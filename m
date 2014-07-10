@@ -1,61 +1,100 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>,
-	Alexander Gordeev <agordeev@redhat.com>
-CC: "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:51134 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750958AbaGJLVi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 07:21:38 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Igor Bezukh <Igor@galilsoft.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Subject: RE: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
-Date: Thu, 3 Jul 2014 09:20:52 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1726BF4E@AcuExch.aculab.com>
-References: <cover.1402405331.git.agordeev@redhat.com>
- <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
- <20140702202201.GA28852@google.com>
-In-Reply-To: <20140702202201.GA28852@google.com>
-Content-Type: text/plain; charset="utf-8"
+	Linux PM list <linux-pm@vger.kernel.org>
+Subject: Re: A question about PCI suspend-resume functionallity
+Date: Thu, 10 Jul 2014 13:39:45 +0200
+Message-ID: <3238200.k7ZdWYUy1n@vostro.rjw.lan>
+In-Reply-To: <CAErSpo5+sGgYpYnF2GzO7Vu9hxJegS025DyYBTkXqgzBOKWE8w@mail.gmail.com>
+References: <4712771.pPjooVqFXc@vostro.rjw.lan> <2305679.jnRnK08iSm@vostro.rjw.lan> <CAErSpo5+sGgYpYnF2GzO7Vu9hxJegS025DyYBTkXqgzBOKWE8w@mail.gmail.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogQmpvcm4gSGVsZ2Fhcw0KPiBPbiBUdWUsIEp1biAxMCwgMjAxNCBhdCAwMzoxMDozMFBN
-ICswMjAwLCBBbGV4YW5kZXIgR29yZGVldiB3cm90ZToNCj4gPiBUaGVyZSBhcmUgUENJIGRldmlj
-ZXMgdGhhdCByZXF1aXJlIGEgcGFydGljdWxhciB2YWx1ZSB3cml0dGVuDQo+ID4gdG8gdGhlIE11
-bHRpcGxlIE1lc3NhZ2UgRW5hYmxlIChNTUUpIHJlZ2lzdGVyIHdoaWxlIGFsaWduZWQgb24NCj4g
-PiBwb3dlciBvZiAyIGJvdW5kYXJ5IHZhbHVlIG9mIGFjdHVhbGx5IHVzZWQgTVNJIHZlY3RvcnMg
-J252ZWMnDQo+ID4gaXMgYSBsZXNzZXIgb2YgdGhhdCBNTUUgdmFsdWU6DQo+ID4NCj4gPiAJcm91
-bmR1cF9wb3dfb2ZfdHdvKG52ZWMpIDwgJ011bHRpcGxlIE1lc3NhZ2UgRW5hYmxlJw0KPiA+DQo+
-ID4gSG93ZXZlciB0aGUgZXhpc3RpbmcgcGNpX2VuYWJsZV9tc2lfYmxvY2soKSBpbnRlcmZhY2Ug
-aXMgbm90DQo+ID4gYWJsZSB0byBjb25maWd1cmUgc3VjaCBkZXZpY2VzLCBzaW5jZSB0aGUgdmFs
-dWUgd3JpdHRlbiB0byB0aGUNCj4gPiBNTUUgcmVnaXN0ZXIgaXMgY2FsY3VsYXRlZCBmcm9tIHRo
-ZSBudW1iZXIgb2YgcmVxdWVzdGVkIE1TSXMNCj4gPiAnbnZlYyc6DQo+ID4NCj4gPiAJJ011bHRp
-cGxlIE1lc3NhZ2UgRW5hYmxlJyA9IHJvdW5kdXBfcG93X29mX3R3byhudmVjKQ0KPiANCj4gRm9y
-IE1TSSwgc29mdHdhcmUgbGVhcm5zIGhvdyBtYW55IHZlY3RvcnMgYSBkZXZpY2UgcmVxdWVzdHMg
-YnkgcmVhZGluZw0KPiB0aGUgTXVsdGlwbGUgTWVzc2FnZSBDYXBhYmxlIChNTUMpIGZpZWxkLiAg
-VGhpcyBmaWVsZCBpcyBlbmNvZGVkLCBzbyBhDQo+IGRldmljZSBjYW4gb25seSByZXF1ZXN0IDEs
-IDIsIDQsIDgsIGV0Yy4sIHZlY3RvcnMuICBJdCdzIGltcG9zc2libGUNCj4gZm9yIGEgZGV2aWNl
-IHRvIHJlcXVlc3QgMyB2ZWN0b3JzOyBpdCB3b3VsZCBoYXZlIHRvIHJvdW5kIHVwIHRoYXQgdXAN
-Cj4gdG8gYSBwb3dlciBvZiB0d28gYW5kIHJlcXVlc3QgNCB2ZWN0b3JzLg0KPiANCj4gU29mdHdh
-cmUgd3JpdGVzIHNpbWlsYXJseSBlbmNvZGVkIHZhbHVlcyB0byBNTUUgdG8gdGVsbCB0aGUgZGV2
-aWNlIGhvdw0KPiBtYW55IHZlY3RvcnMgaGF2ZSBiZWVuIGFsbG9jYXRlZCBmb3IgaXRzIHVzZS4g
-IEZvciBleGFtcGxlLCBpdCdzDQo+IGltcG9zc2libGUgdG8gdGVsbCB0aGUgZGV2aWNlIHRoYXQg
-aXQgY2FuIHVzZSAzIHZlY3RvcnM7IHRoZSBPUyBoYXMgdG8NCj4gcm91bmQgdGhhdCB1cCBhbmQg
-dGVsbCB0aGUgZGV2aWNlIGl0IGNhbiB1c2UgNCB2ZWN0b3JzLg0KPiANCj4gU28gaWYgSSB1bmRl
-cnN0YW5kIGNvcnJlY3RseSwgdGhlIHBvaW50IG9mIHRoaXMgc2VyaWVzIGlzIHRvIHRha2UNCj4g
-YWR2YW50YWdlIG9mIGRldmljZS1zcGVjaWZpYyBrbm93bGVkZ2UsIGUuZy4sIHRoZSBkZXZpY2Ug
-cmVxdWVzdHMgNA0KPiB2ZWN0b3JzIHZpYSBNTUMsIGJ1dCB3ZSAia25vdyIgdGhlIGRldmljZSBp
-cyBvbmx5IGNhcGFibGUgb2YgdXNpbmcgMy4NCj4gTW9yZW92ZXIsIHdlIHRlbGwgdGhlIGRldmlj
-ZSB2aWEgTU1FIHRoYXQgNCB2ZWN0b3JzIGFyZSBhdmFpbGFibGUsIGJ1dA0KPiB3ZSd2ZSBvbmx5
-IGFjdHVhbGx5IHNldCB1cCAzIG9mIHRoZW0uDQouLi4NCg0KRXZlbiBpZiB5b3UgZG8gdGhhdCwg
-eW91IG91Z2h0IHRvIHdyaXRlIHZhbGlkIGludGVycnVwdCBpbmZvcm1hdGlvbg0KaW50byB0aGUg
-NHRoIHNsb3QgKG1heWJlIHJlcGxpY2F0aW5nIG9uZSBvZiB0aGUgZWFybGllciBpbnRlcnJ1cHRz
-KS4NClRoZW4sIGlmIHRoZSBkZXZpY2UgZG9lcyByYWlzZSB0aGUgJ3VuZXhwZWN0ZWQnIGludGVy
-cnVwdCB5b3UgZG9uJ3QNCmdldCBhIHdyaXRlIHRvIGEgcmFuZG9tIGtlcm5lbCBsb2NhdGlvbi4N
-Cg0KUGxhdXNpYmx5IHNvbWV0aGluZyBzaW1pbGFyIHNob3VsZCBiZSBkb25lIHdoZW4gYSBzbWFs
-bGVyIG51bWJlciBvZg0KaW50ZXJydXB0cyBpcyBhc3NpZ25lZC4NCg0KCURhdmlkDQoNCg==
+On Wednesday, July 09, 2014 01:24:20 PM Bjorn Helgaas wrote:
+> On Wed, Jul 9, 2014 at 10:35 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > On Wednesday, July 09, 2014 09:55:24 AM Bjorn Helgaas wrote:
+> >> On Wed, Jul 9, 2014 at 8:18 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> >> > On Wed, 9 Jul 2014, Rafael J. Wysocki wrote:
+> >> >
+> >> >> On Tuesday, July 08, 2014 02:47:03 PM Bjorn Helgaas wrote:
+> >> >> > [+cc linux-pm]
+> >> >> >
+> >> >> > On Tue, Jul 8, 2014 at 9:39 AM, Igor Bezukh <Igor@galilsoft.com> wrote:
+> >> >> > > Hi,
+> >> >> > >
+> >> >> > >
+> >> >> > > We are testing Intel Gigabit adapter driver (igb) under Fedora 20, kernel 3.14.4 for the following use-case:
+> >> >> > >
+> >> >> > > (*) Adapter is connected to the PCIE slot
+> >> >> > > (*) We put the system under suspend by running pm-suspend from user-space
+> >> >> > > (*) Remove the adapter from the PCIE slot
+> >> >> > > (*) Wake up the system
+> >> >> > >
+> >> >> > > Currenlty, we got kernel panics and the system got stuck.
+> >> >> > >
+> >> >> > > My question is - does the PCI subsystem logic calls the driver remove function when driver resume function returns with error code?
+> >> >> > >
+> >> >> > > Or should I implement the call to igb_remove from igb_resume in the Intel driver?
+> >>
+> >> >> ...
+> >> >> The driver's system resume callbacks need to be able to cope with
+> >> >> missing devices.
+> >>
+> >> Based on this, it sounds like igb_resume() should call igb_remove()
+> >> when it figures out the device is missing.
+> >
+> > I wouldn't say so.  igb_resume() should not crash when the device is missing
+> > and should just handle that situation cleanly.  Obviously it is not its role
+> > to remove the device from the hierarchy.
+> 
+> OK, that makes sense.
+> 
+> However, I don't know of anything in the PCI core that will notice
+> that the device has disappeared, so I doubt it will be removed from
+> the hierarchy.
+
+If we don't get a notification via ACPI or PCIe hotplug or anything,
+then no, it won't be removed automatically.
+
+However, it still can be removed manually via sysfs, can't it?
+
+> I think that means the slot will become unusable until
+> a reboot, because the original device is gone and we can't add a new
+> one because the original one is still in the hierarchy.  That's not
+> very good, but it is better than a panic.
+> 
+> >> That might be the best we can do right now, but it doesn't sound like
+> >> a general-purpose solution.  Detecting device removal sounds like a
+> >> core function, not a driver function.  It doesn't seem like drivers
+> >> should have to implement ->resume just to deal with this case.
+> >
+> > No, they shouldn't.  They just need to be able to cope with missing devices
+> > cleanly.
+> >
+> > Devices (and PCI devices in particular) can go away at any time, including
+> > during system resume, without notice anyway and drivers need to be able to
+> > cope with that regardless.
+> >
+> > The notification can actually come in *after* the device has gone in any
+> > case and then whoever gets the notification should handle the device
+> > removal. That is not the driver in particular, but in the meantime
+> > the driver should still work without crashing.
+> 
+> Yep.  So the panic Igor is seeing is probably an igb_resume() problem,
+> but after that's fixed, we'll probably trip over the PCI bug about not
+> handling the remove.
+
+If there's any kind of notification coming in either before of after the event,
+we should act on it and remove the device.  It's a bug if we don't I'd say.
+
+Rafael
+
