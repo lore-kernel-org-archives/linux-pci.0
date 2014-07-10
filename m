@@ -1,63 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.austin.arm.com ([217.140.110.23]:40554 "EHLO
-	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753960AbaGKOLh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 10:11:37 -0400
-Date: Fri, 11 Jul 2014 15:11:16 +0100
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 6/9] pci: Introduce a domain number for
- pci_host_bridge.
-Message-ID: <20140711141115.GB16321@arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-7-git-send-email-Liviu.Dudau@arm.com>
- <20140708005954.GC22939@google.com>
- <20140708104655.GC6501@e106497-lin.cambridge.arm.com>
- <CAErSpo75ovmGoeSHKJN0nckGDy-0gpn8kLPfHQ79CtcXxhPydw@mail.gmail.com>
- <20140708224847.GC4980@e106497-lin.cambridge.arm.com>
- <CAErSpo5rBt0iF2HGeDD-UH6_sPCoC647VCw0Q1v_0Rdpvcir-w@mail.gmail.com>
- <20140710094758.GA6501@e106497-lin.cambridge.arm.com>
- <CAErSpo5ZNCY31NztT0cLFbRVsBZqMsZ0LbTFNOTQCZUU3F7qJA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5ZNCY31NztT0cLFbRVsBZqMsZ0LbTFNOTQCZUU3F7qJA@mail.gmail.com>
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:59703 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751517AbaGJPkv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 11:40:51 -0400
+Received: by mail-wg0-f43.google.com with SMTP id b13so9089831wgh.26
+        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 08:40:47 -0700 (PDT)
+From: matthew_minter@xyratex.com
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: [PATCH RFC] Ensure hot-added PCI devices are given an IRQ on rescan
+Date: Thu, 10 Jul 2014 16:40:38 +0100
+Message-Id: <1405006839-16502-1-git-send-email-matthew_minter@xyratex.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 10, 2014 at 11:36:10PM +0100, Bjorn Helgaas wrote:
-> Most of the rest of the v7 discussion was about "Introduce a domain
-> number for pci_host_bridge."  I think we should add arm64 using the
-> existing pci_scan_root_bus() and keep the domain number in the arm64
-> sysdata structure like every other arch does.  Isn't that feasible?
-> We can worry about domain unification later.
+Some boards which contain physically hot-pluggable PCIe slots such as 8639 connectors can hot-add 
+devices simply by connecting them while up and writing to /sys/bus/pci/rescan.
 
-I think that's what we were trying to avoid, adding an arm64-specific
-pci_sys_data structure (and arm64-specific API). IIUC, avoiding this
-would allow the host controller drivers to use the sysdata pointer for
-their own private data structures.
+This probes the device and loads a driver. However when a device is added in this way it is not given 
+an interrupt. Irqs seem to be passed by the PCI BIOS, or emulated PCI BIOS in the case of non x86 
+arches and so these hot-added cards naturally do not get one.
 
-Also since you can specify the domain number via DT (and in Liviu's
-v8 patches read by of_create_pci_host_bridge), I think it would make
-sense to have it stored in some generic data structures (e.g.
-pci_host_bridge) rather than in an arm64 private sysdata.
+This means that when a device is added in this way, unless the device and driver use only MSI/MSI-X it 
+will try to request irq vector 0 which does not end well. To prevent this I have added a check for an 
+empty irq vector and use pdev_fixup_irq to set one at run time if one has not been provided. This is 
+done inside an unlikely block in order to make negligible the performance impact on the normal PCI 
+device adding code path, this should not be a performance critical area anyway as devices are not 
+often added.
 
-(Liviu is thinking of an alternative API but maybe he could briefly
-describe it here before posting a new series)
+I have looked into instead modifying the rescan code however this would be a less effective solution  
+as there is no convenient way there to run code between device probing and the driver loading and so 
+would need a significant redesign.
 
--- 
-Catalin
+If anyone has any suggestions or feedback on this patch, or a better way to solve this issue should 
+there be one, I would be very grateful.
+
+In addition I have only had the opportunity to test this code on non x86 platforms so if anyone has a 
+x86 or AMD64 PC with physical hot-add capability I would be very appreciative if you could try running 
+this.
+
+Best regards,
+Matthew
+
+ drivers/pci/bus.c       | 11 +++++++++++
+ drivers/pci/setup-irq.c |  2 +-
+ include/linux/pci.h     |  2 ++
+ 3 files changed, 14 insertions(+), 1 deletion(-)
+
