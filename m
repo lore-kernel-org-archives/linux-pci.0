@@ -1,50 +1,234 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1405700934.605.31.camel@jarvis.lan>
-Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Benoit Taine <benoit.taine@lip6.fr>
-Cc: linux-pci@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	ath9k-devel@venema.h4ckr.net, linux-hippi@sunsite.dk,
-	dri-devel@lists.freedesktop.org, linux-acenic@sunsite.dk,
-	wil6210@qca.qualcomm.com, platform-driver-x86@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-mips@linux-mips.org, users@rt2x00.serialmonkey.com,
-	linux-rdma@vger.kernel.org,
-	virtualization@lists.linux-foundation.org,
-	industrypack-devel@lists.sourceforge.net,
-	linux-can@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-fbdev@vger.kernel.org, ath10k@lists.infradead.org,
-	linux-crypto@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com,
-	devel@linuxdriverproject.org, xen-devel@lists.xenproject.org,
-	linux-pcmcia@lists.infradead.org, e1000-devel@lists.sourceforge.net
-Date: Fri, 18 Jul 2014 09:28:54 -0700
-In-Reply-To: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
-References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:5824 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750965AbaGJXOY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Jul 2014 19:14:24 -0400
+Message-ID: <1405034054.4098.39.camel@ul30vt.home>
+Subject: Re: [PATCH 2/2] xen-pciback: provide a "reset" sysfs file to try
+ harder at an SBR
+From: Alex Williamson <alex.williamson@redhat.com>
+To: David Vrabel <david.vrabel@citrix.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	xen-devel@lists.xenproject.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Date: Thu, 10 Jul 2014 17:14:14 -0600
+In-Reply-To: <1404997394-15715-3-git-send-email-david.vrabel@citrix.com>
+References: <1404997394-15715-1-git-send-email-david.vrabel@citrix.com>
+	 <1404997394-15715-3-git-send-email-david.vrabel@citrix.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2014-07-18 at 17:26 +0200, Benoit Taine wrote:
-> We should prefer `const struct pci_device_id` over
-> `DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
-> This issue was reported by checkpatch.
+On Thu, 2014-07-10 at 14:03 +0100, David Vrabel wrote:
+> The standard implementation of pci_reset_function() does not try an
+> SBR if there are other sibling devices.  This is a common
+> configuration for multi-function devices (e.g., GPUs with a HDMI audio
+> device function).
+> 
+> If all the functions are co-assigned to the same domain at the same
+> time, then it is safe to perform an SBR to reset all functions at the
+> same time.
+> 
+> Add a "reset" sysfs file with the same interface as the standard one
+> (i.e., write 1 to reset) that will try an SBR if all sibling devices
+> are unbound or bound to pciback.
+> 
+> Note that this is weaker than the requirement for functions to be
+> simultaneously co-assigned, but the toolstack is expected to ensure
+> this.
+> 
+> Signed-off-by: David Vrabel <david.vrabel@citrix.com>
+> ---
+> Changes in v3:
+> - probe for function reset
+> - use pci_reset_bus().
+> 
+> Changes in v2:
+> - defer creating sysfs node to late init.
+> ---
+>  drivers/xen/xen-pciback/pci_stub.c |  107 +++++++++++++++++++++++++++++++++++-
+>  drivers/xen/xen-pciback/pciback.h  |    1 +
+>  2 files changed, 105 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+> index d57a173..c7deceb 100644
+> --- a/drivers/xen/xen-pciback/pci_stub.c
+> +++ b/drivers/xen/xen-pciback/pci_stub.c
+> @@ -63,6 +63,100 @@ static LIST_HEAD(pcistub_devices);
+>  static int initialize_devices;
+>  static LIST_HEAD(seized_devices);
+>  
+> +/*
+> + * pci_reset_function() will only work if there is a mechanism to
+> + * reset that single function (e.g., FLR or a D-state transition).
+> + * For PCI hardware that has two or more functions but no per-function
+> + * reset, we can do a bus reset iff all the functions are co-assigned
+> + * to the same domain.
+> + *
+> + * If a function has no per-function reset mechanism the 'reset' sysfs
+> + * file that the toolstack uses to reset a function prior to assigning
+> + * the device will be missing.  In this case, pciback adds its own
+> + * which will try a bus reset.
+> + *
+> + * Note: pciback does not check for co-assigment before doing a bus
+> + * reset, only that the devices are bound to pciback.  The toolstack
+> + * is assumed to have done the right thing.
+> + */
+> +static int __pcistub_reset_function(struct pci_dev *dev)
+> +{
+> +	struct pci_dev *pdev;
+> +	int ret;
+> +
+> +	ret = __pci_reset_function_locked(dev);
+> +	if (ret == 0)
+> +		return 0;
+> +
+> +	if (pci_is_root_bus(dev->bus) || dev->subordinate || !dev->bus->self)
+> +		return -ENOTTY;
+> +
+> +	list_for_each_entry(pdev, &dev->bus->devices, bus_list) {
 
-What kernel coding style?  checkpatch isn't the arbiter of style, if
-that's the only problem.
+What if there are buses below this one?
 
-The DEFINE_PCI macro was a well reasoned addition when it was added in
-2008.  The problem was most people were getting the definition wrong.
-When we converted away from CONFIG_HOTPLUG, having this DEFINE_ meant
-that only one place needed changing instead of hundreds for PCI tables.
+> +		if (pdev != dev && (!pdev->driver
+> +				    || strcmp(pdev->driver->name, "pciback")))
+> +			return -ENOTTY;
+> +	}
+> +
+> +	return pci_reset_bus(dev->bus);
+> +}
+> +
+> +static int pcistub_reset_function(struct pci_dev *dev)
+> +{
+> +	int ret;
+> +
+> +	device_lock(&dev->dev);
+> +	ret = __pcistub_reset_function(dev);
+> +	device_unlock(&dev->dev);
+> +
+> +	return ret;
+> +}
+> +
+> +static ssize_t pcistub_reset_store(struct device *dev,
+> +				   struct device_attribute *attr,
+> +				   const char *buf, size_t count)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +	unsigned long val;
+> +	ssize_t result = strict_strtoul(buf, 0, &val);
+> +
+> +	if (result < 0)
+> +		return result;
+> +
+> +	if (val != 1)
+> +		return -EINVAL;
+> +
+> +	result = pcistub_reset_function(pdev);
+> +	if (result < 0)
+> +		return result;
+> +	return count;
+> +}
+> +static DEVICE_ATTR(reset, 0200, NULL, pcistub_reset_store);
+> +
+> +static int pcistub_try_create_reset_file(struct pci_dev *pci)
+> +{
+> +	struct xen_pcibk_dev_data *dev_data = pci_get_drvdata(pci);
+> +	struct device *dev = &pci->dev;
+> +	int ret;
+> +
+> +	/* Already have a per-function reset? */
+> +	if (pci_probe_reset_function(pci) == 0)
+> +		return 0;
+> +
+> +	ret = device_create_file(dev, &dev_attr_reset);
+> +	if (ret < 0)
+> +		return ret;
+> +	dev_data->created_reset_file = true;
+> +	return 0;
+> +}
 
-The reason people were getting the PCI table wrong was mostly the init
-section specifiers which are now gone, but it has enough underlying
-utility (mostly constification) that I don't think we'd want to churn
-the kernel hugely to make a change to struct pci_table and then have to
-start detecting and fixing misuses.
+So the idea here is that if pci-sysfs did not create a sysfs reset file,
+create one when it's bound to pciback that does a secondary bus reset
+instead of a reset isolated to the PCI function, right?  It seems like a
+lot to ask of userspace to know that the extent of the reset depends on
+the driver that it's bound to.  How does userspace figure this out when
+the device is bound to pciback and _does_ support a function level
+reset?  Overloading "reset" seems like a bad idea.
 
-James
+> +
+> +static void pcistub_remove_reset_file(struct pci_dev *pci)
+> +{
+> +	struct xen_pcibk_dev_data *dev_data = pci_get_drvdata(pci);
+> +
+> +	if (dev_data && dev_data->created_reset_file)
+> +		device_remove_file(&pci->dev, &dev_attr_reset);
+> +}
+> +
+>  static struct pcistub_device *pcistub_device_alloc(struct pci_dev *dev)
+>  {
+>  	struct pcistub_device *psdev;
+> @@ -103,7 +197,8 @@ static void pcistub_device_release(struct kref *kref)
+>  	/* Call the reset function which does not take lock as this
+>  	 * is called from "unbind" which takes a device_lock mutex.
+>  	 */
+> -	__pci_reset_function_locked(dev);
+> +	__pcistub_reset_function(psdev->dev);
+> +
+>  	if (pci_load_and_free_saved_state(dev, &dev_data->pci_saved_state))
+>  		dev_dbg(&dev->dev, "Could not reload PCI state\n");
+>  	else
+> @@ -280,7 +375,7 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
+>  	/* This is OK - we are running from workqueue context
+>  	 * and want to inhibit the user from fiddling with 'reset'
+>  	 */
+> -	pci_reset_function(dev);
+> +	pcistub_reset_function(dev);
+>  	pci_restore_state(dev);
+>  
+>  	/* This disables the device. */
+> @@ -404,7 +499,7 @@ static int pcistub_init_device(struct pci_dev *dev)
+>  		dev_err(&dev->dev, "Could not store PCI conf saved state!\n");
+>  	else {
+>  		dev_dbg(&dev->dev, "resetting (FLR, D3, etc) the device\n");
+> -		__pci_reset_function_locked(dev);
+> +		__pcistub_reset_function(dev);
+>  		pci_restore_state(dev);
+>  	}
+>  	/* Now disable the device (this also ensures some private device
+> @@ -413,6 +508,10 @@ static int pcistub_init_device(struct pci_dev *dev)
+>  	dev_dbg(&dev->dev, "reset device\n");
+>  	xen_pcibk_reset_device(dev);
+>  
+> +	err = pcistub_try_create_reset_file(dev);
+> +	if (err < 0)
+> +		goto config_release;
+> +
+>  	dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+>  	return 0;
+>  
+> @@ -540,6 +639,8 @@ static void pcistub_remove(struct pci_dev *dev)
+>  
+>  	dev_dbg(&dev->dev, "removing\n");
+>  
+> +	pcistub_remove_reset_file(dev);
+> +
+>  	spin_lock_irqsave(&pcistub_devices_lock, flags);
+>  
+>  	xen_pcibk_config_quirk_release(dev);
+> diff --git a/drivers/xen/xen-pciback/pciback.h b/drivers/xen/xen-pciback/pciback.h
+> index f72af87..708ade9 100644
+> --- a/drivers/xen/xen-pciback/pciback.h
+> +++ b/drivers/xen/xen-pciback/pciback.h
+> @@ -42,6 +42,7 @@ struct xen_pcibk_device {
+>  struct xen_pcibk_dev_data {
+>  	struct list_head config_fields;
+>  	struct pci_saved_state *pci_saved_state;
+> +	bool created_reset_file;
+>  	unsigned int permissive:1;
+>  	unsigned int warned_on_write:1;
+>  	unsigned int enable_intx:1;
+
 
 
