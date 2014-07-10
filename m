@@ -1,50 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f179.google.com ([209.85.220.179]:36598 "EHLO
-	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751428AbaGUAVa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Jul 2014 20:21:30 -0400
-Received: by mail-vc0-f179.google.com with SMTP id hq11so9550746vcb.10
-        for <linux-pci@vger.kernel.org>; Sun, 20 Jul 2014 17:21:29 -0700 (PDT)
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:52171 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750702AbaGJFRa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 01:17:30 -0400
+Received: by mail-vc0-f174.google.com with SMTP id hy4so9448378vcb.5
+        for <linux-pci@vger.kernel.org>; Wed, 09 Jul 2014 22:17:30 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAKohpokOJLKOwB_rKz0W-1T0nYX7-2_8nm3wQr6khR55x4gqrA@mail.gmail.com>
-References: <76576b662613369d0c71db30ceed4ed5ae1343d2.1405857442.git.viresh.kumar@linaro.org>
-	<20140720192649.GA30124@quad.lixom.net>
-	<CAKohpokOJLKOwB_rKz0W-1T0nYX7-2_8nm3wQr6khR55x4gqrA@mail.gmail.com>
-Date: Sun, 20 Jul 2014 17:21:29 -0700
-Message-ID: <CAOesGMi0HgL14zMqALvqT_cGMr13mGSN0O493eLmydt8Dscqug@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: spear: Fix Section mismatch compilation warning
- for probe()
+In-Reply-To: <CAKohpon0KkW+GqTGriioXCRLet0wBzT-7=+_VUBczJtfgTgJqQ@mail.gmail.com>
+References: <2CC2A0A4A178534D93D5159BF3BCB661A17A3E48F2@EAPEX1MAIL1.st.com>
+	<CAOesGMiu_azMYt3L5OgZSFRgrJQvXvkvSOtr0eLam22CQ5SwuA@mail.gmail.com>
+	<CAKohpon0KkW+GqTGriioXCRLet0wBzT-7=+_VUBczJtfgTgJqQ@mail.gmail.com>
+Date: Wed, 9 Jul 2014 22:17:30 -0700
+Message-ID: <CAOesGMjdAYoFLsqCNMUp7_KbiT8xKn6nkUxX=4V7wojsMp_-2Q@mail.gmail.com>
+Subject: Re: [GIT PULL] ARM: SPEAr1310 PCIe updates
 From: Olof Johansson <olof@lixom.net>
 To: Viresh Kumar <viresh.kumar@linaro.org>
-Cc: Arnd Bergmann <arnd@linaro.org>, "arm@kernel.org" <arm@kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
+Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
 	spear-devel <spear-devel@list.st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mohit KUMAR <mohit.kumar@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>
+	Mark Nicholson <mark@nicholnet.com>,
+	"FTPAdmin Kernel.org" <ftpadmin@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 20, 2014 at 5:12 PM, Viresh Kumar <viresh.kumar@linaro.org> wrote:
-> On 21 July 2014 00:56, Olof Johansson <olof@lixom.net> wrote:
->> Please use 12 significant digits, since 7 might not be sufficient later
->> on in time. I've fixed it up here.
+On Wed, Jul 9, 2014 at 5:18 PM, Viresh Kumar <viresh.kumar@linaro.org> wrote:
+> On 9 July 2014 23:39, Olof Johansson <olof@lixom.net> wrote:
+>> * Why are you sending a pull request for a repo that is not yours?
 >
-> I surely didn't knew this and haven't seen other maintainers do this
-> as well.. And thought, whatever "git log --online" gives would be
-> enough.
+> Because Mohit/Pratyush were facing some issues in pushing patches
+> to the SPEAr public git repo. And so I tried to help them out publicly
+> and nobody objected then:
 >
-> Will take care of this in future.
+> https://lkml.org/lkml/2014/7/8/10
 
-Oh, sorry, I got distracted by my kid waking up so the email was a bit short. :)
+This is completely done wrong on so many levels.
 
-The easiest way of doing it is to switch to 12 by default. In your .gitconfig:
+I am not going to merge code from someone who doesn't have the basic
+skills down when there's already a maintainer for the platform.
+Luckily, you can deal with it -- be it coaching the ST employees on
+how to work with the community the right way, or doing the work
+yourself to send the code up. Probably a combination in this case.
 
-[core]
-        abbrev = 12
+>> * Why is Viresh the git committer but hasn't signed off on the patches?
+>
+> I didn't sign-off because I haven't even looked closed at many of the
+> patches around PCI and Acked whatever I could understand.
+
+Thanks, good to know that the series hasn't been fully reviewed. That
+makes me even more hesitant to apply it at the moment, given all the
+other issues around it.
+
+> But yeah, this committer thing is what I missed. Because of that I might
+> be required to signoff it.
+
+Anyone touching the patch, forwarding it or applying it needs to sign
+off. It's quite simple, and well documented.
+
+>> Are you sharing accounts on kernel.org? (Adding kernel.org admin on cc
+>> just in case).
+>
+> Obviously not. I am alone the user of this account.
+
+Good.
 
 
 -Olof
