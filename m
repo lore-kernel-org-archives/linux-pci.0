@@ -1,53 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:47515 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751341AbaGJFYF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 01:24:05 -0400
+Received: by mail-ob0-f180.google.com with SMTP id vb8so9205366obc.39
+        for <linux-pci@vger.kernel.org>; Wed, 09 Jul 2014 22:24:04 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Sun, 6 Jul 2014 10:23:43 -0500
-Message-ID: <CAL_JsqK_CfagmiFOpOXVYGry22nGnCZL0ZXeJhYxb9zp=P2fsQ@mail.gmail.com>
-Subject: Re: [PATCH v8 0/9] Support for creating generic PCI host bridges from DT
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
+In-Reply-To: <CAOesGMjdAYoFLsqCNMUp7_KbiT8xKn6nkUxX=4V7wojsMp_-2Q@mail.gmail.com>
+References: <2CC2A0A4A178534D93D5159BF3BCB661A17A3E48F2@EAPEX1MAIL1.st.com>
+	<CAOesGMiu_azMYt3L5OgZSFRgrJQvXvkvSOtr0eLam22CQ5SwuA@mail.gmail.com>
+	<CAKohpon0KkW+GqTGriioXCRLet0wBzT-7=+_VUBczJtfgTgJqQ@mail.gmail.com>
+	<CAOesGMjdAYoFLsqCNMUp7_KbiT8xKn6nkUxX=4V7wojsMp_-2Q@mail.gmail.com>
+Date: Thu, 10 Jul 2014 10:54:03 +0530
+Message-ID: <CAKohpom79td__V9r68YmOTS_Ws4PKXDAaHLhYeLZcAcHRsjYig@mail.gmail.com>
+Subject: Re: [GIT PULL] ARM: SPEAr1310 PCIe updates
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: Olof Johansson <olof@lixom.net>
+Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
+	spear-devel <spear-devel@list.st.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mark Nicholson <mark@nicholnet.com>,
+	"FTPAdmin Kernel.org" <ftpadmin@kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 1, 2014 at 1:43 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> This is my resurected attempt at adding support for generic PCI host
-> bridge controllers that make use of device tree information to
-> configure themselves. I've tagged it as v8 although the patches
-> have now been reshuffled in order to ease adoption so referring to
-> the older versions might be a bit of a hoop jumping exercise.
+On 10 July 2014 10:47, Olof Johansson <olof@lixom.net> wrote:
+>> I didn't sign-off because I haven't even looked closed at many of the
+>> patches around PCI and Acked whatever I could understand.
 >
-> Changes from v7:
->   - Reordered the patches so that fixes and non-controversial patches
->     from v7 can be accepted more easily. If agreed I can split the
->     series again into patches that can be upstreamed easily and ones
->     that still need discussion.
->   - Moved the of_create_host_bridge() function to drivers/of/of_pci.c
->     to better reflect its target use.
->   - Added the function to remap the bus I/O resources that used to be
->     provided in my arm64 patch series and (re)named it pci_remap_iospace()
->   - Removed error code checking from parsing and mapping of IRQ from DT
->     in recognition that some PCI devices will not have legacy IRQ mappings.
+> Thanks, good to know that the series hasn't been fully reviewed. That
+> makes me even more hesitant to apply it at the moment, given all the
+> other issues around it.
+
+Its not that the series hasn't been fully reviewed, it is.
+
+Arnd has reviewed and Acked the complete series. I have Acked SPEAr
+specific parts and Bjorn have Acked PCI specific stuff.
+
+>> But yeah, this committer thing is what I missed. Because of that I might
+>> be required to signoff it.
 >
-> v7 thread here with all the historic information: https://lkml.org/lkml/2014/3/14/279
+> Anyone touching the patch, forwarding it or applying it needs to sign
+> off. It's quite simple, and well documented.
 
-Can you publish a branch for this series please.
-
-Rob
+Yeah, my mistake. Accepted.
