@@ -1,89 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:34874 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756174AbaGNQ45 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jul 2014 12:56:57 -0400
-Date: Mon, 14 Jul 2014 17:56:53 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 9/9] pci: Remap I/O bus resources into CPU space with
- pci_remap_iospace()
-Message-ID: <20140714165653.GD825@e106497-lin.cambridge.arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-10-git-send-email-Liviu.Dudau@arm.com>
- <20140714165443.GI1112@arm.com>
-MIME-Version: 1.0
-In-Reply-To: <20140714165443.GI1112@arm.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:55025 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751561AbaGJH2B (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 03:28:01 -0400
+Received: by mail-pd0-f181.google.com with SMTP id v10so10382125pde.12
+        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 00:28:00 -0700 (PDT)
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: arnd@linaro.org, olof@lixom.net
+Cc: linux-arm-kernel@lists.infradead.org, spear-devel@list.st.com,
+	b.zolnierkie@samsung.com, bhelgaas@google.com, mark@nicholnet.com,
+	linux-pci@vger.kernel.org, Mohit Kumar <mohit.kumar@st.com>,
+	Viresh Kumar <viresh.kumar@linaro.org>
+Subject: [PATCH V9 7/7] ARM: SPEAr13xx: Update defconfigs
+Date: Thu, 10 Jul 2014 12:56:38 +0530
+Message-Id: <94293b09b77d64a9bfbfd71e1906abfbb49280ca.1404976059.git.viresh.kumar@linaro.org>
+In-Reply-To: <cover.1404976058.git.viresh.kumar@linaro.org>
+References: <cover.1404976058.git.viresh.kumar@linaro.org>
+In-Reply-To: <cover.1404976058.git.viresh.kumar@linaro.org>
+References: <cover.1404976058.git.viresh.kumar@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 14, 2014 at 05:54:43PM +0100, Catalin Marinas wrote:
-> On Tue, Jul 01, 2014 at 07:43:34PM +0100, Liviu Dudau wrote:
-> > Introduce a default implementation for remapping PCI bus I/O resources
-> > onto the CPU address space. Architectures with special needs may
-> > provide their own version, but most should be able to use this one.
-> [...]
-> > +/**
-> > + *	pci_remap_iospace - Remap the memory mapped I/O space
-> > + *	@res: Resource describing the I/O space
-> > + *	@phys_addr: physical address where the range will be mapped.
-> > + *
-> > + *	Remap the memory mapped I/O space described by the @res
-> > + *	into the CPU physical address space. Only architectures
-> > + *	that have memory mapped IO defined (and hence PCI_IOBASE)
-> > + *	should call this function.
-> > + */
-> > +int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
-> > +{
-> > +	int err = -ENODEV;
-> > +
-> > +#ifdef PCI_IOBASE
-> > +	if (!(res->flags & IORESOURCE_IO))
-> > +		return -EINVAL;
-> > +
-> > +	if (res->end > IO_SPACE_LIMIT)
-> > +		return -EINVAL;
-> > +
-> > +	err = ioremap_page_range(res->start + (unsigned long)PCI_IOBASE,
-> > +				res->end + 1 + (unsigned long)PCI_IOBASE,
-> > +				phys_addr, __pgprot(PROT_DEVICE_nGnRE));
-> 
-> Except that PROT_DEVICE_nGnRE is arm64 only. I think that's a function
-> that should remain arch specific.
+From: Mohit Kumar <mohit.kumar@st.com>
 
-Yes, I was following Arnd's suggestion and lost track of the fact that
-PROT_DEVICE_nGnRE is arm64 specific.
+Enable PCIe, EABI, VFP and NFS configs in default configuration file for
+SPEAr13xx.
 
-Best regards,
-Liviu
+Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
+Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
+[viresh: fixed logs/cclist]
+Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
+---
+ arch/arm/configs/spear13xx_defconfig | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-> 
-> -- 
-> Catalin
-
+diff --git a/arch/arm/configs/spear13xx_defconfig b/arch/arm/configs/spear13xx_defconfig
+index 82eaa55..d271b26 100644
+--- a/arch/arm/configs/spear13xx_defconfig
++++ b/arch/arm/configs/spear13xx_defconfig
+@@ -11,13 +11,24 @@ CONFIG_ARCH_SPEAR13XX=y
+ CONFIG_MACH_SPEAR1310=y
+ CONFIG_MACH_SPEAR1340=y
+ # CONFIG_SWP_EMULATE is not set
++CONFIG_PCI=y
++CONFIG_PCI_MSI=y
++CONFIG_PCIE_SPEAR13XX=y
+ CONFIG_SMP=y
+ # CONFIG_SMP_ON_UP is not set
+ # CONFIG_ARM_CPU_TOPOLOGY is not set
++CONFIG_AEABI=y
+ CONFIG_ARM_APPENDED_DTB=y
+ CONFIG_ARM_ATAG_DTB_COMPAT=y
++CONFIG_VFP=y
+ CONFIG_BINFMT_MISC=y
+ CONFIG_NET=y
++CONFIG_UNIX=y
++CONFIG_INET=y
++CONFIG_IP_PNP=y
++CONFIG_IP_PNP_DHCP=y
++CONFIG_IP_PNP_BOOTP=y
++CONFIG_NET_IPIP=y
+ CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
+ CONFIG_MTD=y
+ CONFIG_MTD_OF_PARTS=y
+@@ -27,6 +38,7 @@ CONFIG_MTD_NAND=y
+ CONFIG_MTD_NAND_FSMC=y
+ CONFIG_BLK_DEV_RAM=y
+ CONFIG_BLK_DEV_RAM_SIZE=16384
++CONFIG_BLK_DEV_SD=y
+ CONFIG_ATA=y
+ # CONFIG_SATA_PMP is not set
+ CONFIG_SATA_AHCI_PLATFORM=y
+@@ -66,6 +78,7 @@ CONFIG_USB=y
+ # CONFIG_USB_DEVICE_CLASS is not set
+ CONFIG_USB_EHCI_HCD=y
+ CONFIG_USB_OHCI_HCD=y
++CONFIG_USB_STORAGE=y
+ CONFIG_MMC=y
+ CONFIG_MMC_SDHCI=y
+ CONFIG_MMC_SDHCI_SPEAR=y
+@@ -79,11 +92,14 @@ CONFIG_EXT2_FS_SECURITY=y
+ CONFIG_EXT3_FS=y
+ CONFIG_EXT3_FS_SECURITY=y
+ CONFIG_AUTOFS4_FS=m
++CONFIG_FUSE_FS=y
+ CONFIG_MSDOS_FS=m
+ CONFIG_VFAT_FS=m
+ CONFIG_FAT_DEFAULT_IOCHARSET="ascii"
+ CONFIG_TMPFS=y
+ CONFIG_JFFS2_FS=y
++CONFIG_NFS_FS=y
++CONFIG_ROOT_NFS=y
+ CONFIG_NLS_DEFAULT="utf8"
+ CONFIG_NLS_CODEPAGE_437=y
+ CONFIG_NLS_ASCII=m
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+2.0.0.rc2
 
