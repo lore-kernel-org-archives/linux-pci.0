@@ -1,59 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CA+mB=1JupzQy+R14kKAk7mTJR2FcZ+cQv-uXQSB6jEVBW95aGQ@mail.gmail.com>
-References: <1404361654-2894-1-git-send-email-sthokal@xilinx.com>
- <20140716173824.GA24357@google.com> <CA+mB=1JupzQy+R14kKAk7mTJR2FcZ+cQv-uXQSB6jEVBW95aGQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 22 Jul 2014 10:08:54 -0600
-Message-ID: <CAErSpo41HwMferWm8q69Sz0t-Cs1WHgwwVp1VKsoxxyvrgQhfQ@mail.gmail.com>
-Subject: Re: [PATCH v4] pcie: Add Xilinx PCIe Host Bridge IP driver
-To: Srikanth Thokala <sthokal@xilinx.com>
-Cc: Michal Simek <michal.simek@xilinx.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:39514 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751760AbaGJMGs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 08:06:48 -0400
+Received: by mail-lb0-f172.google.com with SMTP id c11so6074413lbj.31
+        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 05:06:46 -0700 (PDT)
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Subject: [PATCH] pci: Add include guard to include/linux/pci_ids.h
+Date: Thu, 10 Jul 2014 14:05:11 +0200
+Message-Id: <1404993911-10544-1-git-send-email-linux@rasmusvillemoes.dk>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 21, 2014 at 11:10 PM, Srikanth Thokala <sthokal@xilinx.com> wrote:
-> On Wed, Jul 16, 2014 at 11:08 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> ...
->> I see I forgot to ask for a MAINTAINERS entry for this driver.  Can
->> you add one?
->
-> There was a discussion on this earlier and Michal mentioned it is not
-> required as it is
-> handled by our Xilinx record.
->
-> Here is the reply from Michal to the MAINTAINERS update comment,
->
-> < Reply from Michal >
->
->> Please also include a MAINTAINERS update for drivers/pci/host/pci-xilinx.c.
->
-> This should be handle by our record that's why MAINTAINERS update is
-> not necessary.
-> (N: xilinx below)
+Adding an include guard frees the preprocessor from reparsing over
+2600 #defines in the cases where pci_ids.h is somehow included more
+than once. This gives a tiny-but-measurable performance improvement
+when compiling such files.
 
-That's technically true in the sense that get_maintainer.pl will do
-the right thing, but I often review patches in email (without
-extracting them), so it's more convenient to just look in MAINTAINERS
-to see if they have the right acks.  But I guess I can deal with it
-either way.
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+---
+ include/linux/pci_ids.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-> ARM/ZYNQ ARCHITECTURE
-> M:      Michal Simek <michal.simek@xilinx.com>
-> L:      linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-> W:      http://wiki.xilinx.com
-> T:      git git://git.xilinx.com/linux-xlnx.git
-> S:      Supported
-> F:      arch/arm/mach-zynq/
-> F:      drivers/cpuidle/cpuidle-zynq.c
-> N:      zynq
-> N:      xilinx
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 7fa3173..6ed0bb7 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -6,6 +6,8 @@
+  *	Do not add new entries to this file unless the definitions
+  *	are shared between multiple drivers.
+  */
++#ifndef _LINUX_PCI_IDS_H
++#define _LINUX_PCI_IDS_H
+ 
+ /* Device classes and subclasses */
+ 
+@@ -2968,3 +2970,5 @@
+ #define PCI_DEVICE_ID_XEN_PLATFORM	0x0001
+ 
+ #define PCI_VENDOR_ID_OCZ		0x1b85
++
++#endif /* _LINUX_PCI_IDS_H */
+-- 
+1.9.2
+
