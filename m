@@ -1,119 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:38365 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758700AbaGXGXC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 02:23:02 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 24 Jul 2014 16:22:55 +1000
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 7F5293578048
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 16:22:58 +1000 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s6O605OZ52822044
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 16:00:05 +1000
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s6O6MvCZ020335
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 16:22:58 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V7 16/17] powerpc/powernv: Expanding IOV BAR, with m64_per_iov supported
-Date: Thu, 24 Jul 2014 14:22:26 +0800
-Message-Id: <1406182947-11302-17-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from vps0.lunn.ch ([178.209.37.122]:45761 "EHLO vps0.lunn.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751337AbaGJVl6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Jul 2014 17:41:58 -0400
+From: Andrew Lunn <andrew@lunn.ch>
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: linux ARM <linux-arm-kernel@lists.infradead.org>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCH v2 09/12] PCI: Remove ARCH_KIRKWOOD dependency
+Date: Thu, 10 Jul 2014 23:36:29 +0200
+Message-Id: <1405028192-9623-10-git-send-email-andrew@lunn.ch>
+In-Reply-To: <1405028192-9623-1-git-send-email-andrew@lunn.ch>
+References: <1405028192-9623-1-git-send-email-andrew@lunn.ch>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-M64 aperture size is limited on PHB3. When the IOV BAR is too big, this will
-exceed the limitation and failed to be assigned.
+mach-kirkwood has been removed, now that kirkwood lives in mach-mvebu.
+ARCH_MVEBU is sufficient.
 
-This patch introduce a different expanding based on the IOV BAR size:
-
-IOV BAR size is smaller than 64M, expand to total_pe.
-IOV BAR size is bigger than 64M, roundup power2.
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
 ---
- arch/powerpc/include/asm/pci-bridge.h     |    2 ++
- arch/powerpc/platforms/powernv/pci-ioda.c |   31 +++++++++++++++++++++++++++--
- 2 files changed, 31 insertions(+), 2 deletions(-)
+ drivers/pci/host/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 8cabe8b..9c2c826 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -177,6 +177,8 @@ struct pci_dn {
- 	u16     vfs;			/* number of VFs IOV BAR expended */
- 	u16     vf_pes;
- 	int     offset;
-+#define M64_PER_IOV 4
-+	int     m64_per_iov;
- #define IODA_INVALID_M64        (-1)
- 	int     m64_wins[PCI_SRIOV_NUM_BARS];
- #endif /* CONFIG_PCI_IOV */
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 5bf67fe..98fa01d 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1888,6 +1888,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 	int i;
- 	resource_size_t size;
- 	struct pci_dn *pdn;
-+	int mul, total_vfs;
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 21df477be0c8..88f4862fa452 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -3,7 +3,7 @@ menu "PCI host controller drivers"
  
- 	if (!pdev->is_physfn || pdev->is_added)
- 		return;
-@@ -1898,6 +1899,32 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 	pdn = pci_get_pdn(pdev);
- 	pdn->vfs = 0;
+ config PCI_MVEBU
+ 	bool "Marvell EBU PCIe controller"
+-	depends on ARCH_MVEBU || ARCH_DOVE || ARCH_KIRKWOOD
++	depends on ARCH_MVEBU || ARCH_DOVE
+ 	depends on OF
  
-+	total_vfs = pci_sriov_get_totalvfs(pdev);
-+	pdn->m64_per_iov = 1;
-+	mul = phb->ioda.total_pe;
-+
-+	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
-+		res = &pdev->resource[i];
-+		if (!res->flags || res->parent)
-+			continue;
-+		if (!pnv_pci_is_mem_pref_64(res->flags)) {
-+			dev_warn(&pdev->dev, " non M64 IOV BAR %pR on %s\n",
-+					res, pci_name(pdev));
-+			continue;
-+		}
-+
-+		size = pnv_pci_sriov_resource_size(pdev, i);
-+
-+		/* bigger than 64M */
-+		if (size > (1 << 26)) {
-+			dev_info(&pdev->dev, "PowerNV: VF BAR[%d] size "
-+					"is bigger than 64M, roundup power2\n", i);
-+			pdn->m64_per_iov = M64_PER_IOV;
-+			mul = __roundup_pow_of_two(total_vfs);
-+			break;
-+		}
-+	}
-+
- 	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
- 		res = &pdev->resource[i];
- 		if (!res->flags || res->parent)
-@@ -1911,10 +1938,10 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 		dev_dbg(&pdev->dev, "PowerNV: Fixing VF BAR[%d] %pR to\n",
- 				i, res);
- 		size = pnv_pci_sriov_resource_size(pdev, i);
--		res->end = res->start + size * phb->ioda.total_pe - 1;
-+		res->end = res->start + size * mul - 1;
- 		dev_dbg(&pdev->dev, "                       %pR\n", res);
- 	}
--	pdn->vfs = phb->ioda.total_pe;
-+	pdn->vfs = mul;
- }
- 
- static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
+ config PCIE_DW
 -- 
-1.7.9.5
+2.0.1
 
