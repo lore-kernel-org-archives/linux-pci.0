@@ -1,534 +1,527 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <jg1.han@samsung.com>,
-	<bhelgaas@google.com>, <mohit.kumar@st.com>,
-	<linux-kernel@vger.kernel.org>
-CC: <kishon@ti.com>, <grant.likely@linaro.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 4/4] PCI: host: pcie-dra7xx: add support for pcie-dra7xx controller
-Date: Mon, 14 Jul 2014 20:25:05 +0530
-Message-ID: <1405349705-31400-5-git-send-email-kishon@ti.com>
-In-Reply-To: <1405349705-31400-1-git-send-email-kishon@ti.com>
-References: <1405349705-31400-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:36996 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751321AbaGJH1M (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 03:27:12 -0400
+Received: by mail-pa0-f45.google.com with SMTP id rd3so10650455pab.32
+        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 00:27:11 -0700 (PDT)
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: arnd@linaro.org, olof@lixom.net
+Cc: linux-arm-kernel@lists.infradead.org, spear-devel@list.st.com,
+	b.zolnierkie@samsung.com, bhelgaas@google.com, mark@nicholnet.com,
+	linux-pci@vger.kernel.org, Pratyush Anand <pratyush.anand@st.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Viresh Kumar <viresh.kumar@linaro.org>
+Subject: [PATCH V9 1/7] pcie: Add designware wrapper driver for SPEAr13xx
+Date: Thu, 10 Jul 2014 12:56:32 +0530
+Message-Id: <9430e4b284928e4919297de5602e803d03f82d7b.1404976058.git.viresh.kumar@linaro.org>
+In-Reply-To: <cover.1404976058.git.viresh.kumar@linaro.org>
+References: <cover.1404976058.git.viresh.kumar@linaro.org>
+In-Reply-To: <cover.1404976058.git.viresh.kumar@linaro.org>
+References: <cover.1404976058.git.viresh.kumar@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Added support for pcie controller in dra7xx. This driver re-uses
-the designware core code that is already present in kernel.
+From: Pratyush Anand <pratyush.anand@st.com>
 
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mohit Kumar <mohit.kumar@st.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Marek Vasut <marex@denx.de>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+ARM based ST Microelectronics's SPEAr1310 and SPEAr1340 SOCs have onchip
+designware PCIe controller. To make that usable, this patch adds a wrapper
+driver based on existing designware driver.
+
+Adds bindings for this new driver and update MAINTAINERS as well.
+
+Cc: linux-pci@vger.kernel.org
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Jingoo Han <jg1.han@samsung.com>
+Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
+[viresh: fixed logs/cclist/checkpatch warnings, broken into smaller patches]
+Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
 ---
- drivers/pci/host/Kconfig      |   10 +
- drivers/pci/host/Makefile     |    1 +
- drivers/pci/host/pci-dra7xx.c |  458 +++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 469 insertions(+)
- create mode 100644 drivers/pci/host/pci-dra7xx.c
+ .../devicetree/bindings/pci/spear13xx-pcie.txt     |  14 +
+ MAINTAINERS                                        |   6 +
+ drivers/pci/host/Kconfig                           |   8 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pcie-spear13xx.c                  | 405 +++++++++++++++++++++
+ 5 files changed, 434 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/spear13xx-pcie.txt
+ create mode 100644 drivers/pci/host/pcie-spear13xx.c
 
+diff --git a/Documentation/devicetree/bindings/pci/spear13xx-pcie.txt b/Documentation/devicetree/bindings/pci/spear13xx-pcie.txt
+new file mode 100644
+index 0000000..49ea76d
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/spear13xx-pcie.txt
+@@ -0,0 +1,14 @@
++SPEAr13XX PCIe DT detail:
++================================
++
++SPEAr13XX uses synopsis designware PCIe controller and ST MiPHY as phy
++controller.
++
++Required properties:
++- compatible : should be "st,spear1340-pcie", "snps,dw-pcie".
++- phys		    : phandle to phy node associated with pcie controller
++- phy-names	    : must be "pcie-phy"
++- All other definitions as per generic PCI bindings
++
++ Optional properties:
++- st,pcie-is-gen1 indicates that forced gen1 initialization is needed.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 702ca10..443dd05 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6820,6 +6820,12 @@ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/host-generic-pci.txt
+ F:	drivers/pci/host/pci-host-generic.c
+ 
++PCIE DRIVER FOR ST SPEAR13XX
++M:	Mohit Kumar <mohit.kumar@st.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	drivers/pci/host/pcie-spear13xx.c
++
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
 diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 21df477..22117b0 100644
+index 21df477..2d8a4d0 100644
 --- a/drivers/pci/host/Kconfig
 +++ b/drivers/pci/host/Kconfig
-@@ -1,6 +1,16 @@
- menu "PCI host controller drivers"
- 	depends on PCI
+@@ -46,4 +46,12 @@ config PCI_HOST_GENERIC
+ 	  Say Y here if you want to support a simple generic PCI host
+ 	  controller, such as the one emulated by kvmtool.
  
-+config PCI_DRA7XX
-+	bool "TI DRA7xx PCIe controller"
++config PCIE_SPEAR13XX
++	tristate "STMicroelectronics SPEAr PCIe controller"
++	depends on ARCH_SPEAR13XX
++	select PCIEPORTBUS
 +	select PCIE_DW
-+	depends on OF && HAS_IOMEM && TI_PIPE3
 +	help
-+	 Enables support for the PCIE controller present in DRA7xx SoC. There
-+	 are two instances of PCIE controller in DRA7xx. This controller can
-+	 act both as EP and RC. This reuses the same Designware core as used
-+	 by other SoCs.
++	  Say Y here if you want PCIe support on SPEAr13XX SoCs.
 +
- config PCI_MVEBU
- 	bool "Marvell EBU PCIe controller"
- 	depends on ARCH_MVEBU || ARCH_DOVE || ARCH_KIRKWOOD
+ endmenu
 diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 611ba4b..c42844d 100644
+index 611ba4b..0daec79 100644
 --- a/drivers/pci/host/Makefile
 +++ b/drivers/pci/host/Makefile
-@@ -1,4 +1,5 @@
- obj-$(CONFIG_PCIE_DW) += pcie-designware.o
-+obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
- obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
- obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
- obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+@@ -6,3 +6,4 @@ obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
+ obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+ obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
+ obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
++obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
 new file mode 100644
-index 0000000..52b34fe
+index 0000000..a6fc332
 --- /dev/null
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -0,0 +1,458 @@
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -0,0 +1,405 @@
 +/*
-+ * pcie-dra7xx - PCIe controller driver for TI DRA7xx SoCs
++ * PCIe host controller driver for ST Microelectronics SPEAr13xx SoCs
 + *
-+ * Copyright (C) 2013-2014 Texas Instruments Incorporated - http://www.ti.com
++ * SPEAr13xx PCIe Glue Layer Source Code
 + *
-+ * Authors: Kishon Vijay Abraham I <kishon@ti.com>
++ * Copyright (C) 2010-2014 ST Microelectronics
++ * Pratyush Anand <pratyush.anand@st.com>
++ * Mohit Kumar <mohit.kumar@st.com>
 + *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
++ * This file is licensed under the terms of the GNU General Public
++ * License version 2. This program is licensed "as is" without any
++ * warranty of any kind, whether express or implied.
 + */
 +
++#include <linux/clk.h>
 +#include <linux/delay.h>
-+#include <linux/err.h>
 +#include <linux/interrupt.h>
-+#include <linux/irq.h>
-+#include <linux/irqdomain.h>
 +#include <linux/kernel.h>
 +#include <linux/module.h>
++#include <linux/of.h>
 +#include <linux/pci.h>
 +#include <linux/phy/phy.h>
 +#include <linux/platform_device.h>
-+#include <linux/pm_runtime.h>
 +#include <linux/resource.h>
-+#include <linux/types.h>
 +
 +#include "pcie-designware.h"
 +
-+/* PCIe controller wrapper DRA7XX configuration registers */
-+
-+#define	PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN		0x0024
-+#define	PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN		0x0028
-+#define	ERR_SYS						BIT(0)
-+#define	ERR_FATAL					BIT(1)
-+#define	ERR_NONFATAL					BIT(2)
-+#define	ERR_COR						BIT(3)
-+#define	ERR_AXI						BIT(4)
-+#define	ERR_ECRC					BIT(5)
-+#define	PME_TURN_OFF					BIT(8)
-+#define	PME_TO_ACK					BIT(9)
-+#define	PM_PME						BIT(10)
-+#define	LINK_REQ_RST					BIT(11)
-+#define	LINK_UP_EVT					BIT(12)
-+#define	CFG_BME_EVT					BIT(13)
-+#define	CFG_MSE_EVT					BIT(14)
-+#define	INTERRUPTS (ERR_SYS | ERR_FATAL | ERR_NONFATAL | ERR_COR | ERR_AXI | \
-+			ERR_ECRC | PME_TURN_OFF | PME_TO_ACK | PM_PME | \
-+			LINK_REQ_RST | LINK_UP_EVT | CFG_BME_EVT | CFG_MSE_EVT)
-+
-+#define	PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI		0x0034
-+#define	PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI		0x0038
-+#define	INTA						BIT(0)
-+#define	INTB						BIT(1)
-+#define	INTC						BIT(2)
-+#define	INTD						BIT(3)
-+#define	MSI						BIT(4)
-+#define	LEG_EP_INTERRUPTS (INTA | INTB | INTC | INTD)
-+
-+#define	PCIECTRL_DRA7XX_CONF_DEVICE_CMD			0x0104
-+#define	LTSSM_EN					0x1
-+
-+#define	PCIECTRL_DRA7XX_CONF_PHY_CS			0x010C
-+#define	LINK_UP						BIT(16)
-+
-+struct dra7xx_pcie {
-+	void __iomem		*base;
-+	struct phy		**phy;
-+	int			phy_count;
-+	struct device		*dev;
++struct spear13xx_pcie {
++	void __iomem		*app_base;
++	struct phy		*phy;
++	struct clk		*clk;
 +	struct pcie_port	pp;
++	bool			is_gen1;
 +};
 +
-+#define to_dra7xx_pcie(x)	container_of((x), struct dra7xx_pcie, pp)
++struct pcie_app_reg {
++	u32	app_ctrl_0;		/* cr0 */
++	u32	app_ctrl_1;		/* cr1 */
++	u32	app_status_0;		/* cr2 */
++	u32	app_status_1;		/* cr3 */
++	u32	msg_status;		/* cr4 */
++	u32	msg_payload;		/* cr5 */
++	u32	int_sts;		/* cr6 */
++	u32	int_clr;		/* cr7 */
++	u32	int_mask;		/* cr8 */
++	u32	mst_bmisc;		/* cr9 */
++	u32	phy_ctrl;		/* cr10 */
++	u32	phy_status;		/* cr11 */
++	u32	cxpl_debug_info_0;	/* cr12 */
++	u32	cxpl_debug_info_1;	/* cr13 */
++	u32	ven_msg_ctrl_0;		/* cr14 */
++	u32	ven_msg_ctrl_1;		/* cr15 */
++	u32	ven_msg_data_0;		/* cr16 */
++	u32	ven_msg_data_1;		/* cr17 */
++	u32	ven_msi_0;		/* cr18 */
++	u32	ven_msi_1;		/* cr19 */
++	u32	mst_rmisc;		/* cr20 */
++};
 +
-+static inline u32 dra7xx_pcie_readl(struct dra7xx_pcie *pcie, u32 offset)
++/* CR0 ID */
++#define RX_LANE_FLIP_EN_ID			0
++#define TX_LANE_FLIP_EN_ID			1
++#define SYS_AUX_PWR_DET_ID			2
++#define APP_LTSSM_ENABLE_ID			3
++#define SYS_ATTEN_BUTTON_PRESSED_ID		4
++#define SYS_MRL_SENSOR_STATE_ID			5
++#define SYS_PWR_FAULT_DET_ID			6
++#define SYS_MRL_SENSOR_CHGED_ID			7
++#define SYS_PRE_DET_CHGED_ID			8
++#define SYS_CMD_CPLED_INT_ID			9
++#define APP_INIT_RST_0_ID			11
++#define APP_REQ_ENTR_L1_ID			12
++#define APP_READY_ENTR_L23_ID			13
++#define APP_REQ_EXIT_L1_ID			14
++#define DEVICE_TYPE_EP				(0 << 25)
++#define DEVICE_TYPE_LEP				(1 << 25)
++#define DEVICE_TYPE_RC				(4 << 25)
++#define SYS_INT_ID				29
++#define MISCTRL_EN_ID				30
++#define REG_TRANSLATION_ENABLE			31
++
++/* CR1 ID */
++#define APPS_PM_XMT_TURNOFF_ID			2
++#define APPS_PM_XMT_PME_ID			5
++
++/* CR3 ID */
++#define XMLH_LTSSM_STATE_DETECT_QUIET		0x00
++#define XMLH_LTSSM_STATE_DETECT_ACT		0x01
++#define XMLH_LTSSM_STATE_POLL_ACTIVE		0x02
++#define XMLH_LTSSM_STATE_POLL_COMPLIANCE	0x03
++#define XMLH_LTSSM_STATE_POLL_CONFIG		0x04
++#define XMLH_LTSSM_STATE_PRE_DETECT_QUIET	0x05
++#define XMLH_LTSSM_STATE_DETECT_WAIT		0x06
++#define XMLH_LTSSM_STATE_CFG_LINKWD_START	0x07
++#define XMLH_LTSSM_STATE_CFG_LINKWD_ACEPT	0x08
++#define XMLH_LTSSM_STATE_CFG_LANENUM_WAIT	0x09
++#define XMLH_LTSSM_STATE_CFG_LANENUM_ACEPT	0x0A
++#define XMLH_LTSSM_STATE_CFG_COMPLETE		0x0B
++#define XMLH_LTSSM_STATE_CFG_IDLE		0x0C
++#define XMLH_LTSSM_STATE_RCVRY_LOCK		0x0D
++#define XMLH_LTSSM_STATE_RCVRY_SPEED		0x0E
++#define XMLH_LTSSM_STATE_RCVRY_RCVRCFG		0x0F
++#define XMLH_LTSSM_STATE_RCVRY_IDLE		0x10
++#define XMLH_LTSSM_STATE_L0			0x11
++#define XMLH_LTSSM_STATE_L0S			0x12
++#define XMLH_LTSSM_STATE_L123_SEND_EIDLE	0x13
++#define XMLH_LTSSM_STATE_L1_IDLE		0x14
++#define XMLH_LTSSM_STATE_L2_IDLE		0x15
++#define XMLH_LTSSM_STATE_L2_WAKE		0x16
++#define XMLH_LTSSM_STATE_DISABLED_ENTRY		0x17
++#define XMLH_LTSSM_STATE_DISABLED_IDLE		0x18
++#define XMLH_LTSSM_STATE_DISABLED		0x19
++#define XMLH_LTSSM_STATE_LPBK_ENTRY		0x1A
++#define XMLH_LTSSM_STATE_LPBK_ACTIVE		0x1B
++#define XMLH_LTSSM_STATE_LPBK_EXIT		0x1C
++#define XMLH_LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1D
++#define XMLH_LTSSM_STATE_HOT_RESET_ENTRY	0x1E
++#define XMLH_LTSSM_STATE_HOT_RESET		0x1F
++#define XMLH_LTSSM_STATE_MASK			0x3F
++#define XMLH_LINK_UP				(1 << 6)
++
++/* CR4 ID */
++#define CFG_MSI_EN_ID				18
++
++/* CR6 */
++#define INTA_CTRL_INT				(1 << 7)
++#define INTB_CTRL_INT				(1 << 8)
++#define INTC_CTRL_INT				(1 << 9)
++#define INTD_CTRL_INT				(1 << 10)
++#define MSI_CTRL_INT				(1 << 26)
++
++/* CR19 ID */
++#define VEN_MSI_REQ_ID				11
++#define VEN_MSI_FUN_NUM_ID			8
++#define VEN_MSI_TC_ID				5
++#define VEN_MSI_VECTOR_ID			0
++#define VEN_MSI_REQ_EN		((u32)0x1 << VEN_MSI_REQ_ID)
++#define VEN_MSI_FUN_NUM_MASK	((u32)0x7 << VEN_MSI_FUN_NUM_ID)
++#define VEN_MSI_TC_MASK		((u32)0x7 << VEN_MSI_TC_ID)
++#define VEN_MSI_VECTOR_MASK	((u32)0x1F << VEN_MSI_VECTOR_ID)
++
++#define PCI_CAP_ID_EXP_OFFSET			0x70
++
++#define to_spear13xx_pcie(x)	container_of(x, struct spear13xx_pcie, pp)
++
++static int spear13xx_pcie_establish_link(struct pcie_port *pp)
 +{
-+	return readl(pcie->base + offset);
-+}
-+
-+static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
-+				      u32 value)
-+{
-+	writel(value, pcie->base + offset);
-+}
-+
-+static int dra7xx_pcie_link_up(struct pcie_port *pp)
-+{
-+	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
-+	u32 reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_PHY_CS);
-+
-+	return !!(reg & LINK_UP);
-+}
-+
-+static int dra7xx_pcie_establish_link(struct pcie_port *pp)
-+{
-+	u32 reg;
-+	unsigned int retries = 1000;
-+	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
++	u32 val;
++	int count = 0;
++	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
++	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
++	u32 exp_cap_off = PCI_CAP_ID_EXP_OFFSET;
 +
 +	if (dw_pcie_link_up(pp)) {
-+		dev_err(pp->dev, "link is already up\n");
++		dev_err(pp->dev, "link already up\n");
 +		return 0;
 +	}
 +
-+	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
-+	reg |= LTSSM_EN;
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
-+
-+	while (retries--) {
-+		reg = dra7xx_pcie_readl(dra7xx,	PCIECTRL_DRA7XX_CONF_PHY_CS);
-+		if (reg & LINK_UP)
-+			break;
-+		usleep_range(10, 20);
-+	}
-+
-+	if (retries == 0) {
-+		dev_err(pp->dev, "link is not up\n");
-+		return -ETIMEDOUT;
-+	}
-+
-+	return 0;
-+}
-+
-+static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
-+{
-+	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
-+
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
-+			   ~INTERRUPTS);
-+	dra7xx_pcie_writel(dra7xx,
-+			   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN, INTERRUPTS);
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
-+			   ~LEG_EP_INTERRUPTS & ~MSI);
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		dra7xx_pcie_writel(dra7xx,
-+				   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI, MSI);
-+	else
-+		dra7xx_pcie_writel(dra7xx,
-+				   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
-+				   LEG_EP_INTERRUPTS);
-+}
-+
-+static void dra7xx_pcie_host_init(struct pcie_port *pp)
-+{
 +	dw_pcie_setup_rc(pp);
-+	dra7xx_pcie_establish_link(pp);
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		dw_pcie_msi_init(pp);
-+	dra7xx_pcie_enable_interrupts(pp);
-+}
 +
-+static struct pcie_host_ops dra7xx_pcie_host_ops = {
-+	.link_up = dra7xx_pcie_link_up,
-+	.host_init = dra7xx_pcie_host_init,
-+};
++	/*
++	 * this controller support only 128 bytes read size, however its
++	 * default value in capability register is 512 bytes. So force
++	 * it to 128 here.
++	 */
++	dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, &val);
++	val &= ~PCI_EXP_DEVCTL_READRQ;
++	dw_pcie_cfg_write(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, val);
 +
-+static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
-+				irq_hw_number_t hwirq)
-+{
-+	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
-+	irq_set_chip_data(irq, domain->host_data);
-+	set_irq_flags(irq, IRQF_VALID);
++	dw_pcie_cfg_write(pp->dbi_base, PCI_VENDOR_ID, 2, 0x104A);
++	dw_pcie_cfg_write(pp->dbi_base, PCI_DEVICE_ID, 2, 0xCD80);
 +
-+	return 0;
-+}
++	/*
++	 * if is_gen1 is set then handle it, so that some buggy card
++	 * also works
++	 */
++	if (spear13xx_pcie->is_gen1) {
++		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCAP, 4,
++				 &val);
++		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
++			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
++			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
++			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
++					  PCI_EXP_LNKCAP, 4, val);
++		}
 +
-+static const struct irq_domain_ops intx_domain_ops = {
-+	.map = dra7xx_pcie_intx_map,
-+};
-+
-+static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
-+{
-+	struct device *dev = pp->dev;
-+	struct device_node *node = dev->of_node;
-+	struct device_node *pcie_intc_node =  of_get_next_child(node, NULL);
-+
-+	if (!pcie_intc_node) {
-+		dev_err(dev, "No PCIe Intc node found\n");
-+		return PTR_ERR(pcie_intc_node);
-+	}
-+
-+	pp->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
-+					       &intx_domain_ops, pp);
-+	if (!pp->irq_domain) {
-+		dev_err(dev, "Failed to get a INTx IRQ domain\n");
-+		return PTR_ERR(pp->irq_domain);
-+	}
-+
-+	return 0;
-+}
-+
-+static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
-+{
-+	struct pcie_port *pp = arg;
-+	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
-+	u32 reg;
-+
-+	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
-+
-+	switch (reg) {
-+	case MSI:
-+		dw_handle_msi_irq(pp);
-+		break;
-+	case INTA:
-+	case INTB:
-+	case INTC:
-+	case INTD:
-+		generic_handle_irq(irq_find_mapping(pp->irq_domain, ffs(reg)));
-+		break;
-+	}
-+
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+
-+static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
-+{
-+	struct dra7xx_pcie *dra7xx = arg;
-+	u32 reg;
-+
-+	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN);
-+
-+	if (reg & ERR_SYS)
-+		dev_dbg(dra7xx->dev, "System Error\n");
-+
-+	if (reg & ERR_FATAL)
-+		dev_dbg(dra7xx->dev, "Fatal Error\n");
-+
-+	if (reg & ERR_NONFATAL)
-+		dev_dbg(dra7xx->dev, "Non Fatal Error\n");
-+
-+	if (reg & ERR_COR)
-+		dev_dbg(dra7xx->dev, "Correctable Error\n");
-+
-+	if (reg & ERR_AXI)
-+		dev_dbg(dra7xx->dev, "AXI tag lookup fatal Error\n");
-+
-+	if (reg & ERR_ECRC)
-+		dev_dbg(dra7xx->dev, "ECRC Error\n");
-+
-+	if (reg & PME_TURN_OFF)
-+		dev_dbg(dra7xx->dev,
-+			"Power Management Event Turn-Off message received\n");
-+
-+	if (reg & PME_TO_ACK)
-+		dev_dbg(dra7xx->dev,
-+			"Power Management Turn-Off Ack message received\n");
-+
-+	if (reg & PM_PME)
-+		dev_dbg(dra7xx->dev,
-+			"PM Power Management Event message received\n");
-+
-+	if (reg & LINK_REQ_RST)
-+		dev_dbg(dra7xx->dev, "Link Request Reset\n");
-+
-+	if (reg & LINK_UP_EVT)
-+		dev_dbg(dra7xx->dev, "Link-up state change\n");
-+
-+	if (reg & CFG_BME_EVT)
-+		dev_dbg(dra7xx->dev, "CFG 'Bus Master Enable' change\n");
-+
-+	if (reg & CFG_MSE_EVT)
-+		dev_dbg(dra7xx->dev, "CFG 'Memory Space Enable' change\n");
-+
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN, reg);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static int add_pcie_port(struct dra7xx_pcie *dra7xx,
-+			  struct platform_device *pdev)
-+{
-+	int ret;
-+	struct pcie_port *pp;
-+	struct resource *res;
-+	struct device *dev = &pdev->dev;
-+
-+	pp = &dra7xx->pp;
-+	pp->dev = dev;
-+	pp->ops = &dra7xx_pcie_host_ops;
-+
-+	pp->irq = platform_get_irq(pdev, 1);
-+	if (pp->irq < 0) {
-+		dev_err(dev, "missing IRQ resource\n");
-+		return -EINVAL;
-+	}
-+
-+	ret = devm_request_irq(&pdev->dev, pp->irq,
-+			       dra7xx_pcie_msi_irq_handler, IRQF_SHARED,
-+			       "dra7-pcie-msi",	pp);
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to request irq\n");
-+		return ret;
-+	}
-+
-+	if (!IS_ENABLED(CONFIG_PCI_MSI)) {
-+		ret = dra7xx_pcie_init_irq_domain(pp);
-+		if (ret < 0)
-+			return ret;
-+	}
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
-+	pp->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
-+	if (!pp->dbi_base)
-+		return -ENOMEM;
-+
-+	ret = dw_pcie_host_init(pp);
-+	if (ret) {
-+		dev_err(dra7xx->dev, "failed to initialize host\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int __init dra7xx_pcie_probe(struct platform_device *pdev)
-+{
-+	u32 reg;
-+	int ret;
-+	int irq;
-+	int i;
-+	int phy_count;
-+	struct phy **phy;
-+	void __iomem *base;
-+	struct resource *res;
-+	struct dra7xx_pcie *dra7xx;
-+	struct device *dev = &pdev->dev;
-+	struct device_node *np = dev->of_node;
-+	char name[10];
-+
-+	dra7xx = devm_kzalloc(dev, sizeof(*dra7xx), GFP_KERNEL);
-+	if (!dra7xx)
-+		return -ENOMEM;
-+
-+	irq = platform_get_irq(pdev, 0);
-+	if (irq < 0) {
-+		dev_err(dev, "missing IRQ resource\n");
-+		return -EINVAL;
-+	}
-+
-+	ret = devm_request_irq(dev, irq, dra7xx_pcie_irq_handler,
-+			       IRQF_SHARED, "dra7xx-pcie-main", dra7xx);
-+	if (ret) {
-+		dev_err(dev, "failed to request irq\n");
-+		return ret;
-+	}
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ti_conf");
-+	base = devm_ioremap_nocache(dev, res->start, resource_size(res));
-+	if (!base)
-+		return -ENOMEM;
-+
-+	phy_count = of_property_count_strings(np, "phy-names");
-+	if (phy_count < 0) {
-+		dev_err(dev, "unable to find the strings\n");
-+		return phy_count;
-+	}
-+
-+	phy = devm_kzalloc(dev, sizeof(*phy) * phy_count, GFP_KERNEL);
-+	if (!phy)
-+		return -ENOMEM;
-+
-+	for (i = 0; i < phy_count; i++) {
-+		snprintf(name, sizeof(name), "pcie-phy%d", i);
-+		phy[i] = devm_phy_get(dev, name);
-+		if (IS_ERR(phy[i]))
-+			return PTR_ERR(phy[i]);
-+
-+		ret = phy_init(phy[i]);
-+		if (ret < 0)
-+			goto err_phy;
-+
-+		ret = phy_power_on(phy[i]);
-+		if (ret < 0) {
-+			phy_exit(phy[i]);
-+			goto err_phy;
++		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCTL2, 4,
++				 &val);
++		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
++			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
++			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
++			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
++					  PCI_EXP_LNKCTL2, 4, val);
 +		}
 +	}
 +
-+	dra7xx->base = base;
-+	dra7xx->phy = phy;
-+	dra7xx->dev = dev;
-+	dra7xx->phy_count = phy_count;
++	/* enable ltssm */
++	writel(DEVICE_TYPE_RC | (1 << MISCTRL_EN_ID)
++			| (1 << APP_LTSSM_ENABLE_ID)
++			| ((u32)1 << REG_TRANSLATION_ENABLE),
++			&app_reg->app_ctrl_0);
 +
-+	pm_runtime_enable(dev);
-+	ret = pm_runtime_get_sync(dev);
-+	if (IS_ERR_VALUE(ret)) {
-+		dev_err(dev, "pm_runtime_get_sync failed\n");
-+		goto err_phy;
++	/* check if the link is up or not */
++	while (!dw_pcie_link_up(pp)) {
++		mdelay(100);
++		count++;
++		if (count == 10) {
++			dev_err(pp->dev, "link Fail\n");
++			return -EINVAL;
++		}
 +	}
-+
-+	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
-+	reg &= ~LTSSM_EN;
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
-+
-+	platform_set_drvdata(pdev, dra7xx);
-+
-+	ret = add_pcie_port(dra7xx, pdev);
-+	if (ret < 0)
-+		goto err_add_port;
++	dev_info(pp->dev, "link up\n");
 +
 +	return 0;
++}
 +
-+err_add_port:
-+	pm_runtime_put(dev);
-+	pm_runtime_disable(dev);
++static irqreturn_t spear13xx_pcie_irq_handler(int irq, void *arg)
++{
++	struct pcie_port *pp = arg;
++	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
++	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
++	unsigned int status;
 +
-+err_phy:
-+	while (--i >= 0) {
-+		phy_power_off(phy[i]);
-+		phy_exit(phy[i]);
++	status = readl(&app_reg->int_sts);
++
++	if (status & MSI_CTRL_INT) {
++		if (!IS_ENABLED(CONFIG_PCI_MSI))
++			BUG();
++		dw_handle_msi_irq(pp);
 +	}
++
++	writel(status, &app_reg->int_clr);
++
++	return IRQ_HANDLED;
++}
++
++static void spear13xx_pcie_enable_interrupts(struct pcie_port *pp)
++{
++	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
++	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
++
++	/* Enable MSI interrupt */
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		dw_pcie_msi_init(pp);
++		writel(readl(&app_reg->int_mask) |
++				MSI_CTRL_INT, &app_reg->int_mask);
++	}
++}
++
++static int spear13xx_pcie_link_up(struct pcie_port *pp)
++{
++	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
++	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
++
++	if (readl(&app_reg->app_status_1) & XMLH_LINK_UP)
++		return 1;
++
++	return 0;
++}
++
++static void spear13xx_pcie_host_init(struct pcie_port *pp)
++{
++	spear13xx_pcie_establish_link(pp);
++	spear13xx_pcie_enable_interrupts(pp);
++}
++
++static struct pcie_host_ops spear13xx_pcie_host_ops = {
++	.link_up = spear13xx_pcie_link_up,
++	.host_init = spear13xx_pcie_host_init,
++};
++
++static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	int ret;
++
++	pp->irq = platform_get_irq(pdev, 0);
++	if (!pp->irq) {
++		dev_err(dev, "failed to get irq\n");
++		return -ENODEV;
++	}
++	ret = devm_request_irq(dev, pp->irq, spear13xx_pcie_irq_handler,
++			       IRQF_SHARED, "spear1340-pcie", pp);
++	if (ret) {
++		dev_err(dev, "failed to request irq %d\n", pp->irq);
++		return ret;
++	}
++
++	pp->root_bus_nr = -1;
++	pp->ops = &spear13xx_pcie_host_ops;
++
++	ret = dw_pcie_host_init(pp);
++	if (ret) {
++		dev_err(dev, "failed to initialize host\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static int __init spear13xx_pcie_probe(struct platform_device *pdev)
++{
++	struct spear13xx_pcie *spear13xx_pcie;
++	struct pcie_port *pp;
++	struct device *dev = &pdev->dev;
++	struct device_node *np = pdev->dev.of_node;
++	struct resource *dbi_base;
++	int ret;
++
++	spear13xx_pcie = devm_kzalloc(dev, sizeof(*spear13xx_pcie), GFP_KERNEL);
++	if (!spear13xx_pcie) {
++		dev_err(dev, "no memory for SPEAr13xx pcie\n");
++		return -ENOMEM;
++	}
++
++	spear13xx_pcie->phy = devm_phy_get(dev, "pcie-phy");
++	if (IS_ERR(spear13xx_pcie->phy)) {
++		ret = PTR_ERR(spear13xx_pcie->phy);
++		if (ret == -EPROBE_DEFER)
++			dev_info(dev, "probe deferred\n");
++		else
++			dev_err(dev, "couldn't get pcie-phy\n");
++		return ret;
++	}
++
++	phy_init(spear13xx_pcie->phy);
++
++	spear13xx_pcie->clk = devm_clk_get(dev, NULL);
++	if (IS_ERR(spear13xx_pcie->clk)) {
++		dev_err(dev, "couldn't get clk for pcie\n");
++		return PTR_ERR(spear13xx_pcie->clk);
++	}
++	ret = clk_prepare_enable(spear13xx_pcie->clk);
++	if (ret) {
++		dev_err(dev, "couldn't enable clk for pcie\n");
++		return ret;
++	}
++
++	pp = &spear13xx_pcie->pp;
++
++	pp->dev = dev;
++
++	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	pp->dbi_base = devm_ioremap_resource(dev, dbi_base);
++	if (IS_ERR(pp->dbi_base)) {
++		dev_err(dev, "couldn't remap dbi base %p\n", dbi_base);
++		ret = PTR_ERR(pp->dbi_base);
++		goto fail_clk;
++	}
++	spear13xx_pcie->app_base = pp->dbi_base + 0x2000;
++
++	if (of_property_read_bool(np, "st,pcie-is-gen1"))
++		spear13xx_pcie->is_gen1 = true;
++
++	ret = add_pcie_port(pp, pdev);
++	if (ret < 0)
++		goto fail_clk;
++
++	platform_set_drvdata(pdev, spear13xx_pcie);
++	return 0;
++
++fail_clk:
++	clk_disable_unprepare(spear13xx_pcie->clk);
 +
 +	return ret;
 +}
 +
-+static int __exit dra7xx_pcie_remove(struct platform_device *pdev)
++static int __exit spear13xx_pcie_remove(struct platform_device *pdev)
 +{
-+	struct dra7xx_pcie *dra7xx = platform_get_drvdata(pdev);
-+	struct pcie_port *pp = &dra7xx->pp;
-+	struct device *dev = &pdev->dev;
-+	int count = dra7xx->phy_count;
++	struct spear13xx_pcie *spear13xx_pcie = platform_get_drvdata(pdev);
 +
-+	if (pp->irq_domain)
-+		irq_domain_remove(pp->irq_domain);
-+	pm_runtime_put(dev);
-+	pm_runtime_disable(dev);
-+	while (count--) {
-+		phy_power_off(dra7xx->phy[count]);
-+		phy_exit(dra7xx->phy[count]);
-+	}
++	clk_disable_unprepare(spear13xx_pcie->clk);
++
++	phy_exit(spear13xx_pcie->phy);
 +
 +	return 0;
 +}
 +
-+static const struct of_device_id of_dra7xx_pcie_match[] = {
-+	{ .compatible = "ti,dra7-pcie", },
++static const struct of_device_id spear13xx_pcie_of_match[] = {
++	{ .compatible = "st,spear1340-pcie", },
 +	{},
 +};
-+MODULE_DEVICE_TABLE(of, of_dra7xx_pcie_match);
++MODULE_DEVICE_TABLE(of, spear13xx_pcie_of_match);
 +
-+static struct platform_driver dra7xx_pcie_driver = {
-+	.remove		= __exit_p(dra7xx_pcie_remove),
++static struct platform_driver spear13xx_pcie_driver = {
++	.probe		= spear13xx_pcie_probe,
++	.remove		= spear13xx_pcie_remove,
 +	.driver = {
-+		.name	= "dra7-pcie",
++		.name	= "spear-pcie",
 +		.owner	= THIS_MODULE,
-+		.of_match_table = of_dra7xx_pcie_match,
++		.of_match_table = of_match_ptr(spear13xx_pcie_of_match),
 +	},
 +};
 +
-+module_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
++/* SPEAr13xx PCIe driver does not allow module unload */
 +
-+MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
-+MODULE_DESCRIPTION("TI PCIe controller driver");
++static int __init pcie_init(void)
++{
++	return platform_driver_register(&spear13xx_pcie_driver);
++}
++module_init(pcie_init);
++
++MODULE_DESCRIPTION("ST Microelectronics SPEAr13xx PCIe host controller driver");
++MODULE_AUTHOR("Pratyush Anand <pratyush.anand@st.com>");
 +MODULE_LICENSE("GPL v2");
 -- 
-1.7.9.5
+2.0.0.rc2
 
