@@ -1,229 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([122.248.162.3]:36133 "EHLO
-	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751171AbaGXGWm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 02:22:42 -0400
-Received: from /spool/local
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 24 Jul 2014 11:52:39 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 44C333940043
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:35 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s6O6OPgT4981222
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:54:25 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s6O6MXVg021276
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:34 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V7 01/17] PCI/IOV: Export interface for retrieve VF's BDF
-Date: Thu, 24 Jul 2014 14:22:11 +0800
-Message-Id: <1406182947-11302-2-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from service87.mimecast.com ([91.220.42.44]:58680 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751987AbaGJJsD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 05:48:03 -0400
+Date: Thu, 10 Jul 2014 10:47:58 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 6/9] pci: Introduce a domain number for
+ pci_host_bridge.
+Message-ID: <20140710094758.GA6501@e106497-lin.cambridge.arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-7-git-send-email-Liviu.Dudau@arm.com>
+ <20140708005954.GC22939@google.com>
+ <20140708104655.GC6501@e106497-lin.cambridge.arm.com>
+ <CAErSpo75ovmGoeSHKJN0nckGDy-0gpn8kLPfHQ79CtcXxhPydw@mail.gmail.com>
+ <20140708224847.GC4980@e106497-lin.cambridge.arm.com>
+ <CAErSpo5rBt0iF2HGeDD-UH6_sPCoC647VCw0Q1v_0Rdpvcir-w@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5rBt0iF2HGeDD-UH6_sPCoC647VCw0Q1v_0Rdpvcir-w@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When implementing the SR-IOV on PowerNV platform, some resource reservation is
-needed for VFs which don't exist at the bootup stage. To do the match between
-resources and VFs, the code need to get the VF's BDF in advance.
+On Wed, Jul 09, 2014 at 04:10:04PM +0100, Bjorn Helgaas wrote:
+> On Tue, Jul 8, 2014 at 4:48 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > On Tue, Jul 08, 2014 at 07:41:50PM +0100, Bjorn Helgaas wrote:
+> >> On Tue, Jul 8, 2014 at 4:46 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> >> > On Tue, Jul 08, 2014 at 01:59:54AM +0100, Bjorn Helgaas wrote:
+> >>
+> >> >> I wonder if it would help to make a weak pci_domain_nr() function that
+> >> >> returns "bridge->domain_nr".  Then each arch could individually drop its
+> >> >> pci_domain_nr() definition as it was converted, e.g., something like this:
+> >> >>
+> >> >>   - Convert every arch pci_domain_nr() from a #define to a non-inline
+> >> >>     function
+> >> >>   - Add bridge.domain_nr, initialized from pci_domain_nr()
+> >> >>   - Add a weak generic pci_domain_nr() that returns bridge.domain_nr
+> >> >>   - Add a way to create a host bridge in a specified domain, so we can
+> >> >>     initialize bridge.domain_nr without using pci_domain_nr()
+> >> >>   - Convert each arch to use the new creation mechanism and drop its
+> >> >>     pci_domain_nr() implementation
+> >> >
+> >> > I will try to propose a patch implementing this.
+> >>
+> >> I think this is more of an extra credit, cleanup sort of thing.  I
+> >> don't think it advances your primary goal of (I think) getting arm64
+> >> PCI support in.  So my advice is to not worry about unifying domain
+> >> handling until later.
+> >
+> > Getting arm64 supported *is* my main goal. But like you have stated in your
+> > review of v7, you wanted to see another architecture converted as a guarantee
+> > of "genericity" (for lack of a better word) for my patches. The one architecture
+> > I've set my eyes on is microblaze, and that one uses pci_scan_root_bus()
+> > rather than pci_create_root_bus() so I don't have any opportunity to pass the
+> > domain number or any additional info (like the sysdata pointer that we were
+> > talking about) to the pci_host_bridge structure unless I do this cleanup.
+> 
+> I think maybe I was too harsh about that, or maybe we had different
+> ideas about what "conversion" involved.  My comment was in response to
+> "pci: Introduce pci_register_io_range() helper function", and I don't
+> remember why I was concerned about that; it's not even in drivers/pci,
+> and it doesn't have an obvious connection to putting the domain number
+> in struct pci_host_bridge.
 
-In this patch, it exports the interface to retrieve VF's BDF:
-   * Make the virtfn_bus as an interface
-   * Make the virtfn_devfn as an interface
-   * rename them with more specific name
-   * code cleanup in pci_sriov_resource_alignment()
+Well, to be honest I did move some of the code (as mentioned in the Changelog) from
+drivers/pci into drivers/of. It makes more sense to be in OF, as it mostly concerns
+architectures that use it.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/iov.c   |   26 +++++++-------------------
- drivers/pci/pci.h   |   19 -------------------
- include/linux/pci.h |   44 ++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 51 insertions(+), 38 deletions(-)
+> 
+> The thing I'm more concerned about is adding new PCI interfaces, e.g.,
+> pci_create_root_bus_in_domain(), that are only used by one
+> architecture.  Then it's hard to be sure that it's going to be useful
+> for other arches.  If you can add arm64 using the existing PCI
+> interfaces, I don't any problem with that.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index cb6f247..7566238 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -19,18 +19,6 @@
- 
- #define VIRTFN_ID_LEN	16
- 
--static inline u8 virtfn_bus(struct pci_dev *dev, int id)
--{
--	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
--				    dev->sriov->stride * id) >> 8);
--}
--
--static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
--{
--	return (dev->devfn + dev->sriov->offset +
--		dev->sriov->stride * id) & 0xff;
--}
--
- static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
- {
- 	struct pci_bus *child;
-@@ -69,7 +57,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	struct pci_bus *bus;
- 
- 	mutex_lock(&iov->dev->sriov->lock);
--	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
-+	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
- 	if (!bus)
- 		goto failed;
- 
-@@ -77,7 +65,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	if (!virtfn)
- 		goto failed0;
- 
--	virtfn->devfn = virtfn_devfn(dev, id);
-+	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
- 	virtfn->vendor = dev->vendor;
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
- 	pci_setup_device(virtfn);
-@@ -140,8 +128,8 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
- 	struct pci_sriov *iov = dev->sriov;
- 
- 	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
--					     virtfn_bus(dev, id),
--					     virtfn_devfn(dev, id));
-+					     pci_iov_virtfn_bus(dev, id),
-+					     pci_iov_virtfn_devfn(dev, id));
- 	if (!virtfn)
- 		return;
- 
-@@ -216,7 +204,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	iov->offset = offset;
- 	iov->stride = stride;
- 
--	if (virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
-+	if (pci_iov_virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
- 		dev_err(&dev->dev, "SR-IOV: bus number out of range\n");
- 		return -ENOMEM;
- 	}
-@@ -516,7 +504,7 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
- 	if (!reg)
- 		return 0;
- 
--	 __pci_read_base(dev, type, &tmp, reg);
-+	__pci_read_base(dev, type, &tmp, reg);
- 	return resource_alignment(&tmp);
- }
- 
-@@ -546,7 +534,7 @@ int pci_iov_bus_range(struct pci_bus *bus)
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		if (!dev->is_physfn)
- 			continue;
--		busnr = virtfn_bus(dev, dev->sriov->total_VFs - 1);
-+		busnr = pci_iov_virtfn_bus(dev, dev->sriov->total_VFs - 1);
- 		if (busnr > max)
- 			max = busnr;
- 	}
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 0601890..a3158b2 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -221,25 +221,6 @@ static inline int pci_ari_enabled(struct pci_bus *bus)
- void pci_reassigndev_resource_alignment(struct pci_dev *dev);
- void pci_disable_bridge_window(struct pci_dev *dev);
- 
--/* Single Root I/O Virtualization */
--struct pci_sriov {
--	int pos;		/* capability position */
--	int nres;		/* number of resources */
--	u32 cap;		/* SR-IOV Capabilities */
--	u16 ctrl;		/* SR-IOV Control */
--	u16 total_VFs;		/* total VFs associated with the PF */
--	u16 initial_VFs;	/* initial VFs associated with the PF */
--	u16 num_VFs;		/* number of VFs available */
--	u16 offset;		/* first VF Routing ID offset */
--	u16 stride;		/* following VF stride */
--	u32 pgsz;		/* page size for BAR alignment */
--	u8 link;		/* Function Dependency Link */
--	u16 driver_max_VFs;	/* max num VFs driver supports */
--	struct pci_dev *dev;	/* lowest numbered PF */
--	struct pci_dev *self;	/* this PF */
--	struct mutex lock;	/* lock for VF bus */
--};
--
- #ifdef CONFIG_PCI_ATS
- void pci_restore_ats_state(struct pci_dev *dev);
- #else
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 466bcd1..194db52 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -245,6 +245,27 @@ struct pci_vpd;
- struct pci_sriov;
- struct pci_ats;
- 
-+/* Single Root I/O Virtualization */
-+struct pci_sriov {
-+	int pos;		/* capability position */
-+	int nres;		/* number of resources */
-+	u32 cap;		/* SR-IOV Capabilities */
-+	u16 ctrl;		/* SR-IOV Control */
-+	u16 total_VFs;		/* total VFs associated with the PF */
-+	u16 initial_VFs;	/* initial VFs associated with the PF */
-+	u16 num_VFs;		/* number of VFs available */
-+	u16 offset;		/* first VF Routing ID offset */
-+	u16 stride;		/* following VF stride */
-+	u32 pgsz;		/* page size for BAR alignment */
-+	u8 link;		/* Function Dependency Link */
-+	u16 driver_max_VFs;	/* max num VFs driver supports */
-+	struct pci_dev *dev;	/* lowest numbered PF */
-+	struct pci_dev *self;	/* this PF */
-+	struct mutex lock;	/* lock for VF bus */
-+	struct work_struct mtask; /* VF Migration task */
-+	u8 __iomem *mstate;	/* VF Migration State Array */
-+};
-+
- /*
-  * The pci_dev structure is used to describe PCI devices.
-  */
-@@ -1616,6 +1637,21 @@ int pci_ext_cfg_avail(void);
- void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
- 
- #ifdef CONFIG_PCI_IOV
-+static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
-+{
-+	if (!dev->is_physfn)
-+		return -EINVAL;
-+	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
-+				    dev->sriov->stride * id) >> 8);
-+}
-+static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
-+{
-+	if (!dev->is_physfn)
-+		return -EINVAL;
-+	return (dev->devfn + dev->sriov->offset +
-+		dev->sriov->stride * id) & 0xff;
-+}
-+
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
- int pci_num_vf(struct pci_dev *dev);
-@@ -1623,6 +1659,14 @@ int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
- #else
-+static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
-+{
-+	return -ENXIO;
-+}
-+static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
-+{
-+	return -ENXIO;
-+}
- static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
- { return -ENODEV; }
- static inline void pci_disable_sriov(struct pci_dev *dev) { }
+(No blame here or reproaches, I'm just restating the situation:) I (mostly) did try
+that in my v7 series but it also got NAK-ed by Arnd and Catalin as it had too much
+arm64 specific code in there.
+
+I don't see a way out of adding new PCI interfaces if we want to have support in
+the PCI framework for unifying existing architectures. Of course, there is the painful
+alternative of changing the existing APIs and fixing arches in one go, but like you've
+said is going to be messy. I don't think I (or the people and companies wanting PCIe
+on arm64) should cop out and pick a quick fix that adds sysdata structure into arm64
+just to avoid new APIs, as this is not going to help anyone in long term. What I can
+do is to create a set of parallel APIs for pci_{scan,create}_root_bus() that take
+a pci_host_bridge pointer and start converting architectures one by one to that API
+while deprecating the existing one. That way we can add arm64 easily as it would be
+the first architecture to use new code without breaking things *and* we provide a
+migration path.
+
+Best regards,
+Liviu
+
+> 
+> Bjorn
+> 
+
 -- 
-1.7.9.5
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
