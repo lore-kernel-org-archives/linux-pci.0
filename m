@@ -1,128 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e06smtp16.uk.ibm.com ([195.75.94.112]:50033 "EHLO
-	e06smtp16.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750727AbaGRIq2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jul 2014 04:46:28 -0400
-Received: from /spool/local
-	by e06smtp16.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <sebott@linux.vnet.ibm.com>;
-	Fri, 18 Jul 2014 09:46:26 +0100
-Date: Fri, 18 Jul 2014 10:46:20 +0200 (CEST)
-From: Sebastian Ott <sebott@linux.vnet.ibm.com>
-To: Frank Haverkamp <haver@linux.vnet.ibm.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Alexander Gordeev <agordeev@redhat.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] misc/GenWQE: fix pci_enable_msi usage
-In-Reply-To: <1405612139.30550.13.camel@oc7383187364.ibm.com>
-Message-ID: <alpine.LFD.2.11.1407181034170.1642@denkbrett>
-References: <alpine.LFD.2.11.1407091237030.1590@denkbrett> <20140716211052.GC14366@google.com> <1405612139.30550.13.camel@oc7383187364.ibm.com>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:45984 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750889AbaGJVjl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 17:39:41 -0400
+Received: by mail-ig0-f182.google.com with SMTP id c1so310845igq.3
+        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 14:39:40 -0700 (PDT)
+Date: Thu, 10 Jul 2014 15:39:37 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Viresh Kumar <viresh.kumar@linaro.org>
+Cc: arnd@linaro.org, olof@lixom.net,
+	linux-arm-kernel@lists.infradead.org, spear-devel@list.st.com,
+	b.zolnierkie@samsung.com, mark@nicholnet.com,
+	linux-pci@vger.kernel.org, Pratyush Anand <pratyush.anand@st.com>,
+	Mohit Kumar <mohit.kumar@st.com>
+Subject: Re: [PATCH V9 1/7] pcie: Add designware wrapper driver for SPEAr13xx
+Message-ID: <20140710213937.GB15190@google.com>
+References: <cover.1404976058.git.viresh.kumar@linaro.org>
+ <9430e4b284928e4919297de5602e803d03f82d7b.1404976058.git.viresh.kumar@linaro.org>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9430e4b284928e4919297de5602e803d03f82d7b.1404976058.git.viresh.kumar@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 17 Jul 2014, Frank Haverkamp wrote:
-> Hi Bjorn and Sebastian,
-> 
-> Am Mittwoch, den 16.07.2014, 15:10 -0600 schrieb Bjorn Helgaas:
-> > [+cc linux-pci]
-> > 
-> > On Wed, Jul 09, 2014 at 12:46:39PM +0200, Sebastian Ott wrote:
-> > > GenWQE used to call pci_enable_msi_block to allocate a desired number
-> > > of MSI's. If that was not possible pci_enable_msi_block returned with a
-> > > smaller number which might be possible to allocate. GenWQE then called
-> > > pci_enable_msi_block with that number.
-> > > 
-> > > Since commit a30d0108b
-> > > "GenWQE: Use pci_enable_msi_exact() instead of pci_enable_msi_block()"
-> > > pci_enable_msi_exact is used which fails if the desired number of MSI's
-> > > was not possible to allocate. Change GenWQE to use pci_enable_msi_range
-> > > to restore the old behavior.
-> > > 
-> > > Signed-off-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
-> > 
-> > Since this fixes a30d0108b09a, which we merged via my tree in v3.16-rc1, I
-> > applied this with Alexander and Frank's acks to for-linus for v3.16,
-> > thanks!
-> > 
-> > > ---
-> > >  drivers/misc/genwqe/card_ddcb.c  |  4 +---
-> > >  drivers/misc/genwqe/card_utils.c | 10 ++++++----
-> > >  2 files changed, 7 insertions(+), 7 deletions(-)
-> > > 
-> > > diff --git a/drivers/misc/genwqe/card_ddcb.c b/drivers/misc/genwqe/card_ddcb.c
-> > > index c8046db..f66d43d 100644
-> > > --- a/drivers/misc/genwqe/card_ddcb.c
-> > > +++ b/drivers/misc/genwqe/card_ddcb.c
-> > > @@ -1237,9 +1237,7 @@ int genwqe_setup_service_layer(struct genwqe_dev *cd)
-> > >  	}
-> > >  
-> > >  	rc = genwqe_set_interrupt_capability(cd, GENWQE_MSI_IRQS);
-> > > -	if (rc > 0)
-> > > -		rc = genwqe_set_interrupt_capability(cd, rc);
-> > > -	if (rc != 0) {
-> > > +	if (rc) {
-> > >  		rc = -ENODEV;
-> > >  		goto stop_kthread;
-> > >  	}
-> > > diff --git a/drivers/misc/genwqe/card_utils.c b/drivers/misc/genwqe/card_utils.c
-> > > index 62cc6bb..6abc437 100644
-> > > --- a/drivers/misc/genwqe/card_utils.c
-> > > +++ b/drivers/misc/genwqe/card_utils.c
-> > > @@ -718,10 +718,12 @@ int genwqe_set_interrupt_capability(struct genwqe_dev *cd, int count)
-> > >  	int rc;
-> > >  	struct pci_dev *pci_dev = cd->pci_dev;
-> > >  
-> > > -	rc = pci_enable_msi_exact(pci_dev, count);
-> > > -	if (rc == 0)
-> > > -		cd->flags |= GENWQE_FLAG_MSI_ENABLED;
-> > > -	return rc;
-> > > +	rc = pci_enable_msi_range(pci_dev, 1, count);
-> > > +	if (rc < 0)
-> > > +		return rc;
-> > > +
-> > > +	cd->flags |= GENWQE_FLAG_MSI_ENABLED;
-> > > +	return 0;
-> > >  }
-> 
-> The original code tried to register for 4 interrupts. On my system the
-> following scenario was executed:
-> 
-> We tried to register for 4 MSI interrupts, which was the original plan
-> of interrupts for the card. Linux returned that it could not do that and
-> that just 1 would work. We tried to register for 1 MSI interrupt and it
-> worked. GENWQE_MSI_IRQS is still 4. That is how my original version
-> looked like:
+I guess I'm obsessive, but I think it's nice when people run
+"git log --oneline" on the file or directory they're changing,
+and then follow the existing style.
 
-I changed the code that way, because I was under the impression
-GENWQE_MSI_IRQS was set to 4 for a reason (I have no knowledge of the
-internal workings of this driver). A lot of archs don't support more than
-one MSI anyway - but are you saying that the genwqe card/driver itself
-doesn't support more than one MSI?
+In this case, that would lead to a subject line like:
 
-Regards,
-Sebastian
-> 
->         rc = genwqe_set_interrupt_capability(cd, GENWQE_MSI_IRQS);
->         if (rc > 0)
->                 rc = genwqe_set_interrupt_capability(cd, rc);
->         if (rc != 0) {
->                 rc = -ENODEV;
->                 goto stop_kthread;
->         }
-> 
-> So genwqe_set_interrupt_capability() was indeed called two times.
-> Calling it with 4 returned with rc=1 and no interrupts enabled. So
-> calling it a 2nd time with rc=1 was leading to the proper enablement.
-> 
-> I think the simplest way is to set GENWQE_MSI_IRQS to 1. The rest of the
-> code at least assumes just one interrupt, because 4 never worked.
-> 
-> Regards
-> 
-> Frank
-> 
-> 
+    PCI: spear: Add PCIe driver for ST Microelectronics SPEAr13xx
 
+On Thu, Jul 10, 2014 at 12:56:32PM +0530, Viresh Kumar wrote:
+> From: Pratyush Anand <pratyush.anand@st.com>
+> 
+> ARM based ST Microelectronics's SPEAr1310 and SPEAr1340 SOCs have onchip
+> designware PCIe controller. To make that usable, this patch adds a wrapper
+> driver based on existing designware driver.
+> 
+> Adds bindings for this new driver and update MAINTAINERS as well.
+> 
+> Cc: linux-pci@vger.kernel.org
+> Acked-by: Arnd Bergmann <arnd@arndb.de>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> Acked-by: Jingoo Han <jg1.han@samsung.com>
+> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+> Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
+> [viresh: fixed logs/cclist/checkpatch warnings, broken into smaller patches]
+> Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
+
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 702ca10..443dd05 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -6820,6 +6820,12 @@ S:	Maintained
+>  F:	Documentation/devicetree/bindings/pci/host-generic-pci.txt
+>  F:	drivers/pci/host/pci-host-generic.c
+>  
+> +PCIE DRIVER FOR ST SPEAR13XX
+> +M:	Mohit Kumar <mohit.kumar@st.com>
+> +L:	linux-pci@vger.kernel.org
+> +S:	Maintained
+> +F:	drivers/pci/host/pcie-spear13xx.c
+
+Wildcards work here, so you could follow the lead of IMX6, MVEBU, RCAR,
+and DESIGNWARE and use:
+
+    F:	drivers/pci/host/*spear*
+
+> --- /dev/null
+> +++ b/drivers/pci/host/pcie-spear13xx.c
+> ...
+> +#define PCI_CAP_ID_EXP_OFFSET			0x70
+
+A nit, but I'd use a name like EXP_CAP_ID_OFFSET to make it
+more clear that this is specific to SPEAr, not something from
+the PCI specs.
+
+Bjorn
