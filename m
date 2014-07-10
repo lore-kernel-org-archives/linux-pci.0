@@ -1,89 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:43786 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756613AbaGPKEh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 06:04:37 -0400
-From: Vidya Sagar <sagar.tv@gmail.com>
-To: bhelgaas@google.com, matthew.garrett@nebula.com, rjw@rjwysocki.net,
-	nchumbalkar@lenovo.com, thierry.reding@gmail.com,
-	swarren@nvidia.com, linux-pci@vger.kernel.org
-Cc: kthota@nvidia.com, linux-kernel@vger.kernel.org, vidyas@nvidia.com,
-	Vidya Sagar <sagar.tv@gmail.com>
-Subject: [PATCH v3] PCI: enable ASPM configuration in PCIE POWERSAVE mode
-Date: Wed, 16 Jul 2014 15:33:42 +0530
-Message-Id: <1405505022-7593-1-git-send-email-vidyas@nvidia.com>
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:39817 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751321AbaGJH1h (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 03:27:37 -0400
+Received: by mail-pd0-f180.google.com with SMTP id fp1so10219654pdb.25
+        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 00:27:36 -0700 (PDT)
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: arnd@linaro.org, olof@lixom.net
+Cc: linux-arm-kernel@lists.infradead.org, spear-devel@list.st.com,
+	b.zolnierkie@samsung.com, bhelgaas@google.com, mark@nicholnet.com,
+	linux-pci@vger.kernel.org, Pratyush Anand <pratyush.anand@st.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Viresh Kumar <viresh.kumar@linaro.org>
+Subject: [PATCH V9 4/7] ARM: SPEAr13xx: Fix static mapping table
+Date: Thu, 10 Jul 2014 12:56:35 +0530
+Message-Id: <5a6d915a382c34940865b9ac8835c5af78723cc4.1404976058.git.viresh.kumar@linaro.org>
+In-Reply-To: <cover.1404976058.git.viresh.kumar@linaro.org>
+References: <cover.1404976058.git.viresh.kumar@linaro.org>
+In-Reply-To: <cover.1404976058.git.viresh.kumar@linaro.org>
+References: <cover.1404976058.git.viresh.kumar@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Vidya Sagar <sagar.tv@gmail.com>
+From: Pratyush Anand <pratyush.anand@st.com>
 
-Commit 1a680b7c3258 ("PCI: PCIe links may not get configured for ASPM
- under POWERSAVE mode") moved pcie_aspm_powersave_config_link() out of
-pci_raw_set_power_state() to pci_set_power_state() which would enable
-ASPM. But, with Commit db288c9c5f9d ("PCI / PM: restore the original
- behavior of pci_set_power_state()"), which re-introduced the following check
-./drivers/pci/pci.c: pci_set_power_state()
+SPEAr13xx was using virtual address space 0xFE000000 to map physical address
+space 0xB3000000. But pci_remap_io uses 0xFEE00000 as virtual address and so
+replace 0xFE000000 with 0xF9000000.
 
-+	/* Check if we're already there */
-+	if (dev->current_state == state)
-+	   return 0;
-
-in pci_set_power_state(), call to pcie_aspm_powersave_config_link() is never
-made leaving ASPM broken.
-Fix it by configuring links for ASPM in do_pci_enable_device() instead of
-pci_set_power_state()
-
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Vidya Sagar <sagar.tv@gmail.com>
+Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
+[viresh: fixed logs/cclist]
+Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
 ---
-v3:
-* Modified commit message
-    removed single quotes around commit messages
-    added Suggested-by line
+ arch/arm/mach-spear/include/mach/spear.h | 4 ++--
+ arch/arm/mach-spear/spear13xx.c          | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-v2:
-* Calling ASPM config code is moved from pci_set_power_state() to
-* do_pci_enable_device()
-
- drivers/pci/pci.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 1c8592b..81d49d3 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -839,12 +839,6 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+diff --git a/arch/arm/mach-spear/include/mach/spear.h b/arch/arm/mach-spear/include/mach/spear.h
+index 5cdc53d..f2d6a01 100644
+--- a/arch/arm/mach-spear/include/mach/spear.h
++++ b/arch/arm/mach-spear/include/mach/spear.h
+@@ -52,10 +52,10 @@
+ #ifdef CONFIG_ARCH_SPEAR13XX
  
- 	if (!__pci_complete_power_transition(dev, state))
- 		error = 0;
--	/*
--	 * When aspm_policy is "powersave" this call ensures
--	 * that ASPM is configured.
--	 */
--	if (!error && dev->bus->self)
--		pcie_aspm_powersave_config_link(dev->bus->self);
+ #define PERIP_GRP2_BASE				UL(0xB3000000)
+-#define VA_PERIP_GRP2_BASE			IOMEM(0xFE000000)
++#define VA_PERIP_GRP2_BASE			IOMEM(0xF9000000)
+ #define MCIF_SDHCI_BASE				UL(0xB3000000)
+ #define SYSRAM0_BASE				UL(0xB3800000)
+-#define VA_SYSRAM0_BASE				IOMEM(0xFE800000)
++#define VA_SYSRAM0_BASE				IOMEM(0xF9800000)
+ #define SYS_LOCATION				(VA_SYSRAM0_BASE + 0x600)
  
- 	return error;
- }
-@@ -1195,12 +1189,18 @@ int __weak pcibios_enable_device(struct pci_dev *dev, int bars)
- static int do_pci_enable_device(struct pci_dev *dev, int bars)
- {
- 	int err;
-+	struct pci_dev *bridge;
- 	u16 cmd;
- 	u8 pin;
- 
- 	err = pci_set_power_state(dev, PCI_D0);
- 	if (err < 0 && err != -EIO)
- 		return err;
-+
-+	bridge = pci_upstream_bridge(dev);
-+	if (bridge)
-+		pcie_aspm_powersave_config_link(bridge);
-+
- 	err = pcibios_enable_device(dev, bars);
- 	if (err < 0)
- 		return err;
+ #define PERIP_GRP1_BASE				UL(0xE0000000)
+diff --git a/arch/arm/mach-spear/spear13xx.c b/arch/arm/mach-spear/spear13xx.c
+index c9897ea..53a7614 100644
+--- a/arch/arm/mach-spear/spear13xx.c
++++ b/arch/arm/mach-spear/spear13xx.c
+@@ -52,7 +52,7 @@ void __init spear13xx_l2x0_init(void)
+ /*
+  * Following will create 16MB static virtual/physical mappings
+  * PHYSICAL		VIRTUAL
+- * 0xB3000000		0xFE000000
++ * 0xB3000000		0xF9000000
+  * 0xE0000000		0xFD000000
+  * 0xEC000000		0xFC000000
+  * 0xED000000		0xFB000000
 -- 
-1.8.1.5
+2.0.0.rc2
 
