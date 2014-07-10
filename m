@@ -1,142 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:48606 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751937AbaGCNP3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 09:15:29 -0400
-Received: by mail-ig0-f180.google.com with SMTP id h18so1440009igc.1
-        for <linux-pci@vger.kernel.org>; Thu, 03 Jul 2014 06:15:29 -0700 (PDT)
-Date: Thu, 3 Jul 2014 07:15:26 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>,
+Received: from mx1.redhat.com ([209.132.183.28]:47437 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751517AbaGJKLQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Jul 2014 06:11:16 -0400
+Date: Thu, 10 Jul 2014 12:11:51 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] pci: Allow very large resource windows
-Message-ID: <20140703131526.GG28852@google.com>
-References: <20140611060118.GB3169@yanx>
- <CAE9FiQWe2bf7QbKn9kmZS34a4cMewsdD-9qAELdXs-dEtx70GQ@mail.gmail.com>
- <20140702210736.GB28852@google.com>
- <CAE9FiQU5Ltu89zmRG0h2aXfXH0oCcTEP=jF7b=zHi=SaOA2rKg@mail.gmail.com>
+Subject: Re: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
+Message-ID: <20140710101151.GA21629@dhcp-26-207.brq.redhat.com>
+References: <cover.1402405331.git.agordeev@redhat.com>
+ <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
+ <20140702202201.GA28852@google.com>
+ <20140704085741.GA12247@dhcp-26-207.brq.redhat.com>
+ <CAErSpo6f6RXWv0DEtLBZX0jXoSUYJeWrSm7mubSJ_F-O7tQp6w@mail.gmail.com>
+ <20140708122606.GB6270@dhcp-26-207.brq.redhat.com>
+ <CAErSpo4oiabgoOjsGdWZpCMPnmopK4xRzB2f3tM0AiUFrdhFww@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQU5Ltu89zmRG0h2aXfXH0oCcTEP=jF7b=zHi=SaOA2rKg@mail.gmail.com>
+In-Reply-To: <CAErSpo4oiabgoOjsGdWZpCMPnmopK4xRzB2f3tM0AiUFrdhFww@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 02, 2014 at 03:54:29PM -0700, Yinghai Lu wrote:
-> On Wed, Jul 2, 2014 at 2:07 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >
-> >> Subject: [PATCH -v3] PCI: Fix bus align checking to support more than 8G
-> >>
-> >> So add mmio64 mask checking, only allow more than 4G when bridge and all child
-> >> support 64bit res.  Still keep old 2G checking for other path.
-> >>
-> >> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> >>
-> >> ---
-> >>  drivers/pci/setup-bus.c |   40 ++++++++++++++++++++++++++++++++++++++--
-> >>  1 file changed, 38 insertions(+), 2 deletions(-)
-> >>
-> >> Index: linux-2.6/drivers/pci/setup-bus.c
-> >> ===================================================================
-> >> --- linux-2.6.orig/drivers/pci/setup-bus.c
-> >> +++ linux-2.6/drivers/pci/setup-bus.c
-> >> @@ -928,15 +928,50 @@ static int pbus_size_mem(struct pci_bus
-> >>  {
-> >>       struct pci_dev *dev;
-> >>       resource_size_t min_align, align, size, size0, size1;
-> >> -     resource_size_t aligns[14];     /* Alignments from 1Mb to 8Gb */
-> >> +     resource_size_t aligns[44];     /* Alignments from 1Mb to 2^63 */
-> >>       int order, max_order;
-> >>       struct resource *b_res = find_free_bus_resource(bus,
-> >>                                       mask | IORESOURCE_PREFETCH, type);
-> >>       resource_size_t children_add_size = 0;
-> >> +     unsigned int mem64_mask;
-> >>
-> >>       if (!b_res)
-> >>               return -ENOSPC;
-> >>
-> >> +     mem64_mask = b_res->flags & IORESOURCE_MEM_64;
-> >> +
-> >> +     /* kernel does not support 64bit res */
-> >> +     if (sizeof(resource_size_t) == 4)
-> >> +             mem64_mask &= ~IORESOURCE_MEM_64;
-> >> +
-> >> +     if (!mem64_mask)
-> >> +             goto mem64_mask_check_done;
-> >> +
-> >> +     /* check if mem64 support is supported and needed at first */
-> >> +     list_for_each_entry(dev, &bus->devices, bus_list) {
-> >> +             int i;
-> >> +
-> >> +             for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-> >> +                     struct resource *r = &dev->resource[i];
-> >> +
-> >> +                     if (r->parent || ((r->flags & mask) != type &&
-> >> +                                       (r->flags & mask) != type2 &&
-> >> +                                       (r->flags & mask) != type3))
-> >> +                             continue;
-> >> +#ifdef CONFIG_PCI_IOV
-> >> +                     /* Skip SRIOV checking, as optional res */
-> >> +                     if (realloc_head && i >= PCI_IOV_RESOURCES &&
-> >> +                                     i <= PCI_IOV_RESOURCE_END)
-> >> +                             continue;
-> >> +#endif
-> >> +                     mem64_mask &= r->flags & IORESOURCE_MEM_64;
-> >> +
-> >> +                     if (!mem64_mask)
-> >> +                             goto mem64_mask_check_done;
-> >> +             }
-> >> +     }
-> >> +mem64_mask_check_done:
-> >
-> > What happens if we increase the size of aligns[], but omit this loop and
-> > the mem64_mask stuff?  Is mem64_mask just an optimization, so the code
-> > would still work without it?  If the existing code works for 8GB bars
-> > (without mem64_mask), when does it break and start requiring mem64_mask?
+On Wed, Jul 09, 2014 at 10:06:48AM -0600, Bjorn Helgaas wrote:
+> Out of curiosity, do you have a pointer to this?  It looks like it
+
+I.e. ICH8 chapter 12.1.30 or ICH10 chapter 14.1.27
+
+> uses one vector per port, and I'm wondering if the reason it requests
+> 16 is because there's some possibility of a part with more than 8
+> ports.
+
+I doubt that is the reason. The only allowed MME values (powers of two)
+are 0b000, 0b001, 0b010 and 0b100. As you can see, only one bit is used -
+I would speculate it suits nicely to some hardware logic.
+
+BTW, apart from AHCI, it seems the reason MSI is not going to disappear
+(in a decade at least) is it is way cheaper to implement than MSI-X.
+
+> > No, this is not an erratum. The value of 8 vectors is reserved and could
+> > cause undefined results if used.
 > 
-> Yes, you are right. with current version __pci_bus_size_bridges(), we could
-> get rid of the checking. As child 32bit pref mmio will go underwith
-> bridge 32bit non-pref mmio.
-> 
-> We only need keep
-> 
-> >> +     mem64_mask = b_res->flags & IORESOURCE_MEM_64;
-> >> +
-> >> +     /* kernel does not support 64bit res */
-> >> +     if (sizeof(resource_size_t) == 4)
-> >> +             mem64_mask &= ~IORESOURCE_MEM_64;
+> As I read the spec (PCI 3.0, sec 6.8.1.3), if MMC contains 0b100
+> (requesting 16 vectors), the OS is allowed to allocate 1, 2, 4, 8, or
+> 16 vectors.  If allocating 8 vectors and writing 0b011 to MME causes
+> undefined results, I'd say that's a chipset defect.
 
-I think you're fixing two things at once, and they should be split
-into two separate patches:
+Well, the PCI spec does not prevent devices to have their own specs on top
+of it. Undefined results are meant on the device side here. On the MSI side
+these results are likely perfectly within the PCI spec. I feel speaking as
+a lawer here ;)
 
-  1) Change aligns[] size to increase support alignment from 8GB to 2^63
+> Interrupt vector space is the issue I would worry about, but I think
+> I'm going to put this on the back burner until it actually becomes a
+> problem.
 
-     I'm not sure about going all the way to aligns[44].  That array
-     by itself puts 352 bytes in the stack frame (240 of which are
-     added by this patch), which seems excessive.  I suspect that
-     supporting BARs up to 64GB or 128GB would be enough for the
-     foreseeable future.
+I plan to try get rid of arch_msi_check_device() hook. Should I repost
+this series afterwards?
 
-  2) Adding mem64_mask
+Thanks!
 
-     I think the idea is that even if we have a 64-bit window, we
-     can't use anything above 4GB if we only have 32-bit resources.
-     That's true, but I don't think we can enforce that in
-     pbus_size_mem() because we're only figuring out how much space is
-     needed; we have no idea where that space will be allocated.
-
-And I think there are more problems:
-
-  - I don't think we handle overflow of "size" correctly.  Assume that
-    we have BARs of 2GB, 2GB, and 8GB.  If we have 32-bit resources,
-    when we add those up, it will overflow and we'll mistakenly think
-    we only need 8MB.
-
-  - We shouldn't set "r->flags = 0".  The warning says we're disabling
-    the BAR, but this *doesn't* disable the BAR, and in fact, there is
-    no way to disable a single BAR.  What we can do is turn off
-    PCI_COMMAND_MEMORY to disable all the memory BARs for the device.
-    And to do that, we need to keep IORESOURCE_MEM in r->flags so
-    pci_enable_resources() can tell that this is a memory BAR.
-
-Bjorn
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
