@@ -1,59 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:33818 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751081AbaGVS1O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 14:27:14 -0400
-Received: by mail-ie0-f176.google.com with SMTP id tr6so37670ieb.21
-        for <linux-pci@vger.kernel.org>; Tue, 22 Jul 2014 11:27:13 -0700 (PDT)
-Date: Tue, 22 Jul 2014 12:27:10 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	linux ARM <linux-arm-kernel@lists.infradead.org>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 09/12] PCI: Remove ARCH_KIRKWOOD dependency
-Message-ID: <20140722182710.GA19181@google.com>
-References: <1405028192-9623-1-git-send-email-andrew@lunn.ch>
- <1405028192-9623-10-git-send-email-andrew@lunn.ch>
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:53253 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756602AbaGJASc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 20:18:32 -0400
+Received: by mail-ob0-f170.google.com with SMTP id uz6so9018498obc.29
+        for <linux-pci@vger.kernel.org>; Wed, 09 Jul 2014 17:18:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1405028192-9623-10-git-send-email-andrew@lunn.ch>
+In-Reply-To: <CAOesGMiu_azMYt3L5OgZSFRgrJQvXvkvSOtr0eLam22CQ5SwuA@mail.gmail.com>
+References: <2CC2A0A4A178534D93D5159BF3BCB661A17A3E48F2@EAPEX1MAIL1.st.com>
+	<CAOesGMiu_azMYt3L5OgZSFRgrJQvXvkvSOtr0eLam22CQ5SwuA@mail.gmail.com>
+Date: Thu, 10 Jul 2014 05:48:31 +0530
+Message-ID: <CAKohpon0KkW+GqTGriioXCRLet0wBzT-7=+_VUBczJtfgTgJqQ@mail.gmail.com>
+Subject: Re: [GIT PULL] ARM: SPEAr1310 PCIe updates
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: Olof Johansson <olof@lixom.net>
+Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
+	spear-devel <spear-devel@list.st.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mark Nicholson <mark@nicholnet.com>,
+	"FTPAdmin Kernel.org" <ftpadmin@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 10, 2014 at 11:36:29PM +0200, Andrew Lunn wrote:
-> mach-kirkwood has been removed, now that kirkwood lives in mach-mvebu.
-> ARCH_MVEBU is sufficient.
-> 
-> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+On 9 July 2014 23:39, Olof Johansson <olof@lixom.net> wrote:
+> * Why are you sending a pull request for a repo that is not yours?
 
-Applied with Jason's ack to pci/host-mvebu for v3.17, thanks!
+Because Mohit/Pratyush were facing some issues in pushing patches
+to the SPEAr public git repo. And so I tried to help them out publicly
+and nobody objected then:
 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/pci/host/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 21df477be0c8..88f4862fa452 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -3,7 +3,7 @@ menu "PCI host controller drivers"
->  
->  config PCI_MVEBU
->  	bool "Marvell EBU PCIe controller"
-> -	depends on ARCH_MVEBU || ARCH_DOVE || ARCH_KIRKWOOD
-> +	depends on ARCH_MVEBU || ARCH_DOVE
->  	depends on OF
->  
->  config PCIE_DW
-> -- 
-> 2.0.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+https://lkml.org/lkml/2014/7/8/10
+
+> * Why is Viresh the git committer but hasn't signed off on the patches?
+
+I didn't sign-off because I haven't even looked closed at many of the
+patches around PCI and Acked whatever I could understand.
+
+But yeah, this committer thing is what I missed. Because of that I might
+be required to signoff it.
+
+> Are you sharing accounts on kernel.org? (Adding kernel.org admin on cc
+> just in case).
+
+Obviously not. I am alone the user of this account.
