@@ -1,155 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:33713 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751053AbaG3Ema (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jul 2014 00:42:30 -0400
-Message-ID: <53D87799.6030900@huawei.com>
-Date: Wed, 30 Jul 2014 12:42:01 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Ethan Zhao <ethan.kernel@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from fw-tnat.austin.arm.com ([217.140.110.23]:40554 "EHLO
+	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753960AbaGKOLh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 10:11:37 -0400
+Date: Fri, 11 Jul 2014 15:11:16 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
 	linux-pci <linux-pci@vger.kernel.org>,
-	"<Jordan_Hargrave@dell.com>" <Jordan_Hargrave@dell.com>,
-	"<keith.busch@intel.com>" <keith.busch@intel.com>,
-	"<jon.mason@intel.com>" <jon.mason@intel.com>,
-	"Jon Mason" <jdmason@kudzu.us>
-Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
-References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com> <CABawtvNAOm1VuLnN6vvwH1RtetYk-cu7VnQ6MCtJ4WVufBh2hw@mail.gmail.com> <53D86993.8020702@huawei.com> <76A89A35-D0BA-4E83-97BA-3FF490EF0877@gmail.com>
-In-Reply-To: <76A89A35-D0BA-4E83-97BA-3FF490EF0877@gmail.com>
-Content-Type: text/plain; charset="GB2312"
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 6/9] pci: Introduce a domain number for
+ pci_host_bridge.
+Message-ID: <20140711141115.GB16321@arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-7-git-send-email-Liviu.Dudau@arm.com>
+ <20140708005954.GC22939@google.com>
+ <20140708104655.GC6501@e106497-lin.cambridge.arm.com>
+ <CAErSpo75ovmGoeSHKJN0nckGDy-0gpn8kLPfHQ79CtcXxhPydw@mail.gmail.com>
+ <20140708224847.GC4980@e106497-lin.cambridge.arm.com>
+ <CAErSpo5rBt0iF2HGeDD-UH6_sPCoC647VCw0Q1v_0Rdpvcir-w@mail.gmail.com>
+ <20140710094758.GA6501@e106497-lin.cambridge.arm.com>
+ <CAErSpo5ZNCY31NztT0cLFbRVsBZqMsZ0LbTFNOTQCZUU3F7qJA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5ZNCY31NztT0cLFbRVsBZqMsZ0LbTFNOTQCZUU3F7qJA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/7/30 11:58, Ethan Zhao wrote:
-> 
-> 
->> 在 2014年7月30日，上午11:42，Yijing Wang <wangyijing@huawei.com> 写道：
->>
->>> On 2014/7/30 11:33, Ethan Zhao wrote:
->>> Yijing,
->>>    Seems you want to workaround platform bug in generic PCIe hotplug
->>> code, while not specific to some platforms or devices, that is not
->>> safe/fair to other vendor's platform.
->>> and the updating to MPS of device is out of PCIe specification.
->>>    So the best way is to fix within platform, at least, any platform
->>> specific way in Linux code.
->>
->> No, this is not a platform bug, and this is safe, you can refer to my last reply
->> to Alex.
-> if is not a platform bug, why Didn't other platforms that can do hotplug report such issue ?
-> If it was safe, is it possible that you have all other vendors verify it ? 
+On Thu, Jul 10, 2014 at 11:36:10PM +0100, Bjorn Helgaas wrote:
+> Most of the rest of the v7 discussion was about "Introduce a domain
+> number for pci_host_bridge."  I think we should add arm64 using the
+> existing pci_scan_root_bus() and keep the domain number in the arm64
+> sysdata structure like every other arch does.  Isn't that feasible?
+> We can worry about domain unification later.
 
-This issue was triggered by firmware set the device mps to 256B. It's not related to platform
-hardware.
+I think that's what we were trying to avoid, adding an arm64-specific
+pci_sys_data structure (and arm64-specific API). IIUC, avoiding this
+would allow the host controller drivers to use the sysdata pointer for
+their own private data structures.
 
-I think this is safe, because I only modified the device newly hot-added, this device is not enabled yet.
+Also since you can specify the domain number via DT (and in Liviu's
+v8 patches read by of_create_pci_host_bridge), I think it would make
+sense to have it stored in some generic data structures (e.g.
+pci_host_bridge) rather than in an arm64 private sysdata.
 
-Thanks!
-Yijing.
-
-
->>>
->>>> On Tue, Jul 29, 2014 at 4:17 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->>>> Currently we don't update device's mps value when doing
->>>> pci device hot-add. The hot-added device's mps will be set
->>>> to default value (128B). But the upstream port device's mps
->>>> may be larger than 128B which was set by firmware during
->>>> system bootup. In this case the new added device may not
->>>> work normally. This issue was found in huawei 5885 server
->>>> and Dell R620 server. And if we run the platform with windows,
->>>> this problem is gone. This patch try to update the hot added
->>>> device mps equal to its parent mps, if device mpss < parent mps,
->>>> print warning.
->>>>
->>>> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
->>>> Reported-by: Keith Busch <keith.busch@intel.com>
->>>> Reported-by: Jordan_Hargrave@Dell.com
->>>> Reported-by: Yijing Wang <wangyijing@huawei.com>
->>>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->>>> Cc: Jon Mason <jdmason@kudzu.us>
->>>> ---
->>>> drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
->>>> 1 files changed, 39 insertions(+), 0 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>>> index e3cf8a2..583ca52 100644
->>>> --- a/drivers/pci/probe.c
->>>> +++ b/drivers/pci/probe.c
->>>> @@ -1613,6 +1613,44 @@ static void pcie_write_mrrs(struct pci_dev *dev)
->>>>                dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If problems are experienced, try running with pci=pcie_bus_safe\n");
->>>> }
->>>>
->>>> +/**
->>>> + * pcie_bus_update_set - update device mps when device doing hot-add
->>>> + * @dev: PCI device to set
->>>> + *
->>>> + * After device hot add, mps will be set to default(128B), But the
->>>> + * upstream port device's mps may be larger than 128B which was set
->>>> + * by firmware during system bootup. Then we should update the device
->>>> + * mps to equal to its parent mps, Or the device can not work normally.
->>>> + */
->>>> +static void pcie_bus_update_set(struct pci_dev *dev)
->>>> +{
->>>> +       int mps, p_mps, mpss;
->>>> +       struct pci_dev *parent;
->>>> +
->>>> +       if (!pci_is_pcie(dev) || !dev->bus->self
->>>> +                       || !dev->bus->self->is_hotplug_bridge)
->>>> +               return;
->>>> +
->>>> +       parent = dev->bus->self;
->>>> +       mps = pcie_get_mps(dev);
->>>> +       p_mps = pcie_get_mps(parent);
->>>> +
->>>> +       if (mps >= p_mps)
->>>> +               return;
->>>> +
->>>> +       mpss = 128 << dev->pcie_mpss;
->>>> +       if (mpss < p_mps) {
->>>> +               dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
->>>> +                               "If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
->>>> +                               mpss, p_mps);
->>>> +               return;
->>>> +       }
->>>> +
->>>> +       pcie_write_mps(dev, p_mps);
->>>> +       dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n",
->>>> +                       pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
->>>> +}
->>>> +
->>>> static void pcie_bus_detect_mps(struct pci_dev *dev)
->>>> {
->>>>        struct pci_dev *bridge = dev->bus->self;
->>>> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
->>>>                return 0;
->>>>
->>>>        if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
->>>> +               pcie_bus_update_set(dev);
->>>>                pcie_bus_detect_mps(dev);
->>>>                return 0;
->>>>        }
->>>> --
->>>> 1.7.1
->>>>
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>> .
->>
->>
->> -- 
->> Thanks!
->> Yijing
->>
-> 
-> .
-> 
-
+(Liviu is thinking of an alternative API but maybe he could briefly
+describe it here before posting a new series)
 
 -- 
-Thanks!
-Yijing
-
+Catalin
