@@ -1,89 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:59131 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753000AbaGDV0P (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 17:26:15 -0400
-Received: by mail-ie0-f176.google.com with SMTP id at1so1887084iec.21
-        for <linux-pci@vger.kernel.org>; Fri, 04 Jul 2014 14:26:14 -0700 (PDT)
-Date: Fri, 4 Jul 2014 15:26:12 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Federico Vaga <federico.vaga@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Michel Arruat <michel.arruat@gmail.com>
-Subject: Re: PCIe bus enumeration
-Message-ID: <20140704212612.GA15618@google.com>
-References: <280883016.9onmf0miLq@pcbe13110.cern.ch>
- <7850906.HUE8jaYLrp@harkonnen>
- <CAErSpo6Dgwn5QtHwBEcJsY++ZDUu73S6Jm1EVgD0AO-NaN2Wgw@mail.gmail.com>
- <1807045.P44aWKLMe6@pcbe13110.cern.ch>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1807045.P44aWKLMe6@pcbe13110.cern.ch>
+Received: from mailout4.samsung.com ([203.254.224.34]:61971 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751341AbaGKHd0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 03:33:26 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Tanmay Inamdar' <tinamdar@apm.com>,
+	'Liviu Dudau' <Liviu.Dudau@arm.com>
+Cc: 'Rob Herring' <robherring2@gmail.com>,
+	'linux-pci' <linux-pci@vger.kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Catalin Marinas' <Catalin.Marinas@arm.com>,
+	'Will Deacon' <Will.Deacon@arm.com>,
+	'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'linaro-kernel' <linaro-kernel@lists.linaro.org>,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Sinan Kaya' <okaya@codeaurora.org>,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Suravee Suthikulanit' <suravee.suthikulpanit@amd.com>,
+	'Device Tree ML' <devicetree@vger.kernel.org>,
+	'LKML' <linux-kernel@vger.kernel.org>,
+	'LAKML' <linux-arm-kernel@lists.infradead.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <CAL_JsqK_CfagmiFOpOXVYGry22nGnCZL0ZXeJhYxb9zp=P2fsQ@mail.gmail.com>
+ <20140708171828.GM6501@e106497-lin.cambridge.arm.com>
+ <CACoXjcn3b7otcbxdr+RAVNHHjHyVsvw0QcmK5jd-QBF8SQX5iw@mail.gmail.com>
+In-reply-to: <CACoXjcn3b7otcbxdr+RAVNHHjHyVsvw0QcmK5jd-QBF8SQX5iw@mail.gmail.com>
+Subject: Re: [PATCH v8 0/9] Support for creating generic PCI host bridges from
+ DT
+Date: Fri, 11 Jul 2014 16:33:23 +0900
+Message-id: <004501cf9cda$65703610$3050a230$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 04, 2014 at 09:55:20AM +0200, Federico Vaga wrote:
-> > I assume these ports don't support hotplug.  If they *did* support
-> > hotplug, those ports would have to exist because they handle the
-> > hotplug events (presence detect, etc.)
+On Friday, July 11, 2014 9:44 AM, Tanmay Inamdar wrote:
+> On Tue, Jul 8, 2014 at 10:18 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > On Sun, Jul 06, 2014 at 04:23:43PM +0100, Rob Herring wrote:
+> >> On Tue, Jul 1, 2014 at 1:43 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> >> > This is my resurected attempt at adding support for generic PCI host
+> >> > bridge controllers that make use of device tree information to
+> >> > configure themselves. I've tagged it as v8 although the patches
+> >> > have now been reshuffled in order to ease adoption so referring to
+> >> > the older versions might be a bit of a hoop jumping exercise.
+> >> >
+> >> > Changes from v7:
+> >> >   - Reordered the patches so that fixes and non-controversial patches
+> >> >     from v7 can be accepted more easily. If agreed I can split the
+> >> >     series again into patches that can be upstreamed easily and ones
+> >> >     that still need discussion.
+> >> >   - Moved the of_create_host_bridge() function to drivers/of/of_pci.c
+> >> >     to better reflect its target use.
+> >> >   - Added the function to remap the bus I/O resources that used to be
+> >> >     provided in my arm64 patch series and (re)named it pci_remap_iospace()
+> >> >   - Removed error code checking from parsing and mapping of IRQ from DT
+> >> >     in recognition that some PCI devices will not have legacy IRQ mappings.
+> >> >
+> >> > v7 thread here with all the historic information: https://lkml.org/lkml/2014/3/14/279
+> >>
+> >> Can you publish a branch for this series please.
+> >>
+> >> Rob
+> >>
+> >
+> > Hi Rob,
+> >
+> > I have pushed a brach that matches my v8 patchset +1 obvious missing header include
+> > here: http://www.linux-arm.org/git?p=linux-ld.git;a=shortlog;h=refs/heads/for-upstream/pci_v8
+> >
 > 
-> I asked: yes, they do not support hotplug
+> I was still getting following compilation error after applying arm64
+> pci headers. Please let me know if I am missing something.
 > 
-> > If you can collect the complete "lspci -vv" output from your machine
-> > (with a device plugged in, so we can see the port leading to it),
-> > that will help make this more concrete.  And maybe one with no
-> > devices plugged in, so we can see exactly what changes.
+> linux-git/drivers/of/of_pci.c: In function ‘pci_host_bridge_of_get_ranges’:
+> linux-git/drivers/of/of_pci.c:114:22: error: storage size of ‘range’ isn’t known
+>   struct of_pci_range range;
+>                       ^
+> linux-git/drivers/of/of_pci.c:115:29: error: storage size of ‘parser’
+> isn’t known
+>   struct of_pci_range_parser parser;
+>                              ^
+> linux-git/drivers/of/of_pci.c:121:2: error: implicit declaration of
+> function ‘of_pci_range_parser_init’
+> [-Werror=implicit-function-declaration]
+>   err = of_pci_range_parser_init(&parser, dev);
 > 
-> I attached two files with the output. I putted a card in slot 10 and 
-> took the output, then moved the card on slot 11 and took the output.
 > 
-> As you can see with diff the bridge behind the slot disappear when it 
-> is empty.
+> Below patch fixes the errors.
+> 
+> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> index 55d8320..da88dac 100644
+> --- a/drivers/of/of_pci.c
+> +++ b/drivers/of/of_pci.c
+> @@ -2,6 +2,7 @@
+>  #include <linux/export.h>
+>  #include <linux/of.h>
+>  #include <linux/of_pci.h>
+> +#include <linux/of_address.h>
 
-Perfect, thanks!  For some reason, it really helps me to be able to stare
-at the actual data.  Here's the situation with slot 10 occupied:
+Yes, right. I also found the build errors as above mentioned.
+"of_address.h" should be included, in order to fix the build errors.
+However, for readability, the following would be better.
 
-  00:01.0 82Q35 Root Port to [bus 05]          PCIe SltCap slot #21
-  05:00.0 CERN/ECP/EDU Device                  slot 10
-  00:1c.0 82801I Express Port 1 to [bus 04]    PCIe SltCap slot #22
-  00:1c.3 (not present at all)
-  00:1c.4 82801I Express Port 5 to [bus 03]    PCIe SltCap slot #0
-  03:00.0 Realtek NIC
+ #include <linux/of.h>
++#include <linux/of_address.h>
+ #include <linux/of_pci.h>
 
-and here it is with slot 11 occupied:
+Best regards,
+Jingoo Han
 
-  00:01.0 (not present at all)
-  00:1c.0 82801I Express Port 1 to [bus 05]    PCIe SltCap slot #22
-  00:1c.3 82801I Express Port 4 to [bus 04]    PCIe SltCap slot #25
-  04:00.0 CERN/ECP/EDU Device                  slot 11
-  00:1c.4 82801I Express Port 5 to [bus 03]    PCIe SltCap slot #0
-  03:00.0 Realtek NIC
+> 
+>  static inline int __of_pci_pci_compare(struct device_node *node,
+>                                        unsigned int data)
+> 
+> 
+> > Best regards,
+> > Liviu
+> >
+> >
+> > --
+> > ====================
+> > | I would like to |
+> > | fix the world,  |
+> > | but they're not |
+> > | giving me the   |
+> >  \ source code!  /
+> >   ---------------
+> >     ¯\_(ツ)_/¯
+> >
 
-I'm pretty sure this is a function of your BIOS.  There are often
-device-specific ways to enable or disable individual devices (like the root
-ports here), and the BIOS is likely disabling these ports when there is
-nothing below them.  I don't know why it would turn off 00:1c.3 when its
-slot is empty, but it doesn't turn off 00:1c.0, which also leads to an
-empty slot.  But I don't think Linux is involved in this, and if the BIOS
-disables devices, there really isn't anything Linux can do about it.
-
-If you can get to an EFI shell on this box, you might be able to confirm
-this with the "pci" command.  Booting Linux with "pci=earlydump" is similar
-in that it dumps PCI config space before we change anything.
-
-To solve this problem, I think you need slot information even when there's
-no hotplug.  This has been raised before [1, 2], and I think it's a good
-idea, but nobody has implemented it yet.
-
-Another curious thing is that you refer to "slot 10", but there's no
-obvious connection between that and the "slot 21" in the PCIe capability of
-the Root Port leading to that slot.  But I guess you said the slots are in
-a backplane (they're not an integral part of the motherboard).  In that
-case, there's no way for the motherboard to know what the labels on the
-backplane are.
-
-Bjorn
-
-[1] http://lkml.kernel.org/r/CAErSpo45sDNPt6=Yw-qgqdojYL8+_JNOVNEnVxRLatga+bY+2A@mail.gmail.com
-[2] https://bugzilla.kernel.org/show_bug.cgi?id=72681
