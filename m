@@ -1,49 +1,130 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper function.
-Date: Wed, 9 Jul 2014 08:32:37 +0200
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci" <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com> <20140708212951.GA4555@google.com> <20140708224529.GB4980@e106497-lin.cambridge.arm.com>
-In-Reply-To: <20140708224529.GB4980@e106497-lin.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201407090832.37918.arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:55697 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752374AbaGKGRc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Jul 2014 02:17:32 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V4 11/21] iommu/vt-d: Introduce helper domain_pfn_within_range() to simplify code
+Date: Fri, 11 Jul 2014 14:19:35 +0800
+Message-Id: <1405059585-10620-12-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 09 July 2014, Liviu Dudau wrote:
-> > Maybe that assumption is guaranteed by OF, but it doesn't hold for ACPI;
-> > ACPI can describe several I/O port apertures for a single bridge, each
-> > associated with a different CPU physical memory region.
-> 
-> That is actually a good catch, I've completely missed the fact that
-> io_range->pci_addr could be non-zero.
+Introduce helper function domain_pfn_within_range() to simplify code
+and improve readability.
 
-Hmm, that's what I thought in my initial review, but you convinced me
-that it's actually correct later on, and I still believe it is. Maybe
-now you got confused by your own code?
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |   30 ++++++++++++++++--------------
+ 1 file changed, 16 insertions(+), 14 deletions(-)
 
-Please have another look, I think your code in pci_host_bridge_of_get_ranges
-sufficiently handles the registration to the PCI code with the correct
-io_offset. The only thing that we might want to add is to record the
-PCI address along with the bridge->io_base: For the host driver to
-set up the mapping window correctly, you either need both of them, or
-you assume they are already set up.
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 0852b7021e4a..c9e65edaa2ad 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -549,6 +549,14 @@ static inline int domain_type_is_vm_or_si(struct dmar_domain *domain)
+ 				DOMAIN_FLAG_STATIC_IDENTITY);
+ }
+ 
++static inline int domain_pfn_supported(struct dmar_domain *domain,
++				       unsigned long pfn)
++{
++	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
++
++	return !(addr_width < BITS_PER_LONG && pfn >> addr_width);
++}
++
+ static int __iommu_calculate_agaw(struct intel_iommu *iommu, int max_gaw)
+ {
+ 	unsigned long sagaw;
+@@ -822,14 +830,13 @@ out:
+ static struct dma_pte *pfn_to_dma_pte(struct dmar_domain *domain,
+ 				      unsigned long pfn, int *target_level)
+ {
+-	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
+ 	struct dma_pte *parent, *pte = NULL;
+ 	int level = agaw_to_level(domain->agaw);
+ 	int offset;
+ 
+ 	BUG_ON(!domain->pgd);
+ 
+-	if (addr_width < BITS_PER_LONG && pfn >> addr_width)
++	if (!domain_pfn_supported(domain, pfn))
+ 		/* Address beyond IOMMU's addressing capabilities. */
+ 		return NULL;
+ 
+@@ -912,12 +919,11 @@ static void dma_pte_clear_range(struct dmar_domain *domain,
+ 				unsigned long start_pfn,
+ 				unsigned long last_pfn)
+ {
+-	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
+ 	unsigned int large_page = 1;
+ 	struct dma_pte *first_pte, *pte;
+ 
+-	BUG_ON(addr_width < BITS_PER_LONG && start_pfn >> addr_width);
+-	BUG_ON(addr_width < BITS_PER_LONG && last_pfn >> addr_width);
++	BUG_ON(!domain_pfn_supported(domain, start_pfn));
++	BUG_ON(!domain_pfn_supported(domain, last_pfn));
+ 	BUG_ON(start_pfn > last_pfn);
+ 
+ 	/* we don't need lock here; nobody else touches the iova range */
+@@ -978,10 +984,8 @@ static void dma_pte_free_pagetable(struct dmar_domain *domain,
+ 				   unsigned long start_pfn,
+ 				   unsigned long last_pfn)
+ {
+-	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
+-
+-	BUG_ON(addr_width < BITS_PER_LONG && start_pfn >> addr_width);
+-	BUG_ON(addr_width < BITS_PER_LONG && last_pfn >> addr_width);
++	BUG_ON(!domain_pfn_supported(domain, start_pfn));
++	BUG_ON(!domain_pfn_supported(domain, last_pfn));
+ 	BUG_ON(start_pfn > last_pfn);
+ 
+ 	dma_pte_clear_range(domain, start_pfn, last_pfn);
+@@ -1083,11 +1087,10 @@ struct page *domain_unmap(struct dmar_domain *domain,
+ 			  unsigned long start_pfn,
+ 			  unsigned long last_pfn)
+ {
+-	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
+ 	struct page *freelist = NULL;
+ 
+-	BUG_ON(addr_width < BITS_PER_LONG && start_pfn >> addr_width);
+-	BUG_ON(addr_width < BITS_PER_LONG && last_pfn >> addr_width);
++	BUG_ON(!domain_pfn_supported(domain, start_pfn));
++	BUG_ON(!domain_pfn_supported(domain, last_pfn));
+ 	BUG_ON(start_pfn > last_pfn);
+ 
+ 	/* we don't need lock here; nobody else touches the iova range */
+@@ -1974,12 +1977,11 @@ static int __domain_mapping(struct dmar_domain *domain, unsigned long iov_pfn,
+ {
+ 	struct dma_pte *first_pte = NULL, *pte = NULL;
+ 	phys_addr_t uninitialized_var(pteval);
+-	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
+ 	unsigned long sg_res;
+ 	unsigned int largepage_lvl = 0;
+ 	unsigned long lvl_pages = 0;
+ 
+-	BUG_ON(addr_width < BITS_PER_LONG && (iov_pfn + nr_pages - 1) >> addr_width);
++	BUG_ON(!domain_pfn_supported(domain, iov_pfn + nr_pages - 1));
+ 
+ 	if ((prot & (DMA_PTE_READ|DMA_PTE_WRITE)) == 0)
+ 		return -EINVAL;
+-- 
+1.7.10.4
 
-	Arnd
