@@ -1,61 +1,186 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20403 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:60068 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750976AbaGGUmD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Jul 2014 16:42:03 -0400
-Date: Mon, 7 Jul 2014 22:42:43 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	linux-s390@vger.kernel.org, "x86@kernel.org" <x86@kernel.org>,
-	xen-devel@lists.xenproject.org,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
-Message-ID: <20140707204242.GA27809@dhcp-26-207.brq.redhat.com>
-References: <cover.1402405331.git.agordeev@redhat.com>
- <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
- <20140702202201.GA28852@google.com>
- <20140704085741.GA12247@dhcp-26-207.brq.redhat.com>
- <CAErSpo6f6RXWv0DEtLBZX0jXoSUYJeWrSm7mubSJ_F-O7tQp6w@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo6f6RXWv0DEtLBZX0jXoSUYJeWrSm7mubSJ_F-O7tQp6w@mail.gmail.com>
+	id S1752489AbaGKGRy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Jul 2014 02:17:54 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V4 15/21] iommu/vt-d: Dynamically allocate and free seq_id for DMAR units
+Date: Fri, 11 Jul 2014 14:19:39 +0800
+Message-Id: <1405059585-10620-16-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 07, 2014 at 01:40:48PM -0600, Bjorn Helgaas wrote:
-> As you can tell, I'm a little skeptical about this.  It's a fairly big
-> change, it affects the arch interface, it seems to be targeted for
-> only a single chipset (though it's widely used), and we already
-> support a standard solution (MSI-X, reducing the number of vectors
-> requested, or even operating with 1 vector).
+Introduce functions to support dynamic IOMMU seq_id allocating and
+releasing, which will be used to support DMAR hotplug.
 
-Bjorn,
+Also rename IOMMU_UNITS_SUPPORTED as DMAR_UNITS_SUPPORTED.
 
-I surely understand your concerns. I am answering this "summary"
-question right away.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/dmar.c        |   40 ++++++++++++++++++++++++++++++++++------
+ drivers/iommu/intel-iommu.c |   13 +++----------
+ include/linux/dmar.h        |    6 ++++++
+ 3 files changed, 43 insertions(+), 16 deletions(-)
 
-Even though an extra parameter is introduced, functionally this update
-is rather small. It is only the new pci_enable_msi_partial() function
-that could exploit a custom 'nvec_mme' parameter. By contrast, existing
-pci_enable_msi_range() function (and therefore all device drivers) is
-unaffected - it just rounds up 'nvec' to the nearest power of two and
-continues exactly as it has been. All archs besides x86 just ignore it.
-And x86 change is fairly small as well - all necessary functionality is
-already in.
-
-Thus, at the moment it is only AHCI of concern. And no, AHCI can not do MSI-X..
-
-Thanks!
-
-> Bjorn
-
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index 4fdf238a2a28..02a769347fcb 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -70,6 +70,7 @@ LIST_HEAD(dmar_drhd_units);
+ struct acpi_table_header * __initdata dmar_tbl;
+ static acpi_size dmar_tbl_size;
+ static int dmar_dev_scope_status = 1;
++static unsigned long dmar_seq_ids[BITS_TO_LONGS(DMAR_UNITS_SUPPORTED)];
+ 
+ static int alloc_iommu(struct dmar_drhd_unit *drhd);
+ static void free_iommu(struct intel_iommu *iommu);
+@@ -929,11 +930,32 @@ out:
+ 	return err;
+ }
+ 
++static int dmar_alloc_seq_id(struct intel_iommu *iommu)
++{
++	iommu->seq_id = find_first_zero_bit(dmar_seq_ids,
++					    DMAR_UNITS_SUPPORTED);
++	if (iommu->seq_id >= DMAR_UNITS_SUPPORTED) {
++		iommu->seq_id = -1;
++	} else {
++		set_bit(iommu->seq_id, dmar_seq_ids);
++		sprintf(iommu->name, "dmar%d", iommu->seq_id);
++	}
++
++	return iommu->seq_id;
++}
++
++static void dmar_free_seq_id(struct intel_iommu *iommu)
++{
++	if (iommu->seq_id >= 0) {
++		clear_bit(iommu->seq_id, dmar_seq_ids);
++		iommu->seq_id = -1;
++	}
++}
++
+ static int alloc_iommu(struct dmar_drhd_unit *drhd)
+ {
+ 	struct intel_iommu *iommu;
+ 	u32 ver, sts;
+-	static int iommu_allocated = 0;
+ 	int agaw = 0;
+ 	int msagaw = 0;
+ 	int err;
+@@ -947,13 +969,16 @@ static int alloc_iommu(struct dmar_drhd_unit *drhd)
+ 	if (!iommu)
+ 		return -ENOMEM;
+ 
+-	iommu->seq_id = iommu_allocated++;
+-	sprintf (iommu->name, "dmar%d", iommu->seq_id);
++	if (dmar_alloc_seq_id(iommu) < 0) {
++		pr_err("IOMMU: failed to allocate seq_id\n");
++		err = -ENOSPC;
++		goto error;
++	}
+ 
+ 	err = map_iommu(iommu, drhd->reg_base_addr);
+ 	if (err) {
+ 		pr_err("IOMMU: failed to map %s\n", iommu->name);
+-		goto error;
++		goto error_free_seq_id;
+ 	}
+ 
+ 	err = -EINVAL;
+@@ -1003,9 +1028,11 @@ static int alloc_iommu(struct dmar_drhd_unit *drhd)
+ 
+ 	return 0;
+ 
+- err_unmap:
++err_unmap:
+ 	unmap_iommu(iommu);
+- error:
++error_free_seq_id:
++	dmar_free_seq_id(iommu);
++error:
+ 	kfree(iommu);
+ 	return err;
+ }
+@@ -1029,6 +1056,7 @@ static void free_iommu(struct intel_iommu *iommu)
+ 	if (iommu->reg)
+ 		unmap_iommu(iommu);
+ 
++	dmar_free_seq_id(iommu);
+ 	kfree(iommu);
+ }
+ 
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index d0c37d59e6be..9c5eacc28b0e 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -328,17 +328,10 @@ static int hw_pass_through = 1;
+ /* si_domain contains mulitple devices */
+ #define DOMAIN_FLAG_STATIC_IDENTITY	(1 << 1)
+ 
+-/* define the limit of IOMMUs supported in each domain */
+-#ifdef	CONFIG_X86
+-# define	IOMMU_UNITS_SUPPORTED	MAX_IO_APICS
+-#else
+-# define	IOMMU_UNITS_SUPPORTED	64
+-#endif
+-
+ struct dmar_domain {
+ 	int	id;			/* domain id */
+ 	int	nid;			/* node id */
+-	DECLARE_BITMAP(iommu_bmp, IOMMU_UNITS_SUPPORTED);
++	DECLARE_BITMAP(iommu_bmp, DMAR_UNITS_SUPPORTED);
+ 					/* bitmap of iommus this domain uses*/
+ 
+ 	struct list_head devices; 	/* all devices' list */
+@@ -2704,12 +2697,12 @@ static int __init init_dmars(void)
+ 		 * threaded kernel __init code path all other access are read
+ 		 * only
+ 		 */
+-		if (g_num_of_iommus < IOMMU_UNITS_SUPPORTED) {
++		if (g_num_of_iommus < DMAR_UNITS_SUPPORTED) {
+ 			g_num_of_iommus++;
+ 			continue;
+ 		}
+ 		printk_once(KERN_ERR "intel-iommu: exceeded %d IOMMUs\n",
+-			  IOMMU_UNITS_SUPPORTED);
++			  DMAR_UNITS_SUPPORTED);
+ 	}
+ 
+ 	g_iommus = kcalloc(g_num_of_iommus, sizeof(struct intel_iommu *),
+diff --git a/include/linux/dmar.h b/include/linux/dmar.h
+index fac8ca34f9a8..c8a576bc3a98 100644
+--- a/include/linux/dmar.h
++++ b/include/linux/dmar.h
+@@ -30,6 +30,12 @@
+ 
+ struct acpi_dmar_header;
+ 
++#ifdef	CONFIG_X86
++# define	DMAR_UNITS_SUPPORTED	MAX_IO_APICS
++#else
++# define	DMAR_UNITS_SUPPORTED	64
++#endif
++
+ /* DMAR Flags */
+ #define DMAR_INTR_REMAP		0x1
+ #define DMAR_X2APIC_OPT_OUT	0x2
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.10.4
+
