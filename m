@@ -1,93 +1,285 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:28324 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750975AbaGMXOm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Jul 2014 19:14:42 -0400
-Date: Sun, 13 Jul 2014 19:14:31 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: suravee.suthikulpanit@amd.com
-Cc: marc.zyngier@arm.com, mark.rutland@arm.com, pawel.moll@arm.com,
-	Catalin.Marinas@arm.com, Will.Deacon@arm.com, tglx@linutronix.de,
-	Harish.Kasiviswanathan@amd.com,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH 0/4 V3] irqchip: gic: Introduce ARM GICv2m MSI(-X)
- support
-Message-ID: <20140713231431.GM13108@titan.lakedaemon.net>
-References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
+Received: from mga11.intel.com ([192.55.52.93]:55697 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751190AbaGKGRI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Jul 2014 02:17:08 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V4 04/21] iommu/vt-d: Introduce helper functions to make code symmetric for readability
+Date: Fri, 11 Jul 2014 14:19:28 +0800
+Message-Id: <1405059585-10620-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Suravee,
+Introduce domain_attach_iommu()/domain_detach_iommu() and refine
+iommu_attach_domain()/iommu_detach_domain() to make code symmetric
+and improve readability.
 
-On Wed, Jul 09, 2014 at 06:05:00PM -0500, suravee.suthikulpanit@amd.com wrote:
-> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> 
-> This patch set introduces support for MSI(-X) in GICv2m specification,
-> which is implemented in some variation of GIC400.
-> 
-> This depends on and has been tested with the V7 of"Add support for PCI in AArch64"
-> (https://lkml.org/lkml/2014/3/14/320).
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |  147 +++++++++++++++++++++++--------------------
+ 1 file changed, 80 insertions(+), 67 deletions(-)
 
-Grrr.  I mis-spoke against your v1 of this series.  There are more
-changes to irq-gic.c than I originally thought in this series.
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 52250b3e58d1..eae9b0d8bc60 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1523,32 +1523,39 @@ static struct dmar_domain *alloc_domain(int flags)
+ 	return domain;
+ }
+ 
+-static int iommu_attach_domain(struct dmar_domain *domain,
+-			       struct intel_iommu *iommu)
++static int __iommu_attach_domain(struct dmar_domain *domain,
++				 struct intel_iommu *iommu)
+ {
+ 	int num;
+ 	unsigned long ndomains;
+-	unsigned long flags;
+ 
+ 	ndomains = cap_ndoms(iommu->cap);
+-
+-	spin_lock_irqsave(&iommu->lock, flags);
+-
+ 	num = find_first_zero_bit(iommu->domain_ids, ndomains);
+-	if (num >= ndomains) {
+-		spin_unlock_irqrestore(&iommu->lock, flags);
+-		printk(KERN_ERR "IOMMU: no free domain ids\n");
+-		return -ENOMEM;
++	if (num < ndomains) {
++		set_bit(num, iommu->domain_ids);
++		iommu->domains[num] = domain;
++	} else {
++		num = -ENOSPC;
+ 	}
+ 
+-	domain->id = num;
+-	domain->iommu_count++;
+-	set_bit(num, iommu->domain_ids);
+-	set_bit(iommu->seq_id, domain->iommu_bmp);
+-	iommu->domains[num] = domain;
++	return num;
++}
++
++static int iommu_attach_domain(struct dmar_domain *domain,
++			       struct intel_iommu *iommu)
++{
++	int num;
++	unsigned long flags;
++
++	spin_lock_irqsave(&iommu->lock, flags);
++	num = __iommu_attach_domain(domain, iommu);
++	if (num < 0)
++		pr_err("IOMMU: no free domain ids\n");
++	else
++		domain->id = num;
+ 	spin_unlock_irqrestore(&iommu->lock, flags);
+ 
+-	return 0;
++	return num;
+ }
+ 
+ static void iommu_detach_domain(struct dmar_domain *domain,
+@@ -1558,17 +1565,53 @@ static void iommu_detach_domain(struct dmar_domain *domain,
+ 	int num, ndomains;
+ 
+ 	spin_lock_irqsave(&iommu->lock, flags);
+-	ndomains = cap_ndoms(iommu->cap);
+-	for_each_set_bit(num, iommu->domain_ids, ndomains) {
+-		if (iommu->domains[num] == domain) {
+-			clear_bit(num, iommu->domain_ids);
+-			iommu->domains[num] = NULL;
+-			break;
++	if (domain_type_is_vm_or_si(domain)) {
++		ndomains = cap_ndoms(iommu->cap);
++		for_each_set_bit(num, iommu->domain_ids, ndomains) {
++			if (iommu->domains[num] == domain) {
++				clear_bit(num, iommu->domain_ids);
++				iommu->domains[num] = NULL;
++				break;
++			}
+ 		}
++	} else {
++		clear_bit(domain->id, iommu->domain_ids);
++		iommu->domains[domain->id] = NULL;
+ 	}
+ 	spin_unlock_irqrestore(&iommu->lock, flags);
+ }
+ 
++static void domain_attach_iommu(struct dmar_domain *domain,
++			       struct intel_iommu *iommu)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&domain->iommu_lock, flags);
++	if (!test_and_set_bit(iommu->seq_id, domain->iommu_bmp)) {
++		domain->iommu_count++;
++		if (domain->iommu_count == 1)
++			domain->nid = iommu->node;
++		domain_update_iommu_cap(domain);
++	}
++	spin_unlock_irqrestore(&domain->iommu_lock, flags);
++}
++
++static int domain_detach_iommu(struct dmar_domain *domain,
++			       struct intel_iommu *iommu)
++{
++	unsigned long flags;
++	int count = INT_MAX;
++
++	spin_lock_irqsave(&domain->iommu_lock, flags);
++	if (test_and_clear_bit(iommu->seq_id, domain->iommu_bmp)) {
++		count = --domain->iommu_count;
++		domain_update_iommu_cap(domain);
++	}
++	spin_unlock_irqrestore(&domain->iommu_lock, flags);
++
++	return count;
++}
++
+ static struct iova_domain reserved_iova_list;
+ static struct lock_class_key reserved_rbtree_key;
+ 
+@@ -1706,9 +1749,7 @@ static void domain_exit(struct dmar_domain *domain)
+ 	/* clear attached or cached domains */
+ 	rcu_read_lock();
+ 	for_each_active_iommu(iommu, drhd)
+-		if (domain_type_is_vm(domain) ||
+-		    test_bit(iommu->seq_id, domain->iommu_bmp))
+-			iommu_detach_domain(domain, iommu);
++		iommu_detach_domain(domain, iommu);
+ 	rcu_read_unlock();
+ 
+ 	dma_free_pagelist(freelist);
+@@ -1762,16 +1803,12 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
+ 		}
+ 
+ 		if (found == 0) {
+-			num = find_first_zero_bit(iommu->domain_ids, ndomains);
+-			if (num >= ndomains) {
++			id = __iommu_attach_domain(domain, iommu);
++			if (id < 0) {
+ 				spin_unlock_irqrestore(&iommu->lock, flags);
+-				printk(KERN_ERR "IOMMU: no free domain ids\n");
++				pr_err("IOMMU: no free domain ids\n");
+ 				return -EFAULT;
+ 			}
+-
+-			set_bit(num, iommu->domain_ids);
+-			iommu->domains[num] = domain;
+-			id = num;
+ 		}
+ 
+ 		/* Skip top levels of page tables for
+@@ -1830,14 +1867,8 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
+ 	iommu_enable_dev_iotlb(info);
+ 	spin_unlock_irqrestore(&iommu->lock, flags);
+ 
+-	spin_lock_irqsave(&domain->iommu_lock, flags);
+-	if (!test_and_set_bit(iommu->seq_id, domain->iommu_bmp)) {
+-		domain->iommu_count++;
+-		if (domain->iommu_count == 1)
+-			domain->nid = iommu->node;
+-		domain_update_iommu_cap(domain);
+-	}
+-	spin_unlock_irqrestore(&domain->iommu_lock, flags);
++	domain_attach_iommu(domain, iommu);
++
+ 	return 0;
+ }
+ 
+@@ -2085,7 +2116,7 @@ static inline void unlink_domain_info(struct device_domain_info *info)
+ static void domain_remove_dev_info(struct dmar_domain *domain)
+ {
+ 	struct device_domain_info *info, *tmp;
+-	unsigned long flags, flags2;
++	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&device_domain_lock, flags);
+ 	list_for_each_entry_safe(info, tmp, &domain->devices, link) {
+@@ -2097,16 +2128,7 @@ static void domain_remove_dev_info(struct dmar_domain *domain)
+ 
+ 		if (domain_type_is_vm(domain)) {
+ 			iommu_detach_dependent_devices(info->iommu, info->dev);
+-			/* clear this iommu in iommu_bmp, update iommu count
+-			 * and capabilities
+-			 */
+-			spin_lock_irqsave(&domain->iommu_lock, flags2);
+-			if (test_and_clear_bit(info->iommu->seq_id,
+-					       domain->iommu_bmp)) {
+-				domain->iommu_count--;
+-				domain_update_iommu_cap(domain);
+-			}
+-			spin_unlock_irqrestore(&domain->iommu_lock, flags2);
++			domain_detach_iommu(domain, info->iommu);
+ 		}
+ 
+ 		free_devinfo_mem(info);
+@@ -2236,11 +2258,11 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
+ 	if (!domain)
+ 		return NULL;
+ 
+-	if (iommu_attach_domain(domain, iommu)) {
++	if (iommu_attach_domain(domain, iommu) < 0) {
+ 		free_domain_mem(domain);
+ 		return NULL;
+ 	}
+-
++	domain_attach_iommu(domain, iommu);
+ 	if (domain_init(domain, gaw)) {
+ 		domain_exit(domain);
+ 		return NULL;
+@@ -2413,10 +2435,11 @@ static int __init si_domain_init(int hw)
+ 
+ 	for_each_active_iommu(iommu, drhd) {
+ 		ret = iommu_attach_domain(si_domain, iommu);
+-		if (ret) {
++		if (ret < 0) {
+ 			domain_exit(si_domain);
+ 			return -EFAULT;
+ 		}
++		domain_attach_iommu(si_domain, iommu);
+ 	}
+ 
+ 	if (md_domain_init(si_domain, DEFAULT_DOMAIN_ADDRESS_WIDTH)) {
+@@ -4155,19 +4178,9 @@ static void domain_remove_one_dev_info(struct dmar_domain *domain,
+ 	spin_unlock_irqrestore(&device_domain_lock, flags);
+ 
+ 	if (found == 0) {
+-		unsigned long tmp_flags;
+-		spin_lock_irqsave(&domain->iommu_lock, tmp_flags);
+-		clear_bit(iommu->seq_id, domain->iommu_bmp);
+-		domain->iommu_count--;
+-		domain_update_iommu_cap(domain);
+-		spin_unlock_irqrestore(&domain->iommu_lock, tmp_flags);
+-
+-		if (!domain_type_is_vm_or_si(domain)) {
+-			spin_lock_irqsave(&iommu->lock, tmp_flags);
+-			clear_bit(domain->id, iommu->domain_ids);
+-			iommu->domains[domain->id] = NULL;
+-			spin_unlock_irqrestore(&iommu->lock, tmp_flags);
+-		}
++		domain_detach_iommu(domain, iommu);
++		if (!domain_type_is_vm_or_si(domain))
++			iommu_detach_domain(domain, iommu);
+ 	}
+ }
+ 
+-- 
+1.7.10.4
 
-Additionally, we have a lot of other significant changes to that driver
-as well this cycle.  It would be really helpful if I could take patches
-1-3 through irqchip/gic.  I can Ack #4 with the Subject change, and the
-branch it lands in can depend on irqchip/gic, no problem there.
-
-My main concern is your statement above and your answer to my inquiry
-against v1.
-
-Right now, I'm only concerned about breaking the build.  Can I take 1-3?
-Or, do we need to wait until aarch64 PCI lands in mainline?
-
-If I can take them, I'll fix up the commit log of the one patch when I
-apply them.
-
-thx,
-
-Jason.
-
-> Changes in V3:
->     * Rebase to git://git.infradead.org/users/jcooper/linux.git irqchip/gic
->       (per Jason Cooper request)
->     * Misc fix/clean up per Mark Rutland comments
->     * Minor Clean up in the driver/irqchip/irq-gic-v2m.c: alloc_msi_irqs()
->     * Patch 4 is new to the series:
->         * Add ARM64-specific version arch_setup_msi_irqs() to allow support
->           for Multiple MSI.
->         * Add support for Multiple MSI for GICv2m.
-> 
-> Suravee Suthikulpanit (4):
->   irqchip: gic: Add binding probe for ARM GIC400
->   irqchip: gic: Restructuring ARM GIC code
->   irqchip: gic: Add supports for ARM GICv2m MSI(-X)
->   irqchip: gicv2m: Add support for multiple MSI for ARM64 GICv2m
-> 
->  Documentation/devicetree/bindings/arm/gic.txt |  20 +-
->  arch/arm64/Kconfig                            |   1 +
->  arch/arm64/include/asm/msi.h                  |  15 ++
->  arch/arm64/kernel/Makefile                    |   1 +
->  arch/arm64/kernel/msi.c                       |  57 +++++
->  drivers/irqchip/Kconfig                       |   7 +
->  drivers/irqchip/Makefile                      |   1 +
->  drivers/irqchip/irq-gic-v2m.c                 | 331 ++++++++++++++++++++++++++
->  drivers/irqchip/irq-gic-v2m.h                 |  13 +
->  drivers/irqchip/irq-gic.c                     |  90 ++++---
->  drivers/irqchip/irq-gic.h                     |  67 ++++++
->  11 files changed, 562 insertions(+), 41 deletions(-)
->  create mode 100644 arch/arm64/include/asm/msi.h
->  create mode 100644 arch/arm64/kernel/msi.c
->  create mode 100644 drivers/irqchip/irq-gic-v2m.c
->  create mode 100644 drivers/irqchip/irq-gic-v2m.h
->  create mode 100644 drivers/irqchip/irq-gic.h
-> 
-> -- 
-> 1.9.0
-> 
