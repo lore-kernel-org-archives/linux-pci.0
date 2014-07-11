@@ -1,102 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ausxipps301.us.dell.com ([143.166.148.223]:47722 "EHLO
-	ausxipps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750929AbaG1UJp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jul 2014 16:09:45 -0400
-From: <Jordan_Hargrave@Dell.com>
-To: <bhelgaas@google.com>, <keith.busch@intel.com>
-CC: <linux-pci@vger.kernel.org>, <wangyijing@huawei.com>,
-	<jon.mason@intel.com>, <Austin_Bolen@Dell.com>
-Date: Mon, 28 Jul 2014 14:59:52 -0500
-Subject: RE: Debugging incorrect mps settings detected
-Message-ID: <5B3AAEAF6B46EA4D955DF7AD46C2C48515F8318AA4@AUSX7MCPS303.AMER.DELL.COM>
-References: <alpine.LRH.2.03.1406031308200.11244@AMR>,<CAErSpo6B76KL=PVGuuLjvC77kvxSjjYNnngXxPEjj_3dMbA0yg@mail.gmail.com>
-In-Reply-To: <CAErSpo6B76KL=PVGuuLjvC77kvxSjjYNnngXxPEjj_3dMbA0yg@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-qc0-f170.google.com ([209.85.216.170]:39350 "EHLO
+	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751886AbaGKSAp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 14:00:45 -0400
+Received: by mail-qc0-f170.google.com with SMTP id c9so1322637qcz.29
+        for <linux-pci@vger.kernel.org>; Fri, 11 Jul 2014 11:00:41 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAE9FiQX69x_YgHihYM-+tahTvbuk6MATBXvm9Rz5kiQ9UpKNPg@mail.gmail.com>
+References: <20140611060118.GB3169@yanx> <CAE9FiQWe2bf7QbKn9kmZS34a4cMewsdD-9qAELdXs-dEtx70GQ@mail.gmail.com>
+ <20140702210736.GB28852@google.com> <CAE9FiQU5Ltu89zmRG0h2aXfXH0oCcTEP=jF7b=zHi=SaOA2rKg@mail.gmail.com>
+ <20140703131526.GG28852@google.com> <CAE9FiQWPGXMBYmpzyk8cicKZ1ELUZiARkZjr2vvgntmt3bt1jQ@mail.gmail.com>
+ <20140703221152.GH28852@google.com> <CAE9FiQX69x_YgHihYM-+tahTvbuk6MATBXvm9Rz5kiQ9UpKNPg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 11 Jul 2014 12:00:21 -0600
+Message-ID: <CAErSpo4DzJ112NxfjXT=NbXMxNqre_Vo61fS0Mem=MWCz+OvcA@mail.gmail.com>
+Subject: Re: [PATCH] pci: Allow very large resource windows
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We are still seeing issues too with the maxpayload default setting being incorrect for hotplug PCIE systems on Linux.
-
-The default setting doesn't work if any root port is configured with MPS>128.  Adding in a hotplug device will default to MPS=128 and will cause PCIE error.
-Clamping to pci_bus_safe causes the whole system to run inefficiently at MPS=128
-
-Windows and VMWare are already using the equivalent of pcie_bus_perf and not seeing problems. 
-
---jordan hargrave
-Dell Enterprise Linux Engineering
-________________________________________
-From: linux-pci-owner@vger.kernel.org [linux-pci-owner@vger.kernel.org] On Behalf Of Bjorn Helgaas [bhelgaas@google.com]
-Sent: Tuesday, June 03, 2014 4:01 PM
-To: Keith Busch
-Cc: linux-pci@vger.kernel.org; Yijing Wang; Jon Mason
-Subject: Re: Debugging incorrect mps settings detected
-
-[+cc Yijing, Jon]
-
-On Tue, Jun 3, 2014 at 2:04 PM, Keith Busch <keith.busch@intel.com> wrote:
-> Hello,
+On Thu, Jul 10, 2014 at 7:12 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, Jul 3, 2014 at 3:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Thu, Jul 03, 2014 at 12:59:21PM -0700, Yinghai Lu wrote:
 >
-> Hot adding a pci device results in improper MPS settings detected,
-> reading 128 even though the upstream port is 256. This causes a warning
-> print to be logged suggesting I should report a bug. :)
+>>> when we try to size it,  means that bar is not assigned. with r->flags
+>>> = 0, means
+>>> we will ignore it all the way.
+>>
+>> With "r->flags = 0", we will not try to assign resources to the BAR,
+>> but the hardware BAR still exists and contains some address.  If the
+>> device has other memory BARs, pci_enable_resources() will turn on
+>> PCI_COMMAND_MEMORY.  Now the "r->flags == 0" BAR is enabled but the
+>> address it contains might conflict with other devices.  That's the
+>> problem.
+>>
+>> To fix this, I think we need to do "r->flags |= IORESOURCE_UNSET |
+>> IORESOURCE_DISABLED".
 >
-> Here's the dmesg of the hot plug event:
+> No, that is not right.
 >
-> [ 2105.051941] pciehp 0000:05:07.0:pcie24: Card present on Slot(27)
-> [ 2107.012811] pci 0000:09:00.0: [8086:0953] type 00 class 0x010802
-> [ 2107.012838] pci 0000:09:00.0: reg 0x10: [mem 0x00000000-0x00003fff 64bit]
-> [ 2107.012873] pci 0000:09:00.0: reg 0x30: [mem 0x00000000-0x0000ffff pref]
-> [ 2107.014986] pcieport 0000:05:07.0: bridge window [io  0x1000-0x0fff] to
-> [bus 09] add_size 1000
-> [ 2107.014996] pcieport 0000:05:07.0: res[13]=[io  0x1000-0x0fff]
-> get_res_add_size add_size 1000
-> [ 2107.015001] pcieport 0000:05:07.0: BAR 13: can't assign io (size 0x1000)
-> [ 2107.015006] pcieport 0000:05:07.0: BAR 13: can't assign io (size 0x1000)
-> [ 2107.015013] pci 0000:09:00.0: BAR 6: assigned [mem 0xd5200000-0xd520ffff
-> pref]
-> [ 2107.015018] pci 0000:09:00.0: BAR 0: assigned [mem 0xdb600000-0xdb603fff
-> 64bit]
-> [ 2107.015030] pcieport 0000:05:07.0: PCI bridge to [bus 09]
-> [ 2107.015037] pcieport 0000:05:07.0:   bridge window [mem
-> 0xdb600000-0xdb7fffff]
-> [ 2107.015042] pcieport 0000:05:07.0:   bridge window [mem
-> 0xd5200000-0xd52fffff 64bit pref]
-> [ 2107.015060] pci 0000:09:00.0: Max Payload Size 128, but upstream
-> 0000:05:07.0 set to 256; if necessary, use "pci=pcie_bus_safe" and report a
-> bug
-> [ 2107.015079] pci 0000:09:00.0: no hotplug settings from platform
+> Current that r->flags = 0 and reset_resource() cover the bug in
+> pci_enable_resources() when assign and reassign resource fail.
 >
-> The commit message that added the warning indicates it may be a BIOS
-> issue that incorrectly configures this, but BIOS isn't involved with
-> setting the MPS on a device hot add, am I right? Or is that wrong?
-
-The BIOS is not involved in setting MPS on a device hot-add.
-
-> This is a Dell R620 server, if that matters, though we see this on other
-> platforms as well.
+> In pci_enable_resources() if there is one resource with IO BAR or SRIOV BAR
+> is not assigned and have UNSET, it will prevent device from being enabled.
 >
-> Using pci=pcie_bus_perf works around the issue, but that seems a bit
-> odd to suggest to users. Is setting MPS on hot-add something the PCI
-> driver layer ought to be doing, or should I be looking into the platform
-> BIOS instead?
+> Most drivers could work without io port.
+>
+> If you change r->flags = 0 to
+> r->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED
+>
+> Those drivers would not work anymore.
 
-The PCI core should be doing something intelligent here.  If we can't
-configure MPS safely, we should prevent the device from being enabled.
- But this is stuff the PCI core doesn't implement yet.
+If a driver doesn't need IO ports, it should use
+pci_enable_device_mem().  Then pci_enable_device_flags() will build a
+BAR bitmask that does not include the IO BARs, and
+pci_enable_resources() will not look at the resources corresponding to
+those BARs at all (so it doesn't matter what r->flags is), and it will
+not turn on PCI_COMMAND_IO.
 
-It's hard to reconfigure MPS after boot because it affects other
-devices in the system, and I don't think we can always change the
-settings of other devices while they're active.
+> I also know one driver that could work with pref mmio, but mmio is not assigned.
+> --- silicon bug, that it exposes non-needed mmio bar.
 
-I'm not sure that warning is correct.  It seems like it should suggest
-pcie_bus_peer2peer, which is documented as guaranteeing that hot-added
-devices will work.  But this is always confusing to me, and I could be
-wrong about this.
+The driver might work, but turning on PCI_COMMAND_MEMORY when an MMIO
+BAR is not assigned is dangerous and could cause bus conflicts.  If we
+can't safely turn on PCI_COMMAND_MEMORY and this driver stops working,
+well, I think that's tough luck.
+
+I explained why I think it is dangerous in the paragraph "With
+'r->flags = 0', ..." above.  This a question of how the hardware
+behaves, so if you think I'm wrong, you need to point out something in
+the spec that says the hardware works differently than how I think it
+does.
+
+> BTW I think we may need to clear the BAR in pci_claim_resource().
+>
+> Maybe Linus or Greg have more idea about this.
+> Do we need to get more strict? will only enable PCI_COMMAND_MEMORY
+> unless all mmio BARs get assigned value?
+
+I think we should turn on PCI_COMMAND_MEMORY only when the driver
+requests IORESOURCE_MEM and all MMIO BARs are assigned.
 
 Bjorn
---
-To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
