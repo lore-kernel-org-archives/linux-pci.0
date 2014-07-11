@@ -1,92 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f44.google.com ([209.85.192.44]:50725 "EHLO
-	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752746AbaGIQHJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 12:07:09 -0400
-Received: by mail-qg0-f44.google.com with SMTP id j107so6684531qga.3
-        for <linux-pci@vger.kernel.org>; Wed, 09 Jul 2014 09:07:08 -0700 (PDT)
+Received: from mail-vc0-f169.google.com ([209.85.220.169]:63917 "EHLO
+	mail-vc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751798AbaGKSVO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 14:21:14 -0400
+Received: by mail-vc0-f169.google.com with SMTP id la4so2873229vcb.0
+        for <linux-pci@vger.kernel.org>; Fri, 11 Jul 2014 11:21:13 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20140708122606.GB6270@dhcp-26-207.brq.redhat.com>
-References: <cover.1402405331.git.agordeev@redhat.com> <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
- <20140702202201.GA28852@google.com> <20140704085741.GA12247@dhcp-26-207.brq.redhat.com>
- <CAErSpo6f6RXWv0DEtLBZX0jXoSUYJeWrSm7mubSJ_F-O7tQp6w@mail.gmail.com> <20140708122606.GB6270@dhcp-26-207.brq.redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 9 Jul 2014 10:06:48 -0600
-Message-ID: <CAErSpo4oiabgoOjsGdWZpCMPnmopK4xRzB2f3tM0AiUFrdhFww@mail.gmail.com>
-Subject: Re: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+In-Reply-To: <CAE9FiQWUPd4d9DWeiuDqQ=tKKe+5ZofUEw3JViXYs6+9zBG6Sg@mail.gmail.com>
+References: <20140611060118.GB3169@yanx>
+	<CAE9FiQWe2bf7QbKn9kmZS34a4cMewsdD-9qAELdXs-dEtx70GQ@mail.gmail.com>
+	<20140702210736.GB28852@google.com>
+	<CAE9FiQU5Ltu89zmRG0h2aXfXH0oCcTEP=jF7b=zHi=SaOA2rKg@mail.gmail.com>
+	<20140703131526.GG28852@google.com>
+	<CAE9FiQWPGXMBYmpzyk8cicKZ1ELUZiARkZjr2vvgntmt3bt1jQ@mail.gmail.com>
+	<20140703221152.GH28852@google.com>
+	<CAE9FiQX69x_YgHihYM-+tahTvbuk6MATBXvm9Rz5kiQ9UpKNPg@mail.gmail.com>
+	<CAErSpo4DzJ112NxfjXT=NbXMxNqre_Vo61fS0Mem=MWCz+OvcA@mail.gmail.com>
+	<CAE9FiQWUPd4d9DWeiuDqQ=tKKe+5ZofUEw3JViXYs6+9zBG6Sg@mail.gmail.com>
+Date: Fri, 11 Jul 2014 11:21:13 -0700
+Message-ID: <CA+55aFwyfaAa3opKsDth7b4RXb7E2_Thb581VWvg9V-GvJCYbg@mail.gmail.com>
+Subject: Re: [PATCH] pci: Allow very large resource windows
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 8, 2014 at 6:26 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> On Mon, Jul 07, 2014 at 01:40:48PM -0600, Bjorn Helgaas wrote:
->> >> Can you quantify the benefit of this?  Can't a device already use
->> >> MSI-X to request exactly the number of vectors it can use?  (I know
->> >
->> > A Intel AHCI chipset requires 16 vectors written to MME while advertises
->> > (via AHCI registers) and uses only 6. Even attempt to init 8 vectors results
->> > in device's fallback to 1 (!).
->>
->> Is the fact that it uses only 6 vectors documented in the public spec?
+On Fri, Jul 11, 2014 at 11:09 AM, Yinghai Lu <yinghai@kernel.org> wrote:
 >
-> Yes, it is documented in ICH specs.
+> If the BAR have all 0, cpu can not access it as hw will forward access to ram
+> controller according to routing table.
 
-Out of curiosity, do you have a pointer to this?  It looks like it
-uses one vector per port, and I'm wondering if the reason it requests
-16 is because there's some possibility of a part with more than 8
-ports.
+On PC's, yes (also likely with many devices - there are definitely
+devices out there were setting the BAR to zero disables it).
 
->> Is this a chipset erratum?  Are there newer versions of the chipset
->> that fix this, e.g., by requesting 8 vectors and using 6, or by also
->> supporting MSI-X?
->
-> No, this is not an erratum. The value of 8 vectors is reserved and could
-> cause undefined results if used.
+On other platforms? Not necessarily at all, and some devices have no
+way of disabling the BAR (even clearing the IO/MEM bits in the
+control/status register does *not* necessarily disable things like
+root bridge BARs). I'm pretty sure we had it actually happen (I'd like
+to say "Powerpc", but I wouldn't really bet on it)
 
-As I read the spec (PCI 3.0, sec 6.8.1.3), if MMC contains 0b100
-(requesting 16 vectors), the OS is allowed to allocate 1, 2, 4, 8, or
-16 vectors.  If allocating 8 vectors and writing 0b011 to MME causes
-undefined results, I'd say that's a chipset defect.
+Anyway, the rule is that "r->flags = 0" means that it doesn't exist.
+And that rule makes sense, and is completely unambiguous. Relying on
+the BAR _value_ being zero is bogus and wrong.
 
->> I know this conserves vector numbers.  What does that mean in real
->> user-visible terms?  Are there systems that won't boot because of this
->> issue, and this patch fixes them?  Does it enable bigger
->> configurations, e.g., more I/O devices, than before?
->
-> Visibly, it ceases logging messages ('ahci 0000:00:1f.2: irq 107 for
-> MSI/MSI-X') for IRQs that are not shown in /proc/interrupts later.
->
-> No, it does not enable/fix any existing hardware issue I am aware of.
-> It just saves a couple of interrupt vectors, as Michael put it (10/16
-> to be precise). However, interrupt vectors space is pretty much scarce
-> resource on x86 and a risk of exhausting the vectors (and introducing
-> quota i.e) has already been raised AFAIR.
+Probing that finds a valid BAR, but an unassigned one, will set the
+UNSET bit. Plus IORESOURCE_MEM or IO should also always be set for a
+valid bar. So a value of zero really is completely unambiguous - it
+does not exist. It's not unassigned, it really isn't there.
 
-I'm not too concerned about the logging issue.  If necessary, we could
-tweak that message somehow.
+Of course, it's possible that we get this wrong, and initial probing
+will obviously start out with a zero value, so there is clearly one
+valid situation where we go from "does not exist" to something else,
+but in general, "r->flags == 0" really is special.
 
-Interrupt vector space is the issue I would worry about, but I think
-I'm going to put this on the back burner until it actually becomes a
-problem.
-
->> Do you know how Windows handles this?  Does it have a similar interface?
->
-> Have no clue, TBH. Can try to investigate if you see it helpful.
-
-No, don't worry about investigating.  I was just curious because if
-Windows *did* support something like this, that would be an indication
-that there's a significant problem here and we might need to solve it,
-too.  But it sounds like we can safely ignore it for now.
-
-Bjorn
+           Linus
