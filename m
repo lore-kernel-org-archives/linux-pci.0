@@ -1,80 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:36097 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751163AbaGDIQv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 04:16:51 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Wuyun <wuyun.wu@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 3/5] PCI/MSI: Remove unused function msi_remove_pci_irq_vectors()
-Date: Fri, 4 Jul 2014 16:16:35 +0800
-Message-ID: <1404461795-6840-1-git-send-email-wangyijing@huawei.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:48088 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752930AbaGKUiF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 16:38:05 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH v4 1/6] PCI: designware: add rd[wr]_other_conf API
+Date: Fri, 11 Jul 2014 16:36:30 -0400
+Message-ID: <1405110995-24676-2-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1405110995-24676-1-git-send-email-m-karicheri2@ti.com>
+References: <1405110995-24676-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No one use msi_remove_pci_irq_vectors() function,
-clean up it.
+v3.65 version of the designware h/w, requires application space
+registers to be configured to access the remote EP config space.
+To support this, add rd[wr]_other_conf API in the pcie_host_opts
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Acked-by: Mohit Kumar <mohit.kumar@st.com>
+Acked-by: Jingoo Han <jg1.han@samsung.com>
+Acked-by: Santosh Shilimkar <santosh.shilimkar@ti.com>
+
+CC: Russell King <linux@arm.linux.org.uk>
+CC: Grant Likely <grant.likely@linaro.org>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Pratyush Anand <pratyush.anand@st.com>
+CC: Richard Zhu <r65037@freescale.com>
+CC: Kishon Vijay Abraham I <kishon@ti.com>
+CC: Marek Vasut <marex@denx.de>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Pawel Moll <pawel.moll@arm.com>
+CC: Mark Rutland <mark.rutland@arm.com>
+CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
+CC: Kumar Gala <galak@codeaurora.org>
+CC: Randy Dunlap <rdunlap@infradead.org>
+CC: Grant Likely <grant.likely@linaro.org> 
 ---
- drivers/pci/msi.c   |   18 ------------------
- include/linux/pci.h |    2 --
- 2 files changed, 0 insertions(+), 20 deletions(-)
+ drivers/pci/host/pcie-designware.c |   12 ++++++++++--
+ drivers/pci/host/pcie-designware.h |    4 ++++
+ 2 files changed, 14 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index c306883..86578bb 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1014,24 +1014,6 @@ void pci_disable_msix(struct pci_dev *dev)
- }
- EXPORT_SYMBOL(pci_disable_msix);
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 1eaf4df..d8f3af7 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -656,7 +656,11 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 	}
  
--/**
-- * msi_remove_pci_irq_vectors - reclaim MSI(X) irqs to unused state
-- * @dev: pointer to the pci_dev data structure of MSI(X) device function
-- *
-- * Being called during hotplug remove, from which the device function
-- * is hot-removed. All previous assigned MSI/MSI-X irqs, if
-- * allocated for this device function, are reclaimed to unused state,
-- * which may be used later on.
-- **/
--void msi_remove_pci_irq_vectors(struct pci_dev *dev)
--{
--	if (!pci_msi_enable || !dev)
--		return;
--
--	if (dev->msi_enabled || dev->msix_enabled)
--		free_msi_irqs(dev);
--}
--
- void pci_no_msi(void)
- {
- 	pci_msi_enable = 0;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 466bcd1..66bd22f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1186,7 +1186,6 @@ int pci_msix_vec_count(struct pci_dev *dev);
- int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
- void pci_msix_shutdown(struct pci_dev *dev);
- void pci_disable_msix(struct pci_dev *dev);
--void msi_remove_pci_irq_vectors(struct pci_dev *dev);
- void pci_restore_msi_state(struct pci_dev *dev);
- int pci_msi_enabled(void);
- int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec);
-@@ -1217,7 +1216,6 @@ static inline int pci_enable_msix(struct pci_dev *dev,
- { return -ENOSYS; }
- static inline void pci_msix_shutdown(struct pci_dev *dev) { }
- static inline void pci_disable_msix(struct pci_dev *dev) { }
--static inline void msi_remove_pci_irq_vectors(struct pci_dev *dev) { }
- static inline void pci_restore_msi_state(struct pci_dev *dev) { }
- static inline int pci_msi_enabled(void) { return 0; }
- static inline int pci_enable_msi_range(struct pci_dev *dev, int minvec,
+ 	if (bus->number != pp->root_bus_nr)
+-		ret = dw_pcie_rd_other_conf(pp, bus, devfn,
++		if (pp->ops->rd_other_conf)
++			ret = pp->ops->rd_other_conf(pp, bus, devfn,
++						where, size, val);
++		else
++			ret = dw_pcie_rd_other_conf(pp, bus, devfn,
+ 						where, size, val);
+ 	else
+ 		ret = dw_pcie_rd_own_conf(pp, where, size, val);
+@@ -679,7 +683,11 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+ 	if (bus->number != pp->root_bus_nr)
+-		ret = dw_pcie_wr_other_conf(pp, bus, devfn,
++		if (pp->ops->wr_other_conf)
++			ret = pp->ops->wr_other_conf(pp, bus, devfn,
++						where, size, val);
++		else
++			ret = dw_pcie_wr_other_conf(pp, bus, devfn,
+ 						where, size, val);
+ 	else
+ 		ret = dw_pcie_wr_own_conf(pp, where, size, val);
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 77f592f..8121901 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -61,6 +61,10 @@ struct pcie_host_ops {
+ 			u32 val, void __iomem *dbi_base);
+ 	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32 *val);
+ 	int (*wr_own_conf)(struct pcie_port *pp, int where, int size, u32 val);
++	int (*rd_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
++			unsigned int devfn, int where, int size, u32 *val);
++	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
++			unsigned int devfn, int where, int size, u32 val);
+ 	int (*link_up)(struct pcie_port *pp);
+ 	void (*host_init)(struct pcie_port *pp);
+ };
 -- 
-1.7.1
-
+1.7.9.5
 
