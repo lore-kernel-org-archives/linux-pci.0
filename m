@@ -1,91 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:51122 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755648AbaG3R6o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 30 Jul 2014 13:58:44 -0400
-Date: Wed, 30 Jul 2014 19:58:36 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	lkml <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] x86, irq: Keep IRQ assignment for PCI devices during
- suspend/hibernation
-Message-ID: <20140730175836.GC10213@pd.tnic>
-References: <alpine.DEB.2.10.1407282255120.23352@nanos>
- <1406713034-3387-1-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1406713034-3387-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:27785 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042AbaGKFxe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 01:53:34 -0400
+From: Ethan Zhao <ethan.zhao@oracle.com>
+To: bhelgaas@google.com, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	gleb@kernel.org, pbonzini@redhat.com, jeffrey.t.kirsher@intel.com,
+	jesse.brandeburg@intel.com, bruce.w.allan@intel.com,
+	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
+	gregory.v.rose@intel.com, alexander.h.duyck@intel.com,
+	john.ronciak@intel.com, mitch.a.williams@intel.com,
+	alex.williamson@redhat.com
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+	linux.nics@intel.com, e1000-devel@lists.sourceforge.net,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ethan.kernel@gmail.com, vaughan.cao@oracle.com,
+	Ethan Zhao <ethan.zhao@oracle.com>
+Subject: [PATCH 2/2 V2] PCI: implement VFs assignment reference counter
+Date: Fri, 11 Jul 2014 13:52:41 +0800
+Message-Id: <1405057961-7234-2-git-send-email-ethan.zhao@oracle.com>
+In-Reply-To: <1405057961-7234-1-git-send-email-ethan.zhao@oracle.com>
+References: <1405057961-7234-1-git-send-email-ethan.zhao@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 30, 2014 at 05:37:13PM +0800, Jiang Liu wrote:
-> Function pci_disable_device() may be called for PCI devices during
-> suspend/hibernation, which in turn may release IRQ assigned to PCI
-> interrupt. Later when pci_enable_device() is called during resume,
-> a different IRQ may be assigned and thus break the driver.
-> So keep IRQ assignment for PCI devices during suspend/hibernation.
-> We check pci_dev.dev.power.is_prepared to detect that pci_disable_device()
-> and pci_enable_device() is called during suspend/hibernation.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
-> Hi Borislav,
-> 	I can't reproduce the issue with my test machine. So could you
-> please help to test this patch?
-> Regards!
-> Gerry
-> ---
->  arch/x86/pci/common.c |    5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> index 059a76c29739..417de4c92e8f 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -662,14 +662,15 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->  	if ((err = pci_enable_resources(dev, mask)) < 0)
->  		return err;
->  
-> -	if (!pci_dev_msi_enabled(dev))
-> +	if (!pci_dev_msi_enabled(dev) && !dev->dev.pm.is_prepared)
->  		return pcibios_enable_irq(dev);
->  	return 0;
->  }
->  
->  void pcibios_disable_device (struct pci_dev *dev)
->  {
-> -	if (!pci_dev_msi_enabled(dev) && pcibios_disable_irq)
-> +	if (!pci_dev_msi_enabled(dev) && pcibios_disable_irq &&
-> +	    !dev->dev.pm.is_prepared)
->  		pcibios_disable_irq(dev);
+Current implementation of helper function pci_vfs_assigned() is a
+little complex, to get sum of VFs that assigned to VM, access low
+level configuration space register and then loop in traversing
+device tree.
 
-Did you even build-test this patch?
+This patch introduces an atomic reference counter for VFs those
+were assigned to VM in struct pci_sriov. and simplify the code in
+pci_vfs_assigned().
 
-arch/x86/pci/common.c: In function ‘pcibios_enable_device’:
-arch/x86/pci/common.c:665:44: error: ‘struct device’ has no member named ‘pm’
-  if (!pci_dev_msi_enabled(dev) && !dev->dev.pm.is_prepared)
-                                            ^
-arch/x86/pci/common.c: In function ‘pcibios_disable_device’:
-arch/x86/pci/common.c:673:15: error: ‘struct device’ has no member named ‘pm’
-      !dev->dev.pm.is_prepared)
-               ^
-make[1]: *** [arch/x86/pci/common.o] Error 1
-make[1]: *** Waiting for unfinished jobs....
-make: *** [arch/x86/pci] Error 2
-make: *** Waiting for unfinished jobs....
+v2: reorder the patchset according to the suggestion from
+alex.williamson@redhat.com
 
+Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+---
+ drivers/pci/iov.c |   45 +++++++++++++++++----------------------------
+ drivers/pci/pci.h |    1 +
+ 2 files changed, 18 insertions(+), 28 deletions(-)
 
-
-My tree is rc7 + tip/master from Sunday.
-
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index c082523..5478a0c 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -382,6 +382,7 @@ found:
+ 	iov->nres = nres;
+ 	iov->ctrl = ctrl;
+ 	iov->total_VFs = total;
++	atomic_set(&iov->VFs_assigned_cnt, 0);
+ 	iov->offset = offset;
+ 	iov->stride = stride;
+ 	iov->pgsz = pgsz;
+@@ -603,43 +604,21 @@ int pci_num_vf(struct pci_dev *dev)
+ EXPORT_SYMBOL_GPL(pci_num_vf);
+ 
+ /**
+- * pci_vfs_assigned - returns number of VFs are assigned to a guest
+- * @dev: the PCI device
++ * pci_vfs_assigned - returns number of VFs are assigned to VM
++ * @dev: the physical PCI device that contains the VFs.
+  *
+- * Returns number of VFs belonging to this device that are assigned to a guest.
++ * Returns number of VFs belonging to this device that are assigned to VM.
+  * If device is not a physical function returns 0.
+  */
+ int pci_vfs_assigned(struct pci_dev *dev)
+ {
+-	struct pci_dev *vfdev;
+-	unsigned int vfs_assigned = 0;
+-	unsigned short dev_id;
+-
+ 	/* only search if we are a PF */
+ 	if (!dev->is_physfn)
+ 		return 0;
+ 
+-	/*
+-	 * determine the device ID for the VFs, the vendor ID will be the
+-	 * same as the PF so there is no need to check for that one
+-	 */
+-	pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_VF_DID, &dev_id);
+-
+-	/* loop through all the VFs to see if we own any that are assigned */
+-	vfdev = pci_get_device(dev->vendor, dev_id, NULL);
+-	while (vfdev) {
+-		/*
+-		 * It is considered assigned if it is a virtual function with
+-		 * our dev as the physical function and the assigned bit is set
+-		 */
+-		if (vfdev->is_virtfn && (vfdev->physfn == dev) &&
+-		    (vfdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED))
+-			vfs_assigned++;
+-
+-		vfdev = pci_get_device(dev->vendor, dev_id, vfdev);
+-	}
+-
+-	return vfs_assigned;
++	if (dev->sriov)
++		return atomic_read(&dev->sriov->VFs_assigned_cnt);
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(pci_vfs_assigned);
+ 
+@@ -650,6 +629,11 @@ EXPORT_SYMBOL_GPL(pci_vfs_assigned);
+ void pci_sriov_assign_device(struct pci_dev *pdev)
+ {
+ 	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
++	if (pdev->is_virtfn && !pdev->is_physfn)
++		if (pdev->physfn)
++			if (pdev->physfn->sriov)
++				atomic_inc(&pdev->physfn->sriov->
++					VFs_assigned_cnt);
+ }
+ EXPORT_SYMBOL_GPL(pci_sriov_assign_device);
+ 
+@@ -660,6 +644,11 @@ EXPORT_SYMBOL_GPL(pci_sriov_assign_device);
+ void pci_sriov_deassign_device(struct pci_dev *pdev)
+ {
+ 	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++	if (pdev->is_virtfn && !pdev->is_physfn)
++		if (pdev->physfn)
++			if (pdev->physfn->sriov)
++				atomic_dec(&pdev->physfn->sriov->
++					VFs_assigned_cnt);
+ }
+ EXPORT_SYMBOL_GPL(pci_sriov_deassign_device);      
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 6bd0822..d17bda2 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -235,6 +235,7 @@ struct pci_sriov {
+ 	u32 pgsz;		/* page size for BAR alignment */
+ 	u8 link;		/* Function Dependency Link */
+ 	u16 driver_max_VFs;	/* max num VFs driver supports */
++	atomic_t VFs_assigned_cnt; /* counter of VFs assigned to VM */
+ 	struct pci_dev *dev;	/* lowest numbered PF */
+ 	struct pci_dev *self;	/* this PF */
+ 	struct mutex lock;	/* lock for VF bus */
 -- 
-Regards/Gruss,
-    Boris.
+1.7.1
 
-Sent from a fat crate under my desk. Formatting is fine.
---
