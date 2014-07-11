@@ -1,141 +1,199 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:50995 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752890AbaGKJLn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 05:11:43 -0400
-Date: Fri, 11 Jul 2014 10:11:39 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Tanmay Inamdar' <tinamdar@apm.com>,
-	'Rob Herring' <robherring2@gmail.com>,
-	'linux-pci' <linux-pci@vger.kernel.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'linaro-kernel' <linaro-kernel@lists.linaro.org>,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Sinan Kaya' <okaya@codeaurora.org>,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Suravee Suthikulanit' <suravee.suthikulpanit@amd.com>,
-	'Device Tree ML' <devicetree@vger.kernel.org>,
-	'LKML' <linux-kernel@vger.kernel.org>,
-	'LAKML' <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 0/9] Support for creating generic PCI host bridges
- from DT
-Message-ID: <20140711091139.GM6501@e106497-lin.cambridge.arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <CAL_JsqK_CfagmiFOpOXVYGry22nGnCZL0ZXeJhYxb9zp=P2fsQ@mail.gmail.com>
- <20140708171828.GM6501@e106497-lin.cambridge.arm.com>
- <CACoXjcn3b7otcbxdr+RAVNHHjHyVsvw0QcmK5jd-QBF8SQX5iw@mail.gmail.com>
- <004501cf9cda$65703610$3050a230$%han@samsung.com>
-MIME-Version: 1.0
-In-Reply-To: <004501cf9cda$65703610$3050a230$%han@samsung.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from userp1040.oracle.com ([156.151.31.81]:26904 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752291AbaGKMay (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 08:30:54 -0400
+From: Ethan Zhao <ethan.zhao@oracle.com>
+To: bhelgaas@google.com, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	gleb@kernel.org, pbonzini@redhat.com, jeffrey.t.kirsher@intel.com,
+	jesse.brandeburg@intel.com, bruce.w.allan@intel.com,
+	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
+	gregory.v.rose@intel.com, alexander.h.duyck@intel.com,
+	john.ronciak@intel.com, mitch.a.williams@intel.com,
+	alex.williamson@redhat.com
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+	linux.nics@intel.com, e1000-devel@lists.sourceforge.net,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ethan.kernel@gmail.com, vaughan.cao@oracle.com,
+	Ethan Zhao <ethan.zhao@oracle.com>
+Subject: [PATCH 1/2 V3] PCI: introduce device assignment interface and refactory related code
+Date: Fri, 11 Jul 2014 20:30:01 +0800
+Message-Id: <1405081802-419-1-git-send-email-ethan.zhao@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 11, 2014 at 08:33:23AM +0100, Jingoo Han wrote:
-> On Friday, July 11, 2014 9:44 AM, Tanmay Inamdar wrote:
-> > On Tue, Jul 8, 2014 at 10:18 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> > > On Sun, Jul 06, 2014 at 04:23:43PM +0100, Rob Herring wrote:
-> > >> On Tue, Jul 1, 2014 at 1:43 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> > >> > This is my resurected attempt at adding support for generic PCI host
-> > >> > bridge controllers that make use of device tree information to
-> > >> > configure themselves. I've tagged it as v8 although the patches
-> > >> > have now been reshuffled in order to ease adoption so referring to
-> > >> > the older versions might be a bit of a hoop jumping exercise.
-> > >> >
-> > >> > Changes from v7:
-> > >> >   - Reordered the patches so that fixes and non-controversial patches
-> > >> >     from v7 can be accepted more easily. If agreed I can split the
-> > >> >     series again into patches that can be upstreamed easily and ones
-> > >> >     that still need discussion.
-> > >> >   - Moved the of_create_host_bridge() function to drivers/of/of_pci.c
-> > >> >     to better reflect its target use.
-> > >> >   - Added the function to remap the bus I/O resources that used to be
-> > >> >     provided in my arm64 patch series and (re)named it pci_remap_iospace()
-> > >> >   - Removed error code checking from parsing and mapping of IRQ from DT
-> > >> >     in recognition that some PCI devices will not have legacy IRQ mappings.
-> > >> >
-> > >> > v7 thread here with all the historic information: https://lkml.org/lkml/2014/3/14/279
-> > >>
-> > >> Can you publish a branch for this series please.
-> > >>
-> > >> Rob
-> > >>
-> > >
-> > > Hi Rob,
-> > >
-> > > I have pushed a brach that matches my v8 patchset +1 obvious missing header include
-> > > here: http://www.linux-arm.org/git?p=linux-ld.git;a=shortlog;h=refs/heads/for-upstream/pci_v8
-> > >
-> > 
-> > I was still getting following compilation error after applying arm64
-> > pci headers. Please let me know if I am missing something.
-> > 
-> > linux-git/drivers/of/of_pci.c: In function ‘pci_host_bridge_of_get_ranges’:
-> > linux-git/drivers/of/of_pci.c:114:22: error: storage size of ‘range’ isn’t known
-> >   struct of_pci_range range;
-> >                       ^
-> > linux-git/drivers/of/of_pci.c:115:29: error: storage size of ‘parser’
-> > isn’t known
-> >   struct of_pci_range_parser parser;
-> >                              ^
-> > linux-git/drivers/of/of_pci.c:121:2: error: implicit declaration of
-> > function ‘of_pci_range_parser_init’
-> > [-Werror=implicit-function-declaration]
-> >   err = of_pci_range_parser_init(&parser, dev);
-> > 
-> > 
-> > Below patch fixes the errors.
-> > 
-> > diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> > index 55d8320..da88dac 100644
-> > --- a/drivers/of/of_pci.c
-> > +++ b/drivers/of/of_pci.c
-> > @@ -2,6 +2,7 @@
-> >  #include <linux/export.h>
-> >  #include <linux/of.h>
-> >  #include <linux/of_pci.h>
-> > +#include <linux/of_address.h>
-> 
-> Yes, right. I also found the build errors as above mentioned.
-> "of_address.h" should be included, in order to fix the build errors.
-> However, for readability, the following would be better.
-> 
->  #include <linux/of.h>
-> +#include <linux/of_address.h>
->  #include <linux/of_pci.h>
-> 
-> Best regards,
-> Jingoo Han
+This patch introduces two new device assignment functions
 
+pci_iov_assign_device(),
+pci_iov_deassign_device()
 
-Thanks, guys! Like I've said, it was not my day when I've submitted v8 series.
-I've cherry picked the patches into a clean branch but forgot to be thorough
-and was compiling in the old working directory.
+along with the existed one
 
-Sorry,
-Liviu
+pci_vfs_assigned()
 
-> 
-> > 
-> >  static inline int __of_pci_pci_compare(struct device_node *node,
-> >                                        unsigned int data)
-> > 
-> > 
-> > > Best regards,
-> > > Liviu
+They construct the VFs assignment management interface, used to assign/
+deassign device to VM and query the VFs reference counter. instead of
+direct manipulation of device flag.
 
+This patch refashioned the related code and make them atomic.
+
+v3: change the naming of device assignment helpers, because they work
+for all kind of PCI device, not only SR-IOV (david.vrabel@citrix.com)
+
+v2: reorder the patchset and make it bisectable and atomic, steps clear
+between interface defination and implemenation according to the
+suggestion from alex.williamson@redhat.com
+
+Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+---
+ drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c |   17 ++---------------
+ drivers/pci/iov.c                                  |   20 ++++++++++++++++++++
+ drivers/xen/xen-pciback/pci_stub.c                 |    4 ++--
+ include/linux/pci.h                                |    4 ++++
+ virt/kvm/assigned-dev.c                            |    2 +-
+ virt/kvm/iommu.c                                   |    4 ++--
+ 6 files changed, 31 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c b/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
+index 02c11a7..781040e 100644
+--- a/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
++++ b/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
+@@ -693,22 +693,9 @@ complete_reset:
+ static bool i40e_vfs_are_assigned(struct i40e_pf *pf)
+ {
+ 	struct pci_dev *pdev = pf->pdev;
+-	struct pci_dev *vfdev;
+-
+-	/* loop through all the VFs to see if we own any that are assigned */
+-	vfdev = pci_get_device(PCI_VENDOR_ID_INTEL, I40E_DEV_ID_VF , NULL);
+-	while (vfdev) {
+-		/* if we don't own it we don't care */
+-		if (vfdev->is_virtfn && pci_physfn(vfdev) == pdev) {
+-			/* if it is assigned we cannot release it */
+-			if (vfdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED)
+-				return true;
+-		}
+ 
+-		vfdev = pci_get_device(PCI_VENDOR_ID_INTEL,
+-				       I40E_DEV_ID_VF,
+-				       vfdev);
+-	}
++	if (pci_vfs_assigned(pdev))
++		return true;
+ 
+ 	return false;
+ }
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index de7a747..090f827 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -644,6 +644,26 @@ int pci_vfs_assigned(struct pci_dev *dev)
+ EXPORT_SYMBOL_GPL(pci_vfs_assigned);
+ 
+ /**
++ * pci_iov_assign_device - assign device to VM
++ * @pdev: the device to be assigned.
++ */
++void pci_iov_assign_device(struct pci_dev *pdev)
++{
++	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
++}
++EXPORT_SYMBOL_GPL(pci_iov_assign_device);
++
++/**
++ * pci_iov_deassign_device - deasign device from VM
++ * @pdev: the device to be deassigned.
++ */
++void pci_iov_deassign_device(struct pci_dev *pdev)
++{
++	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++}
++EXPORT_SYMBOL_GPL(pci_iov_deassign_device);
++
++/**
+  * pci_sriov_set_totalvfs -- reduce the TotalVFs available
+  * @dev: the PCI PF device
+  * @numvfs: number that should be used for TotalVFs supported
+diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+index 62fcd48..27e00d1 100644
+--- a/drivers/xen/xen-pciback/pci_stub.c
++++ b/drivers/xen/xen-pciback/pci_stub.c
+@@ -133,7 +133,7 @@ static void pcistub_device_release(struct kref *kref)
+ 	xen_pcibk_config_free_dyn_fields(dev);
+ 	xen_pcibk_config_free_dev(dev);
+ 
+-	dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++	pci_iov_deassign_device(dev);
+ 	pci_dev_put(dev);
+ 
+ 	kfree(psdev);
+@@ -404,7 +404,7 @@ static int pcistub_init_device(struct pci_dev *dev)
+ 	dev_dbg(&dev->dev, "reset device\n");
+ 	xen_pcibk_reset_device(dev);
+ 
+-	dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
++	pci_iov_assign_device(dev);
+ 	return 0;
+ 
+ config_release:
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index aab57b4..5ece6d6 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1603,6 +1603,8 @@ int pci_num_vf(struct pci_dev *dev);
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
++void pci_iov_assign_device(struct pci_dev *dev);
++void pci_iov_deassign_device(struct pci_dev *dev);
+ #else
+ static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+ { return -ENODEV; }
+@@ -1614,6 +1616,8 @@ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+ { return 0; }
+ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ { return 0; }
++static inline void pci_iov_assign_device(struct pci_dev *dev) { }
++static inline void pci_iov_deassign_device(struct pci_dev *dev) { }
+ #endif
+ 
+ #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
+diff --git a/virt/kvm/assigned-dev.c b/virt/kvm/assigned-dev.c
+index bf06577..7fac58d 100644
+--- a/virt/kvm/assigned-dev.c
++++ b/virt/kvm/assigned-dev.c
+@@ -302,7 +302,7 @@ static void kvm_free_assigned_device(struct kvm *kvm,
+ 	else
+ 		pci_restore_state(assigned_dev->dev);
+ 
+-	assigned_dev->dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++	pci_iov_deassign_device(assigned_dev->dev);
+ 
+ 	pci_release_regions(assigned_dev->dev);
+ 	pci_disable_device(assigned_dev->dev);
+diff --git a/virt/kvm/iommu.c b/virt/kvm/iommu.c
+index 0df7d4b..641ee73 100644
+--- a/virt/kvm/iommu.c
++++ b/virt/kvm/iommu.c
+@@ -194,7 +194,7 @@ int kvm_assign_device(struct kvm *kvm,
+ 			goto out_unmap;
+ 	}
+ 
+-	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
++	pci_iov_assign_device(pdev);
+ 
+ 	dev_info(&pdev->dev, "kvm assign device\n");
+ 
+@@ -220,7 +220,7 @@ int kvm_deassign_device(struct kvm *kvm,
+ 
+ 	iommu_detach_device(domain, &pdev->dev);
+ 
+-	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++	pci_iov_deassign_device(pdev);
+ 
+ 	dev_info(&pdev->dev, "kvm deassign device\n");
+ 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.7.1
 
