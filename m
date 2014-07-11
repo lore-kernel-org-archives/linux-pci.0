@@ -1,216 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:40126 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751020AbaGGQyY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Jul 2014 12:54:24 -0400
-Message-ID: <53BAD07C.2010302@ti.com>
-Date: Mon, 7 Jul 2014 12:53:16 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from e06smtp13.uk.ibm.com ([195.75.94.109]:45888 "EHLO
+	e06smtp13.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752836AbaGKHq1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 03:46:27 -0400
+Received: from /spool/local
+	by e06smtp13.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <sebott@linux.vnet.ibm.com>;
+	Fri, 11 Jul 2014 08:46:25 +0100
+Date: Fri, 11 Jul 2014 09:46:12 +0200 (CEST)
+From: Sebastian Ott <sebott@linux.vnet.ibm.com>
+To: Yijing Wang <wangyijing@huawei.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gerald Schaefer <gerald.schaefer@de.ibm.com>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	linux-s390@vger.kernel.org, linux-pci@vger.kernel.org,
+	Wuyun <wuyun.wu@huawei.com>
+Subject: Re: [PATCH v3 2/6] s390/MSI: Use standard mask and unmask funtions
+In-Reply-To: <1404785285-6408-1-git-send-email-wangyijing@huawei.com>
+Message-ID: <alpine.LFD.2.11.1407110942310.1620@denkbrett>
+References: <1404785285-6408-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v3 2/5] PCI: designware: refactor MSI code to work with
- v3.65 dw hardware
-References: <1404164720-11066-1-git-send-email-m-karicheri2@ti.com> <1404164720-11066-3-git-send-email-m-karicheri2@ti.com> <2CC2A0A4A178534D93D5159BF3BCB661A17A3E4291@EAPEX1MAIL1.st.com>
-In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB661A17A3E4291@EAPEX1MAIL1.st.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/07/2014 12:17 AM, Mohit KUMAR DCG wrote:
-> Hello Murali,
->
->> -----Original Message-----
->> From: Murali Karicheri [mailto:m-karicheri2@ti.com]
->> Sent: Tuesday, July 01, 2014 3:15 AM
->> To: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
->> devicetree@vger.kernel.org
->> Cc: Murali Karicheri; Santosh Shilimkar; Russell King; Grant Likely; Rob Herring;
->> Mohit KUMAR DCG; Jingoo Han; Bjorn Helgaas; Pratyush ANAND; Richard
->> Zhu; Kishon Vijay Abraham I; Marek Vasut; Arnd Bergmann; Pawel Moll;
->> Mark Rutland; Ian Campbell; Kumar Gala; Randy Dunlap
->> Subject: [PATCH v3 2/5] PCI: designware: refactor MSI code to work with
->> v3.65 dw hardware
->>
->> Keystone PCI controller is based on v3.65 version of the DW PCI h/w that
->> implements MSI controller registers in application space compared to the
->> newer version. This requires updates to the DW core API to support the PCI
->> controller driver based on this old DW hardware. Add msi_irq_set()/clear()
->> API functions to allow Set/Clear MSI IRQ enable bit in the application register.
->> Also the old h/w uses MSI_IRQ register in application register space to raise
->> MSI IRQ to the RC from EP. Current code uses the standard mechanism as
->> per PCI spec. So add another API get_msi_data() to get the address of this
->> register so that common code can be re-used on old h/w.
->>
->> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->>
->> CC: Santosh Shilimkar<santosh.shilimkar@ti.com>
->> CC: Russell King<linux@arm.linux.org.uk>
->> CC: Grant Likely<grant.likely@linaro.org>
->> CC: Rob Herring<robh+dt@kernel.org>
->> CC: Mohit Kumar<mohit.kumar@st.com>
->> CC: Jingoo Han<jg1.han@samsung.com>
->> CC: Bjorn Helgaas<bhelgaas@google.com>
->> CC: Pratyush Anand<pratyush.anand@st.com>
->> CC: Richard Zhu<r65037@freescale.com>
->> CC: Kishon Vijay Abraham I<kishon@ti.com>
->> CC: Marek Vasut<marex@denx.de>
->> CC: Arnd Bergmann<arnd@arndb.de>
->> CC: Pawel Moll<pawel.moll@arm.com>
->> CC: Mark Rutland<mark.rutland@arm.com>
->> CC: Ian Campbell<ijc+devicetree@hellion.org.uk>
->> CC: Kumar Gala<galak@codeaurora.org>
->> CC: Randy Dunlap<rdunlap@infradead.org>
->> CC: Grant Likely<grant.likely@linaro.org>
->> ---
->>   drivers/pci/host/pcie-designware.c |   50 ++++++++++++++++++++++++++-
->> ---------
->>   drivers/pci/host/pcie-designware.h |    3 +++
->>   2 files changed, 39 insertions(+), 14 deletions(-)
->>
->> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-
->> designware.c
->> index d8f3af7..905941c 100644
->> --- a/drivers/pci/host/pcie-designware.c
->> +++ b/drivers/pci/host/pcie-designware.c
->> @@ -217,27 +217,47 @@ static int find_valid_pos0(struct pcie_port *pp, int
->> msgvec, int pos, int *pos0)
->>   	return 0;
->>   }
->>
->> +static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq) {
->> +	unsigned int res, bit, val;
->> +
->> +	res = (irq / 32) * 12;
->> +	bit = irq % 32;
->> +	dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,&val);
->> +	val&= ~(1<<  bit);
->> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val); }
->> +
->>   static void clear_irq_range(struct pcie_port *pp, unsigned int irq_base,
->>   			    unsigned int nvec, unsigned int pos)  {
->> -	unsigned int i, res, bit, val;
->> +	unsigned int i;
->>
->>   	for (i = 0; i<  nvec; i++) {
->>   		irq_set_msi_desc_off(irq_base, i, NULL);
->>   		clear_bit(pos + i, pp->msi_irq_in_use);
->>   		/* Disable corresponding interrupt on MSI controller */
->> -		res = ((pos + i) / 32) * 12;
->> -		bit = (pos + i) % 32;
->> -		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
->> 4,&val);
->> -		val&= ~(1<<  bit);
->> -		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
->> 4, val);
->> +		if (pp->ops->msi_clear_irq)
->> +			pp->ops->msi_clear_irq(pp, pos + i);
->> +		else
->> +			dw_pcie_msi_clear_irq(pp, pos + i);
->>   	}
->>   }
->>
->> +static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq) {
->> +	unsigned int res, bit, val;
->> +
->> +	res = (irq / 32) * 12;
->> +	bit = irq % 32;
->> +	dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,&val);
->> +	val |= 1<<  bit;
->> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val); }
->> +
->>   static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)  {
->> -	int res, bit, irq, pos0, pos1, i;
->> -	u32 val;
->> +	int irq, pos0, pos1, i;
->>   	struct pcie_port *pp = sys_to_pcie(desc->dev->bus->sysdata);
->>
->>   	if (!pp) {
->> @@ -281,11 +301,10 @@ static int assign_irq(int no_irqs, struct msi_desc
->> *desc, int *pos)
->>   		}
->>   		set_bit(pos0 + i, pp->msi_irq_in_use);
->>   		/*Enable corresponding interrupt in MSI interrupt controller
->> */
->> -		res = ((pos0 + i) / 32) * 12;
->> -		bit = (pos0 + i) % 32;
->> -		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
->> 4,&val);
->> -		val |= 1<<  bit;
->> -		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
->> 4, val);
->> +		if (pp->ops->msi_set_irq)
->> +			pp->ops->msi_set_irq(pp, pos0 + i);
->> +		else
->> +			dw_pcie_msi_set_irq(pp, pos0 + i);
->>   	}
->>
->>   	*pos = pos0;
->> @@ -353,7 +372,10 @@ static int dw_msi_setup_irq(struct msi_chip *chip,
->> struct pci_dev *pdev,
->>   	 */
->>   	desc->msi_attrib.multiple = msgvec;
->>
->> -	msg.address_lo = virt_to_phys((void *)pp->msi_data);
->> +	if (pp->ops->get_msi_data)
->> +		msg.address_lo = pp->ops->get_msi_data(pp);
->> +	else
->> +		msg.address_lo = virt_to_phys((void *)pp->msi_data);
->>   	msg.address_hi = 0x0;
->>   	msg.data = pos;
->>   	write_msi_msg(irq,&msg);
->> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-
->> designware.h
->> index 8121901..387f69e 100644
->> --- a/drivers/pci/host/pcie-designware.h
->> +++ b/drivers/pci/host/pcie-designware.h
->> @@ -67,6 +67,9 @@ struct pcie_host_ops {
->>   			unsigned int devfn, int where, int size, u32 val);
->>   	int (*link_up)(struct pcie_port *pp);
->>   	void (*host_init)(struct pcie_port *pp);
->> +	void (*msi_set_irq)(struct pcie_port *pp, int irq);
->> +	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
->> +	u32 (*get_msi_data)(struct pcie_port *pp);
->>   };
->>
->>   int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
->
-> - Now MSI specific dw code can be shared b/w old Synopsys controller (ver<  3.70)
-> and newer controller that standardize the MSI settings inside design ware core itself.
->
-> Jingoo,
->
-> Pls let us know if you have any concern or comment over this.
->
-> Acked-by: Mohit Kumar<mohit.kumar@st.com>
->
-> Regards
-> Mohit
->
->> --
->> 1.7.9.5
->
-Mohit,
+Hello,
 
-Thanks.
+On Tue, 8 Jul 2014, Yijing Wang wrote:
+> MSI irqchip in s390 has its own mask and unmask MSI irq
+> functions, zpci_enable_irq() and zpci_disable_irq().
+> They mask and unmask MSI irq in standard ways, no arch
+> special. MSI driver provides two global standard functions
+> mask_msi_irq() and unmask_msi_irq(). Local zpci_enable_irq()
+> and zpci_disable_irq() are almost the same as the standard
+> two. the difference is local mask/unmask functions
+> read the mask status before mask and unmask everytime.
+> Then change the value and rewrite to hardware. In standard
+> functions, save the mask status after mask and unmask msi
+> irq, and use the cached status to change the mask status.
+> When we mask or unmask a MSI irq, we always cache its
+> mask status except we know need not to cache it, like in
+> pci_msi_shutdown. So use the standard functions to replace
+> the local is safe.
 
-Jingoo, could you provide your response or Ack?
+Patch applied! (I had to fix another inverted pair in struct irq_chip
+first.)
+Thanks again,
+Sebastian
 
-Thanks
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  arch/s390/pci/pci.c |   49 ++++++-------------------------------------------
+>  1 files changed, 6 insertions(+), 43 deletions(-)
+> 
+> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+> index 9ddc51e..f715031 100644
+> --- a/arch/s390/pci/pci.c
+> +++ b/arch/s390/pci/pci.c
+> @@ -48,13 +48,10 @@
+>  static LIST_HEAD(zpci_list);
+>  static DEFINE_SPINLOCK(zpci_list_lock);
+> 
+> -static void zpci_enable_irq(struct irq_data *data);
+> -static void zpci_disable_irq(struct irq_data *data);
+> -
+>  static struct irq_chip zpci_irq_chip = {
+>  	.name = "zPCI",
+> -	.irq_unmask = zpci_enable_irq,
+> -	.irq_mask = zpci_disable_irq,
+> +	.irq_unmask = mask_msi_irq,
+> +	.irq_mask = unmask_msi_irq,
+>  };
+> 
+>  static DECLARE_BITMAP(zpci_domain, ZPCI_NR_DEVICES);
+> @@ -244,43 +241,6 @@ static int zpci_cfg_store(struct zpci_dev *zdev, int offset, u32 val, u8 len)
+>  	return rc;
+>  }
+> 
+> -static int zpci_msi_set_mask_bits(struct msi_desc *msi, u32 mask, u32 flag)
+> -{
+> -	int offset, pos;
+> -	u32 mask_bits;
+> -
+> -	if (msi->msi_attrib.is_msix) {
+> -		offset = msi->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
+> -			PCI_MSIX_ENTRY_VECTOR_CTRL;
+> -		msi->masked = readl(msi->mask_base + offset);
+> -		writel(flag, msi->mask_base + offset);
+> -	} else if (msi->msi_attrib.maskbit) {
+> -		pos = (long) msi->mask_base;
+> -		pci_read_config_dword(msi->dev, pos, &mask_bits);
+> -		mask_bits &= ~(mask);
+> -		mask_bits |= flag & mask;
+> -		pci_write_config_dword(msi->dev, pos, mask_bits);
+> -	} else
+> -		return 0;
+> -
+> -	msi->msi_attrib.maskbit = !!flag;
+> -	return 1;
+> -}
+> -
+> -static void zpci_enable_irq(struct irq_data *data)
+> -{
+> -	struct msi_desc *msi = irq_get_msi_desc(data->irq);
+> -
+> -	zpci_msi_set_mask_bits(msi, 1, 0);
+> -}
+> -
+> -static void zpci_disable_irq(struct irq_data *data)
+> -{
+> -	struct msi_desc *msi = irq_get_msi_desc(data->irq);
+> -
+> -	zpci_msi_set_mask_bits(msi, 1, 1);
+> -}
+> -
+>  void pcibios_fixup_bus(struct pci_bus *bus)
+>  {
+>  }
+> @@ -487,7 +447,10 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
+> 
+>  	/* Release MSI interrupts */
+>  	list_for_each_entry(msi, &pdev->msi_list, list) {
+> -		zpci_msi_set_mask_bits(msi, 1, 1);
+> +		if (msi->msi_attrib.is_msix)
+> +			default_msix_mask_irq(msi, 1);
+> +		else
+> +			default_msi_mask_irq(msi, 1, 1);
+>  		irq_set_msi_desc(msi->irq, NULL);
+>  		irq_free_desc(msi->irq);
+>  		msi->msg.address_lo = 0;
+> -- 
+> 1.7.1
+> 
+> 
+> 
+
