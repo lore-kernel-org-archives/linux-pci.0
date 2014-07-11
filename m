@@ -1,96 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:60945 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753893AbaGHKmy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 06:42:54 -0400
-Date: Tue, 8 Jul 2014 11:42:48 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 2/9] pci: Export find_pci_host_bridge() function.
-Message-ID: <20140708104248.GB6501@e106497-lin.cambridge.arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-3-git-send-email-Liviu.Dudau@arm.com>
- <20140707232749.GA22939@google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <53BFDBC0.8000705@gmail.com>
+Date: Fri, 11 Jul 2014 18:12:40 +0530
+From: Varka Bhadram <varkabhadram@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20140707232749.GA22939@google.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Ethan Zhao <ethan.zhao@oracle.com>, bhelgaas@google.com,
+	konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
+	david.vrabel@citrix.com, gleb@kernel.org, pbonzini@redhat.com,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	bruce.w.allan@intel.com, carolyn.wyborny@intel.com,
+	donald.c.skidmore@intel.com, gregory.v.rose@intel.com,
+	alexander.h.duyck@intel.com, john.ronciak@intel.com,
+	mitch.a.williams@intel.com, alex.williamson@redhat.com
+CC: linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+	linux.nics@intel.com, e1000-devel@lists.sourceforge.net,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ethan.kernel@gmail.com, vaughan.cao@oracle.com
+Subject: Re: [PATCH 2/2 V3] PCI: implement VFs assignment reference counter
+References: <1405081802-419-1-git-send-email-ethan.zhao@oracle.com> <1405081802-419-2-git-send-email-ethan.zhao@oracle.com>
+In-Reply-To: <1405081802-419-2-git-send-email-ethan.zhao@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 08, 2014 at 12:27:49AM +0100, Bjorn Helgaas wrote:
-> On Tue, Jul 01, 2014 at 07:43:27PM +0100, Liviu Dudau wrote:
-> > This is a useful function and we should make it visible outside the
-> > generic PCI code. Export it as a GPL symbol.
-> > 
-> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> > ---
-> >  drivers/pci/host-bridge.c | 3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> > index 0e5f3c9..36c669e 100644
-> > --- a/drivers/pci/host-bridge.c
-> > +++ b/drivers/pci/host-bridge.c
-> > @@ -16,12 +16,13 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
-> >  	return bus;
-> >  }
-> >  
-> > -static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-> > +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-> >  {
-> >  	struct pci_bus *root_bus = find_pci_root_bus(bus);
-> >  
-> >  	return to_pci_host_bridge(root_bus->bridge);
-> >  }
-> > +EXPORT_SYMBOL_GPL(find_pci_host_bridge);
-> 
-> There's nothing in this series that uses find_pci_host_bridge(), so 
-> how about we just wait until we have something that needs it?
-> 
-> Also, if/when we export this, I'd prefer a name that starts with "pci_"
-> as most of the other interfaces do.
+On 07/11/2014 06:00 PM, Ethan Zhao wrote:
+> Current implementation of helper function pci_vfs_assigned() is a
+> little complex, to get sum of VFs that assigned to VM, access low
+> level configuration space register and then loop in traversing
+> device tree.
 
-Understood.
+(...)
 
-I was using the function in the other patch series that adds PCIe support to arm64
-in order to provide a pci_domain_nr() implementation. But I might not need it
-in the end if I go ahead with separating pci_host_bridge creation from bus
-creation.
+> @@ -650,6 +630,11 @@ EXPORT_SYMBOL_GPL(pci_vfs_assigned);
+>   void pci_iov_assign_device(struct pci_dev *pdev)
+>   {
+>   	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+> +	if (pdev->is_virtfn && !pdev->is_physfn)
+> +		if (pdev->physfn)
+> +			if (pdev->physfn->sriov)
 
-Best regards,
-Liviu
+Why don't we make last two 'if' conditions into single 'if'
 
-> 
-> >  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
-> >  				 void (*release_fn)(struct pci_host_bridge *),
-> > -- 
-> > 2.0.0
-> > 
-> 
+if (pdev->physfn && pdev->physfn->sriov)
+
+> +				atomic_inc(&pdev->physfn->sriov->
+> +					VFs_assigned_cnt);
+>   }
+>   EXPORT_SYMBOL_GPL(pci_iov_assign_device);
+>   
+> @@ -660,6 +645,11 @@ EXPORT_SYMBOL_GPL(pci_iov_assign_device);
+>   void pci_iov_deassign_device(struct pci_dev *pdev)
+>   {
+>   	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+> +	if (pdev->is_virtfn && !pdev->is_physfn)
+> +		if (pdev->physfn)
+> +			if (pdev->physfn->sriov)
+
+same...
+
+> +				atomic_dec(&pdev->physfn->sriov->
+> +					VFs_assigned_cnt);
+>   }
+>   EXPORT_SYMBOL_GPL(pci_iov_deassign_device);
+>   
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 6bd0822..d17bda2 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -235,6 +235,7 @@ struct pci_sriov {
+>   	u32 pgsz;		/* page size for BAR alignment */
+>   	u8 link;		/* Function Dependency Link */
+>   	u16 driver_max_VFs;	/* max num VFs driver supports */
+> +	atomic_t VFs_assigned_cnt; /* counter of VFs assigned to VM */
+>   	struct pci_dev *dev;	/* lowest numbered PF */
+>   	struct pci_dev *self;	/* this PF */
+>   	struct mutex lock;	/* lock for VF bus */
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+Regards,
+Varka Bhadram.
 
