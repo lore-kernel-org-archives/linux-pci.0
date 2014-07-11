@@ -1,128 +1,171 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:48638 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756173AbaGNTvo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Jul 2014 15:51:44 -0400
-Date: Mon, 14 Jul 2014 21:51:28 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-Cc: clemens@ladisch.de, jdelvare@suse.de, linux@roeck-us.net,
-	rdunlap@infradead.org, bhelgaas@google.com,
-	lm-sensors@lm-sensors.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] hwmon, k10temp: Add support for AMD F15h M60h processor
-Message-ID: <20140714195128.GA25124@pd.tnic>
-References: <1405369388-12729-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1405369388-12729-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ethan Zhao <ethan.zhao@oracle.com>
+To: bhelgaas@google.com, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	gleb@kernel.org, pbonzini@redhat.com, jeffrey.t.kirsher@intel.com,
+	jesse.brandeburg@intel.com, bruce.w.allan@intel.com,
+	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
+	gregory.v.rose@intel.com, alexander.h.duyck@intel.com,
+	john.ronciak@intel.com, mitch.a.williams@intel.com
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+	linux.nics@intel.com, e1000-devel@lists.sourceforge.net,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ethan.kernel@gmail.com, vaughan.cao@oracle.com,
+	Ethan Zhao <ethan.zhao@oracle.com>
+Subject: [PATCH 1/4] PCI: introduce VFs reference counter and simplify pci_vfs_assigned() implementation
+Date: Fri, 11 Jul 2014 08:47:19 +0800
+Message-Id: <1405039642-23519-1-git-send-email-ethan.zhao@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 14, 2014 at 03:23:08PM -0500, Aravind Gopalakrishnan wrote:
-> This patch adds temperature monitoring support for F15h M60h processor.
->  - Add new pci device id for the relevant processor
->  - The functionality of REG_REPORTED_TEMPERATURE is moved to
->    D0F0xBC_xD820_0CA4 [Reported Temperature Control]
->    - So, use this to get CUR_TEMP value
->  - Add Kconfig, Doc entries to indicate support for this processor.
-> 
-> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-> ---
->  Documentation/hwmon/k10temp |  2 +-
->  drivers/hwmon/Kconfig       |  4 ++--
->  drivers/hwmon/k10temp.c     | 22 ++++++++++++++++++++--
->  include/linux/pci_ids.h     |  1 +
->  4 files changed, 24 insertions(+), 5 deletions(-)
-> 
-> diff --git a/Documentation/hwmon/k10temp b/Documentation/hwmon/k10temp
-> index ee6d30e..254d2f5 100644
-> --- a/Documentation/hwmon/k10temp
-> +++ b/Documentation/hwmon/k10temp
-> @@ -11,7 +11,7 @@ Supported chips:
->    Socket S1G2: Athlon (X2), Sempron (X2), Turion X2 (Ultra)
->  * AMD Family 12h processors: "Llano" (E2/A4/A6/A8-Series)
->  * AMD Family 14h processors: "Brazos" (C/E/G/Z-Series)
-> -* AMD Family 15h processors: "Bulldozer" (FX-Series), "Trinity", "Kaveri"
-> +* AMD Family 15h processors: "Bulldozer" (FX-Series), "Trinity", "Kaveri", "Carrizo"
->  * AMD Family 16h processors: "Kabini", "Mullins"
->  
->    Prefix: 'k10temp'
-> diff --git a/drivers/hwmon/Kconfig b/drivers/hwmon/Kconfig
-> index 02d3d85..57ba400 100644
-> --- a/drivers/hwmon/Kconfig
-> +++ b/drivers/hwmon/Kconfig
-> @@ -280,8 +280,8 @@ config SENSORS_K10TEMP
->  	  If you say yes here you get support for the temperature
->  	  sensor(s) inside your CPU. Supported are later revisions of
->  	  the AMD Family 10h and all revisions of the AMD Family 11h,
-> -	  12h (Llano), 14h (Brazos), 15h (Bulldozer/Trinity/Kaveri) and
-> -	  16h (Kabini/Mullins) microarchitectures.
-> +	  12h (Llano), 14h (Brazos), 15h (Bulldozer/Trinity/Kaveri/Carrizo)
-> +	  and 16h (Kabini/Mullins) microarchitectures.
->  
->  	  This driver can also be built as a module.  If so, the module
->  	  will be called k10temp.
-> diff --git a/drivers/hwmon/k10temp.c b/drivers/hwmon/k10temp.c
-> index f7b46f6..5da872f 100644
-> --- a/drivers/hwmon/k10temp.c
-> +++ b/drivers/hwmon/k10temp.c
-> @@ -51,13 +51,30 @@ MODULE_PARM_DESC(force, "force loading on processors with erratum 319");
->  #define REG_NORTHBRIDGE_CAPABILITIES	0xe8
->  #define  NB_CAP_HTC			0x00000400
->  
-> +/*
-> + * For F15h M60h, functionality of REG_REPORTED_TEMPERATURE
-> + * has been moved to D0F0xBC_xD820_0CA4 [Reported Temperature
-> + * Control]
-> + */
-> +#define NB_SMU_IND_ADDR			0xb8
-> +#define NB_SMU_IND_DATA			0xbc
-> +#define IND_ADDR_OFFSET			0xd8200ca4
-> +
->  static ssize_t show_temp(struct device *dev,
->  			 struct device_attribute *attr, char *buf)
->  {
->  	u32 regval;
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +	if (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model == 0x60) {
-> +		pci_bus_write_config_dword(pdev->bus, PCI_DEVFN(0, 0),
-> +					   NB_SMU_IND_ADDR, IND_ADDR_OFFSET);
-> +		pci_bus_read_config_dword(pdev->bus, PCI_DEVFN(0, 0),
-> +					  NB_SMU_IND_DATA, &regval);
-> +
-> +	} else
-> +		pci_read_config_dword(pdev, REG_REPORTED_TEMPERATURE, &regval);
->  
-> -	pci_read_config_dword(to_pci_dev(dev),
-> -			      REG_REPORTED_TEMPERATURE, &regval);
->  	return sprintf(buf, "%u\n", (regval >> 21) * 125);
->  }
->  
-> @@ -211,6 +228,7 @@ static const struct pci_device_id k10temp_id_table[] = {
->  	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
->  	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
->  	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F3) },
-> +	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M60H_NB_F3) },
->  	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
->  	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_16H_M30H_NB_F3) },
->  	{}
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 7fa3173..3c8e328 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -520,6 +520,7 @@
->  #define PCI_DEVICE_ID_AMD_15H_M10H_F3	0x1403
->  #define PCI_DEVICE_ID_AMD_15H_M30H_NB_F3 0x141d
->  #define PCI_DEVICE_ID_AMD_15H_M30H_NB_F4 0x141e
-> +#define PCI_DEVICE_ID_AMD_15H_M60H_NB_F3 0x1573
+Current implementation of helper function pci_vfs_assigned() is a little complex, to
+get sum of VFs that assigned to VM, access low level configuration space register and
+then loop in traversing device tree.
 
-I'm assuming this is used somewhere else besides k10temp.c?
+This patch introduce an atomic reference counter for VFs that assigned to VM in struct
+pci_sriov, and compose two more helper functions
 
+pci_sriov_assign_device(),
+pci_sriov_deassign_device()
+
+to replace manipulation to device flag and the meanwhile increase and decease the counter.
+
+Passed building on 3.15.5
+
+Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+---
+ drivers/pci/iov.c   |   65 ++++++++++++++++++++++++++++----------------------
+ drivers/pci/pci.h   |    1 +
+ include/linux/pci.h |    4 +++
+ 3 files changed, 41 insertions(+), 29 deletions(-)
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index de7a747..72e267f 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -382,6 +382,7 @@ found:
+ 	iov->nres = nres;
+ 	iov->ctrl = ctrl;
+ 	iov->total_VFs = total;
++	atomic_set(&iov->VFs_assigned_cnt, 0);
+ 	iov->offset = offset;
+ 	iov->stride = stride;
+ 	iov->pgsz = pgsz;
+@@ -603,45 +604,51 @@ int pci_num_vf(struct pci_dev *dev)
+ EXPORT_SYMBOL_GPL(pci_num_vf);
+ 
+ /**
+- * pci_vfs_assigned - returns number of VFs are assigned to a guest
+- * @dev: the PCI device
++ * pci_vfs_assigned - returns number of VFs are assigned to VM
++ * @dev: the physical PCI device that contains the VFs.
+  *
+- * Returns number of VFs belonging to this device that are assigned to a guest.
++ * Returns number of VFs belonging to this device that are assigned to VM.
+  * If device is not a physical function returns 0.
+  */
+ int pci_vfs_assigned(struct pci_dev *dev)
+ {
+-	struct pci_dev *vfdev;
+-	unsigned int vfs_assigned = 0;
+-	unsigned short dev_id;
+-
+-	/* only search if we are a PF */
+ 	if (!dev->is_physfn)
+ 		return 0;
++	if (dev->sriov)
++		return atomic_read(&dev->sriov->VFs_assigned_cnt);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(pci_vfs_assigned);
+ 
+-	/*
+-	 * determine the device ID for the VFs, the vendor ID will be the
+-	 * same as the PF so there is no need to check for that one
+-	 */
+-	pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_VF_DID, &dev_id);
+-
+-	/* loop through all the VFs to see if we own any that are assigned */
+-	vfdev = pci_get_device(dev->vendor, dev_id, NULL);
+-	while (vfdev) {
+-		/*
+-		 * It is considered assigned if it is a virtual function with
+-		 * our dev as the physical function and the assigned bit is set
+-		 */
+-		if (vfdev->is_virtfn && (vfdev->physfn == dev) &&
+-		    (vfdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED))
+-			vfs_assigned++;
+-
+-		vfdev = pci_get_device(dev->vendor, dev_id, vfdev);
+-	}
++/**
++ * pci_sriov_assign_device - assign device to VM
++ * @pdev: the device to be assigned.
++ */
++void pci_sriov_assign_device(struct pci_dev *pdev)
++{
++	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
++	if (pdev->is_virtfn && !pdev->is_physfn)
++		if (pdev->physfn)
++			if (pdev->physfn->sriov)
++				atomic_inc(&pdev->physfn->sriov->
++						VFs_assigned_cnt);
++}
++EXPORT_SYMBOL_GPL(pci_sriov_assign_device);
+ 
+-	return vfs_assigned;
++/**
++ * pci_sriov_deassign_device - deasign device from VM
++ * @pdev: the device to be deassigned.
++ */
++void pci_sriov_deassign_device(struct pci_dev *pdev)
++{
++	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++	if (pdev->is_virtfn && !pdev->is_physfn)
++		if (pdev->physfn)
++			if (pdev->physfn->sriov)
++				atomic_dec(&pdev->physfn->sriov->
++						VFs_assigned_cnt);
+ }
+-EXPORT_SYMBOL_GPL(pci_vfs_assigned);
++EXPORT_SYMBOL_GPL(pci_sriov_deassign_device);
+ 
+ /**
+  * pci_sriov_set_totalvfs -- reduce the TotalVFs available
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 6bd0822..d17bda2 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -235,6 +235,7 @@ struct pci_sriov {
+ 	u32 pgsz;		/* page size for BAR alignment */
+ 	u8 link;		/* Function Dependency Link */
+ 	u16 driver_max_VFs;	/* max num VFs driver supports */
++	atomic_t VFs_assigned_cnt; /* counter of VFs assigned to VM */
+ 	struct pci_dev *dev;	/* lowest numbered PF */
+ 	struct pci_dev *self;	/* this PF */
+ 	struct mutex lock;	/* lock for VF bus */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index aab57b4..5cf6833 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1601,6 +1601,8 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+ void pci_disable_sriov(struct pci_dev *dev);
+ int pci_num_vf(struct pci_dev *dev);
+ int pci_vfs_assigned(struct pci_dev *dev);
++void pci_sriov_assign_device(struct pci_dev *dev);
++void pci_sriov_deassign_device(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
+ #else
+@@ -1610,6 +1612,8 @@ static inline void pci_disable_sriov(struct pci_dev *dev) { }
+ static inline int pci_num_vf(struct pci_dev *dev) { return 0; }
+ static inline int pci_vfs_assigned(struct pci_dev *dev)
+ { return 0; }
++static inline void pci_sriov_assign_device(struct pci_dev *dev) { }
++static inline void pci_sriov_deassign_device(struct pci_dev *dev) { }
+ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+ { return 0; }
+ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
 -- 
-Regards/Gruss,
-    Boris.
+1.7.1
 
-Sent from a fat crate under my desk. Formatting is fine.
---
