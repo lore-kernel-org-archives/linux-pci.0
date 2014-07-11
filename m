@@ -1,70 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f46.google.com ([209.85.192.46]:62573 "EHLO
-	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751895AbaG3CsS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 22:48:18 -0400
-Received: by mail-qg0-f46.google.com with SMTP id z60so709729qgd.33
-        for <linux-pci@vger.kernel.org>; Tue, 29 Jul 2014 19:48:17 -0700 (PDT)
+Received: from fw-tnat.austin.arm.com ([217.140.110.23]:23312 "EHLO
+	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750973AbaGKQJq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 12:09:46 -0400
+Date: Fri, 11 Jul 2014 17:09:25 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 6/9] pci: Introduce a domain number for
+ pci_host_bridge.
+Message-ID: <20140711160925.GD16321@arm.com>
+References: <1404240214-9804-7-git-send-email-Liviu.Dudau@arm.com>
+ <20140708005954.GC22939@google.com>
+ <20140708104655.GC6501@e106497-lin.cambridge.arm.com>
+ <CAErSpo75ovmGoeSHKJN0nckGDy-0gpn8kLPfHQ79CtcXxhPydw@mail.gmail.com>
+ <20140708224847.GC4980@e106497-lin.cambridge.arm.com>
+ <CAErSpo5rBt0iF2HGeDD-UH6_sPCoC647VCw0Q1v_0Rdpvcir-w@mail.gmail.com>
+ <20140710094758.GA6501@e106497-lin.cambridge.arm.com>
+ <CAErSpo5ZNCY31NztT0cLFbRVsBZqMsZ0LbTFNOTQCZUU3F7qJA@mail.gmail.com>
+ <20140711141115.GB16321@arm.com>
+ <20140711150823.GU6501@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-In-Reply-To: <53D7A9FC.3040001@solarflare.com>
-References: <53D7A9FC.3040001@solarflare.com>
-Date: Wed, 30 Jul 2014 10:48:17 +0800
-Message-ID: <CABawtvN7nb6FkLc_00Qr55+=72tymmkSEDZt7jb9=+=r0BDTBg@mail.gmail.com>
-Subject: Re: pci_sriov_set_totalvfs question
-From: Ethan Zhao <ethan.kernel@gmail.com>
-To: Edward Cree <ecree@solarflare.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140711150823.GU6501@e106497-lin.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 29, 2014 at 10:04 PM, Edward Cree <ecree@solarflare.com> wrote:
-> Not sure if this list is the right place to ask, but:
-> I'm working on fallback code in the sfc driver where in some
-> configurations the device won't support using VFs, but will still
-> advertise them as present [1].  This is discovered at PF probe time, and
-> what I want to do is just set sriov_totalvfs to 0 in this case.
->
-> As far as I can tell, pci_sriov_set_totalvfs (drivers/pci/iov.c) is the
-> function to call, but I'm confused by the comment on that function which
-> states "Should be called from PF driver's probe routine with device's
-> mutex held."
+On Fri, Jul 11, 2014 at 04:08:23PM +0100, Liviu Dudau wrote:
+> On Fri, Jul 11, 2014 at 03:11:16PM +0100, Catalin Marinas wrote:
+> > On Thu, Jul 10, 2014 at 11:36:10PM +0100, Bjorn Helgaas wrote:
+> > > Most of the rest of the v7 discussion was about "Introduce a domain
+> > > number for pci_host_bridge."  I think we should add arm64 using the
+> > > existing pci_scan_root_bus() and keep the domain number in the arm64
+> > > sysdata structure like every other arch does.  Isn't that feasible?
+> > > We can worry about domain unification later.
+> > 
+> > I think that's what we were trying to avoid, adding an arm64-specific
+> > pci_sys_data structure (and arm64-specific API). IIUC, avoiding this
+> > would allow the host controller drivers to use the sysdata pointer for
+> > their own private data structures.
+> > 
+> > Also since you can specify the domain number via DT (and in Liviu's
+> > v8 patches read by of_create_pci_host_bridge), I think it would make
+> > sense to have it stored in some generic data structures (e.g.
+> > pci_host_bridge) rather than in an arm64 private sysdata.
+> > 
+> > (Liviu is thinking of an alternative API but maybe he could briefly
+> > describe it here before posting a new series)
+> 
+> My plan is to keep the domain number in the pci_host_bridge and split
+> the creation of the pci_host_bridge out of the pci_create_root_bus().
 
- device_attach()
-      device_lock(dev);  <--------
-      driver_probe_device()
-            really_probe()
-                  drv->probe(dev)
-                       ixgbe_probe()
-                           pci_sriov_set_totalvfs()
-      device_unlock(dev); <--------
->
-> Specifically, it's unclear what mutex is meant.  struct pci_dev doesn't
-> have one; struct pci_sriov /does/ but the struct is only defined in
-> drivers/pci/pci.h which I don't appear to be able to include from a
-> driver.  There's also one in the 'struct device dev' member of struct
-> pci_dev, but that seems rather unlikely.
->
-> Also, the wording of the comment makes me wonder if being in the PF
-> probe routine /implies/ that the mutex is held already, in which case I
-> don't have to do anything.  This is supported by the only callers,
-> igb_probe (via igb_sw_init and igb_probe_vfs) and ixgbe_probe, not
-> appearing to take any mutexes before calling pci_sriov_set_totalvfs.
->
-> Please CC on replies, as I'm not subscribed to the list.
->
-> Thanks,
-> -Edward
->
-> [1] SFC9120-based NICs support multiple PFs per port and these can be
-> used as a kind of "poor-man's SR-IOV" (we're calling it 'PF-IOV') by
-> placing the firmware v-switch below the PFs.  However, this then
-> precludes adding a v-switch above the PF to direct VF traffic, meaning
-> that VFs are useless in this configuration.  Consequently, our
-> configuration tools won't allow VFs and PF-IOV to be enabled
-> simultaneously, but bugs or corruption could cause this to happen.
-> The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Wouldn't it make more sense to add domain_nr to the pci_bus structure
+(well, only needed for the root bus)? It would simplify pci_domain_nr()
+as well which only takes a pci_bus parameter.
+
+> The new function (tentatively called pci_create_new_root_bus()) will
+> no longer call pci_alloc_host_bridge() but will accept it as a
+> parameter, allowing one to be able to set the domain_nr ahead of the
+> root bus creation.
+
+If we place domain_nr in pci_bus, this split wouldn't help but we still
+need your original pci_create_root_bus_in_domain(). Are there other uses
+of your proposal above?
+
+Yet another alternative is to ignore PCI domains altogether (domain 0
+always).
+
+-- 
+Catalin
