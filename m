@@ -1,128 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:56588 "EHLO
-	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752949AbaGNGFb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jul 2014 02:05:31 -0400
-Date: Mon, 14 Jul 2014 11:33:34 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v4 0/6] Add Keystone PCIe controller driver
-Message-ID: <20140714060334.GB2930@pratyush-vbox>
-References: <1405110995-24676-1-git-send-email-m-karicheri2@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1405110995-24676-1-git-send-email-m-karicheri2@ti.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch Part3 V4 21/21] pci, ACPI, iommu: Enhance pci_root to support DMAR device hotplug
+Date: Fri, 11 Jul 2014 14:19:45 +0800
+Message-Id: <1405059585-10620-22-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Oh.. I see my reply from gmail is not readable at all. (I forgot to
-switch to plain text :( ) Please ignore last mail I am replying again
-here.
+Finally enhance pci_root driver to support DMAR device hotplug when
+hot-plugging PCI host bridges.
 
-On Sat, Jul 12, 2014 at 04:36:29AM +0800, Murali Karicheri wrote:
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/pci_root.c |   16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
-[...]
-
-> Murali Karicheri (6):
->   PCI: designware: add rd[wr]_other_conf API
->   PCI: designware: refactor MSI code to work with v3.65 dw hardware
-
-For  above two you can add my reviewed-by:
-
->   PCI: designware: refactor host init code to re-use on keystone PCI
->   PCI: designware: enhance dw core driver to support keystone PCI host
-
-In stead of using version number and then changing few functions from
-static to global , I would have used same philosophy of adding callbacks
-wherever needed. May be maintainers can give their view, instead of patch 
-3 and 4 I would have gone with something like this, where kc_pcie can be 
-passed through pp->plat_data.
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index d388f13d48b4..99c2b9761c12 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -33,6 +33,7 @@
+ #include <linux/pci.h>
+ #include <linux/pci-acpi.h>
+ #include <linux/pci-aspm.h>
++#include <linux/dmar.h>
+ #include <linux/acpi.h>
+ #include <linux/slab.h>
+ #include <acpi/apei.h>	/* for acpi_hest_init() */
+@@ -511,6 +512,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	struct acpi_pci_root *root;
+ 	acpi_handle handle = device->handle;
+ 	int no_aspm = 0, clear_aspm = 0;
++	bool hotadd = system_state != SYSTEM_BOOTING;
  
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 905941c..b216192 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -490,16 +490,21 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-        }
+ 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+ 	if (!root)
+@@ -557,6 +559,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
+ 	device->driver_data = root;
  
-        if (IS_ENABLED(CONFIG_PCI_MSI)) {
--               pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
--                                       MAX_MSI_IRQS, &msi_domain_ops,
--                                       &dw_pcie_msi_chip);
--               if (!pp->irq_domain) {
--                       dev_err(pp->dev, "irq domain init failed\n");
--                       return -ENXIO;
--               }
-+               if (!pp->ops->msi_init) {
-+                       pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
-+                                               MAX_MSI_IRQS, &msi_domain_ops,
-+                                               &dw_pcie_msi_chip);
-+                       if (!pp->irq_domain) {
-+                               dev_err(pp->dev, "irq domain init failed\n");
-+                               return -ENXIO;
-+                       }
- 
--               for (i = 0; i < MAX_MSI_IRQS; i++)
--                       irq_create_mapping(pp->irq_domain, i);
-+                       for (i = 0; i < MAX_MSI_IRQS; i++)
-+                               irq_create_mapping(pp->irq_domain, i);
-+               } else {
-+                       pp->ops->msi_init(pp, &msi_domain_ops,
-+                                               &dw_pcie_msi_chip);
-+               }
-        }
- 
-        if (pp->ops->host_init)
-@@ -759,6 +764,9 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
-                BUG();
-        }
- 
-+       if (bus && pp->ops->scan_bus)
-+               bus = pp->ops->scan_bus(pp);
++	if (hotadd && dmar_device_add(handle)) {
++		result = -ENXIO;
++		goto end;
++	}
 +
-        return bus;
- }
+ 	pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
+ 	       acpi_device_name(device), acpi_device_bid(device),
+ 	       root->segment, &root->secondary);
+@@ -583,7 +590,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 			root->segment, (unsigned int)root->secondary.start);
+ 		device->driver_data = NULL;
+ 		result = -ENODEV;
+-		goto end;
++		goto remove_dmar;
+ 	}
  
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 387f69e..39ce496 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -52,6 +52,7 @@ struct pcie_port {
-        struct irq_domain       *irq_domain;
-        unsigned long           msi_data;
-        DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
-+       void                    *plat_data;
- };
+ 	if (clear_aspm) {
+@@ -597,7 +604,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	if (device->wakeup.flags.run_wake)
+ 		device_set_run_wake(root->bus->bridge, true);
  
- struct pcie_host_ops {
-@@ -70,6 +71,9 @@ struct pcie_host_ops {
-        void (*msi_set_irq)(struct pcie_port *pp, int irq);
-        void (*msi_clear_irq)(struct pcie_port *pp, int irq);
-        u32 (*get_msi_data)(struct pcie_port *pp);
-+       struct pci_bus *(*scan_bus)(struct pcie_port *pp);
-+       void (*msi_init) (struct pcie_port *pp, struct irq_domain_ops *ops,
-+                       struct msi_chip *chip);
- };
+-	if (system_state != SYSTEM_BOOTING) {
++	if (hotadd) {
+ 		pcibios_resource_survey_bus(root->bus);
+ 		pci_assign_unassigned_root_bus_resources(root->bus);
+ 	}
+@@ -607,6 +614,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	pci_unlock_rescan_remove();
+ 	return 1;
  
- int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
++remove_dmar:
++	if (hotadd)
++		dmar_device_remove(handle);
+ end:
+ 	kfree(root);
+ 	return result;
+@@ -625,6 +635,8 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+ 
+ 	pci_remove_root_bus(root->bus);
+ 
++	dmar_device_remove(device->handle);
++
+ 	pci_unlock_rescan_remove();
+ 
+ 	kfree(root);
+-- 
+1.7.10.4
 
-
-~Pratyush
