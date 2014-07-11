@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:51665 "EHLO arroyo.ext.ti.com"
+Received: from comal.ext.ti.com ([198.47.26.152]:49702 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965092AbaGRPPz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 Jul 2014 11:15:55 -0400
+	id S1752930AbaGKUiB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Jul 2014 16:38:01 -0400
 From: Murali Karicheri <m-karicheri2@ti.com>
 To: <linux-arm-kernel@lists.infradead.org>,
 	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
@@ -11,6 +11,7 @@ CC: Murali Karicheri <m-karicheri2@ti.com>,
 	Grant Likely <grant.likely@linaro.org>,
 	Rob Herring <robh+dt@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
 	Richard Zhu <r65037@freescale.com>,
 	Kishon Vijay Abraham I <kishon@ti.com>,
 	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
@@ -19,11 +20,11 @@ CC: Murali Karicheri <m-karicheri2@ti.com>,
 	Ian Campbell <ijc+devicetree@hellion.org.uk>,
 	Kumar Gala <galak@codeaurora.org>,
 	Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH v6 2/5] PCI: designware: refactor MSI code to work with v3.65 dw hardware
-Date: Fri, 18 Jul 2014 11:14:26 -0400
-Message-ID: <1405696469-7172-3-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com>
-References: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com>
+Subject: [PATCH v4 2/6] PCI: designware: refactor MSI code to work with v3.65 dw hardware
+Date: Fri, 11 Jul 2014 16:36:31 -0400
+Message-ID: <1405110995-24676-3-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1405110995-24676-1-git-send-email-m-karicheri2@ti.com>
+References: <1405110995-24676-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
@@ -42,7 +43,6 @@ to get the address of this register so that common code can be
 re-used on old h/w.
 
 Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-Reviewed-by: Pratyush Anand <pratyush.anand@st.com>
 Acked-by: Mohit Kumar <mohit.kumar@st.com>
 Acked-by: Jingoo Han <jg1.han@samsung.com>
 Acked-by: Santosh Shilimkar <santosh.shilimkar@ti.com>
@@ -51,6 +51,7 @@ CC: Russell King <linux@arm.linux.org.uk>
 CC: Grant Likely <grant.likely@linaro.org>
 CC: Rob Herring <robh+dt@kernel.org>
 CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Pratyush Anand <pratyush.anand@st.com>
 CC: Richard Zhu <r65037@freescale.com>
 CC: Kishon Vijay Abraham I <kishon@ti.com>
 CC: Marek Vasut <marex@denx.de>
@@ -60,7 +61,7 @@ CC: Mark Rutland <mark.rutland@arm.com>
 CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
 CC: Kumar Gala <galak@codeaurora.org>
 CC: Randy Dunlap <rdunlap@infradead.org>
-CC: Grant Likely <grant.likely@linaro.org>
+CC: Grant Likely <grant.likely@linaro.org> 
 ---
  drivers/pci/host/pcie-designware.c |   50 ++++++++++++++++++++++++++----------
  drivers/pci/host/pcie-designware.h |    3 +++
