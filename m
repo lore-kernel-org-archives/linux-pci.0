@@ -1,59 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:36938 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754701AbaGDRAm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 4 Jul 2014 13:00:42 -0400
-Date: Fri, 4 Jul 2014 11:00:28 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	Prabhakar Kushwaha <prabhakar@freescale.com>
-Subject: Re: [PATCH] arm64: PCI(e) arch support
-Message-ID: <20140704170028.GB1736@obsidianresearch.com>
-References: <1404422876-1160-1-git-send-email-tinamdar@apm.com>
- <53B5F81B.8010801@freescale.com>
- <20140704094440.GC6501@e106497-lin.cambridge.arm.com>
- <4342569.JSAyWBcJn2@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4342569.JSAyWBcJn2@wuerfel>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ethan Zhao <ethan.zhao@oracle.com>
+To: bhelgaas@google.com, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	gleb@kernel.org, pbonzini@redhat.com, jeffrey.t.kirsher@intel.com,
+	jesse.brandeburg@intel.com, bruce.w.allan@intel.com,
+	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
+	gregory.v.rose@intel.com, alexander.h.duyck@intel.com,
+	john.ronciak@intel.com, mitch.a.williams@intel.com,
+	alex.williamson@redhat.com
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+	linux.nics@intel.com, e1000-devel@lists.sourceforge.net,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ethan.kernel@gmail.com, vaughan.cao@oracle.com,
+	Ethan Zhao <ethan.zhao@oracle.com>
+Subject: [PATCH 2/2 V3] PCI: implement VFs assignment reference counter
+Date: Fri, 11 Jul 2014 20:30:02 +0800
+Message-Id: <1405081802-419-2-git-send-email-ethan.zhao@oracle.com>
+In-Reply-To: <1405081802-419-1-git-send-email-ethan.zhao@oracle.com>
+References: <1405081802-419-1-git-send-email-ethan.zhao@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 04, 2014 at 12:21:00PM +0200, Arnd Bergmann wrote:
+Current implementation of helper function pci_vfs_assigned() is a
+little complex, to get sum of VFs that assigned to VM, access low
+level configuration space register and then loop in traversing
+device tree.
 
-> However, what do we do about PCI hosts that can be used with different
-> kinds of systems? Do we assume that they all do PCI resource allocation?
-> Can we decide this on a per host driver basis, or do we need to introduce
-> an extension to the PCI DT binding to make that decision?
+This patch introduces an atomic reference counter for VFs those
+were assigned to VM in struct pci_sriov. and simplify the code in
+pci_vfs_assigned().
 
-If the firmware sets everything up, and standard ECAM/CAM config space
-is provided, then Will's simple generic driver should be selected. The
-kernel shouldn't even be using code to manipulate the host
-bridge. This is the x86 model.
+v3: change the naming of device assignment helpers, because they work
+for all kind of PCI device, not only SR-IOV (david.vrabel@citrix.com)
 
-If it is more embedded focused and firmware doesn't do much, then a
-different compatible string and different driver can be used that does
-have any special setup code..
+v2: reorder the patchset according to the suggestion from
+alex.williamson@redhat.com
 
-The HW needs to be designed to support this, so it actually has to
-imeplement configuration access properly, it can't split the config
-space for the bridge with config space for the downstream, for
-instance. It must implement something sensible for root port bridge
-windows, and a few other common sense things.
+Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+---
+ drivers/pci/iov.c |   42 ++++++++++++++++--------------------------
+ drivers/pci/pci.h |    1 +
+ 2 files changed, 17 insertions(+), 26 deletions(-)
 
-Things are going to need to work like this anyhow on any HW that
-expects to suport ACPI...
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 090f827..10efe43 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -382,6 +382,7 @@ found:
+ 	iov->nres = nres;
+ 	iov->ctrl = ctrl;
+ 	iov->total_VFs = total;
++	atomic_set(&iov->VFs_assigned_cnt, 0);
+ 	iov->offset = offset;
+ 	iov->stride = stride;
+ 	iov->pgsz = pgsz;
+@@ -603,43 +604,22 @@ int pci_num_vf(struct pci_dev *dev)
+ EXPORT_SYMBOL_GPL(pci_num_vf);
+ 
+ /**
+- * pci_vfs_assigned - returns number of VFs are assigned to a guest
+- * @dev: the PCI device
++ * pci_vfs_assigned - returns number of VFs are assigned to VM
++ * @dev: the physical PCI device that contains the VFs.
+  *
+  * Returns number of VFs belonging to this device that are assigned to a guest.
+  * If device is not a physical function returns 0.
+  */
+ int pci_vfs_assigned(struct pci_dev *dev)
+ {
+-	struct pci_dev *vfdev;
+-	unsigned int vfs_assigned = 0;
+-	unsigned short dev_id;
+ 
+ 	/* only search if we are a PF */
+ 	if (!dev->is_physfn)
+ 		return 0;
+ 
+-	/*
+-	 * determine the device ID for the VFs, the vendor ID will be the
+-	 * same as the PF so there is no need to check for that one
+-	 */
+-	pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_VF_DID, &dev_id);
+-
+-	/* loop through all the VFs to see if we own any that are assigned */
+-	vfdev = pci_get_device(dev->vendor, dev_id, NULL);
+-	while (vfdev) {
+-		/*
+-		 * It is considered assigned if it is a virtual function with
+-		 * our dev as the physical function and the assigned bit is set
+-		 */
+-		if (vfdev->is_virtfn && (vfdev->physfn == dev) &&
+-		    (vfdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED))
+-			vfs_assigned++;
+-
+-		vfdev = pci_get_device(dev->vendor, dev_id, vfdev);
+-	}
+-
+-	return vfs_assigned;
++	if (dev->sriov)
++		return atomic_read(&dev->sriov->VFs_assigned_cnt);
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(pci_vfs_assigned);
+ 
+@@ -650,6 +630,11 @@ EXPORT_SYMBOL_GPL(pci_vfs_assigned);
+ void pci_iov_assign_device(struct pci_dev *pdev)
+ {
+ 	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
++	if (pdev->is_virtfn && !pdev->is_physfn)
++		if (pdev->physfn)
++			if (pdev->physfn->sriov)
++				atomic_inc(&pdev->physfn->sriov->
++					VFs_assigned_cnt);
+ }
+ EXPORT_SYMBOL_GPL(pci_iov_assign_device);
+ 
+@@ -660,6 +645,11 @@ EXPORT_SYMBOL_GPL(pci_iov_assign_device);
+ void pci_iov_deassign_device(struct pci_dev *pdev)
+ {
+ 	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++	if (pdev->is_virtfn && !pdev->is_physfn)
++		if (pdev->physfn)
++			if (pdev->physfn->sriov)
++				atomic_dec(&pdev->physfn->sriov->
++					VFs_assigned_cnt);
+ }
+ EXPORT_SYMBOL_GPL(pci_iov_deassign_device);
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 6bd0822..d17bda2 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -235,6 +235,7 @@ struct pci_sriov {
+ 	u32 pgsz;		/* page size for BAR alignment */
+ 	u8 link;		/* Function Dependency Link */
+ 	u16 driver_max_VFs;	/* max num VFs driver supports */
++	atomic_t VFs_assigned_cnt; /* counter of VFs assigned to VM */
+ 	struct pci_dev *dev;	/* lowest numbered PF */
+ 	struct pci_dev *self;	/* this PF */
+ 	struct mutex lock;	/* lock for VF bus */
+-- 
+1.7.1
 
-It is OK for the kernel to reconfigure the BARs and other things as it
-likes, so long as the configuration access mechanism is working
-properly according to the spec. IIRC it does a bit of a hybrid on x86
-where it tries to leave things alone that are OK, and fix up things
-that are not OK.
-
-Jason
