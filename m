@@ -1,137 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:43509 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755789AbaGESXg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 Jul 2014 14:23:36 -0400
-Received: by mail-ig0-f169.google.com with SMTP id c1so9245271igq.4
-        for <linux-pci@vger.kernel.org>; Sat, 05 Jul 2014 11:23:35 -0700 (PDT)
-Date: Sat, 5 Jul 2014 12:23:32 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v3 0/5] Add Keystone PCIe controller driver
-Message-ID: <20140705182332.GB28871@google.com>
-References: <1404164720-11066-1-git-send-email-m-karicheri2@ti.com>
+Received: from service87.mimecast.com ([91.220.42.44]:59965 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752506AbaGKJI6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 05:08:58 -0400
+Date: Fri, 11 Jul 2014 10:08:51 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'linux-pci' <linux-pci@vger.kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'linaro-kernel' <linaro-kernel@lists.linaro.org>,
+	'Tanmay Inamdar' <tinamdar@apm.com>,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Sinan Kaya' <okaya@codeaurora.org>,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Suravee Suthikulanit' <suravee.suthikulpanit@amd.com>,
+	'LKML' <linux-kernel@vger.kernel.org>,
+	'Device Tree ML' <devicetree@vger.kernel.org>,
+	'LAKML' <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 8/9] pci: Add support for creating a generic
+ host_bridge from device tree
+Message-ID: <20140711090851.GL6501@e106497-lin.cambridge.arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-9-git-send-email-Liviu.Dudau@arm.com>
+ <004601cf9cdb$ca08f7f0$5e1ae7d0$%han@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1404164720-11066-1-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <004601cf9cdb$ca08f7f0$5e1ae7d0$%han@samsung.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 30, 2014 at 05:45:15PM -0400, Murali Karicheri wrote:
-> This patch add PCIe controller driver for Keystone SoCs. This
-> is based on v2 of the series posted to the mailing list.
-> Keystone PCI controller is based on version 3.65 of the DW
-> hardware. This driver re-uses some of the DW core driver
-> functions and required modification in some to support
-> the old DW h/w based Keystone driver.
+On Fri, Jul 11, 2014 at 08:43:21AM +0100, Jingoo Han wrote:
+> On Wednesday, July 02, 2014 3:44 AM, Liviu Dudau wrote:
+> > 
+> > Several platforms use a rather generic version of parsing
+> > the device tree to find the host bridge ranges. Move the common code
+> > into the generic PCI code and use it to create a pci_host_bridge
+> > structure that can be used by arch code.
+> > 
+> > Based on early attempts by Andrew Murray to unify the code.
+> > Used powerpc and microblaze PCI code as starting point.
+> > 
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+> > ---
+> >  drivers/of/of_pci.c       | 135 ++++++++++++++++++++++++++++++++++++++++++++++
+> >  drivers/pci/host-bridge.c |  18 +++++++
+> >  include/linux/of_pci.h    |  10 ++++
+> >  include/linux/pci.h       |   8 +++
+> >  4 files changed, 171 insertions(+)
+> > 
+> > diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> > index 8481996..55d8320 100644
+> > --- a/drivers/of/of_pci.c
+> > +++ b/drivers/of/of_pci.c
 > 
-> Please review and let me know if you have any comments.
+> [.....]
+> 
+> > +struct pci_host_bridge *
+> > +of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops, void *host_data)
+> > +{
+> > +	int err, domain, busno;
+> > +	struct resource *bus_range;
+> > +	struct pci_bus *root_bus;
+> > +	struct pci_host_bridge *bridge;
+> > +	resource_size_t io_base;
+> > +	LIST_HEAD(res);
+> > +
+> > +	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
+> > +	if (!bus_range)
+> > +		return ERR_PTR(-ENOMEM);
+> > +
+> > +	domain = of_alias_get_id(parent->of_node, "pci-domain");
+> > +	if (domain == -ENODEV)
+> > +		domain = atomic_inc_return(&domain_nr);
+> > +
+> > +	err = of_pci_parse_bus_range(parent->of_node, bus_range);
+> > +	if (err) {
+> > +		dev_info(parent, "No bus range for %s, using default [0-255]\n",
+> > +			parent->of_node->full_name);
+> > +		bus_range->start = 0;
+> > +		bus_range->end = 255;
+> > +		bus_range->flags = IORESOURCE_BUS;
+> > +	}
+> > +	busno = bus_range->start;
+> > +	pci_add_resource(&res, bus_range);
+> > +
+> > +	/* now parse the rest of host bridge bus ranges */
+> > +	err = pci_host_bridge_of_get_ranges(parent->of_node, &res, &io_base);
+> > +	if (err)
+> > +		goto err_create;
+> > +
+> > +	/* then create the root bus */
+> > +	root_bus = pci_create_root_bus_in_domain(parent, domain, busno,
+> > +						ops, host_data, &res);
+> > +	if (IS_ERR(root_bus)) {
+> > +		err = PTR_ERR(root_bus);
+> > +		goto err_create;
+> > +	}
+> > +
+> > +	bridge = to_pci_host_bridge(root_bus->bridge);
+> > +	bridge->io_base = io_base;
+> 
+> Hi Liviu Dudau,
+> 
+> Would you fix the following warning?
+> 
+> drivers/of/of_pci.c: In function 'of_create_pci_host_bridge'
+> drivers/of/of_pci.c:218:18: warning: 'of_base' may be used uninitialized in this function [-Wmaybe-uninitialized]
+>   bridge->io_base = io_base;
 
-I'm waiting for acks from Mohit or Jingoo for the designware changes.
+Yes, I have a simple fix which is to set the initial value to zero when declaring the variable.
 
-I'd also like an ack from the devicetree folks for the Keystone binding.
+Best regards,
+Liviu
 
-And I think we need a MAINTAINERS update for drivers/pci/host/\*keystone\*
+> 
+> Best regards,
+> Jingoo Han
+> 
+> [.....]
+> 
+> 
 
-> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
-> CC: Russell King <linux@arm.linux.org.uk>
-> CC: Grant Likely <grant.likely@linaro.org>
-> CC: Rob Herring <robh+dt@kernel.org>
-> CC: Mohit Kumar <mohit.kumar@st.com>
-> CC: Jingoo Han <jg1.han@samsung.com>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Pratyush Anand <pratyush.anand@st.com>
-> CC: Richard Zhu <r65037@freescale.com>
-> CC: Kishon Vijay Abraham I <kishon@ti.com>
-> CC: Marek Vasut <marex@denx.de>
-> CC: Arnd Bergmann <arnd@arndb.de>
-> CC: Pawel Moll <pawel.moll@arm.com>
-> CC: Mark Rutland <mark.rutland@arm.com>
-> CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
-> CC: Kumar Gala <galak@codeaurora.org>
-> CC: Randy Dunlap <rdunlap@infradead.org>
-> CC: Grant Likely <grant.likely@linaro.org> 
-> 
-> Changelog:
-> 
-> v3
->  - DW application register handling code is now part of
->    Keystone PCI driver. RFC had this code part of Keystone
->    PCI driver, then V1 moved this to a separate file to
->    re-use on other platforms that uses this version of the
->    DW h/w. Then based on comments against v2, this is moved
->    back to Keystone driver.
->  - Keystone SerDes phy driver is removed from this series so that
->    this can be merged independent of that patch
->  - added msi_set_irq()/clear_irq() API's to support Keystone
-> 
-> V2
->  - Split the designware pcie enhancement patch to multiple
->    patches based on functionality added
->  - Remove the quirk code and add a patch to fix mps/mrss
->    tuning for ARM. Use kernel command line parameter
->    pci=pcie_bus_perf to work with Keystone PCI Controller.
->    Following patch addressed this.
->      [PATCH v1] ARM: pci: add call to pcie_bus_configure_settings()
->  - Add documentation for device tree bindings
->  - Add separate interrupt controller nodes for MSI and Legacy
->    IRQs and use irq map for legacy IRQ
->  - Use compatibility to identify v3.65 version of the DW hardware
->    and use it to customize the designware common code.
->  - Use reg property for configuration space instead of range
->  - Other minor updates based on code inspection. 
-> 
-> V1
->  - Add an interrupt controller node for Legacy irq chip and use
->    interrupt map/map-mask property to map legacy IRQs A/B/C/D
->  - Add a Phy driver to replace the original serdes driver
->  - Move common application register handling code to a separate
->    file to allow re-use across other platforms that use older
->    DW PCIe h/w
->  - PCI quirk for maximum read request size. Check and override only
->    if the maximum is higher than what controller can handle.
->  - Converted to a module platform driver.
-> 
-> Murali Karicheri (5):
->   PCI: designware: add rd[wr]_other_conf API
->   PCI: designware: refactor MSI code to work with v3.65 dw hardware
->   PCI: designware: refactor host init code to re-use on keystone PCI
->   PCI: designware: enhance dw core driver to support Keystone PCI host
->     controller
->   PCI: add PCI controller for Keystone PCIe h/w
-> 
->  .../devicetree/bindings/pci/designware-pcie.txt    |    2 +
->  .../devicetree/bindings/pci/pci-keystone.txt       |   69 +++
->  drivers/pci/host/Kconfig                           |    5 +
->  drivers/pci/host/Makefile                          |    1 +
->  drivers/pci/host/pci-keystone-dw.c                 |  523 ++++++++++++++++++++
->  drivers/pci/host/pci-keystone.c                    |  381 ++++++++++++++
->  drivers/pci/host/pci-keystone.h                    |   56 +++
->  drivers/pci/host/pcie-designware.c                 |  206 ++++++--
->  drivers/pci/host/pcie-designware.h                 |   17 +-
->  9 files changed, 1207 insertions(+), 53 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/pci/pci-keystone.txt
->  create mode 100644 drivers/pci/host/pci-keystone-dw.c
->  create mode 100644 drivers/pci/host/pci-keystone.c
->  create mode 100644 drivers/pci/host/pci-keystone.h
-> 
-> -- 
-> 1.7.9.5
-> 
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
