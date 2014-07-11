@@ -1,196 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27762 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042AbaGKFx3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 01:53:29 -0400
-From: Ethan Zhao <ethan.zhao@oracle.com>
-To: bhelgaas@google.com, konrad.wilk@oracle.com,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
-	gleb@kernel.org, pbonzini@redhat.com, jeffrey.t.kirsher@intel.com,
-	jesse.brandeburg@intel.com, bruce.w.allan@intel.com,
-	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
-	gregory.v.rose@intel.com, alexander.h.duyck@intel.com,
-	john.ronciak@intel.com, mitch.a.williams@intel.com,
-	alex.williamson@redhat.com
-Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-	linux.nics@intel.com, e1000-devel@lists.sourceforge.net,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ethan.kernel@gmail.com, vaughan.cao@oracle.com,
-	Ethan Zhao <ethan.zhao@oracle.com>
-Subject: [PATCH 1/2 V2] PCI: introduce device assignment interface and refactory related code
-Date: Fri, 11 Jul 2014 13:52:40 +0800
-Message-Id: <1405057961-7234-1-git-send-email-ethan.zhao@oracle.com>
+Received: from mga01.intel.com ([192.55.52.88]:60068 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752476AbaGKGRx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Jul 2014 02:17:53 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V4 13/21] iommu/vt-d: Fix issue in computing domain's iommu_snooping flag
+Date: Fri, 11 Jul 2014 14:19:37 +0800
+Message-Id: <1405059585-10620-14-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch introduces two new device assignment functions
+IOMMU units may dynamically attached to/detached from domains,
+so we should scan all active IOMMU units when computing iommu_snooping
+flag for a domain instead of only scanning IOMMU units associated
+with the domain.
 
-pci_sriov_assign_device(),
-pci_sriov_deassign_device()
+Also check snooping and superpage capabilities when hot-adding DMAR units.
 
-along with the existed one
-
-pci_vfs_assigned()
-
-They construct the VFs assignment management interface, used to assign/
-deassign device to VM and query the VFs reference counter. instead of
-direct manipulation of device flag.
-
-This patch refashioned the related code and make them atomic.
-
-v2: reorder the patchset and make it bisectable and atomic, steps clear
-between interface defination and implemenation according to the
-suggestion from alex.williamson@redhat.com
-
-Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c |   17 ++---------------
- drivers/pci/iov.c                                  |   20 ++++++++++++++++++++
- drivers/xen/xen-pciback/pci_stub.c                 |    4 ++--
- include/linux/pci.h                                |    4 ++++
- virt/kvm/assigned-dev.c                            |    2 +-
- virt/kvm/iommu.c                                   |    4 ++--
- 6 files changed, 31 insertions(+), 20 deletions(-)
+ drivers/iommu/intel-iommu.c |   42 ++++++++++++++++++++++++------------------
+ 1 file changed, 24 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c b/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
-index 02c11a7..781040e 100644
---- a/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
-+++ b/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
-@@ -693,22 +693,9 @@ complete_reset:
- static bool i40e_vfs_are_assigned(struct i40e_pf *pf)
- {
- 	struct pci_dev *pdev = pf->pdev;
--	struct pci_dev *vfdev;
--
--	/* loop through all the VFs to see if we own any that are assigned */
--	vfdev = pci_get_device(PCI_VENDOR_ID_INTEL, I40E_DEV_ID_VF , NULL);
--	while (vfdev) {
--		/* if we don't own it we don't care */
--		if (vfdev->is_virtfn && pci_physfn(vfdev) == pdev) {
--			/* if it is assigned we cannot release it */
--			if (vfdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED)
--				return true;
--		}
- 
--		vfdev = pci_get_device(PCI_VENDOR_ID_INTEL,
--				       I40E_DEV_ID_VF,
--				       vfdev);
--	}
-+	if (pci_vfs_assigned(pdev))
-+		return true;
- 
- 	return false;
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index cd1ba24c766a..58cc2b75d7ae 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -633,50 +633,56 @@ static void domain_update_iommu_coherency(struct dmar_domain *domain)
+ 	rcu_read_unlock();
  }
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index de7a747..c082523 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -644,6 +644,26 @@ int pci_vfs_assigned(struct pci_dev *dev)
- EXPORT_SYMBOL_GPL(pci_vfs_assigned);
  
- /**
-+ * pci_sriov_assign_device - assign device to VM
-+ * @pdev: the device to be assigned.
-+ */
-+void pci_sriov_assign_device(struct pci_dev *pdev)
-+{
-+	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-+}
-+EXPORT_SYMBOL_GPL(pci_sriov_assign_device);
+-static void domain_update_iommu_snooping(struct dmar_domain *domain)
++static int domain_update_iommu_snooping(struct intel_iommu *skip)
+ {
+-	int i;
+-
+-	domain->iommu_snooping = 1;
++	struct dmar_drhd_unit *drhd;
++	struct intel_iommu *iommu;
++	int ret = 1;
+ 
+-	for_each_set_bit(i, domain->iommu_bmp, g_num_of_iommus) {
+-		if (!ecap_sc_support(g_iommus[i]->ecap)) {
+-			domain->iommu_snooping = 0;
+-			break;
++	rcu_read_lock();
++	for_each_active_iommu(iommu, drhd) {
++		if (iommu != skip) {
++			if (!ecap_sc_support(iommu->ecap)) {
++				ret = 0;
++				break;
++			}
+ 		}
+ 	}
++	rcu_read_unlock();
 +
-+/**
-+ * pci_sriov_deassign_device - deasign device from VM
-+ * @pdev: the device to be deassigned.
-+ */
-+void pci_sriov_deassign_device(struct pci_dev *pdev)
-+{
-+	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-+}
-+EXPORT_SYMBOL_GPL(pci_sriov_deassign_device);
-+
-+/**
-  * pci_sriov_set_totalvfs -- reduce the TotalVFs available
-  * @dev: the PCI PF device
-  * @numvfs: number that should be used for TotalVFs supported
-diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
-index 62fcd48..1d7b747 100644
---- a/drivers/xen/xen-pciback/pci_stub.c
-+++ b/drivers/xen/xen-pciback/pci_stub.c
-@@ -133,7 +133,7 @@ static void pcistub_device_release(struct kref *kref)
- 	xen_pcibk_config_free_dyn_fields(dev);
- 	xen_pcibk_config_free_dev(dev);
++	return ret;
+ }
  
--	dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-+	pci_sriov_deassign_device(dev);
- 	pci_dev_put(dev);
+-static void domain_update_iommu_superpage(struct dmar_domain *domain)
++static int domain_update_iommu_superpage(struct intel_iommu *skip)
+ {
+ 	struct dmar_drhd_unit *drhd;
+-	struct intel_iommu *iommu = NULL;
++	struct intel_iommu *iommu;
+ 	int mask = 0xf;
  
- 	kfree(psdev);
-@@ -404,7 +404,7 @@ static int pcistub_init_device(struct pci_dev *dev)
- 	dev_dbg(&dev->dev, "reset device\n");
- 	xen_pcibk_reset_device(dev);
- 
--	dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-+	pci_sriov_assign_device(dev);
- 	return 0;
- 
- config_release:
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index aab57b4..ddfcceb 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1603,6 +1603,8 @@ int pci_num_vf(struct pci_dev *dev);
- int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
-+void pci_sriov_assign_device(struct pci_dev *dev);
-+void pci_sriov_deassign_device(struct pci_dev *dev);
- #else
- static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
- { return -ENODEV; }
-@@ -1614,6 +1616,8 @@ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
- { return 0; }
- static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
- { return 0; }
-+static inline void pci_sriov_assign_device(struct pci_dev *dev) { }
-+static inline void pci_sriov_deassign_device(struct pci_dev *dev) { }
- #endif
- 
- #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
-diff --git a/virt/kvm/assigned-dev.c b/virt/kvm/assigned-dev.c
-index bf06577..80b477f 100644
---- a/virt/kvm/assigned-dev.c
-+++ b/virt/kvm/assigned-dev.c
-@@ -302,7 +302,7 @@ static void kvm_free_assigned_device(struct kvm *kvm,
- 	else
- 		pci_restore_state(assigned_dev->dev);
- 
--	assigned_dev->dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-+	pci_sriov_deassign_device(assigned_dev->dev);
- 
- 	pci_release_regions(assigned_dev->dev);
- 	pci_disable_device(assigned_dev->dev);
-diff --git a/virt/kvm/iommu.c b/virt/kvm/iommu.c
-index 0df7d4b..6d3f5ef 100644
---- a/virt/kvm/iommu.c
-+++ b/virt/kvm/iommu.c
-@@ -194,7 +194,7 @@ int kvm_assign_device(struct kvm *kvm,
- 			goto out_unmap;
+ 	if (!intel_iommu_superpage) {
+-		domain->iommu_superpage = 0;
+-		return;
++		return 0;
  	}
  
--	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-+	pci_sriov_assign_device(pdev);
+ 	/* set iommu_superpage to the smallest common denominator */
+ 	rcu_read_lock();
+ 	for_each_active_iommu(iommu, drhd) {
+-		mask &= cap_super_page_val(iommu->cap);
+-		if (!mask) {
+-			break;
++		if (iommu != skip) {
++			mask &= cap_super_page_val(iommu->cap);
++			if (!mask)
++				break;
+ 		}
+ 	}
+ 	rcu_read_unlock();
  
- 	dev_info(&pdev->dev, "kvm assign device\n");
+-	domain->iommu_superpage = fls(mask);
++	return fls(mask);
+ }
  
-@@ -220,7 +220,7 @@ int kvm_deassign_device(struct kvm *kvm,
+ /* Some capabilities may be different across iommus */
+ static void domain_update_iommu_cap(struct dmar_domain *domain)
+ {
+ 	domain_update_iommu_coherency(domain);
+-	domain_update_iommu_snooping(domain);
+-	domain_update_iommu_superpage(domain);
++	domain->iommu_snooping = domain_update_iommu_snooping(NULL);
++	domain->iommu_superpage = domain_update_iommu_superpage(NULL);
+ }
  
- 	iommu_detach_device(domain, &pdev->dev);
- 
--	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-+	pci_sriov_deassign_device(pdev);
- 
- 	dev_info(&pdev->dev, "kvm deassign device\n");
- 
+ static struct intel_iommu *device_to_iommu(struct device *dev, u8 *bus, u8 *devfn)
 -- 
-1.7.1
+1.7.10.4
 
