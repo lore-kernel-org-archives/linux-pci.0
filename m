@@ -1,49 +1,98 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Benoit Taine <benoit.taine@lip6.fr>
-To: linux-pci@vger.kernel.org
-Cc: benoit.taine@lip6.fr, ath5k-devel@venema.h4ckr.net,
-	ath9k-devel@venema.h4ckr.net, linux-hippi@sunsite.dk,
-	dri-devel@lists.freedesktop.org, linux-acenic@sunsite.dk,
-	wil6210@qca.qualcomm.com, platform-driver-x86@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-mips@linux-mips.org, users@rt2x00.serialmonkey.com,
-	linux-rdma@vger.kernel.org,
-	virtualization@lists.linux-foundation.org,
-	industrypack-devel@lists.sourceforge.net,
-	linux-can@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-fbdev@vger.kernel.org, ath10k@lists.infradead.org,
-	linux-crypto@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com,
-	devel@linuxdriverproject.org, xen-devel@lists.xenproject.org,
-	linux-pcmcia@lists.infradead.org, e1000-devel@lists.sourceforge.net
-Subject: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
-Date: Fri, 18 Jul 2014 17:26:47 +0200
-Message-Id: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:55697 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752313AbaGKGRY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Jul 2014 02:17:24 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V4 09/21] iommu/vt-d: Change iommu_enable/disable_translation to return void
+Date: Fri, 11 Jul 2014 14:19:33 +0800
+Message-Id: <1405059585-10620-10-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We should prefer `const struct pci_device_id` over
-`DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
-This issue was reported by checkpatch.
+Simplify error handling path by changing iommu_{enable|disable}_translation
+to return void.
 
-A simplified version of the semantic patch that makes this change is as
-follows (http://coccinelle.lip6.fr/):
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |   18 +++++-------------
+ 1 file changed, 5 insertions(+), 13 deletions(-)
 
-// <smpl>
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 5d7383775bf1..0ba078bc0f32 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1389,7 +1389,7 @@ static void iommu_disable_protect_mem_regions(struct intel_iommu *iommu)
+ 	raw_spin_unlock_irqrestore(&iommu->register_lock, flags);
+ }
+ 
+-static int iommu_enable_translation(struct intel_iommu *iommu)
++static void iommu_enable_translation(struct intel_iommu *iommu)
+ {
+ 	u32 sts;
+ 	unsigned long flags;
+@@ -1403,10 +1403,9 @@ static int iommu_enable_translation(struct intel_iommu *iommu)
+ 		      readl, (sts & DMA_GSTS_TES), sts);
+ 
+ 	raw_spin_unlock_irqrestore(&iommu->register_lock, flags);
+-	return 0;
+ }
+ 
+-static int iommu_disable_translation(struct intel_iommu *iommu)
++static void iommu_disable_translation(struct intel_iommu *iommu)
+ {
+ 	u32 sts;
+ 	unsigned long flag;
+@@ -1420,7 +1419,6 @@ static int iommu_disable_translation(struct intel_iommu *iommu)
+ 		      readl, (!(sts & DMA_GSTS_TES)), sts);
+ 
+ 	raw_spin_unlock_irqrestore(&iommu->register_lock, flag);
+-	return 0;
+ }
+ 
+ 
+@@ -2860,11 +2858,7 @@ static int __init init_dmars(void)
+ 
+ 		iommu->flush.flush_context(iommu, 0, 0, 0, DMA_CCMD_GLOBAL_INVL);
+ 		iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
+-
+-		ret = iommu_enable_translation(iommu);
+-		if (ret)
+-			goto free_iommu;
+-
++		iommu_enable_translation(iommu);
+ 		iommu_disable_protect_mem_regions(iommu);
+ 	}
+ 
+@@ -3578,10 +3572,8 @@ static int init_iommu_hw(void)
+ 
+ 		iommu->flush.flush_context(iommu, 0, 0, 0,
+ 					   DMA_CCMD_GLOBAL_INVL);
+-		iommu->flush.flush_iotlb(iommu, 0, 0, 0,
+-					 DMA_TLB_GLOBAL_FLUSH);
+-		if (iommu_enable_translation(iommu))
+-			return 1;
++		iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
++		iommu_enable_translation(iommu);
+ 		iommu_disable_protect_mem_regions(iommu);
+ 	}
+ 
+-- 
+1.7.10.4
 
-@@
-identifier i;
-declarer name DEFINE_PCI_DEVICE_TABLE;
-initializer z;
-@@
-
-- DEFINE_PCI_DEVICE_TABLE(i)
-+ const struct pci_device_id i[]
-= z;
-
-// </smpl>
-
-I have 103 patches ready, and will only send a few for you to judge if
-it is useful enough, and to prevent from spamming too much.
-
-Thanks.
