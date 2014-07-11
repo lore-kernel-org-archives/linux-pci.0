@@ -1,42 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:34181 "EHLO
-	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751428AbaGUA1u (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Jul 2014 20:27:50 -0400
-Received: by mail-oi0-f44.google.com with SMTP id x69so2996144oia.17
-        for <linux-pci@vger.kernel.org>; Sun, 20 Jul 2014 17:27:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAOesGMi0HgL14zMqALvqT_cGMr13mGSN0O493eLmydt8Dscqug@mail.gmail.com>
-References: <76576b662613369d0c71db30ceed4ed5ae1343d2.1405857442.git.viresh.kumar@linaro.org>
-	<20140720192649.GA30124@quad.lixom.net>
-	<CAKohpokOJLKOwB_rKz0W-1T0nYX7-2_8nm3wQr6khR55x4gqrA@mail.gmail.com>
-	<CAOesGMi0HgL14zMqALvqT_cGMr13mGSN0O493eLmydt8Dscqug@mail.gmail.com>
-Date: Mon, 21 Jul 2014 05:57:49 +0530
-Message-ID: <CAKohpon8mGbZ+jEPLmpKeUrxXBfXaXJAAemi8j-jhiHVJbwxRw@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: spear: Fix Section mismatch compilation warning
- for probe()
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: Olof Johansson <olof@lixom.net>
-Cc: Arnd Bergmann <arnd@linaro.org>, "arm@kernel.org" <arm@kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	spear-devel <spear-devel@list.st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mohit KUMAR <mohit.kumar@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ethan Zhao <ethan.zhao@oracle.com>
+To: bhelgaas@google.com, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	gleb@kernel.org, pbonzini@redhat.com, jeffrey.t.kirsher@intel.com,
+	jesse.brandeburg@intel.com, bruce.w.allan@intel.com,
+	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
+	gregory.v.rose@intel.com, alexander.h.duyck@intel.com,
+	john.ronciak@intel.com, mitch.a.williams@intel.com
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+	linux.nics@intel.com, e1000-devel@lists.sourceforge.net,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ethan.kernel@gmail.com, vaughan.cao@oracle.com,
+	Ethan Zhao <ethan.zhao@oracle.com>
+Subject: [PATCH 3/4] KVM: use PCI VFs assignment helper functions
+Date: Fri, 11 Jul 2014 08:47:21 +0800
+Message-Id: <1405039642-23519-3-git-send-email-ethan.zhao@oracle.com>
+In-Reply-To: <1405039642-23519-1-git-send-email-ethan.zhao@oracle.com>
+References: <1405039642-23519-1-git-send-email-ethan.zhao@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 21 July 2014 05:51, Olof Johansson <olof@lixom.net> wrote:
-> Oh, sorry, I got distracted by my kid waking up so the email was a bit short. :)
+New VFs reference counter mechanism and VFs assignment helper functions are introduced to
+PCI SRIOV, use them instead of manipulating device flag directly.
 
-I can understand, mine is 14 months :)
+Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+---
+ virt/kvm/assigned-dev.c |    2 +-
+ virt/kvm/iommu.c        |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-> The easiest way of doing it is to switch to 12 by default. In your .gitconfig:
->
-> [core]
->         abbrev = 12
+diff --git a/virt/kvm/assigned-dev.c b/virt/kvm/assigned-dev.c
+index bf06577..80b477f 100644
+--- a/virt/kvm/assigned-dev.c
++++ b/virt/kvm/assigned-dev.c
+@@ -302,7 +302,7 @@ static void kvm_free_assigned_device(struct kvm *kvm,
+ 	else
+ 		pci_restore_state(assigned_dev->dev);
+ 
+-	assigned_dev->dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++	pci_sriov_deassign_device(assigned_dev->dev);
+ 
+ 	pci_release_regions(assigned_dev->dev);
+ 	pci_disable_device(assigned_dev->dev);
+diff --git a/virt/kvm/iommu.c b/virt/kvm/iommu.c
+index 0df7d4b..6d3f5ef 100644
+--- a/virt/kvm/iommu.c
++++ b/virt/kvm/iommu.c
+@@ -194,7 +194,7 @@ int kvm_assign_device(struct kvm *kvm,
+ 			goto out_unmap;
+ 	}
+ 
+-	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
++	pci_sriov_assign_device(pdev);
+ 
+ 	dev_info(&pdev->dev, "kvm assign device\n");
+ 
+@@ -220,7 +220,7 @@ int kvm_deassign_device(struct kvm *kvm,
+ 
+ 	iommu_detach_device(domain, &pdev->dev);
+ 
+-	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++	pci_sriov_deassign_device(pdev);
+ 
+ 	dev_info(&pdev->dev, "kvm deassign device\n");
+ 
+-- 
+1.7.1
 
-Oh, that will be extremely useful. Thanks.
