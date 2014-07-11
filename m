@@ -1,52 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1lp0141.outbound.protection.outlook.com ([207.46.163.141]:30756
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756827AbaGNT7T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Jul 2014 15:59:19 -0400
-Message-ID: <53C4368E.9090103@amd.com>
-Date: Mon, 14 Jul 2014 14:59:10 -0500
-From: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
-MIME-Version: 1.0
-To: Borislav Petkov <bp@alien8.de>
-CC: <clemens@ladisch.de>, <jdelvare@suse.de>, <linux@roeck-us.net>,
-	<rdunlap@infradead.org>, <bhelgaas@google.com>,
-	<lm-sensors@lm-sensors.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] hwmon, k10temp: Add support for AMD F15h M60h processor
-References: <1405369388-12729-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
- <20140714195128.GA25124@pd.tnic>
-In-Reply-To: <20140714195128.GA25124@pd.tnic>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:59572 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751438AbaGKHIc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 03:08:32 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+Subject: [PATCH 2/2] PCI: tegra: Implement a proper resource hierarchy
+Date: Fri, 11 Jul 2014 09:08:25 +0200
+Message-Id: <1405062505-2606-2-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <1405062505-2606-1-git-send-email-thierry.reding@gmail.com>
+References: <1405062505-2606-1-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/14/2014 2:51 PM, Borislav Petkov wrote:
-> On Mon, Jul 14, 2014 at 03:23:08PM -0500, Aravind Gopalakrishnan wrote:
->>   
->> @@ -211,6 +228,7 @@ static const struct pci_device_id k10temp_id_table[] = {
->>   	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
->>   	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
->>   	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F3) },
->> +	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M60H_NB_F3) },
->>   	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
->>   	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_16H_M30H_NB_F3) },
->>   	{}
->> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
->> index 7fa3173..3c8e328 100644
->> --- a/include/linux/pci_ids.h
->> +++ b/include/linux/pci_ids.h
->> @@ -520,6 +520,7 @@
->>   #define PCI_DEVICE_ID_AMD_15H_M10H_F3	0x1403
->>   #define PCI_DEVICE_ID_AMD_15H_M30H_NB_F3 0x141d
->>   #define PCI_DEVICE_ID_AMD_15H_M30H_NB_F4 0x141e
->> +#define PCI_DEVICE_ID_AMD_15H_M60H_NB_F3 0x1573
-> I'm assuming this is used somewhere else besides k10temp.c?
->
+From: Thierry Reding <treding@nvidia.com>
 
-Yeah, will most likely need to add EDAC bits. But that is something I 
-can't test now.
+Currently the resource hierarchy generated from the PCIe host bridge is
+completely flat:
 
-So will have to do it only in due time.. :)
+	$ cat /proc/iomem
+	00000000-00000fff : /pcie-controller@00003000/pci@1,0
+	00003000-000037ff : pads
+	00003800-000039ff : afi
+	10000000-1fffffff : cs
+	28000000-28003fff : r8169
+	28004000-28004fff : r8169
+	...
 
--Aravind.
+The host bridge driver doesn't request all the resources that are used.
+Windows allocated to each of the root ports aren't tracked, so there is
+no way for resources allocated to individual devices to be matched up
+with the correct parent resource by the PCI core.
+
+This patch addresses this in two steps. It first takes the union of all
+regions associated with the PCIe host bridge (control registers, root
+port registers, configuration space, I/O and prefetchable as well as
+non-prefetchable memory regions) and uses it as the new root of the
+resource hierarchy.
+
+Subsequently, regions are allocated from within this new root resource
+so that the resource tree looks much more like what's expected:
+
+	# cat /proc/iomem
+	00000000-3fffffff : /pcie-controller@00003000
+	  00000000-00000fff : /pcie-controller@00003000/pci@1,0
+	  00003000-000037ff : pads
+	  00003800-000039ff : afi
+	  10000000-1fffffff : cs
+	  20000000-27ffffff : non-prefetchable
+	  28000000-3fffffff : prefetchable
+	    28000000-280fffff : PCI Bus 0000:01
+	      28000000-28003fff : 0000:01:00.0
+	        28000000-28003fff : r8169
+	      28004000-28004fff : 0000:01:00.0
+	        28004000-28004fff : r8169
+	...
+
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ drivers/pci/host/pci-tegra.c | 32 +++++++++++++++++++++++++++++---
+ 1 file changed, 29 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 49b3bd5f5926..b0b337ebaf48 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -252,6 +252,7 @@ struct tegra_pcie {
+ 	struct list_head buses;
+ 	struct resource *cs;
+ 
++	struct resource all;
+ 	struct resource io;
+ 	struct resource mem;
+ 	struct resource prefetch;
+@@ -625,6 +626,15 @@ DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, tegra_pcie_relax_enable);
+ static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
+ {
+ 	struct tegra_pcie *pcie = sys_to_pcie(sys);
++	int err;
++
++	err = devm_request_resource(pcie->dev, &pcie->all, &pcie->mem);
++	if (err < 0)
++		return err;
++
++	err = devm_request_resource(pcie->dev, &pcie->all, &pcie->prefetch);
++	if (err)
++		return err;
+ 
+ 	pci_add_resource_offset(&sys->resources, &pcie->mem, sys->mem_offset);
+ 	pci_add_resource_offset(&sys->resources, &pcie->prefetch,
+@@ -1439,6 +1449,12 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+ 	struct resource res;
+ 	int err;
+ 
++	memset(&pcie->all, 0, sizeof(pcie->all));
++	pcie->all.flags = IORESOURCE_MEM;
++	pcie->all.name = np->full_name;
++	pcie->all.start = ~0;
++	pcie->all.end = 0;
++
+ 	if (of_pci_range_parser_init(&parser, np)) {
+ 		dev_err(pcie->dev, "missing \"ranges\" property\n");
+ 		return -EINVAL;
+@@ -1450,21 +1466,31 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+ 		switch (res.flags & IORESOURCE_TYPE_BITS) {
+ 		case IORESOURCE_IO:
+ 			memcpy(&pcie->io, &res, sizeof(res));
+-			pcie->io.name = "I/O";
++			pcie->io.name = np->full_name;
+ 			break;
+ 
+ 		case IORESOURCE_MEM:
+ 			if (res.flags & IORESOURCE_PREFETCH) {
+ 				memcpy(&pcie->prefetch, &res, sizeof(res));
+-				pcie->prefetch.name = "PREFETCH";
++				pcie->prefetch.name = "prefetchable";
+ 			} else {
+ 				memcpy(&pcie->mem, &res, sizeof(res));
+-				pcie->mem.name = "MEM";
++				pcie->mem.name = "non-prefetchable";
+ 			}
+ 			break;
+ 		}
++
++		if (res.start <= pcie->all.start)
++			pcie->all.start = res.start;
++
++		if (res.end >= pcie->all.end)
++			pcie->all.end = res.end;
+ 	}
+ 
++	err = devm_request_resource(pcie->dev, &iomem_resource, &pcie->all);
++	if (err < 0)
++		return err;
++
+ 	err = of_pci_parse_bus_range(np, &pcie->busn);
+ 	if (err < 0) {
+ 		dev_err(pcie->dev, "failed to parse ranges property: %d\n",
+-- 
+2.0.1
+
