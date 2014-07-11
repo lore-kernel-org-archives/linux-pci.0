@@ -1,47 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50217 "EHLO mx1.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:55697 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753224AbaG2Ovp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Jul 2014 10:51:45 -0400
-Message-ID: <1406645502.1011.166.camel@ul30vt.home>
-Subject: Re: pci_sriov_set_totalvfs question
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Edward Cree <ecree@solarflare.com>
-Cc: linux-pci@vger.kernel.org
-Date: Tue, 29 Jul 2014 08:51:42 -0600
-In-Reply-To: <53D7A9FC.3040001@solarflare.com>
-References: <53D7A9FC.3040001@solarflare.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751190AbaGKGRQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Jul 2014 02:17:16 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V4 07/21] iommu/vt-d: Avoid freeing virtual machine domain in free_dmar_iommu()
+Date: Fri, 11 Jul 2014 14:19:31 +0800
+Message-Id: <1405059585-10620-8-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-07-29 at 15:04 +0100, Edward Cree wrote:
-> Not sure if this list is the right place to ask, but:
-> I'm working on fallback code in the sfc driver where in some
-> configurations the device won't support using VFs, but will still
-> advertise them as present [1].  This is discovered at PF probe time, and
-> what I want to do is just set sriov_totalvfs to 0 in this case.
-> 
-> As far as I can tell, pci_sriov_set_totalvfs (drivers/pci/iov.c) is the
-> function to call, but I'm confused by the comment on that function which
-> states "Should be called from PF driver's probe routine with device's
-> mutex held."
-> 
-> Specifically, it's unclear what mutex is meant.  struct pci_dev doesn't
-> have one; struct pci_sriov /does/ but the struct is only defined in
-> drivers/pci/pci.h which I don't appear to be able to include from a
-> driver.  There's also one in the 'struct device dev' member of struct
-> pci_dev, but that seems rather unlikely.
-> 
-> Also, the wording of the comment makes me wonder if being in the PF
-> probe routine /implies/ that the mutex is held already, in which case I
-> don't have to do anything.  This is supported by the only callers,
-> igb_probe (via igb_sw_init and igb_probe_vfs) and ixgbe_probe, not
-> appearing to take any mutexes before calling pci_sriov_set_totalvfs.
+Virtual machine domains are created by intel_iommu_domain_init() and
+should be destroyed by intel_iommu_domain_destroy(). So avoid freeing
+virtual machine domain data structure in free_dmar_iommu() when
+doamin->iommu_count reaches zero, otherwise it may cause invalid
+memory access because the IOMMU framework still holds references
+to the domain structure.
 
-I believe this is referring to device_lock(), which should already be
-held on the PF during probe.  Thanks,
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Alex
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 0984fa58d872..5d7383775bf1 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1480,7 +1480,8 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
+ 
+ 			domain = iommu->domains[i];
+ 			clear_bit(i, iommu->domain_ids);
+-			if (domain_detach_iommu(domain, iommu) == 0)
++			if (domain_detach_iommu(domain, iommu) == 0 &&
++			    !domain_type_is_vm(domain))
+ 				domain_exit(domain);
+ 		}
+ 	}
+-- 
+1.7.10.4
 
