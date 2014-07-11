@@ -1,43 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:65429 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752753AbaGHHcB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 03:32:01 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Viresh Kumar <viresh.kumar@linaro.org>
-Subject: Re: [PATCH V8 0/9] PCI: Add SPEAr13xx PCie support
-Date: Tue, 8 Jul 2014 09:31:47 +0200
-Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
-	"spear-devel" <spear-devel@list.st.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mark Nicholson <mark@nicholnet.com>
-References: <cover.1397555158.git.mohit.kumar@st.com> <2CC2A0A4A178534D93D5159BF3BCB661A17A3E4639@EAPEX1MAIL1.st.com> <CAOh2x=naoa8a1v7Pk+Qv-Fha34ezp6OqBXVwsh_p=guCZgXFrA@mail.gmail.com>
-In-Reply-To: <CAOh2x=naoa8a1v7Pk+Qv-Fha34ezp6OqBXVwsh_p=guCZgXFrA@mail.gmail.com>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:44506 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751280AbaGKBMc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 21:12:32 -0400
+Received: by mail-ig0-f170.google.com with SMTP id h3so16497igd.5
+        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 18:12:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201407080931.47673.arnd@arndb.de>
+In-Reply-To: <20140703221152.GH28852@google.com>
+References: <20140611060118.GB3169@yanx>
+	<CAE9FiQWe2bf7QbKn9kmZS34a4cMewsdD-9qAELdXs-dEtx70GQ@mail.gmail.com>
+	<20140702210736.GB28852@google.com>
+	<CAE9FiQU5Ltu89zmRG0h2aXfXH0oCcTEP=jF7b=zHi=SaOA2rKg@mail.gmail.com>
+	<20140703131526.GG28852@google.com>
+	<CAE9FiQWPGXMBYmpzyk8cicKZ1ELUZiARkZjr2vvgntmt3bt1jQ@mail.gmail.com>
+	<20140703221152.GH28852@google.com>
+Date: Thu, 10 Jul 2014 18:12:32 -0700
+Message-ID: <CAE9FiQX69x_YgHihYM-+tahTvbuk6MATBXvm9Rz5kiQ9UpKNPg@mail.gmail.com>
+Subject: Re: [PATCH] pci: Allow very large resource windows
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 08 July 2014, Viresh Kumar wrote:
-> On Tue, Jul 8, 2014 at 10:54 AM, Mohit KUMAR DCG <Mohit.KUMAR@st.com> wrote:
-> > Pls find attached patches to push through your repo.  These are rebased over the top
-> >  of 3.16-rc3.
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
-> spear/pcie-support-v8
+On Thu, Jul 3, 2014 at 3:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Jul 03, 2014 at 12:59:21PM -0700, Yinghai Lu wrote:
 
-I'm currently at the Linaro sprint in Le Mans, so Olof is doing all the arm-soc merges.
-Mohit or Pratyush, please send a formal pull request (using "git request-pull") to
-arm@kernel.org with Cc to everyone on Cc here so Olof can pick it up.
+>> when we try to size it,  means that bar is not assigned. with r->flags
+>> = 0, means
+>> we will ignore it all the way.
+>
+> With "r->flags = 0", we will not try to assign resources to the BAR,
+> but the hardware BAR still exists and contains some address.  If the
+> device has other memory BARs, pci_enable_resources() will turn on
+> PCI_COMMAND_MEMORY.  Now the "r->flags == 0" BAR is enabled but the
+> address it contains might conflict with other devices.  That's the
+> problem.
+>
+> To fix this, I think we need to do "r->flags |= IORESOURCE_UNSET |
+> IORESOURCE_DISABLED".
 
-Please also include a description of the overall series and the reasons why we decided
-to merge it through arm-soc in the pull request email. Thanks!
+No, that is not right.
 
-	Arnd
+Current that r->flags = 0 and reset_resource() cover the bug in
+pci_enable_resources() when assign and reassign resource fail.
+
+In pci_enable_resources() if there is one resource with IO BAR or SRIOV BAR
+is not assigned and have UNSET, it will prevent device from being enabled.
+
+Most drivers could work without io port.
+
+If you change r->flags = 0 to
+r->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED
+
+Those drivers would not work anymore.
+
+I also know one driver that could work with pref mmio, but mmio is not assigned.
+--- silicon bug, that it exposes non-needed mmio bar.
+
+BTW I think we may need to clear the BAR in pci_claim_resource().
+
+Maybe Linus or Greg have more idea about this.
+Do we need to get more strict? will only enable PCI_COMMAND_MEMORY
+unless all mmio BARs get assigned value?
+
+Thanks
+
+Yinghai
