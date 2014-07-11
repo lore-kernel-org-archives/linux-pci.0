@@ -1,98 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f52.google.com ([209.85.192.52]:63122 "EHLO
-	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752208AbaGVTBY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 15:01:24 -0400
-Date: Tue, 22 Jul 2014 15:01:20 -0400
-From: Tejun Heo <tj@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] resource: Add device-managed
- request/release_resource()
-Message-ID: <20140722190120.GM13851@htj.dyndns.org>
-References: <1405062505-2606-1-git-send-email-thierry.reding@gmail.com>
- <20140722185002.GC19181@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140722185002.GC19181@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V4 00/21] Enable support of Intel DMAR device hotplug
+Date: Fri, 11 Jul 2014 14:19:24 +0800
+Message-Id: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+When hot plugging a descrete IOH or a physical processor with embedded
+IIO, we need to handle DMAR(or IOMMU) unit in the PCIe host bridge if
+DMAR is in use. This patch set tries to enhance current DMAR/IOMMU/IR
+drivers to support hotplug and is based on latest Joerg's iommu/next
+branch.
 
-On Tue, Jul 22, 2014 at 12:50:02PM -0600, Bjorn Helgaas wrote:
-> [+cc Tejun, LKML]
-> 
-> On Fri, Jul 11, 2014 at 09:08:24AM +0200, Thierry Reding wrote:
-> > From: Thierry Reding <treding@nvidia.com>
-> > 
-> > Provide device-managed implementations of the request_resource() and
-> > release_resource() functions. Upon failure to request a resource, the
-> > new devm_request_resource() function will output an error message for
-> > consistent error reporting.
-> > 
-> > Signed-off-by: Thierry Reding <treding@nvidia.com>
-> 
-> This seems OK to me, but I don't consider myself a devres maintainer.  I
-> added Tejun and LKML for any comment.  Minor nit below.
+Patch 1-13 are bugfixes and code improvement for current drivers.
+Patch 14-17 enhances DMAR framework to support hotplug
+Patch 18 enhances Intel interrupt remapping driver to support hotplug
+Patch 19 enhances error handling in Intel IR driver
+Patch 20 enhance Intel IOMMU to support hotplug
+Patch 21 enhance ACPI pci_root driver to handle DMAR units
 
-If there are gonna be users of the interface, sure.
+This patch set has been tested on Intel development machine.
+Appreciate any comments and tests. With this patch set and
+another IOAPIC hotplug patch set(http://www.mail-archive.com/linux-kernel
+@vger.kernel.org/msg671316.html) applied, we could support full functional
+socket hotplug on x86 platforms now.
 
-> > +int devm_request_resource(struct device *dev, struct resource *root,
-> > +			  struct resource *new)
-> > +{
-> > +	struct resource *conflict, **ptr;
-> > +
-> > +	ptr = devres_alloc(devm_resource_release, sizeof(*ptr), GFP_KERNEL);
-> > +	if (!ptr)
-> > +		return -ENOMEM;
-> > +
-> > +	*ptr = new;
-> > +
-> > +	conflict = request_resource_conflict(root, new);
-> > +	if (!conflict) {
-> > +		devres_add(dev, ptr);
-> > +		return 0;
-> > +	}
-> > +
-> > +	dev_err(dev, "resource collision: %pR conflicts with %s %pR\n", new,
-> > +		conflict->name, conflict);
-> > +	devres_free(ptr);
-> > +	return -EBUSY;
-> 
-> Personally I would write this as:
-> 
->   conflict = request_resource_conflict(...);
->   if (conflict) {
->     dev_err(...);
->     devres_free(...);
->     return -EBUSY;
->   }
-> 
->   devres_add(...);
->   return 0;
-> 
-> so the straight-line path is the normal, non-error path and errors are
-> detected and dealt with in the "if" bodies.  Right now the "if" bodies
-> are a mix of error handling and normal path.  But that's just my personal
-> preference.
+V3->V4:
+1) rebase onto iommu/next branch to solve conflicts
+2) refine commit messages according to Bjorn's suggestion.
 
-Agreed.
+V2->V3:
+1) rebase to latest v3.16-rc2
+2) fix a bug in detecting super page support when hot-adding IOMMU
 
-> > +static int devm_resource_match(struct device *dev, void *res, void *data)
-> > +{
-> > +	struct resource **ptr = res;
-> > +
-> > +	if (WARN_ON(!ptr || !*ptr))
-> > +		return 0;
+V1->V2:
+1) enhance the way to simplify intel_unmap_sg()
+2) rename dmar_device_hotplug() to dmar_device_add/remove()
+3) coding style improvment
 
-How would !ptr or !*ptr possibly happen?  Wouldn't that be a bug
-already?
+Best Regards!
 
-Thanks.
+Jiang Liu (21):
+  iommu/vt-d: Match segment number when searching for dev_iotlb capable
+    devices
+  iommu/vt-d: Use correct domain id to flush virtual machine domains
+  iommu/vt-d: Introduce helper functions to improve code readability
+  iommu/vt-d: Introduce helper functions to make code symmetric for
+    readability
+  iommu/vt-d: Allocate dynamic domain id for virtual domains only
+  iommu/vt-d: Fix possible invalid memory access caused by
+    free_dmar_iommu()
+  iommu/vt-d: Avoid freeing virtual machine domain in free_dmar_iommu()
+  iommu/vt-d: Simplify include/linux/dmar.h
+  iommu/vt-d: Change iommu_enable/disable_translation to return void
+  iommu/vt-d: Simplify intel_unmap_sg() and kill duplicated code
+  iommu/vt-d: Introduce helper domain_pfn_within_range() to simplify
+    code
+  iommu/vt-d: Introduce helper function iova_size() to improve code
+    readability
+  iommu/vt-d: Fix issue in computing domain's iommu_snooping flag
+  iommu/vt-d: Introduce helper function dmar_walk_resources()
+  iommu/vt-d: Dynamically allocate and free seq_id for DMAR units
+  iommu/vt-d: Implement DMAR unit hotplug framework
+  iommu/vt-d: Search for ACPI _DSM method for DMAR hotplug
+  iommu/vt-d: Enhance intel_irq_remapping driver to support DMAR unit
+    hotplug
+  iommu/vt-d: Enhance error recovery in function
+    intel_enable_irq_remapping()
+  iommu/vt-d: Enhance intel-iommu driver to support DMAR unit hotplug
+  pci, ACPI, iommu: Enhance pci_root to support DMAR device hotplug
+
+ drivers/acpi/pci_root.c             |   16 +-
+ drivers/iommu/dmar.c                |  531 ++++++++++++++++++++------
+ drivers/iommu/intel-iommu.c         |  720 +++++++++++++++++++++--------------
+ drivers/iommu/intel_irq_remapping.c |  233 +++++++++---
+ include/linux/dmar.h                |   86 +++--
+ include/linux/iova.h                |    5 +
+ 6 files changed, 1104 insertions(+), 487 deletions(-)
 
 -- 
-tejun
+1.7.10.4
+
