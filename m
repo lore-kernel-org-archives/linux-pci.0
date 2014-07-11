@@ -1,66 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:21684 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751853AbaGZBX1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jul 2014 21:23:27 -0400
-From: <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 3/3] PCI/MSI: Refactor msi_bus to support EP enable/disable MSI
-Date: Sat, 26 Jul 2014 09:48:36 +0800
-Message-ID: <1406339316-20163-4-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1406339316-20163-1-git-send-email-wangyijing@huawei.com>
-References: <1406339316-20163-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-qg0-f46.google.com ([209.85.192.46]:37064 "EHLO
+	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752667AbaGKSke (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 14:40:34 -0400
+Received: by mail-qg0-f46.google.com with SMTP id q107so1278479qgd.5
+        for <linux-pci@vger.kernel.org>; Fri, 11 Jul 2014 11:40:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CA+55aFwyfaAa3opKsDth7b4RXb7E2_Thb581VWvg9V-GvJCYbg@mail.gmail.com>
+References: <20140611060118.GB3169@yanx> <CAE9FiQWe2bf7QbKn9kmZS34a4cMewsdD-9qAELdXs-dEtx70GQ@mail.gmail.com>
+ <20140702210736.GB28852@google.com> <CAE9FiQU5Ltu89zmRG0h2aXfXH0oCcTEP=jF7b=zHi=SaOA2rKg@mail.gmail.com>
+ <20140703131526.GG28852@google.com> <CAE9FiQWPGXMBYmpzyk8cicKZ1ELUZiARkZjr2vvgntmt3bt1jQ@mail.gmail.com>
+ <20140703221152.GH28852@google.com> <CAE9FiQX69x_YgHihYM-+tahTvbuk6MATBXvm9Rz5kiQ9UpKNPg@mail.gmail.com>
+ <CAErSpo4DzJ112NxfjXT=NbXMxNqre_Vo61fS0Mem=MWCz+OvcA@mail.gmail.com>
+ <CAE9FiQWUPd4d9DWeiuDqQ=tKKe+5ZofUEw3JViXYs6+9zBG6Sg@mail.gmail.com> <CA+55aFwyfaAa3opKsDth7b4RXb7E2_Thb581VWvg9V-GvJCYbg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 11 Jul 2014 12:40:14 -0600
+Message-ID: <CAErSpo4GvYgP5zRq0vzFrCGzrYBF9u=KWus8PPNGKpyJVZzYkA@mail.gmail.com>
+Subject: Re: [PATCH] pci: Allow very large resource windows
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yijing Wang <wangyijing@huawei.com>
+On Fri, Jul 11, 2014 at 12:21 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> On Fri, Jul 11, 2014 at 11:09 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>
+>> If the BAR have all 0, cpu can not access it as hw will forward access to ram
+>> controller according to routing table.
+>
+> On PC's, yes (also likely with many devices - there are definitely
+> devices out there were setting the BAR to zero disables it).
 
-Msi_bus attribute is only valid for bridge device.
-We can enable or disable MSI capability for a bus,
-if we echo 1/0 > /sys/bus/pci/devices/$EP/msi_bus,
-the action will be ignored. Sometime we need to
-only enable/disable a device MSI, not all devices share
-the same bus.
+Ooh, we might trip over this some day on a platform with host bridge
+address translation that maps to PCI bus address 0.  I don't think we
+have anything in the allocator that avoids bus address 0 in that case.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/pci-sysfs.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 9ff0a90..b199ad9 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -251,11 +251,9 @@ static ssize_t msi_bus_show(struct device *dev, struct device_attribute *attr,
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	if (!pdev->subordinate)
--		return 0;
--
--	return sprintf(buf, "%u\n",
--		       !(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI));
-+	return sprintf(buf, "%u\n", pdev->subordinate ?
-+		       !(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI)
-+			   : !pdev->no_msi);
- }
- 
- static ssize_t msi_bus_store(struct device *dev, struct device_attribute *attr,
-@@ -278,8 +276,10 @@ static ssize_t msi_bus_store(struct device *dev, struct device_attribute *attr,
- 	 * Maybe devices without subordinate buses shouldn't have this
- 	 * attribute in the first place?
- 	 */
--	if (!pdev->subordinate)
-+	if (!pdev->subordinate) {
-+		pdev->no_msi = !val;
- 		return count;
-+	}
- 
- 	/* Is the flag going to change, or keep the value it already had? */
- 	if (!(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI) ^
--- 
-1.7.1
-
+Bjorn
