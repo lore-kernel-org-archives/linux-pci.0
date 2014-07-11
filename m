@@ -1,115 +1,178 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Liviu Dudau' <Liviu.Dudau@arm.com>
-Cc: 'linux-pci' <linux-pci@vger.kernel.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Catalin Marinas' <Catalin.Marinas@arm.com>,
-	'Will Deacon' <Will.Deacon@arm.com>,
-	'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'linaro-kernel' <linaro-kernel@lists.linaro.org>,
-	'Tanmay Inamdar' <tinamdar@apm.com>,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Sinan Kaya' <okaya@codeaurora.org>,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Suravee Suthikulanit' <suravee.suthikulpanit@amd.com>,
-	'LKML' <linux-kernel@vger.kernel.org>,
-	'Device Tree ML' <devicetree@vger.kernel.org>,
-	'LAKML' <linux-arm-kernel@lists.infradead.org>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-9-git-send-email-Liviu.Dudau@arm.com>
-In-reply-to: <1404240214-9804-9-git-send-email-Liviu.Dudau@arm.com>
-Subject: Re: [PATCH v8 8/9] pci: Add support for creating a generic host_bridge
- from device tree
-Date: Fri, 11 Jul 2014 16:43:21 +0900
-Message-id: <004601cf9cdb$ca08f7f0$5e1ae7d0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:55208 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751051AbaGKHAa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 03:00:30 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+Subject: [PATCH] PCI: tegra: Add debugfs support
+Date: Fri, 11 Jul 2014 09:00:24 +0200
+Message-Id: <1405062024-2364-1-git-send-email-thierry.reding@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, July 02, 2014 3:44 AM, Liviu Dudau wrote:
-> 
-> Several platforms use a rather generic version of parsing
-> the device tree to find the host bridge ranges. Move the common code
-> into the generic PCI code and use it to create a pci_host_bridge
-> structure that can be used by arch code.
-> 
-> Based on early attempts by Andrew Murray to unify the code.
-> Used powerpc and microblaze PCI code as starting point.
-> 
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> ---
->  drivers/of/of_pci.c       | 135 ++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/host-bridge.c |  18 +++++++
->  include/linux/of_pci.h    |  10 ++++
->  include/linux/pci.h       |   8 +++
->  4 files changed, 171 insertions(+)
-> 
-> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> index 8481996..55d8320 100644
-> --- a/drivers/of/of_pci.c
-> +++ b/drivers/of/of_pci.c
+From: Thierry Reding <treding@nvidia.com>
 
-[.....]
+Provide a debugfs file that shows the current link status for each root
+port.
 
-> +struct pci_host_bridge *
-> +of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops, void *host_data)
-> +{
-> +	int err, domain, busno;
-> +	struct resource *bus_range;
-> +	struct pci_bus *root_bus;
-> +	struct pci_host_bridge *bridge;
-> +	resource_size_t io_base;
-> +	LIST_HEAD(res);
-> +
-> +	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
-> +	if (!bus_range)
-> +		return ERR_PTR(-ENOMEM);
-> +
-> +	domain = of_alias_get_id(parent->of_node, "pci-domain");
-> +	if (domain == -ENODEV)
-> +		domain = atomic_inc_return(&domain_nr);
-> +
-> +	err = of_pci_parse_bus_range(parent->of_node, bus_range);
-> +	if (err) {
-> +		dev_info(parent, "No bus range for %s, using default [0-255]\n",
-> +			parent->of_node->full_name);
-> +		bus_range->start = 0;
-> +		bus_range->end = 255;
-> +		bus_range->flags = IORESOURCE_BUS;
-> +	}
-> +	busno = bus_range->start;
-> +	pci_add_resource(&res, bus_range);
-> +
-> +	/* now parse the rest of host bridge bus ranges */
-> +	err = pci_host_bridge_of_get_ranges(parent->of_node, &res, &io_base);
-> +	if (err)
-> +		goto err_create;
-> +
-> +	/* then create the root bus */
-> +	root_bus = pci_create_root_bus_in_domain(parent, domain, busno,
-> +						ops, host_data, &res);
-> +	if (IS_ERR(root_bus)) {
-> +		err = PTR_ERR(root_bus);
-> +		goto err_create;
-> +	}
-> +
-> +	bridge = to_pci_host_bridge(root_bus->bridge);
-> +	bridge->io_base = io_base;
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ drivers/pci/host/pci-tegra.c | 118 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 118 insertions(+)
 
-Hi Liviu Dudau,
-
-Would you fix the following warning?
-
-drivers/of/of_pci.c: In function 'of_create_pci_host_bridge'
-drivers/of/of_pci.c:218:18: warning: 'of_base' may be used uninitialized in this function [-Wmaybe-uninitialized]
-  bridge->io_base = io_base;
-
-Best regards,
-Jingoo Han
-
-[.....]
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 14ec5b2c69e0..49b3bd5f5926 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -25,6 +25,7 @@
+  */
+ 
+ #include <linux/clk.h>
++#include <linux/debugfs.h>
+ #include <linux/delay.h>
+ #include <linux/export.h>
+ #include <linux/interrupt.h>
+@@ -275,6 +276,7 @@ struct tegra_pcie {
+ 	unsigned int num_supplies;
+ 
+ 	const struct tegra_pcie_soc_data *soc_data;
++	struct dentry *debugfs;
+ };
+ 
+ struct tegra_pcie_port {
+@@ -1664,6 +1666,115 @@ static const struct of_device_id tegra_pcie_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, tegra_pcie_of_match);
+ 
++static void *tegra_pcie_ports_seq_start(struct seq_file *s, loff_t *pos)
++{
++	struct tegra_pcie *pcie = s->private;
++
++	if (list_empty(&pcie->ports))
++		return NULL;
++
++	seq_printf(s, "Index  Status\n");
++
++	return seq_list_start(&pcie->ports, *pos);
++}
++
++static void *tegra_pcie_ports_seq_next(struct seq_file *s, void *v, loff_t *pos)
++{
++	struct tegra_pcie *pcie = s->private;
++
++	return seq_list_next(v, &pcie->ports, pos);
++}
++
++static void tegra_pcie_ports_seq_stop(struct seq_file *s, void *v)
++{
++}
++
++static int tegra_pcie_ports_seq_show(struct seq_file *s, void *v)
++{
++	bool up = false, active = false;
++	struct tegra_pcie_port *port;
++	unsigned int value;
++
++	port = list_entry(v, struct tegra_pcie_port, list);
++
++	value = readl(port->base + RP_VEND_XP);
++
++	if (value & RP_VEND_XP_DL_UP)
++		up = true;
++
++	value = readl(port->base + RP_LINK_CONTROL_STATUS);
++
++	if (value & RP_LINK_CONTROL_STATUS_DL_LINK_ACTIVE)
++		active = true;
++
++	seq_printf(s, "%2u     ", port->index);
++
++	if (up)
++		seq_printf(s, "up");
++
++	if (active) {
++		if (up)
++			seq_printf(s, ", ");
++
++		seq_printf(s, "active");
++	}
++
++	seq_printf(s, "\n");
++	return 0;
++}
++
++static const struct seq_operations tegra_pcie_ports_seq_ops = {
++	.start = tegra_pcie_ports_seq_start,
++	.next = tegra_pcie_ports_seq_next,
++	.stop = tegra_pcie_ports_seq_stop,
++	.show = tegra_pcie_ports_seq_show,
++};
++
++static int tegra_pcie_ports_open(struct inode *inode, struct file *file)
++{
++	struct tegra_pcie *pcie = inode->i_private;
++	struct seq_file *s;
++	int err;
++
++	err = seq_open(file, &tegra_pcie_ports_seq_ops);
++	if (err)
++		return err;
++
++	s = file->private_data;
++	s->private = pcie;
++
++	return 0;
++}
++
++static const struct file_operations tegra_pcie_ports_ops = {
++	.owner = THIS_MODULE,
++	.open = tegra_pcie_ports_open,
++	.read = seq_read,
++	.llseek = seq_lseek,
++	.release = seq_release,
++};
++
++static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
++{
++	struct dentry *file;
++
++	pcie->debugfs = debugfs_create_dir("pcie", NULL);
++	if (!pcie->debugfs)
++		return -ENOMEM;
++
++	file = debugfs_create_file("ports", S_IFREG | S_IRUGO, pcie->debugfs,
++				   pcie, &tegra_pcie_ports_ops);
++	if (!file)
++		goto remove;
++
++	return 0;
++
++remove:
++	debugfs_remove_recursive(pcie->debugfs);
++	pcie->debugfs = NULL;
++	return -ENOMEM;
++}
++
+ static int tegra_pcie_probe(struct platform_device *pdev)
+ {
+ 	const struct of_device_id *match;
+@@ -1718,6 +1829,13 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 		goto disable_msi;
+ 	}
+ 
++	if (IS_ENABLED(CONFIG_DEBUG_FS)) {
++		err = tegra_pcie_debugfs_init(pcie);
++		if (err < 0)
++			dev_err(&pdev->dev, "failed to setup debugfs: %d\n",
++				err);
++	}
++
+ 	platform_set_drvdata(pdev, pcie);
+ 	return 0;
+ 
+-- 
+2.0.1
 
