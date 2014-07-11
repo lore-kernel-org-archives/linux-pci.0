@@ -1,69 +1,224 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2lp0236.outbound.protection.outlook.com ([207.46.163.236]:35685
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756571AbaGIXFM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Jul 2014 19:05:12 -0400
-From: <suravee.suthikulpanit@amd.com>
-To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
-	<jason@lakedaemon.net>
-CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
-	<Will.Deacon@arm.com>, <tglx@linutronix.de>,
-	<Harish.Kasiviswanathan@amd.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH 0/4 V3] irqchip: gic: Introduce ARM GICv2m MSI(-X) support
-Date: Wed, 9 Jul 2014 18:05:00 -0500
-Message-ID: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:60038 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753123AbaGKNN4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Jul 2014 09:13:56 -0400
+Message-ID: <1405084407.4098.59.camel@ul30vt.home>
+Subject: Re: [PATCH 1/2 V3] PCI: introduce device assignment interface and
+ refactory related code
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Ethan Zhao <ethan.zhao@oracle.com>
+Cc: bhelgaas@google.com, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	gleb@kernel.org, pbonzini@redhat.com, jeffrey.t.kirsher@intel.com,
+	jesse.brandeburg@intel.com, bruce.w.allan@intel.com,
+	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
+	gregory.v.rose@intel.com, alexander.h.duyck@intel.com,
+	john.ronciak@intel.com, mitch.a.williams@intel.com,
+	linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+	linux.nics@intel.com, e1000-devel@lists.sourceforge.net,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ethan.kernel@gmail.com, vaughan.cao@oracle.com
+Date: Fri, 11 Jul 2014 07:13:27 -0600
+In-Reply-To: <1405081802-419-1-git-send-email-ethan.zhao@oracle.com>
+References: <1405081802-419-1-git-send-email-ethan.zhao@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+On Fri, 2014-07-11 at 20:30 +0800, Ethan Zhao wrote:
+> This patch introduces two new device assignment functions
+> 
+> pci_iov_assign_device(),
+> pci_iov_deassign_device()
+> 
+> along with the existed one
+> 
+> pci_vfs_assigned()
+> 
+> They construct the VFs assignment management interface, used to assign/
+> deassign device to VM and query the VFs reference counter. instead of
+> direct manipulation of device flag.
+> 
+> This patch refashioned the related code and make them atomic.
+> 
+> v3: change the naming of device assignment helpers, because they work
+> for all kind of PCI device, not only SR-IOV (david.vrabel@citrix.com)
+> 
+> v2: reorder the patchset and make it bisectable and atomic, steps clear
+> between interface defination and implemenation according to the
+> suggestion from alex.williamson@redhat.com
+> 
+> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+> ---
 
-This patch set introduces support for MSI(-X) in GICv2m specification,
-which is implemented in some variation of GIC400.
+- Use a cover patch to describe the series
 
-This depends on and has been tested with the V7 of"Add support for PCI in AArch64"
-(https://lkml.org/lkml/2014/3/14/320).
+- Version information goes here, below the "---", not above it
 
-Changes in V3:
-    * Rebase to git://git.infradead.org/users/jcooper/linux.git irqchip/gic
-      (per Jason Cooper request)
-    * Misc fix/clean up per Mark Rutland comments
-    * Minor Clean up in the driver/irqchip/irq-gic-v2m.c: alloc_msi_irqs()
-    * Patch 4 is new to the series:
-        * Add ARM64-specific version arch_setup_msi_irqs() to allow support
-          for Multiple MSI.
-        * Add support for Multiple MSI for GICv2m.
+- I stand by the patch breakdown I suggested originally, there are too
+many logical changes here in patch 1.  There are easily 3 separate
+patches here.
 
-Suravee Suthikulpanit (4):
-  irqchip: gic: Add binding probe for ARM GIC400
-  irqchip: gic: Restructuring ARM GIC code
-  irqchip: gic: Add supports for ARM GICv2m MSI(-X)
-  irqchip: gicv2m: Add support for multiple MSI for ARM64 GICv2m
+- Renaming s/sriov/iov/ doesn't address the problem David raised.  The
+name is still synonymous with SR-IOV and it's defined on
+drivers/pci/iov.c, which is only built with CONFIG_PCI_IOV.
 
- Documentation/devicetree/bindings/arm/gic.txt |  20 +-
- arch/arm64/Kconfig                            |   1 +
- arch/arm64/include/asm/msi.h                  |  15 ++
- arch/arm64/kernel/Makefile                    |   1 +
- arch/arm64/kernel/msi.c                       |  57 +++++
- drivers/irqchip/Kconfig                       |   7 +
- drivers/irqchip/Makefile                      |   1 +
- drivers/irqchip/irq-gic-v2m.c                 | 331 ++++++++++++++++++++++++++
- drivers/irqchip/irq-gic-v2m.h                 |  13 +
- drivers/irqchip/irq-gic.c                     |  90 ++++---
- drivers/irqchip/irq-gic.h                     |  67 ++++++
- 11 files changed, 562 insertions(+), 41 deletions(-)
- create mode 100644 arch/arm64/include/asm/msi.h
- create mode 100644 arch/arm64/kernel/msi.c
- create mode 100644 drivers/irqchip/irq-gic-v2m.c
- create mode 100644 drivers/irqchip/irq-gic-v2m.h
- create mode 100644 drivers/irqchip/irq-gic.h
+- PCI_DEV_FLAGS_ASSIGNED should be unused after this series, why is it
+not removed?
 
--- 
-1.9.0
+>  drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c |   17 ++---------------
+>  drivers/pci/iov.c                                  |   20 ++++++++++++++++++++
+>  drivers/xen/xen-pciback/pci_stub.c                 |    4 ++--
+>  include/linux/pci.h                                |    4 ++++
+>  virt/kvm/assigned-dev.c                            |    2 +-
+>  virt/kvm/iommu.c                                   |    4 ++--
+
+- This patch touch 4 separate logical code areas, who do you expect to
+ack and commit it?  Split it up.
+
+>  6 files changed, 31 insertions(+), 20 deletions(-)
+> 
+> diff --git a/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c b/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
+> index 02c11a7..781040e 100644
+> --- a/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
+> +++ b/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
+> @@ -693,22 +693,9 @@ complete_reset:
+>  static bool i40e_vfs_are_assigned(struct i40e_pf *pf)
+>  {
+>  	struct pci_dev *pdev = pf->pdev;
+> -	struct pci_dev *vfdev;
+> -
+> -	/* loop through all the VFs to see if we own any that are assigned */
+> -	vfdev = pci_get_device(PCI_VENDOR_ID_INTEL, I40E_DEV_ID_VF , NULL);
+> -	while (vfdev) {
+> -		/* if we don't own it we don't care */
+> -		if (vfdev->is_virtfn && pci_physfn(vfdev) == pdev) {
+> -			/* if it is assigned we cannot release it */
+> -			if (vfdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED)
+> -				return true;
+> -		}
+>  
+> -		vfdev = pci_get_device(PCI_VENDOR_ID_INTEL,
+> -				       I40E_DEV_ID_VF,
+> -				       vfdev);
+> -	}
+> +	if (pci_vfs_assigned(pdev))
+> +		return true;
+>  
+>  	return false;
+>  }
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index de7a747..090f827 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -644,6 +644,26 @@ int pci_vfs_assigned(struct pci_dev *dev)
+>  EXPORT_SYMBOL_GPL(pci_vfs_assigned);
+>  
+>  /**
+> + * pci_iov_assign_device - assign device to VM
+> + * @pdev: the device to be assigned.
+> + */
+> +void pci_iov_assign_device(struct pci_dev *pdev)
+> +{
+> +	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_iov_assign_device);
+> +
+> +/**
+> + * pci_iov_deassign_device - deasign device from VM
+> + * @pdev: the device to be deassigned.
+> + */
+> +void pci_iov_deassign_device(struct pci_dev *pdev)
+> +{
+> +	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_iov_deassign_device);
+> +
+> +/**
+>   * pci_sriov_set_totalvfs -- reduce the TotalVFs available
+>   * @dev: the PCI PF device
+>   * @numvfs: number that should be used for TotalVFs supported
+> diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+> index 62fcd48..27e00d1 100644
+> --- a/drivers/xen/xen-pciback/pci_stub.c
+> +++ b/drivers/xen/xen-pciback/pci_stub.c
+> @@ -133,7 +133,7 @@ static void pcistub_device_release(struct kref *kref)
+>  	xen_pcibk_config_free_dyn_fields(dev);
+>  	xen_pcibk_config_free_dev(dev);
+>  
+> -	dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+> +	pci_iov_deassign_device(dev);
+>  	pci_dev_put(dev);
+>  
+>  	kfree(psdev);
+> @@ -404,7 +404,7 @@ static int pcistub_init_device(struct pci_dev *dev)
+>  	dev_dbg(&dev->dev, "reset device\n");
+>  	xen_pcibk_reset_device(dev);
+>  
+> -	dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+> +	pci_iov_assign_device(dev);
+>  	return 0;
+>  
+>  config_release:
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index aab57b4..5ece6d6 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1603,6 +1603,8 @@ int pci_num_vf(struct pci_dev *dev);
+>  int pci_vfs_assigned(struct pci_dev *dev);
+>  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+>  int pci_sriov_get_totalvfs(struct pci_dev *dev);
+> +void pci_iov_assign_device(struct pci_dev *dev);
+> +void pci_iov_deassign_device(struct pci_dev *dev);
+>  #else
+>  static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+>  { return -ENODEV; }
+> @@ -1614,6 +1616,8 @@ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+>  { return 0; }
+>  static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+>  { return 0; }
+> +static inline void pci_iov_assign_device(struct pci_dev *dev) { }
+> +static inline void pci_iov_deassign_device(struct pci_dev *dev) { }
+>  #endif
+>  
+>  #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
+> diff --git a/virt/kvm/assigned-dev.c b/virt/kvm/assigned-dev.c
+> index bf06577..7fac58d 100644
+> --- a/virt/kvm/assigned-dev.c
+> +++ b/virt/kvm/assigned-dev.c
+> @@ -302,7 +302,7 @@ static void kvm_free_assigned_device(struct kvm *kvm,
+>  	else
+>  		pci_restore_state(assigned_dev->dev);
+>  
+> -	assigned_dev->dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+> +	pci_iov_deassign_device(assigned_dev->dev);
+>  
+>  	pci_release_regions(assigned_dev->dev);
+>  	pci_disable_device(assigned_dev->dev);
+> diff --git a/virt/kvm/iommu.c b/virt/kvm/iommu.c
+> index 0df7d4b..641ee73 100644
+> --- a/virt/kvm/iommu.c
+> +++ b/virt/kvm/iommu.c
+> @@ -194,7 +194,7 @@ int kvm_assign_device(struct kvm *kvm,
+>  			goto out_unmap;
+>  	}
+>  
+> -	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+> +	pci_iov_assign_device(pdev);
+>  
+>  	dev_info(&pdev->dev, "kvm assign device\n");
+>  
+> @@ -220,7 +220,7 @@ int kvm_deassign_device(struct kvm *kvm,
+>  
+>  	iommu_detach_device(domain, &pdev->dev);
+>  
+> -	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+> +	pci_iov_deassign_device(pdev);
+>  
+>  	dev_info(&pdev->dev, "kvm deassign device\n");
+>  
+
+
 
