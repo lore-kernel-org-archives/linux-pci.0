@@ -1,59 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1blp0185.outbound.protection.outlook.com ([207.46.163.185]:48736
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752029AbaGUDT4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 20 Jul 2014 23:19:56 -0400
-Date: Mon, 21 Jul 2014 11:19:38 +0800
-From: Shawn Guo <shawn.guo@freescale.com>
-To: Fabio Estevam <festevam@gmail.com>
-CC: Lucas Stach <l.stach@pengutronix.de>,
-	"Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: The imx6q suspend/resume is broken on 3.16-rc due to PCIe
-Message-ID: <20140721031937.GI8537@dragon>
-References: <1404135864.4305.23.camel@weser.hi.pengutronix.de>
- <20140701065105.GE14471@dragon>
- <1404724251.4587.20.camel@weser.hi.pengutronix.de>
- <20140707135502.GR30239@dragon> <20140716065505.GB2612@dragon>
- <1405605306.12800.7.camel@weser.hi.pengutronix.de>
- <247043c4c45c41bf9eaa09aaf91bcc46@DM2PR0301MB0862.namprd03.prod.outlook.com>
- <1405675308.6072.6.camel@weser.hi.pengutronix.de>
- <20140721025034.GH8537@dragon>
- <CAOMZO5DS2NR57kzrjzMBSh8urxSB84Y0TPSJCaGjf7q3cPZPmg@mail.gmail.com>
+Received: from service87.mimecast.com ([91.220.42.44]:36353 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753010AbaGKPIa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 11:08:30 -0400
+Date: Fri, 11 Jul 2014 16:08:23 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 6/9] pci: Introduce a domain number for
+ pci_host_bridge.
+Message-ID: <20140711150823.GU6501@e106497-lin.cambridge.arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-7-git-send-email-Liviu.Dudau@arm.com>
+ <20140708005954.GC22939@google.com>
+ <20140708104655.GC6501@e106497-lin.cambridge.arm.com>
+ <CAErSpo75ovmGoeSHKJN0nckGDy-0gpn8kLPfHQ79CtcXxhPydw@mail.gmail.com>
+ <20140708224847.GC4980@e106497-lin.cambridge.arm.com>
+ <CAErSpo5rBt0iF2HGeDD-UH6_sPCoC647VCw0Q1v_0Rdpvcir-w@mail.gmail.com>
+ <20140710094758.GA6501@e106497-lin.cambridge.arm.com>
+ <CAErSpo5ZNCY31NztT0cLFbRVsBZqMsZ0LbTFNOTQCZUU3F7qJA@mail.gmail.com>
+ <20140711141115.GB16321@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAOMZO5DS2NR57kzrjzMBSh8urxSB84Y0TPSJCaGjf7q3cPZPmg@mail.gmail.com>
+In-Reply-To: <20140711141115.GB16321@arm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 20, 2014 at 11:55:42PM -0300, Fabio Estevam wrote:
-> On Sun, Jul 20, 2014 at 11:50 PM, Shawn Guo <shawn.guo@freescale.com> wrote:
-> > On Fri, Jul 18, 2014 at 11:21:48AM +0200, Lucas Stach wrote:
-> >> However I seem to have a board with rev 1.1 silicon and although the pci
-> >> driver starts up it never establishes a link. So my board may just work
-> >> by chance as I don't really know the differences between rev 1.1 silicon
-> >> and later revisions.
-> >
-> > Lucas, thanks for the info.
-> >
-> > I just checked my board on which the issue is seen, and found it has a
-> > rev 1.3 silicon.  I just tested on a board with rev 1.2 and did not even
-> > see the issue.
-> >
-> > Richard,
-> >
-> > Is this an issue only with rev 1.3?
+On Fri, Jul 11, 2014 at 03:11:16PM +0100, Catalin Marinas wrote:
+> On Thu, Jul 10, 2014 at 11:36:10PM +0100, Bjorn Helgaas wrote:
+> > Most of the rest of the v7 discussion was about "Introduce a domain
+> > number for pci_host_bridge."  I think we should add arm64 using the
+> > existing pci_scan_root_bus() and keep the domain number in the arm64
+> > sysdata structure like every other arch does.  Isn't that feasible?
+> > We can worry about domain unification later.
 > 
-> I could see this issue on my board with rev 1.2.
+> I think that's what we were trying to avoid, adding an arm64-specific
+> pci_sys_data structure (and arm64-specific API). IIUC, avoiding this
+> would allow the host controller drivers to use the sysdata pointer for
+> their own private data structures.
+> 
+> Also since you can specify the domain number via DT (and in Liviu's
+> v8 patches read by of_create_pci_host_bridge), I think it would make
+> sense to have it stored in some generic data structures (e.g.
+> pci_host_bridge) rather than in an arm64 private sysdata.
+> 
+> (Liviu is thinking of an alternative API but maybe he could briefly
+> describe it here before posting a new series)
+> 
+> -- 
+> Catalin
 
-Hmm, that's strange.  I tested two imx6q-sabresd boards with rev 1.2
-silicon, and did not see this issue.  Hopefully, someone else can also
-test.
 
-Shawn
+My plan is to keep the domain number in the pci_host_bridge and split
+the creation of the pci_host_bridge out of the pci_create_root_bus().
+The new function (tentatively called pci_create_new_root_bus()) will
+no longer call pci_alloc_host_bridge() but will accept it as a
+parameter, allowing one to be able to set the domain_nr ahead of the
+root bus creation.
+
+Best regards,
+Liviu
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
