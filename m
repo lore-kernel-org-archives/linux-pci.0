@@ -1,73 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50117 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965526AbaGPStd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Jul 2014 14:49:33 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Anil Gurumurthy <agurumur@brocade.com>,
-	Vijaya Mohan Guvva <vmohan@brocade.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 03/23] bfa: Cleanup bfad_setup_intr() function
-Date: Wed, 16 Jul 2014 20:05:07 +0200
-Message-Id: <20edfb7504d8b0a4c92ecc27300d9eb01d7bf36a.1405533479.git.agordeev@redhat.com>
-In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
+Received: from mail-qg0-f50.google.com ([209.85.192.50]:39865 "EHLO
+	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751749AbaGLRb5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 12 Jul 2014 13:31:57 -0400
+Received: by mail-qg0-f50.google.com with SMTP id j5so2064354qga.9
+        for <linux-pci@vger.kernel.org>; Sat, 12 Jul 2014 10:31:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87tx6mzslt.fsf@rasmusvillemoes.dk>
+References: <1404993911-10544-1-git-send-email-linux@rasmusvillemoes.dk>
+ <20140710220233.GA21053@google.com> <87tx6mzslt.fsf@rasmusvillemoes.dk>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 12 Jul 2014 11:31:36 -0600
+Message-ID: <CAErSpo6KyT=cnESwHL9cGaeGyC-XpHk7wi55Tp_Dw92WquEotg@mail.gmail.com>
+Subject: Re: [PATCH] pci: Add include guard to include/linux/pci_ids.h
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Anil Gurumurthy <agurumur@brocade.com>
-Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
----
- drivers/scsi/bfa/bfad.c |   18 ++++++++----------
- 1 files changed, 8 insertions(+), 10 deletions(-)
+On Sat, Jul 12, 2014 at 6:09 AM, Rasmus Villemoes
+<linux@rasmusvillemoes.dk> wrote:
+> Bjorn Helgaas <bhelgaas@google.com> writes:
+>
+>> On Thu, Jul 10, 2014 at 02:05:11PM +0200, Rasmus Villemoes wrote:
+>>> Adding an include guard frees the preprocessor from reparsing over
+>>> 2600 #defines in the cases where pci_ids.h is somehow included more
+>>> than once. This gives a tiny-but-measurable performance improvement
+>>> when compiling such files.
+>>>
+>>> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+>>
+>> Applied to pci/misc for v3.17, thanks!
+>>
+>
+> Great.
+>
+> One thing I thought about, but which is likely undoable in practice:
+> There are only about 800 files which use any of the #defines in
+> pci_ids.h, but more than 3000 files include pci.h directly or
+> indirectly. Making those 800 include pci_ids.h directly and removing it
+> from pci.h could speed up compilation of the other 2200.
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index bb93180..c18279f 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1219,7 +1219,7 @@ bfad_install_msix_handler(struct bfad_s *bfad)
- int
- bfad_setup_intr(struct bfad_s *bfad)
- {
--	int error = 0;
-+	int error;
- 	u32 mask = 0, i, num_bit = 0, max_bit = 0;
- 	struct msix_entry msix_entries[MAX_MSIX_ENTRY];
- 	struct pci_dev *pdev = bfad->pcidev;
-@@ -1279,20 +1279,18 @@ bfad_setup_intr(struct bfad_s *bfad)
- 
- 		bfad->bfad_flags |= BFAD_MSIX_ON;
- 
--		return error;
-+		return 0;
- 	}
- 
- line_based:
--	error = 0;
--	if (request_irq
--	    (bfad->pcidev->irq, (irq_handler_t) bfad_intx, BFAD_IRQ_FLAGS,
--	     BFAD_DRIVER_NAME, bfad) != 0) {
--		/* Enable interrupt handler failed */
--		return 1;
--	}
-+	error = request_irq(bfad->pcidev->irq, (irq_handler_t)bfad_intx,
-+			    BFAD_IRQ_FLAGS, BFAD_DRIVER_NAME, bfad);
-+	if (error)
-+		return error;
-+
- 	bfad->bfad_flags |= BFAD_INTX_ON;
- 
--	return error;
-+	return 0;
- }
- 
- void
--- 
-1.7.7.6
+Yeah, changing 800 files for a minor build performance improvement
+doesn't sound like it'd be worth the churn.
 
+Bjorn
