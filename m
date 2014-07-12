@@ -1,55 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:46160 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753189AbaGERzC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 Jul 2014 13:55:02 -0400
-Received: by mail-ig0-f180.google.com with SMTP id h18so3137830igc.13
-        for <linux-pci@vger.kernel.org>; Sat, 05 Jul 2014 10:55:01 -0700 (PDT)
-Date: Sat, 5 Jul 2014 11:54:58 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	rmk+kernel@arm.linux.org.uk, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 09/13] PCI: Remove ARCH_KIRKWOOD and ARCH_DOVE dependency
-Message-ID: <20140705175458.GF26618@google.com>
-References: <1404075603-31838-1-git-send-email-andrew@lunn.ch>
- <1404075603-31838-12-git-send-email-andrew@lunn.ch>
+Received: from mail-la0-f51.google.com ([209.85.215.51]:64139 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750750AbaGLMJW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 12 Jul 2014 08:09:22 -0400
+Received: by mail-la0-f51.google.com with SMTP id mc6so1671115lab.10
+        for <linux-pci@vger.kernel.org>; Sat, 12 Jul 2014 05:09:21 -0700 (PDT)
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: Add include guard to include/linux/pci_ids.h
+References: <1404993911-10544-1-git-send-email-linux@rasmusvillemoes.dk>
+	<20140710220233.GA21053@google.com>
+Date: Sat, 12 Jul 2014 14:09:18 +0200
+In-Reply-To: <20140710220233.GA21053@google.com> (Bjorn Helgaas's message of
+	"Thu, 10 Jul 2014 16:02:33 -0600")
+Message-ID: <87tx6mzslt.fsf@rasmusvillemoes.dk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1404075603-31838-12-git-send-email-andrew@lunn.ch>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 29, 2014 at 10:59:58PM +0200, Andrew Lunn wrote:
-> mach-kirkwood and mach-dove have been removed, now that these SoCs
-> lives in mach-mvebu. ARCH_MVEBU is sufficient.
+Bjorn Helgaas <bhelgaas@google.com> writes:
 
-Looks like there's still discussion about the cubox regression, so
-I'll wait until that's resolved and Thomas or Jason ack this.
+> On Thu, Jul 10, 2014 at 02:05:11PM +0200, Rasmus Villemoes wrote:
+>> Adding an include guard frees the preprocessor from reparsing over
+>> 2600 #defines in the cases where pci_ids.h is somehow included more
+>> than once. This gives a tiny-but-measurable performance improvement
+>> when compiling such files.
+>> 
+>> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+>
+> Applied to pci/misc for v3.17, thanks!
+>
 
-> 
-> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/pci/host/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 21df477be0c8..b9692deeb99a 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -3,7 +3,7 @@ menu "PCI host controller drivers"
->  
->  config PCI_MVEBU
->  	bool "Marvell EBU PCIe controller"
-> -	depends on ARCH_MVEBU || ARCH_DOVE || ARCH_KIRKWOOD
-> +	depends on ARCH_MVEBU
->  	depends on OF
->  
->  config PCIE_DW
-> -- 
-> 2.0.0
-> 
+Great.
+
+One thing I thought about, but which is likely undoable in practice:
+There are only about 800 files which use any of the #defines in
+pci_ids.h, but more than 3000 files include pci.h directly or
+indirectly. Making those 800 include pci_ids.h directly and removing it
+from pci.h could speed up compilation of the other 2200.
+
+Rasmus
