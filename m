@@ -1,99 +1,43 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <53D70A55.20805@oracle.com>
-Date: Tue, 29 Jul 2014 10:43:33 +0800
-From: ethan zhao <ethan.zhao@oracle.com>
-MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
-	kvm@vger.kernel.org, konrad.wilk@oracle.com,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
-	xen-devel@lists.xenproject.org, alexander.h.duyck@intel.com,
-	ethan.kernel@gmail.com
-Subject: Re: [PATCH 1/4] PCI: introduce helper functions for device flag operation
-References: <1406045944-1587-1-git-send-email-ethan.zhao@oracle.com>   <1406045944-1587-2-git-send-email-ethan.zhao@oracle.com>  <1406581206.1011.133.camel@ul30vt.home> <53D6FE95.6040605@oracle.com> <1406601073.1011.157.camel@ul30vt.home>
-In-Reply-To: <1406601073.1011.157.camel@ul30vt.home>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: [PATCH 0/2] PCI/MSI: Remove arch_msi_check_device()
+Date: Sat, 12 Jul 2014 13:21:06 +0200
+Message-Id: <cover.1405160163.git.agordeev@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hello,
 
-On 2014/7/29 10:31, Alex Williamson wrote:
-> On Tue, 2014-07-29 at 09:53 +0800, ethan zhao wrote:
->> On 2014/7/29 5:00, Alex Williamson wrote:
->>> On Wed, 2014-07-23 at 00:19 +0800, Ethan Zhao wrote:
->>>> This patch introduced three helper functions to hide direct
->>>> device flag operation.
->>>>
->>>> void pci_set_dev_assigned(struct pci_dev *pdev);
->>>> void pci_set_dev_deassigned(struct pci_dev *pdev);
->>>> bool pci_is_dev_assigned(struct pci_dev *pdev);
->>>>
->>>> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
->>>> ---
->>>>    include/linux/pci.h |   13 +++++++++++++
->>>>    1 files changed, 13 insertions(+), 0 deletions(-)
->>>>
->>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>>> index aab57b4..5f6f8fa 100644
->>>> --- a/include/linux/pci.h
->>>> +++ b/include/linux/pci.h
->>>> @@ -1129,6 +1129,19 @@ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
->>>>    
->>>>    int pci_set_vga_state(struct pci_dev *pdev, bool decode,
->>>>    		      unsigned int command_bits, u32 flags);
->>>> +/* helper functions for operation of device flag */
->>>> +static inline void pci_set_dev_assigned(struct pci_dev *pdev)
->>>> +{
->>>> +	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
->>>> +}
->>>> +static inline void pci_set_dev_deassigned(struct pci_dev *pdev)
->>>> +{
->>>> +	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
->>>> +}
->>> I think pci_clear_dev_assigned() would make more sense, we're not
->>> setting a flag named DEASSIGNED.
->>     Though it is a flag operation now, may not later, we define it
->> because we want to hide the internal operation.
->>     'set' to 'deassigned'  status is enough. So I would like keep it.
-> I disagree, the opposite of a 'set' is a 'clear', or at least an
-> 'unset'.  Using bit-ops-like terminology doesn't lock us into an
-> implementation.  As written, this could just as easily be setting two
-> different variables.
-  So there are two pairs of opposite:
+This is a cleanup effort to get rid of useless arch_msi_check_device().
+I am not sure what were the reasons for its existence in the first place,
+but at the moment it appears totally unnecessary.
 
-  set assigned ---> unset assigned
-  set assigned ---> set deassigned
+Thanks!
 
-  Here you prefer the 'verb' set /unset, and I prefer the 'adj.' 
-assigned / deassigned.
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org
 
-  Do they really have different meaning or make confusion ? I don't 
-think so.
+Alexander Gordeev (2):
+  PCI/MSI/PPC: Remove arch_msi_check_device()
+  PCI/MSI: Remove arch_msi_check_device()
 
-  Thanks,
-  Ethan
+ arch/powerpc/include/asm/machdep.h     |    2 -
+ arch/powerpc/kernel/msi.c              |   12 +-------
+ arch/powerpc/platforms/cell/axon_msi.c |    9 ------
+ arch/powerpc/platforms/powernv/pci.c   |   19 +++---------
+ arch/powerpc/platforms/pseries/msi.c   |   42 ++++++++++-----------------
+ arch/powerpc/sysdev/fsl_msi.c          |   12 ++------
+ arch/powerpc/sysdev/mpic_pasemi_msi.c  |   11 +------
+ arch/powerpc/sysdev/mpic_u3msi.c       |   28 +++++++-----------
+ arch/powerpc/sysdev/ppc4xx_hsta_msi.c  |   18 ++++--------
+ arch/powerpc/sysdev/ppc4xx_msi.c       |   19 ++++--------
+ drivers/pci/msi.c                      |   49 ++++++++-----------------------
+ include/linux/msi.h                    |    3 --
+ 12 files changed, 63 insertions(+), 161 deletions(-)
 
->
->>>> +static inline bool pci_is_dev_assigned(struct pci_dev *pdev)
->>>> +{
->>>> +	return pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED ? true : false;
->>>> +}
->>> The ternary operation isn't necessary.  Thanks,
->>     Yep,
->>
->>     return pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED
->>
->>     is enough.
->>
->>     Thanks,
->>     Ethan
->>> Alex
->>>
->>>>    /* kmem_cache style wrapper around pci_alloc_consistent() */
->>>>    
->>>>    #include <linux/pci-dma.h>
->>>
->
->
+-- 
+1.7.7.6
 
