@@ -1,268 +1,164 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:33544 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757117AbaGVXwE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 19:52:04 -0400
-Received: by mail-ie0-f174.google.com with SMTP id rp18so338737iec.5
-        for <linux-pci@vger.kernel.org>; Tue, 22 Jul 2014 16:52:03 -0700 (PDT)
-Date: Tue, 22 Jul 2014 17:52:00 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v7 4/5] PCI: add PCI controller for keystone PCIe h/w
-Message-ID: <20140722235200.GC27965@google.com>
-References: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com>
- <1405961925-27248-5-git-send-email-m-karicheri2@ti.com>
- <20140722223527.GA27965@google.com>
- <53CEEB1C.9020202@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53CEEB1C.9020202@ti.com>
+Received: from mx1.redhat.com ([209.132.183.28]:30894 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752025AbaGLLUi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 12 Jul 2014 07:20:38 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: [PATCH 2/2] PCI/MSI: Remove arch_msi_check_device()
+Date: Sat, 12 Jul 2014 13:21:08 +0200
+Message-Id: <1005232855c3af2c0c669818ee63be445389b6ad.1405160163.git.agordeev@redhat.com>
+In-Reply-To: <cover.1405160163.git.agordeev@redhat.com>
+References: <cover.1405160163.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 22, 2014 at 06:52:12PM -0400, Murali Karicheri wrote:
-> Bjorn,
-> 
-> On 07/22/2014 06:35 PM, Bjorn Helgaas wrote:
-> >On Mon, Jul 21, 2014 at 12:58:44PM -0400, Murali Karicheri wrote:
-> >>keystone PCIe controller is based on v3.65 version of the
-> >>designware h/w. Main differences are
-> >>	1. No ATU support
-> >>	2. Legacy and MSI irq functions are implemented in
-> >>	   application register space
-> >>	3. MSI interrupts are multiplexed over 8 IRQ lines to the Host
-> >>	   side.
-> >>All of the Application register space handing code are organized into
-> >>pci-keystone-dw.c and the functions are called from pci-keystone.c
-> >>to implement PCI controller driver. Also add necessary DT documentation
-> >>for the driver.
-> >>
-> >>Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
-> >>Acked-by: Santosh Shilimkar<santosh.shilimkar@ti.com>
-> >>...
-> >
-> >>+++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-> >>...
-> >
-> >>+Note for PCI driver usage
-> >>+=========================
-> >>+Driver requires pci=pcie_bus_perf in the bootargs for proper functioning.
-> >
-> >Whoa, why is this?  Special boot args should not be required.
-> 
-> This was discussed initially and I had added following commit to get
-> this working instead of a PCI quirk. To get some background please
-> see the thread for commit below that you also had signed off as
-> well.
+There are no archs that override arch_msi_check_device()
+hook. Remove it as it is completely redundant.
 
-I applied 8b5742ad156d because it's something all arches should do
-(actually, we *should* do it in the PCI core, but nobody's gotten
-around to doing that yet).  It has nothing to do with Keystone
-support, and it doesn't mean I'm in favor of a boot argument.
+If an arch would need to check MSI/MSI-X possibility for a
+device it should make it within arch_setup_msi_irqs() hook.
 
-I think the discussion you mentioned is [1].  I see hints that there
-might be a Keystone hardware defect related to MRSS, but I don't see a
-clear description of it.  If you have a hardware erratum document,
-those usually contain pretty good descriptions.
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/pci/msi.c   |   49 +++++++++++++------------------------------------
+ include/linux/msi.h |    3 ---
+ 2 files changed, 13 insertions(+), 39 deletions(-)
 
-If there is a hardware defect, a PCI quirk is a reasonable way to work
-around it, since that's the main purpose of quirks.  fixup_mpss_256()
-is an example of something that sounds superficially similar.
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 13f3d30..19ac058 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -56,16 +56,6 @@ void __weak arch_teardown_msi_irq(unsigned int irq)
+ 	chip->teardown_irq(chip, irq);
+ }
+ 
+-int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+-{
+-	struct msi_chip *chip = dev->bus->msi;
+-
+-	if (!chip || !chip->check_device)
+-		return 0;
+-
+-	return chip->check_device(chip, dev, nvec, type);
+-}
+-
+ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ {
+ 	struct msi_desc *entry;
+@@ -809,22 +799,23 @@ out_free:
+ }
+ 
+ /**
+- * pci_msi_check_device - check whether MSI may be enabled on a device
++ * msi_check_device - check whether MSI may be enabled on a device
+  * @dev: pointer to the pci_dev data structure of MSI device function
+  * @nvec: how many MSIs have been requested ?
+- * @type: are we checking for MSI or MSI-X ?
+  *
+  * Look at global flags, the device itself, and its parent buses
+  * to determine if MSI/-X are supported for the device. If MSI/-X is
+  * supported return 0, else return an error code.
+  **/
+-static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
++static int msi_check_device(struct pci_dev *dev, int nvec)
+ {
+ 	struct pci_bus *bus;
+-	int ret;
+ 
+ 	/* MSI must be globally enabled and supported by the device */
+-	if (!pci_msi_enable || !dev || dev->no_msi)
++	if (!pci_msi_enable)
++		return -EINVAL;
++
++	if (!dev || dev->no_msi || dev->current_state != PCI_D0)
+ 		return -EINVAL;
+ 
+ 	/*
+@@ -846,10 +837,6 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+ 		if (bus->bus_flags & PCI_BUS_FLAGS_NO_MSI)
+ 			return -EINVAL;
+ 
+-	ret = arch_msi_check_device(dev, nvec, type);
+-	if (ret)
+-		return ret;
+-
+ 	return 0;
+ }
+ 
+@@ -954,13 +941,13 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+ 	int status, nr_entries;
+ 	int i, j;
+ 
+-	if (!entries || !dev->msix_cap || dev->current_state != PCI_D0)
+-		return -EINVAL;
+-
+-	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
++	status = msi_check_device(dev, nvec);
+ 	if (status)
+ 		return status;
+ 
++	if (!entries)
++		return -EINVAL;
++
+ 	nr_entries = pci_msix_vec_count(dev);
+ 	if (nr_entries < 0)
+ 		return nr_entries;
+@@ -1085,8 +1072,9 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+ 	int nvec;
+ 	int rc;
+ 
+-	if (dev->current_state != PCI_D0)
+-		return -EINVAL;
++	rc = msi_check_device(dev, minvec);
++	if (rc)
++		return rc;
+ 
+ 	WARN_ON(!!dev->msi_enabled);
+ 
+@@ -1109,17 +1097,6 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+ 		nvec = maxvec;
+ 
+ 	do {
+-		rc = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
+-		if (rc < 0) {
+-			return rc;
+-		} else if (rc > 0) {
+-			if (rc < minvec)
+-				return -ENOSPC;
+-			nvec = rc;
+-		}
+-	} while (rc);
+-
+-	do {
+ 		rc = msi_capability_init(dev, nvec);
+ 		if (rc < 0) {
+ 			return rc;
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 92a2f99..3b873bc 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -59,7 +59,6 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
+ void arch_teardown_msi_irq(unsigned int irq);
+ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+ void arch_teardown_msi_irqs(struct pci_dev *dev);
+-int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
+ void arch_restore_msi_irqs(struct pci_dev *dev);
+ 
+ void default_teardown_msi_irqs(struct pci_dev *dev);
+@@ -76,8 +75,6 @@ struct msi_chip {
+ 	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
+ 			 struct msi_desc *desc);
+ 	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
+-	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
+-			    int nvec, int type);
+ };
+ 
+ #endif /* LINUX_MSI_H */
+-- 
+1.7.7.6
 
-I don't think there's a way for a device to advertise the maximum MRSS
-value it supports.  MRSS only controls the maximum Read Request size
-the device can generate, and I wouldn't think there's much to go wrong
-there, because the request doesn't contain any data, so MRSS doesn't
-affect the packet size of the *request*.
-
-I think it's more likely that a hardware problem would affect the
-*response*, where, e.g., a device might advertise (via the Device
-Capabilities Max_Payload_Size_Supported field) that it can support an
-MPS of 1024, but it can't actually handle a TLP that big.  Software
-would have to work around that by artificially limiting the MPS to
-something smaller than the MPSS advertised by the device.  This is
-what fixup_mpss_256() is doing.
-
-If there is a hardware problem with MRSS specifically, you can
-probably still do a quirk, but it might also involve a little work in
-the PCI core to add something similar to pcie_mpss to support the
-quirk.
-
-Bjorn
-
-[1] http://lkml.kernel.org/r/1400169692-9677-6-git-send-email-m-karicheri2@ti.com
-
-> commit 8b5742ad156d30ee38486652cdbd152e2d6ebbcc
-> Author: Murali Karicheri <m-karicheri2@ti.com>
-> Date:   Wed May 28 13:14:53 2014 -0400
-> 
->     ARM/PCI: Call pcie_bus_configure_settings() to set MPS
-> 
->     Call pcie_bus_configure_settings() on ARM, like for other platforms.
->     pcie_bus_configure_settings() makes sure the MPS across the bus
-> is uniform
->     and provides the ability to tune the MRSS and MPS to higher performance
->     values.  This is particularly important for embedded where there is no
->     firmware to program these PCIe settings for the OS.
-> 
->     Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     CC: Russell King <linux@arm.linux.org.uk>
->     CC: Arnd Bergmann <arnd@arndb.de>
->     CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
->     CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
-> 
-> This was added as a preparatory patch to support keystone and
-> avoid a PCI quirk to do the same. Keystone has MRSS limitation
-> of 256 bytes. So adding a bootargs flag was suggested a better
-> option than a PCI quirk.
-> 
-> I will look into the rest of the comments and possibly try to
-> address them or discuss.
-> 
-> BTW, please apply patch 1-3 that has already got ack from maintainers
-> and is indepdent of this patch.
-> 
-> Thanks
-> 
-> Murali
-> 
-> >
-> >>diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> >>index 21df477..f8bc475 100644
-> >>--- a/drivers/pci/host/Kconfig
-> >>+++ b/drivers/pci/host/Kconfig
-> >>@@ -46,4 +46,9 @@ config PCI_HOST_GENERIC
-> >>  	  Say Y here if you want to support a simple generic PCI host
-> >>  	  controller, such as the one emulated by kvmtool.
-> >>
-> >>+config PCI_KEYSTONE
-> >>+	bool "TI Keystone PCIe controller"
-> >>+	depends on ARCH_KEYSTONE
-> >>+	select PCIE_DW
-> >>+	select PCIEPORTBUS
-> >
-> >It'd be nice to have some help text here.  I know, not everybody else does.
-> >
-> >>+++ b/drivers/pci/host/pci-keystone-dw.c
-> >>...
-> >>+void ks_dw_pcie_handle_msi_irq(struct keystone_pcie *ks_pcie , int offset)
-> >>+{
-> >>+	struct pcie_port *pp =&ks_pcie->pp;
-> >>+	u32 pending, vector;
-> >>+	int src, virq;
-> >>+
-> >>+	pending = readl(ks_pcie->va_app_base + MSI0_IRQ_STATUS + (offset<<  4));
-> >
-> >Blank line here (before the block comment).
-> >
-> >>+	/*
-> >>+	 * MSI0, Status bit 0-3 shows vectors 0, 8, 16, 24, MSI1 status bit
-> >>+	 * shows 1, 9, 17, 25 and so forth
-> >>+	 */
-> >>+	for (src = 0; src<  4; src++) {
-> >>+		if (BIT(src)&  pending) {
-> >>+			vector = offset + (src<<  3);
-> >>+			virq = irq_linear_revmap(pp->irq_domain, vector);
-> >>+			dev_dbg(pp->dev,
-> >>+				"irq: bit %d, vector %d, virq %d\n",
-> >>+				 src, vector, virq);
-> >>+			generic_handle_irq(virq);
-> >>+		}
-> >>+	}
-> >>+}
-> >>+
-> >>...
-> >
-> >>+static void __iomem *ks_pcie_cfg_setup(struct keystone_pcie *ks_pcie, u8 bus,
-> >>+					unsigned int devfn)
-> >>+{
-> >>+	u8 device = PCI_SLOT(devfn), function = PCI_FUNC(devfn);
-> >>+	struct pcie_port *pp =&ks_pcie->pp;
-> >>+	u32 regval;
-> >>+
-> >>+	if (bus == 0)
-> >>+		return pp->dbi_base;
-> >>+
-> >>+	regval = (bus<<  16) | (device<<  8) | function;
-> >>+	/*
-> >>+	 * Since Bus#1 will be a virtual bus, we need to have TYPE0
-> >>+	 * access only.
-> >>+	 * TYPE 1
-> >>+	 */
-> >>+	if (bus != 1)
-> >>+		regval |= BIT(24);
-> >>+
-> >>+	writel(regval, ks_pcie->va_app_base + CFG_SETUP);
-> >>+	return pp->va_cfg0_base;
-> >>+}
-> >>+
-> >>+int ks_dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-> >>+		unsigned int devfn, int where, int size, u32 *val)
-> >>+{
-> >>+	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
-> >>+	u8 bus_num = bus->number;
-> >>+	void __iomem *addr;
-> >>+	int ret;
-> >>+
-> >>+	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
-> >>+	ret = dw_pcie_cfg_read(addr + (where&  ~0x3), where, size, val);
-> >
-> >This *looks* like it needs a lock to protect against concurrent
-> >ks_pcie_cfg_setup() users, since it writes a register.
-> >
-> >>+
-> >>+	return ret;
-> >
-> >Please use the same style as in ks_dw_pcie_wr_other_conf(), i.e., get rid
-> >of "ret".
-> >
-> >>+}
-> >>+
-> >>+int ks_dw_pcie_wr_other_conf(struct pcie_port *pp,
-> >>+		struct pci_bus *bus, unsigned int devfn, int where,
-> >>+		int size, u32 val)
-> >>+{
-> >>+	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
-> >>+	u8 bus_num = bus->number;
-> >>+	void __iomem *addr;
-> >>+
-> >>+	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
-> >>+
-> >>+	return dw_pcie_cfg_write(addr + (where&  ~0x3), where, size, val);
-> >>+}
-> >
-> >>+++ b/drivers/pci/host/pci-keystone.c
-> >>...
-> >
-> >>+static struct platform_driver ks_pcie_driver __refdata = {
-> >
-> >Why does this need to be __refdata?  There are no other occurrences in
-> >drivers/pci.
-> >
-> >>+	.probe  = ks_pcie_probe,
-> >>+	.remove = __exit_p(ks_pcie_remove),
-> >>+	.driver = {
-> >>+		.name	= "keystone-pcie",
-> >>+		.owner	= THIS_MODULE,
-> >>+		.of_match_table = of_match_ptr(ks_pcie_of_match),
-> >>+	},
-> >>+};
-> >
-> >Bjorn
-> 
