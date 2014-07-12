@@ -1,167 +1,191 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2lp0203.outbound.protection.outlook.com ([207.46.163.203]:27894
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756124AbaGBUEl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 2 Jul 2014 16:04:41 -0400
-Message-ID: <53B465B9.7000407@amd.com>
-Date: Wed, 2 Jul 2014 15:04:09 -0500
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:49055 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753170AbaGLBWJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 21:22:09 -0400
+Received: by mail-ig0-f171.google.com with SMTP id l13so59973iga.4
+        for <linux-pci@vger.kernel.org>; Fri, 11 Jul 2014 18:22:08 -0700 (PDT)
 MIME-Version: 1.0
-To: Mark Rutland <mark.rutland@arm.com>
-CC: Marc Zyngier <Marc.Zyngier@arm.com>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 3/3 V2] irqchip: gic: Add supports for ARM GICv2m MSI(-X)
-References: <1404314544-7762-1-git-send-email-suravee.suthikulpanit@amd.com>
- <20140702163903.GA26903@leverpostej>
-In-Reply-To: <20140702163903.GA26903@leverpostej>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <CAErSpo4GvYgP5zRq0vzFrCGzrYBF9u=KWus8PPNGKpyJVZzYkA@mail.gmail.com>
+References: <20140611060118.GB3169@yanx>
+	<CAE9FiQWe2bf7QbKn9kmZS34a4cMewsdD-9qAELdXs-dEtx70GQ@mail.gmail.com>
+	<20140702210736.GB28852@google.com>
+	<CAE9FiQU5Ltu89zmRG0h2aXfXH0oCcTEP=jF7b=zHi=SaOA2rKg@mail.gmail.com>
+	<20140703131526.GG28852@google.com>
+	<CAE9FiQWPGXMBYmpzyk8cicKZ1ELUZiARkZjr2vvgntmt3bt1jQ@mail.gmail.com>
+	<20140703221152.GH28852@google.com>
+	<CAE9FiQX69x_YgHihYM-+tahTvbuk6MATBXvm9Rz5kiQ9UpKNPg@mail.gmail.com>
+	<CAErSpo4DzJ112NxfjXT=NbXMxNqre_Vo61fS0Mem=MWCz+OvcA@mail.gmail.com>
+	<CAE9FiQWUPd4d9DWeiuDqQ=tKKe+5ZofUEw3JViXYs6+9zBG6Sg@mail.gmail.com>
+	<CA+55aFwyfaAa3opKsDth7b4RXb7E2_Thb581VWvg9V-GvJCYbg@mail.gmail.com>
+	<CAErSpo4GvYgP5zRq0vzFrCGzrYBF9u=KWus8PPNGKpyJVZzYkA@mail.gmail.com>
+Date: Fri, 11 Jul 2014 18:22:08 -0700
+Message-ID: <CAE9FiQXCOvgCTiUhTeBYjHQeMA0wNJ7gJDO9mXXUmZSrH90Exw@mail.gmail.com>
+Subject: Re: [PATCH] pci: Allow very large resource windows
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=90e6ba615034f4806904fdf4e21c
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks again for the review. Please see my comments below.
+--90e6ba615034f4806904fdf4e21c
+Content-Type: text/plain; charset=UTF-8
 
-On 7/2/2014 11:39 AM, Mark Rutland wrote:
-> On Wed, Jul 02, 2014 at 04:22:23PM +0100, suravee.suthikulpanit@amd.com wrote:
->> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->> diff --git a/Documentation/devicetree/bindings/arm/gic.txt b/Documentation/devicetree/bindings/arm/gic.txt
->> index 5573c08..9e46f7f 100644
->> --- a/Documentation/devicetree/bindings/arm/gic.txt
->> +++ b/Documentation/devicetree/bindings/arm/gic.txt
->> @@ -12,11 +12,13 @@ Main node required properties:
+On Fri, Jul 11, 2014 at 11:40 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Jul 11, 2014 at 12:21 PM, Linus Torvalds
+> <torvalds@linux-foundation.org> wrote:
+>> On Fri, Jul 11, 2014 at 11:09 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>
+>>> If the BAR have all 0, cpu can not access it as hw will forward access to ram
+>>> controller according to routing table.
 >>
->>   - compatible : should be one of:
->>          "arm,gic-400"
->> +       "arm,gic-400-plus"
+>> On PC's, yes (also likely with many devices - there are definitely
+>> devices out there were setting the BAR to zero disables it).
 >
-> I am not keen on this name.
+> Ooh, we might trip over this some day on a platform with host bridge
+> address translation that maps to PCI bus address 0.  I don't think we
+> have anything in the allocator that avoids bus address 0 in that case.
 
-Ok, I'll change it. Any suggestion on name?  I'm not sure what is the 
-"official" product name. I've seen this in some slides from ARM. What 
-about "gic-400-v2m"??.
+Anyway, I draft RFC one that replace flags = 0 with flags |=
+IORESOURCE_UNSET | IORESOURCE_DISABLEd.
 
->>          "arm,cortex-a15-gic"
->>          "arm,cortex-a9-gic"
->>          "arm,cortex-a7-gic"
->>          "arm,arm11mp-gic"
->>   - interrupt-controller : Identifies the node as an interrupt controller
->> +
->>   - #interrupt-cells : Specifies the number of cells needed to encode an
->>     interrupt source.  The type shall be a <u32> and the value shall be 3.
->
-> Random (inconsistent) whitespace change?
-It looks to me like there should have been a space here to keep the 
-consistent look, and make it easy to read
+Let's see how many drivers will fail.
 
->> @@ -37,9 +39,16 @@ Main node required properties:
->>          the 8 possible cpus attached to the GIC.  A bit set to '1' indicated
->>          the interrupt is wired to that CPU.  Only valid for PPI interrupts.
->>
->> -- reg : Specifies base physical address(s) and size of the GIC registers. The
->> -  first region is the GIC distributor register base and size. The 2nd region is
->> -  the GIC cpu interface register base and size.
->> +- reg : Specifies base physical address(s) and size of the GIC register frames.
->> +
->> +  Region | Description
->> +  Index  |
->> +  -------------------------------------------------------------------
->> +     0   | GIC distributor register base and size
->> +     1   | GIC cpu interface register base and size
->> +     2   | VGIC interface control register base and size (Optional)
->> +     3   | VGIC CPU interface register base and size (Optional)
->> +     4   | GICv2m MSI interface register base and size (Optional)
->
-> As far as I am aware, the MSI interface is completely orthogonal to
-> having a GICH and GICV.
+Yinghai
 
-Agree. I'm not doing anything with it. I'm just listing them here since 
-they are also mentioned in the gic.txt
+--90e6ba615034f4806904fdf4e21c
+Content-Type: text/x-patch; charset=US-ASCII; name="res_flags_unset_disabled.patch"
+Content-Disposition: attachment; filename="res_flags_unset_disabled.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hxi8y4lo0
 
->
-> We should figure out how we expect to handle that (zero-sized reg
-> entries? reg-names?).
-
-I'm not sure how VGIC stuff handles reg/size = 0.
-
->
->>
->>   Optional
->>   - interrupts   : Interrupt source of the parent interrupt controller on
->> @@ -55,6 +64,10 @@ Optional
->>                    by a crossbar/multiplexer preceding the GIC. The GIC irq
->>                    input line is assigned dynamically when the corresponding
->>                    peripheral's crossbar line is mapped.
->> +
->> +- msi-controller : Identifies the node as an MSI controller.  This requires
->> +  the register region index 4.
->
-> That last clarifying comment is more confusing than helpful.
-
-If you are referring to the table, I added that since it was easier to 
-see than scanning the text.
-
-> [...]
->
->> +#define GIC_V2M_MIN_SPI                        32
->> +#define GIC_V2M_MAX_SPI                        1024
->
-> GIC interrupt IDs 1020 and above are reserved, no?
->
-> Surely the max ID an SPI can take is 1019?
-
-Right, thanks for catching. But the spec says that the SPI ID value must 
-be in the range of 32 to 1020. I guess it was a bit unclear, but 
-definitely not 1024 :)
-
->> +#define GIC_OF_MSIV2M_RANGE_INDEX      4
->> +
->> +/**
->> + * alloc_msi_irq - Allocate MSIs from avaialbe MSI bitmap.
->> + * @data: Pointer to v2m_data
->> + * @nvec: Number of interrupts to allocate
->> + * @irq: Pointer to the allocated irq
->> + *
->> + * Allocates interrupts only if the contiguous range of MSIs
->> + * with specified nvec are available. Otherwise return the number
->> + * of available interrupts. If none are available, then returns -ENOENT.
->> + */
->
-> This function is overly complicated, and pointlessly so.
->
-> It doesn't achieve anything useful as it returns the size of the _last_
-> contiguous block rather than the _largest_ contiguous block, and the
-> only caller (gicv2m_setup_msi_irq) doesn't even care.
->
-> Simplify this to just return an error code if allocation is impossible.
-
-Actually, I made another mistake in the gicv2m_setup_msi_irq when 
-returning from the alloc_msi_irq().
-
-My understanding is the arch_setup_msi_irqs() is supposed to return the 
-number of available vectors if the requested amount could not be 
-allocated. I notice that the current "drivers/pci/msi.c: 
-arch_setup_msi_irqs()" does not do so, which is okay.
-
-However, We are also working on adding support for multi-MSI support 
-since some of the devices we have are using it, which means we will need 
-to provide a different version of the "arch_setup_msi_irqs()" as the 
-current one does not allow (PCI_CAP_ID_MSI && nvec > 1).
-
-Therefore, I implemented the "alloc_msi_irq" this way to account for 
-future changes.
-
-Thanks,
-
-Suravee
-
+U3ViamVjdDogW1JGQyBQQVRDSF0gUENJOiBkb24ndCBzZXQgZmxhZ3MgdG8gMCB3aGVuIGFzc2ln
+biByZXNvdXJjZSBmYWlsCgptYWtlIGZsYWdzIHRha2UgSU9SRVNPVVJDRV9VTlNFVCB8IElPUkVT
+T1VSQ0VfRElTQUJMRSBpbnN0ZWFkLgoKU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hh
+aUBrZXJuZWwub3JnPgoKLS0tCiBkcml2ZXJzL3BjaS9zZXR1cC1idXMuYyB8ICAgNDkgKysrKysr
+KysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCiBkcml2ZXJzL3BjaS9z
+ZXR1cC1yZXMuYyB8ICAgMTEgKysrKysrKysrKwogMiBmaWxlcyBjaGFuZ2VkLCAzNiBpbnNlcnRp
+b25zKCspLCAyNCBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0
+dXAtYnVzLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvc2V0dXAt
+YnVzLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwpAQCAtMTM2LDcgKzEz
+Niw4IEBAIHN0YXRpYyB2b2lkIHBkZXZfc29ydF9yZXNvdXJjZXMoc3RydWN0IHAKIAkJaWYgKHIt
+PmZsYWdzICYgSU9SRVNPVVJDRV9QQ0lfRklYRUQpCiAJCQljb250aW51ZTsKIAotCQlpZiAoIShy
+LT5mbGFncykgfHwgci0+cGFyZW50KQorCQlpZiAoIShyLT5mbGFncykgfHwgci0+cGFyZW50IHx8
+CisJCSAgICAoci0+ZmxhZ3MgJiBJT1JFU09VUkNFX0RJU0FCTEVEKSkKIAkJCWNvbnRpbnVlOwog
+CiAJCXJfYWxpZ24gPSBwY2lfcmVzb3VyY2VfYWxpZ25tZW50KGRldiwgcik7CkBAIC0xOTAsMTMg
+KzE5MSw2IEBAIHN0YXRpYyB2b2lkIF9fZGV2X3NvcnRfcmVzb3VyY2VzKHN0cnVjdAogCXBkZXZf
+c29ydF9yZXNvdXJjZXMoZGV2LCBoZWFkKTsKIH0KIAotc3RhdGljIGlubGluZSB2b2lkIHJlc2V0
+X3Jlc291cmNlKHN0cnVjdCByZXNvdXJjZSAqcmVzKQotewotCXJlcy0+c3RhcnQgPSAwOwotCXJl
+cy0+ZW5kID0gMDsKLQlyZXMtPmZsYWdzID0gMDsKLX0KLQogLyoqCiAgKiByZWFzc2lnbl9yZXNv
+dXJjZXNfc29ydGVkKCkgLSBzYXRpc2Z5IGFueSBhZGRpdGlvbmFsIHJlc291cmNlIHJlcXVlc3Rz
+CiAgKgpAQCAtMjQyLDcgKzIzNiw3IEBAIHN0YXRpYyB2b2lkIHJlYXNzaWduX3Jlc291cmNlc19z
+b3J0ZWQoc3QKIAkJCXJlcy0+c3RhcnQgPSBhZGRfcmVzLT5zdGFydDsKIAkJCXJlcy0+ZW5kID0g
+cmVzLT5zdGFydCArIGFkZF9zaXplIC0gMTsKIAkJCWlmIChwY2lfYXNzaWduX3Jlc291cmNlKGFk
+ZF9yZXMtPmRldiwgaWR4KSkKLQkJCQlyZXNldF9yZXNvdXJjZShyZXMpOworCQkJCXJlcy0+Zmxh
+Z3MgfD0gSU9SRVNPVVJDRV9ESVNBQkxFRDsKIAkJfSBlbHNlIHsKIAkJCXJlc291cmNlX3NpemVf
+dCBhbGlnbiA9IGFkZF9yZXMtPm1pbl9hbGlnbjsKIAkJCXJlcy0+ZmxhZ3MgfD0gYWRkX3Jlcy0+
+ZmxhZ3MgJgpAQCAtMjk0LDcgKzI4OCw3IEBAIHN0YXRpYyB2b2lkIGFzc2lnbl9yZXF1ZXN0ZWRf
+cmVzb3VyY2VzX3MKIAkJCQkJCSAgICAwIC8qIGRvbid0IGNhcmUgKi8sCiAJCQkJCQkgICAgMCAv
+KiBkb24ndCBjYXJlICovKTsKIAkJCX0KLQkJCXJlc2V0X3Jlc291cmNlKHJlcyk7CisJCQlyZXMt
+PmZsYWdzIHw9IElPUkVTT1VSQ0VfRElTQUJMRUQ7CiAJCX0KIAl9CiB9CkBAIC01NDcsNyArNTQx
+LDcgQEAgc3RhdGljIHZvaWQgcGNpX3NldHVwX2JyaWRnZV9pbyhzdHJ1Y3QgcAogCS8qIFNldCB1
+cCB0aGUgdG9wIGFuZCBib3R0b20gb2YgdGhlIFBDSSBJL08gc2VnbWVudCBmb3IgdGhpcyBidXMu
+ICovCiAJcmVzID0gYnVzLT5yZXNvdXJjZVswXTsKIAlwY2liaW9zX3Jlc291cmNlX3RvX2J1cyhi
+cmlkZ2UtPmJ1cywgJnJlZ2lvbiwgcmVzKTsKLQlpZiAocmVzLT5mbGFncyAmIElPUkVTT1VSQ0Vf
+SU8pIHsKKwlpZiAoKHJlcy0+ZmxhZ3MgJiBJT1JFU09VUkNFX0lPKSAmJiAhKHJlcy0+ZmxhZ3Mg
+JiBJT1JFU09VUkNFX1VOU0VUKSkgewogCQlwY2lfcmVhZF9jb25maWdfd29yZChicmlkZ2UsIFBD
+SV9JT19CQVNFLCAmbCk7CiAJCWlvX2Jhc2VfbG8gPSAocmVnaW9uLnN0YXJ0ID4+IDgpICYgaW9f
+bWFzazsKIAkJaW9fbGltaXRfbG8gPSAocmVnaW9uLmVuZCA+PiA4KSAmIGlvX21hc2s7CkBAIC01
+NzgsNyArNTcyLDggQEAgc3RhdGljIHZvaWQgcGNpX3NldHVwX2JyaWRnZV9tbWlvKHN0cnVjdAog
+CS8qIFNldCB1cCB0aGUgdG9wIGFuZCBib3R0b20gb2YgdGhlIFBDSSBNZW1vcnkgc2VnbWVudCBm
+b3IgdGhpcyBidXMuICovCiAJcmVzID0gYnVzLT5yZXNvdXJjZVsxXTsKIAlwY2liaW9zX3Jlc291
+cmNlX3RvX2J1cyhicmlkZ2UtPmJ1cywgJnJlZ2lvbiwgcmVzKTsKLQlpZiAocmVzLT5mbGFncyAm
+IElPUkVTT1VSQ0VfTUVNKSB7CisJaWYgKChyZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9NRU0pICYm
+CisJICAgICEocmVzLT5mbGFncyAmIElPUkVTT1VSQ0VfVU5TRVQpKSB7CiAJCWwgPSAocmVnaW9u
+LnN0YXJ0ID4+IDE2KSAmIDB4ZmZmMDsKIAkJbCB8PSByZWdpb24uZW5kICYgMHhmZmYwMDAwMDsK
+IAkJZGV2X2luZm8oJmJyaWRnZS0+ZGV2LCAiICBicmlkZ2Ugd2luZG93ICVwUlxuIiwgcmVzKTsK
+QEAgLTYwNCw3ICs1OTksOCBAQCBzdGF0aWMgdm9pZCBwY2lfc2V0dXBfYnJpZGdlX21taW9fcHJl
+ZihzCiAJYnUgPSBsdSA9IDA7CiAJcmVzID0gYnVzLT5yZXNvdXJjZVsyXTsKIAlwY2liaW9zX3Jl
+c291cmNlX3RvX2J1cyhicmlkZ2UtPmJ1cywgJnJlZ2lvbiwgcmVzKTsKLQlpZiAocmVzLT5mbGFn
+cyAmIElPUkVTT1VSQ0VfUFJFRkVUQ0gpIHsKKwlpZiAoKHJlcy0+ZmxhZ3MgJiBJT1JFU09VUkNF
+X1BSRUZFVENIKSAmJgorCSAgICAhKHJlcy0+ZmxhZ3MgJiBJT1JFU09VUkNFX1VOU0VUKSkgewog
+CQlsID0gKHJlZ2lvbi5zdGFydCA+PiAxNikgJiAweGZmZjA7CiAJCWwgfD0gcmVnaW9uLmVuZCAm
+IDB4ZmZmMDAwMDA7CiAJCWlmIChyZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9NRU1fNjQpIHsKQEAg
+LTY2MSw2ICs2NTcsNyBAQCBzdGF0aWMgdm9pZCBwY2lfYnJpZGdlX2NoZWNrX3JhbmdlcyhzdHJ1
+CiAKIAliX3JlcyA9ICZicmlkZ2UtPnJlc291cmNlW1BDSV9CUklER0VfUkVTT1VSQ0VTXTsKIAli
+X3Jlc1sxXS5mbGFncyB8PSBJT1JFU09VUkNFX01FTTsKKwliX3Jlc1sxXS5mbGFncyAmPSB+SU9S
+RVNPVVJDRV9ESVNBQkxFRDsKIAogCXBjaV9yZWFkX2NvbmZpZ193b3JkKGJyaWRnZSwgUENJX0lP
+X0JBU0UsICZpbyk7CiAJaWYgKCFpbykgewpAQCAtNjY4LDggKzY2NSwxMCBAQCBzdGF0aWMgdm9p
+ZCBwY2lfYnJpZGdlX2NoZWNrX3JhbmdlcyhzdHJ1CiAJCXBjaV9yZWFkX2NvbmZpZ193b3JkKGJy
+aWRnZSwgUENJX0lPX0JBU0UsICZpbyk7CiAJCXBjaV93cml0ZV9jb25maWdfd29yZChicmlkZ2Us
+IFBDSV9JT19CQVNFLCAweDApOwogCX0KLQlpZiAoaW8pCisJaWYgKGlvKSB7CiAJCWJfcmVzWzBd
+LmZsYWdzIHw9IElPUkVTT1VSQ0VfSU87CisJCWJfcmVzWzBdLmZsYWdzICY9IH5JT1JFU09VUkNF
+X0RJU0FCTEVEOworCX0KIAogCS8qICBERUNjaGlwIDIxMDUwIHBhc3MgMiBlcnJhdGE6IHRoZSBi
+cmlkZ2UgbWF5IG1pc3MgYW4gYWRkcmVzcwogCSAgICBkaXNjb25uZWN0IGJvdW5kYXJ5IGJ5IG9u
+ZSBQQ0kgZGF0YSBwaGFzZS4KQEAgLTY4Niw2ICs2ODUsNyBAQCBzdGF0aWMgdm9pZCBwY2lfYnJp
+ZGdlX2NoZWNrX3JhbmdlcyhzdHJ1CiAJfQogCWlmIChwbWVtKSB7CiAJCWJfcmVzWzJdLmZsYWdz
+IHw9IElPUkVTT1VSQ0VfTUVNIHwgSU9SRVNPVVJDRV9QUkVGRVRDSDsKKwkJYl9yZXNbMl0uZmxh
+Z3MgJj0gfklPUkVTT1VSQ0VfRElTQUJMRUQ7CiAJCWlmICgocG1lbSAmIFBDSV9QUkVGX1JBTkdF
+X1RZUEVfTUFTSykgPT0KIAkJICAgIFBDSV9QUkVGX1JBTkdFX1RZUEVfNjQpIHsKIAkJCWJfcmVz
+WzJdLmZsYWdzIHw9IElPUkVTT1VSQ0VfTUVNXzY0OwpAQCAtODMwLDggKzgzMCwxMCBAQCBzdGF0
+aWMgdm9pZCBwYnVzX3NpemVfaW8oc3RydWN0IHBjaV9idXMKIAkJCXN0cnVjdCByZXNvdXJjZSAq
+ciA9ICZkZXYtPnJlc291cmNlW2ldOwogCQkJdW5zaWduZWQgbG9uZyByX3NpemU7CiAKLQkJCWlm
+IChyLT5wYXJlbnQgfHwgIShyLT5mbGFncyAmIElPUkVTT1VSQ0VfSU8pKQorCQkJaWYgKHItPnBh
+cmVudCB8fCAhKHItPmZsYWdzICYgSU9SRVNPVVJDRV9JTykgfHwKKwkJCSAgICAoci0+ZmxhZ3Mg
+JiBJT1JFU09VUkNFX0RJU0FCTEVEKSkKIAkJCQljb250aW51ZTsKKwogCQkJcl9zaXplID0gcmVz
+b3VyY2Vfc2l6ZShyKTsKIAogCQkJaWYgKHJfc2l6ZSA8IDB4NDAwKQpAQCAtODYwLDcgKzg2Miw3
+IEBAIHN0YXRpYyB2b2lkIHBidXNfc2l6ZV9pbyhzdHJ1Y3QgcGNpX2J1cwogCQlpZiAoYl9yZXMt
+PnN0YXJ0IHx8IGJfcmVzLT5lbmQpCiAJCQlkZXZfaW5mbygmYnVzLT5zZWxmLT5kZXYsICJkaXNh
+YmxpbmcgYnJpZGdlIHdpbmRvdyAlcFIgdG8gJXBSICh1bnVzZWQpXG4iLAogCQkJCSBiX3Jlcywg
+JmJ1cy0+YnVzbl9yZXMpOwotCQliX3Jlcy0+ZmxhZ3MgPSAwOworCQliX3Jlcy0+ZmxhZ3MgfD0g
+SU9SRVNPVVJDRV9VTlNFVCB8IElPUkVTT1VSQ0VfRElTQUJMRUQ7CiAJCXJldHVybjsKIAl9CiAK
+QEAgLTk0Nyw4ICs5NDksMTAgQEAgc3RhdGljIGludCBwYnVzX3NpemVfbWVtKHN0cnVjdCBwY2lf
+YnVzCiAKIAkJCWlmIChyLT5wYXJlbnQgfHwgKChyLT5mbGFncyAmIG1hc2spICE9IHR5cGUgJiYK
+IAkJCQkJICAoci0+ZmxhZ3MgJiBtYXNrKSAhPSB0eXBlMiAmJgotCQkJCQkgIChyLT5mbGFncyAm
+IG1hc2spICE9IHR5cGUzKSkKKwkJCQkJICAoci0+ZmxhZ3MgJiBtYXNrKSAhPSB0eXBlMykgfHwK
+KwkJCSAgICAoci0+ZmxhZ3MgJiBJT1JFU09VUkNFX0RJU0FCTEVEKSkKIAkJCQljb250aW51ZTsK
+KwogCQkJcl9zaXplID0gcmVzb3VyY2Vfc2l6ZShyKTsKICNpZmRlZiBDT05GSUdfUENJX0lPVgog
+CQkJLyogcHV0IFNSSU9WIHJlcXVlc3RlZCByZXMgdG8gdGhlIG9wdGlvbmFsIGxpc3QgKi8KQEAg
+LTk3Myw3ICs5NzcsOCBAQCBzdGF0aWMgaW50IHBidXNfc2l6ZV9tZW0oc3RydWN0IHBjaV9idXMK
+IAkJCWlmIChvcmRlciA+PSBBUlJBWV9TSVpFKGFsaWducykpIHsKIAkJCQlkZXZfd2FybigmZGV2
+LT5kZXYsICJkaXNhYmxpbmcgQkFSICVkOiAlcFIgKGJhZCBhbGlnbm1lbnQgJSNsbHgpXG4iLAog
+CQkJCQkgaSwgciwgKHVuc2lnbmVkIGxvbmcgbG9uZykgYWxpZ24pOwotCQkJCXItPmZsYWdzID0g
+MDsKKwkJCQlyLT5mbGFncyB8PSBJT1JFU09VUkNFX1VOU0VUIHwKKwkJCQkJICAgIElPUkVTT1VS
+Q0VfRElTQUJMRUQ7CiAJCQkJY29udGludWU7CiAJCQl9CiAJCQlzaXplICs9IHJfc2l6ZTsKQEAg
+LTEwMDEsNyArMTAwNiw3IEBAIHN0YXRpYyBpbnQgcGJ1c19zaXplX21lbShzdHJ1Y3QgcGNpX2J1
+cwogCQlpZiAoYl9yZXMtPnN0YXJ0IHx8IGJfcmVzLT5lbmQpCiAJCQlkZXZfaW5mbygmYnVzLT5z
+ZWxmLT5kZXYsICJkaXNhYmxpbmcgYnJpZGdlIHdpbmRvdyAlcFIgdG8gJXBSICh1bnVzZWQpXG4i
+LAogCQkJCSBiX3JlcywgJmJ1cy0+YnVzbl9yZXMpOwotCQliX3Jlcy0+ZmxhZ3MgPSAwOworCQli
+X3Jlcy0+ZmxhZ3MgfD0gSU9SRVNPVVJDRV9VTlNFVCB8IElPUkVTT1VSQ0VfRElTQUJMRUQ7CiAJ
+CXJldHVybiAwOwogCX0KIAliX3Jlcy0+c3RhcnQgPSBtaW5fYWxpZ247CkBAIC0xMzY3LDcgKzEz
+NzIsNyBAQCBzdGF0aWMgdm9pZCBwY2lfYnJpZGdlX3JlbGVhc2VfcmVzb3VyY2VzCiAJCS8qIGtl
+ZXAgdGhlIG9sZCBzaXplICovCiAJCXItPmVuZCA9IHJlc291cmNlX3NpemUocikgLSAxOwogCQly
+LT5zdGFydCA9IDA7Ci0JCXItPmZsYWdzID0gMDsKKwkJci0+ZmxhZ3MgfD0gSU9SRVNPVVJDRV9V
+TlNFVCB8IElPUkVTT1VSQ0VfRElTQUJMRUQ7CiAKIAkJLyogYXZvaWRpbmcgdG91Y2ggdGhlIG9u
+ZSB3aXRob3V0IFBSRUYgKi8KIAkJaWYgKHR5cGUgJiBJT1JFU09VUkNFX1BSRUZFVENIKQpAQCAt
+MTYyMiw4ICsxNjI3LDYgQEAgYWdhaW46CiAJCXJlcy0+c3RhcnQgPSBmYWlsX3Jlcy0+c3RhcnQ7
+CiAJCXJlcy0+ZW5kID0gZmFpbF9yZXMtPmVuZDsKIAkJcmVzLT5mbGFncyA9IGZhaWxfcmVzLT5m
+bGFnczsKLQkJaWYgKGZhaWxfcmVzLT5kZXYtPnN1Ym9yZGluYXRlKQotCQkJcmVzLT5mbGFncyA9
+IDA7CiAJfQogCWZyZWVfbGlzdCgmZmFpbF9oZWFkKTsKIApAQCAtMTY4OCw4ICsxNjkxLDYgQEAg
+YWdhaW46CiAJCXJlcy0+c3RhcnQgPSBmYWlsX3Jlcy0+c3RhcnQ7CiAJCXJlcy0+ZW5kID0gZmFp
+bF9yZXMtPmVuZDsKIAkJcmVzLT5mbGFncyA9IGZhaWxfcmVzLT5mbGFnczsKLQkJaWYgKGZhaWxf
+cmVzLT5kZXYtPnN1Ym9yZGluYXRlKQotCQkJcmVzLT5mbGFncyA9IDA7CiAJfQogCWZyZWVfbGlz
+dCgmZmFpbF9oZWFkKTsKIApJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL3NldHVwLXJlcy5j
+Cj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3NldHVwLXJlcy5jCisr
+KyBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAtcmVzLmMKQEAgLTM2Miw2ICszNjIsMTcgQEAg
+aW50IHBjaV9lbmFibGVfcmVzb3VyY2VzKHN0cnVjdCBwY2lfZGV2CiAJCQljb250aW51ZTsKIAog
+CQlpZiAoci0+ZmxhZ3MgJiBJT1JFU09VUkNFX1VOU0VUKSB7CisJCQkvKiBicmlkZ2UgQkFSIGNv
+dWxkIGJlIGRpc2FibGVkIG9uZSBieSBvbmUgKi8KKwkJCWlmIChkZXYtPnN1Ym9yZGluYXRlICYm
+IGkgPj0gUENJX0JSSURHRV9SRVNPVVJDRVMgJiYKKwkJCQkJCWkgPD0gUENJX0JSSURHRV9SRVNP
+VVJDRV9FTkQpCisJCQkJY29udGludWU7CisKKyNpZmRlZiBDT05GSUdfUENJX0lPVgorCQkJLyog
+U1JJT1YgPyAqLworCQkJaWYgKGkgPj0gUENJX0lPVl9SRVNPVVJDRVMgJiYgaSA8PSBQQ0lfSU9W
+X1JFU09VUkNFX0VORCkKKwkJCQljb250aW51ZTsKKyNlbmRpZgorCiAJCQlkZXZfZXJyKCZkZXYt
+PmRldiwgImNhbid0IGVuYWJsZSBkZXZpY2U6IEJBUiAlZCAlcFIgbm90IGFzc2lnbmVkXG4iLAog
+CQkJCWksIHIpOwogCQkJcmV0dXJuIC1FSU5WQUw7Cg==
+--90e6ba615034f4806904fdf4e21c--
