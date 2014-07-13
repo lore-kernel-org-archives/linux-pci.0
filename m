@@ -1,76 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:23847 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754515AbaGKQ2F (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 12:28:05 -0400
-Date: Fri, 11 Jul 2014 10:27:45 -0600
-From: Jerry Hoemann <jerry.hoemann@hp.com>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: David Woodhouse <dwmw2@infradead.org>, indou.takao@jp.fujitsu.com,
-	bhe@redhat.com, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
-	iommu@lists.linux-foundation.org, ishii.hironobu@jp.fujitsu.com,
-	bhelgaas@google.com, zhenhua@hp.com
-Subject: Re: [PATCH 0/8] iommu/vt-d: Fix crash dump failure caused by legacy
- DMA/IO
-Message-ID: <20140711162745.GA8335@anatevka.fc.hp.com>
-Reply-To: Jerry.Hoemann@hp.com
-References: <1398386198-19304-1-git-send-email-bill.sumner@hp.com>
- <1398854973.12733.23.camel@i7.infradead.org>
- <20140702133258.GN26537@8bytes.org>
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:28324 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750975AbaGMXOm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Jul 2014 19:14:42 -0400
+Date: Sun, 13 Jul 2014 19:14:31 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: suravee.suthikulpanit@amd.com
+Cc: marc.zyngier@arm.com, mark.rutland@arm.com, pawel.moll@arm.com,
+	Catalin.Marinas@arm.com, Will.Deacon@arm.com, tglx@linutronix.de,
+	Harish.Kasiviswanathan@amd.com,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH 0/4 V3] irqchip: gic: Introduce ARM GICv2m MSI(-X)
+ support
+Message-ID: <20140713231431.GM13108@titan.lakedaemon.net>
+References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140702133258.GN26537@8bytes.org>
+In-Reply-To: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 02, 2014 at 03:32:59PM +0200, Joerg Roedel wrote:
-> Hi David,
-> 
-> On Wed, Apr 30, 2014 at 11:49:33AM +0100, David Woodhouse wrote:
-> > There could be all kinds of existing mappings in the DMA page tables,
-> > and I'm not sure it's safe to preserve them. What prevents the crashdump
-> > kernel from trying to use any of the physical pages which are
-> > accessible, and which could thus be corrupted by stray DMA?
-> > 
-> > In fact, the old kernel could even have set up 1:1 passthrough mappings
-> > for some devices, which would then be able to DMA *anywhere*. Surely we
-> > need to prevent that?
-> 
-> Ideally we would prevent that, yes. But the problem is that a failed DMA
-> transaction might put the device into an unrecoverable state. Usually
-> any in-flight DMA transactions should only target buffers set up by the
-> previous kernel and not corrupt any data.
-> 
-> > After the last round of this patchset, we discussed a potential
-> > improvement where you point every virtual bus address at the *same*
-> > physical scratch page.
-> 
-> That is a solution to prevent the in-flight DMA failures. But what
-> happens when there is some in-flight DMA to a disk to write some inodes
-> or a new superblock. Then this scratch address-space may cause
-> filesystem corruption at worst.
-> 
-> So with this in mind I would prefer initially taking over the
-> page-tables from the old kernel before the device drivers re-initialize
-> the devices.
-> 
-> 
-> 	Joerg
+Suravee,
 
-David, Joerg,
+On Wed, Jul 09, 2014 at 06:05:00PM -0500, suravee.suthikulpanit@amd.com wrote:
+> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> 
+> This patch set introduces support for MSI(-X) in GICv2m specification,
+> which is implemented in some variation of GIC400.
+> 
+> This depends on and has been tested with the V7 of"Add support for PCI in AArch64"
+> (https://lkml.org/lkml/2014/3/14/320).
 
-What do you think here?  Do you want me to update the patch set for 3.17?
+Grrr.  I mis-spoke against your v1 of this series.  There are more
+changes to irq-gic.c than I originally thought in this series.
 
-Jerry
+Additionally, we have a lot of other significant changes to that driver
+as well this cycle.  It would be really helpful if I could take patches
+1-3 through irqchip/gic.  I can Ack #4 with the Subject change, and the
+branch it lands in can depend on irqchip/gic, no problem there.
 
--- 
+My main concern is your statement above and your answer to my inquiry
+against v1.
 
-----------------------------------------------------------------------------
-Jerry Hoemann            Software Engineer              Hewlett-Packard
+Right now, I'm only concerned about breaking the build.  Can I take 1-3?
+Or, do we need to wait until aarch64 PCI lands in mainline?
 
-3404 E Harmony Rd. MS 57                        phone:  (970) 898-1022
-Ft. Collins, CO 80528                           FAX:    (970) 898-XXXX
-                                                email:  jerry.hoemann@hp.com
-----------------------------------------------------------------------------
+If I can take them, I'll fix up the commit log of the one patch when I
+apply them.
 
+thx,
+
+Jason.
+
+> Changes in V3:
+>     * Rebase to git://git.infradead.org/users/jcooper/linux.git irqchip/gic
+>       (per Jason Cooper request)
+>     * Misc fix/clean up per Mark Rutland comments
+>     * Minor Clean up in the driver/irqchip/irq-gic-v2m.c: alloc_msi_irqs()
+>     * Patch 4 is new to the series:
+>         * Add ARM64-specific version arch_setup_msi_irqs() to allow support
+>           for Multiple MSI.
+>         * Add support for Multiple MSI for GICv2m.
+> 
+> Suravee Suthikulpanit (4):
+>   irqchip: gic: Add binding probe for ARM GIC400
+>   irqchip: gic: Restructuring ARM GIC code
+>   irqchip: gic: Add supports for ARM GICv2m MSI(-X)
+>   irqchip: gicv2m: Add support for multiple MSI for ARM64 GICv2m
+> 
+>  Documentation/devicetree/bindings/arm/gic.txt |  20 +-
+>  arch/arm64/Kconfig                            |   1 +
+>  arch/arm64/include/asm/msi.h                  |  15 ++
+>  arch/arm64/kernel/Makefile                    |   1 +
+>  arch/arm64/kernel/msi.c                       |  57 +++++
+>  drivers/irqchip/Kconfig                       |   7 +
+>  drivers/irqchip/Makefile                      |   1 +
+>  drivers/irqchip/irq-gic-v2m.c                 | 331 ++++++++++++++++++++++++++
+>  drivers/irqchip/irq-gic-v2m.h                 |  13 +
+>  drivers/irqchip/irq-gic.c                     |  90 ++++---
+>  drivers/irqchip/irq-gic.h                     |  67 ++++++
+>  11 files changed, 562 insertions(+), 41 deletions(-)
+>  create mode 100644 arch/arm64/include/asm/msi.h
+>  create mode 100644 arch/arm64/kernel/msi.c
+>  create mode 100644 drivers/irqchip/irq-gic-v2m.c
+>  create mode 100644 drivers/irqchip/irq-gic-v2m.h
+>  create mode 100644 drivers/irqchip/irq-gic.h
+> 
+> -- 
+> 1.9.0
+> 
