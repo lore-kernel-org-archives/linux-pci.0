@@ -1,54 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.citrix.com ([66.165.176.89]:46383 "EHLO SMTP.CITRIX.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751402AbaGKJl0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Jul 2014 05:41:26 -0400
-Message-ID: <53BFB13E.1060505@citrix.com>
-Date: Fri, 11 Jul 2014 10:41:18 +0100
-From: David Vrabel <david.vrabel@citrix.com>
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:32824 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750844AbaGNFX0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jul 2014 01:23:26 -0400
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+	Viresh Kumar <viresh.kumar@linaro.org>
+Cc: Arnd Bergmann <arnd@linaro.org>, "olof@lixom.net" <olof@lixom.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	spear-devel <spear-devel@list.st.com>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Nicholson <mark@nicholnet.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pratyush ANAND <pratyush.anand@st.com>
+Date: Mon, 14 Jul 2014 13:22:21 +0800
+Subject: RE: [PATCH V9 2/7] phy: Add drivers for PCIe and SATA phy on
+ SPEAr13xx
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB661A47A2A7BF3@EAPEX1MAIL1.st.com>
+References: <cover.1404976058.git.viresh.kumar@linaro.org>
+	<d1ef8db8704d09ba4f276c954dc22b555998f957.1404976058.git.viresh.kumar@linaro.org>
+	<53BE926A.2070005@ti.com>
+ <CAKohpokNijH37NAmuh5cYEZxYFJE-COKwVNP3RNHSEoS03YYAA@mail.gmail.com>
+ <53BFA120.2070005@ti.com>
+In-Reply-To: <53BFA120.2070005@ti.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Ethan Zhao <ethan.zhao@oracle.com>, <bhelgaas@google.com>,
-	<konrad.wilk@oracle.com>, <boris.ostrovsky@oracle.com>,
-	<gleb@kernel.org>, <pbonzini@redhat.com>,
-	<jeffrey.t.kirsher@intel.com>, <jesse.brandeburg@intel.com>,
-	<bruce.w.allan@intel.com>, <carolyn.wyborny@intel.com>,
-	<donald.c.skidmore@intel.com>, <gregory.v.rose@intel.com>,
-	<alexander.h.duyck@intel.com>, <john.ronciak@intel.com>,
-	<mitch.a.williams@intel.com>, <alex.williamson@redhat.com>
-CC: <linux-pci@vger.kernel.org>, <kvm@vger.kernel.org>,
-	<linux.nics@intel.com>, <e1000-devel@lists.sourceforge.net>,
-	<netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<ethan.kernel@gmail.com>, <vaughan.cao@oracle.com>
-Subject: Re: [PATCH 1/2 V2] PCI: introduce device assignment interface and
- refactory related code
-References: <1405057961-7234-1-git-send-email-ethan.zhao@oracle.com>
-In-Reply-To: <1405057961-7234-1-git-send-email-ethan.zhao@oracle.com>
-Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/07/14 06:52, Ethan Zhao wrote:
-> 
-> --- a/drivers/xen/xen-pciback/pci_stub.c
-> +++ b/drivers/xen/xen-pciback/pci_stub.c
-> @@ -133,7 +133,7 @@ static void pcistub_device_release(struct kref *kref)
->  	xen_pcibk_config_free_dyn_fields(dev);
->  	xen_pcibk_config_free_dev(dev);
->  
-> -	dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-> +	pci_sriov_deassign_device(dev);
->  	pci_dev_put(dev);
->  
->  	kfree(psdev);
-> @@ -404,7 +404,7 @@ static int pcistub_init_device(struct pci_dev *dev)
->  	dev_dbg(&dev->dev, "reset device\n");
->  	xen_pcibk_reset_device(dev);
->  
-> -	dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-> +	pci_sriov_assign_device(dev);
->  	return 0;
-
-Xen's PCI passthrough works with all PCI devices not just SR-IOV ones,
-so the naming of the helpers isn't correct.
-
-David
+SGVsbG8gS2lzaG9uL1ZpcmVzaCwNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBG
+cm9tOiBLaXNob24gVmlqYXkgQWJyYWhhbSBJIFttYWlsdG86a2lzaG9uQHRpLmNvbV0NCj4gU2Vu
+dDogRnJpZGF5LCBKdWx5IDExLCAyMDE0IDI6MDMgUE0NCj4gVG86IFZpcmVzaCBLdW1hcg0KPiBD
+YzogQXJuZCBCZXJnbWFubjsgb2xvZkBsaXhvbS5uZXQ7IGxpbnV4LWFybS1rZXJuZWxAbGlzdHMu
+aW5mcmFkZWFkLm9yZzsNCj4gc3BlYXItZGV2ZWw7IEJhcnRsb21pZWogWm9sbmllcmtpZXdpY3o7
+IEJqb3JuIEhlbGdhYXM7IE1hcmsgTmljaG9sc29uOyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVs
+Lm9yZzsgUHJhdHl1c2ggQU5BTkQNCj4gU3ViamVjdDogUmU6IFtQQVRDSCBWOSAyLzddIHBoeTog
+QWRkIGRyaXZlcnMgZm9yIFBDSWUgYW5kIFNBVEEgcGh5IG9uDQo+IFNQRUFyMTN4eA0KPiANCj4g
+DQo+IA0KPiBPbiBUaHVyc2RheSAxMCBKdWx5IDIwMTQgMDc6MDAgUE0sIFZpcmVzaCBLdW1hciB3
+cm90ZToNCj4gPiBPbiAxMCBKdWx5IDIwMTQgMTg6NDcsIEtpc2hvbiBWaWpheSBBYnJhaGFtIEkg
+PGtpc2hvbkB0aS5jb20+IHdyb3RlOg0KPiA+PiBPbiBUaHVyc2RheSAxMCBKdWx5IDIwMTQgMTI6
+NTYgUE0sIFZpcmVzaCBLdW1hciB3cm90ZToNCj4gPj4+IEZyb206IFByYXR5dXNoIEFuYW5kIDxw
+cmF0eXVzaC5hbmFuZEBzdC5jb20+DQo+ID4+Pg0KDQoNClsuLi5dDQoNCj4gPj4+ICsNCj4gPj4+
+ICtzdGF0aWMgaW50IHNwZWFyMTM0MF9taXBoeV9zYXRhX2luaXQoc3RydWN0IHNwZWFyMTM0MF9t
+aXBoeV9wcml2DQo+ID4+PiArKnByaXYpIHsNCj4gPj4+ICsgICAgIHJlZ21hcF91cGRhdGVfYml0
+cyhwcml2LT5taXNjLCBTUEVBUjEzNDBfUENJRV9TQVRBX0NGRywNCj4gPj4+ICsgICAgICAgICAg
+ICAgICAgICAgICAgICBTUEVBUjEzNDBfUENJRV9TQVRBX0NGR19NQVNLLA0KPiA+Pj4gKyAgICAg
+ICAgICAgICAgICAgICAgICAgIFNQRUFSMTM0MF9TQVRBX0NGR19WQUwpOw0KPiA+Pj4gKyAgICAg
+cmVnbWFwX3VwZGF0ZV9iaXRzKHByaXYtPm1pc2MsIFNQRUFSMTM0MF9QQ0lFX01JUEhZX0NGRywN
+Cj4gPj4+ICsgICAgICAgICAgICAgICAgICAgICAgICBTUEVBUjEzNDBfUENJRV9NSVBIWV9DRkdf
+TUFTSywNCj4gPj4+ICsNCj4gU1BFQVIxMzQwX1BDSUVfU0FUQV9NSVBIWV9DRkdfU0FUQV8yNU1f
+Q1JZU1RBTF9DTEspOw0KPiA+Pj4gKyAgICAgLyogU3dpdGNoIG9uIHNhdGEgcG93ZXIgZG9tYWlu
+ICovDQo+ID4+PiArICAgICByZWdtYXBfdXBkYXRlX2JpdHMocHJpdi0+bWlzYywgU1BFQVIxMzQw
+X1BDTV9DRkcsDQo+ID4+PiArICAgICAgICAgICAgICAgICAgICAgICAgU1BFQVIxMzQwX1BDTV9D
+RkdfU0FUQV9QT1dFUl9FTiwNCj4gPj4+ICsgICAgICAgICAgICAgICAgICAgICAgICBTUEVBUjEz
+NDBfUENNX0NGR19TQVRBX1BPV0VSX0VOKTsNCj4gPj4+ICsgICAgIG1zbGVlcCgyMCk7DQo+ID4+
+PiArICAgICAvKiBEaXNhYmxlIFBDSUUgU0FUQSBDb250cm9sbGVyIHJlc2V0ICovDQo+ID4+PiAr
+ICAgICByZWdtYXBfdXBkYXRlX2JpdHMocHJpdi0+bWlzYywgU1BFQVIxMzQwX1BFUklQMV9TV19S
+U1QsDQo+ID4+PiArICAgICAgICAgICAgICAgICAgICAgICAgU1BFQVIxMzQwX1BFUklQMV9TV19S
+U0FUQSwgMCk7DQo+ID4+PiArICAgICBtc2xlZXAoMjApOw0KPiA+Pg0KPiA+PiBQbGVhc2UgYWRk
+IGEgY29tbWVudCBmb3IgYWxsIGRlbGF5cyBhZGRlZC4NCj4gPg0KPiA+IEBQcmF0eXVzaC9Nb2hp
+dDogcGxlYXNlIGxldCBtZSBrbm93IHdoYXQgdG8gYWRkIGhlcmUuDQo+ID4NCg0KLSBJIHRoaW5r
+IHdlIHNob3VsZCByZWFkIHJlZ21hcF8qKCkgYW5kIG1zbGVlcCgpIGluIGNvbnRpbnVhdGlvbiBh
+bmQgc28gdGhlIGNvbW1lbnQgYWJvdmUgaXQNCmlzIHZhbGlkIGZvciBib3RoIHRoZSBvcGVyYXRp
+b25zLg0KDQpPdGhlcndpc2Ugd2UgY2FuIGFkZCBjb21tZW50IGxpbmUgZm9yIG1zbGVlcCgpIGxp
+a2U6DQovKiBXYWl0IGZvciBTQVRBIHBvd2VyIGRvbWFpbiBvbiAqLw0KLyogV2FpdCBmb3IgU0FU
+QSByZXNldCBkZS1hc3NlcnQgY29tcGxldGlvbiAqLw0KDQpTaW1pbGFyaWx5IGluICpfZXhpdCBy
+b3V0aW5lOg0KLyogV2FpdCBmb3IgU0FUQSBwb3dlciBkb21haW4gb2ZmICovDQovKiBXYWl0IGZv
+ciBTQVRBIHJlc2V0IGFzc2VydCBjb21wbGV0aW9uICovDQoNClRoYW5rcw0KTW9oaXQNCg==
