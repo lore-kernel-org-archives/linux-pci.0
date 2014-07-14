@@ -1,68 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f43.google.com ([209.85.192.43]:48189 "EHLO
-	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752056AbaGJTx5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 15:53:57 -0400
-Received: by mail-qg0-f43.google.com with SMTP id z60so75569qgd.30
-        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 12:53:56 -0700 (PDT)
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:56012 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750844AbaGNFeR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jul 2014 01:34:17 -0400
+Received: by mail-oa0-f43.google.com with SMTP id i7so2734768oag.30
+        for <linux-pci@vger.kernel.org>; Sun, 13 Jul 2014 22:34:17 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.03.1407101241010.4703@AMR>
-References: <1403628537-16367-1-git-send-email-keith.busch@intel.com>
- <20140710183840.GA12663@google.com> <alpine.LRH.2.03.1407101241010.4703@AMR>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 10 Jul 2014 13:53:36 -0600
-Message-ID: <CAErSpo76yxvWJma=kTMRuhf8wXM9q_Nfb219MhsTtC_CS00OvQ@mail.gmail.com>
-Subject: Re: [RFC PATCH] Let device drivers disable msi on shutdown
-To: Keith Busch <keith.busch@intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
-	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <CAKohpo=UNwzppiTHzg0qxFBdkiR8fkwTu27OKKPTUFo5GVDKcA@mail.gmail.com>
+References: <cover.1404976058.git.viresh.kumar@linaro.org>
+	<d1ef8db8704d09ba4f276c954dc22b555998f957.1404976058.git.viresh.kumar@linaro.org>
+	<53BE926A.2070005@ti.com>
+	<CAKohpokNijH37NAmuh5cYEZxYFJE-COKwVNP3RNHSEoS03YYAA@mail.gmail.com>
+	<53BFA120.2070005@ti.com>
+	<2CC2A0A4A178534D93D5159BF3BCB661A47A2A7BF3@EAPEX1MAIL1.st.com>
+	<CAKohpo=UNwzppiTHzg0qxFBdkiR8fkwTu27OKKPTUFo5GVDKcA@mail.gmail.com>
+Date: Mon, 14 Jul 2014 11:04:16 +0530
+Message-ID: <CAKohpo=jRq7GaO7t7_=e-y4XFP=MaNY_GhNSGXnnkFubTMbucA@mail.gmail.com>
+Subject: Re: [PATCH V9 2/7] phy: Add drivers for PCIe and SATA phy on SPEAr13xx
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+	Arnd Bergmann <arnd@linaro.org>,
+	"olof@lixom.net" <olof@lixom.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	spear-devel <spear-devel@list.st.com>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Nicholson <mark@nicholnet.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pratyush ANAND <pratyush.anand@st.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 10, 2014 at 12:53 PM, Keith Busch <keith.busch@intel.com> wrote:
-> On Thu, 10 Jul 2014, Bjorn Helgaas wrote:
->>
->> [+cc LKML, Greg KH for driver core async shutdown question]
->> On Tue, Jun 24, 2014 at 10:48:57AM -0600, Keith Busch wrote:
->>>
->>> To provide context why I want to do this asynchronously, NVM-Express has
->>> one PCI device per controller, of which there could be dozens in a
->>> system,
->>> and each one may take many seconds (I've heard over ten in some cases)
->>> to safely shutdown.
->>
->>
->> I don't see anything in device_shutdown() that would wait for this
->> sort of asynchronous shutdown to complete.  So how do we know it's
->> finished before we turn off the power, reset, kexec, etc.?
->>
->> If we need to do asynchronous shutdown, it seems like we need some
->> sort of driver core infrastructure to manage that.
->
->
-> Yes, good point! To address that, I did submit this patch:
->
-> http://lists.infradead.org/pipermail/linux-nvme/2014-May/000827.html
->
-> I need to fix the EXPORT_SYMBOL_GPL usage for a v2, but before that, I
-> wan't to know the reason the driver can't use MSIx in an async shutdown
-> shutdown, and came to the patch mentioned above.
->
-> I'd originally had the async shutdown use legacy interrupts, but I
-> know some NVMe devices do not support legacy, so can't use my original
-> proposal. If I can't rely on MSI/MSI-x being enabled in an async shutdown,
-> then I have to add polling, which I suppose we can live with.
+On 14 July 2014 10:54, Viresh Kumar <viresh.kumar@linaro.org> wrote:
+> These makes sense. Will add them.
 
-OK, I wasn't aware of your async shutdown patch.  Given that, I would
-think we'd want to somehow delay the rest of pci_device_shutdown()
-until after the driver's async shutdown completes.  We don't want to
-do either the MSI shutdown or the pci_clear_master() until after it
-completes, do we?  And if we delay that, there would be no need to
-move the MSI shutdown from the core to the driver.
+Kishon, here is how the diff looks like now:
 
-Bjorn
+diff --git a/drivers/phy/phy-spear1340-miphy.c
+b/drivers/phy/phy-spear1340-miphy.c
+index 5e39231..8de98ad 100644
+--- a/drivers/phy/phy-spear1340-miphy.c
++++ b/drivers/phy/phy-spear1340-miphy.c
+@@ -101,10 +101,13 @@ static int spear1340_miphy_sata_init(struct
+spear1340_miphy_priv *priv)
+        regmap_update_bits(priv->misc, SPEAR1340_PCM_CFG,
+                           SPEAR1340_PCM_CFG_SATA_POWER_EN,
+                           SPEAR1340_PCM_CFG_SATA_POWER_EN);
++       /* Wait for SATA power domain on */
+        msleep(20);
++
+        /* Disable PCIE SATA Controller reset */
+        regmap_update_bits(priv->misc, SPEAR1340_PERIP1_SW_RST,
+                           SPEAR1340_PERIP1_SW_RSATA, 0);
++       /* Wait for SATA reset de-assert completion */
+        msleep(20);
+
+        return 0;
+@@ -121,10 +124,12 @@ static int spear1340_miphy_sata_exit(struct
+spear1340_miphy_priv *priv)
+        regmap_update_bits(priv->misc, SPEAR1340_PERIP1_SW_RST,
+                           SPEAR1340_PERIP1_SW_RSATA,
+                           SPEAR1340_PERIP1_SW_RSATA);
++       /* Wait for SATA power domain off */
+        msleep(20);
+        /* Switch off sata power domain */
+        regmap_update_bits(priv->misc, SPEAR1340_PCM_CFG,
+                           SPEAR1340_PCM_CFG_SATA_POWER_EN, 0);
++       /* Wait for SATA reset assert completion */
+        msleep(20);
+
+        return 0;
