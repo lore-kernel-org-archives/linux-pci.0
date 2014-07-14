@@ -1,104 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:56064 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754901AbaGIIcS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 04:32:18 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [PATCH v8 4/9] pci: OF: Fix the conversion of IO ranges into IO resources.
-Date: Wed, 9 Jul 2014 10:31:50 +0200
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Rob Herring <robherring2@gmail.com>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	"linux-pci" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com> <201407072322.00990.arnd@arndb.de> <20140708100332.GW6501@e106497-lin.cambridge.arm.com>
-In-Reply-To: <20140708100332.GW6501@e106497-lin.cambridge.arm.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:59319 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754890AbaGNO3t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Jul 2014 10:29:49 -0400
+Message-ID: <53C3E905.3080806@ti.com>
+Date: Mon, 14 Jul 2014 10:28:21 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201407091031.50402.arnd@arndb.de>
+To: Pratyush Anand <pratyush.anand@st.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v4 0/6] Add Keystone PCIe controller driver
+References: <1405110995-24676-1-git-send-email-m-karicheri2@ti.com> <20140714060334.GB2930@pratyush-vbox>
+In-Reply-To: <20140714060334.GB2930@pratyush-vbox>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 08 July 2014, Liviu Dudau wrote:
-> On Mon, Jul 07, 2014 at 10:22:00PM +0100, Arnd Bergmann wrote:
-> > 
-> > I looked at the other drivers briefly, and I think you indeed fix the Tegra
-> > driver with this but break the integrator driver as mentioned above.
-> > The other callers of of_pci_range_to_resource() are apparently not
-> > impacted as they recalculate the values they get.
-> 
-> I would argue that integrator version is having broken assumptions. If it would
-> try to allocate that IO range or request the resource as returned currently by
-> of_pci_range_to_resource (without my patch) it would fail. I know because I did
-> the same thing in my host bridge driver and it failed miserably. That's why I
-> tried to patch it.
+On 07/14/2014 02:03 AM, Pratyush Anand wrote:
+> Oh.. I see my reply from gmail is not readable at all. (I forgot to
+> switch to plain text :( ) Please ignore last mail I am replying again
+> here.
+>
+> On Sat, Jul 12, 2014 at 04:36:29AM +0800, Murali Karicheri wrote:
+>
+> [...]
+>
+>> Murali Karicheri (6):
+>>    PCI: designware: add rd[wr]_other_conf API
+>>    PCI: designware: refactor MSI code to work with v3.65 dw hardware
+>
+> For  above two you can add my reviewed-by:
+>
+>>    PCI: designware: refactor host init code to re-use on keystone PCI
+>>    PCI: designware: enhance dw core driver to support keystone PCI host
+>
+> In stead of using version number and then changing few functions from
+> static to global , I would have used same philosophy of adding callbacks
+> wherever needed. May be maintainers can give their view, instead of patch
+> 3 and 4 I would have gone with something like this, where kc_pcie can be
+> passed through pp->plat_data.
+>
 
-The integrator code was just introduced and the reason for how it does things
-is the way that of_pci_range_to_resource() works today. We tried to cope with
-it and not change the existing behavior in order to not break any other drivers.
+Pratyush,
 
-It's certainly not fair to call the integrator version broken, it just works
-around the common code having a quirky interface. We should probably have
-done of_pci_range_to_resource better than it is today (I would have argued
-for it to return an IORESOURCE_MEM with the CPU address), but it took long
-enough to get that merged and I was sick of arguing about it.
+Thanks for the response. I will look into your proposal and respond back 
+when I get a chance.
 
-> If the IO space is memory mapped, then we use the port number, the io_offset
-> and the PCI_IOBASE to get to the virtual address that, when accessed, will
-> generate the correct addresses on the bus, based on what the host bridge has
-> been configured.
-> 
-> This is the current level of my understanding of PCI IO.
+Thanks and regards,
 
-Your understanding is absolutely correct, and that's great because very few
-people get that right. What I think we're really arguing about is what the
-of_pci_range_to_resource is supposed to return. As you and Bjorn both pointed
-out earlier, there are in fact two resources associated with the I/O window
-and the flaw in the current implementation is that of_pci_range_to_resource
-returns the numeric values for the IORESOURCE_MEM resource, but sets the
-type to IORESOURCE_IO, which is offset from that by PCI_IOBASE.
+Murali
 
-You try to fix that by making it return the correct IORESOURCE_IO resource,
-which is a reasonable approach but you must not break drivers that rely
-on the broken resource while doing that.
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 905941c..b216192 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -490,16 +490,21 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>          }
+>
+>          if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> -               pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
+> -                                       MAX_MSI_IRQS,&msi_domain_ops,
+> -&dw_pcie_msi_chip);
+> -               if (!pp->irq_domain) {
+> -                       dev_err(pp->dev, "irq domain init failed\n");
+> -                       return -ENXIO;
+> -               }
+> +               if (!pp->ops->msi_init) {
+> +                       pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
+> +                                               MAX_MSI_IRQS,&msi_domain_ops,
+> +&dw_pcie_msi_chip);
+> +                       if (!pp->irq_domain) {
+> +                               dev_err(pp->dev, "irq domain init failed\n");
+> +                               return -ENXIO;
+> +                       }
+>
+> -               for (i = 0; i<  MAX_MSI_IRQS; i++)
+> -                       irq_create_mapping(pp->irq_domain, i);
+> +                       for (i = 0; i<  MAX_MSI_IRQS; i++)
+> +                               irq_create_mapping(pp->irq_domain, i);
+> +               } else {
+> +                       pp->ops->msi_init(pp,&msi_domain_ops,
+> +&dw_pcie_msi_chip);
+> +               }
+>          }
+>
+>          if (pp->ops->host_init)
+> @@ -759,6 +764,9 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+>                  BUG();
+>          }
+>
+> +       if (bus&&  pp->ops->scan_bus)
+> +               bus = pp->ops->scan_bus(pp);
+> +
+>          return bus;
+>   }
+>
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index 387f69e..39ce496 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -52,6 +52,7 @@ struct pcie_port {
+>          struct irq_domain       *irq_domain;
+>          unsigned long           msi_data;
+>          DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+> +       void                    *plat_data;
+>   };
+>
+>   struct pcie_host_ops {
+> @@ -70,6 +71,9 @@ struct pcie_host_ops {
+>          void (*msi_set_irq)(struct pcie_port *pp, int irq);
+>          void (*msi_clear_irq)(struct pcie_port *pp, int irq);
+>          u32 (*get_msi_data)(struct pcie_port *pp);
+> +       struct pci_bus *(*scan_bus)(struct pcie_port *pp);
+> +       void (*msi_init) (struct pcie_port *pp, struct irq_domain_ops *ops,
+> +                       struct msi_chip *chip);
+>   };
+>
+>   int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+>
+>
+> ~Pratyush
 
-The approach that I would have picked is to return the IORESOURCE_MEM
-resource associated with the I/O window and pick a (basically random)
-IORESOURCE_IO resource struct based on what hasn't been used and then
-compute the appropriate io_offset from that. This approach of course
-would also have required fixing up all drivers relying on the current
-behavior.
-
-To be clear, I'm fine with you (and Bjorn if he cares) picking the
-approach you like here, either one of these works fine as long as the
-host drivers use the interface in the way it is defined.
-
-> Now, I believe Rob has switched entirely to using my series in some test that
-> he has run and he hasn't encountered any issues, as long as one remembers in
-> the host bridge driver to add the io_base offset to the .start resource. If
-> not then I need to patch pci_v3.c.
-
-The crazy part of all these discussions is that basically nobody ever uses
-I/O port access, so it's very hard to test and we don't even notice when
-we get it wrong, but we end up spending most of the time for PCI host controller
-reviews trying to get these right.
-
-I'm very thankful that you are doing this work to get it moved into common
-code so hopefully this is the last time we ever have to worry about it because
-all future drivers will be able to use the common implemnetation.
-
-	Arnd
