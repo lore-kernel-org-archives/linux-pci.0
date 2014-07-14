@@ -1,189 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:38132 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750999AbaG3JTe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jul 2014 05:19:34 -0400
-Message-ID: <53D8B819.9020304@huawei.com>
-Date: Wed, 30 Jul 2014 17:17:13 +0800
+Received: from szxga01-in.huawei.com ([119.145.14.64]:2252 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752194AbaGNCMF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Jul 2014 22:12:05 -0400
+Message-ID: <53C33C6D.8020103@huawei.com>
+Date: Mon, 14 Jul 2014 10:11:57 +0800
 From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Ethan Zhao <ethan.kernel@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	"<keith.busch@intel.com>" <keith.busch@intel.com>,
-	Jon Mason <jdmason@kudzu.us>
-Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
-References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com>	<CABawtvP1sviOZynf2N43ORDF-mPHX9PrcsXSmxKqv4_V9QpnsQ@mail.gmail.com>	<53D89754.3010704@huawei.com>	<CABawtvMg1gUpCr5rpFzKfUVD=Ai06Rpi4XVOvzARb2tYk+HXsw@mail.gmail.com>	<53D8A942.80008@huawei.com> <CABawtvNkodcdxOJ-T=eV8W_AtVV8AMeOi+9016-6DN_hRfrbTA@mail.gmail.com>
-In-Reply-To: <CABawtvNkodcdxOJ-T=eV8W_AtVV8AMeOi+9016-6DN_hRfrbTA@mail.gmail.com>
+To: Alexander Gordeev <agordeev@redhat.com>,
+	<linux-kernel@vger.kernel.org>
+CC: <linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 2/2] PCI/MSI: Remove arch_msi_check_device()
+References: <cover.1405160163.git.agordeev@redhat.com> <1005232855c3af2c0c669818ee63be445389b6ad.1405160163.git.agordeev@redhat.com>
+In-Reply-To: <1005232855c3af2c0c669818ee63be445389b6ad.1405160163.git.agordeev@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/7/30 16:38, Ethan Zhao wrote:
-> On Wed, Jul 30, 2014 at 4:13 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->>>> Yes, that issue is BIOS bug, the mps setting is wrong after system boot up.
->>>> But that issue is not same as this one, Keith and Jordan found the issue
->>>> after hot-plug. And my patch only modify the hotplug slot connected device.
->>>>
->>>> In my idea, make the device work is important, because these platforms with windows
->>>> can run happy, why linux leave this issue to BIOS.
->>>
->>>    That is a reason to make it works with Linux, but does your
->>> platform have _HPX from ACPI for those hot-added back devices ?  if it
->>> has, maybe windows could apply _HPX to configure those devices and
->>> work well.
->>>
->>
->> I checked DSDT table exported from my server, but no "_HPX" found.
-> 
-> You might check the wrong place...
-> 
->> Further more, kernel use pciehp first to support pcie hotplug device. And in pciehp,
->> driver won't touch ACPI methods like "_HPX".
-> 
-> That is not true, please read the code in pciehp_pci.c
-> 
->  pciehp_configure_device()
->     pci_configure_slot()
->        pci_get_hp_params()
->            acpi_run_hpx()
->                acpi_evaluate_object(handle, "_HPX",...)
->  ...
-> 
+>  /**
+> - * pci_msi_check_device - check whether MSI may be enabled on a device
+> + * msi_check_device - check whether MSI may be enabled on a device
+>   * @dev: pointer to the pci_dev data structure of MSI device function
+>   * @nvec: how many MSIs have been requested ?
+> - * @type: are we checking for MSI or MSI-X ?
+>   *
+>   * Look at global flags, the device itself, and its parent buses
+>   * to determine if MSI/-X are supported for the device. If MSI/-X is
+>   * supported return 0, else return an error code.
+>   **/
+> -static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+> +static int msi_check_device(struct pci_dev *dev, int nvec)
+>  {
+>  	struct pci_bus *bus;
+> -	int ret;
+>  
+>  	/* MSI must be globally enabled and supported by the device */
+> -	if (!pci_msi_enable || !dev || dev->no_msi)
+> +	if (!pci_msi_enable)
+> +		return -EINVAL;
+> +
+> +	if (!dev || dev->no_msi || dev->current_state != PCI_D0)
+>  		return -EINVAL;
+>  
+>  	/*
+> @@ -846,10 +837,6 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+>  		if (bus->bus_flags & PCI_BUS_FLAGS_NO_MSI)
+>  			return -EINVAL;
+>  
+> -	ret = arch_msi_check_device(dev, nvec, type);
+> -	if (ret)
+> -		return ret;
+> -
 
-Sorry, I make a mistake. You are right, Use the _HPX can fix the issue from BIOS.
-But what confused me is why linux fail to reconfigure mps after hotplug, but windows did it well.
+Move the arch_msi_check_device() into arch_msi_setup_irq(), make we can not detect whether the device in this platform
+supports MSI or MSI-X aeap. If we delay this, maybe we will do a lot unnecessary working for MSI/MSI-X setup.
 
-Maybe we can cache the device mps into pci_dev, every time we call pcie_bus_configure_settings(),
-if we find the device mps is not equal to the cached value, and the device is disabled, restore it.
+Thanks!
+Yijing.
 
-
-/* PCI Express Setting Record (Type 2) */
-struct hpp_type2 {
-	u32 revision;
-	u32 unc_err_mask_and;
-	u32 unc_err_mask_or;
-	u32 unc_err_sever_and;
-	u32 unc_err_sever_or;
-	u32 cor_err_mask_and;
-	u32 cor_err_mask_or;
-	u32 adv_err_cap_and;
-	u32 adv_err_cap_or;
-	u16 pci_exp_devctl_and;
-	u16 pci_exp_devctl_or;
-	u16 pci_exp_lnkctl_and;
-	u16 pci_exp_lnkctl_or;
-	u32 sec_unc_err_sever_and;
-	u32 sec_unc_err_sever_or;
-	u32 sec_unc_err_mask_and;
-	u32 sec_unc_err_mask_or;
-};
-
-> Native pciehp also does acpi parameter importing ... ...
-> 
-> Thank,s
-> Ethan
-> 
->>
->> Thanks!
->> Yijing.
->>
->>>>
->>>>>
->>>>>> Reported-by: Keith Busch <keith.busch@intel.com>
->>>>>> Reported-by: Jordan_Hargrave@Dell.com
->>>>>> Reported-by: Yijing Wang <wangyijing@huawei.com>
->>>>>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->>>>>> Cc: Jon Mason <jdmason@kudzu.us>
->>>>>> ---
->>>>>>  drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
->>>>>>  1 files changed, 39 insertions(+), 0 deletions(-)
->>>>>>
->>>>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>>>>> index e3cf8a2..583ca52 100644
->>>>>> --- a/drivers/pci/probe.c
->>>>>> +++ b/drivers/pci/probe.c
->>>>>> @@ -1613,6 +1613,44 @@ static void pcie_write_mrrs(struct pci_dev *dev)
->>>>>>                 dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If problems are experienced, try running with pci=pcie_bus_safe\n");
->>>>>>  }
->>>>>>
->>>>>> +/**
->>>>>> + * pcie_bus_update_set - update device mps when device doing hot-add
->>>>>> + * @dev: PCI device to set
->>>>>> + *
->>>>>> + * After device hot add, mps will be set to default(128B), But the
->>>>>> + * upstream port device's mps may be larger than 128B which was set
->>>>>> + * by firmware during system bootup. Then we should update the device
->>>>>> + * mps to equal to its parent mps, Or the device can not work normally.
->>>>>> + */
->>>>>> +static void pcie_bus_update_set(struct pci_dev *dev)
->>>>>> +{
->>>>>> +       int mps, p_mps, mpss;
->>>>>> +       struct pci_dev *parent;
->>>>>> +
->>>>>> +       if (!pci_is_pcie(dev) || !dev->bus->self
->>>>>> +                       || !dev->bus->self->is_hotplug_bridge)
->>>>>> +               return;
->>>>>> +
->>>>>> +       parent = dev->bus->self;
->>>>>> +       mps = pcie_get_mps(dev);
->>>>>> +       p_mps = pcie_get_mps(parent);
->>>>>> +
->>>>>> +       if (mps >= p_mps)
->>>>>> +               return;
->>>>>> +
->>>>>> +       mpss = 128 << dev->pcie_mpss;
->>>>>> +       if (mpss < p_mps) {
->>>>>> +               dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
->>>>>> +                               "If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
->>>>>> +                               mpss, p_mps);
->>>>>> +               return;
->>>>>> +       }
->>>>>> +
->>>>>> +       pcie_write_mps(dev, p_mps);
->>>>>> +       dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n",
->>>>>> +                       pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
->>>>>> +}
->>>>>> +
->>>>>>  static void pcie_bus_detect_mps(struct pci_dev *dev)
->>>>>>  {
->>>>>>         struct pci_dev *bridge = dev->bus->self;
->>>>>> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
->>>>>>                 return 0;
->>>>>>
->>>>>>         if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
->>>>>> +               pcie_bus_update_set(dev);
->>>>>>                 pcie_bus_detect_mps(dev);
->>>>>>                 return 0;
->>>>>>         }
->>>>>> --
->>>>>> 1.7.1
->>>>>>
->>>>>> --
->>>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>>>>> the body of a message to majordomo@vger.kernel.org
->>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>>
->>>>> .
->>>>>
->>>>
->>>>
->>>> --
->>>> Thanks!
->>>> Yijing
->>>>
->>>
->>> .
->>>
->>
->>
->> --
->> Thanks!
->> Yijing
->>
-> 
-> .
+>  	return 0;
+>  }
+>  
+> @@ -954,13 +941,13 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+>  	int status, nr_entries;
+>  	int i, j;
+>  
+> -	if (!entries || !dev->msix_cap || dev->current_state != PCI_D0)
+> -		return -EINVAL;
+> -
+> -	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
+> +	status = msi_check_device(dev, nvec);
+>  	if (status)
+>  		return status;
+>  
+> +	if (!entries)
+> +		return -EINVAL;
+> +
+>  	nr_entries = pci_msix_vec_count(dev);
+>  	if (nr_entries < 0)
+>  		return nr_entries;
+> @@ -1085,8 +1072,9 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+>  	int nvec;
+>  	int rc;
+>  
+> -	if (dev->current_state != PCI_D0)
+> -		return -EINVAL;
+> +	rc = msi_check_device(dev, minvec);
+> +	if (rc)
+> +		return rc;
+>  
+>  	WARN_ON(!!dev->msi_enabled);
+>  
+> @@ -1109,17 +1097,6 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+>  		nvec = maxvec;
+>  
+>  	do {
+> -		rc = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
+> -		if (rc < 0) {
+> -			return rc;
+> -		} else if (rc > 0) {
+> -			if (rc < minvec)
+> -				return -ENOSPC;
+> -			nvec = rc;
+> -		}
+> -	} while (rc);
+> -
+> -	do {
+>  		rc = msi_capability_init(dev, nvec);
+>  		if (rc < 0) {
+>  			return rc;
+> diff --git a/include/linux/msi.h b/include/linux/msi.h
+> index 92a2f99..3b873bc 100644
+> --- a/include/linux/msi.h
+> +++ b/include/linux/msi.h
+> @@ -59,7 +59,6 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
+>  void arch_teardown_msi_irq(unsigned int irq);
+>  int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+>  void arch_teardown_msi_irqs(struct pci_dev *dev);
+> -int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
+>  void arch_restore_msi_irqs(struct pci_dev *dev);
+>  
+>  void default_teardown_msi_irqs(struct pci_dev *dev);
+> @@ -76,8 +75,6 @@ struct msi_chip {
+>  	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
+>  			 struct msi_desc *desc);
+>  	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
+> -	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
+> -			    int nvec, int type);
+>  };
+>  
+>  #endif /* LINUX_MSI_H */
 > 
 
 
