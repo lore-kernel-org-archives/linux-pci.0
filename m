@@ -1,79 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52414 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965673AbaGPSFC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Jul 2014 14:05:02 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Anil Gurumurthy <agurumur@brocade.com>,
-	Vijaya Mohan Guvva <vmohan@brocade.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 04/23] bfa: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Wed, 16 Jul 2014 20:05:08 +0200
-Message-Id: <bc13ddf17d035921de994d2f8a52902e0a5d1a60.1405533479.git.agordeev@redhat.com>
-In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:51675 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756147AbaGNUR5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jul 2014 16:17:57 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH] ACPI / hotplug: Simplify acpi_set_hp_context()
+Date: Mon, 14 Jul 2014 22:36:10 +0200
+Message-ID: <5388095.MjHqc07ajT@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Anil Gurumurthy <agurumur@brocade.com>
-Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+Since all of the acpi_set_hp_context() callers pass at least one NULL
+function pointer and one caller passes NULL function pointers only
+to it, drop function pointer arguments from acpi_set_hp_context()
+and make the callers initialize the function pointers in struct
+acpi_hotplug_context by themselves before passing it to
+acpi_set_hp_context().
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/scsi/bfa/bfad.c |   20 ++++++--------------
- 1 files changed, 6 insertions(+), 14 deletions(-)
+ drivers/acpi/scan.c                |    4 +++-
+ drivers/pci/hotplug/acpiphp_glue.c |    7 ++++---
+ include/acpi/acpi_bus.h            |    8 +-------
+ 3 files changed, 8 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index c18279f..e90a374 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1234,29 +1234,21 @@ bfad_setup_intr(struct bfad_s *bfad)
- 	if ((bfa_asic_id_ctc(pdev->device) && !msix_disable_ct) ||
- 	   (bfa_asic_id_cb(pdev->device) && !msix_disable_cb)) {
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -372,15 +372,9 @@ static inline void acpi_set_device_statu
+ }
  
--		error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
-+		error = pci_enable_msix_exact(bfad->pcidev,
-+					      msix_entries, bfad->nvec);
- 		/* In CT1 & CT2, try to allocate just one vector */
--		if (error > 0 && bfa_asic_id_ctc(pdev->device)) {
-+		if (error == -ENOSPC && bfa_asic_id_ctc(pdev->device)) {
- 			printk(KERN_WARNING "bfa %s: trying one msix "
- 			       "vector failed to allocate %d[%d]\n",
- 			       bfad->pci_name, bfad->nvec, error);
- 			bfad->nvec = 1;
--			error = pci_enable_msix(bfad->pcidev,
--						msix_entries, bfad->nvec);
-+			error = pci_enable_msix_exact(bfad->pcidev,
-+						      msix_entries, 1);
- 		}
+ static inline void acpi_set_hp_context(struct acpi_device *adev,
+-				       struct acpi_hotplug_context *hp,
+-				       int (*notify)(struct acpi_device *, u32),
+-				       void (*uevent)(struct acpi_device *, u32),
+-				       void (*fixup)(struct acpi_device *))
++				       struct acpi_hotplug_context *hp)
+ {
+ 	hp->self = adev;
+-	hp->notify = notify;
+-	hp->uevent = uevent;
+-	hp->fixup = fixup;
+ 	adev->hp = hp;
+ }
  
--		/*
--		 * Only error number of vector is available.
--		 * We don't have a mechanism to map multiple
--		 * interrupts into one vector, so even if we
--		 * can try to request less vectors, we don't
--		 * know how to associate interrupt events to
--		 *  vectors. Linux doesn't duplicate vectors
--		 * in the MSIX table for this case.
--		 */
- 		if (error) {
- 			printk(KERN_WARNING "bfad%d: "
--			       "pci_enable_msix failed (%d), "
-+			       "pci_enable_msix_exact failed (%d), "
- 			       "use line based.\n",
- 				bfad->inst_no, error);
- 			goto line_based;
--- 
-1.7.7.6
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -77,7 +77,9 @@ void acpi_initialize_hp_context(struct a
+ 				void (*uevent)(struct acpi_device *, u32))
+ {
+ 	acpi_lock_hp_context();
+-	acpi_set_hp_context(adev, hp, notify, uevent, NULL);
++	hp->notify = notify;
++	hp->uevent = uevent;
++	acpi_set_hp_context(adev, hp);
+ 	acpi_unlock_hp_context();
+ }
+ EXPORT_SYMBOL_GPL(acpi_initialize_hp_context);
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -80,8 +80,9 @@ static struct acpiphp_context *acpiphp_i
+ 		return NULL;
+ 
+ 	context->refcount = 1;
+-	acpi_set_hp_context(adev, &context->hp, acpiphp_hotplug_notify, NULL,
+-			    acpiphp_post_dock_fixup);
++	context->hp.notify = acpiphp_hotplug_notify;
++	context->hp.fixup = acpiphp_post_dock_fixup;
++	acpi_set_hp_context(adev, &context->hp);
+ 	return context;
+ }
+ 
+@@ -876,7 +877,7 @@ void acpiphp_enumerate_slots(struct pci_
+ 			goto err;
+ 
+ 		root_context->root_bridge = bridge;
+-		acpi_set_hp_context(adev, &root_context->hp, NULL, NULL, NULL);
++		acpi_set_hp_context(adev, &root_context->hp);
+ 	} else {
+ 		struct acpiphp_context *context;
+ 
 
