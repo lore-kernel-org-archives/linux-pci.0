@@ -1,137 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:54504 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753148AbaGVEbi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 00:31:38 -0400
-Message-ID: <53CDE926.4010802@infradead.org>
-Date: Mon, 21 Jul 2014 21:31:34 -0700
-From: Randy Dunlap <rdunlap@infradead.org>
+Received: from mail-bn1lp0142.outbound.protection.outlook.com ([207.46.163.142]:49753
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754843AbaGNTkT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Jul 2014 15:40:19 -0400
+From: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+To: <clemens@ladisch.de>, <jdelvare@suse.de>, <linux@roeck-us.net>,
+	<rdunlap@infradead.org>, <bhelgaas@google.com>,
+	<lm-sensors@lm-sensors.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Subject: [PATCH] hwmon, k10temp: Add support for AMD F15h M60h processor
+Date: Mon, 14 Jul 2014 15:23:08 -0500
+Message-ID: <1405369388-12729-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Mike Qiu <qiudayu@linux.vnet.ibm.com>
-CC: linux-pci@vger.kernel.org,
-	Tuomas Tynkkynen <ttynkkynen@nvidia.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	gong.chen@linux.intel.com, Lance Ortiz <lance.ortiz@hp.com>,
-	Tony Luck <tony.luck@intel.com>
-Subject: Re: [PATCH] Fix build warnings in aer.h
-References: <1405498124-11519-1-git-send-email-qiudayu@linux.vnet.ibm.com> <20140722023813.GA27601@google.com>
-In-Reply-To: <20140722023813.GA27601@google.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/21/2014 07:38 PM, Bjorn Helgaas wrote:
-> [+cc Tuomas, Randy, Gavin, Gong, Lance, Tony]
-> 
-> On Wed, Jul 16, 2014 at 04:08:44AM -0400, Mike Qiu wrote:
->> build log:
->>
->> In file included from include/ras/ras_event.h:11:0,
->>                  from drivers/ras/ras.c:13:
->> include/linux/aer.h:42:129: warning: ‘struct pci_dev’
->> declared inside parameter list [enabled by default]
->>
->> include/linux/aer.h:42:129: warning: its scope is only
->> this definition or declaration, which is probably not
->> what you want [enabled by default]
->>
->> include/linux/aer.h:46:130: warning: ‘struct pci_dev’
->> declared inside parameter list [enabled by default]
->>
->> include/linux/aer.h:50:136: warning: ‘struct pci_dev’
->> declared inside parameter list [enabled by default]
->>
->> include/linux/aer.h:57:14: warning: ‘struct pci_dev’
->> declared inside parameter list [enabled by default]
->>
->> Signed-off-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
-> 
-> OK, so the problem doesn't occur on x86 because there we have a struct
-> pci_dev declaration reached earlier via:
-> 
->   drivers/ras/ras.c
->     include/ras/ras_event.h
->       include/linux/edac.h
->         include/linux/device.h
->           include/linux/gfp.h
->             arch/x86/include/asm/mmzone.h
->               arch/x86/include/asm/mmzone_64.h
->                 arch/x86/include/asm/smp.h
->                   arch/x86/include/asm/mpspec.h
->                     arch/x86/include/asm/x86_init.h
->                       struct pci_dev;
->       include/linux/aer.h
->         ... pci_enable_pcie_error_reporting(struct pci_dev *dev);
-> 
-> You're building powerpc, which doesn't have the same pci_dev
-> declaration in the arch header files, so you see the declaration
-> problem in aer.h.
+This patch adds temperature monitoring support for F15h M60h processor.
+ - Add new pci device id for the relevant processor
+ - The functionality of REG_REPORTED_TEMPERATURE is moved to
+   D0F0xBC_xD820_0CA4 [Reported Temperature Control]
+   - So, use this to get CUR_TEMP value
+ - Add Kconfig, Doc entries to indicate support for this processor.
 
-I get in on many i386 and x86_64 randconfig builds.... [checking]
+Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+---
+ Documentation/hwmon/k10temp |  2 +-
+ drivers/hwmon/Kconfig       |  4 ++--
+ drivers/hwmon/k10temp.c     | 22 ++++++++++++++++++++--
+ include/linux/pci_ids.h     |  1 +
+ 4 files changed, 24 insertions(+), 5 deletions(-)
 
-20140715: 2 of 10 i386 randconfig builds
-20140716: 1 of 10 i386 randconfig builds
-20140717: 2 of 10 i386 randconfig builds
-20140718: 1 of 10 i386 randconfig builds
-
-20140715: 3 of 10 x86_64 randconfig builds
-20140716: 1 of 10 x86_64 randconfig builds
-20140717: 1 of 10 x86_64 randconfig builds
-20140718: 2 of 10 x86_64 randconfig builds
-20140721: 1 of 10 x86_64 randconfig builds
-
-
-> I could apply your fix, but it should go in v3.16 along with the commit
-> (0a2409aad38e ("trace, AER: Move trace into unified interface")) that
-> exposes the problem, and I'm leaving on vacation before I can get this
-> into -next, have it smoke-tested, and ask Linus to pull it.
-> 
-> So you might want to ask Tony to put in his tree, since it looks like
-> he merged 0a2409aad38e in the first place.
-> 
-> Please add these:
-> 
->   Fixes: 0a2409aad38e ("trace, AER: Move trace into unified interface")
->   Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> I know 0a2409aad38e isn't actually *responsible* for the problem, but
-> anybody who backports 0a2409aad38e should pick up this fix as well.
-> 
-> Lance, I added you because of an unrelated issue I noticed while reviewing
-> this: you added the AER trace events with 1ca1d8d54f92 ("aerdrv: Trace
-> Event for PCI Express Advanced Error Reporting"):
-> 
->   +#define aer_correctable_errors         \
->   +       {BIT(0),        "Receiver Error"},              \
->   ...
-> 
-> I'd like to see all those "BIT(...)" things changed to use the #defines
-> that already exist in include/uapi/linux/pci_regs.h, e.g.,
-> PCI_ERR_COR_RCVR.  That way grep will find these uses, which will make
-> maintenance easier.  There's no hurry about this part, of course.
-> 
-> Bjorn
-> 
->> ---
->>  include/linux/aer.h | 2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/include/linux/aer.h b/include/linux/aer.h
->> index 4dbaa70..c826d1c 100644
->> --- a/include/linux/aer.h
->> +++ b/include/linux/aer.h
->> @@ -11,6 +11,8 @@
->>  #define AER_FATAL                        1
->>  #define AER_CORRECTABLE                        2
->>  
->> +struct pci_dev;
->> +
->>  struct aer_header_log_regs {
->>          unsigned int dw0;
->>          unsigned int dw1;
->> -- 
-
-
+diff --git a/Documentation/hwmon/k10temp b/Documentation/hwmon/k10temp
+index ee6d30e..254d2f5 100644
+--- a/Documentation/hwmon/k10temp
++++ b/Documentation/hwmon/k10temp
+@@ -11,7 +11,7 @@ Supported chips:
+   Socket S1G2: Athlon (X2), Sempron (X2), Turion X2 (Ultra)
+ * AMD Family 12h processors: "Llano" (E2/A4/A6/A8-Series)
+ * AMD Family 14h processors: "Brazos" (C/E/G/Z-Series)
+-* AMD Family 15h processors: "Bulldozer" (FX-Series), "Trinity", "Kaveri"
++* AMD Family 15h processors: "Bulldozer" (FX-Series), "Trinity", "Kaveri", "Carrizo"
+ * AMD Family 16h processors: "Kabini", "Mullins"
+ 
+   Prefix: 'k10temp'
+diff --git a/drivers/hwmon/Kconfig b/drivers/hwmon/Kconfig
+index 02d3d85..57ba400 100644
+--- a/drivers/hwmon/Kconfig
++++ b/drivers/hwmon/Kconfig
+@@ -280,8 +280,8 @@ config SENSORS_K10TEMP
+ 	  If you say yes here you get support for the temperature
+ 	  sensor(s) inside your CPU. Supported are later revisions of
+ 	  the AMD Family 10h and all revisions of the AMD Family 11h,
+-	  12h (Llano), 14h (Brazos), 15h (Bulldozer/Trinity/Kaveri) and
+-	  16h (Kabini/Mullins) microarchitectures.
++	  12h (Llano), 14h (Brazos), 15h (Bulldozer/Trinity/Kaveri/Carrizo)
++	  and 16h (Kabini/Mullins) microarchitectures.
+ 
+ 	  This driver can also be built as a module.  If so, the module
+ 	  will be called k10temp.
+diff --git a/drivers/hwmon/k10temp.c b/drivers/hwmon/k10temp.c
+index f7b46f6..5da872f 100644
+--- a/drivers/hwmon/k10temp.c
++++ b/drivers/hwmon/k10temp.c
+@@ -51,13 +51,30 @@ MODULE_PARM_DESC(force, "force loading on processors with erratum 319");
+ #define REG_NORTHBRIDGE_CAPABILITIES	0xe8
+ #define  NB_CAP_HTC			0x00000400
+ 
++/*
++ * For F15h M60h, functionality of REG_REPORTED_TEMPERATURE
++ * has been moved to D0F0xBC_xD820_0CA4 [Reported Temperature
++ * Control]
++ */
++#define NB_SMU_IND_ADDR			0xb8
++#define NB_SMU_IND_DATA			0xbc
++#define IND_ADDR_OFFSET			0xd8200ca4
++
+ static ssize_t show_temp(struct device *dev,
+ 			 struct device_attribute *attr, char *buf)
+ {
+ 	u32 regval;
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	if (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model == 0x60) {
++		pci_bus_write_config_dword(pdev->bus, PCI_DEVFN(0, 0),
++					   NB_SMU_IND_ADDR, IND_ADDR_OFFSET);
++		pci_bus_read_config_dword(pdev->bus, PCI_DEVFN(0, 0),
++					  NB_SMU_IND_DATA, &regval);
++
++	} else
++		pci_read_config_dword(pdev, REG_REPORTED_TEMPERATURE, &regval);
+ 
+-	pci_read_config_dword(to_pci_dev(dev),
+-			      REG_REPORTED_TEMPERATURE, &regval);
+ 	return sprintf(buf, "%u\n", (regval >> 21) * 125);
+ }
+ 
+@@ -211,6 +228,7 @@ static const struct pci_device_id k10temp_id_table[] = {
+ 	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
+ 	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
+ 	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F3) },
++	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M60H_NB_F3) },
+ 	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
+ 	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_16H_M30H_NB_F3) },
+ 	{}
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 7fa3173..3c8e328 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -520,6 +520,7 @@
+ #define PCI_DEVICE_ID_AMD_15H_M10H_F3	0x1403
+ #define PCI_DEVICE_ID_AMD_15H_M30H_NB_F3 0x141d
+ #define PCI_DEVICE_ID_AMD_15H_M30H_NB_F4 0x141e
++#define PCI_DEVICE_ID_AMD_15H_M60H_NB_F3 0x1573
+ #define PCI_DEVICE_ID_AMD_15H_NB_F0	0x1600
+ #define PCI_DEVICE_ID_AMD_15H_NB_F1	0x1601
+ #define PCI_DEVICE_ID_AMD_15H_NB_F2	0x1602
 -- 
-~Randy
+1.8.1.2
+
