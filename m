@@ -1,70 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:37590 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751128AbaGDJoo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 05:44:44 -0400
-Date: Fri, 4 Jul 2014 10:44:40 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Prabhakar Kushwaha <prabhakar@freescale.com>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"galak@codeaurora.org" <galak@codeaurora.org>
-Subject: Re: [PATCH] arm64: PCI(e) arch support
-Message-ID: <20140704094440.GC6501@e106497-lin.cambridge.arm.com>
-References: <1404422876-1160-1-git-send-email-tinamdar@apm.com>
- <53B5F81B.8010801@freescale.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <jg1.han@samsung.com>,
+	<bhelgaas@google.com>, <mohit.kumar@st.com>,
+	<linux-kernel@vger.kernel.org>
+CC: <kishon@ti.com>, <grant.likely@linaro.org>
+Subject: [PATCH v2 3/4] Documentation: pci: ti: Add dt binding documentation for PCIe in DRA7xx
+Date: Mon, 14 Jul 2014 20:25:04 +0530
+Message-ID: <1405349705-31400-4-git-send-email-kishon@ti.com>
+In-Reply-To: <1405349705-31400-1-git-send-email-kishon@ti.com>
+References: <1405349705-31400-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <53B5F81B.8010801@freescale.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 04, 2014 at 01:40:59AM +0100, Prabhakar Kushwaha wrote:
-> Hi Tanmay, Liviu,
-> On 7/4/2014 2:57 AM, Tanmay Inamdar wrote:
-> > Reposting on request of several people since previously posted one was
-> > corrupted.
-> >
-> > This patch adds the arch support for PCI(e) for arm64. The files
-> > added or modified in this patch are based on PCI(e) support in
-> > 32bit arm.
-> >
-> > Please note that this patch is just for the reference. Liviu Dudau from ARM
-> > has posted his v8 series of patch to support PCIe in arm64.
-> >
-> > The patch will apply against 3.13 Linux Kernel
-> >
-> > Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
-> >
-> 
-> do we foresee similar type of changes in u-boot  to support PCI(e) for 
-> ARM64.
+Added dt binding documentation of PCIe in DRA7xx.
 
-I'm afraid I'm not familiar with u-boot's support for PCI(e), so I cannot
-answer that. As a general matter, ARM has decided to officially support
-UEFI as a bootloader for ARMv8 and that already has support for PCI(e),
-one only needs a driver for the specific host bridge.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ Documentation/devicetree/bindings/pci/ti-pci.txt |   59 ++++++++++++++++++++++
+ 1 file changed, 59 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/ti-pci.txt
 
-Best regards,
-Liviu
-
-> 
-> Regards,
-> Prabhakar
-> 
-> 
-> 
-
+diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+new file mode 100644
+index 0000000..3d21791
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+@@ -0,0 +1,59 @@
++TI PCI Controllers
++
++PCIe Designware Controller
++ - compatible: Should be "ti,dra7-pcie""
++ - reg : Two register ranges as listed in the reg-names property
++ - reg-names : The first entry must be "ti-conf" for the TI specific registers
++	       The second entry must be "rc-dbics" for the designware pcie
++	       registers
++	       The third entry must be "config" for the PCIe configuration space
++ - phys : list of PHY specifiers (used by generic PHY framework)
++ - phy-names : must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
++	       number of PHYs as specified in *phys* property.
++ - ti,hwmods : Name of the hwmod associated to the pcie, "pcie<X>",
++	       where <X> is the instance number of the pcie from the HW spec.
++ - interrupts : Two interrupt entries must be specified. The first one is for
++		main interrupt line and the second for MSI interrupt line.
++ - #address-cells,
++   #size-cells,
++   #interrupt-cells,
++   device_type,
++   ranges,
++   num-lanes,
++   interrupt-map-mask,
++   interrupt-map : as specified in ../designware-pcie.txt
++
++Example:
++axi {
++	compatible = "simple-bus";
++	#size-cells = <1>;
++	#address-cells = <1>;
++	ranges = <0x51000000 0x51000000 0x3000
++		  0x0	     0x20000000 0x10000000>;
++	pcie@51000000 {
++		compatible = "ti,dra7-pcie";
++		reg = <0x51000000 0x2000>, <0x51002000 0x14c>, <0x1000 0x2000>;
++		reg-names = "rc_dbics", "ti_conf", "config";
++		interrupts = <0 232 0x4>, <0 233 0x4>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x81000000 0 0          0x03000 0 0x00010000
++			  0x82000000 0 0x20013000 0x13000 0 0xffed000>;
++		#interrupt-cells = <1>;
++		num-lanes = <1>;
++		ti,hwmods = "pcie1";
++		phys = <&pcie1_phy>;
++		phy-names = "pcie-phy0";
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie_intc 1>,
++				<0 0 0 2 &pcie_intc 2>,
++				<0 0 0 3 &pcie_intc 3>,
++				<0 0 0 4 &pcie_intc 4>;
++		pcie_intc: interrupt-controller {
++			interrupt-controller;
++			#address-cells = <0>;
++			#interrupt-cells = <1>;
++		};
++	};
++};
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.7.9.5
 
