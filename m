@@ -1,107 +1,133 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<Paul.Mundt@huawei.com>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	"Marc Zyngier" <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<virtualization@lists.linux-foundation.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [RFC PATCH 01/11] PCI/MSI: Use pci_dev->msi_cap instead of msi_desc->msi_attrib.pos
-Date: Sat, 26 Jul 2014 11:08:38 +0800
-Message-ID: <1406344128-27055-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1406344128-27055-1-git-send-email-wangyijing@huawei.com>
-References: <1406344128-27055-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:65089 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754648AbaGNMXb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jul 2014 08:23:31 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Pratyush Anand' <pratyush.anand@st.com>,
+	'Murali Karicheri' <m-karicheri2@ti.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	'Russell King' <linux@arm.linux.org.uk>,
+	'Grant Likely' <grant.likely@linaro.org>,
+	'Rob Herring' <robh+dt@kernel.org>,
+	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Marek Vasut' <marex@denx.de>, 'Arnd Bergmann' <arnd@arndb.de>,
+	'Pawel Moll' <pawel.moll@arm.com>,
+	'Mark Rutland' <mark.rutland@arm.com>,
+	'Ian Campbell' <ijc+devicetree@hellion.org.uk>,
+	'Kumar Gala' <galak@codeaurora.org>,
+	'Randy Dunlap' <rdunlap@infradead.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1405110995-24676-1-git-send-email-m-karicheri2@ti.com>
+ <20140714060334.GB2930@pratyush-vbox>
+In-reply-to: <20140714060334.GB2930@pratyush-vbox>
+Subject: Re: [PATCH v4 0/6] Add Keystone PCIe controller driver
+Date: Mon, 14 Jul 2014 21:23:28 +0900
+Message-id: <00bb01cf9f5e$6aac4250$4004c6f0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI devices save the msi and msix capability offset in pci_dev->msi_cap
-and pci_dev->msix_cap. When we access PCI device MSI and MSIX
-registers, we can use msi_cap and msix_cap in pci_dev directly.
-Remove the pos member in msi_attrib.
+On Monday, July 14, 2014 3:04 PM, Pratyush Anand wrote:
+> On Sat, Jul 12, 2014 at 04:36:29AM +0800, Murali Karicheri wrote:
+> 
+> [...]
+> 
+> > Murali Karicheri (6):
+> >   PCI: designware: add rd[wr]_other_conf API
+> >   PCI: designware: refactor MSI code to work with v3.65 dw hardware
+> 
+> For  above two you can add my reviewed-by:
+> 
+> >   PCI: designware: refactor host init code to re-use on keystone PCI
+> >   PCI: designware: enhance dw core driver to support keystone PCI host
+> 
+> In stead of using version number and then changing few functions from
+> static to global , I would have used same philosophy of adding callbacks
+> wherever needed. May be maintainers can give their view, instead of patch
+> 3 and 4 I would have gone with something like this, where kc_pcie can be
+> passed through pp->plat_data.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/mips/pci/msi-octeon.c         |    4 ++--
- drivers/pci/host/pcie-designware.c |    2 +-
- drivers/pci/msi.c                  |    2 --
- include/linux/msi.h                |    1 -
- 4 files changed, 3 insertions(+), 6 deletions(-)
+I agree with your suggestion. I don't want to use the version number.
+The call back would be better.
 
-diff --git a/arch/mips/pci/msi-octeon.c b/arch/mips/pci/msi-octeon.c
-index ab0c5d1..6a6a99f 100644
---- a/arch/mips/pci/msi-octeon.c
-+++ b/arch/mips/pci/msi-octeon.c
-@@ -73,7 +73,7 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- 	 * wants.  Most devices only want 1, which will give
- 	 * configured_private_bits and request_private_bits equal 0.
- 	 */
--	pci_read_config_word(dev, desc->msi_attrib.pos + PCI_MSI_FLAGS,
-+	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS,
- 			     &control);
- 
- 	/*
-@@ -176,7 +176,7 @@ msi_irq_allocated:
- 	/* Update the number of IRQs the device has available to it */
- 	control &= ~PCI_MSI_FLAGS_QSIZE;
- 	control |= request_private_bits << 4;
--	pci_write_config_word(dev, desc->msi_attrib.pos + PCI_MSI_FLAGS,
-+	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS,
- 			      control);
- 
- 	irq_set_msi_desc(irq, desc);
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 1eaf4df..04339cd 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -335,7 +335,7 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
- 		return -EINVAL;
- 	}
- 
--	pci_read_config_word(pdev, desc->msi_attrib.pos+PCI_MSI_FLAGS,
-+	pci_read_config_word(pdev, pdev->msi_cap + PCI_MSI_FLAGS,
- 				&msg_ctr);
- 	msgvec = (msg_ctr&PCI_MSI_FLAGS_QSIZE) >> 4;
- 	if (msgvec == 0)
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 5a40516..e67acd1 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -595,7 +595,6 @@ static struct msi_desc *msi_setup_entry(struct pci_dev *dev)
- 	entry->msi_attrib.entry_nr	= 0;
- 	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
- 	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
--	entry->msi_attrib.pos		= dev->msi_cap;
- 	entry->msi_attrib.multi_cap	= (control & PCI_MSI_FLAGS_QMASK) >> 1;
- 
- 	if (control & PCI_MSI_FLAGS_64BIT)
-@@ -699,7 +698,6 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
- 		entry->msi_attrib.is_64		= 1;
- 		entry->msi_attrib.entry_nr	= entries[i].entry;
- 		entry->msi_attrib.default_irq	= dev->irq;
--		entry->msi_attrib.pos		= dev->msix_cap;
- 		entry->mask_base		= base;
- 
- 		list_add_tail(&entry->list, &dev->msi_list);
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 8103f32..ce88c5b 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -29,7 +29,6 @@ struct msi_desc {
- 		__u8	multi_cap : 3;	/* log2 num of messages supported */
- 		__u8	maskbit	: 1;	/* mask-pending bit supported ? */
- 		__u8	is_64	: 1;	/* Address size: 0=32bit 1=64bit */
--		__u8	pos;		/* Location of the msi capability */
- 		__u16	entry_nr;	/* specific enabled entry */
- 		unsigned default_irq;	/* default pre-assigned irq */
- 	} msi_attrib;
--- 
-1.7.1
+Best regards,
+Jingoo Han
+
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 905941c..b216192 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -490,16 +490,21 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>         }
+> 
+>         if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> -               pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
+> -                                       MAX_MSI_IRQS, &msi_domain_ops,
+> -                                       &dw_pcie_msi_chip);
+> -               if (!pp->irq_domain) {
+> -                       dev_err(pp->dev, "irq domain init failed\n");
+> -                       return -ENXIO;
+> -               }
+> +               if (!pp->ops->msi_init) {
+> +                       pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
+> +                                               MAX_MSI_IRQS, &msi_domain_ops,
+> +                                               &dw_pcie_msi_chip);
+> +                       if (!pp->irq_domain) {
+> +                               dev_err(pp->dev, "irq domain init failed\n");
+> +                               return -ENXIO;
+> +                       }
+> 
+> -               for (i = 0; i < MAX_MSI_IRQS; i++)
+> -                       irq_create_mapping(pp->irq_domain, i);
+> +                       for (i = 0; i < MAX_MSI_IRQS; i++)
+> +                               irq_create_mapping(pp->irq_domain, i);
+> +               } else {
+> +                       pp->ops->msi_init(pp, &msi_domain_ops,
+> +                                               &dw_pcie_msi_chip);
+> +               }
+>         }
+> 
+>         if (pp->ops->host_init)
+> @@ -759,6 +764,9 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+>                 BUG();
+>         }
+> 
+> +       if (bus && pp->ops->scan_bus)
+> +               bus = pp->ops->scan_bus(pp);
+> +
+>         return bus;
+>  }
+> 
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index 387f69e..39ce496 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -52,6 +52,7 @@ struct pcie_port {
+>         struct irq_domain       *irq_domain;
+>         unsigned long           msi_data;
+>         DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+> +       void                    *plat_data;
+>  };
+> 
+>  struct pcie_host_ops {
+> @@ -70,6 +71,9 @@ struct pcie_host_ops {
+>         void (*msi_set_irq)(struct pcie_port *pp, int irq);
+>         void (*msi_clear_irq)(struct pcie_port *pp, int irq);
+>         u32 (*get_msi_data)(struct pcie_port *pp);
+> +       struct pci_bus *(*scan_bus)(struct pcie_port *pp);
+> +       void (*msi_init) (struct pcie_port *pp, struct irq_domain_ops *ops,
+> +                       struct msi_chip *chip);
+>  };
+> 
+>  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+> 
+> 
+> ~Pratyush
 
