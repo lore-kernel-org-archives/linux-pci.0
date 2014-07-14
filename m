@@ -1,57 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:55697 "EHLO mga11.intel.com"
+Received: from gloria.sntech.de ([95.129.55.99]:39395 "EHLO gloria.sntech.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751190AbaGKGRQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Jul 2014 02:17:16 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V4 07/21] iommu/vt-d: Avoid freeing virtual machine domain in free_dmar_iommu()
-Date: Fri, 11 Jul 2014 14:19:31 +0800
-Message-Id: <1405059585-10620-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
+	id S1754541AbaGNOCA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Jul 2014 10:02:00 -0400
+From: Heiko =?ISO-8859-1?Q?St=FCbner?= <heiko@sntech.de>
+To: suravee.suthikulpanit@amd.com, jason@lakedaemon.net
+Cc: linux-arm-kernel@lists.infradead.org, marc.zyngier@arm.com,
+	mark.rutland@arm.com, devicetree@vger.kernel.org,
+	pawel.moll@arm.com, linux-doc@vger.kernel.org,
+	Catalin.Marinas@arm.com, Harish.Kasiviswanathan@amd.com,
+	linux-kernel@vger.kernel.org, Will.Deacon@arm.com,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	linux-pci@vger.kernel.org, tglx@linutronix.de
+Subject: Re: [PATCH 1/4 V3] irqchip: gic: Add binding probe for ARM GIC400
+Date: Mon, 14 Jul 2014 16:03:15 +0200
+Message-ID: <2932284.F1eaAf8ArJ@diego>
+In-Reply-To: <1404947104-21345-2-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com> <1404947104-21345-2-git-send-email-suravee.suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Virtual machine domains are created by intel_iommu_domain_init() and
-should be destroyed by intel_iommu_domain_destroy(). So avoid freeing
-virtual machine domain data structure in free_dmar_iommu() when
-doamin->iommu_count reaches zero, otherwise it may cause invalid
-memory access because the IOMMU framework still holds references
-to the domain structure.
+Am Mittwoch, 9. Juli 2014, 18:05:01 schrieb suravee.suthikulpanit@amd.com:
+> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> 
+> Add new Irqchip declaration for GIC400. This was mentioned in
+> gic binding documentation, but there is not code to support it.
+> 
+> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+The Rockchip RK3288 also contains a GIC400, so I would be very happy if 
+someone could pick up this one patch independently of the rest.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 0984fa58d872..5d7383775bf1 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1480,7 +1480,8 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
- 
- 			domain = iommu->domains[i];
- 			clear_bit(i, iommu->domain_ids);
--			if (domain_detach_iommu(domain, iommu) == 0)
-+			if (domain_detach_iommu(domain, iommu) == 0 &&
-+			    !domain_type_is_vm(domain))
- 				domain_exit(domain);
- 		}
- 	}
--- 
-1.7.10.4
+But in light of Matthias' cortex-a7-gic patch from last week, this one might 
+need an update.
+
+
+> ---
+>  drivers/irqchip/irq-gic.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
+> index 508b815..ac8f7ea 100644
+> --- a/drivers/irqchip/irq-gic.c
+> +++ b/drivers/irqchip/irq-gic.c
+> @@ -1020,6 +1020,8 @@ gic_of_init(struct device_node *node, struct
+> device_node *parent) gic_cnt++;
+>  	return 0;
+>  }
+> +
+
+also it looks like the omission of the blank line in the original file is 
+intentional, so I'd guess it shouldn't be added here.
+
+
+> +IRQCHIP_DECLARE(arm_gic_400, "arm,gic-400", gic_of_init);
+>  IRQCHIP_DECLARE(cortex_a15_gic, "arm,cortex-a15-gic", gic_of_init);
+>  IRQCHIP_DECLARE(cortex_a9_gic, "arm,cortex-a9-gic", gic_of_init);
+>  IRQCHIP_DECLARE(msm_8660_qgic, "qcom,msm-8660-qgic", gic_of_init);
+
+
+Thanks
+Heiko
 
