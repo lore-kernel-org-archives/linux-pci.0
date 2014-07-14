@@ -1,36 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:35686 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752920AbaGAPE4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Jul 2014 11:04:56 -0400
-Message-ID: <53B2CE15.7010403@wwwdotorg.org>
-Date: Tue, 01 Jul 2014 09:04:53 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Vidya Sagar <vidyas@nvidia.com>, bhelgaas@google.com, rjw@sisk.pl,
-	nagananda.chumbalkar@hp.com, thierry.reding@gmail.com,
-	swarren@nvidia.com, kthota@nvidia.com, linux-pci@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1] PCI: enable ASPM configuration in PCIE POWERSAVE mode
-References: <1404198978-26593-1-git-send-email-vidyas@nvidia.com>
-In-Reply-To: <1404198978-26593-1-git-send-email-vidyas@nvidia.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from gate.crashing.org ([63.228.1.57]:37503 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752631AbaGNDMY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 13 Jul 2014 23:12:24 -0400
+Message-ID: <1405307520.9343.10.camel@pasglop>
+Subject: Re: [RFC PATCH V3 06/17] ppc/pnv: allocate pe->iommu_table
+ dynamically
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: David Laight <David.Laight@ACULAB.COM>
+Cc: "'Wei Yang'" <weiyang@linux.vnet.ibm.com>,
+	Alexey Kardashevskiy <aik@ozlabs.ru>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
+	"qiudayu@linux.vnet.ibm.com" <qiudayu@linux.vnet.ibm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"yan@linux.vnet.ibm.com" <yan@linux.vnet.ibm.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+Date: Mon, 14 Jul 2014 13:12:00 +1000
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D17264AD8@AcuExch.aculab.com>
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+	 <1402365399-5121-7-git-send-email-weiyang@linux.vnet.ibm.com>
+	 <53A94DA8.6020206@ozlabs.ru> <20140625011211.GA5785@richard>
+	 <53AA4C32.7060004@ozlabs.ru> <20140625052758.GA8873@richard>
+	 <063D6719AE5E284EB5DD2968C1650D6D17264AD8@AcuExch.aculab.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/01/2014 01:16 AM, Vidya Sagar wrote:
-> commit 1a680b7c moved pcie_aspm_powersave_config_link() out of
-> pci_raw_set_power_state() to pci_set_power_state() which would enable
-> ASPM. But, with commit db288c9c, which re-introduced the following check
-> ./drivers/pci/pci.c: pci_set_power_state()
-> +   /* Check if we're already there */
-> +   if (dev->current_state == state)
-> +       return 0;
-> in pci_set_power_state(), call to pcie_aspm_powersave_config_link() is never
-> made leaving ASPM broken.
-> Fix it by not returning from when the above condition is true, rather, jump to
-> ASPM configuration code and exit from there eventually.
+On Wed, 2014-06-25 at 09:20 +0000, David Laight wrote:
+> What are the sizes of the iommu table and the PE structure? 
+> If the table is a round number of pages then you probably don't want
+> to embed it inside the PE structure. 
 
-Out of curiosity, was this patch tested by running an umodified mainline
-kernel on a Tegra device, or is this simply a port from our downstream
-kernel, without any additional upstream testing?
+The problem isn't the table itself but the struct iommu_table which
+contains the pointer to the actual table and various other bits of
+controlling state.
+
+Cheers,
+Ben.
+
+
+
