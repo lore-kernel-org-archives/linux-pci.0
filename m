@@ -1,109 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:35825 "EHLO bear.ext.ti.com"
+Received: from comal.ext.ti.com ([198.47.26.152]:42556 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965465AbaGRPP4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 Jul 2014 11:15:56 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH v6 1/5] PCI: designware: add rd[wr]_other_conf API
-Date: Fri, 18 Jul 2014 11:14:25 -0400
-Message-ID: <1405696469-7172-2-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com>
-References: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com>
+	id S932234AbaGNOzv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Jul 2014 10:55:51 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <jg1.han@samsung.com>,
+	<bhelgaas@google.com>, <mohit.kumar@st.com>,
+	<linux-kernel@vger.kernel.org>
+CC: <kishon@ti.com>, <grant.likely@linaro.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v2 1/4] PCI: designware: Configuration space should be specified in 'reg'
+Date: Mon, 14 Jul 2014 20:25:02 +0530
+Message-ID: <1405349705-31400-2-git-send-email-kishon@ti.com>
+In-Reply-To: <1405349705-31400-1-git-send-email-kishon@ti.com>
+References: <1405349705-31400-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v3.65 version of the designware h/w, requires application space
-registers to be configured to access the remote EP config space.
-To support this, add rd[wr]_other_conf API in the pcie_host_opts
+The configuration address space has so far been specified in *ranges*,
+however it should be specified in *reg* making it a platform MEM resource.
+Hence used 'platform_get_resource_*' API to get configuration address
+space in the designware driver.
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-Reviewed-by: Pratyush Anand <pratyush.anand@st.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Marek Vasut <marex@denx.de>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 Acked-by: Mohit Kumar <mohit.kumar@st.com>
 Acked-by: Jingoo Han <jg1.han@samsung.com>
-Acked-by: Santosh Shilimkar <santosh.shilimkar@ti.com>
-
-CC: Russell King <linux@arm.linux.org.uk>
-CC: Grant Likely <grant.likely@linaro.org>
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Richard Zhu <r65037@freescale.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>
-CC: Marek Vasut <marex@denx.de>
-CC: Arnd Bergmann <arnd@arndb.de>
-CC: Pawel Moll <pawel.moll@arm.com>
-CC: Mark Rutland <mark.rutland@arm.com>
-CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
-CC: Kumar Gala <galak@codeaurora.org>
-CC: Randy Dunlap <rdunlap@infradead.org>
-CC: Grant Likely <grant.likely@linaro.org> 
-
 ---
- drivers/pci/host/pcie-designware.c |   12 ++++++++++--
- drivers/pci/host/pcie-designware.h |    4 ++++
- 2 files changed, 14 insertions(+), 2 deletions(-)
+ .../devicetree/bindings/pci/designware-pcie.txt    |    4 ++++
+ drivers/pci/host/pcie-designware.c                 |   17 +++++++++++++++--
+ 2 files changed, 19 insertions(+), 2 deletions(-)
 
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index d0d15ee..ed0d9b9 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -2,6 +2,10 @@
+ 
+ Required properties:
+ - compatible: should contain "snps,dw-pcie" to identify the core.
++- reg: Should contain the configuration address space.
++- reg-names: Must be "config" for the PCIe configuration space.
++    (The old way of getting the configuration address space from "ranges"
++    is deprecated and should be avoided.)
+ - #address-cells: set to <3>
+ - #size-cells: set to <2>
+ - device_type: set to "pci"
 diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 1eaf4df..d8f3af7 100644
+index 1eaf4df..0b7b455 100644
 --- a/drivers/pci/host/pcie-designware.c
 +++ b/drivers/pci/host/pcie-designware.c
-@@ -656,7 +656,11 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+@@ -20,6 +20,7 @@
+ #include <linux/of_pci.h>
+ #include <linux/pci.h>
+ #include <linux/pci_regs.h>
++#include <linux/platform_device.h>
+ #include <linux/types.h>
+ 
+ #include "pcie-designware.h"
+@@ -396,11 +397,23 @@ static const struct irq_domain_ops msi_domain_ops = {
+ int __init dw_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct device_node *np = pp->dev->of_node;
++	struct platform_device *pdev = to_platform_device(pp->dev);
+ 	struct of_pci_range range;
+ 	struct of_pci_range_parser parser;
++	struct resource *cfg_res;
+ 	u32 val;
+ 	int i;
+ 
++	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
++	if (cfg_res) {
++		pp->config.cfg0_size = resource_size(cfg_res)/2;
++		pp->config.cfg1_size = resource_size(cfg_res)/2;
++		pp->cfg0_base = cfg_res->start;
++		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
++	} else {
++		dev_err(pp->dev, "missing *config* reg space\n");
++	}
++
+ 	if (of_pci_range_parser_init(&parser, np)) {
+ 		dev_err(pp->dev, "missing ranges property\n");
+ 		return -EINVAL;
+@@ -433,6 +446,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 			of_pci_range_to_resource(&range, np, &pp->cfg);
+ 			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
+ 			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
++			pp->cfg0_base = pp->cfg.start;
++			pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+ 		}
  	}
  
- 	if (bus->number != pp->root_bus_nr)
--		ret = dw_pcie_rd_other_conf(pp, bus, devfn,
-+		if (pp->ops->rd_other_conf)
-+			ret = pp->ops->rd_other_conf(pp, bus, devfn,
-+						where, size, val);
-+		else
-+			ret = dw_pcie_rd_other_conf(pp, bus, devfn,
- 						where, size, val);
- 	else
- 		ret = dw_pcie_rd_own_conf(pp, where, size, val);
-@@ -679,7 +683,11 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 		return PCIBIOS_DEVICE_NOT_FOUND;
+@@ -445,8 +460,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 		}
+ 	}
  
- 	if (bus->number != pp->root_bus_nr)
--		ret = dw_pcie_wr_other_conf(pp, bus, devfn,
-+		if (pp->ops->wr_other_conf)
-+			ret = pp->ops->wr_other_conf(pp, bus, devfn,
-+						where, size, val);
-+		else
-+			ret = dw_pcie_wr_other_conf(pp, bus, devfn,
- 						where, size, val);
- 	else
- 		ret = dw_pcie_wr_own_conf(pp, where, size, val);
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 77f592f..8121901 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -61,6 +61,10 @@ struct pcie_host_ops {
- 			u32 val, void __iomem *dbi_base);
- 	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32 *val);
- 	int (*wr_own_conf)(struct pcie_port *pp, int where, int size, u32 val);
-+	int (*rd_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
-+			unsigned int devfn, int where, int size, u32 *val);
-+	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
-+			unsigned int devfn, int where, int size, u32 val);
- 	int (*link_up)(struct pcie_port *pp);
- 	void (*host_init)(struct pcie_port *pp);
- };
+-	pp->cfg0_base = pp->cfg.start;
+-	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+ 	pp->mem_base = pp->mem.start;
+ 
+ 	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
 -- 
 1.7.9.5
 
