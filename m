@@ -1,60 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nbfkord-smmo03.seg.att.com ([209.65.160.84]:62713 "EHLO
-	nbfkord-smmo03.seg.att.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755597AbaG3SYN convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 30 Jul 2014 14:24:13 -0400
-Message-ID: <53D93848.7070203@solarflare.com>
-Date: Wed, 30 Jul 2014 19:24:08 +0100
-From: Edward Cree <ecree@solarflare.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:52266 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750844AbaGNFbr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jul 2014 01:31:47 -0400
+Received: by mail-ob0-f174.google.com with SMTP id vb8so3388919obc.5
+        for <linux-pci@vger.kernel.org>; Sun, 13 Jul 2014 22:31:47 -0700 (PDT)
 MIME-Version: 1.0
-To: Don Dutile <ddutile@redhat.com>
-CC: <linux-pci@vger.kernel.org>
-Subject: Re: pci_sriov_set_totalvfs again
-References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com>
-In-Reply-To: <53D93407.8040308@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <53BE926A.2070005@ti.com>
+References: <cover.1404976058.git.viresh.kumar@linaro.org>
+	<d1ef8db8704d09ba4f276c954dc22b555998f957.1404976058.git.viresh.kumar@linaro.org>
+	<53BE926A.2070005@ti.com>
+Date: Mon, 14 Jul 2014 11:01:47 +0530
+Message-ID: <CAKohpo=aoWgQseciOiZcYqupKZyz5eMFNA4A+VRSHoCbQuqeGw@mail.gmail.com>
+Subject: Re: [PATCH V9 2/7] phy: Add drivers for PCIe and SATA phy on SPEAr13xx
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Arnd Bergmann <arnd@linaro.org>, "olof@lixom.net" <olof@lixom.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	spear-devel <spear-devel@list.st.com>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Nicholson <mark@nicholnet.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pratyush Anand <pratyush.anand@st.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30/07/14 19:05, Don Dutile wrote:
-> On 07/30/2014 01:16 PM, Edward Cree wrote:
->> Calling pci_sriov_set_totalvfs(dev, 0) has no effect, because
->> pci_sriov_get_totalvfs ignores dev->sriov->driver_max_VFs if it's 0,
->> as that is used as the 'not set' value.
->> So, three questions:
->> a) is this a bug?
->> b) if not, should the comment on pci_sriov_set_totalvfs mention that
->> passing numvfs=0 will be interpreted as numvfs=dev->sriov->total_VFs?
->> c) is there a better way of indicating "current configuration doesn't
->> support VFs" rather than calling set_totalvfs(0)?
->>
->> Thanks,
->> -Edward
+On 10 July 2014 18:47, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+
+>> diff --git a/Documentation/devicetree/bindings/phy/st-spear1310-miphy.txt b/Documentation/devicetree/bindings/phy/st-spear1310-miphy.txt
+>> new file mode 100644
+>> index 0000000..b9b281a
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/phy/st-spear1310-miphy.txt
 >
-> The file shouldn't exist if the device doesn't provide an SRIOV
-> capability.
-> If it does, and it's not supported, then add a patch in quirks.c.
->
->
-I don't know much about quirks, but I'm not sure they're the answer
-here, as it's not quite as simple as "driver doesn't support it".
-It's a firmware / configuration issue, that if the device (it's a NIC)
-is configured a certain way [1], the VFs - while appearing fine from a
-PCI perspective - don't actually work (they can't pass traffic).
-We can't detect this misconfiguration until PF probe time, and we need a
-way to report that the VFs aren't usable.
+> We generally create a single document for a SoC vendor. So just use st-phy.txt.
 
-Can quirks handle this?
+st-phy may not be appropriate as this is specifically for SPEAr. New
+binding doc looks like this:
 
--Edward
-
-[1] SFC9120-based NICs support multiple PFs per port and these can be
-used as a kind of "poor-man's SR-IOV" (we're calling it 'PF-IOV') by
-placing the firmware v-switch below the PFs. However, this then
-precludes adding a v-switch above the PF to direct VF traffic, meaning
-that VFs are useless in this configuration. Consequently, our
-configuration tools won't allow VFs and PF-IOV to be enabled
-simultaneously, but bugs or corruption could cause this to happen.
-
-The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
+diff --git a/Documentation/devicetree/bindings/phy/st-spear-miphy.txt
+b/Documentation/devicetree/bindings/phy/st-spear-miphy.txt
+new file mode 100644
+index 0000000..2a6bfdc
+--- /dev/null
++++ b/Documentation/devicetree/bindings/phy/st-spear-miphy.txt
+@@ -0,0 +1,15 @@
++ST SPEAr miphy DT details
++=========================
++
++ST Microelectronics SPEAr miphy is a phy controller supporting PCIe and SATA.
++
++Required properties:
++- compatible : should be "st,spear1310-miphy" or "st,spear1340-miphy"
++- reg : offset and length of the PHY register set.
++- misc: phandle for the syscon node to access misc registers
++- #phy-cells : from the generic PHY bindings, must be 1.
++       - cell[1]: 0 if phy used for SATA, 1 for PCIe.
++
++Optional properties:
++- phy-id: Instance id of the phy. Only required when there are multiple phys
++  present on a implementation.
