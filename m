@@ -1,151 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:38796 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753495AbaGNKfp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jul 2014 06:35:45 -0400
-Message-ID: <53C3B251.8000209@ti.com>
-Date: Mon, 14 Jul 2014 16:04:57 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:62022 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752663AbaGNFpQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jul 2014 01:45:16 -0400
+Received: by mail-ob0-f176.google.com with SMTP id wo20so3643434obc.7
+        for <linux-pci@vger.kernel.org>; Sun, 13 Jul 2014 22:45:15 -0700 (PDT)
 MIME-Version: 1.0
-To: Rajendra Nayak <rnayak@ti.com>, <paul@pwsan.com>
-CC: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>, <tony@atomide.com>,
-	<linux@arm.linux.org.uk>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] arm: dra7xx: Add hwmod data for pcie1 and pcie2 subsystems
-References: <1403719366-9656-3-git-send-email-kishon@ti.com> <1404896567-32204-1-git-send-email-kishon@ti.com> <53BD2136.9030009@ti.com>
-In-Reply-To: <53BD2136.9030009@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <cover.1404976058.git.viresh.kumar@linaro.org>
+References: <cover.1404976058.git.viresh.kumar@linaro.org>
+Date: Mon, 14 Jul 2014 11:15:15 +0530
+Message-ID: <CAKohpomvafkZcQiqC4+FXCH8cj5PnArd3wDzvUJMPU-dgWcygA@mail.gmail.com>
+Subject: Re: [PATCH V9 0/7] ARM: SPEAr13xx: Add PCIe support
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: Arnd Bergmann <arnd@linaro.org>, "olof@lixom.net" <olof@lixom.net>,
+	Kishon <kishon@ti.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	spear-devel <spear-devel@list.st.com>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Nicholson <mark@nicholnet.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Viresh Kumar <viresh.kumar@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 09 July 2014 04:32 PM, Rajendra Nayak wrote:
-> On Wednesday 09 July 2014 02:32 PM, Kishon Vijay Abraham I wrote:
->> Added hwmod data for pcie1 and pcie2 subsystem present in DRA7xx SOC.
->>
->> Cc: Tony Lindgren <tony@atomide.com>
->> Cc: Russell King <linux@arm.linux.org.uk>
->> Cc: Paul Walmsley <paul@pwsan.com>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> Tested-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->> Changes from v1:
->> * changed the clock domain to "pcie_clkdm"
->> * Added PCIe as a slave port for l3_main.
-> 
-> Looks good to me,
-> Reviewed-by: Rajendra Nayak <rnayak@ti.com>
+On 10 July 2014 12:56, Viresh Kumar <viresh.kumar@linaro.org> wrote:
+> This adds PCIe support for ARM based ST Microelectronics SPEAr13xx SoCs.
+>
+> V8 was here: https://lkml.org/lkml/2014/4/15/260 and just before being pulled by
+> Olof this happened: https://lkml.org/lkml/2014/7/9/641.
+>
+> An detailed look at the patches make it clear why Olof was unhappy.
+> Patches weren't in right order, groups, etc..
+>
+> So, this is an attempt to fix all those issues. Pushed here:
+> git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git spear/pcie-support-v9
 
-Paul,
+It may not be worth enough to send V10 as there aren't many updates.
+I have provided proper diff's in response to the comments I got.
 
-Can you pick this one?
+V10 is here:
+git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
+spear/pcie-support-v10
 
-Thanks
-Kishon
-> 
->>
->> Boot log for dra7xx can be found at http://paste.ubuntu.com/7769402/
->>
->>  arch/arm/mach-omap2/omap_hwmod_7xx_data.c |   73 +++++++++++++++++++++++++++++
->>  1 file changed, 73 insertions(+)
->>
->> diff --git a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
->> index 6ff40a6..2f37ca8 100644
->> --- a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
->> +++ b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
->> @@ -1290,6 +1290,43 @@ static struct omap_hwmod dra7xx_ocp2scp3_hwmod = {
->>  };
->>  
->>  /*
->> + * 'PCIE' class
->> + *
->> + */
->> +
->> +static struct omap_hwmod_class dra7xx_pcie_hwmod_class = {
->> +	.name	= "pcie",
->> +};
->> +
->> +/* pcie1 */
->> +static struct omap_hwmod dra7xx_pcie1_hwmod = {
->> +	.name		= "pcie1",
->> +	.class		= &dra7xx_pcie_hwmod_class,
->> +	.clkdm_name	= "pcie_clkdm",
->> +	.main_clk	= "l4_root_clk_div",
->> +	.prcm = {
->> +		.omap4 = {
->> +			.clkctrl_offs	= DRA7XX_CM_PCIE_CLKSTCTRL_OFFSET,
->> +			.modulemode	= MODULEMODE_SWCTRL,
->> +		},
->> +	},
->> +};
->> +
->> +/* pcie2 */
->> +static struct omap_hwmod dra7xx_pcie2_hwmod = {
->> +	.name		= "pcie2",
->> +	.class		= &dra7xx_pcie_hwmod_class,
->> +	.clkdm_name	= "pcie_clkdm",
->> +	.main_clk	= "l4_root_clk_div",
->> +	.prcm = {
->> +		.omap4 = {
->> +			.clkctrl_offs = DRA7XX_CM_PCIE_CLKSTCTRL_OFFSET,
->> +			.modulemode   = MODULEMODE_SWCTRL,
->> +		},
->> +	},
->> +};
->> +
->> +/*
->>   * 'PCIE PHY' class
->>   *
->>   */
->> @@ -2448,6 +2485,38 @@ static struct omap_hwmod_ocp_if dra7xx_l4_cfg__ocp2scp1 = {
->>  	.user		= OCP_USER_MPU | OCP_USER_SDMA,
->>  };
->>  
->> +/* l3_main_1 -> pcie1 */
->> +static struct omap_hwmod_ocp_if dra7xx_l3_main_1__pcie1 = {
->> +	.master		= &dra7xx_l3_main_1_hwmod,
->> +	.slave		= &dra7xx_pcie1_hwmod,
->> +	.clk		= "l3_iclk_div",
->> +	.user		= OCP_USER_MPU | OCP_USER_SDMA,
->> +};
->> +
->> +/* l4_cfg -> pcie1 */
->> +static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie1 = {
->> +	.master		= &dra7xx_l4_cfg_hwmod,
->> +	.slave		= &dra7xx_pcie1_hwmod,
->> +	.clk		= "l4_root_clk_div",
->> +	.user		= OCP_USER_MPU | OCP_USER_SDMA,
->> +};
->> +
->> +/* l3_main_1 -> pcie2 */
->> +static struct omap_hwmod_ocp_if dra7xx_l3_main_1__pcie2 = {
->> +	.master		= &dra7xx_l3_main_1_hwmod,
->> +	.slave		= &dra7xx_pcie2_hwmod,
->> +	.clk		= "l3_iclk_div",
->> +	.user		= OCP_USER_MPU | OCP_USER_SDMA,
->> +};
->> +
->> +/* l4_cfg -> pcie2 */
->> +static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie2 = {
->> +	.master		= &dra7xx_l4_cfg_hwmod,
->> +	.slave		= &dra7xx_pcie2_hwmod,
->> +	.clk		= "l4_root_clk_div",
->> +	.user		= OCP_USER_MPU | OCP_USER_SDMA,
->> +};
->> +
->>  /* l4_cfg -> pcie1 phy */
->>  static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie1_phy = {
->>  	.master		= &dra7xx_l4_cfg_hwmod,
->> @@ -2813,6 +2882,10 @@ static struct omap_hwmod_ocp_if *dra7xx_hwmod_ocp_ifs[] __initdata = {
->>  	&dra7xx_l4_cfg__mpu,
->>  	&dra7xx_l4_cfg__ocp2scp1,
->>  	&dra7xx_l4_cfg__ocp2scp3,
->> +	&dra7xx_l3_main_1__pcie1,
->> +	&dra7xx_l4_cfg__pcie1,
->> +	&dra7xx_l3_main_1__pcie2,
->> +	&dra7xx_l4_cfg__pcie2,
->>  	&dra7xx_l4_cfg__pcie1_phy,
->>  	&dra7xx_l4_cfg__pcie2_phy,
->>  	&dra7xx_l3_main_1__qspi,
->>
-> 
+Let me know if something is still missing before I send a pull request tomorrow.
+
+--
+Viresh
