@@ -1,79 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:57294 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755275AbaGQN4R (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jul 2014 09:56:17 -0400
-Date: Thu, 17 Jul 2014 14:55:34 +0100
-From: Mark Rutland <mark.rutland@arm.com>
-To: Jason Cooper <jason@lakedaemon.net>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Cc: Pawel Moll <Pawel.Moll@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 0/4 V3] irqchip: gic: Introduce ARM GICv2m MSI(-X) support
-Message-ID: <20140717135534.GM30313@leverpostej>
-References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
- <20140717131854.GN13108@titan.lakedaemon.net>
+Received: from mail-bn1lp0141.outbound.protection.outlook.com ([207.46.163.141]:30756
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756827AbaGNT7T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Jul 2014 15:59:19 -0400
+Message-ID: <53C4368E.9090103@amd.com>
+Date: Mon, 14 Jul 2014 14:59:10 -0500
+From: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140717131854.GN13108@titan.lakedaemon.net>
+To: Borislav Petkov <bp@alien8.de>
+CC: <clemens@ladisch.de>, <jdelvare@suse.de>, <linux@roeck-us.net>,
+	<rdunlap@infradead.org>, <bhelgaas@google.com>,
+	<lm-sensors@lm-sensors.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] hwmon, k10temp: Add support for AMD F15h M60h processor
+References: <1405369388-12729-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+ <20140714195128.GA25124@pd.tnic>
+In-Reply-To: <20140714195128.GA25124@pd.tnic>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jason,
+On 7/14/2014 2:51 PM, Borislav Petkov wrote:
+> On Mon, Jul 14, 2014 at 03:23:08PM -0500, Aravind Gopalakrishnan wrote:
+>>   
+>> @@ -211,6 +228,7 @@ static const struct pci_device_id k10temp_id_table[] = {
+>>   	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
+>>   	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
+>>   	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F3) },
+>> +	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M60H_NB_F3) },
+>>   	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
+>>   	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_16H_M30H_NB_F3) },
+>>   	{}
+>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+>> index 7fa3173..3c8e328 100644
+>> --- a/include/linux/pci_ids.h
+>> +++ b/include/linux/pci_ids.h
+>> @@ -520,6 +520,7 @@
+>>   #define PCI_DEVICE_ID_AMD_15H_M10H_F3	0x1403
+>>   #define PCI_DEVICE_ID_AMD_15H_M30H_NB_F3 0x141d
+>>   #define PCI_DEVICE_ID_AMD_15H_M30H_NB_F4 0x141e
+>> +#define PCI_DEVICE_ID_AMD_15H_M60H_NB_F3 0x1573
+> I'm assuming this is used somewhere else besides k10temp.c?
+>
 
-On Thu, Jul 17, 2014 at 02:18:54PM +0100, Jason Cooper wrote:
-> On Wed, Jul 09, 2014 at 06:05:00PM -0500, suravee.suthikulpanit@amd.com wrote:
-> > From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> > 
-> > This patch set introduces support for MSI(-X) in GICv2m specification,
-> > which is implemented in some variation of GIC400.
-> > 
-> > This depends on and has been tested with the V7 of"Add support for PCI in AArch64"
-> > (https://lkml.org/lkml/2014/3/14/320).
-> > 
-> > Changes in V3:
-> >     * Rebase to git://git.infradead.org/users/jcooper/linux.git irqchip/gic
-> >       (per Jason Cooper request)
-> >     * Misc fix/clean up per Mark Rutland comments
-> >     * Minor Clean up in the driver/irqchip/irq-gic-v2m.c: alloc_msi_irqs()
-> >     * Patch 4 is new to the series:
-> >         * Add ARM64-specific version arch_setup_msi_irqs() to allow support
-> >           for Multiple MSI.
-> >         * Add support for Multiple MSI for GICv2m.
-> > 
-> > Suravee Suthikulpanit (4):
-> >   irqchip: gic: Add binding probe for ARM GIC400
-> >   irqchip: gic: Restructuring ARM GIC code
-> >   irqchip: gic: Add supports for ARM GICv2m MSI(-X)
-> >   irqchip: gicv2m: Add support for multiple MSI for ARM64 GICv2m
-> 
-> Ok, patch #1 applied to irqchip/urgent.  Patches 2 and 3 applied to
-> irqchip/gic with irqchip/urgent merged in.  To facilitate
-> testing/merging, I've prepared an unsigned tag for you on the
-> irqchip/gic branch:
+Yeah, will most likely need to add EDAC bits. But that is something I 
+can't test now.
 
-I'm a little concerned that this is all going through for v3.17 without
-a {Reviewed,Acked}-by from Marc or anyone working with GIC{,v2m}.
+So will have to do it only in due time.. :)
 
-While his comments on v1 have been addressed, he has not had a chance to
-acknowledge the solutions. I appreciate Marc's holiday is unfortunately
-timed.
-
-I also have an open concern with the binding with regard to the
-orthogonality of GICV GICH and the MSI registers.
-
-Suravee, do you need this urgently for v3.17? I was under the impression
-that we wouldn't have full PCIe support by then.
-
-Cheers,
-Mark.
+-Aravind.
