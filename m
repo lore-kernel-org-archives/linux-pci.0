@@ -1,52 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:41690 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752881AbaGOWwE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jul 2014 18:52:04 -0400
-Received: by mail-ie0-f178.google.com with SMTP id tp5so82183ieb.9
-        for <linux-pci@vger.kernel.org>; Tue, 15 Jul 2014 15:52:02 -0700 (PDT)
-Date: Tue, 15 Jul 2014 16:51:59 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI: tegra: Fix license string
-Message-ID: <20140715225159.GB22303@google.com>
-References: <1405061938-2191-1-git-send-email-thierry.reding@gmail.com>
- <1405061938-2191-2-git-send-email-thierry.reding@gmail.com>
+Received: from dehamd003.servertools24.de ([31.47.254.18]:33321 "EHLO
+	dehamd003.servertools24.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755536AbaGOHlh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jul 2014 03:41:37 -0400
+Message-ID: <53C4DB2D.80406@ladisch.de>
+Date: Tue, 15 Jul 2014 09:41:33 +0200
+From: Clemens Ladisch <clemens@ladisch.de>
 MIME-Version: 1.0
+To: Guenter Roeck <linux@roeck-us.net>
+CC: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	Borislav Petkov <bp@alien8.de>, jdelvare@suse.de,
+	rdunlap@infradead.org, bhelgaas@google.com,
+	lm-sensors@lm-sensors.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] hwmon, k10temp: Add support for AMD F15h M60h processor
+References: <1405369388-12729-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <20140714195128.GA25124@pd.tnic> <53C43BDF.2070403@ladisch.de> <20140714203336.GA30926@roeck-us.net>
+In-Reply-To: <20140714203336.GA30926@roeck-us.net>
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1405061938-2191-2-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 11, 2014 at 08:58:58AM +0200, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
-> 
-> The proper MODULE_LICENSE() string for the GPL v2 is "GPL v2", not
-> "GPLv2".
-> 
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
+Guenter Roeck wrote:
+> On Mon, Jul 14, 2014 at 10:21:51PM +0200, Clemens Ladisch wrote:
+>> Borislav Petkov wrote:
+>>> On Mon, Jul 14, 2014 at 03:23:08PM -0500, Aravind Gopalakrishnan wrote:
+>>>> +	if (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model == 0x60) {
+>>>> +		pci_bus_write_config_dword(pdev->bus, PCI_DEVFN(0, 0),
+>>>> +					   NB_SMU_IND_ADDR, IND_ADDR_OFFSET);
+>>>> +		pci_bus_read_config_dword(pdev->bus, PCI_DEVFN(0, 0),
+>>>> +					  NB_SMU_IND_DATA, &regval);
+>>
+>> How do you prevent races with any other code that accesses some indirect
+>> register?
+>>
+> I just wanted to ask exactly the same question. I think this will need
+> locking.
 
-Applied with Jingoo's reviewed-by to pci/host-tegra for v3.17, thanks!
+If there actually is any other code; these indirect SMU registers appear
+to be mostly undocumented and to be intended to be used by the BIOS.
+(Which makes me wonder why the temperature sensor was moved there.)
 
-> ---
->  drivers/pci/host/pci-tegra.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 7df5aaf58921..14ec5b2c69e0 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -1742,4 +1742,4 @@ module_platform_driver(tegra_pcie_driver);
->  
->  MODULE_AUTHOR("Thierry Reding <treding@nvidia.com>");
->  MODULE_DESCRIPTION("NVIDIA Tegra PCIe driver");
-> -MODULE_LICENSE("GPLv2");
-> +MODULE_LICENSE("GPL v2");
-> -- 
-> 2.0.1
-> 
+Anyway, if a lock is needed, it looks as if it could go into a helper
+function such as "amd_nb_smu_ind_read()" in arch/x86/kernel/amd_nb.c.
+
+
+Regards,
+Clemens
