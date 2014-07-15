@@ -1,55 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62716 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965730AbaGPSFM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Jul 2014 14:05:12 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Lukasz Dorau <lukasz.dorau@intel.com>,
-	Maciej Patelczyk <maciej.patelczyk@intel.com>,
-	Dave Jiang <dave.jiang@intel.com>, intel-linux-scu@intel.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 10/23] isci: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Wed, 16 Jul 2014 20:05:14 +0200
-Message-Id: <24a4bb34f5a8b5ca964fb063688c24549e8a3b5d.1405533479.git.agordeev@redhat.com>
-In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
+Received: from mail-qg0-f49.google.com ([209.85.192.49]:58751 "EHLO
+	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932797AbaGOUv7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jul 2014 16:51:59 -0400
+Received: by mail-qg0-f49.google.com with SMTP id 63so5313978qgz.36
+        for <linux-pci@vger.kernel.org>; Tue, 15 Jul 2014 13:51:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1405317877-15060-1-git-send-email-vidyas@nvidia.com>
+References: <1405317877-15060-1-git-send-email-vidyas@nvidia.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 15 Jul 2014 14:51:38 -0600
+Message-ID: <CAErSpo4D5m14wk6k2Hd19tH+E_VbtmSR2SncQBhg5Dq=KSyKSw@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: enable ASPM configuration in PCIE POWERSAVE mode
+To: Vidya Sagar <sagar.tv@gmail.com>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Nagananda Chumbalkar <nchumbalkar@lenovo.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Stephen Warren <swarren@nvidia.com>,
+	Krishna Thota <kthota@nvidia.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Vidya Sagar <vidyas@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+[+cc Matthew, Rafael]
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Lukasz Dorau <lukasz.dorau@intel.com>
-Cc: Maciej Patelczyk <maciej.patelczyk@intel.com>
-Cc: Dave Jiang <dave.jiang@intel.com>
-Cc: intel-linux-scu@intel.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
----
- drivers/scsi/isci/init.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Mon, Jul 14, 2014 at 12:04 AM, Vidya Sagar <sagar.tv@gmail.com> wrote:
+> From: Vidya Sagar <sagar.tv@gmail.com>
+>
+> 'commit 1a680b7c3258 ("PCI: PCIe links may not get configured for ASPM
+>  under POWERSAVE mode")' moved pcie_aspm_powersave_config_link() out of
+> pci_raw_set_power_state() to pci_set_power_state() which would enable
+> ASPM. But, with 'commit db288c9c5f9d ("PCI / PM: restore the original
+>  behavior of pci_set_power_state()")', which re-introduced the following check
+> ./drivers/pci/pci.c: pci_set_power_state()
+> +   /* Check if we're already there */
+> +   if (dev->current_state == state)
+> +       return 0;
+> in pci_set_power_state(), call to pcie_aspm_powersave_config_link() is never
+> made leaving ASPM broken.
+> Fix it by not returning from when the above condition is true, rather, jump to
+> ASPM configuration code and exit from there eventually.
+>
+> Signed-off-by: Vidya Sagar <sagar.tv@gmail.com>
 
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 695b34e..4198e45 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -356,7 +356,7 @@ static int isci_setup_interrupts(struct pci_dev *pdev)
- 	for (i = 0; i < num_msix; i++)
- 		pci_info->msix_entries[i].entry = i;
- 
--	err = pci_enable_msix(pdev, pci_info->msix_entries, num_msix);
-+	err = pci_enable_msix_exact(pdev, pci_info->msix_entries, num_msix);
- 	if (err)
- 		goto intx;
- 
--- 
-1.7.7.6
+I'm OK with the patch (obviously, since I wrote it), but you neglected
+to copy Matthew and Rafael.  And you forgot to rewrite the changelog.
+I'll take care of the changelog, but I would like to see something
+from Matthew and Rafael, since this is a significant change in how we
+configure ASPM.
 
+Matthew, Rafael, my observation was: "But I wonder if we can untangle
+ASPM from pci_set_power_state().  I don't think they're really
+related.  There are a zillion .suspend() and .resume() methods that
+call pci_set_power_state().  I doubt that we need to do ASPM
+configuration during suspend, and I'm dubious about resume, too."
+
+So the new patch moves the pcie_aspm_powersave_config_link() call out
+of pci_set_power_state() and into do_pci_enable_device().
+
+Bjorn
+
+> ---
+> v2:
+> * Calling ASPM config code is moved from pci_set_power_state() to
+> * do_pci_enable_device()
+>
+>  drivers/pci/pci.c | 12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 1c8592b..81d49d3 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -839,12 +839,6 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>
+>         if (!__pci_complete_power_transition(dev, state))
+>                 error = 0;
+> -       /*
+> -        * When aspm_policy is "powersave" this call ensures
+> -        * that ASPM is configured.
+> -        */
+> -       if (!error && dev->bus->self)
+> -               pcie_aspm_powersave_config_link(dev->bus->self);
+>
+>         return error;
+>  }
+> @@ -1195,12 +1189,18 @@ int __weak pcibios_enable_device(struct pci_dev *dev, int bars)
+>  static int do_pci_enable_device(struct pci_dev *dev, int bars)
+>  {
+>         int err;
+> +       struct pci_dev *bridge;
+>         u16 cmd;
+>         u8 pin;
+>
+>         err = pci_set_power_state(dev, PCI_D0);
+>         if (err < 0 && err != -EIO)
+>                 return err;
+> +
+> +       bridge = pci_upstream_bridge(dev);
+> +       if (bridge)
+> +               pcie_aspm_powersave_config_link(bridge);
+> +
+>         err = pcibios_enable_device(dev, bars);
+>         if (err < 0)
+>                 return err;
+> --
+> 1.8.1.5
+>
