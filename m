@@ -1,99 +1,122 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:62411 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755891AbaGOSgz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jul 2014 14:36:55 -0400
+Received: by mail-ig0-f175.google.com with SMTP id uq10so3245130igb.2
+        for <linux-pci@vger.kernel.org>; Tue, 15 Jul 2014 11:36:54 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <5388095.MjHqc07ajT@vostro.rjw.lan>
-References: <5388095.MjHqc07ajT@vostro.rjw.lan>
+In-Reply-To: <53C36D75.2060002@zoho.com>
+References: <53C36D75.2060002@zoho.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 15 Jul 2014 14:56:29 -0600
-Message-ID: <CAErSpo5BYyC-A3qXE2OsgkkGJg8Lvr2B+ASMJ63N-S9xm8wUow@mail.gmail.com>
-Subject: Re: [PATCH] ACPI / hotplug: Simplify acpi_set_hp_context()
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
+Date: Tue, 15 Jul 2014 12:36:34 -0600
+Message-ID: <CAErSpo50WfC3hVe2YM=-S2b3Eknxzh26i4nz96FA_CKC_16Mvw@mail.gmail.com>
+Subject: Re: Help understanding a possible timing issue in PCIe link training?
+To: Kyle Auble <kyle.auble@zoho.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 14, 2014 at 2:36 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Sun, Jul 13, 2014 at 11:41 PM, Kyle Auble <kyle.auble@zoho.com> wrote:
+> Hello, I wanted to keep this email short, but my questions are all
+> interconnected. My GPU is an on-board Nvidia GeForce 8400M GT
+> (pci id [10de:0426]), and since at least kernel v3.2, the generic x86
+> kernel only loads the device 1 in 10 times. This is still true as of
+> v3.16-rc3. Honestly, it's probably something that the BIOS should
+> prevent, but I've checked and there are no relevant options or upgrades
+> for my BIOS (on a Sony Vaio VGN-FZ260E).
 >
-> Since all of the acpi_set_hp_context() callers pass at least one NULL
-> function pointer and one caller passes NULL function pointers only
-> to it, drop function pointer arguments from acpi_set_hp_context()
-> and make the callers initialize the function pointers in struct
-> acpi_hotplug_context by themselves before passing it to
-> acpi_set_hp_context().
->
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> I've been tracking this problem at launchpad.net on-and-off for a
+> couple years now,
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+This is https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1009312, right?
 
-> ---
->  drivers/acpi/scan.c                |    4 +++-
->  drivers/pci/hotplug/acpiphp_glue.c |    7 ++++---
->  include/acpi/acpi_bus.h            |    8 +-------
->  3 files changed, 8 insertions(+), 11 deletions(-)
+Please collect the following information from two boots of the newest
+kernel you have: the first on battery power where the GPU works fine,
+and the second on AC power where the GPU driver fails to load:
+
+  - complete dmesg log
+  - "lspci -vvxxx" output for the whole system
+
+In addition, please collect an acpidump (this will be the same either
+way, so you only need one copy).
+
+I see that in https://launchpadlibrarian.net/106978987/baddmesg.log,
+you were using the proprietary nvidia driver.  If the problem is that
+that driver isn't loading, there isn't much we can do because it's
+closed-source.  But if you're seeing a problem before loading that
+driver, there might be something we can fix.
+
+Bjorn
+
+> but I don't think it's a common issue, and I have
+> some free time to try resolving it myself now. I'm new to system
+> programming though so I was wondering: Does the issue I'm seeing fit a
+> pattern of some kind? Can someone help me understand how the symptoms
+> fit together and where they come from? Or if I need to do more
+> analysis, what would probably be the best approach?
 >
-> Index: linux-pm/include/acpi/acpi_bus.h
-> ===================================================================
-> --- linux-pm.orig/include/acpi/acpi_bus.h
-> +++ linux-pm/include/acpi/acpi_bus.h
-> @@ -372,15 +372,9 @@ static inline void acpi_set_device_statu
->  }
+> 1.The key thing I discovered is that whenever the GPU does load, a ~6ms
+> gap appears in the dmesg logs during the GPU's pci initialization. When
+> the GPU fails to load though, this gap grows to 30ms. Also, I've
+> pinpointed the delay (with dev_info statements) to:
+> pcie_aspm_configure_common_clock in drivers/pci/pcie/aspm.c
 >
->  static inline void acpi_set_hp_context(struct acpi_device *adev,
-> -                                      struct acpi_hotplug_context *hp,
-> -                                      int (*notify)(struct acpi_device *, u32),
-> -                                      void (*uevent)(struct acpi_device *, u32),
-> -                                      void (*fixup)(struct acpi_device *))
-> +                                      struct acpi_hotplug_context *hp)
->  {
->         hp->self = adev;
-> -       hp->notify = notify;
-> -       hp->uevent = uevent;
-> -       hp->fixup = fixup;
->         adev->hp = hp;
->  }
+> After some googling, I came across powerpoints from the PCI-SIG
+> organization that mention 24ms as precisely the PCIe specified timeout
+> for some states of link training, and sure enough, this function tells
+> the bridge upstream of the GPU to retrain the link. However, even when
+> the GPU fails to load and 30ms is spent in the function, the dev_err
+> towards the end of the function doesn't print.
 >
-> Index: linux-pm/drivers/acpi/scan.c
-> ===================================================================
-> --- linux-pm.orig/drivers/acpi/scan.c
-> +++ linux-pm/drivers/acpi/scan.c
-> @@ -77,7 +77,9 @@ void acpi_initialize_hp_context(struct a
->                                 void (*uevent)(struct acpi_device *, u32))
->  {
->         acpi_lock_hp_context();
-> -       acpi_set_hp_context(adev, hp, notify, uevent, NULL);
-> +       hp->notify = notify;
-> +       hp->uevent = uevent;
-> +       acpi_set_hp_context(adev, hp);
->         acpi_unlock_hp_context();
->  }
->  EXPORT_SYMBOL_GPL(acpi_initialize_hp_context);
-> Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-> +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -80,8 +80,9 @@ static struct acpiphp_context *acpiphp_i
->                 return NULL;
+> 2.Now the first reason I'm pretty certain that this isn't strictly a
+> hardware issue beyond recovery is that there's a workaround. If I make
+> sure my computer is running off of the battery, without AC power, for
+> that first second of kernel initialization, the GPU always loads. I've
+> tried this dozens of times. I don't clearly understand why, but I've
+> read that the power-saving link states do correspond to distinct states
+> in the link-training state machine.
 >
->         context->refcount = 1;
-> -       acpi_set_hp_context(adev, &context->hp, acpiphp_hotplug_notify, NULL,
-> -                           acpiphp_post_dock_fixup);
-> +       context->hp.notify = acpiphp_hotplug_notify;
-> +       context->hp.fixup = acpiphp_post_dock_fixup;
-> +       acpi_set_hp_context(adev, &context->hp);
->         return context;
->  }
+> 3.The next fact (that I have no explanation for) is that the situation
+> reverses almost exactly on the amd64 kernel. The 64-bit kernel boots
+> the GPU fine 9 times out of 10, but there is still the occasional
+> session where the 30ms gap appears and the GPU never loads.
 >
-> @@ -876,7 +877,7 @@ void acpiphp_enumerate_slots(struct pci_
->                         goto err;
+> 4.To keep things simple, I also tried inserting dev_info statements
+> within the different branches of pcie_aspm_configure_common_clock, but
+> this made the problem disappear (and there was only a 6ms gap). I tried
+> once more with fewer statements to reduce overhead, which did increase
+> the time gap to 11ms but still allowed the GPU to load. The idea that
+> more overhead in the function affects timing makes sense to me, but
+> that it decreases time spent in the function is counter-intuitive.
 >
->                 root_context->root_bridge = bridge;
-> -               acpi_set_hp_context(adev, &root_context->hp, NULL, NULL, NULL);
-> +               acpi_set_hp_context(adev, &root_context->hp);
->         } else {
->                 struct acpiphp_context *context;
+> 5.Finally, before I started looking through the code, I tried some git
+> bisections because there was a brief time in summer of 2013 where the
+> problem went away. The commit that resolved it turned out to be:
+> d34883d4e35c0a994e91dd847a82b4c9e0c31d83 by Xiao Guangrong
+> After the problem returned, I tried another bisection, but wound up
+> doing a manual bisection instead of using git bisect (I honestly don't
+> remember why). The commit I found that reintroduced the problem was:
+> ee8209fd026b074bb8eb75bece516a338a281b1b by Andy Shevchenko
 >
+> What stumps me is that neither of these commits appears directly
+> related to the pci subsystem. Because it wasn't a normal bisection that
+> returned Andy's commit and I didn't test that build as much, I still
+> wonder if it's a false positive. However, I've tested a kernel built at
+> Xiao's commit many times so I'm confident it resolved the issue, though
+> my hypothesis is that it's purely by a subtle side effect of how the
+> raw assembly is loaded into memory at startup.
 >
+> Again, I apologize for the length, but I'd be grateful for any advice.
+> I'm not registered on the mailing list so I would appreciate being
+> CC'ed in any replies. I don't plan on becoming a regular kernel hacker
+> anytime soon, just want to do my tiny part to help.
+>
+> Sincerely,
+> Kyle Auble
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
