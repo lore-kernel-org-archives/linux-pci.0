@@ -1,67 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 17 Jul 2014 09:13:20 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: suravee.suthikulpanit@amd.com
-Cc: marc.zyngier@arm.com, mark.rutland@arm.com, pawel.moll@arm.com,
-	Catalin.Marinas@arm.com, Will.Deacon@arm.com, tglx@linutronix.de,
-	Harish.Kasiviswanathan@amd.com,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH 3/4 V3] irqchip: gic: Add supports for ARM GICv2m
- MSI(-X)
-Message-ID: <20140717131320.GM13108@titan.lakedaemon.net>
-References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
- <1404947104-21345-4-git-send-email-suravee.suthikulpanit@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:41690 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752881AbaGOWwE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jul 2014 18:52:04 -0400
+Received: by mail-ie0-f178.google.com with SMTP id tp5so82183ieb.9
+        for <linux-pci@vger.kernel.org>; Tue, 15 Jul 2014 15:52:02 -0700 (PDT)
+Date: Tue, 15 Jul 2014 16:51:59 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI: tegra: Fix license string
+Message-ID: <20140715225159.GB22303@google.com>
+References: <1405061938-2191-1-git-send-email-thierry.reding@gmail.com>
+ <1405061938-2191-2-git-send-email-thierry.reding@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1404947104-21345-4-git-send-email-suravee.suthikulpanit@amd.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1405061938-2191-2-git-send-email-thierry.reding@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 09, 2014 at 06:05:03PM -0500, suravee.suthikulpanit@amd.com wrote:
-> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+On Fri, Jul 11, 2014 at 08:58:58AM +0200, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
 > 
-> ARM GICv2m specification extends GICv2 to support MSI(-X) with
-> a new set of register frames. This patch introduces support for
-> the non-secure GICv2m register frame.
+> The proper MODULE_LICENSE() string for the GPL v2 is "GPL v2", not
+> "GPLv2".
 > 
-> The driver currently matchs "arm,gic-400-plus" in device tree binding,
-> which implements GICv2m.
-> 
-> The "msi-controller" keyword in ARM GIC devicetree binding is used to indentify
-> GIC driver that it should enable MSI(-X) support, The region of GICv2m MSI
-> register frame is specified using the register frame index 4 in the device tree.
-> MSI support is optional.
-> 
-> Each GIC maintains an "msi_chip" structure. To discover the msi_chip,
-> PCI host driver can do the following:
-> 
->     struct device_node *gic_node = of_irq_find_parent(pdev->dev.of_node);
->     pcie_bus->msi_chip = of_pci_find_msi_chip_by_node(gic_node);
-> 
-> Cc: Mark Rutland <Mark.Rutland@arm.com>
-> Cc: Marc Zyngier <Marc.Zyngier@arm.com>
-> Cc: Jason Cooper <jason@lakedaemon.net>
-> Cc: Catalin Marinas <Catalin.Marinas@arm.com>
-> Cc: Will Deacon <Will.Deacon@arm.com>
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
+
+Applied with Jingoo's reviewed-by to pci/host-tegra for v3.17, thanks!
+
 > ---
->  Documentation/devicetree/bindings/arm/gic.txt |  20 +-
->  arch/arm64/Kconfig                            |   1 +
->  drivers/irqchip/Kconfig                       |   7 +
->  drivers/irqchip/Makefile                      |   1 +
->  drivers/irqchip/irq-gic-v2m.c                 | 251 ++++++++++++++++++++++++++
->  drivers/irqchip/irq-gic-v2m.h                 |  13 ++
->  drivers/irqchip/irq-gic.c                     |  23 ++-
->  drivers/irqchip/irq-gic.h                     |  31 +++-
->  8 files changed, 334 insertions(+), 13 deletions(-)
->  create mode 100644 drivers/irqchip/irq-gic-v2m.c
->  create mode 100644 drivers/irqchip/irq-gic-v2m.h
-
-Applied to irqchip/gic with some minor typos fixed in the commit
-message.
-
-thx,
-
-Jason.
+>  drivers/pci/host/pci-tegra.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 7df5aaf58921..14ec5b2c69e0 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -1742,4 +1742,4 @@ module_platform_driver(tegra_pcie_driver);
+>  
+>  MODULE_AUTHOR("Thierry Reding <treding@nvidia.com>");
+>  MODULE_DESCRIPTION("NVIDIA Tegra PCIe driver");
+> -MODULE_LICENSE("GPLv2");
+> +MODULE_LICENSE("GPL v2");
+> -- 
+> 2.0.1
+> 
