@@ -1,70 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:58401 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756831AbaGVVdK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 17:33:10 -0400
-Received: by mail-ig0-f178.google.com with SMTP id uq10so726623igb.11
-        for <linux-pci@vger.kernel.org>; Tue, 22 Jul 2014 14:33:09 -0700 (PDT)
-Date: Tue, 22 Jul 2014 15:33:06 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-pci@vger.kernel.org, jg1.han@samsung.com, mohit.kumar@st.com,
-	linux-kernel@vger.kernel.org, grant.likely@linaro.org
-Subject: Re: [PATCH v3 0/4] dra7: Add PCIe support
-Message-ID: <20140722213306.GB25432@google.com>
-References: <1405587643-13808-1-git-send-email-kishon@ti.com>
+Received: from mail-qg0-f49.google.com ([209.85.192.49]:55207 "EHLO
+	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932994AbaGOUzM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jul 2014 16:55:12 -0400
+Received: by mail-qg0-f49.google.com with SMTP id 63so5269009qgz.8
+        for <linux-pci@vger.kernel.org>; Tue, 15 Jul 2014 13:55:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1405587643-13808-1-git-send-email-kishon@ti.com>
+In-Reply-To: <1740704.38rBxHAFD3@vostro.rjw.lan>
+References: <1740704.38rBxHAFD3@vostro.rjw.lan>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 15 Jul 2014 14:54:51 -0600
+Message-ID: <CAErSpo4WpaRYyU6tmbGiOHFgmV=5bvc-ixTPtCR0cQ6vreaTgA@mail.gmail.com>
+Subject: Re: [PATCH] ACPI / hotplug / PCI: Eliminate acpiphp_dev_to_bridge()
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 17, 2014 at 02:30:39PM +0530, Kishon Vijay Abraham I wrote:
-> Changes from v2:
-> * Added myself as MAINTAINER of pcie dra7xx driver
-> 
-> Changes from v1:
-> * fixed dw_pcie_prog_viewport_io_outbound() to use untranslated address
-> * split dra7xx patch into driver part and documentation part
-> 
-> [1] is split into separate series in order for individual subsystem
-> Maintainers to pick up the patches. This series handles the PCIe
-> support for DRA7.
-> 
-> Rebased to pci -next.
-> 
-> [1] -> https://lkml.org/lkml/2014/5/29/258
-> 
-> Kishon Vijay Abraham I (4):
->   PCI: designware: Configuration space should be specified in 'reg'
->   PCI: designware: use untranslated address while programming ATU
->   Documentation: pci: ti: Add dt binding documentation for PCIe in
->     DRA7xx
->   PCI: host: pcie-dra7xx: add support for pcie-dra7xx controller
-> 
->  .../devicetree/bindings/pci/designware-pcie.txt    |    4 +
->  Documentation/devicetree/bindings/pci/ti-pci.txt   |   59 +++
->  MAINTAINERS                                        |    8 +
->  drivers/pci/host/Kconfig                           |   10 +
->  drivers/pci/host/Makefile                          |    1 +
->  drivers/pci/host/pci-dra7xx.c                      |  458 ++++++++++++++++++++
->  drivers/pci/host/pcie-designware.c                 |   72 ++-
->  drivers/pci/host/pcie-designware.h                 |    4 +
->  8 files changed, 600 insertions(+), 16 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/pci/ti-pci.txt
->  create mode 100644 drivers/pci/host/pci-dra7xx.c
+On Mon, Jul 14, 2014 at 2:34 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> Since acpiphp_dev_to_bridge() is only called by acpiphp_check_host_bridge(),
+> move the code from it to that function directly which reduces the call
+> chain depth and makes the code slightly easier to follow.
+>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-I applied these to pci/host-designware for v3.17.  This will not be in my
-first pull request because I'm going on vacation and won't have time to get
-everything through -next and tagged.  But I'm planning a second pull
-request that will include this.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Mohit, I applied your ack of "use untranslated address" from the v1 posting
-(your mail of Jul 09) to the corresponding patch here, since Kishon didn't
-carry it forward.  Let me know if that's not OK.
-
-I also squashed the last two patches into one so the DT binding
-documentation goes along with the dra7xx driver addition.
-
-Bjorn
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c |   24 ++++++++----------------
+>  1 file changed, 8 insertions(+), 16 deletions(-)
+>
+> Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
+> +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -369,20 +369,6 @@ static acpi_status acpiphp_add_context(a
+>         return AE_OK;
+>  }
+>
+> -static struct acpiphp_bridge *acpiphp_dev_to_bridge(struct acpi_device *adev)
+> -{
+> -       struct acpiphp_bridge *bridge = NULL;
+> -
+> -       acpi_lock_hp_context();
+> -       if (adev->hp) {
+> -               bridge = to_acpiphp_root_context(adev->hp)->root_bridge;
+> -               if (bridge)
+> -                       get_bridge(bridge);
+> -       }
+> -       acpi_unlock_hp_context();
+> -       return bridge;
+> -}
+> -
+>  static void cleanup_bridge(struct acpiphp_bridge *bridge)
+>  {
+>         struct acpiphp_slot *slot;
+> @@ -753,9 +739,15 @@ static void acpiphp_sanitize_bus(struct
+>
+>  void acpiphp_check_host_bridge(struct acpi_device *adev)
+>  {
+> -       struct acpiphp_bridge *bridge;
+> +       struct acpiphp_bridge *bridge = NULL;
+>
+> -       bridge = acpiphp_dev_to_bridge(adev);
+> +       acpi_lock_hp_context();
+> +       if (adev->hp) {
+> +               bridge = to_acpiphp_root_context(adev->hp)->root_bridge;
+> +               if (bridge)
+> +                       get_bridge(bridge);
+> +       }
+> +       acpi_unlock_hp_context();
+>         if (bridge) {
+>                 pci_lock_rescan_remove();
+>
+>
