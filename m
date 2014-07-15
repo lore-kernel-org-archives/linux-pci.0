@@ -1,30 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:60987 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751853AbaGZBXM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jul 2014 21:23:12 -0400
-From: <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 0/3] trivial changes for MSI
-Date: Sat, 26 Jul 2014 09:48:33 +0800
-Message-ID: <1406339316-20163-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:35413 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752881AbaGOWvd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jul 2014 18:51:33 -0400
+Received: by mail-ie0-f171.google.com with SMTP id at1so79636iec.16
+        for <linux-pci@vger.kernel.org>; Tue, 15 Jul 2014 15:51:32 -0700 (PDT)
+Date: Tue, 15 Jul 2014 16:51:29 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI: mvebu: Fix license string
+Message-ID: <20140715225129.GA22303@google.com>
+References: <1405061938-2191-1-git-send-email-thierry.reding@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1405061938-2191-1-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yijing Wang <wangyijing@huawei.com>
+On Fri, Jul 11, 2014 at 08:58:57AM +0200, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
+> 
+> The proper MODULE_LICENSE() string for the GPL v2 is "GPL v2", not
+> "GPLv2".
+> 
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
 
-Yijing Wang (3):
-  PCI/MSI: Clean up the kobject in struct msi_desc
-  PCI/MSI: Remove msi_desc->msi_attrib.pos
-  PCI/MSI: Refactor msi_bus to support EP enable/disable MSI
+Applied with Jingoo's reviewed-by and Thomas' ack to pci/host-mvebu
+for v3.17, thanks!
 
- arch/mips/pci/msi-octeon.c         |    6 +++---
- drivers/pci/host/pcie-designware.c |    2 +-
- drivers/pci/msi.c                  |   13 -------------
- drivers/pci/pci-sysfs.c            |   12 ++++++------
- include/linux/msi.h                |    3 ---
- 5 files changed, 10 insertions(+), 26 deletions(-)
+I'll also post similar patches for drivers/pci/host/pci-host-generic.c and
+drivers/pci/host/pcie-rcar.c, the only other occurrences of "GPLv2" in
+drivers/pci.
 
+> ---
+>  drivers/pci/host/pci-mvebu.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index ce23e0f076b6..a8c6f1a92e0f 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -1094,4 +1094,4 @@ module_platform_driver(mvebu_pcie_driver);
+>  
+>  MODULE_AUTHOR("Thomas Petazzoni <thomas.petazzoni@free-electrons.com>");
+>  MODULE_DESCRIPTION("Marvell EBU PCIe driver");
+> -MODULE_LICENSE("GPLv2");
+> +MODULE_LICENSE("GPL v2");
+> -- 
+> 2.0.1
+> 
