@@ -1,40 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:44233 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932289AbaGWRkg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jul 2014 13:40:36 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Shawn Guo <shawn.guo@freescale.com>, kernel@pengutronix.de
-Subject: [PATCH 1/3] MAINTAINERS: add myself as co-maintainer for i.MX6 PCI driver
-Date: Wed, 23 Jul 2014 19:40:15 +0200
-Message-Id: <1406137217-11294-2-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1406137217-11294-1-git-send-email-l.stach@pengutronix.de>
-References: <1406137217-11294-1-git-send-email-l.stach@pengutronix.de>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:52587 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756416AbaGOW4y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jul 2014 18:56:54 -0400
+Received: by mail-ie0-f170.google.com with SMTP id rl12so84685iec.15
+        for <linux-pci@vger.kernel.org>; Tue, 15 Jul 2014 15:56:54 -0700 (PDT)
+Subject: [PATCH 2/2] PCI: rcar: Fix GPL v2 license string typo
+To: linux-pci@vger.kernel.org, Simon Horman <horms@verge.net.au>,
+	Will Deacon <will.deacon@arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thierry Reding <treding@nvidia.com>,
+	linux-arm-kernel@lists.infradead.org, linux-sh@vger.kernel.org
+Date: Tue, 15 Jul 2014 16:56:52 -0600
+Message-ID: <20140715225652.22578.86359.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140715225503.22578.32174.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140715225503.22578.32174.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
-I've talked privately to Richard about this and he's
-in favor, but still should give an public ACK.
----
- MAINTAINERS | 1 +
- 1 file changed, 1 insertion(+)
+The proper MODULE_LICENSE() string for the GPL v2 is "GPL v2", not "GPLv2".
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 134483f206e4..54c23c4fcbb0 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6775,6 +6775,7 @@ F:	arch/x86/kernel/quirks.c
- PCI DRIVER FOR IMX6
- M:	Richard Zhu <r65037@freescale.com>
- M:	Shawn Guo <shawn.guo@linaro.org>
-+M:	Lucas Stach <l.stach@pengutronix.de>
- L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
--- 
-2.0.1
+Based-on-work-by: Thierry Reding <treding@nvidia.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-rcar.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index f7d3de32c9a0..a393cc60b5a3 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -1003,4 +1003,4 @@ module_platform_driver(rcar_pcie_driver);
+ 
+ MODULE_AUTHOR("Phil Edworthy <phil.edworthy@renesas.com>");
+ MODULE_DESCRIPTION("Renesas R-Car PCIe driver");
+-MODULE_LICENSE("GPLv2");
++MODULE_LICENSE("GPL v2");
 
