@@ -1,91 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:58717 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754231AbaGHWho (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 18:37:44 -0400
-Received: by mail-pa0-f44.google.com with SMTP id rd3so8068880pab.17
-        for <linux-pci@vger.kernel.org>; Tue, 08 Jul 2014 15:37:43 -0700 (PDT)
-Date: Tue, 8 Jul 2014 16:37:37 -0600
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:64743 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757724AbaGOW4s (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jul 2014 18:56:48 -0400
+Received: by mail-ig0-f176.google.com with SMTP id hn18so3440108igb.15
+        for <linux-pci@vger.kernel.org>; Tue, 15 Jul 2014 15:56:47 -0700 (PDT)
+Subject: [PATCH 1/2] PCI: generic: Fix GPL v2 license string typo
+To: linux-pci@vger.kernel.org, Simon Horman <horms@verge.net.au>,
+	Will Deacon <will.deacon@arm.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 8/9] pci: Add support for creating a generic
- host_bridge from device tree
-Message-ID: <20140708223737.GA19512@google.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-9-git-send-email-Liviu.Dudau@arm.com>
- <20140708010103.GD22939@google.com>
- <20140708102940.GZ6501@e106497-lin.cambridge.arm.com>
- <20140708213305.GB4555@google.com>
- <20140708222738.GA4980@e106497-lin.cambridge.arm.com>
+Cc: Thierry Reding <treding@nvidia.com>,
+	linux-arm-kernel@lists.infradead.org, linux-sh@vger.kernel.org
+Date: Tue, 15 Jul 2014 16:56:45 -0600
+Message-ID: <20140715225645.22578.64865.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140715225503.22578.32174.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140715225503.22578.32174.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140708222738.GA4980@e106497-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 08, 2014 at 11:27:38PM +0100, Liviu Dudau wrote:
-> On Tue, Jul 08, 2014 at 10:33:05PM +0100, Bjorn Helgaas wrote:
-> > On Tue, Jul 08, 2014 at 11:29:40AM +0100, Liviu Dudau wrote:
-> > > On Tue, Jul 08, 2014 at 02:01:04AM +0100, Bjorn Helgaas wrote:
-> > > > On Tue, Jul 01, 2014 at 07:43:33PM +0100, Liviu Dudau wrote:
-> > > > > ...
-> > > > > +int __weak pcibios_fixup_bridge_ranges(struct list_head *resources)
-> > > > > +{
-> > > > > +     return 0;
-> > > > > +}
-> > > > 
-> > > > I'd wait to add this until there's a platform that needs to implement it.
-> > > > Splitting it out will make this patch that much smaller and easier to
-> > > > understand.
-> > > 
-> > > I need this as this is the default implementation (i.e. do nothing). Otherwise the
-> > > link phase will give errors. 
-> > 
-> > I meant that you could remove the default implementation *and* the call of
-> > it, since it currently does nothing.
-> 
-> True. But it looks like converting Will's pci-host-generic.c driver will make use of this.
+The proper MODULE_LICENSE() string for the GPL v2 is "GPL v2", not "GPLv2".
 
-I think we should move this part of the patch to the conversion of
-that driver.  That will keep related changes grouped together, which 
-makes them easier to review and easier to backport, e.g., to distro
-kernels.
+Based-on-work-by: Thierry Reding <treding@nvidia.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-host-generic.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> > > > > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > > > > index 7e7b939..556dc5f 100644
-> > > > > --- a/include/linux/pci.h
-> > > > > +++ b/include/linux/pci.h
-> > > > > @@ -402,6 +402,7 @@ struct pci_host_bridge {
-> > > > >       struct device dev;
-> > > > >       struct pci_bus *bus;            /* root bus */
-> > > > >       int domain_nr;
-> > > > > +     resource_size_t io_base;        /* physical address for the start of I/O area */
-> > > > 
-> > > > I don't see where this is used yet.
-> > > 
-> > > It's used in pci_host_bridge_of_get_ranges() (earlier in this patch).
-> > 
-> > of_create_pci_host_bridge() fills in bridge->io_base, but I don't see
-> > anything that ever *reads* bridge->io_base.
-> 
-> Ah, understood. It is used by the host bridge drivers to set their ATR registers to the
-> correct CPU address values.
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 44fe6aa6a43f..3d2076f59911 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -385,4 +385,4 @@ module_platform_driver(gen_pci_driver);
+ 
+ MODULE_DESCRIPTION("Generic PCI host driver");
+ MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
+-MODULE_LICENSE("GPLv2");
++MODULE_LICENSE("GPL v2");
 
-Same applies here.
-
-Bjorn
