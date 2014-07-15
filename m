@@ -1,54 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f172.google.com ([209.85.220.172]:35801 "EHLO
-	mail-vc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932908AbaGQQrP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jul 2014 12:47:15 -0400
-Received: by mail-vc0-f172.google.com with SMTP id im17so5184917vcb.17
-        for <linux-pci@vger.kernel.org>; Thu, 17 Jul 2014 09:47:14 -0700 (PDT)
+Received: from fw-tnat.austin.arm.com ([217.140.110.23]:42274 "EHLO
+	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932512AbaGOJKH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jul 2014 05:10:07 -0400
+Date: Tue, 15 Jul 2014 10:09:40 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 9/9] pci: Remap I/O bus resources into CPU space with
+ pci_remap_iospace()
+Message-ID: <20140715090939.GA18203@arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-10-git-send-email-Liviu.Dudau@arm.com>
+ <20140714165443.GI1112@arm.com>
+ <7345495.UDsgOtKzyQ@wuerfel>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUWnW0uSBN2Pmt6t2EADQysf3=RGqj0c1Bjopgf1qbMuw@mail.gmail.com>
-References: <CAKAYmMLfxkmaVxaPDd6z=B0ESQ3mR=dUG4OFFgEoy0295qLYgg@mail.gmail.com>
-	<CAKAYmMLhPhukBbR8NhPk3EigmvwiX+DEGj-Mod7zpHMnZKRsLw@mail.gmail.com>
-	<CAErSpo7vooChRfSF6oY8GcqVYZruv-7_D0zm3a4M_KDVMbWNiA@mail.gmail.com>
-	<CAE9FiQWomktcpSHeFwxWBLXmAsbdXEHv6sOrNXodobkBw=mRKA@mail.gmail.com>
-	<CAE9FiQW+GbprQZNvHC-ek1cSydP3KWcjgAU0ii5_jECC1+tXrg@mail.gmail.com>
-	<CAKAYmMJf=TdpdyALZQOoAmdgPjpzFu-OP7rMLzyaFRno-36F6Q@mail.gmail.com>
-	<CAE9FiQUn4QByiaPqKnk=CCmCXsnaqVfNCjynoyNM3FucrKGhew@mail.gmail.com>
-	<CAKAYmMJOWtn268Kipwm6JVamrsrfxCG=Ju8E56-ZCXctBn+12A@mail.gmail.com>
-	<CAE9FiQUWnW0uSBN2Pmt6t2EADQysf3=RGqj0c1Bjopgf1qbMuw@mail.gmail.com>
-Date: Thu, 17 Jul 2014 09:47:13 -0700
-Message-ID: <CAKAYmM+3oWjG-3P11MFVgv2w4x1vqhUr_Ho=pvabpb6sR_doaQ@mail.gmail.com>
-Subject: Re: Error assigning BAR 0 to hotplugged device
-From: Chuck Tuffli <ctuffli@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <7345495.UDsgOtKzyQ@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 17, 2014 at 9:33 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Jul 17, 2014 at 8:08 AM, Chuck Tuffli <ctuffli@gmail.com> wrote:
->> On Wed, Jul 16, 2014 at 7:15 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>> If the BIOS doesn't allocate enough memory mapped IO resources for
->>>> devices, it sounds like the kernel can't really fix this problem,
->>>> right?
->>>
->>> Yes. You need to fix BIOS at first.
->>>
->>> So it will be final products or just development prototype?
->>
->> This is a prototype development system I'm using to develop software.
->> Since a BIOS fix isn't likely to happen, are there existing features I
->> can use to work around this problem?
->
-> You need have a scripts with kexec to reload kernel.
-> 1. make sure that card is the slot 9b:15.0
-> 2. boot system with kernel.
-> 3. unload or unbind the drivers for devices under 80:03.0
-> 4. use setpci to clear bridge io, mmio, mmio pref bars with 80:03.0
-> 5. kexec load kernel and start kernel again.
+On Mon, Jul 14, 2014 at 07:15:48PM +0100, Arnd Bergmann wrote:
+> On Monday 14 July 2014 17:54:43 Catalin Marinas wrote:
+> > On Tue, Jul 01, 2014 at 07:43:34PM +0100, Liviu Dudau wrote:
+> > > Introduce a default implementation for remapping PCI bus I/O resources
+> > > onto the CPU address space. Architectures with special needs may
+> > > provide their own version, but most should be able to use this one.
+> > [...]
+> > > +/**
+> > > + *   pci_remap_iospace - Remap the memory mapped I/O space
+> > > + *   @res: Resource describing the I/O space
+> > > + *   @phys_addr: physical address where the range will be mapped.
+> > > + *
+> > > + *   Remap the memory mapped I/O space described by the @res
+> > > + *   into the CPU physical address space. Only architectures
+> > > + *   that have memory mapped IO defined (and hence PCI_IOBASE)
+> > > + *   should call this function.
+> > > + */
+> > > +int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+> > > +{
+> > > +     int err = -ENODEV;
+> > > +
+> > > +#ifdef PCI_IOBASE
+> > > +     if (!(res->flags & IORESOURCE_IO))
+> > > +             return -EINVAL;
+> > > +
+> > > +     if (res->end > IO_SPACE_LIMIT)
+> > > +             return -EINVAL;
+> > > +
+> > > +     err = ioremap_page_range(res->start + (unsigned long)PCI_IOBASE,
+> > > +                             res->end + 1 + (unsigned long)PCI_IOBASE,
+> > > +                             phys_addr, __pgprot(PROT_DEVICE_nGnRE));
+> > 
+> > Except that PROT_DEVICE_nGnRE is arm64 only. I think that's a function
+> > that should remain arch specific.
+> > 
+> 
+> How about #defining a macro with the correct pgprot value in asm/pci.h
+> or asm/pgtable.h?
+> We can provide a default for that in another architecture independent
+> location.
 
-Perfect. Thanks so much for your explanations and advice!
+That should work. We already have pgprot_noncached/writecombine in
+asm-generic/pgtable.h which all architectures seem to include. The
+default can be pgprot_noncached and we would invoke it as
+pgprot_device(PAGE_KERNEL).
 
---chuck
+-- 
+Catalin
