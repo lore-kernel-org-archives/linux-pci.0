@@ -1,93 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1lp0145.outbound.protection.outlook.com ([207.46.163.145]:53227
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933057AbaGQOss (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 Jul 2014 10:48:48 -0400
-Message-ID: <53C7E23D.1050900@amd.com>
-Date: Thu, 17 Jul 2014 09:48:29 -0500
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Received: from mail.active-venture.com ([67.228.131.205]:58315 "EHLO
+	mail.active-venture.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758042AbaGOJDZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jul 2014 05:03:25 -0400
+Message-ID: <53C4EE5C.5020407@roeck-us.net>
+Date: Tue, 15 Jul 2014 02:03:24 -0700
+From: Guenter Roeck <linux@roeck-us.net>
 MIME-Version: 1.0
-To: Mark Rutland <mark.rutland@arm.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Marc Zyngier <Marc.Zyngier@arm.com>
-CC: Pawel Moll <Pawel.Moll@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 0/4 V3] irqchip: gic: Introduce ARM GICv2m MSI(-X) support
-References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
- <20140717131854.GN13108@titan.lakedaemon.net>
- <20140717135534.GM30313@leverpostej>
-In-Reply-To: <20140717135534.GM30313@leverpostej>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Clemens Ladisch <clemens@ladisch.de>
+CC: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	Borislav Petkov <bp@alien8.de>, jdelvare@suse.de,
+	rdunlap@infradead.org, bhelgaas@google.com,
+	lm-sensors@lm-sensors.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] hwmon, k10temp: Add support for AMD F15h M60h processor
+References: <1405369388-12729-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <20140714195128.GA25124@pd.tnic> <53C43BDF.2070403@ladisch.de> <20140714203336.GA30926@roeck-us.net> <53C4DB2D.80406@ladisch.de>
+In-Reply-To: <53C4DB2D.80406@ladisch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/17/2014 8:55 AM, Mark Rutland wrote:
-> Hi Jason,
->
-> On Thu, Jul 17, 2014 at 02:18:54PM +0100, Jason Cooper wrote:
->> On Wed, Jul 09, 2014 at 06:05:00PM -0500, suravee.suthikulpanit@amd.com wrote:
->>> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+On 07/15/2014 12:41 AM, Clemens Ladisch wrote:
+> Guenter Roeck wrote:
+>> On Mon, Jul 14, 2014 at 10:21:51PM +0200, Clemens Ladisch wrote:
+>>> Borislav Petkov wrote:
+>>>> On Mon, Jul 14, 2014 at 03:23:08PM -0500, Aravind Gopalakrishnan wrote:
+>>>>> +	if (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model == 0x60) {
+>>>>> +		pci_bus_write_config_dword(pdev->bus, PCI_DEVFN(0, 0),
+>>>>> +					   NB_SMU_IND_ADDR, IND_ADDR_OFFSET);
+>>>>> +		pci_bus_read_config_dword(pdev->bus, PCI_DEVFN(0, 0),
+>>>>> +					  NB_SMU_IND_DATA, &regval);
 >>>
->>> This patch set introduces support for MSI(-X) in GICv2m specification,
->>> which is implemented in some variation of GIC400.
+>>> How do you prevent races with any other code that accesses some indirect
+>>> register?
 >>>
->>> This depends on and has been tested with the V7 of"Add support for PCI in AArch64"
->>> (https://lkml.org/lkml/2014/3/14/320).
->>>
->>> Changes in V3:
->>>      * Rebase to git://git.infradead.org/users/jcooper/linux.git irqchip/gic
->>>        (per Jason Cooper request)
->>>      * Misc fix/clean up per Mark Rutland comments
->>>      * Minor Clean up in the driver/irqchip/irq-gic-v2m.c: alloc_msi_irqs()
->>>      * Patch 4 is new to the series:
->>>          * Add ARM64-specific version arch_setup_msi_irqs() to allow support
->>>            for Multiple MSI.
->>>          * Add support for Multiple MSI for GICv2m.
->>>
->>> Suravee Suthikulpanit (4):
->>>    irqchip: gic: Add binding probe for ARM GIC400
->>>    irqchip: gic: Restructuring ARM GIC code
->>>    irqchip: gic: Add supports for ARM GICv2m MSI(-X)
->>>    irqchip: gicv2m: Add support for multiple MSI for ARM64 GICv2m
->>
->> Ok, patch #1 applied to irqchip/urgent.  Patches 2 and 3 applied to
->> irqchip/gic with irqchip/urgent merged in.  To facilitate
->> testing/merging, I've prepared an unsigned tag for you on the
->> irqchip/gic branch:
+>> I just wanted to ask exactly the same question. I think this will need
+>> locking.
 >
-> I'm a little concerned that this is all going through for v3.17 without
-> a {Reviewed,Acked}-by from Marc or anyone working with GIC{,v2m}.
-
-> While his comments on v1 have been addressed, he has not had a chance to
-> acknowledge the solutions. I appreciate Marc's holiday is unfortunately
-> timed.
+> If there actually is any other code; these indirect SMU registers appear
+> to be mostly undocumented and to be intended to be used by the BIOS.
+> (Which makes me wonder why the temperature sensor was moved there.)
 >
-> I also have an open concern with the binding with regard to the
-> orthogonality of GICV GICH and the MSI registers.
+Scary. Does that mean there is a chance they may get used through ACPI ?
 
-The MSI part is normally enabled from the optional "msi-controller" 
-keyword. It should not really matter which compatible ID it uses.
-
-Ooops. I noticed that was accidentally dropped the check for 
-"msi-controller" in the gicv2m_of_init() function.  I'll send a follow 
-up patch to fix this.
-
-> Suravee, do you need this urgently for v3.17? I was under the impression
-> that we wouldn't have full PCIe support by then.
+> Anyway, if a lock is needed, it looks as if it could go into a helper
+> function such as "amd_nb_smu_ind_read()" in arch/x86/kernel/amd_nb.c.
 >
+Yes, something like that.
 
-PCI is the dependency for this patch to function.  So, it should be 
-aligned with upstreaming of PCI patches.
-
-Suravee
+Guenter
 
