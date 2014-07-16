@@ -1,83 +1,37 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 8 Jul 2014 23:48:47 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 6/9] pci: Introduce a domain number for
- pci_host_bridge.
-Message-ID: <20140708224847.GC4980@e106497-lin.cambridge.arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-7-git-send-email-Liviu.Dudau@arm.com>
- <20140708005954.GC22939@google.com>
- <20140708104655.GC6501@e106497-lin.cambridge.arm.com>
- <CAErSpo75ovmGoeSHKJN0nckGDy-0gpn8kLPfHQ79CtcXxhPydw@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:14374 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751663AbaGPDe6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Jul 2014 23:34:58 -0400
+Message-ID: <53C5F2C2.20707@linux.intel.com>
+Date: Wed, 16 Jul 2014 11:34:26 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo75ovmGoeSHKJN0nckGDy-0gpn8kLPfHQ79CtcXxhPydw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Need advices about PCI IRQ reference count tracking
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 08, 2014 at 07:41:50PM +0100, Bjorn Helgaas wrote:
-> On Tue, Jul 8, 2014 at 4:46 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> > On Tue, Jul 08, 2014 at 01:59:54AM +0100, Bjorn Helgaas wrote:
-> 
-> >> I wonder if it would help to make a weak pci_domain_nr() function that
-> >> returns "bridge->domain_nr".  Then each arch could individually drop its
-> >> pci_domain_nr() definition as it was converted, e.g., something like this:
-> >>
-> >>   - Convert every arch pci_domain_nr() from a #define to a non-inline
-> >>     function
-> >>   - Add bridge.domain_nr, initialized from pci_domain_nr()
-> >>   - Add a weak generic pci_domain_nr() that returns bridge.domain_nr
-> >>   - Add a way to create a host bridge in a specified domain, so we can
-> >>     initialize bridge.domain_nr without using pci_domain_nr()
-> >>   - Convert each arch to use the new creation mechanism and drop its
-> >>     pci_domain_nr() implementation
-> >
-> > I will try to propose a patch implementing this.
-> 
-> I think this is more of an extra credit, cleanup sort of thing.  I
-> don't think it advances your primary goal of (I think) getting arm64
-> PCI support in.  So my advice is to not worry about unifying domain
-> handling until later.
+Hi Bjorn,
+	When enabling ACPI based IOAPIC hotplug, we encountered an
+issue with PCI IRQ reference count tracking and need your advices.
+	In order to hot-remove an IOAPIC, we need to track and keep
+balance of IOAPIC pin usage count. But acpi_pci_irq_enable() may
+be called twice for a PCI device,
+1) pci_acpi_init() if pci_routeirq is true
+2) pci_enable_device()
 
-Getting arm64 supported *is* my main goal. But like you have stated in your
-review of v7, you wanted to see another architecture converted as a guarantee
-of "genericity" (for lack of a better word) for my patches. The one architecture
-I've set my eyes on is microblaze, and that one uses pci_scan_root_bus()
-rather than pci_create_root_bus() so I don't have any opportunity to pass the
-domain number or any additional info (like the sysdata pointer that we were
-talking about) to the pci_host_bridge structure unless I do this cleanup.
+So in function acpi_pci_irq_enable(), we need a way to track whether
+an IOAPIC IRQ has been assigned to the PCI device. Previously we check
+"if (dev->irq > 0)" for that, but that's wrong because dev->irq may
+be set to non-zero in pci_read_irq() if BIOS has already assigned
+a legacy IRQ for the device. So is it OK to add a flag into pci_dev
+to track this information?
 
-Best regards,
-Liviu
+Another possible workaround is to disable IOAPIC hotplug when
+pci_routeirq is set, but that sounds not the best solution.
 
-
-> 
-> Bjorn
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+Regards!
+Gerry
