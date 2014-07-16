@@ -1,107 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:61153 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752721AbaGHCHo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jul 2014 22:07:44 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Wuyun <wuyun.wu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v3 1/6] PCI/MSI: MSI cleanup, msi_setup_entry()
-Date: Tue, 8 Jul 2014 10:07:23 +0800
-Message-ID: <1404785243-6040-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:24234 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965798AbaGPSFb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Jul 2014 14:05:31 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Vikas Chaudhary <vikas.chaudhary@qlogic.com>,
+	iscsi-driver@qlogic.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 22/23] qla4xxx: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Wed, 16 Jul 2014 20:05:26 +0200
+Message-Id: <0496ccbc0f203afaeeb7758c146b93c2f387684c.1405533479.git.agordeev@redhat.com>
+In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move MSI entry stuff to a new function
-msi_setup_entry(), simplify msi_capability_init()
-code like MSI-X do.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Cc: iscsi-driver@qlogic.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Acked-By: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/pci/msi.c |   51 +++++++++++++++++++++++++++++++++------------------
- 1 files changed, 33 insertions(+), 18 deletions(-)
+ drivers/scsi/qla4xxx/ql4_nx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 50a7e4e..c306883 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -581,6 +581,38 @@ error_attrs:
- 	return ret;
- }
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index 9dbdb4b..7c33658 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -4221,7 +4221,7 @@ qla4_8xxx_enable_msix(struct scsi_qla_host *ha)
+ 	for (i = 0; i < QLA_MSIX_ENTRIES; i++)
+ 		entries[i].entry = qla4_8xxx_msix_entries[i].entry;
  
-+static struct msi_desc *msi_setup_entry(struct pci_dev *dev)
-+{
-+	u16 control;
-+	struct msi_desc *entry;
-+
-+	/* MSI Entry Initialization */
-+	entry = alloc_msi_entry(dev);
-+	if (!entry)
-+		return NULL;
-+
-+	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
-+
-+	entry->msi_attrib.is_msix	= 0;
-+	entry->msi_attrib.is_64		= !!(control & PCI_MSI_FLAGS_64BIT);
-+	entry->msi_attrib.entry_nr	= 0;
-+	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
-+	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
-+	entry->msi_attrib.pos		= dev->msi_cap;
-+	entry->msi_attrib.multi_cap	= (control & PCI_MSI_FLAGS_QMASK) >> 1;
-+
-+	if (control & PCI_MSI_FLAGS_64BIT)
-+		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
-+	else
-+		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_32;
-+
-+	/* Save the initial mask status */
-+	if (entry->msi_attrib.maskbit)
-+		pci_read_config_dword(dev, entry->mask_pos, &entry->masked);
-+
-+	return entry;
-+}
-+
- /**
-  * msi_capability_init - configure device's MSI capability structure
-  * @dev: pointer to the pci_dev data structure of MSI device function
-@@ -596,32 +628,15 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- {
- 	struct msi_desc *entry;
- 	int ret;
--	u16 control;
- 	unsigned mask;
- 
- 	msi_set_enable(dev, 0);	/* Disable MSI during set up */
- 
--	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
--	/* MSI Entry Initialization */
--	entry = alloc_msi_entry(dev);
-+	entry = msi_setup_entry(dev);
- 	if (!entry)
- 		return -ENOMEM;
- 
--	entry->msi_attrib.is_msix	= 0;
--	entry->msi_attrib.is_64		= !!(control & PCI_MSI_FLAGS_64BIT);
--	entry->msi_attrib.entry_nr	= 0;
--	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
--	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
--	entry->msi_attrib.pos		= dev->msi_cap;
--	entry->msi_attrib.multi_cap	= (control & PCI_MSI_FLAGS_QMASK) >> 1;
--
--	if (control & PCI_MSI_FLAGS_64BIT)
--		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
--	else
--		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_32;
- 	/* All MSIs are unmasked by default, Mask them all */
--	if (entry->msi_attrib.maskbit)
--		pci_read_config_dword(dev, entry->mask_pos, &entry->masked);
- 	mask = msi_mask(entry->msi_attrib.multi_cap);
- 	msi_mask_irq(entry, mask, mask);
- 
+-	ret = pci_enable_msix(ha->pdev, entries, ARRAY_SIZE(entries));
++	ret = pci_enable_msix_exact(ha->pdev, entries, ARRAY_SIZE(entries));
+ 	if (ret) {
+ 		ql4_printk(KERN_WARNING, ha,
+ 		    "MSI-X: Failed to enable support -- %d/%d\n",
 -- 
-1.7.1
-
+1.7.7.6
 
