@@ -1,108 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:51804 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965035AbaGCJxG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 05:53:06 -0400
-Date: Thu, 3 Jul 2014 10:53:02 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	patches <patches@apm.com>
-Subject: Re: [PATCH v8 2/9] pci: Export find_pci_host_bridge() function.
-Message-ID: <20140703095302.GY2173@e106497-lin.cambridge.arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-3-git-send-email-Liviu.Dudau@arm.com>
- <CACoXjck+aU33=kSy=KCGABNXNR7tj2KndAiBqEDK7wQ_Qei80Q@mail.gmail.com>
- <7101568.8DVJFku5jp@wuerfel>
- <CACoXjcn5wdOwQx6PSfhTyuo-FQqBL62o-MNj3i6EfENRnUNt6g@mail.gmail.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:49646 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753823AbaGPVML (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 17:12:11 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Vidya Sagar <sagar.tv@gmail.com>, matthew.garrett@nebula.com,
+	nchumbalkar@lenovo.com, thierry.reding@gmail.com,
+	swarren@nvidia.com, linux-pci@vger.kernel.org, kthota@nvidia.com,
+	linux-kernel@vger.kernel.org, vidyas@nvidia.com
+Subject: Re: [PATCH v3] PCI: enable ASPM configuration in PCIE POWERSAVE mode
+Date: Wed, 16 Jul 2014 23:30:27 +0200
+Message-ID: <1480976.v66rlUIZnu@vostro.rjw.lan>
+In-Reply-To: <20140716193637.GA14366@google.com>
+References: <1405505022-7593-1-git-send-email-vidyas@nvidia.com> <20140716193637.GA14366@google.com>
 MIME-Version: 1.0
-In-Reply-To: <CACoXjcn5wdOwQx6PSfhTyuo-FQqBL62o-MNj3i6EfENRnUNt6g@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 02, 2014 at 09:43:41PM +0100, Tanmay Inamdar wrote:
-> On Wed, Jul 2, 2014 at 12:12 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Wednesday 02 July 2014 11:06:38 Tanmay Inamdar wrote:
-> >> On Tue, Jul 1, 2014 at 11:43 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> >> > This is a useful function and we should make it visible outside the
-> >> > generic PCI code. Export it as a GPL symbol.
-> >> >
-> >> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> >> > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> >> > ---
-> >> >  drivers/pci/host-bridge.c | 3 ++-
-> >> >  1 file changed, 2 insertions(+), 1 deletion(-)
-> >> >
-> >> > diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> >> > index 0e5f3c9..36c669e 100644
-> >> > --- a/drivers/pci/host-bridge.c
-> >> > +++ b/drivers/pci/host-bridge.c
-> >> > @@ -16,12 +16,13 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
-> >> >         return bus;
-> >> >  }
-> >> >
-> >> > -static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-> >> > +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-> >> >  {
-> >> >         struct pci_bus *root_bus = find_pci_root_bus(bus);
-> >> >
-> >> >         return to_pci_host_bridge(root_bus->bridge);
-> >> >  }
-> >> > +EXPORT_SYMBOL_GPL(find_pci_host_bridge);
-> >>
-> >> Is there any specific reason behind making this symbol GPL? I think
-> >> the other functions in this file are just EXPORT_SYMBOL. Ultimately
-> >> companies which have non gpl Linux modules (nvidia) will face issue
-> >> using this API.
-> >>
-> >> The same applies to 'of_create_pci_host_bridge'.
-> >
-> > I think EXPORT_SYMBOL_GPL() is better here. The new symbols are unlikely
-> > to be used by a peripheral device driver, and PCI host controllers are
-> > already restricted by EXPORT_SYMBOL_GPL.
-> >
+On Wednesday, July 16, 2014 01:36:37 PM Bjorn Helgaas wrote:
+> On Wed, Jul 16, 2014 at 03:33:42PM +0530, Vidya Sagar wrote:
+> > From: Vidya Sagar <sagar.tv@gmail.com>
+> > 
+> > Commit 1a680b7c3258 ("PCI: PCIe links may not get configured for ASPM
+> >  under POWERSAVE mode") moved pcie_aspm_powersave_config_link() out of
+> > pci_raw_set_power_state() to pci_set_power_state() which would enable
+> > ASPM. But, with Commit db288c9c5f9d ("PCI / PM: restore the original
+> >  behavior of pci_set_power_state()"), which re-introduced the following check
+> > ./drivers/pci/pci.c: pci_set_power_state()
+> > 
+> > +	/* Check if we're already there */
+> > +	if (dev->current_state == state)
+> > +	   return 0;
+> > 
+> > in pci_set_power_state(), call to pcie_aspm_powersave_config_link() is never
+> > made leaving ASPM broken.
+> > Fix it by configuring links for ASPM in do_pci_enable_device() instead of
+> > pci_set_power_state()
+> > 
+> > Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> > Signed-off-by: Vidya Sagar <sagar.tv@gmail.com>
 > 
-> You are right as long as the functions are not used directly. But what
-> if GPL functions are called indirectly.  For example, 'pci_domain_nr'
-> implementation in Liviu's V7 series calls 'find_pci_host_bridge'.
-
-I will not be drawn into the discussion of EXPORT_SYMBOL vs EXPORT_SYMBOL_GPL()
-other than to say that I don't understand what is so secret in implementing
-a standard. I do not want to support host bridge drivers that are not open
-source.
-
-Best regards,
-Liviu
-
+> I applied this to pci/misc for v3.17 with the following changelog:
 > 
-> > nvidia will certainly not do a PCI host controller driver that is not
-> > upstream or not GPL-compatible.
-> >
-> >         Arnd
+> It would still make me feel better if Matthew and/or Rafael acked this.
 > 
+>     PCI: Configure ASPM when enabling device
+>     
+>     We can't do ASPM configuration at enumeration-time because enabling it
+>     makes some defective hardware unresponsive, even if ASPM is disabled later
+>     (see 41cd766b0659 ("PCI: Don't enable aspm before drivers have had a chance
+>     to veto it").  Therefore, we have to do it after a driver claims the
+>     device.
+>     
+>     We previously configured ASPM in pci_set_power_state(), but that's not a
+>     very good place because it's not really related to setting the PCI device
+>     power state, and doing it there means:
+>     
+>       - We incorrectly skipped ASPM config when setting a device that's
+>         already in D0 to D0.
+>     
+>       - We unnecessarily configured ASPM when setting a device to a low-power
+>         state (the ASPM feature only applies when the device is in D0).
+>     
+>       - We unnecessarily configured ASPM when called from a .resume() method
+>         (ASPM configuration needs to be restored during resume, but I think
+>         pci_restore_pcie_state() should already do this).
+>     
+>     Move ASPM configuration from pci_set_power_state() to
+>     do_pci_enable_device() so we do it when a driver enables a device.
+>     
+>     [bhelgaas: changelog]
+>     Link: https://bugzilla.kernel.org/show_bug.cgi?id=79621
+> 
+> It would still make me feel better if Matthew and/or Rafael chimed in to
+> make sure this is sane.
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+I like the change, but I'm not sure whether or not it will work for everyone.
+
+The only way to verify that seems to be to apply it, however.
+
+Rafael
 
