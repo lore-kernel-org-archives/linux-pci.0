@@ -1,131 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:59317 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751224AbaGLALL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 20:11:11 -0400
-Message-ID: <53BFA056.1010507@huawei.com>
-Date: Fri, 11 Jul 2014 16:29:10 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from server721-han.de-nserver.de ([85.158.180.102]:36455 "EHLO
+	server721-han.de-nserver.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755428AbaGPIHD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 04:07:03 -0400
+Message-ID: <53C63139.7000608@kristov.de>
+Date: Wed, 16 Jul 2014 10:00:57 +0200
+From: Christoph Schulz <develop@kristov.de>
 MIME-Version: 1.0
-To: Sebastian Ott <sebott@linux.vnet.ibm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Gerald Schaefer <gerald.schaefer@de.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	<linux-s390@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Wuyun <wuyun.wu@huawei.com>
-Subject: Re: [PATCH v3 2/6] s390/MSI: Use standard mask and unmask funtions
-References: <1404785285-6408-1-git-send-email-wangyijing@huawei.com> <alpine.LFD.2.11.1407110942310.1620@denkbrett>
-In-Reply-To: <alpine.LFD.2.11.1407110942310.1620@denkbrett>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: linux-kernel@vger.kernel.org
+CC: linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Robert Resch <fli4l@robert.reschpara.de>
+Subject: [PATCH 1/1] x86: don't exclude low BIOS area when allocating address
+ space for non-PCI cards
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> mask status except we know need not to cache it, like in
->> pci_msi_shutdown. So use the standard functions to replace
->> the local is safe.
-> 
-> Patch applied! (I had to fix another inverted pair in struct irq_chip
-> first.)
+From: Christoph Schulz <develop@kristov.de>
 
-Thanks very much, I'm very sorry for my carelessness.
+Commit 30919b0bf356a8ee0ef4f7d38ca8ad99b96820b2 ("x86: avoid low BIOS area when
+allocating address space") moved the test for resource allocations that fall
+within the first 1MB of address space from the PCI-specific path to a generic
+path, such that all resource allocations will avoid this area. However, this
+breaks ISA cards which need to allocate a memory region within the first 1MB.
+An example is the i82365 PCMCIA controller and derivatives like the Ricoh
+RF5C296/396 which map part of the PCMCIA socket memory address space into the
+first 1MB of system memory address space. They do not work anymore as no usable
+memory region exists due to this change:
 
-Thanks!
-Yijing.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  arch/s390/pci/pci.c |   49 ++++++-------------------------------------------
->>  1 files changed, 6 insertions(+), 43 deletions(-)
->>
->> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
->> index 9ddc51e..f715031 100644
->> --- a/arch/s390/pci/pci.c
->> +++ b/arch/s390/pci/pci.c
->> @@ -48,13 +48,10 @@
->>  static LIST_HEAD(zpci_list);
->>  static DEFINE_SPINLOCK(zpci_list_lock);
->>
->> -static void zpci_enable_irq(struct irq_data *data);
->> -static void zpci_disable_irq(struct irq_data *data);
->> -
->>  static struct irq_chip zpci_irq_chip = {
->>  	.name = "zPCI",
->> -	.irq_unmask = zpci_enable_irq,
->> -	.irq_mask = zpci_disable_irq,
->> +	.irq_unmask = mask_msi_irq,
->> +	.irq_mask = unmask_msi_irq,
->>  };
->>
->>  static DECLARE_BITMAP(zpci_domain, ZPCI_NR_DEVICES);
->> @@ -244,43 +241,6 @@ static int zpci_cfg_store(struct zpci_dev *zdev, int offset, u32 val, u8 len)
->>  	return rc;
->>  }
->>
->> -static int zpci_msi_set_mask_bits(struct msi_desc *msi, u32 mask, u32 flag)
->> -{
->> -	int offset, pos;
->> -	u32 mask_bits;
->> -
->> -	if (msi->msi_attrib.is_msix) {
->> -		offset = msi->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
->> -			PCI_MSIX_ENTRY_VECTOR_CTRL;
->> -		msi->masked = readl(msi->mask_base + offset);
->> -		writel(flag, msi->mask_base + offset);
->> -	} else if (msi->msi_attrib.maskbit) {
->> -		pos = (long) msi->mask_base;
->> -		pci_read_config_dword(msi->dev, pos, &mask_bits);
->> -		mask_bits &= ~(mask);
->> -		mask_bits |= flag & mask;
->> -		pci_write_config_dword(msi->dev, pos, mask_bits);
->> -	} else
->> -		return 0;
->> -
->> -	msi->msi_attrib.maskbit = !!flag;
->> -	return 1;
->> -}
->> -
->> -static void zpci_enable_irq(struct irq_data *data)
->> -{
->> -	struct msi_desc *msi = irq_get_msi_desc(data->irq);
->> -
->> -	zpci_msi_set_mask_bits(msi, 1, 0);
->> -}
->> -
->> -static void zpci_disable_irq(struct irq_data *data)
->> -{
->> -	struct msi_desc *msi = irq_get_msi_desc(data->irq);
->> -
->> -	zpci_msi_set_mask_bits(msi, 1, 1);
->> -}
->> -
->>  void pcibios_fixup_bus(struct pci_bus *bus)
->>  {
->>  }
->> @@ -487,7 +447,10 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
->>
->>  	/* Release MSI interrupts */
->>  	list_for_each_entry(msi, &pdev->msi_list, list) {
->> -		zpci_msi_set_mask_bits(msi, 1, 1);
->> +		if (msi->msi_attrib.is_msix)
->> +			default_msix_mask_irq(msi, 1);
->> +		else
->> +			default_msi_mask_irq(msi, 1, 1);
->>  		irq_set_msi_desc(msi->irq, NULL);
->>  		irq_free_desc(msi->irq);
->>  		msi->msg.address_lo = 0;
->> -- 
->> 1.7.1
->>
->>
->>
-> 
-> 
-> .
-> 
+Intel ISA PCIC probe: Ricoh RF5C296/396 ISA-to-PCMCIA at port 0x3e0 ofs 0x00, 2 sockets
+host opts [0]: none
+host opts [1]: none
+ISA irqs (scanned) = 3,4,5,9,10 status change on irq 10
+pcmcia_socket pcmcia_socket1: pccard: PCMCIA card inserted into slot 1
+pcmcia_socket pcmcia_socket0: cs: IO port probe 0xc00-0xcff: excluding 0xcf8-0xcff
+pcmcia_socket pcmcia_socket0: cs: IO port probe 0xa00-0xaff: clean.
+pcmcia_socket pcmcia_socket0: cs: IO port probe 0x100-0x3ff: excluding 0x170-0x177 0x1f0-0x1f7 0x2f8-0x2ff 0x370-0x37f 0x3c0-0x3e7 0x3f0-0x3ff
+pcmcia_socket pcmcia_socket0: cs: memory probe 0x0a0000-0x0affff: excluding 0xa0000-0xaffff
+pcmcia_socket pcmcia_socket0: cs: memory probe 0x0b0000-0x0bffff: excluding 0xb0000-0xbffff
+pcmcia_socket pcmcia_socket0: cs: memory probe 0x0c0000-0x0cffff: excluding 0xc0000-0xcbfff
+pcmcia_socket pcmcia_socket0: cs: memory probe 0x0d0000-0x0dffff: clean.
+pcmcia_socket pcmcia_socket0: cs: memory probe 0x0e0000-0x0effff: clean.
+pcmcia_socket pcmcia_socket0: cs: memory probe 0x60000000-0x60ffffff: clean.
+pcmcia_socket pcmcia_socket0: cs: memory probe 0xa0000000-0xa0ffffff: clean.
+pcmcia_socket pcmcia_socket1: cs: IO port probe 0xc00-0xcff: excluding 0xcf8-0xcff
+pcmcia_socket pcmcia_socket1: cs: IO port probe 0xa00-0xaff: clean.
+pcmcia_socket pcmcia_socket1: cs: IO port probe 0x100-0x3ff: excluding 0x170-0x177 0x1f0-0x1f7 0x2f8-0x2ff 0x370-0x37f 0x3c0-0x3e7 0x3f0-0x3ff
+pcmcia_socket pcmcia_socket1: cs: memory probe 0x0a0000-0x0affff: excluding 0xa0000-0xaffff
+pcmcia_socket pcmcia_socket1: cs: memory probe 0x0b0000-0x0bffff: excluding 0xb0000-0xbffff
+pcmcia_socket pcmcia_socket1: cs: memory probe 0x0c0000-0x0cffff: excluding 0xc0000-0xcbfff
+pcmcia_socket pcmcia_socket1: cs: memory probe 0x0d0000-0x0dffff: clean.
+pcmcia_socket pcmcia_socket1: cs: memory probe 0x0e0000-0x0effff: clean.
+pcmcia_socket pcmcia_socket1: cs: memory probe 0x60000000-0x60ffffff: clean.
+pcmcia_socket pcmcia_socket1: cs: memory probe 0xa0000000-0xa0ffffff: clean.
+pcmcia_socket pcmcia_socket1: cs: memory probe 0x0cc000-0x0effff: excluding 0xe0000-0xeffff
+pcmcia_socket pcmcia_socket1: cs: unable to map card memory!
 
+If filtering out the first 1MB is reverted, everything works as expected.
 
--- 
-Thanks!
-Yijing
-
+Signed-off-by: Christoph Schulz <develop@kristov.de>
+Tested-by: Robert Resch <fli4l@robert.reschpara.de>
+---
+diff --git a/arch/x86/kernel/resource.c b/arch/x86/kernel/resource.c
+index 2a26819..80eab01 100644
+--- a/arch/x86/kernel/resource.c
++++ b/arch/x86/kernel/resource.c
+@@ -37,10 +37,12 @@ static void remove_e820_regions(struct resource *avail)
+ 
+ void arch_remove_reservations(struct resource *avail)
+ {
+-	/* Trim out BIOS areas (low 1MB and high 2MB) and E820 regions */
++	/*
++	 * Trim out BIOS area (high 2MB) and E820 regions. We do not remove
++	 * the low 1MB unconditionally, as this area is needed for some ISA
++	 * cards requiring a memory range, e.g. the i82365 PCMCIA controller.
++	 */
+ 	if (avail->flags & IORESOURCE_MEM) {
+-		if (avail->start < BIOS_END)
+-			avail->start = BIOS_END;
+ 		resource_clip(avail, BIOS_ROM_BASE, BIOS_ROM_END);
+ 
+ 		remove_e820_regions(avail);
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index a19ed92..2ae525e 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -162,6 +162,10 @@ pcibios_align_resource(void *data, const struct resource *res,
+ 			return start;
+ 		if (start & 0x300)
+ 			start = (start + 0x3ff) & ~0x3ff;
++	} else if (res->flags & IORESOURCE_MEM) {
++		/* The low 1MB range is reserved for ISA cards */
++		if (start < BIOS_END)
++			start = BIOS_END;
+ 	}
+ 	return start;
+ }
