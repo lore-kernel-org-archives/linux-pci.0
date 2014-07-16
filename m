@@ -1,38 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:44261 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750960AbaG2N4l (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 09:56:41 -0400
-Date: Tue, 29 Jul 2014 06:56:41 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Tomas Henzl <thenzl@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:60048 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755531AbaGPSV3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Jul 2014 14:21:29 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>,
-	linux-kernel@vger.kernel.org, xjtuwjp@gmail.com,
-	lindar_liu@usish.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: Re: [PATCH v2 RESEND 17/23] pm8001: Fix invalid return when
- request_irq() failed
-Message-ID: <20140729135641.GA14378@infradead.org>
+	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
+	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com,
+	DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 16/23] mpt3sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Wed, 16 Jul 2014 20:05:20 +0200
+Message-Id: <76ec123596e05dcbcd8957f00ad5f8d4627a32d0.1405533479.git.agordeev@redhat.com>
+In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
 References: <cover.1405533479.git.agordeev@redhat.com>
- <5ecd9b80f705545c3dc85b2a4ae63a8ac3df8105.1405533479.git.agordeev@redhat.com>
- <53D79DE2.9000702@redhat.com>
- <20140729132020.GA7714@infradead.org>
- <53D7A62D.2090709@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53D7A62D.2090709@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 29, 2014 at 03:48:29PM +0200, Tomas Henzl wrote:
-> I'm a bit confused - you were not commenting my text above I think?
-> 
-> I see in drivers-for-3.17 this patch already applied 5607de7
-> but not yet the next one (18/23) which also has a review, is there another ack needed?
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Looks like I got a bit confused due to a non-applying patch, but it
-seems like the one that failed was the second one.  I'll look at it time
-permitting, but if someone familar with pm8001 can fix the reject for me
-that would help me greatly!
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+Cc: support@lsi.com
+Cc: DL-MPTFusionLinux@lsi.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 0cf4f70..7b65ec2 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1747,10 +1747,10 @@ _base_enable_msix(struct MPT3SAS_ADAPTER *ioc)
+ 	for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++)
+ 		a->entry = i;
+ 
+-	r = pci_enable_msix(ioc->pdev, entries, ioc->reply_queue_count);
++	r = pci_enable_msix_exact(ioc->pdev, entries, ioc->reply_queue_count);
+ 	if (r) {
+ 		dfailprintk(ioc, pr_info(MPT3SAS_FMT
+-			"pci_enable_msix failed (r=%d) !!!\n",
++			"pci_enable_msix_exact failed (r=%d) !!!\n",
+ 			ioc->name, r));
+ 		kfree(entries);
+ 		goto try_ioapic;
+-- 
+1.7.7.6
 
