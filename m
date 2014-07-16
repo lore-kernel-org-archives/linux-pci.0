@@ -1,71 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:35172 "EHLO
+Received: from mail-we0-f181.google.com ([74.125.82.181]:58920 "EHLO
 	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753115AbaGUVTh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jul 2014 17:19:37 -0400
-Date: Mon, 21 Jul 2014 23:19:34 +0200
+	with ESMTP id S1751016AbaGPIPk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 04:15:40 -0400
+Date: Wed, 16 Jul 2014 10:15:37 +0200
 From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH] PCI: tegra: Add debugfs support
-Message-ID: <20140721211932.GB12076@mithrandir>
-References: <1405062024-2364-1-git-send-email-thierry.reding@gmail.com>
- <53CD37CA.7020308@wwwdotorg.org>
+To: Vidya Sagar <sagar.tv@gmail.com>
+Cc: bhelgaas@google.com, rjw@rjwysocki.net, nchumbalkar@lenovo.com,
+	swarren@nvidia.com, kthota@nvidia.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, vidyas@nvidia.com
+Subject: Re: [PATCH v2] PCI: enable ASPM configuration in PCIE POWERSAVE mode
+Message-ID: <20140716081533.GJ7978@ulmo>
+References: <1405317877-15060-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="TakKZr9L6Hm6aLOc"
-In-Reply-To: <53CD37CA.7020308@wwwdotorg.org>
+	protocol="application/pgp-signature"; boundary="BOmey7/79ja+7F5w"
+In-Reply-To: <1405317877-15060-1-git-send-email-vidyas@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
---TakKZr9L6Hm6aLOc
+--BOmey7/79ja+7F5w
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jul 21, 2014 at 09:54:50AM -0600, Stephen Warren wrote:
-> On 07/11/2014 01:00 AM, Thierry Reding wrote:
-> > From: Thierry Reding <treding@nvidia.com>
-> >=20
-> > Provide a debugfs file that shows the current link status for each root
-> > port.
->=20
-> Reviewed-by: Stephen Warren <swarren@nvidia.com>
->=20
-> Does this patch conflict with or merge well with the Tegra124 PCIe
-> driver patches, I wonder?
+On Mon, Jul 14, 2014 at 11:34:37AM +0530, Vidya Sagar wrote:
+> From: Vidya Sagar <sagar.tv@gmail.com>
 
-Yes. The Tegra124 PCIe patches are part of the same branch. My plan was
-to get this merged for 3.17 (if it's not too late yet) and then submit
-Tegra124 support for 3.18 soonish after 3.17 is released.
+The commit message looks somewhat cluttered:
 
-I also have a bunch of patches that allow the Tegra PCIe driver to be
-built as a module (though that has even more cross-tree dependencies, so
-should probably be phased in over a couple of cycles).
+> 'commit 1a680b7c3258 ("PCI: PCIe links may not get configured for ASPM
+>  under POWERSAVE mode")'
+
+Usually you'd cite a commit without the extra single quotes. More like
+this:
+
+Commit 1a680b7c3258 ("PCI: PCIe links may not get configured for ASPM
+under POWERSAVE mode") moved...
+
+> moved pcie_aspm_powersave_config_link() out of
+> pci_raw_set_power_state() to pci_set_power_state() which would enable
+> ASPM. But, with 'commit db288c9c5f9d ("PCI / PM: restore the original
+>  behavior of pci_set_power_state()")',
+
+Same here.
+
+>                                        which re-introduced the following =
+check
+> ./drivers/pci/pci.c: pci_set_power_state()
+> +   /* Check if we're already there */
+> +   if (dev->current_state =3D=3D state)
+> +       return 0;
+
+To make this stand out better, it could be preceded and followed by a
+single blank line (and perhaps indented using tabs).
+
+> in pci_set_power_state(), call to pcie_aspm_powersave_config_link() is ne=
+ver
+> made leaving ASPM broken.
+> Fix it by not returning from when the above condition is true, rather, ju=
+mp to
+> ASPM configuration code and exit from there eventually.
+>=20
+> Signed-off-by: Vidya Sagar <sagar.tv@gmail.com>
+
+This patch uses code suggested by Bjorn and it's customary to credit the
+original author using something like:
+
+	Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+
+or
+
+	Originally-by: Bjorn Helgaas <bhelgaas@google.com>
 
 Thierry
 
---TakKZr9L6Hm6aLOc
+--BOmey7/79ja+7F5w
 Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+Version: GnuPG v2
 
-iQIcBAEBAgAGBQJTzYPkAAoJEN0jrNd/PrOhuhYQALJriv+0xZQhNVSyPJIUovYB
-snS3iOcKIu1kKpIIj2kh+Pp3AHVWZYM9Rv+cbTwZwIG0eehixu+3L+tICb/KHPV8
-VX/w2EDBvIt42S/L3aRy+aKedNFYMyt0sTkEnqVahqf1VLBfqsieaNbAVUt7bVJi
-iNi3c7KKwrZYtF1YEFPgqP7CjPDxbsDVTAVmMTtNJjOZaTVNF9obl2kNGnNcwPXV
-LWxEORsjSprXQyKoNTQOu07hS0avSCWdjiU4dXNn+IO/9eBosPhx6Q1aG/t+Y9r3
-/GMeON8YiIe8+lGnz1Q95U0HoPNdZEe39Aj/MnbyVgO4yRA1+xailsUCzRgBq85g
-BT5yg3u8t/dAKuchx9Z9z2HgGxyQZeQGGUKPbeyby3hiQQRA55uxdHQMx1LEBEVv
-VSLjKjxeYlL46UyiTdsEpOQqhqJmgQKZd0MWITp37FBr0otFFnpLFvDR67+DoCOr
-9+pp44pWKQj5SqeY7XsMET0a2jZkR6Fd1XEg9Vwkg00V2RkEKT6wCeM0D4DC44nV
-4S0J3qFMF4ZePdi6jTnzX3YqrSQIpn4U1W7QpSS1E8DcZnUvL5PSxRU+pq56g5KA
-1Jwx9pCU565FaZh6SixFQPcJVlP9+V7/+WuCfJ6Efbcd9FUfMg9h4l55Ndh0ne0J
-pVaE323PEEpnFOd64vyG
-=OyXj
+iQIcBAEBAgAGBQJTxjSlAAoJEN0jrNd/PrOhueUP+QFQ6cA6SkjxyYNnG/qmPZwA
+xH+p5mN+pjsHNAEZVir7k3jBI0CVMTrOCSSOsFuoHGUHHwyBz/CoJdQBDFDc/i3y
+RFzMi7P9fG8oongL8IEMWsmPaNBn8pufhwZ4+aSKRmCCzJFb/wMlobhB+coECMSP
+unZ7QBORb+zGrKDqoDVditueuFtVCVuJGnN1UglZgn7B8jUAKEXU6QPwhHzH/o0c
+24Gc1LD6/WH1VzJhbFvdiuJuSJ/s1fyS+xYKfAXhFybJd9VzpJsEBgtHFsltPPHa
+esbqyshpTZ3GiSDL5bbE2Ki4t0uC98BRTgHSdOVaOK9sPvQtr4fOxwm79tUL75j4
+Yx76aBRH0yPr9i/uLq/jAmKcbmQu/NsM0q5kAREzkS2YWxChdSy+BuugxavZicKD
+eXnh6BLyjbGlkTHNVEhmut6XdN9nsHq60Dh2oFEQolN8GhMsl98w33exyxYkYnkF
+665sR7Zcz6YuOdrwwpXKCVV4b8QNh5BpNn+eODiVeqnuTS/q+YVk+/m3xRWjSGYE
+d1XAdkoXya0DbWESRui9iHlhaooGtj3GX8f8R0+if1Z9V/lluGO8JUYfK2EPSLv9
+fserTjzmDC13E3KGgO++cMF/D7PanVk7KXJCBoxfRNmw+3noUFf2BCWg2TF4LDs9
+s9AMwQ0cXpDBmyMzdkjx
+=eh10
 -----END PGP SIGNATURE-----
 
---TakKZr9L6Hm6aLOc--
+--BOmey7/79ja+7F5w--
