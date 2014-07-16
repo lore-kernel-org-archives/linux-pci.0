@@ -1,181 +1,63 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <53D89502.60506@linux.intel.com>
-Date: Wed, 30 Jul 2014 14:47:30 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:58216 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754647AbaGPSyq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 14:54:46 -0400
+Received: by mail-ie0-f182.google.com with SMTP id y20so1251209ier.13
+        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 11:54:46 -0700 (PDT)
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>, Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org
-CC: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>, Paul.Mundt@huawei.com,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	virtualization@lists.linux-foundation.org,
-	Xinwei Hu <huxinwei@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Wuyun <wuyun.wu@huawei.com>
-Subject: Re: [RFC PATCH 00/11] Refactor MSI to support Non-PCI device
-References: <1406344128-27055-1-git-send-email-wangyijing@huawei.com> <1748052.OMBQJiOLYT@wuerfel> <53D85C2E.3060205@huawei.com>
-In-Reply-To: <53D85C2E.3060205@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <CAKAYmMLhPhukBbR8NhPk3EigmvwiX+DEGj-Mod7zpHMnZKRsLw@mail.gmail.com>
+References: <CAKAYmMLfxkmaVxaPDd6z=B0ESQ3mR=dUG4OFFgEoy0295qLYgg@mail.gmail.com>
+ <CAKAYmMLhPhukBbR8NhPk3EigmvwiX+DEGj-Mod7zpHMnZKRsLw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 16 Jul 2014 12:54:26 -0600
+Message-ID: <CAErSpo7vooChRfSF6oY8GcqVYZruv-7_D0zm3a4M_KDVMbWNiA@mail.gmail.com>
+Subject: Re: Error assigning BAR 0 to hotplugged device
+To: Chuck Tuffli <ctuffli@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+[+cc Yinghai]
 
+On Wed, Jul 16, 2014 at 11:19 AM, Chuck Tuffli <ctuffli@gmail.com> wrote:
+> On Tue, Jul 8, 2014 at 12:37 PM, Chuck Tuffli <ctuffli@gmail.com> wrote:
+>> On a system with a recent Fedora kernel (3.14.9-200.fc20.x86_64), a
+>> hotplugged PCI device is unable to get memory mapped IO:
+>> ...
+>> [  183.247377] pcieport 0000:9a:00.0: BAR 15: can't assign mem pref
+>> (size 0x100000)
+>> [  183.247384] pcieport 0000:9b:15.0: BAR 14: can't assign mem (size 0x100000)
+>> [  183.247388] pcieport 0000:9b:15.0: BAR 15: can't assign mem pref
+>> (size 0x100000)
+>> [  183.247394] pci 0000:a5:00.0: BAR 6: can't assign mem pref (size 0x10000)
+>> [  183.247397] pci 0000:a5:00.0: BAR 0: can't assign mem (size 0x4000)
+>>
+>> The device is connected to a switch supporting hotplug (i.e. SltCap
+>> includes HotPlug+) and I have added
+>> pci=realloc,hpmemsize=16M
+>> to the kernel boot parameters. This appears to have increased the
+>> prefetchable memory but not the memory mapped IO:
+>
+> Further investigation suggests that pbus_size_mem() never really gets
+> a chance to increase the bridge aperture by the hpmemsize value
+> because find_free_bus_resource() returns NULL. This apparently happens
+> because the function "skip[s] the bus resources which have already
+> been assigned (that is, have non-NULL parent resource)". Specifically,
+> it checks
+>
+>     if (r && (r->flags & type_mask) == type && !r->parent)
+>
+> and in my configuration, finds that r->parent != NULL for the memory
+> mapped IO resource. Wouldn't r->parent be non-NULL in most cases other
+> than for bridges in the root complex? If so, does that imply hpmemsize
+> would only be used for bridges advertising hot plug in the root
+> complex?
 
-On 2014/7/30 10:45, Yijing Wang wrote:
-> On 2014/7/29 22:08, Arnd Bergmann wrote:
->> On Saturday 26 July 2014 11:08:37 Yijing Wang wrote:
->>>         The series is a draft of generic MSI driver that supports PCI
->>> and Non-PCI device which have MSI capability. If you're not interested
->>> it, sorry for the noise.
->>
->> I've finally managed to take some time to look at the series. Overall,
->> the concept looks good to me, and the patches look very well implemented.
->>
->> The part I'm not sure about is the interface we want to end up with
->> at the end of the series. More on that below
-> 
-> Hi Arnd,
->    Thanks for your review and comments very much!
-> Please refer the inline comments.
-> 
->>
->>> The series is based on Linux-3.16-rc1.
->>>
->>> MSI was introduced in PCI Spec 2.2. Currently, kernel MSI 
->>> driver codes are bonding with PCI device. Because MSI has a lot
->>> advantages in design. More and more non-PCI devices want to
->>> use MSI as their default interrupt. The existing MSI device
->>> include HPET. HPET driver provide its own MSI code to initialize
->>> and process MSI interrupts. In the latest GIC v3 spec, legacy device
->>> can deliver MSI by the help of a relay device named consolidator.
->>> Consolidator can translate the legacy interrupts connected to it
->>> to MSI/MSI-X. And new non-PCI device will be designed to 
->>> support MSI in future. So make the MSI driver code be generic will 
->>> help the non-PCI device use MSI more simply.
->>>
->>> The new data struct for generic MSI driver.
->>> struct msi_irqs {
->>>         u8 msi_enabled:1; /* Enable flag */
->>>         u8 msix_enabled:1;
->>>         struct list_head msi_list; /* MSI desc list */
->>>         void *data;     /* help to find the MSI device */
->>>         struct msi_ops *ops; /* MSI device specific hook */
->>> };
->>> struct msi_irqs is used to manage MSI related informations. Every device supports
->>> MSI should contain this data struct and allocate it.
->>
->> I think you should have a stronger association with the 'struct
->> device' here. Can you replace the 'void *data' with 'struct device *dev'?
-> 
-> Actually, I used the struct device *dev in my first draft, finally, I replaced
-> it with void *data, because some MSI devices don't have a struct device *dev,
-> like the existing hpet device, dmar msi device, and OF device, like the ARM consolidator.
-> 
-> Of course, we can make the MSI devices have their own struct device, and register to
-> device tree, eg, add a class device named MSI_DEV. But I'm not sure whether it is appropriate.
-> 
->>
->> The other part I'm not completely sure about is how you want to
->> have MSIs map into normal IRQ descriptors. At the moment, all
->> MSI users are based on IRQ numbers, but this has known scalability problems.
-> 
-> Hmmm, I still use the IRQ number to map the MSIs to IRQ description.
-> I'm sorry, I don't understand you meaning.
-> What are the scalability problems you mentioned ?
-We have soft limitation of nr_irqs or hard limitation NR_IRQS,
-we couldn't allocate as much irq number as we need in some cases,
-such as to support MSI-x.
+Thanks for chasing this down.  I'm going to be on vacation for a few
+weeks and won't be able to work on this until I return.  I added
+Yinghai, who will probably have a suggestion for you.
 
-> For device drivers, they always process interrupt in two steps.
-> If irq is the legacy interrupt, drivers will first
-> use the irq_of_parse_and_map() or pci_enable_device() to parse and get the IRQ number.
-> Then drivers will call the request_irq() to register the interrupt handler.
-> If irq is MSIs, first call pci_enable_msi/x() to get the IRQ number and then call
-> request_irq() to register interrupt handler.
-> 
->> I wonder if we can do the interface in a way that
->> hides the interrupt number from generic device drivers and just
->> passes a 'struct irq_desc'. Note that there are long-term plans to
->> get rid of IRQ numbers entirely, but those plans have existed for
->> a long time already without anybody seriously addressing the device
->> driver interfaces so far, so it might never really happen.
->>
-> 
-> Maybe this is a huge work, now hundreds drivers use the IRQ number, so maybe we can consider
-> this in a separate title.
-> 
->>> struct msi_ops {
->>>         struct msi_desc *(*msi_setup_entry)(struct msi_irqs *msi, struct msi_desc *entry);
->>>         int msix_setup_entries(struct msi_irqs *msi, struct msix_entry *entries);
->>>         u32 (*msi_mask_irq)(struct msi_desc *desc, u32 mask, u32 flag);
->>>         u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
->>>         void (*msi_read_message)(struct msi_desc *desc, struct msi_msg *msg);
->>>         void (*msi_write_message)(struct msi_desc *desc, struct msi_msg *msg);
->>>         void (*msi_set_intx)(struct msi_irqs *msi, int enable);
->>> };
->>> struct msi_ops provides several hook functions, generic MSI driver will call
->>> the hook functions to access device specific registers. PCI devices will share
->>> the same msi_ops, because they have the same way to access MSI hardware registers.
->>>
->>> Generic MSI layer export msi_capability_init() and msix_capability_init() functions
->>> to drivers. msi/x_capability_init() will initialize MSI capability data struct msi_desc
->>> and alloc the irq, then write the msi address/data value to hardware registers.
->>>
->>> This series only did compile test, we will test it in x86 and arm platform later.
->>
->> For the generic drivers, I don't see much point in differentiating between
->> MSI and MSI-X, as I believe the difference is something internal to the PCI
->> implementation.
-> 
-> Yes, we can integrate them, and use a generic ops, add a type in hook function to
-> differentiate them.
-> 
->>
->> With the other operations, I think they should all take a 'struct device *'
->> as the first argument for convenience and consistency. I don't think you actually
->> need msi_read_message(), and we could avoid msi_write_message() by doing it
->> the other way round.
->>
-> 
-> There only two functions use the read_msi_msg(), because every msi_desc has
-> a struct msi_msg, and it caches the msi address and data. I will consider to
-> retrieve the msg from cached msi_msg, then we can avoid the msi_read_message().
-> But msi_write_message() maybe necessary, some xxx_set_affinity() functions and
-> restore functions need the msi_write_message() to rewrite the address and data.
-> 
->> What I'd envision as the API from the device driver perspective is something
->> as simple like this:
->>
->> struct msi_desc *msi_request(struct msi_chip *chip, irq_handler_t handler,
->> 			unsigned long flags, const char *name, struct device *dev);
->>
->> which would get an msi descriptor that is valid for this device (dev)
->> connected to a particular msi_chip, and associate a handler function
->> with it. The device driver can call that function and retrieve the
->> address/message pair from the msi_desc in order to store it in its own
->> device specific registers. The request_irq() can be handled internally
->> to msi_request().
-> 
-> This is a huge change for device drivers, and some device drivers don't know which msi_chip
-> their MSI irq deliver to. I'm reworking the msi_chip, and try to use msi_chip to eliminate
-> all arch_msi_xxx() under every arch in kernel. And the important point is how to create the
-> binding for the MSI device to the target msi_chip.
-> 
-> For PCI device, some arm platform already bound the msi_chip to the pci hostbridge, then all
-> pci devices under the pci hostbridge deliver their MSI irqs to the target msi_chip.
-> And other platform create the binding in DTS file, then the MSI device can find their msi_chip
-> by device_node.
-> I don't know whether there are other situations, we should provide a generic interface that
-> every MSI device under every platform can use it to find its msi_chip exactly.
-> 
-> 
-> Thanks!
-> Yijing.
-> 
->>
->> .
->>
-> 
-> 
+Bjorn
