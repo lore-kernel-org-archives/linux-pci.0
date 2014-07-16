@@ -1,80 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f178.google.com ([209.85.216.178]:50712 "EHLO
-	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753677AbaGHU1V (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 16:27:21 -0400
-Received: by mail-qc0-f178.google.com with SMTP id i17so1470282qcy.37
-        for <linux-pci@vger.kernel.org>; Tue, 08 Jul 2014 13:27:20 -0700 (PDT)
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:41174 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752818AbaGPXtC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 19:49:02 -0400
+Received: by mail-ig0-f175.google.com with SMTP id uq10so5040083igb.14
+        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 16:49:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <3107266.EcOOcRPPM0@harkonnen>
-References: <280883016.9onmf0miLq@pcbe13110.cern.ch> <5283004.YemU4lhtKD@pcbe13110.cern.ch>
- <CAErSpo5ixtc=n0f56=QvtxYnXumZiao6NMgBVAWpcJH4f7QA4g@mail.gmail.com> <3107266.EcOOcRPPM0@harkonnen>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 8 Jul 2014 14:27:00 -0600
-Message-ID: <CAErSpo7YEiiM1b8Jf1d3Pt4iZXhwNTr18SsSZS15Ekm_LHS03A@mail.gmail.com>
-Subject: Re: PCIe bus enumeration
-To: Federico Vaga <federico.vaga@cern.ch>
+In-Reply-To: <CAE9FiQW+GbprQZNvHC-ek1cSydP3KWcjgAU0ii5_jECC1+tXrg@mail.gmail.com>
+References: <CAKAYmMLfxkmaVxaPDd6z=B0ESQ3mR=dUG4OFFgEoy0295qLYgg@mail.gmail.com>
+	<CAKAYmMLhPhukBbR8NhPk3EigmvwiX+DEGj-Mod7zpHMnZKRsLw@mail.gmail.com>
+	<CAErSpo7vooChRfSF6oY8GcqVYZruv-7_D0zm3a4M_KDVMbWNiA@mail.gmail.com>
+	<CAE9FiQWomktcpSHeFwxWBLXmAsbdXEHv6sOrNXodobkBw=mRKA@mail.gmail.com>
+	<CAE9FiQW+GbprQZNvHC-ek1cSydP3KWcjgAU0ii5_jECC1+tXrg@mail.gmail.com>
+Date: Wed, 16 Jul 2014 16:49:01 -0700
+Message-ID: <CAE9FiQX9p-nTGeRo365d9m10OXF9-QqUJ+4z6GD37ztd+s8EEQ@mail.gmail.com>
+Subject: Re: Error assigning BAR 0 to hotplugged device
+From: Yinghai Lu <yinghai@kernel.org>
+To: Chuck Tuffli <ctuffli@gmail.com>
 Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	michel.arruat@cern.ch
+	Bjorn Helgaas <bhelgaas@google.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 8, 2014 at 1:20 PM, Federico Vaga <federico.vaga@cern.ch> wrote:
-> On Tuesday 08 July 2014 12:23:39 Bjorn Helgaas wrote:
->> On Tue, Jul 8, 2014 at 1:15 AM, Federico Vaga
-> <federico.vaga@cern.ch> wrote:
->> >> > So, It looks like that some BIOS disable the bridge when there
->> >> > is
->> >> > nothing behind it. Why? Power save? :/
->> >>
->> >> Could be power savings, or possibly to conserve bus numbers,
->> >> which
->> >> are a limited resource.
->> >
->> > what is the maximum number of buses?
->>
->> 256.
+On Wed, Jul 16, 2014 at 4:47 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Jul 16, 2014 at 1:55 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+
 >
-> Well, it is not a small number. I will ask directly to the company who
-> sell this crate and ask them what is going on in the BIOS
-
-Yeah, it's not usually a problem until you get to the really big
-machines.  The BIOS vendor could give you a much better reason; I'm
-only speculating.
-
->> > At this point I'm a little bit confused about the definition "slot
->> > numbers" :) You mean the 22, 25, ...
->>
->> Right.  Bus numbers are under software control, to some degree (as a
->> general rule, an x86 BIOS assigns them and Linux leaves them alone,
->> but they *can* be changed so they aren't a good thing to rely on).
->> The bus number of a root bus is usually determined by hardware or
->> by an arch-specific host bridge driver.  The bus number below a
->> PCI-PCI bridge is determined by the bridge's "secondary bus number"
->> register, which software can change.
->>
->> Slot numbers are based on the Physical Slot Number in the PCIe Slot
->> Capability register.  This is set by some hardware mechanism such as
->> pin strapping or a serial EEPROM.  Software can't change it, so you
->> can rely on it to be constant.  (There's also a mechanism for
->> getting a slot number from ACPI, but that should also return a
->> constant value).  The problem is that I don't think the Linux slot
->> number support is very good, so I'm sure there's plenty of stuff
->> that we *should* be able to do that we can't do *yet*.
+> in the tree:
+>    80:03.0 ==> 96:00.0 ==> 97:08.0 ==> 98:00.0 ==> 99:00.0 ==> 9a:00.0
+> ==> 9b:15.0
 >
-> Mh, I understand. Let's say that I have time to spend on this problem
-> (I do not know) and contributing to the PCI subsystem. How many
-> differences are there between 3.2, 3.6, 3.16/next? We are using
-> 3.2/3.6 at the moment, but probably you should expect that it will
-> work on the last version :)
+> only 97:08.0 and 99:00.0 is hotplug+.
+>
+> and kernel will honor BIOS set value at first, and realloc will only work on
+> unassigned/invalid assigned BARs. and hpmem_size will be only treated at
+> optional size even on hotplug slots.
+>
+> a5:00.0 is not in 9b:15.0 at first, so yo just put the card in can
+> rescan the card,
+> right?
+>
+> In this case we don't to realloc, as other devices could already have
+> driver loaded.
+>
+> You need to fix the BIOS to have correct setting for 96:1b.0.
 
-There are quite a few differences, including a fair amount of work on
-the hotplug drivers.  The problem in this area is that pciehp (the
-PCIe hotplug driver) and acpiphp (the ACPI hotplug driver) both can
-register slot numbers and it's sort of ugly to figure out which one to
-use in a given situation.  Neither can be a loadable module anymore,
-which simplifies things a little bit, but it's still ugly.
+should 9b:15.0
 
-Bjorn
+>
+>                 SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd-
+> HotPlug- Surprise-
+>                         Slot #21, PowerLimit 25.000W; Interlock- NoCompl-
+>                 SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet-
+> CmdCplt- HPIrq- LinkChg-
+>                         Control: AttnInd Unknown, PwrInd Unknown,
+> Power- Interlock-
+>                 SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt-
+> PresDet+ Interlock-
+>                         Changed: MRL- PresDet+ LinkState+
+>
+> to make it really hotplug slot.
+>
+> And BIOS need to make sure parent bus/bridge have enough resource ranges
+> for the hotplug slots.
+>
+> Yinghai
