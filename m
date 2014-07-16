@@ -1,95 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21498 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:62716 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751428AbaG2Cb0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 28 Jul 2014 22:31:26 -0400
-Message-ID: <1406601073.1011.157.camel@ul30vt.home>
-Subject: Re: [PATCH 1/4] PCI: introduce helper functions for device flag
- operation
-From: Alex Williamson <alex.williamson@redhat.com>
-To: ethan zhao <ethan.zhao@oracle.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
-	kvm@vger.kernel.org, konrad.wilk@oracle.com,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
-	xen-devel@lists.xenproject.org, alexander.h.duyck@intel.com,
-	ethan.kernel@gmail.com
-Date: Mon, 28 Jul 2014 20:31:13 -0600
-In-Reply-To: <53D6FE95.6040605@oracle.com>
-References: <1406045944-1587-1-git-send-email-ethan.zhao@oracle.com>
-	  <1406045944-1587-2-git-send-email-ethan.zhao@oracle.com>
-	 <1406581206.1011.133.camel@ul30vt.home> <53D6FE95.6040605@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S965730AbaGPSFM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Jul 2014 14:05:12 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Lukasz Dorau <lukasz.dorau@intel.com>,
+	Maciej Patelczyk <maciej.patelczyk@intel.com>,
+	Dave Jiang <dave.jiang@intel.com>, intel-linux-scu@intel.com,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 10/23] isci: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Wed, 16 Jul 2014 20:05:14 +0200
+Message-Id: <24a4bb34f5a8b5ca964fb063688c24549e8a3b5d.1405533479.git.agordeev@redhat.com>
+In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-07-29 at 09:53 +0800, ethan zhao wrote:
-> On 2014/7/29 5:00, Alex Williamson wrote:
-> > On Wed, 2014-07-23 at 00:19 +0800, Ethan Zhao wrote:
-> >> This patch introduced three helper functions to hide direct
-> >> device flag operation.
-> >>
-> >> void pci_set_dev_assigned(struct pci_dev *pdev);
-> >> void pci_set_dev_deassigned(struct pci_dev *pdev);
-> >> bool pci_is_dev_assigned(struct pci_dev *pdev);
-> >>
-> >> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
-> >> ---
-> >>   include/linux/pci.h |   13 +++++++++++++
-> >>   1 files changed, 13 insertions(+), 0 deletions(-)
-> >>
-> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> >> index aab57b4..5f6f8fa 100644
-> >> --- a/include/linux/pci.h
-> >> +++ b/include/linux/pci.h
-> >> @@ -1129,6 +1129,19 @@ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
-> >>   
-> >>   int pci_set_vga_state(struct pci_dev *pdev, bool decode,
-> >>   		      unsigned int command_bits, u32 flags);
-> >> +/* helper functions for operation of device flag */
-> >> +static inline void pci_set_dev_assigned(struct pci_dev *pdev)
-> >> +{
-> >> +	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-> >> +}
-> >> +static inline void pci_set_dev_deassigned(struct pci_dev *pdev)
-> >> +{
-> >> +	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-> >> +}
-> > I think pci_clear_dev_assigned() would make more sense, we're not
-> > setting a flag named DEASSIGNED.
->    Though it is a flag operation now, may not later, we define it 
-> because we want to hide the internal operation.
->    'set' to 'deassigned'  status is enough. So I would like keep it.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-I disagree, the opposite of a 'set' is a 'clear', or at least an
-'unset'.  Using bit-ops-like terminology doesn't lock us into an
-implementation.  As written, this could just as easily be setting two
-different variables.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: Maciej Patelczyk <maciej.patelczyk@intel.com>
+Cc: Dave Jiang <dave.jiang@intel.com>
+Cc: intel-linux-scu@intel.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Acked-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ drivers/scsi/isci/init.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> >
-> >> +static inline bool pci_is_dev_assigned(struct pci_dev *pdev)
-> >> +{
-> >> +	return pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED ? true : false;
-> >> +}
-> > The ternary operation isn't necessary.  Thanks,
->    Yep,
-> 
->    return pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED
-> 
->    is enough.
-> 
->    Thanks,
->    Ethan
-> >
-> > Alex
-> >
-> >>   /* kmem_cache style wrapper around pci_alloc_consistent() */
-> >>   
-> >>   #include <linux/pci-dma.h>
-> >
-> >
-> 
-
-
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index 695b34e..4198e45 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -356,7 +356,7 @@ static int isci_setup_interrupts(struct pci_dev *pdev)
+ 	for (i = 0; i < num_msix; i++)
+ 		pci_info->msix_entries[i].entry = i;
+ 
+-	err = pci_enable_msix(pdev, pci_info->msix_entries, num_msix);
++	err = pci_enable_msix_exact(pdev, pci_info->msix_entries, num_msix);
+ 	if (err)
+ 		goto intx;
+ 
+-- 
+1.7.7.6
 
