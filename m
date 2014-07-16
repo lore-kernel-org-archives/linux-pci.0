@@ -1,85 +1,41 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: [PATCH] ACPI / PCI: Use ACPI_COMPANION() instead of ACPI_HANDLE()
-Date: Mon, 21 Jul 2014 02:52:53 +0200
-Message-ID: <2972136.muxEZR9mUT@vostro.rjw.lan>
+Message-ID: <53C5EB19.7060104@linux.intel.com>
+Date: Wed, 16 Jul 2014 11:01:45 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [Patch V3 00/16] Enable support of IOAPIC hotplug on x86 platforms
+References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com> <20140714172642.GA12920@laptop.dumpdata.com> <20140714194133.GA22857@laptop.dumpdata.com> <53C54876.5090606@linux.intel.com> <20140715161035.GA8097@laptop.dumpdata.com>
+In-Reply-To: <20140715161035.GA8097@laptop.dumpdata.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-The ACPI_HANDLE() macro evaluates ACPI_COMPANION() internally to
-return the handle of the device's ACPI companion, so it is much
-more straightforward and efficient to use ACPI_COMPANION()
-directly to obtain the device's ACPI companion object instead of
-using ACPI_HANDLE() and acpi_bus_get_device() on the returned
-handle for the same thing.
-
-Use ACPI_COMPANION() instead of ACPI_HANDLE() in the PCI ACPI support
-code.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pci-acpi.c |   16 +++++++---------
- 1 file changed, 7 insertions(+), 9 deletions(-)
-
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -175,14 +175,13 @@ static pci_power_t acpi_pci_choose_state
- 
- static bool acpi_pci_power_manageable(struct pci_dev *dev)
- {
--	acpi_handle handle = ACPI_HANDLE(&dev->dev);
--
--	return handle ? acpi_bus_power_manageable(handle) : false;
-+	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
-+	return adev ? acpi_device_power_manageable(adev) : false;
- }
- 
- static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
- {
--	acpi_handle handle = ACPI_HANDLE(&dev->dev);
-+	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
- 	static const u8 state_conv[] = {
- 		[PCI_D0] = ACPI_STATE_D0,
- 		[PCI_D1] = ACPI_STATE_D1,
-@@ -193,7 +192,7 @@ static int acpi_pci_set_power_state(stru
- 	int error = -EINVAL;
- 
- 	/* If the ACPI device has _EJ0, ignore the device */
--	if (!handle || acpi_has_method(handle, "_EJ0"))
-+	if (!adev || acpi_has_method(adev->handle, "_EJ0"))
- 		return -ENODEV;
- 
- 	switch (state) {
-@@ -207,7 +206,7 @@ static int acpi_pci_set_power_state(stru
- 	case PCI_D1:
- 	case PCI_D2:
- 	case PCI_D3hot:
--		error = acpi_bus_set_power(handle, state_conv[state]);
-+		error = acpi_device_set_power(adev, state_conv[state]);
- 	}
- 
- 	if (!error)
-@@ -219,9 +218,8 @@ static int acpi_pci_set_power_state(stru
- 
- static bool acpi_pci_can_wakeup(struct pci_dev *dev)
- {
--	acpi_handle handle = ACPI_HANDLE(&dev->dev);
--
--	return handle ? acpi_bus_can_wakeup(handle) : false;
-+	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
-+	return adev ? acpi_device_can_wakeup(adev) : false;
- }
- 
- static void acpi_pci_propagate_wakeup_enable(struct pci_bus *bus, bool enable)
-
+Hi Konrad,
+	We have found the root cause with your great support. If BIOS
+assigns an IRQ number for a PCI device, acpi_pci_irq_enable() fails to
+assign IOAPIC IRQ then due to the check:
+        if (dev->irq > 0)
+                return 0;
+	For a quick workaround, just comment out above check. But we
+need some time to figure out a clean fixup for it. We will send out new
+version once it gets resolved.
+	Thanks for your great help again.
+Regards!
+Gerry
+On 2014/7/16 0:10, Konrad Rzeszutek Wilk wrote:
+> already assigned IRQ
