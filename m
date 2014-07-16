@@ -1,78 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp08.in.ibm.com ([122.248.162.8]:52470 "EHLO
-	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758713AbaGXGWz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 02:22:55 -0400
-Received: from /spool/local
-	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 24 Jul 2014 11:52:52 +0530
-Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 398DD125805B
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:43 +0530 (IST)
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s6O6OdBq36110408
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:54:39 +0530
-Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s6O6Ml44010785
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:48 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V7 09/17] powerpc/powernv: mark IOV BAR with IORESOURCE_ARCH
-Date: Thu, 24 Jul 2014 14:22:19 +0800
-Message-Id: <1406182947-11302-10-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from smtp-outbound-2.vmware.com ([208.91.2.13]:39178 "EHLO
+	smtp-outbound-2.vmware.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755531AbaGPSXh convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Jul 2014 14:23:37 -0400
+From: Arvind Kumar <arvindkumar@vmware.com>
+To: Alexander Gordeev <agordeev@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: "pv-drivers@vmware.com" <pv-drivers@vmware.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v2 RESEND 23/23] vmw_pvscsi: Use pci_enable_msix_exact()
+ instead of pci_enable_msix()
+Date: Wed, 16 Jul 2014 18:23:23 +0000
+Message-ID: <9424d275bdc34133a03a68877ab253d0@EX13-MBX-025.vmware.com>
+References: <cover.1405533479.git.agordeev@redhat.com>,<c27a72eaa07631ca182bfdb71d0d3d7f9f280b26.1405533479.git.agordeev@redhat.com>
+In-Reply-To: <c27a72eaa07631ca182bfdb71d0d3d7f9f280b26.1405533479.git.agordeev@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On powernv platform, the IOV BAR size will be adjusted to meet the alignment
-requirement from hardware. This leads to the VF resource size need to be
-retrieved from hardware directly.
+Hi Alexander,
 
-This patch adds this flag for IOV BAR on powernv platform.
+This looks fine to me.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Arvind Kumar <arvindkumar@vmware.com>
+
+Thanks!
+Arvind
+________________________________________
+From: Alexander Gordeev <agordeev@redhat.com>
+Sent: Wednesday, July 16, 2014 11:05 AM
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev; Arvind Kumar; pv-drivers@vmware.com; linux-scsi@vger.kernel.org; linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 23/23] vmw_pvscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
+
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
+
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Arvind Kumar <arvindkumar@vmware.com>
+Cc: pv-drivers@vmware.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Acked-by: Arvind Kumar <arvindkumar@vmware.com>
 ---
- arch/powerpc/platforms/powernv/pci.c |   18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ drivers/scsi/vmw_pvscsi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index b97aa79..cc7c9a6 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -21,6 +21,7 @@
- #include <linux/io.h>
- #include <linux/msi.h>
- #include <linux/iommu.h>
-+#include <uapi/linux/pci_regs.h>
- 
- #include <asm/sections.h>
- #include <asm/io.h>
-@@ -876,3 +877,20 @@ static int __init tce_iommu_bus_notifier_init(void)
- }
- 
- subsys_initcall_sync(tce_iommu_bus_notifier_init);
-+
-+static void pnv_sriov_final_fixup(struct pci_dev *dev)
-+{
-+	struct resource *res;
-+	int i;
-+
-+	if (!dev->is_physfn)
-+		return;
-+
-+	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-+		res = dev->resource + PCI_IOV_RESOURCES + i;
-+		if (!res->flags)
-+			continue;
-+		res->flags |= IORESOURCE_ARCH;
-+	}
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_sriov_final_fixup);
--- 
-1.7.9.5
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index c88e146..598f65e 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -1194,7 +1194,7 @@ static int pvscsi_setup_msix(const struct pvscsi_adapter *adapter,
+        struct msix_entry entry = { 0, PVSCSI_VECTOR_COMPLETION };
+        int ret;
 
+-       ret = pci_enable_msix(adapter->dev, &entry, 1);
++       ret = pci_enable_msix_exact(adapter->dev, &entry, 1);
+        if (ret)
+                return ret;
+
+--
+1.7.7.6
