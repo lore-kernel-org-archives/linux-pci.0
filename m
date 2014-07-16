@@ -1,78 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:3685 "EHLO mga03.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:6471 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751818AbaGaQko (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Jul 2014 12:40:44 -0400
-Message-ID: <53DA718A.9040407@intel.com>
-Date: Thu, 31 Jul 2014 09:40:42 -0700
-From: Alexander Duyck <alexander.h.duyck@intel.com>
-MIME-Version: 1.0
-To: Edward Cree <ecree@solarflare.com>
-CC: linux-pci@vger.kernel.org, Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
-References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com> <alpine.LFD.2.03.1407311500570.16821@solarflare.com> <53DA5EF4.1030500@intel.com> <53DA674A.9030305@solarflare.com>
-In-Reply-To: <53DA674A.9030305@solarflare.com>
-Content-Type: text/plain; charset=UTF-8
+	id S965714AbaGPSFO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Jul 2014 14:05:14 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	James Smart <james.smart@emulex.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 11/23] lpfc: Remove superfluous call to pci_disable_msix()
+Date: Wed, 16 Jul 2014 20:05:15 +0200
+Message-Id: <2caecd863ac0ed807c33184651305bf25ed35436.1405533479.git.agordeev@redhat.com>
+In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/31/2014 08:56 AM, Edward Cree wrote:
-> On 31/07/14 16:21, Alexander Duyck wrote:
->> However if you are wanting to use this as a way to disable SR-IOV for a
->> device I wouldn't recommend it.  Based on what you have described I
->> would suggest dropping the fix in drivers/pci/quirks that would clear
->> dev->is_physfn if you are in the PF-IOV mode.  That way the SR-IOV
->> functionality should be fully disabled.
-> I still don't see how this can go in drivers/pci/quirks, because PF-IOV
-> mode can only be detected at driver probe time.  The way we find out
-> that the NIC is in PF-IOV mode is that a request to the MC (the
-> Management CPU on the card) to create a vswitch fails.  But maybe I'm
-> wrong about what quirks can do - is there any relevant documentation?
+There is no need to call pci_disable_msix() in case
+the previous call to pci_enable_msix() failed
 
-If this PF-IOV mode is enabled what would be the layout of the PF
-devices?  It seems like you should be able to scan for multiple PFs all
-showing up on the same bus with a certain stride if you wanted to detect it.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: James Smart <james.smart@emulex.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Acked-by: James Smart <james.smart@emulex.com>
+---
+ drivers/scsi/lpfc/lpfc_init.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-> Clearing dev->is_physfn in the driver probe routine isn't safe:
-> dev->sriov memory can get leaked, for example, as sriov_init will get
-> called at device add, but sriov_release won't be called at removal.
-
-Thanks for pointing that out.  It seems like that is a bug.  We should
-probably be checking for dev->sriov, not dev->is_physfn before calling
-sriov_release.
-
-I might see about submitting a patch to address that.
-
-> I'm also unconvinced that having !(dev->is_physfn || dev->is_virtfn) is
-> a valid state; but maybe I'm misunderstanding and "is_physfn" doesn't
-> actually mean "is a physical function", but rather "has SR-IOV capability".
-
-is_physfn is typically used to indicate the device is capable of acting
-as a physical function.  So a non-IOV device will not set either
-is_physfn or is_virtfn.
-
->> In addition this solution would
->> also resolve the fact that the driver wouldn't actually have to be
->> loaded for it to work so if someone were to load a driver that didn't
->> contain the fix they would be blocked from enabling SR-IOV as well.
-> The current driver fails to probe the PF because it assumes the vswitch
-> creation failure is fatal.  There should never be a driver that knows it
-> can live without the vswitch but doesn't know that that breaks SR-IOV.
-> 
-> -Edward
-
-Is the vswitch a hard requirement for something other than SR-IOV?  If
-not then maybe you should consider modifying the driver so it simply
-disabled SR-IOV if you cannot allocate the vswitch instead of blocking
-probe.
-
-Thanks,
-
-Alex
-
-P.S.  You should really consider changing your email signature.  The bit
-about "you may not use, copy or disclose to anyone this message" kind of
-goes against the whole point of submitting patches to an open source
-project.
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 06f9a5b..a5769a9 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -8242,7 +8242,7 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
+ 	if (rc) {
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 				"0420 PCI enable MSI-X failed (%d)\n", rc);
+-		goto msi_fail_out;
++		goto vec_fail_out;
+ 	}
+ 	for (i = 0; i < LPFC_MSIX_VECTORS; i++)
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+@@ -8320,6 +8320,8 @@ irq_fail_out:
+ msi_fail_out:
+ 	/* Unconfigure MSI-X capability structure */
+ 	pci_disable_msix(phba->pcidev);
++
++vec_fail_out:
+ 	return rc;
+ }
+ 
+@@ -8812,7 +8814,7 @@ enable_msix_vectors:
+ 	} else if (rc) {
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 				"0484 PCI enable MSI-X failed (%d)\n", rc);
+-		goto msi_fail_out;
++		goto vec_fail_out;
+ 	}
+ 
+ 	/* Log MSI-X vector assignment */
+@@ -8875,9 +8877,10 @@ cfg_fail_out:
+ 			 &phba->sli4_hba.fcp_eq_hdl[index]);
+ 	}
+ 
+-msi_fail_out:
+ 	/* Unconfigure MSI-X capability structure */
+ 	pci_disable_msix(phba->pcidev);
++
++vec_fail_out:
+ 	return rc;
+ }
+ 
+-- 
+1.7.7.6
 
