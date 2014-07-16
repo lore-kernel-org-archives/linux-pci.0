@@ -1,52 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:63936 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751809AbaGBTJ5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 15:09:57 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Will Deacon <will.deacon@arm.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 8/9] pci: Add support for creating a generic host_bridge from device tree
-Date: Wed, 02 Jul 2014 21:09:06 +0200
-Message-ID: <4233600.RyK6LJF6ZK@wuerfel>
-In-Reply-To: <20140702173113.GJ24879@arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com> <20140702172355.GQ2173@e106497-lin.cambridge.arm.com> <20140702173113.GJ24879@arm.com>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:58431 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965259AbaGPSsy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 14:48:54 -0400
+Received: by mail-ie0-f173.google.com with SMTP id tr6so1223366ieb.18
+        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 11:48:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1405059585-10620-22-git-send-email-jiang.liu@linux.intel.com>
+References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com> <1405059585-10620-22-git-send-email-jiang.liu@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 16 Jul 2014 12:48:33 -0600
+Message-ID: <CAErSpo5MU2tck3iQxf0K0rMzNuHdFMLDF+frqQ-5f-KPGcobqg@mail.gmail.com>
+Subject: Re: [Patch Part3 V4 21/21] pci, ACPI, iommu: Enhance pci_root to
+ support DMAR device hotplug
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux hotplug mailing <linux-hotplug@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	dmaengine@vger.kernel.org,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 02 July 2014 18:31:13 Will Deacon wrote:
-> > > > + err = of_pci_parse_bus_range(parent->of_node, bus_range);
-> > > > + if (err) {
-> > > > +         dev_info(parent, "No bus range for %s, using default [0-255]\n",
-> > > > +                 parent->of_node->full_name);
-> > > > +         bus_range->start = 0;
-> > > > +         bus_range->end = 255;
-> > > > +         bus_range->flags = IORESOURCE_BUS;
-> > > 
-> > > What about bus_range->name?
-> > 
-> > Don't know! Is anyone using it?
-> 
-> I guess /proc/iomem prints it out? I set it in my current driver, if you
-> want to take a look.
+On Fri, Jul 11, 2014 at 12:19 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> Finally enhance pci_root driver to support DMAR device hotplug when
+> hot-plugging PCI host bridges.
+>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 
-I don't think the bus resources show up anywhere in procfs. Anyway, it's
-always a good idea to give resources a name, if only for debugging purposes.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-	Arnd
+I assume you'll merge this along with the rest of the series via some
+non-PCI tree.
+
+> ---
+>  drivers/acpi/pci_root.c |   16 ++++++++++++++--
+>  1 file changed, 14 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index d388f13d48b4..99c2b9761c12 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -33,6 +33,7 @@
+>  #include <linux/pci.h>
+>  #include <linux/pci-acpi.h>
+>  #include <linux/pci-aspm.h>
+> +#include <linux/dmar.h>
+>  #include <linux/acpi.h>
+>  #include <linux/slab.h>
+>  #include <acpi/apei.h> /* for acpi_hest_init() */
+> @@ -511,6 +512,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>         struct acpi_pci_root *root;
+>         acpi_handle handle = device->handle;
+>         int no_aspm = 0, clear_aspm = 0;
+> +       bool hotadd = system_state != SYSTEM_BOOTING;
+>
+>         root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+>         if (!root)
+> @@ -557,6 +559,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>         strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
+>         device->driver_data = root;
+>
+> +       if (hotadd && dmar_device_add(handle)) {
+> +               result = -ENXIO;
+> +               goto end;
+> +       }
+> +
+>         pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
+>                acpi_device_name(device), acpi_device_bid(device),
+>                root->segment, &root->secondary);
+> @@ -583,7 +590,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>                         root->segment, (unsigned int)root->secondary.start);
+>                 device->driver_data = NULL;
+>                 result = -ENODEV;
+> -               goto end;
+> +               goto remove_dmar;
+>         }
+>
+>         if (clear_aspm) {
+> @@ -597,7 +604,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>         if (device->wakeup.flags.run_wake)
+>                 device_set_run_wake(root->bus->bridge, true);
+>
+> -       if (system_state != SYSTEM_BOOTING) {
+> +       if (hotadd) {
+>                 pcibios_resource_survey_bus(root->bus);
+>                 pci_assign_unassigned_root_bus_resources(root->bus);
+>         }
+> @@ -607,6 +614,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>         pci_unlock_rescan_remove();
+>         return 1;
+>
+> +remove_dmar:
+> +       if (hotadd)
+> +               dmar_device_remove(handle);
+>  end:
+>         kfree(root);
+>         return result;
+> @@ -625,6 +635,8 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+>
+>         pci_remove_root_bus(root->bus);
+>
+> +       dmar_device_remove(device->handle);
+> +
+>         pci_unlock_rescan_remove();
+>
+>         kfree(root);
+> --
+> 1.7.10.4
+>
