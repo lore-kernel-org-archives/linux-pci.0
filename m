@@ -1,67 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:48467 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753091AbaGERcF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 Jul 2014 13:32:05 -0400
-Received: by mail-ie0-f176.google.com with SMTP id at1so2397934iec.35
-        for <linux-pci@vger.kernel.org>; Sat, 05 Jul 2014 10:32:04 -0700 (PDT)
-Date: Sat, 5 Jul 2014 11:32:00 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-pci@vger.kernel.org, jg1.han@samsung.com, mohit.kumar@st.com,
-	linux-kernel@vger.kernel.org, grant.likely@linaro.org,
-	Pratyush Anand <pratyush.anand@gmail.com>
-Subject: Re: [PATCH 0/3] dra7: Add PCIe support
-Message-ID: <20140705173200.GA26618@google.com>
-References: <1403719007-9352-1-git-send-email-kishon@ti.com>
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:37129 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998AbaGPUeo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 16:34:44 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1403719007-9352-1-git-send-email-kishon@ti.com>
+In-Reply-To: <20140716193637.GA14366@google.com>
+References: <1405505022-7593-1-git-send-email-vidyas@nvidia.com> <20140716193637.GA14366@google.com>
+From: vidya sagar <sagar.tv@gmail.com>
+Date: Thu, 17 Jul 2014 02:04:23 +0530
+Message-ID: <CAN7O0+JObXFbEjFhKOED+RSFG3cVQTfXS8qp7J1ZYHd5YE18eQ@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI: enable ASPM configuration in PCIE POWERSAVE mode
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: matthew.garrett@nebula.com, rjw@rjwysocki.net,
+	nchumbalkar@lenovo.com, thierry.reding@gmail.com,
+	swarren@nvidia.com, linux-pci@vger.kernel.org, kthota@nvidia.com,
+	linux-kernel@vger.kernel.org, vidyas@nvidia.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 25, 2014 at 11:26:44PM +0530, Kishon Vijay Abraham I wrote:
-> [1] is split into separate series in order for individual subsystem
-> Maintainers to pick up the patches. This series handles the PCIe
-> support for DRA7.
-> 
-> Rebased to 3.16-rc2.
-> 
-> [1] -> https://lkml.org/lkml/2014/5/29/258
-> 
-> Kishon Vijay Abraham I (3):
->   PCI: designware: Configuration space should be specified in 'reg'
->   PCI: designware: use untranslated address while programming ATU
->   PCI: host: pcie-dra7xx: add support for pcie-dra7xx controller
+On Thu, Jul 17, 2014 at 1:06 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Jul 16, 2014 at 03:33:42PM +0530, Vidya Sagar wrote:
+>> From: Vidya Sagar <sagar.tv@gmail.com>
+>>
+>> Commit 1a680b7c3258 ("PCI: PCIe links may not get configured for ASPM
+>>  under POWERSAVE mode") moved pcie_aspm_powersave_config_link() out of
+>> pci_raw_set_power_state() to pci_set_power_state() which would enable
+>> ASPM. But, with Commit db288c9c5f9d ("PCI / PM: restore the original
+>>  behavior of pci_set_power_state()"), which re-introduced the following check
+>> ./drivers/pci/pci.c: pci_set_power_state()
+>>
+>> +     /* Check if we're already there */
+>> +     if (dev->current_state == state)
+>> +        return 0;
+>>
+>> in pci_set_power_state(), call to pcie_aspm_powersave_config_link() is never
+>> made leaving ASPM broken.
+>> Fix it by configuring links for ASPM in do_pci_enable_device() instead of
+>> pci_set_power_state()
+>>
+>> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+>> Signed-off-by: Vidya Sagar <sagar.tv@gmail.com>
+>
+> I applied this to pci/misc for v3.17 with the following changelog:
 
-Mohit, I see your ack for [1/3], but not for [2/3]; are you OK with that,
-too?
+Thanks,
 
-Pratyush, you had some questions about [2/3]; are you happy with that one?
-
-[3/3] adds the devicetree binding; I'd like somebody to check that out.
-
-Also, there's no MAINTAINERS update for pci-dra7xx.c.  Kishon, can you
-include an update for that?
-
-Kishon, can you collect the acks and post a v2 series with those and the
-MAINTAINERS update?
-
-Bjorn
-
-> 
->  .../devicetree/bindings/pci/designware-pcie.txt    |    4 +
->  Documentation/devicetree/bindings/pci/ti-pci.txt   |   59 +++
->  drivers/pci/host/Kconfig                           |   10 +
->  drivers/pci/host/Makefile                          |    1 +
->  drivers/pci/host/pci-dra7xx.c                      |  458 ++++++++++++++++++++
->  drivers/pci/host/pcie-designware.c                 |   66 ++-
->  drivers/pci/host/pcie-designware.h                 |    4 +
->  7 files changed, 589 insertions(+), 13 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/pci/ti-pci.txt
->  create mode 100644 drivers/pci/host/pci-dra7xx.c
-> 
-> -- 
-> 1.7.9.5
-> 
+>
+> It would still make me feel better if Matthew and/or Rafael acked this.
+>
+>     PCI: Configure ASPM when enabling device
+>
+>     We can't do ASPM configuration at enumeration-time because enabling it
+>     makes some defective hardware unresponsive, even if ASPM is disabled later
+>     (see 41cd766b0659 ("PCI: Don't enable aspm before drivers have had a chance
+>     to veto it").  Therefore, we have to do it after a driver claims the
+>     device.
+>
+>     We previously configured ASPM in pci_set_power_state(), but that's not a
+>     very good place because it's not really related to setting the PCI device
+>     power state, and doing it there means:
+>
+>       - We incorrectly skipped ASPM config when setting a device that's
+>         already in D0 to D0.
+>
+>       - We unnecessarily configured ASPM when setting a device to a low-power
+>         state (the ASPM feature only applies when the device is in D0).
+>
+>       - We unnecessarily configured ASPM when called from a .resume() method
+>         (ASPM configuration needs to be restored during resume, but I think
+>         pci_restore_pcie_state() should already do this).
+>
+>     Move ASPM configuration from pci_set_power_state() to
+>     do_pci_enable_device() so we do it when a driver enables a device.
+>
+>     [bhelgaas: changelog]
+>     Link: https://bugzilla.kernel.org/show_bug.cgi?id=79621
+>
+> It would still make me feel better if Matthew and/or Rafael chimed in to
+> make sure this is sane.
+>
+> Bjorn
+>
+>> ---
+>> v3:
+>> * Modified commit message
+>>     removed single quotes around commit messages
+>>     added Suggested-by line
+>>
+>> v2:
+>> * Calling ASPM config code is moved from pci_set_power_state() to
+>> * do_pci_enable_device()
+>>
+>>  drivers/pci/pci.c | 12 ++++++------
+>>  1 file changed, 6 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 1c8592b..81d49d3 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -839,12 +839,6 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>>
+>>       if (!__pci_complete_power_transition(dev, state))
+>>               error = 0;
+>> -     /*
+>> -      * When aspm_policy is "powersave" this call ensures
+>> -      * that ASPM is configured.
+>> -      */
+>> -     if (!error && dev->bus->self)
+>> -             pcie_aspm_powersave_config_link(dev->bus->self);
+>>
+>>       return error;
+>>  }
+>> @@ -1195,12 +1189,18 @@ int __weak pcibios_enable_device(struct pci_dev *dev, int bars)
+>>  static int do_pci_enable_device(struct pci_dev *dev, int bars)
+>>  {
+>>       int err;
+>> +     struct pci_dev *bridge;
+>>       u16 cmd;
+>>       u8 pin;
+>>
+>>       err = pci_set_power_state(dev, PCI_D0);
+>>       if (err < 0 && err != -EIO)
+>>               return err;
+>> +
+>> +     bridge = pci_upstream_bridge(dev);
+>> +     if (bridge)
+>> +             pcie_aspm_powersave_config_link(bridge);
+>> +
+>>       err = pcibios_enable_device(dev, bars);
+>>       if (err < 0)
+>>               return err;
+>> --
+>> 1.8.1.5
+>>
