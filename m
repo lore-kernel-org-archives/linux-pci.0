@@ -1,62 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f54.google.com ([209.85.192.54]:62324 "EHLO
-	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753747AbaGHSYA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 14:24:00 -0400
-Received: by mail-qg0-f54.google.com with SMTP id q107so5379919qgd.41
-        for <linux-pci@vger.kernel.org>; Tue, 08 Jul 2014 11:23:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5283004.YemU4lhtKD@pcbe13110.cern.ch>
-References: <280883016.9onmf0miLq@pcbe13110.cern.ch> <1719046.4xHmiSoxkE@pcbe13110.cern.ch>
- <CAErSpo5YbaOjqr4obHwekRNwo1K5j0JbE-PYu48k7U90ZpWM0A@mail.gmail.com> <5283004.YemU4lhtKD@pcbe13110.cern.ch>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 8 Jul 2014 12:23:39 -0600
-Message-ID: <CAErSpo5ixtc=n0f56=QvtxYnXumZiao6NMgBVAWpcJH4f7QA4g@mail.gmail.com>
-Subject: Re: PCIe bus enumeration
-To: Federico Vaga <federico.vaga@cern.ch>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	michel.arruat@cern.ch
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Naresh Kumar Inna <naresh@chelsio.com>,
+	Arvind Bhushan <arvindb@chelsio.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 06/23] csiostor: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Wed, 16 Jul 2014 20:05:10 +0200
+Message-Id: <66f5bda4546f61484a27570f9971fdb6683210da.1405533479.git.agordeev@redhat.com>
+In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 8, 2014 at 1:15 AM, Federico Vaga <federico.vaga@cern.ch> wrote:
->> > So, It looks like that some BIOS disable the bridge when there is
->> > nothing behind it. Why? Power save? :/
->>
->> Could be power savings, or possibly to conserve bus numbers, which
->> are a limited resource.
->
-> what is the maximum number of buses?
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-256.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Naresh Kumar Inna <naresh@chelsio.com>
+Cc: Arvind Bhushan <arvindb@chelsio.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/csiostor/csio_hw.h  |    2 +-
+ drivers/scsi/csiostor/csio_isr.c |   22 +++++++++-------------
+ 2 files changed, 10 insertions(+), 14 deletions(-)
 
->> Well, it's true that it's hard to get constant *bus numbers*, but
->> it's never really been a good idea to rely on those, because
->> they're assigned at the discretion of the OS, and there are reasons
->> why the OS might want to reallocate them, e.g., to accommodate a
->> deep hot-plugged hierarchy.  If you shift focus to *slot numbers*,
->> then I think there's a lot more we can do.
->
-> At this point I'm a little bit confused about the definition "slot
-> numbers" :) You mean the 22, 25, ...
+diff --git a/drivers/scsi/csiostor/csio_hw.h b/drivers/scsi/csiostor/csio_hw.h
+index 49b1daa..5db2d85 100644
+--- a/drivers/scsi/csiostor/csio_hw.h
++++ b/drivers/scsi/csiostor/csio_hw.h
+@@ -94,7 +94,7 @@ enum {
+ };
+ 
+ struct csio_msix_entries {
+-	unsigned short	vector;		/* Vector assigned by pci_enable_msix */
++	unsigned short	vector;		/* Assigned MSI-X vector */
+ 	void		*dev_id;	/* Priv object associated w/ this msix*/
+ 	char		desc[24];	/* Description of this vector */
+ };
+diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
+index 91ba91d..a8c748a 100644
+--- a/drivers/scsi/csiostor/csio_isr.c
++++ b/drivers/scsi/csiostor/csio_isr.c
+@@ -499,7 +499,7 @@ csio_reduce_sqsets(struct csio_hw *hw, int cnt)
+ static int
+ csio_enable_msix(struct csio_hw *hw)
+ {
+-	int rv, i, j, k, n, min, cnt;
++	int i, j, k, n, min, cnt;
+ 	struct csio_msix_entries *entryp;
+ 	struct msix_entry *entries;
+ 	int extra = CSIO_EXTRA_VECS;
+@@ -521,19 +521,15 @@ csio_enable_msix(struct csio_hw *hw)
+ 
+ 	csio_dbg(hw, "FW supp #niq:%d, trying %d msix's\n", hw->cfg_niq, cnt);
+ 
+-	while ((rv = pci_enable_msix(hw->pdev, entries, cnt)) >= min)
+-		cnt = rv;
+-	if (!rv) {
+-		if (cnt < (hw->num_sqsets + extra)) {
+-			csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
+-			csio_reduce_sqsets(hw, cnt - extra);
+-		}
+-	} else {
+-		if (rv > 0)
+-			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
+-
++	cnt = pci_enable_msix_range(hw->pdev, entries, min, cnt);
++	if (cnt < 0) {
+ 		kfree(entries);
+-		return -ENOMEM;
++		return cnt;
++	}
++
++	if (cnt < (hw->num_sqsets + extra)) {
++		csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
++		csio_reduce_sqsets(hw, cnt - extra);
+ 	}
+ 
+ 	/* Save off vectors */
+-- 
+1.7.7.6
 
-Right.  Bus numbers are under software control, to some degree (as a
-general rule, an x86 BIOS assigns them and Linux leaves them alone,
-but they *can* be changed so they aren't a good thing to rely on).
-The bus number of a root bus is usually determined by hardware or by
-an arch-specific host bridge driver.  The bus number below a PCI-PCI
-bridge is determined by the bridge's "secondary bus number" register,
-which software can change.
-
-Slot numbers are based on the Physical Slot Number in the PCIe Slot
-Capability register.  This is set by some hardware mechanism such as
-pin strapping or a serial EEPROM.  Software can't change it, so you
-can rely on it to be constant.  (There's also a mechanism for getting
-a slot number from ACPI, but that should also return a constant
-value).  The problem is that I don't think the Linux slot number
-support is very good, so I'm sure there's plenty of stuff that we
-*should* be able to do that we can't do *yet*.
-
-Bjorn
