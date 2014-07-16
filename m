@@ -1,75 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:55510 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933357AbaGQPGU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 Jul 2014 11:06:20 -0400
-Message-ID: <53C7E613.3080102@ti.com>
-Date: Thu, 17 Jul 2014 11:04:51 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Pratyush Anand <pratyush.anand@st.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v5 3/5] PCI: designware: enhance dw_pcie_host_init() to
- support v3.65 DW hardware
-References: <1405528686-16539-1-git-send-email-m-karicheri2@ti.com> <1405528686-16539-4-git-send-email-m-karicheri2@ti.com> <20140717033638.GI12278@pratyush-vbox>
-In-Reply-To: <20140717033638.GI12278@pratyush-vbox>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Hiral Patel <hiralpat@cisco.com>,
+	Suma Ramars <sramars@cisco.com>,
+	Brian Uchino <buchino@cisco.com>, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 07/23] fnic: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Wed, 16 Jul 2014 20:05:11 +0200
+Message-Id: <e8cc7988e4b0a38f59d3e854d387c7c0d95b058c.1405533479.git.agordeev@redhat.com>
+In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/16/2014 11:36 PM, Pratyush Anand wrote:
-> On Thu, Jul 17, 2014 at 12:38:04AM +0800, Murali Karicheri wrote:
->> keystone PCI controller is based on v3.65 designware hardware. This
->> version differs from newer versions of the hardware in few functional
->> areas discussed below that makes it necessary to change dw_pcie_host_init()
->> to support v3.65 based PCI controller.
->>
->>   1. No support for ATU port. So any ATU specific resource handling code
->>      is to be bypassed for v3.65 h/w.
->>   2. MSI controller uses Application space to implement MSI and 32 MSI
->>      interrupts are multiplexed over 8 IRQs to the host. Hence the code
->>      to process MSI IRQ needs to be different. This patch allows platform
->>      driver to provide its own irq_domain_ops ptr to irq_domain_add_linear()
->>      through an API callback from the designware core driver.
->>   3. MSI interrupt generation requires EP to write to the RC's application
->>      register. So enhance the driver to allow setup of inbound access to
->>      MSI irq register as a post scan bus API callback.
->>
->> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
-> Looks almost ok to me.
->
-> Reviewed-by: Pratyush Anand<pratyush.anand@st.com>
->
->>   int __init dw_pcie_host_init(struct pcie_port *pp)
->>   {
->>   	struct device_node *np = pp->dev->of_node;
->> -	struct of_pci_range range;
->>   	struct of_pci_range_parser parser;
->> +	struct of_pci_range range;
-> You may avoid moving the above line.
-Thought the variables are to be sorted. I can fix this when I resend it 
-today with your reviewed by and Mohit's Ack.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Regards,
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Hiral Patel <hiralpat@cisco.com>
+Cc: Suma Ramars <sramars@cisco.com>
+Cc: Brian Uchino <buchino@cisco.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/fnic/fnic_isr.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Murali
-> ~Pratyush
+diff --git a/drivers/scsi/fnic/fnic_isr.c b/drivers/scsi/fnic/fnic_isr.c
+index 7d9b54a..a0dd1b6 100644
+--- a/drivers/scsi/fnic/fnic_isr.c
++++ b/drivers/scsi/fnic/fnic_isr.c
+@@ -257,8 +257,8 @@ int fnic_set_intr_mode(struct fnic *fnic)
+ 	    fnic->raw_wq_count >= m &&
+ 	    fnic->wq_copy_count >= o &&
+ 	    fnic->cq_count >= n + m + o) {
+-		if (!pci_enable_msix(fnic->pdev, fnic->msix_entry,
+-				    n + m + o + 1)) {
++		if (!pci_enable_msix_exact(fnic->pdev, fnic->msix_entry,
++					   n + m + o + 1)) {
+ 			fnic->rq_count = n;
+ 			fnic->raw_wq_count = m;
+ 			fnic->wq_copy_count = o;
+-- 
+1.7.7.6
 
