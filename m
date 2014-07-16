@@ -1,86 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f182.google.com ([209.85.220.182]:46350 "EHLO
-	mail-vc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754971AbaGISJJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 14:09:09 -0400
-Received: by mail-vc0-f182.google.com with SMTP id il7so7713212vcb.41
-        for <linux-pci@vger.kernel.org>; Wed, 09 Jul 2014 11:09:09 -0700 (PDT)
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:52306 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751480AbaGPUzN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 16:55:13 -0400
+Received: by mail-ie0-f170.google.com with SMTP id rl12so1507002iec.1
+        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 13:55:13 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB661A17A3E48F2@EAPEX1MAIL1.st.com>
-References: <2CC2A0A4A178534D93D5159BF3BCB661A17A3E48F2@EAPEX1MAIL1.st.com>
-Date: Wed, 9 Jul 2014 11:09:08 -0700
-Message-ID: <CAOesGMiu_azMYt3L5OgZSFRgrJQvXvkvSOtr0eLam22CQ5SwuA@mail.gmail.com>
-Subject: Re: [GIT PULL] ARM: SPEAr1310 PCIe updates
-From: Olof Johansson <olof@lixom.net>
-To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mark Nicholson <mark@nicholnet.com>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	"FTPAdmin Kernel.org" <ftpadmin@kernel.org>
+In-Reply-To: <CAErSpo7vooChRfSF6oY8GcqVYZruv-7_D0zm3a4M_KDVMbWNiA@mail.gmail.com>
+References: <CAKAYmMLfxkmaVxaPDd6z=B0ESQ3mR=dUG4OFFgEoy0295qLYgg@mail.gmail.com>
+	<CAKAYmMLhPhukBbR8NhPk3EigmvwiX+DEGj-Mod7zpHMnZKRsLw@mail.gmail.com>
+	<CAErSpo7vooChRfSF6oY8GcqVYZruv-7_D0zm3a4M_KDVMbWNiA@mail.gmail.com>
+Date: Wed, 16 Jul 2014 13:55:12 -0700
+Message-ID: <CAE9FiQWomktcpSHeFwxWBLXmAsbdXEHv6sOrNXodobkBw=mRKA@mail.gmail.com>
+Subject: Re: Error assigning BAR 0 to hotplugged device
+From: Yinghai Lu <yinghai@kernel.org>
+To: Chuck Tuffli <ctuffli@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-
-
-On Tue, Jul 8, 2014 at 10:48 PM, Mohit KUMAR DCG <Mohit.KUMAR@st.com> wrote:
-> Hello Olof,
+On Wed, Jul 16, 2014 at 11:54 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Yinghai]
 >
-> Please pull PCIe updates for ST's SPEAr1310 SoC.
->
-> Last version of posted V8 patches have been Acked-by respective maintainers.
-> https://lkml.org/lkml/2014/4/15/260
->
-> Apart from arch/arm/ changes, it also contains patches for drivers/{pci|phy}.
-> Bjorn advised to get complete series via arm-soc tree.
-> http://www.spinics.net/lists/linux-pci/msg30271.html
->
->  Regards
->  Mohit
->
-> The following changes since commit 4c834452aad01531db949414f94f817a86348d59:
->   Linus Torvalds (1):
->         Linux 3.16-rc3
->
-> are available in the git repository at:
->
->   https://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git spear/pcie-support-v8
->
-> Mohit Kumar (1):
->       SPEAr13xx: defconfig: Update
->
-> Pratyush Anand (8):
->       clk: SPEAr13XX: Fix pcie clock name
->       SPEAr13XX: Fix static mapping table
->       phy: SPEAr1310/40-miphy: Add binding information
->       SPEAr: misc: Add binding information
->       phy: SPEAr1310/40-miphy: Add phy driver for PCIe and SATA
->       SPEAr13XX: Add binding information for PCIe controller
->       SPEAr13XX: dts: Add PCIe node information
->       pcie: SPEAr13xx: Add designware wrapper support
+> On Wed, Jul 16, 2014 at 11:19 AM, Chuck Tuffli <ctuffli@gmail.com> wrote:
+>> On Tue, Jul 8, 2014 at 12:37 PM, Chuck Tuffli <ctuffli@gmail.com> wrote:
+>>> On a system with a recent Fedora kernel (3.14.9-200.fc20.x86_64), a
+>>> hotplugged PCI device is unable to get memory mapped IO:
+>>> ...
+>>> [  183.247377] pcieport 0000:9a:00.0: BAR 15: can't assign mem pref
+>>> (size 0x100000)
+>>> [  183.247384] pcieport 0000:9b:15.0: BAR 14: can't assign mem (size 0x100000)
+>>> [  183.247388] pcieport 0000:9b:15.0: BAR 15: can't assign mem pref
+>>> (size 0x100000)
+>>> [  183.247394] pci 0000:a5:00.0: BAR 6: can't assign mem pref (size 0x10000)
+>>> [  183.247397] pci 0000:a5:00.0: BAR 0: can't assign mem (size 0x4000)
+>>>
+>>> The device is connected to a switch supporting hotplug (i.e. SltCap
+>>> includes HotPlug+) and I have added
+>>> pci=realloc,hpmemsize=16M
+>>> to the kernel boot parameters. This appears to have increased the
+>>> prefetchable memory but not the memory mapped IO:
+>>
+>> Further investigation suggests that pbus_size_mem() never really gets
+>> a chance to increase the bridge aperture by the hpmemsize value
+>> because find_free_bus_resource() returns NULL. This apparently happens
+>> because the function "skip[s] the bus resources which have already
+>> been assigned (that is, have non-NULL parent resource)". Specifically,
+>> it checks
+>>
+>>     if (r && (r->flags & type_mask) == type && !r->parent)
+>>
+>> and in my configuration, finds that r->parent != NULL for the memory
+>> mapped IO resource. Wouldn't r->parent be non-NULL in most cases other
+>> than for bridges in the root complex? If so, does that imply hpmemsize
+>> would only be used for bridges advertising hot plug in the root
+>> complex?
 
-There are so many things wrong with this pull request.
+Please try current tree linus/master or pci/next.
+also need boot with "debug ignore_loglevel pciehp.pciehp_debug=1".
 
-* Why is this not coming from the spear maintainer that knows how to
-look at patches and deal with these things?
-* Why have you separated out the PCIe node info, but not the phy DTS
-updates in separate patches?
-* Why are you sending a pull request for a repo that is not yours?
-* Why is Viresh the git committer but hasn't signed off on the patches?
+post
+dmesg -s 262144
+lspci -tv
+lspci -vvxxx
 
-Are you sharing accounts on kernel.org? (Adding kernel.org admin on cc
-just in case).
+Thanks
 
-I'm not going to touch this pull request until the above has been
-sorted out and explained.
-
-
--Olof
+Yinghai
