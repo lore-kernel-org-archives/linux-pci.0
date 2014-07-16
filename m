@@ -1,32 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:44211 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932289AbaGWRkU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jul 2014 13:40:20 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Shawn Guo <shawn.guo@freescale.com>, kernel@pengutronix.de
-Subject: [PATCH 0/3] i.MX6 PCIe fixes for 3.17
-Date: Wed, 23 Jul 2014 19:40:14 +0200
-Message-Id: <1406137217-11294-1-git-send-email-l.stach@pengutronix.de>
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:52537 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753926AbaGPWU1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 18:20:27 -0400
+Received: by mail-ig0-f172.google.com with SMTP id h15so4934197igd.17
+        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 15:20:27 -0700 (PDT)
+Date: Wed, 16 Jul 2014 16:20:24 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI/MSI: Remove arch_msi_check_device()
+Message-ID: <20140716222024.GE14366@google.com>
+References: <cover.1405160163.git.agordeev@redhat.com>
+ <1005232855c3af2c0c669818ee63be445389b6ad.1405160163.git.agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1005232855c3af2c0c669818ee63be445389b6ad.1405160163.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Two important fixes for i.MX6 PCIe that should go in to 3.17
+On Sat, Jul 12, 2014 at 01:21:08PM +0200, Alexander Gordeev wrote:
+> There are no archs that override arch_msi_check_device()
+> hook. Remove it as it is completely redundant.
+> 
+> If an arch would need to check MSI/MSI-X possibility for a
+> device it should make it within arch_setup_msi_irqs() hook.
+> 
+> Cc: linuxppc-dev@lists.ozlabs.org
+> Cc: linux-pci@vger.kernel.org
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  drivers/pci/msi.c   |   49 +++++++++++++------------------------------------
+>  include/linux/msi.h |    3 ---
+>  2 files changed, 13 insertions(+), 39 deletions(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 13f3d30..19ac058 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -56,16 +56,6 @@ void __weak arch_teardown_msi_irq(unsigned int irq)
+>  	chip->teardown_irq(chip, irq);
+>  }
+>  
+> -int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+> -{
+> -	struct msi_chip *chip = dev->bus->msi;
+> -
+> -	if (!chip || !chip->check_device)
+> -		return 0;
+> -
+> -	return chip->check_device(chip, dev, nvec, type);
+> -}
+> -
+>  int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+>  {
+>  	struct msi_desc *entry;
+> @@ -809,22 +799,23 @@ out_free:
+>  }
+>  
+>  /**
+> - * pci_msi_check_device - check whether MSI may be enabled on a device
+> + * msi_check_device - check whether MSI may be enabled on a device
+>   * @dev: pointer to the pci_dev data structure of MSI device function
+>   * @nvec: how many MSIs have been requested ?
+> - * @type: are we checking for MSI or MSI-X ?
+>   *
+>   * Look at global flags, the device itself, and its parent buses
+>   * to determine if MSI/-X are supported for the device. If MSI/-X is
+>   * supported return 0, else return an error code.
+>   **/
+> -static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+> +static int msi_check_device(struct pci_dev *dev, int nvec)
 
-Also I'm adding myself as a co-maintainer of the driver as I'm
-already keeping an eye on it and Richard seems to be ok with this.
+I think "check_device" is a terrible name because it really doesn't
+give a clue about what it's doing or what the return value means.
+Since you're removing the external usage (arch_msi_check_device) and
+this one is static, this would be a good time to fix it.  Maybe
+"pci_msi_supported()" or something?
 
-Lucas Stach (3):
-  MAINTAINERS: add myself as co-maintainer for i.MX6 PCI driver
-  PCI: imx6: prevent driver unbind
-  PCI: imx6: fix boot hang when link already enabled
+I *love* the idea of getting rid of this much code!
 
- MAINTAINERS                 |  1 +
- drivers/pci/host/pci-imx6.c | 38 ++++++++++++++++++++++++++++++++++++++
- 2 files changed, 39 insertions(+)
-
--- 
-2.0.1
-
+Bjorn
