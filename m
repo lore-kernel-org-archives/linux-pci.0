@@ -1,85 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:57471 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754562AbaGII7O convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 04:59:14 -0400
-Date: Wed, 9 Jul 2014 09:59:11 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper
- function.
-Message-ID: <20140709085910.GP6501@e106497-lin.cambridge.arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <20140708001418.GB22939@google.com>
- <20140708104050.GA6501@e106497-lin.cambridge.arm.com>
- <201407081614.18304.arnd@arndb.de>
+Received: from comal.ext.ti.com ([198.47.26.152]:58112 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965608AbaGPQkG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Jul 2014 12:40:06 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH v5 1/5] PCI: designware: add rd[wr]_other_conf API
+Date: Wed, 16 Jul 2014 12:38:02 -0400
+Message-ID: <1405528686-16539-2-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1405528686-16539-1-git-send-email-m-karicheri2@ti.com>
+References: <1405528686-16539-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <201407081614.18304.arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 08, 2014 at 03:14:17PM +0100, Arnd Bergmann wrote:
-> On Tuesday 08 July 2014, Liviu Dudau wrote:
-> > > Here's what these look like in /proc/iomem and /proc/ioports (note that
-> > > there are two resource structs for each memory-mapped IO port space: one
-> > > IORESOURCE_MEM for the memory-mapped area (used only by the host bridge
-> > > driver), and one IORESOURCE_IO for the I/O port space (this becomes the
-> > > parent of a region used by a regular device driver):
-> > > 
-> > >   /proc/iomem:
-> > >     PCI Bus 0000:00 I/O Ports 00000000-00000fff
-> > >     PCI Bus 0001:00 I/O Ports 01000000-01000fff
-> > > 
-> > >   /proc/ioports:
-> > >     00000000-00000fff : PCI Bus 0000:00
-> > >     01000000-01000fff : PCI Bus 0001:00
-> > 
-> > OK, I have a question that might be ovbious to you but I have missed the answer
-> > so far: how does the IORESOURCE_MEM area gets created? Is it the host bridge
-> > driver's job to do it? Is it something that the framework should do when it
-> > notices that the IORESOURCE_IO is memory mapped?
-> 
-> The host bridge driver should either register the IORESOURCE_MEM resource
-> itself from its probe or setup function, or it should get registered behind
-> the covers in drivers using of_create_pci_host_bridge().
-> 
-> Your new pci_host_bridge_of_get_ranges already loops over all the 
-> resources, so it would be a good place to put that.
+v3.65 version of the designware h/w, requires application space
+registers to be configured to access the remote EP config space.
+To support this, add rd[wr]_other_conf API in the pcie_host_opts
 
-OK, so it is not something that I've missed, just something that x86-64 does and
-my version doesn't yet.
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Acked-by: Mohit Kumar <mohit.kumar@st.com>
+Acked-by: Jingoo Han <jg1.han@samsung.com>
+Acked-by: Santosh Shilimkar <santosh.shilimkar@ti.com>
 
-Thanks for confirming that.
+CC: Russell King <linux@arm.linux.org.uk>
+CC: Grant Likely <grant.likely@linaro.org>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Pratyush Anand <pratyush.anand@st.com>
+CC: Richard Zhu <r65037@freescale.com>
+CC: Kishon Vijay Abraham I <kishon@ti.com>
+CC: Marek Vasut <marex@denx.de>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Pawel Moll <pawel.moll@arm.com>
+CC: Mark Rutland <mark.rutland@arm.com>
+CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
+CC: Kumar Gala <galak@codeaurora.org>
+CC: Randy Dunlap <rdunlap@infradead.org>
+CC: Grant Likely <grant.likely@linaro.org> 
+---
+ drivers/pci/host/pcie-designware.c |   12 ++++++++++--
+ drivers/pci/host/pcie-designware.h |    4 ++++
+ 2 files changed, 14 insertions(+), 2 deletions(-)
 
-Liviu
-
-> 
-> 	Arnd
-> 
-
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 1eaf4df..d8f3af7 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -656,7 +656,11 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 	}
+ 
+ 	if (bus->number != pp->root_bus_nr)
+-		ret = dw_pcie_rd_other_conf(pp, bus, devfn,
++		if (pp->ops->rd_other_conf)
++			ret = pp->ops->rd_other_conf(pp, bus, devfn,
++						where, size, val);
++		else
++			ret = dw_pcie_rd_other_conf(pp, bus, devfn,
+ 						where, size, val);
+ 	else
+ 		ret = dw_pcie_rd_own_conf(pp, where, size, val);
+@@ -679,7 +683,11 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+ 	if (bus->number != pp->root_bus_nr)
+-		ret = dw_pcie_wr_other_conf(pp, bus, devfn,
++		if (pp->ops->wr_other_conf)
++			ret = pp->ops->wr_other_conf(pp, bus, devfn,
++						where, size, val);
++		else
++			ret = dw_pcie_wr_other_conf(pp, bus, devfn,
+ 						where, size, val);
+ 	else
+ 		ret = dw_pcie_wr_own_conf(pp, where, size, val);
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 77f592f..8121901 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -61,6 +61,10 @@ struct pcie_host_ops {
+ 			u32 val, void __iomem *dbi_base);
+ 	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32 *val);
+ 	int (*wr_own_conf)(struct pcie_port *pp, int where, int size, u32 val);
++	int (*rd_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
++			unsigned int devfn, int where, int size, u32 *val);
++	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
++			unsigned int devfn, int where, int size, u32 val);
+ 	int (*link_up)(struct pcie_port *pp);
+ 	void (*host_init)(struct pcie_port *pp);
+ };
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.7.9.5
 
