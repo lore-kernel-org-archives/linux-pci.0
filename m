@@ -1,97 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:58878 "EHLO
-	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750718AbaGIF7G (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 01:59:06 -0400
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: "arm@kernel.org" <arm@kernel.org>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mark Nicholson <mark@nicholnet.com>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	"olof@lixom.net" <olof@lixom.net>,
-	"Arnd Bergmann (arnd@arndb.de)" <arnd@arndb.de>
-Date: Wed, 9 Jul 2014 13:58:41 +0800
-Subject: RE: [GIT PULL] ARM: SPEAr1310 PCIe updates
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB661A17A3E48FE@EAPEX1MAIL1.st.com>
-References: <2CC2A0A4A178534D93D5159BF3BCB661A17A3E48F2@EAPEX1MAIL1.st.com>
-In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB661A17A3E48F2@EAPEX1MAIL1.st.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:35419 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934741AbaGPShu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 14:37:50 -0400
+Received: by mail-ie0-f171.google.com with SMTP id at1so1192490iec.2
+        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 11:37:49 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAErSpo6D3q0NoJhjF2kTZBVaQBb5Gz-bY-P_eR2EYzFvQ6yhPw@mail.gmail.com>
+References: <53C5F2C2.20707@linux.intel.com>
+	<CAErSpo6D3q0NoJhjF2kTZBVaQBb5Gz-bY-P_eR2EYzFvQ6yhPw@mail.gmail.com>
+Date: Wed, 16 Jul 2014 11:37:49 -0700
+Message-ID: <CAE9FiQWsjXU0YBsgnSvNXzkPKDPph4RgYQcvmGGoL27TE7YrhA@mail.gmail.com>
+Subject: Re: Need advices about PCI IRQ reference count tracking
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-KyBhcm1Aa2VybmVsLm9yZw0KDQpTb3JyeSBmb3IgcHJldmlvdXMgbWFpbCBhZGRyZXNzZWQgdG8g
-T2xvZidzIHBlcnNvbmFsIGlkLg0KDQpUaGFua3MNCk1vaGl0DQoNCj4gLS0tLS1PcmlnaW5hbCBN
-ZXNzYWdlLS0tLS0NCj4gRnJvbTogTW9oaXQgS1VNQVIgRENHDQo+IFNlbnQ6IFdlZG5lc2RheSwg
-SnVseSAwOSwgMjAxNCAxMToxOCBBTQ0KPiBUbzogb2xvZkBsaXhvbS5uZXQNCj4gQ2M6IEJhcnRs
-b21pZWogWm9sbmllcmtpZXdpY3o7IFByYXR5dXNoIEFOQU5EOyAnQmpvcm4gSGVsZ2FhcycNCj4g
-KGJoZWxnYWFzQGdvb2dsZS5jb20pOyBzcGVhci1kZXZlbDsgbGludXgta2VybmVsQHZnZXIua2Vy
-bmVsLm9yZzsNCj4gZGV2aWNldHJlZUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LXBjaUB2Z2VyLmtl
-cm5lbC5vcmc7IE1hcmsgTmljaG9sc29uOw0KPiBWaXJlc2ggS3VtYXINCj4gU3ViamVjdDogW0dJ
-VCBQVUxMXSBBUk06IFNQRUFyMTMxMCBQQ0llIHVwZGF0ZXMNCj4gDQo+IEhlbGxvIE9sb2YsDQo+
-IA0KPiBQbGVhc2UgcHVsbCBQQ0llIHVwZGF0ZXMgZm9yIFNUJ3MgU1BFQXIxMzEwIFNvQy4NCj4g
-DQo+IExhc3QgdmVyc2lvbiBvZiBwb3N0ZWQgVjggcGF0Y2hlcyBoYXZlIGJlZW4gQWNrZWQtYnkg
-cmVzcGVjdGl2ZQ0KPiBtYWludGFpbmVycy4NCj4gaHR0cHM6Ly9sa21sLm9yZy9sa21sLzIwMTQv
-NC8xNS8yNjANCj4gDQo+IEFwYXJ0IGZyb20gYXJjaC9hcm0vIGNoYW5nZXMsIGl0IGFsc28gY29u
-dGFpbnMgcGF0Y2hlcyBmb3IgZHJpdmVycy97cGNpfHBoeX0uDQo+IEJqb3JuIGFkdmlzZWQgdG8g
-Z2V0IGNvbXBsZXRlIHNlcmllcyB2aWEgYXJtLXNvYyB0cmVlLg0KPiBodHRwOi8vd3d3LnNwaW5p
-Y3MubmV0L2xpc3RzL2xpbnV4LXBjaS9tc2czMDI3MS5odG1sDQo+IA0KPiAgUmVnYXJkcw0KPiAg
-TW9oaXQNCj4gDQo+IFRoZSBmb2xsb3dpbmcgY2hhbmdlcyBzaW5jZSBjb21taXQNCj4gNGM4MzQ0
-NTJhYWQwMTUzMWRiOTQ5NDE0Zjk0ZjgxN2E4NjM0OGQ1OToNCj4gICBMaW51cyBUb3J2YWxkcyAo
-MSk6DQo+ICAgICAgICAgTGludXggMy4xNi1yYzMNCj4gDQo+IGFyZSBhdmFpbGFibGUgaW4gdGhl
-IGdpdCByZXBvc2l0b3J5IGF0Og0KPiANCj4gICBodHRwczovL2dpdC5rZXJuZWwub3JnL3B1Yi9z
-Y20vbGludXgva2VybmVsL2dpdC92aXJlc2hrL2xpbnV4LmdpdA0KPiBzcGVhci9wY2llLXN1cHBv
-cnQtdjgNCj4gDQo+IE1vaGl0IEt1bWFyICgxKToNCj4gICAgICAgU1BFQXIxM3h4OiBkZWZjb25m
-aWc6IFVwZGF0ZQ0KPiANCj4gUHJhdHl1c2ggQW5hbmQgKDgpOg0KPiAgICAgICBjbGs6IFNQRUFy
-MTNYWDogRml4IHBjaWUgY2xvY2sgbmFtZQ0KPiAgICAgICBTUEVBcjEzWFg6IEZpeCBzdGF0aWMg
-bWFwcGluZyB0YWJsZQ0KPiAgICAgICBwaHk6IFNQRUFyMTMxMC80MC1taXBoeTogQWRkIGJpbmRp
-bmcgaW5mb3JtYXRpb24NCj4gICAgICAgU1BFQXI6IG1pc2M6IEFkZCBiaW5kaW5nIGluZm9ybWF0
-aW9uDQo+ICAgICAgIHBoeTogU1BFQXIxMzEwLzQwLW1pcGh5OiBBZGQgcGh5IGRyaXZlciBmb3Ig
-UENJZSBhbmQgU0FUQQ0KPiAgICAgICBTUEVBcjEzWFg6IEFkZCBiaW5kaW5nIGluZm9ybWF0aW9u
-IGZvciBQQ0llIGNvbnRyb2xsZXINCj4gICAgICAgU1BFQXIxM1hYOiBkdHM6IEFkZCBQQ0llIG5v
-ZGUgaW5mb3JtYXRpb24NCj4gICAgICAgcGNpZTogU1BFQXIxM3h4OiBBZGQgZGVzaWdud2FyZSB3
-cmFwcGVyIHN1cHBvcnQNCj4gDQo+ICAuLi4vZGV2aWNldHJlZS9iaW5kaW5ncy9hcm0vc3BlYXIt
-bWlzYy50eHQgICAgICAgICB8ICAgIDkgKw0KPiAgLi4uL2RldmljZXRyZWUvYmluZGluZ3MvcGNp
-L3NwZWFyMTN4eC1wY2llLnR4dCAgICAgfCAgIDE0ICsNCj4gIC4uLi9kZXZpY2V0cmVlL2JpbmRp
-bmdzL3BoeS9zdC1zcGVhcjEzMTAtbWlwaHkudHh0IHwgICAxMiArDQo+ICAuLi4vZGV2aWNldHJl
-ZS9iaW5kaW5ncy9waHkvc3Qtc3BlYXIxMzQwLW1pcGh5LnR4dCB8ICAgMTEgKw0KPiAgTUFJTlRB
-SU5FUlMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgICA2ICsNCj4g
-IGFyY2gvYXJtL2Jvb3QvZHRzL3NwZWFyMTMxMC1ldmIuZHRzICAgICAgICAgICAgICAgIHwgICAg
-NCArDQo+ICBhcmNoL2FybS9ib290L2R0cy9zcGVhcjEzMTAuZHRzaSAgICAgICAgICAgICAgICAg
-ICB8ICAgOTMgKysrKystDQo+ICBhcmNoL2FybS9ib290L2R0cy9zcGVhcjEzNDAtZXZiLmR0cyAg
-ICAgICAgICAgICAgICB8ICAgIDQgKw0KPiAgYXJjaC9hcm0vYm9vdC9kdHMvc3BlYXIxMzQwLmR0
-c2kgICAgICAgICAgICAgICAgICAgfCAgIDMwICsrLQ0KPiAgYXJjaC9hcm0vYm9vdC9kdHMvc3Bl
-YXIxM3h4LmR0c2kgICAgICAgICAgICAgICAgICAgfCAgICA5ICstDQo+ICBhcmNoL2FybS9jb25m
-aWdzL3NwZWFyMTN4eF9kZWZjb25maWcgICAgICAgICAgICAgICB8ICAgMTYgKw0KPiAgYXJjaC9h
-cm0vbWFjaC1zcGVhci9LY29uZmlnICAgICAgICAgICAgICAgICAgICAgICAgfCAgICA0ICsNCj4g
-IGFyY2gvYXJtL21hY2gtc3BlYXIvaW5jbHVkZS9tYWNoL3NwZWFyLmggICAgICAgICAgIHwgICAg
-NCArLQ0KPiAgYXJjaC9hcm0vbWFjaC1zcGVhci9zcGVhcjEzNDAuYyAgICAgICAgICAgICAgICAg
-ICAgfCAgMTI3ICstLS0tLS0NCj4gIGFyY2gvYXJtL21hY2gtc3BlYXIvc3BlYXIxM3h4LmMgICAg
-ICAgICAgICAgICAgICAgIHwgICAgMiArLQ0KPiAgZHJpdmVycy9jbGsvc3BlYXIvc3BlYXIxMzEw
-X2Nsb2NrLmMgICAgICAgICAgICAgICAgfCAgICA2ICstDQo+ICBkcml2ZXJzL2Nsay9zcGVhci9z
-cGVhcjEzNDBfY2xvY2suYyAgICAgICAgICAgICAgICB8ICAgIDIgKy0NCj4gIGRyaXZlcnMvcGNp
-L2hvc3QvS2NvbmZpZyAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAgOCArDQo+ICBkcml2
-ZXJzL3BjaS9ob3N0L01ha2VmaWxlICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgIDEgKw0K
-PiAgZHJpdmVycy9wY2kvaG9zdC9wY2llLXNwZWFyMTN4eC5jICAgICAgICAgICAgICAgICAgfCAg
-NDA2ICsrKysrKysrKysrKysrKysrKysrDQo+ICBkcml2ZXJzL3BoeS9LY29uZmlnICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICB8ICAgMTIgKw0KPiAgZHJpdmVycy9waHkvTWFrZWZpbGUg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgICAyICsNCj4gIGRyaXZlcnMvcGh5L3Bo
-eS1zcGVhcjEzMTAtbWlwaHkuYyAgICAgICAgICAgICAgICAgIHwgIDI3NCArKysrKysrKysrKysr
-DQo+ICBkcml2ZXJzL3BoeS9waHktc3BlYXIxMzQwLW1pcGh5LmMgICAgICAgICAgICAgICAgICB8
-ICAzMDAgKysrKysrKysrKysrKysrDQo+ICAyNCBmaWxlcyBjaGFuZ2VkLCAxMjE3IGluc2VydGlv
-bnMoKyksIDEzOSBkZWxldGlvbnMoLSkgIGNyZWF0ZSBtb2RlIDEwMDY0NA0KPiBEb2N1bWVudGF0
-aW9uL2RldmljZXRyZWUvYmluZGluZ3MvYXJtL3NwZWFyLW1pc2MudHh0DQo+ICBjcmVhdGUgbW9k
-ZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9zcGVhcjEzeHgt
-DQo+IHBjaWUudHh0DQo+ICBjcmVhdGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9kZXZpY2V0
-cmVlL2JpbmRpbmdzL3BoeS9zdC0NCj4gc3BlYXIxMzEwLW1pcGh5LnR4dA0KPiAgY3JlYXRlIG1v
-ZGUgMTAwNjQ0IERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9waHkvc3QtDQo+IHNw
-ZWFyMTM0MC1taXBoeS50eHQNCj4gIGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3BjaS9ob3N0
-L3BjaWUtc3BlYXIxM3h4LmMgIGNyZWF0ZSBtb2RlIDEwMDY0NA0KPiBkcml2ZXJzL3BoeS9waHkt
-c3BlYXIxMzEwLW1pcGh5LmMgIGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3BoeS9waHktDQo+
-IHNwZWFyMTM0MC1taXBoeS5jDQo=
+On Wed, Jul 16, 2014 at 11:04 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Yinghai]
+>
+> On Tue, Jul 15, 2014 at 9:34 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>> Hi Bjorn,
+>>         When enabling ACPI based IOAPIC hotplug, we encountered an
+>> issue with PCI IRQ reference count tracking and need your advices.
+>>         In order to hot-remove an IOAPIC, we need to track and keep
+>> balance of IOAPIC pin usage count. But acpi_pci_irq_enable() may
+>> be called twice for a PCI device,
+>> 1) pci_acpi_init() if pci_routeirq is true
+>> 2) pci_enable_device()
+>>
+>> So in function acpi_pci_irq_enable(), we need a way to track whether
+>> an IOAPIC IRQ has been assigned to the PCI device. Previously we check
+>> "if (dev->irq > 0)" for that, but that's wrong because dev->irq may
+>> be set to non-zero in pci_read_irq() if BIOS has already assigned
+>> a legacy IRQ for the device. So is it OK to add a flag into pci_dev
+>> to track this information?
+
+Why do you need to track it?
+
+When do you hot-remove ioapic with pci root bus, all the drivers for
+devices on that pci root bus should be stopped at first, so no one
+will use the ioapic before ioapic is being removed.
+
+>>
+>> Another possible workaround is to disable IOAPIC hotplug when
+>> pci_routeirq is set, but that sounds not the best solution.
+
+That is not good.
+
+>
+> My first choice would be to get rid of pci_routeirq.  It was added in
+> 2004 as a workaround for broken drivers.  I don't know any reason why
+> we need the "pci=routeirq" option any more.
+
+I always use "pci=routeirq apic=debug" to check the print out
+ if BIOS routing irq correctly.
+
+>
+> However, 629e15d245f4 ("x86, irq: update_mptable needs pci_routeirq")
+> added another use of pci_routeirq.  This is only used when booting
+> with the undocumented "update_mptable" option, and I can't tell
+> whether it's useful or not.
+
+Yes, we could drop update_mptable now. Will produce one patch to do that.
+
+Thanks
+
+Yinghai
