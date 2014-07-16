@@ -1,69 +1,191 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f47.google.com ([209.85.216.47]:53317 "EHLO
-	mail-qa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752643AbaGKRDR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 13:03:17 -0400
-Received: by mail-qa0-f47.google.com with SMTP id i13so1113538qae.34
-        for <linux-pci@vger.kernel.org>; Fri, 11 Jul 2014 10:03:16 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 3/3] vfio-pci: Attempt bus/slot reset on release
+To: alex.williamson@redhat.com
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Date: Wed, 16 Jul 2014 13:01:31 -0600
+Message-ID: <20140716190131.4153.10787.stgit@gimli.home>
+In-Reply-To: <20140716184645.4153.86129.stgit@gimli.home>
+References: <20140716184645.4153.86129.stgit@gimli.home>
 MIME-Version: 1.0
-In-Reply-To: <20140711141115.GB16321@arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-7-git-send-email-Liviu.Dudau@arm.com> <20140708005954.GC22939@google.com>
- <20140708104655.GC6501@e106497-lin.cambridge.arm.com> <CAErSpo75ovmGoeSHKJN0nckGDy-0gpn8kLPfHQ79CtcXxhPydw@mail.gmail.com>
- <20140708224847.GC4980@e106497-lin.cambridge.arm.com> <CAErSpo5rBt0iF2HGeDD-UH6_sPCoC647VCw0Q1v_0Rdpvcir-w@mail.gmail.com>
- <20140710094758.GA6501@e106497-lin.cambridge.arm.com> <CAErSpo5ZNCY31NztT0cLFbRVsBZqMsZ0LbTFNOTQCZUU3F7qJA@mail.gmail.com>
- <20140711141115.GB16321@arm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 11 Jul 2014 11:02:56 -0600
-Message-ID: <CAErSpo7C8qzmdp+XgVi2ysXj_NcgvVY7RVfBZ2PHimLzrzANMQ@mail.gmail.com>
-Subject: Re: [PATCH v8 6/9] pci: Introduce a domain number for pci_host_bridge.
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 11, 2014 at 8:11 AM, Catalin Marinas
-<catalin.marinas@arm.com> wrote:
-> On Thu, Jul 10, 2014 at 11:36:10PM +0100, Bjorn Helgaas wrote:
->> Most of the rest of the v7 discussion was about "Introduce a domain
->> number for pci_host_bridge."  I think we should add arm64 using the
->> existing pci_scan_root_bus() and keep the domain number in the arm64
->> sysdata structure like every other arch does.  Isn't that feasible?
->> We can worry about domain unification later.
->
-> I think that's what we were trying to avoid, adding an arm64-specific
-> pci_sys_data structure (and arm64-specific API). IIUC, avoiding this
-> would allow the host controller drivers to use the sysdata pointer for
-> their own private data structures.
->
-> Also since you can specify the domain number via DT (and in Liviu's
-> v8 patches read by of_create_pci_host_bridge), I think it would make
-> sense to have it stored in some generic data structures (e.g.
-> pci_host_bridge) rather than in an arm64 private sysdata.
+Each time a device is released, mark whether a local reset was
+successful or whether a bus/slot reset is needed.  If a reset is
+needed and all of the affected devices are bound to vfio-pci and
+unused, allow the reset.  This is most useful when the userspace
+driver is killed and releases all the devices in an unclean state,
+such as when a QEMU VM quits.
 
-It would definitely be nice to keep the domain in a generic data
-structure rather than an arm64-specific one.  But every other arch
-keeps it in an arch-specific structure today, and I think following
-that existing pattern is the quickest way forward.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
 
-But you mentioned arm64-specific API, too.  What do you have in mind
-there?  I know there will be arm64 implementations of various
-pcibios_*() functions (just like for every other arch), but it sounds
-like there might be something else?
+ drivers/vfio/pci/vfio_pci.c         |  112 +++++++++++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_private.h |    1 
+ 2 files changed, 113 insertions(+)
 
-Bjorn
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index c4949a7..f95b90f 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -39,6 +39,8 @@ MODULE_PARM_DESC(nointxmask,
+ 
+ static DEFINE_MUTEX(driver_lock);
+ 
++static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev);
++
+ static int vfio_pci_enable(struct vfio_pci_device *vdev)
+ {
+ 	struct pci_dev *pdev = vdev->pdev;
+@@ -123,6 +125,8 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
+ 		vdev->barmap[bar] = NULL;
+ 	}
+ 
++	vdev->needs_reset = true;
++
+ 	/*
+ 	 * If we have saved state, restore it.  If we can reset the device,
+ 	 * even better.  Resetting with current state seems better than
+@@ -154,11 +158,15 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
+ 		if (ret)
+ 			pr_warn("%s: Failed to reset device %s (%d)\n",
+ 				__func__, dev_name(&pdev->dev), ret);
++		else
++			vdev->needs_reset = false;
+ 	}
+ 
+ 	pci_restore_state(pdev);
+ out:
+ 	pci_disable_device(pdev);
++
++	vfio_pci_try_bus_reset(vdev);
+ }
+ 
+ static void vfio_pci_release(void *device_data)
+@@ -917,6 +925,110 @@ static struct pci_driver vfio_pci_driver = {
+ 	.err_handler	= &vfio_err_handlers,
+ };
+ 
++/*
++ * Test whether a reset is necessary and possible.  We mark devices as
++ * needs_reset when they are released, but don't have a function-local reset
++ * available.  If any of these exist in the affected devices, we want to do
++ * a bus/slot reset.  We also need all of the affected devices to be unused,
++ * so we abort if any device has a non-zero refcnt.  driver_lock prevents a
++ * device from being opened during the scan or unbound from vfio-pci.
++ */
++static int vfio_pci_test_bus_reset(struct pci_dev *pdev, void *data)
++{
++	bool *needs_reset = data;
++	struct pci_driver *pci_drv = ACCESS_ONCE(pdev->driver);
++	int ret = -EBUSY;
++
++	if (pci_drv == &vfio_pci_driver) {
++		struct vfio_device *device;
++		struct vfio_pci_device *vdev;
++
++		device = vfio_device_get_from_dev(&pdev->dev);
++		if (!device)
++			return ret;
++
++		vdev = vfio_device_data(device);
++		if (vdev) {
++			if (vdev->needs_reset)
++				*needs_reset = true;
++
++			if (!vdev->refcnt)
++				ret = 0;
++		}
++
++		vfio_device_put(device);
++	}
++
++	/*
++	 * TODO: vfio-core considers groups to be viable even if some devices
++	 * are attached to known drivers, like pci-stub or pcieport.  We can't
++	 * freeze devices from being unbound to those drivers like we can
++	 * here though, so it would be racy to test for them.  We also can't
++	 * use device_lock() to prevent changes as that would interfere with
++	 * PCI-core taking device_lock during bus reset.  For now, we require
++	 * devices to be bound to vfio-pci to get a bus/slot reset on release.
++	 */
++
++	return ret;
++}
++
++/* Clear needs_reset on all affected devices after successful bus/slot reset */
++static int vfio_pci_clear_needs_reset(struct pci_dev *pdev, void *data)
++{
++	struct pci_driver *pci_drv = ACCESS_ONCE(pdev->driver);
++
++	if (pci_drv == &vfio_pci_driver) {
++		struct vfio_device *device;
++		struct vfio_pci_device *vdev;
++
++		device = vfio_device_get_from_dev(&pdev->dev);
++		if (!device)
++			return 0;
++
++		vdev = vfio_device_data(device);
++		if (vdev)
++			vdev->needs_reset = false;
++
++		vfio_device_put(device);
++	}
++
++	return 0;
++}
++
++/*
++ * Attempt to do a bus/slot reset if there are devices affected by a reset for
++ * this device that are needs_reset and all of the affected devices are unused
++ * (!refcnt).  Callers of this function are required to hold driver_lock such
++ * that devices can not be unbound from vfio-pci or opened by a user while we
++ * test for and perform a bus/slot reset.
++ */
++static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
++{
++	bool needs_reset = false, slot = false;
++	int ret;
++
++	if (!pci_probe_reset_slot(vdev->pdev->slot))
++		slot = true;
++	else if (pci_probe_reset_bus(vdev->pdev->bus))
++		return;
++
++	if (vfio_pci_for_each_slot_or_bus(vdev->pdev,
++					  vfio_pci_test_bus_reset,
++					  &needs_reset, slot) || !needs_reset)
++		return;
++
++	if (slot)
++		ret = pci_try_reset_slot(vdev->pdev->slot);
++	else
++		ret = pci_try_reset_bus(vdev->pdev->bus);
++
++	if (ret)
++		return;
++
++	vfio_pci_for_each_slot_or_bus(vdev->pdev,
++				      vfio_pci_clear_needs_reset, NULL, slot);
++}
++
+ static void __exit vfio_pci_cleanup(void)
+ {
+ 	pci_unregister_driver(&vfio_pci_driver);
+diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
+index 31e7a30..671c17a 100644
+--- a/drivers/vfio/pci/vfio_pci_private.h
++++ b/drivers/vfio/pci/vfio_pci_private.h
+@@ -54,6 +54,7 @@ struct vfio_pci_device {
+ 	bool			extended_caps;
+ 	bool			bardirty;
+ 	bool			has_vga;
++	bool			needs_reset;
+ 	struct pci_saved_state	*pci_saved_state;
+ 	int			refcnt;
+ 	struct eventfd_ctx	*err_trigger;
+
