@@ -1,462 +1,1269 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f181.google.com ([209.85.216.181]:47799 "EHLO
-	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755652AbaGDAkM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 20:40:12 -0400
-Received: by mail-qc0-f181.google.com with SMTP id x13so931076qcv.40
-        for <linux-pci@vger.kernel.org>; Thu, 03 Jul 2014 17:40:11 -0700 (PDT)
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:36294 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755956AbaGPRi3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 13:38:29 -0400
+Received: by mail-ig0-f175.google.com with SMTP id uq10so4401504igb.14
+        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 10:38:28 -0700 (PDT)
+Date: Wed, 16 Jul 2014 11:38:24 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Srikanth Thokala <sthokal@xilinx.com>
+Cc: michal.simek@xilinx.com, grant.likely@linaro.org,
+	robh+dt@kernel.org, arnd@arndb.de, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH v4] pcie: Add Xilinx PCIe Host Bridge IP driver
+Message-ID: <20140716173824.GA24357@google.com>
+References: <1404361654-2894-1-git-send-email-sthokal@xilinx.com>
 MIME-Version: 1.0
-In-Reply-To: <53B4F0F7.9020403@huawei.com>
-References: <CAKb7UviGCtebGwyHbXRLZhDOiDAez+eKkxPe9jz5kc-3R1kUvQ@mail.gmail.com>
-	<53B4F0F7.9020403@huawei.com>
-Date: Thu, 3 Jul 2014 20:40:11 -0400
-Message-ID: <CALhae2jSNkAn-kqv44bCte=BGJY0dd9afUwoUF2gP_TX_-LnJw@mail.gmail.com>
-Subject: Re: How to check for proper MSI support?
-From: Brian Becker <brian.johnathan.b@gmail.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Ilia Mirkin <imirkin@alum.mit.edu>, linux-pci@vger.kernel.org,
-	"nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1404361654-2894-1-git-send-email-sthokal@xilinx.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-My previous message was badly formatted, and didn't make it to
-linux-pci@vger.kernel.org. Hopefully this information is of some use.
+On Thu, Jul 03, 2014 at 09:57:34AM +0530, Srikanth Thokala wrote:
+> This is the driver for Xilinx AXI PCIe Host Bridge Soft IP
+> 
+> Signed-off-by: Srikanth Thokala <sthokal@xilinx.com>
+> ---
+> Changes in v4:
+> - Regarding the comments to separate ECAM functionality,
+>   I have sent a separate patch and it is decided to implement
+>   it later. The patch is here,
+>   https://lkml.org/lkml/2014/5/18/54
+> - Fixed issue with adding configuration bus resource.
+> - Moved the logic for setting up bus resources to probe() from
+>   pcie_setup().
+> - Instead of mapping all the MSI interrupts in the probe, changed
+>   to map only when a MSI is requested.
+> - Earlier, the implementation of legacy and MSI interrupts init-
+>   is mutually exclusive, now changed to have the legacy interrupts
+>   init always and MSI interrupt init based on CONFIG_PCI_MSI flag.
+> - Regarding the MSI generic implementation comment, I will plan to
+>   do on top of this driver patch.
+> - Rebased on 3.16-rc2.
+> - Fixed other minor comments.
+> - Thanks Arnd and Bjorn for the review.
+> 
+> Changes in v3:
+> - Rebased on v3.15.0-rc1
+> - Added support for interrupt-map DT functionality.
+> - Removed map_irq() wrapper, instead using of_irq_parse_and_map_pci().
+> - Modified resource mapping logic as per the series
+>   "PCI: ARM: add support for generic PCI host controller"
+> - Modified devicetree binding documentation to update with interrupt-
+>   map properties.
+> - Use devm calls wherever applicable.
+> - Fixed minor comments from Jason
+> - Thanks Jason for the review and suggestions.
+> 
+> Changes in v2:
+> - Rebased on v3.14.0-rc8
+> - Removed IP specific DT properties like include-rc, axibar-num etc.,
+>   as suggested by Jason and Bjorn, Thanks
+> ---
+>  .../devicetree/bindings/pci/xilinx-pcie.txt        |   62 ++
+>  drivers/pci/host/Kconfig                           |    7 +
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pci-xilinx.c                      | 1027 ++++++++++++++++++++
+>  4 files changed, 1097 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/xilinx-pcie.txt
+>  create mode 100644 drivers/pci/host/pci-xilinx.c
 
-root@p5-133:~# uname -a
-Linux p5-133 3.15.2-p5-133 #1 Thu Jun 26 22:56:27 EDT 2014 i586 GNU/Linux
-root@p5-133:~# lspci -vvvxxx
-00:00.0 Host bridge: Intel Corporation 430FX - 82437FX TSC [Triton I] (rev 01)
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort+ >SERR- <PERR- INTx-
-        Latency: 128
-00: 86 80 2d 12 06 00 00 22 01 00 00 06 00 80 00 00
-10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-50: 88 00 41 00 00 00 00 03 49 10 55 55 55 05 55 05
-60: 08 10 18 20 20 00 00 00 0f 00 00 00 00 00 00 00
-70: 00 00 0a 00 00 00 00 00 00 00 00 00 00 00 00 00
-80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 00
+I see I forgot to ask for a MAINTAINERS entry for this driver.  Can
+you add one?
 
-00:07.0 ISA bridge: Intel Corporation 82371FB PIIX ISA [Triton I] (rev 02)
-        Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-00: 86 80 2e 12 0f 00 80 02 02 00 01 06 00 00 80 00
-10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-40: 00 00 00 00 00 00 00 00 00 00 00 00 4d 00 60 00
-50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-60: 0b 0b 0b 09 00 00 00 00 00 f2 05 00 00 00 00 00
-70: 0f 80 00 00 00 00 04 04 02 00 00 00 00 00 00 00
-80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 03 00 e0 00 02 d0 00 a0 13 00 00 00 00 00 00 00
-b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 08 02 00 00 00 00 00 00
+I'd also like an ack from Arnd or another devicetree person for the
+binding.
 
-00:07.1 IDE interface: Intel Corporation 82371FB PIIX IDE [Triton I]
-(rev 02) (prog-if 80 [Master])
-        Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 128
-        Region 0: [virtual] Memory at 000001f0 (32-bit,
-non-prefetchable) [size=8]
-        Region 1: [virtual] Memory at 000003f0 (type 3,
-non-prefetchable) [size=1]
-        Region 2: [virtual] Memory at 00000170 (32-bit,
-non-prefetchable) [size=8]
-        Region 3: [virtual] Memory at 00000370 (type 3,
-non-prefetchable) [size=1]
-        Region 4: I/O ports at ef80 [size=16]
-        Kernel driver in use: pata_oldpiix
-00: 86 80 30 12 05 00 80 02 02 80 01 01 00 80 00 00
-10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-20: 81 ef 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-40: 36 a3 07 a3 00 00 00 00 00 00 00 00 00 00 00 00
-50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 08 02 00 00 00 00 00 00
+I have a few minor comments below.
 
-00:0e.0 PCI bridge: PLX Technology, Inc. PEX8112 x1 Lane PCI
-Express-to-PCI Bridge (rev aa) (prog-if 00 [Normal decode])
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop-
-ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 128, Cache Line Size: 32 bytes
-        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-        I/O behind bridge: 0000f000-0000ffff
-        Memory behind bridge: f5e00000-fbffffff
-        Prefetchable memory behind bridge: d5d00000-f5dfffff
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- <SERR- <PERR-
-        BridgeCtl: Parity+ SERR+ NoISA- VGA+ MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Power Management version 2
-                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=0mA
-PME(D0+,D1+,D2-,D3hot+,D3cold-)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [60] Express (v1) PCI/PCI-X to PCI-Express Bridge, MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s
-<64ns, L1 <1us
-                        ExtTag- RBE- FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
-Unsupported-
-                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop- BrConfRtry-
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq-
-AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1,
-Latency L0 <1us, L1 <16us
-                        ClockPM- Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train-
-SlotClk- DLActive- BWMgmt- ABWMgmt-
-00: b5 10 12 81 17 01 30 02 aa 00 04 06 08 80 01 00
-10: 00 00 00 00 00 00 00 00 00 01 01 00 f0 f0 00 00
-20: e0 f5 f0 fb d0 d5 d0 f5 00 00 00 00 00 00 00 00
-30: 00 00 00 00 40 00 00 00 00 00 00 00 00 01 0b 00
-40: 01 50 02 5a 00 00 00 00 10 28 0e 00 00 00 00 00
-50: 05 60 80 00 00 00 00 00 00 00 00 00 00 00 00 00
-60: 10 00 81 00 00 00 00 00 00 20 00 00 11 4c 02 00
-70: 00 00 11 00 80 0c 00 00 00 00 40 00 00 00 00 00
-80: 00 00 00 00 00 00 00 00 33 00 00 00 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> diff --git a/Documentation/devicetree/bindings/pci/xilinx-pcie.txt b/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
+> new file mode 100644
+> index 0000000..3e2c88d
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
+> @@ -0,0 +1,62 @@
+> +* Xilinx AXI PCIe Root Port Bridge DT description
+> +
+> +Required properties:
+> +- #address-cells: Address representation for root ports, set to <3>
+> +- #size-cells: Size representation for root ports, set to <2>
+> +- #interrupt-cells: specifies the number of cells needed to encode an
+> +	interrupt source. The value must be 1.
+> +- compatible: Should contain "xlnx,axi-pcie-host-1.00.a"
+> +- reg: Should contain AXI PCIe registers location and length
+> +- device_type: must be "pci"
+> +- interrupts: Should contain AXI PCIe interrupt
+> +- interrupt-map-mask,
+> +  interrupt-map: standard PCI properties to define the mapping of the
+> +	PCI interface to interrupt numbers.
+> +- ranges: ranges for the PCI memory regions (I/O space region is not
+> +	supported by hardware)
+> +	Please refer to the standard PCI bus binding document for a more
+> +	detailed explanation
+> +
+> +Optional properties:
+> +- bus-range: PCI bus numbers covered
+> +
+> +Interrupt controller child node
+> ++++++++++++++++++++++++++++++++
+> +Required properties:
+> +- interrupt-controller: identifies the node as an interrupt controller
+> +- #address-cells: specifies the number of cells needed to encode an
+> +	address. The value must be 0.
+> +- #interrupt-cells: specifies the number of cells needed to encode an
+> +	interrupt source. The value must be 1.
+> +
+> +NOTE:
+> +The core provides a single interrupt for both INTx/MSI messages. So,
+> +created a interrupt controller node to support 'interrupt-map' DT
+> +functionality.  The driver will create an IRQ domain for this map, decode
+> +the four INTx interrupts in ISR and route them to this domain.
+> +
+> +
+> +Example:
+> +++++++++
+> +
+> +	pci_express: axi-pcie@50000000 {
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		#interrupt-cells = <1>;
+> +		compatible = "xlnx,axi-pcie-host-1.00.a";
+> +		reg = < 0x50000000 0x10000000 >;
+> +		device_type = "pci";
+> +		interrupts = < 0 52 4 >;
+> +		interrupt-map-mask = <0 0 0 7>;
+> +		interrupt-map = <0 0 0 1 &pcie_intc 1>,
+> +				<0 0 0 2 &pcie_intc 2>,
+> +				<0 0 0 3 &pcie_intc 3>,
+> +				<0 0 0 4 &pcie_intc 4>;
+> +		ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
+> +
+> +		pcie_intc: interrupt-controller {
+> +			interrupt-controller;
+> +			#address-cells = <0>;
+> +			#interrupt-cells = <1>;
+> +		}
+> +	};
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 21df477..afedcde 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -46,4 +46,11 @@ config PCI_HOST_GENERIC
+>  	  Say Y here if you want to support a simple generic PCI host
+>  	  controller, such as the one emulated by kvmtool.
+>  
+> +config PCI_XILINX
+> +	bool "Xilinx AXI PCIe host bridge support"
+> +	depends on ARCH_ZYNQ
+> +	help
+> +	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
+> +	  Host Bridge driver.
+> +
+>  endmenu
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> index 611ba4b..68dfd06 100644
+> --- a/drivers/pci/host/Makefile
+> +++ b/drivers/pci/host/Makefile
+> @@ -6,3 +6,4 @@ obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
+>  obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+>  obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
+>  obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
+> +obj-$(CONFIG_PCI_XILINX) += pci-xilinx.o
+> diff --git a/drivers/pci/host/pci-xilinx.c b/drivers/pci/host/pci-xilinx.c
+> new file mode 100644
+> index 0000000..57d59e7
+> --- /dev/null
+> +++ b/drivers/pci/host/pci-xilinx.c
+> @@ -0,0 +1,1027 @@
+> +/*
+> + * PCIe host controller driver for Xilinx AXI PCIe Bridge
+> + *
+> + * Copyright (c) 2012 - 2014 Xilinx, Inc.
+> + *
+> + * Based on the Tegra PCIe driver
+> + *
+> + * Bits taken from Synopsys Designware Host controller driver and
+> + * ARM PCI Host generic driver.
+> + *
+> + * This program is free software: you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License as published by
+> + * the Free Software Foundation, either version 2 of the License, or
+> + * (at your option) any later version.
+> + */
+> +
+> +#include <linux/interrupt.h>
+> +#include <linux/irq.h>
+> +#include <linux/irqdomain.h>
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/msi.h>
+> +#include <linux/of_address.h>
+> +#include <linux/of_pci.h>
+> +#include <linux/of_platform.h>
+> +#include <linux/of_irq.h>
+> +#include <linux/pci.h>
+> +#include <linux/platform_device.h>
+> +
+> +/* Register definitions */
+> +#define XILINX_PCIE_REG_VSECC		0x00000128
+> +#define XILINX_PCIE_REG_VSECH		0x0000012c
+> +#define XILINX_PCIE_REG_BIR		0x00000130
+> +#define XILINX_PCIE_REG_BSCR		0x00000134
+> +#define XILINX_PCIE_REG_IDR		0x00000138
+> +#define XILINX_PCIE_REG_IMR		0x0000013c
+> +#define XILINX_PCIE_REG_BLR		0x00000140
+> +#define XILINX_PCIE_REG_PSCR		0x00000144
+> +#define XILINX_PCIE_REG_RPSC		0x00000148
+> +#define XILINX_PCIE_REG_MSIBASE1	0x0000014c
+> +#define XILINX_PCIE_REG_MSIBASE2	0x00000150
+> +#define XILINX_PCIE_REG_RPEFR		0x00000154
+> +#define XILINX_PCIE_REG_RPIFR1		0x00000158
+> +#define XILINX_PCIE_REG_RPIFR2		0x0000015c
+> +#define XILINX_PCIE_REG_VSECC2		0x00000200
+> +#define XILINX_PCIE_REG_VSECH2		0x00000204
+> +
+> +/* Interrupt registers definitions */
+> +#define XILINX_PCIE_INTR_LINK_DOWN	BIT(0)
+> +#define XILINX_PCIE_INTR_ECRC_ERR	BIT(1)
+> +#define XILINX_PCIE_INTR_STR_ERR	BIT(2)
+> +#define XILINX_PCIE_INTR_HOT_RESET	BIT(3)
+> +#define XILINX_PCIE_INTR_CFG_COMPL	GENMASK(7, 5)
+> +#define XILINX_PCIE_INTR_CFG_TIMEOUT	BIT(8)
+> +#define XILINX_PCIE_INTR_CORRECTABLE	BIT(9)
+> +#define XILINX_PCIE_INTR_NONFATAL	BIT(10)
+> +#define XILINX_PCIE_INTR_FATAL		BIT(11)
+> +#define XILINX_PCIE_INTR_INTX		BIT(16)
+> +#define XILINX_PCIE_INTR_MSI		BIT(17)
+> +#define XILINX_PCIE_INTR_SLV_UNSUPP	BIT(20)
+> +#define XILINX_PCIE_INTR_SLV_UNEXP	BIT(21)
+> +#define XILINX_PCIE_INTR_SLV_COMPL	BIT(22)
+> +#define XILINX_PCIE_INTR_SLV_ERRP	BIT(23)
+> +#define XILINX_PCIE_INTR_SLV_CMPABT	BIT(24)
+> +#define XILINX_PCIE_INTR_SLV_ILLBUR	BIT(25)
+> +#define XILINX_PCIE_INTR_MST_DECERR	BIT(26)
+> +#define XILINX_PCIE_INTR_MST_SLVERR	BIT(27)
+> +#define XILINX_PCIE_INTR_MST_ERRP	BIT(28)
+> +#define XILINX_PCIE_IMR_ALL_MASK	0x1FF30FED
+> +#define XILINX_PCIE_IDR_ALL_MASK	0xFFFFFFFF
+> +
+> +/* Root Port Error FIFO Read Register definitions */
+> +#define XILINX_PCIE_RPEFR_ERR_VALID	BIT(18)
+> +#define XILINX_PCIE_RPEFR_REQ_ID	GENMASK(15, 0)
+> +#define XILINX_PCIE_RPEFR_ALL_MASK	0xFFFFFFFF
+> +
+> +/* Root Port Interrupt FIFO Read Register 1 definitions */
+> +#define XILINX_PCIE_RPIFR1_INTR_VALID	BIT(31)
+> +#define XILINX_PCIE_RPIFR1_MSI_INTR	BIT(30)
+> +#define XILINX_PCIE_RPIFR1_INTR_ASSRT	BIT(29)
+> +#define XILINX_PCIE_RPIFR1_INTR_MASK	GENMASK(28, 27)
+> +#define XILINX_PCIE_RPIFR1_MSI_ADR_MASK	GENMASK(26, 16)
+> +#define XILINX_PCIE_RPIFR1_ALL_MASK	0xFFFFFFFF
+> +#define XILINX_PCIE_RPIFR1_INTR_SHIFT		27
+> +#define XILINX_PCIE_RPIFR1_MSI_ADR_SHIFT	16
+> +
+> +/* Bridge Info Register definitions */
+> +#define XILINX_PCIE_BIR_ECAM_SZ_MASK	GENMASK(18, 16)
+> +#define XILINX_PCIE_BIR_ECAM_SZ_SHIFT	16
+> +
+> +/* Root Port Interrupt FIFO Read Register 2 definitions */
+> +#define XILINX_PCIE_RPIFR2_MSG_DATA	GENMASK(15, 0)
+> +
+> +/* Root Port Status/control Register definitions */
+> +#define XILINX_PCIE_REG_RPSC_BEN	BIT(0)
+> +
+> +/* Phy Status/Control Register definitions */
+> +#define XILINX_PCIE_REG_PSCR_LNKUP	BIT(11)
+> +
+> +/* ECAM definitions */
+> +#define ECAM_BUS_NUM_SHIFT		20
+> +#define ECAM_DEV_NUM_SHIFT		12
+> +
+> +/* PCI Configuration space Bus Number Register definitions */
+> +#define PCI_SECONDARY_BUS_NUM_SHIFT	8
+> +#define PCI_SUBORDINATE_BUS_NUM_SHIFT	16
+> +#define PCI_LATENCY_TIMER_MASK		GENMASK(31, 24)
 
-00:0f.0 USB controller: ULi Electronics Inc. USB 1.1 Controller (rev
-03) (prog-if 10 [OHCI])
-        Subsystem: ULi Electronics Inc. ASRock 939Dual-SATA2 Motherboard
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop-
-ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 128 (20000ns max), Cache Line Size: 32 bytes
-        Interrupt: pin B routed to IRQ 9
-        Region 0: Memory at ffbeb000 (32-bit, non-prefetchable) [size=4K]
-        Capabilities: [60] Power Management version 2
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
-PME(D0+,D1+,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Kernel driver in use: ohci-pci
-00: b9 10 37 52 17 01 b0 02 03 10 03 0c 08 80 80 00
-10: 00 b0 be ff 00 00 00 00 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 b9 10 37 52
-30: 00 00 00 00 60 00 00 00 00 00 00 00 09 02 00 50
-40: 00 00 1f 00 e0 02 00 00 00 00 00 00 00 00 00 00
-50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-60: 01 00 02 d8 00 00 00 00 00 00 00 00 00 00 00 00
-70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+These three #defines aren't used; can you remove them?  (If you need
+them someday, you should either try to use generic definitions from
+include/uapi/linux/pci_regs.h, or if they're Xilinx-specific, rename
+them so they look Xilinx-specific rather than generic.
 
-00:0f.1 USB controller: ULi Electronics Inc. USB 1.1 Controller (rev
-03) (prog-if 10 [OHCI])
-        Subsystem: ULi Electronics Inc. ASRock 939Dual-SATA2 Motherboard
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop-
-ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 128 (20000ns max), Cache Line Size: 32 bytes
-        Interrupt: pin C routed to IRQ 11
-        Region 0: Memory at ffbec000 (32-bit, non-prefetchable) [size=4K]
-        Capabilities: [60] Power Management version 2
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
-PME(D0+,D1+,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Kernel driver in use: ohci-pci
-00: b9 10 37 52 17 01 b0 02 03 10 03 0c 08 80 80 00
-10: 00 c0 be ff 00 00 00 00 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 b9 10 37 52
-30: 00 00 00 00 60 00 00 00 00 00 00 00 0b 03 00 50
-40: 00 00 1f 00 e0 02 00 00 00 00 00 00 00 00 00 00
-50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-60: 01 00 02 d8 00 00 00 00 00 00 00 00 00 00 00 00
-70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> +
+> +/* Number of MSI IRQs */
+> +#define XILINX_NUM_MSI_IRQS		128
+> +
+> +/* Number of Memory Resources */
+> +#define XILINX_MAX_NUM_RESOURCES	3
+> +
+> +/**
+> + * struct xilinx_pcie_port - PCIe port information
+> + * @reg_base: IO Mapped Register Base
+> + * @irq: Interrupt number
+> + * @msi_pages: MSI pages
+> + * @root_busno: Root Bus number
+> + * @link_up: Link status flag
+> + * @dev: Device pointer
+> + * @irq_domain: IRQ domain pointer
+> + * @bus_range: Bus range
+> + * @resources: Bus Resources
+> + */
+> +struct xilinx_pcie_port {
+> +	void __iomem *reg_base;
+> +	u32 irq;
+> +	unsigned long msi_pages;
+> +	u8 root_busno;
+> +	bool link_up;
+> +	struct device *dev;
+> +	struct irq_domain *irq_domain;
+> +	struct resource bus_range;
+> +	struct list_head resources;
+> +};
+> +
+> +static DECLARE_BITMAP(msi_irq_in_use, XILINX_NUM_MSI_IRQS);
+> +
+> +static inline struct xilinx_pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+> +{
+> +	return sys->private_data;
+> +}
+> +
+> +static inline u32 pcie_read(struct xilinx_pcie_port *port, u32 reg)
+> +{
+> +	return readl(port->reg_base + reg);
+> +}
+> +
+> +static inline void pcie_write(struct xilinx_pcie_port *port,
+> +			      u32 val, u32 reg)
+> +{
+> +	writel(val, port->reg_base + reg);
+> +}
+> +
+> +static inline bool xilinx_pcie_is_link_up(struct xilinx_pcie_port *port)
 
-00:0f.2 USB controller: ULi Electronics Inc. USB 1.1 Controller (rev
-03) (prog-if 10 [OHCI])
-        Subsystem: ULi Electronics Inc. ASRock 939Dual-SATA2 Motherboard
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop-
-ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 128 (20000ns max), Cache Line Size: 32 bytes
-        Interrupt: pin D routed to IRQ 11
-        Region 0: Memory at ffbed000 (32-bit, non-prefetchable) [size=4K]
-        Capabilities: [60] Power Management version 2
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
-PME(D0+,D1+,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Kernel driver in use: ohci-pci
-00: b9 10 37 52 17 01 b0 02 03 10 03 0c 08 80 80 00
-10: 00 d0 be ff 00 00 00 00 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 b9 10 37 52
-30: 00 00 00 00 60 00 00 00 00 00 00 00 0b 04 00 50
-40: 00 00 1f 00 e0 02 00 00 00 00 00 00 00 00 00 00
-50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-60: 01 00 02 d8 00 00 00 00 00 00 00 00 00 00 00 00
-70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Bool function names should be statements or properties, not questions,
+since a statement can be true or false but a question cannot.  For
+example, in this case, "xilinx_pcie_link_up()" or
+"xilinx_pcie_link_is_up()" would read better.
 
-00:0f.3 USB controller: ULi Electronics Inc. USB 2.0 Controller (rev
-01) (prog-if 20 [EHCI])
-        Subsystem: ULi Electronics Inc. Device 5272
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop-
-ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 128 (20000ns max), Cache Line Size: 32 bytes
-        Interrupt: pin A routed to IRQ 11
-        Region 0: Memory at ffbefc00 (32-bit, non-prefetchable) [size=256]
-        Capabilities: [50] Power Management version 2
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
-PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [58] Debug port: BAR=1 offset=0090
-        Kernel driver in use: ehci-pci
-00: b9 10 39 52 16 01 b0 02 01 20 03 0c 08 80 80 00
-10: 00 fc be ff 00 00 00 00 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 b9 10 72 52
-30: 00 00 00 00 50 00 00 00 00 00 00 00 0b 01 00 50
-40: 01 02 00 ee 00 00 10 c4 00 00 00 00 00 00 00 00
-50: 01 58 02 c8 00 00 00 00 0a 00 90 20 00 00 00 00
-60: 20 20 7f 00 00 00 00 00 00 00 00 00 00 00 00 00
-70: 01 00 00 00 00 00 00 c0 00 00 00 00 00 00 00 00
-80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> +{
+> +	return (pcie_read(port, XILINX_PCIE_REG_PSCR) &
+> +		XILINX_PCIE_REG_PSCR_LNKUP) ? 1 : 0;
+> +}
+> +
+> +/**
+> + * xilinx_pcie_clear_err_interrupts - Clear Error Interrupts
+> + * @port: PCIe port information
+> + */
+> +static inline void
+> +xilinx_pcie_clear_err_interrupts(struct xilinx_pcie_port *port)
 
-00:10.0 RAID bus controller: Silicon Image, Inc. PCI0680 Ultra ATA-133
-Host Controller (rev 02)
-        Subsystem: Silicon Image, Inc. Winic W-680 (Silicon Image 680 based)
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 128, Cache Line Size: 4 bytes
-        Interrupt: pin A routed to IRQ 9
-        Region 0: I/O ports at eff0 [size=8]
-        Region 1: I/O ports at efe4 [size=4]
-        Region 2: I/O ports at efa8 [size=8]
-        Region 3: I/O ports at efe0 [size=4]
-        Region 4: I/O ports at ef90 [size=16]
-        Region 5: Memory at ffbeec00 (32-bit, non-prefetchable) [size=256]
-        [virtual] Expansion ROM at 08000000 [disabled] [size=512K]
-        Capabilities: [60] Power Management version 2
-                Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=2 PME-
-        Kernel driver in use: pata_sil680
-00: 95 10 80 06 07 01 90 02 02 00 04 01 01 80 00 00
-10: f1 ef 00 00 e5 ef 00 00 a9 ef 00 00 e1 ef 00 00
-20: 91 ef 00 00 00 ec be ff 00 00 00 00 95 10 80 36
-30: 00 00 00 00 60 00 00 00 00 00 00 00 09 01 00 00
-40: 00 00 00 00 90 14 19 08 00 00 00 00 00 00 00 00
-50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-60: 01 00 22 06 00 40 00 64 00 00 00 00 00 00 00 00
-70: 08 00 00 00 00 40 59 07 00 00 00 00 00 00 00 00
-80: 03 00 00 00 00 00 00 00 00 00 11 00 d9 7d ff 7b
-90: 00 fe 00 0d ff ff ff 3b 33 00 00 19 ff 00 00 00
-a0: 00 62 c1 10 c1 10 8a 32 c1 10 92 43 07 40 09 40
-b0: 01 60 8a 32 8a 32 8a 32 92 43 92 43 09 40 09 40
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Put the signature all on one line.  It probably doesn't need to be
+inline (we're making a couple register accesses, so speed isn't a
+concern), and removing that will make it fit.
 
-01:00.0 VGA compatible controller: NVIDIA Corporation G96 [GeForce
-9400 GT] (rev a1) (prog-if 00 [VGA controller])
-        Subsystem: Jaton Corp Device 0641
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 32 bytes
-        Interrupt: pin A routed to IRQ 11
-        Region 0: Memory at fb000000 (32-bit, non-prefetchable) [size=16M]
-        Region 1: Memory at e0000000 (64-bit, prefetchable) [size=256M]
-        Region 3: Memory at f8000000 (64-bit, non-prefetchable) [size=32M]
-        Region 5: I/O ports at fc80 [size=128]
-        [virtual] Expansion ROM at d5d00000 [disabled] [size=512K]
-        Capabilities: [60] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [68] MSI: Enable- Count=1/1 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [78] Express (v1) Endpoint, MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s
-<512ns, L1 <4us
-                        ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
-Unsupported-
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq-
-AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x16, ASPM L0s
-L1, Latency L0 <512ns, L1 <1us
-                        ClockPM- Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train-
-SlotClk+ DLActive- BWMgmt- ABWMgmt-
-        Capabilities: [b4] Vendor Specific Information: Len=14 <?>
-        Kernel driver in use: nouveau
-00: de 10 41 06 07 01 10 00 a1 00 00 03 08 00 00 00
-10: 00 00 00 fb 0c 00 00 e0 00 00 00 00 04 00 00 f8
-20: 00 00 00 00 81 fc 00 00 00 00 00 00 13 1b 41 06
-30: 00 00 00 00 60 00 00 00 00 00 00 00 0b 01 00 00
-40: 13 1b 41 06 00 00 00 00 00 00 00 00 00 00 00 00
-50: 01 00 00 00 01 00 00 00 ce d6 23 00 00 00 00 00
-60: 01 68 03 00 00 00 00 00 05 78 80 00 00 00 00 00
-70: 00 00 00 00 00 00 00 00 10 b4 01 00 e0 84 64 00
-80: 10 28 01 00 01 3d 00 00 08 00 11 10 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-b0: 00 00 00 00 09 00 14 01 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> +{
+> +	u32 val = pcie_read(port, XILINX_PCIE_REG_RPEFR);
+> +
+> +	if (val & XILINX_PCIE_RPEFR_ERR_VALID) {
+> +		dev_dbg(port->dev, "Requester ID %d\n",
+> +			val & XILINX_PCIE_RPEFR_REQ_ID);
+> +		pcie_write(port, XILINX_PCIE_RPEFR_ALL_MASK,
+> +			   XILINX_PCIE_REG_RPEFR);
+> +	}
+> +}
+> +
+> +/**
+> + * xilinx_pcie_verify_config - Verify configuration
+> + * @bus: PCI Bus structure
+> + * @devfn: device/function
+> + *
+> + * Return: 0 on success and error value for invalid configuration
+> + */
+> +static int xilinx_pcie_verify_config(struct pci_bus *bus,
+> +				     unsigned int devfn)
 
-root@p5-133:~#
+"verify_config" is not a great function name because it doesn't give a
+good clue about what the return value is.  If you make it boolean and
+name it, e.g., xilinx_pcie_valid_device(), then it's obvious.
 
-On Thu, Jul 3, 2014 at 1:58 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> On 2014/7/3 11:20, Ilia Mirkin wrote:
->> Hello,
->>
->> A user (cc'd) reported that nouveau's enabling of MSI causes the card
->> to not work on his setup [1]. I think the situation is that MSI is
->> just not supported by the underlying motherboard, even though the
->> card, and probably bridge, support it just fine. It's a very old
->> board. The nouveau code does:
->
->
-> What is the kernel version running in your board ?
->
->>
->> pmc->use_msi = pci_enable_msi(device->pdev) == 0;
->
-> Driver call pci_enable_msi() and always return 0 ?
->
->>
->> Does it need to do more checking than that before trying to enable MSI
->> on the device? Could it be that the linux pci subsystem is missing on
->> inheriting MSI capabilities somewhere?
->
-> pci_enable_msi() will checking your device whether it supports MSI.
-> Can you provide the detailed lspci information ? eg. lspci -vvvxxx ?
->
->
->>
->>   -ilia
->>
->> [1]
->>
->> 00:00.0 Host bridge [0600]: Intel Corporation 430FX - 82437FX TSC
->> [Triton I] [8086:122d] (rev 01)
->>         Flags: bus master, medium devsel, latency 64
->>
->> 00:0e.0 PCI bridge [0604]: PLX Technology, Inc. PEX8112 x1 Lane PCI
->> Express-to-PCI Bridge [10b5:8112] (rev aa) (prog-if 00 [Normal
->> decode])
->>         Flags: bus master, 66MHz, medium devsel, latency 66
->>         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
->>         I/O behind bridge: 0000f000-0000ffff
->>         Memory behind bridge: f5e00000-fbffffff
->>         Prefetchable memory behind bridge: d5d00000-f5dfffff
->>         Capabilities: [40] Power Management version 2
->>         Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
->>         Capabilities: [60] Express PCI/PCI-X to PCI-Express Bridge, MSI 00
->>
->> 01:00.0 VGA compatible controller [0300]: NVIDIA Corporation G96
->> [GeForce 9400 GT] [10de:0641] (rev a1) (prog-if 00 [VGA controller])
->>         Subsystem: Jaton Corp Device [1b13:0641]
->>         Flags: bus master, fast devsel, latency 0, IRQ 11
->>         Memory at fb000000 (32-bit, non-prefetchable) [size=16M]
->>         Memory at e0000000 (64-bit, prefetchable) [size=256M]
->>         Memory at f8000000 (64-bit, non-prefetchable) [size=32M]
->>         I/O ports at fc80 [size=128]
->>         [virtual] Expansion ROM at d5d00000 [disabled] [size=512K]
->>         Capabilities: [60] Power Management version 3
->>         Capabilities: [68] MSI: Enable- Count=1/1 Maskable- 64bit+
->>         Capabilities: [78] Express Endpoint, MSI 00
->>         Capabilities: [b4] Vendor Specific Information: Len=14 <?>
->>         Kernel driver in use: nouveau
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->
->
-> --
-> Thanks!
-> Yijing
->
+> +{
+> +	struct xilinx_pcie_port *port = sys_to_pcie(bus->sysdata);
+> +
+> +	/* Check if link is up when trying to access downstream ports */
+> +	if (bus->number != port->root_busno)
+> +		if (!xilinx_pcie_is_link_up(port))
+> +			return -EINVAL;
+> +
+> +	/* Only one device down on each root port */
+> +	if (bus->number == port->root_busno && devfn > 0)
+> +		return -EINVAL;
+> +
+> +	/*
+> +	 * Do not read more than one device on the bus directly attached
+> +	 * to RC.
+> +	 */
+> +	if (bus->primary == port->root_busno && devfn > 0)
+> +		return -EINVAL;
+> +
+> +	return 0;
+> +}
+> +
+> +/**
+> + * xilinx_pcie_get_config_base - Get configuration base
+> + * @bus: PCI Bus structure
+> + * @devfn: Device/function
+> + * @where: Offset from base
+> + *
+> + * Return: Base address of the configuration space needed to be
+> + *	   accessed.
+> + */
+> +static void __iomem *xilinx_pcie_get_config_base(struct pci_bus *bus,
+> +						 unsigned int devfn,
+> +						 int where)
+
+"xilinx_pcie_config_base()" would be sufficient.  We use "get" as a
+clue that we're acquiring a reference (obviously not an issue here,
+but I think the "get" in this function name is still a bit redundant.)
+
+> +{
+> +	struct xilinx_pcie_port *port = sys_to_pcie(bus->sysdata);
+> +	int relbus;
+> +
+> +	relbus = (bus->number << ECAM_BUS_NUM_SHIFT) |
+> +		 (devfn << ECAM_DEV_NUM_SHIFT);
+> +
+> +	return port->reg_base + relbus + where;
+> +}
+> +
+> +/**
+> + * xilinx_pcie_read_config - Read configuration space
+> + * @bus: PCI Bus structure
+> + * @devfn: Device/function
+> + * @where: Offset from base
+> + * @size: Byte/word/dword
+> + * @val: Value to be read
+> + *
+> + * Return: PCIBIOS_SUCCESSFUL on success
+> + *	   EINVAL/PCIBIOS_DEVICE_NOT_FOUND/PCIBIOS_BAD_REGISTER_NUMBER
+> + *	   on failure.
+> + */
+> +static int xilinx_pcie_read_config(struct pci_bus *bus,
+> +				   unsigned int devfn, int where,
+> +				   int size, u32 *val)
+> +{
+> +	struct xilinx_pcie_port *port = sys_to_pcie(bus->sysdata);
+> +	void __iomem *addr;
+> +
+> +	if (!port) {
+> +		BUG();
+> +		return -EINVAL;
+> +	}
+
+I don't think you need to test "port" for NULL here.  And I don't
+think callers will be prepared for -EINVAL anyway; they'll be
+expecting PCIBIOS_* values.
+
+> +	if (xilinx_pcie_verify_config(bus, devfn)) {
+> +		*val = 0xFFFFFFFF;
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +	}
+> +
+> +	addr = xilinx_pcie_get_config_base(bus, devfn, where);
+> +
+> +	switch (size) {
+> +	case 1:
+> +		*val = readb(addr);
+> +		break;
+> +	case 2:
+> +		*val = readw(addr);
+> +		break;
+> +	default:
+> +		*val = readl(addr);
+> +		break;
+> +	}
+> +
+> +	return PCIBIOS_SUCCESSFUL;
+> +}
+> +
+> +/**
+> + * xilinx_pcie_write_config - Write configuration space
+> + * @bus: PCI Bus structure
+> + * @devfn: Device/function
+> + * @where: Offset from base
+> + * @size: Byte/word/dword
+> + * @val: Value to be written to device
+> + *
+> + * Return: PCIBIOS_SUCCESSFUL on success,
+> + *	   EINVAL/PCIBIOS_DEVICE_NOT_FOUND/PCIBIOS_BAD_REGISTER_NUMBER
+> + *	   on failure.
+> + */
+> +static int xilinx_pcie_write_config(struct pci_bus *bus,
+> +				    unsigned int devfn, int where,
+> +				    int size, u32 val)
+> +{
+> +	struct xilinx_pcie_port *port = sys_to_pcie(bus->sysdata);
+> +	void __iomem *addr;
+> +
+> +	if (!port) {
+> +		BUG();
+> +		return -EINVAL;
+> +	}
+
+I don't think this test is necessary.
+
+> +	if (xilinx_pcie_verify_config(bus, devfn))
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +
+> +	addr = xilinx_pcie_get_config_base(bus, devfn, where);
+> +
+> +	switch (size) {
+> +	case 1:
+> +		writeb(val, addr);
+> +		break;
+> +	case 2:
+> +		writew(val, addr);
+> +		break;
+> +	default:
+> +		writel(val, addr);
+> +		break;
+> +	}
+> +
+> +	return PCIBIOS_SUCCESSFUL;
+> +}
+> +
+> +/* PCIe operations */
+> +static struct pci_ops xilinx_pcie_ops = {
+> +	.read  = xilinx_pcie_read_config,
+> +	.write = xilinx_pcie_write_config,
+> +};
+> +
+> +/* MSI functions */
+> +
+> +/**
+> + * xilinx_pcie_destroy_msi - Free MSI number
+> + * @irq: IRQ to be freed
+> + */
+> +static void xilinx_pcie_destroy_msi(unsigned int irq)
+> +{
+> +	struct irq_desc *desc;
+> +	struct msi_desc *msi;
+> +	struct xilinx_pcie_port *port;
+> +
+> +	desc = irq_to_desc(irq);
+> +	msi = irq_desc_get_msi_desc(desc);
+> +	port = sys_to_pcie(msi->dev->bus->sysdata);
+> +	if (!port) {
+> +		BUG();
+> +		return;
+> +	}
+
+Or this one.
+
+> +	if (!test_bit(irq, msi_irq_in_use))
+> +		dev_err(port->dev, "Trying to free unused MSI#%d\n", irq);
+> +	else
+> +		clear_bit(irq, msi_irq_in_use);
+> +}
+> +
+> +/**
+> + * xilinx_pcie_assign_msi - Allocate MSI number
+> + * @port: PCIe port structure
+> + *
+> + * Return: A valid IRQ on success and error value on failure.
+> + */
+> +static int xilinx_pcie_assign_msi(struct xilinx_pcie_port *port)
+> +{
+> +	int pos;
+> +
+> +	pos = find_first_zero_bit(msi_irq_in_use, XILINX_NUM_MSI_IRQS);
+> +	if (pos < XILINX_NUM_MSI_IRQS)
+> +		set_bit(pos, msi_irq_in_use);
+> +	else
+> +		return -ENOSPC;
+> +
+> +	return pos;
+> +}
+> +
+> +/**
+> + * xilinx_msi_teardown_irq - Destroy the MSI
+> + * @chip: MSI Chip descriptor
+> + * @irq: MSI IRQ to destroy
+> + */
+> +static void xilinx_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
+> +{
+> +	xilinx_pcie_destroy_msi(irq);
+> +}
+> +
+> +/**
+> + * xilinx_pcie_msi_setup_irq - Setup MSI request
+> + * @chip: MSI chip pointer
+> + * @pdev: PCIe device pointer
+> + * @desc: MSI descriptor pointer
+> + *
+> + * Return: '0' on success and error value on failure
+> + */
+> +static int xilinx_pcie_msi_setup_irq(struct msi_chip *chip,
+> +				     struct pci_dev *pdev,
+> +				     struct msi_desc *desc)
+> +{
+> +	struct xilinx_pcie_port *port = sys_to_pcie(pdev->bus->sysdata);
+> +	unsigned int irq;
+> +	int hwirq;
+> +	struct msi_msg msg;
+> +	phys_addr_t msg_addr;
+> +
+> +	if (!port) {
+> +		BUG();
+> +		return -EINVAL;
+> +	}
+
+Or this one.
+
+> +	hwirq = xilinx_pcie_assign_msi(port);
+> +	if (irq < 0)
+> +		return irq;
+> +
+> +	irq = irq_create_mapping(port->irq_domain, hwirq);
+> +	if (!irq)
+> +		return -EINVAL;
+> +
+> +	irq_set_msi_desc(irq, desc);
+> +
+> +	msg_addr = virt_to_phys((void *)port->msi_pages);
+> +
+> +	msg.address_hi = 0;
+> +	msg.address_lo = msg_addr;
+> +	msg.data = irq;
+> +
+> +	write_msi_msg(irq, &msg);
+> +
+> +	return 0;
+> +}
+> +
+> +/* MSI Chip Descriptor */
+> +static struct msi_chip xilinx_pcie_msi_chip = {
+> +	.setup_irq = xilinx_pcie_msi_setup_irq,
+> +	.teardown_irq = xilinx_msi_teardown_irq,
+> +};
+> +
+> +/* HW Interrupt Chip Descriptor */
+> +static struct irq_chip xilinx_msi_irq_chip = {
+> +	.name = "Xilinx PCIe MSI",
+> +	.irq_enable = unmask_msi_irq,
+> +	.irq_disable = mask_msi_irq,
+> +	.irq_mask = mask_msi_irq,
+> +	.irq_unmask = unmask_msi_irq,
+> +};
+> +
+> +/**
+> + * xilinx_pcie_msi_map - Set the handler for the MSI and mark IRQ as valid
+> + * @domain: IRQ domain
+> + * @irq: Virtual IRQ number
+> + * @hwirq: HW interrupt number
+> + *
+> + * Return: Always returns 0.
+> + */
+> +static int xilinx_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+> +			       irq_hw_number_t hwirq)
+> +{
+> +	irq_set_chip_and_handler(irq, &xilinx_msi_irq_chip, handle_simple_irq);
+> +	irq_set_chip_data(irq, domain->host_data);
+> +	set_irq_flags(irq, IRQF_VALID);
+> +
+> +	return 0;
+> +}
+> +
+> +/* IRQ Domain operations */
+> +static const struct irq_domain_ops msi_domain_ops = {
+> +	.map = xilinx_pcie_msi_map,
+> +};
+> +
+> +/**
+> + * xilinx_pcie_enable_msi - Enable MSI support
+> + * @port: PCIe port information
+> + */
+> +static void xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
+> +{
+> +	phys_addr_t msg_addr;
+> +
+> +	port->msi_pages = __get_free_pages(GFP_KERNEL, 0);
+> +	msg_addr = virt_to_phys((void *)port->msi_pages);
+> +	pcie_write(port, 0x0, XILINX_PCIE_REG_MSIBASE1);
+> +	pcie_write(port, msg_addr, XILINX_PCIE_REG_MSIBASE2);
+> +}
+> +
+> +/**
+> + * xilinx_pcie_add_bus - Add MSI chip info to PCIe bus
+> + * @bus: PCIe bus
+> + */
+> +static void xilinx_pcie_add_bus(struct pci_bus *bus)
+> +{
+> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+
+Did you verify that this builds with both CONFIG_PCI_MSI=y and with it
+unset?
+
+> +		struct xilinx_pcie_port *port = sys_to_pcie(bus->sysdata);
+> +
+> +		if (!port)
+> +			return;
+
+Unnecessary "port" test.
+
+> +		xilinx_pcie_msi_chip.dev = port->dev;
+> +		bus->msi = &xilinx_pcie_msi_chip;
+> +	}
+> +}
+> +
+> +/* INTx Functions */
+> +
+> +/**
+> + * xilinx_pcie_intx_map - Set the handler for the INTx and mark IRQ as valid
+> + * @domain: IRQ domain
+> + * @irq: Virtual IRQ number
+> + * @hwirq: HW interrupt number
+> + *
+> + * Return: Always returns 0.
+> + */
+> +static int xilinx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+> +				irq_hw_number_t hwirq)
+> +{
+> +	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+> +	irq_set_chip_data(irq, domain->host_data);
+> +	set_irq_flags(irq, IRQF_VALID);
+> +
+> +	return 0;
+> +}
+> +
+> +/* INTx IRQ Domain operations */
+> +static const struct irq_domain_ops intx_domain_ops = {
+> +	.map = xilinx_pcie_intx_map,
+> +};
+> +
+> +/* PCIe HW Functions */
+> +
+> +/**
+> + * xilinx_pcie_intr_handler - Interrupt Service Handler
+> + * @irq: IRQ number
+> + * @data: PCIe port information
+> + *
+> + * Return: IRQ_HANDLED on success and IRQ_NONE on failure
+> + */
+> +static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+> +{
+> +	struct xilinx_pcie_port *port = (struct xilinx_pcie_port *)data;
+> +	u32 val, mask, status, msi_data;
+> +
+> +	/* Read interrupt decode and mask registers */
+> +	val = pcie_read(port, XILINX_PCIE_REG_IDR);
+> +	mask = pcie_read(port, XILINX_PCIE_REG_IMR);
+> +
+> +	status = val & mask;
+> +	if (!status)
+> +		return IRQ_NONE;
+> +
+> +	if (status & XILINX_PCIE_INTR_LINK_DOWN)
+> +		dev_warn(port->dev, "Link Down\n");
+> +
+> +	if (status & XILINX_PCIE_INTR_ECRC_ERR)
+> +		dev_warn(port->dev, "ECRC failed\n");
+> +
+> +	if (status & XILINX_PCIE_INTR_STR_ERR)
+> +		dev_warn(port->dev, "Streaming error\n");
+> +
+> +	if (status & XILINX_PCIE_INTR_HOT_RESET)
+> +		dev_info(port->dev, "Hot reset\n");
+> +
+> +	if (status & XILINX_PCIE_INTR_CFG_TIMEOUT)
+> +		dev_warn(port->dev, "ECAM access timeout\n");
+> +
+> +	if (status & XILINX_PCIE_INTR_CORRECTABLE) {
+> +		dev_warn(port->dev, "Correctable error message\n");
+> +		xilinx_pcie_clear_err_interrupts(port);
+> +	}
+> +
+> +	if (status & XILINX_PCIE_INTR_NONFATAL) {
+> +		dev_warn(port->dev, "Non fatal error message\n");
+> +		xilinx_pcie_clear_err_interrupts(port);
+> +	}
+> +
+> +	if (status & XILINX_PCIE_INTR_FATAL) {
+> +		dev_warn(port->dev, "Fatal error message\n");
+> +		xilinx_pcie_clear_err_interrupts(port);
+> +	}
+> +
+> +	if (status & XILINX_PCIE_INTR_INTX) {
+> +		/* INTx interrupt received */
+> +		val = pcie_read(port, XILINX_PCIE_REG_RPIFR1);
+> +
+> +		/* Check whether interrupt valid */
+> +		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
+> +			dev_warn(port->dev, "RP Intr FIFO1 read error\n");
+> +			return IRQ_HANDLED;
+> +		}
+> +
+> +		/* Clear interrupt FIFO register 1 */
+> +		pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
+> +			   XILINX_PCIE_REG_RPIFR1);
+> +
+> +		/* Handle INTx Interrupt */
+> +		val = ((val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
+> +			XILINX_PCIE_RPIFR1_INTR_SHIFT) + 1;
+> +		generic_handle_irq(irq_find_mapping(port->irq_domain, val));
+> +	}
+> +
+> +	if (status & XILINX_PCIE_INTR_MSI) {
+> +		/* MSI Interrupt */
+> +		val = pcie_read(port, XILINX_PCIE_REG_RPIFR1);
+> +
+> +		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
+> +			dev_warn(port->dev, "RP Intr FIFO1 read error\n");
+> +			return IRQ_HANDLED;
+> +		}
+> +
+> +		if (val & XILINX_PCIE_RPIFR1_MSI_INTR) {
+> +			msi_data = pcie_read(port, XILINX_PCIE_REG_RPIFR2) &
+> +				   XILINX_PCIE_RPIFR2_MSG_DATA;
+> +
+> +			/* Clear interrupt FIFO register 1 */
+> +			pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
+> +				   XILINX_PCIE_REG_RPIFR1);
+> +
+> +			if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +				/* Handle MSI Interrupt */
+> +				generic_handle_irq(msi_data);
+> +			}
+> +		}
+> +	}
+> +
+> +	if (status & XILINX_PCIE_INTR_SLV_UNSUPP)
+> +		dev_warn(port->dev, "Slave unsupported request\n");
+> +
+> +	if (status & XILINX_PCIE_INTR_SLV_UNEXP)
+> +		dev_warn(port->dev, "Slave unexpected completion\n");
+> +
+> +	if (status & XILINX_PCIE_INTR_SLV_COMPL)
+> +		dev_warn(port->dev, "Slave completion timeout\n");
+> +
+> +	if (status & XILINX_PCIE_INTR_SLV_ERRP)
+> +		dev_warn(port->dev, "Slave Error Poison\n");
+> +
+> +	if (status & XILINX_PCIE_INTR_SLV_CMPABT)
+> +		dev_warn(port->dev, "Slave Completer Abort\n");
+> +
+> +	if (status & XILINX_PCIE_INTR_SLV_ILLBUR)
+> +		dev_warn(port->dev, "Slave Illegal Burst\n");
+> +
+> +	if (status & XILINX_PCIE_INTR_MST_DECERR)
+> +		dev_warn(port->dev, "Master decode error\n");
+> +
+> +	if (status & XILINX_PCIE_INTR_MST_SLVERR)
+> +		dev_warn(port->dev, "Master slave error\n");
+> +
+> +	if (status & XILINX_PCIE_INTR_MST_ERRP)
+> +		dev_warn(port->dev, "Master error poison\n");
+> +
+> +	/* Clear the Interrupt Decode register */
+> +	pcie_write(port, status, XILINX_PCIE_REG_IDR);
+> +
+> +	return IRQ_HANDLED;
+> +}
+> +
+> +/**
+> + * xilinx_pcie_free_irq_domain - Free IRQ domain
+> + * @port: PCIe port information
+> + */
+> +static void xilinx_pcie_free_irq_domain(struct xilinx_pcie_port *port)
+> +{
+> +	int i;
+> +	u32 irq, num_irqs;
+> +
+> +	/* Free IRQ Domain */
+> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +
+> +		free_pages(port->msi_pages, 0);
+> +
+> +		num_irqs = XILINX_NUM_MSI_IRQS;
+> +	} else {
+> +		/* INTx */
+> +		num_irqs = 4;
+> +	}
+> +
+> +	for (i = 0; i < num_irqs; i++) {
+> +		irq = irq_find_mapping(port->irq_domain, i);
+> +		if (irq > 0)
+> +			irq_dispose_mapping(irq);
+> +	}
+> +
+> +	irq_domain_remove(port->irq_domain);
+> +}
+> +
+> +/**
+> + * xilinx_pcie_init_irq_domain - Initialize IRQ domain
+> + * @port: PCIe port information
+> + *
+> + * Return: '0' on success and error value on failure
+> + */
+> +static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+> +{
+> +	struct device *dev = port->dev;
+> +	struct device_node *node = dev->of_node;
+> +	struct device_node *pcie_intc_node;
+> +
+> +	/* Setup INTx */
+> +	pcie_intc_node = of_get_next_child(node, NULL);
+> +	if (!pcie_intc_node) {
+> +		dev_err(dev, "No PCIe Intc node found\n");
+> +		return PTR_ERR(pcie_intc_node);
+> +	}
+> +
+> +	port->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
+> +						 &intx_domain_ops,
+> +						 port);
+> +	if (!port->irq_domain) {
+> +		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+> +		return PTR_ERR(port->irq_domain);
+> +	}
+> +
+> +	/* Setup MSI */
+> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +		port->irq_domain = irq_domain_add_linear(node,
+> +							 XILINX_NUM_MSI_IRQS,
+> +							 &msi_domain_ops,
+> +							 &xilinx_pcie_msi_chip);
+> +		if (!port->irq_domain) {
+> +			dev_err(dev, "Failed to get a MSI IRQ domain\n");
+> +			return PTR_ERR(port->irq_domain);
+> +		}
+> +
+> +		xilinx_pcie_enable_msi(port);
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +/**
+> + * xilinx_pcie_init_port - Initialize hardware
+> + * @port: PCIe port information
+> + */
+> +static void xilinx_pcie_init_port(struct xilinx_pcie_port *port)
+> +{
+> +	port->link_up = xilinx_pcie_is_link_up(port);
+> +	if (!port->link_up)
+
+I'd use "if (port->link_up)" and reorder the dev_info() to avoid the
+negation (trivial, I know, but why use the negative when the positive
+works just as well?)
+
+> +		dev_info(port->dev, "PCIe Link is DOWN\n");
+> +	else
+> +		dev_info(port->dev, "PCIe Link is UP\n");
+> +
+> +	/* Disable all interrupts*/
+> +	pcie_write(port, ~XILINX_PCIE_IDR_ALL_MASK,
+> +		   XILINX_PCIE_REG_IMR);
+> +
+> +	/* Clear pending interrupts */
+> +	pcie_write(port, pcie_read(port, XILINX_PCIE_REG_IDR) &
+> +			 XILINX_PCIE_IMR_ALL_MASK,
+> +		   XILINX_PCIE_REG_IDR);
+> +
+> +	/* Enable all interrupts*/
+
+Missing space before "*/" (also on "Disable all interrupts" comment).
+
+> +	pcie_write(port, XILINX_PCIE_IMR_ALL_MASK, XILINX_PCIE_REG_IMR);
+> +
+> +	/* Enable the Bridge enable bit */
+> +	pcie_write(port, pcie_read(port, XILINX_PCIE_REG_RPSC) |
+> +			 XILINX_PCIE_REG_RPSC_BEN,
+> +		   XILINX_PCIE_REG_RPSC);
+> +}
+> +
+> +/**
+> + * xilinx_pcie_setup - Setup memory resources
+> + * @nr: Bus number
+> + * @sys: Per controller structure
+> + *
+> + * Return: '1' on success and error value on failure
+
+Incorrect.  No point in a comment that explains obvious code anyway.
+But maybe DocBook requires it, and I guess it's OK then.
+
+> + */
+> +static int xilinx_pcie_setup(int nr, struct pci_sys_data *sys)
+> +{
+> +	struct xilinx_pcie_port *port = sys_to_pcie(sys);
+> +
+> +	list_splice_init(&port->resources, &sys->resources);
+> +
+> +	return 1;
+> +}
+> +
+> +/**
+> + * xilinx_pcie_scan_bus - Scan PCIe bus for devices
+> + * @nr: Bus number
+> + * @sys: Per controller structure
+> + *
+> + * Return: Valid Bus pointer on success and NULL on failure
+> + */
+> +static struct pci_bus __init *xilinx_pcie_scan_bus(int nr,
+> +						   struct pci_sys_data *sys)
+> +{
+> +	struct xilinx_pcie_port *port = sys_to_pcie(sys);
+> +	struct pci_bus *bus;
+> +
+> +	if (port) {
+
+I think this test (and the BUG()) is superfluous.  I don't think it's
+possible to get here with sys->private_data == NULL.  And if we do,
+we'll take a null pointer fault and get a nice backtrace anyway.
+
+> +		port->root_busno = sys->busnr;
+> +		bus = pci_scan_root_bus(port->dev, sys->busnr, &xilinx_pcie_ops,
+> +					sys, &sys->resources);
+> +	} else {
+> +		bus = NULL;
+> +		BUG();
+> +	}
+> +
+> +	return bus;
+> +}
+> +
+> +
+> +/**
+> + * xilinx_pcie_parse_and_add_res - Add resources by parsing ranges
+> + * @port: PCIe port information
+> + *
+> + * Return: '0' on success and error value on failure
+> + */
+> +static int xilinx_pcie_parse_and_add_res(struct xilinx_pcie_port *port)
+> +{
+> +	struct device *dev = port->dev;
+> +	struct device_node *node = dev->of_node;
+> +	struct resource *mem;
+> +	resource_size_t offset;
+> +	struct of_pci_range_parser parser;
+> +	struct of_pci_range range;
+> +	struct pci_host_bridge_window *win;
+> +	int err = 0, mem_resno = 0;
+> +
+> +	/* Get the ranges */
+> +	if (of_pci_range_parser_init(&parser, node)) {
+> +		dev_err(dev, "missing \"ranges\" property\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	/* Parse the ranges and add the resources found to the list */
+> +	for_each_of_pci_range(&parser, &range) {
+> +
+> +		if (mem_resno >= XILINX_MAX_NUM_RESOURCES) {
+> +			dev_err(dev, "Maximum memory resources exceeded\n");
+> +			return -EINVAL;
+> +		}
+> +
+> +		mem = devm_kmalloc(dev, sizeof(*mem), GFP_KERNEL);
+> +		if (!mem) {
+> +			err = -ENOMEM;
+> +			goto free_resources;
+> +		}
+> +
+> +		of_pci_range_to_resource(&range, node, mem);
+> +
+> +		switch (mem->flags & IORESOURCE_TYPE_BITS) {
+> +		case IORESOURCE_MEM:
+> +			offset = range.cpu_addr - range.pci_addr;
+> +			mem_resno++;
+> +			break;
+> +		default:
+> +			err = -EINVAL;
+> +			break;
+> +		}
+> +
+> +		if (err < 0) {
+> +			dev_warn(dev, "Invalid resource found %pR\n", mem);
+> +			continue;
+> +		}
+> +
+> +		err = request_resource(&iomem_resource, mem);
+> +		if (err)
+> +			goto free_resources;
+> +
+> +		pci_add_resource_offset(&port->resources, mem, offset);
+> +	}
+> +
+> +	/* Get the bus range */
+> +	if (of_pci_parse_bus_range(node, &port->bus_range)) {
+> +		u32 val = pcie_read(port, XILINX_PCIE_REG_BIR);
+> +		u8 last;
+> +
+> +		last = (val & XILINX_PCIE_BIR_ECAM_SZ_MASK) >>
+> +			XILINX_PCIE_BIR_ECAM_SZ_SHIFT;
+> +
+> +		port->bus_range = (struct resource) {
+> +			.name	= node->name,
+> +			.start	= 0,
+> +			.end	= last,
+> +			.flags	= IORESOURCE_BUS,
+> +		};
+> +	}
+> +
+> +	/* Register bus resource */
+> +	pci_add_resource(&port->resources, &port->bus_range);
+> +
+> +	return 0;
+> +
+> +free_resources:
+> +	release_child_resources(&iomem_resource);
+> +	list_for_each_entry(win, &port->resources, list)
+> +		devm_kfree(dev, win->res);
+> +	pci_free_resource_list(&port->resources);
+> +
+> +	return err;
+> +}
+> +
+> +/**
+> + * xilinx_pcie_parse_dt - Parse Device tree
+> + * @port: PCIe port information
+> + *
+> + * Return: '0' on success and error value on failure
+> + */
+> +static int xilinx_pcie_parse_dt(struct xilinx_pcie_port *port)
+> +{
+> +	struct device *dev = port->dev;
+> +	struct device_node *node = dev->of_node;
+> +	struct resource regs;
+> +	const char *type;
+> +	int err;
+> +
+> +	type = of_get_property(node, "device_type", NULL);
+> +	if (!type || strcmp(type, "pci")) {
+> +		dev_err(dev, "invalid \"device_type\" %s\n", type);
+> +		return -EINVAL;
+> +	}
+> +
+> +	err = of_address_to_resource(node, 0, &regs);
+> +	if (err) {
+> +		dev_err(dev, "missing \"reg\" property\n");
+> +		return err;
+> +	}
+> +
+> +	port->reg_base = devm_ioremap_resource(dev, &regs);
+> +	if (IS_ERR(port->reg_base))
+> +		return PTR_ERR(port->reg_base);
+> +
+> +	port->irq = irq_of_parse_and_map(node, 0);
+> +	err = devm_request_irq(dev, port->irq, xilinx_pcie_intr_handler,
+> +			       IRQF_SHARED, "xilinx-pcie", port);
+> +	if (err) {
+> +		dev_err(dev, "unable to request irq %d\n", port->irq);
+> +		return err;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +/**
+> + * xilinx_pcie_probe - Probe function
+> + * @pdev: Platform device pointer
+> + *
+> + * Return: '0' on success and error value on failure
+> + */
+> +static int xilinx_pcie_probe(struct platform_device *pdev)
+> +{
+> +	struct xilinx_pcie_port *port;
+> +	struct hw_pci hw;
+> +	struct device *dev = &pdev->dev;
+> +	int err;
+> +
+> +	if (!dev->of_node)
+> +		return -ENODEV;
+> +
+> +	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
+> +	if (!port)
+> +		return -ENOMEM;
+> +
+> +	port->dev = dev;
+> +
+> +	err = xilinx_pcie_parse_dt(port);
+> +	if (err) {
+> +		dev_err(dev, "Parsing DT failed\n");
+> +		return err;
+> +	}
+> +
+> +	xilinx_pcie_init_port(port);
+> +
+> +	err = xilinx_pcie_init_irq_domain(port);
+> +	if (err) {
+> +		dev_err(dev, "Failed creating IRQ Domain\n");
+> +		return err;
+> +	}
+> +
+> +	/*
+> +	 * Parse PCI ranges, configuration bus range and
+> +	 * request their resources
+> +	 */
+> +	INIT_LIST_HEAD(&port->resources);
+> +	err = xilinx_pcie_parse_and_add_res(port);
+> +	if (err) {
+> +		dev_err(dev, "Failed adding resources\n");
+> +		return err;
+> +	}
+> +
+> +	platform_set_drvdata(pdev, port);
+> +
+> +	/* Register the device */
+> +	memset(&hw, 0, sizeof(hw));
+> +	hw = (struct hw_pci) {
+> +		.nr_controllers	= 1,
+> +		.private_data	= (void **)&port,
+> +		.setup		= xilinx_pcie_setup,
+> +		.map_irq	= of_irq_parse_and_map_pci,
+> +		.add_bus	= xilinx_pcie_add_bus,
+> +		.scan		= xilinx_pcie_scan_bus,
+> +		.ops		= &xilinx_pcie_ops,
+> +	};
+> +	pci_common_init_dev(dev, &hw);
+> +
+> +	return 0;
+> +}
+> +
+> +/**
+> + * xilinx_pcie_remove - Remove function
+> + * @pdev: Platform device pointer
+> + *
+> + * Return: '0' always
+> + */
+> +static int xilinx_pcie_remove(struct platform_device *pdev)
+> +{
+> +	struct xilinx_pcie_port *port = platform_get_drvdata(pdev);
+> +
+> +	xilinx_pcie_free_irq_domain(port);
+> +
+> +	return 0;
+> +}
+> +
+> +static struct of_device_id xilinx_pcie_of_match[] = {
+> +	{ .compatible = "xlnx,axi-pcie-host-1.00.a", },
+> +	{}
+> +};
+> +
+> +static struct platform_driver xilinx_pcie_driver = {
+> +	.driver = {
+> +		.name = "xilinx-pcie",
+> +		.owner = THIS_MODULE,
+> +		.of_match_table = xilinx_pcie_of_match,
+> +		.suppress_bind_attrs = true,
+> +	},
+> +	.probe = xilinx_pcie_probe,
+> +	.remove = xilinx_pcie_remove,
+> +};
+> +module_platform_driver(xilinx_pcie_driver);
+> +
+> +MODULE_AUTHOR("Xilinx Inc");
+> +MODULE_DESCRIPTION("Xilinx AXI PCIe driver");
+> +MODULE_LICENSE("GPLv2");
+
+I think you want "GPL v2" here (with the space; see
+license_is_gpl_compatible()).
