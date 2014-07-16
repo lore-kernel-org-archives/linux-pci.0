@@ -1,51 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:53253 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756602AbaGJASc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 20:18:32 -0400
-Received: by mail-ob0-f170.google.com with SMTP id uz6so9018498obc.29
-        for <linux-pci@vger.kernel.org>; Wed, 09 Jul 2014 17:18:31 -0700 (PDT)
+Received: from userp1040.oracle.com ([156.151.31.81]:32191 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758996AbaGPNjB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 09:39:01 -0400
+Date: Wed, 16 Jul 2014 09:33:05 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [Patch V3 00/16] Enable support of IOAPIC hotplug on x86
+ platforms
+Message-ID: <20140716133305.GG19585@laptop.dumpdata.com>
+References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+ <20140714172642.GA12920@laptop.dumpdata.com>
+ <20140714194133.GA22857@laptop.dumpdata.com>
+ <53C54876.5090606@linux.intel.com>
+ <20140715161035.GA8097@laptop.dumpdata.com>
+ <53C5EB19.7060104@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOesGMiu_azMYt3L5OgZSFRgrJQvXvkvSOtr0eLam22CQ5SwuA@mail.gmail.com>
-References: <2CC2A0A4A178534D93D5159BF3BCB661A17A3E48F2@EAPEX1MAIL1.st.com>
-	<CAOesGMiu_azMYt3L5OgZSFRgrJQvXvkvSOtr0eLam22CQ5SwuA@mail.gmail.com>
-Date: Thu, 10 Jul 2014 05:48:31 +0530
-Message-ID: <CAKohpon0KkW+GqTGriioXCRLet0wBzT-7=+_VUBczJtfgTgJqQ@mail.gmail.com>
-Subject: Re: [GIT PULL] ARM: SPEAr1310 PCIe updates
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: Olof Johansson <olof@lixom.net>
-Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mark Nicholson <mark@nicholnet.com>,
-	"FTPAdmin Kernel.org" <ftpadmin@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53C5EB19.7060104@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9 July 2014 23:39, Olof Johansson <olof@lixom.net> wrote:
-> * Why are you sending a pull request for a repo that is not yours?
+On Wed, Jul 16, 2014 at 11:01:45AM +0800, Jiang Liu wrote:
+> Hi Konrad,
 
-Because Mohit/Pratyush were facing some issues in pushing patches
-to the SPEAr public git repo. And so I tried to help them out publicly
-and nobody objected then:
+Hey Jiang,
+> 	We have found the root cause with your great support. If BIOS
+> assigns an IRQ number for a PCI device, acpi_pci_irq_enable() fails to
 
-https://lkml.org/lkml/2014/7/8/10
+I would think that is a common scenario?
 
-> * Why is Viresh the git committer but hasn't signed off on the patches?
+> assign IOAPIC IRQ then due to the check:
+>         if (dev->irq > 0)
+>                 return 0;
 
-I didn't sign-off because I haven't even looked closed at many of the
-patches around PCI and Acked whatever I could understand.
+I should really look in the code to figure this out - but I think your
+patch will have a detail analysis that will make tglrx happy, so
+will just wait till then :-)
 
-But yeah, this committer thing is what I missed. Because of that I might
-be required to signoff it.
+> 	For a quick workaround, just comment out above check. But we
+> need some time to figure out a clean fixup for it. We will send out new
+> version once it gets resolved.
 
-> Are you sharing accounts on kernel.org? (Adding kernel.org admin on cc
-> just in case).
+Excellent. Once you do, please do give me the git tree so I can slurp
+it in my testing
 
-Obviously not. I am alone the user of this account.
+> 	Thanks for your great help again.
+
+Of course! Thank you for your quick turn-around.
+> Regards!
+> Gerry
+> On 2014/7/16 0:10, Konrad Rzeszutek Wilk wrote:
+> > already assigned IRQ
