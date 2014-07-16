@@ -1,54 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:34608 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756975AbaGNUGQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jul 2014 16:06:16 -0400
-Date: Mon, 14 Jul 2014 13:06:12 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-To: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
-Cc: Borislav Petkov <bp@alien8.de>, clemens@ladisch.de,
-	jdelvare@suse.de, rdunlap@infradead.org, bhelgaas@google.com,
-	lm-sensors@lm-sensors.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] hwmon, k10temp: Add support for AMD F15h M60h processor
-Message-ID: <20140714200612.GA29123@roeck-us.net>
-References: <1405369388-12729-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
- <20140714195128.GA25124@pd.tnic>
- <53C4368E.9090103@amd.com>
+Received: from mx1.redhat.com ([209.132.183.28]:4898 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760510AbaGPTBU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Jul 2014 15:01:20 -0400
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 1/3] vfio-pci: Release devices with BusMaster disabled
+To: alex.williamson@redhat.com
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Date: Wed, 16 Jul 2014 13:01:19 -0600
+Message-ID: <20140716190118.4153.62519.stgit@gimli.home>
+In-Reply-To: <20140716184645.4153.86129.stgit@gimli.home>
+References: <20140716184645.4153.86129.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53C4368E.9090103@amd.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 14, 2014 at 02:59:10PM -0500, Aravind Gopalakrishnan wrote:
-> On 7/14/2014 2:51 PM, Borislav Petkov wrote:
-> >On Mon, Jul 14, 2014 at 03:23:08PM -0500, Aravind Gopalakrishnan wrote:
-> >>@@ -211,6 +228,7 @@ static const struct pci_device_id k10temp_id_table[] = {
-> >>  	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
-> >>  	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
-> >>  	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F3) },
-> >>+	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M60H_NB_F3) },
-> >>  	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
-> >>  	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_16H_M30H_NB_F3) },
-> >>  	{}
-> >>diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> >>index 7fa3173..3c8e328 100644
-> >>--- a/include/linux/pci_ids.h
-> >>+++ b/include/linux/pci_ids.h
-> >>@@ -520,6 +520,7 @@
-> >>  #define PCI_DEVICE_ID_AMD_15H_M10H_F3	0x1403
-> >>  #define PCI_DEVICE_ID_AMD_15H_M30H_NB_F3 0x141d
-> >>  #define PCI_DEVICE_ID_AMD_15H_M30H_NB_F4 0x141e
-> >>+#define PCI_DEVICE_ID_AMD_15H_M60H_NB_F3 0x1573
-> >I'm assuming this is used somewhere else besides k10temp.c?
-> >
-> 
-> Yeah, will most likely need to add EDAC bits. But that is something
-> I can't test now.
-> 
-Sorry, I can not add this to a common file unless it is used elsewhere.
-I would suggest to add it locally for now. It can be moved to the
-common file once it is used elsewhere.
+Our current open/release path looks like this:
 
-Guenter
+vfio_pci_open
+  vfio_pci_enable
+    pci_enable_device
+    pci_save_state
+    pci_store_saved_state
+
+vfio_pci_release
+  vfio_pci_disable
+    pci_disable_device
+    pci_restore_state
+
+pci_enable_device() doesn't modify PCI_COMMAND_MASTER, so if a device
+comes to us with it enabled, it persists through the open and gets
+stored as part of the device saved state.  We then restore that saved
+state when released, which can allow the device to attempt to continue
+to do DMA.  When the group is disconnected from the domain, this will
+get caught by the IOMMU, but if there are other devices in the group,
+the device may continue running and interfere with the user.  Even in
+the former case, IOMMUs don't necessarily behave well and a stream of
+blocked DMA can result in unpleasant behavior on the host.
+
+Explicitly disable Bus Master as we're enabling the device and
+slightly re-work release to make sure that pci_disable_device() is
+the last thing that touches the device.
+
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+
+ drivers/vfio/pci/vfio_pci.c |   10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 010e0f8..36d8332 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -44,6 +44,9 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
+ 	u16 cmd;
+ 	u8 msix_pos;
+ 
++	/* Don't allow our initial saved state to include busmaster */
++	pci_clear_master(pdev);
++
+ 	ret = pci_enable_device(pdev);
+ 	if (ret)
+ 		return ret;
+@@ -99,7 +102,8 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
+ 	struct pci_dev *pdev = vdev->pdev;
+ 	int bar;
+ 
+-	pci_disable_device(pdev);
++	/* Stop the device from further DMA */
++	pci_clear_master(pdev);
+ 
+ 	vfio_pci_set_irqs_ioctl(vdev, VFIO_IRQ_SET_DATA_NONE |
+ 				VFIO_IRQ_SET_ACTION_TRIGGER,
+@@ -128,7 +132,7 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
+ 			__func__, dev_name(&pdev->dev));
+ 
+ 		if (!vdev->reset_works)
+-			return;
++			goto out;
+ 
+ 		pci_save_state(pdev);
+ 	}
+@@ -151,6 +155,8 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
+ 	}
+ 
+ 	pci_restore_state(pdev);
++out:
++	pci_disable_device(pdev);
+ }
+ 
+ static void vfio_pci_release(void *device_data)
+
