@@ -1,63 +1,37 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 4 Jul 2014 11:54:34 +0200
 From: Alexander Gordeev <agordeev@redhat.com>
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: "'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
-Message-ID: <20140704095434.GC12247@dhcp-26-207.brq.redhat.com>
-References: <cover.1402405331.git.agordeev@redhat.com>
- <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
- <20140702202201.GA28852@google.com>
- <063D6719AE5E284EB5DD2968C1650D6D1726BF4E@AcuExch.aculab.com>
- <20140704085816.GB12247@dhcp-26-207.brq.redhat.com>
- <063D6719AE5E284EB5DD2968C1650D6D1726C717@AcuExch.aculab.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D1726C717@AcuExch.aculab.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Anil Ravindranath <anil_ravindranath@pmc-sierra.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 19/23] pmcraid: Get rid of a redundant assignment
+Date: Wed, 16 Jul 2014 20:05:23 +0200
+Message-Id: <d37c53e35c578fd819d1faad176b109f8d397855.1405533479.git.agordeev@redhat.com>
+In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 04, 2014 at 09:11:50AM +0000, David Laight wrote:
-> > I might be missing something, but we are talking of MSI address space
-> > here, aren't we? I am not getting how we could end up with a 'write'
-> > to a random kernel location when a unclaimed MSI vector sent. We could
-> > only expect a spurious interrupt at worst, which is handled and reported.
-> > 
-> > Anyway, as I described in my reply to Bjorn, this is not a concern IMO.
-> 
-> I'm thinking of the following - which might be MSI-X ?
-> 1) Hardware requests some interrupts and tells the host the BAR (and offset)
->    where the 'vectors' should be written.
-> 2) To raise an interrupt the hardware uses the 'vector' as the address
->    of a normal PCIe write cycle.
-> 
-> So if the hardware requests 4 interrupts, but the driver (believing it
-> will only use 3) only write 3 vectors, and then the hardware uses the
-> 4th vector it can write to a random location.
-> 
-> Debugging that would be hard!
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/pmcraid.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-MSI base address is kind of hardcoded for a platform. A combination of
-MSI base address, PCI function number and MSI vector makes a PCI host to
-raise interrupt on a CPU. I might be inaccurate in details, but the scenario
-you described is impossible AFAICT.
-
-> 	David
-> 
-> 
-> 
-
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index be8ce54..c06af7f 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -4746,7 +4746,6 @@ pmcraid_isr_legacy:
+ 	pinstance->hrrq_vector[0].drv_inst = pinstance;
+ 	pinstance->hrrq_vector[0].vector = pdev->irq;
+ 	pinstance->num_hrrq = 1;
+-	rc = 0;
+ 
+ 	rc = request_irq(pdev->irq, pmcraid_isr, IRQF_SHARED,
+ 			 PMCRAID_DRIVER_NAME, &pinstance->hrrq_vector[0]);
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.7.6
+
