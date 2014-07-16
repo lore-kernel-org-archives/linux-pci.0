@@ -1,81 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:41681 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751321AbaGJH13 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 03:27:29 -0400
-Received: by mail-pd0-f173.google.com with SMTP id r10so10404879pdi.32
-        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 00:27:28 -0700 (PDT)
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: arnd@linaro.org, olof@lixom.net
-Cc: linux-arm-kernel@lists.infradead.org, spear-devel@list.st.com,
-	b.zolnierkie@samsung.com, bhelgaas@google.com, mark@nicholnet.com,
-	linux-pci@vger.kernel.org, Pratyush Anand <pratyush.anand@st.com>,
-	Mike Turquette <mturquette@linaro.org>,
-	Viresh Kumar <viresh.kumar@linaro.org>
-Subject: [PATCH V9 3/7] ARM: SPEAr13xx: Fix pcie clock name
-Date: Thu, 10 Jul 2014 12:56:34 +0530
-Message-Id: <08c2b017de1d545e42d97ce911ed913aeba46ca9.1404976058.git.viresh.kumar@linaro.org>
-In-Reply-To: <cover.1404976058.git.viresh.kumar@linaro.org>
-References: <cover.1404976058.git.viresh.kumar@linaro.org>
-In-Reply-To: <cover.1404976058.git.viresh.kumar@linaro.org>
-References: <cover.1404976058.git.viresh.kumar@linaro.org>
+Received: from mx1.redhat.com ([209.132.183.28]:42687 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934882AbaGPSsU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Jul 2014 14:48:20 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Naresh Kumar Inna <naresh@chelsio.com>,
+	Arvind Bhushan <arvindb@chelsio.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 05/23] csiostor: Remove superfluous call to pci_disable_msix()
+Date: Wed, 16 Jul 2014 20:05:09 +0200
+Message-Id: <bd849e403573b161beb4dcfdb7d410f997c95562.1405533479.git.agordeev@redhat.com>
+In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Pratyush Anand <pratyush.anand@st.com>
+There is no need to call pci_disable_msix() in case
+the previous call to pci_enable_msix() failed
 
-Follow dt clock naming convention for PCIe clocks.
-
-Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
-Cc: Mike Turquette <mturquette@linaro.org>
-[viresh: fixed logs/cclist]
-Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Naresh Kumar Inna <naresh@chelsio.com>
+Cc: Arvind Bhushan <arvindb@chelsio.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/clk/spear/spear1310_clock.c | 6 +++---
- drivers/clk/spear/spear1340_clock.c | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/csiostor/csio_isr.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/clk/spear/spear1310_clock.c b/drivers/clk/spear/spear1310_clock.c
-index 65894f7..4daa597 100644
---- a/drivers/clk/spear/spear1310_clock.c
-+++ b/drivers/clk/spear/spear1310_clock.c
-@@ -742,19 +742,19 @@ void __init spear1310_clk_init(void __iomem *misc_base, void __iomem *ras_base)
- 	clk = clk_register_gate(NULL, "pcie_sata_0_clk", "ahb_clk", 0,
- 			SPEAR1310_PERIP1_CLK_ENB, SPEAR1310_PCIE_SATA_0_CLK_ENB,
- 			0, &_lock);
--	clk_register_clkdev(clk, NULL, "dw_pcie.0");
-+	clk_register_clkdev(clk, NULL, "b1000000.pcie");
- 	clk_register_clkdev(clk, NULL, "b1000000.ahci");
+diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
+index 7ee9777..91ba91d 100644
+--- a/drivers/scsi/csiostor/csio_isr.c
++++ b/drivers/scsi/csiostor/csio_isr.c
+@@ -529,10 +529,8 @@ csio_enable_msix(struct csio_hw *hw)
+ 			csio_reduce_sqsets(hw, cnt - extra);
+ 		}
+ 	} else {
+-		if (rv > 0) {
+-			pci_disable_msix(hw->pdev);
++		if (rv > 0)
+ 			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
+-		}
  
- 	clk = clk_register_gate(NULL, "pcie_sata_1_clk", "ahb_clk", 0,
- 			SPEAR1310_PERIP1_CLK_ENB, SPEAR1310_PCIE_SATA_1_CLK_ENB,
- 			0, &_lock);
--	clk_register_clkdev(clk, NULL, "dw_pcie.1");
-+	clk_register_clkdev(clk, NULL, "b1800000.pcie");
- 	clk_register_clkdev(clk, NULL, "b1800000.ahci");
- 
- 	clk = clk_register_gate(NULL, "pcie_sata_2_clk", "ahb_clk", 0,
- 			SPEAR1310_PERIP1_CLK_ENB, SPEAR1310_PCIE_SATA_2_CLK_ENB,
- 			0, &_lock);
--	clk_register_clkdev(clk, NULL, "dw_pcie.2");
-+	clk_register_clkdev(clk, NULL, "b4000000.pcie");
- 	clk_register_clkdev(clk, NULL, "b4000000.ahci");
- 
- 	clk = clk_register_gate(NULL, "sysram0_clk", "ahb_clk", 0,
-diff --git a/drivers/clk/spear/spear1340_clock.c b/drivers/clk/spear/spear1340_clock.c
-index fe835c1..5a5c664 100644
---- a/drivers/clk/spear/spear1340_clock.c
-+++ b/drivers/clk/spear/spear1340_clock.c
-@@ -839,7 +839,7 @@ void __init spear1340_clk_init(void __iomem *misc_base)
- 	clk = clk_register_gate(NULL, "pcie_sata_clk", "ahb_clk", 0,
- 			SPEAR1340_PERIP1_CLK_ENB, SPEAR1340_PCIE_SATA_CLK_ENB,
- 			0, &_lock);
--	clk_register_clkdev(clk, NULL, "dw_pcie");
-+	clk_register_clkdev(clk, NULL, "b1000000.pcie");
- 	clk_register_clkdev(clk, NULL, "b1000000.ahci");
- 
- 	clk = clk_register_gate(NULL, "sysram0_clk", "ahb_clk", 0,
+ 		kfree(entries);
+ 		return -ENOMEM;
 -- 
-2.0.0.rc2
+1.7.7.6
 
