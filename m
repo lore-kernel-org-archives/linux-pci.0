@@ -1,51 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <53C6034E.5000105@ti.com>
-Date: Wed, 16 Jul 2014 10:15:02 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
-MIME-Version: 1.0
-To: Paul Walmsley <paul@pwsan.com>
-CC: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>, <tony@atomide.com>,
-	<linux@arm.linux.org.uk>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] arm: dra7xx: Add hwmod data for pcie1 and pcie2 subsystems
-References: <1403719366-9656-3-git-send-email-kishon@ti.com> <1404896567-32204-1-git-send-email-kishon@ti.com> <53BD2136.9030009@ti.com> <53C3B251.8000209@ti.com> <alpine.DEB.2.02.1407152013310.21432@utopia.booyaka.com>
-In-Reply-To: <alpine.DEB.2.02.1407152013310.21432@utopia.booyaka.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:50117 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965526AbaGPStd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Jul 2014 14:49:33 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Anil Gurumurthy <agurumur@brocade.com>,
+	Vijaya Mohan Guvva <vmohan@brocade.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 03/23] bfa: Cleanup bfad_setup_intr() function
+Date: Wed, 16 Jul 2014 20:05:07 +0200
+Message-Id: <20edfb7504d8b0a4c92ecc27300d9eb01d7bf36a.1405533479.git.agordeev@redhat.com>
+In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Anil Gurumurthy <agurumur@brocade.com>
+Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+---
+ drivers/scsi/bfa/bfad.c |   18 ++++++++----------
+ 1 files changed, 8 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index bb93180..c18279f 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -1219,7 +1219,7 @@ bfad_install_msix_handler(struct bfad_s *bfad)
+ int
+ bfad_setup_intr(struct bfad_s *bfad)
+ {
+-	int error = 0;
++	int error;
+ 	u32 mask = 0, i, num_bit = 0, max_bit = 0;
+ 	struct msix_entry msix_entries[MAX_MSIX_ENTRY];
+ 	struct pci_dev *pdev = bfad->pcidev;
+@@ -1279,20 +1279,18 @@ bfad_setup_intr(struct bfad_s *bfad)
+ 
+ 		bfad->bfad_flags |= BFAD_MSIX_ON;
+ 
+-		return error;
++		return 0;
+ 	}
+ 
+ line_based:
+-	error = 0;
+-	if (request_irq
+-	    (bfad->pcidev->irq, (irq_handler_t) bfad_intx, BFAD_IRQ_FLAGS,
+-	     BFAD_DRIVER_NAME, bfad) != 0) {
+-		/* Enable interrupt handler failed */
+-		return 1;
+-	}
++	error = request_irq(bfad->pcidev->irq, (irq_handler_t)bfad_intx,
++			    BFAD_IRQ_FLAGS, BFAD_DRIVER_NAME, bfad);
++	if (error)
++		return error;
++
+ 	bfad->bfad_flags |= BFAD_INTX_ON;
+ 
+-	return error;
++	return 0;
+ }
+ 
+ void
+-- 
+1.7.7.6
 
-On Wednesday 16 July 2014 01:43 AM, Paul Walmsley wrote:
-> On Mon, 14 Jul 2014, Kishon Vijay Abraham I wrote:
-> 
->> On Wednesday 09 July 2014 04:32 PM, Rajendra Nayak wrote:
->>> On Wednesday 09 July 2014 02:32 PM, Kishon Vijay Abraham I wrote:
->>>> Added hwmod data for pcie1 and pcie2 subsystem present in DRA7xx SOC.
->>>>
->>>> Cc: Tony Lindgren <tony@atomide.com>
->>>> Cc: Russell King <linux@arm.linux.org.uk>
->>>> Cc: Paul Walmsley <paul@pwsan.com>
->>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->>>> Tested-by: Kishon Vijay Abraham I <kishon@ti.com>
->>>> ---
->>>> Changes from v1:
->>>> * changed the clock domain to "pcie_clkdm"
->>>> * Added PCIe as a slave port for l3_main.
->>>
->>> Looks good to me,
->>> Reviewed-by: Rajendra Nayak <rnayak@ti.com>
->>
->> Paul,
->>
->> Can you pick this one?
-> 
-> Yep, queued for 3.17.
-
-Thanks :-)
-
--Kishon
-> 
-> - Paul
-> 
