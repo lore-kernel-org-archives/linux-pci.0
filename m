@@ -1,91 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f44.google.com ([209.85.192.44]:43260 "EHLO
-	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753892AbaGEXET (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 Jul 2014 19:04:19 -0400
-Received: by mail-qg0-f44.google.com with SMTP id j107so2500772qga.31
-        for <linux-pci@vger.kernel.org>; Sat, 05 Jul 2014 16:04:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo7Dk+7THPn2SUO1p-P0bbfP7nSyOoiukXLgMsuGoJrMOA@mail.gmail.com>
-References: <CAKb7UviGCtebGwyHbXRLZhDOiDAez+eKkxPe9jz5kc-3R1kUvQ@mail.gmail.com>
-	<53B4F0F7.9020403@huawei.com>
-	<CALhae2jRz8hL0bwySAbP7r+vJGOG5aif4GA_Yjp0inGAwz5JEA@mail.gmail.com>
-	<53B612FE.4080105@huawei.com>
-	<CAKb7UviVFQYwYdp_dgxK7jJ5Ny9yG1y8LATydxtVtkzRh+aOKw@mail.gmail.com>
-	<53B61B03.3070308@huawei.com>
-	<CAKb7UvjFuu4Hm1pfmY-NMFORfv-+fx4oYeJicRoE8UTL_4Wp4A@mail.gmail.com>
-	<53B625D9.9080500@huawei.com>
-	<CAKb7UviYak+Jt6+RGFZc=OtNh2DVJaCvxnBpRRkw7zVn8u+9Vw@mail.gmail.com>
-	<CAErSpo7Dk+7THPn2SUO1p-P0bbfP7nSyOoiukXLgMsuGoJrMOA@mail.gmail.com>
-Date: Sat, 5 Jul 2014 19:04:18 -0400
-Message-ID: <CALhae2iZSdsX5dywMTgJQY=N=H1eFneJceDtiOrQJjus1Df62w@mail.gmail.com>
-Subject: Re: How to check for proper MSI support?
-From: Brian Becker <brian.johnathan.b@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ilia Mirkin <imirkin@alum.mit.edu>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:31217 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965737AbaGPSFP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Jul 2014 14:05:15 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	James Smart <james.smart@emulex.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 12/23] lpfc: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Wed, 16 Jul 2014 20:05:16 +0200
+Message-Id: <ea1bf102a3ce0471996e2ddaaa498b088ac791c8.1405533479.git.agordeev@redhat.com>
+In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-I went ahead and sent a report to
-https://bugzilla.kernel.org/show_bug.cgi?id=79531. It does not appear
-that my system supports APIC/LAPIC, from the dmesg logs which claim
-that APIC is hardware disabled or not available. Perhaps the BIOS is
-allowed to disable it, or is required to enable it, and the BIOS does
-indeed predate the installed CPU.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: James Smart <james.smart@emulex.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/lpfc/lpfc_init.c |   38 +++++++++++++++++---------------------
+ 1 files changed, 17 insertions(+), 21 deletions(-)
 
-Thanks,
-Brian Becker
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index a5769a9..d9caed9 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -8211,9 +8211,9 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
+  * @phba: pointer to lpfc hba data structure.
+  *
+  * This routine is invoked to enable the MSI-X interrupt vectors to device
+- * with SLI-3 interface specs. The kernel function pci_enable_msix() is
+- * called to enable the MSI-X vectors. Note that pci_enable_msix(), once
+- * invoked, enables either all or nothing, depending on the current
++ * with SLI-3 interface specs. The kernel function pci_enable_msix_exact()
++ * is called to enable the MSI-X vectors. Note that pci_enable_msix_exact(),
++ * once invoked, enables either all or nothing, depending on the current
+  * availability of PCI vector resources. The device driver is responsible
+  * for calling the individual request_irq() to register each MSI-X vector
+  * with a interrupt handler, which is done in this function. Note that
+@@ -8237,8 +8237,8 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
+ 		phba->msix_entries[i].entry = i;
+ 
+ 	/* Configure MSI-X capability structure */
+-	rc = pci_enable_msix(phba->pcidev, phba->msix_entries,
+-				ARRAY_SIZE(phba->msix_entries));
++	rc = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
++				   ARRAY_SIZE(phba->msix_entries));
+ 	if (rc) {
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 				"0420 PCI enable MSI-X failed (%d)\n", rc);
+@@ -8775,15 +8775,13 @@ out:
+  * @phba: pointer to lpfc hba data structure.
+  *
+  * This routine is invoked to enable the MSI-X interrupt vectors to device
+- * with SLI-4 interface spec. The kernel function pci_enable_msix() is called
+- * to enable the MSI-X vectors. Note that pci_enable_msix(), once invoked,
+- * enables either all or nothing, depending on the current availability of
+- * PCI vector resources. The device driver is responsible for calling the
+- * individual request_irq() to register each MSI-X vector with a interrupt
+- * handler, which is done in this function. Note that later when device is
+- * unloading, the driver should always call free_irq() on all MSI-X vectors
+- * it has done request_irq() on before calling pci_disable_msix(). Failure
+- * to do so results in a BUG_ON() and a device will be left with MSI-X
++ * with SLI-4 interface spec. The kernel function pci_enable_msix_range()
++ * is called to enable the MSI-X vectors. The device driver is responsible
++ * for calling the individual request_irq() to register each MSI-X vector
++ * with a interrupt handler, which is done in this function. Note that later
++ * when device is unloading, the driver should always call free_irq() on all
++ * MSI-X vectors it has done request_irq() on before calling pci_disable_msix()
++ * Failure to do so results in a BUG_ON() and a device will be left with MSI-X
+  * enabled and leaks its vectors.
+  *
+  * Return codes
+@@ -8805,18 +8803,16 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
+ 		phba->sli4_hba.msix_entries[index].entry = index;
+ 		vectors++;
+ 	}
+-enable_msix_vectors:
+-	rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
+-			     vectors);
+-	if (rc > 1) {
+-		vectors = rc;
+-		goto enable_msix_vectors;
+-	} else if (rc) {
++
++	rc = pci_enable_msix_range(phba->pcidev, phba->sli4_hba.msix_entries,
++				   2, vectors);
++	if (rc < 0) {
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 				"0484 PCI enable MSI-X failed (%d)\n", rc);
+ 		goto vec_fail_out;
+ 	}
+ 
++	vectors = rc;
+ 	/* Log MSI-X vector assignment */
+ 	for (index = 0; index < vectors; index++)
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+-- 
+1.7.7.6
 
-On Sat, Jul 5, 2014 at 6:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Jul 3, 2014 at 10:32 PM, Ilia Mirkin <imirkin@alum.mit.edu> wrote:
->> So let me get this straight -- you're suggesting I add a quirk for
->> every PCI chipset that doesn't support MSI? There are probably
->> hundreds of these... anything made before 1999 or so, and probably a
->> bunch since then too. There _has_ to be a way to do this generically.
->> Is the PCI spec version anywhere in the root hub?
->>
->> Perhaps we can check if every bridge on the way to the CPU has the MSI
->> capability (including the root hub)? (And naturally _that_ won't
->> work... on my sandybridge laptop, the host bridge doesn't have the MSI
->> cap but the system most definitely supports MSI.)
->>
->> Adding Bjorn... perhaps you know? Some of the info has been stripped
->> out by now, you can see the full lspci -vvvxxx at
->> http://marc.info/?l=linux-pci&m=140443441730503&w=2
->
-> Huh, this stinks.  We don't really have a good way of figuring out
-> whether the system chipset supports MSI.  The ACPI FADT "MSI Not
-> Supported" bit (ACPI_FADT_NO_MSI) was added to the ACPI v3.0b spec in
-> October 2006, so that won't help the systems that predate that or
-> don't have ACPI.
->
-> We have quirks for some Serverworks, ATI, and VIA chipsets that
-> basically do the same as booting with "pci=nomsi".  But as you say,
-> it's unreasonable to add quirks for all old systems.
->
-> Brian, can you open a report at http://bugzilla.kernel.org and attach
-> a complete dmesg log, /proc/cpuinfo contents, and "lspci -vvv" output?
->
-> If I understand correctly, you have a P200MMX with a 430FX chipset.
-> I'm not a hardware guy, but sounds like that might be a 200MHz Pentium
-> with MMX (P54CS), which does have an integrated LAPIC, according to
-> wikipedia.
->
-> From the PCI host bridge's perspective, an incoming MSI just looks
-> like a normal DMA write.  As long as that write reaches the CPU LAPIC,
-> it should work fine.  There's not really any specific MSI support
-> required, except to route the incoming write to the CPU LAPIC.  So
-> it's possible that a bridge designed before MSI was added to the PCI
-> spec might be able to support MSI.
->
-> But I don't know how much value there is in MSI on such old systems.
-> Maybe we could default to disabling MSI on BIOS dates before 1998 or
-> something.
->
-> Bjorn
