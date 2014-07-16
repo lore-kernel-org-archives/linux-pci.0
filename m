@@ -1,107 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:57134 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758727AbaGXGXm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 02:23:42 -0400
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 24 Jul 2014 16:23:34 +1000
-Received: from d23relay04.au.ibm.com (d23relay04.au.ibm.com [9.190.234.120])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 279B72BB0052
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 16:22:37 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay04.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s6O65dXn17039366
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 16:05:39 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s6O6MZoq000749
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 16:22:36 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V7 02/17] PCI/IOV: Get VF BAR size from hardware directly when platform needs
-Date: Thu, 24 Jul 2014 14:22:12 +0800
-Message-Id: <1406182947-11302-3-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:40502 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965683AbaGPSIy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 14:08:54 -0400
+Received: by mail-ig0-f171.google.com with SMTP id l13so4444052iga.16
+        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 11:08:54 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1405498124-11519-1-git-send-email-qiudayu@linux.vnet.ibm.com>
+References: <1405498124-11519-1-git-send-email-qiudayu@linux.vnet.ibm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 16 Jul 2014 12:08:30 -0600
+Message-ID: <CAErSpo47WBkOuThU6ZW0htSm9s2P_r0ebZ6T3TM0dWiSdaGaBA@mail.gmail.com>
+Subject: Re: [PATCH] Fix build warnings in aer.h
+To: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current implementation calculates VF BAR size from dividing the total size of
-IOV BAR by total VF number. It won't work on PowerNV platform because we're
-going to expand IOV BAR size for finely alignment.
+On Wed, Jul 16, 2014 at 2:08 AM, Mike Qiu <qiudayu@linux.vnet.ibm.com> wrote:
+> build log:
+>
+> In file included from include/ras/ras_event.h:11:0,
+>                  from drivers/ras/ras.c:13:
+> include/linux/aer.h:42:129: warning: ‘struct pci_dev’
+> declared inside parameter list [enabled by default]
+>
+> include/linux/aer.h:42:129: warning: its scope is only
+> this definition or declaration, which is probably not
+> what you want [enabled by default]
+>
+> include/linux/aer.h:46:130: warning: ‘struct pci_dev’
+> declared inside parameter list [enabled by default]
+>
+> include/linux/aer.h:50:136: warning: ‘struct pci_dev’
+> declared inside parameter list [enabled by default]
+>
+> include/linux/aer.h:57:14: warning: ‘struct pci_dev’
+> declared inside parameter list [enabled by default]
+>
+> Signed-off-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
 
-The patch enforces getting IOV BAR size from hardware and then calculate
-the VF BAR size based on that when platform wants so.
+Hi Mike,
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/iov.c      |   28 ++++++++++++++++++++++++----
- include/linux/ioport.h |    1 +
- 2 files changed, 25 insertions(+), 4 deletions(-)
+How did you reproduce this build error?  There are other include files
+that use pci_dev without a previous declaration or include of
+include/linux/pci.h, e.g., include/linux/msi.h, so I want to make sure
+we don't have similar problems elsewhere.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 7566238..ef1c546 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -55,6 +55,9 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	struct resource *res;
- 	struct pci_sriov *iov = dev->sriov;
- 	struct pci_bus *bus;
-+	struct resource tmp;
-+	enum pci_bar_type type;
-+	int reg;
- 
- 	mutex_lock(&iov->dev->sriov->lock);
- 	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
-@@ -80,12 +83,29 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 			continue;
- 		virtfn->resource[i].name = pci_name(virtfn);
- 		virtfn->resource[i].flags = res->flags;
--		size = resource_size(res);
--		do_div(size, iov->total_VFs);
-+		/* When res has IORESOURCE_ARCH, retrieve the IOV BAR size
-+		 * from hardware directly.
-+		 */
-+		if (res->flags & IORESOURCE_ARCH) {
-+			reg = pci_iov_resource_bar(dev, i + PCI_IOV_RESOURCES, &type);
-+			__pci_read_base(dev, type, &tmp, reg);
-+			size = resource_size(&tmp);
-+			/* When __pci_read_base fails, flags is set to 0.
-+			 * In this case, reset size to 0, which means the VF
-+			 * will not be enabled.
-+			 */
-+			if (!tmp.flags)
-+				size = 0;
-+		} else {
-+			size = resource_size(res);
-+			do_div(size, iov->total_VFs);
-+		}
- 		virtfn->resource[i].start = res->start + size * id;
- 		virtfn->resource[i].end = virtfn->resource[i].start + size - 1;
--		rc = request_resource(res, &virtfn->resource[i]);
--		BUG_ON(rc);
-+		if (resource_size(&virtfn->resource[i])) {
-+			rc = request_resource(res, &virtfn->resource[i]);
-+			BUG_ON(rc);
-+		}
- 	}
- 
- 	if (reset)
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 5e3a906..de8b57c 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -48,6 +48,7 @@ struct resource {
- #define IORESOURCE_MEM_64	0x00100000
- #define IORESOURCE_WINDOW	0x00200000	/* forwarded by bridge */
- #define IORESOURCE_MUXED	0x00400000	/* Resource is software muxed */
-+#define IORESOURCE_ARCH		0x00800000	/* Resource arch tagged */
- 
- #define IORESOURCE_EXCLUSIVE	0x08000000	/* Userland may not map this resource */
- #define IORESOURCE_DISABLED	0x10000000
--- 
-1.7.9.5
+Bjorn
 
+> ---
+>  include/linux/aer.h | 2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/include/linux/aer.h b/include/linux/aer.h
+> index 4dbaa70..c826d1c 100644
+> --- a/include/linux/aer.h
+> +++ b/include/linux/aer.h
+> @@ -11,6 +11,8 @@
+>  #define AER_FATAL                      1
+>  #define AER_CORRECTABLE                        2
+>
+> +struct pci_dev;
+> +
+>  struct aer_header_log_regs {
+>         unsigned int dw0;
+>         unsigned int dw1;
+> --
+> 1.8.1.4
+>
