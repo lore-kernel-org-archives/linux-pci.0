@@ -1,128 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:41340 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754748AbaGHBLk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jul 2014 21:11:40 -0400
-Received: by mail-ie0-f171.google.com with SMTP id rp18so1831287iec.16
-        for <linux-pci@vger.kernel.org>; Mon, 07 Jul 2014 18:11:39 -0700 (PDT)
-Date: Mon, 7 Jul 2014 19:11:36 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for
- pci_host_bridge.
-Message-ID: <20140708011136.GE22939@google.com>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
- <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com>
- <20140405000007.GD15806@google.com>
- <20140407084623.GG17163@e106497-lin.cambridge.arm.com>
- <1396862058.3671.40.camel@pasglop>
- <20140407100715.GI17163@e106497-lin.cambridge.arm.com>
- <CAErSpo7h+Yew2hBztzkOzcHU5r4OQebxFbcZGkNUwJwfTFsbfg@mail.gmail.com>
- <20140704145752.GJ6501@e106497-lin.cambridge.arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 2/3] vfio-pci: Use mutex around open, release, and remove
+To: alex.williamson@redhat.com
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Date: Wed, 16 Jul 2014 13:01:25 -0600
+Message-ID: <20140716190124.4153.97712.stgit@gimli.home>
+In-Reply-To: <20140716184645.4153.86129.stgit@gimli.home>
+References: <20140716184645.4153.86129.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140704145752.GJ6501@e106497-lin.cambridge.arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 4, 2014 at 8:57 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> On Mon, Apr 07, 2014 at 11:44:51PM +0100, Bjorn Helgaas wrote:
->> On Mon, Apr 7, 2014 at 4:07 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
->> > On Mon, Apr 07, 2014 at 10:14:18AM +0100, Benjamin Herrenschmidt wrote:
->> >> On Mon, 2014-04-07 at 09:46 +0100, Liviu Dudau wrote:
->> >> >
->> >> > *My* strategy is to get rid of pci_domain_nr(). I don't see why we need
->> >> > to have arch specific way of providing the number, specially after looking
->> >> > at the existing implementations that return a value from a variable that
->> >> > is never touched or incremented. My guess is that pci_domain_nr() was
->> >> > created to work around the fact that there was no domain_nr maintainance in
->> >> > the generic code.
->> >>
->> >> Well, there was no generic host bridge structure. There is one now, it should
->> >> go there.
->> >
->> > Exactly! Hence my patch. After it gets accepted I will go through architectures
->> > and remove their version of pci_domain_nr().
->>
->> Currently the arch has to supply pci_domain_nr() because that's the
->> only way for the generic code to learn the domain.  After you add
->> pci_create_root_bus_in_domain(), the arch can supply the domain that
->> way, and we won't need the arch-specific pci_domain_nr().  Right?
->> That makes more sense to me; thanks for the explanation.
->>
->> Let me try to explain my concern about the
->> pci_create_root_bus_in_domain() interface.  We currently have these
->> interfaces:
->>
->>   pci_scan_root_bus()
->>   pci_scan_bus()
->>   pci_scan_bus_parented()
->>   pci_create_root_bus()
->>
->> pci_scan_root_bus() is a higher-level interface than
->> pci_create_root_bus(), so I'm trying to migrate toward it because it
->> lets us remove a little code from the arch, e.g., pci_scan_child_bus()
->> and pci_bus_add_devices().
->>
->> I think we can only remove the arch-specific pci_domain_nr() if that
->> arch uses pci_create_root_bus_in_domain().  When we convert an arch
->> from using scan_bus interfaces to using
->> pci_create_root_bus_in_domain(), we will have to move the rest of the
->> scan_bus code (pci_scan_child_bus(), pci_bus_add_devices()) back into
->> the arch code.
->>
->> One alternative is to add an _in_domain() variant of each of these
->> interfaces, but that doesn't seem very convenient either.  My idea of
->> passing in a structure would also require adding variants, so there's
->> not really an advantage there, but I am thinking of the next
->> unification effort, e.g., for NUMA node info.  I don't really want to
->> have to change all the _in_domain() interfaces to also take yet
->> another parameter for the node number.
->
-> ...
-> My understanding is that when pci_host_bridge structure was introduced
-> you were trying to keep the APIs unchanged and hence the creation of a
-> bridge was hidden inside the pci_create_root_bus() function.
+Serializing open/release allows us to fix a refcnt error if we fail
+to enable the device and lets us prevent devices from being unbound
+or opened, giving us an opportunity to do bus resets on release.  No
+restriction added to serialize binding devices to vfio-pci while the
+mutex is held though.
 
-You mean pci_alloc_host_bridge()?  Right; ideally I would have used
-pci_scan_root_bus() everywhere and gotten rid of pci_create_root_bus().
-The outline of pci_scan_root_bus() is:
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
 
-    pci_create_root_bus()
-    pci_scan_child_bus()
-    pci_bus_add_devices()
+ drivers/vfio/pci/vfio_pci.c         |   35 +++++++++++++++++++++++++----------
+ drivers/vfio/pci/vfio_pci_private.h |    2 +-
+ 2 files changed, 26 insertions(+), 11 deletions(-)
 
-The problem was that several arches do interesting things scattered among
-that core.  The ACPI host bridge driver used on x86 and ia64 does resource
-allocation before pci_bus_add_devices(), as does parisc.  Probably all
-arches should do this, but they don't.
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 36d8332..c4949a7 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -37,6 +37,8 @@ module_param_named(nointxmask, nointxmask, bool, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(nointxmask,
+ 		  "Disable support for PCI 2.3 style INTx masking.  If this resolves problems for specific devices, report lspci -vvvxxx to linux-pci@vger.kernel.org so the device can be fixed automatically via the broken_intx_masking flag.");
+ 
++static DEFINE_MUTEX(driver_lock);
++
+ static int vfio_pci_enable(struct vfio_pci_device *vdev)
+ {
+ 	struct pci_dev *pdev = vdev->pdev;
+@@ -163,28 +165,39 @@ static void vfio_pci_release(void *device_data)
+ {
+ 	struct vfio_pci_device *vdev = device_data;
+ 
+-	if (atomic_dec_and_test(&vdev->refcnt))
++	mutex_lock(&driver_lock);
++
++	if (!(--vdev->refcnt))
+ 		vfio_pci_disable(vdev);
+ 
++	mutex_unlock(&driver_lock);
++
+ 	module_put(THIS_MODULE);
+ }
+ 
+ static int vfio_pci_open(void *device_data)
+ {
+ 	struct vfio_pci_device *vdev = device_data;
++	int ret = 0;
+ 
+ 	if (!try_module_get(THIS_MODULE))
+ 		return -ENODEV;
+ 
+-	if (atomic_inc_return(&vdev->refcnt) == 1) {
+-		int ret = vfio_pci_enable(vdev);
++	mutex_lock(&driver_lock);
++
++	if (!vdev->refcnt) {
++		ret = vfio_pci_enable(vdev);
+ 		if (ret) {
+ 			module_put(THIS_MODULE);
+-			return ret;
++			goto unlock;
+ 		}
+ 	}
++	vdev->refcnt++;
+ 
+-	return 0;
++unlock:
++	mutex_unlock(&driver_lock);
++
++	return ret;
+ }
+ 
+ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
+@@ -839,7 +852,6 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	vdev->irq_type = VFIO_PCI_NUM_IRQS;
+ 	mutex_init(&vdev->igate);
+ 	spin_lock_init(&vdev->irqlock);
+-	atomic_set(&vdev->refcnt, 0);
+ 
+ 	ret = vfio_add_group_dev(&pdev->dev, &vfio_pci_ops, vdev);
+ 	if (ret) {
+@@ -854,12 +866,15 @@ static void vfio_pci_remove(struct pci_dev *pdev)
+ {
+ 	struct vfio_pci_device *vdev;
+ 
++	mutex_lock(&driver_lock);
++
+ 	vdev = vfio_del_group_dev(&pdev->dev);
+-	if (!vdev)
+-		return;
++	if (vdev) {
++		iommu_group_put(pdev->dev.iommu_group);
++		kfree(vdev);
++	}
+ 
+-	iommu_group_put(pdev->dev.iommu_group);
+-	kfree(vdev);
++	mutex_unlock(&driver_lock);
+ }
+ 
+ static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
+diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
+index 9c6d5d0..31e7a30 100644
+--- a/drivers/vfio/pci/vfio_pci_private.h
++++ b/drivers/vfio/pci/vfio_pci_private.h
+@@ -55,7 +55,7 @@ struct vfio_pci_device {
+ 	bool			bardirty;
+ 	bool			has_vga;
+ 	struct pci_saved_state	*pci_saved_state;
+-	atomic_t		refcnt;
++	int			refcnt;
+ 	struct eventfd_ctx	*err_trigger;
+ };
+ 
 
-And powerpc and sparc use of_scan_bus() or something similar instead of
-pci_scan_child_bus().  They probably *could* provide config space accessors
-that talk to OF and would allow pci_scan_child_bus() to work.  But that
-seemed like too much work at the time.
-
-> If we want to store the domain_nr information in the host bridge structure,
-> together with a pointer to sysdata, then we need to break up the creation
-> of the pci_host_bridge from the creation of a root bus. At that moment,
-> pci_scan_root_bus() will need to be changed to accept a pci_host_bridge
-> pointer, while pci_scan_bus() and pci_scan_bus_parented() will create
-> the host bridge in the body of their function.
-
-It's hard to change an existing interface like pci_scan_root_bus() because
-it's called from so many places and you have to change them all at once.
-Then if something goes wrong, the revert makes a mess for everybody.  But
-I think it makes sense to add a new interface that does what you want.
-
-Bjorn
