@@ -1,80 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:61761 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753490AbaGCQp7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 12:45:59 -0400
-From: Federico Vaga <federico.vaga@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Michel Arruat <michel.arruat@gmail.com>
-Subject: PCIe bus enumeration
-Date: Thu, 03 Jul 2014 18:45:54 +0200
-Message-ID: <280883016.9onmf0miLq@pcbe13110.cern.ch>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:43786 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756613AbaGPKEh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 06:04:37 -0400
+From: Vidya Sagar <sagar.tv@gmail.com>
+To: bhelgaas@google.com, matthew.garrett@nebula.com, rjw@rjwysocki.net,
+	nchumbalkar@lenovo.com, thierry.reding@gmail.com,
+	swarren@nvidia.com, linux-pci@vger.kernel.org
+Cc: kthota@nvidia.com, linux-kernel@vger.kernel.org, vidyas@nvidia.com,
+	Vidya Sagar <sagar.tv@gmail.com>
+Subject: [PATCH v3] PCI: enable ASPM configuration in PCIE POWERSAVE mode
+Date: Wed, 16 Jul 2014 15:33:42 +0530
+Message-Id: <1405505022-7593-1-git-send-email-vidyas@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+From: Vidya Sagar <sagar.tv@gmail.com>
 
-(I haven't a deep knowledge of the PCIe specification, maybe I'm just 
-missing something)
+Commit 1a680b7c3258 ("PCI: PCIe links may not get configured for ASPM
+ under POWERSAVE mode") moved pcie_aspm_powersave_config_link() out of
+pci_raw_set_power_state() to pci_set_power_state() which would enable
+ASPM. But, with Commit db288c9c5f9d ("PCI / PM: restore the original
+ behavior of pci_set_power_state()"), which re-introduced the following check
+./drivers/pci/pci.c: pci_set_power_state()
 
-is there a way to force the PCI subsystem to assign a bus-number to 
-every PCIe bridge, even if there is nothing connected?
++	/* Check if we're already there */
++	if (dev->current_state == state)
++	   return 0;
 
+in pci_set_power_state(), call to pcie_aspm_powersave_config_link() is never
+made leaving ASPM broken.
+Fix it by configuring links for ASPM in do_pci_enable_device() instead of
+pci_set_power_state()
 
-My aim is to have a bus enumeration constant and independent from what 
-I plugged on the system. So, I can associate a physical slot to linux 
-device address bb:dd.f. Is it possible?
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Vidya Sagar <sagar.tv@gmail.com>
+---
+v3:
+* Modified commit message
+    removed single quotes around commit messages
+    added Suggested-by line
 
-I can do the mapping with a simple shell script by discovering the 
-"new" bus number, but I'm wondering if there is a way to have a 
-constant bus enumeration.
+v2:
+* Calling ASPM config code is moved from pci_set_power_state() to
+* do_pci_enable_device()
 
+ drivers/pci/pci.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-
-My Humble Observation
----------------------
-It seems (to me) that for PCI the kernel assigns a bus-number to every 
-PCI bridges and sub-bridges even if there is nothing connected:
-
-
-e.g. from lspci -t
-
-      [...]
-      +-1e.0-[04-05]----0c.0-[05]--
-
-00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 92)
-04:0c.0 PCI bridge: Texas Instruments PCI2050 PCI-to-PCI Bridge (rev 
-02)
-
-
-The behavior on PCIe seems different. When there is nothing plugged on 
-a bus, then the kernel doesn't assign any bus-number and it doesn't 
-detect any PCI-Bridge at all. So, when I reboot the system with a new 
-PCIe card the bus enumeration may change.
-
-
-I tried to use the following pci kernel parameters:
-
-assign-busses : because I want to force the kernel to re-enumerate the 
-busses, hopefully _all_ buses even if they are empty.
-
-pcie_scan_all : not clear the explanation, but it sounds like it tells 
-to the kernel to inspect everything.
-
-bfsort : because, maybe, for a bfsort it must assign a number to each 
-bridge at the same level before inspect the next one.
-
-noacpi : in order to scan independently from BIOS information
-
-
-The result is always the same (empty buses are not enumerated). 
-
-
-
-Thank you :)
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 1c8592b..81d49d3 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -839,12 +839,6 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+ 
+ 	if (!__pci_complete_power_transition(dev, state))
+ 		error = 0;
+-	/*
+-	 * When aspm_policy is "powersave" this call ensures
+-	 * that ASPM is configured.
+-	 */
+-	if (!error && dev->bus->self)
+-		pcie_aspm_powersave_config_link(dev->bus->self);
+ 
+ 	return error;
+ }
+@@ -1195,12 +1189,18 @@ int __weak pcibios_enable_device(struct pci_dev *dev, int bars)
+ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+ {
+ 	int err;
++	struct pci_dev *bridge;
+ 	u16 cmd;
+ 	u8 pin;
+ 
+ 	err = pci_set_power_state(dev, PCI_D0);
+ 	if (err < 0 && err != -EIO)
+ 		return err;
++
++	bridge = pci_upstream_bridge(dev);
++	if (bridge)
++		pcie_aspm_powersave_config_link(bridge);
++
+ 	err = pcibios_enable_device(dev, bars);
+ 	if (err < 0)
+ 		return err;
 -- 
-Federico Vaga
+1.8.1.5
+
