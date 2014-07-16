@@ -1,76 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:56978 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757546AbaGBTMr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 15:12:47 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	patches <patches@apm.com>
-Subject: Re: [PATCH v8 2/9] pci: Export find_pci_host_bridge() function.
-Date: Wed, 02 Jul 2014 21:12:05 +0200
-Message-ID: <7101568.8DVJFku5jp@wuerfel>
-In-Reply-To: <CACoXjck+aU33=kSy=KCGABNXNR7tj2KndAiBqEDK7wQ_Qei80Q@mail.gmail.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com> <1404240214-9804-3-git-send-email-Liviu.Dudau@arm.com> <CACoXjck+aU33=kSy=KCGABNXNR7tj2KndAiBqEDK7wQ_Qei80Q@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:51669 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754831AbaGPTBP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Jul 2014 15:01:15 -0400
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 0/3] vfio-pci: Reset improvements
+To: alex.williamson@redhat.com
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Date: Wed, 16 Jul 2014 13:01:10 -0600
+Message-ID: <20140716184645.4153.86129.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 02 July 2014 11:06:38 Tanmay Inamdar wrote:
-> On Tue, Jul 1, 2014 at 11:43 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> > This is a useful function and we should make it visible outside the
-> > generic PCI code. Export it as a GPL symbol.
-> >
-> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> > ---
-> >  drivers/pci/host-bridge.c | 3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> > index 0e5f3c9..36c669e 100644
-> > --- a/drivers/pci/host-bridge.c
-> > +++ b/drivers/pci/host-bridge.c
-> > @@ -16,12 +16,13 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
-> >         return bus;
-> >  }
-> >
-> > -static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-> > +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-> >  {
-> >         struct pci_bus *root_bus = find_pci_root_bus(bus);
-> >
-> >         return to_pci_host_bridge(root_bus->bridge);
-> >  }
-> > +EXPORT_SYMBOL_GPL(find_pci_host_bridge);
-> 
-> Is there any specific reason behind making this symbol GPL? I think
-> the other functions in this file are just EXPORT_SYMBOL. Ultimately
-> companies which have non gpl Linux modules (nvidia) will face issue
-> using this API.
-> 
-> The same applies to 'of_create_pci_host_bridge'.
+This series is intended to improve the state of devices returned back
+to the host from vfio-pci or re-used by another user.  First we make
+sure that busmaster is disabled in the saved state, so the device
+cannot continue to do DMA, then we add some serialization, move our
+reference counting under it to fix an unlikely bug should we fail to
+initialize a device, and add the ability to do bus/slot reset on
+device release.  To do this, we require all devices affected by the
+bus/slot reset to be bound to vfio-pci, therefore users sequestering
+devices with pci-stub will need to bind them to vfio-pci to see this
+change.
 
-I think EXPORT_SYMBOL_GPL() is better here. The new symbols are unlikely
-to be used by a peripheral device driver, and PCI host controllers are
-already restricted by EXPORT_SYMBOL_GPL.
+The effect of these changes are perhaps most noticeable with GPU
+assignment to a VM, where killing QEMU results in a static image on
+the framebuffer since no reset of the device was done.  Returning
+the GPU to a host device at this point was suspect.  Other devices,
+like USB controllers, also don't necessarily appreciate being abruptly
+disconnected from their IOMMU domain and would generate IOMMU faults
+in the event the user process is killed.  Both of these cases should
+be resolved here, assuming all the devices on the bus are bound to
+vfio-pci and at least one of the devices in use does not support
+a function-local reset.
 
-nvidia will certainly not do a PCI host controller driver that is not
-upstream or not GPL-compatible.
+Please test and comment.  Thanks,
 
-	Arnd
+Alex
+
+---
+
+Alex Williamson (3):
+      vfio-pci: Attempt bus/slot reset on release
+      vfio-pci: Use mutex around open, release, and remove
+      vfio-pci: Release devices with BusMaster disabled
+
+
+ drivers/vfio/pci/vfio_pci.c         |  157 ++++++++++++++++++++++++++++++++---
+ drivers/vfio/pci/vfio_pci_private.h |    3 -
+ 2 files changed, 147 insertions(+), 13 deletions(-)
