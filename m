@@ -1,64 +1,188 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17770 "EHLO mx1.redhat.com"
+Received: from comal.ext.ti.com ([198.47.26.152]:58086 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750961AbaGZIJp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 26 Jul 2014 04:09:45 -0400
-Date: Sat, 26 Jul 2014 09:16:48 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
-	iss_storagedev@hp.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 RESEND 08/23] hpsa: Fallback to MSI rather than to
- INTx if MSI-X failed
-Message-ID: <20140726081647.GE21129@agordeev.usersys.redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <3ca64c251518a2db8810534b4e63ec696bcfeefd.1405533479.git.agordeev@redhat.com>
+	id S965448AbaGPQjf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Jul 2014 12:39:35 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH v5 3/5] PCI: designware: enhance dw_pcie_host_init() to support v3.65 DW hardware
+Date: Wed, 16 Jul 2014 12:38:04 -0400
+Message-ID: <1405528686-16539-4-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1405528686-16539-1-git-send-email-m-karicheri2@ti.com>
+References: <1405528686-16539-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3ca64c251518a2db8810534b4e63ec696bcfeefd.1405533479.git.agordeev@redhat.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 16, 2014 at 08:05:12PM +0200, Alexander Gordeev wrote:
-> Currently the driver falls back to INTx mode when MSI-X
-> initialization failed. This is a suboptimal behaviour
-> for chips that also support MSI. This update changes that
-> behaviour and falls back to MSI mode in case MSI-X mode
-> initialization failed.
+keystone PCI controller is based on v3.65 designware hardware. This
+version differs from newer versions of the hardware in few functional
+areas discussed below that makes it necessary to change dw_pcie_host_init()
+to support v3.65 based PCI controller.
 
-Hi Stephen,
+ 1. No support for ATU port. So any ATU specific resource handling code
+    is to be bypassed for v3.65 h/w.
+ 2. MSI controller uses Application space to implement MSI and 32 MSI
+    interrupts are multiplexed over 8 IRQs to the host. Hence the code
+    to process MSI IRQ needs to be different. This patch allows platform
+    driver to provide its own irq_domain_ops ptr to irq_domain_add_linear()
+    through an API callback from the designware core driver.
+ 3. MSI interrupt generation requires EP to write to the RC's application
+    register. So enhance the driver to allow setup of inbound access to
+    MSI irq register as a post scan bus API callback.
 
-Could you please reveiew hpsa patches in this series?
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
 
-Thanks!
+CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+CC: Russell King <linux@arm.linux.org.uk>
+CC: Grant Likely <grant.likely@linaro.org>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Mohit Kumar <mohit.kumar@st.com>
+CC: Jingoo Han <jg1.han@samsung.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Pratyush Anand <pratyush.anand@st.com>
+CC: Richard Zhu <r65037@freescale.com>
+CC: Kishon Vijay Abraham I <kishon@ti.com>
+CC: Marek Vasut <marex@denx.de>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Pawel Moll <pawel.moll@arm.com>
+CC: Mark Rutland <mark.rutland@arm.com>
+CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
+CC: Kumar Gala <galak@codeaurora.org>
+CC: Randy Dunlap <rdunlap@infradead.org>
+CC: Grant Likely <grant.likely@linaro.org>
+---
+ drivers/pci/host/pcie-designware.c |   56 ++++++++++++++++++++++--------------
+ drivers/pci/host/pcie-designware.h |    2 ++
+ 2 files changed, 37 insertions(+), 21 deletions(-)
 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-> Cc: iss_storagedev@hp.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/scsi/hpsa.c |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 31184b3..648dec2 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -6177,7 +6177,6 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
->  			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
->  			       err);
->  			h->msix_vector = 0;
-> -			goto default_int_mode;
->  		}
->  	}
->  	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
-> -- 
-> 1.7.7.6
-> 
-
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 905941c..e164fde 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -418,10 +418,10 @@ static const struct irq_domain_ops msi_domain_ops = {
+ int __init dw_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct device_node *np = pp->dev->of_node;
+-	struct of_pci_range range;
+ 	struct of_pci_range_parser parser;
++	struct of_pci_range range;
++	int i, ret;
+ 	u32 val;
+-	int i;
+ 
+ 	if (of_pci_range_parser_init(&parser, np)) {
+ 		dev_err(pp->dev, "missing ranges property\n");
+@@ -467,21 +467,26 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 		}
+ 	}
+ 
+-	pp->cfg0_base = pp->cfg.start;
+-	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+ 	pp->mem_base = pp->mem.start;
+ 
+-	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+-					pp->config.cfg0_size);
+ 	if (!pp->va_cfg0_base) {
+-		dev_err(pp->dev, "error with ioremap in function\n");
+-		return -ENOMEM;
++		pp->cfg0_base = pp->cfg.start;
++		pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
++						pp->config.cfg0_size);
++		if (!pp->va_cfg0_base) {
++			dev_err(pp->dev, "error with ioremap in function\n");
++			return -ENOMEM;
++		}
+ 	}
+-	pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
+-					pp->config.cfg1_size);
++
+ 	if (!pp->va_cfg1_base) {
+-		dev_err(pp->dev, "error with ioremap\n");
+-		return -ENOMEM;
++		pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
++		pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
++						pp->config.cfg1_size);
++		if (!pp->va_cfg1_base) {
++			dev_err(pp->dev, "error with ioremap\n");
++			return -ENOMEM;
++		}
+ 	}
+ 
+ 	if (of_property_read_u32(np, "num-lanes", &pp->lanes)) {
+@@ -490,16 +495,22 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	}
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-		pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
+-					MAX_MSI_IRQS, &msi_domain_ops,
+-					&dw_pcie_msi_chip);
+-		if (!pp->irq_domain) {
+-			dev_err(pp->dev, "irq domain init failed\n");
+-			return -ENXIO;
+-		}
++		if (!pp->ops->msi_host_init) {
++			pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
++						MAX_MSI_IRQS, &msi_domain_ops,
++						&dw_pcie_msi_chip);
++			if (!pp->irq_domain) {
++				dev_err(pp->dev, "irq domain init failed\n");
++				return -ENXIO;
++			}
+ 
+-		for (i = 0; i < MAX_MSI_IRQS; i++)
+-			irq_create_mapping(pp->irq_domain, i);
++			for (i = 0; i < MAX_MSI_IRQS; i++)
++				irq_create_mapping(pp->irq_domain, i);
++		} else {
++			ret = pp->ops->msi_host_init(pp, &dw_pcie_msi_chip);
++			if (ret < 0)
++				return ret;
++		}
+ 	}
+ 
+ 	if (pp->ops->host_init)
+@@ -759,6 +770,9 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 		BUG();
+ 	}
+ 
++	if (bus && pp->ops->scan_bus)
++		pp->ops->scan_bus(pp);
++
+ 	return bus;
+ }
+ 
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 387f69e..080c649 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -70,6 +70,8 @@ struct pcie_host_ops {
+ 	void (*msi_set_irq)(struct pcie_port *pp, int irq);
+ 	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
+ 	u32 (*get_msi_data)(struct pcie_port *pp);
++	void (*scan_bus)(struct pcie_port *pp);
++	int (*msi_host_init)(struct pcie_port *pp, struct msi_chip *chip);
+ };
+ 
+ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.9.5
+
