@@ -1,178 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:55208 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751051AbaGKHAa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 03:00:30 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: [PATCH] PCI: tegra: Add debugfs support
-Date: Fri, 11 Jul 2014 09:00:24 +0200
-Message-Id: <1405062024-2364-1-git-send-email-thierry.reding@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:10872 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965754AbaGPSFT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Jul 2014 14:05:19 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 14/23] megaraid: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Wed, 16 Jul 2014 20:05:18 +0200
+Message-Id: <57071ec862e6e0cf6b1c9f7fa5c1d3b9fa97d087.1405533479.git.agordeev@redhat.com>
+In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Provide a debugfs file that shows the current link status for each root
-port.
-
-Signed-off-by: Thierry Reding <treding@nvidia.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/pci/host/pci-tegra.c | 118 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 118 insertions(+)
+ drivers/scsi/megaraid/megaraid_sas_base.c |   20 +++++++-------------
+ 1 files changed, 7 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 14ec5b2c69e0..49b3bd5f5926 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -25,6 +25,7 @@
-  */
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index ba06102..7a4e75e 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -4105,17 +4105,11 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 					     (unsigned int)num_online_cpus());
+ 		for (i = 0; i < instance->msix_vectors; i++)
+ 			instance->msixentry[i].entry = i;
+-		i = pci_enable_msix(instance->pdev, instance->msixentry,
+-				    instance->msix_vectors);
+-		if (i >= 0) {
+-			if (i) {
+-				if (!pci_enable_msix(instance->pdev,
+-						     instance->msixentry, i))
+-					instance->msix_vectors = i;
+-				else
+-					instance->msix_vectors = 0;
+-			}
+-		} else
++		i = pci_enable_msix_range(instance->pdev, instance->msixentry,
++					  1, instance->msix_vectors);
++		if (i)
++			instance->msix_vectors = i;
++		else
+ 			instance->msix_vectors = 0;
  
- #include <linux/clk.h>
-+#include <linux/debugfs.h>
- #include <linux/delay.h>
- #include <linux/export.h>
- #include <linux/interrupt.h>
-@@ -275,6 +276,7 @@ struct tegra_pcie {
- 	unsigned int num_supplies;
+ 		dev_info(&instance->pdev->dev, "[scsi%d]: FW supports"
+@@ -5135,8 +5129,8 @@ megasas_resume(struct pci_dev *pdev)
  
- 	const struct tegra_pcie_soc_data *soc_data;
-+	struct dentry *debugfs;
- };
+ 	/* Now re-enable MSI-X */
+ 	if (instance->msix_vectors &&
+-	    pci_enable_msix(instance->pdev, instance->msixentry,
+-			    instance->msix_vectors))
++	    pci_enable_msix_exact(instance->pdev, instance->msixentry,
++				  instance->msix_vectors))
+ 		goto fail_reenable_msix;
  
- struct tegra_pcie_port {
-@@ -1664,6 +1666,115 @@ static const struct of_device_id tegra_pcie_of_match[] = {
- };
- MODULE_DEVICE_TABLE(of, tegra_pcie_of_match);
- 
-+static void *tegra_pcie_ports_seq_start(struct seq_file *s, loff_t *pos)
-+{
-+	struct tegra_pcie *pcie = s->private;
-+
-+	if (list_empty(&pcie->ports))
-+		return NULL;
-+
-+	seq_printf(s, "Index  Status\n");
-+
-+	return seq_list_start(&pcie->ports, *pos);
-+}
-+
-+static void *tegra_pcie_ports_seq_next(struct seq_file *s, void *v, loff_t *pos)
-+{
-+	struct tegra_pcie *pcie = s->private;
-+
-+	return seq_list_next(v, &pcie->ports, pos);
-+}
-+
-+static void tegra_pcie_ports_seq_stop(struct seq_file *s, void *v)
-+{
-+}
-+
-+static int tegra_pcie_ports_seq_show(struct seq_file *s, void *v)
-+{
-+	bool up = false, active = false;
-+	struct tegra_pcie_port *port;
-+	unsigned int value;
-+
-+	port = list_entry(v, struct tegra_pcie_port, list);
-+
-+	value = readl(port->base + RP_VEND_XP);
-+
-+	if (value & RP_VEND_XP_DL_UP)
-+		up = true;
-+
-+	value = readl(port->base + RP_LINK_CONTROL_STATUS);
-+
-+	if (value & RP_LINK_CONTROL_STATUS_DL_LINK_ACTIVE)
-+		active = true;
-+
-+	seq_printf(s, "%2u     ", port->index);
-+
-+	if (up)
-+		seq_printf(s, "up");
-+
-+	if (active) {
-+		if (up)
-+			seq_printf(s, ", ");
-+
-+		seq_printf(s, "active");
-+	}
-+
-+	seq_printf(s, "\n");
-+	return 0;
-+}
-+
-+static const struct seq_operations tegra_pcie_ports_seq_ops = {
-+	.start = tegra_pcie_ports_seq_start,
-+	.next = tegra_pcie_ports_seq_next,
-+	.stop = tegra_pcie_ports_seq_stop,
-+	.show = tegra_pcie_ports_seq_show,
-+};
-+
-+static int tegra_pcie_ports_open(struct inode *inode, struct file *file)
-+{
-+	struct tegra_pcie *pcie = inode->i_private;
-+	struct seq_file *s;
-+	int err;
-+
-+	err = seq_open(file, &tegra_pcie_ports_seq_ops);
-+	if (err)
-+		return err;
-+
-+	s = file->private_data;
-+	s->private = pcie;
-+
-+	return 0;
-+}
-+
-+static const struct file_operations tegra_pcie_ports_ops = {
-+	.owner = THIS_MODULE,
-+	.open = tegra_pcie_ports_open,
-+	.read = seq_read,
-+	.llseek = seq_lseek,
-+	.release = seq_release,
-+};
-+
-+static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
-+{
-+	struct dentry *file;
-+
-+	pcie->debugfs = debugfs_create_dir("pcie", NULL);
-+	if (!pcie->debugfs)
-+		return -ENOMEM;
-+
-+	file = debugfs_create_file("ports", S_IFREG | S_IRUGO, pcie->debugfs,
-+				   pcie, &tegra_pcie_ports_ops);
-+	if (!file)
-+		goto remove;
-+
-+	return 0;
-+
-+remove:
-+	debugfs_remove_recursive(pcie->debugfs);
-+	pcie->debugfs = NULL;
-+	return -ENOMEM;
-+}
-+
- static int tegra_pcie_probe(struct platform_device *pdev)
- {
- 	const struct of_device_id *match;
-@@ -1718,6 +1829,13 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 		goto disable_msi;
- 	}
- 
-+	if (IS_ENABLED(CONFIG_DEBUG_FS)) {
-+		err = tegra_pcie_debugfs_init(pcie);
-+		if (err < 0)
-+			dev_err(&pdev->dev, "failed to setup debugfs: %d\n",
-+				err);
-+	}
-+
- 	platform_set_drvdata(pdev, pcie);
- 	return 0;
- 
+ 	switch (instance->pdev->device) {
 -- 
-2.0.1
+1.7.7.6
 
