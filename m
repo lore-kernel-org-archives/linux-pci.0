@@ -1,77 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:39090 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751289AbaGSFde (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Jul 2014 01:33:34 -0400
-Received: by mail-pa0-f44.google.com with SMTP id eu11so6670917pac.31
-        for <linux-pci@vger.kernel.org>; Fri, 18 Jul 2014 22:33:34 -0700 (PDT)
-Date: Fri, 18 Jul 2014 22:33:59 -0700
-From: Olof Johansson <olof@lixom.net>
-To: Viresh Kumar <viresh.kumar@linaro.org>
-Cc: "arm@kernel.org" <arm@kernel.org>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mark Nicholson <mark@nicholnet.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@linaro.org>
-Subject: Re: [GIT PULL] ARM: SPEAr13xx PCIe updates for v3.17
-Message-ID: <20140719053359.GF20064@quad.lixom.net>
-References: <CAKohpo=T3taZx8e39tenCRBNxCUr=7H2xG7Ng=e+YQXuuY9u8Q@mail.gmail.com>
- <20140719045804.GC20064@quad.lixom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140719045804.GC20064@quad.lixom.net>
+Received: from e06smtp17.uk.ibm.com ([195.75.94.113]:38599 "EHLO
+	e06smtp17.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755380AbaGQPtE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jul 2014 11:49:04 -0400
+Received: from /spool/local
+	by e06smtp17.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <haver@linux.vnet.ibm.com>;
+	Thu, 17 Jul 2014 16:49:03 +0100
+Subject: Re: [PATCH] misc/GenWQE: fix pci_enable_msi usage
+From: Frank Haverkamp <haver@linux.vnet.ibm.com>
+Reply-To: haver@linux.vnet.ibm.com
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Alexander Gordeev <agordeev@redhat.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20140716211052.GC14366@google.com>
+References: <alpine.LFD.2.11.1407091237030.1590@denkbrett>
+	 <20140716211052.GC14366@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 17 Jul 2014 17:48:59 +0200
+Message-ID: <1405612139.30550.13.camel@oc7383187364.ibm.com>
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 18, 2014 at 09:58:04PM -0700, Olof Johansson wrote:
-> On Wed, Jul 16, 2014 at 02:33:03PM +0530, Viresh Kumar wrote:
-> > Hi Olof/Arnd,
-> > 
-> > This is another attempt to merge SPEAr PCIe updates after olof
-> > pointed out *enough* issues with initial PULL request:
-> > 
-> > https://lkml.org/lkml/2014/7/9/641
-> > 
-> > Last version was sent here: http://patchwork.ozlabs.org/patch/368479/
-> > and all the nits pointed out by Kishon & Bjorn are fixed in this pull
-> > request.
-> > 
-> > Apart from ARM specific changes, this updates drivers/{pci|phy}. Bjorn
-> > advised to get complete series via arm-soc tree earlier:
-> > 
-> > http://www.spinics.net/lists/linux-pci/msg30271.html
-> > 
-> > Please let me know if I couldn't get it right this time.
-> 
-> Looks good. Thanks for following up on this and fixing up stuff.
-> 
-> > 
-> > The following changes since commit 4c834452aad01531db949414f94f817a86348d59:
-> > 
-> >   Linux 3.16-rc3 (2014-06-29 14:11:36 -0700)
-> > 
-> > are available in the git repository at:
-> > 
-> >   git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
-> > spear/pcie-support-v10
-> > 
-> > for you to fetch changes up to f6e670a3b62d23722d04e801244a068755a45b7a:
-> > 
-> >   ARM: SPEAr13xx: Update defconfigs (2014-07-14 11:04:44 +0530)
-> 
-> Merged into next/drivers.
-> 
-> If anything, just one thing: you should consider using signed tags. :)
+Hi Bjorn and Sebastian,
 
-Also, there's a conflict with one of the fixes that were sent earlier.
-It'd been nice to keep this based on the -rc that had that fix to avoid the
-conflict. Please check the contents in our for-next.
+Am Mittwoch, den 16.07.2014, 15:10 -0600 schrieb Bjorn Helgaas:
+> [+cc linux-pci]
+> 
+> On Wed, Jul 09, 2014 at 12:46:39PM +0200, Sebastian Ott wrote:
+> > GenWQE used to call pci_enable_msi_block to allocate a desired number
+> > of MSI's. If that was not possible pci_enable_msi_block returned with a
+> > smaller number which might be possible to allocate. GenWQE then called
+> > pci_enable_msi_block with that number.
+> > 
+> > Since commit a30d0108b
+> > "GenWQE: Use pci_enable_msi_exact() instead of pci_enable_msi_block()"
+> > pci_enable_msi_exact is used which fails if the desired number of MSI's
+> > was not possible to allocate. Change GenWQE to use pci_enable_msi_range
+> > to restore the old behavior.
+> > 
+> > Signed-off-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
+> 
+> Since this fixes a30d0108b09a, which we merged via my tree in v3.16-rc1, I
+> applied this with Alexander and Frank's acks to for-linus for v3.16,
+> thanks!
+> 
+> > ---
+> >  drivers/misc/genwqe/card_ddcb.c  |  4 +---
+> >  drivers/misc/genwqe/card_utils.c | 10 ++++++----
+> >  2 files changed, 7 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/drivers/misc/genwqe/card_ddcb.c b/drivers/misc/genwqe/card_ddcb.c
+> > index c8046db..f66d43d 100644
+> > --- a/drivers/misc/genwqe/card_ddcb.c
+> > +++ b/drivers/misc/genwqe/card_ddcb.c
+> > @@ -1237,9 +1237,7 @@ int genwqe_setup_service_layer(struct genwqe_dev *cd)
+> >  	}
+> >  
+> >  	rc = genwqe_set_interrupt_capability(cd, GENWQE_MSI_IRQS);
+> > -	if (rc > 0)
+> > -		rc = genwqe_set_interrupt_capability(cd, rc);
+> > -	if (rc != 0) {
+> > +	if (rc) {
+> >  		rc = -ENODEV;
+> >  		goto stop_kthread;
+> >  	}
+> > diff --git a/drivers/misc/genwqe/card_utils.c b/drivers/misc/genwqe/card_utils.c
+> > index 62cc6bb..6abc437 100644
+> > --- a/drivers/misc/genwqe/card_utils.c
+> > +++ b/drivers/misc/genwqe/card_utils.c
+> > @@ -718,10 +718,12 @@ int genwqe_set_interrupt_capability(struct genwqe_dev *cd, int count)
+> >  	int rc;
+> >  	struct pci_dev *pci_dev = cd->pci_dev;
+> >  
+> > -	rc = pci_enable_msi_exact(pci_dev, count);
+> > -	if (rc == 0)
+> > -		cd->flags |= GENWQE_FLAG_MSI_ENABLED;
+> > -	return rc;
+> > +	rc = pci_enable_msi_range(pci_dev, 1, count);
+> > +	if (rc < 0)
+> > +		return rc;
+> > +
+> > +	cd->flags |= GENWQE_FLAG_MSI_ENABLED;
+> > +	return 0;
+> >  }
 
+The original code tried to register for 4 interrupts. On my system the
+following scenario was executed:
 
--Olof
+We tried to register for 4 MSI interrupts, which was the original plan
+of interrupts for the card. Linux returned that it could not do that and
+that just 1 would work. We tried to register for 1 MSI interrupt and it
+worked. GENWQE_MSI_IRQS is still 4. That is how my original version
+looked like:
+
+        rc = genwqe_set_interrupt_capability(cd, GENWQE_MSI_IRQS);
+        if (rc > 0)
+                rc = genwqe_set_interrupt_capability(cd, rc);
+        if (rc != 0) {
+                rc = -ENODEV;
+                goto stop_kthread;
+        }
+
+So genwqe_set_interrupt_capability() was indeed called two times.
+Calling it with 4 returned with rc=1 and no interrupts enabled. So
+calling it a 2nd time with rc=1 was leading to the proper enablement.
+
+I think the simplest way is to set GENWQE_MSI_IRQS to 1. The rest of the
+code at least assumes just one interrupt, because 4 never worked.
+
+Regards
+
+Frank
+
