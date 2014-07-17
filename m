@@ -1,135 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:2466 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750852AbaG3IPj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jul 2014 04:15:39 -0400
-Message-ID: <53D8A942.80008@huawei.com>
-Date: Wed, 30 Jul 2014 16:13:54 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-vc0-f178.google.com ([209.85.220.178]:48039 "EHLO
+	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753172AbaGQBAb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 21:00:31 -0400
+Received: by mail-vc0-f178.google.com with SMTP id la4so3180248vcb.37
+        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 18:00:31 -0700 (PDT)
 MIME-Version: 1.0
-To: Ethan Zhao <ethan.kernel@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	"<keith.busch@intel.com>" <keith.busch@intel.com>,
-	Jon Mason <jdmason@kudzu.us>
-Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
-References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com>	<CABawtvP1sviOZynf2N43ORDF-mPHX9PrcsXSmxKqv4_V9QpnsQ@mail.gmail.com>	<53D89754.3010704@huawei.com> <CABawtvMg1gUpCr5rpFzKfUVD=Ai06Rpi4XVOvzARb2tYk+HXsw@mail.gmail.com>
-In-Reply-To: <CABawtvMg1gUpCr5rpFzKfUVD=Ai06Rpi4XVOvzARb2tYk+HXsw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CAE9FiQW+GbprQZNvHC-ek1cSydP3KWcjgAU0ii5_jECC1+tXrg@mail.gmail.com>
+References: <CAKAYmMLfxkmaVxaPDd6z=B0ESQ3mR=dUG4OFFgEoy0295qLYgg@mail.gmail.com>
+	<CAKAYmMLhPhukBbR8NhPk3EigmvwiX+DEGj-Mod7zpHMnZKRsLw@mail.gmail.com>
+	<CAErSpo7vooChRfSF6oY8GcqVYZruv-7_D0zm3a4M_KDVMbWNiA@mail.gmail.com>
+	<CAE9FiQWomktcpSHeFwxWBLXmAsbdXEHv6sOrNXodobkBw=mRKA@mail.gmail.com>
+	<CAE9FiQW+GbprQZNvHC-ek1cSydP3KWcjgAU0ii5_jECC1+tXrg@mail.gmail.com>
+Date: Wed, 16 Jul 2014 18:00:31 -0700
+Message-ID: <CAKAYmMJf=TdpdyALZQOoAmdgPjpzFu-OP7rMLzyaFRno-36F6Q@mail.gmail.com>
+Subject: Re: Error assigning BAR 0 to hotplugged device
+From: Chuck Tuffli <ctuffli@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> Yes, that issue is BIOS bug, the mps setting is wrong after system boot up.
->> But that issue is not same as this one, Keith and Jordan found the issue
->> after hot-plug. And my patch only modify the hotplug slot connected device.
->>
->> In my idea, make the device work is important, because these platforms with windows
->> can run happy, why linux leave this issue to BIOS.
-> 
->    That is a reason to make it works with Linux, but does your
-> platform have _HPX from ACPI for those hot-added back devices ?  if it
-> has, maybe windows could apply _HPX to configure those devices and
-> work well.
-> 
+On Wed, Jul 16, 2014 at 4:47 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+...
+> in the tree:
+>    80:03.0 ==> 96:00.0 ==> 97:08.0 ==> 98:00.0 ==> 99:00.0 ==> 9a:00.0
+> ==> 9b:15.0
+>
+> only 97:08.0 and 99:00.0 is hotplug+.
+>
+> and kernel will honor BIOS set value at first, and realloc will only work on
+> unassigned/invalid assigned BARs. and hpmem_size will be only treated at
+> optional size even on hotplug slots.
 
-I checked DSDT table exported from my server, but no "_HPX" found.
-Further more, kernel use pciehp first to support pcie hotplug device. And in pciehp,
-driver won't touch ACPI methods like "_HPX".
+Does this mean the only time the kernel will re-allocate the BARs and
+use hpmemsize is if they have the value 0x0? If so, does realloc have
+any limitations with respect to where in the tree the invalid BAR
+exists? In my example, could realloc fix 80:03.0? 9b:15.0?
 
-Thanks!
-Yijing.
+> a5:00.0 is not in 9b:15.0 at first, so yo just put the card in can
+> rescan the card,
+> right?
 
->>
->>>
->>>> Reported-by: Keith Busch <keith.busch@intel.com>
->>>> Reported-by: Jordan_Hargrave@Dell.com
->>>> Reported-by: Yijing Wang <wangyijing@huawei.com>
->>>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->>>> Cc: Jon Mason <jdmason@kudzu.us>
->>>> ---
->>>>  drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
->>>>  1 files changed, 39 insertions(+), 0 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>>> index e3cf8a2..583ca52 100644
->>>> --- a/drivers/pci/probe.c
->>>> +++ b/drivers/pci/probe.c
->>>> @@ -1613,6 +1613,44 @@ static void pcie_write_mrrs(struct pci_dev *dev)
->>>>                 dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If problems are experienced, try running with pci=pcie_bus_safe\n");
->>>>  }
->>>>
->>>> +/**
->>>> + * pcie_bus_update_set - update device mps when device doing hot-add
->>>> + * @dev: PCI device to set
->>>> + *
->>>> + * After device hot add, mps will be set to default(128B), But the
->>>> + * upstream port device's mps may be larger than 128B which was set
->>>> + * by firmware during system bootup. Then we should update the device
->>>> + * mps to equal to its parent mps, Or the device can not work normally.
->>>> + */
->>>> +static void pcie_bus_update_set(struct pci_dev *dev)
->>>> +{
->>>> +       int mps, p_mps, mpss;
->>>> +       struct pci_dev *parent;
->>>> +
->>>> +       if (!pci_is_pcie(dev) || !dev->bus->self
->>>> +                       || !dev->bus->self->is_hotplug_bridge)
->>>> +               return;
->>>> +
->>>> +       parent = dev->bus->self;
->>>> +       mps = pcie_get_mps(dev);
->>>> +       p_mps = pcie_get_mps(parent);
->>>> +
->>>> +       if (mps >= p_mps)
->>>> +               return;
->>>> +
->>>> +       mpss = 128 << dev->pcie_mpss;
->>>> +       if (mpss < p_mps) {
->>>> +               dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
->>>> +                               "If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
->>>> +                               mpss, p_mps);
->>>> +               return;
->>>> +       }
->>>> +
->>>> +       pcie_write_mps(dev, p_mps);
->>>> +       dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n",
->>>> +                       pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
->>>> +}
->>>> +
->>>>  static void pcie_bus_detect_mps(struct pci_dev *dev)
->>>>  {
->>>>         struct pci_dev *bridge = dev->bus->self;
->>>> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
->>>>                 return 0;
->>>>
->>>>         if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
->>>> +               pcie_bus_update_set(dev);
->>>>                 pcie_bus_detect_mps(dev);
->>>>                 return 0;
->>>>         }
->>>> --
->>>> 1.7.1
->>>>
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>> .
->>>
->>
->>
->> --
->> Thanks!
->> Yijing
->>
-> 
-> .
-> 
+Correct. I did an echo 1 > /sys/bus/pci/rescan
 
+> In this case we don't to realloc, as other devices could already have
+> driver loaded.
 
--- 
-Thanks!
-Yijing
+I can understand why this is true after the PCI subsystem is up and
+running, but at boot time, before any other drivers have loaded,
+wouldn't it be possible for the PCI driver to honor realloc and
+hpmemsize and override the values written by the BIOS? This way,
+devices added later would have memory available for their BARs.
 
+> You need to fix the BIOS to have correct setting for 96:1b.0.
+>
+>                 SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd-
+> HotPlug- Surprise-
+>                         Slot #21, PowerLimit 25.000W; Interlock- NoCompl-
+>                 SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet-
+> CmdCplt- HPIrq- LinkChg-
+>                         Control: AttnInd Unknown, PwrInd Unknown,
+> Power- Interlock-
+>                 SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt-
+> PresDet+ Interlock-
+>                         Changed: MRL- PresDet+ LinkState+
+>
+> to make it really hotplug slot.
+
+Agreed. The slot actually is hot plug capable, and I was considering
+adding a quirk and then using hpmemsize to provide enough resources
+for devices. But given your description, it sounds like this won't
+work.
+
+> And BIOS need to make sure parent bus/bridge have enough resource ranges
+> for the hotplug slots.
+>
+> Yinghai
+
+If the BIOS doesn't allocate enough memory mapped IO resources for
+devices, it sounds like the kernel can't really fix this problem,
+right?
+
+--chuck
