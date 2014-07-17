@@ -1,59 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60048 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934902AbaGPSVd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Jul 2014 14:21:33 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
-	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com,
-	DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 15/23] mpt2sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Wed, 16 Jul 2014 20:05:19 +0200
-Message-Id: <045986b7900c6b1703010675b590284e384b8207.1405533479.git.agordeev@redhat.com>
-In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
+Received: from mail-out.m-online.net ([212.18.0.10]:49667 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755310AbaGQIcE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jul 2014 04:32:04 -0400
+From: Marek Vasut <marex@denx.de>
+To: "Uwe =?iso-8859-1?q?Kleine-K=F6nig?="
+	<u.kleine-koenig@pengutronix.de>
+Subject: Re: [RFC] PCI: pci-imx6: Add delay to workaround kernel hang
+Date: Thu, 17 Jul 2014 10:23:10 +0200
+Cc: Fabio Estevam <festevam@gmail.com>, bhelgaas@google.com,
+	r65037@freescale.com, shawn.guo@freescale.com, d.mueller@elsoft.ch,
+	kernel@pengutronix.de, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org, tharvey@gateworks.com,
+	Fabio Estevam <fabio.estevam@freescale.com>
+References: <1403637507-9424-1-git-send-email-festevam@gmail.com> <20140717065148.GT11056@pengutronix.de>
+In-Reply-To: <20140717065148.GT11056@pengutronix.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201407171023.10908.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On Thursday, July 17, 2014 at 08:51:48 AM, Uwe Kleine-König wrote:
+> Hello,
+> 
+> On Tue, Jun 24, 2014 at 04:18:27PM -0300, Fabio Estevam wrote:
+> > From: Fabio Estevam <fabio.estevam@freescale.com>
+> > 
+> > When the mx6 PCI conctroller is initialized in the bootloader we see a
+> > kernel hang inside imx6_add_pcie_port().
+> > 
+> > Adding a 30ms delay allows the kernel to boot.
+> 
+> Just my thought on how to debug that: I'd try to bisect the pci init
+> routine in the boot loader. I.e. first only do the first half of the
+> initialisation in U-Boot. Depending on Linux being able to boot or not
+> initialize more or less on the next run.
+> 
+> Maybe there is a single register write that makes Linux fail?!
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Cc: support@lsi.com
-Cc: DL-MPTFusionLinux@lsi.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/mpt2sas/mpt2sas_base.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+I am still hell-bent on thinking that the missing PCIe block reset is what makes 
+the Linux fail. Missing block reset is always a problem. Or do we now have a 
+mean to reset the PCIe block and it's PHY from software?
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 8b88118..6aca369 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1432,10 +1432,10 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
- 	for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++)
- 		a->entry = i;
- 
--	r = pci_enable_msix(ioc->pdev, entries, ioc->reply_queue_count);
-+	r = pci_enable_msix_exact(ioc->pdev, entries, ioc->reply_queue_count);
- 	if (r) {
--		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "pci_enable_msix "
--		    "failed (r=%d) !!!\n", ioc->name, r));
-+		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT
-+		    "pci_enable_msix_exact failed (r=%d) !!!\n", ioc->name, r));
- 		kfree(entries);
- 		goto try_ioapic;
- 	}
--- 
-1.7.7.6
-
+Best regards,
+Marek Vasut
