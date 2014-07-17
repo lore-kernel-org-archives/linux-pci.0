@@ -1,46 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:42373 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932241AbaGWRwt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jul 2014 13:52:49 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>, Marek Vasut <marex@denx.de>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	kernel@pengutronix.de
-Subject: [PATCH 4/4] PCI: imx6: move to module_init
-Date: Wed, 23 Jul 2014 19:52:41 +0200
-Message-Id: <1406137961-14684-5-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
-References: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:29804 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755046AbaGQMxT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jul 2014 08:53:19 -0400
+Date: Thu, 17 Jul 2014 08:53:09 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: suravee.suthikulpanit@amd.com
+Cc: marc.zyngier@arm.com, mark.rutland@arm.com, pawel.moll@arm.com,
+	Catalin.Marinas@arm.com, Will.Deacon@arm.com, tglx@linutronix.de,
+	Harish.Kasiviswanathan@amd.com,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH 4/4 V3] irqchip: gicv2m: Add support for multiple MSI
+ for ARM64 GICv2m
+Message-ID: <20140717125309.GK13108@titan.lakedaemon.net>
+References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <1404947104-21345-5-git-send-email-suravee.suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1404947104-21345-5-git-send-email-suravee.suthikulpanit@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This effectively reverts f216f57ffe6eede3c8a763add65d331e688f8c56
-"PCI: imx6: Probe the PCIe in fs_initcall()" as the ressource
-allocation issue that prevented the driver from working properly
-at module_initcall level is now fixed in pcie-designware.
+Suravee,
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
- drivers/pci/host/pci-imx6.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Wed, Jul 09, 2014 at 06:05:04PM -0500, suravee.suthikulpanit@amd.com wrote:
+> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> 
+> This patch extend GICv2m MSI to support multiple MSI in ARM64.
+> 
+> This requires the common arch_setup_msi_irqs() to be overwriten
+> with ARM64 version which does not return 1 for PCI_CAP_ID_MSI and
+> nvec > 1.
+> 
+> Cc: Mark Rutland <Mark.Rutland@arm.com>
+> Cc: Marc Zyngier <Marc.Zyngier@arm.com>
+> Cc: Jason Cooper <jason@lakedaemon.net>
+> Cc: Catalin Marinas <Catalin.Marinas@arm.com>
+> Cc: Will Deacon <Will.Deacon@arm.com>
+> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> ---
+>  arch/arm64/include/asm/msi.h  | 15 ++++++++
+>  arch/arm64/kernel/Makefile    |  1 +
+>  arch/arm64/kernel/msi.c       | 57 ++++++++++++++++++++++++++++++
+>  drivers/irqchip/irq-gic-v2m.c | 80 +++++++++++++++++++++++++++++++++++++++++++
+>  4 files changed, 153 insertions(+)
+>  create mode 100644 arch/arm64/include/asm/msi.h
+>  create mode 100644 arch/arm64/kernel/msi.c
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index a568efaa331c..0fc2ba8ea006 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -609,7 +609,7 @@ static int __init imx6_pcie_init(void)
- {
- 	return platform_driver_probe(&imx6_pcie_driver, imx6_pcie_probe);
- }
--fs_initcall(imx6_pcie_init);
-+module_init(imx6_pcie_init);
- 
- MODULE_AUTHOR("Sean Cross <xobs@kosagi.com>");
- MODULE_DESCRIPTION("Freescale i.MX6 PCIe host controller driver");
--- 
-2.0.1
+With the Subject line nit fixed ("irqchip: gic-v2m: ..."),
 
+Acked-by: Jason Cooper <jason@lakedaemon.net>
+
+Please route as you see fit.
+
+thx,
+
+Jason.
