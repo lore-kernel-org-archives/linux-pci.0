@@ -1,64 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49354 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759016AbaGCPv7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Jul 2014 11:51:59 -0400
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 7/7] iommu: Remove pci.h
-To: iommu@lists.linux-foundation.org
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Alex Williamson <alex.williamson@redhat.com>
-Date: Thu, 03 Jul 2014 09:51:55 -0600
-Message-ID: <20140703155155.8112.13590.stgit@gimli.home>
-In-Reply-To: <20140703154428.8112.97562.stgit@gimli.home>
-References: <20140703154428.8112.97562.stgit@gimli.home>
+Received: from mail-vc0-f176.google.com ([209.85.220.176]:53706 "EHLO
+	mail-vc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933147AbaGQPIi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jul 2014 11:08:38 -0400
+Received: by mail-vc0-f176.google.com with SMTP id id10so204677vcb.21
+        for <linux-pci@vger.kernel.org>; Thu, 17 Jul 2014 08:08:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAE9FiQUn4QByiaPqKnk=CCmCXsnaqVfNCjynoyNM3FucrKGhew@mail.gmail.com>
+References: <CAKAYmMLfxkmaVxaPDd6z=B0ESQ3mR=dUG4OFFgEoy0295qLYgg@mail.gmail.com>
+	<CAKAYmMLhPhukBbR8NhPk3EigmvwiX+DEGj-Mod7zpHMnZKRsLw@mail.gmail.com>
+	<CAErSpo7vooChRfSF6oY8GcqVYZruv-7_D0zm3a4M_KDVMbWNiA@mail.gmail.com>
+	<CAE9FiQWomktcpSHeFwxWBLXmAsbdXEHv6sOrNXodobkBw=mRKA@mail.gmail.com>
+	<CAE9FiQW+GbprQZNvHC-ek1cSydP3KWcjgAU0ii5_jECC1+tXrg@mail.gmail.com>
+	<CAKAYmMJf=TdpdyALZQOoAmdgPjpzFu-OP7rMLzyaFRno-36F6Q@mail.gmail.com>
+	<CAE9FiQUn4QByiaPqKnk=CCmCXsnaqVfNCjynoyNM3FucrKGhew@mail.gmail.com>
+Date: Thu, 17 Jul 2014 08:08:37 -0700
+Message-ID: <CAKAYmMJOWtn268Kipwm6JVamrsrfxCG=Ju8E56-ZCXctBn+12A@mail.gmail.com>
+Subject: Re: Error assigning BAR 0 to hotplugged device
+From: Chuck Tuffli <ctuffli@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The single helper here no longer has any users.
+On Wed, Jul 16, 2014 at 7:15 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Jul 16, 2014 at 6:00 PM, Chuck Tuffli <ctuffli@gmail.com> wrote:
+>> On Wed, Jul 16, 2014 at 4:47 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> ...
+>>> in the tree:
+>>>    80:03.0 ==> 96:00.0 ==> 97:08.0 ==> 98:00.0 ==> 99:00.0 ==> 9a:00.0
+>>> ==> 9b:15.0
+>>>
+>>> only 97:08.0 and 99:00.0 is hotplug+.
+>>>
+>>> and kernel will honor BIOS set value at first, and realloc will only work on
+>>> unassigned/invalid assigned BARs. and hpmem_size will be only treated at
+>>> optional size even on hotplug slots.
+>>
+>> Does this mean the only time the kernel will re-allocate the BARs and
+>> use hpmemsize is if they have the value 0x0? If so, does realloc have
+>> any limitations with respect to where in the tree the invalid BAR
+>> exists? In my example, could realloc fix 80:03.0? 9b:15.0?
+>
+> the problem is 9b:15.0 is not hotplugable, when a5:00.0 is not
+> inserted into the slot,
+> realloc will not pre-reserve range for 9b:15.0.
+>
+>> If the BIOS doesn't allocate enough memory mapped IO resources for
+>> devices, it sounds like the kernel can't really fix this problem,
+>> right?
+>
+> Yes. You need to fix BIOS at first.
+>
+> So it will be final products or just development prototype?
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+This is a prototype development system I'm using to develop software.
+Since a BIOS fix isn't likely to happen, are there existing features I
+can use to work around this problem?
 
- drivers/iommu/pci.h |   29 -----------------------------
- 1 file changed, 29 deletions(-)
- delete mode 100644 drivers/iommu/pci.h
-
-diff --git a/drivers/iommu/pci.h b/drivers/iommu/pci.h
-deleted file mode 100644
-index 352d80a..0000000
---- a/drivers/iommu/pci.h
-+++ /dev/null
-@@ -1,29 +0,0 @@
--/*
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License, version 2, as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-- *
-- * Copyright (C) 2013 Red Hat, Inc.
-- * Copyright (C) 2013 Freescale Semiconductor, Inc.
-- *
-- */
--#ifndef __IOMMU_PCI_H
--#define __IOMMU_PCI_H
--
--/* Helper function for swapping pci device reference */
--static inline void swap_pci_ref(struct pci_dev **from, struct pci_dev *to)
--{
--	pci_dev_put(*from);
--	*from = to;
--}
--
--#endif  /* __IOMMU_PCI_H */
-
+--chuck
