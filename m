@@ -1,125 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:63334 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751301AbaGTXoE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Jul 2014 19:44:04 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Subject: [PATCH] PCI / PM: Drop unused runtime PM support code for PCIe ports
-Date: Mon, 21 Jul 2014 02:02:23 +0200
-Message-ID: <1722733.TI67PLqUAC@vostro.rjw.lan>
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:43799 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750994AbaGQDG4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 23:06:56 -0400
+Received: by mail-ig0-f172.google.com with SMTP id h15so5265746igd.17
+        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 20:06:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <53C73CC6.20803@linux.intel.com>
+References: <53C5F2C2.20707@linux.intel.com>
+	<CAErSpo6D3q0NoJhjF2kTZBVaQBb5Gz-bY-P_eR2EYzFvQ6yhPw@mail.gmail.com>
+	<CAE9FiQWsjXU0YBsgnSvNXzkPKDPph4RgYQcvmGGoL27TE7YrhA@mail.gmail.com>
+	<53C73CC6.20803@linux.intel.com>
+Date: Wed, 16 Jul 2014 20:06:55 -0700
+Message-ID: <CAE9FiQX3nTCXvwfUwz9vx4HmO_mdUaFg57qN_YR-cYN0qWpQpg@mail.gmail.com>
+Subject: Re: Need advices about PCI IRQ reference count tracking
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wed, Jul 16, 2014 at 8:02 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>
+>
+> On 2014/7/17 2:37, Yinghai Lu wrote:
+>> On Wed, Jul 16, 2014 at 11:04 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> [+cc Yinghai]
+>>>
+>>> On Tue, Jul 15, 2014 at 9:34 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>>>> Hi Bjorn,
+>>>>         When enabling ACPI based IOAPIC hotplug, we encountered an
+>>>> issue with PCI IRQ reference count tracking and need your advices.
+>>>>         In order to hot-remove an IOAPIC, we need to track and keep
+>>>> balance of IOAPIC pin usage count. But acpi_pci_irq_enable() may
+>>>> be called twice for a PCI device,
+>>>> 1) pci_acpi_init() if pci_routeirq is true
+>>>> 2) pci_enable_device()
+>>>>
+>>>> So in function acpi_pci_irq_enable(), we need a way to track whether
+>>>> an IOAPIC IRQ has been assigned to the PCI device. Previously we check
+>>>> "if (dev->irq > 0)" for that, but that's wrong because dev->irq may
+>>>> be set to non-zero in pci_read_irq() if BIOS has already assigned
+>>>> a legacy IRQ for the device. So is it OK to add a flag into pci_dev
+>>>> to track this information?
+>>
+>> Why do you need to track it?
+>>
+>> When do you hot-remove ioapic with pci root bus, all the drivers for
+>> devices on that pci root bus should be stopped at first, so no one
+>> will use the ioapic before ioapic is being removed.
+> Hi Yinghai,
+>         By tracking IOAPIC pin usage count, we could release the
+> assigned IRQ number when there are no device uses an IOAPIC pin anymore.
 
-Since commit de7d5f729c72 (PCI/PM: Disable runtime PM of PCIe ports)
-the runtime PM support code for PCIe ports in portdrv_pci.c has never
-been used, so drop it entirely.
+Delay releasing IRQ number later when destroying irq domain?
 
-If we are to support runtime PM of PCIe ports, it will have to be
-done in a different way most likely anyway.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pcie/portdrv_pci.c |   74 -----------------------------------------
- 1 file changed, 74 deletions(-)
-
-Index: linux-pm/drivers/pci/pcie/portdrv_pci.c
-===================================================================
---- linux-pm.orig/drivers/pci/pcie/portdrv_pci.c
-+++ linux-pm/drivers/pci/pcie/portdrv_pci.c
-@@ -93,77 +93,6 @@ static int pcie_port_resume_noirq(struct
- 	return 0;
- }
- 
--#ifdef CONFIG_PM_RUNTIME
--struct d3cold_info {
--	bool no_d3cold;
--	unsigned int d3cold_delay;
--};
--
--static int pci_dev_d3cold_info(struct pci_dev *pdev, void *data)
--{
--	struct d3cold_info *info = data;
--
--	info->d3cold_delay = max_t(unsigned int, pdev->d3cold_delay,
--				   info->d3cold_delay);
--	if (pdev->no_d3cold)
--		info->no_d3cold = true;
--	return 0;
--}
--
--static int pcie_port_runtime_suspend(struct device *dev)
--{
--	struct pci_dev *pdev = to_pci_dev(dev);
--	struct d3cold_info d3cold_info = {
--		.no_d3cold	= false,
--		.d3cold_delay	= PCI_PM_D3_WAIT,
--	};
--
--	/*
--	 * If any subordinate device disable D3cold, we should not put
--	 * the port into D3cold.  The D3cold delay of port should be
--	 * the max of that of all subordinate devices.
--	 */
--	pci_walk_bus(pdev->subordinate, pci_dev_d3cold_info, &d3cold_info);
--	pdev->no_d3cold = d3cold_info.no_d3cold;
--	pdev->d3cold_delay = d3cold_info.d3cold_delay;
--	return 0;
--}
--
--static int pcie_port_runtime_resume(struct device *dev)
--{
--	return 0;
--}
--
--static int pci_dev_pme_poll(struct pci_dev *pdev, void *data)
--{
--	bool *pme_poll = data;
--
--	if (pdev->pme_poll)
--		*pme_poll = true;
--	return 0;
--}
--
--static int pcie_port_runtime_idle(struct device *dev)
--{
--	struct pci_dev *pdev = to_pci_dev(dev);
--	bool pme_poll = false;
--
--	/*
--	 * If any subordinate device needs pme poll, we should keep
--	 * the port in D0, because we need port in D0 to poll it.
--	 */
--	pci_walk_bus(pdev->subordinate, pci_dev_pme_poll, &pme_poll);
--	/* Delay for a short while to prevent too frequent suspend/resume */
--	if (!pme_poll)
--		pm_schedule_suspend(dev, 10);
--	return -EBUSY;
--}
--#else
--#define pcie_port_runtime_suspend	NULL
--#define pcie_port_runtime_resume	NULL
--#define pcie_port_runtime_idle		NULL
--#endif
--
- static const struct dev_pm_ops pcie_portdrv_pm_ops = {
- 	.suspend	= pcie_port_device_suspend,
- 	.resume		= pcie_port_device_resume,
-@@ -172,9 +101,6 @@ static const struct dev_pm_ops pcie_port
- 	.poweroff	= pcie_port_device_suspend,
- 	.restore	= pcie_port_device_resume,
- 	.resume_noirq	= pcie_port_resume_noirq,
--	.runtime_suspend = pcie_port_runtime_suspend,
--	.runtime_resume = pcie_port_runtime_resume,
--	.runtime_idle	= pcie_port_runtime_idle,
- };
- 
- #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
-
+Yinghai
