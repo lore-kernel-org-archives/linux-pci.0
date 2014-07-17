@@ -1,72 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:33416 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751230AbaG3UFz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 30 Jul 2014 16:05:55 -0400
-Date: Wed, 30 Jul 2014 14:05:13 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Marek Vasut <marex@denx.de>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	linux-pci@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>,
-	linux-kernel@vger.kernel.org,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v7 4/5] PCI: add PCI controller for keystone PCIe h/w
-Message-ID: <20140730200513.GA11918@obsidianresearch.com>
-References: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com>
- <1405961925-27248-5-git-send-email-m-karicheri2@ti.com>
- <20140722223527.GA27965@google.com>
- <53CEEB1C.9020202@ti.com>
- <20140722235200.GC27965@google.com>
- <20140723174228.GB11270@obsidianresearch.com>
- <53D948D4.6080603@ti.com>
+Received: from mail-bl2lp0208.outbound.protection.outlook.com ([207.46.163.208]:33169
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933145AbaGQPmw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Jul 2014 11:42:52 -0400
+Date: Thu, 17 Jul 2014 23:27:09 +0800
+From: Shawn Guo <shawn.guo@freescale.com>
+To: Marek Vasut <marex@denx.de>
+CC: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?=
+	<u.kleine-koenig@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>, <bhelgaas@google.com>,
+	<r65037@freescale.com>, <d.mueller@elsoft.ch>,
+	<kernel@pengutronix.de>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <tharvey@gateworks.com>,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: Re: [RFC] PCI: pci-imx6: Add delay to workaround kernel hang
+Message-ID: <20140717152707.GA8537@dragon>
+References: <1403637507-9424-1-git-send-email-festevam@gmail.com>
+ <20140717065148.GT11056@pengutronix.de> <201407171023.10908.marex@denx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <53D948D4.6080603@ti.com>
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <201407171023.10908.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 30, 2014 at 03:34:44PM -0400, Murali Karicheri wrote:
-
-> â€¢ Maximum remote read request size of 256 bytes
-
-The PCI spec simply does not permit a completer to impose this
-limitation.
-
-See spec 2.3.1.1
-
-It is not an option to error a read request because it is too
-long. All requests must be completed. All completions must be segmented
-according to the RCB and Max_Payload_Size.
-
-> completion packets. So it seems to be able to segment up to maximum
-> 256 bytes of read request. Where do I find the requirement in PCI
-> spec that "read response segmentation at the host bridge does not
-> work" ?
-
-You just said it. Segmenting up to only 256 bytes is not a limitation
-the completer can impose. Such a device is non-conformant.
-
-> >So, the only fix is that every downstream device must always have a
-> >MRSS set to less than the MPS of the host bridge.
+On Thu, Jul 17, 2014 at 10:23:10AM +0200, Marek Vasut wrote:
+> On Thursday, July 17, 2014 at 08:51:48 AM, Uwe Kleine-König wrote:
+> > Hello,
+> > 
+> > On Tue, Jun 24, 2014 at 04:18:27PM -0300, Fabio Estevam wrote:
+> > > From: Fabio Estevam <fabio.estevam@freescale.com>
+> > > 
+> > > When the mx6 PCI conctroller is initialized in the bootloader we see a
+> > > kernel hang inside imx6_add_pcie_port().
+> > > 
+> > > Adding a 30ms delay allows the kernel to boot.
+> > 
+> > Just my thought on how to debug that: I'd try to bisect the pci init
+> > routine in the boot loader. I.e. first only do the first half of the
+> > initialisation in U-Boot. Depending on Linux being able to boot or not
+> > initialize more or less on the next run.
+> > 
+> > Maybe there is a single register write that makes Linux fail?!
 > 
-> Why this can't be the default behavior in the PCI core? Any cons?
+> I am still hell-bent on thinking that the missing PCIe block reset is what makes 
+> the Linux fail. Missing block reset is always a problem.
 
-It increases read request traffic and read response latency on the bus
-for large transfers.
+Indeed.  We're missing a hardware reset for PCIe on i.MX6Q and i.MX6DL.
+Such reset is available on i.MX6SX, so there is no this problem for
+i.MX6SX PCIe.
 
-The MRSS is intented as a performance tuning knob, it is not something
-that ever needs to be set properly for correct bus operation.
+> Or do we now have a 
+> mean to reset the PCIe block and it's PHY from software?
 
-Jason
+Richard is trying to find a SW workaround for it, but we're not really
+sure if it's possible.
+
+Shawn
