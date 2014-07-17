@@ -1,106 +1,99 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:60722 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751575AbaGQETp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Jul 2014 00:19:45 -0400
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Murali Karicheri <m-karicheri2@ti.com>,
+	"Jingoo Han (jg1.han@samsung.com)" <jg1.han@samsung.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch Part3 V4 21/21] pci, ACPI, iommu: Enhance pci_root to support DMAR device hotplug
-Date: Fri, 11 Jul 2014 14:19:45 +0800
-Message-Id: <1405059585-10620-22-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Pratyush ANAND <pratyush.anand@st.com>
+Date: Thu, 17 Jul 2014 12:18:11 +0800
+Subject: RE: [PATCH v5 3/5] PCI: designware: enhance dw_pcie_host_init() to
+ support v3.65 DW hardware
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB661A47A2A83BB@EAPEX1MAIL1.st.com>
+References: <1405528686-16539-1-git-send-email-m-karicheri2@ti.com>
+ <1405528686-16539-4-git-send-email-m-karicheri2@ti.com>
+ <20140717033638.GI12278@pratyush-vbox>
+In-Reply-To: <20140717033638.GI12278@pratyush-vbox>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Finally enhance pci_root driver to support DMAR device hotplug when
-hot-plugging PCI host bridges.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/pci_root.c |   16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index d388f13d48b4..99c2b9761c12 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -33,6 +33,7 @@
- #include <linux/pci.h>
- #include <linux/pci-acpi.h>
- #include <linux/pci-aspm.h>
-+#include <linux/dmar.h>
- #include <linux/acpi.h>
- #include <linux/slab.h>
- #include <acpi/apei.h>	/* for acpi_hest_init() */
-@@ -511,6 +512,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	struct acpi_pci_root *root;
- 	acpi_handle handle = device->handle;
- 	int no_aspm = 0, clear_aspm = 0;
-+	bool hotadd = system_state != SYSTEM_BOOTING;
- 
- 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
- 	if (!root)
-@@ -557,6 +559,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
- 	device->driver_data = root;
- 
-+	if (hotadd && dmar_device_add(handle)) {
-+		result = -ENXIO;
-+		goto end;
-+	}
-+
- 	pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
- 	       acpi_device_name(device), acpi_device_bid(device),
- 	       root->segment, &root->secondary);
-@@ -583,7 +590,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 			root->segment, (unsigned int)root->secondary.start);
- 		device->driver_data = NULL;
- 		result = -ENODEV;
--		goto end;
-+		goto remove_dmar;
- 	}
- 
- 	if (clear_aspm) {
-@@ -597,7 +604,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	if (device->wakeup.flags.run_wake)
- 		device_set_run_wake(root->bus->bridge, true);
- 
--	if (system_state != SYSTEM_BOOTING) {
-+	if (hotadd) {
- 		pcibios_resource_survey_bus(root->bus);
- 		pci_assign_unassigned_root_bus_resources(root->bus);
- 	}
-@@ -607,6 +614,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	pci_unlock_rescan_remove();
- 	return 1;
- 
-+remove_dmar:
-+	if (hotadd)
-+		dmar_device_remove(handle);
- end:
- 	kfree(root);
- 	return result;
-@@ -625,6 +635,8 @@ static void acpi_pci_root_remove(struct acpi_device *device)
- 
- 	pci_remove_root_bus(root->bus);
- 
-+	dmar_device_remove(device->handle);
-+
- 	pci_unlock_rescan_remove();
- 
- 	kfree(root);
--- 
-1.7.10.4
+> -----Original Message-----
+> From: Pratyush ANAND
+> Sent: Thursday, July 17, 2014 9:07 AM
+> To: Murali Karicheri
+> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-arm-
+> kernel@lists.infradead.org; Santosh Shilimkar; Russell King; Grant Likely; Rob
+> Herring; Mohit KUMAR DCG; Jingoo Han; Bjorn Helgaas; Richard Zhu; Kishon
+> Vijay Abraham I; Marek Vasut; Arnd Bergmann; Pawel Moll; Mark Rutland;
+> Ian Campbell; Kumar Gala; Randy Dunlap
+> Subject: Re: [PATCH v5 3/5] PCI: designware: enhance dw_pcie_host_init()
+> to support v3.65 DW hardware
+> 
+> On Thu, Jul 17, 2014 at 12:38:04AM +0800, Murali Karicheri wrote:
+> > keystone PCI controller is based on v3.65 designware hardware. This
+> > version differs from newer versions of the hardware in few functional
+> > areas discussed below that makes it necessary to change
+> > dw_pcie_host_init() to support v3.65 based PCI controller.
+> >
+> >  1. No support for ATU port. So any ATU specific resource handling code
+> >     is to be bypassed for v3.65 h/w.
+> >  2. MSI controller uses Application space to implement MSI and 32 MSI
+> >     interrupts are multiplexed over 8 IRQs to the host. Hence the code
+> >     to process MSI IRQ needs to be different. This patch allows platform
+> >     driver to provide its own irq_domain_ops ptr to irq_domain_add_linear()
+> >     through an API callback from the designware core driver.
+> >  3. MSI interrupt generation requires EP to write to the RC's application
+> >     register. So enhance the driver to allow setup of inbound access to
+> >     MSI irq register as a post scan bus API callback.
+> >
+> > Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+> 
+> Looks almost ok to me.
+> 
+> Reviewed-by: Pratyush Anand <pratyush.anand@st.com>
+> 
 
+- Now looks fine to me.
+
+Acked-by: Mohit KUMAR <mohit.kumar@st.com>
+
+Jingoo,
+After Murali's patches,  dw code can be used by  older Synopsys controller based driver too.
+Pls have a look at the series if you have any further comment.
+
+Thanks
+Mohit
+
+> >  int __init dw_pcie_host_init(struct pcie_port *pp)  {
+> >  	struct device_node *np = pp->dev->of_node;
+> > -	struct of_pci_range range;
+> >  	struct of_pci_range_parser parser;
+> > +	struct of_pci_range range;
+> 
+> You may avoid moving the above line.
+> 
+> ~Pratyush
