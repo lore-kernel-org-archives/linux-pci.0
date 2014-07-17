@@ -1,60 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48187 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752896AbaGVQT5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 12:19:57 -0400
-From: Ethan Zhao <ethan.zhao@oracle.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
-	kvm@vger.kernel.org, konrad.wilk@oracle.com,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
-	xen-devel@lists.xenproject.org
-Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
-	ethan.kernel@gmail.com
-Subject: [PATCH 1/4] PCI: introduce helper functions for device flag operation
-Date: Wed, 23 Jul 2014 00:19:01 +0800
-Message-Id: <1406045944-1587-2-git-send-email-ethan.zhao@oracle.com>
-In-Reply-To: <1406045944-1587-1-git-send-email-ethan.zhao@oracle.com>
-References: <1406045944-1587-1-git-send-email-ethan.zhao@oracle.com>
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:44345 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752443AbaGQDiE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 23:38:04 -0400
+Date: Thu, 17 Jul 2014 09:06:38 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v5 3/5] PCI: designware: enhance dw_pcie_host_init() to
+ support v3.65 DW hardware
+Message-ID: <20140717033638.GI12278@pratyush-vbox>
+References: <1405528686-16539-1-git-send-email-m-karicheri2@ti.com>
+ <1405528686-16539-4-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1405528686-16539-4-git-send-email-m-karicheri2@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch introduced three helper functions to hide direct
-device flag operation.
+On Thu, Jul 17, 2014 at 12:38:04AM +0800, Murali Karicheri wrote:
+> keystone PCI controller is based on v3.65 designware hardware. This
+> version differs from newer versions of the hardware in few functional
+> areas discussed below that makes it necessary to change dw_pcie_host_init()
+> to support v3.65 based PCI controller.
+> 
+>  1. No support for ATU port. So any ATU specific resource handling code
+>     is to be bypassed for v3.65 h/w.
+>  2. MSI controller uses Application space to implement MSI and 32 MSI
+>     interrupts are multiplexed over 8 IRQs to the host. Hence the code
+>     to process MSI IRQ needs to be different. This patch allows platform
+>     driver to provide its own irq_domain_ops ptr to irq_domain_add_linear()
+>     through an API callback from the designware core driver.
+>  3. MSI interrupt generation requires EP to write to the RC's application
+>     register. So enhance the driver to allow setup of inbound access to
+>     MSI irq register as a post scan bus API callback.
+> 
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
 
-void pci_set_dev_assigned(struct pci_dev *pdev);
-void pci_set_dev_deassigned(struct pci_dev *pdev);
-bool pci_is_dev_assigned(struct pci_dev *pdev);
+Looks almost ok to me.
 
-Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
----
- include/linux/pci.h |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
+Reviewed-by: Pratyush Anand <pratyush.anand@st.com>
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index aab57b4..5f6f8fa 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1129,6 +1129,19 @@ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
- 
- int pci_set_vga_state(struct pci_dev *pdev, bool decode,
- 		      unsigned int command_bits, u32 flags);
-+/* helper functions for operation of device flag */
-+static inline void pci_set_dev_assigned(struct pci_dev *pdev)
-+{
-+	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-+}
-+static inline void pci_set_dev_deassigned(struct pci_dev *pdev)
-+{
-+	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-+}
-+static inline bool pci_is_dev_assigned(struct pci_dev *pdev)
-+{
-+	return pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED ? true : false;
-+}
- /* kmem_cache style wrapper around pci_alloc_consistent() */
- 
- #include <linux/pci-dma.h>
--- 
-1.7.1
+>  int __init dw_pcie_host_init(struct pcie_port *pp)
+>  {
+>  	struct device_node *np = pp->dev->of_node;
+> -	struct of_pci_range range;
+>  	struct of_pci_range_parser parser;
+> +	struct of_pci_range range;
 
+You may avoid moving the above line.
+
+~Pratyush
