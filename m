@@ -1,48 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:34238 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751465AbaGHWYr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 18:24:47 -0400
-Received: by mail-pa0-f53.google.com with SMTP id ey11so8027085pad.40
-        for <linux-pci@vger.kernel.org>; Tue, 08 Jul 2014 15:24:47 -0700 (PDT)
-Date: Tue, 8 Jul 2014 16:24:42 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 1/3] PCI: Fix bus align checking to support more than
- 8G
-Message-ID: <20140708222442.GA13700@google.com>
-References: <1404420379-20983-1-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <53C7F389.7010007@ladisch.de>
+Date: Thu, 17 Jul 2014 18:02:17 +0200
+From: Clemens Ladisch <clemens@ladisch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1404420379-20983-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
+	Guenter Roeck <linux@roeck-us.net>
+CC: Borislav Petkov <bp@alien8.de>, jdelvare@suse.de,
+	rdunlap@infradead.org, bhelgaas@google.com,
+	lm-sensors@lm-sensors.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] hwmon, k10temp: Add support for AMD F15h M60h processor
+References: <1405369388-12729-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <20140714195128.GA25124@pd.tnic> <53C43BDF.2070403@ladisch.de> <20140714203336.GA30926@roeck-us.net> <53C4DB2D.80406@ladisch.de> <53C4EE5C.5020407@roeck-us.net> <53C7EA41.8030907@amd.com>
+In-Reply-To: <53C7EA41.8030907@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 03, 2014 at 01:46:17PM -0700, Yinghai Lu wrote:
-> Use 128G instead.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Aravind Gopalakrishnan wrote:
+> On 7/15/2014 4:03 AM, Guenter Roeck wrote:
+>> On 07/15/2014 12:41 AM, Clemens Ladisch wrote:
+>>> Guenter Roeck wrote:
+>>>> On Mon, Jul 14, 2014 at 10:21:51PM +0200, Clemens Ladisch wrote:
+>>>>> Borislav Petkov wrote:
+>>>>>> On Mon, Jul 14, 2014 at 03:23:08PM -0500, Aravind Gopalakrishnan wrote:
+>>>>>>> +    if (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model == 0x60) {
+>>>>>>> +        pci_bus_write_config_dword(pdev->bus, PCI_DEVFN(0, 0),
+>>>>>>> +                       NB_SMU_IND_ADDR, IND_ADDR_OFFSET);
+>>>>>>> +        pci_bus_read_config_dword(pdev->bus, PCI_DEVFN(0, 0),
+>>>>>>> +                      NB_SMU_IND_DATA, &regval);
+>>>>>
+>>>>> How do you prevent races with any other code that accesses some indirect
+>>>>> register?
+>>>
+>>> If there actually is any other code; these indirect SMU registers appear
+>>> to be mostly undocumented and to be intended to be used by the BIOS.
+>>> (Which makes me wonder why the temperature sensor was moved there.)
+>>
+>> Scary. Does that mean there is a chance they may get used through ACPI ?
+>
+> I have been asking internally about this, and looks like it's just a register address change.
+> So we probably don't have to worry about this being used elsewhere..
 
-I applied this one to pci/resource for v3.17, thanks!
+The conflict is about the SMU index register; the question is whether
+_any_ of these SMU registers is used elsewhere (in a way that could
+happen concurrently).
 
-I didn't apply [2/3] or [3/3] because the questions I raised earlier
-haven't been resolved.
 
-> ---
->  drivers/pci/setup-bus.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> Index: linux-2.6/drivers/pci/setup-bus.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/setup-bus.c
-> +++ linux-2.6/drivers/pci/setup-bus.c
-> @@ -925,7 +925,7 @@ static int pbus_size_mem(struct pci_bus
->  {
->  	struct pci_dev *dev;
->  	resource_size_t min_align, align, size, size0, size1;
-> -	resource_size_t aligns[14];	/* Alignments from 1Mb to 8Gb */
-> +	resource_size_t aligns[18];	/* Alignments from 1Mb to 128Gb */
->  	int order, max_order;
->  	struct resource *b_res = find_free_bus_resource(bus,
->  					mask | IORESOURCE_PREFETCH, type);
+Regards,
+Clemens
