@@ -1,82 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:47461 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751057AbaG3IAU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jul 2014 04:00:20 -0400
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <yan@linux.vnet.ibm.com>;
-	Wed, 30 Jul 2014 18:00:05 +1000
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 3040E3578053
-	for <linux-pci@vger.kernel.org>; Wed, 30 Jul 2014 18:00:14 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s6U7bC5J590150
-	for <linux-pci@vger.kernel.org>; Wed, 30 Jul 2014 17:37:13 +1000
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s6U80CDu027186
-	for <linux-pci@vger.kernel.org>; Wed, 30 Jul 2014 18:00:12 +1000
-From: Guo Chao <yan@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: Guo Chao <yan@linux.vnet.ibm.com>
-Subject: [PATCH] PCI: Reset failed bridge resources in PCI realloc
-Date: Wed, 30 Jul 2014 16:00:07 +0800
-Message-Id: <1406707207-13152-1-git-send-email-yan@linux.vnet.ibm.com>
+Received: from mga01.intel.com ([192.55.52.88]:52952 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751122AbaGQDDE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Jul 2014 23:03:04 -0400
+Message-ID: <53C73CC6.20803@linux.intel.com>
+Date: Thu, 17 Jul 2014 11:02:30 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: Need advices about PCI IRQ reference count tracking
+References: <53C5F2C2.20707@linux.intel.com>	<CAErSpo6D3q0NoJhjF2kTZBVaQBb5Gz-bY-P_eR2EYzFvQ6yhPw@mail.gmail.com> <CAE9FiQWsjXU0YBsgnSvNXzkPKDPph4RgYQcvmGGoL27TE7YrhA@mail.gmail.com>
+In-Reply-To: <CAE9FiQWsjXU0YBsgnSvNXzkPKDPph4RgYQcvmGGoL27TE7YrhA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We observed a problem on at least two POWER machines with PCIe
-devices with very large SR-IOV BARs. The total size is larger than
-host bridge MMIO window. We expect normal BARs of this device get address
-successfuly, and SR-IOV BARs deserted. However, this only happens if PCI
-realloc is disabled (pci=realloc=off or not config at all). Otherwise we
-fail to assign both BARs.
 
-Here is what happened when realloc is enabled:
-	* SR-IOV resources will NOT be considered as optional until the last
-	  round of realloc. Both normal BARs and SR-IOV BARs of this device
-	  will be sized and recorded in upstream bridge as initial size.
-	* Realloc never works because this bridge is too big, at end of
-	  each round, the bridge is restored to the value before
-	  assigning, i.e. it keeps its size.
-	* At last round, we finally consider SR-IOV resources optional
-	  and size them seperately. We should get a small bridge this
-	  time.
-	* However, in pbus_size_mem() we call calculate_memsize() to
-	  calculate the final size. calculate_memsize() never shrinks
-	  window, i.e. if old size is larger than newly sized result,
-	  old size will be honored. Unfortunately, the old size at this
-	  time is the sum of both normal BARs and SR-IOV BARs when doing
-	  realloc.
-	* The bridge window failed to get address just like previous rounds.
 
-Without PCI realloc, SR-IOV resources are considered as optional
-from the beginning and sized seperately. The old size would be 0. We get
-a small bridge window and assinged successfully. Everything work as
-expected.
+On 2014/7/17 2:37, Yinghai Lu wrote:
+> On Wed, Jul 16, 2014 at 11:04 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> [+cc Yinghai]
+>>
+>> On Tue, Jul 15, 2014 at 9:34 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>>> Hi Bjorn,
+>>>         When enabling ACPI based IOAPIC hotplug, we encountered an
+>>> issue with PCI IRQ reference count tracking and need your advices.
+>>>         In order to hot-remove an IOAPIC, we need to track and keep
+>>> balance of IOAPIC pin usage count. But acpi_pci_irq_enable() may
+>>> be called twice for a PCI device,
+>>> 1) pci_acpi_init() if pci_routeirq is true
+>>> 2) pci_enable_device()
+>>>
+>>> So in function acpi_pci_irq_enable(), we need a way to track whether
+>>> an IOAPIC IRQ has been assigned to the PCI device. Previously we check
+>>> "if (dev->irq > 0)" for that, but that's wrong because dev->irq may
+>>> be set to non-zero in pci_read_irq() if BIOS has already assigned
+>>> a legacy IRQ for the device. So is it OK to add a flag into pci_dev
+>>> to track this information?
+> 
+> Why do you need to track it?
+> 
+> When do you hot-remove ioapic with pci root bus, all the drivers for
+> devices on that pci root bus should be stopped at first, so no one
+> will use the ioapic before ioapic is being removed.
+Hi Yinghai,
+	By tracking IOAPIC pin usage count, we could release the
+assigned IRQ number when there are no device uses an IOAPIC pin anymore.
 
-I actually don't quite understand what realloc does. Apparently this is
-not the right fix ...
+> 
+>>>
+>>> Another possible workaround is to disable IOAPIC hotplug when
+>>> pci_routeirq is set, but that sounds not the best solution.
+> 
+> That is not good.
+> 
+>>
+>> My first choice would be to get rid of pci_routeirq.  It was added in
+>> 2004 as a workaround for broken drivers.  I don't know any reason why
+>> we need the "pci=routeirq" option any more.
+> 
+> I always use "pci=routeirq apic=debug" to check the print out
+>  if BIOS routing irq correctly.
+So seems the solution is to add a flag to struct pci_dev, right?
+Regards!
+Gerry
 
-Cc: Yinghai Lu <yinghai@kernel.org> 
-Signed-off-by: Guo Chao <yan@linux.vnet.ibm.com>
----
- drivers/pci/setup-bus.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index a5a63ec..39837d7 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1623,7 +1623,7 @@ again:
- 		res->end = fail_res->end;
- 		res->flags = fail_res->flags;
- 		if (fail_res->dev->subordinate)
--			res->flags = 0;
-+			res->flags = res->start = res->end = 0;
- 	}
- 	free_list(&fail_head);
- 
--- 
-1.9.1
-
+> 
+>>
+>> However, 629e15d245f4 ("x86, irq: update_mptable needs pci_routeirq")
+>> added another use of pci_routeirq.  This is only used when booting
+>> with the undocumented "update_mptable" option, and I can't tell
+>> whether it's useful or not.
+> 
+> Yes, we could drop update_mptable now. Will produce one patch to do that.
+> 
+> Thanks
+> 
+> Yinghai
+> 
