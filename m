@@ -1,90 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f170.google.com ([209.85.216.170]:39350 "EHLO
-	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751886AbaGKSAp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 14:00:45 -0400
-Received: by mail-qc0-f170.google.com with SMTP id c9so1322637qcz.29
-        for <linux-pci@vger.kernel.org>; Fri, 11 Jul 2014 11:00:41 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 17 Jul 2014 09:13:20 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: suravee.suthikulpanit@amd.com
+Cc: marc.zyngier@arm.com, mark.rutland@arm.com, pawel.moll@arm.com,
+	Catalin.Marinas@arm.com, Will.Deacon@arm.com, tglx@linutronix.de,
+	Harish.Kasiviswanathan@amd.com,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH 3/4 V3] irqchip: gic: Add supports for ARM GICv2m
+ MSI(-X)
+Message-ID: <20140717131320.GM13108@titan.lakedaemon.net>
+References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <1404947104-21345-4-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQX69x_YgHihYM-+tahTvbuk6MATBXvm9Rz5kiQ9UpKNPg@mail.gmail.com>
-References: <20140611060118.GB3169@yanx> <CAE9FiQWe2bf7QbKn9kmZS34a4cMewsdD-9qAELdXs-dEtx70GQ@mail.gmail.com>
- <20140702210736.GB28852@google.com> <CAE9FiQU5Ltu89zmRG0h2aXfXH0oCcTEP=jF7b=zHi=SaOA2rKg@mail.gmail.com>
- <20140703131526.GG28852@google.com> <CAE9FiQWPGXMBYmpzyk8cicKZ1ELUZiARkZjr2vvgntmt3bt1jQ@mail.gmail.com>
- <20140703221152.GH28852@google.com> <CAE9FiQX69x_YgHihYM-+tahTvbuk6MATBXvm9Rz5kiQ9UpKNPg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 11 Jul 2014 12:00:21 -0600
-Message-ID: <CAErSpo4DzJ112NxfjXT=NbXMxNqre_Vo61fS0Mem=MWCz+OvcA@mail.gmail.com>
-Subject: Re: [PATCH] pci: Allow very large resource windows
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1404947104-21345-4-git-send-email-suravee.suthikulpanit@amd.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 10, 2014 at 7:12 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Jul 3, 2014 at 3:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Thu, Jul 03, 2014 at 12:59:21PM -0700, Yinghai Lu wrote:
->
->>> when we try to size it,  means that bar is not assigned. with r->flags
->>> = 0, means
->>> we will ignore it all the way.
->>
->> With "r->flags = 0", we will not try to assign resources to the BAR,
->> but the hardware BAR still exists and contains some address.  If the
->> device has other memory BARs, pci_enable_resources() will turn on
->> PCI_COMMAND_MEMORY.  Now the "r->flags == 0" BAR is enabled but the
->> address it contains might conflict with other devices.  That's the
->> problem.
->>
->> To fix this, I think we need to do "r->flags |= IORESOURCE_UNSET |
->> IORESOURCE_DISABLED".
->
-> No, that is not right.
->
-> Current that r->flags = 0 and reset_resource() cover the bug in
-> pci_enable_resources() when assign and reassign resource fail.
->
-> In pci_enable_resources() if there is one resource with IO BAR or SRIOV BAR
-> is not assigned and have UNSET, it will prevent device from being enabled.
->
-> Most drivers could work without io port.
->
-> If you change r->flags = 0 to
-> r->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED
->
-> Those drivers would not work anymore.
+On Wed, Jul 09, 2014 at 06:05:03PM -0500, suravee.suthikulpanit@amd.com wrote:
+> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> 
+> ARM GICv2m specification extends GICv2 to support MSI(-X) with
+> a new set of register frames. This patch introduces support for
+> the non-secure GICv2m register frame.
+> 
+> The driver currently matchs "arm,gic-400-plus" in device tree binding,
+> which implements GICv2m.
+> 
+> The "msi-controller" keyword in ARM GIC devicetree binding is used to indentify
+> GIC driver that it should enable MSI(-X) support, The region of GICv2m MSI
+> register frame is specified using the register frame index 4 in the device tree.
+> MSI support is optional.
+> 
+> Each GIC maintains an "msi_chip" structure. To discover the msi_chip,
+> PCI host driver can do the following:
+> 
+>     struct device_node *gic_node = of_irq_find_parent(pdev->dev.of_node);
+>     pcie_bus->msi_chip = of_pci_find_msi_chip_by_node(gic_node);
+> 
+> Cc: Mark Rutland <Mark.Rutland@arm.com>
+> Cc: Marc Zyngier <Marc.Zyngier@arm.com>
+> Cc: Jason Cooper <jason@lakedaemon.net>
+> Cc: Catalin Marinas <Catalin.Marinas@arm.com>
+> Cc: Will Deacon <Will.Deacon@arm.com>
+> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> ---
+>  Documentation/devicetree/bindings/arm/gic.txt |  20 +-
+>  arch/arm64/Kconfig                            |   1 +
+>  drivers/irqchip/Kconfig                       |   7 +
+>  drivers/irqchip/Makefile                      |   1 +
+>  drivers/irqchip/irq-gic-v2m.c                 | 251 ++++++++++++++++++++++++++
+>  drivers/irqchip/irq-gic-v2m.h                 |  13 ++
+>  drivers/irqchip/irq-gic.c                     |  23 ++-
+>  drivers/irqchip/irq-gic.h                     |  31 +++-
+>  8 files changed, 334 insertions(+), 13 deletions(-)
+>  create mode 100644 drivers/irqchip/irq-gic-v2m.c
+>  create mode 100644 drivers/irqchip/irq-gic-v2m.h
 
-If a driver doesn't need IO ports, it should use
-pci_enable_device_mem().  Then pci_enable_device_flags() will build a
-BAR bitmask that does not include the IO BARs, and
-pci_enable_resources() will not look at the resources corresponding to
-those BARs at all (so it doesn't matter what r->flags is), and it will
-not turn on PCI_COMMAND_IO.
+Applied to irqchip/gic with some minor typos fixed in the commit
+message.
 
-> I also know one driver that could work with pref mmio, but mmio is not assigned.
-> --- silicon bug, that it exposes non-needed mmio bar.
+thx,
 
-The driver might work, but turning on PCI_COMMAND_MEMORY when an MMIO
-BAR is not assigned is dangerous and could cause bus conflicts.  If we
-can't safely turn on PCI_COMMAND_MEMORY and this driver stops working,
-well, I think that's tough luck.
-
-I explained why I think it is dangerous in the paragraph "With
-'r->flags = 0', ..." above.  This a question of how the hardware
-behaves, so if you think I'm wrong, you need to point out something in
-the spec that says the hardware works differently than how I think it
-does.
-
-> BTW I think we may need to clear the BAR in pci_claim_resource().
->
-> Maybe Linus or Greg have more idea about this.
-> Do we need to get more strict? will only enable PCI_COMMAND_MEMORY
-> unless all mmio BARs get assigned value?
-
-I think we should turn on PCI_COMMAND_MEMORY only when the driver
-requests IORESOURCE_MEM and all MMIO BARs are assigned.
-
-Bjorn
+Jason.
