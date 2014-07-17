@@ -1,68 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:46099 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752077AbaGQDOb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Jul 2014 23:14:31 -0400
-Message-ID: <53C73F94.7060500@linux.intel.com>
-Date: Thu, 17 Jul 2014 11:14:28 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <53C78C31.7000709@ti.com>
+Date: Thu, 17 Jul 2014 14:11:21 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: Need advices about PCI IRQ reference count tracking
-References: <53C5F2C2.20707@linux.intel.com>	<CAErSpo6D3q0NoJhjF2kTZBVaQBb5Gz-bY-P_eR2EYzFvQ6yhPw@mail.gmail.com>	<CAE9FiQWsjXU0YBsgnSvNXzkPKDPph4RgYQcvmGGoL27TE7YrhA@mail.gmail.com>	<53C73CC6.20803@linux.intel.com> <CAE9FiQX3nTCXvwfUwz9vx4HmO_mdUaFg57qN_YR-cYN0qWpQpg@mail.gmail.com>
-In-Reply-To: <CAE9FiQX3nTCXvwfUwz9vx4HmO_mdUaFg57qN_YR-cYN0qWpQpg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Jingoo Han <jg1.han@samsung.com>
+CC: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+	<mohit.kumar@st.com>, <linux-kernel@vger.kernel.org>,
+	<grant.likely@linaro.org>
+Subject: Re: [PATCH v2 0/4] dra7: Add PCIe support
+References: <1405349705-31400-1-git-send-email-kishon@ti.com> <009001cfa16b$0c558ea0$2500abe0$%han@samsung.com>
+In-Reply-To: <009001cfa16b$0c558ea0$2500abe0$%han@samsung.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
 
-On 2014/7/17 11:06, Yinghai Lu wrote:
-> On Wed, Jul 16, 2014 at 8:02 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+On Thursday 17 July 2014 08:28 AM, Jingoo Han wrote:
+> On Monday, July 14, 2014 11:55 PM, Kishon Vijay Abraham I wrote:
 >>
+>> Changes from v1:
+>> * fixed dw_pcie_prog_viewport_io_outbound() to use untranslated address
+>> * split dra7xx patch into driver part and documentation part
 >>
->> On 2014/7/17 2:37, Yinghai Lu wrote:
->>> On Wed, Jul 16, 2014 at 11:04 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> [+cc Yinghai]
->>>>
->>>> On Tue, Jul 15, 2014 at 9:34 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->>>>> Hi Bjorn,
->>>>>         When enabling ACPI based IOAPIC hotplug, we encountered an
->>>>> issue with PCI IRQ reference count tracking and need your advices.
->>>>>         In order to hot-remove an IOAPIC, we need to track and keep
->>>>> balance of IOAPIC pin usage count. But acpi_pci_irq_enable() may
->>>>> be called twice for a PCI device,
->>>>> 1) pci_acpi_init() if pci_routeirq is true
->>>>> 2) pci_enable_device()
->>>>>
->>>>> So in function acpi_pci_irq_enable(), we need a way to track whether
->>>>> an IOAPIC IRQ has been assigned to the PCI device. Previously we check
->>>>> "if (dev->irq > 0)" for that, but that's wrong because dev->irq may
->>>>> be set to non-zero in pci_read_irq() if BIOS has already assigned
->>>>> a legacy IRQ for the device. So is it OK to add a flag into pci_dev
->>>>> to track this information?
->>>
->>> Why do you need to track it?
->>>
->>> When do you hot-remove ioapic with pci root bus, all the drivers for
->>> devices on that pci root bus should be stopped at first, so no one
->>> will use the ioapic before ioapic is being removed.
->> Hi Yinghai,
->>         By tracking IOAPIC pin usage count, we could release the
->> assigned IRQ number when there are no device uses an IOAPIC pin anymore.
+>> [1] is split into separate series in order for individual subsystem
+>> Maintainers to pick up the patches. This series handles the PCIe
+>> support for DRA7.
+>>
+>> Rebased to pci -next.
+>>
+>> [1] -> https://lkml.org/lkml/2014/5/29/258
+>>
+>> Kishon Vijay Abraham I (4):
+>>   PCI: designware: Configuration space should be specified in 'reg'
+>>   PCI: designware: use untranslated address while programming ATU
+>>   Documentation: pci: ti: Add dt binding documentation for PCIe in
+>>     DRA7xx
+>>   PCI: host: pcie-dra7xx: add support for pcie-dra7xx controller
 > 
-> Delay releasing IRQ number later when destroying irq domain?
-Hi Yinghai,
-	We could release IRQ number at runtime not only for IOAPIC
-hotplug, but also for PCI device hotplug. For example, release IRQ
-number if an IOAPIC pin is not used anymore after hot-removal of
-a PCI device.
+> Kishon,
+> 
+> Actually, I have no objections to these patches.
 
-Regards!
-Gerry
+Thanks :-)
+> Then, how about adding maintainer entry for pci-dra7xx.c
+> to MAINTAINERS file? It would be good. :-)
 
-> 
-> Yinghai
-> 
+Sure, will post it.
+
+-Kishon
