@@ -1,66 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1lp0139.outbound.protection.outlook.com ([207.46.163.139]:2267
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756033AbaGVRCZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Jul 2014 13:02:25 -0400
-Date: Tue, 22 Jul 2014 19:02:08 +0200
-From: Michal Simek <michal.simek@xilinx.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:44044 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756139AbaGQJC0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Jul 2014 05:02:26 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <jg1.han@samsung.com>,
+	<bhelgaas@google.com>, <mohit.kumar@st.com>,
+	<linux-kernel@vger.kernel.org>
+CC: <kishon@ti.com>, <grant.likely@linaro.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v3 1/4] PCI: designware: Configuration space should be specified in 'reg'
+Date: Thu, 17 Jul 2014 14:30:40 +0530
+Message-ID: <1405587643-13808-2-git-send-email-kishon@ti.com>
+In-Reply-To: <1405587643-13808-1-git-send-email-kishon@ti.com>
+References: <1405587643-13808-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Srikanth Thokala <sthokal@xilinx.com>
-CC: Michal Simek <michal.simek@xilinx.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH v4] pcie: Add Xilinx PCIe Host Bridge IP driver
-References: <1404361654-2894-1-git-send-email-sthokal@xilinx.com>
- <20140716173824.GA24357@google.com>
- <CA+mB=1JupzQy+R14kKAk7mTJR2FcZ+cQv-uXQSB6jEVBW95aGQ@mail.gmail.com>
- <CAErSpo41HwMferWm8q69Sz0t-Cs1WHgwwVp1VKsoxxyvrgQhfQ@mail.gmail.com>
-In-Reply-To: <CAErSpo41HwMferWm8q69Sz0t-Cs1WHgwwVp1VKsoxxyvrgQhfQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <dc252e61-3179-4f51-90e6-f92929e93d40@BN1AFFO11FD030.protection.gbl>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/22/2014 06:08 PM, Bjorn Helgaas wrote:
-> On Mon, Jul 21, 2014 at 11:10 PM, Srikanth Thokala <sthokal@xilinx.com> wrote:
->> On Wed, Jul 16, 2014 at 11:08 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> ...
->>> I see I forgot to ask for a MAINTAINERS entry for this driver.  Can
->>> you add one?
->>
->> There was a discussion on this earlier and Michal mentioned it is not
->> required as it is
->> handled by our Xilinx record.
->>
->> Here is the reply from Michal to the MAINTAINERS update comment,
->>
->> < Reply from Michal >
->>
->>> Please also include a MAINTAINERS update for drivers/pci/host/pci-xilinx.c.
->>
->> This should be handle by our record that's why MAINTAINERS update is
->> not necessary.
->> (N: xilinx below)
-> 
-> That's technically true in the sense that get_maintainer.pl will do
-> the right thing, but I often review patches in email (without
-> extracting them), so it's more convenient to just look in MAINTAINERS
-> to see if they have the right acks.  But I guess I can deal with it
-> either way.
+The configuration address space has so far been specified in *ranges*,
+however it should be specified in *reg* making it a platform MEM resource.
+Hence used 'platform_get_resource_*' API to get configuration address
+space in the designware driver.
 
-There is also another reason for using just this fragment.
-Because developers and their responsibilities are changing so often
-and I just know who is responsible for it at that time.
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Marek Vasut <marex@denx.de>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Acked-by: Mohit Kumar <mohit.kumar@st.com>
+Acked-by: Jingoo Han <jg1.han@samsung.com>
+---
+ .../devicetree/bindings/pci/designware-pcie.txt    |    4 ++++
+ drivers/pci/host/pcie-designware.c                 |   17 +++++++++++++++--
+ 2 files changed, 19 insertions(+), 2 deletions(-)
 
-Thanks,
-Michal
-
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index d0d15ee..ed0d9b9 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -2,6 +2,10 @@
+ 
+ Required properties:
+ - compatible: should contain "snps,dw-pcie" to identify the core.
++- reg: Should contain the configuration address space.
++- reg-names: Must be "config" for the PCIe configuration space.
++    (The old way of getting the configuration address space from "ranges"
++    is deprecated and should be avoided.)
+ - #address-cells: set to <3>
+ - #size-cells: set to <2>
+ - device_type: set to "pci"
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 1eaf4df..0b7b455 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -20,6 +20,7 @@
+ #include <linux/of_pci.h>
+ #include <linux/pci.h>
+ #include <linux/pci_regs.h>
++#include <linux/platform_device.h>
+ #include <linux/types.h>
+ 
+ #include "pcie-designware.h"
+@@ -396,11 +397,23 @@ static const struct irq_domain_ops msi_domain_ops = {
+ int __init dw_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct device_node *np = pp->dev->of_node;
++	struct platform_device *pdev = to_platform_device(pp->dev);
+ 	struct of_pci_range range;
+ 	struct of_pci_range_parser parser;
++	struct resource *cfg_res;
+ 	u32 val;
+ 	int i;
+ 
++	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
++	if (cfg_res) {
++		pp->config.cfg0_size = resource_size(cfg_res)/2;
++		pp->config.cfg1_size = resource_size(cfg_res)/2;
++		pp->cfg0_base = cfg_res->start;
++		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
++	} else {
++		dev_err(pp->dev, "missing *config* reg space\n");
++	}
++
+ 	if (of_pci_range_parser_init(&parser, np)) {
+ 		dev_err(pp->dev, "missing ranges property\n");
+ 		return -EINVAL;
+@@ -433,6 +446,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 			of_pci_range_to_resource(&range, np, &pp->cfg);
+ 			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
+ 			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
++			pp->cfg0_base = pp->cfg.start;
++			pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+ 		}
+ 	}
+ 
+@@ -445,8 +460,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 		}
+ 	}
+ 
+-	pp->cfg0_base = pp->cfg.start;
+-	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+ 	pp->mem_base = pp->mem.start;
+ 
+ 	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+-- 
+1.7.9.5
 
