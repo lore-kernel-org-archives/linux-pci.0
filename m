@@ -1,84 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31856 "EHLO mx1.redhat.com"
+Received: from bear.ext.ti.com ([192.94.94.41]:38118 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965803AbaGPSFc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Jul 2014 14:05:32 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 21/23] qla2xxx: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Wed, 16 Jul 2014 20:05:25 +0200
-Message-Id: <cf38d1596543fd61c099bc0b834c2ea7a11f8b28.1405533479.git.agordeev@redhat.com>
-In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
+	id S933520AbaGQPN0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Jul 2014 11:13:26 -0400
+Message-ID: <53C7E78A.8080604@ti.com>
+Date: Thu, 17 Jul 2014 11:11:06 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+CC: "Jingoo Han (jg1.han@samsung.com)" <jg1.han@samsung.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Pratyush ANAND <pratyush.anand@st.com>
+Subject: Re: [PATCH v5 3/5] PCI: designware: enhance dw_pcie_host_init() to
+ support v3.65 DW hardware
+References: <1405528686-16539-1-git-send-email-m-karicheri2@ti.com> <1405528686-16539-4-git-send-email-m-karicheri2@ti.com> <20140717033638.GI12278@pratyush-vbox> <2CC2A0A4A178534D93D5159BF3BCB661A47A2A83BB@EAPEX1MAIL1.st.com>
+In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB661A47A2A83BB@EAPEX1MAIL1.st.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On 07/17/2014 12:18 AM, Mohit KUMAR DCG wrote:
+>
+>
+>> -----Original Message-----
+>> From: Pratyush ANAND
+>> Sent: Thursday, July 17, 2014 9:07 AM
+>> To: Murali Karicheri
+>> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-arm-
+>> kernel@lists.infradead.org; Santosh Shilimkar; Russell King; Grant Likely; Rob
+>> Herring; Mohit KUMAR DCG; Jingoo Han; Bjorn Helgaas; Richard Zhu; Kishon
+>> Vijay Abraham I; Marek Vasut; Arnd Bergmann; Pawel Moll; Mark Rutland;
+>> Ian Campbell; Kumar Gala; Randy Dunlap
+>> Subject: Re: [PATCH v5 3/5] PCI: designware: enhance dw_pcie_host_init()
+>> to support v3.65 DW hardware
+>>
+>> On Thu, Jul 17, 2014 at 12:38:04AM +0800, Murali Karicheri wrote:
+>>> keystone PCI controller is based on v3.65 designware hardware. This
+>>> version differs from newer versions of the hardware in few functional
+>>> areas discussed below that makes it necessary to change
+>>> dw_pcie_host_init() to support v3.65 based PCI controller.
+>>>
+>>>   1. No support for ATU port. So any ATU specific resource handling code
+>>>      is to be bypassed for v3.65 h/w.
+>>>   2. MSI controller uses Application space to implement MSI and 32 MSI
+>>>      interrupts are multiplexed over 8 IRQs to the host. Hence the code
+>>>      to process MSI IRQ needs to be different. This patch allows platform
+>>>      driver to provide its own irq_domain_ops ptr to irq_domain_add_linear()
+>>>      through an API callback from the designware core driver.
+>>>   3. MSI interrupt generation requires EP to write to the RC's application
+>>>      register. So enhance the driver to allow setup of inbound access to
+>>>      MSI irq register as a post scan bus API callback.
+>>>
+>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>>
+>> Looks almost ok to me.
+>>
+>> Reviewed-by: Pratyush Anand<pratyush.anand@st.com>
+>>
+>
+> - Now looks fine to me.
+>
+> Acked-by: Mohit KUMAR<mohit.kumar@st.com>
+>
+> Jingoo,
+> After Murali's patches,  dw code can be used by  older Synopsys controller based driver too.
+> Pls have a look at the series if you have any further comment.
+>
+> Thanks
+> Mohit
 
-Log message code 0x00c6 preserved, although it is reported
-after successful call to pci_enable_msix_range(), not before
-possibly unsuccessful call to pci_enable_msix(). Consumers
-of the error code should not notice the difference.
+Mohit,
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: qla2xxx-upstream@qlogic.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/qla2xxx/qla_isr.c |   27 +++++++++++----------------
- 1 files changed, 11 insertions(+), 16 deletions(-)
+Thanks for the review and Ack.
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index a56825c..52d420f 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2923,27 +2923,22 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 	for (i = 0; i < ha->msix_count; i++)
- 		entries[i].entry = i;
- 
--	ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
--	if (ret) {
--		if (ret < MIN_MSIX_COUNT)
--			goto msix_failed;
--
-+	ret = pci_enable_msix_range(ha->pdev,
-+				    entries, MIN_MSIX_COUNT, ha->msix_count);
-+	if (ret < 0) {
-+		ql_log(ql_log_fatal, vha, 0x00c7,
-+		    "MSI-X: Failed to enable support, "
-+		    "giving   up -- %d/%d.\n",
-+		    ha->msix_count, ret);
-+		goto msix_out;
-+	} else if (ret < ha->msix_count) {
- 		ql_log(ql_log_warn, vha, 0x00c6,
- 		    "MSI-X: Failed to enable support "
- 		    "-- %d/%d\n Retry with %d vectors.\n",
- 		    ha->msix_count, ret, ret);
--		ha->msix_count = ret;
--		ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
--		if (ret) {
--msix_failed:
--			ql_log(ql_log_fatal, vha, 0x00c7,
--			    "MSI-X: Failed to enable support, "
--			    "giving   up -- %d/%d.\n",
--			    ha->msix_count, ret);
--			goto msix_out;
--		}
--		ha->max_rsp_queues = ha->msix_count - 1;
- 	}
-+	ha->msix_count = ret;
-+	ha->max_rsp_queues = ha->msix_count - 1;
- 	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
- 				ha->msix_count, GFP_KERNEL);
- 	if (!ha->msix_entries) {
--- 
-1.7.7.6
+Murali
+>
+>>>   int __init dw_pcie_host_init(struct pcie_port *pp)  {
+>>>   	struct device_node *np = pp->dev->of_node;
+>>> -	struct of_pci_range range;
+>>>   	struct of_pci_range_parser parser;
+>>> +	struct of_pci_range range;
+>>
+>> You may avoid moving the above line.
+>>
+>> ~Pratyush
 
