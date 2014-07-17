@@ -1,88 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f173.google.com ([209.85.216.173]:63274 "EHLO
-	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752336AbaGIDlP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 23:41:15 -0400
-Received: by mail-qc0-f173.google.com with SMTP id c9so295613qcz.18
-        for <linux-pci@vger.kernel.org>; Tue, 08 Jul 2014 20:41:14 -0700 (PDT)
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:39711 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754473AbaGQKyR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jul 2014 06:54:17 -0400
+Received: by mail-lb0-f171.google.com with SMTP id l4so1566368lbv.2
+        for <linux-pci@vger.kernel.org>; Thu, 17 Jul 2014 03:54:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <001101cf9b15$df01cf50$9d056df0$%han@samsung.com>
-References: <1403104613-9867-1-git-send-email-festevam@gmail.com>
- <20140709105731.1b3e2bbe@canb.auug.org.au> <001101cf9b15$df01cf50$9d056df0$%han@samsung.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 8 Jul 2014 21:40:54 -0600
-Message-ID: <CAErSpo5fXPqfbj9Gwm4BExHuVG+qyiTq3CwvoAiNR28Z_t0jCw@mail.gmail.com>
-Subject: Re: PCI: designware: Use IS_ENABLED()
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	Fabio Estevam <festevam@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	Mohit Kumar <mohit.kumar@st.com>
+In-Reply-To: <20140716220046.GD14366@google.com>
+References: <CAFJTrDt146269JkQ7eRcgGxk=4EEQ2XK+Rbe11Y+6URr=LQzrA@mail.gmail.com>
+	<20140716220046.GD14366@google.com>
+Date: Thu, 17 Jul 2014 11:54:15 +0100
+Message-ID: <CAFJTrDtvbnY+-bLySWyOBYtbsujSf+E-wpb=FtAptZvquxzKuA@mail.gmail.com>
+Subject: Re: [PATCH RFC] Added code to ensure hot-added PCI devices are given
+ an IRQ on rescan
+From: Matthew Minter <matthew_minter@xyratex.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 8, 2014 at 7:34 PM, Jingoo Han <jg1.han@samsung.com> wrote:
-> On Wednesday, July 09, 2014 9:58 AM, Stephen Rothwell wrote:
->>
->> Hi Fabio,
->>
->> [I noticed this in the pci tree in linux-next this morning]
->>
->> On Wed, 18 Jun 2014 12:16:53 -0300 Fabio Estevam <festevam@gmail.com> wrote:
->> >
->> > From: Fabio Estevam <fabio.estevam@freescale.com>
->> >
->> > We can get rid of the 'ifdef' by using the IS_ENABLED() macro.
->> >
->> > Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
->> > Acked-by: Jingoo Han <jg1.han@samsung.com>
->> > Acked-by: Mohit Kumar <mohit.kumar@st.com>
->> >
->> > ---
->> > drivers/pci/host/pcie-designware.c | 5 ++---
->> >  1 file changed, 2 insertions(+), 3 deletions(-)
->> >
->> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
->> > index 1eaf4df3..dc842fd 100644
->> > --- a/drivers/pci/host/pcie-designware.c
->> > +++ b/drivers/pci/host/pcie-designware.c
->> > @@ -497,9 +497,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->> >
->> >     pci_common_init_dev(pp->dev, &dw_pci);
->> >     pci_assign_unassigned_resources();
->> > -#ifdef CONFIG_PCI_DOMAINS
->> > -   dw_pci.domain++;
->> > -#endif
->> > +   if (IS_ENABLED(CONFIG_PCI_DOMAINS))
->> > +           dw_pci.domain++;
->> >
->> >     return 0;
->> >  }
->>
->> Will this actually compile if CONFIG_PCI_DOMAINS is disabled, since the
->> "domains" field of dw_pci does not even exist in that case (it is
->> ifdeffed out in arch/arm/include/asm/mach/pci.h)?  Even if it works
->> with newer compilers, will it work with older ones i.e. how new does
->> the compiler have to be to elide the code before noticing that
->> "domains" does not exist?
->
-> Oops, you're right! It makes build errors when CONFIG_PCI_DOMAINS
-> is disabled.
->
-> The "domain" variable is guarded by "#ifdef CONFIG_PCI_DOMAINS";
-> thus, IS_ENABLED() should NOT be used.
->
-> ./arch/arm/include/asm/mach/pci.h
-> struct hw_pci {
-> #ifdef CONFIG_PCI_DOMAINS
->         int             domain;
-> #endif
->
-> Bjorn Helgaas,
-> Please revert this patch from your pci tree. Thank you.
+On 16 July 2014 23:00, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> This is a tangent, but I'm curious about this part of the hotplug
+> process.  Since this is PCIe, I assume the switch leading to the 8639
+> connector supports hotplug and the pciehp driver would be involved.
+> Why doesn't it notice the device addition and handle it automatically?
+> You shouldn't have to do anything with /sys/bus/pci/rescan.
 
-I dropped it.  Thanks for noticing this, Stephen.
+That is a good question and possibly exposes some of the background here.
 
-Bjorn
+8639 connectors do not require hot-plug support from PCIe layer at
+all. This is because the hot-plug does not rely on the power to the
+port being shut down first. They have a power connector based on a
+modified SATA power connector including the staged power pins and such
+can be surprised hot-(un)plugged without consequence (of course the
+file-systems should be unmounted and ideally the driver stopped
+first).
+
+Having said that, this has the additional implication that this form
+of hot-plug works on architectures which seem to have no PCIe hot-plug
+support such as ARM. On the board we have here (based on an ARM server
+chip-set) the PCIe switch we are using supports resource
+pre-allocation for hot-adding but does not support power control or
+plug/unplug interrupts but this is fine again as the connectors are
+all physically hot-plug safe.
+
+I was concerned myself about using hot-plug without a hot-plug driver
+but the guys on the arm kernel mailing list confirmed that this was
+normal and should be fine. Thus we have taken a system for hot adding
+where we just connect the device to a pre-allocated resource port and
+the run rescan. To hot-swap a device we unmount it's file-systems,
+stop it's driver where possible, remove it using
+/sys/bus/pci/devices/xxxx/remove then follow the hot-add procedure
+above to install it's replacement. (note in our case the devices are
+storage devices but this could apply equally to any peripheral).
+
+Hopefully this explains the situation a little. Please note however,
+this applies to a wider issue, any system where there is no BIOS/BIOS
+like object/ACPI to map irqs to unused slots (or if the firmware is
+buggy and will not do so) currently has no way to allocate an irq to
+those slots later should a device become connected to them. It does
+not seem correct that this code should be reserved only to boot time
+and would seem beneficial to have routines to do this later.
+
+> pci_fixup_irqs() has been broken from the beginning because it is only
+> done for devices present at boot-time, and nothing happens for
+> hot-added devices.
+>
+> I think you're on the right path by looking at the generic
+> pci_bus_add_device() path that is used both at boot-time and hot
+> add-time.  I would like to see something that works the same way at
+> both times and gets rid of pci_fixup_irqs() altogether.
+>
+> I'm not sure this needs to be done as early as pci_bus_add_device();
+> it could probably be done somewhere in the pci_enable_device() path,
+> since drivers can't use interrupts before that anyway.
+>
+> Bjorn
+
+It should be entirely possible to factor out pci_fixup_irqs
+completely, it seems most of the calls to it are in the virtual PCI
+BIOSes of platforms which have no BIOS, I agree it would be far neater
+to avoid the platform independent code as far as possible and unify
+PCI irqs into a single place.
+
+If it is OK with you I would like to rework the patch-set so that that
+instead of the boot time PCI code assigning the irqs it can instead
+register an irq swizzling and an irq mapping function (which would
+probably be stored either in the pci_host_bridge struct) or a default
+could be used. Thich can then be called during the drvice-add code
+path to both fix hot-plug irqs and unify the infrastructure a little
+so it relies less on platform code. This registration could be done in
+pcibios_root_bridge_prepare (as this can be overridden by each arch).
+
+I might be way off here but if that is the sort of thing you were
+looking for I can certainly begin working on a new patch-set however I
+also have a  question which is possibly on a bit of a tangent, the
+pci_assign_unassigned_resources function seems to be called in every
+PCI supporting arch yet the function is still called from the arch
+specific code, is there reason for this?
+
+Many thanks,
+Matthew
+
+-- 
+
+
+------------------------------
+For additional information including the registered office and the treatment of Xyratex confidential information please visit www.xyratex.com
+
+------------------------------
