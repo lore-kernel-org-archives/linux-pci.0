@@ -1,52 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20415 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750762AbaGaNcE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jul 2014 09:32:04 -0400
-Date: Thu, 31 Jul 2014 16:31:25 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: kishon@ti.com
-Cc: linux-pci@vger.kernel.org
-Subject: re: PCI: dra7xx: Add TI DRA7xx PCIe driver
-Message-ID: <20140731133125.GA7434@mwanda>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:26023 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754731AbaGQMvl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jul 2014 08:51:41 -0400
+Date: Thu, 17 Jul 2014 08:51:31 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Cc: marc.zyngier@arm.com, mark.rutland@arm.com, pawel.moll@arm.com,
+	Catalin.Marinas@arm.com, Will.Deacon@arm.com, tglx@linutronix.de,
+	Harish.Kasiviswanathan@amd.com,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH 0/4 V3] irqchip: gic: Introduce ARM GICv2m MSI(-X)
+ support
+Message-ID: <20140717125131.GJ13108@titan.lakedaemon.net>
+References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <20140713231431.GM13108@titan.lakedaemon.net>
+ <53C3FE7D.3090805@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53C3FE7D.3090805@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Kishon Vijay Abraham I,
+On Mon, Jul 14, 2014 at 10:59:57AM -0500, Suravee Suthikulanit wrote:
+> On 7/13/2014 6:14 PM, Jason Cooper wrote:
+> >Suravee,
+> >
+> >On Wed, Jul 09, 2014 at 06:05:00PM -0500, suravee.suthikulpanit@amd.com wrote:
+> >>From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> >>
+> >>This patch set introduces support for MSI(-X) in GICv2m specification,
+> >>which is implemented in some variation of GIC400.
+> >>
+> >>This depends on and has been tested with the V7 of"Add support for PCI in AArch64"
+> >>(https://lkml.org/lkml/2014/3/14/320).
+> >
+> >Grrr.  I mis-spoke against your v1 of this series.  There are more
+> >changes to irq-gic.c than I originally thought in this series.
+> 
+> I am not quite sure what your are referring to.
+> 
 
-The patch 47ff3de911a7: "PCI: dra7xx: Add TI DRA7xx PCIe driver" from
-Jul 22, 2014, leads to the following static checker warning:
+No problem, it was an old comment.  If you weren't depending on it then it
+doesn't matter. ;-)
 
-	drivers/pci/host/pci-dra7xx.c:180 dra7xx_pcie_init_irq_domain()
-	warn: passing zero to 'PTR_ERR'
+> >Additionally, we have a lot of other significant changes to that driver
+> >as well this cycle.  It would be really helpful if I could take patches
+> >1-3 through irqchip/gic.  I can Ack #4 with the Subject change, and the
+> >branch it lands in can depend on irqchip/gic, no problem there.
+> 
+> Patch 1-3 should be able to go through the irqchip/gic along with
+> the gicv3 from Marc, which I have rebased this patch against.
 
-drivers/pci/host/pci-dra7xx.c
-   172  static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
-   173  {
-   174          struct device *dev = pp->dev;
-   175          struct device_node *node = dev->of_node;
-   176          struct device_node *pcie_intc_node =  of_get_next_child(node, NULL);
-   177  
-   178          if (!pcie_intc_node) {
-                     ^^^^^^^^^^^^^^
-   179                  dev_err(dev, "No PCIe Intc node found\n");
-   180                  return PTR_ERR(pcie_intc_node);
-                                       ^^^^^^^^^^^^^^
-   181          }
-   182  
-   183          pp->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
-   184                                                 &intx_domain_ops, pp);
-   185          if (!pp->irq_domain) {
-   186                  dev_err(dev, "Failed to get a INTx IRQ domain\n");
-   187                  return PTR_ERR(pp->irq_domain);
-                                       ^^^^^^^^^^^^^^
-Again.
+Perfect!
 
-   188          }
-   189  
-   190          return 0;
+> Patch 4 is arch64 architectural changes.  Therefore, it might need
+> to be going through a different branch. Marc/Mark/Will/Catalin, do
+> you have any suggestions on which branch this should go to?
 
-regards,
-dan carpenter
+Yep, I'll Ack it for arm64 to take, conflicts should be minimal.
+
+thx,
+
+Jason.
