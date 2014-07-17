@@ -1,45 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:3493 "EHLO
-	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932977AbaGUQbl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jul 2014 12:31:41 -0400
-From: Tuomas Tynkkynen <ttynkkynen@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Tuomas Tynkkynen <ttynkkynen@nvidia.com>
-Subject: [PATCH] PCI/AER: Forward declare struct pci_dev to avoid warning
-Date: Mon, 21 Jul 2014 19:30:43 +0300
-Message-ID: <1405960243-589-1-git-send-email-ttynkkynen@nvidia.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:60927 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752504AbaGQGwE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jul 2014 02:52:04 -0400
+Date: Thu, 17 Jul 2014 08:51:48 +0200
+From: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?=
+	<u.kleine-koenig@pengutronix.de>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: bhelgaas@google.com, r65037@freescale.com, shawn.guo@freescale.com,
+	marex@denx.de, d.mueller@elsoft.ch, kernel@pengutronix.de,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	tharvey@gateworks.com, Fabio Estevam <fabio.estevam@freescale.com>
+Subject: Re: [RFC] PCI: pci-imx6: Add delay to workaround kernel hang
+Message-ID: <20140717065148.GT11056@pengutronix.de>
+References: <1403637507-9424-1-git-send-email-festevam@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1403637507-9424-1-git-send-email-festevam@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Forward declaring struct pci_dev in aer.h avoids this warning:
+Hello,
 
-In file included from include/ras/ras_event.h:11:0,
-                 from drivers/ras/ras.c:13:
-include/linux/aer.h:38:44: warning: 'struct pci_devâ€™ declared inside parameter list [enabled by default]
-include/linux/aer.h:38:44: warning: its scope is only this definition or declaration, which is probably not what you want [enabled by default]
+On Tue, Jun 24, 2014 at 04:18:27PM -0300, Fabio Estevam wrote:
+> From: Fabio Estevam <fabio.estevam@freescale.com>
+> 
+> When the mx6 PCI conctroller is initialized in the bootloader we see a kernel 
+> hang inside imx6_add_pcie_port().
+> 
+> Adding a 30ms delay allows the kernel to boot.
+Just my thought on how to debug that: I'd try to bisect the pci init
+routine in the boot loader. I.e. first only do the first half of the
+initialisation in U-Boot. Depending on Linux being able to boot or not
+initialize more or less on the next run.
 
-Signed-off-by: Tuomas Tynkkynen <ttynkkynen@nvidia.com>
----
- include/linux/aer.h | 2 ++
- 1 file changed, 2 insertions(+)
+Maybe there is a single register write that makes Linux fail?!
 
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index 4dbaa70..d9ec8dd 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -7,6 +7,8 @@
- #ifndef _AER_H_
- #define _AER_H_
- 
-+struct pci_dev;
-+
- #define AER_NONFATAL			0
- #define AER_FATAL			1
- #define AER_CORRECTABLE			2
+Best regards
+Uwe
+
 -- 
-1.8.1.5
-
+Pengutronix e.K.                           | Uwe Kleine-König            |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
