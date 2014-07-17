@@ -1,96 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54967 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965602AbaGPSFA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Jul 2014 14:05:00 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Anil Gurumurthy <agurumur@brocade.com>,
-	Vijaya Mohan Guvva <vmohan@brocade.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 02/23] bfa: Do not call pci_enable_msix() after it failed once
-Date: Wed, 16 Jul 2014 20:05:06 +0200
-Message-Id: <c32fcabee664518b9aeff8bb319aa6980a1bcb38.1405533479.git.agordeev@redhat.com>
-In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
+Received: from mailout1.samsung.com ([203.254.224.24]:36979 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752148AbaGQC66 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 22:58:58 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kishon Vijay Abraham I' <kishon@ti.com>
+Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com, mohit.kumar@st.com,
+	linux-kernel@vger.kernel.org, grant.likely@linaro.org,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1405349705-31400-1-git-send-email-kishon@ti.com>
+In-reply-to: <1405349705-31400-1-git-send-email-kishon@ti.com>
+Subject: Re: [PATCH v2 0/4] dra7: Add PCIe support
+Date: Thu, 17 Jul 2014 11:58:55 +0900
+Message-id: <009001cfa16b$0c558ea0$2500abe0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function pci_enable_msix() should not be called in case
-it threw a negative errno from a previous call.
+On Monday, July 14, 2014 11:55 PM, Kishon Vijay Abraham I wrote:
+> 
+> Changes from v1:
+> * fixed dw_pcie_prog_viewport_io_outbound() to use untranslated address
+> * split dra7xx patch into driver part and documentation part
+> 
+> [1] is split into separate series in order for individual subsystem
+> Maintainers to pick up the patches. This series handles the PCIe
+> support for DRA7.
+> 
+> Rebased to pci -next.
+> 
+> [1] -> https://lkml.org/lkml/2014/5/29/258
+> 
+> Kishon Vijay Abraham I (4):
+>   PCI: designware: Configuration space should be specified in 'reg'
+>   PCI: designware: use untranslated address while programming ATU
+>   Documentation: pci: ti: Add dt binding documentation for PCIe in
+>     DRA7xx
+>   PCI: host: pcie-dra7xx: add support for pcie-dra7xx controller
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Anil Gurumurthy <agurumur@brocade.com>
-Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
----
- drivers/scsi/bfa/bfad.c |   48 ++++++++++++++++++++++------------------------
- 1 files changed, 23 insertions(+), 25 deletions(-)
+Kishon,
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index 7593b7c..bb93180 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1235,33 +1235,31 @@ bfad_setup_intr(struct bfad_s *bfad)
- 	   (bfa_asic_id_cb(pdev->device) && !msix_disable_cb)) {
- 
- 		error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
--		if (error) {
--			/* In CT1 & CT2, try to allocate just one vector */
--			if (bfa_asic_id_ctc(pdev->device)) {
--				printk(KERN_WARNING "bfa %s: trying one msix "
--				       "vector failed to allocate %d[%d]\n",
--				       bfad->pci_name, bfad->nvec, error);
--				bfad->nvec = 1;
--				error = pci_enable_msix(bfad->pcidev,
-+		/* In CT1 & CT2, try to allocate just one vector */
-+		if (error > 0 && bfa_asic_id_ctc(pdev->device)) {
-+			printk(KERN_WARNING "bfa %s: trying one msix "
-+			       "vector failed to allocate %d[%d]\n",
-+			       bfad->pci_name, bfad->nvec, error);
-+			bfad->nvec = 1;
-+			error = pci_enable_msix(bfad->pcidev,
- 						msix_entries, bfad->nvec);
--			}
-+		}
- 
--			/*
--			 * Only error number of vector is available.
--			 * We don't have a mechanism to map multiple
--			 * interrupts into one vector, so even if we
--			 * can try to request less vectors, we don't
--			 * know how to associate interrupt events to
--			 *  vectors. Linux doesn't duplicate vectors
--			 * in the MSIX table for this case.
--			 */
--			if (error) {
--				printk(KERN_WARNING "bfad%d: "
--				       "pci_enable_msix failed (%d), "
--				       "use line based.\n",
--					bfad->inst_no, error);
--				goto line_based;
--			}
-+		/*
-+		 * Only error number of vector is available.
-+		 * We don't have a mechanism to map multiple
-+		 * interrupts into one vector, so even if we
-+		 * can try to request less vectors, we don't
-+		 * know how to associate interrupt events to
-+		 *  vectors. Linux doesn't duplicate vectors
-+		 * in the MSIX table for this case.
-+		 */
-+		if (error) {
-+			printk(KERN_WARNING "bfad%d: "
-+			       "pci_enable_msix failed (%d), "
-+			       "use line based.\n",
-+				bfad->inst_no, error);
-+			goto line_based;
- 		}
- 
- 		/* Disable INTX in MSI-X mode */
--- 
-1.7.7.6
+Actually, I have no objections to these patches.
+Then, how about adding maintainer entry for pci-dra7xx.c
+to MAINTAINERS file? It would be good. :-)
+
+Best regards,
+Jingoo Han
+
+> 
+>  .../devicetree/bindings/pci/designware-pcie.txt    |    4 +
+>  Documentation/devicetree/bindings/pci/ti-pci.txt   |   59 +++
+>  drivers/pci/host/Kconfig                           |   10 +
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pci-dra7xx.c                      |  458 ++++++++++++++++++++
+>  drivers/pci/host/pcie-designware.c                 |   72 ++-
+>  drivers/pci/host/pcie-designware.h                 |    4 +
+>  7 files changed, 592 insertions(+), 16 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/pci/ti-pci.txt
+>  create mode 100644 drivers/pci/host/pci-dra7xx.c
+> 
+> --
+> 1.7.9.5
 
