@@ -1,62 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1blp0185.outbound.protection.outlook.com ([207.46.163.185]:14875
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933195AbaGPGzZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Jul 2014 02:55:25 -0400
-Date: Wed, 16 Jul 2014 14:55:06 +0800
-From: Shawn Guo <shawn.guo@freescale.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: Richard Zhu <r65037@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	"Fabio Estevam" <festevam@gmail.com>,
+Received: from mout.kundenserver.de ([212.227.17.10]:61807 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757246AbaGRTuU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jul 2014 15:50:20 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
 	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: The imx6q suspend/resume is broken on 3.16-rc due to PCIe
-Message-ID: <20140716065505.GB2612@dragon>
-References: <20140625062243.GD3242@dragon>
- <CAOMZO5BuOhWo7SCEPFmNRUQBi=5JhDrVv0yvBQM2d_jMyLkbyw@mail.gmail.com>
- <1403693452.4249.1.camel@weser.hi.pengutronix.de>
- <20140625125306.GB6917@dragon>
- <1403772229.4254.4.camel@weser.hi.pengutronix.de>
- <20140628143712.GA7869@dragon>
- <1404135864.4305.23.camel@weser.hi.pengutronix.de>
- <20140701065105.GE14471@dragon>
- <1404724251.4587.20.camel@weser.hi.pengutronix.de>
- <20140707135502.GR30239@dragon>
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v6 4/5] PCI: add PCI controller for keystone PCIe h/w
+Date: Fri, 18 Jul 2014 21:50:08 +0200
+Message-ID: <5467203.eMVRoNeSx1@wuerfel>
+In-Reply-To: <CAL_JsqKheoWrSGtxPO=AE8g9iOAqfwRa=81Ku=Cfx8_gpDysOg@mail.gmail.com>
+References: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com> <1405696469-7172-5-git-send-email-m-karicheri2@ti.com> <CAL_JsqKheoWrSGtxPO=AE8g9iOAqfwRa=81Ku=Cfx8_gpDysOg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20140707135502.GR30239@dragon>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 07, 2014 at 09:55:03PM +0800, Shawn Guo wrote:
-> On Mon, Jul 07, 2014 at 11:10:51AM +0200, Lucas Stach wrote:
-> > Hi Shawn,
-> > 
-> > Over the weekend I tried to reproduce your problem on a SabreSD board,
-> > but wasn't able to trigger the issue. 3.16-rc3 with PCIe active works
-> > just fine over a suspend and resume cycle for me.
+On Friday 18 July 2014 14:31:39 Rob Herring wrote:
+> > +
+> > + Example:
+> > +       pcie_msi_intc: msi-interrupt-controller {
+> > +                       interrupt-controller;
+> > +                       #interrupt-cells = <1>;
+> > +                       interrupt-parent = <&gic>;
+> > +                       interrupts = <GIC_SPI 30 IRQ_TYPE_EDGE_RISING>,
+> > +                                       <GIC_SPI 31 IRQ_TYPE_EDGE_RISING>,
+> > +                                       <GIC_SPI 32 IRQ_TYPE_EDGE_RISING>,
+> > +                                       <GIC_SPI 33 IRQ_TYPE_EDGE_RISING>,
+> > +                                       <GIC_SPI 34 IRQ_TYPE_EDGE_RISING>,
+> > +                                       <GIC_SPI 35 IRQ_TYPE_EDGE_RISING>,
+> > +                                       <GIC_SPI 36 IRQ_TYPE_EDGE_RISING>,
+> > +                                       <GIC_SPI 37 IRQ_TYPE_EDGE_RISING>;
+> > +       };
+> > +
+> > +pcie_intc: Interrupt controller device node for Legacy irq chip
+> > +       interrupt-cells: should be set to 1
+> > +       interrupt-parent: Parent interrupt controller phandle
+> > +       interrupts: GIC interrupt lines connected to PCI Legacy interrupt lines
+> > +
+> > + Example:
+> > +       pcie_intc: legacy-interrupt-controller {
+> > +               interrupt-controller;
+> > +               #interrupt-cells = <1>;
+> > +               interrupt-parent = <&gic>;
+> > +               interrupts = <GIC_SPI 26 IRQ_TYPE_EDGE_RISING>,
+> > +                       <GIC_SPI 27 IRQ_TYPE_EDGE_RISING>,
+> > +                       <GIC_SPI 28 IRQ_TYPE_EDGE_RISING>,
+> > +                       <GIC_SPI 29 IRQ_TYPE_EDGE_RISING>;
+> > +       };
 > 
-> That's strange.  In my setup, PCIe support is enabled in kernel and DT,
-> but I do not have a PCIe device connected to the board.
+> This seems wrong. Legacy interrupts should be described with
+> interrupt-map and then PCI child devices have a standard interrupt
+> specifier.
 > 
-> > 
-> > One possibly relevant difference is that I've booted with NFSroot, while
-> > it seems you are using a SATA connected device. Is this right?
+> I'm not sure about MSIs, but I would think they would have a standard
+> format too.
 > 
-> I have a SATA disk connected, but did boot with NFSroot.
-> 
-> > If so,
-> > can you test if it works if you boot from SDcard or the like? This might
-> > be relevant as PCIe and SATA share some clocks.
-> 
-> I tried to disable SATA support completely, but it doesn't help.
 
-Lucas, any news on this?  Or should we just try to use Richard's patch
-to solve the problem?
+IIRC, it's actually the correct way to do this here: the problem is that
+the PCI IRQs are not directly connected to the GIC, but instead there is
+a nested irqchip that has each PCI IRQ routed to it and that requires
+an extra EOI for each interrupt.
 
-Shawn
+The interrupt-map in the PCI host points to this special irqchip rather
+than to the GIC.
+
+	Arnd
