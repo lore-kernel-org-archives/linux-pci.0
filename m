@@ -1,79 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:55243 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751053AbaGaPVg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Jul 2014 11:21:36 -0400
-Date: Thu, 31 Jul 2014 17:21:33 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Received: from mail-by2lp0238.outbound.protection.outlook.com ([207.46.163.238]:25444
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1759303AbaGRCLX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Jul 2014 22:11:23 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Lucas Stach <l.stach@pengutronix.de>,
+	Shawn Guo <Shawn.Guo@freescale.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Sascha Hauer <kernel@pengutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	iommu <iommu@lists.linux-foundation.org>
-Subject: Re: [PATCH] x86, irq: Keep IRQ assignment for PCI devices during
- suspend/hibernation
-Message-ID: <20140731152132.GE4375@pd.tnic>
-References: <20140730175836.GC10213@pd.tnic>
- <1406766807-5745-1-git-send-email-jiang.liu@linux.intel.com>
- <20140731103941.GA4375@pd.tnic>
- <53DA55A0.6070005@linux.intel.com>
+	Shawn Guo <shawn.guo@linaro.org>,
+	Fabio Estevam <festevam@gmail.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: The imx6q suspend/resume is broken on 3.16-rc due to PCIe
+Date: Fri, 18 Jul 2014 02:11:19 +0000
+Message-ID: <247043c4c45c41bf9eaa09aaf91bcc46@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <20140625062243.GD3242@dragon>
+	 <CAOMZO5BuOhWo7SCEPFmNRUQBi=5JhDrVv0yvBQM2d_jMyLkbyw@mail.gmail.com>
+	 <1403693452.4249.1.camel@weser.hi.pengutronix.de>
+	 <20140625125306.GB6917@dragon>
+	 <1403772229.4254.4.camel@weser.hi.pengutronix.de>
+	 <20140628143712.GA7869@dragon>
+	 <1404135864.4305.23.camel@weser.hi.pengutronix.de>
+	 <20140701065105.GE14471@dragon>
+	 <1404724251.4587.20.camel@weser.hi.pengutronix.de>
+	 <20140707135502.GR30239@dragon> <20140716065505.GB2612@dragon>
+ <1405605306.12800.7.camel@weser.hi.pengutronix.de>
+In-Reply-To: <1405605306.12800.7.camel@weser.hi.pengutronix.de>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <53DA55A0.6070005@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On Thu, Jul 31, 2014 at 10:41:36PM +0800, Jiang Liu wrote:
-> 	Really appreciate your help. There are two issues left
-> according to the log messages.
-
-first of all:
-
-A: Because it messes up the order in which people normally read text.
-Q: Why is top-posting such a bad thing?
-A: Top-posting.
-Q: What is the most annoying thing in e-mail?
-
-So please refrain from top-posting on lkml.
-
-> 	The first issue is " WARNING: CPU: 2 PID: 3786 at
-> fs/proc/generic.c:521 remove_proc_entry+0x19c/0x1b0()".
-> It's caused by an issue in usb driver and a patch is ready to fix
-> this issue, please refer to https://lkml.org/lkml/2014/7/20/277.
-> This patch has been merged into Greg's usb repository, so it should
-> be merge into v3.17 too.
-
-I can apply this patch to test.
-
-> 	The second issue is "AMD-Vi: Event logged [IO_PAGE_FAULT
-> device=00:12.0 domain=0x0009 address=0x0000000000000000 flags=0x0000]".
-> I feel it's not caused by IRQ related changes, but may be caused
-> by IO page fault related work for AMD IOMMU. I need more time
-> to investigate this and also CC Joerg for help too.
-
-I don't think that's the issue - plain rc7 doesn't trigger the issue.
-Only if I merge tip/master in it happens. And there are no AMD iommu
-patches in tip/master since Joerg doesn't send stuff through tip
-anymore.
-
-> 	According to the log message, I feel my patch has fixed the
-> original issue caused by IRQ related changes. What's your thoughts?
-
-I still think the issue is in tip/master. I'm currently trying to
-reproduce on another box so that I can bisect it. (Bisecting on my
-workstation is always nasty :-\).
-
-Thanks.
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBMdWNhcyBTdGFjaCBbbWFpbHRv
+Omwuc3RhY2hAcGVuZ3V0cm9uaXguZGVdDQo+IFNlbnQ6IFRodXJzZGF5LCBKdWx5IDE3LCAyMDE0
+IDk6NTUgUE0NCj4gVG86IEd1byBTaGF3bi1SNjUwNzMNCj4gQ2M6IFpodSBSaWNoYXJkLVI2NTAz
+NzsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgU2FzY2hhIEhhdWVyOyBCam9ybiBIZWxnYWFz
+Ow0KPiBTaGF3biBHdW87IEZhYmlvIEVzdGV2YW07IGxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5m
+cmFkZWFkLm9yZw0KPiBTdWJqZWN0OiBSZTogVGhlIGlteDZxIHN1c3BlbmQvcmVzdW1lIGlzIGJy
+b2tlbiBvbiAzLjE2LXJjIGR1ZSB0byBQQ0llDQo+IA0KPiBIaSBTaGF3biwNCj4gDQo+IEFtIE1p
+dHR3b2NoLCBkZW4gMTYuMDcuMjAxNCwgMTQ6NTUgKzA4MDAgc2NocmllYiBTaGF3biBHdW86DQo+
+ID4gT24gTW9uLCBKdWwgMDcsIDIwMTQgYXQgMDk6NTU6MDNQTSArMDgwMCwgU2hhd24gR3VvIHdy
+b3RlOg0KPiA+ID4gT24gTW9uLCBKdWwgMDcsIDIwMTQgYXQgMTE6MTA6NTFBTSArMDIwMCwgTHVj
+YXMgU3RhY2ggd3JvdGU6DQo+ID4gPiA+IEhpIFNoYXduLA0KPiA+ID4gPg0KPiA+ID4gPiBPdmVy
+IHRoZSB3ZWVrZW5kIEkgdHJpZWQgdG8gcmVwcm9kdWNlIHlvdXIgcHJvYmxlbSBvbiBhIFNhYnJl
+U0QNCj4gPiA+ID4gYm9hcmQsIGJ1dCB3YXNuJ3QgYWJsZSB0byB0cmlnZ2VyIHRoZSBpc3N1ZS4g
+My4xNi1yYzMgd2l0aCBQQ0llDQo+ID4gPiA+IGFjdGl2ZSB3b3JrcyBqdXN0IGZpbmUgb3ZlciBh
+IHN1c3BlbmQgYW5kIHJlc3VtZSBjeWNsZSBmb3IgbWUuDQo+ID4gPg0KPiA+ID4gVGhhdCdzIHN0
+cmFuZ2UuICBJbiBteSBzZXR1cCwgUENJZSBzdXBwb3J0IGlzIGVuYWJsZWQgaW4ga2VybmVsIGFu
+ZA0KPiA+ID4gRFQsIGJ1dCBJIGRvIG5vdCBoYXZlIGEgUENJZSBkZXZpY2UgY29ubmVjdGVkIHRv
+IHRoZSBib2FyZC4NCj4gPiA+DQo+ID4gPiA+DQo+ID4gPiA+IE9uZSBwb3NzaWJseSByZWxldmFu
+dCBkaWZmZXJlbmNlIGlzIHRoYXQgSSd2ZSBib290ZWQgd2l0aCBORlNyb290LA0KPiA+ID4gPiB3
+aGlsZSBpdCBzZWVtcyB5b3UgYXJlIHVzaW5nIGEgU0FUQSBjb25uZWN0ZWQgZGV2aWNlLiBJcyB0
+aGlzIHJpZ2h0Pw0KPiA+ID4NCj4gPiA+IEkgaGF2ZSBhIFNBVEEgZGlzayBjb25uZWN0ZWQsIGJ1
+dCBkaWQgYm9vdCB3aXRoIE5GU3Jvb3QuDQo+ID4gPg0KPiA+ID4gPiBJZiBzbywNCj4gPiA+ID4g
+Y2FuIHlvdSB0ZXN0IGlmIGl0IHdvcmtzIGlmIHlvdSBib290IGZyb20gU0RjYXJkIG9yIHRoZSBs
+aWtlPyBUaGlzDQo+ID4gPiA+IG1pZ2h0IGJlIHJlbGV2YW50IGFzIFBDSWUgYW5kIFNBVEEgc2hh
+cmUgc29tZSBjbG9ja3MuDQo+ID4gPg0KPiA+ID4gSSB0cmllZCB0byBkaXNhYmxlIFNBVEEgc3Vw
+cG9ydCBjb21wbGV0ZWx5LCBidXQgaXQgZG9lc24ndCBoZWxwLg0KPiA+DQo+ID4gTHVjYXMsIGFu
+eSBuZXdzIG9uIHRoaXM/ICBPciBzaG91bGQgd2UganVzdCB0cnkgdG8gdXNlIFJpY2hhcmQncyBw
+YXRjaA0KPiA+IHRvIHNvbHZlIHRoZSBwcm9ibGVtPw0KPiANCj4gSSB3b3VsZCBsaWtlIHRvIHVu
+ZGVyc3RhbmQgdGhlIHByb2JsZW0gZmlyc3QgYmVmb3JlIHRocm93aW5nICJmaXhlcyIgYXQgdGhl
+DQo+IGlzc3VlLiBBcyB5b3Ugc2FpZCB0aGlzIGlzbid0IGEgcmVncmVzc2lvbiB3ZSBhcmUgaW4g
+bm8gaHVycnkgYW5kIHNob3VsZCB0cnkNCj4gdG8gYW5hbHl6ZSB0aGUgaXNzdWUgcHJvcGVybHku
+IEkganVzdCByZXRlc3RlZCBhbmQgSSdtIHN0aWxsIG5vdCBhYmxlIHRvDQo+IHJlcHJvZHVjZSB0
+aGUgaXNzdWUgb24gbXkgU2FicmVTRC4gTWF5YmUgdGhlcmUgYXJlIGJvYXJkIHJldmlzaW9uIHRo
+YXQgZXhoaWJpdA0KPiBkaWZmZXJlbnQgYmVoYXZpb3I/IE15IGJvYXJkIGhhcyB0d28gc3RpY2tz
+IG9uIHNheWluZyAiUmV2IEIzIiBhbmQgIlJldiBYMyIuDQo+IA0KPiBBcyB5b3UgY2FuIHNlZSBm
+cm9tIHRoZSBsb2cgc3VzcGVuZC9yZXN1bWUgaXMgd29ya2luZyBmaW5lIGZvciBtZSB3aXRoIGtl
+cm5lbA0KPiAzLjE2LXJjNSArIGlteF92Nl92N19kZWZjb25maWcuDQpbUmljaGFyZF0gQXMgSSBr
+bm93IHRoYXQgaW14NiBwY2llIGlzIG5vdCBlbmFibGVkIGluIGlteF92Nl92N19kZWZjb25maWcg
+aW4gZGVmYXVsdC4NCk1lbnUtY29uZmlnIGlzIHJlcXVpcmVkIGlmIHlvdSB3YW50IHRvIHRlc3Rz
+IHN5c3RlbSBzdXNwZW5kL3Jlc3VtZSB3aXRoIHBjaWUgYnVpbHQtaW4uDQpKdXN0IGRvdWJsZSBj
+b25maXJtLCBpcyB0aGUgcGNpZSBidWlsdC1pbiBhdCB5b3VyIHNpZGU/DQoNCj4gDQo+IHJvb3RA
+WFhYOn4gZWNobyBtZW0gPiAvc3lzL3Bvd2VyL3N0YXRlDQo+IFBNOiBTeW5jaW5nIGZpbGVzeXN0
+ZW1zIC4uLiBkb25lLg0KPiBGcmVlemluZyB1c2VyIHNwYWNlIHByb2Nlc3NlcyAuLi4gKGVsYXBz
+ZWQgMC4wMDQgc2Vjb25kcykgZG9uZS4NCj4gRnJlZXppbmcgcmVtYWluaW5nIGZyZWV6YWJsZSB0
+YXNrcyAuLi4gKGVsYXBzZWQgMC4wMDIgc2Vjb25kcykgZG9uZS4NCj4gU3VzcGVuZGluZyBjb25z
+b2xlKHMpICh1c2Ugbm9fY29uc29sZV9zdXNwZW5kIHRvIGRlYnVnKQ0KPiBQTTogc3VzcGVuZCBv
+ZiBkZXZpY2VzIGNvbXBsZXRlIGFmdGVyIDk1Ljg0NiBtc2Vjcw0KPiBQTTogc3VzcGVuZCBkZXZp
+Y2VzIHRvb2sgMC4xMDAgc2Vjb25kcw0KPiBQTTogbGF0ZSBzdXNwZW5kIG9mIGRldmljZXMgY29t
+cGxldGUgYWZ0ZXIgNS4zOTUgbXNlY3MNCj4gUE06IG5vaXJxIHN1c3BlbmQgb2YgZGV2aWNlcyBj
+b21wbGV0ZSBhZnRlciA0LjkxNCBtc2VjcyBEaXNhYmxpbmcgbm9uLWJvb3QNCj4gQ1BVcyAuLi4N
+Cj4gQ1BVMTogc2h1dGRvd24NCj4gQ1BVMjogc2h1dGRvd24NCj4gQ1BVMzogc2h1dGRvd24NCj4g
+RW5hYmxpbmcgbm9uLWJvb3QgQ1BVcyAuLi4NCj4gQ1BVMTogQm9vdGVkIHNlY29uZGFyeSBwcm9j
+ZXNzb3INCj4gQ1BVMSBpcyB1cA0KPiBDUFUyOiBCb290ZWQgc2Vjb25kYXJ5IHByb2Nlc3Nvcg0K
+PiBDUFUyIGlzIHVwDQo+IENQVTM6IEJvb3RlZCBzZWNvbmRhcnkgcHJvY2Vzc29yDQo+IENQVTMg
+aXMgdXANCj4gUE06IG5vaXJxIHJlc3VtZSBvZiBkZXZpY2VzIGNvbXBsZXRlIGFmdGVyIDE1NTYu
+Mzg1IG1zZWNzDQo+IFBNOiBlYXJseSByZXN1bWUgb2YgZGV2aWNlcyBjb21wbGV0ZSBhZnRlciAz
+LjEzNCBtc2Vjcw0KPiBQTTogcmVzdW1lIG9mIGRldmljZXMgY29tcGxldGUgYWZ0ZXIgMTUzLjU2
+OCBtc2Vjcw0KPiBQTTogcmVzdW1lIGRldmljZXMgdG9vayAwLjE2MCBzZWNvbmRzDQo+IFJlc3Rh
+cnRpbmcgdGFza3MgLi4uIGRvbmUuDQo+IGF0YTE6IFNBVEEgbGluayBkb3duIChTU3RhdHVzIDAg
+U0NvbnRyb2wgMzAwKSBmZWMgMjE4ODAwMC5ldGhlcm5ldCBldGgwOiBMaW5rDQo+IGlzIERvd24g
+ZmVjIDIxODgwMDAuZXRoZXJuZXQgZXRoMDogTGluayBpcyBVcCAtIDFHYnBzL0Z1bGwgLSBmbG93
+IGNvbnRyb2wgb2ZmDQo+IHJvb3RAWFhYOn4gZWNobyBtZW0gPiAvc3lzL3Bvd2VyL3N0YXRlDQo+
+IFBNOiBTeW5jaW5nIGZpbGVzeXN0ZW1zIC4uLiBkb25lLg0KPiBGcmVlemluZyB1c2VyIHNwYWNl
+IHByb2Nlc3NlcyAuLi4gKGVsYXBzZWQgMC4wMDIgc2Vjb25kcykgZG9uZS4NCj4gRnJlZXppbmcg
+cmVtYWluaW5nIGZyZWV6YWJsZSB0YXNrcyAuLi4gKGVsYXBzZWQgMC4wMDEgc2Vjb25kcykgZG9u
+ZS4NCj4gU3VzcGVuZGluZyBjb25zb2xlKHMpICh1c2Ugbm9fY29uc29sZV9zdXNwZW5kIHRvIGRl
+YnVnKQ0KPiBQTTogc3VzcGVuZCBvZiBkZXZpY2VzIGNvbXBsZXRlIGFmdGVyIDg3LjYzOCBtc2Vj
+cw0KPiBQTTogc3VzcGVuZCBkZXZpY2VzIHRvb2sgMC4wOTAgc2Vjb25kcw0KPiBQTTogbGF0ZSBz
+dXNwZW5kIG9mIGRldmljZXMgY29tcGxldGUgYWZ0ZXIgNC41MjggbXNlY3MNCj4gUE06IG5vaXJx
+IHN1c3BlbmQgb2YgZGV2aWNlcyBjb21wbGV0ZSBhZnRlciA1LjAzMSBtc2VjcyBEaXNhYmxpbmcg
+bm9uLWJvb3QNCj4gQ1BVcyAuLi4NCj4gQ1BVMTogc2h1dGRvd24NCj4gQ1BVMjogc2h1dGRvd24N
+Cj4gQ1BVMzogc2h1dGRvd24NCj4gRW5hYmxpbmcgbm9uLWJvb3QgQ1BVcyAuLi4NCj4gQ1BVMTog
+Qm9vdGVkIHNlY29uZGFyeSBwcm9jZXNzb3INCj4gQ1BVMSBpcyB1cA0KPiBDUFUyOiBCb290ZWQg
+c2Vjb25kYXJ5IHByb2Nlc3Nvcg0KPiBDUFUyIGlzIHVwDQo+IENQVTM6IEJvb3RlZCBzZWNvbmRh
+cnkgcHJvY2Vzc29yDQo+IENQVTMgaXMgdXANCj4gUE06IG5vaXJxIHJlc3VtZSBvZiBkZXZpY2Vz
+IGNvbXBsZXRlIGFmdGVyIDE0MjUuMzAyIG1zZWNzDQo+IFBNOiBlYXJseSByZXN1bWUgb2YgZGV2
+aWNlcyBjb21wbGV0ZSBhZnRlciAyLjczNiBtc2Vjcw0KPiBQTTogcmVzdW1lIG9mIGRldmljZXMg
+Y29tcGxldGUgYWZ0ZXIgMTU2LjAxMyBtc2Vjcw0KPiBQTTogcmVzdW1lIGRldmljZXMgdG9vayAw
+LjE2MCBzZWNvbmRzDQo+IFJlc3RhcnRpbmcgdGFza3MgLi4uIGRvbmUuDQo+IGF0YTE6IFNBVEEg
+bGluayBkb3duIChTU3RhdHVzIDAgU0NvbnRyb2wgMzAwKSBmZWMgMjE4ODAwMC5ldGhlcm5ldCBl
+dGgwOiBMaW5rDQo+IGlzIERvd24gZmVjIDIxODgwMDAuZXRoZXJuZXQgZXRoMDogTGluayBpcyBV
+cCAtIDFHYnBzL0Z1bGwgLSBmbG93IGNvbnRyb2wgb2ZmDQo+IHJvb3RAWFhYOn4NCj4gDQo+IC0t
+DQo+IFBlbmd1dHJvbml4IGUuSy4gICAgICAgICAgICAgfCBMdWNhcyBTdGFjaCAgICAgICAgICAg
+ICAgICAgfA0KPiBJbmR1c3RyaWFsIExpbnV4IFNvbHV0aW9ucyAgIHwgaHR0cDovL3d3dy5wZW5n
+dXRyb25peC5kZS8gIHwNCg0KDQpCZXN0IFJlZ2FyZHMNClJpY2hhcmQgWmh1DQoNCg==
