@@ -1,65 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:55636 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751151AbaGHVrK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 17:47:10 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Igor Bezukh <Igor@galilsoft.com>,
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:37918 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756217AbaGRJFZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jul 2014 05:05:25 -0400
+Date: Fri, 18 Jul 2014 10:04:40 +0100
+From: Mark Rutland <mark.rutland@arm.com>
+To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Cc: Jason Cooper <jason@lakedaemon.net>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Subject: Re: A question about PCI suspend-resume functionallity
-Date: Wed, 09 Jul 2014 00:05:14 +0200
-Message-ID: <4712771.pPjooVqFXc@vostro.rjw.lan>
-In-Reply-To: <CAErSpo5p6qEL3=tcWTYMCQCF08oanc3KTUAOdY9P6=5rxZYNZg@mail.gmail.com>
-References: <1404833913010.27399@galilsoft.com> <CAErSpo5p6qEL3=tcWTYMCQCF08oanc3KTUAOdY9P6=5rxZYNZg@mail.gmail.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH 0/4 V3] irqchip: gic: Introduce ARM GICv2m MSI(-X) support
+Message-ID: <20140718090439.GC25180@leverpostej>
+References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <20140717131854.GN13108@titan.lakedaemon.net>
+ <20140717135534.GM30313@leverpostej>
+ <53C7E23D.1050900@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53C7E23D.1050900@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, July 08, 2014 02:47:03 PM Bjorn Helgaas wrote:
-> [+cc linux-pm]
+On Thu, Jul 17, 2014 at 03:48:29PM +0100, Suravee Suthikulanit wrote:
+> On 7/17/2014 8:55 AM, Mark Rutland wrote:
+> > Hi Jason,
+> >
+> > On Thu, Jul 17, 2014 at 02:18:54PM +0100, Jason Cooper wrote:
+> >> On Wed, Jul 09, 2014 at 06:05:00PM -0500, suravee.suthikulpanit@amd.com wrote:
+> >>> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> >>>
+> >>> This patch set introduces support for MSI(-X) in GICv2m specification,
+> >>> which is implemented in some variation of GIC400.
+> >>>
+> >>> This depends on and has been tested with the V7 of"Add support for PCI in AArch64"
+> >>> (https://lkml.org/lkml/2014/3/14/320).
+> >>>
+> >>> Changes in V3:
+> >>>      * Rebase to git://git.infradead.org/users/jcooper/linux.git irqchip/gic
+> >>>        (per Jason Cooper request)
+> >>>      * Misc fix/clean up per Mark Rutland comments
+> >>>      * Minor Clean up in the driver/irqchip/irq-gic-v2m.c: alloc_msi_irqs()
+> >>>      * Patch 4 is new to the series:
+> >>>          * Add ARM64-specific version arch_setup_msi_irqs() to allow support
+> >>>            for Multiple MSI.
+> >>>          * Add support for Multiple MSI for GICv2m.
+> >>>
+> >>> Suravee Suthikulpanit (4):
+> >>>    irqchip: gic: Add binding probe for ARM GIC400
+> >>>    irqchip: gic: Restructuring ARM GIC code
+> >>>    irqchip: gic: Add supports for ARM GICv2m MSI(-X)
+> >>>    irqchip: gicv2m: Add support for multiple MSI for ARM64 GICv2m
+> >>
+> >> Ok, patch #1 applied to irqchip/urgent.  Patches 2 and 3 applied to
+> >> irqchip/gic with irqchip/urgent merged in.  To facilitate
+> >> testing/merging, I've prepared an unsigned tag for you on the
+> >> irqchip/gic branch:
+> >
+> > I'm a little concerned that this is all going through for v3.17 without
+> > a {Reviewed,Acked}-by from Marc or anyone working with GIC{,v2m}.
 > 
-> On Tue, Jul 8, 2014 at 9:39 AM, Igor Bezukh <Igor@galilsoft.com> wrote:
-> > Hi,
+> > While his comments on v1 have been addressed, he has not had a chance to
+> > acknowledge the solutions. I appreciate Marc's holiday is unfortunately
+> > timed.
 > >
-> >
-> > We are testing Intel Gigabit adapter driver (igb) under Fedora 20, kernel 3.14.4 for the following use-case:
-> >
-> > (*) Adapter is connected to the PCIE slot
-> > (*) We put the system under suspend by running pm-suspend from user-space
-> > (*) Remove the adapter from the PCIE slot
-> > (*) Wake up the system
-> >
-> > Currenlty, we got kernel panics and the system got stuck.
-> >
-> > My question is - does the PCI subsystem logic calls the driver remove function when driver resume function returns with error code?
-> >
-> > Or should I implement the call to igb_remove from igb_resume in the Intel driver?
+> > I also have an open concern with the binding with regard to the
+> > orthogonality of GICV GICH and the MSI registers.
 > 
-> I don't know what the best design is here.  I suspect that when we
-> resume, we should re-enumerate the PCI topology to see if anything
-> changed, but I don't think we do that.  I think there *is* something
-> like that for ACPI -- the BIOS can send a Bus Check notification on
-> resume if it knows something has changed.
+> The MSI part is normally enabled from the optional "msi-controller" 
+> keyword. It should not really matter which compatible ID it uses.
 
-In ACPI we wait for system resume to complete and handle the notifications
-then.  Calling .remove() callbacks from drivers during system resume doesn't
-really work, especially if they happen too early (e.g. during the "noirq resume"
-stage).
+I meant the fact that the MSI registers being described in reg[4],
+rather than how the driver determines MSI support.
 
-> But my guess is that if you
-> remove an adapter below a switch that is powered down because the
-> system is suspended, the interrupt we would normally get is lost
-> forever.
+> Ooops. I noticed that was accidentally dropped the check for 
+> "msi-controller" in the gicv2m_of_init() function.  I'll send a follow 
+> up patch to fix this.
+
+Sure. Whatever happens we should have both the msi-controller property
+and the registers for the MSI block before we enable MSI support.
+
+> > Suravee, do you need this urgently for v3.17? I was under the impression
+> > that we wouldn't have full PCIe support by then.
+> >
 > 
-> It doesn't seem like something that should be solved in the driver,
-> because you could just as easily have *added* a device while
-> suspended, and the core has to re-enumerate to find that.
+> PCI is the dependency for this patch to function.  So, it should be 
+> aligned with upstreaming of PCI patches.
 
-The driver's system resume callbacks need to be able to cope with
-missing devices.
+Ok, so it sounds like this can wait for the moment (but we should
+definitely ensure this gets some testing before then).
 
-Rafael
-
+Cheers,
+Mark
