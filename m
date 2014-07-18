@@ -1,68 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:11605 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751271AbaGHCLc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jul 2014 22:11:32 -0400
-Message-ID: <53BB5348.10701@huawei.com>
-Date: Tue, 8 Jul 2014 10:11:20 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:48744 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755044AbaGRURR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 18 Jul 2014 16:17:17 -0400
+Message-ID: <53C98079.4080707@ti.com>
+Date: Fri, 18 Jul 2014 16:15:53 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Wuyun <wuyun.wu@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>
-Subject: Re: [PATCH] PCI/MSI: Use irq_get_msi_desc() to simplify code
-References: <1404463406-3484-1-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1404463406-3484-1-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Rob Herring <robherring2@gmail.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v6 4/5] PCI: add PCI controller for keystone PCIe h/w
+References: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com> <1405696469-7172-5-git-send-email-m-karicheri2@ti.com> <CAL_JsqKheoWrSGtxPO=AE8g9iOAqfwRa=81Ku=Cfx8_gpDysOg@mail.gmail.com> <5467203.eMVRoNeSx1@wuerfel>
+In-Reply-To: <5467203.eMVRoNeSx1@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch has been integrate into "[PATCH v3 0/6] Cleanup for MSI" patchset.
+On 07/18/2014 03:50 PM, Arnd Bergmann wrote:
+> On Friday 18 July 2014 14:31:39 Rob Herring wrote:
+>>> +
+>>> + Example:
+>>> +       pcie_msi_intc: msi-interrupt-controller {
+>>> +                       interrupt-controller;
+>>> +                       #interrupt-cells =<1>;
+>>> +                       interrupt-parent =<&gic>;
+>>> +                       interrupts =<GIC_SPI 30 IRQ_TYPE_EDGE_RISING>,
+>>> +<GIC_SPI 31 IRQ_TYPE_EDGE_RISING>,
+>>> +<GIC_SPI 32 IRQ_TYPE_EDGE_RISING>,
+>>> +<GIC_SPI 33 IRQ_TYPE_EDGE_RISING>,
+>>> +<GIC_SPI 34 IRQ_TYPE_EDGE_RISING>,
+>>> +<GIC_SPI 35 IRQ_TYPE_EDGE_RISING>,
+>>> +<GIC_SPI 36 IRQ_TYPE_EDGE_RISING>,
+>>> +<GIC_SPI 37 IRQ_TYPE_EDGE_RISING>;
+>>> +       };
+>>> +
+>>> +pcie_intc: Interrupt controller device node for Legacy irq chip
+>>> +       interrupt-cells: should be set to 1
+>>> +       interrupt-parent: Parent interrupt controller phandle
+>>> +       interrupts: GIC interrupt lines connected to PCI Legacy interrupt lines
+>>> +
+>>> + Example:
+>>> +       pcie_intc: legacy-interrupt-controller {
+>>> +               interrupt-controller;
+>>> +               #interrupt-cells =<1>;
+>>> +               interrupt-parent =<&gic>;
+>>> +               interrupts =<GIC_SPI 26 IRQ_TYPE_EDGE_RISING>,
+>>> +<GIC_SPI 27 IRQ_TYPE_EDGE_RISING>,
+>>> +<GIC_SPI 28 IRQ_TYPE_EDGE_RISING>,
+>>> +<GIC_SPI 29 IRQ_TYPE_EDGE_RISING>;
+>>> +       };
+>> This seems wrong. Legacy interrupts should be described with
+>> interrupt-map and then PCI child devices have a standard interrupt
+>> specifier.
+>>
+>> I'm not sure about MSIs, but I would think they would have a standard
+>> format too.
+>>
+> IIRC, it's actually the correct way to do this here: the problem is that
+> the PCI IRQs are not directly connected to the GIC, but instead there is
+> a nested irqchip that has each PCI IRQ routed to it and that requires
+> an extra EOI for each interrupt.
+>
+> The interrupt-map in the PCI host points to this special irqchip rather
+> than to the GIC.
+Arnd,
 
-On 2014/7/4 16:43, Yijing Wang wrote:
-> Use irq_get_msi_desc() to get MSI irq related msi_desc
-> directly.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/msi.c |   12 +++++-------
->  1 files changed, 5 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 3bee1ba..f95af2b 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -487,7 +487,6 @@ EXPORT_SYMBOL_GPL(pci_restore_msi_state);
->  static ssize_t msi_mode_show(struct device *dev, struct device_attribute *attr,
->  			     char *buf)
->  {
-> -	struct pci_dev *pdev = to_pci_dev(dev);
->  	struct msi_desc *entry;
->  	unsigned long irq;
->  	int retval;
-> @@ -496,12 +495,11 @@ static ssize_t msi_mode_show(struct device *dev, struct device_attribute *attr,
->  	if (retval)
->  		return retval;
->  
-> -	list_for_each_entry(entry, &pdev->msi_list, list) {
-> -		if (entry->irq == irq) {
-> -			return sprintf(buf, "%s\n",
-> -				       entry->msi_attrib.is_msix ? "msix" : "msi");
-> -		}
-> -	}
-> +	entry = irq_get_msi_desc(irq);
-> +	if (entry)
-> +		return sprintf(buf, "%s\n",
-> +				entry->msi_attrib.is_msix ? "msix" : "msi");
-> +
->  	return -ENODEV;
->  }
->  
-> 
+Thanks. I agree with Arnd and believe there is no issue here
 
-
--- 
-Thanks!
-Yijing
+> 	Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
