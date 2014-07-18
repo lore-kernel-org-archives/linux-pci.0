@@ -1,60 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:43799 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750994AbaGQDG4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 23:06:56 -0400
-Received: by mail-ig0-f172.google.com with SMTP id h15so5265746igd.17
-        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 20:06:55 -0700 (PDT)
+Received: from szxga02-in.huawei.com ([119.145.14.65]:52250 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753872AbaGRCPI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jul 2014 22:15:08 -0400
+Message-ID: <53C8831C.9020806@huawei.com>
+Date: Fri, 18 Jul 2014 10:14:52 +0800
+From: Abel <wuyun.wu@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <53C73CC6.20803@linux.intel.com>
-References: <53C5F2C2.20707@linux.intel.com>
-	<CAErSpo6D3q0NoJhjF2kTZBVaQBb5Gz-bY-P_eR2EYzFvQ6yhPw@mail.gmail.com>
-	<CAE9FiQWsjXU0YBsgnSvNXzkPKDPph4RgYQcvmGGoL27TE7YrhA@mail.gmail.com>
-	<53C73CC6.20803@linux.intel.com>
-Date: Wed, 16 Jul 2014 20:06:55 -0700
-Message-ID: <CAE9FiQX3nTCXvwfUwz9vx4HmO_mdUaFg57qN_YR-cYN0qWpQpg@mail.gmail.com>
-Subject: Re: Need advices about PCI IRQ reference count tracking
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Yijing Wang <wangyijing@huawei.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3 1/6] PCI/MSI: MSI cleanup, msi_setup_entry()
+References: <1404785243-6040-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1404785243-6040-1-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 16, 2014 at 8:02 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->
->
-> On 2014/7/17 2:37, Yinghai Lu wrote:
->> On Wed, Jul 16, 2014 at 11:04 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> [+cc Yinghai]
->>>
->>> On Tue, Jul 15, 2014 at 9:34 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->>>> Hi Bjorn,
->>>>         When enabling ACPI based IOAPIC hotplug, we encountered an
->>>> issue with PCI IRQ reference count tracking and need your advices.
->>>>         In order to hot-remove an IOAPIC, we need to track and keep
->>>> balance of IOAPIC pin usage count. But acpi_pci_irq_enable() may
->>>> be called twice for a PCI device,
->>>> 1) pci_acpi_init() if pci_routeirq is true
->>>> 2) pci_enable_device()
->>>>
->>>> So in function acpi_pci_irq_enable(), we need a way to track whether
->>>> an IOAPIC IRQ has been assigned to the PCI device. Previously we check
->>>> "if (dev->irq > 0)" for that, but that's wrong because dev->irq may
->>>> be set to non-zero in pci_read_irq() if BIOS has already assigned
->>>> a legacy IRQ for the device. So is it OK to add a flag into pci_dev
->>>> to track this information?
->>
->> Why do you need to track it?
->>
->> When do you hot-remove ioapic with pci root bus, all the drivers for
->> devices on that pci root bus should be stopped at first, so no one
->> will use the ioapic before ioapic is being removed.
-> Hi Yinghai,
->         By tracking IOAPIC pin usage count, we could release the
-> assigned IRQ number when there are no device uses an IOAPIC pin anymore.
+Hi Yijing,
+On 2014/7/8 10:07, Yijing Wang wrote:
 
-Delay releasing IRQ number later when destroying irq domain?
+> Move MSI entry stuff to a new function
+> msi_setup_entry(), simplify msi_capability_init()
+> code like MSI-X do.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/msi.c |   51 +++++++++++++++++++++++++++++++++------------------
+>  1 files changed, 33 insertions(+), 18 deletions(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 50a7e4e..c306883 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -581,6 +581,38 @@ error_attrs:
+>  	return ret;
+>  }
+>  
+> +static struct msi_desc *msi_setup_entry(struct pci_dev *dev)
+> +{
+> +	u16 control;
+> +	struct msi_desc *entry;
+> +
+> +	/* MSI Entry Initialization */
+> +	entry = alloc_msi_entry(dev);
+> +	if (!entry)
+> +		return NULL;
+> +
+> +	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+> +
+> +	entry->msi_attrib.is_msix	= 0;
+> +	entry->msi_attrib.is_64		= !!(control & PCI_MSI_FLAGS_64BIT);
+> +	entry->msi_attrib.entry_nr	= 0;
+> +	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
+> +	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
+> +	entry->msi_attrib.pos		= dev->msi_cap;
+> +	entry->msi_attrib.multi_cap	= (control & PCI_MSI_FLAGS_QMASK) >> 1;
+> +
+> +	if (control & PCI_MSI_FLAGS_64BIT)
+> +		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
+> +	else
+> +		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_32;
+> +
+> +	/* Save the initial mask status */
+> +	if (entry->msi_attrib.maskbit)
+> +		pci_read_config_dword(dev, entry->mask_pos, &entry->masked);
 
-Yinghai
++ list_add_tail(&entry->list, &dev->msi_list);
+Just an advice. :)
+
+Thanks,
+Abel.
+
+> +
+> +	return entry;
+> +}
+> +
+>  /**
+>   * msi_capability_init - configure device's MSI capability structure
+>   * @dev: pointer to the pci_dev data structure of MSI device function
+> @@ -596,32 +628,15 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+>  {
+>  	struct msi_desc *entry;
+>  	int ret;
+> -	u16 control;
+>  	unsigned mask;
+>  
+>  	msi_set_enable(dev, 0);	/* Disable MSI during set up */
+>  
+> -	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+> -	/* MSI Entry Initialization */
+> -	entry = alloc_msi_entry(dev);
+> +	entry = msi_setup_entry(dev);
+>  	if (!entry)
+>  		return -ENOMEM;
+>  
+> -	entry->msi_attrib.is_msix	= 0;
+> -	entry->msi_attrib.is_64		= !!(control & PCI_MSI_FLAGS_64BIT);
+> -	entry->msi_attrib.entry_nr	= 0;
+> -	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
+> -	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
+> -	entry->msi_attrib.pos		= dev->msi_cap;
+> -	entry->msi_attrib.multi_cap	= (control & PCI_MSI_FLAGS_QMASK) >> 1;
+> -
+> -	if (control & PCI_MSI_FLAGS_64BIT)
+> -		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
+> -	else
+> -		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_32;
+>  	/* All MSIs are unmasked by default, Mask them all */
+> -	if (entry->msi_attrib.maskbit)
+> -		pci_read_config_dword(dev, entry->mask_pos, &entry->masked);
+>  	mask = msi_mask(entry->msi_attrib.multi_cap);
+>  	msi_mask_irq(entry, mask, mask);
+>  
+
+
+
