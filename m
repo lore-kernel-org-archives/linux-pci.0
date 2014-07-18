@@ -1,74 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:36563 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751219AbaG0DTS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 26 Jul 2014 23:19:18 -0400
-Date: Sat, 26 Jul 2014 20:18:52 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: wangyijing@huawei.com
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/3] PCI/MSI: Clean up the kobject in struct msi_desc
-Message-ID: <20140727031852.GB22368@kroah.com>
-References: <1406339316-20163-1-git-send-email-wangyijing@huawei.com>
- <1406339316-20163-2-git-send-email-wangyijing@huawei.com>
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:41890 "EHLO
+	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756835AbaGRSSB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jul 2014 14:18:01 -0400
+Received: from compute6.internal (compute6.nyi.mail.srv.osa [10.202.2.46])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 9CD9D224BC
+	for <linux-pci@vger.kernel.org>; Fri, 18 Jul 2014 14:18:00 -0400 (EDT)
+Date: Fri, 18 Jul 2014 11:17:59 -0700
+From: Greg KH <greg@kroah.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Benoit Taine <benoit.taine@lip6.fr>, linux-mips@linux-mips.org,
+	linux-fbdev@vger.kernel.org, linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net, linux-acenic@sunsite.dk,
+	linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org,
+	ath10k@lists.infradead.org, linux-hippi@sunsite.dk,
+	industrypack-devel@lists.sourceforge.net,
+	linux-mmc@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com,
+	virtualization@lists.linux-foundation.org,
+	ath9k-devel@venema.h4ckr.net, wil6210@qca.qualcomm.com,
+	linux-pcmcia@lists.infradead.org, linux-can@vger.kernel.org,
+	xen-devel@lists.xenproject.org,
+	platform-driver-x86@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	e1000-devel@lists.sourceforge.net, linux-crypto@vger.kernel.org,
+	devel@linuxdriverproject.org
+Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
+Message-ID: <20140718181759.GB2193@kroah.com>
+References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+ <20140718162213.GC31114@tuxdriver.com>
+ <20140718164340.GA24960@kroah.com>
+ <1405702472.30262.1.camel@dabdike.int.hansenpartnership.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1406339316-20163-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1405702472.30262.1.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jul 26, 2014 at 09:48:34AM +0800, wangyijing@huawei.com wrote:
-> From: Yijing Wang <wangyijing@huawei.com>
+On Fri, Jul 18, 2014 at 09:54:32AM -0700, James Bottomley wrote:
+> On Fri, 2014-07-18 at 09:43 -0700, Greg KH wrote:
+> > On Fri, Jul 18, 2014 at 12:22:13PM -0400, John W. Linville wrote:
+> > > On Fri, Jul 18, 2014 at 05:26:47PM +0200, Benoit Taine wrote:
+> > > > We should prefer `const struct pci_device_id` over
+> > > > `DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
+> > > > This issue was reported by checkpatch.
+> > > 
+> > > Honestly, I prefer the macro -- it stands-out more.  Maybe the style
+> > > guidelines and/or checkpatch should change instead?
+> > 
+> > The macro is horrid, no other bus has this type of thing just to save a
+> > few characters in typing
 > 
-> commit 1c51b50c299 exported MSI mode using attributes
-> instead of kobject. So clean up the kobject in struct
-> msi_desc.
+> OK, so this is the macro:
 > 
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/msi.c   |   11 -----------
->  include/linux/msi.h |    2 --
->  2 files changed, 0 insertions(+), 13 deletions(-)
+> #define DEFINE_PCI_DEVICE_TABLE(_table) \
+> 	const struct pci_device_id _table[]
 > 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 5a40516..e2aa74e 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -384,17 +384,6 @@ static void free_msi_irqs(struct pci_dev *dev)
->  				iounmap(entry->mask_base);
->  		}
->  
-> -		/*
-> -		 * Its possible that we get into this path
-> -		 * When populate_msi_sysfs fails, which means the entries
-> -		 * were not registered with sysfs.  In that case don't
-> -		 * unregister them.
-> -		 */
-> -		if (entry->kobj.parent) {
-> -			kobject_del(&entry->kobj);
-> -			kobject_put(&entry->kobj);
-> -		}
-> -
->  		list_del(&entry->list);
->  		kfree(entry);
->  	}
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index 8103f32..8892d41 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -47,8 +47,6 @@ struct msi_desc {
->  
->  	/* Last set MSI message */
->  	struct msi_msg msg;
-> -
-> -	struct kobject kobj;
->  };
->  
->  /*
-> -- 
-> 1.7.1
+> Could you explain what's so horrible?
+> 
+> The reason it's useful today is that people forget the const (and
+> sometimes the [] making it a true table instead of a pointer).  If you
+> use the DEFINE_PCI_DEVICE_TABLE macro, the compile breaks if you use it
+> wrongly (good) and you automatically get the correct annotations.
 
-Oops, missed that one, nice catch.
+We have almost 1000 more uses of the non-macro version than the "macro"
+version in the kernel today:
+$ git grep -w DEFINE_PCI_DEVICE_TABLE | wc -l
+262
+$ git grep "const struct pci_device_id" | wc -l
+1254
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+My big complaint is that we need to be consistant, either pick one or
+the other and stick to it.  As the macro is the least used, it's easiest
+to fix up, and it also is more consistant with all other kernel
+subsystems which do not have such a macro.
+
+As there is no need for the __init macro mess anymore, there's no real
+need for the DEFINE_PCI_DEVICE_TABLE macro either.  I think checkpatch
+will catch the use of non-const users for the id table already today, it
+catches lots of other uses like this already.
+
+> > , so why should PCI be "special" in this regard
+> > anymore?
+> 
+> I think the PCI usage dwarfs most other bus types now, so you could turn
+> the question around.  However, I don't think majority voting is a good
+> guide to best practise; lets debate the merits for their own sake.
+
+Not really "dwarf", USB is close with over 700 such structures:
+$ git grep "const struct usb_device_id" | wc -l
+725
+
+And i2c is almost just as big as PCI:
+$ git grep "const struct i2c_device_id" | wc -l
+1223
+
+So again, this macro is not consistent with the majority of PCI drivers,
+nor with any other type of "device id" declaration in the kernel, which
+is why I feel it should be removed.
+
+And finally, the PCI documentation itself says to not use this macro, so
+this isn't a "new" thing.  From Documentation/PCI/pci.txt:
+
+	The ID table is an array of struct pci_device_id entries ending with an
+	all-zero entry.  Definitions with static const are generally preferred.
+	Use of the deprecated macro DEFINE_PCI_DEVICE_TABLE should be avoided.
+
+That wording went into the file last December, when we last talked about
+this and everyone in that discussion agreed to remove the macro for the
+above reasons.
+
+Consistency matters.
+
+thanks,
+
+greg k-h
