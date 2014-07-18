@@ -1,70 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:55036 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751749AbaGCX5J (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 19:57:09 -0400
-Received: by mail-ie0-f169.google.com with SMTP id rl12so1024605iec.28
-        for <linux-pci@vger.kernel.org>; Thu, 03 Jul 2014 16:57:09 -0700 (PDT)
-Date: Thu, 3 Jul 2014 17:57:06 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Gerald Schaefer <gerald.schaefer@de.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	linux-s390@vger.kernel.org, linux-pci@vger.kernel.org,
-	Wuyun <wuyun.wu@huawei.com>, Xinwei Hu <huxinwei@huawei.com>
-Subject: Re: [PATCH 5/5] s390/MSI: Fix msi mask issue
-Message-ID: <20140703235706.GC25980@google.com>
-References: <1403166674-6836-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1403166674-6836-1-git-send-email-wangyijing@huawei.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46140 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755885AbaGRQyf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jul 2014 12:54:35 -0400
+Message-ID: <1405702472.30262.1.camel@dabdike.int.hansenpartnership.com>
+Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Greg KH <greg@kroah.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Benoit Taine <benoit.taine@lip6.fr>, linux-mips@linux-mips.org,
+	linux-fbdev@vger.kernel.org, linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net, linux-acenic@sunsite.dk,
+	linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org,
+	ath10k@lists.infradead.org, linux-hippi@sunsite.dk,
+	industrypack-devel@lists.sourceforge.net,
+	linux-mmc@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com,
+	virtualization@lists.linux-foundation.org,
+	ath9k-devel@venema.h4ckr.net, wil6210@qca.qualcomm.com,
+	linux-pcmcia@lists.infradead.org, linux-can@vger.kernel.org,
+	xen-devel@lists.xenproject.org,
+	platform-driver-x86@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	e1000-devel@lists.sourceforge.net, linux-crypto@vger.kernel.org,
+	devel@linuxdriverproject.org
+Date: Fri, 18 Jul 2014 09:54:32 -0700
+In-Reply-To: <20140718164340.GA24960@kroah.com>
+References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+	 <20140718162213.GC31114@tuxdriver.com> <20140718164340.GA24960@kroah.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 19, 2014 at 04:31:14PM +0800, Yijing Wang wrote:
-> Maskbit in msi_attrib indicates MSI whether
-> support mask-pending bit. It is read only,
-> should save mask state in masked.
+On Fri, 2014-07-18 at 09:43 -0700, Greg KH wrote:
+> On Fri, Jul 18, 2014 at 12:22:13PM -0400, John W. Linville wrote:
+> > On Fri, Jul 18, 2014 at 05:26:47PM +0200, Benoit Taine wrote:
+> > > We should prefer `const struct pci_device_id` over
+> > > `DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
+> > > This issue was reported by checkpatch.
+> > 
+> > Honestly, I prefer the macro -- it stands-out more.  Maybe the style
+> > guidelines and/or checkpatch should change instead?
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  arch/s390/pci/pci.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-> index bdf0257..4651d6b 100644
-> --- a/arch/s390/pci/pci.c
-> +++ b/arch/s390/pci/pci.c
-> @@ -263,7 +263,7 @@ static int zpci_msi_set_mask_bits(struct msi_desc *msi, u32 mask, u32 flag)
->  	} else
->  		return 0;
->  
-> -	msi->msi_attrib.maskbit = !!flag;
-> +	msi->masked = !!flag;
+> The macro is horrid, no other bus has this type of thing just to save a
+> few characters in typing
 
-This doesn't look right.  For MSI-X, you just overwrote the previous update
-of msi->masked:
+OK, so this is the macro:
 
-    if (msi->msi_attrib.is_msix) {
-	...
-	msi->masked = readl(msi->mask_base + offset);
+#define DEFINE_PCI_DEVICE_TABLE(_table) \
+	const struct pci_device_id _table[]
 
-Maybe the update values end up being the same, but why do it twice?
+Could you explain what's so horrible?
 
-Also, the MSI mask bits are 32-bit field that can individually mask any
-subset of the 32 possible MSI vectors, and you collapsed this down to a
-single bit, so msi->masked no longer contains that information.
+The reason it's useful today is that people forget the const (and
+sometimes the [] making it a true table instead of a pointer).  If you
+use the DEFINE_PCI_DEVICE_TABLE macro, the compile breaks if you use it
+wrongly (good) and you automatically get the correct annotations.
 
-Maybe none of this matters because all the zpci_msi_set_mask_bits() uses
-seem to be for a single bit, but the name says "mask_*bits*" and the
-msi->masked field is generic and covers multiple MSI vectors in general.
+> , so why should PCI be "special" in this regard
+> anymore?
 
->  	return 1;
->  }
->  
-> -- 
-> 1.7.1
-> 
-> 
+I think the PCI usage dwarfs most other bus types now, so you could turn
+the question around.  However, I don't think majority voting is a good
+guide to best practise; lets debate the merits for their own sake.
+
+James
+
+
