@@ -1,119 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f48.google.com ([209.85.219.48]:36305 "EHLO
-	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752655AbaGNFBy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jul 2014 01:01:54 -0400
-Received: by mail-oa0-f48.google.com with SMTP id m1so3640311oag.21
-        for <linux-pci@vger.kernel.org>; Sun, 13 Jul 2014 22:01:53 -0700 (PDT)
+Received: from mail-out.m-online.net ([212.18.0.9]:39698 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756032AbaGRUqZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jul 2014 16:46:25 -0400
+From: Marek Vasut <marex@denx.de>
+To: Shawn Guo <shawn.guo@freescale.com>
+Subject: Re: [RFC] PCI: pci-imx6: Add delay to workaround kernel hang
+Date: Fri, 18 Jul 2014 22:46:20 +0200
+Cc: "Uwe =?iso-8859-1?q?Kleine-K=F6nig?="
+	<u.kleine-koenig@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>, bhelgaas@google.com,
+	r65037@freescale.com, d.mueller@elsoft.ch, kernel@pengutronix.de,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	tharvey@gateworks.com, Fabio Estevam <fabio.estevam@freescale.com>
+References: <1403637507-9424-1-git-send-email-festevam@gmail.com> <201407171023.10908.marex@denx.de> <20140717152707.GA8537@dragon>
+In-Reply-To: <20140717152707.GA8537@dragon>
 MIME-Version: 1.0
-In-Reply-To: <20140710213937.GB15190@google.com>
-References: <cover.1404976058.git.viresh.kumar@linaro.org>
-	<9430e4b284928e4919297de5602e803d03f82d7b.1404976058.git.viresh.kumar@linaro.org>
-	<20140710213937.GB15190@google.com>
-Date: Mon, 14 Jul 2014 10:31:53 +0530
-Message-ID: <CAKohpokzzaTRJfyU2viB3cr6SJqeMSNEffXrN2VLY_n+umt9TQ@mail.gmail.com>
-Subject: Re: [PATCH V9 1/7] pcie: Add designware wrapper driver for SPEAr13xx
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@linaro.org>, "olof@lixom.net" <olof@lixom.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	spear-devel <spear-devel@list.st.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Mark Nicholson <mark@nicholnet.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Mohit Kumar <mohit.kumar@st.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201407182246.20911.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11 July 2014 03:09, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> I guess I'm obsessive, but I think it's nice when people run
-> "git log --oneline" on the file or directory they're changing,
-> and then follow the existing style.
->
-> In this case, that would lead to a subject line like:
->
->     PCI: spear: Add PCIe driver for ST Microelectronics SPEAr13xx
->
+On Thursday, July 17, 2014 at 05:27:09 PM, Shawn Guo wrote:
+> On Thu, Jul 17, 2014 at 10:23:10AM +0200, Marek Vasut wrote:
+> > On Thursday, July 17, 2014 at 08:51:48 AM, Uwe Kleine-König wrote:
+> > > Hello,
+> > > 
+> > > On Tue, Jun 24, 2014 at 04:18:27PM -0300, Fabio Estevam wrote:
+> > > > From: Fabio Estevam <fabio.estevam@freescale.com>
+> > > > 
+> > > > When the mx6 PCI conctroller is initialized in the bootloader we see
+> > > > a kernel hang inside imx6_add_pcie_port().
+> > > > 
+> > > > Adding a 30ms delay allows the kernel to boot.
+> > > 
+> > > Just my thought on how to debug that: I'd try to bisect the pci init
+> > > routine in the boot loader. I.e. first only do the first half of the
+> > > initialisation in U-Boot. Depending on Linux being able to boot or not
+> > > initialize more or less on the next run.
+> > > 
+> > > Maybe there is a single register write that makes Linux fail?!
+> > 
+> > I am still hell-bent on thinking that the missing PCIe block reset is
+> > what makes the Linux fail. Missing block reset is always a problem.
+> 
+> Indeed.  We're missing a hardware reset for PCIe on i.MX6Q and i.MX6DL.
+> Such reset is available on i.MX6SX, so there is no this problem for
+> i.MX6SX PCIe.
+> 
+> > Or do we now have a
+> > mean to reset the PCIe block and it's PHY from software?
+> 
+> Richard is trying to find a SW workaround for it, but we're not really
+> sure if it's possible.
 
->> diff --git a/MAINTAINERS b/MAINTAINERS
->> index 702ca10..443dd05 100644
->> --- a/MAINTAINERS
->> +++ b/MAINTAINERS
->> @@ -6820,6 +6820,12 @@ S:     Maintained
->>  F:   Documentation/devicetree/bindings/pci/host-generic-pci.txt
->>  F:   drivers/pci/host/pci-host-generic.c
->>
->> +PCIE DRIVER FOR ST SPEAR13XX
->> +M:   Mohit Kumar <mohit.kumar@st.com>
->> +L:   linux-pci@vger.kernel.org
->> +S:   Maintained
->> +F:   drivers/pci/host/pcie-spear13xx.c
->
-> Wildcards work here, so you could follow the lead of IMX6, MVEBU, RCAR,
-> and DESIGNWARE and use:
->
->     F:  drivers/pci/host/*spear*
->
->> --- /dev/null
->> +++ b/drivers/pci/host/pcie-spear13xx.c
->> ...
->> +#define PCI_CAP_ID_EXP_OFFSET                        0x70
->
-> A nit, but I'd use a name like EXP_CAP_ID_OFFSET to make it
-> more clear that this is specific to SPEAr, not something from
-> the PCI specs.
+I hate to ask this, but does that mean all but MX6SLX are irrepairably broken 
+and will never have a reliable PCIe implementation ever?
 
-Hi Bjorn,
-
-So this is how the diff looks like over this patch:
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 443dd05..766948e 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6824,7 +6824,7 @@ PCIE DRIVER FOR ST SPEAR13XX
- M:     Mohit Kumar <mohit.kumar@st.com>
- L:     linux-pci@vger.kernel.org
- S:     Maintained
--F:     drivers/pci/host/pcie-spear13xx.c
-+F:     drivers/pci/host/*spear*
-
- PCMCIA SUBSYSTEM
- P:     Linux PCMCIA Team
-diff --git a/drivers/pci/host/pcie-spear13xx.c
-b/drivers/pci/host/pcie-spear13xx.c
-index a6fc332..99738e4 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -139,7 +139,7 @@ struct pcie_app_reg {
- #define VEN_MSI_TC_MASK                ((u32)0x7 << VEN_MSI_TC_ID)
- #define VEN_MSI_VECTOR_MASK    ((u32)0x1F << VEN_MSI_VECTOR_ID)
-
--#define PCI_CAP_ID_EXP_OFFSET                  0x70
-+#define EXP_CAP_ID_OFFSET                      0x70
-
- #define to_spear13xx_pcie(x)   container_of(x, struct spear13xx_pcie, pp)
-
-@@ -149,7 +149,7 @@ static int spear13xx_pcie_establish_link(struct
-pcie_port *pp)
-        int count = 0;
-        struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
-        struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
--       u32 exp_cap_off = PCI_CAP_ID_EXP_OFFSET;
-+       u32 exp_cap_off = EXP_CAP_ID_OFFSET;
-
-        if (dw_pcie_link_up(pp)) {
-                dev_err(pp->dev, "link already up\n");
-
-
-
-And the subject looks like this now:
-PCI: spear: Add PCIe driver for ST Microelectronics SPEAr13xx
-
-I may skip sending a V10 for this and directly send a pull request as
-there aren't any significant changes suggested in V9.
-
-Thanks.
+Best regards,
+Marek Vasut
