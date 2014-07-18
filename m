@@ -1,129 +1,184 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:48014 "EHLO comal.ext.ti.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:51674 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753057AbaGKIdZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Jul 2014 04:33:25 -0400
-Message-ID: <53BFA120.2070005@ti.com>
-Date: Fri, 11 Jul 2014 14:02:32 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
-MIME-Version: 1.0
-To: Viresh Kumar <viresh.kumar@linaro.org>
-CC: Arnd Bergmann <arnd@linaro.org>, "olof@lixom.net" <olof@lixom.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	spear-devel <spear-devel@list.st.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	id S965092AbaGRPQA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 18 Jul 2014 11:16:00 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Nicholson <mark@nicholnet.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush Anand <pratyush.anand@st.com>
-Subject: Re: [PATCH V9 2/7] phy: Add drivers for PCIe and SATA phy on SPEAr13xx
-References: <cover.1404976058.git.viresh.kumar@linaro.org>	<d1ef8db8704d09ba4f276c954dc22b555998f957.1404976058.git.viresh.kumar@linaro.org>	<53BE926A.2070005@ti.com> <CAKohpokNijH37NAmuh5cYEZxYFJE-COKwVNP3RNHSEoS03YYAA@mail.gmail.com>
-In-Reply-To: <CAKohpokNijH37NAmuh5cYEZxYFJE-COKwVNP3RNHSEoS03YYAA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH v6 3/5] PCI: designware: enhance dw_pcie_host_init() to support v3.65 DW hardware
+Date: Fri, 18 Jul 2014 11:14:27 -0400
+Message-ID: <1405696469-7172-4-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com>
+References: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+keystone PCI controller is based on v3.65 designware hardware. This
+version differs from newer versions of the hardware in few functional
+areas discussed below that makes it necessary to change dw_pcie_host_init()
+to support v3.65 based PCI controller.
 
+ 1. No support for ATU port. So any ATU specific resource handling code
+    is to be bypassed for v3.65 h/w.
+ 2. MSI controller uses Application space to implement MSI and 32 MSI
+    interrupts are multiplexed over 8 IRQs to the host. Hence the code
+    to process MSI IRQ needs to be different. This patch allows platform
+    driver to provide its own irq_domain_ops ptr to irq_domain_add_linear()
+    through an API callback from the designware core driver.
+ 3. MSI interrupt generation requires EP to write to the RC's application
+    register. So enhance the driver to allow setup of inbound access to
+    MSI irq register as a post scan bus API callback.
 
-On Thursday 10 July 2014 07:00 PM, Viresh Kumar wrote:
-> On 10 July 2014 18:47, Kishon Vijay Abraham I <kishon@ti.com> wrote:
->> On Thursday 10 July 2014 12:56 PM, Viresh Kumar wrote:
->>> From: Pratyush Anand <pratyush.anand@st.com>
->>>
->>> ARM based ST Microelectronics's SPEAr1310/40 platforms uses ST's phy (known as
->>> 'miphy') for PCIe and SATA. This patch adds drivers for these miphys.
->>>
->>> This also adds proper bindings for miphys.
->>>
->>> Acked-by: Arnd Bergmann <arnd@arndb.de>
->>> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
->>> Tested-by: Mohit Kumar <mohit.kumar@st.com>
->>> Cc: Kishon Vijay Abraham I <kishon@ti.com>
->>> [viresh: fixed logs/cclist/checkpatch warnings, broken into smaller patches]
->>> Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
->>> ---
->>>  .../devicetree/bindings/phy/st-spear1310-miphy.txt |  12 +
->>>  .../devicetree/bindings/phy/st-spear1340-miphy.txt |  11 +
->>>  drivers/phy/Kconfig                                |  12 +
->>>  drivers/phy/Makefile                               |   2 +
->>>  drivers/phy/phy-spear1310-miphy.c                  | 274 +++++++++++++++++++
->>>  drivers/phy/phy-spear1340-miphy.c                  | 302 +++++++++++++++++++++
->>
->> Please send separate patche for each driver.
-> 
-> These were both around SPEAr and were on the same lines.
-> So sending these in a single patch shouldn't be a big issue I believe.
-> 
-> In case another version is required, I may do it.
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Reviewed-by: Pratyush Anand <pratyush.anand@st.com>
+Acked-by: Mohit KUMAR <mohit.kumar@st.com>
 
-yes please.
+CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+CC: Russell King <linux@arm.linux.org.uk>
+CC: Grant Likely <grant.likely@linaro.org>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Jingoo Han <jg1.han@samsung.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Richard Zhu <r65037@freescale.com>
+CC: Kishon Vijay Abraham I <kishon@ti.com>
+CC: Marek Vasut <marex@denx.de>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Pawel Moll <pawel.moll@arm.com>
+CC: Mark Rutland <mark.rutland@arm.com>
+CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
+CC: Kumar Gala <galak@codeaurora.org>
+CC: Randy Dunlap <rdunlap@infradead.org>
+CC: Grant Likely <grant.likely@linaro.org>
 
--Kishon
-> 
->>> diff --git a/Documentation/devicetree/bindings/phy/st-spear1310-miphy.txt b/Documentation/devicetree/bindings/phy/st-spear1310-miphy.txt
->>> new file mode 100644
->>> index 0000000..b9b281a
->>> --- /dev/null
->>> +++ b/Documentation/devicetree/bindings/phy/st-spear1310-miphy.txt
->>
->> We generally create a single document for a SoC vendor. So just use st-phy.txt.
-> 
-> Probably yes.
-> 
->> <snip>
-> 
-> Please keep line containing file names while removing stuff, makes it easy
-> to locate code.
-> 
->>> +
->>> +static int spear1340_miphy_sata_init(struct spear1340_miphy_priv *priv)
->>> +{
->>> +     regmap_update_bits(priv->misc, SPEAR1340_PCIE_SATA_CFG,
->>> +                        SPEAR1340_PCIE_SATA_CFG_MASK,
->>> +                        SPEAR1340_SATA_CFG_VAL);
->>> +     regmap_update_bits(priv->misc, SPEAR1340_PCIE_MIPHY_CFG,
->>> +                        SPEAR1340_PCIE_MIPHY_CFG_MASK,
->>> +                        SPEAR1340_PCIE_SATA_MIPHY_CFG_SATA_25M_CRYSTAL_CLK);
->>> +     /* Switch on sata power domain */
->>> +     regmap_update_bits(priv->misc, SPEAR1340_PCM_CFG,
->>> +                        SPEAR1340_PCM_CFG_SATA_POWER_EN,
->>> +                        SPEAR1340_PCM_CFG_SATA_POWER_EN);
->>> +     msleep(20);
->>> +     /* Disable PCIE SATA Controller reset */
->>> +     regmap_update_bits(priv->misc, SPEAR1340_PERIP1_SW_RST,
->>> +                        SPEAR1340_PERIP1_SW_RSATA, 0);
->>> +     msleep(20);
->>
->> Please add a comment for all delays added.
-> 
-> @Pratyush/Mohit: please let me know what to add here.
-> 
->>> +#ifdef CONFIG_PM_SLEEP
->>> +static int spear1340_miphy_suspend(struct device *dev)
->>> +{
->>> +     struct spear1340_miphy_priv *priv = dev_get_drvdata(dev);
->>> +     int ret = 0;
->>> +
->>> +     if (priv->mode == SATA)
->>> +             ret = spear1340_miphy_sata_exit(priv);
->>
->> Shouldn't this be spear1340_miphy_init()?
->>> +
->>> +     return ret;
->>> +}
->>> +
->>> +static int spear1340_miphy_resume(struct device *dev)
->>> +{
->>> +     struct spear1340_miphy_priv *priv = dev_get_drvdata(dev);
->>> +     int ret = 0;
->>> +
->>> +     if (priv->mode == SATA)
->>> +             ret = spear1340_miphy_sata_init(priv);
->>
->> And here spear1340_miphy_exit()? Why only for sata phys?
-> 
-> @Mohit/Pratyush ??
-> 
-> Thanks Kishon for another round of review :)
-> 
+---
+ drivers/pci/host/pcie-designware.c |   54 +++++++++++++++++++++++-------------
+ drivers/pci/host/pcie-designware.h |    2 ++
+ 2 files changed, 36 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 905941c..35bb4af 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -420,8 +420,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	struct device_node *np = pp->dev->of_node;
+ 	struct of_pci_range range;
+ 	struct of_pci_range_parser parser;
++	int i, ret;
+ 	u32 val;
+-	int i;
+ 
+ 	if (of_pci_range_parser_init(&parser, np)) {
+ 		dev_err(pp->dev, "missing ranges property\n");
+@@ -467,21 +467,26 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 		}
+ 	}
+ 
+-	pp->cfg0_base = pp->cfg.start;
+-	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+ 	pp->mem_base = pp->mem.start;
+ 
+-	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+-					pp->config.cfg0_size);
+ 	if (!pp->va_cfg0_base) {
+-		dev_err(pp->dev, "error with ioremap in function\n");
+-		return -ENOMEM;
++		pp->cfg0_base = pp->cfg.start;
++		pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
++						pp->config.cfg0_size);
++		if (!pp->va_cfg0_base) {
++			dev_err(pp->dev, "error with ioremap in function\n");
++			return -ENOMEM;
++		}
+ 	}
+-	pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
+-					pp->config.cfg1_size);
++
+ 	if (!pp->va_cfg1_base) {
+-		dev_err(pp->dev, "error with ioremap\n");
+-		return -ENOMEM;
++		pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
++		pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
++						pp->config.cfg1_size);
++		if (!pp->va_cfg1_base) {
++			dev_err(pp->dev, "error with ioremap\n");
++			return -ENOMEM;
++		}
+ 	}
+ 
+ 	if (of_property_read_u32(np, "num-lanes", &pp->lanes)) {
+@@ -490,16 +495,22 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	}
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-		pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
+-					MAX_MSI_IRQS, &msi_domain_ops,
+-					&dw_pcie_msi_chip);
+-		if (!pp->irq_domain) {
+-			dev_err(pp->dev, "irq domain init failed\n");
+-			return -ENXIO;
+-		}
++		if (!pp->ops->msi_host_init) {
++			pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
++						MAX_MSI_IRQS, &msi_domain_ops,
++						&dw_pcie_msi_chip);
++			if (!pp->irq_domain) {
++				dev_err(pp->dev, "irq domain init failed\n");
++				return -ENXIO;
++			}
+ 
+-		for (i = 0; i < MAX_MSI_IRQS; i++)
+-			irq_create_mapping(pp->irq_domain, i);
++			for (i = 0; i < MAX_MSI_IRQS; i++)
++				irq_create_mapping(pp->irq_domain, i);
++		} else {
++			ret = pp->ops->msi_host_init(pp, &dw_pcie_msi_chip);
++			if (ret < 0)
++				return ret;
++		}
+ 	}
+ 
+ 	if (pp->ops->host_init)
+@@ -759,6 +770,9 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 		BUG();
+ 	}
+ 
++	if (bus && pp->ops->scan_bus)
++		pp->ops->scan_bus(pp);
++
+ 	return bus;
+ }
+ 
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 387f69e..080c649 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -70,6 +70,8 @@ struct pcie_host_ops {
+ 	void (*msi_set_irq)(struct pcie_port *pp, int irq);
+ 	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
+ 	u32 (*get_msi_data)(struct pcie_port *pp);
++	void (*scan_bus)(struct pcie_port *pp);
++	int (*msi_host_init)(struct pcie_port *pp, struct msi_chip *chip);
+ };
+ 
+ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+-- 
+1.7.9.5
+
