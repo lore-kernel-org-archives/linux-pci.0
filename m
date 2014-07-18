@@ -1,63 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:63780 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753322AbaGHMNV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 08:13:21 -0400
-Date: Tue, 8 Jul 2014 08:13:01 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	rmk+kernel@arm.linux.org.uk, Mark Brown <broonie@kernel.org>,
-	alsa-devel@alsa-project.org,
-	Daniel Lezcano <daniel.lezcano@linaro.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
-	Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org,
-	Zhang Rui <rui.zhang@intel.com>, Bryan Wu <cooloney@gmail.com>,
-	Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Alessandro Zummo <a.zummo@towertech.it>,
-	rtc-linux@googlegroups.com, Wim Van Sebroeck <wim@iguana.be>,
-	linux-watchdog@vger.kernel.org
-Subject: Re: [PATCH 00/13] Remove mach-kirkwood and mach-dove
-Message-ID: <20140708121301.GU23978@titan.lakedaemon.net>
-References: <1404075603-31838-1-git-send-email-andrew@lunn.ch>
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:50774 "EHLO
+	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756865AbaGRQoH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jul 2014 12:44:07 -0400
+Date: Fri, 18 Jul 2014 09:43:40 -0700
+From: Greg KH <greg@kroah.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Benoit Taine <benoit.taine@lip6.fr>, linux-mips@linux-mips.org,
+	linux-fbdev@vger.kernel.org, linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net, linux-acenic@sunsite.dk,
+	linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org,
+	ath10k@lists.infradead.org, linux-hippi@sunsite.dk,
+	industrypack-devel@lists.sourceforge.net,
+	linux-mmc@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com,
+	virtualization@lists.linux-foundation.org,
+	ath9k-devel@venema.h4ckr.net, wil6210@qca.qualcomm.com,
+	linux-pcmcia@lists.infradead.org, linux-can@vger.kernel.org,
+	xen-devel@lists.xenproject.org,
+	platform-driver-x86@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	e1000-devel@lists.sourceforge.net, linux-crypto@vger.kernel.org,
+	devel@linuxdriverproject.org
+Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
+Message-ID: <20140718164340.GA24960@kroah.com>
+References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+ <20140718162213.GC31114@tuxdriver.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1404075603-31838-1-git-send-email-andrew@lunn.ch>
+In-Reply-To: <20140718162213.GC31114@tuxdriver.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Andrew,
-
-On Sun, Jun 29, 2014 at 10:59:47PM +0200, Andrew Lunn wrote:
-> This patchset removes arch/arm/mach-kirkwood and arch/arm/mach-dove.
-> These SoCs are now supported in arch/arm/mach-mvebu using device tree.
+On Fri, Jul 18, 2014 at 12:22:13PM -0400, John W. Linville wrote:
+> On Fri, Jul 18, 2014 at 05:26:47PM +0200, Benoit Taine wrote:
+> > We should prefer `const struct pci_device_id` over
+> > `DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
+> > This issue was reported by checkpatch.
 > 
-> Change the dependencies for a number of drivers, either to use
-> ARCH_MVEBU where the drivers are generic, or MACH_KIRKWOOD and
-> MACH_DOVE where the drivers are specific to a SoC.
-> 
-> 
-> Andrew Lunn (13):
->   ARM: Kirkwood: Remove mach-kirkwood
->   ARM: Dove: Remove mach-dove
->   sound: ASoC: kirkwood: Remove unused drivers
->   sound: ASoC: kirkwood: Remove ARCH_KIRKWOOD and ARCH_DOVE dependency
->   cpuidle: kirkwood: Replace ARCH_KIRKWOOD dependency
->   ata: Remove ARCH_KIRKWOOD and ARCH_DOVE dependency
->   thermal: Replace ARCH_KIRKWOOD and ARCH_DOVE dependency
->   leds: Replace ARCH_KIRKWOOD dependency
->   PCI: Remove ARCH_KIRKWOOD and ARCH_DOVE dependency
->   phy: Replace ARCH_KIRKWOOD and ARCH_DOVE dependency
->   rtc: Remove ARCH_KIRKWOOD and ARCH_DOVE dependency
->   watchdog: Remove ARCH_KIRKWOOD and ARCH_DOVE dependency
->   Remove ARCH_DOVE dependency
+> Honestly, I prefer the macro -- it stands-out more.  Maybe the style
+> guidelines and/or checkpatch should change instead?
 
-Let's just do mach-kirkwood/ removal this time around and we'll
-re-address mach-dove next window.
+The macro is horrid, no other bus has this type of thing just to save a
+few characters in typing, so why should PCI be "special" in this regard
+anymore?
 
-thx,
+thanks,
 
-Jason.
+greg k-h
