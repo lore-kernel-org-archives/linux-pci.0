@@ -1,171 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ethan Zhao <ethan.zhao@oracle.com>
-To: bhelgaas@google.com, konrad.wilk@oracle.com,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
-	gleb@kernel.org, pbonzini@redhat.com, jeffrey.t.kirsher@intel.com,
-	jesse.brandeburg@intel.com, bruce.w.allan@intel.com,
-	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
-	gregory.v.rose@intel.com, alexander.h.duyck@intel.com,
-	john.ronciak@intel.com, mitch.a.williams@intel.com
-Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-	linux.nics@intel.com, e1000-devel@lists.sourceforge.net,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ethan.kernel@gmail.com, vaughan.cao@oracle.com,
-	Ethan Zhao <ethan.zhao@oracle.com>
-Subject: [PATCH 1/4] PCI: introduce VFs reference counter and simplify pci_vfs_assigned() implementation
-Date: Fri, 11 Jul 2014 08:47:19 +0800
-Message-Id: <1405039642-23519-1-git-send-email-ethan.zhao@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:49215 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755035AbaGRUaj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 18 Jul 2014 16:30:39 -0400
+Message-ID: <53C9839C.5090604@ti.com>
+Date: Fri, 18 Jul 2014 16:29:16 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Rob Herring <robherring2@gmail.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v6 4/5] PCI: add PCI controller for keystone PCIe h/w
+References: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com> <1405696469-7172-5-git-send-email-m-karicheri2@ti.com> <CAL_JsqKheoWrSGtxPO=AE8g9iOAqfwRa=81Ku=Cfx8_gpDysOg@mail.gmail.com>
+In-Reply-To: <CAL_JsqKheoWrSGtxPO=AE8g9iOAqfwRa=81Ku=Cfx8_gpDysOg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current implementation of helper function pci_vfs_assigned() is a little complex, to
-get sum of VFs that assigned to VM, access low level configuration space register and
-then loop in traversing device tree.
+Rob,
 
-This patch introduce an atomic reference counter for VFs that assigned to VM in struct
-pci_sriov, and compose two more helper functions
+On 07/18/2014 03:31 PM, Rob Herring wrote:
+> On Fri, Jul 18, 2014 at 10:14 AM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
+--- Cut ---
+>> +
+>> +Optional properties:-
+>> +       phys: phandle to Generic Keystone SerDes phy for PCI
+>> +       phy-names: name of the Generic Keystine SerDes phy for PCI
+>> +         - If boot loader already does PCI link establishment, then phys and
+>> +           phy-names shouldn't be present.
+>> +       ti,enable-linktrain - Enable Link training.
+>> +         - If boot loader already does PCI link establishment, then this
+>> +           shouldn't be present.
+>
+> Can't you read from the h/w if the link is trained?
 
-pci_sriov_assign_device(),
-pci_sriov_deassign_device()
+Yes.
 
-to replace manipulation to device flag and the meanwhile increase and decease the counter.
+There are customers who use this driver with PCI Link setup done in the 
+boot loader. This property tells the driver to bypass Link setup 
+procedure in that case. Is this undesirable and if so. how other 
+platforms handle it? Check first if link is trained or start the link 
+setup procedure? Let me know. If this is fine, please provide your Ack.
 
-Passed building on 3.15.5
+Thanks.
 
-Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
----
- drivers/pci/iov.c   |   65 ++++++++++++++++++++++++++++----------------------
- drivers/pci/pci.h   |    1 +
- include/linux/pci.h |    4 +++
- 3 files changed, 41 insertions(+), 29 deletions(-)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index de7a747..72e267f 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -382,6 +382,7 @@ found:
- 	iov->nres = nres;
- 	iov->ctrl = ctrl;
- 	iov->total_VFs = total;
-+	atomic_set(&iov->VFs_assigned_cnt, 0);
- 	iov->offset = offset;
- 	iov->stride = stride;
- 	iov->pgsz = pgsz;
-@@ -603,45 +604,51 @@ int pci_num_vf(struct pci_dev *dev)
- EXPORT_SYMBOL_GPL(pci_num_vf);
- 
- /**
-- * pci_vfs_assigned - returns number of VFs are assigned to a guest
-- * @dev: the PCI device
-+ * pci_vfs_assigned - returns number of VFs are assigned to VM
-+ * @dev: the physical PCI device that contains the VFs.
-  *
-- * Returns number of VFs belonging to this device that are assigned to a guest.
-+ * Returns number of VFs belonging to this device that are assigned to VM.
-  * If device is not a physical function returns 0.
-  */
- int pci_vfs_assigned(struct pci_dev *dev)
- {
--	struct pci_dev *vfdev;
--	unsigned int vfs_assigned = 0;
--	unsigned short dev_id;
--
--	/* only search if we are a PF */
- 	if (!dev->is_physfn)
- 		return 0;
-+	if (dev->sriov)
-+		return atomic_read(&dev->sriov->VFs_assigned_cnt);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pci_vfs_assigned);
- 
--	/*
--	 * determine the device ID for the VFs, the vendor ID will be the
--	 * same as the PF so there is no need to check for that one
--	 */
--	pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_VF_DID, &dev_id);
--
--	/* loop through all the VFs to see if we own any that are assigned */
--	vfdev = pci_get_device(dev->vendor, dev_id, NULL);
--	while (vfdev) {
--		/*
--		 * It is considered assigned if it is a virtual function with
--		 * our dev as the physical function and the assigned bit is set
--		 */
--		if (vfdev->is_virtfn && (vfdev->physfn == dev) &&
--		    (vfdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED))
--			vfs_assigned++;
--
--		vfdev = pci_get_device(dev->vendor, dev_id, vfdev);
--	}
-+/**
-+ * pci_sriov_assign_device - assign device to VM
-+ * @pdev: the device to be assigned.
-+ */
-+void pci_sriov_assign_device(struct pci_dev *pdev)
-+{
-+	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-+	if (pdev->is_virtfn && !pdev->is_physfn)
-+		if (pdev->physfn)
-+			if (pdev->physfn->sriov)
-+				atomic_inc(&pdev->physfn->sriov->
-+						VFs_assigned_cnt);
-+}
-+EXPORT_SYMBOL_GPL(pci_sriov_assign_device);
- 
--	return vfs_assigned;
-+/**
-+ * pci_sriov_deassign_device - deasign device from VM
-+ * @pdev: the device to be deassigned.
-+ */
-+void pci_sriov_deassign_device(struct pci_dev *pdev)
-+{
-+	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-+	if (pdev->is_virtfn && !pdev->is_physfn)
-+		if (pdev->physfn)
-+			if (pdev->physfn->sriov)
-+				atomic_dec(&pdev->physfn->sriov->
-+						VFs_assigned_cnt);
- }
--EXPORT_SYMBOL_GPL(pci_vfs_assigned);
-+EXPORT_SYMBOL_GPL(pci_sriov_deassign_device);
- 
- /**
-  * pci_sriov_set_totalvfs -- reduce the TotalVFs available
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 6bd0822..d17bda2 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -235,6 +235,7 @@ struct pci_sriov {
- 	u32 pgsz;		/* page size for BAR alignment */
- 	u8 link;		/* Function Dependency Link */
- 	u16 driver_max_VFs;	/* max num VFs driver supports */
-+	atomic_t VFs_assigned_cnt; /* counter of VFs assigned to VM */
- 	struct pci_dev *dev;	/* lowest numbered PF */
- 	struct pci_dev *self;	/* this PF */
- 	struct mutex lock;	/* lock for VF bus */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index aab57b4..5cf6833 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1601,6 +1601,8 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
- int pci_num_vf(struct pci_dev *dev);
- int pci_vfs_assigned(struct pci_dev *dev);
-+void pci_sriov_assign_device(struct pci_dev *dev);
-+void pci_sriov_deassign_device(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
- #else
-@@ -1610,6 +1612,8 @@ static inline void pci_disable_sriov(struct pci_dev *dev) { }
- static inline int pci_num_vf(struct pci_dev *dev) { return 0; }
- static inline int pci_vfs_assigned(struct pci_dev *dev)
- { return 0; }
-+static inline void pci_sriov_assign_device(struct pci_dev *dev) { }
-+static inline void pci_sriov_deassign_device(struct pci_dev *dev) { }
- static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
- { return 0; }
- static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
--- 
-1.7.1
+Murali
+>
+> Rob
 
