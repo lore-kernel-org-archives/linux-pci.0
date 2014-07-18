@@ -1,120 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og112.obsmtp.com ([64.18.0.24]:43007 "HELO
-	exprod5og112.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750927AbaGKAoJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 20:44:09 -0400
-Received: by mail-vc0-f173.google.com with SMTP id lf12so711414vcb.32
-        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 17:44:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140708171828.GM6501@e106497-lin.cambridge.arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
-	<CAL_JsqK_CfagmiFOpOXVYGry22nGnCZL0ZXeJhYxb9zp=P2fsQ@mail.gmail.com>
-	<20140708171828.GM6501@e106497-lin.cambridge.arm.com>
-Date: Thu, 10 Jul 2014 17:44:07 -0700
-Message-ID: <CACoXjcn3b7otcbxdr+RAVNHHjHyVsvw0QcmK5jd-QBF8SQX5iw@mail.gmail.com>
-Subject: Re: [PATCH v8 0/9] Support for creating generic PCI host bridges from DT
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Rob Herring <robherring2@gmail.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1405700934.605.31.camel@jarvis.lan>
+Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Benoit Taine <benoit.taine@lip6.fr>
+Cc: linux-pci@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	ath9k-devel@venema.h4ckr.net, linux-hippi@sunsite.dk,
+	dri-devel@lists.freedesktop.org, linux-acenic@sunsite.dk,
+	wil6210@qca.qualcomm.com, platform-driver-x86@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-mips@linux-mips.org, users@rt2x00.serialmonkey.com,
+	linux-rdma@vger.kernel.org,
+	virtualization@lists.linux-foundation.org,
+	industrypack-devel@lists.sourceforge.net,
+	linux-can@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-fbdev@vger.kernel.org, ath10k@lists.infradead.org,
+	linux-crypto@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com,
+	devel@linuxdriverproject.org, xen-devel@lists.xenproject.org,
+	linux-pcmcia@lists.infradead.org, e1000-devel@lists.sourceforge.net
+Date: Fri, 18 Jul 2014 09:28:54 -0700
+In-Reply-To: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Fri, 2014-07-18 at 17:26 +0200, Benoit Taine wrote:
+> We should prefer `const struct pci_device_id` over
+> `DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
+> This issue was reported by checkpatch.
 
-On Tue, Jul 8, 2014 at 10:18 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> On Sun, Jul 06, 2014 at 04:23:43PM +0100, Rob Herring wrote:
->> On Tue, Jul 1, 2014 at 1:43 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
->> > This is my resurected attempt at adding support for generic PCI host
->> > bridge controllers that make use of device tree information to
->> > configure themselves. I've tagged it as v8 although the patches
->> > have now been reshuffled in order to ease adoption so referring to
->> > the older versions might be a bit of a hoop jumping exercise.
->> >
->> > Changes from v7:
->> >   - Reordered the patches so that fixes and non-controversial patches
->> >     from v7 can be accepted more easily. If agreed I can split the
->> >     series again into patches that can be upstreamed easily and ones
->> >     that still need discussion.
->> >   - Moved the of_create_host_bridge() function to drivers/of/of_pci.c
->> >     to better reflect its target use.
->> >   - Added the function to remap the bus I/O resources that used to be
->> >     provided in my arm64 patch series and (re)named it pci_remap_iospace()
->> >   - Removed error code checking from parsing and mapping of IRQ from DT
->> >     in recognition that some PCI devices will not have legacy IRQ mappings.
->> >
->> > v7 thread here with all the historic information: https://lkml.org/lkml/2014/3/14/279
->>
->> Can you publish a branch for this series please.
->>
->> Rob
->>
->
-> Hi Rob,
->
-> I have pushed a brach that matches my v8 patchset +1 obvious missing header include
-> here: http://www.linux-arm.org/git?p=linux-ld.git;a=shortlog;h=refs/heads/for-upstream/pci_v8
->
+What kernel coding style?  checkpatch isn't the arbiter of style, if
+that's the only problem.
 
-I was still getting following compilation error after applying arm64
-pci headers. Please let me know if I am missing something.
+The DEFINE_PCI macro was a well reasoned addition when it was added in
+2008.  The problem was most people were getting the definition wrong.
+When we converted away from CONFIG_HOTPLUG, having this DEFINE_ meant
+that only one place needed changing instead of hundreds for PCI tables.
 
-linux-git/drivers/of/of_pci.c: In function ‘pci_host_bridge_of_get_ranges’:
-linux-git/drivers/of/of_pci.c:114:22: error: storage size of ‘range’ isn’t known
-  struct of_pci_range range;
-                      ^
-linux-git/drivers/of/of_pci.c:115:29: error: storage size of ‘parser’
-isn’t known
-  struct of_pci_range_parser parser;
-                             ^
-linux-git/drivers/of/of_pci.c:121:2: error: implicit declaration of
-function ‘of_pci_range_parser_init’
-[-Werror=implicit-function-declaration]
-  err = of_pci_range_parser_init(&parser, dev);
+The reason people were getting the PCI table wrong was mostly the init
+section specifiers which are now gone, but it has enough underlying
+utility (mostly constification) that I don't think we'd want to churn
+the kernel hugely to make a change to struct pci_table and then have to
+start detecting and fixing misuses.
+
+James
 
 
-Below patch fixes the errors.
-
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 55d8320..da88dac 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -2,6 +2,7 @@
- #include <linux/export.h>
- #include <linux/of.h>
- #include <linux/of_pci.h>
-+#include <linux/of_address.h>
-
- static inline int __of_pci_pci_compare(struct device_node *node,
-                                       unsigned int data)
-
-
-> Best regards,
-> Liviu
->
->
-> --
-> ====================
-> | I would like to |
-> | fix the world,  |
-> | but they're not |
-> | giving me the   |
->  \ source code!  /
->   ---------------
->     ¯\_(ツ)_/¯
->
