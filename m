@@ -1,113 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:51780 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757886AbaGWQ5x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 23 Jul 2014 12:57:53 -0400
-Message-ID: <53CFE942.3020804@ti.com>
-Date: Wed, 23 Jul 2014 12:56:34 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:56734 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750784AbaGSE5j (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Jul 2014 00:57:39 -0400
+Received: by mail-pa0-f52.google.com with SMTP id bj1so6625630pad.39
+        for <linux-pci@vger.kernel.org>; Fri, 18 Jul 2014 21:57:38 -0700 (PDT)
+Date: Fri, 18 Jul 2014 21:58:04 -0700
+From: Olof Johansson <olof@lixom.net>
+To: Viresh Kumar <viresh.kumar@linaro.org>
+Cc: "arm@kernel.org" <arm@kernel.org>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
+	spear-devel <spear-devel@list.st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mark Nicholson <mark@nicholnet.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@linaro.org>
+Subject: Re: [GIT PULL] ARM: SPEAr13xx PCIe updates for v3.17
+Message-ID: <20140719045804.GC20064@quad.lixom.net>
+References: <CAKohpo=T3taZx8e39tenCRBNxCUr=7H2xG7Ng=e+YQXuuY9u8Q@mail.gmail.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v7 0/5] Add Keystone PCIe controller driver
-References: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com> <20140722225708.GB27965@google.com> <53CFD444.4010700@ti.com> <CAErSpo6gEVP7XbiPZ90MP4zn5mrjaJLZTW0_sdjg9Q6HjnnkFg@mail.gmail.com>
-In-Reply-To: <CAErSpo6gEVP7XbiPZ90MP4zn5mrjaJLZTW0_sdjg9Q6HjnnkFg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKohpo=T3taZx8e39tenCRBNxCUr=7H2xG7Ng=e+YQXuuY9u8Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/23/2014 12:43 PM, Bjorn Helgaas wrote:
-> On Wed, Jul 23, 2014 at 9:27 AM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
->>
->> Bjorn,
->>
->>
->> On 07/22/2014 06:57 PM, Bjorn Helgaas wrote:
->>>
->>> On Mon, Jul 21, 2014 at 12:58:40PM -0400, Murali Karicheri wrote:
->>
->>
->>>> Murali Karicheri (5):
->>>>     PCI: designware: add rd[wr]_other_conf API
->>>>     PCI: designware: refactor MSI code to work with v3.65 dw hardware
->>>
->>>
->>> I applied the above two to my pci/host-designware branch.  The rest didn't
->>> apply cleanly because I applied Kishon's DRA7xx changes first, and there
->>> are several conflicts.  Can you rebase the rest of them on top of
->>> pci/host-designware?
->>
->>
->> Thanks for applying 1 and 2.
->>
->> I will fix up 3 based on your branch and send you updated patch 3 and 4
->> today.  Hope you can apply this updated patch so that I don't have to
->> address any rebase issues. Regarding the MRSS comment, I will discuss it on
->> that thread and send you a fix for removing the bootargs depedency based on
->> what comes out of that discussion. Is that fine?
->
-> Yep, sounds reasonable.  I'm about to leave for vacation, so I won't
-> be able to apply these until mid-August, but I think we can still get
-> them into v3.17 since it's new hardware that shouldn't affect anything
-> else.
->
-Ok Thanks
-> For MRSS, I'll probably open a bugzilla and reference it in the
-> changelog just so we don't forget about it.
-Not done it before. Will check and do this.
+On Wed, Jul 16, 2014 at 02:33:03PM +0530, Viresh Kumar wrote:
+> Hi Olof/Arnd,
+> 
+> This is another attempt to merge SPEAr PCIe updates after olof
+> pointed out *enough* issues with initial PULL request:
+> 
+> https://lkml.org/lkml/2014/7/9/641
+> 
+> Last version was sent here: http://patchwork.ozlabs.org/patch/368479/
+> and all the nits pointed out by Kishon & Bjorn are fixed in this pull
+> request.
+> 
+> Apart from ARM specific changes, this updates drivers/{pci|phy}. Bjorn
+> advised to get complete series via arm-soc tree earlier:
+> 
+> http://www.spinics.net/lists/linux-pci/msg30271.html
+> 
+> Please let me know if I couldn't get it right this time.
 
-Regards,
+Looks good. Thanks for following up on this and fixing up stuff.
 
-Murali
+> 
+> The following changes since commit 4c834452aad01531db949414f94f817a86348d59:
+> 
+>   Linux 3.16-rc3 (2014-06-29 14:11:36 -0700)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
+> spear/pcie-support-v10
+> 
+> for you to fetch changes up to f6e670a3b62d23722d04e801244a068755a45b7a:
+> 
+>   ARM: SPEAr13xx: Update defconfigs (2014-07-14 11:04:44 +0530)
 
->
->>>>     PCI: designware: enhance dw_pcie_host_init() to support v3.65 DW
->>>>       hardware
->>>>     PCI: add PCI controller for keystone PCIe h/w
->>>>     PCI: keystone: Update maintainer information
->>>
->>>
->>> You can squash the MAINTAINERS update into the driver addition.  They're
->>> logically part of the same change.
->>>
->>> Bjorn
->>>
->>>>    .../devicetree/bindings/pci/pci-keystone.txt       |   68 +++
->>>>    MAINTAINERS                                        |    7 +
->>>>    drivers/pci/host/Kconfig                           |    5 +
->>>>    drivers/pci/host/Makefile                          |    1 +
->>>>    drivers/pci/host/pci-keystone-dw.c                 |  521
->>>> ++++++++++++++++++++
->>>>    drivers/pci/host/pci-keystone.c                    |  386
->>>> +++++++++++++++
->>>>    drivers/pci/host/pci-keystone.h                    |   58 +++
->>>>    drivers/pci/host/pcie-designware.c                 |  116 +++--
->>>>    drivers/pci/host/pcie-designware.h                 |    9 +
->>>>    9 files changed, 1135 insertions(+), 36 deletions(-)
->>>>    create mode 100644
->>>> Documentation/devicetree/bindings/pci/pci-keystone.txt
->>>>    create mode 100644 drivers/pci/host/pci-keystone-dw.c
->>>>    create mode 100644 drivers/pci/host/pci-keystone.c
->>>>    create mode 100644 drivers/pci/host/pci-keystone.h
->>>>
->>>> --
->>>> 1.7.9.5
->>>>
->>
+Merged into next/drivers.
 
+If anything, just one thing: you should consider using signed tags. :)
+
+
+-Olof
