@@ -1,119 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp01.in.ibm.com ([122.248.162.1]:32867 "EHLO
-	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758699AbaGXGXB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 02:23:01 -0400
-Received: from /spool/local
-	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 24 Jul 2014 11:52:58 +0530
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id D51EB394005C
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:54 +0530 (IST)
-Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
-	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s6O6NElo1048924
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:53:14 +0530
-Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
-	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s6O6MrXW007977
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:53 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V7 13/17] powerpc/powernv: Implement pcibios_sriov_resource_alignment on powernv
-Date: Thu, 24 Jul 2014 14:22:23 +0800
-Message-Id: <1406182947-11302-14-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:37423 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754211AbaGSOaN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Jul 2014 10:30:13 -0400
+Received: by mail-oa0-f54.google.com with SMTP id n16so5021731oag.41
+        for <linux-pci@vger.kernel.org>; Sat, 19 Jul 2014 07:30:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140719045804.GC20064@quad.lixom.net>
+References: <CAKohpo=T3taZx8e39tenCRBNxCUr=7H2xG7Ng=e+YQXuuY9u8Q@mail.gmail.com>
+	<20140719045804.GC20064@quad.lixom.net>
+Date: Sat, 19 Jul 2014 20:00:12 +0530
+Message-ID: <CAKohponcBFB=dvO5Maz-wr9JMdiMY-N35jqYgTsRzP2N59ky=Q@mail.gmail.com>
+Subject: Re: [GIT PULL] ARM: SPEAr13xx PCIe updates for v3.17
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: Olof Johansson <olof@lixom.net>
+Cc: "arm@kernel.org" <arm@kernel.org>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
+	spear-devel <spear-devel@list.st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mark Nicholson <mark@nicholnet.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch implements the pcibios_sriov_resource_alignment() on powernv
-platform.
+On 19 July 2014 10:28, Olof Johansson <olof@lixom.net> wrote:
+> Looks good. Thanks for following up on this and fixing up stuff.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/machdep.h        |    3 +++
- arch/powerpc/kernel/pci-common.c          |   14 ++++++++++++++
- arch/powerpc/platforms/powernv/pci-ioda.c |   18 ++++++++++++++++++
- 3 files changed, 35 insertions(+)
-
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index fabb8016..5c023be 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -254,6 +254,9 @@ struct machdep_calls {
- 
- #ifdef CONFIG_PCI_IOV
- 	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
-+	resource_size_t (*pcibios_sriov_resource_alignment)(struct pci_dev *,
-+			                                    int resno,
-+							    resource_size_t align);
- #endif /* CONFIG_PCI_IOV */
- 
- 	/* Called to shutdown machine specific hardware not already controlled
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index c2b7930..942a3e5 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -140,6 +140,20 @@ void pcibios_reset_secondary_bus(struct pci_dev *dev)
- 	ssleep(1);
- }
- 
-+#ifdef CONFIG_PCI_IOV
-+resource_size_t pcibios_sriov_resource_alignment(struct pci_dev *pdev,
-+						 int resno,
-+						 resource_size_t align)
-+{
-+	if (ppc_md.pcibios_sriov_resource_alignment)
-+		return ppc_md.pcibios_sriov_resource_alignment(pdev,
-+							       resno,
-+							       align);
-+
-+	return 0;
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- static resource_size_t pcibios_io_size(const struct pci_controller *hose)
- {
- #ifdef CONFIG_PPC64
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 6fd2377..3aeb87b 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1767,6 +1767,23 @@ resource_size_t pnv_pci_sriov_resource_size(struct pci_dev *pdev, int resno)
- 
- 	return size;
- }
-+
-+static resource_size_t pnv_pcibios_sriov_resource_alignment(struct pci_dev *pdev,
-+							    int resno,
-+							    resource_size_t align)
-+{
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+	resource_size_t iov_align;
-+
-+	iov_align = resource_size(&pdev->resource[resno]);
-+	if (iov_align)
-+		return iov_align;
-+
-+	if (pdn->vfs)
-+		return pdn->vfs * align;
-+
-+	return align;
-+}
- #endif /* CONFIG_PCI_IOV */
- 
- /* Prevent enabling devices for which we couldn't properly
-@@ -1976,6 +1993,7 @@ void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
- #ifdef CONFIG_PCI_IOV
- 	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
-+	ppc_md.pcibios_sriov_resource_alignment = pnv_pcibios_sriov_resource_alignment;
- #endif /* CONFIG_PCI_IOV */
- 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
- 
--- 
-1.7.9.5
-
+Thanks for picking it up.
