@@ -1,70 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:42404 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932289AbaGWRxE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jul 2014 13:53:04 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>, Marek Vasut <marex@denx.de>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	kernel@pengutronix.de
-Subject: [PATCH 2/4] PCI: designware: get rid of pci_scan_root_bus
-Date: Wed, 23 Jul 2014 19:52:39 +0200
-Message-Id: <1406137961-14684-3-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
-References: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:39090 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751289AbaGSFde (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Jul 2014 01:33:34 -0400
+Received: by mail-pa0-f44.google.com with SMTP id eu11so6670917pac.31
+        for <linux-pci@vger.kernel.org>; Fri, 18 Jul 2014 22:33:34 -0700 (PDT)
+Date: Fri, 18 Jul 2014 22:33:59 -0700
+From: Olof Johansson <olof@lixom.net>
+To: Viresh Kumar <viresh.kumar@linaro.org>
+Cc: "arm@kernel.org" <arm@kernel.org>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
+	spear-devel <spear-devel@list.st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mark Nicholson <mark@nicholnet.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@linaro.org>
+Subject: Re: [GIT PULL] ARM: SPEAr13xx PCIe updates for v3.17
+Message-ID: <20140719053359.GF20064@quad.lixom.net>
+References: <CAKohpo=T3taZx8e39tenCRBNxCUr=7H2xG7Ng=e+YQXuuY9u8Q@mail.gmail.com>
+ <20140719045804.GC20064@quad.lixom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140719045804.GC20064@quad.lixom.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use pci_create_root_bus() similar to other pci
-host controller drivers.
+On Fri, Jul 18, 2014 at 09:58:04PM -0700, Olof Johansson wrote:
+> On Wed, Jul 16, 2014 at 02:33:03PM +0530, Viresh Kumar wrote:
+> > Hi Olof/Arnd,
+> > 
+> > This is another attempt to merge SPEAr PCIe updates after olof
+> > pointed out *enough* issues with initial PULL request:
+> > 
+> > https://lkml.org/lkml/2014/7/9/641
+> > 
+> > Last version was sent here: http://patchwork.ozlabs.org/patch/368479/
+> > and all the nits pointed out by Kishon & Bjorn are fixed in this pull
+> > request.
+> > 
+> > Apart from ARM specific changes, this updates drivers/{pci|phy}. Bjorn
+> > advised to get complete series via arm-soc tree earlier:
+> > 
+> > http://www.spinics.net/lists/linux-pci/msg30271.html
+> > 
+> > Please let me know if I couldn't get it right this time.
+> 
+> Looks good. Thanks for following up on this and fixing up stuff.
+> 
+> > 
+> > The following changes since commit 4c834452aad01531db949414f94f817a86348d59:
+> > 
+> >   Linux 3.16-rc3 (2014-06-29 14:11:36 -0700)
+> > 
+> > are available in the git repository at:
+> > 
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
+> > spear/pcie-support-v10
+> > 
+> > for you to fetch changes up to f6e670a3b62d23722d04e801244a068755a45b7a:
+> > 
+> >   ARM: SPEAr13xx: Update defconfigs (2014-07-14 11:04:44 +0530)
+> 
+> Merged into next/drivers.
+> 
+> If anything, just one thing: you should consider using signed tags. :)
 
-The main problem with pci_scan_root_bus() is that
-not only it will create the root bus, but also try
-to activate all devices on the bus. This triggers
-PCI device drivers probe, which try to use the device
-but fail as resource allocation isn't done at that
-point in time.
+Also, there's a conflict with one of the fixes that were sent earlier.
+It'd been nice to keep this based on the -rc that had that fix to avoid the
+conflict. Please check the contents in our for-next.
 
-To work around this we made sure that the host
-controller driver is probed early and finishes resource
-allocation before any other device drivers are registered.
-Switching to pci_create_root_bus() allows us to get rid
-of this special handling.
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
- drivers/pci/host/pcie-designware.c | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index b13a830c8b0f..b869e202367c 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -801,14 +801,13 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	struct pci_bus *bus;
- 	struct pcie_port *pp = sys_to_pcie(sys);
- 
--	if (pp) {
--		pp->root_bus_nr = sys->busnr;
--		bus = pci_scan_root_bus(pp->dev, sys->busnr, &dw_pcie_ops,
--					sys, &sys->resources);
--	} else {
--		bus = NULL;
--		BUG();
--	}
-+	pp->root_bus_nr = sys->busnr;
-+	bus = pci_create_root_bus(pp->dev, sys->busnr,
-+				  &dw_pcie_ops, sys, &sys->resources);
-+	if (!bus)
-+		return NULL;
-+
-+	pci_scan_child_bus(bus);
- 
- 	return bus;
- }
--- 
-2.0.1
-
+-Olof
