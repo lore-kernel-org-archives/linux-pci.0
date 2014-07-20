@@ -1,103 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:37918 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756217AbaGRJFZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jul 2014 05:05:25 -0400
-Date: Fri, 18 Jul 2014 10:04:40 +0100
-From: Mark Rutland <mark.rutland@arm.com>
-To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 0/4 V3] irqchip: gic: Introduce ARM GICv2m MSI(-X) support
-Message-ID: <20140718090439.GC25180@leverpostej>
-References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
- <20140717131854.GN13108@titan.lakedaemon.net>
- <20140717135534.GM30313@leverpostej>
- <53C7E23D.1050900@amd.com>
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:44181 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753075AbaGTT0X (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Jul 2014 15:26:23 -0400
+Received: by mail-pd0-f181.google.com with SMTP id g10so6441301pdj.40
+        for <linux-pci@vger.kernel.org>; Sun, 20 Jul 2014 12:26:23 -0700 (PDT)
+Date: Sun, 20 Jul 2014 12:26:49 -0700
+From: Olof Johansson <olof@lixom.net>
+To: Viresh Kumar <viresh.kumar@linaro.org>
+Cc: arnd@linaro.org, arm@kernel.org,
+	linux-arm-kernel@lists.infradead.org, spear-devel@list.st.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org, mohit.kumar@st.com,
+	pratyush.anand@st.com
+Subject: Re: [PATCH 1/2] PCI: spear: Fix Section mismatch compilation warning
+ for probe()
+Message-ID: <20140720192649.GA30124@quad.lixom.net>
+References: <76576b662613369d0c71db30ceed4ed5ae1343d2.1405857442.git.viresh.kumar@linaro.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53C7E23D.1050900@amd.com>
+In-Reply-To: <76576b662613369d0c71db30ceed4ed5ae1343d2.1405857442.git.viresh.kumar@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 17, 2014 at 03:48:29PM +0100, Suravee Suthikulanit wrote:
-> On 7/17/2014 8:55 AM, Mark Rutland wrote:
-> > Hi Jason,
-> >
-> > On Thu, Jul 17, 2014 at 02:18:54PM +0100, Jason Cooper wrote:
-> >> On Wed, Jul 09, 2014 at 06:05:00PM -0500, suravee.suthikulpanit@amd.com wrote:
-> >>> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> >>>
-> >>> This patch set introduces support for MSI(-X) in GICv2m specification,
-> >>> which is implemented in some variation of GIC400.
-> >>>
-> >>> This depends on and has been tested with the V7 of"Add support for PCI in AArch64"
-> >>> (https://lkml.org/lkml/2014/3/14/320).
-> >>>
-> >>> Changes in V3:
-> >>>      * Rebase to git://git.infradead.org/users/jcooper/linux.git irqchip/gic
-> >>>        (per Jason Cooper request)
-> >>>      * Misc fix/clean up per Mark Rutland comments
-> >>>      * Minor Clean up in the driver/irqchip/irq-gic-v2m.c: alloc_msi_irqs()
-> >>>      * Patch 4 is new to the series:
-> >>>          * Add ARM64-specific version arch_setup_msi_irqs() to allow support
-> >>>            for Multiple MSI.
-> >>>          * Add support for Multiple MSI for GICv2m.
-> >>>
-> >>> Suravee Suthikulpanit (4):
-> >>>    irqchip: gic: Add binding probe for ARM GIC400
-> >>>    irqchip: gic: Restructuring ARM GIC code
-> >>>    irqchip: gic: Add supports for ARM GICv2m MSI(-X)
-> >>>    irqchip: gicv2m: Add support for multiple MSI for ARM64 GICv2m
-> >>
-> >> Ok, patch #1 applied to irqchip/urgent.  Patches 2 and 3 applied to
-> >> irqchip/gic with irqchip/urgent merged in.  To facilitate
-> >> testing/merging, I've prepared an unsigned tag for you on the
-> >> irqchip/gic branch:
-> >
-> > I'm a little concerned that this is all going through for v3.17 without
-> > a {Reviewed,Acked}-by from Marc or anyone working with GIC{,v2m}.
+On Sun, Jul 20, 2014 at 05:29:47PM +0530, Viresh Kumar wrote:
+> Following compilation warning occurs when compiled with:
+> CONFIG_DEBUG_SECTION_MISMATCH=y
 > 
-> > While his comments on v1 have been addressed, he has not had a chance to
-> > acknowledge the solutions. I appreciate Marc's holiday is unfortunately
-> > timed.
-> >
-> > I also have an open concern with the binding with regard to the
-> > orthogonality of GICV GICH and the MSI registers.
+>  WARNING: drivers/pci/host/built-in.o(.data+0xc0): Section mismatch in
+>  reference from the variable spear13xx_pcie_driver to the function
+>  .init.text:spear13xx_pcie_probe()
 > 
-> The MSI part is normally enabled from the optional "msi-controller" 
-> keyword. It should not really matter which compatible ID it uses.
-
-I meant the fact that the MSI registers being described in reg[4],
-rather than how the driver determines MSI support.
-
-> Ooops. I noticed that was accidentally dropped the check for 
-> "msi-controller" in the gicv2m_of_init() function.  I'll send a follow 
-> up patch to fix this.
-
-Sure. Whatever happens we should have both the msi-controller property
-and the registers for the MSI block before we enable MSI support.
-
-> > Suravee, do you need this urgently for v3.17? I was under the impression
-> > that we wouldn't have full PCIe support by then.
-> >
+> Both .probe() and pcie_init() are marked with __init, but spear13xx_pcie_driver
+> isn't. And so section mismatch.
 > 
-> PCI is the dependency for this patch to function.  So, it should be 
-> aligned with upstreaming of PCI patches.
+> Fix it by marking spear13xx_pcie_driver with __initdata.
+> 
+> Fixes: 51b66a6 (PCI: spear: Add PCIe driver for ST Microelectronics SPEAr13xx)
 
-Ok, so it sounds like this can wait for the moment (but we should
-definitely ensure this gets some testing before then).
+Please use 12 significant digits, since 7 might not be sufficient later
+on in time. I've fixed it up here.
 
-Cheers,
-Mark
+> Reported-by: Olof Johansson <olof@lixom.net>
+> Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
+> ---
+> Olof/Arnd,
+> 
+> Let me know if a PULL request is required for this, otherwise just apply them
+> directly.
+
+I've applied both of these on top of next/drivers, where your previous branch
+was. No need for a pull request.
+
+
+-Olof
