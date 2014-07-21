@@ -1,210 +1,217 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:42557 "EHLO comal.ext.ti.com"
+Received: from mga02.intel.com ([134.134.136.20]:50428 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932235AbaGNOzv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Jul 2014 10:55:51 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <jg1.han@samsung.com>,
-	<bhelgaas@google.com>, <mohit.kumar@st.com>,
-	<linux-kernel@vger.kernel.org>
-CC: <kishon@ti.com>, <grant.likely@linaro.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 2/4] PCI: designware: use untranslated address while programming ATU
-Date: Mon, 14 Jul 2014 20:25:03 +0530
-Message-ID: <1405349705-31400-3-git-send-email-kishon@ti.com>
-In-Reply-To: <1405349705-31400-1-git-send-email-kishon@ti.com>
-References: <1405349705-31400-1-git-send-email-kishon@ti.com>
+	id S1752823AbaGUW3O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 21 Jul 2014 18:29:14 -0400
+Message-ID: <53CD9438.6010409@intel.com>
+Date: Mon, 21 Jul 2014 15:29:12 -0700
+From: Alexander Duyck <alexander.h.duyck@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Ethan Zhao <ethan.zhao@oracle.com>, bhelgaas@google.com,
+	konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
+	david.vrabel@citrix.com, gleb@kernel.org, pbonzini@redhat.com,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	bruce.w.allan@intel.com, carolyn.wyborny@intel.com,
+	donald.c.skidmore@intel.com, gregory.v.rose@intel.com,
+	john.ronciak@intel.com, mitch.a.williams@intel.com,
+	alex.williamson@redhat.com
+CC: linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+	linux.nics@intel.com, e1000-devel@lists.sourceforge.net,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ethan.kernel@gmail.com, vaughan.cao@oracle.com
+Subject: Re: [PATCH 1/2 V3] PCI: introduce device assignment interface and
+ refactory related code
+References: <1405081802-419-1-git-send-email-ethan.zhao@oracle.com>
+In-Reply-To: <1405081802-419-1-git-send-email-ethan.zhao@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In DRA7, the cpu sees 32bit address, but the pcie controller can see only 28bit
-address. So whenever the cpu issues a read/write request, the 4 most
-significant bits are used by L3 to determine the target controller.
-For example, the cpu reserves 0x2000_0000 - 0x2FFF_FFFF for PCIe controller but
-the PCIe controller will see only (0x000_0000 - 0xFFF_FFF). So for programming
-the outbound translation window the *base* should be programmed as 0x000_0000.
-Whenever we try to write to say 0x2000_0000, it will be translated to whatever
-we have programmed in the translation window with base as 0x000_0000.
+On 07/11/2014 05:30 AM, Ethan Zhao wrote:
+> This patch introduces two new device assignment functions
+> 
+> pci_iov_assign_device(),
+> pci_iov_deassign_device()
+> 
+> along with the existed one
+> 
+> pci_vfs_assigned()
+> 
+> They construct the VFs assignment management interface, used to assign/
+> deassign device to VM and query the VFs reference counter. instead of
+> direct manipulation of device flag.
+> 
+> This patch refashioned the related code and make them atomic.
+> 
+> v3: change the naming of device assignment helpers, because they work
+> for all kind of PCI device, not only SR-IOV (david.vrabel@citrix.com)
+> 
+> v2: reorder the patchset and make it bisectable and atomic, steps clear
+> between interface defination and implemenation according to the
+> suggestion from alex.williamson@redhat.com
+> 
+> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+> ---
+>  drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c |   17 ++---------------
+>  drivers/pci/iov.c                                  |   20 ++++++++++++++++++++
+>  drivers/xen/xen-pciback/pci_stub.c                 |    4 ++--
+>  include/linux/pci.h                                |    4 ++++
+>  virt/kvm/assigned-dev.c                            |    2 +-
+>  virt/kvm/iommu.c                                   |    4 ++--
+>  6 files changed, 31 insertions(+), 20 deletions(-)
+> 
+> diff --git a/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c b/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
+> index 02c11a7..781040e 100644
+> --- a/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
+> +++ b/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
+> @@ -693,22 +693,9 @@ complete_reset:
+>  static bool i40e_vfs_are_assigned(struct i40e_pf *pf)
+>  {
+>  	struct pci_dev *pdev = pf->pdev;
+> -	struct pci_dev *vfdev;
+> -
+> -	/* loop through all the VFs to see if we own any that are assigned */
+> -	vfdev = pci_get_device(PCI_VENDOR_ID_INTEL, I40E_DEV_ID_VF , NULL);
+> -	while (vfdev) {
+> -		/* if we don't own it we don't care */
+> -		if (vfdev->is_virtfn && pci_physfn(vfdev) == pdev) {
+> -			/* if it is assigned we cannot release it */
+> -			if (vfdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED)
+> -				return true;
+> -		}
+>  
+> -		vfdev = pci_get_device(PCI_VENDOR_ID_INTEL,
+> -				       I40E_DEV_ID_VF,
+> -				       vfdev);
+> -	}
+> +	if (pci_vfs_assigned(pdev))
+> +		return true;
+>  
+>  	return false;
+>  }
 
-This is needed when the dt node is modelled something like below
-axi {
-	compatible = "simple-bus";
-	#size-cells = <1>;
-	#address-cells = <1>;
-	ranges = <0x0        0x20000000 0x10000000 // 28-bit bus
-		  0x51000000 0x51000000 0x3000>;
-	pcie@51000000 {
-		reg = <0x1000 0x2000>, <0x51002000 0x14c>, <0x51000000 0x2000>;
-		reg-names = "config", "ti_conf", "rc_dbics";
-		#address-cells = <3>;
-		#size-cells = <2>;
-		ranges = <0x81000000 0 0          0x03000 0 0x00010000
-			  0x82000000 0 0x20013000 0x13000 0 0xffed000>;
-	};
-};
+This portion for i40e should be in one patch by itself.  It shouldn't be
+included in the bits below.  Normally this would go through netdev.  The
+rest of this below would go through linux-pci.
 
-Here the CPU address for configuration space is 0x20013000 and the controller
-address for configuration space is 0x13000. The controller address should be
-used while programming the ATU (in order for translation to happen properly in
-DRA7xx).
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index de7a747..090f827 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -644,6 +644,26 @@ int pci_vfs_assigned(struct pci_dev *dev)
+>  EXPORT_SYMBOL_GPL(pci_vfs_assigned);
+>  
+>  /**
+> + * pci_iov_assign_device - assign device to VM
+> + * @pdev: the device to be assigned.
+> + */
+> +void pci_iov_assign_device(struct pci_dev *pdev)
+> +{
+> +	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_iov_assign_device);
+> +
+> +/**
+> + * pci_iov_deassign_device - deasign device from VM
+> + * @pdev: the device to be deassigned.
+> + */
+> +void pci_iov_deassign_device(struct pci_dev *pdev)
+> +{
+> +	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_iov_deassign_device);
+> +
+> +/**
+>   * pci_sriov_set_totalvfs -- reduce the TotalVFs available
+>   * @dev: the PCI PF device
+>   * @numvfs: number that should be used for TotalVFs supported
 
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mohit Kumar <mohit.kumar@st.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Marek Vasut <marex@denx.de>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/host/pcie-designware.c |   55 +++++++++++++++++++++++++++---------
- drivers/pci/host/pcie-designware.h |    4 +++
- 2 files changed, 45 insertions(+), 14 deletions(-)
+The two functions above don't have anything to do with IOV.  You can
+direct assign a device that doesn't even support SR-IOV or MR-IOV.  You
+might be better off defining this as something like
+"pci_set_flag_assigned/pci_clear_flag_assigned".  I would likely also
+make them inline and possibly move them to pci.h since it would likely
+result in less actual code after you consider the overhead to push
+everything on the stack prior to making the call.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 0b7b455..8aab1d6 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -401,8 +401,15 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 	struct of_pci_range range;
- 	struct of_pci_range_parser parser;
- 	struct resource *cfg_res;
--	u32 val;
--	int i;
-+	u32 val, na, ns;
-+	const __be32 *addrp;
-+	int i, index;
-+
-+	/* Find the address cell size and the number of cells in order to get
-+	 * the untranslated address.
-+	 */
-+	of_property_read_u32(np, "#address-cells", &na);
-+	ns = of_n_size_cells(np);
- 
- 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
- 	if (cfg_res) {
-@@ -410,6 +417,12 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 		pp->config.cfg1_size = resource_size(cfg_res)/2;
- 		pp->cfg0_base = cfg_res->start;
- 		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
-+
-+		/* Find the untranslated configuration space address */
-+		index = of_property_match_string(np, "reg-names", "config");
-+		addrp = of_get_address(np, index, false, false);
-+		pp->cfg0_mod_base = of_read_number(addrp, ns);
-+		pp->cfg1_mod_base = pp->cfg0_mod_base + pp->config.cfg0_size;
- 	} else {
- 		dev_err(pp->dev, "missing *config* reg space\n");
- 	}
-@@ -435,12 +448,20 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 			pp->config.io_size = resource_size(&pp->io);
- 			pp->config.io_bus_addr = range.pci_addr;
- 			pp->io_base = range.cpu_addr;
-+
-+			/* Find the untranslated IO space address */
-+			pp->io_mod_base = of_read_number(parser.range -
-+							 parser.np + na, ns);
- 		}
- 		if (restype == IORESOURCE_MEM) {
- 			of_pci_range_to_resource(&range, np, &pp->mem);
- 			pp->mem.name = "MEM";
- 			pp->config.mem_size = resource_size(&pp->mem);
- 			pp->config.mem_bus_addr = range.pci_addr;
-+
-+			/* Find the untranslated MEM space address */
-+			pp->mem_mod_base = of_read_number(parser.range -
-+							  parser.np + na, ns);
- 		}
- 		if (restype == 0) {
- 			of_pci_range_to_resource(&range, np, &pp->cfg);
-@@ -448,6 +469,12 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
- 			pp->cfg0_base = pp->cfg.start;
- 			pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
-+
-+			/* Find the untranslated configuration space address */
-+			pp->cfg0_mod_base = of_read_number(parser.range -
-+							   parser.np + na, ns);
-+			pp->cfg1_mod_base = pp->cfg0_mod_base +
-+					    pp->config.cfg0_size;
- 		}
- 	}
- 
-@@ -522,9 +549,9 @@ static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
- 	/* Program viewport 0 : OUTBOUND : CFG0 */
- 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
- 			  PCIE_ATU_VIEWPORT);
--	dw_pcie_writel_rc(pp, pp->cfg0_base, PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, (pp->cfg0_base >> 32), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, pp->cfg0_base + pp->config.cfg0_size - 1,
-+	dw_pcie_writel_rc(pp, pp->cfg0_mod_base, PCIE_ATU_LOWER_BASE);
-+	dw_pcie_writel_rc(pp, (pp->cfg0_mod_base >> 32), PCIE_ATU_UPPER_BASE);
-+	dw_pcie_writel_rc(pp, pp->cfg0_mod_base + pp->config.cfg0_size - 1,
- 			  PCIE_ATU_LIMIT);
- 	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
- 	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
-@@ -538,9 +565,9 @@ static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
- 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
- 			  PCIE_ATU_VIEWPORT);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, pp->cfg1_base, PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, (pp->cfg1_base >> 32), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, pp->cfg1_base + pp->config.cfg1_size - 1,
-+	dw_pcie_writel_rc(pp, pp->cfg1_mod_base, PCIE_ATU_LOWER_BASE);
-+	dw_pcie_writel_rc(pp, (pp->cfg1_mod_base >> 32), PCIE_ATU_UPPER_BASE);
-+	dw_pcie_writel_rc(pp, pp->cfg1_mod_base + pp->config.cfg1_size - 1,
- 			  PCIE_ATU_LIMIT);
- 	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
- 	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
-@@ -553,9 +580,9 @@ static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
- 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
- 			  PCIE_ATU_VIEWPORT);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, pp->mem_base, PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, (pp->mem_base >> 32), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, pp->mem_base + pp->config.mem_size - 1,
-+	dw_pcie_writel_rc(pp, pp->mem_mod_base, PCIE_ATU_LOWER_BASE);
-+	dw_pcie_writel_rc(pp, (pp->mem_mod_base >> 32), PCIE_ATU_UPPER_BASE);
-+	dw_pcie_writel_rc(pp, pp->mem_mod_base + pp->config.mem_size - 1,
- 			  PCIE_ATU_LIMIT);
- 	dw_pcie_writel_rc(pp, pp->config.mem_bus_addr, PCIE_ATU_LOWER_TARGET);
- 	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.mem_bus_addr),
-@@ -569,9 +596,9 @@ static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
- 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
- 			  PCIE_ATU_VIEWPORT);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, pp->io_base, PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, (pp->io_base >> 32), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, pp->io_base + pp->config.io_size - 1,
-+	dw_pcie_writel_rc(pp, pp->io_mod_base, PCIE_ATU_LOWER_BASE);
-+	dw_pcie_writel_rc(pp, (pp->io_mod_base >> 32), PCIE_ATU_UPPER_BASE);
-+	dw_pcie_writel_rc(pp, pp->io_mod_base + pp->config.io_size - 1,
- 			  PCIE_ATU_LIMIT);
- 	dw_pcie_writel_rc(pp, pp->config.io_bus_addr, PCIE_ATU_LOWER_TARGET);
- 	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.io_bus_addr),
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 77f592f..add6527 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -36,11 +36,15 @@ struct pcie_port {
- 	u8			root_bus_nr;
- 	void __iomem		*dbi_base;
- 	u64			cfg0_base;
-+	u64			cfg0_mod_base;
- 	void __iomem		*va_cfg0_base;
- 	u64			cfg1_base;
-+	u64			cfg1_mod_base;
- 	void __iomem		*va_cfg1_base;
- 	u64			io_base;
-+	u64			io_mod_base;
- 	u64			mem_base;
-+	u64			mem_mod_base;
- 	struct resource		cfg;
- 	struct resource		io;
- 	struct resource		mem;
--- 
-1.7.9.5
+> diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+> index 62fcd48..27e00d1 100644
+> --- a/drivers/xen/xen-pciback/pci_stub.c
+> +++ b/drivers/xen/xen-pciback/pci_stub.c
+> @@ -133,7 +133,7 @@ static void pcistub_device_release(struct kref *kref)
+>  	xen_pcibk_config_free_dyn_fields(dev);
+>  	xen_pcibk_config_free_dev(dev);
+>  
+> -	dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+> +	pci_iov_deassign_device(dev);
+>  	pci_dev_put(dev);
+>  
+>  	kfree(psdev);
+> @@ -404,7 +404,7 @@ static int pcistub_init_device(struct pci_dev *dev)
+>  	dev_dbg(&dev->dev, "reset device\n");
+>  	xen_pcibk_reset_device(dev);
+>  
+> -	dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+> +	pci_iov_assign_device(dev);
+>  	return 0;
+>  
+>  config_release:
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index aab57b4..5ece6d6 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1603,6 +1603,8 @@ int pci_num_vf(struct pci_dev *dev);
+>  int pci_vfs_assigned(struct pci_dev *dev);
+>  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+>  int pci_sriov_get_totalvfs(struct pci_dev *dev);
+> +void pci_iov_assign_device(struct pci_dev *dev);
+> +void pci_iov_deassign_device(struct pci_dev *dev);
+>  #else
+>  static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+>  { return -ENODEV; }
+> @@ -1614,6 +1616,8 @@ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+>  { return 0; }
+>  static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+>  { return 0; }
+> +static inline void pci_iov_assign_device(struct pci_dev *dev) { }
+> +static inline void pci_iov_deassign_device(struct pci_dev *dev) { }
+>  #endif
+>  
+>  #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
+> diff --git a/virt/kvm/assigned-dev.c b/virt/kvm/assigned-dev.c
+> index bf06577..7fac58d 100644
+> --- a/virt/kvm/assigned-dev.c
+> +++ b/virt/kvm/assigned-dev.c
+> @@ -302,7 +302,7 @@ static void kvm_free_assigned_device(struct kvm *kvm,
+>  	else
+>  		pci_restore_state(assigned_dev->dev);
+>  
+> -	assigned_dev->dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+> +	pci_iov_deassign_device(assigned_dev->dev);
+>  
+>  	pci_release_regions(assigned_dev->dev);
+>  	pci_disable_device(assigned_dev->dev);
+> diff --git a/virt/kvm/iommu.c b/virt/kvm/iommu.c
+> index 0df7d4b..641ee73 100644
+> --- a/virt/kvm/iommu.c
+> +++ b/virt/kvm/iommu.c
+> @@ -194,7 +194,7 @@ int kvm_assign_device(struct kvm *kvm,
+>  			goto out_unmap;
+>  	}
+>  
+> -	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+> +	pci_iov_assign_device(pdev);
+>  
+>  	dev_info(&pdev->dev, "kvm assign device\n");
+>  
+> @@ -220,7 +220,7 @@ int kvm_deassign_device(struct kvm *kvm,
+>  
+>  	iommu_detach_device(domain, &pdev->dev);
+>  
+> -	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+> +	pci_iov_deassign_device(pdev);
+>  
+>  	dev_info(&pdev->dev, "kvm deassign device\n");
+>  
+> 
 
