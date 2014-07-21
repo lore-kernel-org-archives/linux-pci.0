@@ -1,121 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:40450 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756451AbaGBRbJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 13:31:09 -0400
-Date: Wed, 2 Jul 2014 18:31:13 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 8/9] pci: Add support for creating a generic
- host_bridge from device tree
-Message-ID: <20140702173113.GJ24879@arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-9-git-send-email-Liviu.Dudau@arm.com>
- <20140702112230.GL18731@arm.com>
- <20140702172355.GQ2173@e106497-lin.cambridge.arm.com>
+Received: from mail-vc0-f179.google.com ([209.85.220.179]:36598 "EHLO
+	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751428AbaGUAVa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Jul 2014 20:21:30 -0400
+Received: by mail-vc0-f179.google.com with SMTP id hq11so9550746vcb.10
+        for <linux-pci@vger.kernel.org>; Sun, 20 Jul 2014 17:21:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140702172355.GQ2173@e106497-lin.cambridge.arm.com>
+In-Reply-To: <CAKohpokOJLKOwB_rKz0W-1T0nYX7-2_8nm3wQr6khR55x4gqrA@mail.gmail.com>
+References: <76576b662613369d0c71db30ceed4ed5ae1343d2.1405857442.git.viresh.kumar@linaro.org>
+	<20140720192649.GA30124@quad.lixom.net>
+	<CAKohpokOJLKOwB_rKz0W-1T0nYX7-2_8nm3wQr6khR55x4gqrA@mail.gmail.com>
+Date: Sun, 20 Jul 2014 17:21:29 -0700
+Message-ID: <CAOesGMi0HgL14zMqALvqT_cGMr13mGSN0O493eLmydt8Dscqug@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: spear: Fix Section mismatch compilation warning
+ for probe()
+From: Olof Johansson <olof@lixom.net>
+To: Viresh Kumar <viresh.kumar@linaro.org>
+Cc: Arnd Bergmann <arnd@linaro.org>, "arm@kernel.org" <arm@kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	spear-devel <spear-devel@list.st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mohit KUMAR <mohit.kumar@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 02, 2014 at 06:23:55PM +0100, Liviu Dudau wrote:
-> On Wed, Jul 02, 2014 at 12:22:30PM +0100, Will Deacon wrote:
-> > On Tue, Jul 01, 2014 at 07:43:33PM +0100, Liviu Dudau wrote:
-> > > Several platforms use a rather generic version of parsing
-> > > the device tree to find the host bridge ranges. Move the common code
-> > > into the generic PCI code and use it to create a pci_host_bridge
-> > > structure that can be used by arch code.
-> > > 
-> > > Based on early attempts by Andrew Murray to unify the code.
-> > > Used powerpc and microblaze PCI code as starting point.
-> > 
-> > I just had a quick look at this to see how it differs from the parsing in
-> > pci-host-generic.c and there a few small differences worth discussing.
+On Sun, Jul 20, 2014 at 5:12 PM, Viresh Kumar <viresh.kumar@linaro.org> wrote:
+> On 21 July 2014 00:56, Olof Johansson <olof@lixom.net> wrote:
+>> Please use 12 significant digits, since 7 might not be sufficient later
+>> on in time. I've fixed it up here.
+>
+> I surely didn't knew this and haven't seen other maintainers do this
+> as well.. And thought, whatever "git log --online" gives would be
+> enough.
+>
+> Will take care of this in future.
 
-[...]
+Oh, sorry, I got distracted by my kid waking up so the email was a bit short. :)
 
-> > > +	}
-> > > +
-> > > +	/* Apply architecture specific fixups for the ranges */
-> > > +	return pcibios_fixup_bridge_ranges(resources);
-> > 
-> > I currently mandate at least one non-prefetchable resource in the
-> > device-tree. Should I simply drop this restriction, or do I have to somehow
-> > hook this into the pcibios callback?
-> 
-> Don't think I understand why you need at least one non-prefetcheable resource
-> but if you want to mandate that then the pcibios_fixup_bridge_ranges() would
-> be the place to put that check.
+The easiest way of doing it is to switch to 12 by default. In your .gitconfig:
 
-I think it was Arnd's idea at the time:
+[core]
+        abbrev = 12
 
-  http://lists.infradead.org/pipermail/linux-arm-kernel/2014-February/232225.html
 
-and it's probably worth keeping if possible (just to avoid changes to the
-behaviour of the existing driver).
-
-However, that means I already need a host-controller callback via
-pcibios_fixup_bridge_ranges...
-
-> > > +	err = of_pci_parse_bus_range(parent->of_node, bus_range);
-> > > +	if (err) {
-> > > +		dev_info(parent, "No bus range for %s, using default [0-255]\n",
-> > > +			parent->of_node->full_name);
-> > > +		bus_range->start = 0;
-> > > +		bus_range->end = 255;
-> > > +		bus_range->flags = IORESOURCE_BUS;
-> > 
-> > What about bus_range->name?
-> 
-> Don't know! Is anyone using it?
-
-I guess /proc/iomem prints it out? I set it in my current driver, if you
-want to take a look.
-
-> > 
-> > > +	}
-> > > +	busno = bus_range->start;
-> > > +	pci_add_resource(&res, bus_range);
-> > 
-> > I currently truncate the bus range to fit inside the Configuration Space
-> > window I have (in the reg property). How can I continue to do that with this
-> > patch?
-> 
-> Not easily. Unless I add an argument to this function that will allow you to
-> pass in the max number for the bus range, then the code becomes:
-> 
-> +	err = of_pci_parse_bus_range(parent->of_node, bus_range);
-> +	if (err) {
-> +		dev_info(parent, "No bus range for %s, using default [0-%d]\n",
-> +			parent->of_node->full_name, max_range);
-> +		bus_range->start = 0;
-> +		bus_range->end = max_range;
-> +		bus_range->flags = IORESOURCE_BUS;
-> +	} else {
-> +		if (bus_range->end > bus_range->start + max_range) {
-> +			bus_range->end = bus_range->start + max_range;
-> +		}
-> +	}
-> 
-> Or something like that.
-
-Again, take a look at my driver (it's in mainline now) to see how I deal
-with this.
-
-Will
+-Olof
