@@ -1,53 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f170.google.com ([209.85.220.170]:62327 "EHLO
-	mail-vc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933237AbaGPRTH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 13:19:07 -0400
-Received: by mail-vc0-f170.google.com with SMTP id lf12so2294937vcb.29
-        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 10:19:06 -0700 (PDT)
+Received: from devils.ext.ti.com ([198.47.26.153]:57850 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932679AbaGURAE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jul 2014 13:00:04 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH v7 1/5] PCI: designware: add rd[wr]_other_conf API
+Date: Mon, 21 Jul 2014 12:58:41 -0400
+Message-ID: <1405961925-27248-2-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com>
+References: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <CAKAYmMLfxkmaVxaPDd6z=B0ESQ3mR=dUG4OFFgEoy0295qLYgg@mail.gmail.com>
-References: <CAKAYmMLfxkmaVxaPDd6z=B0ESQ3mR=dUG4OFFgEoy0295qLYgg@mail.gmail.com>
-Date: Wed, 16 Jul 2014 10:19:06 -0700
-Message-ID: <CAKAYmMLhPhukBbR8NhPk3EigmvwiX+DEGj-Mod7zpHMnZKRsLw@mail.gmail.com>
-Subject: Re: Error assigning BAR 0 to hotplugged device
-From: Chuck Tuffli <ctuffli@gmail.com>
-To: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 8, 2014 at 12:37 PM, Chuck Tuffli <ctuffli@gmail.com> wrote:
-> On a system with a recent Fedora kernel (3.14.9-200.fc20.x86_64), a
-> hotplugged PCI device is unable to get memory mapped IO:
-> ...
-> [  183.247377] pcieport 0000:9a:00.0: BAR 15: can't assign mem pref
-> (size 0x100000)
-> [  183.247384] pcieport 0000:9b:15.0: BAR 14: can't assign mem (size 0x100000)
-> [  183.247388] pcieport 0000:9b:15.0: BAR 15: can't assign mem pref
-> (size 0x100000)
-> [  183.247394] pci 0000:a5:00.0: BAR 6: can't assign mem pref (size 0x10000)
-> [  183.247397] pci 0000:a5:00.0: BAR 0: can't assign mem (size 0x4000)
->
-> The device is connected to a switch supporting hotplug (i.e. SltCap
-> includes HotPlug+) and I have added
-> pci=realloc,hpmemsize=16M
-> to the kernel boot parameters. This appears to have increased the
-> prefetchable memory but not the memory mapped IO:
+v3.65 version of the designware h/w, requires application space
+registers to be configured to access the remote EP config space.
+To support this, add rd[wr]_other_conf API in the pcie_host_opts
 
-Further investigation suggests that pbus_size_mem() never really gets
-a chance to increase the bridge aperture by the hpmemsize value
-because find_free_bus_resource() returns NULL. This apparently happens
-because the function "skip[s] the bus resources which have already
-been assigned (that is, have non-NULL parent resource)". Specifically,
-it checks
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Reviewed-by: Pratyush Anand <pratyush.anand@st.com>
+Acked-by: Mohit Kumar <mohit.kumar@st.com>
+Acked-by: Jingoo Han <jg1.han@samsung.com>
+Acked-by: Santosh Shilimkar <santosh.shilimkar@ti.com>
 
-    if (r && (r->flags & type_mask) == type && !r->parent)
+CC: Russell King <linux@arm.linux.org.uk>
+CC: Grant Likely <grant.likely@linaro.org>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Richard Zhu <r65037@freescale.com>
+CC: Kishon Vijay Abraham I <kishon@ti.com>
+CC: Marek Vasut <marex@denx.de>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Pawel Moll <pawel.moll@arm.com>
+CC: Mark Rutland <mark.rutland@arm.com>
+CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
+CC: Kumar Gala <galak@codeaurora.org>
+CC: Randy Dunlap <rdunlap@infradead.org>
+CC: Grant Likely <grant.likely@linaro.org>
+---
+ drivers/pci/host/pcie-designware.c |   12 ++++++++++--
+ drivers/pci/host/pcie-designware.h |    4 ++++
+ 2 files changed, 14 insertions(+), 2 deletions(-)
 
-and in my configuration, finds that r->parent != NULL for the memory
-mapped IO resource. Wouldn't r->parent be non-NULL in most cases other
-than for bridges in the root complex? If so, does that imply hpmemsize
-would only be used for bridges advertising hot plug in the root
-complex?
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 1eaf4df..d8f3af7 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -656,7 +656,11 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 	}
+ 
+ 	if (bus->number != pp->root_bus_nr)
+-		ret = dw_pcie_rd_other_conf(pp, bus, devfn,
++		if (pp->ops->rd_other_conf)
++			ret = pp->ops->rd_other_conf(pp, bus, devfn,
++						where, size, val);
++		else
++			ret = dw_pcie_rd_other_conf(pp, bus, devfn,
+ 						where, size, val);
+ 	else
+ 		ret = dw_pcie_rd_own_conf(pp, where, size, val);
+@@ -679,7 +683,11 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+ 	if (bus->number != pp->root_bus_nr)
+-		ret = dw_pcie_wr_other_conf(pp, bus, devfn,
++		if (pp->ops->wr_other_conf)
++			ret = pp->ops->wr_other_conf(pp, bus, devfn,
++						where, size, val);
++		else
++			ret = dw_pcie_wr_other_conf(pp, bus, devfn,
+ 						where, size, val);
+ 	else
+ 		ret = dw_pcie_wr_own_conf(pp, where, size, val);
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 77f592f..8121901 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -61,6 +61,10 @@ struct pcie_host_ops {
+ 			u32 val, void __iomem *dbi_base);
+ 	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32 *val);
+ 	int (*wr_own_conf)(struct pcie_port *pp, int where, int size, u32 val);
++	int (*rd_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
++			unsigned int devfn, int where, int size, u32 *val);
++	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
++			unsigned int devfn, int where, int size, u32 val);
+ 	int (*link_up)(struct pcie_port *pp);
+ 	void (*host_init)(struct pcie_port *pp);
+ };
+-- 
+1.7.9.5
 
---chuck
