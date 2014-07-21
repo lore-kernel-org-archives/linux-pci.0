@@ -1,123 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1lp0142.outbound.protection.outlook.com ([207.46.163.142]:49753
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754843AbaGNTkT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Jul 2014 15:40:19 -0400
-From: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-To: <clemens@ladisch.de>, <jdelvare@suse.de>, <linux@roeck-us.net>,
-	<rdunlap@infradead.org>, <bhelgaas@google.com>,
-	<lm-sensors@lm-sensors.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-Subject: [PATCH] hwmon, k10temp: Add support for AMD F15h M60h processor
-Date: Mon, 14 Jul 2014 15:23:08 -0500
-Message-ID: <1405369388-12729-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:57173 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932412AbaGUQlQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jul 2014 12:41:16 -0400
+Message-ID: <53CD424B.1090806@ti.com>
+Date: Mon, 21 Jul 2014 12:39:39 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Jingoo Han <jg1.han@samsung.com>
+CC: "'Rob Herring'" <robherring2@gmail.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	"'Russell King'" <linux@arm.linux.org.uk>,
+	"'Grant Likely'" <grant.likely@linaro.org>,
+	"'Rob Herring'" <robh+dt@kernel.org>,
+	"'Mohit Kumar'" <mohit.kumar@st.com>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Pratyush Anand'" <pratyush.anand@st.com>,
+	"'Richard Zhu'" <r65037@freescale.com>,
+	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
+	"'Marek Vasut'" <marex@denx.de>, "'Arnd Bergmann'" <arnd@arndb.de>,
+	"'Pawel Moll'" <pawel.moll@arm.com>,
+	"'Mark Rutland'" <mark.rutland@arm.com>,
+	"'Ian Campbell'" <ijc+devicetree@hellion.org.uk>,
+	"'Kumar Gala'" <galak@codeaurora.org>,
+	"'Randy Dunlap'" <rdunlap@infradead.org>
+Subject: Re: [PATCH v6 4/5] PCI: add PCI controller for keystone PCIe h/w
+References: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com> <1405696469-7172-5-git-send-email-m-karicheri2@ti.com> <CAL_JsqKheoWrSGtxPO=AE8g9iOAqfwRa=81Ku=Cfx8_gpDysOg@mail.gmail.com> <53C9839C.5090604@ti.com> <006001cfa485$4f4fcff0$edef6fd0$%han@samsung.com>
+In-Reply-To: <006001cfa485$4f4fcff0$edef6fd0$%han@samsung.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds temperature monitoring support for F15h M60h processor.
- - Add new pci device id for the relevant processor
- - The functionality of REG_REPORTED_TEMPERATURE is moved to
-   D0F0xBC_xD820_0CA4 [Reported Temperature Control]
-   - So, use this to get CUR_TEMP value
- - Add Kconfig, Doc entries to indicate support for this processor.
+On 07/20/2014 09:44 PM, Jingoo Han wrote:
+> On Saturday, July 19, 2014 5:29 AM, Murali Karicheri wrote:
+>> On 07/18/2014 03:31 PM, Rob Herring wrote:
+>>> On Fri, Jul 18, 2014 at 10:14 AM, Murali Karicheri<m-karicheri2@ti.com>   wrote:
+>> --- Cut ---
+>>>> +
+>>>> +Optional properties:-
+>>>> +       phys: phandle to Generic Keystone SerDes phy for PCI
+>>>> +       phy-names: name of the Generic Keystine SerDes phy for PCI
+>>>> +         - If boot loader already does PCI link establishment, then phys and
+>>>> +           phy-names shouldn't be present.
+>>>> +       ti,enable-linktrain - Enable Link training.
+>>>> +         - If boot loader already does PCI link establishment, then this
+>>>> +           shouldn't be present.
+>>>
+>>> Can't you read from the h/w if the link is trained?
+>
+> I agree with Rob Herring's suggestion.
+>
+>>
+>> Yes.
+>>
+>> There are customers who use this driver with PCI Link setup done in the
+>> boot loader. This property tells the driver to bypass Link setup
+>> procedure in that case. Is this undesirable and if so. how other
+>> platforms handle it? Check first if link is trained or start the link
+>> setup procedure? Let me know. If this is fine, please provide your Ack.
+>
+> Please, check the following code of Exynos PCIe diver.
+>
+> ./drivers/pci/host/pci-exynos.c
+>
+> static int exynos_pcie_establish_link(struct pcie_port *pp)
+> {
+> 	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
+> 	void __iomem *elbi_base = exynos_pcie->elbi_base;
+> 	void __iomem *pmu_base = exynos_pcie->pmu_base;
+>
+> 	if (dw_pcie_link_up(pp)) {
+> 		dev_err(pp->dev, "Link already up\n");
+> 		return 0;
+> 	}
+> 	.....
+>
+> In the case of Exynos PCIe, the Exynos PCIe driver checks the
+> h/w bit such as PCIE_ELBI_LTSSM_ENABLE bit of PCIE_ELBI_RDLH_LINKUP
+> offset register.
+>
+> If the link is already set up by the boot loader or other reasons,
+> the driver will skip some initialization codes.
+>
+> The first step is that you find such h/w bit for checking link up.
+> If so, please add the code for skipping, when the link is already
+> set up.
+>
+Rob, Jingoo,
 
-Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
----
- Documentation/hwmon/k10temp |  2 +-
- drivers/hwmon/Kconfig       |  4 ++--
- drivers/hwmon/k10temp.c     | 22 ++++++++++++++++++++--
- include/linux/pci_ids.h     |  1 +
- 4 files changed, 24 insertions(+), 5 deletions(-)
+We have similar bit to check for Link status and I have removed the DT 
+property and skip Link retrain if PCIe Link is already Up. I will be 
+resending the series with Patch 4/5 updated.
 
-diff --git a/Documentation/hwmon/k10temp b/Documentation/hwmon/k10temp
-index ee6d30e..254d2f5 100644
---- a/Documentation/hwmon/k10temp
-+++ b/Documentation/hwmon/k10temp
-@@ -11,7 +11,7 @@ Supported chips:
-   Socket S1G2: Athlon (X2), Sempron (X2), Turion X2 (Ultra)
- * AMD Family 12h processors: "Llano" (E2/A4/A6/A8-Series)
- * AMD Family 14h processors: "Brazos" (C/E/G/Z-Series)
--* AMD Family 15h processors: "Bulldozer" (FX-Series), "Trinity", "Kaveri"
-+* AMD Family 15h processors: "Bulldozer" (FX-Series), "Trinity", "Kaveri", "Carrizo"
- * AMD Family 16h processors: "Kabini", "Mullins"
- 
-   Prefix: 'k10temp'
-diff --git a/drivers/hwmon/Kconfig b/drivers/hwmon/Kconfig
-index 02d3d85..57ba400 100644
---- a/drivers/hwmon/Kconfig
-+++ b/drivers/hwmon/Kconfig
-@@ -280,8 +280,8 @@ config SENSORS_K10TEMP
- 	  If you say yes here you get support for the temperature
- 	  sensor(s) inside your CPU. Supported are later revisions of
- 	  the AMD Family 10h and all revisions of the AMD Family 11h,
--	  12h (Llano), 14h (Brazos), 15h (Bulldozer/Trinity/Kaveri) and
--	  16h (Kabini/Mullins) microarchitectures.
-+	  12h (Llano), 14h (Brazos), 15h (Bulldozer/Trinity/Kaveri/Carrizo)
-+	  and 16h (Kabini/Mullins) microarchitectures.
- 
- 	  This driver can also be built as a module.  If so, the module
- 	  will be called k10temp.
-diff --git a/drivers/hwmon/k10temp.c b/drivers/hwmon/k10temp.c
-index f7b46f6..5da872f 100644
---- a/drivers/hwmon/k10temp.c
-+++ b/drivers/hwmon/k10temp.c
-@@ -51,13 +51,30 @@ MODULE_PARM_DESC(force, "force loading on processors with erratum 319");
- #define REG_NORTHBRIDGE_CAPABILITIES	0xe8
- #define  NB_CAP_HTC			0x00000400
- 
-+/*
-+ * For F15h M60h, functionality of REG_REPORTED_TEMPERATURE
-+ * has been moved to D0F0xBC_xD820_0CA4 [Reported Temperature
-+ * Control]
-+ */
-+#define NB_SMU_IND_ADDR			0xb8
-+#define NB_SMU_IND_DATA			0xbc
-+#define IND_ADDR_OFFSET			0xd8200ca4
-+
- static ssize_t show_temp(struct device *dev,
- 			 struct device_attribute *attr, char *buf)
- {
- 	u32 regval;
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	if (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model == 0x60) {
-+		pci_bus_write_config_dword(pdev->bus, PCI_DEVFN(0, 0),
-+					   NB_SMU_IND_ADDR, IND_ADDR_OFFSET);
-+		pci_bus_read_config_dword(pdev->bus, PCI_DEVFN(0, 0),
-+					  NB_SMU_IND_DATA, &regval);
-+
-+	} else
-+		pci_read_config_dword(pdev, REG_REPORTED_TEMPERATURE, &regval);
- 
--	pci_read_config_dword(to_pci_dev(dev),
--			      REG_REPORTED_TEMPERATURE, &regval);
- 	return sprintf(buf, "%u\n", (regval >> 21) * 125);
- }
- 
-@@ -211,6 +228,7 @@ static const struct pci_device_id k10temp_id_table[] = {
- 	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
- 	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
- 	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F3) },
-+	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M60H_NB_F3) },
- 	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
- 	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_16H_M30H_NB_F3) },
- 	{}
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 7fa3173..3c8e328 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -520,6 +520,7 @@
- #define PCI_DEVICE_ID_AMD_15H_M10H_F3	0x1403
- #define PCI_DEVICE_ID_AMD_15H_M30H_NB_F3 0x141d
- #define PCI_DEVICE_ID_AMD_15H_M30H_NB_F4 0x141e
-+#define PCI_DEVICE_ID_AMD_15H_M60H_NB_F3 0x1573
- #define PCI_DEVICE_ID_AMD_15H_NB_F0	0x1600
- #define PCI_DEVICE_ID_AMD_15H_NB_F1	0x1601
- #define PCI_DEVICE_ID_AMD_15H_NB_F2	0x1602
--- 
-1.8.1.2
+Thanks.
+
+Murali
+
+> Best regards,
+> Jingoo Han
+>
 
