@@ -1,92 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:45523 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751493AbaGCT7W (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 15:59:22 -0400
-Received: by mail-ig0-f181.google.com with SMTP id h15so1635491igd.8
-        for <linux-pci@vger.kernel.org>; Thu, 03 Jul 2014 12:59:21 -0700 (PDT)
+Received: from comal.ext.ti.com ([198.47.26.152]:51484 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932841AbaGURBY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 21 Jul 2014 13:01:24 -0400
+Message-ID: <53CD475F.5010407@ti.com>
+Date: Mon, 21 Jul 2014 13:01:19 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20140703131526.GG28852@google.com>
-References: <20140611060118.GB3169@yanx>
-	<CAE9FiQWe2bf7QbKn9kmZS34a4cMewsdD-9qAELdXs-dEtx70GQ@mail.gmail.com>
-	<20140702210736.GB28852@google.com>
-	<CAE9FiQU5Ltu89zmRG0h2aXfXH0oCcTEP=jF7b=zHi=SaOA2rKg@mail.gmail.com>
-	<20140703131526.GG28852@google.com>
-Date: Thu, 3 Jul 2014 12:59:21 -0700
-Message-ID: <CAE9FiQWPGXMBYmpzyk8cicKZ1ELUZiARkZjr2vvgntmt3bt1jQ@mail.gmail.com>
-Subject: Re: [PATCH] pci: Allow very large resource windows
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>,
+To: Rob Herring <robh+dt@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Subject: Fwd: [PATCH v7 0/5] Add Keystone PCIe controller driver
+References: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 3, 2014 at 6:15 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> >> +     mem64_mask = b_res->flags & IORESOURCE_MEM_64;
->> >> +
->> >> +     /* kernel does not support 64bit res */
->> >> +     if (sizeof(resource_size_t) == 4)
->> >> +             mem64_mask &= ~IORESOURCE_MEM_64;
->
-> I think you're fixing two things at once, and they should be split
-> into two separate patches:
->
->   1) Change aligns[] size to increase support alignment from 8GB to 2^63
->
->      I'm not sure about going all the way to aligns[44].  That array
->      by itself puts 352 bytes in the stack frame (240 of which are
->      added by this patch), which seems excessive.  I suspect that
->      supporting BARs up to 64GB or 128GB would be enough for the
->      foreseeable future.
+-------- Original Message --------
+Subject: [PATCH v7 0/5] Add Keystone PCIe controller driver
+Date: Mon, 21 Jul 2014 12:58:40 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+<linux-arm-kernel@lists.infradead.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>, Russell King 
+<linux@arm.linux.org.uk>, Grant Likely <grant.likely@linaro.org>, Rob 
+Herring <robh+dt@kernel.org>, Mohit Kumar <mohit.kumar@st.com>, Jingoo 
+Han <jg1.han@samsung.com>, Bjorn Helgaas <bhelgaas@google.com>, Pratyush 
+Anand <pratyush.anand@st.com>, Richard Zhu <r65037@freescale.com>, 
+"Kishon Vijay Abraham I" <kishon@ti.com>, Marek Vasut <marex@denx.de>, 
+Arnd Bergmann <arnd@arndb.de>, Pawel Moll <pawel.moll@arm.com>, Mark 
+Rutland <mark.rutland@arm.com>, Ian Campbell 
+<ijc+devicetree@hellion.org.uk>, "Kumar Gala" <galak@codeaurora.org>, 
+Randy Dunlap <rdunlap@infradead.org>
 
-ok, let's use 128G this time.
+This patch series add PCIe controller driver for keystone SoCs. This is
+based on v4 of the series posted to the mailing list. Keystone PCI 
+controller
+is based on version 3.65 of the DW hardware. This driver uses the DW core
+functions to implement the PCI controller driver for keystone.
 
->
->   2) Adding mem64_mask
->
->      I think the idea is that even if we have a 64-bit window, we
->      can't use anything above 4GB if we only have 32-bit resources.
->      That's true, but I don't think we can enforce that in
->      pbus_size_mem() because we're only figuring out how much space is
->      needed; we have no idea where that space will be allocated.
+Testing:
+=======
 
-with current version of __pci_bus_size_bridges, we separate pref_mem64 with
-pref_mem32 to calling pbus_size_mem.
+Testing of the driver is done on TI's K2HK EVM inserted to a Elma blu!eco
+MicroTCA chassis AMC slot with JumpGen SEM-200 AMC SATA Storage and Dual
+Ethernet Card Express inserted on another AMC slot. The e1000e driver 
+available
+on intel's website is patched to the kernel source tree and build. e1000e.ko
+is dynamically loaded and executed ping and iperf tests to test the
+functionality.
 
-so if we have pref 64bit window, we will only size pref 64 bit
-children under it.
-and will only assign pref 64bit mem64 to them late.
-
-If the bridge does not support 64bit pref windows, and child support
-64bit pref mmio, then bridge will try to use pref 32 window, in that
-case, .... could have
-size overflow as you state follow.
-
->
-> And I think there are more problems:
->
->   - I don't think we handle overflow of "size" correctly.  Assume that
->     we have BARs of 2GB, 2GB, and 8GB.  If we have 32-bit resources,
->     when we add those up, it will overflow and we'll mistakenly think
->     we only need 8MB.
-
-in this case we should check the overflow.
-
->
->   - We shouldn't set "r->flags = 0".  The warning says we're disabling
->     the BAR, but this *doesn't* disable the BAR, and in fact, there is
->     no way to disable a single BAR.  What we can do is turn off
->     PCI_COMMAND_MEMORY to disable all the memory BARs for the device.
->     And to do that, we need to keep IORESOURCE_MEM in r->flags so
->     pci_enable_resources() can tell that this is a memory BAR.
-
-when we try to size it,  means that bar is not assigned. with r->flags
-= 0, means
-we will ignore it all the way.
+Thanks to all of you who have contributed by reviewing and offering valuable
+comments. If you want me to add your "Reviewed-by", please let me know 
+so that
+I can add it to the commit log and re-send. Patch 1-3 has Acks from 
+maintainers
+and I believe this can be merged to upstream branch. Patch 4 is waiting for
+Ack from DT maintainer. Please provide the same at the earliest.
 
 Thanks
 
-Yinghai
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+
+CC: Russell King <linux@arm.linux.org.uk>
+CC: Grant Likely <grant.likely@linaro.org>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Mohit Kumar <mohit.kumar@st.com>
+CC: Jingoo Han <jg1.han@samsung.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Pratyush Anand <pratyush.anand@st.com>
+CC: Richard Zhu <r65037@freescale.com>
+CC: Kishon Vijay Abraham I <kishon@ti.com>
+CC: Marek Vasut <marex@denx.de>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Pawel Moll <pawel.moll@arm.com>
+CC: Mark Rutland <mark.rutland@arm.com>
+CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
+CC: Kumar Gala <galak@codeaurora.org>
+CC: Randy Dunlap <rdunlap@infradead.org>
+CC: Grant Likely <grant.likely@linaro.org>
+
+Changelog:
+
+v7
+  - Removed ti,enable_linktrain DT property. The driver now check if
+    the link is up and then retrain the link if not already up. This
+    is as per comment from DT maintainer.
+  - Rebased to upstream kernel v3.16-rc6
+
+v6
+  - Added Ack from Maintainer for patch 3. Patch 1-3 now have the
+    Acks from maintainer and can be merged to upstream branch.
+    Patch 4 is waiting ack from DT maintainer.
+v5
+  - Rebased to upstream kernel v3.16-rc5
+  - Reworked Patch 3/6 and 4/6 into a single patch based on
+    maintainer comment to use a API callback model to support
+    the v3.65 h/w.
+v4
+  - Addressed comments against 5/5.
+  - Added a patch 6/6 for Maintainer information
+  - Added couple of Acked-By:
+  - Rebased to latest Linux 3.16-rc4
+v3
+  - DW application register handling code is now part of
+    Keystone PCI driver. RFC had this code part of Keystone
+    PCI driver, then V1 moved this to a separate file to
+    re-use on other platforms that uses this version of the
+    DW h/w. Then based on comments against v2, this is moved
+    back to Keystone driver.
+  - Keystone SerDes phy driver is removed from this series so that
+    this can be merged independent of that patch
+  - added msi_set_irq()/clear_irq() API's to support Keystone
+
+V2
+  - Split the designware pcie enhancement patch to multiple
+    patches based on functionality added
+  - Remove the quirk code and add a patch to fix mps/mrss
+    tuning for ARM. Use kernel command line parameter
+    pci=pcie_bus_perf to work with Keystone PCI Controller.
+    Following patch addressed this.
+      [PATCH v1] ARM: pci: add call to pcie_bus_configure_settings()
+  - Add documentation for device tree bindings
+  - Add separate interrupt controller nodes for MSI and Legacy
+    IRQs and use irq map for legacy IRQ
+  - Use compatibility to identify v3.65 version of the DW hardware
+    and use it to customize the designware common code.
+  - Use reg property for configuration space instead of range
+  - Other minor updates based on code inspection.
+
+V1
+  - Add an interrupt controller node for Legacy irq chip and use
+    interrupt map/map-mask property to map legacy IRQs A/B/C/D
+  - Add a Phy driver to replace the original serdes driver
+  - Move common application register handling code to a separate
+    file to allow re-use across other platforms that use older
+    DW PCIe h/w
+  - PCI quirk for maximum read request size. Check and override only
+    if the maximum is higher than what controller can handle.
+  - Converted to a module platform driver.
+
+Murali Karicheri (5):
+   PCI: designware: add rd[wr]_other_conf API
+   PCI: designware: refactor MSI code to work with v3.65 dw hardware
+   PCI: designware: enhance dw_pcie_host_init() to support v3.65 DW
+     hardware
+   PCI: add PCI controller for keystone PCIe h/w
+   PCI: keystone: Update maintainer information
+
+  .../devicetree/bindings/pci/pci-keystone.txt       |   68 +++
+  MAINTAINERS                                        |    7 +
+  drivers/pci/host/Kconfig                           |    5 +
+  drivers/pci/host/Makefile                          |    1 +
+  drivers/pci/host/pci-keystone-dw.c                 |  521 
+++++++++++++++++++++
+  drivers/pci/host/pci-keystone.c                    |  386 +++++++++++++++
+  drivers/pci/host/pci-keystone.h                    |   58 +++
+  drivers/pci/host/pcie-designware.c                 |  116 +++--
+  drivers/pci/host/pcie-designware.h                 |    9 +
+  9 files changed, 1135 insertions(+), 36 deletions(-)
+  create mode 100644 Documentation/devicetree/bindings/pci/pci-keystone.txt
+  create mode 100644 drivers/pci/host/pci-keystone-dw.c
+  create mode 100644 drivers/pci/host/pci-keystone.c
+  create mode 100644 drivers/pci/host/pci-keystone.h
+
+-- 
+1.7.9.5
+Rob,
+
+I have removed the DT property as suggested by you and resend the 
+series. Please provide your Ack if this looks good.
+
+Murali
