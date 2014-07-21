@@ -1,114 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:45422 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751344AbaGHW57 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 18:57:59 -0400
-Date: Tue, 8 Jul 2014 23:57:55 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 8/9] pci: Add support for creating a generic
- host_bridge from device tree
-Message-ID: <20140708225755.GE4980@e106497-lin.cambridge.arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-9-git-send-email-Liviu.Dudau@arm.com>
- <20140708010103.GD22939@google.com>
- <20140708102940.GZ6501@e106497-lin.cambridge.arm.com>
- <20140708213305.GB4555@google.com>
- <20140708222738.GA4980@e106497-lin.cambridge.arm.com>
- <20140708223737.GA19512@google.com>
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:46054 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752900AbaGUE2F (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jul 2014 00:28:05 -0400
+Received: by mail-oa0-f49.google.com with SMTP id eb12so6521938oac.22
+        for <linux-pci@vger.kernel.org>; Sun, 20 Jul 2014 21:28:03 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20140708223737.GA19512@google.com>
+In-Reply-To: <CAL_Jsq+dSoYp83wnXXHnfQ__GkQvoNcijmktvwqvcpazsQGioQ@mail.gmail.com>
+References: <76576b662613369d0c71db30ceed4ed5ae1343d2.1405857442.git.viresh.kumar@linaro.org>
+	<20140720192649.GA30124@quad.lixom.net>
+	<CAKohpokOJLKOwB_rKz0W-1T0nYX7-2_8nm3wQr6khR55x4gqrA@mail.gmail.com>
+	<CAL_Jsq+dSoYp83wnXXHnfQ__GkQvoNcijmktvwqvcpazsQGioQ@mail.gmail.com>
+Date: Mon, 21 Jul 2014 09:58:03 +0530
+Message-ID: <CAKohponUGvs818F-Ch4kFrRPv+vwXkuZotiVjQD9To0LuyNcZg@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: spear: Fix Section mismatch compilation warning
+ for probe()
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: Rob Herring <robherring2@gmail.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Olof Johansson <olof@lixom.net>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	spear-devel <spear-devel@list.st.com>,
+	"arm@kernel.org" <arm@kernel.org>,
+	Mohit KUMAR <mohit.kumar@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@linaro.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 08, 2014 at 11:37:37PM +0100, Bjorn Helgaas wrote:
-> On Tue, Jul 08, 2014 at 11:27:38PM +0100, Liviu Dudau wrote:
-> > On Tue, Jul 08, 2014 at 10:33:05PM +0100, Bjorn Helgaas wrote:
-> > > On Tue, Jul 08, 2014 at 11:29:40AM +0100, Liviu Dudau wrote:
-> > > > On Tue, Jul 08, 2014 at 02:01:04AM +0100, Bjorn Helgaas wrote:
-> > > > > On Tue, Jul 01, 2014 at 07:43:33PM +0100, Liviu Dudau wrote:
-> > > > > > ...
-> > > > > > +int __weak pcibios_fixup_bridge_ranges(struct list_head *resources)
-> > > > > > +{
-> > > > > > +     return 0;
-> > > > > > +}
-> > > > > 
-> > > > > I'd wait to add this until there's a platform that needs to implement it.
-> > > > > Splitting it out will make this patch that much smaller and easier to
-> > > > > understand.
-> > > > 
-> > > > I need this as this is the default implementation (i.e. do nothing). Otherwise the
-> > > > link phase will give errors. 
-> > > 
-> > > I meant that you could remove the default implementation *and* the call of
-> > > it, since it currently does nothing.
-> > 
-> > True. But it looks like converting Will's pci-host-generic.c driver will make use of this.
-> 
-> I think we should move this part of the patch to the conversion of
-> that driver.  That will keep related changes grouped together, which 
-> makes them easier to review and easier to backport, e.g., to distro
-> kernels.
-> 
-> > > > > > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > > > > > index 7e7b939..556dc5f 100644
-> > > > > > --- a/include/linux/pci.h
-> > > > > > +++ b/include/linux/pci.h
-> > > > > > @@ -402,6 +402,7 @@ struct pci_host_bridge {
-> > > > > >       struct device dev;
-> > > > > >       struct pci_bus *bus;            /* root bus */
-> > > > > >       int domain_nr;
-> > > > > > +     resource_size_t io_base;        /* physical address for the start of I/O area */
-> > > > > 
-> > > > > I don't see where this is used yet.
-> > > > 
-> > > > It's used in pci_host_bridge_of_get_ranges() (earlier in this patch).
-> > > 
-> > > of_create_pci_host_bridge() fills in bridge->io_base, but I don't see
-> > > anything that ever *reads* bridge->io_base.
-> > 
-> > Ah, understood. It is used by the host bridge drivers to set their ATR registers to the
-> > correct CPU address values.
-> 
-> Same applies here.
+On 21 July 2014 07:45, Rob Herring <robherring2@gmail.com> wrote:
+> The Fixes tag is new and the format is documented in SubmittingPatches
 
-Except I have no idea which host bridge driver is going to be submitted first. There are
-at least a couple of public series for HB drivers based on my series plus the one I have yet
-to submit for my platform.
+Yeah, just saw that for the first time :)
 
-Maybe an associated documentation patch that explains the intended use for io_base could
-persuade you on the value of keeping the io_base patch here?
+> IIRC. I believe it is also supposed to be quotes rather than
+> parentheses around the commit message if we want to be really picky.
 
-Best regards,
-Liviu
+Actually both: ("$subject")
 
-> 
-> Bjorn
-> 
+I never saw the doc and picked how it was done by Rafael for cpufreq stuff.
+Though he was correctly adding 12 digits of the sha key, but the quotes
+were missing :)
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+I will take care of this now.
 
+--
+viresh
