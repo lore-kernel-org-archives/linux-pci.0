@@ -1,122 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f48.google.com ([209.85.192.48]:43403 "EHLO
-	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932084AbaG3G0b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jul 2014 02:26:31 -0400
-Received: by mail-qg0-f48.google.com with SMTP id i50so891778qgf.21
-        for <linux-pci@vger.kernel.org>; Tue, 29 Jul 2014 23:26:30 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: [PATCH] ACPI / PCI: Use ACPI_COMPANION() instead of ACPI_HANDLE()
+Date: Mon, 21 Jul 2014 02:52:53 +0200
+Message-ID: <2972136.muxEZR9mUT@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <1406621877-12022-1-git-send-email-wangyijing@huawei.com>
-References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com>
-Date: Wed, 30 Jul 2014 14:26:30 +0800
-Message-ID: <CABawtvP1sviOZynf2N43ORDF-mPHX9PrcsXSmxKqv4_V9QpnsQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
-From: Ethan Zhao <ethan.kernel@gmail.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	"<keith.busch@intel.com>" <keith.busch@intel.com>,
-	"<jon.mason@intel.com>" <jon.mason@intel.com>,
-	Jon Mason <jdmason@kudzu.us>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 29, 2014 at 4:17 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Currently we don't update device's mps value when doing
-> pci device hot-add. The hot-added device's mps will be set
-> to default value (128B). But the upstream port device's mps
-> may be larger than 128B which was set by firmware during
-> system bootup. In this case the new added device may not
-> work normally. This issue was found in huawei 5885 server
-> and Dell R620 server. And if we run the platform with windows,
-> this problem is gone. This patch try to update the hot added
-> device mps equal to its parent mps, if device mpss < parent mps,
-> print warning.
->
-> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-http://marc.info/?l=e1000-devel&m=134182518500774&w=2
+The ACPI_HANDLE() macro evaluates ACPI_COMPANION() internally to
+return the handle of the device's ACPI companion, so it is much
+more straightforward and efficient to use ACPI_COMPANION()
+directly to obtain the device's ACPI companion object instead of
+using ACPI_HANDLE() and acpi_bus_get_device() on the returned
+handle for the same thing.
 
-The bug was reported by Joe.jin@oracle.com. the related hardware
-is SUN FIRE X2270 M2, it is not a hotplug sever except SAS HDD,
-and the the issue is definitely a BIOS bug. not related to the hotplug
-code path. was fixed by BIOS.
+Use ACPI_COMPANION() instead of ACPI_HANDLE() in the PCI ACPI support
+code.
 
-Thanks,
-Ethan
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/pci-acpi.c |   16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
 
-> Reported-by: Keith Busch <keith.busch@intel.com>
-> Reported-by: Jordan_Hargrave@Dell.com
-> Reported-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Cc: Jon Mason <jdmason@kudzu.us>
-> ---
->  drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
->  1 files changed, 39 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index e3cf8a2..583ca52 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1613,6 +1613,44 @@ static void pcie_write_mrrs(struct pci_dev *dev)
->                 dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If problems are experienced, try running with pci=pcie_bus_safe\n");
->  }
->
-> +/**
-> + * pcie_bus_update_set - update device mps when device doing hot-add
-> + * @dev: PCI device to set
-> + *
-> + * After device hot add, mps will be set to default(128B), But the
-> + * upstream port device's mps may be larger than 128B which was set
-> + * by firmware during system bootup. Then we should update the device
-> + * mps to equal to its parent mps, Or the device can not work normally.
-> + */
-> +static void pcie_bus_update_set(struct pci_dev *dev)
-> +{
-> +       int mps, p_mps, mpss;
-> +       struct pci_dev *parent;
-> +
-> +       if (!pci_is_pcie(dev) || !dev->bus->self
-> +                       || !dev->bus->self->is_hotplug_bridge)
-> +               return;
-> +
-> +       parent = dev->bus->self;
-> +       mps = pcie_get_mps(dev);
-> +       p_mps = pcie_get_mps(parent);
-> +
-> +       if (mps >= p_mps)
-> +               return;
-> +
-> +       mpss = 128 << dev->pcie_mpss;
-> +       if (mpss < p_mps) {
-> +               dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
-> +                               "If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
-> +                               mpss, p_mps);
-> +               return;
-> +       }
-> +
-> +       pcie_write_mps(dev, p_mps);
-> +       dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n",
-> +                       pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
-> +}
-> +
->  static void pcie_bus_detect_mps(struct pci_dev *dev)
->  {
->         struct pci_dev *bridge = dev->bus->self;
-> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
->                 return 0;
->
->         if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
-> +               pcie_bus_update_set(dev);
->                 pcie_bus_detect_mps(dev);
->                 return 0;
->         }
-> --
-> 1.7.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -175,14 +175,13 @@ static pci_power_t acpi_pci_choose_state
+ 
+ static bool acpi_pci_power_manageable(struct pci_dev *dev)
+ {
+-	acpi_handle handle = ACPI_HANDLE(&dev->dev);
+-
+-	return handle ? acpi_bus_power_manageable(handle) : false;
++	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
++	return adev ? acpi_device_power_manageable(adev) : false;
+ }
+ 
+ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+ {
+-	acpi_handle handle = ACPI_HANDLE(&dev->dev);
++	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
+ 	static const u8 state_conv[] = {
+ 		[PCI_D0] = ACPI_STATE_D0,
+ 		[PCI_D1] = ACPI_STATE_D1,
+@@ -193,7 +192,7 @@ static int acpi_pci_set_power_state(stru
+ 	int error = -EINVAL;
+ 
+ 	/* If the ACPI device has _EJ0, ignore the device */
+-	if (!handle || acpi_has_method(handle, "_EJ0"))
++	if (!adev || acpi_has_method(adev->handle, "_EJ0"))
+ 		return -ENODEV;
+ 
+ 	switch (state) {
+@@ -207,7 +206,7 @@ static int acpi_pci_set_power_state(stru
+ 	case PCI_D1:
+ 	case PCI_D2:
+ 	case PCI_D3hot:
+-		error = acpi_bus_set_power(handle, state_conv[state]);
++		error = acpi_device_set_power(adev, state_conv[state]);
+ 	}
+ 
+ 	if (!error)
+@@ -219,9 +218,8 @@ static int acpi_pci_set_power_state(stru
+ 
+ static bool acpi_pci_can_wakeup(struct pci_dev *dev)
+ {
+-	acpi_handle handle = ACPI_HANDLE(&dev->dev);
+-
+-	return handle ? acpi_bus_can_wakeup(handle) : false;
++	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
++	return adev ? acpi_device_can_wakeup(adev) : false;
+ }
+ 
+ static void acpi_pci_propagate_wakeup_enable(struct pci_bus *bus, bool enable)
+
