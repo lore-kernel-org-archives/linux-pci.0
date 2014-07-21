@@ -1,136 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:37129 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750998AbaGPUeo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 16:34:44 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 21 Jul 2014 10:17:34 +0200
+From: Peter Zijlstra <peterz@infradead.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>
+Subject: Re: [Update 2x][PATCH 1/2] ACPI / PM: Always enable wakeup GPEs when
+ enabling device wakeup
+Message-ID: <20140721081734.GL3935@laptop>
+References: <1907495.agrCMfRsQN@vostro.rjw.lan>
+ <1617640.X0G82q0eFI@vostro.rjw.lan>
+ <7670400.0LUVFHKPfm@vostro.rjw.lan>
+ <5962983.s3jy9r09Hm@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20140716193637.GA14366@google.com>
-References: <1405505022-7593-1-git-send-email-vidyas@nvidia.com> <20140716193637.GA14366@google.com>
-From: vidya sagar <sagar.tv@gmail.com>
-Date: Thu, 17 Jul 2014 02:04:23 +0530
-Message-ID: <CAN7O0+JObXFbEjFhKOED+RSFG3cVQTfXS8qp7J1ZYHd5YE18eQ@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI: enable ASPM configuration in PCIE POWERSAVE mode
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: matthew.garrett@nebula.com, rjw@rjwysocki.net,
-	nchumbalkar@lenovo.com, thierry.reding@gmail.com,
-	swarren@nvidia.com, linux-pci@vger.kernel.org, kthota@nvidia.com,
-	linux-kernel@vger.kernel.org, vidyas@nvidia.com
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5962983.s3jy9r09Hm@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 17, 2014 at 1:06 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Wed, Jul 16, 2014 at 03:33:42PM +0530, Vidya Sagar wrote:
->> From: Vidya Sagar <sagar.tv@gmail.com>
->>
->> Commit 1a680b7c3258 ("PCI: PCIe links may not get configured for ASPM
->>  under POWERSAVE mode") moved pcie_aspm_powersave_config_link() out of
->> pci_raw_set_power_state() to pci_set_power_state() which would enable
->> ASPM. But, with Commit db288c9c5f9d ("PCI / PM: restore the original
->>  behavior of pci_set_power_state()"), which re-introduced the following check
->> ./drivers/pci/pci.c: pci_set_power_state()
->>
->> +     /* Check if we're already there */
->> +     if (dev->current_state == state)
->> +        return 0;
->>
->> in pci_set_power_state(), call to pcie_aspm_powersave_config_link() is never
->> made leaving ASPM broken.
->> Fix it by configuring links for ASPM in do_pci_enable_device() instead of
->> pci_set_power_state()
->>
->> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
->> Signed-off-by: Vidya Sagar <sagar.tv@gmail.com>
->
-> I applied this to pci/misc for v3.17 with the following changelog:
+On Mon, Jul 21, 2014 at 01:51:46AM +0200, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Subject: ACPI / PM: Always enable wakeup GPEs when enabling device wakeup
+> 
+> Wakeup GPEs are currently only enabled when setting up devices for
+> remote wakeup at run time.  During system-wide transitions they are
+> enabled by ACPICA at the very last stage of suspend (before asking
+> the BIOS to take over).  Of course, that only works for system
+> sleep states supported by ACPI, so in particular it doesn't work
+> for the "freeze" sleep state.
+> 
+> For this reason, modify the ACPI core device PM code to enable wakeup
+> GPEs for devices when setting them up for wakeup regardless of whether
+> that is remote wakeup at runtime or system wakeup.  That allows the
+> same device wakeup setup routine to be used for both runtime PM and
+> system-wide PM and makes it possible to reduce code size quite a bit.
+> 
+> That should make things like ACPI-based PCI Wake-on-LAN work with
+> the "freeze" sleep state among other things.
+> 
+> Tested-on: Toshiba Portege R500
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+> 
+> The PCI ACPI device PM notify handler has to be updated to avoid running
+> runtime resume callbacks during system suspend too.
 
-Thanks,
+So I tested the first version, with that my WSM-EP didn't resume on WoL
+and pressing the power button after the WoL had it crash and burn in the
+igb driver.
 
->
-> It would still make me feel better if Matthew and/or Rafael acked this.
->
->     PCI: Configure ASPM when enabling device
->
->     We can't do ASPM configuration at enumeration-time because enabling it
->     makes some defective hardware unresponsive, even if ASPM is disabled later
->     (see 41cd766b0659 ("PCI: Don't enable aspm before drivers have had a chance
->     to veto it").  Therefore, we have to do it after a driver claims the
->     device.
->
->     We previously configured ASPM in pci_set_power_state(), but that's not a
->     very good place because it's not really related to setting the PCI device
->     power state, and doing it there means:
->
->       - We incorrectly skipped ASPM config when setting a device that's
->         already in D0 to D0.
->
->       - We unnecessarily configured ASPM when setting a device to a low-power
->         state (the ASPM feature only applies when the device is in D0).
->
->       - We unnecessarily configured ASPM when called from a .resume() method
->         (ASPM configuration needs to be restored during resume, but I think
->         pci_restore_pcie_state() should already do this).
->
->     Move ASPM configuration from pci_set_power_state() to
->     do_pci_enable_device() so we do it when a driver enables a device.
->
->     [bhelgaas: changelog]
->     Link: https://bugzilla.kernel.org/show_bug.cgi?id=79621
->
-> It would still make me feel better if Matthew and/or Rafael chimed in to
-> make sure this is sane.
->
-> Bjorn
->
->> ---
->> v3:
->> * Modified commit message
->>     removed single quotes around commit messages
->>     added Suggested-by line
->>
->> v2:
->> * Calling ASPM config code is moved from pci_set_power_state() to
->> * do_pci_enable_device()
->>
->>  drivers/pci/pci.c | 12 ++++++------
->>  1 file changed, 6 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 1c8592b..81d49d3 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -839,12 +839,6 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
->>
->>       if (!__pci_complete_power_transition(dev, state))
->>               error = 0;
->> -     /*
->> -      * When aspm_policy is "powersave" this call ensures
->> -      * that ASPM is configured.
->> -      */
->> -     if (!error && dev->bus->self)
->> -             pcie_aspm_powersave_config_link(dev->bus->self);
->>
->>       return error;
->>  }
->> @@ -1195,12 +1189,18 @@ int __weak pcibios_enable_device(struct pci_dev *dev, int bars)
->>  static int do_pci_enable_device(struct pci_dev *dev, int bars)
->>  {
->>       int err;
->> +     struct pci_dev *bridge;
->>       u16 cmd;
->>       u8 pin;
->>
->>       err = pci_set_power_state(dev, PCI_D0);
->>       if (err < 0 && err != -EIO)
->>               return err;
->> +
->> +     bridge = pci_upstream_bridge(dev);
->> +     if (bridge)
->> +             pcie_aspm_powersave_config_link(bridge);
->> +
->>       err = pcibios_enable_device(dev, bars);
->>       if (err < 0)
->>               return err;
->> --
->> 1.8.1.5
->>
+Today I tested this latest version and WoL still didn't trigger a
+resume, but the power button did make it go again, no crashes and I
+suppose I can confirm the earlier patch that stopped making it go halt
+works.
+
+When I 'halt' I can wake the machine back up using a WoL so that all
+_should_ work afaik.
