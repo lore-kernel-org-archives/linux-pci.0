@@ -1,123 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:33054 "EHLO
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:53475 "EHLO
 	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751629AbaG0K3f (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jul 2014 06:29:35 -0400
+	with ESMTP id S1753690AbaGUVMv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jul 2014 17:12:51 -0400
+Received: by mail-oa0-f52.google.com with SMTP id o6so8367793oag.11
+        for <linux-pci@vger.kernel.org>; Mon, 21 Jul 2014 14:12:50 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20140726083301.GI21129@agordeev.usersys.redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
-	<9bfa1f22a2a59814a4d520bbcce6eba1b6979b31.1405533479.git.agordeev@redhat.com>
-	<20140726083301.GI21129@agordeev.usersys.redhat.com>
-Date: Sun, 27 Jul 2014 12:29:34 +0200
-Message-ID: <CAD+HZHWot_ZZr_+kR6_pKc0bRGFCU_k35RM7TRi=aKeeccsh9w@mail.gmail.com>
-Subject: Re: [PATCH v2 RESEND 18/23] pm8001: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-From: Jack Wang <xjtuwjp@gmail.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, lindar_liu <lindar_liu@usish.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	linux-pci@vger.kernel.org
+In-Reply-To: <1405966635-7455-1-git-send-email-l.stach@pengutronix.de>
+References: <1405966635-7455-1-git-send-email-l.stach@pengutronix.de>
+Date: Mon, 21 Jul 2014 14:12:50 -0700
+Message-ID: <CAJ+vNU1raC+eajYy33KDU=98NhJguz9j-ob+5oo94Q8oV3Cjqg@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: imx6: fix boot hang when link already enabled
+From: Tim Harvey <tharvey@gateworks.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fabio Estevam <fabio.estevam@freescale.com>,
+	Shawn Guo <shawn.guo@freescale.com>,
+	Marek Vasut <marex@denx.de>,
+	=?UTF-8?Q?David_M=C3=BCller_=28ELSOFT_AG=29?= <d.mueller@elsoft.ch>,
+	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex,
-
-Looks Ok for me.
-Please feel free to add my:
-Reviewed-by: Jack Wang <xjtuwjp@gmail.com>
-
-Thanks,
-Jack
-
-2014-07-26 10:33 GMT+02:00 Alexander Gordeev <agordeev@redhat.com>:
-> On Wed, Jul 16, 2014 at 08:05:22PM +0200, Alexander Gordeev wrote:
->> As result of deprecation of MSI-X/MSI enablement functions
->> pci_enable_msix() and pci_enable_msi_block() all drivers
->> using these two interfaces need to be updated to use the
->> new pci_enable_msi_range()  or pci_enable_msi_exact()
->> and pci_enable_msix_range() or pci_enable_msix_exact()
->> interfaces.
+On Mon, Jul 21, 2014 at 11:17 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> This fixes a boot hang observed when the bootloader
+> already enabled the PCIe link for it's own use. The
+> fundamental problem is that Freescale forgot to wire
+> up the core reset, so software doesn't have a sane way
+> to get the core into a defined state.
 >
-> Hi Jack, Lindar,
+> According to the DW PCIe core reference manual configuration
+> of the core may only happen when the LTSSM is disabled, so
+> this is one of the first things we need to do. Apparently
+> this isn't safe to do when the LTSSM is in any other state
+> than "detect" as we observe an instant machine hang when
+> trying to do so while the link is already up.
 >
-> Could you please review this patch?
+> As a workaround force LTSSM into detect state right before
+> hitting the disable switch.
 >
-> Thanks!
+> Reported-by: Fabio Estevam <fabio.estevam@freescale.com>
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+> v2: messed up the first submission by omitting a chunk
 >
->> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
->> Cc: xjtuwjp@gmail.com
->> Cc: lindar_liu@usish.com
->> Cc: linux-scsi@vger.kernel.org
->> Cc: linux-pci@vger.kernel.org
->> ---
->>  drivers/scsi/pm8001/pm8001_init.c |   39 +++++++++++++++++++------------------
->>  1 files changed, 20 insertions(+), 19 deletions(-)
->>
->> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
->> index e837ece..4057c24 100644
->> --- a/drivers/scsi/pm8001/pm8001_init.c
->> +++ b/drivers/scsi/pm8001/pm8001_init.c
->> @@ -729,34 +729,35 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
->>               sizeof(pm8001_ha->msix_entries[0]);
->>       for (i = 0; i < max_entry ; i++)
->>               pm8001_ha->msix_entries[i].entry = i;
->> -     rc = pci_enable_msix(pm8001_ha->pdev, pm8001_ha->msix_entries,
->> +     rc = pci_enable_msix_exact(pm8001_ha->pdev, pm8001_ha->msix_entries,
->>               number_of_intr);
->>       pm8001_ha->number_of_intr = number_of_intr;
->> -     if (!rc) {
->> -             PM8001_INIT_DBG(pm8001_ha, pm8001_printk(
->> -                     "pci_enable_msix request ret:%d no of intr %d\n",
->> -                                     rc, pm8001_ha->number_of_intr));
->> +     if (rc)
->> +             return rc;
->>
->> +     PM8001_INIT_DBG(pm8001_ha, pm8001_printk(
->> +             "pci_enable_msix_exact request ret:%d no of intr %d\n",
->> +                             rc, pm8001_ha->number_of_intr));
->>
->> -             for (i = 0; i < number_of_intr; i++) {
->> -                     snprintf(intr_drvname[i], sizeof(intr_drvname[0]),
->> -                                     DRV_NAME"%d", i);
->> -                     pm8001_ha->irq_vector[i].irq_id = i;
->> -                     pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
->> +     for (i = 0; i < number_of_intr; i++) {
->> +             snprintf(intr_drvname[i], sizeof(intr_drvname[0]),
->> +                             DRV_NAME"%d", i);
->> +             pm8001_ha->irq_vector[i].irq_id = i;
->> +             pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
->>
->> -                     rc = request_irq(pm8001_ha->msix_entries[i].vector,
->> -                             pm8001_interrupt_handler_msix, flag,
->> -                             intr_drvname[i], &(pm8001_ha->irq_vector[i]));
->> -                     if (rc) {
->> -                             for (j = 0; j < i; j++)
->> -                                     free_irq(
->> -                                     pm8001_ha->msix_entries[j].vector,
->> +             rc = request_irq(pm8001_ha->msix_entries[i].vector,
->> +                     pm8001_interrupt_handler_msix, flag,
->> +                     intr_drvname[i], &(pm8001_ha->irq_vector[i]));
->> +             if (rc) {
->> +                     for (j = 0; j < i; j++) {
->> +                             free_irq(pm8001_ha->msix_entries[j].vector,
->>                                       &(pm8001_ha->irq_vector[i]));
->> -                             pci_disable_msix(pm8001_ha->pdev);
->> -                             break;
->>                       }
->> +                     pci_disable_msix(pm8001_ha->pdev);
->> +                     break;
->>               }
->>       }
->> +
->>       return rc;
->>  }
->>  #endif
->> --
->> 1.7.7.6
->>
+> Fabios delay workaround worked because of the following
+> conditions:
+> 1. The driver gets probed and pulls the peripheral reset GPIO
+> 2. Peripheral is held in reset, so won't answer any link
+> negotiation requests
+> 3. The LTSSM times out and falls back into detect state
+> after 24ms (that's why a 30ms delay helps)
+> 4. After LTSSM entered detect state it's safe to hit the
+> disable switch
+> ---
+>  drivers/pci/host/pci-imx6.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+>
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index a568efaa331c..1c4b4b81fe15 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -49,6 +49,9 @@ struct imx6_pcie {
+>
+>  /* PCIe Port Logic registers (memory-mapped) */
+>  #define PL_OFFSET 0x700
+> +#define PCIE_PL_PFLR (PL_OFFSET + 0x08)
+> +#define PCIE_PL_PFLR_LINK_STATE_MASK           (0x3f << 16)
+> +#define PCIE_PL_PFLR_FORCE_LINK                        (1 << 15)
+>  #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
+>  #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
+>  #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING        (1 << 29)
+> @@ -214,7 +217,15 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
+>  static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
+>  {
+>         struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+> +       u32 val;
+> +
+> +       val = readl(pp->dbi_base + PCIE_PL_PFLR);
+> +       val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
+> +       val |= PCIE_PL_PFLR_FORCE_LINK;
+> +       writel(val, pp->dbi_base + PCIE_PL_PFLR);
+>
+> +       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> +                       IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
+>         regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+>                         IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
+>         regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> --
+> 2.0.1
 >
 > --
-> Regards,
-> Alexander Gordeev
-> agordeev@redhat.com
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Lucas,
+
+Thank you - this does resolve the hang on all my board configurations
+(with and without bridges, external and internal clock-gen).
+
+Acked-by: Tim Harvey <tharvey@gateworks.com>
+
+Tim
