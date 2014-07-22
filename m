@@ -1,106 +1,314 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:64620 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754107AbaGPXr2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 19:47:28 -0400
-Received: by mail-ig0-f179.google.com with SMTP id h18so1769150igc.0
-        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 16:47:27 -0700 (PDT)
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:50450 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751233AbaGVDQT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jul 2014 23:16:19 -0400
+Received: by mail-oa0-f52.google.com with SMTP id o6so8835193oag.11
+        for <linux-pci@vger.kernel.org>; Mon, 21 Jul 2014 20:16:18 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWomktcpSHeFwxWBLXmAsbdXEHv6sOrNXodobkBw=mRKA@mail.gmail.com>
-References: <CAKAYmMLfxkmaVxaPDd6z=B0ESQ3mR=dUG4OFFgEoy0295qLYgg@mail.gmail.com>
-	<CAKAYmMLhPhukBbR8NhPk3EigmvwiX+DEGj-Mod7zpHMnZKRsLw@mail.gmail.com>
-	<CAErSpo7vooChRfSF6oY8GcqVYZruv-7_D0zm3a4M_KDVMbWNiA@mail.gmail.com>
-	<CAE9FiQWomktcpSHeFwxWBLXmAsbdXEHv6sOrNXodobkBw=mRKA@mail.gmail.com>
-Date: Wed, 16 Jul 2014 16:47:27 -0700
-Message-ID: <CAE9FiQW+GbprQZNvHC-ek1cSydP3KWcjgAU0ii5_jECC1+tXrg@mail.gmail.com>
-Subject: Re: Error assigning BAR 0 to hotplugged device
-From: Yinghai Lu <yinghai@kernel.org>
-To: Chuck Tuffli <ctuffli@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
+In-Reply-To: <20140714163922.GH1112@arm.com>
+References: <20140708005954.GC22939@google.com> <20140708104655.GC6501@e106497-lin.cambridge.arm.com>
+ <CAErSpo75ovmGoeSHKJN0nckGDy-0gpn8kLPfHQ79CtcXxhPydw@mail.gmail.com>
+ <20140708224847.GC4980@e106497-lin.cambridge.arm.com> <CAErSpo5rBt0iF2HGeDD-UH6_sPCoC647VCw0Q1v_0Rdpvcir-w@mail.gmail.com>
+ <20140710094758.GA6501@e106497-lin.cambridge.arm.com> <CAErSpo5ZNCY31NztT0cLFbRVsBZqMsZ0LbTFNOTQCZUU3F7qJA@mail.gmail.com>
+ <20140711141115.GB16321@arm.com> <CAErSpo7C8qzmdp+XgVi2ysXj_NcgvVY7RVfBZ2PHimLzrzANMQ@mail.gmail.com>
+ <20140711180151.GH16321@arm.com> <20140714163922.GH1112@arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 21 Jul 2014 21:15:58 -0600
+Message-ID: <CAErSpo65RBeTgzrVefWBfjnZqTPzyz__HnC4bn8riGGDC0GkHg@mail.gmail.com>
+Subject: Re: [PATCH v8 6/9] pci: Introduce a domain number for pci_host_bridge.
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 16, 2014 at 1:55 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Jul 16, 2014 at 11:54 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> [+cc Yinghai]
->>
->> On Wed, Jul 16, 2014 at 11:19 AM, Chuck Tuffli <ctuffli@gmail.com> wrote:
->>> On Tue, Jul 8, 2014 at 12:37 PM, Chuck Tuffli <ctuffli@gmail.com> wrote:
->>>> On a system with a recent Fedora kernel (3.14.9-200.fc20.x86_64), a
->>>> hotplugged PCI device is unable to get memory mapped IO:
->>>> ...
->>>> [  183.247377] pcieport 0000:9a:00.0: BAR 15: can't assign mem pref
->>>> (size 0x100000)
->>>> [  183.247384] pcieport 0000:9b:15.0: BAR 14: can't assign mem (size 0x100000)
->>>> [  183.247388] pcieport 0000:9b:15.0: BAR 15: can't assign mem pref
->>>> (size 0x100000)
->>>> [  183.247394] pci 0000:a5:00.0: BAR 6: can't assign mem pref (size 0x10000)
->>>> [  183.247397] pci 0000:a5:00.0: BAR 0: can't assign mem (size 0x4000)
->>>>
->>>> The device is connected to a switch supporting hotplug (i.e. SltCap
->>>> includes HotPlug+) and I have added
->>>> pci=realloc,hpmemsize=16M
->>>> to the kernel boot parameters. This appears to have increased the
->>>> prefetchable memory but not the memory mapped IO:
->>>
->>> Further investigation suggests that pbus_size_mem() never really gets
->>> a chance to increase the bridge aperture by the hpmemsize value
->>> because find_free_bus_resource() returns NULL. This apparently happens
->>> because the function "skip[s] the bus resources which have already
->>> been assigned (that is, have non-NULL parent resource)". Specifically,
->>> it checks
->>>
->>>     if (r && (r->flags & type_mask) == type && !r->parent)
->>>
->>> and in my configuration, finds that r->parent != NULL for the memory
->>> mapped IO resource. Wouldn't r->parent be non-NULL in most cases other
->>> than for bridges in the root complex? If so, does that imply hpmemsize
->>> would only be used for bridges advertising hot plug in the root
->>> complex?
+On Mon, Jul 14, 2014 at 10:39 AM, Catalin Marinas
+<catalin.marinas@arm.com> wrote:
+> ...
+> Some more thinking, so I guess we could get away without changing the
+> API. On top of Liviu's tree here:
 >
-> Please try current tree linus/master or pci/next.
-> also need boot with "debug ignore_loglevel pciehp.pciehp_debug=1".
+> http://linux-arm.org/git?p=linux-ld.git;a=shortlog;h=refs/heads/for-upstream/pci_v8
 >
-> post
-> dmesg -s 262144
-> lspci -tv
-> lspci -vvxxx
+> I reverted "pci: Introduce a domain number for pci_host_bridge.":
+>
+> http://linux-arm.org/git?p=linux-ld.git;a=commitdiff;h=b44e1c7d6b01c436f6f55662a1414e925161c9ca
+>
+> and added this patch on top (if you agree with the idea, we can split it
+> nicely in arm64, OF and PCI specific parts). What we get is the
+> domain_nr in a generic structure and free the sysdata pointer for the
+> host controller driver.
+>
+> ----------------8<----------------------------------------
+> From b32606aa3997fc8a45014a64f99e921eef4872b0 Mon Sep 17 00:00:00 2001
+> From: Catalin Marinas <catalin.marinas@arm.com>
+> Date: Mon, 14 Jul 2014 17:20:01 +0100
+> Subject: [PATCH] pci: Add support for generic domain_nr in pci_bus
+>
+> This patch adds domain_nr in struct pci_bus if
+> CONFIG_PCI_DOMAINS_GENERIC is enabled. The default implementation for
+> pci_domain_nr() simply returns bus->domain_nr. For the root bus, the
+> core PCI code calls pci_set_domain_nr(bus, parent_device) while the
+> child buses inherit the domain nr of the parent bus.
+>
+> This patch also adds an of_pci_set_domain_nr() implementation which
+> parses the device tree for the "pci-domain" property or sets domain_nr
+> to the next available value (this function could also be implemented
+> entirely in arm64).
+>
+> Signed-off-by: Catalin Marinas <catalin.marinas@arm.com>
 
-in the tree:
-   80:03.0 ==> 96:00.0 ==> 97:08.0 ==> 98:00.0 ==> 99:00.0 ==> 9a:00.0
-==> 9b:15.0
+I like this.  It seems like a reasonable step forward.  I don't really
+like the pci_set_domain_nr() interface because the domain conceptually
+exists before the root bus in the domain, but we can deal with that
+later.
 
-only 97:08.0 and 99:00.0 is hotplug+.
+Tiny nit: please remove the "extern" on the pci_set_domain_nr()
+declaration in include/linux/pci.h; we recently removed all the rest
+(f39d5b72913e).
 
-and kernel will honor BIOS set value at first, and realloc will only work on
-unassigned/invalid assigned BARs. and hpmem_size will be only treated at
-optional size even on hotplug slots.
+I'd really like to see all this stuff in v3.17, but I'm going to be on
+vacation for the next three weeks and won't be able to do much until
+Aug 11, which is probably going to be in the middle of the merge
+window.  But maybe the series can be integrated in -next via an ARM
+tree or something.  If it helps, you can add my
 
-a5:00.0 is not in 9b:15.0 at first, so yo just put the card in can
-rescan the card,
-right?
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-In this case we don't to realloc, as other devices could already have
-driver loaded.
+for this piece.  I don't remember how many other PCI changes are
+involved; maybe my ack on this will be enough?  Even if we can't get
+it in for the merge window, I'm open to trying to merge it after
+v3.17-rc1 if it's isolated enough.
 
-You need to fix the BIOS to have correct setting for 96:1b.0.
+Bjorn
 
-                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd-
-HotPlug- Surprise-
-                        Slot #21, PowerLimit 25.000W; Interlock- NoCompl-
-                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet-
-CmdCplt- HPIrq- LinkChg-
-                        Control: AttnInd Unknown, PwrInd Unknown,
-Power- Interlock-
-                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt-
-PresDet+ Interlock-
-                        Changed: MRL- PresDet+ LinkState+
-
-to make it really hotplug slot.
-
-And BIOS need to make sure parent bus/bridge have enough resource ranges
-for the hotplug slots.
-
-Yinghai
+> ---
+>  arch/arm64/Kconfig           |  3 +++
+>  arch/arm64/include/asm/pci.h | 10 ----------
+>  arch/arm64/kernel/pci.c      |  5 +++++
+>  drivers/of/of_pci.c          | 20 +++++++++++++-------
+>  drivers/pci/probe.c          | 11 ++++++++---
+>  include/linux/of_pci.h       |  5 +++++
+>  include/linux/pci.h          | 15 +++++++++++++++
+>  7 files changed, 49 insertions(+), 20 deletions(-)
+>
+> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+> index 48ed631adde2..2c884f7453ba 100644
+> --- a/arch/arm64/Kconfig
+> +++ b/arch/arm64/Kconfig
+> @@ -160,6 +160,9 @@ config PCI
+>  config PCI_DOMAINS
+>         def_bool PCI
+>
+> +config PCI_DOMAINS_GENERIC
+> +       def_bool PCI
+> +
+>  config PCI_SYSCALL
+>         def_bool PCI
+>
+> diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
+> index 3f7856e92d66..4f091a5135b7 100644
+> --- a/arch/arm64/include/asm/pci.h
+> +++ b/arch/arm64/include/asm/pci.h
+> @@ -29,16 +29,6 @@ struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus);
+>  extern int isa_dma_bridge_buggy;
+>
+>  #ifdef CONFIG_PCI
+> -static inline int pci_domain_nr(struct pci_bus *bus)
+> -{
+> -       struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+> -
+> -       if (bridge)
+> -               return bridge->domain_nr;
+> -
+> -       return 0;
+> -}
+> -
+>  static inline int pci_proc_domain(struct pci_bus *bus)
+>  {
+>         return 1;
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index 955d6d1cb011..d5ed1afb0d88 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -36,3 +36,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>  {
+>         return res->start;
+>  }
+> +
+> +void pci_set_domain_nr(struct pci_bus *bus, struct device *parent)
+> +{
+> +       of_pci_set_domain_nr(bus, parent);
+> +}
+> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> index e81402af5cde..54f06b748bf1 100644
+> --- a/drivers/of/of_pci.c
+> +++ b/drivers/of/of_pci.c
+> @@ -175,7 +175,7 @@ static atomic_t domain_nr = ATOMIC_INIT(-1);
+>  struct pci_host_bridge *
+>  of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops, void *host_data)
+>  {
+> -       int err, domain, busno;
+> +       int err, busno;
+>         struct resource *bus_range;
+>         struct pci_bus *root_bus;
+>         struct pci_host_bridge *bridge;
+> @@ -186,10 +186,6 @@ of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops, void *host
+>         if (!bus_range)
+>                 return ERR_PTR(-ENOMEM);
+>
+> -       domain = of_alias_get_id(parent->of_node, "pci-domain");
+> -       if (domain == -ENODEV)
+> -               domain = atomic_inc_return(&domain_nr);
+> -
+>         err = of_pci_parse_bus_range(parent->of_node, bus_range);
+>         if (err) {
+>                 dev_info(parent, "No bus range for %s, using default [0-255]\n",
+> @@ -207,8 +203,7 @@ of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops, void *host
+>                 goto err_create;
+>
+>         /* then create the root bus */
+> -       root_bus = pci_create_root_bus_in_domain(parent, domain, busno,
+> -                                               ops, host_data, &res);
+> +       root_bus = pci_create_root_bus(parent, busno, ops, host_data, &res);
+>         if (IS_ERR(root_bus)) {
+>                 err = PTR_ERR(root_bus);
+>                 goto err_create;
+> @@ -225,6 +220,17 @@ err_create:
+>  }
+>  EXPORT_SYMBOL_GPL(of_create_pci_host_bridge);
+>
+> +void of_pci_set_domain_nr(struct pci_bus *bus, struct device *parent)
+> +{
+> +       int domain;
+> +
+> +       domain = of_alias_get_id(parent->of_node, "pci-domain");
+> +       if (domain == -ENODEV)
+> +               domain = atomic_inc_return(&domain_nr);
+> +
+> +       bus->domain_nr = domain;
+> +}
+> +
+>  #ifdef CONFIG_PCI_MSI
+>
+>  static LIST_HEAD(of_pci_msi_chip_list);
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 2c9266237edc..aa30a9e8915d 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -485,7 +485,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
+>         }
+>  }
+>
+> -static struct pci_bus *pci_alloc_bus(void)
+> +static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
+>  {
+>         struct pci_bus *b;
+>
+> @@ -500,6 +500,10 @@ static struct pci_bus *pci_alloc_bus(void)
+>         INIT_LIST_HEAD(&b->resources);
+>         b->max_bus_speed = PCI_SPEED_UNKNOWN;
+>         b->cur_bus_speed = PCI_SPEED_UNKNOWN;
+> +#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> +       if (parent)
+> +               b->domain_nr = parent->domain_nr;
+> +#endif
+>         return b;
+>  }
+>
+> @@ -670,7 +674,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>         /*
+>          * Allocate a new bus, and inherit stuff from the parent..
+>          */
+> -       child = pci_alloc_bus();
+> +       child = pci_alloc_bus(parent);
+>         if (!child)
+>                 return NULL;
+>
+> @@ -1767,13 +1771,14 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>         bridge->dev.parent = parent;
+>         bridge->dev.release = pci_release_host_bridge_dev;
+>
+> -       b = pci_alloc_bus();
+> +       b = pci_alloc_bus(NULL);
+>         if (!b)
+>                 goto err_out;
+>
+>         b->sysdata = sysdata;
+>         b->ops = ops;
+>         b->number = b->busn_res.start = bus;
+> +       pci_set_domain_nr(b, parent);
+>         b2 = pci_find_bus(pci_domain_nr(b), bus);
+>         if (b2) {
+>                 /* If we already got to this bus through a different bridge, ignore it */
+> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+> index 71e36d091db2..af16ac40c7a2 100644
+> --- a/include/linux/of_pci.h
+> +++ b/include/linux/of_pci.h
+> @@ -17,6 +17,7 @@ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+>  int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+>  struct pci_host_bridge *of_create_pci_host_bridge(struct device *parent,
+>                                         struct pci_ops *ops, void *host_data);
+> +void of_pci_set_domain_nr(struct pci_bus *bus, struct device *parent);
+>
+>  #else
+>  static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
+> @@ -53,6 +54,10 @@ of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops,
+>  {
+>         return NULL;
+>  }
+> +
+> +static inline void of_pci_set_domain_nr(struct pci_bus *bus, struct device *parent)
+> +{
+> +}
+>  #endif
+>
+>  #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index d32b4ed1f411..9113f62c5038 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -457,6 +457,9 @@ struct pci_bus {
+>         unsigned char   primary;        /* number of primary bridge */
+>         unsigned char   max_bus_speed;  /* enum pci_bus_speed */
+>         unsigned char   cur_bus_speed;  /* enum pci_bus_speed */
+> +#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> +       int             domain_nr;
+> +#endif
+>
+>         char            name[48];
+>
+> @@ -1292,6 +1295,18 @@ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+>  static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+>  #endif /* CONFIG_PCI_DOMAINS */
+>
+> +#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> +static inline int pci_domain_nr(struct pci_bus *bus)
+> +{
+> +       return bus->domain_nr;
+> +}
+> +extern void pci_set_domain_nr(struct pci_bus *bus, struct device *parent);
+> +#else
+> +static inline void pci_set_domain_nr(struct pci_bus *bus, struct device *parent)
+> +{
+> +}
+> +#endif
+> +
+>  /* some architectures require additional setup to direct VGA traffic */
+>  typedef int (*arch_set_vga_state_t)(struct pci_dev *pdev, bool decode,
+>                       unsigned int command_bits, u32 flags);
