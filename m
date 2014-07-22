@@ -1,88 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:60961 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751874AbaGHBdi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jul 2014 21:33:38 -0400
-Message-ID: <53BB4A67.4010104@huawei.com>
-Date: Tue, 8 Jul 2014 09:33:27 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:33818 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751081AbaGVS1O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 14:27:14 -0400
+Received: by mail-ie0-f176.google.com with SMTP id tr6so37670ieb.21
+        for <linux-pci@vger.kernel.org>; Tue, 22 Jul 2014 11:27:13 -0700 (PDT)
+Date: Tue, 22 Jul 2014 12:27:10 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: Jason Cooper <jason@lakedaemon.net>,
+	linux ARM <linux-arm-kernel@lists.infradead.org>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 09/12] PCI: Remove ARCH_KIRKWOOD dependency
+Message-ID: <20140722182710.GA19181@google.com>
+References: <1405028192-9623-1-git-send-email-andrew@lunn.ch>
+ <1405028192-9623-10-git-send-email-andrew@lunn.ch>
 MIME-Version: 1.0
-To: Sebastian Ott <sebott@linux.vnet.ibm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Gerald Schaefer <gerald.schaefer@de.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	<linux-s390@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Wuyun <wuyun.wu@huawei.com>, Xinwei Hu <huxinwei@huawei.com>
-Subject: Re: [PATCH 2/5] s390/MSI: Use standard mask and unmask funtions
-References: <1404461764-6520-1-git-send-email-wangyijing@huawei.com> <alpine.LFD.2.11.1407041623560.1624@denkbrett>
-In-Reply-To: <alpine.LFD.2.11.1407041623560.1624@denkbrett>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1405028192-9623-10-git-send-email-andrew@lunn.ch>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/7/4 22:28, Sebastian Ott wrote:
-> On Fri, 4 Jul 2014, Yijing Wang wrote:
->> MSI irqchip in s390 has its own mask and unmask MSI irq
->> functions, zpci_enable_irq() and zpci_disable_irq().
->> They mask and unmask MSI irq in standard ways, no arch
->> special. MSI driver provides two global standard functions
->> mask_msi_irq() and unmask_msi_irq(). Local zpci_enable_irq()
->> and zpci_disable_irq() are almost the same as the standard
->> two. the difference is local mask/unmask functions
->> read the mask status before mask and unmask everytime.
->> Then change the value and rewrite to hardware. In standard
->> functions, save the mask status after mask and unmask msi
->> irq, and use the cached status to change the mask status.
->> When we mask or unmask a MSI irq, we always cache its
->> mask status except we know need not to cache it, like in
->> pci_msi_shutdown. So use the standard functions to replace
->> the local is safe.
+On Thu, Jul 10, 2014 at 11:36:29PM +0200, Andrew Lunn wrote:
+> mach-kirkwood has been removed, now that kirkwood lives in mach-mvebu.
+> ARCH_MVEBU is sufficient.
 > 
-> Thanks, for doing that!
-> At first glance the last hunk looks funny.
+> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
 
-Thanks for your review.
+Applied with Jason's ack to pci/host-mvebu for v3.17, thanks!
 
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/pci/host/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  arch/s390/pci/pci.c |   49 ++++++-------------------------------------------
-
->>  }
->> @@ -487,7 +447,10 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
->>
->>  	/* Release MSI interrupts */
->>  	list_for_each_entry(msi, &pdev->msi_list, list) {
->> -		zpci_msi_set_mask_bits(msi, 1, 1);
->> +		if (msi->msi_attrib.is_msix)
->> +			default_msi_mask_irq(msi, 1, 1);
->> +		else
->> +			default_msix_mask_irq(msi, 1);
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 21df477be0c8..88f4862fa452 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -3,7 +3,7 @@ menu "PCI host controller drivers"
+>  
+>  config PCI_MVEBU
+>  	bool "Marvell EBU PCIe controller"
+> -	depends on ARCH_MVEBU || ARCH_DOVE || ARCH_KIRKWOOD
+> +	depends on ARCH_MVEBU || ARCH_DOVE
+>  	depends on OF
+>  
+>  config PCIE_DW
+> -- 
+> 2.0.1
 > 
-> This one looks inverted.
-
-Oh, my mistake, will update and resend.
-
-
-Thanks!
-Yijing.
-
-> 
->>  		irq_set_msi_desc(msi->irq, NULL);
->>  		irq_free_desc(msi->irq);
->>  		msi->msg.address_lo = 0;
-> 
-> Regards,
-> Sebastian
-> 
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
