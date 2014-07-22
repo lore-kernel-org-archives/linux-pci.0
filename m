@@ -1,44 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:37503 "EHLO gate.crashing.org"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:59367 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752631AbaGNDMY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 13 Jul 2014 23:12:24 -0400
-Message-ID: <1405307520.9343.10.camel@pasglop>
-Subject: Re: [RFC PATCH V3 06/17] ppc/pnv: allocate pe->iommu_table
- dynamically
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: "'Wei Yang'" <weiyang@linux.vnet.ibm.com>,
-	Alexey Kardashevskiy <aik@ozlabs.ru>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
-	"qiudayu@linux.vnet.ibm.com" <qiudayu@linux.vnet.ibm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"yan@linux.vnet.ibm.com" <yan@linux.vnet.ibm.com>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Date: Mon, 14 Jul 2014 13:12:00 +1000
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D17264AD8@AcuExch.aculab.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
-	 <1402365399-5121-7-git-send-email-weiyang@linux.vnet.ibm.com>
-	 <53A94DA8.6020206@ozlabs.ru> <20140625011211.GA5785@richard>
-	 <53AA4C32.7060004@ozlabs.ru> <20140625052758.GA8873@richard>
-	 <063D6719AE5E284EB5DD2968C1650D6D17264AD8@AcuExch.aculab.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1755237AbaGVMSQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Jul 2014 08:18:16 -0400
+Message-ID: <53CE5663.3020100@ti.com>
+Date: Tue, 22 Jul 2014 17:47:39 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
+MIME-Version: 1.0
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <jg1.han@samsung.com>,
+	<bhelgaas@google.com>, <mohit.kumar@st.com>,
+	<linux-kernel@vger.kernel.org>
+CC: <grant.likely@linaro.org>
+Subject: Re: [PATCH v3 0/4] dra7: Add PCIe support
+References: <1405587643-13808-1-git-send-email-kishon@ti.com>
+In-Reply-To: <1405587643-13808-1-git-send-email-kishon@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-06-25 at 09:20 +0000, David Laight wrote:
-> What are the sizes of the iommu table and the PE structure? 
-> If the table is a round number of pages then you probably don't want
-> to embed it inside the PE structure. 
+Hi Bjorn,
 
-The problem isn't the table itself but the struct iommu_table which
-contains the pointer to the actual table and various other bits of
-controlling state.
+On Thursday 17 July 2014 02:30 PM, Kishon Vijay Abraham I wrote:
+> Changes from v2:
+> * Added myself as MAINTAINER of pcie dra7xx driver
+> 
+> Changes from v1:
+> * fixed dw_pcie_prog_viewport_io_outbound() to use untranslated address
+> * split dra7xx patch into driver part and documentation part
+> 
+> [1] is split into separate series in order for individual subsystem
+> Maintainers to pick up the patches. This series handles the PCIe
+> support for DRA7.
+> 
+> Rebased to pci -next.
+> 
+> [1] -> https://lkml.org/lkml/2014/5/29/258
 
-Cheers,
-Ben.
+I tried to get Acks for the DT documentation from DT maintainers but couldn't.
+I'd assume they would have reverted if they had any concerns. Moreover the dt
+documentation for DRA7xx is just an extension of the dt documentation for
+designware. And since Pratyush, Jingoo, Mohit seems to be okay with this patch
+series, can we get this series merged?
 
-
-
+Cheers
+Kishon
