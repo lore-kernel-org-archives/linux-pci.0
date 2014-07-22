@@ -1,110 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:53475 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753690AbaGUVMv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jul 2014 17:12:51 -0400
-Received: by mail-oa0-f52.google.com with SMTP id o6so8367793oag.11
-        for <linux-pci@vger.kernel.org>; Mon, 21 Jul 2014 14:12:50 -0700 (PDT)
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:63349 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932154AbaGVVxD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 17:53:03 -0400
+Received: by mail-ie0-f181.google.com with SMTP id rp18so249647iec.40
+        for <linux-pci@vger.kernel.org>; Tue, 22 Jul 2014 14:53:01 -0700 (PDT)
+Date: Tue, 22 Jul 2014 15:52:59 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add device specific (non)reset for AMD GPUs
+Message-ID: <20140722215259.GE19181@google.com>
+References: <20140716190955.4722.25453.stgit@gimli.home>
+ <20140722195557.GD19181@google.com>
+ <1406060607.4463.36.camel@ul30vt.home>
 MIME-Version: 1.0
-In-Reply-To: <1405966635-7455-1-git-send-email-l.stach@pengutronix.de>
-References: <1405966635-7455-1-git-send-email-l.stach@pengutronix.de>
-Date: Mon, 21 Jul 2014 14:12:50 -0700
-Message-ID: <CAJ+vNU1raC+eajYy33KDU=98NhJguz9j-ob+5oo94Q8oV3Cjqg@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: imx6: fix boot hang when link already enabled
-From: Tim Harvey <tharvey@gateworks.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	Shawn Guo <shawn.guo@freescale.com>,
-	Marek Vasut <marex@denx.de>,
-	=?UTF-8?Q?David_M=C3=BCller_=28ELSOFT_AG=29?= <d.mueller@elsoft.ch>,
-	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1406060607.4463.36.camel@ul30vt.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 21, 2014 at 11:17 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> This fixes a boot hang observed when the bootloader
-> already enabled the PCIe link for it's own use. The
-> fundamental problem is that Freescale forgot to wire
-> up the core reset, so software doesn't have a sane way
-> to get the core into a defined state.
->
-> According to the DW PCIe core reference manual configuration
-> of the core may only happen when the LTSSM is disabled, so
-> this is one of the first things we need to do. Apparently
-> this isn't safe to do when the LTSSM is in any other state
-> than "detect" as we observe an instant machine hang when
-> trying to do so while the link is already up.
->
-> As a workaround force LTSSM into detect state right before
-> hitting the disable switch.
->
-> Reported-by: Fabio Estevam <fabio.estevam@freescale.com>
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
-> v2: messed up the first submission by omitting a chunk
->
-> Fabios delay workaround worked because of the following
-> conditions:
-> 1. The driver gets probed and pulls the peripheral reset GPIO
-> 2. Peripheral is held in reset, so won't answer any link
-> negotiation requests
-> 3. The LTSSM times out and falls back into detect state
-> after 24ms (that's why a 30ms delay helps)
-> 4. After LTSSM entered detect state it's safe to hit the
-> disable switch
-> ---
->  drivers/pci/host/pci-imx6.c | 11 +++++++++++
->  1 file changed, 11 insertions(+)
->
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index a568efaa331c..1c4b4b81fe15 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -49,6 +49,9 @@ struct imx6_pcie {
->
->  /* PCIe Port Logic registers (memory-mapped) */
->  #define PL_OFFSET 0x700
-> +#define PCIE_PL_PFLR (PL_OFFSET + 0x08)
-> +#define PCIE_PL_PFLR_LINK_STATE_MASK           (0x3f << 16)
-> +#define PCIE_PL_PFLR_FORCE_LINK                        (1 << 15)
->  #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
->  #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
->  #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING        (1 << 29)
-> @@ -214,7 +217,15 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
->  static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
->  {
->         struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-> +       u32 val;
-> +
-> +       val = readl(pp->dbi_base + PCIE_PL_PFLR);
-> +       val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
-> +       val |= PCIE_PL_PFLR_FORCE_LINK;
-> +       writel(val, pp->dbi_base + PCIE_PL_PFLR);
->
-> +       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> +                       IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
->         regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
->                         IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
->         regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> --
-> 2.0.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Tue, Jul 22, 2014 at 02:23:27PM -0600, Alex Williamson wrote:
+> On Tue, 2014-07-22 at 13:55 -0600, Bjorn Helgaas wrote:
+> > On Wed, Jul 16, 2014 at 01:14:08PM -0600, Alex Williamson wrote:
+> > > There are numerous ATI/AMD GPUs available that report that they
+> > > support a PM reset (NoSoftRst-) but for which such a reset has no
+> > > apparent effect on the device.  These devices continue to display the
+> > > same framebuffer across PM reset and the fan speed remains constant,
+> > > while a proper bus reset causes the display to lose sync and the fan
+> > > to reset to high speed.  Create a device specific reset for ATI vendor
+> > > devices that tries to catch these devices and report that
+> > > pci_reset_function() is not supported.
+> > > 
+> > > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > > ---
+> > > 
+> > > This patch makes the series "vfio-pci: Reset improvements" far more
+> > > useful for users with one of these GPUs.  If pci_reset_function()
+> > > indicates that it's supported and successful, then I have no reason
+> > > to resort to a bus/slot reset in the vfio-pci code.  Since it doesn't
+> > > seem to do anything anyway, let's just forget that PM reset exists
+> > > for these devices.
+> > > 
+> > >  drivers/pci/quirks.c |   53 ++++++++++++++++++++++++++++++++++++++++++++++++++
+> > >  1 file changed, 53 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > > index 460c354..bed9c63 100644
+> > > --- a/drivers/pci/quirks.c
+> > > +++ b/drivers/pci/quirks.c
+> > > @@ -3289,6 +3289,57 @@ static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
+> > >  	return 0;
+> > >  }
+> > >  
+> > > +/*
+> > > + * Numerous AMD/ATI GPUs report that they're capable of PM reset (NoSoftRst-)
+> > > + * and pci_reset_function() reports the device as successfully reset, but
+> > > + * there's no apparent effect from the reset.  Test for these, being sure to
+> > > + * allow FLR should it ever exist, and use the device specific reset to
+> > > + * disable any sort of function-local reset if only PM reset is available.
+> > > + */
+> > > +static int reset_ati_gpu(struct pci_dev *dev, int probe)
+> > > +{
+> > > +	u16 pm_csr;
+> > > +	u32 devcap;
+> > > +	int af_pos;
+> > > +
+> > > +	/*
+> > > +	 * VGA class devices, not on the root bus, PCI function 0 of a
+> > > +	 * multifunction device with PM capabilities
+> > > +	 */
+> > > +	if ((dev->class >> 8) != PCI_CLASS_DISPLAY_VGA ||
+> > > +	    pci_is_root_bus(dev->bus) || PCI_FUNC(dev->devfn) ||
+> > > +	    !dev->multifunction || !dev->pm_cap)
+> > > +		return -ENOTTY;
+> > > +
+> > > +	/* PM reports NoSoftRst- */
+> > > +	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pm_csr);
+> > > +	if (pm_csr & PCI_PM_CTRL_NO_SOFT_RESET)
+> > > +		return -ENOTTY;
+> > > +
+> > > +	/* No PCIe FLR */
+> > > +	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &devcap);
+> > > +	if (devcap & PCI_EXP_DEVCAP_FLR)
+> > > +		return -ENOTTY;
+> > > +
+> > > +	/* No AF FLR */
+> > > +	af_pos = pci_find_capability(dev, PCI_CAP_ID_AF);
+> > > +	if (af_pos) {
+> > > +		u8 af_cap;
+> > > +
+> > > +		pci_read_config_byte(dev, af_pos + PCI_AF_CAP, &af_cap);
+> > > +		if ((af_cap && PCI_AF_CAP_TP) && (af_cap && PCI_AF_CAP_FLR))
+> > > +			return -ENOTTY;
+> > > +	}
+> > > +
+> > > +	/*
+> > > +	 * We could attempt a singleton bus/slot reset here to override
+> > > +	 * PM reset priority over these, but the devices we're interested
+> > > +	 * in are multifunction GPU + audio devices in their known configs.
+> > > +	 */
+> > > +
+> > > +	return -EINVAL;
+> > > +}
+> > > +
+> > >  #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
+> > >  #define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
+> > >  #define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
+> > > @@ -3304,6 +3355,8 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+> > >  		reset_intel_generic_dev },
+> > >  	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
+> > >  		reset_chelsio_generic_dev },
+> > > +	{ PCI_VENDOR_ID_ATI, PCI_ANY_ID,
+> > > +		reset_ati_gpu },
+> > 
+> > I'm a little confused, but maybe we just need a comment about what the
+> > return values from pci_dev_specific_reset() mean.  Based on reading
+> > __pci_dev_reset(), it looks like:
+> > 
+> >   0 means "I support this reset method" (if probe) or
+> >   "I performed this reset" (if !probe),
+> >   
+> >   ENOTTY means "I don't support this reset method, try another one",
+> > 
+> >   anything else means "I don't support this reset method and don't try
+> >   any others" (it'd be useful to know what this is good for).
+> > 
+> > But reset_ati_gpu() never returns 0, so it seems like your patch makes
+> > it so we can never reset any ATI device at all.  So I must be missing
+> > something.
+> 
+> Nope, you're not missing anything.  The return value behavior is exactly
+> as you describe and the ATI GPUs that advertise NoSoftRst- don't appear
+> to do any sort of reset when moving them back from D3, so I'm
+> effectively trying to negate that as a viable reset option.  I think
+> this is what the anything-else return value is meant for.  I only return
+> "I don't support this reset method and don't try any others" after I
+> verify there are no other options, so if they come out with FLR support,
+> that would still get precedence.  It's a little awkward, but I don't
+> know how to test whether a reset function was successful.  It seems like
+> it would be device specific.  Anyone from AMD reading the list that can
+> comment on what sort of reset happens on these GPUs for a D3->D0 reset?
 
-Lucas,
+I was expecting to see "return 0" for some of the cases, e.g., maybe
+for non-GPU devices that support FLR or AF FLR.
 
-Thank you - this does resolve the hang on all my board configurations
-(with and without bridges, external and internal clock-gen).
+You currently always return -ENOTTY or -EINVAL, which means we won't
+support any kind of reset on any ATI device.  It looks like most ATI
+devices are graphics, but there are a few IDE, USB, SMBus, SATA, etc.
+devices that look like they'll be caught by this quirk.  That doesn't
+sound like what you intend.
 
-Acked-by: Tim Harvey <tharvey@gateworks.com>
-
-Tim
+Bjorn
