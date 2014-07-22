@@ -1,125 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:15939 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756686AbaGDD4W (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 23:56:22 -0400
-Message-ID: <53B625D9.9080500@huawei.com>
-Date: Fri, 4 Jul 2014 11:56:09 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:38766 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751317AbaGVTAT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Jul 2014 15:00:19 -0400
+Message-ID: <53CEB46D.2020006@ti.com>
+Date: Tue, 22 Jul 2014 14:58:53 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-To: Ilia Mirkin <imirkin@alum.mit.edu>
-CC: Brian Becker <brian.johnathan.b@gmail.com>,
-	<linux-pci@vger.kernel.org>,
-	"nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>
-Subject: Re: How to check for proper MSI support?
-References: <CAKb7UviGCtebGwyHbXRLZhDOiDAez+eKkxPe9jz5kc-3R1kUvQ@mail.gmail.com>	<53B4F0F7.9020403@huawei.com>	<CALhae2jRz8hL0bwySAbP7r+vJGOG5aif4GA_Yjp0inGAwz5JEA@mail.gmail.com>	<53B612FE.4080105@huawei.com>	<CAKb7UviVFQYwYdp_dgxK7jJ5Ny9yG1y8LATydxtVtkzRh+aOKw@mail.gmail.com>	<53B61B03.3070308@huawei.com> <CAKb7UvjFuu4Hm1pfmY-NMFORfv-+fx4oYeJicRoE8UTL_4Wp4A@mail.gmail.com>
-In-Reply-To: <CAKb7UvjFuu4Hm1pfmY-NMFORfv-+fx4oYeJicRoE8UTL_4Wp4A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+To: Rob Herring <robherring2@gmail.com>
+CC: Jingoo Han <jg1.han@samsung.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v6 4/5] PCI: add PCI controller for keystone PCIe h/w
+References: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com> <1405696469-7172-5-git-send-email-m-karicheri2@ti.com> <CAL_JsqKheoWrSGtxPO=AE8g9iOAqfwRa=81Ku=Cfx8_gpDysOg@mail.gmail.com> <53C9839C.5090604@ti.com> <006001cfa485$4f4fcff0$edef6fd0$%han@samsung.com> <53CD424B.1090806@ti.com> <CAL_JsqJXb28RHhZG9=-NACwAr1ooGhfMOPjtsTGO2s3Dx7ayxQ@mail.gmail.com>
+In-Reply-To: <CAL_JsqJXb28RHhZG9=-NACwAr1ooGhfMOPjtsTGO2s3Dx7ayxQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/7/4 11:30, Ilia Mirkin wrote:
-> On Thu, Jul 3, 2014 at 11:09 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->> On 2014/7/4 10:43, Ilia Mirkin wrote:
->>> On Thu, Jul 3, 2014 at 10:35 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->>>> Hi Brian,
->>>>    From your 01:00.0 VGA compatible controller PCI config register, it supports 1 MSI vector, so I think this
->>>> card has no problem. But you didn't answer what's the pci_enable_msi() return during it enable MSI fail.
->>>>
->>>> You can check PCI bus whether support MSI like:
->>>>
->>>> cat /sys/bus/pci/devices/00:0e.0/msi_bus
->>>>
->>>> Other, do you call pci_enable_device() before pci_enable_msi() ?
+On 07/22/2014 11:41 AM, Rob Herring wrote:
+> On Mon, Jul 21, 2014 at 11:39 AM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
+>> On 07/20/2014 09:44 PM, Jingoo Han wrote:
+>>> On Saturday, July 19, 2014 5:29 AM, Murali Karicheri wrote:
+>>>> On 07/18/2014 03:31 PM, Rob Herring wrote:
+>>>>> On Fri, Jul 18, 2014 at 10:14 AM, Murali Karicheri<m-karicheri2@ti.com>
+>>>>> wrote:
+>>>> --- Cut ---
+>>>>>> +
+>>>>>> +Optional properties:-
+>>>>>> +       phys: phandle to Generic Keystone SerDes phy for PCI
+>>>>>> +       phy-names: name of the Generic Keystine SerDes phy for PCI
+>>>>>> +         - If boot loader already does PCI link establishment, then
+>>>>>> phys and
+>>>>>> +           phy-names shouldn't be present.
+>>>>>> +       ti,enable-linktrain - Enable Link training.
+>>>>>> +         - If boot loader already does PCI link establishment, then
+>>>>>> this
+>>>>>> +           shouldn't be present.
+>>>>>
+>>>>> Can't you read from the h/w if the link is trained?
 >>>
->>> Yes, the device is enabled. nouveau does generally work for most
->>> people :) And it works fine here if MSI is forced off.
+>>> I agree with Rob Herring's suggestion.
 >>>
->>> The problem here is that pci_enable_msi() succeeds, but it probably
->>
->> It's some strange, pci_enable_msi() succeeds, but there is nothing in MSI address and data register
->>
->>         Capabilities: [68] MSI: Enable- Count=1/1 Maskable- 64bit+
->>                 Address: 0000000000000000  Data: 0000
->> Because the address and data is invalid, so MSI can not work.
->>
->> Because you said pci_enable_msi() return 0 which indicates success, so I guess the device
->> current power state is not D0, because checking code in __write_msi_msi.
->>
->> void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->> {
->>     if (entry->dev->current_state != PCI_D0) {
->>         /* Don't touch the hardware now */
->>     } else if (entry->msi_attrib.is_msix) {
->>         void __iomem *base;
->>         base = entry->mask_base +
->>             entry->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE;
->>
->>         writel(msg->address_lo, base + PCI_MSIX_ENTRY_LOWER_ADDR);
->>         writel(msg->address_hi, base + PCI_MSIX_ENTRY_UPPER_ADDR);
->>         writel(msg->data, base + PCI_MSIX_ENTRY_DATA);
->>     ......
->>
->>> shouldn't. I don't know all the details about MSI, but doesn't the CPU
->>> or (L)APIC have to support it? In this case, it's a P200MMX on a 430FX
->>> chipset board. Both quite ancient...
->>
->> MSI in x86 always send to specific interrupt address(0xfeexxxx), most x86 CPU
->> should support MSI, but I am not sure, I don't know hardware much.
-> 
-> To put things in perspective, P200MMX was released in early 1997. It
-> looks like the PCI 2.2 spec, which defines MSI, was released in late
-> 1998. The 430FX chipset only supports PCI 2.0.
-
-Maybe you are right, the chipset can not support MSI...
-
-But why after your call pci_enable_msi(), the MSI address and data register is nothing initialized.
-
-
-> 
->>
+>>>> Yes.
+>>>>
+>>>> There are customers who use this driver with PCI Link setup done in the
+>>>> boot loader. This property tells the driver to bypass Link setup
+>>>> procedure in that case. Is this undesirable and if so. how other
+>>>> platforms handle it? Check first if link is trained or start the link
+>>>> setup procedure? Let me know. If this is fine, please provide your Ack.
 >>>
->>> So given that the PCI device itself supports MSI, how do we tell that
->>> it shouldn't actually get turned on?
+>>> Please, check the following code of Exynos PCIe diver.
+>>>
+>>> ./drivers/pci/host/pci-exynos.c
+>>>
+>>> static int exynos_pcie_establish_link(struct pcie_port *pp)
+>>> {
+>>>          struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
+>>>          void __iomem *elbi_base = exynos_pcie->elbi_base;
+>>>          void __iomem *pmu_base = exynos_pcie->pmu_base;
+>>>
+>>>          if (dw_pcie_link_up(pp)) {
+>>>                  dev_err(pp->dev, "Link already up\n");
+>>>                  return 0;
+>>>          }
+>>>          .....
+>>>
+>>> In the case of Exynos PCIe, the Exynos PCIe driver checks the
+>>> h/w bit such as PCIE_ELBI_LTSSM_ENABLE bit of PCIE_ELBI_RDLH_LINKUP
+>>> offset register.
+>>>
+>>> If the link is already set up by the boot loader or other reasons,
+>>> the driver will skip some initialization codes.
+>>>
+>>> The first step is that you find such h/w bit for checking link up.
+>>> If so, please add the code for skipping, when the link is already
+>>> set up.
+>>>
+>> Rob, Jingoo,
 >>
->> Generally, some message in dmesg like:
->> [   17.322311] ahci 0000:00:1f.2: irq 119 for MSI/MSI-X
->> [   17.322319] ahci 0000:00:1f.2: irq 120 for MSI/MSI-X
->> [   17.322326] ahci 0000:00:1f.2: irq 121 for MSI/MSI-X
->> [   17.322333] ahci 0000:00:1f.2: irq 122 for MSI/MSI-X
->> [   17.322339] ahci 0000:00:1f.2: irq 123 for MSI/MSI-X
->>
->> Also you can check /proc/interrupts I think.
-> 
-> I must not have made my question clear. Let me try again:
-> 
-> There is a NVIDIA G96 GPU (which is PCIe only) hanging off of a PCIe
-> <-> PCI bridge (all on one card), which is plugged into a motherboard
-> with the 430FX chipset (PCI 2.0 supported).
-> 
-> The GPU PCI device, of course, has full support for MSI. However my
-> understanding is that MSI won't actually work here. This is confirmed
-> by the fact that if we let nouveau enable MSI, the device doesn't work
-> (presumably due to lack of interrupt delivery, although I admit to not
-> having debugged it that far). How do I, as a nouveau driver developer,
-> know not to call pci_enable_msi? Or alternatively how can
-> pci_enable_msi be taught not to succeed in this case?
+>> We have similar bit to check for Link status and I have removed the DT
+>> property and skip Link retrain if PCIe Link is already Up. I will be
+>> resending the series with Patch 4/5 updated.
+> For both keystone and exynos, is this status bit in the phy? If so,
+> sounds like this should be a standard phy function op.
+>
+> Rob
+Rob,
 
-You can set bus_flags or global pci_msi_enable flag by add quirk function.
-You can refer to examples in drivers/pci/quirk.c
+There is phy bit as well as PCIe specific Link LTSSM state for Keystone.
+Phy one is handled by the Phy driver and PCie driver care about LTSSM
+state bit. I have removed the enable_link_train DT attribute from
+patch 4/5. Can you ack it now?
 
-Linux support some broken chipsets or devices to disable msi during device initialization by add quirk.
-
-> 
-> Thanks,
-> 
->   -ilia
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+Murali
