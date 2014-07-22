@@ -1,54 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f170.google.com ([209.85.216.170]:38835 "EHLO
-	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752377AbaGKOwH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 10:52:07 -0400
-Date: Fri, 11 Jul 2014 10:52:03 -0400
-From: Tejun Heo <tj@kernel.org>
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	linux ARM <linux-arm-kernel@lists.infradead.org>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
-	Mark Brown <broonie@kernel.org>, alsa-devel@alsa-project.org,
-	Daniel Lezcano <daniel.lezcano@linaro.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
-	linux-ide@vger.kernel.org, Zhang Rui <rui.zhang@intel.com>,
-	Bryan Wu <cooloney@gmail.com>,
-	Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Alessandro Zummo <a.zummo@towertech.it>,
-	rtc-linux@googlegroups.com, Wim Van Sebroeck <wim@iguana.be>,
-	linux-watchdog@vger.kernel.org
-Subject: Re: [PATCH v2 00/12] Remove mach-kirkwood
-Message-ID: <20140711145203.GD27706@htj.dyndns.org>
-References: <1405028192-9623-1-git-send-email-andrew@lunn.ch>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>
+Subject: Re: [Update 2x][PATCH 1/2] ACPI / PM: Always enable wakeup GPEs when enabling device wakeup
+Date: Tue, 22 Jul 2014 03:02:29 +0200
+Message-ID: <30566603.pYsRuTlO6S@vostro.rjw.lan>
+In-Reply-To: <20140721081734.GL3935@laptop>
+References: <1907495.agrCMfRsQN@vostro.rjw.lan> <5962983.s3jy9r09Hm@vostro.rjw.lan> <20140721081734.GL3935@laptop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1405028192-9623-1-git-send-email-andrew@lunn.ch>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 10, 2014 at 11:36:20PM +0200, Andrew Lunn wrote:
-> This patchset removes arch/arm/mach-kirkwood.  This SoCs is now
-> supported in arch/arm/mach-mvebu using device tree.
+On Monday, July 21, 2014 10:17:34 AM Peter Zijlstra wrote:
+> On Mon, Jul 21, 2014 at 01:51:46AM +0200, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Subject: ACPI / PM: Always enable wakeup GPEs when enabling device wakeup
+> > 
+> > Wakeup GPEs are currently only enabled when setting up devices for
+> > remote wakeup at run time.  During system-wide transitions they are
+> > enabled by ACPICA at the very last stage of suspend (before asking
+> > the BIOS to take over).  Of course, that only works for system
+> > sleep states supported by ACPI, so in particular it doesn't work
+> > for the "freeze" sleep state.
+> > 
+> > For this reason, modify the ACPI core device PM code to enable wakeup
+> > GPEs for devices when setting them up for wakeup regardless of whether
+> > that is remote wakeup at runtime or system wakeup.  That allows the
+> > same device wakeup setup routine to be used for both runtime PM and
+> > system-wide PM and makes it possible to reduce code size quite a bit.
+> > 
+> > That should make things like ACPI-based PCI Wake-on-LAN work with
+> > the "freeze" sleep state among other things.
+> > 
+> > Tested-on: Toshiba Portege R500
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> > 
+> > The PCI ACPI device PM notify handler has to be updated to avoid running
+> > runtime resume callbacks during system suspend too.
 > 
-> V1 of this patchset also removed mach-dove. However it has been
-> decided to leave it alone for a while to aid some developers get out
-> of tree patches merged.
->                                                                          
-> Change the dependencies for a number of drivers, either to use
-> ARCH_MVEBU where the drivers are generic, or MACH_KIRKWOOD and where
-> the drivers are specific to the SoC.
+> So I tested the first version, with that my WSM-EP didn't resume on WoL
+> and pressing the power button after the WoL had it crash and burn in the
+> igb driver.
 > 
-> Once Jason Cooper has Acked these patches, we would prefer that
-> individual subsystem maintainers take these patches through their own
-> trees.
+> Today I tested this latest version and WoL still didn't trigger a
+> resume, but the power button did make it go again, no crashes and I
+> suppose I can confirm the earlier patch that stopped making it go halt
+> works.
 
-Please let me know when I can take the libata part.
+OK, thanks!
 
-Thanks.
+> When I 'halt' I can wake the machine back up using a WoL so that all
+> _should_ work afaik.
 
--- 
-tejun
+Yes, it should.
+
+I'll send an updated patchset shortly, so please test that one.  If it
+doesn't help, we'll need to dig deeper still.
+
+Rafael
+
