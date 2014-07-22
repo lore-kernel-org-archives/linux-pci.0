@@ -1,154 +1,101 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <53B50E8F.7010604@ti.com>
-Date: Thu, 3 Jul 2014 13:34:31 +0530
-From: Rajendra Nayak <rnayak@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp04.in.ibm.com ([122.248.162.4]:58947 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751139AbaGVB71 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jul 2014 21:59:27 -0400
+Received: from /spool/local
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <qiudayu@linux.vnet.ibm.com>;
+	Tue, 22 Jul 2014 07:29:24 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 93D0A125804D
+	for <linux-pci@vger.kernel.org>; Tue, 22 Jul 2014 07:29:14 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s6M21A2G56885348
+	for <linux-pci@vger.kernel.org>; Tue, 22 Jul 2014 07:31:10 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s6M1xMWg008278
+	for <linux-pci@vger.kernel.org>; Tue, 22 Jul 2014 07:29:22 +0530
+Message-ID: <53CDC578.3090800@linux.vnet.ibm.com>
+Date: Tue, 22 Jul 2014 09:59:20 +0800
+From: Mike Qiu <qiudayu@linux.vnet.ibm.com>
 MIME-Version: 1.0
-To: Kishon Vijay Abraham I <kishon@ti.com>
-CC: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>, <paul@pwsan.com>, <tony@atomide.com>,
-	<linux@arm.linux.org.uk>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/2] arm: dra7xx: Add hwmod data for pcie1 phy and pcie2
- phy
-References: <1403719366-9656-1-git-send-email-kishon@ti.com> <1403719366-9656-2-git-send-email-kishon@ti.com>
-In-Reply-To: <1403719366-9656-2-git-send-email-kishon@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Tuomas Tynkkynen <ttynkkynen@nvidia.com>
+Subject: Re: [PATCH] Fix build warnings in aer.h
+References: <1405498124-11519-1-git-send-email-qiudayu@linux.vnet.ibm.com> <CAErSpo47WBkOuThU6ZW0htSm9s2P_r0ebZ6T3TM0dWiSdaGaBA@mail.gmail.com>
+In-Reply-To: <CAErSpo47WBkOuThU6ZW0htSm9s2P_r0ebZ6T3TM0dWiSdaGaBA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 25 June 2014 11:32 PM, Kishon Vijay Abraham I wrote:
-> Added hwmod data for pcie1 and pcie2 phy present in DRA7xx SOC.
-> Also added the missing CLKCTRL OFFSET macro and CONTEXT OFFSET macro
-> for pcie1 phy and pcie2 phy.
-> 
-> Cc: Tony Lindgren <tony@atomide.com>
-> Cc: Russell King <linux@arm.linux.org.uk>
-> Cc: Paul Walmsley <paul@pwsan.com>
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> Tested-by: Kishon Vijay Abraham I <kishon@ti.com>
+On 07/17/2014 02:08 AM, Bjorn Helgaas wrote:
+> On Wed, Jul 16, 2014 at 2:08 AM, Mike Qiu <qiudayu@linux.vnet.ibm.com> wrote:
+>> build log:
+>>
+>> In file included from include/ras/ras_event.h:11:0,
+>>                   from drivers/ras/ras.c:13:
+>> include/linux/aer.h:42:129: warning: ‘struct pci_dev’
+>> declared inside parameter list [enabled by default]
+>>
+>> include/linux/aer.h:42:129: warning: its scope is only
+>> this definition or declaration, which is probably not
+>> what you want [enabled by default]
+>>
+>> include/linux/aer.h:46:130: warning: ‘struct pci_dev’
+>> declared inside parameter list [enabled by default]
+>>
+>> include/linux/aer.h:50:136: warning: ‘struct pci_dev’
+>> declared inside parameter list [enabled by default]
+>>
+>> include/linux/aer.h:57:14: warning: ‘struct pci_dev’
+>> declared inside parameter list [enabled by default]
+>>
+>> Signed-off-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+> Hi Mike,
+>
+> How did you reproduce this build error?  There are other include files
+> that use pci_dev without a previous declaration or include of
+> include/linux/pci.h, e.g., include/linux/msi.h, so I want to make sure
+> we don't have similar problems elsewhere.
+( I have reply it before but seems haven't send out successful, just 
+resend it, if you have seen, pls ignore this)
+I checkout to linux-next master branch, see the top commit is:
 
-Looks good to me, feel free to add
-Reviewed-by: Rajendra Nayak <rnayak@ti.com>
+commit b997a07604562f1a54cc531fe1cf7447f0ed6078
+Author: Stephen Rothwell <sfr@canb.auug.org.au>
+Date:   Tue Jul 15 18:34:28 2014 +1000
 
-> ---
-> Please find the bootlog with these hwmod patches
-> http://paste.ubuntu.com/7701601/
->  arch/arm/mach-omap2/cm2_7xx.h             |    4 ++
->  arch/arm/mach-omap2/omap_hwmod_7xx_data.c |   57 +++++++++++++++++++++++++++++
->  arch/arm/mach-omap2/prm7xx.h              |    4 ++
->  3 files changed, 65 insertions(+)
-> 
-> diff --git a/arch/arm/mach-omap2/cm2_7xx.h b/arch/arm/mach-omap2/cm2_7xx.h
-> index 9ad7594..e966e3a 100644
-> --- a/arch/arm/mach-omap2/cm2_7xx.h
-> +++ b/arch/arm/mach-omap2/cm2_7xx.h
-> @@ -357,6 +357,10 @@
->  #define DRA7XX_CM_L3INIT_SATA_CLKCTRL				DRA7XX_CM_CORE_REGADDR(DRA7XX_CM_CORE_L3INIT_INST, 0x0088)
->  #define DRA7XX_CM_PCIE_CLKSTCTRL_OFFSET				0x00a0
->  #define DRA7XX_CM_PCIE_STATICDEP_OFFSET				0x00a4
-> +#define DRA7XX_CM_L3INIT_PCIESS1_CLKCTRL_OFFSET			0x00b0
-> +#define DRA7XX_CM_L3INIT_PCIESS1_CLKCTRL			DRA7XX_CM_CORE_REGADDR(DRA7XX_CM_CORE_L3INIT_INST, 0x00b0)
-> +#define DRA7XX_CM_L3INIT_PCIESS2_CLKCTRL_OFFSET			0x00b8
-> +#define DRA7XX_CM_L3INIT_PCIESS2_CLKCTRL			DRA7XX_CM_CORE_REGADDR(DRA7XX_CM_CORE_L3INIT_INST, 0x00b8)
->  #define DRA7XX_CM_GMAC_CLKSTCTRL_OFFSET				0x00c0
->  #define DRA7XX_CM_GMAC_STATICDEP_OFFSET				0x00c4
->  #define DRA7XX_CM_GMAC_DYNAMICDEP_OFFSET			0x00c8
-> diff --git a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
-> index 3deb76e..6ff40a6 100644
-> --- a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
-> +++ b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
-> @@ -1290,6 +1290,45 @@ static struct omap_hwmod dra7xx_ocp2scp3_hwmod = {
->  };
->  
->  /*
-> + * 'PCIE PHY' class
-> + *
-> + */
-> +
-> +static struct omap_hwmod_class dra7xx_pcie_phy_hwmod_class = {
-> +	.name	= "pcie-phy",
-> +};
-> +
-> +/* pcie1 phy */
-> +static struct omap_hwmod dra7xx_pcie1_phy_hwmod = {
-> +	.name		= "pcie1-phy",
-> +	.class		= &dra7xx_pcie_phy_hwmod_class,
-> +	.clkdm_name	= "l3init_clkdm",
-> +	.main_clk	= "l4_root_clk_div",
-> +	.prcm = {
-> +		.omap4 = {
-> +			.clkctrl_offs = DRA7XX_CM_L3INIT_PCIESS1_CLKCTRL_OFFSET,
-> +			.context_offs = DRA7XX_RM_L3INIT_PCIESS1_CONTEXT_OFFSET,
-> +			.modulemode   = MODULEMODE_SWCTRL,
-> +		},
-> +	},
-> +};
-> +
-> +/* pcie2 phy */
-> +static struct omap_hwmod dra7xx_pcie2_phy_hwmod = {
-> +	.name		= "pcie2-phy",
-> +	.class		= &dra7xx_pcie_phy_hwmod_class,
-> +	.clkdm_name	= "l3init_clkdm",
-> +	.main_clk	= "l4_root_clk_div",
-> +	.prcm = {
-> +		.omap4 = {
-> +			.clkctrl_offs = DRA7XX_CM_L3INIT_PCIESS2_CLKCTRL_OFFSET,
-> +			.context_offs = DRA7XX_RM_L3INIT_PCIESS2_CONTEXT_OFFSET,
-> +			.modulemode   = MODULEMODE_SWCTRL,
-> +		},
-> +	},
-> +};
-> +
-> +/*
->   * 'qspi' class
->   *
->   */
-> @@ -2409,6 +2448,22 @@ static struct omap_hwmod_ocp_if dra7xx_l4_cfg__ocp2scp1 = {
->  	.user		= OCP_USER_MPU | OCP_USER_SDMA,
->  };
->  
-> +/* l4_cfg -> pcie1 phy */
-> +static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie1_phy = {
-> +	.master		= &dra7xx_l4_cfg_hwmod,
-> +	.slave		= &dra7xx_pcie1_phy_hwmod,
-> +	.clk		= "l4_root_clk_div",
-> +	.user		= OCP_USER_MPU | OCP_USER_SDMA,
-> +};
-> +
-> +/* l4_cfg -> pcie2 phy */
-> +static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie2_phy = {
-> +	.master		= &dra7xx_l4_cfg_hwmod,
-> +	.slave		= &dra7xx_pcie2_phy_hwmod,
-> +	.clk		= "l4_root_clk_div",
-> +	.user		= OCP_USER_MPU | OCP_USER_SDMA,
-> +};
-> +
->  static struct omap_hwmod_addr_space dra7xx_qspi_addrs[] = {
->  	{
->  		.pa_start	= 0x4b300000,
-> @@ -2758,6 +2813,8 @@ static struct omap_hwmod_ocp_if *dra7xx_hwmod_ocp_ifs[] __initdata = {
->  	&dra7xx_l4_cfg__mpu,
->  	&dra7xx_l4_cfg__ocp2scp1,
->  	&dra7xx_l4_cfg__ocp2scp3,
-> +	&dra7xx_l4_cfg__pcie1_phy,
-> +	&dra7xx_l4_cfg__pcie2_phy,
->  	&dra7xx_l3_main_1__qspi,
->  	&dra7xx_l4_cfg__sata,
->  	&dra7xx_l4_cfg__smartreflex_core,
-> diff --git a/arch/arm/mach-omap2/prm7xx.h b/arch/arm/mach-omap2/prm7xx.h
-> index d92a840..4bb50fbf 100644
-> --- a/arch/arm/mach-omap2/prm7xx.h
-> +++ b/arch/arm/mach-omap2/prm7xx.h
-> @@ -374,6 +374,10 @@
->  #define DRA7XX_RM_L3INIT_IEEE1500_2_OCP_CONTEXT_OFFSET		0x007c
->  #define DRA7XX_PM_L3INIT_SATA_WKDEP_OFFSET			0x0088
->  #define DRA7XX_RM_L3INIT_SATA_CONTEXT_OFFSET			0x008c
-> +#define DRA7XX_PM_L3INIT_PCIESS1_WKDEP_OFFSET			0x00b0
-> +#define DRA7XX_RM_L3INIT_PCIESS1_CONTEXT_OFFSET		0x00b4
-> +#define DRA7XX_PM_L3INIT_PCIESS2_WKDEP_OFFSET			0x00b8
-> +#define DRA7XX_RM_L3INIT_PCIESS2_CONTEXT_OFFSET		0x00bc
->  #define DRA7XX_RM_GMAC_GMAC_CONTEXT_OFFSET			0x00d4
->  #define DRA7XX_RM_L3INIT_OCP2SCP1_CONTEXT_OFFSET		0x00e4
->  #define DRA7XX_RM_L3INIT_OCP2SCP3_CONTEXT_OFFSET		0x00ec
-> 
+     Add linux-next specific files for 20140715
+
+     Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
+
+Use default config file(copy from /boot/) then use command "make -j60",  
+and it will show that message. but for "msi.h" I haven't see this warning.
+
+Thanks,
+Mike
+> Bjorn
+>
+>> ---
+>>   include/linux/aer.h | 2 ++
+>>   1 file changed, 2 insertions(+)
+>>
+>> diff --git a/include/linux/aer.h b/include/linux/aer.h
+>> index 4dbaa70..c826d1c 100644
+>> --- a/include/linux/aer.h
+>> +++ b/include/linux/aer.h
+>> @@ -11,6 +11,8 @@
+>>   #define AER_FATAL                      1
+>>   #define AER_CORRECTABLE                        2
+>>
+>> +struct pci_dev;
+>> +
+>>   struct aer_header_log_regs {
+>>          unsigned int dw0;
+>>          unsigned int dw1;
+>> --
+>> 1.8.1.4
+>>
 
