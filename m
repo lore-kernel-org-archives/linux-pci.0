@@ -1,149 +1,224 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:55697 "EHLO mga11.intel.com"
+Received: from comal.ext.ti.com ([198.47.26.152]:36324 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751344AbaGKGRJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Jul 2014 02:17:09 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V4 05/21] iommu/vt-d: Allocate dynamic domain id for virtual domains only
-Date: Fri, 11 Jul 2014 14:19:29 +0800
-Message-Id: <1405059585-10620-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
+	id S932203AbaGVWx3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Jul 2014 18:53:29 -0400
+Message-ID: <53CEEB1C.9020202@ti.com>
+Date: Tue, 22 Jul 2014 18:52:12 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v7 4/5] PCI: add PCI controller for keystone PCIe h/w
+References: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com> <1405961925-27248-5-git-send-email-m-karicheri2@ti.com> <20140722223527.GA27965@google.com>
+In-Reply-To: <20140722223527.GA27965@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Check the same domain id is allocated for si_domain on each IOMMU,
-otherwise the IOTLB flush for si_domain will fail.
+Bjorn,
 
-Now the rules to allocate and manage domain id are:
-1) For normal and static identity domains, domain id is allocated
-   when creating domain structure. And this id will be written into
-   context entry.
-2) For virtual machine domain, a virtual id is allocated when creating
-   domain. And when binding virtual machine domain to an iommu, a real
-   domain id is allocated on demand and this domain id will be written
-   into context entry. So domain->id for virtual machine domain may be
-   different from the domain id written into context entry(used by
-   hardware).
+On 07/22/2014 06:35 PM, Bjorn Helgaas wrote:
+> On Mon, Jul 21, 2014 at 12:58:44PM -0400, Murali Karicheri wrote:
+>> keystone PCIe controller is based on v3.65 version of the
+>> designware h/w. Main differences are
+>> 	1. No ATU support
+>> 	2. Legacy and MSI irq functions are implemented in
+>> 	   application register space
+>> 	3. MSI interrupts are multiplexed over 8 IRQ lines to the Host
+>> 	   side.
+>> All of the Application register space handing code are organized into
+>> pci-keystone-dw.c and the functions are called from pci-keystone.c
+>> to implement PCI controller driver. Also add necessary DT documentation
+>> for the driver.
+>>
+>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>> Acked-by: Santosh Shilimkar<santosh.shilimkar@ti.com>
+>> ...
+>
+>> +++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
+>> ...
+>
+>> +Note for PCI driver usage
+>> +=========================
+>> +Driver requires pci=pcie_bus_perf in the bootargs for proper functioning.
+>
+> Whoa, why is this?  Special boot args should not be required.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |   47 ++++++++++++++++++++++++-------------------
- 1 file changed, 26 insertions(+), 21 deletions(-)
+This was discussed initially and I had added following commit to get 
+this working instead of a PCI quirk. To get some background please see 
+the thread for commit below that you also had signed off as well.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index eae9b0d8bc60..968e3d32e305 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1549,15 +1549,27 @@ static int iommu_attach_domain(struct dmar_domain *domain,
- 
- 	spin_lock_irqsave(&iommu->lock, flags);
- 	num = __iommu_attach_domain(domain, iommu);
-+	spin_unlock_irqrestore(&iommu->lock, flags);
- 	if (num < 0)
- 		pr_err("IOMMU: no free domain ids\n");
--	else
--		domain->id = num;
--	spin_unlock_irqrestore(&iommu->lock, flags);
- 
- 	return num;
- }
- 
-+static int iommu_attach_vm_domain(struct dmar_domain *domain,
-+				  struct intel_iommu *iommu)
-+{
-+	int num;
-+	unsigned long ndomains;
-+
-+	ndomains = cap_ndoms(iommu->cap);
-+	for_each_set_bit(num, iommu->domain_ids, ndomains)
-+		if (iommu->domains[num] == domain)
-+			return num;
-+
-+	return __iommu_attach_domain(domain, iommu);
-+}
-+
- static void iommu_detach_domain(struct dmar_domain *domain,
- 				struct intel_iommu *iommu)
- {
-@@ -1764,8 +1776,6 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
- 	struct context_entry *context;
- 	unsigned long flags;
- 	struct dma_pte *pgd;
--	unsigned long num;
--	unsigned long ndomains;
- 	int id;
- 	int agaw;
- 	struct device_domain_info *info = NULL;
-@@ -1790,20 +1800,8 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
- 	pgd = domain->pgd;
- 
- 	if (domain_type_is_vm_or_si(domain)) {
--		int found = 0;
--
--		/* find an available domain id for this device in iommu */
--		ndomains = cap_ndoms(iommu->cap);
--		for_each_set_bit(num, iommu->domain_ids, ndomains) {
--			if (iommu->domains[num] == domain) {
--				id = num;
--				found = 1;
--				break;
--			}
--		}
--
--		if (found == 0) {
--			id = __iommu_attach_domain(domain, iommu);
-+		if (domain_type_is_vm(domain)) {
-+			id = iommu_attach_vm_domain(domain, iommu);
- 			if (id < 0) {
- 				spin_unlock_irqrestore(&iommu->lock, flags);
- 				pr_err("IOMMU: no free domain ids\n");
-@@ -2257,8 +2255,8 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	domain = alloc_domain(0);
- 	if (!domain)
- 		return NULL;
--
--	if (iommu_attach_domain(domain, iommu) < 0) {
-+	domain->id = iommu_attach_domain(domain, iommu);
-+	if (domain->id < 0) {
- 		free_domain_mem(domain);
- 		return NULL;
- 	}
-@@ -2428,6 +2426,7 @@ static int __init si_domain_init(int hw)
- 	struct dmar_drhd_unit *drhd;
- 	struct intel_iommu *iommu;
- 	int nid, ret = 0;
-+	bool first = true;
- 
- 	si_domain = alloc_domain(DOMAIN_FLAG_STATIC_IDENTITY);
- 	if (!si_domain)
-@@ -2438,6 +2437,12 @@ static int __init si_domain_init(int hw)
- 		if (ret < 0) {
- 			domain_exit(si_domain);
- 			return -EFAULT;
-+		} else if (first) {
-+			si_domain->id = ret;
-+			first = false;
-+		} else if (si_domain->id != ret) {
-+			domain_exit(si_domain);
-+			return -EFAULT;
- 		}
- 		domain_attach_iommu(si_domain, iommu);
- 	}
--- 
-1.7.10.4
+commit 8b5742ad156d30ee38486652cdbd152e2d6ebbcc
+Author: Murali Karicheri <m-karicheri2@ti.com>
+Date:   Wed May 28 13:14:53 2014 -0400
+
+     ARM/PCI: Call pcie_bus_configure_settings() to set MPS
+
+     Call pcie_bus_configure_settings() on ARM, like for other platforms.
+     pcie_bus_configure_settings() makes sure the MPS across the bus is 
+uniform
+     and provides the ability to tune the MRSS and MPS to higher performance
+     values.  This is particularly important for embedded where there is no
+     firmware to program these PCIe settings for the OS.
+
+     Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+     CC: Russell King <linux@arm.linux.org.uk>
+     CC: Arnd Bergmann <arnd@arndb.de>
+     CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+     CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+
+This was added as a preparatory patch to support keystone and
+avoid a PCI quirk to do the same. Keystone has MRSS limitation
+of 256 bytes. So adding a bootargs flag was suggested a better option 
+than a PCI quirk.
+
+I will look into the rest of the comments and possibly try to address 
+them or discuss.
+
+BTW, please apply patch 1-3 that has already got ack from maintainers
+and is indepdent of this patch.
+
+Thanks
+
+Murali
+
+>
+>> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+>> index 21df477..f8bc475 100644
+>> --- a/drivers/pci/host/Kconfig
+>> +++ b/drivers/pci/host/Kconfig
+>> @@ -46,4 +46,9 @@ config PCI_HOST_GENERIC
+>>   	  Say Y here if you want to support a simple generic PCI host
+>>   	  controller, such as the one emulated by kvmtool.
+>>
+>> +config PCI_KEYSTONE
+>> +	bool "TI Keystone PCIe controller"
+>> +	depends on ARCH_KEYSTONE
+>> +	select PCIE_DW
+>> +	select PCIEPORTBUS
+>
+> It'd be nice to have some help text here.  I know, not everybody else does.
+>
+>> +++ b/drivers/pci/host/pci-keystone-dw.c
+>> ...
+>> +void ks_dw_pcie_handle_msi_irq(struct keystone_pcie *ks_pcie , int offset)
+>> +{
+>> +	struct pcie_port *pp =&ks_pcie->pp;
+>> +	u32 pending, vector;
+>> +	int src, virq;
+>> +
+>> +	pending = readl(ks_pcie->va_app_base + MSI0_IRQ_STATUS + (offset<<  4));
+>
+> Blank line here (before the block comment).
+>
+>> +	/*
+>> +	 * MSI0, Status bit 0-3 shows vectors 0, 8, 16, 24, MSI1 status bit
+>> +	 * shows 1, 9, 17, 25 and so forth
+>> +	 */
+>> +	for (src = 0; src<  4; src++) {
+>> +		if (BIT(src)&  pending) {
+>> +			vector = offset + (src<<  3);
+>> +			virq = irq_linear_revmap(pp->irq_domain, vector);
+>> +			dev_dbg(pp->dev,
+>> +				"irq: bit %d, vector %d, virq %d\n",
+>> +				 src, vector, virq);
+>> +			generic_handle_irq(virq);
+>> +		}
+>> +	}
+>> +}
+>> +
+>> ...
+>
+>> +static void __iomem *ks_pcie_cfg_setup(struct keystone_pcie *ks_pcie, u8 bus,
+>> +					unsigned int devfn)
+>> +{
+>> +	u8 device = PCI_SLOT(devfn), function = PCI_FUNC(devfn);
+>> +	struct pcie_port *pp =&ks_pcie->pp;
+>> +	u32 regval;
+>> +
+>> +	if (bus == 0)
+>> +		return pp->dbi_base;
+>> +
+>> +	regval = (bus<<  16) | (device<<  8) | function;
+>> +	/*
+>> +	 * Since Bus#1 will be a virtual bus, we need to have TYPE0
+>> +	 * access only.
+>> +	 * TYPE 1
+>> +	 */
+>> +	if (bus != 1)
+>> +		regval |= BIT(24);
+>> +
+>> +	writel(regval, ks_pcie->va_app_base + CFG_SETUP);
+>> +	return pp->va_cfg0_base;
+>> +}
+>> +
+>> +int ks_dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+>> +		unsigned int devfn, int where, int size, u32 *val)
+>> +{
+>> +	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
+>> +	u8 bus_num = bus->number;
+>> +	void __iomem *addr;
+>> +	int ret;
+>> +
+>> +	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
+>> +	ret = dw_pcie_cfg_read(addr + (where&  ~0x3), where, size, val);
+>
+> This *looks* like it needs a lock to protect against concurrent
+> ks_pcie_cfg_setup() users, since it writes a register.
+>
+>> +
+>> +	return ret;
+>
+> Please use the same style as in ks_dw_pcie_wr_other_conf(), i.e., get rid
+> of "ret".
+>
+>> +}
+>> +
+>> +int ks_dw_pcie_wr_other_conf(struct pcie_port *pp,
+>> +		struct pci_bus *bus, unsigned int devfn, int where,
+>> +		int size, u32 val)
+>> +{
+>> +	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
+>> +	u8 bus_num = bus->number;
+>> +	void __iomem *addr;
+>> +
+>> +	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
+>> +
+>> +	return dw_pcie_cfg_write(addr + (where&  ~0x3), where, size, val);
+>> +}
+>
+>> +++ b/drivers/pci/host/pci-keystone.c
+>> ...
+>
+>> +static struct platform_driver ks_pcie_driver __refdata = {
+>
+> Why does this need to be __refdata?  There are no other occurrences in
+> drivers/pci.
+>
+>> +	.probe  = ks_pcie_probe,
+>> +	.remove = __exit_p(ks_pcie_remove),
+>> +	.driver = {
+>> +		.name	= "keystone-pcie",
+>> +		.owner	= THIS_MODULE,
+>> +		.of_match_table = of_match_ptr(ks_pcie_of_match),
+>> +	},
+>> +};
+>
+> Bjorn
 
