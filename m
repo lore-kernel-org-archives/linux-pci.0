@@ -1,160 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f53.google.com ([209.85.192.53]:61618 "EHLO
-	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750782AbaG3Iio (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jul 2014 04:38:44 -0400
-Received: by mail-qg0-f53.google.com with SMTP id q107so1067197qgd.12
-        for <linux-pci@vger.kernel.org>; Wed, 30 Jul 2014 01:38:43 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]:56519 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750821AbaGVEvI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 00:51:08 -0400
+Message-ID: <53CDEDBA.4070509@infradead.org>
+Date: Mon, 21 Jul 2014 21:51:06 -0700
+From: Randy Dunlap <rdunlap@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <53D8A942.80008@huawei.com>
-References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com>
-	<CABawtvP1sviOZynf2N43ORDF-mPHX9PrcsXSmxKqv4_V9QpnsQ@mail.gmail.com>
-	<53D89754.3010704@huawei.com>
-	<CABawtvMg1gUpCr5rpFzKfUVD=Ai06Rpi4XVOvzARb2tYk+HXsw@mail.gmail.com>
-	<53D8A942.80008@huawei.com>
-Date: Wed, 30 Jul 2014 16:38:43 +0800
-Message-ID: <CABawtvNkodcdxOJ-T=eV8W_AtVV8AMeOi+9016-6DN_hRfrbTA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
-From: Ethan Zhao <ethan.kernel@gmail.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	"<keith.busch@intel.com>" <keith.busch@intel.com>,
-	Jon Mason <jdmason@kudzu.us>
+To: Mike Qiu <qiudayu@linux.vnet.ibm.com>, linux-pci@vger.kernel.org
+CC: bhelgaas@google.com, Tony Luck <tony.luck@intel.com>
+Subject: Re: [PATCH] Fix build warnings in aer.h
+References: <1405498124-11519-1-git-send-email-qiudayu@linux.vnet.ibm.com>
+In-Reply-To: <1405498124-11519-1-git-send-email-qiudayu@linux.vnet.ibm.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 30, 2014 at 4:13 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->>> Yes, that issue is BIOS bug, the mps setting is wrong after system boot up.
->>> But that issue is not same as this one, Keith and Jordan found the issue
->>> after hot-plug. And my patch only modify the hotplug slot connected device.
->>>
->>> In my idea, make the device work is important, because these platforms with windows
->>> can run happy, why linux leave this issue to BIOS.
->>
->>    That is a reason to make it works with Linux, but does your
->> platform have _HPX from ACPI for those hot-added back devices ?  if it
->> has, maybe windows could apply _HPX to configure those devices and
->> work well.
->>
->
-> I checked DSDT table exported from my server, but no "_HPX" found.
+On 07/16/2014 01:08 AM, Mike Qiu wrote:
+> build log:
+> 
 
-You might check the wrong place...
+When CONFIG_PCIEAER is not enabled:
 
-> Further more, kernel use pciehp first to support pcie hotplug device. And in pciehp,
-> driver won't touch ACPI methods like "_HPX".
+> In file included from include/ras/ras_event.h:11:0,
+>                  from drivers/ras/ras.c:13:
+> include/linux/aer.h:42:129: warning: ‘struct pci_dev’
+> declared inside parameter list [enabled by default]
+> 
+> include/linux/aer.h:42:129: warning: its scope is only
+> this definition or declaration, which is probably not
+> what you want [enabled by default]
+> 
+> include/linux/aer.h:46:130: warning: ‘struct pci_dev’
+> declared inside parameter list [enabled by default]
+> 
+> include/linux/aer.h:50:136: warning: ‘struct pci_dev’
+> declared inside parameter list [enabled by default]
+> 
+> include/linux/aer.h:57:14: warning: ‘struct pci_dev’
+> declared inside parameter list [enabled by default]
+> 
+> Signed-off-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
 
-That is not true, please read the code in pciehp_pci.c
+Acked-by: Randy Dunlap <rdunlap@infradead.org>
 
- pciehp_configure_device()
-    pci_configure_slot()
-       pci_get_hp_params()
-           acpi_run_hpx()
-               acpi_evaluate_object(handle, "_HPX",...)
- ...
+Tested-by: Randy Dunlap <rdunlap@infradead.org>
 
-Native pciehp also does acpi parameter importing ... ...
+> ---
+>  include/linux/aer.h | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/include/linux/aer.h b/include/linux/aer.h
+> index 4dbaa70..c826d1c 100644
+> --- a/include/linux/aer.h
+> +++ b/include/linux/aer.h
+> @@ -11,6 +11,8 @@
+>  #define AER_FATAL			1
+>  #define AER_CORRECTABLE			2
+>  
+> +struct pci_dev;
+> +
+>  struct aer_header_log_regs {
+>  	unsigned int dw0;
+>  	unsigned int dw1;
+> 
 
-Thank,s
-Ethan
 
->
-> Thanks!
-> Yijing.
->
->>>
->>>>
->>>>> Reported-by: Keith Busch <keith.busch@intel.com>
->>>>> Reported-by: Jordan_Hargrave@Dell.com
->>>>> Reported-by: Yijing Wang <wangyijing@huawei.com>
->>>>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->>>>> Cc: Jon Mason <jdmason@kudzu.us>
->>>>> ---
->>>>>  drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
->>>>>  1 files changed, 39 insertions(+), 0 deletions(-)
->>>>>
->>>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>>>> index e3cf8a2..583ca52 100644
->>>>> --- a/drivers/pci/probe.c
->>>>> +++ b/drivers/pci/probe.c
->>>>> @@ -1613,6 +1613,44 @@ static void pcie_write_mrrs(struct pci_dev *dev)
->>>>>                 dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If problems are experienced, try running with pci=pcie_bus_safe\n");
->>>>>  }
->>>>>
->>>>> +/**
->>>>> + * pcie_bus_update_set - update device mps when device doing hot-add
->>>>> + * @dev: PCI device to set
->>>>> + *
->>>>> + * After device hot add, mps will be set to default(128B), But the
->>>>> + * upstream port device's mps may be larger than 128B which was set
->>>>> + * by firmware during system bootup. Then we should update the device
->>>>> + * mps to equal to its parent mps, Or the device can not work normally.
->>>>> + */
->>>>> +static void pcie_bus_update_set(struct pci_dev *dev)
->>>>> +{
->>>>> +       int mps, p_mps, mpss;
->>>>> +       struct pci_dev *parent;
->>>>> +
->>>>> +       if (!pci_is_pcie(dev) || !dev->bus->self
->>>>> +                       || !dev->bus->self->is_hotplug_bridge)
->>>>> +               return;
->>>>> +
->>>>> +       parent = dev->bus->self;
->>>>> +       mps = pcie_get_mps(dev);
->>>>> +       p_mps = pcie_get_mps(parent);
->>>>> +
->>>>> +       if (mps >= p_mps)
->>>>> +               return;
->>>>> +
->>>>> +       mpss = 128 << dev->pcie_mpss;
->>>>> +       if (mpss < p_mps) {
->>>>> +               dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
->>>>> +                               "If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
->>>>> +                               mpss, p_mps);
->>>>> +               return;
->>>>> +       }
->>>>> +
->>>>> +       pcie_write_mps(dev, p_mps);
->>>>> +       dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n",
->>>>> +                       pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
->>>>> +}
->>>>> +
->>>>>  static void pcie_bus_detect_mps(struct pci_dev *dev)
->>>>>  {
->>>>>         struct pci_dev *bridge = dev->bus->self;
->>>>> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
->>>>>                 return 0;
->>>>>
->>>>>         if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
->>>>> +               pcie_bus_update_set(dev);
->>>>>                 pcie_bus_detect_mps(dev);
->>>>>                 return 0;
->>>>>         }
->>>>> --
->>>>> 1.7.1
->>>>>
->>>>> --
->>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>>>> the body of a message to majordomo@vger.kernel.org
->>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>
->>>> .
->>>>
->>>
->>>
->>> --
->>> Thanks!
->>> Yijing
->>>
->>
->> .
->>
->
->
-> --
-> Thanks!
-> Yijing
->
+-- 
+~Randy
