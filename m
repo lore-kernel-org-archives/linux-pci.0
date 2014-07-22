@@ -1,46 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f53.google.com ([209.85.192.53]:43884 "EHLO
-	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751933AbaGJQZv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 12:25:51 -0400
-Received: by mail-qg0-f53.google.com with SMTP id i50so7846254qgf.40
-        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 09:25:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1404997394-15715-1-git-send-email-david.vrabel@citrix.com>
-References: <1404997394-15715-1-git-send-email-david.vrabel@citrix.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 10 Jul 2014 10:25:29 -0600
-Message-ID: <CAErSpo4wbqPTYa-0Ot2vdfnnRE3iQbPoUsaXca8kr7SkjqSJQg@mail.gmail.com>
-Subject: Re: [PATCHv1 0/2] xen-pciback: allow device reset to work more often
-To: David Vrabel <david.vrabel@citrix.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from aserp1040.oracle.com ([141.146.126.69]:24521 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755741AbaGVQUI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 12:20:08 -0400
+From: Ethan Zhao <ethan.zhao@oracle.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
+	kvm@vger.kernel.org, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	xen-devel@lists.xenproject.org
+Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
+	ethan.kernel@gmail.com
+Subject: [PATCH 2/4] KVM: use pci device flag operation helper functions
+Date: Wed, 23 Jul 2014 00:19:02 +0800
+Message-Id: <1406045944-1587-3-git-send-email-ethan.zhao@oracle.com>
+In-Reply-To: <1406045944-1587-1-git-send-email-ethan.zhao@oracle.com>
+References: <1406045944-1587-1-git-send-email-ethan.zhao@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Alex]
+Use helper function instead of direct operation to pci device
+flag when set device to assigned or deassigned.
 
-On Thu, Jul 10, 2014 at 7:03 AM, David Vrabel <david.vrabel@citrix.com> wrote:
-> When a PCI device is passed through to a different domain, it must be
-> reset to ensure it works correctly in the new domain.  Usually the
-> toolstack will request a device reset via the "reset" sysfs file.  But
-> this file is not present if a function reset is not available.
->
-> A common use case is a GPU device and its associated audio function.
-> In the case where these two devices are simultaneously co-assigned to
-> the same domain, it is safe to reset them with an SBR.
->
-> Patch #1 export pci_probe_reset_function() so pciback can know if an
-> alternate reset mechanism needs to be proved.
->
-> Patch #2 adds a "reset" file to devices bound to pciback that performs
-> the SBR if it is safe to do so.
+Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+---
+ virt/kvm/assigned-dev.c |    2 +-
+ virt/kvm/iommu.c        |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-I haven't looked at your patches yet, but I added Alex because he did
-a lot of similar work for vfio.
+diff --git a/virt/kvm/assigned-dev.c b/virt/kvm/assigned-dev.c
+index bf06577..d122bda 100644
+--- a/virt/kvm/assigned-dev.c
++++ b/virt/kvm/assigned-dev.c
+@@ -302,7 +302,7 @@ static void kvm_free_assigned_device(struct kvm *kvm,
+ 	else
+ 		pci_restore_state(assigned_dev->dev);
+ 
+-	assigned_dev->dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++	pci_set_dev_deassigned(assigned_dev->dev);
+ 
+ 	pci_release_regions(assigned_dev->dev);
+ 	pci_disable_device(assigned_dev->dev);
+diff --git a/virt/kvm/iommu.c b/virt/kvm/iommu.c
+index 0df7d4b..8cfe021 100644
+--- a/virt/kvm/iommu.c
++++ b/virt/kvm/iommu.c
+@@ -194,7 +194,7 @@ int kvm_assign_device(struct kvm *kvm,
+ 			goto out_unmap;
+ 	}
+ 
+-	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
++	pci_set_dev_assigned(pdev);
+ 
+ 	dev_info(&pdev->dev, "kvm assign device\n");
+ 
+@@ -220,7 +220,7 @@ int kvm_deassign_device(struct kvm *kvm,
+ 
+ 	iommu_detach_device(domain, &pdev->dev);
+ 
+-	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++	pci_set_dev_deassigned(pdev);
+ 
+ 	dev_info(&pdev->dev, "kvm deassign device\n");
+ 
+-- 
+1.7.1
 
-Bjorn
