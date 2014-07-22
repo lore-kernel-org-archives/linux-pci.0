@@ -1,137 +1,178 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:53820 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750737AbaGNEff (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jul 2014 00:35:35 -0400
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:36595 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751521AbaGVSuG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 14:50:06 -0400
+Received: by mail-ig0-f182.google.com with SMTP id c1so565345igq.15
+        for <linux-pci@vger.kernel.org>; Tue, 22 Jul 2014 11:50:05 -0700 (PDT)
+Date: Tue, 22 Jul 2014 12:50:02 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/2] resource: Add device-managed
+ request/release_resource()
+Message-ID: <20140722185002.GC19181@google.com>
+References: <1405062505-2606-1-git-send-email-thierry.reding@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20140711224421.GA5417@google.com>
-References: <1404198978-26593-1-git-send-email-vidyas@nvidia.com>
- <20140705185736.GD28871@google.com> <20140705190203.GE28871@google.com>
- <113ACA888B71994BB56E5CF3704953486D8E9DFE3C@BGMAIL02.nvidia.com>
- <CAErSpo5qSy6sEUj-Hu1_ympHUhxLBw6Cf1v_Y6bQ6XqFNmJS8Q@mail.gmail.com>
- <CAN7O0+KymyWPNnd+HDHNPTUwm8uSXa2v2fmUkHK=5NQenWK7xA@mail.gmail.com> <20140711224421.GA5417@google.com>
-From: vidya sagar <sagar.tv@gmail.com>
-Date: Mon, 14 Jul 2014 10:05:13 +0530
-Message-ID: <CAN7O0+LJKCMdXmELP3KTsLyRmGEHKvRcvNi+53AJFJLHUnmhrg@mail.gmail.com>
-Subject: Re: [PATCH v1] PCI: enable ASPM configuration in PCIE POWERSAVE mode
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Vidya Sagar <vidyas@nvidia.com>,
-	"thierry.reding@gmail.com" <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@nvidia.com>,
-	Krishna Thota <kthota@nvidia.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"tianyu.lan@intel.com" <tianyu.lan@intel.com>,
-	Nagananda Chumbalkar <nchumbalkar@lenovo.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1405062505-2606-1-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jul 12, 2014 at 4:14 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [updated Naga's email address]
->
-> On Wed, Jul 09, 2014 at 11:50:01PM +0530, vidya sagar wrote:
->> On Tue, Jul 8, 2014 at 2:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> > On Mon, Jul 7, 2014 at 12:00 PM, Vidya Sagar <vidyas@nvidia.com> wrote:
->> >>> -----Original Message-----
->> >>> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->> >>> Sent: Sunday, July 06, 2014 12:32 AM
->> >>> To: Vidya Sagar
->> >>> Cc: nagananda.chumbalkar@hp.com; thierry.reding@gmail.com; Stephen
->> >>> Warren; Krishna Thota; linux-pci@vger.kernel.org; linux-
->> >>> kernel@vger.kernel.org; Matthew Garrett; Rafael J. Wysocki
->> >>> Subject: Re: [PATCH v1] PCI: enable ASPM configuration in PCIE POWERSAVE
->> >>> mode
->> >>>
->> >>> [+cc Rafael]
->> >>>
->> >>> On Sat, Jul 05, 2014 at 12:57:36PM -0600, Bjorn Helgaas wrote:
->> >>> > [+cc Matthew]
->> >>> >
->> >>> > On Tue, Jul 01, 2014 at 12:46:18PM +0530, Vidya Sagar wrote:
->> >>> > > commit 1a680b7c moved pcie_aspm_powersave_config_link() out of
->> >>> > > pci_raw_set_power_state() to pci_set_power_state() which would
->> >>> > > enable ASPM. But, with commit db288c9c, which re-introduced the
->> >>> > > following check
->> >>> > > ./drivers/pci/pci.c: pci_set_power_state()
->> >>> > > +   /* Check if we're already there */
->> >>> > > +   if (dev->current_state == state)
->> >>> > > +       return 0;
->> >>> > > in pci_set_power_state(), call to pcie_aspm_powersave_config_link()
->> >>> > > is never made leaving ASPM broken.
->> >>> > > Fix it by not returning from when the above condition is true,
->> >>> > > rather, jump to ASPM configuration code and exit from there eventually.
->> >>> >
->> >>> > Rafael, Matthew, any comments?  We have vacillated on this before and
->> >>> > the web is already pretty tangled.
->> >>> >
->> >> I've raised a bugzilla bug  https://bugzilla.kernel.org/show_bug.cgi?id=79621 for the same.
->> >> Scenario here is, when the driver of a particular PCIe device is loaded and when CONFIG_PCIEASPM_POWERSAVE=y, ASPM is expected to get configured by the sub system which is not happening as of today.
->> >> The reason for this behavior is the 'if' condition that checks for the device's power state and returns if it is already in D0. Ideally, it shouldn't return from there, rather proceed to configure ASPM.
->> >
->> Please find the attached files (before_aspm_patch.txt &
->> after_aspm_patch.txt) with 'dmesg' and 'lspci -vvv' info.
->> BTW, my understanding is that this issue (enabling ASPM while booting)
->> exists for all the devices which are in D0 state.
->> Please correct my understanding if it's wrong.
->> Though, enabling aspm through writing 'powersave' to
->> '/sys/module/pcie_aspm/parameters' is working fine always.
->
-> I think your observation is correct: it looks like if we boot with all
-> devices in D0 (which I would expect to be a very common case), we don't
-> touch ASPM configuration at all.  That would mean we would just leave
-> the BIOS settings alone.
->
-> It seems pretty surprising that it could have been this way since
-> v3.6, when db288c9c5f9d was merged, and we haven't noticed until now,
-> but if most BIOSes configure ASPM themselves, maybe it's possible.
->
-> But I wonder if we can untangle ASPM from pci_set_power_state().  I
-> don't think they're really related.  There are a zillion .suspend()
-> and .resume() methods that call pci_set_power_state().  I doubt that
-> we need to do ASPM configuration during suspend, and I'm dubious about
-> resume, too.  What about a patch like the following?
->
+[+cc Tejun, LKML]
 
-yes. this looks better. I've tested this and is working fine.
-I'll push a new patch with this.
+On Fri, Jul 11, 2014 at 09:08:24AM +0200, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
+> 
+> Provide device-managed implementations of the request_resource() and
+> release_resource() functions. Upon failure to request a resource, the
+> new devm_request_resource() function will output an error message for
+> consistent error reporting.
+> 
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
 
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 63a54a340863..75fabd1f72bc 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -839,12 +839,6 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
->
->         if (!__pci_complete_power_transition(dev, state))
->                 error = 0;
-> -       /*
-> -        * When aspm_policy is "powersave" this call ensures
-> -        * that ASPM is configured.
-> -        */
-> -       if (!error && dev->bus->self)
-> -               pcie_aspm_powersave_config_link(dev->bus->self);
->
->         return error;
->  }
-> @@ -1195,12 +1189,18 @@ int __weak pcibios_enable_device(struct pci_dev *dev, int bars)
->  static int do_pci_enable_device(struct pci_dev *dev, int bars)
->  {
->         int err;
-> +       struct pci_dev *bridge;
->         u16 cmd;
->         u8 pin;
->
->         err = pci_set_power_state(dev, PCI_D0);
->         if (err < 0 && err != -EIO)
->                 return err;
+This seems OK to me, but I don't consider myself a devres maintainer.  I
+added Tejun and LKML for any comment.  Minor nit below.
+
+> ---
+>  Documentation/driver-model/devres.txt |  2 +
+>  include/linux/ioport.h                |  5 +++
+>  kernel/resource.c                     | 73 +++++++++++++++++++++++++++++++++++
+>  3 files changed, 80 insertions(+)
+> 
+> diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
+> index 034d32b00846..b466f3d19bcb 100644
+> --- a/Documentation/driver-model/devres.txt
+> +++ b/Documentation/driver-model/devres.txt
+> @@ -252,6 +252,8 @@ IIO
+>    devm_iio_device_unregister()
+>  
+>  IO region
+> +  devm_request_resource()
+> +  devm_release_resource()
+>    devm_request_region()
+>    devm_request_mem_region()
+>    devm_release_region()
+> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+> index 142ec544167c..2c5250222278 100644
+> --- a/include/linux/ioport.h
+> +++ b/include/linux/ioport.h
+> @@ -215,6 +215,11 @@ static inline int __deprecated check_region(resource_size_t s,
+>  
+>  /* Wrappers for managed devices */
+>  struct device;
 > +
-> +       bridge = pci_upstream_bridge(dev);
-> +       if (bridge)
-> +               pcie_aspm_powersave_config_link(bridge);
+> +extern int devm_request_resource(struct device *dev, struct resource *root,
+> +				 struct resource *new);
+> +extern void devm_release_resource(struct device *dev, struct resource *new);
 > +
->         err = pcibios_enable_device(dev, bars);
->         if (err < 0)
->                 return err;
+>  #define devm_request_region(dev,start,n,name) \
+>  	__devm_request_region(dev, &ioport_resource, (start), (n), (name))
+>  #define devm_request_mem_region(dev,start,n,name) \
+> diff --git a/kernel/resource.c b/kernel/resource.c
+> index da14b8d09296..39d99aa401a6 100644
+> --- a/kernel/resource.c
+> +++ b/kernel/resource.c
+> @@ -1248,6 +1248,79 @@ int release_mem_region_adjustable(struct resource *parent,
+>  /*
+>   * Managed region resource
+>   */
+> +static void devm_resource_release(struct device *dev, void *ptr)
+> +{
+> +	struct resource **r = ptr;
+> +
+> +	release_resource(*r);
+> +}
+> +
+> +/**
+> + * devm_request_resource() - request and reserve an I/O or memory resource
+> + * @dev: device for which to request the resource
+> + * @root: root of the resource tree from which to request the resource
+> + * @new: descriptor of the resource to request
+> + *
+> + * This is a device-managed version of request_resource(). There is usually
+> + * no need to release resources requested by this function explicitly since
+> + * that will be taken care of when the device is unbound from its driver.
+> + * If for some reason the resource needs to be released explicitly, because
+> + * of ordering issues for example, drivers must call devm_release_resource()
+> + * rather than the regular release_resource().
+> + *
+> + * When a conflict is detected between any existing resources and the newly
+> + * requested resource, an error message will be printed.
+> + *
+> + * Returns 0 on success or a negative error code on failure.
+> + */
+> +int devm_request_resource(struct device *dev, struct resource *root,
+> +			  struct resource *new)
+> +{
+> +	struct resource *conflict, **ptr;
+> +
+> +	ptr = devres_alloc(devm_resource_release, sizeof(*ptr), GFP_KERNEL);
+> +	if (!ptr)
+> +		return -ENOMEM;
+> +
+> +	*ptr = new;
+> +
+> +	conflict = request_resource_conflict(root, new);
+> +	if (!conflict) {
+> +		devres_add(dev, ptr);
+> +		return 0;
+> +	}
+> +
+> +	dev_err(dev, "resource collision: %pR conflicts with %s %pR\n", new,
+> +		conflict->name, conflict);
+> +	devres_free(ptr);
+> +	return -EBUSY;
+
+Personally I would write this as:
+
+  conflict = request_resource_conflict(...);
+  if (conflict) {
+    dev_err(...);
+    devres_free(...);
+    return -EBUSY;
+  }
+
+  devres_add(...);
+  return 0;
+
+so the straight-line path is the normal, non-error path and errors are
+detected and dealt with in the "if" bodies.  Right now the "if" bodies
+are a mix of error handling and normal path.  But that's just my personal
+preference.
+
+> +}
+> +EXPORT_SYMBOL(devm_request_resource);
+> +
+> +static int devm_resource_match(struct device *dev, void *res, void *data)
+> +{
+> +	struct resource **ptr = res;
+> +
+> +	if (WARN_ON(!ptr || !*ptr))
+> +		return 0;
+> +
+> +	return *ptr == data;
+> +}
+> +
+> +/**
+> + * devm_release_resource() - release a previously requested resource
+> + * @dev: device for which to release the resource
+> + * @new: descriptor of the resource to release
+> + *
+> + * Releases a resource previously requested using devm_request_resource().
+> + */
+> +void devm_release_resource(struct device *dev, struct resource *new)
+> +{
+> +	WARN_ON(devres_release(dev, devm_resource_release, devm_resource_match,
+> +			       new));
+> +}
+> +EXPORT_SYMBOL(devm_release_resource);
+> +
+>  struct region_devres {
+>  	struct resource *parent;
+>  	resource_size_t start;
+> -- 
+> 2.0.1
+> 
