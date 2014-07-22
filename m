@@ -1,89 +1,137 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 17 Jul 2014 10:12:35 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Mark Rutland <mark.rutland@arm.com>
-Cc: Marc Zyngier <Marc.Zyngier@arm.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 0/4 V3] irqchip: gic: Introduce ARM GICv2m MSI(-X)
- support
-Message-ID: <20140717141235.GR13108@titan.lakedaemon.net>
-References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
- <20140717131854.GN13108@titan.lakedaemon.net>
- <20140717135534.GM30313@leverpostej>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:54504 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753148AbaGVEbi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 00:31:38 -0400
+Message-ID: <53CDE926.4010802@infradead.org>
+Date: Mon, 21 Jul 2014 21:31:34 -0700
+From: Randy Dunlap <rdunlap@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140717135534.GM30313@leverpostej>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Mike Qiu <qiudayu@linux.vnet.ibm.com>
+CC: linux-pci@vger.kernel.org,
+	Tuomas Tynkkynen <ttynkkynen@nvidia.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	gong.chen@linux.intel.com, Lance Ortiz <lance.ortiz@hp.com>,
+	Tony Luck <tony.luck@intel.com>
+Subject: Re: [PATCH] Fix build warnings in aer.h
+References: <1405498124-11519-1-git-send-email-qiudayu@linux.vnet.ibm.com> <20140722023813.GA27601@google.com>
+In-Reply-To: <20140722023813.GA27601@google.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 17, 2014 at 02:55:34PM +0100, Mark Rutland wrote:
-> Hi Jason,
+On 07/21/2014 07:38 PM, Bjorn Helgaas wrote:
+> [+cc Tuomas, Randy, Gavin, Gong, Lance, Tony]
 > 
-> On Thu, Jul 17, 2014 at 02:18:54PM +0100, Jason Cooper wrote:
-> > On Wed, Jul 09, 2014 at 06:05:00PM -0500, suravee.suthikulpanit@amd.com wrote:
-> > > From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> > > 
-> > > This patch set introduces support for MSI(-X) in GICv2m specification,
-> > > which is implemented in some variation of GIC400.
-> > > 
-> > > This depends on and has been tested with the V7 of"Add support for PCI in AArch64"
-> > > (https://lkml.org/lkml/2014/3/14/320).
-> > > 
-> > > Changes in V3:
-> > >     * Rebase to git://git.infradead.org/users/jcooper/linux.git irqchip/gic
-> > >       (per Jason Cooper request)
-> > >     * Misc fix/clean up per Mark Rutland comments
-> > >     * Minor Clean up in the driver/irqchip/irq-gic-v2m.c: alloc_msi_irqs()
-> > >     * Patch 4 is new to the series:
-> > >         * Add ARM64-specific version arch_setup_msi_irqs() to allow support
-> > >           for Multiple MSI.
-> > >         * Add support for Multiple MSI for GICv2m.
-> > > 
-> > > Suravee Suthikulpanit (4):
-> > >   irqchip: gic: Add binding probe for ARM GIC400
-> > >   irqchip: gic: Restructuring ARM GIC code
-> > >   irqchip: gic: Add supports for ARM GICv2m MSI(-X)
-> > >   irqchip: gicv2m: Add support for multiple MSI for ARM64 GICv2m
-> > 
-> > Ok, patch #1 applied to irqchip/urgent.  Patches 2 and 3 applied to
-> > irqchip/gic with irqchip/urgent merged in.  To facilitate
-> > testing/merging, I've prepared an unsigned tag for you on the
-> > irqchip/gic branch:
+> On Wed, Jul 16, 2014 at 04:08:44AM -0400, Mike Qiu wrote:
+>> build log:
+>>
+>> In file included from include/ras/ras_event.h:11:0,
+>>                  from drivers/ras/ras.c:13:
+>> include/linux/aer.h:42:129: warning: ‘struct pci_dev’
+>> declared inside parameter list [enabled by default]
+>>
+>> include/linux/aer.h:42:129: warning: its scope is only
+>> this definition or declaration, which is probably not
+>> what you want [enabled by default]
+>>
+>> include/linux/aer.h:46:130: warning: ‘struct pci_dev’
+>> declared inside parameter list [enabled by default]
+>>
+>> include/linux/aer.h:50:136: warning: ‘struct pci_dev’
+>> declared inside parameter list [enabled by default]
+>>
+>> include/linux/aer.h:57:14: warning: ‘struct pci_dev’
+>> declared inside parameter list [enabled by default]
+>>
+>> Signed-off-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
 > 
-> I'm a little concerned that this is all going through for v3.17 without
-> a {Reviewed,Acked}-by from Marc or anyone working with GIC{,v2m}.
-
-Well, that's why it's not in irqchip/core yet. ;-)  It can be undone if
-needed.
-
-> While his comments on v1 have been addressed, he has not had a chance to
-> acknowledge the solutions. I appreciate Marc's holiday is unfortunately
-> timed.
+> OK, so the problem doesn't occur on x86 because there we have a struct
+> pci_dev declaration reached earlier via:
 > 
-> I also have an open concern with the binding with regard to the
-> orthogonality of GICV GICH and the MSI registers.
+>   drivers/ras/ras.c
+>     include/ras/ras_event.h
+>       include/linux/edac.h
+>         include/linux/device.h
+>           include/linux/gfp.h
+>             arch/x86/include/asm/mmzone.h
+>               arch/x86/include/asm/mmzone_64.h
+>                 arch/x86/include/asm/smp.h
+>                   arch/x86/include/asm/mpspec.h
+>                     arch/x86/include/asm/x86_init.h
+>                       struct pci_dev;
+>       include/linux/aer.h
+>         ... pci_enable_pcie_error_reporting(struct pci_dev *dev);
 > 
-> Suravee, do you need this urgently for v3.17? I was under the impression
-> that we wouldn't have full PCIe support by then.
+> You're building powerpc, which doesn't have the same pci_dev
+> declaration in the arch header files, so you see the declaration
+> problem in aer.h.
 
-If Suravee is ok with it, I can drop them for now and he can resend for
-v3.18.  Since we've worked out a way to merge it all in one window, I
-don't think it would hurt anything to wait.
+I get in on many i386 and x86_64 randconfig builds.... [checking]
 
-I'll leave these in irqchip/for-next until I hear from Suravee, then
-I'll drop the lot till we hear from Marc and look at the timing.
+20140715: 2 of 10 i386 randconfig builds
+20140716: 1 of 10 i386 randconfig builds
+20140717: 2 of 10 i386 randconfig builds
+20140718: 1 of 10 i386 randconfig builds
 
-thx,
+20140715: 3 of 10 x86_64 randconfig builds
+20140716: 1 of 10 x86_64 randconfig builds
+20140717: 1 of 10 x86_64 randconfig builds
+20140718: 2 of 10 x86_64 randconfig builds
+20140721: 1 of 10 x86_64 randconfig builds
 
-Jason.
+
+> I could apply your fix, but it should go in v3.16 along with the commit
+> (0a2409aad38e ("trace, AER: Move trace into unified interface")) that
+> exposes the problem, and I'm leaving on vacation before I can get this
+> into -next, have it smoke-tested, and ask Linus to pull it.
+> 
+> So you might want to ask Tony to put in his tree, since it looks like
+> he merged 0a2409aad38e in the first place.
+> 
+> Please add these:
+> 
+>   Fixes: 0a2409aad38e ("trace, AER: Move trace into unified interface")
+>   Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> I know 0a2409aad38e isn't actually *responsible* for the problem, but
+> anybody who backports 0a2409aad38e should pick up this fix as well.
+> 
+> Lance, I added you because of an unrelated issue I noticed while reviewing
+> this: you added the AER trace events with 1ca1d8d54f92 ("aerdrv: Trace
+> Event for PCI Express Advanced Error Reporting"):
+> 
+>   +#define aer_correctable_errors         \
+>   +       {BIT(0),        "Receiver Error"},              \
+>   ...
+> 
+> I'd like to see all those "BIT(...)" things changed to use the #defines
+> that already exist in include/uapi/linux/pci_regs.h, e.g.,
+> PCI_ERR_COR_RCVR.  That way grep will find these uses, which will make
+> maintenance easier.  There's no hurry about this part, of course.
+> 
+> Bjorn
+> 
+>> ---
+>>  include/linux/aer.h | 2 ++
+>>  1 file changed, 2 insertions(+)
+>>
+>> diff --git a/include/linux/aer.h b/include/linux/aer.h
+>> index 4dbaa70..c826d1c 100644
+>> --- a/include/linux/aer.h
+>> +++ b/include/linux/aer.h
+>> @@ -11,6 +11,8 @@
+>>  #define AER_FATAL                        1
+>>  #define AER_CORRECTABLE                        2
+>>  
+>> +struct pci_dev;
+>> +
+>>  struct aer_header_log_regs {
+>>          unsigned int dw0;
+>>          unsigned int dw1;
+>> -- 
+
+
+-- 
+~Randy
