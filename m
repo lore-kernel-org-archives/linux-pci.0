@@ -1,573 +1,191 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V4 16/21] iommu/vt-d: Implement DMAR unit hotplug framework
-Date: Fri, 11 Jul 2014 14:19:40 +0800
-Message-Id: <1405059585-10620-17-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:57973 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753765AbaGVSf0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 14:35:26 -0400
+Received: by mail-ie0-f171.google.com with SMTP id at1so45722iec.30
+        for <linux-pci@vger.kernel.org>; Tue, 22 Jul 2014 11:35:26 -0700 (PDT)
+Date: Tue, 22 Jul 2014 12:35:23 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+Subject: Re: [PATCH] PCI: tegra: Add debugfs support
+Message-ID: <20140722183523.GB19181@google.com>
+References: <1405062024-2364-1-git-send-email-thierry.reding@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1405062024-2364-1-git-send-email-thierry.reding@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Intel platforms, an IO Hub (PCI/PCIe host bridge) may contain DMAR
-units, so we need to support DMAR hotplug when supporting PCI host
-bridge hotplug on Intel platforms.
+On Fri, Jul 11, 2014 at 09:00:24AM +0200, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
+> 
+> Provide a debugfs file that shows the current link status for each root
+> port.
+> 
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
 
-According to Section 8.8 "Remapping Hardware Unit Hot Plug" in "Intel
-Virtualization Technology for Directed IO Architecture Specification
-Rev 2.2", ACPI BIOS should implement ACPI _DSM method under the ACPI
-object for the PCI host bridge to support DMAR hotplug.
+I applied this with Stephen's ack to my pci/host-tegra branch for v3.17.
+Let me know if you prefer a different merge strategy.  I'll be on vacation
+until Aug 11, so it won't be in my first pull request, but I plan to do
+another for things like this.
 
-This patch introduces interfaces to parse ACPI _DSM method for
-DMAR unit hotplug. It also implements state machines for DMAR unit
-hot-addition and hot-removal.
-
-The PCI host bridge hotplug driver should call dmar_hotplug_hotplug()
-before scanning PCI devices connected for hot-addition and after
-destroying all PCI devices for hot-removal.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/dmar.c                |  268 +++++++++++++++++++++++++++++++++--
- drivers/iommu/intel-iommu.c         |   78 +++++++++-
- drivers/iommu/intel_irq_remapping.c |    5 +
- include/linux/dmar.h                |   33 +++++
- 4 files changed, 370 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 02a769347fcb..9d8f5c82b717 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -75,7 +75,7 @@ static unsigned long dmar_seq_ids[BITS_TO_LONGS(DMAR_UNITS_SUPPORTED)];
- static int alloc_iommu(struct dmar_drhd_unit *drhd);
- static void free_iommu(struct intel_iommu *iommu);
- 
--static void __init dmar_register_drhd_unit(struct dmar_drhd_unit *drhd)
-+static void dmar_register_drhd_unit(struct dmar_drhd_unit *drhd)
- {
- 	/*
- 	 * add INCLUDE_ALL at the tail, so scan the list will find it at
-@@ -336,24 +336,45 @@ static struct notifier_block dmar_pci_bus_nb = {
- 	.priority = INT_MIN,
- };
- 
-+static struct dmar_drhd_unit *
-+dmar_find_dmaru(struct acpi_dmar_hardware_unit *drhd)
-+{
-+	struct dmar_drhd_unit *dmaru;
-+
-+	list_for_each_entry_rcu(dmaru, &dmar_drhd_units, list)
-+		if (dmaru->segment == drhd->segment &&
-+		    dmaru->reg_base_addr == drhd->address)
-+			return dmaru;
-+
-+	return NULL;
-+}
-+
- /**
-  * dmar_parse_one_drhd - parses exactly one DMA remapping hardware definition
-  * structure which uniquely represent one DMA remapping hardware unit
-  * present in the platform
-  */
--static int __init
--dmar_parse_one_drhd(struct acpi_dmar_header *header, void *arg)
-+static int dmar_parse_one_drhd(struct acpi_dmar_header *header, void *arg)
- {
- 	struct acpi_dmar_hardware_unit *drhd;
- 	struct dmar_drhd_unit *dmaru;
- 	int ret = 0;
- 
- 	drhd = (struct acpi_dmar_hardware_unit *)header;
--	dmaru = kzalloc(sizeof(*dmaru), GFP_KERNEL);
-+	dmaru = dmar_find_dmaru(drhd);
-+	if (dmaru)
-+		goto out;
-+
-+	dmaru = kzalloc(sizeof(*dmaru) + header->length, GFP_KERNEL);
- 	if (!dmaru)
- 		return -ENOMEM;
- 
--	dmaru->hdr = header;
-+	/*
-+	 * If header is allocated from slab by ACPI _DSM method, we need to
-+	 * copy the content because the memory buffer will be freed on return.
-+	 */
-+	dmaru->hdr = (void *)(dmaru + 1);
-+	memcpy(dmaru->hdr, header, header->length);
- 	dmaru->reg_base_addr = drhd->address;
- 	dmaru->segment = drhd->segment;
- 	dmaru->include_all = drhd->flags & 0x1; /* BIT0: INCLUDE_ALL */
-@@ -374,6 +395,7 @@ dmar_parse_one_drhd(struct acpi_dmar_header *header, void *arg)
- 	}
- 	dmar_register_drhd_unit(dmaru);
- 
-+out:
- 	if (arg)
- 		(*(int *)arg)++;
- 
-@@ -411,8 +433,7 @@ static int __init dmar_parse_one_andd(struct acpi_dmar_header *header,
- }
- 
- #ifdef CONFIG_ACPI_NUMA
--static int __init
--dmar_parse_one_rhsa(struct acpi_dmar_header *header, void *arg)
-+static int dmar_parse_one_rhsa(struct acpi_dmar_header *header, void *arg)
- {
- 	struct acpi_dmar_rhsa *rhsa;
- 	struct dmar_drhd_unit *drhd;
-@@ -806,14 +827,22 @@ dmar_validate_one_drhd(struct acpi_dmar_header *entry, void *arg)
- 		return -EINVAL;
- 	}
- 
--	addr = early_ioremap(drhd->address, VTD_PAGE_SIZE);
-+	if (arg)
-+		addr = ioremap(drhd->address, VTD_PAGE_SIZE);
-+	else
-+		addr = early_ioremap(drhd->address, VTD_PAGE_SIZE);
- 	if (!addr) {
- 		pr_warn("IOMMU: can't validate: %llx\n", drhd->address);
- 		return -EINVAL;
- 	}
-+
- 	cap = dmar_readq(addr + DMAR_CAP_REG);
- 	ecap = dmar_readq(addr + DMAR_ECAP_REG);
--	early_iounmap(addr, VTD_PAGE_SIZE);
-+
-+	if (arg)
-+		iounmap(addr);
-+	else
-+		early_iounmap(addr, VTD_PAGE_SIZE);
- 
- 	if (cap == (uint64_t)-1 && ecap == (uint64_t)-1) {
- 		warn_invalid_dmar(drhd->address, " returns all ones");
-@@ -1687,12 +1716,17 @@ int __init dmar_ir_support(void)
- 	return dmar->flags & 0x1;
- }
- 
-+/* Check whether DMAR units are in use */
-+static inline bool dmar_in_use(void)
-+{
-+	return irq_remapping_enabled || intel_iommu_enabled;
-+}
-+
- static int __init dmar_free_unused_resources(void)
- {
- 	struct dmar_drhd_unit *dmaru, *dmaru_n;
- 
--	/* DMAR units are in use */
--	if (irq_remapping_enabled || intel_iommu_enabled)
-+	if (dmar_in_use())
- 		return 0;
- 
- 	if (dmar_dev_scope_status != 1 && !list_empty(&dmar_drhd_units))
-@@ -1710,3 +1744,215 @@ static int __init dmar_free_unused_resources(void)
- 
- late_initcall(dmar_free_unused_resources);
- IOMMU_INIT_POST(detect_intel_iommu);
-+
-+/*
-+ * DMAR Hotplug Support
-+ * For more details, please refer to Intel(R) Virtualization Technology
-+ * for Directed-IO Architecture Specifiction, Rev 2.2, Section 8.8
-+ * "Remapping Hardware Unit Hot Plug".
-+ */
-+static u8 dmar_hp_uuid[] = {
-+	/* 0000 */    0xA6, 0xA3, 0xC1, 0xD8, 0x9B, 0xBE, 0x9B, 0x4C,
-+	/* 0008 */    0x91, 0xBF, 0xC3, 0xCB, 0x81, 0xFC, 0x5D, 0xAF
-+};
-+
-+/*
-+ * Currently there's only one revision and BIOS will not check the revision id,
-+ * so use 0 for safety.
-+ */
-+#define	DMAR_DSM_REV_ID			0
-+#define	DMAR_DSM_FUNC_DRHD		1
-+#define	DMAR_DSM_FUNC_ATSR		2
-+#define	DMAR_DSM_FUNC_RHSA		3
-+
-+static inline bool dmar_detect_dsm(acpi_handle handle, int func)
-+{
-+	return acpi_check_dsm(handle, dmar_hp_uuid, DMAR_DSM_REV_ID, 1 << func);
-+}
-+
-+static int dmar_walk_dsm_resource(acpi_handle handle, int func,
-+				  dmar_res_handler_t handler, void *arg)
-+{
-+	int ret = -ENODEV;
-+	union acpi_object *obj;
-+	struct acpi_dmar_header *start;
-+	struct dmar_res_callback callback;
-+	static int res_type[] = {
-+		[DMAR_DSM_FUNC_DRHD] = ACPI_DMAR_TYPE_HARDWARE_UNIT,
-+		[DMAR_DSM_FUNC_ATSR] = ACPI_DMAR_TYPE_ATSR,
-+		[DMAR_DSM_FUNC_RHSA] = ACPI_DMAR_HARDWARE_AFFINITY,
-+	};
-+
-+	if (!dmar_detect_dsm(handle, func))
-+		return 0;
-+
-+	obj = acpi_evaluate_dsm_typed(handle, dmar_hp_uuid, DMAR_DSM_REV_ID,
-+				      func, NULL, ACPI_TYPE_BUFFER);
-+	if (!obj)
-+		return -ENODEV;
-+
-+	memset(&callback, 0, sizeof(callback));
-+	callback.cb[res_type[func]] = handler;
-+	callback.arg[res_type[func]] = arg;
-+	start = (struct acpi_dmar_header *)obj->buffer.pointer;
-+	ret = dmar_walk_resources(start, obj->buffer.length, &callback);
-+
-+	ACPI_FREE(obj);
-+
-+	return ret;
-+}
-+
-+static int dmar_hp_add_drhd(struct acpi_dmar_header *header, void *arg)
-+{
-+	int ret;
-+	struct dmar_drhd_unit *dmaru;
-+
-+	dmaru = dmar_find_dmaru((struct acpi_dmar_hardware_unit *)header);
-+	if (!dmaru)
-+		return -ENODEV;
-+
-+	ret = dmar_ir_hotplug(dmaru, true);
-+	if (ret == 0)
-+		ret = dmar_iommu_hotplug(dmaru, true);
-+
-+	return ret;
-+}
-+
-+static int dmar_hp_remove_drhd(struct acpi_dmar_header *header, void *arg)
-+{
-+	int i, ret;
-+	struct device *dev;
-+	struct dmar_drhd_unit *dmaru;
-+
-+	dmaru = dmar_find_dmaru((struct acpi_dmar_hardware_unit *)header);
-+	if (!dmaru)
-+		return 0;
-+
-+	/*
-+	 * All PCI devices managed by this unit should have been destroyed.
-+	 */
-+	if (!dmaru->include_all && dmaru->devices && dmaru->devices_cnt)
-+		for_each_active_dev_scope(dmaru->devices,
-+					  dmaru->devices_cnt, i, dev)
-+			return -EBUSY;
-+
-+	ret = dmar_ir_hotplug(dmaru, false);
-+	if (ret == 0)
-+		ret = dmar_iommu_hotplug(dmaru, false);
-+
-+	return ret;
-+}
-+
-+static int dmar_hp_release_drhd(struct acpi_dmar_header *header, void *arg)
-+{
-+	struct dmar_drhd_unit *dmaru;
-+
-+	dmaru = dmar_find_dmaru((struct acpi_dmar_hardware_unit *)header);
-+	if (dmaru) {
-+		list_del_rcu(&dmaru->list);
-+		synchronize_rcu();
-+		dmar_free_drhd(dmaru);
-+	}
-+
-+	return 0;
-+}
-+
-+static int dmar_hotplug_insert(acpi_handle handle)
-+{
-+	int ret;
-+	int drhd_count = 0;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				     &dmar_validate_one_drhd, (void *)1);
-+	if (ret)
-+		goto out;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				     &dmar_parse_one_drhd, (void *)&drhd_count);
-+	if (ret == 0 && drhd_count == 0) {
-+		pr_warn(FW_BUG "No DRHD structures in buffer returned by _DSM method\n");
-+		goto out;
-+	} else if (ret) {
-+		goto release_drhd;
-+	}
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_RHSA,
-+				     &dmar_parse_one_rhsa, NULL);
-+	if (ret)
-+		goto release_drhd;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_ATSR,
-+				     &dmar_parse_one_atsr, NULL);
-+	if (ret)
-+		goto release_atsr;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				     &dmar_hp_add_drhd, NULL);
-+	if (!ret)
-+		return 0;
-+
-+	dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+			       &dmar_hp_remove_drhd, NULL);
-+release_atsr:
-+	dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_ATSR,
-+			       &dmar_release_one_atsr, NULL);
-+release_drhd:
-+	dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+			       &dmar_hp_release_drhd, NULL);
-+out:
-+	return ret;
-+}
-+
-+static int dmar_hotplug_remove(acpi_handle handle)
-+{
-+	int ret;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_ATSR,
-+				     &dmar_check_one_atsr, NULL);
-+	if (ret)
-+		return ret;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				     &dmar_hp_remove_drhd, NULL);
-+	if (ret == 0) {
-+		WARN_ON(dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_ATSR,
-+					       &dmar_release_one_atsr, NULL));
-+		WARN_ON(dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+					       &dmar_hp_release_drhd, NULL));
-+	} else {
-+		dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				       &dmar_hp_add_drhd, NULL);
-+	}
-+
-+	return ret;
-+}
-+
-+static int dmar_device_hotplug(acpi_handle handle, bool insert)
-+{
-+	int ret;
-+
-+	if (!dmar_in_use())
-+		return 0;
-+
-+	if (!dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD))
-+		return 0;
-+
-+	down_write(&dmar_global_lock);
-+	if (insert)
-+		ret = dmar_hotplug_insert(handle);
-+	else
-+		ret = dmar_hotplug_remove(handle);
-+	up_write(&dmar_global_lock);
-+
-+	return ret;
-+}
-+
-+int dmar_device_add(acpi_handle handle)
-+{
-+	return dmar_device_hotplug(handle, true);
-+}
-+
-+int dmar_device_remove(acpi_handle handle)
-+{
-+	return dmar_device_hotplug(handle, false);
-+}
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 9c5eacc28b0e..d35141ab62c3 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3677,17 +3677,48 @@ int __init dmar_parse_one_rmrr(struct acpi_dmar_header *header, void *arg)
- 	return 0;
- }
- 
--int __init dmar_parse_one_atsr(struct acpi_dmar_header *hdr, void *arg)
-+static struct dmar_atsr_unit *dmar_find_atsr(struct acpi_dmar_atsr *atsr)
-+{
-+	struct dmar_atsr_unit *atsru;
-+	struct acpi_dmar_atsr *tmp;
-+
-+	list_for_each_entry_rcu(atsru, &dmar_atsr_units, list) {
-+		tmp = (struct acpi_dmar_atsr *)atsru->hdr;
-+		if (atsr->segment != tmp->segment)
-+			continue;
-+		if (atsr->header.length != tmp->header.length)
-+			continue;
-+		if (memcmp(atsr, tmp, atsr->header.length) == 0)
-+			return atsru;
-+	}
-+
-+	return NULL;
-+}
-+
-+int dmar_parse_one_atsr(struct acpi_dmar_header *hdr, void *arg)
- {
- 	struct acpi_dmar_atsr *atsr;
- 	struct dmar_atsr_unit *atsru;
- 
-+	if (system_state != SYSTEM_BOOTING && !intel_iommu_enabled)
-+		return 0;
-+
- 	atsr = container_of(hdr, struct acpi_dmar_atsr, header);
--	atsru = kzalloc(sizeof(*atsru), GFP_KERNEL);
-+	atsru = dmar_find_atsr(atsr);
-+	if (atsru)
-+		return 0;
-+
-+	atsru = kzalloc(sizeof(*atsru) + hdr->length, GFP_KERNEL);
- 	if (!atsru)
- 		return -ENOMEM;
- 
--	atsru->hdr = hdr;
-+	/*
-+	 * If memory is allocated from slab by ACPI _DSM method, we need to
-+	 * copy the memory content because the memory buffer will be freed
-+	 * on return.
-+	 */
-+	atsru->hdr = (void *)(atsru + 1);
-+	memcpy(atsru->hdr, hdr, hdr->length);
- 	atsru->include_all = atsr->flags & 0x1;
- 	if (!atsru->include_all) {
- 		atsru->devices = dmar_alloc_dev_scope((void *)(atsr + 1),
-@@ -3710,6 +3741,47 @@ static void intel_iommu_free_atsr(struct dmar_atsr_unit *atsru)
- 	kfree(atsru);
- }
- 
-+int dmar_release_one_atsr(struct acpi_dmar_header *hdr, void *arg)
-+{
-+	struct acpi_dmar_atsr *atsr;
-+	struct dmar_atsr_unit *atsru;
-+
-+	atsr = container_of(hdr, struct acpi_dmar_atsr, header);
-+	atsru = dmar_find_atsr(atsr);
-+	if (atsru) {
-+		list_del_rcu(&atsru->list);
-+		synchronize_rcu();
-+		intel_iommu_free_atsr(atsru);
-+	}
-+
-+	return 0;
-+}
-+
-+int dmar_check_one_atsr(struct acpi_dmar_header *hdr, void *arg)
-+{
-+	int i;
-+	struct device *dev;
-+	struct acpi_dmar_atsr *atsr;
-+	struct dmar_atsr_unit *atsru;
-+
-+	atsr = container_of(hdr, struct acpi_dmar_atsr, header);
-+	atsru = dmar_find_atsr(atsr);
-+	if (!atsru)
-+		return 0;
-+
-+	if (!atsru->include_all && atsru->devices && atsru->devices_cnt)
-+		for_each_active_dev_scope(atsru->devices, atsru->devices_cnt,
-+					  i, dev)
-+			return -EBUSY;
-+
-+	return 0;
-+}
-+
-+int dmar_iommu_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
-+{
-+	return intel_iommu_enabled ? -ENOSYS : 0;
-+}
-+
- static void intel_iommu_free_dmars(void)
- {
- 	struct dmar_rmrr_unit *rmrru, *rmrr_n;
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 757e0b0d19ff..0a58195ed902 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -1167,3 +1167,8 @@ struct irq_remap_ops intel_irq_remap_ops = {
- 	.msi_setup_irq		= intel_msi_setup_irq,
- 	.setup_hpet_msi		= intel_setup_hpet_msi,
- };
-+
-+int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
-+{
-+	return irq_remapping_enabled ? -ENOSYS : 0;
-+}
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index c8a576bc3a98..9c06bb4b5b14 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -120,6 +120,8 @@ extern int dmar_remove_dev_scope(struct dmar_pci_notify_info *info,
- /* Intel IOMMU detection */
- extern int detect_intel_iommu(void);
- extern int enable_drhd_fault_handling(void);
-+extern int dmar_device_add(acpi_handle handle);
-+extern int dmar_device_remove(acpi_handle handle);
- 
- static inline int dmar_res_noop(struct acpi_dmar_header *hdr, void *arg)
- {
-@@ -131,17 +133,48 @@ extern int iommu_detected, no_iommu;
- extern int intel_iommu_init(void);
- extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header, void *arg);
- extern int dmar_parse_one_atsr(struct acpi_dmar_header *header, void *arg);
-+extern int dmar_check_one_atsr(struct acpi_dmar_header *hdr, void *arg);
-+extern int dmar_release_one_atsr(struct acpi_dmar_header *hdr, void *arg);
-+extern int dmar_iommu_hotplug(struct dmar_drhd_unit *dmaru, bool insert);
- extern int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info);
- #else /* !CONFIG_INTEL_IOMMU: */
- static inline int intel_iommu_init(void) { return -ENODEV; }
-+
- #define	dmar_parse_one_rmrr		dmar_res_noop
- #define	dmar_parse_one_atsr		dmar_res_noop
-+#define	dmar_check_one_atsr		dmar_res_noop
-+#define	dmar_release_one_atsr		dmar_res_noop
-+
- static inline int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
- {
- 	return 0;
- }
-+
-+static inline int dmar_iommu_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
-+{
-+	return 0;
-+}
- #endif /* CONFIG_INTEL_IOMMU */
- 
-+#ifdef CONFIG_IRQ_REMAP
-+extern int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert);
-+#else  /* CONFIG_IRQ_REMAP */
-+static inline int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
-+{ return 0; }
-+#endif /* CONFIG_IRQ_REMAP */
-+
-+#else /* CONFIG_DMAR_TABLE */
-+
-+static inline int dmar_device_add(acpi_handle handle)
-+{
-+	return 0;
-+}
-+
-+static inline int dmar_device_remove(acpi_handle handle)
-+{
-+	return 0;
-+}
-+
- #endif /* CONFIG_DMAR_TABLE */
- 
- struct irte {
--- 
-1.7.10.4
-
+> ---
+>  drivers/pci/host/pci-tegra.c | 118 +++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 118 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 14ec5b2c69e0..49b3bd5f5926 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -25,6 +25,7 @@
+>   */
+>  
+>  #include <linux/clk.h>
+> +#include <linux/debugfs.h>
+>  #include <linux/delay.h>
+>  #include <linux/export.h>
+>  #include <linux/interrupt.h>
+> @@ -275,6 +276,7 @@ struct tegra_pcie {
+>  	unsigned int num_supplies;
+>  
+>  	const struct tegra_pcie_soc_data *soc_data;
+> +	struct dentry *debugfs;
+>  };
+>  
+>  struct tegra_pcie_port {
+> @@ -1664,6 +1666,115 @@ static const struct of_device_id tegra_pcie_of_match[] = {
+>  };
+>  MODULE_DEVICE_TABLE(of, tegra_pcie_of_match);
+>  
+> +static void *tegra_pcie_ports_seq_start(struct seq_file *s, loff_t *pos)
+> +{
+> +	struct tegra_pcie *pcie = s->private;
+> +
+> +	if (list_empty(&pcie->ports))
+> +		return NULL;
+> +
+> +	seq_printf(s, "Index  Status\n");
+> +
+> +	return seq_list_start(&pcie->ports, *pos);
+> +}
+> +
+> +static void *tegra_pcie_ports_seq_next(struct seq_file *s, void *v, loff_t *pos)
+> +{
+> +	struct tegra_pcie *pcie = s->private;
+> +
+> +	return seq_list_next(v, &pcie->ports, pos);
+> +}
+> +
+> +static void tegra_pcie_ports_seq_stop(struct seq_file *s, void *v)
+> +{
+> +}
+> +
+> +static int tegra_pcie_ports_seq_show(struct seq_file *s, void *v)
+> +{
+> +	bool up = false, active = false;
+> +	struct tegra_pcie_port *port;
+> +	unsigned int value;
+> +
+> +	port = list_entry(v, struct tegra_pcie_port, list);
+> +
+> +	value = readl(port->base + RP_VEND_XP);
+> +
+> +	if (value & RP_VEND_XP_DL_UP)
+> +		up = true;
+> +
+> +	value = readl(port->base + RP_LINK_CONTROL_STATUS);
+> +
+> +	if (value & RP_LINK_CONTROL_STATUS_DL_LINK_ACTIVE)
+> +		active = true;
+> +
+> +	seq_printf(s, "%2u     ", port->index);
+> +
+> +	if (up)
+> +		seq_printf(s, "up");
+> +
+> +	if (active) {
+> +		if (up)
+> +			seq_printf(s, ", ");
+> +
+> +		seq_printf(s, "active");
+> +	}
+> +
+> +	seq_printf(s, "\n");
+> +	return 0;
+> +}
+> +
+> +static const struct seq_operations tegra_pcie_ports_seq_ops = {
+> +	.start = tegra_pcie_ports_seq_start,
+> +	.next = tegra_pcie_ports_seq_next,
+> +	.stop = tegra_pcie_ports_seq_stop,
+> +	.show = tegra_pcie_ports_seq_show,
+> +};
+> +
+> +static int tegra_pcie_ports_open(struct inode *inode, struct file *file)
+> +{
+> +	struct tegra_pcie *pcie = inode->i_private;
+> +	struct seq_file *s;
+> +	int err;
+> +
+> +	err = seq_open(file, &tegra_pcie_ports_seq_ops);
+> +	if (err)
+> +		return err;
+> +
+> +	s = file->private_data;
+> +	s->private = pcie;
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct file_operations tegra_pcie_ports_ops = {
+> +	.owner = THIS_MODULE,
+> +	.open = tegra_pcie_ports_open,
+> +	.read = seq_read,
+> +	.llseek = seq_lseek,
+> +	.release = seq_release,
+> +};
+> +
+> +static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
+> +{
+> +	struct dentry *file;
+> +
+> +	pcie->debugfs = debugfs_create_dir("pcie", NULL);
+> +	if (!pcie->debugfs)
+> +		return -ENOMEM;
+> +
+> +	file = debugfs_create_file("ports", S_IFREG | S_IRUGO, pcie->debugfs,
+> +				   pcie, &tegra_pcie_ports_ops);
+> +	if (!file)
+> +		goto remove;
+> +
+> +	return 0;
+> +
+> +remove:
+> +	debugfs_remove_recursive(pcie->debugfs);
+> +	pcie->debugfs = NULL;
+> +	return -ENOMEM;
+> +}
+> +
+>  static int tegra_pcie_probe(struct platform_device *pdev)
+>  {
+>  	const struct of_device_id *match;
+> @@ -1718,6 +1829,13 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+>  		goto disable_msi;
+>  	}
+>  
+> +	if (IS_ENABLED(CONFIG_DEBUG_FS)) {
+> +		err = tegra_pcie_debugfs_init(pcie);
+> +		if (err < 0)
+> +			dev_err(&pdev->dev, "failed to setup debugfs: %d\n",
+> +				err);
+> +	}
+> +
+>  	platform_set_drvdata(pdev, pcie);
+>  	return 0;
+>  
+> -- 
+> 2.0.1
+> 
