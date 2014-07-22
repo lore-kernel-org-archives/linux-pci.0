@@ -1,48 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from dehamd003.servertools24.de ([31.47.254.18]:33321 "EHLO
-	dehamd003.servertools24.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755536AbaGOHlh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jul 2014 03:41:37 -0400
-Message-ID: <53C4DB2D.80406@ladisch.de>
-Date: Tue, 15 Jul 2014 09:41:33 +0200
-From: Clemens Ladisch <clemens@ladisch.de>
-MIME-Version: 1.0
-To: Guenter Roeck <linux@roeck-us.net>
-CC: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	Borislav Petkov <bp@alien8.de>, jdelvare@suse.de,
-	rdunlap@infradead.org, bhelgaas@google.com,
-	lm-sensors@lm-sensors.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] hwmon, k10temp: Add support for AMD F15h M60h processor
-References: <1405369388-12729-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <20140714195128.GA25124@pd.tnic> <53C43BDF.2070403@ladisch.de> <20140714203336.GA30926@roeck-us.net>
-In-Reply-To: <20140714203336.GA30926@roeck-us.net>
-Content-Type: text/plain; charset=us-ascii
+Received: from aserp1040.oracle.com ([141.146.126.69]:24387 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754293AbaGVQTz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 12:19:55 -0400
+From: Ethan Zhao <ethan.zhao@oracle.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
+	kvm@vger.kernel.org, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	xen-devel@lists.xenproject.org
+Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
+	ethan.kernel@gmail.com
+Subject: [PATCH 0/4] Introduce device assignment flag operation helper function 
+Date: Wed, 23 Jul 2014 00:19:00 +0800
+Message-Id: <1406045944-1587-1-git-send-email-ethan.zhao@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Guenter Roeck wrote:
-> On Mon, Jul 14, 2014 at 10:21:51PM +0200, Clemens Ladisch wrote:
->> Borislav Petkov wrote:
->>> On Mon, Jul 14, 2014 at 03:23:08PM -0500, Aravind Gopalakrishnan wrote:
->>>> +	if (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model == 0x60) {
->>>> +		pci_bus_write_config_dword(pdev->bus, PCI_DEVFN(0, 0),
->>>> +					   NB_SMU_IND_ADDR, IND_ADDR_OFFSET);
->>>> +		pci_bus_read_config_dword(pdev->bus, PCI_DEVFN(0, 0),
->>>> +					  NB_SMU_IND_DATA, &regval);
->>
->> How do you prevent races with any other code that accesses some indirect
->> register?
->>
-> I just wanted to ask exactly the same question. I think this will need
-> locking.
+This patch set introduces three PCI device flag operation helper functions
+when set pci device PF/VF to assigned or deassigned status also check it.
+and patch 2,3,4 apply these helper functions to KVM,XEN and PCI.
 
-If there actually is any other code; these indirect SMU registers appear
-to be mostly undocumented and to be intended to be used by the BIOS.
-(Which makes me wonder why the temperature sensor was moved there.)
-
-Anyway, if a lock is needed, it looks as if it could go into a helper
-function such as "amd_nb_smu_ind_read()" in arch/x86/kernel/amd_nb.c.
+Much thanks to suggestion from
+alex.williamson@redhat.com,
+david.vrabel@citrix.com,
+alexander.h.duyck@intel.com
 
 
-Regards,
-Clemens
+BR,
+Ethan
+
