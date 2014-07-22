@@ -1,43 +1,92 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Zhang Rui <rui.zhang@intel.com>
-Subject: Re: [PATCH 0/3] ACPI / PM: Make ACPI-based PCI wakeup work for the "freeze" sleep state
-Date: Wed, 23 Jul 2014 13:43:59 +0200
-Message-ID: <1938033.aGLPbNTjeQ@vostro.rjw.lan>
-In-Reply-To: <20140723072850.GO3935@laptop>
-References: <1907495.agrCMfRsQN@vostro.rjw.lan> <3271848.fNJ1rk2xTa@vostro.rjw.lan> <20140723072850.GO3935@laptop>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vc0-f178.google.com ([209.85.220.178]:57708 "EHLO
+	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755637AbaGVPhz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 11:37:55 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <5467203.eMVRoNeSx1@wuerfel>
+References: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com>
+ <1405696469-7172-5-git-send-email-m-karicheri2@ti.com> <CAL_JsqKheoWrSGtxPO=AE8g9iOAqfwRa=81Ku=Cfx8_gpDysOg@mail.gmail.com>
+ <5467203.eMVRoNeSx1@wuerfel>
+From: Rob Herring <robherring2@gmail.com>
+Date: Tue, 22 Jul 2014 10:37:34 -0500
+Message-ID: <CAL_JsqLrh_M0gTRezST9jX1X_5Eo98taNcHok6QX6vDMxeqkcw@mail.gmail.com>
+Subject: Re: [PATCH v6 4/5] PCI: add PCI controller for keystone PCIe h/w
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, July 23, 2014 09:28:50 AM Peter Zijlstra wrote:
-> On Wed, Jul 23, 2014 at 12:26:20AM +0200, Rafael J. Wysocki wrote:
-> > All of that indicates that the machine in question has WoL based on native PCIe
-> > PME signaling.  In that case it doesn't wake up from the "freeze" state, because
-> > some code is missing.
-> 
-> Didn't wake, but it did show:
-> 
-> 0000:00:01.0:pcie01     1               1               0               0               0               0               0               99207           0
-> LNXPWRBN:00             1               1               0               0               0               0               0               99191           0
-> 
-> So at least something's moving, although its not quite working yet.
+On Fri, Jul 18, 2014 at 2:50 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Friday 18 July 2014 14:31:39 Rob Herring wrote:
+>> > +
+>> > + Example:
+>> > +       pcie_msi_intc: msi-interrupt-controller {
+>> > +                       interrupt-controller;
+>> > +                       #interrupt-cells = <1>;
+>> > +                       interrupt-parent = <&gic>;
+>> > +                       interrupts = <GIC_SPI 30 IRQ_TYPE_EDGE_RISING>,
+>> > +                                       <GIC_SPI 31 IRQ_TYPE_EDGE_RISING>,
+>> > +                                       <GIC_SPI 32 IRQ_TYPE_EDGE_RISING>,
+>> > +                                       <GIC_SPI 33 IRQ_TYPE_EDGE_RISING>,
+>> > +                                       <GIC_SPI 34 IRQ_TYPE_EDGE_RISING>,
+>> > +                                       <GIC_SPI 35 IRQ_TYPE_EDGE_RISING>,
+>> > +                                       <GIC_SPI 36 IRQ_TYPE_EDGE_RISING>,
+>> > +                                       <GIC_SPI 37 IRQ_TYPE_EDGE_RISING>;
+>> > +       };
+>> > +
+>> > +pcie_intc: Interrupt controller device node for Legacy irq chip
+>> > +       interrupt-cells: should be set to 1
+>> > +       interrupt-parent: Parent interrupt controller phandle
+>> > +       interrupts: GIC interrupt lines connected to PCI Legacy interrupt lines
+>> > +
+>> > + Example:
+>> > +       pcie_intc: legacy-interrupt-controller {
+>> > +               interrupt-controller;
+>> > +               #interrupt-cells = <1>;
+>> > +               interrupt-parent = <&gic>;
+>> > +               interrupts = <GIC_SPI 26 IRQ_TYPE_EDGE_RISING>,
+>> > +                       <GIC_SPI 27 IRQ_TYPE_EDGE_RISING>,
+>> > +                       <GIC_SPI 28 IRQ_TYPE_EDGE_RISING>,
+>> > +                       <GIC_SPI 29 IRQ_TYPE_EDGE_RISING>;
+>> > +       };
+>>
+>> This seems wrong. Legacy interrupts should be described with
+>> interrupt-map and then PCI child devices have a standard interrupt
+>> specifier.
+>>
+>> I'm not sure about MSIs, but I would think they would have a standard
+>> format too.
+>>
+>
+> IIRC, it's actually the correct way to do this here: the problem is that
+> the PCI IRQs are not directly connected to the GIC, but instead there is
+> a nested irqchip that has each PCI IRQ routed to it and that requires
+> an extra EOI for each interrupt.
+>
+> The interrupt-map in the PCI host points to this special irqchip rather
+> than to the GIC.
 
-That may be because I forgot about one piece, sorry about that.
-This patch:
+Okay, if there is still an interrupt-map property, then I agree. This
+wasn't clear in the example.
 
-https://patchwork.kernel.org/patch/4526561/
-
-(which I think is in tip already) is needed to make enable_irq_wake()
-work with the "freeze" state.
-
-Can you please apply this in addition and retest?
-
-Rafael
-
+Rob
