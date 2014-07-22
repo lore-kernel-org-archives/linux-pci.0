@@ -1,101 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:37861 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760842AbaGRJDC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jul 2014 05:03:02 -0400
-Date: Fri, 18 Jul 2014 10:02:05 +0100
-From: Mark Rutland <mark.rutland@arm.com>
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Marc Zyngier <Marc.Zyngier@arm.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 0/4 V3] irqchip: gic: Introduce ARM GICv2m MSI(-X) support
-Message-ID: <20140718090204.GB25180@leverpostej>
-References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
- <20140717131854.GN13108@titan.lakedaemon.net>
- <20140717135534.GM30313@leverpostej>
- <20140717141235.GR13108@titan.lakedaemon.net>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>,
+	Peter Zijlstra <peterz@infradead.org>
+Subject: [PATCH 1/3] PM: Create PM workqueue if runtime PM is not configured too
+Date: Tue, 22 Jul 2014 03:24:27 +0200
+Message-ID: <1470749.z3A6zRcAYh@vostro.rjw.lan>
+In-Reply-To: <9631666.En3K0jlGsY@vostro.rjw.lan>
+References: <1907495.agrCMfRsQN@vostro.rjw.lan> <9631666.En3K0jlGsY@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140717141235.GR13108@titan.lakedaemon.net>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 17, 2014 at 03:12:35PM +0100, Jason Cooper wrote:
-> On Thu, Jul 17, 2014 at 02:55:34PM +0100, Mark Rutland wrote:
-> > Hi Jason,
-> > 
-> > On Thu, Jul 17, 2014 at 02:18:54PM +0100, Jason Cooper wrote:
-> > > On Wed, Jul 09, 2014 at 06:05:00PM -0500, suravee.suthikulpanit@amd.com wrote:
-> > > > From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> > > > 
-> > > > This patch set introduces support for MSI(-X) in GICv2m specification,
-> > > > which is implemented in some variation of GIC400.
-> > > > 
-> > > > This depends on and has been tested with the V7 of"Add support for PCI in AArch64"
-> > > > (https://lkml.org/lkml/2014/3/14/320).
-> > > > 
-> > > > Changes in V3:
-> > > >     * Rebase to git://git.infradead.org/users/jcooper/linux.git irqchip/gic
-> > > >       (per Jason Cooper request)
-> > > >     * Misc fix/clean up per Mark Rutland comments
-> > > >     * Minor Clean up in the driver/irqchip/irq-gic-v2m.c: alloc_msi_irqs()
-> > > >     * Patch 4 is new to the series:
-> > > >         * Add ARM64-specific version arch_setup_msi_irqs() to allow support
-> > > >           for Multiple MSI.
-> > > >         * Add support for Multiple MSI for GICv2m.
-> > > > 
-> > > > Suravee Suthikulpanit (4):
-> > > >   irqchip: gic: Add binding probe for ARM GIC400
-> > > >   irqchip: gic: Restructuring ARM GIC code
-> > > >   irqchip: gic: Add supports for ARM GICv2m MSI(-X)
-> > > >   irqchip: gicv2m: Add support for multiple MSI for ARM64 GICv2m
-> > > 
-> > > Ok, patch #1 applied to irqchip/urgent.  Patches 2 and 3 applied to
-> > > irqchip/gic with irqchip/urgent merged in.  To facilitate
-> > > testing/merging, I've prepared an unsigned tag for you on the
-> > > irqchip/gic branch:
-> > 
-> > I'm a little concerned that this is all going through for v3.17 without
-> > a {Reviewed,Acked}-by from Marc or anyone working with GIC{,v2m}.
-> 
-> Well, that's why it's not in irqchip/core yet. ;-)  It can be undone if
-> needed.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Ah, perhaps I was a litte premature. :)
+The PM workqueue is going to be used by ACPI PM notify handlers
+regardless of whether or not runtime PM is configured, so move
+it out of #ifdef CONFIG_PM_RUNTIME.
+
+Do that in three places in the ACPI device PM code.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ include/linux/pm_runtime.h |   11 +++++++++--
+ kernel/power/main.c        |    4 ----
+ 2 files changed, 9 insertions(+), 6 deletions(-)
+
+Index: linux-pm/include/linux/pm_runtime.h
+===================================================================
+--- linux-pm.orig/include/linux/pm_runtime.h
++++ linux-pm/include/linux/pm_runtime.h
+@@ -24,11 +24,20 @@
+ #define RPM_AUTO		0x08	/* Use autosuspend_delay */
  
-> > While his comments on v1 have been addressed, he has not had a chance to
-> > acknowledge the solutions. I appreciate Marc's holiday is unfortunately
-> > timed.
-> > 
-> > I also have an open concern with the binding with regard to the
-> > orthogonality of GICV GICH and the MSI registers.
-> > 
-> > Suravee, do you need this urgently for v3.17? I was under the impression
-> > that we wouldn't have full PCIe support by then.
-> 
-> If Suravee is ok with it, I can drop them for now and he can resend for
-> v3.18.  Since we've worked out a way to merge it all in one window, I
-> don't think it would hurt anything to wait.
+ #ifdef CONFIG_PM
++extern struct workqueue_struct *pm_wq;
++
++static inline bool queue_pm_work(struct work_struct *work)
++{
++	return queue_work(pm_wq, work);
++}
++
+ extern int pm_generic_runtime_suspend(struct device *dev);
+ extern int pm_generic_runtime_resume(struct device *dev);
+ extern int pm_runtime_force_suspend(struct device *dev);
+ extern int pm_runtime_force_resume(struct device *dev);
+ #else
++static inline bool queue_pm_work(struct work_struct *work) { return false; }
++
+ static inline int pm_generic_runtime_suspend(struct device *dev) { return 0; }
+ static inline int pm_generic_runtime_resume(struct device *dev) { return 0; }
+ static inline int pm_runtime_force_suspend(struct device *dev) { return 0; }
+@@ -37,8 +46,6 @@ static inline int pm_runtime_force_resum
+ 
+ #ifdef CONFIG_PM_RUNTIME
+ 
+-extern struct workqueue_struct *pm_wq;
+-
+ extern int __pm_runtime_idle(struct device *dev, int rpmflags);
+ extern int __pm_runtime_suspend(struct device *dev, int rpmflags);
+ extern int __pm_runtime_resume(struct device *dev, int rpmflags);
+Index: linux-pm/kernel/power/main.c
+===================================================================
+--- linux-pm.orig/kernel/power/main.c
++++ linux-pm/kernel/power/main.c
+@@ -616,7 +616,6 @@ static struct attribute_group attr_group
+ 	.attrs = g,
+ };
+ 
+-#ifdef CONFIG_PM_RUNTIME
+ struct workqueue_struct *pm_wq;
+ EXPORT_SYMBOL_GPL(pm_wq);
+ 
+@@ -626,9 +625,6 @@ static int __init pm_start_workqueue(voi
+ 
+ 	return pm_wq ? 0 : -ENOMEM;
+ }
+-#else
+-static inline int pm_start_workqueue(void) { return 0; }
+-#endif
+ 
+ static int __init pm_init(void)
+ {
 
-Ok.
-
-> I'll leave these in irqchip/for-next until I hear from Suravee, then
-> I'll drop the lot till we hear from Marc and look at the timing.
-
-Keeping it in for-next for testing sounds like a good idea, but until we
-hear from Marc I wouldn't want to see this queued for mainline. So the
-above sounds fine to me.
-
-Cheers,
-Mark.
