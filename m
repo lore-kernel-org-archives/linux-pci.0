@@ -1,100 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:51134 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750958AbaGJLVi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 07:21:38 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Received: from mx1.redhat.com ([209.132.183.28]:59365 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751462AbaGVUXc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Jul 2014 16:23:32 -0400
+Message-ID: <1406060607.4463.36.camel@ul30vt.home>
+Subject: Re: [PATCH] PCI: Add device specific (non)reset for AMD GPUs
+From: Alex Williamson <alex.williamson@redhat.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Igor Bezukh <Igor@galilsoft.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Subject: Re: A question about PCI suspend-resume functionallity
-Date: Thu, 10 Jul 2014 13:39:45 +0200
-Message-ID: <3238200.k7ZdWYUy1n@vostro.rjw.lan>
-In-Reply-To: <CAErSpo5+sGgYpYnF2GzO7Vu9hxJegS025DyYBTkXqgzBOKWE8w@mail.gmail.com>
-References: <4712771.pPjooVqFXc@vostro.rjw.lan> <2305679.jnRnK08iSm@vostro.rjw.lan> <CAErSpo5+sGgYpYnF2GzO7Vu9hxJegS025DyYBTkXqgzBOKWE8w@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 22 Jul 2014 14:23:27 -0600
+In-Reply-To: <20140722195557.GD19181@google.com>
+References: <20140716190955.4722.25453.stgit@gimli.home>
+	 <20140722195557.GD19181@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, July 09, 2014 01:24:20 PM Bjorn Helgaas wrote:
-> On Wed, Jul 9, 2014 at 10:35 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > On Wednesday, July 09, 2014 09:55:24 AM Bjorn Helgaas wrote:
-> >> On Wed, Jul 9, 2014 at 8:18 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> >> > On Wed, 9 Jul 2014, Rafael J. Wysocki wrote:
-> >> >
-> >> >> On Tuesday, July 08, 2014 02:47:03 PM Bjorn Helgaas wrote:
-> >> >> > [+cc linux-pm]
-> >> >> >
-> >> >> > On Tue, Jul 8, 2014 at 9:39 AM, Igor Bezukh <Igor@galilsoft.com> wrote:
-> >> >> > > Hi,
-> >> >> > >
-> >> >> > >
-> >> >> > > We are testing Intel Gigabit adapter driver (igb) under Fedora 20, kernel 3.14.4 for the following use-case:
-> >> >> > >
-> >> >> > > (*) Adapter is connected to the PCIE slot
-> >> >> > > (*) We put the system under suspend by running pm-suspend from user-space
-> >> >> > > (*) Remove the adapter from the PCIE slot
-> >> >> > > (*) Wake up the system
-> >> >> > >
-> >> >> > > Currenlty, we got kernel panics and the system got stuck.
-> >> >> > >
-> >> >> > > My question is - does the PCI subsystem logic calls the driver remove function when driver resume function returns with error code?
-> >> >> > >
-> >> >> > > Or should I implement the call to igb_remove from igb_resume in the Intel driver?
-> >>
-> >> >> ...
-> >> >> The driver's system resume callbacks need to be able to cope with
-> >> >> missing devices.
-> >>
-> >> Based on this, it sounds like igb_resume() should call igb_remove()
-> >> when it figures out the device is missing.
-> >
-> > I wouldn't say so.  igb_resume() should not crash when the device is missing
-> > and should just handle that situation cleanly.  Obviously it is not its role
-> > to remove the device from the hierarchy.
+On Tue, 2014-07-22 at 13:55 -0600, Bjorn Helgaas wrote:
+> On Wed, Jul 16, 2014 at 01:14:08PM -0600, Alex Williamson wrote:
+> > There are numerous ATI/AMD GPUs available that report that they
+> > support a PM reset (NoSoftRst-) but for which such a reset has no
+> > apparent effect on the device.  These devices continue to display the
+> > same framebuffer across PM reset and the fan speed remains constant,
+> > while a proper bus reset causes the display to lose sync and the fan
+> > to reset to high speed.  Create a device specific reset for ATI vendor
+> > devices that tries to catch these devices and report that
+> > pci_reset_function() is not supported.
+> > 
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > ---
+> > 
+> > This patch makes the series "vfio-pci: Reset improvements" far more
+> > useful for users with one of these GPUs.  If pci_reset_function()
+> > indicates that it's supported and successful, then I have no reason
+> > to resort to a bus/slot reset in the vfio-pci code.  Since it doesn't
+> > seem to do anything anyway, let's just forget that PM reset exists
+> > for these devices.
+> > 
+> >  drivers/pci/quirks.c |   53 ++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 53 insertions(+)
+> > 
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index 460c354..bed9c63 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -3289,6 +3289,57 @@ static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
+> >  	return 0;
+> >  }
+> >  
+> > +/*
+> > + * Numerous AMD/ATI GPUs report that they're capable of PM reset (NoSoftRst-)
+> > + * and pci_reset_function() reports the device as successfully reset, but
+> > + * there's no apparent effect from the reset.  Test for these, being sure to
+> > + * allow FLR should it ever exist, and use the device specific reset to
+> > + * disable any sort of function-local reset if only PM reset is available.
+> > + */
+> > +static int reset_ati_gpu(struct pci_dev *dev, int probe)
+> > +{
+> > +	u16 pm_csr;
+> > +	u32 devcap;
+> > +	int af_pos;
+> > +
+> > +	/*
+> > +	 * VGA class devices, not on the root bus, PCI function 0 of a
+> > +	 * multifunction device with PM capabilities
+> > +	 */
+> > +	if ((dev->class >> 8) != PCI_CLASS_DISPLAY_VGA ||
+> > +	    pci_is_root_bus(dev->bus) || PCI_FUNC(dev->devfn) ||
+> > +	    !dev->multifunction || !dev->pm_cap)
+> > +		return -ENOTTY;
+> > +
+> > +	/* PM reports NoSoftRst- */
+> > +	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pm_csr);
+> > +	if (pm_csr & PCI_PM_CTRL_NO_SOFT_RESET)
+> > +		return -ENOTTY;
+> > +
+> > +	/* No PCIe FLR */
+> > +	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &devcap);
+> > +	if (devcap & PCI_EXP_DEVCAP_FLR)
+> > +		return -ENOTTY;
+> > +
+> > +	/* No AF FLR */
+> > +	af_pos = pci_find_capability(dev, PCI_CAP_ID_AF);
+> > +	if (af_pos) {
+> > +		u8 af_cap;
+> > +
+> > +		pci_read_config_byte(dev, af_pos + PCI_AF_CAP, &af_cap);
+> > +		if ((af_cap && PCI_AF_CAP_TP) && (af_cap && PCI_AF_CAP_FLR))
+> > +			return -ENOTTY;
+> > +	}
+> > +
+> > +	/*
+> > +	 * We could attempt a singleton bus/slot reset here to override
+> > +	 * PM reset priority over these, but the devices we're interested
+> > +	 * in are multifunction GPU + audio devices in their known configs.
+> > +	 */
+> > +
+> > +	return -EINVAL;
+> > +}
+> > +
+> >  #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
+> >  #define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
+> >  #define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
+> > @@ -3304,6 +3355,8 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+> >  		reset_intel_generic_dev },
+> >  	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
+> >  		reset_chelsio_generic_dev },
+> > +	{ PCI_VENDOR_ID_ATI, PCI_ANY_ID,
+> > +		reset_ati_gpu },
 > 
-> OK, that makes sense.
+> I'm a little confused, but maybe we just need a comment about what the
+> return values from pci_dev_specific_reset() mean.  Based on reading
+> __pci_dev_reset(), it looks like:
 > 
-> However, I don't know of anything in the PCI core that will notice
-> that the device has disappeared, so I doubt it will be removed from
-> the hierarchy.
-
-If we don't get a notification via ACPI or PCIe hotplug or anything,
-then no, it won't be removed automatically.
-
-However, it still can be removed manually via sysfs, can't it?
-
-> I think that means the slot will become unusable until
-> a reboot, because the original device is gone and we can't add a new
-> one because the original one is still in the hierarchy.  That's not
-> very good, but it is better than a panic.
+>   0 means "I support this reset method" (if probe) or
+>   "I performed this reset" (if !probe),
+>   
+>   ENOTTY means "I don't support this reset method, try another one",
 > 
-> >> That might be the best we can do right now, but it doesn't sound like
-> >> a general-purpose solution.  Detecting device removal sounds like a
-> >> core function, not a driver function.  It doesn't seem like drivers
-> >> should have to implement ->resume just to deal with this case.
-> >
-> > No, they shouldn't.  They just need to be able to cope with missing devices
-> > cleanly.
-> >
-> > Devices (and PCI devices in particular) can go away at any time, including
-> > during system resume, without notice anyway and drivers need to be able to
-> > cope with that regardless.
-> >
-> > The notification can actually come in *after* the device has gone in any
-> > case and then whoever gets the notification should handle the device
-> > removal. That is not the driver in particular, but in the meantime
-> > the driver should still work without crashing.
+>   anything else means "I don't support this reset method and don't try
+>   any others" (it'd be useful to know what this is good for).
 > 
-> Yep.  So the panic Igor is seeing is probably an igb_resume() problem,
-> but after that's fixed, we'll probably trip over the PCI bug about not
-> handling the remove.
+> But reset_ati_gpu() never returns 0, so it seems like your patch makes
+> it so we can never reset any ATI device at all.  So I must be missing
+> something.
 
-If there's any kind of notification coming in either before of after the event,
-we should act on it and remove the device.  It's a bug if we don't I'd say.
+Nope, you're not missing anything.  The return value behavior is exactly
+as you describe and the ATI GPUs that advertise NoSoftRst- don't appear
+to do any sort of reset when moving them back from D3, so I'm
+effectively trying to negate that as a viable reset option.  I think
+this is what the anything-else return value is meant for.  I only return
+"I don't support this reset method and don't try any others" after I
+verify there are no other options, so if they come out with FLR support,
+that would still get precedence.  It's a little awkward, but I don't
+know how to test whether a reset function was successful.  It seems like
+it would be device specific.  Anyone from AMD reading the list that can
+comment on what sort of reset happens on these GPUs for a D3->D0 reset?
 
-Rafael
+Regardless, I don't really expect users other than device assignment,
+and my testing indicates that PM reset is useless on these devices for
+that.  Thanks,
+
+Alex
+
 
