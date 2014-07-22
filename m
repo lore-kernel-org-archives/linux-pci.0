@@ -1,73 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f44.google.com ([209.85.192.44]:38857 "EHLO
-	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752198AbaG2MeE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 08:34:04 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>, devicetree@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	jg1.han@samsung.com, mohit.kumar@st.com,
+	linux-kernel@vger.kernel.org, grant.likely@linaro.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Marek Vasut <marex@denx.de>
+Subject: Re: [PATCH v3 1/4] PCI: designware: Configuration space should be specified in 'reg'
+Date: Tue, 22 Jul 2014 23:11:14 +0200
+Message-ID: <5462407.z4eX3u12aQ@wuerfel>
+In-Reply-To: <20140722205326.GA25432@google.com>
+References: <1405587643-13808-1-git-send-email-kishon@ti.com> <1405587643-13808-2-git-send-email-kishon@ti.com> <20140722205326.GA25432@google.com>
 MIME-Version: 1.0
-In-Reply-To: <53D7725C.5010405@citrix.com>
-References: <1406606791-8834-1-git-send-email-ethan.zhao@oracle.com>
-	<1406606791-8834-4-git-send-email-ethan.zhao@oracle.com>
-	<53D7725C.5010405@citrix.com>
-Date: Tue, 29 Jul 2014 20:34:02 +0800
-Message-ID: <CABawtvPLXE=VF-yP6UuguBgxU5Pv=m8PS8kLSOUD=TmkgS6KVA@mail.gmail.com>
-Subject: Re: [PATCH 3/4 v3] xen-pciback: use pci device flag operation helper function
-From: Ethan Zhao <ethan.kernel@gmail.com>
-To: David Vrabel <david.vrabel@citrix.com>
-Cc: Ethan Zhao <ethan.zhao@oracle.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"<gleb@kernel.org>" <gleb@kernel.org>,
-	"<pbonzini@redhat.com>" <pbonzini@redhat.com>,
-	"<kvm@vger.kernel.org>" <kvm@vger.kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"<boris.ostrovsky@oracle.com>" <boris.ostrovsky@oracle.com>,
-	"<xen-devel@lists.xenproject.org>" <xen-devel@lists.xenproject.org>,
-	"<alex.williamson@redhat.com>" <alex.williamson@redhat.com>,
-	"<alexander.h.duyck@intel.com>" <alexander.h.duyck@intel.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 29, 2014 at 6:07 PM, David Vrabel <david.vrabel@citrix.com> wrote:
-> On 29/07/14 05:06, Ethan Zhao wrote:
->> Use pci device flag operation helper functions when set device
->> to assigned or deassigned state.
->>
->> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
->
-> Konrad already reviewed this but you've not included his reviewed-by tag.
->
-> I don't understand why we bother with this flag on Xen since we never
-> use it but:
->
-> Acked-by: David Vrabel <david.vrabel@citrix.com>
->
-> I'm expecting this to go via the PCI tree.
+On Tuesday 22 July 2014 14:53:26 Bjorn Helgaas wrote:
+> > @@ -2,6 +2,10 @@
+> >  
+> >  Required properties:
+> >  - compatible: should contain "snps,dw-pcie" to identify the core.
+> > +- reg: Should contain the configuration address space.
+> > +- reg-names: Must be "config" for the PCIe configuration space.
+> > +    (The old way of getting the configuration address space from "ranges"
+> > +    is deprecated and should be avoided.)
+> 
+> I'm not a devicetree person, so please excuse my floundering here.
+> There doesn't seem to be consistent usage of "reg" or "reg-names".
 
-  Seems Bjorn still holds his bullet for last shot :)
+I think the above is ok, given the constraints we hae.
+
+> Here's what I found in the existing Documentation/devicetree/bindings/pci
+> stuff:
 >
-> David
->
->> --- a/drivers/xen/xen-pciback/pci_stub.c
->> +++ b/drivers/xen/xen-pciback/pci_stub.c
->> @@ -133,7 +133,7 @@ static void pcistub_device_release(struct kref *kref)
->>       xen_pcibk_config_free_dyn_fields(dev);
->>       xen_pcibk_config_free_dev(dev);
->>
->> -     dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
->> +     pci_clear_dev_assigned(dev);
->>       pci_dev_put(dev);
->>
->>       kfree(psdev);
->> @@ -404,7 +404,7 @@ static int pcistub_init_device(struct pci_dev *dev)
->>       dev_dbg(&dev->dev, "reset device\n");
->>       xen_pcibk_reset_device(dev);
->>
->> -     dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
->> +     pci_set_dev_assigned(dev);
->>       return 0;
->>
->>  config_release:
->>
->
+>   83xx-512x-pci.txt
+>     - reg: should contain two address length tuples
+>         The first is for the internal pci bridge registers
+>         The second is for the pci config space access registers
+
+This is fine
+
+>   fsl,imx6q-pcie.txt
+>     - reg: base addresse and length of the pcie controller
+
+This should have included an entry for the config space, it was a
+mistake
+
+>   host-generic-pci.txt
+>     - reg            : The Configuration Space base address and size, as accessed
+>                        from the parent bus.
+
+This is fine.
+
+>   nvidia,tegra20-pcie.txt
+>     - reg: A list of physical base address and length for each set of controller
+>       registers. Must contain an entry for each entry in the reg-names property.
+>     - reg-names: Must include the following entries:
+>       "pads": PADS registers
+>       "afi": AFI registers
+>       "cs": configuration space region
+
+The names are a bit strange, but it's also ok. In general we should mandate
+the order of the entries as well.
+
+>   pci-rcar-gen2.txt
+>     - reg:  A list of physical regions to access the device: the first is
+>             the operational registers for the OHCI/EHCI controllers and the
+>             second is for the bridge configuration and control registers.
+
+This one is wrong, as previously discussed. The first region should
+have been listed in the 'ranges' property, because these are the registers
+of the child nodes (the actual PCI devices) rather than the host controller
+itself.
+
+>   ralink,rt3883-pci.txt
+>      - reg: specifies the physical base address of the controller and
+>        the length of the memory mapped region.
+
+The wording is a bit strange but it seems otherwise correct.
+
+>   rcar-pci.txt
+>     - reg: base address and length of the pcie controller registers.
+
+This is ok
+
+>   samsung,exynos5440-pcie.txt
+>     - reg: base addresses and lengths of the pcie controller,
+>           the phy controller, additional register for the phy controller.
+
+Could be a bit more verbose, but is not wrong. In order to work
+with the "snps,dw-pcie" binding, this will need a reg-names property.
+
+>   v3-v360epc-pci.txt
+>     - reg: should contain the base address of the V3 adapter.
+
+This has the same mistake that the pcie-dw driver has and should
+be fixed by putting the config space in there.
+
+> So my questions are:
+> 
+> 1) Is "reg" the right place for configuration space?  I assume this is
+> CAM or ECAM.  Only 83xx-512x-pci.txt, host-generic-pci.txt, and
+> nvidia,tegra20-pcie.txt mention using "reg" for config space; all the
+> others use "reg" for register space for the PCIe controller itself.
+
+We had long debates about this. The conclusion was that we should
+have put them in 'reg' from the start and not used 'ranges' here.
+
+> 2) Is "config" the correct value for "reg-names"?  Only
+> nvidia,tegra20-pcie.txt has something similar, and it wants "cs".
+> Should these be the same?
+
+It would be better if they were the same, but it's not important.
+The names are private to the device driver, and the register layout
+within this region is driver specific, so we can't use common code
+to parse them anyway.
+
+> 3) Doesn't this add a revlock (kernels with this patch require a new
+> device tree that adds "reg" and "reg-names"?  I know both Mohit and
+> Jingoo acked this [1,2], so I'm just double-checking that this is
+> expected and desired.
+
+My understanding is that the patch still allows the old method as
+a fallback if no reg with the name "config" is present.
+
+	Arnd
