@@ -1,133 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:65089 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754648AbaGNMXb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jul 2014 08:23:31 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Pratyush Anand' <pratyush.anand@st.com>,
-	'Murali Karicheri' <m-karicheri2@ti.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	'Russell King' <linux@arm.linux.org.uk>,
-	'Grant Likely' <grant.likely@linaro.org>,
-	'Rob Herring' <robh+dt@kernel.org>,
-	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Marek Vasut' <marex@denx.de>, 'Arnd Bergmann' <arnd@arndb.de>,
-	'Pawel Moll' <pawel.moll@arm.com>,
-	'Mark Rutland' <mark.rutland@arm.com>,
-	'Ian Campbell' <ijc+devicetree@hellion.org.uk>,
-	'Kumar Gala' <galak@codeaurora.org>,
-	'Randy Dunlap' <rdunlap@infradead.org>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1405110995-24676-1-git-send-email-m-karicheri2@ti.com>
- <20140714060334.GB2930@pratyush-vbox>
-In-reply-to: <20140714060334.GB2930@pratyush-vbox>
-Subject: Re: [PATCH v4 0/6] Add Keystone PCIe controller driver
-Date: Mon, 14 Jul 2014 21:23:28 +0900
-Message-id: <00bb01cf9f5e$6aac4250$4004c6f0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from userp1040.oracle.com ([156.151.31.81]:48187 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752896AbaGVQT5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 12:19:57 -0400
+From: Ethan Zhao <ethan.zhao@oracle.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
+	kvm@vger.kernel.org, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	xen-devel@lists.xenproject.org
+Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
+	ethan.kernel@gmail.com
+Subject: [PATCH 1/4] PCI: introduce helper functions for device flag operation
+Date: Wed, 23 Jul 2014 00:19:01 +0800
+Message-Id: <1406045944-1587-2-git-send-email-ethan.zhao@oracle.com>
+In-Reply-To: <1406045944-1587-1-git-send-email-ethan.zhao@oracle.com>
+References: <1406045944-1587-1-git-send-email-ethan.zhao@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, July 14, 2014 3:04 PM, Pratyush Anand wrote:
-> On Sat, Jul 12, 2014 at 04:36:29AM +0800, Murali Karicheri wrote:
-> 
-> [...]
-> 
-> > Murali Karicheri (6):
-> >   PCI: designware: add rd[wr]_other_conf API
-> >   PCI: designware: refactor MSI code to work with v3.65 dw hardware
-> 
-> For  above two you can add my reviewed-by:
-> 
-> >   PCI: designware: refactor host init code to re-use on keystone PCI
-> >   PCI: designware: enhance dw core driver to support keystone PCI host
-> 
-> In stead of using version number and then changing few functions from
-> static to global , I would have used same philosophy of adding callbacks
-> wherever needed. May be maintainers can give their view, instead of patch
-> 3 and 4 I would have gone with something like this, where kc_pcie can be
-> passed through pp->plat_data.
+This patch introduced three helper functions to hide direct
+device flag operation.
 
-I agree with your suggestion. I don't want to use the version number.
-The call back would be better.
+void pci_set_dev_assigned(struct pci_dev *pdev);
+void pci_set_dev_deassigned(struct pci_dev *pdev);
+bool pci_is_dev_assigned(struct pci_dev *pdev);
 
-Best regards,
-Jingoo Han
+Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+---
+ include/linux/pci.h |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 905941c..b216192 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -490,16 +490,21 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->         }
-> 
->         if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> -               pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
-> -                                       MAX_MSI_IRQS, &msi_domain_ops,
-> -                                       &dw_pcie_msi_chip);
-> -               if (!pp->irq_domain) {
-> -                       dev_err(pp->dev, "irq domain init failed\n");
-> -                       return -ENXIO;
-> -               }
-> +               if (!pp->ops->msi_init) {
-> +                       pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
-> +                                               MAX_MSI_IRQS, &msi_domain_ops,
-> +                                               &dw_pcie_msi_chip);
-> +                       if (!pp->irq_domain) {
-> +                               dev_err(pp->dev, "irq domain init failed\n");
-> +                               return -ENXIO;
-> +                       }
-> 
-> -               for (i = 0; i < MAX_MSI_IRQS; i++)
-> -                       irq_create_mapping(pp->irq_domain, i);
-> +                       for (i = 0; i < MAX_MSI_IRQS; i++)
-> +                               irq_create_mapping(pp->irq_domain, i);
-> +               } else {
-> +                       pp->ops->msi_init(pp, &msi_domain_ops,
-> +                                               &dw_pcie_msi_chip);
-> +               }
->         }
-> 
->         if (pp->ops->host_init)
-> @@ -759,6 +764,9 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
->                 BUG();
->         }
-> 
-> +       if (bus && pp->ops->scan_bus)
-> +               bus = pp->ops->scan_bus(pp);
-> +
->         return bus;
->  }
-> 
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index 387f69e..39ce496 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -52,6 +52,7 @@ struct pcie_port {
->         struct irq_domain       *irq_domain;
->         unsigned long           msi_data;
->         DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
-> +       void                    *plat_data;
->  };
-> 
->  struct pcie_host_ops {
-> @@ -70,6 +71,9 @@ struct pcie_host_ops {
->         void (*msi_set_irq)(struct pcie_port *pp, int irq);
->         void (*msi_clear_irq)(struct pcie_port *pp, int irq);
->         u32 (*get_msi_data)(struct pcie_port *pp);
-> +       struct pci_bus *(*scan_bus)(struct pcie_port *pp);
-> +       void (*msi_init) (struct pcie_port *pp, struct irq_domain_ops *ops,
-> +                       struct msi_chip *chip);
->  };
-> 
->  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
-> 
-> 
-> ~Pratyush
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index aab57b4..5f6f8fa 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1129,6 +1129,19 @@ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+ 
+ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+ 		      unsigned int command_bits, u32 flags);
++/* helper functions for operation of device flag */
++static inline void pci_set_dev_assigned(struct pci_dev *pdev)
++{
++	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
++}
++static inline void pci_set_dev_deassigned(struct pci_dev *pdev)
++{
++	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++}
++static inline bool pci_is_dev_assigned(struct pci_dev *pdev)
++{
++	return pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED ? true : false;
++}
+ /* kmem_cache style wrapper around pci_alloc_consistent() */
+ 
+ #include <linux/pci-dma.h>
+-- 
+1.7.1
 
