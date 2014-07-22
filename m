@@ -1,63 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:55731 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752342AbaGPU06 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 16:26:58 -0400
-Received: by mail-ie0-f182.google.com with SMTP id y20so1462023ier.13
-        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 13:26:58 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140716213513.18895776q3wl3oj5@berry.schulz.ip-v6.eu>
-References: <53C63139.7000608@kristov.de> <CAErSpo5_wJrA_aHL9Oy3_qq_UUCb2-7ioY_wARKFFUoM9Ag6FQ@mail.gmail.com>
- <20140716213513.18895776q3wl3oj5@berry.schulz.ip-v6.eu>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 16 Jul 2014 14:26:37 -0600
-Message-ID: <CAErSpo41UDuCiS24dV0i=CGTthbUusMRVUcM0-T2UtQNYgVqJA@mail.gmail.com>
-Subject: Re: [PATCH 1/1] x86: don't exclude low BIOS area when allocating
- address space for non-PCI cards
-To: Christoph Schulz <develop@kristov.de>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Robert Resch <fli4l@robert.reschpara.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:28288 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756066AbaGVQRa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Jul 2014 12:17:30 -0400
+From: "Luck, Tony" <tony.luck@intel.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Mike Qiu <qiudayu@linux.vnet.ibm.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+In-reply-to: <CAErSpo6zOkjU0ELH-NQQL-rvjnG2L7B6963eOFbpPpEOgNUV6Q@mail.gmail.com>
+Subject: [PATCH] Fix build warnings in aer.h
+Date: Tue, 22 Jul 2014 09:17:18 -0700
+Message-Id: <53ce8e8e22217dde72@agluck-desk.sc.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 16, 2014 at 1:35 PM, Christoph Schulz <develop@kristov.de> wrote:
-> Hello!
->
-> Bjorn Helgaas schrieb am Wed, 16 Jul 2014 13:00:21 -0600:
->
->
->> I applied this to pci/misc for v3.17, thanks.
->
->
-> Thank you very much. What do you think about queuing it up to -stable?
-> Commit 30919b0bf356 is in the tree since 2.6.37-rc7. We have used the
-> proposed patch for over a year (since 3.2.42 / 3.7.10 / 3.8.5, to be exact)
-> without any regressions. I *think* it meets the criteria for -stable, but I
-> don't have much experience of Linux kernel development processes, so it's
-> your decision, of course.
+From: Mike Qiu <qiudayu@linux.vnet.ibm.com>
 
-Good point, I added:
+build log:
 
-CC: stable@vger.kernel.org  # v2.6.37+
+In file included from include/ras/ras_event.h:11:0,
+                 from drivers/ras/ras.c:13:
+include/linux/aer.h:42:129: warning: ‘struct pci_dev’
+declared inside parameter list [enabled by default]
 
->> This effectively reverts 30919b0bf356 ("x86: avoid low BIOS area when
->> allocating address space").  I don't see a reference there to a bug
->> fixed by 30919b0bf356, so hopefully reverting it won't reintroduce a
->> bug.
->
->
-> Well, for PCI, the current behaviour does not change effectively, and for
-> ISA, the proposed patch fixes a bug. What memory allocations beyond ISA and
-> PCI could be adversely affected?
+include/linux/aer.h:42:129: warning: its scope is only
+this definition or declaration, which is probably not
+what you want [enabled by default]
 
-There aren't very many, I guess, but I don't want to build things on
-the assumption that ISA and PCI are the only possibilities.  ISA was
-once the only possibility :)
+include/linux/aer.h:46:130: warning: ‘struct pci_dev’
+declared inside parameter list [enabled by default]
 
-Bjorn
+include/linux/aer.h:50:136: warning: ‘struct pci_dev’
+declared inside parameter list [enabled by default]
+
+include/linux/aer.h:57:14: warning: ‘struct pci_dev’
+declared inside parameter list [enabled by default]
+
+Signed-off-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+Acked-by: Randy Dunlap <rdunlap@infradead.org>
+Tested-by: Randy Dunlap <rdunlap@infradead.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Tony Luck <tony.luck@intel.com>
+---
+ include/linux/aer.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+Linus: The breakage that this fixes is actually only in linux-next,
+but the commits that found this gap are already in the tip tree, so
+hard to rebase to get this fix ahead of them to avoid a bisection gap.
+But since this is so obvious - perhaps it can go into 3.16? If you
+don't want it, I'll ask hpa to add it to the right topic branch in
+tip so it is at least close to the commit that reveals the gap.
+
+diff --git a/include/linux/aer.h b/include/linux/aer.h
+index 4dbaa70..c826d1c 100644
+--- a/include/linux/aer.h
++++ b/include/linux/aer.h
+@@ -11,6 +11,8 @@
+ #define AER_FATAL			1
+ #define AER_CORRECTABLE			2
+ 
++struct pci_dev;
++
+ struct aer_header_log_regs {
+ 	unsigned int dw0;
+ 	unsigned int dw1;
+-- 
+1.8.1.4
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
