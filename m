@@ -1,143 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:61003 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752876AbaG2LdL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 07:33:11 -0400
-Date: Tue, 29 Jul 2014 13:33:04 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] resource: Add device-managed
- request/release_resource()
-Message-ID: <20140729113302.GA21732@ulmo.nvidia.com>
-References: <1405062505-2606-1-git-send-email-thierry.reding@gmail.com>
- <20140722185002.GC19181@google.com>
- <20140722190120.GM13851@htj.dyndns.org>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:43546 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750980AbaGVCiR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jul 2014 22:38:17 -0400
+Received: by mail-ig0-f171.google.com with SMTP id l13so3532160iga.16
+        for <linux-pci@vger.kernel.org>; Mon, 21 Jul 2014 19:38:16 -0700 (PDT)
+Date: Mon, 21 Jul 2014 20:38:13 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org,
+	Tuomas Tynkkynen <ttynkkynen@nvidia.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	gong.chen@linux.intel.com, Lance Ortiz <lance.ortiz@hp.com>,
+	Tony Luck <tony.luck@intel.com>
+Subject: Re: [PATCH] Fix build warnings in aer.h
+Message-ID: <20140722023813.GA27601@google.com>
+References: <1405498124-11519-1-git-send-email-qiudayu@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="cNdxnHkX5QqsyA0e"
-In-Reply-To: <20140722190120.GM13851@htj.dyndns.org>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1405498124-11519-1-git-send-email-qiudayu@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+[+cc Tuomas, Randy, Gavin, Gong, Lance, Tony]
 
---cNdxnHkX5QqsyA0e
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Wed, Jul 16, 2014 at 04:08:44AM -0400, Mike Qiu wrote:
+> build log:
+> 
+> In file included from include/ras/ras_event.h:11:0,
+>                  from drivers/ras/ras.c:13:
+> include/linux/aer.h:42:129: warning: ‘struct pci_dev’
+> declared inside parameter list [enabled by default]
+> 
+> include/linux/aer.h:42:129: warning: its scope is only
+> this definition or declaration, which is probably not
+> what you want [enabled by default]
+> 
+> include/linux/aer.h:46:130: warning: ‘struct pci_dev’
+> declared inside parameter list [enabled by default]
+> 
+> include/linux/aer.h:50:136: warning: ‘struct pci_dev’
+> declared inside parameter list [enabled by default]
+> 
+> include/linux/aer.h:57:14: warning: ‘struct pci_dev’
+> declared inside parameter list [enabled by default]
+> 
+> Signed-off-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
 
-On Tue, Jul 22, 2014 at 03:01:20PM -0400, Tejun Heo wrote:
-> Hello,
->=20
-> On Tue, Jul 22, 2014 at 12:50:02PM -0600, Bjorn Helgaas wrote:
-> > [+cc Tejun, LKML]
-> >=20
-> > On Fri, Jul 11, 2014 at 09:08:24AM +0200, Thierry Reding wrote:
-> > > From: Thierry Reding <treding@nvidia.com>
-> > >=20
-> > > Provide device-managed implementations of the request_resource() and
-> > > release_resource() functions. Upon failure to request a resource, the
-> > > new devm_request_resource() function will output an error message for
-> > > consistent error reporting.
-> > >=20
-> > > Signed-off-by: Thierry Reding <treding@nvidia.com>
-> >=20
-> > This seems OK to me, but I don't consider myself a devres maintainer.  I
-> > added Tejun and LKML for any comment.  Minor nit below.
->=20
-> If there are gonna be users of the interface, sure.
->=20
-> > > +int devm_request_resource(struct device *dev, struct resource *root,
-> > > +			  struct resource *new)
-> > > +{
-> > > +	struct resource *conflict, **ptr;
-> > > +
-> > > +	ptr =3D devres_alloc(devm_resource_release, sizeof(*ptr), GFP_KERNE=
-L);
-> > > +	if (!ptr)
-> > > +		return -ENOMEM;
-> > > +
-> > > +	*ptr =3D new;
-> > > +
-> > > +	conflict =3D request_resource_conflict(root, new);
-> > > +	if (!conflict) {
-> > > +		devres_add(dev, ptr);
-> > > +		return 0;
-> > > +	}
-> > > +
-> > > +	dev_err(dev, "resource collision: %pR conflicts with %s %pR\n", new,
-> > > +		conflict->name, conflict);
-> > > +	devres_free(ptr);
-> > > +	return -EBUSY;
-> >=20
-> > Personally I would write this as:
-> >=20
-> >   conflict =3D request_resource_conflict(...);
-> >   if (conflict) {
-> >     dev_err(...);
-> >     devres_free(...);
-> >     return -EBUSY;
-> >   }
-> >=20
-> >   devres_add(...);
-> >   return 0;
-> >=20
-> > so the straight-line path is the normal, non-error path and errors are
-> > detected and dealt with in the "if" bodies.  Right now the "if" bodies
-> > are a mix of error handling and normal path.  But that's just my person=
-al
-> > preference.
->=20
-> Agreed.
->=20
-> > > +static int devm_resource_match(struct device *dev, void *res, void *=
-data)
-> > > +{
-> > > +	struct resource **ptr =3D res;
-> > > +
-> > > +	if (WARN_ON(!ptr || !*ptr))
-> > > +		return 0;
->=20
-> How would !ptr or !*ptr possibly happen?  Wouldn't that be a bug
-> already?
+OK, so the problem doesn't occur on x86 because there we have a struct
+pci_dev declaration reached earlier via:
 
-Honestly, I copied that from similar implementations. But checking the
-code again, I don't think they can actually happen. The value returned
-by devres_alloc() is a struct devres * with an added offset so that it
-points at the payload immediately following the struct devres. So at
-least !ptr can never happen.
+  drivers/ras/ras.c
+    include/ras/ras_event.h
+      include/linux/edac.h
+        include/linux/device.h
+          include/linux/gfp.h
+            arch/x86/include/asm/mmzone.h
+              arch/x86/include/asm/mmzone_64.h
+                arch/x86/include/asm/smp.h
+                  arch/x86/include/asm/mpspec.h
+                    arch/x86/include/asm/x86_init.h
+                      struct pci_dev;
+      include/linux/aer.h
+        ... pci_enable_pcie_error_reporting(struct pci_dev *dev);
 
-!*ptr could happen since the devres code calls the match function on
-every resource managed for the device and someone could've inserted a
-NULL (or 0) value. But since we're not dereferencing *ptr this should
-not be an issue. That said, having either res or data above be NULL
-isn't something that devres was meant to deal with anyway, since it
-relies on the pointers being unique for the matching.
+You're building powerpc, which doesn't have the same pci_dev
+declaration in the arch header files, so you see the declaration
+problem in aer.h.
 
-Thierry
+I could apply your fix, but it should go in v3.16 along with the commit
+(0a2409aad38e ("trace, AER: Move trace into unified interface")) that
+exposes the problem, and I'm leaving on vacation before I can get this
+into -next, have it smoke-tested, and ask Linus to pull it.
 
---cNdxnHkX5QqsyA0e
-Content-Type: application/pgp-signature
+So you might want to ask Tony to put in his tree, since it looks like
+he merged 0a2409aad38e in the first place.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+Please add these:
 
-iQIcBAEBAgAGBQJT14ZuAAoJEN0jrNd/PrOhRvkP/RdgBG+pCc5uzZnj+9QEFfKS
-0ArAQn5oLCn7VNPbnELU9z53JpDZMvite2H8R6HksifF6ZN56skOypr6gy9T8aOM
-hn206DvUSYB8BWj17fJaDfFe+X1IXT8nLYyHxJoMrGvJubs0aRaST5EPKK6uvtOo
-jFdHuHRFsLeA++qIaH44uoaIDaHGNUms1/kvogT3Afa9QJTUPfr6FGx4ExU9ifcU
-4DmZrepwS1UtYxxuSjFsZDvVAzYu06yBoT5xReEN+un1SiUIKb2uyyvCFDY0dNmv
-V5ugte1gvSrVOkRCrkt8gZn163PdL7s/zAL86yhv9BA0zJ/KlwnvGR7z5kygs1wa
-p+t5/VRN6IEWbsFe1Fsrd7TN+YsShBfMTzaRB7SJ44kS4S/IADQmym/DauytWnxX
-zm0wjjUFHmOG1xTeZjm+tYKckhhFjjiLUiABDnhZfqLxfq8TcLu5MxqxHoZrJQE3
-36WsNvR2HFFtRJWyiIlnH05rtkb+1Wo18ur9rA4Nq20YQuPHP6J15nasj075YlOy
-vLUZvnL9H/cVKJsTSR+LbV9E7oG+KYYibTVChMhcawVmYJbsdgQ9cgixq7EAIMu/
-9iitR/Z/0X/RQ4Ag8cGwo7F6STVuQ3+QdolFrQvcQtxHmPe62rFVVo5QbS375YE2
-yWF0ZIh9tByyPAjxwVJe
-=tNi4
------END PGP SIGNATURE-----
+  Fixes: 0a2409aad38e ("trace, AER: Move trace into unified interface")
+  Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
---cNdxnHkX5QqsyA0e--
+I know 0a2409aad38e isn't actually *responsible* for the problem, but
+anybody who backports 0a2409aad38e should pick up this fix as well.
+
+Lance, I added you because of an unrelated issue I noticed while reviewing
+this: you added the AER trace events with 1ca1d8d54f92 ("aerdrv: Trace
+Event for PCI Express Advanced Error Reporting"):
+
+  +#define aer_correctable_errors         \
+  +       {BIT(0),        "Receiver Error"},              \
+  ...
+
+I'd like to see all those "BIT(...)" things changed to use the #defines
+that already exist in include/uapi/linux/pci_regs.h, e.g.,
+PCI_ERR_COR_RCVR.  That way grep will find these uses, which will make
+maintenance easier.  There's no hurry about this part, of course.
+
+Bjorn
+
+> ---
+>  include/linux/aer.h | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/include/linux/aer.h b/include/linux/aer.h
+> index 4dbaa70..c826d1c 100644
+> --- a/include/linux/aer.h
+> +++ b/include/linux/aer.h
+> @@ -11,6 +11,8 @@
+>  #define AER_FATAL                        1
+>  #define AER_CORRECTABLE                        2
+>  
+> +struct pci_dev;
+> +
+>  struct aer_header_log_regs {
+>          unsigned int dw0;
+>          unsigned int dw1;
+> -- 
+> 1.8.1.4
+> 
