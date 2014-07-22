@@ -1,144 +1,237 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:59572 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751438AbaGKHIc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 03:08:32 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: [PATCH 2/2] PCI: tegra: Implement a proper resource hierarchy
-Date: Fri, 11 Jul 2014 09:08:25 +0200
-Message-Id: <1405062505-2606-2-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1405062505-2606-1-git-send-email-thierry.reding@gmail.com>
-References: <1405062505-2606-1-git-send-email-thierry.reding@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>,
+	Peter Zijlstra <peterz@infradead.org>
+Subject: [PATCH 3/3] ACPI / PM: Always enable wakeup GPEs when enabling device wakeup
+Date: Tue, 22 Jul 2014 03:26:01 +0200
+Message-ID: <2036304.rpZzsWCEyN@vostro.rjw.lan>
+In-Reply-To: <9631666.En3K0jlGsY@vostro.rjw.lan>
+References: <1907495.agrCMfRsQN@vostro.rjw.lan> <9631666.En3K0jlGsY@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Currently the resource hierarchy generated from the PCIe host bridge is
-completely flat:
+Wakeup GPEs are currently only enabled when setting up devices for
+remote wakeup at run time.  During system-wide transitions they are
+enabled by ACPICA at the very last stage of suspend (before asking
+the BIOS to take over).  Of course, that only works for system
+sleep states supported by ACPI, so in particular it doesn't work
+for the "freeze" sleep state.
 
-	$ cat /proc/iomem
-	00000000-00000fff : /pcie-controller@00003000/pci@1,0
-	00003000-000037ff : pads
-	00003800-000039ff : afi
-	10000000-1fffffff : cs
-	28000000-28003fff : r8169
-	28004000-28004fff : r8169
-	...
+For this reason, modify the ACPI core device PM code to enable wakeup
+GPEs for devices when setting them up for wakeup regardless of whether
+that is remote wakeup at runtime or system wakeup.  That allows the
+same device wakeup setup routine to be used for both runtime PM and
+system-wide PM and makes it possible to reduce code size quite a bit.
 
-The host bridge driver doesn't request all the resources that are used.
-Windows allocated to each of the root ports aren't tracked, so there is
-no way for resources allocated to individual devices to be matched up
-with the correct parent resource by the PCI core.
+This make ACPI-based PCI Wake-on-LAN work with the "freeze" sleep
+state on my venerable Toshiba Portege R500 and should help other
+systems too.
 
-This patch addresses this in two steps. It first takes the union of all
-regions associated with the PCIe host bridge (control registers, root
-port registers, configuration space, I/O and prefetchable as well as
-non-prefetchable memory regions) and uses it as the new root of the
-resource hierarchy.
-
-Subsequently, regions are allocated from within this new root resource
-so that the resource tree looks much more like what's expected:
-
-	# cat /proc/iomem
-	00000000-3fffffff : /pcie-controller@00003000
-	  00000000-00000fff : /pcie-controller@00003000/pci@1,0
-	  00003000-000037ff : pads
-	  00003800-000039ff : afi
-	  10000000-1fffffff : cs
-	  20000000-27ffffff : non-prefetchable
-	  28000000-3fffffff : prefetchable
-	    28000000-280fffff : PCI Bus 0000:01
-	      28000000-28003fff : 0000:01:00.0
-	        28000000-28003fff : r8169
-	      28004000-28004fff : 0000:01:00.0
-	        28004000-28004fff : r8169
-	...
-
-Signed-off-by: Thierry Reding <treding@nvidia.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/pci/host/pci-tegra.c | 32 +++++++++++++++++++++++++++++---
- 1 file changed, 29 insertions(+), 3 deletions(-)
+ drivers/acpi/device_pm.c |   49 ++++++++++++++++-------------------------------
+ include/acpi/acpi_bus.h  |   11 ----------
+ 2 files changed, 17 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 49b3bd5f5926..b0b337ebaf48 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -252,6 +252,7 @@ struct tegra_pcie {
- 	struct list_head buses;
- 	struct resource *cs;
+Index: linux-pm/drivers/acpi/device_pm.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/device_pm.c
++++ linux-pm/drivers/acpi/device_pm.c
+@@ -632,7 +632,6 @@ int acpi_pm_device_sleep_state(struct de
+ }
+ EXPORT_SYMBOL(acpi_pm_device_sleep_state);
  
-+	struct resource all;
- 	struct resource io;
- 	struct resource mem;
- 	struct resource prefetch;
-@@ -625,6 +626,15 @@ DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, tegra_pcie_relax_enable);
- static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
+-#ifdef CONFIG_PM_RUNTIME
+ /**
+  * acpi_pm_notify_work_func - ACPI devices wakeup notification work function.
+  * @work: Work item to handle.
+@@ -649,8 +648,9 @@ static void acpi_pm_notify_work_func(str
+ }
+ 
+ /**
+- * __acpi_device_run_wake - Enable/disable runtime remote wakeup for device.
+- * @adev: ACPI device to enable/disable the remote wakeup for.
++ * acpi_device_wakeup - Enable/disable wakeup functionality for device.
++ * @adev: ACPI device to enable/disable wakeup functionality for.
++ * @target_state: State the system is transitioning into.
+  * @enable: Whether to enable or disable the wakeup functionality.
+  *
+  * Enable/disable the GPE associated with @adev so that it can generate
+@@ -660,7 +660,8 @@ static void acpi_pm_notify_work_func(str
+  * Callers must ensure that @adev is a valid ACPI device node before executing
+  * this function.
+  */
+-int __acpi_device_run_wake(struct acpi_device *adev, bool enable)
++static int acpi_device_wakeup(struct acpi_device *adev, u32 target_state,
++			      bool enable)
  {
- 	struct tegra_pcie *pcie = sys_to_pcie(sys);
-+	int err;
-+
-+	err = devm_request_resource(pcie->dev, &pcie->all, &pcie->mem);
-+	if (err < 0)
-+		return err;
-+
-+	err = devm_request_resource(pcie->dev, &pcie->all, &pcie->prefetch);
-+	if (err)
-+		return err;
+ 	struct acpi_device_wakeup *wakeup = &adev->wakeup;
  
- 	pci_add_resource_offset(&sys->resources, &pcie->mem, sys->mem_offset);
- 	pci_add_resource_offset(&sys->resources, &pcie->prefetch,
-@@ -1439,6 +1449,12 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 	struct resource res;
- 	int err;
+@@ -668,7 +669,7 @@ int __acpi_device_run_wake(struct acpi_d
+ 		acpi_status res;
+ 		int error;
  
-+	memset(&pcie->all, 0, sizeof(pcie->all));
-+	pcie->all.flags = IORESOURCE_MEM;
-+	pcie->all.name = np->full_name;
-+	pcie->all.start = ~0;
-+	pcie->all.end = 0;
-+
- 	if (of_pci_range_parser_init(&parser, np)) {
- 		dev_err(pcie->dev, "missing \"ranges\" property\n");
- 		return -EINVAL;
-@@ -1450,21 +1466,31 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 		switch (res.flags & IORESOURCE_TYPE_BITS) {
- 		case IORESOURCE_IO:
- 			memcpy(&pcie->io, &res, sizeof(res));
--			pcie->io.name = "I/O";
-+			pcie->io.name = np->full_name;
- 			break;
+-		error = acpi_enable_wakeup_device_power(adev, ACPI_STATE_S0);
++		error = acpi_enable_wakeup_device_power(adev, target_state);
+ 		if (error)
+ 			return error;
  
- 		case IORESOURCE_MEM:
- 			if (res.flags & IORESOURCE_PREFETCH) {
- 				memcpy(&pcie->prefetch, &res, sizeof(res));
--				pcie->prefetch.name = "PREFETCH";
-+				pcie->prefetch.name = "prefetchable";
- 			} else {
- 				memcpy(&pcie->mem, &res, sizeof(res));
--				pcie->mem.name = "MEM";
-+				pcie->mem.name = "non-prefetchable";
- 			}
- 			break;
- 		}
-+
-+		if (res.start <= pcie->all.start)
-+			pcie->all.start = res.start;
-+
-+		if (res.end >= pcie->all.end)
-+			pcie->all.end = res.end;
+@@ -684,6 +685,7 @@ int __acpi_device_run_wake(struct acpi_d
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PM_RUNTIME
+ /**
+  * acpi_pm_device_run_wake - Enable/disable remote wakeup for given device.
+  * @dev: Device to enable/disable the platform to wake up.
+@@ -704,29 +706,13 @@ int acpi_pm_device_run_wake(struct devic
+ 		return -ENODEV;
  	}
  
-+	err = devm_request_resource(pcie->dev, &iomem_resource, &pcie->all);
-+	if (err < 0)
-+		return err;
-+
- 	err = of_pci_parse_bus_range(np, &pcie->busn);
- 	if (err < 0) {
- 		dev_err(pcie->dev, "failed to parse ranges property: %d\n",
--- 
-2.0.1
+-	return __acpi_device_run_wake(adev, enable);
++	return acpi_device_wakeup(adev, enable, ACPI_STATE_S0);
+ }
+ EXPORT_SYMBOL(acpi_pm_device_run_wake);
+-#else
+-static inline void acpi_pm_notify_work_func(struct work_struct *work) {}
+ #endif /* CONFIG_PM_RUNTIME */
+ 
+ #ifdef CONFIG_PM_SLEEP
+ /**
+- * __acpi_device_sleep_wake - Enable or disable device to wake up the system.
+- * @dev: Device to enable/desible to wake up the system.
+- * @target_state: System state the device is supposed to wake up from.
+- * @enable: Whether to enable or disable @dev to wake up the system.
+- */
+-int __acpi_device_sleep_wake(struct acpi_device *adev, u32 target_state,
+-			     bool enable)
+-{
+-	return enable ?
+-		acpi_enable_wakeup_device_power(adev, target_state) :
+-		acpi_disable_wakeup_device_power(adev);
+-}
+-
+-/**
+  * acpi_pm_device_sleep_wake - Enable or disable device to wake up the system.
+  * @dev: Device to enable/desible to wake up the system from sleep states.
+  * @enable: Whether to enable or disable @dev to wake up the system.
+@@ -746,8 +732,7 @@ int acpi_pm_device_sleep_wake(struct dev
+ 		return -ENODEV;
+ 	}
+ 
+-	error = __acpi_device_sleep_wake(adev, acpi_target_system_state(),
+-					 enable);
++	error = acpi_device_wakeup(adev, acpi_target_system_state(), enable);
+ 	if (!error)
+ 		dev_info(dev, "System wakeup %s by ACPI\n",
+ 				enable ? "enabled" : "disabled");
+@@ -805,13 +790,13 @@ int acpi_dev_runtime_suspend(struct devi
+ 
+ 	remote_wakeup = dev_pm_qos_flags(dev, PM_QOS_FLAG_REMOTE_WAKEUP) >
+ 				PM_QOS_FLAGS_NONE;
+-	error = __acpi_device_run_wake(adev, remote_wakeup);
++	error = acpi_device_wakeup(adev, ACPI_STATE_S0, remote_wakeup);
+ 	if (remote_wakeup && error)
+ 		return -EAGAIN;
+ 
+ 	error = acpi_dev_pm_low_power(dev, adev, ACPI_STATE_S0);
+ 	if (error)
+-		__acpi_device_run_wake(adev, false);
++		acpi_device_wakeup(adev, ACPI_STATE_S0, false);
+ 
+ 	return error;
+ }
+@@ -834,7 +819,7 @@ int acpi_dev_runtime_resume(struct devic
+ 		return 0;
+ 
+ 	error = acpi_dev_pm_full_power(adev);
+-	__acpi_device_run_wake(adev, false);
++	acpi_device_wakeup(adev, ACPI_STATE_S0, false);
+ 	return error;
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_runtime_resume);
+@@ -890,13 +875,13 @@ int acpi_dev_suspend_late(struct device
+ 
+ 	target_state = acpi_target_system_state();
+ 	wakeup = device_may_wakeup(dev);
+-	error = __acpi_device_sleep_wake(adev, target_state, wakeup);
++	error = acpi_device_wakeup(adev, target_state, wakeup);
+ 	if (wakeup && error)
+ 		return error;
+ 
+ 	error = acpi_dev_pm_low_power(dev, adev, target_state);
+ 	if (error)
+-		__acpi_device_sleep_wake(adev, ACPI_STATE_UNKNOWN, false);
++		acpi_device_wakeup(adev, ACPI_STATE_UNKNOWN, false);
+ 
+ 	return error;
+ }
+@@ -919,7 +904,7 @@ int acpi_dev_resume_early(struct device
+ 		return 0;
+ 
+ 	error = acpi_dev_pm_full_power(adev);
+-	__acpi_device_sleep_wake(adev, ACPI_STATE_UNKNOWN, false);
++	acpi_device_wakeup(adev, ACPI_STATE_UNKNOWN, false);
+ 	return error;
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resume_early);
+@@ -1082,7 +1067,7 @@ int acpi_dev_pm_attach(struct device *de
+ 	dev->pm_domain = &acpi_general_pm_domain;
+ 	if (power_on) {
+ 		acpi_dev_pm_full_power(adev);
+-		__acpi_device_run_wake(adev, false);
++		acpi_device_wakeup(adev, ACPI_STATE_S0, false);
+ 	}
+ 	return 0;
+ }
+@@ -1116,7 +1101,7 @@ void acpi_dev_pm_detach(struct device *d
+ 			 */
+ 			dev_pm_qos_hide_latency_limit(dev);
+ 			dev_pm_qos_hide_flags(dev);
+-			__acpi_device_run_wake(adev, false);
++			acpi_device_wakeup(adev, ACPI_STATE_S0, false);
+ 			acpi_dev_pm_low_power(dev, adev, ACPI_STATE_S0);
+ 		}
+ 	}
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -537,13 +537,8 @@ static inline int acpi_pm_device_sleep_s
+ #endif
+ 
+ #ifdef CONFIG_PM_RUNTIME
+-int __acpi_device_run_wake(struct acpi_device *, bool);
+ int acpi_pm_device_run_wake(struct device *, bool);
+ #else
+-static inline int __acpi_device_run_wake(struct acpi_device *adev, bool en)
+-{
+-	return -ENODEV;
+-}
+ static inline int acpi_pm_device_run_wake(struct device *dev, bool enable)
+ {
+ 	return -ENODEV;
+@@ -551,14 +546,8 @@ static inline int acpi_pm_device_run_wak
+ #endif
+ 
+ #ifdef CONFIG_PM_SLEEP
+-int __acpi_device_sleep_wake(struct acpi_device *, u32, bool);
+ int acpi_pm_device_sleep_wake(struct device *, bool);
+ #else
+-static inline int __acpi_device_sleep_wake(struct acpi_device *adev,
+-					   u32 target_state, bool enable)
+-{
+-	return -ENODEV;
+-}
+ static inline int acpi_pm_device_sleep_wake(struct device *dev, bool enable)
+ {
+ 	return -ENODEV;
 
