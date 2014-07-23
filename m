@@ -1,43 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:65439 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754589AbaGKSJt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 14:09:49 -0400
-Received: by mail-ie0-f177.google.com with SMTP id at20so1200236iec.22
-        for <linux-pci@vger.kernel.org>; Fri, 11 Jul 2014 11:09:48 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <53CF718C.1060109@ti.com>
+Date: Wed, 23 Jul 2014 13:55:48 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4DzJ112NxfjXT=NbXMxNqre_Vo61fS0Mem=MWCz+OvcA@mail.gmail.com>
-References: <20140611060118.GB3169@yanx>
-	<CAE9FiQWe2bf7QbKn9kmZS34a4cMewsdD-9qAELdXs-dEtx70GQ@mail.gmail.com>
-	<20140702210736.GB28852@google.com>
-	<CAE9FiQU5Ltu89zmRG0h2aXfXH0oCcTEP=jF7b=zHi=SaOA2rKg@mail.gmail.com>
-	<20140703131526.GG28852@google.com>
-	<CAE9FiQWPGXMBYmpzyk8cicKZ1ELUZiARkZjr2vvgntmt3bt1jQ@mail.gmail.com>
-	<20140703221152.GH28852@google.com>
-	<CAE9FiQX69x_YgHihYM-+tahTvbuk6MATBXvm9Rz5kiQ9UpKNPg@mail.gmail.com>
-	<CAErSpo4DzJ112NxfjXT=NbXMxNqre_Vo61fS0Mem=MWCz+OvcA@mail.gmail.com>
-Date: Fri, 11 Jul 2014 11:09:48 -0700
-Message-ID: <CAE9FiQWUPd4d9DWeiuDqQ=tKKe+5ZofUEw3JViXYs6+9zBG6Sg@mail.gmail.com>
-Subject: Re: [PATCH] pci: Allow very large resource windows
-From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+CC: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <jg1.han@samsung.com>,
+	<mohit.kumar@st.com>, <linux-kernel@vger.kernel.org>,
+	<grant.likely@linaro.org>
+Subject: Re: [PATCH v3 0/4] dra7: Add PCIe support
+References: <1405587643-13808-1-git-send-email-kishon@ti.com> <20140722213306.GB25432@google.com>
+In-Reply-To: <20140722213306.GB25432@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 11, 2014 at 11:00 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
-> I explained why I think it is dangerous in the paragraph "With
-> 'r->flags = 0', ..." above.  This a question of how the hardware
-> behaves, so if you think I'm wrong, you need to point out something in
-> the spec that says the hardware works differently than how I think it
-> does.
 
-If the BAR have all 0, cpu can not access it as hw will forward access to ram
-controller according to routing table.
 
-Yinghai
+On Wednesday 23 July 2014 03:03 AM, Bjorn Helgaas wrote:
+> On Thu, Jul 17, 2014 at 02:30:39PM +0530, Kishon Vijay Abraham I wrote:
+>> Changes from v2:
+>> * Added myself as MAINTAINER of pcie dra7xx driver
+>>
+>> Changes from v1:
+>> * fixed dw_pcie_prog_viewport_io_outbound() to use untranslated address
+>> * split dra7xx patch into driver part and documentation part
+>>
+>> [1] is split into separate series in order for individual subsystem
+>> Maintainers to pick up the patches. This series handles the PCIe
+>> support for DRA7.
+>>
+>> Rebased to pci -next.
+>>
+>> [1] -> https://lkml.org/lkml/2014/5/29/258
+>>
+>> Kishon Vijay Abraham I (4):
+>>   PCI: designware: Configuration space should be specified in 'reg'
+>>   PCI: designware: use untranslated address while programming ATU
+>>   Documentation: pci: ti: Add dt binding documentation for PCIe in
+>>     DRA7xx
+>>   PCI: host: pcie-dra7xx: add support for pcie-dra7xx controller
+>>
+>>  .../devicetree/bindings/pci/designware-pcie.txt    |    4 +
+>>  Documentation/devicetree/bindings/pci/ti-pci.txt   |   59 +++
+>>  MAINTAINERS                                        |    8 +
+>>  drivers/pci/host/Kconfig                           |   10 +
+>>  drivers/pci/host/Makefile                          |    1 +
+>>  drivers/pci/host/pci-dra7xx.c                      |  458 ++++++++++++++++++++
+>>  drivers/pci/host/pcie-designware.c                 |   72 ++-
+>>  drivers/pci/host/pcie-designware.h                 |    4 +
+>>  8 files changed, 600 insertions(+), 16 deletions(-)
+>>  create mode 100644 Documentation/devicetree/bindings/pci/ti-pci.txt
+>>  create mode 100644 drivers/pci/host/pci-dra7xx.c
+> 
+> I applied these to pci/host-designware for v3.17.  This will not be in my
+> first pull request because I'm going on vacation and won't have time to get
+> everything through -next and tagged.  But I'm planning a second pull
+> request that will include this.
+> 
+> Mohit, I applied your ack of "use untranslated address" from the v1 posting
+> (your mail of Jul 09) to the corresponding patch here, since Kishon didn't
+> carry it forward.  Let me know if that's not OK.
+> 
+> I also squashed the last two patches into one so the DT binding
+> documentation goes along with the dra7xx driver addition.
+> 
+
+Thanks Bjorn.
+
+-Kishon
+> Bjorn
+> 
