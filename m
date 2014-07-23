@@ -1,78 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcdn-iport-1.cisco.com ([173.37.86.72]:56962 "EHLO
-	rcdn-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751352AbaG1ISF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jul 2014 04:18:05 -0400
-From: "Suma Ramars (sramars)" <sramars@cisco.com>
-To: Alexander Gordeev <agordeev@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: Hiral Patel <hiralpat@cisco.com>,
-	"Brian Uchino (buchino)" <buchino@cisco.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 RESEND 07/23] fnic: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-Date: Mon, 28 Jul 2014 08:08:28 +0000
-Message-ID: <CFFC0234.11596%sramars@cisco.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <e8cc7988e4b0a38f59d3e854d387c7c0d95b058c.1405533479.git.agordeev@redhat.com>
- <20140726081502.GD21129@agordeev.usersys.redhat.com>
-In-Reply-To: <20140726081502.GD21129@agordeev.usersys.redhat.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:42404 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932289AbaGWRxE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jul 2014 13:53:04 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>, Marek Vasut <marex@denx.de>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	kernel@pengutronix.de
+Subject: [PATCH 2/4] PCI: designware: get rid of pci_scan_root_bus
+Date: Wed, 23 Jul 2014 19:52:39 +0200
+Message-Id: <1406137961-14684-3-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
+References: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Acked-by: "Suma Ramars (sramars)" <sramars@cisco.com>
+Use pci_create_root_bus() similar to other pci
+host controller drivers.
 
+The main problem with pci_scan_root_bus() is that
+not only it will create the root bus, but also try
+to activate all devices on the bus. This triggers
+PCI device drivers probe, which try to use the device
+but fail as resource allocation isn't done at that
+point in time.
 
-On 26/07/14 1:45 pm, "Alexander Gordeev" <agordeev@redhat.com> wrote:
+To work around this we made sure that the host
+controller driver is probed early and finishes resource
+allocation before any other device drivers are registered.
+Switching to pci_create_root_bus() allows us to get rid
+of this special handling.
 
->On Wed, Jul 16, 2014 at 08:05:11PM +0200, Alexander Gordeev wrote:
->> As result of deprecation of MSI-X/MSI enablement functions
->> pci_enable_msix() and pci_enable_msi_block() all drivers
->> using these two interfaces need to be updated to use the
->> new pci_enable_msi_range()  or pci_enable_msi_exact()
->> and pci_enable_msix_range() or pci_enable_msix_exact()
->> interfaces.
->
->Hi Hiral, Suma, Brian,
->
->Could you please review this patch?
->
->Thanks!
->
->> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
->> Cc: Hiral Patel <hiralpat@cisco.com>
->> Cc: Suma Ramars <sramars@cisco.com>
->> Cc: Brian Uchino <buchino@cisco.com>
->> Cc: linux-scsi@vger.kernel.org
->> Cc: linux-pci@vger.kernel.org
->> ---
->>  drivers/scsi/fnic/fnic_isr.c |    4 ++--
->>  1 files changed, 2 insertions(+), 2 deletions(-)
->> 
->> diff --git a/drivers/scsi/fnic/fnic_isr.c b/drivers/scsi/fnic/fnic_isr.c
->> index 7d9b54a..a0dd1b6 100644
->> --- a/drivers/scsi/fnic/fnic_isr.c
->> +++ b/drivers/scsi/fnic/fnic_isr.c
->> @@ -257,8 +257,8 @@ int fnic_set_intr_mode(struct fnic *fnic)
->>  	    fnic->raw_wq_count >= m &&
->>  	    fnic->wq_copy_count >= o &&
->>  	    fnic->cq_count >= n + m + o) {
->> -		if (!pci_enable_msix(fnic->pdev, fnic->msix_entry,
->> -				    n + m + o + 1)) {
->> +		if (!pci_enable_msix_exact(fnic->pdev, fnic->msix_entry,
->> +					   n + m + o + 1)) {
->>  			fnic->rq_count = n;
->>  			fnic->raw_wq_count = m;
->>  			fnic->wq_copy_count = o;
->> -- 
->> 1.7.7.6
->> 
->
->-- 
->Regards,
->Alexander Gordeev
->agordeev@redhat.com
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+ drivers/pci/host/pcie-designware.c | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index b13a830c8b0f..b869e202367c 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -801,14 +801,13 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 	struct pci_bus *bus;
+ 	struct pcie_port *pp = sys_to_pcie(sys);
+ 
+-	if (pp) {
+-		pp->root_bus_nr = sys->busnr;
+-		bus = pci_scan_root_bus(pp->dev, sys->busnr, &dw_pcie_ops,
+-					sys, &sys->resources);
+-	} else {
+-		bus = NULL;
+-		BUG();
+-	}
++	pp->root_bus_nr = sys->busnr;
++	bus = pci_create_root_bus(pp->dev, sys->busnr,
++				  &dw_pcie_ops, sys, &sys->resources);
++	if (!bus)
++		return NULL;
++
++	pci_scan_child_bus(bus);
+ 
+ 	return bus;
+ }
+-- 
+2.0.1
 
