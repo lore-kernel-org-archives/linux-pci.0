@@ -1,52 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23630 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934606AbaGPSUX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Jul 2014 14:20:23 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, xjtuwjp@gmail.com,
-	lindar_liu@usish.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 17/23] pm8001: Fix invalid return when request_irq() failed
-Date: Wed, 16 Jul 2014 20:05:21 +0200
-Message-Id: <5ecd9b80f705545c3dc85b2a4ae63a8ac3df8105.1405533479.git.agordeev@redhat.com>
-In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:42387 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757741AbaGWRw5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jul 2014 13:52:57 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>, Marek Vasut <marex@denx.de>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	kernel@pengutronix.de
+Subject: [PATCH 3/4] PCI: designware: remove pci_assign_unassigned_resources call
+Date: Wed, 23 Jul 2014 19:52:40 +0200
+Message-Id: <1406137961-14684-4-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
+References: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When a call to request_irq() failed pm8001_setup_msix()
-still returns the success. This udate fixes the described
-misbehaviour.
+The pci_common_init_dev() call right before will already
+handle the device resource allocation, so this call
+was a no-op.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: xjtuwjp@gmail.com
-Cc: lindar_liu@usish.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: Jack Wang <xjtuwjp@gmail.com>
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 ---
- drivers/scsi/pm8001/pm8001_init.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/pci/host/pcie-designware.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index e90c89f..e837ece 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -744,9 +744,10 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
- 			pm8001_ha->irq_vector[i].irq_id = i;
- 			pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index b869e202367c..dde5e6d4afa2 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -568,7 +568,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	dw_pci.private_data = (void **)&pp;
  
--			if (request_irq(pm8001_ha->msix_entries[i].vector,
-+			rc = request_irq(pm8001_ha->msix_entries[i].vector,
- 				pm8001_interrupt_handler_msix, flag,
--				intr_drvname[i], &(pm8001_ha->irq_vector[i]))) {
-+				intr_drvname[i], &(pm8001_ha->irq_vector[i]));
-+			if (rc) {
- 				for (j = 0; j < i; j++)
- 					free_irq(
- 					pm8001_ha->msix_entries[j].vector,
+ 	pci_common_init_dev(pp->dev, &dw_pci);
+-	pci_assign_unassigned_resources();
+ #ifdef CONFIG_PCI_DOMAINS
+ 	dw_pci.domain++;
+ #endif
 -- 
-1.7.7.6
+2.0.1
 
