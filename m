@@ -1,109 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:59192 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750845AbaGJSio (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 14:38:44 -0400
-Received: by mail-ie0-f177.google.com with SMTP id at20so1272118iec.8
-        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 11:38:43 -0700 (PDT)
-Date: Thu, 10 Jul 2014 12:38:40 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
-	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH] Let device drivers disable msi on shutdown
-Message-ID: <20140710183840.GA12663@google.com>
-References: <1403628537-16367-1-git-send-email-keith.busch@intel.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:52423 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756244AbaGWQh3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jul 2014 12:37:29 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 0/3] ACPI / PM: Make ACPI-based PCI wakeup work for the "freeze" sleep state
+Date: Wed, 23 Jul 2014 18:55:53 +0200
+Message-ID: <9451719.LAKB4xNqkA@vostro.rjw.lan>
+In-Reply-To: <20140723120432.GU3935@laptop>
+References: <1907495.agrCMfRsQN@vostro.rjw.lan> <6491652.ycQtdn67HU@vostro.rjw.lan> <20140723120432.GU3935@laptop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1403628537-16367-1-git-send-email-keith.busch@intel.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc LKML, Greg KH for driver core async shutdown question]
+[Trimming CC list somewhat]
 
-On Tue, Jun 24, 2014 at 10:48:57AM -0600, Keith Busch wrote:
-> I'd like to do shutdowns asynchronously so I can shutdown multiple
-> devices in parallel, but the pci-driver disables interrupts after my
-> driver returns from its '.shutdown', though it needs to rely on these
-> interrupts in its asynchronously scheduled shutdown.
+On Wednesday, July 23, 2014 02:04:32 PM Peter Zijlstra wrote:
+> On Wed, Jul 23, 2014 at 02:17:55PM +0200, Rafael J. Wysocki wrote:
+> > > (also, patchwork blows chunks :/)
+> > 
+> > That's never happened to me (and there's only one hunk in that patch).
 > 
-> I tracked the reason for pci disabling msi to ...
-> 
-> | commit d52877c7b1afb8c37ebe17e2005040b79cb618b0
-> | Author: Yinghai Lu <yhlu.kernel.send@gmail.com>
-> | Date:   Wed Apr 23 14:58:09 2008 -0700
-> |
-> |     pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2
-> 
-> ... because mptfusion doesn't disable msi in its shutdown path.
-> 
-> Any reason we can't let the drivers do this instead?
+> I meant that patchwork sucks :-) It hides the actual patch, I had to
+> download things in order to see the actual patch.
 
-I guess they *could*, but my general idea is that when we can do
-something in the core, we probably should, because then we're not
-depending on all the drivers to do the right thing.  So I would turn
-this around and say "we need a pretty good reason to move something
-out of the core and into the drivers."
+Well, my experience is much better here, never mind. :-)
 
-A lot of the issues in the shutdown path are related to getting the
-device to shut up so it doesn't cause problems with kexec.  So it does
-seem like a good idea to have pci_device_shutdown() disable MSI to
-remove one source of bothersome interrupts.
-
-> To provide context why I want to do this asynchronously, NVM-Express has
-> one PCI device per controller, of which there could be dozens in a system,
-> and each one may take many seconds (I've heard over ten in some cases)
-> to safely shutdown.
-
-I don't see anything in device_shutdown() that would wait for this
-sort of asynchronous shutdown to complete.  So how do we know it's
-finished before we turn off the power, reset, kexec, etc.?
-
-If we need to do asynchronous shutdown, it seems like we need some
-sort of driver core infrastructure to manage that.
-
-> In this patch, mptfusion was compile tested only; I didn't observe any
-> adverse affects from running the pci portion.
+> > Anyway, the count for 0000:00:01.0:pcie01 means that the wakeup source
+> > has been activated, so it should have woken it up in theory.
+> > 
+> > Unless, of course, it was activated after the power button wakeup.
 > 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-> Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/message/fusion/mptscsih.c |    3 +++
->  drivers/pci/pci-driver.c          |    2 --
->  2 files changed, 3 insertions(+), 2 deletions(-)
+> Yeah, I was thikning that maybe it doesn't get through entirely but has
+> pending state and comes through once we press the power button.
+
+It looks like that's what happens.
+
+> > It looks like the stuff works on the hardware level, though, so we should be
+> > able to make the wakeup work too.  I'll have another look later today.
 > 
-> diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-> index 2a1c6f2..3186e17 100644
-> --- a/drivers/message/fusion/mptscsih.c
-> +++ b/drivers/message/fusion/mptscsih.c
-> @@ -1215,6 +1215,9 @@ mptscsih_remove(struct pci_dev *pdev)
->  void
->  mptscsih_shutdown(struct pci_dev *pdev)
->  {
-> +	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
-> +	if (ioc->msi_enable)
-> +		pci_disable_msi(pdev);
->  }
->  
->  #ifdef CONFIG_PM
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 3f8e3db..8079d98 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -453,8 +453,6 @@ static void pci_device_shutdown(struct device *dev)
->  
->  	if (drv && drv->shutdown)
->  		drv->shutdown(pci_dev);
-> -	pci_msi_shutdown(pci_dev);
-> -	pci_msix_shutdown(pci_dev);
->  
->  #ifdef CONFIG_KEXEC
->  	/*
-> -- 
-> 1.7.10.4
-> 
+> Thanks.
+
+OK, so I think that before going any deeper it's better to check if we don't
+leave anything obvious behind, so please see if this makes any difference (on
+top of the previous one):
+
+---
+ drivers/pci/pcie/pme.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+Index: linux-pm/drivers/pci/pcie/pme.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pcie/pme.c
++++ linux-pm/drivers/pci/pcie/pme.c
+@@ -364,7 +364,8 @@ static int pcie_pme_probe(struct pcie_de
+ 	pcie_pme_interrupt_enable(port, false);
+ 	pcie_clear_root_pme_status(port);
+ 
+-	ret = request_irq(srv->irq, pcie_pme_irq, IRQF_SHARED, "PCIe PME", srv);
++	ret = request_irq(srv->irq, pcie_pme_irq, IRQF_SHARED | IRQF_NO_SUSPEND,
++			  "PCIe PME", srv);
+ 	if (ret) {
+ 		kfree(data);
+ 	} else {
+
