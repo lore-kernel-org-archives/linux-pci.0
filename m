@@ -1,43 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:57025 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754251AbaGSOj2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Jul 2014 10:39:28 -0400
-Received: by mail-oa0-f52.google.com with SMTP id o6so5067729oag.39
-        for <linux-pci@vger.kernel.org>; Sat, 19 Jul 2014 07:39:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140719053359.GF20064@quad.lixom.net>
-References: <CAKohpo=T3taZx8e39tenCRBNxCUr=7H2xG7Ng=e+YQXuuY9u8Q@mail.gmail.com>
-	<20140719045804.GC20064@quad.lixom.net>
-	<20140719053359.GF20064@quad.lixom.net>
-Date: Sat, 19 Jul 2014 20:09:28 +0530
-Message-ID: <CAKohpok0-RQ2L4LZoEuZ4UvN_1FkffUukDk4aMUF56ybjMSBwQ@mail.gmail.com>
-Subject: Re: [GIT PULL] ARM: SPEAr13xx PCIe updates for v3.17
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: Olof Johansson <olof@lixom.net>
-Cc: "arm@kernel.org" <arm@kernel.org>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mark Nicholson <mark@nicholnet.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:44240 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932289AbaGWRkp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jul 2014 13:40:45 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@freescale.com>, kernel@pengutronix.de
+Subject: [PATCH 2/3] PCI: imx6: prevent driver unbind
+Date: Wed, 23 Jul 2014 19:40:16 +0200
+Message-Id: <1406137217-11294-3-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1406137217-11294-1-git-send-email-l.stach@pengutronix.de>
+References: <1406137217-11294-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 19 July 2014 11:03, Olof Johansson <olof@lixom.net> wrote:
-> Also, there's a conflict with one of the fixes that were sent earlier.
-> It'd been nice to keep this based on the -rc that had that fix to avoid the
-> conflict. Please check the contents in our for-next.
+The current code is not prepared for the driver to be
+bound/unbound arbitrarily.
 
-I wasn't aware of any such issues, otherwise I would have rebased
-it over latest rc.
+Prevent possible user visible issues by disabling the
+bind sysfs attributes.
 
-I kept it on rc3 as I thought people might want to look at diffs
-between v8, 9 and 10 and v8 was rebased over rc3. So never changed
-it.
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+ drivers/pci/host/pci-imx6.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index a568efaa331c..ceb1677884b2 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -600,6 +600,7 @@ static struct platform_driver imx6_pcie_driver = {
+ 		.name	= "imx6q-pcie",
+ 		.owner	= THIS_MODULE,
+ 		.of_match_table = imx6_pcie_of_match,
++		.suppress_bind_attrs = true,
+ 	},
+ };
+ 
+-- 
+2.0.1
+
