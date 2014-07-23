@@ -1,62 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:50795 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755564AbaGEV0c (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 Jul 2014 17:26:32 -0400
-Received: by mail-ie0-f179.google.com with SMTP id lx4so1522440iec.10
-        for <linux-pci@vger.kernel.org>; Sat, 05 Jul 2014 14:26:32 -0700 (PDT)
-Date: Sat, 5 Jul 2014 15:26:29 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Joerg Roedel <jroedel@suse.de>
-Subject: Re: [PATCH] PCI: Add bridge DMA alias quirk for Intel 82801
-Message-ID: <20140705212629.GF28871@google.com>
-References: <20140623223530.13445.94886.stgit@gimli.home>
- <20140705163143.GB6247@google.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:61482 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753350AbaGWL7c (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jul 2014 07:59:32 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>
+Subject: Re: [PATCH 0/3] ACPI / PM: Make ACPI-based PCI wakeup work for the "freeze" sleep state
+Date: Wed, 23 Jul 2014 14:17:55 +0200
+Message-ID: <6491652.ycQtdn67HU@vostro.rjw.lan>
+In-Reply-To: <20140723113840.GJ20603@laptop.programming.kicks-ass.net>
+References: <1907495.agrCMfRsQN@vostro.rjw.lan> <1938033.aGLPbNTjeQ@vostro.rjw.lan> <20140723113840.GJ20603@laptop.programming.kicks-ass.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140705163143.GB6247@google.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Joerg]
-
-On Sat, Jul 05, 2014 at 10:31:43AM -0600, Bjorn Helgaas wrote:
-> On Mon, Jun 23, 2014 at 04:36:25PM -0600, Alex Williamson wrote:
-> > This bridge sometimes shows up as a root complex device and sometimes
-> > as a discrete PCIe-to-PCI bridge.  Testing indicates that in the
-> > latter case, we need to enable the PCIe bridge DMA alias quirk.
+On Wednesday, July 23, 2014 01:38:40 PM Peter Zijlstra wrote:
+> On Wed, Jul 23, 2014 at 01:43:59PM +0200, Rafael J. Wysocki wrote:
+> > On Wednesday, July 23, 2014 09:28:50 AM Peter Zijlstra wrote:
+> > > On Wed, Jul 23, 2014 at 12:26:20AM +0200, Rafael J. Wysocki wrote:
+> > > > All of that indicates that the machine in question has WoL based on native PCIe
+> > > > PME signaling.  In that case it doesn't wake up from the "freeze" state, because
+> > > > some code is missing.
+> > > 
+> > > Didn't wake, but it did show:
+> > > 
+> > > 0000:00:01.0:pcie01     1               1               0               0               0               0               0               99207           0
+> > > LNXPWRBN:00             1               1               0               0               0               0               0               99191           0
+> > > 
+> > > So at least something's moving, although its not quite working yet.
 > > 
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > Reported-by: Milos Kaurin <milos.kaurin@gmail.com>
-> > Tested-by: Milos Kaurin <milos.kaurin@gmail.com>
+> > That may be because I forgot about one piece, sorry about that.
+> > This patch:
+> > 
+> > https://patchwork.kernel.org/patch/4526561/
+> > 
+> > (which I think is in tip already) is needed to make enable_irq_wake()
+> > work with the "freeze" state.
+> > 
+> > Can you please apply this in addition and retest?
 > 
-> Applied to for-linus for v3.16, thanks!
+> I appear to have that hunk already (I'm running -tip based kernels).
 
-Actually, this quirk doesn't make any difference until the iommu changes
-are in, so there's no reason to have this in v3.16, is there?  
+I see.
 
-I saw that Joerg applied those iommu changes to his core branch, which I
-assume will be merged for v3.17.  So I'll move this to a pci/iommu branch,
-to be merged during the v3.17 merge window.
+> (also, patchwork blows chunks :/)
 
-> > ---
-> > 
-> >  drivers/pci/quirks.c |    2 ++
-> >  1 file changed, 2 insertions(+)
-> > 
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index 78a7df6..460c354 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -3405,6 +3405,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1080,
-> >  DECLARE_PCI_FIXUP_HEADER(0x10e3, 0x8113, quirk_use_pcie_bridge_dma_alias);
-> >  /* ITE 8892, https://bugzilla.kernel.org/show_bug.cgi?id=73551 */
-> >  DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
-> > +/* Intel 82801, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c49 */
-> > +DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
-> >  
-> >  /*
-> >   * AMD has indicated that the devices below do not support peer-to-peer
-> > 
+That's never happened to me (and there's only one hunk in that patch).
+
+Anyway, the count for 0000:00:01.0:pcie01 means that the wakeup source
+has been activated, so it should have woken it up in theory.
+
+Unless, of course, it was activated after the power button wakeup.
+
+It looks like the stuff works on the hardware level, though, so we should be
+able to make the wakeup work too.  I'll have another look later today.
+
+Rafael
+
