@@ -1,24 +1,17 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:38766 "EHLO bear.ext.ti.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:43736 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751317AbaGVTAT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Jul 2014 15:00:19 -0400
-Message-ID: <53CEB46D.2020006@ti.com>
-Date: Tue, 22 Jul 2014 14:58:53 -0400
+	id S932557AbaGWSzz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 23 Jul 2014 14:55:55 -0400
 From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Rob Herring <robherring2@gmail.com>
-CC: Jingoo Han <jg1.han@samsung.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+To: <linux-pci@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
 	Russell King <linux@arm.linux.org.uk>,
 	Grant Likely <grant.likely@linaro.org>,
 	Rob Herring <robh+dt@kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
 	Richard Zhu <r65037@freescale.com>,
 	Kishon Vijay Abraham I <kishon@ti.com>,
 	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
@@ -27,86 +20,159 @@ CC: Jingoo Han <jg1.han@samsung.com>,
 	Ian Campbell <ijc+devicetree@hellion.org.uk>,
 	Kumar Gala <galak@codeaurora.org>,
 	Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v6 4/5] PCI: add PCI controller for keystone PCIe h/w
-References: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com> <1405696469-7172-5-git-send-email-m-karicheri2@ti.com> <CAL_JsqKheoWrSGtxPO=AE8g9iOAqfwRa=81Ku=Cfx8_gpDysOg@mail.gmail.com> <53C9839C.5090604@ti.com> <006001cfa485$4f4fcff0$edef6fd0$%han@samsung.com> <53CD424B.1090806@ti.com> <CAL_JsqJXb28RHhZG9=-NACwAr1ooGhfMOPjtsTGO2s3Dx7ayxQ@mail.gmail.com>
-In-Reply-To: <CAL_JsqJXb28RHhZG9=-NACwAr1ooGhfMOPjtsTGO2s3Dx7ayxQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Subject: [PATCH v8 1/2] PCI: designware: enhance dw_pcie_host_init() to support v3.65 DW hardware
+Date: Wed, 23 Jul 2014 14:54:51 -0400
+Message-ID: <1406141692-7249-2-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1406141692-7249-1-git-send-email-m-karicheri2@ti.com>
+References: <1406141692-7249-1-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/22/2014 11:41 AM, Rob Herring wrote:
-> On Mon, Jul 21, 2014 at 11:39 AM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
->> On 07/20/2014 09:44 PM, Jingoo Han wrote:
->>> On Saturday, July 19, 2014 5:29 AM, Murali Karicheri wrote:
->>>> On 07/18/2014 03:31 PM, Rob Herring wrote:
->>>>> On Fri, Jul 18, 2014 at 10:14 AM, Murali Karicheri<m-karicheri2@ti.com>
->>>>> wrote:
->>>> --- Cut ---
->>>>>> +
->>>>>> +Optional properties:-
->>>>>> +       phys: phandle to Generic Keystone SerDes phy for PCI
->>>>>> +       phy-names: name of the Generic Keystine SerDes phy for PCI
->>>>>> +         - If boot loader already does PCI link establishment, then
->>>>>> phys and
->>>>>> +           phy-names shouldn't be present.
->>>>>> +       ti,enable-linktrain - Enable Link training.
->>>>>> +         - If boot loader already does PCI link establishment, then
->>>>>> this
->>>>>> +           shouldn't be present.
->>>>>
->>>>> Can't you read from the h/w if the link is trained?
->>>
->>> I agree with Rob Herring's suggestion.
->>>
->>>> Yes.
->>>>
->>>> There are customers who use this driver with PCI Link setup done in the
->>>> boot loader. This property tells the driver to bypass Link setup
->>>> procedure in that case. Is this undesirable and if so. how other
->>>> platforms handle it? Check first if link is trained or start the link
->>>> setup procedure? Let me know. If this is fine, please provide your Ack.
->>>
->>> Please, check the following code of Exynos PCIe diver.
->>>
->>> ./drivers/pci/host/pci-exynos.c
->>>
->>> static int exynos_pcie_establish_link(struct pcie_port *pp)
->>> {
->>>          struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
->>>          void __iomem *elbi_base = exynos_pcie->elbi_base;
->>>          void __iomem *pmu_base = exynos_pcie->pmu_base;
->>>
->>>          if (dw_pcie_link_up(pp)) {
->>>                  dev_err(pp->dev, "Link already up\n");
->>>                  return 0;
->>>          }
->>>          .....
->>>
->>> In the case of Exynos PCIe, the Exynos PCIe driver checks the
->>> h/w bit such as PCIE_ELBI_LTSSM_ENABLE bit of PCIE_ELBI_RDLH_LINKUP
->>> offset register.
->>>
->>> If the link is already set up by the boot loader or other reasons,
->>> the driver will skip some initialization codes.
->>>
->>> The first step is that you find such h/w bit for checking link up.
->>> If so, please add the code for skipping, when the link is already
->>> set up.
->>>
->> Rob, Jingoo,
->>
->> We have similar bit to check for Link status and I have removed the DT
->> property and skip Link retrain if PCIe Link is already Up. I will be
->> resending the series with Patch 4/5 updated.
-> For both keystone and exynos, is this status bit in the phy? If so,
-> sounds like this should be a standard phy function op.
->
-> Rob
-Rob,
+keystone PCI controller is based on v3.65 designware hardware. This
+version differs from newer versions of the hardware in few functional
+areas discussed below that makes it necessary to change dw_pcie_host_init()
+to support v3.65 based PCI controller.
 
-There is phy bit as well as PCIe specific Link LTSSM state for Keystone.
-Phy one is handled by the Phy driver and PCie driver care about LTSSM
-state bit. I have removed the enable_link_train DT attribute from
-patch 4/5. Can you ack it now?
+ 1. No support for ATU port. So any ATU specific resource handling code
+    is to be bypassed for v3.65 h/w.
+ 2. MSI controller uses Application space to implement MSI and 32 MSI
+    interrupts are multiplexed over 8 IRQs to the host. Hence the code
+    to process MSI IRQ needs to be different. This patch allows platform
+    driver to provide its own irq_domain_ops ptr to irq_domain_add_linear()
+    through an API callback from the designware core driver.
+ 3. MSI interrupt generation requires EP to write to the RC's application
+    register. So enhance the driver to allow setup of inbound access to
+    MSI irq register as a post scan bus API callback.
 
-Murali
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Reviewed-by: Pratyush Anand <pratyush.anand@st.com>
+Acked-by: Mohit KUMAR <mohit.kumar@st.com>
+Acked-by: Jingoo Han <jg1.han@samsung.com>
+
+CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+CC: Russell King <linux@arm.linux.org.uk>
+CC: Grant Likely <grant.likely@linaro.org>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Jingoo Han <jg1.han@samsung.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Richard Zhu <r65037@freescale.com>
+CC: Kishon Vijay Abraham I <kishon@ti.com>
+CC: Marek Vasut <marex@denx.de>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Pawel Moll <pawel.moll@arm.com>
+CC: Mark Rutland <mark.rutland@arm.com>
+CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
+CC: Kumar Gala <galak@codeaurora.org>
+CC: Randy Dunlap <rdunlap@infradead.org>
+CC: Grant Likely <grant.likely@linaro.org>
+---
+ drivers/pci/host/pcie-designware.c |   52 +++++++++++++++++++++++-------------
+ drivers/pci/host/pcie-designware.h |    2 ++
+ 2 files changed, 36 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 52bd3a1..76d3d8e 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -425,7 +425,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	struct resource *cfg_res;
+ 	u32 val, na, ns;
+ 	const __be32 *addrp;
+-	int i, index;
++	int i, index, ret;
+ 
+ 	/* Find the address cell size and the number of cells in order to get
+ 	 * the untranslated address.
+@@ -511,17 +511,24 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	pp->mem_base = pp->mem.start;
+ 
+-	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+-					pp->config.cfg0_size);
+ 	if (!pp->va_cfg0_base) {
+-		dev_err(pp->dev, "error with ioremap in function\n");
+-		return -ENOMEM;
++		pp->cfg0_base = pp->cfg.start;
++		pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
++						pp->config.cfg0_size);
++		if (!pp->va_cfg0_base) {
++			dev_err(pp->dev, "error with ioremap in function\n");
++			return -ENOMEM;
++		}
+ 	}
+-	pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
+-					pp->config.cfg1_size);
++
+ 	if (!pp->va_cfg1_base) {
+-		dev_err(pp->dev, "error with ioremap\n");
+-		return -ENOMEM;
++		pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
++		pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
++						pp->config.cfg1_size);
++		if (!pp->va_cfg1_base) {
++			dev_err(pp->dev, "error with ioremap\n");
++			return -ENOMEM;
++		}
+ 	}
+ 
+ 	if (of_property_read_u32(np, "num-lanes", &pp->lanes)) {
+@@ -530,16 +537,22 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	}
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-		pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
+-					MAX_MSI_IRQS, &msi_domain_ops,
+-					&dw_pcie_msi_chip);
+-		if (!pp->irq_domain) {
+-			dev_err(pp->dev, "irq domain init failed\n");
+-			return -ENXIO;
+-		}
++		if (!pp->ops->msi_host_init) {
++			pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
++						MAX_MSI_IRQS, &msi_domain_ops,
++						&dw_pcie_msi_chip);
++			if (!pp->irq_domain) {
++				dev_err(pp->dev, "irq domain init failed\n");
++				return -ENXIO;
++			}
+ 
+-		for (i = 0; i < MAX_MSI_IRQS; i++)
+-			irq_create_mapping(pp->irq_domain, i);
++			for (i = 0; i < MAX_MSI_IRQS; i++)
++				irq_create_mapping(pp->irq_domain, i);
++		} else {
++			ret = pp->ops->msi_host_init(pp, &dw_pcie_msi_chip);
++			if (ret < 0)
++				return ret;
++		}
+ 	}
+ 
+ 	if (pp->ops->host_init)
+@@ -799,6 +812,9 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 		BUG();
+ 	}
+ 
++	if (bus && pp->ops->scan_bus)
++		pp->ops->scan_bus(pp);
++
+ 	return bus;
+ }
+ 
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index daf81f9..3e84e0a 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -74,6 +74,8 @@ struct pcie_host_ops {
+ 	void (*msi_set_irq)(struct pcie_port *pp, int irq);
+ 	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
+ 	u32 (*get_msi_data)(struct pcie_port *pp);
++	void (*scan_bus)(struct pcie_port *pp);
++	int (*msi_host_init)(struct pcie_port *pp, struct msi_chip *chip);
+ };
+ 
+ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+-- 
+1.7.9.5
+
