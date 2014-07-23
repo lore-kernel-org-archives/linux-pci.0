@@ -1,106 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:56868 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751171AbaGXGWo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 02:22:44 -0400
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 24 Jul 2014 16:22:34 +1000
-Received: from d23relay03.au.ibm.com (d23relay03.au.ibm.com [9.190.235.21])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 8703F2BB0040
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 16:22:38 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay03.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s6O6MMFN10355148
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 16:22:22 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s6O6MblV030100
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 16:22:38 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V7 03/17] PCI: Add weak pcibios_sriov_resource_alignment() interface
-Date: Thu, 24 Jul 2014 14:22:13 +0800
-Message-Id: <1406182947-11302-4-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:42412 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932289AbaGWRxN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jul 2014 13:53:13 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>, Marek Vasut <marex@denx.de>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	kernel@pengutronix.de
+Subject: [PATCH 1/4] PCI: designware: start parsing bus-range
+Date: Wed, 23 Jul 2014 19:52:38 +0200
+Message-Id: <1406137961-14684-2-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
+References: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The sriov resource alignment is designed to be the individual size of a sriov
-resource. This works fine for many platforms, but on powernv platform it needs
-some change.
+This allows to explicitly specify the covered bus
+numbers in the devicetree, which will come in handy
+once we see a SoC with more than one PCIe host
+controller instance.
 
-The original alignment works, since at sizing and assigning stage the
-requirement is from an individual VF's resource size instead of the big IOV
-BAR. This is the reason for the original code to just retrieve the individual
-sriov size as the alignment.
+Previously the driver relied on the behavior of
+pci_scan_root_bus() to fill in a range of 0x00-0xff
+if no valid range was found. We fall back to the
+same range if no valid DT entry was found to keep
+backwards compatibility, but now do it explicitly.
 
-On powernv platform, it is required to align the whole IOV BAR to a hardware
-aperture. Based on this fact, the alignment of sriov resource should be the
-total size of the IOV BAR.
-
-This patch introduces a weak pcibios_sriov_resource_alignment() interface, which
-gives platform a chance to implement specific method to calculate the sriov
-resource alignment.
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 ---
- drivers/pci/iov.c   |   11 ++++++++++-
- include/linux/pci.h |    3 +++
- 2 files changed, 13 insertions(+), 1 deletion(-)
+ Documentation/devicetree/bindings/pci/designware-pcie.txt |  3 +++
+ drivers/pci/host/pcie-designware.c                        | 13 ++++++++++++-
+ drivers/pci/host/pcie-designware.h                        |  1 +
+ 3 files changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ef1c546..d395769 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -505,6 +505,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno,
- 		4 * (resno - PCI_IOV_RESOURCES);
- }
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index ed0d9b9fff2b..9f4faa8e8d00 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -23,3 +23,6 @@ Required properties:
  
-+resource_size_t __weak pcibios_sriov_resource_alignment(struct pci_dev *dev,
-+		int resno, resource_size_t align)
-+{
-+	return align;
-+}
+ Optional properties:
+ - reset-gpio: gpio pin number of power good signal
++- bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
++  specify this property, to keep backwards compatibility a range of 0x00-0xff
++  is assumed if not present)
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 52bd3a143563..b13a830c8b0f 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -425,7 +425,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	struct resource *cfg_res;
+ 	u32 val, na, ns;
+ 	const __be32 *addrp;
+-	int i, index;
++	int i, index, ret;
+ 
+ 	/* Find the address cell size and the number of cells in order to get
+ 	 * the untranslated address.
+@@ -500,6 +500,16 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 		}
+ 	}
+ 
++	ret = of_pci_parse_bus_range(np, &pp->busn);
++	if (ret < 0) {
++		dev_dbg(pp->dev, "failed to parse bus-range property: %d, using default [0x00-0xff]\n",
++			ret);
++		pp->busn.name = np->name;
++		pp->busn.start = 0;
++		pp->busn.end = 0xff;
++		pp->busn.flags = IORESOURCE_BUS;
++	}
 +
- /**
-  * pci_sriov_resource_alignment - get resource alignment for VF BAR
-  * @dev: the PCI device
-@@ -519,13 +525,16 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
- {
- 	struct resource tmp;
- 	enum pci_bar_type type;
-+	resource_size_t align;
- 	int reg = pci_iov_resource_bar(dev, resno, &type);
+ 	if (!pp->dbi_base) {
+ 		pp->dbi_base = devm_ioremap(pp->dev, pp->cfg.start,
+ 					resource_size(&pp->cfg));
+@@ -781,6 +791,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
  
- 	if (!reg)
- 		return 0;
+ 	sys->mem_offset = pp->mem.start - pp->config.mem_bus_addr;
+ 	pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
++	pci_add_resource(&sys->resources, &pp->busn);
  
- 	__pci_read_base(dev, type, &tmp, reg);
--	return resource_alignment(&tmp);
-+	align = resource_alignment(&tmp);
-+
-+	return pcibios_sriov_resource_alignment(dev, resno, align);
+ 	return 1;
  }
- 
- /**
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 194db52..541ef4eb43 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1166,6 +1166,9 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
- void pci_setup_bridge(struct pci_bus *bus);
- resource_size_t pcibios_window_alignment(struct pci_bus *bus,
- 					 unsigned long type);
-+resource_size_t pcibios_sriov_resource_alignment(struct pci_dev *dev,
-+						 int resno,
-+						 resource_size_t align);
- 
- #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
- #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index daf81f922cda..9a09633ecdf8 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -48,6 +48,7 @@ struct pcie_port {
+ 	struct resource		cfg;
+ 	struct resource		io;
+ 	struct resource		mem;
++	struct resource		busn;
+ 	struct pcie_port_info	config;
+ 	int			irq;
+ 	u32			lanes;
 -- 
-1.7.9.5
+2.0.1
 
