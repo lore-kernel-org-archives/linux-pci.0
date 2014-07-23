@@ -1,67 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 23 Jul 2014 17:34:21 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: Re: [Patch Part3 V4 16/21] iommu/vt-d: Implement DMAR unit hotplug
- framework
-Message-ID: <20140723153420.GC14017@8bytes.org>
-References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
- <1405059585-10620-17-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 23 Jul 2014 14:04:32 +0200
+From: Peter Zijlstra <peterz@infradead.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>
+Subject: Re: [PATCH 0/3] ACPI / PM: Make ACPI-based PCI wakeup work for the
+ "freeze" sleep state
+Message-ID: <20140723120432.GU3935@laptop>
+References: <1907495.agrCMfRsQN@vostro.rjw.lan>
+ <1938033.aGLPbNTjeQ@vostro.rjw.lan>
+ <20140723113840.GJ20603@laptop.programming.kicks-ass.net>
+ <6491652.ycQtdn67HU@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1405059585-10620-17-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6491652.ycQtdn67HU@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 11, 2014 at 02:19:40PM +0800, Jiang Liu wrote:
-> On Intel platforms, an IO Hub (PCI/PCIe host bridge) may contain DMAR
-> units, so we need to support DMAR hotplug when supporting PCI host
-> bridge hotplug on Intel platforms.
+On Wed, Jul 23, 2014 at 02:17:55PM +0200, Rafael J. Wysocki wrote:
+> > (also, patchwork blows chunks :/)
 > 
-> According to Section 8.8 "Remapping Hardware Unit Hot Plug" in "Intel
-> Virtualization Technology for Directed IO Architecture Specification
-> Rev 2.2", ACPI BIOS should implement ACPI _DSM method under the ACPI
-> object for the PCI host bridge to support DMAR hotplug.
-> 
-> This patch introduces interfaces to parse ACPI _DSM method for
-> DMAR unit hotplug. It also implements state machines for DMAR unit
-> hot-addition and hot-removal.
-> 
-> The PCI host bridge hotplug driver should call dmar_hotplug_hotplug()
-> before scanning PCI devices connected for hot-addition and after
-> destroying all PCI devices for hot-removal.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/iommu/dmar.c                |  268 +++++++++++++++++++++++++++++++++--
->  drivers/iommu/intel-iommu.c         |   78 +++++++++-
->  drivers/iommu/intel_irq_remapping.c |    5 +
->  include/linux/dmar.h                |   33 +++++
->  4 files changed, 370 insertions(+), 14 deletions(-)
+> That's never happened to me (and there's only one hunk in that patch).
 
-This patch triggers a compile error with allnoconfig on amd64:
+I meant that patchwork sucks :-) It hides the actual patch, I had to
+download things in order to see the actual patch.
 
-  CC      arch/x86/kernel/pci-dma.o
-In file included from arch/x86/kernel/pci-dma.c:3:0:
-include/linux/dmar.h:168:35: error: unknown type name ‘acpi_handle’
- static inline int dmar_device_add(acpi_handle handle)
-                                   ^
-include/linux/dmar.h:173:38: error: unknown type name ‘acpi_handle’
- static inline int dmar_device_remove(acpi_handle handle)
-                                      ^
-make[2]: *** [arch/x86/kernel/pci-dma.o] Error 1
-make[1]: *** [arch/x86/kernel] Error 2
-make: *** [arch/x86] Error 2
+> Anyway, the count for 0000:00:01.0:pcie01 means that the wakeup source
+> has been activated, so it should have woken it up in theory.
+> 
+> Unless, of course, it was activated after the power button wakeup.
 
+Yeah, I was thikning that maybe it doesn't get through entirely but has
+pending state and comes through once we press the power button.
+
+> It looks like the stuff works on the hardware level, though, so we should be
+> able to make the wakeup work too.  I'll have another look later today.
+
+Thanks.
