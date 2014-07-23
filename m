@@ -1,63 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([85.214.48.195]:38482 "EHLO mail.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752406AbaGBNdE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 2 Jul 2014 09:33:04 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by mail.8bytes.org (Postfix) with SMTP id 5550812B340
-	for <linux-pci@vger.kernel.org>; Wed,  2 Jul 2014 15:33:02 +0200 (CEST)
-Date: Wed, 2 Jul 2014 15:32:59 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: Bill Sumner <bill.sumner@hp.com>,
-	"Hoemann, Jerry" <jerry.hoemann@hp.com>,
-	indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
-	doug.hatch@hp.com, ishii.hironobu@jp.fujitsu.com,
-	bhelgaas@google.com, zhenhua@hp.com
-Subject: Re: [PATCH 0/8] iommu/vt-d: Fix crash dump failure caused by legacy
- DMA/IO
-Message-ID: <20140702133258.GN26537@8bytes.org>
-References: <1398386198-19304-1-git-send-email-bill.sumner@hp.com>
- <1398854973.12733.23.camel@i7.infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1398854973.12733.23.camel@i7.infradead.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:42373 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932241AbaGWRwt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jul 2014 13:52:49 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>, Marek Vasut <marex@denx.de>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	kernel@pengutronix.de
+Subject: [PATCH 4/4] PCI: imx6: move to module_init
+Date: Wed, 23 Jul 2014 19:52:41 +0200
+Message-Id: <1406137961-14684-5-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
+References: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi David,
+This effectively reverts f216f57ffe6eede3c8a763add65d331e688f8c56
+"PCI: imx6: Probe the PCIe in fs_initcall()" as the ressource
+allocation issue that prevented the driver from working properly
+at module_initcall level is now fixed in pcie-designware.
 
-On Wed, Apr 30, 2014 at 11:49:33AM +0100, David Woodhouse wrote:
-> There could be all kinds of existing mappings in the DMA page tables,
-> and I'm not sure it's safe to preserve them. What prevents the crashdump
-> kernel from trying to use any of the physical pages which are
-> accessible, and which could thus be corrupted by stray DMA?
-> 
-> In fact, the old kernel could even have set up 1:1 passthrough mappings
-> for some devices, which would then be able to DMA *anywhere*. Surely we
-> need to prevent that?
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+ drivers/pci/host/pci-imx6.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Ideally we would prevent that, yes. But the problem is that a failed DMA
-transaction might put the device into an unrecoverable state. Usually
-any in-flight DMA transactions should only target buffers set up by the
-previous kernel and not corrupt any data.
-
-> After the last round of this patchset, we discussed a potential
-> improvement where you point every virtual bus address at the *same*
-> physical scratch page.
-
-That is a solution to prevent the in-flight DMA failures. But what
-happens when there is some in-flight DMA to a disk to write some inodes
-or a new superblock. Then this scratch address-space may cause
-filesystem corruption at worst.
-
-So with this in mind I would prefer initially taking over the
-page-tables from the old kernel before the device drivers re-initialize
-the devices.
-
-
-	Joerg
-
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index a568efaa331c..0fc2ba8ea006 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -609,7 +609,7 @@ static int __init imx6_pcie_init(void)
+ {
+ 	return platform_driver_probe(&imx6_pcie_driver, imx6_pcie_probe);
+ }
+-fs_initcall(imx6_pcie_init);
++module_init(imx6_pcie_init);
+ 
+ MODULE_AUTHOR("Sean Cross <xobs@kosagi.com>");
+ MODULE_DESCRIPTION("Freescale i.MX6 PCIe host controller driver");
+-- 
+2.0.1
 
