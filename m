@@ -1,45 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:36683 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752599AbaGYNcM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 25 Jul 2014 09:32:12 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Alex Williamson <alex.williamson@redhat.com>,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Brown <broonie@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-spi@vger.kernel.org, linux-serial@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 3/3] spi: topcliff-pch: use pci_get_dma_device() helper
-Date: Fri, 25 Jul 2014 16:31:44 +0300
-Message-Id: <1406295104-20082-3-git-send-email-andriy.shevchenko@linux.intel.com>
-In-Reply-To: <1406295104-20082-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1406295104-20082-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 23 Jul 2014 13:38:40 +0200
+From: Peter Zijlstra <peterz@infradead.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>
+Subject: Re: [PATCH 0/3] ACPI / PM: Make ACPI-based PCI wakeup work for the
+ "freeze" sleep state
+Message-ID: <20140723113840.GJ20603@laptop.programming.kicks-ass.net>
+References: <1907495.agrCMfRsQN@vostro.rjw.lan>
+ <3271848.fNJ1rk2xTa@vostro.rjw.lan>
+ <20140723072850.GO3935@laptop>
+ <1938033.aGLPbNTjeQ@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1938033.aGLPbNTjeQ@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since we have pci_get_dma_device() public we may use it in the drivers. It
-considers the function 0 as a DMA controller.
+On Wed, Jul 23, 2014 at 01:43:59PM +0200, Rafael J. Wysocki wrote:
+> On Wednesday, July 23, 2014 09:28:50 AM Peter Zijlstra wrote:
+> > On Wed, Jul 23, 2014 at 12:26:20AM +0200, Rafael J. Wysocki wrote:
+> > > All of that indicates that the machine in question has WoL based on native PCIe
+> > > PME signaling.  In that case it doesn't wake up from the "freeze" state, because
+> > > some code is missing.
+> > 
+> > Didn't wake, but it did show:
+> > 
+> > 0000:00:01.0:pcie01     1               1               0               0               0               0               0               99207           0
+> > LNXPWRBN:00             1               1               0               0               0               0               0               99191           0
+> > 
+> > So at least something's moving, although its not quite working yet.
+> 
+> That may be because I forgot about one piece, sorry about that.
+> This patch:
+> 
+> https://patchwork.kernel.org/patch/4526561/
+> 
+> (which I think is in tip already) is needed to make enable_irq_wake()
+> work with the "freeze" state.
+> 
+> Can you please apply this in addition and retest?
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/spi/spi-topcliff-pch.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+I appear to have that hunk already (I'm running -tip based kernels).
 
-diff --git a/drivers/spi/spi-topcliff-pch.c b/drivers/spi/spi-topcliff-pch.c
-index af51d6a..fe868ce 100644
---- a/drivers/spi/spi-topcliff-pch.c
-+++ b/drivers/spi/spi-topcliff-pch.c
-@@ -874,8 +874,7 @@ static void pch_spi_request_dma(struct pch_spi_data *data, int bpw)
- 	dma_cap_set(DMA_SLAVE, mask);
- 
- 	/* Get DMA's dev information */
--	dma_dev = pci_get_bus_and_slot(data->board_dat->pdev->bus->number,
--				       PCI_DEVFN(12, 0));
-+	dma_dev = pci_get_dma_device(data->board_dat->pdev);
- 
- 	/* Set Tx DMA */
- 	param = &dma->param_tx;
--- 
-2.0.1
-
+(also, patchwork blows chunks :/)
