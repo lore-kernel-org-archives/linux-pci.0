@@ -1,50 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:49905 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750844AbaGNFaE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jul 2014 01:30:04 -0400
-Received: by mail-ob0-f180.google.com with SMTP id uy5so3468500obc.11
-        for <linux-pci@vger.kernel.org>; Sun, 13 Jul 2014 22:30:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB661A47A2A7BF3@EAPEX1MAIL1.st.com>
-References: <cover.1404976058.git.viresh.kumar@linaro.org>
-	<d1ef8db8704d09ba4f276c954dc22b555998f957.1404976058.git.viresh.kumar@linaro.org>
-	<53BE926A.2070005@ti.com>
-	<CAKohpokNijH37NAmuh5cYEZxYFJE-COKwVNP3RNHSEoS03YYAA@mail.gmail.com>
-	<53BFA120.2070005@ti.com>
-	<2CC2A0A4A178534D93D5159BF3BCB661A47A2A7BF3@EAPEX1MAIL1.st.com>
-Date: Mon, 14 Jul 2014 10:54:18 +0530
-Message-ID: <CAKohpo=UNwzppiTHzg0qxFBdkiR8fkwTu27OKKPTUFo5GVDKcA@mail.gmail.com>
-Subject: Re: [PATCH V9 2/7] phy: Add drivers for PCIe and SATA phy on SPEAr13xx
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-	Arnd Bergmann <arnd@linaro.org>,
-	"olof@lixom.net" <olof@lixom.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	spear-devel <spear-devel@list.st.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Nicholson <mark@nicholnet.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush ANAND <pratyush.anand@st.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:42386 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757655AbaGWRw4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jul 2014 13:52:56 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>, Marek Vasut <marex@denx.de>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	kernel@pengutronix.de
+Subject: [PATCH 0/4] PCI: designware: init order/resource alloc fixes
+Date: Wed, 23 Jul 2014 19:52:37 +0200
+Message-Id: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14 July 2014 10:52, Mohit KUMAR DCG <Mohit.KUMAR@st.com> wrote:
-> - I think we should read regmap_*() and msleep() in continuation and so the comment above it
-> is valid for both the operations.
+This series fixes a couple of issues with the initialisation
+ordering and ressource allocation handling in the designware
+driver and moves its behavior much closer to other PCI host
+controller drivers like MVEBU and Tegra.
+For more detailed explanation see the commit messages.
 
-Probably not, its not obvious why a msleep() is required after regmap_*().
+This effectively enables the i.MX6 pcie driver to be
+probed from module initcall level, instead of relying on
+being probed early.
 
-> Otherwise we can add comment line for msleep() like:
-> /* Wait for SATA power domain on */
-> /* Wait for SATA reset de-assert completion */
->
-> Similarily in *_exit routine:
-> /* Wait for SATA power domain off */
-> /* Wait for SATA reset assert completion */
+Lucas Stach (4):
+  PCI: designware: start parsing bus-range
+  PCI: designware: get rid of pci_scan_root_bus
+  PCI: designware: remove pci_assign_unassigned_resources call
+  PCI: imx6: move to module_init
 
-These makes sense. Will add them.
+ .../devicetree/bindings/pci/designware-pcie.txt    |  3 +++
+ drivers/pci/host/pci-imx6.c                        |  2 +-
+ drivers/pci/host/pcie-designware.c                 | 29 ++++++++++++++--------
+ drivers/pci/host/pcie-designware.h                 |  1 +
+ 4 files changed, 24 insertions(+), 11 deletions(-)
+
+-- 
+2.0.1
+
