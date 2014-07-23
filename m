@@ -1,267 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:56480 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751022AbaGSUUC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Jul 2014 16:20:02 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Zhang Rui <rui.zhang@intel.com>,
-	Peter Zijlstra <peterz@infradead.org>
-Subject: [PATCH 1/2] ACPI / PM: Always enable wakeup GPEs when enabling device wakeup
-Date: Sat, 19 Jul 2014 22:37:34 +0200
-Message-ID: <1617640.X0G82q0eFI@vostro.rjw.lan>
-In-Reply-To: <1907495.agrCMfRsQN@vostro.rjw.lan>
-References: <1907495.agrCMfRsQN@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:44226 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932289AbaGWRk2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jul 2014 13:40:28 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@freescale.com>, kernel@pengutronix.de
+Subject: [PATCH 3/3] PCI: imx6: fix boot hang when link already enabled
+Date: Wed, 23 Jul 2014 19:40:17 +0200
+Message-Id: <1406137217-11294-4-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1406137217-11294-1-git-send-email-l.stach@pengutronix.de>
+References: <1406137217-11294-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+This fixes a boot hang observed when the bootloader
+already enabled the PCIe link for it's own use. The
+fundamental problem is that Freescale forgot to wire
+up the core reset, so software doesn't have a sane way
+to get the core into a defined state.
 
-Wakeup GPEs are currently only enabled when setting up devices for
-remote wakeup at run time.  During system-wide transitions they are
-enabled by ACPICA at the very last stage of suspend (before asking
-the BIOS to take over).  Of course, that only works for system
-sleep states supported by ACPI, so in particular it doesn't work
-for the "freeze" sleep state.
+According to the DW PCIe core reference manual configuration
+of the core may only happen when the LTSSM is disabled, so
+this is one of the first things we need to do. Apparently
+this isn't safe to do when the LTSSM is in any other state
+than "detect" as we observe an instant machine hang when
+trying to do so while the link is already up.
 
-For this reason, modify the ACPI core device PM code to enable wakeup
-GPEs for devices when setting them up for wakeup regardless of whether
-that is remote wakeup at runtime or system wakeup.  That allows the
-same device wakeup setup routine to be used for both runtime PM and
-system-wide PM and makes it possible to reduce code size quite a bit.
+As a workaround force LTSSM into detect state right before
+hitting the disable switch.
 
-That should make things like ACPI-based PCI Wake-on-LAN work with
-the "freeze" sleep state among other things.
-
-Tested-on: Toshiba Portege R500
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reported-by: Fabio Estevam <fabio.estevam@freescale.com>
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Acked-by: Tim Harvey <tharvey@gateworks.com>
 ---
- drivers/acpi/device_pm.c |   80 +++++++++++++++++++----------------------------
- include/acpi/acpi_bus.h  |   11 ------
- 2 files changed, 34 insertions(+), 57 deletions(-)
+v2: - messed up the first submission by omitting a chunk
+v3: - check if bootloader actually enabled link before
+      touching any core registers
+    - add a comment to explain things a bit
+    - add shutdown hook to clean state on reboot
 
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -600,26 +600,10 @@ int acpi_pm_device_sleep_state(struct de
- }
- EXPORT_SYMBOL(acpi_pm_device_sleep_state);
+Fabios delay workaround worked because of the following
+conditions:
+1. The driver gets probed and pulls the peripheral reset GPIO
+2. Peripheral is held in reset, so won't answer any link
+negotiation requests
+3. The LTSSM times out and falls back into detect state
+after 24ms (that's why a 30ms delay helps)
+4. After LTSSM entered detect state it's safe to hit the
+disable switch
+---
+ drivers/pci/host/pci-imx6.c | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index ceb1677884b2..8199257f7f28 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -49,6 +49,9 @@ struct imx6_pcie {
  
--#ifdef CONFIG_PM_RUNTIME
--/**
-- * acpi_wakeup_device - Wakeup notification handler for ACPI devices.
-- * @handle: ACPI handle of the device the notification is for.
-- * @event: Type of the signaled event.
-- * @context: Device corresponding to @handle.
-- */
--static void acpi_wakeup_device(acpi_handle handle, u32 event, void *context)
--{
--	struct device *dev = context;
--
--	if (event == ACPI_NOTIFY_DEVICE_WAKE && dev) {
--		pm_wakeup_event(dev, 0);
--		pm_runtime_resume(dev);
--	}
--}
--
- /**
-- * __acpi_device_run_wake - Enable/disable runtime remote wakeup for device.
-- * @adev: ACPI device to enable/disable the remote wakeup for.
-+ * acpi_device_wakeup - Enable/disable wakeup functionality for device.
-+ * @adev: ACPI device to enable/disable wakeup functionality for.
-+ * @target_state: State the system is transitioning into.
-  * @enable: Whether to enable or disable the wakeup functionality.
-  *
-  * Enable/disable the GPE associated with @adev so that it can generate
-@@ -629,7 +613,8 @@ static void acpi_wakeup_device(acpi_hand
-  * Callers must ensure that @adev is a valid ACPI device node before executing
-  * this function.
-  */
--int __acpi_device_run_wake(struct acpi_device *adev, bool enable)
-+static int acpi_device_wakeup(struct acpi_device *adev, u32 target_state,
-+			      bool enable)
+ /* PCIe Port Logic registers (memory-mapped) */
+ #define PL_OFFSET 0x700
++#define PCIE_PL_PFLR (PL_OFFSET + 0x08)
++#define PCIE_PL_PFLR_LINK_STATE_MASK		(0x3f << 16)
++#define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
+ #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
+ #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
+ #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
+@@ -214,6 +217,31 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
+ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
  {
- 	struct acpi_device_wakeup *wakeup = &adev->wakeup;
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
++	u32 val, gpr1, gpr12;
++
++	/*
++	 * If the bootloader already enabled the link we need some special
++	 * handling to get the core back into a state where it is safe to
++	 * touch it for configuration. As there is no dedicated reset signal
++	 * wired up for MX6QDL, we need to manually force LTSSM into "detect"
++	 * state before completely disabling LTSSM, which is a prerequisite
++	 * for core configuration.
++	 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
++	 * indication that the bootloader activated the link.
++	 */
++	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
++	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
++
++	if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
++	    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
++		val = readl(pp->dbi_base + PCIE_PL_PFLR);
++		val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
++		val |= PCIE_PL_PFLR_FORCE_LINK;
++		writel(val, pp->dbi_base + PCIE_PL_PFLR);
++
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
++	}
  
-@@ -637,7 +622,7 @@ int __acpi_device_run_wake(struct acpi_d
- 		acpi_status res;
- 		int error;
- 
--		error = acpi_enable_wakeup_device_power(adev, ACPI_STATE_S0);
-+		error = acpi_enable_wakeup_device_power(adev, target_state);
- 		if (error)
- 			return error;
- 
-@@ -653,6 +638,24 @@ int __acpi_device_run_wake(struct acpi_d
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
+@@ -589,6 +617,14 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
  	return 0;
  }
  
-+#ifdef CONFIG_PM_RUNTIME
-+/**
-+ * acpi_wakeup_device - Wakeup notification handler for ACPI devices.
-+ * @handle: ACPI handle of the device the notification is for.
-+ * @event: Type of the signaled event.
-+ * @context: Device corresponding to @handle.
-+ */
-+static void acpi_wakeup_device(acpi_handle handle, u32 event, void *context)
++static void imx6_pcie_shutdown(struct platform_device *pdev)
 +{
-+	struct device *dev = context;
++	struct imx6_pcie *imx6_pcie = platform_get_drvdata(pdev);
 +
-+	if (event == ACPI_NOTIFY_DEVICE_WAKE && dev) {
-+		pm_wakeup_event(dev, 0);
-+		if (acpi_target_system_state() == ACPI_STATE_S0)
-+			pm_runtime_resume(dev);
-+	}
++	/* bring down link, so bootloader gets clean state in case of reboot */
++	imx6_pcie_assert_core_reset(&imx6_pcie->pp);
 +}
 +
- /**
-  * acpi_pm_device_run_wake - Enable/disable remote wakeup for given device.
-  * @dev: Device to enable/disable the platform to wake up.
-@@ -673,7 +676,7 @@ int acpi_pm_device_run_wake(struct devic
- 		return -ENODEV;
- 	}
+ static const struct of_device_id imx6_pcie_of_match[] = {
+ 	{ .compatible = "fsl,imx6q-pcie", },
+ 	{},
+@@ -602,6 +638,7 @@ static struct platform_driver imx6_pcie_driver = {
+ 		.of_match_table = imx6_pcie_of_match,
+ 		.suppress_bind_attrs = true,
+ 	},
++	.shutdown = imx6_pcie_shutdown,
+ };
  
--	return __acpi_device_run_wake(adev, enable);
-+	return acpi_device_wakeup(adev, enable, ACPI_STATE_S0);
- }
- EXPORT_SYMBOL(acpi_pm_device_run_wake);
- #else
-@@ -683,20 +686,6 @@ static inline void acpi_wakeup_device(ac
- 
- #ifdef CONFIG_PM_SLEEP
- /**
-- * __acpi_device_sleep_wake - Enable or disable device to wake up the system.
-- * @dev: Device to enable/desible to wake up the system.
-- * @target_state: System state the device is supposed to wake up from.
-- * @enable: Whether to enable or disable @dev to wake up the system.
-- */
--int __acpi_device_sleep_wake(struct acpi_device *adev, u32 target_state,
--			     bool enable)
--{
--	return enable ?
--		acpi_enable_wakeup_device_power(adev, target_state) :
--		acpi_disable_wakeup_device_power(adev);
--}
--
--/**
-  * acpi_pm_device_sleep_wake - Enable or disable device to wake up the system.
-  * @dev: Device to enable/desible to wake up the system from sleep states.
-  * @enable: Whether to enable or disable @dev to wake up the system.
-@@ -716,8 +705,7 @@ int acpi_pm_device_sleep_wake(struct dev
- 		return -ENODEV;
- 	}
- 
--	error = __acpi_device_sleep_wake(adev, acpi_target_system_state(),
--					 enable);
-+	error = acpi_device_wakeup(adev, acpi_target_system_state(), enable);
- 	if (!error)
- 		dev_info(dev, "System wakeup %s by ACPI\n",
- 				enable ? "enabled" : "disabled");
-@@ -775,13 +763,13 @@ int acpi_dev_runtime_suspend(struct devi
- 
- 	remote_wakeup = dev_pm_qos_flags(dev, PM_QOS_FLAG_REMOTE_WAKEUP) >
- 				PM_QOS_FLAGS_NONE;
--	error = __acpi_device_run_wake(adev, remote_wakeup);
-+	error = acpi_device_wakeup(adev, ACPI_STATE_S0, remote_wakeup);
- 	if (remote_wakeup && error)
- 		return -EAGAIN;
- 
- 	error = acpi_dev_pm_low_power(dev, adev, ACPI_STATE_S0);
- 	if (error)
--		__acpi_device_run_wake(adev, false);
-+		acpi_device_wakeup(adev, ACPI_STATE_S0, false);
- 
- 	return error;
- }
-@@ -804,7 +792,7 @@ int acpi_dev_runtime_resume(struct devic
- 		return 0;
- 
- 	error = acpi_dev_pm_full_power(adev);
--	__acpi_device_run_wake(adev, false);
-+	acpi_device_wakeup(adev, ACPI_STATE_S0, false);
- 	return error;
- }
- EXPORT_SYMBOL_GPL(acpi_dev_runtime_resume);
-@@ -860,13 +848,13 @@ int acpi_dev_suspend_late(struct device
- 
- 	target_state = acpi_target_system_state();
- 	wakeup = device_may_wakeup(dev);
--	error = __acpi_device_sleep_wake(adev, target_state, wakeup);
-+	error = acpi_device_wakeup(adev, target_state, wakeup);
- 	if (wakeup && error)
- 		return error;
- 
- 	error = acpi_dev_pm_low_power(dev, adev, target_state);
- 	if (error)
--		__acpi_device_sleep_wake(adev, ACPI_STATE_UNKNOWN, false);
-+		acpi_device_wakeup(adev, ACPI_STATE_UNKNOWN, false);
- 
- 	return error;
- }
-@@ -889,7 +877,7 @@ int acpi_dev_resume_early(struct device
- 		return 0;
- 
- 	error = acpi_dev_pm_full_power(adev);
--	__acpi_device_sleep_wake(adev, ACPI_STATE_UNKNOWN, false);
-+	acpi_device_wakeup(adev, ACPI_STATE_UNKNOWN, false);
- 	return error;
- }
- EXPORT_SYMBOL_GPL(acpi_dev_resume_early);
-@@ -1052,7 +1040,7 @@ int acpi_dev_pm_attach(struct device *de
- 	dev->pm_domain = &acpi_general_pm_domain;
- 	if (power_on) {
- 		acpi_dev_pm_full_power(adev);
--		__acpi_device_run_wake(adev, false);
-+		acpi_device_wakeup(adev, ACPI_STATE_S0, false);
- 	}
- 	return 0;
- }
-@@ -1086,7 +1074,7 @@ void acpi_dev_pm_detach(struct device *d
- 			 */
- 			dev_pm_qos_hide_latency_limit(dev);
- 			dev_pm_qos_hide_flags(dev);
--			__acpi_device_run_wake(adev, false);
-+			acpi_device_wakeup(adev, ACPI_STATE_S0, false);
- 			acpi_dev_pm_low_power(dev, adev, ACPI_STATE_S0);
- 		}
- 	}
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -532,13 +532,8 @@ static inline int acpi_pm_device_sleep_s
- #endif
- 
- #ifdef CONFIG_PM_RUNTIME
--int __acpi_device_run_wake(struct acpi_device *, bool);
- int acpi_pm_device_run_wake(struct device *, bool);
- #else
--static inline int __acpi_device_run_wake(struct acpi_device *adev, bool en)
--{
--	return -ENODEV;
--}
- static inline int acpi_pm_device_run_wake(struct device *dev, bool enable)
- {
- 	return -ENODEV;
-@@ -546,14 +541,8 @@ static inline int acpi_pm_device_run_wak
- #endif
- 
- #ifdef CONFIG_PM_SLEEP
--int __acpi_device_sleep_wake(struct acpi_device *, u32, bool);
- int acpi_pm_device_sleep_wake(struct device *, bool);
- #else
--static inline int __acpi_device_sleep_wake(struct acpi_device *adev,
--					   u32 target_state, bool enable)
--{
--	return -ENODEV;
--}
- static inline int acpi_pm_device_sleep_wake(struct device *dev, bool enable)
- {
- 	return -ENODEV;
+ /* Freescale PCIe driver does not allow module unload */
+-- 
+2.0.1
 
