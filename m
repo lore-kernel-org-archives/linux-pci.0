@@ -1,227 +1,119 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <53BF4BF8.7060605@oracle.com>
-Date: Fri, 11 Jul 2014 10:29:12 +0800
-From: ethan zhao <ethan.zhao@oracle.com>
-MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: bhelgaas@google.com, konrad.wilk@oracle.com,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
-	gleb@kernel.org, pbonzini@redhat.com, jeffrey.t.kirsher@intel.com,
-	jesse.brandeburg@intel.com, bruce.w.allan@intel.com,
-	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
-	gregory.v.rose@intel.com, alexander.h.duyck@intel.com,
-	john.ronciak@intel.com, mitch.a.williams@intel.com,
-	linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-	linux.nics@intel.com, e1000-devel@lists.sourceforge.net,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ethan.kernel@gmail.com, vaughan.cao@oracle.com
-Subject: Re: [PATCH 1/4] PCI: introduce VFs reference counter and simplify
- pci_vfs_assigned() implementation
-References: <1405039642-23519-1-git-send-email-ethan.zhao@oracle.com>  <1405043293.4098.46.camel@ul30vt.home> <53BF479A.5030006@oracle.com> <1405045324.4098.50.camel@ul30vt.home>
-In-Reply-To: <1405045324.4098.50.camel@ul30vt.home>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:38365 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758700AbaGXGXC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 02:23:02 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 24 Jul 2014 16:22:55 +1000
+Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 7F5293578048
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 16:22:58 +1000 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s6O605OZ52822044
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 16:00:05 +1000
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s6O6MvCZ020335
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 16:22:58 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V7 16/17] powerpc/powernv: Expanding IOV BAR, with m64_per_iov supported
+Date: Thu, 24 Jul 2014 14:22:26 +0800
+Message-Id: <1406182947-11302-17-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+M64 aperture size is limited on PHB3. When the IOV BAR is too big, this will
+exceed the limitation and failed to be assigned.
 
-On 2014/7/11 10:22, Alex Williamson wrote:
-> On Fri, 2014-07-11 at 10:10 +0800, ethan zhao wrote:
->> Alex,
->>      Thanks for your reviewing, when I create the patch order, I thought
->> about the question you concerned for
->> quit a while, make every patch be independent to each other as possible
->> as I could, so we can do bisect when hit
->> problem.
->>
->>      I manage to take more time to figure out better patch order.
->>
->>      Thanks,
->>      Ethan
->>
->> On 2014/7/11 9:48, Alex Williamson wrote:
->>> Since there's no 0th patch, I guess I'll comment here.  This series is
->>> not bisectable, patch 1 breaks the existing implementation.  I'd
->>> suggest:
->>>
->>> patch 1 - fix i40e
->>               i40e only could be fixed with new interface, so it couldn't
->> be the first one.
-> It looks like i40e just has it's own copy of pci_vfs_assigned(), why
-> can't your current patch 4/4 be applied now?
-  Yes, i40e has its local copy of pci_vfs_assigned(),it could be 
-simplified .
-with new interface,in another word, its a user of new interface.
+This patch introduce a different expanding based on the IOV BAR size:
 
-  Thanks,
-  Ethan
->
->>> patch 2 - create assign/deassign that uses dev_flags
->>               This will be the first ?
->>> patch 3 - convert users to new interface
->>               Have to be the later step.
->>> patch 4 - convert interface to use atomic_t
->>               Could it be standalone step ?
->>
->>    Let me think about it.
->>
->>> IMHO, the assigned flag is a horrible hack and I don't know why drivers
->>> like xenback need to use it.  KVM needs to use it because it doesn't
->>> actually have a driver to bind to when a device is assigned, it's happy
->>> to assign devices without any driver.  Thanks,
->>>
->>> Alex
->>>
->>>
->>> On Fri, 2014-07-11 at 08:47 +0800, Ethan Zhao wrote:
->>>> Current implementation of helper function pci_vfs_assigned() is a little complex, to
->>>> get sum of VFs that assigned to VM, access low level configuration space register and
->>>> then loop in traversing device tree.
->>>>
->>>> This patch introduce an atomic reference counter for VFs that assigned to VM in struct
->>>> pci_sriov, and compose two more helper functions
->>>>
->>>> pci_sriov_assign_device(),
->>>> pci_sriov_deassign_device()
->>>>
->>>> to replace manipulation to device flag and the meanwhile increase and decease the counter.
->>>>
->>>> Passed building on 3.15.5
->>>>
->>>> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
->>>> ---
->>>>    drivers/pci/iov.c   |   65 ++++++++++++++++++++++++++++----------------------
->>>>    drivers/pci/pci.h   |    1 +
->>>>    include/linux/pci.h |    4 +++
->>>>    3 files changed, 41 insertions(+), 29 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->>>> index de7a747..72e267f 100644
->>>> --- a/drivers/pci/iov.c
->>>> +++ b/drivers/pci/iov.c
->>>> @@ -382,6 +382,7 @@ found:
->>>>    	iov->nres = nres;
->>>>    	iov->ctrl = ctrl;
->>>>    	iov->total_VFs = total;
->>>> +	atomic_set(&iov->VFs_assigned_cnt, 0);
->>>>    	iov->offset = offset;
->>>>    	iov->stride = stride;
->>>>    	iov->pgsz = pgsz;
->>>> @@ -603,45 +604,51 @@ int pci_num_vf(struct pci_dev *dev)
->>>>    EXPORT_SYMBOL_GPL(pci_num_vf);
->>>>    
->>>>    /**
->>>> - * pci_vfs_assigned - returns number of VFs are assigned to a guest
->>>> - * @dev: the PCI device
->>>> + * pci_vfs_assigned - returns number of VFs are assigned to VM
->>>> + * @dev: the physical PCI device that contains the VFs.
->>>>     *
->>>> - * Returns number of VFs belonging to this device that are assigned to a guest.
->>>> + * Returns number of VFs belonging to this device that are assigned to VM.
->>>>     * If device is not a physical function returns 0.
->>>>     */
->>>>    int pci_vfs_assigned(struct pci_dev *dev)
->>>>    {
->>>> -	struct pci_dev *vfdev;
->>>> -	unsigned int vfs_assigned = 0;
->>>> -	unsigned short dev_id;
->>>> -
->>>> -	/* only search if we are a PF */
->>>>    	if (!dev->is_physfn)
->>>>    		return 0;
->>>> +	if (dev->sriov)
->>>> +		return atomic_read(&dev->sriov->VFs_assigned_cnt);
->>>> +	return 0;
->>>> +}
->>>> +EXPORT_SYMBOL_GPL(pci_vfs_assigned);
->>>>    
->>>> -	/*
->>>> -	 * determine the device ID for the VFs, the vendor ID will be the
->>>> -	 * same as the PF so there is no need to check for that one
->>>> -	 */
->>>> -	pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_VF_DID, &dev_id);
->>>> -
->>>> -	/* loop through all the VFs to see if we own any that are assigned */
->>>> -	vfdev = pci_get_device(dev->vendor, dev_id, NULL);
->>>> -	while (vfdev) {
->>>> -		/*
->>>> -		 * It is considered assigned if it is a virtual function with
->>>> -		 * our dev as the physical function and the assigned bit is set
->>>> -		 */
->>>> -		if (vfdev->is_virtfn && (vfdev->physfn == dev) &&
->>>> -		    (vfdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED))
->>>> -			vfs_assigned++;
->>>> -
->>>> -		vfdev = pci_get_device(dev->vendor, dev_id, vfdev);
->>>> -	}
->>>> +/**
->>>> + * pci_sriov_assign_device - assign device to VM
->>>> + * @pdev: the device to be assigned.
->>>> + */
->>>> +void pci_sriov_assign_device(struct pci_dev *pdev)
->>>> +{
->>>> +	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
->>>> +	if (pdev->is_virtfn && !pdev->is_physfn)
->>>> +		if (pdev->physfn)
->>>> +			if (pdev->physfn->sriov)
->>>> +				atomic_inc(&pdev->physfn->sriov->
->>>> +						VFs_assigned_cnt);
->>>> +}
->>>> +EXPORT_SYMBOL_GPL(pci_sriov_assign_device);
->>>>    
->>>> -	return vfs_assigned;
->>>> +/**
->>>> + * pci_sriov_deassign_device - deasign device from VM
->>>> + * @pdev: the device to be deassigned.
->>>> + */
->>>> +void pci_sriov_deassign_device(struct pci_dev *pdev)
->>>> +{
->>>> +	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
->>>> +	if (pdev->is_virtfn && !pdev->is_physfn)
->>>> +		if (pdev->physfn)
->>>> +			if (pdev->physfn->sriov)
->>>> +				atomic_dec(&pdev->physfn->sriov->
->>>> +						VFs_assigned_cnt);
->>>>    }
->>>> -EXPORT_SYMBOL_GPL(pci_vfs_assigned);
->>>> +EXPORT_SYMBOL_GPL(pci_sriov_deassign_device);
->>>>    
->>>>    /**
->>>>     * pci_sriov_set_totalvfs -- reduce the TotalVFs available
->>>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->>>> index 6bd0822..d17bda2 100644
->>>> --- a/drivers/pci/pci.h
->>>> +++ b/drivers/pci/pci.h
->>>> @@ -235,6 +235,7 @@ struct pci_sriov {
->>>>    	u32 pgsz;		/* page size for BAR alignment */
->>>>    	u8 link;		/* Function Dependency Link */
->>>>    	u16 driver_max_VFs;	/* max num VFs driver supports */
->>>> +	atomic_t VFs_assigned_cnt; /* counter of VFs assigned to VM */
->>>>    	struct pci_dev *dev;	/* lowest numbered PF */
->>>>    	struct pci_dev *self;	/* this PF */
->>>>    	struct mutex lock;	/* lock for VF bus */
->>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>>> index aab57b4..5cf6833 100644
->>>> --- a/include/linux/pci.h
->>>> +++ b/include/linux/pci.h
->>>> @@ -1601,6 +1601,8 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
->>>>    void pci_disable_sriov(struct pci_dev *dev);
->>>>    int pci_num_vf(struct pci_dev *dev);
->>>>    int pci_vfs_assigned(struct pci_dev *dev);
->>>> +void pci_sriov_assign_device(struct pci_dev *dev);
->>>> +void pci_sriov_deassign_device(struct pci_dev *dev);
->>>>    int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
->>>>    int pci_sriov_get_totalvfs(struct pci_dev *dev);
->>>>    #else
->>>> @@ -1610,6 +1612,8 @@ static inline void pci_disable_sriov(struct pci_dev *dev) { }
->>>>    static inline int pci_num_vf(struct pci_dev *dev) { return 0; }
->>>>    static inline int pci_vfs_assigned(struct pci_dev *dev)
->>>>    { return 0; }
->>>> +static inline void pci_sriov_assign_device(struct pci_dev *dev) { }
->>>> +static inline void pci_sriov_deassign_device(struct pci_dev *dev) { }
->>>>    static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
->>>>    { return 0; }
->>>>    static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
->>>
->
->
+IOV BAR size is smaller than 64M, expand to total_pe.
+IOV BAR size is bigger than 64M, roundup power2.
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h     |    2 ++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   31 +++++++++++++++++++++++++++--
+ 2 files changed, 31 insertions(+), 2 deletions(-)
+
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 8cabe8b..9c2c826 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -177,6 +177,8 @@ struct pci_dn {
+ 	u16     vfs;			/* number of VFs IOV BAR expended */
+ 	u16     vf_pes;
+ 	int     offset;
++#define M64_PER_IOV 4
++	int     m64_per_iov;
+ #define IODA_INVALID_M64        (-1)
+ 	int     m64_wins[PCI_SRIOV_NUM_BARS];
+ #endif /* CONFIG_PCI_IOV */
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 5bf67fe..98fa01d 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1888,6 +1888,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 	int i;
+ 	resource_size_t size;
+ 	struct pci_dn *pdn;
++	int mul, total_vfs;
+ 
+ 	if (!pdev->is_physfn || pdev->is_added)
+ 		return;
+@@ -1898,6 +1899,32 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 	pdn = pci_get_pdn(pdev);
+ 	pdn->vfs = 0;
+ 
++	total_vfs = pci_sriov_get_totalvfs(pdev);
++	pdn->m64_per_iov = 1;
++	mul = phb->ioda.total_pe;
++
++	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
++		res = &pdev->resource[i];
++		if (!res->flags || res->parent)
++			continue;
++		if (!pnv_pci_is_mem_pref_64(res->flags)) {
++			dev_warn(&pdev->dev, " non M64 IOV BAR %pR on %s\n",
++					res, pci_name(pdev));
++			continue;
++		}
++
++		size = pnv_pci_sriov_resource_size(pdev, i);
++
++		/* bigger than 64M */
++		if (size > (1 << 26)) {
++			dev_info(&pdev->dev, "PowerNV: VF BAR[%d] size "
++					"is bigger than 64M, roundup power2\n", i);
++			pdn->m64_per_iov = M64_PER_IOV;
++			mul = __roundup_pow_of_two(total_vfs);
++			break;
++		}
++	}
++
+ 	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
+ 		res = &pdev->resource[i];
+ 		if (!res->flags || res->parent)
+@@ -1911,10 +1938,10 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 		dev_dbg(&pdev->dev, "PowerNV: Fixing VF BAR[%d] %pR to\n",
+ 				i, res);
+ 		size = pnv_pci_sriov_resource_size(pdev, i);
+-		res->end = res->start + size * phb->ioda.total_pe - 1;
++		res->end = res->start + size * mul - 1;
+ 		dev_dbg(&pdev->dev, "                       %pR\n", res);
+ 	}
+-	pdn->vfs = phb->ioda.total_pe;
++	pdn->vfs = mul;
+ }
+ 
+ static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
+-- 
+1.7.9.5
 
