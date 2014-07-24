@@ -1,196 +1,183 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <53D89CA1.7000501@huawei.com>
-Date: Wed, 30 Jul 2014 15:20:01 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: <linux-kernel@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>, <Paul.Mundt@huawei.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-pci@vger.kernel.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	<virtualization@lists.linux-foundation.org>,
-	"Xinwei Hu" <huxinwei@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Wuyun <wuyun.wu@huawei.com>
-Subject: Re: [RFC PATCH 00/11] Refactor MSI to support Non-PCI device
-References: <1406344128-27055-1-git-send-email-wangyijing@huawei.com> <1748052.OMBQJiOLYT@wuerfel> <53D85C2E.3060205@huawei.com> <53D89502.60506@linux.intel.com>
-In-Reply-To: <53D89502.60506@linux.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp09.in.ibm.com ([122.248.162.9]:58910 "EHLO
+	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758695AbaGXGWs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 02:22:48 -0400
+Received: from /spool/local
+	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 24 Jul 2014 11:52:45 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id D13E01258053
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:35 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s6O6OV1R16908366
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:54:31 +0530
+Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s6O6MdZv021652
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:40 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V7 04/17] PCI: Take additional IOV BAR alignment in sizing and assigning
+Date: Thu, 24 Jul 2014 14:22:14 +0800
+Message-Id: <1406182947-11302-5-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/7/30 14:47, Jiang Liu wrote:
-> 
-> 
-> On 2014/7/30 10:45, Yijing Wang wrote:
->> On 2014/7/29 22:08, Arnd Bergmann wrote:
->>> On Saturday 26 July 2014 11:08:37 Yijing Wang wrote:
->>>>         The series is a draft of generic MSI driver that supports PCI
->>>> and Non-PCI device which have MSI capability. If you're not interested
->>>> it, sorry for the noise.
->>>
->>> I've finally managed to take some time to look at the series. Overall,
->>> the concept looks good to me, and the patches look very well implemented.
->>>
->>> The part I'm not sure about is the interface we want to end up with
->>> at the end of the series. More on that below
->>
->> Hi Arnd,
->>    Thanks for your review and comments very much!
->> Please refer the inline comments.
->>
->>>
->>>> The series is based on Linux-3.16-rc1.
->>>>
->>>> MSI was introduced in PCI Spec 2.2. Currently, kernel MSI 
->>>> driver codes are bonding with PCI device. Because MSI has a lot
->>>> advantages in design. More and more non-PCI devices want to
->>>> use MSI as their default interrupt. The existing MSI device
->>>> include HPET. HPET driver provide its own MSI code to initialize
->>>> and process MSI interrupts. In the latest GIC v3 spec, legacy device
->>>> can deliver MSI by the help of a relay device named consolidator.
->>>> Consolidator can translate the legacy interrupts connected to it
->>>> to MSI/MSI-X. And new non-PCI device will be designed to 
->>>> support MSI in future. So make the MSI driver code be generic will 
->>>> help the non-PCI device use MSI more simply.
->>>>
->>>> The new data struct for generic MSI driver.
->>>> struct msi_irqs {
->>>>         u8 msi_enabled:1; /* Enable flag */
->>>>         u8 msix_enabled:1;
->>>>         struct list_head msi_list; /* MSI desc list */
->>>>         void *data;     /* help to find the MSI device */
->>>>         struct msi_ops *ops; /* MSI device specific hook */
->>>> };
->>>> struct msi_irqs is used to manage MSI related informations. Every device supports
->>>> MSI should contain this data struct and allocate it.
->>>
->>> I think you should have a stronger association with the 'struct
->>> device' here. Can you replace the 'void *data' with 'struct device *dev'?
->>
->> Actually, I used the struct device *dev in my first draft, finally, I replaced
->> it with void *data, because some MSI devices don't have a struct device *dev,
->> like the existing hpet device, dmar msi device, and OF device, like the ARM consolidator.
->>
->> Of course, we can make the MSI devices have their own struct device, and register to
->> device tree, eg, add a class device named MSI_DEV. But I'm not sure whether it is appropriate.
->>
->>>
->>> The other part I'm not completely sure about is how you want to
->>> have MSIs map into normal IRQ descriptors. At the moment, all
->>> MSI users are based on IRQ numbers, but this has known scalability problems.
->>
->> Hmmm, I still use the IRQ number to map the MSIs to IRQ description.
->> I'm sorry, I don't understand you meaning.
->> What are the scalability problems you mentioned ?
-> We have soft limitation of nr_irqs or hard limitation NR_IRQS,
-> we couldn't allocate as much irq number as we need in some cases,
-> such as to support MSI-x.
+At resource sizing/assigning stage, resources are divided into two lists,
+requested list and additional list, while the alignement of the additional
+IOV BAR is not taken into the sizeing and assigning procedure.
 
-Oh, yes, this is a potential issue. Gerry, thanks for you explanation. :)
+This is reasonable in the original implementation, since IOV BAR's alignment is
+mostly the size of a PF BAR alignemt. This means the alignment is already taken
+into consideration. While this rule may be violated on some platform.
 
-> 
->> For device drivers, they always process interrupt in two steps.
->> If irq is the legacy interrupt, drivers will first
->> use the irq_of_parse_and_map() or pci_enable_device() to parse and get the IRQ number.
->> Then drivers will call the request_irq() to register the interrupt handler.
->> If irq is MSIs, first call pci_enable_msi/x() to get the IRQ number and then call
->> request_irq() to register interrupt handler.
->>
->>> I wonder if we can do the interface in a way that
->>> hides the interrupt number from generic device drivers and just
->>> passes a 'struct irq_desc'. Note that there are long-term plans to
->>> get rid of IRQ numbers entirely, but those plans have existed for
->>> a long time already without anybody seriously addressing the device
->>> driver interfaces so far, so it might never really happen.
->>>
->>
->> Maybe this is a huge work, now hundreds drivers use the IRQ number, so maybe we can consider
->> this in a separate title.
->>
->>>> struct msi_ops {
->>>>         struct msi_desc *(*msi_setup_entry)(struct msi_irqs *msi, struct msi_desc *entry);
->>>>         int msix_setup_entries(struct msi_irqs *msi, struct msix_entry *entries);
->>>>         u32 (*msi_mask_irq)(struct msi_desc *desc, u32 mask, u32 flag);
->>>>         u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
->>>>         void (*msi_read_message)(struct msi_desc *desc, struct msi_msg *msg);
->>>>         void (*msi_write_message)(struct msi_desc *desc, struct msi_msg *msg);
->>>>         void (*msi_set_intx)(struct msi_irqs *msi, int enable);
->>>> };
->>>> struct msi_ops provides several hook functions, generic MSI driver will call
->>>> the hook functions to access device specific registers. PCI devices will share
->>>> the same msi_ops, because they have the same way to access MSI hardware registers.
->>>>
->>>> Generic MSI layer export msi_capability_init() and msix_capability_init() functions
->>>> to drivers. msi/x_capability_init() will initialize MSI capability data struct msi_desc
->>>> and alloc the irq, then write the msi address/data value to hardware registers.
->>>>
->>>> This series only did compile test, we will test it in x86 and arm platform later.
->>>
->>> For the generic drivers, I don't see much point in differentiating between
->>> MSI and MSI-X, as I believe the difference is something internal to the PCI
->>> implementation.
->>
->> Yes, we can integrate them, and use a generic ops, add a type in hook function to
->> differentiate them.
->>
->>>
->>> With the other operations, I think they should all take a 'struct device *'
->>> as the first argument for convenience and consistency. I don't think you actually
->>> need msi_read_message(), and we could avoid msi_write_message() by doing it
->>> the other way round.
->>>
->>
->> There only two functions use the read_msi_msg(), because every msi_desc has
->> a struct msi_msg, and it caches the msi address and data. I will consider to
->> retrieve the msg from cached msi_msg, then we can avoid the msi_read_message().
->> But msi_write_message() maybe necessary, some xxx_set_affinity() functions and
->> restore functions need the msi_write_message() to rewrite the address and data.
->>
->>> What I'd envision as the API from the device driver perspective is something
->>> as simple like this:
->>>
->>> struct msi_desc *msi_request(struct msi_chip *chip, irq_handler_t handler,
->>> 			unsigned long flags, const char *name, struct device *dev);
->>>
->>> which would get an msi descriptor that is valid for this device (dev)
->>> connected to a particular msi_chip, and associate a handler function
->>> with it. The device driver can call that function and retrieve the
->>> address/message pair from the msi_desc in order to store it in its own
->>> device specific registers. The request_irq() can be handled internally
->>> to msi_request().
->>
->> This is a huge change for device drivers, and some device drivers don't know which msi_chip
->> their MSI irq deliver to. I'm reworking the msi_chip, and try to use msi_chip to eliminate
->> all arch_msi_xxx() under every arch in kernel. And the important point is how to create the
->> binding for the MSI device to the target msi_chip.
->>
->> For PCI device, some arm platform already bound the msi_chip to the pci hostbridge, then all
->> pci devices under the pci hostbridge deliver their MSI irqs to the target msi_chip.
->> And other platform create the binding in DTS file, then the MSI device can find their msi_chip
->> by device_node.
->> I don't know whether there are other situations, we should provide a generic interface that
->> every MSI device under every platform can use it to find its msi_chip exactly.
->>
->>
->> Thanks!
->> Yijing.
->>
->>>
->>> .
->>>
->>
->>
-> 
-> .
-> 
+This patch take the additional IOV BAR alignment in sizing and assigning stage
+explicitly.
 
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/setup-bus.c |   68 +++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 60 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index a5a63ec..d83681f 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -120,6 +120,28 @@ static resource_size_t get_res_add_size(struct list_head *head,
+ 	return 0;
+ }
+ 
++static resource_size_t get_res_add_align(struct list_head *head,
++		struct resource *res)
++{
++	struct pci_dev_resource *dev_res;
++
++	list_for_each_entry(dev_res, head, list) {
++		if (dev_res->res == res) {
++			int idx = res - &dev_res->dev->resource[0];
++
++			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
++				   "res[%d]=%pR get_res_add_align min_align %llx\n",
++				   idx, dev_res->res,
++				   (unsigned long long)dev_res->min_align);
++
++			return dev_res->min_align;
++		}
++	}
++
++	return 0;
++}
++
++
+ /* Sort resources by alignment */
+ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ {
+@@ -368,8 +390,9 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+-	struct pci_dev_resource *dev_res, *tmp_res;
++	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
+ 	unsigned long fail_type;
++	resource_size_t add_align, align;
+ 
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -384,10 +407,31 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+-	list_for_each_entry(dev_res, head, list)
++	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
+ 		dev_res->res->end += get_res_add_size(realloc_head,
+ 							dev_res->res);
+ 
++		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
++			continue;
++
++		add_align = get_res_add_align(realloc_head, dev_res->res);
++
++		if (add_align > dev_res->res->start) {
++			dev_res->res->start = add_align;
++			dev_res->res->end = add_align +
++				            resource_size(dev_res->res);
++
++			list_for_each_entry(dev_res2, head, list) {
++				align = pci_resource_alignment(dev_res2->dev,
++							       dev_res2->res);
++				if (add_align > align)
++					list_move_tail(&dev_res->list,
++						       &dev_res2->list);
++			}
++               }
++
++	}
++
+ 	/* Try updated head list with add_size added */
+ 	assign_requested_resources_sorted(head, &local_fail_head);
+ 
+@@ -930,6 +974,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	struct resource *b_res = find_free_bus_resource(bus,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	resource_size_t children_add_size = 0;
++	resource_size_t children_add_align = 0;
++	resource_size_t add_align = 0;
+ 
+ 	if (!b_res)
+ 		return -ENOSPC;
+@@ -954,6 +1000,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			/* put SRIOV requested res to the optional list */
+ 			if (realloc_head && i >= PCI_IOV_RESOURCES &&
+ 					i <= PCI_IOV_RESOURCE_END) {
++				add_align = max(pci_resource_alignment(dev, r), add_align);
+ 				r->end = r->start - 1;
+ 				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
+ 				children_add_size += r_size;
+@@ -984,8 +1031,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			if (order > max_order)
+ 				max_order = order;
+ 
+-			if (realloc_head)
++			if (realloc_head) {
+ 				children_add_size += get_res_add_size(realloc_head, r);
++				children_add_align = get_res_add_align(realloc_head, r);
++				add_align = max(add_align, children_add_align);
++			}
+ 		}
+ 	}
+ 
+@@ -996,7 +1046,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		add_size = children_add_size;
+ 	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+ 		calculate_memsize(size, min_size, add_size,
+-				resource_size(b_res), min_align);
++				resource_size(b_res), max(min_align, add_align));
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+ 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
+@@ -1008,10 +1058,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1-size0, min_align);
+-		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
+-			   b_res, &bus->busn_res,
+-			   (unsigned long long)size1-size0);
++		add_to_list(realloc_head, bus->self, b_res, size1-size0,
++				max(min_align, add_align));
++		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
++				 "%pR to %pR add_size %llx add_align %llx\n", b_res,
++				 &bus->busn_res, (unsigned long long)size1-size0,
++				 max(min_align, add_align));
+ 	}
+ 	return 0;
+ }
 -- 
-Thanks!
-Yijing
+1.7.9.5
 
