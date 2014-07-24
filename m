@@ -1,82 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:52952 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751122AbaGQDDE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Jul 2014 23:03:04 -0400
-Message-ID: <53C73CC6.20803@linux.intel.com>
-Date: Thu, 17 Jul 2014 11:02:30 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: Need advices about PCI IRQ reference count tracking
-References: <53C5F2C2.20707@linux.intel.com>	<CAErSpo6D3q0NoJhjF2kTZBVaQBb5Gz-bY-P_eR2EYzFvQ6yhPw@mail.gmail.com> <CAE9FiQWsjXU0YBsgnSvNXzkPKDPph4RgYQcvmGGoL27TE7YrhA@mail.gmail.com>
-In-Reply-To: <CAE9FiQWsjXU0YBsgnSvNXzkPKDPph4RgYQcvmGGoL27TE7YrhA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from e28smtp01.in.ibm.com ([122.248.162.1]:32867 "EHLO
+	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758699AbaGXGXB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 02:23:01 -0400
+Received: from /spool/local
+	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 24 Jul 2014 11:52:58 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id D51EB394005C
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:54 +0530 (IST)
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s6O6NElo1048924
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:53:14 +0530
+Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s6O6MrXW007977
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:53 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V7 13/17] powerpc/powernv: Implement pcibios_sriov_resource_alignment on powernv
+Date: Thu, 24 Jul 2014 14:22:23 +0800
+Message-Id: <1406182947-11302-14-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This patch implements the pcibios_sriov_resource_alignment() on powernv
+platform.
 
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/machdep.h        |    3 +++
+ arch/powerpc/kernel/pci-common.c          |   14 ++++++++++++++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   18 ++++++++++++++++++
+ 3 files changed, 35 insertions(+)
 
-On 2014/7/17 2:37, Yinghai Lu wrote:
-> On Wed, Jul 16, 2014 at 11:04 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> [+cc Yinghai]
->>
->> On Tue, Jul 15, 2014 at 9:34 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->>> Hi Bjorn,
->>>         When enabling ACPI based IOAPIC hotplug, we encountered an
->>> issue with PCI IRQ reference count tracking and need your advices.
->>>         In order to hot-remove an IOAPIC, we need to track and keep
->>> balance of IOAPIC pin usage count. But acpi_pci_irq_enable() may
->>> be called twice for a PCI device,
->>> 1) pci_acpi_init() if pci_routeirq is true
->>> 2) pci_enable_device()
->>>
->>> So in function acpi_pci_irq_enable(), we need a way to track whether
->>> an IOAPIC IRQ has been assigned to the PCI device. Previously we check
->>> "if (dev->irq > 0)" for that, but that's wrong because dev->irq may
->>> be set to non-zero in pci_read_irq() if BIOS has already assigned
->>> a legacy IRQ for the device. So is it OK to add a flag into pci_dev
->>> to track this information?
-> 
-> Why do you need to track it?
-> 
-> When do you hot-remove ioapic with pci root bus, all the drivers for
-> devices on that pci root bus should be stopped at first, so no one
-> will use the ioapic before ioapic is being removed.
-Hi Yinghai,
-	By tracking IOAPIC pin usage count, we could release the
-assigned IRQ number when there are no device uses an IOAPIC pin anymore.
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index fabb8016..5c023be 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -254,6 +254,9 @@ struct machdep_calls {
+ 
+ #ifdef CONFIG_PCI_IOV
+ 	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
++	resource_size_t (*pcibios_sriov_resource_alignment)(struct pci_dev *,
++			                                    int resno,
++							    resource_size_t align);
+ #endif /* CONFIG_PCI_IOV */
+ 
+ 	/* Called to shutdown machine specific hardware not already controlled
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index c2b7930..942a3e5 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -140,6 +140,20 @@ void pcibios_reset_secondary_bus(struct pci_dev *dev)
+ 	ssleep(1);
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++resource_size_t pcibios_sriov_resource_alignment(struct pci_dev *pdev,
++						 int resno,
++						 resource_size_t align)
++{
++	if (ppc_md.pcibios_sriov_resource_alignment)
++		return ppc_md.pcibios_sriov_resource_alignment(pdev,
++							       resno,
++							       align);
++
++	return 0;
++}
++#endif /* CONFIG_PCI_IOV */
++
+ static resource_size_t pcibios_io_size(const struct pci_controller *hose)
+ {
+ #ifdef CONFIG_PPC64
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 6fd2377..3aeb87b 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1767,6 +1767,23 @@ resource_size_t pnv_pci_sriov_resource_size(struct pci_dev *pdev, int resno)
+ 
+ 	return size;
+ }
++
++static resource_size_t pnv_pcibios_sriov_resource_alignment(struct pci_dev *pdev,
++							    int resno,
++							    resource_size_t align)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++	resource_size_t iov_align;
++
++	iov_align = resource_size(&pdev->resource[resno]);
++	if (iov_align)
++		return iov_align;
++
++	if (pdn->vfs)
++		return pdn->vfs * align;
++
++	return align;
++}
+ #endif /* CONFIG_PCI_IOV */
+ 
+ /* Prevent enabling devices for which we couldn't properly
+@@ -1976,6 +1993,7 @@ void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
+ #ifdef CONFIG_PCI_IOV
+ 	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
++	ppc_md.pcibios_sriov_resource_alignment = pnv_pcibios_sriov_resource_alignment;
+ #endif /* CONFIG_PCI_IOV */
+ 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+ 
+-- 
+1.7.9.5
 
-> 
->>>
->>> Another possible workaround is to disable IOAPIC hotplug when
->>> pci_routeirq is set, but that sounds not the best solution.
-> 
-> That is not good.
-> 
->>
->> My first choice would be to get rid of pci_routeirq.  It was added in
->> 2004 as a workaround for broken drivers.  I don't know any reason why
->> we need the "pci=routeirq" option any more.
-> 
-> I always use "pci=routeirq apic=debug" to check the print out
->  if BIOS routing irq correctly.
-So seems the solution is to add a flag to struct pci_dev, right?
-Regards!
-Gerry
-
-> 
->>
->> However, 629e15d245f4 ("x86, irq: update_mptable needs pci_routeirq")
->> added another use of pci_routeirq.  This is only used when booting
->> with the undocumented "update_mptable" option, and I can't tell
->> whether it's useful or not.
-> 
-> Yes, we could drop update_mptable now. Will produce one patch to do that.
-> 
-> Thanks
-> 
-> Yinghai
-> 
