@@ -1,136 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e06smtp12.uk.ibm.com ([195.75.94.108]:42018 "EHLO
-	e06smtp12.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751720AbaGDO2l (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 10:28:41 -0400
-Received: from /spool/local
-	by e06smtp12.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <sebott@linux.vnet.ibm.com>;
-	Fri, 4 Jul 2014 15:28:39 +0100
-Date: Fri, 4 Jul 2014 16:28:32 +0200 (CEST)
-From: Sebastian Ott <sebott@linux.vnet.ibm.com>
-To: Yijing Wang <wangyijing@huawei.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gerald Schaefer <gerald.schaefer@de.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	linux-s390@vger.kernel.org, linux-pci@vger.kernel.org,
-	Wuyun <wuyun.wu@huawei.com>, Xinwei Hu <huxinwei@huawei.com>
-Subject: Re: [PATCH 2/5] s390/MSI: Use standard mask and unmask funtions
-In-Reply-To: <1404461764-6520-1-git-send-email-wangyijing@huawei.com>
-Message-ID: <alpine.LFD.2.11.1407041623560.1624@denkbrett>
-References: <1404461764-6520-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-by2lp0243.outbound.protection.outlook.com ([207.46.163.243]:17102
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750787AbaGXIyg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 Jul 2014 04:54:36 -0400
+Date: Thu, 24 Jul 2014 16:54:10 +0800
+From: Shawn Guo <shawn.guo@freescale.com>
+To: Jingoo Han <jg1.han@samsung.com>
+CC: 'Lucas Stach' <l.stach@pengutronix.de>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, 'Richard Zhu' <r65037@freescale.com>,
+	<kernel@pengutronix.de>
+Subject: Re: [PATCH 1/3] MAINTAINERS: add myself as co-maintainer for i.MX6
+ PCI driver
+Message-ID: <20140724085410.GC8821@dragon>
+References: <1406137217-11294-1-git-send-email-l.stach@pengutronix.de>
+ <1406137217-11294-2-git-send-email-l.stach@pengutronix.de>
+ <20140724084030.GA8821@dragon>
+ <002c01cfa71c$8bd24590$a376d0b0$%han@samsung.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <002c01cfa71c$8bd24590$a376d0b0$%han@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 4 Jul 2014, Yijing Wang wrote:
-> MSI irqchip in s390 has its own mask and unmask MSI irq
-> functions, zpci_enable_irq() and zpci_disable_irq().
-> They mask and unmask MSI irq in standard ways, no arch
-> special. MSI driver provides two global standard functions
-> mask_msi_irq() and unmask_msi_irq(). Local zpci_enable_irq()
-> and zpci_disable_irq() are almost the same as the standard
-> two. the difference is local mask/unmask functions
-> read the mask status before mask and unmask everytime.
-> Then change the value and rewrite to hardware. In standard
-> functions, save the mask status after mask and unmask msi
-> irq, and use the cached status to change the mask status.
-> When we mask or unmask a MSI irq, we always cache its
-> mask status except we know need not to cache it, like in
-> pci_msi_shutdown. So use the standard functions to replace
-> the local is safe.
-
-Thanks, for doing that!
-At first glance the last hunk looks funny.
-
+On Thu, Jul 24, 2014 at 05:52:06PM +0900, Jingoo Han wrote:
+> On Thursday, July 24, 2014 5:41 PM, Shawn Guo wrote:
+> > On Wed, Jul 23, 2014 at 07:40:15PM +0200, Lucas Stach wrote:
+> > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > > ---
+> > > I've talked privately to Richard about this and he's
+> > > in favor, but still should give an public ACK.
+> > > ---
+> > >  MAINTAINERS | 1 +
+> > >  1 file changed, 1 insertion(+)
+> > >
+> > > diff --git a/MAINTAINERS b/MAINTAINERS
+> > > index 134483f206e4..54c23c4fcbb0 100644
+> > > --- a/MAINTAINERS
+> > > +++ b/MAINTAINERS
+> > > @@ -6775,6 +6775,7 @@ F:	arch/x86/kernel/quirks.c
+> > >  PCI DRIVER FOR IMX6
+> > >  M:	Richard Zhu <r65037@freescale.com>
+> > >  M:	Shawn Guo <shawn.guo@linaro.org>
+> > > +M:	Lucas Stach <l.stach@pengutronix.de>
+> > 
+> > Acked-by: Shawn Guo <shawn.guo@freescale.com>
+> > 
+> > I would step down from the position, so I prefer you replace myself.
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  arch/s390/pci/pci.c |   49 ++++++-------------------------------------------
->  1 files changed, 6 insertions(+), 43 deletions(-)
+> Hi Shawn,
 > 
-> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-> index 9ddc51e..01fa289 100644
-> --- a/arch/s390/pci/pci.c
-> +++ b/arch/s390/pci/pci.c
-> @@ -48,13 +48,10 @@
->  static LIST_HEAD(zpci_list);
->  static DEFINE_SPINLOCK(zpci_list_lock);
+> OK, I also agree with your suggestion.
+> Then, do you mean the following? It looks good.
 > 
-> -static void zpci_enable_irq(struct irq_data *data);
-> -static void zpci_disable_irq(struct irq_data *data);
-> -
->  static struct irq_chip zpci_irq_chip = {
->  	.name = "zPCI",
-> -	.irq_unmask = zpci_enable_irq,
-> -	.irq_mask = zpci_disable_irq,
-> +	.irq_unmask = mask_msi_irq,
-> +	.irq_mask = unmask_msi_irq,
->  };
-> 
->  static DECLARE_BITMAP(zpci_domain, ZPCI_NR_DEVICES);
-> @@ -244,43 +241,6 @@ static int zpci_cfg_store(struct zpci_dev *zdev, int offset, u32 val, u8 len)
->  	return rc;
->  }
-> 
-> -static int zpci_msi_set_mask_bits(struct msi_desc *msi, u32 mask, u32 flag)
-> -{
-> -	int offset, pos;
-> -	u32 mask_bits;
-> -
-> -	if (msi->msi_attrib.is_msix) {
-> -		offset = msi->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
-> -			PCI_MSIX_ENTRY_VECTOR_CTRL;
-> -		msi->masked = readl(msi->mask_base + offset);
-> -		writel(flag, msi->mask_base + offset);
-> -	} else if (msi->msi_attrib.maskbit) {
-> -		pos = (long) msi->mask_base;
-> -		pci_read_config_dword(msi->dev, pos, &mask_bits);
-> -		mask_bits &= ~(mask);
-> -		mask_bits |= flag & mask;
-> -		pci_write_config_dword(msi->dev, pos, mask_bits);
-> -	} else
-> -		return 0;
-> -
-> -	msi->msi_attrib.maskbit = !!flag;
-> -	return 1;
-> -}
-> -
-> -static void zpci_enable_irq(struct irq_data *data)
-> -{
-> -	struct msi_desc *msi = irq_get_msi_desc(data->irq);
-> -
-> -	zpci_msi_set_mask_bits(msi, 1, 0);
-> -}
-> -
-> -static void zpci_disable_irq(struct irq_data *data)
-> -{
-> -	struct msi_desc *msi = irq_get_msi_desc(data->irq);
-> -
-> -	zpci_msi_set_mask_bits(msi, 1, 1);
-> -}
-> -
->  void pcibios_fixup_bus(struct pci_bus *bus)
->  {
->  }
-> @@ -487,7 +447,10 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
-> 
->  	/* Release MSI interrupts */
->  	list_for_each_entry(msi, &pdev->msi_list, list) {
-> -		zpci_msi_set_mask_bits(msi, 1, 1);
-> +		if (msi->msi_attrib.is_msix)
-> +			default_msi_mask_irq(msi, 1, 1);
-> +		else
-> +			default_msix_mask_irq(msi, 1);
+>  PCI DRIVER FOR IMX6
+>  M:	Richard Zhu <r65037@freescale.com>
+> +M:	Lucas Stach <l.stach@pengutronix.de>
+>  M:	Shawn Guo <shawn.guo@linaro.org>
 
-This one looks inverted.
+Hi Jingoo,
 
->  		irq_set_msi_desc(msi->irq, NULL);
->  		irq_free_desc(msi->irq);
->  		msi->msg.address_lo = 0;
+I meant the following :)
 
-Regards,
-Sebastian
+  PCI DRIVER FOR IMX6
+  M:	Richard Zhu <r65037@freescale.com>
+ -M:	Shawn Guo <shawn.guo@linaro.org>
+ +M:	Lucas Stach <l.stach@pengutronix.de>
 
+Shawn
