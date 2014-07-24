@@ -1,65 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:52266 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750844AbaGNFbr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jul 2014 01:31:47 -0400
-Received: by mail-ob0-f174.google.com with SMTP id vb8so3388919obc.5
-        for <linux-pci@vger.kernel.org>; Sun, 13 Jul 2014 22:31:47 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:61276 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752544AbaGXLKO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 Jul 2014 07:10:14 -0400
+Message-ID: <53D0E984.3040104@redhat.com>
+Date: Thu, 24 Jul 2014 13:09:56 +0200
+From: Paolo Bonzini <pbonzini@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <53BE926A.2070005@ti.com>
-References: <cover.1404976058.git.viresh.kumar@linaro.org>
-	<d1ef8db8704d09ba4f276c954dc22b555998f957.1404976058.git.viresh.kumar@linaro.org>
-	<53BE926A.2070005@ti.com>
-Date: Mon, 14 Jul 2014 11:01:47 +0530
-Message-ID: <CAKohpo=aoWgQseciOiZcYqupKZyz5eMFNA4A+VRSHoCbQuqeGw@mail.gmail.com>
-Subject: Re: [PATCH V9 2/7] phy: Add drivers for PCIe and SATA phy on SPEAr13xx
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Arnd Bergmann <arnd@linaro.org>, "olof@lixom.net" <olof@lixom.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	spear-devel <spear-devel@list.st.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Nicholson <mark@nicholnet.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush Anand <pratyush.anand@st.com>
-Content-Type: text/plain; charset=UTF-8
+To: Ethan Zhao <ethan.zhao@oracle.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	gleb@kernel.org, kvm@vger.kernel.org, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	xen-devel@lists.xenproject.org
+CC: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
+	ethan.kernel@gmail.com
+Subject: Re: [PATCH 2/4] KVM: use pci device flag operation helper functions
+References: <1406045944-1587-1-git-send-email-ethan.zhao@oracle.com> <1406045944-1587-3-git-send-email-ethan.zhao@oracle.com>
+In-Reply-To: <1406045944-1587-3-git-send-email-ethan.zhao@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10 July 2014 18:47, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+Il 22/07/2014 18:19, Ethan Zhao ha scritto:
+> Use helper function instead of direct operation to pci device
+> flag when set device to assigned or deassigned.
+> 
+> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+> ---
+>  virt/kvm/assigned-dev.c |    2 +-
+>  virt/kvm/iommu.c        |    4 ++--
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/virt/kvm/assigned-dev.c b/virt/kvm/assigned-dev.c
+> index bf06577..d122bda 100644
+> --- a/virt/kvm/assigned-dev.c
+> +++ b/virt/kvm/assigned-dev.c
+> @@ -302,7 +302,7 @@ static void kvm_free_assigned_device(struct kvm *kvm,
+>  	else
+>  		pci_restore_state(assigned_dev->dev);
+>  
+> -	assigned_dev->dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+> +	pci_set_dev_deassigned(assigned_dev->dev);
+>  
+>  	pci_release_regions(assigned_dev->dev);
+>  	pci_disable_device(assigned_dev->dev);
+> diff --git a/virt/kvm/iommu.c b/virt/kvm/iommu.c
+> index 0df7d4b..8cfe021 100644
+> --- a/virt/kvm/iommu.c
+> +++ b/virt/kvm/iommu.c
+> @@ -194,7 +194,7 @@ int kvm_assign_device(struct kvm *kvm,
+>  			goto out_unmap;
+>  	}
+>  
+> -	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+> +	pci_set_dev_assigned(pdev);
+>  
+>  	dev_info(&pdev->dev, "kvm assign device\n");
+>  
+> @@ -220,7 +220,7 @@ int kvm_deassign_device(struct kvm *kvm,
+>  
+>  	iommu_detach_device(domain, &pdev->dev);
+>  
+> -	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+> +	pci_set_dev_deassigned(pdev);
+>  
+>  	dev_info(&pdev->dev, "kvm deassign device\n");
+>  
+> 
 
->> diff --git a/Documentation/devicetree/bindings/phy/st-spear1310-miphy.txt b/Documentation/devicetree/bindings/phy/st-spear1310-miphy.txt
->> new file mode 100644
->> index 0000000..b9b281a
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/phy/st-spear1310-miphy.txt
->
-> We generally create a single document for a SoC vendor. So just use st-phy.txt.
-
-st-phy may not be appropriate as this is specifically for SPEAr. New
-binding doc looks like this:
-
-diff --git a/Documentation/devicetree/bindings/phy/st-spear-miphy.txt
-b/Documentation/devicetree/bindings/phy/st-spear-miphy.txt
-new file mode 100644
-index 0000000..2a6bfdc
---- /dev/null
-+++ b/Documentation/devicetree/bindings/phy/st-spear-miphy.txt
-@@ -0,0 +1,15 @@
-+ST SPEAr miphy DT details
-+=========================
-+
-+ST Microelectronics SPEAr miphy is a phy controller supporting PCIe and SATA.
-+
-+Required properties:
-+- compatible : should be "st,spear1310-miphy" or "st,spear1340-miphy"
-+- reg : offset and length of the PHY register set.
-+- misc: phandle for the syscon node to access misc registers
-+- #phy-cells : from the generic PHY bindings, must be 1.
-+       - cell[1]: 0 if phy used for SATA, 1 for PCIe.
-+
-+Optional properties:
-+- phy-id: Instance id of the phy. Only required when there are multiple phys
-+  present on a implementation.
+Acked-by: Paolo Bonzini <pbonzini@redhat.com>
