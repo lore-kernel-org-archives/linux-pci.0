@@ -1,87 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og106.obsmtp.com ([64.18.0.182]:54350 "HELO
-	exprod5og106.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751638AbaGBUnm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 16:43:42 -0400
-Received: by mail-vc0-f176.google.com with SMTP id ik5so10560899vcb.7
-        for <linux-pci@vger.kernel.org>; Wed, 02 Jul 2014 13:43:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <7101568.8DVJFku5jp@wuerfel>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
-	<1404240214-9804-3-git-send-email-Liviu.Dudau@arm.com>
-	<CACoXjck+aU33=kSy=KCGABNXNR7tj2KndAiBqEDK7wQ_Qei80Q@mail.gmail.com>
-	<7101568.8DVJFku5jp@wuerfel>
-Date: Wed, 2 Jul 2014 13:43:41 -0700
-Message-ID: <CACoXjcn5wdOwQx6PSfhTyuo-FQqBL62o-MNj3i6EfENRnUNt6g@mail.gmail.com>
-Subject: Re: [PATCH v8 2/9] pci: Export find_pci_host_bridge() function.
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	patches <patches@apm.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from e28smtp01.in.ibm.com ([122.248.162.1]:60940 "EHLO
+	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758701AbaGXGWv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 02:22:51 -0400
+Received: from /spool/local
+	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 24 Jul 2014 11:52:49 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 4F8391258061
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:39 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s6O6OZpZ18874414
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:54:35 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s6O6MhHJ010455
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:44 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V7 06/17] powerpc/pci: Define pcibios_disable_device() on powerpc
+Date: Thu, 24 Jul 2014 14:22:16 +0800
+Message-Id: <1406182947-11302-7-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 2, 2014 at 12:12 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Wednesday 02 July 2014 11:06:38 Tanmay Inamdar wrote:
->> On Tue, Jul 1, 2014 at 11:43 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
->> > This is a useful function and we should make it visible outside the
->> > generic PCI code. Export it as a GPL symbol.
->> >
->> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
->> > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
->> > ---
->> >  drivers/pci/host-bridge.c | 3 ++-
->> >  1 file changed, 2 insertions(+), 1 deletion(-)
->> >
->> > diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
->> > index 0e5f3c9..36c669e 100644
->> > --- a/drivers/pci/host-bridge.c
->> > +++ b/drivers/pci/host-bridge.c
->> > @@ -16,12 +16,13 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
->> >         return bus;
->> >  }
->> >
->> > -static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
->> > +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
->> >  {
->> >         struct pci_bus *root_bus = find_pci_root_bus(bus);
->> >
->> >         return to_pci_host_bridge(root_bus->bridge);
->> >  }
->> > +EXPORT_SYMBOL_GPL(find_pci_host_bridge);
->>
->> Is there any specific reason behind making this symbol GPL? I think
->> the other functions in this file are just EXPORT_SYMBOL. Ultimately
->> companies which have non gpl Linux modules (nvidia) will face issue
->> using this API.
->>
->> The same applies to 'of_create_pci_host_bridge'.
->
-> I think EXPORT_SYMBOL_GPL() is better here. The new symbols are unlikely
-> to be used by a peripheral device driver, and PCI host controllers are
-> already restricted by EXPORT_SYMBOL_GPL.
->
+When driver remove a pci_dev, it will call pcibios_disable_device() which is
+platform dependent. This gives flexibility to platforms.
 
-You are right as long as the functions are not used directly. But what
-if GPL functions are called indirectly.  For example, 'pci_domain_nr'
-implementation in Liviu's V7 series calls 'find_pci_host_bridge'.
+This patch defines this weak function on powerpc architecture.
 
-> nvidia will certainly not do a PCI host controller driver that is not
-> upstream or not GPL-compatible.
->
->         Arnd
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/machdep.h |    5 ++++-
+ arch/powerpc/kernel/pci-common.c   |    8 ++++++++
+ 2 files changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index f92b0b5..3909d1b 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -238,7 +238,10 @@ struct machdep_calls {
+ 
+ 	/* Called when pci_enable_device() is called. Returns 0 to
+ 	 * allow assignment/enabling of the device. */
+-	int  (*pcibios_enable_device_hook)(struct pci_dev *);
++	int (*pcibios_enable_device_hook)(struct pci_dev *);
++
++	/* Called when pci_disable_device() is called. */
++	void (*pcibios_disable_device_hook)(struct pci_dev *);
+ 
+ 	/* Called after scan and before resource survey */
+ 	void (*pcibios_fixup_phb)(struct pci_controller *hose);
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index ee70f57..d38a330 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1457,6 +1457,14 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	return pci_enable_resources(dev, mask);
+ }
+ 
++void pcibios_disable_device(struct pci_dev *dev)
++{
++	if (ppc_md.pcibios_disable_device_hook)
++		ppc_md.pcibios_disable_device_hook(dev);
++
++	return;
++}
++
+ resource_size_t pcibios_io_space_offset(struct pci_controller *hose)
+ {
+ 	return (unsigned long) hose->io_base_virt - _IO_BASE;
+-- 
+1.7.9.5
+
