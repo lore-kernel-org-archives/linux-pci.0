@@ -1,71 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2lp0243.outbound.protection.outlook.com ([207.46.163.243]:17102
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750787AbaGXIyg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 Jul 2014 04:54:36 -0400
-Date: Thu, 24 Jul 2014 16:54:10 +0800
-From: Shawn Guo <shawn.guo@freescale.com>
-To: Jingoo Han <jg1.han@samsung.com>
-CC: 'Lucas Stach' <l.stach@pengutronix.de>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, 'Richard Zhu' <r65037@freescale.com>,
-	<kernel@pengutronix.de>
-Subject: Re: [PATCH 1/3] MAINTAINERS: add myself as co-maintainer for i.MX6
- PCI driver
-Message-ID: <20140724085410.GC8821@dragon>
-References: <1406137217-11294-1-git-send-email-l.stach@pengutronix.de>
- <1406137217-11294-2-git-send-email-l.stach@pengutronix.de>
- <20140724084030.GA8821@dragon>
- <002c01cfa71c$8bd24590$a376d0b0$%han@samsung.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <002c01cfa71c$8bd24590$a376d0b0$%han@samsung.com>
+Received: from plane.gmane.org ([80.91.229.3]:57770 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751589AbaGXGkM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 Jul 2014 02:40:12 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glp-linux-pci@m.gmane.org>)
+	id 1XACh9-0000Ue-8Z
+	for linux-pci@vger.kernel.org; Thu, 24 Jul 2014 08:40:03 +0200
+Received: from nat-ies.mentorg.com ([192.94.31.2])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 08:40:03 +0200
+Received: from john.fadel by nat-ies.mentorg.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 08:40:03 +0200
+To: linux-pci@vger.kernel.org
+From: John <john.fadel@gmail.com>
+Subject: PCIe IOMEM Resource Allocation
+Date: Thu, 24 Jul 2014 06:35:46 +0000 (UTC)
+Message-ID: <loom.20140724T083447-909@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 24, 2014 at 05:52:06PM +0900, Jingoo Han wrote:
-> On Thursday, July 24, 2014 5:41 PM, Shawn Guo wrote:
-> > On Wed, Jul 23, 2014 at 07:40:15PM +0200, Lucas Stach wrote:
-> > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> > > ---
-> > > I've talked privately to Richard about this and he's
-> > > in favor, but still should give an public ACK.
-> > > ---
-> > >  MAINTAINERS | 1 +
-> > >  1 file changed, 1 insertion(+)
-> > >
-> > > diff --git a/MAINTAINERS b/MAINTAINERS
-> > > index 134483f206e4..54c23c4fcbb0 100644
-> > > --- a/MAINTAINERS
-> > > +++ b/MAINTAINERS
-> > > @@ -6775,6 +6775,7 @@ F:	arch/x86/kernel/quirks.c
-> > >  PCI DRIVER FOR IMX6
-> > >  M:	Richard Zhu <r65037@freescale.com>
-> > >  M:	Shawn Guo <shawn.guo@linaro.org>
-> > > +M:	Lucas Stach <l.stach@pengutronix.de>
-> > 
-> > Acked-by: Shawn Guo <shawn.guo@freescale.com>
-> > 
-> > I would step down from the position, so I prefer you replace myself.
-> 
-> Hi Shawn,
-> 
-> OK, I also agree with your suggestion.
-> Then, do you mean the following? It looks good.
-> 
->  PCI DRIVER FOR IMX6
->  M:	Richard Zhu <r65037@freescale.com>
-> +M:	Lucas Stach <l.stach@pengutronix.de>
->  M:	Shawn Guo <shawn.guo@linaro.org>
+Hi
+I am trying to write a PCIe linux device driver to handle PCIe switches and
+endpoints that show up after the Redhat 6.4 linux is already up and running.
 
-Hi Jingoo,
+If I try to allocate the resources of the PCIe switches & endpoints between
+0xF4000000 and 0xF47FFFFF everything works fine .. But this range is quite
+full with other devices, so I tried to extend this range to start from
+0xF0000000, or from 0xD0000000 the allocation works fine, but I am unable to
+access devices in the extended range
 
-I meant the following :)
+Anybody has idea why I am unable to use the complete 3G - 4G address range ?
+Is it related to some ACPI boot configuration that need to be changed, I can
+see in my dmesg
 
-  PCI DRIVER FOR IMX6
-  M:	Richard Zhu <r65037@freescale.com>
- -M:	Shawn Guo <shawn.guo@linaro.org>
- +M:	Lucas Stach <l.stach@pengutronix.de>
+pci_root PNP0A08:00: host bridge window [mem 0xf4000000-0xf7ffffff]
+pci_root PNP0A08:00: host bridge window [io 0x1000-0x7fff]
+pci_root PNP0A08:00: host bridge window [io 0x0000-0x03af]
+pci_root PNP0A08:00: host bridge window [io 0x03e0-0x0cf7]
+pci_root PNP0A08:00: host bridge window [io 0x0d00-0x0fff]
+pci_root PNP0A08:00: host bridge window [mem 0xfed00000-0xfed03fff]
+pci_root PNP0A08:00: host bridge window [mem 0xfed40000-0xfed44fff]
+pci_root PNP0A08:00: host bridge window [io 0x03b0-0x03bb]
+pci_root PNP0A08:00: host bridge window [io 0x03c0-0x03df]
+pci_root PNP0A08:00: host bridge window [mem 0x000a0000-0x000bffff]
+pci_root PNP0A08:01: host bridge window [mem 0xf8000000-0xfbffffff]
+pci_root PNP0A08:01: host bridge window [io 0x8000-0xffff]
 
-Shawn
+Is there a reason for this limited range ? Is it processor dependant ?
+
+Thanks 
+
