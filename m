@@ -1,210 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:37516 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754283AbaGBRYA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 13:24:00 -0400
-Date: Wed, 2 Jul 2014 18:23:55 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 8/9] pci: Add support for creating a generic
- host_bridge from device tree
-Message-ID: <20140702172355.GQ2173@e106497-lin.cambridge.arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-9-git-send-email-Liviu.Dudau@arm.com>
- <20140702112230.GL18731@arm.com>
-MIME-Version: 1.0
-In-Reply-To: <20140702112230.GL18731@arm.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mailout4.samsung.com ([203.254.224.34]:46522 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750797AbaGXIwN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 04:52:13 -0400
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0N9700EEVKMUEO10@mailout4.samsung.com> for
+ linux-pci@vger.kernel.org; Thu, 24 Jul 2014 17:52:06 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Shawn Guo' <shawn.guo@freescale.com>,
+	'Lucas Stach' <l.stach@pengutronix.de>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	'Richard Zhu' <r65037@freescale.com>, kernel@pengutronix.de,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1406137217-11294-1-git-send-email-l.stach@pengutronix.de>
+ <1406137217-11294-2-git-send-email-l.stach@pengutronix.de>
+ <20140724084030.GA8821@dragon>
+In-reply-to: <20140724084030.GA8821@dragon>
+Subject: Re: [PATCH 1/3] MAINTAINERS: add myself as co-maintainer for i.MX6 PCI
+ driver
+Date: Thu, 24 Jul 2014 17:52:06 +0900
+Message-id: <002c01cfa71c$8bd24590$a376d0b0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 02, 2014 at 12:22:30PM +0100, Will Deacon wrote:
-> Hi Liviu,
+On Thursday, July 24, 2014 5:41 PM, Shawn Guo wrote:
+> On Wed, Jul 23, 2014 at 07:40:15PM +0200, Lucas Stach wrote:
+> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > ---
+> > I've talked privately to Richard about this and he's
+> > in favor, but still should give an public ACK.
+> > ---
+> >  MAINTAINERS | 1 +
+> >  1 file changed, 1 insertion(+)
+> >
+> > diff --git a/MAINTAINERS b/MAINTAINERS
+> > index 134483f206e4..54c23c4fcbb0 100644
+> > --- a/MAINTAINERS
+> > +++ b/MAINTAINERS
+> > @@ -6775,6 +6775,7 @@ F:	arch/x86/kernel/quirks.c
+> >  PCI DRIVER FOR IMX6
+> >  M:	Richard Zhu <r65037@freescale.com>
+> >  M:	Shawn Guo <shawn.guo@linaro.org>
+> > +M:	Lucas Stach <l.stach@pengutronix.de>
 > 
-> On Tue, Jul 01, 2014 at 07:43:33PM +0100, Liviu Dudau wrote:
-> > Several platforms use a rather generic version of parsing
-> > the device tree to find the host bridge ranges. Move the common code
-> > into the generic PCI code and use it to create a pci_host_bridge
-> > structure that can be used by arch code.
-> > 
-> > Based on early attempts by Andrew Murray to unify the code.
-> > Used powerpc and microblaze PCI code as starting point.
+> Acked-by: Shawn Guo <shawn.guo@freescale.com>
 > 
-> I just had a quick look at this to see how it differs from the parsing in
-> pci-host-generic.c and there a few small differences worth discussing.
-> 
-> > +static int pci_host_bridge_of_get_ranges(struct device_node *dev,
-> > +		struct list_head *resources, resource_size_t *io_base)
-> > +{
-> > +	struct resource *res;
-> > +	struct of_pci_range range;
-> > +	struct of_pci_range_parser parser;
-> > +	int err;
-> > +
-> > +	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
-> > +
-> > +	/* Check for ranges property */
-> > +	err = of_pci_range_parser_init(&parser, dev);
-> > +	if (err)
-> > +		return err;
-> > +
-> > +	pr_debug("Parsing ranges property...\n");
-> > +	for_each_of_pci_range(&parser, &range) {
-> > +		/* Read next ranges element */
-> > +		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx cpu_addr:0x%016llx size:0x%016llx\n",
-> > +			range.pci_space, range.pci_addr, range.cpu_addr, range.size);
-> > +
-> > +		/*
-> > +		 * If we failed translation or got a zero-sized region
-> > +		 * then skip this range
-> > +		 */
-> > +		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
-> > +			continue;
-> > +
-> > +		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
-> > +		if (!res)
-> > +			return -ENOMEM;
-> > +
-> > +		err = of_pci_range_to_resource(&range, dev, res);
-> > +		if (err)
-> > +			return err;
-> > +
-> > +		if (resource_type(res) == IORESOURCE_IO)
-> > +			*io_base = range.cpu_addr;
-> > +
-> > +		pci_add_resource_offset(resources, res,
-> > +				res->start - range.pci_addr);
-> 
-> Where do you request_resource before adding it?
+> I would step down from the position, so I prefer you replace myself.
 
-I don't, because I'm expecting that arch code might filter the list. When 
-the host bridge code calls pci_scan_root_bus() the resources will be
-requested then.
+Hi Shawn,
 
-> 
-> > +	}
-> > +
-> > +	/* Apply architecture specific fixups for the ranges */
-> > +	return pcibios_fixup_bridge_ranges(resources);
-> 
-> I currently mandate at least one non-prefetchable resource in the
-> device-tree. Should I simply drop this restriction, or do I have to somehow
-> hook this into the pcibios callback?
+OK, I also agree with your suggestion.
+Then, do you mean the following? It looks good.
 
-Don't think I understand why you need at least one non-prefetcheable resource
-but if you want to mandate that then the pcibios_fixup_bridge_ranges() would
-be the place to put that check.
+ PCI DRIVER FOR IMX6
+ M:	Richard Zhu <r65037@freescale.com>
++M:	Lucas Stach <l.stach@pengutronix.de>
+ M:	Shawn Guo <shawn.guo@linaro.org>
 
-> 
-> > +}
-> > +
-> > +static atomic_t domain_nr = ATOMIC_INIT(-1);
-> > +
-> > +/**
-> > + * of_create_pci_host_bridge - Create a PCI host bridge structure using
-> > + * information passed in the DT.
-> > + * @parent: device owning this host bridge
-> > + * @ops: pci_ops associated with the host controller
-> > + * @host_data: opaque data structure used by the host controller.
-> > + *
-> > + * returns a pointer to the newly created pci_host_bridge structure, or
-> > + * NULL if the call failed.
-> > + *
-> > + * This function will try to obtain the host bridge domain number by
-> > + * using of_alias_get_id() call with "pci-domain" as a stem. If that
-> > + * fails, a local allocator will be used that will put each host bridge
-> > + * in a new domain.
-> > + */
-> > +struct pci_host_bridge *
-> > +of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops, void *host_data)
-> > +{
-> > +	int err, domain, busno;
-> > +	struct resource *bus_range;
-> > +	struct pci_bus *root_bus;
-> > +	struct pci_host_bridge *bridge;
-> > +	resource_size_t io_base;
-> > +	LIST_HEAD(res);
-> > +
-> > +	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
-> > +	if (!bus_range)
-> > +		return ERR_PTR(-ENOMEM);
-> > +
-> > +	domain = of_alias_get_id(parent->of_node, "pci-domain");
-> > +	if (domain == -ENODEV)
-> > +		domain = atomic_inc_return(&domain_nr);
-> > +
-> > +	err = of_pci_parse_bus_range(parent->of_node, bus_range);
-> > +	if (err) {
-> > +		dev_info(parent, "No bus range for %s, using default [0-255]\n",
-> > +			parent->of_node->full_name);
-> > +		bus_range->start = 0;
-> > +		bus_range->end = 255;
-> > +		bus_range->flags = IORESOURCE_BUS;
-> 
-> What about bus_range->name?
-
-Don't know! Is anyone using it?
-
-> 
-> > +	}
-> > +	busno = bus_range->start;
-> > +	pci_add_resource(&res, bus_range);
-> 
-> I currently truncate the bus range to fit inside the Configuration Space
-> window I have (in the reg property). How can I continue to do that with this
-> patch?
-
-Not easily. Unless I add an argument to this function that will allow you to
-pass in the max number for the bus range, then the code becomes:
-
-+	err = of_pci_parse_bus_range(parent->of_node, bus_range);
-+	if (err) {
-+		dev_info(parent, "No bus range for %s, using default [0-%d]\n",
-+			parent->of_node->full_name, max_range);
-+		bus_range->start = 0;
-+		bus_range->end = max_range;
-+		bus_range->flags = IORESOURCE_BUS;
-+	} else {
-+		if (bus_range->end > bus_range->start + max_range) {
-+			bus_range->end = bus_range->start + max_range;
-+		}
-+	}
-
-Or something like that.
+Thanks.
 
 Best regards,
-Liviu
+Jingoo Han
 
 > 
-> Will
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Shawn
 > 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+> >  L:	linux-pci@vger.kernel.org
+> >  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+> >  S:	Maintained
+> > --
+> > 2.0.1
+> >
 
