@@ -1,65 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:61482 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753350AbaGWL7c (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jul 2014 07:59:32 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Zhang Rui <rui.zhang@intel.com>
-Subject: Re: [PATCH 0/3] ACPI / PM: Make ACPI-based PCI wakeup work for the "freeze" sleep state
-Date: Wed, 23 Jul 2014 14:17:55 +0200
-Message-ID: <6491652.ycQtdn67HU@vostro.rjw.lan>
-In-Reply-To: <20140723113840.GJ20603@laptop.programming.kicks-ass.net>
-References: <1907495.agrCMfRsQN@vostro.rjw.lan> <1938033.aGLPbNTjeQ@vostro.rjw.lan> <20140723113840.GJ20603@laptop.programming.kicks-ass.net>
+Received: from mail-bn1lp0141.outbound.protection.outlook.com ([207.46.163.141]:14787
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S934148AbaGXGYv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 02:24:51 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shawn Guo <Shawn.Guo@freescale.com>,
+	"kernel@pengutronix.de" <kernel@pengutronix.de>
+Subject: RE: [PATCH 1/3] MAINTAINERS: add myself as co-maintainer for i.MX6
+ PCI driver
+Date: Thu, 24 Jul 2014 06:24:47 +0000
+Message-ID: <c1c3cd19841343f7b9e77dababdaff36@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1406137217-11294-1-git-send-email-l.stach@pengutronix.de>
+ <1406137217-11294-2-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1406137217-11294-2-git-send-email-l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, July 23, 2014 01:38:40 PM Peter Zijlstra wrote:
-> On Wed, Jul 23, 2014 at 01:43:59PM +0200, Rafael J. Wysocki wrote:
-> > On Wednesday, July 23, 2014 09:28:50 AM Peter Zijlstra wrote:
-> > > On Wed, Jul 23, 2014 at 12:26:20AM +0200, Rafael J. Wysocki wrote:
-> > > > All of that indicates that the machine in question has WoL based on native PCIe
-> > > > PME signaling.  In that case it doesn't wake up from the "freeze" state, because
-> > > > some code is missing.
-> > > 
-> > > Didn't wake, but it did show:
-> > > 
-> > > 0000:00:01.0:pcie01     1               1               0               0               0               0               0               99207           0
-> > > LNXPWRBN:00             1               1               0               0               0               0               0               99191           0
-> > > 
-> > > So at least something's moving, although its not quite working yet.
-> > 
-> > That may be because I forgot about one piece, sorry about that.
-> > This patch:
-> > 
-> > https://patchwork.kernel.org/patch/4526561/
-> > 
-> > (which I think is in tip already) is needed to make enable_irq_wake()
-> > work with the "freeze" state.
-> > 
-> > Can you please apply this in addition and retest?
+
+> -----Original Message-----
+> From: Lucas Stach [mailto:l.stach@pengutronix.de]
+> Sent: Thursday, July 24, 2014 1:40 AM
+> To: Bjorn Helgaas
+> Cc: linux-pci@vger.kernel.org; Zhu Richard-R65037; Guo Shawn-R65073;
+> kernel@pengutronix.de
+> Subject: [PATCH 1/3] MAINTAINERS: add myself as co-maintainer for i.MX6 PCI
+> driver
 > 
-> I appear to have that hunk already (I'm running -tip based kernels).
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+> I've talked privately to Richard about this and he's in favor, but still
+> should give an public ACK.
+[Richard] Acked-by: Richard Zhu <r65037@freescale.com>
 
-I see.
+Best Regards
+Richard Zhu
 
-> (also, patchwork blows chunks :/)
 
-That's never happened to me (and there's only one hunk in that patch).
-
-Anyway, the count for 0000:00:01.0:pcie01 means that the wakeup source
-has been activated, so it should have woken it up in theory.
-
-Unless, of course, it was activated after the power button wakeup.
-
-It looks like the stuff works on the hardware level, though, so we should be
-able to make the wakeup work too.  I'll have another look later today.
-
-Rafael
+> ---
+>  MAINTAINERS | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 134483f206e4..54c23c4fcbb0 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -6775,6 +6775,7 @@ F:	arch/x86/kernel/quirks.c
+>  PCI DRIVER FOR IMX6
+>  M:	Richard Zhu <r65037@freescale.com>
+>  M:	Shawn Guo <shawn.guo@linaro.org>
+> +M:	Lucas Stach <l.stach@pengutronix.de>
+>  L:	linux-pci@vger.kernel.org
+>  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+>  S:	Maintained
+> --
+> 2.0.1
 
