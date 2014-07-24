@@ -1,73 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:56596 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753695AbaGEWWK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 Jul 2014 18:22:10 -0400
-Received: by mail-qa0-f53.google.com with SMTP id j15so2323861qaq.26
-        for <linux-pci@vger.kernel.org>; Sat, 05 Jul 2014 15:22:10 -0700 (PDT)
+Received: from v094114.home.net.pl ([79.96.170.134]:60774 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758976AbaGXOmm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 10:42:42 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Subject: Re: [PATCH] PCI / PM: Make PCIe PME interrupts wake up from "freeze" sleep state
+Date: Thu, 24 Jul 2014 17:01:02 +0200
+Message-ID: <2043223.I5LvKcR9SD@vostro.rjw.lan>
+In-Reply-To: <20140724134241.GZ6758@twins.programming.kicks-ass.net>
+References: <12684812.i3F8JrYCl0@vostro.rjw.lan> <20140724134241.GZ6758@twins.programming.kicks-ass.net>
 MIME-Version: 1.0
-In-Reply-To: <CAKb7UviYak+Jt6+RGFZc=OtNh2DVJaCvxnBpRRkw7zVn8u+9Vw@mail.gmail.com>
-References: <CAKb7UviGCtebGwyHbXRLZhDOiDAez+eKkxPe9jz5kc-3R1kUvQ@mail.gmail.com>
- <53B4F0F7.9020403@huawei.com> <CALhae2jRz8hL0bwySAbP7r+vJGOG5aif4GA_Yjp0inGAwz5JEA@mail.gmail.com>
- <53B612FE.4080105@huawei.com> <CAKb7UviVFQYwYdp_dgxK7jJ5Ny9yG1y8LATydxtVtkzRh+aOKw@mail.gmail.com>
- <53B61B03.3070308@huawei.com> <CAKb7UvjFuu4Hm1pfmY-NMFORfv-+fx4oYeJicRoE8UTL_4Wp4A@mail.gmail.com>
- <53B625D9.9080500@huawei.com> <CAKb7UviYak+Jt6+RGFZc=OtNh2DVJaCvxnBpRRkw7zVn8u+9Vw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 5 Jul 2014 16:21:49 -0600
-Message-ID: <CAErSpo7Dk+7THPn2SUO1p-P0bbfP7nSyOoiukXLgMsuGoJrMOA@mail.gmail.com>
-Subject: Re: How to check for proper MSI support?
-To: Ilia Mirkin <imirkin@alum.mit.edu>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Brian Becker <brian.johnathan.b@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; boundary="nextPart3037520.4Vi3rT9msu"; micalg="pgp-sha256"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 3, 2014 at 10:32 PM, Ilia Mirkin <imirkin@alum.mit.edu> wrote:
-> So let me get this straight -- you're suggesting I add a quirk for
-> every PCI chipset that doesn't support MSI? There are probably
-> hundreds of these... anything made before 1999 or so, and probably a
-> bunch since then too. There _has_ to be a way to do this generically.
-> Is the PCI spec version anywhere in the root hub?
->
-> Perhaps we can check if every bridge on the way to the CPU has the MSI
-> capability (including the root hub)? (And naturally _that_ won't
-> work... on my sandybridge laptop, the host bridge doesn't have the MSI
-> cap but the system most definitely supports MSI.)
->
-> Adding Bjorn... perhaps you know? Some of the info has been stripped
-> out by now, you can see the full lspci -vvvxxx at
-> http://marc.info/?l=linux-pci&m=140443441730503&w=2
 
-Huh, this stinks.  We don't really have a good way of figuring out
-whether the system chipset supports MSI.  The ACPI FADT "MSI Not
-Supported" bit (ACPI_FADT_NO_MSI) was added to the ACPI v3.0b spec in
-October 2006, so that won't help the systems that predate that or
-don't have ACPI.
+--nextPart3037520.4Vi3rT9msu
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
 
-We have quirks for some Serverworks, ATI, and VIA chipsets that
-basically do the same as booting with "pci=nomsi".  But as you say,
-it's unreasonable to add quirks for all old systems.
+On Thursday, July 24, 2014 03:42:41 PM Peter Zijlstra wrote:
+> On Wed, Jul 23, 2014 at 10:46:26PM +0200, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >=20
+> > The "freeze" sleep state, also known as suspend-to-idle, is entered=
 
-Brian, can you open a report at http://bugzilla.kernel.org and attach
-a complete dmesg log, /proc/cpuinfo contents, and "lspci -vvv" output?
+> > without taking nonboot CPUs offline, right after devices have been
+> > suspended.  It works by waiting for at least one wakeup source obje=
+ct
+> > to become "active" as a result of handling a hardware interrupt.
+> >=20
+> > Of course, interrupts supposed to be able to wake up the system fro=
+m
+> > suspend-to-idle cannot be disabled by suspend_device_irqs() and the=
+ir
+> > interrupt handlers must be able to cope with interrupts coming afte=
+r
+> > all devices have been suspended.  In that case, they only need to
+> > call __pm_wakeup_event() for a single wakeup source object without
+> > trying to access hardware (that will be resumed later as part of
+> > the subsequent system resume).
+> >=20
+> > Make PCIe PME interrupts work this way.
+> >=20
+> > Register an additional wakeup source object for each PCIe PME
+> > service device.  That object will be used to generate wakeups from
+> > suspend-to-idle.
+> >=20
+> > Add IRQF_NO_SUSPEND to PME interrupt flags.  This will make
+> > suspend_device_irqs() to ignore PME interrupts, but that's OK,
+> > because the PME interrupt handler is suspend-aware anyway and
+> > can cope with interrupts coming during system suspend-resume.
+> >=20
+> > For each PCIe port with PME service during the "prepare" phase of
+> > system suspend walk the bus below it and see if any devices on that=
 
-If I understand correctly, you have a P200MMX with a 430FX chipset.
-I'm not a hardware guy, but sounds like that might be a 200MHz Pentium
-with MMX (P54CS), which does have an integrated LAPIC, according to
-wikipedia.
+> > bus are configured for wakeup.  If so, mark the port as one that ca=
+n
+> > be used for system wakeup signaling and handle it differenty going
+> > forward.
+> >=20
+> > Namely, while suspending its PME service, do not disable the PME
+> > interrupt, but only set a "suspended" flag for the PME service to
+> > make the interrupt handler behave in a special way, which is to cal=
+l
+> > __pm_wakeup_event() with the service's wakeup source object as the
+> > first argument whenever the interrupt is triggered.
+> >=20
+> > The "suspended" flag is cleared while resuming the PME service and
+> > the "wakeup" flag is cleared at the "complete" stage of system
+> > resume.
+> >=20
+> > This change allows Wake-on-LAN to be used for wakeup from
+> > suspend-to-idle on my MSI Wind tesbed netbook.
+> >=20
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+>=20
+> > -=09ret =3D request_irq(srv->irq, pcie_pme_irq, IRQF_SHARED, "PCIe =
+PME", srv);
+> > +=09ret =3D request_irq(srv->irq, pcie_pme_irq, IRQF_SHARED | IRQF_=
+NO_SUSPEND,
+> > +=09=09=09  "PCIe PME", srv);
+>=20
+> So with this patch on:
+>=20
+>   http://marc.info/?l=3Dlinux-kernel&m=3D140620918218199
 
->From the PCI host bridge's perspective, an incoming MSI just looks
-like a normal DMA write.  As long as that write reaches the CPU LAPIC,
-it should work fine.  There's not really any specific MSI support
-required, except to route the incoming write to the CPU LAPIC.  So
-it's possible that a bridge designed before MSI was added to the PCI
-spec might be able to support MSI.
+ACK for this one (already sent in that thread).
 
-But I don't know how much value there is in MSI on such old systems.
-Maybe we could default to disabling MSI on BIOS dates before 1998 or
-something.
+> This will not work on my machine, because aerdrv is requesting the sa=
+me
+> irq.
 
-Bjorn
+AER is PCIe error reporting service.
+
+> Now I've not a f'cking clue what aerdrv is, and whether it too wants
+> NO_SUSPEND on or not.
+>=20
+> But if I make it also request NO_SUSPEND it all starts working.
+
+I think we should make all PCIe port services (there may be hotplug too=
+)
+use IRQF_NO_SUSPEND which will solve this particular problem, but there=
+'s
+more to that (for example, ACPI SCI which in theory may be shared).
+
+I guess it's time to revisit that thing, but that's a separate issue, o=
+f
+course.
+
+=2D-=20
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
+--nextPart3037520.4Vi3rT9msu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAABCAAGBQJT0R+0AAoJEILEb/54YlRxh1wP/RNgqYA/tpZkJacjOZkHulgH
+FfsNnC0Zd1S+3XciKvunlnGKJBT4B072kMjS9nmd1+sFbWfACleE9jDc8opRNOH3
+p/UVNbeUAoadB+qf146gYTZpLk1JPXqlkMLvTIthaenB4MFW90LckBPWcyMsCi3/
++3jrOtATRXwL433md4co5nEptg6AMs+3/mZMdKUdrFyJ4y7Vb63f+HnuppSjZjap
+EQUFv/I2mMOSXx38G+pydOKtRlgPWTqUzrN5k9XV2rJHnIKjCcfb/hYopjto38a4
+KUq+6Dzp7/sTgXGtt3PPNLIxFdQNA6IB2AQK1VrJBim5sLOtsRtr25oh1Z0ci8Ed
+XHfbpqQfHjFnWEbWBPFEEvd18ZlgF+DkPaQweGK0i6YlHEDNYXL5CmPCRmUVrjYS
+qEY8UlWrwrzS5God8DV5w5RJF+ggnO/fByJEDf4GroyivR+vDPkf2Vge2XOdD+wm
+fCaXbPJfmUIqIsqiuVqpOVJoKvc0BIl81rqjegqf8tP4s4bno4B9YVPFbVNLW3cc
+wXNEQky+UWmOG7fzbAtEzaX9+RST31TONSMDtgVR2InB44QWcOt2RBl6W+Xdn/4m
+3MzFrivKZb3ZXY+vYDNqueiy0lVrEuZz2x5QmUn3jhAf/tiqyND+EKtc28KpWBWk
+mfFotye5QpBgYNo1IiBC
+=4ONd
+-----END PGP SIGNATURE-----
+
+--nextPart3037520.4Vi3rT9msu--
+
