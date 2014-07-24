@@ -1,246 +1,229 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57627 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753441AbaGCPvU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Jul 2014 11:51:20 -0400
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 1/7] iommu: Create central IOMMU group lookup/creation
-	interface
-To: iommu@lists.linux-foundation.org
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Alex Williamson <alex.williamson@redhat.com>
-Date: Thu, 03 Jul 2014 09:51:18 -0600
-Message-ID: <20140703155117.8112.95406.stgit@gimli.home>
-In-Reply-To: <20140703154428.8112.97562.stgit@gimli.home>
-References: <20140703154428.8112.97562.stgit@gimli.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from e28smtp03.in.ibm.com ([122.248.162.3]:36133 "EHLO
+	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751171AbaGXGWm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 02:22:42 -0400
+Received: from /spool/local
+	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 24 Jul 2014 11:52:39 +0530
+Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 44C333940043
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:35 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s6O6OPgT4981222
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:54:25 +0530
+Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s6O6MXVg021276
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:34 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V7 01/17] PCI/IOV: Export interface for retrieve VF's BDF
+Date: Thu, 24 Jul 2014 14:22:11 +0800
+Message-Id: <1406182947-11302-2-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently each IOMMU driver that supports IOMMU groups has its own
-code for discovering the base device used in grouping.  This code
-is generally not specific to the IOMMU hardware, but to the bus of
-the devices managed by the IOMMU.  We can therefore create a common
-interface for supporting devices on different buses.
+When implementing the SR-IOV on PowerNV platform, some resource reservation is
+needed for VFs which don't exist at the bootup stage. To do the match between
+resources and VFs, the code need to get the VF's BDF in advance.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+In this patch, it exports the interface to retrieve VF's BDF:
+   * Make the virtfn_bus as an interface
+   * Make the virtfn_devfn as an interface
+   * rename them with more specific name
+   * code cleanup in pci_sriov_resource_alignment()
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
+ drivers/pci/iov.c   |   26 +++++++-------------------
+ drivers/pci/pci.h   |   19 -------------------
+ include/linux/pci.h |   44 ++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 51 insertions(+), 38 deletions(-)
 
- drivers/iommu/iommu.c |  182 +++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/iommu.h |    1 
- 2 files changed, 183 insertions(+)
-
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index e5555fc..d061c86 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -29,6 +29,7 @@
- #include <linux/idr.h>
- #include <linux/notifier.h>
- #include <linux/err.h>
-+#include <linux/pci.h>
- #include <trace/events/iommu.h>
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index cb6f247..7566238 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -19,18 +19,6 @@
  
- static struct kset *iommu_group_kset;
-@@ -514,6 +515,187 @@ int iommu_group_id(struct iommu_group *group)
+ #define VIRTFN_ID_LEN	16
+ 
+-static inline u8 virtfn_bus(struct pci_dev *dev, int id)
+-{
+-	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
+-				    dev->sriov->stride * id) >> 8);
+-}
+-
+-static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
+-{
+-	return (dev->devfn + dev->sriov->offset +
+-		dev->sriov->stride * id) & 0xff;
+-}
+-
+ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+ {
+ 	struct pci_bus *child;
+@@ -69,7 +57,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	struct pci_bus *bus;
+ 
+ 	mutex_lock(&iov->dev->sriov->lock);
+-	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
++	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
+ 	if (!bus)
+ 		goto failed;
+ 
+@@ -77,7 +65,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	if (!virtfn)
+ 		goto failed0;
+ 
+-	virtfn->devfn = virtfn_devfn(dev, id);
++	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
+ 	virtfn->vendor = dev->vendor;
+ 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
+ 	pci_setup_device(virtfn);
+@@ -140,8 +128,8 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+ 	struct pci_sriov *iov = dev->sriov;
+ 
+ 	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
+-					     virtfn_bus(dev, id),
+-					     virtfn_devfn(dev, id));
++					     pci_iov_virtfn_bus(dev, id),
++					     pci_iov_virtfn_devfn(dev, id));
+ 	if (!virtfn)
+ 		return;
+ 
+@@ -216,7 +204,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	iov->offset = offset;
+ 	iov->stride = stride;
+ 
+-	if (virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
++	if (pci_iov_virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
+ 		dev_err(&dev->dev, "SR-IOV: bus number out of range\n");
+ 		return -ENOMEM;
+ 	}
+@@ -516,7 +504,7 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
+ 	if (!reg)
+ 		return 0;
+ 
+-	 __pci_read_base(dev, type, &tmp, reg);
++	__pci_read_base(dev, type, &tmp, reg);
+ 	return resource_alignment(&tmp);
  }
- EXPORT_SYMBOL_GPL(iommu_group_id);
  
-+/*
-+ * To consider a PCI device isolated, we require ACS to support Source
-+ * Validation, Request Redirection, Completer Redirection, and Upstream
-+ * Forwarding.  This effectively means that devices cannot spoof their
-+ * requester ID, requests and completions cannot be redirected, and all
-+ * transactions are forwarded upstream, even as it passes through a
-+ * bridge where the target device is downstream.
-+ */
-+#define REQ_ACS_FLAGS   (PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
-+
-+struct group_for_pci_data {
-+	struct pci_dev *pdev;
-+	struct iommu_group *group;
+@@ -546,7 +534,7 @@ int pci_iov_bus_range(struct pci_bus *bus)
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		if (!dev->is_physfn)
+ 			continue;
+-		busnr = virtfn_bus(dev, dev->sriov->total_VFs - 1);
++		busnr = pci_iov_virtfn_bus(dev, dev->sriov->total_VFs - 1);
+ 		if (busnr > max)
+ 			max = busnr;
+ 	}
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 0601890..a3158b2 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -221,25 +221,6 @@ static inline int pci_ari_enabled(struct pci_bus *bus)
+ void pci_reassigndev_resource_alignment(struct pci_dev *dev);
+ void pci_disable_bridge_window(struct pci_dev *dev);
+ 
+-/* Single Root I/O Virtualization */
+-struct pci_sriov {
+-	int pos;		/* capability position */
+-	int nres;		/* number of resources */
+-	u32 cap;		/* SR-IOV Capabilities */
+-	u16 ctrl;		/* SR-IOV Control */
+-	u16 total_VFs;		/* total VFs associated with the PF */
+-	u16 initial_VFs;	/* initial VFs associated with the PF */
+-	u16 num_VFs;		/* number of VFs available */
+-	u16 offset;		/* first VF Routing ID offset */
+-	u16 stride;		/* following VF stride */
+-	u32 pgsz;		/* page size for BAR alignment */
+-	u8 link;		/* Function Dependency Link */
+-	u16 driver_max_VFs;	/* max num VFs driver supports */
+-	struct pci_dev *dev;	/* lowest numbered PF */
+-	struct pci_dev *self;	/* this PF */
+-	struct mutex lock;	/* lock for VF bus */
+-};
+-
+ #ifdef CONFIG_PCI_ATS
+ void pci_restore_ats_state(struct pci_dev *dev);
+ #else
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 466bcd1..194db52 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -245,6 +245,27 @@ struct pci_vpd;
+ struct pci_sriov;
+ struct pci_ats;
+ 
++/* Single Root I/O Virtualization */
++struct pci_sriov {
++	int pos;		/* capability position */
++	int nres;		/* number of resources */
++	u32 cap;		/* SR-IOV Capabilities */
++	u16 ctrl;		/* SR-IOV Control */
++	u16 total_VFs;		/* total VFs associated with the PF */
++	u16 initial_VFs;	/* initial VFs associated with the PF */
++	u16 num_VFs;		/* number of VFs available */
++	u16 offset;		/* first VF Routing ID offset */
++	u16 stride;		/* following VF stride */
++	u32 pgsz;		/* page size for BAR alignment */
++	u8 link;		/* Function Dependency Link */
++	u16 driver_max_VFs;	/* max num VFs driver supports */
++	struct pci_dev *dev;	/* lowest numbered PF */
++	struct pci_dev *self;	/* this PF */
++	struct mutex lock;	/* lock for VF bus */
++	struct work_struct mtask; /* VF Migration task */
++	u8 __iomem *mstate;	/* VF Migration State Array */
 +};
 +
-+/*
-+ * DMA alias iterator callback, return the last seen device.  Stop and return
-+ * the IOMMU group if we find one along the way.
-+ */
-+static int get_pci_alias_or_group(struct pci_dev *pdev, u16 alias, void *opaque)
-+{
-+	struct group_for_pci_data *data = opaque;
-+
-+	data->pdev = pdev;
-+	data->group = iommu_group_get(&pdev->dev);
-+
-+	return data->group != NULL;
-+}
-+
-+/*
-+ * Use standard PCI bus topology, isolation features, and DMA alias quirks
-+ * to find or create an IOMMU group for a device.
-+ */
-+static struct iommu_group *iommu_group_get_for_pci_dev(struct pci_dev *pdev)
-+{
-+	struct group_for_pci_data data;
-+	struct pci_bus *bus;
-+	struct iommu_group *group = NULL;
-+	struct pci_dev *tmp;
-+
-+	/*
-+	 * Find the upstream DMA alias for the device.  A device must not
-+	 * be aliased due to topology in order to have its own IOMMU group.
-+	 * If we find an alias along the way that already belongs to a
-+	 * group, use it.
-+	 */
-+	if (pci_for_each_dma_alias(pdev, get_pci_alias_or_group, &data))
-+		return data.group;
-+
-+	pdev = data.pdev;
-+
-+	/*
-+	 * Continue upstream from the point of minimum IOMMU granularity
-+	 * due to aliases to the point where devices are protected from
-+	 * peer-to-peer DMA by PCI ACS.  Again, if we find an existing
-+	 * group, use it.
-+	 */
-+	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
-+		if (!bus->self)
-+			continue;
-+
-+		if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
-+			break;
-+
-+		pdev = bus->self;
-+
-+		group = iommu_group_get(&pdev->dev);
-+		if (group)
-+			return group;
-+	}
-+
-+	/*
-+	 * Next we need to consider DMA alias quirks.  If one device aliases
-+	 * to another, they should be grouped together.  It's theoretically
-+	 * possible that aliases could create chains of devices where each
-+	 * device aliases another device.  If we then factor in multifunction
-+	 * ACS grouping requirements, each alias could incorporate a new slot
-+	 * with multiple functions, each with aliases.  This is all extremely
-+	 * unlikely as DMA alias quirks are typically only used for PCIe
-+	 * devices where we usually have a single slot per bus.  Furthermore,
-+	 * the alias quirk is usually to another function within the slot
-+	 * (and ACS multifunction is not supported) or to a different slot
-+	 * that doesn't physically exist.  The likely scenario is therefore
-+	 * that everything on the bus gets grouped together.  To reduce the
-+	 * problem space, share the IOMMU group for all devices on the bus
-+	 * if a DMA alias quirk is present on the bus.
-+	 */
-+	tmp = NULL;
-+	for_each_pci_dev(tmp) {
-+		if (tmp->bus != pdev->bus ||
-+		    !(tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN))
-+			continue;
-+
-+		pci_dev_put(tmp);
-+		tmp = NULL;
-+
-+		/* We have an alias quirk, search for an existing group */
-+		for_each_pci_dev(tmp) {
-+			struct iommu_group *group_tmp;
-+
-+			if (tmp->bus != pdev->bus)
-+				continue;
-+
-+			group_tmp = iommu_group_get(&tmp->dev);
-+			if (!group) {
-+				group = group_tmp;
-+				continue;
-+			}
-+
-+			if (group_tmp) {
-+				WARN_ON(group != group_tmp);
-+				iommu_group_put(group_tmp);
-+			}
-+		}
-+
-+		return group ? group : iommu_group_alloc();
-+	}
-+
-+	/*
-+	 * Non-multifunction devices or multifunction devices supporting
-+	 * ACS get their own group.
-+	 */
-+	if (!pdev->multifunction || pci_acs_enabled(pdev, REQ_ACS_FLAGS))
-+		return iommu_group_alloc();
-+
-+	/*
-+	 * Multifunction devices not supporting ACS share a group with other
-+	 * similar devices in the same slot.
-+	 */
-+	tmp = NULL;
-+	for_each_pci_dev(tmp) {
-+		if (tmp == pdev || tmp->bus != pdev->bus ||
-+		    PCI_SLOT(tmp->devfn) !=  PCI_SLOT(pdev->devfn) ||
-+		    pci_acs_enabled(tmp, REQ_ACS_FLAGS))
-+			continue;
-+
-+		group = iommu_group_get(&tmp->dev);
-+		if (group) {
-+			pci_dev_put(tmp);
-+			return group;
-+		}
-+	}
-+
-+	/* No shared group found, allocate new */
-+	return iommu_group_alloc();
-+}
-+
-+/**
-+ * iommu_group_get_for_dev - Find or create the IOMMU group for a device
-+ * @dev: target device
-+ *
-+ * This function is intended to be called by IOMMU drivers and extended to
-+ * support common, bus-defined algorithms when determining or creating the
-+ * IOMMU group for a device.  On success, the caller will hold a reference
-+ * to the returned IOMMU group, which will already include the provided
-+ * device.  The reference should be released with iommu_group_put().
-+ */
-+struct iommu_group *iommu_group_get_for_dev(struct device *dev)
-+{
-+	struct iommu_group *group = ERR_PTR(-EIO);
-+	int ret;
-+
-+	group = iommu_group_get(dev);
-+	if (group)
-+		return group;
-+
-+	if (dev_is_pci(dev))
-+		group = iommu_group_get_for_pci_dev(to_pci_dev(dev));
-+
-+	if (IS_ERR(group))
-+		return group;
-+
-+	ret = iommu_group_add_device(group, dev);
-+	if (ret) {
-+		iommu_group_put(group);
-+		return ERR_PTR(ret);
-+	}
-+
-+	return group;
-+}
-+
- static int add_iommu_group(struct device *dev, void *data)
- {
- 	struct iommu_ops *ops = data;
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index b96a5b2..a2e5843 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -181,6 +181,7 @@ extern int iommu_group_register_notifier(struct iommu_group *group,
- extern int iommu_group_unregister_notifier(struct iommu_group *group,
- 					   struct notifier_block *nb);
- extern int iommu_group_id(struct iommu_group *group);
-+extern struct iommu_group *iommu_group_get_for_dev(struct device *dev);
+ /*
+  * The pci_dev structure is used to describe PCI devices.
+  */
+@@ -1616,6 +1637,21 @@ int pci_ext_cfg_avail(void);
+ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
  
- extern int iommu_domain_get_attr(struct iommu_domain *domain, enum iommu_attr,
- 				 void *data);
+ #ifdef CONFIG_PCI_IOV
++static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
++{
++	if (!dev->is_physfn)
++		return -EINVAL;
++	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
++				    dev->sriov->stride * id) >> 8);
++}
++static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
++{
++	if (!dev->is_physfn)
++		return -EINVAL;
++	return (dev->devfn + dev->sriov->offset +
++		dev->sriov->stride * id) & 0xff;
++}
++
+ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+ void pci_disable_sriov(struct pci_dev *dev);
+ int pci_num_vf(struct pci_dev *dev);
+@@ -1623,6 +1659,14 @@ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
+ #else
++static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
++{
++	return -ENXIO;
++}
++static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
++{
++	return -ENXIO;
++}
+ static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+ { return -ENODEV; }
+ static inline void pci_disable_sriov(struct pci_dev *dev) { }
+-- 
+1.7.9.5
 
