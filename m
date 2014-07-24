@@ -1,178 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:36595 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751521AbaGVSuG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 14:50:06 -0400
-Received: by mail-ig0-f182.google.com with SMTP id c1so565345igq.15
-        for <linux-pci@vger.kernel.org>; Tue, 22 Jul 2014 11:50:05 -0700 (PDT)
-Date: Tue, 22 Jul 2014 12:50:02 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/2] resource: Add device-managed
- request/release_resource()
-Message-ID: <20140722185002.GC19181@google.com>
-References: <1405062505-2606-1-git-send-email-thierry.reding@gmail.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:61839 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757671AbaGXJRx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 05:17:53 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Mohit Kumar <mohit.kumar@st.com>, Jingoo Han <jg1.han@samsung.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC] PCI: pcie-designware: allow drivers as loadable modules
+Date: Thu, 24 Jul 2014 11:17:45 +0200
+Message-ID: <5303286.K45Li7B92z@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1405062505-2606-1-git-send-email-thierry.reding@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Tejun, LKML]
+>From 0ee79c7451851a34e5a7c33eb6020befcdcb2b24 Mon Sep 17 00:00:00 2001
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 24 Jul 2014 11:12:48 +0200
+Subject: [PATCH] PCI: pcie-designware: allow drivers as loadable modules
 
-On Fri, Jul 11, 2014 at 09:08:24AM +0200, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
-> 
-> Provide device-managed implementations of the request_resource() and
-> release_resource() functions. Upon failure to request a resource, the
-> new devm_request_resource() function will output an error message for
-> consistent error reporting.
-> 
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
+The new pcie-spear13xx driver uses the pcie-designware library
+and in the current form it can be built as a loadable module.
+However, the functions it uses from the base driver are not exported,
+so this results in a build failure and a module that can never
+be loaded:
 
-This seems OK to me, but I don't consider myself a devres maintainer.  I
-added Tejun and LKML for any comment.  Minor nit below.
+ERROR: "dw_pcie_host_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+ERROR: "dw_handle_msi_irq" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+ERROR: "dw_pcie_msi_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+ERROR: "dw_pcie_cfg_write" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+ERROR: "dw_pcie_cfg_read" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+ERROR: "dw_pcie_setup_rc" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+ERROR: "dw_pcie_link_up" [drivers/pci/host/pcie-spear13xx.ko] undefined!
 
-> ---
->  Documentation/driver-model/devres.txt |  2 +
->  include/linux/ioport.h                |  5 +++
->  kernel/resource.c                     | 73 +++++++++++++++++++++++++++++++++++
->  3 files changed, 80 insertions(+)
-> 
-> diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
-> index 034d32b00846..b466f3d19bcb 100644
-> --- a/Documentation/driver-model/devres.txt
-> +++ b/Documentation/driver-model/devres.txt
-> @@ -252,6 +252,8 @@ IIO
->    devm_iio_device_unregister()
->  
->  IO region
-> +  devm_request_resource()
-> +  devm_release_resource()
->    devm_request_region()
->    devm_request_mem_region()
->    devm_release_region()
-> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> index 142ec544167c..2c5250222278 100644
-> --- a/include/linux/ioport.h
-> +++ b/include/linux/ioport.h
-> @@ -215,6 +215,11 @@ static inline int __deprecated check_region(resource_size_t s,
->  
->  /* Wrappers for managed devices */
->  struct device;
-> +
-> +extern int devm_request_resource(struct device *dev, struct resource *root,
-> +				 struct resource *new);
-> +extern void devm_release_resource(struct device *dev, struct resource *new);
-> +
->  #define devm_request_region(dev,start,n,name) \
->  	__devm_request_region(dev, &ioport_resource, (start), (n), (name))
->  #define devm_request_mem_region(dev,start,n,name) \
-> diff --git a/kernel/resource.c b/kernel/resource.c
-> index da14b8d09296..39d99aa401a6 100644
-> --- a/kernel/resource.c
-> +++ b/kernel/resource.c
-> @@ -1248,6 +1248,79 @@ int release_mem_region_adjustable(struct resource *parent,
->  /*
->   * Managed region resource
->   */
-> +static void devm_resource_release(struct device *dev, void *ptr)
-> +{
-> +	struct resource **r = ptr;
-> +
-> +	release_resource(*r);
-> +}
-> +
-> +/**
-> + * devm_request_resource() - request and reserve an I/O or memory resource
-> + * @dev: device for which to request the resource
-> + * @root: root of the resource tree from which to request the resource
-> + * @new: descriptor of the resource to request
-> + *
-> + * This is a device-managed version of request_resource(). There is usually
-> + * no need to release resources requested by this function explicitly since
-> + * that will be taken care of when the device is unbound from its driver.
-> + * If for some reason the resource needs to be released explicitly, because
-> + * of ordering issues for example, drivers must call devm_release_resource()
-> + * rather than the regular release_resource().
-> + *
-> + * When a conflict is detected between any existing resources and the newly
-> + * requested resource, an error message will be printed.
-> + *
-> + * Returns 0 on success or a negative error code on failure.
-> + */
-> +int devm_request_resource(struct device *dev, struct resource *root,
-> +			  struct resource *new)
-> +{
-> +	struct resource *conflict, **ptr;
-> +
-> +	ptr = devres_alloc(devm_resource_release, sizeof(*ptr), GFP_KERNEL);
-> +	if (!ptr)
-> +		return -ENOMEM;
-> +
-> +	*ptr = new;
-> +
-> +	conflict = request_resource_conflict(root, new);
-> +	if (!conflict) {
-> +		devres_add(dev, ptr);
-> +		return 0;
-> +	}
-> +
-> +	dev_err(dev, "resource collision: %pR conflicts with %s %pR\n", new,
-> +		conflict->name, conflict);
-> +	devres_free(ptr);
-> +	return -EBUSY;
+If we want to allow loadable pcie-designware drivers, we have to
+export all those symbols and ensure none of them are marked as __init.
+This also requires making pci_assign_unassigned_resources available
+after boot.
 
-Personally I would write this as:
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+If we don't want this patch for some reason, we should instead mark
+this driver 'bool' in Kconfig, so it becomes impossible to encounter
+this build error.
 
-  conflict = request_resource_conflict(...);
-  if (conflict) {
-    dev_err(...);
-    devres_free(...);
-    return -EBUSY;
-  }
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 1eaf4df3618a..0348408ebc68 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -88,6 +88,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+ 
+ 	return PCIBIOS_SUCCESSFUL;
+ }
++EXPORT_SYMBOL_GPL(dw_pcie_cfg_read);
+ 
+ int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
+ {
+@@ -102,6 +103,7 @@ int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
+ 
+ 	return PCIBIOS_SUCCESSFUL;
+ }
++EXPORT_SYMBOL_GPL(dw_pcie_cfg_write);
+ 
+ static inline void dw_pcie_readl_rc(struct pcie_port *pp, u32 reg, u32 *val)
+ {
+@@ -182,6 +184,7 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(dw_handle_msi_irq);
+ 
+ void dw_pcie_msi_init(struct pcie_port *pp)
+ {
+@@ -192,6 +195,7 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+ 			virt_to_phys((void *)pp->msi_data));
+ 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
+ }
++EXPORT_SYMBOL_GPL(dw_pcie_msi_init);
+ 
+ static int find_valid_pos0(struct pcie_port *pp, int msgvec, int pos, int *pos0)
+ {
+@@ -378,6 +382,7 @@ int dw_pcie_link_up(struct pcie_port *pp)
+ 	else
+ 		return 0;
+ }
++EXPORT_SYMBOL_GPL(dw_pcie_link_up);
+ 
+ static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+ 			irq_hw_number_t hwirq)
+@@ -393,7 +398,7 @@ static const struct irq_domain_ops msi_domain_ops = {
+ 	.map = dw_pcie_msi_map,
+ };
+ 
+-int __init dw_pcie_host_init(struct pcie_port *pp)
++int dw_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct device_node *np = pp->dev->of_node;
+ 	struct of_pci_range range;
+@@ -503,6 +508,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(dw_pcie_host_init);
+ 
+ static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
+ {
+@@ -829,6 +835,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
+ 	dw_pcie_writel_rc(pp, val, PCI_COMMAND);
+ }
++EXPORT_SYMBOL_GPL(dw_pcie_setup_rc);
+ 
+ MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
+ MODULE_DESCRIPTION("Designware PCIe host controller driver");
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 6373985ad3f7..eeef7a1f4d0d 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1634,7 +1634,7 @@ dump:
+ 	pci_bus_dump_resources(bus);
+ }
+ 
+-void __init pci_assign_unassigned_resources(void)
++void pci_assign_unassigned_resources(void)
+ {
+ 	struct pci_bus *root_bus;
+ 
 
-  devres_add(...);
-  return 0;
-
-so the straight-line path is the normal, non-error path and errors are
-detected and dealt with in the "if" bodies.  Right now the "if" bodies
-are a mix of error handling and normal path.  But that's just my personal
-preference.
-
-> +}
-> +EXPORT_SYMBOL(devm_request_resource);
-> +
-> +static int devm_resource_match(struct device *dev, void *res, void *data)
-> +{
-> +	struct resource **ptr = res;
-> +
-> +	if (WARN_ON(!ptr || !*ptr))
-> +		return 0;
-> +
-> +	return *ptr == data;
-> +}
-> +
-> +/**
-> + * devm_release_resource() - release a previously requested resource
-> + * @dev: device for which to release the resource
-> + * @new: descriptor of the resource to release
-> + *
-> + * Releases a resource previously requested using devm_request_resource().
-> + */
-> +void devm_release_resource(struct device *dev, struct resource *new)
-> +{
-> +	WARN_ON(devres_release(dev, devm_resource_release, devm_resource_match,
-> +			       new));
-> +}
-> +EXPORT_SYMBOL(devm_release_resource);
-> +
->  struct region_devres {
->  	struct resource *parent;
->  	resource_size_t start;
-> -- 
-> 2.0.1
-> 
