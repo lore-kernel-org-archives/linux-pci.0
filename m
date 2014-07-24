@@ -1,263 +1,352 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:17446 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750975AbaGMXDi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Jul 2014 19:03:38 -0400
-Date: Sun, 13 Jul 2014 19:03:28 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: suravee.suthikulpanit@amd.com
-Cc: marc.zyngier@arm.com, mark.rutland@arm.com, pawel.moll@arm.com,
-	Catalin.Marinas@arm.com, Will.Deacon@arm.com, tglx@linutronix.de,
-	Harish.Kasiviswanathan@amd.com,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH 4/4 V3] irqchip: gicv2m: Add support for multiple MSI
- for ARM64 GICv2m
-Message-ID: <20140713230328.GL13108@titan.lakedaemon.net>
-References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
- <1404947104-21345-5-git-send-email-suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1404947104-21345-5-git-send-email-suravee.suthikulpanit@amd.com>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:43925 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758721AbaGXGXE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 02:23:04 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 24 Jul 2014 16:23:02 +1000
+Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id C4A4D2CE8055
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 16:23:00 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s6O6070D50790492
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 16:00:07 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s6O6MxGI001354
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 16:23:00 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V7 17/17] powerpc/powernv: Group VF PE when IOV BAR is big on PHB3
+Date: Thu, 24 Jul 2014 14:22:27 +0800
+Message-Id: <1406182947-11302-18-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Suravee,
+When IOV BAR is big, each of it is covered by 4 M64 window. This leads to
+several VF PE sits in one PE in terms of M64.
 
-If you need to respin this series, please change the subject line to
-"irqchip: gic-v2m: ..."  If there are no other changes needed, It can be
-fixed up when applied.
+This patch group VF PEs according to the M64 allocation.
 
-thx,
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h     |    2 +-
+ arch/powerpc/platforms/powernv/pci-ioda.c |  187 +++++++++++++++++++++++------
+ 2 files changed, 149 insertions(+), 40 deletions(-)
 
-Jason.
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 9c2c826..41e52e3 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -180,7 +180,7 @@ struct pci_dn {
+ #define M64_PER_IOV 4
+ 	int     m64_per_iov;
+ #define IODA_INVALID_M64        (-1)
+-	int     m64_wins[PCI_SRIOV_NUM_BARS];
++	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
+ #endif /* CONFIG_PCI_IOV */
+ #endif
+ 	struct list_head child_list;
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 98fa01d..88aa14f 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -997,26 +997,27 @@ static int pnv_pci_vf_release_m64(struct pci_dev *pdev)
+ 	struct pci_controller *hose;
+ 	struct pnv_phb        *phb;
+ 	struct pci_dn         *pdn;
+-	int                    i;
++	int                    i, j;
+ 
+ 	bus = pdev->bus;
+ 	hose = pci_bus_to_host(bus);
+ 	phb = hose->private_data;
+ 	pdn = pci_get_pdn(pdev);
+ 
+-	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		if (pdn->m64_wins[i] == IODA_INVALID_M64)
+-			continue;
+-		opal_pci_phb_mmio_enable(phb->opal_id,
+-				OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i], 0);
+-		clear_bit(pdn->m64_wins[i], &phb->ioda.m64_bar_alloc);
+-		pdn->m64_wins[i] = IODA_INVALID_M64;
+-	}
++	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
++		for (j = 0; j < M64_PER_IOV; j++) {
++			if (pdn->m64_wins[i][j] == IODA_INVALID_M64)
++				continue;
++			opal_pci_phb_mmio_enable(phb->opal_id,
++				OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i][j], 0);
++			clear_bit(pdn->m64_wins[i][j], &phb->ioda.m64_bar_alloc);
++			pdn->m64_wins[i][j] = IODA_INVALID_M64;
++		}
+ 
+ 	return 0;
+ }
+ 
+-static int pnv_pci_vf_assign_m64(struct pci_dev *pdev)
++static int pnv_pci_vf_assign_m64(struct pci_dev *pdev, u16 vf_num)
+ {
+ 	struct pci_bus        *bus;
+ 	struct pci_controller *hose;
+@@ -1024,17 +1025,33 @@ static int pnv_pci_vf_assign_m64(struct pci_dev *pdev)
+ 	struct pci_dn         *pdn;
+ 	unsigned int           win;
+ 	struct resource       *res;
+-	int                    i;
++	int                    i, j;
+ 	int64_t                rc;
++	int                    total_vfs;
++	resource_size_t        size, start;
++	int                    pe_num;
++	int                    vf_groups;
++	int                    vf_per_group;
+ 
+ 	bus = pdev->bus;
+ 	hose = pci_bus_to_host(bus);
+ 	phb = hose->private_data;
+ 	pdn = pci_get_pdn(pdev);
++	total_vfs = pci_sriov_get_totalvfs(pdev);
+ 
+ 	/* Initialize the m64_wins to IODA_INVALID_M64 */
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
+-		pdn->m64_wins[i] = IODA_INVALID_M64;
++		for (j = 0; j < M64_PER_IOV; j++)
++			pdn->m64_wins[i][j] = IODA_INVALID_M64;
++
++	if (pdn->m64_per_iov == M64_PER_IOV) {
++		vf_groups = (vf_num <= M64_PER_IOV) ? vf_num: M64_PER_IOV;
++		vf_per_group = (vf_num <= M64_PER_IOV)? 1:
++			__roundup_pow_of_two(vf_num) / pdn->m64_per_iov;
++	} else {
++		vf_groups = 1;
++		vf_per_group = 1;
++	}
+ 
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		res = pdev->resource + PCI_IOV_RESOURCES + i;
+@@ -1044,33 +1061,61 @@ static int pnv_pci_vf_assign_m64(struct pci_dev *pdev)
+ 		if (!pnv_pci_is_mem_pref_64(res->flags))
+ 			continue;
+ 
+-		do {
+-			win = find_next_zero_bit(&phb->ioda.m64_bar_alloc,
+-					phb->ioda.m64_bar_idx + 1, 0);
+-
+-			if (win >= phb->ioda.m64_bar_idx + 1)
+-				goto m64_failed;
+-		} while (test_and_set_bit(win, &phb->ioda.m64_bar_alloc));
++		for (j = 0; j < vf_groups; j++) {
++			do {
++				win = find_next_zero_bit(&phb->ioda.m64_bar_alloc,
++						phb->ioda.m64_bar_idx + 1, 0);
++
++				if (win >= phb->ioda.m64_bar_idx + 1)
++					goto m64_failed;
++			} while (test_and_set_bit(win, &phb->ioda.m64_bar_alloc));
++
++			pdn->m64_wins[i][j] = win;
++
++			if (pdn->m64_per_iov == M64_PER_IOV) {
++				size = pnv_pci_sriov_resource_size(pdev,
++								   PCI_IOV_RESOURCES + i);
++				size = size * vf_per_group;
++				start = res->start + size * j;
++			} else {
++				size = resource_size(res);
++				start = res->start;
++			}
+ 
+-		pdn->m64_wins[i] = win;
++			/* Map the M64 here */
++			if (pdn->m64_per_iov == M64_PER_IOV) {
++				pe_num = pdn->offset + j;
++				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
++						pe_num, OPAL_M64_WINDOW_TYPE,
++						pdn->m64_wins[i][j], 0);
++			}
+ 
+-		/* Map the M64 here */
+-		rc = opal_pci_set_phb_mem_window(phb->opal_id,
++			rc = opal_pci_set_phb_mem_window(phb->opal_id,
+ 						 OPAL_M64_WINDOW_TYPE,
+-						 pdn->m64_wins[i],
+-						 res->start,
++						 pdn->m64_wins[i][j],
++						 start,
+ 						 0, /* unused */
+-						 resource_size(res));
+-		if (rc != OPAL_SUCCESS) {
+-			pr_err("Failed to map M64 BAR #%d: %lld\n", win, rc);
+-			goto m64_failed;
+-		}
++						 size);
+ 
+-		rc = opal_pci_phb_mmio_enable(phb->opal_id,
+-				OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i], 1);
+-		if (rc != OPAL_SUCCESS) {
+-			pr_err("Failed to enable M64 BAR #%d: %llx\n", win, rc);
+-			goto m64_failed;
++
++			if (rc != OPAL_SUCCESS) {
++				pr_err("Failed to set M64 BAR #%d: %lld\n",
++						win, rc);
++				goto m64_failed;
++			}
++
++			if (pdn->m64_per_iov == M64_PER_IOV)
++				rc = opal_pci_phb_mmio_enable(phb->opal_id,
++				     OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i][j], 2);
++			else
++				rc = opal_pci_phb_mmio_enable(phb->opal_id,
++				     OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i][j], 1);
++
++			if (rc != OPAL_SUCCESS) {
++				pr_err("Failed to enable M64 BAR #%d: %llx\n",
++						win, rc);
++				goto m64_failed;
++			}
+ 		}
+ 	}
+ 	return 0;
+@@ -1111,21 +1156,53 @@ static void pnv_pci_ioda2_release_dma_pe(struct pci_dev *dev, struct pnv_ioda_pe
+ 	pe->tce32_table = NULL;
+ }
+ 
+-static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
++static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 vf_num)
+ {
+ 	struct pci_bus        *bus;
+ 	struct pci_controller *hose;
+ 	struct pnv_phb        *phb;
+ 	struct pnv_ioda_pe    *pe, *pe_n;
+ 	struct pci_dn         *pdn;
++	u16                    vf_index;
++	int64_t                rc;
+ 
+ 	bus = pdev->bus;
+ 	hose = pci_bus_to_host(bus);
+ 	phb = hose->private_data;
++	pdn = pci_get_pdn(pdev);
+ 
+ 	if (!pdev->is_physfn)
+ 		return;
+ 
++	if (pdn->m64_per_iov == M64_PER_IOV && vf_num > M64_PER_IOV) {
++		int   vf_group;
++		int   vf_per_group;
++		int   vf_index1;
++
++		vf_per_group = __roundup_pow_of_two(vf_num) / pdn->m64_per_iov;
++
++		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++)
++			for (vf_index = vf_group * vf_per_group;
++				vf_index < (vf_group + 1) * vf_per_group &&
++				vf_index < vf_num;
++				vf_index++)
++				for (vf_index1 = vf_group * vf_per_group;
++					vf_index1 < (vf_group + 1) * vf_per_group &&
++					vf_index1 < vf_num;
++					vf_index1++){
++
++					rc = opal_pci_set_peltv(phb->opal_id,
++						pdn->offset + vf_index,
++						pdn->offset + vf_index1,
++						OPAL_REMOVE_PE_FROM_DOMAIN);
++
++					if (rc)
++					    pr_warn("%s: Failed to unlink same"
++						" group PE#%d(%lld)\n", __func__,
++						pdn->offset + vf_index1, rc);
++				}
++	}
++
+ 	pdn = pci_get_pdn(pdev);
+ 	list_for_each_entry_safe(pe, pe_n, &phb->ioda.pe_list, list) {
+ 		if (pe->parent_dev != pdev)
+@@ -1161,10 +1238,11 @@ void pnv_pci_sriov_disable(struct pci_dev *pdev)
+ 	vf_num = pdn->vf_pes;
+ 
+ 	/* Release VF PEs */
+-	pnv_ioda_release_vf_PE(pdev);
++	pnv_ioda_release_vf_PE(pdev, vf_num);
+ 
+ 	if (phb->type == PNV_PHB_IODA2) {
+-		pnv_pci_vf_resource_shift(pdev, -pdn->offset);
++		if (pdn->m64_per_iov == 1)
++			pnv_pci_vf_resource_shift(pdev, -pdn->offset);
+ 
+ 		/* Release M64 BARs */
+ 		pnv_pci_vf_release_m64(pdev);
+@@ -1188,6 +1266,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 vf_num)
+ 	int                    pe_num;
+ 	u16                    vf_index;
+ 	struct pci_dn         *pdn;
++	int64_t                rc;
+ 
+ 	bus = pdev->bus;
+ 	hose = pci_bus_to_host(bus);
+@@ -1235,7 +1314,36 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 vf_num)
+ 		mutex_unlock(&phb->ioda.pe_list_mutex);
+ 
+ 		pnv_pci_ioda2_setup_dma_pe(phb, pe);
++	}
+ 
++	if (pdn->m64_per_iov == M64_PER_IOV && vf_num > M64_PER_IOV) {
++		int   vf_group;
++		int   vf_per_group;
++		int   vf_index1;
++
++		vf_per_group = __roundup_pow_of_two(vf_num) / pdn->m64_per_iov;
++
++		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++)
++			for (vf_index = vf_group * vf_per_group;
++				vf_index < (vf_group + 1) * vf_per_group &&
++				vf_index < vf_num;
++				vf_index++)
++				for (vf_index1 = vf_group * vf_per_group;
++					vf_index1 < (vf_group + 1) * vf_per_group &&
++					vf_index1 < vf_num;
++					vf_index1++) {
++
++					rc = opal_pci_set_peltv(phb->opal_id,
++						pdn->offset + vf_index,
++						pdn->offset + vf_index1,
++						OPAL_ADD_PE_TO_DOMAIN);
++
++					if (rc)
++					    pr_warn("%s: Failed to link same "
++						"group PE#%d(%lld)\n",
++						__func__,
++						pdn->offset + vf_index1, rc);
++			}
+ 	}
+ }
+ 
+@@ -1274,14 +1382,15 @@ try_again:
+ 		mutex_unlock(&phb->ioda.pe_alloc_mutex);
+ 
+ 		/* Assign M64 BAR accordingly */
+-		ret = pnv_pci_vf_assign_m64(pdev);
++		ret = pnv_pci_vf_assign_m64(pdev, vf_num);
+ 		if (ret) {
+ 			pr_info("No enough M64 resource\n");
+ 			goto m64_failed;
+ 		}
+ 
+ 		/* Do some magic shift */
+-		pnv_pci_vf_resource_shift(pdev, pdn->offset);
++		if (pdn->m64_per_iov == 1)
++			pnv_pci_vf_resource_shift(pdev, pdn->offset);
+ 	}
+ 
+ 	/* Setup VF PEs */
+-- 
+1.7.9.5
 
-On Wed, Jul 09, 2014 at 06:05:04PM -0500, suravee.suthikulpanit@amd.com wrote:
-> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> 
-> This patch extend GICv2m MSI to support multiple MSI in ARM64.
-> 
-> This requires the common arch_setup_msi_irqs() to be overwriten
-> with ARM64 version which does not return 1 for PCI_CAP_ID_MSI and
-> nvec > 1.
-> 
-> Cc: Mark Rutland <Mark.Rutland@arm.com>
-> Cc: Marc Zyngier <Marc.Zyngier@arm.com>
-> Cc: Jason Cooper <jason@lakedaemon.net>
-> Cc: Catalin Marinas <Catalin.Marinas@arm.com>
-> Cc: Will Deacon <Will.Deacon@arm.com>
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> ---
->  arch/arm64/include/asm/msi.h  | 15 ++++++++
->  arch/arm64/kernel/Makefile    |  1 +
->  arch/arm64/kernel/msi.c       | 57 ++++++++++++++++++++++++++++++
->  drivers/irqchip/irq-gic-v2m.c | 80 +++++++++++++++++++++++++++++++++++++++++++
->  4 files changed, 153 insertions(+)
->  create mode 100644 arch/arm64/include/asm/msi.h
->  create mode 100644 arch/arm64/kernel/msi.c
-> 
-> diff --git a/arch/arm64/include/asm/msi.h b/arch/arm64/include/asm/msi.h
-> new file mode 100644
-> index 0000000..2a0944a
-> --- /dev/null
-> +++ b/arch/arm64/include/asm/msi.h
-> @@ -0,0 +1,15 @@
-> +#ifndef _ASM_ARM64_MSI_H_
-> +#define _ASM_ARM64_MSI_H_
-> +
-> +struct pci_dev;
-> +struct msi_desc;
-> +
-> +struct arm64_msi_ops {
-> +	int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
-> +	void (*teardown_msi_irqs)(struct pci_dev *dev);
-> +};
-> +
-> +extern struct arm64_msi_ops arm64_msi;
-> +extern int arm64_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
-> +
-> +#endif /* _ASM_ARM64_MSI_H_ */
-> diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
-> index cdaedad..0636e27 100644
-> --- a/arch/arm64/kernel/Makefile
-> +++ b/arch/arm64/kernel/Makefile
-> @@ -29,6 +29,7 @@ arm64-obj-$(CONFIG_ARM64_CPU_SUSPEND)	+= sleep.o suspend.o
->  arm64-obj-$(CONFIG_JUMP_LABEL)		+= jump_label.o
->  arm64-obj-$(CONFIG_KGDB)		+= kgdb.o
->  arm64-obj-$(CONFIG_EFI)			+= efi.o efi-stub.o efi-entry.o
-> +arm64-obj-$(CONFIG_PCI_MSI)		+= msi.o
->  
->  obj-y					+= $(arm64-obj-y) vdso/
->  obj-m					+= $(arm64-obj-m)
-> diff --git a/arch/arm64/kernel/msi.c b/arch/arm64/kernel/msi.c
-> new file mode 100644
-> index 0000000..ed62397
-> --- /dev/null
-> +++ b/arch/arm64/kernel/msi.c
-> @@ -0,0 +1,57 @@
-> +/*
-> + * ARM64 architectural MSI implemention
-> + *
-> + * Support for Message Signalelled Interrupts for systems that
-> + * implement ARM Generic Interrupt Controller: GICv2m.
-> + *
-> + * Copyright (C) 2014 Advanced Micro Devices, Inc.
-> + * Authors: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify it
-> + * under the terms of the GNU General Public License version 2 as published
-> + * by the Free Software Foundation.
-> + */
-> +
-> +#include <linux/irq.h>
-> +#include <linux/msi.h>
-> +#include <linux/pci.h>
-> +
-> +#include <asm/msi.h>
-> +
-> +/*
-> + * ARM64 function for seting up MSI irqs.
-> + * Copied from driver/pci/msi.c: arch_setup_msi_irqs().
-> + */
-> +int arm64_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-> +{
-> +	struct msi_desc *entry;
-> +	int ret;
-> +
-> +	if (type == PCI_CAP_ID_MSI && nvec > 1)
-> +		return 1;
-> +
-> +	list_for_each_entry(entry, &dev->msi_list, list) {
-> +		ret = arch_setup_msi_irq(dev, entry);
-> +		if (ret < 0)
-> +			return ret;
-> +		if (ret > 0)
-> +			return -ENOSPC;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +struct arm64_msi_ops arm64_msi = {
-> +	.setup_msi_irqs         = arm64_setup_msi_irqs,
-> +	.teardown_msi_irqs      = default_teardown_msi_irqs,
-> +};
-> +
-> +int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-> +{
-> +	return arm64_msi.setup_msi_irqs(dev, nvec, type);
-> +}
-> +
-> +void arch_teardown_msi_irqs(struct pci_dev *dev)
-> +{
-> +	arm64_msi.teardown_msi_irqs(dev);
-> +}
-> diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
-> index e54ca1d..9d88ad9 100644
-> --- a/drivers/irqchip/irq-gic-v2m.c
-> +++ b/drivers/irqchip/irq-gic-v2m.c
-> @@ -24,6 +24,10 @@
->  #include <linux/of_pci.h>
->  #include <linux/bitmap.h>
->  
-> +#ifdef CONFIG_ARM64
-> +#include <asm/msi.h>
-> +#endif
-> +
->  #include "irqchip.h"
->  #include "irq-gic.h"
->  
-> @@ -216,6 +220,80 @@ static struct irq_chip gicv2m_chip = {
->  #endif
->  };
->  
-> +
-> +/*
-> + * _gicv2m_setup_msi_irqs - Setup MSI interrupts for the given PCI device.
-> + * This overrides the weak definition in ./drivers/pci/msi.c.
-> + * If nvec interrupts are irqable, then assign it to PCI device.
-> + * Otherwise return error.
-> + *
-> + * @pdev: PCI device which is requesting to enable MSI
-> + * @nvec: number of MSI vectors
-> + */
-> +static int _gicv2m_setup_msi_irqs(struct pci_dev *pdev, int nvec)
-> +{
-> +	int irq = 0, nvec_pow2 = 0, avail;
-> +	int i = 0;
-> +	struct msi_msg msg;
-> +	phys_addr_t addr;
-> +	struct msi_desc *entry;
-> +	struct msi_chip *chip = pdev->bus->msi;
-> +	struct v2m_data *data = to_v2m_data(chip);
-> +
-> +	BUG_ON(list_empty(&pdev->msi_list));
-> +	WARN_ON(!list_is_singular(&pdev->msi_list));
-> +
-> +	entry = list_first_entry(&pdev->msi_list, struct msi_desc, list);
-> +	WARN_ON(entry->irq);
-> +	WARN_ON(entry->msi_attrib.multiple);
-> +	WARN_ON(entry->nvec_used);
-> +	WARN_ON(!entry->dev);
-> +
-> +	avail = alloc_msi_irq(data, nvec, &irq);
-> +	if (avail != 0) {
-> +		dev_err(&pdev->dev,
-> +			"GICv2m: Failed to allocate %d irqs.\n", nvec);
-> +		return avail;
-> +	}
-> +
-> +	/* Set lowest of the new interrupts assigned to the PCI device */
-> +	nvec_pow2 = __roundup_pow_of_two(nvec);
-> +	entry->nvec_used = nvec;
-> +	entry->msi_attrib.multiple = ilog2(nvec_pow2);
-> +
-> +	for (i = 0; i < nvec; i++) {
-> +		irq_set_chip_data(irq+i, chip);
-> +		if (irq_set_msi_desc_off(irq, i, entry)) {
-> +			dev_err(&pdev->dev,
-> +				"GICv2m: Failed to set up MSI irq %d\n",
-> +				(irq+i));
-> +			return -EINVAL;
-> +		}
-> +
-> +		irq_set_irq_type((irq+i), IRQ_TYPE_EDGE_RISING);
-> +	}
-> +
-> +	addr = data->res.start + V2M_MSI_SETSPI_NS;
-> +	msg.address_hi = (u32)(addr >> 32);
-> +	msg.address_lo = (u32)(addr);
-> +	msg.data = irq;
-> +	write_msi_msg(irq, &msg);
-> +
-> +	return 0;
-> +}
-> +
-> +static int
-> +gicv2m_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
-> +{
-> +	int ret;
-> +
-> +	if (type == PCI_CAP_ID_MSI)
-> +		ret = _gicv2m_setup_msi_irqs(pdev, nvec);
-> +	else
-> +		ret = arm64_setup_msi_irqs(pdev, nvec, type);
-> +	return ret;
-> +}
-> +
->  #ifdef CONFIG_OF
->  static int __init
->  gicv2m_of_init(struct device_node *node, struct device_node *parent)
-> @@ -229,6 +307,8 @@ gicv2m_of_init(struct device_node *node, struct device_node *parent)
->  		return ret;
->  	}
->  
-> +	arm64_msi.setup_msi_irqs = &gicv2m_setup_msi_irqs;
-> +
->  	gic->msi_chip.owner = THIS_MODULE;
->  	gic->msi_chip.of_node = node;
->  	gic->msi_chip.setup_irq = gicv2m_setup_msi_irq;
-> -- 
-> 1.9.0
-> 
