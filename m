@@ -1,63 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:58216 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754647AbaGPSyq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 14:54:46 -0400
-Received: by mail-ie0-f182.google.com with SMTP id y20so1251209ier.13
-        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 11:54:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAKAYmMLhPhukBbR8NhPk3EigmvwiX+DEGj-Mod7zpHMnZKRsLw@mail.gmail.com>
-References: <CAKAYmMLfxkmaVxaPDd6z=B0ESQ3mR=dUG4OFFgEoy0295qLYgg@mail.gmail.com>
- <CAKAYmMLhPhukBbR8NhPk3EigmvwiX+DEGj-Mod7zpHMnZKRsLw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 16 Jul 2014 12:54:26 -0600
-Message-ID: <CAErSpo7vooChRfSF6oY8GcqVYZruv-7_D0zm3a4M_KDVMbWNiA@mail.gmail.com>
-Subject: Re: Error assigning BAR 0 to hotplugged device
-To: Chuck Tuffli <ctuffli@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from e28smtp02.in.ibm.com ([122.248.162.2]:41275 "EHLO
+	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758710AbaGXGWy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 02:22:54 -0400
+Received: from /spool/local
+	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 24 Jul 2014 11:52:53 +0530
+Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 35684E004C
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:54:32 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay05.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s6O6NCZn2294258
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:53:13 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s6O6Mo6E011121
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:51 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V7 11/17] powerpc/powernv: Add function to deconfig a PE
+Date: Thu, 24 Jul 2014 14:22:21 +0800
+Message-Id: <1406182947-11302-12-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yinghai]
+On PowerNV platform, it will support dynamic PE allocation and deallocation.
 
-On Wed, Jul 16, 2014 at 11:19 AM, Chuck Tuffli <ctuffli@gmail.com> wrote:
-> On Tue, Jul 8, 2014 at 12:37 PM, Chuck Tuffli <ctuffli@gmail.com> wrote:
->> On a system with a recent Fedora kernel (3.14.9-200.fc20.x86_64), a
->> hotplugged PCI device is unable to get memory mapped IO:
->> ...
->> [  183.247377] pcieport 0000:9a:00.0: BAR 15: can't assign mem pref
->> (size 0x100000)
->> [  183.247384] pcieport 0000:9b:15.0: BAR 14: can't assign mem (size 0x100000)
->> [  183.247388] pcieport 0000:9b:15.0: BAR 15: can't assign mem pref
->> (size 0x100000)
->> [  183.247394] pci 0000:a5:00.0: BAR 6: can't assign mem pref (size 0x10000)
->> [  183.247397] pci 0000:a5:00.0: BAR 0: can't assign mem (size 0x4000)
->>
->> The device is connected to a switch supporting hotplug (i.e. SltCap
->> includes HotPlug+) and I have added
->> pci=realloc,hpmemsize=16M
->> to the kernel boot parameters. This appears to have increased the
->> prefetchable memory but not the memory mapped IO:
->
-> Further investigation suggests that pbus_size_mem() never really gets
-> a chance to increase the bridge aperture by the hpmemsize value
-> because find_free_bus_resource() returns NULL. This apparently happens
-> because the function "skip[s] the bus resources which have already
-> been assigned (that is, have non-NULL parent resource)". Specifically,
-> it checks
->
->     if (r && (r->flags & type_mask) == type && !r->parent)
->
-> and in my configuration, finds that r->parent != NULL for the memory
-> mapped IO resource. Wouldn't r->parent be non-NULL in most cases other
-> than for bridges in the root complex? If so, does that imply hpmemsize
-> would only be used for bridges advertising hot plug in the root
-> complex?
+This patch adds a function to release those resources related to a PE. Also
+fix a bug when it is the root bus, there is no bridge associated.
 
-Thanks for chasing this down.  I'm going to be on vacation for a few
-weeks and won't be able to work on this until I return.  I added
-Yinghai, who will probably have a suggestion for you.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c |   90 ++++++++++++++++++++++++++++-
+ 1 file changed, 89 insertions(+), 1 deletion(-)
 
-Bjorn
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index d66a76b..8318b07 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -505,6 +505,93 @@ static struct pnv_ioda_pe *pnv_ioda_get_pe(struct pci_dev *dev)
+ }
+ #endif /* CONFIG_PCI_MSI */
+ 
++static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
++{
++	struct pci_dev *parent;
++	uint8_t bcomp, dcomp, fcomp;
++	int64_t rc;
++	long rid_end, rid;
++
++	/* Currently, we just deconfigure VF PE. Bus PE will always there.*/
++	if (pe->pbus) {
++		int count;
++
++		dcomp = OPAL_IGNORE_RID_DEVICE_NUMBER;
++		fcomp = OPAL_IGNORE_RID_FUNCTION_NUMBER;
++		parent = pe->pbus->self;
++		if (pe->flags & PNV_IODA_PE_BUS_ALL)
++			count = pe->pbus->busn_res.end - pe->pbus->busn_res.start + 1;
++		else
++			count = 1;
++
++		switch(count) {
++		case  1: bcomp = OpalPciBusAll;         break;
++		case  2: bcomp = OpalPciBus7Bits;       break;
++		case  4: bcomp = OpalPciBus6Bits;       break;
++		case  8: bcomp = OpalPciBus5Bits;       break;
++		case 16: bcomp = OpalPciBus4Bits;       break;
++		case 32: bcomp = OpalPciBus3Bits;       break;
++		default:
++			pr_err("%s: Number of subordinate busses %d"
++			       " unsupported\n",
++			       pci_is_root_bus(pe->pbus)?"root bus":pci_name(pe->pbus->self),
++			       count);
++			/* Do an exact match only */
++			bcomp = OpalPciBusAll;
++		}
++		rid_end = pe->rid + (count << 8);
++	} else {
++		parent = pe->pdev->bus->self;
++		bcomp = OpalPciBusAll;
++		dcomp = OPAL_COMPARE_RID_DEVICE_NUMBER;
++		fcomp = OPAL_COMPARE_RID_FUNCTION_NUMBER;
++		rid_end = pe->rid + 1;
++	}
++
++	/* Disable MVT on IODA1 */
++	if (phb->type == PNV_PHB_IODA1) {
++		rc = opal_pci_set_mve_enable(phb->opal_id,
++					     pe->mve_number, OPAL_DISABLE_MVE);
++		if (rc) {
++			pe_err(pe, "OPAL error %ld enabling MVE %d\n",
++			       rc, pe->mve_number);
++			pe->mve_number = -1;
++		}
++	}
++	/* Clear the reverse map */
++	for (rid = pe->rid; rid < rid_end; rid++)
++		phb->ioda.pe_rmap[rid] = 0;
++
++	/* Release from all parents PELT-V */
++	while (parent) {
++		struct pci_dn *pdn = pci_get_pdn(parent);
++		if (pdn && pdn->pe_number != IODA_INVALID_PE) {
++			rc = opal_pci_set_peltv(phb->opal_id, pdn->pe_number,
++						pe->pe_number, OPAL_REMOVE_PE_FROM_DOMAIN);
++			/* XXX What to do in case of error ? */
++		}
++		parent = parent->bus->self;
++	}
++
++	opal_pci_eeh_freeze_set(phb->opal_id, pe->pe_number,
++				  OPAL_EEH_ACTION_CLEAR_FREEZE_ALL);
++
++	/* Dissociate PE in PELT */
++	rc = opal_pci_set_peltv(phb->opal_id, pe->pe_number,
++				pe->pe_number, OPAL_REMOVE_PE_FROM_DOMAIN);
++	if (rc)
++		pe_warn(pe, "OPAL error %ld remove self from PELTV\n", rc);
++	rc = opal_pci_set_pe(phb->opal_id, pe->pe_number, pe->rid,
++			     bcomp, dcomp, fcomp, OPAL_UNMAP_PE);
++	if (rc)
++		pe_err(pe, "OPAL error %ld trying to setup PELT table\n", rc);
++
++	pe->pbus = NULL;
++	pe->pdev = NULL;
++
++	return 0;
++}
++
+ static int pnv_ioda_configure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+ {
+ 	struct pci_dev *parent;
+@@ -533,7 +620,8 @@ static int pnv_ioda_configure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+ 		default:
+ 			pr_err("%s: Number of subordinate busses %d"
+ 			       " unsupported\n",
+-			       pci_name(pe->pbus->self), count);
++			       pci_is_root_bus(pe->pbus)?"root bus":pci_name(pe->pbus->self),
++			       count);
+ 			/* Do an exact match only */
+ 			bcomp = OpalPciBusAll;
+ 		}
+-- 
+1.7.9.5
+
