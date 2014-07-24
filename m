@@ -1,71 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp02.citrix.com ([66.165.176.63]:32448 "EHLO
-	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753721AbaGJNDg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 09:03:36 -0400
-From: David Vrabel <david.vrabel@citrix.com>
-To: <linux-pci@vger.kernel.org>
-CC: David Vrabel <david.vrabel@citrix.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<xen-devel@lists.xenproject.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Subject: [PATCH 1/2] pci: export pci_probe_reset_function()
-Date: Thu, 10 Jul 2014 14:03:13 +0100
-Message-ID: <1404997394-15715-2-git-send-email-david.vrabel@citrix.com>
-In-Reply-To: <1404997394-15715-1-git-send-email-david.vrabel@citrix.com>
-References: <1404997394-15715-1-git-send-email-david.vrabel@citrix.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:56974 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933524AbaGXKEm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 06:04:42 -0400
+Message-ID: <1406196163.4590.21.camel@weser.hi.pengutronix.de>
+Subject: Re: [RFC] PCI: pcie-designware: allow drivers as loadable modules
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Mohit Kumar <mohit.kumar@st.com>, Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Date: Thu, 24 Jul 2014 12:02:43 +0200
+In-Reply-To: <5303286.K45Li7B92z@wuerfel>
+References: <5303286.K45Li7B92z@wuerfel>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The xen-pciback needs to test if a per-function reset is available so
-it can provide an interface for a safe bus reset instead.
+Am Donnerstag, den 24.07.2014, 11:17 +0200 schrieb Arnd Bergmann:
+> From 0ee79c7451851a34e5a7c33eb6020befcdcb2b24 Mon Sep 17 00:00:00 2001
+> From: Arnd Bergmann <arnd@arndb.de>
+> Date: Thu, 24 Jul 2014 11:12:48 +0200
+> Subject: [PATCH] PCI: pcie-designware: allow drivers as loadable modules
+> 
+> The new pcie-spear13xx driver uses the pcie-designware library
+> and in the current form it can be built as a loadable module.
+> However, the functions it uses from the base driver are not exported,
+> so this results in a build failure and a module that can never
+> be loaded:
+> 
+> ERROR: "dw_pcie_host_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> ERROR: "dw_handle_msi_irq" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> ERROR: "dw_pcie_msi_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> ERROR: "dw_pcie_cfg_write" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> ERROR: "dw_pcie_cfg_read" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> ERROR: "dw_pcie_setup_rc" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> ERROR: "dw_pcie_link_up" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> 
+> If we want to allow loadable pcie-designware drivers, we have to
+> export all those symbols and ensure none of them are marked as __init.
+> This also requires making pci_assign_unassigned_resources available
+> after boot.
 
-Signed-off-by: David Vrabel <david.vrabel@citrix.com>
----
- drivers/pci/pci.c   |    1 +
- drivers/pci/pci.h   |    1 -
- include/linux/pci.h |    1 +
- 3 files changed, 2 insertions(+), 1 deletion(-)
+My series "PCI: designware: init order/resource alloc fixes" removes
+this function call from pcie-designware, so if it get's accepted this
+should not be necessary.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 63a54a3..950e517 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3459,6 +3459,7 @@ int pci_probe_reset_function(struct pci_dev *dev)
- {
- 	return pci_dev_reset(dev, 1);
- }
-+EXPORT_SYMBOL_GPL(pci_probe_reset_function);
- 
- /**
-  * pci_reset_function - quiesce and reset a PCI device function
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 0601890..7be87d4 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -28,7 +28,6 @@ enum pci_mmap_api {
- int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
- 		  enum pci_mmap_api mmap_api);
- #endif
--int pci_probe_reset_function(struct pci_dev *dev);
- 
- /**
-  * struct pci_platform_pm_ops - Firmware PM callbacks
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 466bcd1..a2d9871f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -968,6 +968,7 @@ int pcie_get_mps(struct pci_dev *dev);
- int pcie_set_mps(struct pci_dev *dev, int mps);
- int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- 			  enum pcie_link_width *width);
-+int pci_probe_reset_function(struct pci_dev *slot);
- int __pci_reset_function(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
+Regards,
+Lucas
 -- 
-1.7.10.4
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
