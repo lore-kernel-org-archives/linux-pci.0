@@ -1,150 +1,169 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:38622 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754426AbaGHMuF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Jul 2014 08:50:05 -0400
-Message-ID: <53BBE8BC.2090302@ti.com>
-Date: Tue, 8 Jul 2014 08:49:00 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<devicetree@vger.kernel.org>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v3 0/5] Add Keystone PCIe controller driver
-References: <1404164720-11066-1-git-send-email-m-karicheri2@ti.com> <20140705182332.GB28871@google.com>
-In-Reply-To: <20140705182332.GB28871@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from e28smtp01.in.ibm.com ([122.248.162.1]:60996 "EHLO
+	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758714AbaGXGWz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 02:22:55 -0400
+Received: from /spool/local
+	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 24 Jul 2014 11:52:53 +0530
+Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 71E01394006B
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:50 +0530 (IST)
+Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
+	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s6O6OeU78192258
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:54:40 +0530
+Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
+	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s6O6MnWZ018750
+	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:49 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V7 10/17] powerpc/powernv: Allocate pe->iommu_table dynamically
+Date: Thu, 24 Jul 2014 14:22:20 +0800
+Message-Id: <1406182947-11302-11-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/05/2014 02:23 PM, Bjorn Helgaas wrote:
-> On Mon, Jun 30, 2014 at 05:45:15PM -0400, Murali Karicheri wrote:
->> This patch add PCIe controller driver for Keystone SoCs. This
->> is based on v2 of the series posted to the mailing list.
->> Keystone PCI controller is based on version 3.65 of the DW
->> hardware. This driver re-uses some of the DW core driver
->> functions and required modification in some to support
->> the old DW h/w based Keystone driver.
->>
->> Please review and let me know if you have any comments.
->
-> I'm waiting for acks from Mohit or Jingoo for the designware changes.
->
-Bjorn,
+Current iommu_table of a PE is a static field. This will have a problem when
+iommu_free_table is called.
 
-Thanks for your email.
+This patch allocate iommu_table dynamically.
 
-So far I got Ack for 1/5 and 2/5. I will ping them today for 3/5 and 4/5.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/iommu.h          |    3 +++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   26 ++++++++++++++------------
+ arch/powerpc/platforms/powernv/pci.h      |    2 +-
+ 3 files changed, 18 insertions(+), 13 deletions(-)
 
-> I'd also like an ack from the devicetree folks for the Keystone binding.
->
-Ok
-> And I think we need a MAINTAINERS update for drivers/pci/host/\*keystone\*
-I will address your comments against 5/5 and discuss them if any and 
-make the above update for v4 and send the patch set to the list.
-
-Thanks and regards,
-
-Murali
->
->> CC: Santosh Shilimkar<santosh.shilimkar@ti.com>
->> CC: Russell King<linux@arm.linux.org.uk>
->> CC: Grant Likely<grant.likely@linaro.org>
->> CC: Rob Herring<robh+dt@kernel.org>
->> CC: Mohit Kumar<mohit.kumar@st.com>
->> CC: Jingoo Han<jg1.han@samsung.com>
->> CC: Bjorn Helgaas<bhelgaas@google.com>
->> CC: Pratyush Anand<pratyush.anand@st.com>
->> CC: Richard Zhu<r65037@freescale.com>
->> CC: Kishon Vijay Abraham I<kishon@ti.com>
->> CC: Marek Vasut<marex@denx.de>
->> CC: Arnd Bergmann<arnd@arndb.de>
->> CC: Pawel Moll<pawel.moll@arm.com>
->> CC: Mark Rutland<mark.rutland@arm.com>
->> CC: Ian Campbell<ijc+devicetree@hellion.org.uk>
->> CC: Kumar Gala<galak@codeaurora.org>
->> CC: Randy Dunlap<rdunlap@infradead.org>
->> CC: Grant Likely<grant.likely@linaro.org>
->>
->> Changelog:
->>
->> v3
->>   - DW application register handling code is now part of
->>     Keystone PCI driver. RFC had this code part of Keystone
->>     PCI driver, then V1 moved this to a separate file to
->>     re-use on other platforms that uses this version of the
->>     DW h/w. Then based on comments against v2, this is moved
->>     back to Keystone driver.
->>   - Keystone SerDes phy driver is removed from this series so that
->>     this can be merged independent of that patch
->>   - added msi_set_irq()/clear_irq() API's to support Keystone
->>
->> V2
->>   - Split the designware pcie enhancement patch to multiple
->>     patches based on functionality added
->>   - Remove the quirk code and add a patch to fix mps/mrss
->>     tuning for ARM. Use kernel command line parameter
->>     pci=pcie_bus_perf to work with Keystone PCI Controller.
->>     Following patch addressed this.
->>       [PATCH v1] ARM: pci: add call to pcie_bus_configure_settings()
->>   - Add documentation for device tree bindings
->>   - Add separate interrupt controller nodes for MSI and Legacy
->>     IRQs and use irq map for legacy IRQ
->>   - Use compatibility to identify v3.65 version of the DW hardware
->>     and use it to customize the designware common code.
->>   - Use reg property for configuration space instead of range
->>   - Other minor updates based on code inspection.
->>
->> V1
->>   - Add an interrupt controller node for Legacy irq chip and use
->>     interrupt map/map-mask property to map legacy IRQs A/B/C/D
->>   - Add a Phy driver to replace the original serdes driver
->>   - Move common application register handling code to a separate
->>     file to allow re-use across other platforms that use older
->>     DW PCIe h/w
->>   - PCI quirk for maximum read request size. Check and override only
->>     if the maximum is higher than what controller can handle.
->>   - Converted to a module platform driver.
->>
->> Murali Karicheri (5):
->>    PCI: designware: add rd[wr]_other_conf API
->>    PCI: designware: refactor MSI code to work with v3.65 dw hardware
->>    PCI: designware: refactor host init code to re-use on keystone PCI
->>    PCI: designware: enhance dw core driver to support Keystone PCI host
->>      controller
->>    PCI: add PCI controller for Keystone PCIe h/w
->>
->>   .../devicetree/bindings/pci/designware-pcie.txt    |    2 +
->>   .../devicetree/bindings/pci/pci-keystone.txt       |   69 +++
->>   drivers/pci/host/Kconfig                           |    5 +
->>   drivers/pci/host/Makefile                          |    1 +
->>   drivers/pci/host/pci-keystone-dw.c                 |  523 ++++++++++++++++++++
->>   drivers/pci/host/pci-keystone.c                    |  381 ++++++++++++++
->>   drivers/pci/host/pci-keystone.h                    |   56 +++
->>   drivers/pci/host/pcie-designware.c                 |  206 ++++++--
->>   drivers/pci/host/pcie-designware.h                 |   17 +-
->>   9 files changed, 1207 insertions(+), 53 deletions(-)
->>   create mode 100644 Documentation/devicetree/bindings/pci/pci-keystone.txt
->>   create mode 100644 drivers/pci/host/pci-keystone-dw.c
->>   create mode 100644 drivers/pci/host/pci-keystone.c
->>   create mode 100644 drivers/pci/host/pci-keystone.h
->>
->> --
->> 1.7.9.5
->>
+diff --git a/arch/powerpc/include/asm/iommu.h b/arch/powerpc/include/asm/iommu.h
+index 42632c7..0fedacb 100644
+--- a/arch/powerpc/include/asm/iommu.h
++++ b/arch/powerpc/include/asm/iommu.h
+@@ -78,6 +78,9 @@ struct iommu_table {
+ 	struct iommu_group *it_group;
+ #endif
+ 	void (*set_bypass)(struct iommu_table *tbl, bool enable);
++#ifdef CONFIG_PPC_POWERNV
++	void           *data;
++#endif
+ };
+ 
+ /* Pure 2^n version of get_order */
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index b5082a2..d66a76b 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -784,6 +784,10 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, int all)
+ 		return;
+ 	}
+ 
++	pe->tce32_table = kzalloc_node(sizeof(struct iommu_table),
++			GFP_KERNEL, hose->node);
++	pe->tce32_table->data = pe;
++
+ 	/* Associate it with all child devices */
+ 	pnv_ioda_setup_same_PE(bus, pe);
+ 
+@@ -857,7 +861,7 @@ static void pnv_pci_ioda_dma_dev_setup(struct pnv_phb *phb, struct pci_dev *pdev
+ 
+ 	pe = &phb->ioda.pe_array[pdn->pe_number];
+ 	WARN_ON(get_dma_ops(&pdev->dev) != &dma_iommu_ops);
+-	set_iommu_table_base(&pdev->dev, &pe->tce32_table);
++	set_iommu_table_base(&pdev->dev, pe->tce32_table);
+ }
+ 
+ static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
+@@ -884,7 +888,7 @@ static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
+ 	} else {
+ 		dev_info(&pdev->dev, "Using 32-bit DMA via iommu\n");
+ 		set_dma_ops(&pdev->dev, &dma_iommu_ops);
+-		set_iommu_table_base(&pdev->dev, &pe->tce32_table);
++		set_iommu_table_base(&pdev->dev, pe->tce32_table);
+ 	}
+ 	return 0;
+ }
+@@ -898,9 +902,9 @@ static void pnv_ioda_setup_bus_dma(struct pnv_ioda_pe *pe,
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		if (add_to_iommu_group)
+ 			set_iommu_table_base_and_group(&dev->dev,
+-						       &pe->tce32_table);
++						       pe->tce32_table);
+ 		else
+-			set_iommu_table_base(&dev->dev, &pe->tce32_table);
++			set_iommu_table_base(&dev->dev, pe->tce32_table);
+ 
+ 		if (dev->subordinate)
+ 			pnv_ioda_setup_bus_dma(pe, dev->subordinate,
+@@ -988,8 +992,7 @@ static void pnv_pci_ioda2_tce_invalidate(struct pnv_ioda_pe *pe,
+ void pnv_pci_ioda_tce_invalidate(struct iommu_table *tbl,
+ 				 __be64 *startp, __be64 *endp, bool rm)
+ {
+-	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
+-					      tce32_table);
++	struct pnv_ioda_pe *pe = tbl->data;
+ 	struct pnv_phb *phb = pe->phb;
+ 
+ 	if (phb->type == PNV_PHB_IODA1)
+@@ -1055,7 +1058,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+ 	}
+ 
+ 	/* Setup linux iommu table */
+-	tbl = &pe->tce32_table;
++	tbl = pe->tce32_table;
+ 	pnv_pci_setup_iommu_table(tbl, addr, TCE32_TABLE_SIZE * segs,
+ 				  base << 28);
+ 
+@@ -1093,8 +1096,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+ 
+ static void pnv_pci_ioda2_set_bypass(struct iommu_table *tbl, bool enable)
+ {
+-	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
+-					      tce32_table);
++	struct pnv_ioda_pe *pe = tbl->data;
+ 	uint16_t window_id = (pe->pe_number << 1 ) + 1;
+ 	int64_t rc;
+ 
+@@ -1139,10 +1141,10 @@ static void pnv_pci_ioda2_setup_bypass_pe(struct pnv_phb *phb,
+ 	pe->tce_bypass_base = 1ull << 59;
+ 
+ 	/* Install set_bypass callback for VFIO */
+-	pe->tce32_table.set_bypass = pnv_pci_ioda2_set_bypass;
++	pe->tce32_table->set_bypass = pnv_pci_ioda2_set_bypass;
+ 
+ 	/* Enable bypass by default */
+-	pnv_pci_ioda2_set_bypass(&pe->tce32_table, true);
++	pnv_pci_ioda2_set_bypass(pe->tce32_table, true);
+ }
+ 
+ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+@@ -1190,7 +1192,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+ 	}
+ 
+ 	/* Setup linux iommu table */
+-	tbl = &pe->tce32_table;
++	tbl = pe->tce32_table;
+ 	pnv_pci_setup_iommu_table(tbl, addr, tce_table_size, 0);
+ 
+ 	/* OPAL variant of PHB3 invalidated TCEs */
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index bff26d9..0d616f0 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -53,7 +53,7 @@ struct pnv_ioda_pe {
+ 	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
+ 	int			tce32_seg;
+ 	int			tce32_segcount;
+-	struct iommu_table	tce32_table;
++	struct iommu_table	*tce32_table;
+ 	phys_addr_t		tce_inval_reg_phys;
+ 
+ 	/* 64-bit TCE bypass region */
+-- 
+1.7.9.5
 
