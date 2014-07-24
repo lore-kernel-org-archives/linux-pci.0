@@ -1,128 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 2/3] vfio-pci: Use mutex around open, release, and remove
-To: alex.williamson@redhat.com
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Date: Wed, 16 Jul 2014 13:01:25 -0600
-Message-ID: <20140716190124.4153.97712.stgit@gimli.home>
-In-Reply-To: <20140716184645.4153.86129.stgit@gimli.home>
-References: <20140716184645.4153.86129.stgit@gimli.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1blp0183.outbound.protection.outlook.com ([207.46.163.183]:5754
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751248AbaGXGcr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 02:32:47 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>, Marek Vasut <marex@denx.de>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	"kernel@pengutronix.de" <kernel@pengutronix.de>
+Subject: RE: [PATCH 4/4] PCI: imx6: move to module_init
+Date: Thu, 24 Jul 2014 06:32:44 +0000
+Message-ID: <eb34b98d76674c0d9f70c1f55dc1a4fa@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
+ <1406137961-14684-5-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1406137961-14684-5-git-send-email-l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Serializing open/release allows us to fix a refcnt error if we fail
-to enable the device and lets us prevent devices from being unbound
-or opened, giving us an opportunity to do bus resets on release.  No
-restriction added to serialize binding devices to vfio-pci while the
-mutex is held though.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+> -----Original Message-----
+> From: Lucas Stach [mailto:l.stach@pengutronix.de]
+> Sent: Thursday, July 24, 2014 1:53 AM
+> To: Bjorn Helgaas
+> Cc: linux-pci@vger.kernel.org; Zhu Richard-R65037; Mohit Kumar; Jingoo Han;
+> Marek Vasut; Kishon Vijay Abraham I; kernel@pengutronix.de
+> Subject: [PATCH 4/4] PCI: imx6: move to module_init
+> 
+> This effectively reverts f216f57ffe6eede3c8a763add65d331e688f8c56
+> "PCI: imx6: Probe the PCIe in fs_initcall()" as the ressource allocation issue
+> that prevented the driver from working properly at module_initcall level is
+> now fixed in pcie-designware.
+> 
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+>  drivers/pci/host/pci-imx6.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c index
+> a568efaa331c..0fc2ba8ea006 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -609,7 +609,7 @@ static int __init imx6_pcie_init(void)  {
+>  	return platform_driver_probe(&imx6_pcie_driver, imx6_pcie_probe);  } -
+> fs_initcall(imx6_pcie_init);
+> +module_init(imx6_pcie_init);
+> 
+Acked-by: Richard Zhu <r65037@freescale.com>
 
- drivers/vfio/pci/vfio_pci.c         |   35 +++++++++++++++++++++++++----------
- drivers/vfio/pci/vfio_pci_private.h |    2 +-
- 2 files changed, 26 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 36d8332..c4949a7 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -37,6 +37,8 @@ module_param_named(nointxmask, nointxmask, bool, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(nointxmask,
- 		  "Disable support for PCI 2.3 style INTx masking.  If this resolves problems for specific devices, report lspci -vvvxxx to linux-pci@vger.kernel.org so the device can be fixed automatically via the broken_intx_masking flag.");
- 
-+static DEFINE_MUTEX(driver_lock);
-+
- static int vfio_pci_enable(struct vfio_pci_device *vdev)
- {
- 	struct pci_dev *pdev = vdev->pdev;
-@@ -163,28 +165,39 @@ static void vfio_pci_release(void *device_data)
- {
- 	struct vfio_pci_device *vdev = device_data;
- 
--	if (atomic_dec_and_test(&vdev->refcnt))
-+	mutex_lock(&driver_lock);
-+
-+	if (!(--vdev->refcnt))
- 		vfio_pci_disable(vdev);
- 
-+	mutex_unlock(&driver_lock);
-+
- 	module_put(THIS_MODULE);
- }
- 
- static int vfio_pci_open(void *device_data)
- {
- 	struct vfio_pci_device *vdev = device_data;
-+	int ret = 0;
- 
- 	if (!try_module_get(THIS_MODULE))
- 		return -ENODEV;
- 
--	if (atomic_inc_return(&vdev->refcnt) == 1) {
--		int ret = vfio_pci_enable(vdev);
-+	mutex_lock(&driver_lock);
-+
-+	if (!vdev->refcnt) {
-+		ret = vfio_pci_enable(vdev);
- 		if (ret) {
- 			module_put(THIS_MODULE);
--			return ret;
-+			goto unlock;
- 		}
- 	}
-+	vdev->refcnt++;
- 
--	return 0;
-+unlock:
-+	mutex_unlock(&driver_lock);
-+
-+	return ret;
- }
- 
- static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
-@@ -839,7 +852,6 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	vdev->irq_type = VFIO_PCI_NUM_IRQS;
- 	mutex_init(&vdev->igate);
- 	spin_lock_init(&vdev->irqlock);
--	atomic_set(&vdev->refcnt, 0);
- 
- 	ret = vfio_add_group_dev(&pdev->dev, &vfio_pci_ops, vdev);
- 	if (ret) {
-@@ -854,12 +866,15 @@ static void vfio_pci_remove(struct pci_dev *pdev)
- {
- 	struct vfio_pci_device *vdev;
- 
-+	mutex_lock(&driver_lock);
-+
- 	vdev = vfio_del_group_dev(&pdev->dev);
--	if (!vdev)
--		return;
-+	if (vdev) {
-+		iommu_group_put(pdev->dev.iommu_group);
-+		kfree(vdev);
-+	}
- 
--	iommu_group_put(pdev->dev.iommu_group);
--	kfree(vdev);
-+	mutex_unlock(&driver_lock);
- }
- 
- static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
-diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
-index 9c6d5d0..31e7a30 100644
---- a/drivers/vfio/pci/vfio_pci_private.h
-+++ b/drivers/vfio/pci/vfio_pci_private.h
-@@ -55,7 +55,7 @@ struct vfio_pci_device {
- 	bool			bardirty;
- 	bool			has_vga;
- 	struct pci_saved_state	*pci_saved_state;
--	atomic_t		refcnt;
-+	int			refcnt;
- 	struct eventfd_ctx	*err_trigger;
- };
- 
+Best Regards
+Richard Zhu
+>  MODULE_AUTHOR("Sean Cross <xobs@kosagi.com>");  MODULE_DESCRIPTION("Freescale
+> i.MX6 PCIe host controller driver");
+> --
+> 2.0.1
 
