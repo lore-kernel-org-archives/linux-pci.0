@@ -1,66 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:36979 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752148AbaGQC66 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 22:58:58 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kishon Vijay Abraham I' <kishon@ti.com>
-Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com, mohit.kumar@st.com,
-	linux-kernel@vger.kernel.org, grant.likely@linaro.org,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1405349705-31400-1-git-send-email-kishon@ti.com>
-In-reply-to: <1405349705-31400-1-git-send-email-kishon@ti.com>
-Subject: Re: [PATCH v2 0/4] dra7: Add PCIe support
-Date: Thu, 17 Jul 2014 11:58:55 +0900
-Message-id: <009001cfa16b$0c558ea0$2500abe0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:33644 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934297AbaGXIeJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 04:34:09 -0400
+Message-ID: <1406190729.4590.8.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH 2/4] PCI: designware: get rid of pci_scan_root_bus
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Mohit Kumar' <mohit.kumar@st.com>,
+	'Marek Vasut' <marex@denx.de>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	kernel@pengutronix.de
+Date: Thu, 24 Jul 2014 10:32:09 +0200
+In-Reply-To: <001201cfa6f5$52863840$f792a8c0$%han@samsung.com>
+References: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
+	 <1406137961-14684-3-git-send-email-l.stach@pengutronix.de>
+	 <001201cfa6f5$52863840$f792a8c0$%han@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, July 14, 2014 11:55 PM, Kishon Vijay Abraham I wrote:
-> 
-> Changes from v1:
-> * fixed dw_pcie_prog_viewport_io_outbound() to use untranslated address
-> * split dra7xx patch into driver part and documentation part
-> 
-> [1] is split into separate series in order for individual subsystem
-> Maintainers to pick up the patches. This series handles the PCIe
-> support for DRA7.
-> 
-> Rebased to pci -next.
-> 
-> [1] -> https://lkml.org/lkml/2014/5/29/258
-> 
-> Kishon Vijay Abraham I (4):
->   PCI: designware: Configuration space should be specified in 'reg'
->   PCI: designware: use untranslated address while programming ATU
->   Documentation: pci: ti: Add dt binding documentation for PCIe in
->     DRA7xx
->   PCI: host: pcie-dra7xx: add support for pcie-dra7xx controller
+Hi Jingoo,
 
-Kishon,
-
-Actually, I have no objections to these patches.
-Then, how about adding maintainer entry for pci-dra7xx.c
-to MAINTAINERS file? It would be good. :-)
-
-Best regards,
-Jingoo Han
-
+Am Donnerstag, den 24.07.2014, 13:11 +0900 schrieb Jingoo Han:
+> On Thursday, July 24, 2014 2:53 AM, Lucas Stach wrote:
+> > 
+> > Use pci_create_root_bus() similar to other pci
+> > host controller drivers.
+> > 
+> > The main problem with pci_scan_root_bus() is that
+> > not only it will create the root bus, but also try
+> > to activate all devices on the bus. This triggers
+> > PCI device drivers probe, which try to use the device
+> > but fail as resource allocation isn't done at that
+> > point in time.
+> > 
+> > To work around this we made sure that the host
+> > controller driver is probed early and finishes resource
+> > allocation before any other device drivers are registered.
+> > Switching to pci_create_root_bus() allows us to get rid
+> > of this special handling.
+> > 
+> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > ---
+> >  drivers/pci/host/pcie-designware.c | 15 +++++++--------
+> >  1 file changed, 7 insertions(+), 8 deletions(-)
+> > 
+> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > index b13a830c8b0f..b869e202367c 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -801,14 +801,13 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+> >  	struct pci_bus *bus;
+> >  	struct pcie_port *pp = sys_to_pcie(sys);
+> > 
+> > -	if (pp) {
+> > -		pp->root_bus_nr = sys->busnr;
+> > -		bus = pci_scan_root_bus(pp->dev, sys->busnr, &dw_pcie_ops,
+> > -					sys, &sys->resources);
+> > -	} else {
+> > -		bus = NULL;
+> > -		BUG();
+> > -	}
+> > +	pp->root_bus_nr = sys->busnr;
+> > +	bus = pci_create_root_bus(pp->dev, sys->busnr,
+> > +				  &dw_pcie_ops, sys, &sys->resources);
+> > +	if (!bus)
+> > +		return NULL;
+> > +
+> > +	pci_scan_child_bus(bus);
 > 
->  .../devicetree/bindings/pci/designware-pcie.txt    |    4 +
->  Documentation/devicetree/bindings/pci/ti-pci.txt   |   59 +++
->  drivers/pci/host/Kconfig                           |   10 +
->  drivers/pci/host/Makefile                          |    1 +
->  drivers/pci/host/pci-dra7xx.c                      |  458 ++++++++++++++++++++
->  drivers/pci/host/pcie-designware.c                 |   72 ++-
->  drivers/pci/host/pcie-designware.h                 |    4 +
->  7 files changed, 592 insertions(+), 16 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/pci/ti-pci.txt
->  create mode 100644 drivers/pci/host/pci-dra7xx.c
 > 
-> --
-> 1.7.9.5
+> I think that we still need to check if pp is NULL.
+> Then, how about adding NULL check as below?
+> 
+No I don't think it's needed as it doesn't provide any additional
+security.
+
+The only code path that is calling this dw_pci_scan_bus() is in
+pcibios_init_hw() which always fills sys->private_data with
+hw_pci->private_data. As we are always filling hw_pci->private_data with
+a pointer to our pcie_port structure in dw_pcie_host_init() the only way
+for pp to be NULL at this point would be for pp to be NULL in
+dw_pcie_host_init(). This would obviously crash a lot earlier.
+
+So this check is just adding to LOC without adding any value.
+
+Regards,
+Lucas
+
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
