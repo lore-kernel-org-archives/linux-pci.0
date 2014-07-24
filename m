@@ -1,84 +1,115 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1406606791-8834-3-git-send-email-ethan.zhao@oracle.com>
-References: <1406606791-8834-1-git-send-email-ethan.zhao@oracle.com>
-	<1406606791-8834-3-git-send-email-ethan.zhao@oracle.com>
-Date: Tue, 29 Jul 2014 20:26:47 +0800
-Message-ID: <CABawtvOBy2BRJ0YQTmJSpbXUGXVH60DCjAqhzR13CZ3UXX_BMg@mail.gmail.com>
-Subject: Re: [PATCH 2/4 v3] KVM: use pci device flag operation helper functions
-From: Ethan Zhao <ethan.kernel@gmail.com>
-To: Ethan Zhao <ethan.zhao@oracle.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"<gleb@kernel.org>" <gleb@kernel.org>,
-	"<pbonzini@redhat.com>" <pbonzini@redhat.com>,
-	"<kvm@vger.kernel.org>" <kvm@vger.kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"<boris.ostrovsky@oracle.com>" <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"<xen-devel@lists.xenproject.org>" <xen-devel@lists.xenproject.org>,
-	"<alex.williamson@redhat.com>" <alex.williamson@redhat.com>,
-	"<alexander.h.duyck@intel.com>" <alexander.h.duyck@intel.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:49460 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751605AbaGXIzu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 04:55:50 -0400
+Received: from epcpsbgr1.samsung.com
+ (u141.gpu120.samsung.co.kr [203.254.230.141])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0N9700CNOKSZQCD0@mailout2.samsung.com> for
+ linux-pci@vger.kernel.org; Thu, 24 Jul 2014 17:55:47 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Lucas Stach' <l.stach@pengutronix.de>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Mohit Kumar' <mohit.kumar@st.com>,
+	'Marek Vasut' <marex@denx.de>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	kernel@pengutronix.de, 'Jingoo Han' <jg1.han@samsung.com>
+References: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
+ <1406137961-14684-3-git-send-email-l.stach@pengutronix.de>
+ <001201cfa6f5$52863840$f792a8c0$%han@samsung.com>
+ <1406190729.4590.8.camel@weser.hi.pengutronix.de>
+In-reply-to: <1406190729.4590.8.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH 2/4] PCI: designware: get rid of pci_scan_root_bus
+Date: Thu, 24 Jul 2014 17:55:46 +0900
+Message-id: <002d01cfa71d$0f5a2590$2e0e70b0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch was already
-Acked-by: Paolo Bonzini <pbonzini@redhat.com>
-I forgot to add the Ack tag.
+On Thursday, July 24, 2014 5:32 PM, Lucas Stach wrote:
+> Am Donnerstag, den 24.07.2014, 13:11 +0900 schrieb Jingoo Han:
+> > On Thursday, July 24, 2014 2:53 AM, Lucas Stach wrote:
+> > >
+> > > Use pci_create_root_bus() similar to other pci
+> > > host controller drivers.
+> > >
+> > > The main problem with pci_scan_root_bus() is that
+> > > not only it will create the root bus, but also try
+> > > to activate all devices on the bus. This triggers
+> > > PCI device drivers probe, which try to use the device
+> > > but fail as resource allocation isn't done at that
+> > > point in time.
+> > >
+> > > To work around this we made sure that the host
+> > > controller driver is probed early and finishes resource
+> > > allocation before any other device drivers are registered.
+> > > Switching to pci_create_root_bus() allows us to get rid
+> > > of this special handling.
+> > >
+> > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > > ---
+> > >  drivers/pci/host/pcie-designware.c | 15 +++++++--------
+> > >  1 file changed, 7 insertions(+), 8 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > > index b13a830c8b0f..b869e202367c 100644
+> > > --- a/drivers/pci/host/pcie-designware.c
+> > > +++ b/drivers/pci/host/pcie-designware.c
+> > > @@ -801,14 +801,13 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+> > >  	struct pci_bus *bus;
+> > >  	struct pcie_port *pp = sys_to_pcie(sys);
+> > >
+> > > -	if (pp) {
+> > > -		pp->root_bus_nr = sys->busnr;
+> > > -		bus = pci_scan_root_bus(pp->dev, sys->busnr, &dw_pcie_ops,
+> > > -					sys, &sys->resources);
+> > > -	} else {
+> > > -		bus = NULL;
+> > > -		BUG();
+> > > -	}
+> > > +	pp->root_bus_nr = sys->busnr;
+> > > +	bus = pci_create_root_bus(pp->dev, sys->busnr,
+> > > +				  &dw_pcie_ops, sys, &sys->resources);
+> > > +	if (!bus)
+> > > +		return NULL;
+> > > +
+> > > +	pci_scan_child_bus(bus);
+> >
+> >
+> > I think that we still need to check if pp is NULL.
+> > Then, how about adding NULL check as below?
+> >
+> No I don't think it's needed as it doesn't provide any additional
+> security.
+> 
+> The only code path that is calling this dw_pci_scan_bus() is in
+> pcibios_init_hw() which always fills sys->private_data with
+> hw_pci->private_data. As we are always filling hw_pci->private_data with
+> a pointer to our pcie_port structure in dw_pcie_host_init() the only way
+> for pp to be NULL at this point would be for pp to be NULL in
+> dw_pcie_host_init(). This would obviously crash a lot earlier.
+> 
+> So this check is just adding to LOC without adding any value.
 
-Thanks,
-Ethan
+Hi Lucas,
 
-Sorry for last post in HTML format with ipad.
+I see what you mean. However, pcie-designware.c has been handled by
+various engineers. So, it is not sure that the current sequence will
+not change in the future. Anyway, thank you for your comment. :-)
 
-On Tue, Jul 29, 2014 at 12:06 PM, Ethan Zhao <ethan.zhao@oracle.com> wrote:
-> Use helper function instead of direct operation to pci device
-> flag when set device to assigned or deassigned.
->
-> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
-> ---
->  v3: amend helper functions naming.
->  virt/kvm/assigned-dev.c |    2 +-
->  virt/kvm/iommu.c        |    4 ++--
->  2 files changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/virt/kvm/assigned-dev.c b/virt/kvm/assigned-dev.c
-> index bf06577..d122bda 100644
-> --- a/virt/kvm/assigned-dev.c
-> +++ b/virt/kvm/assigned-dev.c
-> @@ -302,7 +302,7 @@ static void kvm_free_assigned_device(struct kvm *kvm,
->         else
->                 pci_restore_state(assigned_dev->dev);
->
-> -       assigned_dev->dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-> +       pci_clear_dev_assigned(assigned_dev->dev);
->
->         pci_release_regions(assigned_dev->dev);
->         pci_disable_device(assigned_dev->dev);
-> diff --git a/virt/kvm/iommu.c b/virt/kvm/iommu.c
-> index 0df7d4b..8cfe021 100644
-> --- a/virt/kvm/iommu.c
-> +++ b/virt/kvm/iommu.c
-> @@ -194,7 +194,7 @@ int kvm_assign_device(struct kvm *kvm,
->                         goto out_unmap;
->         }
->
-> -       pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-> +       pci_set_dev_assigned(pdev);
->
->         dev_info(&pdev->dev, "kvm assign device\n");
->
-> @@ -220,7 +220,7 @@ int kvm_deassign_device(struct kvm *kvm,
->
->         iommu_detach_device(domain, &pdev->dev);
->
-> -       pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-> +       pci_clear_dev_assigned(pdev);
->
->         dev_info(&pdev->dev, "kvm deassign device\n");
->
+Best regards,
+Jingoo Han
+
+> 
+> Regards,
+> Lucas
+> 
 > --
-> 1.7.1
->
+> Pengutronix e.K.             | Lucas Stach                 |
+> Industrial Linux Solutions   | http://www.pengutronix.de/  |
+
+
