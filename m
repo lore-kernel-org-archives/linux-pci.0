@@ -1,34 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:51213 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752800AbaGHWu2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 18:50:28 -0400
-Received: by mail-ig0-f173.google.com with SMTP id h18so58211igc.0
-        for <linux-pci@vger.kernel.org>; Tue, 08 Jul 2014 15:50:28 -0700 (PDT)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:7698 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760134AbaGYMUp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jul 2014 08:20:45 -0400
+From: Jisheng Zhang <jszhang@marvell.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+	<swarren@wwwdotorg.org>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Jisheng Zhang <jszhang@marvell.com>
+Subject: [PATCH] PCI: tegra: add missing cleanup in error path and teardown_irq
+Date: Fri, 25 Jul 2014 20:18:23 +0800
+Message-ID: <1406290703-2175-1-git-send-email-jszhang@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <20140708222442.GA13700@google.com>
-References: <1404420379-20983-1-git-send-email-yinghai@kernel.org>
-	<20140708222442.GA13700@google.com>
-Date: Tue, 8 Jul 2014 15:50:27 -0700
-Message-ID: <CAE9FiQV_EarZgBuGEz+s_39LE3AJBL_PLupL8WkO7Rw3mD76Dw@mail.gmail.com>
-Subject: Re: [PATCH v4 1/3] PCI: Fix bus align checking to support more than 8G
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 8, 2014 at 3:24 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Jul 03, 2014 at 01:46:17PM -0700, Yinghai Lu wrote:
->> Use 128G instead.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->
-> I applied this one to pci/resource for v3.17, thanks!
->
-> I didn't apply [2/3] or [3/3] because the questions I raised earlier
-> haven't been resolved.
+We should call tegra_msi_free() to free the msi bit if
+irq_create_mapping() fails. And we need to dispose the irq mapping
+during irq teardown.
 
-That is fine. We can apply [2/3] later if there is any regression ...
+Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+---
+ drivers/pci/host/pci-tegra.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 083cf37..695e7b9 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -1203,8 +1203,10 @@ static int tegra_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+ 		return hwirq;
+ 
+ 	irq = irq_create_mapping(msi->domain, hwirq);
+-	if (!irq)
++	if (!irq) {
++		tegra_msi_free(msi, hwirq);
+ 		return -EINVAL;
++	}
+ 
+ 	irq_set_msi_desc(irq, desc);
+ 
+@@ -1223,6 +1225,7 @@ static void tegra_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
+ 	struct tegra_msi *msi = to_tegra_msi(chip);
+ 	struct irq_data *d = irq_get_irq_data(irq);
+ 
++	irq_dispose_mapping(irq);
+ 	tegra_msi_free(msi, d->hwirq);
+ }
+ 
+-- 
+2.0.1
+
