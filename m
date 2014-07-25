@@ -1,67 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:34952 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753069AbaGBLRn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 07:17:43 -0400
-Date: Wed, 2 Jul 2014 12:17:48 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 7/9] pci: of: Parse and map the IRQ when adding the
- PCI device.
-Message-ID: <20140702111748.GJ18731@arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-8-git-send-email-Liviu.Dudau@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1404240214-9804-8-git-send-email-Liviu.Dudau@arm.com>
+Received: from mga09.intel.com ([134.134.136.24]:36683 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752599AbaGYNcM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 25 Jul 2014 09:32:12 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Brown <broonie@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-spi@vger.kernel.org, linux-serial@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 3/3] spi: topcliff-pch: use pci_get_dma_device() helper
+Date: Fri, 25 Jul 2014 16:31:44 +0300
+Message-Id: <1406295104-20082-3-git-send-email-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <1406295104-20082-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1406295104-20082-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 01, 2014 at 07:43:32PM +0100, Liviu Dudau wrote:
-> Enhance the default implementation of pcibios_add_device() to
-> parse and map the IRQ of the device if a DT binding is available.
-> 
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> ---
->  drivers/pci/pci.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 63a54a3..8e65dc3 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -17,6 +17,7 @@
->  #include <linux/spinlock.h>
->  #include <linux/string.h>
->  #include <linux/log2.h>
-> +#include <linux/of_pci.h>
->  #include <linux/pci-aspm.h>
->  #include <linux/pm_wakeup.h>
->  #include <linux/interrupt.h>
-> @@ -1453,6 +1454,9 @@ EXPORT_SYMBOL(pcim_pin_device);
->   */
->  int __weak pcibios_add_device(struct pci_dev *dev)
->  {
-> +#ifdef CONFIG_OF
-> +	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> +#endif
+Since we have pci_get_dma_device() public we may use it in the drivers. It
+considers the function 0 as a DMA controller.
 
-You could avoid the #ifdef by only assigning dev->irq if
-of_irq_parse_and_map_pci returned something > 0.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/spi/spi-topcliff-pch.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Will
+diff --git a/drivers/spi/spi-topcliff-pch.c b/drivers/spi/spi-topcliff-pch.c
+index af51d6a..fe868ce 100644
+--- a/drivers/spi/spi-topcliff-pch.c
++++ b/drivers/spi/spi-topcliff-pch.c
+@@ -874,8 +874,7 @@ static void pch_spi_request_dma(struct pch_spi_data *data, int bpw)
+ 	dma_cap_set(DMA_SLAVE, mask);
+ 
+ 	/* Get DMA's dev information */
+-	dma_dev = pci_get_bus_and_slot(data->board_dat->pdev->bus->number,
+-				       PCI_DEVFN(12, 0));
++	dma_dev = pci_get_dma_device(data->board_dat->pdev);
+ 
+ 	/* Set Tx DMA */
+ 	param = &dma->param_tx;
+-- 
+2.0.1
+
