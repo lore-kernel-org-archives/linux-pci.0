@@ -1,99 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx07-00178001.pphosted.com ([62.209.51.94]:60722 "EHLO
-	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751575AbaGQETp convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 Jul 2014 00:19:45 -0400
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Murali Karicheri <m-karicheri2@ti.com>,
-	"Jingoo Han (jg1.han@samsung.com)" <jg1.han@samsung.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
+Received: from fw-tnat.austin.arm.com ([217.140.110.23]:41179 "EHLO
+	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1760814AbaGYPnD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jul 2014 11:43:03 -0400
+Date: Fri, 25 Jul 2014 16:42:42 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
 	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Pratyush ANAND <pratyush.anand@st.com>
-Date: Thu, 17 Jul 2014 12:18:11 +0800
-Subject: RE: [PATCH v5 3/5] PCI: designware: enhance dw_pcie_host_init() to
- support v3.65 DW hardware
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB661A47A2A83BB@EAPEX1MAIL1.st.com>
-References: <1405528686-16539-1-git-send-email-m-karicheri2@ti.com>
- <1405528686-16539-4-git-send-email-m-karicheri2@ti.com>
- <20140717033638.GI12278@pratyush-vbox>
-In-Reply-To: <20140717033638.GI12278@pratyush-vbox>
-Content-Type: text/plain; charset="Windows-1252"
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 6/9] pci: Introduce a domain number for
+ pci_host_bridge.
+Message-ID: <20140725154242.GN24268@arm.com>
+References: <CAErSpo75ovmGoeSHKJN0nckGDy-0gpn8kLPfHQ79CtcXxhPydw@mail.gmail.com>
+ <20140708224847.GC4980@e106497-lin.cambridge.arm.com>
+ <CAErSpo5rBt0iF2HGeDD-UH6_sPCoC647VCw0Q1v_0Rdpvcir-w@mail.gmail.com>
+ <20140710094758.GA6501@e106497-lin.cambridge.arm.com>
+ <CAErSpo5ZNCY31NztT0cLFbRVsBZqMsZ0LbTFNOTQCZUU3F7qJA@mail.gmail.com>
+ <20140711141115.GB16321@arm.com>
+ <CAErSpo7C8qzmdp+XgVi2ysXj_NcgvVY7RVfBZ2PHimLzrzANMQ@mail.gmail.com>
+ <20140711180151.GH16321@arm.com>
+ <20140714163922.GH1112@arm.com>
+ <CAErSpo65RBeTgzrVefWBfjnZqTPzyz__HnC4bn8riGGDC0GkHg@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo65RBeTgzrVefWBfjnZqTPzyz__HnC4bn8riGGDC0GkHg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-> -----Original Message-----
-> From: Pratyush ANAND
-> Sent: Thursday, July 17, 2014 9:07 AM
-> To: Murali Karicheri
-> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-arm-
-> kernel@lists.infradead.org; Santosh Shilimkar; Russell King; Grant Likely; Rob
-> Herring; Mohit KUMAR DCG; Jingoo Han; Bjorn Helgaas; Richard Zhu; Kishon
-> Vijay Abraham I; Marek Vasut; Arnd Bergmann; Pawel Moll; Mark Rutland;
-> Ian Campbell; Kumar Gala; Randy Dunlap
-> Subject: Re: [PATCH v5 3/5] PCI: designware: enhance dw_pcie_host_init()
-> to support v3.65 DW hardware
-> 
-> On Thu, Jul 17, 2014 at 12:38:04AM +0800, Murali Karicheri wrote:
-> > keystone PCI controller is based on v3.65 designware hardware. This
-> > version differs from newer versions of the hardware in few functional
-> > areas discussed below that makes it necessary to change
-> > dw_pcie_host_init() to support v3.65 based PCI controller.
+On Tue, Jul 22, 2014 at 04:15:58AM +0100, Bjorn Helgaas wrote:
+> On Mon, Jul 14, 2014 at 10:39 AM, Catalin Marinas
+> <catalin.marinas@arm.com> wrote:
+> > From b32606aa3997fc8a45014a64f99e921eef4872b0 Mon Sep 17 00:00:00 2001
+> > From: Catalin Marinas <catalin.marinas@arm.com>
+> > Date: Mon, 14 Jul 2014 17:20:01 +0100
+> > Subject: [PATCH] pci: Add support for generic domain_nr in pci_bus
 > >
-> >  1. No support for ATU port. So any ATU specific resource handling code
-> >     is to be bypassed for v3.65 h/w.
-> >  2. MSI controller uses Application space to implement MSI and 32 MSI
-> >     interrupts are multiplexed over 8 IRQs to the host. Hence the code
-> >     to process MSI IRQ needs to be different. This patch allows platform
-> >     driver to provide its own irq_domain_ops ptr to irq_domain_add_linear()
-> >     through an API callback from the designware core driver.
-> >  3. MSI interrupt generation requires EP to write to the RC's application
-> >     register. So enhance the driver to allow setup of inbound access to
-> >     MSI irq register as a post scan bus API callback.
+> > This patch adds domain_nr in struct pci_bus if
+> > CONFIG_PCI_DOMAINS_GENERIC is enabled. The default implementation for
+> > pci_domain_nr() simply returns bus->domain_nr. For the root bus, the
+> > core PCI code calls pci_set_domain_nr(bus, parent_device) while the
+> > child buses inherit the domain nr of the parent bus.
 > >
-> > Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+> > This patch also adds an of_pci_set_domain_nr() implementation which
+> > parses the device tree for the "pci-domain" property or sets domain_nr
+> > to the next available value (this function could also be implemented
+> > entirely in arm64).
+> >
+> > Signed-off-by: Catalin Marinas <catalin.marinas@arm.com>
 > 
-> Looks almost ok to me.
+> I like this.  It seems like a reasonable step forward.  I don't really
+> like the pci_set_domain_nr() interface because the domain conceptually
+> exists before the root bus in the domain, but we can deal with that
+> later.
+
+That's just the name I came up with. Maybe something like
+pci_assign_domain_to_bus()?
+
+> I'd really like to see all this stuff in v3.17, but I'm going to be on
+> vacation for the next three weeks and won't be able to do much until
+> Aug 11, which is probably going to be in the middle of the merge
+> window.  But maybe the series can be integrated in -next via an ARM
+> tree or something.  If it helps, you can add my
 > 
-> Reviewed-by: Pratyush Anand <pratyush.anand@st.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 > 
+> for this piece.  I don't remember how many other PCI changes are
+> involved; maybe my ack on this will be enough?  Even if we can't get
+> it in for the merge window, I'm open to trying to merge it after
+> v3.17-rc1 if it's isolated enough.
 
-- Now looks fine to me.
+Thanks for the Ack but I think Liviu needs to address a few more things
+with the OF part of his PCIe patches and it's unlikely that they are
+ready for 3.17. My "deadline" is for 3.18 to get the generic (and arm64)
+PCIe support in.
 
-Acked-by: Mohit KUMAR <mohit.kumar@st.com>
+(I'm off for two weeks starting now as well).
 
-Jingoo,
-After Murali's patches,  dw code can be used by  older Synopsys controller based driver too.
-Pls have a look at the series if you have any further comment.
-
-Thanks
-Mohit
-
-> >  int __init dw_pcie_host_init(struct pcie_port *pp)  {
-> >  	struct device_node *np = pp->dev->of_node;
-> > -	struct of_pci_range range;
-> >  	struct of_pci_range_parser parser;
-> > +	struct of_pci_range range;
-> 
-> You may avoid moving the above line.
-> 
-> ~Pratyush
+-- 
+Catalin
