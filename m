@@ -1,74 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45079 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750832AbaGZISi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 26 Jul 2014 04:18:38 -0400
-Date: Sat, 26 Jul 2014 09:26:48 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
-	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com,
-	DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 RESEND 15/23] mpt2sas: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-Message-ID: <20140726082648.GH21129@agordeev.usersys.redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <045986b7900c6b1703010675b590284e384b8207.1405533479.git.agordeev@redhat.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:21684 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751853AbaGZBX1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jul 2014 21:23:27 -0400
+From: <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 3/3] PCI/MSI: Refactor msi_bus to support EP enable/disable MSI
+Date: Sat, 26 Jul 2014 09:48:36 +0800
+Message-ID: <1406339316-20163-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1406339316-20163-1-git-send-email-wangyijing@huawei.com>
+References: <1406339316-20163-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <045986b7900c6b1703010675b590284e384b8207.1405533479.git.agordeev@redhat.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 16, 2014 at 08:05:19PM +0200, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
+From: Yijing Wang <wangyijing@huawei.com>
 
-Hi Nagalakshmi, Sreekanth,
+Msi_bus attribute is only valid for bridge device.
+We can enable or disable MSI capability for a bus,
+if we echo 1/0 > /sys/bus/pci/devices/$EP/msi_bus,
+the action will be ignored. Sometime we need to
+only enable/disable a device MSI, not all devices share
+the same bus.
 
-Could you please review mpt patches in this series?
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pci-sysfs.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-Thanks!
-
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-> Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-> Cc: support@lsi.com
-> Cc: DL-MPTFusionLinux@lsi.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/scsi/mpt2sas/mpt2sas_base.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> index 8b88118..6aca369 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> @@ -1432,10 +1432,10 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
->  	for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++)
->  		a->entry = i;
->  
-> -	r = pci_enable_msix(ioc->pdev, entries, ioc->reply_queue_count);
-> +	r = pci_enable_msix_exact(ioc->pdev, entries, ioc->reply_queue_count);
->  	if (r) {
-> -		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "pci_enable_msix "
-> -		    "failed (r=%d) !!!\n", ioc->name, r));
-> +		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT
-> +		    "pci_enable_msix_exact failed (r=%d) !!!\n", ioc->name, r));
->  		kfree(entries);
->  		goto try_ioapic;
->  	}
-> -- 
-> 1.7.7.6
-> 
-
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 9ff0a90..b199ad9 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -251,11 +251,9 @@ static ssize_t msi_bus_show(struct device *dev, struct device_attribute *attr,
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+-	if (!pdev->subordinate)
+-		return 0;
+-
+-	return sprintf(buf, "%u\n",
+-		       !(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI));
++	return sprintf(buf, "%u\n", pdev->subordinate ?
++		       !(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI)
++			   : !pdev->no_msi);
+ }
+ 
+ static ssize_t msi_bus_store(struct device *dev, struct device_attribute *attr,
+@@ -278,8 +276,10 @@ static ssize_t msi_bus_store(struct device *dev, struct device_attribute *attr,
+ 	 * Maybe devices without subordinate buses shouldn't have this
+ 	 * attribute in the first place?
+ 	 */
+-	if (!pdev->subordinate)
++	if (!pdev->subordinate) {
++		pdev->no_msi = !val;
+ 		return count;
++	}
+ 
+ 	/* Is the flag going to change, or keep the value it already had? */
+ 	if (!(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI) ^
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.1
+
