@@ -1,69 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1blp0186.outbound.protection.outlook.com ([207.46.163.186]:20479
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932908AbaGQPWt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 Jul 2014 11:22:49 -0400
-Message-ID: <53C7EA41.8030907@amd.com>
-Date: Thu, 17 Jul 2014 10:22:41 -0500
-From: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	"Bjorn Helgaas" <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<Paul.Mundt@huawei.com>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	"Marc Zyngier" <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<virtualization@lists.linux-foundation.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [RFC PATCH 08/11] PCI/MSI: Introduce new struct msi_irqs and struct msi_ops
+Date: Sat, 26 Jul 2014 11:08:45 +0800
+Message-ID: <1406344128-27055-9-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1406344128-27055-1-git-send-email-wangyijing@huawei.com>
+References: <1406344128-27055-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Guenter Roeck <linux@roeck-us.net>,
-	Clemens Ladisch <clemens@ladisch.de>
-CC: Borislav Petkov <bp@alien8.de>, <jdelvare@suse.de>,
-	<rdunlap@infradead.org>, <bhelgaas@google.com>,
-	<lm-sensors@lm-sensors.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] hwmon, k10temp: Add support for AMD F15h M60h processor
-References: <1405369388-12729-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
- <20140714195128.GA25124@pd.tnic> <53C43BDF.2070403@ladisch.de>
- <20140714203336.GA30926@roeck-us.net> <53C4DB2D.80406@ladisch.de>
- <53C4EE5C.5020407@roeck-us.net>
-In-Reply-To: <53C4EE5C.5020407@roeck-us.net>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/15/2014 4:03 AM, Guenter Roeck wrote:
-> On 07/15/2014 12:41 AM, Clemens Ladisch wrote:
->> Guenter Roeck wrote:
->>> On Mon, Jul 14, 2014 at 10:21:51PM +0200, Clemens Ladisch wrote:
->>>> Borislav Petkov wrote:
->>>>> On Mon, Jul 14, 2014 at 03:23:08PM -0500, Aravind Gopalakrishnan 
->>>>> wrote:
->>>>>> +    if (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model == 
->>>>>> 0x60) {
->>>>>> +        pci_bus_write_config_dword(pdev->bus, PCI_DEVFN(0, 0),
->>>>>> +                       NB_SMU_IND_ADDR, IND_ADDR_OFFSET);
->>>>>> +        pci_bus_read_config_dword(pdev->bus, PCI_DEVFN(0, 0),
->>>>>> +                      NB_SMU_IND_DATA, &regval);
->>>>
->>>> How do you prevent races with any other code that accesses some 
->>>> indirect
->>>> register?
->>>>
->>> I just wanted to ask exactly the same question. I think this will need
->>> locking.
->>
->> If there actually is any other code; these indirect SMU registers appear
->> to be mostly undocumented and to be intended to be used by the BIOS.
->> (Which makes me wonder why the temperature sensor was moved there.)
->>
-> Scary. Does that mean there is a chance they may get used through ACPI ?
+Currently, MSI driver is bonding with PCI everywhere.
+Now introduce a new struct msi_irqs to manage all MSI
+related informations in a MSI support device. In addition,
+we introduce struct msi_ops to hook all device specific
+MSI operations. Then MSI driver can be decoupled with
+PCI.
 
-I have been asking internally about this, and looks like it's just a 
-register address change.
-So we probably don't have to worry about this being used elsewhere..
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ include/linux/msi.h |   30 +++++++++++++++++++++++++++++-
+ include/linux/pci.h |    7 +------
+ 2 files changed, 30 insertions(+), 7 deletions(-)
 
->
->> Anyway, if a lock is needed, it looks as if it could go into a helper
->> function such as "amd_nb_smu_ind_read()" in arch/x86/kernel/amd_nb.c.
->>
-> Yes, something like that.
->
->
-Okay, I shall add the locking mechanism and re-send.
-
-Thanks,
--Aravind.
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 3ad8416..5a672d3 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -10,6 +10,34 @@ struct msi_msg {
+ 	u32	data;		/* 16 bits of msi message data */
+ };
+ 
++struct msi_ops;
++
++struct msi_irqs {
++	u8 msi_enabled:1;
++	u8 msix_enabled:1;
++	int node;
++	struct list_head msi_list;
++	void *data;
++	struct msi_ops *ops;
++};
++
++struct msix_entry {
++	u32	vector;	/* kernel uses to write allocated vector */
++	u16	entry;	/* driver uses to specify entry, OS writes */
++};
++
++struct msi_ops {
++	void (*msi_set_enable)(struct msi_irqs *msi, int enable, int type);
++	struct msi_desc *(*msi_setup_entry)(struct msi_irqs *msi);
++	int (*msix_setup_entries)(struct msi_irqs *msi, void __iomem *base,
++			struct msix_entry *entries, int nvec);
++	u32 (*msi_mask_irq)(struct msi_desc *desc, u32 mask, u32 flag);
++	u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
++	void (*msi_read_message)(struct msi_desc *desc, struct msi_msg *msg);
++	void (*msi_write_message)(struct msi_desc *desc, struct msi_msg *msg);
++	void (*msi_set_intx)(struct msi_irqs *msi, int enable);
++};
++
+ /* Helper functions */
+ struct irq_data;
+ struct msi_desc;
+@@ -42,7 +70,7 @@ struct msi_desc {
+ 		void __iomem *mask_base;
+ 		u8 mask_pos;
+ 	};
+-	struct pci_dev *dev;
++	struct msi_irqs *msi;
+ 
+ 	/* Last set MSI message */
+ 	struct msi_msg msg;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c6c01ae..c7bca1c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -32,8 +32,8 @@
+ #include <uapi/linux/pci.h>
+ 
+ #include <linux/pci_ids.h>
+-
+ #include <linux/msi.h>
++
+ /*
+  * The PCI interface treats multi-function devices as independent
+  * devices.  The slot/function address of each device is encoded
+@@ -1182,11 +1182,6 @@ enum pci_dma_burst_strategy {
+ 				   strategy_parameter byte boundaries */
+ };
+ 
+-struct msix_entry {
+-	u32	vector;	/* kernel uses to write allocated vector */
+-	u16	entry;	/* driver uses to specify entry, OS writes */
+-};
+-
+ 
+ #ifdef CONFIG_PCI_MSI
+ int pci_msi_vec_count(struct pci_dev *dev);
+-- 
+1.7.1
 
