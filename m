@@ -1,313 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:49414 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751301AbaGTXd0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Jul 2014 19:33:26 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Zhang Rui <rui.zhang@intel.com>,
-	Peter Zijlstra <peterz@infradead.org>
-Subject: [Update 2x][PATCH 1/2] ACPI / PM: Always enable wakeup GPEs when enabling device wakeup
-Date: Mon, 21 Jul 2014 01:51:46 +0200
-Message-ID: <5962983.s3jy9r09Hm@vostro.rjw.lan>
-In-Reply-To: <7670400.0LUVFHKPfm@vostro.rjw.lan>
-References: <1907495.agrCMfRsQN@vostro.rjw.lan> <1617640.X0G82q0eFI@vostro.rjw.lan> <7670400.0LUVFHKPfm@vostro.rjw.lan>
+Received: from mx1.redhat.com ([209.132.183.28]:45079 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750832AbaGZISi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 26 Jul 2014 04:18:38 -0400
+Date: Sat, 26 Jul 2014 09:26:48 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
+	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com,
+	DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 RESEND 15/23] mpt2sas: Use pci_enable_msix_exact()
+ instead of pci_enable_msix()
+Message-ID: <20140726082648.GH21129@agordeev.usersys.redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
+ <045986b7900c6b1703010675b590284e384b8207.1405533479.git.agordeev@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <045986b7900c6b1703010675b590284e384b8207.1405533479.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: ACPI / PM: Always enable wakeup GPEs when enabling device wakeup
+On Wed, Jul 16, 2014 at 08:05:19PM +0200, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
 
-Wakeup GPEs are currently only enabled when setting up devices for
-remote wakeup at run time.  During system-wide transitions they are
-enabled by ACPICA at the very last stage of suspend (before asking
-the BIOS to take over).  Of course, that only works for system
-sleep states supported by ACPI, so in particular it doesn't work
-for the "freeze" sleep state.
+Hi Nagalakshmi, Sreekanth,
 
-For this reason, modify the ACPI core device PM code to enable wakeup
-GPEs for devices when setting them up for wakeup regardless of whether
-that is remote wakeup at runtime or system wakeup.  That allows the
-same device wakeup setup routine to be used for both runtime PM and
-system-wide PM and makes it possible to reduce code size quite a bit.
+Could you please review mpt patches in this series?
 
-That should make things like ACPI-based PCI Wake-on-LAN work with
-the "freeze" sleep state among other things.
+Thanks!
 
-Tested-on: Toshiba Portege R500
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+> Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+> Cc: support@lsi.com
+> Cc: DL-MPTFusionLinux@lsi.com
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/scsi/mpt2sas/mpt2sas_base.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> index 8b88118..6aca369 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> @@ -1432,10 +1432,10 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
+>  	for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++)
+>  		a->entry = i;
+>  
+> -	r = pci_enable_msix(ioc->pdev, entries, ioc->reply_queue_count);
+> +	r = pci_enable_msix_exact(ioc->pdev, entries, ioc->reply_queue_count);
+>  	if (r) {
+> -		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "pci_enable_msix "
+> -		    "failed (r=%d) !!!\n", ioc->name, r));
+> +		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT
+> +		    "pci_enable_msix_exact failed (r=%d) !!!\n", ioc->name, r));
+>  		kfree(entries);
+>  		goto try_ioapic;
+>  	}
+> -- 
+> 1.7.7.6
+> 
 
-The PCI ACPI device PM notify handler has to be updated to avoid running
-runtime resume callbacks during system suspend too.
-
----
- drivers/acpi/device_pm.c |   83 ++++++++++++++++++++---------------------------
- drivers/pci/pci-acpi.c   |   15 +++++---
- include/acpi/acpi_bus.h  |   11 ------
- 3 files changed, 47 insertions(+), 62 deletions(-)
-
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -600,26 +600,10 @@ int acpi_pm_device_sleep_state(struct de
- }
- EXPORT_SYMBOL(acpi_pm_device_sleep_state);
- 
--#ifdef CONFIG_PM_RUNTIME
--/**
-- * acpi_wakeup_device - Wakeup notification handler for ACPI devices.
-- * @handle: ACPI handle of the device the notification is for.
-- * @event: Type of the signaled event.
-- * @context: Device corresponding to @handle.
-- */
--static void acpi_wakeup_device(acpi_handle handle, u32 event, void *context)
--{
--	struct device *dev = context;
--
--	if (event == ACPI_NOTIFY_DEVICE_WAKE && dev) {
--		pm_wakeup_event(dev, 0);
--		pm_runtime_resume(dev);
--	}
--}
--
- /**
-- * __acpi_device_run_wake - Enable/disable runtime remote wakeup for device.
-- * @adev: ACPI device to enable/disable the remote wakeup for.
-+ * acpi_device_wakeup - Enable/disable wakeup functionality for device.
-+ * @adev: ACPI device to enable/disable wakeup functionality for.
-+ * @target_state: State the system is transitioning into.
-  * @enable: Whether to enable or disable the wakeup functionality.
-  *
-  * Enable/disable the GPE associated with @adev so that it can generate
-@@ -629,7 +613,8 @@ static void acpi_wakeup_device(acpi_hand
-  * Callers must ensure that @adev is a valid ACPI device node before executing
-  * this function.
-  */
--int __acpi_device_run_wake(struct acpi_device *adev, bool enable)
-+static int acpi_device_wakeup(struct acpi_device *adev, u32 target_state,
-+			      bool enable)
- {
- 	struct acpi_device_wakeup *wakeup = &adev->wakeup;
- 
-@@ -637,7 +622,7 @@ int __acpi_device_run_wake(struct acpi_d
- 		acpi_status res;
- 		int error;
- 
--		error = acpi_enable_wakeup_device_power(adev, ACPI_STATE_S0);
-+		error = acpi_enable_wakeup_device_power(adev, target_state);
- 		if (error)
- 			return error;
- 
-@@ -653,6 +638,27 @@ int __acpi_device_run_wake(struct acpi_d
- 	return 0;
- }
- 
-+#ifdef CONFIG_PM_RUNTIME
-+/**
-+ * acpi_wakeup_device - Wakeup notification handler for ACPI devices.
-+ * @handle: ACPI handle of the device the notification is for.
-+ * @event: Type of the signaled event.
-+ * @context: Device corresponding to @handle.
-+ */
-+static void acpi_wakeup_device(acpi_handle handle, u32 event, void *context)
-+{
-+	struct device *dev = context;
-+
-+	if (event == ACPI_NOTIFY_DEVICE_WAKE && dev) {
-+		pm_wakeup_event(dev, 0);
-+		/*
-+		 * Use the PM workqueue to avoid running the runtime resume
-+		 * callback during system suspend which may not be appropriate.
-+		 */
-+		pm_request_resume(dev);
-+	}
-+}
-+
- /**
-  * acpi_pm_device_run_wake - Enable/disable remote wakeup for given device.
-  * @dev: Device to enable/disable the platform to wake up.
-@@ -673,7 +679,7 @@ int acpi_pm_device_run_wake(struct devic
- 		return -ENODEV;
- 	}
- 
--	return __acpi_device_run_wake(adev, enable);
-+	return acpi_device_wakeup(adev, enable, ACPI_STATE_S0);
- }
- EXPORT_SYMBOL(acpi_pm_device_run_wake);
- #else
-@@ -683,20 +689,6 @@ static inline void acpi_wakeup_device(ac
- 
- #ifdef CONFIG_PM_SLEEP
- /**
-- * __acpi_device_sleep_wake - Enable or disable device to wake up the system.
-- * @dev: Device to enable/desible to wake up the system.
-- * @target_state: System state the device is supposed to wake up from.
-- * @enable: Whether to enable or disable @dev to wake up the system.
-- */
--int __acpi_device_sleep_wake(struct acpi_device *adev, u32 target_state,
--			     bool enable)
--{
--	return enable ?
--		acpi_enable_wakeup_device_power(adev, target_state) :
--		acpi_disable_wakeup_device_power(adev);
--}
--
--/**
-  * acpi_pm_device_sleep_wake - Enable or disable device to wake up the system.
-  * @dev: Device to enable/desible to wake up the system from sleep states.
-  * @enable: Whether to enable or disable @dev to wake up the system.
-@@ -716,8 +708,7 @@ int acpi_pm_device_sleep_wake(struct dev
- 		return -ENODEV;
- 	}
- 
--	error = __acpi_device_sleep_wake(adev, acpi_target_system_state(),
--					 enable);
-+	error = acpi_device_wakeup(adev, acpi_target_system_state(), enable);
- 	if (!error)
- 		dev_info(dev, "System wakeup %s by ACPI\n",
- 				enable ? "enabled" : "disabled");
-@@ -775,13 +766,13 @@ int acpi_dev_runtime_suspend(struct devi
- 
- 	remote_wakeup = dev_pm_qos_flags(dev, PM_QOS_FLAG_REMOTE_WAKEUP) >
- 				PM_QOS_FLAGS_NONE;
--	error = __acpi_device_run_wake(adev, remote_wakeup);
-+	error = acpi_device_wakeup(adev, ACPI_STATE_S0, remote_wakeup);
- 	if (remote_wakeup && error)
- 		return -EAGAIN;
- 
- 	error = acpi_dev_pm_low_power(dev, adev, ACPI_STATE_S0);
- 	if (error)
--		__acpi_device_run_wake(adev, false);
-+		acpi_device_wakeup(adev, ACPI_STATE_S0, false);
- 
- 	return error;
- }
-@@ -804,7 +795,7 @@ int acpi_dev_runtime_resume(struct devic
- 		return 0;
- 
- 	error = acpi_dev_pm_full_power(adev);
--	__acpi_device_run_wake(adev, false);
-+	acpi_device_wakeup(adev, ACPI_STATE_S0, false);
- 	return error;
- }
- EXPORT_SYMBOL_GPL(acpi_dev_runtime_resume);
-@@ -860,13 +851,13 @@ int acpi_dev_suspend_late(struct device
- 
- 	target_state = acpi_target_system_state();
- 	wakeup = device_may_wakeup(dev);
--	error = __acpi_device_sleep_wake(adev, target_state, wakeup);
-+	error = acpi_device_wakeup(adev, target_state, wakeup);
- 	if (wakeup && error)
- 		return error;
- 
- 	error = acpi_dev_pm_low_power(dev, adev, target_state);
- 	if (error)
--		__acpi_device_sleep_wake(adev, ACPI_STATE_UNKNOWN, false);
-+		acpi_device_wakeup(adev, ACPI_STATE_UNKNOWN, false);
- 
- 	return error;
- }
-@@ -889,7 +880,7 @@ int acpi_dev_resume_early(struct device
- 		return 0;
- 
- 	error = acpi_dev_pm_full_power(adev);
--	__acpi_device_sleep_wake(adev, ACPI_STATE_UNKNOWN, false);
-+	acpi_device_wakeup(adev, ACPI_STATE_UNKNOWN, false);
- 	return error;
- }
- EXPORT_SYMBOL_GPL(acpi_dev_resume_early);
-@@ -1052,7 +1043,7 @@ int acpi_dev_pm_attach(struct device *de
- 	dev->pm_domain = &acpi_general_pm_domain;
- 	if (power_on) {
- 		acpi_dev_pm_full_power(adev);
--		__acpi_device_run_wake(adev, false);
-+		acpi_device_wakeup(adev, ACPI_STATE_S0, false);
- 	}
- 	return 0;
- }
-@@ -1086,7 +1077,7 @@ void acpi_dev_pm_detach(struct device *d
- 			 */
- 			dev_pm_qos_hide_latency_limit(dev);
- 			dev_pm_qos_hide_flags(dev);
--			__acpi_device_run_wake(adev, false);
-+			acpi_device_wakeup(adev, ACPI_STATE_S0, false);
- 			acpi_dev_pm_low_power(dev, adev, ACPI_STATE_S0);
- 		}
- 	}
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -532,13 +532,8 @@ static inline int acpi_pm_device_sleep_s
- #endif
- 
- #ifdef CONFIG_PM_RUNTIME
--int __acpi_device_run_wake(struct acpi_device *, bool);
- int acpi_pm_device_run_wake(struct device *, bool);
- #else
--static inline int __acpi_device_run_wake(struct acpi_device *adev, bool en)
--{
--	return -ENODEV;
--}
- static inline int acpi_pm_device_run_wake(struct device *dev, bool enable)
- {
- 	return -ENODEV;
-@@ -546,14 +541,8 @@ static inline int acpi_pm_device_run_wak
- #endif
- 
- #ifdef CONFIG_PM_SLEEP
--int __acpi_device_sleep_wake(struct acpi_device *, u32, bool);
- int acpi_pm_device_sleep_wake(struct device *, bool);
- #else
--static inline int __acpi_device_sleep_wake(struct acpi_device *adev,
--					   u32 target_state, bool enable)
--{
--	return -ENODEV;
--}
- static inline int acpi_pm_device_sleep_wake(struct device *dev, bool enable)
- {
- 	return -ENODEV;
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -47,9 +47,15 @@ static void pci_acpi_wake_dev(acpi_handl
- 	if (pci_dev->pme_poll)
- 		pci_dev->pme_poll = false;
- 
-+	pci_wakeup_event(pci_dev);
-+	/*
-+	 * Use the PM workqueue for resuming devices to avoid running runtime
-+	 * resume callbacks during system suspend which may not be appropriate.
-+	 * Bridges are an exception, because they are never suspended, so it is
-+	 * not necessary to resume them here.
-+	 */
- 	if (pci_dev->current_state == PCI_D3cold) {
--		pci_wakeup_event(pci_dev);
--		pm_runtime_resume(&pci_dev->dev);
-+		pm_request_resume(&pci_dev->dev);
- 		return;
- 	}
- 
-@@ -57,11 +63,10 @@ static void pci_acpi_wake_dev(acpi_handl
- 	if (pci_dev->pme_support)
- 		pci_check_pme_status(pci_dev);
- 
--	pci_wakeup_event(pci_dev);
--	pm_runtime_resume(&pci_dev->dev);
--
- 	if (pci_dev->subordinate)
- 		pci_pme_wakeup_bus(pci_dev->subordinate);
-+	else
-+		pm_request_resume(&pci_dev->dev);
- }
- 
- /**
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
