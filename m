@@ -1,54 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:55688 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751213AbaGKGRE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Jul 2014 02:17:04 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V4 02/21] iommu/vt-d: Use correct domain id to flush virtual machine domains
-Date: Fri, 11 Jul 2014 14:19:26 +0800
-Message-Id: <1405059585-10620-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	"Bjorn Helgaas" <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<Paul.Mundt@huawei.com>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	"Marc Zyngier" <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<virtualization@lists.linux-foundation.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [RFC PATCH 07/11] PCI/MSI: Mask MSI-X entry in msix_setup_entries()
+Date: Sat, 26 Jul 2014 11:08:44 +0800
+Message-ID: <1406344128-27055-8-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1406344128-27055-1-git-send-email-wangyijing@huawei.com>
+References: <1406344128-27055-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For virtual machine domains, domain->id is a virtual id, and the real
-domain id written into context entry is dynamically allocated.
-So use the real domain id instead of domain->id when flushing iotlbs
-for virtual machine domains.
+Save the MSI-X entry initial mask status in
+msix_setup_entries(), also mask the entry.
+This is preparation for generic MSI.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/iommu/intel-iommu.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/msi.c |   21 +++++++++++----------
+ 1 files changed, 11 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 147ab1c0b573..d77009bdade5 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1822,7 +1822,7 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
- 					   (((u16)bus) << 8) | devfn,
- 					   DMA_CCMD_MASK_NOBIT,
- 					   DMA_CCMD_DEVICE_INVL);
--		iommu->flush.flush_iotlb(iommu, domain->id, 0, 0, DMA_TLB_DSI_FLUSH);
-+		iommu->flush.flush_iotlb(iommu, id, 0, 0, DMA_TLB_DSI_FLUSH);
- 	} else {
- 		iommu_flush_write_buffer(iommu);
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index f96dd38..41c33da 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -672,7 +672,7 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
+ 			      struct msix_entry *entries, int nvec)
+ {
+ 	struct msi_desc *entry;
+-	int i;
++	int i, offset;
+ 
+ 	for (i = 0; i < nvec; i++) {
+ 		entry = alloc_msi_entry(dev);
+@@ -691,6 +691,15 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
+ 		entry->msi_attrib.default_irq	= dev->irq;
+ 		entry->mask_base		= base;
+ 
++		msix_clear_and_set_ctrl(dev, 0, 
++				PCI_MSIX_FLAGS_MASKALL | PCI_MSIX_FLAGS_ENABLE);
++		offset = entries[i].entry * PCI_MSIX_ENTRY_SIZE +
++						PCI_MSIX_ENTRY_VECTOR_CTRL;
++		entry->masked = readl(entry->mask_base + offset);
++		msix_mask_irq(entry, 1);
++		msix_clear_and_set_ctrl(dev, 
++				PCI_MSIX_FLAGS_MASKALL | PCI_MSIX_FLAGS_ENABLE, 0);
++
+ 		list_add_tail(&entry->list, &dev->msi_list);
  	}
+ 
+@@ -704,13 +713,8 @@ static void msix_program_entries(struct pci_dev *dev,
+ 	int i = 0;
+ 
+ 	list_for_each_entry(entry, &dev->msi_list, list) {
+-		int offset = entries[i].entry * PCI_MSIX_ENTRY_SIZE +
+-						PCI_MSIX_ENTRY_VECTOR_CTRL;
+-
+ 		entries[i].vector = entry->irq;
+ 		irq_set_msi_desc(entry->irq, entry);
+-		entry->masked = readl(entry->mask_base + offset);
+-		msix_mask_irq(entry, 1);
+ 		i++;
+ 	}
+ }
+@@ -746,16 +750,13 @@ static int msix_capability_init(struct pci_dev *dev, void __iomem *base,
+ 	 * MSI-X registers.  We need to mask all the vectors to prevent
+ 	 * interrupts coming in before they're fully set up.
+ 	 */
+-	msix_clear_and_set_ctrl(dev, 0,
+-				PCI_MSIX_FLAGS_MASKALL | PCI_MSIX_FLAGS_ENABLE);
+-
+ 	msix_program_entries(dev, entries);
+ 
+ 	/* Set MSI-X enabled bits and unmask the function */
+ 	pci_intx_for_msi(dev, 0);
+ 	dev->msix_enabled = 1;
+ 
+-	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
++	msix_clear_and_set_ctrl(dev, 0, PCI_MSIX_FLAGS_ENABLE);
+ 
+ 	return 0;
+ 
 -- 
-1.7.10.4
+1.7.1
 
