@@ -1,122 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:43546 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750980AbaGVCiR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jul 2014 22:38:17 -0400
-Received: by mail-ig0-f171.google.com with SMTP id l13so3532160iga.16
-        for <linux-pci@vger.kernel.org>; Mon, 21 Jul 2014 19:38:16 -0700 (PDT)
-Date: Mon, 21 Jul 2014 20:38:13 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Mike Qiu <qiudayu@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org,
-	Tuomas Tynkkynen <ttynkkynen@nvidia.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	gong.chen@linux.intel.com, Lance Ortiz <lance.ortiz@hp.com>,
-	Tony Luck <tony.luck@intel.com>
-Subject: Re: [PATCH] Fix build warnings in aer.h
-Message-ID: <20140722023813.GA27601@google.com>
-References: <1405498124-11519-1-git-send-email-qiudayu@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:4760 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751097AbaGZIOP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 26 Jul 2014 04:14:15 -0400
+Date: Sat, 26 Jul 2014 09:22:27 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 RESEND 12/23] lpfc: Use pci_enable_msix_range()
+ instead of pci_enable_msix()
+Message-ID: <20140726082227.GF21129@agordeev.usersys.redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
+ <ea1bf102a3ce0471996e2ddaaa498b088ac791c8.1405533479.git.agordeev@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1405498124-11519-1-git-send-email-qiudayu@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ea1bf102a3ce0471996e2ddaaa498b088ac791c8.1405533479.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Tuomas, Randy, Gavin, Gong, Lance, Tony]
+On Wed, Jul 16, 2014 at 08:05:16PM +0200, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
 
-On Wed, Jul 16, 2014 at 04:08:44AM -0400, Mike Qiu wrote:
-> build log:
-> 
-> In file included from include/ras/ras_event.h:11:0,
->                  from drivers/ras/ras.c:13:
-> include/linux/aer.h:42:129: warning: ‘struct pci_dev’
-> declared inside parameter list [enabled by default]
-> 
-> include/linux/aer.h:42:129: warning: its scope is only
-> this definition or declaration, which is probably not
-> what you want [enabled by default]
-> 
-> include/linux/aer.h:46:130: warning: ‘struct pci_dev’
-> declared inside parameter list [enabled by default]
-> 
-> include/linux/aer.h:50:136: warning: ‘struct pci_dev’
-> declared inside parameter list [enabled by default]
-> 
-> include/linux/aer.h:57:14: warning: ‘struct pci_dev’
-> declared inside parameter list [enabled by default]
-> 
-> Signed-off-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+Hi James,
 
-OK, so the problem doesn't occur on x86 because there we have a struct
-pci_dev declaration reached earlier via:
+Could you please review this patch?
 
-  drivers/ras/ras.c
-    include/ras/ras_event.h
-      include/linux/edac.h
-        include/linux/device.h
-          include/linux/gfp.h
-            arch/x86/include/asm/mmzone.h
-              arch/x86/include/asm/mmzone_64.h
-                arch/x86/include/asm/smp.h
-                  arch/x86/include/asm/mpspec.h
-                    arch/x86/include/asm/x86_init.h
-                      struct pci_dev;
-      include/linux/aer.h
-        ... pci_enable_pcie_error_reporting(struct pci_dev *dev);
+Thanks!
 
-You're building powerpc, which doesn't have the same pci_dev
-declaration in the arch header files, so you see the declaration
-problem in aer.h.
-
-I could apply your fix, but it should go in v3.16 along with the commit
-(0a2409aad38e ("trace, AER: Move trace into unified interface")) that
-exposes the problem, and I'm leaving on vacation before I can get this
-into -next, have it smoke-tested, and ask Linus to pull it.
-
-So you might want to ask Tony to put in his tree, since it looks like
-he merged 0a2409aad38e in the first place.
-
-Please add these:
-
-  Fixes: 0a2409aad38e ("trace, AER: Move trace into unified interface")
-  Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-I know 0a2409aad38e isn't actually *responsible* for the problem, but
-anybody who backports 0a2409aad38e should pick up this fix as well.
-
-Lance, I added you because of an unrelated issue I noticed while reviewing
-this: you added the AER trace events with 1ca1d8d54f92 ("aerdrv: Trace
-Event for PCI Express Advanced Error Reporting"):
-
-  +#define aer_correctable_errors         \
-  +       {BIT(0),        "Receiver Error"},              \
-  ...
-
-I'd like to see all those "BIT(...)" things changed to use the #defines
-that already exist in include/uapi/linux/pci_regs.h, e.g.,
-PCI_ERR_COR_RCVR.  That way grep will find these uses, which will make
-maintenance easier.  There's no hurry about this part, of course.
-
-Bjorn
-
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: James Smart <james.smart@emulex.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
 > ---
->  include/linux/aer.h | 2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/scsi/lpfc/lpfc_init.c |   38 +++++++++++++++++---------------------
+>  1 files changed, 17 insertions(+), 21 deletions(-)
 > 
-> diff --git a/include/linux/aer.h b/include/linux/aer.h
-> index 4dbaa70..c826d1c 100644
-> --- a/include/linux/aer.h
-> +++ b/include/linux/aer.h
-> @@ -11,6 +11,8 @@
->  #define AER_FATAL                        1
->  #define AER_CORRECTABLE                        2
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index a5769a9..d9caed9 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -8211,9 +8211,9 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
+>   * @phba: pointer to lpfc hba data structure.
+>   *
+>   * This routine is invoked to enable the MSI-X interrupt vectors to device
+> - * with SLI-3 interface specs. The kernel function pci_enable_msix() is
+> - * called to enable the MSI-X vectors. Note that pci_enable_msix(), once
+> - * invoked, enables either all or nothing, depending on the current
+> + * with SLI-3 interface specs. The kernel function pci_enable_msix_exact()
+> + * is called to enable the MSI-X vectors. Note that pci_enable_msix_exact(),
+> + * once invoked, enables either all or nothing, depending on the current
+>   * availability of PCI vector resources. The device driver is responsible
+>   * for calling the individual request_irq() to register each MSI-X vector
+>   * with a interrupt handler, which is done in this function. Note that
+> @@ -8237,8 +8237,8 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
+>  		phba->msix_entries[i].entry = i;
 >  
-> +struct pci_dev;
+>  	/* Configure MSI-X capability structure */
+> -	rc = pci_enable_msix(phba->pcidev, phba->msix_entries,
+> -				ARRAY_SIZE(phba->msix_entries));
+> +	rc = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
+> +				   ARRAY_SIZE(phba->msix_entries));
+>  	if (rc) {
+>  		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+>  				"0420 PCI enable MSI-X failed (%d)\n", rc);
+> @@ -8775,15 +8775,13 @@ out:
+>   * @phba: pointer to lpfc hba data structure.
+>   *
+>   * This routine is invoked to enable the MSI-X interrupt vectors to device
+> - * with SLI-4 interface spec. The kernel function pci_enable_msix() is called
+> - * to enable the MSI-X vectors. Note that pci_enable_msix(), once invoked,
+> - * enables either all or nothing, depending on the current availability of
+> - * PCI vector resources. The device driver is responsible for calling the
+> - * individual request_irq() to register each MSI-X vector with a interrupt
+> - * handler, which is done in this function. Note that later when device is
+> - * unloading, the driver should always call free_irq() on all MSI-X vectors
+> - * it has done request_irq() on before calling pci_disable_msix(). Failure
+> - * to do so results in a BUG_ON() and a device will be left with MSI-X
+> + * with SLI-4 interface spec. The kernel function pci_enable_msix_range()
+> + * is called to enable the MSI-X vectors. The device driver is responsible
+> + * for calling the individual request_irq() to register each MSI-X vector
+> + * with a interrupt handler, which is done in this function. Note that later
+> + * when device is unloading, the driver should always call free_irq() on all
+> + * MSI-X vectors it has done request_irq() on before calling pci_disable_msix()
+> + * Failure to do so results in a BUG_ON() and a device will be left with MSI-X
+>   * enabled and leaks its vectors.
+>   *
+>   * Return codes
+> @@ -8805,18 +8803,16 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
+>  		phba->sli4_hba.msix_entries[index].entry = index;
+>  		vectors++;
+>  	}
+> -enable_msix_vectors:
+> -	rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
+> -			     vectors);
+> -	if (rc > 1) {
+> -		vectors = rc;
+> -		goto enable_msix_vectors;
+> -	} else if (rc) {
 > +
->  struct aer_header_log_regs {
->          unsigned int dw0;
->          unsigned int dw1;
+> +	rc = pci_enable_msix_range(phba->pcidev, phba->sli4_hba.msix_entries,
+> +				   2, vectors);
+> +	if (rc < 0) {
+>  		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+>  				"0484 PCI enable MSI-X failed (%d)\n", rc);
+>  		goto vec_fail_out;
+>  	}
+>  
+> +	vectors = rc;
+>  	/* Log MSI-X vector assignment */
+>  	for (index = 0; index < vectors; index++)
+>  		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
 > -- 
-> 1.8.1.4
+> 1.7.7.6
 > 
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
