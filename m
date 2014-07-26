@@ -1,53 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:57558 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932288AbaGASf4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Jul 2014 14:35:56 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:13060 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750835AbaGZIGu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 26 Jul 2014 04:06:50 -0400
+Date: Sat, 26 Jul 2014 09:15:02 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Hiral Patel <hiralpat@cisco.com>, Suma Ramars <sramars@cisco.com>,
+	Brian Uchino <buchino@cisco.com>, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 RESEND 07/23] fnic: Use pci_enable_msix_exact()
+ instead of pci_enable_msix()
+Message-ID: <20140726081502.GD21129@agordeev.usersys.redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
+ <e8cc7988e4b0a38f59d3e854d387c7c0d95b058c.1405533479.git.agordeev@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20140630224709.GA22024@google.com>
-References: <1402346730-2508-1-git-send-email-andreas.noever@gmail.com>
-	<20140617221620.GC30559@google.com>
-	<CAE9FiQXD7hvt0cUYMzvq0r6CbZn=iJZc7BHRaF2nACbG7qwuBQ@mail.gmail.com>
-	<CAMxnaaWWuNeNbnUe++N=2bBfs5JyKiq7tHH+_kiQZyQ9aakEHg@mail.gmail.com>
-	<CAE9FiQVQ657vDOhdhBq5VC044qt6TUF7FKP_-qy+35g71e56Yg@mail.gmail.com>
-	<20140630224709.GA22024@google.com>
-Date: Tue, 1 Jul 2014 11:35:56 -0700
-Message-ID: <CAE9FiQWzFP_6AU1hLwKKxD2tu+OPjwXfQbLwW-yNT6pCW7JJZA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Do not touch siblings in pci_assign_unassigned_bridge_resources
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <e8cc7988e4b0a38f59d3e854d387c7c0d95b058c.1405533479.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 30, 2014 at 3:47 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> Should not be dangerous, just second try.
->
-> I still don't understand this.  Why do we set "res->flags = 0"?  That
-> clears out the resource type.  Where do we figure out the type of "res"
-> again?
+On Wed, Jul 16, 2014 at 08:05:11PM +0200, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
 
-pci_bridge_check_ranges()
+Hi Hiral, Suma, Brian,
 
->> Subject: [PATCH] pci: Add back missing MEM_64 check for hotplug path
->>
->> We miss that in
->> |  commit 5b28541552ef5eeffc41d6936105f38c2508e566
->> |    PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources
->> for pci hotplug path.
->
-> This changelog is useless.  I don't have time to spend a few hours
-> figuring out why we want this change.
+Could you please review this patch?
 
-We have MEM_64 in type_mask from pci_assign_unassigned_root_bus_resources().
-And I missed the same change for hotplug path.
+Thanks!
 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Hiral Patel <hiralpat@cisco.com>
+> Cc: Suma Ramars <sramars@cisco.com>
+> Cc: Brian Uchino <buchino@cisco.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/scsi/fnic/fnic_isr.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/fnic/fnic_isr.c b/drivers/scsi/fnic/fnic_isr.c
+> index 7d9b54a..a0dd1b6 100644
+> --- a/drivers/scsi/fnic/fnic_isr.c
+> +++ b/drivers/scsi/fnic/fnic_isr.c
+> @@ -257,8 +257,8 @@ int fnic_set_intr_mode(struct fnic *fnic)
+>  	    fnic->raw_wq_count >= m &&
+>  	    fnic->wq_copy_count >= o &&
+>  	    fnic->cq_count >= n + m + o) {
+> -		if (!pci_enable_msix(fnic->pdev, fnic->msix_entry,
+> -				    n + m + o + 1)) {
+> +		if (!pci_enable_msix_exact(fnic->pdev, fnic->msix_entry,
+> +					   n + m + o + 1)) {
+>  			fnic->rq_count = n;
+>  			fnic->raw_wq_count = m;
+>  			fnic->wq_copy_count = o;
+> -- 
+> 1.7.7.6
+> 
 
-That is for exact type checking.
-
-Thanks
-
-Yinghai
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
