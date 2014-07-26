@@ -1,138 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:59965 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752506AbaGKJI6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 05:08:58 -0400
-Date: Fri, 11 Jul 2014 10:08:51 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'linux-pci' <linux-pci@vger.kernel.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'linaro-kernel' <linaro-kernel@lists.linaro.org>,
-	'Tanmay Inamdar' <tinamdar@apm.com>,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Sinan Kaya' <okaya@codeaurora.org>,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Suravee Suthikulanit' <suravee.suthikulpanit@amd.com>,
-	'LKML' <linux-kernel@vger.kernel.org>,
-	'Device Tree ML' <devicetree@vger.kernel.org>,
-	'LAKML' <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 8/9] pci: Add support for creating a generic
- host_bridge from device tree
-Message-ID: <20140711090851.GL6501@e106497-lin.cambridge.arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-9-git-send-email-Liviu.Dudau@arm.com>
- <004601cf9cdb$ca08f7f0$5e1ae7d0$%han@samsung.com>
+Received: from mx1.redhat.com ([209.132.183.28]:51011 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751017AbaGZIFA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 26 Jul 2014 04:05:00 -0400
+Date: Sat, 26 Jul 2014 09:13:12 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Naresh Kumar Inna <naresh@chelsio.com>,
+	Arvind Bhushan <arvindb@chelsio.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 RESEND 05/23] csiostor: Remove superfluous call to
+ pci_disable_msix()
+Message-ID: <20140726081311.GC21129@agordeev.usersys.redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
+ <bd849e403573b161beb4dcfdb7d410f997c95562.1405533479.git.agordeev@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <004601cf9cdb$ca08f7f0$5e1ae7d0$%han@samsung.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <bd849e403573b161beb4dcfdb7d410f997c95562.1405533479.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 11, 2014 at 08:43:21AM +0100, Jingoo Han wrote:
-> On Wednesday, July 02, 2014 3:44 AM, Liviu Dudau wrote:
-> > 
-> > Several platforms use a rather generic version of parsing
-> > the device tree to find the host bridge ranges. Move the common code
-> > into the generic PCI code and use it to create a pci_host_bridge
-> > structure that can be used by arch code.
-> > 
-> > Based on early attempts by Andrew Murray to unify the code.
-> > Used powerpc and microblaze PCI code as starting point.
-> > 
-> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> > ---
-> >  drivers/of/of_pci.c       | 135 ++++++++++++++++++++++++++++++++++++++++++++++
-> >  drivers/pci/host-bridge.c |  18 +++++++
-> >  include/linux/of_pci.h    |  10 ++++
-> >  include/linux/pci.h       |   8 +++
-> >  4 files changed, 171 insertions(+)
-> > 
-> > diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> > index 8481996..55d8320 100644
-> > --- a/drivers/of/of_pci.c
-> > +++ b/drivers/of/of_pci.c
-> 
-> [.....]
-> 
-> > +struct pci_host_bridge *
-> > +of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops, void *host_data)
-> > +{
-> > +	int err, domain, busno;
-> > +	struct resource *bus_range;
-> > +	struct pci_bus *root_bus;
-> > +	struct pci_host_bridge *bridge;
-> > +	resource_size_t io_base;
-> > +	LIST_HEAD(res);
-> > +
-> > +	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
-> > +	if (!bus_range)
-> > +		return ERR_PTR(-ENOMEM);
-> > +
-> > +	domain = of_alias_get_id(parent->of_node, "pci-domain");
-> > +	if (domain == -ENODEV)
-> > +		domain = atomic_inc_return(&domain_nr);
-> > +
-> > +	err = of_pci_parse_bus_range(parent->of_node, bus_range);
-> > +	if (err) {
-> > +		dev_info(parent, "No bus range for %s, using default [0-255]\n",
-> > +			parent->of_node->full_name);
-> > +		bus_range->start = 0;
-> > +		bus_range->end = 255;
-> > +		bus_range->flags = IORESOURCE_BUS;
-> > +	}
-> > +	busno = bus_range->start;
-> > +	pci_add_resource(&res, bus_range);
-> > +
-> > +	/* now parse the rest of host bridge bus ranges */
-> > +	err = pci_host_bridge_of_get_ranges(parent->of_node, &res, &io_base);
-> > +	if (err)
-> > +		goto err_create;
-> > +
-> > +	/* then create the root bus */
-> > +	root_bus = pci_create_root_bus_in_domain(parent, domain, busno,
-> > +						ops, host_data, &res);
-> > +	if (IS_ERR(root_bus)) {
-> > +		err = PTR_ERR(root_bus);
-> > +		goto err_create;
-> > +	}
-> > +
-> > +	bridge = to_pci_host_bridge(root_bus->bridge);
-> > +	bridge->io_base = io_base;
-> 
-> Hi Liviu Dudau,
-> 
-> Would you fix the following warning?
-> 
-> drivers/of/of_pci.c: In function 'of_create_pci_host_bridge'
-> drivers/of/of_pci.c:218:18: warning: 'of_base' may be used uninitialized in this function [-Wmaybe-uninitialized]
->   bridge->io_base = io_base;
+On Wed, Jul 16, 2014 at 08:05:09PM +0200, Alexander Gordeev wrote:
+> There is no need to call pci_disable_msix() in case
+> the previous call to pci_enable_msix() failed
 
-Yes, I have a simple fix which is to set the initial value to zero when declaring the variable.
+Hi Naresh, Arvind,
 
-Best regards,
-Liviu
+Could you please review csiostor patches in this series?
 
+Thanks!
+
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Naresh Kumar Inna <naresh@chelsio.com>
+> Cc: Arvind Bhushan <arvindb@chelsio.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/scsi/csiostor/csio_isr.c |    4 +---
+>  1 files changed, 1 insertions(+), 3 deletions(-)
 > 
-> Best regards,
-> Jingoo Han
-> 
-> [.....]
-> 
+> diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
+> index 7ee9777..91ba91d 100644
+> --- a/drivers/scsi/csiostor/csio_isr.c
+> +++ b/drivers/scsi/csiostor/csio_isr.c
+> @@ -529,10 +529,8 @@ csio_enable_msix(struct csio_hw *hw)
+>  			csio_reduce_sqsets(hw, cnt - extra);
+>  		}
+>  	} else {
+> -		if (rv > 0) {
+> -			pci_disable_msix(hw->pdev);
+> +		if (rv > 0)
+>  			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
+> -		}
+>  
+>  		kfree(entries);
+>  		return -ENOMEM;
+> -- 
+> 1.7.7.6
 > 
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
