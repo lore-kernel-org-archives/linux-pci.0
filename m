@@ -1,47 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f44.google.com ([209.85.216.44]:48351 "EHLO
-	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751974AbaGEQL5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 Jul 2014 12:11:57 -0400
-Received: by mail-qa0-f44.google.com with SMTP id hw13so2180740qab.3
-        for <linux-pci@vger.kernel.org>; Sat, 05 Jul 2014 09:11:56 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Peter Zijlstra <peterz@infradead.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Subject: Re: [PATCH] PCI / PM: Make PCIe PME interrupts wake up from "freeze" sleep state
+Date: Mon, 28 Jul 2014 01:08:58 +0200
+Message-ID: <1744442.5aE2TFtgoQ@vostro.rjw.lan>
+In-Reply-To: <3655886.Ih7L6voqVK@vostro.rjw.lan>
+References: <12684812.i3F8JrYCl0@vostro.rjw.lan> <20140724134241.GZ6758@twins.programming.kicks-ass.net> <3655886.Ih7L6voqVK@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CACna6rxfutrgdnv2=UZgg5=awQy4KMqFYzwesGtq9gyxh3Jw_g@mail.gmail.com>
-References: <CACna6ry7+oNLwGVkdJiDkLq_QCZ5+gKk8Dxr=tbs-kBYqCp9Yg@mail.gmail.com>
- <CACna6rxfutrgdnv2=UZgg5=awQy4KMqFYzwesGtq9gyxh3Jw_g@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 5 Jul 2014 10:11:36 -0600
-Message-ID: <CAErSpo4kFuCn98eJFbCo5W7bpPTA-visb0u-nPq-ptUCiB6XgA@mail.gmail.com>
-Subject: Re: Checking PCIe generation in driver code
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 4, 2014 at 5:35 PM, Rafał Miłecki <zajec5@gmail.com> wrote:
-> On 3 July 2014 22:06, Rafał Miłecki <zajec5@gmail.com> wrote:
->> I'm dealing with Broadcom devices and it appears I need to know if the
->> current PCIe device is Gen 1 or Gen 2. This is because they have
->> slightly different registers:
->> #define PCI_BAR0_WIN2 0xac
->> #define PCIE2_BAR0_WIN2 0x70
->>
->> Is there a way to know that? I keep starring at struct pci_dev, but
->> can't see "generation" field. Tried Googling, but couldn't find
->> anything.
->
-> I've noticed that my 14e4:4360 card (PCIe Gen2) has:
-> LNKCAP: 0x0046DC12 (hint: PCI_EXP_LNKCAP_SLS_5_0GB)
->
-> Some older card 14e4:4359 (PCIe 1) has:
-> LNKCAP: 0x00176811 (hint: PCI_EXP_LNKCAP_SLS_2_5GB)
->
-> Wikipedia says 500 MB/s was added in PCIe 2.0.
->
-> Could I check for this bit to determine if I'm dealing PCIe 2.0 card?
+On Thursday, July 24, 2014 05:36:28 PM Rafael J. Wysocki wrote:
+> On Thursday, July 24, 2014 03:42:41 PM Peter Zijlstra wrote:
+> 
+> [...]
+> 
+> > 
+> > So with this patch on:
+> > 
+> >   http://marc.info/?l=3Dlinux-kernel&m=3D140620918218199
+> > 
+> > This will not work on my machine, because aerdrv is requesting the same
+> > irq.
+> > 
+> > Now I've not a f'cking clue what aerdrv is, and whether it too wants
+> > NO_SUSPEND on or not.
+> > 
+> > But if I make it also request NO_SUSPEND it all starts working.
+> 
+> OK, so can you please test the updated patch below?
+> 
+> Rafael
+> 
+> ---
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Subject: PCI / PM: Make PCIe PME interrupts wake up from "freeze" sleep state
+> 
+> The "freeze" sleep state, also known as suspend-to-idle, is entered
+> without taking nonboot CPUs offline, right after devices have been
+> suspended.  It works by waiting for at least one wakeup source object
+> to become "active" as a result of handling a hardware interrupt.
+> 
+> Of course, interrupts supposed to be able to wake up the system from
+> suspend-to-idle cannot be disabled by suspend_device_irqs() and their
+> interrupt handlers must be able to cope with interrupts coming after
+> all devices have been suspended.  In that case, they only need to
+> call __pm_wakeup_event() for a single wakeup source object without
+> trying to access hardware (that will be resumed later as part of
+> the subsequent system resume).
+> 
+> Make PCIe PME interrupts work this way.
+> 
+> Register an additional wakeup source object for each PCIe PME
+> service device.  That object will be used to generate wakeups from
+> suspend-to-idle.
+> 
+> Add IRQF_NO_SUSPEND to PME interrupt flags.  This will make
+> suspend_device_irqs() to ignore PME interrupts, but that's OK,
+> because the PME interrupt handler is suspend-aware anyway and
+> can cope with interrupts coming during system suspend-resume.
+> Unfortunately, that requires the AER service driver to pass
+> IRQF_NO_SUSPEND when requesting its IRQ which may be shared with
+> the PME interrupt and to make that safe, simple suspend/resume
+> routines need to be added to the AER driver.
+> 
+> During system suspend, while suspending the PME service for given
+> port, walk the bus below that port and see if any devices on that
+> bus are configured for wakeup.  If so, do not disable the PME
+> interrupt, but only set a "suspend level" for the service to
+> "wakeup" and make the interrupt handler behave in a special way,
+> which is to call __pm_wakeup_event() with the service's wakeup
+> source object as the first argument whenever the interrupt is
+> triggered.
+> 
+> The "suspend level" is cleared while resuming the PME service.
+> 
+> This change allows Wake-on-LAN to be used for wakeup from
+> suspend-to-idle on my MSI Wind tesbed netbook.
 
-No, I think you should use the device ID to differentiate between the
-register layouts.
+Hi Bjorn,
 
-Bjorn
+There will be a new version of this, please ignore for now.
+
+Rafael
+
