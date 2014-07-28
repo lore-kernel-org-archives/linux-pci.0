@@ -1,165 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:36048 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750957AbaGCXjz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 19:39:55 -0400
-Received: by mail-ig0-f170.google.com with SMTP id h15so7930725igd.3
-        for <linux-pci@vger.kernel.org>; Thu, 03 Jul 2014 16:39:55 -0700 (PDT)
-Date: Thu, 3 Jul 2014 17:39:52 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, Wuyun <wuyun.wu@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>
-Subject: Re: [PATCH 4/5] PCI/MSI: MSI cleanup, msi_setup_entry()
-Message-ID: <20140703233952.GB25980@google.com>
-References: <1403166648-7932-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+To: Alexander Gordeev <agordeev@redhat.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+CC: Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 RESEND 22/23] qla4xxx: Use pci_enable_msix_exact()
+ instead of pci_enable_msix()
+Date: Mon, 28 Jul 2014 11:47:19 +0000
+Message-ID: <3FC4AB8B47ECD546BCD4B361A64BEACD8C6CAFD2@avmb3.qlogic.org>
+References: <cover.1405533479.git.agordeev@redhat.com>
+ <0496ccbc0f203afaeeb7758c146b93c2f387684c.1405533479.git.agordeev@redhat.com>
+ <20140726084137.GL21129@agordeev.usersys.redhat.com>
+In-Reply-To: <20140726084137.GL21129@agordeev.usersys.redhat.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1403166648-7932-1-git-send-email-wangyijing@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 19, 2014 at 04:30:48PM +0800, Yijing Wang wrote:
-> Move MSI entry stuff to a new function
-> msi_setup_entry(), simplify msi_capability_init()
-> code like MSI-X do.
 
-I like this in general, but ...
+Acked-By: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/msi.c |   71 +++++++++++++++++++++++++++++++---------------------
->  1 files changed, 42 insertions(+), 29 deletions(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index d8e431d..8e17446 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -582,6 +582,35 @@ error_attrs:
->  	return ret;
->  }
->  
-> +static int msi_setup_entry(struct pci_dev *dev)
-> +{
-> +	u16 control;
-> +	struct msi_desc *entry;
-> +
-> +	entry = alloc_msi_entry(dev);
-> +	if (!entry)
-> +		return -ENOMEM;
-> +
-> +	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
-> +
-> +	entry->msi_attrib.is_msix	= 0;
-> +	entry->msi_attrib.is_64		= !!(control & PCI_MSI_FLAGS_64BIT);
-> +	entry->msi_attrib.entry_nr	= 0;
-> +	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
-> +	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
-> +	entry->msi_attrib.pos		= dev->msi_cap;
-> +	entry->msi_attrib.multi_cap = (control & PCI_MSI_FLAGS_QMASK) >> 1;
-> +
-> +	if (control & PCI_MSI_FLAGS_64BIT)
-> +		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
-> +	else
-> +		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_32;
-> +
-> +
-> +	list_add_tail(&entry->list, &dev->msi_list);
-> +	return 0;
 
-Why don't you just return "entry" here (and NULL for the failure above)?
 
-> +}
-> +
->  /**
->   * msi_capability_init - configure device's MSI capability structure
->   * @dev: pointer to the pci_dev data structure of MSI device function
-> @@ -597,51 +626,30 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
->  {
->  	struct msi_desc *entry;
->  	int ret;
-> -	u16 control;
->  	unsigned mask;
->  
->  	msi_set_enable(dev, 0);	/* Disable MSI during set up */
->  
-> -	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
->  	/* MSI Entry Initialization */
-> -	entry = alloc_msi_entry(dev);
-> -	if (!entry)
-> -		return -ENOMEM;
-> -
-> -	entry->msi_attrib.is_msix	= 0;
-> -	entry->msi_attrib.is_64		= !!(control & PCI_MSI_FLAGS_64BIT);
-> -	entry->msi_attrib.entry_nr	= 0;
-> -	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
-> -	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
-> -	entry->msi_attrib.pos		= dev->msi_cap;
-> -	entry->msi_attrib.multi_cap = (control & PCI_MSI_FLAGS_QMASK) >> 1;
-> +	ret = msi_setup_entry(dev);
-> +	if (ret)
-> +		return ret;
->  
-> -	if (control & PCI_MSI_FLAGS_64BIT)
-> -		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
-> -	else
-> -		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_32;
-> +	entry = list_first_entry(&dev->msi_list, struct msi_desc, list);
->  	/* All MSIs are unmasked by default, Mask them all */
->  	if (entry->msi_attrib.maskbit)
->  		pci_read_config_dword(dev, entry->mask_pos, &entry->masked);
->  	mask = msi_mask(entry->msi_attrib.multi_cap);
->  	msi_mask_irq(entry, mask, mask);
->  
-> -	list_add_tail(&entry->list, &dev->msi_list);
+On 26/07/14 2:11 pm, "Alexander Gordeev" <agordeev@redhat.com> wrote:
 
-And keep the list_add_tail() here.  Then you don't have the awkwardness of
-pulling the entry off the list after calling msi_setup_entry().
+>On Wed, Jul 16, 2014 at 08:05:26PM +0200, Alexander Gordeev wrote:
+>> As result of deprecation of MSI-X/MSI enablement functions
+>> pci_enable_msix() and pci_enable_msi_block() all drivers
+>> using these two interfaces need to be updated to use the
+>> new pci_enable_msi_range()  or pci_enable_msi_exact()
+>> and pci_enable_msix_range() or pci_enable_msix_exact()
+>> interfaces.
+>
+>Hi Vikas,
+>
+>Could you please reveiw this patch?
+>
+>Thanks!
+>
+>> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+>> Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+>> Cc: iscsi-driver@qlogic.com
+>> Cc: linux-scsi@vger.kernel.org
+>> Cc: linux-pci@vger.kernel.org
+>> Acked-By: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+>> ---
+>>  drivers/scsi/qla4xxx/ql4_nx.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>> 
+>> diff --git a/drivers/scsi/qla4xxx/ql4_nx.c
+>>b/drivers/scsi/qla4xxx/ql4_nx.c
+>> index 9dbdb4b..7c33658 100644
+>> --- a/drivers/scsi/qla4xxx/ql4_nx.c
+>> +++ b/drivers/scsi/qla4xxx/ql4_nx.c
+>> @@ -4221,7 +4221,7 @@ qla4_8xxx_enable_msix(struct scsi_qla_host *ha)
+>>  	for (i = 0; i < QLA_MSIX_ENTRIES; i++)
+>>  		entries[i].entry = qla4_8xxx_msix_entries[i].entry;
+>>  
+>> -	ret = pci_enable_msix(ha->pdev, entries, ARRAY_SIZE(entries));
+>> +	ret = pci_enable_msix_exact(ha->pdev, entries, ARRAY_SIZE(entries));
+>>  	if (ret) {
+>>  		ql4_printk(KERN_WARNING, ha,
+>>  		    "MSI-X: Failed to enable support -- %d/%d\n",
+>> -- 
+>> 1.7.7.6
+>> 
+>
+>-- 
+>Regards,
+>Alexander Gordeev
+>agordeev@redhat.com
 
-That also means the MSIs can be masked before putting the entry on
-dev->msi_list, as they were before.  It *might* be safe to change the order
-as you did, but it definitely takes some analysis to prove it, especially
-since pci_enable_msi_range() only WARNs but doesn't bail out if
-dev->msi_enabled already.
-
->  	/* Configure MSI capability structure */
->  	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
-> -	if (ret) {
-> -		msi_mask_irq(entry, mask, ~mask);
-> -		free_msi_irqs(dev);
-> -		return ret;
-> -	}
-> +	if (ret)
-> +		goto err;
->  
->  	ret = populate_msi_sysfs(dev);
-> -	if (ret) {
-> -		msi_mask_irq(entry, mask, ~mask);
-> -		free_msi_irqs(dev);
-> -		return ret;
-> -	}
-> +	if (ret)
-> +		goto err;
->  
->  	/* Set MSI enabled bits	 */
->  	pci_intx_for_msi(dev, 0);
-> @@ -650,6 +658,11 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
->  
->  	dev->irq = entry->irq;
->  	return 0;
-> +
-> +err:
-> +	msi_mask_irq(entry, mask, ~mask);
-> +	free_msi_irqs(dev);
-> +	return ret;
->  }
->  
->  static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
-> -- 
-> 1.7.1
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
