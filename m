@@ -1,83 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2lp0235.outbound.protection.outlook.com ([207.46.163.235]:44025
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756163AbaGNQAc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Jul 2014 12:00:32 -0400
-Message-ID: <53C3FE7D.3090805@amd.com>
-Date: Mon, 14 Jul 2014 10:59:57 -0500
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-To: Jason Cooper <jason@lakedaemon.net>
-CC: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
-	<pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
-	<Will.Deacon@arm.com>, <tglx@linutronix.de>,
-	<Harish.Kasiviswanathan@amd.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 0/4 V3] irqchip: gic: Introduce ARM GICv2m MSI(-X) support
-References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
- <20140713231431.GM13108@titan.lakedaemon.net>
-In-Reply-To: <20140713231431.GM13108@titan.lakedaemon.net>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:49652 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750981AbaG1VAW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 28 Jul 2014 17:00:22 -0400
+Message-ID: <1406581206.1011.133.camel@ul30vt.home>
+Subject: Re: [PATCH 1/4] PCI: introduce helper functions for device flag
+ operation
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Ethan Zhao <ethan.zhao@oracle.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
+	kvm@vger.kernel.org, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	xen-devel@lists.xenproject.org, alexander.h.duyck@intel.com,
+	ethan.kernel@gmail.com
+Date: Mon, 28 Jul 2014 15:00:06 -0600
+In-Reply-To: <1406045944-1587-2-git-send-email-ethan.zhao@oracle.com>
+References: <1406045944-1587-1-git-send-email-ethan.zhao@oracle.com>
+	 <1406045944-1587-2-git-send-email-ethan.zhao@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/13/2014 6:14 PM, Jason Cooper wrote:
-> Suravee,
->
-> On Wed, Jul 09, 2014 at 06:05:00PM -0500, suravee.suthikulpanit@amd.com wrote:
->> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->>
->> This patch set introduces support for MSI(-X) in GICv2m specification,
->> which is implemented in some variation of GIC400.
->>
->> This depends on and has been tested with the V7 of"Add support for PCI in AArch64"
->> (https://lkml.org/lkml/2014/3/14/320).
->
-> Grrr.  I mis-spoke against your v1 of this series.  There are more
-> changes to irq-gic.c than I originally thought in this series.
+On Wed, 2014-07-23 at 00:19 +0800, Ethan Zhao wrote:
+> This patch introduced three helper functions to hide direct
+> device flag operation.
+> 
+> void pci_set_dev_assigned(struct pci_dev *pdev);
+> void pci_set_dev_deassigned(struct pci_dev *pdev);
+> bool pci_is_dev_assigned(struct pci_dev *pdev);
+> 
+> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+> ---
+>  include/linux/pci.h |   13 +++++++++++++
+>  1 files changed, 13 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index aab57b4..5f6f8fa 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1129,6 +1129,19 @@ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+>  
+>  int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+>  		      unsigned int command_bits, u32 flags);
+> +/* helper functions for operation of device flag */
+> +static inline void pci_set_dev_assigned(struct pci_dev *pdev)
+> +{
+> +	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+> +}
+> +static inline void pci_set_dev_deassigned(struct pci_dev *pdev)
+> +{
+> +	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+> +}
 
-I am not quite sure what your are referring to.
+I think pci_clear_dev_assigned() would make more sense, we're not
+setting a flag named DEASSIGNED.
 
-> Additionally, we have a lot of other significant changes to that driver
-> as well this cycle.  It would be really helpful if I could take patches
-> 1-3 through irqchip/gic.  I can Ack #4 with the Subject change, and the
-> branch it lands in can depend on irqchip/gic, no problem there.
+> +static inline bool pci_is_dev_assigned(struct pci_dev *pdev)
+> +{
+> +	return pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED ? true : false;
+> +}
 
-Patch 1-3 should be able to go through the irqchip/gic along with the 
-gicv3 from Marc, which I have rebased this patch against.
+The ternary operation isn't necessary.  Thanks,
 
-Patch 4 is arch64 architectural changes.  Therefore, it might need to be 
-going through a different branch. Marc/Mark/Will/Catalin, do you have 
-any suggestions on which branch this should go to?
+Alex
 
-> My main concern is your statement above and your answer to my inquiry
-> against v1.
->
-> Right now, I'm only concerned about breaking the build.  Can I take 1-3?
-> Or, do we need to wait until aarch64 PCI lands in mainline?
+>  /* kmem_cache style wrapper around pci_alloc_consistent() */
+>  
+>  #include <linux/pci-dma.h>
 
-1 and 2 should be trivial since there is no change functionally.
 
-3 mostly adding new files which should not get built if ARCH64 PCI is 
-not supported based on the arch/arm64/Kconfig below.
-
-+++ b/arch/arm64/Kconfig
-@@ -9,6 +9,7 @@ config ARM64
-  	select ARM_AMBA
-  	select ARM_ARCH_TIMER
-  	select ARM_GIC
-+	select ARM_GIC_V2M if (PCI && PCI_MSI)
-  	select ARM_GIC_V3
-  	select BUILDTIME_EXTABLE_SORT
-  	select CLONE_BACKWARDS
-
-The only thing is the change related to MSI in the irq-gic.c which 
-should not affect with the non-PCI system.
-
-Thanks,
-
-Suravee
 
