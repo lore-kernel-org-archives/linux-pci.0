@@ -1,191 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 3/3] vfio-pci: Attempt bus/slot reset on release
-To: alex.williamson@redhat.com
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Date: Wed, 16 Jul 2014 13:01:31 -0600
-Message-ID: <20140716190131.4153.10787.stgit@gimli.home>
-In-Reply-To: <20140716184645.4153.86129.stgit@gimli.home>
-References: <20140716184645.4153.86129.stgit@gimli.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ausxipps301.us.dell.com ([143.166.148.223]:47722 "EHLO
+	ausxipps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750929AbaG1UJp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jul 2014 16:09:45 -0400
+From: <Jordan_Hargrave@Dell.com>
+To: <bhelgaas@google.com>, <keith.busch@intel.com>
+CC: <linux-pci@vger.kernel.org>, <wangyijing@huawei.com>,
+	<jon.mason@intel.com>, <Austin_Bolen@Dell.com>
+Date: Mon, 28 Jul 2014 14:59:52 -0500
+Subject: RE: Debugging incorrect mps settings detected
+Message-ID: <5B3AAEAF6B46EA4D955DF7AD46C2C48515F8318AA4@AUSX7MCPS303.AMER.DELL.COM>
+References: <alpine.LRH.2.03.1406031308200.11244@AMR>,<CAErSpo6B76KL=PVGuuLjvC77kvxSjjYNnngXxPEjj_3dMbA0yg@mail.gmail.com>
+In-Reply-To: <CAErSpo6B76KL=PVGuuLjvC77kvxSjjYNnngXxPEjj_3dMbA0yg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Each time a device is released, mark whether a local reset was
-successful or whether a bus/slot reset is needed.  If a reset is
-needed and all of the affected devices are bound to vfio-pci and
-unused, allow the reset.  This is most useful when the userspace
-driver is killed and releases all the devices in an unclean state,
-such as when a QEMU VM quits.
+We are still seeing issues too with the maxpayload default setting being incorrect for hotplug PCIE systems on Linux.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+The default setting doesn't work if any root port is configured with MPS>128.  Adding in a hotplug device will default to MPS=128 and will cause PCIE error.
+Clamping to pci_bus_safe causes the whole system to run inefficiently at MPS=128
 
- drivers/vfio/pci/vfio_pci.c         |  112 +++++++++++++++++++++++++++++++++++
- drivers/vfio/pci/vfio_pci_private.h |    1 
- 2 files changed, 113 insertions(+)
+Windows and VMWare are already using the equivalent of pcie_bus_perf and not seeing problems. 
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index c4949a7..f95b90f 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -39,6 +39,8 @@ MODULE_PARM_DESC(nointxmask,
- 
- static DEFINE_MUTEX(driver_lock);
- 
-+static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev);
-+
- static int vfio_pci_enable(struct vfio_pci_device *vdev)
- {
- 	struct pci_dev *pdev = vdev->pdev;
-@@ -123,6 +125,8 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
- 		vdev->barmap[bar] = NULL;
- 	}
- 
-+	vdev->needs_reset = true;
-+
- 	/*
- 	 * If we have saved state, restore it.  If we can reset the device,
- 	 * even better.  Resetting with current state seems better than
-@@ -154,11 +158,15 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
- 		if (ret)
- 			pr_warn("%s: Failed to reset device %s (%d)\n",
- 				__func__, dev_name(&pdev->dev), ret);
-+		else
-+			vdev->needs_reset = false;
- 	}
- 
- 	pci_restore_state(pdev);
- out:
- 	pci_disable_device(pdev);
-+
-+	vfio_pci_try_bus_reset(vdev);
- }
- 
- static void vfio_pci_release(void *device_data)
-@@ -917,6 +925,110 @@ static struct pci_driver vfio_pci_driver = {
- 	.err_handler	= &vfio_err_handlers,
- };
- 
-+/*
-+ * Test whether a reset is necessary and possible.  We mark devices as
-+ * needs_reset when they are released, but don't have a function-local reset
-+ * available.  If any of these exist in the affected devices, we want to do
-+ * a bus/slot reset.  We also need all of the affected devices to be unused,
-+ * so we abort if any device has a non-zero refcnt.  driver_lock prevents a
-+ * device from being opened during the scan or unbound from vfio-pci.
-+ */
-+static int vfio_pci_test_bus_reset(struct pci_dev *pdev, void *data)
-+{
-+	bool *needs_reset = data;
-+	struct pci_driver *pci_drv = ACCESS_ONCE(pdev->driver);
-+	int ret = -EBUSY;
-+
-+	if (pci_drv == &vfio_pci_driver) {
-+		struct vfio_device *device;
-+		struct vfio_pci_device *vdev;
-+
-+		device = vfio_device_get_from_dev(&pdev->dev);
-+		if (!device)
-+			return ret;
-+
-+		vdev = vfio_device_data(device);
-+		if (vdev) {
-+			if (vdev->needs_reset)
-+				*needs_reset = true;
-+
-+			if (!vdev->refcnt)
-+				ret = 0;
-+		}
-+
-+		vfio_device_put(device);
-+	}
-+
-+	/*
-+	 * TODO: vfio-core considers groups to be viable even if some devices
-+	 * are attached to known drivers, like pci-stub or pcieport.  We can't
-+	 * freeze devices from being unbound to those drivers like we can
-+	 * here though, so it would be racy to test for them.  We also can't
-+	 * use device_lock() to prevent changes as that would interfere with
-+	 * PCI-core taking device_lock during bus reset.  For now, we require
-+	 * devices to be bound to vfio-pci to get a bus/slot reset on release.
-+	 */
-+
-+	return ret;
-+}
-+
-+/* Clear needs_reset on all affected devices after successful bus/slot reset */
-+static int vfio_pci_clear_needs_reset(struct pci_dev *pdev, void *data)
-+{
-+	struct pci_driver *pci_drv = ACCESS_ONCE(pdev->driver);
-+
-+	if (pci_drv == &vfio_pci_driver) {
-+		struct vfio_device *device;
-+		struct vfio_pci_device *vdev;
-+
-+		device = vfio_device_get_from_dev(&pdev->dev);
-+		if (!device)
-+			return 0;
-+
-+		vdev = vfio_device_data(device);
-+		if (vdev)
-+			vdev->needs_reset = false;
-+
-+		vfio_device_put(device);
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Attempt to do a bus/slot reset if there are devices affected by a reset for
-+ * this device that are needs_reset and all of the affected devices are unused
-+ * (!refcnt).  Callers of this function are required to hold driver_lock such
-+ * that devices can not be unbound from vfio-pci or opened by a user while we
-+ * test for and perform a bus/slot reset.
-+ */
-+static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
-+{
-+	bool needs_reset = false, slot = false;
-+	int ret;
-+
-+	if (!pci_probe_reset_slot(vdev->pdev->slot))
-+		slot = true;
-+	else if (pci_probe_reset_bus(vdev->pdev->bus))
-+		return;
-+
-+	if (vfio_pci_for_each_slot_or_bus(vdev->pdev,
-+					  vfio_pci_test_bus_reset,
-+					  &needs_reset, slot) || !needs_reset)
-+		return;
-+
-+	if (slot)
-+		ret = pci_try_reset_slot(vdev->pdev->slot);
-+	else
-+		ret = pci_try_reset_bus(vdev->pdev->bus);
-+
-+	if (ret)
-+		return;
-+
-+	vfio_pci_for_each_slot_or_bus(vdev->pdev,
-+				      vfio_pci_clear_needs_reset, NULL, slot);
-+}
-+
- static void __exit vfio_pci_cleanup(void)
- {
- 	pci_unregister_driver(&vfio_pci_driver);
-diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
-index 31e7a30..671c17a 100644
---- a/drivers/vfio/pci/vfio_pci_private.h
-+++ b/drivers/vfio/pci/vfio_pci_private.h
-@@ -54,6 +54,7 @@ struct vfio_pci_device {
- 	bool			extended_caps;
- 	bool			bardirty;
- 	bool			has_vga;
-+	bool			needs_reset;
- 	struct pci_saved_state	*pci_saved_state;
- 	int			refcnt;
- 	struct eventfd_ctx	*err_trigger;
+--jordan hargrave
+Dell Enterprise Linux Engineering
+________________________________________
+From: linux-pci-owner@vger.kernel.org [linux-pci-owner@vger.kernel.org] On Behalf Of Bjorn Helgaas [bhelgaas@google.com]
+Sent: Tuesday, June 03, 2014 4:01 PM
+To: Keith Busch
+Cc: linux-pci@vger.kernel.org; Yijing Wang; Jon Mason
+Subject: Re: Debugging incorrect mps settings detected
 
+[+cc Yijing, Jon]
+
+On Tue, Jun 3, 2014 at 2:04 PM, Keith Busch <keith.busch@intel.com> wrote:
+> Hello,
+>
+> Hot adding a pci device results in improper MPS settings detected,
+> reading 128 even though the upstream port is 256. This causes a warning
+> print to be logged suggesting I should report a bug. :)
+>
+> Here's the dmesg of the hot plug event:
+>
+> [ 2105.051941] pciehp 0000:05:07.0:pcie24: Card present on Slot(27)
+> [ 2107.012811] pci 0000:09:00.0: [8086:0953] type 00 class 0x010802
+> [ 2107.012838] pci 0000:09:00.0: reg 0x10: [mem 0x00000000-0x00003fff 64bit]
+> [ 2107.012873] pci 0000:09:00.0: reg 0x30: [mem 0x00000000-0x0000ffff pref]
+> [ 2107.014986] pcieport 0000:05:07.0: bridge window [io  0x1000-0x0fff] to
+> [bus 09] add_size 1000
+> [ 2107.014996] pcieport 0000:05:07.0: res[13]=[io  0x1000-0x0fff]
+> get_res_add_size add_size 1000
+> [ 2107.015001] pcieport 0000:05:07.0: BAR 13: can't assign io (size 0x1000)
+> [ 2107.015006] pcieport 0000:05:07.0: BAR 13: can't assign io (size 0x1000)
+> [ 2107.015013] pci 0000:09:00.0: BAR 6: assigned [mem 0xd5200000-0xd520ffff
+> pref]
+> [ 2107.015018] pci 0000:09:00.0: BAR 0: assigned [mem 0xdb600000-0xdb603fff
+> 64bit]
+> [ 2107.015030] pcieport 0000:05:07.0: PCI bridge to [bus 09]
+> [ 2107.015037] pcieport 0000:05:07.0:   bridge window [mem
+> 0xdb600000-0xdb7fffff]
+> [ 2107.015042] pcieport 0000:05:07.0:   bridge window [mem
+> 0xd5200000-0xd52fffff 64bit pref]
+> [ 2107.015060] pci 0000:09:00.0: Max Payload Size 128, but upstream
+> 0000:05:07.0 set to 256; if necessary, use "pci=pcie_bus_safe" and report a
+> bug
+> [ 2107.015079] pci 0000:09:00.0: no hotplug settings from platform
+>
+> The commit message that added the warning indicates it may be a BIOS
+> issue that incorrectly configures this, but BIOS isn't involved with
+> setting the MPS on a device hot add, am I right? Or is that wrong?
+
+The BIOS is not involved in setting MPS on a device hot-add.
+
+> This is a Dell R620 server, if that matters, though we see this on other
+> platforms as well.
+>
+> Using pci=pcie_bus_perf works around the issue, but that seems a bit
+> odd to suggest to users. Is setting MPS on hot-add something the PCI
+> driver layer ought to be doing, or should I be looking into the platform
+> BIOS instead?
+
+The PCI core should be doing something intelligent here.  If we can't
+configure MPS safely, we should prevent the device from being enabled.
+ But this is stuff the PCI core doesn't implement yet.
+
+It's hard to reconfigure MPS after boot because it affects other
+devices in the system, and I don't think we can always change the
+settings of other devices while they're active.
+
+I'm not sure that warning is correct.  It seems like it should suggest
+pcie_bus_peer2peer, which is documented as guaranteeing that hot-added
+devices will work.  But this is always confusing to me, and I could be
+wrong about this.
+
+Bjorn
+--
+To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
