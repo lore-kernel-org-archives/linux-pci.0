@@ -1,76 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:33891 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934045AbaGXHOZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 03:14:25 -0400
-Message-ID: <53D0B24A.30100@huawei.com>
-Date: Thu, 24 Jul 2014 15:14:18 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mout.kundenserver.de ([212.227.17.13]:61027 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750752AbaG1N6L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jul 2014 09:58:11 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: kbuild test robot <fengguang.wu@intel.com>
+Cc: kbuild-all@01.org, Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [linux-devel:devel-athens-arm-201407281729 9/13] ERROR: "dw_pcie_host_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+Date: Mon, 28 Jul 2014 15:57:18 +0200
+Message-ID: <5266883.bDcz9kd6ee@wuerfel>
+In-Reply-To: <53d65148.2/x780FfPLEYMqov%fengguang.wu@intel.com>
+References: <53d65148.2/x780FfPLEYMqov%fengguang.wu@intel.com>
 MIME-Version: 1.0
-To: John <john.fadel@gmail.com>, <linux-pci@vger.kernel.org>
-Subject: Re: PCIe IOMEM Resource Allocation
-References: <loom.20140724T083447-909@post.gmane.org>
-In-Reply-To: <loom.20140724T083447-909@post.gmane.org>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/7/24 14:35, John wrote:
-> Hi
-> I am trying to write a PCIe linux device driver to handle PCIe switches and
-> endpoints that show up after the Redhat 6.4 linux is already up and running.
+On Monday 28 July 2014 21:34:00 kbuild test robot wrote:
+> Hi Wu,
 > 
-> If I try to allocate the resources of the PCIe switches & endpoints between
-> 0xF4000000 and 0xF47FFFFF everything works fine .. But this range is quite
-> full with other devices, so I tried to extend this range to start from
-> 0xF0000000, or from 0xD0000000 the allocation works fine, but I am unable to
-> access devices in the extended range
+> FYI, this happens on a merge commit, which indicates conflicting changes with one of the below merged branches.
 > 
-> Anybody has idea why I am unable to use the complete 3G - 4G address range ?
-> Is it related to some ACPI boot configuration that need to be changed, I can
-> see in my dmesg
-> 
-> pci_root PNP0A08:00: host bridge window [mem 0xf4000000-0xf7ffffff]
-> pci_root PNP0A08:00: host bridge window [io 0x1000-0x7fff]
-> pci_root PNP0A08:00: host bridge window [io 0x0000-0x03af]
-> pci_root PNP0A08:00: host bridge window [io 0x03e0-0x0cf7]
-> pci_root PNP0A08:00: host bridge window [io 0x0d00-0x0fff]
-> pci_root PNP0A08:00: host bridge window [mem 0xfed00000-0xfed03fff]
-> pci_root PNP0A08:00: host bridge window [mem 0xfed40000-0xfed44fff]
-> pci_root PNP0A08:00: host bridge window [io 0x03b0-0x03bb]
-> pci_root PNP0A08:00: host bridge window [io 0x03c0-0x03df]
-> pci_root PNP0A08:00: host bridge window [mem 0x000a0000-0x000bffff]
-> pci_root PNP0A08:01: host bridge window [mem 0xf8000000-0xfbffffff]
-> pci_root PNP0A08:01: host bridge window [io 0x8000-0xffff]
-> 
-> Is there a reason for this limited range ? Is it processor dependant ?
-
-Yes, you should use the resource range in host bridge window, or you won't
-request resource success. PCI hostbridge retrieve the host bridge window
-from ACPI _CRS method, if _CRS is not exist, PCI may use global resource
-iomem_resource and ioport_resource as its hostbridge window.
-
-BIOS is responsible for the _CRS resource range report.
-
-BTW, you can append the pci=nocrs in command line and try again.
-
-
-Thanks!
-Yijing.
-
-
-> 
-> Thanks 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 46b7e36 Merge 'arm-soc/for-next' into devel-athens-arm-201407281729
+> ed67b70 Merge 'sound/for-next' into devel-athens-arm-201407281729
+> df8c9cc Merge 's390/features' into devel-athens-arm-201407281729
+> a97b04d Merge 'powerpc/test' into devel-athens-arm-201407281729
+> 6baf298 Merge 'powerpc/next' into devel-athens-arm-201407281729
+> e216a37 Merge 'tip/sched/core' into devel-athens-arm-201407281729
+> 6c9d717 Merge 'tip/perf/core' into devel-athens-arm-201407281729
+> ab83da1 Merge 'ath6kl/ath-next-test' into devel-athens-arm-201407281729
+> 86fc732 0day base guard for 'devel-athens-arm-201407281729'
+> 64aa90f Linux 3.16-rc7
 > 
 > 
+> tree:   git://internal_merge_and_test_tree devel-athens-arm-201407281729
+> head:   ed9c75e87f52f14597c4db2ba5b45950f2e09c1a
+> commit: 46b7e363b2006f212f930aa284b0ad3ca6d3fe48 [9/13] Merge 'arm-soc/for-next' into devel-athens-arm-201407281729
+> config: make ARCH=arm allmodconfig
+> 
+> All error/warnings:
+> 
+> >> ERROR: "dw_pcie_host_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> >> ERROR: "dw_handle_msi_irq" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> >> ERROR: "dw_pcie_msi_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> >> ERROR: "dw_pcie_cfg_write" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> >> ERROR: "dw_pcie_cfg_read" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> >> ERROR: "dw_pcie_setup_rc" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> >> ERROR: "dw_pcie_link_up" [drivers/pci/host/pcie-spear13xx.ko] undefined!
 
+I submitted a patch for this already:
 
--- 
-Thanks!
-Yijing
+http://patchwork.ozlabs.org/patch/373209/
 
+Not sure how to deal with that, as Lucas indicated that it conflicts with
+another patch of his. I guess I could just apply my patch as-is to fix the
+current bug and let Linus deal with the merge conflict later.
+
+Alternatively, we can turn this driver into builtin-only like some of
+the other PCI host controllers. Not as nice, but gets rid of the bug
+without introducing a conflict.
+
+Jingoo, Mohit, Bjorn, any other opinions?
+
+	Arnd
