@@ -1,95 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V4 17/21] iommu/vt-d: Search for ACPI _DSM method for DMAR hotplug
-Date: Fri, 11 Jul 2014 14:19:41 +0800
-Message-Id: <1405059585-10620-18-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:29323 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752468AbaG2NNZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Jul 2014 09:13:25 -0400
+Message-ID: <53D79DE2.9000702@redhat.com>
+Date: Tue, 29 Jul 2014 15:13:06 +0200
+From: Tomas Henzl <thenzl@redhat.com>
+MIME-Version: 1.0
+To: Alexander Gordeev <agordeev@redhat.com>,
+	linux-kernel@vger.kernel.org
+CC: xjtuwjp@gmail.com, lindar_liu@usish.com,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+Subject: Re: [PATCH v2 RESEND 17/23] pm8001: Fix invalid return when request_irq()
+ failed
+References: <cover.1405533479.git.agordeev@redhat.com> <5ecd9b80f705545c3dc85b2a4ae63a8ac3df8105.1405533479.git.agordeev@redhat.com>
+In-Reply-To: <5ecd9b80f705545c3dc85b2a4ae63a8ac3df8105.1405533479.git.agordeev@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to Intel VT-d specification, _DSM method to support DMAR
-hotplug should exist directly under corresponding ACPI object
-representing PCI host bridge. But some BIOSes doesn't conform to
-this, so search for _DSM method in the subtree starting from the
-ACPI object representing the PCI host bridge.
+Hi, 
+patch looks good.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/dmar.c |   35 +++++++++++++++++++++++++++++++----
- 1 file changed, 31 insertions(+), 4 deletions(-)
+A correction in pm8001_request_irq might be added too to allow 
+the INT-X path when pm8001_setup_msix fails, but that is not part 
+of this fix.
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 9d8f5c82b717..cc1d19c33486 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -1927,21 +1927,48 @@ static int dmar_hotplug_remove(acpi_handle handle)
- 	return ret;
- }
- 
--static int dmar_device_hotplug(acpi_handle handle, bool insert)
-+static acpi_status dmar_get_dsm_handle(acpi_handle handle, u32 lvl,
-+				       void *context, void **retval)
-+{
-+	acpi_handle *phdl = retval;
-+
-+	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
-+		*phdl = handle;
-+		return AE_CTRL_TERMINATE;
-+	}
-+
-+	return AE_OK;
-+}
-+
-+int dmar_device_hotplug(acpi_handle handle, bool insert)
- {
- 	int ret;
-+	acpi_handle tmp = NULL;
-+	acpi_status status;
- 
- 	if (!dmar_in_use())
- 		return 0;
- 
--	if (!dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD))
-+	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
-+		tmp = handle;
-+	} else {
-+		status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
-+					     ACPI_UINT32_MAX,
-+					     dmar_get_dsm_handle,
-+					     NULL, NULL, &tmp);
-+		if (ACPI_FAILURE(status)) {
-+			pr_warn("Failed to locate _DSM method.\n");
-+			return -ENXIO;
-+		}
-+	}
-+	if (tmp == NULL)
- 		return 0;
- 
- 	down_write(&dmar_global_lock);
- 	if (insert)
--		ret = dmar_hotplug_insert(handle);
-+		ret = dmar_hotplug_insert(tmp);
- 	else
--		ret = dmar_hotplug_remove(handle);
-+		ret = dmar_hotplug_remove(tmp);
- 	up_write(&dmar_global_lock);
- 
- 	return ret;
--- 
-1.7.10.4
+Tomas
+
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+
+On 07/16/2014 08:05 PM, Alexander Gordeev wrote:
+> When a call to request_irq() failed pm8001_setup_msix()
+> still returns the success. This udate fixes the described
+> misbehaviour.
+>
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: xjtuwjp@gmail.com
+> Cc: lindar_liu@usish.com
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Acked-by: Jack Wang <xjtuwjp@gmail.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_init.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index e90c89f..e837ece 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -744,9 +744,10 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
+>  			pm8001_ha->irq_vector[i].irq_id = i;
+>  			pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
+>  
+> -			if (request_irq(pm8001_ha->msix_entries[i].vector,
+> +			rc = request_irq(pm8001_ha->msix_entries[i].vector,
+>  				pm8001_interrupt_handler_msix, flag,
+> -				intr_drvname[i], &(pm8001_ha->irq_vector[i]))) {
+> +				intr_drvname[i], &(pm8001_ha->irq_vector[i]));
+> +			if (rc) {
+>  				for (j = 0; j < i; j++)
+>  					free_irq(
+>  					pm8001_ha->msix_entries[j].vector,
 
