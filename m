@@ -1,90 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:60826 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752817AbaGETCH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 Jul 2014 15:02:07 -0400
-Received: by mail-ig0-f178.google.com with SMTP id hn18so3159713igb.11
-        for <linux-pci@vger.kernel.org>; Sat, 05 Jul 2014 12:02:06 -0700 (PDT)
-Date: Sat, 5 Jul 2014 13:02:03 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Vidya Sagar <vidyas@nvidia.com>
-Cc: nagananda.chumbalkar@hp.com, thierry.reding@gmail.com,
-	swarren@nvidia.com, kthota@nvidia.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH v1] PCI: enable ASPM configuration in PCIE POWERSAVE mode
-Message-ID: <20140705190203.GE28871@google.com>
-References: <1404198978-26593-1-git-send-email-vidyas@nvidia.com>
- <20140705185736.GD28871@google.com>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:38228 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752061AbaG2CF0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jul 2014 22:05:26 -0400
+Date: Tue, 29 Jul 2014 09:42:10 +0800
+From: Jisheng Zhang <jszhang@marvell.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"swarren@wwwdotorg.org" <swarren@wwwdotorg.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] PCI: tegra: add missing cleanup in error path and
+ teardown_irq
+Message-ID: <20140729094210.1d599469@xhacker>
+In-Reply-To: <20140728153548.GB10126@ulmo.nvidia.com>
+References: <1406519142-3018-1-git-send-email-jszhang@marvell.com>
+	<20140728153548.GB10126@ulmo.nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140705185736.GD28871@google.com>
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael]
+Hi Thierry,
 
-On Sat, Jul 05, 2014 at 12:57:36PM -0600, Bjorn Helgaas wrote:
-> [+cc Matthew]
+On Mon, 28 Jul 2014 08:35:50 -0700
+Thierry Reding <thierry.reding@gmail.com> wrote:
+
+> On Mon, Jul 28, 2014 at 11:45:42AM +0800, Jisheng Zhang wrote:
+> > We should call tegra_msi_free() to free the msi bit if
+> > irq_create_mapping() fails. And we need to dispose the irq mapping
+> > during irq teardown.
 > 
-> On Tue, Jul 01, 2014 at 12:46:18PM +0530, Vidya Sagar wrote:
-> > commit 1a680b7c moved pcie_aspm_powersave_config_link() out of
-> > pci_raw_set_power_state() to pci_set_power_state() which would enable
-> > ASPM. But, with commit db288c9c, which re-introduced the following check
-> > ./drivers/pci/pci.c: pci_set_power_state()
-> > +   /* Check if we're already there */
-> > +   if (dev->current_state == state)
-> > +       return 0;
-> > in pci_set_power_state(), call to pcie_aspm_powersave_config_link() is never
-> > made leaving ASPM broken.
-> > Fix it by not returning from when the above condition is true, rather, jump to
-> > ASPM configuration code and exit from there eventually.
+> "MSI" and "IRQ" please.
+
+Done in the v3 patch. Thanks for your reviewing.
+
 > 
-> Rafael, Matthew, any comments?  We have vacillated on this before and
-> the web is already pretty tangled.
+> > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> > index 083cf37..4ccc418 100644
+> > --- a/drivers/pci/host/pci-tegra.c
+> > +++ b/drivers/pci/host/pci-tegra.c
+> > @@ -1203,8 +1203,10 @@ static int tegra_msi_setup_irq(struct msi_chip
+> > *chip, struct pci_dev *pdev, return hwirq;
+> >  
+> >  	irq = irq_create_mapping(msi->domain, hwirq);
+> > -	if (!irq)
+> > +	if (!irq) {
+> > +		tegra_msi_free(msi, hwirq);
+> >  		return -EINVAL;
+> > +	}
+> >  
+> >  	irq_set_msi_desc(irq, desc);
+> >  
+> > @@ -1222,8 +1224,10 @@ static void tegra_msi_teardown_irq(struct msi_chip
+> > *chip, unsigned int irq) {
+> >  	struct tegra_msi *msi = to_tegra_msi(chip);
+> >  	struct irq_data *d = irq_get_irq_data(irq);
+> > +	unsigned long hwirq = d->hwirq;
 > 
-> Vidya, can you give more details about the bug fixed by this change?
-> What's the scenario?  Are we resuming and the device is powered up but
-> ASPM isn't enabled?  Maybe you could collect more details in a
-> http://bugzilla.kernel.org report?
+> I don't think we need this temporary variable, d->hwirq isn't overly
+> long.
+
+irq_dispose_mapping() will clear d->hwirq as 0, so if we don't save to a temporary
+variable, we will always MSI 0, this is not what we want. What do you think?
+
 > 
-> > Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> > ---
-> >  drivers/pci/pci.c | 6 ++++--
-> >  1 file changed, 4 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 1c8592b..ded24c4 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -804,7 +804,7 @@ EXPORT_SYMBOL_GPL(__pci_complete_power_transition);
-> >   */
-> >  int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
-> >  {
-> > -	int error;
-> > +	int error = 0;
-> >  
-> >  	/* bound the state we're entering */
-> >  	if (state > PCI_D3cold)
-> > @@ -821,7 +821,7 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
-> >  
-> >  	/* Check if we're already there */
-> >  	if (dev->current_state == state)
-> > -		return 0;
-> > +		goto config_aspm;
-> >  
-> >  	__pci_start_power_transition(dev, state);
-> >  
-> > @@ -839,6 +839,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
-> >  
-> >  	if (!__pci_complete_power_transition(dev, state))
-> >  		error = 0;
-> > +
-> > +config_aspm:
-> >  	/*
-> >  	 * When aspm_policy is "powersave" this call ensures
-> >  	 * that ASPM is configured.
-> > -- 
-> > 1.8.1.5
-> > 
+> With both of the above address, this is:
+> 
+> Reviewed-by: Thierry Reding <treding@nvidia.com>
+> Acked-by: Thierry Reding <treding@nvidia.com>
+
+Thanks for reviewing,
+Jisheng
+
