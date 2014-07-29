@@ -1,132 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:14082 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932088AbaG3Dp1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 23:45:27 -0400
-Message-ID: <53D86993.8020702@huawei.com>
-Date: Wed, 30 Jul 2014 11:42:11 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:61717 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752168AbaG2Kes (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 06:34:48 -0400
+Date: Tue, 29 Jul 2014 12:34:43 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Jisheng Zhang <jszhang@marvell.com>
+Cc: bhelgaas@google.com, swarren@wwwdotorg.org,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: tegra: add missing cleanup in error path and
+ teardown_irq
+Message-ID: <20140729103442.GE21182@ulmo.nvidia.com>
+References: <1406597610-6748-1-git-send-email-jszhang@marvell.com>
 MIME-Version: 1.0
-To: Ethan Zhao <ethan.kernel@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	<Jordan_Hargrave@dell.com>, <keith.busch@intel.com>,
-	<jon.mason@intel.com>, Jon Mason <jdmason@kudzu.us>
-Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
-References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com> <CABawtvNAOm1VuLnN6vvwH1RtetYk-cu7VnQ6MCtJ4WVufBh2hw@mail.gmail.com>
-In-Reply-To: <CABawtvNAOm1VuLnN6vvwH1RtetYk-cu7VnQ6MCtJ4WVufBh2hw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="BZaMRJmqxGScZ8Mx"
+In-Reply-To: <1406597610-6748-1-git-send-email-jszhang@marvell.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/7/30 11:33, Ethan Zhao wrote:
-> Yijing,
->     Seems you want to workaround platform bug in generic PCIe hotplug
-> code, while not specific to some platforms or devices, that is not
-> safe/fair to other vendor's platform.
-> and the updating to MPS of device is out of PCIe specification.
->     So the best way is to fix within platform, at least, any platform
-> specific way in Linux code.
 
-No, this is not a platform bug, and this is safe, you can refer to my last reply
-to Alex.
+--BZaMRJmqxGScZ8Mx
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> Thanks,
-> Ethan
-> 
-> On Tue, Jul 29, 2014 at 4:17 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->> Currently we don't update device's mps value when doing
->> pci device hot-add. The hot-added device's mps will be set
->> to default value (128B). But the upstream port device's mps
->> may be larger than 128B which was set by firmware during
->> system bootup. In this case the new added device may not
->> work normally. This issue was found in huawei 5885 server
->> and Dell R620 server. And if we run the platform with windows,
->> this problem is gone. This patch try to update the hot added
->> device mps equal to its parent mps, if device mpss < parent mps,
->> print warning.
->>
->> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
->> Reported-by: Keith Busch <keith.busch@intel.com>
->> Reported-by: Jordan_Hargrave@Dell.com
->> Reported-by: Yijing Wang <wangyijing@huawei.com>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> Cc: Jon Mason <jdmason@kudzu.us>
->> ---
->>  drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
->>  1 files changed, 39 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index e3cf8a2..583ca52 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -1613,6 +1613,44 @@ static void pcie_write_mrrs(struct pci_dev *dev)
->>                 dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If problems are experienced, try running with pci=pcie_bus_safe\n");
->>  }
->>
->> +/**
->> + * pcie_bus_update_set - update device mps when device doing hot-add
->> + * @dev: PCI device to set
->> + *
->> + * After device hot add, mps will be set to default(128B), But the
->> + * upstream port device's mps may be larger than 128B which was set
->> + * by firmware during system bootup. Then we should update the device
->> + * mps to equal to its parent mps, Or the device can not work normally.
->> + */
->> +static void pcie_bus_update_set(struct pci_dev *dev)
->> +{
->> +       int mps, p_mps, mpss;
->> +       struct pci_dev *parent;
->> +
->> +       if (!pci_is_pcie(dev) || !dev->bus->self
->> +                       || !dev->bus->self->is_hotplug_bridge)
->> +               return;
->> +
->> +       parent = dev->bus->self;
->> +       mps = pcie_get_mps(dev);
->> +       p_mps = pcie_get_mps(parent);
->> +
->> +       if (mps >= p_mps)
->> +               return;
->> +
->> +       mpss = 128 << dev->pcie_mpss;
->> +       if (mpss < p_mps) {
->> +               dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
->> +                               "If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
->> +                               mpss, p_mps);
->> +               return;
->> +       }
->> +
->> +       pcie_write_mps(dev, p_mps);
->> +       dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n",
->> +                       pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
->> +}
->> +
->>  static void pcie_bus_detect_mps(struct pci_dev *dev)
->>  {
->>         struct pci_dev *bridge = dev->bus->self;
->> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
->>                 return 0;
->>
->>         if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
->> +               pcie_bus_update_set(dev);
->>                 pcie_bus_detect_mps(dev);
->>                 return 0;
->>         }
->> --
->> 1.7.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
+On Tue, Jul 29, 2014 at 09:33:30AM +0800, Jisheng Zhang wrote:
+> We should call tegra_msi_free() to free the MSI bit if
+> irq_create_mapping() fails. And we need to dispose the IRQ mapping
+> during IRQ teardown.
+>=20
+> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+> ---
+>  drivers/pci/host/pci-tegra.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 083cf37..4ccc418 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -1203,8 +1203,10 @@ static int tegra_msi_setup_irq(struct msi_chip *ch=
+ip, struct pci_dev *pdev,
+>  		return hwirq;
+> =20
+>  	irq =3D irq_create_mapping(msi->domain, hwirq);
+> -	if (!irq)
+> +	if (!irq) {
+> +		tegra_msi_free(msi, hwirq);
+>  		return -EINVAL;
+> +	}
+> =20
+>  	irq_set_msi_desc(irq, desc);
+> =20
+> @@ -1222,8 +1224,10 @@ static void tegra_msi_teardown_irq(struct msi_chip=
+ *chip, unsigned int irq)
+>  {
+>  	struct tegra_msi *msi =3D to_tegra_msi(chip);
+>  	struct irq_data *d =3D irq_get_irq_data(irq);
+> +	unsigned long hwirq =3D d->hwirq;
 
+There seems to be an inconsistency regarding the data type of hwirq. The
+irq_data structure uses unsigned long, but irqd_to_hwirq() function
+returns irq_hw_number_t. Perhaps it would be best to use this instead:
 
--- 
-Thanks!
-Yijing
+	irq_hw_number_t hwirq =3D irqd_to_hwirq(d);
 
+But I don't have a strong preference for either way, so with or without
+that change:
+
+Reviewed-by: Thierry Reding <treding@nvidia.com>
+Acked-by: Thierry Reding <treding@nvidia.com>
+
+--BZaMRJmqxGScZ8Mx
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJT13jCAAoJEN0jrNd/PrOh5rAP/3VrMEHtf6F2AdCx6bEL/rcU
+3NgrrkSVv5V++AysHqU3N1KkS+drGl7PU6wJvNL4FPi4mUGuY8abUSrHWUMzzlod
+FwEcIi3e6tO005j1r0yFJ2Wj95/nAW6N7urVuj8eb6dO3AJpQG8uep1Ncv4grfKq
+ogiSRp1eFJ9eneWYA73bCYLPm4zM3YuXwPQ93ooTWNr0/C34BgZkHeSn9BacjQ/h
+xTGwv0cGU49JK4+TnzAjIQjnPS2JUyoMIloz5EdVxft0ETg1iOKEII79LxJvwh0M
+636ZPSZFzZCnV6SJ9m9+g0hdd4NxEH+kDr9fw9J4Ob05iV+++YSpkIiQ3hHf8/7y
+dBSFAPS9B+lCxjHZ8fRiupN5Kzr9StXratFV2+WTiWRz97XA40FS0YCtJCxD2cF8
+CGMWhIO/tApeh5hWhrIeAoi+L7betcBQrtaSdTvT8dUuPKEnChE6zSPwiKuMSNSG
+V3sVvbsdAOqnGt4LtMSqfQAPT4c+kLFem04R07V/Sm5IrvelRveSH/1bdkCkckSW
+CF2LUDX0SE/U0ZYBO5c5iibhwQzZVqufi1oaDzyqAsrSqxtsa+ReyOfbAHKqQgPc
+LmRP8qvA7n9Fh8/np7vvhgU6GmqAT6UPJXHQSrSIvaGyhb2/9+olCeG3fSZkSbhI
+8KmeeGZ397CEs4mgQKag
+=59cK
+-----END PGP SIGNATURE-----
+
+--BZaMRJmqxGScZ8Mx--
