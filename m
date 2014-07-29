@@ -1,49 +1,30 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:39514 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751760AbaGJMGs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 08:06:48 -0400
-Received: by mail-lb0-f172.google.com with SMTP id c11so6074413lbj.31
-        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 05:06:46 -0700 (PDT)
-From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:41325 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752146AbaG2H5x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 03:57:53 -0400
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Subject: [PATCH] pci: Add include guard to include/linux/pci_ids.h
-Date: Thu, 10 Jul 2014 14:05:11 +0200
-Message-Id: <1404993911-10544-1-git-send-email-linux@rasmusvillemoes.dk>
+CC: <linux-pci@vger.kernel.org>, <Jordan_Hargrave@Dell.com>,
+	<keith.busch@intel.com>, <jdmason@kudzu.us>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH] Update device mps when doing pci hotplug
+Date: Tue, 29 Jul 2014 16:23:21 +0800
+Message-ID: <1406622201-12503-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding an include guard frees the preprocessor from reparsing over
-2600 #defines in the cases where pci_ids.h is somehow included more
-than once. This gives a tiny-but-measurable performance improvement
-when compiling such files.
+Hi Bjorn,
+	Keith Busch and jordan hargrave reported the same issue about
+mps issue after pci device hot add. It seems that more firmware
+set device mps >=256B default. So can you pick up this patch to fix
+this issue temporarily.
 
-Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
----
- include/linux/pci_ids.h | 4 ++++
- 1 file changed, 4 insertions(+)
+Yijing Wang (1):
+  PCI: update device mps when doing pci hotplug
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 7fa3173..6ed0bb7 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -6,6 +6,8 @@
-  *	Do not add new entries to this file unless the definitions
-  *	are shared between multiple drivers.
-  */
-+#ifndef _LINUX_PCI_IDS_H
-+#define _LINUX_PCI_IDS_H
- 
- /* Device classes and subclasses */
- 
-@@ -2968,3 +2970,5 @@
- #define PCI_DEVICE_ID_XEN_PLATFORM	0x0001
- 
- #define PCI_VENDOR_ID_OCZ		0x1b85
-+
-+#endif /* _LINUX_PCI_IDS_H */
--- 
-1.9.2
+ drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 39 insertions(+), 0 deletions(-)
 
