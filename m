@@ -1,115 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:49460 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751605AbaGXIzu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 04:55:50 -0400
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0N9700CNOKSZQCD0@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Thu, 24 Jul 2014 17:55:47 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Lucas Stach' <l.stach@pengutronix.de>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Mohit Kumar' <mohit.kumar@st.com>,
-	'Marek Vasut' <marex@denx.de>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	kernel@pengutronix.de, 'Jingoo Han' <jg1.han@samsung.com>
-References: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
- <1406137961-14684-3-git-send-email-l.stach@pengutronix.de>
- <001201cfa6f5$52863840$f792a8c0$%han@samsung.com>
- <1406190729.4590.8.camel@weser.hi.pengutronix.de>
-In-reply-to: <1406190729.4590.8.camel@weser.hi.pengutronix.de>
-Subject: Re: [PATCH 2/4] PCI: designware: get rid of pci_scan_root_bus
-Date: Thu, 24 Jul 2014 17:55:46 +0900
-Message-id: <002d01cfa71d$0f5a2590$2e0e70b0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <53D71707.6000200@gmail.com>
+Date: Mon, 28 Jul 2014 20:37:43 -0700
+From: Alexander Duyck <alexander.duyck@gmail.com>
+MIME-Version: 1.0
+To: ethan zhao <ethan.zhao@oracle.com>,
+	Alex Williamson <alex.williamson@redhat.com>
+CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
+	kvm@vger.kernel.org, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	xen-devel@lists.xenproject.org, alexander.h.duyck@intel.com,
+	ethan.kernel@gmail.com
+Subject: Re: [PATCH 1/4] PCI: introduce helper functions for device flag operation
+References: <1406045944-1587-1-git-send-email-ethan.zhao@oracle.com>   <1406045944-1587-2-git-send-email-ethan.zhao@oracle.com>  <1406581206.1011.133.camel@ul30vt.home> <53D6FE95.6040605@oracle.com> <1406601073.1011.157.camel@ul30vt.home> <53D70A55.20805@oracle.com>
+In-Reply-To: <53D70A55.20805@oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, July 24, 2014 5:32 PM, Lucas Stach wrote:
-> Am Donnerstag, den 24.07.2014, 13:11 +0900 schrieb Jingoo Han:
-> > On Thursday, July 24, 2014 2:53 AM, Lucas Stach wrote:
-> > >
-> > > Use pci_create_root_bus() similar to other pci
-> > > host controller drivers.
-> > >
-> > > The main problem with pci_scan_root_bus() is that
-> > > not only it will create the root bus, but also try
-> > > to activate all devices on the bus. This triggers
-> > > PCI device drivers probe, which try to use the device
-> > > but fail as resource allocation isn't done at that
-> > > point in time.
-> > >
-> > > To work around this we made sure that the host
-> > > controller driver is probed early and finishes resource
-> > > allocation before any other device drivers are registered.
-> > > Switching to pci_create_root_bus() allows us to get rid
-> > > of this special handling.
-> > >
-> > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> > > ---
-> > >  drivers/pci/host/pcie-designware.c | 15 +++++++--------
-> > >  1 file changed, 7 insertions(+), 8 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > > index b13a830c8b0f..b869e202367c 100644
-> > > --- a/drivers/pci/host/pcie-designware.c
-> > > +++ b/drivers/pci/host/pcie-designware.c
-> > > @@ -801,14 +801,13 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
-> > >  	struct pci_bus *bus;
-> > >  	struct pcie_port *pp = sys_to_pcie(sys);
-> > >
-> > > -	if (pp) {
-> > > -		pp->root_bus_nr = sys->busnr;
-> > > -		bus = pci_scan_root_bus(pp->dev, sys->busnr, &dw_pcie_ops,
-> > > -					sys, &sys->resources);
-> > > -	} else {
-> > > -		bus = NULL;
-> > > -		BUG();
-> > > -	}
-> > > +	pp->root_bus_nr = sys->busnr;
-> > > +	bus = pci_create_root_bus(pp->dev, sys->busnr,
-> > > +				  &dw_pcie_ops, sys, &sys->resources);
-> > > +	if (!bus)
-> > > +		return NULL;
-> > > +
-> > > +	pci_scan_child_bus(bus);
-> >
-> >
-> > I think that we still need to check if pp is NULL.
-> > Then, how about adding NULL check as below?
-> >
-> No I don't think it's needed as it doesn't provide any additional
-> security.
+On 07/28/2014 07:43 PM, ethan zhao wrote:
 > 
-> The only code path that is calling this dw_pci_scan_bus() is in
-> pcibios_init_hw() which always fills sys->private_data with
-> hw_pci->private_data. As we are always filling hw_pci->private_data with
-> a pointer to our pcie_port structure in dw_pcie_host_init() the only way
-> for pp to be NULL at this point would be for pp to be NULL in
-> dw_pcie_host_init(). This would obviously crash a lot earlier.
+> On 2014/7/29 10:31, Alex Williamson wrote:
+>> On Tue, 2014-07-29 at 09:53 +0800, ethan zhao wrote:
+>>> On 2014/7/29 5:00, Alex Williamson wrote:
+>>>> On Wed, 2014-07-23 at 00:19 +0800, Ethan Zhao wrote:
+>>>>> This patch introduced three helper functions to hide direct
+>>>>> device flag operation.
+>>>>>
+>>>>> void pci_set_dev_assigned(struct pci_dev *pdev);
+>>>>> void pci_set_dev_deassigned(struct pci_dev *pdev);
+>>>>> bool pci_is_dev_assigned(struct pci_dev *pdev);
+>>>>>
+>>>>> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+>>>>> ---
+>>>>>    include/linux/pci.h |   13 +++++++++++++
+>>>>>    1 files changed, 13 insertions(+), 0 deletions(-)
+>>>>>
+>>>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>>>>> index aab57b4..5f6f8fa 100644
+>>>>> --- a/include/linux/pci.h
+>>>>> +++ b/include/linux/pci.h
+>>>>> @@ -1129,6 +1129,19 @@ resource_size_t
+>>>>> pcibios_window_alignment(struct pci_bus *bus,
+>>>>>       int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+>>>>>                  unsigned int command_bits, u32 flags);
+>>>>> +/* helper functions for operation of device flag */
+>>>>> +static inline void pci_set_dev_assigned(struct pci_dev *pdev)
+>>>>> +{
+>>>>> +    pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+>>>>> +}
+>>>>> +static inline void pci_set_dev_deassigned(struct pci_dev *pdev)
+>>>>> +{
+>>>>> +    pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+>>>>> +}
+>>>> I think pci_clear_dev_assigned() would make more sense, we're not
+>>>> setting a flag named DEASSIGNED.
+>>>     Though it is a flag operation now, may not later, we define it
+>>> because we want to hide the internal operation.
+>>>     'set' to 'deassigned'  status is enough. So I would like keep it.
+>> I disagree, the opposite of a 'set' is a 'clear', or at least an
+>> 'unset'.  Using bit-ops-like terminology doesn't lock us into an
+>> implementation.  As written, this could just as easily be setting two
+>> different variables.
+>  So there are two pairs of opposite:
 > 
-> So this check is just adding to LOC without adding any value.
-
-Hi Lucas,
-
-I see what you mean. However, pcie-designware.c has been handled by
-various engineers. So, it is not sure that the current sequence will
-not change in the future. Anyway, thank you for your comment. :-)
-
-Best regards,
-Jingoo Han
-
+>  set assigned ---> unset assigned
+>  set assigned ---> set deassigned
 > 
-> Regards,
-> Lucas
+>  Here you prefer the 'verb' set /unset, and I prefer the 'adj.' assigned
+> / deassigned.
 > 
-> --
-> Pengutronix e.K.             | Lucas Stach                 |
-> Industrial Linux Solutions   | http://www.pengutronix.de/  |
+>  Do they really have different meaning or make confusion ? I don't think
+> so.
+> 
+>  Thanks,
+>  Ethan
+> 
 
+I agree with Alex W.  If you are going to use the "set" name you should
+probably use "clear" for the operation that undoes it.  Using the term
+set implies that it is setting a bit and we currently don't have a
+deassigned/unassigned bit.
+
+If that doesn't work perhaps you could use something like
+get/put_assigned_device or acquire/release_assigned_device.  You just
+need to describe what it is you are doing.  You could even consider
+adding some tests to return an error if you attempt to assign a device
+that is already assigned.
+
+Thanks,
+
+Alex D
 
