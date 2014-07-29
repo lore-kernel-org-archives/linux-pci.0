@@ -1,93 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.austin.arm.com ([217.140.110.23]:41179 "EHLO
-	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1760814AbaGYPnD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jul 2014 11:43:03 -0400
-Date: Fri, 25 Jul 2014 16:42:42 +0100
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 6/9] pci: Introduce a domain number for
- pci_host_bridge.
-Message-ID: <20140725154242.GN24268@arm.com>
-References: <CAErSpo75ovmGoeSHKJN0nckGDy-0gpn8kLPfHQ79CtcXxhPydw@mail.gmail.com>
- <20140708224847.GC4980@e106497-lin.cambridge.arm.com>
- <CAErSpo5rBt0iF2HGeDD-UH6_sPCoC647VCw0Q1v_0Rdpvcir-w@mail.gmail.com>
- <20140710094758.GA6501@e106497-lin.cambridge.arm.com>
- <CAErSpo5ZNCY31NztT0cLFbRVsBZqMsZ0LbTFNOTQCZUU3F7qJA@mail.gmail.com>
- <20140711141115.GB16321@arm.com>
- <CAErSpo7C8qzmdp+XgVi2ysXj_NcgvVY7RVfBZ2PHimLzrzANMQ@mail.gmail.com>
- <20140711180151.GH16321@arm.com>
- <20140714163922.GH1112@arm.com>
- <CAErSpo65RBeTgzrVefWBfjnZqTPzyz__HnC4bn8riGGDC0GkHg@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <53D7725C.5010405@citrix.com>
+Date: Tue, 29 Jul 2014 11:07:24 +0100
+From: David Vrabel <david.vrabel@citrix.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo65RBeTgzrVefWBfjnZqTPzyz__HnC4bn8riGGDC0GkHg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Ethan Zhao <ethan.zhao@oracle.com>, <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<gleb@kernel.org>, <pbonzini@redhat.com>, <kvm@vger.kernel.org>,
+	<konrad.wilk@oracle.com>, <boris.ostrovsky@oracle.com>,
+	<xen-devel@lists.xenproject.org>
+CC: <alex.williamson@redhat.com>, <alexander.h.duyck@intel.com>,
+	<ethan.kernel@gmail.com>
+Subject: Re: [PATCH 3/4 v3] xen-pciback: use pci device flag operation helper
+ function
+References: <1406606791-8834-1-git-send-email-ethan.zhao@oracle.com> <1406606791-8834-4-git-send-email-ethan.zhao@oracle.com>
+In-Reply-To: <1406606791-8834-4-git-send-email-ethan.zhao@oracle.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 22, 2014 at 04:15:58AM +0100, Bjorn Helgaas wrote:
-> On Mon, Jul 14, 2014 at 10:39 AM, Catalin Marinas
-> <catalin.marinas@arm.com> wrote:
-> > From b32606aa3997fc8a45014a64f99e921eef4872b0 Mon Sep 17 00:00:00 2001
-> > From: Catalin Marinas <catalin.marinas@arm.com>
-> > Date: Mon, 14 Jul 2014 17:20:01 +0100
-> > Subject: [PATCH] pci: Add support for generic domain_nr in pci_bus
-> >
-> > This patch adds domain_nr in struct pci_bus if
-> > CONFIG_PCI_DOMAINS_GENERIC is enabled. The default implementation for
-> > pci_domain_nr() simply returns bus->domain_nr. For the root bus, the
-> > core PCI code calls pci_set_domain_nr(bus, parent_device) while the
-> > child buses inherit the domain nr of the parent bus.
-> >
-> > This patch also adds an of_pci_set_domain_nr() implementation which
-> > parses the device tree for the "pci-domain" property or sets domain_nr
-> > to the next available value (this function could also be implemented
-> > entirely in arm64).
-> >
-> > Signed-off-by: Catalin Marinas <catalin.marinas@arm.com>
+On 29/07/14 05:06, Ethan Zhao wrote:
+> Use pci device flag operation helper functions when set device
+> to assigned or deassigned state.
 > 
-> I like this.  It seems like a reasonable step forward.  I don't really
-> like the pci_set_domain_nr() interface because the domain conceptually
-> exists before the root bus in the domain, but we can deal with that
-> later.
+> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
 
-That's just the name I came up with. Maybe something like
-pci_assign_domain_to_bus()?
+Konrad already reviewed this but you've not included his reviewed-by tag.
 
-> I'd really like to see all this stuff in v3.17, but I'm going to be on
-> vacation for the next three weeks and won't be able to do much until
-> Aug 11, which is probably going to be in the middle of the merge
-> window.  But maybe the series can be integrated in -next via an ARM
-> tree or something.  If it helps, you can add my
+I don't understand why we bother with this flag on Xen since we never
+use it but:
+
+Acked-by: David Vrabel <david.vrabel@citrix.com>
+
+I'm expecting this to go via the PCI tree.
+
+David
+
+> --- a/drivers/xen/xen-pciback/pci_stub.c
+> +++ b/drivers/xen/xen-pciback/pci_stub.c
+> @@ -133,7 +133,7 @@ static void pcistub_device_release(struct kref *kref)
+>  	xen_pcibk_config_free_dyn_fields(dev);
+>  	xen_pcibk_config_free_dev(dev);
+>  
+> -	dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+> +	pci_clear_dev_assigned(dev);
+>  	pci_dev_put(dev);
+>  
+>  	kfree(psdev);
+> @@ -404,7 +404,7 @@ static int pcistub_init_device(struct pci_dev *dev)
+>  	dev_dbg(&dev->dev, "reset device\n");
+>  	xen_pcibk_reset_device(dev);
+>  
+> -	dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+> +	pci_set_dev_assigned(dev);
+>  	return 0;
+>  
+>  config_release:
 > 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> for this piece.  I don't remember how many other PCI changes are
-> involved; maybe my ack on this will be enough?  Even if we can't get
-> it in for the merge window, I'm open to trying to merge it after
-> v3.17-rc1 if it's isolated enough.
 
-Thanks for the Ack but I think Liviu needs to address a few more things
-with the OF part of his PCIe patches and it's unlikely that they are
-ready for 3.17. My "deadline" is for 3.18 to get the generic (and arm64)
-PCIe support in.
-
-(I'm off for two weeks starting now as well).
-
--- 
-Catalin
