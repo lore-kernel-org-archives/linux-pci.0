@@ -1,47 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:58208 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752757AbaGDAEn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 20:04:43 -0400
-Received: by mail-ie0-f173.google.com with SMTP id at20so1017100iec.18
-        for <linux-pci@vger.kernel.org>; Thu, 03 Jul 2014 17:04:43 -0700 (PDT)
-Date: Thu, 3 Jul 2014 18:04:40 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, Wuyun <wuyun.wu@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>
-Subject: Re: [PATCH 0/5] Cleanup for MSI
-Message-ID: <20140704000440.GD25980@google.com>
-References: <1403166574-7032-1-git-send-email-wangyijing@huawei.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:13071 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751425AbaG2BjA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jul 2014 21:39:00 -0400
+From: Jisheng Zhang <jszhang@marvell.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+	<swarren@wwwdotorg.org>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Jisheng Zhang <jszhang@marvell.com>
+Subject: [PATCH v3] PCI: tegra: add missing cleanup in error path and teardown_irq
+Date: Tue, 29 Jul 2014 09:33:30 +0800
+Message-ID: <1406597610-6748-1-git-send-email-jszhang@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1403166574-7032-1-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 19, 2014 at 04:29:34PM +0800, Yijing Wang wrote:
-> 
-> Yijing Wang (5):
->   PCI/MSI: Introduce msix_clear_and_set_ctrl() function
->   PCI/MSI: Remove the unused function msi_enabled_mask()
->   PCI/MSI: Cache Multiple Message Capable info in msi_desc
+We should call tegra_msi_free() to free the MSI bit if
+irq_create_mapping() fails. And we need to dispose the IRQ mapping
+during IRQ teardown.
 
-The above three look good, and I applied them to pci/msi for v3.17.  If you
-repost the others, please rebase them to that branch because I fixed some
-whitespace issues:
+Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+---
+ drivers/pci/host/pci-tegra.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/msi
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 083cf37..4ccc418 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -1203,8 +1203,10 @@ static int tegra_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+ 		return hwirq;
+ 
+ 	irq = irq_create_mapping(msi->domain, hwirq);
+-	if (!irq)
++	if (!irq) {
++		tegra_msi_free(msi, hwirq);
+ 		return -EINVAL;
++	}
+ 
+ 	irq_set_msi_desc(irq, desc);
+ 
+@@ -1222,8 +1224,10 @@ static void tegra_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
+ {
+ 	struct tegra_msi *msi = to_tegra_msi(chip);
+ 	struct irq_data *d = irq_get_irq_data(irq);
++	unsigned long hwirq = d->hwirq;
+ 
+-	tegra_msi_free(msi, d->hwirq);
++	irq_dispose_mapping(irq);
++	tegra_msi_free(msi, hwirq);
+ }
+ 
+ static struct irq_chip tegra_msi_irq_chip = {
+-- 
+2.0.1
 
->   PCI/MSI: MSI cleanup, msi_setup_entry()
->   s390/MSI: Fix msi mask issue
-> 
->  arch/s390/pci/pci.c |    2 +-
->  drivers/pci/msi.c   |  129 +++++++++++++++++++++++++--------------------------
->  include/linux/msi.h |    1 +
->  3 files changed, 65 insertions(+), 67 deletions(-)
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
