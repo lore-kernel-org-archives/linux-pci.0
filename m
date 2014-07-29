@@ -1,65 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51011 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:50217 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751017AbaGZIFA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 26 Jul 2014 04:05:00 -0400
-Date: Sat, 26 Jul 2014 09:13:12 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Naresh Kumar Inna <naresh@chelsio.com>,
-	Arvind Bhushan <arvindb@chelsio.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 RESEND 05/23] csiostor: Remove superfluous call to
- pci_disable_msix()
-Message-ID: <20140726081311.GC21129@agordeev.usersys.redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <bd849e403573b161beb4dcfdb7d410f997c95562.1405533479.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <bd849e403573b161beb4dcfdb7d410f997c95562.1405533479.git.agordeev@redhat.com>
+	id S1753224AbaG2Ovp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Jul 2014 10:51:45 -0400
+Message-ID: <1406645502.1011.166.camel@ul30vt.home>
+Subject: Re: pci_sriov_set_totalvfs question
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Edward Cree <ecree@solarflare.com>
+Cc: linux-pci@vger.kernel.org
+Date: Tue, 29 Jul 2014 08:51:42 -0600
+In-Reply-To: <53D7A9FC.3040001@solarflare.com>
+References: <53D7A9FC.3040001@solarflare.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 16, 2014 at 08:05:09PM +0200, Alexander Gordeev wrote:
-> There is no need to call pci_disable_msix() in case
-> the previous call to pci_enable_msix() failed
-
-Hi Naresh, Arvind,
-
-Could you please review csiostor patches in this series?
-
-Thanks!
-
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Naresh Kumar Inna <naresh@chelsio.com>
-> Cc: Arvind Bhushan <arvindb@chelsio.com>
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/scsi/csiostor/csio_isr.c |    4 +---
->  1 files changed, 1 insertions(+), 3 deletions(-)
+On Tue, 2014-07-29 at 15:04 +0100, Edward Cree wrote:
+> Not sure if this list is the right place to ask, but:
+> I'm working on fallback code in the sfc driver where in some
+> configurations the device won't support using VFs, but will still
+> advertise them as present [1].  This is discovered at PF probe time, and
+> what I want to do is just set sriov_totalvfs to 0 in this case.
 > 
-> diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
-> index 7ee9777..91ba91d 100644
-> --- a/drivers/scsi/csiostor/csio_isr.c
-> +++ b/drivers/scsi/csiostor/csio_isr.c
-> @@ -529,10 +529,8 @@ csio_enable_msix(struct csio_hw *hw)
->  			csio_reduce_sqsets(hw, cnt - extra);
->  		}
->  	} else {
-> -		if (rv > 0) {
-> -			pci_disable_msix(hw->pdev);
-> +		if (rv > 0)
->  			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
-> -		}
->  
->  		kfree(entries);
->  		return -ENOMEM;
-> -- 
-> 1.7.7.6
+> As far as I can tell, pci_sriov_set_totalvfs (drivers/pci/iov.c) is the
+> function to call, but I'm confused by the comment on that function which
+> states "Should be called from PF driver's probe routine with device's
+> mutex held."
 > 
+> Specifically, it's unclear what mutex is meant.  struct pci_dev doesn't
+> have one; struct pci_sriov /does/ but the struct is only defined in
+> drivers/pci/pci.h which I don't appear to be able to include from a
+> driver.  There's also one in the 'struct device dev' member of struct
+> pci_dev, but that seems rather unlikely.
+> 
+> Also, the wording of the comment makes me wonder if being in the PF
+> probe routine /implies/ that the mutex is held already, in which case I
+> don't have to do anything.  This is supported by the only callers,
+> igb_probe (via igb_sw_init and igb_probe_vfs) and ixgbe_probe, not
+> appearing to take any mutexes before calling pci_sriov_set_totalvfs.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+I believe this is referring to device_lock(), which should already be
+held on the PF during probe.  Thanks,
+
+Alex
+
