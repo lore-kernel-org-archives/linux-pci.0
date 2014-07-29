@@ -1,77 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:49007 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752020AbaGIOS5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 10:18:57 -0400
-Date: Wed, 9 Jul 2014 10:18:56 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Igor Bezukh <Igor@galilsoft.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Subject: Re: A question about PCI suspend-resume functionallity
-In-Reply-To: <4712771.pPjooVqFXc@vostro.rjw.lan>
-Message-ID: <Pine.LNX.4.44L0.1407091008350.873-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from userp1040.oracle.com ([156.151.31.81]:35995 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751154AbaG2EHb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 00:07:31 -0400
+From: Ethan Zhao <ethan.zhao@oracle.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
+	kvm@vger.kernel.org, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	xen-devel@lists.xenproject.org
+Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
+	ethan.kernel@gmail.com
+Subject: [PATCH 3/4 v3] xen-pciback: use pci device flag operation helper function
+Date: Tue, 29 Jul 2014 12:06:30 +0800
+Message-Id: <1406606791-8834-4-git-send-email-ethan.zhao@oracle.com>
+In-Reply-To: <1406606791-8834-1-git-send-email-ethan.zhao@oracle.com>
+References: <1406606791-8834-1-git-send-email-ethan.zhao@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 9 Jul 2014, Rafael J. Wysocki wrote:
+Use pci device flag operation helper functions when set device
+to assigned or deassigned state.
 
-> On Tuesday, July 08, 2014 02:47:03 PM Bjorn Helgaas wrote:
-> > [+cc linux-pm]
-> > 
-> > On Tue, Jul 8, 2014 at 9:39 AM, Igor Bezukh <Igor@galilsoft.com> wrote:
-> > > Hi,
-> > >
-> > >
-> > > We are testing Intel Gigabit adapter driver (igb) under Fedora 20, kernel 3.14.4 for the following use-case:
-> > >
-> > > (*) Adapter is connected to the PCIE slot
-> > > (*) We put the system under suspend by running pm-suspend from user-space
-> > > (*) Remove the adapter from the PCIE slot
-> > > (*) Wake up the system
-> > >
-> > > Currenlty, we got kernel panics and the system got stuck.
-> > >
-> > > My question is - does the PCI subsystem logic calls the driver remove function when driver resume function returns with error code?
-> > >
-> > > Or should I implement the call to igb_remove from igb_resume in the Intel driver?
-> > 
-> > I don't know what the best design is here.  I suspect that when we
-> > resume, we should re-enumerate the PCI topology to see if anything
-> > changed, but I don't think we do that.  I think there *is* something
-> > like that for ACPI -- the BIOS can send a Bus Check notification on
-> > resume if it knows something has changed.
-> 
-> In ACPI we wait for system resume to complete and handle the notifications
-> then.  Calling .remove() callbacks from drivers during system resume doesn't
-> really work, especially if they happen too early (e.g. during the "noirq resume"
-> stage).
+Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+---
+ v3: amend helper functions naming.
+ drivers/xen/xen-pciback/pci_stub.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-USB uses a similar approach.  Hot-unplugs are handled by the khubd 
-thread, which is freezable and therefore doesn't run until after the 
-system is resumed.
-
-> > But my guess is that if you
-> > remove an adapter below a switch that is powered down because the
-> > system is suspended, the interrupt we would normally get is lost
-> > forever.
-> > 
-> > It doesn't seem like something that should be solved in the driver,
-> > because you could just as easily have *added* a device while
-> > suspended, and the core has to re-enumerate to find that.
-> 
-> The driver's system resume callbacks need to be able to cope with
-> missing devices.
-
-In the USB stack, the subsystem core resume code checks to see if a
-device has been unplugged before the driver's ->resume callback is
-invoked.  If a device is gone, the driver callback is skipped.  Thus
-drivers don't have to worry about trying to resume a device that has
-been unplugged.
-
-Alan Stern
+diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+index 62fcd48..71f69f1 100644
+--- a/drivers/xen/xen-pciback/pci_stub.c
++++ b/drivers/xen/xen-pciback/pci_stub.c
+@@ -133,7 +133,7 @@ static void pcistub_device_release(struct kref *kref)
+ 	xen_pcibk_config_free_dyn_fields(dev);
+ 	xen_pcibk_config_free_dev(dev);
+ 
+-	dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++	pci_clear_dev_assigned(dev);
+ 	pci_dev_put(dev);
+ 
+ 	kfree(psdev);
+@@ -404,7 +404,7 @@ static int pcistub_init_device(struct pci_dev *dev)
+ 	dev_dbg(&dev->dev, "reset device\n");
+ 	xen_pcibk_reset_device(dev);
+ 
+-	dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
++	pci_set_dev_assigned(dev);
+ 	return 0;
+ 
+ config_release:
+-- 
+1.7.1
 
