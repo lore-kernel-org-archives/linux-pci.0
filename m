@@ -1,63 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1lp0141.outbound.protection.outlook.com ([207.46.163.141]:14787
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934148AbaGXGYv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 02:24:51 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shawn Guo <Shawn.Guo@freescale.com>,
-	"kernel@pengutronix.de" <kernel@pengutronix.de>
-Subject: RE: [PATCH 1/3] MAINTAINERS: add myself as co-maintainer for i.MX6
- PCI driver
-Date: Thu, 24 Jul 2014 06:24:47 +0000
-Message-ID: <c1c3cd19841343f7b9e77dababdaff36@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1406137217-11294-1-git-send-email-l.stach@pengutronix.de>
- <1406137217-11294-2-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1406137217-11294-2-git-send-email-l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
+Received: from bombadil.infradead.org ([198.137.202.9]:44261 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750960AbaG2N4l (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 09:56:41 -0400
+Date: Tue, 29 Jul 2014 06:56:41 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	linux-kernel@vger.kernel.org, xjtuwjp@gmail.com,
+	lindar_liu@usish.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+Subject: Re: [PATCH v2 RESEND 17/23] pm8001: Fix invalid return when
+ request_irq() failed
+Message-ID: <20140729135641.GA14378@infradead.org>
+References: <cover.1405533479.git.agordeev@redhat.com>
+ <5ecd9b80f705545c3dc85b2a4ae63a8ac3df8105.1405533479.git.agordeev@redhat.com>
+ <53D79DE2.9000702@redhat.com>
+ <20140729132020.GA7714@infradead.org>
+ <53D7A62D.2090709@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53D7A62D.2090709@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-> -----Original Message-----
-> From: Lucas Stach [mailto:l.stach@pengutronix.de]
-> Sent: Thursday, July 24, 2014 1:40 AM
-> To: Bjorn Helgaas
-> Cc: linux-pci@vger.kernel.org; Zhu Richard-R65037; Guo Shawn-R65073;
-> kernel@pengutronix.de
-> Subject: [PATCH 1/3] MAINTAINERS: add myself as co-maintainer for i.MX6 PCI
-> driver
+On Tue, Jul 29, 2014 at 03:48:29PM +0200, Tomas Henzl wrote:
+> I'm a bit confused - you were not commenting my text above I think?
 > 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
-> I've talked privately to Richard about this and he's in favor, but still
-> should give an public ACK.
-[Richard] Acked-by: Richard Zhu <r65037@freescale.com>
+> I see in drivers-for-3.17 this patch already applied 5607de7
+> but not yet the next one (18/23) which also has a review, is there another ack needed?
 
-Best Regards
-Richard Zhu
-
-
-> ---
->  MAINTAINERS | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 134483f206e4..54c23c4fcbb0 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -6775,6 +6775,7 @@ F:	arch/x86/kernel/quirks.c
->  PCI DRIVER FOR IMX6
->  M:	Richard Zhu <r65037@freescale.com>
->  M:	Shawn Guo <shawn.guo@linaro.org>
-> +M:	Lucas Stach <l.stach@pengutronix.de>
->  L:	linux-pci@vger.kernel.org
->  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
->  S:	Maintained
-> --
-> 2.0.1
+Looks like I got a bit confused due to a non-applying patch, but it
+seems like the one that failed was the second one.  I'll look at it time
+permitting, but if someone familar with pm8001 can fix the reject for me
+that would help me greatly!
 
