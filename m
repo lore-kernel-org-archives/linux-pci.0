@@ -1,51 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47895 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934606AbaGPSUK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Jul 2014 14:20:10 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Arvind Kumar <arvindkumar@vmware.com>, pv-drivers@vmware.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 23/23] vmw_pvscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Wed, 16 Jul 2014 20:05:27 +0200
-Message-Id: <c27a72eaa07631ca182bfdb71d0d3d7f9f280b26.1405533479.git.agordeev@redhat.com>
-In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:52365 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750828AbaG2MQ0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 08:16:26 -0400
+Content-Type: text/plain;
+	charset=gb2312
+Mime-Version: 1.0 (1.0)
+Subject: Re: [PATCH 3/4 v3] xen-pciback: use pci device flag operation helper function
+From: Ethan Zhao <ethan.kernel@gmail.com>
+In-Reply-To: <53D7725C.5010405@citrix.com>
+Date: Tue, 29 Jul 2014 20:16:12 +0800
+Cc: Ethan Zhao <ethan.zhao@oracle.com>,
+	"<bhelgaas@google.com>" <bhelgaas@google.com>,
+	"<linux-pci@vger.kernel.org>" <linux-pci@vger.kernel.org>,
+	"<linux-kernel@vger.kernel.org>" <linux-kernel@vger.kernel.org>,
+	"<gleb@kernel.org>" <gleb@kernel.org>,
+	"<pbonzini@redhat.com>" <pbonzini@redhat.com>,
+	"<kvm@vger.kernel.org>" <kvm@vger.kernel.org>,
+	"<konrad.wilk@oracle.com>" <konrad.wilk@oracle.com>,
+	"<boris.ostrovsky@oracle.com>" <boris.ostrovsky@oracle.com>,
+	"<xen-devel@lists.xenproject.org>" <xen-devel@lists.xenproject.org>,
+	"<alex.williamson@redhat.com>" <alex.williamson@redhat.com>,
+	"<alexander.h.duyck@intel.com>" <alexander.h.duyck@intel.com>
+Message-Id: <32E4A68B-AF5E-49ED-92AC-99DFCD0960BD@gmail.com>
+References: <1406606791-8834-1-git-send-email-ethan.zhao@oracle.com> <1406606791-8834-4-git-send-email-ethan.zhao@oracle.com> <53D7725C.5010405@citrix.com>
+To: David Vrabel <david.vrabel@citrix.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Arvind Kumar <arvindkumar@vmware.com>
-Cc: pv-drivers@vmware.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: Arvind Kumar <arvindkumar@vmware.com>
----
- drivers/scsi/vmw_pvscsi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index c88e146..598f65e 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -1194,7 +1194,7 @@ static int pvscsi_setup_msix(const struct pvscsi_adapter *adapter,
- 	struct msix_entry entry = { 0, PVSCSI_VECTOR_COMPLETION };
- 	int ret;
- 
--	ret = pci_enable_msix(adapter->dev, &entry, 1);
-+	ret = pci_enable_msix_exact(adapter->dev, &entry, 1);
- 	if (ret)
- 		return ret;
- 
--- 
-1.7.7.6
-
+> 在 2014年7月29日，下午6:07，David Vrabel <david.vrabel@citrix.com> 写道：
+> 
+>> On 29/07/14 05:06, Ethan Zhao wrote:
+>> Use pci device flag operation helper functions when set device
+>> to assigned or deassigned state.
+>> 
+>> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+> 
+> Konrad already reviewed this but you've not included his reviewed-by tag.
+> 
+yep，I lost Konrad's reviewed-by tag.
+Thanks.
+> I don't understand why we bother with this flag on Xen since we never
+> use it but:
+> 
+> Acked-by: David Vrabel <david.vrabel@citrix.com>
+> 
+> I'm expecting this to go via the PCI tree.
+> 
+> David
+> 
+>> --- a/drivers/xen/xen-pciback/pci_stub.c
+>> +++ b/drivers/xen/xen-pciback/pci_stub.c
+>> @@ -133,7 +133,7 @@ static void pcistub_device_release(struct kref *kref)
+>>    xen_pcibk_config_free_dyn_fields(dev);
+>>    xen_pcibk_config_free_dev(dev);
+>> 
+>> -    dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+>> +    pci_clear_dev_assigned(dev);
+>>    pci_dev_put(dev);
+>> 
+>>    kfree(psdev);
+>> @@ -404,7 +404,7 @@ static int pcistub_init_device(struct pci_dev *dev)
+>>    dev_dbg(&dev->dev, "reset device\n");
+>>    xen_pcibk_reset_device(dev);
+>> 
+>> -    dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+>> +    pci_set_dev_assigned(dev);
+>>    return 0;
+>> 
+>> config_release:
+>> 
+> 
