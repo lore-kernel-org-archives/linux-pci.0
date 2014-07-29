@@ -1,78 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nbfkord-smmo03.seg.att.com ([209.65.160.84]:42071 "EHLO
-	nbfkord-smmo03.seg.att.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751349AbaGaQ5f convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Jul 2014 12:57:35 -0400
-Message-ID: <53DA7574.4050103@solarflare.com>
-Date: Thu, 31 Jul 2014 17:57:24 +0100
-From: Edward Cree <ecree@solarflare.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:10225 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750708AbaG2Hwg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 03:52:36 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <Jordan_Hargrave@Dell.com>,
+	<keith.busch@intel.com>, <jon.mason@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jon Mason <jdmason@kudzu.us>
+Subject: [PATCH] PCI: update device mps when doing pci hotplug
+Date: Tue, 29 Jul 2014 16:17:57 +0800
+Message-ID: <1406621877-12022-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Alexander Duyck <alexander.h.duyck@intel.com>
-CC: <linux-pci@vger.kernel.org>, Don Dutile <ddutile@redhat.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
-References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com> <alpine.LFD.2.03.1407311500570.16821@solarflare.com> <53DA5EF4.1030500@intel.com> <53DA674A.9030305@solarflare.com> <53DA718A.9040407@intel.com>
-In-Reply-To: <53DA718A.9040407@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 31/07/14 17:40, Alexander Duyck wrote:
-> If this PF-IOV mode is enabled what would be the layout of the PF
-> devices?  It seems like you should be able to scan for multiple PFs all
-> showing up on the same bus with a certain stride if you wanted to detect it.
-Alas, it's (once again) more complicated than that.  There's another
-mode, NIC partitioning, which has multiple PFs per port but connected
-with a VLAN aggregator rather than a v-switch, which means that each PF
-then can support VFs (the firmware limitation is that v-switches can't
-be stacked).
-So having multiple PFs on the port doesn't necessarily mean we can't do
-SR-IOV.
+Currently we don't update device's mps value when doing
+pci device hot-add. The hot-added device's mps will be set
+to default value (128B). But the upstream port device's mps
+may be larger than 128B which was set by firmware during
+system bootup. In this case the new added device may not
+work normally. This issue was found in huawei 5885 server
+and Dell R620 server. And if we run the platform with windows,
+this problem is gone. This patch try to update the hot added
+device mps equal to its parent mps, if device mpss < parent mps,
+print warning.
 
-> Thanks for pointing that out.  It seems like that is a bug.  We should
-> probably be checking for dev->sriov, not dev->is_physfn before calling
-> sriov_release.
->
-> I might see about submitting a patch to address that.
-Unfortunately, that won't work because dev->sriov is in a union with
-dev->physfn (presumably on the grounds that if you have an associated
-PF, you're a VF, so you can't have VFs of your own).
-So I think the test in pci_iov_release is correct, and anyone changing
-dev->is_physfn after the PCI device has been set up is in the wrong.
+References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+Reported-by: Keith Busch <keith.busch@intel.com>
+Reported-by: Jordan_Hargrave@Dell.com
+Reported-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Jon Mason <jdmason@kudzu.us>
+---
+ drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 39 insertions(+), 0 deletions(-)
 
->> I'm also unconvinced that having !(dev->is_physfn || dev->is_virtfn) is
->> a valid state; but maybe I'm misunderstanding and "is_physfn" doesn't
->> actually mean "is a physical function", but rather "has SR-IOV capability".
-> is_physfn is typically used to indicate the device is capable of acting
-> as a physical function.  So a non-IOV device will not set either
-> is_physfn or is_virtfn.
-Ok, well I think a comment to that effect in struct pci_dev might be a
-good idea.
->>> In addition this solution would
->>> also resolve the fact that the driver wouldn't actually have to be
->>> loaded for it to work so if someone were to load a driver that didn't
->>> contain the fix they would be blocked from enabling SR-IOV as well.
->> The current driver fails to probe the PF because it assumes the vswitch
->> creation failure is fatal.  There should never be a driver that knows it
->> can live without the vswitch but doesn't know that that breaks SR-IOV.
->>
->> -Edward
-> Is the vswitch a hard requirement for something other than SR-IOV?  If
-> not then maybe you should consider modifying the driver so it simply
-> disabled SR-IOV if you cannot allocate the vswitch instead of blocking
-> probe.
->
-That's exactly what I'm trying to do with pci_sriov_set_totalvfs(dev,
-0); that's the whole point.
-> P.S.  You should really consider changing your email signature.  The bit
-> about "you may not use, copy or disclose to anyone this message" kind of
-> goes against the whole point of submitting patches to an open source
-> project.
->
-I know; it's automatically appended by our mail server to all outgoing
-mail.  I've already raised this with our IT department but they haven't
-answered yet :(
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index e3cf8a2..583ca52 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1613,6 +1613,44 @@ static void pcie_write_mrrs(struct pci_dev *dev)
+ 		dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If problems are experienced, try running with pci=pcie_bus_safe\n");
+ }
+ 
++/**
++ * pcie_bus_update_set - update device mps when device doing hot-add
++ * @dev: PCI device to set
++ * 
++ * After device hot add, mps will be set to default(128B), But the 
++ * upstream port device's mps may be larger than 128B which was set 
++ * by firmware during system bootup. Then we should update the device
++ * mps to equal to its parent mps, Or the device can not work normally.
++ */
++static void pcie_bus_update_set(struct pci_dev *dev)
++{
++	int mps, p_mps, mpss;
++	struct pci_dev *parent;
++
++	if (!pci_is_pcie(dev) || !dev->bus->self 
++			|| !dev->bus->self->is_hotplug_bridge)
++		return;
++	
++	parent = dev->bus->self;
++	mps = pcie_get_mps(dev);
++	p_mps = pcie_get_mps(parent);
++
++	if (mps >= p_mps)
++		return;
++
++	mpss = 128 << dev->pcie_mpss;
++	if (mpss < p_mps) {
++		dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
++				"If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
++				mpss, p_mps);
++		return;
++	}
++
++	pcie_write_mps(dev, p_mps);
++	dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n", 
++			pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
++}
++
+ static void pcie_bus_detect_mps(struct pci_dev *dev)
+ {
+ 	struct pci_dev *bridge = dev->bus->self;
+@@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+ 		return 0;
+ 
+ 	if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
++		pcie_bus_update_set(dev);
+ 		pcie_bus_detect_mps(dev);
+ 		return 0;
+ 	}
+-- 
+1.7.1
 
--Edward
-The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
