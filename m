@@ -1,74 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f180.google.com ([209.85.192.180]:39817 "EHLO
-	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751321AbaGJH1h (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 03:27:37 -0400
-Received: by mail-pd0-f180.google.com with SMTP id fp1so10219654pdb.25
-        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 00:27:36 -0700 (PDT)
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: arnd@linaro.org, olof@lixom.net
-Cc: linux-arm-kernel@lists.infradead.org, spear-devel@list.st.com,
-	b.zolnierkie@samsung.com, bhelgaas@google.com, mark@nicholnet.com,
-	linux-pci@vger.kernel.org, Pratyush Anand <pratyush.anand@st.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Viresh Kumar <viresh.kumar@linaro.org>
-Subject: [PATCH V9 4/7] ARM: SPEAr13xx: Fix static mapping table
-Date: Thu, 10 Jul 2014 12:56:35 +0530
-Message-Id: <5a6d915a382c34940865b9ac8835c5af78723cc4.1404976058.git.viresh.kumar@linaro.org>
-In-Reply-To: <cover.1404976058.git.viresh.kumar@linaro.org>
-References: <cover.1404976058.git.viresh.kumar@linaro.org>
-In-Reply-To: <cover.1404976058.git.viresh.kumar@linaro.org>
-References: <cover.1404976058.git.viresh.kumar@linaro.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:22964 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750719AbaG2EH1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 00:07:27 -0400
+From: Ethan Zhao <ethan.zhao@oracle.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
+	kvm@vger.kernel.org, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	xen-devel@lists.xenproject.org
+Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
+	ethan.kernel@gmail.com
+Subject: [PATCH 1/4 v3] PCI: introduce helper functions for device flag operation
+Date: Tue, 29 Jul 2014 12:06:28 +0800
+Message-Id: <1406606791-8834-2-git-send-email-ethan.zhao@oracle.com>
+In-Reply-To: <1406606791-8834-1-git-send-email-ethan.zhao@oracle.com>
+References: <1406606791-8834-1-git-send-email-ethan.zhao@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Pratyush Anand <pratyush.anand@st.com>
+This patch introduced three helper functions to hide direct
+device flag operation.
 
-SPEAr13xx was using virtual address space 0xFE000000 to map physical address
-space 0xB3000000. But pci_remap_io uses 0xFEE00000 as virtual address and so
-replace 0xFE000000 with 0xF9000000.
+void pci_set_dev_assigned(struct pci_dev *pdev);
+void pci_clear_dev_assigned(struct pci_dev *pdev);
+bool pci_is_dev_assigned(struct pci_dev *pdev);
 
-Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
-[viresh: fixed logs/cclist]
-Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
+Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
 ---
- arch/arm/mach-spear/include/mach/spear.h | 4 ++--
- arch/arm/mach-spear/spear13xx.c          | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ v2: simplify unnecessory ternary operation in function pci_is_dev_assigned();
+ v3: amend helper functions naming.
+ include/linux/pci.h |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-diff --git a/arch/arm/mach-spear/include/mach/spear.h b/arch/arm/mach-spear/include/mach/spear.h
-index 5cdc53d..f2d6a01 100644
---- a/arch/arm/mach-spear/include/mach/spear.h
-+++ b/arch/arm/mach-spear/include/mach/spear.h
-@@ -52,10 +52,10 @@
- #ifdef CONFIG_ARCH_SPEAR13XX
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index aab57b4..5f6f8fa 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1129,6 +1129,19 @@ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
  
- #define PERIP_GRP2_BASE				UL(0xB3000000)
--#define VA_PERIP_GRP2_BASE			IOMEM(0xFE000000)
-+#define VA_PERIP_GRP2_BASE			IOMEM(0xF9000000)
- #define MCIF_SDHCI_BASE				UL(0xB3000000)
- #define SYSRAM0_BASE				UL(0xB3800000)
--#define VA_SYSRAM0_BASE				IOMEM(0xFE800000)
-+#define VA_SYSRAM0_BASE				IOMEM(0xF9800000)
- #define SYS_LOCATION				(VA_SYSRAM0_BASE + 0x600)
+ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+ 		      unsigned int command_bits, u32 flags);
++/* helper functions for operation of device flag */
++static inline void pci_set_dev_assigned(struct pci_dev *pdev)
++{
++	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
++}
++static inline void pci_clear_dev_assigned(struct pci_dev *pdev)
++{
++	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++}
++static inline bool pci_is_dev_assigned(struct pci_dev *pdev)
++{
++	return pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED;
++}
+ /* kmem_cache style wrapper around pci_alloc_consistent() */
  
- #define PERIP_GRP1_BASE				UL(0xE0000000)
-diff --git a/arch/arm/mach-spear/spear13xx.c b/arch/arm/mach-spear/spear13xx.c
-index c9897ea..53a7614 100644
---- a/arch/arm/mach-spear/spear13xx.c
-+++ b/arch/arm/mach-spear/spear13xx.c
-@@ -52,7 +52,7 @@ void __init spear13xx_l2x0_init(void)
- /*
-  * Following will create 16MB static virtual/physical mappings
-  * PHYSICAL		VIRTUAL
-- * 0xB3000000		0xFE000000
-+ * 0xB3000000		0xF9000000
-  * 0xE0000000		0xFD000000
-  * 0xEC000000		0xFC000000
-  * 0xED000000		0xFB000000
+ #include <linux/pci-dma.h>
 -- 
-2.0.0.rc2
+1.7.1
 
