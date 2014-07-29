@@ -1,48 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:49667 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755310AbaGQIcE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jul 2014 04:32:04 -0400
-From: Marek Vasut <marex@denx.de>
-To: "Uwe =?iso-8859-1?q?Kleine-K=F6nig?="
-	<u.kleine-koenig@pengutronix.de>
-Subject: Re: [RFC] PCI: pci-imx6: Add delay to workaround kernel hang
-Date: Thu, 17 Jul 2014 10:23:10 +0200
-Cc: Fabio Estevam <festevam@gmail.com>, bhelgaas@google.com,
-	r65037@freescale.com, shawn.guo@freescale.com, d.mueller@elsoft.ch,
-	kernel@pengutronix.de, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, tharvey@gateworks.com,
-	Fabio Estevam <fabio.estevam@freescale.com>
-References: <1403637507-9424-1-git-send-email-festevam@gmail.com> <20140717065148.GT11056@pengutronix.de>
-In-Reply-To: <20140717065148.GT11056@pengutronix.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201407171023.10908.marex@denx.de>
+Received: from mx1.redhat.com ([209.132.183.28]:21498 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751428AbaG2Cb0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 28 Jul 2014 22:31:26 -0400
+Message-ID: <1406601073.1011.157.camel@ul30vt.home>
+Subject: Re: [PATCH 1/4] PCI: introduce helper functions for device flag
+ operation
+From: Alex Williamson <alex.williamson@redhat.com>
+To: ethan zhao <ethan.zhao@oracle.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
+	kvm@vger.kernel.org, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	xen-devel@lists.xenproject.org, alexander.h.duyck@intel.com,
+	ethan.kernel@gmail.com
+Date: Mon, 28 Jul 2014 20:31:13 -0600
+In-Reply-To: <53D6FE95.6040605@oracle.com>
+References: <1406045944-1587-1-git-send-email-ethan.zhao@oracle.com>
+	  <1406045944-1587-2-git-send-email-ethan.zhao@oracle.com>
+	 <1406581206.1011.133.camel@ul30vt.home> <53D6FE95.6040605@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, July 17, 2014 at 08:51:48 AM, Uwe Kleine-König wrote:
-> Hello,
-> 
-> On Tue, Jun 24, 2014 at 04:18:27PM -0300, Fabio Estevam wrote:
-> > From: Fabio Estevam <fabio.estevam@freescale.com>
-> > 
-> > When the mx6 PCI conctroller is initialized in the bootloader we see a
-> > kernel hang inside imx6_add_pcie_port().
-> > 
-> > Adding a 30ms delay allows the kernel to boot.
-> 
-> Just my thought on how to debug that: I'd try to bisect the pci init
-> routine in the boot loader. I.e. first only do the first half of the
-> initialisation in U-Boot. Depending on Linux being able to boot or not
-> initialize more or less on the next run.
-> 
-> Maybe there is a single register write that makes Linux fail?!
+On Tue, 2014-07-29 at 09:53 +0800, ethan zhao wrote:
+> On 2014/7/29 5:00, Alex Williamson wrote:
+> > On Wed, 2014-07-23 at 00:19 +0800, Ethan Zhao wrote:
+> >> This patch introduced three helper functions to hide direct
+> >> device flag operation.
+> >>
+> >> void pci_set_dev_assigned(struct pci_dev *pdev);
+> >> void pci_set_dev_deassigned(struct pci_dev *pdev);
+> >> bool pci_is_dev_assigned(struct pci_dev *pdev);
+> >>
+> >> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+> >> ---
+> >>   include/linux/pci.h |   13 +++++++++++++
+> >>   1 files changed, 13 insertions(+), 0 deletions(-)
+> >>
+> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> >> index aab57b4..5f6f8fa 100644
+> >> --- a/include/linux/pci.h
+> >> +++ b/include/linux/pci.h
+> >> @@ -1129,6 +1129,19 @@ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+> >>   
+> >>   int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+> >>   		      unsigned int command_bits, u32 flags);
+> >> +/* helper functions for operation of device flag */
+> >> +static inline void pci_set_dev_assigned(struct pci_dev *pdev)
+> >> +{
+> >> +	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+> >> +}
+> >> +static inline void pci_set_dev_deassigned(struct pci_dev *pdev)
+> >> +{
+> >> +	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+> >> +}
+> > I think pci_clear_dev_assigned() would make more sense, we're not
+> > setting a flag named DEASSIGNED.
+>    Though it is a flag operation now, may not later, we define it 
+> because we want to hide the internal operation.
+>    'set' to 'deassigned'  status is enough. So I would like keep it.
 
-I am still hell-bent on thinking that the missing PCIe block reset is what makes 
-the Linux fail. Missing block reset is always a problem. Or do we now have a 
-mean to reset the PCIe block and it's PHY from software?
+I disagree, the opposite of a 'set' is a 'clear', or at least an
+'unset'.  Using bit-ops-like terminology doesn't lock us into an
+implementation.  As written, this could just as easily be setting two
+different variables.
 
-Best regards,
-Marek Vasut
+> >
+> >> +static inline bool pci_is_dev_assigned(struct pci_dev *pdev)
+> >> +{
+> >> +	return pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED ? true : false;
+> >> +}
+> > The ternary operation isn't necessary.  Thanks,
+>    Yep,
+> 
+>    return pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED
+> 
+>    is enough.
+> 
+>    Thanks,
+>    Ethan
+> >
+> > Alex
+> >
+> >>   /* kmem_cache style wrapper around pci_alloc_consistent() */
+> >>   
+> >>   #include <linux/pci-dma.h>
+> >
+> >
+> 
+
+
+
