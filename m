@@ -1,62 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22964 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750719AbaG2EH1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 00:07:27 -0400
-From: Ethan Zhao <ethan.zhao@oracle.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
-	kvm@vger.kernel.org, konrad.wilk@oracle.com,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
-	xen-devel@lists.xenproject.org
-Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
-	ethan.kernel@gmail.com
-Subject: [PATCH 1/4 v3] PCI: introduce helper functions for device flag operation
-Date: Tue, 29 Jul 2014 12:06:28 +0800
-Message-Id: <1406606791-8834-2-git-send-email-ethan.zhao@oracle.com>
-In-Reply-To: <1406606791-8834-1-git-send-email-ethan.zhao@oracle.com>
-References: <1406606791-8834-1-git-send-email-ethan.zhao@oracle.com>
+Received: from mga02.intel.com ([134.134.136.20]:3795 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751066AbaG2Rt1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Jul 2014 13:49:27 -0400
+From: "Luck, Tony" <tony.luck@intel.com>
+To: "H. Peter Anvin" <hpa@linux.jf.intel.com>
+Cc: Mike Qiu <qiudayu@linux.vnet.ibm.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCH] Fix build warnings in aer.h
+Date: Tue, 29 Jul 2014 10:49:25 -0700
+Message-Id: <53d7dea511471321bb@agluck-desk.sc.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch introduced three helper functions to hide direct
-device flag operation.
+From: Mike Qiu <qiudayu@linux.vnet.ibm.com>
 
-void pci_set_dev_assigned(struct pci_dev *pdev);
-void pci_clear_dev_assigned(struct pci_dev *pdev);
-bool pci_is_dev_assigned(struct pci_dev *pdev);
+build log:
 
-Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+In file included from include/ras/ras_event.h:11:0,
+                 from drivers/ras/ras.c:13:
+include/linux/aer.h:42:129: warning: ‘struct pci_dev’
+declared inside parameter list [enabled by default]
+
+include/linux/aer.h:42:129: warning: its scope is only
+this definition or declaration, which is probably not
+what you want [enabled by default]
+
+include/linux/aer.h:46:130: warning: ‘struct pci_dev’
+declared inside parameter list [enabled by default]
+
+include/linux/aer.h:50:136: warning: ‘struct pci_dev’
+declared inside parameter list [enabled by default]
+
+include/linux/aer.h:57:14: warning: ‘struct pci_dev’
+declared inside parameter list [enabled by default]
+
+Signed-off-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+Acked-by: Randy Dunlap <rdunlap@infradead.org>
+Tested-by: Randy Dunlap <rdunlap@infradead.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Tony Luck <tony.luck@intel.com>
 ---
- v2: simplify unnecessory ternary operation in function pci_is_dev_assigned();
- v3: amend helper functions naming.
- include/linux/pci.h |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
+ include/linux/aer.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index aab57b4..5f6f8fa 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1129,6 +1129,19 @@ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+Peter: Can you add this to the x86/ras branch in the tip tree.
+There's a change in there that is breaking randconfig
+builds in linux-next because something includes aer.h
+without including pci.h ... which ought to be legal as
+aer.h needs to take responsibility for making sure that
+it resolves dependencies itself.
+
+diff --git a/include/linux/aer.h b/include/linux/aer.h
+index 4dbaa70..c826d1c 100644
+--- a/include/linux/aer.h
++++ b/include/linux/aer.h
+@@ -11,6 +11,8 @@
+ #define AER_FATAL			1
+ #define AER_CORRECTABLE			2
  
- int pci_set_vga_state(struct pci_dev *pdev, bool decode,
- 		      unsigned int command_bits, u32 flags);
-+/* helper functions for operation of device flag */
-+static inline void pci_set_dev_assigned(struct pci_dev *pdev)
-+{
-+	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-+}
-+static inline void pci_clear_dev_assigned(struct pci_dev *pdev)
-+{
-+	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-+}
-+static inline bool pci_is_dev_assigned(struct pci_dev *pdev)
-+{
-+	return pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED;
-+}
- /* kmem_cache style wrapper around pci_alloc_consistent() */
- 
- #include <linux/pci-dma.h>
++struct pci_dev;
++
+ struct aer_header_log_regs {
+ 	unsigned int dw0;
+ 	unsigned int dw1;
 -- 
-1.7.1
+1.8.1.4
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
