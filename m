@@ -1,69 +1,37 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ethan Zhao <ethan.zhao@oracle.com>
-To: bhelgaas@google.com, konrad.wilk@oracle.com,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
-	gleb@kernel.org, pbonzini@redhat.com, jeffrey.t.kirsher@intel.com,
-	jesse.brandeburg@intel.com, bruce.w.allan@intel.com,
-	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
-	gregory.v.rose@intel.com, alexander.h.duyck@intel.com,
-	john.ronciak@intel.com, mitch.a.williams@intel.com
-Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-	linux.nics@intel.com, e1000-devel@lists.sourceforge.net,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ethan.kernel@gmail.com, vaughan.cao@oracle.com,
-	Ethan Zhao <ethan.zhao@oracle.com>
-Subject: [PATCH 3/4] KVM: use PCI VFs assignment helper functions
-Date: Fri, 11 Jul 2014 08:47:21 +0800
-Message-Id: <1405039642-23519-3-git-send-email-ethan.zhao@oracle.com>
-In-Reply-To: <1405039642-23519-1-git-send-email-ethan.zhao@oracle.com>
-References: <1405039642-23519-1-git-send-email-ethan.zhao@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:33092 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752164AbaG2QbA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Jul 2014 12:31:00 -0400
+Date: Tue, 29 Jul 2014 10:30:58 -0600 (MDT)
+From: Keith Busch <keith.busch@intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+cc: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Jordan_Hargrave@Dell.com, keith.busch@intel.com,
+	jon.mason@intel.com, Jon Mason <jdmason@kudzu.us>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+In-Reply-To: <1406650687.1011.180.camel@ul30vt.home>
+Message-ID: <alpine.LRH.2.03.1407291022380.5109@AMR>
+References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com> <1406650687.1011.180.camel@ul30vt.home>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-New VFs reference counter mechanism and VFs assignment helper functions are introduced to
-PCI SRIOV, use them instead of manipulating device flag directly.
+On Tue, 29 Jul 2014, Alex Williamson wrote:
+> On Tue, 2014-07-29 at 16:17 +0800, Yijing Wang wrote:
+>> Currently we don't update device's mps value when doing
+>> pci device hot-add. The hot-added device's mps will be set
+>> to default value (128B). But the upstream port device's mps
+>> may be larger than 128B which was set by firmware during
+>> system bootup. In this case the new added device may not
+>> work normally.
+>
+> Apologies if we rehash some previously discussed topics while I try to
+> cover for Bjorn while he's out.  By "normally", do you mean "optimally"?
+> The device should be functional with a lower mps setting, right?
 
-Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
----
- virt/kvm/assigned-dev.c |    2 +-
- virt/kvm/iommu.c        |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/virt/kvm/assigned-dev.c b/virt/kvm/assigned-dev.c
-index bf06577..80b477f 100644
---- a/virt/kvm/assigned-dev.c
-+++ b/virt/kvm/assigned-dev.c
-@@ -302,7 +302,7 @@ static void kvm_free_assigned_device(struct kvm *kvm,
- 	else
- 		pci_restore_state(assigned_dev->dev);
- 
--	assigned_dev->dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-+	pci_sriov_deassign_device(assigned_dev->dev);
- 
- 	pci_release_regions(assigned_dev->dev);
- 	pci_disable_device(assigned_dev->dev);
-diff --git a/virt/kvm/iommu.c b/virt/kvm/iommu.c
-index 0df7d4b..6d3f5ef 100644
---- a/virt/kvm/iommu.c
-+++ b/virt/kvm/iommu.c
-@@ -194,7 +194,7 @@ int kvm_assign_device(struct kvm *kvm,
- 			goto out_unmap;
- 	}
- 
--	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-+	pci_sriov_assign_device(pdev);
- 
- 	dev_info(&pdev->dev, "kvm assign device\n");
- 
-@@ -220,7 +220,7 @@ int kvm_deassign_device(struct kvm *kvm,
- 
- 	iommu_detach_device(domain, &pdev->dev);
- 
--	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-+	pci_sriov_deassign_device(pdev);
- 
- 	dev_info(&pdev->dev, "kvm deassign device\n");
- 
--- 
-1.7.1
-
+You'd think so, but some platforms don't work. A pci-e trace showed
+TLPs exceeding MPS when parent device at 256B and the end device left
+at 128B. Even if that's a platform bug, I think we still want it to work.
