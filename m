@@ -1,125 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f51.google.com ([209.85.219.51]:37363 "EHLO
-	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752092AbaGJNaa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 09:30:30 -0400
-Received: by mail-oa0-f51.google.com with SMTP id j17so9794968oag.38
-        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 06:30:30 -0700 (PDT)
+Received: from bear.ext.ti.com ([192.94.94.41]:53149 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755766AbaG3TgI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Jul 2014 15:36:08 -0400
+Message-ID: <53D948D4.6080603@ti.com>
+Date: Wed, 30 Jul 2014 15:34:44 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <53BE926A.2070005@ti.com>
-References: <cover.1404976058.git.viresh.kumar@linaro.org>
-	<d1ef8db8704d09ba4f276c954dc22b555998f957.1404976058.git.viresh.kumar@linaro.org>
-	<53BE926A.2070005@ti.com>
-Date: Thu, 10 Jul 2014 19:00:30 +0530
-Message-ID: <CAKohpokNijH37NAmuh5cYEZxYFJE-COKwVNP3RNHSEoS03YYAA@mail.gmail.com>
-Subject: Re: [PATCH V9 2/7] phy: Add drivers for PCIe and SATA phy on SPEAr13xx
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Arnd Bergmann <arnd@linaro.org>, "olof@lixom.net" <olof@lixom.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	spear-devel <spear-devel@list.st.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Nicholson <mark@nicholnet.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush Anand <pratyush.anand@st.com>
-Content-Type: text/plain; charset=UTF-8
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Marek Vasut <marex@denx.de>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	<linux-pci@vger.kernel.org>, Jingoo Han <jg1.han@samsung.com>,
+	<linux-kernel@vger.kernel.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v7 4/5] PCI: add PCI controller for keystone PCIe h/w
+References: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com> <1405961925-27248-5-git-send-email-m-karicheri2@ti.com> <20140722223527.GA27965@google.com> <53CEEB1C.9020202@ti.com> <20140722235200.GC27965@google.com> <20140723174228.GB11270@obsidianresearch.com>
+In-Reply-To: <20140723174228.GB11270@obsidianresearch.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10 July 2014 18:47, Kishon Vijay Abraham I <kishon@ti.com> wrote:
-> On Thursday 10 July 2014 12:56 PM, Viresh Kumar wrote:
->> From: Pratyush Anand <pratyush.anand@st.com>
->>
->> ARM based ST Microelectronics's SPEAr1310/40 platforms uses ST's phy (known as
->> 'miphy') for PCIe and SATA. This patch adds drivers for these miphys.
->>
->> This also adds proper bindings for miphys.
->>
->> Acked-by: Arnd Bergmann <arnd@arndb.de>
->> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
->> Tested-by: Mohit Kumar <mohit.kumar@st.com>
->> Cc: Kishon Vijay Abraham I <kishon@ti.com>
->> [viresh: fixed logs/cclist/checkpatch warnings, broken into smaller patches]
->> Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
->> ---
->>  .../devicetree/bindings/phy/st-spear1310-miphy.txt |  12 +
->>  .../devicetree/bindings/phy/st-spear1340-miphy.txt |  11 +
->>  drivers/phy/Kconfig                                |  12 +
->>  drivers/phy/Makefile                               |   2 +
->>  drivers/phy/phy-spear1310-miphy.c                  | 274 +++++++++++++++++++
->>  drivers/phy/phy-spear1340-miphy.c                  | 302 +++++++++++++++++++++
+On 07/23/2014 01:42 PM, Jason Gunthorpe wrote:
+> On Tue, Jul 22, 2014 at 05:52:00PM -0600, Bjorn Helgaas wrote:
+>> If there is a hardware defect, a PCI quirk is a reasonable way to work
+>> around it, since that's the main purpose of quirks.  fixup_mpss_256()
+>> is an example of something that sounds superficially similar.
 >
-> Please send separate patche for each driver.
-
-These were both around SPEAr and were on the same lines.
-So sending these in a single patch shouldn't be a big issue I believe.
-
-In case another version is required, I may do it.
-
->> diff --git a/Documentation/devicetree/bindings/phy/st-spear1310-miphy.txt b/Documentation/devicetree/bindings/phy/st-spear1310-miphy.txt
->> new file mode 100644
->> index 0000000..b9b281a
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/phy/st-spear1310-miphy.txt
+> It was my suggestion to engage the PCI-E tuning code. By my
+> understanding the HW bug is that read response segmentation at the
+> host bridge does not work - so all read requests from any downstream
+> device must have responses that fit within a single packet.
 >
-> We generally create a single document for a SoC vendor. So just use st-phy.txt.
 
-Probably yes.
+In the case of Keystone PCI, when I set the MRSS to 256 in the EP, PCI 
+controller is able to function properly. Keystone spec says.
 
-> <snip>
+• Maximum outbound payload size of 128 bytes
+• Maximum inbound payload size of 256 bytes
+• Maximum remote read request size of 256 bytes
 
-Please keep line containing file names while removing stuff, makes it easy
-to locate code.
+I am interpreting the "Maximum remote read request size" to indicate it 
+can's handle if it exceeds the limit. It has an outbound payload size of 
+128 bytes. So in this case a read request would results in 2 completion 
+packets. So it seems to be able to segment up to maximum 256 bytes of 
+read request. Where do I find the requirement in PCI spec that "read 
+response segmentation at the host bridge does not work" ?
 
->> +
->> +static int spear1340_miphy_sata_init(struct spear1340_miphy_priv *priv)
->> +{
->> +     regmap_update_bits(priv->misc, SPEAR1340_PCIE_SATA_CFG,
->> +                        SPEAR1340_PCIE_SATA_CFG_MASK,
->> +                        SPEAR1340_SATA_CFG_VAL);
->> +     regmap_update_bits(priv->misc, SPEAR1340_PCIE_MIPHY_CFG,
->> +                        SPEAR1340_PCIE_MIPHY_CFG_MASK,
->> +                        SPEAR1340_PCIE_SATA_MIPHY_CFG_SATA_25M_CRYSTAL_CLK);
->> +     /* Switch on sata power domain */
->> +     regmap_update_bits(priv->misc, SPEAR1340_PCM_CFG,
->> +                        SPEAR1340_PCM_CFG_SATA_POWER_EN,
->> +                        SPEAR1340_PCM_CFG_SATA_POWER_EN);
->> +     msleep(20);
->> +     /* Disable PCIE SATA Controller reset */
->> +     regmap_update_bits(priv->misc, SPEAR1340_PERIP1_SW_RST,
->> +                        SPEAR1340_PERIP1_SW_RSATA, 0);
->> +     msleep(20);
+> This is completely against how the spec envisions things working,
+> segmentation is a mandatory function. As you point out there is no
+> parameter bounding the maximum read request size that a completer will
+> accept.
 >
-> Please add a comment for all delays added.
+> So, the only fix is that every downstream device must always have a
+> MRSS set to less than the MPS of the host bridge.
 
-@Pratyush/Mohit: please let me know what to add here.
+Why this can't be the default behavior in the PCI core? Any cons?
 
->> +#ifdef CONFIG_PM_SLEEP
->> +static int spear1340_miphy_suspend(struct device *dev)
->> +{
->> +     struct spear1340_miphy_priv *priv = dev_get_drvdata(dev);
->> +     int ret = 0;
->> +
->> +     if (priv->mode == SATA)
->> +             ret = spear1340_miphy_sata_exit(priv);
+Murali
 >
-> Shouldn't this be spear1340_miphy_init()?
->> +
->> +     return ret;
->> +}
->> +
->> +static int spear1340_miphy_resume(struct device *dev)
->> +{
->> +     struct spear1340_miphy_priv *priv = dev_get_drvdata(dev);
->> +     int ret = 0;
->> +
->> +     if (priv->mode == SATA)
->> +             ret = spear1340_miphy_sata_init(priv);
+> Which means the tuning code must be involved somehow, as that code
+> controls the MRSS of unrelated devices...
 >
-> And here spear1340_miphy_exit()? Why only for sata phys?
+> Regards,
+> Jason
 
-@Mohit/Pratyush ??
-
-Thanks Kishon for another round of review :)
