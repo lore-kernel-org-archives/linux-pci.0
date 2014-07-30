@@ -1,101 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50171 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S964784AbaGASog (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Jul 2014 14:44:36 -0400
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
+Received: from mail.skyhub.de ([78.46.96.112]:51122 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755648AbaG3R6o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Jul 2014 13:58:44 -0400
+Date: Wed, 30 Jul 2014 19:58:36 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v8 9/9] pci: Remap I/O bus resources into CPU space with pci_remap_iospace()
-Date: Tue,  1 Jul 2014 19:43:34 +0100
-Message-Id: <1404240214-9804-10-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	lkml <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] x86, irq: Keep IRQ assignment for PCI devices during
+ suspend/hibernation
+Message-ID: <20140730175836.GC10213@pd.tnic>
+References: <alpine.DEB.2.10.1407282255120.23352@nanos>
+ <1406713034-3387-1-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1406713034-3387-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce a default implementation for remapping PCI bus I/O resources
-onto the CPU address space. Architectures with special needs may
-provide their own version, but most should be able to use this one.
+On Wed, Jul 30, 2014 at 05:37:13PM +0800, Jiang Liu wrote:
+> Function pci_disable_device() may be called for PCI devices during
+> suspend/hibernation, which in turn may release IRQ assigned to PCI
+> interrupt. Later when pci_enable_device() is called during resume,
+> a different IRQ may be assigned and thus break the driver.
+> So keep IRQ assignment for PCI devices during suspend/hibernation.
+> We check pci_dev.dev.power.is_prepared to detect that pci_disable_device()
+> and pci_enable_device() is called during suspend/hibernation.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+> Hi Borislav,
+> 	I can't reproduce the issue with my test machine. So could you
+> please help to test this patch?
+> Regards!
+> Gerry
+> ---
+>  arch/x86/pci/common.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index 059a76c29739..417de4c92e8f 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -662,14 +662,15 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+>  	if ((err = pci_enable_resources(dev, mask)) < 0)
+>  		return err;
+>  
+> -	if (!pci_dev_msi_enabled(dev))
+> +	if (!pci_dev_msi_enabled(dev) && !dev->dev.pm.is_prepared)
+>  		return pcibios_enable_irq(dev);
+>  	return 0;
+>  }
+>  
+>  void pcibios_disable_device (struct pci_dev *dev)
+>  {
+> -	if (!pci_dev_msi_enabled(dev) && pcibios_disable_irq)
+> +	if (!pci_dev_msi_enabled(dev) && pcibios_disable_irq &&
+> +	    !dev->dev.pm.is_prepared)
+>  		pcibios_disable_irq(dev);
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
----
- drivers/pci/pci.c   | 33 +++++++++++++++++++++++++++++++++
- include/linux/pci.h |  3 +++
- 2 files changed, 36 insertions(+)
+Did you even build-test this patch?
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 8e65dc3..a90df97 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2708,6 +2708,39 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
- }
- EXPORT_SYMBOL(pci_request_regions_exclusive);
- 
-+/**
-+ *	pci_remap_iospace - Remap the memory mapped I/O space
-+ *	@res: Resource describing the I/O space
-+ *	@phys_addr: physical address where the range will be mapped.
-+ *
-+ *	Remap the memory mapped I/O space described by the @res
-+ *	into the CPU physical address space. Only architectures
-+ *	that have memory mapped IO defined (and hence PCI_IOBASE)
-+ *	should call this function.
-+ */
-+int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
-+{
-+	int err = -ENODEV;
-+
-+#ifdef PCI_IOBASE
-+	if (!(res->flags & IORESOURCE_IO))
-+		return -EINVAL;
-+
-+	if (res->end > IO_SPACE_LIMIT)
-+		return -EINVAL;
-+
-+	err = ioremap_page_range(res->start + (unsigned long)PCI_IOBASE,
-+				res->end + 1 + (unsigned long)PCI_IOBASE,
-+				phys_addr, __pgprot(PROT_DEVICE_nGnRE));
-+#else
-+	/* this architecture does not have memory mapped I/O space,
-+	   so this function should never be called */
-+	WARN_ON(1);
-+#endif
-+
-+	return err;
-+}
-+
- static void __pci_set_master(struct pci_dev *dev, bool enable)
- {
- 	u16 old_cmd, cmd;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 556dc5f..65fb1fc 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1100,6 +1100,9 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
- 						  resource_size_t),
- 			void *alignf_data);
- 
-+
-+int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
-+
- static inline dma_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
- {
- 	struct pci_bus_region region;
+arch/x86/pci/common.c: In function ‘pcibios_enable_device’:
+arch/x86/pci/common.c:665:44: error: ‘struct device’ has no member named ‘pm’
+  if (!pci_dev_msi_enabled(dev) && !dev->dev.pm.is_prepared)
+                                            ^
+arch/x86/pci/common.c: In function ‘pcibios_disable_device’:
+arch/x86/pci/common.c:673:15: error: ‘struct device’ has no member named ‘pm’
+      !dev->dev.pm.is_prepared)
+               ^
+make[1]: *** [arch/x86/pci/common.o] Error 1
+make[1]: *** Waiting for unfinished jobs....
+make: *** [arch/x86/pci] Error 2
+make: *** Waiting for unfinished jobs....
+
+
+
+My tree is rc7 + tip/master from Sunday.
+
 -- 
-2.0.0
+Regards/Gruss,
+    Boris.
 
+Sent from a fat crate under my desk. Formatting is fine.
+--
