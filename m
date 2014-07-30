@@ -1,110 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:47190 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752056AbaGDDat (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 23:30:49 -0400
-Received: by mail-ob0-f169.google.com with SMTP id wp18so1271345obc.14
-        for <linux-pci@vger.kernel.org>; Thu, 03 Jul 2014 20:30:48 -0700 (PDT)
+Received: from szxga03-in.huawei.com ([119.145.14.66]:33713 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751053AbaG3Ema (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jul 2014 00:42:30 -0400
+Message-ID: <53D87799.6030900@huawei.com>
+Date: Wed, 30 Jul 2014 12:42:01 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <53B61B03.3070308@huawei.com>
-References: <CAKb7UviGCtebGwyHbXRLZhDOiDAez+eKkxPe9jz5kc-3R1kUvQ@mail.gmail.com>
-	<53B4F0F7.9020403@huawei.com>
-	<CALhae2jRz8hL0bwySAbP7r+vJGOG5aif4GA_Yjp0inGAwz5JEA@mail.gmail.com>
-	<53B612FE.4080105@huawei.com>
-	<CAKb7UviVFQYwYdp_dgxK7jJ5Ny9yG1y8LATydxtVtkzRh+aOKw@mail.gmail.com>
-	<53B61B03.3070308@huawei.com>
-Date: Thu, 3 Jul 2014 23:30:48 -0400
-Message-ID: <CAKb7UvjFuu4Hm1pfmY-NMFORfv-+fx4oYeJicRoE8UTL_4Wp4A@mail.gmail.com>
-Subject: Re: How to check for proper MSI support?
-From: Ilia Mirkin <imirkin@alum.mit.edu>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Brian Becker <brian.johnathan.b@gmail.com>,
-	linux-pci@vger.kernel.org,
-	"nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>
-Content-Type: text/plain; charset=UTF-8
+To: Ethan Zhao <ethan.kernel@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	"<Jordan_Hargrave@dell.com>" <Jordan_Hargrave@dell.com>,
+	"<keith.busch@intel.com>" <keith.busch@intel.com>,
+	"<jon.mason@intel.com>" <jon.mason@intel.com>,
+	"Jon Mason" <jdmason@kudzu.us>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com> <CABawtvNAOm1VuLnN6vvwH1RtetYk-cu7VnQ6MCtJ4WVufBh2hw@mail.gmail.com> <53D86993.8020702@huawei.com> <76A89A35-D0BA-4E83-97BA-3FF490EF0877@gmail.com>
+In-Reply-To: <76A89A35-D0BA-4E83-97BA-3FF490EF0877@gmail.com>
+Content-Type: text/plain; charset="GB2312"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 3, 2014 at 11:09 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> On 2014/7/4 10:43, Ilia Mirkin wrote:
->> On Thu, Jul 3, 2014 at 10:35 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->>> Hi Brian,
->>>    From your 01:00.0 VGA compatible controller PCI config register, it supports 1 MSI vector, so I think this
->>> card has no problem. But you didn't answer what's the pci_enable_msi() return during it enable MSI fail.
->>>
->>> You can check PCI bus whether support MSI like:
->>>
->>> cat /sys/bus/pci/devices/00:0e.0/msi_bus
->>>
->>> Other, do you call pci_enable_device() before pci_enable_msi() ?
+On 2014/7/30 11:58, Ethan Zhao wrote:
+> 
+> 
+>> 在 2014年7月30日，上午11:42，Yijing Wang <wangyijing@huawei.com> 写道：
 >>
->> Yes, the device is enabled. nouveau does generally work for most
->> people :) And it works fine here if MSI is forced off.
+>>> On 2014/7/30 11:33, Ethan Zhao wrote:
+>>> Yijing,
+>>>    Seems you want to workaround platform bug in generic PCIe hotplug
+>>> code, while not specific to some platforms or devices, that is not
+>>> safe/fair to other vendor's platform.
+>>> and the updating to MPS of device is out of PCIe specification.
+>>>    So the best way is to fix within platform, at least, any platform
+>>> specific way in Linux code.
 >>
->> The problem here is that pci_enable_msi() succeeds, but it probably
->
-> It's some strange, pci_enable_msi() succeeds, but there is nothing in MSI address and data register
->
->         Capabilities: [68] MSI: Enable- Count=1/1 Maskable- 64bit+
->                 Address: 0000000000000000  Data: 0000
-> Because the address and data is invalid, so MSI can not work.
->
-> Because you said pci_enable_msi() return 0 which indicates success, so I guess the device
-> current power state is not D0, because checking code in __write_msi_msi.
->
-> void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
-> {
->     if (entry->dev->current_state != PCI_D0) {
->         /* Don't touch the hardware now */
->     } else if (entry->msi_attrib.is_msix) {
->         void __iomem *base;
->         base = entry->mask_base +
->             entry->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE;
->
->         writel(msg->address_lo, base + PCI_MSIX_ENTRY_LOWER_ADDR);
->         writel(msg->address_hi, base + PCI_MSIX_ENTRY_UPPER_ADDR);
->         writel(msg->data, base + PCI_MSIX_ENTRY_DATA);
->     ......
->
->> shouldn't. I don't know all the details about MSI, but doesn't the CPU
->> or (L)APIC have to support it? In this case, it's a P200MMX on a 430FX
->> chipset board. Both quite ancient...
->
-> MSI in x86 always send to specific interrupt address(0xfeexxxx), most x86 CPU
-> should support MSI, but I am not sure, I don't know hardware much.
+>> No, this is not a platform bug, and this is safe, you can refer to my last reply
+>> to Alex.
+> if is not a platform bug, why Didn't other platforms that can do hotplug report such issue ?
+> If it was safe, is it possible that you have all other vendors verify it ? 
 
-To put things in perspective, P200MMX was released in early 1997. It
-looks like the PCI 2.2 spec, which defines MSI, was released in late
-1998. The 430FX chipset only supports PCI 2.0.
+This issue was triggered by firmware set the device mps to 256B. It's not related to platform
+hardware.
 
->
+I think this is safe, because I only modified the device newly hot-added, this device is not enabled yet.
+
+Thanks!
+Yijing.
+
+
+>>>
+>>>> On Tue, Jul 29, 2014 at 4:17 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>>> Currently we don't update device's mps value when doing
+>>>> pci device hot-add. The hot-added device's mps will be set
+>>>> to default value (128B). But the upstream port device's mps
+>>>> may be larger than 128B which was set by firmware during
+>>>> system bootup. In this case the new added device may not
+>>>> work normally. This issue was found in huawei 5885 server
+>>>> and Dell R620 server. And if we run the platform with windows,
+>>>> this problem is gone. This patch try to update the hot added
+>>>> device mps equal to its parent mps, if device mpss < parent mps,
+>>>> print warning.
+>>>>
+>>>> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+>>>> Reported-by: Keith Busch <keith.busch@intel.com>
+>>>> Reported-by: Jordan_Hargrave@Dell.com
+>>>> Reported-by: Yijing Wang <wangyijing@huawei.com>
+>>>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>>>> Cc: Jon Mason <jdmason@kudzu.us>
+>>>> ---
+>>>> drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
+>>>> 1 files changed, 39 insertions(+), 0 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>>> index e3cf8a2..583ca52 100644
+>>>> --- a/drivers/pci/probe.c
+>>>> +++ b/drivers/pci/probe.c
+>>>> @@ -1613,6 +1613,44 @@ static void pcie_write_mrrs(struct pci_dev *dev)
+>>>>                dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If problems are experienced, try running with pci=pcie_bus_safe\n");
+>>>> }
+>>>>
+>>>> +/**
+>>>> + * pcie_bus_update_set - update device mps when device doing hot-add
+>>>> + * @dev: PCI device to set
+>>>> + *
+>>>> + * After device hot add, mps will be set to default(128B), But the
+>>>> + * upstream port device's mps may be larger than 128B which was set
+>>>> + * by firmware during system bootup. Then we should update the device
+>>>> + * mps to equal to its parent mps, Or the device can not work normally.
+>>>> + */
+>>>> +static void pcie_bus_update_set(struct pci_dev *dev)
+>>>> +{
+>>>> +       int mps, p_mps, mpss;
+>>>> +       struct pci_dev *parent;
+>>>> +
+>>>> +       if (!pci_is_pcie(dev) || !dev->bus->self
+>>>> +                       || !dev->bus->self->is_hotplug_bridge)
+>>>> +               return;
+>>>> +
+>>>> +       parent = dev->bus->self;
+>>>> +       mps = pcie_get_mps(dev);
+>>>> +       p_mps = pcie_get_mps(parent);
+>>>> +
+>>>> +       if (mps >= p_mps)
+>>>> +               return;
+>>>> +
+>>>> +       mpss = 128 << dev->pcie_mpss;
+>>>> +       if (mpss < p_mps) {
+>>>> +               dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
+>>>> +                               "If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
+>>>> +                               mpss, p_mps);
+>>>> +               return;
+>>>> +       }
+>>>> +
+>>>> +       pcie_write_mps(dev, p_mps);
+>>>> +       dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n",
+>>>> +                       pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
+>>>> +}
+>>>> +
+>>>> static void pcie_bus_detect_mps(struct pci_dev *dev)
+>>>> {
+>>>>        struct pci_dev *bridge = dev->bus->self;
+>>>> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+>>>>                return 0;
+>>>>
+>>>>        if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
+>>>> +               pcie_bus_update_set(dev);
+>>>>                pcie_bus_detect_mps(dev);
+>>>>                return 0;
+>>>>        }
+>>>> --
+>>>> 1.7.1
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>> .
 >>
->> So given that the PCI device itself supports MSI, how do we tell that
->> it shouldn't actually get turned on?
->
-> Generally, some message in dmesg like:
-> [   17.322311] ahci 0000:00:1f.2: irq 119 for MSI/MSI-X
-> [   17.322319] ahci 0000:00:1f.2: irq 120 for MSI/MSI-X
-> [   17.322326] ahci 0000:00:1f.2: irq 121 for MSI/MSI-X
-> [   17.322333] ahci 0000:00:1f.2: irq 122 for MSI/MSI-X
-> [   17.322339] ahci 0000:00:1f.2: irq 123 for MSI/MSI-X
->
-> Also you can check /proc/interrupts I think.
+>>
+>> -- 
+>> Thanks!
+>> Yijing
+>>
+> 
+> .
+> 
 
-I must not have made my question clear. Let me try again:
 
-There is a NVIDIA G96 GPU (which is PCIe only) hanging off of a PCIe
-<-> PCI bridge (all on one card), which is plugged into a motherboard
-with the 430FX chipset (PCI 2.0 supported).
+-- 
+Thanks!
+Yijing
 
-The GPU PCI device, of course, has full support for MSI. However my
-understanding is that MSI won't actually work here. This is confirmed
-by the fact that if we let nouveau enable MSI, the device doesn't work
-(presumably due to lack of interrupt delivery, although I admit to not
-having debugged it that far). How do I, as a nouveau driver developer,
-know not to call pci_enable_msi? Or alternatively how can
-pci_enable_msi be taught not to succeed in this case?
-
-Thanks,
-
-  -ilia
