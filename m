@@ -1,70 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-outbound-2.vmware.com ([208.91.2.13]:39178 "EHLO
-	smtp-outbound-2.vmware.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755531AbaGPSXh convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Jul 2014 14:23:37 -0400
-From: Arvind Kumar <arvindkumar@vmware.com>
-To: Alexander Gordeev <agordeev@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: "pv-drivers@vmware.com" <pv-drivers@vmware.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v2 RESEND 23/23] vmw_pvscsi: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-Date: Wed, 16 Jul 2014 18:23:23 +0000
-Message-ID: <9424d275bdc34133a03a68877ab253d0@EX13-MBX-025.vmware.com>
-References: <cover.1405533479.git.agordeev@redhat.com>,<c27a72eaa07631ca182bfdb71d0d3d7f9f280b26.1405533479.git.agordeev@redhat.com>
-In-Reply-To: <c27a72eaa07631ca182bfdb71d0d3d7f9f280b26.1405533479.git.agordeev@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from szxga02-in.huawei.com ([119.145.14.65]:2466 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750852AbaG3IPj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jul 2014 04:15:39 -0400
+Message-ID: <53D8A942.80008@huawei.com>
+Date: Wed, 30 Jul 2014 16:13:54 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
+To: Ethan Zhao <ethan.kernel@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	"<keith.busch@intel.com>" <keith.busch@intel.com>,
+	Jon Mason <jdmason@kudzu.us>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com>	<CABawtvP1sviOZynf2N43ORDF-mPHX9PrcsXSmxKqv4_V9QpnsQ@mail.gmail.com>	<53D89754.3010704@huawei.com> <CABawtvMg1gUpCr5rpFzKfUVD=Ai06Rpi4XVOvzARb2tYk+HXsw@mail.gmail.com>
+In-Reply-To: <CABawtvMg1gUpCr5rpFzKfUVD=Ai06Rpi4XVOvzARb2tYk+HXsw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alexander,
+>> Yes, that issue is BIOS bug, the mps setting is wrong after system boot up.
+>> But that issue is not same as this one, Keith and Jordan found the issue
+>> after hot-plug. And my patch only modify the hotplug slot connected device.
+>>
+>> In my idea, make the device work is important, because these platforms with windows
+>> can run happy, why linux leave this issue to BIOS.
+> 
+>    That is a reason to make it works with Linux, but does your
+> platform have _HPX from ACPI for those hot-added back devices ?  if it
+> has, maybe windows could apply _HPX to configure those devices and
+> work well.
+> 
 
-This looks fine to me.
-
-Acked-by: Arvind Kumar <arvindkumar@vmware.com>
+I checked DSDT table exported from my server, but no "_HPX" found.
+Further more, kernel use pciehp first to support pcie hotplug device. And in pciehp,
+driver won't touch ACPI methods like "_HPX".
 
 Thanks!
-Arvind
-________________________________________
-From: Alexander Gordeev <agordeev@redhat.com>
-Sent: Wednesday, July 16, 2014 11:05 AM
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev; Arvind Kumar; pv-drivers@vmware.com; linux-scsi@vger.kernel.org; linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 23/23] vmw_pvscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Yijing.
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+>>
+>>>
+>>>> Reported-by: Keith Busch <keith.busch@intel.com>
+>>>> Reported-by: Jordan_Hargrave@Dell.com
+>>>> Reported-by: Yijing Wang <wangyijing@huawei.com>
+>>>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>>>> Cc: Jon Mason <jdmason@kudzu.us>
+>>>> ---
+>>>>  drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
+>>>>  1 files changed, 39 insertions(+), 0 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>>> index e3cf8a2..583ca52 100644
+>>>> --- a/drivers/pci/probe.c
+>>>> +++ b/drivers/pci/probe.c
+>>>> @@ -1613,6 +1613,44 @@ static void pcie_write_mrrs(struct pci_dev *dev)
+>>>>                 dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If problems are experienced, try running with pci=pcie_bus_safe\n");
+>>>>  }
+>>>>
+>>>> +/**
+>>>> + * pcie_bus_update_set - update device mps when device doing hot-add
+>>>> + * @dev: PCI device to set
+>>>> + *
+>>>> + * After device hot add, mps will be set to default(128B), But the
+>>>> + * upstream port device's mps may be larger than 128B which was set
+>>>> + * by firmware during system bootup. Then we should update the device
+>>>> + * mps to equal to its parent mps, Or the device can not work normally.
+>>>> + */
+>>>> +static void pcie_bus_update_set(struct pci_dev *dev)
+>>>> +{
+>>>> +       int mps, p_mps, mpss;
+>>>> +       struct pci_dev *parent;
+>>>> +
+>>>> +       if (!pci_is_pcie(dev) || !dev->bus->self
+>>>> +                       || !dev->bus->self->is_hotplug_bridge)
+>>>> +               return;
+>>>> +
+>>>> +       parent = dev->bus->self;
+>>>> +       mps = pcie_get_mps(dev);
+>>>> +       p_mps = pcie_get_mps(parent);
+>>>> +
+>>>> +       if (mps >= p_mps)
+>>>> +               return;
+>>>> +
+>>>> +       mpss = 128 << dev->pcie_mpss;
+>>>> +       if (mpss < p_mps) {
+>>>> +               dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
+>>>> +                               "If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
+>>>> +                               mpss, p_mps);
+>>>> +               return;
+>>>> +       }
+>>>> +
+>>>> +       pcie_write_mps(dev, p_mps);
+>>>> +       dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n",
+>>>> +                       pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
+>>>> +}
+>>>> +
+>>>>  static void pcie_bus_detect_mps(struct pci_dev *dev)
+>>>>  {
+>>>>         struct pci_dev *bridge = dev->bus->self;
+>>>> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+>>>>                 return 0;
+>>>>
+>>>>         if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
+>>>> +               pcie_bus_update_set(dev);
+>>>>                 pcie_bus_detect_mps(dev);
+>>>>                 return 0;
+>>>>         }
+>>>> --
+>>>> 1.7.1
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>> .
+>>>
+>>
+>>
+>> --
+>> Thanks!
+>> Yijing
+>>
+> 
+> .
+> 
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Arvind Kumar <arvindkumar@vmware.com>
-Cc: pv-drivers@vmware.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: Arvind Kumar <arvindkumar@vmware.com>
----
- drivers/scsi/vmw_pvscsi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index c88e146..598f65e 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -1194,7 +1194,7 @@ static int pvscsi_setup_msix(const struct pvscsi_adapter *adapter,
-        struct msix_entry entry = { 0, PVSCSI_VECTOR_COMPLETION };
-        int ret;
+-- 
+Thanks!
+Yijing
 
--       ret = pci_enable_msix(adapter->dev, &entry, 1);
-+       ret = pci_enable_msix_exact(adapter->dev, &entry, 1);
-        if (ret)
-                return ret;
-
---
-1.7.7.6
