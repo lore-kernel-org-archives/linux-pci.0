@@ -1,82 +1,162 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:35741 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758463AbaGXDwg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jul 2014 23:52:36 -0400
-Received: from epcpsbgr3.samsung.com
- (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0N9700AF96RMBM50@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Thu, 24 Jul 2014 12:52:34 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Lucas Stach' <l.stach@pengutronix.de>,
-	'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Richard Zhu' <r65037@freescale.com>,
-	'Shawn Guo' <shawn.guo@freescale.com>, kernel@pengutronix.de,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1406137217-11294-1-git-send-email-l.stach@pengutronix.de>
- <1406137217-11294-3-git-send-email-l.stach@pengutronix.de>
-In-reply-to: <1406137217-11294-3-git-send-email-l.stach@pengutronix.de>
-Subject: Re: [PATCH 2/3] PCI: imx6: prevent driver unbind
-Date: Thu, 24 Jul 2014 12:52:34 +0900
-Message-id: <001101cfa6f2$b39c86f0$1ad594d0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-qg0-f44.google.com ([209.85.192.44]:38855 "EHLO
+	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755367AbaG3HRC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jul 2014 03:17:02 -0400
+Received: by mail-qg0-f44.google.com with SMTP id e89so968351qgf.17
+        for <linux-pci@vger.kernel.org>; Wed, 30 Jul 2014 00:17:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <53D89754.3010704@huawei.com>
+References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com>
+	<CABawtvP1sviOZynf2N43ORDF-mPHX9PrcsXSmxKqv4_V9QpnsQ@mail.gmail.com>
+	<53D89754.3010704@huawei.com>
+Date: Wed, 30 Jul 2014 15:17:01 +0800
+Message-ID: <CABawtvMg1gUpCr5rpFzKfUVD=Ai06Rpi4XVOvzARb2tYk+HXsw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+From: Ethan Zhao <ethan.kernel@gmail.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	"<keith.busch@intel.com>" <keith.busch@intel.com>,
+	"<jon.mason@intel.com>" <jon.mason@intel.com>,
+	Jon Mason <jdmason@kudzu.us>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, July 24, 2014 2:40 AM, Lucas Stach wrote:
-> 
-> The current code is not prepared for the driver to be
-> bound/unbound arbitrarily.
-> 
-> Prevent possible user visible issues by disabling the
-> bind sysfs attributes.
-> 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
->  drivers/pci/host/pci-imx6.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index a568efaa331c..ceb1677884b2 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -600,6 +600,7 @@ static struct platform_driver imx6_pcie_driver = {
->  		.name	= "imx6q-pcie",
->  		.owner	= THIS_MODULE,
->  		.of_match_table = imx6_pcie_of_match,
-> +		.suppress_bind_attrs = true,
+On Wed, Jul 30, 2014 at 2:57 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> On 2014/7/30 14:26, Ethan Zhao wrote:
+>> On Tue, Jul 29, 2014 at 4:17 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>> Currently we don't update device's mps value when doing
+>>> pci device hot-add. The hot-added device's mps will be set
+>>> to default value (128B). But the upstream port device's mps
+>>> may be larger than 128B which was set by firmware during
+>>> system bootup. In this case the new added device may not
+>>> work normally. This issue was found in huawei 5885 server
+>>> and Dell R620 server. And if we run the platform with windows,
+>>> this problem is gone. This patch try to update the hot added
+>>> device mps equal to its parent mps, if device mpss < parent mps,
+>>> print warning.
+>>>
+>>> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+>>
+>> http://marc.info/?l=e1000-devel&m=134182518500774&w=2
+>>
+>> The bug was reported by Joe.jin@oracle.com. the related hardware
+>> is SUN FIRE X2270 M2, it is not a hotplug sever except SAS HDD,
+>> and the the issue is definitely a BIOS bug. not related to the hotplug
+>> code path. was fixed by BIOS.
+>>
+>
+> Yes, that issue is BIOS bug, the mps setting is wrong after system boot up.
+> But that issue is not same as this one, Keith and Jordan found the issue
+> after hot-plug. And my patch only modify the hotplug slot connected device.
+>
+> In my idea, make the device work is important, because these platforms with windows
+> can run happy, why linux leave this issue to BIOS.
 
-pci-imx6.c already uses platform_driver_probe().
-In platform_driver_probe(),suppress_bind_attrs is set as true as below,
+   That is a reason to make it works with Linux, but does your
+platform have _HPX from ACPI for those hot-added back devices ?  if it
+has, maybe windows could apply _HPX to configure those devices and
+work well.
 
-./drivers/base/platform.c
+   Maybe you should check with _HPX .  That is a generic way to import
+configuration from firmware when hot-add device.
 
-int __init_or_module platform_driver_probe(struct platform_driver *drv,
-		int (*probe)(struct platform_device *))
-{
-	int retval, code;
+  Please see also
+  chapter 6.2.8 _HPX (Hot Plug Parameter Extensions) of ACPI spec 4&5
 
-	/*
-	 * Prevent driver from requesting probe deferral to avoid further
-	 * futile probe attempts.
-	 */
-	drv->prevent_deferred_probe = true;
+  Thanks,
+  Ethan
 
-	/* make sure driver won't have bind/unbind attributes */
-	drv->driver.suppress_bind_attrs = true;
 
-So, it looks duplicated.
-Is there any reason to do it twice?
-
-Best regards,
-Jingoo Han
-
->  	},
->  };
-> 
+>
+> Anyway, this is my personal opinion.
+>
+> Thanks!
+> Yijing.
+>
+>>
+>>> Reported-by: Keith Busch <keith.busch@intel.com>
+>>> Reported-by: Jordan_Hargrave@Dell.com
+>>> Reported-by: Yijing Wang <wangyijing@huawei.com>
+>>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>>> Cc: Jon Mason <jdmason@kudzu.us>
+>>> ---
+>>>  drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
+>>>  1 files changed, 39 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>> index e3cf8a2..583ca52 100644
+>>> --- a/drivers/pci/probe.c
+>>> +++ b/drivers/pci/probe.c
+>>> @@ -1613,6 +1613,44 @@ static void pcie_write_mrrs(struct pci_dev *dev)
+>>>                 dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If problems are experienced, try running with pci=pcie_bus_safe\n");
+>>>  }
+>>>
+>>> +/**
+>>> + * pcie_bus_update_set - update device mps when device doing hot-add
+>>> + * @dev: PCI device to set
+>>> + *
+>>> + * After device hot add, mps will be set to default(128B), But the
+>>> + * upstream port device's mps may be larger than 128B which was set
+>>> + * by firmware during system bootup. Then we should update the device
+>>> + * mps to equal to its parent mps, Or the device can not work normally.
+>>> + */
+>>> +static void pcie_bus_update_set(struct pci_dev *dev)
+>>> +{
+>>> +       int mps, p_mps, mpss;
+>>> +       struct pci_dev *parent;
+>>> +
+>>> +       if (!pci_is_pcie(dev) || !dev->bus->self
+>>> +                       || !dev->bus->self->is_hotplug_bridge)
+>>> +               return;
+>>> +
+>>> +       parent = dev->bus->self;
+>>> +       mps = pcie_get_mps(dev);
+>>> +       p_mps = pcie_get_mps(parent);
+>>> +
+>>> +       if (mps >= p_mps)
+>>> +               return;
+>>> +
+>>> +       mpss = 128 << dev->pcie_mpss;
+>>> +       if (mpss < p_mps) {
+>>> +               dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
+>>> +                               "If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
+>>> +                               mpss, p_mps);
+>>> +               return;
+>>> +       }
+>>> +
+>>> +       pcie_write_mps(dev, p_mps);
+>>> +       dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n",
+>>> +                       pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
+>>> +}
+>>> +
+>>>  static void pcie_bus_detect_mps(struct pci_dev *dev)
+>>>  {
+>>>         struct pci_dev *bridge = dev->bus->self;
+>>> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+>>>                 return 0;
+>>>
+>>>         if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
+>>> +               pcie_bus_update_set(dev);
+>>>                 pcie_bus_detect_mps(dev);
+>>>                 return 0;
+>>>         }
+>>> --
+>>> 1.7.1
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>> .
+>>
+>
+>
 > --
-> 2.0.1
-
+> Thanks!
+> Yijing
+>
