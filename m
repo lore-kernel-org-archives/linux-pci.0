@@ -1,38 +1,30 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:51813 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755335AbaGARX1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Jul 2014 13:23:27 -0400
-Date: Tue, 1 Jul 2014 11:27:46 +0900
-From: Simon Horman <horms@verge.net.au>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH v2 0/3] PCI: host: pcie-rcar: minor clean ups
-Message-ID: <20140701022746.GA13917@verge.net.au>
-References: <1404114864-17330-1-git-send-email-phil.edworthy@renesas.com>
+Received: from nbfkord-smmo03.seg.att.com ([209.65.160.84]:59068 "EHLO
+	nbfkord-smmo03.seg.att.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755448AbaG3RXN convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Jul 2014 13:23:13 -0400
+Message-ID: <53D929FE.40706@solarflare.com>
+Date: Wed, 30 Jul 2014 18:23:10 +0100
+From: Edward Cree <ecree@solarflare.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1404114864-17330-1-git-send-email-phil.edworthy@renesas.com>
+To: <linux-pci@vger.kernel.org>
+Subject: pci_sriov_set_totalvfs again
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 30, 2014 at 08:54:21AM +0100, Phil Edworthy wrote:
-> Relatively minor clean up patches for the pcie-rcar driver. These
-> are on top of Sergei's recent patch "pcie-rcar: kill duplicate checks".
-> 
-> Thanks to Sergei for point these out.
-> 
-> v2:
->  - break out replacing function arg with local var into separate patch
-> 
-> Phil Edworthy (3):
->   PCI: host: pcie-rcar: Use correct initial HW settings
->   PCI: host: pcie-rcar: Style and formatting changes.
->   PCI: host: pcie-rcar: Replace arg passed into a func with local var
+Calling pci_sriov_set_totalvfs(dev, 0) has no effect, because
+pci_sriov_get_totalvfs ignores dev->sriov->driver_max_VFs if it's 0, as
+that is used as the 'not set' value.
+So, three questions:
+a) is this a bug?
+b) if not, should the comment on pci_sriov_set_totalvfs mention that
+passing numvfs=0 will be interpreted as numvfs=dev->sriov->total_VFs?
+c) is there a better way of indicating "current configuration doesn't
+support VFs" rather than calling set_totalvfs(0)?
 
-Thanks Phil,
-
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
-
+Thanks,
+-Edward
+||
+The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
