@@ -1,319 +1,181 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:43314 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751957AbaGAN5c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 Jul 2014 09:57:32 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: <linux-pci@vger.kernel.org>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Grant Likely <grant.likely@linaro.org>
-Subject: [RESEND: PATCH - v3] phy: Add serdes phy driver for keystone
-Date: Tue, 1 Jul 2014 09:57:22 -0400
-Message-ID: <1404223042-12845-1-git-send-email-m-karicheri2@ti.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <53D89502.60506@linux.intel.com>
+Date: Wed, 30 Jul 2014 14:47:30 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+To: Yijing Wang <wangyijing@huawei.com>, Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org
+CC: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>, Paul.Mundt@huawei.com,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	virtualization@lists.linux-foundation.org,
+	Xinwei Hu <huxinwei@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Wuyun <wuyun.wu@huawei.com>
+Subject: Re: [RFC PATCH 00/11] Refactor MSI to support Non-PCI device
+References: <1406344128-27055-1-git-send-email-wangyijing@huawei.com> <1748052.OMBQJiOLYT@wuerfel> <53D85C2E.3060205@huawei.com>
+In-Reply-To: <53D85C2E.3060205@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This phy driver added to support keystone PCI driver. This is
-a generic phy driver and currently it supports only SerDes
-for PCI Controller. The hw vendor that provides the phy
-hw published only registers and their values. So this driver
-uses these hard coded values to initialize the phy.
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Pawel Moll <pawel.moll@arm.com>
-CC: Mark Rutland <mark.rutland@arm.com>
-CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
-CC: Kumar Gala <galak@codeaurora.org>
-CC: Kishon Vijay Abraham I <kishon@ti.com>
-CC: Grant Likely <grant.likely@linaro.org>
----
-Changelog:-
- -  Resending with changelog moved out of commit message
- -  Added comments to indicate what the register functionality
-    each register blob is doing.
- -  Previous versions were part of the PCI Keystone driver series.
-    This is now send as a separate patch so that this can be
-    reviewed indepedently and merged.
 
- .../bindings/phy/phy-serdes-keystone.txt           |   25 +++
- drivers/phy/Kconfig                                |    6 +
- drivers/phy/Makefile                               |    1 +
- drivers/phy/phy-serdes-keystone.c                  |  200 ++++++++++++++++++++
- 4 files changed, 232 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/phy/phy-serdes-keystone.txt
- create mode 100644 drivers/phy/phy-serdes-keystone.c
+On 2014/7/30 10:45, Yijing Wang wrote:
+> On 2014/7/29 22:08, Arnd Bergmann wrote:
+>> On Saturday 26 July 2014 11:08:37 Yijing Wang wrote:
+>>>         The series is a draft of generic MSI driver that supports PCI
+>>> and Non-PCI device which have MSI capability. If you're not interested
+>>> it, sorry for the noise.
+>>
+>> I've finally managed to take some time to look at the series. Overall,
+>> the concept looks good to me, and the patches look very well implemented.
+>>
+>> The part I'm not sure about is the interface we want to end up with
+>> at the end of the series. More on that below
+> 
+> Hi Arnd,
+>    Thanks for your review and comments very much!
+> Please refer the inline comments.
+> 
+>>
+>>> The series is based on Linux-3.16-rc1.
+>>>
+>>> MSI was introduced in PCI Spec 2.2. Currently, kernel MSI 
+>>> driver codes are bonding with PCI device. Because MSI has a lot
+>>> advantages in design. More and more non-PCI devices want to
+>>> use MSI as their default interrupt. The existing MSI device
+>>> include HPET. HPET driver provide its own MSI code to initialize
+>>> and process MSI interrupts. In the latest GIC v3 spec, legacy device
+>>> can deliver MSI by the help of a relay device named consolidator.
+>>> Consolidator can translate the legacy interrupts connected to it
+>>> to MSI/MSI-X. And new non-PCI device will be designed to 
+>>> support MSI in future. So make the MSI driver code be generic will 
+>>> help the non-PCI device use MSI more simply.
+>>>
+>>> The new data struct for generic MSI driver.
+>>> struct msi_irqs {
+>>>         u8 msi_enabled:1; /* Enable flag */
+>>>         u8 msix_enabled:1;
+>>>         struct list_head msi_list; /* MSI desc list */
+>>>         void *data;     /* help to find the MSI device */
+>>>         struct msi_ops *ops; /* MSI device specific hook */
+>>> };
+>>> struct msi_irqs is used to manage MSI related informations. Every device supports
+>>> MSI should contain this data struct and allocate it.
+>>
+>> I think you should have a stronger association with the 'struct
+>> device' here. Can you replace the 'void *data' with 'struct device *dev'?
+> 
+> Actually, I used the struct device *dev in my first draft, finally, I replaced
+> it with void *data, because some MSI devices don't have a struct device *dev,
+> like the existing hpet device, dmar msi device, and OF device, like the ARM consolidator.
+> 
+> Of course, we can make the MSI devices have their own struct device, and register to
+> device tree, eg, add a class device named MSI_DEV. But I'm not sure whether it is appropriate.
+> 
+>>
+>> The other part I'm not completely sure about is how you want to
+>> have MSIs map into normal IRQ descriptors. At the moment, all
+>> MSI users are based on IRQ numbers, but this has known scalability problems.
+> 
+> Hmmm, I still use the IRQ number to map the MSIs to IRQ description.
+> I'm sorry, I don't understand you meaning.
+> What are the scalability problems you mentioned ?
+We have soft limitation of nr_irqs or hard limitation NR_IRQS,
+we couldn't allocate as much irq number as we need in some cases,
+such as to support MSI-x.
 
-diff --git a/Documentation/devicetree/bindings/phy/phy-serdes-keystone.txt b/Documentation/devicetree/bindings/phy/phy-serdes-keystone.txt
-new file mode 100644
-index 0000000..612c7b5
---- /dev/null
-+++ b/Documentation/devicetree/bindings/phy/phy-serdes-keystone.txt
-@@ -0,0 +1,25 @@
-+TI Keystone SerDes Phy: DT documentation
-+=======================================
-+
-+Required properties:
-+ - compatible: should be "ti,keystone-serdes-phy";
-+ - reg: base address and length of the SerDes register set
-+ - reg-names: should be "reg_serdes", name of the reg SerDes register set
-+ - #phy-cells: from the generic phy bindings, must be 0;
-+
-+Exampel for Keystone PCIE,
-+
-+		pcie0_phy: serdes_phy@2320000 {
-+			#phy-cells = <0>;
-+			compatible = "ti,keystone-serdes-phy";
-+			reg = <0x02320000 0x4000>;
-+			reg-names = "reg_serdes";
-+		};
-+
-+
-+Then the PHY can be used in PCIe controller node as
-+
-+pcie@21800000 {
-+	phys = <&pcie0_phy>;
-+	phy-names = "pcie-phy";
-+};
-diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
-index 16a2f06..54a8471 100644
---- a/drivers/phy/Kconfig
-+++ b/drivers/phy/Kconfig
-@@ -178,4 +178,10 @@ config PHY_XGENE
- 	help
- 	  This option enables support for APM X-Gene SoC multi-purpose PHY.
- 
-+config PHY_TI_KEYSTONE_SERDES
-+	bool "TI Keystone SerDes PHY support"
-+	depends on ARCH_KEYSTONE
-+	select GENERIC_PHY
-+	help
-+	  This option enables support for TI Keystone SerDes PHY.
- endmenu
-diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
-index b4f1d57..a02faaa 100644
---- a/drivers/phy/Makefile
-+++ b/drivers/phy/Makefile
-@@ -20,3 +20,4 @@ phy-exynos-usb2-$(CONFIG_PHY_EXYNOS4X12_USB2)	+= phy-exynos4x12-usb2.o
- phy-exynos-usb2-$(CONFIG_PHY_EXYNOS5250_USB2)	+= phy-exynos5250-usb2.o
- obj-$(CONFIG_PHY_EXYNOS5_USBDRD)	+= phy-exynos5-usbdrd.o
- obj-$(CONFIG_PHY_XGENE)			+= phy-xgene.o
-+obj-$(CONFIG_PHY_TI_KEYSTONE_SERDES)	+= phy-serdes-keystone.o
-diff --git a/drivers/phy/phy-serdes-keystone.c b/drivers/phy/phy-serdes-keystone.c
-new file mode 100644
-index 0000000..f1a8888
---- /dev/null
-+++ b/drivers/phy/phy-serdes-keystone.c
-@@ -0,0 +1,200 @@
-+/*
-+ * Keystone SerDes Phy driver
-+ *
-+ * Copyright (C) 2013-2014 Texas Instruments, Inc.
-+ *		http://www.ti.com
-+ *
-+ * Author: Murali Karicheri <m-karicheri2@ti.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/clk.h>
-+#include <linux/delay.h>
-+#include <linux/err.h>
-+#include <linux/io.h>
-+#include <linux/module.h>
-+#include <linux/of.h>
-+#include <linux/of_address.h>
-+#include <linux/of_platform.h>
-+#include <linux/phy/phy.h>
-+#include <linux/platform_device.h>
-+
-+#define reg_dump(addr, mask) \
-+		pr_debug("reg %p has value %x\n", (void *)addr, \
-+			(readl(addr) & ~mask))
-+
-+/* mask bits point to bits being modified */
-+#define reg_rmw(addr, value, mask) \
-+		writel(((readl(addr) & (~(mask))) | \
-+			(value & (mask))), (addr))
-+struct serdes_config {
-+	u32 reg;
-+	u32 val;
-+	u32 mask;
-+};
-+
-+struct phy_serdes_keystone {
-+	struct device *dev;
-+	void __iomem *base;
-+};
-+
-+static struct serdes_config ks_100mhz_5gbps_serdes[] = {
-+	/* SerDes Clock and common configuration */
-+	{0x0000, 0x00000800, 0x0000ff00},
-+	{0x0060, 0x00041c5c, 0x00ffffff},
-+	{0x0064, 0x0343c700, 0xffffff00},
-+	{0x006c, 0x00000012, 0x000000ff},
-+	{0x0068, 0x00070000, 0x00ff0000},
-+	{0x0078, 0x0000c000, 0x0000ff00},
-+
-+	/* Lane - A Phy configuration */
-+	{0x0200, 0x00000000, 0x000000ff},
-+	{0x0204, 0x5e000080, 0xff0000ff},
-+	{0x0208, 0x00000006, 0x000000ff},
-+	{0x0210, 0x00000023, 0x000000ff},
-+	{0x0214, 0x2e003060, 0xff00ffff},
-+	{0x0218, 0x76000000, 0xff000000},
-+	{0x022c, 0x00200002, 0x00ff00ff},
-+	{0x02a0, 0xffee0000, 0xffff0000},
-+	{0x02a4, 0x0000000f, 0x000000ff},
-+	{0x0204, 0x5e000000, 0xff000000},
-+	{0x0208, 0x00000006, 0x000000ff},
-+	{0x0278, 0x00002000, 0x0000ff00},
-+	{0x0280, 0x00280028, 0x00ff00ff},
-+	{0x0284, 0x2d0f0385, 0xffffffff},
-+	{0x0250, 0xd0000000, 0xff000000},
-+	{0x0284, 0x00000085, 0x000000ff},
-+	{0x0294, 0x20000000, 0xff000000},
-+
-+	/* Lane - B Phy configuration */
-+	{0x0400, 0x00000000, 0x000000ff},
-+	{0x0404, 0x5e000080, 0xff0000ff},
-+	{0x0408, 0x00000006, 0x000000ff},
-+	{0x0410, 0x00000023, 0x000000ff},
-+	{0x0414, 0x2e003060, 0xff00ffff},
-+	{0x0418, 0x76000000, 0xff000000},
-+	{0x042c, 0x00200002, 0x00ff00ff},
-+	{0x04a0, 0xffee0000, 0xffff0000},
-+	{0x04a4, 0x0000000f, 0x000000ff},
-+	{0x0404, 0x5e000000, 0xff000000},
-+	{0x0408, 0x00000006, 0x000000ff},
-+	{0x0478, 0x00002000, 0x0000ff00},
-+	{0x0480, 0x00280028, 0x00ff00ff},
-+	{0x0484, 0x2d0f0385, 0xffffffff},
-+	{0x0450, 0xd0000000, 0xff000000},
-+	{0x0494, 0x20000000, 0xff000000},
-+
-+	/* Common Lane configurations */
-+	{0x0a00, 0x00000100, 0x0000ff00},
-+	{0x0a08, 0x00e12c08, 0x00ffffff},
-+	{0x0a0c, 0x00000081, 0x000000ff},
-+	{0x0a18, 0x00e80000, 0x00ff0000},
-+	{0x0a30, 0x002f2f00, 0x00ffff00},
-+	{0x0a4c, 0xac820000, 0xffff0000},
-+	{0x0a54, 0xc0000000, 0xff000000},
-+	{0x0a58, 0x00001441, 0x0000ffff},
-+	{0x0a84, 0x00000301, 0x0000ffff},
-+	{0x0a8c, 0x81030000, 0xffff0000},
-+	{0x0a90, 0x00006001, 0x0000ffff},
-+	{0x0a94, 0x01000000, 0xff000000},
-+	{0x0aa0, 0x81000000, 0xff000000},
-+	{0x0abc, 0xff000000, 0xff000000},
-+	{0x0ac0, 0x0000008b, 0x000000ff},
-+
-+	/* common clock configuration */
-+	{0x0000, 0x00000003, 0x000000ff},
-+
-+	/* Common Lane configurations */
-+	{0x0a00, 0x0000009f, 0x000000ff},
-+	{0x0a44, 0x5f733d00, 0xffffff00},
-+	{0x0a48, 0x00fdca00, 0x00ffff00},
-+	{0x0a5c, 0x00000000, 0xffff0000},
-+	{0x0a60, 0x00008000, 0xffffffff},
-+	{0x0a64, 0x0c581220, 0xffffffff},
-+	{0x0a68, 0xe13b0602, 0xffffffff},
-+	{0x0a6c, 0xb8074cc1, 0xffffffff},
-+	{0x0a70, 0x3f02e989, 0xffffffff},
-+	{0x0a74, 0x00000001, 0x000000ff},
-+	{0x0b14, 0x00370000, 0x00ff0000},
-+	{0x0b10, 0x37000000, 0xff000000},
-+	{0x0b14, 0x0000005d, 0x000000ff},
-+};
-+
-+static int ks_serdes_phy_init(struct phy *phy)
-+{
-+	struct serdes_config *p;
-+	struct phy_serdes_keystone *ks_phy = phy_get_drvdata(phy);
-+
-+	int i;
-+
-+	for (i = 0, p = &ks_100mhz_5gbps_serdes[0];
-+		i < ARRAY_SIZE(ks_100mhz_5gbps_serdes);
-+		i++, p++) {
-+		reg_rmw((ks_phy->base + p->reg), p->val, p->mask);
-+		reg_dump((ks_phy->base + p->reg), p->mask);
-+	}
-+	msleep(20);
-+
-+	return 0;
-+}
-+
-+static struct phy_ops ks_serdes_phy_ops = {
-+	.init		= ks_serdes_phy_init,
-+	.owner		= THIS_MODULE,
-+};
-+
-+static int ks_serdes_phy_probe(struct platform_device *pdev)
-+{
-+	struct phy_provider *phy_provider;
-+	struct device *dev = &pdev->dev;
-+	struct phy_serdes_keystone *ks_phy;
-+	struct phy *phy;
-+	struct resource *res;
-+
-+	ks_phy = devm_kzalloc(dev, sizeof(*ks_phy), GFP_KERNEL);
-+	if (!ks_phy)
-+		return -ENOMEM;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "reg_serdes");
-+	ks_phy->base = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(ks_phy->base))
-+		return PTR_ERR(ks_phy->base);
-+
-+	ks_phy->dev = dev;
-+	phy = devm_phy_create(dev, &ks_serdes_phy_ops, NULL);
-+	if (IS_ERR(phy))
-+		return PTR_ERR(phy);
-+
-+	phy_set_drvdata(phy, ks_phy);
-+	phy_provider = devm_of_phy_provider_register(ks_phy->dev,
-+				of_phy_simple_xlate);
-+
-+	if (IS_ERR(phy_provider))
-+		return PTR_ERR(phy_provider);
-+
-+	dev_info(dev, "keystone SerDes Phy initialized\n");
-+	return 0;
-+}
-+
-+static const struct of_device_id ks_serdes_phy_of_match[] = {
-+	{ .compatible = "ti,keystone-serdes-phy" },
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(of, ks_serdes_phy_of_match);
-+
-+static struct platform_driver ks_serdes_phy_driver = {
-+	.probe	= ks_serdes_phy_probe,
-+	.driver = {
-+		.of_match_table	= ks_serdes_phy_of_match,
-+		.name  = "ti,keystone-serdes-phy",
-+		.owner = THIS_MODULE,
-+	}
-+};
-+module_platform_driver(ks_serdes_phy_driver);
-+
-+MODULE_DESCRIPTION("TI Keystone SerDes PHY driver");
-+MODULE_LICENSE("GPL V2");
-+MODULE_AUTHOR("Murali Karicheri <m-karicheri2@ti.com>");
--- 
-1.7.9.5
-
+> For device drivers, they always process interrupt in two steps.
+> If irq is the legacy interrupt, drivers will first
+> use the irq_of_parse_and_map() or pci_enable_device() to parse and get the IRQ number.
+> Then drivers will call the request_irq() to register the interrupt handler.
+> If irq is MSIs, first call pci_enable_msi/x() to get the IRQ number and then call
+> request_irq() to register interrupt handler.
+> 
+>> I wonder if we can do the interface in a way that
+>> hides the interrupt number from generic device drivers and just
+>> passes a 'struct irq_desc'. Note that there are long-term plans to
+>> get rid of IRQ numbers entirely, but those plans have existed for
+>> a long time already without anybody seriously addressing the device
+>> driver interfaces so far, so it might never really happen.
+>>
+> 
+> Maybe this is a huge work, now hundreds drivers use the IRQ number, so maybe we can consider
+> this in a separate title.
+> 
+>>> struct msi_ops {
+>>>         struct msi_desc *(*msi_setup_entry)(struct msi_irqs *msi, struct msi_desc *entry);
+>>>         int msix_setup_entries(struct msi_irqs *msi, struct msix_entry *entries);
+>>>         u32 (*msi_mask_irq)(struct msi_desc *desc, u32 mask, u32 flag);
+>>>         u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
+>>>         void (*msi_read_message)(struct msi_desc *desc, struct msi_msg *msg);
+>>>         void (*msi_write_message)(struct msi_desc *desc, struct msi_msg *msg);
+>>>         void (*msi_set_intx)(struct msi_irqs *msi, int enable);
+>>> };
+>>> struct msi_ops provides several hook functions, generic MSI driver will call
+>>> the hook functions to access device specific registers. PCI devices will share
+>>> the same msi_ops, because they have the same way to access MSI hardware registers.
+>>>
+>>> Generic MSI layer export msi_capability_init() and msix_capability_init() functions
+>>> to drivers. msi/x_capability_init() will initialize MSI capability data struct msi_desc
+>>> and alloc the irq, then write the msi address/data value to hardware registers.
+>>>
+>>> This series only did compile test, we will test it in x86 and arm platform later.
+>>
+>> For the generic drivers, I don't see much point in differentiating between
+>> MSI and MSI-X, as I believe the difference is something internal to the PCI
+>> implementation.
+> 
+> Yes, we can integrate them, and use a generic ops, add a type in hook function to
+> differentiate them.
+> 
+>>
+>> With the other operations, I think they should all take a 'struct device *'
+>> as the first argument for convenience and consistency. I don't think you actually
+>> need msi_read_message(), and we could avoid msi_write_message() by doing it
+>> the other way round.
+>>
+> 
+> There only two functions use the read_msi_msg(), because every msi_desc has
+> a struct msi_msg, and it caches the msi address and data. I will consider to
+> retrieve the msg from cached msi_msg, then we can avoid the msi_read_message().
+> But msi_write_message() maybe necessary, some xxx_set_affinity() functions and
+> restore functions need the msi_write_message() to rewrite the address and data.
+> 
+>> What I'd envision as the API from the device driver perspective is something
+>> as simple like this:
+>>
+>> struct msi_desc *msi_request(struct msi_chip *chip, irq_handler_t handler,
+>> 			unsigned long flags, const char *name, struct device *dev);
+>>
+>> which would get an msi descriptor that is valid for this device (dev)
+>> connected to a particular msi_chip, and associate a handler function
+>> with it. The device driver can call that function and retrieve the
+>> address/message pair from the msi_desc in order to store it in its own
+>> device specific registers. The request_irq() can be handled internally
+>> to msi_request().
+> 
+> This is a huge change for device drivers, and some device drivers don't know which msi_chip
+> their MSI irq deliver to. I'm reworking the msi_chip, and try to use msi_chip to eliminate
+> all arch_msi_xxx() under every arch in kernel. And the important point is how to create the
+> binding for the MSI device to the target msi_chip.
+> 
+> For PCI device, some arm platform already bound the msi_chip to the pci hostbridge, then all
+> pci devices under the pci hostbridge deliver their MSI irqs to the target msi_chip.
+> And other platform create the binding in DTS file, then the MSI device can find their msi_chip
+> by device_node.
+> I don't know whether there are other situations, we should provide a generic interface that
+> every MSI device under every platform can use it to find its msi_chip exactly.
+> 
+> 
+> Thanks!
+> Yijing.
+> 
+>>
+>> .
+>>
+> 
+> 
