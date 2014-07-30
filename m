@@ -1,135 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:39982 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932401AbaGQOS1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jul 2014 10:18:27 -0400
-Message-ID: <1405605306.12800.7.camel@weser.hi.pengutronix.de>
-Subject: Re: The imx6q suspend/resume is broken on 3.16-rc due to PCIe
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Shawn Guo <shawn.guo@freescale.com>
-Cc: Richard Zhu <r65037@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Fabio Estevam <festevam@gmail.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-In-Reply-To: <20140716065505.GB2612@dragon>
-References: <20140625062243.GD3242@dragon>
-	 <CAOMZO5BuOhWo7SCEPFmNRUQBi=5JhDrVv0yvBQM2d_jMyLkbyw@mail.gmail.com>
-	 <1403693452.4249.1.camel@weser.hi.pengutronix.de>
-	 <20140625125306.GB6917@dragon>
-	 <1403772229.4254.4.camel@weser.hi.pengutronix.de>
-	 <20140628143712.GA7869@dragon>
-	 <1404135864.4305.23.camel@weser.hi.pengutronix.de>
-	 <20140701065105.GE14471@dragon>
-	 <1404724251.4587.20.camel@weser.hi.pengutronix.de>
-	 <20140707135502.GR30239@dragon> <20140716065505.GB2612@dragon>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 17 Jul 2014 15:55:06 +0200
-Mime-Version: 1.0
+Received: from mail-qg0-f48.google.com ([209.85.192.48]:43403 "EHLO
+	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932084AbaG3G0b (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jul 2014 02:26:31 -0400
+Received: by mail-qg0-f48.google.com with SMTP id i50so891778qgf.21
+        for <linux-pci@vger.kernel.org>; Tue, 29 Jul 2014 23:26:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1406621877-12022-1-git-send-email-wangyijing@huawei.com>
+References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com>
+Date: Wed, 30 Jul 2014 14:26:30 +0800
+Message-ID: <CABawtvP1sviOZynf2N43ORDF-mPHX9PrcsXSmxKqv4_V9QpnsQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+From: Ethan Zhao <ethan.kernel@gmail.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	"<keith.busch@intel.com>" <keith.busch@intel.com>,
+	"<jon.mason@intel.com>" <jon.mason@intel.com>,
+	Jon Mason <jdmason@kudzu.us>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Shawn,
+On Tue, Jul 29, 2014 at 4:17 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> Currently we don't update device's mps value when doing
+> pci device hot-add. The hot-added device's mps will be set
+> to default value (128B). But the upstream port device's mps
+> may be larger than 128B which was set by firmware during
+> system bootup. In this case the new added device may not
+> work normally. This issue was found in huawei 5885 server
+> and Dell R620 server. And if we run the platform with windows,
+> this problem is gone. This patch try to update the hot added
+> device mps equal to its parent mps, if device mpss < parent mps,
+> print warning.
+>
+> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
 
-Am Mittwoch, den 16.07.2014, 14:55 +0800 schrieb Shawn Guo:
-> On Mon, Jul 07, 2014 at 09:55:03PM +0800, Shawn Guo wrote:
-> > On Mon, Jul 07, 2014 at 11:10:51AM +0200, Lucas Stach wrote:
-> > > Hi Shawn,
-> > > 
-> > > Over the weekend I tried to reproduce your problem on a SabreSD board,
-> > > but wasn't able to trigger the issue. 3.16-rc3 with PCIe active works
-> > > just fine over a suspend and resume cycle for me.
-> > 
-> > That's strange.  In my setup, PCIe support is enabled in kernel and DT,
-> > but I do not have a PCIe device connected to the board.
-> > 
-> > > 
-> > > One possibly relevant difference is that I've booted with NFSroot, while
-> > > it seems you are using a SATA connected device. Is this right?
-> > 
-> > I have a SATA disk connected, but did boot with NFSroot.
-> > 
-> > > If so,
-> > > can you test if it works if you boot from SDcard or the like? This might
-> > > be relevant as PCIe and SATA share some clocks.
-> > 
-> > I tried to disable SATA support completely, but it doesn't help.
-> 
-> Lucas, any news on this?  Or should we just try to use Richard's patch
-> to solve the problem?
+http://marc.info/?l=e1000-devel&m=134182518500774&w=2
 
-I would like to understand the problem first before throwing "fixes" at
-the issue. As you said this isn't a regression we are in no hurry and
-should try to analyze the issue properly. I just retested and I'm still
-not able to reproduce the issue on my SabreSD. Maybe there are board
-revision that exhibit different behavior? My board has two sticks on
-saying "Rev B3" and "Rev X3".
+The bug was reported by Joe.jin@oracle.com. the related hardware
+is SUN FIRE X2270 M2, it is not a hotplug sever except SAS HDD,
+and the the issue is definitely a BIOS bug. not related to the hotplug
+code path. was fixed by BIOS.
 
-As you can see from the log suspend/resume is working fine for me with
-kernel 3.16-rc5 + imx_v6_v7_defconfig.
+Thanks,
+Ethan
 
-root@XXX:~ echo mem > /sys/power/state
-PM: Syncing filesystems ... done.
-Freezing user space processes ... (elapsed 0.004 seconds) done.
-Freezing remaining freezable tasks ... (elapsed 0.002 seconds) done.
-Suspending console(s) (use no_console_suspend to debug)
-PM: suspend of devices complete after 95.846 msecs
-PM: suspend devices took 0.100 seconds
-PM: late suspend of devices complete after 5.395 msecs
-PM: noirq suspend of devices complete after 4.914 msecs
-Disabling non-boot CPUs ...
-CPU1: shutdown
-CPU2: shutdown
-CPU3: shutdown
-Enabling non-boot CPUs ...
-CPU1: Booted secondary processor
-CPU1 is up
-CPU2: Booted secondary processor
-CPU2 is up
-CPU3: Booted secondary processor
-CPU3 is up
-PM: noirq resume of devices complete after 1556.385 msecs
-PM: early resume of devices complete after 3.134 msecs
-PM: resume of devices complete after 153.568 msecs
-PM: resume devices took 0.160 seconds
-Restarting tasks ... done.
-ata1: SATA link down (SStatus 0 SControl 300)
-fec 2188000.ethernet eth0: Link is Down
-fec 2188000.ethernet eth0: Link is Up - 1Gbps/Full - flow control off
-root@XXX:~ echo mem > /sys/power/state
-PM: Syncing filesystems ... done.
-Freezing user space processes ... (elapsed 0.002 seconds) done.
-Freezing remaining freezable tasks ... (elapsed 0.001 seconds) done.
-Suspending console(s) (use no_console_suspend to debug)
-PM: suspend of devices complete after 87.638 msecs
-PM: suspend devices took 0.090 seconds
-PM: late suspend of devices complete after 4.528 msecs
-PM: noirq suspend of devices complete after 5.031 msecs
-Disabling non-boot CPUs ...
-CPU1: shutdown
-CPU2: shutdown
-CPU3: shutdown
-Enabling non-boot CPUs ...
-CPU1: Booted secondary processor
-CPU1 is up
-CPU2: Booted secondary processor
-CPU2 is up
-CPU3: Booted secondary processor
-CPU3 is up
-PM: noirq resume of devices complete after 1425.302 msecs
-PM: early resume of devices complete after 2.736 msecs
-PM: resume of devices complete after 156.013 msecs
-PM: resume devices took 0.160 seconds
-Restarting tasks ... done.
-ata1: SATA link down (SStatus 0 SControl 300)
-fec 2188000.ethernet eth0: Link is Down
-fec 2188000.ethernet eth0: Link is Up - 1Gbps/Full - flow control off
-root@XXX:~
-
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
-
+> Reported-by: Keith Busch <keith.busch@intel.com>
+> Reported-by: Jordan_Hargrave@Dell.com
+> Reported-by: Yijing Wang <wangyijing@huawei.com>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Cc: Jon Mason <jdmason@kudzu.us>
+> ---
+>  drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
+>  1 files changed, 39 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index e3cf8a2..583ca52 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1613,6 +1613,44 @@ static void pcie_write_mrrs(struct pci_dev *dev)
+>                 dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If problems are experienced, try running with pci=pcie_bus_safe\n");
+>  }
+>
+> +/**
+> + * pcie_bus_update_set - update device mps when device doing hot-add
+> + * @dev: PCI device to set
+> + *
+> + * After device hot add, mps will be set to default(128B), But the
+> + * upstream port device's mps may be larger than 128B which was set
+> + * by firmware during system bootup. Then we should update the device
+> + * mps to equal to its parent mps, Or the device can not work normally.
+> + */
+> +static void pcie_bus_update_set(struct pci_dev *dev)
+> +{
+> +       int mps, p_mps, mpss;
+> +       struct pci_dev *parent;
+> +
+> +       if (!pci_is_pcie(dev) || !dev->bus->self
+> +                       || !dev->bus->self->is_hotplug_bridge)
+> +               return;
+> +
+> +       parent = dev->bus->self;
+> +       mps = pcie_get_mps(dev);
+> +       p_mps = pcie_get_mps(parent);
+> +
+> +       if (mps >= p_mps)
+> +               return;
+> +
+> +       mpss = 128 << dev->pcie_mpss;
+> +       if (mpss < p_mps) {
+> +               dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
+> +                               "If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
+> +                               mpss, p_mps);
+> +               return;
+> +       }
+> +
+> +       pcie_write_mps(dev, p_mps);
+> +       dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n",
+> +                       pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
+> +}
+> +
+>  static void pcie_bus_detect_mps(struct pci_dev *dev)
+>  {
+>         struct pci_dev *bridge = dev->bus->self;
+> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+>                 return 0;
+>
+>         if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
+> +               pcie_bus_update_set(dev);
+>                 pcie_bus_detect_mps(dev);
+>                 return 0;
+>         }
+> --
+> 1.7.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
