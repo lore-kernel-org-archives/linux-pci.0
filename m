@@ -1,103 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:38118 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933520AbaGQPN0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 Jul 2014 11:13:26 -0400
-Message-ID: <53C7E78A.8080604@ti.com>
-Date: Thu, 17 Jul 2014 11:11:06 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from mail-qg0-f53.google.com ([209.85.192.53]:61618 "EHLO
+	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750782AbaG3Iio (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jul 2014 04:38:44 -0400
+Received: by mail-qg0-f53.google.com with SMTP id q107so1067197qgd.12
+        for <linux-pci@vger.kernel.org>; Wed, 30 Jul 2014 01:38:43 -0700 (PDT)
 MIME-Version: 1.0
-To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-CC: "Jingoo Han (jg1.han@samsung.com)" <jg1.han@samsung.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Pratyush ANAND <pratyush.anand@st.com>
-Subject: Re: [PATCH v5 3/5] PCI: designware: enhance dw_pcie_host_init() to
- support v3.65 DW hardware
-References: <1405528686-16539-1-git-send-email-m-karicheri2@ti.com> <1405528686-16539-4-git-send-email-m-karicheri2@ti.com> <20140717033638.GI12278@pratyush-vbox> <2CC2A0A4A178534D93D5159BF3BCB661A47A2A83BB@EAPEX1MAIL1.st.com>
-In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB661A47A2A83BB@EAPEX1MAIL1.st.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+In-Reply-To: <53D8A942.80008@huawei.com>
+References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com>
+	<CABawtvP1sviOZynf2N43ORDF-mPHX9PrcsXSmxKqv4_V9QpnsQ@mail.gmail.com>
+	<53D89754.3010704@huawei.com>
+	<CABawtvMg1gUpCr5rpFzKfUVD=Ai06Rpi4XVOvzARb2tYk+HXsw@mail.gmail.com>
+	<53D8A942.80008@huawei.com>
+Date: Wed, 30 Jul 2014 16:38:43 +0800
+Message-ID: <CABawtvNkodcdxOJ-T=eV8W_AtVV8AMeOi+9016-6DN_hRfrbTA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+From: Ethan Zhao <ethan.kernel@gmail.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	"<keith.busch@intel.com>" <keith.busch@intel.com>,
+	Jon Mason <jdmason@kudzu.us>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/17/2014 12:18 AM, Mohit KUMAR DCG wrote:
->
->
->> -----Original Message-----
->> From: Pratyush ANAND
->> Sent: Thursday, July 17, 2014 9:07 AM
->> To: Murali Karicheri
->> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-arm-
->> kernel@lists.infradead.org; Santosh Shilimkar; Russell King; Grant Likely; Rob
->> Herring; Mohit KUMAR DCG; Jingoo Han; Bjorn Helgaas; Richard Zhu; Kishon
->> Vijay Abraham I; Marek Vasut; Arnd Bergmann; Pawel Moll; Mark Rutland;
->> Ian Campbell; Kumar Gala; Randy Dunlap
->> Subject: Re: [PATCH v5 3/5] PCI: designware: enhance dw_pcie_host_init()
->> to support v3.65 DW hardware
->>
->> On Thu, Jul 17, 2014 at 12:38:04AM +0800, Murali Karicheri wrote:
->>> keystone PCI controller is based on v3.65 designware hardware. This
->>> version differs from newer versions of the hardware in few functional
->>> areas discussed below that makes it necessary to change
->>> dw_pcie_host_init() to support v3.65 based PCI controller.
+On Wed, Jul 30, 2014 at 4:13 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>> Yes, that issue is BIOS bug, the mps setting is wrong after system boot up.
+>>> But that issue is not same as this one, Keith and Jordan found the issue
+>>> after hot-plug. And my patch only modify the hotplug slot connected device.
 >>>
->>>   1. No support for ATU port. So any ATU specific resource handling code
->>>      is to be bypassed for v3.65 h/w.
->>>   2. MSI controller uses Application space to implement MSI and 32 MSI
->>>      interrupts are multiplexed over 8 IRQs to the host. Hence the code
->>>      to process MSI IRQ needs to be different. This patch allows platform
->>>      driver to provide its own irq_domain_ops ptr to irq_domain_add_linear()
->>>      through an API callback from the designware core driver.
->>>   3. MSI interrupt generation requires EP to write to the RC's application
->>>      register. So enhance the driver to allow setup of inbound access to
->>>      MSI irq register as a post scan bus API callback.
+>>> In my idea, make the device work is important, because these platforms with windows
+>>> can run happy, why linux leave this issue to BIOS.
+>>
+>>    That is a reason to make it works with Linux, but does your
+>> platform have _HPX from ACPI for those hot-added back devices ?  if it
+>> has, maybe windows could apply _HPX to configure those devices and
+>> work well.
+>>
+>
+> I checked DSDT table exported from my server, but no "_HPX" found.
+
+You might check the wrong place...
+
+> Further more, kernel use pciehp first to support pcie hotplug device. And in pciehp,
+> driver won't touch ACPI methods like "_HPX".
+
+That is not true, please read the code in pciehp_pci.c
+
+ pciehp_configure_device()
+    pci_configure_slot()
+       pci_get_hp_params()
+           acpi_run_hpx()
+               acpi_evaluate_object(handle, "_HPX",...)
+ ...
+
+Native pciehp also does acpi parameter importing ... ...
+
+Thank,s
+Ethan
+
+>
+> Thanks!
+> Yijing.
+>
 >>>
->>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>>>>
+>>>>> Reported-by: Keith Busch <keith.busch@intel.com>
+>>>>> Reported-by: Jordan_Hargrave@Dell.com
+>>>>> Reported-by: Yijing Wang <wangyijing@huawei.com>
+>>>>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>>>>> Cc: Jon Mason <jdmason@kudzu.us>
+>>>>> ---
+>>>>>  drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
+>>>>>  1 files changed, 39 insertions(+), 0 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>>>> index e3cf8a2..583ca52 100644
+>>>>> --- a/drivers/pci/probe.c
+>>>>> +++ b/drivers/pci/probe.c
+>>>>> @@ -1613,6 +1613,44 @@ static void pcie_write_mrrs(struct pci_dev *dev)
+>>>>>                 dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If problems are experienced, try running with pci=pcie_bus_safe\n");
+>>>>>  }
+>>>>>
+>>>>> +/**
+>>>>> + * pcie_bus_update_set - update device mps when device doing hot-add
+>>>>> + * @dev: PCI device to set
+>>>>> + *
+>>>>> + * After device hot add, mps will be set to default(128B), But the
+>>>>> + * upstream port device's mps may be larger than 128B which was set
+>>>>> + * by firmware during system bootup. Then we should update the device
+>>>>> + * mps to equal to its parent mps, Or the device can not work normally.
+>>>>> + */
+>>>>> +static void pcie_bus_update_set(struct pci_dev *dev)
+>>>>> +{
+>>>>> +       int mps, p_mps, mpss;
+>>>>> +       struct pci_dev *parent;
+>>>>> +
+>>>>> +       if (!pci_is_pcie(dev) || !dev->bus->self
+>>>>> +                       || !dev->bus->self->is_hotplug_bridge)
+>>>>> +               return;
+>>>>> +
+>>>>> +       parent = dev->bus->self;
+>>>>> +       mps = pcie_get_mps(dev);
+>>>>> +       p_mps = pcie_get_mps(parent);
+>>>>> +
+>>>>> +       if (mps >= p_mps)
+>>>>> +               return;
+>>>>> +
+>>>>> +       mpss = 128 << dev->pcie_mpss;
+>>>>> +       if (mpss < p_mps) {
+>>>>> +               dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
+>>>>> +                               "If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
+>>>>> +                               mpss, p_mps);
+>>>>> +               return;
+>>>>> +       }
+>>>>> +
+>>>>> +       pcie_write_mps(dev, p_mps);
+>>>>> +       dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n",
+>>>>> +                       pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
+>>>>> +}
+>>>>> +
+>>>>>  static void pcie_bus_detect_mps(struct pci_dev *dev)
+>>>>>  {
+>>>>>         struct pci_dev *bridge = dev->bus->self;
+>>>>> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+>>>>>                 return 0;
+>>>>>
+>>>>>         if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
+>>>>> +               pcie_bus_update_set(dev);
+>>>>>                 pcie_bus_detect_mps(dev);
+>>>>>                 return 0;
+>>>>>         }
+>>>>> --
+>>>>> 1.7.1
+>>>>>
+>>>>> --
+>>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>
+>>>> .
+>>>>
+>>>
+>>>
+>>> --
+>>> Thanks!
+>>> Yijing
+>>>
 >>
->> Looks almost ok to me.
->>
->> Reviewed-by: Pratyush Anand<pratyush.anand@st.com>
+>> .
 >>
 >
-> - Now looks fine to me.
 >
-> Acked-by: Mohit KUMAR<mohit.kumar@st.com>
+> --
+> Thanks!
+> Yijing
 >
-> Jingoo,
-> After Murali's patches,  dw code can be used by  older Synopsys controller based driver too.
-> Pls have a look at the series if you have any further comment.
->
-> Thanks
-> Mohit
-
-Mohit,
-
-Thanks for the review and Ack.
-
-Murali
->
->>>   int __init dw_pcie_host_init(struct pcie_port *pp)  {
->>>   	struct device_node *np = pp->dev->of_node;
->>> -	struct of_pci_range range;
->>>   	struct of_pci_range_parser parser;
->>> +	struct of_pci_range range;
->>
->> You may avoid moving the above line.
->>
->> ~Pratyush
-
