@@ -1,95 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:32996 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751738AbaGUBob (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Jul 2014 21:44:31 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Murali Karicheri' <m-karicheri2@ti.com>,
-	'Rob Herring' <robherring2@gmail.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	'Russell King' <linux@arm.linux.org.uk>,
-	'Grant Likely' <grant.likely@linaro.org>,
-	'Rob Herring' <robh+dt@kernel.org>,
-	'Mohit Kumar' <mohit.kumar@st.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Marek Vasut' <marex@denx.de>, 'Arnd Bergmann' <arnd@arndb.de>,
-	'Pawel Moll' <pawel.moll@arm.com>,
-	'Mark Rutland' <mark.rutland@arm.com>,
-	'Ian Campbell' <ijc+devicetree@hellion.org.uk>,
-	'Kumar Gala' <galak@codeaurora.org>,
-	'Randy Dunlap' <rdunlap@infradead.org>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com>
- <1405696469-7172-5-git-send-email-m-karicheri2@ti.com>
- <CAL_JsqKheoWrSGtxPO=AE8g9iOAqfwRa=81Ku=Cfx8_gpDysOg@mail.gmail.com>
- <53C9839C.5090604@ti.com>
-In-reply-to: <53C9839C.5090604@ti.com>
-Subject: Re: [PATCH v6 4/5] PCI: add PCI controller for keystone PCIe h/w
-Date: Mon, 21 Jul 2014 10:44:28 +0900
-Message-id: <006001cfa485$4f4fcff0$edef6fd0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=UTF-8
+Received: from mail-qa0-f48.google.com ([209.85.216.48]:39617 "EHLO
+	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753918AbaG3Ddj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 23:33:39 -0400
+Received: by mail-qa0-f48.google.com with SMTP id m5so670857qaj.7
+        for <linux-pci@vger.kernel.org>; Tue, 29 Jul 2014 20:33:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1406621877-12022-1-git-send-email-wangyijing@huawei.com>
+References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com>
+Date: Wed, 30 Jul 2014 11:33:38 +0800
+Message-ID: <CABawtvNAOm1VuLnN6vvwH1RtetYk-cu7VnQ6MCtJ4WVufBh2hw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+From: Ethan Zhao <ethan.kernel@gmail.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>, Jordan_Hargrave@dell.com,
+	keith.busch@intel.com, jon.mason@intel.com,
+	Jon Mason <jdmason@kudzu.us>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, July 19, 2014 5:29 AM, Murali Karicheri wrote:
-> On 07/18/2014 03:31 PM, Rob Herring wrote:
-> > On Fri, Jul 18, 2014 at 10:14 AM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
-> --- Cut ---
-> >> +
-> >> +Optional properties:-
-> >> +       phys: phandle to Generic Keystone SerDes phy for PCI
-> >> +       phy-names: name of the Generic Keystine SerDes phy for PCI
-> >> +         - If boot loader already does PCI link establishment, then phys and
-> >> +           phy-names shouldn't be present.
-> >> +       ti,enable-linktrain - Enable Link training.
-> >> +         - If boot loader already does PCI link establishment, then this
-> >> +           shouldn't be present.
-> >
-> > Can't you read from the h/w if the link is trained?
+Yijing,
+    Seems you want to workaround platform bug in generic PCIe hotplug
+code, while not specific to some platforms or devices, that is not
+safe/fair to other vendor's platform.
+and the updating to MPS of device is out of PCIe specification.
+    So the best way is to fix within platform, at least, any platform
+specific way in Linux code.
 
-I agree with Rob Herring's suggestion.
+Thanks,
+Ethan
 
-> 
-> Yes.
-> 
-> There are customers who use this driver with PCI Link setup done in the
-> boot loader. This property tells the driver to bypass Link setup
-> procedure in that case. Is this undesirable and if so. how other
-> platforms handle it? Check first if link is trained or start the link
-> setup procedure? Let me know. If this is fine, please provide your Ack.
-
-Please, check the following code of Exynos PCIe diver.
-
-./drivers/pci/host/pci-exynos.c
-
-static int exynos_pcie_establish_link(struct pcie_port *pp)
-{
-	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
-	void __iomem *elbi_base = exynos_pcie->elbi_base;
-	void __iomem *pmu_base = exynos_pcie->pmu_base;
-
-	if (dw_pcie_link_up(pp)) {
-		dev_err(pp->dev, "Link already up\n");
-		return 0;
-	}
-	.....
-
-In the case of Exynos PCIe, the Exynos PCIe driver checks the
-h/w bit such as PCIE_ELBI_LTSSM_ENABLE bit of PCIE_ELBI_RDLH_LINKUP
-offset register.
-
-If the link is already set up by the boot loader or other reasons,
-the driver will skip some initialization codes.
-
-The first step is that you find such h/w bit for checking link up.
-If so, please add the code for skipping, when the link is already
-set up.
-
-Best regards,
-Jingoo Han
-
+On Tue, Jul 29, 2014 at 4:17 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> Currently we don't update device's mps value when doing
+> pci device hot-add. The hot-added device's mps will be set
+> to default value (128B). But the upstream port device's mps
+> may be larger than 128B which was set by firmware during
+> system bootup. In this case the new added device may not
+> work normally. This issue was found in huawei 5885 server
+> and Dell R620 server. And if we run the platform with windows,
+> this problem is gone. This patch try to update the hot added
+> device mps equal to its parent mps, if device mpss < parent mps,
+> print warning.
+>
+> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+> Reported-by: Keith Busch <keith.busch@intel.com>
+> Reported-by: Jordan_Hargrave@Dell.com
+> Reported-by: Yijing Wang <wangyijing@huawei.com>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Cc: Jon Mason <jdmason@kudzu.us>
+> ---
+>  drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
+>  1 files changed, 39 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index e3cf8a2..583ca52 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1613,6 +1613,44 @@ static void pcie_write_mrrs(struct pci_dev *dev)
+>                 dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If problems are experienced, try running with pci=pcie_bus_safe\n");
+>  }
+>
+> +/**
+> + * pcie_bus_update_set - update device mps when device doing hot-add
+> + * @dev: PCI device to set
+> + *
+> + * After device hot add, mps will be set to default(128B), But the
+> + * upstream port device's mps may be larger than 128B which was set
+> + * by firmware during system bootup. Then we should update the device
+> + * mps to equal to its parent mps, Or the device can not work normally.
+> + */
+> +static void pcie_bus_update_set(struct pci_dev *dev)
+> +{
+> +       int mps, p_mps, mpss;
+> +       struct pci_dev *parent;
+> +
+> +       if (!pci_is_pcie(dev) || !dev->bus->self
+> +                       || !dev->bus->self->is_hotplug_bridge)
+> +               return;
+> +
+> +       parent = dev->bus->self;
+> +       mps = pcie_get_mps(dev);
+> +       p_mps = pcie_get_mps(parent);
+> +
+> +       if (mps >= p_mps)
+> +               return;
+> +
+> +       mpss = 128 << dev->pcie_mpss;
+> +       if (mpss < p_mps) {
+> +               dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
+> +                               "If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
+> +                               mpss, p_mps);
+> +               return;
+> +       }
+> +
+> +       pcie_write_mps(dev, p_mps);
+> +       dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n",
+> +                       pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
+> +}
+> +
+>  static void pcie_bus_detect_mps(struct pci_dev *dev)
+>  {
+>         struct pci_dev *bridge = dev->bus->self;
+> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+>                 return 0;
+>
+>         if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
+> +               pcie_bus_update_set(dev);
+>                 pcie_bus_detect_mps(dev);
+>                 return 0;
+>         }
+> --
+> 1.7.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
