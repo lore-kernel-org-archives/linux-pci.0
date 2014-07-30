@@ -1,103 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:57173 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932412AbaGUQlQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jul 2014 12:41:16 -0400
-Message-ID: <53CD424B.1090806@ti.com>
-Date: Mon, 21 Jul 2014 12:39:39 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:33416 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751230AbaG3UFz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Jul 2014 16:05:55 -0400
+Date: Wed, 30 Jul 2014 14:05:13 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Marek Vasut <marex@denx.de>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	linux-pci@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>,
+	linux-kernel@vger.kernel.org,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v7 4/5] PCI: add PCI controller for keystone PCIe h/w
+Message-ID: <20140730200513.GA11918@obsidianresearch.com>
+References: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com>
+ <1405961925-27248-5-git-send-email-m-karicheri2@ti.com>
+ <20140722223527.GA27965@google.com>
+ <53CEEB1C.9020202@ti.com>
+ <20140722235200.GC27965@google.com>
+ <20140723174228.GB11270@obsidianresearch.com>
+ <53D948D4.6080603@ti.com>
 MIME-Version: 1.0
-To: Jingoo Han <jg1.han@samsung.com>
-CC: "'Rob Herring'" <robherring2@gmail.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	"'Russell King'" <linux@arm.linux.org.uk>,
-	"'Grant Likely'" <grant.likely@linaro.org>,
-	"'Rob Herring'" <robh+dt@kernel.org>,
-	"'Mohit Kumar'" <mohit.kumar@st.com>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Pratyush Anand'" <pratyush.anand@st.com>,
-	"'Richard Zhu'" <r65037@freescale.com>,
-	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
-	"'Marek Vasut'" <marex@denx.de>, "'Arnd Bergmann'" <arnd@arndb.de>,
-	"'Pawel Moll'" <pawel.moll@arm.com>,
-	"'Mark Rutland'" <mark.rutland@arm.com>,
-	"'Ian Campbell'" <ijc+devicetree@hellion.org.uk>,
-	"'Kumar Gala'" <galak@codeaurora.org>,
-	"'Randy Dunlap'" <rdunlap@infradead.org>
-Subject: Re: [PATCH v6 4/5] PCI: add PCI controller for keystone PCIe h/w
-References: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com> <1405696469-7172-5-git-send-email-m-karicheri2@ti.com> <CAL_JsqKheoWrSGtxPO=AE8g9iOAqfwRa=81Ku=Cfx8_gpDysOg@mail.gmail.com> <53C9839C.5090604@ti.com> <006001cfa485$4f4fcff0$edef6fd0$%han@samsung.com>
-In-Reply-To: <006001cfa485$4f4fcff0$edef6fd0$%han@samsung.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <53D948D4.6080603@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/20/2014 09:44 PM, Jingoo Han wrote:
-> On Saturday, July 19, 2014 5:29 AM, Murali Karicheri wrote:
->> On 07/18/2014 03:31 PM, Rob Herring wrote:
->>> On Fri, Jul 18, 2014 at 10:14 AM, Murali Karicheri<m-karicheri2@ti.com>   wrote:
->> --- Cut ---
->>>> +
->>>> +Optional properties:-
->>>> +       phys: phandle to Generic Keystone SerDes phy for PCI
->>>> +       phy-names: name of the Generic Keystine SerDes phy for PCI
->>>> +         - If boot loader already does PCI link establishment, then phys and
->>>> +           phy-names shouldn't be present.
->>>> +       ti,enable-linktrain - Enable Link training.
->>>> +         - If boot loader already does PCI link establishment, then this
->>>> +           shouldn't be present.
->>>
->>> Can't you read from the h/w if the link is trained?
->
-> I agree with Rob Herring's suggestion.
->
->>
->> Yes.
->>
->> There are customers who use this driver with PCI Link setup done in the
->> boot loader. This property tells the driver to bypass Link setup
->> procedure in that case. Is this undesirable and if so. how other
->> platforms handle it? Check first if link is trained or start the link
->> setup procedure? Let me know. If this is fine, please provide your Ack.
->
-> Please, check the following code of Exynos PCIe diver.
->
-> ./drivers/pci/host/pci-exynos.c
->
-> static int exynos_pcie_establish_link(struct pcie_port *pp)
-> {
-> 	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
-> 	void __iomem *elbi_base = exynos_pcie->elbi_base;
-> 	void __iomem *pmu_base = exynos_pcie->pmu_base;
->
-> 	if (dw_pcie_link_up(pp)) {
-> 		dev_err(pp->dev, "Link already up\n");
-> 		return 0;
-> 	}
-> 	.....
->
-> In the case of Exynos PCIe, the Exynos PCIe driver checks the
-> h/w bit such as PCIE_ELBI_LTSSM_ENABLE bit of PCIE_ELBI_RDLH_LINKUP
-> offset register.
->
-> If the link is already set up by the boot loader or other reasons,
-> the driver will skip some initialization codes.
->
-> The first step is that you find such h/w bit for checking link up.
-> If so, please add the code for skipping, when the link is already
-> set up.
->
-Rob, Jingoo,
+On Wed, Jul 30, 2014 at 03:34:44PM -0400, Murali Karicheri wrote:
 
-We have similar bit to check for Link status and I have removed the DT 
-property and skip Link retrain if PCIe Link is already Up. I will be 
-resending the series with Patch 4/5 updated.
+> • Maximum remote read request size of 256 bytes
 
-Thanks.
+The PCI spec simply does not permit a completer to impose this
+limitation.
 
-Murali
+See spec 2.3.1.1
 
-> Best regards,
-> Jingoo Han
->
+It is not an option to error a read request because it is too
+long. All requests must be completed. All completions must be segmented
+according to the RCB and Max_Payload_Size.
 
+> completion packets. So it seems to be able to segment up to maximum
+> 256 bytes of read request. Where do I find the requirement in PCI
+> spec that "read response segmentation at the host bridge does not
+> work" ?
+
+You just said it. Segmenting up to only 256 bytes is not a limitation
+the completer can impose. Such a device is non-conformant.
+
+> >So, the only fix is that every downstream device must always have a
+> >MRSS set to less than the MPS of the host bridge.
+> 
+> Why this can't be the default behavior in the PCI core? Any cons?
+
+It increases read request traffic and read response latency on the bus
+for large transfers.
+
+The MRSS is intented as a performance tuning knob, it is not something
+that ever needs to be set properly for correct bus operation.
+
+Jason
