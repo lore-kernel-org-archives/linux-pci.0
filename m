@@ -1,124 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:58680 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751987AbaGJJsD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 05:48:03 -0400
-Date: Thu, 10 Jul 2014 10:47:58 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 6/9] pci: Introduce a domain number for
- pci_host_bridge.
-Message-ID: <20140710094758.GA6501@e106497-lin.cambridge.arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-7-git-send-email-Liviu.Dudau@arm.com>
- <20140708005954.GC22939@google.com>
- <20140708104655.GC6501@e106497-lin.cambridge.arm.com>
- <CAErSpo75ovmGoeSHKJN0nckGDy-0gpn8kLPfHQ79CtcXxhPydw@mail.gmail.com>
- <20140708224847.GC4980@e106497-lin.cambridge.arm.com>
- <CAErSpo5rBt0iF2HGeDD-UH6_sPCoC647VCw0Q1v_0Rdpvcir-w@mail.gmail.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:22128 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754208AbaG3HAE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jul 2014 03:00:04 -0400
+Message-ID: <53D89754.3010704@huawei.com>
+Date: Wed, 30 Jul 2014 14:57:24 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5rBt0iF2HGeDD-UH6_sPCoC647VCw0Q1v_0Rdpvcir-w@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: Ethan Zhao <ethan.kernel@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	"<keith.busch@intel.com>" <keith.busch@intel.com>,
+	"<jon.mason@intel.com>" <jon.mason@intel.com>,
+	Jon Mason <jdmason@kudzu.us>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com> <CABawtvP1sviOZynf2N43ORDF-mPHX9PrcsXSmxKqv4_V9QpnsQ@mail.gmail.com>
+In-Reply-To: <CABawtvP1sviOZynf2N43ORDF-mPHX9PrcsXSmxKqv4_V9QpnsQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 09, 2014 at 04:10:04PM +0100, Bjorn Helgaas wrote:
-> On Tue, Jul 8, 2014 at 4:48 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> > On Tue, Jul 08, 2014 at 07:41:50PM +0100, Bjorn Helgaas wrote:
-> >> On Tue, Jul 8, 2014 at 4:46 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> >> > On Tue, Jul 08, 2014 at 01:59:54AM +0100, Bjorn Helgaas wrote:
-> >>
-> >> >> I wonder if it would help to make a weak pci_domain_nr() function that
-> >> >> returns "bridge->domain_nr".  Then each arch could individually drop its
-> >> >> pci_domain_nr() definition as it was converted, e.g., something like this:
-> >> >>
-> >> >>   - Convert every arch pci_domain_nr() from a #define to a non-inline
-> >> >>     function
-> >> >>   - Add bridge.domain_nr, initialized from pci_domain_nr()
-> >> >>   - Add a weak generic pci_domain_nr() that returns bridge.domain_nr
-> >> >>   - Add a way to create a host bridge in a specified domain, so we can
-> >> >>     initialize bridge.domain_nr without using pci_domain_nr()
-> >> >>   - Convert each arch to use the new creation mechanism and drop its
-> >> >>     pci_domain_nr() implementation
-> >> >
-> >> > I will try to propose a patch implementing this.
-> >>
-> >> I think this is more of an extra credit, cleanup sort of thing.  I
-> >> don't think it advances your primary goal of (I think) getting arm64
-> >> PCI support in.  So my advice is to not worry about unifying domain
-> >> handling until later.
-> >
-> > Getting arm64 supported *is* my main goal. But like you have stated in your
-> > review of v7, you wanted to see another architecture converted as a guarantee
-> > of "genericity" (for lack of a better word) for my patches. The one architecture
-> > I've set my eyes on is microblaze, and that one uses pci_scan_root_bus()
-> > rather than pci_create_root_bus() so I don't have any opportunity to pass the
-> > domain number or any additional info (like the sysdata pointer that we were
-> > talking about) to the pci_host_bridge structure unless I do this cleanup.
+On 2014/7/30 14:26, Ethan Zhao wrote:
+> On Tue, Jul 29, 2014 at 4:17 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> Currently we don't update device's mps value when doing
+>> pci device hot-add. The hot-added device's mps will be set
+>> to default value (128B). But the upstream port device's mps
+>> may be larger than 128B which was set by firmware during
+>> system bootup. In this case the new added device may not
+>> work normally. This issue was found in huawei 5885 server
+>> and Dell R620 server. And if we run the platform with windows,
+>> this problem is gone. This patch try to update the hot added
+>> device mps equal to its parent mps, if device mpss < parent mps,
+>> print warning.
+>>
+>> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
 > 
-> I think maybe I was too harsh about that, or maybe we had different
-> ideas about what "conversion" involved.  My comment was in response to
-> "pci: Introduce pci_register_io_range() helper function", and I don't
-> remember why I was concerned about that; it's not even in drivers/pci,
-> and it doesn't have an obvious connection to putting the domain number
-> in struct pci_host_bridge.
+> http://marc.info/?l=e1000-devel&m=134182518500774&w=2
+> 
+> The bug was reported by Joe.jin@oracle.com. the related hardware
+> is SUN FIRE X2270 M2, it is not a hotplug sever except SAS HDD,
+> and the the issue is definitely a BIOS bug. not related to the hotplug
+> code path. was fixed by BIOS.
+> 
 
-Well, to be honest I did move some of the code (as mentioned in the Changelog) from
-drivers/pci into drivers/of. It makes more sense to be in OF, as it mostly concerns
-architectures that use it.
+Yes, that issue is BIOS bug, the mps setting is wrong after system boot up.
+But that issue is not same as this one, Keith and Jordan found the issue
+after hot-plug. And my patch only modify the hotplug slot connected device.
+
+In my idea, make the device work is important, because these platforms with windows
+can run happy, why linux leave this issue to BIOS.
+
+Anyway, this is my personal opinion.
+
+Thanks!
+Yijing.
 
 > 
-> The thing I'm more concerned about is adding new PCI interfaces, e.g.,
-> pci_create_root_bus_in_domain(), that are only used by one
-> architecture.  Then it's hard to be sure that it's going to be useful
-> for other arches.  If you can add arm64 using the existing PCI
-> interfaces, I don't any problem with that.
-
-(No blame here or reproaches, I'm just restating the situation:) I (mostly) did try
-that in my v7 series but it also got NAK-ed by Arnd and Catalin as it had too much
-arm64 specific code in there.
-
-I don't see a way out of adding new PCI interfaces if we want to have support in
-the PCI framework for unifying existing architectures. Of course, there is the painful
-alternative of changing the existing APIs and fixing arches in one go, but like you've
-said is going to be messy. I don't think I (or the people and companies wanting PCIe
-on arm64) should cop out and pick a quick fix that adds sysdata structure into arm64
-just to avoid new APIs, as this is not going to help anyone in long term. What I can
-do is to create a set of parallel APIs for pci_{scan,create}_root_bus() that take
-a pci_host_bridge pointer and start converting architectures one by one to that API
-while deprecating the existing one. That way we can add arm64 easily as it would be
-the first architecture to use new code without breaking things *and* we provide a
-migration path.
-
-Best regards,
-Liviu
-
+>> Reported-by: Keith Busch <keith.busch@intel.com>
+>> Reported-by: Jordan_Hargrave@Dell.com
+>> Reported-by: Yijing Wang <wangyijing@huawei.com>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> Cc: Jon Mason <jdmason@kudzu.us>
+>> ---
+>>  drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
+>>  1 files changed, 39 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index e3cf8a2..583ca52 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1613,6 +1613,44 @@ static void pcie_write_mrrs(struct pci_dev *dev)
+>>                 dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If problems are experienced, try running with pci=pcie_bus_safe\n");
+>>  }
+>>
+>> +/**
+>> + * pcie_bus_update_set - update device mps when device doing hot-add
+>> + * @dev: PCI device to set
+>> + *
+>> + * After device hot add, mps will be set to default(128B), But the
+>> + * upstream port device's mps may be larger than 128B which was set
+>> + * by firmware during system bootup. Then we should update the device
+>> + * mps to equal to its parent mps, Or the device can not work normally.
+>> + */
+>> +static void pcie_bus_update_set(struct pci_dev *dev)
+>> +{
+>> +       int mps, p_mps, mpss;
+>> +       struct pci_dev *parent;
+>> +
+>> +       if (!pci_is_pcie(dev) || !dev->bus->self
+>> +                       || !dev->bus->self->is_hotplug_bridge)
+>> +               return;
+>> +
+>> +       parent = dev->bus->self;
+>> +       mps = pcie_get_mps(dev);
+>> +       p_mps = pcie_get_mps(parent);
+>> +
+>> +       if (mps >= p_mps)
+>> +               return;
+>> +
+>> +       mpss = 128 << dev->pcie_mpss;
+>> +       if (mpss < p_mps) {
+>> +               dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
+>> +                               "If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
+>> +                               mpss, p_mps);
+>> +               return;
+>> +       }
+>> +
+>> +       pcie_write_mps(dev, p_mps);
+>> +       dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n",
+>> +                       pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
+>> +}
+>> +
+>>  static void pcie_bus_detect_mps(struct pci_dev *dev)
+>>  {
+>>         struct pci_dev *bridge = dev->bus->self;
+>> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+>>                 return 0;
+>>
+>>         if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
+>> +               pcie_bus_update_set(dev);
+>>                 pcie_bus_detect_mps(dev);
+>>                 return 0;
+>>         }
+>> --
+>> 1.7.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> Bjorn
+> .
 > 
+
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+Thanks!
+Yijing
 
