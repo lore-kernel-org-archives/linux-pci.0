@@ -1,115 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:61953 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030224AbaGPOsH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 10:48:07 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v8 4/9] pci: OF: Fix the conversion of IO ranges into IO resources.
-Date: Wed, 16 Jul 2014 16:47:41 +0200
-Message-ID: <9785692.7QoVkhofSt@wuerfel>
-In-Reply-To: <CAL_JsqKaR=SYtM7BKTgO_AN5Vb0GCjaiKbA=9Zr7qGB29R9-5Q@mail.gmail.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com> <201407091031.50402.arnd@arndb.de> <CAL_JsqKaR=SYtM7BKTgO_AN5Vb0GCjaiKbA=9Zr7qGB29R9-5Q@mail.gmail.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:14082 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932088AbaG3Dp1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 23:45:27 -0400
+Message-ID: <53D86993.8020702@huawei.com>
+Date: Wed, 30 Jul 2014 11:42:11 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Ethan Zhao <ethan.kernel@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	<Jordan_Hargrave@dell.com>, <keith.busch@intel.com>,
+	<jon.mason@intel.com>, Jon Mason <jdmason@kudzu.us>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com> <CABawtvNAOm1VuLnN6vvwH1RtetYk-cu7VnQ6MCtJ4WVufBh2hw@mail.gmail.com>
+In-Reply-To: <CABawtvNAOm1VuLnN6vvwH1RtetYk-cu7VnQ6MCtJ4WVufBh2hw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 16 July 2014 09:35:37 Rob Herring wrote:
-> On Wed, Jul 9, 2014 at 3:31 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Tuesday 08 July 2014, Liviu Dudau wrote:
-> >> On Mon, Jul 07, 2014 at 10:22:00PM +0100, Arnd Bergmann wrote:
-> >> >
-> >> > I looked at the other drivers briefly, and I think you indeed fix the Tegra
-> >> > driver with this but break the integrator driver as mentioned above.
-> >> > The other callers of of_pci_range_to_resource() are apparently not
-> >> > impacted as they recalculate the values they get.
-> >>
-> >> I would argue that integrator version is having broken assumptions. If it would
-> >> try to allocate that IO range or request the resource as returned currently by
-> >> of_pci_range_to_resource (without my patch) it would fail. I know because I did
-> >> the same thing in my host bridge driver and it failed miserably. That's why I
-> >> tried to patch it.
-> >
-> > The integrator code was just introduced and the reason for how it does things
-> > is the way that of_pci_range_to_resource() works today. We tried to cope with
-> > it and not change the existing behavior in order to not break any other drivers.
-> >
-> > It's certainly not fair to call the integrator version broken, it just works
-> > around the common code having a quirky interface. We should probably have
-> > done of_pci_range_to_resource better than it is today (I would have argued
-> > for it to return an IORESOURCE_MEM with the CPU address), but it took long
-> > enough to get that merged and I was sick of arguing about it.
-> >
-> >> If the IO space is memory mapped, then we use the port number, the io_offset
-> >> and the PCI_IOBASE to get to the virtual address that, when accessed, will
-> >> generate the correct addresses on the bus, based on what the host bridge has
-> >> been configured.
-> >>
-> >> This is the current level of my understanding of PCI IO.
+On 2014/7/30 11:33, Ethan Zhao wrote:
+> Yijing,
+>     Seems you want to workaround platform bug in generic PCIe hotplug
+> code, while not specific to some platforms or devices, that is not
+> safe/fair to other vendor's platform.
+> and the updating to MPS of device is out of PCIe specification.
+>     So the best way is to fix within platform, at least, any platform
+> specific way in Linux code.
+
+No, this is not a platform bug, and this is safe, you can refer to my last reply
+to Alex.
+
 > 
-> What is io_offset supposed to be and be based on?
-
-(you probably know most of this, but I'll explain it the long way
-to avoid ambiguity).
-
-io_offset is a concept used internally to translate bus-specific I/O port
-numbers into Linux-global ports.
-
-A simple example would be having two PCI host bridges each with a
-(hardware) port range from 0 to 0xffff. These numbers are programmed
-into "BARs" in PCI device config space and they are used on the physical
-address lines in PCI or in the packet header on PCIe.
-
-In Linux, we have a single logical port range that is seen by device
-drivers, in the example the first host bridge would use ports 0-0xfffff
-and the second one would use ports 0x10000-0x1ffff.
-
-The PCI core uses the io_offset to translate between the two address
-spaces when it does the resource allocation during bus probe, so a device
-that gets Linux I/O port 0x10100 has its BAR programmed with 0x100 and
-the struct resource filled as 0x10000.
-
-When a PCI host bridge driver registers its root bus with the PCI core,
-it passes the io_offset using the last argument to pci_add_resource_offset()
-along with the Linux I/O port resource, so in the example the first
-io_offset is zero, while the second one is 0x10000.
-
-Note that there is no requirement for the I/O port range on the bus to
-start at zero, and you can even have negative io_offset values to
-deal with that, but this is the exception.
-
-> >> Now, I believe Rob has switched entirely to using my series in some test that
-> >> he has run and he hasn't encountered any issues, as long as one remembers in
-> >> the host bridge driver to add the io_base offset to the .start resource. If
-> >> not then I need to patch pci_v3.c.
-> >
-> > The crazy part of all these discussions is that basically nobody ever uses
-> > I/O port access, so it's very hard to test and we don't even notice when
-> > we get it wrong, but we end up spending most of the time for PCI host controller
-> > reviews trying to get these right.
+> Thanks,
+> Ethan
 > 
-> FWIW, I test i/o accesses with Versatile QEMU. The LSI53xxxx device in
-> the model has a kconfig option to use i/o accesses. However, I have
-> seen in the past this is an area where 2 wrongs can make a right.
+> On Tue, Jul 29, 2014 at 4:17 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> Currently we don't update device's mps value when doing
+>> pci device hot-add. The hot-added device's mps will be set
+>> to default value (128B). But the upstream port device's mps
+>> may be larger than 128B which was set by firmware during
+>> system bootup. In this case the new added device may not
+>> work normally. This issue was found in huawei 5885 server
+>> and Dell R620 server. And if we run the platform with windows,
+>> this problem is gone. This patch try to update the hot added
+>> device mps equal to its parent mps, if device mpss < parent mps,
+>> print warning.
+>>
+>> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+>> Reported-by: Keith Busch <keith.busch@intel.com>
+>> Reported-by: Jordan_Hargrave@Dell.com
+>> Reported-by: Yijing Wang <wangyijing@huawei.com>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> Cc: Jon Mason <jdmason@kudzu.us>
+>> ---
+>>  drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
+>>  1 files changed, 39 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index e3cf8a2..583ca52 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1613,6 +1613,44 @@ static void pcie_write_mrrs(struct pci_dev *dev)
+>>                 dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If problems are experienced, try running with pci=pcie_bus_safe\n");
+>>  }
+>>
+>> +/**
+>> + * pcie_bus_update_set - update device mps when device doing hot-add
+>> + * @dev: PCI device to set
+>> + *
+>> + * After device hot add, mps will be set to default(128B), But the
+>> + * upstream port device's mps may be larger than 128B which was set
+>> + * by firmware during system bootup. Then we should update the device
+>> + * mps to equal to its parent mps, Or the device can not work normally.
+>> + */
+>> +static void pcie_bus_update_set(struct pci_dev *dev)
+>> +{
+>> +       int mps, p_mps, mpss;
+>> +       struct pci_dev *parent;
+>> +
+>> +       if (!pci_is_pcie(dev) || !dev->bus->self
+>> +                       || !dev->bus->self->is_hotplug_bridge)
+>> +               return;
+>> +
+>> +       parent = dev->bus->self;
+>> +       mps = pcie_get_mps(dev);
+>> +       p_mps = pcie_get_mps(parent);
+>> +
+>> +       if (mps >= p_mps)
+>> +               return;
+>> +
+>> +       mpss = 128 << dev->pcie_mpss;
+>> +       if (mpss < p_mps) {
+>> +               dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
+>> +                               "If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
+>> +                               mpss, p_mps);
+>> +               return;
+>> +       }
+>> +
+>> +       pcie_write_mps(dev, p_mps);
+>> +       dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n",
+>> +                       pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
+>> +}
+>> +
+>>  static void pcie_bus_detect_mps(struct pci_dev *dev)
+>>  {
+>>         struct pci_dev *bridge = dev->bus->self;
+>> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+>>                 return 0;
+>>
+>>         if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
+>> +               pcie_bus_update_set(dev);
+>>                 pcie_bus_detect_mps(dev);
+>>                 return 0;
+>>         }
+>> --
+>> 1.7.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
 
-Can you point me to a git tree with your kernel and dts?
 
-	Arnd
+-- 
+Thanks!
+Yijing
+
