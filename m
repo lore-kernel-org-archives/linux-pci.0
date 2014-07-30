@@ -1,50 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42687 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934882AbaGPSsU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Jul 2014 14:48:20 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Naresh Kumar Inna <naresh@chelsio.com>,
-	Arvind Bhushan <arvindb@chelsio.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 05/23] csiostor: Remove superfluous call to pci_disable_msix()
-Date: Wed, 16 Jul 2014 20:05:09 +0200
-Message-Id: <bd849e403573b161beb4dcfdb7d410f997c95562.1405533479.git.agordeev@redhat.com>
-In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:31860 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753918AbaG3D3M (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 23:29:12 -0400
+Message-ID: <53D8663C.20203@huawei.com>
+Date: Wed, 30 Jul 2014 11:27:56 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<Jordan_Hargrave@Dell.com>, <keith.busch@intel.com>,
+	<jon.mason@intel.com>, Jon Mason <jdmason@kudzu.us>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com> <1406650687.1011.180.camel@ul30vt.home>
+In-Reply-To: <1406650687.1011.180.camel@ul30vt.home>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is no need to call pci_disable_msix() in case
-the previous call to pci_enable_msix() failed
+On 2014/7/30 0:18, Alex Williamson wrote:
+> On Tue, 2014-07-29 at 16:17 +0800, Yijing Wang wrote:
+>> Currently we don't update device's mps value when doing
+>> pci device hot-add. The hot-added device's mps will be set
+>> to default value (128B). But the upstream port device's mps
+>> may be larger than 128B which was set by firmware during
+>> system bootup. In this case the new added device may not
+>> work normally.
+> 
+> Apologies if we rehash some previously discussed topics while I try to
+> cover for Bjorn while he's out.  By "normally", do you mean "optimally"?
+> The device should be functional with a lower mps setting, right?
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Naresh Kumar Inna <naresh@chelsio.com>
-Cc: Arvind Bhushan <arvindb@chelsio.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/csiostor/csio_isr.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+No, the device can not work, because some pcie tlp packets will be discarded.
+Sorry for my poor English.
+> 
+>>  This issue was found in huawei 5885 server
+>> and Dell R620 server. And if we run the platform with windows,
+>> this problem is gone. This patch try to update the hot added
+>> device mps equal to its parent mps, if device mpss < parent mps,
+>> print warning.
+>>
+>> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
+>> Reported-by: Keith Busch <keith.busch@intel.com>
+>> Reported-by: Jordan_Hargrave@Dell.com
+>> Reported-by: Yijing Wang <wangyijing@huawei.com>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> Cc: Jon Mason <jdmason@kudzu.us>
+>> ---
+>>  drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
+>>  1 files changed, 39 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index e3cf8a2..583ca52 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1613,6 +1613,44 @@ static void pcie_write_mrrs(struct pci_dev *dev)
+>>  		dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If problems are experienced, try running with pci=pcie_bus_safe\n");
+>>  }
+>>  
+>> +/**
+>> + * pcie_bus_update_set - update device mps when device doing hot-add
+>> + * @dev: PCI device to set
+>> + * 
+>> + * After device hot add, mps will be set to default(128B), But the 
+>> + * upstream port device's mps may be larger than 128B which was set 
+>> + * by firmware during system bootup. Then we should update the device
+>> + * mps to equal to its parent mps, Or the device can not work normally.
+>> + */
+>> +static void pcie_bus_update_set(struct pci_dev *dev)
+>> +{
+>> +	int mps, p_mps, mpss;
+>> +	struct pci_dev *parent;
+>> +
+>> +	if (!pci_is_pcie(dev) || !dev->bus->self 
+>> +			|| !dev->bus->self->is_hotplug_bridge)
+>> +		return;
+>> +	
+>> +	parent = dev->bus->self;
+>> +	mps = pcie_get_mps(dev);
+>> +	p_mps = pcie_get_mps(parent);
+>> +
+>> +	if (mps >= p_mps)
+>> +		return;
+>> +
+>> +	mpss = 128 << dev->pcie_mpss;
+>> +	if (mpss < p_mps) {
+>> +		dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
+>> +				"If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
+>> +				mpss, p_mps);
+>> +		return;
+>> +	}
+>> +
+>> +	pcie_write_mps(dev, p_mps);
+>> +	dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n", 
+>> +			pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
+>> +}
+> 
+> So if the device mps is less than the parent mps and the device supports
+> the parent mps, we update the device.  If the device cannot support the
+> parent mps, warn.  Why do we bypass the opportunity to reduce the device
+> mps if it exceeds the parent mps?
 
-diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
-index 7ee9777..91ba91d 100644
---- a/drivers/scsi/csiostor/csio_isr.c
-+++ b/drivers/scsi/csiostor/csio_isr.c
-@@ -529,10 +529,8 @@ csio_enable_msix(struct csio_hw *hw)
- 			csio_reduce_sqsets(hw, cnt - extra);
- 		}
- 	} else {
--		if (rv > 0) {
--			pci_disable_msix(hw->pdev);
-+		if (rv > 0)
- 			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
--		}
- 
- 		kfree(entries);
- 		return -ENOMEM;
+Exactly, the device's mps will never larger than its parent's. That's unexpected, so we leave it.
+
+> 
+>> +
+>>  static void pcie_bus_detect_mps(struct pci_dev *dev)
+>>  {
+>>  	struct pci_dev *bridge = dev->bus->self;
+>> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+>>  		return 0;
+>>  
+>>  	if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
+>> +		pcie_bus_update_set(dev);
+>>  		pcie_bus_detect_mps(dev);
+>>  		return 0;
+>>  	}
+> 
+> pcie_bus_update_set() and pcie_bus_detect_mps() have a lot of
+> redundancy, can't we merge this new functionality into the existing
+> function? 
+
+OK， will do.
+
+> Also, we're in the PCIE_BUS_TUNE_OFF branch, but we seem to
+> be adding code which would imply PCIE_BUS_PERFORMANCE since we're
+> bringing the device up to an optimal mps to match the parent.  Is there
+> a simpler solution to simply downgrade the dev_warn in
+> pcie_bus_detect_mps() to dev_info and change the text?  Thanks,
+
+We just to adjust the device's mps to make the device can work, not for an
+optimal mps.
+
+> 
+> Alex
+> 
+> 
+> .
+> 
+
+
 -- 
-1.7.7.6
+Thanks!
+Yijing
 
