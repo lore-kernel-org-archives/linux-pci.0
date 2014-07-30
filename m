@@ -1,69 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:32934 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751320AbaGDF7b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 01:59:31 -0400
-Message-ID: <53B642BA.3090007@huawei.com>
-Date: Fri, 4 Jul 2014 13:59:22 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mga03.intel.com ([143.182.124.21]:17947 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751600AbaG3VOU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Jul 2014 17:14:20 -0400
+Message-ID: <53D9602A.4010406@intel.com>
+Date: Wed, 30 Jul 2014 14:14:18 -0700
+From: Alexander Duyck <alexander.h.duyck@intel.com>
 MIME-Version: 1.0
-To: Ilia Mirkin <imirkin@alum.mit.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Brian Becker <brian.johnathan.b@gmail.com>,
-	<linux-pci@vger.kernel.org>,
-	"nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>
-Subject: Re: How to check for proper MSI support?
-References: <CAKb7UviGCtebGwyHbXRLZhDOiDAez+eKkxPe9jz5kc-3R1kUvQ@mail.gmail.com>	<53B4F0F7.9020403@huawei.com>	<CALhae2jRz8hL0bwySAbP7r+vJGOG5aif4GA_Yjp0inGAwz5JEA@mail.gmail.com>	<53B612FE.4080105@huawei.com>	<CAKb7UviVFQYwYdp_dgxK7jJ5Ny9yG1y8LATydxtVtkzRh+aOKw@mail.gmail.com>	<53B61B03.3070308@huawei.com>	<CAKb7UvjFuu4Hm1pfmY-NMFORfv-+fx4oYeJicRoE8UTL_4Wp4A@mail.gmail.com>	<53B625D9.9080500@huawei.com> <CAKb7UviYak+Jt6+RGFZc=OtNh2DVJaCvxnBpRRkw7zVn8u+9Vw@mail.gmail.com>
-In-Reply-To: <CAKb7UviYak+Jt6+RGFZc=OtNh2DVJaCvxnBpRRkw7zVn8u+9Vw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+To: Edward Cree <ecree@solarflare.com>, Don Dutile <ddutile@redhat.com>
+CC: linux-pci@vger.kernel.org
+Subject: Re: pci_sriov_set_totalvfs again
+References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com>
+In-Reply-To: <53D93848.7070203@solarflare.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> There is a NVIDIA G96 GPU (which is PCIe only) hanging off of a PCIe
->>> <-> PCI bridge (all on one card), which is plugged into a motherboard
->>> with the 430FX chipset (PCI 2.0 supported).
+On 07/30/2014 11:24 AM, Edward Cree wrote:
+> On 30/07/14 19:05, Don Dutile wrote:
+>> On 07/30/2014 01:16 PM, Edward Cree wrote:
+>>> Calling pci_sriov_set_totalvfs(dev, 0) has no effect, because
+>>> pci_sriov_get_totalvfs ignores dev->sriov->driver_max_VFs if it's 0,
+>>> as that is used as the 'not set' value.
+>>> So, three questions:
+>>> a) is this a bug?
+>>> b) if not, should the comment on pci_sriov_set_totalvfs mention that
+>>> passing numvfs=0 will be interpreted as numvfs=dev->sriov->total_VFs?
+>>> c) is there a better way of indicating "current configuration doesn't
+>>> support VFs" rather than calling set_totalvfs(0)?
 >>>
->>> The GPU PCI device, of course, has full support for MSI. However my
->>> understanding is that MSI won't actually work here. This is confirmed
->>> by the fact that if we let nouveau enable MSI, the device doesn't work
->>> (presumably due to lack of interrupt delivery, although I admit to not
->>> having debugged it that far). How do I, as a nouveau driver developer,
->>> know not to call pci_enable_msi? Or alternatively how can
->>> pci_enable_msi be taught not to succeed in this case?
+>>> Thanks,
+>>> -Edward
 >>
->> You can set bus_flags or global pci_msi_enable flag by add quirk function.
->> You can refer to examples in drivers/pci/quirk.c
+>> The file shouldn't exist if the device doesn't provide an SRIOV
+>> capability.
+>> If it does, and it's not supported, then add a patch in quirks.c.
 >>
->> Linux support some broken chipsets or devices to disable msi during device initialization by add quirk.
+>>
+> I don't know much about quirks, but I'm not sure they're the answer
+> here, as it's not quite as simple as "driver doesn't support it".
+> It's a firmware / configuration issue, that if the device (it's a NIC)
+> is configured a certain way [1], the VFs - while appearing fine from a
+> PCI perspective - don't actually work (they can't pass traffic).
+> We can't detect this misconfiguration until PF probe time, and we need a
+> way to report that the VFs aren't usable.
 > 
-> So let me get this straight -- you're suggesting I add a quirk for
-> every PCI chipset that doesn't support MSI? There are probably
-> hundreds of these... anything made before 1999 or so, and probably a
-> bunch since then too. There _has_ to be a way to do this generically.
-> Is the PCI spec version anywhere in the root hub?
+> Can quirks handle this?
+> 
+> -Edward
+> 
+> [1] SFC9120-based NICs support multiple PFs per port and these can be
+> used as a kind of "poor-man's SR-IOV" (we're calling it 'PF-IOV') by
+> placing the firmware v-switch below the PFs. However, this then
+> precludes adding a v-switch above the PF to direct VF traffic, meaning
+> that VFs are useless in this configuration. Consequently, our
+> configuration tools won't allow VFs and PF-IOV to be enabled
+> simultaneously, but bugs or corruption could cause this to happen.
 
-There is no register to identify PCI spec version in PCI config space registers.
-If your platform boot up with ACPI, you can setting ACPI FADT boot flag to disable MSI,
-you can refer to this in ACPI 5.2.9.3 chapter "Fixed ACPI Description Table Boot Architecture Flags"
+My $.02 on the issue would be to simply have sriov_configure return an
+error indicating the resources are not available if you have the PF-IOV
+mode enabled it is consuming the VF v-switch resources.
 
+Thanks,
 
-> 
-> Perhaps we can check if every bridge on the way to the CPU has the MSI
-> capability (including the root hub)? (And naturally _that_ won't
-> work... on my sandybridge laptop, the host bridge doesn't have the MSI
-> cap but the system most definitely supports MSI.)
-> 
-> Adding Bjorn... perhaps you know? Some of the info has been stripped
-> out by now, you can see the full lspci -vvvxxx at
-> http://marc.info/?l=linux-pci&m=140443441730503&w=2
-> 
->   -ilia
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
+Alex
 
