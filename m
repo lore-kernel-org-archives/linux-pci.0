@@ -1,152 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from dliviu.plus.com ([80.229.23.120]:32786 "EHLO smtp.dudau.co.uk"
+Received: from mga03.intel.com ([143.182.124.21]:34479 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754745AbaGAUpb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 Jul 2014 16:45:31 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by smtp.dudau.co.uk (Postfix) with SMTP id 1ED19FFCF3
-	for <linux-pci@vger.kernel.org>; Tue,  1 Jul 2014 21:45:30 +0100 (BST)
-From: "Liviu Dudau" <liviu@dudau.co.uk>
-Date: Tue, 1 Jul 2014 21:45:09 +0100
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper
- function.
-Message-ID: <20140701204508.GA19569@bart.dudau.co.uk>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-4-git-send-email-Liviu.Dudau@arm.com>
- <8556461.i7qCGvGY5a@wuerfel>
+	id S1751153AbaGaRzv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 31 Jul 2014 13:55:51 -0400
+Message-ID: <53DA8326.1030705@intel.com>
+Date: Thu, 31 Jul 2014 10:55:50 -0700
+From: Alexander Duyck <alexander.h.duyck@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <8556461.i7qCGvGY5a@wuerfel>
+To: Edward Cree <ecree@solarflare.com>
+CC: linux-pci@vger.kernel.org, Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
+References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com> <alpine.LFD.2.03.1407311500570.16821@solarflare.com> <53DA5EF4.1030500@intel.com> <53DA674A.9030305@solarflare.com> <53DA718A.9040407@intel.com> <53DA7574.4050103@solarflare.com>
+In-Reply-To: <53DA7574.4050103@solarflare.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 01, 2014 at 09:36:10PM +0200, Arnd Bergmann wrote:
-> On Tuesday 01 July 2014 19:43:28 Liviu Dudau wrote:
-> > +/*
-> > + * Record the PCI IO range (expressed as CPU physical address + size).
-> > + * Return a negative value if an error has occured, zero otherwise
-> > + */
-> > +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-> > +{
-> > +#ifdef PCI_IOBASE
-> > +       struct io_range *res;
-> > +       resource_size_t allocated_size = 0;
-> > +
-> > +       /* check if the range hasn't been previously recorded */
-> > +       list_for_each_entry(res, &io_range_list, list) {
-> > +               if (addr >= res->start && addr + size <= res->start + size)
-> > +                       return 0;
-> > +               allocated_size += res->size;
-> > +       }
-> > +
-> > +       /* range not registed yet, check for available space */
-> > +       if (allocated_size + size - 1 > IO_SPACE_LIMIT)
-> > +               return -E2BIG;
-> > +
-> > +       /* add the range to the list */
-> > +       res = kzalloc(sizeof(*res), GFP_KERNEL);
-> > +       if (!res)
-> > +               return -ENOMEM;
-> > +
-> > +       res->start = addr;
-> > +       res->size = size;
-> > +
-> > +       list_add_tail(&res->list, &io_range_list);
-> > +
-> > +       return 0;
-> > +#else
-> > +       return -EINVAL;
-> > +#endif
-> > +}
-> > +
-> >  unsigned long __weak pci_address_to_pio(phys_addr_t address)
-> >  {
-> > +#ifdef PCI_IOBASE
-> > +       struct io_range *res;
-> > +       resource_size_t offset = 0;
-> > +
-> > +       list_for_each_entry(res, &io_range_list, list) {
-> > +               if (address >= res->start &&
-> > +                       address < res->start + res->size) {
-> > +                       return res->start - address + offset;
-> > +               }
-> > +               offset += res->size;
-> > +       }
-> > +
-> > +       return (unsigned long)-1;
-> > +#else
-> >         if (address > IO_SPACE_LIMIT)
-> >                 return (unsigned long)-1;
-> >  
-> >         return (unsigned long) address;
-> > +#endif
-> >  }
-> 
-> This still conflicts with the other allocator you have in patch 9
-> for pci_remap_iospace: nothing guarantees that the mapping is the
-> same for both.
-> 
-> Also, this is a completely pointless exercise at this moment, because
-> nobody cares about the result of pci_address_to_pio on architectures
-> that don't already provide this function. If we ever get a proper
-> Open Firmware implementation that wants to put hardcoded PCI devices
-> into DT, we can add an implementation, but for now this seems overkill.
-> 
-> The allocator in pci_register_io_range seems reasonable, why not merge
-> this function with pci_remap_iospace() as I have asked you multiple
-> times before? Just make it return the io_offset so the caller can
-> put that into the PCI host resources.
+On 07/31/2014 09:57 AM, Edward Cree wrote:
+> On 31/07/14 17:40, Alexander Duyck wrote:
+>> If this PF-IOV mode is enabled what would be the layout of the PF
+>> devices?  It seems like you should be able to scan for multiple PFs all
+>> showing up on the same bus with a certain stride if you wanted to detect it.
+> Alas, it's (once again) more complicated than that.  There's another
+> mode, NIC partitioning, which has multiple PFs per port but connected
+> with a VLAN aggregator rather than a v-switch, which means that each PF
+> then can support VFs (the firmware limitation is that v-switches can't
+> be stacked).
+> So having multiple PFs on the port doesn't necessarily mean we can't do
+> SR-IOV.
 
-Hi Arnd,
+Okay, so this is purely a vswitch issue then.  If it is allocated for
+the PF-IOV it isn't available for SR-IOV.  I think I understand now.
 
-While I agree with you that at some moment the allocators were inconsistent
-wrt each other, for this version I would respectfully disagree on this.
-The allocator in pci_register_io_range() only makes sure that the ranges
-are not overlapping, it doesn't do any mapping whatsoever, while
-pci_remap_iospace() does only an ioremap_page_range(). The idea is that
-you get the offset out of pci_address_to_pio() and apply it to
-pci_remap_iospace().
+>>>> In addition this solution would
+>>>> also resolve the fact that the driver wouldn't actually have to be
+>>>> loaded for it to work so if someone were to load a driver that didn't
+>>>> contain the fix they would be blocked from enabling SR-IOV as well.
+>>> The current driver fails to probe the PF because it assumes the vswitch
+>>> creation failure is fatal.  There should never be a driver that knows it
+>>> can live without the vswitch but doesn't know that that breaks SR-IOV.
+>>>
+>>> -Edward
+>> Is the vswitch a hard requirement for something other than SR-IOV?  If
+>> not then maybe you should consider modifying the driver so it simply
+>> disabled SR-IOV if you cannot allocate the vswitch instead of blocking
+>> probe.
+>>
+> That's exactly what I'm trying to do with pci_sriov_set_totalvfs(dev,
+> 0); that's the whole point.
 
-Why do you think there are conflicts?
+It sounds reasonable.  My only real concern is the fact that the error
+reported when attempting to enable the interface will be a ERANGE when
+really a more appropriate error return might be something like a EBUSY
+since it is the vswitch that is occupied.
 
-Best regards,
-Liviu
+You might want to take a look at modifying sriov_numvfs_store so that if
+the only option is 0 you return EBUSY for all non-zero values requested.
+ This way it will be more in sync with how we handle the case of
+attempting to update the number of VFs when SR-IOV is already enabled.
 
+Thanks,
 
-> 
-> 	Arnd
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
--------------------
-   .oooO
-   (   )
-    \ (  Oooo.
-     \_) (   )
-          ) /
-         (_/
-
- One small step
-   for me ...
-
+Alex
