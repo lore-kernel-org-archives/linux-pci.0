@@ -1,109 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:48088 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752930AbaGKUiF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 16:38:05 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
+Received: from mail.skyhub.de ([78.46.96.112]:59334 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751997AbaGaQ4w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 31 Jul 2014 12:56:52 -0400
+Date: Thu, 31 Jul 2014 18:56:48 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH v4 1/6] PCI: designware: add rd[wr]_other_conf API
-Date: Fri, 11 Jul 2014 16:36:30 -0400
-Message-ID: <1405110995-24676-2-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1405110995-24676-1-git-send-email-m-karicheri2@ti.com>
-References: <1405110995-24676-1-git-send-email-m-karicheri2@ti.com>
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] x86, irq: Keep IRQ assignment for PCI devices during
+ suspend/hibernation
+Message-ID: <20140731165648.GG4375@pd.tnic>
+References: <20140730175836.GC10213@pd.tnic>
+ <1406766807-5745-1-git-send-email-jiang.liu@linux.intel.com>
+ <20140731103941.GA4375@pd.tnic>
+ <53DA70AB.9010906@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <53DA70AB.9010906@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v3.65 version of the designware h/w, requires application space
-registers to be configured to access the remote EP config space.
-To support this, add rd[wr]_other_conf API in the pcie_host_opts
+On Fri, Aug 01, 2014 at 12:36:59AM +0800, Jiang Liu wrote:
+> 1) There's a race window between device_shutdown() and
+> syscore_shutdown(). USB device may be returned to BIOS
+> during device_shutdown() and IOMMU units are disabled
+> during syscore_shutdown().
+> 2) Printing debug messages enlarges the race window,
+> especially when using serial console.
+> Then it triggers warning message "AMD-Vi: Event logged [IO_PAGE_FAULT
+> device=00:12.0 domain=0x0009 address=0x00000000ffffffc0 flags=0x0010]".
+> 
+> But I have no AMD platforms to verify this theory. Could you
+> please help to try adding delays between device_shutdown()
+> and syscore_shutdown() in function kernel_power_off()?
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-Acked-by: Mohit Kumar <mohit.kumar@st.com>
-Acked-by: Jingoo Han <jg1.han@samsung.com>
-Acked-by: Santosh Shilimkar <santosh.shilimkar@ti.com>
+Ok, but this whole deal started appearing only after rc6. And this
+ordering hasn't been touched recently, AFAICT. So it must be something
+new...
 
-CC: Russell King <linux@arm.linux.org.uk>
-CC: Grant Likely <grant.likely@linaro.org>
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Pratyush Anand <pratyush.anand@st.com>
-CC: Richard Zhu <r65037@freescale.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>
-CC: Marek Vasut <marex@denx.de>
-CC: Arnd Bergmann <arnd@arndb.de>
-CC: Pawel Moll <pawel.moll@arm.com>
-CC: Mark Rutland <mark.rutland@arm.com>
-CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
-CC: Kumar Gala <galak@codeaurora.org>
-CC: Randy Dunlap <rdunlap@infradead.org>
-CC: Grant Likely <grant.likely@linaro.org> 
----
- drivers/pci/host/pcie-designware.c |   12 ++++++++++--
- drivers/pci/host/pcie-designware.h |    4 ++++
- 2 files changed, 14 insertions(+), 2 deletions(-)
+I'm still trying to get that other system to trigger...
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 1eaf4df..d8f3af7 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -656,7 +656,11 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- 	}
- 
- 	if (bus->number != pp->root_bus_nr)
--		ret = dw_pcie_rd_other_conf(pp, bus, devfn,
-+		if (pp->ops->rd_other_conf)
-+			ret = pp->ops->rd_other_conf(pp, bus, devfn,
-+						where, size, val);
-+		else
-+			ret = dw_pcie_rd_other_conf(pp, bus, devfn,
- 						where, size, val);
- 	else
- 		ret = dw_pcie_rd_own_conf(pp, where, size, val);
-@@ -679,7 +683,11 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
- 	if (bus->number != pp->root_bus_nr)
--		ret = dw_pcie_wr_other_conf(pp, bus, devfn,
-+		if (pp->ops->wr_other_conf)
-+			ret = pp->ops->wr_other_conf(pp, bus, devfn,
-+						where, size, val);
-+		else
-+			ret = dw_pcie_wr_other_conf(pp, bus, devfn,
- 						where, size, val);
- 	else
- 		ret = dw_pcie_wr_own_conf(pp, where, size, val);
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 77f592f..8121901 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -61,6 +61,10 @@ struct pcie_host_ops {
- 			u32 val, void __iomem *dbi_base);
- 	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32 *val);
- 	int (*wr_own_conf)(struct pcie_port *pp, int where, int size, u32 val);
-+	int (*rd_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
-+			unsigned int devfn, int where, int size, u32 *val);
-+	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
-+			unsigned int devfn, int where, int size, u32 val);
- 	int (*link_up)(struct pcie_port *pp);
- 	void (*host_init)(struct pcie_port *pp);
- };
 -- 
-1.7.9.5
+Regards/Gruss,
+    Boris.
 
+Sent from a fat crate under my desk. Formatting is fine.
+--
