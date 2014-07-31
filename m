@@ -1,100 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:58920 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016AbaGPIPk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 04:15:40 -0400
-Date: Wed, 16 Jul 2014 10:15:37 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Vidya Sagar <sagar.tv@gmail.com>
-Cc: bhelgaas@google.com, rjw@rjwysocki.net, nchumbalkar@lenovo.com,
-	swarren@nvidia.com, kthota@nvidia.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, vidyas@nvidia.com
-Subject: Re: [PATCH v2] PCI: enable ASPM configuration in PCIE POWERSAVE mode
-Message-ID: <20140716081533.GJ7978@ulmo>
-References: <1405317877-15060-1-git-send-email-vidyas@nvidia.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:20415 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750762AbaGaNcE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jul 2014 09:32:04 -0400
+Date: Thu, 31 Jul 2014 16:31:25 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: kishon@ti.com
+Cc: linux-pci@vger.kernel.org
+Subject: re: PCI: dra7xx: Add TI DRA7xx PCIe driver
+Message-ID: <20140731133125.GA7434@mwanda>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="BOmey7/79ja+7F5w"
-In-Reply-To: <1405317877-15060-1-git-send-email-vidyas@nvidia.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hello Kishon Vijay Abraham I,
 
---BOmey7/79ja+7F5w
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The patch 47ff3de911a7: "PCI: dra7xx: Add TI DRA7xx PCIe driver" from
+Jul 22, 2014, leads to the following static checker warning:
 
-On Mon, Jul 14, 2014 at 11:34:37AM +0530, Vidya Sagar wrote:
-> From: Vidya Sagar <sagar.tv@gmail.com>
+	drivers/pci/host/pci-dra7xx.c:180 dra7xx_pcie_init_irq_domain()
+	warn: passing zero to 'PTR_ERR'
 
-The commit message looks somewhat cluttered:
+drivers/pci/host/pci-dra7xx.c
+   172  static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
+   173  {
+   174          struct device *dev = pp->dev;
+   175          struct device_node *node = dev->of_node;
+   176          struct device_node *pcie_intc_node =  of_get_next_child(node, NULL);
+   177  
+   178          if (!pcie_intc_node) {
+                     ^^^^^^^^^^^^^^
+   179                  dev_err(dev, "No PCIe Intc node found\n");
+   180                  return PTR_ERR(pcie_intc_node);
+                                       ^^^^^^^^^^^^^^
+   181          }
+   182  
+   183          pp->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
+   184                                                 &intx_domain_ops, pp);
+   185          if (!pp->irq_domain) {
+   186                  dev_err(dev, "Failed to get a INTx IRQ domain\n");
+   187                  return PTR_ERR(pp->irq_domain);
+                                       ^^^^^^^^^^^^^^
+Again.
 
-> 'commit 1a680b7c3258 ("PCI: PCIe links may not get configured for ASPM
->  under POWERSAVE mode")'
+   188          }
+   189  
+   190          return 0;
 
-Usually you'd cite a commit without the extra single quotes. More like
-this:
-
-Commit 1a680b7c3258 ("PCI: PCIe links may not get configured for ASPM
-under POWERSAVE mode") moved...
-
-> moved pcie_aspm_powersave_config_link() out of
-> pci_raw_set_power_state() to pci_set_power_state() which would enable
-> ASPM. But, with 'commit db288c9c5f9d ("PCI / PM: restore the original
->  behavior of pci_set_power_state()")',
-
-Same here.
-
->                                        which re-introduced the following =
-check
-> ./drivers/pci/pci.c: pci_set_power_state()
-> +   /* Check if we're already there */
-> +   if (dev->current_state =3D=3D state)
-> +       return 0;
-
-To make this stand out better, it could be preceded and followed by a
-single blank line (and perhaps indented using tabs).
-
-> in pci_set_power_state(), call to pcie_aspm_powersave_config_link() is ne=
-ver
-> made leaving ASPM broken.
-> Fix it by not returning from when the above condition is true, rather, ju=
-mp to
-> ASPM configuration code and exit from there eventually.
->=20
-> Signed-off-by: Vidya Sagar <sagar.tv@gmail.com>
-
-This patch uses code suggested by Bjorn and it's customary to credit the
-original author using something like:
-
-	Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-
-or
-
-	Originally-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Thierry
-
---BOmey7/79ja+7F5w
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJTxjSlAAoJEN0jrNd/PrOhueUP+QFQ6cA6SkjxyYNnG/qmPZwA
-xH+p5mN+pjsHNAEZVir7k3jBI0CVMTrOCSSOsFuoHGUHHwyBz/CoJdQBDFDc/i3y
-RFzMi7P9fG8oongL8IEMWsmPaNBn8pufhwZ4+aSKRmCCzJFb/wMlobhB+coECMSP
-unZ7QBORb+zGrKDqoDVditueuFtVCVuJGnN1UglZgn7B8jUAKEXU6QPwhHzH/o0c
-24Gc1LD6/WH1VzJhbFvdiuJuSJ/s1fyS+xYKfAXhFybJd9VzpJsEBgtHFsltPPHa
-esbqyshpTZ3GiSDL5bbE2Ki4t0uC98BRTgHSdOVaOK9sPvQtr4fOxwm79tUL75j4
-Yx76aBRH0yPr9i/uLq/jAmKcbmQu/NsM0q5kAREzkS2YWxChdSy+BuugxavZicKD
-eXnh6BLyjbGlkTHNVEhmut6XdN9nsHq60Dh2oFEQolN8GhMsl98w33exyxYkYnkF
-665sR7Zcz6YuOdrwwpXKCVV4b8QNh5BpNn+eODiVeqnuTS/q+YVk+/m3xRWjSGYE
-d1XAdkoXya0DbWESRui9iHlhaooGtj3GX8f8R0+if1Z9V/lluGO8JUYfK2EPSLv9
-fserTjzmDC13E3KGgO++cMF/D7PanVk7KXJCBoxfRNmw+3noUFf2BCWg2TF4LDs9
-s9AMwQ0cXpDBmyMzdkjx
-=eh10
------END PGP SIGNATURE-----
-
---BOmey7/79ja+7F5w--
+regards,
+dan carpenter
