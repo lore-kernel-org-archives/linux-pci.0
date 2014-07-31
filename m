@@ -1,139 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:2252 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752194AbaGNCMF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Jul 2014 22:12:05 -0400
-Message-ID: <53C33C6D.8020103@huawei.com>
-Date: Mon, 14 Jul 2014 10:11:57 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from nbfkord-smmo03.seg.att.com ([209.65.160.84]:42071 "EHLO
+	nbfkord-smmo03.seg.att.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751349AbaGaQ5f convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 31 Jul 2014 12:57:35 -0400
+Message-ID: <53DA7574.4050103@solarflare.com>
+Date: Thu, 31 Jul 2014 17:57:24 +0100
+From: Edward Cree <ecree@solarflare.com>
 MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>,
-	<linux-kernel@vger.kernel.org>
-CC: <linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 2/2] PCI/MSI: Remove arch_msi_check_device()
-References: <cover.1405160163.git.agordeev@redhat.com> <1005232855c3af2c0c669818ee63be445389b6ad.1405160163.git.agordeev@redhat.com>
-In-Reply-To: <1005232855c3af2c0c669818ee63be445389b6ad.1405160163.git.agordeev@redhat.com>
+To: Alexander Duyck <alexander.h.duyck@intel.com>
+CC: <linux-pci@vger.kernel.org>, Don Dutile <ddutile@redhat.com>,
+	"Bjorn Helgaas" <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
+References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com> <alpine.LFD.2.03.1407311500570.16821@solarflare.com> <53DA5EF4.1030500@intel.com> <53DA674A.9030305@solarflare.com> <53DA718A.9040407@intel.com>
+In-Reply-To: <53DA718A.9040407@intel.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->  /**
-> - * pci_msi_check_device - check whether MSI may be enabled on a device
-> + * msi_check_device - check whether MSI may be enabled on a device
->   * @dev: pointer to the pci_dev data structure of MSI device function
->   * @nvec: how many MSIs have been requested ?
-> - * @type: are we checking for MSI or MSI-X ?
->   *
->   * Look at global flags, the device itself, and its parent buses
->   * to determine if MSI/-X are supported for the device. If MSI/-X is
->   * supported return 0, else return an error code.
->   **/
-> -static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
-> +static int msi_check_device(struct pci_dev *dev, int nvec)
->  {
->  	struct pci_bus *bus;
-> -	int ret;
->  
->  	/* MSI must be globally enabled and supported by the device */
-> -	if (!pci_msi_enable || !dev || dev->no_msi)
-> +	if (!pci_msi_enable)
-> +		return -EINVAL;
-> +
-> +	if (!dev || dev->no_msi || dev->current_state != PCI_D0)
->  		return -EINVAL;
->  
->  	/*
-> @@ -846,10 +837,6 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
->  		if (bus->bus_flags & PCI_BUS_FLAGS_NO_MSI)
->  			return -EINVAL;
->  
-> -	ret = arch_msi_check_device(dev, nvec, type);
-> -	if (ret)
-> -		return ret;
-> -
+On 31/07/14 17:40, Alexander Duyck wrote:
+> If this PF-IOV mode is enabled what would be the layout of the PF
+> devices?  It seems like you should be able to scan for multiple PFs all
+> showing up on the same bus with a certain stride if you wanted to detect it.
+Alas, it's (once again) more complicated than that.  There's another
+mode, NIC partitioning, which has multiple PFs per port but connected
+with a VLAN aggregator rather than a v-switch, which means that each PF
+then can support VFs (the firmware limitation is that v-switches can't
+be stacked).
+So having multiple PFs on the port doesn't necessarily mean we can't do
+SR-IOV.
 
-Move the arch_msi_check_device() into arch_msi_setup_irq(), make we can not detect whether the device in this platform
-supports MSI or MSI-X aeap. If we delay this, maybe we will do a lot unnecessary working for MSI/MSI-X setup.
+> Thanks for pointing that out.  It seems like that is a bug.  We should
+> probably be checking for dev->sriov, not dev->is_physfn before calling
+> sriov_release.
+>
+> I might see about submitting a patch to address that.
+Unfortunately, that won't work because dev->sriov is in a union with
+dev->physfn (presumably on the grounds that if you have an associated
+PF, you're a VF, so you can't have VFs of your own).
+So I think the test in pci_iov_release is correct, and anyone changing
+dev->is_physfn after the PCI device has been set up is in the wrong.
 
-Thanks!
-Yijing.
+>> I'm also unconvinced that having !(dev->is_physfn || dev->is_virtfn) is
+>> a valid state; but maybe I'm misunderstanding and "is_physfn" doesn't
+>> actually mean "is a physical function", but rather "has SR-IOV capability".
+> is_physfn is typically used to indicate the device is capable of acting
+> as a physical function.  So a non-IOV device will not set either
+> is_physfn or is_virtfn.
+Ok, well I think a comment to that effect in struct pci_dev might be a
+good idea.
+>>> In addition this solution would
+>>> also resolve the fact that the driver wouldn't actually have to be
+>>> loaded for it to work so if someone were to load a driver that didn't
+>>> contain the fix they would be blocked from enabling SR-IOV as well.
+>> The current driver fails to probe the PF because it assumes the vswitch
+>> creation failure is fatal.  There should never be a driver that knows it
+>> can live without the vswitch but doesn't know that that breaks SR-IOV.
+>>
+>> -Edward
+> Is the vswitch a hard requirement for something other than SR-IOV?  If
+> not then maybe you should consider modifying the driver so it simply
+> disabled SR-IOV if you cannot allocate the vswitch instead of blocking
+> probe.
+>
+That's exactly what I'm trying to do with pci_sriov_set_totalvfs(dev,
+0); that's the whole point.
+> P.S.  You should really consider changing your email signature.  The bit
+> about "you may not use, copy or disclose to anyone this message" kind of
+> goes against the whole point of submitting patches to an open source
+> project.
+>
+I know; it's automatically appended by our mail server to all outgoing
+mail.  I've already raised this with our IT department but they haven't
+answered yet :(
 
->  	return 0;
->  }
->  
-> @@ -954,13 +941,13 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
->  	int status, nr_entries;
->  	int i, j;
->  
-> -	if (!entries || !dev->msix_cap || dev->current_state != PCI_D0)
-> -		return -EINVAL;
-> -
-> -	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
-> +	status = msi_check_device(dev, nvec);
->  	if (status)
->  		return status;
->  
-> +	if (!entries)
-> +		return -EINVAL;
-> +
->  	nr_entries = pci_msix_vec_count(dev);
->  	if (nr_entries < 0)
->  		return nr_entries;
-> @@ -1085,8 +1072,9 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
->  	int nvec;
->  	int rc;
->  
-> -	if (dev->current_state != PCI_D0)
-> -		return -EINVAL;
-> +	rc = msi_check_device(dev, minvec);
-> +	if (rc)
-> +		return rc;
->  
->  	WARN_ON(!!dev->msi_enabled);
->  
-> @@ -1109,17 +1097,6 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
->  		nvec = maxvec;
->  
->  	do {
-> -		rc = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
-> -		if (rc < 0) {
-> -			return rc;
-> -		} else if (rc > 0) {
-> -			if (rc < minvec)
-> -				return -ENOSPC;
-> -			nvec = rc;
-> -		}
-> -	} while (rc);
-> -
-> -	do {
->  		rc = msi_capability_init(dev, nvec);
->  		if (rc < 0) {
->  			return rc;
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index 92a2f99..3b873bc 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -59,7 +59,6 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
->  void arch_teardown_msi_irq(unsigned int irq);
->  int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
->  void arch_teardown_msi_irqs(struct pci_dev *dev);
-> -int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
->  void arch_restore_msi_irqs(struct pci_dev *dev);
->  
->  void default_teardown_msi_irqs(struct pci_dev *dev);
-> @@ -76,8 +75,6 @@ struct msi_chip {
->  	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
->  			 struct msi_desc *desc);
->  	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
-> -	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
-> -			    int nvec, int type);
->  };
->  
->  #endif /* LINUX_MSI_H */
-> 
-
-
--- 
-Thanks!
-Yijing
-
+-Edward
+The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
