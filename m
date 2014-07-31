@@ -1,82 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:37713 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932320AbaGUSM4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jul 2014 14:12:56 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	Shawn Guo <shawn.guo@freescale.com>,
-	Marek Vasut <marex@denx.de>, d.mueller@elsoft.ch,
-	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
-	tharvey@gateworks.com, kernel@pengutronix.de,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH] PCI: imx6: fix boot hang when link already enabled
-Date: Mon, 21 Jul 2014 20:12:49 +0200
-Message-Id: <1405966369-5712-1-git-send-email-l.stach@pengutronix.de>
+Received: from mga03.intel.com ([143.182.124.21]:46107 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751490AbaGaPXW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 31 Jul 2014 11:23:22 -0400
+Message-ID: <53DA5EF4.1030500@intel.com>
+Date: Thu, 31 Jul 2014 08:21:24 -0700
+From: Alexander Duyck <alexander.h.duyck@intel.com>
+MIME-Version: 1.0
+To: Edward Cree <ecree@solarflare.com>, linux-pci@vger.kernel.org
+CC: Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
+References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com> <alpine.LFD.2.03.1407311500570.16821@solarflare.com>
+In-Reply-To: <alpine.LFD.2.03.1407311500570.16821@solarflare.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This fixes a boot hang observed when the bootloader
-already enabled the PCIe link for it's own use. The
-fundamental problem is that Freescale forgot to wire
-up the core reset, so software doesn't have a sane way
-to get the core into a defined state.
+On 07/31/2014 07:24 AM, Edward Cree wrote:
+> Make a driver_max_VFs of 0 mean 0, instead of total_VFs as previously.
+> Initialise driver_max_VFs to total_VFs instead of 0.
+> 
+> Signed-off-by: Edward Cree <ecree@solarflare.com>
+> ---
+> Only existing callers are ixgbe and igb, and neither passes 0, so this
+> doesn't break existing users.
+> ---
+>  drivers/pci/iov.c | 7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index cb6f247..fb51467 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -381,7 +381,7 @@ found:
+>         iov->pos = pos;
+>         iov->nres = nres;
+>         iov->ctrl = ctrl;
+> -       iov->total_VFs = total;
+> +       iov->driver_max_VFs = iov->total_VFs = total;
+>         iov->offset = offset;
+>         iov->stride = stride;
+>         iov->pgsz = pgsz;
+> @@ -686,9 +686,6 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+>         if (!dev->is_physfn)
+>                 return 0;
+> 
+> -       if (dev->sriov->driver_max_VFs)
+> -               return dev->sriov->driver_max_VFs;
+> -
+> -       return dev->sriov->total_VFs;
+> +       return dev->sriov->driver_max_VFs;
+>  }
+>  EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
 
-According to the DW PCIe core reference manual configuration
-of the core may only happen when the LTSSM is disabled, so
-this is one of the first things we do. Apparently this isn't
-safe to do when the LTSSM is in any other state than
-"detect" as we observe an instant machine hang when trying to
-do so while the link is already up.
 
-As a workaround force LTSSM into detect state right before
-hitting the disable switch.
+This change is mostly harmless so I am not concerned with any effects on
+igb or ixgbe.  In the grand scheme of things it should also drop a few
+lines of code which is always good.
 
-Reported-by: Fabio Estevam <fabio.estevam@freescale.com>
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
-Fabios delay workaround worked because of the following
-conditions:
-1. The driver gets probed and pulls the peripheral reset GPIO
-2. Peripheral is held in reset, so won't answer any link
-negotiation requests
-3. The LTSSM times out and falls back into detect state
-after 24ms (that's why a 30ms delay helps)
-4. After LTSSM entered detect state it's safe to hit the
-disable switch
----
- drivers/pci/host/pci-imx6.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+However if you are wanting to use this as a way to disable SR-IOV for a
+device I wouldn't recommend it.  Based on what you have described I
+would suggest dropping the fix in drivers/pci/quirks that would clear
+dev->is_physfn if you are in the PF-IOV mode.  That way the SR-IOV
+functionality should be fully disabled.  In addition this solution would
+also resolve the fact that the driver wouldn't actually have to be
+loaded for it to work so if someone were to load a driver that didn't
+contain the fix they would be blocked from enabling SR-IOV as well.
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index afa450c54aba..1c4b4b81fe15 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -49,6 +49,9 @@ struct imx6_pcie {
- 
- /* PCIe Port Logic registers (memory-mapped) */
- #define PL_OFFSET 0x700
-+#define PCIE_PL_PFLR (PL_OFFSET + 0x08)
-+#define PCIE_PL_PFLR_LINK_STATE_MASK		(0x3f << 16)
-+#define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
- #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
- #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
- #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
-@@ -214,6 +217,12 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
- static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
- {
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-+	u32 val;
-+
-+	val = readl(pp->dbi_base + PCIE_PL_PFLR);
-+	val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
-+	val |= PCIE_PL_PFLR_FORCE_LINK;
-+	writel(val, pp->dbi_base + PCIE_PL_PFLR);
- 
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
--- 
-2.0.1
+Thanks,
+
+Alex
 
