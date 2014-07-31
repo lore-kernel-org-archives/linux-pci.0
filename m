@@ -1,67 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:55779 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752576AbaGIGsC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 02:48:02 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [PATCH v8 8/9] pci: Add support for creating a generic host_bridge from device tree
-Date: Wed, 9 Jul 2014 08:47:40 +0200
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci" <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com> <20140708223737.GA19512@google.com> <20140708225755.GE4980@e106497-lin.cambridge.arm.com>
-In-Reply-To: <20140708225755.GE4980@e106497-lin.cambridge.arm.com>
+Received: from nbfkord-smmo01.seg.att.com ([209.65.160.76]:54294 "EHLO
+	nbfkord-smmo01.seg.att.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750996AbaGaOg4 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 31 Jul 2014 10:36:56 -0400
+Date: Thu, 31 Jul 2014 15:24:07 +0100
+From: Edward Cree <ecree@solarflare.com>
+To: <linux-pci@vger.kernel.org>
+CC: Alexander Duyck <alexander.h.duyck@intel.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
+In-Reply-To: <53DA3180.5040302@solarflare.com>
+Message-ID: <alpine.LFD.2.03.1407311500570.16821@solarflare.com>
+References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201407090847.41303.arnd@arndb.de>
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 09 July 2014, Liviu Dudau wrote:
-> On Tue, Jul 08, 2014 at 11:37:37PM +0100, Bjorn Helgaas wrote:
-> > On Tue, Jul 08, 2014 at 11:27:38PM +0100, Liviu Dudau wrote:
-> > > > > > > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > > > > > > index 7e7b939..556dc5f 100644
-> > > > > > > --- a/include/linux/pci.h
-> > > > > > > +++ b/include/linux/pci.h
-> > > > > > > @@ -402,6 +402,7 @@ struct pci_host_bridge {
-> > > > > > >       struct device dev;
-> > > > > > >       struct pci_bus *bus;            /* root bus */
-> > > > > > >       int domain_nr;
-> > > > > > > +     resource_size_t io_base;        /* physical address for the start of I/O area */
-> > > > > > 
-> > > > > > I don't see where this is used yet.
-> > > > > 
-> > > > > It's used in pci_host_bridge_of_get_ranges() (earlier in this patch).
-> > > > 
-> > > > of_create_pci_host_bridge() fills in bridge->io_base, but I don't see
-> > > > anything that ever reads bridge->io_base.
-> > > 
-> > > Ah, understood. It is used by the host bridge drivers to set their ATR registers to the
-> > > correct CPU address values.
+Make a driver_max_VFs of 0 mean 0, instead of total_VFs as previously.
+Initialise driver_max_VFs to total_VFs instead of 0.
 
-Actually, as we just discovered with one of the pci_dw drivers, it may
-be the wrong number: what you program in the ATR registers is not
-necessarily the same as the address visible to the CPU. What you need
-instead is the address at the bus immediately above the PCI host bridge.
+Signed-off-by: Edward Cree <ecree@solarflare.com>
+---
+Only existing callers are ixgbe and igb, and neither passes 0, so this
+doesn't break existing users.
+---
+ drivers/pci/iov.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-I think for now we can leave out this part from common code and add
-the infrastructure later. Host drivers can have their own loop
-around the ranges if they need to set up these registers. Ideally
-at least on arm64, they should be set up by the firmware already.
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index cb6f247..fb51467 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -381,7 +381,7 @@ found:
+        iov->pos = pos;
+        iov->nres = nres;
+        iov->ctrl = ctrl;
+-       iov->total_VFs = total;
++       iov->driver_max_VFs = iov->total_VFs = total;
+        iov->offset = offset;
+        iov->stride = stride;
+        iov->pgsz = pgsz;
+@@ -686,9 +686,6 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+        if (!dev->is_physfn)
+                return 0;
 
-	Arnd
+-       if (dev->sriov->driver_max_VFs)
+-               return dev->sriov->driver_max_VFs;
+-
+-       return dev->sriov->total_VFs;
++       return dev->sriov->driver_max_VFs;
+ }
+ EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
+--
+1.7.11.7
+The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
