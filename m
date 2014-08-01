@@ -1,83 +1,118 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20140822130640.GM13147@bart.dudau.co.uk>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
- <1407860725-25202-5-git-send-email-Liviu.Dudau@arm.com> <CAL_JsqJm6qWNdrJ2F8xddFUj46y42n6hQVu1nkTaA-5Tbg--XQ@mail.gmail.com>
- <20140822130640.GM13147@bart.dudau.co.uk>
-From: Rob Herring <robherring2@gmail.com>
-Date: Sun, 24 Aug 2014 18:27:48 -0500
-Message-ID: <CAL_JsqLGa3em5Phct-H0Q=vB5AnA78h19uA=4xi3xHA1rCVq+A@mail.gmail.com>
-Subject: Re: [PATCH v9 04/12] PCI: OF: Fix the conversion of IO ranges into IO resources.
-To: Liviu Dudau <liviu@dudau.co.uk>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:51412 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754106AbaHAJKb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Aug 2014 05:10:31 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+	Mohit Kumar <mohit.kumar@st.com>, kernel@pengutronix.de
+Subject: [PATCH] PCI: designware: check private_data validity in single place
+Date: Fri,  1 Aug 2014 11:10:22 +0200
+Message-Id: <1406884222-23974-1-git-send-email-l.stach@pengutronix.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 22, 2014 at 8:06 AM, Liviu Dudau <liviu@dudau.co.uk> wrote:
-> On Thu, Aug 21, 2014 at 11:08:48PM -0500, Rob Herring wrote:
->> On Tue, Aug 12, 2014 at 11:25 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
->> > The ranges property for a host bridge controller in DT describes
->> > the mapping between the PCI bus address and the CPU physical address.
->> > The resources framework however expects that the IO resources start
->> > at a pseudo "port" address 0 (zero) and have a maximum size of IO_SPACE_LIMIT.
->> > The conversion from pci ranges to resources failed to take that into account.
->> >
->> > In the process move the function into drivers/of/address.c as it now
->> > depends on pci_address_to_pio() code and make it return an error code.
->> >
->> > Cc: Grant Likely <grant.likely@linaro.org>
->> > Cc: Rob Herring <robh+dt@kernel.org>
->>
->> Humm, this says I'm cc'ed, but I'm not which defeats the point of
->> recording the Cc's in the commit.
->
-> Appologies, I've screwed up my git send-email arguments.
->
->>
->> I still have the same concerns that this will break existing users.
->> Are you sure integrator is the only platform affected?
->
-> microblaze and powerpc have their similar handcoded routine for parsing ranges
-> where they pre-compute the io_base and adjust the values again when registering
-> resources. I'm not absolutely sure they are not broken as I lack the appropriate
-> platforms to test (I've been asking for an FPGA engineer to build me a microblaze
-> image with all the bits included but haven't received anything yet and it is
-> possible Xilinx has now shifted their interests towards ARM + PCI as the ML605
-> board that I have seems to have been discontinued).
+The driver had checks for this sprinkled all over. As we call
+sys_to_pcie() before every instance of this check, we can as well
+move the check to this single location to make things clear.
 
-I will settle for "I've read through the $arch code and believe they
-are not broken". It is unrealistic for you to test on everything.
+Removing the statements after BUG[_ON]() is safe as the kernel
+is halted at this point anyway.
 
-> mips is doing the same thing and I believe is not affected, pci-host-generic.c
-> was adjusting the returned values afterwards so that will not be needed and Lorenzo
-> has a patch for the driver to adapt it to this series anyway.
->
-> pcie-designware.c also recalculates the io.start and io.end values, so that's fine
-> for now. The only ones that I believe are still affected are pci-tegra.c and
-> pcie-rcar.c for which I will need to provide a patch similar to integrator unless
-> the code gets converted to the new range parsing.
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+This is a follow on patch to the series
+"PCI: designware: init order/resource alloc fixes", which
+addresses Jingoos review feedback, so this series should
+be hopefully good to go now.
+---
+ drivers/pci/host/pcie-designware.c | 29 ++---------------------------
+ 1 file changed, 2 insertions(+), 27 deletions(-)
 
-Well, the latter would be nice, but they certainly have to be fixed.
-Now that I think about it, this needs to be handled in a bisectable
-way. So I think you need to fix all affected platforms in this patch
-rather than a separate patch as you have done.
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index dde5e6d4afa2..3dbfc089601d 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -73,6 +73,8 @@ static unsigned long global_io_offset;
+ 
+ static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+ {
++	BUG_ON(!sys->private_data);
++
+ 	return sys->private_data;
+ }
+ 
+@@ -261,11 +263,6 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+ 	int irq, pos0, pos1, i;
+ 	struct pcie_port *pp = sys_to_pcie(desc->dev->bus->sysdata);
+ 
+-	if (!pp) {
+-		BUG();
+-		return -EINVAL;
+-	}
+-
+ 	pos0 = find_first_zero_bit(pp->msi_irq_in_use,
+ 			MAX_MSI_IRQS);
+ 	if (pos0 % no_irqs) {
+@@ -326,10 +323,6 @@ static void clear_irq(unsigned int irq)
+ 	/* get the port structure */
+ 	msi = irq_data_get_msi(data);
+ 	pp = sys_to_pcie(msi->dev->bus->sysdata);
+-	if (!pp) {
+-		BUG();
+-		return;
+-	}
+ 
+ 	/* undo what was done in assign_irq */
+ 	pos = data->hwirq;
+@@ -350,11 +343,6 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+ 	struct msi_msg msg;
+ 	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+ 
+-	if (!pp) {
+-		BUG();
+-		return -EINVAL;
+-	}
+-
+ 	pci_read_config_word(pdev, desc->msi_attrib.pos+PCI_MSI_FLAGS,
+ 				&msg_ctr);
+ 	msgvec = (msg_ctr&PCI_MSI_FLAGS_QSIZE) >> 4;
+@@ -716,11 +704,6 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
+ 	int ret;
+ 
+-	if (!pp) {
+-		BUG();
+-		return -EINVAL;
+-	}
+-
+ 	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0) {
+ 		*val = 0xffffffff;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+@@ -745,11 +728,6 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
+ 	int ret;
+ 
+-	if (!pp) {
+-		BUG();
+-		return -EINVAL;
+-	}
+-
+ 	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+@@ -777,9 +755,6 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+ 
+ 	pp = sys_to_pcie(sys);
+ 
+-	if (!pp)
+-		return 0;
+-
+ 	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
+ 		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
+ 		pci_ioremap_io(global_io_offset, pp->io_base);
+-- 
+2.0.1
 
-Rob
