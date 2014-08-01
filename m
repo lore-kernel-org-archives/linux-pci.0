@@ -1,41 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51751 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751947AbaHWBPR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 21:15:17 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] PCI: add back missing MEM_64 mask check for hotplug path
-Date: Fri, 22 Aug 2014 18:15:07 -0700
-Message-Id: <1408756512-16885-1-git-send-email-yinghai@kernel.org>
+Received: from mail-qa0-f41.google.com ([209.85.216.41]:60263 "EHLO
+	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754832AbaHAMz0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Aug 2014 08:55:26 -0400
+Date: Fri, 1 Aug 2014 08:55:22 -0400
+From: Tejun Heo <tj@kernel.org>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] resource: Add device-managed
+ request/release_resource()
+Message-ID: <20140801125522.GC21624@htj.dyndns.org>
+References: <1406895311-18869-1-git-send-email-thierry.reding@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1406895311-18869-1-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We missed that in
-|  commit 5b28541552ef5eeffc41d6936105f38c2508e566
-|    PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources
-for pci hotplug path.
+On Fri, Aug 01, 2014 at 02:15:10PM +0200, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
+> 
+> Provide device-managed implementations of the request_resource() and
+> release_resource() functions. Upon failure to request a resource, the
+> new devm_request_resource() function will output an error message for
+> consistent error reporting.
+> 
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
 
-We have MEM_64 in type_mask from pci_assign_unassigned_root_bus_resources()
-for boot path.
+Acked-by: Tejun Heo <tj@kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+But please also update Documentation/driver-model/devres.txt.
 
----
- drivers/pci/setup-bus.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks.
 
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -1652,7 +1652,7 @@ void pci_assign_unassigned_bridge_resour
- 	struct pci_dev_resource *fail_res;
- 	int retval;
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
--				  IORESOURCE_PREFETCH;
-+				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
- 
- again:
- 	__pci_bus_size_bridges(parent, &add_list);
+-- 
+tejun
