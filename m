@@ -1,126 +1,64 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Cc: linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v9 06/12] ARM: integrator: Correct usage of of_pci_range_to_resource()
-Date: Tue, 12 Aug 2014 17:25:19 +0100
-Message-Id: <1407860725-25202-7-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.skyhub.de ([78.46.96.112]:56732 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751624AbaHAOj2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Aug 2014 10:39:28 -0400
+Date: Fri, 1 Aug 2014 16:39:22 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>,
+	=?utf-8?B?SsO2cmcgUsO2ZGVs?= <joro@8bytes.org>
+Subject: Re: [PATCH] x86, irq: Keep IRQ assignment for PCI devices during
+ suspend/hibernation, bisected
+Message-ID: <20140801143922.GB5406@pd.tnic>
+References: <20140730175836.GC10213@pd.tnic>
+ <1406766807-5745-1-git-send-email-jiang.liu@linux.intel.com>
+ <20140731103941.GA4375@pd.tnic>
+ <53DA70AB.9010906@linux.intel.com>
+ <20140731165648.GG4375@pd.tnic>
+ <20140801105618.GA3857@nazgul.tnic>
+ <53DB87AB.1000900@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <53DB87AB.1000900@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Previously, of_pci_range_to_resource() would return a resource
-that contained physical addresses of the IO space even if the
-IORESOURCE_IO flags mandate a logical port set of values. Now
-that the function has been fixed we need to update the drivers
-that were taking advantage of the old behaviour.
+On Fri, Aug 01, 2014 at 08:27:23PM +0800, Jiang Liu wrote:
+> 	The above commit may cause failure of suspend/hiberrnation.
+> The reason is:
+> 1) With recent changers, we dynamically allocate irq number for IOAPIC
+>    pins.
+> 2) The allocated irq will be released when suspending/hibernating.
+> 	pci_disable_device()->pcibios_disable_irq()
+> 3) When resuming, a different irq may be assigned to the PCI device.
+> 	pci_enable_device()->pcibios_enable_irq()
+> 4) Now the hardware will deliver interrupt to the new allocated irq
+>    but the interrupt handler is still registered on old irq, so it
+>    breaks the driver and causes failure of hibernation.
+> 
+> The patch sent out by me is to fix this issue by keeping the allocated
+> irq when suspend/hibernate. And seems it works as expected.
+> 
+> But I still don't know why it causes IOMMU related warnings as:
+> AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.0 domain=0x0009
+> address=0x0000000000000000 flags=0x0000]
 
-Cc: Linus Walleij <linus.walleij@linaro.org>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Russell King <linux@arm.linux.org.uk>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
----
- arch/arm/mach-integrator/pci_v3.c | 24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
+Well, the devices in those change during my test runs. Once it was
+00:13.0, once this, once the GPU. This box has IOMMU so it might be
+related to that somehow.
 
-diff --git a/arch/arm/mach-integrator/pci_v3.c b/arch/arm/mach-integrator/pci_v3.c
-index 05e1f73..193b7f8 100644
---- a/arch/arm/mach-integrator/pci_v3.c
-+++ b/arch/arm/mach-integrator/pci_v3.c
-@@ -660,6 +660,7 @@ static void __init pci_v3_preinit(void)
- {
- 	unsigned long flags;
- 	unsigned int temp;
-+	phys_addr_t io_address = pci_pio_to_address(io_mem.start);
- 
- 	pcibios_min_mem = 0x00100000;
- 
-@@ -701,7 +702,7 @@ static void __init pci_v3_preinit(void)
- 	/*
- 	 * Setup window 2 - PCI IO
- 	 */
--	v3_writel(V3_LB_BASE2, v3_addr_to_lb_base2(io_mem.start) |
-+	v3_writel(V3_LB_BASE2, v3_addr_to_lb_base2(io_address) |
- 			V3_LB_BASE_ENABLE);
- 	v3_writew(V3_LB_MAP2, v3_addr_to_lb_map2(0));
- 
-@@ -742,6 +743,7 @@ static void __init pci_v3_preinit(void)
- static void __init pci_v3_postinit(void)
- {
- 	unsigned int pci_cmd;
-+	phys_addr_t io_address = pci_pio_to_address(io_mem.start);
- 
- 	pci_cmd = PCI_COMMAND_MEMORY |
- 		  PCI_COMMAND_MASTER | PCI_COMMAND_INVALIDATE;
-@@ -758,7 +760,7 @@ static void __init pci_v3_postinit(void)
- 		       "interrupt: %d\n", ret);
- #endif
- 
--	register_isa_ports(non_mem.start, io_mem.start, 0);
-+	register_isa_ports(non_mem.start, io_address, 0);
- }
- 
- /*
-@@ -867,33 +869,33 @@ static int __init pci_v3_probe(struct platform_device *pdev)
- 
- 	for_each_of_pci_range(&parser, &range) {
- 		if (!range.flags) {
--			of_pci_range_to_resource(&range, np, &conf_mem);
-+			ret = of_pci_range_to_resource(&range, np, &conf_mem);
- 			conf_mem.name = "PCIv3 config";
- 		}
- 		if (range.flags & IORESOURCE_IO) {
--			of_pci_range_to_resource(&range, np, &io_mem);
-+			ret = of_pci_range_to_resource(&range, np, &io_mem);
-+			dev_info(&pdev->dev, "IO PCI range converted\n");
- 			io_mem.name = "PCIv3 I/O";
- 		}
- 		if ((range.flags & IORESOURCE_MEM) &&
- 			!(range.flags & IORESOURCE_PREFETCH)) {
- 			non_mem_pci = range.pci_addr;
- 			non_mem_pci_sz = range.size;
--			of_pci_range_to_resource(&range, np, &non_mem);
-+			ret = of_pci_range_to_resource(&range, np, &non_mem);
- 			non_mem.name = "PCIv3 non-prefetched mem";
- 		}
- 		if ((range.flags & IORESOURCE_MEM) &&
- 			(range.flags & IORESOURCE_PREFETCH)) {
- 			pre_mem_pci = range.pci_addr;
- 			pre_mem_pci_sz = range.size;
--			of_pci_range_to_resource(&range, np, &pre_mem);
-+			ret = of_pci_range_to_resource(&range, np, &pre_mem);
- 			pre_mem.name = "PCIv3 prefetched mem";
- 		}
--	}
- 
--	if (!conf_mem.start || !io_mem.start ||
--	    !non_mem.start || !pre_mem.start) {
--		dev_err(&pdev->dev, "missing ranges in device node\n");
--		return -EINVAL;
-+		if (ret < 0) {
-+			dev_err(&pdev->dev, "missing ranges in device node\n");
-+			return -EINVAL;
-+		}
- 	}
- 
- 	pci_v3.map_irq = of_irq_parse_and_map_pci;
+I could try to disable the IOMMU and see whether it still triggers. That
+could tell us something.
+
 -- 
-2.0.4
+Regards/Gruss,
+    Boris.
 
+Sent from a fat crate under my desk. Formatting is fine.
+--
