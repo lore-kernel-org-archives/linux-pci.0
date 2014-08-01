@@ -1,52 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hygieia.santi-shop.eu ([78.46.175.2]:46958 "EHLO
-	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751536AbaHPRb5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Aug 2014 13:31:57 -0400
-Date: Sat, 16 Aug 2014 19:21:35 +0200
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-To: Andreas Noever <andreas.noever@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: DRI mailing list <dri-devel@lists.freedesktop.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dave Airlie <airlied@linux.ie>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 0/2] x86, ia64: Move EFI_FB vga_default_device()
- initialization to pci_vga_fixup()
-Message-ID: <20140816192135.34260115@neptune.home>
-In-Reply-To: <CAMxnaaVNpiSZmhQsHa_ZHJckgzG+xHyOL6hOT3Ts8GdcGN_A9g@mail.gmail.com>
-References: <20140514224339.7f8be3a9@neptune.home>
-	<20140527234255.GJ11907@google.com>
-	<20140602201650.35f0e936@neptune.home>
-	<20140602201926.4d476818@neptune.home>
-	<20140625005501.7ff7e982@neptune.home>
-	<20140705171503.GC6247@google.com>
-	<CAMxnaaXxAZAJAdr5AYYRZC_xKFCuyrfY=qpJu8x+P-S+osm5vw@mail.gmail.com>
-	<CAMxnaaXGQe4vg9cY5e2KZBnG4F-z49OriwxEGUE-DCE6MKUryQ@mail.gmail.com>
-	<20140810112654.1bf684d6@neptune.home>
-	<CAMxnaaUsd+XHppMmPMXdFL13d1-OhLzoH_yjv_9abOx_uP=_Ug@mail.gmail.com>
-	<20140810183411.19370721@neptune.home>
-	<CAMxnaaVNpiSZmhQsHa_ZHJckgzG+xHyOL6hOT3Ts8GdcGN_A9g@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga01.intel.com ([192.55.52.88]:17386 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751963AbaHAM11 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Aug 2014 08:27:27 -0400
+Message-ID: <53DB87AB.1000900@linux.intel.com>
+Date: Fri, 01 Aug 2014 20:27:23 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+To: Borislav Petkov <bp@alien8.de>
+CC: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] x86, irq: Keep IRQ assignment for PCI devices during
+ suspend/hibernation, bisected
+References: <20140730175836.GC10213@pd.tnic> <1406766807-5745-1-git-send-email-jiang.liu@linux.intel.com> <20140731103941.GA4375@pd.tnic> <53DA70AB.9010906@linux.intel.com> <20140731165648.GG4375@pd.tnic> <20140801105618.GA3857@nazgul.tnic>
+In-Reply-To: <20140801105618.GA3857@nazgul.tnic>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series improves on commit 20cde694027e (x86, ia64: Move EFI_FB
-vga_default_device() initialization to pci_vga_fixup()):
-- cleanup remaining but always-true #ifndefs
-- fix boot regression on dual-GPU Macs
 
-Andreas, can you please test this series? It is a modification from
-previous testing patch that should still work fine for you.
-That testing patch would have been failing X startup on old BIOS systems
-booted with vga=normal (or otherwise in VGA text mode).
+On 2014/8/1 18:56, Borislav Petkov wrote:
+> Ok,
+> 
+> so I went and looked at tip and which branches could be the usual
+> suspects. And whaddya know, tip/x86/apic was the first to pick and it
+> contained the culprit:
+> 
+> 6a38fa0e3c94 ("x86, irq, ACPI: Release IOAPIC pin when PCI device is disabled")
+Hi Borislav,
+	The above commit may cause failure of suspend/hiberrnation.
+The reason is:
+1) With recent changers, we dynamically allocate irq number for IOAPIC
+   pins.
+2) The allocated irq will be released when suspending/hibernating.
+	pci_disable_device()->pcibios_disable_irq()
+3) When resuming, a different irq may be assigned to the PCI device.
+	pci_enable_device()->pcibios_enable_irq()
+4) Now the hardware will deliver interrupt to the new allocated irq
+   but the interrupt handler is still registered on old irq, so it
+   breaks the driver and causes failure of hibernation.
 
+The patch sent out by me is to fix this issue by keeping the allocated
+irq when suspend/hibernate. And seems it works as expected.
 
-Greg, in case you have scheduled above-mentioned commit for your next
-stable iteration, please hold it back in the queue until this follow-up
-has landed and can be included within the same stable update as alone
-that patch regresses for Macs with dual-GPU and using efifb.
+But I still don't know why it causes IOMMU related warnings as:
+AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.0 domain=0x0009
+address=0x0000000000000000 flags=0x0000]
 
-Bruno
+Regards!
+Gerry
+> 
+> It seems like my machine doesn't like releasing the IOAPIC pin. Or,
+> maybe it is IOMMU-related and the IOMMU doesn't like this releasing of
+> the pin *after* the device gets suspended and *before* the IOMMU.
+> 
+> Strange.
+> 
+> Oh well, a well deserved lunch now :)
+> 
