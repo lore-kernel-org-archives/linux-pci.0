@@ -1,183 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7808 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965297AbaH1CWL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 Aug 2014 22:22:11 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Prarit Bhargava <prarit@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: [Patch v4 13/16] x86, irq, ACPI: Implement interfaces to support ACPI based IOAPIC hot-removal
-Date: Thu, 28 Aug 2014 10:22:38 +0800
-Message-Id: <1409192561-19744-14-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Cc: Mark Rutland <Mark.Rutland@arm.com>,
+	"jason\@lakedaemon.net" <jason@lakedaemon.net>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"tglx\@linutronix.de" <tglx@linutronix.de>,
+	"Harish.Kasiviswanathan\@amd.com" <Harish.Kasiviswanathan@amd.com>,
+	"linux-arm-kernel\@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc\@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"devicetree\@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH 3/4 V3] irqchip: gic: Add supports for ARM GICv2m MSI(-X)
+In-Reply-To: <53DBC074.3030309@amd.com> (Suravee Suthikulanit's message of
+	"Fri, 1 Aug 2014 17:29:40 +0100")
+References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
+	<1404947104-21345-4-git-send-email-suravee.suthikulpanit@amd.com>
+	<87zjfqj3mc.fsf@approximate.cambridge.arm.com>
+	<53DBB562.5020003@amd.com> <53DBC074.3030309@amd.com>
+Date: Fri, 01 Aug 2014 18:05:15 +0100
+Message-ID: <87oaw4gmyc.fsf@approximate.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement acpi_unregister_ioapic() to support ACPI based IOAPIC hot-removal.
-An IOAPIC could only be removed when all its pins are unused.
+On Fri, Aug 01 2014 at  5:29:40 pm BST, Suravee Suthikulanit <suravee.suthikulpanit@amd.com> wrote:
+> On 8/1/2014 10:42 AM, Suravee Suthikulanit wrote:
+>>>> +#ifdef CONFIG_SMP
+>>>> +       .irq_set_affinity       = gic_set_affinity,
+>>>> +#endif
+>>>> +#ifdef CONFIG_PM
+>>>> +       .irq_set_wake           = gic_set_wake,
+>>>> +#endif
+>>>> +};
+>>>> +
+>>>> +#ifdef CONFIG_OF
+>>>> +static int __init
+>>>> +gicv2m_of_init(struct device_node *node, struct device_node *parent)
+>>>> +{
+>>>> +       struct gic_chip_data *gic;
+>>>> +       int ret;
+>>>> +
+>>>> +       ret = _gic_of_init(node, parent, &gicv2m_chip, &gic);
+>>>> +       if (ret) {
+>>>> +               pr_err("GICv2m: Failed to initialize GIC\n");
+>>>> +               return ret;
+>>>> +       }
+>>>> +
+>>>> +       gic->msi_chip.owner = THIS_MODULE;
+>>>> +       gic->msi_chip.of_node = node;
+>>>> +       gic->msi_chip.setup_irq = gicv2m_setup_msi_irq;
+>>>> +       gic->msi_chip.teardown_irq = gicv2m_teardown_msi_irq;
+>>>> +       ret = of_pci_msi_chip_add(&gic->msi_chip);
+>>>> +       if (ret) {
+>>>> +               /* MSI is optional and not supported here */
+>>>> +               pr_info("GICv2m: MSI is not supported.\n");
+>>>> +               return 0;
+>>>> +       }
+>>>> +
+>>>> +       ret = gicv2m_msi_init(node, &gic->v2m_data);
+>>>> +       if (ret)
+>>>> +               return ret;
+>>>> +       return ret;
+>>>> +}
+>>>> +
+>>>> +IRQCHIP_DECLARE(arm_gic_400_v2m, "arm,gic-400-v2m", gicv2m_of_init);
+>>>
+>>> So if you follow my advise of reversing your probing and call into the
+>>> v2m init from the main GIC driver, you could take a irq_chip as a
+>>> parameter, and use it to populate the v2m irq_chip, only overriding the
+>>> two methods that actually differ.
+>>>
+>>> This would have the net effect of completely dropping patch #2, which
+>>> becomes effectively useless.
+>>>
+>>
+>> [Suravee] Ok, lemme look into this.
+>
+> So, in previous revision, you mentioned that we should have a separate 
+> irq_chip for gicv2m stuff, is that is still the case here?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |    1 +
- arch/x86/kernel/acpi/boot.c    |   13 +++++++---
- arch/x86/kernel/apic/io_apic.c |   55 ++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 65 insertions(+), 4 deletions(-)
+Yes. You would do something like this:
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 94d05bd6586f..ce63cf34c93c 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -190,6 +190,7 @@ extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
- extern void mp_unmap_irq(int irq);
- extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 			      struct ioapic_domain_cfg *cfg);
-+extern int mp_unregister_ioapic(u32 gsi_base);
- extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 			    irq_hw_number_t hwirq);
- extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 796cd9e31ef3..560a6d1cb0f4 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -794,15 +794,20 @@ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
- 
- 	return ret;
- }
--
- EXPORT_SYMBOL(acpi_register_ioapic);
- 
- int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
- {
--	/* TBD */
--	return -EINVAL;
--}
-+	int ret = -ENOSYS;
-+
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+	down_write(&acpi_ioapic_rwsem);
-+	ret  = mp_unregister_ioapic(gsi_base);
-+	up_write(&acpi_ioapic_rwsem);
-+#endif
- 
-+	return ret;
-+}
- EXPORT_SYMBOL(acpi_unregister_ioapic);
- 
- static int __init acpi_parse_sbf(struct acpi_table_header *table)
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index b286461cabf9..fc1e1f9567bc 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -112,6 +112,7 @@ static struct ioapic {
- 	struct ioapic_domain_cfg irqdomain_cfg;
- 	struct irq_domain *irqdomain;
- 	struct mp_pin_info *pin_info;
-+	struct resource *iomem_res;
- } ioapics[MAX_IO_APICS];
- 
- #define mpc_ioapic_ver(ioapic_idx)	ioapics[ioapic_idx].mp_config.apicver
-@@ -250,6 +251,12 @@ static void alloc_ioapic_saved_registers(int idx)
- 		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
- }
- 
-+static void free_ioapic_saved_registers(int idx)
-+{
-+	kfree(ioapics[idx].saved_registers);
-+	ioapics[idx].saved_registers = NULL;
-+}
-+
- int __init arch_early_irq_init(void)
- {
- 	struct irq_cfg *cfg;
-@@ -2972,6 +2979,16 @@ static int mp_irqdomain_create(int ioapic)
- 	return 0;
- }
- 
-+static void ioapic_destroy_irqdomain(int idx)
-+{
-+	if (ioapics[idx].irqdomain) {
-+		irq_domain_remove(ioapics[idx].irqdomain);
-+		ioapics[idx].irqdomain = NULL;
-+	}
-+	kfree(ioapics[idx].pin_info);
-+	ioapics[idx].pin_info = NULL;
-+}
-+
- void __init setup_IO_APIC(void)
- {
- 	int ioapic;
-@@ -3733,6 +3750,7 @@ static struct resource * __init ioapic_setup_resources(void)
- 		snprintf(mem, IOAPIC_RESOURCE_NAME_SIZE, "IOAPIC %u", i);
- 		mem += IOAPIC_RESOURCE_NAME_SIZE;
- 		num++;
-+		ioapics[i].iomem_res = res;
- 	}
- 
- 	ioapic_resources = res;
-@@ -3955,6 +3973,43 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 	return 0;
- }
- 
-+int mp_unregister_ioapic(u32 gsi_base)
-+{
-+	int ioapic, pin;
-+	int found = 0;
-+	struct mp_pin_info *pin_info;
-+
-+	for_each_ioapic(ioapic)
-+		if (ioapics[ioapic].gsi_config.gsi_base == gsi_base) {
-+			found = 1;
-+			break;
-+		}
-+	if (!found) {
-+		pr_warn("can't find IOAPIC for GSI %d\n", gsi_base);
-+		return -ENODEV;
-+	}
-+
-+	for_each_pin(ioapic, pin) {
-+		pin_info = mp_pin_info(ioapic, pin);
-+		if (pin_info->count) {
-+			pr_warn("pin%d on IOAPIC%d is still in use.\n",
-+				pin, ioapic);
-+			return -EBUSY;
-+		}
-+	}
-+
-+	/* Mark entry not present */
-+	ioapics[ioapic].nr_registers  = 0;
-+	ioapic_destroy_irqdomain(ioapic);
-+	free_ioapic_saved_registers(ioapic);
-+	if (ioapics[ioapic].iomem_res)
-+		release_resource(ioapics[ioapic].iomem_res);
-+	clear_fixmap(FIX_IO_APIC_BASE_0 + ioapic);
-+	memset(&ioapics[ioapic], 0, sizeof(ioapics[ioapic]));
-+
-+	return 0;
-+}
-+
- int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 		     irq_hw_number_t hwirq)
- {
+- In the main GIC code:
+	if (v2m_present()) {
+        	v2m_init(&gic_chip);
+        }
+
+- In the v2m code:
+	static struct irq_chip_v2m_chip;
+	void v2m_init(struct irq_chip *gic_chip)
+        {
+        	[...]
+        	v2m_chip = *gic_chip;
+                v2m_chip.mask = v2m_irq_mask;
+                v2m_chip.unmask = v2m_irq_unmask;
+                [...]
+        }
+
+Basically, you inherit a number of default methods, only overloading the
+ones that are different. The rest of your driver is mostly unchanged.
+
+This preserves the current probing structure, and avoids exposing
+private methods outside of irq-gic.c (preventing people from doing silly
+things with an unsuspecting interrupt controller...).
+
+	M.
 -- 
-1.7.10.4
-
+Jazz is not dead. It just smells funny.
