@@ -1,183 +1,144 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Len Brown <lenb@kernel.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Patch v4 05/16] ACPI: Add interfaces to parse IOAPIC ID for IOAPIC hotplug
-Date: Thu, 28 Aug 2014 10:22:30 +0800
-Message-Id: <1409192561-19744-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>
+Cc: Stephen Warren <swarren@wwwdotorg.org>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 1/2] resource: Add device-managed request/release_resource()
+Date: Fri,  1 Aug 2014 14:15:10 +0200
+Message-Id: <1406895311-18869-1-git-send-email-thierry.reding@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+From: Thierry Reding <treding@nvidia.com>
 
-We need to parse APIC ID for IOAPIC registration for IOAPIC hotplug.
-ACPI _MAT method and MADT table are used to figure out IOAPIC ID, just
-like parsing CPU APIC ID for CPU hotplug.
+Provide device-managed implementations of the request_resource() and
+release_resource() functions. Upon failure to request a resource, the
+new devm_request_resource() function will output an error message for
+consistent error reporting.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
- drivers/acpi/apic_id.c |   96 +++++++++++++++++++++++++++++++++++++++++++++++-
- include/linux/acpi.h   |    4 ++
- 2 files changed, 98 insertions(+), 2 deletions(-)
+Changes in v2:
+- use more natural flow for error handling
+- don't needlessly check for NULL pointers
 
-diff --git a/drivers/acpi/apic_id.c b/drivers/acpi/apic_id.c
-index ada5fd48bad4..ad2e2679c104 100644
---- a/drivers/acpi/apic_id.c
-+++ b/drivers/acpi/apic_id.c
-@@ -4,11 +4,18 @@
-  *
-  *	Alex Chiang <achiang@hp.com>
-  *	- Unified x86/ia64 implementations
-+ *
-+ * I/O APIC hotplug support
-+ *	Yinghai Lu <yinghai@kernel.org>
-+ *	Jiang Liu <jiang.liu@intel.com>
+ Documentation/driver-model/devres.txt |  2 +
+ include/linux/ioport.h                |  5 +++
+ kernel/resource.c                     | 70 +++++++++++++++++++++++++++++++++++
+ 3 files changed, 77 insertions(+)
+
+diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
+index d14710b04439..befc3fe12ba6 100644
+--- a/Documentation/driver-model/devres.txt
++++ b/Documentation/driver-model/devres.txt
+@@ -264,8 +264,10 @@ IIO
+ IO region
+   devm_release_mem_region()
+   devm_release_region()
++  devm_release_resource()
+   devm_request_mem_region()
+   devm_request_region()
++  devm_request_resource()
+ 
+ IOMAP
+   devm_ioport_map()
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 142ec544167c..2c5250222278 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -215,6 +215,11 @@ static inline int __deprecated check_region(resource_size_t s,
+ 
+ /* Wrappers for managed devices */
+ struct device;
++
++extern int devm_request_resource(struct device *dev, struct resource *root,
++				 struct resource *new);
++extern void devm_release_resource(struct device *dev, struct resource *new);
++
+ #define devm_request_region(dev,start,n,name) \
+ 	__devm_request_region(dev, &ioport_resource, (start), (n), (name))
+ #define devm_request_mem_region(dev,start,n,name) \
+diff --git a/kernel/resource.c b/kernel/resource.c
+index da14b8d09296..ca24f19f9d18 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -1248,6 +1248,76 @@ int release_mem_region_adjustable(struct resource *parent,
+ /*
+  * Managed region resource
   */
- #include <linux/export.h>
- #include <linux/acpi.h>
- #include "internal.h"
- 
-+static struct acpi_table_madt *madt;
-+static int read_madt;
-+
- static int map_lapic_id(struct acpi_subtable_header *entry,
- 		 u32 acpi_id, int *apic_id)
- {
-@@ -64,8 +71,6 @@ static int map_lsapic_id(struct acpi_subtable_header *entry,
- static int map_madt_entry(int type, u32 acpi_id)
- {
- 	unsigned long madt_end, entry;
--	static struct acpi_table_madt *madt;
--	static int read_madt;
- 	int apic_id = -1;
- 
- 	if (!read_madt) {
-@@ -200,3 +205,90 @@ int acpi_get_cpuid(acpi_handle handle, int type, u32 acpi_id)
- 	return acpi_map_cpuid(apic_id, acpi_id);
- }
- EXPORT_SYMBOL_GPL(acpi_get_cpuid);
-+
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+static int map_ioapic_id(struct acpi_subtable_header *entry, u32 gsi_base,
-+			 u64 *phys_addr, int *ioapic_id)
++static void devm_resource_release(struct device *dev, void *ptr)
 +{
-+	struct acpi_madt_io_apic *ioapic = (struct acpi_madt_io_apic *)entry;
++	struct resource **r = ptr;
 +
-+	if (ioapic->global_irq_base != gsi_base)
-+		return 0;
-+
-+	*phys_addr = ioapic->address;
-+	*ioapic_id = ioapic->id;
-+	return 1;
++	release_resource(*r);
 +}
 +
-+static int map_madt_ioapic_entry(u32 gsi_base, u64 *phys_addr)
++/**
++ * devm_request_resource() - request and reserve an I/O or memory resource
++ * @dev: device for which to request the resource
++ * @root: root of the resource tree from which to request the resource
++ * @new: descriptor of the resource to request
++ *
++ * This is a device-managed version of request_resource(). There is usually
++ * no need to release resources requested by this function explicitly since
++ * that will be taken care of when the device is unbound from its driver.
++ * If for some reason the resource needs to be released explicitly, because
++ * of ordering issues for example, drivers must call devm_release_resource()
++ * rather than the regular release_resource().
++ *
++ * When a conflict is detected between any existing resources and the newly
++ * requested resource, an error message will be printed.
++ *
++ * Returns 0 on success or a negative error code on failure.
++ */
++int devm_request_resource(struct device *dev, struct resource *root,
++			  struct resource *new)
 +{
-+	struct acpi_subtable_header *hdr;
-+	unsigned long madt_end, entry;
-+	int apic_id = -1;
++	struct resource *conflict, **ptr;
 +
-+	if (!read_madt) {
-+		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
-+					(struct acpi_table_header **)&madt)))
-+			madt = NULL;
-+		read_madt++;
++	ptr = devres_alloc(devm_resource_release, sizeof(*ptr), GFP_KERNEL);
++	if (!ptr)
++		return -ENOMEM;
++
++	*ptr = new;
++
++	conflict = request_resource_conflict(root, new);
++	if (conflict) {
++		dev_err(dev, "resource collision: %pR conflicts with %s %pR\n",
++			new, conflict->name, conflict);
++		devres_free(ptr);
++		return -EBUSY;
 +	}
 +
-+	if (!madt)
-+		return apic_id;
-+
-+	entry = (unsigned long)madt;
-+	madt_end = entry + madt->header.length;
-+
-+	/* Parse all entries looking for a match. */
-+	entry += sizeof(struct acpi_table_madt);
-+	while (entry + sizeof(struct acpi_subtable_header) < madt_end) {
-+		hdr = (struct acpi_subtable_header *)entry;
-+		if (hdr->type == ACPI_MADT_TYPE_IO_APIC &&
-+		    map_ioapic_id(hdr, gsi_base, phys_addr, &apic_id))
-+			break;
-+		else
-+			entry += hdr->length;
-+	}
-+
-+	return apic_id;
++	devres_add(dev, ptr);
++	return 0;
 +}
++EXPORT_SYMBOL(devm_request_resource);
 +
-+static int map_mat_ioapic_entry(acpi_handle handle, u32 gsi_base,
-+				u64 *phys_addr)
++static int devm_resource_match(struct device *dev, void *res, void *data)
 +{
-+	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
-+	union acpi_object *obj;
-+	struct acpi_subtable_header *header;
-+	int apic_id = -1;
++	struct resource **ptr = res;
 +
-+	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_MAT", NULL, &buffer)))
-+		goto exit;
-+
-+	if (!buffer.length || !buffer.pointer)
-+		goto exit;
-+
-+	obj = buffer.pointer;
-+	if (obj->type != ACPI_TYPE_BUFFER ||
-+	    obj->buffer.length < sizeof(struct acpi_subtable_header))
-+		goto exit;
-+
-+	header = (struct acpi_subtable_header *)obj->buffer.pointer;
-+	if (header->type == ACPI_MADT_TYPE_IO_APIC)
-+		map_ioapic_id(header, gsi_base, phys_addr, &apic_id);
-+
-+exit:
-+	kfree(buffer.pointer);
-+	return apic_id;
++	return *ptr == data;
 +}
 +
-+int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr)
++/**
++ * devm_release_resource() - release a previously requested resource
++ * @dev: device for which to release the resource
++ * @new: descriptor of the resource to release
++ *
++ * Releases a resource previously requested using devm_request_resource().
++ */
++void devm_release_resource(struct device *dev, struct resource *new)
 +{
-+	int apic_id;
-+
-+	apic_id = map_mat_ioapic_entry(handle, gsi_base, phys_addr);
-+	if (apic_id == -1)
-+		apic_id = map_madt_ioapic_entry(gsi_base, phys_addr);
-+
-+	return apic_id;
++	WARN_ON(devres_release(dev, devm_resource_release, devm_resource_match,
++			       new));
 +}
-+#endif /* CONFIG_ACPI_HOTPLUG_IOAPIC */
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 05ed6886f1f8..b41c5aef5336 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -149,6 +149,10 @@ int acpi_map_lsapic(acpi_handle handle, int physid, int *pcpu);
- int acpi_unmap_lsapic(int cpu);
- #endif /* CONFIG_ACPI_HOTPLUG_CPU */
- 
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
-+#endif
++EXPORT_SYMBOL(devm_release_resource);
 +
- int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
- int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
- void acpi_irq_stats_init(void);
+ struct region_devres {
+ 	struct resource *parent;
+ 	resource_size_t start;
 -- 
-1.7.10.4
+2.0.3
 
