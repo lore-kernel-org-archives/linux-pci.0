@@ -1,136 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:53472 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754517AbaHVHpc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 03:45:32 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>,
-	"Tony Luck" <tony.luck@intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>, <x86@kernel.org>,
-	<linux-ia64@vger.kernel.org>
-Subject: [PATCH v2 4/5] MSI: Use __get_cached_msi_msg() instead of get_cached_msi_msg()
-Date: Fri, 22 Aug 2014 16:07:59 +0800
-Message-ID: <1408694880-8260-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1408694880-8260-1-git-send-email-wangyijing@huawei.com>
-References: <1408694880-8260-1-git-send-email-wangyijing@huawei.com>
+Received: from fw-tnat.austin.arm.com ([217.140.110.23]:14085 "EHLO
+	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754615AbaHAQF1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Aug 2014 12:05:27 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Cc: Mark Rutland <Mark.Rutland@arm.com>,
+	"jason\@lakedaemon.net" <jason@lakedaemon.net>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"tglx\@linutronix.de" <tglx@linutronix.de>,
+	"Harish.Kasiviswanathan\@amd.com" <Harish.Kasiviswanathan@amd.com>,
+	"linux-arm-kernel\@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc\@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"devicetree\@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH 3/4 V3] irqchip: gic: Add supports for ARM GICv2m MSI(-X)
+In-Reply-To: <53DBB562.5020003@amd.com> (Suravee Suthikulanit's message of
+	"Fri, 1 Aug 2014 16:42:26 +0100")
+References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
+	<1404947104-21345-4-git-send-email-suravee.suthikulpanit@amd.com>
+	<87zjfqj3mc.fsf@approximate.cambridge.arm.com>
+	<53DBB562.5020003@amd.com>
+Date: Fri, 01 Aug 2014 17:05:14 +0100
+Message-ID: <87silggpqd.fsf@approximate.cambridge.arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Get_cached_msi_msg() only be called in two places,
-ia64_set_msi_irq_affinity() and sn_set_msi_irq_affinity().
+On Fri, Aug 01 2014 at  4:42:26 pm BST, Suravee Suthikulanit <suravee.suthikulpanit@amd.com> wrote:
+> On 7/30/2014 9:57 AM, Marc Zyngier wrote:
+>> On Thu, Jul 10 2014 at 12:05:03 am BST, "suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com> wrote:
+>>
+>> Hi Suravee,
+>>
+>>> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>>>
+>  >> ......
+>  >>
+>>> -  first region is the GIC distributor register base and size. The 2nd region is
+>>> -  the GIC cpu interface register base and size.
+>>> +- reg : Specifies base physical address(s) and size of the GIC register frames.
+>>> +
+>>> +  Region | Description
+>>> +  Index  |
+>>> +  -------------------------------------------------------------------
+>>> +     0   | GIC distributor register base and size
+>>> +     1   | GIC cpu interface register base and size
+>>> +     2   | VGIC interface control register base and size (Optional)
+>>> +     3   | VGIC CPU interface register base and size (Optional)
+>>> +     4   | GICv2m MSI interface register base and size (Optional)
+>>
+>> Given that the v2m block is somehow bolted on the side of a standard
+>> GICv2, I'd rather see it as a subnode of the main GIC.
+>>
+>> Then you could directly call into the v2m layer to initialize it,
+>> instead of the odd "reverse probing" you're using here...
+>
+> [Suravee] IIUC, you don't think we should introduce the "gic-400-v2m" 
+> compatible ID. Instead, you want to see something like:
+>
+>      gic @ 0x00f00000 {
+>          .....
+>          v2m {
+>              msi-controller;
+>              reg = < .... >; /* v2m reg frame */
+>          }
+>      }
+>
+> If so, I can change this.
 
-The code flow is:
-irq = irq_data->irq
-    get_cached_msi_msg(irq)
-	    irq_get_msi_desc(irq)
-		    irq_get_irq_data(irq)
-			    msi_desc = irq_data->desc
-        __get_cached_msi_msg(msi_desc, msg)
+Yes, something like that indeed.
 
-This is crazy, we should use __get_cached_msi_msg(irq_data->desc, msg)
-directly to simplify the flow, and remove get_cached_msi_msg().
-Finally, rename __get_cached_msi_msg() to get_cached_msi_msg().
+>
+>
+>>> +
+>>> +static int __init
+>>> +gicv2m_msi_init(struct device_node *node, struct v2m_data *v2m)
+>>> +{
+>>> +       unsigned int val;
+>>> +
+>>> +       if (of_address_to_resource(node, GIC_OF_MSIV2M_RANGE_INDEX,
+>>> +                                  &v2m->res)) {
+>>> +               pr_err("GICv2m: Failed locate GICv2m MSI register frame\n");
+>>> +               return -EINVAL;
+>>> +       }
+>>> +
+>>> +       v2m->base = of_iomap(node, GIC_OF_MSIV2M_RANGE_INDEX);
+>>> +       if (!v2m->base) {
+>>> +               pr_err("GICv2m: Failed to map GIC MSI registers\n");
+>>> +               return -EINVAL;
+>>> +       }
+>>> +
+>>> +       val = readl_relaxed(v2m->base + V2M_MSI_TYPER);
+>>> +       if (!val) {
+>>> +               pr_warn("GICv2m: Failed to read V2M_MSI_TYPER register\n");
+>>> +               return -EINVAL;
+>>> +       }
+>>> +
+>>> +       v2m->spi_start = (val >> V2M_MSI_TYPER_BASE_SHIFT) &
+>>> +                               V2M_MSI_TYPER_BASE_MASK;
+>>> +       v2m->nr_spis = val & V2M_MSI_TYPER_NUM_MASK;
+>>> +       if ((v2m->spi_start < V2M_MIN_SPI) || (v2m->nr_spis >= V2M_MAX_SPI)) {
+>>> +                       pr_err("GICv2m: Invalid MSI_TYPER (%#x)\n", val);
+>>> +                       return -EINVAL;
+>>> +       }
+>>> +
+>>> +       v2m->bm = kzalloc(sizeof(long) * BITS_TO_LONGS(v2m->nr_spis),
+>>> +                         GFP_KERNEL);
+>>> +       if (!v2m->bm) {
+>>> +               pr_err("GICv2m: Failed to allocate MSI bitmap\n");
+>>> +               return -ENOMEM;
+>>> +       }
+>>> +
+>>> +       spin_lock_init(&v2m->msi_cnt_lock);
+>>> +
+>>> +       pr_info("GICv2m: SPI range [%d:%d]\n",
+>>> +               v2m->spi_start, (v2m->spi_start + v2m->nr_spis));
+>>> +
+>>> +       return 0;
+>>> +}
+>>
+>> This function is assuming that you will only see one single MSI frame
+>> here. Is there any chance that there would be more than one in a system?
+>>
+>
+> [Suravee] If I would imagine such SOC, where there are multiple MSI 
+> frames (hence multiple msi-controllers), can we currently support this 
+> with the current msichip interface?  Currently, each PCI RC connects to 
+> an "interrupt-parrent", which is also an MSI controller. We would need 
+> to have a way for PCI RC to specify which of the msichips within an 
+> interrupt-controller it wants to use.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Tony Luck <tony.luck@intel.com>
-CC: Thomas Gleixner <tglx@linutronix.de>
-CC: x86@kernel.org
-CC: linux-ia64@vger.kernel.org
----
- arch/ia64/kernel/msi_ia64.c    |    2 +-
- arch/ia64/sn/kernel/msi_sn.c   |    4 ++--
- arch/x86/kernel/apic/io_apic.c |    2 +-
- drivers/pci/msi.c              |    9 +--------
- include/linux/msi.h            |    3 +--
- 5 files changed, 6 insertions(+), 14 deletions(-)
+Not necessarly multiple MSI controllers. As far as I can see, a v2m MSI
+frame describes a range of SPIs, and I can perfectly imagine a system
+where someone would have a number of these, each capable of generating a
+number of SPIs. It becomes interesting when you have non-contiguous SPI
+ranges... ;-)
 
-diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
-index c430f91..4efe748 100644
---- a/arch/ia64/kernel/msi_ia64.c
-+++ b/arch/ia64/kernel/msi_ia64.c
-@@ -23,7 +23,7 @@ static int ia64_set_msi_irq_affinity(struct irq_data *idata,
- 	if (irq_prepare_move(irq, cpu))
- 		return -1;
- 
--	get_cached_msi_msg(irq, &msg);
-+	get_cached_msi_msg(idata->msi_desc, &msg);
- 
- 	addr = msg.address_lo;
- 	addr &= MSI_ADDR_DEST_ID_MASK;
-diff --git a/arch/ia64/sn/kernel/msi_sn.c b/arch/ia64/sn/kernel/msi_sn.c
-index afc58d2..8bec242 100644
---- a/arch/ia64/sn/kernel/msi_sn.c
-+++ b/arch/ia64/sn/kernel/msi_sn.c
-@@ -175,8 +175,8 @@ static int sn_set_msi_irq_affinity(struct irq_data *data,
- 	 * Release XIO resources for the old MSI PCI address
- 	 */
- 
--	get_cached_msi_msg(irq, &msg);
--        sn_pdev = (struct pcidev_info *)sn_irq_info->irq_pciioinfo;
-+	get_cached_msi_msg(data->msi_desc, &msg);
-+	sn_pdev = (struct pcidev_info *)sn_irq_info->irq_pciioinfo;
- 	pdev = sn_pdev->pdi_linux_pcidev;
- 	provider = SN_PCIDEV_BUSPROVIDER(pdev);
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 29290f5..e877cfb 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3145,7 +3145,7 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
- 	if (ret)
- 		return ret;
- 
--	__get_cached_msi_msg(data->msi_desc, &msg);
-+	get_cached_msi_msg(data->msi_desc, &msg);
- 
- 	msg.data &= ~MSI_DATA_VECTOR_MASK;
- 	msg.data |= MSI_DATA_VECTOR(cfg->vector);
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 0d0f163..8746ecd 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -296,7 +296,7 @@ void read_msi_msg(unsigned int irq, struct msi_msg *msg)
- 	__read_msi_msg(entry, msg);
- }
- 
--void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
-+void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	/* Assert that the cache is valid, assuming that
- 	 * valid messages are not all-zeroes. */
-@@ -306,13 +306,6 @@ void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 	*msg = entry->msg;
- }
- 
--void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg)
--{
--	struct msi_desc *entry = irq_get_msi_desc(irq);
--
--	__get_cached_msi_msg(entry, msg);
--}
--
- void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	if (entry->dev->current_state != PCI_D0) {
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index fff7201..329ec73 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -16,10 +16,9 @@ struct msi_desc;
- void mask_msi_irq(struct irq_data *data);
- void unmask_msi_irq(struct irq_data *data);
- void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
--void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-+void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void read_msi_msg(unsigned int irq, struct msi_msg *msg);
--void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
- void write_msi_msg(unsigned int irq, struct msi_msg *msg);
- 
- struct msi_desc {
+> Currently, I am not aware if there is a GIC w/ multiple MSI frames. 
+> Could you check if there is such product for ARM GICs?
+
+I can, but it is unlikely I'll be able to find about what people outside
+of ARM are doing. They usually only get in touch when they've screwed
+something up.. ;-)
+
+Anyway, maybe we just don't need to address this at this point in
+time. Adding a comment to that effect would probably be enough, and give
+a hint to anyone building such a configuration.
+
+Thanks,
+
+	M.
 -- 
-1.7.1
-
+Jazz is not dead. It just smells funny.
