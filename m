@@ -1,105 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23048 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753460AbaHER7T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 13:59:19 -0400
-Date: Tue, 5 Aug 2014 13:58:02 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: xen-devel@lists.xenproject.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [Bugfix 0/2] Fix bugs caused by "use irqdomain to dynamically
- allocate IRQ for IOAPIC"
-Message-ID: <20140805175802.GE27240@laptop.dumpdata.com>
-References: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com>
- <20140805130448.GA13057@laptop.dumpdata.com>
- <53E10136.9000505@linux.intel.com>
+Received: from mail-bn1blp0186.outbound.protection.outlook.com ([207.46.163.186]:42711
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754842AbaHAQTi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Aug 2014 12:19:38 -0400
+Message-ID: <53DBBE06.5040307@amd.com>
+Date: Fri, 1 Aug 2014 11:19:18 -0500
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53E10136.9000505@linux.intel.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+CC: Mark Rutland <Mark.Rutland@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH 4/4 V3] irqchip: gicv2m: Add support for multiple MSI
+ for ARM64 GICv2m
+References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <1404947104-21345-5-git-send-email-suravee.suthikulpanit@amd.com>
+ <87vbqej2rj.fsf@approximate.cambridge.arm.com> <53DBA603.9030509@amd.com>
+ <53DBA986.90705@arm.com>
+In-Reply-To: <53DBA986.90705@arm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 06, 2014 at 12:07:18AM +0800, Jiang Liu wrote:
-> 
-> 
-> On 2014/8/5 21:04, Konrad Rzeszutek Wilk wrote:
-> > On Tue, Aug 05, 2014 at 11:26:16AM +0800, Jiang Liu wrote:
-> >> Two issues have been reported against patch set "use irqdomain to
-> >> dynamically allocate IRQ for IOAPIC" at https://lkml.org/lkml/2014/6/9/44.
-> >>
-> >> This first one causes failure of suspend/hibernation, please refer to
-> >> https://lkml.org/lkml/2014/7/28/822 for more information. And we have
-> >> worked out a patch to fix it (https://lkml.org/lkml/2014/7/30/725) and
-> >> Borislav has tested it. But with more testing and analysis, I found the
-> >> provided patch still has some issues:
-> >> 1) It may cause regression to Xen
-> > 
-> > Could you elaborate please?
-> > 
-> > Is there a git tree with all of these patches to test it?
-> Hi Konrad,
-> 	The patch at https://lkml.org/lkml/2014/7/30/725 skips invoking
-> xen_pcifront_enable_irq() on resume from suspend or restore from
-> hibernation. I'm not sure whether that will affect suspend/hibernation
-> with Xen. This patch series won't affect Xen anymore.
+On 8/1/2014 9:51 AM, Marc Zyngier wrote:
+> Hi Suravee,
+>
+> On 01/08/14 15:36, Suravee Suthikulanit wrote:
+>> On 7/30/2014 10:16 AM, Marc Zyngier wrote:
+>>> Why do we need this complexity at all? Is there any case where we'd want
+>>> to limit ourselves to a single vector for MSI?
+>>
+>> I think the ARM64 GICv2m should not be the limitation for the devices
+>> multiple MSI if there is no real hardware/design limitation.
+>>
+>>> arm64 is a new enough architecture so that we can expect all interrupt controllers to cope
+>>> with that.
+>>
+>> I am not sure if I understand this comment.
+>>
+>> We are not forcing all interrupt controllers for ARM64 to handle
+>> multi-MSI.  They have the option to support if multi-MSI if they want
+>> to. I just think that we should not put the architectural limit here.
+>
+> Let me be clearer: I think we should put the burden of *not* handling
+> multi-MSI on interrupt controllers. Here, you're making the
+> architectural default to be "I don't support multi-MSI", hence having to
+> override global vectors and such for well behaved MSI controllers like
+> GICv2m and GICv3 ITS.
+>
+> Let's only support multi-MSI for the time being. If someone comes up
+> with a silly old MSI controller that can't deal with it, we'll address
+> the issue at that problem.
+>
+> Thanks,
+>
+> 	M.
+>
 
-Ah, it looks like:
+Ok, I'm fine with that. Thanks for clarification.
 
-415         pcibios_enable_irq = xen_pcifront_enable_irq;                           
-416         pcibios_disable_irq = NULL;                                             
+Suravee
 
-Is the culprit right? If there was an pcibios_disable_irq set, then said
-patch would not been needed?
-
-
-> 	I have prepared a tree for you at
-> https://github.com/jiangliu/linux.git suspend
-
-Thank you. Will give it a spin tomorrow.
-> 
-> Thanks for help!
-> Gerry
-> 
-> >> 2) Flag dev->dev.power.is_prepared has already been cleared when
-> >>    pcibios_enable_device() gets called, so it will cause IOAPIC pin
-> >>    reference count leak.
-> >>
-> >> So I reworked the patch to fix above issues. The first patch fixes issue
-> >> 1 by moving check of dev->dev.power.is_prepared pcibios_enable_irq, so
-> >> it won't affect Xen. The second patch fixes the IOAPIC pin reference
-> >> count leakage issue. It also solves the issue we have discussed at
-> >> http://www.spinics.net/lists/linux-pci/msg32902.html
-> >>
-> >> Regards!
-> >> Gerry
-> >>
-> >> Jiang Liu (2):
-> >>   x86, irq, PCI: Keep IRQ assignment for PCI devices during
-> >>     suspend/hibernation
-> >>   x86, irq: Keep balance of IOAPIC pin reference count
-> >>
-> >>  arch/x86/pci/intel_mid_pci.c |    9 ++++++++-
-> >>  arch/x86/pci/irq.c           |    8 +++++++-
-> >>  drivers/acpi/pci_irq.c       |   15 +++++++++++++--
-> >>  include/linux/pci.h          |    1 +
-> >>  4 files changed, 29 insertions(+), 4 deletions(-)
-> >>
-> >> -- 
-> >> 1.7.10.4
-> >>
