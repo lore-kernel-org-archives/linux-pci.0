@@ -1,72 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f171.google.com ([209.85.220.171]:54110 "EHLO
-	mail-vc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757112AbaHZC5O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Aug 2014 22:57:14 -0400
-Received: by mail-vc0-f171.google.com with SMTP id hq11so16215717vcb.16
-        for <linux-pci@vger.kernel.org>; Mon, 25 Aug 2014 19:57:13 -0700 (PDT)
+Received: from mail.skyhub.de ([78.46.96.112]:45959 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754809AbaHAWux (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Aug 2014 18:50:53 -0400
+Date: Sat, 2 Aug 2014 00:50:49 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: =?utf-8?B?SsO2cmcgUsO2ZGVs?= <joro@8bytes.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] x86, irq: Keep IRQ assignment for PCI devices during
+ suspend/hibernation, bisected
+Message-ID: <20140801225049.GC4553@pd.tnic>
+References: <20140730175836.GC10213@pd.tnic>
+ <1406766807-5745-1-git-send-email-jiang.liu@linux.intel.com>
+ <20140731103941.GA4375@pd.tnic>
+ <53DA70AB.9010906@linux.intel.com>
+ <20140731165648.GG4375@pd.tnic>
+ <20140801105618.GA3857@nazgul.tnic>
+ <53DB87AB.1000900@linux.intel.com>
+ <20140801143922.GB5406@pd.tnic>
+ <20140801161107.GA4553@pd.tnic>
+ <20140801221410.GT9809@8bytes.org>
 MIME-Version: 1.0
-In-Reply-To: <CAOesGMgJtP-A9x_OSAkGd9HNPt9sTCtDQJJ1BZMmuQZm-nZoUg@mail.gmail.com>
-References: <5303286.K45Li7B92z@wuerfel>
-	<20140813172155.GB7298@google.com>
-	<CAOesGMgJtP-A9x_OSAkGd9HNPt9sTCtDQJJ1BZMmuQZm-nZoUg@mail.gmail.com>
-Date: Mon, 25 Aug 2014 19:57:13 -0700
-Message-ID: <CAOesGMgJADdKxCaCmiu-t1NOg9ZP7bPPkBb6vD9Q33nqvgmOrQ@mail.gmail.com>
-Subject: Re: [RFC] PCI: pcie-designware: allow drivers as loadable modules
-From: Olof Johansson <olof@lixom.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140801221410.GT9809@8bytes.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 25, 2014 at 7:56 PM, Olof Johansson <olof@lixom.net> wrote:
-> On Wed, Aug 13, 2014 at 10:21 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Thu, Jul 24, 2014 at 11:17:45AM +0200, Arnd Bergmann wrote:
->>> From 0ee79c7451851a34e5a7c33eb6020befcdcb2b24 Mon Sep 17 00:00:00 2001
->>> From: Arnd Bergmann <arnd@arndb.de>
->>> Date: Thu, 24 Jul 2014 11:12:48 +0200
->>> Subject: [PATCH] PCI: pcie-designware: allow drivers as loadable modules
->>>
->>> The new pcie-spear13xx driver uses the pcie-designware library
->>> and in the current form it can be built as a loadable module.
->>> However, the functions it uses from the base driver are not exported,
->>> so this results in a build failure and a module that can never
->>> be loaded:
->>>
->>> ERROR: "dw_pcie_host_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
->>> ERROR: "dw_handle_msi_irq" [drivers/pci/host/pcie-spear13xx.ko] undefined!
->>> ERROR: "dw_pcie_msi_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
->>> ERROR: "dw_pcie_cfg_write" [drivers/pci/host/pcie-spear13xx.ko] undefined!
->>> ERROR: "dw_pcie_cfg_read" [drivers/pci/host/pcie-spear13xx.ko] undefined!
->>> ERROR: "dw_pcie_setup_rc" [drivers/pci/host/pcie-spear13xx.ko] undefined!
->>> ERROR: "dw_pcie_link_up" [drivers/pci/host/pcie-spear13xx.ko] undefined!
->>>
->>> If we want to allow loadable pcie-designware drivers, we have to
->>> export all those symbols and ensure none of them are marked as __init.
->>> This also requires making pci_assign_unassigned_resources available
->>> after boot.
->>>
->>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->>> ---
->>> If we don't want this patch for some reason, we should instead mark
->>> this driver 'bool' in Kconfig, so it becomes impossible to encounter
->>> this build error.
->>
->> I'm not opposed to doing this, but I applied Sachin's patch that changes
->> the Kconfig option to bool, so I'll drop this one for now.
->
->
-> Hi Bjorn,
->
-> Are you going to send this as a 3.17 fix, or is it queued only for
-> 3.18? The former would be preferrable here.
+On Sat, Aug 02, 2014 at 12:14:10AM +0200, Jörg Rödel wrote:
+> My guess is that the firmware takes back the device after the OS
+> released it and now the legacy emulation tries to do DMA with it. But
+> since there is an IOMMU the physical addresses it tries to DMA to is
+> not mapped and it generated IO page faults
+> 
+> In a perfect world the BIOS would define Unity Mapping regions in the
+> IVRS ACPI table for the USB controler so that the IOMMU driver would
+> keep these regions mapped.  But I have never seen those regions defined
+> by any BIOS of an AMD machine, so this is probably the cause why you are
+> seeing these IO page faults.
 
-Nevermind, next time I'll go look at your tree directly instead. :-)
+Ok but what changed? Apparently we didn't have that small window earlier
+as I have never seen those IOMMU PFs before. So Jiang's stuff simply
+opens that hole now. And I bet this whole work is aiming at physical
+hotplug which is all fine and dandy but it shouldn't cause regressions.
 
+So, IIUC, the dynamic IOAPIC stuff of freeing an irq number during
+suspend opens this hole. Which leads me to the naive thinking that maybe
+this new behavior should be configurable so that systems can choose.
 
--Olof
+And I bet I won't be the last one to trigger those when those changes
+hit 3.17...
+
+> But this doesn't explain the GPU faults, though.
+
+I think this got fixed by
+
+https://lkml.kernel.org/r/1406766807-5745-1-git-send-email-jiang.liu@linux.intel.com
+
+which keeps the IRQ numbers across S/R.
+
+I'll watch out for those though.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
