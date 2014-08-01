@@ -1,110 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f54.google.com ([209.85.192.54]:65471 "EHLO
-	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752741AbaHTWgU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Aug 2014 18:36:20 -0400
-Received: by mail-qg0-f54.google.com with SMTP id j5so5290538qga.27
-        for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 15:36:20 -0700 (PDT)
+Received: from mail-bn1blp0182.outbound.protection.outlook.com ([207.46.163.182]:47675
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754765AbaHAK1t convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Aug 2014 06:27:49 -0400
+From: "arnab.basu@freescale.com" <arnab.basu@freescale.com>
+To: Yijing Wang <wangyijing@huawei.com>
+CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Paul.Mundt@huawei.com" <Paul.Mundt@huawei.com>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+	"virtualization@lists.linux-foundation.org"
+	<virtualization@lists.linux-foundation.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [RFC PATCH 00/11] Refactor MSI to support Non-PCI device
+Date: Fri, 1 Aug 2014 10:27:46 +0000
+Message-ID: <c6d34fe1bbe9457ea8cff7dcd97902b8@DM2PR03MB317.namprd03.prod.outlook.com>
+References: <1406344128-27055-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1406344128-27055-1-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20140820123112.GG13147@bart.dudau.co.uk>
-References: <1407861695-25549-1-git-send-email-Liviu.Dudau@arm.com>
- <201408201327.57376.arnd@arndb.de> <20140820123112.GG13147@bart.dudau.co.uk>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 20 Aug 2014 17:35:59 -0500
-Message-ID: <CAErSpo6Z4b3w7j=X9C1YGOV59JHZwZUt7pnVp+Z0erY2RLCNAQ@mail.gmail.com>
-Subject: Re: [PATCH] drivers: pci: convert generic host controller to DT host
- bridge creation API
-To: Liviu Dudau <liviu@dudau.co.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 20, 2014 at 7:31 AM, Liviu Dudau <liviu@dudau.co.uk> wrote:
-> On Wed, Aug 20, 2014 at 01:27:57PM +0200, Arnd Bergmann wrote:
->> On Tuesday 12 August 2014, Liviu Dudau wrote:
->> > +       return of_create_pci_host_bridge(dev, 0, 0xff, &gen_pci_ops,
->> > +                                       gen_pci_setup, pci);
->>
->> I had not noticed it earlier, but the setup callback is actually a feature
->> of the arm32 PCI code that I had hoped to avoid when moving to the
->> generic API. Can we do this as a more regular sequence of
->>
->>
->>       ret = of_create_pci_host_bridge(dev, 0, 0xff, &gen_pci_ops, pci);
->>       if (ret)
->>               return ret;
->>
->>       ret = gen_pci_setup(pci);
->>       if (ret)
->>               pci_destroy_host_bridge(dev, pci);
->>       return ret;
->>
->> ?
->>
->>       Arnd
->
-> Hi Arnd,
->
-> That has been the general approach of my patchset up to v9. But, as Bjorn has
-> mentioned in his v8 review and I have put in my cover letter, the regular
-> aproach means that architectures that use pci_scan_root_bus() will have to
-> drop their one liner and replace it with the more verbose of_create_pci_host_bridge()
-> followed by pci_scan_child_bus() and pci_bus_add_devices() (basically, the content
-> of pci_scan_root_bus()). For those architectures it will lead to a net increase of
-> lines of code.
->
-> The patch for pci-host-generic.c is the first to use the callback setup function, but
-> not the only one. My PCI host bridge driver for Juno has the same need, and I'm betting
-> all other host bridge controllers will use it as it will be the only opportunity to
-> finish the controller setup before we start scanning the child busses. I'm trying to
-> balance ease of read vs ease of use here and it is the best version I've come up with
-> so far.
+Hi Yijing
 
-My guess is that you're referring to
-http://lkml.kernel.org/r/20140708011136.GE22939@google.com
+> -----Original Message-----
+> From: Yijing Wang [mailto:wangyijing@huawei.com]
+> Sent: Saturday, July 26, 2014 8:39 AM
+> To: linux-kernel@vger.kernel.org
+> Cc: Xinwei Hu; Wuyun; Bjorn Helgaas; linux-pci@vger.kernel.org;
+> Paul.Mundt@huawei.com; James E.J. Bottomley; Marc Zyngier; linux-arm-
+> kernel@lists.infradead.org; Russell King; linux-arch@vger.kernel.org;
+> Basu Arnab-B45036; virtualization@lists.linux-foundation.org; Hanjun Guo;
+> Yijing Wang
+> Subject: [RFC PATCH 00/11] Refactor MSI to support Non-PCI device
+> 
+> Hi all,
+> 	The series is a draft of generic MSI driver that supports PCI and
+> Non-PCI device which have MSI capability. If you're not interested it,
+> sorry for the noise.
+> 
 
-I'm trying to get to the point where arch code can discover the host
-bridge, configure it, learn its properties (apertures, etc.), then
-pass it off completely to the PCI core for PCI device enumeration.
-pci_scan_root_bus() is the closest thing we have to that right now, so
-that's why I point to that.  Here's the current pci_scan_root_bus():
+Thanks for sending out these patches, I have some (very basic) questions.
 
-  pci_scan_root_bus()
-  {
-    pci_create_root_bus();
-    /* 1 */
-    pci_scan_child_bus()
-    /* 2 */
-    pci_bus_add_devices()
-  }
+> The series is based on Linux-3.16-rc1.
+> 
+> MSI was introduced in PCI Spec 2.2. Currently, kernel MSI driver codes
+> are bonding with PCI device. Because MSI has a lot advantages in design.
+> More and more non-PCI devices want to use MSI as their default interrupt.
+> The existing MSI device include HPET. HPET driver provide its own MSI
+> code to initialize and process MSI interrupts. In the latest GIC v3 spec,
+> legacy device can deliver MSI by the help of a relay device named
+> consolidator.
+> Consolidator can translate the legacy interrupts connected to it to
+> MSI/MSI-X. And new non-PCI device will be designed to support MSI in
+> future. So make the MSI driver code be generic will help the non-PCI
+> device use MSI more simply.
 
-This is obviously incomplete as it is -- for example, it does nothing
-about assigning resources to PCI devices, so it only works if we rely
-completely on the firmware to do that.  Some arches (x86, ia64, etc.)
-don't want to rely on firmware, so they basically open-code
-pci_scan_root_bus() and insert resource assignment at (2) above.  That
-resource assignment really *should* be done in pci_scan_root_bus()
-itself, but it's quite a bit of work to make that happen.
+As per my understanding the GICv3 provides a service that will convert writes to a specified address to IRQs delivered to the core and as you mention above MSIs are part of the PCI spec. So I can see a strong case for non-PCI devices to want MSI like functionality without being fully compliant with the requirements of the MSI spec.
 
-In your case, of_create_pci_host_bridge() open-codes
-pci_scan_root_bus() and calls the "setup" callback at (1) in the
-outline above.  I don't have any problem with that, and I don't care
-whether you do it by passing in a callback function pointer or via
-some other means.
+My question is do we necessarily want to rework so much of the PCI-MSI layer to support non PCI devices? Or will it be sufficient to create a framework to allow non PCI devices to hook up with a device that can convert their writes to an IRQ to the core.
 
-However, I would ask whether this is really a requirement.  Most
-(maybe all) other arches require nothing special at (1), i.e., between
-pci_create_root_bus() and pci_scan_child_bus().  If you can do it
-*before* pci_create_root_bus(), I think that would be nicer, but maybe
-you can't.
+As I understand it, the msi_chip is (almost) such a framework. The only problem being that it makes some PCI specific assumptions (such as PCI specific writes from within msi_chip functions). Won't it be sufficient to make the msi_chip framework generic enough to be used by non-PCI devices and let each bus/device manage any additional requirements (such as configuration flow, bit definitions etc) that it places on message based interrupts?
 
-Bjorn
+Thanks
+Arnab
