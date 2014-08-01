@@ -1,170 +1,43 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 4 Aug 2014 21:00:24 +0200
-From: Quentin Lambert <lambert.quentin@gmail.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Murray <scott@spiteful.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH 1/3] PCI hotplug: fix a missing space coding style issue
-Message-ID: <20140804190024.GA4229@greed>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from na3sys010aog106.obsmtp.com ([74.125.245.80]:55896 "HELO
+	na3sys010aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756295AbaHAWxI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Aug 2014 18:53:08 -0400
+Received: by mail-pa0-f45.google.com with SMTP id eu11so6590493pac.32
+        for <linux-pci@vger.kernel.org>; Fri, 01 Aug 2014 15:53:06 -0700 (PDT)
+From: Sandeep Mann <sandeep@purestorage.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: [PATCH] PCI: pciehp: Use ordered workqueue for HPC events
+Date: Fri,  1 Aug 2014 15:47:12 -0700
+Message-Id: <1406933232-1560-1-git-send-email-sandeep@purestorage.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Modified the file so that it respects the coding style
-with regards to "if"s being followed by a space.
+Using an ordered workqueue serializes processing of hotplug event. Processing
+an hotplug event for some devices can take a relatively "long" time, which
+means if a device is added and removed in quick succession (or due to flacky
+hardware), it can lead to multiple outstanding hotplug events. Processing
+these events concurrently can lead to unknown internal state and/or kernel
+panics.
 
-Signed-off-by: Quentin Lambert <lambert.quentin@gmail.com>
+Signed-off-by: Sandeep Mann <sandeep@purestorage.com>
 ---
- drivers/pci/hotplug/cpcihp_zt5550.c | 34 +++++++++++++++++-----------------
- 1 file changed, 17 insertions(+), 17 deletions(-)
+ drivers/pci/hotplug/pciehp_hpc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/cpcihp_zt5550.c b/drivers/pci/hotplug/cpcihp_zt5550.c
-index 6757b3e..42a61c2 100644
---- a/drivers/pci/hotplug/cpcihp_zt5550.c
-+++ b/drivers/pci/hotplug/cpcihp_zt5550.c
-@@ -82,13 +82,13 @@ static int zt5550_hc_config(struct pci_dev *pdev)
- 	int ret;
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 42914e0..c4eedab 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -681,7 +681,7 @@ static int pcie_init_slot(struct controller *ctrl)
+ 	if (!slot)
+ 		return -ENOMEM;
  
- 	/* Since we know that no boards exist with two HC chips, treat it as an error */
--	if(hc_dev) {
-+	if (hc_dev) {
- 		err("too many host controller devices?");
- 		return -EBUSY;
- 	}
+-	slot->wq = alloc_workqueue("pciehp-%u", 0, 0, PSN(ctrl));
++	slot->wq = alloc_ordered_workqueue("pciehp-%u", 0, PSN(ctrl));
+ 	if (!slot->wq)
+ 		goto abort;
  
- 	ret = pci_enable_device(pdev);
--	if(ret) {
-+	if (ret) {
- 		err("cannot enable %s\n", pci_name(pdev));
- 		return ret;
- 	}
-@@ -98,7 +98,7 @@ static int zt5550_hc_config(struct pci_dev *pdev)
- 	dbg("pci resource start %llx", (unsigned long long)pci_resource_start(hc_dev, 1));
- 	dbg("pci resource len %llx", (unsigned long long)pci_resource_len(hc_dev, 1));
- 
--	if(!request_mem_region(pci_resource_start(hc_dev, 1),
-+	if (!request_mem_region(pci_resource_start(hc_dev, 1),
- 				pci_resource_len(hc_dev, 1), MY_NAME)) {
- 		err("cannot reserve MMIO region");
- 		ret = -ENOMEM;
-@@ -107,7 +107,7 @@ static int zt5550_hc_config(struct pci_dev *pdev)
- 
- 	hc_registers =
- 	    ioremap(pci_resource_start(hc_dev, 1), pci_resource_len(hc_dev, 1));
--	if(!hc_registers) {
-+	if (!hc_registers) {
- 		err("cannot remap MMIO region %llx @ %llx",
- 			(unsigned long long)pci_resource_len(hc_dev, 1),
- 			(unsigned long long)pci_resource_start(hc_dev, 1));
-@@ -146,7 +146,7 @@ exit_disable_device:
- 
- static int zt5550_hc_cleanup(void)
- {
--	if(!hc_dev)
-+	if (!hc_dev)
- 		return -ENODEV;
- 
- 	iounmap(hc_registers);
-@@ -170,9 +170,9 @@ static int zt5550_hc_check_irq(void *dev_id)
- 	u8 reg;
- 
- 	ret = 0;
--	if(dev_id == zt5550_hpc.dev_id) {
-+	if (dev_id == zt5550_hpc.dev_id) {
- 		reg = readb(csr_int_status);
--		if(reg)
-+		if (reg)
- 			ret = 1;
- 	}
- 	return ret;
-@@ -182,7 +182,7 @@ static int zt5550_hc_enable_irq(void)
- {
- 	u8 reg;
- 
--	if(hc_dev == NULL) {
-+	if (hc_dev == NULL) {
- 		return -ENODEV;
- 	}
- 	reg = readb(csr_int_mask);
-@@ -195,7 +195,7 @@ static int zt5550_hc_disable_irq(void)
- {
- 	u8 reg;
- 
--	if(hc_dev == NULL) {
-+	if (hc_dev == NULL) {
- 		return -ENODEV;
- 	}
- 
-@@ -210,7 +210,7 @@ static int zt5550_hc_init_one (struct pci_dev *pdev, const struct pci_device_id
- 	int status;
- 
- 	status = zt5550_hc_config(pdev);
--	if(status != 0) {
-+	if (status != 0) {
- 		return status;
- 	}
- 	dbg("returned from zt5550_hc_config");
-@@ -218,7 +218,7 @@ static int zt5550_hc_init_one (struct pci_dev *pdev, const struct pci_device_id
- 	memset(&zt5550_hpc, 0, sizeof (struct cpci_hp_controller));
- 	zt5550_hpc_ops.query_enum = zt5550_hc_query_enum;
- 	zt5550_hpc.ops = &zt5550_hpc_ops;
--	if(!poll) {
-+	if (!poll) {
- 		zt5550_hpc.irq = hc_dev->irq;
- 		zt5550_hpc.irq_flags = IRQF_SHARED;
- 		zt5550_hpc.dev_id = hc_dev;
-@@ -231,14 +231,14 @@ static int zt5550_hc_init_one (struct pci_dev *pdev, const struct pci_device_id
- 	}
- 
- 	status = cpci_hp_register_controller(&zt5550_hpc);
--	if(status != 0) {
-+	if (status != 0) {
- 		err("could not register cPCI hotplug controller");
- 		goto init_hc_error;
- 	}
- 	dbg("registered controller");
- 
- 	/* Look for first device matching cPCI bus's bridge vendor and device IDs */
--	if(!(bus0_dev = pci_get_device(PCI_VENDOR_ID_DEC,
-+	if (!(bus0_dev = pci_get_device(PCI_VENDOR_ID_DEC,
- 					 PCI_DEVICE_ID_DEC_21154, NULL))) {
- 		status = -ENODEV;
- 		goto init_register_error;
-@@ -247,14 +247,14 @@ static int zt5550_hc_init_one (struct pci_dev *pdev, const struct pci_device_id
- 	pci_dev_put(bus0_dev);
- 
- 	status = cpci_hp_register_bus(bus0, 0x0a, 0x0f);
--	if(status != 0) {
-+	if (status != 0) {
- 		err("could not register cPCI hotplug bus");
- 		goto init_register_error;
- 	}
- 	dbg("registered bus");
- 
- 	status = cpci_hp_start();
--	if(status != 0) {
-+	if (status != 0) {
- 		err("could not started cPCI hotplug system");
- 		cpci_hp_unregister_bus(bus0);
- 		goto init_register_error;
-@@ -300,11 +300,11 @@ static int __init zt5550_init(void)
- 
- 	info(DRIVER_DESC " version: " DRIVER_VERSION);
- 	r = request_region(ENUM_PORT, 1, "#ENUM hotswap signal register");
--	if(!r)
-+	if (!r)
- 		return -EBUSY;
- 
- 	rc = pci_register_driver(&zt5550_hc_driver);
--	if(rc < 0)
-+	if (rc < 0)
- 		release_region(ENUM_PORT, 1);
- 	return rc;
- }
 -- 
-1.9.1
+1.8.3.2
 
