@@ -1,91 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:51257 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750800AbaH2JHD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Aug 2014 05:07:03 -0400
+Received: from nbfkord-smmo04.seg.att.com ([209.65.160.86]:9264 "EHLO
+	nbfkord-smmo04.seg.att.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755234AbaHAMPq convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Aug 2014 08:15:46 -0400
+Message-ID: <53DB84E6.1070206@solarflare.com>
+Date: Fri, 1 Aug 2014 13:15:34 +0100
+From: Edward Cree <ecree@solarflare.com>
 MIME-Version: 1.0
-In-Reply-To: <20140829042121.GA31486@richard>
-References: <CANwwZzXowyGmg-cfCHQqeJ_iqjT+Ec+JPy+OWzNGeyN=hRqmPg@mail.gmail.com>
-	<20140829042121.GA31486@richard>
-Date: Fri, 29 Aug 2014 14:37:01 +0530
-Message-ID: <CANwwZzVbx5TdFwK=8-FOHzT4FVyk6ZX+2P2kNmW0MkSDzyOSug@mail.gmail.com>
-Subject: Re: mlx4 query in sriov mode
-From: Bob Biloxi <iambobbiloxi@gmail.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Ethan Zhao <ethan.kernel@gmail.com>
+CC: linux-pci <linux-pci@vger.kernel.org>,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Vasundhara Volam <vasundhara.volam@emulex.com>
+Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
+References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com> <alpine.LFD.2.03.1407311500570.16821@solarflare.com> <CABawtvPwxovKV==8RVCL1OcsdfnZDDjr=d1uYp-A=bAzYbmKww@mail.gmail.com>
+In-Reply-To: <CABawtvPwxovKV==8RVCL1OcsdfnZDDjr=d1uYp-A=bAzYbmKww@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On 01/08/14 04:51, Ethan Zhao wrote:
+> Though I like this patch, it shows direct style, but it will change
+> the meaning of a function not mentioned here.
+>
+>   int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+Am I missing something here, or is that exactly the function mentioned
+in the patch title / subject line?
 
-> Where you fund the communication between PF and VF is by writing its BAR?
-http://lxr.free-electrons.com/source/drivers/net/ethernet/mellanox/mlx4/cmd.c#L1964
+> So far seems no driver call pci_sriov_set_totalvfs() with numvfs = 0
+> and the patch will change the behavior of the drivers, but it will
+> definitely change the test cases and documents related to IOV.
+As for test cases and documents, I can't find any in the kernel tree -
+if I grep for pci_sriov_set_totalvfs, the only mentions I find are:
+* The declaration in include/linux/pci.h.  Doesn't have any comments.
+* The definition in drivers/pci/iov.c.  The comment doesn't document the
+behaviour in the numvfs = 0 case.
+* Documentation/ABI/testing/sysfs-bus-pci.  Describes the function's
+purpose "reduce the value read from [the sriov_totalvfs sysfs file]" but
+doesn't say anything about the numvfs = 0 case.
+* the Intel igb and ixgbe ethernet drivers.  Both pass nonzero constants
+for numvfs.
+* the Emulex benet driver.  This went into Dave Miller's net-next branch
+on 30/06/2014 (so hasn't hit Linus' or other trees yet), but it looks to
+me like it might call with numvfs = 0.  CCing the author of that patch
+(Vasundhara Volam) for comments.
 
-
-Best Regards,
-Bob
-
-On Fri, Aug 29, 2014 at 9:51 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
-> On Thu, Aug 28, 2014 at 10:58:50PM +0530, Bob Biloxi wrote:
->>Hi All,
->>
->>
->>I really appreciate this wonderful community which has immensely
->>helped me broaden my knowledge and understanding.
->>
->>
->>I was going through the mlx4 sriov code, trying to understand the
->>communication between the VF driver and the PF driver.
->>
->>I was having a few queries..hoping to get a better understanding.
->>
->>
->>As I understand, the commands are communicated between VF and PF
->>through a mechanism called communication channel. VF writes to
->>specific address in its BAR space, PF gets an event and then proceeds
->>ahead to read the command from its BAR space and then complete the
->>execution of it..
->>
->>
->>Now, my query is, lets say the VF driver is not yet present and only
->>the PF driver is there...
->>
->>In this case, can we simulate a VF command write and get notified
->>through an event?
->>
->
-> Hi,
->
-> I am not that familiar with mlx4 driver. As you mentioned in previous, VF
-> communicate with PF by writing some word in BAR and PF gets it. If this is
-> true, I believe it would works.
->
->>For eg. we write to some offset in the PF BAR space itself upon
->>completion of which, an event is generated because of the write? kind
->>of like loopback mechanism.
->>
->>
->>I searched through the code but couldn't find anywhere.
->>
->>Can anyone please help me understand if this is possible? And if there
->>is any location in the code where i can find this?
->
-> Where you fund the communication between PF and VF is by writing its BAR?
->
->>
->>Thanks a lot in advance!!
->>
->>
->>Best Regards,
->>Bob
->>--
->>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>the body of a message to majordomo@vger.kernel.org
->>More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> --
-> Richard Yang
-> Help you, Help me
->
+-Edward
+The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
