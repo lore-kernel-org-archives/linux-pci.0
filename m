@@ -1,144 +1,92 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2lp0206.outbound.protection.outlook.com ([207.46.163.206]:33754
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750851AbaHAQaS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Aug 2014 12:30:18 -0400
+Message-ID: <53DBC074.3030309@amd.com>
+Date: Fri, 1 Aug 2014 11:29:40 -0500
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+MIME-Version: 1.0
+To: Marc Zyngier <marc.zyngier@arm.com>
+CC: Mark Rutland <Mark.Rutland@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	Pawel Moll <Pawel.Moll@arm.com>,
 	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Cc: linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v9 08/12] PCI: Introduce generic domain handling for PCI busses.
-Date: Tue, 12 Aug 2014 17:25:21 +0100
-Message-Id: <1407860725-25202-9-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH 3/4 V3] irqchip: gic: Add supports for ARM GICv2m MSI(-X)
+References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
+	<1404947104-21345-4-git-send-email-suravee.suthikulpanit@amd.com>
+ <87zjfqj3mc.fsf@approximate.cambridge.arm.com> <53DBB562.5020003@amd.com>
+In-Reply-To: <53DBB562.5020003@amd.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The handling of PCI domains (or PCI segments in ACPI speak) is
-usually a straightforward affair but its implementation is
-currently left to the architectural code, with pci_domain_nr(b)
-querying the value of the domain associated with bus b.
+On 8/1/2014 10:42 AM, Suravee Suthikulanit wrote:
+>>> +#ifdef CONFIG_SMP
+>>> +       .irq_set_affinity       = gic_set_affinity,
+>>> +#endif
+>>> +#ifdef CONFIG_PM
+>>> +       .irq_set_wake           = gic_set_wake,
+>>> +#endif
+>>> +};
+>>> +
+>>> +#ifdef CONFIG_OF
+>>> +static int __init
+>>> +gicv2m_of_init(struct device_node *node, struct device_node *parent)
+>>> +{
+>>> +       struct gic_chip_data *gic;
+>>> +       int ret;
+>>> +
+>>> +       ret = _gic_of_init(node, parent, &gicv2m_chip, &gic);
+>>> +       if (ret) {
+>>> +               pr_err("GICv2m: Failed to initialize GIC\n");
+>>> +               return ret;
+>>> +       }
+>>> +
+>>> +       gic->msi_chip.owner = THIS_MODULE;
+>>> +       gic->msi_chip.of_node = node;
+>>> +       gic->msi_chip.setup_irq = gicv2m_setup_msi_irq;
+>>> +       gic->msi_chip.teardown_irq = gicv2m_teardown_msi_irq;
+>>> +       ret = of_pci_msi_chip_add(&gic->msi_chip);
+>>> +       if (ret) {
+>>> +               /* MSI is optional and not supported here */
+>>> +               pr_info("GICv2m: MSI is not supported.\n");
+>>> +               return 0;
+>>> +       }
+>>> +
+>>> +       ret = gicv2m_msi_init(node, &gic->v2m_data);
+>>> +       if (ret)
+>>> +               return ret;
+>>> +       return ret;
+>>> +}
+>>> +
+>>> +IRQCHIP_DECLARE(arm_gic_400_v2m, "arm,gic-400-v2m", gicv2m_of_init);
+>>
+>> So if you follow my advise of reversing your probing and call into the
+>> v2m init from the main GIC driver, you could take a irq_chip as a
+>> parameter, and use it to populate the v2m irq_chip, only overriding the
+>> two methods that actually differ.
+>>
+>> This would have the net effect of completely dropping patch #2, which
+>> becomes effectively useless.
+>>
+>
+> [Suravee] Ok, lemme look into this.
 
-This patch introduces CONFIG_PCI_DOMAINS_GENERIC as an
-option that can be selected if an architecture want a
-simple implementation where the value of the domain
-associated with a bus is stored in struct pci_bus.
+So, in previous revision, you mentioned that we should have a separate 
+irq_chip for gicv2m stuff, is that is still the case here?
 
-The architectures that select CONFIG_PCI_DOMAINS_GENERIC will
-then have to implement pci_bus_assign_domain_nr() as a way
-of setting the domain number associated with a root bus.
-All child busses except the root bus will inherit the domain_nr
-value from their parent.
+Thanks,
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Catalin Marinas <Catalin.Marinas@arm.com>
-[Renamed pci_set_domain_nr() to pci_bus_assign_domain_nr()]
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
----
- drivers/pci/probe.c | 11 ++++++++---
- include/linux/pci.h | 21 +++++++++++++++++++++
- 2 files changed, 29 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 5ff72ec..ef891d2 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -485,7 +485,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
- 	}
- }
- 
--static struct pci_bus *pci_alloc_bus(void)
-+static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
- {
- 	struct pci_bus *b;
- 
-@@ -500,6 +500,10 @@ static struct pci_bus *pci_alloc_bus(void)
- 	INIT_LIST_HEAD(&b->resources);
- 	b->max_bus_speed = PCI_SPEED_UNKNOWN;
- 	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
-+#ifdef CONFIG_PCI_DOMAINS_GENERIC
-+	if (parent)
-+		b->domain_nr = parent->domain_nr;
-+#endif
- 	return b;
- }
- 
-@@ -672,7 +676,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	/*
- 	 * Allocate a new bus, and inherit stuff from the parent..
- 	 */
--	child = pci_alloc_bus();
-+	child = pci_alloc_bus(parent);
- 	if (!child)
- 		return NULL;
- 
-@@ -1768,13 +1772,14 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 
- 	bridge->dev.parent = parent;
- 
--	b = pci_alloc_bus();
-+	b = pci_alloc_bus(NULL);
- 	if (!b)
- 		goto err_out;
- 
- 	b->sysdata = sysdata;
- 	b->ops = ops;
- 	b->number = b->busn_res.start = bus;
-+	pci_bus_assign_domain_nr(b, parent);
- 	b2 = pci_find_bus(pci_domain_nr(b), bus);
- 	if (b2) {
- 		/* If we already got to this bus through a different bridge, ignore it */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 466bcd1..1d0e0b5 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -456,6 +456,9 @@ struct pci_bus {
- 	unsigned char	primary;	/* number of primary bridge */
- 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
- 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
-+#ifdef CONFIG_PCI_DOMAINS_GENERIC
-+	int		domain_nr;
-+#endif
- 
- 	char		name[48];
- 
-@@ -1288,6 +1291,24 @@ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
- static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
- #endif /* CONFIG_PCI_DOMAINS */
- 
-+/*
-+ * Generic implementation for PCI domain support. If your
-+ * architecture does not need custom management of PCI
-+ * domains then this implementation will be used
-+ */
-+#ifdef CONFIG_PCI_DOMAINS_GENERIC
-+static inline int pci_domain_nr(struct pci_bus *bus)
-+{
-+	return bus->domain_nr;
-+}
-+void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
-+#else
-+static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
-+					struct device *parent)
-+{
-+}
-+#endif
-+
- /* some architectures require additional setup to direct VGA traffic */
- typedef int (*arch_set_vga_state_t)(struct pci_dev *pdev, bool decode,
- 		      unsigned int command_bits, u32 flags);
--- 
-2.0.4
+Suravee
 
