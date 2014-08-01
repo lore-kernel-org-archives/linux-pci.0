@@ -1,124 +1,155 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:62923 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755003AbaHEQMH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 12:12:07 -0400
-Received: by mail-wi0-f177.google.com with SMTP id ho1so1645421wib.16
-        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2014 09:12:05 -0700 (PDT)
-From: matthew_minter@xyratex.com
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: matthew_minter <matthew_minter@xyratex.com>
-Subject: [PATCH 11/22] Added (untested) support to mn10300 architecture to accomodate new irq init code
-Date: Tue,  5 Aug 2014 17:11:12 +0100
-Message-Id: <1407255083-9356-12-git-send-email-matthew_minter@xyratex.com>
-In-Reply-To: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
-References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Yijing Wang <wangyijing@huawei.com>
+Subject: Re: [RFC PATCH 00/11] Refactor MSI to support Non-PCI device
+Date: Fri, 1 Aug 2014 15:52:31 +0200
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
+	Paul.Mundt@huawei.com, Marc Zyngier <marc.zyngier@arm.com>,
+	linux-pci@vger.kernel.org,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	virtualization@lists.linux-foundation.org,
+	Xinwei Hu <huxinwei@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	"Bjorn Helgaas" <bhelgaas@google.com>, Wuyun <wuyun.wu@huawei.com>
+References: <1406344128-27055-1-git-send-email-wangyijing@huawei.com> <1748052.OMBQJiOLYT@wuerfel> <53D85C2E.3060205@huawei.com>
+In-Reply-To: <53D85C2E.3060205@huawei.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201408011552.32135.arnd@arndb.de>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: matthew_minter <matthew_minter@xyratex.com>
+On Wednesday 30 July 2014, Yijing Wang wrote:
+> On 2014/7/29 22:08, Arnd Bergmann wrote:
+> > On Saturday 26 July 2014 11:08:37 Yijing Wang wrote:
+> >>
+> >> The new data struct for generic MSI driver.
+> >> struct msi_irqs {
+> >>         u8 msi_enabled:1; /* Enable flag */
+> >>         u8 msix_enabled:1;
+> >>         struct list_head msi_list; /* MSI desc list */
+> >>         void *data;     /* help to find the MSI device */
+> >>         struct msi_ops *ops; /* MSI device specific hook */
+> >> };
+> >> struct msi_irqs is used to manage MSI related informations. Every device supports
+> >> MSI should contain this data struct and allocate it.
+> > 
+> > I think you should have a stronger association with the 'struct
+> > device' here. Can you replace the 'void *data' with 'struct device *dev'?
+> 
+> Actually, I used the struct device *dev in my first draft, finally, I replaced
+> it with void *data, because some MSI devices don't have a struct device *dev,
+> like the existing hpet device, dmar msi device, and OF device, like the ARM consolidator.
+> 
+> Of course, we can make the MSI devices have their own struct device, and register to
+> device tree, eg, add a class device named MSI_DEV. But I'm not sure whether it is appropriate.
 
----
- arch/mn10300/unit-asb2305/pci-asb2305.h |  5 +----
- arch/mn10300/unit-asb2305/pci-irq.c     | 25 +++++--------------------
- arch/mn10300/unit-asb2305/pci.c         | 21 ++++++++-------------
- 3 files changed, 14 insertions(+), 37 deletions(-)
+It doesn't have to be in the (OF) device tree, but I think it absolutely makes
+sense to use the 'struct device' infrastructure here, as almost everything uses
+a device, and the ones that don't do that today can be easily changed.
 
-diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.h b/arch/mn10300/unit-asb2305/pci-asb2305.h
-index 9e17aca..fb520cf 100644
---- a/arch/mn10300/unit-asb2305/pci-asb2305.h
-+++ b/arch/mn10300/unit-asb2305/pci-asb2305.h
-@@ -67,9 +67,6 @@ struct irq_routing_table {
- } __attribute__((packed));
- 
- extern unsigned int pcibios_irq_mask;
--
--extern void pcibios_irq_init(void);
--extern void pcibios_fixup_irqs(void);
--extern void pcibios_enable_irq(struct pci_dev *dev);
-+extern int pci_map_irq(struct pci_dev *, u8 slot, u8 pin);
- 
- #endif /* PCI_ASB2305_H */
-diff --git a/arch/mn10300/unit-asb2305/pci-irq.c b/arch/mn10300/unit-asb2305/pci-irq.c
-index fcb28ce..5be6fea 100644
---- a/arch/mn10300/unit-asb2305/pci-irq.c
-+++ b/arch/mn10300/unit-asb2305/pci-irq.c
-@@ -20,27 +20,12 @@
- #include <asm/smp.h>
- #include "pci-asb2305.h"
- 
--void __init pcibios_irq_init(void)
-+int pci_map_irq(struct pci_dev *, u8 slot, u8 pin)
- {
--}
--
--void __init pcibios_fixup_irqs(void)
--{
--	struct pci_dev *dev = NULL;
--	u8 line, pin;
-+	u8 line;
- 
--	for_each_pci_dev(dev) {
--		pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
--		if (pin) {
--			dev->irq = XIRQ1;
--			pci_write_config_byte(dev, PCI_INTERRUPT_LINE,
--					      dev->irq);
--		}
--		pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &line);
--	}
--}
--
--void pcibios_enable_irq(struct pci_dev *dev)
--{
-+	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
-+	dev->irq = XIRQ1;
- 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, dev->irq);
-+	pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &line);
- }
-diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
-index 6b4339f..22f8786 100644
---- a/arch/mn10300/unit-asb2305/pci.c
-+++ b/arch/mn10300/unit-asb2305/pci.c
-@@ -377,13 +377,18 @@ static int __init pcibios_init(void)
- 	pci_add_resource_offset(&resources, &pci_ioport_resource, io_offset);
- 	pci_add_resource_offset(&resources, &pci_iomem_resource, mem_offset);
- 	pci_scan_root_bus(NULL, 0, &pci_direct_ampci, NULL, &resources);
--
--	pcibios_irq_init();
--	pcibios_fixup_irqs();
- 	pcibios_resource_survey();
- 	return 0;
- }
- 
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->swizzle_irq = NULL;
-+	bridge->map_irq = pci_map_irq;
-+	return 0;
-+}
-+
-+
- arch_initcall(pcibios_init);
- 
- char *__init pcibios_setup(char *str)
-@@ -396,16 +401,6 @@ char *__init pcibios_setup(char *str)
- 	return str;
- }
- 
--int pcibios_enable_device(struct pci_dev *dev, int mask)
--{
--	int err;
--
--	err = pci_enable_resources(dev, mask);
--	if (err == 0)
--		pcibios_enable_irq(dev);
--	return err;
--}
--
- /*
-  * disable the ethernet chipset
-  */
--- 
-2.0.4
+> > The other part I'm not completely sure about is how you want to
+> > have MSIs map into normal IRQ descriptors. At the moment, all
+> > MSI users are based on IRQ numbers, but this has known scalability problems.
+> 
+> Hmmm, I still use the IRQ number to map the MSIs to IRQ description.
+> I'm sorry, I don't understand you meaning.
+> What are the scalability problems you mentioned ?
+> For device drivers, they always process interrupt in two steps.
+> If irq is the legacy interrupt, drivers will first
+> use the irq_of_parse_and_map() or pci_enable_device() to parse and get the IRQ number.
+> Then drivers will call the request_irq() to register the interrupt handler.
+> If irq is MSIs, first call pci_enable_msi/x() to get the IRQ number and then call
+> request_irq() to register interrupt handler.
 
+The method you describe here makes sense for PCI devices that are required to support
+legacy interrupts and may or may not support MSI on a given system, but not so much
+for platform devices for which we know exactly whether we want to use MSI
+or legacy interrupts.
+
+In particular if you have a device that can only do MSI, the entire pci_enable_msi
+step is pointless: all we need to do is program the correct MSI target address/message
+pair into the device and register the handler.
+
+> > I wonder if we can do the interface in a way that
+> > hides the interrupt number from generic device drivers and just
+> > passes a 'struct irq_desc'. Note that there are long-term plans to
+> > get rid of IRQ numbers entirely, but those plans have existed for
+> > a long time already without anybody seriously addressing the device
+> > driver interfaces so far, so it might never really happen.
+> > 
+> 
+> Maybe this is a huge work, now hundreds drivers use the IRQ number, so maybe we can consider
+> this in a separate title.
+
+Sorry for being unclear here: I did suggest changing all drivers now. What I meant
+is that we use a different API for non-PCI devices that works without IRQ numbers.
+I don't think we should touch the PCI interfaces at this point.
+
+> > With the other operations, I think they should all take a 'struct device *'
+> > as the first argument for convenience and consistency. I don't think you actually
+> > need msi_read_message(), and we could avoid msi_write_message() by doing it
+> > the other way round.
+> > 
+> 
+> There only two functions use the read_msi_msg(), because every msi_desc has
+> a struct msi_msg, and it caches the msi address and data. I will consider to
+> retrieve the msg from cached msi_msg, then we can avoid the msi_read_message().
+> But msi_write_message() maybe necessary, some xxx_set_affinity() functions and
+> restore functions need the msi_write_message() to rewrite the address and data.
+
+Makes sense. I'd have to think about it more, but I think you are right
+about the affinity APIs needing this.
+
+> > What I'd envision as the API from the device driver perspective is something
+> > as simple like this:
+> > 
+> > struct msi_desc *msi_request(struct msi_chip *chip, irq_handler_t handler,
+> > 			unsigned long flags, const char *name, struct device *dev);
+> > 
+> > which would get an msi descriptor that is valid for this device (dev)
+> > connected to a particular msi_chip, and associate a handler function
+> > with it. The device driver can call that function and retrieve the
+> > address/message pair from the msi_desc in order to store it in its own
+> > device specific registers. The request_irq() can be handled internally
+> > to msi_request().
+> 
+> This is a huge change for device drivers, and some device drivers don't know which msi_chip
+> their MSI irq deliver to. I'm reworking the msi_chip, and try to use msi_chip to eliminate
+> all arch_msi_xxx() under every arch in kernel. And the important point is how to create the
+> binding for the MSI device to the target msi_chip.
+
+Which drivers are you thinking of? Again, I wouldn't expect to change any PCI drivers,
+but only platform drivers that do native MSI, so we only have to change drivers that
+do not support any MSI at all yet and that need to be changed anyway in order to add
+support.
+
+> For PCI device, some arm platform already bound the msi_chip to the pci hostbridge, then all
+> pci devices under the pci hostbridge deliver their MSI irqs to the target msi_chip.
+> And other platform create the binding in DTS file, then the MSI device can find their msi_chip
+> by device_node.
+> I don't know whether there are other situations, we should provide a generic interface that
+> every MSI device under every platform can use it to find its msi_chip exactly.
+
+We have introduced the "msi-parent" property to mirror the "interrupt-parent" property.
+For the PCI case, this property is only needed in the PCI host controller, and there
+can be a system-wide default, by putting the "msi-parent" property into the root device
+node or the node of a bus that is parent to all devices supporting MSI.
+
+For non-PCI devices, it should be possible to override the "msi-parent" property per
+device, but those can also use the global property.
+
+The main use case that I see are PCI host controllers that have their own MSI catcher
+included, so meaning that any PCI device can either send its MSIs there, or to a
+system-wide GICv3 instance, and we need a way to select which one.
+
+A degenerate case of this would be a system where a PCI device sends its MSI into
+the host controller, that generates a legacy interrupt and that in turn gets 
+sent to an irqchip which turns it back into an MSI for the GICv3. This would of
+course be very inefficient, but I think we should be able to express this with
+both the binding and the in-kernel framework just to be on the safe side.
+
+
+	Arnd
