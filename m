@@ -1,96 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:37036 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756502AbaGVTBh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 15:01:37 -0400
-Message-ID: <53CEB4C7.1020601@ti.com>
-Date: Tue, 22 Jul 2014 15:00:23 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Rob Herring <robherring2@gmail.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v6 4/5] PCI: add PCI controller for keystone PCIe h/w
-References: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com> <1405696469-7172-5-git-send-email-m-karicheri2@ti.com> <CAL_JsqKheoWrSGtxPO=AE8g9iOAqfwRa=81Ku=Cfx8_gpDysOg@mail.gmail.com> <5467203.eMVRoNeSx1@wuerfel> <CAL_JsqLrh_M0gTRezST9jX1X_5Eo98taNcHok6QX6vDMxeqkcw@mail.gmail.com>
-In-Reply-To: <CAL_JsqLrh_M0gTRezST9jX1X_5Eo98taNcHok6QX6vDMxeqkcw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from e28smtp04.in.ibm.com ([122.248.162.4]:46897 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751847AbaHADva (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jul 2014 23:51:30 -0400
+Received: from /spool/local
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 1 Aug 2014 09:21:27 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 3C68F3940018
+	for <linux-pci@vger.kernel.org>; Fri,  1 Aug 2014 09:21:26 +0530 (IST)
+Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
+	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s713pHG631916270
+	for <linux-pci@vger.kernel.org>; Fri, 1 Aug 2014 09:21:17 +0530
+Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
+	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s713pPOX028243
+	for <linux-pci@vger.kernel.org>; Fri, 1 Aug 2014 09:21:25 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH] PCI: Mark broken INTx masking for Mellanox devices
+Date: Fri,  1 Aug 2014 13:51:03 +1000
+Message-Id: <1406865063-24775-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/22/2014 11:37 AM, Rob Herring wrote:
-> On Fri, Jul 18, 2014 at 2:50 PM, Arnd Bergmann<arnd@arndb.de>  wrote:
->> On Friday 18 July 2014 14:31:39 Rob Herring wrote:
->>>> +
->>>> + Example:
->>>> +       pcie_msi_intc: msi-interrupt-controller {
->>>> +                       interrupt-controller;
->>>> +                       #interrupt-cells =<1>;
->>>> +                       interrupt-parent =<&gic>;
->>>> +                       interrupts =<GIC_SPI 30 IRQ_TYPE_EDGE_RISING>,
->>>> +<GIC_SPI 31 IRQ_TYPE_EDGE_RISING>,
->>>> +<GIC_SPI 32 IRQ_TYPE_EDGE_RISING>,
->>>> +<GIC_SPI 33 IRQ_TYPE_EDGE_RISING>,
->>>> +<GIC_SPI 34 IRQ_TYPE_EDGE_RISING>,
->>>> +<GIC_SPI 35 IRQ_TYPE_EDGE_RISING>,
->>>> +<GIC_SPI 36 IRQ_TYPE_EDGE_RISING>,
->>>> +<GIC_SPI 37 IRQ_TYPE_EDGE_RISING>;
->>>> +       };
->>>> +
->>>> +pcie_intc: Interrupt controller device node for Legacy irq chip
->>>> +       interrupt-cells: should be set to 1
->>>> +       interrupt-parent: Parent interrupt controller phandle
->>>> +       interrupts: GIC interrupt lines connected to PCI Legacy interrupt lines
->>>> +
->>>> + Example:
->>>> +       pcie_intc: legacy-interrupt-controller {
->>>> +               interrupt-controller;
->>>> +               #interrupt-cells =<1>;
->>>> +               interrupt-parent =<&gic>;
->>>> +               interrupts =<GIC_SPI 26 IRQ_TYPE_EDGE_RISING>,
->>>> +<GIC_SPI 27 IRQ_TYPE_EDGE_RISING>,
->>>> +<GIC_SPI 28 IRQ_TYPE_EDGE_RISING>,
->>>> +<GIC_SPI 29 IRQ_TYPE_EDGE_RISING>;
->>>> +       };
->>> This seems wrong. Legacy interrupts should be described with
->>> interrupt-map and then PCI child devices have a standard interrupt
->>> specifier.
->>>
->>> I'm not sure about MSIs, but I would think they would have a standard
->>> format too.
->>>
->> IIRC, it's actually the correct way to do this here: the problem is that
->> the PCI IRQs are not directly connected to the GIC, but instead there is
->> a nested irqchip that has each PCI IRQ routed to it and that requires
->> an extra EOI for each interrupt.
->>
->> The interrupt-map in the PCI host points to this special irqchip rather
->> than to the GIC.
-> Okay, if there is still an interrupt-map property, then I agree. This
-> wasn't clear in the example.
-Rob,
+The VFIO driver is routing LSI interrupts by capturing, masking,
+and then delivering. When passing though Mallanox adapters from
+host to guest, interrupt storm was reported from host and guest.
+That's because we can't mask the LSI interrupt with help of PCI
+command register.
 
-There is and is described in designware DT documentation. This documentation
-refers to that and also describe DT bindings specific to Keystone. Could you
-Ack this based on this?
+The patch marks broken INTx masking for Mellanox devices so that
+the VFIO driver will always mask the interrupt from interrupt
+controller side to avoid interrupt storm.
 
-Murali
->
-> Rob
+Suggested-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ drivers/pci/quirks.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index d0f6926..8c2b96f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2977,6 +2977,10 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CHELSIO, 0x0030,
+ 			 quirk_broken_intx_masking);
+ DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
+ 			 quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, 0x1003,
++			 quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, 0x6750,
++			 quirk_broken_intx_masking);
+ /*
+  * Realtek RTL8169 PCI Gigabit Ethernet Controller (rev 10)
+  * Subsystem: Realtek RTL8169/8110 Family PCI Gigabit Ethernet NIC
+-- 
+1.8.3.2
 
