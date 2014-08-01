@@ -1,90 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nbfkord-smmo03.seg.att.com ([209.65.160.84]:29023 "EHLO
-	nbfkord-smmo03.seg.att.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750852AbaGaO4a convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Jul 2014 10:56:30 -0400
-Date: Thu, 31 Jul 2014 15:56:19 +0100
-From: Edward Cree <ecree@solarflare.com>
-To: <linux-pci@vger.kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH trivial] PCI: convert struct pci_sriov comments to
- kernel-doc
-Message-ID: <alpine.LFD.2.03.1407311546190.19970@solarflare.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Received: from e28smtp02.in.ibm.com ([122.248.162.2]:40794 "EHLO
+	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750851AbaHAEyk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Aug 2014 00:54:40 -0400
+Received: from /spool/local
+	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 1 Aug 2014 10:24:38 +0530
+Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 66E313940018
+	for <linux-pci@vger.kernel.org>; Fri,  1 Aug 2014 10:24:35 +0530 (IST)
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s714sd5258589184
+	for <linux-pci@vger.kernel.org>; Fri, 1 Aug 2014 10:24:40 +0530
+Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s714sXvX008338
+	for <linux-pci@vger.kernel.org>; Fri, 1 Aug 2014 10:24:34 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: amirv@mellanox.com, alex.williamson@redhat.com,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v2] PCI: Mark broken INTx masking for Mellanox devices
+Date: Fri,  1 Aug 2014 14:54:31 +1000
+Message-Id: <1406868871-350-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No changes to the field descriptions, just move them.
+The VFIO driver is routing LSI interrupts by capturing, masking,
+and then delivering. When passing though Mallanox adapters from
+host to guest, interrupt storm was reported from host and guest.
+That's because we can't mask the LSI interrupt with help of PCI
+command register.
 
-Signed-off-by: Edward Cree <ecree@solarflare.com>
+[root@ncc-1701 ~]# lspci | grep Mellanox
+0001:05:00.0 Ethernet controller: Mellanox Technologies MT27500 \
+             Family [ConnectX-3]
+0005:01:00.0 Ethernet controller: Mellanox Technologies MT26448 \
+             [ConnectX EN 10GigE, PCIe 2.0 5GT/s] (rev b0)
+
+The patch marks broken INTx masking for Mellanox devices so that
+the VFIO driver will always mask the interrupt from interrupt
+controller side to avoid interrupt storm.
+
+Cc: Amir Vadai <amirv@mellanox.com>
+Suggested-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/pci/pci.h | 50 ++++++++++++++++++++++++++++++++++----------------
- 1 file changed, 34 insertions(+), 16 deletions(-)
+ drivers/pci/quirks.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 0601890..28fcce8 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -221,23 +221,41 @@ static inline int pci_ari_enabled(struct pci_bus *bus)
- void pci_reassigndev_resource_alignment(struct pci_dev *dev);
- void pci_disable_bridge_window(struct pci_dev *dev);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index d0f6926..8c2b96f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2977,6 +2977,10 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CHELSIO, 0x0030,
+ 			 quirk_broken_intx_masking);
+ DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
+ 			 quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, 0x1003,
++			 quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, 0x6750,
++			 quirk_broken_intx_masking);
+ /*
+  * Realtek RTL8169 PCI Gigabit Ethernet Controller (rev 10)
+  * Subsystem: Realtek RTL8169/8110 Family PCI Gigabit Ethernet NIC
+-- 
+1.8.3.2
 
--/* Single Root I/O Virtualization */
-+/**
-+ *     struct pci_sriov - Single Root I/O Virtualization
-+ *
-+ *     @pos:           capability position
-+ *     @nres:          number of resources
-+ *     @cap:           SR-IOV Capabilities
-+ *     @ctrl:          SR-IOV Control
-+ *     @total_VFs:     total VFs associated with the PF
-+ *     @initial_VFs:   initial VFs associated with the PF
-+ *     @num_vfs:       number of VFs available
-+ *     @offset:        first VF Routing ID offset
-+ *     @stride:        following VF stride
-+ *     @pgsz:          page size for BAR alignment
-+ *     @link:          Function Dependency Link
-+ *     @driver_max_VFs:max num VFs driver supports
-+ *     @dev:           lowest numbered PF
-+ *     @self:          this PF
-+ *     @lock:          lock for VF bus
-+ */
- struct pci_sriov {
--       int pos;                /* capability position */
--       int nres;               /* number of resources */
--       u32 cap;                /* SR-IOV Capabilities */
--       u16 ctrl;               /* SR-IOV Control */
--       u16 total_VFs;          /* total VFs associated with the PF */
--       u16 initial_VFs;        /* initial VFs associated with the PF */
--       u16 num_VFs;            /* number of VFs available */
--       u16 offset;             /* first VF Routing ID offset */
--       u16 stride;             /* following VF stride */
--       u32 pgsz;               /* page size for BAR alignment */
--       u8 link;                /* Function Dependency Link */
--       u16 driver_max_VFs;     /* max num VFs driver supports */
--       struct pci_dev *dev;    /* lowest numbered PF */
--       struct pci_dev *self;   /* this PF */
--       struct mutex lock;      /* lock for VF bus */
-+       int pos;
-+       int nres;
-+       u32 cap;
-+       u16 ctrl;
-+       u16 total_VFs;
-+       u16 initial_VFs;
-+       u16 num_VFs;
-+       u16 offset;
-+       u16 stride;
-+       u32 pgsz;
-+       u8 link;
-+       u16 driver_max_VFs;
-+       struct pci_dev *dev;
-+       struct pci_dev *self;
-+       struct mutex lock;
- };
-
- #ifdef CONFIG_PCI_ATS
---
-1.7.11.7
-The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
