@@ -1,140 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23732 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759056AbaGCPwC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Jul 2014 11:52:02 -0400
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 4/7] iommu/intel: Use iommu_group_get_for_dev()
-To: iommu@lists.linux-foundation.org
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Alex Williamson <alex.williamson@redhat.com>,
-	David Woodhouse <dwmw2@infradead.org>
-Date: Thu, 03 Jul 2014 09:51:37 -0600
-Message-ID: <20140703155136.8112.64951.stgit@gimli.home>
-In-Reply-To: <20140703154428.8112.97562.stgit@gimli.home>
-References: <20140703154428.8112.97562.stgit@gimli.home>
+Received: from mail-qg0-f49.google.com ([209.85.192.49]:46154 "EHLO
+	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751847AbaHADvO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jul 2014 23:51:14 -0400
+Received: by mail-qg0-f49.google.com with SMTP id j107so5190434qga.36
+        for <linux-pci@vger.kernel.org>; Thu, 31 Jul 2014 20:51:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <alpine.LFD.2.03.1407311500570.16821@solarflare.com>
+References: <53D9288B.5030302@solarflare.com>
+	<53D93407.8040308@redhat.com>
+	<53D93848.7070203@solarflare.com>
+	<53D9602A.4010406@intel.com>
+	<53DA3180.5040302@solarflare.com>
+	<alpine.LFD.2.03.1407311500570.16821@solarflare.com>
+Date: Fri, 1 Aug 2014 11:51:13 +0800
+Message-ID: <CABawtvPwxovKV==8RVCL1OcsdfnZDDjr=d1uYp-A=bAzYbmKww@mail.gmail.com>
+Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
+From: Ethan Zhao <ethan.kernel@gmail.com>
+To: Edward Cree <ecree@solarflare.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The IOMMU code now provides a common interface for finding or
-creating an IOMMU group for a device on PCI buses.  Make use of it
-and remove piles of code.
+Though I like this patch, it shows direct style, but it will change
+the meaning of a function not mentioned here.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: David Woodhouse <dwmw2@infradead.org>
----
+  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
 
- drivers/iommu/intel-iommu.c |   79 ++-----------------------------------------
- 1 file changed, 4 insertions(+), 75 deletions(-)
+So far seems no driver call pci_sriov_set_totalvfs() with numvfs = 0
+and the patch will change the behavior of the drivers, but it will
+definitely change the test cases and documents related to IOV.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 51b6b77..9128c84 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -45,7 +45,6 @@
- #include <asm/iommu.h>
- 
- #include "irq_remapping.h"
--#include "pci.h"
- 
- #define ROOT_SIZE		VTD_PAGE_SIZE
- #define CONTEXT_SIZE		VTD_PAGE_SIZE
-@@ -4373,91 +4372,21 @@ static int intel_iommu_domain_has_cap(struct iommu_domain *domain,
- 	return 0;
- }
- 
--#define REQ_ACS_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
--
- static int intel_iommu_add_device(struct device *dev)
- {
--	struct pci_dev *pdev = to_pci_dev(dev);
--	struct pci_dev *bridge, *dma_pdev = NULL;
- 	struct iommu_group *group;
--	int ret;
- 	u8 bus, devfn;
- 
- 	if (!device_to_iommu(dev, &bus, &devfn))
- 		return -ENODEV;
- 
--	bridge = pci_find_upstream_pcie_bridge(pdev);
--	if (bridge) {
--		if (pci_is_pcie(bridge))
--			dma_pdev = pci_get_domain_bus_and_slot(
--						pci_domain_nr(pdev->bus),
--						bridge->subordinate->number, 0);
--		if (!dma_pdev)
--			dma_pdev = pci_dev_get(bridge);
--	} else
--		dma_pdev = pci_dev_get(pdev);
--
--	/* Account for quirked devices */
--	swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
--
--	/*
--	 * If it's a multifunction device that does not support our
--	 * required ACS flags, add to the same group as lowest numbered
--	 * function that also does not suport the required ACS flags.
--	 */
--	if (dma_pdev->multifunction &&
--	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
--		u8 i, slot = PCI_SLOT(dma_pdev->devfn);
--
--		for (i = 0; i < 8; i++) {
--			struct pci_dev *tmp;
--
--			tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
--			if (!tmp)
--				continue;
--
--			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
--				swap_pci_ref(&dma_pdev, tmp);
--				break;
--			}
--			pci_dev_put(tmp);
--		}
--	}
--
--	/*
--	 * Devices on the root bus go through the iommu.  If that's not us,
--	 * find the next upstream device and test ACS up to the root bus.
--	 * Finding the next device may require skipping virtual buses.
--	 */
--	while (!pci_is_root_bus(dma_pdev->bus)) {
--		struct pci_bus *bus = dma_pdev->bus;
--
--		while (!bus->self) {
--			if (!pci_is_root_bus(bus))
--				bus = bus->parent;
--			else
--				goto root_bus;
--		}
--
--		if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
--			break;
--
--		swap_pci_ref(&dma_pdev, pci_dev_get(bus->self));
--	}
-+	group = iommu_group_get_for_dev(dev);
- 
--root_bus:
--	group = iommu_group_get(&dma_pdev->dev);
--	pci_dev_put(dma_pdev);
--	if (!group) {
--		group = iommu_group_alloc();
--		if (IS_ERR(group))
--			return PTR_ERR(group);
--	}
--
--	ret = iommu_group_add_device(group, dev);
-+	if (IS_ERR(group))
-+		return PTR_ERR(group);
- 
- 	iommu_group_put(group);
--	return ret;
-+	return 0;
- }
- 
- static void intel_iommu_remove_device(struct device *dev)
+Thanks,
+Ethan
 
+On Thu, Jul 31, 2014 at 10:24 PM, Edward Cree <ecree@solarflare.com> wrote:
+> Make a driver_max_VFs of 0 mean 0, instead of total_VFs as previously.
+> Initialise driver_max_VFs to total_VFs instead of 0.
+>
+> Signed-off-by: Edward Cree <ecree@solarflare.com>
+> ---
+> Only existing callers are ixgbe and igb, and neither passes 0, so this
+> doesn't break existing users.
+> ---
+>  drivers/pci/iov.c | 7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index cb6f247..fb51467 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -381,7 +381,7 @@ found:
+>         iov->pos = pos;
+>         iov->nres = nres;
+>         iov->ctrl = ctrl;
+> -       iov->total_VFs = total;
+> +       iov->driver_max_VFs = iov->total_VFs = total;
+>         iov->offset = offset;
+>         iov->stride = stride;
+>         iov->pgsz = pgsz;
+> @@ -686,9 +686,6 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+>         if (!dev->is_physfn)
+>                 return 0;
+>
+> -       if (dev->sriov->driver_max_VFs)
+> -               return dev->sriov->driver_max_VFs;
+> -
+> -       return dev->sriov->total_VFs;
+> +       return dev->sriov->driver_max_VFs;
+>  }
+>  EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
+> --
+> 1.7.11.7
+> The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
