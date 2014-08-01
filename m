@@ -1,88 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22345 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756653AbaGDI5c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 4 Jul 2014 04:57:32 -0400
-Date: Fri, 4 Jul 2014 10:58:17 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: "'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
-Message-ID: <20140704085816.GB12247@dhcp-26-207.brq.redhat.com>
-References: <cover.1402405331.git.agordeev@redhat.com>
- <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
- <20140702202201.GA28852@google.com>
- <063D6719AE5E284EB5DD2968C1650D6D1726BF4E@AcuExch.aculab.com>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:49791 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750770AbaHAEkc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Aug 2014 00:40:32 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 1 Aug 2014 14:40:30 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id EA48A2BB0023
+	for <linux-pci@vger.kernel.org>; Fri,  1 Aug 2014 14:40:26 +1000 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay06.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s714esBN12779636
+	for <linux-pci@vger.kernel.org>; Fri, 1 Aug 2014 14:40:54 +1000
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s714eQPe011507
+	for <linux-pci@vger.kernel.org>; Fri, 1 Aug 2014 14:40:26 +1000
+Date: Fri, 1 Aug 2014 14:40:22 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Mark broken INTx masking for Mellanox devices
+Message-ID: <20140801044021.GA30733@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1406865063-24775-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1406865990.2963.167.camel@ul30vt.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D1726BF4E@AcuExch.aculab.com>
+In-Reply-To: <1406865990.2963.167.camel@ul30vt.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 03, 2014 at 09:20:52AM +0000, David Laight wrote:
-> From: Bjorn Helgaas
-> > On Tue, Jun 10, 2014 at 03:10:30PM +0200, Alexander Gordeev wrote:
-> > > There are PCI devices that require a particular value written
-> > > to the Multiple Message Enable (MME) register while aligned on
-> > > power of 2 boundary value of actually used MSI vectors 'nvec'
-> > > is a lesser of that MME value:
-> > >
-> > > 	roundup_pow_of_two(nvec) < 'Multiple Message Enable'
-> > >
-> > > However the existing pci_enable_msi_block() interface is not
-> > > able to configure such devices, since the value written to the
-> > > MME register is calculated from the number of requested MSIs
-> > > 'nvec':
-> > >
-> > > 	'Multiple Message Enable' = roundup_pow_of_two(nvec)
-> > 
-> > For MSI, software learns how many vectors a device requests by reading
-> > the Multiple Message Capable (MMC) field.  This field is encoded, so a
-> > device can only request 1, 2, 4, 8, etc., vectors.  It's impossible
-> > for a device to request 3 vectors; it would have to round up that up
-> > to a power of two and request 4 vectors.
-> > 
-> > Software writes similarly encoded values to MME to tell the device how
-> > many vectors have been allocated for its use.  For example, it's
-> > impossible to tell the device that it can use 3 vectors; the OS has to
-> > round that up and tell the device it can use 4 vectors.
-> > 
-> > So if I understand correctly, the point of this series is to take
-> > advantage of device-specific knowledge, e.g., the device requests 4
-> > vectors via MMC, but we "know" the device is only capable of using 3.
-> > Moreover, we tell the device via MME that 4 vectors are available, but
-> > we've only actually set up 3 of them.
-> ...
-> 
-> Even if you do that, you ought to write valid interrupt information
-> into the 4th slot (maybe replicating one of the earlier interrupts).
-> Then, if the device does raise the 'unexpected' interrupt you don't
-> get a write to a random kernel location.
+On Thu, Jul 31, 2014 at 10:06:30PM -0600, Alex Williamson wrote:
+>On Fri, 2014-08-01 at 13:51 +1000, Gavin Shan wrote:
+>> The VFIO driver is routing LSI interrupts by capturing, masking,
+>> and then delivering. When passing though Mallanox adapters from
+>> host to guest, interrupt storm was reported from host and guest.
+>> That's because we can't mask the LSI interrupt with help of PCI
+>> command register.
+>> 
+>> The patch marks broken INTx masking for Mellanox devices so that
+>> the VFIO driver will always mask the interrupt from interrupt
+>> controller side to avoid interrupt storm.
+>> 
+>> Suggested-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> ---
+>>  drivers/pci/quirks.c | 4 ++++
+>>  1 file changed, 4 insertions(+)
+>> 
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index d0f6926..8c2b96f 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -2977,6 +2977,10 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CHELSIO, 0x0030,
+>>  			 quirk_broken_intx_masking);
+>>  DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
+>>  			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, 0x1003,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, 0x6750,
+>> +			 quirk_broken_intx_masking);
+>>  /*
+>>   * Realtek RTL8169 PCI Gigabit Ethernet Controller (rev 10)
+>>   * Subsystem: Realtek RTL8169/8110 Family PCI Gigabit Ethernet NIC
+>
+>Is there an lspci description for the devices that we can also include?
+>You might also want to cc the driver maintainers to see if they're aware
+>or have any comments.  Thanks,
+>
 
-I might be missing something, but we are talking of MSI address space
-here, aren't we? I am not getting how we could end up with a 'write'
-to a random kernel location when a unclaimed MSI vector sent. We could
-only expect a spurious interrupt at worst, which is handled and reported.
+Yes, I'll include that in next revision and cc driver's maintainer.
 
-Anyway, as I described in my reply to Bjorn, this is not a concern IMO.
+Thanks,
+Gavin
 
-> Plausibly something similar should be done when a smaller number of
-> interrupts is assigned.
-> 
-> 	David
-> 
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
