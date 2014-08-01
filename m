@@ -1,87 +1,137 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Sat, 9 Aug 2014 19:06:43 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: David Rientjes <rientjes@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Peter Zijlstra <a.p.zijlstra@chello.nl>
-Subject: Re: [GIT PULL] x86/apic changes for v3.17
-Message-ID: <20140809170643.GC4209@pd.tnic>
-References: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com>
- <1407209178-18644-2-git-send-email-jiang.liu@linux.intel.com>
- <20140805183729.GA23068@pd.tnic>
- <53E201FC.6010102@linux.intel.com>
- <20140806170937.GA4895@pd.tnic>
- <20140807110332.GB10043@pd.tnic>
- <20140807113346.GA24225@gmail.com>
- <alpine.DEB.2.02.1408081519240.7430@chino.kir.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <alpine.DEB.2.02.1408081519240.7430@chino.kir.corp.google.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.samsung.com ([203.254.224.33]:13964 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753060AbaHAKmz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Aug 2014 06:42:55 -0400
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0N9M00FO8J3HCR30@mailout3.samsung.com> for
+ linux-pci@vger.kernel.org; Fri, 01 Aug 2014 19:42:53 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Lucas Stach' <l.stach@pengutronix.de>, linux-pci@vger.kernel.org
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Mohit Kumar' <mohit.kumar@st.com>, kernel@pengutronix.de,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1406884222-23974-1-git-send-email-l.stach@pengutronix.de>
+In-reply-to: <1406884222-23974-1-git-send-email-l.stach@pengutronix.de>
+Subject: Re: [PATCH] PCI: designware: check private_data validity in single
+ place
+Date: Fri, 01 Aug 2014 19:42:52 +0900
+Message-id: <007901cfad75$58974040$09c5c0c0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 08, 2014 at 03:21:44PM -0700, David Rientjes wrote:
-> On Thu, 7 Aug 2014, Ingo Molnar wrote:
+On Friday, August 01, 2014 6:10 PM, Lucas Stach wrote:
 > 
-> > Linus, please pull the latest x86-apic-for-linus git tree from:
-> > 
-> >    git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git x86-apic-for-linus
-> > 
-> >    # HEAD: 5e3bf215f4f2efc0af89e6dbc5da789744aeb5d7 x86/apic/vsmp: Make is_vsmp_box() static
-> > 
-> > 
-> > The main changes in this cycle are:
-> > 
-> >     * Remove obsolete APIC driver abstractions. (David Rientjes)
-> > 
+> The driver had checks for this sprinkled all over. As we call
+> sys_to_pcie() before every instance of this check, we can as well
+> move the check to this single location to make things clear.
 > 
-> These changes are unrelated from the other issues and can still be pulled 
-> from
+> Removing the statements after BUG[_ON]() is safe as the kernel
+> is halted at this point anyway.
 > 
-> 	git://git.kernel.org/pub/scm/linux/kernel/git/rientjes/linux.git x86/apic 
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+
+Acked-by: Jingoo Han <jg1.han@samsung.com>
+
+Best regards,
+Jingoo Han
+
+> ---
+> This is a follow on patch to the series
+> "PCI: designware: init order/resource alloc fixes", which
+> addresses Jingoos review feedback, so this series should
+> be hopefully good to go now.
+> ---
+>  drivers/pci/host/pcie-designware.c | 29 ++---------------------------
+>  1 file changed, 2 insertions(+), 27 deletions(-)
 > 
-> if we want the cleanups for 3.17.  The x86 pull request was originally at 
-> http://marc.info/?l=linux-kernel&m=140678961924050.
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index dde5e6d4afa2..3dbfc089601d 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -73,6 +73,8 @@ static unsigned long global_io_offset;
 > 
-> It would be a shame to miss out on that because the changes share the same 
-> tip branch.
+>  static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+>  {
+> +	BUG_ON(!sys->private_data);
+> +
+>  	return sys->private_data;
+>  }
+> 
+> @@ -261,11 +263,6 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+>  	int irq, pos0, pos1, i;
+>  	struct pcie_port *pp = sys_to_pcie(desc->dev->bus->sysdata);
+> 
+> -	if (!pp) {
+> -		BUG();
+> -		return -EINVAL;
+> -	}
+> -
+>  	pos0 = find_first_zero_bit(pp->msi_irq_in_use,
+>  			MAX_MSI_IRQS);
+>  	if (pos0 % no_irqs) {
+> @@ -326,10 +323,6 @@ static void clear_irq(unsigned int irq)
+>  	/* get the port structure */
+>  	msi = irq_data_get_msi(data);
+>  	pp = sys_to_pcie(msi->dev->bus->sysdata);
+> -	if (!pp) {
+> -		BUG();
+> -		return;
+> -	}
+> 
+>  	/* undo what was done in assign_irq */
+>  	pos = data->hwirq;
+> @@ -350,11 +343,6 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+>  	struct msi_msg msg;
+>  	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+> 
+> -	if (!pp) {
+> -		BUG();
+> -		return -EINVAL;
+> -	}
+> -
+>  	pci_read_config_word(pdev, desc->msi_attrib.pos+PCI_MSI_FLAGS,
+>  				&msg_ctr);
+>  	msgvec = (msg_ctr&PCI_MSI_FLAGS_QSIZE) >> 4;
+> @@ -716,11 +704,6 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+>  	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
+>  	int ret;
+> 
+> -	if (!pp) {
+> -		BUG();
+> -		return -EINVAL;
+> -	}
+> -
+>  	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0) {
+>  		*val = 0xffffffff;
+>  		return PCIBIOS_DEVICE_NOT_FOUND;
+> @@ -745,11 +728,6 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+>  	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
+>  	int ret;
+> 
+> -	if (!pp) {
+> -		BUG();
+> -		return -EINVAL;
+> -	}
+> -
+>  	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
+>  		return PCIBIOS_DEVICE_NOT_FOUND;
+> 
+> @@ -777,9 +755,6 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+> 
+>  	pp = sys_to_pcie(sys);
+> 
+> -	if (!pp)
+> -		return 0;
+> -
+>  	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
+>  		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
+>  		pci_ioremap_io(global_io_offset, pp->io_base);
+> --
+> 2.0.1
 
-Actually, that whole branch could go in now, especially since Thomas
-picked up the stable IRQ numbers assignment during s/r fix:
-
-https://lkml.kernel.org/r/tip-3eec595235c17a74094daa1e02d1b0af2e9a7125@git.kernel.org
-
-@tglx: I don't know about IOAPIC reference count:
-
-https://lkml.kernel.org/r/1407209178-18644-3-git-send-email-jiang.liu@linux.intel.com
-
-This looks like a bugfix too.
-
-With those two applied, tip/x86/apic is good to go IMHO. The only thing
-that remains are the IOMMU IOPFs which we'll deal accordingly later -
-they need shutting up only anyway.
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
