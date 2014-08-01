@@ -1,103 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:8846 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753324AbaHKSIB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 14:08:01 -0400
-Date: Mon, 11 Aug 2014 14:07:52 -0400
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: <qla2xxx-upstream@qlogic.com>, <linux-scsi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 RESEND 21/23] qla2xxx: Use pci_enable_msix_range()
- instead of pci_enable_msix()
-In-Reply-To: <20140811085709.GM16504@dhcp-27-160.brq.redhat.com>
-Message-ID: <alpine.OSX.2.00.1408111407050.1722@administrators-macbook-pro.local>
-References: <cover.1405533479.git.agordeev@redhat.com> <cf38d1596543fd61c099bc0b834c2ea7a11f8b28.1405533479.git.agordeev@redhat.com> <20140811085709.GM16504@dhcp-27-160.brq.redhat.com>
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:50459 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754196AbaHANzt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Aug 2014 09:55:49 -0400
+Date: Fri, 1 Aug 2014 15:55:42 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] resource: Add device-managed
+ request/release_resource()
+Message-ID: <20140801135540.GA373@ulmo.nvidia.com>
+References: <1406895311-18869-1-git-send-email-thierry.reding@gmail.com>
+ <20140801125522.GC21624@htj.dyndns.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="PEIAKu/WMn1b1Hv9"
+In-Reply-To: <20140801125522.GC21624@htj.dyndns.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
+--PEIAKu/WMn1b1Hv9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, 11 Aug 2014, Alexander Gordeev wrote:
+On Fri, Aug 01, 2014 at 08:55:22AM -0400, Tejun Heo wrote:
+> On Fri, Aug 01, 2014 at 02:15:10PM +0200, Thierry Reding wrote:
+> > From: Thierry Reding <treding@nvidia.com>
+> >=20
+> > Provide device-managed implementations of the request_resource() and
+> > release_resource() functions. Upon failure to request a resource, the
+> > new devm_request_resource() function will output an error message for
+> > consistent error reporting.
+> >=20
+> > Signed-off-by: Thierry Reding <treding@nvidia.com>
+>=20
+> Acked-by: Tejun Heo <tj@kernel.org>
+>=20
+> But please also update Documentation/driver-model/devres.txt.
 
-> On Wed, Jul 16, 2014 at 08:05:25PM +0200, Alexander Gordeev wrote:
->> As result of deprecation of MSI-X/MSI enablement functions
->> pci_enable_msix() and pci_enable_msi_block() all drivers
->> using these two interfaces need to be updated to use the
->> new pci_enable_msi_range()  or pci_enable_msi_exact()
->> and pci_enable_msix_range() or pci_enable_msix_exact()
->> interfaces.
->>
->> Log message code 0x00c6 preserved, although it is reported
->> after successful call to pci_enable_msix_range(), not before
->> possibly unsuccessful call to pci_enable_msix(). Consumers
->> of the error code should not notice the difference.
->
-> Hello,
->
-> Please, anyone (from QLogic especially) review this patch.
->
-> Thanks!
+The patch already contains the below hunk. Do you expect anything more
+to be added to that file?
 
-Looks good.
+Thierry
 
-Ack-by: Chad Dupuis <chad.dupuis@qlogic.com>
+diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-m=
+odel/devres.txt
+index d14710b04439..befc3fe12ba6 100644
+--- a/Documentation/driver-model/devres.txt
++++ b/Documentation/driver-model/devres.txt
+@@ -264,8 +264,10 @@ IIO
+ IO region
+   devm_release_mem_region()
+   devm_release_region()
++  devm_release_resource()
+   devm_request_mem_region()
+   devm_request_region()
++  devm_request_resource()
 
->
->> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
->> Cc: qla2xxx-upstream@qlogic.com
->> Cc: linux-scsi@vger.kernel.org
->> Cc: linux-pci@vger.kernel.org
->> ---
->>  drivers/scsi/qla2xxx/qla_isr.c |   27 +++++++++++----------------
->>  1 files changed, 11 insertions(+), 16 deletions(-)
->>
->> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
->> index a56825c..52d420f 100644
->> --- a/drivers/scsi/qla2xxx/qla_isr.c
->> +++ b/drivers/scsi/qla2xxx/qla_isr.c
->> @@ -2923,27 +2923,22 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
->>  	for (i = 0; i < ha->msix_count; i++)
->>  		entries[i].entry = i;
->>
->> -	ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
->> -	if (ret) {
->> -		if (ret < MIN_MSIX_COUNT)
->> -			goto msix_failed;
->> -
->> +	ret = pci_enable_msix_range(ha->pdev,
->> +				    entries, MIN_MSIX_COUNT, ha->msix_count);
->> +	if (ret < 0) {
->> +		ql_log(ql_log_fatal, vha, 0x00c7,
->> +		    "MSI-X: Failed to enable support, "
->> +		    "giving   up -- %d/%d.\n",
->> +		    ha->msix_count, ret);
->> +		goto msix_out;
->> +	} else if (ret < ha->msix_count) {
->>  		ql_log(ql_log_warn, vha, 0x00c6,
->>  		    "MSI-X: Failed to enable support "
->>  		    "-- %d/%d\n Retry with %d vectors.\n",
->>  		    ha->msix_count, ret, ret);
->> -		ha->msix_count = ret;
->> -		ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
->> -		if (ret) {
->> -msix_failed:
->> -			ql_log(ql_log_fatal, vha, 0x00c7,
->> -			    "MSI-X: Failed to enable support, "
->> -			    "giving   up -- %d/%d.\n",
->> -			    ha->msix_count, ret);
->> -			goto msix_out;
->> -		}
->> -		ha->max_rsp_queues = ha->msix_count - 1;
->>  	}
->> +	ha->msix_count = ret;
->> +	ha->max_rsp_queues = ha->msix_count - 1;
->>  	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
->>  				ha->msix_count, GFP_KERNEL);
->>  	if (!ha->msix_entries) {
->> --
->> 1.7.7.6
->>
->
+ IOMAP
+   devm_ioport_map()
+
+--PEIAKu/WMn1b1Hv9
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJT25xcAAoJEN0jrNd/PrOhPuoP/2T18ziutKk3DktygVhk+yNN
+Gmu2n+RwBe+lbkSmtli+6Q5Vx+LBPqzLAh7uUWqU+o5KtzRREW3s+9k+unqM/Hwk
+gj6YzpipwPr0g5pkXEw/jqbwAI6Hmw9xdIAZlZmOl+TVaYG/kNaEe2nc1SGpCxqb
+Exb2qyujAGeUmFpAaYxFY+3bXOfgbsajVJxqoYgiR7TnrotkHBJ+0h5ifcJ8avSh
+4VN7So/TFYLpsomEflx6gr30K9eOFaqicgFTIPJSDCjlOA5/M4s4nctaRTLsC5Z5
+aYhEV3PHBr3iLRi8CKNjTmfklGcLCIYi61AeibEs+tl6UWaNYsCqGV1YdqGHtCSO
+m4MRUsay4J/FiVfX2RolgIFIkDkgmJQAFbMI2c701Dwt2V0TMQjko3QHITxoahV3
+fZq6NHg2ozHSDeGWDVYL2ZWvAbLhJhfdjePuURg7BtH5WbHvYL+iLP0OkhdVK8D3
+0ZNAW7nBD3U6WyG/WSeR7l0lAKvebQI1Dcow4MqlxzjorpswFiGL2EiSpr2drx43
+dHzmYAWLNan1rFfDmI9i4eJP0OK5B5egEwasQ+R6+htB35xyvfanfvuGxYW1w6ER
+0o8LBTo5FK/I44+8r2zv/vJepS9fTqKLhnh8J/AmYb0sGJz0yrLh0FcTNabtq/kr
+s04NqHDmQRYeisZLELYZ
+=bFUi
+-----END PGP SIGNATURE-----
+
+--PEIAKu/WMn1b1Hv9--
