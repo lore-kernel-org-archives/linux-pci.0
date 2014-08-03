@@ -1,70 +1,67 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 26 Aug 2014 12:52:21 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
-	Prarit Bhargava <prarit@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: Re: [Bugfix] x86, irq: Fix bug in setting IOAPIC pin attributes
-Message-ID: <20140826095221.GO1660@lahna.fi.intel.com>
-References: <20140822124145.GF1660@lahna.fi.intel.com>
- <1409042706-11958-1-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp05.in.ibm.com ([122.248.162.5]:36664 "EHLO
+	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750960AbaHCOaU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Aug 2014 10:30:20 -0400
+Received: from /spool/local
+	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Sun, 3 Aug 2014 20:00:18 +0530
+Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 254D31258017
+	for <linux-pci@vger.kernel.org>; Sun,  3 Aug 2014 20:00:18 +0530 (IST)
+Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
+	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s73EWKFu64946428
+	for <linux-pci@vger.kernel.org>; Sun, 3 Aug 2014 20:02:21 +0530
+Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
+	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s73EUFw5018142
+	for <linux-pci@vger.kernel.org>; Sun, 3 Aug 2014 20:00:15 +0530
+Date: Mon, 4 Aug 2014 00:30:07 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Eli Cohen <eli@mellanox.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Amir Vadai <amirv@mellanox.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	Yevgeny Petrilin <yevgenyp@mellanox.com>,
+	Peter Paneah <peter@mellanox.com>
+Subject: Re: [PATCH v2] PCI: Mark broken INTx masking for Mellanox devices
+Message-ID: <20140803143007.GA4692@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1406868871-350-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <53DDE9EC.5040303@mellanox.com>
+ <20140803082046.GA8962@shangw>
+ <CFE9BFE80FFE4D4892AA5D31387E310F014FC1968B@MTLDAG02.mtl.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1409042706-11958-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CFE9BFE80FFE4D4892AA5D31387E310F014FC1968B@MTLDAG02.mtl.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 26, 2014 at 04:45:01PM +0800, Jiang Liu wrote:
-> On startup, IOAPIC driver preallocates IRQ descriptors and programs
-> IOAPIC pins with default level and polarity attributes for all legacy
-> IRQs. Later legacy IRQ users may fail to set IOAPIC pin attributes
-> if the requested attributes conflicts with the default IOAPIC pin
-> attributes. So change mp_irqdomain_map() to allow the first legacy IRQ
-> user to reprogram IOAPIC pin with different attributes.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+On Sun, Aug 03, 2014 at 08:57:39AM +0000, Eli Cohen wrote:
+>>>
+>>>What is the problem with masking the interrupts with the PCI command 
+>>>register? I'm asking because I want to understand in which devices we 
+>>>have the problem, and if it could be fixed by firmware guys.
+>>>What are the implications of having the quirk?
+>>>
+>
+>>The way to mask the interrupt through PCI command register isn't taking effect on IBM power platform. So we have to have the >quirk so that the interrupt could be masked from interrupt controller side with function disable_irq_nosync().
+>>
+>>If the interrupt can't be masked properly, we detect interrupt storm reported from host/guest when passing through those devices >via VFIO without suprise.
+>
+>Hi Gavin,
+>Does it have any effect on performance. Also, can you tell in which cases interrupts need to be masked?
+>
 
-I tried this and now we get further in setting up the IOAPIC but it
-still doesn't work :-(
+Eli, more code needed to be run for masking the LSI from interrupt controller
+side than from PCI command register.
 
-I noticed that mp_set_gsi_attr() never programs the IOAPIC in case
-info->set is 0 so I added following on top of your patch. With the below
-patch, the system seems to work as expected.
+I was passing through Mellanox devices from host to guest with VFIO, and I
+designated to use LSI in the guest side. More details could be found in
+drivers/vfio/pci/vfio_pci_intrs.c::vfio_intx_handler()
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 66c2700c9f83..777762a0ad09 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3942,10 +3942,16 @@ int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
- 
- 	mutex_lock(&ioapic_mutex);
- 	if (!info->set) {
-+		struct io_apic_irq_attr attr;
-+
- 		info->trigger = trigger;
- 		info->polarity = polarity;
- 		info->node = node;
- 		info->set = 1;
-+
-+		/* Now program the IOAPIC with the new attributes */
-+		set_io_apic_irq_attr(&attr, ioapic, pin, trigger, polarity);
-+		ret = io_apic_setup_irq_pin(gsi, node, &attr);
- 	} else if (info->trigger != trigger || info->polarity != polarity) {
- 		ret = -EBUSY;
- 	}
+Thanks,
+Gavin
+
+
