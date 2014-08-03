@@ -1,118 +1,59 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1407860725-25202-13-git-send-email-Liviu.Dudau@arm.com>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com> <1407860725-25202-13-git-send-email-Liviu.Dudau@arm.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Thu, 21 Aug 2014 23:16:16 -0500
-Message-ID: <CAL_JsqK6XiuS7OJ_2F16ySA8oj9AHqP0fAft21AOtJxXP2SqnQ@mail.gmail.com>
-Subject: Re: [PATCH v9 12/12] PCI: Introduce pci_remap_iospace() for remapping
- PCI I/O bus resources into CPU space
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:56530 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752378AbaHCPIP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 3 Aug 2014 11:08:15 -0400
+Message-ID: <1407078486.14674.5.camel@ul30vt.home>
+Subject: Re: [PATCH v2] PCI: Mark broken INTx masking for Mellanox devices
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Eli Cohen <eli@mellanox.com>, Amir Vadai <amirv@mellanox.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yevgeny Petrilin <yevgenyp@mellanox.com>,
+	Peter Paneah <peter@mellanox.com>
+Date: Sun, 03 Aug 2014 09:08:06 -0600
+In-Reply-To: <20140803143007.GA4692@shangw>
+References: <1406868871-350-1-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <53DDE9EC.5040303@mellanox.com> <20140803082046.GA8962@shangw>
+	 <CFE9BFE80FFE4D4892AA5D31387E310F014FC1968B@MTLDAG02.mtl.com>
+	 <20140803143007.GA4692@shangw>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 12, 2014 at 11:25 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> Introduce a default implementation for remapping PCI bus I/O resources
-> onto the CPU address space. Architectures with special needs may
-> provide their own version, but most should be able to use this one.
->
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+On Mon, 2014-08-04 at 00:30 +1000, Gavin Shan wrote:
+> On Sun, Aug 03, 2014 at 08:57:39AM +0000, Eli Cohen wrote:
+> >>>
+> >>>What is the problem with masking the interrupts with the PCI command 
+> >>>register? I'm asking because I want to understand in which devices we 
+> >>>have the problem, and if it could be fixed by firmware guys.
+> >>>What are the implications of having the quirk?
+> >>>
+> >
+> >>The way to mask the interrupt through PCI command register isn't taking effect on IBM power platform. So we have to have the >quirk so that the interrupt could be masked from interrupt controller side with function disable_irq_nosync().
+> >>
+> >>If the interrupt can't be masked properly, we detect interrupt storm reported from host/guest when passing through those devices >via VFIO without suprise.
+> >
+> >Hi Gavin,
+> >Does it have any effect on performance. Also, can you tell in which cases interrupts need to be masked?
+> >
+> 
+> Eli, more code needed to be run for masking the LSI from interrupt controller
+> side than from PCI command register.
+> 
+> I was passing through Mellanox devices from host to guest with VFIO, and I
+> designated to use LSI in the guest side. More details could be found in
+> drivers/vfio/pci/vfio_pci_intrs.c::vfio_intx_handler()
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+INTx is relatively high overhead already for device assignment since the
+interrupt is level triggered and needs to be masked on the host while
+the guest is processing it.  The more important restriction imposed by
+marking broken INTx masking is that the device needs an exclusive
+interrupt line in order to be assigned to a guest.  That may be common
+practice on IBM power, but on x86 it can make it much harder to
+configure the system for this use case.  Thanks,
 
-However, I would like to see ARM pci_ioremap_io converted over to this function.
+Alex
 
-Rob
 
-> ---
->  drivers/pci/pci.c   | 33 +++++++++++++++++++++++++++++++++
->  include/linux/pci.h |  3 +++
->  2 files changed, 36 insertions(+)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 29d1775..76d21b6 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2707,6 +2707,39 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
->  }
->  EXPORT_SYMBOL(pci_request_regions_exclusive);
->
-> +/**
-> + *     pci_remap_iospace - Remap the memory mapped I/O space
-> + *     @res: Resource describing the I/O space
-> + *     @phys_addr: physical address where the range will be mapped.
-> + *
-> + *     Remap the memory mapped I/O space described by the @res
-> + *     into the CPU physical address space. Only architectures
-> + *     that have memory mapped IO defined (and hence PCI_IOBASE)
-> + *     should call this function.
-> + */
-> +int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
-> +{
-> +       int err = -ENODEV;
-> +
-> +#ifdef PCI_IOBASE
-> +       if (!(res->flags & IORESOURCE_IO))
-> +               return -EINVAL;
-> +
-> +       if (res->end > IO_SPACE_LIMIT)
-> +               return -EINVAL;
-> +
-> +       err = ioremap_page_range(res->start + (unsigned long)PCI_IOBASE,
-> +                               res->end + 1 + (unsigned long)PCI_IOBASE,
-> +                               phys_addr, pgprot_device(PAGE_KERNEL));
-> +#else
-> +       /* this architecture does not have memory mapped I/O space,
-> +          so this function should never be called */
-> +       WARN_ON(1);
-> +#endif
-> +
-> +       return err;
-> +}
-> +
->  static void __pci_set_master(struct pci_dev *dev, bool enable)
->  {
->         u16 old_cmd, cmd;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index e1e0d80..988c2f5 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1098,6 +1098,9 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
->                                                   resource_size_t),
->                         void *alignf_data);
->
-> +
-> +int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
-> +
->  static inline dma_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
->  {
->         struct pci_bus_region region;
-> --
-> 2.0.4
->
->
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
