@@ -1,32 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <53E4F0AA.6000404@iam.tj>
-Date: Fri, 08 Aug 2014 16:45:46 +0100
-From: TJ <linux@iam.tj>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 4 Aug 2014 21:01:17 +0200
+From: Quentin Lambert <lambert.quentin@gmail.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Scott Murray <scott@spiteful.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH 2/3] PCI hotplug: fix a simple if coding style issue
+Message-ID: <20140804190117.GA4243@greed>
 MIME-Version: 1.0
-To: "linux-kernel@vger.kernel.org >> linux-kernel"
-	<linux-kernel@vger.kernel.org>
-CC: linux-pci@vger.kernel.org
-Subject: Re: Regression: pci=realloc fails to modify bridge windows, causing
- devices to fail BAR allocation
-References: <53D9FADA.6020304@iam.tj>
-In-Reply-To: <53D9FADA.6020304@iam.tj>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 31/07/14 09:14, TJ wrote:
-> See https://bugzilla.kernel.org/show_bug.cgi?id=81431
->
-> Summary:
->
-> Up until v3.15.7 booting with "pci=realloc,use_crs" successfully modifies the PCI bridge windows to allow an external ExpressCard <> ViDock4 + Nvidia Quadro NVS420 with its 2 GPUs to be configured.
->
-> With v3.16rc6 and rc7 it fails to do this, leaving the NVS420 inoperable.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
+Removing curly braces in simple if cases.
 
-This continues to affect 3.16.
+Signed-off-by: Quentin Lambert <lambert.quentin@gmail.com>
+---
+ drivers/pci/hotplug/cpcihp_zt5550.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pci/hotplug/cpcihp_zt5550.c b/drivers/pci/hotplug/cpcihp_zt5550.c
+index 42a61c2..2b222fc 100644
+--- a/drivers/pci/hotplug/cpcihp_zt5550.c
++++ b/drivers/pci/hotplug/cpcihp_zt5550.c
+@@ -182,9 +182,9 @@ static int zt5550_hc_enable_irq(void)
+ {
+ 	u8 reg;
+ 
+-	if (hc_dev == NULL) {
++	if (hc_dev == NULL) 
+ 		return -ENODEV;
+-	}
++
+ 	reg = readb(csr_int_mask);
+ 	reg = reg & ~ENUM_INT_MASK;
+ 	writeb(reg, csr_int_mask);
+@@ -195,9 +195,8 @@ static int zt5550_hc_disable_irq(void)
+ {
+ 	u8 reg;
+ 
+-	if (hc_dev == NULL) {
++	if (hc_dev == NULL)
+ 		return -ENODEV;
+-	}
+ 
+ 	reg = readb(csr_int_mask);
+ 	reg = reg | ENUM_INT_MASK;
+@@ -210,9 +209,9 @@ static int zt5550_hc_init_one (struct pci_dev *pdev, const struct pci_device_id
+ 	int status;
+ 
+ 	status = zt5550_hc_config(pdev);
+-	if (status != 0) {
++	if (status != 0)
+ 		return status;
+-	}
++
+ 	dbg("returned from zt5550_hc_config");
+ 
+ 	memset(&zt5550_hpc, 0, sizeof (struct cpci_hp_controller));
+-- 
+1.9.1
+
