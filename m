@@ -1,110 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hygieia.santi-shop.eu ([78.46.175.2]:52292 "EHLO
-	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751254AbaHJJeF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Aug 2014 05:34:05 -0400
-Date: Sun, 10 Aug 2014 11:26:54 +0200
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	DRI mailing list <dri-devel@lists.freedesktop.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dave Airlie <airlied@linux.ie>,
-	Matthew Garrett <matthew.garrett@nebula.com>
-Subject: Re: [PATCH 1/2 v2] x86, ia64: Move EFI_FB vga_default_device()
- initialization to pci_vga_fixup()
-Message-ID: <20140810112654.1bf684d6@neptune.home>
-In-Reply-To: <CAMxnaaXGQe4vg9cY5e2KZBnG4F-z49OriwxEGUE-DCE6MKUryQ@mail.gmail.com>
-References: <20140514224339.7f8be3a9@neptune.home>
-	<20140527234255.GJ11907@google.com>
-	<20140602201650.35f0e936@neptune.home>
-	<20140602201926.4d476818@neptune.home>
-	<20140625005501.7ff7e982@neptune.home>
-	<20140705171503.GC6247@google.com>
-	<CAMxnaaXxAZAJAdr5AYYRZC_xKFCuyrfY=qpJu8x+P-S+osm5vw@mail.gmail.com>
-	<CAMxnaaXGQe4vg9cY5e2KZBnG4F-z49OriwxEGUE-DCE6MKUryQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <53DEF80C.1010608@huawei.com>
+Date: Mon, 4 Aug 2014 11:03:40 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: "arnab.basu@freescale.com" <arnab.basu@freescale.com>
+CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Paul.Mundt@huawei.com" <Paul.Mundt@huawei.com>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+	"virtualization@lists.linux-foundation.org"
+	<virtualization@lists.linux-foundation.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC PATCH 00/11] Refactor MSI to support Non-PCI device
+References: <1406344128-27055-1-git-send-email-wangyijing@huawei.com> <c6d34fe1bbe9457ea8cff7dcd97902b8@DM2PR03MB317.namprd03.prod.outlook.com>
+In-Reply-To: <c6d34fe1bbe9457ea8cff7dcd97902b8@DM2PR03MB317.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 10 August 2014 Andreas Noever <andreas.noever@gmail.com> wrote:
-
-> On Sun, Aug 10, 2014 at 2:21 AM, Andreas Noever
-> <andreas.noever@gmail.com> wrote:
-> > On Sat, Jul 5, 2014 at 7:15 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >> On Wed, Jun 25, 2014 at 12:55:01AM +0200, Bruno Prémont wrote:
-> >>> With commit b4aa0163056b ("efifb: Implement vga_default_device() (v2)")
-> >>> Matthew Garrett introduced a efifb vga_default_device() so that EFI
-> >>> systems that do not load shadow VBIOS or setup VGA get proper value for
-> >>> boot_vga PCI sysfs attribute on the corresponding PCI device.
-> >>>
-> >>> Xorg is refusing to detect devices when boot_vga=0 which is the case on
-> >>> some EFI system (e.g. MacBookAir2,1). Xorg detects the GPU and finds
-> >>> the dri device but then bails out with "no devices detected".
-> >>>
-> >>> Note: When vga_default_device() is set boot_vga PCI sysfs attribute
-> >>> reflects its state. When unset this attribute is 1 whenever
-> >>> IORESOURCE_ROM_SHADOW flag is set.
-> >>>
-> >>> With introduction of sysfb/simplefb/simpledrm efifb is getting obsolete
-> >>> while having native drivers for the GPU also makes selecting
-> >>> sysfb/efifb optional.
-> >>>
-> >>> Remove the efifb implementation of vga_default_device() and initialize
-> >>> vgaarb's vga_default_device() with the PCI GPU that matches boot
-> >>> screen_info in pci_fixup_video().
-> >>>
-> >>> Tested-by: Anibal Francisco Martinez Cortina <linuxkid.zeuz@gmail.com>
-> >>> Cc: Matthew Garrett <matthew.garrett@nebula.com>
-> >>> Cc: stable@vger.kernel.org
-> >>> Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
-> >>
-> >> I applied both with Matthew's ack to pci/misc for v3.17, thanks!
-> >
-> > I just tried to run the latest kernel.  It failed to boot and git
-> > bisect points to this commit (MacBookPro10,1 with Nvidia&Intel
-> > graphics).
-> >
-> > The (now removed) code in efifb_setup did always set default_vga, even
-> > if it had already been set earlier. The new code in pci_fixup_video
-> > runs only if vga_default_device() is NULL. Removing the check fixes
-> > the regression.
-> >
-> >
-> > The following calls to vga_set_default_device are made during boot:
-> >
-> > vga_arbiter_add_pci_device -> vga_set_default_device(intel)
-> > pci_fixup_video -> vga_set_default_device(intel) (there are two calls
-> > in pci_fixup_video, this one is the one near "Boot video device")
-> > pci_fixup_video -> vga_set_default_device(nvidia) (from the "Does
-> > firmware framebuffer belong to us?" loop, only if I remove the check)
-> >
-> > vga_arbiter_add_pci_device chooses intel simply because it is the
-> > first device. Next pci_fixup_video(intel) sees that it is the default
-> > device, sets the IORESOURCE_ROM_SHADOW flag and calls
-> > vga_set_default_device again. And finally (if the check is removed)
-> > pci_fixup_video(nvidia) sees that it owns the framebuffer and sets
-> > itself as the default device which allows the system to boot again.
-> >
-> > Does setting the ROM_SHADOW flag on (possibly) the wrong device have
-> > any effect?
-> Yes it does. Removing the line changes a long standing
-> i915 0000:00:02.0: Invalid ROM contents
-> into a
-> i915 0000:00:02.0: BAR 6: can't assign [??? 0x00000000 flags
-> 0x20000000] (bogus alignment).
+>> MSI was introduced in PCI Spec 2.2. Currently, kernel MSI driver codes
+>> are bonding with PCI device. Because MSI has a lot advantages in design.
+>> More and more non-PCI devices want to use MSI as their default interrupt.
+>> The existing MSI device include HPET. HPET driver provide its own MSI
+>> code to initialize and process MSI interrupts. In the latest GIC v3 spec,
+>> legacy device can deliver MSI by the help of a relay device named
+>> consolidator.
+>> Consolidator can translate the legacy interrupts connected to it to
+>> MSI/MSI-X. And new non-PCI device will be designed to support MSI in
+>> future. So make the MSI driver code be generic will help the non-PCI
+>> device use MSI more simply.
 > 
-> The first is logged at KERN_ERR and the second one only at KERN_INFO.
-> We are making progress.
+> As per my understanding the GICv3 provides a service that will convert writes to a specified address to IRQs delivered to the core and as you mention above MSIs are part of the PCI spec. So I can see a strong case for non-PCI devices to want MSI like functionality without being fully compliant with the requirements of the MSI spec.
 
-How does your system behave if you change vga_arbiter_add_pci_device()
-not to set vga_set_default_device() with the first device registered?
+In GICv3, MBI is named for the service, but there is no more detailed information about it, only we can know is MBI is analogous to MSI,
+MBI devices must have address/data registers, but other registers like enable/mask/ctrl are not mandatory requirement.
+I don't know whether the MBI spec will be release, but anyway I think MSI refactoring is make sense, there are some existing Non-PCI MSI device like hpet, dmar.
+For simplicity, let name MSI and MBI to MSI temporarily.
+> 
+> My question is do we necessarily want to rework so much of the PCI-MSI layer to support non PCI devices? Or will it be sufficient to create a framework to allow non PCI devices to hook up with a device that can convert their writes to an IRQ to the core.
+> 
+> As I understand it, the msi_chip is (almost) such a framework. The only problem being that it makes some PCI specific assumptions (such as PCI specific writes from within msi_chip functions). Won't it be sufficient to make the msi_chip framework generic enough to be used by non-PCI devices and let each bus/device manage any additional requirements (such as configuration flow, bit definitions etc) that it places on message based interrupts?
 
-That is remove the 
-#ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
-code block in vga_arbiter_add_pci_device().
+msi_chip framework is important to support that, but I think maybe it's not enough, msi_chip is only responsible for IRQ allocation, teardown, etc..
 
-How did your system behave in the past if you did not enable efifb?
+The key difference between PCI device and Non-PCI MSI is the interfaces to access hardware MSI registers.
+for instance, currently, msi_chip->setup_irq() to setup MSI irq and configure the MSI address/data registers, so we need to provide device specific write_msi_msg() interface,
+then when we call msi_chip->setup_irq(), the device MSI registers can be configured appropriately.
 
-Bruno
+My patchset is just a RFC draft, I will update it later, all we want to do is make kernel support Non-PCI MSI devices.
+
+Thanks!
+Yijing.
+
+
+> 
+> Thanks
+> Arnab
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
