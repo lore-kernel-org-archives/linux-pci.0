@@ -1,57 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:35922 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753710AbaHEQMG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 12:12:06 -0400
-Received: by mail-wi0-f170.google.com with SMTP id f8so8234293wiw.3
-        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2014 09:12:05 -0700 (PDT)
-From: matthew_minter@xyratex.com
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: matthew_minter <matthew_minter@xyratex.com>
-Subject: [PATCH 10/22] Added (untested) support to cris architecture to accomodate new irq init code
-Date: Tue,  5 Aug 2014 17:11:11 +0100
-Message-Id: <1407255083-9356-11-git-send-email-matthew_minter@xyratex.com>
-In-Reply-To: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
-References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+Received: from nbfkord-smmo03.seg.att.com ([209.65.160.84]:61805 "EHLO
+	nbfkord-smmo03.seg.att.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751033AbaHDPp1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Aug 2014 11:45:27 -0400
+Message-ID: <53DFAA8C.2010602@solarflare.com>
+Date: Mon, 4 Aug 2014 16:45:16 +0100
+From: Edward Cree <ecree@solarflare.com>
+MIME-Version: 1.0
+To: Ethan Zhao <ethan.kernel@gmail.com>
+CC: linux-pci <linux-pci@vger.kernel.org>,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Vasundhara Volam <vasundhara.volam@emulex.com>
+Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
+References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com> <alpine.LFD.2.03.1407311500570.16821@solarflare.com> <CABawtvPwxovKV==8RVCL1OcsdfnZDDjr=d1uYp-A=bAzYbmKww@mail.gmail.com> <53DB84E6.1070206@solarflare.com> <107835EF-8941-4621-952F-E1583F7E3636@gmail.com>
+In-Reply-To: <107835EF-8941-4621-952F-E1583F7E3636@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: matthew_minter <matthew_minter@xyratex.com>
+On 02/08/14 01:25, Ethan Zhao wrote:
+> 在 2014年8月1日，下午8:15，Edward Cree <ecree@solarflare.com> 写道：
+>> On 01/08/14 04:51, Ethan Zhao wrote:
+>>> So far seems no driver call pci_sriov_set_totalvfs() with numvfs = 0
+>>> and the patch will change the behavior of the drivers, but it will
+>>> definitely change the test cases and documents related to IOV.
+>> As for test cases and documents, I can't find any in the kernel tree
+> I mean some test cases or doc that are out of kernel tree ... such as some Distro, 
+> not only Hardware vendors.
+I was under the impression that we don't care about breaking out-of-tree
+code.  Distros should be (and it looks like most are) using the
+kernel-doc to generate their documentation, and the kernel-doc doesn't
+say anything about what happens when passing 0.
 
----
- arch/cris/arch-v32/drivers/pci/bios.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
-
-diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
-index 64a5fb9..d04ecc8 100644
---- a/arch/cris/arch-v32/drivers/pci/bios.c
-+++ b/arch/cris/arch-v32/drivers/pci/bios.c
-@@ -80,20 +80,16 @@ int pcibios_enable_resources(struct pci_dev *dev, int mask)
- 	return 0;
- }
- 
--int pcibios_enable_irq(struct pci_dev *dev)
-+int pcibios_enable_irq(struct pci_dev *dev, u8 slot, u8 pin)
- {
- 	dev->irq = EXT_INTR_VECT;
- 	return 0;
- }
- 
--int pcibios_enable_device(struct pci_dev *dev, int mask)
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- {
--	int err;
--
--	if ((err = pcibios_enable_resources(dev, mask)) < 0)
--		return err;
--
--	if (!dev->msi_enabled)
--		pcibios_enable_irq(dev);
-+	bridge->swizzle_irq = NULL;
-+	bridge->map_irq = pcibios_enable_irq;
- 	return 0;
- }
-+
--- 
-2.0.4
-
+-Edward
