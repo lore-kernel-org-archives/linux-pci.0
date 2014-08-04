@@ -1,58 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:55133 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061AbaH2JKP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Aug 2014 05:10:15 -0400
-From: David Henningsson <david.henningsson@canonical.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: David Henningsson <david.henningsson@canonical.com>
-Subject: [PATCH] Add pci=assign-busses quirk to Dell Latitude D505
-Date: Fri, 29 Aug 2014 11:10:14 +0200
-Message-Id: <1409303414-5196-1-git-send-email-david.henningsson@canonical.com>
+Received: from nbfkord-smmo03.seg.att.com ([209.65.160.84]:41954 "EHLO
+	nbfkord-smmo03.seg.att.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752917AbaHDRI7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Aug 2014 13:08:59 -0400
+Message-ID: <53DFBE21.1010802@solarflare.com>
+Date: Mon, 4 Aug 2014 18:08:49 +0100
+From: Edward Cree <ecree@solarflare.com>
+MIME-Version: 1.0
+To: Alexander Duyck <alexander.h.duyck@intel.com>
+CC: Ethan Zhao <ethan.kernel@gmail.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Vasundhara Volam <vasundhara.volam@emulex.com>
+Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
+References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com> <alpine.LFD.2.03.1407311500570.16821@solarflare.com> <CABawtvPwxovKV==8RVCL1OcsdfnZDDjr=d1uYp-A=bAzYbmKww@mail.gmail.com> <53DB84E6.1070206@solarflare.com> <107835EF-8941-4621-952F-E1583F7E3636@gmail.com> <53DFAA8C.2010602@solarflare.com> <53DFB78D.4080309@intel.com>
+In-Reply-To: <53DFB78D.4080309@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Under a 3.16 based kernel (Ubuntu 3.16.0-031600-lowlatency),
-CardBus is not working unless pci=assign-buses is added to the
-kernel boot parameters.
+On 04/08/14 17:40, Alexander Duyck wrote:
+> Edward,
+>
+> The concern isn't what is out there, but what will come of it as a
+> result.  The question is should we allow setting the value to 0 to
+> change the behavior from disabling the override to essentially disabling
+> SR-IOV.
+I still don't see why any driver would set an override and then want to
+disable it; moreover, it seems like unnatural semantics to use 0 for
+this (something like -1 would seem much more sensible) since most people
+will expect 0 to mean, well, 0.
 
-Signed-off-by: David Henningsson <david.henningsson@canonical.com>
----
- arch/x86/pci/common.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+> If we consider it acceptable to use 0 as a disable value, and there are
+> several people on this thread that don't, the secondary issue of this is
+> the error return for sriov_numvfs_store which hasn't been addressed.
+> Should we still be returning ERANGE if SR-IOV has essentially been
+> disabled, or should we be returning some other error such as EBUSY,
+> ENOMEM, ENODEV, or ENOSYS to indicate that there are no resources
+> available for SR-IOV.
+In my opinion we should still return ERANGE, as that's the immediate
+error - user requested more VFs than were advertised.  I.e. it's exactly
+the same as if someone requested 8 VFs on igb after igb reduced totalvfs
+to 7; we don't return a different error code to say _why_ igb can only
+support 7 VFs.  I don't see why 0 is special in this regard.
 
-It was working OOTB on a 3.2 based kernel (Ubuntu 3.2.0-67-generic),
-and I have not thoroughly bisected what made it stop working.
-Still I'm suggesting to just a quirk to make it work regardless of
-kernel - it's a ~8 year old laptop, so being a bit lazy about it is
-probably okay, I hope. :-)
+> I think you would be much better off just implementing sriov_configure
+> for your PCI driver and placing your own error return there if you
+> cannot allocate a vswitch.
+It just seems silly to advertise VFs when we already know at PF probe
+time that we've failed to allocate the vswitch.
 
-Extract from dmidecode:
-
-Handle 0x0100, DMI type 1, 25 bytes
-System Information
-	Manufacturer: Dell Inc.
-	Product Name: Latitude D505    
-
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 059a76c..1849e39 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -262,6 +262,14 @@ static const struct dmi_system_id pciprobe_dmi_table[] = {
- 			DMI_MATCH(DMI_PRODUCT_NAME, "SX20S"),
- 		},
- 	},
-+	{
-+		.callback = assign_all_busses,
-+		.ident = "Dell Latitude D505 Laptop",
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Dell Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "Latitude D505"),
-+		},
-+	},
- #endif		/* __i386__ */
- 	{
- 		.callback = set_bf_sort,
--- 
-1.9.1
-
+-Edward
