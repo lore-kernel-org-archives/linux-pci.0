@@ -1,137 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:39575 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752015AbaH1VzL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Aug 2014 17:55:11 -0400
-Message-ID: <53FFA54D.9000907@gmail.com>
-Date: Thu, 28 Aug 2014 14:55:25 -0700
-From: Rajat Jain <rajatxjain@gmail.com>
+Received: from nbfkord-smmo03.seg.att.com ([209.65.160.84]:20020 "EHLO
+	nbfkord-smmo03.seg.att.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751498AbaHDPWm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Aug 2014 11:22:42 -0400
+Message-ID: <53DFA53A.4080401@solarflare.com>
+Date: Mon, 4 Aug 2014 16:22:34 +0100
+From: Edward Cree <ecree@solarflare.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-CC: rajatjain@juniper.net, groeck@juniper.net
-Subject: [PATCH] pci/probe: Enable CRS for Intel Haswell root ports
-Content-Type: text/plain; charset=ISO-8859-1
+To: Alexander Duyck <alexander.h.duyck@intel.com>
+CC: Don Dutile <ddutile@redhat.com>, <linux-pci@vger.kernel.org>,
+	"Bjorn Helgaas" <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
+References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com> <alpine.LFD.2.03.1407311500570.16821@solarflare.com> <53DA5EF4.1030500@intel.com> <53DA674A.9030305@solarflare.com> <53DA718A.9040407@intel.com> <53DA7574.4050103@solarflare.com> <53DA82AF.7000503@redhat.com> <53DA8745.2070405@solarflare.com> <53DF92B4.1040505@solarflare.com> <53DF9A9F.9060600@intel.com>
+In-Reply-To: <53DF9A9F.9060600@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIe root port of the Intel Haswell CPU, has a behavior to endlessly
-retry the configuration cycles, if an endpoint responds with a CRS
-(Configuration Request Retry Status), and the "CRS Software Visibility"
-flag is not set at the root port. This results in a CPU hang, when the
-kernel tries to enumerate the device that responds with CRS.
+I must be really bad at explaining things, I keep confusing everyone...
 
-Please note that this root port behavior (of endless retries) is still
-compliant with PCIe spec as the spec leaves the behavior open to
-implementation, on how many retries to do if "CRS visibility flag" is
-not enabled and it receives a CRS. (Intel has chosen to retry indefinitely)
+On 04/08/14 15:37, Alexander Duyck wrote:
+> How is it you get yourself into the PF-IOV mode?  Is this something that
+> is stored in the NVM of the adapter, or is it something where the driver
+> has to issue a request for it?  Also does each PF advertise SR-IOV
+> support in PF-IOV mode or only function 0?
+It's stored in the card's NVM, yes.
+Each PF will advertise SR-IOV support (if it has VFs configured -
+another NVM setting).
+> Modifying the total VFs and/or the initial VFs in the configuration
+> space is not practical.  You would likely run into issues as one of
+> these fields is read at probe time and the other is read at SR-IOV
+> enablement and if the two differ you cannot enable SR-IOV.
+I wasn't suggesting modifying configuration space at probe time.  The
+suggestion was for the firmware to do it at power-on.  But it was
+decided impractical, hence why I want to use pci_sriov_set_totalvfs instead.
+> I'm not sure what davem has to do with any of this.  We are discussing
+> PCI at this point, not the network drivers.  As such Dave won't be the
+> one accepting the pci_sriov_set_totalvfs changes you proposed.
+I just meant that if and when this PCI patch gets accepted, it'll be
+followed by a driver patch (against davem's tree) to use this function,
+and at that point there's likely to be another discussion of whether
+it's the right thing for the driver to do.
+> rather than trying to change the SR-IOV API to match
+> your use case.
+Here's the thing: I don't feel like I'm changing the API, I feel like
+I'm fixing a bug.  Now what is a bug and what is an undocumented, unused
+feature is of course subjective.  But I haven't seen any arguments so
+far why pci_sriov_set_totalvfs(dev, 0) _should_ have the old behaviour,
+while it's easy to argue that the old behaviour is an inconsistent
+interface with an undocumented and surprising pitfall.
+So can someone please explain to me why this isn't a bug?
 
-Ref1:
-https://www.pcisig.com/specifications/pciexpress/ECN_CRS_Software_Visibility_No27.pdf
-
-Ref2:
-PCIe spec V3.0, pg119, pg127 for "Configuration Request Retry Status"
-
-Following CPUs are affected:
-http://ark.intel.com/products/codename/42174/Haswell#@All
-
-Thus we need to enable the CRS visibility flag for such root ports. The
-commit ad7edfe04908 ("[PCI] Do not enable CRS Software Visibility by
-default") suggests to maintain a whitelist of the systems for which CRS
-should be enabled. This patch does the same.
-
-Note: Looking at the spec and reading about the CRS, IMHO the "CRS
-visibility" looks like a good thing to me that should always be enabled
-on the root ports that support it. And may be we should always enable
-it if supported and maintain a blacklist of devices on which should be
-disabled (because of known issues).
-
-How I stumbled upon this and tested the fix:
-
-Root port: PCI bridge: Intel Corporation Device 2f02 (rev 01)
-
-I have a PCIe endpoint (a PLX 8713 NT bridge) that will keep on responding
-with CRS for a long time when the kernel tries to enumerate the
-endpoint, trying to indicate that the device is not yet ready. This is
-because it needs some configuration over I2C in order to complete its
-reset sequence. This results in a CPU hang during enumeration.
-
-I used this setup to fix and test this issue. After enabling the CRS
-visibility flag at the root port, I see that CPU moves on as expected
-declaring the following (instead of freezing):
-
-pci 0000:30:00.0 id reading try 50 times with interval 20 ms to get
-ffff0001
-
-Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
----
-Hi Bjorn / folks,
-
-I had also saught suggestions on how this patch should be modelled.
-Please find a suggestive alternative here:
-
-https://lkml.org/lkml/2014/8/1/186
-
-Please let me know your thoughts.
-
-Thanks,
-
-Rajat
-
-
-
-
- drivers/pci/probe.c |   28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e3cf8a2..909ca75 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -740,6 +740,32 @@ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
- }
- EXPORT_SYMBOL(pci_add_new_bus);
- 
-+static const struct pci_device_id crs_whitelist[] = {
-+	{ PCI_VDEVICE(INTEL, 0x2f00), },
-+	{ PCI_VDEVICE(INTEL, 0x2f01), },
-+	{ PCI_VDEVICE(INTEL, 0x2f02), },
-+	{ PCI_VDEVICE(INTEL, 0x2f03), },
-+	{ PCI_VDEVICE(INTEL, 0x2f04), },
-+	{ PCI_VDEVICE(INTEL, 0x2f05), },
-+	{ PCI_VDEVICE(INTEL, 0x2f06), },
-+	{ PCI_VDEVICE(INTEL, 0x2f07), },
-+	{ PCI_VDEVICE(INTEL, 0x2f08), },
-+	{ PCI_VDEVICE(INTEL, 0x2f09), },
-+	{ PCI_VDEVICE(INTEL, 0x2f0a), },
-+	{ PCI_VDEVICE(INTEL, 0x2f0b), },
-+	{ },
-+};
-+
-+static void pci_enable_crs(struct pci_dev *dev)
-+{
-+	/* Enable CRS Software visibility only for whitelisted systems */
-+	if (pci_is_pcie(dev) &&
-+	    pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
-+	    pci_match_id(crs_whitelist, dev))
-+		pcie_capability_set_word(dev, PCI_EXP_RTCTL,
-+					 PCI_EXP_RTCTL_CRSSVE);
-+}
-+
- /*
-  * If it's a bridge, configure it and scan the bus behind it.
-  * For CardBus bridges, we don't scan behind as the devices will
-@@ -787,6 +813,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 	pci_write_config_word(dev, PCI_BRIDGE_CONTROL,
- 			      bctl & ~PCI_BRIDGE_CTL_MASTER_ABORT);
- 
-+	pci_enable_crs(dev);
-+
- 	if ((secondary || subordinate) && !pcibios_assign_all_busses() &&
- 	    !is_cardbus && !broken) {
- 		unsigned int cmax;
--- 
-1.7.9.5
-
+-Edward
