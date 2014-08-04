@@ -1,58 +1,54 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 8 Aug 2014 15:21:44 -0700 (PDT)
-From: David Rientjes <rientjes@google.com>
-To: Ingo Molnar <mingo@kernel.org>
-cc: Borislav Petkov <bp@alien8.de>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Peter Zijlstra <a.p.zijlstra@chello.nl>
-Subject: Re: [GIT PULL] x86/apic changes for v3.17
-In-Reply-To: <20140807113346.GA24225@gmail.com>
-Message-ID: <alpine.DEB.2.02.1408081519240.7430@chino.kir.corp.google.com>
-References: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com> <1407209178-18644-2-git-send-email-jiang.liu@linux.intel.com> <20140805183729.GA23068@pd.tnic> <53E201FC.6010102@linux.intel.com> <20140806170937.GA4895@pd.tnic> <20140807110332.GB10043@pd.tnic>
- <20140807113346.GA24225@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from nbfkord-smmo03.seg.att.com ([209.65.160.84]:15985 "EHLO
+	nbfkord-smmo03.seg.att.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752753AbaHDODi convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 Aug 2014 10:03:38 -0400
+Message-ID: <53DF92B4.1040505@solarflare.com>
+Date: Mon, 4 Aug 2014 15:03:32 +0100
+From: Edward Cree <ecree@solarflare.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+To: Don Dutile <ddutile@redhat.com>
+CC: Alexander Duyck <alexander.h.duyck@intel.com>,
+	<linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
+References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com> <alpine.LFD.2.03.1407311500570.16821@solarflare.com> <53DA5EF4.1030500@intel.com> <53DA674A.9030305@solarflare.com> <53DA718A.9040407@intel.com> <53DA7574.4050103@solarflare.com> <53DA82AF.7000503@redhat.com> <53DA8745.2070405@solarflare.com>
+In-Reply-To: <53DA8745.2070405@solarflare.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 7 Aug 2014, Ingo Molnar wrote:
+On 31/07/14 19:13, Edward Cree wrote:
+> On 31/07/14 18:53, Don Dutile wrote:
+>> Ideally, when the device is configured in different modes, the SRIOV
+>> cap structure
+>> should be modified so the pci sriov code doesn't try to act or reflect
+>> the
+>> non-reality the device is in.
+> That would be much nicer of course, and I'll ask our firmware team if
+> that's possible.  But I don't think it will be.
+As I feared, it's not practical for the device to do this.
+(Unfortunately, the IMEM (instruction memory) on the device is rather
+small and the firmware team are struggling to fit all the required
+features into it.)
+However, I also found out that in principle, the device _is_ capable of
+supporting VFs in PF-IOV mode, by attaching them directly to the
+underlying v-switch.  The firmware may or may not already do this; the
+person who's likely to know this isn't in today.  The driver at present
+doesn't support it because it assumes it always needs to attach VFs to
+its own v-switch, but it could (again, in principle) be taught otherwise.
 
-> Linus, please pull the latest x86-apic-for-linus git tree from:
-> 
->    git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git x86-apic-for-linus
-> 
->    # HEAD: 5e3bf215f4f2efc0af89e6dbc5da789744aeb5d7 x86/apic/vsmp: Make is_vsmp_box() static
-> 
-> 
-> The main changes in this cycle are:
-> 
->     * Remove obsolete APIC driver abstractions. (David Rientjes)
-> 
+So at this point it becomes a policy question of whether we want to
+support this, and our opinion is that this isn't a valid use-case (as
+the only time you'd want PF-IOV is if your system doesn't support VFs)
+and thus shouldn't be supported (as it creates extra testing and
+maintenance work).  The driver should probe the device, detect PF-IOV
+mode, recognise that it (the driver) doesn't have support for VFs in
+that mode, and set totalvfs to 0.
+Others may demur, of course, but that's likely to be decided when
+sending the driver patches to davem.  It's my belief that, uncertainty
+about my use case notwithstanding, pci_sriov_set_totalvfs(dev, 0) should
+be a valid operation with the semantics I've implemented in my patch.
 
-These changes are unrelated from the other issues and can still be pulled 
-from
-
-	git://git.kernel.org/pub/scm/linux/kernel/git/rientjes/linux.git x86/apic 
-
-if we want the cleanups for 3.17.  The x86 pull request was originally at 
-http://marc.info/?l=linux-kernel&m=140678961924050.
-
-It would be a shame to miss out on that because the changes share the same 
-tip branch.
+-Edward
+The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
