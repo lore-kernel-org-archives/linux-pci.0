@@ -1,51 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:33444 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752775AbaHTW3d (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Aug 2014 18:29:33 -0400
-Date: Wed, 20 Aug 2014 18:29:22 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Christoph Hellwig <hch@lst.de>,
-	Sathya Prakash <sathya.prakash@avagotech.com>,
-	Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>,
-	boris.ostrovsky@oracle.com
-Subject: Re: How to get the number of VFs assigned to the guests in XEN
-Message-ID: <20140820222922.GA7387@laptop.dumpdata.com>
-References: <CAK=zhgpH2tG-EG4QP1SE46e+uHXA+GJGOPA1vi8UqAfRZ-EFTA@mail.gmail.com>
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:55673 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750883AbaHDGxv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Aug 2014 02:53:51 -0400
+From: Sathya Perla <Sathya.Perla@Emulex.Com>
+To: Edward Cree <ecree@solarflare.com>,
+	Ethan Zhao <ethan.kernel@gmail.com>
+CC: linux-pci <linux-pci@vger.kernel.org>,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Vasundhara Volam <Vasundhara.Volam@Emulex.Com>
+Subject: RE: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
+Date: Mon, 4 Aug 2014 06:53:14 +0000
+Message-ID: <379c0701-9e78-4216-94ec-678f98f784e3@CMEXHTCAS2.ad.emulex.com>
+References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com>
+ <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com>
+ <53DA3180.5040302@solarflare.com>
+ <alpine.LFD.2.03.1407311500570.16821@solarflare.com>
+ <CABawtvPwxovKV==8RVCL1OcsdfnZDDjr=d1uYp-A=bAzYbmKww@mail.gmail.com>
+ <53DB84E6.1070206@solarflare.com>
+In-Reply-To: <53DB84E6.1070206@solarflare.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAK=zhgpH2tG-EG4QP1SE46e+uHXA+GJGOPA1vi8UqAfRZ-EFTA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 20, 2014 at 04:33:29PM +0530, Sreekanth Reddy wrote:
-> HI,
-> 
-> 
-> 
-> For SRIOV support, currently in the KVM environment, mpt3sas driver can use
-> the API pci_vfs_assigned() to know the number of VFs that are currently
-> assigned to the running VMs. So that during the PF driver unload time, if
-> the return value of this API is greater than zero the our driver won't call
-> the pci_disable_sriov() to disable the VFs.
-> 
-> 
-> 
-> Now for the same purpose in XEN environment, is there any API similar to
-> pci_vfs_assigned() which the low lever device driver can use to know 'the
-> number of VFs that are currently assigned to the running VMs'. In XEN
-> environment this API pci_vfs_assigned() will return always zero even though
-> VFs are assigned to the running VMs.
-
-Odd. It should return the same value. Are the devices binded to pci-back?
-
-> 
-> 
-> 
-> Regards,
-> 
-> Sreekanth
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1wY2ktb3duZXJAdmdl
+ci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtcGNpLQ0KPiANCj4gT24gMDEvMDgvMTQgMDQ6NTEs
+IEV0aGFuIFpoYW8gd3JvdGU6DQo+ID4gVGhvdWdoIEkgbGlrZSB0aGlzIHBhdGNoLCBpdCBzaG93
+cyBkaXJlY3Qgc3R5bGUsIGJ1dCBpdCB3aWxsIGNoYW5nZQ0KPiA+IHRoZSBtZWFuaW5nIG9mIGEg
+ZnVuY3Rpb24gbm90IG1lbnRpb25lZCBoZXJlLg0KPiA+DQo+ID4gICBpbnQgcGNpX3NyaW92X3Nl
+dF90b3RhbHZmcyhzdHJ1Y3QgcGNpX2RldiAqZGV2LCB1MTYgbnVtdmZzKQ0KPiBBbSBJIG1pc3Np
+bmcgc29tZXRoaW5nIGhlcmUsIG9yIGlzIHRoYXQgZXhhY3RseSB0aGUgZnVuY3Rpb24gbWVudGlv
+bmVkDQo+IGluIHRoZSBwYXRjaCB0aXRsZSAvIHN1YmplY3QgbGluZT8NCj4gDQo+ID4gU28gZmFy
+IHNlZW1zIG5vIGRyaXZlciBjYWxsIHBjaV9zcmlvdl9zZXRfdG90YWx2ZnMoKSB3aXRoIG51bXZm
+cyA9IDANCj4gPiBhbmQgdGhlIHBhdGNoIHdpbGwgY2hhbmdlIHRoZSBiZWhhdmlvciBvZiB0aGUg
+ZHJpdmVycywgYnV0IGl0IHdpbGwNCj4gPiBkZWZpbml0ZWx5IGNoYW5nZSB0aGUgdGVzdCBjYXNl
+cyBhbmQgZG9jdW1lbnRzIHJlbGF0ZWQgdG8gSU9WLg0KPiBBcyBmb3IgdGVzdCBjYXNlcyBhbmQg
+ZG9jdW1lbnRzLCBJIGNhbid0IGZpbmQgYW55IGluIHRoZSBrZXJuZWwgdHJlZSAtDQo+IGlmIEkg
+Z3JlcCBmb3IgcGNpX3NyaW92X3NldF90b3RhbHZmcywgdGhlIG9ubHkgbWVudGlvbnMgSSBmaW5k
+IGFyZToNCj4gKiBUaGUgZGVjbGFyYXRpb24gaW4gaW5jbHVkZS9saW51eC9wY2kuaC4gIERvZXNu
+J3QgaGF2ZSBhbnkgY29tbWVudHMuDQo+ICogVGhlIGRlZmluaXRpb24gaW4gZHJpdmVycy9wY2kv
+aW92LmMuICBUaGUgY29tbWVudCBkb2Vzbid0IGRvY3VtZW50IHRoZQ0KPiBiZWhhdmlvdXIgaW4g
+dGhlIG51bXZmcyA9IDAgY2FzZS4NCj4gKiBEb2N1bWVudGF0aW9uL0FCSS90ZXN0aW5nL3N5c2Zz
+LWJ1cy1wY2kuICBEZXNjcmliZXMgdGhlIGZ1bmN0aW9uJ3MNCj4gcHVycG9zZSAicmVkdWNlIHRo
+ZSB2YWx1ZSByZWFkIGZyb20gW3RoZSBzcmlvdl90b3RhbHZmcyBzeXNmcyBmaWxlXSIgYnV0DQo+
+IGRvZXNuJ3Qgc2F5IGFueXRoaW5nIGFib3V0IHRoZSBudW12ZnMgPSAwIGNhc2UuDQo+ICogdGhl
+IEludGVsIGlnYiBhbmQgaXhnYmUgZXRoZXJuZXQgZHJpdmVycy4gIEJvdGggcGFzcyBub256ZXJv
+IGNvbnN0YW50cw0KPiBmb3IgbnVtdmZzLg0KPiAqIHRoZSBFbXVsZXggYmVuZXQgZHJpdmVyLiAg
+VGhpcyB3ZW50IGludG8gRGF2ZSBNaWxsZXIncyBuZXQtbmV4dCBicmFuY2gNCj4gb24gMzAvMDYv
+MjAxNCAoc28gaGFzbid0IGhpdCBMaW51cycgb3Igb3RoZXIgdHJlZXMgeWV0KSwgYnV0IGl0IGxv
+b2tzIHRvDQo+IG1lIGxpa2UgaXQgbWlnaHQgY2FsbCB3aXRoIG51bXZmcyA9IDAuICBDQ2luZyB0
+aGUgYXV0aG9yIG9mIHRoYXQgcGF0Y2gNCj4gKFZhc3VuZGhhcmEgVm9sYW0pIGZvciBjb21tZW50
+cy4NCj4gDQoNCkluY2lkZW50YWxseSwgYWZ0ZXIgbXkgbW9zdCByZWNlbnQgcGF0Y2ggLSBjb21t
+aXQgZDNkMTgzMTINCigiYmUybmV0OiBpZ25vcmUgZ2V0L3NldCBwcm9maWxlIEZXIGNtZCBmYWls
+dXJlcyIpLCBiZTJuZXQgbm8gbG9uZ2VyDQpjYWxscyBwY2lfc3Jpb3Zfc2V0X3RvdGFsdmZzKCkg
+d2l0aCBudW1fdmZzPTAuIA0KSG9wZSB0aGlzIGhlbHBzLg0KDQp0aGFua3MsDQotU2F0aHlhDQo=
