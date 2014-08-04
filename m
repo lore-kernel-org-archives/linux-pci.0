@@ -1,56 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19225 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755887AbaHHFhP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Aug 2014 01:37:15 -0400
-From: Ethan Zhao <ethan.zhao@oracle.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
-	kvm@vger.kernel.org, konrad.wilk@oracle.com,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
-	xen-devel@lists.xenproject.org
-Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
-	ethan.kernel@gmail.com
-Subject: [PATCH 3/4] xen-pciback: use pci device flag operation helper function
-Date: Fri,  8 Aug 2014 13:36:06 +0800
-Message-Id: <1407476167-18935-4-git-send-email-ethan.zhao@oracle.com>
-In-Reply-To: <1407476167-18935-1-git-send-email-ethan.zhao@oracle.com>
-References: <1407476167-18935-1-git-send-email-ethan.zhao@oracle.com>
+Received: from mga14.intel.com ([192.55.52.115]:16973 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750812AbaHDOh2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 Aug 2014 10:37:28 -0400
+Message-ID: <53DF9A9F.9060600@intel.com>
+Date: Mon, 04 Aug 2014 07:37:19 -0700
+From: Alexander Duyck <alexander.h.duyck@intel.com>
+MIME-Version: 1.0
+To: Edward Cree <ecree@solarflare.com>, Don Dutile <ddutile@redhat.com>
+CC: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
+References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com> <alpine.LFD.2.03.1407311500570.16821@solarflare.com> <53DA5EF4.1030500@intel.com> <53DA674A.9030305@solarflare.com> <53DA718A.9040407@intel.com> <53DA7574.4050103@solarflare.com> <53DA82AF.7000503@redhat.com> <53DA8745.2070405@solarflare.com> <53DF92B4.1040505@solarflare.com>
+In-Reply-To: <53DF92B4.1040505@solarflare.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use pci device flag operation helper functions when set device
-to assigned or deassigned state.
+On 08/04/2014 07:03 AM, Edward Cree wrote:
+> On 31/07/14 19:13, Edward Cree wrote:
+>> On 31/07/14 18:53, Don Dutile wrote:
+>>> Ideally, when the device is configured in different modes, the SRIOV
+>>> cap structure
+>>> should be modified so the pci sriov code doesn't try to act or reflect
+>>> the
+>>> non-reality the device is in.
+>> That would be much nicer of course, and I'll ask our firmware team if
+>> that's possible.  But I don't think it will be.
+> As I feared, it's not practical for the device to do this.
+> (Unfortunately, the IMEM (instruction memory) on the device is rather
+> small and the firmware team are struggling to fit all the required
+> features into it.)
+> However, I also found out that in principle, the device _is_ capable of
+> supporting VFs in PF-IOV mode, by attaching them directly to the
+> underlying v-switch.  The firmware may or may not already do this; the
+> person who's likely to know this isn't in today.  The driver at present
+> doesn't support it because it assumes it always needs to attach VFs to
+> its own v-switch, but it could (again, in principle) be taught otherwise.
+> 
+> So at this point it becomes a policy question of whether we want to
+> support this, and our opinion is that this isn't a valid use-case (as
+> the only time you'd want PF-IOV is if your system doesn't support VFs)
+> and thus shouldn't be supported (as it creates extra testing and
+> maintenance work).  The driver should probe the device, detect PF-IOV
+> mode, recognise that it (the driver) doesn't have support for VFs in
+> that mode, and set totalvfs to 0.
+> Others may demur, of course, but that's likely to be decided when
+> sending the driver patches to davem.  It's my belief that, uncertainty
+> about my use case notwithstanding, pci_sriov_set_totalvfs(dev, 0) should
+> be a valid operation with the semantics I've implemented in my patch.
+> 
+> -Edward
 
-Acked-by: David Vrabel <david.vrabel@citrix.com>
-Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
----
- drivers/xen/xen-pciback/pci_stub.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+How is it you get yourself into the PF-IOV mode?  Is this something that
+is stored in the NVM of the adapter, or is it something where the driver
+has to issue a request for it?  Also does each PF advertise SR-IOV
+support in PF-IOV mode or only function 0?
 
-diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
-index d57a173..e593921 100644
---- a/drivers/xen/xen-pciback/pci_stub.c
-+++ b/drivers/xen/xen-pciback/pci_stub.c
-@@ -133,7 +133,7 @@ static void pcistub_device_release(struct kref *kref)
- 	xen_pcibk_config_free_dyn_fields(dev);
- 	xen_pcibk_config_free_dev(dev);
- 
--	dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-+	pci_clear_dev_assigned(dev);
- 	pci_dev_put(dev);
- 
- 	kfree(psdev);
-@@ -413,7 +413,7 @@ static int pcistub_init_device(struct pci_dev *dev)
- 	dev_dbg(&dev->dev, "reset device\n");
- 	xen_pcibk_reset_device(dev);
- 
--	dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-+	pci_set_dev_assigned(dev);
- 	return 0;
- 
- config_release:
--- 
-1.7.1
+Modifying the total VFs and/or the initial VFs in the configuration
+space is not practical.  You would likely run into issues as one of
+these fields is read at probe time and the other is read at SR-IOV
+enablement and if the two differ you cannot enable SR-IOV.
+
+I'm not sure what davem has to do with any of this.  We are discussing
+PCI at this point, not the network drivers.  As such Dave won't be the
+one accepting the pci_sriov_set_totalvfs changes you proposed.  If you
+are just wanting to get a patch through Dave for this you would be much
+better off just returning an error on sriov_configure if the vswitch
+isn't available rather than trying to change the SR-IOV API to match
+your use case.
+
+Thanks,
+
+Alex
+
 
