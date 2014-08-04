@@ -1,49 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:51241 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753262AbaHFJFB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Aug 2014 05:05:01 -0400
-From: "Chen, Gong" <gong.chen@linux.intel.com>
-To: bhelgaas@google.com, rdunlap@infradead.org, bp@alien8.de,
-	tony.luck@intel.com
-Cc: linux-pci@vger.kernel.org, "Chen, Gong" <gong.chen@linux.intel.com>
-Subject: [RFC PATCH 5/5] PCI, aer: Update initial value of UC error mask
-Date: Wed,  6 Aug 2014 04:32:44 -0400
-Message-Id: <1407313964-20794-5-git-send-email-gong.chen@linux.intel.com>
-In-Reply-To: <1407313964-20794-1-git-send-email-gong.chen@linux.intel.com>
-References: <1407313964-20794-1-git-send-email-gong.chen@linux.intel.com>
+Received: from mail-bn1blp0188.outbound.protection.outlook.com ([207.46.163.188]:38713
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751934AbaHDUW0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Aug 2014 16:22:26 -0400
+From: Rajat Jain <rajatjain@juniper.net>
+To: Sandeep Mann <sandeep@purestorage.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "rajatxjain@gmail.com" <rajatxjain@gmail.com>
+Subject: RE: [PATCH] PCI: pciehp: Use ordered workqueue for HPC events
+Date: Mon, 4 Aug 2014 20:22:22 +0000
+Message-ID: <dc3c0a8a73734bac8b3340ed4fec4810@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <1406933232-1560-1-git-send-email-sandeep@purestorage.com>
+In-Reply-To: <1406933232-1560-1-git-send-email-sandeep@purestorage.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In PCI-e SPEC r3.0, BIT 0 of Uncorrectable Error Status Register
-is redefined and it has an explicit requirement that when writing
-this field, a value of 1b is the only choice. So change previous
-initial maks from 0 to 1.
 
-Signed-off-by: Chen, Gong <gong.chen@linux.intel.com>
----
-NOTE: After scratching all use cases, this is the most obvious use
-case to violate the SPEC. Most of use cases just read first and
-then overwrite for clear purpose. Even so, such fix is obvious to
-not compatiable with previous SPEC definition. Do we need a dirty
-hack?
 
- arch/mips/pci/pci-octeon.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> owner@vger.kernel.org] On Behalf Of Sandeep Mann
+> Sent: Friday, August 01, 2014 3:47 PM
+> To: bhelgaas@google.com; linux-pci@vger.kernel.org
+> Subject: [PATCH] PCI: pciehp: Use ordered workqueue for HPC events
+> 
+> Using an ordered workqueue serializes processing of hotplug event.
+> Processing an hotplug event for some devices can take a relatively "long"
+> time, which means if a device is added and removed in quick succession (or
+> due to flacky hardware), it can lead to multiple outstanding hotplug events.
+> Processing these events concurrently can lead to unknown internal state
+> and/or kernel panics.
+> 
+> Signed-off-by: Sandeep Mann <sandeep@purestorage.com>
 
-diff --git a/arch/mips/pci/pci-octeon.c b/arch/mips/pci/pci-octeon.c
-index 59cccd9..f1bfdc2 100644
---- a/arch/mips/pci/pci-octeon.c
-+++ b/arch/mips/pci/pci-octeon.c
-@@ -134,7 +134,7 @@ int pcibios_plat_dev_init(struct pci_dev *dev)
- 				       dconfig);
- 		/* Enable reporting of all uncorrectable errors */
- 		/* Uncorrectable Error Mask - turned on bits disable errors */
--		pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, 0);
-+		pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, 1);
- 		/*
- 		 * Leave severity at HW default. This only controls if
- 		 * errors are reported as uncorrectable or
--- 
-2.0.0.rc2
+Acked-by: Rajat Jain <rajatxjain@gmail.com>
 
+Yes, this is good and needed. Sometime back I felt the need for it, but sort of assumed that the slot->wq is already ordered.
+
+Thanks,
+Rajat
+
+
+> ---
+>  drivers/pci/hotplug/pciehp_hpc.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c
+> b/drivers/pci/hotplug/pciehp_hpc.c
+> index 42914e0..c4eedab 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -681,7 +681,7 @@ static int pcie_init_slot(struct controller *ctrl)
+>  	if (!slot)
+>  		return -ENOMEM;
+> 
+> -	slot->wq = alloc_workqueue("pciehp-%u", 0, 0, PSN(ctrl));
+> +	slot->wq = alloc_ordered_workqueue("pciehp-%u", 0, PSN(ctrl));
+>  	if (!slot->wq)
+>  		goto abort;
+> 
+> --
+> 1.8.3.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
+> body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
