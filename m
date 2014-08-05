@@ -1,168 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 29 Aug 2014 12:04:19 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Rajat Jain <rajatxjain@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, rajatjain@juniper.net,
-	groeck@juniper.net
-Subject: Re: [PATCH] pci/probe: Enable CRS for Intel Haswell root ports
-Message-ID: <20140829040419.GA11664@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <53FFA54D.9000907@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53FFA54D.9000907@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:38667 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753710AbaHEQMA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 12:12:00 -0400
+Received: by mail-wi0-f180.google.com with SMTP id n3so1625808wiv.1
+        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2014 09:11:56 -0700 (PDT)
+From: matthew_minter@xyratex.com
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: [PATCH RFC V2] Factor out pci_fixup_irqs and give IRQs to hot-added devices
+Date: Tue,  5 Aug 2014 17:11:01 +0100
+Message-Id: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 28, 2014 at 02:55:25PM -0700, Rajat Jain wrote:
->The PCIe root port of the Intel Haswell CPU, has a behavior to endlessly
->retry the configuration cycles, if an endpoint responds with a CRS
->(Configuration Request Retry Status), and the "CRS Software Visibility"
->flag is not set at the root port. This results in a CPU hang, when the
->kernel tries to enumerate the device that responds with CRS.
->
->Please note that this root port behavior (of endless retries) is still
->compliant with PCIe spec as the spec leaves the behavior open to
->implementation, on how many retries to do if "CRS visibility flag" is
->not enabled and it receives a CRS. (Intel has chosen to retry indefinitely)
->
->Ref1:
->https://www.pcisig.com/specifications/pciexpress/ECN_CRS_Software_Visibility_No27.pdf
->
->Ref2:
->PCIe spec V3.0, pg119, pg127 for "Configuration Request Retry Status"
->
->Following CPUs are affected:
->http://ark.intel.com/products/codename/42174/Haswell#@All
->
->Thus we need to enable the CRS visibility flag for such root ports. The
->commit ad7edfe04908 ("[PCI] Do not enable CRS Software Visibility by
->default") suggests to maintain a whitelist of the systems for which CRS
->should be enabled. This patch does the same.
->
->Note: Looking at the spec and reading about the CRS, IMHO the "CRS
->visibility" looks like a good thing to me that should always be enabled
->on the root ports that support it. And may be we should always enable
->it if supported and maintain a blacklist of devices on which should be
->disabled (because of known issues).
->
->How I stumbled upon this and tested the fix:
->
->Root port: PCI bridge: Intel Corporation Device 2f02 (rev 01)
->
->I have a PCIe endpoint (a PLX 8713 NT bridge) that will keep on responding
->with CRS for a long time when the kernel tries to enumerate the
->endpoint, trying to indicate that the device is not yet ready. This is
->because it needs some configuration over I2C in order to complete its
->reset sequence. This results in a CPU hang during enumeration.
->
->I used this setup to fix and test this issue. After enabling the CRS
->visibility flag at the root port, I see that CPU moves on as expected
->declaring the following (instead of freezing):
->
->pci 0000:30:00.0 id reading try 50 times with interval 20 ms to get
->ffff0001
->
->Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
->Signed-off-by: Rajat Jain <rajatjain@juniper.net>
->Signed-off-by: Guenter Roeck <groeck@juniper.net>
->---
->Hi Bjorn / folks,
->
->I had also saught suggestions on how this patch should be modelled.
->Please find a suggestive alternative here:
->
->https://lkml.org/lkml/2014/8/1/186
->
->Please let me know your thoughts.
->
->Thanks,
->
->Rajat
->
->
->
->
-> drivers/pci/probe.c |   28 ++++++++++++++++++++++++++++
-> 1 file changed, 28 insertions(+)
->
->diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->index e3cf8a2..909ca75 100644
->--- a/drivers/pci/probe.c
->+++ b/drivers/pci/probe.c
->@@ -740,6 +740,32 @@ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
-> }
-> EXPORT_SYMBOL(pci_add_new_bus);
->
->+static const struct pci_device_id crs_whitelist[] = {
->+	{ PCI_VDEVICE(INTEL, 0x2f00), },
->+	{ PCI_VDEVICE(INTEL, 0x2f01), },
->+	{ PCI_VDEVICE(INTEL, 0x2f02), },
->+	{ PCI_VDEVICE(INTEL, 0x2f03), },
->+	{ PCI_VDEVICE(INTEL, 0x2f04), },
->+	{ PCI_VDEVICE(INTEL, 0x2f05), },
->+	{ PCI_VDEVICE(INTEL, 0x2f06), },
->+	{ PCI_VDEVICE(INTEL, 0x2f07), },
->+	{ PCI_VDEVICE(INTEL, 0x2f08), },
->+	{ PCI_VDEVICE(INTEL, 0x2f09), },
->+	{ PCI_VDEVICE(INTEL, 0x2f0a), },
->+	{ PCI_VDEVICE(INTEL, 0x2f0b), },
->+	{ },
->+};
->+
->+static void pci_enable_crs(struct pci_dev *dev)
->+{
->+	/* Enable CRS Software visibility only for whitelisted systems */
->+	if (pci_is_pcie(dev) &&
->+	    pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
->+	    pci_match_id(crs_whitelist, dev))
->+		pcie_capability_set_word(dev, PCI_EXP_RTCTL,
->+					 PCI_EXP_RTCTL_CRSSVE);
->+}
->+
-> /*
->  * If it's a bridge, configure it and scan the bus behind it.
->  * For CardBus bridges, we don't scan behind as the devices will
->@@ -787,6 +813,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
-> 	pci_write_config_word(dev, PCI_BRIDGE_CONTROL,
-> 			      bctl & ~PCI_BRIDGE_CTL_MASTER_ABORT);
->
->+	pci_enable_crs(dev);
->+
+pci_fixup_irqs is the current method used in most arches to assign IRQs to
+PCI devices. This has a number of flaws including it requiring an extra walk
+of the PCI bus and most importantly not running for devices which are added
+after boot time, this includes hot-added devices on boards that support this.
 
-Rajat,
+This patch set (which is a respin of my earlier patch set) modifies the
+IRQ mapping and swizzling infrastructure such that functions are registered
+by the boot code (instead of being run directly by the boot code)
+and then run later in the enable_device path such that it will apply to all
+devices and not only those inserted at boot time.
 
-I am not familiar with the CRS Software Visibility, but I think your code
-could fix the problem.
+This is cleaner as it unifies how each architecture allocates PCI IRQs as much
+as possible (some arches were particularly resistant to these changes so some
+work-arounds have been used).
 
-While I have one tiny suggestion. I see the commit 
-"ad7edfe04908 [PCI] Do not enable CRS Software Visibility by default" has the
-pci_enable_crs() called in pci_scan_bridge(), while I think this may not be a
-very good place for this fix.
+The caveat here is that I have been forced to modify some architecture specific
+code for various architectures which I cannot test due to not having such boards
+available. The code seems correct and the changes in most cases are small and
+trivial however I need some help testing these patches.
 
-How about have a early fixup for these intel devices? Since the original code
-is called on each bridge, while this fix is just invoked on specific devices.
-And sounds we are not planing to have this enabled by default in a short term.
-If we have other devices to be in the white list in the future, we would expand
-this list. This will make the probe.c not that generic. 
+I am also a little unsure if these should all be here or if some of them should
+be sent to architecture specific lists, the reason I picked here as these
+all need to be applied at once in order to safely work.
 
-Hmm... to me, enable this in the eary fixup is a different stage as you did in
-pci_scan_bridge(). Not sure enable them in a different stage will effect the 
-behavior. If this matters, my suggestion is not a good one.
+Any comments on this patch revision would be very appreciated, particularly if
+anyone can catch bugs in any of the arches which are listed as (untested)
+in the patch names.
 
-> 	if ((secondary || subordinate) && !pcibios_assign_all_busses() &&
-> 	    !is_cardbus && !broken) {
-> 		unsigned int cmax;
->-- 
->1.7.9.5
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Many thanks,
+Matthew
 
--- 
-Richard Yang
-Help you, Help me
+arch/alpha/kernel/pci.c                 | 16 ++++++++++------
+arch/alpha/kernel/sys_nautilus.c        |  1 -
+arch/arm/kernel/bios32.c                | 13 +++++++++----
+arch/cris/arch-v32/drivers/pci/bios.c   | 14 +++++---------
+arch/frv/mb93090-mb00/pci-frv.h         |  1 -
+arch/frv/mb93090-mb00/pci-irq.c         | 28 +++++++++++++++++-----------
+arch/frv/mb93090-mb00/pci-vdk.c         |  1 -
+arch/ia64/pci/pci.c                     |  3 +++
+arch/m68k/platform/coldfire/pci.c       |  8 +++++++-
+arch/microblaze/pci/pci-common.c        | 10 +++++++---
+arch/mips/pci/pci.c                     |  9 +++++++--
+arch/mn10300/unit-asb2305/pci-asb2305.h |  5 +----
+arch/mn10300/unit-asb2305/pci-irq.c     | 25 +++++--------------------
+arch/mn10300/unit-asb2305/pci.c         | 21 ++++++++-------------
+arch/parisc/kernel/pci.c                |  8 +++++++-
+arch/powerpc/kernel/pci-common.c        | 26 +++++++++++++-------------
+arch/s390/pci/pci.c                     |  7 +++++++
+arch/sh/drivers/pci/fixups-cayman.c     |  2 +-
+arch/sh/drivers/pci/fixups-dreamcast.c  |  2 +-
+arch/sh/drivers/pci/fixups-r7780rp.c    |  2 +-
+arch/sh/drivers/pci/fixups-rts7751r2d.c |  6 +++---
+arch/sh/drivers/pci/fixups-sdk7780.c    |  4 ++--
+arch/sh/drivers/pci/fixups-se7751.c     |  2 +-
+arch/sh/drivers/pci/fixups-sh03.c       |  2 +-
+arch/sh/drivers/pci/fixups-snapgear.c   |  2 +-
+arch/sh/drivers/pci/fixups-titan.c      |  4 ++--
+arch/sh/drivers/pci/pci.c               | 10 +++++++---
+arch/sh/drivers/pci/pcie-sh7786.c       |  2 +-
+arch/sparc/kernel/leon_pci.c            | 12 +++++++++++-
+arch/sparc/kernel/pci.c                 | 21 +++++++++++++++++----
+arch/tile/kernel/pci.c                  | 10 +++++++---
+arch/tile/kernel/pci_gx.c               | 10 +++++++---
+arch/unicore32/kernel/pci.c             | 11 ++++++++---
+arch/x86/include/asm/pci_x86.h          |  7 ++++---
+arch/x86/kernel/x86_init.c              |  1 -
+arch/x86/pci/acpi.c                     |  5 ++++-
+arch/x86/pci/common.c                   |  2 --
+arch/x86/pci/irq.c                      | 95 +++++++++++++++++++++++++++++++++++++++++++++++++++--------------------------------------------
+drivers/of/of_pci_irq.c                 |  2 +-
+drivers/pci/Makefile                    | 15 ++-------------
+drivers/pci/host-bridge.c               |  2 +-
+drivers/pci/pci.c                       |  6 +++++-
+drivers/pci/pci.h                       |  1 +
+drivers/pci/probe.c                     | 12 ------------
+drivers/pci/setup-irq.c                 | 34 ++++++++++++++++------------------
+include/linux/pci.h                     |  8 ++++----
+46 files changed, 266 insertions(+), 222 deletions(-)
 
