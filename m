@@ -1,107 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-la0-f51.google.com ([209.85.215.51]:56591 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755364AbaHES0O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 14:26:14 -0400
+Received: by mail-la0-f51.google.com with SMTP id pn19so1052202lab.38
+        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2014 11:26:10 -0700 (PDT)
+MIME-Version: 1.0
+Date: Tue, 5 Aug 2014 15:26:10 -0300
+Message-ID: <CAOMZO5CmDa4=AcHZpWcaLanDZQ3fXNfQbcN_0Oc04MWPw9bY1Q@mail.gmail.com>
+Subject: designware: missing *config* reg space
+From: Fabio Estevam <festevam@gmail.com>
+To: kishon@ti.com
+Cc: Mohit Kumar <mohit.kumar@st.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Bugfix] x86, irq, PCI: Keep IRQ assignment for PCI devices during suspend/hibernation
-Date: Fri,  8 Aug 2014 14:07:51 +0800
-Message-Id: <1407478071-29399-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <20140807113346.GA24225@gmail.com>
-References: <20140807113346.GA24225@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Shawn Guo <shawn.guo@freescale.com>,
+	=?UTF-8?B?TWFyZWsgVmHFoXV0?= <marex@denx.de>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now IOAPIC driver dynamically allocates IRQ numbers for IOAPIC pins.
-We need to keep IRQ assignment for PCI devices during suspend/hibernation,
-otherwise it may cause failure of suspend/hibernation due to:
-1) Device driver calls pci_enable_device() to allocate an IRQ number
-   and register interrupt handler on the returned IRQ.
-2) Device driver's suspend callback calls pci_disable_device() and
-   release assigned IRQ in turn.
-3) Device driver's resume callback calls pci_enable_device() to
-   allocate IRQ number again. A different IRQ number may be assigned
-   by IOAPIC driver this time.
-4) Now the hardware delivers interrupt to the new IRQ but interrupt
-   handler is still registered against the old IRQ, so it breaks
-   suspend/hibernation.
+Hi,
 
-To fix this issue, we keep IRQ assignment during suspend/hibernation.
-Flag pci_dev.dev.power.is_prepared is used to detect that
-pci_disable_device() is called during suspend/hibernation.
+I am running linux-next 20140805 on a imx6q-sabresd board and noticed
+the following error:
 
-Reported-and-Tested-by: Borislav Petkov <bp@suse.de>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
-Hi Ingo,
-	Could you please help to apply this patch onto 
-git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git x86-apic-for-linus?
-	It fixes the suspend/hibernation failure reported by Borislav.
-Thanks!
-Gerry
----
- arch/x86/pci/intel_mid_pci.c |    2 +-
- arch/x86/pci/irq.c           |    3 ++-
- drivers/acpi/pci_irq.c       |    4 ++++
- 3 files changed, 7 insertions(+), 2 deletions(-)
+root@freescale /$ dmesg | grep pci
+[    0.168095] imx6q-pcie 1ffc000.pcie: missing *config* reg space
+[    0.501019] imx6q-pcie 1ffc000.pcie: phy link never came up
+[    0.501579] imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
 
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 09fece368592..3865116c51fb 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -229,7 +229,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 
- static void intel_mid_pci_irq_disable(struct pci_dev *dev)
- {
--	if (dev->irq > 0)
-+	if (!dev->dev.power.is_prepared && dev->irq > 0)
- 		mp_unmap_irq(dev->irq);
- }
- 
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 748cfe8ab322..bc1a2c341891 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1256,7 +1256,8 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 
- static void pirq_disable_irq(struct pci_dev *dev)
- {
--	if (io_apic_assign_pci_irqs && dev->irq) {
-+	if (io_apic_assign_pci_irqs && !dev->dev.power.is_prepared &&
-+	    dev->irq) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq = 0;
- 	}
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index 6ba463ceccc6..c96887d5289e 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -481,6 +481,10 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	if (!pin)
- 		return;
- 
-+	/* Keep IOAPIC pin configuration when suspending */
-+	if (dev->dev.power.is_prepared)
-+		return;
-+
- 	entry = acpi_pci_irq_lookup(dev, pin);
- 	if (!entry)
- 		return;
--- 
-1.7.10.4
+This 'missing *config* reg space' was introduced by:
 
+commit 4dd964df36d0e548e1806ec2ec275b62d4dc46e8
+Author: Kishon Vijay Abraham I <kishon@ti.com>
+Date:   Thu Jul 17 14:30:40 2014 +0530
+
+    PCI: designware: Look for configuration space in 'reg', not 'ranges'
+
+    The configuration address space has so far been specified in *ranges*,
+    however it should be specified in *reg* making it a platform MEM resource.
+    Hence used 'platform_get_resource_*' API to get configuration address space
+    in the designware driver.
+
+    Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Acked-by: Mohit Kumar <mohit.kumar@st.com>
+    Acked-by: Jingoo Han <jg1.han@samsung.com>
+    Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+    Cc: Marek Vasut <marex@denx.de>
+    Cc: Arnd Bergmann <arnd@arndb.de>
+
+Wouldn't this break dt compatibility?
