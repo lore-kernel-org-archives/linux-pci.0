@@ -1,49 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:17343 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753937AbaHHFhI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Aug 2014 01:37:08 -0400
-From: Ethan Zhao <ethan.zhao@oracle.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
-	kvm@vger.kernel.org, konrad.wilk@oracle.com,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
-	xen-devel@lists.xenproject.org
-Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
-	ethan.kernel@gmail.com
-Subject: [PATCH v3 0/4 resend] Introduce device assignment flag operation helper function 
-Date: Fri,  8 Aug 2014 13:36:03 +0800
-Message-Id: <1407476167-18935-1-git-send-email-ethan.zhao@oracle.com>
+Received: from mail-we0-f169.google.com ([74.125.82.169]:64038 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754957AbaHEQME (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 12:12:04 -0400
+Received: by mail-we0-f169.google.com with SMTP id u56so1281236wes.28
+        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2014 09:12:03 -0700 (PDT)
+From: matthew_minter@xyratex.com
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: matthew_minter <matthew_minter@xyratex.com>
+Subject: [PATCH 09/22] Added (untested) support to microblaze architecture to accomodate new irq init code
+Date: Tue,  5 Aug 2014 17:11:10 +0100
+Message-Id: <1407255083-9356-10-git-send-email-matthew_minter@xyratex.com>
+In-Reply-To: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set introduces three PCI device flag operation helper functions
-when set pci device PF/VF to assigned or deassigned status also check it.
-and patch 2,3,4 apply these helper functions to KVM,XEN and PCI.
+From: matthew_minter <matthew_minter@xyratex.com>
 
-v2: simplify unnecessory ternary operation in function pci_is_dev_assigned().
-v3: amend helper function naming.
-
-Appreciate suggestion from
-alex.williamson@redhat.com,
-david.vrabel@citrix.com,
-alexander.h.duyck@intel.com
-
-Resend for v3.16 building.
-
-Thanks,
-Ethan
 ---
-Ethan Zhao (4):
-  PCI: introduce helper functions for device flag operation
-  KVM: use pci device flag operation helper functions
-  xen-pciback: use pci device flag operation helper function
-  PCI: use device flag operation helper function in iov.c
+ arch/microblaze/pci/pci-common.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
- drivers/pci/iov.c                  |    2 +-
- drivers/xen/xen-pciback/pci_stub.c |    4 ++--
- include/linux/pci.h                |   13 +++++++++++++
- virt/kvm/assigned-dev.c            |    2 +-
- virt/kvm/iommu.c                   |    4 ++--
- 5 files changed, 19 insertions(+), 6 deletions(-)
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index 9037914..6843b34 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -850,12 +850,16 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
+ 		 * code and is needed by the DMA init
+ 		 */
+ 		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
+-
+-		/* Read default IRQs and fixup if necessary */
+-		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+ 	}
+ }
+ 
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->swizzle_irq = NULL;
++	bridge->map_irq = of_irq_parse_and_map_pci;
++	return 0;
++}
++
+ void pcibios_fixup_bus(struct pci_bus *bus)
+ {
+ 	/* When called from the generic PCI probe, read PCI<->PCI bridge
+-- 
+2.0.4
 
