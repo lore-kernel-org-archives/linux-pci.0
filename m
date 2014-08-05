@@ -1,80 +1,226 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:45552 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753451AbaHFOjg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Aug 2014 10:39:36 -0400
-Message-ID: <53E23DDB.4010803@ti.com>
-Date: Wed, 6 Aug 2014 10:38:19 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Marek Vasut <marex@denx.de>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	<linux-pci@vger.kernel.org>, Jingoo Han <jg1.han@samsung.com>,
-	<linux-kernel@vger.kernel.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v7 4/5] PCI: add PCI controller for keystone PCIe h/w
-References: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com> <1405961925-27248-5-git-send-email-m-karicheri2@ti.com> <20140722223527.GA27965@google.com> <53CEEB1C.9020202@ti.com> <20140722235200.GC27965@google.com> <20140723174228.GB11270@obsidianresearch.com> <53D948D4.6080603@ti.com> <20140730200513.GA11918@obsidianresearch.com>
-In-Reply-To: <20140730200513.GA11918@obsidianresearch.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:50142 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754804AbaHEQMM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 12:12:12 -0400
+Received: by mail-wg0-f42.google.com with SMTP id l18so1253252wgh.13
+        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2014 09:12:10 -0700 (PDT)
+From: matthew_minter@xyratex.com
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: matthew_minter <matthew_minter@xyratex.com>
+Subject: [PATCH 17/22] Added (untested) support to sh architecture to accomodate new irq init code
+Date: Tue,  5 Aug 2014 17:11:18 +0100
+Message-Id: <1407255083-9356-18-git-send-email-matthew_minter@xyratex.com>
+In-Reply-To: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/30/2014 04:05 PM, Jason Gunthorpe wrote:
-> On Wed, Jul 30, 2014 at 03:34:44PM -0400, Murali Karicheri wrote:
->
->> • Maximum remote read request size of 256 bytes
->
-> The PCI spec simply does not permit a completer to impose this
-> limitation.
->
-> See spec 2.3.1.1
->
-> It is not an option to error a read request because it is too
-> long. All requests must be completed. All completions must be segmented
-> according to the RCB and Max_Payload_Size.
->
->> completion packets. So it seems to be able to segment up to maximum
->> 256 bytes of read request. Where do I find the requirement in PCI
->> spec that "read response segmentation at the host bridge does not
->> work" ?
->
-> You just said it. Segmenting up to only 256 bytes is not a limitation
-> the completer can impose. Such a device is non-conformant.
->
->>> So, the only fix is that every downstream device must always have a
->>> MRSS set to less than the MPS of the host bridge.
->>
->> Why this can't be the default behavior in the PCI core? Any cons?
->
-> It increases read request traffic and read response latency on the bus
-> for large transfers.
->
-> The MRSS is intented as a performance tuning knob, it is not something
-> that ever needs to be set properly for correct bus operation.
->
-> Jason
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Jason, Bjorn,
+From: matthew_minter <matthew_minter@xyratex.com>
 
-It appears that Keystone PCI has a hardware limitation that can't
-handle read request size of greater than 256 bytes and a quirk is the
-way to handle this hardware limitation. I will be sending a patch to
-address this
+---
+ arch/sh/drivers/pci/fixups-cayman.c     |  2 +-
+ arch/sh/drivers/pci/fixups-dreamcast.c  |  2 +-
+ arch/sh/drivers/pci/fixups-r7780rp.c    |  2 +-
+ arch/sh/drivers/pci/fixups-rts7751r2d.c |  6 +++---
+ arch/sh/drivers/pci/fixups-sdk7780.c    |  4 ++--
+ arch/sh/drivers/pci/fixups-se7751.c     |  2 +-
+ arch/sh/drivers/pci/fixups-sh03.c       |  2 +-
+ arch/sh/drivers/pci/fixups-snapgear.c   |  2 +-
+ arch/sh/drivers/pci/fixups-titan.c      |  4 ++--
+ arch/sh/drivers/pci/pci.c               | 10 +++++++---
+ arch/sh/drivers/pci/pcie-sh7786.c       |  2 +-
+ 11 files changed, 21 insertions(+), 17 deletions(-)
 
-Murali
+diff --git a/arch/sh/drivers/pci/fixups-cayman.c b/arch/sh/drivers/pci/fixups-cayman.c
+index edc2fb7..3246788 100644
+--- a/arch/sh/drivers/pci/fixups-cayman.c
++++ b/arch/sh/drivers/pci/fixups-cayman.c
+@@ -5,7 +5,7 @@
+ #include <cpu/irq.h>
+ #include "pci-sh5.h"
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	int result = -1;
+ 
+diff --git a/arch/sh/drivers/pci/fixups-dreamcast.c b/arch/sh/drivers/pci/fixups-dreamcast.c
+index 1d1c5a2..9d597f7 100644
+--- a/arch/sh/drivers/pci/fixups-dreamcast.c
++++ b/arch/sh/drivers/pci/fixups-dreamcast.c
+@@ -76,7 +76,7 @@ static void gapspci_fixup_resources(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, gapspci_fixup_resources);
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	/*
+ 	 * The interrupt routing semantics here are quite trivial.
+diff --git a/arch/sh/drivers/pci/fixups-r7780rp.c b/arch/sh/drivers/pci/fixups-r7780rp.c
+index 57ed3f0..2c9b58f 100644
+--- a/arch/sh/drivers/pci/fixups-r7780rp.c
++++ b/arch/sh/drivers/pci/fixups-r7780rp.c
+@@ -15,7 +15,7 @@
+ #include <linux/sh_intc.h>
+ #include "pci-sh4.h"
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+ 	return evt2irq(0xa20) + slot;
+ }
+diff --git a/arch/sh/drivers/pci/fixups-rts7751r2d.c b/arch/sh/drivers/pci/fixups-rts7751r2d.c
+index eaddb56..358ac10 100644
+--- a/arch/sh/drivers/pci/fixups-rts7751r2d.c
++++ b/arch/sh/drivers/pci/fixups-rts7751r2d.c
+@@ -20,18 +20,18 @@
+ #define PCIMCR_MRSET_OFF	0xBFFFFFFF
+ #define PCIMCR_RFSH_OFF		0xFFFFFFFB
+ 
+-static u8 rts7751r2d_irq_tab[] __initdata = {
++static u8 rts7751r2d_irq_tab[] = {
+ 	IRQ_PCI_INTA,
+ 	IRQ_PCI_INTB,
+ 	IRQ_PCI_INTC,
+ 	IRQ_PCI_INTD,
+ };
+ 
+-static char lboxre2_irq_tab[] __initdata = {
++static char lboxre2_irq_tab[] = {
+ 	IRQ_ETH0, IRQ_ETH1, IRQ_INTA, IRQ_INTD,
+ };
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+ 	if (mach_is_lboxre2())
+ 		return lboxre2_irq_tab[slot];
+diff --git a/arch/sh/drivers/pci/fixups-sdk7780.c b/arch/sh/drivers/pci/fixups-sdk7780.c
+index c0a015a..24e96df 100644
+--- a/arch/sh/drivers/pci/fixups-sdk7780.c
++++ b/arch/sh/drivers/pci/fixups-sdk7780.c
+@@ -22,7 +22,7 @@
+ #define IRQ_INTD	evt2irq(0xa80)
+ 
+ /* IDSEL [16][17][18][19][20][21][22][23][24][25][26][27][28][29][30][31] */
+-static char sdk7780_irq_tab[4][16] __initdata = {
++static char sdk7780_irq_tab[4][16] = {
+ 	/* INTA */
+ 	{ IRQ_INTA, IRQ_INTD, IRQ_INTC, IRQ_INTD, -1, -1, -1, -1, -1, -1,
+ 	  -1, -1, -1, -1, -1, -1 },
+@@ -37,7 +37,7 @@ static char sdk7780_irq_tab[4][16] __initdata = {
+ 	  -1, -1, -1 },
+ };
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+        return sdk7780_irq_tab[pin-1][slot];
+ }
+diff --git a/arch/sh/drivers/pci/fixups-se7751.c b/arch/sh/drivers/pci/fixups-se7751.c
+index 84a88ca..1cb8d0a 100644
+--- a/arch/sh/drivers/pci/fixups-se7751.c
++++ b/arch/sh/drivers/pci/fixups-se7751.c
+@@ -7,7 +7,7 @@
+ #include <linux/sh_intc.h>
+ #include "pci-sh4.h"
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *, u8 slot, u8 pin)
+ {
+         switch (slot) {
+         case 0: return evt2irq(0x3a0);
+diff --git a/arch/sh/drivers/pci/fixups-sh03.c b/arch/sh/drivers/pci/fixups-sh03.c
+index 16207be..55ac1ba 100644
+--- a/arch/sh/drivers/pci/fixups-sh03.c
++++ b/arch/sh/drivers/pci/fixups-sh03.c
+@@ -4,7 +4,7 @@
+ #include <linux/pci.h>
+ #include <linux/sh_intc.h>
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	int irq;
+ 
+diff --git a/arch/sh/drivers/pci/fixups-snapgear.c b/arch/sh/drivers/pci/fixups-snapgear.c
+index 6e33ba4..a931e59 100644
+--- a/arch/sh/drivers/pci/fixups-snapgear.c
++++ b/arch/sh/drivers/pci/fixups-snapgear.c
+@@ -19,7 +19,7 @@
+ #include <linux/sh_intc.h>
+ #include "pci-sh4.h"
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+ 	int irq = -1;
+ 
+diff --git a/arch/sh/drivers/pci/fixups-titan.c b/arch/sh/drivers/pci/fixups-titan.c
+index bd1addb..a9d563e 100644
+--- a/arch/sh/drivers/pci/fixups-titan.c
++++ b/arch/sh/drivers/pci/fixups-titan.c
+@@ -19,7 +19,7 @@
+ #include <mach/titan.h>
+ #include "pci-sh4.h"
+ 
+-static char titan_irq_tab[] __initdata = {
++static char titan_irq_tab[] = {
+ 	TITAN_IRQ_WAN,
+ 	TITAN_IRQ_LAN,
+ 	TITAN_IRQ_MPCIA,
+@@ -27,7 +27,7 @@ static char titan_irq_tab[] __initdata = {
+ 	TITAN_IRQ_USB,
+ };
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+ 	int irq = titan_irq_tab[slot];
+ 
+diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
+index 1bc09ee..718fae3 100644
+--- a/arch/sh/drivers/pci/pci.c
++++ b/arch/sh/drivers/pci/pci.c
+@@ -141,16 +141,20 @@ static int __init pcibios_init(void)
+ 	for (hose = hose_head; hose; hose = hose->next)
+ 		pcibios_scanbus(hose);
+ 
+-	pci_fixup_irqs(pci_common_swizzle, pcibios_map_platform_irq);
+-
+ 	dma_debug_add_bus(&pci_bus_type);
+-
+ 	pci_initialized = 1;
+ 
+ 	return 0;
+ }
+ subsys_initcall(pcibios_init);
+ 
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->swizzle_irq = pci_common_swizzle;
++	bridge->map_irq = pcibios_map_platform_irq;
++	return 0;
++}
++
+ /*
+  *  Called after each bus is probed, but before its children
+  *  are examined.
+diff --git a/arch/sh/drivers/pci/pcie-sh7786.c b/arch/sh/drivers/pci/pcie-sh7786.c
+index a162a7f..0167a73 100644
+--- a/arch/sh/drivers/pci/pcie-sh7786.c
++++ b/arch/sh/drivers/pci/pcie-sh7786.c
+@@ -467,7 +467,7 @@ static int __init pcie_init(struct sh7786_pcie_port *port)
+ 	return 0;
+ }
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+         return evt2irq(0xae0);
+ }
+-- 
+2.0.4
 
