@@ -1,151 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:61616 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752309AbaHZPLo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Aug 2014 11:11:44 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 1/6] resource: Add device-managed request/release_resource()
-Date: Tue, 26 Aug 2014 17:11:33 +0200
-Message-Id: <1409065898-26887-2-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1409065898-26887-1-git-send-email-thierry.reding@gmail.com>
-References: <1409065898-26887-1-git-send-email-thierry.reding@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Bugfix 1/2] x86, irq, PCI: Keep IRQ assignment for PCI devices during suspend/hibernation
+Date: Tue,  5 Aug 2014 11:26:17 +0800
+Message-Id: <1407209178-18644-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+Now IOAPIC driver dynamically allocates IRQ numbers for IOAPIC pins.
+We need to keep IRQ assignment for PCI devices during suspend/hibernation,
+otherwise it may cause failure of suspend/hibernation due to:
+1) Device driver calls pci_enable_device() to allocate an IRQ number
+   and register interrupt handler on the returned IRQ.
+2) Device driver's suspend callback calls pci_disable_device() and
+   release assigned IRQ in turn.
+3) Device driver's resume callback calls pci_enable_device() to
+   allocate IRQ number again. A different IRQ number may be assigned
+   by IOAPIC driver this time.
+4) Now the hardware delivers interrupt to the new IRQ but interrupt
+   handler is still registered against the old IRQ, so it breaks
+   suspend/hibernation.
 
-Provide device-managed implementations of the request_resource() and
-release_resource() functions. Upon failure to request a resource, the
-new devm_request_resource() function will output an error message for
-consistent error reporting.
+To fix this issue, we keep IRQ assignment during suspend/hibernation.
+Flag pci_dev.dev.power.is_prepared is used to detect that
+pci_disable_device() is called during suspend/hibernation.
 
-Acked-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
-Changes in v2:
-- use more natural flow for error handling
-- don't needlessly check for NULL pointers
+Hi Borislav,
+	Could you please help to review the patch again since I have
+made changes against the previous version?
+Regards!
+Gerry
+---
+ arch/x86/pci/intel_mid_pci.c |    2 +-
+ arch/x86/pci/irq.c           |    3 ++-
+ drivers/acpi/pci_irq.c       |    4 ++++
+ 3 files changed, 7 insertions(+), 2 deletions(-)
 
- Documentation/driver-model/devres.txt |  2 +
- include/linux/ioport.h                |  5 +++
- kernel/resource.c                     | 70 +++++++++++++++++++++++++++++++++++
- 3 files changed, 77 insertions(+)
-
-diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
-index d14710b04439..befc3fe12ba6 100644
---- a/Documentation/driver-model/devres.txt
-+++ b/Documentation/driver-model/devres.txt
-@@ -264,8 +264,10 @@ IIO
- IO region
-   devm_release_mem_region()
-   devm_release_region()
-+  devm_release_resource()
-   devm_request_mem_region()
-   devm_request_region()
-+  devm_request_resource()
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index 09fece368592..3865116c51fb 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -229,7 +229,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
  
- IOMAP
-   devm_ioport_map()
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 142ec544167c..2c5250222278 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -215,6 +215,11 @@ static inline int __deprecated check_region(resource_size_t s,
+ static void intel_mid_pci_irq_disable(struct pci_dev *dev)
+ {
+-	if (dev->irq > 0)
++	if (!dev->dev.power.is_prepared && dev->irq > 0)
+ 		mp_unmap_irq(dev->irq);
+ }
  
- /* Wrappers for managed devices */
- struct device;
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index 748cfe8ab322..bc1a2c341891 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1256,7 +1256,8 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 
+ static void pirq_disable_irq(struct pci_dev *dev)
+ {
+-	if (io_apic_assign_pci_irqs && dev->irq) {
++	if (io_apic_assign_pci_irqs && !dev->dev.power.is_prepared &&
++	    dev->irq) {
+ 		mp_unmap_irq(dev->irq);
+ 		dev->irq = 0;
+ 	}
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index 6ba463ceccc6..c96887d5289e 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -481,6 +481,10 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	if (!pin)
+ 		return;
+ 
++	/* Keep IOAPIC pin configuration when suspending */
++	if (dev->dev.power.is_prepared)
++		return;
 +
-+extern int devm_request_resource(struct device *dev, struct resource *root,
-+				 struct resource *new);
-+extern void devm_release_resource(struct device *dev, struct resource *new);
-+
- #define devm_request_region(dev,start,n,name) \
- 	__devm_request_region(dev, &ioport_resource, (start), (n), (name))
- #define devm_request_mem_region(dev,start,n,name) \
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 60c5a3856ab7..46322019ab7d 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -1245,6 +1245,76 @@ int release_mem_region_adjustable(struct resource *parent,
- /*
-  * Managed region resource
-  */
-+static void devm_resource_release(struct device *dev, void *ptr)
-+{
-+	struct resource **r = ptr;
-+
-+	release_resource(*r);
-+}
-+
-+/**
-+ * devm_request_resource() - request and reserve an I/O or memory resource
-+ * @dev: device for which to request the resource
-+ * @root: root of the resource tree from which to request the resource
-+ * @new: descriptor of the resource to request
-+ *
-+ * This is a device-managed version of request_resource(). There is usually
-+ * no need to release resources requested by this function explicitly since
-+ * that will be taken care of when the device is unbound from its driver.
-+ * If for some reason the resource needs to be released explicitly, because
-+ * of ordering issues for example, drivers must call devm_release_resource()
-+ * rather than the regular release_resource().
-+ *
-+ * When a conflict is detected between any existing resources and the newly
-+ * requested resource, an error message will be printed.
-+ *
-+ * Returns 0 on success or a negative error code on failure.
-+ */
-+int devm_request_resource(struct device *dev, struct resource *root,
-+			  struct resource *new)
-+{
-+	struct resource *conflict, **ptr;
-+
-+	ptr = devres_alloc(devm_resource_release, sizeof(*ptr), GFP_KERNEL);
-+	if (!ptr)
-+		return -ENOMEM;
-+
-+	*ptr = new;
-+
-+	conflict = request_resource_conflict(root, new);
-+	if (conflict) {
-+		dev_err(dev, "resource collision: %pR conflicts with %s %pR\n",
-+			new, conflict->name, conflict);
-+		devres_free(ptr);
-+		return -EBUSY;
-+	}
-+
-+	devres_add(dev, ptr);
-+	return 0;
-+}
-+EXPORT_SYMBOL(devm_request_resource);
-+
-+static int devm_resource_match(struct device *dev, void *res, void *data)
-+{
-+	struct resource **ptr = res;
-+
-+	return *ptr == data;
-+}
-+
-+/**
-+ * devm_release_resource() - release a previously requested resource
-+ * @dev: device for which to release the resource
-+ * @new: descriptor of the resource to release
-+ *
-+ * Releases a resource previously requested using devm_request_resource().
-+ */
-+void devm_release_resource(struct device *dev, struct resource *new)
-+{
-+	WARN_ON(devres_release(dev, devm_resource_release, devm_resource_match,
-+			       new));
-+}
-+EXPORT_SYMBOL(devm_release_resource);
-+
- struct region_devres {
- 	struct resource *parent;
- 	resource_size_t start;
+ 	entry = acpi_pci_irq_lookup(dev, pin);
+ 	if (!entry)
+ 		return;
 -- 
-2.0.4
+1.7.10.4
 
