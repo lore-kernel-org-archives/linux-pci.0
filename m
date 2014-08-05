@@ -1,38 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:46271 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750811AbaH3AAt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Aug 2014 20:00:49 -0400
-Received: by mail-pa0-f49.google.com with SMTP id kq14so7442395pab.8
-        for <linux-pci@vger.kernel.org>; Fri, 29 Aug 2014 17:00:48 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: rajatxjain@gmail.com
-In-Reply-To: <CAErSpo68rteOFbbX5n6GccPc9kpt-UL9FRS7JbOMAoDLR-7mtA@mail.gmail.com>
-References: <CAErSpo68rteOFbbX5n6GccPc9kpt-UL9FRS7JbOMAoDLR-7mtA@mail.gmail.com>
-Date: Fri, 29 Aug 2014 17:00:48 -0700
-Message-ID: <CAA93t1qcKh3BaCbiHE2+pUYtNizRUXW4D5465tQUTz46dDY0rg@mail.gmail.com>
-Subject: Re: pciehp regression (bug #79701)
-From: Rajat Jain <rajatxjain@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:33836 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754804AbaHEQME (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 12:12:04 -0400
+Received: by mail-wg0-f43.google.com with SMTP id l18so1205596wgh.2
+        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2014 09:12:02 -0700 (PDT)
+From: matthew_minter@xyratex.com
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: matthew_minter <matthew_minter@xyratex.com>
+Subject: [PATCH 06/22] Added (untested) support to mips architecture to accomodate new irq init code
+Date: Tue,  5 Aug 2014 17:11:07 +0100
+Message-Id: <1407255083-9356-7-git-send-email-matthew_minter@xyratex.com>
+In-Reply-To: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+From: matthew_minter <matthew_minter@xyratex.com>
 
-I will take a look.
+---
+ arch/mips/pci/pci.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-Thanks,
+diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+index 1bf60b1..dc660a0 100644
+--- a/arch/mips/pci/pci.c
++++ b/arch/mips/pci/pci.c
+@@ -242,13 +242,18 @@ static int __init pcibios_init(void)
+ 	for (hose = hose_head; hose; hose = hose->next)
+ 		pcibios_scanbus(hose);
+ 
+-	pci_fixup_irqs(pci_common_swizzle, pcibios_map_irq);
+-
+ 	pci_initialized = 1;
+ 
+ 	return 0;
+ }
+ 
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++       bridge->swizzle_irq = pci_common_swizzle;
++       bridge->map_irq = pcibios_map_irq;
++       return 0;
++}
++
+ subsys_initcall(pcibios_init);
+ 
+ static int pcibios_enable_resources(struct pci_dev *dev, int mask)
+-- 
+2.0.4
 
-Rajat
-
-On Fri, Aug 29, 2014 at 3:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Hi Rajat,
->
-> This bug report: https://bugzilla.kernel.org/show_bug.cgi?id=79701 was
-> bisected to 02e93a8a7c1d ("PCI: pciehp: Don't check adapter or latch
-> status while disabling").  Can you take a look?
->
-> Bjorn
