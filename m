@@ -1,63 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:24118 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751145AbaHMQF7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Aug 2014 12:05:59 -0400
-Date: Wed, 13 Aug 2014 11:04:54 -0500
-From: scameron@beardog.cce.hp.com
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, iss_storagedev@hp.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
-	scameron@beardog.cce.hp.com
-Subject: Re: [PATCH v2 RESEND 08/23] hpsa: Fallback to MSI rather than to INTx if MSI-X failed
-Message-ID: <20140813160454.GA19666@beardog.cce.hp.com>
-References: <cover.1405533479.git.agordeev@redhat.com> <3ca64c251518a2db8810534b4e63ec696bcfeefd.1405533479.git.agordeev@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3ca64c251518a2db8810534b4e63ec696bcfeefd.1405533479.git.agordeev@redhat.com>
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:44568 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754797AbaHEQMP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 12:12:15 -0400
+Received: by mail-wg0-f51.google.com with SMTP id b13so1256830wgh.34
+        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2014 09:12:14 -0700 (PDT)
+From: matthew_minter@xyratex.com
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: matthew_minter <matthew_minter@xyratex.com>
+Subject: [PATCH 22/22] Tidy up including documentation and messages
+Date: Tue,  5 Aug 2014 17:11:23 +0100
+Message-Id: <1407255083-9356-23-git-send-email-matthew_minter@xyratex.com>
+In-Reply-To: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 16, 2014 at 08:05:12PM +0200, Alexander Gordeev wrote:
-> Currently the driver falls back to INTx mode when MSI-X
-> initialization failed. This is a suboptimal behaviour
-> for chips that also support MSI. This update changes that
-> behaviour and falls back to MSI mode in case MSI-X mode
-> initialization failed.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-> Cc: iss_storagedev@hp.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/scsi/hpsa.c |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 31184b3..648dec2 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -6177,7 +6177,6 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
->  			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
->  			       err);
->  			h->msix_vector = 0;
-> -			goto default_int_mode;
->  		}
->  	}
->  	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
-> -- 
-> 1.7.7.6
+From: matthew_minter <matthew_minter@xyratex.com>
 
-Ack.
+---
+ drivers/of/of_pci_irq.c | 2 +-
+ drivers/pci/setup-irq.c | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-Sorry for the slow reply, this got lost in the tornadic maelstrom
-I call my inbox.
-
-I also tested this with a Smart Array P420, P420i, and P430 in
-the system by ifdef'ing out the code for MSI-X and setting
-h->msix_vector = 0, to force it down the MSI path, and that all
-appears to work. 
-
--- steve
+diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
+index 1710d9d..205eb7a 100644
+--- a/drivers/of/of_pci_irq.c
++++ b/drivers/of/of_pci_irq.c
+@@ -97,7 +97,7 @@ EXPORT_SYMBOL_GPL(of_irq_parse_pci);
+  * @pin: PCI irq pin number; passed when used as map_irq callback. Unused
+  *
+  * @slot and @pin are unused, but included in the function so that this
+- * function can be used directly as the map_irq callback to pci_fixup_irqs().
++ * function can be used directly as the map_irq callback to pdev_assign_irq().
+  */
+ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+index 7bb4356..203bf7e 100644
+--- a/drivers/pci/setup-irq.c
++++ b/drivers/pci/setup-irq.c
+@@ -31,7 +31,7 @@ void pdev_assign_irq(struct pci_dev *dev,
+ 	int irq = 0;
+ 
+ 	if (!map_irq) {
+-		dev_dbg(&dev->dev, "map_irq not provided by arch\n", dev->irq);
++		dev_dbg(&dev->dev, "runtime irq mapping not provided by arch\n");
+ 		return;
+ 	}
+ 
+@@ -46,7 +46,7 @@ void pdev_assign_irq(struct pci_dev *dev,
+ 	if (pin > 4)
+ 		pin = 1;
+ 
+-	if (pin != 0) {
++	if (pin) {
+ 		/* Follow the chain of bridges, swizzling as we go. */
+ 		if(swizzle)
+ 			slot = (*swizzle)(dev, &pin);
+@@ -57,7 +57,7 @@ void pdev_assign_irq(struct pci_dev *dev,
+ 			irq = 0;
+ 	}
+ 
+-	dev_dbg(&dev->dev, "fixup irq: got %d\n", dev->irq);
++	dev_dbg(&dev->dev, "assign irq: got %d\n", dev->irq);
+ 	dev->irq = irq;
+ 	/* Always tell the device, so the driver knows what is
+ 	   the real IRQ to use; the device does not use it. */
+-- 
+2.0.4
 
