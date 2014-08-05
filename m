@@ -1,89 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:50459 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754196AbaHANzt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Aug 2014 09:55:49 -0400
-Date: Fri, 1 Aug 2014 15:55:42 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] resource: Add device-managed
- request/release_resource()
-Message-ID: <20140801135540.GA373@ulmo.nvidia.com>
-References: <1406895311-18869-1-git-send-email-thierry.reding@gmail.com>
- <20140801125522.GC21624@htj.dyndns.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="PEIAKu/WMn1b1Hv9"
-In-Reply-To: <20140801125522.GC21624@htj.dyndns.org>
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:52914 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754005AbaHEQMJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 12:12:09 -0400
+Received: by mail-wi0-f180.google.com with SMTP id n3so1629063wiv.13
+        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2014 09:12:07 -0700 (PDT)
+From: matthew_minter@xyratex.com
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: matthew_minter <matthew_minter@xyratex.com>
+Subject: [PATCH 14/22] Added (untested) support to alpha architecture to accomodate new irq init code
+Date: Tue,  5 Aug 2014 17:11:15 +0100
+Message-Id: <1407255083-9356-15-git-send-email-matthew_minter@xyratex.com>
+In-Reply-To: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: matthew_minter <matthew_minter@xyratex.com>
 
---PEIAKu/WMn1b1Hv9
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+---
+ arch/alpha/kernel/pci.c | 16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
 
-On Fri, Aug 01, 2014 at 08:55:22AM -0400, Tejun Heo wrote:
-> On Fri, Aug 01, 2014 at 02:15:10PM +0200, Thierry Reding wrote:
-> > From: Thierry Reding <treding@nvidia.com>
-> >=20
-> > Provide device-managed implementations of the request_resource() and
-> > release_resource() functions. Upon failure to request a resource, the
-> > new devm_request_resource() function will output an error message for
-> > consistent error reporting.
-> >=20
-> > Signed-off-by: Thierry Reding <treding@nvidia.com>
->=20
-> Acked-by: Tejun Heo <tj@kernel.org>
->=20
-> But please also update Documentation/driver-model/devres.txt.
+diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+index 076c35c..338537c 100644
+--- a/arch/alpha/kernel/pci.c
++++ b/arch/alpha/kernel/pci.c
+@@ -28,7 +28,7 @@
+ 
+ 
+ /*
+- * Some string constants used by the various core logics. 
++ * Some string constants used by the various core logics.
+  */
+ 
+ const char *const pci_io_names[] = {
+@@ -247,7 +247,7 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+ 	if (pci_has_flag(PCI_PROBE_ONLY) && dev &&
+  		   (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
+  		pci_read_bridge_bases(bus);
+-	} 
++	}
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		pdev_save_srm_config(dev);
+@@ -338,7 +338,7 @@ common_init_pci(void)
+ 		hose->need_domain_info = need_domain_info;
+ 		next_busno = bus->busn_res.end + 1;
+ 		/* Don't allow 8-bit bus number overflow inside the hose -
+-		   reserve some space for bridges. */ 
++		   reserve some space for bridges. */
+ 		if (next_busno > 224) {
+ 			next_busno = 0;
+ 			need_domain_info = 1;
+@@ -346,11 +346,15 @@ common_init_pci(void)
+ 	}
+ 
+ 	pcibios_claim_console_setup();
+-
+ 	pci_assign_unassigned_resources();
+-	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
+ }
+ 
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->swizzle_irq = alpha_mv.pci_swizzle;
++	bridge->map_irq = alpha_mv.pci_map_irq;
++	return 0;
++}
+ 
+ struct pci_controller * __init
+ alloc_pci_controller(void)
+@@ -387,7 +391,7 @@ sys_pciconfig_iobase(long which, unsigned long bus, unsigned long dfn)
+ 
+ 	/* from hose or from bus.devfn */
+ 	if (which & IOBASE_FROM_HOSE) {
+-		for(hose = hose_head; hose; hose = hose->next) 
++		for(hose = hose_head; hose; hose = hose->next)
+ 			if (hose->index == bus) break;
+ 		if (!hose) return -ENODEV;
+ 	} else {
+-- 
+2.0.4
 
-The patch already contains the below hunk. Do you expect anything more
-to be added to that file?
-
-Thierry
-
-diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-m=
-odel/devres.txt
-index d14710b04439..befc3fe12ba6 100644
---- a/Documentation/driver-model/devres.txt
-+++ b/Documentation/driver-model/devres.txt
-@@ -264,8 +264,10 @@ IIO
- IO region
-   devm_release_mem_region()
-   devm_release_region()
-+  devm_release_resource()
-   devm_request_mem_region()
-   devm_request_region()
-+  devm_request_resource()
-
- IOMAP
-   devm_ioport_map()
-
---PEIAKu/WMn1b1Hv9
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJT25xcAAoJEN0jrNd/PrOhPuoP/2T18ziutKk3DktygVhk+yNN
-Gmu2n+RwBe+lbkSmtli+6Q5Vx+LBPqzLAh7uUWqU+o5KtzRREW3s+9k+unqM/Hwk
-gj6YzpipwPr0g5pkXEw/jqbwAI6Hmw9xdIAZlZmOl+TVaYG/kNaEe2nc1SGpCxqb
-Exb2qyujAGeUmFpAaYxFY+3bXOfgbsajVJxqoYgiR7TnrotkHBJ+0h5ifcJ8avSh
-4VN7So/TFYLpsomEflx6gr30K9eOFaqicgFTIPJSDCjlOA5/M4s4nctaRTLsC5Z5
-aYhEV3PHBr3iLRi8CKNjTmfklGcLCIYi61AeibEs+tl6UWaNYsCqGV1YdqGHtCSO
-m4MRUsay4J/FiVfX2RolgIFIkDkgmJQAFbMI2c701Dwt2V0TMQjko3QHITxoahV3
-fZq6NHg2ozHSDeGWDVYL2ZWvAbLhJhfdjePuURg7BtH5WbHvYL+iLP0OkhdVK8D3
-0ZNAW7nBD3U6WyG/WSeR7l0lAKvebQI1Dcow4MqlxzjorpswFiGL2EiSpr2drx43
-dHzmYAWLNan1rFfDmI9i4eJP0OK5B5egEwasQ+R6+htB35xyvfanfvuGxYW1w6ER
-0o8LBTo5FK/I44+8r2zv/vJepS9fTqKLhnh8J/AmYb0sGJz0yrLh0FcTNabtq/kr
-s04NqHDmQRYeisZLELYZ
-=bFUi
------END PGP SIGNATURE-----
-
---PEIAKu/WMn1b1Hv9--
