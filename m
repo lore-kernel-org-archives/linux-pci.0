@@ -1,199 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1lp0144.outbound.protection.outlook.com ([207.46.163.144]:49606
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753567AbaHKOdf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 10:33:35 -0400
-From: "Bharat.Bhushan@freescale.com" <Bharat.Bhushan@freescale.com>
-To: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v2 2/2] PCI/MSI: Remove arch_msi_check_device()
-Date: Mon, 11 Aug 2014 14:33:25 +0000
-Message-ID: <0a23568bd6eb4dfbb5f4acc96bba3706@BLUPR03MB566.namprd03.prod.outlook.com>
-References: <cover.1405160163.git.agordeev@redhat.com>
- <1005232855c3af2c0c669818ee63be445389b6ad.1405160163.git.agordeev@redhat.com>
- <20140716222024.GE14366@google.com>
- <20140811114536.GA3427@dhcp-27-160.brq.redhat.com>
-In-Reply-To: <20140811114536.GA3427@dhcp-27-160.brq.redhat.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-we0-f181.google.com ([74.125.82.181]:43386 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754005AbaHEQMO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 12:12:14 -0400
+Received: by mail-we0-f181.google.com with SMTP id k48so1302945wev.12
+        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2014 09:12:13 -0700 (PDT)
+From: matthew_minter@xyratex.com
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: matthew_minter <matthew_minter@xyratex.com>
+Subject: [PATCH 21/22] Fixes so non PCI x86 systems should work
+Date: Tue,  5 Aug 2014 17:11:22 +0100
+Message-Id: <1407255083-9356-22-git-send-email-matthew_minter@xyratex.com>
+In-Reply-To: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: matthew_minter <matthew_minter@xyratex.com>
 
+---
+ arch/x86/include/asm/pci_x86.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org]
-> On Behalf Of Alexander Gordeev
-> Sent: Monday, August 11, 2014 5:16 PM
-> To: Bjorn Helgaas
-> Cc: linux-kernel@vger.kernel.org; linuxppc-dev@lists.ozlabs.org; linux-
-> pci@vger.kernel.org
-> Subject: [PATCH v2 2/2] PCI/MSI: Remove arch_msi_check_device()
-> 
-> There are no archs that override arch_msi_check_device() hook. Remove it as it
-> is completely redundant.
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index 436b9e5..16fd8e9 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -205,5 +205,5 @@ static inline void mmio_config_writel(void __iomem *pos, u32 val)
+ #else
+ # define x86_default_pci_init		NULL
+ # define x86_default_pci_init_irq	NULL
+-# define x86_default_pci_fixup_irqs	NULL
++# define x86_default_pci_fixup_irq	NULL
+ #endif
+-- 
+2.0.4
 
-Is not we are still overriding this in powerpc (not sure I missed some patch , if so please point to that).
-
-$ grep -r  arch_msi_check_device arch/powerpc/
-Binary file arch/powerpc/kernel/msi.o matches
-arch/powerpc/kernel/msi.c:int arch_msi_check_device(struct pci_dev* dev, int nvec, int type)
-Binary file arch/powerpc/kernel/built-in.o matches
-
-Thanks
--Bharat
-
-> 
-> If an arch would need to check MSI/MSI-X possibility for a device it should make
-> it within arch_setup_msi_irqs() hook.
-> 
-> Cc: linuxppc-dev@lists.ozlabs.org
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->  drivers/pci/msi.c   | 49 +++++++++++++------------------------------------
->  include/linux/msi.h |  3 ---
->  2 files changed, 13 insertions(+), 39 deletions(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c index 5a40516..6c2cc41 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -56,16 +56,6 @@ void __weak arch_teardown_msi_irq(unsigned int irq)
->  	chip->teardown_irq(chip, irq);
->  }
-> 
-> -int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type) -{
-> -	struct msi_chip *chip = dev->bus->msi;
-> -
-> -	if (!chip || !chip->check_device)
-> -		return 0;
-> -
-> -	return chip->check_device(chip, dev, nvec, type);
-> -}
-> -
->  int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)  {
->  	struct msi_desc *entry;
-> @@ -806,22 +796,23 @@ out_free:
->  }
-> 
->  /**
-> - * pci_msi_check_device - check whether MSI may be enabled on a device
-> + * pci_msi_supported - check whether MSI may be enabled on a device
->   * @dev: pointer to the pci_dev data structure of MSI device function
->   * @nvec: how many MSIs have been requested ?
-> - * @type: are we checking for MSI or MSI-X ?
->   *
->   * Look at global flags, the device itself, and its parent buses
->   * to determine if MSI/-X are supported for the device. If MSI/-X is
->   * supported return 0, else return an error code.
->   **/
-> -static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
-> +static int pci_msi_supported(struct pci_dev *dev, int nvec)
->  {
->  	struct pci_bus *bus;
-> -	int ret;
-> 
->  	/* MSI must be globally enabled and supported by the device */
-> -	if (!pci_msi_enable || !dev || dev->no_msi)
-> +	if (!pci_msi_enable)
-> +		return -EINVAL;
-> +
-> +	if (!dev || dev->no_msi || dev->current_state != PCI_D0)
->  		return -EINVAL;
-> 
->  	/*
-> @@ -843,10 +834,6 @@ static int pci_msi_check_device(struct pci_dev *dev, int
-> nvec, int type)
->  		if (bus->bus_flags & PCI_BUS_FLAGS_NO_MSI)
->  			return -EINVAL;
-> 
-> -	ret = arch_msi_check_device(dev, nvec, type);
-> -	if (ret)
-> -		return ret;
-> -
->  	return 0;
->  }
-> 
-> @@ -949,13 +936,13 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry
-> *entries, int nvec)
->  	int status, nr_entries;
->  	int i, j;
-> 
-> -	if (!entries || !dev->msix_cap || dev->current_state != PCI_D0)
-> -		return -EINVAL;
-> -
-> -	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
-> +	status = pci_msi_supported(dev, nvec);
->  	if (status)
->  		return status;
-> 
-> +	if (!entries)
-> +		return -EINVAL;
-> +
->  	nr_entries = pci_msix_vec_count(dev);
->  	if (nr_entries < 0)
->  		return nr_entries;
-> @@ -1062,8 +1049,9 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec,
-> int maxvec)
->  	int nvec;
->  	int rc;
-> 
-> -	if (dev->current_state != PCI_D0)
-> -		return -EINVAL;
-> +	rc = pci_msi_supported(dev, minvec);
-> +	if (rc)
-> +		return rc;
-> 
->  	WARN_ON(!!dev->msi_enabled);
-> 
-> @@ -1086,17 +1074,6 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec,
-> int maxvec)
->  		nvec = maxvec;
-> 
->  	do {
-> -		rc = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
-> -		if (rc < 0) {
-> -			return rc;
-> -		} else if (rc > 0) {
-> -			if (rc < minvec)
-> -				return -ENOSPC;
-> -			nvec = rc;
-> -		}
-> -	} while (rc);
-> -
-> -	do {
->  		rc = msi_capability_init(dev, nvec);
->  		if (rc < 0) {
->  			return rc;
-> diff --git a/include/linux/msi.h b/include/linux/msi.h index 8103f32..dbf7cc9
-> 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -60,7 +60,6 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc
-> *desc);  void arch_teardown_msi_irq(unsigned int irq);  int
-> arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);  void
-> arch_teardown_msi_irqs(struct pci_dev *dev); -int arch_msi_check_device(struct
-> pci_dev* dev, int nvec, int type);  void arch_restore_msi_irqs(struct pci_dev
-> *dev);
-> 
->  void default_teardown_msi_irqs(struct pci_dev *dev); @@ -77,8 +76,6 @@ struct
-> msi_chip {
->  	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
->  			 struct msi_desc *desc);
->  	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
-> -	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
-> -			    int nvec, int type);
->  };
-> 
->  #endif /* LINUX_MSI_H */
-> --
-> 1.9.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the body
-> of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
