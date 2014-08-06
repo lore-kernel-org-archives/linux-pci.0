@@ -1,47 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rs04.intra2net.com ([85.214.66.2]:47925 "EHLO
-	rs04.intra2net.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752745AbaHHOOX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Aug 2014 10:14:23 -0400
-From: Thomas Jarosch <thomas.jarosch@intra2net.com>
-To: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	intel-gfx@lists.freedesktop.org
-Subject: [PATCH] PCI: Add another ID for Intel GPU "spurious interrupt" quirk
-Date: Fri, 08 Aug 2014 15:54:04 +0200
-Message-ID: <12243017.yA3ijCk2M3@storm>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga11.intel.com ([192.55.52.93]:52491 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753262AbaHFJEj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Aug 2014 05:04:39 -0400
+From: "Chen, Gong" <gong.chen@linux.intel.com>
+To: bhelgaas@google.com, rdunlap@infradead.org, bp@alien8.de,
+	tony.luck@intel.com
+Cc: linux-pci@vger.kernel.org, "Chen, Gong" <gong.chen@linux.intel.com>
+Subject: [PATCH 2/5] PCI-e, AER: Replenish missed AER status bits for AER driver
+Date: Wed,  6 Aug 2014 04:32:41 -0400
+Message-Id: <1407313964-20794-2-git-send-email-gong.chen@linux.intel.com>
+In-Reply-To: <1407313964-20794-1-git-send-email-gong.chen@linux.intel.com>
+References: <1407313964-20794-1-git-send-email-gong.chen@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-New Intel G3258 CPU, new MSI board, same problem:
-The GPU interrupt fired like crazy on monitor unplug.
+Since commit 6c2b374d is commited, the capability of PCI-e AER
+has changed a lot. This patch adds all missed CE/UC error bits
+existed in PCI-e SPEC r3.0. Meanwhile, adjust the code format
+to make it simpler to read/maintain.
 
-lspci output:
-00:02.0 VGA compatible controller: Intel Corporation Device 0402 (rev 06)
-        Subsystem: Micro-Star International Co., Ltd. Device 7817
-        Flags: bus master, fast devsel, latency 0, IRQ 11
-
-Signed-off-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
-Tested-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
-CC: stable@vger.kernel.org  # v3.4+
+Signed-off-by: Chen, Gong <gong.chen@linux.intel.com>
 ---
- drivers/pci/quirks.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/pcie/aer/aerdrv_errprint.c | 60 ++++++++++++++--------------------
+ 1 file changed, 25 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 80c2d01..d2ff39d 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2940,6 +2940,7 @@ static void disable_igfx_irq(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0152, disable_igfx_irq);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0402, disable_igfx_irq);
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 35d06e1..5c4f7e2 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -75,44 +75,34 @@ static const char *aer_error_layer[] = {
+ };
  
- /*
-  * PCI devices which are on Intel chips can skip the 10ms delay
+ static const char *aer_correctable_error_string[] = {
+-	"Receiver Error",		/* Bit Position 0	*/
+-	NULL,
+-	NULL,
+-	NULL,
+-	NULL,
+-	NULL,
+-	"Bad TLP",			/* Bit Position 6	*/
+-	"Bad DLLP",			/* Bit Position 7	*/
+-	"RELAY_NUM Rollover",		/* Bit Position 8	*/
+-	NULL,
+-	NULL,
+-	NULL,
+-	"Replay Timer Timeout",		/* Bit Position 12	*/
+-	"Advisory Non-Fatal",		/* Bit Position 13	*/
++	[0] = "Receiver Error",
++	[6] = "Bad TLP",
++	[7] = "Bad DLLP",
++	[8] = "RELAY_NUM Rollover",
++	[12] = "Replay Timer Timeout",
++	[13] = "Advisory Non-Fatal Error",
++	[14] = "Corrected Internal Error",
++	[15] = "Header Log Overflow",
+ };
+ 
+ static const char *aer_uncorrectable_error_string[] = {
+-	NULL,
+-	NULL,
+-	NULL,
+-	NULL,
+-	"Data Link Protocol",		/* Bit Position 4	*/
+-	NULL,
+-	NULL,
+-	NULL,
+-	NULL,
+-	NULL,
+-	NULL,
+-	NULL,
+-	"Poisoned TLP",			/* Bit Position 12	*/
+-	"Flow Control Protocol",	/* Bit Position 13	*/
+-	"Completion Timeout",		/* Bit Position 14	*/
+-	"Completer Abort",		/* Bit Position 15	*/
+-	"Unexpected Completion",	/* Bit Position 16	*/
+-	"Receiver Overflow",		/* Bit Position 17	*/
+-	"Malformed TLP",		/* Bit Position 18	*/
+-	"ECRC",				/* Bit Position 19	*/
+-	"Unsupported Request",		/* Bit Position 20	*/
++	[0] = "Undefined",
++	[4] = "Data Link Protocol Error",
++	[5] = "Surprise Down Error",
++	[12] = "Poisoned TLP",
++	[13] = "Flow Control Protocol Error",
++	[14] = "Completion Timeout",
++	[15] = "Completer Abort",
++	[16] = "Unexpected Completion",
++	[17] = "Receiver Overflow",
++	[18] = "Malformed TLP",
++	[19] = "ECRC Error",
++	[20] = "Unsupported Request Error",
++	[21] = "ACS Violation",
++	[22] = "Uncorrectable Internal Error",
++	[23] = "MC Blocked TLP",
++	[24] = "AtomicOp Egress Blocked",
++	[25] = "TLP Prefix Blocked Error",
+ };
+ 
+ static const char *aer_agent_string[] = {
 -- 
-1.9.3
+2.0.0.rc2
 
