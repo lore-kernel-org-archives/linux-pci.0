@@ -1,113 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:58414 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750748AbaH3CZN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Aug 2014 22:25:13 -0400
-Received: by mail-pd0-f173.google.com with SMTP id p10so1625719pdj.18
-        for <linux-pci@vger.kernel.org>; Fri, 29 Aug 2014 19:25:13 -0700 (PDT)
+Received: from quartz.orcorp.ca ([184.70.90.242]:54408 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754457AbaHFRaT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Aug 2014 13:30:19 -0400
+Date: Wed, 6 Aug 2014 11:30:14 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH] PCI: keystone: add a pci quirk to limit mrrs
+Message-ID: <20140806173014.GD19914@obsidianresearch.com>
+References: <1407338300-9146-1-git-send-email-m-karicheri2@ti.com>
+ <20140806163021.GB19914@obsidianresearch.com>
+ <53E25E24.8070506@ti.com>
+ <20140806165837.GC19914@obsidianresearch.com>
+ <53E26155.1020107@ti.com>
 MIME-Version: 1.0
-Reply-To: rajatxjain@gmail.com
-In-Reply-To: <CAErSpo68rteOFbbX5n6GccPc9kpt-UL9FRS7JbOMAoDLR-7mtA@mail.gmail.com>
-References: <CAErSpo68rteOFbbX5n6GccPc9kpt-UL9FRS7JbOMAoDLR-7mtA@mail.gmail.com>
-Date: Fri, 29 Aug 2014 19:25:12 -0700
-Message-ID: <CAA93t1rLa27HY11ZEEGqZ6X5+01adgizR6U=+smcKD9pxHJk5Q@mail.gmail.com>
-Subject: Re: pciehp regression (bug #79701)
-From: Rajat Jain <rajatxjain@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53E26155.1020107@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Wed, Aug 06, 2014 at 01:09:41PM -0400, Murali Karicheri wrote:
 
-On Fri, Aug 29, 2014 at 3:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Hi Rajat,
->
-> This bug report: https://bugzilla.kernel.org/show_bug.cgi?id=79701 was
-> bisected to 02e93a8a7c1d ("PCI: pciehp: Don't check adapter or latch
-> status while disabling").  Can you take a look?
->
+> >>Yes it works with tuning enabled. Tuning happens afterwards. The
+> >>'limiting mrrs to 256' below is from my patch.
+> >
+> >That seems backwards to me...
+> Rational? The tuning is reading mrrs and set mps to less than or
+> equal to mrss. So adding this before make sure mrrs used is below
+> keystones's limit.
 
-Hi,
+The tuning process adjusts the parameters however it sees fit, todays
+algorithm might not increase a BIOS set MRRS, but tomorrow's could.
 
-I looked at this and wanted to share by observations:
+The quirk should be after the tuning to ensure the MRRS is limited..
 
-The Basic Issue
-==============
-There are a bunch of quick hotplug events (unplug followed by the
-hot-plug) that are received by the hotplug driver. While both the
-hotplug drivers (pciehp and acpiphp) are fine with it, the radeon
-driver itself is probably not equipped enough to handle them so well?
-[   41.224428] trying to unbind memory from uninitialized GART !
-
-When acpiphp was being used
-=======================
-As Rafael mentions in this commit log, this is a problem with the VGA
-subsystem, that requires the hot-plug driver to ignore such hot-plug
-events associated with a slot that connects to such known Radeon
-controllers. This was done for acpiphp by introducing a "no_hotplug"
-flag for the ACPI:
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=f244d8b623dae7a7bc695b0336f67729b95a9736
-The above commit would fix the problem if the acpiphp is used, by
-ignoring the hot-plug events for that slot.
-
-Switch to using pciehp
-=================
-1) For some reason, the system now seems to use pciehp for these slots
-instead of the acpiphp (can someone please tell if this looks OK? I
-only ask because I see the concerned Rafael's log getting printed that
-seems to indicate that he is expecting the acpiphp to control this
-slot?). But I also see that the pciehp has already grabbed the slot by
-the time this messages gets printed:
-[    4.419180] VGA switcheroo: detected switching method
-\_SB_.PCI0.VGA_.ATPX handle
-
-Even with using pciehp, things were still all right until the commit
-02e93a8a7, beacuse the pciehp used to ignore the hot-unplug events
-(including loss-of-presence-detect and link-down) if (1) SURPRISE
-removal is not supported or (2) ADAPTER is not present (which is what
-this commit addresses). Thus the hot unplug event used to come, the
-pciehp_disable_slot() used to find no adapter and refused to do
-anything.
-
-Why problem started with pciehp
-==========================
-Essentially the commits 02e93a8a7 and 2b3940b60 made the pciehp handle
-all hot-unplug events (loss-of-presence-detect and link-downs)
-irrespective of whether the the SURPRISE removal was supported or not,
-and also if ADAPTER is not present. Now, I would think that both these
-commits are still valid because it makes no sense to ignore an unplug
-event (and let the kernel continue with stale data structures) just
-because SURPRISE is not set, or the ADAPTER is not present (The latter
-is an even better reason to process the unplug event).
-
-My recommendations / Options
-========================
-1) I would first like an opinion on whether it is OK to see the pciehp
-handle these hotplug slots. The radeon code seems to be ACPI
-intensive, and Rafael's commit also seems to say that this was
-supposed to be handled by acpiphp.
-
-2) If it is expected to continue using pciehp, may be we could handle
-it in the same way as Rafael did for acpiphp. We could add a flag in
-the pci_dev ("ignore_hp_events" or something) and set it for the hot
-pluggable slot from radeon code, just like acpi_bus_no_hotplug() is
-called today.
-
-I'll be going out for vacation for the 3 days, and would be glad to
-submit a patch if needed.
-
-One question to the gentleman who bisected this. (SpacemanSpiff).
-Would it be possible for you to look for the following messages while
-trying out the image just before the commit 02e93a8a7c?
-...
-No adapter on slot(2)
-...
-
-Thanks & Best Regards,
-
-Rajat Jain
+Jason
