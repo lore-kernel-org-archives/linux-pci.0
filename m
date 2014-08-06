@@ -1,40 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:56657 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965199AbaH0VEF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Aug 2014 17:04:05 -0400
-Date: Wed, 27 Aug 2014 14:04:05 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pci/pci-sysfs: Set pci interface in uppercase
-Message-ID: <20140827210405.GA26372@kroah.com>
-References: <1409144277-23379-1-git-send-email-ricardo.ribalda@gmail.com>
- <20140827202301.GA13800@kroah.com>
- <20140827205129.GA25227@kroah.com>
- <CAPybu_2p0UroO=WwUOC3LybPq0HQymoD50v6-6gA+aVweveOHw@mail.gmail.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:43383 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751612AbaHFTFu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Aug 2014 15:05:50 -0400
+Message-ID: <53E27C7B.80200@ti.com>
+Date: Wed, 6 Aug 2014 15:05:31 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPybu_2p0UroO=WwUOC3LybPq0HQymoD50v6-6gA+aVweveOHw@mail.gmail.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: keystone: add a pci quirk to limit mrrs
+References: <1407338300-9146-1-git-send-email-m-karicheri2@ti.com> <20140806163021.GB19914@obsidianresearch.com> <53E25E24.8070506@ti.com> <20140806165837.GC19914@obsidianresearch.com> <53E26155.1020107@ti.com> <20140806173014.GD19914@obsidianresearch.com>
+In-Reply-To: <20140806173014.GD19914@obsidianresearch.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 27, 2014 at 10:56:57PM +0200, Ricardo Ribalda Delgado wrote:
-> No worries,
-> 
-> I have to mark for stable it or Bjorn? It it is me, how :) ?
+On 08/06/2014 01:30 PM, Jason Gunthorpe wrote:
+> On Wed, Aug 06, 2014 at 01:09:41PM -0400, Murali Karicheri wrote:
+>
+>>>> Yes it works with tuning enabled. Tuning happens afterwards. The
+>>>> 'limiting mrrs to 256' below is from my patch.
+>>>
+>>> That seems backwards to me...
+>> Rational? The tuning is reading mrrs and set mps to less than or
+>> equal to mrss. So adding this before make sure mrrs used is below
+>> keystones's limit.
+>
+> The tuning process adjusts the parameters however it sees fit, todays
+> algorithm might not increase a BIOS set MRRS, but tomorrow's could.
+>
+> The quirk should be after the tuning to ensure the MRRS is limited..
+>
+> Jason
+Ok. I see it.
 
-Bjorn can when he applies it, for details on the process, see the kernel
-file Documentation/stable_kernel_rules.txt
+The latest possible quirk application point seems to be before enabling
+the ep device. A change in macro as below will achieve this and it works.
 
-> ps: For other people reading this thread, the kmod/modprobe is in
-> http://anonscm.debian.org/cgit/users/md/kmod.git/tree/libkmod/libkmod-index.c
-> and handles all the modalias as strings without differing the type.
+-DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
++DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
 
-That sounds wrong, and odds are, will cause more problems over time.
-These are hex values, not strings :(
+If this looks reasonable, I will repost my patch with this change.
 
-thanks,
+regards,
 
-greg k-h
+Murali
