@@ -1,110 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f53.google.com ([209.85.213.53]:52131 "EHLO
-	mail-yh0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751331AbaHSVpF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Aug 2014 17:45:05 -0400
-Received: by mail-yh0-f53.google.com with SMTP id c41so6205469yho.26
-        for <linux-pci@vger.kernel.org>; Tue, 19 Aug 2014 14:45:04 -0700 (PDT)
-Date: Tue, 19 Aug 2014 15:44:59 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
-Subject: Re: [PATCH V7 02/17] PCI/IOV: Get VF BAR size from hardware directly
- when platform needs
-Message-ID: <20140819214459.GC6295@google.com>
-References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1406182947-11302-3-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:44613 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753240AbaHFPSe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Aug 2014 11:18:34 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <bhelgaas@google.com>
+CC: <jgunthorpe@obsidianresearch.com>,
+	Murali Karicheri <m-karicheri2@ti.com>
+Subject: [PATCH] PCI: keystone: add a pci quirk to limit mrrs
+Date: Wed, 6 Aug 2014 11:18:20 -0400
+Message-ID: <1407338300-9146-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1406182947-11302-3-git-send-email-weiyang@linux.vnet.ibm.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 24, 2014 at 02:22:12PM +0800, Wei Yang wrote:
-> Current implementation calculates VF BAR size from dividing the total size of
-> IOV BAR by total VF number. It won't work on PowerNV platform because we're
-> going to expand IOV BAR size for finely alignment.
-> 
-> The patch enforces getting IOV BAR size from hardware and then calculate
-> the VF BAR size based on that when platform wants so.
-> 
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> ---
->  drivers/pci/iov.c      |   28 ++++++++++++++++++++++++----
->  include/linux/ioport.h |    1 +
->  2 files changed, 25 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 7566238..ef1c546 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -55,6 +55,9 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
->  	struct resource *res;
->  	struct pci_sriov *iov = dev->sriov;
->  	struct pci_bus *bus;
-> +	struct resource tmp;
-> +	enum pci_bar_type type;
-> +	int reg;
->  
->  	mutex_lock(&iov->dev->sriov->lock);
->  	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
-> @@ -80,12 +83,29 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
->  			continue;
->  		virtfn->resource[i].name = pci_name(virtfn);
->  		virtfn->resource[i].flags = res->flags;
-> -		size = resource_size(res);
-> -		do_div(size, iov->total_VFs);
-> +		/* When res has IORESOURCE_ARCH, retrieve the IOV BAR size
-> +		 * from hardware directly.
-> +		 */
-> +		if (res->flags & IORESOURCE_ARCH) {
-> +			reg = pci_iov_resource_bar(dev, i + PCI_IOV_RESOURCES, &type);
-> +			__pci_read_base(dev, type, &tmp, reg);
-> +			size = resource_size(&tmp);
-> +			/* When __pci_read_base fails, flags is set to 0.
-> +			 * In this case, reset size to 0, which means the VF
-> +			 * will not be enabled.
-> +			 */
-> +			if (!tmp.flags)
-> +				size = 0;
+Keystone PCI controller has a limitation that memory read request
+size must not exceed 256 bytes. This is a hardware limitation and
+add a quirk to force this limit on all downstream devices by
+updating mrrs.
 
-I don't like the IORESOURCE_ARCH flag because it really doesn't have any
-specific meaning.  You're using it to enable some arch-specific code here
-for this specific case.  But there are any number of other places that
-could do something similar, and there's no way to coordinate them all.
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+---
+ This applies on top of the Keystone PCI controller patch series
+ at http://thread.gmane.org/gmane.linux.kernel.pci/33523
+ drivers/pci/host/pci-keystone.c |   40 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
-I'd rather have some sort of pcibios_*() hook here where powerpc could
-override the default implementation.
+diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+index c1cfaef..541ab24 100644
+--- a/drivers/pci/host/pci-keystone.c
++++ b/drivers/pci/host/pci-keystone.c
+@@ -42,8 +42,48 @@
+ /* DEV_STAT_CTRL */
+ #define PCIE_CAP_BASE		0x70
+ 
++/* PCIE controller device IDs */
++#define PCIE_RC_K2HK		0xb008
++#define PCIE_RC_K2E		0xb009
++#define PCIE_RC_K2L		0xb00a
++
+ #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
+ 
++static void quirk_limit_mrrs(struct pci_dev *dev)
++{
++	struct pci_bus *bus = dev->bus;
++	struct pci_dev *bridge = bus->self;
++
++	if (pci_is_root_bus(bus))
++		return;
++
++	/* look for the host bridge */
++	while (!pci_is_root_bus(bus)) {
++		bridge = bus->self;
++		bus = bus->parent;
++	}
++
++	if (bridge) {
++		u16 id;
++
++		/*
++		 * Keystone PCI controller has a h/w limitation of
++		 * 256 bytes maximum read request size. It can't handle
++		 * anything higher than this. So force this limit on
++		 * all downstream devices
++		 */
++		pci_read_config_word(bridge, PCI_DEVICE_ID, &id);
++		if ((id == PCIE_RC_K2HK) || (id == PCIE_RC_K2E) ||
++		    (id == PCIE_RC_K2L)) {
++			if (pcie_get_readrq(dev) > 256) {
++				pr_info("limiting mrrs to 256\n");
++				pcie_set_readrq(dev, 256);
++			}
++		}
++	}
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
++
+ static int ks_pcie_establish_link(struct keystone_pcie *ks_pcie)
+ {
+ 	struct pcie_port *pp = &ks_pcie->pp;
+-- 
+1.7.9.5
 
-> +		} else {
-> +			size = resource_size(res);
-> +			do_div(size, iov->total_VFs);
-> +		}
->  		virtfn->resource[i].start = res->start + size * id;
->  		virtfn->resource[i].end = virtfn->resource[i].start + size - 1;
-> -		rc = request_resource(res, &virtfn->resource[i]);
-> -		BUG_ON(rc);
-> +		if (resource_size(&virtfn->resource[i])) {
-> +			rc = request_resource(res, &virtfn->resource[i]);
-> +			BUG_ON(rc);
-> +		}
->  	}
->  
->  	if (reset)
-> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> index 5e3a906..de8b57c 100644
-> --- a/include/linux/ioport.h
-> +++ b/include/linux/ioport.h
-> @@ -48,6 +48,7 @@ struct resource {
->  #define IORESOURCE_MEM_64	0x00100000
->  #define IORESOURCE_WINDOW	0x00200000	/* forwarded by bridge */
->  #define IORESOURCE_MUXED	0x00400000	/* Resource is software muxed */
-> +#define IORESOURCE_ARCH		0x00800000	/* Resource arch tagged */
->
->  #define IORESOURCE_EXCLUSIVE	0x08000000	/* Userland may not map this resource */
->  #define IORESOURCE_DISABLED	0x10000000
-> -- 
-> 1.7.9.5
-> 
