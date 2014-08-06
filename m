@@ -1,56 +1,198 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:38341 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751593AbaHQC7K (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Aug 2014 22:59:10 -0400
-Received: by mail-ig0-f180.google.com with SMTP id l13so4997298iga.1
-        for <linux-pci@vger.kernel.org>; Sat, 16 Aug 2014 19:59:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAHM4w1nMxwfk9Vv37FO6Aa4-Zbb0tgCposakVzUm66B2BZobRQ@mail.gmail.com>
-References: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
-	<1406137961-14684-4-git-send-email-l.stach@pengutronix.de>
-	<CAHM4w1nMxwfk9Vv37FO6Aa4-Zbb0tgCposakVzUm66B2BZobRQ@mail.gmail.com>
-Date: Sat, 16 Aug 2014 19:59:09 -0700
-Message-ID: <CAE9FiQWe-NzAxGuYDsTBRgA=bDH5y5n5AL5awnw6s-1MwcwhAg@mail.gmail.com>
-Subject: Re: [PATCH 3/4] PCI: designware: remove pci_assign_unassigned_resources
- call
-From: Yinghai Lu <yinghai@kernel.org>
-To: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <r65037@freescale.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>, Marek Vasut <marex@denx.de>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	kernel@pengutronix.de, Pratyush ANAND <pratyush.anand@st.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-out.m-online.net ([212.18.0.10]:57071 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752989AbaHFOy2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Aug 2014 10:54:28 -0400
+From: Gerhard Sittig <gsi@denx.de>
+To: linux-pci@vger.kernel.org, Jon Mason <jon.mason@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Detlev Zundel <dzu@denx.de>,
+	Gerhard Sittig <gsi@denx.de>
+Subject: [PATCH RFC v1 1/4] ntb: split Intel specifics out of the "NTB hardware" interface
+Date: Wed,  6 Aug 2014 16:53:52 +0200
+Message-Id: <1407336835-30586-2-git-send-email-gsi@denx.de>
+In-Reply-To: <1407336835-30586-1-git-send-email-gsi@denx.de>
+References: <1407336835-30586-1-git-send-email-gsi@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 16, 2014 at 6:13 AM, Pratyush Anand
-<pratyush.anand@gmail.com> wrote:
-> On Wed, Jul 23, 2014 at 11:22 PM, Lucas Stach <l.stach@pengutronix.de> wrote:
->
-> I am not sure here. IIRC, then calling  pci_assign_unassigned_resources after
-> pci_common_init_dev was needed to handle few PCIe cards with EP behind
-> bridge.
->
-> I do not have good understanding of pci resource allocation code.
-> @Yinghai: Can you please help(rather teach) with the description of
-> different resource allocator
-> available in setup-bus.c. Can try reading code, but if a documentation
-> exists, that would
-> be helpful.
+Rename the ntb_hw.c compile unit and adjust the Makefile, to reflect
+that this code drives Intel hardware.  Move Intel specific declarations
+from ntb_hw.h to a separate ntb_hw_intel.h header file and rename the
+Intel specific register set header file.
 
-pci_assign_unassigned_resources() should try several times to make sure
-assign resource to PCI bars that are not assigned by BIOS or not valid value
-from BIOS.
-so it will honor the setting from BIOS.
+This leaves the ntb_hw.h header file with the declaration of the
+interface between the 'data transport' and the 'hardware' aspects.
 
-in your arm case, pci_common_init_dev() is doing sizing and assign.
-so you should not need that pci_assign_unassigned_resources() anymore.
+Signed-off-by: Gerhard Sittig <gsi@denx.de>
+---
+ drivers/ntb/Makefile                         |    2 +-
+ drivers/ntb/ntb_hw.h                         |   21 --------
+ drivers/ntb/{ntb_hw.c => ntb_hw_intel.c}     |   11 ++--
+ drivers/ntb/ntb_hw_intel.h                   |   73 ++++++++++++++++++++++++++
+ drivers/ntb/{ntb_regs.h => ntb_regs_intel.h} |    0
+ 5 files changed, 80 insertions(+), 27 deletions(-)
+ rename drivers/ntb/{ntb_hw.c => ntb_hw_intel.c} (99%)
+ create mode 100644 drivers/ntb/ntb_hw_intel.h
+ rename drivers/ntb/{ntb_regs.h => ntb_regs_intel.h} (100%)
 
-Or your setup have PCI_PROBE_ONLY ?
+diff --git a/drivers/ntb/Makefile b/drivers/ntb/Makefile
+index 15cb59fd354e..468ca8ea395e 100644
+--- a/drivers/ntb/Makefile
++++ b/drivers/ntb/Makefile
+@@ -1,3 +1,3 @@
+ obj-$(CONFIG_NTB) += ntb.o
+ 
+-ntb-objs := ntb_hw.o ntb_transport.o
++ntb-objs := ntb_hw_intel.o ntb_transport.o
+diff --git a/drivers/ntb/ntb_hw.h b/drivers/ntb/ntb_hw.h
+index 465517b7393e..9cb288c045db 100644
+--- a/drivers/ntb/ntb_hw.h
++++ b/drivers/ntb/ntb_hw.h
+@@ -47,19 +47,6 @@
+  */
+ #include <linux/ntb.h>
+ 
+-#define PCI_DEVICE_ID_INTEL_NTB_B2B_JSF		0x3725
+-#define PCI_DEVICE_ID_INTEL_NTB_PS_JSF		0x3726
+-#define PCI_DEVICE_ID_INTEL_NTB_SS_JSF		0x3727
+-#define PCI_DEVICE_ID_INTEL_NTB_B2B_SNB		0x3C0D
+-#define PCI_DEVICE_ID_INTEL_NTB_PS_SNB		0x3C0E
+-#define PCI_DEVICE_ID_INTEL_NTB_SS_SNB		0x3C0F
+-#define PCI_DEVICE_ID_INTEL_NTB_B2B_IVT		0x0E0D
+-#define PCI_DEVICE_ID_INTEL_NTB_PS_IVT		0x0E0E
+-#define PCI_DEVICE_ID_INTEL_NTB_SS_IVT		0x0E0F
+-#define PCI_DEVICE_ID_INTEL_NTB_B2B_HSX		0x2F0D
+-#define PCI_DEVICE_ID_INTEL_NTB_PS_HSX		0x2F0E
+-#define PCI_DEVICE_ID_INTEL_NTB_SS_HSX		0x2F0F
+-#define PCI_DEVICE_ID_INTEL_NTB_B2B_BWD		0x0C4E
+ 
+ #ifndef readq
+ static inline u64 readq(void __iomem *addr)
+@@ -76,14 +63,6 @@ static inline void writeq(u64 val, void __iomem *addr)
+ }
+ #endif
+ 
+-#define NTB_BAR_MMIO		0
+-#define NTB_BAR_23		2
+-#define NTB_BAR_45		4
+-#define NTB_BAR_MASK		((1 << NTB_BAR_MMIO) | (1 << NTB_BAR_23) |\
+-				 (1 << NTB_BAR_45))
+-
+-#define NTB_HB_TIMEOUT		msecs_to_jiffies(1000)
+-
+ #define NTB_MAX_NUM_MW		2
+ 
+ enum ntb_hw_event {
+diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw_intel.c
+similarity index 99%
+rename from drivers/ntb/ntb_hw.c
+rename to drivers/ntb/ntb_hw_intel.c
+index 372e08c4ffef..699f05132a61 100644
+--- a/drivers/ntb/ntb_hw.c
++++ b/drivers/ntb/ntb_hw_intel.c
+@@ -54,13 +54,14 @@
+ #include <linux/random.h>
+ #include <linux/slab.h>
+ #include "ntb_hw.h"
+-#include "ntb_regs.h"
++#include "ntb_hw_intel.h"
++#include "ntb_regs_intel.h"
+ 
+-#define NTB_NAME	"Intel(R) PCI-E Non-Transparent Bridge Driver"
+-#define NTB_VER		"1.0"
++#define NTB_HW_INTEL_NAME	"Intel(R) PCI-E Non-Transparent Bridge Driver"
++#define NTB_HW_INTEL_VER	"1.0"
+ 
+-MODULE_DESCRIPTION(NTB_NAME);
+-MODULE_VERSION(NTB_VER);
++MODULE_DESCRIPTION(NTB_HW_INTEL_NAME);
++MODULE_VERSION(NTB_HW_INTEL_VER);
+ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_AUTHOR("Intel Corporation");
+ 
+diff --git a/drivers/ntb/ntb_hw_intel.h b/drivers/ntb/ntb_hw_intel.h
+new file mode 100644
+index 000000000000..93e2c3977394
+--- /dev/null
++++ b/drivers/ntb/ntb_hw_intel.h
+@@ -0,0 +1,73 @@
++/*
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ *   redistributing this file, you may do so under either license.
++ *
++ *   GPL LICENSE SUMMARY
++ *
++ *   Copyright(c) 2012 Intel Corporation. All rights reserved.
++ *
++ *   This program is free software; you can redistribute it and/or modify
++ *   it under the terms of version 2 of the GNU General Public License as
++ *   published by the Free Software Foundation.
++ *
++ *   BSD LICENSE
++ *
++ *   Copyright(c) 2012 Intel Corporation. All rights reserved.
++ *
++ *   Redistribution and use in source and binary forms, with or without
++ *   modification, are permitted provided that the following conditions
++ *   are met:
++ *
++ *     * Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *     * Redistributions in binary form must reproduce the above copy
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *     * Neither the name of Intel Corporation nor the names of its
++ *       contributors may be used to endorse or promote products derived
++ *       from this software without specific prior written permission.
++ *
++ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ * Intel PCIe NTB Linux driver
++ *
++ * Contact Information:
++ * Jon Mason <jon.mason@intel.com>
++ */
++#ifndef NTB_HW_INTEL_H
++#define NTB_HW_INTEL_H
++
++#define PCI_DEVICE_ID_INTEL_NTB_B2B_JSF		0x3725
++#define PCI_DEVICE_ID_INTEL_NTB_PS_JSF		0x3726
++#define PCI_DEVICE_ID_INTEL_NTB_SS_JSF		0x3727
++#define PCI_DEVICE_ID_INTEL_NTB_B2B_SNB		0x3C0D
++#define PCI_DEVICE_ID_INTEL_NTB_PS_SNB		0x3C0E
++#define PCI_DEVICE_ID_INTEL_NTB_SS_SNB		0x3C0F
++#define PCI_DEVICE_ID_INTEL_NTB_B2B_IVT		0x0E0D
++#define PCI_DEVICE_ID_INTEL_NTB_PS_IVT		0x0E0E
++#define PCI_DEVICE_ID_INTEL_NTB_SS_IVT		0x0E0F
++#define PCI_DEVICE_ID_INTEL_NTB_B2B_HSX		0x2F0D
++#define PCI_DEVICE_ID_INTEL_NTB_PS_HSX		0x2F0E
++#define PCI_DEVICE_ID_INTEL_NTB_SS_HSX		0x2F0F
++#define PCI_DEVICE_ID_INTEL_NTB_B2B_BWD		0x0C4E
++
++#define NTB_BAR_MMIO		0
++#define NTB_BAR_23		2
++#define NTB_BAR_45		4
++#define NTB_BAR_MASK		((1 << NTB_BAR_MMIO) | (1 << NTB_BAR_23) |\
++				 (1 << NTB_BAR_45))
++
++#define NTB_HB_TIMEOUT		msecs_to_jiffies(1000)
++
++#endif /* NTB_HW_INTEL_H */
+diff --git a/drivers/ntb/ntb_regs.h b/drivers/ntb/ntb_regs_intel.h
+similarity index 100%
+rename from drivers/ntb/ntb_regs.h
+rename to drivers/ntb/ntb_regs_intel.h
+-- 
+1.7.10.4
 
-Yinghai
