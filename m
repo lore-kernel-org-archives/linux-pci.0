@@ -1,41 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:46164 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933370AbaHYV1N (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Aug 2014 17:27:13 -0400
-Received: by mail-we0-f178.google.com with SMTP id w61so13925391wes.37
-        for <linux-pci@vger.kernel.org>; Mon, 25 Aug 2014 14:27:12 -0700 (PDT)
-From: Mathias Krause <minipli@googlemail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Mathias Krause <minipli@googlemail.com>
-Subject: [PATCH 4/5] x86/PCI: Constify pci_mmcfg_probes[] array
-Date: Mon, 25 Aug 2014 23:26:38 +0200
-Message-Id: <1409001999-23161-5-git-send-email-minipli@googlemail.com>
-In-Reply-To: <1409001999-23161-1-git-send-email-minipli@googlemail.com>
-References: <1409001999-23161-1-git-send-email-minipli@googlemail.com>
+Received: from mga09.intel.com ([134.134.136.24]:51214 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753262AbaHFJEx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Aug 2014 05:04:53 -0400
+From: "Chen, Gong" <gong.chen@linux.intel.com>
+To: bhelgaas@google.com, rdunlap@infradead.org, bp@alien8.de,
+	tony.luck@intel.com
+Cc: linux-pci@vger.kernel.org, "Chen, Gong" <gong.chen@linux.intel.com>
+Subject: [PATCH 1/5] RAS, trace: Update error definition format
+Date: Wed,  6 Aug 2014 04:32:40 -0400
+Message-Id: <1407313964-20794-1-git-send-email-gong.chen@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pci_mmcfg_probes[] array is only ever read, therefore make it const.
+Previous format definition uses MACRO BIT(...), which is not very
+maintainable. Use unified MACRO as substitution.
 
-Signed-off-by: Mathias Krause <minipli@googlemail.com>
+Signed-off-by: Chen, Gong <gong.chen@linux.intel.com>
 ---
- arch/x86/pci/mmconfig-shared.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/ras/ras_event.h | 33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 63fc0d4d58..326198a443 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -306,7 +306,7 @@ struct pci_mmcfg_hostbridge_probe {
- 	const char *(*probe)(void);
- };
+diff --git a/include/ras/ras_event.h b/include/ras/ras_event.h
+index 47da53c..0f2cca4 100644
+--- a/include/ras/ras_event.h
++++ b/include/ras/ras_event.h
+@@ -8,6 +8,7 @@
+ #include <linux/tracepoint.h>
+ #include <linux/edac.h>
+ #include <linux/ktime.h>
++#include <linux/pci.h>
+ #include <linux/aer.h>
+ #include <linux/cper.h>
  
--static struct pci_mmcfg_hostbridge_probe pci_mmcfg_probes[] __initdata = {
-+static const struct pci_mmcfg_hostbridge_probe pci_mmcfg_probes[] __initconst = {
- 	{ 0, PCI_DEVFN(0, 0), PCI_VENDOR_ID_INTEL,
- 	  PCI_DEVICE_ID_INTEL_E7520_MCH, pci_mmcfg_e7520 },
- 	{ 0, PCI_DEVFN(0, 0), PCI_VENDOR_ID_INTEL,
+@@ -174,24 +175,24 @@ TRACE_EVENT(mc_event,
+  */
+ 
+ #define aer_correctable_errors		\
+-	{BIT(0),	"Receiver Error"},		\
+-	{BIT(6),	"Bad TLP"},			\
+-	{BIT(7),	"Bad DLLP"},			\
+-	{BIT(8),	"RELAY_NUM Rollover"},		\
+-	{BIT(12),	"Replay Timer Timeout"},	\
+-	{BIT(13),	"Advisory Non-Fatal"}
++	{PCI_ERR_COR_RCVR,	"Receiver Error"},	\
++	{PCI_ERR_COR_BAD_TLP,	"Bad TLP"},		\
++	{PCI_ERR_COR_BAD_DLLP,	"Bad DLLP"},		\
++	{PCI_ERR_COR_REP_ROLL,	"RELAY_NUM Rollover"},	\
++	{PCI_ERR_COR_REP_TIMER,	"Replay Timer Timeout"},\
++	{PCI_ERR_COR_ADV_NFAT,	"Advisory Non-Fatal"}
+ 
+ #define aer_uncorrectable_errors		\
+-	{BIT(4),	"Data Link Protocol"},		\
+-	{BIT(12),	"Poisoned TLP"},		\
+-	{BIT(13),	"Flow Control Protocol"},	\
+-	{BIT(14),	"Completion Timeout"},		\
+-	{BIT(15),	"Completer Abort"},		\
+-	{BIT(16),	"Unexpected Completion"},	\
+-	{BIT(17),	"Receiver Overflow"},		\
+-	{BIT(18),	"Malformed TLP"},		\
+-	{BIT(19),	"ECRC"},			\
+-	{BIT(20),	"Unsupported Request"}
++	{PCI_ERR_UNC_DLP,	"Data Link Protocol"},		\
++	{PCI_ERR_UNC_POISON_TLP,"Poisoned TLP"},		\
++	{PCI_ERR_UNC_FCP,	"Flow Control Protocol"},	\
++	{PCI_ERR_UNC_COMP_TIME,	"Completion Timeout"},		\
++	{PCI_ERR_UNC_COMP_ABORT,"Completer Abort"},		\
++	{PCI_ERR_UNC_UNX_COMP,	"Unexpected Completion"},	\
++	{PCI_ERR_UNC_RX_OVER,	"Receiver Overflow"},		\
++	{PCI_ERR_UNC_MALF_TLP,	"Malformed TLP"},		\
++	{PCI_ERR_UNC_ECRC,	"ECRC"},			\
++	{PCI_ERR_UNC_UNSUP,	"Unsupported Request"}
+ 
+ TRACE_EVENT(aer_event,
+ 	TP_PROTO(const char *dev_name,
 -- 
-1.7.10.4
+2.0.0.rc2
 
