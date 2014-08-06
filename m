@@ -1,254 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2lp0238.outbound.protection.outlook.com ([207.46.163.238]:33459
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753144AbaHMPBW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Aug 2014 11:01:22 -0400
-From: <suravee.suthikulpanit@amd.com>
-To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
-	<jason@lakedaemon.net>
-CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
-	<Will.Deacon@arm.com>, <tglx@linutronix.de>,
-	<Harish.Kasiviswanathan@amd.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"Marc Zyngier" <Marc.Zyngier@arm.com>
-Subject: [PATCH 2/2 V4] irqchip: gicv2m: Add support for multiple MSI for ARM64 GICv2m
-Date: Wed, 13 Aug 2014 10:00:41 -0500
-Message-ID: <1407942041-3291-3-git-send-email-suravee.suthikulpanit@amd.com>
-In-Reply-To: <1407942041-3291-1-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1407942041-3291-1-git-send-email-suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-out.m-online.net ([212.18.0.9]:55998 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751244AbaHFOyO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Aug 2014 10:54:14 -0400
+From: Gerhard Sittig <gsi@denx.de>
+To: linux-pci@vger.kernel.org, Jon Mason <jon.mason@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Detlev Zundel <dzu@denx.de>,
+	Gerhard Sittig <gsi@denx.de>
+Subject: [PATCH RFC v1 0/4] PCI NTB: prepare for more hardware support
+Date: Wed,  6 Aug 2014 16:53:51 +0200
+Message-Id: <1407336835-30586-1-git-send-email-gsi@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+The current implementation of the PCI non-transparent bridge
+support exclusively supports Intel hardware.  This series
+prepares for the introduction of other vendor's hardware support,
+by separating the generic 'data transport' driver from the
+specific 'hardware support' driver.
 
-This patch extend GICv2m MSI to support multiple MSI in ARM64.
+The current implementation has a circular dependency, where the
+data transport uses hardware specific routines for its
+communication, while the hardware driver calls into the data
+transport layer to have the data link established upon probe.  In
+addition, existing documentation suggests that out-of-tree
+drivers may use the hardware driver's routines, working in
+parallel to the in-tree data transport and the network interface
+on top if it.
 
-This requires the common arch_setup_msi_irqs() to be overwriten
-with ARM64 version which does not return 1 for PCI_CAP_ID_MSI and
-nvec > 1.
+This series "puts the data transport first", to provide routines
+to register hardware drivers with the transport and to have the
+transport become available as hardware is found.  While several
+hardware drivers may implement the common "hw" API, and one of
+those drivers gets probed at runtime and then is used for the
+data transport.  The relation of exactly one hardware driver to
+one transport instance is kept, as is the NTB driver's API within
+the kernel.  No new hardware support gets introduced by this
+series.  It's "mere refactoring".
 
-Cc: Mark Rutland <Mark.Rutland@arm.com>
-Cc: Marc Zyngier <Marc.Zyngier@arm.com>
-Cc: Jason Cooper <jason@lakedaemon.net>
-Cc: Catalin Marinas <Catalin.Marinas@arm.com>
-Cc: Will Deacon <Will.Deacon@arm.com>
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
----
- arch/arm64/include/asm/msi.h  | 15 ++++++++
- arch/arm64/kernel/Makefile    |  1 +
- arch/arm64/kernel/msi.c       | 57 +++++++++++++++++++++++++++++++
- drivers/irqchip/irq-gic-v2m.c | 79 +++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 152 insertions(+)
- create mode 100644 arch/arm64/include/asm/msi.h
- create mode 100644 arch/arm64/kernel/msi.c
 
-diff --git a/arch/arm64/include/asm/msi.h b/arch/arm64/include/asm/msi.h
-new file mode 100644
-index 0000000..2a0944a
---- /dev/null
-+++ b/arch/arm64/include/asm/msi.h
-@@ -0,0 +1,15 @@
-+#ifndef _ASM_ARM64_MSI_H_
-+#define _ASM_ARM64_MSI_H_
-+
-+struct pci_dev;
-+struct msi_desc;
-+
-+struct arm64_msi_ops {
-+	int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
-+	void (*teardown_msi_irqs)(struct pci_dev *dev);
-+};
-+
-+extern struct arm64_msi_ops arm64_msi;
-+extern int arm64_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
-+
-+#endif /* _ASM_ARM64_MSI_H_ */
-diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
-index cdaedad..0636e27 100644
---- a/arch/arm64/kernel/Makefile
-+++ b/arch/arm64/kernel/Makefile
-@@ -29,6 +29,7 @@ arm64-obj-$(CONFIG_ARM64_CPU_SUSPEND)	+= sleep.o suspend.o
- arm64-obj-$(CONFIG_JUMP_LABEL)		+= jump_label.o
- arm64-obj-$(CONFIG_KGDB)		+= kgdb.o
- arm64-obj-$(CONFIG_EFI)			+= efi.o efi-stub.o efi-entry.o
-+arm64-obj-$(CONFIG_PCI_MSI)		+= msi.o
- 
- obj-y					+= $(arm64-obj-y) vdso/
- obj-m					+= $(arm64-obj-m)
-diff --git a/arch/arm64/kernel/msi.c b/arch/arm64/kernel/msi.c
-new file mode 100644
-index 0000000..ed62397
---- /dev/null
-+++ b/arch/arm64/kernel/msi.c
-@@ -0,0 +1,57 @@
-+/*
-+ * ARM64 architectural MSI implemention
-+ *
-+ * Support for Message Signalelled Interrupts for systems that
-+ * implement ARM Generic Interrupt Controller: GICv2m.
-+ *
-+ * Copyright (C) 2014 Advanced Micro Devices, Inc.
-+ * Authors: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License version 2 as published
-+ * by the Free Software Foundation.
-+ */
-+
-+#include <linux/irq.h>
-+#include <linux/msi.h>
-+#include <linux/pci.h>
-+
-+#include <asm/msi.h>
-+
-+/*
-+ * ARM64 function for seting up MSI irqs.
-+ * Copied from driver/pci/msi.c: arch_setup_msi_irqs().
-+ */
-+int arm64_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+{
-+	struct msi_desc *entry;
-+	int ret;
-+
-+	if (type == PCI_CAP_ID_MSI && nvec > 1)
-+		return 1;
-+
-+	list_for_each_entry(entry, &dev->msi_list, list) {
-+		ret = arch_setup_msi_irq(dev, entry);
-+		if (ret < 0)
-+			return ret;
-+		if (ret > 0)
-+			return -ENOSPC;
-+	}
-+
-+	return 0;
-+}
-+
-+struct arm64_msi_ops arm64_msi = {
-+	.setup_msi_irqs         = arm64_setup_msi_irqs,
-+	.teardown_msi_irqs      = default_teardown_msi_irqs,
-+};
-+
-+int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+{
-+	return arm64_msi.setup_msi_irqs(dev, nvec, type);
-+}
-+
-+void arch_teardown_msi_irqs(struct pci_dev *dev)
-+{
-+	arm64_msi.teardown_msi_irqs(dev);
-+}
-diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
-index 1ac0ace..21221e9 100644
---- a/drivers/irqchip/irq-gic-v2m.c
-+++ b/drivers/irqchip/irq-gic-v2m.c
-@@ -24,6 +24,10 @@
- #include <linux/of_pci.h>
- #include <linux/bitmap.h>
- 
-+#ifdef CONFIG_ARM64
-+#include <asm/msi.h>
-+#endif
-+
- #include "irqchip.h"
- #include "irq-gic.h"
- 
-@@ -146,6 +150,79 @@ static void gicv2m_unmask_irq(struct irq_data *d)
- 		unmask_msi_irq(d);
- }
- 
-+/*
-+ * _gicv2m_setup_msi_irqs - Setup MSI interrupts for the given PCI device.
-+ * This overrides the weak definition in ./drivers/pci/msi.c.
-+ * If nvec interrupts are irqable, then assign it to PCI device.
-+ * Otherwise return error.
-+ *
-+ * @pdev: PCI device which is requesting to enable MSI
-+ * @nvec: number of MSI vectors
-+ */
-+static int _gicv2m_setup_msi_irqs(struct pci_dev *pdev, int nvec)
-+{
-+	int irq = 0, nvec_pow2 = 0, avail;
-+	int i = 0;
-+	struct msi_msg msg;
-+	phys_addr_t addr;
-+	struct msi_desc *entry;
-+	struct msi_chip *chip = pdev->bus->msi;
-+	struct v2m_data *data = container_of(chip, struct v2m_data, msi_chip);
-+
-+	BUG_ON(list_empty(&pdev->msi_list));
-+	WARN_ON(!list_is_singular(&pdev->msi_list));
-+
-+	entry = list_first_entry(&pdev->msi_list, struct msi_desc, list);
-+	WARN_ON(entry->irq);
-+	WARN_ON(entry->msi_attrib.multiple);
-+	WARN_ON(entry->nvec_used);
-+	WARN_ON(!entry->dev);
-+
-+	avail = alloc_msi_irq(data, nvec, &irq);
-+	if (avail != 0) {
-+		dev_err(&pdev->dev,
-+			"GICv2m: Failed to allocate %d irqs.\n", nvec);
-+		return avail;
-+	}
-+
-+	/* Set lowest of the new interrupts assigned to the PCI device */
-+	nvec_pow2 = __roundup_pow_of_two(nvec);
-+	entry->nvec_used = nvec;
-+	entry->msi_attrib.multiple = ilog2(nvec_pow2);
-+
-+	for (i = 0; i < nvec; i++) {
-+		irq_set_chip_data(irq+i, chip);
-+		if (irq_set_msi_desc_off(irq, i, entry)) {
-+			dev_err(&pdev->dev,
-+				"GICv2m: Failed to set up MSI irq %d\n",
-+				(irq+i));
-+			return -EINVAL;
-+		}
-+
-+		irq_set_irq_type((irq+i), IRQ_TYPE_EDGE_RISING);
-+	}
-+
-+	addr = data->res.start + V2M_MSI_SETSPI_NS;
-+	msg.address_hi = (u32)(addr >> 32);
-+	msg.address_lo = (u32)(addr);
-+	msg.data = irq;
-+	write_msi_msg(irq, &msg);
-+
-+	return 0;
-+}
-+
-+static int
-+gicv2m_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
-+{
-+	int ret;
-+
-+	if (type == PCI_CAP_ID_MSI)
-+		ret = _gicv2m_setup_msi_irqs(pdev, nvec);
-+	else
-+		ret = arm64_setup_msi_irqs(pdev, nvec, type);
-+	return ret;
-+}
-+
- static struct irq_chip gicv2m_chip;
- 
- #ifdef CONFIG_OF
-@@ -156,6 +233,8 @@ gicv2m_of_init(struct device_node *node, struct gic_chip_data *gic)
- 	unsigned int val;
- 	struct v2m_data *v2m = &gic->v2m_data;
- 
-+	arm64_msi.setup_msi_irqs = &gicv2m_setup_msi_irqs;
-+
- 	v2m->msi_chip.owner = THIS_MODULE;
- 	v2m->msi_chip.of_node = node;
- 	v2m->msi_chip.setup_irq = gicv2m_setup_msi_irq;
+Unfortunately I don't have Intel hardware to exercise runtime
+tests for the series.  It has only been compile-tested for
+bisectability and with several combinations of the tristate
+options, and the series is checkpatch clean including --strict.
+Testers who have access to hardware are cordially invited. :)
+
+
+BTW was I surprised to find the NTB driver under drivers/ntb/,
+and not underneath the PCI subsystem.  I hope I got the list of
+recipients correct for the series.
+
+
+Gerhard Sittig (4):
+  ntb: split Intel specifics out of the "NTB hardware" interface
+  ntb: header file nits (multiple inclusion, explicit entries)
+  ntb: prepare to build the 'data transport' as a separate module
+  ntb: de-couple data transport from hardware support
+
+ drivers/ntb/Kconfig                          |   45 ++++--
+ drivers/ntb/Makefile                         |    5 +-
+ drivers/ntb/ntb_hw.h                         |  101 +++++++------
+ drivers/ntb/{ntb_hw.c => ntb_hw_intel.c}     |   83 +++++++----
+ drivers/ntb/ntb_hw_intel.h                   |   73 ++++++++++
+ drivers/ntb/{ntb_regs.h => ntb_regs_intel.h} |    0
+ drivers/ntb/ntb_transport.c                  |  196 ++++++++++++++++++++++++++
+ include/linux/ntb.h                          |    7 +
+ 8 files changed, 426 insertions(+), 84 deletions(-)
+ rename drivers/ntb/{ntb_hw.c => ntb_hw_intel.c} (94%)
+ create mode 100644 drivers/ntb/ntb_hw_intel.h
+ rename drivers/ntb/{ntb_regs.h => ntb_regs_intel.h} (100%)
+
 -- 
-1.9.0
+1.7.10.4
 
