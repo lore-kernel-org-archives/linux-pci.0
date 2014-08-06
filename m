@@ -1,82 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:27208 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752723AbaHEBWM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Aug 2014 21:22:12 -0400
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0N9T00HC87SYCZ50@mailout1.samsung.com> for
- linux-pci@vger.kernel.org; Tue, 05 Aug 2014 10:22:10 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Viresh Kumar' <viresh.kumar@linaro.org>,
-	'Sachin Kamat' <sachin.kamat@samsung.com>
-Cc: linux-pci@vger.kernel.org, 'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Sachin Kamat' <spk.linux@gmail.com>, olof@lixom.net,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1406892514-27996-1-git-send-email-sachin.kamat@samsung.com>
- <CAKohpo=tbN5UXz8C+c=EJbRdxUfkWpSUQHSi8YT0RduDsNTFFg@mail.gmail.com>
-In-reply-to: <CAKohpo=tbN5UXz8C+c=EJbRdxUfkWpSUQHSi8YT0RduDsNTFFg@mail.gmail.com>
-Subject: Re: [PATCH 1/1] PCI: spear: Fix build error
-Date: Tue, 05 Aug 2014 10:22:09 +0900
-Message-id: <001901cfb04b$adc50600$094f1200$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:53737 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753262AbaHFJEo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Aug 2014 05:04:44 -0400
+From: "Chen, Gong" <gong.chen@linux.intel.com>
+To: bhelgaas@google.com, rdunlap@infradead.org, bp@alien8.de,
+	tony.luck@intel.com
+Cc: linux-pci@vger.kernel.org, "Chen, Gong" <gong.chen@linux.intel.com>
+Subject: [PATCH 4/5] PCI-e, AER: Make AER UC status naming clearer
+Date: Wed,  6 Aug 2014 04:32:43 -0400
+Message-Id: <1407313964-20794-4-git-send-email-gong.chen@linux.intel.com>
+In-Reply-To: <1407313964-20794-1-git-send-email-gong.chen@linux.intel.com>
+References: <1407313964-20794-1-git-send-email-gong.chen@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, August 04, 2014 4:09 PM, Sachin Kamat wrote:
-> On 1 August 2014 16:58, Sachin Kamat <sachin.kamat@samsung.com> wrote:
-> > We get the following error when built as a module. Though the general fix would
-> > be in this case to export the below mentioned symbols, considering that
-> > dw_pcie_host_init is marked with __init and other PCI drivers do not support
-> > modular build, I have disabled building this driver as a module too.
-> >
-> > ERROR: "dw_pcie_host_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
-> > ERROR: "dw_handle_msi_irq" [drivers/pci/host/pcie-spear13xx.ko] undefined!
-> > ERROR: "dw_pcie_msi_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
-> > ERROR: "dw_pcie_cfg_write" [drivers/pci/host/pcie-spear13xx.ko] undefined!
-> > ERROR: "dw_pcie_cfg_read" [drivers/pci/host/pcie-spear13xx.ko] undefined!
-> > ERROR: "dw_pcie_setup_rc" [drivers/pci/host/pcie-spear13xx.ko] undefined!
-> > ERROR: "dw_pcie_link_up" [drivers/pci/host/pcie-spear13xx.ko] undefined!
-> > make[1]: *** [__modpost] Error 1
-> > make: *** [modules] Error 2
-> >
-> > Signed-off-by: Sachin Kamat <sachin.kamat@samsung.com>
+In PCI-e SPEC r3.0, BIT 0 of Uncorrectable Error Status Register
+has been redefined for a different purpose.
 
-Reviewed-by: Jingoo Han <jg1.han@samsung.com>
+BIT 0:
+    Undefined – The value read from this bit is undefined. In
+		previous versions of this specification, this
+		bit was used to mask a Link Training Error. 
+		System software must ignore the value read from 
+		this bit. System software must only write a value
+		of 1b to this bit.
 
-In order to use PCI host drivers as the module, we need to
-do additional works. Actually, it was already discussed in
-other threads. However, it is not sure that who will do this
-work. Thanks!
+Update related MACRO definition to reflect this change.
 
-Best regards,
-Jingoo Han
+Signed-off-by: Chen, Gong <gong.chen@linux.intel.com>
+---
+ drivers/vfio/pci/vfio_pci_config.c | 2 +-
+ include/ras/ras_event.h            | 2 +-
+ include/uapi/linux/pci_regs.h      | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-> > ---
-> >  drivers/pci/host/Kconfig | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> > index 8922c37..90f5cca 100644
-> > --- a/drivers/pci/host/Kconfig
-> > +++ b/drivers/pci/host/Kconfig
-> > @@ -56,7 +56,7 @@ config PCI_HOST_GENERIC
-> >           controller, such as the one emulated by kvmtool.
-> >
-> >  config PCIE_SPEAR13XX
-> > -       tristate "STMicroelectronics SPEAr PCIe controller"
-> > +       bool "STMicroelectronics SPEAr PCIe controller"
-> >         depends on ARCH_SPEAR13XX
-> >         select PCIEPORTBUS
-> >         select PCIE_DW
-> 
-> Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+index e50790e..1de3f94 100644
+--- a/drivers/vfio/pci/vfio_pci_config.c
++++ b/drivers/vfio/pci/vfio_pci_config.c
+@@ -727,7 +727,7 @@ static int __init init_pci_ext_cap_err_perm(struct perm_bits *perm)
+ 	p_setd(perm, 0, ALL_VIRT, NO_WRITE);
+ 
+ 	/* Writable bits mask */
+-	mask =	PCI_ERR_UNC_TRAIN |		/* Training */
++	mask =	PCI_ERR_UNC_UND |		/* Undefined */
+ 		PCI_ERR_UNC_DLP |		/* Data Link Protocol */
+ 		PCI_ERR_UNC_SURPDN |		/* Surprise Down */
+ 		PCI_ERR_UNC_POISON_TLP |	/* Poisoned TLP */
+diff --git a/include/ras/ras_event.h b/include/ras/ras_event.h
+index 0f04a97..79abb9c 100644
+--- a/include/ras/ras_event.h
++++ b/include/ras/ras_event.h
+@@ -185,7 +185,7 @@ TRACE_EVENT(mc_event,
+ 	{PCI_ERR_COR_LOG_OVER,	"Header Log Overflow"}
+ 
+ #define aer_uncorrectable_errors				\
+-	{PCI_ERR_UNC_TRAIN,	"Undefined"},			\
++	{PCI_ERR_UNC_UND,	"Undefined"},			\
+ 	{PCI_ERR_UNC_DLP,	"Data Link Protocol Error"},	\
+ 	{PCI_ERR_UNC_SURPDN,	"Surprise Down Error"},		\
+ 	{PCI_ERR_UNC_POISON_TLP,"Poisoned TLP"},		\
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 30db069..99e3182 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -630,7 +630,7 @@
+ 
+ /* Advanced Error Reporting */
+ #define PCI_ERR_UNCOR_STATUS	4	/* Uncorrectable Error Status */
+-#define  PCI_ERR_UNC_TRAIN	0x00000001	/* Training */
++#define  PCI_ERR_UNC_UND	0x00000001	/* Undefined */
+ #define  PCI_ERR_UNC_DLP	0x00000010	/* Data Link Protocol */
+ #define  PCI_ERR_UNC_SURPDN	0x00000020	/* Surprise Down */
+ #define  PCI_ERR_UNC_POISON_TLP	0x00001000	/* Poisoned TLP */
+-- 
+2.0.0.rc2
 
