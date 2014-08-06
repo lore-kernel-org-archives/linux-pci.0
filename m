@@ -1,45 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.austin.arm.com ([217.140.110.23]:54200 "EHLO
-	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750968AbaHMKAY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Aug 2014 06:00:24 -0400
-Date: Wed, 13 Aug 2014 10:59:45 +0100
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v9 11/12] arm64: Add pgprot_device() interface for device
- mappings.
-Message-ID: <20140813095944.GB18495@arm.com>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
- <1407860725-25202-12-git-send-email-Liviu.Dudau@arm.com>
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:46949 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750730AbaHFEdQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Aug 2014 00:33:16 -0400
+Date: Wed, 6 Aug 2014 10:02:04 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: "kishon@ti.com" <kishon@ti.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shawn Guo <shawn.guo@freescale.com>,
+	Marek =?utf-8?B?VmHFoXV0?= <marex@denx.de>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: Re: designware: missing *config* reg space
+Message-ID: <20140806043204.GA2755@pratyush-vbox>
+References: <CAOMZO5CmDa4=AcHZpWcaLanDZQ3fXNfQbcN_0Oc04MWPw9bY1Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1407860725-25202-12-git-send-email-Liviu.Dudau@arm.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAOMZO5CmDa4=AcHZpWcaLanDZQ3fXNfQbcN_0Oc04MWPw9bY1Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 12, 2014 at 05:25:24PM +0100, Liviu Dudau wrote:
-> Add pgprot_device(). It will be aliased to pgprot_noncached for
-> architectures that do not support special attributes for device
-> mapping. Used by arm64 to define new attributes for devices.
-> 
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Catalin Marinas <catalin.marinas@arm.com>
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Hi,
 
-Acked-by: Catalin Marinas <catalin.marinas@arm.com>
+On Wed, Aug 06, 2014 at 02:26:10AM +0800, Fabio Estevam wrote:
+> Hi,
+> 
+> I am running linux-next 20140805 on a imx6q-sabresd board and noticed
+> the following error:
+> 
+> root@freescale /$ dmesg | grep pci
+> [    0.168095] imx6q-pcie 1ffc000.pcie: missing *config* reg space
+> [    0.501019] imx6q-pcie 1ffc000.pcie: phy link never came up
+> [    0.501579] imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
+> 
+> This 'missing *config* reg space' was introduced by:
+
+dev_err printing the above message should be dev_dbg until all the
+platform specifies its configuration space definition through *reg*
+instead of *ranges*.
+
+> commit 4dd964df36d0e548e1806ec2ec275b62d4dc46e8
+> Author: Kishon Vijay Abraham I <kishon@ti.com>
+> Date:   Thu Jul 17 14:30:40 2014 +0530
+> 
+>     PCI: designware: Look for configuration space in 'reg', not 'ranges'
+> 
+>     The configuration address space has so far been specified in *ranges*,
+>     however it should be specified in *reg* making it a platform MEM resource.
+>     Hence used 'platform_get_resource_*' API to get configuration address space
+>     in the designware driver.
+> 
+>     Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     Acked-by: Mohit Kumar <mohit.kumar@st.com>
+>     Acked-by: Jingoo Han <jg1.han@samsung.com>
+>     Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+>     Cc: Marek Vasut <marex@denx.de>
+>     Cc: Arnd Bergmann <arnd@arndb.de>
+> 
+> Wouldn't this break dt compatibility?
+
+In spite of the above missing *config* message, your system should
+work fine. This patch should not affect any older platform.They will
+assign their cfg space through restype == 0.
+
+~Pratyush
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
