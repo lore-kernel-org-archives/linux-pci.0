@@ -1,112 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1lp0139.outbound.protection.outlook.com ([207.46.163.139]:20715
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751599AbaHSXqg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 Aug 2014 19:46:36 -0400
-Message-ID: <1408491984.4058.48.camel@snotra.buserror.net>
-Subject: Re: PCIe driver not working properly after upgrading to linux 3.8.13
-From: Scott Wood <scottwood@freescale.com>
-To: Gokul C G <gokul.g@kalkitech.in>
-CC: <linux-pci@vger.kernel.org>, <meta-freescale@yoctoproject.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <djiang@mvista.com>
-Date: Tue, 19 Aug 2014 18:46:24 -0500
-In-Reply-To: <53F3629A.6060208@kalkitech.in>
-References: <53F3629A.6060208@kalkitech.in>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <53E201FC.6010102@linux.intel.com>
+Date: Wed, 06 Aug 2014 18:22:52 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+To: Borislav Petkov <bp@alien8.de>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [Bugfix 1/2] x86, irq, PCI: Keep IRQ assignment for PCI devices
+ during suspend/hibernation
+References: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com> <1407209178-18644-2-git-send-email-jiang.liu@linux.intel.com> <20140805183729.GA23068@pd.tnic>
+In-Reply-To: <20140805183729.GA23068@pd.tnic>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-08-19 at 20:13 +0530, Gokul C G wrote:
-> HI,
-> 
->  
-> 
-> I am facing problem with PCIE driver in new Linux kernel compiled for
-> powerpc architecture (Big endian) ,freescales P2040 processor.I was
-> using old kernel Linux version 3.0.48 previously and now updated to
-> Linux version 3.8.13-rt9.After updating to the new kernel, 
-
-3.8.13-rt9 is also an old kernel. :-)
-
-It is also presumably a Freescale SDK kernel (not even the most recent
-one), so it would be best to stick with community.freescale.com (you
-didn't follow up to my response there) or, in the case of problems with
-third party code you've added on to the SDK kernel, the support channels
-of whoever provided you with the software.
-
-> PCIe device drivers not working properly and i am getting some error
-> messages in the boot-up .My intention is to use   EXAR PCIe Multiport
-> serial driver and add 8 serial ports in addition to 4 built in serial
-> ports provided by P2040 processor. The PCIe driver form EXAR is
-> compiled and  loaded as kernel module . The same was working with
-> linux kernel 3.0.48 and following prints observed while loading kernel
-> module.
-> 
-> 
-> linux 3.0.48 ,working insmod log
-> 
-> 
-> ========================
->  
-> 
-> 
-> 
-> Exar PCIe (XR17V35x) serial driver Revision: 1.2
-
-I don't see this driver in the kernel tree.  We can't help you with code
-we can't see.  Are you sure that the driver is expected to work with
-3.8?  Have you tried debugging it and/or contacting Exar for support
-with their driver?
 
 
-> PCI: Probing PCI hardware
+On 2014/8/6 2:37, Borislav Petkov wrote:
+> On Tue, Aug 05, 2014 at 11:26:17AM +0800, Jiang Liu wrote:
+>> Now IOAPIC driver dynamically allocates IRQ numbers for IOAPIC pins.
+>> We need to keep IRQ assignment for PCI devices during suspend/hibernation,
+>> otherwise it may cause failure of suspend/hibernation due to:
+>> 1) Device driver calls pci_enable_device() to allocate an IRQ number
+>>    and register interrupt handler on the returned IRQ.
+>> 2) Device driver's suspend callback calls pci_disable_device() and
+>>    release assigned IRQ in turn.
+>> 3) Device driver's resume callback calls pci_enable_device() to
+>>    allocate IRQ number again. A different IRQ number may be assigned
+>>    by IOAPIC driver this time.
+>> 4) Now the hardware delivers interrupt to the new IRQ but interrupt
+>>    handler is still registered against the old IRQ, so it breaks
+>>    suspend/hibernation.
+>>
+>> To fix this issue, we keep IRQ assignment during suspend/hibernation.
+>> Flag pci_dev.dev.power.is_prepared is used to detect that
+>> pci_disable_device() is called during suspend/hibernation.
+>>
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> ---
+>> Hi Borislav,
+>> 	Could you please help to review the patch again since I have
+>> made changes against the previous version?
 > 
-> fsl-pci ffe201000.pcie: PCI host bridge to bus 0000:00
+> I think you're asking me to test that patch, correct?
 > 
-> pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+> If so, what is the exact tree I need to apply? tip/x86/apic + those two
+> patches here? What else? What about the USB chunk which removes the proc
+> splat, is that somewhere too? Maybe Linus did pull it already?
 > 
-> pci_bus 0000:00: root bus resource [mem 0xc20000000-0xc3fffffff] (bus
-> address [0xe0000000-0xffffffff])
-> 
-> pci_bus 0000:00: root bus resource [bus 00-ff]
-> 
-> PCIE error(s) detected
-> 
-> PCIE ERR_DR register: 0x80020000
-> 
-> PCIE ERR_CAP_STAT register: 0x80000001
-> 
-> PCIE ERR_CAP_R0 register: 0x00000800
-> 
-> pci 0000:00:00.0: PCI bridge to [bus 01-ff]
-> 
-> PCIE ERR_CAP_R1 register: 0x00000000
-> 
-> PCIE ERR_CAP_R2 register: 0x00000000
-> 
-> PCIE ERR_CAP_R3 register: 0x00000000
-> 
-> PCI: Cannot allocate resource region 0 of device 0000:00:00.0, will
-> remap
-> 
-> pci 0000:00:00.0: BAR 0: can't assign mem (size 0x1000000)
-> 
-> pci 0000:00:00.0: BAR 9: can't assign mem pref (size 0x200000)
-> 
-> pci 0000:00:00.0: PCI bridge to [bus 01]
-> 
-> pci 0000:00:00.0:   bridge window [io  0x0000-0xffff]
-> 
-> pci 0000:00:00.0:   bridge window [mem 0xc20000000-0xc3fffffff]
-> 
->  
-> 
-I get very similar errors on Freescale's SDK 1.5 kernel (based on
-v3.8.13-rt9), and it doesn't stop a PCIe network card from working.  So
-I wouldn't focus too much on these errors.
+> Please specify what exactly I should test.
+Hi Borislav,
+	I have prepared a tree for you at
+https://github.com/jiangliu/linux.git suspend2
 
--Scott
+It's based on tip/master and includes:
+1) the patch to fix warning caused  by USB controller
+2) these two patches to fix failure of suspend/hibernation
 
+Could you please help to check whether suspend/hibernation works as
+expect on your platforms?
+Thanks!
+Gerry
 
+> 
+> Thanks.
+> 
