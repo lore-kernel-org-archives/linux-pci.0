@@ -1,47 +1,88 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Wed, 13 Aug 2014 11:01:18 +0100
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v9 12/12] PCI: Introduce pci_remap_iospace() for
- remapping PCI I/O bus resources into CPU space
-Message-ID: <20140813100118.GC18495@arm.com>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
- <1407860725-25202-13-git-send-email-Liviu.Dudau@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:50542 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757738AbaHFREF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Aug 2014 13:04:05 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <bhelgaas@google.com>
+CC: <jgunthorpe@obsidianresearch.com>,
+	Murali Karicheri <m-karicheri2@ti.com>
+Subject: [PATCH v1] PCI: keystone: add a pci quirk to limit mrrs
+Date: Wed, 6 Aug 2014 13:03:52 -0400
+Message-ID: <1407344632-13865-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1407860725-25202-13-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 12, 2014 at 05:25:25PM +0100, Liviu Dudau wrote:
-> Introduce a default implementation for remapping PCI bus I/O resources
-> onto the CPU address space. Architectures with special needs may
-> provide their own version, but most should be able to use this one.
-> 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Keystone PCI controller has a limitation that memory read request
+size must not exceed 256 bytes. This is a hardware limitation and
+add a quirk to force this limit on all downstream devices by
+updating mrrs.
 
-I guess you could have added the generic pgprot_device definition to
-this patch and the arm64 specific one in the separate arm64 PCIe support
-(and one less patch in total). But not a big issue either way.
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+---
+ v1 - updated based on comments pr_info to dev_info
+ This applies on top of the Keystone PCI controller patch series
+ at http://thread.gmane.org/gmane.linux.kernel.pci/33523
+ drivers/pci/host/pci-keystone.c |   40 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
+diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+index c1cfaef..50d6995 100644
+--- a/drivers/pci/host/pci-keystone.c
++++ b/drivers/pci/host/pci-keystone.c
+@@ -42,8 +42,48 @@
+ /* DEV_STAT_CTRL */
+ #define PCIE_CAP_BASE		0x70
+ 
++/* PCIE controller device IDs */
++#define PCIE_RC_K2HK		0xb008
++#define PCIE_RC_K2E		0xb009
++#define PCIE_RC_K2L		0xb00a
++
+ #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
+ 
++static void quirk_limit_mrrs(struct pci_dev *dev)
++{
++	struct pci_bus *bus = dev->bus;
++	struct pci_dev *bridge = bus->self;
++
++	if (pci_is_root_bus(bus))
++		return;
++
++	/* look for the host bridge */
++	while (!pci_is_root_bus(bus)) {
++		bridge = bus->self;
++		bus = bus->parent;
++	}
++
++	if (bridge) {
++		u16 id;
++
++		/*
++		 * Keystone PCI controller has a h/w limitation of
++		 * 256 bytes maximum read request size. It can't handle
++		 * anything higher than this. So force this limit on
++		 * all downstream devices
++		 */
++		pci_read_config_word(bridge, PCI_DEVICE_ID, &id);
++		if ((id == PCIE_RC_K2HK) || (id == PCIE_RC_K2E) ||
++		    (id == PCIE_RC_K2L)) {
++			if (pcie_get_readrq(dev) > 256) {
++				dev_info(&dev->dev, "limiting mrrs to 256\n");
++				pcie_set_readrq(dev, 256);
++			}
++		}
++	}
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
++
+ static int ks_pcie_establish_link(struct keystone_pcie *ks_pcie)
+ {
+ 	struct pcie_port *pp = &ks_pcie->pp;
 -- 
-Catalin
+1.7.9.5
+
