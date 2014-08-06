@@ -1,40 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51785 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752365AbaHWBP1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 21:15:27 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] PCI: print out exact timeout in pciehp for wait_cmd
-Date: Fri, 22 Aug 2014 18:15:09 -0700
-Message-Id: <1408756512-16885-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1408756512-16885-1-git-send-email-yinghai@kernel.org>
-References: <1408756512-16885-1-git-send-email-yinghai@kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:30735 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754164AbaHFJoU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Aug 2014 05:44:20 -0400
+Date: Wed, 6 Aug 2014 05:08:54 -0400
+From: "Chen, Gong" <gong.chen@linux.intel.com>
+To: Borislav Petkov <bp@alien8.de>
+Cc: bhelgaas@google.com, rdunlap@infradead.org, tony.luck@intel.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/5] RAS, trace: Update error definition format
+Message-ID: <20140806090853.GA21650@gchen.bj.intel.com>
+References: <1407313964-20794-1-git-send-email-gong.chen@linux.intel.com>
+ <20140806093223.GA27033@pd.tnic>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="RnlQjJ0d97Da+TV1"
+In-Reply-To: <20140806093223.GA27033@pd.tnic>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-debug print out should add back timeout that pass during wait event or
-polling.
 
-That now is cached vaule before wait.
+--RnlQjJ0d97Da+TV1
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+On Wed, Aug 06, 2014 at 11:32:23AM +0200, Borislav Petkov wrote:
+> Date: Wed, 6 Aug 2014 11:32:23 +0200
+> From: Borislav Petkov <bp@alien8.de>
+> To: "Chen, Gong" <gong.chen@linux.intel.com>
+> Cc: bhelgaas@google.com, rdunlap@infradead.org, tony.luck@intel.com,
+>  linux-pci@vger.kernel.org
+> Subject: Re: [PATCH 1/5] RAS, trace: Update error definition format
+> User-Agent: Mutt/1.5.23 (2014-03-12)
+>=20
+> On Wed, Aug 06, 2014 at 04:32:40AM -0400, Chen, Gong wrote:
+> > Previous format definition uses MACRO BIT(...), which is not very
+> > maintainable.
+>=20
+> What does that "not very maintainable" mean?
+>=20
+Bjorn ever mentioned for this:
+"I'd like to see all those "BIT(...)" things changed to use the #defines
+that already exist in include/uapi/linux/pci_regs.h, e.g.,
+PCI_ERR_COR_RCVR.  That way grep will find these uses, which will make
+maintenance easier."
 
----
- drivers/pci/hotplug/pciehp_hpc.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+--RnlQjJ0d97Da+TV1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-===================================================================
---- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
-+++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-@@ -173,7 +173,7 @@ static void pcie_wait_cmd(struct control
- 	if (!rc)
- 		ctrl_info(ctrl, "Timeout on hotplug command %#010x (issued %u msec ago)\n",
- 			  ctrl->slot_ctrl,
--			  jiffies_to_msecs(now - ctrl->cmd_started));
-+			  jiffies_to_msecs(now - ctrl->cmd_started + timeout));
- }
- 
- /**
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJT4fClAAoJEI01n1+kOSLH0YAQAKsk8wkTOHinhFwr+pKbmDfY
+CwT6kVtR27UKO0ggs0+946xApbDMitdKhrTLvw7xzgnlMlwGyTcAU/q6WXpnVeSr
+1JJpgPL0ZbiOV7ghQtBju0NQgrZX0Apz77C3pnZpahtCEGDPKNz3tbRx6NSDmQl0
+ZCXAm4DmQUAAOlWJalC+hTSHv7ViVqeZCL3CQBp2XYMsRSD6i4+GEICOSpDQibtv
+Q08M8O4BUIRo5nS/uQwLlqT8BEdgJKKVw3VrVRc5eLR3wfVOOQM9Y2koWzwX69a8
+iQoGhCanAsKqn1UPc/kLzMiu/o4ZjCL7HvC2juUkqRVsHiT95N21w8ElD459/tQf
+EJdW+g7wT2rP3p3WOhCYt1Fj1nDfglGQslY9qV3aNykGR/h8GlGuwH6gbZfaYdEu
+V8IwTuPeqHvyHQGtWtRatrXz0FUAAmhtMbyVrRp9B/SW6etYKfKWiG1g+Lrmvt2i
+2g2G1uszZ4UfUZqhiNiBOqZOkj765qe5vy2l9A49yHiYcsDl99B6aFGXiBb0FqIM
+LkLFoxiwgyOndm2nQuJIYb0/CrKB98knpZwImFgA5RfUhDbA6dg0Mbuahf/vk0gZ
+kHwPwe1hs1AXBvB+kMRmoEnrmaxVlruIq0NIvcTY2jlrC6YbPYHEKas69mYXAkq2
+ZwA35HfKtqn87Wz1PdEu
+=xpTZ
+-----END PGP SIGNATURE-----
+
+--RnlQjJ0d97Da+TV1--
