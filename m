@@ -1,82 +1,103 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <53E201FC.6010102@linux.intel.com>
-Date: Wed, 06 Aug 2014 18:22:52 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Borislav Petkov <bp@alien8.de>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [Bugfix 1/2] x86, irq, PCI: Keep IRQ assignment for PCI devices
- during suspend/hibernation
-References: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com> <1407209178-18644-2-git-send-email-jiang.liu@linux.intel.com> <20140805183729.GA23068@pd.tnic>
-In-Reply-To: <20140805183729.GA23068@pd.tnic>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.samsung.com ([203.254.224.33]:42557 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754510AbaHGDB6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Aug 2014 23:01:58 -0400
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0N9X00KX91R7JY10@mailout3.samsung.com> for
+ linux-pci@vger.kernel.org; Thu, 07 Aug 2014 12:01:56 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Lucas Stach' <l.stach@pengutronix.de>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Fabio Estevam' <festevam@gmail.com>
+Cc: kishon@ti.com, 'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Shawn Guo' <shawn.guo@freescale.com>,
+	=?UTF-8?Q?'Marek_Va=C5=A1ut'?= <marex@denx.de>,
+	'Tim Harvey' <tharvey@gateworks.com>,
+	'Sascha Hauer' <kernel@pengutronix.de>,
+	linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
+References: <CAOMZO5CmDa4=AcHZpWcaLanDZQ3fXNfQbcN_0Oc04MWPw9bY1Q@mail.gmail.com>
+ <20140806043204.GA2755@pratyush-vbox>
+ <1407314357.5208.2.camel@weser.hi.pengutronix.de>
+In-reply-to: <1407314357.5208.2.camel@weser.hi.pengutronix.de>
+Subject: Re: designware: missing *config* reg space
+Date: Thu, 07 Aug 2014 12:01:55 +0900
+Message-id: <001901cfb1eb$f22cd8d0$d6868a70$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 2014/8/6 2:37, Borislav Petkov wrote:
-> On Tue, Aug 05, 2014 at 11:26:17AM +0800, Jiang Liu wrote:
->> Now IOAPIC driver dynamically allocates IRQ numbers for IOAPIC pins.
->> We need to keep IRQ assignment for PCI devices during suspend/hibernation,
->> otherwise it may cause failure of suspend/hibernation due to:
->> 1) Device driver calls pci_enable_device() to allocate an IRQ number
->>    and register interrupt handler on the returned IRQ.
->> 2) Device driver's suspend callback calls pci_disable_device() and
->>    release assigned IRQ in turn.
->> 3) Device driver's resume callback calls pci_enable_device() to
->>    allocate IRQ number again. A different IRQ number may be assigned
->>    by IOAPIC driver this time.
->> 4) Now the hardware delivers interrupt to the new IRQ but interrupt
->>    handler is still registered against the old IRQ, so it breaks
->>    suspend/hibernation.
->>
->> To fix this issue, we keep IRQ assignment during suspend/hibernation.
->> Flag pci_dev.dev.power.is_prepared is used to detect that
->> pci_disable_device() is called during suspend/hibernation.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> ---
->> Hi Borislav,
->> 	Could you please help to review the patch again since I have
->> made changes against the previous version?
+On Wednesday, August 06, 2014 5:39 PM, Lucas Stach wrote:
 > 
-> I think you're asking me to test that patch, correct?
-> 
-> If so, what is the exact tree I need to apply? tip/x86/apic + those two
-> patches here? What else? What about the USB chunk which removes the proc
-> splat, is that somewhere too? Maybe Linus did pull it already?
-> 
-> Please specify what exactly I should test.
-Hi Borislav,
-	I have prepared a tree for you at
-https://github.com/jiangliu/linux.git suspend2
+> Am Mittwoch, den 06.08.2014, 10:02 +0530 schrieb Pratyush Anand:
+> > On Wed, Aug 06, 2014 at 02:26:10AM +0800, Fabio Estevam wrote:
+> > > Hi,
+> > >
+> > > I am running linux-next 20140805 on a imx6q-sabresd board and noticed
+> > > the following error:
+> > >
+> > > root@freescale /$ dmesg | grep pci
+> > > [    0.168095] imx6q-pcie 1ffc000.pcie: missing *config* reg space
+> > > [    0.501019] imx6q-pcie 1ffc000.pcie: phy link never came up
+> > > [    0.501579] imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
+> > >
+> > > This 'missing *config* reg space' was introduced by:
+> >
+> > dev_err printing the above message should be dev_dbg until all the
+> > platform specifies its configuration space definition through *reg*
+> > instead of *ranges*.
+> >
+> No it's completely right. Printing errors actually triggers people to
+> fix their DTs.
 
-It's based on tip/master and includes:
-1) the patch to fix warning caused  by USB controller
-2) these two patches to fix failure of suspend/hibernation
-
-Could you please help to check whether suspend/hibernation works as
-expect on your platforms?
-Thanks!
-Gerry
+I agree with Lucas Stach's opinion.
+Printing errors is necessary to let people change to fix the DT.
+According to the DT spec, using *ranges* is wrong. So, dev_err()
+can be used.
 
 > 
-> Thanks.
+> > > commit 4dd964df36d0e548e1806ec2ec275b62d4dc46e8
+> > > Author: Kishon Vijay Abraham I <kishon@ti.com>
+> > > Date:   Thu Jul 17 14:30:40 2014 +0530
+> > >
+> > >     PCI: designware: Look for configuration space in 'reg', not 'ranges'
+> > >
+> > >     The configuration address space has so far been specified in *ranges*,
+> > >     however it should be specified in *reg* making it a platform MEM resource.
+> > >     Hence used 'platform_get_resource_*' API to get configuration address space
+> > >     in the designware driver.
+> > >
+> > >     Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> > >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > >     Acked-by: Mohit Kumar <mohit.kumar@st.com>
+> > >     Acked-by: Jingoo Han <jg1.han@samsung.com>
+> > >     Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> > >     Cc: Marek Vasut <marex@denx.de>
+> > >     Cc: Arnd Bergmann <arnd@arndb.de>
+> > >
+> > > Wouldn't this break dt compatibility?
+> >
+> > In spite of the above missing *config* message, your system should
+> > work fine. This patch should not affect any older platform.They will
+> > assign their cfg space through restype == 0.
+> >
+> As Pratyush said things should work fine despite this warning. I'll send
+> a DT patch out to Shawn today to get rid of this warning.
+
+Good! :-)
+
+Best regards,
+Jingoo Han
+
 > 
+> Regards,
+> Lucas
+> --
+> Pengutronix e.K.             | Lucas Stach                 |
+> Industrial Linux Solutions   | http://www.pengutronix.de/  |
+
