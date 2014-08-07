@@ -1,75 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:55998 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751244AbaHFOyO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Aug 2014 10:54:14 -0400
-From: Gerhard Sittig <gsi@denx.de>
-To: linux-pci@vger.kernel.org, Jon Mason <jon.mason@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Detlev Zundel <dzu@denx.de>,
-	Gerhard Sittig <gsi@denx.de>
-Subject: [PATCH RFC v1 0/4] PCI NTB: prepare for more hardware support
-Date: Wed,  6 Aug 2014 16:53:51 +0200
-Message-Id: <1407336835-30586-1-git-send-email-gsi@denx.de>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:56531 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756792AbaHGDnp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Aug 2014 23:43:45 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 7 Aug 2014 13:43:43 +1000
+Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 5C0542BB0052
+	for <linux-pci@vger.kernel.org>; Thu,  7 Aug 2014 13:43:41 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s773KVxg10682774
+	for <linux-pci@vger.kernel.org>; Thu, 7 Aug 2014 13:20:31 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s773hesP009255
+	for <linux-pci@vger.kernel.org>; Thu, 7 Aug 2014 13:43:40 +1000
+Date: Thu, 7 Aug 2014 11:43:39 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: matthew_minter@xyratex.com
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 01/22] Added some infrastructure to allow assigning PCI
+ device IRQs at device enable time and removed pci_fixup_irqs as the other
+ change obsolites it.
+Message-ID: <20140807034338.GA13444@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+ <1407255083-9356-2-git-send-email-matthew_minter@xyratex.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1407255083-9356-2-git-send-email-matthew_minter@xyratex.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The current implementation of the PCI non-transparent bridge
-support exclusively supports Intel hardware.  This series
-prepares for the introduction of other vendor's hardware support,
-by separating the generic 'data transport' driver from the
-specific 'hardware support' driver.
+On Tue, Aug 05, 2014 at 05:11:02PM +0100, matthew_minter@xyratex.com wrote:
+>From: matthew_minter <matthew_minter@xyratex.com>
+>
+>---
+> drivers/pci/Makefile      | 15 ++-------------
+> drivers/pci/host-bridge.c |  2 +-
+> drivers/pci/pci.c         |  6 +++++-
+> drivers/pci/pci.h         |  1 +
+> drivers/pci/probe.c       | 12 ------------
+> drivers/pci/setup-irq.c   | 25 +++++++++----------------
+> include/linux/pci.h       |  8 ++++----
+> 7 files changed, 22 insertions(+), 47 deletions(-)
+>
+>diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+>index e04fe2d..38c4cb0 100644
+>--- a/drivers/pci/Makefile
+>+++ b/drivers/pci/Makefile
+>@@ -4,7 +4,8 @@
+>
+> obj-y		+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
+> 			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
+>-			irq.o vpd.o setup-bus.o vc.o
+>+			irq.o vpd.o setup-bus.o vc.o setup-irq.o
+>+
+> obj-$(CONFIG_PROC_FS) += proc.o
+> obj-$(CONFIG_SYSFS) += slot.o
+>
+>@@ -31,18 +32,6 @@ obj-$(CONFIG_PCI_ATS) += ats.o
+> obj-$(CONFIG_PCI_IOV) += iov.o
+>
+> #
+>-# Some architectures use the generic PCI setup functions
+>-#
+>-obj-$(CONFIG_ALPHA) += setup-irq.o
+>-obj-$(CONFIG_ARM) += setup-irq.o
+>-obj-$(CONFIG_UNICORE32) += setup-irq.o
+>-obj-$(CONFIG_SUPERH) += setup-irq.o
+>-obj-$(CONFIG_MIPS) += setup-irq.o
+>-obj-$(CONFIG_TILE) += setup-irq.o
+>-obj-$(CONFIG_SPARC_LEON) += setup-irq.o
+>-obj-$(CONFIG_M68K) += setup-irq.o
+>-
+>-#
+> # ACPI Related PCI FW Functions
+> # ACPI _DSM provided firmware instance and string name
+> #
+>diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+>index 0e5f3c9..8ed186f 100644
+>--- a/drivers/pci/host-bridge.c
+>+++ b/drivers/pci/host-bridge.c
+>@@ -16,7 +16,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+> 	return bus;
+> }
+>
+>-static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+>+struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+> {
+> 	struct pci_bus *root_bus = find_pci_root_bus(bus);
+>
+>diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>index 63a54a3..d51d076 100644
+>--- a/drivers/pci/pci.c
+>+++ b/drivers/pci/pci.c
+>@@ -1197,10 +1197,15 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+> 	int err;
+> 	u16 cmd;
+> 	u8 pin;
+>+	struct pci_host_bridge *hbrg = find_pci_host_bridge(dev->bus);
+>
+> 	err = pci_set_power_state(dev, PCI_D0);
+> 	if (err < 0 && err != -EIO)
+> 		return err;
+>+
+>+	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+>+	pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
+>+
+> 	err = pcibios_enable_device(dev, bars);
+> 	if (err < 0)
+> 		return err;
+>@@ -1209,7 +1214,6 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+> 	if (dev->msi_enabled || dev->msix_enabled)
+> 		return 0;
+>
+>-	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
 
-The current implementation has a circular dependency, where the
-data transport uses hardware specific routines for its
-communication, while the hardware driver calls into the data
-transport layer to have the data link established upon probe.  In
-addition, existing documentation suggests that out-of-tree
-drivers may use the hardware driver's routines, working in
-parallel to the in-tree data transport and the network interface
-on top if it.
+Not sure why you move this up.
 
-This series "puts the data transport first", to provide routines
-to register hardware drivers with the transport and to have the
-transport become available as hardware is found.  While several
-hardware drivers may implement the common "hw" API, and one of
-those drivers gets probed at runtime and then is used for the
-data transport.  The relation of exactly one hardware driver to
-one transport instance is kept, as is the NTB driver's API within
-the kernel.  No new hardware support gets introduced by this
-series.  It's "mere refactoring".
+Before your change, the call flow would be like this:
 
+| scan_bus
+|   + pci_fixup_irqs
+|      +    pci_dev->irq and PCI_INTERRUPT_PIN assigned with correct number
+|
+| pci_enable_device, called from driver
+|   + do_pci_enable_device, read the pin from pci_dev
 
-Unfortunately I don't have Intel hardware to exercise runtime
-tests for the series.  It has only been compile-tested for
-bisectability and with several combinations of the tristate
-options, and the series is checkpatch clean including --strict.
-Testers who have access to hardware are cordially invited. :)
+As my understanding, this ensures the pin read from hardware is fixuped. While
+after your change, the pci_fixup_irqs is removed and the pin will be assigned
+in pdev_assign_irq() after you fix it properly.
 
+Do I missed something?
 
-BTW was I surprised to find the NTB driver under drivers/ntb/,
-and not underneath the PCI subsystem.  I hope I got the list of
-recipients correct for the series.
-
-
-Gerhard Sittig (4):
-  ntb: split Intel specifics out of the "NTB hardware" interface
-  ntb: header file nits (multiple inclusion, explicit entries)
-  ntb: prepare to build the 'data transport' as a separate module
-  ntb: de-couple data transport from hardware support
-
- drivers/ntb/Kconfig                          |   45 ++++--
- drivers/ntb/Makefile                         |    5 +-
- drivers/ntb/ntb_hw.h                         |  101 +++++++------
- drivers/ntb/{ntb_hw.c => ntb_hw_intel.c}     |   83 +++++++----
- drivers/ntb/ntb_hw_intel.h                   |   73 ++++++++++
- drivers/ntb/{ntb_regs.h => ntb_regs_intel.h} |    0
- drivers/ntb/ntb_transport.c                  |  196 ++++++++++++++++++++++++++
- include/linux/ntb.h                          |    7 +
- 8 files changed, 426 insertions(+), 84 deletions(-)
- rename drivers/ntb/{ntb_hw.c => ntb_hw_intel.c} (94%)
- create mode 100644 drivers/ntb/ntb_hw_intel.h
- rename drivers/ntb/{ntb_regs.h => ntb_regs_intel.h} (100%)
+> 	if (pin) {
+> 		pci_read_config_word(dev, PCI_COMMAND, &cmd);
+> 		if (cmd & PCI_COMMAND_INTX_DISABLE)
 
 -- 
-1.7.10.4
+Richard Yang
+Help you, Help me
 
