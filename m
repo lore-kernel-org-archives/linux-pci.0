@@ -1,39 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:62534 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755053AbaHEQMN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 12:12:13 -0400
-Received: by mail-wi0-f177.google.com with SMTP id ho1so1661473wib.4
-        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2014 09:12:12 -0700 (PDT)
-From: matthew_minter@xyratex.com
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: matthew_minter <matthew_minter@xyratex.com>
-Subject: [PATCH 20/22] Added (untested) support to alpha nautilus boards to accomodate new irq init code
-Date: Tue,  5 Aug 2014 17:11:21 +0100
-Message-Id: <1407255083-9356-21-git-send-email-matthew_minter@xyratex.com>
-In-Reply-To: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
-References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+Received: from mail.skyhub.de ([78.46.96.112]:55938 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757434AbaHGNbw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 7 Aug 2014 09:31:52 -0400
+Date: Thu, 7 Aug 2014 15:31:48 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Ingo Molnar <mingo@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Peter Zijlstra <a.p.zijlstra@chello.nl>
+Subject: Re: [GIT PULL] x86/apic changes for v3.17
+Message-ID: <20140807133148.GC10043@pd.tnic>
+References: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com>
+ <1407209178-18644-2-git-send-email-jiang.liu@linux.intel.com>
+ <20140805183729.GA23068@pd.tnic>
+ <53E201FC.6010102@linux.intel.com>
+ <20140806170937.GA4895@pd.tnic>
+ <20140807110332.GB10043@pd.tnic>
+ <20140807113346.GA24225@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140807113346.GA24225@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: matthew_minter <matthew_minter@xyratex.com>
+On Thu, Aug 07, 2014 at 01:33:46PM +0200, Ingo Molnar wrote:
+> Linus, please pull the latest x86-apic-for-linus git tree from:
+> 
+>    git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git x86-apic-for-linus
 
----
- arch/alpha/kernel/sys_nautilus.c | 1 -
- 1 file changed, 1 deletion(-)
+This tree still needs the suspend/resume fixes on this thread AFAICT.
+Like keeping IRQ numbers of PCI devices stable across a s/r cycle, for
+example.
 
-diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
-index 837c0fa..7fb4d51 100644
---- a/arch/alpha/kernel/sys_nautilus.c
-+++ b/arch/alpha/kernel/sys_nautilus.c
-@@ -252,7 +252,6 @@ nautilus_init_pci(void)
- 	/* pci_common_swizzle() relies on bus->self being NULL
- 	   for the root bus, so just clear it. */
- 	bus->self = NULL;
--	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
- }
- 
- /*
+I'm guessing you'll send Linus a follow-up pull request with those
+later, right?
+
+Thanks.
+
 -- 
-2.0.4
+Regards/Gruss,
+    Boris.
 
+Sent from a fat crate under my desk. Formatting is fine.
+--
