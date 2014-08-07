@@ -1,64 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:17386 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751963AbaHAM11 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 1 Aug 2014 08:27:27 -0400
-Message-ID: <53DB87AB.1000900@linux.intel.com>
-Date: Fri, 01 Aug 2014 20:27:23 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Borislav Petkov <bp@alien8.de>
-CC: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 7 Aug 2014 13:03:32 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] x86, irq: Keep IRQ assignment for PCI devices during
- suspend/hibernation, bisected
-References: <20140730175836.GC10213@pd.tnic> <1406766807-5745-1-git-send-email-jiang.liu@linux.intel.com> <20140731103941.GA4375@pd.tnic> <53DA70AB.9010906@linux.intel.com> <20140731165648.GG4375@pd.tnic> <20140801105618.GA3857@nazgul.tnic>
-In-Reply-To: <20140801105618.GA3857@nazgul.tnic>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	"H. Peter Anvin" <hpa@zytor.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: tip/x86/apic (was: Re: [Bugfix 1/2] x86, irq, PCI: Keep IRQ
+ assignment for PCI devices during suspend/hibernation)
+Message-ID: <20140807110332.GB10043@pd.tnic>
+References: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com>
+ <1407209178-18644-2-git-send-email-jiang.liu@linux.intel.com>
+ <20140805183729.GA23068@pd.tnic>
+ <53E201FC.6010102@linux.intel.com>
+ <20140806170937.GA4895@pd.tnic>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140806170937.GA4895@pd.tnic>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Aug 06, 2014 at 07:09:37PM +0200, Borislav Petkov wrote:
+> On Wed, Aug 06, 2014 at 06:22:52PM +0800, Jiang Liu wrote:
+> > 	I have prepared a tree for you at
+> > https://github.com/jiangliu/linux.git suspend2
+> > 
+> > It's based on tip/master and includes:
+> > 1) the patch to fix warning caused  by USB controller
+> > 2) these two patches to fix failure of suspend/hibernation
+> > 
+> > Could you please help to check whether suspend/hibernation works as
+> > expect on your platforms?
+> 
+> Seems to work - just did 10-ish successful s/r cycles. The IO page
+> faults are still there though.
 
-On 2014/8/1 18:56, Borislav Petkov wrote:
-> Ok,
-> 
-> so I went and looked at tip and which branches could be the usual
-> suspects. And whaddya know, tip/x86/apic was the first to pick and it
-> contained the culprit:
-> 
-> 6a38fa0e3c94 ("x86, irq, ACPI: Release IOAPIC pin when PCI device is disabled")
-Hi Borislav,
-	The above commit may cause failure of suspend/hiberrnation.
-The reason is:
-1) With recent changers, we dynamically allocate irq number for IOAPIC
-   pins.
-2) The allocated irq will be released when suspending/hibernating.
-	pci_disable_device()->pcibios_disable_irq()
-3) When resuming, a different irq may be assigned to the PCI device.
-	pci_enable_device()->pcibios_enable_irq()
-4) Now the hardware will deliver interrupt to the new allocated irq
-   but the interrupt handler is still registered on old irq, so it
-   breaks the driver and causes failure of hibernation.
+Ok, tip guys, so Jörg and I talked about the IOPFs a bit and we feel
+that while they still need to be taken care of, they're harmless and
+there's no need to hold off tip/x86/apic anymore unless there are other
+problems with it.
 
-The patch sent out by me is to fix this issue by keeping the allocated
-irq when suspend/hibernate. And seems it works as expected.
+So, from my POV, it can go in so that it doesn't miss this merge window
+and we'd deal with the IOPFs later.
 
-But I still don't know why it causes IOMMU related warnings as:
-AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.0 domain=0x0009
-address=0x0000000000000000 flags=0x0000]
+I'm guessing Jiang needs to give you some updated versions of patches
+from this thread for the branch to be complete. Jiang, please add my
 
-Regards!
-Gerry
-> 
-> It seems like my machine doesn't like releasing the IOAPIC pin. Or,
-> maybe it is IOMMU-related and the IOMMU doesn't like this releasing of
-> the pin *after* the device gets suspended and *before* the IOMMU.
-> 
-> Strange.
-> 
-> Oh well, a well deserved lunch now :)
-> 
+Tested-by: Borislav Petkov <bp@suse.de>
+
+for those.
+
+Thanks to everyone involved.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
