@@ -1,72 +1,96 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 5 Aug 2014 09:04:48 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	xen-devel@lists.xenproject.org
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [Bugfix 0/2] Fix bugs caused by "use irqdomain to dynamically
- allocate IRQ for IOAPIC"
-Message-ID: <20140805130448.GA13057@laptop.dumpdata.com>
-References: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1blp0181.outbound.protection.outlook.com ([207.46.163.181]:5572
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753781AbaHHIEX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Aug 2014 04:04:23 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Tim Harvey <tharvey@gateworks.com>,
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>
+CC: Fabio Estevam <festevam@gmail.com>,
+	Shawn Guo <Shawn.Guo@freescale.com>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
+	"marex@denx.de" <marex@denx.de>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH] PCI: imx6: fix occasional link failure
+Date: Fri, 8 Aug 2014 08:04:18 +0000
+Message-ID: <b5b3f50464b641f89a8f7809ccbe6346@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1407479800-6730-1-git-send-email-tharvey@gateworks.com>
+In-Reply-To: <1407479800-6730-1-git-send-email-tharvey@gateworks.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 05, 2014 at 11:26:16AM +0800, Jiang Liu wrote:
-> Two issues have been reported against patch set "use irqdomain to
-> dynamically allocate IRQ for IOAPIC" at https://lkml.org/lkml/2014/6/9/44.
-> 
-> This first one causes failure of suspend/hibernation, please refer to
-> https://lkml.org/lkml/2014/7/28/822 for more information. And we have
-> worked out a patch to fix it (https://lkml.org/lkml/2014/7/30/725) and
-> Borislav has tested it. But with more testing and analysis, I found the
-> provided patch still has some issues:
-> 1) It may cause regression to Xen
+Hi Tim:
 
-Could you elaborate please?
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org]
+> On Behalf Of Tim Harvey
+> Sent: Friday, August 08, 2014 2:37 PM
+> To: l.stach@pengutronix.de
+> Cc: Fabio Estevam; Guo Shawn-R65073; stable@vger.kernel.org; marex@denx.de;
+> bhelgaas@google.com; linux-pci@vger.kernel.org
+> Subject: [PATCH] PCI: imx6: fix occasional link failure
+> 
+> According to the IMX6 reference manuals, REF_SSP_EN (Reference clock enable
+> for SS function) must remain deasserted until the reference clock is running
+> at the appropriate frequency.
+> 
+> Without this patch we find a high link failure rate (>5%) on certain
+> IMX6 boards at various temperatures.
+> 
+> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+> ---
+>  drivers/pci/host/pci-imx6.c | 11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c index
+> 1be6073..9b6bab9 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -256,11 +256,6 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port
+> *pp)
+>  	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+>  	int ret;
+> 
+> -	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> -			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+> -	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> -			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+> -
+>  	ret = clk_prepare_enable(imx6_pcie->pcie_phy);
+>  	if (ret) {
+>  		dev_err(pp->dev, "unable to enable pcie_phy clock\n"); @@ -282,6
+> +277,12 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+>  	/* allow the clocks to stabilize */
+>  	usleep_range(200, 500);
+> 
+> +	/* power up core phy and enable ref clock */
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+> +
 
-Is there a git tree with all of these patches to test it?
-> 2) Flag dev->dev.power.is_prepared has already been cleared when
->    pcibios_enable_device() gets called, so it will cause IOAPIC pin
->    reference count leak.
+[Richard] It's better add some comments into the codes, why
+Enable_pcie_clock should be placed before ssp_en is set.
+For example:
+    - enable_pcie_clock should be call before ssp_en is set,
+      since that ssp_en control the phy_ref clk gate, turn on
+      it after the source of the pcie clks are stable.
+
+Best Regards
+Richard Zhu
+
+>  	/* Some boards don't have PCIe reset GPIO. */
+>  	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+>  		gpio_set_value(imx6_pcie->reset_gpio, 0);
+> --
+> 1.8.3.2
 > 
-> So I reworked the patch to fix above issues. The first patch fixes issue
-> 1 by moving check of dev->dev.power.is_prepared pcibios_enable_irq, so
-> it won't affect Xen. The second patch fixes the IOAPIC pin reference
-> count leakage issue. It also solves the issue we have discussed at
-> http://www.spinics.net/lists/linux-pci/msg32902.html
-> 
-> Regards!
-> Gerry
-> 
-> Jiang Liu (2):
->   x86, irq, PCI: Keep IRQ assignment for PCI devices during
->     suspend/hibernation
->   x86, irq: Keep balance of IOAPIC pin reference count
-> 
->  arch/x86/pci/intel_mid_pci.c |    9 ++++++++-
->  arch/x86/pci/irq.c           |    8 +++++++-
->  drivers/acpi/pci_irq.c       |   15 +++++++++++++--
->  include/linux/pci.h          |    1 +
->  4 files changed, 29 insertions(+), 4 deletions(-)
-> 
-> -- 
-> 1.7.10.4
-> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
+> body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
