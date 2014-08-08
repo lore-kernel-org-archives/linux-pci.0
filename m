@@ -1,100 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:61764 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754797AbaHEQME (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 12:12:04 -0400
-Received: by mail-wg0-f43.google.com with SMTP id l18so1205528wgh.2
-        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2014 09:11:59 -0700 (PDT)
-From: matthew_minter@xyratex.com
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: matthew_minter <matthew_minter@xyratex.com>
-Subject: [PATCH 03/22] Added (untested) support to powerpc initialisation to fix pci irq changes
-Date: Tue,  5 Aug 2014 17:11:04 +0100
-Message-Id: <1407255083-9356-4-git-send-email-matthew_minter@xyratex.com>
-In-Reply-To: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
-References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:17343 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753937AbaHHFhI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Aug 2014 01:37:08 -0400
+From: Ethan Zhao <ethan.zhao@oracle.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
+	kvm@vger.kernel.org, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	xen-devel@lists.xenproject.org
+Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
+	ethan.kernel@gmail.com
+Subject: [PATCH v3 0/4 resend] Introduce device assignment flag operation helper function 
+Date: Fri,  8 Aug 2014 13:36:03 +0800
+Message-Id: <1407476167-18935-1-git-send-email-ethan.zhao@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: matthew_minter <matthew_minter@xyratex.com>
+This patch set introduces three PCI device flag operation helper functions
+when set pci device PF/VF to assigned or deassigned status also check it.
+and patch 2,3,4 apply these helper functions to KVM,XEN and PCI.
 
+v2: simplify unnecessory ternary operation in function pci_is_dev_assigned().
+v3: amend helper function naming.
+
+Appreciate suggestion from
+alex.williamson@redhat.com,
+david.vrabel@citrix.com,
+alexander.h.duyck@intel.com
+
+Resend for v3.16 building.
+
+Thanks,
+Ethan
 ---
- arch/powerpc/kernel/pci-common.c | 26 +++++++++++++-------------
- 1 file changed, 13 insertions(+), 13 deletions(-)
+Ethan Zhao (4):
+  PCI: introduce helper functions for device flag operation
+  KVM: use pci device flag operation helper functions
+  xen-pciback: use pci device flag operation helper function
+  PCI: use device flag operation helper function in iov.c
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index b49c72f..ed4bd53 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -226,7 +226,7 @@ struct pci_controller* pci_find_hose_for_OF_device(struct device_node* node)
-  * If the interrupt is used, then gets the interrupt line from the
-  * openfirmware and sets it in the pci_dev and pci_config line.
-  */
--static int pci_read_irq_line(struct pci_dev *pci_dev)
-+static int pci_read_irq_line(struct pci_dev *pci_dev, u8 pin)
- {
- 	struct of_phandle_args oirq;
- 	unsigned int virq;
-@@ -238,7 +238,7 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
- #endif
- 	/* Try to get a mapping from the device-tree */
- 	if (of_irq_parse_pci(pci_dev, &oirq)) {
--		u8 line, pin;
-+		u8 line;
- 
- 		/* If that fails, lets fallback to what is in the config
- 		 * space and map that through the default controller. We
-@@ -247,10 +247,6 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
- 		 * either provide a proper interrupt tree or don't use this
- 		 * function.
- 		 */
--		if (pci_read_config_byte(pci_dev, PCI_INTERRUPT_PIN, &pin))
--			return -1;
--		if (pin == 0)
--			return -1;
- 		if (pci_read_config_byte(pci_dev, PCI_INTERRUPT_LINE, &line) ||
- 		    line == 0xff || line == 0) {
- 			return -1;
-@@ -275,9 +271,16 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
- 
- 	pr_debug(" Mapped to linux irq %d\n", virq);
- 
--	pci_dev->irq = virq;
-+	return virq;
-+}
- 
--	return 0;
-+int pci_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
-+{
-+	/* Read default IRQs and fixup if necessary */
-+	int irq = pci_read_irq_line(dev, pin);
-+	if (ppc_md.pci_irq_fixup)
-+		ppc_md.pci_irq_fixup(dev);
-+	return irq;
- }
- 
- /*
-@@ -775,6 +778,8 @@ int pci_proc_domain(struct pci_bus *bus)
- 
- int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- {
-+	bridge->swizzle_irq = NULL;
-+	bridge->map_irq = pci_map_irq;
- 	if (ppc_md.pcibios_root_bridge_prepare)
- 		return ppc_md.pcibios_root_bridge_prepare(bridge);
- 
-@@ -977,11 +982,6 @@ static void pcibios_setup_device(struct pci_dev *dev)
- 	/* Additional platform DMA/iommu setup */
- 	if (ppc_md.pci_dma_dev_setup)
- 		ppc_md.pci_dma_dev_setup(dev);
--
--	/* Read default IRQs and fixup if necessary */
--	pci_read_irq_line(dev);
--	if (ppc_md.pci_irq_fixup)
--		ppc_md.pci_irq_fixup(dev);
- }
- 
- int pcibios_add_device(struct pci_dev *dev)
--- 
-2.0.4
+ drivers/pci/iov.c                  |    2 +-
+ drivers/xen/xen-pciback/pci_stub.c |    4 ++--
+ include/linux/pci.h                |   13 +++++++++++++
+ virt/kvm/assigned-dev.c            |    2 +-
+ virt/kvm/iommu.c                   |    4 ++--
+ 5 files changed, 19 insertions(+), 6 deletions(-)
 
