@@ -1,72 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:49922 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756514AbaHAWON (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 1 Aug 2014 18:14:13 -0400
-Date: Sat, 2 Aug 2014 00:14:10 +0200
-From: =?iso-8859-1?Q?J=F6rg_R=F6del?= <joro@8bytes.org>
-To: Borislav Petkov <bp@alien8.de>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
 	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] x86, irq: Keep IRQ assignment for PCI devices during
- suspend/hibernation, bisected
-Message-ID: <20140801221410.GT9809@8bytes.org>
-References: <20140730175836.GC10213@pd.tnic>
- <1406766807-5745-1-git-send-email-jiang.liu@linux.intel.com>
- <20140731103941.GA4375@pd.tnic>
- <53DA70AB.9010906@linux.intel.com>
- <20140731165648.GG4375@pd.tnic>
- <20140801105618.GA3857@nazgul.tnic>
- <53DB87AB.1000900@linux.intel.com>
- <20140801143922.GB5406@pd.tnic>
- <20140801161107.GA4553@pd.tnic>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140801161107.GA4553@pd.tnic>
-Sender: linux-pci-owner@vger.kernel.org
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Bugfix] x86, irq, PCI: Keep IRQ assignment for PCI devices during suspend/hibernation
+Date: Fri,  8 Aug 2014 14:07:51 +0800
+Message-Id: <1407478071-29399-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <20140807113346.GA24225@gmail.com>
+References: <20140807113346.GA24225@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 01, 2014 at 06:11:08PM +0200, Borislav Petkov wrote:
-> [   89.040795] pcieport 0000:00:04.0: System wakeup enabled by ACPI
-> [   89.061697] AMD-Vi: Event logged [IO_PAGE_FAULT device=01:00.0 domain=0x0014 address=0x0000000020001000 flags=0x0000]
-> [   89.071871] ACPI: Preparing to enter system sleep state S5
-> [   89.072117] [Firmware Bug]: ACPI: BIOS _OSI(Linux) query honored via cmdline
-> [   89.089832] AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.0 domain=0x0009 address=0x0000000000000080 flags=0x0020]
-> [   89.102239] AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.0 domain=0x0009 address=0x0000000000000000 flags=0x0000]
-> [   89.114684] AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.0 domain=0x0009 address=0x00000000ffffffc0 flags=0x0010]
-> [   89.127162] AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.0 domain=0x0009 address=0x00000000ffffffc0 flags=0x0010]
-> [   89.139576] AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.0 domain=0x0009 address=0x00000000ffffffc0 flags=0x0010]
-> [   89.152017] AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.0 domain=0x0009 address=0x00000000ffffffc0 flags=0x0010]
-> [   89.164481] AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.0 domain=0x0009 address=0x00000000ffffffc0 flags=0x0010]
-> [   89.176994] AMD-Vi: Event logged [[   89.177657] reboot: Power down
-> [   89.185286] acpi_power_off called
-> 
-> Now this device 00:12.0 is that OHCI thing for which we have the
-> hcd-pci.c hunk applied above, AFAICT:
-> 
-> 00:12.0 USB controller: Advanced Micro Devices, Inc. [AMD/ATI] SB7x0/SB8x0/SB9x0 USB OHCI0 Controller
-> 
-> so it must be still some timing issue there after disabling the device
-> and *before* disabling the IOMMU.
+Now IOAPIC driver dynamically allocates IRQ numbers for IOAPIC pins.
+We need to keep IRQ assignment for PCI devices during suspend/hibernation,
+otherwise it may cause failure of suspend/hibernation due to:
+1) Device driver calls pci_enable_device() to allocate an IRQ number
+   and register interrupt handler on the returned IRQ.
+2) Device driver's suspend callback calls pci_disable_device() and
+   release assigned IRQ in turn.
+3) Device driver's resume callback calls pci_enable_device() to
+   allocate IRQ number again. A different IRQ number may be assigned
+   by IOAPIC driver this time.
+4) Now the hardware delivers interrupt to the new IRQ but interrupt
+   handler is still registered against the old IRQ, so it breaks
+   suspend/hibernation.
 
-My guess is that the firmware takes back the device after the OS
-released it and now the legacy emulation tries to do DMA with it. But
-since there is an IOMMU the physical addresses it tries to DMA to is
-not mapped and it generated IO page faults
+To fix this issue, we keep IRQ assignment during suspend/hibernation.
+Flag pci_dev.dev.power.is_prepared is used to detect that
+pci_disable_device() is called during suspend/hibernation.
 
-In a perfect world the BIOS would define Unity Mapping regions in the
-IVRS ACPI table for the USB controler so that the IOMMU driver would
-keep these regions mapped.  But I have never seen those regions defined
-by any BIOS of an AMD machine, so this is probably the cause why you are
-seeing these IO page faults.
+Reported-and-Tested-by: Borislav Petkov <bp@suse.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+Hi Ingo,
+	Could you please help to apply this patch onto 
+git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git x86-apic-for-linus?
+	It fixes the suspend/hibernation failure reported by Borislav.
+Thanks!
+Gerry
+---
+ arch/x86/pci/intel_mid_pci.c |    2 +-
+ arch/x86/pci/irq.c           |    3 ++-
+ drivers/acpi/pci_irq.c       |    4 ++++
+ 3 files changed, 7 insertions(+), 2 deletions(-)
 
-But this doesn't explain the GPU faults, though.
-
-
-	Joerg
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index 09fece368592..3865116c51fb 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -229,7 +229,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 
+ static void intel_mid_pci_irq_disable(struct pci_dev *dev)
+ {
+-	if (dev->irq > 0)
++	if (!dev->dev.power.is_prepared && dev->irq > 0)
+ 		mp_unmap_irq(dev->irq);
+ }
+ 
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index 748cfe8ab322..bc1a2c341891 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1256,7 +1256,8 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 
+ static void pirq_disable_irq(struct pci_dev *dev)
+ {
+-	if (io_apic_assign_pci_irqs && dev->irq) {
++	if (io_apic_assign_pci_irqs && !dev->dev.power.is_prepared &&
++	    dev->irq) {
+ 		mp_unmap_irq(dev->irq);
+ 		dev->irq = 0;
+ 	}
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index 6ba463ceccc6..c96887d5289e 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -481,6 +481,10 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	if (!pin)
+ 		return;
+ 
++	/* Keep IOAPIC pin configuration when suspending */
++	if (dev->dev.power.is_prepared)
++		return;
++
+ 	entry = acpi_pci_irq_lookup(dev, pin);
+ 	if (!entry)
+ 		return;
+-- 
+1.7.10.4
 
