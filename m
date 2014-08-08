@@ -1,35 +1,45 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 11 Aug 2014 10:14:15 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Tomas Henzl <thenzl@redhat.com>, linux-kernel@vger.kernel.org,
-	xjtuwjp@gmail.com, lindar_liu@usish.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
-	Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: Re: [PATCH v2 RESEND 17/23] pm8001: Fix invalid return when
- request_irq() failed
-Message-ID: <20140811081415.GK16504@dhcp-27-160.brq.redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <5ecd9b80f705545c3dc85b2a4ae63a8ac3df8105.1405533479.git.agordeev@redhat.com>
- <53D79DE2.9000702@redhat.com>
- <20140729132020.GA7714@infradead.org>
- <53D7A62D.2090709@redhat.com>
- <20140729135641.GA14378@infradead.org>
- <20140729141544.GA18029@dhcp-26-207.brq.redhat.com>
- <20140729142403.GA13589@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140729142403.GA13589@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from isis.lip6.fr ([132.227.60.2]:56534 "EHLO isis.lip6.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752763AbaHHNzC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Aug 2014 09:55:02 -0400
+From: Benoit Taine <benoit.taine@lip6.fr>
+To: bhelgaas@google.com
+Cc: benoit.taine@lip6.fr, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH 0/1] Replace DEFINE_PCI_DEVICE_TABLE macro use
+Date: Fri,  8 Aug 2014 15:56:02 +0200
+Message-Id: <1407506163-8371-1-git-send-email-benoit.taine@lip6.fr>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 29, 2014 at 07:24:03AM -0700, Christoph Hellwig wrote:
-> On Tue, Jul 29, 2014 at 04:15:45PM +0200, Alexander Gordeev wrote:
-> > Hmm.. 18/23 applies with a minor fuzz against
-> > git://git.infradead.org/users/hch/scsi-queue.git drivers-for-3.17
-> 
-> Okay, it was just git-am being goofy then.  I'll take care of it.
-> 
+We should prefer `const struct pci_device_id` over
+`DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
+This issue was reported by checkpatch.
 
-Anything I can help with?
+A simplified version of the semantic patch that makes this change is as
+follows (http://coccinelle.lip6.fr/):
+
+// <smpl>
+
+@@
+identifier i;
+declarer name DEFINE_PCI_DEVICE_TABLE;
+initializer z;
+@@
+
+- DEFINE_PCI_DEVICE_TABLE(i)
++ const struct pci_device_id i[]
+= z;
+
+// </smpl>
+
+I previously sent parts of this patch to check wether or not it was
+worth sending, and Bjorn answered:
+> Benoit, how about if you wait until about half-way through the merge
+> window after v3.16 releases, generate an up-to-date single patch, and
+> post that?  Then we can try to get it in before v3.17-rc1 to minimize
+> merge hassles.
+
+So here it is, based on linux-next on 2014-08-07.
 
