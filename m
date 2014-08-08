@@ -1,74 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:45959 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754809AbaHAWux (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 1 Aug 2014 18:50:53 -0400
-Date: Sat, 2 Aug 2014 00:50:49 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: =?utf-8?B?SsO2cmcgUsO2ZGVs?= <joro@8bytes.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] x86, irq: Keep IRQ assignment for PCI devices during
- suspend/hibernation, bisected
-Message-ID: <20140801225049.GC4553@pd.tnic>
-References: <20140730175836.GC10213@pd.tnic>
- <1406766807-5745-1-git-send-email-jiang.liu@linux.intel.com>
- <20140731103941.GA4375@pd.tnic>
- <53DA70AB.9010906@linux.intel.com>
- <20140731165648.GG4375@pd.tnic>
- <20140801105618.GA3857@nazgul.tnic>
- <53DB87AB.1000900@linux.intel.com>
- <20140801143922.GB5406@pd.tnic>
- <20140801161107.GA4553@pd.tnic>
- <20140801221410.GT9809@8bytes.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140801221410.GT9809@8bytes.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:19194 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755719AbaHHFhM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Aug 2014 01:37:12 -0400
+From: Ethan Zhao <ethan.zhao@oracle.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
+	kvm@vger.kernel.org, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	xen-devel@lists.xenproject.org
+Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
+	ethan.kernel@gmail.com
+Subject: [PATCH 1/4] PCI: introduce helper functions for device flag operation
+Date: Fri,  8 Aug 2014 13:36:04 +0800
+Message-Id: <1407476167-18935-2-git-send-email-ethan.zhao@oracle.com>
+In-Reply-To: <1407476167-18935-1-git-send-email-ethan.zhao@oracle.com>
+References: <1407476167-18935-1-git-send-email-ethan.zhao@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 02, 2014 at 12:14:10AM +0200, Jörg Rödel wrote:
-> My guess is that the firmware takes back the device after the OS
-> released it and now the legacy emulation tries to do DMA with it. But
-> since there is an IOMMU the physical addresses it tries to DMA to is
-> not mapped and it generated IO page faults
-> 
-> In a perfect world the BIOS would define Unity Mapping regions in the
-> IVRS ACPI table for the USB controler so that the IOMMU driver would
-> keep these regions mapped.  But I have never seen those regions defined
-> by any BIOS of an AMD machine, so this is probably the cause why you are
-> seeing these IO page faults.
+This patch introduced three helper functions to hide direct
+device flag operation.
 
-Ok but what changed? Apparently we didn't have that small window earlier
-as I have never seen those IOMMU PFs before. So Jiang's stuff simply
-opens that hole now. And I bet this whole work is aiming at physical
-hotplug which is all fine and dandy but it shouldn't cause regressions.
+void pci_set_dev_assigned(struct pci_dev *pdev);
+void pci_clear_dev_assigned(struct pci_dev *pdev);
+bool pci_is_dev_assigned(struct pci_dev *pdev);
 
-So, IIUC, the dynamic IOAPIC stuff of freeing an irq number during
-suspend opens this hole. Which leads me to the naive thinking that maybe
-this new behavior should be configurable so that systems can choose.
+Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+---
+ v2: simplify unnecessory ternary operation in function pci_is_dev_assigned();
+ v3: amend helper functions naming.
+---
+ include/linux/pci.h |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-And I bet I won't be the last one to trigger those when those changes
-hit 3.17...
-
-> But this doesn't explain the GPU faults, though.
-
-I think this got fixed by
-
-https://lkml.kernel.org/r/1406766807-5745-1-git-send-email-jiang.liu@linux.intel.com
-
-which keeps the IRQ numbers across S/R.
-
-I'll watch out for those though.
-
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 466bcd1..b610ab3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1829,4 +1829,17 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
+  */
+ struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
+ 
++/* helper functions for operation of device flag */
++static inline void pci_set_dev_assigned(struct pci_dev *pdev)
++{
++	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
++}
++static inline void pci_clear_dev_assigned(struct pci_dev *pdev)
++{
++	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++}
++static inline bool pci_is_dev_assigned(struct pci_dev *pdev)
++{
++	return pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED;
++}
+ #endif /* LINUX_PCI_H */
 -- 
-Regards/Gruss,
-    Boris.
+1.7.1
 
-Sent from a fat crate under my desk. Formatting is fine.
---
