@@ -1,62 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:55938 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757434AbaHGNbw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 7 Aug 2014 09:31:52 -0400
-Date: Thu, 7 Aug 2014 15:31:48 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Ingo Molnar <mingo@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Peter Zijlstra <a.p.zijlstra@chello.nl>
-Subject: Re: [GIT PULL] x86/apic changes for v3.17
-Message-ID: <20140807133148.GC10043@pd.tnic>
-References: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com>
- <1407209178-18644-2-git-send-email-jiang.liu@linux.intel.com>
- <20140805183729.GA23068@pd.tnic>
- <53E201FC.6010102@linux.intel.com>
- <20140806170937.GA4895@pd.tnic>
- <20140807110332.GB10043@pd.tnic>
- <20140807113346.GA24225@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140807113346.GA24225@gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:19225 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755887AbaHHFhP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Aug 2014 01:37:15 -0400
+From: Ethan Zhao <ethan.zhao@oracle.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
+	kvm@vger.kernel.org, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	xen-devel@lists.xenproject.org
+Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
+	ethan.kernel@gmail.com
+Subject: [PATCH 3/4] xen-pciback: use pci device flag operation helper function
+Date: Fri,  8 Aug 2014 13:36:06 +0800
+Message-Id: <1407476167-18935-4-git-send-email-ethan.zhao@oracle.com>
+In-Reply-To: <1407476167-18935-1-git-send-email-ethan.zhao@oracle.com>
+References: <1407476167-18935-1-git-send-email-ethan.zhao@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 07, 2014 at 01:33:46PM +0200, Ingo Molnar wrote:
-> Linus, please pull the latest x86-apic-for-linus git tree from:
-> 
->    git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git x86-apic-for-linus
+Use pci device flag operation helper functions when set device
+to assigned or deassigned state.
 
-This tree still needs the suspend/resume fixes on this thread AFAICT.
-Like keeping IRQ numbers of PCI devices stable across a s/r cycle, for
-example.
+Acked-by: David Vrabel <david.vrabel@citrix.com>
+Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+---
+ drivers/xen/xen-pciback/pci_stub.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-I'm guessing you'll send Linus a follow-up pull request with those
-later, right?
-
-Thanks.
-
+diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+index d57a173..e593921 100644
+--- a/drivers/xen/xen-pciback/pci_stub.c
++++ b/drivers/xen/xen-pciback/pci_stub.c
+@@ -133,7 +133,7 @@ static void pcistub_device_release(struct kref *kref)
+ 	xen_pcibk_config_free_dyn_fields(dev);
+ 	xen_pcibk_config_free_dev(dev);
+ 
+-	dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++	pci_clear_dev_assigned(dev);
+ 	pci_dev_put(dev);
+ 
+ 	kfree(psdev);
+@@ -413,7 +413,7 @@ static int pcistub_init_device(struct pci_dev *dev)
+ 	dev_dbg(&dev->dev, "reset device\n");
+ 	xen_pcibk_reset_device(dev);
+ 
+-	dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
++	pci_set_dev_assigned(dev);
+ 	return 0;
+ 
+ config_release:
 -- 
-Regards/Gruss,
-    Boris.
+1.7.1
 
-Sent from a fat crate under my desk. Formatting is fine.
---
