@@ -1,38 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f47.google.com ([209.85.215.47]:34964 "EHLO
-	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754230AbaHKQRz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 12:17:55 -0400
-Received: by mail-la0-f47.google.com with SMTP id mc6so6797005lab.6
-        for <linux-pci@vger.kernel.org>; Mon, 11 Aug 2014 09:17:54 -0700 (PDT)
+Received: from [207.46.163.185] ([207.46.163.185]:10591 "EHLO
+	na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757679AbaHHXUU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Aug 2014 19:20:20 -0400
+From: <suravee.suthikulpanit@amd.com>
+To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
+	<jason@lakedaemon.net>
+CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
+	<Will.Deacon@arm.com>, <tglx@linutronix.de>,
+	<Harish.Kasiviswanathan@amd.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"Marc Zyngier" <Marc.Zyngier@arm.com>
+Subject: [PATCH 2/4] irqchip: gic-v2m: Remove the matching name gic-400-v2m
+Date: Fri, 8 Aug 2014 18:17:14 -0500
+Message-ID: <1407539836-9768-3-git-send-email-suravee.suthikulpanit@amd.com>
+In-Reply-To: <1407539836-9768-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1407539836-9768-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <1407479800-6730-1-git-send-email-tharvey@gateworks.com>
-References: <1407479800-6730-1-git-send-email-tharvey@gateworks.com>
-Date: Mon, 11 Aug 2014 13:17:53 -0300
-Message-ID: <CAOMZO5DGLDHetfOf8AUjcHAAbpNfyMpdMRN+JpJVTxR86Kn3Xw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: imx6: fix occasional link failure
-From: Fabio Estevam <festevam@gmail.com>
-To: Tim Harvey <tharvey@gateworks.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	Shawn Guo <shawn.guo@freescale.com>,
-	=?UTF-8?B?TWFyZWsgVmHFoXV0?= <marex@denx.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <r65037@freescale.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 8, 2014 at 3:36 AM, Tim Harvey <tharvey@gateworks.com> wrote:
-> According to the IMX6 reference manuals, REF_SSP_EN (Reference clock enable
-> for SS function) must remain deasserted until the reference clock is running
-> at the appropriate frequency.
->
-> Without this patch we find a high link failure rate (>5%) on certain
-> IMX6 boards at various temperatures.
->
-> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Thanks for the patch, Tim:
+This patch remove the matching name gic-400-v2m.
+It will use the "gic-400" instead
 
-Tested-by: Fabio Estevam <fabio.estevam@freescale.com>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Cc: Mark Rutland <Mark.Rutland@arm.com>
+Cc: Marc Zyngier <Marc.Zyngier@arm.com>
+Cc: Jason Cooper <jason@lakedaemon.net>
+---
+ drivers/irqchip/irq-gic-v2m.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
+index 94ed8d6..57b5a51 100644
+--- a/drivers/irqchip/irq-gic-v2m.c
++++ b/drivers/irqchip/irq-gic-v2m.c
+@@ -245,7 +245,4 @@ gicv2m_of_init(struct device_node *node, struct device_node *parent)
+ 
+ 	return gicv2m_msi_init(node, &gic->v2m_data);
+ }
+-
+-IRQCHIP_DECLARE(arm_gic_400_v2m, "arm,gic-400-v2m", gicv2m_of_init);
+-
+ #endif /* CONFIG_OF */
+-- 
+1.9.0
+
