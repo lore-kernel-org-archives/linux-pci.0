@@ -1,83 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:56996 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753774AbaHZVVP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Aug 2014 17:21:15 -0400
-Date: Tue, 26 Aug 2014 23:20:41 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
-	Prarit Bhargava <prarit@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: Re: [Bugfix] x86, irq: Fix bug in setting IOAPIC pin attributes
-In-Reply-To: <20140826095221.GO1660@lahna.fi.intel.com>
-Message-ID: <alpine.DEB.2.10.1408262319500.3323@nanos>
-References: <20140822124145.GF1660@lahna.fi.intel.com> <1409042706-11958-1-git-send-email-jiang.liu@linux.intel.com> <20140826095221.GO1660@lahna.fi.intel.com>
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:41941 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756777AbaHHPXz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Aug 2014 11:23:55 -0400
+Received: by mail-wg0-f49.google.com with SMTP id k14so5787412wgh.20
+        for <linux-pci@vger.kernel.org>; Fri, 08 Aug 2014 08:23:54 -0700 (PDT)
+Date: Fri, 8 Aug 2014 17:24:06 +0200
+From: Daniel Vetter <daniel@ffwll.ch>
+To: Thomas Jarosch <thomas.jarosch@intra2net.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	intel-gfx@lists.freedesktop.org
+Subject: Re: [Intel-gfx] [PATCH] PCI: Add another ID for Intel GPU "spurious
+ interrupt" quirk
+Message-ID: <20140808152406.GW8727@phenom.ffwll.local>
+References: <12243017.yA3ijCk2M3@storm>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <12243017.yA3ijCk2M3@storm>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 26 Aug 2014, Mika Westerberg wrote:
+On Fri, Aug 08, 2014 at 03:54:04PM +0200, Thomas Jarosch wrote:
+> New Intel G3258 CPU, new MSI board, same problem:
+> The GPU interrupt fired like crazy on monitor unplug.
+> 
+> lspci output:
+> 00:02.0 VGA compatible controller: Intel Corporation Device 0402 (rev 06)
+>         Subsystem: Micro-Star International Co., Ltd. Device 7817
+>         Flags: bus master, fast devsel, latency 0, IRQ 11
+> 
+> Signed-off-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
+> Tested-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
+> CC: stable@vger.kernel.org  # v3.4+
+> ---
+>  drivers/pci/quirks.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 80c2d01..d2ff39d 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2940,6 +2940,7 @@ static void disable_igfx_irq(struct pci_dev *dev)
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0152, disable_igfx_irq);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0402, disable_igfx_irq);
 
-> On Tue, Aug 26, 2014 at 04:45:01PM +0800, Jiang Liu wrote:
-> > On startup, IOAPIC driver preallocates IRQ descriptors and programs
-> > IOAPIC pins with default level and polarity attributes for all legacy
-> > IRQs. Later legacy IRQ users may fail to set IOAPIC pin attributes
-> > if the requested attributes conflicts with the default IOAPIC pin
-> > attributes. So change mp_irqdomain_map() to allow the first legacy IRQ
-> > user to reprogram IOAPIC pin with different attributes.
-> > 
-> > Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> 
-> I tried this and now we get further in setting up the IOAPIC but it
-> still doesn't work :-(
-> 
-> I noticed that mp_set_gsi_attr() never programs the IOAPIC in case
-> info->set is 0 so I added following on top of your patch. With the below
-> patch, the system seems to work as expected.
-> 
-> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-> index 66c2700c9f83..777762a0ad09 100644
-> --- a/arch/x86/kernel/apic/io_apic.c
-> +++ b/arch/x86/kernel/apic/io_apic.c
-> @@ -3942,10 +3942,16 @@ int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
+Shouldn't we just add entries for them all? See include/drm/i915_pciids.h
+
+We might need to abstract the macro magic a bit though to reuse that list.
+Also note that not all have the DEIER register. In any case I don't think
+this game of whack-a-mole here is, we should plug this all for real.
+-Daniel
+
 >  
->  	mutex_lock(&ioapic_mutex);
->  	if (!info->set) {
-> +		struct io_apic_irq_attr attr;
-> +
->  		info->trigger = trigger;
->  		info->polarity = polarity;
->  		info->node = node;
->  		info->set = 1;
-> +
-> +		/* Now program the IOAPIC with the new attributes */
-> +		set_io_apic_irq_attr(&attr, ioapic, pin, trigger, polarity);
-> +		ret = io_apic_setup_irq_pin(gsi, node, &attr);
->  	} else if (info->trigger != trigger || info->polarity != polarity) {
->  		ret = -EBUSY;
->  	}
+>  /*
+>   * PCI devices which are on Intel chips can skip the 10ms delay
+> -- 
+> 1.9.3
+> 
+> _______________________________________________
+> Intel-gfx mailing list
+> Intel-gfx@lists.freedesktop.org
+> http://lists.freedesktop.org/mailman/listinfo/intel-gfx
 
-Can someone please combine this into a single patch with a proper
-changelog?
-
-Thanks,
-
-	tglx
-
+-- 
+Daniel Vetter
+Software Engineer, Intel Corporation
++41 (0) 79 365 57 48 - http://blog.ffwll.ch
