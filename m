@@ -1,65 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:49105 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933329AbaHYV1M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Aug 2014 17:27:12 -0400
-Received: by mail-we0-f169.google.com with SMTP id u56so13813660wes.14
-        for <linux-pci@vger.kernel.org>; Mon, 25 Aug 2014 14:27:11 -0700 (PDT)
-From: Mathias Krause <minipli@googlemail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Mathias Krause <minipli@googlemail.com>
-Subject: [PATCH 3/5] x86/PCI: Mark constants of pci_mmcfg_nvidia_mcp55() as __initconst
-Date: Mon, 25 Aug 2014 23:26:37 +0200
-Message-Id: <1409001999-23161-4-git-send-email-minipli@googlemail.com>
-In-Reply-To: <1409001999-23161-1-git-send-email-minipli@googlemail.com>
-References: <1409001999-23161-1-git-send-email-minipli@googlemail.com>
+Received: from albert.telenet-ops.be ([195.130.137.90]:37772 "EHLO
+	albert.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756936AbaHHPeT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Aug 2014 11:34:19 -0400
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Geert Uytterhoeven <geert+renesas@glider.be>
+Subject: [PATCH] PCI: mvebu: Fix uninitialized variable in mvebu_get_tgt_attr()
+Date: Fri,  8 Aug 2014 17:34:05 +0200
+Message-Id: <1407512045-26969-1-git-send-email-geert+renesas@glider.be>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The constants in pci_mmcfg_nvidia_mcp55() need to be marked as
-__initconst or they will remain in memory after init memory was
-released.
+drivers/pci/host/pci-mvebu.c: In function 'mvebu_get_tgt_attr':
+drivers/pci/host/pci-mvebu.c:887:39: warning: 'rtype' may be used uninitialized in this function [-Wmaybe-uninitialized]
+   if (slot == PCI_SLOT(devfn) && type == rtype) {
+                                       ^
 
-Signed-off-by: Mathias Krause <minipli@googlemail.com>
+If there's ever gonna be a configuration space or 64-bit memory space
+entry in DT, rtype will be uninitialized, and the wrong entry may be
+returned.
+
+Initialize rtype to 0 (which is an unused IORESOURCE_* type) to fix this.
+
+Introduced in commit 11be65472a427dcf7a11ab6e3e3628f1c6768b5b ("PCI:
+mvebu: Adapt to the new device tree layout").
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 ---
- arch/x86/pci/mmconfig-shared.c |   24 ++++++++++++++----------
- 1 file changed, 14 insertions(+), 10 deletions(-)
+Alternatively, should the "else if (DT_FLAGS_TO_TYPE(flags) ==
+DT_TYPE_MEM32)" just be changed to "else", assuming there can never be
+other entries than for I/O or 32-bit memory space?
+---
+ drivers/pci/host/pci-mvebu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 163ef6bf16..63fc0d4d58 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -240,16 +240,20 @@ static const char *__init pci_mmcfg_nvidia_mcp55(void)
- 	int bus;
- 	int mcp55_mmconf_found = 0;
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index ce23e0f076b6..9515f0d13fd4 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -877,7 +877,7 @@ static int mvebu_get_tgt_attr(struct device_node *np, int devfn,
+ 		u32 flags = of_read_number(range, 1);
+ 		u32 slot = of_read_number(range + 1, 1);
+ 		u64 cpuaddr = of_read_number(range + na, pna);
+-		unsigned long rtype;
++		unsigned long rtype = 0;
  
--	static const u32 extcfg_regnum		= 0x90;
--	static const u32 extcfg_regsize		= 4;
--	static const u32 extcfg_enable_mask	= 1<<31;
--	static const u32 extcfg_start_mask	= 0xff<<16;
--	static const int extcfg_start_shift	= 16;
--	static const u32 extcfg_size_mask	= 0x3<<28;
--	static const int extcfg_size_shift	= 28;
--	static const int extcfg_sizebus[]	= {0x100, 0x80, 0x40, 0x20};
--	static const u32 extcfg_base_mask[]	= {0x7ff8, 0x7ffc, 0x7ffe, 0x7fff};
--	static const int extcfg_base_lshift	= 25;
-+	static const u32 extcfg_regnum __initconst	= 0x90;
-+	static const u32 extcfg_regsize __initconst	= 4;
-+	static const u32 extcfg_enable_mask __initconst	= 1 << 31;
-+	static const u32 extcfg_start_mask __initconst	= 0xff << 16;
-+	static const int extcfg_start_shift __initconst	= 16;
-+	static const u32 extcfg_size_mask __initconst	= 0x3 << 28;
-+	static const int extcfg_size_shift __initconst	= 28;
-+	static const int extcfg_sizebus[] __initconst	= {
-+		0x100, 0x80, 0x40, 0x20
-+	};
-+	static const u32 extcfg_base_mask[] __initconst	= {
-+		0x7ff8, 0x7ffc, 0x7ffe, 0x7fff
-+	};
-+	static const int extcfg_base_lshift __initconst	= 25;
- 
- 	/*
- 	 * do check if amd fam10h already took over
+ 		if (DT_FLAGS_TO_TYPE(flags) == DT_TYPE_IO)
+ 			rtype = IORESOURCE_IO;
 -- 
-1.7.10.4
+1.9.1
 
