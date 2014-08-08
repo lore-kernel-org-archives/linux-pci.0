@@ -1,101 +1,117 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [Patch v4 11/16] x86, irq, ACPI: Introduce a rwsem to protect IOAPIC operations from hotplug
-Date: Thu, 28 Aug 2014 10:22:36 +0800
-Message-Id: <1409192561-19744-12-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from [207.46.163.244] ([207.46.163.244]:11441 "EHLO
+	na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757679AbaHHXUb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Aug 2014 19:20:31 -0400
+From: <suravee.suthikulpanit@amd.com>
+To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
+	<jason@lakedaemon.net>
+CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
+	<Will.Deacon@arm.com>, <tglx@linutronix.de>,
+	<Harish.Kasiviswanathan@amd.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"Marc Zyngier" <Marc.Zyngier@arm.com>
+Subject: [PATCH 3/4] irqchip: gic: Revert the static declaration of irq-gic functions
+Date: Fri, 8 Aug 2014 18:17:15 -0500
+Message-ID: <1407539836-9768-4-git-send-email-suravee.suthikulpanit@amd.com>
+In-Reply-To: <1407539836-9768-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1407539836-9768-1-git-send-email-suravee.suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We are going to support ACPI based IOAPIC hotplug, so introduce a rwsem
-to protect IOAPIC data structures from IOAPIC hotplug. We choose to
-serialize in ACPI instead of in the IOAPIC core because:
-1) currently we are only plan to support ACPI based IOAPIC hotplug
-2) it's much more cleaner and easier
-3) It does't affect IOAPIC discovered by devicetree, SFI and mpparse.
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+This patch reverts the static declaration of various irq-gic
+functions introduced in the fe7ac63fe5393b205b94247239f3d0686a65ee0a
+
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Cc: Mark Rutland <Mark.Rutland@arm.com>
+Cc: Marc Zyngier <Marc.Zyngier@arm.com>
+Cc: Jason Cooper <jason@lakedaemon.net>
 ---
- arch/x86/kernel/acpi/boot.c |   13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+ drivers/irqchip/irq-gic.c | 10 +++++-----
+ drivers/irqchip/irq-gic.h | 13 -------------
+ 2 files changed, 5 insertions(+), 18 deletions(-)
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index b436fc735aa4..e23f7460c3f8 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -76,6 +76,8 @@ int acpi_fix_pin2_polarity __initdata;
- static u64 acpi_lapic_addr __initdata = APIC_DEFAULT_PHYS_BASE;
- #endif
- 
-+static DECLARE_RWSEM(acpi_ioapic_rwsem);
-+
- /* --------------------------------------------------------------------------
-                               Boot-time Configuration
-    -------------------------------------------------------------------------- */
-@@ -604,8 +606,11 @@ void __init acpi_pic_sci_set_trigger(unsigned int irq, u16 trigger)
- 
- int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
- {
--	int irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
-+	int irq;
- 
-+	down_read(&acpi_ioapic_rwsem);
-+	irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
-+	up_read(&acpi_ioapic_rwsem);
- 	if (irq >= 0) {
- 		*irqp = irq;
- 		return 0;
-@@ -646,7 +651,9 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
- 	int irq = gsi;
- 
- #ifdef CONFIG_X86_IO_APIC
-+	down_read(&acpi_ioapic_rwsem);
- 	irq = mp_register_gsi(dev, gsi, trigger, polarity);
-+	up_read(&acpi_ioapic_rwsem);
- #endif
- 
- 	return irq;
-@@ -655,7 +662,9 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
- static void acpi_unregister_gsi_ioapic(u32 gsi)
- {
- #ifdef CONFIG_X86_IO_APIC
-+	down_read(&acpi_ioapic_rwsem);
- 	mp_unregister_gsi(gsi);
-+	up_read(&acpi_ioapic_rwsem);
- #endif
+diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
+index 29ee97a..cedaeb4 100644
+--- a/drivers/irqchip/irq-gic.c
++++ b/drivers/irqchip/irq-gic.c
+@@ -172,7 +172,7 @@ void gic_unmask_irq(struct irq_data *d)
+ 	raw_spin_unlock(&irq_controller_lock);
  }
  
-@@ -1181,7 +1190,9 @@ static void __init acpi_process_madt(void)
- 			/*
- 			 * Parse MADT IO-APIC entries
- 			 */
-+			down_write(&acpi_ioapic_rwsem);
- 			error = acpi_parse_madt_ioapic_entries();
-+			up_write(&acpi_ioapic_rwsem);
- 			if (!error) {
- 				acpi_set_irq_model_ioapic();
+-void gic_eoi_irq(struct irq_data *d)
++static void gic_eoi_irq(struct irq_data *d)
+ {
+ 	if (gic_arch_extn.irq_eoi) {
+ 		raw_spin_lock(&irq_controller_lock);
+@@ -183,7 +183,7 @@ void gic_eoi_irq(struct irq_data *d)
+ 	writel_relaxed(gic_irq(d), gic_cpu_base(d) + GIC_CPU_EOI);
+ }
  
+-int gic_set_type(struct irq_data *d, unsigned int type)
++static int gic_set_type(struct irq_data *d, unsigned int type)
+ {
+ 	void __iomem *base = gic_dist_base(d);
+ 	unsigned int gicirq = gic_irq(d);
+@@ -207,7 +207,7 @@ int gic_set_type(struct irq_data *d, unsigned int type)
+ 	return 0;
+ }
+ 
+-int gic_retrigger(struct irq_data *d)
++static int gic_retrigger(struct irq_data *d)
+ {
+ 	if (gic_arch_extn.irq_retrigger)
+ 		return gic_arch_extn.irq_retrigger(d);
+@@ -217,7 +217,7 @@ int gic_retrigger(struct irq_data *d)
+ }
+ 
+ #ifdef CONFIG_SMP
+-int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
++static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
+ 		     bool force)
+ {
+ 	void __iomem *reg = gic_dist_base(d) + GIC_DIST_TARGET + (gic_irq(d) & ~3);
+@@ -244,7 +244,7 @@ int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
+ #endif
+ 
+ #ifdef CONFIG_PM
+-int gic_set_wake(struct irq_data *d, unsigned int on)
++static int gic_set_wake(struct irq_data *d, unsigned int on)
+ {
+ 	int ret = -ENXIO;
+ 
+diff --git a/drivers/irqchip/irq-gic.h b/drivers/irqchip/irq-gic.h
+index 1c6547d..83aa772 100644
+--- a/drivers/irqchip/irq-gic.h
++++ b/drivers/irqchip/irq-gic.h
+@@ -50,18 +50,5 @@ int _gic_of_init(struct device_node *node,
+ 
+ void gic_mask_irq(struct irq_data *d);
+ void gic_unmask_irq(struct irq_data *d);
+-void gic_eoi_irq(struct irq_data *d);
+-int gic_set_type(struct irq_data *d, unsigned int type);
+-int gic_retrigger(struct irq_data *d);
+-
+-#ifdef CONFIG_SMP
+-int gic_set_affinity(struct irq_data *d,
+-			    const struct cpumask *mask_val,
+-			    bool force);
+-#endif
+-
+-#ifdef CONFIG_PM
+-int gic_set_wake(struct irq_data *d, unsigned int on);
+-#endif
+ 
+ #endif /* _IRQ_GIC_H_ */
 -- 
-1.7.10.4
+1.9.0
 
