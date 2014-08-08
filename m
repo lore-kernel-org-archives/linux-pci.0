@@ -1,58 +1,45 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Anil Ravindranath <anil_ravindranath@pmc-sierra.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v3 13/13] pmcraid: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Mon, 18 Aug 2014 08:01:53 +0200
-Message-Id: <0f19a7660054e85da9f2137d21d198fbe7ddd71c.1408335523.git.agordeev@redhat.com>
-In-Reply-To: <cover.1408335523.git.agordeev@redhat.com>
-References: <cover.1408335523.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:19237 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755860AbaHHFhT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Aug 2014 01:37:19 -0400
+From: Ethan Zhao <ethan.zhao@oracle.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
+	kvm@vger.kernel.org, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	xen-devel@lists.xenproject.org
+Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
+	ethan.kernel@gmail.com
+Subject: [PATCH 4/4] PCI: use device flag operation helper function in iov.c
+Date: Fri,  8 Aug 2014 13:36:07 +0800
+Message-Id: <1407476167-18935-5-git-send-email-ethan.zhao@oracle.com>
+In-Reply-To: <1407476167-18935-1-git-send-email-ethan.zhao@oracle.com>
+References: <1407476167-18935-1-git-send-email-ethan.zhao@oracle.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+Use device flag operation helper functions when check device
+assignment status.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
 ---
- drivers/scsi/pmcraid.c | 13 ++-----------
- 1 file changed, 2 insertions(+), 11 deletions(-)
+ drivers/pci/iov.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index 6e575ed..bcb64eb 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -4698,19 +4698,10 @@ pmcraid_register_interrupt_handler(struct pmcraid_instance *pinstance)
- 		for (i = 0; i < PMCRAID_NUM_MSIX_VECTORS; i++)
- 			entries[i].entry = i;
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index cb6f247..4d109c0 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -633,7 +633,7 @@ int pci_vfs_assigned(struct pci_dev *dev)
+ 		 * our dev as the physical function and the assigned bit is set
+ 		 */
+ 		if (vfdev->is_virtfn && (vfdev->physfn == dev) &&
+-		    (vfdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED))
++			pci_is_dev_assigned(vfdev))
+ 			vfs_assigned++;
  
--		rc = pci_enable_msix(pdev, entries, num_hrrq);
--		if (rc < 0)
-+		num_hrrq = pci_enable_msix_range(pdev, entries, 1, num_hrrq);
-+		if (num_hrrq < 0)
- 			goto pmcraid_isr_legacy;
- 
--		/* Check how many MSIX vectors are allocated and register
--		 * msi-x handlers for each of them giving appropriate buffer
--		 */
--		if (rc > 0) {
--			num_hrrq = rc;
--			if (pci_enable_msix(pdev, entries, num_hrrq))
--				goto pmcraid_isr_legacy;
--		}
--
- 		for (i = 0; i < num_hrrq; i++) {
- 			pinstance->hrrq_vector[i].hrrq_id = i;
- 			pinstance->hrrq_vector[i].drv_inst = pinstance;
+ 		vfdev = pci_get_device(dev->vendor, dev_id, vfdev);
 -- 
-1.9.3
+1.7.1
 
