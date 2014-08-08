@@ -1,82 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31430 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750819AbaHTOKk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Aug 2014 10:10:40 -0400
-Message-ID: <1408543798.11383.42.camel@ul30vt.home>
-Subject: Re: How to get the number of VFs assigned to the guests in XEN
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, konrad.wilk@oracle.com,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Christoph Hellwig <hch@lst.de>, boris.ostrovsky@oracle.com,
-	Sathya Prakash <sathya.prakash@avagotech.com>,
-	Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
-Date: Wed, 20 Aug 2014 08:09:58 -0600
-In-Reply-To: <CAK=zhgrFV10k0yzOrkSnmYJge3M+kQrcNz9e5qZZ5q180NY2xQ@mail.gmail.com>
-References: <CAK=zhgrv=e20s11v7Ls5ioWZrbyvp9Rzyv+QRDLR3mffr9E61A@mail.gmail.com>
-	 <1408538771.11383.33.camel@ul30vt.home>
-	 <CAK=zhgrFV10k0yzOrkSnmYJge3M+kQrcNz9e5qZZ5q180NY2xQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 8 Aug 2014 15:21:44 -0700 (PDT)
+From: David Rientjes <rientjes@google.com>
+To: Ingo Molnar <mingo@kernel.org>
+cc: Borislav Petkov <bp@alien8.de>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Peter Zijlstra <a.p.zijlstra@chello.nl>
+Subject: Re: [GIT PULL] x86/apic changes for v3.17
+In-Reply-To: <20140807113346.GA24225@gmail.com>
+Message-ID: <alpine.DEB.2.02.1408081519240.7430@chino.kir.corp.google.com>
+References: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com> <1407209178-18644-2-git-send-email-jiang.liu@linux.intel.com> <20140805183729.GA23068@pd.tnic> <53E201FC.6010102@linux.intel.com> <20140806170937.GA4895@pd.tnic> <20140807110332.GB10043@pd.tnic>
+ <20140807113346.GA24225@gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-08-20 at 19:14 +0530, Sreekanth Reddy wrote:
-> Thanks Alex,
+On Thu, 7 Aug 2014, Ingo Molnar wrote:
+
+> Linus, please pull the latest x86-apic-for-linus git tree from:
 > 
-> Then, Is there any other ways to stop accidental unload of PF driver
-> while still some VFs are accessing by the running VMs.
+>    git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git x86-apic-for-linus
+> 
+>    # HEAD: 5e3bf215f4f2efc0af89e6dbc5da789744aeb5d7 x86/apic/vsmp: Make is_vsmp_box() static
+> 
+> 
+> The main changes in this cycle are:
+> 
+>     * Remove obsolete APIC driver abstractions. (David Rientjes)
+> 
 
-I believe the reason pci_vfs_assigned() and the pci_dev flag that backs
-it exists is because legacy KVM device assignment does not require a
-host driver for the device.  At best, the assigned device is bound to
-pci-stub, which is more than happy to release a device at any point in
-time.  This flag was therefore added to indicate that the device was in
-use, please don't make it disappear.  With VFIO, the device is bound to
-vfio-pci in the host which will only release the device when it is
-unused, just like any other device driver.  If the device is in use,
-either assigned to a VM or otherwise in use by a userspace driver,
-vfio-pci will block until unused.
+These changes are unrelated from the other issues and can still be pulled 
+from
 
-There are opportunities that we have yet to implement that we could
-notify the user of the removal request, triggering a hot-unplug in a
-guest.  Assuming some sort of revoke() functionality gets pushed
-upstream we could also make an unplug request, wait from some time, then
-revoke the device from the user.  The point however is that device
-assignment shouldn't be handled as a special case.  When
-pci_disable_sriov() is called, the release functions for any drivers
-owning an affected VF should be called where we have the opportunity to
-block until unused.  Thanks,
+	git://git.kernel.org/pub/scm/linux/kernel/git/rientjes/linux.git x86/apic 
 
-Alex
+if we want the cleanups for 3.17.  The x86 pull request was originally at 
+http://marc.info/?l=linux-kernel&m=140678961924050.
 
-> On Wed, Aug 20, 2014 at 6:16 PM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > On Wed, 2014-08-20 at 16:39 +0530, Sreekanth Reddy wrote:
-> >> HI,
-> >>
-> >> For SRIOV support, currently in the KVM environment, mpt3sas driver
-> >> can use the API pci_vfs_assigned() to know the number of VFs that are
-> >> currently assigned to the running VMs. So that during the PF driver
-> >> unload time, if the return value of this API is greater than zero the
-> >> our driver won't call the pci_disable_sriov() to disable the VFs.
-> >>
-> >> Now for the same purpose in XEN environment, is there any API similar
-> >> to pci_vfs_assigned() which the low lever device driver can use to
-> >> know 'the number of VFs that are currently assigned to the running
-> >> VMs'. In XEN environment this API pci_vfs_assigned() will return
-> >> always zero even though VFs are assigned to the running VMs.
-> >
-> > Note that pci_vfs_assigned() assigned is only used by legacy KVM device
-> > assignment and primarily as a workaround for not using an actual
-> > host-based device driver to manage device ownership.  When using
-> > VFIO-based device assignment with KVM, pci_vfs_assigned() is not
-> > updated.  Please don't rely on this interface.  Thanks,
-> >
-> > Alex
-> >
-
-
-
+It would be a shame to miss out on that because the changes share the same 
+tip branch.
