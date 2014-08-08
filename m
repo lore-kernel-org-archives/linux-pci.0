@@ -1,99 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:42513 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750720AbaHKI0Q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 04:26:16 -0400
-Message-ID: <1407745453.4660.7.camel@weser.hi.pengutronix.de>
-Subject: Re: [PATCH 2/2] PCI: imx6: fix boot hang when link already enabled
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Tim Harvey <tharvey@gateworks.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shawn Guo <Shawn.Guo@freescale.com>,
-	Sascha Hauer <kernel@pengutronix.de>
-Date: Mon, 11 Aug 2014 10:24:13 +0200
-In-Reply-To: <CAJ+vNU0vT2Fot6V=pn7HKDctNHrWMDiudghVTtAojv8mPDXhBw@mail.gmail.com>
-References: <1406830565-23450-1-git-send-email-l.stach@pengutronix.de>
-	 <1406830565-23450-3-git-send-email-l.stach@pengutronix.de>
-	 <CAJ+vNU0vT2Fot6V=pn7HKDctNHrWMDiudghVTtAojv8mPDXhBw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from bear.ext.ti.com ([192.94.94.41]:58498 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751002AbaHHTpw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Aug 2014 15:45:52 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>
+CC: <jgunthorpe@obsidianresearch.com>,
+	Murali Karicheri <m-karicheri2@ti.com>
+Subject: [PATCH v2] PCI: keystone: add a pci quirk to limit mrrs
+Date: Fri, 8 Aug 2014 15:45:32 -0400
+Message-ID: <1407527132-3294-1-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tim,
+Keystone PCI controller has a limitation that memory read request
+size must not exceed 256 bytes. This is a hardware limitation and
+add a quirk to force this limit on all downstream devices by
+updating mrrs.
 
-Am Samstag, den 09.08.2014, 10:49 -0700 schrieb Tim Harvey:
-[...]
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+---
+ -v2: made the quirk happens after tuning
+ -v1: changed printk to indicate PCI bdf
+ This applies on top of the Keystone PCI controller patch series
+ at http://thread.gmane.org/gmane.linux.kernel.pci/33523
+ drivers/pci/host/pci-keystone.c |   40 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
-> i/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> > index a568efaa331c..1be607360988 100644
-> > --- a/drivers/pci/host/pci-imx6.c
-> > +++ b/drivers/pci/host/pci-imx6.c
-> > @@ -49,6 +49,9 @@ struct imx6_pcie {
-> >
-> >  /* PCIe Port Logic registers (memory-mapped) */
-> >  #define PL_OFFSET 0x700
-> > +#define PCIE_PL_PFLR (PL_OFFSET + 0x08)
-> > +#define PCIE_PL_PFLR_LINK_STATE_MASK           (0x3f << 16)
-> > +#define PCIE_PL_PFLR_FORCE_LINK                        (1 << 15)
-> >  #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
-> >  #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
-> >  #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING        (1 << 29)
-> > @@ -214,6 +217,31 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
-> >  static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
-> >  {
-> >         struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-> > +       u32 val, gpr1, gpr12;
-> > +
-> > +       /*
-> > +        * If the bootloader already enabled the link we need some special
-> > +        * handling to get the core back into a state where it is safe to
-> > +        * touch it for configuration. As there is no dedicated reset signal
-> > +        * wired up for MX6QDL, we need to manually force LTSSM into "detect"
-> > +        * state before completely disabling LTSSM, which is a prerequisite
-> > +        * for core configuration.
-> > +        * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
-> > +        * indication that the bootloader activated the link.
-> > +        */
-> > +       regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
-> > +       regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
-> > +
-> > +       if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
-> > +           (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
-> > +               val = readl(pp->dbi_base + PCIE_PL_PFLR);
-> > +               val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
-> > +               val |= PCIE_PL_PFLR_FORCE_LINK;
-> > +               writel(val, pp->dbi_base + PCIE_PL_PFLR);
-> 
-> Lucas,
-> 
-> I hate to delay this patch any longer as I believe its critical that
-> this gets in the current kernel. I did however encounter an issue when
-> I backported this to another (older 3.10 kernel I use). The access
-> above to dbi_base to force the link down assumes that PCIe clock is
-> enabled (or it will hang the system). This obviously must be the case
-> for the current kernel (the bootloader enables it and I guess the
-> clock setup for imx6 doesn't disturb it), but on the particular kernel
-> I was backporting to there must be enough differences in the clock
-> tree that the clock setup disabled the PCIe clocks. Thus I had to
-> enable them early, right before the access to dbi_base above in that
-> kernel.
-> 
-> I wonder if we should at least put a comment before the dbi_base
-> access above about the assumption that the bootloader also enabled
-> PCIe clock and the clock config left it as such so we don't get burned
-> later on if the clock config changes and causes a hang here.
-> 
-
-What clock are we talking about here exactly? If it's just the register
-clock "pcie" we may as well enable it early to make things robust. Other
-clocks may be a bit more problematic.
-
-Regards,
-Lucas
+diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+index c1cfaef..a132622 100644
+--- a/drivers/pci/host/pci-keystone.c
++++ b/drivers/pci/host/pci-keystone.c
+@@ -42,8 +42,48 @@
+ /* DEV_STAT_CTRL */
+ #define PCIE_CAP_BASE		0x70
+ 
++/* PCIE controller device IDs */
++#define PCIE_RC_K2HK		0xb008
++#define PCIE_RC_K2E		0xb009
++#define PCIE_RC_K2L		0xb00a
++
+ #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
+ 
++static void quirk_limit_mrrs(struct pci_dev *dev)
++{
++	struct pci_bus *bus = dev->bus;
++	struct pci_dev *bridge = bus->self;
++
++	if (pci_is_root_bus(bus))
++		return;
++
++	/* look for the host bridge */
++	while (!pci_is_root_bus(bus)) {
++		bridge = bus->self;
++		bus = bus->parent;
++	}
++
++	if (bridge) {
++		u16 id;
++
++		/*
++		 * Keystone PCI controller has a h/w limitation of
++		 * 256 bytes maximum read request size. It can't handle
++		 * anything higher than this. So force this limit on
++		 * all downstream devices
++		 */
++		pci_read_config_word(bridge, PCI_DEVICE_ID, &id);
++		if ((id == PCIE_RC_K2HK) || (id == PCIE_RC_K2E) ||
++		    (id == PCIE_RC_K2L)) {
++			if (pcie_get_readrq(dev) > 256) {
++				dev_info(&dev->dev, "limiting mrrs to 256\n");
++				pcie_set_readrq(dev, 256);
++			}
++		}
++	}
++}
++DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
++
+ static int ks_pcie_establish_link(struct keystone_pcie *ks_pcie)
+ {
+ 	struct pcie_port *pp = &ks_pcie->pp;
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+1.7.9.5
 
