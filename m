@@ -1,57 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from albert.telenet-ops.be ([195.130.137.90]:37772 "EHLO
-	albert.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756936AbaHHPeT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Aug 2014 11:34:19 -0400
-From: Geert Uytterhoeven <geert+renesas@glider.be>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH] PCI: mvebu: Fix uninitialized variable in mvebu_get_tgt_attr()
-Date: Fri,  8 Aug 2014 17:34:05 +0200
-Message-Id: <1407512045-26969-1-git-send-email-geert+renesas@glider.be>
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:38043 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755870AbaHHGgt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Aug 2014 02:36:49 -0400
+Received: by mail-pd0-f176.google.com with SMTP id y10so6477800pdj.7
+        for <linux-pci@vger.kernel.org>; Thu, 07 Aug 2014 23:36:49 -0700 (PDT)
+From: Tim Harvey <tharvey@gateworks.com>
+To: l.stach@pengutronix.de
+Cc: Fabio Estevam <festevam@gmail.com>, shawn.guo@freescale.com,
+	stable@vger.kernel.org, marex@denx.de, bhelgaas@google.com,
+	linux-pci@vger.kernel.org
+Subject: [PATCH] PCI: imx6: fix occasional link failure
+Date: Thu,  7 Aug 2014 23:36:40 -0700
+Message-Id: <1407479800-6730-1-git-send-email-tharvey@gateworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-drivers/pci/host/pci-mvebu.c: In function 'mvebu_get_tgt_attr':
-drivers/pci/host/pci-mvebu.c:887:39: warning: 'rtype' may be used uninitialized in this function [-Wmaybe-uninitialized]
-   if (slot == PCI_SLOT(devfn) && type == rtype) {
-                                       ^
+According to the IMX6 reference manuals, REF_SSP_EN (Reference clock enable
+for SS function) must remain deasserted until the reference clock is running
+at the appropriate frequency.
 
-If there's ever gonna be a configuration space or 64-bit memory space
-entry in DT, rtype will be uninitialized, and the wrong entry may be
-returned.
+Without this patch we find a high link failure rate (>5%) on certain
+IMX6 boards at various temperatures.
 
-Initialize rtype to 0 (which is an unused IORESOURCE_* type) to fix this.
-
-Introduced in commit 11be65472a427dcf7a11ab6e3e3628f1c6768b5b ("PCI:
-mvebu: Adapt to the new device tree layout").
-
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tim Harvey <tharvey@gateworks.com>
 ---
-Alternatively, should the "else if (DT_FLAGS_TO_TYPE(flags) ==
-DT_TYPE_MEM32)" just be changed to "else", assuming there can never be
-other entries than for I/O or 32-bit memory space?
----
- drivers/pci/host/pci-mvebu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/host/pci-imx6.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index ce23e0f076b6..9515f0d13fd4 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -877,7 +877,7 @@ static int mvebu_get_tgt_attr(struct device_node *np, int devfn,
- 		u32 flags = of_read_number(range, 1);
- 		u32 slot = of_read_number(range + 1, 1);
- 		u64 cpuaddr = of_read_number(range + na, pna);
--		unsigned long rtype;
-+		unsigned long rtype = 0;
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 1be6073..9b6bab9 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -256,11 +256,6 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ 	int ret;
  
- 		if (DT_FLAGS_TO_TYPE(flags) == DT_TYPE_IO)
- 			rtype = IORESOURCE_IO;
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+-
+ 	ret = clk_prepare_enable(imx6_pcie->pcie_phy);
+ 	if (ret) {
+ 		dev_err(pp->dev, "unable to enable pcie_phy clock\n");
+@@ -282,6 +277,12 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 	/* allow the clocks to stabilize */
+ 	usleep_range(200, 500);
+ 
++	/* power up core phy and enable ref clock */
++	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
++	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
++
+ 	/* Some boards don't have PCIe reset GPIO. */
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+ 		gpio_set_value(imx6_pcie->reset_gpio, 0);
 -- 
-1.9.1
+1.8.3.2
 
