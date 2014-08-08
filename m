@@ -1,39 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:47412 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750734AbaHTTWk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Aug 2014 15:22:40 -0400
-Date: Wed, 20 Aug 2014 12:22:39 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	linux-kernel@vger.kernel.org,
-	Naresh Kumar Inna <naresh@chelsio.com>,
-	Arvind Bhushan <arvindb@chelsio.com>,
-	Jayamohan Kallickal <jayamohan.kallickal@emulex.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH v3 00/13] scsi: Use pci_enable_msix_range() instead of
- pci_enable_msix()
-Message-ID: <20140820192239.GA25281@infradead.org>
-References: <cover.1408335523.git.agordeev@redhat.com>
- <20140819170047.GA7237@infradead.org>
- <20140820191416.GA1886@agordeev.usersys.redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 8 Aug 2014 10:09:18 +0200
+From: Ingo Molnar <mingo@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Borislav Petkov <bp@alien8.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	the arch/x86 maintainers <x86@kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>
+Subject: Re: [GIT PULL] x86/apic changes for v3.17
+Message-ID: <20140808080918.GB8502@gmail.com>
+References: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com>
+ <1407209178-18644-2-git-send-email-jiang.liu@linux.intel.com>
+ <20140805183729.GA23068@pd.tnic>
+ <53E201FC.6010102@linux.intel.com>
+ <20140806170937.GA4895@pd.tnic>
+ <20140807110332.GB10043@pd.tnic>
+ <20140807113346.GA24225@gmail.com>
+ <20140807133148.GC10043@pd.tnic>
+ <CA+55aFzWZSc4vK5qK9jrjE1hfRSxdcWxmPHe7mfYWQtjY7WiSQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140820191416.GA1886@agordeev.usersys.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CA+55aFzWZSc4vK5qK9jrjE1hfRSxdcWxmPHe7mfYWQtjY7WiSQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 20, 2014 at 08:14:17PM +0100, Alexander Gordeev wrote:
-> > I've applied patches 1 to 7 to the drivers-for-3.18 branch.
-> 
-> Thanks, Christoph!
-> 
-> Not sure how to handle the rest, though. Chelsio driver has no
-> maintainers and none of be2iscsi, pmcraid and csiostor has been
-> reviewed for several months.
 
-I've added Tomas to the Cc list who has been very helpful with reviewing
-drivers lately.  Tomas, can you take a quick look at these patches?
+* Linus Torvalds <torvalds@linux-foundation.org> wrote:
+
+> On Thu, Aug 7, 2014 at 3:31 AM, Borislav Petkov <bp@alien8.de> wrote:
+> >
+> > This tree still needs the suspend/resume fixes on this thread AFAICT.
+> > Like keeping IRQ numbers of PCI devices stable across a s/r cycle, for
+> > example.
+> >
+> > I'm guessing you'll send Linus a follow-up pull request with those
+> > later, right?
+> 
+> If there are known issues with suspend/resume, I'm not willing to 
+> pull this yet. The code for the merge window is supposed to be 
+> complete and ready.
+> 
+> Ingo?
+
+Yeah, I think it might be better to delay this for v3.18 after all and 
+let it cook - I should not have tried to hurry and force it, my bad, 
+sorry about that!
+
+Thanks,
+
+	Ingo
