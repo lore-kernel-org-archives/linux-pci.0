@@ -1,97 +1,205 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>, <linux-pci@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<arnab.basu@freescale.com>, <x86@kernel.org>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [RFC PATCH 13/20] MIPS/xlr/MSI: Use msi_chip instead of arch func to configure MSI/MSI-X
-Date: Tue, 12 Aug 2014 15:26:06 +0800
-Message-ID: <1407828373-24322-14-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1407828373-24322-1-git-send-email-wangyijing@huawei.com>
-References: <1407828373-24322-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:44087 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752360AbaHKKQv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 06:16:51 -0400
+Received: by mail-ig0-f179.google.com with SMTP id h18so3980127igc.12
+        for <linux-pci@vger.kernel.org>; Mon, 11 Aug 2014 03:16:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140808012017.GA11712@richard>
+References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+	<1407255083-9356-2-git-send-email-matthew_minter@xyratex.com>
+	<20140807034338.GA13444@richard>
+	<CAFJTrDuzdoOPoQ_rpNsYU+OeE380sY37aQaMSudhu_MVKo352g@mail.gmail.com>
+	<20140808012017.GA11712@richard>
+Date: Mon, 11 Aug 2014 11:16:50 +0100
+Message-ID: <CAFJTrDs0oELF3FNaf6axQvPkLv1skK1f3j_Hgre2VX9XDFBOag@mail.gmail.com>
+Subject: Re: [PATCH 01/22] Added some infrastructure to allow assigning PCI
+ device IRQs at device enable time and removed pci_fixup_irqs as the other
+ change obsolites it.
+From: Matthew Minter <matthew_minter@xyratex.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce a new struct msi_chip xlr_msi_chip instead of weak arch
-functions to configure MSI/MSI-X.
+It seems that by coincidence, my testing boxes did not have any
+devices which needed the PCI_INTERRUPT_PIN fixed up. Therefore I had
+not noticed the fact the fixed value was not used in the enable path.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/mips/pci/pci-xlr.c |   19 +++++++++++++++----
- 1 files changed, 15 insertions(+), 4 deletions(-)
+I would assume that someone with a different setup would have had a
+problem there however so thank you for pointing out this bug. I have
+integrated your fix into version 2 of the patch set.
 
-diff --git a/arch/mips/pci/pci-xlr.c b/arch/mips/pci/pci-xlr.c
-index 0dde803..6eef164 100644
---- a/arch/mips/pci/pci-xlr.c
-+++ b/arch/mips/pci/pci-xlr.c
-@@ -214,11 +214,11 @@ static int get_irq_vector(const struct pci_dev *dev)
- }
- 
- #ifdef CONFIG_PCI_MSI
--void arch_teardown_msi_irq(unsigned int irq)
-+void xlr_teardown_msi_irq(unsigned int irq)
- {
- }
- 
--int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
-+int xlr_setup_msi_irq(struct device *dev, struct msi_desc *desc)
- {
- 	struct msi_msg msg;
- 	struct pci_dev *lnk;
-@@ -233,7 +233,7 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- 	 * Enable MSI on the XLS PCIe controller bridge which was disabled
- 	 * at enumeration, the bridge MSI capability is at 0x50
- 	 */
--	lnk = xls_get_pcie_link(dev);
-+	lnk = xls_get_pcie_link(to_pci_dev(dev));
- 	if (lnk == NULL)
- 		return 1;
- 
-@@ -243,7 +243,7 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- 		pci_write_config_word(lnk, 0x50 + PCI_MSI_FLAGS, val);
- 	}
- 
--	irq = get_irq_vector(dev);
-+	irq = get_irq_vector(to_pci_dev(dev));
- 	if (irq <= 0)
- 		return 1;
- 
-@@ -263,6 +263,17 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- 	write_msi_msg(irq, &msg);
- 	return 0;
- }
-+
-+struct msi_chip xlr_msi_chip = {
-+	.setup_irq = xlr_setup_msi_irq,
-+	.teardown_irq = xlr_teardown_msi_irq,
-+};
-+
-+struct msi_chip *arch_get_match_msi_chip(struct device *dev)
-+{
-+	return &xlr_msi_chip;
-+}
-+
- #endif
- 
- /* Extra ACK needed for XLR on chip PCI controller */
+Many thanks.
+
+On 8 August 2014 02:20, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+> On Thu, Aug 07, 2014 at 12:35:41PM +0100, Matthew Minter wrote:
+>>Just to confirm, are you saying that:
+>>
+>>>+
+>>>+      pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+>>>+      pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
+>>>+
+>>
+>>Should become:
+>>
+>>>+
+>>>+     pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
+>>>+     pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+>>>+
+>>
+>>So that we read the config byte after running the assignment and fixup?
+>>
+>>I had not thought about the case where the fixup changes the
+>>PCI_INTERRUPT_PIN value.
+>>It looks to me like you are correct there and this should indeed be fixed.
+>>I can certainly swap those around for the next patch revision if that
+>>is what you are suggesting?
+>>
+>
+> Yes, pci_read_config_byte() should be called after pdev_assign_irq().
+>
+>>I will give that a quick test but it sounds like you are correct.
+>
+> I am willing to know the result, especially in the original one, what pin
+> value you retrieved from pci_dev.
+>
+>>
+>>Many thanks,
+>>Matthew
+>>
+>>On 7 August 2014 04:43, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>>> On Tue, Aug 05, 2014 at 05:11:02PM +0100, matthew_minter@xyratex.com wrote:
+>>>>From: matthew_minter <matthew_minter@xyratex.com>
+>>>>
+>>>>---
+>>>> drivers/pci/Makefile      | 15 ++-------------
+>>>> drivers/pci/host-bridge.c |  2 +-
+>>>> drivers/pci/pci.c         |  6 +++++-
+>>>> drivers/pci/pci.h         |  1 +
+>>>> drivers/pci/probe.c       | 12 ------------
+>>>> drivers/pci/setup-irq.c   | 25 +++++++++----------------
+>>>> include/linux/pci.h       |  8 ++++----
+>>>> 7 files changed, 22 insertions(+), 47 deletions(-)
+>>>>
+>>>>diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+>>>>index e04fe2d..38c4cb0 100644
+>>>>--- a/drivers/pci/Makefile
+>>>>+++ b/drivers/pci/Makefile
+>>>>@@ -4,7 +4,8 @@
+>>>>
+>>>> obj-y         += access.o bus.o probe.o host-bridge.o remove.o pci.o \
+>>>>                       pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
+>>>>-                      irq.o vpd.o setup-bus.o vc.o
+>>>>+                      irq.o vpd.o setup-bus.o vc.o setup-irq.o
+>>>>+
+>>>> obj-$(CONFIG_PROC_FS) += proc.o
+>>>> obj-$(CONFIG_SYSFS) += slot.o
+>>>>
+>>>>@@ -31,18 +32,6 @@ obj-$(CONFIG_PCI_ATS) += ats.o
+>>>> obj-$(CONFIG_PCI_IOV) += iov.o
+>>>>
+>>>> #
+>>>>-# Some architectures use the generic PCI setup functions
+>>>>-#
+>>>>-obj-$(CONFIG_ALPHA) += setup-irq.o
+>>>>-obj-$(CONFIG_ARM) += setup-irq.o
+>>>>-obj-$(CONFIG_UNICORE32) += setup-irq.o
+>>>>-obj-$(CONFIG_SUPERH) += setup-irq.o
+>>>>-obj-$(CONFIG_MIPS) += setup-irq.o
+>>>>-obj-$(CONFIG_TILE) += setup-irq.o
+>>>>-obj-$(CONFIG_SPARC_LEON) += setup-irq.o
+>>>>-obj-$(CONFIG_M68K) += setup-irq.o
+>>>>-
+>>>>-#
+>>>> # ACPI Related PCI FW Functions
+>>>> # ACPI _DSM provided firmware instance and string name
+>>>> #
+>>>>diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+>>>>index 0e5f3c9..8ed186f 100644
+>>>>--- a/drivers/pci/host-bridge.c
+>>>>+++ b/drivers/pci/host-bridge.c
+>>>>@@ -16,7 +16,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+>>>>       return bus;
+>>>> }
+>>>>
+>>>>-static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+>>>>+struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+>>>> {
+>>>>       struct pci_bus *root_bus = find_pci_root_bus(bus);
+>>>>
+>>>>diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>>index 63a54a3..d51d076 100644
+>>>>--- a/drivers/pci/pci.c
+>>>>+++ b/drivers/pci/pci.c
+>>>>@@ -1197,10 +1197,15 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+>>>>       int err;
+>>>>       u16 cmd;
+>>>>       u8 pin;
+>>>>+      struct pci_host_bridge *hbrg = find_pci_host_bridge(dev->bus);
+>>>>
+>>>>       err = pci_set_power_state(dev, PCI_D0);
+>>>>       if (err < 0 && err != -EIO)
+>>>>               return err;
+>>>>+
+>>>>+      pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+>>>>+      pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
+>>>>+
+>>>>       err = pcibios_enable_device(dev, bars);
+>>>>       if (err < 0)
+>>>>               return err;
+>>>>@@ -1209,7 +1214,6 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+>>>>       if (dev->msi_enabled || dev->msix_enabled)
+>>>>               return 0;
+>>>>
+>>>>-      pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+>>>
+>>> Not sure why you move this up.
+>>>
+>>> Before your change, the call flow would be like this:
+>>>
+>>> | scan_bus
+>>> |   + pci_fixup_irqs
+>>> |      +    pci_dev->irq and PCI_INTERRUPT_PIN assigned with correct number
+>>> |
+>>> | pci_enable_device, called from driver
+>>> |   + do_pci_enable_device, read the pin from pci_dev
+>>>
+>>> As my understanding, this ensures the pin read from hardware is fixuped. While
+>>> after your change, the pci_fixup_irqs is removed and the pin will be assigned
+>>> in pdev_assign_irq() after you fix it properly.
+>>>
+>>> Do I missed something?
+>>>
+>>>>       if (pin) {
+>>>>               pci_read_config_word(dev, PCI_COMMAND, &cmd);
+>>>>               if (cmd & PCI_COMMAND_INTX_DISABLE)
+>>>
+>>> --
+>>> Richard Yang
+>>> Help you, Help me
+>>>
+>>
+>>--
+>>
+>>
+>>------------------------------
+>>For additional information including the registered office and the treatment of Xyratex confidential information please visit www.xyratex.com
+>>
+>>------------------------------
+>
+> --
+> Richard Yang
+> Help you, Help me
+>
+
 -- 
-1.7.1
 
+
+------------------------------
+For additional information including the registered office and the treatment of Xyratex confidential information please visit www.xyratex.com
+
+------------------------------
