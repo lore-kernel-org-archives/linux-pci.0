@@ -1,70 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2lp0239.outbound.protection.outlook.com ([207.46.163.239]:11100
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934491AbaH0QYZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 Aug 2014 12:24:25 -0400
-Date: Wed, 27 Aug 2014 18:24:04 +0200
-From: Robert Richter <robert.richter@caviumnetworks.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v9 00/12] Support for creating generic PCI host bridges
- from DT
-Message-ID: <20140827162404.GA4818@rric.localhost>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:49038 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752144AbaHKNHY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Aug 2014 09:07:24 -0400
+Message-ID: <53E8C003.9020403@redhat.com>
+Date: Mon, 11 Aug 2014 15:07:15 +0200
+From: Tomas Henzl <thenzl@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+To: Alexander Gordeev <agordeev@redhat.com>,
+	linux-kernel@vger.kernel.org
+CC: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
+	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com,
+	DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 RESEND 15/23] mpt2sas: Use pci_enable_msix_exact()
+ instead of pci_enable_msix()
+References: <cover.1405533479.git.agordeev@redhat.com> <045986b7900c6b1703010675b590284e384b8207.1405533479.git.agordeev@redhat.com>
+In-Reply-To: <045986b7900c6b1703010675b590284e384b8207.1405533479.git.agordeev@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Liviu,
-
-On 12.08.14 17:25:13, Liviu Dudau wrote:
-> This is my updated attempt at adding support for generic PCI host
-> bridge controllers that make use of device tree information to
-> configure themselves. This version incorporates Catalin's proposal
-> for managing domain numbers that got Bjorn's approval. I am now requesting
-> ACKs from the relevant maintainers as I would like to get the upstream ball
-> rolling.
+On 07/16/2014 08:05 PM, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
 >
-> Of the more important changes vs v8, this version has an altered implementation
-> of of_create_pci_host_bridge() that allows for easier conversion of architectures
-> that use pci_scan_root_bus() in their code rather than pci_create_root_bus().
-> With my v8 version of the patchset it would've meant adding back the code
-> from pci_scan_root_bus() into architectural code. v9 fixes that and adds
-> a callback parameter to of_create_pci_host_bridge() that permits the host
-> controller driver to finish the driver setup before the bus is being scanned.
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+> Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+> Cc: support@lsi.com
+> Cc: DL-MPTFusionLinux@lsi.com
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+
+Looks good
+
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+
+> ---
+>  drivers/scsi/mpt2sas/mpt2sas_base.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
 >
-> To repeat for the benefit of people writing host bridge drivers on top of
-> my patchset: the API for of_create_pci_host_bridge() has changed and it will now
-> do all the child bus and device scanning for you, so you only need to provide a
-> setup function that will be called before scanning start. I will post a patch
-> that Lorenzo has kindly constructed for converting pci-host-generic.c to my API.
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> index 8b88118..6aca369 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> @@ -1432,10 +1432,10 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
+>  	for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++)
+>  		a->entry = i;
+>  
+> -	r = pci_enable_msix(ioc->pdev, entries, ioc->reply_queue_count);
+> +	r = pci_enable_msix_exact(ioc->pdev, entries, ioc->reply_queue_count);
+>  	if (r) {
+> -		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "pci_enable_msix "
+> -		    "failed (r=%d) !!!\n", ioc->name, r));
+> +		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT
+> +		    "pci_enable_msix_exact failed (r=%d) !!!\n", ioc->name, r));
+>  		kfree(entries);
+>  		goto try_ioapic;
+>  	}
 
-would it be possible to provide a branch with this patch set in your
-git repo as for v8?
-
-This would make rebasing and testing of our Cavium Thunder code base
-much easier. We could then also refer to a public repo where our
-patches base on.
-
-Thanks,
-
--Robert
