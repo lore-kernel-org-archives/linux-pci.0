@@ -1,81 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 11 Aug 2014 10:09:42 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Kashyap Desai <kashyap.desai@avagotech.com>,
-	Neela Syam Kolli <megaraidlinux@avagotech.com>
-Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 RESEND 14/23] megaraid: Use pci_enable_msix_range()
- instead of pci_enable_msix()
-Message-ID: <20140811080941.GI16504@dhcp-27-160.brq.redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <57071ec862e6e0cf6b1c9f7fa5c1d3b9fa97d087.1405533479.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <57071ec862e6e0cf6b1c9f7fa5c1d3b9fa97d087.1405533479.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:38141 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751174AbaHKEhB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Aug 2014 00:37:01 -0400
+Message-ID: <1407731815.4508.69.camel@pasglop>
+Subject: [PATCH] pci/msi-x: Sanity check MSI-X table offset
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>
+Date: Mon, 11 Aug 2014 14:36:55 +1000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 16, 2014 at 08:05:18PM +0200, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
+If the hardware device mis-behaves (such as for example crashes or
+gets unplugged at the wrong time) and provides us with a bogus
+MSI-X table offset, all sorts of "interesting" and potentially
+very hard to debug things can happen.
 
-Kashyap, Neela,
+For example, on POWER8, such a device caused us to ioremap an area
+outside of the region assigned to the PCI bus, causing subsequent
+accesses to cause a PowerBus timeout and checkstop the machine.
 
-Could you please reveiw this patch?
+Since this isn't a hot path, let's add a good dose of sanity
+checking to msix_map_region() to flag these issues early and limit
+the damage.
 
-Thanks!
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+---
+ drivers/pci/msi.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/scsi/megaraid/megaraid_sas_base.c |   20 +++++++-------------
->  1 files changed, 7 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index ba06102..7a4e75e 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -4105,17 +4105,11 @@ static int megasas_init_fw(struct megasas_instance *instance)
->  					     (unsigned int)num_online_cpus());
->  		for (i = 0; i < instance->msix_vectors; i++)
->  			instance->msixentry[i].entry = i;
-> -		i = pci_enable_msix(instance->pdev, instance->msixentry,
-> -				    instance->msix_vectors);
-> -		if (i >= 0) {
-> -			if (i) {
-> -				if (!pci_enable_msix(instance->pdev,
-> -						     instance->msixentry, i))
-> -					instance->msix_vectors = i;
-> -				else
-> -					instance->msix_vectors = 0;
-> -			}
-> -		} else
-> +		i = pci_enable_msix_range(instance->pdev, instance->msixentry,
-> +					  1, instance->msix_vectors);
-> +		if (i)
-> +			instance->msix_vectors = i;
-> +		else
->  			instance->msix_vectors = 0;
->  
->  		dev_info(&instance->pdev->dev, "[scsi%d]: FW supports"
-> @@ -5135,8 +5129,8 @@ megasas_resume(struct pci_dev *pdev)
->  
->  	/* Now re-enable MSI-X */
->  	if (instance->msix_vectors &&
-> -	    pci_enable_msix(instance->pdev, instance->msixentry,
-> -			    instance->msix_vectors))
-> +	    pci_enable_msix_exact(instance->pdev, instance->msixentry,
-> +				  instance->msix_vectors))
->  		goto fail_reenable_msix;
->  
->  	switch (instance->pdev->device) {
-> -- 
-> 1.7.7.6
-> 
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 5a40516..a584f590 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -666,13 +666,30 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+ static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
+ {
+ 	resource_size_t phys_addr;
+-	u32 table_offset;
++	u32 table_offset, table_end;
+ 	u8 bir;
+ 
+ 	pci_read_config_dword(dev, dev->msix_cap + PCI_MSIX_TABLE,
+ 			      &table_offset);
+ 	bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
++	if (bir >= DEVICE_COUNT_RESOURCE) {
++		dev_err(&dev->dev, "MSI-X points to non-exiting BAR %d !\n",
++			bir);
++		return NULL;
++	}
++	if ((pci_resource_flags(dev, bir) & IORESOURCE_MEM) == 0) {
++		dev_err(&dev->dev, "MSI-X points to non-memory BAR %d !\n",
++			bir);
++		return NULL;
++	}
+ 	table_offset &= PCI_MSIX_TABLE_OFFSET;
++	table_end = table_offset + nr_entries * PCI_MSIX_ENTRY_SIZE;
++	if (table_end <= table_offset ||
++	    table_end > pci_resource_len(dev, bir)) {
++		dev_err(&dev->dev, "MSI-X table outside of BAR boundary !"
++			" (0x%08x..%08x)\n", table_offset, table_end);
++		return NULL;
++	}
+ 	phys_addr = pci_resource_start(dev, bir) + table_offset;
+ 
+ 	return ioremap_nocache(phys_addr, nr_entries * PCI_MSIX_ENTRY_SIZE);
+
+
