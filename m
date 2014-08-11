@@ -1,48 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:54334 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752937AbaHVHqs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 03:46:48 -0400
-Message-ID: <53F6F558.8060308@huawei.com>
-Date: Fri, 22 Aug 2014 15:46:32 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:53596 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753547AbaHKNoz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 09:44:55 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Peter Zijlstra <peterz@infradead.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH 0/6 v2] irq / PM: Shared IRQs vs IRQF_NO_SUSPEND and suspend-to-idle wakeup interrupts
+Date: Mon, 11 Aug 2014 15:56:46 +0200
+Message-ID: <26580319.OZP7jvJnA9@vostro.rjw.lan>
 MIME-Version: 1.0
-To: <wangyijing@huawei.com>, Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 0/3] trivial changes for MSI
-References: <1406339316-20163-1-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1406339316-20163-1-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/7/26 9:48, wangyijing@huawei.com wrote:
-> From: Yijing Wang <wangyijing@huawei.com>
+Hi,
 
-Hi Bjorn, please drop this one, I have sent new version.
+I thought I'd just refresh the previous patchset, but in the meantime I found
+a way to avoid adding overhead to note_interrupt(), so I decided to change the
+approach.
 
-Thanks!
-Yijing.
+Patch [2/6] fixes the problem with IRQF_NO_SUSPEND and shared interrupts.  The
+idea is to use wrapper handlers for all irqactions of the shared IRQs where at
+least one of them has IRQF_NO_SUSPEND set.  Since the wrapper handler is now
+installed for all irqactions in the given irq_desc, it can track the return
+codes from the original handlers and "suspend" the IRQ if the interrupt is going
+to be unhandled eventually.  All described in the changelog.  This is independent
+of the handling of wakeup interrupts for suspend-to-idle.
 
-> 
-> Yijing Wang (3):
->   PCI/MSI: Clean up the kobject in struct msi_desc
->   PCI/MSI: Remove msi_desc->msi_attrib.pos
->   PCI/MSI: Refactor msi_bus to support EP enable/disable MSI
-> 
->  arch/mips/pci/msi-octeon.c         |    6 +++---
->  drivers/pci/host/pcie-designware.c |    2 +-
->  drivers/pci/msi.c                  |   13 -------------
->  drivers/pci/pci-sysfs.c            |   12 ++++++------
->  include/linux/msi.h                |    3 ---
->  5 files changed, 10 insertions(+), 26 deletions(-)
-> 
-> 
-> .
-> 
+Patch [3/6] makes IRQs configured for system wakeup with enable_irq_wake() work
+for suspend to idle.  It does that by using a (different) wrapper handler for
+all irqactions in the wakeup irq_descs and that wrapper handler takes care of
+all the ugly details.  Again, all described in the changelog.
 
+Patches [1/6], [4-5/6] are unmodified and the last one addes documentation.
 
--- 
-Thanks!
-Yijing
+Please review.
+
+Rafael
 
