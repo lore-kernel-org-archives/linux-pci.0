@@ -1,137 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:13964 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753060AbaHAKmz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Aug 2014 06:42:55 -0400
-Received: from epcpsbgr3.samsung.com
- (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0N9M00FO8J3HCR30@mailout3.samsung.com> for
- linux-pci@vger.kernel.org; Fri, 01 Aug 2014 19:42:53 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Lucas Stach' <l.stach@pengutronix.de>, linux-pci@vger.kernel.org
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Mohit Kumar' <mohit.kumar@st.com>, kernel@pengutronix.de,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1406884222-23974-1-git-send-email-l.stach@pengutronix.de>
-In-reply-to: <1406884222-23974-1-git-send-email-l.stach@pengutronix.de>
-Subject: Re: [PATCH] PCI: designware: check private_data validity in single
- place
-Date: Fri, 01 Aug 2014 19:42:52 +0900
-Message-id: <007901cfad75$58974040$09c5c0c0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:20070 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751331AbaHKIHq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Aug 2014 04:07:46 -0400
+Date: Mon, 11 Aug 2014 10:07:16 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Kashyap Desai <kashyap.desai@avagotech.com>,
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 RESEND 13/23] megaraid: Fail resume if MSI-X
+ re-initialization failed
+Message-ID: <20140811080714.GH16504@dhcp-27-160.brq.redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
+ <3d2402ebfad625e508bb13257e1560abf92594cd.1405533479.git.agordeev@redhat.com>
+ <20140726082408.GG21129@agordeev.usersys.redhat.com>
+ <3b7c554551d306e2f58f5e09dc171db2@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3b7c554551d306e2f58f5e09dc171db2@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, August 01, 2014 6:10 PM, Lucas Stach wrote:
+On Mon, Jul 28, 2014 at 11:26:13AM +0530, Kashyap Desai wrote:
+> > -----Original Message-----
+> > From: Alexander Gordeev [mailto:agordeev@redhat.com]
+> > Sent: Saturday, July 26, 2014 1:54 PM
+> > To: linux-kernel@vger.kernel.org; Neela Syam Kolli
+> > Subject: Re: [PATCH v2 RESEND 13/23] megaraid: Fail resume if MSI-X re-
+> > initialization failed
+> >
+> > On Wed, Jul 16, 2014 at 08:05:17PM +0200, Alexander Gordeev wrote:
+> > > Currently the driver fails to analize MSI-X re-enablement status on
+> > > resuming and always assumes the success. This update checks the MSI-X
+> > > initialization result and fails to resume if MSI-Xs re-enablement
+> > > failed.
+> >
+> > Hi Neela,
+> >
+> > Could you please review megaraid patches in this series?
+> >
+> > Thanks!
+> Please consider this patch Acked by Me.
 > 
-> The driver had checks for this sprinkled all over. As we call
-> sys_to_pcie() before every instance of this check, we can as well
-> move the check to this single location to make things clear.
-> 
-> Removing the statements after BUG[_ON]() is safe as the kernel
-> is halted at this point anyway.
-> 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> Acked-by: Kashyap Desai <Kashyap.desai@avagotech.com>
 
-Acked-by: Jingoo Han <jg1.han@samsung.com>
+Christoph,
 
-Best regards,
-Jingoo Han
+I guess, this patch could be picked?
 
-> ---
-> This is a follow on patch to the series
-> "PCI: designware: init order/resource alloc fixes", which
-> addresses Jingoos review feedback, so this series should
-> be hopefully good to go now.
-> ---
->  drivers/pci/host/pcie-designware.c | 29 ++---------------------------
->  1 file changed, 2 insertions(+), 27 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index dde5e6d4afa2..3dbfc089601d 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -73,6 +73,8 @@ static unsigned long global_io_offset;
-> 
->  static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
->  {
-> +	BUG_ON(!sys->private_data);
-> +
->  	return sys->private_data;
->  }
-> 
-> @@ -261,11 +263,6 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
->  	int irq, pos0, pos1, i;
->  	struct pcie_port *pp = sys_to_pcie(desc->dev->bus->sysdata);
-> 
-> -	if (!pp) {
-> -		BUG();
-> -		return -EINVAL;
-> -	}
-> -
->  	pos0 = find_first_zero_bit(pp->msi_irq_in_use,
->  			MAX_MSI_IRQS);
->  	if (pos0 % no_irqs) {
-> @@ -326,10 +323,6 @@ static void clear_irq(unsigned int irq)
->  	/* get the port structure */
->  	msi = irq_data_get_msi(data);
->  	pp = sys_to_pcie(msi->dev->bus->sysdata);
-> -	if (!pp) {
-> -		BUG();
-> -		return;
-> -	}
-> 
->  	/* undo what was done in assign_irq */
->  	pos = data->hwirq;
-> @@ -350,11 +343,6 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
->  	struct msi_msg msg;
->  	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
-> 
-> -	if (!pp) {
-> -		BUG();
-> -		return -EINVAL;
-> -	}
-> -
->  	pci_read_config_word(pdev, desc->msi_attrib.pos+PCI_MSI_FLAGS,
->  				&msg_ctr);
->  	msgvec = (msg_ctr&PCI_MSI_FLAGS_QSIZE) >> 4;
-> @@ -716,11 +704,6 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
->  	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
->  	int ret;
-> 
-> -	if (!pp) {
-> -		BUG();
-> -		return -EINVAL;
-> -	}
-> -
->  	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0) {
->  		*val = 0xffffffff;
->  		return PCIBIOS_DEVICE_NOT_FOUND;
-> @@ -745,11 +728,6 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
->  	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
->  	int ret;
-> 
-> -	if (!pp) {
-> -		BUG();
-> -		return -EINVAL;
-> -	}
-> -
->  	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
->  		return PCIBIOS_DEVICE_NOT_FOUND;
-> 
-> @@ -777,9 +755,6 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
-> 
->  	pp = sys_to_pcie(sys);
-> 
-> -	if (!pp)
-> -		return 0;
-> -
->  	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
->  		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
->  		pci_ioremap_io(global_io_offset, pp->io_base);
-> --
-> 2.0.1
-
+> >
+> > > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> > > ---
+> > >  drivers/scsi/megaraid/megaraid_sas_base.c |    8 +++++---
+> > >  1 files changed, 5 insertions(+), 3 deletions(-)
+> > >
+> > > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+> > > b/drivers/scsi/megaraid/megaraid_sas_base.c
+> > > index 112799b..ba06102 100644
+> > > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> > > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> > > @@ -5134,9 +5134,10 @@ megasas_resume(struct pci_dev *pdev)
+> > >  		goto fail_ready_state;
+> > >
+> > >  	/* Now re-enable MSI-X */
+> > > -	if (instance->msix_vectors)
+> > > -		pci_enable_msix(instance->pdev, instance->msixentry,
+> > > -				instance->msix_vectors);
+> > > +	if (instance->msix_vectors &&
+> > > +	    pci_enable_msix(instance->pdev, instance->msixentry,
+> > > +			    instance->msix_vectors))
+> > > +		goto fail_reenable_msix;
+> > >
+> > >  	switch (instance->pdev->device) {
+> > >  	case PCI_DEVICE_ID_LSI_FUSION:
+> > > @@ -5245,6 +5246,7 @@ fail_init_mfi:
+> > >
+> > >  fail_set_dma_mask:
+> > >  fail_ready_state:
+> > > +fail_reenable_msix:
+> > >
+> > >  	pci_disable_device(pdev);
+> > >
+> > > --
+> > > 1.7.7.6
+> > >
+> >
+> > --
+> > Regards,
+> > Alexander Gordeev
+> > agordeev@redhat.com
