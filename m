@@ -1,93 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p50936449.dip0.t-ipconnect.de ([80.147.100.73]:30499 "EHLO
-	dhcp-27-160.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752456AbaHRIzf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Aug 2014 04:55:35 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:61242 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752590AbaHKHpP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Aug 2014 03:45:15 -0400
+Date: Mon, 11 Aug 2014 09:44:38 +0200
 From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Naresh Kumar Inna <naresh@chelsio.com>,
-	Arvind Bhushan <arvindb@chelsio.com>,
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>,
 	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v3 10/13] csiostor: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Mon, 18 Aug 2014 08:01:50 +0200
-Message-Id: <3ddc5fb60e32d05996a539d7007bfb3a5e5f09b2.1408335523.git.agordeev@redhat.com>
-In-Reply-To: <cover.1408335523.git.agordeev@redhat.com>
-References: <cover.1408335523.git.agordeev@redhat.com>
+Subject: Re: [PATCH v2 RESEND 20/23] pmcraid: Use pci_enable_msix_range()
+ instead of pci_enable_msix()
+Message-ID: <20140811074437.GC16504@dhcp-27-160.brq.redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
+ <0d3b343a9a1e2146add1dcf51791c4e5914d5612.1405533479.git.agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0d3b343a9a1e2146add1dcf51791c4e5914d5612.1405533479.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On Wed, Jul 16, 2014 at 08:05:24PM +0200, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Naresh Kumar Inna <naresh@chelsio.com>
-Cc: Arvind Bhushan <arvindb@chelsio.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/csiostor/csio_hw.h  |  2 +-
- drivers/scsi/csiostor/csio_isr.c | 22 +++++++++-------------
- 2 files changed, 10 insertions(+), 14 deletions(-)
+Hi Christoph,
 
-diff --git a/drivers/scsi/csiostor/csio_hw.h b/drivers/scsi/csiostor/csio_hw.h
-index 49b1daa..5db2d85 100644
---- a/drivers/scsi/csiostor/csio_hw.h
-+++ b/drivers/scsi/csiostor/csio_hw.h
-@@ -94,7 +94,7 @@ enum {
- };
- 
- struct csio_msix_entries {
--	unsigned short	vector;		/* Vector assigned by pci_enable_msix */
-+	unsigned short	vector;		/* Assigned MSI-X vector */
- 	void		*dev_id;	/* Priv object associated w/ this msix*/
- 	char		desc[24];	/* Description of this vector */
- };
-diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
-index 91ba91d..a8c748a 100644
---- a/drivers/scsi/csiostor/csio_isr.c
-+++ b/drivers/scsi/csiostor/csio_isr.c
-@@ -499,7 +499,7 @@ csio_reduce_sqsets(struct csio_hw *hw, int cnt)
- static int
- csio_enable_msix(struct csio_hw *hw)
- {
--	int rv, i, j, k, n, min, cnt;
-+	int i, j, k, n, min, cnt;
- 	struct csio_msix_entries *entryp;
- 	struct msix_entry *entries;
- 	int extra = CSIO_EXTRA_VECS;
-@@ -521,19 +521,15 @@ csio_enable_msix(struct csio_hw *hw)
- 
- 	csio_dbg(hw, "FW supp #niq:%d, trying %d msix's\n", hw->cfg_niq, cnt);
- 
--	while ((rv = pci_enable_msix(hw->pdev, entries, cnt)) >= min)
--		cnt = rv;
--	if (!rv) {
--		if (cnt < (hw->num_sqsets + extra)) {
--			csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
--			csio_reduce_sqsets(hw, cnt - extra);
--		}
--	} else {
--		if (rv > 0)
--			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
--
-+	cnt = pci_enable_msix_range(hw->pdev, entries, min, cnt);
-+	if (cnt < 0) {
- 		kfree(entries);
--		return -ENOMEM;
-+		return cnt;
-+	}
-+
-+	if (cnt < (hw->num_sqsets + extra)) {
-+		csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
-+		csio_reduce_sqsets(hw, cnt - extra);
- 	}
- 
- 	/* Save off vectors */
--- 
-1.9.3
+This device's maintainer mail <anil_ravindranath@pmc-sierra.com>
+does not seem exist anymore.
 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/scsi/pmcraid.c |   13 ++-----------
+>  1 files changed, 2 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+> index c06af7f..6d0f208 100644
+> --- a/drivers/scsi/pmcraid.c
+> +++ b/drivers/scsi/pmcraid.c
+> @@ -4698,19 +4698,10 @@ pmcraid_register_interrupt_handler(struct pmcraid_instance *pinstance)
+>  		for (i = 0; i < PMCRAID_NUM_MSIX_VECTORS; i++)
+>  			entries[i].entry = i;
+>  
+> -		rc = pci_enable_msix(pdev, entries, num_hrrq);
+> -		if (rc < 0)
+> +		num_hrrq = pci_enable_msix_range(pdev, entries, 1, num_hrrq);
+> +		if (num_hrrq < 0)
+>  			goto pmcraid_isr_legacy;
+>  
+> -		/* Check how many MSIX vectors are allocated and register
+> -		 * msi-x handlers for each of them giving appropriate buffer
+> -		 */
+> -		if (rc > 0) {
+> -			num_hrrq = rc;
+> -			if (pci_enable_msix(pdev, entries, num_hrrq))
+> -				goto pmcraid_isr_legacy;
+> -		}
+> -
+>  		for (i = 0; i < num_hrrq; i++) {
+>  			pinstance->hrrq_vector[i].hrrq_id = i;
+>  			pinstance->hrrq_vector[i].drv_inst = pinstance;
+> -- 
+> 1.7.7.6
+> 
