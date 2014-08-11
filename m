@@ -1,118 +1,203 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f178.google.com ([209.85.216.178]:58871 "EHLO
-	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751499AbaHPM0k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Aug 2014 08:26:40 -0400
-Received: by mail-qc0-f178.google.com with SMTP id x3so3314187qcv.9
-        for <linux-pci@vger.kernel.org>; Sat, 16 Aug 2014 05:26:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1406137961-14684-2-git-send-email-l.stach@pengutronix.de>
-References: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
-	<1406137961-14684-2-git-send-email-l.stach@pengutronix.de>
-Date: Sat, 16 Aug 2014 17:56:39 +0530
-Message-ID: <CAHM4w1nvYyMytByD4NZZ5QqKU=hbZ4Hw6PVDAGE5BGg-Ut-zgA@mail.gmail.com>
-Subject: Re: [PATCH 1/4] PCI: designware: start parsing bus-range
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Lucas Stach <l.stach@pengutronix.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 11 Aug 2014 15:35:55 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: "Bharat.Bhushan@freescale.com" <Bharat.Bhushan@freescale.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <r65037@freescale.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>, Marek Vasut <marex@denx.de>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	kernel@pengutronix.de, Pratyush ANAND <pratyush.anand@st.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] PCI/MSI: Remove arch_msi_check_device()
+Message-ID: <20140811193555.GC8397@lenovo-rd230-04.lab.bos.redhat.com>
+References: <cover.1405160163.git.agordeev@redhat.com>
+ <1005232855c3af2c0c669818ee63be445389b6ad.1405160163.git.agordeev@redhat.com>
+ <20140716222024.GE14366@google.com>
+ <20140811114536.GA3427@dhcp-27-160.brq.redhat.com>
+ <0a23568bd6eb4dfbb5f4acc96bba3706@BLUPR03MB566.namprd03.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0a23568bd6eb4dfbb5f4acc96bba3706@BLUPR03MB566.namprd03.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 23, 2014 at 11:22 PM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> This allows to explicitly specify the covered bus
-> numbers in the devicetree, which will come in handy
-> once we see a SoC with more than one PCIe host
-> controller instance.
->
-> Previously the driver relied on the behavior of
-> pci_scan_root_bus() to fill in a range of 0x00-0xff
-> if no valid range was found. We fall back to the
-> same range if no valid DT entry was found to keep
-> backwards compatibility, but now do it explicitly.
->
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
->  Documentation/devicetree/bindings/pci/designware-pcie.txt |  3 +++
->  drivers/pci/host/pcie-designware.c                        | 13 ++++++++++++-
->  drivers/pci/host/pcie-designware.h                        |  1 +
->  3 files changed, 16 insertions(+), 1 deletion(-)
->
-> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> index ed0d9b9fff2b..9f4faa8e8d00 100644
-> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> @@ -23,3 +23,6 @@ Required properties:
->
->  Optional properties:
->  - reset-gpio: gpio pin number of power good signal
-> +- bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
-> +  specify this property, to keep backwards compatibility a range of 0x00-0xff
-> +  is assumed if not present)
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 52bd3a143563..b13a830c8b0f 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -425,7 +425,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->         struct resource *cfg_res;
->         u32 val, na, ns;
->         const __be32 *addrp;
-> -       int i, index;
-> +       int i, index, ret;
->
->         /* Find the address cell size and the number of cells in order to get
->          * the untranslated address.
-> @@ -500,6 +500,16 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->                 }
->         }
->
-> +       ret = of_pci_parse_bus_range(np, &pp->busn);
-> +       if (ret < 0) {
-> +               dev_dbg(pp->dev, "failed to parse bus-range property: %d, using default [0x00-0xff]\n",
-> +                       ret);
-> +               pp->busn.name = np->name;
-> +               pp->busn.start = 0;
-> +               pp->busn.end = 0xff;
-> +               pp->busn.flags = IORESOURCE_BUS;
-> +       }
-> +
->         if (!pp->dbi_base) {
->                 pp->dbi_base = devm_ioremap(pp->dev, pp->cfg.start,
->                                         resource_size(&pp->cfg));
-> @@ -781,6 +791,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
->
->         sys->mem_offset = pp->mem.start - pp->config.mem_bus_addr;
->         pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
-> +       pci_add_resource(&sys->resources, &pp->busn);
->
->         return 1;
->  }
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index daf81f922cda..9a09633ecdf8 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -48,6 +48,7 @@ struct pcie_port {
->         struct resource         cfg;
->         struct resource         io;
->         struct resource         mem;
-> +       struct resource         busn;
->         struct pcie_port_info   config;
->         int                     irq;
->         u32                     lanes;
-> --
-> 2.0.1
->
+On Mon, Aug 11, 2014 at 02:33:25PM +0000, Bharat.Bhushan@freescale.com wrote:
+> 
+> 
+> > -----Original Message-----
+> > From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org]
+> > On Behalf Of Alexander Gordeev
+> > Sent: Monday, August 11, 2014 5:16 PM
+> > To: Bjorn Helgaas
+> > Cc: linux-kernel@vger.kernel.org; linuxppc-dev@lists.ozlabs.org; linux-
+> > pci@vger.kernel.org
+> > Subject: [PATCH v2 2/2] PCI/MSI: Remove arch_msi_check_device()
+> > 
+> > There are no archs that override arch_msi_check_device() hook. Remove it as it
+> > is completely redundant.
+> 
+> Is not we are still overriding this in powerpc (not sure I missed some patch , if so please point to that).
 
-Looks fine to me.
-Reviewed-by: Pratyush Anand <pratyush.anand@st.com>
+Patch 1/2 ;)
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> $ grep -r  arch_msi_check_device arch/powerpc/
+> Binary file arch/powerpc/kernel/msi.o matches
+> arch/powerpc/kernel/msi.c:int arch_msi_check_device(struct pci_dev* dev, int nvec, int type)
+> Binary file arch/powerpc/kernel/built-in.o matches
+> 
+> Thanks
+> -Bharat
+> 
+> > 
+> > If an arch would need to check MSI/MSI-X possibility for a device it should make
+> > it within arch_setup_msi_irqs() hook.
+> > 
+> > Cc: linuxppc-dev@lists.ozlabs.org
+> > Cc: linux-pci@vger.kernel.org
+> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> > ---
+> >  drivers/pci/msi.c   | 49 +++++++++++++------------------------------------
+> >  include/linux/msi.h |  3 ---
+> >  2 files changed, 13 insertions(+), 39 deletions(-)
+> > 
+> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c index 5a40516..6c2cc41 100644
+> > --- a/drivers/pci/msi.c
+> > +++ b/drivers/pci/msi.c
+> > @@ -56,16 +56,6 @@ void __weak arch_teardown_msi_irq(unsigned int irq)
+> >  	chip->teardown_irq(chip, irq);
+> >  }
+> > 
+> > -int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type) -{
+> > -	struct msi_chip *chip = dev->bus->msi;
+> > -
+> > -	if (!chip || !chip->check_device)
+> > -		return 0;
+> > -
+> > -	return chip->check_device(chip, dev, nvec, type);
+> > -}
+> > -
+> >  int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)  {
+> >  	struct msi_desc *entry;
+> > @@ -806,22 +796,23 @@ out_free:
+> >  }
+> > 
+> >  /**
+> > - * pci_msi_check_device - check whether MSI may be enabled on a device
+> > + * pci_msi_supported - check whether MSI may be enabled on a device
+> >   * @dev: pointer to the pci_dev data structure of MSI device function
+> >   * @nvec: how many MSIs have been requested ?
+> > - * @type: are we checking for MSI or MSI-X ?
+> >   *
+> >   * Look at global flags, the device itself, and its parent buses
+> >   * to determine if MSI/-X are supported for the device. If MSI/-X is
+> >   * supported return 0, else return an error code.
+> >   **/
+> > -static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+> > +static int pci_msi_supported(struct pci_dev *dev, int nvec)
+> >  {
+> >  	struct pci_bus *bus;
+> > -	int ret;
+> > 
+> >  	/* MSI must be globally enabled and supported by the device */
+> > -	if (!pci_msi_enable || !dev || dev->no_msi)
+> > +	if (!pci_msi_enable)
+> > +		return -EINVAL;
+> > +
+> > +	if (!dev || dev->no_msi || dev->current_state != PCI_D0)
+> >  		return -EINVAL;
+> > 
+> >  	/*
+> > @@ -843,10 +834,6 @@ static int pci_msi_check_device(struct pci_dev *dev, int
+> > nvec, int type)
+> >  		if (bus->bus_flags & PCI_BUS_FLAGS_NO_MSI)
+> >  			return -EINVAL;
+> > 
+> > -	ret = arch_msi_check_device(dev, nvec, type);
+> > -	if (ret)
+> > -		return ret;
+> > -
+> >  	return 0;
+> >  }
+> > 
+> > @@ -949,13 +936,13 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry
+> > *entries, int nvec)
+> >  	int status, nr_entries;
+> >  	int i, j;
+> > 
+> > -	if (!entries || !dev->msix_cap || dev->current_state != PCI_D0)
+> > -		return -EINVAL;
+> > -
+> > -	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
+> > +	status = pci_msi_supported(dev, nvec);
+> >  	if (status)
+> >  		return status;
+> > 
+> > +	if (!entries)
+> > +		return -EINVAL;
+> > +
+> >  	nr_entries = pci_msix_vec_count(dev);
+> >  	if (nr_entries < 0)
+> >  		return nr_entries;
+> > @@ -1062,8 +1049,9 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec,
+> > int maxvec)
+> >  	int nvec;
+> >  	int rc;
+> > 
+> > -	if (dev->current_state != PCI_D0)
+> > -		return -EINVAL;
+> > +	rc = pci_msi_supported(dev, minvec);
+> > +	if (rc)
+> > +		return rc;
+> > 
+> >  	WARN_ON(!!dev->msi_enabled);
+> > 
+> > @@ -1086,17 +1074,6 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec,
+> > int maxvec)
+> >  		nvec = maxvec;
+> > 
+> >  	do {
+> > -		rc = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
+> > -		if (rc < 0) {
+> > -			return rc;
+> > -		} else if (rc > 0) {
+> > -			if (rc < minvec)
+> > -				return -ENOSPC;
+> > -			nvec = rc;
+> > -		}
+> > -	} while (rc);
+> > -
+> > -	do {
+> >  		rc = msi_capability_init(dev, nvec);
+> >  		if (rc < 0) {
+> >  			return rc;
+> > diff --git a/include/linux/msi.h b/include/linux/msi.h index 8103f32..dbf7cc9
+> > 100644
+> > --- a/include/linux/msi.h
+> > +++ b/include/linux/msi.h
+> > @@ -60,7 +60,6 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc
+> > *desc);  void arch_teardown_msi_irq(unsigned int irq);  int
+> > arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);  void
+> > arch_teardown_msi_irqs(struct pci_dev *dev); -int arch_msi_check_device(struct
+> > pci_dev* dev, int nvec, int type);  void arch_restore_msi_irqs(struct pci_dev
+> > *dev);
+> > 
+> >  void default_teardown_msi_irqs(struct pci_dev *dev); @@ -77,8 +76,6 @@ struct
+> > msi_chip {
+> >  	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
+> >  			 struct msi_desc *desc);
+> >  	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
+> > -	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
+> > -			    int nvec, int type);
+> >  };
+> > 
+> >  #endif /* LINUX_MSI_H */
+> > --
+> > 1.9.3
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in the body
+> > of a message to majordomo@vger.kernel.org More majordomo info at
+> > http://vger.kernel.org/majordomo-info.html
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
