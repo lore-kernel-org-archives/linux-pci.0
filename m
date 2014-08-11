@@ -1,94 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:37005 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751513AbaHJAg1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Aug 2014 20:36:27 -0400
-Received: by mail-ig0-f180.google.com with SMTP id l13so2683127iga.7
-        for <linux-pci@vger.kernel.org>; Sat, 09 Aug 2014 17:36:26 -0700 (PDT)
+Received: from e28smtp09.in.ibm.com ([122.248.162.9]:45521 "EHLO
+	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753901AbaHKOSV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 10:18:21 -0400
+Received: from /spool/local
+	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 11 Aug 2014 19:48:18 +0530
+Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 43DC3394001A
+	for <linux-pci@vger.kernel.org>; Mon, 11 Aug 2014 19:48:15 +0530 (IST)
+Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
+	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s7BEKUrk5046604
+	for <linux-pci@vger.kernel.org>; Mon, 11 Aug 2014 19:50:30 +0530
+Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
+	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s7BEIEdp030926
+	for <linux-pci@vger.kernel.org>; Mon, 11 Aug 2014 19:48:14 +0530
+Date: Mon, 11 Aug 2014 22:18:12 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] pci/msi-x: Sanity check MSI-X table offset
+Message-ID: <20140811141812.GB5794@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1407731815.4508.69.camel@pasglop>
 MIME-Version: 1.0
-In-Reply-To: <CAMxnaaXxAZAJAdr5AYYRZC_xKFCuyrfY=qpJu8x+P-S+osm5vw@mail.gmail.com>
-References: <20140514224339.7f8be3a9@neptune.home> <20140527234255.GJ11907@google.com>
- <20140602201650.35f0e936@neptune.home> <20140602201926.4d476818@neptune.home>
- <20140625005501.7ff7e982@neptune.home> <20140705171503.GC6247@google.com> <CAMxnaaXxAZAJAdr5AYYRZC_xKFCuyrfY=qpJu8x+P-S+osm5vw@mail.gmail.com>
-From: Andreas Noever <andreas.noever@gmail.com>
-Date: Sun, 10 Aug 2014 02:36:06 +0200
-Message-ID: <CAMxnaaXGQe4vg9cY5e2KZBnG4F-z49OriwxEGUE-DCE6MKUryQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2 v2] x86, ia64: Move EFI_FB vga_default_device()
- initialization to pci_vga_fixup()
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: =?UTF-8?Q?Bruno_Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
-	DRI mailing list <dri-devel@lists.freedesktop.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dave Airlie <airlied@linux.ie>,
-	Matthew Garrett <matthew.garrett@nebula.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1407731815.4508.69.camel@pasglop>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Aug 10, 2014 at 2:21 AM, Andreas Noever
-<andreas.noever@gmail.com> wrote:
-> On Sat, Jul 5, 2014 at 7:15 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Wed, Jun 25, 2014 at 12:55:01AM +0200, Bruno Prémont wrote:
->>> With commit b4aa0163056b ("efifb: Implement vga_default_device() (v2)")
->>> Matthew Garrett introduced a efifb vga_default_device() so that EFI
->>> systems that do not load shadow VBIOS or setup VGA get proper value for
->>> boot_vga PCI sysfs attribute on the corresponding PCI device.
->>>
->>> Xorg is refusing to detect devices when boot_vga=0 which is the case on
->>> some EFI system (e.g. MacBookAir2,1). Xorg detects the GPU and finds
->>> the dri device but then bails out with "no devices detected".
->>>
->>> Note: When vga_default_device() is set boot_vga PCI sysfs attribute
->>> reflects its state. When unset this attribute is 1 whenever
->>> IORESOURCE_ROM_SHADOW flag is set.
->>>
->>> With introduction of sysfb/simplefb/simpledrm efifb is getting obsolete
->>> while having native drivers for the GPU also makes selecting
->>> sysfb/efifb optional.
->>>
->>> Remove the efifb implementation of vga_default_device() and initialize
->>> vgaarb's vga_default_device() with the PCI GPU that matches boot
->>> screen_info in pci_fixup_video().
->>>
->>> Tested-by: Anibal Francisco Martinez Cortina <linuxkid.zeuz@gmail.com>
->>> Cc: Matthew Garrett <matthew.garrett@nebula.com>
->>> Cc: stable@vger.kernel.org
->>> Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
->>
->> I applied both with Matthew's ack to pci/misc for v3.17, thanks!
+On Mon, Aug 11, 2014 at 02:36:55PM +1000, Benjamin Herrenschmidt wrote:
+>If the hardware device mis-behaves (such as for example crashes or
+>gets unplugged at the wrong time) and provides us with a bogus
+>MSI-X table offset, all sorts of "interesting" and potentially
+>very hard to debug things can happen.
 >
-> I just tried to run the latest kernel.  It failed to boot and git
-> bisect points to this commit (MacBookPro10,1 with Nvidia&Intel
-> graphics).
+>For example, on POWER8, such a device caused us to ioremap an area
+>outside of the region assigned to the PCI bus, causing subsequent
+>accesses to cause a PowerBus timeout and checkstop the machine.
 >
-> The (now removed) code in efifb_setup did always set default_vga, even
-> if it had already been set earlier. The new code in pci_fixup_video
-> runs only if vga_default_device() is NULL. Removing the check fixes
-> the regression.
+>Since this isn't a hot path, let's add a good dose of sanity
+>checking to msix_map_region() to flag these issues early and limit
+>the damage.
 >
+>Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>---
+> drivers/pci/msi.c | 19 ++++++++++++++++++-
+> 1 file changed, 18 insertions(+), 1 deletion(-)
 >
-> The following calls to vga_set_default_device are made during boot:
+>diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>index 5a40516..a584f590 100644
+>--- a/drivers/pci/msi.c
+>+++ b/drivers/pci/msi.c
+>@@ -666,13 +666,30 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+> static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
+> {
+> 	resource_size_t phys_addr;
+>-	u32 table_offset;
+>+	u32 table_offset, table_end;
+> 	u8 bir;
 >
-> vga_arbiter_add_pci_device -> vga_set_default_device(intel)
-> pci_fixup_video -> vga_set_default_device(intel) (there are two calls
-> in pci_fixup_video, this one is the one near "Boot video device")
-> pci_fixup_video -> vga_set_default_device(nvidia) (from the "Does
-> firmware framebuffer belong to us?" loop, only if I remove the check)
->
-> vga_arbiter_add_pci_device chooses intel simply because it is the
-> first device. Next pci_fixup_video(intel) sees that it is the default
-> device, sets the IORESOURCE_ROM_SHADOW flag and calls
-> vga_set_default_device again. And finally (if the check is removed)
-> pci_fixup_video(nvidia) sees that it owns the framebuffer and sets
-> itself as the default device which allows the system to boot again.
->
-> Does setting the ROM_SHADOW flag on (possibly) the wrong device have
-> any effect?
-Yes it does. Removing the line changes a long standing
-i915 0000:00:02.0: Invalid ROM contents
-into a
-i915 0000:00:02.0: BAR 6: can't assign [??? 0x00000000 flags
-0x20000000] (bogus alignment).
+> 	pci_read_config_dword(dev, dev->msix_cap + PCI_MSIX_TABLE,
+> 			      &table_offset);
+> 	bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
+>+	if (bir >= DEVICE_COUNT_RESOURCE) {
 
-The first is logged at KERN_ERR and the second one only at KERN_INFO.
-We are making progress.
+could we use this?
+
+        if (bir > PCI_STD_RESOURCE_END)
+
+my understanding is the IOV BAR and bridge resources are not proper for MSI-X
+neigher.
+
+>+		dev_err(&dev->dev, "MSI-X points to non-exiting BAR %d !\n",
+>+			bir);
+>+		return NULL;
+>+	}
+>+	if ((pci_resource_flags(dev, bir) & IORESOURCE_MEM) == 0) {
+>+		dev_err(&dev->dev, "MSI-X points to non-memory BAR %d !\n",
+>+			bir);
+>+		return NULL;
+>+	}
+> 	table_offset &= PCI_MSIX_TABLE_OFFSET;
+>+	table_end = table_offset + nr_entries * PCI_MSIX_ENTRY_SIZE;
+>+	if (table_end <= table_offset ||
+>+	    table_end > pci_resource_len(dev, bir)) {
+>+		dev_err(&dev->dev, "MSI-X table outside of BAR boundary !"
+>+			" (0x%08x..%08x)\n", table_offset, table_end);
+>+		return NULL;
+>+	}
+> 	phys_addr = pci_resource_start(dev, bir) + table_offset;
+>
+> 	return ioremap_nocache(phys_addr, nr_entries * PCI_MSIX_ENTRY_SIZE);
+>
+>
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Richard Yang
+Help you, Help me
+
