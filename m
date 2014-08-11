@@ -1,54 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nbfkord-smmo03.seg.att.com ([209.65.160.84]:41954 "EHLO
-	nbfkord-smmo03.seg.att.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752917AbaHDRI7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Aug 2014 13:08:59 -0400
-Message-ID: <53DFBE21.1010802@solarflare.com>
-Date: Mon, 4 Aug 2014 18:08:49 +0100
-From: Edward Cree <ecree@solarflare.com>
-MIME-Version: 1.0
-To: Alexander Duyck <alexander.h.duyck@intel.com>
-CC: Ethan Zhao <ethan.kernel@gmail.com>,
+Received: from mx1.redhat.com ([209.132.183.28]:31861 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751444AbaHKIzB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Aug 2014 04:55:01 -0400
+Date: Mon, 11 Aug 2014 10:54:34 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>,
+	Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>,
+	linux-scsi <linux-scsi@vger.kernel.org>,
 	linux-pci <linux-pci@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Vasundhara Volam <vasundhara.volam@emulex.com>
-Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
-References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com> <alpine.LFD.2.03.1407311500570.16821@solarflare.com> <CABawtvPwxovKV==8RVCL1OcsdfnZDDjr=d1uYp-A=bAzYbmKww@mail.gmail.com> <53DB84E6.1070206@solarflare.com> <107835EF-8941-4621-952F-E1583F7E3636@gmail.com> <53DFAA8C.2010602@solarflare.com> <53DFB78D.4080309@intel.com>
-In-Reply-To: <53DFB78D.4080309@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+	Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: Re: [PATCH v2 RESEND 22/23] qla4xxx: Use pci_enable_msix_exact()
+ instead of pci_enable_msix()
+Message-ID: <20140811085433.GL16504@dhcp-27-160.brq.redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
+ <0496ccbc0f203afaeeb7758c146b93c2f387684c.1405533479.git.agordeev@redhat.com>
+ <20140726084137.GL21129@agordeev.usersys.redhat.com>
+ <3FC4AB8B47ECD546BCD4B361A64BEACD8C6CAFD2@avmb3.qlogic.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3FC4AB8B47ECD546BCD4B361A64BEACD8C6CAFD2@avmb3.qlogic.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/08/14 17:40, Alexander Duyck wrote:
-> Edward,
->
-> The concern isn't what is out there, but what will come of it as a
-> result.  The question is should we allow setting the value to 0 to
-> change the behavior from disabling the override to essentially disabling
-> SR-IOV.
-I still don't see why any driver would set an override and then want to
-disable it; moreover, it seems like unnatural semantics to use 0 for
-this (something like -1 would seem much more sensible) since most people
-will expect 0 to mean, well, 0.
+On Mon, Jul 28, 2014 at 11:47:19AM +0000, Vikas Chaudhary wrote:
+> 
+> Acked-By: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-> If we consider it acceptable to use 0 as a disable value, and there are
-> several people on this thread that don't, the secondary issue of this is
-> the error return for sriov_numvfs_store which hasn't been addressed.
-> Should we still be returning ERANGE if SR-IOV has essentially been
-> disabled, or should we be returning some other error such as EBUSY,
-> ENOMEM, ENODEV, or ENOSYS to indicate that there are no resources
-> available for SR-IOV.
-In my opinion we should still return ERANGE, as that's the immediate
-error - user requested more VFs than were advertised.  I.e. it's exactly
-the same as if someone requested 8 VFs on igb after igb reduced totalvfs
-to 7; we don't return a different error code to say _why_ igb can only
-support 7 VFs.  I don't see why 0 is special in this regard.
+Christoph,
 
-> I think you would be much better off just implementing sriov_configure
-> for your PCI driver and placing your own error return there if you
-> cannot allocate a vswitch.
-It just seems silly to advertise VFs when we already know at PF probe
-time that we've failed to allocate the vswitch.
+This patch seems ready..
 
--Edward
+> On 26/07/14 2:11 pm, "Alexander Gordeev" <agordeev@redhat.com> wrote:
+> 
+> >On Wed, Jul 16, 2014 at 08:05:26PM +0200, Alexander Gordeev wrote:
+> >> As result of deprecation of MSI-X/MSI enablement functions
+> >> pci_enable_msix() and pci_enable_msi_block() all drivers
+> >> using these two interfaces need to be updated to use the
+> >> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> >> and pci_enable_msix_range() or pci_enable_msix_exact()
+> >> interfaces.
+> >
+> >Hi Vikas,
+> >
+> >Could you please reveiw this patch?
+> >
+> >Thanks!
+> >
+> >> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> >> Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+> >> Cc: iscsi-driver@qlogic.com
+> >> Cc: linux-scsi@vger.kernel.org
+> >> Cc: linux-pci@vger.kernel.org
+> >> Acked-By: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+> >> ---
+> >>  drivers/scsi/qla4xxx/ql4_nx.c |    2 +-
+> >>  1 files changed, 1 insertions(+), 1 deletions(-)
+> >> 
+> >> diff --git a/drivers/scsi/qla4xxx/ql4_nx.c
+> >>b/drivers/scsi/qla4xxx/ql4_nx.c
+> >> index 9dbdb4b..7c33658 100644
+> >> --- a/drivers/scsi/qla4xxx/ql4_nx.c
+> >> +++ b/drivers/scsi/qla4xxx/ql4_nx.c
+> >> @@ -4221,7 +4221,7 @@ qla4_8xxx_enable_msix(struct scsi_qla_host *ha)
+> >>  	for (i = 0; i < QLA_MSIX_ENTRIES; i++)
+> >>  		entries[i].entry = qla4_8xxx_msix_entries[i].entry;
+> >>  
+> >> -	ret = pci_enable_msix(ha->pdev, entries, ARRAY_SIZE(entries));
+> >> +	ret = pci_enable_msix_exact(ha->pdev, entries, ARRAY_SIZE(entries));
+> >>  	if (ret) {
+> >>  		ql4_printk(KERN_WARNING, ha,
+> >>  		    "MSI-X: Failed to enable support -- %d/%d\n",
+> >> -- 
+> >> 1.7.7.6
+> >> 
+> >
+> >-- 
+> >Regards,
+> >Alexander Gordeev
+> >agordeev@redhat.com
+> 
