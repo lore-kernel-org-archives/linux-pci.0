@@ -1,188 +1,168 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Cc: linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v9 03/12] PCI: Introduce helper functions to deal with PCI I/O ranges.
-Date: Tue, 12 Aug 2014 17:25:16 +0100
-Message-Id: <1407860725-25202-4-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:20724 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751787AbaHKLpp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Aug 2014 07:45:45 -0400
+Date: Mon, 11 Aug 2014 13:45:36 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 2/2] PCI/MSI: Remove arch_msi_check_device()
+Message-ID: <20140811114536.GA3427@dhcp-27-160.brq.redhat.com>
+References: <cover.1405160163.git.agordeev@redhat.com>
+ <1005232855c3af2c0c669818ee63be445389b6ad.1405160163.git.agordeev@redhat.com>
+ <20140716222024.GE14366@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140716222024.GE14366@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some architectures do not have a simple view of the PCI I/O space
-and instead use a range of CPU addresses that map to bus addresses.
-For some architectures these ranges will be expressed by OF bindings
-in a device tree file.
+There are no archs that override arch_msi_check_device()
+hook. Remove it as it is completely redundant.
 
-This patch introduces a pci_register_io_range() helper function with
-a generic implementation that can be used by such architectures to
-keep track of the I/O ranges described by the PCI bindings. If the
-PCI_IOBASE macro is not defined that signals lack of support for PCI
-and we return an error.
+If an arch would need to check MSI/MSI-X possibility for a
+device it should make it within arch_setup_msi_irqs() hook.
 
-In order to retrieve the CPU address associated with an I/O port, a
-new helper function pci_pio_to_address() is introduced. This will
-search in the list of ranges registered with pci_register_io_range()
-and return the CPU address that corresponds to the given port.
-
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/of/address.c       | 95 ++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/of_address.h |  2 +
- 2 files changed, 97 insertions(+)
+ drivers/pci/msi.c   | 49 +++++++++++++------------------------------------
+ include/linux/msi.h |  3 ---
+ 2 files changed, 13 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 5edfcb0..4dab700 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -5,6 +5,7 @@
- #include <linux/module.h>
- #include <linux/of_address.h>
- #include <linux/pci_regs.h>
-+#include <linux/slab.h>
- #include <linux/string.h>
- 
- /* Max address size we deal with */
-@@ -601,12 +602,106 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 5a40516..6c2cc41 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -56,16 +56,6 @@ void __weak arch_teardown_msi_irq(unsigned int irq)
+ 	chip->teardown_irq(chip, irq);
  }
- EXPORT_SYMBOL(of_get_address);
  
-+#ifdef PCI_IOBASE
-+struct io_range {
-+	struct list_head list;
-+	phys_addr_t start;
-+	resource_size_t size;
-+};
-+
-+static LIST_HEAD(io_range_list);
-+static DEFINE_SPINLOCK(io_range_lock);
-+#endif
-+
-+/*
-+ * Record the PCI IO range (expressed as CPU physical address + size).
-+ * Return a negative value if an error has occured, zero otherwise
-+ */
-+int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-+{
-+#ifdef PCI_IOBASE
-+	struct io_range *range;
-+	resource_size_t allocated_size = 0;
-+
-+	/* check if the range hasn't been previously recorded */
-+	spin_lock(&io_range_lock);
-+	list_for_each_entry(range, &io_range_list, list) {
-+		if (addr >= range->start && addr + size <= range->start + size)
-+			return 0;
-+		allocated_size += range->size;
-+	}
-+	spin_unlock(&io_range_lock);
-+
-+	/* range not registed yet, check for available space */
-+	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
-+		/* if it's too big check if 64K space can be reserved */
-+		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT)
-+			return -E2BIG;
-+
-+		size = SZ_64K;
-+		pr_warn("Requested IO range too big, new size set to 64K\n");
-+	}
-+
-+	/* add the range to the list */
-+	range = kzalloc(sizeof(*range), GFP_KERNEL);
-+	if (!range)
-+		return -ENOMEM;
-+
-+	range->start = addr;
-+	range->size = size;
-+
-+	list_add_tail(&range->list, &io_range_list);
-+#endif
-+
-+	return 0;
-+}
-+
-+phys_addr_t pci_pio_to_address(unsigned long pio)
-+{
-+	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
-+
-+#ifdef PCI_IOBASE
-+	struct io_range *range;
-+	resource_size_t allocated_size = 0;
-+
-+	if (pio > IO_SPACE_LIMIT)
-+		return address;
-+
-+	spin_lock(&io_range_lock);
-+	list_for_each_entry(range, &io_range_list, list) {
-+		if (pio >= allocated_size && pio < allocated_size + range->size) {
-+			address = range->start + pio - allocated_size;
-+			break;
-+		}
-+		allocated_size += range->size;
-+	}
-+	spin_unlock(&io_range_lock);
-+#endif
-+
-+	return address;
-+}
-+
- unsigned long __weak pci_address_to_pio(phys_addr_t address)
+-int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+-{
+-	struct msi_chip *chip = dev->bus->msi;
+-
+-	if (!chip || !chip->check_device)
+-		return 0;
+-
+-	return chip->check_device(chip, dev, nvec, type);
+-}
+-
+ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
  {
-+#ifdef PCI_IOBASE
-+	struct io_range *res;
-+	resource_size_t offset = 0;
-+
-+	list_for_each_entry(res, &io_range_list, list) {
-+		if (address >= res->start &&
-+			address < res->start + res->size) {
-+			return res->start - address + offset;
-+		}
-+		offset += res->size;
-+	}
-+
-+	return (unsigned long)-1;
-+#else
- 	if (address > IO_SPACE_LIMIT)
- 		return (unsigned long)-1;
- 
- 	return (unsigned long) address;
-+#endif
+ 	struct msi_desc *entry;
+@@ -806,22 +796,23 @@ out_free:
  }
  
- static int __of_address_to_resource(struct device_node *dev,
-diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-index c13b878..28e6836 100644
---- a/include/linux/of_address.h
-+++ b/include/linux/of_address.h
-@@ -55,7 +55,9 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
- extern const __be32 *of_get_address(struct device_node *dev, int index,
- 			   u64 *size, unsigned int *flags);
+ /**
+- * pci_msi_check_device - check whether MSI may be enabled on a device
++ * pci_msi_supported - check whether MSI may be enabled on a device
+  * @dev: pointer to the pci_dev data structure of MSI device function
+  * @nvec: how many MSIs have been requested ?
+- * @type: are we checking for MSI or MSI-X ?
+  *
+  * Look at global flags, the device itself, and its parent buses
+  * to determine if MSI/-X are supported for the device. If MSI/-X is
+  * supported return 0, else return an error code.
+  **/
+-static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
++static int pci_msi_supported(struct pci_dev *dev, int nvec)
+ {
+ 	struct pci_bus *bus;
+-	int ret;
  
-+extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
- extern unsigned long pci_address_to_pio(phys_addr_t addr);
-+extern phys_addr_t pci_pio_to_address(unsigned long pio);
+ 	/* MSI must be globally enabled and supported by the device */
+-	if (!pci_msi_enable || !dev || dev->no_msi)
++	if (!pci_msi_enable)
++		return -EINVAL;
++
++	if (!dev || dev->no_msi || dev->current_state != PCI_D0)
+ 		return -EINVAL;
  
- extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
- 			struct device_node *node);
+ 	/*
+@@ -843,10 +834,6 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+ 		if (bus->bus_flags & PCI_BUS_FLAGS_NO_MSI)
+ 			return -EINVAL;
+ 
+-	ret = arch_msi_check_device(dev, nvec, type);
+-	if (ret)
+-		return ret;
+-
+ 	return 0;
+ }
+ 
+@@ -949,13 +936,13 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+ 	int status, nr_entries;
+ 	int i, j;
+ 
+-	if (!entries || !dev->msix_cap || dev->current_state != PCI_D0)
+-		return -EINVAL;
+-
+-	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
++	status = pci_msi_supported(dev, nvec);
+ 	if (status)
+ 		return status;
+ 
++	if (!entries)
++		return -EINVAL;
++
+ 	nr_entries = pci_msix_vec_count(dev);
+ 	if (nr_entries < 0)
+ 		return nr_entries;
+@@ -1062,8 +1049,9 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+ 	int nvec;
+ 	int rc;
+ 
+-	if (dev->current_state != PCI_D0)
+-		return -EINVAL;
++	rc = pci_msi_supported(dev, minvec);
++	if (rc)
++		return rc;
+ 
+ 	WARN_ON(!!dev->msi_enabled);
+ 
+@@ -1086,17 +1074,6 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+ 		nvec = maxvec;
+ 
+ 	do {
+-		rc = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
+-		if (rc < 0) {
+-			return rc;
+-		} else if (rc > 0) {
+-			if (rc < minvec)
+-				return -ENOSPC;
+-			nvec = rc;
+-		}
+-	} while (rc);
+-
+-	do {
+ 		rc = msi_capability_init(dev, nvec);
+ 		if (rc < 0) {
+ 			return rc;
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 8103f32..dbf7cc9 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -60,7 +60,6 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
+ void arch_teardown_msi_irq(unsigned int irq);
+ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+ void arch_teardown_msi_irqs(struct pci_dev *dev);
+-int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
+ void arch_restore_msi_irqs(struct pci_dev *dev);
+ 
+ void default_teardown_msi_irqs(struct pci_dev *dev);
+@@ -77,8 +76,6 @@ struct msi_chip {
+ 	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
+ 			 struct msi_desc *desc);
+ 	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
+-	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
+-			    int nvec, int type);
+ };
+ 
+ #endif /* LINUX_MSI_H */
 -- 
-2.0.4
+1.9.3
 
