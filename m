@@ -1,72 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:34568 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754752AbaHEQMD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 12:12:03 -0400
-Received: by mail-we0-f175.google.com with SMTP id t60so1287043wes.20
-        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2014 09:12:01 -0700 (PDT)
-From: matthew_minter@xyratex.com
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: matthew_minter <matthew_minter@xyratex.com>
-Subject: [PATCH 04/22] Added support to ARM architecture to accomodate new irq init code
-Date: Tue,  5 Aug 2014 17:11:05 +0100
-Message-Id: <1407255083-9356-5-git-send-email-matthew_minter@xyratex.com>
-In-Reply-To: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
-References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 11 Aug 2014 10:09:42 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Kashyap Desai <kashyap.desai@avagotech.com>,
+	Neela Syam Kolli <megaraidlinux@avagotech.com>
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 RESEND 14/23] megaraid: Use pci_enable_msix_range()
+ instead of pci_enable_msix()
+Message-ID: <20140811080941.GI16504@dhcp-27-160.brq.redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
+ <57071ec862e6e0cf6b1c9f7fa5c1d3b9fa97d087.1405533479.git.agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <57071ec862e6e0cf6b1c9f7fa5c1d3b9fa97d087.1405533479.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: matthew_minter <matthew_minter@xyratex.com>
+On Wed, Jul 16, 2014 at 08:05:18PM +0200, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
 
----
- arch/arm/kernel/bios32.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+Kashyap, Neela,
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 17a26c1..4dcf3f7 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -389,7 +389,7 @@ void pcibios_remove_bus(struct pci_bus *bus)
-  * PCI standard swizzle is implemented on plug-in cards and Cardbus based
-  * PCI extenders, so it can not be ignored.
-  */
--static u8 pcibios_swizzle(struct pci_dev *dev, u8 *pin)
-+u8 pcibios_swizzle(struct pci_dev *dev, u8 *pin)
- {
- 	struct pci_sys_data *sys = dev->sysdata;
- 	int slot, oldpin = *pin;
-@@ -409,7 +409,7 @@ static u8 pcibios_swizzle(struct pci_dev *dev, u8 *pin)
- /*
-  * Map a slot/pin to an IRQ.
-  */
--static int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-+int pcibios_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
- {
- 	struct pci_sys_data *sys = dev->sysdata;
- 	int irq = -1;
-@@ -424,6 +424,13 @@ static int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- 	return irq;
- }
- 
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->swizzle_irq = pcibios_swizzle;
-+	bridge->map_irq = pcibios_map_irq;
-+	return 0;
-+}
-+
- static int pcibios_init_resources(int busnr, struct pci_sys_data *sys)
- {
- 	int ret;
-@@ -523,8 +530,6 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
- 	if (hw->postinit)
- 		hw->postinit();
- 
--	pci_fixup_irqs(pcibios_swizzle, pcibios_map_irq);
--
- 	list_for_each_entry(sys, &head, node) {
- 		struct pci_bus *bus = sys->bus;
- 
--- 
-2.0.4
+Could you please reveiw this patch?
 
+Thanks!
+
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/scsi/megaraid/megaraid_sas_base.c |   20 +++++++-------------
+>  1 files changed, 7 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index ba06102..7a4e75e 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -4105,17 +4105,11 @@ static int megasas_init_fw(struct megasas_instance *instance)
+>  					     (unsigned int)num_online_cpus());
+>  		for (i = 0; i < instance->msix_vectors; i++)
+>  			instance->msixentry[i].entry = i;
+> -		i = pci_enable_msix(instance->pdev, instance->msixentry,
+> -				    instance->msix_vectors);
+> -		if (i >= 0) {
+> -			if (i) {
+> -				if (!pci_enable_msix(instance->pdev,
+> -						     instance->msixentry, i))
+> -					instance->msix_vectors = i;
+> -				else
+> -					instance->msix_vectors = 0;
+> -			}
+> -		} else
+> +		i = pci_enable_msix_range(instance->pdev, instance->msixentry,
+> +					  1, instance->msix_vectors);
+> +		if (i)
+> +			instance->msix_vectors = i;
+> +		else
+>  			instance->msix_vectors = 0;
+>  
+>  		dev_info(&instance->pdev->dev, "[scsi%d]: FW supports"
+> @@ -5135,8 +5129,8 @@ megasas_resume(struct pci_dev *pdev)
+>  
+>  	/* Now re-enable MSI-X */
+>  	if (instance->msix_vectors &&
+> -	    pci_enable_msix(instance->pdev, instance->msixentry,
+> -			    instance->msix_vectors))
+> +	    pci_enable_msix_exact(instance->pdev, instance->msixentry,
+> +				  instance->msix_vectors))
+>  		goto fail_reenable_msix;
+>  
+>  	switch (instance->pdev->device) {
+> -- 
+> 1.7.7.6
+> 
