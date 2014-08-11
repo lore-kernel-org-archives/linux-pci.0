@@ -1,72 +1,127 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1blp0188.outbound.protection.outlook.com ([207.46.163.188]:38713
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751934AbaHDUW0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Aug 2014 16:22:26 -0400
-From: Rajat Jain <rajatjain@juniper.net>
-To: Sandeep Mann <sandeep@purestorage.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "rajatxjain@gmail.com" <rajatxjain@gmail.com>
-Subject: RE: [PATCH] PCI: pciehp: Use ordered workqueue for HPC events
-Date: Mon, 4 Aug 2014 20:22:22 +0000
-Message-ID: <dc3c0a8a73734bac8b3340ed4fec4810@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <1406933232-1560-1-git-send-email-sandeep@purestorage.com>
-In-Reply-To: <1406933232-1560-1-git-send-email-sandeep@purestorage.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 11 Aug 2014 10:01:49 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: James Smart <james.smart@emulex.com>
+Cc: linux-kernel@vger.kernel.org,
+	Christoph Hellwig <hch@infradead.org>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 RESEND 12/23] lpfc: Use pci_enable_msix_range()
+ instead of pci_enable_msix()
+Message-ID: <20140811080148.GG16504@dhcp-27-160.brq.redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
+ <ea1bf102a3ce0471996e2ddaaa498b088ac791c8.1405533479.git.agordeev@redhat.com>
+ <20140726082227.GF21129@agordeev.usersys.redhat.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140726082227.GF21129@agordeev.usersys.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> owner@vger.kernel.org] On Behalf Of Sandeep Mann
-> Sent: Friday, August 01, 2014 3:47 PM
-> To: bhelgaas@google.com; linux-pci@vger.kernel.org
-> Subject: [PATCH] PCI: pciehp: Use ordered workqueue for HPC events
+On Sat, Jul 26, 2014 at 09:22:27AM +0100, Alexander Gordeev wrote:
+> On Wed, Jul 16, 2014 at 08:05:16PM +0200, Alexander Gordeev wrote:
+> > As result of deprecation of MSI-X/MSI enablement functions
+> > pci_enable_msix() and pci_enable_msi_block() all drivers
+> > using these two interfaces need to be updated to use the
+> > new pci_enable_msi_range()  or pci_enable_msi_exact()
+> > and pci_enable_msix_range() or pci_enable_msix_exact()
+> > interfaces.
 > 
-> Using an ordered workqueue serializes processing of hotplug event.
-> Processing an hotplug event for some devices can take a relatively "long"
-> time, which means if a device is added and removed in quick succession (or
-> due to flacky hardware), it can lead to multiple outstanding hotplug events.
-> Processing these events concurrently can lead to unknown internal state
-> and/or kernel panics.
+> Hi James,
 > 
-> Signed-off-by: Sandeep Mann <sandeep@purestorage.com>
+> Could you please review this patch?
 
-Acked-by: Rajat Jain <rajatxjain@gmail.com>
+James?
 
-Yes, this is good and needed. Sometime back I felt the need for it, but sort of assumed that the slot->wq is already ordered.
-
-Thanks,
-Rajat
-
-
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> Thanks!
 > 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c
-> b/drivers/pci/hotplug/pciehp_hpc.c
-> index 42914e0..c4eedab 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -681,7 +681,7 @@ static int pcie_init_slot(struct controller *ctrl)
->  	if (!slot)
->  		return -ENOMEM;
+> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> > Cc: James Smart <james.smart@emulex.com>
+> > Cc: linux-scsi@vger.kernel.org
+> > Cc: linux-pci@vger.kernel.org
+> > ---
+> >  drivers/scsi/lpfc/lpfc_init.c |   38 +++++++++++++++++---------------------
+> >  1 files changed, 17 insertions(+), 21 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> > index a5769a9..d9caed9 100644
+> > --- a/drivers/scsi/lpfc/lpfc_init.c
+> > +++ b/drivers/scsi/lpfc/lpfc_init.c
+> > @@ -8211,9 +8211,9 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
+> >   * @phba: pointer to lpfc hba data structure.
+> >   *
+> >   * This routine is invoked to enable the MSI-X interrupt vectors to device
+> > - * with SLI-3 interface specs. The kernel function pci_enable_msix() is
+> > - * called to enable the MSI-X vectors. Note that pci_enable_msix(), once
+> > - * invoked, enables either all or nothing, depending on the current
+> > + * with SLI-3 interface specs. The kernel function pci_enable_msix_exact()
+> > + * is called to enable the MSI-X vectors. Note that pci_enable_msix_exact(),
+> > + * once invoked, enables either all or nothing, depending on the current
+> >   * availability of PCI vector resources. The device driver is responsible
+> >   * for calling the individual request_irq() to register each MSI-X vector
+> >   * with a interrupt handler, which is done in this function. Note that
+> > @@ -8237,8 +8237,8 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
+> >  		phba->msix_entries[i].entry = i;
+> >  
+> >  	/* Configure MSI-X capability structure */
+> > -	rc = pci_enable_msix(phba->pcidev, phba->msix_entries,
+> > -				ARRAY_SIZE(phba->msix_entries));
+> > +	rc = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
+> > +				   ARRAY_SIZE(phba->msix_entries));
+> >  	if (rc) {
+> >  		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+> >  				"0420 PCI enable MSI-X failed (%d)\n", rc);
+> > @@ -8775,15 +8775,13 @@ out:
+> >   * @phba: pointer to lpfc hba data structure.
+> >   *
+> >   * This routine is invoked to enable the MSI-X interrupt vectors to device
+> > - * with SLI-4 interface spec. The kernel function pci_enable_msix() is called
+> > - * to enable the MSI-X vectors. Note that pci_enable_msix(), once invoked,
+> > - * enables either all or nothing, depending on the current availability of
+> > - * PCI vector resources. The device driver is responsible for calling the
+> > - * individual request_irq() to register each MSI-X vector with a interrupt
+> > - * handler, which is done in this function. Note that later when device is
+> > - * unloading, the driver should always call free_irq() on all MSI-X vectors
+> > - * it has done request_irq() on before calling pci_disable_msix(). Failure
+> > - * to do so results in a BUG_ON() and a device will be left with MSI-X
+> > + * with SLI-4 interface spec. The kernel function pci_enable_msix_range()
+> > + * is called to enable the MSI-X vectors. The device driver is responsible
+> > + * for calling the individual request_irq() to register each MSI-X vector
+> > + * with a interrupt handler, which is done in this function. Note that later
+> > + * when device is unloading, the driver should always call free_irq() on all
+> > + * MSI-X vectors it has done request_irq() on before calling pci_disable_msix()
+> > + * Failure to do so results in a BUG_ON() and a device will be left with MSI-X
+> >   * enabled and leaks its vectors.
+> >   *
+> >   * Return codes
+> > @@ -8805,18 +8803,16 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
+> >  		phba->sli4_hba.msix_entries[index].entry = index;
+> >  		vectors++;
+> >  	}
+> > -enable_msix_vectors:
+> > -	rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
+> > -			     vectors);
+> > -	if (rc > 1) {
+> > -		vectors = rc;
+> > -		goto enable_msix_vectors;
+> > -	} else if (rc) {
+> > +
+> > +	rc = pci_enable_msix_range(phba->pcidev, phba->sli4_hba.msix_entries,
+> > +				   2, vectors);
+> > +	if (rc < 0) {
+> >  		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+> >  				"0484 PCI enable MSI-X failed (%d)\n", rc);
+> >  		goto vec_fail_out;
+> >  	}
+> >  
+> > +	vectors = rc;
+> >  	/* Log MSI-X vector assignment */
+> >  	for (index = 0; index < vectors; index++)
+> >  		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+> > -- 
+> > 1.7.7.6
+> > 
 > 
-> -	slot->wq = alloc_workqueue("pciehp-%u", 0, 0, PSN(ctrl));
-> +	slot->wq = alloc_ordered_workqueue("pciehp-%u", 0, PSN(ctrl));
->  	if (!slot->wq)
->  		goto abort;
-> 
-> --
-> 1.8.3.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
-> body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+> -- 
+> Regards,
+> Alexander Gordeev
+> agordeev@redhat.com
