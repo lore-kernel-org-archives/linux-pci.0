@@ -1,1168 +1,194 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:50648 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753240AbaHELfw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 07:35:52 -0400
-From: Srikanth Thokala <sthokal@xilinx.com>
-To: bhelgaas@google.com, michal.simek@xilinx.com,
-	grant.likely@linaro.org, robh+dt@kernel.org
-Cc: arnd@arndb.de, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org, anirudh@xilinx.com,
-	Srikanth Thokala <sthokal@xilinx.com>
-Subject: [PATCH v6] pcie: Add Xilinx PCIe Host Bridge IP driver
-Date: Tue,  5 Aug 2014 17:05:38 +0530
-Message-Id: <1407238538-3167-1-git-send-email-sthokal@xilinx.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:59492 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753547AbaHKNov (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 09:44:51 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Peter Zijlstra <peterz@infradead.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH 6/6 v2] irq / PM: Document rules related to system suspend and interrupts
+Date: Mon, 11 Aug 2014 16:03:09 +0200
+Message-ID: <32757447.HpzYdgnW9A@vostro.rjw.lan>
+In-Reply-To: <26580319.OZP7jvJnA9@vostro.rjw.lan>
+References: <26580319.OZP7jvJnA9@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is the driver for Xilinx AXI PCIe Host Bridge Soft IP
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Srikanth Thokala <sthokal@xilinx.com>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
+Add a document describing how IRQs are managed during system suspend
+and resume, how to set up a wakeup interrupt and what the IRQF_NO_SUSPEND
+flag is supposed to be used for.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
-NOTE: The AXI PCIe IP doesn't support I/O space, so this
-driver has no support for I/O space.
+ Documentation/power/suspend-and-interrupts.txt |  156 +++++++++++++++++++++++++
+ 1 file changed, 156 insertions(+)
 
-Changes in v6:
-- Added Ack from Arnd. Thanks Arnd.
-- Rebased on 3.16-rc7.
-
-Changes in v5:
-- Removed unnecessary checking of port structure.
-- Changed the return type of verify_config from int to bool.
-- Renamed following functions,
-  xilinx_pcie_is_link_up() -> xilinx_pcie_link_is_up()
-  xilinx_pcie_verify_config() -> xilinx_pcie_valid_device()
-  xilinx_pcie_get_config_base() -> xilinx_pcie_config_base()
-- Removed link_up bool flag from port structure, as it is not
-  being used.
-- Removed unused constants.
-- Rebased on 3.16-rc6.
-- Fixed some minor comments.
-- Thanks Bjorn for the review.
-
-Changes in v4:
-- Regarding the comments to separate ECAM functionality,
-  I have sent a separate patch and it is decided to implement
-  it later. The patch is here,
-  https://lkml.org/lkml/2014/5/18/54
-- Fixed issue with adding configuration bus resource.
-- Moved the logic for setting up bus resources to probe() from
-  pcie_setup().
-- Instead of mapping all the MSI interrupts in the probe, changed
-  to map only when a MSI is requested.
-- Earlier, the implementation of legacy and MSI interrupts init-
-  is mutually exclusive, now changed to have the legacy interrupts
-  init always and MSI interrupt init based on CONFIG_PCI_MSI flag.
-- Regarding the MSI generic implementation comment, I will plan to
-  do on top of this driver patch.
-- Rebased on 3.16-rc2.
-- Fixed other minor comments.
-- Thanks Arnd and Bjorn for the review.
-
-Changes in v3:
-- Rebased on v3.15.0-rc1
-- Added support for interrupt-map DT functionality.
-- Removed map_irq() wrapper, instead using of_irq_parse_and_map_pci().
-- Modified resource mapping logic as per the series
-  "PCI: ARM: add support for generic PCI host controller"
-- Modified devicetree binding documentation to update with interrupt-
-  map properties.
-- Use devm calls wherever applicable.
-- Fixed minor comments from Jason
-- Thanks Jason for the review and suggestions.
-
-Changes in v2:
-- Rebased on v3.14.0-rc8
-- Removed IP specific DT properties like include-rc, axibar-num etc.,
-  as suggested by Jason and Bjorn, Thanks
----
- .../devicetree/bindings/pci/xilinx-pcie.txt        |   62 ++
- drivers/pci/host/Kconfig                           |    7 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pci-xilinx.c                      |  978 ++++++++++++++++++++
- 4 files changed, 1048 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xilinx-pcie.txt
- create mode 100644 drivers/pci/host/pci-xilinx.c
-
-diff --git a/Documentation/devicetree/bindings/pci/xilinx-pcie.txt b/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
-new file mode 100644
-index 0000000..3e2c88d
+Index: linux-pm/Documentation/power/suspend-and-interrupts.txt
+===================================================================
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
-@@ -0,0 +1,62 @@
-+* Xilinx AXI PCIe Root Port Bridge DT description
-+
-+Required properties:
-+- #address-cells: Address representation for root ports, set to <3>
-+- #size-cells: Size representation for root ports, set to <2>
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+	interrupt source. The value must be 1.
-+- compatible: Should contain "xlnx,axi-pcie-host-1.00.a"
-+- reg: Should contain AXI PCIe registers location and length
-+- device_type: must be "pci"
-+- interrupts: Should contain AXI PCIe interrupt
-+- interrupt-map-mask,
-+  interrupt-map: standard PCI properties to define the mapping of the
-+	PCI interface to interrupt numbers.
-+- ranges: ranges for the PCI memory regions (I/O space region is not
-+	supported by hardware)
-+	Please refer to the standard PCI bus binding document for a more
-+	detailed explanation
-+
-+Optional properties:
-+- bus-range: PCI bus numbers covered
-+
-+Interrupt controller child node
-++++++++++++++++++++++++++++++++
-+Required properties:
-+- interrupt-controller: identifies the node as an interrupt controller
-+- #address-cells: specifies the number of cells needed to encode an
-+	address. The value must be 0.
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+	interrupt source. The value must be 1.
-+
-+NOTE:
-+The core provides a single interrupt for both INTx/MSI messages. So,
-+created a interrupt controller node to support 'interrupt-map' DT
-+functionality.  The driver will create an IRQ domain for this map, decode
-+the four INTx interrupts in ISR and route them to this domain.
-+
-+
-+Example:
-+++++++++
-+
-+	pci_express: axi-pcie@50000000 {
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		#interrupt-cells = <1>;
-+		compatible = "xlnx,axi-pcie-host-1.00.a";
-+		reg = < 0x50000000 0x10000000 >;
-+		device_type = "pci";
-+		interrupts = < 0 52 4 >;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie_intc 1>,
-+				<0 0 0 2 &pcie_intc 2>,
-+				<0 0 0 3 &pcie_intc 3>,
-+				<0 0 0 4 &pcie_intc 4>;
-+		ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
-+
-+		pcie_intc: interrupt-controller {
-+			interrupt-controller;
-+			#address-cells = <0>;
-+			#interrupt-cells = <1>;
-+		}
-+	};
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 21df477..afedcde 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -46,4 +46,11 @@ config PCI_HOST_GENERIC
- 	  Say Y here if you want to support a simple generic PCI host
- 	  controller, such as the one emulated by kvmtool.
- 
-+config PCI_XILINX
-+	bool "Xilinx AXI PCIe host bridge support"
-+	depends on ARCH_ZYNQ
-+	help
-+	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
-+	  Host Bridge driver.
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 611ba4b..68dfd06 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -6,3 +6,4 @@ obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
- obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
- obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
- obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
-+obj-$(CONFIG_PCI_XILINX) += pci-xilinx.o
-diff --git a/drivers/pci/host/pci-xilinx.c b/drivers/pci/host/pci-xilinx.c
-new file mode 100644
-index 0000000..5dd9fda
---- /dev/null
-+++ b/drivers/pci/host/pci-xilinx.c
-@@ -0,0 +1,978 @@
-+/*
-+ * PCIe host controller driver for Xilinx AXI PCIe Bridge
-+ *
-+ * Copyright (c) 2012 - 2014 Xilinx, Inc.
-+ *
-+ * Based on the Tegra PCIe driver
-+ *
-+ * Bits taken from Synopsys Designware Host controller driver and
-+ * ARM PCI Host generic driver.
-+ *
-+ * This program is free software: you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation, either version 2 of the License, or
-+ * (at your option) any later version.
-+ */
-+
-+#include <linux/interrupt.h>
-+#include <linux/irq.h>
-+#include <linux/irqdomain.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/msi.h>
-+#include <linux/of_address.h>
-+#include <linux/of_pci.h>
-+#include <linux/of_platform.h>
-+#include <linux/of_irq.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+
-+/* Register definitions */
-+#define XILINX_PCIE_REG_BIR		0x00000130
-+#define XILINX_PCIE_REG_IDR		0x00000138
-+#define XILINX_PCIE_REG_IMR		0x0000013c
-+#define XILINX_PCIE_REG_PSCR		0x00000144
-+#define XILINX_PCIE_REG_RPSC		0x00000148
-+#define XILINX_PCIE_REG_MSIBASE1	0x0000014c
-+#define XILINX_PCIE_REG_MSIBASE2	0x00000150
-+#define XILINX_PCIE_REG_RPEFR		0x00000154
-+#define XILINX_PCIE_REG_RPIFR1		0x00000158
-+#define XILINX_PCIE_REG_RPIFR2		0x0000015c
-+
-+/* Interrupt registers definitions */
-+#define XILINX_PCIE_INTR_LINK_DOWN	BIT(0)
-+#define XILINX_PCIE_INTR_ECRC_ERR	BIT(1)
-+#define XILINX_PCIE_INTR_STR_ERR	BIT(2)
-+#define XILINX_PCIE_INTR_HOT_RESET	BIT(3)
-+#define XILINX_PCIE_INTR_CFG_TIMEOUT	BIT(8)
-+#define XILINX_PCIE_INTR_CORRECTABLE	BIT(9)
-+#define XILINX_PCIE_INTR_NONFATAL	BIT(10)
-+#define XILINX_PCIE_INTR_FATAL		BIT(11)
-+#define XILINX_PCIE_INTR_INTX		BIT(16)
-+#define XILINX_PCIE_INTR_MSI		BIT(17)
-+#define XILINX_PCIE_INTR_SLV_UNSUPP	BIT(20)
-+#define XILINX_PCIE_INTR_SLV_UNEXP	BIT(21)
-+#define XILINX_PCIE_INTR_SLV_COMPL	BIT(22)
-+#define XILINX_PCIE_INTR_SLV_ERRP	BIT(23)
-+#define XILINX_PCIE_INTR_SLV_CMPABT	BIT(24)
-+#define XILINX_PCIE_INTR_SLV_ILLBUR	BIT(25)
-+#define XILINX_PCIE_INTR_MST_DECERR	BIT(26)
-+#define XILINX_PCIE_INTR_MST_SLVERR	BIT(27)
-+#define XILINX_PCIE_INTR_MST_ERRP	BIT(28)
-+#define XILINX_PCIE_IMR_ALL_MASK	0x1FF30FED
-+#define XILINX_PCIE_IDR_ALL_MASK	0xFFFFFFFF
-+
-+/* Root Port Error FIFO Read Register definitions */
-+#define XILINX_PCIE_RPEFR_ERR_VALID	BIT(18)
-+#define XILINX_PCIE_RPEFR_REQ_ID	GENMASK(15, 0)
-+#define XILINX_PCIE_RPEFR_ALL_MASK	0xFFFFFFFF
-+
-+/* Root Port Interrupt FIFO Read Register 1 definitions */
-+#define XILINX_PCIE_RPIFR1_INTR_VALID	BIT(31)
-+#define XILINX_PCIE_RPIFR1_MSI_INTR	BIT(30)
-+#define XILINX_PCIE_RPIFR1_INTR_MASK	GENMASK(28, 27)
-+#define XILINX_PCIE_RPIFR1_ALL_MASK	0xFFFFFFFF
-+#define XILINX_PCIE_RPIFR1_INTR_SHIFT		27
-+
-+/* Bridge Info Register definitions */
-+#define XILINX_PCIE_BIR_ECAM_SZ_MASK	GENMASK(18, 16)
-+#define XILINX_PCIE_BIR_ECAM_SZ_SHIFT	16
-+
-+/* Root Port Interrupt FIFO Read Register 2 definitions */
-+#define XILINX_PCIE_RPIFR2_MSG_DATA	GENMASK(15, 0)
-+
-+/* Root Port Status/control Register definitions */
-+#define XILINX_PCIE_REG_RPSC_BEN	BIT(0)
-+
-+/* Phy Status/Control Register definitions */
-+#define XILINX_PCIE_REG_PSCR_LNKUP	BIT(11)
-+
-+/* ECAM definitions */
-+#define ECAM_BUS_NUM_SHIFT		20
-+#define ECAM_DEV_NUM_SHIFT		12
-+
-+/* Number of MSI IRQs */
-+#define XILINX_NUM_MSI_IRQS		128
-+
-+/* Number of Memory Resources */
-+#define XILINX_MAX_NUM_RESOURCES	3
-+
-+/**
-+ * struct xilinx_pcie_port - PCIe port information
-+ * @reg_base: IO Mapped Register Base
-+ * @irq: Interrupt number
-+ * @msi_pages: MSI pages
-+ * @root_busno: Root Bus number
-+ * @dev: Device pointer
-+ * @irq_domain: IRQ domain pointer
-+ * @bus_range: Bus range
-+ * @resources: Bus Resources
-+ */
-+struct xilinx_pcie_port {
-+	void __iomem *reg_base;
-+	u32 irq;
-+	unsigned long msi_pages;
-+	u8 root_busno;
-+	struct device *dev;
-+	struct irq_domain *irq_domain;
-+	struct resource bus_range;
-+	struct list_head resources;
-+};
-+
-+static DECLARE_BITMAP(msi_irq_in_use, XILINX_NUM_MSI_IRQS);
-+
-+static inline struct xilinx_pcie_port *sys_to_pcie(struct pci_sys_data *sys)
-+{
-+	return sys->private_data;
-+}
-+
-+static inline u32 pcie_read(struct xilinx_pcie_port *port, u32 reg)
-+{
-+	return readl(port->reg_base + reg);
-+}
-+
-+static inline void pcie_write(struct xilinx_pcie_port *port,
-+			      u32 val, u32 reg)
-+{
-+	writel(val, port->reg_base + reg);
-+}
-+
-+static inline bool xilinx_pcie_link_is_up(struct xilinx_pcie_port *port)
-+{
-+	return (pcie_read(port, XILINX_PCIE_REG_PSCR) &
-+		XILINX_PCIE_REG_PSCR_LNKUP) ? 1 : 0;
-+}
-+
-+/**
-+ * xilinx_pcie_clear_err_interrupts - Clear Error Interrupts
-+ * @port: PCIe port information
-+ */
-+static void xilinx_pcie_clear_err_interrupts(struct xilinx_pcie_port *port)
-+{
-+	u32 val = pcie_read(port, XILINX_PCIE_REG_RPEFR);
-+
-+	if (val & XILINX_PCIE_RPEFR_ERR_VALID) {
-+		dev_dbg(port->dev, "Requester ID %d\n",
-+			val & XILINX_PCIE_RPEFR_REQ_ID);
-+		pcie_write(port, XILINX_PCIE_RPEFR_ALL_MASK,
-+			   XILINX_PCIE_REG_RPEFR);
-+	}
-+}
-+
-+/**
-+ * xilinx_pcie_valid_device - Check if a valid device is present on bus
-+ * @bus: PCI Bus structure
-+ * @devfn: device/function
-+ *
-+ * Return: 'true' on success and 'false' if invalid device is found
-+ */
-+static bool xilinx_pcie_valid_device(struct pci_bus *bus,
-+				     unsigned int devfn)
-+{
-+	struct xilinx_pcie_port *port = sys_to_pcie(bus->sysdata);
-+
-+	/* Check if link is up when trying to access downstream ports */
-+	if (bus->number != port->root_busno)
-+		if (!xilinx_pcie_link_is_up(port))
-+			return false;
-+
-+	/* Only one device down on each root port */
-+	if (bus->number == port->root_busno && devfn > 0)
-+		return false;
-+
-+	/*
-+	 * Do not read more than one device on the bus directly attached
-+	 * to RC.
-+	 */
-+	if (bus->primary == port->root_busno && devfn > 0)
-+		return false;
-+
-+	return true;
-+}
-+
-+/**
-+ * xilinx_pcie_config_base - Get configuration base
-+ * @bus: PCI Bus structure
-+ * @devfn: Device/function
-+ * @where: Offset from base
-+ *
-+ * Return: Base address of the configuration space needed to be
-+ *	   accessed.
-+ */
-+static void __iomem *xilinx_pcie_config_base(struct pci_bus *bus,
-+						 unsigned int devfn,
-+						 int where)
-+{
-+	struct xilinx_pcie_port *port = sys_to_pcie(bus->sysdata);
-+	int relbus;
-+
-+	relbus = (bus->number << ECAM_BUS_NUM_SHIFT) |
-+		 (devfn << ECAM_DEV_NUM_SHIFT);
-+
-+	return port->reg_base + relbus + where;
-+}
-+
-+/**
-+ * xilinx_pcie_read_config - Read configuration space
-+ * @bus: PCI Bus structure
-+ * @devfn: Device/function
-+ * @where: Offset from base
-+ * @size: Byte/word/dword
-+ * @val: Value to be read
-+ *
-+ * Return: PCIBIOS_SUCCESSFUL on success
-+ *	   EINVAL/PCIBIOS_DEVICE_NOT_FOUND/PCIBIOS_BAD_REGISTER_NUMBER
-+ *	   on failure.
-+ */
-+static int xilinx_pcie_read_config(struct pci_bus *bus,
-+				   unsigned int devfn, int where,
-+				   int size, u32 *val)
-+{
-+	void __iomem *addr;
-+
-+	if (!xilinx_pcie_valid_device(bus, devfn)) {
-+		*val = 0xFFFFFFFF;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	addr = xilinx_pcie_config_base(bus, devfn, where);
-+
-+	switch (size) {
-+	case 1:
-+		*val = readb(addr);
-+		break;
-+	case 2:
-+		*val = readw(addr);
-+		break;
-+	default:
-+		*val = readl(addr);
-+		break;
-+	}
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+/**
-+ * xilinx_pcie_write_config - Write configuration space
-+ * @bus: PCI Bus structure
-+ * @devfn: Device/function
-+ * @where: Offset from base
-+ * @size: Byte/word/dword
-+ * @val: Value to be written to device
-+ *
-+ * Return: PCIBIOS_SUCCESSFUL on success,
-+ *	   EINVAL/PCIBIOS_DEVICE_NOT_FOUND/PCIBIOS_BAD_REGISTER_NUMBER
-+ *	   on failure.
-+ */
-+static int xilinx_pcie_write_config(struct pci_bus *bus,
-+				    unsigned int devfn, int where,
-+				    int size, u32 val)
-+{
-+	void __iomem *addr;
-+
-+	if (!xilinx_pcie_valid_device(bus, devfn))
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	addr = xilinx_pcie_config_base(bus, devfn, where);
-+
-+	switch (size) {
-+	case 1:
-+		writeb(val, addr);
-+		break;
-+	case 2:
-+		writew(val, addr);
-+		break;
-+	default:
-+		writel(val, addr);
-+		break;
-+	}
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+/* PCIe operations */
-+static struct pci_ops xilinx_pcie_ops = {
-+	.read  = xilinx_pcie_read_config,
-+	.write = xilinx_pcie_write_config,
-+};
-+
-+/* MSI functions */
-+
-+/**
-+ * xilinx_pcie_destroy_msi - Free MSI number
-+ * @irq: IRQ to be freed
-+ */
-+static void xilinx_pcie_destroy_msi(unsigned int irq)
-+{
-+	struct irq_desc *desc;
-+	struct msi_desc *msi;
-+	struct xilinx_pcie_port *port;
-+
-+	desc = irq_to_desc(irq);
-+	msi = irq_desc_get_msi_desc(desc);
-+	port = sys_to_pcie(msi->dev->bus->sysdata);
-+
-+	if (!test_bit(irq, msi_irq_in_use))
-+		dev_err(port->dev, "Trying to free unused MSI#%d\n", irq);
-+	else
-+		clear_bit(irq, msi_irq_in_use);
-+}
-+
-+/**
-+ * xilinx_pcie_assign_msi - Allocate MSI number
-+ * @port: PCIe port structure
-+ *
-+ * Return: A valid IRQ on success and error value on failure.
-+ */
-+static int xilinx_pcie_assign_msi(struct xilinx_pcie_port *port)
-+{
-+	int pos;
-+
-+	pos = find_first_zero_bit(msi_irq_in_use, XILINX_NUM_MSI_IRQS);
-+	if (pos < XILINX_NUM_MSI_IRQS)
-+		set_bit(pos, msi_irq_in_use);
-+	else
-+		return -ENOSPC;
-+
-+	return pos;
-+}
-+
-+/**
-+ * xilinx_msi_teardown_irq - Destroy the MSI
-+ * @chip: MSI Chip descriptor
-+ * @irq: MSI IRQ to destroy
-+ */
-+static void xilinx_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
-+{
-+	xilinx_pcie_destroy_msi(irq);
-+}
-+
-+/**
-+ * xilinx_pcie_msi_setup_irq - Setup MSI request
-+ * @chip: MSI chip pointer
-+ * @pdev: PCIe device pointer
-+ * @desc: MSI descriptor pointer
-+ *
-+ * Return: '0' on success and error value on failure
-+ */
-+static int xilinx_pcie_msi_setup_irq(struct msi_chip *chip,
-+				     struct pci_dev *pdev,
-+				     struct msi_desc *desc)
-+{
-+	struct xilinx_pcie_port *port = sys_to_pcie(pdev->bus->sysdata);
-+	unsigned int irq;
-+	int hwirq;
-+	struct msi_msg msg;
-+	phys_addr_t msg_addr;
-+
-+	hwirq = xilinx_pcie_assign_msi(port);
-+	if (irq < 0)
-+		return irq;
-+
-+	irq = irq_create_mapping(port->irq_domain, hwirq);
-+	if (!irq)
-+		return -EINVAL;
-+
-+	irq_set_msi_desc(irq, desc);
-+
-+	msg_addr = virt_to_phys((void *)port->msi_pages);
-+
-+	msg.address_hi = 0;
-+	msg.address_lo = msg_addr;
-+	msg.data = irq;
-+
-+	write_msi_msg(irq, &msg);
-+
-+	return 0;
-+}
-+
-+/* MSI Chip Descriptor */
-+static struct msi_chip xilinx_pcie_msi_chip = {
-+	.setup_irq = xilinx_pcie_msi_setup_irq,
-+	.teardown_irq = xilinx_msi_teardown_irq,
-+};
-+
-+/* HW Interrupt Chip Descriptor */
-+static struct irq_chip xilinx_msi_irq_chip = {
-+	.name = "Xilinx PCIe MSI",
-+	.irq_enable = unmask_msi_irq,
-+	.irq_disable = mask_msi_irq,
-+	.irq_mask = mask_msi_irq,
-+	.irq_unmask = unmask_msi_irq,
-+};
-+
-+/**
-+ * xilinx_pcie_msi_map - Set the handler for the MSI and mark IRQ as valid
-+ * @domain: IRQ domain
-+ * @irq: Virtual IRQ number
-+ * @hwirq: HW interrupt number
-+ *
-+ * Return: Always returns 0.
-+ */
-+static int xilinx_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
-+			       irq_hw_number_t hwirq)
-+{
-+	irq_set_chip_and_handler(irq, &xilinx_msi_irq_chip, handle_simple_irq);
-+	irq_set_chip_data(irq, domain->host_data);
-+	set_irq_flags(irq, IRQF_VALID);
-+
-+	return 0;
-+}
-+
-+/* IRQ Domain operations */
-+static const struct irq_domain_ops msi_domain_ops = {
-+	.map = xilinx_pcie_msi_map,
-+};
-+
-+/**
-+ * xilinx_pcie_enable_msi - Enable MSI support
-+ * @port: PCIe port information
-+ */
-+static void xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
-+{
-+	phys_addr_t msg_addr;
-+
-+	port->msi_pages = __get_free_pages(GFP_KERNEL, 0);
-+	msg_addr = virt_to_phys((void *)port->msi_pages);
-+	pcie_write(port, 0x0, XILINX_PCIE_REG_MSIBASE1);
-+	pcie_write(port, msg_addr, XILINX_PCIE_REG_MSIBASE2);
-+}
-+
-+/**
-+ * xilinx_pcie_add_bus - Add MSI chip info to PCIe bus
-+ * @bus: PCIe bus
-+ */
-+static void xilinx_pcie_add_bus(struct pci_bus *bus)
-+{
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		struct xilinx_pcie_port *port = sys_to_pcie(bus->sysdata);
-+
-+		xilinx_pcie_msi_chip.dev = port->dev;
-+		bus->msi = &xilinx_pcie_msi_chip;
-+	}
-+}
-+
-+/* INTx Functions */
-+
-+/**
-+ * xilinx_pcie_intx_map - Set the handler for the INTx and mark IRQ as valid
-+ * @domain: IRQ domain
-+ * @irq: Virtual IRQ number
-+ * @hwirq: HW interrupt number
-+ *
-+ * Return: Always returns 0.
-+ */
-+static int xilinx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
-+				irq_hw_number_t hwirq)
-+{
-+	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
-+	irq_set_chip_data(irq, domain->host_data);
-+	set_irq_flags(irq, IRQF_VALID);
-+
-+	return 0;
-+}
-+
-+/* INTx IRQ Domain operations */
-+static const struct irq_domain_ops intx_domain_ops = {
-+	.map = xilinx_pcie_intx_map,
-+};
-+
-+/* PCIe HW Functions */
-+
-+/**
-+ * xilinx_pcie_intr_handler - Interrupt Service Handler
-+ * @irq: IRQ number
-+ * @data: PCIe port information
-+ *
-+ * Return: IRQ_HANDLED on success and IRQ_NONE on failure
-+ */
-+static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
-+{
-+	struct xilinx_pcie_port *port = (struct xilinx_pcie_port *)data;
-+	u32 val, mask, status, msi_data;
-+
-+	/* Read interrupt decode and mask registers */
-+	val = pcie_read(port, XILINX_PCIE_REG_IDR);
-+	mask = pcie_read(port, XILINX_PCIE_REG_IMR);
-+
-+	status = val & mask;
-+	if (!status)
-+		return IRQ_NONE;
-+
-+	if (status & XILINX_PCIE_INTR_LINK_DOWN)
-+		dev_warn(port->dev, "Link Down\n");
-+
-+	if (status & XILINX_PCIE_INTR_ECRC_ERR)
-+		dev_warn(port->dev, "ECRC failed\n");
-+
-+	if (status & XILINX_PCIE_INTR_STR_ERR)
-+		dev_warn(port->dev, "Streaming error\n");
-+
-+	if (status & XILINX_PCIE_INTR_HOT_RESET)
-+		dev_info(port->dev, "Hot reset\n");
-+
-+	if (status & XILINX_PCIE_INTR_CFG_TIMEOUT)
-+		dev_warn(port->dev, "ECAM access timeout\n");
-+
-+	if (status & XILINX_PCIE_INTR_CORRECTABLE) {
-+		dev_warn(port->dev, "Correctable error message\n");
-+		xilinx_pcie_clear_err_interrupts(port);
-+	}
-+
-+	if (status & XILINX_PCIE_INTR_NONFATAL) {
-+		dev_warn(port->dev, "Non fatal error message\n");
-+		xilinx_pcie_clear_err_interrupts(port);
-+	}
-+
-+	if (status & XILINX_PCIE_INTR_FATAL) {
-+		dev_warn(port->dev, "Fatal error message\n");
-+		xilinx_pcie_clear_err_interrupts(port);
-+	}
-+
-+	if (status & XILINX_PCIE_INTR_INTX) {
-+		/* INTx interrupt received */
-+		val = pcie_read(port, XILINX_PCIE_REG_RPIFR1);
-+
-+		/* Check whether interrupt valid */
-+		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
-+			dev_warn(port->dev, "RP Intr FIFO1 read error\n");
-+			return IRQ_HANDLED;
-+		}
-+
-+		/* Clear interrupt FIFO register 1 */
-+		pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
-+			   XILINX_PCIE_REG_RPIFR1);
-+
-+		/* Handle INTx Interrupt */
-+		val = ((val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
-+			XILINX_PCIE_RPIFR1_INTR_SHIFT) + 1;
-+		generic_handle_irq(irq_find_mapping(port->irq_domain, val));
-+	}
-+
-+	if (status & XILINX_PCIE_INTR_MSI) {
-+		/* MSI Interrupt */
-+		val = pcie_read(port, XILINX_PCIE_REG_RPIFR1);
-+
-+		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
-+			dev_warn(port->dev, "RP Intr FIFO1 read error\n");
-+			return IRQ_HANDLED;
-+		}
-+
-+		if (val & XILINX_PCIE_RPIFR1_MSI_INTR) {
-+			msi_data = pcie_read(port, XILINX_PCIE_REG_RPIFR2) &
-+				   XILINX_PCIE_RPIFR2_MSG_DATA;
-+
-+			/* Clear interrupt FIFO register 1 */
-+			pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
-+				   XILINX_PCIE_REG_RPIFR1);
-+
-+			if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+				/* Handle MSI Interrupt */
-+				generic_handle_irq(msi_data);
-+			}
-+		}
-+	}
-+
-+	if (status & XILINX_PCIE_INTR_SLV_UNSUPP)
-+		dev_warn(port->dev, "Slave unsupported request\n");
-+
-+	if (status & XILINX_PCIE_INTR_SLV_UNEXP)
-+		dev_warn(port->dev, "Slave unexpected completion\n");
-+
-+	if (status & XILINX_PCIE_INTR_SLV_COMPL)
-+		dev_warn(port->dev, "Slave completion timeout\n");
-+
-+	if (status & XILINX_PCIE_INTR_SLV_ERRP)
-+		dev_warn(port->dev, "Slave Error Poison\n");
-+
-+	if (status & XILINX_PCIE_INTR_SLV_CMPABT)
-+		dev_warn(port->dev, "Slave Completer Abort\n");
-+
-+	if (status & XILINX_PCIE_INTR_SLV_ILLBUR)
-+		dev_warn(port->dev, "Slave Illegal Burst\n");
-+
-+	if (status & XILINX_PCIE_INTR_MST_DECERR)
-+		dev_warn(port->dev, "Master decode error\n");
-+
-+	if (status & XILINX_PCIE_INTR_MST_SLVERR)
-+		dev_warn(port->dev, "Master slave error\n");
-+
-+	if (status & XILINX_PCIE_INTR_MST_ERRP)
-+		dev_warn(port->dev, "Master error poison\n");
-+
-+	/* Clear the Interrupt Decode register */
-+	pcie_write(port, status, XILINX_PCIE_REG_IDR);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+/**
-+ * xilinx_pcie_free_irq_domain - Free IRQ domain
-+ * @port: PCIe port information
-+ */
-+static void xilinx_pcie_free_irq_domain(struct xilinx_pcie_port *port)
-+{
-+	int i;
-+	u32 irq, num_irqs;
-+
-+	/* Free IRQ Domain */
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+
-+		free_pages(port->msi_pages, 0);
-+
-+		num_irqs = XILINX_NUM_MSI_IRQS;
-+	} else {
-+		/* INTx */
-+		num_irqs = 4;
-+	}
-+
-+	for (i = 0; i < num_irqs; i++) {
-+		irq = irq_find_mapping(port->irq_domain, i);
-+		if (irq > 0)
-+			irq_dispose_mapping(irq);
-+	}
-+
-+	irq_domain_remove(port->irq_domain);
-+}
-+
-+/**
-+ * xilinx_pcie_init_irq_domain - Initialize IRQ domain
-+ * @port: PCIe port information
-+ *
-+ * Return: '0' on success and error value on failure
-+ */
-+static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
-+{
-+	struct device *dev = port->dev;
-+	struct device_node *node = dev->of_node;
-+	struct device_node *pcie_intc_node;
-+
-+	/* Setup INTx */
-+	pcie_intc_node = of_get_next_child(node, NULL);
-+	if (!pcie_intc_node) {
-+		dev_err(dev, "No PCIe Intc node found\n");
-+		return PTR_ERR(pcie_intc_node);
-+	}
-+
-+	port->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
-+						 &intx_domain_ops,
-+						 port);
-+	if (!port->irq_domain) {
-+		dev_err(dev, "Failed to get a INTx IRQ domain\n");
-+		return PTR_ERR(port->irq_domain);
-+	}
-+
-+	/* Setup MSI */
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		port->irq_domain = irq_domain_add_linear(node,
-+							 XILINX_NUM_MSI_IRQS,
-+							 &msi_domain_ops,
-+							 &xilinx_pcie_msi_chip);
-+		if (!port->irq_domain) {
-+			dev_err(dev, "Failed to get a MSI IRQ domain\n");
-+			return PTR_ERR(port->irq_domain);
-+		}
-+
-+		xilinx_pcie_enable_msi(port);
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-+ * xilinx_pcie_init_port - Initialize hardware
-+ * @port: PCIe port information
-+ */
-+static void xilinx_pcie_init_port(struct xilinx_pcie_port *port)
-+{
-+	if (xilinx_pcie_link_is_up(port))
-+		dev_info(port->dev, "PCIe Link is UP\n");
-+	else
-+		dev_info(port->dev, "PCIe Link is DOWN\n");
-+
-+	/* Disable all interrupts */
-+	pcie_write(port, ~XILINX_PCIE_IDR_ALL_MASK,
-+		   XILINX_PCIE_REG_IMR);
-+
-+	/* Clear pending interrupts */
-+	pcie_write(port, pcie_read(port, XILINX_PCIE_REG_IDR) &
-+			 XILINX_PCIE_IMR_ALL_MASK,
-+		   XILINX_PCIE_REG_IDR);
-+
-+	/* Enable all interrupts */
-+	pcie_write(port, XILINX_PCIE_IMR_ALL_MASK, XILINX_PCIE_REG_IMR);
-+
-+	/* Enable the Bridge enable bit */
-+	pcie_write(port, pcie_read(port, XILINX_PCIE_REG_RPSC) |
-+			 XILINX_PCIE_REG_RPSC_BEN,
-+		   XILINX_PCIE_REG_RPSC);
-+}
-+
-+/**
-+ * xilinx_pcie_setup - Setup memory resources
-+ * @nr: Bus number
-+ * @sys: Per controller structure
-+ *
-+ * Return: '1' on success and error value on failure
-+ */
-+static int xilinx_pcie_setup(int nr, struct pci_sys_data *sys)
-+{
-+	struct xilinx_pcie_port *port = sys_to_pcie(sys);
-+
-+	list_splice_init(&port->resources, &sys->resources);
-+
-+	return 1;
-+}
-+
-+/**
-+ * xilinx_pcie_scan_bus - Scan PCIe bus for devices
-+ * @nr: Bus number
-+ * @sys: Per controller structure
-+ *
-+ * Return: Valid Bus pointer on success and NULL on failure
-+ */
-+static struct pci_bus __init *xilinx_pcie_scan_bus(int nr,
-+						   struct pci_sys_data *sys)
-+{
-+	struct xilinx_pcie_port *port = sys_to_pcie(sys);
-+	struct pci_bus *bus;
-+
-+	port->root_busno = sys->busnr;
-+	bus = pci_scan_root_bus(port->dev, sys->busnr, &xilinx_pcie_ops,
-+				sys, &sys->resources);
-+
-+	return bus;
-+}
-+
-+/**
-+ * xilinx_pcie_parse_and_add_res - Add resources by parsing ranges
-+ * @port: PCIe port information
-+ *
-+ * Return: '0' on success and error value on failure
-+ */
-+static int xilinx_pcie_parse_and_add_res(struct xilinx_pcie_port *port)
-+{
-+	struct device *dev = port->dev;
-+	struct device_node *node = dev->of_node;
-+	struct resource *mem;
-+	resource_size_t offset;
-+	struct of_pci_range_parser parser;
-+	struct of_pci_range range;
-+	struct pci_host_bridge_window *win;
-+	int err = 0, mem_resno = 0;
-+
-+	/* Get the ranges */
-+	if (of_pci_range_parser_init(&parser, node)) {
-+		dev_err(dev, "missing \"ranges\" property\n");
-+		return -EINVAL;
-+	}
-+
-+	/* Parse the ranges and add the resources found to the list */
-+	for_each_of_pci_range(&parser, &range) {
-+
-+		if (mem_resno >= XILINX_MAX_NUM_RESOURCES) {
-+			dev_err(dev, "Maximum memory resources exceeded\n");
-+			return -EINVAL;
-+		}
-+
-+		mem = devm_kmalloc(dev, sizeof(*mem), GFP_KERNEL);
-+		if (!mem) {
-+			err = -ENOMEM;
-+			goto free_resources;
-+		}
-+
-+		of_pci_range_to_resource(&range, node, mem);
-+
-+		switch (mem->flags & IORESOURCE_TYPE_BITS) {
-+		case IORESOURCE_MEM:
-+			offset = range.cpu_addr - range.pci_addr;
-+			mem_resno++;
-+			break;
-+		default:
-+			err = -EINVAL;
-+			break;
-+		}
-+
-+		if (err < 0) {
-+			dev_warn(dev, "Invalid resource found %pR\n", mem);
-+			continue;
-+		}
-+
-+		err = request_resource(&iomem_resource, mem);
-+		if (err)
-+			goto free_resources;
-+
-+		pci_add_resource_offset(&port->resources, mem, offset);
-+	}
-+
-+	/* Get the bus range */
-+	if (of_pci_parse_bus_range(node, &port->bus_range)) {
-+		u32 val = pcie_read(port, XILINX_PCIE_REG_BIR);
-+		u8 last;
-+
-+		last = (val & XILINX_PCIE_BIR_ECAM_SZ_MASK) >>
-+			XILINX_PCIE_BIR_ECAM_SZ_SHIFT;
-+
-+		port->bus_range = (struct resource) {
-+			.name	= node->name,
-+			.start	= 0,
-+			.end	= last,
-+			.flags	= IORESOURCE_BUS,
-+		};
-+	}
-+
-+	/* Register bus resource */
-+	pci_add_resource(&port->resources, &port->bus_range);
-+
-+	return 0;
-+
-+free_resources:
-+	release_child_resources(&iomem_resource);
-+	list_for_each_entry(win, &port->resources, list)
-+		devm_kfree(dev, win->res);
-+	pci_free_resource_list(&port->resources);
-+
-+	return err;
-+}
-+
-+/**
-+ * xilinx_pcie_parse_dt - Parse Device tree
-+ * @port: PCIe port information
-+ *
-+ * Return: '0' on success and error value on failure
-+ */
-+static int xilinx_pcie_parse_dt(struct xilinx_pcie_port *port)
-+{
-+	struct device *dev = port->dev;
-+	struct device_node *node = dev->of_node;
-+	struct resource regs;
-+	const char *type;
-+	int err;
-+
-+	type = of_get_property(node, "device_type", NULL);
-+	if (!type || strcmp(type, "pci")) {
-+		dev_err(dev, "invalid \"device_type\" %s\n", type);
-+		return -EINVAL;
-+	}
-+
-+	err = of_address_to_resource(node, 0, &regs);
-+	if (err) {
-+		dev_err(dev, "missing \"reg\" property\n");
-+		return err;
-+	}
-+
-+	port->reg_base = devm_ioremap_resource(dev, &regs);
-+	if (IS_ERR(port->reg_base))
-+		return PTR_ERR(port->reg_base);
-+
-+	port->irq = irq_of_parse_and_map(node, 0);
-+	err = devm_request_irq(dev, port->irq, xilinx_pcie_intr_handler,
-+			       IRQF_SHARED, "xilinx-pcie", port);
-+	if (err) {
-+		dev_err(dev, "unable to request irq %d\n", port->irq);
-+		return err;
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-+ * xilinx_pcie_probe - Probe function
-+ * @pdev: Platform device pointer
-+ *
-+ * Return: '0' on success and error value on failure
-+ */
-+static int xilinx_pcie_probe(struct platform_device *pdev)
-+{
-+	struct xilinx_pcie_port *port;
-+	struct hw_pci hw;
-+	struct device *dev = &pdev->dev;
-+	int err;
-+
-+	if (!dev->of_node)
-+		return -ENODEV;
-+
-+	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
-+	if (!port)
-+		return -ENOMEM;
-+
-+	port->dev = dev;
-+
-+	err = xilinx_pcie_parse_dt(port);
-+	if (err) {
-+		dev_err(dev, "Parsing DT failed\n");
-+		return err;
-+	}
-+
-+	xilinx_pcie_init_port(port);
-+
-+	err = xilinx_pcie_init_irq_domain(port);
-+	if (err) {
-+		dev_err(dev, "Failed creating IRQ Domain\n");
-+		return err;
-+	}
-+
-+	/*
-+	 * Parse PCI ranges, configuration bus range and
-+	 * request their resources
-+	 */
-+	INIT_LIST_HEAD(&port->resources);
-+	err = xilinx_pcie_parse_and_add_res(port);
-+	if (err) {
-+		dev_err(dev, "Failed adding resources\n");
-+		return err;
-+	}
-+
-+	platform_set_drvdata(pdev, port);
-+
-+	/* Register the device */
-+	memset(&hw, 0, sizeof(hw));
-+	hw = (struct hw_pci) {
-+		.nr_controllers	= 1,
-+		.private_data	= (void **)&port,
-+		.setup		= xilinx_pcie_setup,
-+		.map_irq	= of_irq_parse_and_map_pci,
-+		.add_bus	= xilinx_pcie_add_bus,
-+		.scan		= xilinx_pcie_scan_bus,
-+		.ops		= &xilinx_pcie_ops,
-+	};
-+	pci_common_init_dev(dev, &hw);
-+
-+	return 0;
-+}
-+
-+/**
-+ * xilinx_pcie_remove - Remove function
-+ * @pdev: Platform device pointer
-+ *
-+ * Return: '0' always
-+ */
-+static int xilinx_pcie_remove(struct platform_device *pdev)
-+{
-+	struct xilinx_pcie_port *port = platform_get_drvdata(pdev);
-+
-+	xilinx_pcie_free_irq_domain(port);
-+
-+	return 0;
-+}
-+
-+static struct of_device_id xilinx_pcie_of_match[] = {
-+	{ .compatible = "xlnx,axi-pcie-host-1.00.a", },
-+	{}
-+};
-+
-+static struct platform_driver xilinx_pcie_driver = {
-+	.driver = {
-+		.name = "xilinx-pcie",
-+		.owner = THIS_MODULE,
-+		.of_match_table = xilinx_pcie_of_match,
-+		.suppress_bind_attrs = true,
-+	},
-+	.probe = xilinx_pcie_probe,
-+	.remove = xilinx_pcie_remove,
-+};
-+module_platform_driver(xilinx_pcie_driver);
-+
-+MODULE_AUTHOR("Xilinx Inc");
-+MODULE_DESCRIPTION("Xilinx AXI PCIe driver");
-+MODULE_LICENSE("GPL v2");
--- 
-1.7.9.5
++++ linux-pm/Documentation/power/suspend-and-interrupts.txt
+@@ -0,0 +1,156 @@
++System Suspend and Device Interrupts
++
++Copyright (C) 2014 Intel Corp.
++Author: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
++
++
++Suspending and Resuming Device IRQs
++-----------------------------------
++
++Device interrupt request lines (IRQs) are generally disabled during system
++suspend after the "late" phase of suspending devices (that is, after all of the
++->prepare, ->suspend and ->suspend_late callbacks have been executed for all
++devices).  That is done by suspend_device_irqs().
++
++The rationale for doing so is that after the "late" phase of device suspend
++there is no legitimate reason why any interrupts from suspended devices should
++trigger and if any devices have not been suspended properly yet, it is better to
++block interrupts from them anyway.  Also, in the past we had problems with
++interrupt handlers for shared IRQs that device drivers using them were not
++prepared for interrupts triggering after their devices had been suspended.
++In some cases they would attempt to access, for example, memory address spaces
++of suspended devices and cause unpredictable behavior to ensue as a result.
++Unfortunately, such problems are very difficult to debug and the introduction
++of suspend_device_irqs(), along with the "noirq" phase of device suspend and
++resume, was the only practical way to prevent them from happening.
++
++Device IRQs are re-enabled during system resume, right before the "early" phase
++of resuming devices (that is, before starting to execute ->resume_early
++callbacks for devices).  The function doing that is resume_device_irqs().
++
++
++The IRQF_NO_SUSPEND Flag
++------------------------
++
++There are interrupts that can legitimately trigger during the entire system
++suspend-resume cycle, including the "noirq" phases of suspending and resuming
++devices as well as during the time when nonboot CPUs are taken offline and
++brought back online.  That applies to timer interrupts in the first place,
++but also to IPIs and to some other special-purpose interrupts, such as the ACPI
++SCI that isn't associated with any specific device and is used for signaling
++many different types of events.
++
++The IRQF_NO_SUSPEND flag is used to indicate that to the IRQ subsystem when
++requesting a special-purpose interrupt.  It causes suspend_device_irqs() to
++leave the corresponding IRQ enabled so as to allow the interrupt to work all
++the time as expected.
++
++If that IRQ is shared, it will still be left enabled by suspend_device_irqs(),
++but the interrupt handlers that were installed for it without IRQF_NO_SUSPEND
++set will not be executed after suspend_device_irqs() has returned.  Then, the
++IRQ subsystem will only execute interrupt handlers for which IRQF_NO_SUSPEND is
++set.  In that case, if the final result of handing an interrupt is IRQ_NONE, the
++IRQ subsystem will assume that the interrupt came from one of the apparently
++suspended devices that share the IRQ with an IRQF_NO_SUSPEND interrupt source
++(or more of them).  As a result, the IRQ will be disabled and marked as
++"suspended" to prevent spurious interrupts from triggering going forward.  Next
++(1) if a system suspend is in progress, it will be aborted or
++(2) if the system is in the "freeze" sleep state (suspend-to-idle), it will be
++    woken up,
++to allow the system to recover from that potentially unstable condition
++gracefully.
++
++The IRQF_NO_SUSPEND flag should not be used when requesting interrupts that
++subsequently will be configured for waking up the system from sleep states
++via enable_irq_wake() (that is, system wakeup interrupts).
++
++
++System Wakeup Interrupts, enable_irq_wake() and disable_irq_wake()
++------------------------------------------------------------------
++
++System wakeup interrupts generally need to be configured to wake up the system
++from sleep states, especially if they are used for different purposes (e.g. as
++I/O interrupts) in the working state.
++
++That may involve turning on a special signal handling logic within the platform
++(such as an SoC) so that signals from a given line are routed in a different way
++during system sleep so as to trigger a system wakeup when needed.  For example,
++the platform may include a dedicated interrupt controller used specifically for
++handling system wakeup events.  Then, if a given interrupt line is supposed to
++wake up the system from sleep sates, the corresponding input of that interrupt
++controller needs to be enabled to handle signals from the line in question.
++After wakeup, it generally is better to disable that input to prevent the
++dedicated controller from triggering interrupts unnecessarily.
++
++The IRQ subsystem provides two helper functions to be used by device drivers for
++those purposes.  Namely, enable_irq_wake() turns on the platform's logic for
++handling the given IRQ as a system wakeup interrupt line and disable_irq_wake()
++turns that logic off.
++
++Calling enable_irq_wake() doesn't prevent the working-state logic for handling
++the given IRQ from being disabled by suspend_device_irqs(), so after the "late"
++phase of suspending devices the IRQ can only be expected to work as a system
++wakeup interrupt line.  The IRQ subsystem checks if there are any pending
++interrupts on those lines by calling check_wakeup_irqs() at the last (syscore)
++stage of full system suspend.  If there are any, it aborts the system suspend
++by returning -EBUSY from that function.  It does not, however, invoke any
++interrupt handlers for system wakeup IRQs after suspend_device_irqs().
++
++
++System Wakeup Interrupts and Suspend-to-Idle
++--------------------------------------------
++
++Suspend-to-idle (also known as the "freeze" sleep state) is a relatively new
++system sleep state that works by idling all of the processors and waiting for
++interrupts right after the "noirq" phase of suspending devices.
++
++Of course, this means that all of the interrupts with the IRQF_NO_SUSPEND flag
++set will bring CPUs out of idle while in that state, but they will not cause the
++IRQ subsystem to trigger a system wakeup, unless the final result of handling an
++interrupt for a shared IRQ is IRQ_NONE.
++
++System wakeup interrupts, in turn, are generally expected to trigger wakeup from
++system sleep states, including suspend-to-idle.  For this reason, all of the
++IRQs configured for system wakeup with enable_irq_wake(), previously disabled
++by suspend_device_irqs(), are re-enabled right before starting the final "go to
++an idle state and wait for an interrupt" loop of suspend-to-idle.  However, they
++are also reconfigured so that the original handlers associated with them will
++not be invoked at that time.  Those interrupt handlers are all temporarily
++replaced with a special "wakeup mode" interrupt handler that disables the IRQ,
++marks it as "suspended" and pending and triggers wakeup from suspend-to-idle.
++
++The rationale here is to keep the behavior consistent with the previously
++existing way of handling wakeup interrupts during full system suspends, which
++is that (a) interrupt handlers are not executed for them after
++suspend_device_irqs() and (b) full system suspends are aborted if any of them
++are received after suspend_device_irqs().  Combined with the requirement that
++system wakeup interrupts wake up the system from suspend-to-idle, (a) and (b)
++imply that interrupt handlers should not be invoked for wakeup interrupts in
++suspend-to-idle, although those interrupts should still wake up the system from
++that state.  The IRQs that triggered wakeup also need to be marked as pending
++to avoid losing wakeup events.
++
++When wakeup from suspend-to-idle is triggered, the wakeup IRQs are disabled
++again and their original behavior is restored.  They are subsequently re-enabled
++by resume_device_irqs(), as usual.
++
++
++IRQF_NO_SUSPEND and enable_irq_wake()
++-------------------------------------
++
++There are no valid reasons to use both enable_irq_wake() and the IRQF_NO_SUSPEND
++flag on the same IRQ.
++
++First of all, if the IRQ is not shared, the rules for handling IRQF_NO_SUSPEND
++interrupts (interrupt handlers are invoked after suspend_device_irqs()) are
++directly at odds with the rules for handling system wakeup interrupts (interrupt
++handlers are not invoked after suspend_device_irqs()).
++
++Secondly, enable_irq_wake() applies to entire IRQs and not to individual
++interrupt handlers, so sharing an IRQ between a system wakeup interrupt source
++and an IRQF_NO_SUSPEND interrupt source does not make sense in principle.  If
++attempted, it leads to situations in which genuine wakeup interrups are lost,
++because they are regarded as interrupts from the IRQF_NO_SUSPEND interrupt
++source, or are reported as unhandled interrupts, depending on the implementation
++of the interrupt handler for that source, the timing of events and other
++factors.
 
