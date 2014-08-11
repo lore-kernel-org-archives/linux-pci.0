@@ -1,94 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:64755 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751769AbaHLHC7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 03:02:59 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>, <linux-pci@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<arnab.basu@freescale.com>, <x86@kernel.org>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [RFC PATCH 00/20] Use msi_chip to configure MSI/MSI-X in all platforms
-Date: Tue, 12 Aug 2014 15:25:53 +0800
-Message-ID: <1407828373-24322-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-qg0-f49.google.com ([209.85.192.49]:45243 "EHLO
+	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753421AbaHKRB2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 13:01:28 -0400
+Received: by mail-qg0-f49.google.com with SMTP id j107so8553868qga.8
+        for <linux-pci@vger.kernel.org>; Mon, 11 Aug 2014 10:01:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <53D9FADA.6020304@iam.tj>
+References: <53D9FADA.6020304@iam.tj>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 11 Aug 2014 11:01:08 -0600
+Message-ID: <CAErSpo4J6nNzhT6e7xf85+J_dDCht3V35HLAmc+zCPiA48MUMw@mail.gmail.com>
+Subject: Re: Regression: pci=realloc fails to modify bridge windows, causing
+ devices to fail BAR allocation
+To: TJ <linux@iam.tj>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series is mainly to use msi_chip instead of currently weak arch functions
-across all platforms. Also clean up current MSI code and make drivers support
-MSI easier.  
+[+cc linux-pci]
 
-Yijing Wang (20):
-  x86/xen/MSI: Eliminate arch_msix_mask_irq() and arch_msi_mask_irq()
-  MSI: Clean up struct msi_chip argument
-  PCI/MSI: Remove useless bus->msi assignment
-  MSI: Remove the redundant irq_set_chip_data()
-  MSI: Refactor struct msi_chip to become more common
-  PCI/MSI: Introduce arch_get_match_msi_chip() to find the match
-    msi_chip
-  x86/MSI: Use msi_chip instead of arch func to configure MSI/MSI-X
-  x86/xen/MSI: Use msi_chip instead of arch func to configure MSI/MSI-X
-  irq_remapping/MSI: Use msi_chip instead of arch func to configure
-    MSI/MSI-X
-  x86/MSI: Remove unused MSI weak arch functions
-  MIPS/Octeon/MSI: Use msi_chip instead of arch func to configure
-    MSI/MSI-X
-  MIPS/Xlp/MSI: Use msi_chip instead of arch func to configure
-    MSI/MSI-X
-  MIPS/xlr/MSI: Use msi_chip instead of arch func to configure
-    MSI/MSI-X
-  Powerpc/MSI: Use msi_chip instead of arch func to configure MSI/MSI-X
-  s390/MSI: Use msi_chip instead of arch func to configure MSI/MSI-X
-  arm/iop13xx/MSI: Use msi_chip instead of arch func to configure
-    MSI/MSI-X
-  IA64/MSI: Use msi_chip instead of arch func to configure MSI/MSI-X
-  Sparc/MSI: Use msi_chip instead of arch func to configure MSI/MSI-X
-  tile/MSI: Use msi_chip instead of arch func to configure MSI/MSI-X
-  PCI/MSI: Clean up unused MSI arch functions
+On Thu, Jul 31, 2014 at 2:14 AM, TJ <linux@iam.tj> wrote:
+> See https://bugzilla.kernel.org/show_bug.cgi?id=81431
+>
+> Summary:
+>
+> Up until v3.15.7 booting with "pci=realloc,use_crs" successfully modifies
+> the PCI bridge windows to allow an external ExpressCard <> ViDock4 + Nvidia
+> Quadro NVS420 with its 2 GPUs to be configured.
+>
+> With v3.16rc6 and rc7 it fails to do this, leaving the NVS420 inoperable.
 
- arch/arm/mach-iop13xx/include/mach/pci.h |    2 +
- arch/arm/mach-iop13xx/iq81340mc.c        |    1 +
- arch/arm/mach-iop13xx/iq81340sc.c        |    1 +
- arch/arm/mach-iop13xx/msi.c              |   14 +++-
- arch/arm/mach-iop13xx/pci.c              |    6 ++
- arch/ia64/kernel/msi_ia64.c              |   18 +++-
- arch/mips/pci/msi-octeon.c               |   45 ++++------
- arch/mips/pci/msi-xlp.c                  |   15 +++-
- arch/mips/pci/pci-xlr.c                  |   19 +++-
- arch/powerpc/kernel/msi.c                |   23 ++++--
- arch/s390/pci/pci.c                      |   16 +++-
- arch/sparc/kernel/pci.c                  |   18 +++-
- arch/tile/kernel/pci_gx.c                |   20 +++-
- arch/x86/include/asm/pci.h               |    4 +-
- arch/x86/include/asm/x86_init.h          |    3 -
- arch/x86/kernel/apic/io_apic.c           |   35 +++++++-
- arch/x86/kernel/x86_init.c               |   34 -------
- arch/x86/pci/xen.c                       |  139 ++++++++++++++++--------------
- drivers/iommu/irq_remapping.c            |   13 ++-
- drivers/irqchip/irq-armada-370-xp.c      |   12 +--
- drivers/pci/host/pci-tegra.c             |    9 ++-
- drivers/pci/host/pcie-designware.c       |    6 +-
- drivers/pci/host/pcie-rcar.c             |    9 ++-
- drivers/pci/msi.c                        |  118 ++++++++++++--------------
- drivers/pci/probe.c                      |    1 -
- include/linux/msi.h                      |   13 ++--
- 26 files changed, 338 insertions(+), 256 deletions(-)
+Thanks for the report and the dmesg logs.  I'm just returning from
+vacation and haven't been able to analyze them yet.  If you have a
+chance to bisect this to a specific commit, we might be able to fix or
+revert it.
 
+Bjorn
