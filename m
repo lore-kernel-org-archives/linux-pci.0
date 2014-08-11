@@ -1,155 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:35847 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935598AbaH0Uc3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Aug 2014 16:32:29 -0400
-Date: Wed, 27 Aug 2014 22:32:23 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-cc: Peter Zijlstra <peterz@infradead.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dmitry Torokhov <dtor@google.com>,
-	Aubrey Li <aubrey.li@intel.com>
-Subject: Re: [PATCH 2/5 v3] irq / PM: Make wakeup interrupts work with
- suspend-to-idle
-In-Reply-To: <16387974.EqoNYrShmO@vostro.rjw.lan>
-Message-ID: <alpine.DEB.2.10.1408272130350.3323@nanos>
-References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan> <16387974.EqoNYrShmO@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:42513 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750720AbaHKI0Q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 04:26:16 -0400
+Message-ID: <1407745453.4660.7.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH 2/2] PCI: imx6: fix boot hang when link already enabled
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Tim Harvey <tharvey@gateworks.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shawn Guo <Shawn.Guo@freescale.com>,
+	Sascha Hauer <kernel@pengutronix.de>
+Date: Mon, 11 Aug 2014 10:24:13 +0200
+In-Reply-To: <CAJ+vNU0vT2Fot6V=pn7HKDctNHrWMDiudghVTtAojv8mPDXhBw@mail.gmail.com>
+References: <1406830565-23450-1-git-send-email-l.stach@pengutronix.de>
+	 <1406830565-23450-3-git-send-email-l.stach@pengutronix.de>
+	 <CAJ+vNU0vT2Fot6V=pn7HKDctNHrWMDiudghVTtAojv8mPDXhBw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 27 Aug 2014, Rafael J. Wysocki wrote:
-> The line of reasoning leading to that is as follows.
+Hi Tim,
+
+Am Samstag, den 09.08.2014, 10:49 -0700 schrieb Tim Harvey:
+[...]
+
+> i/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> > index a568efaa331c..1be607360988 100644
+> > --- a/drivers/pci/host/pci-imx6.c
+> > +++ b/drivers/pci/host/pci-imx6.c
+> > @@ -49,6 +49,9 @@ struct imx6_pcie {
+> >
+> >  /* PCIe Port Logic registers (memory-mapped) */
+> >  #define PL_OFFSET 0x700
+> > +#define PCIE_PL_PFLR (PL_OFFSET + 0x08)
+> > +#define PCIE_PL_PFLR_LINK_STATE_MASK           (0x3f << 16)
+> > +#define PCIE_PL_PFLR_FORCE_LINK                        (1 << 15)
+> >  #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
+> >  #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
+> >  #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING        (1 << 29)
+> > @@ -214,6 +217,31 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
+> >  static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
+> >  {
+> >         struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+> > +       u32 val, gpr1, gpr12;
+> > +
+> > +       /*
+> > +        * If the bootloader already enabled the link we need some special
+> > +        * handling to get the core back into a state where it is safe to
+> > +        * touch it for configuration. As there is no dedicated reset signal
+> > +        * wired up for MX6QDL, we need to manually force LTSSM into "detect"
+> > +        * state before completely disabling LTSSM, which is a prerequisite
+> > +        * for core configuration.
+> > +        * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
+> > +        * indication that the bootloader activated the link.
+> > +        */
+> > +       regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
+> > +       regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
+> > +
+> > +       if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
+> > +           (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
+> > +               val = readl(pp->dbi_base + PCIE_PL_PFLR);
+> > +               val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
+> > +               val |= PCIE_PL_PFLR_FORCE_LINK;
+> > +               writel(val, pp->dbi_base + PCIE_PL_PFLR);
 > 
-> The way suspend_device_irqs() works and the existing code in
-> check_wakeup_irqs(), called by syscore_suspend(), imply that:
+> Lucas,
 > 
->   (1) Interrupt handlers are not invoked for wakeup interrupts
->       after suspend_device_irqs().
+> I hate to delay this patch any longer as I believe its critical that
+> this gets in the current kernel. I did however encounter an issue when
+> I backported this to another (older 3.10 kernel I use). The access
+> above to dbi_base to force the link down assumes that PCIe clock is
+> enabled (or it will hang the system). This obviously must be the case
+> for the current kernel (the bootloader enables it and I guess the
+> clock setup for imx6 doesn't disturb it), but on the particular kernel
+> I was backporting to there must be enough differences in the clock
+> tree that the clock setup disabled the PCIe clocks. Thus I had to
+> enable them early, right before the access to dbi_base above in that
+> kernel.
 > 
->   (2) All interrups from system wakeup IRQs received after\
->       suspend_device_irqs() cause full system suspends to be aborted.
+> I wonder if we should at least put a comment before the dbi_base
+> access above about the assumption that the bootloader also enabled
+> PCIe clock and the clock config left it as such so we don't get burned
+> later on if the clock config changes and causes a hang here.
 > 
-> In addition to the above, there is the requirement that
-> 
->   (3) System wakeup interrupts should wake up the system from
->       suspend-to-idle.
-> 
-> It immediately follows from (1) and (2) that no effort is made to
-> distinguish "genuine" wakeup interrupts from "spurious" ones.  They
-> all are treated in the same way.  Since (3) means that "genuine"
-> wakeup interrupts are supposed to wake up the system from
-> suspend-to-idle too, consistency with (1) and (2) requires that
-> "spurious" wakeup interrupts should do the same thing.  Thus there is
-> no reason to invoke interrupt handlers for wakeup interrups after
-> suspend_device_irqs() in the suspend-to-idle case.  Moreover, doing
-> so would go against rule (1).
 
-I agree with that, but I disagree with the implementation.
+What clock are we talking about here exactly? If it's just the register
+clock "pcie" we may as well enable it early to make things robust. Other
+clocks may be a bit more problematic.
 
-We now have two separate mechanisms to abort suspend:
-
-1) The existing suspend_device_irqs() / check_wakeup_irqs() 
-
-2) The new suspend_device_irqs() /
-   reenable_stuff_and_fiddle_with_irq_action()
-
-So why do we need those two mechanisms in the first place?
-
-AFAICT there is no reason why we cant use the abort_suspend mechanics
-to replace the suspend_device_irqs() / check_wakeup_irqs() pair.
-
-All it needs is to do the handler substitution in
-suspend_device_irqs() right away and replace the loop in
-check_wakeup_irqs() with a check for abort_suspend == true. The roll
-back of the handler substitution can happen in resume_device_irqs()
-for both scenarios.
-
-Aside of that the whole irqaction based substitution is silly. What's
-wrong with doing it at the real interrupt handler level?
-
-static void handle_wakeup_irq(unsigned int irq, struct irq_desc *desc)
-{
-	raw_spin_lock(&desc->lock);
-
-	desc->istate |= IRQS_SUSPENDED | IRQS_PENDING;
-	desc->depth++;
-	irq_disable(desc);
-	pm_system_wakeup();
-
-	raw_spin_unlock(&desc->lock);
-}
-
-void suspend_device_irqs(void)
-{
-	for_each_irq_desc(irq, desc) {
-		/* Disable the interrupt unconditionally */	       
-		disable_irq(irq);
-
-		/* Is the irq a wakeup source? */
-		if (!irqd_is_wakeup_set(&desc->irq_data))
-			continue;
-
-		/* Replace the handler */
-		raw_spin_lock_irqsave(&desc->lock, flags);
-	     	desc->saved_handler = desc->handler;
-		desc->handler = handle_wakeup_irq;
-		raw_spin_unlock_irqrestore(&desc->lock, flags);
-
-		/* Reenable the wakeup irq */
-		enable_irq(irq);
-	}
-}
-
-/* Move that into the pm core code */
-bool check_wakeup_irqs(void)
-{
-	return abort_suspend;
-}
-
-void resume_device_irqs(void)
-{
-	for_each_irq_desc(irq, desc) {
-
-		/* Prevent the wakeup handler from running */
-		disable_irq();
-
-		raw_spin_lock_irqsave(&desc->lock, flags);
-
-		/* Do we need to restore the handler? */
-		if (desc->handler == handle_wakeup_irq)
-		   	desc->handler = desc->saved_handler;
-
-		/* Is the irq a wakeup source? */
-		if (!irqd_is_wakeup_set(&desc->irq_data))
-		   	__enable_irq(irq, desc);
-
-		/* Did it get disabled in the wakeup handler? */
-		else if (desc->istate & IRQS_SUSPENDED)
-		   	__enable_irq(irq, desc);
-
-		raw_spin_unlock_irqrestore(&desc->lock, flags);
-
-		enable_irq();
-	}
-}
-
-Hmm?
-
-One thing we might think about is having flow specific
-handle_wakeup_irq variants as some hardware might require an ack or
-eoi, but that's a simple to solve problem and way simpler than
-fiddling with the irqaction chain and avoids the whole mess of
-sprinkling irq_pm_saved_id() and irq_pm_restore_handler() calls all
-over the place. I wonder why you added them to __free_irq() at all,
-but no, we dont want that.
-
-Thanks,
-
-	tglx
-
+Regards,
+Lucas
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
