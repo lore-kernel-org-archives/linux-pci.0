@@ -1,106 +1,165 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:42426 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753775AbaHLHDZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 03:03:25 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>, <linux-pci@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<arnab.basu@freescale.com>, <x86@kernel.org>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [RFC PATCH 19/20] tile/MSI: Use msi_chip instead of arch func to configure MSI/MSI-X
-Date: Tue, 12 Aug 2014 15:26:12 +0800
-Message-ID: <1407828373-24322-20-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1407828373-24322-1-git-send-email-wangyijing@huawei.com>
-References: <1407828373-24322-1-git-send-email-wangyijing@huawei.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:62911 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753646AbaHKNov (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 09:44:51 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Peter Zijlstra <peterz@infradead.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH 5/6 v2] PCI / PM: Make PCIe PME interrupts wake up from suspend-to-idle
+Date: Mon, 11 Aug 2014 16:02:31 +0200
+Message-ID: <4377115.sK1ENHlJNS@vostro.rjw.lan>
+In-Reply-To: <26580319.OZP7jvJnA9@vostro.rjw.lan>
+References: <26580319.OZP7jvJnA9@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce a new struct msi_chip tile_msi_chip instead of weak arch
-functions to configure MSI/MSI-X.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+To make PCIe PME interrupts wake up the system from suspend to idle,
+make the PME driver use enable_irq_wake() on the IRQ during system
+suspend (if there are any wakeup devices below the given PCIe port)
+without disabling PME interrupts.  This way, an interrupt will still
+trigger if a wakeup event happens and the system will be woken up (or
+system suspend in progress will be aborted) by means of the new
+mechanics introduced previously.
+
+This change allows Wake-on-LAN to be used for wakeup from
+suspend-to-idle on my MSI Wind tesbed netbook.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- arch/tile/kernel/pci_gx.c |   20 +++++++++++++++-----
- 1 files changed, 15 insertions(+), 5 deletions(-)
 
-diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
-index e39f9c5..d1f308c 100644
---- a/arch/tile/kernel/pci_gx.c
-+++ b/arch/tile/kernel/pci_gx.c
-@@ -1485,7 +1485,7 @@ static struct irq_chip tilegx_msi_chip = {
- 	/* TBD: support set_affinity. */
+This patch is the same as the previous version.
+
+---
+ drivers/pci/pcie/pme.c |   61 ++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 51 insertions(+), 10 deletions(-)
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-pm" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Index: linux-pm/drivers/pci/pcie/pme.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pcie/pme.c
++++ linux-pm/drivers/pci/pcie/pme.c
+@@ -41,11 +41,17 @@ static int __init pcie_pme_setup(char *s
+ }
+ __setup("pcie_pme=", pcie_pme_setup);
+ 
++enum pme_suspend_level {
++	PME_SUSPEND_NONE = 0,
++	PME_SUSPEND_WAKEUP,
++	PME_SUSPEND_NOIRQ,
++};
++
+ struct pcie_pme_service_data {
+ 	spinlock_t lock;
+ 	struct pcie_device *srv;
+ 	struct work_struct work;
+-	bool noirq; /* Don't enable the PME interrupt used by this service. */
++	enum pme_suspend_level suspend_level;
  };
  
--int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
-+int tile_setup_msi_irq(struct device *dev, struct msi_desc *desc)
- {
- 	struct pci_controller *controller;
- 	gxio_trio_context_t *trio_context;
-@@ -1510,7 +1510,7 @@ int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
- 	 * Most PCIe endpoint devices do support 64-bit message addressing.
- 	 */
- 	if (desc->msi_attrib.is_64 == 0) {
--		dev_printk(KERN_INFO, &pdev->dev,
-+		dev_printk(KERN_INFO, dev,
- 			"64-bit MSI message address not supported, "
- 			"falling back to legacy interrupts.\n");
+ /**
+@@ -223,7 +229,7 @@ static void pcie_pme_work_fn(struct work
+ 	spin_lock_irq(&data->lock);
  
-@@ -1549,7 +1549,7 @@ int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
- 		/* SQ regions are out, allocate from map mem regions. */
- 		mem_map = gxio_trio_alloc_memory_maps(trio_context, 1, 0, 0);
- 		if (mem_map < 0) {
--			dev_printk(KERN_INFO, &pdev->dev,
-+			dev_printk(KERN_INFO, dev,
- 				"%s Mem-Map alloc failure. "
- 				"Failed to initialize MSI interrupts. "
- 				"Falling back to legacy interrupts.\n",
-@@ -1580,7 +1580,7 @@ int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
- 					mem_map, mem_map_base, mem_map_limit,
- 					trio_context->asid);
- 	if (ret < 0) {
--		dev_printk(KERN_INFO, &pdev->dev, "HV MSI config failed.\n");
-+		dev_printk(KERN_INFO, dev, "HV MSI config failed.\n");
+ 	for (;;) {
+-		if (data->noirq)
++		if (data->suspend_level != PME_SUSPEND_NONE)
+ 			break;
  
- 		goto hv_msi_config_failure;
+ 		pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
+@@ -250,7 +256,7 @@ static void pcie_pme_work_fn(struct work
+ 		spin_lock_irq(&data->lock);
  	}
-@@ -1604,7 +1604,17 @@ is_64_failure:
+ 
+-	if (!data->noirq)
++	if (data->suspend_level == PME_SUSPEND_NONE)
+ 		pcie_pme_interrupt_enable(port, true);
+ 
+ 	spin_unlock_irq(&data->lock);
+@@ -367,6 +373,21 @@ static int pcie_pme_probe(struct pcie_de
  	return ret;
  }
  
--void arch_teardown_msi_irq(unsigned int irq)
-+void tile_teardown_msi_irq(unsigned int irq)
- {
- 	irq_free_hwirq(irq);
- }
-+
-+struct msi_chip tile_msi_chip = {
-+	.setup_irq = tile_setup_msi_irq,
-+	.teardown_irq = tile_teardown_msi_irq,
-+};
-+
-+struct msi_chip *arch_get_match_msi_chip(struct device *dev)
++static bool pcie_pme_check_wakeup(struct pci_bus *bus)
 +{
-+	return &tile_msi_chip;
++	struct pci_dev *dev;
++
++	if (!bus)
++		return false;
++
++	list_for_each_entry(dev, &bus->devices, bus_list)
++		if (device_may_wakeup(&dev->dev)
++		    || pcie_pme_check_wakeup(dev->subordinate))
++			return true;
++
++	return false;
 +}
--- 
-1.7.1
++
+ /**
+  * pcie_pme_suspend - Suspend PCIe PME service device.
+  * @srv: PCIe service device to suspend.
+@@ -375,11 +396,26 @@ static int pcie_pme_suspend(struct pcie_
+ {
+ 	struct pcie_pme_service_data *data = get_service_data(srv);
+ 	struct pci_dev *port = srv->port;
++	bool wakeup;
+ 
++	if (device_may_wakeup(&port->dev)) {
++		wakeup = true;
++	} else {
++		down_read(&pci_bus_sem);
++		wakeup = pcie_pme_check_wakeup(port->subordinate);
++		up_read(&pci_bus_sem);
++	}
+ 	spin_lock_irq(&data->lock);
+-	pcie_pme_interrupt_enable(port, false);
+-	pcie_clear_root_pme_status(port);
+-	data->noirq = true;
++	if (wakeup) {
++		enable_irq_wake(srv->irq);
++		data->suspend_level = PME_SUSPEND_WAKEUP;
++	} else {
++		struct pci_dev *port = srv->port;
++
++		pcie_pme_interrupt_enable(port, false);
++		pcie_clear_root_pme_status(port);
++		data->suspend_level = PME_SUSPEND_NOIRQ;
++	}
+ 	spin_unlock_irq(&data->lock);
+ 
+ 	synchronize_irq(srv->irq);
+@@ -394,12 +430,17 @@ static int pcie_pme_suspend(struct pcie_
+ static int pcie_pme_resume(struct pcie_device *srv)
+ {
+ 	struct pcie_pme_service_data *data = get_service_data(srv);
+-	struct pci_dev *port = srv->port;
+ 
+ 	spin_lock_irq(&data->lock);
+-	data->noirq = false;
+-	pcie_clear_root_pme_status(port);
+-	pcie_pme_interrupt_enable(port, true);
++	if (data->suspend_level == PME_SUSPEND_NOIRQ) {
++		struct pci_dev *port = srv->port;
++
++		pcie_clear_root_pme_status(port);
++		pcie_pme_interrupt_enable(port, true);
++	} else {
++		disable_irq_wake(srv->irq);
++	}
++	data->suspend_level = PME_SUSPEND_NONE;
+ 	spin_unlock_irq(&data->lock);
+ 
+ 	return 0;
 
