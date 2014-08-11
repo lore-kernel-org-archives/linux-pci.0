@@ -1,59 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:54726 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753291AbaHLQ0v (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 12:26:51 -0400
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Cc: linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v9 05/12] ARM: Define PCI_IOBASE as the base of virtual PCI IO space.
-Date: Tue, 12 Aug 2014 17:25:18 +0100
-Message-Id: <1407860725-25202-6-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 11 Aug 2014 10:54:09 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>
+Cc: 'Marc Zyngier' <marc.zyngier@arm.com>,
+	'Mark Rutland' <Mark.Rutland@arm.com>,
+	'Pawel Moll' <Pawel.Moll@arm.com>,
+	'Catalin Marinas' <Catalin.Marinas@arm.com>,
+	'Will Deacon' <Will.Deacon@arm.com>,
+	"'tglx@linutronix.de'" <tglx@linutronix.de>,
+	"Kasiviswanathan, Harish" <Harish.Kasiviswanathan@amd.com>,
+	"'linux-arm-kernel@lists.infradead.org'"
+	<linux-arm-kernel@lists.infradead.org>,
+	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+	"'linux-doc@vger.kernel.org'" <linux-doc@vger.kernel.org>,
+	"'devicetree@vger.kernel.org'" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH 0/4] irqchip: gic-v2m: Rework GICv2m Initialization
+Message-ID: <20140811145409.GD5063@titan.lakedaemon.net>
+References: <1407539836-9768-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <53E87ADA.6040204@arm.com>
+ <02D2024799561B48A732D1A51CB969E836F74ABC@satlexdag05.amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <02D2024799561B48A732D1A51CB969E836F74ABC@satlexdag05.amd.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is needed for calls into OF code that parses PCI ranges.
-It signals support for memory mapped PCI I/O accesses that
-are described be device trees.
+Suravee,
 
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Rob Herring <robh+dt@kernel.org>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
----
- arch/arm/include/asm/io.h | 1 +
- 1 file changed, 1 insertion(+)
+On Mon, Aug 11, 2014 at 01:30:50PM +0000, Suthikulpanit, Suravee wrote:
+> Jason already created a branch irqchip/gic-v2m, which I have created
+> my patch against.  So, what branch do you want me to re-create a patch
+> against for you to review?
 
-diff --git a/arch/arm/include/asm/io.h b/arch/arm/include/asm/io.h
-index 3d23418..22b7529 100644
---- a/arch/arm/include/asm/io.h
-+++ b/arch/arm/include/asm/io.h
-@@ -178,6 +178,7 @@ static inline void __iomem *__typesafe_io(unsigned long addr)
- 
- /* PCI fixed i/o mapping */
- #define PCI_IO_VIRT_BASE	0xfee00000
-+#define PCI_IOBASE		PCI_IO_VIRT_BASE
- 
- #if defined(CONFIG_PCI)
- void pci_ioremap_set_mem_type(int mem_type);
--- 
-2.0.4
+Ideally, against v3.17-rc1.  That's a few weeks away, though.  In the
+mean time, please base against irqchip/core.  It has the relevant
+patches that are going to be in v3.17-rc1.
 
+thx,
+
+Jason.
