@@ -1,103 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1lp0144.outbound.protection.outlook.com ([207.46.163.144]:29036
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751549AbaHFUjm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Aug 2014 16:39:42 -0400
-From: Rajat Jain <rajatjain@juniper.net>
-To: Gerhard Sittig <gsi@denx.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jon Mason <jon.mason@intel.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Detlev Zundel <dzu@denx.de>,
-	"rajatxjain@gmail.com" <rajatxjain@gmail.com>
-Subject: RE: [PATCH RFC v1 0/4] PCI NTB: prepare for more hardware support
-Date: Wed, 6 Aug 2014 20:23:49 +0000
-Message-ID: <6711167537394013bf58b9132d2a63fe@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <1407336835-30586-1-git-send-email-gsi@denx.de>
-In-Reply-To: <1407336835-30586-1-git-send-email-gsi@denx.de>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <53E85440.5070408@linux.intel.com>
+Date: Mon, 11 Aug 2014 13:27:28 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+To: Borislav Petkov <bp@alien8.de>,
+	David Rientjes <rientjes@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+CC: Ingo Molnar <mingo@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Peter Zijlstra <a.p.zijlstra@chello.nl>
+Subject: Re: [GIT PULL] x86/apic changes for v3.17
+References: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com> <1407209178-18644-2-git-send-email-jiang.liu@linux.intel.com> <20140805183729.GA23068@pd.tnic> <53E201FC.6010102@linux.intel.com> <20140806170937.GA4895@pd.tnic> <20140807110332.GB10043@pd.tnic> <20140807113346.GA24225@gmail.com> <alpine.DEB.2.02.1408081519240.7430@chino.kir.corp.google.com> <20140809170643.GC4209@pd.tnic>
+In-Reply-To: <20140809170643.GC4209@pd.tnic>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Gerhard,
-
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> owner@vger.kernel.org] On Behalf Of Gerhard Sittig
-> Sent: Wednesday, August 06, 2014 7:54 AM
-> To: linux-pci@vger.kernel.org; Jon Mason
-> Cc: Bjorn Helgaas; Detlev Zundel; Gerhard Sittig
-> Subject: [PATCH RFC v1 0/4] PCI NTB: prepare for more hardware support
-> 
-> The current implementation of the PCI non-transparent bridge support
-> exclusively supports Intel hardware.  This series prepares for the introduction
-> of other vendor's hardware support, by separating the generic 'data
-> transport' driver from the specific 'hardware support' driver.
-
-Thanks for this effort. I also have a PLX NT bridge that I was exploring to add support for. This will definitely make it easier.
-
-Just curious, do you have any kind of NT bridge hardware that you want to add support for?
-
-Thanks,
-
-Rajat
 
 
+On 2014/8/10 1:06, Borislav Petkov wrote:
+> On Fri, Aug 08, 2014 at 03:21:44PM -0700, David Rientjes wrote:
+>> On Thu, 7 Aug 2014, Ingo Molnar wrote:
+>>
+>>> Linus, please pull the latest x86-apic-for-linus git tree from:
+>>>
+>>>    git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git x86-apic-for-linus
+>>>
+>>>    # HEAD: 5e3bf215f4f2efc0af89e6dbc5da789744aeb5d7 x86/apic/vsmp: Make is_vsmp_box() static
+>>>
+>>>
+>>> The main changes in this cycle are:
+>>>
+>>>     * Remove obsolete APIC driver abstractions. (David Rientjes)
+>>>
+>>
+>> These changes are unrelated from the other issues and can still be pulled 
+>> from
+>>
+>> 	git://git.kernel.org/pub/scm/linux/kernel/git/rientjes/linux.git x86/apic 
+>>
+>> if we want the cleanups for 3.17.  The x86 pull request was originally at 
+>> http://marc.info/?l=linux-kernel&m=140678961924050.
+>>
+>> It would be a shame to miss out on that because the changes share the same 
+>> tip branch.
 > 
-> The current implementation has a circular dependency, where the data
-> transport uses hardware specific routines for its communication, while the
-> hardware driver calls into the data transport layer to have the data link
-> established upon probe.  In addition, existing documentation suggests that
-> out-of-tree drivers may use the hardware driver's routines, working in
-> parallel to the in-tree data transport and the network interface on top if it.
+> Actually, that whole branch could go in now, especially since Thomas
+> picked up the stable IRQ numbers assignment during s/r fix:
 > 
-> This series "puts the data transport first", to provide routines to register
-> hardware drivers with the transport and to have the transport become
-> available as hardware is found.  While several hardware drivers may
-> implement the common "hw" API, and one of those drivers gets probed at
-> runtime and then is used for the data transport.  The relation of exactly one
-> hardware driver to one transport instance is kept, as is the NTB driver's API
-> within the kernel.  No new hardware support gets introduced by this series.
-> It's "mere refactoring".
+> https://lkml.kernel.org/r/tip-3eec595235c17a74094daa1e02d1b0af2e9a7125@git.kernel.org
 > 
+> @tglx: I don't know about IOAPIC reference count:
 > 
-> Unfortunately I don't have Intel hardware to exercise runtime tests for the
-> series.  It has only been compile-tested for bisectability and with several
-> combinations of the tristate options, and the series is checkpatch clean
-> including --strict.
-> Testers who have access to hardware are cordially invited. :)
+> https://lkml.kernel.org/r/1407209178-18644-3-git-send-email-jiang.liu@linux.intel.com
 > 
+> This looks like a bugfix too.
+Hi Borislav,
+	The reference count fix only affects IOAPIC hotplug, so it
+may be grouped into coming IOAPIC hotplug patch set.
+Thanks!
+Gerry
+
 > 
-> BTW was I surprised to find the NTB driver under drivers/ntb/, and not
-> underneath the PCI subsystem.  I hope I got the list of recipients correct for
-> the series.
+> With those two applied, tip/x86/apic is good to go IMHO. The only thing
+> that remains are the IOMMU IOPFs which we'll deal accordingly later -
+> they need shutting up only anyway.
 > 
-> 
-> Gerhard Sittig (4):
->   ntb: split Intel specifics out of the "NTB hardware" interface
->   ntb: header file nits (multiple inclusion, explicit entries)
->   ntb: prepare to build the 'data transport' as a separate module
->   ntb: de-couple data transport from hardware support
-> 
->  drivers/ntb/Kconfig                          |   45 ++++--
->  drivers/ntb/Makefile                         |    5 +-
->  drivers/ntb/ntb_hw.h                         |  101 +++++++------
->  drivers/ntb/{ntb_hw.c => ntb_hw_intel.c}     |   83 +++++++----
->  drivers/ntb/ntb_hw_intel.h                   |   73 ++++++++++
->  drivers/ntb/{ntb_regs.h => ntb_regs_intel.h} |    0
->  drivers/ntb/ntb_transport.c                  |  196
-> ++++++++++++++++++++++++++
->  include/linux/ntb.h                          |    7 +
->  8 files changed, 426 insertions(+), 84 deletions(-)  rename
-> drivers/ntb/{ntb_hw.c => ntb_hw_intel.c} (94%)  create mode 100644
-> drivers/ntb/ntb_hw_intel.h  rename drivers/ntb/{ntb_regs.h =>
-> ntb_regs_intel.h} (100%)
-> 
-> --
-> 1.7.10.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
-> body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
