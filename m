@@ -1,256 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:65097 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753673AbaHKNox (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 09:44:53 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH 3/6 v2] irq / PM: Make wakeup interrupts work with suspend-to-idle
-Date: Mon, 11 Aug 2014 16:00:02 +0200
-Message-ID: <1851736.ujj1bO3Shk@vostro.rjw.lan>
-In-Reply-To: <26580319.OZP7jvJnA9@vostro.rjw.lan>
-References: <26580319.OZP7jvJnA9@vostro.rjw.lan>
+Received: from mx1.redhat.com ([209.132.183.28]:33923 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754188AbaHLIjF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Aug 2014 04:39:05 -0400
+Date: Tue, 12 Aug 2014 10:09:58 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: James Smart <james.smart@emulex.com>
+Cc: linux-kernel@vger.kernel.org,
+	Christoph Hellwig <hch@infradead.org>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v3 12/23] lpfc: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Message-ID: <20140812080957.GA16561@dhcp-27-160.brq.redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
+ <ea1bf102a3ce0471996e2ddaaa498b088ac791c8.1405533479.git.agordeev@redhat.com>
+ <20140726082227.GF21129@agordeev.usersys.redhat.com>
+ <20140811080148.GG16504@dhcp-27-160.brq.redhat.com>
+ <dfd59266-71ff-4112-8e11-835a08d7a94d@CMEXHTCAS2.ad.emulex.com>
+ <20140812081115.GA1674@agordeev.usersys.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140812081115.GA1674@agordeev.usersys.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Make IRQs enabled for system wakeup via enable_irq_wake() wake up
-the system from suspend-to-idle.
-
-For this purpose, introduce a new routine, wakeup_mode_for_irqs(),
-for switching wakeup IRQs into a special "wakeup mode" and back from
-it and make freeze_enter() call it to turn the "wakeup mode" on
-before starting the suspend-to-idle loop and to turn it off after
-that loop has been terminated.
-
-The "wakeup mode" switch works by replaceing interrupt handlers for
-all wakeup IRQs and all their irqactions with a special "wakeup mode"
-handler and enabling all wakeup IRQs, previously disabled by
-suspend_device_irqs().  The "wakeup mode" interrupt handler returns
-IRQ_NONE for all irqactions except for the last one in the given chain
-and for that one it disables the IRQ, marks it as "suspended" and
-pending and triggers system wakeup.
-
-The switch back from the "wakeup mode" restores the original
-interrupt handlers for wakeup IRQs and disables them so that they
-are in the state that they were put into by suspend_device_irqs().
-
-As a result, when in suspend-to-idle, every wakeup interrupt will
-trigger a system wakeup, but the original interrupt handlers will not
-be invoked for wakeup interrupts.
-
-The line of reasoning leading to that is as follows.
-
-The way suspend_device_irqs() works and the existing code in
-check_wakeup_irqs(), called by syscore_suspend(), imply that:
-
-  (1) Interrupt handlers are not invoked for wakeup interrupts
-      after suspend_device_irqs().
-
-  (2) System wakeup interrups after suspend_device_irqs() cause
-      full system suspends to be aborted.
-
-In addition to the above, there is the requirement that
-
-  (3) System wakeup interrupts should wake up the system from
-      suspend-to-idle.
-
-It immediately follows from (1) and (2) that no effort is made to
-distinguish "genuine" wakeup interrupts from "spurious" ones.  They
-all are treated in the same way.  Since (3) means that "genuine"
-wakeup interrupts are supposed to wake up the system from
-suspend-to-idle too, consistency with (1) and (2) requires that
-"spurious" wakeup interrupts should do the same thing.  That also is
-consistent with the rule
-
-  (4) Unhandled interrupts after suspend_device_irqs() abort system
-      suspends in progress (or wake up the system from suspend-to-idle
-      if already there).
-
-introduced by the previous changeset and implies that there is no
-reason to invoke interrupt handlers for wakeup interrups after
-suspend_device_irqs() in the suspend-to-idle case.  Moreover, doing
-so would go against rule (1).
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: James Smart <james.smart@emulex.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- include/linux/interrupt.h |    5 +-
- kernel/irq/pm.c           |   84 +++++++++++++++++++++++++++++++++++++++-------
- kernel/power/suspend.c    |    3 +
- 3 files changed, 79 insertions(+), 13 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 39 +++++++++++++++++----------------------
+ 1 file changed, 17 insertions(+), 22 deletions(-)
 
-Index: linux-pm/include/linux/interrupt.h
-===================================================================
---- linux-pm.orig/include/linux/interrupt.h
-+++ linux-pm/include/linux/interrupt.h
-@@ -101,8 +101,8 @@ typedef irqreturn_t (*irq_handler_t)(int
-  * @thread_flags:	flags related to @thread
-  * @thread_mask:	bitmask for keeping track of @thread activity
-  * @dir:	pointer to the proc/irq/NN/name entry
-- * @s_handler:	original interrupt handler for suspend mode interrupts
-- * @s_dev_id:	original device identification cookie for suspend mode
-+ * @s_handler:	original interrupt handler for suspend/wakeup mode interrupts
-+ * @s_dev_id:	original device identification cookie for suspend/wakeup mode
-  * @prev_ret:	suspend mode return code from the previous action
-  */
- struct irqaction {
-@@ -201,6 +201,7 @@ extern void irq_wake_thread(unsigned int
- /* The following three functions are for the core kernel use only. */
- extern void suspend_device_irqs(void);
- extern void resume_device_irqs(void);
-+extern void wakeup_mode_for_irqs(bool enable);
- #ifdef CONFIG_PM_SLEEP
- extern int check_wakeup_irqs(void);
- #else
-Index: linux-pm/kernel/power/suspend.c
-===================================================================
---- linux-pm.orig/kernel/power/suspend.c
-+++ linux-pm/kernel/power/suspend.c
-@@ -28,6 +28,7 @@
- #include <linux/ftrace.h>
- #include <trace/events/power.h>
- #include <linux/compiler.h>
-+#include <linux/interrupt.h>
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index a5769a9..37f2a20 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -8211,9 +8211,9 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
+  * @phba: pointer to lpfc hba data structure.
+  *
+  * This routine is invoked to enable the MSI-X interrupt vectors to device
+- * with SLI-3 interface specs. The kernel function pci_enable_msix() is
+- * called to enable the MSI-X vectors. Note that pci_enable_msix(), once
+- * invoked, enables either all or nothing, depending on the current
++ * with SLI-3 interface specs. The kernel function pci_enable_msix_exact()
++ * is called to enable the MSI-X vectors. Note that pci_enable_msix_exact(),
++ * once invoked, enables either all or nothing, depending on the current
+  * availability of PCI vector resources. The device driver is responsible
+  * for calling the individual request_irq() to register each MSI-X vector
+  * with a interrupt handler, which is done in this function. Note that
+@@ -8237,8 +8237,8 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
+ 		phba->msix_entries[i].entry = i;
  
- #include "power.h"
- 
-@@ -55,7 +56,9 @@ static void freeze_enter(void)
- {
- 	cpuidle_use_deepest_state(true);
- 	cpuidle_resume();
-+	wakeup_mode_for_irqs(true);
- 	wait_event(suspend_freeze_wait_head, suspend_freeze_wake);
-+	wakeup_mode_for_irqs(false);
- 	cpuidle_pause();
- 	cpuidle_use_deepest_state(false);
- }
-Index: linux-pm/kernel/irq/pm.c
-===================================================================
---- linux-pm.orig/kernel/irq/pm.c
-+++ linux-pm/kernel/irq/pm.c
-@@ -14,6 +14,17 @@
- 
- #include "internals.h"
- 
-+static void irq_pm_replace_handler(struct irqaction *action,
-+				   irq_handler_t new_handler)
-+{
-+	if (!action->s_handler) {
-+		action->s_handler = action->handler;
-+		action->handler = new_handler;
-+		action->s_dev_id = action->dev_id;
-+		action->dev_id = action;
-+	}
-+}
-+
- static void irq_pm_restore_handler(struct irqaction *action)
- {
- 	if (action->s_handler) {
-@@ -24,14 +35,36 @@ static void irq_pm_restore_handler(struc
+ 	/* Configure MSI-X capability structure */
+-	rc = pci_enable_msix(phba->pcidev, phba->msix_entries,
+-				ARRAY_SIZE(phba->msix_entries));
++	rc = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
++				   LPFC_MSIX_VECTORS);
+ 	if (rc) {
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 				"0420 PCI enable MSI-X failed (%d)\n", rc);
+@@ -8775,16 +8775,14 @@ out:
+  * @phba: pointer to lpfc hba data structure.
+  *
+  * This routine is invoked to enable the MSI-X interrupt vectors to device
+- * with SLI-4 interface spec. The kernel function pci_enable_msix() is called
+- * to enable the MSI-X vectors. Note that pci_enable_msix(), once invoked,
+- * enables either all or nothing, depending on the current availability of
+- * PCI vector resources. The device driver is responsible for calling the
+- * individual request_irq() to register each MSI-X vector with a interrupt
+- * handler, which is done in this function. Note that later when device is
+- * unloading, the driver should always call free_irq() on all MSI-X vectors
+- * it has done request_irq() on before calling pci_disable_msix(). Failure
+- * to do so results in a BUG_ON() and a device will be left with MSI-X
+- * enabled and leaks its vectors.
++ * with SLI-4 interface spec. The kernel function pci_enable_msix_range()
++ * is called to enable the MSI-X vectors. The device driver is responsible
++ * for calling the individual request_irq() to register each MSI-X vector
++ * with a interrupt handler, which is done in this function. Note that
++ * later when device is unloading, the driver should always call free_irq()
++ * on all MSI-X vectors it has done request_irq() on before calling
++ * pci_disable_msix(). Failure to do so results in a BUG_ON() and a device
++ * will be left with MSI-X enabled and leaks its vectors.
+  *
+  * Return codes
+  * 0 - successful
+@@ -8805,17 +8803,14 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
+ 		phba->sli4_hba.msix_entries[index].entry = index;
+ 		vectors++;
  	}
- }
- 
--static void irq_pm_disable_and_wakeup(int irq)
-+static void irq_pm_disable_and_wakeup(struct irq_desc *desc)
- {
--	struct irq_desc *desc = irq_to_desc(irq);
-+	if (!(desc->istate & IRQS_SUSPENDED)) {
-+		desc->istate |= IRQS_SUSPENDED;
-+		desc->depth++;
-+		irq_disable(desc);
-+		pm_system_wakeup();
-+	}
-+}
-+
-+static irqreturn_t irq_wakeup_mode_handler(int irq, void *dev_id)
-+{
-+	struct irqaction *action = dev_id;
-+	struct irq_desc *desc;
-+
-+	if (action->next)
-+		return IRQ_NONE;
-+
-+	desc = irq_to_desc(irq);
-+	desc->istate |= IRQS_PENDING;
-+	irq_pm_disable_and_wakeup(desc);
-+	return IRQ_HANDLED;
-+}
-+
-+static void irq_pm_wakeup_mode(struct irq_desc *desc)
-+{
-+	struct irqaction *action;
- 
--	desc->istate |= IRQS_SUSPENDED;
--	desc->depth++;
--	irq_disable(desc);
--	pm_system_wakeup();
-+	for (action = desc->action; action; action = action->next)
-+		irq_pm_replace_handler(action, irq_wakeup_mode_handler);
- }
- 
- static irqreturn_t irq_suspend_mode_handler(int irq, void *dev_id)
-@@ -52,7 +85,7 @@ static irqreturn_t irq_suspend_mode_hand
- 		 * trigger wakeup.
- 		 */
- 		pr_err("IRQ %d: Unhandled while suspended\n", irq);
--		irq_pm_disable_and_wakeup(irq);
-+		irq_pm_disable_and_wakeup(irq_to_desc(irq));
+-enable_msix_vectors:
+-	rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
+-			     vectors);
+-	if (rc > 1) {
+-		vectors = rc;
+-		goto enable_msix_vectors;
+-	} else if (rc) {
++	rc = pci_enable_msix_range(phba->pcidev, phba->sli4_hba.msix_entries,
++				   2, vectors);
++	if (rc < 0) {
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 				"0484 PCI enable MSI-X failed (%d)\n", rc);
+ 		goto vec_fail_out;
  	}
- 	return ret;
- }
-@@ -69,10 +102,7 @@ bool irq_pm_suspend_mode(struct irq_desc
- 		return true;
++	vectors = rc;
  
- 	for (action = desc->action; action; action = action->next) {
--		action->s_handler = action->handler;
--		action->handler = irq_suspend_mode_handler;
--		action->s_dev_id = action->dev_id;
--		action->dev_id = action;
-+		irq_pm_replace_handler(action, irq_suspend_mode_handler);
- 		action->prev_ret = IRQ_NONE;
- 	}
- 	return true;
-@@ -213,3 +243,35 @@ int check_wakeup_irqs(void)
- 
- 	return 0;
- }
-+
-+void wakeup_mode_for_irqs(bool enable)
-+{
-+	struct irq_desc *desc;
-+	int irq;
-+
-+	for_each_irq_desc(irq, desc) {
-+		struct irqaction *action = desc->action;
-+		unsigned long flags;
-+
-+		raw_spin_lock_irqsave(&desc->lock, flags);
-+
-+		if (action && irqd_is_wakeup_set(&desc->irq_data) &&
-+		    !desc->skip_suspend_depth) {
-+			if (enable) {
-+				irq_pm_wakeup_mode(desc);
-+				if (desc->istate & IRQS_SUSPENDED) {
-+					desc->istate &= ~IRQS_SUSPENDED;
-+					__enable_irq(desc, irq, false);
-+				}
-+			} else {
-+				if (!(desc->istate & IRQS_SUSPENDED)) {
-+					__disable_irq(desc, irq, false);
-+					desc->istate |= IRQS_SUSPENDED;
-+				}
-+				irq_pm_normal_mode(desc);
-+			}
-+		}
-+
-+		raw_spin_unlock_irqrestore(&desc->lock, flags);
-+	}
-+}
+ 	/* Log MSI-X vector assignment */
+ 	for (index = 0; index < vectors; index++)
+-- 
+1.9.3
 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
