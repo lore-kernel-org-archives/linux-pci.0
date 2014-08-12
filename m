@@ -1,70 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:41941 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756777AbaHHPXz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Aug 2014 11:23:55 -0400
-Received: by mail-wg0-f49.google.com with SMTP id k14so5787412wgh.20
-        for <linux-pci@vger.kernel.org>; Fri, 08 Aug 2014 08:23:54 -0700 (PDT)
-Date: Fri, 8 Aug 2014 17:24:06 +0200
-From: Daniel Vetter <daniel@ffwll.ch>
-To: Thomas Jarosch <thomas.jarosch@intra2net.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	intel-gfx@lists.freedesktop.org
-Subject: Re: [Intel-gfx] [PATCH] PCI: Add another ID for Intel GPU "spurious
- interrupt" quirk
-Message-ID: <20140808152406.GW8727@phenom.ffwll.local>
-References: <12243017.yA3ijCk2M3@storm>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <12243017.yA3ijCk2M3@storm>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:54724 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753065AbaHLQ0v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 12:26:51 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Cc: linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v9 09/12] OF: Introduce helper function for getting PCI domain_nr
+Date: Tue, 12 Aug 2014 17:25:22 +0100
+Message-Id: <1407860725-25202-10-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 08, 2014 at 03:54:04PM +0200, Thomas Jarosch wrote:
-> New Intel G3258 CPU, new MSI board, same problem:
-> The GPU interrupt fired like crazy on monitor unplug.
-> 
-> lspci output:
-> 00:02.0 VGA compatible controller: Intel Corporation Device 0402 (rev 06)
->         Subsystem: Micro-Star International Co., Ltd. Device 7817
->         Flags: bus master, fast devsel, latency 0, IRQ 11
-> 
-> Signed-off-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
-> Tested-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
-> CC: stable@vger.kernel.org  # v3.4+
-> ---
->  drivers/pci/quirks.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 80c2d01..d2ff39d 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2940,6 +2940,7 @@ static void disable_igfx_irq(struct pci_dev *dev)
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0152, disable_igfx_irq);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0402, disable_igfx_irq);
+Add of_pci_get_domain_nr() to retrieve the PCI domain number
+of a given device from DT. If the information is not present,
+the function can be requested to allocate a new domain number.
 
-Shouldn't we just add entries for them all? See include/drm/i915_pciids.h
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ drivers/of/of_pci.c    | 34 ++++++++++++++++++++++++++++++++++
+ include/linux/of_pci.h |  7 +++++++
+ 2 files changed, 41 insertions(+)
 
-We might need to abstract the macro magic a bit though to reuse that list.
-Also note that not all have the DEIER register. In any case I don't think
-this game of whack-a-mole here is, we should plug this all for real.
--Daniel
-
->  
->  /*
->   * PCI devices which are on Intel chips can skip the 10ms delay
-> -- 
-> 1.9.3
-> 
-> _______________________________________________
-> Intel-gfx mailing list
-> Intel-gfx@lists.freedesktop.org
-> http://lists.freedesktop.org/mailman/listinfo/intel-gfx
-
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 8481996..a107edb 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -89,6 +89,40 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
+ }
+ EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
+ 
++static atomic_t of_domain_nr = ATOMIC_INIT(-1);
++
++/**
++ * This function will try to obtain the host bridge domain number by
++ * using of_alias_get_id() call with "pci-domain" as a stem. If that
++ * fails, a local allocator will be used. The local allocator can
++ * be requested to return a new domain_nr if the information is missing
++ * from the device tree.
++ *
++ * @node: device tree node with the domain information
++ * @allocate_if_missing: if DT lacks information about the domain nr,
++ * allocate a new number.
++ *
++ * Returns the associated domain number from DT, or a new domain number
++ * if DT information is missing and @allocate_if_missing is true. If
++ * @allocate_if_missing is false then the last allocated domain number
++ * will be returned.
++ */
++int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
++{
++	int domain;
++
++	domain = of_alias_get_id(node, "pci-domain");
++	if (domain == -ENODEV) {
++		if (allocate_if_missing)
++			domain = atomic_inc_return(&of_domain_nr);
++		else
++			domain = atomic_read(&of_domain_nr);
++	}
++
++	return domain;
++}
++EXPORT_SYMBOL_GPL(of_pci_get_domain_nr);
++
+ #ifdef CONFIG_PCI_MSI
+ 
+ static LIST_HEAD(of_pci_msi_chip_list);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index dde3a4a..3a3824c 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -15,6 +15,7 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ int of_pci_get_devfn(struct device_node *np);
+ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+ int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
++int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing);
+ #else
+ static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
+ {
+@@ -43,6 +44,12 @@ of_pci_parse_bus_range(struct device_node *node, struct resource *res)
+ {
+ 	return -EINVAL;
+ }
++
++static inline int
++of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
++{
++	return -1;
++}
+ #endif
+ 
+ #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
 -- 
-Daniel Vetter
-Software Engineer, Intel Corporation
-+41 (0) 79 365 57 48 - http://blog.ffwll.ch
+2.0.4
+
