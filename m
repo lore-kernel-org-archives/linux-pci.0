@@ -1,79 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:53184 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752981AbaHTX0y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Aug 2014 19:26:54 -0400
-Date: Thu, 21 Aug 2014 09:26:52 +1000
-From: Anton Blanchard <anton@samba.org>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, dllehr@us.ibm.com,
-	miltonm@us.ibm.com
-Subject: [PATCH] PCI: Increase BAR size quirk for IBM ipr SAS Crocodile
- adapters
-Message-ID: <20140821092652.604d7484@kryten>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:62155 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751506AbaHLLRo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 07:17:44 -0400
+Message-ID: <53E9F679.8060302@huawei.com>
+Date: Tue, 12 Aug 2014 19:11:53 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+To: David Vrabel <david.vrabel@citrix.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-mips@linux-mips.org>, <linux-ia64@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, <sparclinux@vger.kernel.org>,
+	<linux-s390@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"Joerg Roedel" <joro@8bytes.org>, <x86@kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<xen-devel@lists.xenproject.org>, <arnab.basu@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Tony Luck <tony.luck@intel.com>,
+	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+	Wuyun <wuyun.wu@huawei.com>, <linuxppc-dev@lists.ozlabs.org>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [Xen-devel] [RFC PATCH 01/20] x86/xen/MSI: Eliminate arch_msix_mask_irq()
+ and arch_msi_mask_irq()
+References: <1407828373-24322-1-git-send-email-wangyijing@huawei.com> <1407828373-24322-2-git-send-email-wangyijing@huawei.com> <53E9D9DD.3060901@citrix.com>
+In-Reply-To: <53E9D9DD.3060901@citrix.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Douglas Lehr <dllehr@us.ibm.com>
+On 2014/8/12 17:09, David Vrabel wrote:
+> On 12/08/14 08:25, Yijing Wang wrote:
+>> Commit 0e4ccb150 added two __weak arch functions arch_msix_mask_irq()
+>> and arch_msi_mask_irq() to fix a bug found when running xen in x86.
+>> Introduced these two funcntions make MSI code complex. This patch
+>> reverted commit 0e4ccb150 and add #ifdef for x86 msi_chip to fix this
+>> bug for simplicity. Also this is preparation for using struct
+>> msi_chip instead of weak arch MSI functions in all platforms.
+> [...]
+>>  static struct irq_chip msi_chip = {
+>>  	.name			= "PCI-MSI",
+>> +#ifdef CONFIG_XEN
+>> +	.irq_unmask		= nop_unmask_msi_irq,
+>> +	.irq_mask		= nop_mask_msi_irq,
+>> +#else
+>>  	.irq_unmask		= unmask_msi_irq,
+>>  	.irq_mask		= mask_msi_irq,
+>> +#endif
+> 
+> No.  CONFIG_XEN kernels can run on Xen and bare metal so this must be a
+> runtime option.
 
-The Crocodile chip occasionally comes up with 4k and 8k BAR sizes.
-Due to an errata, setting the SR-IOV page size causes the physical
-function BARs to expand to the system page size.  Since ppc64 uses
-64k pages, when Linux tries to assign the smaller resource sizes
-to the now 64k BARs the address will be truncated and the BARs will
-overlap.
+Hi David, that's my mistake, what about export struct irq_chip msi_chip, then
+change the msi_chip->irq_mask/irq_unmask() in xen init functions.
 
-This quirk will force Linux to allocate the resource as a full page,
-which will avoid the overlap.
 
-Cc: <stable@vger.kernel.org> 
-Signed-off-by: Douglas Lehr <dllehr@us.ibm.com>
-Signed-off-by: Anton Blanchard <anton@samba.org>
-Acked-by: Milton Miller <miltonm@us.ibm.com>
----
- drivers/pci/quirks.c |   19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+Eg.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 80c2d01..45b946d 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -24,6 +24,7 @@
- #include <linux/ioport.h>
- #include <linux/sched.h>
- #include <linux/ktime.h>
-+#include <linux/mm.h>
- #include <asm/dma.h>	/* isa_dma_bridge_buggy */
- #include "pci.h"
- 
-@@ -287,6 +288,24 @@ static void quirk_citrine(struct pci_dev *dev)
+diff --git a/arch/x86/include/asm/apic.h b/arch/x86/include/asm/apic.h
+index 19b0eba..bb6af00 100644
+--- a/arch/x86/include/asm/apic.h
++++ b/arch/x86/include/asm/apic.h
+@@ -43,6 +43,10 @@ static inline void generic_apic_probe(void)
  }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_IBM,	PCI_DEVICE_ID_IBM_CITRINE,	quirk_citrine);
- 
-+/*  On IBM Crocodile ipr SAS adapters, expand bar size to system page size. */
-+static void quirk_extend_bar_to_page(struct pci_dev *dev)
-+{
-+	int i;
+ #endif
+
++#ifdef CONFIG_PCI_MSI
++extern struct irq_chip msi_chip;
++#endif
 +
-+	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
-+		struct resource *r = &dev->resource[i];
+ #ifdef CONFIG_X86_LOCAL_APIC
+[...]
 +
-+		if (r->flags & IORESOURCE_MEM && resource_size(r) < PAGE_SIZE) {
-+			dev_info(&dev->dev, "Setting Bar size to Page size");
-+			r->end = PAGE_SIZE-1;
-+			r->start = 0;
-+			r->flags |= IORESOURCE_UNSET;
-+		}
-+	}
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_IBM, 0x034a, quirk_extend_bar_to_page);
-+
- /*
-  *  S3 868 and 968 chips report region size equal to 32M, but they decode 64M.
-  *  If it's needed, re-allocate the region.
++#ifdef CONFIG_PCI_MSI
++void xen_nop_msi_mask(struct irq_data *data)
+ {
+-       return 0;
+ }
+ #endif
+
+@@ -424,8 +423,8 @@ int __init pci_xen_init(void)
+        x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
+        x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
+        x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
+-       x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
+-       x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
++       msi_chip.irq_mask = xen_nop_msi_mask;
++       msi_chip.irq_unmask = xen_nop_msi_mask;
+ #endif
+        return 0;
+ }
+@@ -505,8 +504,8 @@ int __init pci_xen_initial_domain(void)
+        x86_msi.setup_msi_irqs = xen_initdom_setup_msi_irqs;
+        x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
+        x86_msi.restore_msi_irqs = xen_initdom_restore_msi_irqs;
+-       x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
+-       x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
++       msi_chip.irq_mask = xen_nop_msi_mask;
++       msi_chip.irq_unmask = xen_nop_msi_mask;
+ #endif
+        xen_setup_acpi_sci();
+
+
+> 
+> David
+> 
+> .
+> 
+
+
 -- 
-1.7.9.5
+Thanks!
+Yijing
 
