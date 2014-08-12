@@ -1,62 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1blp0182.outbound.protection.outlook.com ([207.46.163.182]:13608
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751963AbaHMPBE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Aug 2014 11:01:04 -0400
-From: <suravee.suthikulpanit@amd.com>
-To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
-	<jason@lakedaemon.net>
-CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
-	<Will.Deacon@arm.com>, <tglx@linutronix.de>,
-	<Harish.Kasiviswanathan@amd.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH 0/2 V4] irqchip: gic: Introduce ARM GICv2m MSI(-X) support
-Date: Wed, 13 Aug 2014 10:00:39 -0500
-Message-ID: <1407942041-3291-1-git-send-email-suravee.suthikulpanit@amd.com>
+Received: from eu1sys200aog132.obsmtp.com ([207.126.144.207]:53415 "EHLO
+	eu1sys200aog132.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752162AbaHLH5h (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 03:57:37 -0400
+Message-ID: <53E9C79D.6080704@mellanox.com>
+Date: Tue, 12 Aug 2014 10:51:57 +0300
+From: Amir Vadai <amirv@mellanox.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+CC: <linux-pci@vger.kernel.org>, <alex.williamson@redhat.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Yevgeny Petrilin <yevgenyp@mellanox.com>,
+	Eli Cohen <eli@mellanox.com>, Peter Paneah <peter@mellanox.com>
+Subject: Re: [PATCH v2] PCI: Mark broken INTx masking for Mellanox devices
+References: <1406868871-350-1-git-send-email-gwshan@linux.vnet.ibm.com> <20140811134854.GA5794@richard> <20140812035226.GA15421@shangw>
+In-Reply-To: <20140812035226.GA15421@shangw>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+On 8/12/2014 6:52 AM, Gavin Shan wrote:
+> On Mon, Aug 11, 2014 at 09:48:54PM +0800, Wei Yang wrote:
+>> >On Fri, Aug 01, 2014 at 02:54:31PM +1000, Gavin Shan wrote:
+>>> >>The VFIO driver is routing LSI interrupts by capturing, masking,
+>>> >>and then delivering. When passing though Mallanox adapters from
+>> >
+>> >one typo                                  Mellanox
+>> >
+>> >Others, looks good to me.
+>> >
+> Thanks, Richard. I'll correct it in next revision. However, I'm
+> still waiting for comments or ACK from Alex/Eli/Amir.
+> 
+> Thanks,
+> Gavin
+> 
 
-This patch set introduces support for MSI(-X) in GICv2m specification,
-which is implemented in some variation of GIC400.
+Hi Gavin,
 
-This depends on and has been tested with the V7 of"Add support for PCI in AArch64"
-(https://lkml.org/lkml/2014/3/14/320).
+Sorry for the delay - wanted to understand the exact limitations with
+our Hardware/Firmware guys.
 
-Changes in V4:
-    * Rebase to git://git.infradead.org/users/jcooper/linux.git irqchip/core
-    * Remove patch 2 from previous version
-    * Merge patch 1 and 3 from previous version
-    * Reworks the GICv2m initialization based on Marc Zyngier review comments.
-    * Introduce "v2m" subnode in GIC binding
-    * Moves the "struct msi_chip" from "struct gic_chip_data" to "struct v2m_data".
+Please change the device to PCI_ANY_ID since all Mellanox devices
+currently need the quirk.
+The issue will be fixed in the next GA firmwares.
 
-Suravee Suthikulpanit (2):
-  irqchip: gic: Add supports for ARM GICv2m MSI(-X)
-  irqchip: gicv2m: Add support for multiple MSI for ARM64 GICv2m
-
- Documentation/devicetree/bindings/arm/gic.txt |  32 +++
- arch/arm64/include/asm/msi.h                  |  15 ++
- arch/arm64/kernel/Makefile                    |   1 +
- arch/arm64/kernel/msi.c                       |  57 +++++
- drivers/irqchip/Kconfig                       |   7 +
- drivers/irqchip/Makefile                      |   1 +
- drivers/irqchip/irq-gic-v2m.c                 | 294 ++++++++++++++++++++++++++
- drivers/irqchip/irq-gic.c                     |  75 ++++---
- drivers/irqchip/irq-gic.h                     |  48 +++++
- 9 files changed, 500 insertions(+), 30 deletions(-)
- create mode 100644 arch/arm64/include/asm/msi.h
- create mode 100644 arch/arm64/kernel/msi.c
- create mode 100644 drivers/irqchip/irq-gic-v2m.c
- create mode 100644 drivers/irqchip/irq-gic.h
-
--- 
-1.9.0
-
+Thanks,
+Amir
