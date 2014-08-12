@@ -1,121 +1,109 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH 1/6 v2] PM / sleep: Mechanism for aborting system suspends unconditionally
-Date: Mon, 11 Aug 2014 15:58:27 +0200
-Message-ID: <3600808.j5JGM0n4nv@vostro.rjw.lan>
-In-Reply-To: <26580319.OZP7jvJnA9@vostro.rjw.lan>
-References: <26580319.OZP7jvJnA9@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:36740 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753495AbaHLQtD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 12:49:03 -0400
+Date: Tue, 12 Aug 2014 17:48:58 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v9] arm64: Add architectural support for PCIe
+Message-ID: <20140812164858.GJ25761@e106497-lin.cambridge.arm.com>
+References: <1407860760-25252-1-git-send-email-Liviu.Dudau@arm.com>
+ <1407860760-25252-2-git-send-email-Liviu.Dudau@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1407860760-25252-2-git-send-email-Liviu.Dudau@arm.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: PM / sleep: Mechanism for aborting system suspends unconditionally
+Somehow, my cover letter went AWOL. Here it is:
 
-It sometimes may be necessary to abort a system suspend in
-progress or wake up the system from suspend-to-idle even if the
-pm_wakeup_event()/pm_stay_awake() mechanism is not enabled.
+Hi,
 
-For this purpose, introduce a new global variable abort_suspend and
-make pm_wakeup_pending() check its value.  Also add routines for
-manipulating that variable.
+This patch adds support for PCI to AArch64. It is based on my v9 patch
+that adds support for creating generic host bridge structure from
+device tree. With that in place, I was able to boot a platform that
+has PCIe host bridge support and use a PCIe network card.
 
-This is going to be used in subsequent changes.
+Changes from v8:
+  - Added support for generic PCI domains
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
+Changes from v7:
+  - Rebased to v3.16-rc3
+  - Removed pci_ioremap_io() function as it is provided by my v8 generic
+    PCI host bridge patches under a different name.
 
-This patch is the same as the previous version.
+Changes from v6:
+  - Guard the pci_domain_nr() inline implementation with #ifdef CONFIG_PCI as
+    to avoid conflict with default empty version present in include/linux/pci.h.
+    Thanks to Jingoo Han for catching this.
 
----
- drivers/base/power/wakeup.c |   20 ++++++++++++++++++++
- include/linux/suspend.h     |    4 ++++
- kernel/power/process.c      |    1 +
- 3 files changed, 25 insertions(+)
+Changes from v5:
+  - Removed pcibios_fixup_bridge_ranges() as the week default version is fine.
+  - Removed the ALIGN() call in pcibios_align_resource()
+  - Stopped exporting pcibios_align_resource()
 
-Index: linux-pm/include/linux/suspend.h
-===================================================================
---- linux-pm.orig/include/linux/suspend.h
-+++ linux-pm/include/linux/suspend.h
-@@ -371,6 +371,8 @@ extern int unregister_pm_notifier(struct
- extern bool events_check_enabled;
- 
- extern bool pm_wakeup_pending(void);
-+extern void pm_system_wakeup(void);
-+extern void pm_wakeup_clear(void);
- extern bool pm_get_wakeup_count(unsigned int *count, bool block);
- extern bool pm_save_wakeup_count(unsigned int count);
- extern void pm_wakep_autosleep_enabled(bool set);
-@@ -418,6 +420,8 @@ static inline int unregister_pm_notifier
- #define pm_notifier(fn, pri)	do { (void)(fn); } while (0)
- 
- static inline bool pm_wakeup_pending(void) { return false; }
-+static inline void pm_system_wakeup(void) {}
-+static inline void pm_wakeup_clear(void) {}
- 
- static inline void lock_system_sleep(void) {}
- static inline void unlock_system_sleep(void) {}
-Index: linux-pm/drivers/base/power/wakeup.c
-===================================================================
---- linux-pm.orig/drivers/base/power/wakeup.c
-+++ linux-pm/drivers/base/power/wakeup.c
-@@ -691,6 +691,8 @@ void pm_print_active_wakeup_sources(void
- }
- EXPORT_SYMBOL_GPL(pm_print_active_wakeup_sources);
- 
-+static bool abort_suspend;
-+
- /**
-  * pm_wakeup_pending - Check if power transition in progress should be aborted.
-  *
-@@ -712,6 +714,7 @@ bool pm_wakeup_pending(void)
- 		ret = (cnt != saved_count || inpr > 0);
- 		events_check_enabled = !ret;
- 	}
-+	ret = ret || abort_suspend;
- 	spin_unlock_irqrestore(&events_lock, flags);
- 
- 	if (ret) {
-@@ -722,6 +725,23 @@ bool pm_wakeup_pending(void)
- 	return ret;
- }
- 
-+void pm_system_wakeup(void)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&events_lock, flags);
-+	abort_suspend = true;
-+	spin_unlock_irqrestore(&events_lock, flags);
-+	freeze_wake();
-+}
-+
-+void pm_wakeup_clear(void)
-+{
-+	spin_lock_irq(&events_lock);
-+	abort_suspend = false;
-+	spin_unlock_irq(&events_lock);
-+}
-+
- /**
-  * pm_get_wakeup_count - Read the number of registered wakeup events.
-  * @count: Address to store the value at.
-Index: linux-pm/kernel/power/process.c
-===================================================================
---- linux-pm.orig/kernel/power/process.c
-+++ linux-pm/kernel/power/process.c
-@@ -129,6 +129,7 @@ int freeze_processes(void)
- 	if (!pm_freezing)
- 		atomic_inc(&system_freezing_cnt);
- 
-+	pm_wakeup_clear();
- 	printk("Freezing user space processes ... ");
- 	pm_freezing = true;
- 	error = try_to_freeze_tasks(true);
+Changes from v4:
+  - Fixed the pci_domain_nr() implementation for arm64. Now we use
+    find_pci_host_bride() to find the host bridge before we retrieve
+    the domain number.
+
+Changes from v3:
+  - Added Acks accumulated so far ;)
+  - Still carrying Catalin's patch for moving the PCI_IO_BASE until it
+    lands in linux-next or mainline, in order to ease applying the series
+
+Changes from v2:
+  - Implement an arch specific version of pci_register_io_range() and
+    pci_address_to_pio().
+  - Return 1 from pci_proc_domain().
+
+Changes from v1:
+  - Added Catalin's patch for moving the PCI_IO_BASE location and extend
+    its size to 16MB
+  - Integrated Arnd's version of pci_ioremap_io that uses a bitmap for
+    keeping track of assigned IO space and returns an io_offset. At the
+    moment the code is added in arch/arm64 but it can be moved in drivers/pci.
+  - Added a fix for the generic ioport_map() function when !CONFIG_GENERIC_IOMAP
+    as suggested by Arnd.
+
+v8 thread here: https://lkml.org/lkml/2014/7/1/705
+v7 thread here: https://lkml.org/lkml/2014/3/14/320
+v6 thread here: https://lkml.org/lkml/2014/3/5/41
+v5 thread here: https://lkml.org/lkml/2014/3/4/307
+v4 thread here: https://lkml.org/lkml/2014/3/3/298
+v3 thread here: https://lkml.org/lkml/2014/2/28/211
+v2 thread here: https://lkml.org/lkml/2014/2/27/255
+v1 thread here: https://lkml.org/lkml/2014/2/3/389
+
+Liviu Dudau (1):
+  arm64: Add architectural support for PCIe
+
+ arch/arm64/Kconfig            | 22 +++++++++++++++++++-
+ arch/arm64/include/asm/Kbuild |  1 +
+ arch/arm64/include/asm/io.h   |  3 ++-
+ arch/arm64/include/asm/pci.h  | 37 +++++++++++++++++++++++++++++++++
+ arch/arm64/kernel/Makefile    |  1 +
+ arch/arm64/kernel/pci.c       | 48 +++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 110 insertions(+), 2 deletions(-)
+ create mode 100644 arch/arm64/include/asm/pci.h
+ create mode 100644 arch/arm64/kernel/pci.c
+
+-- 
+2.0.4
+
 
