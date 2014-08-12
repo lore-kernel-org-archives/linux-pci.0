@@ -1,41 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:41191 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752288AbaH2Ile (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Aug 2014 04:41:34 -0400
-Message-ID: <1409301692.30345.1.camel@concordia>
-Subject: Re: [PATCH 1/2] PCI/MSI/PPC: Remove arch_msi_check_device()
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-pci@vger.kernel.org
-Date: Fri, 29 Aug 2014 18:41:32 +1000
-In-Reply-To: <18276ae8c0b212b8d40dfd186e1c84b8ae949525.1405160163.git.agordeev@redhat.com>
-References: <cover.1405160163.git.agordeev@redhat.com>
-	 <18276ae8c0b212b8d40dfd186e1c84b8ae949525.1405160163.git.agordeev@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:54726 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753291AbaHLQ0v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 12:26:51 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Cc: linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v9 05/12] ARM: Define PCI_IOBASE as the base of virtual PCI IO space.
+Date: Tue, 12 Aug 2014 17:25:18 +0100
+Message-Id: <1407860725-25202-6-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 2014-07-12 at 13:21 +0200, Alexander Gordeev wrote:
-> PowerPC is the only architecture that makes use of hook
-> arch_msi_check_device() and does perform some checks to
-> figure out if MSI/MSI-X could be enabled for a device.
-> However, there are no reasons why those checks could not
-> be done within arch_setup_msi_irqs() hook.
-> 
-> Moving MSI checks into arch_setup_msi_irqs() makes code
-> more readable and allows getting rid of unnecessary hook
-> arch_msi_check_device().
+This is needed for calls into OF code that parses PCI ranges.
+It signals support for memory mapped PCI I/O accesses that
+are described be device trees.
 
-The intention was that this hook allowed a platform to reject the request
-early, ie. before all the setup had been done. But if no one except us is using
-it then fine, get rid of it.
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Rob Herring <robh+dt@kernel.org>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ arch/arm/include/asm/io.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-Acked-by: Michael Ellerman <mpe@ellerman.id.au>
-
-cheers
-
-
+diff --git a/arch/arm/include/asm/io.h b/arch/arm/include/asm/io.h
+index 3d23418..22b7529 100644
+--- a/arch/arm/include/asm/io.h
++++ b/arch/arm/include/asm/io.h
+@@ -178,6 +178,7 @@ static inline void __iomem *__typesafe_io(unsigned long addr)
+ 
+ /* PCI fixed i/o mapping */
+ #define PCI_IO_VIRT_BASE	0xfee00000
++#define PCI_IOBASE		PCI_IO_VIRT_BASE
+ 
+ #if defined(CONFIG_PCI)
+ void pci_ioremap_set_mem_type(int mem_type);
+-- 
+2.0.4
 
