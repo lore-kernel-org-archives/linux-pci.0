@@ -1,80 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:52491 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753262AbaHFJEl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Aug 2014 05:04:41 -0400
-From: "Chen, Gong" <gong.chen@linux.intel.com>
-To: bhelgaas@google.com, rdunlap@infradead.org, bp@alien8.de,
-	tony.luck@intel.com
-Cc: linux-pci@vger.kernel.org, "Chen, Gong" <gong.chen@linux.intel.com>
-Subject: [PATCH 3/5] PCI-e, trace: Replenish missed AER status bits for PCIE trace I/F
-Date: Wed,  6 Aug 2014 04:32:42 -0400
-Message-Id: <1407313964-20794-3-git-send-email-gong.chen@linux.intel.com>
-In-Reply-To: <1407313964-20794-1-git-send-email-gong.chen@linux.intel.com>
-References: <1407313964-20794-1-git-send-email-gong.chen@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Cc: linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v9 02/12] PCI: OF: Parse and map the IRQ when adding the PCI device.
+Date: Tue, 12 Aug 2014 17:25:15 +0100
+Message-Id: <1407860725-25202-3-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds all missed AER error bits(CE & UC) existed in PCI-e
-SPEC r3.0 for trace interface.
+Enhance the default implementation of pcibios_add_device() to
+parse and map the IRQ of the device if a DT binding is available.
 
-Signed-off-by: Chen, Gong <gong.chen@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 ---
- include/ras/ras_event.h | 35 ++++++++++++++++++++++-------------
- 1 file changed, 22 insertions(+), 13 deletions(-)
+ drivers/pci/pci.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/include/ras/ras_event.h b/include/ras/ras_event.h
-index 0f2cca4..0f04a97 100644
---- a/include/ras/ras_event.h
-+++ b/include/ras/ras_event.h
-@@ -174,25 +174,34 @@ TRACE_EVENT(mc_event,
-  * u8 severity -	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 1c8592b..29d1775 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -17,6 +17,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/string.h>
+ #include <linux/log2.h>
++#include <linux/of_pci.h>
+ #include <linux/pci-aspm.h>
+ #include <linux/pm_wakeup.h>
+ #include <linux/interrupt.h>
+@@ -1453,6 +1454,8 @@ EXPORT_SYMBOL(pcim_pin_device);
   */
- 
--#define aer_correctable_errors		\
--	{PCI_ERR_COR_RCVR,	"Receiver Error"},	\
--	{PCI_ERR_COR_BAD_TLP,	"Bad TLP"},		\
--	{PCI_ERR_COR_BAD_DLLP,	"Bad DLLP"},		\
--	{PCI_ERR_COR_REP_ROLL,	"RELAY_NUM Rollover"},	\
--	{PCI_ERR_COR_REP_TIMER,	"Replay Timer Timeout"},\
--	{PCI_ERR_COR_ADV_NFAT,	"Advisory Non-Fatal"}
--
--#define aer_uncorrectable_errors		\
--	{PCI_ERR_UNC_DLP,	"Data Link Protocol"},		\
-+#define aer_correctable_errors					\
-+	{PCI_ERR_COR_RCVR,	"Receiver Error"},		\
-+	{PCI_ERR_COR_BAD_TLP,	"Bad TLP"},			\
-+	{PCI_ERR_COR_BAD_DLLP,	"Bad DLLP"},			\
-+	{PCI_ERR_COR_REP_ROLL,	"RELAY_NUM Rollover"},		\
-+	{PCI_ERR_COR_REP_TIMER,	"Replay Timer Timeout"},	\
-+	{PCI_ERR_COR_ADV_NFAT,	"Advisory Non-Fatal Error"},	\
-+	{PCI_ERR_COR_INTERNAL,	"Corrected Internal Error"},	\
-+	{PCI_ERR_COR_LOG_OVER,	"Header Log Overflow"}
+ int __weak pcibios_add_device(struct pci_dev *dev)
+ {
++	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
 +
-+#define aer_uncorrectable_errors				\
-+	{PCI_ERR_UNC_TRAIN,	"Undefined"},			\
-+	{PCI_ERR_UNC_DLP,	"Data Link Protocol Error"},	\
-+	{PCI_ERR_UNC_SURPDN,	"Surprise Down Error"},		\
- 	{PCI_ERR_UNC_POISON_TLP,"Poisoned TLP"},		\
--	{PCI_ERR_UNC_FCP,	"Flow Control Protocol"},	\
-+	{PCI_ERR_UNC_FCP,	"Flow Control Protocol Error"},	\
- 	{PCI_ERR_UNC_COMP_TIME,	"Completion Timeout"},		\
- 	{PCI_ERR_UNC_COMP_ABORT,"Completer Abort"},		\
- 	{PCI_ERR_UNC_UNX_COMP,	"Unexpected Completion"},	\
- 	{PCI_ERR_UNC_RX_OVER,	"Receiver Overflow"},		\
- 	{PCI_ERR_UNC_MALF_TLP,	"Malformed TLP"},		\
--	{PCI_ERR_UNC_ECRC,	"ECRC"},			\
--	{PCI_ERR_UNC_UNSUP,	"Unsupported Request"}
-+	{PCI_ERR_UNC_ECRC,	"ECRC Error"},			\
-+	{PCI_ERR_UNC_UNSUP,	"Unsupported Request Error"},	\
-+	{PCI_ERR_UNC_ACSV,	"ACS Violation"},		\
-+	{PCI_ERR_UNC_INTN,	"Uncorrectable Internal Error"},\
-+	{PCI_ERR_UNC_MCBTLP,	"MC Blocked TLP"},		\
-+	{PCI_ERR_UNC_ATOMEG,	"AtomicOp Egress Blocked"},	\
-+	{PCI_ERR_UNC_TLPPRE,	"TLP Prefix Blocked Error"}
+ 	return 0;
+ }
  
- TRACE_EVENT(aer_event,
- 	TP_PROTO(const char *dev_name,
 -- 
-2.0.0.rc2
+2.0.4
 
