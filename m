@@ -1,143 +1,119 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Fri, 15 Aug 2014 16:56:32 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:51256 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752636AbaHLHDO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 03:03:14 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>, <linux-pci@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
 	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v9 02/12] PCI: OF: Parse and map the IRQ when adding the
- PCI device.
-Message-ID: <20140815085632.GA4954@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
- <1407860725-25202-3-git-send-email-Liviu.Dudau@arm.com>
- <20140814145804.GA5586@richard>
- <20140814154959.GG25761@e106497-lin.cambridge.arm.com>
+	<arnab.basu@freescale.com>, <x86@kernel.org>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [RFC PATCH 10/20] x86/MSI: Remove unused MSI weak arch functions
+Date: Tue, 12 Aug 2014 15:26:03 +0800
+Message-ID: <1407828373-24322-11-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1407828373-24322-1-git-send-email-wangyijing@huawei.com>
+References: <1407828373-24322-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140814154959.GG25761@e106497-lin.cambridge.arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 14, 2014 at 04:49:59PM +0100, Liviu Dudau wrote:
->On Thu, Aug 14, 2014 at 03:58:04PM +0100, Wei Yang wrote:
->> On Tue, Aug 12, 2014 at 05:25:15PM +0100, Liviu Dudau wrote:
->> >Enhance the default implementation of pcibios_add_device() to
->> >parse and map the IRQ of the device if a DT binding is available.
->> >
->> >Cc: Bjorn Helgaas <bhelgaas@google.com>
->> >Cc: Grant Likely <grant.likely@linaro.org>
->> >Cc: Rob Herring <robh+dt@kernel.org>
->> >Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
->> >---
->> > drivers/pci/pci.c | 3 +++
->> > 1 file changed, 3 insertions(+)
->> >
->> >diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> >index 1c8592b..29d1775 100644
->> >--- a/drivers/pci/pci.c
->> >+++ b/drivers/pci/pci.c
->> >@@ -17,6 +17,7 @@
->> > #include <linux/spinlock.h>
->> > #include <linux/string.h>
->> > #include <linux/log2.h>
->> >+#include <linux/of_pci.h>
->> > #include <linux/pci-aspm.h>
->> > #include <linux/pm_wakeup.h>
->> > #include <linux/interrupt.h>
->> >@@ -1453,6 +1454,8 @@ EXPORT_SYMBOL(pcim_pin_device);
->> >  */
->> > int __weak pcibios_add_device(struct pci_dev *dev)
->> > {
->> >+	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
->> >+
->> > 	return 0;
->> > }
->> 
->> Liviu,
->> 
->> For this, my suggestion is to add arch dependent function to setup the irq
->> line for pci devices. I can't find an obvious reason this won't work on other
->> archs, but maybe this will hurt some of them?
->
->Hi Wei,
->
->I'm not sure I understand your point. Architectures that support OF will obviously
->benefit from this common approach, and for the other ones the function is empty
->so it will not change existing behaviour. If you are suggesting that I should
->create a new API that each architecture could go and implement for setting up the
->IRQ line then I would agree that it would be nice to have that, but the question
->is how many architectures are outside OF that need this?
+Now we can clean up MSI weak arch functions in x86.
 
-My suggestion is to define the pcibios_add_device() for arm arch, like the one
-in arch/powerpc/kernel/pci-common.c. If my understanding is correct, this
-patch set address the pci bus setup mostly on arm arch.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/x86/include/asm/pci.h     |    3 ---
+ arch/x86/kernel/apic/io_apic.c |    2 +-
+ arch/x86/kernel/x86_init.c     |   24 ------------------------
+ 3 files changed, 1 insertions(+), 28 deletions(-)
 
-For those archs not support OF, this function is empty and has no effect. I
-agree on this one.
-
-For those archs rely on OF, we still have two cases:
-    1. they would have implement this function like powerpc
-    2. have other way to fix it up,  otherwise how it works now?
-If my assumption is correct, this change will either have no effect, or fix up
-the irq line the second time. Not harmful, but not necessary.
-
-I am not familiar with other arch, so the second case is my deduction. If this
-is not correct, please let me know.
-
->
->If I understood you correctly, it is a nice idea but slightly outside the scope
->of my current patchset.
->
->Best regards,
->Liviu
->
->> 
->> >
->> >-- 
->> >2.0.4
->> >
->> >--
->> >To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> >the body of a message to majordomo@vger.kernel.org
->> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> 
->> -- 
->> Richard Yang
->> Help you, Help me
->> 
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> 
->
->-- 
->====================
->| I would like to |
->| fix the world,  |
->| but they're not |
->| giving me the   |
-> \ source code!  /
->  ---------------
->    ¯\_(ツ)_/¯
-
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 878a06d..34f9676 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -96,14 +96,11 @@ extern void pci_iommu_alloc(void);
+ #ifdef CONFIG_PCI_MSI
+ /* implemented in arch/x86/kernel/apic/io_apic. */
+ struct msi_desc;
+-int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+ void native_teardown_msi_irq(unsigned int irq);
+-void native_restore_msi_irqs(struct pci_dev *dev);
+ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ 		  unsigned int irq_base, unsigned int irq_offset);
+ extern struct msi_chip *x86_msi_chip;
+ #else
+-#define native_setup_msi_irqs		NULL
+ #define native_teardown_msi_irq		NULL
+ #endif
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index eb8ab7c..e3326d9 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3077,7 +3077,7 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ 	return 0;
+ }
+ 
+-int native_setup_msi_irqs(struct device *dev, int nvec, int type)
++static int native_setup_msi_irqs(struct device *dev, int nvec, int type)
+ {
+ 	struct msi_desc *msidesc;
+ 	unsigned int irq;
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index 234b072..cc32568 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -110,34 +110,10 @@ EXPORT_SYMBOL_GPL(x86_platform);
+ 
+ #if defined(CONFIG_PCI_MSI)
+ struct x86_msi_ops x86_msi = {
+-	.setup_msi_irqs		= native_setup_msi_irqs,
+ 	.compose_msi_msg	= native_compose_msi_msg,
+-	.teardown_msi_irq	= native_teardown_msi_irq,
+-	.teardown_msi_irqs	= default_teardown_msi_irqs,
+-	.restore_msi_irqs	= default_restore_msi_irqs,
+ 	.setup_hpet_msi		= default_setup_hpet_msi,
+ };
+ 
+-/* MSI arch specific hooks */
+-int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+-{
+-	return x86_msi.setup_msi_irqs(dev, nvec, type);
+-}
+-
+-void arch_teardown_msi_irqs(struct pci_dev *dev)
+-{
+-	x86_msi.teardown_msi_irqs(dev);
+-}
+-
+-void arch_teardown_msi_irq(unsigned int irq)
+-{
+-	x86_msi.teardown_msi_irq(irq);
+-}
+-
+-void arch_restore_msi_irqs(struct pci_dev *dev)
+-{
+-	x86_msi.restore_msi_irqs(dev);
+-}
+ #endif
+ 
+ struct x86_io_apic_ops x86_io_apic_ops = {
 -- 
-Richard Yang
-Help you, Help me
+1.7.1
 
