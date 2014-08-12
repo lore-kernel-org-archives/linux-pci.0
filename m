@@ -1,34 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 21 Aug 2014 10:02:13 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Tomas Henzl <thenzl@redhat.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	James Smart <james.smart@emulex.com>,
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 11/13] lpfc: Use pci_enable_msix_range() instead of
- pci_enable_msix()
-Message-ID: <20140821170213.GA2296@infradead.org>
-References: <cover.1408335523.git.agordeev@redhat.com>
- <e7470e484083c9eeb6b4f34f3e69e332ad5998c2.1408335523.git.agordeev@redhat.com>
- <53F5D8DF.4060705@redhat.com>
- <53F5DEEF.4070406@redhat.com>
- <20140821165833.GA5853@agordeev.usersys.redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:5726 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750763AbaHLBnx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 21:43:53 -0400
+Message-ID: <53E97149.8070303@huawei.com>
+Date: Tue, 12 Aug 2014 09:43:37 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140821165833.GA5853@agordeev.usersys.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Liu Ping Fan <kernelfans@gmail.com>, <linux-pci@vger.kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] pci: bugfix, pci_get_domain_bus_and_slot() needs to inc
+ reference count
+References: <1407803481-7910-1-git-send-email-pingfank@linux.vnet.ibm.com>
+In-Reply-To: <1407803481-7910-1-git-send-email-pingfank@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 21, 2014 at 05:58:34PM +0100, Alexander Gordeev wrote:
-> > Reviewed-by: Tomas Henzl
-> 
-> Christoph, this patch was declined by James few times.
-> I think it needs his approval as well.
+On 2014/8/12 8:31, Liu Ping Fan wrote:
+> As the notes of this function, pci_get_domain_bus_and_slot() should
+> increase the reference count.
 
-You're referring to James Smart here, right?  For an actively maintained
-driver like lpfc I'd like it be acked by the maintainer indeed.  In fact
-for lpfc I have an agreement with James that he'll pick up lpfc patches 
-and sent the colleted patches on to me.
+It had did it.
+please refer to:
+
+#define for_each_pci_dev(d) while ((d = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
+
+> 
+> Signed-off-by: Liu Ping Fan <pingfank@linux.vnet.ibm.com>
+> ---
+>  drivers/pci/search.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+> index 827ad83..41a5738 100644
+> --- a/drivers/pci/search.c
+> +++ b/drivers/pci/search.c
+> @@ -258,8 +258,10 @@ struct pci_dev *pci_get_domain_bus_and_slot(int domain, unsigned int bus,
+>  
+>  	for_each_pci_dev(dev) {
+>  		if (pci_domain_nr(dev->bus) == domain &&
+> -		    (dev->bus->number == bus && dev->devfn == devfn))
+> +		    (dev->bus->number == bus && dev->devfn == devfn)) {
+> +			pci_dev_get(dev);
+>  			return dev;
+> +		}
+>  	}
+>  	return NULL;
+>  }
+> 
+
+
+-- 
+Thanks!
+Yijing
 
