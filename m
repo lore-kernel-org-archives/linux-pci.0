@@ -1,77 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:19090 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751833AbaHOFn7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Aug 2014 01:43:59 -0400
-Message-ID: <53ED9E11.8050406@huawei.com>
-Date: Fri, 15 Aug 2014 13:43:45 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<xen-devel@lists.xenproject.org>
-Subject: Re: [PATCH 3/3] xen/MSI: Retrieve MSI msg from cached msi_desc->msg
-References: <1408072477-10008-1-git-send-email-wangyijing@huawei.com> <20140815035122.GB27697@laptop.dumpdata.com>
-In-Reply-To: <20140815035122.GB27697@laptop.dumpdata.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Cc: linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v9 12/12] PCI: Introduce pci_remap_iospace() for remapping PCI I/O bus resources into CPU space
+Date: Tue, 12 Aug 2014 17:25:25 +0100
+Message-Id: <1407860725-25202-13-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/8/15 11:51, Konrad Rzeszutek Wilk wrote:
-> On Fri, Aug 15, 2014 at 11:14:37AM +0800, Yijing Wang wrote:
->> We had cached the MSI msg in __write_msi_msg(),
->> so we should retrieve the cached MSI msg directly,
->> not to access the MSI address/data hardware registers
->> again.
-> 
-> Is this fixing a particular problem?
-> 
-> Could you kindly explain to me when you do the __write_msi_msg
-> before doing an read_msi_msg? The order of operation in this
-> function is read, and then write.
+Introduce a default implementation for remapping PCI bus I/O resources
+onto the CPU address space. Architectures with special needs may
+provide their own version, but most should be able to use this one.
 
-Hi Konrad,
-   Thanks for your review and comments. It looks like I made a mistake.
-Before I thought xen_hvm_setup_msi_irqs() here worked like restore MSI irq,
-but it seems not in real. Since every time we call the setup MSI irq function,
-the msi_desc always new allocated, so here should use read_msi_msg(),
-I'm sorry for my mistake. :(
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Rob Herring <robh+dt@kernel.org>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ drivers/pci/pci.c   | 33 +++++++++++++++++++++++++++++++++
+ include/linux/pci.h |  3 +++
+ 2 files changed, 36 insertions(+)
 
-Bjorn, please drop this one.
-
-Thanks!
-Yijing.
-
-> 
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
->> CC: xen-devel@lists.xenproject.org
->> ---
->>  arch/x86/pci/xen.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
->> index 4656099..7a74404 100644
->> --- a/arch/x86/pci/xen.c
->> +++ b/arch/x86/pci/xen.c
->> @@ -228,7 +228,7 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->>  		return 1;
->>  
->>  	list_for_each_entry(msidesc, &dev->msi_list, list) {
->> -		read_msi_msg(msidesc, &msg);
->> +		get_cached_msi_msg(msidesc, &msg);
->>  		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
->>  			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
->>  		if (msg.data != XEN_PIRQ_MSI_DATA ||
->> -- 
->> 1.7.1
->>
-> 
-> 
-
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 29d1775..76d21b6 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2707,6 +2707,39 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
+ }
+ EXPORT_SYMBOL(pci_request_regions_exclusive);
+ 
++/**
++ *	pci_remap_iospace - Remap the memory mapped I/O space
++ *	@res: Resource describing the I/O space
++ *	@phys_addr: physical address where the range will be mapped.
++ *
++ *	Remap the memory mapped I/O space described by the @res
++ *	into the CPU physical address space. Only architectures
++ *	that have memory mapped IO defined (and hence PCI_IOBASE)
++ *	should call this function.
++ */
++int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
++{
++	int err = -ENODEV;
++
++#ifdef PCI_IOBASE
++	if (!(res->flags & IORESOURCE_IO))
++		return -EINVAL;
++
++	if (res->end > IO_SPACE_LIMIT)
++		return -EINVAL;
++
++	err = ioremap_page_range(res->start + (unsigned long)PCI_IOBASE,
++				res->end + 1 + (unsigned long)PCI_IOBASE,
++				phys_addr, pgprot_device(PAGE_KERNEL));
++#else
++	/* this architecture does not have memory mapped I/O space,
++	   so this function should never be called */
++	WARN_ON(1);
++#endif
++
++	return err;
++}
++
+ static void __pci_set_master(struct pci_dev *dev, bool enable)
+ {
+ 	u16 old_cmd, cmd;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e1e0d80..988c2f5 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1098,6 +1098,9 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
+ 						  resource_size_t),
+ 			void *alignf_data);
+ 
++
++int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
++
+ static inline dma_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
+ {
+ 	struct pci_bus_region region;
 -- 
-Thanks!
-Yijing
+2.0.4
 
