@@ -1,41 +1,56 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Mon, 18 Aug 2014 15:26:22 +0100
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v9 00/12] Support for creating generic PCI host bridges
- from DT
-Message-ID: <20140818142622.GP20043@localhost>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:51230 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753147AbaHLWBD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 18:01:03 -0400
+Received: by mail-ig0-f182.google.com with SMTP id c1so8170193igq.3
+        for <linux-pci@vger.kernel.org>; Tue, 12 Aug 2014 15:01:01 -0700 (PDT)
+Date: Tue, 12 Aug 2014 16:00:58 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Sandeep Mann <sandeep@purestorage.com>
+Cc: linux-pci@vger.kernel.org, Rajat Jain <rajatxjain@gmail.com>
+Subject: Re: [PATCH] PCI: pciehp: Use ordered workqueue for HPC events
+Message-ID: <20140812213626.GA6333@google.com>
+References: <1406933232-1560-1-git-send-email-sandeep@purestorage.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <1406933232-1560-1-git-send-email-sandeep@purestorage.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 12, 2014 at 05:25:13PM +0100, Liviu Dudau wrote:
-> This is my updated attempt at adding support for generic PCI host
-> bridge controllers that make use of device tree information to
-> configure themselves. This version incorporates Catalin's proposal
-> for managing domain numbers that got Bjorn's approval. I am now requesting
-> ACKs from the relevant maintainers as I would like to get the upstream ball
-> rolling.
+[+cc Rajat]
 
-As this series kept me busy on a long flight, you can add:
+On Fri, Aug 01, 2014 at 03:47:12PM -0700, Sandeep Mann wrote:
+> Using an ordered workqueue serializes processing of hotplug event. Processing
+> an hotplug event for some devices can take a relatively "long" time, which
+> means if a device is added and removed in quick succession (or due to flacky
+> hardware), it can lead to multiple outstanding hotplug events. Processing
+> these events concurrently can lead to unknown internal state and/or kernel
+> panics.
 
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+Did you find this by code inspection, or did you actually observe a
+problem?  If the latter, what were the symptoms?
+
+shpchp does the same thing, so I assume it requires the same fix.
+
+> Signed-off-by: Sandeep Mann <sandeep@purestorage.com>
+> ---
+>  drivers/pci/hotplug/pciehp_hpc.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 42914e0..c4eedab 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -681,7 +681,7 @@ static int pcie_init_slot(struct controller *ctrl)
+>  	if (!slot)
+>  		return -ENOMEM;
+>  
+> -	slot->wq = alloc_workqueue("pciehp-%u", 0, 0, PSN(ctrl));
+> +	slot->wq = alloc_ordered_workqueue("pciehp-%u", 0, PSN(ctrl));
+>  	if (!slot->wq)
+>  		goto abort;
+>  
+> -- 
+> 1.8.3.2
+> 
