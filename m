@@ -1,35 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: wfp5p@worldbroken.com
-To: gregkh@linuxfoundation.org
-Cc: cascardo@linux.vnet.ibm.com, linux-serial@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	lidza.louina@gmail.com, devel@driverdev.osuosl.org
-Subject: [PATCH 0/2] Move Digi Neo card support from dgnc to jsm
-Date: Sat, 30 Aug 2014 14:54:35 -0400
-Message-Id: <1409424877-2304-1-git-send-email-wfp5p@worldbroken.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.citrix.com ([66.165.176.89]:58216 "EHLO SMTP.CITRIX.COM"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752702AbaHLJJz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Aug 2014 05:09:55 -0400
+Message-ID: <53E9D9DD.3060901@citrix.com>
+Date: Tue, 12 Aug 2014 10:09:49 +0100
+From: David Vrabel <david.vrabel@citrix.com>
+MIME-Version: 1.0
+To: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-mips@linux-mips.org>, <linux-ia64@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, <sparclinux@vger.kernel.org>,
+	<linux-s390@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Joerg Roedel <joro@8bytes.org>, <x86@kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<xen-devel@lists.xenproject.org>, <arnab.basu@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Tony Luck <tony.luck@intel.com>,
+	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+	Wuyun <wuyun.wu@huawei.com>, <linuxppc-dev@lists.ozlabs.org>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [Xen-devel] [RFC PATCH 01/20] x86/xen/MSI: Eliminate arch_msix_mask_irq()
+ and arch_msi_mask_irq()
+References: <1407828373-24322-1-git-send-email-wangyijing@huawei.com> <1407828373-24322-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1407828373-24322-2-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bill Pemberton <wfp5p@worldbroken.com>
+On 12/08/14 08:25, Yijing Wang wrote:
+> Commit 0e4ccb150 added two __weak arch functions arch_msix_mask_irq()
+> and arch_msi_mask_irq() to fix a bug found when running xen in x86.
+> Introduced these two funcntions make MSI code complex. This patch
+> reverted commit 0e4ccb150 and add #ifdef for x86 msi_chip to fix this
+> bug for simplicity. Also this is preparation for using struct
+> msi_chip instead of weak arch MSI functions in all platforms.
+[...]
+>  static struct irq_chip msi_chip = {
+>  	.name			= "PCI-MSI",
+> +#ifdef CONFIG_XEN
+> +	.irq_unmask		= nop_unmask_msi_irq,
+> +	.irq_mask		= nop_mask_msi_irq,
+> +#else
+>  	.irq_unmask		= unmask_msi_irq,
+>  	.irq_mask		= mask_msi_irq,
+> +#endif
 
-The jsm driver (drivers/tty/serial/jsm) already supports the Digi Neo
-cards that dgnc (staging) supports.  In fact, it appears that jsm was
-based on dgnc.  The dgnc driver has PCI ids for more cards than jsm,
-this patch moves support for all the Neo cards to jsm.
+No.  CONFIG_XEN kernels can run on Xen and bare metal so this must be a
+runtime option.
 
-The result of this will be that dgnc will only support the Classic
-cards since the jsm driver doesn't support those cards yet.
-
-
-Bill Pemberton (2):
-  jsm: add support for additional Neo cards
-  staging: dgnc: remove Neo card ids from device table
-
- drivers/staging/dgnc/dgnc_driver.c  | 13 -------------
- drivers/tty/serial/jsm/jsm_driver.c | 38 +++++++++++++++++++++++++++++++++----
- include/linux/pci_ids.h             |  8 ++++++++
- 3 files changed, 42 insertions(+), 17 deletions(-)
-
--- 
-1.9.3
-
+David
