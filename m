@@ -1,87 +1,231 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.restena.lu ([158.64.1.62]:42863 "EHLO
-	smtprelay.restena.lu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754455AbaHYMjE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Aug 2014 08:39:04 -0400
-Date: Mon, 25 Aug 2014 14:39:01 +0200
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-To: Daniel Vetter <daniel@ffwll.ch>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	DRI mailing list <dri-devel@lists.freedesktop.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH 0/2] x86, ia64: Move EFI_FB vga_default_device()
- initialization to pci_vga_fixup()
-Message-ID: <20140825143901.18357759@pluto>
-In-Reply-To: <20140825121602.GB15520@phenom.ffwll.local>
-References: <20140810183411.19370721@neptune.home>
-	<CAMxnaaVNpiSZmhQsHa_ZHJckgzG+xHyOL6hOT3Ts8GdcGN_A9g@mail.gmail.com>
-	<20140816192135.34260115@neptune.home>
-	<CAMxnaaWQoX9KMQVCKHTkeqSxGEybz5u1qU6AVBqzW3+mj_nJHQ@mail.gmail.com>
-	<20140820075508.74f5b622@pluto>
-	<20140820091152.76cd4e1a@pluto>
-	<CAMxnaaUodONkqmdPWedN-Q1qheHiJAScFcG_XbX1--ZmiOQZDg@mail.gmail.com>
-	<20140821233435.19a9cffa@neptune.home>
-	<CAErSpo6D1B+dPLrYoAF4OA1KeWuW8VZW2_RR5jB1GbCRo+6vHg@mail.gmail.com>
-	<20140822082324.12cb6e93@pluto>
-	<20140825121602.GB15520@phenom.ffwll.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from e28smtp09.in.ibm.com ([122.248.162.9]:60976 "EHLO
+	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751321AbaHLBpb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 21:45:31 -0400
+Received: from /spool/local
+	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 12 Aug 2014 07:15:28 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id F00BC394001E
+	for <linux-pci@vger.kernel.org>; Tue, 12 Aug 2014 07:15:25 +0530 (IST)
+Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
+	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s7C1jl8U59703488
+	for <linux-pci@vger.kernel.org>; Tue, 12 Aug 2014 07:15:47 +0530
+Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
+	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s7C1jOxr011470
+	for <linux-pci@vger.kernel.org>; Tue, 12 Aug 2014 07:15:25 +0530
+Date: Tue, 12 Aug 2014 09:45:23 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Matthew Minter <matthew_minter@xyratex.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 01/22] Added some infrastructure to allow assigning PCI
+ device IRQs at device enable time and removed pci_fixup_irqs as the other
+ change obsolites it.
+Message-ID: <20140812014523.GA10573@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+ <1407255083-9356-2-git-send-email-matthew_minter@xyratex.com>
+ <20140807034338.GA13444@richard>
+ <CAFJTrDuzdoOPoQ_rpNsYU+OeE380sY37aQaMSudhu_MVKo352g@mail.gmail.com>
+ <20140808012017.GA11712@richard>
+ <CAFJTrDs0oELF3FNaf6axQvPkLv1skK1f3j_Hgre2VX9XDFBOag@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAFJTrDs0oELF3FNaf6axQvPkLv1skK1f3j_Hgre2VX9XDFBOag@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Daniel,
+On Mon, Aug 11, 2014 at 11:16:50AM +0100, Matthew Minter wrote:
+>It seems that by coincidence, my testing boxes did not have any
+>devices which needed the PCI_INTERRUPT_PIN fixed up. Therefore I had
+>not noticed the fact the fixed value was not used in the enable path.
 
-On Mon, 25 Aug 2014 14:16:02 +0200 Daniel Vetter wrote:
-> Very often when something goes wrong with a kms driver we hang while doing
-> the initial modeset. Which is all done while holding the console_lock
-> (because fbdev+vt locking is just insane). You can try to get a closer
-> look with I915_FBDEV=n which will avoid the console_lock, but which also
-> won't register the legacy/compat i915 fbdev emulation any more, so greatly
-> changes boot behaviour.
-> 
-> If that doesn't lead to clues the next approach is to "carefully"
-> drop&reacquire console_lock at a few "interesting" places to get a few
-> printks out over netconsole or similar. Or just hack up entire netconsole
-> loggin infrastructure which bypasses printk and so all the console_lock
-> insanity.
+ok
 
-In this case it's not that bad as Andreas could send the logs for all
-cases (captured via ssh).
+>
+>I would assume that someone with a different setup would have had a
+>problem there however so thank you for pointing out this bug. I have
+>integrated your fix into version 2 of the patch set.
 
-So probably console lock is not held (unless he did have to do
-terminal-free ssh which I doubt).
-It looks much more as if it's just the output routing that gets weird
-on his Mac (or possibly any other dual-GPU MacBook where discrete GPU is
-primary). Black screen but alive system :)
+thanks
 
-See follow-up posts in this thread.
+>
+>Many thanks.
+>
+>On 8 August 2014 02:20, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>> On Thu, Aug 07, 2014 at 12:35:41PM +0100, Matthew Minter wrote:
+>>>Just to confirm, are you saying that:
+>>>
+>>>>+
+>>>>+      pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+>>>>+      pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
+>>>>+
+>>>
+>>>Should become:
+>>>
+>>>>+
+>>>>+     pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
+>>>>+     pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+>>>>+
+>>>
+>>>So that we read the config byte after running the assignment and fixup?
+>>>
+>>>I had not thought about the case where the fixup changes the
+>>>PCI_INTERRUPT_PIN value.
+>>>It looks to me like you are correct there and this should indeed be fixed.
+>>>I can certainly swap those around for the next patch revision if that
+>>>is what you are suggesting?
+>>>
+>>
+>> Yes, pci_read_config_byte() should be called after pdev_assign_irq().
+>>
+>>>I will give that a quick test but it sounds like you are correct.
+>>
+>> I am willing to know the result, especially in the original one, what pin
+>> value you retrieved from pci_dev.
+>>
+>>>
+>>>Many thanks,
+>>>Matthew
+>>>
+>>>On 7 August 2014 04:43, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>>>> On Tue, Aug 05, 2014 at 05:11:02PM +0100, matthew_minter@xyratex.com wrote:
+>>>>>From: matthew_minter <matthew_minter@xyratex.com>
+>>>>>
+>>>>>---
+>>>>> drivers/pci/Makefile      | 15 ++-------------
+>>>>> drivers/pci/host-bridge.c |  2 +-
+>>>>> drivers/pci/pci.c         |  6 +++++-
+>>>>> drivers/pci/pci.h         |  1 +
+>>>>> drivers/pci/probe.c       | 12 ------------
+>>>>> drivers/pci/setup-irq.c   | 25 +++++++++----------------
+>>>>> include/linux/pci.h       |  8 ++++----
+>>>>> 7 files changed, 22 insertions(+), 47 deletions(-)
+>>>>>
+>>>>>diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+>>>>>index e04fe2d..38c4cb0 100644
+>>>>>--- a/drivers/pci/Makefile
+>>>>>+++ b/drivers/pci/Makefile
+>>>>>@@ -4,7 +4,8 @@
+>>>>>
+>>>>> obj-y         += access.o bus.o probe.o host-bridge.o remove.o pci.o \
+>>>>>                       pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
+>>>>>-                      irq.o vpd.o setup-bus.o vc.o
+>>>>>+                      irq.o vpd.o setup-bus.o vc.o setup-irq.o
+>>>>>+
+>>>>> obj-$(CONFIG_PROC_FS) += proc.o
+>>>>> obj-$(CONFIG_SYSFS) += slot.o
+>>>>>
+>>>>>@@ -31,18 +32,6 @@ obj-$(CONFIG_PCI_ATS) += ats.o
+>>>>> obj-$(CONFIG_PCI_IOV) += iov.o
+>>>>>
+>>>>> #
+>>>>>-# Some architectures use the generic PCI setup functions
+>>>>>-#
+>>>>>-obj-$(CONFIG_ALPHA) += setup-irq.o
+>>>>>-obj-$(CONFIG_ARM) += setup-irq.o
+>>>>>-obj-$(CONFIG_UNICORE32) += setup-irq.o
+>>>>>-obj-$(CONFIG_SUPERH) += setup-irq.o
+>>>>>-obj-$(CONFIG_MIPS) += setup-irq.o
+>>>>>-obj-$(CONFIG_TILE) += setup-irq.o
+>>>>>-obj-$(CONFIG_SPARC_LEON) += setup-irq.o
+>>>>>-obj-$(CONFIG_M68K) += setup-irq.o
+>>>>>-
+>>>>>-#
+>>>>> # ACPI Related PCI FW Functions
+>>>>> # ACPI _DSM provided firmware instance and string name
+>>>>> #
+>>>>>diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+>>>>>index 0e5f3c9..8ed186f 100644
+>>>>>--- a/drivers/pci/host-bridge.c
+>>>>>+++ b/drivers/pci/host-bridge.c
+>>>>>@@ -16,7 +16,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+>>>>>       return bus;
+>>>>> }
+>>>>>
+>>>>>-static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+>>>>>+struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+>>>>> {
+>>>>>       struct pci_bus *root_bus = find_pci_root_bus(bus);
+>>>>>
+>>>>>diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>>>index 63a54a3..d51d076 100644
+>>>>>--- a/drivers/pci/pci.c
+>>>>>+++ b/drivers/pci/pci.c
+>>>>>@@ -1197,10 +1197,15 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+>>>>>       int err;
+>>>>>       u16 cmd;
+>>>>>       u8 pin;
+>>>>>+      struct pci_host_bridge *hbrg = find_pci_host_bridge(dev->bus);
+>>>>>
+>>>>>       err = pci_set_power_state(dev, PCI_D0);
+>>>>>       if (err < 0 && err != -EIO)
+>>>>>               return err;
+>>>>>+
+>>>>>+      pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+>>>>>+      pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
+>>>>>+
+>>>>>       err = pcibios_enable_device(dev, bars);
+>>>>>       if (err < 0)
+>>>>>               return err;
+>>>>>@@ -1209,7 +1214,6 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+>>>>>       if (dev->msi_enabled || dev->msix_enabled)
+>>>>>               return 0;
+>>>>>
+>>>>>-      pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+>>>>
+>>>> Not sure why you move this up.
+>>>>
+>>>> Before your change, the call flow would be like this:
+>>>>
+>>>> | scan_bus
+>>>> |   + pci_fixup_irqs
+>>>> |      +    pci_dev->irq and PCI_INTERRUPT_PIN assigned with correct number
+>>>> |
+>>>> | pci_enable_device, called from driver
+>>>> |   + do_pci_enable_device, read the pin from pci_dev
+>>>>
+>>>> As my understanding, this ensures the pin read from hardware is fixuped. While
+>>>> after your change, the pci_fixup_irqs is removed and the pin will be assigned
+>>>> in pdev_assign_irq() after you fix it properly.
+>>>>
+>>>> Do I missed something?
+>>>>
+>>>>>       if (pin) {
+>>>>>               pci_read_config_word(dev, PCI_COMMAND, &cmd);
+>>>>>               if (cmd & PCI_COMMAND_INTX_DISABLE)
+>>>>
+>>>> --
+>>>> Richard Yang
+>>>> Help you, Help me
+>>>>
+>>>
+>>>--
+>>>
+>>>
+>>>------------------------------
+>>>For additional information including the registered office and the treatment of Xyratex confidential information please visit www.xyratex.com
+>>>
+>>>------------------------------
+>>
+>> --
+>> Richard Yang
+>> Help you, Help me
+>>
+>
+>-- 
+>
+>
+>------------------------------
+>For additional information including the registered office and the treatment of Xyratex confidential information please visit www.xyratex.com
+>
+>------------------------------
 
-If you have some uncommon or otherwise weird (EFI) multi-GPU systems
-around and want to give my patches sent yesterday evening a try, you're
-welcome! Some with non-Apple GPU multiplexer would be nice to have
-tested as well.
+-- 
+Richard Yang
+Help you, Help me
 
-
-The following part mentioned earlier by Andreas might be of interest to
-you though (and my latest patch series should bring the improvement):
-> > vga_arbiter_add_pci_device chooses intel simply because it is the
-> > first device. Next pci_fixup_video(intel) sees that it is the default
-> > device, sets the IORESOURCE_ROM_SHADOW flag and calls
-> > vga_set_default_device again. And finally (if the check is removed)
-> > pci_fixup_video(nvidia) sees that it owns the framebuffer and sets
-> > itself as the default device which allows the system to boot again.
-> >
-> > Does setting the ROM_SHADOW flag on (possibly) the wrong device have
-> > any effect?  
-> Yes it does. Removing the line changes a long standing
-> i915 0000:00:02.0: Invalid ROM contents
-> into a
-> i915 0000:00:02.0: BAR 6: can't assign [??? 0x00000000 flags 0x20000000] (bogus alignment).
-> 
-> The first is logged at KERN_ERR and the second one only at KERN_INFO.
-> We are making progress.
-
-Bruno
