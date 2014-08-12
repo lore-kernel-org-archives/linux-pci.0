@@ -1,36 +1,87 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 11 Aug 2014 02:40:06 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: Re: [PATCH v2 RESEND 22/23] qla4xxx: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-Message-ID: <20140811094006.GA722@infradead.org>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <0496ccbc0f203afaeeb7758c146b93c2f387684c.1405533479.git.agordeev@redhat.com>
- <20140726084137.GL21129@agordeev.usersys.redhat.com>
- <3FC4AB8B47ECD546BCD4B361A64BEACD8C6CAFD2@avmb3.qlogic.org>
- <20140811085433.GL16504@dhcp-27-160.brq.redhat.com>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>, <linux-pci@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<arnab.basu@freescale.com>, <x86@kernel.org>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [RFC PATCH 18/20] Sparc/MSI: Use msi_chip instead of arch func to configure MSI/MSI-X
+Date: Tue, 12 Aug 2014 15:26:11 +0800
+Message-ID: <1407828373-24322-19-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1407828373-24322-1-git-send-email-wangyijing@huawei.com>
+References: <1407828373-24322-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140811085433.GL16504@dhcp-27-160.brq.redhat.com>
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 11, 2014 at 10:54:34AM +0200, Alexander Gordeev wrote:
-> On Mon, Jul 28, 2014 at 11:47:19AM +0000, Vikas Chaudhary wrote:
-> > 
-> > Acked-By: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-> 
-> Christoph,
-> 
-> This patch seems ready..
+Introduce a new struct msi_chip sparc_msi_chip instead of weak arch
+functions to configure MSI/MSI-X.
 
-I will apply all the patches that have gotten reviews once I open
-up the queues for 3.18 which should be in about a week from now.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/sparc/kernel/pci.c |   18 ++++++++++++++----
+ 1 files changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 857ad77..9eabd22 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -839,18 +839,18 @@ int pci_domain_nr(struct pci_bus *pbus)
+ EXPORT_SYMBOL(pci_domain_nr);
+ 
+ #ifdef CONFIG_PCI_MSI
+-int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
++int sparc_setup_msi_irq(struct device *dev, struct msi_desc *desc)
+ {
+-	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
++	struct pci_pbm_info *pbm = dev->archdata.host_controller;
+ 	unsigned int irq;
+ 
+ 	if (!pbm->setup_msi_irq)
+ 		return -EINVAL;
+ 
+-	return pbm->setup_msi_irq(&irq, pdev, desc);
++	return pbm->setup_msi_irq(&irq, to_pci_dev(dev), desc);
+ }
+ 
+-void arch_teardown_msi_irq(unsigned int irq)
++void sparc_teardown_msi_irq(unsigned int irq)
+ {
+ 	struct msi_desc *entry = irq_get_msi_desc(irq);
+ 	struct pci_dev *pdev = entry->dev;
+@@ -859,6 +859,16 @@ void arch_teardown_msi_irq(unsigned int irq)
+ 	if (pbm->teardown_msi_irq)
+ 		pbm->teardown_msi_irq(irq, pdev);
+ }
++
++struct msi_chip sparc_msi_chip = {
++	.setup_irq = sparc_setup_msi_irq,
++	.teardown_irq = sparc_teardown_msi_irq,
++};
++
++struct msi_chip *arch_get_match_msi_chip(struct device *dev)
++{
++	return &sparc_msi_chip;
++}
+ #endif /* !(CONFIG_PCI_MSI) */
+ 
+ static void ali_sound_dma_hack(struct pci_dev *pdev, int set_bit)
+-- 
+1.7.1
 
