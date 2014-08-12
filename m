@@ -1,57 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:51846 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751244AbaH1R2w (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Aug 2014 13:28:52 -0400
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:43399 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754997AbaHLJhb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 05:37:31 -0400
+Received: by mail-wg0-f49.google.com with SMTP id k14so9549803wgh.8
+        for <linux-pci@vger.kernel.org>; Tue, 12 Aug 2014 02:37:29 -0700 (PDT)
+Message-ID: <53E9E052.3070308@monstr.eu>
+Date: Tue, 12 Aug 2014 11:37:22 +0200
+From: Michal Simek <monstr@monstr.eu>
+Reply-To: monstr@monstr.eu
 MIME-Version: 1.0
-Date: Thu, 28 Aug 2014 22:58:50 +0530
-Message-ID: <CANwwZzXowyGmg-cfCHQqeJ_iqjT+Ec+JPy+OWzNGeyN=hRqmPg@mail.gmail.com>
-Subject: mlx4 query in sriov mode
-From: Bob Biloxi <iambobbiloxi@gmail.com>
-To: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Srikanth Thokala <sthokal@xilinx.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	svemula@xilinx.com,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Grant Likely <grant.likely@linaro.org>, anirudh@xilinx.com
+Subject: Re: [PATCH v5] pcie: Add Xilinx PCIe Host Bridge IP driver
+References: <1406131381-25577-1-git-send-email-sthokal@xilinx.com>	<CA+mB=1JhDF=BBXcyTbgVB8S7qH=Mb1JH78HLL4pA9OBH19hQvA@mail.gmail.com>	<8258903.Rn4s07GKGV@wuerfel> <CA+mB=1LeZn1k2VHNby2TRBcb1xuFFTQio=C845_xe2A=ZciYqg@mail.gmail.com>
+In-Reply-To: <CA+mB=1LeZn1k2VHNby2TRBcb1xuFFTQio=C845_xe2A=ZciYqg@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="q6kIRpcKTBjkk9TCMqwk5g6kquBLV1CXU"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--q6kIRpcKTBjkk9TCMqwk5g6kquBLV1CXU
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Hi Bjorn,
+
+On 07/30/2014 01:24 PM, Srikanth Thokala wrote:
+> Hi Arnd,
+>=20
+> On Mon, Jul 28, 2014 at 6:32 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> On Monday 28 July 2014 18:04:34 Srikanth Thokala wrote:
+>>> Hi Arnd and Rob,
+>>>
+>>> I discussed with Bjorn and we believe this patch is in good shape to
+>>> apply.  And Bjorn requires ACKs to apply this patch.  So, could you
+>>> guys please review this patch and provided your ACKs to this patch.
+>>
+>> Looks great for the most part. I've looked through the whole driver
+>> again, and I have two small issues remaining:
+>>
+>> a) Please clarify in the changeset description why there is no support=
+
+>>    for PCI I/O space.
+>=20
+> Sure, I will add to my changeset.
+>=20
+>>
+>> b) I think you should use the 'msi-parent' property, and the
+>>    of_pci_find_msi_chip_by_node() to find the msi_chip for the
+>>    PCI controller. This will make it possible to forward MSIs
+>>    to the main interrupt controller in the system, which is more
+>>    efficient. See the pcie-mvebu driver for an example of this.
+>=20
+> Ok, I need to look into this and I will plan to implement on top of thi=
+s patch.
+>=20
+>>
+>> Other than these:
+>>
+>> Acked-by: Arnd Bergmann <arnd@arndb.de>
+>=20
+> Thanks Arnd for the Ack.
+
+What's the status on this one?
+
+Srikanth:
+Isn't pcie-xilinx.c better name if this is just pcie host bridge?
+
+Thanks,
+Michal
+
+--=20
+Michal Simek, Ing. (M.Eng), OpenPGP -> KeyID: FE3D1F91
+w: www.monstr.eu p: +42-0-721842854
+Maintainer of Linux kernel - Microblaze cpu - http://www.monstr.eu/fdt/
+Maintainer of Linux kernel - Xilinx Zynq ARM architecture
+Microblaze U-BOOT custodian and responsible for u-boot arm zynq platform
 
 
-I really appreciate this wonderful community which has immensely
-helped me broaden my knowledge and understanding.
 
+--q6kIRpcKTBjkk9TCMqwk5g6kquBLV1CXU
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-I was going through the mlx4 sriov code, trying to understand the
-communication between the VF driver and the PF driver.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-I was having a few queries..hoping to get a better understanding.
+iEYEARECAAYFAlPp4FYACgkQykllyylKDCHy1ACfQqu74eitbokR7l/BnmFHNqzZ
+cIUAnR96rLi4FehQknsDgvflZSHGx00K
+=fxph
+-----END PGP SIGNATURE-----
 
-
-As I understand, the commands are communicated between VF and PF
-through a mechanism called communication channel. VF writes to
-specific address in its BAR space, PF gets an event and then proceeds
-ahead to read the command from its BAR space and then complete the
-execution of it..
-
-
-Now, my query is, lets say the VF driver is not yet present and only
-the PF driver is there...
-
-In this case, can we simulate a VF command write and get notified
-through an event?
-
-For eg. we write to some offset in the PF BAR space itself upon
-completion of which, an event is generated because of the write? kind
-of like loopback mechanism.
-
-
-I searched through the code but couldn't find anywhere.
-
-Can anyone please help me understand if this is possible? And if there
-is any location in the code where i can find this?
-
-Thanks a lot in advance!!
-
-
-Best Regards,
-Bob
+--q6kIRpcKTBjkk9TCMqwk5g6kquBLV1CXU--
