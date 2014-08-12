@@ -1,127 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cthulhu.worldbroken.com ([173.230.133.178]:34513 "EHLO
-	cthulhu.worldbroken.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751790AbaH3UIJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Aug 2014 16:08:09 -0400
-Message-ID: <54022F26.6040603@worldbroken.com>
-Date: Sat, 30 Aug 2014 16:08:06 -0400
-From: Bill Pemberton <wfp5p@worldbroken.com>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:65496 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753745AbaHLSo0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 14:44:26 -0400
+Received: by mail-ig0-f173.google.com with SMTP id h18so7737847igc.0
+        for <linux-pci@vger.kernel.org>; Tue, 12 Aug 2014 11:44:24 -0700 (PDT)
+Date: Tue, 12 Aug 2014 12:44:21 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Benoit Taine <benoit.taine@lip6.fr>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH 0/1] Replace DEFINE_PCI_DEVICE_TABLE macro use
+Message-ID: <20140812184421.GA5516@google.com>
+References: <1407506163-8371-1-git-send-email-benoit.taine@lip6.fr>
 MIME-Version: 1.0
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: cascardo@linux.vnet.ibm.com, linux-serial@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	lidza.louina@gmail.com, devel@driverdev.osuosl.org
-Subject: Re: [PATCH 1/2] jsm: add support for additional Neo cards
-References: <1409424877-2304-1-git-send-email-wfp5p@worldbroken.com> <1409424877-2304-2-git-send-email-wfp5p@worldbroken.com> <20140830185914.GA17371@kroah.com>
-In-Reply-To: <20140830185914.GA17371@kroah.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1407506163-8371-1-git-send-email-benoit.taine@lip6.fr>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/30/2014 02:59 PM, Greg KH wrote:
-> On Sat, Aug 30, 2014 at 02:54:36PM -0400, wfp5p@worldbroken.com wrote:
->> From: Bill Pemberton <wfp5p@worldbroken.com>
->>
->> Add device ids for additional Neo cards.  The ids come from the dgnc
->> driver.
->>
->> Signed-off-by: Bill Pemberton <wfp5p@worldbroken.com>
->> ---
->>   drivers/tty/serial/jsm/jsm_driver.c | 38 +++++++++++++++++++++++++++++++++----
->>   include/linux/pci_ids.h             |  8 ++++++++
->>   2 files changed, 42 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/tty/serial/jsm/jsm_driver.c b/drivers/tty/serial/jsm/jsm_driver.c
->> index a47d882d6743..d2885a7bb090 100644
->> --- a/drivers/tty/serial/jsm/jsm_driver.c
->> +++ b/drivers/tty/serial/jsm/jsm_driver.c
->> @@ -93,12 +93,34 @@ static int jsm_probe_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->>   	/* store the info for the board we've found */
->>   	brd->boardnum = adapter_count++;
->>   	brd->pci_dev = pdev;
->> -	if (pdev->device == PCIE_DEVICE_ID_NEO_4_IBM)
->> +
->> +	switch (pdev->device) {
->> +
->> +	case PCI_DEVICE_ID_NEO_2DB9:
->> +	case PCI_DEVICE_ID_NEO_2DB9PRI:
->> +	case PCI_DEVICE_ID_NEO_2RJ45:
->> +	case PCI_DEVICE_ID_NEO_2RJ45PRI:
->> +	case PCI_DEVICE_ID_NEO_2_422_485:
->> +		brd->maxports = 2;
->> +		break;
->> +
->> +	case PCI_DEVICE_ID_NEO_4:
->> +	case PCIE_DEVICE_ID_NEO_4:
->> +	case PCIE_DEVICE_ID_NEO_4RJ45:
->> +	case PCIE_DEVICE_ID_NEO_4_IBM:
->>   		brd->maxports = 4;
->> -	else if (pdev->device == PCI_DEVICE_ID_DIGI_NEO_8)
->> +		break;
->> +
->> +	case PCI_DEVICE_ID_DIGI_NEO_8:
->> +	case PCIE_DEVICE_ID_NEO_8:
->> +	case PCIE_DEVICE_ID_NEO_8RJ45:
->>   		brd->maxports = 8;
->> -	else
->> -		brd->maxports = 2;
->> +		break;
->> +
->> +	default:
->> +		brd->maxports = 1;
->> +		break;
->> +	}
->>
->>   	spin_lock_init(&brd->bd_intr_lock);
->>
->> @@ -209,6 +231,14 @@ static struct pci_device_id jsm_pci_tbl[] = {
->>   	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCI_DEVICE_ID_NEO_2RJ45PRI), 0, 0, 3 },
->>   	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCIE_DEVICE_ID_NEO_4_IBM), 0, 0, 4 },
->>   	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCI_DEVICE_ID_DIGI_NEO_8), 0, 0, 5 },
->> +	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCI_DEVICE_ID_NEO_4), 0, 0, 6 },
->> +	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCI_DEVICE_ID_NEO_1_422), 0, 0, 7 },
->> +	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCI_DEVICE_ID_NEO_1_422_485), 0, 0, 8 },
->> +	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCI_DEVICE_ID_NEO_2_422_485), 0, 0, 9 },
->> +	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCIE_DEVICE_ID_NEO_8), 0, 0, 10 },
->> +	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCIE_DEVICE_ID_NEO_4), 0, 0, 11 },
->> +	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCIE_DEVICE_ID_NEO_4RJ45), 0, 0, 12 },
->> +	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCIE_DEVICE_ID_NEO_8RJ45), 0, 0, 13 },
->>   	{ 0, }
->>   };
->>   MODULE_DEVICE_TABLE(pci, jsm_pci_tbl);
->> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
->> index 6ed0bb73a864..f0f610c94bb2 100644
->> --- a/include/linux/pci_ids.h
->> +++ b/include/linux/pci_ids.h
->> @@ -1516,11 +1516,19 @@
->>   #define PCI_DEVICE_ID_DIGI_DF_M_E	0x0071
->>   #define PCI_DEVICE_ID_DIGI_DF_M_IOM2_A	0x0072
->>   #define PCI_DEVICE_ID_DIGI_DF_M_A	0x0073
->> +#define PCI_DEVICE_ID_NEO_4             0x00B0
->>   #define PCI_DEVICE_ID_DIGI_NEO_8	0x00B1
->>   #define PCI_DEVICE_ID_NEO_2DB9          0x00C8
->>   #define PCI_DEVICE_ID_NEO_2DB9PRI       0x00C9
->>   #define PCI_DEVICE_ID_NEO_2RJ45         0x00CA
->>   #define PCI_DEVICE_ID_NEO_2RJ45PRI      0x00CB
->> +#define PCI_DEVICE_ID_NEO_1_422         0x00CC
->> +#define PCI_DEVICE_ID_NEO_1_422_485     0x00CD
->> +#define PCI_DEVICE_ID_NEO_2_422_485     0x00CE
->> +#define PCIE_DEVICE_ID_NEO_8            0x00F0
->> +#define PCIE_DEVICE_ID_NEO_4            0x00F1
->> +#define PCIE_DEVICE_ID_NEO_4RJ45        0x00F2
->> +#define PCIE_DEVICE_ID_NEO_8RJ45        0x00F3
->>   #define PCIE_DEVICE_ID_NEO_4_IBM        0x00F4
->
-> As per the information in the top of this file, we only add new ids when
-> they cross multiple files.  Right now these values you are adding are
-> only for a single driver, so they don't need to be added here.
->
-> Can you redo this series without touching the pci_ids.h file?
->
+On Fri, Aug 08, 2014 at 03:56:02PM +0200, Benoit Taine wrote:
+> We should prefer `const struct pci_device_id` over
+> `DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
+> This issue was reported by checkpatch.
+> 
+> A simplified version of the semantic patch that makes this change is as
+> follows (http://coccinelle.lip6.fr/):
+> 
+> // <smpl>
+> 
+> @@
+> identifier i;
+> declarer name DEFINE_PCI_DEVICE_TABLE;
+> initializer z;
+> @@
+> 
+> - DEFINE_PCI_DEVICE_TABLE(i)
+> + const struct pci_device_id i[]
+> = z;
+> 
+> // </smpl>
+> 
+> I previously sent parts of this patch to check wether or not it was
+> worth sending, and Bjorn answered:
+> > Benoit, how about if you wait until about half-way through the merge
+> > window after v3.16 releases, generate an up-to-date single patch, and
+> > post that?  Then we can try to get it in before v3.17-rc1 to minimize
+> > merge hassles.
+> 
+> So here it is, based on linux-next on 2014-08-07.
 
-Ah, my apologies, obviously I didn't read the top of the pci_ids.h. 
-I'll redo these.
+Applied to my for-linus branch for v3.17, thanks!
 
--- 
-Bill
-
+Bjorn
