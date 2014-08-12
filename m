@@ -1,165 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:62911 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753646AbaHKNov (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 09:44:51 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH 5/6 v2] PCI / PM: Make PCIe PME interrupts wake up from suspend-to-idle
-Date: Mon, 11 Aug 2014 16:02:31 +0200
-Message-ID: <4377115.sK1ENHlJNS@vostro.rjw.lan>
-In-Reply-To: <26580319.OZP7jvJnA9@vostro.rjw.lan>
-References: <26580319.OZP7jvJnA9@vostro.rjw.lan>
+Received: from eu1sys200aog126.obsmtp.com ([207.126.144.174]:51624 "EHLO
+	eu1sys200aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752248AbaHLMAY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 08:00:24 -0400
+Message-ID: <53EA01B5.5020900@mellanox.com>
+Date: Tue, 12 Aug 2014 14:59:49 +0300
+From: Amir Vadai <amirv@mellanox.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>, <linux-pci@vger.kernel.org>
+CC: <alex.williamson@redhat.com>, <eli@mellanox.com>,
+	<weiyang@linux.vnet.ibm.com>
+Subject: Re: [PATCH v3] PCI: Mark broken INTx masking for Mellanox devices
+References: <1407844091-20815-1-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1407844091-20815-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On 8/12/2014 2:48 PM, Gavin Shan wrote:
+> The VFIO driver is routing LSI interrupts by capturing, masking,
+> and then delivering. When passing though Mellanox adapters from
+> host to guest, interrupt storm was reported from host and guest.
+> That's because we can't mask the LSI interrupt with help of PCI
+> command register.
+> 
+>  # lspci | grep Mellanox
+>  0001:05:00.0 Ethernet controller: Mellanox Technologies MT27500 \
+>               Family [ConnectX-3]
+>  0005:01:00.0 Ethernet controller: Mellanox Technologies MT26448 \
+>               [ConnectX EN 10GigE, PCIe 2.0 5GT/s] (rev b0)
+> 
+> It's confirmed by Amir Vadai that all Mellanox devices have same
+> problem. The patch marks broken INTx masking for all Mellanox
+> adapters.
+> 
+> Cc: Amir Vadai <amirv@mellanox.com>
+> Suggested-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+> v3: Mark broken INTx masking for all Mellanox adapters
+> ---
+>  drivers/pci/quirks.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
 
-To make PCIe PME interrupts wake up the system from suspend to idle,
-make the PME driver use enable_irq_wake() on the IRQ during system
-suspend (if there are any wakeup devices below the given PCIe port)
-without disabling PME interrupts.  This way, an interrupt will still
-trigger if a wakeup event happens and the system will be woken up (or
-system suspend in progress will be aborted) by means of the new
-mechanics introduced previously.
-
-This change allows Wake-on-LAN to be used for wakeup from
-suspend-to-idle on my MSI Wind tesbed netbook.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
-
-This patch is the same as the previous version.
-
----
- drivers/pci/pcie/pme.c |   61 ++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 51 insertions(+), 10 deletions(-)
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-pm" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-Index: linux-pm/drivers/pci/pcie/pme.c
-===================================================================
---- linux-pm.orig/drivers/pci/pcie/pme.c
-+++ linux-pm/drivers/pci/pcie/pme.c
-@@ -41,11 +41,17 @@ static int __init pcie_pme_setup(char *s
- }
- __setup("pcie_pme=", pcie_pme_setup);
- 
-+enum pme_suspend_level {
-+	PME_SUSPEND_NONE = 0,
-+	PME_SUSPEND_WAKEUP,
-+	PME_SUSPEND_NOIRQ,
-+};
-+
- struct pcie_pme_service_data {
- 	spinlock_t lock;
- 	struct pcie_device *srv;
- 	struct work_struct work;
--	bool noirq; /* Don't enable the PME interrupt used by this service. */
-+	enum pme_suspend_level suspend_level;
- };
- 
- /**
-@@ -223,7 +229,7 @@ static void pcie_pme_work_fn(struct work
- 	spin_lock_irq(&data->lock);
- 
- 	for (;;) {
--		if (data->noirq)
-+		if (data->suspend_level != PME_SUSPEND_NONE)
- 			break;
- 
- 		pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
-@@ -250,7 +256,7 @@ static void pcie_pme_work_fn(struct work
- 		spin_lock_irq(&data->lock);
- 	}
- 
--	if (!data->noirq)
-+	if (data->suspend_level == PME_SUSPEND_NONE)
- 		pcie_pme_interrupt_enable(port, true);
- 
- 	spin_unlock_irq(&data->lock);
-@@ -367,6 +373,21 @@ static int pcie_pme_probe(struct pcie_de
- 	return ret;
- }
- 
-+static bool pcie_pme_check_wakeup(struct pci_bus *bus)
-+{
-+	struct pci_dev *dev;
-+
-+	if (!bus)
-+		return false;
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list)
-+		if (device_may_wakeup(&dev->dev)
-+		    || pcie_pme_check_wakeup(dev->subordinate))
-+			return true;
-+
-+	return false;
-+}
-+
- /**
-  * pcie_pme_suspend - Suspend PCIe PME service device.
-  * @srv: PCIe service device to suspend.
-@@ -375,11 +396,26 @@ static int pcie_pme_suspend(struct pcie_
- {
- 	struct pcie_pme_service_data *data = get_service_data(srv);
- 	struct pci_dev *port = srv->port;
-+	bool wakeup;
- 
-+	if (device_may_wakeup(&port->dev)) {
-+		wakeup = true;
-+	} else {
-+		down_read(&pci_bus_sem);
-+		wakeup = pcie_pme_check_wakeup(port->subordinate);
-+		up_read(&pci_bus_sem);
-+	}
- 	spin_lock_irq(&data->lock);
--	pcie_pme_interrupt_enable(port, false);
--	pcie_clear_root_pme_status(port);
--	data->noirq = true;
-+	if (wakeup) {
-+		enable_irq_wake(srv->irq);
-+		data->suspend_level = PME_SUSPEND_WAKEUP;
-+	} else {
-+		struct pci_dev *port = srv->port;
-+
-+		pcie_pme_interrupt_enable(port, false);
-+		pcie_clear_root_pme_status(port);
-+		data->suspend_level = PME_SUSPEND_NOIRQ;
-+	}
- 	spin_unlock_irq(&data->lock);
- 
- 	synchronize_irq(srv->irq);
-@@ -394,12 +430,17 @@ static int pcie_pme_suspend(struct pcie_
- static int pcie_pme_resume(struct pcie_device *srv)
- {
- 	struct pcie_pme_service_data *data = get_service_data(srv);
--	struct pci_dev *port = srv->port;
- 
- 	spin_lock_irq(&data->lock);
--	data->noirq = false;
--	pcie_clear_root_pme_status(port);
--	pcie_pme_interrupt_enable(port, true);
-+	if (data->suspend_level == PME_SUSPEND_NOIRQ) {
-+		struct pci_dev *port = srv->port;
-+
-+		pcie_clear_root_pme_status(port);
-+		pcie_pme_interrupt_enable(port, true);
-+	} else {
-+		disable_irq_wake(srv->irq);
-+	}
-+	data->suspend_level = PME_SUSPEND_NONE;
- 	spin_unlock_irq(&data->lock);
- 
- 	return 0;
+Acked-By: Amir Vadai <amirv@mellanox.com>
 
