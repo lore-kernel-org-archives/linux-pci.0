@@ -1,138 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f171.google.com ([209.85.216.171]:61943 "EHLO
-	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752366AbaHUSCZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Aug 2014 14:02:25 -0400
-Received: by mail-qc0-f171.google.com with SMTP id r5so9591411qcx.16
-        for <linux-pci@vger.kernel.org>; Thu, 21 Aug 2014 11:02:25 -0700 (PDT)
-Date: Thu, 21 Aug 2014 12:02:16 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Liviu Dudau <liviu@dudau.co.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
 	Jingoo Han <jg1.han@samsung.com>,
 	Kukjin Kim <kgene.kim@samsung.com>,
 	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Cc: linux-arch <linux-arch@vger.kernel.org>,
 	LKML <linux-kernel@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH] drivers: pci: convert generic host controller to DT host
- bridge creation API
-Message-ID: <20140821180216.GA15311@google.com>
-References: <1407861695-25549-1-git-send-email-Liviu.Dudau@arm.com>
- <201408201327.57376.arnd@arndb.de>
- <20140820123112.GG13147@bart.dudau.co.uk>
- <CAErSpo6Z4b3w7j=X9C1YGOV59JHZwZUt7pnVp+Z0erY2RLCNAQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo6Z4b3w7j=X9C1YGOV59JHZwZUt7pnVp+Z0erY2RLCNAQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v9 06/12] ARM: integrator: Correct usage of of_pci_range_to_resource()
+Date: Tue, 12 Aug 2014 17:25:19 +0100
+Message-Id: <1407860725-25202-7-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Lorenzo]
+Previously, of_pci_range_to_resource() would return a resource
+that contained physical addresses of the IO space even if the
+IORESOURCE_IO flags mandate a logical port set of values. Now
+that the function has been fixed we need to update the drivers
+that were taking advantage of the old behaviour.
 
-On Wed, Aug 20, 2014 at 05:35:59PM -0500, Bjorn Helgaas wrote:
-> On Wed, Aug 20, 2014 at 7:31 AM, Liviu Dudau <liviu@dudau.co.uk> wrote:
-> > On Wed, Aug 20, 2014 at 01:27:57PM +0200, Arnd Bergmann wrote:
-> >> On Tuesday 12 August 2014, Liviu Dudau wrote:
-> >> > +       return of_create_pci_host_bridge(dev, 0, 0xff, &gen_pci_ops,
-> >> > +                                       gen_pci_setup, pci);
-> >>
-> >> I had not noticed it earlier, but the setup callback is actually a feature
-> >> of the arm32 PCI code that I had hoped to avoid when moving to the
-> >> generic API. Can we do this as a more regular sequence of
-> >>
-> >>
-> >>       ret = of_create_pci_host_bridge(dev, 0, 0xff, &gen_pci_ops, pci);
-> >>       if (ret)
-> >>               return ret;
-> >>
-> >>       ret = gen_pci_setup(pci);
-> >>       if (ret)
-> >>               pci_destroy_host_bridge(dev, pci);
-> >>       return ret;
-> >>
-> >> ?
-> >>
-> >>       Arnd
-> >
-> > Hi Arnd,
-> >
-> > That has been the general approach of my patchset up to v9. But, as Bjorn has
-> > mentioned in his v8 review and I have put in my cover letter, the regular
-> > aproach means that architectures that use pci_scan_root_bus() will have to
-> > drop their one liner and replace it with the more verbose of_create_pci_host_bridge()
-> > followed by pci_scan_child_bus() and pci_bus_add_devices() (basically, the content
-> > of pci_scan_root_bus()). For those architectures it will lead to a net increase of
-> > lines of code.
-> >
-> > The patch for pci-host-generic.c is the first to use the callback setup function, but
-> > not the only one. My PCI host bridge driver for Juno has the same need, and I'm betting
-> > all other host bridge controllers will use it as it will be the only opportunity to
-> > finish the controller setup before we start scanning the child busses. I'm trying to
-> > balance ease of read vs ease of use here and it is the best version I've come up with
-> > so far.
-> 
-> My guess is that you're referring to
-> http://lkml.kernel.org/r/20140708011136.GE22939@google.com
-> 
-> I'm trying to get to the point where arch code can discover the host
-> bridge, configure it, learn its properties (apertures, etc.), then
-> pass it off completely to the PCI core for PCI device enumeration.
-> pci_scan_root_bus() is the closest thing we have to that right now, so
-> that's why I point to that.  Here's the current pci_scan_root_bus():
-> 
->   pci_scan_root_bus()
->   {
->     pci_create_root_bus();
->     /* 1 */
->     pci_scan_child_bus()
->     /* 2 */
->     pci_bus_add_devices()
->   }
-> 
-> This is obviously incomplete as it is -- for example, it does nothing
-> about assigning resources to PCI devices, so it only works if we rely
-> completely on the firmware to do that.  Some arches (x86, ia64, etc.)
-> don't want to rely on firmware, so they basically open-code
-> pci_scan_root_bus() and insert resource assignment at (2) above.  That
-> resource assignment really *should* be done in pci_scan_root_bus()
-> itself, but it's quite a bit of work to make that happen.
-> 
-> In your case, of_create_pci_host_bridge() open-codes
-> pci_scan_root_bus() and calls the "setup" callback at (1) in the
-> outline above.  I don't have any problem with that, and I don't care
-> whether you do it by passing in a callback function pointer or via
-> some other means.
-> 
-> However, I would ask whether this is really a requirement.  Most
-> (maybe all) other arches require nothing special at (1), i.e., between
-> pci_create_root_bus() and pci_scan_child_bus().  If you can do it
-> *before* pci_create_root_bus(), I think that would be nicer, but maybe
-> you can't.
+Cc: Linus Walleij <linus.walleij@linaro.org>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Russell King <linux@arm.linux.org.uk>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ arch/arm/mach-integrator/pci_v3.c | 24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
 
-I talked to Lorenzo here at LinuxCon and he explained this so it makes a
-lot more sense to me now.  Would something like the following work?
+diff --git a/arch/arm/mach-integrator/pci_v3.c b/arch/arm/mach-integrator/pci_v3.c
+index 05e1f73..193b7f8 100644
+--- a/arch/arm/mach-integrator/pci_v3.c
++++ b/arch/arm/mach-integrator/pci_v3.c
+@@ -660,6 +660,7 @@ static void __init pci_v3_preinit(void)
+ {
+ 	unsigned long flags;
+ 	unsigned int temp;
++	phys_addr_t io_address = pci_pio_to_address(io_mem.start);
+ 
+ 	pcibios_min_mem = 0x00100000;
+ 
+@@ -701,7 +702,7 @@ static void __init pci_v3_preinit(void)
+ 	/*
+ 	 * Setup window 2 - PCI IO
+ 	 */
+-	v3_writel(V3_LB_BASE2, v3_addr_to_lb_base2(io_mem.start) |
++	v3_writel(V3_LB_BASE2, v3_addr_to_lb_base2(io_address) |
+ 			V3_LB_BASE_ENABLE);
+ 	v3_writew(V3_LB_MAP2, v3_addr_to_lb_map2(0));
+ 
+@@ -742,6 +743,7 @@ static void __init pci_v3_preinit(void)
+ static void __init pci_v3_postinit(void)
+ {
+ 	unsigned int pci_cmd;
++	phys_addr_t io_address = pci_pio_to_address(io_mem.start);
+ 
+ 	pci_cmd = PCI_COMMAND_MEMORY |
+ 		  PCI_COMMAND_MASTER | PCI_COMMAND_INVALIDATE;
+@@ -758,7 +760,7 @@ static void __init pci_v3_postinit(void)
+ 		       "interrupt: %d\n", ret);
+ #endif
+ 
+-	register_isa_ports(non_mem.start, io_mem.start, 0);
++	register_isa_ports(non_mem.start, io_address, 0);
+ }
+ 
+ /*
+@@ -867,33 +869,33 @@ static int __init pci_v3_probe(struct platform_device *pdev)
+ 
+ 	for_each_of_pci_range(&parser, &range) {
+ 		if (!range.flags) {
+-			of_pci_range_to_resource(&range, np, &conf_mem);
++			ret = of_pci_range_to_resource(&range, np, &conf_mem);
+ 			conf_mem.name = "PCIv3 config";
+ 		}
+ 		if (range.flags & IORESOURCE_IO) {
+-			of_pci_range_to_resource(&range, np, &io_mem);
++			ret = of_pci_range_to_resource(&range, np, &io_mem);
++			dev_info(&pdev->dev, "IO PCI range converted\n");
+ 			io_mem.name = "PCIv3 I/O";
+ 		}
+ 		if ((range.flags & IORESOURCE_MEM) &&
+ 			!(range.flags & IORESOURCE_PREFETCH)) {
+ 			non_mem_pci = range.pci_addr;
+ 			non_mem_pci_sz = range.size;
+-			of_pci_range_to_resource(&range, np, &non_mem);
++			ret = of_pci_range_to_resource(&range, np, &non_mem);
+ 			non_mem.name = "PCIv3 non-prefetched mem";
+ 		}
+ 		if ((range.flags & IORESOURCE_MEM) &&
+ 			(range.flags & IORESOURCE_PREFETCH)) {
+ 			pre_mem_pci = range.pci_addr;
+ 			pre_mem_pci_sz = range.size;
+-			of_pci_range_to_resource(&range, np, &pre_mem);
++			ret = of_pci_range_to_resource(&range, np, &pre_mem);
+ 			pre_mem.name = "PCIv3 prefetched mem";
+ 		}
+-	}
+ 
+-	if (!conf_mem.start || !io_mem.start ||
+-	    !non_mem.start || !pre_mem.start) {
+-		dev_err(&pdev->dev, "missing ranges in device node\n");
+-		return -EINVAL;
++		if (ret < 0) {
++			dev_err(&pdev->dev, "missing ranges in device node\n");
++			return -EINVAL;
++		}
+ 	}
+ 
+ 	pci_v3.map_irq = of_irq_parse_and_map_pci;
+-- 
+2.0.4
 
-  gen_pci_probe()
-  {
-    LIST_HEAD(res);
-    resource_size_t io_base = 0;
-
-    of_parse_pci_host_bridge_resources(dev, &res, 0, 0xff, &io_base);
-    gen_pci_setup(&res, io_base);
-
-    pci_create_root_bus(..., &res);
-    pci_scan_child_bus();
-    ... pci_assign_unassigned_bus_resources
-    pci_bus_add_resources();
-  }
-
-Then we at least have all the PCI-related code consolidated, without
-the arch-specific stuff mixed in.  We could almost use pci_scan_root_bus(),
-but not quite, because of the pci_assign_unassigned_bus_resources() call
-that pci_scan_root_bus() doesn't do.
-
-Bjorn
