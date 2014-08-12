@@ -1,76 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:48200 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751556AbaHRPkx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Aug 2014 11:40:53 -0400
-Message-ID: <53F21E48.20008@ti.com>
-Date: Mon, 18 Aug 2014 11:39:52 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Pratyush Anand <pratyush.anand@gmail.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <r65037@freescale.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>, Marek Vasut <marex@denx.de>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	<kernel@pengutronix.de>, Pratyush ANAND <pratyush.anand@st.com>
-Subject: Re: [PATCH 3/4] PCI: designware: remove pci_assign_unassigned_resources
- call
-References: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de> <1406137961-14684-4-git-send-email-l.stach@pengutronix.de> <CAHM4w1nMxwfk9Vv37FO6Aa4-Zbb0tgCposakVzUm66B2BZobRQ@mail.gmail.com> <CAE9FiQWe-NzAxGuYDsTBRgA=bDH5y5n5AL5awnw6s-1MwcwhAg@mail.gmail.com> <CAHM4w1kiWy407FARWyYz_1GJUbFh9jnGP+oMuWZUCfdWtdHX_Q@mail.gmail.com>
-In-Reply-To: <CAHM4w1kiWy407FARWyYz_1GJUbFh9jnGP+oMuWZUCfdWtdHX_Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Cc: linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v9 08/12] PCI: Introduce generic domain handling for PCI busses.
+Date: Tue, 12 Aug 2014 17:25:21 +0100
+Message-Id: <1407860725-25202-9-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/17/2014 02:20 AM, Pratyush Anand wrote:
-> On Sun, Aug 17, 2014 at 8:29 AM, Yinghai Lu<yinghai@kernel.org>  wrote:
->> On Sat, Aug 16, 2014 at 6:13 AM, Pratyush Anand
->> <pratyush.anand@gmail.com>  wrote:
->>> On Wed, Jul 23, 2014 at 11:22 PM, Lucas Stach<l.stach@pengutronix.de>  wrote:
->>>
->>> I am not sure here. IIRC, then calling  pci_assign_unassigned_resources after
->>> pci_common_init_dev was needed to handle few PCIe cards with EP behind
->>> bridge.
->>>
->>> I do not have good understanding of pci resource allocation code.
->>> @Yinghai: Can you please help(rather teach) with the description of
->>> different resource allocator
->>> available in setup-bus.c. Can try reading code, but if a documentation
->>> exists, that would
->>> be helpful.
->>
->> pci_assign_unassigned_resources() should try several times to make sure
->> assign resource to PCI bars that are not assigned by BIOS or not valid value
->> from BIOS.
->> so it will honor the setting from BIOS.
->>
->> in your arm case, pci_common_init_dev() is doing sizing and assign.
->> so you should not need that pci_assign_unassigned_resources() anymore.
->>
->> Or your setup have PCI_PROBE_ONLY ?
->
-> Thanks for the clarification.
->
-> I think none of the designware based platform boots with *firmware*, so none of
-> the setup should have PCI_PROBE_ONLY. Then patch seems fine.
->
-There are customers using Keystone platform on which u-boot sets up BAR 
-and use firmware option to honor BAR assignment done by the boot loader. 
-How does this change that use case? If this still works with this 
-change, no issues. If not, I would suggest this shouldn't be removed. 
-Any expert here who can comment on this? Keystone driver is just getting 
-merged to upstream branch and is based on designware.
+The handling of PCI domains (or PCI segments in ACPI speak) is
+usually a straightforward affair but its implementation is
+currently left to the architectural code, with pci_domain_nr(b)
+querying the value of the domain associated with bus b.
 
-Murali
-> ~Pratyush
->
->>
->> Yinghai
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This patch introduces CONFIG_PCI_DOMAINS_GENERIC as an
+option that can be selected if an architecture want a
+simple implementation where the value of the domain
+associated with a bus is stored in struct pci_bus.
+
+The architectures that select CONFIG_PCI_DOMAINS_GENERIC will
+then have to implement pci_bus_assign_domain_nr() as a way
+of setting the domain number associated with a root bus.
+All child busses except the root bus will inherit the domain_nr
+value from their parent.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Catalin Marinas <Catalin.Marinas@arm.com>
+[Renamed pci_set_domain_nr() to pci_bus_assign_domain_nr()]
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ drivers/pci/probe.c | 11 ++++++++---
+ include/linux/pci.h | 21 +++++++++++++++++++++
+ 2 files changed, 29 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 5ff72ec..ef891d2 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -485,7 +485,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
+ 	}
+ }
+ 
+-static struct pci_bus *pci_alloc_bus(void)
++static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
+ {
+ 	struct pci_bus *b;
+ 
+@@ -500,6 +500,10 @@ static struct pci_bus *pci_alloc_bus(void)
+ 	INIT_LIST_HEAD(&b->resources);
+ 	b->max_bus_speed = PCI_SPEED_UNKNOWN;
+ 	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
++	if (parent)
++		b->domain_nr = parent->domain_nr;
++#endif
+ 	return b;
+ }
+ 
+@@ -672,7 +676,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	/*
+ 	 * Allocate a new bus, and inherit stuff from the parent..
+ 	 */
+-	child = pci_alloc_bus();
++	child = pci_alloc_bus(parent);
+ 	if (!child)
+ 		return NULL;
+ 
+@@ -1768,13 +1772,14 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 
+ 	bridge->dev.parent = parent;
+ 
+-	b = pci_alloc_bus();
++	b = pci_alloc_bus(NULL);
+ 	if (!b)
+ 		goto err_out;
+ 
+ 	b->sysdata = sysdata;
+ 	b->ops = ops;
+ 	b->number = b->busn_res.start = bus;
++	pci_bus_assign_domain_nr(b, parent);
+ 	b2 = pci_find_bus(pci_domain_nr(b), bus);
+ 	if (b2) {
+ 		/* If we already got to this bus through a different bridge, ignore it */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 466bcd1..1d0e0b5 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -456,6 +456,9 @@ struct pci_bus {
+ 	unsigned char	primary;	/* number of primary bridge */
+ 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
+ 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
++	int		domain_nr;
++#endif
+ 
+ 	char		name[48];
+ 
+@@ -1288,6 +1291,24 @@ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+ static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+ #endif /* CONFIG_PCI_DOMAINS */
+ 
++/*
++ * Generic implementation for PCI domain support. If your
++ * architecture does not need custom management of PCI
++ * domains then this implementation will be used
++ */
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
++static inline int pci_domain_nr(struct pci_bus *bus)
++{
++	return bus->domain_nr;
++}
++void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
++#else
++static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
++					struct device *parent)
++{
++}
++#endif
++
+ /* some architectures require additional setup to direct VGA traffic */
+ typedef int (*arch_set_vga_state_t)(struct pci_dev *pdev, bool decode,
+ 		      unsigned int command_bits, u32 flags);
+-- 
+2.0.4
 
