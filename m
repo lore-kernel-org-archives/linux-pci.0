@@ -1,71 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:48383 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751251AbaHDTB6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Aug 2014 15:01:58 -0400
-Date: Mon, 4 Aug 2014 21:01:53 +0200
-From: Quentin Lambert <lambert.quentin@gmail.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Murray <scott@spiteful.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH 3/3] PCI hotplug: remove assignement from if conditions
-Message-ID: <20140804190153.GA4257@greed>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:52329 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752656AbaHLA1n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 20:27:43 -0400
+Received: by mail-oi0-f53.google.com with SMTP id e131so6128911oig.40
+        for <linux-pci@vger.kernel.org>; Mon, 11 Aug 2014 17:27:42 -0700 (PDT)
+From: Liu Ping Fan <kernelfans@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH] pci: bugfix, pci_get_domain_bus_and_slot() needs to inc reference count
+Date: Tue, 12 Aug 2014 08:31:21 +0800
+Message-Id: <1407803481-7910-1-git-send-email-pingfank@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The following Coccinelle semantic patch was used to
-find and correct cases of assignements in if conditions:
+As the notes of this function, pci_get_domain_bus_and_slot() should
+increase the reference count.
 
-@ifassign@
-expression var, expr;
-statement S;
-@@
-
-- if(!(var = expr)) S
-+ var = expr;
-+ if(!var) S
-
-Signed-off-by: Quentin Lambert <lambert.quentin@gmail.com>
+Signed-off-by: Liu Ping Fan <pingfank@linux.vnet.ibm.com>
 ---
- drivers/pci/hotplug/acpi_pcihp.c    | 3 ++-
- drivers/pci/hotplug/cpcihp_zt5550.c | 5 +++--
- 2 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/pci/search.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-index a94d850..2cac548 100644
---- a/drivers/pci/hotplug/acpi_pcihp.c
-+++ b/drivers/pci/hotplug/acpi_pcihp.c
-@@ -433,7 +433,8 @@ int acpi_pci_check_ejectable(struct pci_bus *pbus, acpi_handle handle)
- {
- 	acpi_handle bridge_handle, parent_handle;
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 827ad83..41a5738 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -258,8 +258,10 @@ struct pci_dev *pci_get_domain_bus_and_slot(int domain, unsigned int bus,
  
--	if (!(bridge_handle = acpi_pci_get_bridge_handle(pbus)))
-+	bridge_handle = acpi_pci_get_bridge_handle(pbus);
-+	if (!bridge_handle)
- 		return 0;
- 	if ((ACPI_FAILURE(acpi_get_parent(handle, &parent_handle))))
- 		return 0;
-diff --git a/drivers/pci/hotplug/cpcihp_zt5550.c b/drivers/pci/hotplug/cpcihp_zt5550.c
-index 2b222fc..4d0cf3f 100644
---- a/drivers/pci/hotplug/cpcihp_zt5550.c
-+++ b/drivers/pci/hotplug/cpcihp_zt5550.c
-@@ -237,8 +237,9 @@ static int zt5550_hc_init_one (struct pci_dev *pdev, const struct pci_device_id
- 	dbg("registered controller");
- 
- 	/* Look for first device matching cPCI bus's bridge vendor and device IDs */
--	if (!(bus0_dev = pci_get_device(PCI_VENDOR_ID_DEC,
--					 PCI_DEVICE_ID_DEC_21154, NULL))) {
-+	bus0_dev = pci_get_device(PCI_VENDOR_ID_DEC,
-+				  PCI_DEVICE_ID_DEC_21154, NULL);
-+	if (!bus0_dev) {
- 		status = -ENODEV;
- 		goto init_register_error;
+ 	for_each_pci_dev(dev) {
+ 		if (pci_domain_nr(dev->bus) == domain &&
+-		    (dev->bus->number == bus && dev->devfn == devfn))
++		    (dev->bus->number == bus && dev->devfn == devfn)) {
++			pci_dev_get(dev);
+ 			return dev;
++		}
  	}
+ 	return NULL;
+ }
 -- 
-1.9.1
+1.8.1.4
 
