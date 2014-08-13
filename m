@@ -1,42 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:53450 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754214AbaHVHpc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 03:45:32 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 0/5] Some cleanup for MSI code
-Date: Fri, 22 Aug 2014 16:07:55 +0800
-Message-ID: <1408694880-8260-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:24118 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751145AbaHMQF7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Aug 2014 12:05:59 -0400
+Date: Wed, 13 Aug 2014 11:04:54 -0500
+From: scameron@beardog.cce.hp.com
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, iss_storagedev@hp.com,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	scameron@beardog.cce.hp.com
+Subject: Re: [PATCH v2 RESEND 08/23] hpsa: Fallback to MSI rather than to INTx if MSI-X failed
+Message-ID: <20140813160454.GA19666@beardog.cce.hp.com>
+References: <cover.1405533479.git.agordeev@redhat.com> <3ca64c251518a2db8810534b4e63ec696bcfeefd.1405533479.git.agordeev@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3ca64c251518a2db8810534b4e63ec696bcfeefd.1405533479.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is collection of two cleanup patchset,
-http://marc.info/?l=linux-pci&m=140807095026813&w=2 and
-http://marc.info/?l=linux-pci&m=140633779729162&w=2
+On Wed, Jul 16, 2014 at 08:05:12PM +0200, Alexander Gordeev wrote:
+> Currently the driver falls back to INTx mode when MSI-X
+> initialization failed. This is a suboptimal behaviour
+> for chips that also support MSI. This update changes that
+> behaviour and falls back to MSI mode in case MSI-X mode
+> initialization failed.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+> Cc: iss_storagedev@hp.com
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/scsi/hpsa.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 31184b3..648dec2 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -6177,7 +6177,6 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
+>  			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
+>  			       err);
+>  			h->msix_vector = 0;
+> -			goto default_int_mode;
+>  		}
+>  	}
+>  	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
+> -- 
+> 1.7.7.6
 
-I rebased it on 3.17-rc1, and dropped a incorrect patch.
+Ack.
 
-Yijing Wang (5):
-  PCI/MSI: Clean up the kobject in struct msi_desc
-  PCI/MSI: Remove msi_attrib->pos in struct msi_desc
-  PCI/MSI: Change msi_bus attribute to support enable/disable MSI for
-    EP
-  MSI: Use __get_cached_msi_msg() instead of get_cached_msi_msg()
-  MSI: Use __read_msi_msg() instead of read_msi_msg()
+Sorry for the slow reply, this got lost in the tornadic maelstrom
+I call my inbox.
 
- arch/ia64/kernel/msi_ia64.c          |    2 +-
- arch/ia64/sn/kernel/msi_sn.c         |    4 ++--
- arch/mips/pci/msi-octeon.c           |    6 +++---
- arch/powerpc/platforms/pseries/msi.c |    2 +-
- arch/x86/kernel/apic/io_apic.c       |    2 +-
- arch/x86/pci/xen.c                   |    2 +-
- drivers/pci/host/pcie-designware.c   |    2 +-
- drivers/pci/msi.c                    |   31 ++-----------------------------
- drivers/pci/pci-sysfs.c              |   12 ++++++------
- include/linux/msi.h                  |    9 ++-------
- 10 files changed, 20 insertions(+), 52 deletions(-)
+I also tested this with a Smart Array P420, P420i, and P430 in
+the system by ifdef'ing out the code for MSI-X and setting
+h->msix_vector = 0, to force it down the MSI path, and that all
+appears to work. 
+
+-- steve
 
