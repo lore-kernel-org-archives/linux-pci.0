@@ -1,66 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49038 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752144AbaHKNHY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Aug 2014 09:07:24 -0400
-Message-ID: <53E8C003.9020403@redhat.com>
-Date: Mon, 11 Aug 2014 15:07:15 +0200
-From: Tomas Henzl <thenzl@redhat.com>
+Received: from fw-tnat.austin.arm.com ([217.140.110.23]:54200 "EHLO
+	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750968AbaHMKAY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Aug 2014 06:00:24 -0400
+Date: Wed, 13 Aug 2014 10:59:45 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v9 11/12] arm64: Add pgprot_device() interface for device
+ mappings.
+Message-ID: <20140813095944.GB18495@arm.com>
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+ <1407860725-25202-12-git-send-email-Liviu.Dudau@arm.com>
 MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>,
-	linux-kernel@vger.kernel.org
-CC: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
-	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com,
-	DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 RESEND 15/23] mpt2sas: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-References: <cover.1405533479.git.agordeev@redhat.com> <045986b7900c6b1703010675b590284e384b8207.1405533479.git.agordeev@redhat.com>
-In-Reply-To: <045986b7900c6b1703010675b590284e384b8207.1405533479.git.agordeev@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1407860725-25202-12-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/16/2014 08:05 PM, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
->
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-> Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-> Cc: support@lsi.com
-> Cc: DL-MPTFusionLinux@lsi.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
+On Tue, Aug 12, 2014 at 05:25:24PM +0100, Liviu Dudau wrote:
+> Add pgprot_device(). It will be aliased to pgprot_noncached for
+> architectures that do not support special attributes for device
+> mapping. Used by arm64 to define new attributes for devices.
+> 
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Catalin Marinas <catalin.marinas@arm.com>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-Looks good
-
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-
-> ---
->  drivers/scsi/mpt2sas/mpt2sas_base.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> index 8b88118..6aca369 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> @@ -1432,10 +1432,10 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
->  	for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++)
->  		a->entry = i;
->  
-> -	r = pci_enable_msix(ioc->pdev, entries, ioc->reply_queue_count);
-> +	r = pci_enable_msix_exact(ioc->pdev, entries, ioc->reply_queue_count);
->  	if (r) {
-> -		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "pci_enable_msix "
-> -		    "failed (r=%d) !!!\n", ioc->name, r));
-> +		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT
-> +		    "pci_enable_msix_exact failed (r=%d) !!!\n", ioc->name, r));
->  		kfree(entries);
->  		goto try_ioapic;
->  	}
-
+Acked-by: Catalin Marinas <catalin.marinas@arm.com>
