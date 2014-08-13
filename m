@@ -1,195 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hygieia.santi-shop.eu ([78.46.175.2]:45492 "EHLO
-	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750964AbaHJQeR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Aug 2014 12:34:17 -0400
-Date: Sun, 10 Aug 2014 18:34:11 +0200
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	DRI mailing list <dri-devel@lists.freedesktop.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dave Airlie <airlied@linux.ie>,
-	Matthew Garrett <matthew.garrett@nebula.com>
-Subject: Re: [PATCH 1/2 v2] x86, ia64: Move EFI_FB vga_default_device()
- initialization to pci_vga_fixup()
-Message-ID: <20140810183411.19370721@neptune.home>
-In-Reply-To: <CAMxnaaUsd+XHppMmPMXdFL13d1-OhLzoH_yjv_9abOx_uP=_Ug@mail.gmail.com>
-References: <20140514224339.7f8be3a9@neptune.home>
-	<20140527234255.GJ11907@google.com>
-	<20140602201650.35f0e936@neptune.home>
-	<20140602201926.4d476818@neptune.home>
-	<20140625005501.7ff7e982@neptune.home>
-	<20140705171503.GC6247@google.com>
-	<CAMxnaaXxAZAJAdr5AYYRZC_xKFCuyrfY=qpJu8x+P-S+osm5vw@mail.gmail.com>
-	<CAMxnaaXGQe4vg9cY5e2KZBnG4F-z49OriwxEGUE-DCE6MKUryQ@mail.gmail.com>
-	<20140810112654.1bf684d6@neptune.home>
-	<CAMxnaaUsd+XHppMmPMXdFL13d1-OhLzoH_yjv_9abOx_uP=_Ug@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:45444 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751405AbaHMGzT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Aug 2014 02:55:19 -0400
+From: "Chen, Gong" <gong.chen@linux.intel.com>
+To: bhelgaas@google.com, rdunlap@infradead.org
+Cc: bp@alien8.de, tony.luck@intel.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"Chen, Gong" <gong.chen@linux.intel.com>
+Subject: [RESEND 2/5] PCIe, AER: Replenish missed AER status bits for AER driver
+Date: Wed, 13 Aug 2014 02:22:38 -0400
+Message-Id: <1407910961-7798-3-git-send-email-gong.chen@linux.intel.com>
+In-Reply-To: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
+References: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 10 August 2014 Andreas Noever <andreas.noever@gmail.com> wrote:
-> On Sun, Aug 10, 2014 at 11:26 AM, Bruno Prémont wrote:
-> > On Sun, 10 August 2014 Andreas Noever wrote:
-> >
-> >> On Sun, Aug 10, 2014 at 2:21 AM, Andreas Noeverwrote:
-> >> > I just tried to run the latest kernel.  It failed to boot and git
-> >> > bisect points to this commit (MacBookPro10,1 with Nvidia&Intel
-> >> > graphics).
-> >> >
-> >> > The (now removed) code in efifb_setup did always set default_vga, even
-> >> > if it had already been set earlier. The new code in pci_fixup_video
-> >> > runs only if vga_default_device() is NULL. Removing the check fixes
-> >> > the regression.
-> >> >
-> >> >
-> >> > The following calls to vga_set_default_device are made during boot:
-> >> >
-> >> > vga_arbiter_add_pci_device -> vga_set_default_device(intel)
-> >> > pci_fixup_video -> vga_set_default_device(intel) (there are two calls
-> >> > in pci_fixup_video, this one is the one near "Boot video device")
-> >> > pci_fixup_video -> vga_set_default_device(nvidia) (from the "Does
-> >> > firmware framebuffer belong to us?" loop, only if I remove the check)
-> >> >
-> >> > vga_arbiter_add_pci_device chooses intel simply because it is the
-> >> > first device. Next pci_fixup_video(intel) sees that it is the default
-> >> > device, sets the IORESOURCE_ROM_SHADOW flag and calls
-> >> > vga_set_default_device again. And finally (if the check is removed)
-> >> > pci_fixup_video(nvidia) sees that it owns the framebuffer and sets
-> >> > itself as the default device which allows the system to boot again.
-> >> >
-> >> > Does setting the ROM_SHADOW flag on (possibly) the wrong device have
-> >> > any effect?
-> >> Yes it does. Removing the line changes a long standing
-> >> i915 0000:00:02.0: Invalid ROM contents
-> >> into a
-> >> i915 0000:00:02.0: BAR 6: can't assign [??? 0x00000000 flags
-> >> 0x20000000] (bogus alignment).
-> >>
-> >> The first is logged at KERN_ERR and the second one only at KERN_INFO.
-> >> We are making progress.
-> >
-> > How does your system behave if you change vga_arbiter_add_pci_device()
-> > not to set vga_set_default_device() with the first device registered?
-> >
-> > That is remove the
-> > #ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
-> > code block in vga_arbiter_add_pci_device().
-> The system does not boot.  The Intel device is still set as the
-> default device in pci_fixup_video (near "Boot video device") and
-> prevents the nvidia device (which is initialized later) from becoming
-> the default one.
->
-> > How did your system behave in the past if you did not enable efifb?
-> I don't think that I ever did not enable efifb. It seems to have been
-> around for quite a while?
+Since commit 6c2b374d is commited, the capability of PCI-e AER
+has changed a lot. This patch adds all missed CE/UC error bits
+existed in PCI-e SPEC r3.0. Meanwhile, adjust the code format
+to make it simpler to read/maintain.
 
-The question here is if you system just refuses to boot as well.
-
-The aim of my patch is to make system work (properly) when efifb is not used
-(why use efifb if built-in drm drivers handle the GPU(s)?)
-
-If you decided to replace efifb with platform-framebuffer+simplefb/simpledrm
-you would probably see the same issue as that would be no efifb as well.
-
-The presence of efifb should not be mandatory for successfully booting
-and running Xorg.
-
-> Andreas
-
-How does you system behave with below patch on top of Linus tree?
-
-Bruno
-
-
-
+Signed-off-by: Chen, Gong <gong.chen@linux.intel.com>
 ---
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index c61ea57..15d0068 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -367,7 +367,7 @@ static void pci_fixup_video(struct pci_dev *pdev)
- 		}
- 		bus = bus->parent;
- 	}
--	if (!vga_default_device() || pdev == vga_default_device()) {
-+	if (pdev == vga_default_device()) {
- 		pci_read_config_word(pdev, PCI_COMMAND, &config);
- 		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
- 			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
-diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-index d2077f0..ac44d87 100644
---- a/drivers/gpu/vga/vgaarb.c
-+++ b/drivers/gpu/vga/vgaarb.c
-@@ -112,10 +112,8 @@ both:
- 	return 1;
- }
+ drivers/pci/pcie/aer/aerdrv_errprint.c | 60 ++++++++++++++--------------------
+ 1 file changed, 25 insertions(+), 35 deletions(-)
+
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 35d06e177917..5c4f7e252e5e 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -75,44 +75,34 @@ static const char *aer_error_layer[] = {
+ };
  
--#ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
- /* this is only used a cookie - it should not be dereferenced */
- static struct pci_dev *vga_default;
--#endif
+ static const char *aer_correctable_error_string[] = {
+-	"Receiver Error",		/* Bit Position 0	*/
+-	NULL,
+-	NULL,
+-	NULL,
+-	NULL,
+-	NULL,
+-	"Bad TLP",			/* Bit Position 6	*/
+-	"Bad DLLP",			/* Bit Position 7	*/
+-	"RELAY_NUM Rollover",		/* Bit Position 8	*/
+-	NULL,
+-	NULL,
+-	NULL,
+-	"Replay Timer Timeout",		/* Bit Position 12	*/
+-	"Advisory Non-Fatal",		/* Bit Position 13	*/
++	[0] = "Receiver Error",
++	[6] = "Bad TLP",
++	[7] = "Bad DLLP",
++	[8] = "RELAY_NUM Rollover",
++	[12] = "Replay Timer Timeout",
++	[13] = "Advisory Non-Fatal Error",
++	[14] = "Corrected Internal Error",
++	[15] = "Header Log Overflow",
+ };
  
- static void vga_arb_device_card_gone(struct pci_dev *pdev);
+ static const char *aer_uncorrectable_error_string[] = {
+-	NULL,
+-	NULL,
+-	NULL,
+-	NULL,
+-	"Data Link Protocol",		/* Bit Position 4	*/
+-	NULL,
+-	NULL,
+-	NULL,
+-	NULL,
+-	NULL,
+-	NULL,
+-	NULL,
+-	"Poisoned TLP",			/* Bit Position 12	*/
+-	"Flow Control Protocol",	/* Bit Position 13	*/
+-	"Completion Timeout",		/* Bit Position 14	*/
+-	"Completer Abort",		/* Bit Position 15	*/
+-	"Unexpected Completion",	/* Bit Position 16	*/
+-	"Receiver Overflow",		/* Bit Position 17	*/
+-	"Malformed TLP",		/* Bit Position 18	*/
+-	"ECRC",				/* Bit Position 19	*/
+-	"Unsupported Request",		/* Bit Position 20	*/
++	[0] = "Undefined",
++	[4] = "Data Link Protocol Error",
++	[5] = "Surprise Down Error",
++	[12] = "Poisoned TLP",
++	[13] = "Flow Control Protocol Error",
++	[14] = "Completion Timeout",
++	[15] = "Completer Abort",
++	[16] = "Unexpected Completion",
++	[17] = "Receiver Overflow",
++	[18] = "Malformed TLP",
++	[19] = "ECRC Error",
++	[20] = "Unsupported Request Error",
++	[21] = "ACS Violation",
++	[22] = "Uncorrectable Internal Error",
++	[23] = "MC Blocked TLP",
++	[24] = "AtomicOp Egress Blocked",
++	[25] = "TLP Prefix Blocked Error",
+ };
  
-@@ -131,7 +129,6 @@ static struct vga_device *vgadev_find(struct pci_dev *pdev)
- }
- 
- /* Returns the default VGA device (vgacon's babe) */
--#ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
- struct pci_dev *vga_default_device(void)
- {
- 	return vga_default;
-@@ -147,7 +144,6 @@ void vga_set_default_device(struct pci_dev *pdev)
- 	pci_dev_put(vga_default);
- 	vga_default = pci_dev_get(pdev);
- }
--#endif
- 
- static inline void vga_irq_set_state(struct vga_device *vgadev, bool state)
- {
-@@ -580,10 +576,10 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
- 		bus = bus->parent;
- 	}
- 
-+#if 0
- 	/* Deal with VGA default device. Use first enabled one
- 	 * by default if arch doesn't have it's own hook
- 	 */
--#ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
- 	if (vga_default == NULL &&
- 	    ((vgadev->owns & VGA_RSRC_LEGACY_MASK) == VGA_RSRC_LEGACY_MASK))
- 		vga_set_default_device(pdev);
-@@ -621,10 +617,8 @@ static bool vga_arbiter_del_pci_device(struct pci_dev *pdev)
- 		goto bail;
- 	}
- 
--#ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
- 	if (vga_default == pdev)
- 		vga_set_default_device(NULL);
--#endif
- 
- 	if (vgadev->decodes & (VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM))
- 		vga_decode_count--;
-diff --git a/include/linux/vgaarb.h b/include/linux/vgaarb.h
-index 2c02f3a..c37bd4d 100644
---- a/include/linux/vgaarb.h
-+++ b/include/linux/vgaarb.h
-@@ -182,7 +182,6 @@ extern void vga_put(struct pci_dev *pdev, unsigned int rsrc);
-  *     vga_get()...
-  */
- 
--#ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
- #ifdef CONFIG_VGA_ARB
- extern struct pci_dev *vga_default_device(void);
- extern void vga_set_default_device(struct pci_dev *pdev);
-@@ -190,7 +189,6 @@ extern void vga_set_default_device(struct pci_dev *pdev);
- static inline struct pci_dev *vga_default_device(void) { return NULL; };
- static inline void vga_set_default_device(struct pci_dev *pdev) { };
- #endif
--#endif
- 
- /**
-  *     vga_conflicts
+ static const char *aer_agent_string[] = {
+-- 
+2.0.0.rc2
+
