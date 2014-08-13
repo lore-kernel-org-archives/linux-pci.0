@@ -1,55 +1,31 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 27 Aug 2014 11:04:42 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
-	Prarit Bhargava <prarit@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: Re: [Bugfix] x86, irq: Fix bug in setting IOAPIC pin attributes
-Message-ID: <20140827080238.GH1785@lahna.fi.intel.com>
-References: <20140826095221.GO1660@lahna.fi.intel.com>
- <1409118795-17046-1-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1409118795-17046-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
+References: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 13 Aug 2014 07:52:45 -0600
+Message-ID: <CAErSpo4DZboL75xa1Ahxr9aoDg_wyad1gZpXeAAiqcmx=8N8sg@mail.gmail.com>
+Subject: Re: [RESEND 0/5] PCIe, AER: Misc cleanup
+To: "Chen, Gong" <gong.chen@linux.intel.com>
+Cc: Randy Dunlap <rdunlap@infradead.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 27, 2014 at 01:53:11PM +0800, Jiang Liu wrote:
-> Commit 15a3c7cc9154321fc3 "x86, irq: Introduce two helper functions
-> to support irqdomain map operation" breaks LPSS ACPI enumerated
-> devices.
-> 
-> On startup, IOAPIC driver preallocates IRQ descriptors and programs
-> IOAPIC pins with default level and polarity attributes for all legacy
-> IRQs. Later legacy IRQ users may fail to set IOAPIC pin attributes
-> if the requested attributes conflicts with the default IOAPIC pin
-> attributes. So change mp_irqdomain_map() to allow the first legacy IRQ
-> user to reprogram IOAPIC pin with different attributes.
-> 
-> Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
-> Hi Mika,
-> 	We have a plan to kill function mp_set_gsi_attr() later, so
-> I have slightly modified your changes. Could you please help to test
-> it again?
+On Wed, Aug 13, 2014 at 12:22 AM, Chen, Gong <gong.chen@linux.intel.com> wrote:
+>
+> No response since last commit so spread it to a bigger range.
+>
+> This patch series is for AER related cleanup & update based on PCIe
+> SPEC r3.0.
 
-Works fine here, thanks!
+I haven't responded because I've been on vacation for the past three
+weeks.  If there's no change in the patches themselves, and if they
+are still in http://patchwork.ozlabs.org/project/linux-pci/list, the
+only thing reposting them does is make more work for me.
 
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Bjorn
