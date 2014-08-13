@@ -1,85 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:52914 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754005AbaHEQMJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 12:12:09 -0400
-Received: by mail-wi0-f180.google.com with SMTP id n3so1629063wiv.13
-        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2014 09:12:07 -0700 (PDT)
-From: matthew_minter@xyratex.com
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: matthew_minter <matthew_minter@xyratex.com>
-Subject: [PATCH 14/22] Added (untested) support to alpha architecture to accomodate new irq init code
-Date: Tue,  5 Aug 2014 17:11:15 +0100
-Message-Id: <1407255083-9356-15-git-send-email-matthew_minter@xyratex.com>
-In-Reply-To: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
-References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:56904 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752854AbaHMRUg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Aug 2014 13:20:36 -0400
+Received: by mail-ig0-f173.google.com with SMTP id h18so10912756igc.12
+        for <linux-pci@vger.kernel.org>; Wed, 13 Aug 2014 10:20:35 -0700 (PDT)
+Date: Wed, 13 Aug 2014 11:20:32 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Sachin Kamat <sachin.kamat@samsung.com>
+Cc: linux-pci@vger.kernel.org, pratyush.anand@st.com,
+	viresh.kumar@linaro.org, spk.linux@gmail.com, olof@lixom.net
+Subject: Re: [PATCH 1/1] PCI: spear: Fix build error
+Message-ID: <20140813172032.GA7298@google.com>
+References: <1406892514-27996-1-git-send-email-sachin.kamat@samsung.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1406892514-27996-1-git-send-email-sachin.kamat@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: matthew_minter <matthew_minter@xyratex.com>
+On Fri, Aug 01, 2014 at 04:58:34PM +0530, Sachin Kamat wrote:
+> We get the following error when built as a module. Though the general fix would
+> be in this case to export the below mentioned symbols, considering that
+> dw_pcie_host_init is marked with __init and other PCI drivers do not support
+> modular build, I have disabled building this driver as a module too.
+> 
+> ERROR: "dw_pcie_host_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> ERROR: "dw_handle_msi_irq" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> ERROR: "dw_pcie_msi_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> ERROR: "dw_pcie_cfg_write" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> ERROR: "dw_pcie_cfg_read" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> ERROR: "dw_pcie_setup_rc" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> ERROR: "dw_pcie_link_up" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> make[1]: *** [__modpost] Error 1
+> make: *** [modules] Error 2
+> 
+> Signed-off-by: Sachin Kamat <sachin.kamat@samsung.com>
 
----
- arch/alpha/kernel/pci.c | 16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
+Applied with ack and reviewed-by from Viresh and Jingoo to pci/spear for
+v3.17, thanks!
 
-diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
-index 076c35c..338537c 100644
---- a/arch/alpha/kernel/pci.c
-+++ b/arch/alpha/kernel/pci.c
-@@ -28,7 +28,7 @@
- 
- 
- /*
-- * Some string constants used by the various core logics. 
-+ * Some string constants used by the various core logics.
-  */
- 
- const char *const pci_io_names[] = {
-@@ -247,7 +247,7 @@ void pcibios_fixup_bus(struct pci_bus *bus)
- 	if (pci_has_flag(PCI_PROBE_ONLY) && dev &&
-  		   (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
-  		pci_read_bridge_bases(bus);
--	} 
-+	}
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		pdev_save_srm_config(dev);
-@@ -338,7 +338,7 @@ common_init_pci(void)
- 		hose->need_domain_info = need_domain_info;
- 		next_busno = bus->busn_res.end + 1;
- 		/* Don't allow 8-bit bus number overflow inside the hose -
--		   reserve some space for bridges. */ 
-+		   reserve some space for bridges. */
- 		if (next_busno > 224) {
- 			next_busno = 0;
- 			need_domain_info = 1;
-@@ -346,11 +346,15 @@ common_init_pci(void)
- 	}
- 
- 	pcibios_claim_console_setup();
--
- 	pci_assign_unassigned_resources();
--	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
- }
- 
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->swizzle_irq = alpha_mv.pci_swizzle;
-+	bridge->map_irq = alpha_mv.pci_map_irq;
-+	return 0;
-+}
- 
- struct pci_controller * __init
- alloc_pci_controller(void)
-@@ -387,7 +391,7 @@ sys_pciconfig_iobase(long which, unsigned long bus, unsigned long dfn)
- 
- 	/* from hose or from bus.devfn */
- 	if (which & IOBASE_FROM_HOSE) {
--		for(hose = hose_head; hose; hose = hose->next) 
-+		for(hose = hose_head; hose; hose = hose->next)
- 			if (hose->index == bus) break;
- 		if (!hose) return -ENODEV;
- 	} else {
--- 
-2.0.4
-
+> ---
+>  drivers/pci/host/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 8922c37..90f5cca 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -56,7 +56,7 @@ config PCI_HOST_GENERIC
+>  	  controller, such as the one emulated by kvmtool.
+>  
+>  config PCIE_SPEAR13XX
+> -	tristate "STMicroelectronics SPEAr PCIe controller"
+> +	bool "STMicroelectronics SPEAr PCIe controller"
+>  	depends on ARCH_SPEAR13XX
+>  	select PCIEPORTBUS
+>  	select PCIE_DW
+> -- 
+> 1.8.1.2
+> 
