@@ -1,160 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.austin.arm.com ([217.140.110.23]:14085 "EHLO
-	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754615AbaHAQF1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Aug 2014 12:05:27 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
-	"jason\@lakedaemon.net" <jason@lakedaemon.net>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"tglx\@linutronix.de" <tglx@linutronix.de>,
-	"Harish.Kasiviswanathan\@amd.com" <Harish.Kasiviswanathan@amd.com>,
-	"linux-arm-kernel\@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc\@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"devicetree\@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 3/4 V3] irqchip: gic: Add supports for ARM GICv2m MSI(-X)
-In-Reply-To: <53DBB562.5020003@amd.com> (Suravee Suthikulanit's message of
-	"Fri, 1 Aug 2014 16:42:26 +0100")
-References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
-	<1404947104-21345-4-git-send-email-suravee.suthikulpanit@amd.com>
-	<87zjfqj3mc.fsf@approximate.cambridge.arm.com>
-	<53DBB562.5020003@amd.com>
-Date: Fri, 01 Aug 2014 17:05:14 +0100
-Message-ID: <87silggpqd.fsf@approximate.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mailout4.samsung.com ([203.254.224.34]:37945 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752068AbaHNJTz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Aug 2014 05:19:55 -0400
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0NAA00HIWHX5VL50@mailout4.samsung.com> for
+ linux-pci@vger.kernel.org; Thu, 14 Aug 2014 18:19:54 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Lucas Stach' <l.stach@pengutronix.de>
+Cc: linux-pci@vger.kernel.org, 'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Mohit Kumar' <mohit.kumar@st.com>, kernel@pengutronix.de,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1406884222-23974-1-git-send-email-l.stach@pengutronix.de>
+ <007901cfad75$58974040$09c5c0c0$%han@samsung.com>
+ <1408005693.4649.15.camel@weser.hi.pengutronix.de>
+In-reply-to: <1408005693.4649.15.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH] PCI: designware: check private_data validity in single
+ place
+Date: Thu, 14 Aug 2014 18:19:53 +0900
+Message-id: <005101cfb7a0$e83bfe90$b8b3fbb0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 01 2014 at  4:42:26 pm BST, Suravee Suthikulanit <suravee.suthikulpanit@amd.com> wrote:
-> On 7/30/2014 9:57 AM, Marc Zyngier wrote:
->> On Thu, Jul 10 2014 at 12:05:03 am BST, "suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com> wrote:
->>
->> Hi Suravee,
->>
->>> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->>>
->  >> ......
->  >>
->>> -  first region is the GIC distributor register base and size. The 2nd region is
->>> -  the GIC cpu interface register base and size.
->>> +- reg : Specifies base physical address(s) and size of the GIC register frames.
->>> +
->>> +  Region | Description
->>> +  Index  |
->>> +  -------------------------------------------------------------------
->>> +     0   | GIC distributor register base and size
->>> +     1   | GIC cpu interface register base and size
->>> +     2   | VGIC interface control register base and size (Optional)
->>> +     3   | VGIC CPU interface register base and size (Optional)
->>> +     4   | GICv2m MSI interface register base and size (Optional)
->>
->> Given that the v2m block is somehow bolted on the side of a standard
->> GICv2, I'd rather see it as a subnode of the main GIC.
->>
->> Then you could directly call into the v2m layer to initialize it,
->> instead of the odd "reverse probing" you're using here...
->
-> [Suravee] IIUC, you don't think we should introduce the "gic-400-v2m" 
-> compatible ID. Instead, you want to see something like:
->
->      gic @ 0x00f00000 {
->          .....
->          v2m {
->              msi-controller;
->              reg = < .... >; /* v2m reg frame */
->          }
->      }
->
-> If so, I can change this.
+On Thursday, August 14, 2014 5:42 PM, Lucas Stach wrote:
+> Am Freitag, den 01.08.2014, 19:42 +0900 schrieb Jingoo Han:
+> > On Friday, August 01, 2014 6:10 PM, Lucas Stach wrote:
+> > >
+> > > The driver had checks for this sprinkled all over. As we call
+> > > sys_to_pcie() before every instance of this check, we can as well
+> > > move the check to this single location to make things clear.
+> > >
+> > > Removing the statements after BUG[_ON]() is safe as the kernel
+> > > is halted at this point anyway.
+> > >
+> > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> >
+> > Acked-by: Jingoo Han <jg1.han@samsung.com>
+> 
+> Does this mean this addresses your concerns with the original series and
+> you are okay with it now? If so please provide an Ack to the patches of
+> this series also, so Bjorn knows if he can pick those up.
 
-Yes, something like that indeed.
+Do you mean "[PATCH 0/4] PCI: designware: init order/resource alloc fixes"?
+Sorry , I didn't review it. Also, I am not sure when I review it.
 
->
->
->>> +
->>> +static int __init
->>> +gicv2m_msi_init(struct device_node *node, struct v2m_data *v2m)
->>> +{
->>> +       unsigned int val;
->>> +
->>> +       if (of_address_to_resource(node, GIC_OF_MSIV2M_RANGE_INDEX,
->>> +                                  &v2m->res)) {
->>> +               pr_err("GICv2m: Failed locate GICv2m MSI register frame\n");
->>> +               return -EINVAL;
->>> +       }
->>> +
->>> +       v2m->base = of_iomap(node, GIC_OF_MSIV2M_RANGE_INDEX);
->>> +       if (!v2m->base) {
->>> +               pr_err("GICv2m: Failed to map GIC MSI registers\n");
->>> +               return -EINVAL;
->>> +       }
->>> +
->>> +       val = readl_relaxed(v2m->base + V2M_MSI_TYPER);
->>> +       if (!val) {
->>> +               pr_warn("GICv2m: Failed to read V2M_MSI_TYPER register\n");
->>> +               return -EINVAL;
->>> +       }
->>> +
->>> +       v2m->spi_start = (val >> V2M_MSI_TYPER_BASE_SHIFT) &
->>> +                               V2M_MSI_TYPER_BASE_MASK;
->>> +       v2m->nr_spis = val & V2M_MSI_TYPER_NUM_MASK;
->>> +       if ((v2m->spi_start < V2M_MIN_SPI) || (v2m->nr_spis >= V2M_MAX_SPI)) {
->>> +                       pr_err("GICv2m: Invalid MSI_TYPER (%#x)\n", val);
->>> +                       return -EINVAL;
->>> +       }
->>> +
->>> +       v2m->bm = kzalloc(sizeof(long) * BITS_TO_LONGS(v2m->nr_spis),
->>> +                         GFP_KERNEL);
->>> +       if (!v2m->bm) {
->>> +               pr_err("GICv2m: Failed to allocate MSI bitmap\n");
->>> +               return -ENOMEM;
->>> +       }
->>> +
->>> +       spin_lock_init(&v2m->msi_cnt_lock);
->>> +
->>> +       pr_info("GICv2m: SPI range [%d:%d]\n",
->>> +               v2m->spi_start, (v2m->spi_start + v2m->nr_spis));
->>> +
->>> +       return 0;
->>> +}
->>
->> This function is assuming that you will only see one single MSI frame
->> here. Is there any chance that there would be more than one in a system?
->>
->
-> [Suravee] If I would imagine such SOC, where there are multiple MSI 
-> frames (hence multiple msi-controllers), can we currently support this 
-> with the current msichip interface?  Currently, each PCI RC connects to 
-> an "interrupt-parrent", which is also an MSI controller. We would need 
-> to have a way for PCI RC to specify which of the msichips within an 
-> interrupt-controller it wants to use.
+Mohit,
+Would you review Lucas's patch?
 
-Not necessarly multiple MSI controllers. As far as I can see, a v2m MSI
-frame describes a range of SPIs, and I can perfectly imagine a system
-where someone would have a number of these, each capable of generating a
-number of SPIs. It becomes interesting when you have non-contiguous SPI
-ranges... ;-)
+Best regards,
+Jingoo Han
 
-> Currently, I am not aware if there is a GIC w/ multiple MSI frames. 
-> Could you check if there is such product for ARM GICs?
+> 
+> Thanks,
+> Lucas
+> >
+> > > ---
+> > > This is a follow on patch to the series
+> > > "PCI: designware: init order/resource alloc fixes", which
+> > > addresses Jingoos review feedback, so this series should
+> > > be hopefully good to go now.
+> > > ---
+> >
+> 
+> --
+> Pengutronix e.K.             | Lucas Stach                 |
+> Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
-I can, but it is unlikely I'll be able to find about what people outside
-of ARM are doing. They usually only get in touch when they've screwed
-something up.. ;-)
-
-Anyway, maybe we just don't need to address this at this point in
-time. Adding a comment to that effect would probably be enough, and give
-a hint to anyone building such a configuration.
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny.
