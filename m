@@ -1,46 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:20793 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753135AbaHOCvU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Aug 2014 22:51:20 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>
-Subject: [PATCH 3/3] xen/MSI: Retrieve MSI msg from cached msi_desc->msg
-Date: Fri, 15 Aug 2014 11:14:37 +0800
-Message-ID: <1408072477-10008-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andy Lutomirski <luto@amacapital.net>
+To: Mauro Carvalho Chehab <m.chehab@samsung.com>,
+	Doug Thompson <dougthompson@xmission.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Borislav Petkov <bp@alien8.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-edac@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Andy Lutomirski <luto@amacapital.net>,
+	Rui Wang <ruiv.wang@gmail.com>
+Subject: [PATCH 2/2] sb_edac: Claim a different PCI device
+Date: Thu, 14 Aug 2014 14:45:41 -0700
+Message-Id: <59f55d679cc596731589516a71075b6059fcaaa5.1408051536.git.luto@amacapital.net>
+In-Reply-To: <cover.1408051536.git.luto@amacapital.net>
+References: <cover.1408051536.git.luto@amacapital.net>
+In-Reply-To: <cover.1408051536.git.luto@amacapital.net>
+References: <cover.1408051536.git.luto@amacapital.net>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We had cached the MSI msg in __write_msi_msg(),
-so we should retrieve the cached MSI msg directly,
-not to access the MSI address/data hardware registers
-again.
+sb_edac controls a large number of different PCI functions.  Rather
+than registering as a normal PCI driver for all of them, it
+registers for just one so that it gets probed and, at probe time, it
+looks for all the others.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: xen-devel@lists.xenproject.org
+Coincidentally, the device it registers for also contains the SMBUS
+registers, so the PCI core will refuse to probe both sb_edac and a
+future iMC SMBUS driver.  The drivers don't actually conflict, so
+just change sb_edac's device table to probe a different device.
+
+An alternative fix would be to merge the two drivers, but sb_edac
+will also refuse to load on non-ECC systems, whereas i2c_imc would
+still be useful without ECC.
+
+The only user-visible change should be that sb_edac appears to bind
+a different device.
+
+Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>
+Cc: Rui Wang <ruiv.wang@gmail.com>
+Signed-off-by: Andy Lutomirski <luto@amacapital.net>
 ---
- arch/x86/pci/xen.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/edac/sb_edac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index 4656099..7a74404 100644
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -228,7 +228,7 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 		return 1;
- 
- 	list_for_each_entry(msidesc, &dev->msi_list, list) {
--		read_msi_msg(msidesc, &msg);
-+		get_cached_msi_msg(msidesc, &msg);
- 		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
- 			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
- 		if (msg.data != XEN_PIRQ_MSI_DATA ||
+diff --git a/drivers/edac/sb_edac.c b/drivers/edac/sb_edac.c
+index a2597e9313c6..e3bc2cced580 100644
+--- a/drivers/edac/sb_edac.c
++++ b/drivers/edac/sb_edac.c
+@@ -432,7 +432,7 @@ static const struct pci_id_table pci_dev_descr_ibridge_table[] = {
+  *	pci_device_id	table for which devices we are looking for
+  */
+ static const struct pci_device_id sbridge_pci_tbl[] = {
+-	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TA)},
++	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_HA0)},
+ 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IBRIDGE_IMC_HA0_TA)},
+ 	{0,}			/* 0 terminated list. */
+ };
 -- 
-1.7.1
+1.9.3
 
