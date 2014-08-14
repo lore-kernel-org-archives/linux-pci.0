@@ -1,36 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nbfkord-smmo01.seg.att.com ([209.65.160.76]:10875 "EHLO
-	nbfkord-smmo01.seg.att.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751013AbaGaMHd convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Jul 2014 08:07:33 -0400
-Message-ID: <53DA3180.5040302@solarflare.com>
-Date: Thu, 31 Jul 2014 13:07:28 +0100
-From: Edward Cree <ecree@solarflare.com>
+Received: from mga14.intel.com ([192.55.52.115]:45583 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754638AbaHNCYj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Aug 2014 22:24:39 -0400
+Date: Wed, 13 Aug 2014 21:52:36 -0400
+From: "Chen, Gong" <gong.chen@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Randy Dunlap <rdunlap@infradead.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RESEND 0/5] PCIe, AER: Misc cleanup
+Message-ID: <20140814015236.GB28066@gchen.bj.intel.com>
+References: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
+ <CAErSpo4DZboL75xa1Ahxr9aoDg_wyad1gZpXeAAiqcmx=8N8sg@mail.gmail.com>
 MIME-Version: 1.0
-To: Alexander Duyck <alexander.h.duyck@intel.com>
-CC: Don Dutile <ddutile@redhat.com>, <linux-pci@vger.kernel.org>
-Subject: Re: pci_sriov_set_totalvfs again
-References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com>
-In-Reply-To: <53D9602A.4010406@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="tjCHc7DPkfUGtrlw"
+In-Reply-To: <CAErSpo4DZboL75xa1Ahxr9aoDg_wyad1gZpXeAAiqcmx=8N8sg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30/07/14 22:14, Alexander Duyck wrote:
-> My $.02 on the issue would be to simply have sriov_configure return an
-> error indicating the resources are not available if you have the
-> PF-IOV mode enabled it is consuming the VF v-switch resources. Thanks,
-> Alex
-That would work, but I don't like the idea of saying (in sysfs
-device/sriov_totalvfs) "I have some VFs" only to say "not really, ha"
-when someone tries to use them.  At least, not when we knew all along.
 
-Let's look at this from a different angle:
-If I posted a patch to make pci_sriov_set_totalvfs(dev, 0) do what I
-want, would there be any objections to taking it?  It seems like a sane
-API, the only existing (in-tree) users never pass 0, and it shouldn't
-require too ugly an implementation.
+--tjCHc7DPkfUGtrlw
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
--Edward
-The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
+On Wed, Aug 13, 2014 at 07:52:45AM -0600, Bjorn Helgaas wrote:
+> I haven't responded because I've been on vacation for the past three
+> weeks.  If there's no change in the patches themselves, and if they
+> are still in http://patchwork.ozlabs.org/project/linux-pci/list, the
+> only thing reposting them does is make more work for me.
+>=20
+There is one difference existed in Patch 1. I add more explanation in
+the comments as Boris suggested.
+
+--tjCHc7DPkfUGtrlw
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJT7BZjAAoJEI01n1+kOSLH+icP/iBxgWLwYEecN2bBkdBb1qhq
+nufgUGZ69HaLt3J+hbELoeuYZIoIBjd5THPKzXJM9yKSNVgAXePWMdOENPukjUCC
+Nx6eAfa47j5z1VfBY2u8M91zaxNXbuJBtZW5ZAGi23cAQbVuEvFnlfi0+V7TDxYe
+qj1C7vtC815oOgV4iSTZEIsoSgh2+yxyHxKF1r3SgOv5pski2LZKBWk5unKq0U65
+4TvEquaB0LuU8tR01V3GdPdCojmO/XTENmxxvA6A2xlYFajVjdnASvV87ET4UVZP
+/sEVopQFAc8DNByoBk7xkZFTNi1njkM8lFGznOTysxW5vle9eirXdJcrTB9jATfW
+LMb/4tg+av1GmLZ1ijO2pvAafkDh8wayRzMZou/r2cdGoxDE7jjQWhgy5ufYMF4h
+SjZ1F7SE7v2BjXDehVDaKIeRjQHW2k+fwUR4FjOyVOnRiOSp6Aq268KTip/0KkY5
+dxKtSoPUrcfx8rExzLi8ySKM8vmneQfdzfQl6aMv1tRymqZOWYu22iRnS8zpvZM6
+dOSjON+N4RAqn5H2PqNf+6UQykBFhF3sgcB8Xtd5Y9ynDRSOky+NsME6lsnu7QLR
+vzbCBSGp52lA0uk8KeOEOPOkT5JrhW36pq78iZ0dOvEPo+QQRErOolbjjTRNoYuh
+XY2HTtsvtJxqq3q9if1/
+=O9o3
+-----END PGP SIGNATURE-----
+
+--tjCHc7DPkfUGtrlw--
