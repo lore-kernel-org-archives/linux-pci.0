@@ -1,96 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17383 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752615AbaHFNim (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Aug 2014 09:38:42 -0400
-Message-ID: <53E1F793.3050106@redhat.com>
-Date: Wed, 06 Aug 2014 05:38:27 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:60176 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752498AbaHNR4N (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Aug 2014 13:56:13 -0400
+Date: Thu, 14 Aug 2014 18:55:26 +0100
+From: Mark Rutland <mark.rutland@arm.com>
+To: "suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
+Cc: Marc Zyngier <Marc.Zyngier@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH 1/2 V4] irqchip: gic: Add supports for ARM GICv2m MSI(-X)
+Message-ID: <20140814175525.GI24018@leverpostej>
+References: <1407942041-3291-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <1407942041-3291-2-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-To: Alexander Duyck <alexander.h.duyck@intel.com>
-CC: Edward Cree <ecree@solarflare.com>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
-References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com> <alpine.LFD.2.03.1407311500570.16821@solarflare.com> <53DA5EF4.1030500@intel.com> <53DA674A.9030305@solarflare.com> <53DA718A.9040407@intel.com> <53DA7574.4050103@solarflare.com> <53DA82AF.7000503@redhat.com> <53DA8745.2070405@solarflare.com> <53DF92B4.1040505@solarflare.com> <53DF9A9F.9060600@intel.com>
-In-Reply-To: <53DF9A9F.9060600@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1407942041-3291-2-git-send-email-suravee.suthikulpanit@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/04/2014 10:37 AM, Alexander Duyck wrote:
-> On 08/04/2014 07:03 AM, Edward Cree wrote:
->> On 31/07/14 19:13, Edward Cree wrote:
->>> On 31/07/14 18:53, Don Dutile wrote:
->>>> Ideally, when the device is configured in different modes, the SRIOV
->>>> cap structure
->>>> should be modified so the pci sriov code doesn't try to act or reflect
->>>> the
->>>> non-reality the device is in.
->>> That would be much nicer of course, and I'll ask our firmware team if
->>> that's possible.  But I don't think it will be.
->> As I feared, it's not practical for the device to do this.
->> (Unfortunately, the IMEM (instruction memory) on the device is rather
->> small and the firmware team are struggling to fit all the required
->> features into it.)
->> However, I also found out that in principle, the device _is_ capable of
->> supporting VFs in PF-IOV mode, by attaching them directly to the
->> underlying v-switch.  The firmware may or may not already do this; the
->> person who's likely to know this isn't in today.  The driver at present
->> doesn't support it because it assumes it always needs to attach VFs to
->> its own v-switch, but it could (again, in principle) be taught otherwise.
->>
->> So at this point it becomes a policy question of whether we want to
->> support this, and our opinion is that this isn't a valid use-case (as
->> the only time you'd want PF-IOV is if your system doesn't support VFs)
->> and thus shouldn't be supported (as it creates extra testing and
->> maintenance work).  The driver should probe the device, detect PF-IOV
->> mode, recognise that it (the driver) doesn't have support for VFs in
->> that mode, and set totalvfs to 0.
->> Others may demur, of course, but that's likely to be decided when
->> sending the driver patches to davem.  It's my belief that, uncertainty
->> about my use case notwithstanding, pci_sriov_set_totalvfs(dev, 0) should
->> be a valid operation with the semantics I've implemented in my patch.
->>
->> -Edward
->
-> How is it you get yourself into the PF-IOV mode?  Is this something that
-> is stored in the NVM of the adapter, or is it something where the driver
-> has to issue a request for it?  Also does each PF advertise SR-IOV
-> support in PF-IOV mode or only function 0?
->
-> Modifying the total VFs and/or the initial VFs in the configuration
-> space is not practical.  You would likely run into issues as one of
-> these fields is read at probe time and the other is read at SR-IOV
-> enablement and if the two differ you cannot enable SR-IOV.
->
-> I'm not sure what davem has to do with any of this.  We are discussing
-> PCI at this point, not the network drivers.  As such Dave won't be the
-> one accepting the pci_sriov_set_totalvfs changes you proposed.  If you
-> are just wanting to get a patch through Dave for this you would be much
-> better off just returning an error on sriov_configure if the vswitch
-> isn't available rather than trying to change the SR-IOV API to match
-> your use case.
->
-> Thanks,
->
-> Alex
->
-+1 to the points Alex makes.
-This is a device-specific issue that can be handled with device-specific
-changes, leaving the existing PCI SRIOV infrastructure working as-is.
-pci_sriov_set_totalvfs() was not designed to disable SRIOV for a device,
-merely adjust it's max number reported in the config structure, which is
-common in a number of PCIe-SRIOV devices.  returning failure on sriov_configure()
-is the proper solution for this device in this state... no different then
-if some other failure occurred in the device to fail sriov configuration.
+On Wed, Aug 13, 2014 at 04:00:40PM +0100, suravee.suthikulpanit@amd.com wrote:
+> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> 
+> ARM GICv2m specification extends GICv2 to support MSI(-X) with
+> a new set of register frame. This patch introduces support for
+> the non-secure GICv2m register frame. Currently, GICV2m is available
+> in certain version of GIC-400.
+> 
+> The patch introduces a new property in ARM gic binding, the v2m subnode.
+> It is optional.
+> 
+> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> Cc: Mark Rutland <Mark.Rutland@arm.com>
+> Cc: Marc Zyngier <Marc.Zyngier@arm.com>
+> Cc: Jason Cooper <jason@lakedaemon.net>
+> Cc: Catalin Marinas <Catalin.Marinas@arm.com>
+> Cc: Will Deacon <Will.Deacon@arm.com>
+> ---
+>  Documentation/devicetree/bindings/arm/gic.txt |  32 ++++
+>  drivers/irqchip/Kconfig                       |   7 +
+>  drivers/irqchip/Makefile                      |   1 +
+>  drivers/irqchip/irq-gic-v2m.c                 | 215 ++++++++++++++++++++++++++
+>  drivers/irqchip/irq-gic.c                     |  75 +++++----
+>  drivers/irqchip/irq-gic.h                     |  48 ++++++
+>  6 files changed, 348 insertions(+), 30 deletions(-)
+>  create mode 100644 drivers/irqchip/irq-gic-v2m.c
+>  create mode 100644 drivers/irqchip/irq-gic.h
+> 
+> diff --git a/Documentation/devicetree/bindings/arm/gic.txt b/Documentation/devicetree/bindings/arm/gic.txt
+> index 5573c08..8a64179 100644
+> --- a/Documentation/devicetree/bindings/arm/gic.txt
+> +++ b/Documentation/devicetree/bindings/arm/gic.txt
+> @@ -95,3 +95,35 @@ Example:
+>                       <0x2c006000 0x2000>;
+>                 interrupts = <1 9 0xf04>;
+>         };
+> +
+> +
+> +* GICv2m extension for MSI/MSI-x support (Optional)
+> +
+> +Certain revision of GIC-400 supports MSI/MSI-x via V2M register frame.
+> +This is enabled by specifying v2m sub-node.
+> +
+> +Required properties:
+> +
+> +- msi-controller : Identifies the node as an MSI controller.
+> +
+> +- reg : GICv2m MSI interface register base and size
+> +
+> +Example:
+> +
+> +       interrupt-controller@e1101000 {
+> +               compatible = "arm,gic-400";
+> +               #interrupt-cells = <3>;
+> +               #address-cells = <2>;
+> +               #size-cells = <2>;
+> +               interrupt-controller;
+> +               interrupts = <1 8 0xf04>;
+> +               ranges = <0 0 0 0xe1100000 0 0x100000>;
+> +               reg = <0x0 0xe1110000 0 0x01000>,
+> +                     <0x0 0xe112f000 0 0x02000>,
+> +                     <0x0 0xe1140000 0 0x10000>,
+> +                     <0x0 0xe1160000 0 0x10000>;
+> +               v2m {
+> +                       msi-controller;
+> +                       reg = <0x0 0x80000 0 0x1000>;
+> +               };
+> +       };
 
-Nack to this patch request.
+[...]
 
+> @@ -1009,6 +1012,16 @@ gic_of_init(struct device_node *node, struct device_node *parent)
+>         if (of_property_read_u32(node, "cpu-offset", &percpu_offset))
+>                 percpu_offset = 0;
+> 
+> +       gic_data[gic_cnt].irq_chip = &gic_chip;
+> +
+> +       /* Currently, we only support one v2m subnode. */
+> +       child = of_get_child_by_name(node, "v2m");
+> +       if (child) {
+> +               ret = gicv2m_of_init(child, &gic_data[gic_cnt]);
+> +               if (ret)
+> +                       return ret;
+> +       }
 
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I can't see how you'd sanely expand this to multiple children, which was
+the main point of having a separate node for the M block.
 
+Give the M block a compatible string and look for children with that
+string.
+
+Thanks,
+Mark.
