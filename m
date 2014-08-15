@@ -1,50 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog132.obsmtp.com ([207.126.144.207]:53415 "EHLO
-	eu1sys200aog132.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752162AbaHLH5h (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 03:57:37 -0400
-Message-ID: <53E9C79D.6080704@mellanox.com>
-Date: Tue, 12 Aug 2014 10:51:57 +0300
-From: Amir Vadai <amirv@mellanox.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:19090 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751833AbaHOFn7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Aug 2014 01:43:59 -0400
+Message-ID: <53ED9E11.8050406@huawei.com>
+Date: Fri, 15 Aug 2014 13:43:45 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-CC: <linux-pci@vger.kernel.org>, <alex.williamson@redhat.com>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Yevgeny Petrilin <yevgenyp@mellanox.com>,
-	Eli Cohen <eli@mellanox.com>, Peter Paneah <peter@mellanox.com>
-Subject: Re: [PATCH v2] PCI: Mark broken INTx masking for Mellanox devices
-References: <1406868871-350-1-git-send-email-gwshan@linux.vnet.ibm.com> <20140811134854.GA5794@richard> <20140812035226.GA15421@shangw>
-In-Reply-To: <20140812035226.GA15421@shangw>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<xen-devel@lists.xenproject.org>
+Subject: Re: [PATCH 3/3] xen/MSI: Retrieve MSI msg from cached msi_desc->msg
+References: <1408072477-10008-1-git-send-email-wangyijing@huawei.com> <20140815035122.GB27697@laptop.dumpdata.com>
+In-Reply-To: <20140815035122.GB27697@laptop.dumpdata.com>
 Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/12/2014 6:52 AM, Gavin Shan wrote:
-> On Mon, Aug 11, 2014 at 09:48:54PM +0800, Wei Yang wrote:
->> >On Fri, Aug 01, 2014 at 02:54:31PM +1000, Gavin Shan wrote:
->>> >>The VFIO driver is routing LSI interrupts by capturing, masking,
->>> >>and then delivering. When passing though Mallanox adapters from
->> >
->> >one typo                                  Mellanox
->> >
->> >Others, looks good to me.
->> >
-> Thanks, Richard. I'll correct it in next revision. However, I'm
-> still waiting for comments or ACK from Alex/Eli/Amir.
+On 2014/8/15 11:51, Konrad Rzeszutek Wilk wrote:
+> On Fri, Aug 15, 2014 at 11:14:37AM +0800, Yijing Wang wrote:
+>> We had cached the MSI msg in __write_msi_msg(),
+>> so we should retrieve the cached MSI msg directly,
+>> not to access the MSI address/data hardware registers
+>> again.
 > 
-> Thanks,
-> Gavin
+> Is this fixing a particular problem?
+> 
+> Could you kindly explain to me when you do the __write_msi_msg
+> before doing an read_msi_msg? The order of operation in this
+> function is read, and then write.
+
+Hi Konrad,
+   Thanks for your review and comments. It looks like I made a mistake.
+Before I thought xen_hvm_setup_msi_irqs() here worked like restore MSI irq,
+but it seems not in real. Since every time we call the setup MSI irq function,
+the msi_desc always new allocated, so here should use read_msi_msg(),
+I'm sorry for my mistake. :(
+
+Bjorn, please drop this one.
+
+Thanks!
+Yijing.
+
+> 
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+>> CC: xen-devel@lists.xenproject.org
+>> ---
+>>  arch/x86/pci/xen.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+>> index 4656099..7a74404 100644
+>> --- a/arch/x86/pci/xen.c
+>> +++ b/arch/x86/pci/xen.c
+>> @@ -228,7 +228,7 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+>>  		return 1;
+>>  
+>>  	list_for_each_entry(msidesc, &dev->msi_list, list) {
+>> -		read_msi_msg(msidesc, &msg);
+>> +		get_cached_msi_msg(msidesc, &msg);
+>>  		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
+>>  			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
+>>  		if (msg.data != XEN_PIRQ_MSI_DATA ||
+>> -- 
+>> 1.7.1
+>>
+> 
 > 
 
-Hi Gavin,
 
-Sorry for the delay - wanted to understand the exact limitations with
-our Hardware/Firmware guys.
+-- 
+Thanks!
+Yijing
 
-Please change the device to PCI_ANY_ID since all Mellanox devices
-currently need the quirk.
-The issue will be fixed in the next GA firmwares.
-
-Thanks,
-Amir
