@@ -1,112 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:64736 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750699AbaHLHC5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 03:02:57 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>, <linux-pci@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<arnab.basu@freescale.com>, <x86@kernel.org>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [RFC PATCH 07/20] x86/MSI: Use msi_chip instead of arch func to configure MSI/MSI-X
-Date: Tue, 12 Aug 2014 15:26:00 +0800
-Message-ID: <1407828373-24322-8-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1407828373-24322-1-git-send-email-wangyijing@huawei.com>
-References: <1407828373-24322-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:47274 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750882AbaHOFBt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Aug 2014 01:01:49 -0400
+Received: by mail-ig0-f172.google.com with SMTP id h15so982090igd.11
+        for <linux-pci@vger.kernel.org>; Thu, 14 Aug 2014 22:01:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1407745453.4660.7.camel@weser.hi.pengutronix.de>
+References: <1406830565-23450-1-git-send-email-l.stach@pengutronix.de>
+	<1406830565-23450-3-git-send-email-l.stach@pengutronix.de>
+	<CAJ+vNU0vT2Fot6V=pn7HKDctNHrWMDiudghVTtAojv8mPDXhBw@mail.gmail.com>
+	<1407745453.4660.7.camel@weser.hi.pengutronix.de>
+Date: Thu, 14 Aug 2014 22:01:48 -0700
+Message-ID: <CAJ+vNU2QEQQEA93n_Rc952Wyht1Ytd09tpU7XRyo_rVop5SWdA@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: imx6: fix boot hang when link already enabled
+From: Tim Harvey <tharvey@gateworks.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shawn Guo <Shawn.Guo@freescale.com>,
+	Sascha Hauer <kernel@pengutronix.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce a new struct msi_chip apic_msi_chip instead of weak arch
-functions to configure MSI/MSI-X in x86.
+On Mon, Aug 11, 2014 at 1:24 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> Hi Tim,
+>
+> Am Samstag, den 09.08.2014, 10:49 -0700 schrieb Tim Harvey:
+> [...]
+>
+>> i/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+>> > index a568efaa331c..1be607360988 100644
+>> > --- a/drivers/pci/host/pci-imx6.c
+>> > +++ b/drivers/pci/host/pci-imx6.c
+>> > @@ -49,6 +49,9 @@ struct imx6_pcie {
+>> >
+>> >  /* PCIe Port Logic registers (memory-mapped) */
+>> >  #define PL_OFFSET 0x700
+>> > +#define PCIE_PL_PFLR (PL_OFFSET + 0x08)
+>> > +#define PCIE_PL_PFLR_LINK_STATE_MASK           (0x3f << 16)
+>> > +#define PCIE_PL_PFLR_FORCE_LINK                        (1 << 15)
+>> >  #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
+>> >  #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
+>> >  #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING        (1 << 29)
+>> > @@ -214,6 +217,31 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
+>> >  static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
+>> >  {
+>> >         struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+>> > +       u32 val, gpr1, gpr12;
+>> > +
+>> > +       /*
+>> > +        * If the bootloader already enabled the link we need some special
+>> > +        * handling to get the core back into a state where it is safe to
+>> > +        * touch it for configuration. As there is no dedicated reset signal
+>> > +        * wired up for MX6QDL, we need to manually force LTSSM into "detect"
+>> > +        * state before completely disabling LTSSM, which is a prerequisite
+>> > +        * for core configuration.
+>> > +        * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
+>> > +        * indication that the bootloader activated the link.
+>> > +        */
+>> > +       regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
+>> > +       regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
+>> > +
+>> > +       if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
+>> > +           (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
+>> > +               val = readl(pp->dbi_base + PCIE_PL_PFLR);
+>> > +               val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
+>> > +               val |= PCIE_PL_PFLR_FORCE_LINK;
+>> > +               writel(val, pp->dbi_base + PCIE_PL_PFLR);
+>>
+>> Lucas,
+>>
+>> I hate to delay this patch any longer as I believe its critical that
+>> this gets in the current kernel. I did however encounter an issue when
+>> I backported this to another (older 3.10 kernel I use). The access
+>> above to dbi_base to force the link down assumes that PCIe clock is
+>> enabled (or it will hang the system). This obviously must be the case
+>> for the current kernel (the bootloader enables it and I guess the
+>> clock setup for imx6 doesn't disturb it), but on the particular kernel
+>> I was backporting to there must be enough differences in the clock
+>> tree that the clock setup disabled the PCIe clocks. Thus I had to
+>> enable them early, right before the access to dbi_base above in that
+>> kernel.
+>>
+>> I wonder if we should at least put a comment before the dbi_base
+>> access above about the assumption that the bootloader also enabled
+>> PCIe clock and the clock config left it as such so we don't get burned
+>> later on if the clock config changes and causes a hang here.
+>>
+>
+> What clock are we talking about here exactly? If it's just the register
+> clock "pcie" we may as well enable it early to make things robust. Other
+> clocks may be a bit more problematic.
+>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/x86/include/asm/pci.h     |    1 +
- arch/x86/kernel/apic/io_apic.c |   20 ++++++++++++++++----
- 2 files changed, 17 insertions(+), 4 deletions(-)
+Lucas,
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 0892ea0..878a06d 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -101,6 +101,7 @@ void native_teardown_msi_irq(unsigned int irq);
- void native_restore_msi_irqs(struct pci_dev *dev);
- int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- 		  unsigned int irq_base, unsigned int irq_offset);
-+extern struct msi_chip *x86_msi_chip;
- #else
- #define native_setup_msi_irqs		NULL
- #define native_teardown_msi_irq		NULL
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 2609dcd..eb8ab7c 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3077,24 +3077,25 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- 	return 0;
- }
- 
--int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+int native_setup_msi_irqs(struct device *dev, int nvec, int type)
- {
- 	struct msi_desc *msidesc;
- 	unsigned int irq;
- 	int node, ret;
-+	struct pci_dev *pdev = to_pci_dev(dev);
- 
- 	/* Multiple MSI vectors only supported with interrupt remapping */
- 	if (type == PCI_CAP_ID_MSI && nvec > 1)
- 		return 1;
- 
--	node = dev_to_node(&dev->dev);
-+	node = dev_to_node(dev);
- 
--	list_for_each_entry(msidesc, &dev->msi_list, list) {
-+	list_for_each_entry(msidesc, &pdev->msi_list, list) {
- 		irq = irq_alloc_hwirq(node);
- 		if (!irq)
- 			return -ENOSPC;
- 
--		ret = setup_msi_irq(dev, msidesc, irq, 0);
-+		ret = setup_msi_irq(pdev, msidesc, irq, 0);
- 		if (ret < 0) {
- 			irq_free_hwirq(irq);
- 			return ret;
-@@ -3214,6 +3215,17 @@ int default_setup_hpet_msi(unsigned int irq, unsigned int id)
- }
- #endif
- 
-+struct msi_chip apic_msi_chip = {
-+	.setup_irqs = native_setup_msi_irqs,
-+	.teardown_irq = native_teardown_msi_irq,
-+};
-+
-+struct msi_chip *arch_get_match_msi_chip(struct device *dev)
-+{
-+	return x86_msi_chip;
-+}
-+
-+struct msi_chip *x86_msi_chip = &apic_msi_chip;
- #endif /* CONFIG_PCI_MSI */
- /*
-  * Hypertransport interrupt support
--- 
-1.7.1
+I'm not really sure, I just duplicated what was being done in the
+regular clock setup to resolve my issue on a 3.10 vendor kernel where
+I have backported the pci driver from mainline. I'm not clear yet why
+the clocks still wouldn't be enabled from the bootloader, but I assume
+its because of something else that is happening in that vendor kernel.
+I don't feel there is anything wrong with your patch and have already
+acked it - it solves a real issue with the current driver. Its just
+worth realizing that clocks do have to be setup before you access
+dbi_base which currently is true, but in the future may depend on
+changes that occur outside of the pci driver.
 
+Tim
