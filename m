@@ -1,105 +1,135 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Bugfix 1/2] x86, irq, PCI: Keep IRQ assignment for PCI devices during suspend/hibernation
-Date: Tue,  5 Aug 2014 11:26:17 +0800
-Message-Id: <1407209178-18644-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:55252 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932113AbaHOCtN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Aug 2014 22:49:13 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>,
+	"Tony Luck" <tony.luck@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>, <x86@kernel.org>,
+	<linux-ia64@vger.kernel.org>
+Subject: [PATCH 1/3] MSI: Use __get_cached_msi_msg() instead of get_cached_msi_msg()
+Date: Fri, 15 Aug 2014 11:14:21 +0800
+Message-ID: <1408072461-9914-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now IOAPIC driver dynamically allocates IRQ numbers for IOAPIC pins.
-We need to keep IRQ assignment for PCI devices during suspend/hibernation,
-otherwise it may cause failure of suspend/hibernation due to:
-1) Device driver calls pci_enable_device() to allocate an IRQ number
-   and register interrupt handler on the returned IRQ.
-2) Device driver's suspend callback calls pci_disable_device() and
-   release assigned IRQ in turn.
-3) Device driver's resume callback calls pci_enable_device() to
-   allocate IRQ number again. A different IRQ number may be assigned
-   by IOAPIC driver this time.
-4) Now the hardware delivers interrupt to the new IRQ but interrupt
-   handler is still registered against the old IRQ, so it breaks
-   suspend/hibernation.
+Get_cached_msi_msg() only be called in two places,
+ia64_set_msi_irq_affinity() and sn_set_msi_irq_affinity().
 
-To fix this issue, we keep IRQ assignment during suspend/hibernation.
-Flag pci_dev.dev.power.is_prepared is used to detect that
-pci_disable_device() is called during suspend/hibernation.
+The code flow is:
+irq = irq_data->irq
+    get_cached_msi_msg(irq)
+	    irq_get_msi_desc(irq)
+		    irq_get_irq_data(irq)
+			    msi_desc = irq_data->desc
+        __get_cached_msi_msg(msi_desc, msg)
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+This is crazy, we can use __get_cached_msi_msg(irq_data->desc, msg)
+directly to simplify the flow. Now no one use get_cached_msi_msg(),
+let's remove it. Then we rename __get_cached_msi_msg() to
+get_cached_msi_msg().
+
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Tony Luck <tony.luck@intel.com>
+CC: Thomas Gleixner <tglx@linutronix.de>
+CC: x86@kernel.org
+CC: linux-ia64@vger.kernel.org
 ---
-Hi Borislav,
-	Could you please help to review the patch again since I have
-made changes against the previous version?
-Regards!
-Gerry
----
- arch/x86/pci/intel_mid_pci.c |    2 +-
- arch/x86/pci/irq.c           |    3 ++-
- drivers/acpi/pci_irq.c       |    4 ++++
- 3 files changed, 7 insertions(+), 2 deletions(-)
+ arch/ia64/kernel/msi_ia64.c    |    2 +-
+ arch/ia64/sn/kernel/msi_sn.c   |    4 ++--
+ arch/x86/kernel/apic/io_apic.c |    2 +-
+ drivers/pci/msi.c              |    9 +--------
+ include/linux/msi.h            |    3 +--
+ 5 files changed, 6 insertions(+), 14 deletions(-)
 
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 09fece368592..3865116c51fb 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -229,7 +229,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
+index c430f91..4efe748 100644
+--- a/arch/ia64/kernel/msi_ia64.c
++++ b/arch/ia64/kernel/msi_ia64.c
+@@ -23,7 +23,7 @@ static int ia64_set_msi_irq_affinity(struct irq_data *idata,
+ 	if (irq_prepare_move(irq, cpu))
+ 		return -1;
  
- static void intel_mid_pci_irq_disable(struct pci_dev *dev)
- {
--	if (dev->irq > 0)
-+	if (!dev->dev.power.is_prepared && dev->irq > 0)
- 		mp_unmap_irq(dev->irq);
+-	get_cached_msi_msg(irq, &msg);
++	get_cached_msi_msg(idata->msi_desc, &msg);
+ 
+ 	addr = msg.address_lo;
+ 	addr &= MSI_ADDR_DEST_ID_MASK;
+diff --git a/arch/ia64/sn/kernel/msi_sn.c b/arch/ia64/sn/kernel/msi_sn.c
+index afc58d2..8bec242 100644
+--- a/arch/ia64/sn/kernel/msi_sn.c
++++ b/arch/ia64/sn/kernel/msi_sn.c
+@@ -175,8 +175,8 @@ static int sn_set_msi_irq_affinity(struct irq_data *data,
+ 	 * Release XIO resources for the old MSI PCI address
+ 	 */
+ 
+-	get_cached_msi_msg(irq, &msg);
+-        sn_pdev = (struct pcidev_info *)sn_irq_info->irq_pciioinfo;
++	get_cached_msi_msg(data->msi_desc, &msg);
++	sn_pdev = (struct pcidev_info *)sn_irq_info->irq_pciioinfo;
+ 	pdev = sn_pdev->pdi_linux_pcidev;
+ 	provider = SN_PCIDEV_BUSPROVIDER(pdev);
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 81e08ef..a1b34f6 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3007,7 +3007,7 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+ 	if (ret)
+ 		return ret;
+ 
+-	__get_cached_msi_msg(data->msi_desc, &msg);
++	get_cached_msi_msg(data->msi_desc, &msg);
+ 
+ 	msg.data &= ~MSI_DATA_VECTOR_MASK;
+ 	msg.data |= MSI_DATA_VECTOR(cfg->vector);
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 5a40516..988224f 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -296,7 +296,7 @@ void read_msi_msg(unsigned int irq, struct msi_msg *msg)
+ 	__read_msi_msg(entry, msg);
  }
  
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 748cfe8ab322..bc1a2c341891 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1256,7 +1256,8 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 
- static void pirq_disable_irq(struct pci_dev *dev)
+-void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
++void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
  {
--	if (io_apic_assign_pci_irqs && dev->irq) {
-+	if (io_apic_assign_pci_irqs && !dev->dev.power.is_prepared &&
-+	    dev->irq) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq = 0;
- 	}
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index 6ba463ceccc6..c96887d5289e 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -481,6 +481,10 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	if (!pin)
- 		return;
+ 	/* Assert that the cache is valid, assuming that
+ 	 * valid messages are not all-zeroes. */
+@@ -306,13 +306,6 @@ void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ 	*msg = entry->msg;
+ }
  
-+	/* Keep IOAPIC pin configuration when suspending */
-+	if (dev->dev.power.is_prepared)
-+		return;
-+
- 	entry = acpi_pci_irq_lookup(dev, pin);
- 	if (!entry)
- 		return;
+-void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg)
+-{
+-	struct msi_desc *entry = irq_get_msi_desc(irq);
+-
+-	__get_cached_msi_msg(entry, msg);
+-}
+-
+ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	if (entry->dev->current_state != PCI_D0) {
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 8103f32..e3adf93 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -16,10 +16,9 @@ struct msi_desc;
+ void mask_msi_irq(struct irq_data *data);
+ void unmask_msi_irq(struct irq_data *data);
+ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+-void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
++void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void read_msi_msg(unsigned int irq, struct msi_msg *msg);
+-void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
+ void write_msi_msg(unsigned int irq, struct msi_msg *msg);
+ 
+ struct msi_desc {
 -- 
-1.7.10.4
+1.7.1
 
