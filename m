@@ -1,37 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:59744 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932305AbaH0WEH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Aug 2014 18:04:07 -0400
-Received: by mail-qa0-f49.google.com with SMTP id i13so140591qae.22
-        for <linux-pci@vger.kernel.org>; Wed, 27 Aug 2014 15:04:04 -0700 (PDT)
-MIME-Version: 1.0
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 27 Aug 2014 16:03:43 -0600
-Message-ID: <CAErSpo5KBNmeh+pjZXyk47w28tHr95kO64KJKBKSky9ODWuM2w@mail.gmail.com>
-Subject: pciehp PCI_BASE_CLASS_DISPLAY check
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 15 Aug 2014 10:48:03 -0500
+From: scameron@beardog.cce.hp.com
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, iss_storagedev@hp.com,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	scameron@beardog.cce.hp.com
+Subject: Re: [PATCH v2 RESEND 09/23] hpsa: Use pci_enable_msix_range() instead of pci_enable_msix()
+Message-ID: <20140815154803.GY19666@beardog.cce.hp.com>
+References: <cover.1405533479.git.agordeev@redhat.com> <fa8dc16252a7afa6186b78af4b90590755f45507.1405533479.git.agordeev@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <fa8dc16252a7afa6186b78af4b90590755f45507.1405533479.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yinghai,
+On Wed, Jul 16, 2014 at 08:05:13PM +0200, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
+> 
+> Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+> Cc: iss_storagedev@hp.com
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  drivers/scsi/hpsa.c |   27 ++++++++++++---------------
+>  1 files changed, 12 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 648dec2..5c4ab6e 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -6160,25 +6160,22 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
+>  		h->msix_vector = MAX_REPLY_QUEUES;
+>  		if (h->msix_vector > num_online_cpus())
+>  			h->msix_vector = num_online_cpus();
+> -		err = pci_enable_msix(h->pdev, hpsa_msix_entries,
+> -				      h->msix_vector);
+> -		if (err > 0) {
+> +		err = pci_enable_msix_range(h->pdev, hpsa_msix_entries,
+> +					    1, h->msix_vector);
+> +		if (err < 0) {
+> +			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n", err);
+> +			h->msix_vector = 0;
+> +			goto single_msi_mode;
+> +		} else if (err < h->msix_vector) {
+>  			dev_warn(&h->pdev->dev, "only %d MSI-X vectors "
+>  			       "available\n", err);
+> -			h->msix_vector = err;
+> -			err = pci_enable_msix(h->pdev, hpsa_msix_entries,
+> -					      h->msix_vector);
+> -		}
+> -		if (!err) {
+> -			for (i = 0; i < h->msix_vector; i++)
+> -				h->intr[i] = hpsa_msix_entries[i].vector;
+> -			return;
+> -		} else {
+> -			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
+> -			       err);
+> -			h->msix_vector = 0;
+>  		}
+> +		h->msix_vector = err;
+> +		for (i = 0; i < h->msix_vector; i++)
+> +			h->intr[i] = hpsa_msix_entries[i].vector;
+> +		return;
+>  	}
+> +single_msi_mode:
+>  	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
+>  		dev_info(&h->pdev->dev, "MSI\n");
+>  		if (!pci_enable_msi(h->pdev))
+> -- 
+> 1.7.7.6
 
-In 9789ac979b6b ("PCI: pciehp: cleanup flow in
-pciehp_configure_device") [1], you added a check that prevents us from
-calling pci_configure_slot() for PCI_BASE_CLASS_DISPLAY devices.
+Ack. 
 
-Do you remember why we need that check?  I would like to configure
-devices in the pci_device_add() path instead of doing it in the
-hotplug drivers.  pci_configure_device() is currently called from:
+I had previously acked an older, but seemingly semantically identical patch.
+Was requested to ack this one as well.
 
-  acpiphp_set_hpp_values()
-  pciehp_configure_device()
-  shpchp_configure_device()
+-- steve
 
-Only pciehp_configure_device() has the PCI_BASE_CLASS_DISPLAY check.
-
-Bjorn
-
-[1] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=9789ac979b6b
