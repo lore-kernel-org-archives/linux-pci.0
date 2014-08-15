@@ -1,46 +1,105 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 12 Aug 2014 09:11:16 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: James Smart <james.smart@emulex.com>
-Cc: linux-kernel@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 RESEND 12/23] lpfc: Use pci_enable_msix_range()
- instead of pci_enable_msix()
-Message-ID: <20140812081115.GA1674@agordeev.usersys.redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <ea1bf102a3ce0471996e2ddaaa498b088ac791c8.1405533479.git.agordeev@redhat.com>
- <20140726082227.GF21129@agordeev.usersys.redhat.com>
- <20140811080148.GG16504@dhcp-27-160.brq.redhat.com>
- <dfd59266-71ff-4112-8e11-835a08d7a94d@CMEXHTCAS2.ad.emulex.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:55639 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753533AbaHOCtw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Aug 2014 22:49:52 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>,
+	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>
+Subject: [PATCH 2/3] MSI: Use __read_msi_msg() instead of read_msi_msg()
+Date: Fri, 15 Aug 2014 11:14:29 +0800
+Message-ID: <1408072469-9959-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <dfd59266-71ff-4112-8e11-835a08d7a94d@CMEXHTCAS2.ad.emulex.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 11, 2014 at 01:14:54PM -0400, James Smart wrote:
-> Alexander,
-> 
-> I haven't looked too deeply, but it's clear it doesn't jive with what we've
-> discussed in the past. Your original patches missed several other similar
-> sections for revision. I had sent a revised set of patches.
-> 
-> I was also unclear as to the merge path the patches were taking, as it was
-> mod'ing areas that have already changed in the scsi misc tree, but the misc
-> tree didn' have the pci mods.  I take it this is heading to Christoph's tree
-> ?  and that it has picked up the pci mods ?
+Read_msi_msg() only be called in rtas_setup_msi_irqs(),
+use __read_msi_msg() instead of read_msi_msg for
+simplification. And rename __read_msi_msg() to
+read_msi_msg().
 
-James,
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: linuxppc-dev@lists.ozlabs.org
+---
+ arch/powerpc/platforms/pseries/msi.c |    2 +-
+ arch/x86/pci/xen.c                   |    2 +-
+ drivers/pci/msi.c                    |    9 +--------
+ include/linux/msi.h                  |    3 +--
+ 4 files changed, 4 insertions(+), 12 deletions(-)
 
-I lost the context and not sure what PCI modifications you are referring :(
-I will send a patch that combines your version shortly.
-
-Thanks!
-
-> -- james s
-
+diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
+index 0c882e8..591650b 100644
+--- a/arch/powerpc/platforms/pseries/msi.c
++++ b/arch/powerpc/platforms/pseries/msi.c
+@@ -484,7 +484,7 @@ again:
+ 		irq_set_msi_desc(virq, entry);
+ 
+ 		/* Read config space back so we can restore after reset */
+-		read_msi_msg(virq, &msg);
++		read_msi_msg(entry, &msg);
+ 		entry->msg = msg;
+ 	}
+ 
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index 905956f..4656099 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -228,7 +228,7 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 		return 1;
+ 
+ 	list_for_each_entry(msidesc, &dev->msi_list, list) {
+-		__read_msi_msg(msidesc, &msg);
++		read_msi_msg(msidesc, &msg);
+ 		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
+ 			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
+ 		if (msg.data != XEN_PIRQ_MSI_DATA ||
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 988224f..cbb41d6 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -259,7 +259,7 @@ void default_restore_msi_irqs(struct pci_dev *dev)
+ 	}
+ }
+ 
+-void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
++void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	BUG_ON(entry->dev->current_state != PCI_D0);
+ 
+@@ -289,13 +289,6 @@ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ 	}
+ }
+ 
+-void read_msi_msg(unsigned int irq, struct msi_msg *msg)
+-{
+-	struct msi_desc *entry = irq_get_msi_desc(irq);
+-
+-	__read_msi_msg(entry, msg);
+-}
+-
+ void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	/* Assert that the cache is valid, assuming that
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index e3adf93..4d7c0f5 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -15,10 +15,9 @@ struct irq_data;
+ struct msi_desc;
+ void mask_msi_irq(struct irq_data *data);
+ void unmask_msi_irq(struct irq_data *data);
+-void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
++void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+-void read_msi_msg(unsigned int irq, struct msi_msg *msg);
+ void write_msi_msg(unsigned int irq, struct msi_msg *msg);
+ 
+ struct msi_desc {
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.1
+
