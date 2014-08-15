@@ -1,137 +1,178 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Prarit Bhargava <prarit@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: [Patch v4 12/16] x86, irq, ACPI: Implement interface to support ACPI based IOAPIC hot-addition
-Date: Thu, 28 Aug 2014 10:22:37 +0800
-Message-Id: <1409192561-19744-13-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:36390 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752459AbaHOKa6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Aug 2014 06:30:58 -0400
+Date: Fri, 15 Aug 2014 11:30:52 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v9 02/12] PCI: OF: Parse and map the IRQ when adding the
+ PCI device.
+Message-ID: <20140815103052.GD27553@e106497-lin.cambridge.arm.com>
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+ <1407860725-25202-3-git-send-email-Liviu.Dudau@arm.com>
+ <20140814145804.GA5586@richard>
+ <20140814154959.GG25761@e106497-lin.cambridge.arm.com>
+ <20140815085632.GA4954@richard>
+MIME-Version: 1.0
+In-Reply-To: <20140815085632.GA4954@richard>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement acpi_register_ioapic() and enhance mp_register_ioapic()
-to support ACPI based IOAPIC hot-addition.
+On Fri, Aug 15, 2014 at 09:56:32AM +0100, Wei Yang wrote:
+> On Thu, Aug 14, 2014 at 04:49:59PM +0100, Liviu Dudau wrote:
+> >On Thu, Aug 14, 2014 at 03:58:04PM +0100, Wei Yang wrote:
+> >> On Tue, Aug 12, 2014 at 05:25:15PM +0100, Liviu Dudau wrote:
+> >> >Enhance the default implementation of pcibios_add_device() to
+> >> >parse and map the IRQ of the device if a DT binding is available.
+> >> >
+> >> >Cc: Bjorn Helgaas <bhelgaas@google.com>
+> >> >Cc: Grant Likely <grant.likely@linaro.org>
+> >> >Cc: Rob Herring <robh+dt@kernel.org>
+> >> >Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> >> >---
+> >> > drivers/pci/pci.c | 3 +++
+> >> > 1 file changed, 3 insertions(+)
+> >> >
+> >> >diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> >> >index 1c8592b..29d1775 100644
+> >> >--- a/drivers/pci/pci.c
+> >> >+++ b/drivers/pci/pci.c
+> >> >@@ -17,6 +17,7 @@
+> >> > #include <linux/spinlock.h>
+> >> > #include <linux/string.h>
+> >> > #include <linux/log2.h>
+> >> >+#include <linux/of_pci.h>
+> >> > #include <linux/pci-aspm.h>
+> >> > #include <linux/pm_wakeup.h>
+> >> > #include <linux/interrupt.h>
+> >> >@@ -1453,6 +1454,8 @@ EXPORT_SYMBOL(pcim_pin_device);
+> >> >  */
+> >> > int __weak pcibios_add_device(struct pci_dev *dev)
+> >> > {
+> >> >+	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> >> >+
+> >> > 	return 0;
+> >> > }
+> >> 
+> >> Liviu,
+> >> 
+> >> For this, my suggestion is to add arch dependent function to setup the irq
+> >> line for pci devices. I can't find an obvious reason this won't work on other
+> >> archs, but maybe this will hurt some of them?
+> >
+> >Hi Wei,
+> >
+> >I'm not sure I understand your point. Architectures that support OF will obviously
+> >benefit from this common approach, and for the other ones the function is empty
+> >so it will not change existing behaviour. If you are suggesting that I should
+> >create a new API that each architecture could go and implement for setting up the
+> >IRQ line then I would agree that it would be nice to have that, but the question
+> >is how many architectures are outside OF that need this?
+> 
+> My suggestion is to define the pcibios_add_device() for arm arch, like the one
+> in arch/powerpc/kernel/pci-common.c. If my understanding is correct, this
+> patch set address the pci bus setup mostly on arm arch.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/acpi/boot.c    |   31 +++++++++++++++++++++++++++++--
- arch/x86/kernel/apic/io_apic.c |   27 ++++++++++++++++++++++++---
- 2 files changed, 53 insertions(+), 5 deletions(-)
+And also arm64 at the least.
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index e23f7460c3f8..796cd9e31ef3 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -764,8 +764,35 @@ EXPORT_SYMBOL(acpi_unmap_lsapic);
- 
- int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
- {
--	/* TBD */
--	return -EINVAL;
-+	int ret = -ENOSYS;
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+	int ioapic_id;
-+	u64 addr;
-+	struct ioapic_domain_cfg cfg = {
-+		.type = IOAPIC_DOMAIN_DYNAMIC,
-+		.ops = &acpi_irqdomain_ops,
-+	};
-+
-+	ioapic_id = acpi_get_ioapic_id(handle, gsi_base, &addr);
-+	if (ioapic_id < 0) {
-+		unsigned long long uid;
-+		acpi_status status;
-+
-+		status = acpi_evaluate_integer(handle, METHOD_NAME__UID,
-+					       NULL, &uid);
-+		if (ACPI_FAILURE(status)) {
-+			acpi_handle_warn(handle, "failed to get IOAPIC ID.\n");
-+			return -EINVAL;
-+		}
-+		ioapic_id = (int)uid;
-+	}
-+
-+	down_write(&acpi_ioapic_rwsem);
-+	ret  = mp_register_ioapic(ioapic_id, phys_addr, gsi_base, &cfg);
-+	up_write(&acpi_ioapic_rwsem);
-+#endif
-+
-+	return ret;
- }
- 
- EXPORT_SYMBOL(acpi_register_ioapic);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 6e67af0c5f99..b286461cabf9 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3851,7 +3851,13 @@ static int bad_ioapic_register(int idx)
- 
- static int find_free_ioapic_entry(void)
- {
--	return nr_ioapics;
-+	int idx;
-+
-+	for (idx = 0; idx < MAX_IO_APICS; idx++)
-+		if (ioapics[idx].nr_registers == 0)
-+			return idx;
-+
-+	return MAX_IO_APICS;
- }
- 
- int mp_register_ioapic(int id, u32 address, u32 gsi_base,
-@@ -3867,8 +3873,15 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 	}
- 	for_each_ioapic(ioapic)
- 		if (ioapics[ioapic].mp_config.apicaddr == address) {
--			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
--				address, ioapic);
-+			/*
-+			 * IOAPIC unit may also be visible in PCI scope.
-+			 * When ioapic PCI driver's probe() is called,
-+			 * the IOAPIC unit may have already been initialized
-+			 * at boot time.
-+			 */
-+			if (!ioapic_initialized)
-+				pr_warn("address 0x%x conflicts with IOAPIC%d\n",
-+					address, ioapic);
- 			return -EEXIST;
- 		}
- 
-@@ -3918,6 +3931,14 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 	ioapics[idx].irqdomain = NULL;
- 	ioapics[idx].irqdomain_cfg = *cfg;
- 
-+	if (ioapic_initialized) {
-+		if (mp_irqdomain_create(idx)) {
-+			clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
-+			return -ENOMEM;
-+		}
-+		alloc_ioapic_saved_registers(idx);
-+	}
-+
- 	if (gsi_cfg->gsi_end >= gsi_top)
- 		gsi_top = gsi_cfg->gsi_end + 1;
- 	if (nr_ioapics <= idx)
+> 
+> For those archs not support OF, this function is empty and has no effect. I
+> agree on this one.
+> 
+> For those archs rely on OF, we still have two cases:
+>     1. they would have implement this function like powerpc
+
+Actually, powerpc seems to be the only OF platform reimplementing this function.
+s390 and x86 are not OF platforms.
+
+>     2. have other way to fix it up,  otherwise how it works now?
+
+Don't forget that my patchset aims to replace existing house-made code with a more
+generic version. When architectures and platforms switch to my code they will have
+to add this back in their code if it's needed.
+
+> If my assumption is correct, this change will either have no effect, or fix up
+> the irq line the second time. Not harmful, but not necessary.
+
+Well, it will become necessary as old code gets dismantled and converted towards
+this patchset. To give you an example that I'm familiar with, for arch/arm the
+host bridge drivers have moved into drivers/pci/host, but they still depend/use
+the bios32 infrastructure that takes care of setting up the irq. When they switch
+to my version they would have to go and debug the "irq not being assigned" issue
+and it is quite likely that some of the people doing the conversion will complain
+about my code rather than understanding the issue. What I'm trying to do is to
+make switching to my patchset as painless as possible, with a cleanup to remove
+redundant operations coming after the switchover.
+
+Does that sound like a reasonable plan?
+
+Best regards,
+Liviu
+
+> 
+> I am not familiar with other arch, so the second case is my deduction. If this
+> is not correct, please let me know.
+> 
+> >
+> >If I understood you correctly, it is a nice idea but slightly outside the scope
+> >of my current patchset.
+> >
+> >Best regards,
+> >Liviu
+> >
+> >> 
+> >> >
+> >> >-- 
+> >> >2.0.4
+> >> >
+> >> >--
+> >> >To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> >> >the body of a message to majordomo@vger.kernel.org
+> >> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >> 
+> >> -- 
+> >> Richard Yang
+> >> Help you, Help me
+> >> 
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >> 
+> >
+> 
+> -- 
+> Richard Yang
+> Help you, Help me
+> 
+> 
+
 -- 
-1.7.10.4
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
