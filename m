@@ -1,126 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f170.google.com ([209.85.160.170]:34478 "EHLO
-	mail-yk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751604AbaHSVTs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Aug 2014 17:19:48 -0400
-Received: by mail-yk0-f170.google.com with SMTP id 9so5901253ykp.15
-        for <linux-pci@vger.kernel.org>; Tue, 19 Aug 2014 14:19:47 -0700 (PDT)
-Date: Tue, 19 Aug 2014 15:19:42 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
-Subject: Re: [PATCH V7 00/17] Enable SRIOV on POWER8
-Message-ID: <20140819211942.GA6295@google.com>
-References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-bn1lp0145.outbound.protection.outlook.com ([207.46.163.145]:52164
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751076AbaHOOxq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 15 Aug 2014 10:53:46 -0400
+Message-ID: <53EE1EE5.3060103@amd.com>
+Date: Fri, 15 Aug 2014 09:53:25 -0500
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+CC: Mark Rutland <Mark.Rutland@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH 2/2 V4] irqchip: gicv2m: Add support for multiple MSI
+ for ARM64 GICv2m
+References: <1407942041-3291-1-git-send-email-suravee.suthikulpanit@amd.com>
+	<1407942041-3291-3-git-send-email-suravee.suthikulpanit@amd.com>
+ <87k369ri9k.fsf@approximate.cambridge.arm.com>
+In-Reply-To: <87k369ri9k.fsf@approximate.cambridge.arm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 24, 2014 at 02:22:10PM +0800, Wei Yang wrote:
-> This patch set enables the SRIOV on POWER8.
-> 
-> The gerneral idea is put each VF into one individual PE and allocate required
-> resources like DMA/MSI.
-> 
-> One thing special for VF PE is we use M64BT to cover the IOV BAR. M64BT is one
-> hardware on POWER platform to map MMIO address to PE. By using M64BT, we could
-> map one individual VF to a VF PE, which introduce more flexiblity to users.
-> 
-> To achieve this effect, we need to do some hack on pci devices's resources.
-> 1. Expand the IOV BAR properly.
->    Done by pnv_pci_ioda_fixup_iov_resources().
-> 2. Shift the IOV BAR properly.
->    Done by pnv_pci_vf_resource_shift().
-> 3. IOV BAR alignment is the total size instead of an individual size on
->    powernv platform.
->    Done by pnv_pcibios_sriov_resource_alignment().
-> 4. Take the IOV BAR alignment into consideration in the sizing and assigning.
->    This is achieved by commit: "PCI: Take additional IOV BAR alignment in
->    sizing and assigning"
-> 
-> Test Environment:
->        The SRIOV device tested is Emulex Lancer and Mellanox ConnectX-3 on
->        POWER8.
-> 
-> Examples on pass through a VF to guest through vfio:
-> 	1. install necessary modules
-> 	   modprobe vfio
-> 	   modprobe vfio-pci
-> 	2. retrieve the iommu_group the device belongs to
-> 	   readlink /sys/bus/pci/devices/0000:06:0d.0/iommu_group
-> 	   ../../../../kernel/iommu_groups/26
-> 	   This means it belongs to group 26
-> 	3. see how many devices under this iommu_group
-> 	   ls /sys/kernel/iommu_groups/26/devices/
-> 	4. unbind the original driver and bind to vfio-pci driver
-> 	   echo 0000:06:0d.0 > /sys/bus/pci/devices/0000:06:0d.0/driver/unbind
-> 	   echo  1102 0002 > /sys/bus/pci/drivers/vfio-pci/new_id
-> 	   Note: this should be done for each device in the same iommu_group
-> 	5. Start qemu and pass device through vfio
-> 	   /home/ywywyang/git/qemu-impreza/ppc64-softmmu/qemu-system-ppc64 \
-> 		   -M pseries -m 2048 -enable-kvm -nographic \
-> 		   -drive file=/home/ywywyang/kvm/fc19.img \
-> 		   -monitor telnet:localhost:5435,server,nowait -boot cd \
-> 		   -device "spapr-pci-vfio-host-bridge,id=CXGB3,iommu=26,index=6"
-> 
-> Verify this is the exact VF response:
-> 	1. ping from a machine in the same subnet(the broadcast domain)
-> 	2. run arp -n on this machine
-> 	   9.115.251.20             ether   00:00:c9:df:ed:bf   C eth0
-> 	3. ifconfig in the guest
-> 	   # ifconfig eth1
-> 	   eth1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
-> 	        inet 9.115.251.20  netmask 255.255.255.0  broadcast 9.115.251.255
-> 		inet6 fe80::200:c9ff:fedf:edbf  prefixlen 64  scopeid 0x20<link>
-> 	        ether 00:00:c9:df:ed:bf  txqueuelen 1000 (Ethernet)
-> 	        RX packets 175  bytes 13278 (12.9 KiB)
-> 	        RX errors 0  dropped 0  overruns 0  frame 0
-> 		TX packets 58  bytes 9276 (9.0 KiB)
-> 	        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
-> 	4. They have the same MAC address
-> 
-> 	Note: make sure you shutdown other network interfaces in guest.
-> 
-> ---
-> v6 -> v7:
->    1. add IORESOURCE_ARCH flag for IOV BAR on powernv platform.
->    2. when IOV BAR has IORESOURCE_ARCH flag, the size is retrieved from
->       hardware directly. If not, calculate as usual.
->    3. reorder the patch set, group them by subsystem:
->       PCI, powerpc, powernv
->    4. rebase it on 3.16-rc6
+On 8/15/2014 8:31 AM, Marc Zyngier wrote:
+> Hi Suravee,
+>
+>> +/*
+>> + * ARM64 function for seting up MSI irqs.
+>> + * Copied from driver/pci/msi.c: arch_setup_msi_irqs().
+>> + */
+>> +int arm64_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+>> +{
+>> +	struct msi_desc *entry;
+>> +	int ret;
+>> +
+>> +	if (type == PCI_CAP_ID_MSI && nvec > 1)
+>> +		return 1;
+>> +
+>> +	list_for_each_entry(entry, &dev->msi_list, list) {
+>> +		ret = arch_setup_msi_irq(dev, entry);
+>> +		if (ret < 0)
+>> +			return ret;
+>> +		if (ret > 0)
+>> +			return -ENOSPC;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>
+> I'm going to reiterate what I said last time: Why do we need this?
 
-This doesn't apply for me on v3.16-rc6:
+[Suravee] Marc, I understand what you described last time but I think 
+there is one point that missing here. See below.
 
-  02:48:57 ~/linux$ stg rebase v3.16-rc6
-  Checking for changes in the working directory ... done
-  Rebasing to "v3.16-rc6" ... done
-  No patches applied
-  02:49:14 ~/linux$ stg import -M --sign m/wy
-  Checking for changes in the working directory ... done
-  Importing patch "pci-iov-export-interface-for" ... done
-  Importing patch "pci-iov-get-vf-bar-size-from" ... done
-  Importing patch "pci-add-weak" ... done
-  Importing patch "pci-take-additional-iov-bar" ... done
-  Importing patch "powerpc-pci-don-t-unset-pci" ... done
-  Importing patch "powerpc-pci-define" ... done
-  Importing patch "powrepc-pci-refactor-pci_dn" ... done
-  Importing patch "powerpc-powernv-use-pci_dn-in" ... error: patch failed:
-  arch/powerpc/platforms/powernv/pci.c:376
-  error: arch/powerpc/platforms/powernv/pci.c: patch does not apply
-  stg import: Diff does not apply cleanly
+> So far, we have two MSI-capable controllers on their way upstream:
+> GICv2m and GICv3. Both are perfectly capable of handling more than a
+> single MSI per device.
 
-What am I missing?
+[Suravee] I am aware of this.
 
-I assume you intend these all to go through my tree just to keep them all
-together.  The ideal rebase target for me would be v3.17-rc1.
+> So why should we cater for this? My gut feeling is that we should just
+> have:
+>
+> int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+> {
+>          struct msi_desc *entry;
+>          int ret;
+>
+>          /*
+>           * So far, all our MSI controllers are capable of handling more
+>           * than a single MSI per device. Should we encounter less
+>           * capable devices, we'll consider doing something special for
+>           * them.
+>           */
+>          list_for_each_entry(entry, &dev->msi_list, list) {
+>                  ret = arch_setup_msi_irq(dev, entry);
+>                  if (ret < 0)
+>                          return ret;
+>                  if (ret > 0)
+>                          return -ENOSPC;
+>          }
+>
+>          return 0;
+> }
+>
+> and nothing else. Your driver should be able to retrieve the number of
+> MSI needed by the device, and allocate them. GICv3 manages it, and so
+> should GICv2m.
+>
 
-Given the arch/powerpc parts, I'll want an ack from Ben.  I just chatted
-with him about these, so I assume that's not a problem, but we should make
-it explicit.
+[Suravee] Multi-MSI and MSI-x are not the same. For MSI-X, you can treat 
+each of the MSI separately since it MSI-X capability structure has a 
+table specific for each one of them.  For Multi-MSI, there is only one 
+MSI capability structure which control all of them, and you need to 
+program the "multiple-message enable" field with the encoding for 
+"power-of-two", and therefore must be in contiguous range.
 
-Bjorn
+Your logic above is what the standard MSI-x setup code is using. It is 
+not handling of how many it can allocate all at once.
+
+As for sharing the logic b/w GICv2m and GICv3, unless they are sharing 
+the same common data structure (e.g. the struct v2m which contans 
+msi_chip), and the allocation function (e.g. generic 
+gic_alloc_msi_irqs()), you pretty much need to do this separately since 
+we need to walk the msi_chip back to its container structure.
+
+I am not saying this cannot be done, but we need to work out the detail 
+together b/w GICv2m and GICv3.
+
+Thanks,
+
+Suravee
+
+
