@@ -1,92 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20070 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751331AbaHKIHq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Aug 2014 04:07:46 -0400
-Date: Mon, 11 Aug 2014 10:07:16 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Kashyap Desai <kashyap.desai@avagotech.com>,
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 RESEND 13/23] megaraid: Fail resume if MSI-X
- re-initialization failed
-Message-ID: <20140811080714.GH16504@dhcp-27-160.brq.redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <3d2402ebfad625e508bb13257e1560abf92594cd.1405533479.git.agordeev@redhat.com>
- <20140726082408.GG21129@agordeev.usersys.redhat.com>
- <3b7c554551d306e2f58f5e09dc171db2@mail.gmail.com>
+Received: from mail-qa0-f48.google.com ([209.85.216.48]:53053 "EHLO
+	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751389AbaHPM1l (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Aug 2014 08:27:41 -0400
+Received: by mail-qa0-f48.google.com with SMTP id m5so2863167qaj.21
+        for <linux-pci@vger.kernel.org>; Sat, 16 Aug 2014 05:27:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3b7c554551d306e2f58f5e09dc171db2@mail.gmail.com>
+In-Reply-To: <1406137961-14684-3-git-send-email-l.stach@pengutronix.de>
+References: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
+	<1406137961-14684-3-git-send-email-l.stach@pengutronix.de>
+Date: Sat, 16 Aug 2014 17:57:40 +0530
+Message-ID: <CAHM4w1nToF7uK4wrPHpTkMNF+aoBEuUCuyvYwk9cJAZwHRPuGA@mail.gmail.com>
+Subject: Re: [PATCH 2/4] PCI: designware: get rid of pci_scan_root_bus
+From: Pratyush Anand <pratyush.anand@gmail.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Zhu <r65037@freescale.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>, Marek Vasut <marex@denx.de>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	kernel@pengutronix.de, Pratyush ANAND <pratyush.anand@st.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 28, 2014 at 11:26:13AM +0530, Kashyap Desai wrote:
-> > -----Original Message-----
-> > From: Alexander Gordeev [mailto:agordeev@redhat.com]
-> > Sent: Saturday, July 26, 2014 1:54 PM
-> > To: linux-kernel@vger.kernel.org; Neela Syam Kolli
-> > Subject: Re: [PATCH v2 RESEND 13/23] megaraid: Fail resume if MSI-X re-
-> > initialization failed
-> >
-> > On Wed, Jul 16, 2014 at 08:05:17PM +0200, Alexander Gordeev wrote:
-> > > Currently the driver fails to analize MSI-X re-enablement status on
-> > > resuming and always assumes the success. This update checks the MSI-X
-> > > initialization result and fails to resume if MSI-Xs re-enablement
-> > > failed.
-> >
-> > Hi Neela,
-> >
-> > Could you please review megaraid patches in this series?
-> >
-> > Thanks!
-> Please consider this patch Acked by Me.
-> 
-> Acked-by: Kashyap Desai <Kashyap.desai@avagotech.com>
+On Wed, Jul 23, 2014 at 11:22 PM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> Use pci_create_root_bus() similar to other pci
+> host controller drivers.
+>
+> The main problem with pci_scan_root_bus() is that
+> not only it will create the root bus, but also try
+> to activate all devices on the bus. This triggers
+> PCI device drivers probe, which try to use the device
+> but fail as resource allocation isn't done at that
+> point in time.
+>
+> To work around this we made sure that the host
+> controller driver is probed early and finishes resource
+> allocation before any other device drivers are registered.
+> Switching to pci_create_root_bus() allows us to get rid
+> of this special handling.
+>
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+>  drivers/pci/host/pcie-designware.c | 15 +++++++--------
+>  1 file changed, 7 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index b13a830c8b0f..b869e202367c 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -801,14 +801,13 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+>         struct pci_bus *bus;
+>         struct pcie_port *pp = sys_to_pcie(sys);
+>
+> -       if (pp) {
+> -               pp->root_bus_nr = sys->busnr;
+> -               bus = pci_scan_root_bus(pp->dev, sys->busnr, &dw_pcie_ops,
+> -                                       sys, &sys->resources);
+> -       } else {
+> -               bus = NULL;
+> -               BUG();
+> -       }
+> +       pp->root_bus_nr = sys->busnr;
+> +       bus = pci_create_root_bus(pp->dev, sys->busnr,
+> +                                 &dw_pcie_ops, sys, &sys->resources);
+> +       if (!bus)
+> +               return NULL;
+> +
+> +       pci_scan_child_bus(bus);
+>
+>         return bus;
+>  }
+> --
 
-Christoph,
+Looks fine to me.
+Reviewed-by: Pratyush Anand <pratyush.anand@st.com>
 
-I guess, this patch could be picked?
-
-> >
-> > > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> > > ---
-> > >  drivers/scsi/megaraid/megaraid_sas_base.c |    8 +++++---
-> > >  1 files changed, 5 insertions(+), 3 deletions(-)
-> > >
-> > > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
-> > > b/drivers/scsi/megaraid/megaraid_sas_base.c
-> > > index 112799b..ba06102 100644
-> > > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> > > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> > > @@ -5134,9 +5134,10 @@ megasas_resume(struct pci_dev *pdev)
-> > >  		goto fail_ready_state;
-> > >
-> > >  	/* Now re-enable MSI-X */
-> > > -	if (instance->msix_vectors)
-> > > -		pci_enable_msix(instance->pdev, instance->msixentry,
-> > > -				instance->msix_vectors);
-> > > +	if (instance->msix_vectors &&
-> > > +	    pci_enable_msix(instance->pdev, instance->msixentry,
-> > > +			    instance->msix_vectors))
-> > > +		goto fail_reenable_msix;
-> > >
-> > >  	switch (instance->pdev->device) {
-> > >  	case PCI_DEVICE_ID_LSI_FUSION:
-> > > @@ -5245,6 +5246,7 @@ fail_init_mfi:
-> > >
-> > >  fail_set_dma_mask:
-> > >  fail_ready_state:
-> > > +fail_reenable_msix:
-> > >
-> > >  	pci_disable_device(pdev);
-> > >
-> > > --
-> > > 1.7.7.6
-> > >
-> >
-> > --
-> > Regards,
-> > Alexander Gordeev
-> > agordeev@redhat.com
+> 2.0.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
