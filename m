@@ -1,151 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp08.in.ibm.com ([122.248.162.8]:38219 "EHLO
-	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751738AbaHTCeM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Aug 2014 22:34:12 -0400
-Received: from /spool/local
-	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 20 Aug 2014 08:04:10 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 961B23940048
-	for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 08:04:06 +0530 (IST)
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s7K2aUYH3211542
-	for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 08:06:30 +0530
-Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s7K2Y5VM006938
-	for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 08:04:06 +0530
-Date: Wed, 20 Aug 2014 10:34:04 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
-Subject: Re: [PATCH V7 00/17] Enable SRIOV on POWER8
-Message-ID: <20140820023404.GC6904@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <20140819211942.GA6295@google.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Mon, 18 Aug 2014 22:52:25 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Liviu Dudau <liviu@dudau.co.uk>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v9 03/12] PCI: Introduce helper functions to deal with
+ PCI I/O ranges.
+Message-ID: <20140818215225.GI24600@localhost>
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+ <1407860725-25202-4-git-send-email-Liviu.Dudau@arm.com>
+ <20140818142604.GO20043@localhost>
+ <20140818213446.GC13147@bart.dudau.co.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140819211942.GA6295@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20140818213446.GC13147@bart.dudau.co.uk>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 19, 2014 at 03:19:42PM -0600, Bjorn Helgaas wrote:
->On Thu, Jul 24, 2014 at 02:22:10PM +0800, Wei Yang wrote:
->> This patch set enables the SRIOV on POWER8.
->> 
->> The gerneral idea is put each VF into one individual PE and allocate required
->> resources like DMA/MSI.
->> 
->> One thing special for VF PE is we use M64BT to cover the IOV BAR. M64BT is one
->> hardware on POWER platform to map MMIO address to PE. By using M64BT, we could
->> map one individual VF to a VF PE, which introduce more flexiblity to users.
->> 
->> To achieve this effect, we need to do some hack on pci devices's resources.
->> 1. Expand the IOV BAR properly.
->>    Done by pnv_pci_ioda_fixup_iov_resources().
->> 2. Shift the IOV BAR properly.
->>    Done by pnv_pci_vf_resource_shift().
->> 3. IOV BAR alignment is the total size instead of an individual size on
->>    powernv platform.
->>    Done by pnv_pcibios_sriov_resource_alignment().
->> 4. Take the IOV BAR alignment into consideration in the sizing and assigning.
->>    This is achieved by commit: "PCI: Take additional IOV BAR alignment in
->>    sizing and assigning"
->> 
->> Test Environment:
->>        The SRIOV device tested is Emulex Lancer and Mellanox ConnectX-3 on
->>        POWER8.
->> 
->> Examples on pass through a VF to guest through vfio:
->> 	1. install necessary modules
->> 	   modprobe vfio
->> 	   modprobe vfio-pci
->> 	2. retrieve the iommu_group the device belongs to
->> 	   readlink /sys/bus/pci/devices/0000:06:0d.0/iommu_group
->> 	   ../../../../kernel/iommu_groups/26
->> 	   This means it belongs to group 26
->> 	3. see how many devices under this iommu_group
->> 	   ls /sys/kernel/iommu_groups/26/devices/
->> 	4. unbind the original driver and bind to vfio-pci driver
->> 	   echo 0000:06:0d.0 > /sys/bus/pci/devices/0000:06:0d.0/driver/unbind
->> 	   echo  1102 0002 > /sys/bus/pci/drivers/vfio-pci/new_id
->> 	   Note: this should be done for each device in the same iommu_group
->> 	5. Start qemu and pass device through vfio
->> 	   /home/ywywyang/git/qemu-impreza/ppc64-softmmu/qemu-system-ppc64 \
->> 		   -M pseries -m 2048 -enable-kvm -nographic \
->> 		   -drive file=/home/ywywyang/kvm/fc19.img \
->> 		   -monitor telnet:localhost:5435,server,nowait -boot cd \
->> 		   -device "spapr-pci-vfio-host-bridge,id=CXGB3,iommu=26,index=6"
->> 
->> Verify this is the exact VF response:
->> 	1. ping from a machine in the same subnet(the broadcast domain)
->> 	2. run arp -n on this machine
->> 	   9.115.251.20             ether   00:00:c9:df:ed:bf   C eth0
->> 	3. ifconfig in the guest
->> 	   # ifconfig eth1
->> 	   eth1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
->> 	        inet 9.115.251.20  netmask 255.255.255.0  broadcast 9.115.251.255
->> 		inet6 fe80::200:c9ff:fedf:edbf  prefixlen 64  scopeid 0x20<link>
->> 	        ether 00:00:c9:df:ed:bf  txqueuelen 1000 (Ethernet)
->> 	        RX packets 175  bytes 13278 (12.9 KiB)
->> 	        RX errors 0  dropped 0  overruns 0  frame 0
->> 		TX packets 58  bytes 9276 (9.0 KiB)
->> 	        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
->> 	4. They have the same MAC address
->> 
->> 	Note: make sure you shutdown other network interfaces in guest.
->> 
->> ---
->> v6 -> v7:
->>    1. add IORESOURCE_ARCH flag for IOV BAR on powernv platform.
->>    2. when IOV BAR has IORESOURCE_ARCH flag, the size is retrieved from
->>       hardware directly. If not, calculate as usual.
->>    3. reorder the patch set, group them by subsystem:
->>       PCI, powerpc, powernv
->>    4. rebase it on 3.16-rc6
->
->This doesn't apply for me on v3.16-rc6:
->
->  02:48:57 ~/linux$ stg rebase v3.16-rc6
->  Checking for changes in the working directory ... done
->  Rebasing to "v3.16-rc6" ... done
->  No patches applied
->  02:49:14 ~/linux$ stg import -M --sign m/wy
->  Checking for changes in the working directory ... done
->  Importing patch "pci-iov-export-interface-for" ... done
->  Importing patch "pci-iov-get-vf-bar-size-from" ... done
->  Importing patch "pci-add-weak" ... done
->  Importing patch "pci-take-additional-iov-bar" ... done
->  Importing patch "powerpc-pci-don-t-unset-pci" ... done
->  Importing patch "powerpc-pci-define" ... done
->  Importing patch "powrepc-pci-refactor-pci_dn" ... done
->  Importing patch "powerpc-powernv-use-pci_dn-in" ... error: patch failed:
->  arch/powerpc/platforms/powernv/pci.c:376
->  error: arch/powerpc/platforms/powernv/pci.c: patch does not apply
->  stg import: Diff does not apply cleanly
->
->What am I missing?
->
->I assume you intend these all to go through my tree just to keep them all
->together.  The ideal rebase target for me would be v3.17-rc1.
+On Mon, Aug 18, 2014 at 10:34:46PM +0100, Liviu Dudau wrote:
+> On Mon, Aug 18, 2014 at 03:26:04PM +0100, Catalin Marinas wrote:
+> > On Tue, Aug 12, 2014 at 05:25:16PM +0100, Liviu Dudau wrote:
+> > > Some architectures do not have a simple view of the PCI I/O space
+> > > and instead use a range of CPU addresses that map to bus addresses.
+> > > For some architectures these ranges will be expressed by OF bindings
+> > > in a device tree file.
+> > > 
+> > > This patch introduces a pci_register_io_range() helper function with
+> > > a generic implementation that can be used by such architectures to
+> > > keep track of the I/O ranges described by the PCI bindings. If the
+> > > PCI_IOBASE macro is not defined that signals lack of support for PCI
+> > > and we return an error.
+> > > 
+> > > In order to retrieve the CPU address associated with an I/O port, a
+> > > new helper function pci_pio_to_address() is introduced. This will
+> > > search in the list of ranges registered with pci_register_io_range()
+> > > and return the CPU address that corresponds to the given port.
+> > > 
+> > > Cc: Grant Likely <grant.likely@linaro.org>
+> > > Cc: Rob Herring <robh+dt@kernel.org>
+> > > Cc: Arnd Bergmann <arnd@arndb.de>
+> > > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > > ---
+> > >  drivers/of/address.c       | 95 ++++++++++++++++++++++++++++++++++++++++++++++
+> > >  include/linux/of_address.h |  2 +
+> > >  2 files changed, 97 insertions(+)
+> > 
+> > Actually, I think we moved too much code into drivers/of/. Is there
+> > anything OF specific about this code to live here (apart from
+> > OF_BAD_ADDR)? I think driver/pci/ more appropriate?
+> 
+> I have no strong preference for one place vs the other. While this does
+> not use any OF specific code, it should be called only from OF enabled
+> code. So the relationship is not one of depending on of_* but on being
+> dependent on.
 
-Ok, I will rebase it on v3.17-rc1 upstream. While I guess the conflict is due
-to some patches from Gavin, which is not merged at that moment. I will make
-sure it applies to v3.17-rc1.
+In this case it's probably ok to keep them here for the time being.
 
->
->Given the arch/powerpc parts, I'll want an ack from Ben.  I just chatted
->with him about these, so I assume that's not a problem, but we should make
->it explicit.
->
->Bjorn
+I wonder whether it would also be useful for ACPI. But I have no idea
+how ACPI would fit with the ACPI patches.
 
 -- 
-Richard Yang
-Help you, Help me
-
+Catalin
