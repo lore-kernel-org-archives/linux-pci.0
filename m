@@ -1,13 +1,9 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:36390 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752459AbaHOKa6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Aug 2014 06:30:58 -0400
-Date: Fri, 15 Aug 2014 11:30:52 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Mon, 18 Aug 2014 22:34:46 +0100
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Will Deacon <Will.Deacon@arm.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Arnd Bergmann <arnd@arndb.de>,
@@ -23,156 +19,81 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	LKML <linux-kernel@vger.kernel.org>,
 	Device Tree ML <devicetree@vger.kernel.org>,
 	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v9 02/12] PCI: OF: Parse and map the IRQ when adding the
- PCI device.
-Message-ID: <20140815103052.GD27553@e106497-lin.cambridge.arm.com>
+Subject: Re: [PATCH v9 03/12] PCI: Introduce helper functions to deal with
+ PCI I/O ranges.
+Message-ID: <20140818213446.GC13147@bart.dudau.co.uk>
 References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
- <1407860725-25202-3-git-send-email-Liviu.Dudau@arm.com>
- <20140814145804.GA5586@richard>
- <20140814154959.GG25761@e106497-lin.cambridge.arm.com>
- <20140815085632.GA4954@richard>
+ <1407860725-25202-4-git-send-email-Liviu.Dudau@arm.com>
+ <20140818142604.GO20043@localhost>
 MIME-Version: 1.0
-In-Reply-To: <20140815085632.GA4954@richard>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140818142604.GO20043@localhost>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 15, 2014 at 09:56:32AM +0100, Wei Yang wrote:
-> On Thu, Aug 14, 2014 at 04:49:59PM +0100, Liviu Dudau wrote:
-> >On Thu, Aug 14, 2014 at 03:58:04PM +0100, Wei Yang wrote:
-> >> On Tue, Aug 12, 2014 at 05:25:15PM +0100, Liviu Dudau wrote:
-> >> >Enhance the default implementation of pcibios_add_device() to
-> >> >parse and map the IRQ of the device if a DT binding is available.
-> >> >
-> >> >Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >> >Cc: Grant Likely <grant.likely@linaro.org>
-> >> >Cc: Rob Herring <robh+dt@kernel.org>
-> >> >Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> >> >---
-> >> > drivers/pci/pci.c | 3 +++
-> >> > 1 file changed, 3 insertions(+)
-> >> >
-> >> >diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> >> >index 1c8592b..29d1775 100644
-> >> >--- a/drivers/pci/pci.c
-> >> >+++ b/drivers/pci/pci.c
-> >> >@@ -17,6 +17,7 @@
-> >> > #include <linux/spinlock.h>
-> >> > #include <linux/string.h>
-> >> > #include <linux/log2.h>
-> >> >+#include <linux/of_pci.h>
-> >> > #include <linux/pci-aspm.h>
-> >> > #include <linux/pm_wakeup.h>
-> >> > #include <linux/interrupt.h>
-> >> >@@ -1453,6 +1454,8 @@ EXPORT_SYMBOL(pcim_pin_device);
-> >> >  */
-> >> > int __weak pcibios_add_device(struct pci_dev *dev)
-> >> > {
-> >> >+	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> >> >+
-> >> > 	return 0;
-> >> > }
-> >> 
-> >> Liviu,
-> >> 
-> >> For this, my suggestion is to add arch dependent function to setup the irq
-> >> line for pci devices. I can't find an obvious reason this won't work on other
-> >> archs, but maybe this will hurt some of them?
-> >
-> >Hi Wei,
-> >
-> >I'm not sure I understand your point. Architectures that support OF will obviously
-> >benefit from this common approach, and for the other ones the function is empty
-> >so it will not change existing behaviour. If you are suggesting that I should
-> >create a new API that each architecture could go and implement for setting up the
-> >IRQ line then I would agree that it would be nice to have that, but the question
-> >is how many architectures are outside OF that need this?
+On Mon, Aug 18, 2014 at 03:26:04PM +0100, Catalin Marinas wrote:
+> On Tue, Aug 12, 2014 at 05:25:16PM +0100, Liviu Dudau wrote:
+> > Some architectures do not have a simple view of the PCI I/O space
+> > and instead use a range of CPU addresses that map to bus addresses.
+> > For some architectures these ranges will be expressed by OF bindings
+> > in a device tree file.
+> > 
+> > This patch introduces a pci_register_io_range() helper function with
+> > a generic implementation that can be used by such architectures to
+> > keep track of the I/O ranges described by the PCI bindings. If the
+> > PCI_IOBASE macro is not defined that signals lack of support for PCI
+> > and we return an error.
+> > 
+> > In order to retrieve the CPU address associated with an I/O port, a
+> > new helper function pci_pio_to_address() is introduced. This will
+> > search in the list of ranges registered with pci_register_io_range()
+> > and return the CPU address that corresponds to the given port.
+> > 
+> > Cc: Grant Likely <grant.likely@linaro.org>
+> > Cc: Rob Herring <robh+dt@kernel.org>
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > ---
+> >  drivers/of/address.c       | 95 ++++++++++++++++++++++++++++++++++++++++++++++
+> >  include/linux/of_address.h |  2 +
+> >  2 files changed, 97 insertions(+)
 > 
-> My suggestion is to define the pcibios_add_device() for arm arch, like the one
-> in arch/powerpc/kernel/pci-common.c. If my understanding is correct, this
-> patch set address the pci bus setup mostly on arm arch.
+> Actually, I think we moved too much code into drivers/of/. Is there
+> anything OF specific about this code to live here (apart from
+> OF_BAD_ADDR)? I think driver/pci/ more appropriate?
 
-And also arm64 at the least.
+I have no strong preference for one place vs the other. While this does
+not use any OF specific code, it should be called only from OF enabled
+code. So the relationship is not one of depending on of_* but on being
+dependent on.
 
 > 
-> For those archs not support OF, this function is empty and has no effect. I
-> agree on this one.
-> 
-> For those archs rely on OF, we still have two cases:
->     1. they would have implement this function like powerpc
+> Otherwise it looks fine to me.
 
-Actually, powerpc seems to be the only OF platform reimplementing this function.
-s390 and x86 are not OF platforms.
-
->     2. have other way to fix it up,  otherwise how it works now?
-
-Don't forget that my patchset aims to replace existing house-made code with a more
-generic version. When architectures and platforms switch to my code they will have
-to add this back in their code if it's needed.
-
-> If my assumption is correct, this change will either have no effect, or fix up
-> the irq line the second time. Not harmful, but not necessary.
-
-Well, it will become necessary as old code gets dismantled and converted towards
-this patchset. To give you an example that I'm familiar with, for arch/arm the
-host bridge drivers have moved into drivers/pci/host, but they still depend/use
-the bios32 infrastructure that takes care of setting up the irq. When they switch
-to my version they would have to go and debug the "irq not being assigned" issue
-and it is quite likely that some of the people doing the conversion will complain
-about my code rather than understanding the issue. What I'm trying to do is to
-make switching to my patchset as painless as possible, with a cleanup to remove
-redundant operations coming after the switchover.
-
-Does that sound like a reasonable plan?
+Thanks! Would be nice if you can prod at the kernel summit other maintainers
+for ACKs.
 
 Best regards,
 Liviu
 
 > 
-> I am not familiar with other arch, so the second case is my deduction. If this
-> is not correct, please let me know.
-> 
-> >
-> >If I understood you correctly, it is a nice idea but slightly outside the scope
-> >of my current patchset.
-> >
-> >Best regards,
-> >Liviu
-> >
-> >> 
-> >> >
-> >> >-- 
-> >> >2.0.4
-> >> >
-> >> >--
-> >> >To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >> >the body of a message to majordomo@vger.kernel.org
-> >> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >> 
-> >> -- 
-> >> Richard Yang
-> >> Help you, Help me
-> >> 
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >> 
-> >
-> 
 > -- 
-> Richard Yang
-> Help you, Help me
-> 
+> Catalin
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
+
+ One small step
+   for me ...
 
