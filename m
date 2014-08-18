@@ -1,92 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:51758 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754005AbaHEQME (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 12:12:04 -0400
-Received: by mail-wi0-f171.google.com with SMTP id hi2so7292539wib.16
-        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2014 09:12:01 -0700 (PDT)
-From: matthew_minter@xyratex.com
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: matthew_minter <matthew_minter@xyratex.com>
-Subject: [PATCH 05/22] Added (untested) support to frv architecture to accomodate new irq init code
-Date: Tue,  5 Aug 2014 17:11:06 +0100
-Message-Id: <1407255083-9356-6-git-send-email-matthew_minter@xyratex.com>
-In-Reply-To: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
-References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+Received: from p50936449.dip0.t-ipconnect.de ([80.147.100.73]:30499 "EHLO
+	dhcp-27-160.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751551AbaHRIzI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Aug 2014 04:55:08 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, iss_storagedev@hp.com,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v3 01/13] hpsa: Fallback to MSI rather than to INTx if MSI-X failed
+Date: Mon, 18 Aug 2014 08:01:41 +0200
+Message-Id: <16baf29bf7cd9d45de63a4192a9ef9e87ba12936.1408335523.git.agordeev@redhat.com>
+In-Reply-To: <cover.1408335523.git.agordeev@redhat.com>
+References: <cover.1408335523.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: matthew_minter <matthew_minter@xyratex.com>
+Currently the driver falls back to INTx mode when MSI-X
+initialization failed. This is a suboptimal behaviour
+for chips that also support MSI. This update changes that
+behaviour and falls back to MSI mode in case MSI-X mode
+initialization failed.
 
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Acked-by: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: iss_storagedev@hp.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- arch/frv/mb93090-mb00/pci-frv.h |  1 -
- arch/frv/mb93090-mb00/pci-irq.c | 28 +++++++++++++++++-----------
- arch/frv/mb93090-mb00/pci-vdk.c |  1 -
- 3 files changed, 17 insertions(+), 13 deletions(-)
+ drivers/scsi/hpsa.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/arch/frv/mb93090-mb00/pci-frv.h b/arch/frv/mb93090-mb00/pci-frv.h
-index a7e487fe..492b56d 100644
---- a/arch/frv/mb93090-mb00/pci-frv.h
-+++ b/arch/frv/mb93090-mb00/pci-frv.h
-@@ -36,5 +36,4 @@ extern struct pci_ops *__nongpreldata pci_root_ops;
- extern unsigned int pcibios_irq_mask;
- 
- void pcibios_irq_init(void);
--void pcibios_fixup_irqs(void);
- void pcibios_enable_irq(struct pci_dev *dev);
-diff --git a/arch/frv/mb93090-mb00/pci-irq.c b/arch/frv/mb93090-mb00/pci-irq.c
-index 1c35c93..3463e30 100644
---- a/arch/frv/mb93090-mb00/pci-irq.c
-+++ b/arch/frv/mb93090-mb00/pci-irq.c
-@@ -40,19 +40,25 @@ void __init pcibios_irq_init(void)
- {
- }
- 
--void __init pcibios_fixup_irqs(void)
-+int pcibios_map_irq(struct pci_dev *dev, uint8_t slot, uint8_t pin)
- {
--	struct pci_dev *dev = NULL;
--	uint8_t line, pin;
--
--	for_each_pci_dev(dev) {
--		pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
--		if (pin) {
--			dev->irq = pci_bus0_irq_routing[PCI_SLOT(dev->devfn)][pin - 1];
--			pci_write_config_byte(dev, PCI_INTERRUPT_LINE, dev->irq);
--		}
--		pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &line);
-+	uint8_t line;
-+	int irq;
-+
-+	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
-+	if (pin) {
-+		irq = pci_bus0_irq_routing[PCI_SLOT(dev->devfn)][pin - 1];
-+		pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 6b35d0d..a9c4c9f 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -6176,7 +6176,6 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
+ 			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
+ 			       err);
+ 			h->msix_vector = 0;
+-			goto default_int_mode;
+ 		}
  	}
-+	pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &line);
-+	return irq;
-+}
-+
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->swizzle_irq = NULL;
-+	bridge->map_irq = pcibios_map_irq;
-+	return 0;
- }
- 
- void pcibios_enable_irq(struct pci_dev *dev)
-diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
-index efa5d65..86657a7 100644
---- a/arch/frv/mb93090-mb00/pci-vdk.c
-+++ b/arch/frv/mb93090-mb00/pci-vdk.c
-@@ -386,7 +386,6 @@ int __init pcibios_init(void)
- 	pci_scan_root_bus(NULL, 0, pci_root_ops, NULL, &resources);
- 
- 	pcibios_irq_init();
--	pcibios_fixup_irqs();
- 	pcibios_resource_survey();
- 
- 	return 0;
+ 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
 -- 
-2.0.4
+1.9.3
 
