@@ -1,84 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f175.google.com ([209.85.160.175]:57259 "EHLO
-	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754124AbaHFUPG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Aug 2014 16:15:06 -0400
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: r65037@freescale.com, shawn.guo@freescale.com,
-	linux-pci@vger.kernel.org, marex@denx.de, l.stach@pengutronix.de,
-	tharvey@gateworks.com, d.mueller@elsoft.ch,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH] PCI: imx6: fix boot hang when link already enabled
-Date: Wed,  6 Aug 2014 17:14:39 -0300
-Message-Id: <1407356079-28908-1-git-send-email-festevam@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v3 04/13] megaraid: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Mon, 18 Aug 2014 08:01:44 +0200
+Message-Id: <53f5625fafdf27f7404efd9ec497a718a2465dc2.1408335523.git.agordeev@redhat.com>
+In-Reply-To: <cover.1408335523.git.agordeev@redhat.com>
+References: <cover.1408335523.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@freescale.com>
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-This fixes a boot hang observed when the bootloader
-already enabled the PCIe link for it's own use. The
-fundamental problem is that Freescale forgot to wire
-up the core reset, so software doesn't have a sane way
-to get the core into a defined state.
-
-According to the DW PCIe core reference manual configuration
-of the core may only happen when the LTSSM is disabled, so
-this is one of the first things we do. Apparently this isn't
-safe to do when the LTSSM is in any other state than
-"detect" as we observe an instant machine hang when trying to
-do so while the link is already up.
-
-As a workaround force LTSSM into detect state right before
-hitting the disable switch.
-
-Tested on a mx6qsabresd board with PCI driver enabled in the 
-bootloader and also with PCI driver disabled in the bootloader.
-The kernel boots succesfully on both cases now.
-
-Cc: <stable@vger.kernel.org> # 3.16
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Acked-by: Kashyap Desai <Kashyap.desai@avagotech.com>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/pci/host/pci-imx6.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 20 +++++++-------------
+ 1 file changed, 7 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index a568efa..2fa6d3a 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -49,6 +49,9 @@ struct imx6_pcie {
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index e4ffae5..a2f4d4f 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -4103,17 +4103,11 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 					     (unsigned int)num_online_cpus());
+ 		for (i = 0; i < instance->msix_vectors; i++)
+ 			instance->msixentry[i].entry = i;
+-		i = pci_enable_msix(instance->pdev, instance->msixentry,
+-				    instance->msix_vectors);
+-		if (i >= 0) {
+-			if (i) {
+-				if (!pci_enable_msix(instance->pdev,
+-						     instance->msixentry, i))
+-					instance->msix_vectors = i;
+-				else
+-					instance->msix_vectors = 0;
+-			}
+-		} else
++		i = pci_enable_msix_range(instance->pdev, instance->msixentry,
++					  1, instance->msix_vectors);
++		if (i)
++			instance->msix_vectors = i;
++		else
+ 			instance->msix_vectors = 0;
  
- /* PCIe Port Logic registers (memory-mapped) */
- #define PL_OFFSET 0x700
-+#define PCIE_PL_PFLR				(PL_OFFSET + 0x08)
-+#define PCIE_PL_PFLR_LINK_STATE_MASK		(0x3f << 16)
-+#define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
- #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
- #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
- #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
-@@ -214,7 +217,19 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
- static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
- {
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-+	u32 val;
-+
-+	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &val);
+ 		dev_info(&instance->pdev->dev, "[scsi%d]: FW supports"
+@@ -5133,8 +5127,8 @@ megasas_resume(struct pci_dev *pdev)
  
-+	if (val & IMX6Q_GPR12_PCIE_CTL_2) {
-+		val = readl(pp->dbi_base + PCIE_PL_PFLR);
-+		val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
-+		val |= PCIE_PL_PFLR_FORCE_LINK;
-+		writel(val, pp->dbi_base + PCIE_PL_PFLR);
-+
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+				   IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
-+	}
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 	/* Now re-enable MSI-X */
+ 	if (instance->msix_vectors &&
+-	    pci_enable_msix(instance->pdev, instance->msixentry,
+-			    instance->msix_vectors))
++	    pci_enable_msix_exact(instance->pdev, instance->msixentry,
++				  instance->msix_vectors))
+ 		goto fail_reenable_msix;
+ 
+ 	switch (instance->pdev->device) {
 -- 
-1.9.1
+1.9.3
 
