@@ -1,43 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:59596 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753286AbaHFJ7q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Aug 2014 05:59:46 -0400
-Date: Wed, 6 Aug 2014 11:59:39 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: "Chen, Gong" <gong.chen@linux.intel.com>
-Cc: bhelgaas@google.com, rdunlap@infradead.org, tony.luck@intel.com,
+Received: from p50936449.dip0.t-ipconnect.de ([80.147.100.73]:30499 "EHLO
+	dhcp-27-160.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752456AbaHRIzk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Aug 2014 04:55:40 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
+	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com,
+	DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/5] RAS, trace: Update error definition format
-Message-ID: <20140806095939.GB27033@pd.tnic>
-References: <1407313964-20794-1-git-send-email-gong.chen@linux.intel.com>
- <20140806093223.GA27033@pd.tnic>
- <20140806090853.GA21650@gchen.bj.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140806090853.GA21650@gchen.bj.intel.com>
+Subject: [PATCH v3 05/13] mpt2sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Mon, 18 Aug 2014 08:01:45 +0200
+Message-Id: <4ade0314570678af6c18ec21d858a7bd06da2f53.1408335523.git.agordeev@redhat.com>
+In-Reply-To: <cover.1408335523.git.agordeev@redhat.com>
+References: <cover.1408335523.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 06, 2014 at 05:08:54AM -0400, Chen, Gong wrote:
-> Bjorn ever mentioned for this:
-> "I'd like to see all those "BIT(...)" things changed to use the #defines
-> that already exist in include/uapi/linux/pci_regs.h, e.g.,
-> PCI_ERR_COR_RCVR.  That way grep will find these uses, which will make
-> maintenance easier."
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-So explain that in the commit message but don't use some bits out of
-context.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+Cc: support@lsi.com
+Cc: DL-MPTFusionLinux@lsi.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/mpt2sas/mpt2sas_base.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-In general, when you read your own commit message, always ask yourself
-whether other people will be able to understand it, long time from now
-and out of context.
-
-If yes, only then send out the patch.
-
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 2f262be..cf51b48 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1414,10 +1414,10 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
+ 	for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++)
+ 		a->entry = i;
+ 
+-	r = pci_enable_msix(ioc->pdev, entries, ioc->reply_queue_count);
++	r = pci_enable_msix_exact(ioc->pdev, entries, ioc->reply_queue_count);
+ 	if (r) {
+-		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "pci_enable_msix "
+-		    "failed (r=%d) !!!\n", ioc->name, r));
++		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT
++		    "pci_enable_msix_exact failed (r=%d) !!!\n", ioc->name, r));
+ 		kfree(entries);
+ 		goto try_ioapic;
+ 	}
 -- 
-Regards/Gruss,
-    Boris.
+1.9.3
 
-Sent from a fat crate under my desk. Formatting is fine.
---
