@@ -1,149 +1,48 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Fri, 22 Aug 2014 13:43:26 +0100
-From: Liviu Dudau <liviu@dudau.co.uk>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v9 12/12] PCI: Introduce pci_remap_iospace() for
- remapping PCI I/O bus resources into CPU space
-Message-ID: <20140822124326.GL13147@bart.dudau.co.uk>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
- <1407860725-25202-13-git-send-email-Liviu.Dudau@arm.com>
- <CAL_JsqK6XiuS7OJ_2F16ySA8oj9AHqP0fAft21AOtJxXP2SqnQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAL_JsqK6XiuS7OJ_2F16ySA8oj9AHqP0fAft21AOtJxXP2SqnQ@mail.gmail.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Jayamohan Kallickal <jayamohan.kallickal@emulex.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v3 08/13] be2iscsi: Use pci_enable_msix_range()
+Date: Mon, 18 Aug 2014 08:01:48 +0200
+Message-Id: <1cf2c3d3243067edac8d170cda0450c82bbfc025.1408335523.git.agordeev@redhat.com>
+In-Reply-To: <cover.1408335523.git.agordeev@redhat.com>
+References: <cover.1408335523.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 21, 2014 at 11:16:16PM -0500, Rob Herring wrote:
-> On Tue, Aug 12, 2014 at 11:25 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> > Introduce a default implementation for remapping PCI bus I/O resources
-> > onto the CPU address space. Architectures with special needs may
-> > provide their own version, but most should be able to use this one.
-> >
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: Rob Herring <robh+dt@kernel.org>
-> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> 
-> Reviewed-by: Rob Herring <robh@kernel.org>
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Thanks, Rob, much appreciated!
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/be2iscsi/be_main.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-> 
-> However, I would like to see ARM pci_ioremap_io converted over to this function.
-
-Do you care if this is done as a separate patch?
-
-Best regards,
-Liviu
-
-> 
-> Rob
-> 
-> > ---
-> >  drivers/pci/pci.c   | 33 +++++++++++++++++++++++++++++++++
-> >  include/linux/pci.h |  3 +++
-> >  2 files changed, 36 insertions(+)
-> >
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 29d1775..76d21b6 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -2707,6 +2707,39 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
-> >  }
-> >  EXPORT_SYMBOL(pci_request_regions_exclusive);
-> >
-> > +/**
-> > + *     pci_remap_iospace - Remap the memory mapped I/O space
-> > + *     @res: Resource describing the I/O space
-> > + *     @phys_addr: physical address where the range will be mapped.
-> > + *
-> > + *     Remap the memory mapped I/O space described by the @res
-> > + *     into the CPU physical address space. Only architectures
-> > + *     that have memory mapped IO defined (and hence PCI_IOBASE)
-> > + *     should call this function.
-> > + */
-> > +int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
-> > +{
-> > +       int err = -ENODEV;
-> > +
-> > +#ifdef PCI_IOBASE
-> > +       if (!(res->flags & IORESOURCE_IO))
-> > +               return -EINVAL;
-> > +
-> > +       if (res->end > IO_SPACE_LIMIT)
-> > +               return -EINVAL;
-> > +
-> > +       err = ioremap_page_range(res->start + (unsigned long)PCI_IOBASE,
-> > +                               res->end + 1 + (unsigned long)PCI_IOBASE,
-> > +                               phys_addr, pgprot_device(PAGE_KERNEL));
-> > +#else
-> > +       /* this architecture does not have memory mapped I/O space,
-> > +          so this function should never be called */
-> > +       WARN_ON(1);
-> > +#endif
-> > +
-> > +       return err;
-> > +}
-> > +
-> >  static void __pci_set_master(struct pci_dev *dev, bool enable)
-> >  {
-> >         u16 old_cmd, cmd;
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index e1e0d80..988c2f5 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -1098,6 +1098,9 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
-> >                                                   resource_size_t),
-> >                         void *alignf_data);
-> >
-> > +
-> > +int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
-> > +
-> >  static inline dma_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
-> >  {
-> >         struct pci_bus_region region;
-> > --
-> > 2.0.4
-> >
-> >
-> > _______________________________________________
-> > linux-arm-kernel mailing list
-> > linux-arm-kernel@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 915c26b..b422659 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -5276,9 +5276,9 @@ static void beiscsi_msix_enable(struct beiscsi_hba *phba)
+ 	for (i = 0; i <= phba->num_cpus; i++)
+ 		phba->msix_entries[i].entry = i;
+ 
+-	status = pci_enable_msix(phba->pcidev, phba->msix_entries,
+-				 (phba->num_cpus + 1));
+-	if (!status)
++	status = pci_enable_msix_range(phba->pcidev, phba->msix_entries,
++				       phba->num_cpus + 1, phba->num_cpus + 1);
++	if (status > 0)
+ 		phba->msix_enabled = true;
+ 
+ 	return;
 -- 
--------------------
-   .oooO
-   (   )
-    \ (  Oooo.
-     \_) (   )
-          ) /
-         (_/
-
- One small step
-   for me ...
+1.9.3
 
