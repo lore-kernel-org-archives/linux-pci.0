@@ -1,88 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:42415 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753794AbaHLHD0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 03:03:26 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>, <linux-pci@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<arnab.basu@freescale.com>, <x86@kernel.org>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [RFC PATCH 17/20] IA64/MSI: Use msi_chip instead of arch func to configure MSI/MSI-X
-Date: Tue, 12 Aug 2014 15:26:10 +0800
-Message-ID: <1407828373-24322-18-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1407828373-24322-1-git-send-email-wangyijing@huawei.com>
-References: <1407828373-24322-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from p50936449.dip0.t-ipconnect.de ([80.147.100.73]:30499 "EHLO
+	dhcp-27-160.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752293AbaHRIzR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Aug 2014 04:55:17 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v3 03/13] megaraid: Fail resume if MSI-X re-initialization failed
+Date: Mon, 18 Aug 2014 08:01:43 +0200
+Message-Id: <674297e21ea4fc03f08694c1dd830d9113dd7965.1408335523.git.agordeev@redhat.com>
+In-Reply-To: <cover.1408335523.git.agordeev@redhat.com>
+References: <cover.1408335523.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce a new struct msi_chip ia64_msi_chip instead of weak arch
-functions to configure MSI/MSI-X.
+Currently the driver fails to analize MSI-X re-enablement
+status on resuming and always assumes the success. This
+update checks the MSI-X initialization result and fails
+to resume if MSI-Xs re-enablement failed.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Acked-by: Kashyap Desai <Kashyap.desai@avagotech.com>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- arch/ia64/kernel/msi_ia64.c |   18 ++++++++++++++----
- 1 files changed, 14 insertions(+), 4 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
-index c430f91..6e527c4 100644
---- a/arch/ia64/kernel/msi_ia64.c
-+++ b/arch/ia64/kernel/msi_ia64.c
-@@ -112,15 +112,15 @@ static struct irq_chip ia64_msi_chip = {
- };
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 22a04e3..e4ffae5 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -5132,9 +5132,10 @@ megasas_resume(struct pci_dev *pdev)
+ 		goto fail_ready_state;
  
+ 	/* Now re-enable MSI-X */
+-	if (instance->msix_vectors)
+-		pci_enable_msix(instance->pdev, instance->msixentry,
+-				instance->msix_vectors);
++	if (instance->msix_vectors &&
++	    pci_enable_msix(instance->pdev, instance->msixentry,
++			    instance->msix_vectors))
++		goto fail_reenable_msix;
  
--int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
-+static int arch_ia64_setup_msi_irq(struct device *dev, struct msi_desc *desc)
- {
- 	if (platform_setup_msi_irq)
--		return platform_setup_msi_irq(pdev, desc);
-+		return platform_setup_msi_irq(to_pci_dev(dev), desc);
+ 	switch (instance->pdev->device) {
+ 	case PCI_DEVICE_ID_LSI_FUSION:
+@@ -5243,6 +5244,7 @@ fail_init_mfi:
  
--	return ia64_setup_msi_irq(pdev, desc);
-+	return ia64_setup_msi_irq(to_pci_dev(dev), desc);
- }
+ fail_set_dma_mask:
+ fail_ready_state:
++fail_reenable_msix:
  
--void arch_teardown_msi_irq(unsigned int irq)
-+static void arch_ia64_teardown_msi_irq(unsigned int irq)
- {
- 	if (platform_teardown_msi_irq)
- 		return platform_teardown_msi_irq(irq);
-@@ -128,6 +128,16 @@ void arch_teardown_msi_irq(unsigned int irq)
- 	return ia64_teardown_msi_irq(irq);
- }
+ 	pci_disable_device(pdev);
  
-+static struct msi_chip chip = {
-+	.setup_irq = arch_ia64_setup_msi_irq,
-+	.teardown_irq = arch_ia64_teardown_msi_irq,
-+};
-+
-+struct msi_chip *arch_get_match_msi_chip(struct device *dev)
-+{
-+	return &chip;
-+}
-+
- #ifdef CONFIG_INTEL_IOMMU
- #ifdef CONFIG_SMP
- static int dmar_msi_set_affinity(struct irq_data *data,
 -- 
-1.7.1
+1.9.3
 
