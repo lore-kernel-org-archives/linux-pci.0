@@ -1,167 +1,65 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <53F45482.4020505@huawei.com>
-Date: Wed, 20 Aug 2014 15:55:46 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: "Bharat.Bhushan@freescale.com" <Bharat.Bhushan@freescale.com>,
-	"arnab.basu@freescale.com" <arnab.basu@freescale.com>
-CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Paul.Mundt@huawei.com" <Paul.Mundt@huawei.com>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
+Date: Mon, 18 Aug 2014 15:26:04 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Russell King <linux@arm.linux.org.uk>,
-	"linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-	"virtualization@lists.linux-foundation.org"
-	<virtualization@lists.linux-foundation.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC PATCH 00/11] Refactor MSI to support Non-PCI device
-References: <1406344128-27055-1-git-send-email-wangyijing@huawei.com> <c6d34fe1bbe9457ea8cff7dcd97902b8@DM2PR03MB317.namprd03.prod.outlook.com> <53DEF80C.1010608@huawei.com> <8a2b4e237f2d4c7e95ef72867658b53a@BLUPR03MB566.namprd03.prod.outlook.com> <53F44022.6030706@huawei.com> <c3b2bd89ef3d462cb302f6ede56a0d44@BLUPR03MB566.namprd03.prod.outlook.com>
-In-Reply-To: <c3b2bd89ef3d462cb302f6ede56a0d44@BLUPR03MB566.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v9 03/12] PCI: Introduce helper functions to deal with
+ PCI I/O ranges.
+Message-ID: <20140818142604.GO20043@localhost>
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+ <1407860725-25202-4-git-send-email-Liviu.Dudau@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1407860725-25202-4-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> We in Freescale will be using MSI for the devices behind a new-bus (which is
->> not PCI based), We have a separate bus driver for same. And this new bus driver
->> register/provide its own address/data write function which is based on that
->> specific bus protocol.
->>
->> Hi Bharat, I'm glad to know your MSI device working mode.
->> Provide the private MSI setup functions in bus-driver layer can't apply to all
->> Non-PCI MSI devices, because we can not guarantee Non-PCI MSI devices are always
->> on a bus. The existing HPET, DMAR device both have no bus bind.
+On Tue, Aug 12, 2014 at 05:25:16PM +0100, Liviu Dudau wrote:
+> Some architectures do not have a simple view of the PCI I/O space
+> and instead use a range of CPU addresses that map to bus addresses.
+> For some architectures these ranges will be expressed by OF bindings
+> in a device tree file.
 > 
-> Yes, that's why I was not sure of bus-driver or device-driver model.
+> This patch introduces a pci_register_io_range() helper function with
+> a generic implementation that can be used by such architectures to
+> keep track of the I/O ranges described by the PCI bindings. If the
+> PCI_IOBASE macro is not defined that signals lack of support for PCI
+> and we return an error.
 > 
->> I'm working on a
->> new MSI setup framework, as you mentioned before, in device-driver model.
->>
->> I abstracted a new virtual device (called struct msi_dev), this msi_dev will
->> manage all MSI info,
+> In order to retrieve the CPU address associated with an I/O port, a
+> new helper function pci_pio_to_address() is introduced. This will
+> search in the list of ranges registered with pci_register_io_range()
+> and return the CPU address that corresponds to the given port.
 > 
-> Will this "struct msi_dev" will be part of "struct device"?
+> Cc: Grant Likely <grant.likely@linaro.org>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> ---
+>  drivers/of/address.c       | 95 ++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/of_address.h |  2 +
+>  2 files changed, 97 insertions(+)
 
-struct msi_dev contains the struct device
+Actually, I think we moved too much code into drivers/of/. Is there
+anything OF specific about this code to live here (apart from
+OF_BAD_ADDR)? I think driver/pci/ more appropriate?
 
-piece code:
-
-struct msi_dev {
-    u8 type;
-    u8 enabled;
-    u8 nvec;
-    u8 nvec_retry;
-    char *id;
-    void __iomem *base;
-    struct msix_entry *entries;
-    struct list_head msi_list;
-    struct device dev;
-    void *msi_data;
-    struct msi_driver *driver;
-    const struct attribute_group **irq_groups;
-};
-
-
-struct msi_driver {
-    const char *name;
-    char *id;
-    void (*msi_set_enable)(struct msi_dev *dev, int enable);
-    int (*msi_setup_entry)(struct msi_dev *dev, struct msi_desc *entry);
-    int (*msix_setup_entries)(struct msi_dev *dev, struct msi_desc *entry, int index);
-    u32 (*msi_mask_irq)(struct msi_desc *desc, u32 mask, u32 flag);
-    u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
-    void (*msi_read_message)(struct msi_desc *desc, struct msi_msg *msg);
-    void (*msi_write_message)(struct msi_desc *desc, struct msi_msg *msg);
-    void (*msi_set_legacy_irq)(struct msi_dev *dev, int enable);
-    struct device_driver driver;
-};
-
-Thanks!
-Yijing.
-
-> 
->> and a new bus named msi_bus, also introduced a new driver
->> msi_driver, msi_bus is responsible for binding msi_dev and msi_driver.
->> All MSI devices will be classified into different MSI device types, like
->> MSI_TYPE_PCI, MSI_TYPE_HPET, MSI_TYPE_DMAR, etc..
->>
->> Each MSI type device should provide a private struct msi_driver. msi_driver
->> should contain the type specific MSI ops functions to help setup and enable MSI
->> device, request MSI irq.
->>
->> I almost finish the first draft, and will post out next week in plan :)
-> 
-> Will be looking forward to next version.
-> 
-> Thanks
-> -Bharat
-> 
->>
->>
->> Thanks!
->> Yijing.
->>
->>>
->>> Thanks
->>> -Bharat
->>>
->>>>
->>>> My patchset is just a RFC draft, I will update it later, all we want
->>>> to do is make kernel support Non-PCI MSI devices.
->>>>
->>>> Thanks!
->>>> Yijing.
->>>>
->>>>
->>>>>
->>>>> Thanks
->>>>> Arnab
->>>>> --
->>>>> To unsubscribe from this list: send the line "unsubscribe
->>>>> linux-kernel" in the body of a message to majordomo@vger.kernel.org
->>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>> Please read the FAQ at  http://www.tux.org/lkml/
->>>>>
->>>>> .
->>>>>
->>>>
->>>>
->>>> --
->>>> Thanks!
->>>> Yijing
->>>>
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-pci"
->>>> in the body of a message to majordomo@vger.kernel.org More majordomo
->>>> info at http://vger.kernel.org/majordomo-info.html
->>>
->>> .
->>>
->>
->>
->> --
->> Thanks!
->> Yijing
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the body
->> of a message to majordomo@vger.kernel.org More majordomo info at
->> http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
-> .
-> 
-
+Otherwise it looks fine to me.
 
 -- 
-Thanks!
-Yijing
-
+Catalin
