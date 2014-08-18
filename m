@@ -1,114 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
-	"jason\@lakedaemon.net" <jason@lakedaemon.net>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"tglx\@linutronix.de" <tglx@linutronix.de>,
-	"Harish.Kasiviswanathan\@amd.com" <Harish.Kasiviswanathan@amd.com>,
-	"linux-arm-kernel\@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc\@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"devicetree\@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 3/4 V3] irqchip: gic: Add supports for ARM GICv2m MSI(-X)
-In-Reply-To: <53DBC074.3030309@amd.com> (Suravee Suthikulanit's message of
-	"Fri, 1 Aug 2014 17:29:40 +0100")
-References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
-	<1404947104-21345-4-git-send-email-suravee.suthikulpanit@amd.com>
-	<87zjfqj3mc.fsf@approximate.cambridge.arm.com>
-	<53DBB562.5020003@amd.com> <53DBC074.3030309@amd.com>
-Date: Fri, 01 Aug 2014 18:05:15 +0100
-Message-ID: <87oaw4gmyc.fsf@approximate.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from p50936449.dip0.t-ipconnect.de ([80.147.100.73]:30499 "EHLO
+	dhcp-27-160.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752420AbaHRIz0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Aug 2014 04:55:26 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v3 07/13] qla2xxx: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Mon, 18 Aug 2014 08:01:47 +0200
+Message-Id: <6d02c05e9135b0f91de9345d36f097daac9e95cb.1408335523.git.agordeev@redhat.com>
+In-Reply-To: <cover.1408335523.git.agordeev@redhat.com>
+References: <cover.1408335523.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 01 2014 at  5:29:40 pm BST, Suravee Suthikulanit <suravee.suthikulpanit@amd.com> wrote:
-> On 8/1/2014 10:42 AM, Suravee Suthikulanit wrote:
->>>> +#ifdef CONFIG_SMP
->>>> +       .irq_set_affinity       = gic_set_affinity,
->>>> +#endif
->>>> +#ifdef CONFIG_PM
->>>> +       .irq_set_wake           = gic_set_wake,
->>>> +#endif
->>>> +};
->>>> +
->>>> +#ifdef CONFIG_OF
->>>> +static int __init
->>>> +gicv2m_of_init(struct device_node *node, struct device_node *parent)
->>>> +{
->>>> +       struct gic_chip_data *gic;
->>>> +       int ret;
->>>> +
->>>> +       ret = _gic_of_init(node, parent, &gicv2m_chip, &gic);
->>>> +       if (ret) {
->>>> +               pr_err("GICv2m: Failed to initialize GIC\n");
->>>> +               return ret;
->>>> +       }
->>>> +
->>>> +       gic->msi_chip.owner = THIS_MODULE;
->>>> +       gic->msi_chip.of_node = node;
->>>> +       gic->msi_chip.setup_irq = gicv2m_setup_msi_irq;
->>>> +       gic->msi_chip.teardown_irq = gicv2m_teardown_msi_irq;
->>>> +       ret = of_pci_msi_chip_add(&gic->msi_chip);
->>>> +       if (ret) {
->>>> +               /* MSI is optional and not supported here */
->>>> +               pr_info("GICv2m: MSI is not supported.\n");
->>>> +               return 0;
->>>> +       }
->>>> +
->>>> +       ret = gicv2m_msi_init(node, &gic->v2m_data);
->>>> +       if (ret)
->>>> +               return ret;
->>>> +       return ret;
->>>> +}
->>>> +
->>>> +IRQCHIP_DECLARE(arm_gic_400_v2m, "arm,gic-400-v2m", gicv2m_of_init);
->>>
->>> So if you follow my advise of reversing your probing and call into the
->>> v2m init from the main GIC driver, you could take a irq_chip as a
->>> parameter, and use it to populate the v2m irq_chip, only overriding the
->>> two methods that actually differ.
->>>
->>> This would have the net effect of completely dropping patch #2, which
->>> becomes effectively useless.
->>>
->>
->> [Suravee] Ok, lemme look into this.
->
-> So, in previous revision, you mentioned that we should have a separate 
-> irq_chip for gicv2m stuff, is that is still the case here?
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Yes. You would do something like this:
+Log message code 0x00c6 preserved, although it is reported
+after successful call to pci_enable_msix_range(), not before
+possibly unsuccessful call to pci_enable_msix(). Consumers
+of the error code should not notice the difference.
 
-- In the main GIC code:
-	if (v2m_present()) {
-        	v2m_init(&gic_chip);
-        }
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: qla2xxx-upstream@qlogic.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/qla2xxx/qla_isr.c | 27 +++++++++++----------------
+ 1 file changed, 11 insertions(+), 16 deletions(-)
 
-- In the v2m code:
-	static struct irq_chip_v2m_chip;
-	void v2m_init(struct irq_chip *gic_chip)
-        {
-        	[...]
-        	v2m_chip = *gic_chip;
-                v2m_chip.mask = v2m_irq_mask;
-                v2m_chip.unmask = v2m_irq_unmask;
-                [...]
-        }
-
-Basically, you inherit a number of default methods, only overloading the
-ones that are different. The rest of your driver is mostly unchanged.
-
-This preserves the current probing structure, and avoids exposing
-private methods outside of irq-gic.c (preventing people from doing silly
-things with an unsuspecting interrupt controller...).
-
-	M.
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 550a4a3..a485578 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2923,27 +2923,22 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 	for (i = 0; i < ha->msix_count; i++)
+ 		entries[i].entry = i;
+ 
+-	ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
+-	if (ret) {
+-		if (ret < MIN_MSIX_COUNT)
+-			goto msix_failed;
+-
++	ret = pci_enable_msix_range(ha->pdev,
++				    entries, MIN_MSIX_COUNT, ha->msix_count);
++	if (ret < 0) {
++		ql_log(ql_log_fatal, vha, 0x00c7,
++		    "MSI-X: Failed to enable support, "
++		    "giving   up -- %d/%d.\n",
++		    ha->msix_count, ret);
++		goto msix_out;
++	} else if (ret < ha->msix_count) {
+ 		ql_log(ql_log_warn, vha, 0x00c6,
+ 		    "MSI-X: Failed to enable support "
+ 		    "-- %d/%d\n Retry with %d vectors.\n",
+ 		    ha->msix_count, ret, ret);
+-		ha->msix_count = ret;
+-		ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
+-		if (ret) {
+-msix_failed:
+-			ql_log(ql_log_fatal, vha, 0x00c7,
+-			    "MSI-X: Failed to enable support, "
+-			    "giving   up -- %d/%d.\n",
+-			    ha->msix_count, ret);
+-			goto msix_out;
+-		}
+-		ha->max_rsp_queues = ha->msix_count - 1;
+ 	}
++	ha->msix_count = ret;
++	ha->max_rsp_queues = ha->msix_count - 1;
+ 	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
+ 				ha->msix_count, GFP_KERNEL);
+ 	if (!ha->msix_entries) {
 -- 
-Jazz is not dead. It just smells funny.
+1.9.3
+
