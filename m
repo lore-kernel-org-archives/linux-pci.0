@@ -1,120 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Prarit Bhargava <prarit@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	Ingo Molnar <mingo@kernel.org>
-Subject: [Patch v4 07/16] x86, irq: Prefer assigned ID in APIC ID register for x86_64
-Date: Thu, 28 Aug 2014 10:22:32 +0800
-Message-Id: <1409192561-19744-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-out.m-online.net ([212.18.0.10]:43064 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750911AbaHRQYc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Aug 2014 12:24:32 -0400
+Date: Mon, 18 Aug 2014 18:24:26 +0200
+From: Gerhard Sittig <gsi@denx.de>
+To: linux-pci@vger.kernel.org, Jon Mason <jdmason@kudzu.us>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Detlev Zundel <dzu@denx.de>
+Subject: Re: [PATCH RFC v1 0/4] PCI NTB: prepare for more hardware support
+Message-ID: <20140818162426.GQ28369@book.gsilab.sittig.org>
+References: <1407336835-30586-1-git-send-email-gsi@denx.de>
+ <20140806150112.GG28369@book.gsilab.sittig.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140806150112.GG28369@book.gsilab.sittig.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+[ adjusted Jon Mason's email address ]
 
-Perfer the assigned ID in APIC ID register for x86_64 if it's still
-available.
+On Wed, 2014-08-06 at 17:01 +0200, Gerhard Sittig wrote:
+> 
+> On Wed, 2014-08-06 at 16:53 +0200, Gerhard Sittig wrote:
+> > 
+> > The current implementation of the PCI non-transparent bridge
+> > support exclusively supports Intel hardware.  This series
+> > prepares for the introduction of other vendor's hardware support,
+> > by separating the generic 'data transport' driver from the
+> > specific 'hardware support' driver.
+> 
+> For the record:  Email to Jon Mason, the original NTB driver
+> author, bounced with SMTP error 550.  The MAINTAINERS file's
+> "NTB DRIVER" section might need an update.  Is the address
+> listed under "NETERION 10GbE DRIVERS" correct, or is it a
+> coincidence that the name matches?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/io_apic.c |   38 +++++++++++++++++++++++++++++++++-----
- 1 file changed, 33 insertions(+), 5 deletions(-)
+For the record:  In personal conversation Jon acknowledged his
+new/other email address, that was listed in the MAINTAINERS file
+as well.  The NTB entry should receive an update.
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 3faf9599ff29..196d9c15fdec 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3575,26 +3575,54 @@ static int __init io_apic_get_unique_id(int ioapic, int apic_id)
- 	return apic_id;
- }
- 
--static u8 __init io_apic_unique_id(u8 id)
-+static u8 io_apic_unique_id(int idx, u8 id)
- {
- 	if ((boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) &&
- 	    !APIC_XAPIC(apic_version[boot_cpu_physical_apicid]))
--		return io_apic_get_unique_id(nr_ioapics, id);
-+		return io_apic_get_unique_id(idx, id);
- 	else
- 		return id;
- }
- #else
--static u8 __init io_apic_unique_id(u8 id)
-+static u8 io_apic_unique_id(int idx, u8 id)
- {
- 	int i;
-+	u8 new_id;
-+	unsigned long flags;
- 	DECLARE_BITMAP(used, 256);
-+	union IO_APIC_reg_00 reg_00;
- 
- 	bitmap_zero(used, 256);
- 	for_each_ioapic(i)
- 		__set_bit(mpc_ioapic_id(i), used);
- 	if (!test_bit(id, used))
- 		return id;
--	return find_first_zero_bit(used, 256);
-+
-+	/* check register at first */
-+	raw_spin_lock_irqsave(&ioapic_lock, flags);
-+	reg_00.raw = io_apic_read(idx, 0);
-+	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
-+	new_id = reg_00.bits.ID;
-+	if (!test_bit(new_id, used)) {
-+		apic_printk(APIC_VERBOSE, KERN_INFO
-+			"IOAPIC[%d]: Using reg apic_id %d instead of %d\n",
-+			 idx, new_id, id);
-+		return new_id;
-+	}
-+
-+	new_id = find_first_zero_bit(used, 256);
-+	reg_00.bits.ID = new_id;
-+	raw_spin_lock_irqsave(&ioapic_lock, flags);
-+	io_apic_write(idx, 0, reg_00.raw);
-+	reg_00.raw = io_apic_read(idx, 0);
-+	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
-+
-+	/* Sanity check */
-+	if (reg_00.bits.ID != new_id)
-+		pr_warn("IOAPIC[%d]: Unable to change apic_id to %d!\n",
-+			idx, new_id);
-+
-+	return new_id;
- }
- #endif
- 
-@@ -3860,7 +3888,7 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 		return;
- 	}
- 
--	ioapics[idx].mp_config.apicid = io_apic_unique_id(id);
-+	ioapics[idx].mp_config.apicid = io_apic_unique_id(idx, id);
- 	ioapics[idx].mp_config.apicver = io_apic_get_version(idx);
- 
- 	/*
+
+Jon is busy moving and changing jobs.  Is there any other
+feedback, test results, opinions, requests, remarks?
+
+
+virtually yours
+Gerhard Sittig
 -- 
-1.7.10.4
-
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr. 5, D-82194 Groebenzell, Germany
+Phone: +49-8142-66989-0 Fax: +49-8142-66989-80  Email: office@denx.de
