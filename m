@@ -1,130 +1,93 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: "Bharat.Bhushan@freescale.com" <Bharat.Bhushan@freescale.com>
-To: Yijing Wang <wangyijing@huawei.com>,
-	"arnab.basu@freescale.com" <arnab.basu@freescale.com>
-CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Paul.Mundt@huawei.com" <Paul.Mundt@huawei.com>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-	"virtualization@lists.linux-foundation.org"
-	<virtualization@lists.linux-foundation.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [RFC PATCH 00/11] Refactor MSI to support Non-PCI device
-Date: Wed, 20 Aug 2014 05:44:17 +0000
-Message-ID: <8a2b4e237f2d4c7e95ef72867658b53a@BLUPR03MB566.namprd03.prod.outlook.com>
-References: <1406344128-27055-1-git-send-email-wangyijing@huawei.com>
- <c6d34fe1bbe9457ea8cff7dcd97902b8@DM2PR03MB317.namprd03.prod.outlook.com>
- <53DEF80C.1010608@huawei.com>
-In-Reply-To: <53DEF80C.1010608@huawei.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from p50936449.dip0.t-ipconnect.de ([80.147.100.73]:30499 "EHLO
+	dhcp-27-160.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752456AbaHRIzf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Aug 2014 04:55:35 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Naresh Kumar Inna <naresh@chelsio.com>,
+	Arvind Bhushan <arvindb@chelsio.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v3 10/13] csiostor: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Mon, 18 Aug 2014 08:01:50 +0200
+Message-Id: <3ddc5fb60e32d05996a539d7007bfb3a5e5f09b2.1408335523.git.agordeev@redhat.com>
+In-Reply-To: <cover.1408335523.git.agordeev@redhat.com>
+References: <cover.1408335523.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yijing
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org]
-> On Behalf Of Yijing Wang
-> Sent: Monday, August 04, 2014 8:34 AM
-> To: Basu Arnab-B45036
-> Cc: Xinwei Hu; Wuyun; Bjorn Helgaas; linux-pci@vger.kernel.org;
-> Paul.Mundt@huawei.com; James E.J. Bottomley; Marc Zyngier; linux-arm-
-> kernel@lists.infradead.org; Russell King; linux-arch@vger.kernel.org;
-> virtualization@lists.linux-foundation.org; Hanjun Guo; linux-
-> kernel@vger.kernel.org
-> Subject: Re: [RFC PATCH 00/11] Refactor MSI to support Non-PCI device
-> 
-> >> MSI was introduced in PCI Spec 2.2. Currently, kernel MSI driver
-> >> codes are bonding with PCI device. Because MSI has a lot advantages in
-> design.
-> >> More and more non-PCI devices want to use MSI as their default interrupt.
-> >> The existing MSI device include HPET. HPET driver provide its own MSI
-> >> code to initialize and process MSI interrupts. In the latest GIC v3
-> >> spec, legacy device can deliver MSI by the help of a relay device
-> >> named consolidator.
-> >> Consolidator can translate the legacy interrupts connected to it to
-> >> MSI/MSI-X. And new non-PCI device will be designed to support MSI in
-> >> future. So make the MSI driver code be generic will help the non-PCI
-> >> device use MSI more simply.
-> >
-> > As per my understanding the GICv3 provides a service that will convert writes
-> to a specified address to IRQs delivered to the core and as you mention above
-> MSIs are part of the PCI spec. So I can see a strong case for non-PCI devices to
-> want MSI like functionality without being fully compliant with the requirements
-> of the MSI spec.
-> 
-> In GICv3, MBI is named for the service, but there is no more detailed
-> information about it, only we can know is MBI is analogous to MSI, MBI devices
-> must have address/data registers, but other registers like enable/mask/ctrl are
-> not mandatory requirement.
-> I don't know whether the MBI spec will be release, but anyway I think MSI
-> refactoring is make sense, there are some existing Non-PCI MSI device like hpet,
-> dmar.
-> For simplicity, let name MSI and MBI to MSI temporarily.
-> >
-> > My question is do we necessarily want to rework so much of the PCI-MSI layer
-> to support non PCI devices? Or will it be sufficient to create a framework to
-> allow non PCI devices to hook up with a device that can convert their writes to
-> an IRQ to the core.
-> >
-> > As I understand it, the msi_chip is (almost) such a framework. The only
-> problem being that it makes some PCI specific assumptions (such as PCI specific
-> writes from within msi_chip functions). Won't it be sufficient to make the
-> msi_chip framework generic enough to be used by non-PCI devices and let each
-> bus/device manage any additional requirements (such as configuration flow, bit
-> definitions etc) that it places on message based interrupts?
-> 
-> msi_chip framework is important to support that, but I think maybe it's not
-> enough, msi_chip is only responsible for IRQ allocation, teardown, etc..
-> 
-> The key difference between PCI device and Non-PCI MSI is the interfaces to
-> access hardware MSI registers.
-> for instance, currently, msi_chip->setup_irq() to setup MSI irq and configure
-> the MSI address/data registers, so we need to provide device specific
-> write_msi_msg() interface, then when we call msi_chip->setup_irq(), the device
-> MSI registers can be configured appropriately.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Naresh Kumar Inna <naresh@chelsio.com>
+Cc: Arvind Bhushan <arvindb@chelsio.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/csiostor/csio_hw.h  |  2 +-
+ drivers/scsi/csiostor/csio_isr.c | 22 +++++++++-------------
+ 2 files changed, 10 insertions(+), 14 deletions(-)
 
-What if we can register/override the setup_irq() from bus-driver (not sure, but may be device-driver itself). Example PCI bus-driver will provide setup_irq() (or the part of setup_irq which set address and data in h/w) by PCI bus, which configure address/data in h/w as per PCI standard. 
+diff --git a/drivers/scsi/csiostor/csio_hw.h b/drivers/scsi/csiostor/csio_hw.h
+index 49b1daa..5db2d85 100644
+--- a/drivers/scsi/csiostor/csio_hw.h
++++ b/drivers/scsi/csiostor/csio_hw.h
+@@ -94,7 +94,7 @@ enum {
+ };
+ 
+ struct csio_msix_entries {
+-	unsigned short	vector;		/* Vector assigned by pci_enable_msix */
++	unsigned short	vector;		/* Assigned MSI-X vector */
+ 	void		*dev_id;	/* Priv object associated w/ this msix*/
+ 	char		desc[24];	/* Description of this vector */
+ };
+diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
+index 91ba91d..a8c748a 100644
+--- a/drivers/scsi/csiostor/csio_isr.c
++++ b/drivers/scsi/csiostor/csio_isr.c
+@@ -499,7 +499,7 @@ csio_reduce_sqsets(struct csio_hw *hw, int cnt)
+ static int
+ csio_enable_msix(struct csio_hw *hw)
+ {
+-	int rv, i, j, k, n, min, cnt;
++	int i, j, k, n, min, cnt;
+ 	struct csio_msix_entries *entryp;
+ 	struct msix_entry *entries;
+ 	int extra = CSIO_EXTRA_VECS;
+@@ -521,19 +521,15 @@ csio_enable_msix(struct csio_hw *hw)
+ 
+ 	csio_dbg(hw, "FW supp #niq:%d, trying %d msix's\n", hw->cfg_niq, cnt);
+ 
+-	while ((rv = pci_enable_msix(hw->pdev, entries, cnt)) >= min)
+-		cnt = rv;
+-	if (!rv) {
+-		if (cnt < (hw->num_sqsets + extra)) {
+-			csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
+-			csio_reduce_sqsets(hw, cnt - extra);
+-		}
+-	} else {
+-		if (rv > 0)
+-			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
+-
++	cnt = pci_enable_msix_range(hw->pdev, entries, min, cnt);
++	if (cnt < 0) {
+ 		kfree(entries);
+-		return -ENOMEM;
++		return cnt;
++	}
++
++	if (cnt < (hw->num_sqsets + extra)) {
++		csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
++		csio_reduce_sqsets(hw, cnt - extra);
+ 	}
+ 
+ 	/* Save off vectors */
+-- 
+1.9.3
 
-We in Freescale will be using MSI for the devices behind a new-bus (which is not PCI based), We have a separate bus driver for same. And this new bus driver register/provide its own address/data write function which is based on that specific bus protocol.
-
-Thanks
--Bharat
-
-> 
-> My patchset is just a RFC draft, I will update it later, all we want to do is
-> make kernel support Non-PCI MSI devices.
-> 
-> Thanks!
-> Yijing.
-> 
-> 
-> >
-> > Thanks
-> > Arnab
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe
-> > linux-kernel" in the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
-> >
-> > .
-> >
-> 
-> 
-> --
-> Thanks!
-> Yijing
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the body
-> of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
