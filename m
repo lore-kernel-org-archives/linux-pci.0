@@ -1,79 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <53DEF80C.1010608@huawei.com>
-Date: Mon, 4 Aug 2014 11:03:40 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:51008 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751590AbaHRO7a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 Aug 2014 10:59:30 -0400
+Message-ID: <53F21485.9000700@ti.com>
+Date: Mon, 18 Aug 2014 10:58:13 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-To: "arnab.basu@freescale.com" <arnab.basu@freescale.com>
-CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Paul.Mundt@huawei.com" <Paul.Mundt@huawei.com>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
 	Russell King <linux@arm.linux.org.uk>,
-	"linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-	"virtualization@lists.linux-foundation.org"
-	<virtualization@lists.linux-foundation.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC PATCH 00/11] Refactor MSI to support Non-PCI device
-References: <1406344128-27055-1-git-send-email-wangyijing@huawei.com> <c6d34fe1bbe9457ea8cff7dcd97902b8@DM2PR03MB317.namprd03.prod.outlook.com>
-In-Reply-To: <c6d34fe1bbe9457ea8cff7dcd97902b8@DM2PR03MB317.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v7 0/5] Add Keystone PCIe controller driver
+References: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com> <20140722225708.GB27965@google.com> <53CFD444.4010700@ti.com> <CAErSpo6gEVP7XbiPZ90MP4zn5mrjaJLZTW0_sdjg9Q6HjnnkFg@mail.gmail.com>
+In-Reply-To: <CAErSpo6gEVP7XbiPZ90MP4zn5mrjaJLZTW0_sdjg9Q6HjnnkFg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> MSI was introduced in PCI Spec 2.2. Currently, kernel MSI driver codes
->> are bonding with PCI device. Because MSI has a lot advantages in design.
->> More and more non-PCI devices want to use MSI as their default interrupt.
->> The existing MSI device include HPET. HPET driver provide its own MSI
->> code to initialize and process MSI interrupts. In the latest GIC v3 spec,
->> legacy device can deliver MSI by the help of a relay device named
->> consolidator.
->> Consolidator can translate the legacy interrupts connected to it to
->> MSI/MSI-X. And new non-PCI device will be designed to support MSI in
->> future. So make the MSI driver code be generic will help the non-PCI
->> device use MSI more simply.
-> 
-> As per my understanding the GICv3 provides a service that will convert writes to a specified address to IRQs delivered to the core and as you mention above MSIs are part of the PCI spec. So I can see a strong case for non-PCI devices to want MSI like functionality without being fully compliant with the requirements of the MSI spec.
+Bjorn,
 
-In GICv3, MBI is named for the service, but there is no more detailed information about it, only we can know is MBI is analogous to MSI,
-MBI devices must have address/data registers, but other registers like enable/mask/ctrl are not mandatory requirement.
-I don't know whether the MBI spec will be release, but anyway I think MSI refactoring is make sense, there are some existing Non-PCI MSI device like hpet, dmar.
-For simplicity, let name MSI and MBI to MSI temporarily.
-> 
-> My question is do we necessarily want to rework so much of the PCI-MSI layer to support non PCI devices? Or will it be sufficient to create a framework to allow non PCI devices to hook up with a device that can convert their writes to an IRQ to the core.
-> 
-> As I understand it, the msi_chip is (almost) such a framework. The only problem being that it makes some PCI specific assumptions (such as PCI specific writes from within msi_chip functions). Won't it be sufficient to make the msi_chip framework generic enough to be used by non-PCI devices and let each bus/device manage any additional requirements (such as configuration flow, bit definitions etc) that it places on message based interrupts?
+On 07/23/2014 12:43 PM, Bjorn Helgaas wrote:
+> On Wed, Jul 23, 2014 at 9:27 AM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
+>>
+>> Bjorn,
+>>
+>>
+>> On 07/22/2014 06:57 PM, Bjorn Helgaas wrote:
+>>>
+>>> On Mon, Jul 21, 2014 at 12:58:40PM -0400, Murali Karicheri wrote:
+>>
+>>
+>>>> Murali Karicheri (5):
+>>>>     PCI: designware: add rd[wr]_other_conf API
+>>>>     PCI: designware: refactor MSI code to work with v3.65 dw hardware
+>>>
+>>>
+>>> I applied the above two to my pci/host-designware branch.  The rest didn't
+>>> apply cleanly because I applied Kishon's DRA7xx changes first, and there
+>>> are several conflicts.  Can you rebase the rest of them on top of
+>>> pci/host-designware?
+>>
+>>
+>> Thanks for applying 1 and 2.
+>>
+>> I will fix up 3 based on your branch and send you updated patch 3 and 4
+>> today.  Hope you can apply this updated patch so that I don't have to
+>> address any rebase issues. Regarding the MRSS comment, I will discuss it on
+>> that thread and send you a fix for removing the bootargs depedency based on
+>> what comes out of that discussion. Is that fine?
+>
+> Yep, sounds reasonable.  I'm about to leave for vacation, so I won't
+> be able to apply these until mid-August, but I think we can still get
+> them into v3.17 since it's new hardware that shouldn't affect anything
+> else.
+Could you please apply my re-send patches [1] on top of patch 1 and 2? I 
+have reposted it addressing some of the comments and replied to others 
+as there are no action.
 
-msi_chip framework is important to support that, but I think maybe it's not enough, msi_chip is only responsible for IRQ allocation, teardown, etc..
+[1] http://www.spinics.net/lists/linux-pci/msg33178.html
 
-The key difference between PCI device and Non-PCI MSI is the interfaces to access hardware MSI registers.
-for instance, currently, msi_chip->setup_irq() to setup MSI irq and configure the MSI address/data registers, so we need to provide device specific write_msi_msg() interface,
-then when we call msi_chip->setup_irq(), the device MSI registers can be configured appropriately.
+>
+> For MRSS, I'll probably open a bugzilla and reference it in the
+> changelog just so we don't forget about it.
 
-My patchset is just a RFC draft, I will update it later, all we want to do is make kernel support Non-PCI MSI devices.
+I have posted another pactch to remove the bootarg depedency and already 
+incorporated comments from Jason Gunthorpe who has discussed this on the 
+list. Please review and apply it if it looks good or comment.
 
-Thanks!
-Yijing.
+https://lkml.org/lkml/2014/8/8/486
 
+Thanks and regards,
 
-> 
-> Thanks
-> Arnab
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+Murali
