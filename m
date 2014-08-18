@@ -1,49 +1,89 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <53FCD816.6070108@infradead.org>
-Date: Tue, 26 Aug 2014 11:55:18 -0700
-From: Randy Dunlap <rdunlap@infradead.org>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
-	Prarit Bhargava <prarit@redhat.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: Re: [Bugfix] x86, irq: Fix bug in setting IOAPIC pin attributes
-References: <20140822124145.GF1660@lahna.fi.intel.com> <1409042706-11958-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1409042706-11958-1-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Anil Ravindranath <anil_ravindranath@pmc-sierra.com>,
+	James Smart <james.smart@emulex.com>,
+	Naresh Kumar Inna <naresh@chelsio.com>,
+	Arvind Bhushan <arvindb@chelsio.com>,
+	Jayamohan Kallickal <jayamohan.kallickal@emulex.com>,
+	Chad Dupuis <chad.dupuis@qlogic.com>,
+	Tomas Henzl <thenzl@redhat.com>,
+	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
+	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>,
+	Kashyap Desai <Kashyap.desai@avagotech.com>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	"Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
+	iss_storagedev@hp.com, support@lsi.com, DL-MPTFusionLinux@lsi.com,
+	qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v3 00/13] scsi: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Mon, 18 Aug 2014 08:01:40 +0200
+Message-Id: <cover.1408335523.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/26/14 01:45, Jiang Liu wrote:
-> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-> index 29290f554e79..66c2700c9f83 100644
-> --- a/arch/x86/kernel/apic/io_apic.c
-> +++ b/arch/x86/kernel/apic/io_apic.c
-> @@ -3896,7 +3896,15 @@ int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
-> +		/*
-> +		 * setup_IO_APIC_irqs() programs all legacy IRQs with default
-> +		 * trigger and polarity attirbutes. Don't set the flag for that
+Hello,
 
-		                        attributes.
+This series is against 3.17-rc1. Patches 0-7 have been acked.
+Patches 8-13 still need reviews and are resent without changes
+except 'lpfc' which concerns latest James comments.
 
-> +		 * case so the first legacy IRQ user could reprogram the pin
-> +		 * with real trigger and polarity attributes.
-> +		 */
+Thanks!
 
-thanks,
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
+
+Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Cc: James Smart <james.smart@emulex.com>
+Cc: Naresh Kumar Inna <naresh@chelsio.com>
+Cc: Arvind Bhushan <arvindb@chelsio.com>
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Cc: Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: Tomas Henzl <thenzl@redhat.com>
+Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+Cc: Kashyap Desai <Kashyap.desai@avagotech.com>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: iss_storagedev@hp.com
+Cc: support@lsi.com
+Cc: DL-MPTFusionLinux@lsi.com
+Cc: qla2xxx-upstream@qlogic.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+
+Alexander Gordeev (13):
+  hpsa: Fallback to MSI rather than to INTx if MSI-X failed
+  hpsa: Use pci_enable_msix_range() instead of pci_enable_msix()
+  megaraid: Fail resume if MSI-X re-initialization failed
+  megaraid: Use pci_enable_msix_range() instead of pci_enable_msix()
+  mpt2sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  mpt3sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  qla2xxx: Use pci_enable_msix_range() instead of pci_enable_msix()
+  be2iscsi: Use pci_enable_msix_range()
+  csiostor: Remove superfluous call to pci_disable_msix()
+  csiostor: Use pci_enable_msix_range() instead of pci_enable_msix()
+  lpfc: Use pci_enable_msix_range() instead of pci_enable_msix()
+  pmcraid: Get rid of a redundant assignment
+  pmcraid: Use pci_enable_msix_range() instead of pci_enable_msix()
+
+ drivers/scsi/be2iscsi/be_main.c           |  6 ++---
+ drivers/scsi/csiostor/csio_hw.h           |  2 +-
+ drivers/scsi/csiostor/csio_isr.c          | 24 +++++++------------
+ drivers/scsi/hpsa.c                       | 28 ++++++++++------------
+ drivers/scsi/lpfc/lpfc_init.c             | 39 ++++++++++++++-----------------
+ drivers/scsi/megaraid/megaraid_sas_base.c | 24 ++++++++-----------
+ drivers/scsi/mpt2sas/mpt2sas_base.c       |  6 ++---
+ drivers/scsi/mpt3sas/mpt3sas_base.c       |  4 ++--
+ drivers/scsi/pmcraid.c                    | 14 ++---------
+ drivers/scsi/qla2xxx/qla_isr.c            | 27 +++++++++------------
+ 10 files changed, 70 insertions(+), 104 deletions(-)
+
 -- 
-~Randy
+1.9.3
+
