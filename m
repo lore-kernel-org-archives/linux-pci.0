@@ -1,100 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:35876 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751008AbaHAQLM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 1 Aug 2014 12:11:12 -0400
-Date: Fri, 1 Aug 2014 18:11:08 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	=?utf-8?B?SsO2cmcgUsO2ZGVs?= <joro@8bytes.org>
-Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] x86, irq: Keep IRQ assignment for PCI devices during
- suspend/hibernation, bisected
-Message-ID: <20140801161107.GA4553@pd.tnic>
-References: <20140730175836.GC10213@pd.tnic>
- <1406766807-5745-1-git-send-email-jiang.liu@linux.intel.com>
- <20140731103941.GA4375@pd.tnic>
- <53DA70AB.9010906@linux.intel.com>
- <20140731165648.GG4375@pd.tnic>
- <20140801105618.GA3857@nazgul.tnic>
- <53DB87AB.1000900@linux.intel.com>
- <20140801143922.GB5406@pd.tnic>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140801143922.GB5406@pd.tnic>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Anil Ravindranath <anil_ravindranath@pmc-sierra.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v3 13/13] pmcraid: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Mon, 18 Aug 2014 08:01:53 +0200
+Message-Id: <0f19a7660054e85da9f2137d21d198fbe7ddd71c.1408335523.git.agordeev@redhat.com>
+In-Reply-To: <cover.1408335523.git.agordeev@redhat.com>
+References: <cover.1408335523.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 01, 2014 at 04:39:22PM +0200, Borislav Petkov wrote:
-> I could try to disable the IOMMU and see whether it still triggers.
-> That could tell us something.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Ok, let me summarize what I've been able to observe so far:
-
-* https://lkml.kernel.org/r/1406766807-5745-1-git-send-email-jiang.liu@linux.intel.com
-
-this is definitely needed for suspend/resume so for that patch
-
-Acked-and-tested-by: Borislav Petkov <bp@suse.de>
-
-(I need to somehow justify a whole day of bisecting today :-P)
-
-* Then, this
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
-diff --git a/drivers/usb/core/hcd-pci.c b/drivers/usb/core/hcd-pci.c
-index 82044b5d6113..efc953119ce2 100644
---- a/drivers/usb/core/hcd-pci.c
-+++ b/drivers/usb/core/hcd-pci.c
-@@ -380,6 +380,8 @@ void usb_hcd_pci_shutdown(struct pci_dev *dev)
- 	if (test_bit(HCD_FLAG_HW_ACCESSIBLE, &hcd->flags) &&
- 			hcd->driver->shutdown) {
- 		hcd->driver->shutdown(hcd);
-+		if (usb_hcd_is_primary_hcd(hcd) && hcd->irq > 0)
-+			free_irq(hcd->irq, hcd);
- 		pci_disable_device(dev);
- 	}
- }
---
+ drivers/scsi/pmcraid.c | 13 ++-----------
+ 1 file changed, 2 insertions(+), 11 deletions(-)
 
-is needed for not triggering the remove_proc_entry() WARN_ON.
-
-Finally, even with this hunk above, suspend works fine but I see IOMMU
-PFs sometimes(!). Yes, sometimes as in it suspends fine without even
-screaming at all and sometimes I get a few of those right before the
-machine goes down:
-
-[   89.040795] pcieport 0000:00:04.0: System wakeup enabled by ACPI
-[   89.061697] AMD-Vi: Event logged [IO_PAGE_FAULT device=01:00.0 domain=0x0014 address=0x0000000020001000 flags=0x0000]
-[   89.071871] ACPI: Preparing to enter system sleep state S5
-[   89.072117] [Firmware Bug]: ACPI: BIOS _OSI(Linux) query honored via cmdline
-[   89.089832] AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.0 domain=0x0009 address=0x0000000000000080 flags=0x0020]
-[   89.102239] AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.0 domain=0x0009 address=0x0000000000000000 flags=0x0000]
-[   89.114684] AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.0 domain=0x0009 address=0x00000000ffffffc0 flags=0x0010]
-[   89.127162] AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.0 domain=0x0009 address=0x00000000ffffffc0 flags=0x0010]
-[   89.139576] AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.0 domain=0x0009 address=0x00000000ffffffc0 flags=0x0010]
-[   89.152017] AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.0 domain=0x0009 address=0x00000000ffffffc0 flags=0x0010]
-[   89.164481] AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.0 domain=0x0009 address=0x00000000ffffffc0 flags=0x0010]
-[   89.176994] AMD-Vi: Event logged [[   89.177657] reboot: Power down
-[   89.185286] acpi_power_off called
-
-Now this device 00:12.0 is that OHCI thing for which we have the
-hcd-pci.c hunk applied above, AFAICT:
-
-00:12.0 USB controller: Advanced Micro Devices, Inc. [AMD/ATI] SB7x0/SB8x0/SB9x0 USB OHCI0 Controller
-
-so it must be still some timing issue there after disabling the device
-and *before* disabling the IOMMU.
-
-I don't have a clue how to further debug that. Joerg is on CC.
-
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index 6e575ed..bcb64eb 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -4698,19 +4698,10 @@ pmcraid_register_interrupt_handler(struct pmcraid_instance *pinstance)
+ 		for (i = 0; i < PMCRAID_NUM_MSIX_VECTORS; i++)
+ 			entries[i].entry = i;
+ 
+-		rc = pci_enable_msix(pdev, entries, num_hrrq);
+-		if (rc < 0)
++		num_hrrq = pci_enable_msix_range(pdev, entries, 1, num_hrrq);
++		if (num_hrrq < 0)
+ 			goto pmcraid_isr_legacy;
+ 
+-		/* Check how many MSIX vectors are allocated and register
+-		 * msi-x handlers for each of them giving appropriate buffer
+-		 */
+-		if (rc > 0) {
+-			num_hrrq = rc;
+-			if (pci_enable_msix(pdev, entries, num_hrrq))
+-				goto pmcraid_isr_legacy;
+-		}
+-
+ 		for (i = 0; i < num_hrrq; i++) {
+ 			pinstance->hrrq_vector[i].hrrq_id = i;
+ 			pinstance->hrrq_vector[i].drv_inst = pinstance;
 -- 
-Regards/Gruss,
-    Boris.
+1.9.3
 
-Sent from a fat crate under my desk. Formatting is fine.
---
