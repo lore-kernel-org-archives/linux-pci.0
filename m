@@ -1,81 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:45629 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751579AbaHMG41 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Aug 2014 02:56:27 -0400
-From: "Chen, Gong" <gong.chen@linux.intel.com>
-To: bhelgaas@google.com, rdunlap@infradead.org
-Cc: bp@alien8.de, tony.luck@intel.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Chen, Gong" <gong.chen@linux.intel.com>
-Subject: [RESEND 3/5] PCIe, trace: Replenish missed AER status bits for PCIE trace I/F
-Date: Wed, 13 Aug 2014 02:22:39 -0400
-Message-Id: <1407910961-7798-4-git-send-email-gong.chen@linux.intel.com>
-In-Reply-To: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
-References: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
+Received: from mail-yh0-f41.google.com ([209.85.213.41]:62403 "EHLO
+	mail-yh0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750997AbaHSEky (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Aug 2014 00:40:54 -0400
+Received: by mail-yh0-f41.google.com with SMTP id b6so5361825yha.14
+        for <linux-pci@vger.kernel.org>; Mon, 18 Aug 2014 21:40:54 -0700 (PDT)
+Date: Mon, 18 Aug 2014 22:40:50 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Thierry Reding <treding@nvidia.com>,
+	Andrew Lunn <andrew@lunn.ch>
+Subject: [GIT PULL] PCI changes for v3.17 (part 3)
+Message-ID: <20140819044050.GA15551@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds all missed AER error bits(CE & UC) existed in PCI-e
-SPEC r3.0 for trace interface.
+Hi Linus,
 
-Signed-off-by: Chen, Gong <gong.chen@linux.intel.com>
----
- include/ras/ras_event.h | 35 ++++++++++++++++++++++-------------
- 1 file changed, 22 insertions(+), 13 deletions(-)
+I screwed up.  I intended these changes for v3.17, and I put them in my
+'next' branch just before leaving on vacation, but I forgot to include them
+in my merge window pull request when I returned.  They're low-risk, so I'm
+sending them to you now (late), but the world won't end if they wait until
+v3.18.
 
-diff --git a/include/ras/ras_event.h b/include/ras/ras_event.h
-index 0f2cca4ccbf0..0f04a9755d1e 100644
---- a/include/ras/ras_event.h
-+++ b/include/ras/ras_event.h
-@@ -174,25 +174,34 @@ TRACE_EVENT(mc_event,
-  * u8 severity -	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
-  */
- 
--#define aer_correctable_errors		\
--	{PCI_ERR_COR_RCVR,	"Receiver Error"},	\
--	{PCI_ERR_COR_BAD_TLP,	"Bad TLP"},		\
--	{PCI_ERR_COR_BAD_DLLP,	"Bad DLLP"},		\
--	{PCI_ERR_COR_REP_ROLL,	"RELAY_NUM Rollover"},	\
--	{PCI_ERR_COR_REP_TIMER,	"Replay Timer Timeout"},\
--	{PCI_ERR_COR_ADV_NFAT,	"Advisory Non-Fatal"}
--
--#define aer_uncorrectable_errors		\
--	{PCI_ERR_UNC_DLP,	"Data Link Protocol"},		\
-+#define aer_correctable_errors					\
-+	{PCI_ERR_COR_RCVR,	"Receiver Error"},		\
-+	{PCI_ERR_COR_BAD_TLP,	"Bad TLP"},			\
-+	{PCI_ERR_COR_BAD_DLLP,	"Bad DLLP"},			\
-+	{PCI_ERR_COR_REP_ROLL,	"RELAY_NUM Rollover"},		\
-+	{PCI_ERR_COR_REP_TIMER,	"Replay Timer Timeout"},	\
-+	{PCI_ERR_COR_ADV_NFAT,	"Advisory Non-Fatal Error"},	\
-+	{PCI_ERR_COR_INTERNAL,	"Corrected Internal Error"},	\
-+	{PCI_ERR_COR_LOG_OVER,	"Header Log Overflow"}
-+
-+#define aer_uncorrectable_errors				\
-+	{PCI_ERR_UNC_TRAIN,	"Undefined"},			\
-+	{PCI_ERR_UNC_DLP,	"Data Link Protocol Error"},	\
-+	{PCI_ERR_UNC_SURPDN,	"Surprise Down Error"},		\
- 	{PCI_ERR_UNC_POISON_TLP,"Poisoned TLP"},		\
--	{PCI_ERR_UNC_FCP,	"Flow Control Protocol"},	\
-+	{PCI_ERR_UNC_FCP,	"Flow Control Protocol Error"},	\
- 	{PCI_ERR_UNC_COMP_TIME,	"Completion Timeout"},		\
- 	{PCI_ERR_UNC_COMP_ABORT,"Completer Abort"},		\
- 	{PCI_ERR_UNC_UNX_COMP,	"Unexpected Completion"},	\
- 	{PCI_ERR_UNC_RX_OVER,	"Receiver Overflow"},		\
- 	{PCI_ERR_UNC_MALF_TLP,	"Malformed TLP"},		\
--	{PCI_ERR_UNC_ECRC,	"ECRC"},			\
--	{PCI_ERR_UNC_UNSUP,	"Unsupported Request"}
-+	{PCI_ERR_UNC_ECRC,	"ECRC Error"},			\
-+	{PCI_ERR_UNC_UNSUP,	"Unsupported Request Error"},	\
-+	{PCI_ERR_UNC_ACSV,	"ACS Violation"},		\
-+	{PCI_ERR_UNC_INTN,	"Uncorrectable Internal Error"},\
-+	{PCI_ERR_UNC_MCBTLP,	"MC Blocked TLP"},		\
-+	{PCI_ERR_UNC_ATOMEG,	"AtomicOp Egress Blocked"},	\
-+	{PCI_ERR_UNC_TLPPRE,	"TLP Prefix Blocked Error"}
- 
- TRACE_EVENT(aer_event,
- 	TP_PROTO(const char *dev_name,
--- 
-2.0.0.rc2
+The main reason to include them would be to support the TI DRA7xx.
 
+Bjorn
+
+
+The following changes since commit 792688fde431b4fdb2cf10a6f7589a8176b6b14a:
+
+  Merge branches 'pci/host-generic', 'pci/host-mvebu', 'pci/host-rcar', 'pci/host-tegra', 'pci/msi', 'pci/misc', 'pci/resource' and 'pci/virtualization' into next (2014-07-16 17:09:47 -0600)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.17-changes-3
+
+for you to fetch changes up to 981c191778a4f92bc82456205a444d522843a630:
+
+  Merge branches 'pci/host-designware', 'pci/host-mvebu' and 'pci/host-tegra' into next (2014-07-22 17:55:50 -0600)
+
+----------------------------------------------------------------
+PCI changes for v3.17 (part 3):
+
+  Marvell MVEBU
+    - Remove ARCH_KIRKWOOD dependency (Andrew Lunn)
+
+  NVIDIA Tegra
+    - Add debugfs support (Thierry Reding)
+
+  Synopsys DesignWare
+    - Look for configuration space in 'reg', not 'ranges' (Kishon Vijay Abraham I)
+    - Program ATU with untranslated address (Kishon Vijay Abraham I)
+    - Add config access-related pcie_host_ops for v3.65 hardware (Murali Karicheri)
+    - Add MSI-related pcie_host_ops for v3.65 hardware (Murali Karicheri)
+
+  TI DRA7xx
+    - Add TI DR7xx PCIe driver (Kishon Vijay Abraham I)
+
+----------------------------------------------------------------
+Andrew Lunn (1):
+      PCI: mvebu: Remove ARCH_KIRKWOOD dependency
+
+Bjorn Helgaas (1):
+      Merge branches 'pci/host-designware', 'pci/host-mvebu' and 'pci/host-tegra' into next
+
+Kishon Vijay Abraham I (3):
+      PCI: designware: Look for configuration space in 'reg', not 'ranges'
+      PCI: designware: Program ATU with untranslated address
+      PCI: dra7xx: Add TI DRA7xx PCIe driver
+
+Murali Karicheri (2):
+      PCI: designware: Add config access-related pcie_host_ops for v3.65 hardware
+      PCI: designware: Add MSI-related pcie_host_ops for v3.65 hardware
+
+Thierry Reding (1):
+      PCI: tegra: Add debugfs support
+
+ .../devicetree/bindings/pci/designware-pcie.txt    |   4 +
+ Documentation/devicetree/bindings/pci/ti-pci.txt   |  59 +++
+ MAINTAINERS                                        |   8 +
+ drivers/pci/host/Kconfig                           |  11 +-
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pci-dra7xx.c                      | 458 +++++++++++++++++++++
+ drivers/pci/host/pci-tegra.c                       | 118 ++++++
+ drivers/pci/host/pcie-designware.c                 | 134 ++++--
+ drivers/pci/host/pcie-designware.h                 |  11 +
+ 9 files changed, 771 insertions(+), 33 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/ti-pci.txt
+ create mode 100644 drivers/pci/host/pci-dra7xx.c
