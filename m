@@ -1,88 +1,239 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g2t2354.austin.hp.com ([15.217.128.53]:35513 "EHLO
-	g2t2354.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751852AbaHMT2B (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Aug 2014 15:28:01 -0400
-Date: Wed, 13 Aug 2014 14:27:08 -0500
-From: scameron@beardog.cce.hp.com
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, iss_storagedev@hp.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
-	scameron@beardog.cce.hp.com
-Subject: Re: [PATCH v2 RESEND 10/23] hpsa: Use pci_enable_msix_range() instead of pci_enable_msix()
-Message-ID: <20140813192708.GD19666@beardog.cce.hp.com>
-References: <cover.1397461652.git.agordeev@redhat.com> <6e17ab33b0ddbe49f72bf0d9c5fd3019acf6d6ca.1397461652.git.agordeev@redhat.com>
-Mime-Version: 1.0
+Received: from mail-yk0-f173.google.com ([209.85.160.173]:47926 "EHLO
+	mail-yk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751186AbaHSVhe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Aug 2014 17:37:34 -0400
+Received: by mail-yk0-f173.google.com with SMTP id 131so5917179ykp.18
+        for <linux-pci@vger.kernel.org>; Tue, 19 Aug 2014 14:37:33 -0700 (PDT)
+Date: Tue, 19 Aug 2014 15:37:26 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
+Subject: Re: [PATCH V7 01/17] PCI/IOV: Export interface for retrieve VF's BDF
+Message-ID: <20140819213726.GB6295@google.com>
+References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1406182947-11302-2-git-send-email-weiyang@linux.vnet.ibm.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6e17ab33b0ddbe49f72bf0d9c5fd3019acf6d6ca.1397461652.git.agordeev@redhat.com>
+In-Reply-To: <1406182947-11302-2-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 14, 2014 at 10:05:34AM +0200, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
+On Thu, Jul 24, 2014 at 02:22:11PM +0800, Wei Yang wrote:
+> When implementing the SR-IOV on PowerNV platform, some resource reservation is
+> needed for VFs which don't exist at the bootup stage. To do the match between
+> resources and VFs, the code need to get the VF's BDF in advance.
+
+Ben started explaining this whole hardware PE/VF/etc stuff to me, but it
+hasn't all sunk in yet.  We need to describe it somewhere (it sounds pretty
+involved, so maybe an extended description in Documentation/ would be
+appropriate).
+
+What I'm concerned about is that PCI resource assignment is a huge mess,
+and this obviously complicates it even more.  That's necessary and OK, but
+I want to at least preserve the possibility that somebody could rework it
+to make it manageable, and that means we need to know what the special
+constraints of PowerNV are.
+
+Code question below.
+
+> In this patch, it exports the interface to retrieve VF's BDF:
+>    * Make the virtfn_bus as an interface
+>    * Make the virtfn_devfn as an interface
+>    * rename them with more specific name
+>    * code cleanup in pci_sriov_resource_alignment()
 > 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-> Cc: iss_storagedev@hp.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 > ---
->  drivers/scsi/hpsa.c |   29 +++++++++++++----------------
->  1 files changed, 13 insertions(+), 16 deletions(-)
+>  drivers/pci/iov.c   |   26 +++++++-------------------
+>  drivers/pci/pci.h   |   19 -------------------
+>  include/linux/pci.h |   44 ++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 51 insertions(+), 38 deletions(-)
 > 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 3284edb..36bb1e4 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -6144,26 +6144,23 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
->  		goto default_int_mode;
->  	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
->  		dev_info(&h->pdev->dev, "MSIX\n");
-> -		h->msix_vector = MAX_REPLY_QUEUES;
-> -		err = pci_enable_msix(h->pdev, hpsa_msix_entries,
-> -				      h->msix_vector);
-> -		if (err > 0) {
-> +		err = pci_enable_msix_range(h->pdev, hpsa_msix_entries,
-> +					    1, MAX_REPLY_QUEUES);
-> +		if (err < 0) {
-> +			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n", err);
-> +			h->msix_vector = 0;
-> +			goto single_msi_mode;
-> +		} else if (err < MAX_REPLY_QUEUES) {
->  			dev_warn(&h->pdev->dev, "only %d MSI-X vectors "
->  			       "available\n", err);
-> -			h->msix_vector = err;
-> -			err = pci_enable_msix(h->pdev, hpsa_msix_entries,
-> -					      h->msix_vector);
-> -		}
-> -		if (!err) {
-> -			for (i = 0; i < h->msix_vector; i++)
-> -				h->intr[i] = hpsa_msix_entries[i].vector;
-> -			return;
-> -		} else {
-> -			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
-> -			       err);
-> -			h->msix_vector = 0;
->  		}
-> +
-> +		h->msix_vector = err;
-> +		for (i = 0; i < h->msix_vector; i++)
-> +			h->intr[i] = hpsa_msix_entries[i].vector;
-> +		return;
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index cb6f247..7566238 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -19,18 +19,6 @@
+>  
+>  #define VIRTFN_ID_LEN	16
+>  
+> -static inline u8 virtfn_bus(struct pci_dev *dev, int id)
+> -{
+> -	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
+> -				    dev->sriov->stride * id) >> 8);
+> -}
+> -
+> -static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
+> -{
+> -	return (dev->devfn + dev->sriov->offset +
+> -		dev->sriov->stride * id) & 0xff;
+> -}
+> -
+>  static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+>  {
+>  	struct pci_bus *child;
+> @@ -69,7 +57,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+>  	struct pci_bus *bus;
+>  
+>  	mutex_lock(&iov->dev->sriov->lock);
+> -	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
+> +	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
+>  	if (!bus)
+>  		goto failed;
+>  
+> @@ -77,7 +65,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+>  	if (!virtfn)
+>  		goto failed0;
+>  
+> -	virtfn->devfn = virtfn_devfn(dev, id);
+> +	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
+>  	virtfn->vendor = dev->vendor;
+>  	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
+>  	pci_setup_device(virtfn);
+> @@ -140,8 +128,8 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+>  	struct pci_sriov *iov = dev->sriov;
+>  
+>  	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
+> -					     virtfn_bus(dev, id),
+> -					     virtfn_devfn(dev, id));
+> +					     pci_iov_virtfn_bus(dev, id),
+> +					     pci_iov_virtfn_devfn(dev, id));
+>  	if (!virtfn)
+>  		return;
+>  
+> @@ -216,7 +204,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  	iov->offset = offset;
+>  	iov->stride = stride;
+>  
+> -	if (virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
+> +	if (pci_iov_virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
+>  		dev_err(&dev->dev, "SR-IOV: bus number out of range\n");
+>  		return -ENOMEM;
 >  	}
-> +single_msi_mode:
->  	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
->  		dev_info(&h->pdev->dev, "MSI\n");
->  		if (!pci_enable_msi(h->pdev))
+> @@ -516,7 +504,7 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
+>  	if (!reg)
+>  		return 0;
+>  
+> -	 __pci_read_base(dev, type, &tmp, reg);
+> +	__pci_read_base(dev, type, &tmp, reg);
+>  	return resource_alignment(&tmp);
+>  }
+>  
+> @@ -546,7 +534,7 @@ int pci_iov_bus_range(struct pci_bus *bus)
+>  	list_for_each_entry(dev, &bus->devices, bus_list) {
+>  		if (!dev->is_physfn)
+>  			continue;
+> -		busnr = virtfn_bus(dev, dev->sriov->total_VFs - 1);
+> +		busnr = pci_iov_virtfn_bus(dev, dev->sriov->total_VFs - 1);
+>  		if (busnr > max)
+>  			max = busnr;
+>  	}
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 0601890..a3158b2 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -221,25 +221,6 @@ static inline int pci_ari_enabled(struct pci_bus *bus)
+>  void pci_reassigndev_resource_alignment(struct pci_dev *dev);
+>  void pci_disable_bridge_window(struct pci_dev *dev);
+>  
+> -/* Single Root I/O Virtualization */
+> -struct pci_sriov {
+> -	int pos;		/* capability position */
+> -	int nres;		/* number of resources */
+> -	u32 cap;		/* SR-IOV Capabilities */
+> -	u16 ctrl;		/* SR-IOV Control */
+> -	u16 total_VFs;		/* total VFs associated with the PF */
+> -	u16 initial_VFs;	/* initial VFs associated with the PF */
+> -	u16 num_VFs;		/* number of VFs available */
+> -	u16 offset;		/* first VF Routing ID offset */
+> -	u16 stride;		/* following VF stride */
+> -	u32 pgsz;		/* page size for BAR alignment */
+> -	u8 link;		/* Function Dependency Link */
+> -	u16 driver_max_VFs;	/* max num VFs driver supports */
+> -	struct pci_dev *dev;	/* lowest numbered PF */
+> -	struct pci_dev *self;	/* this PF */
+> -	struct mutex lock;	/* lock for VF bus */
+> -};
+> -
+>  #ifdef CONFIG_PCI_ATS
+>  void pci_restore_ats_state(struct pci_dev *dev);
+>  #else
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 466bcd1..194db52 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -245,6 +245,27 @@ struct pci_vpd;
+>  struct pci_sriov;
+>  struct pci_ats;
+>  
+> +/* Single Root I/O Virtualization */
+> +struct pci_sriov {
+> +	int pos;		/* capability position */
+> +	int nres;		/* number of resources */
+> +	u32 cap;		/* SR-IOV Capabilities */
+> +	u16 ctrl;		/* SR-IOV Control */
+> +	u16 total_VFs;		/* total VFs associated with the PF */
+> +	u16 initial_VFs;	/* initial VFs associated with the PF */
+> +	u16 num_VFs;		/* number of VFs available */
+> +	u16 offset;		/* first VF Routing ID offset */
+> +	u16 stride;		/* following VF stride */
+> +	u32 pgsz;		/* page size for BAR alignment */
+> +	u8 link;		/* Function Dependency Link */
+> +	u16 driver_max_VFs;	/* max num VFs driver supports */
+> +	struct pci_dev *dev;	/* lowest numbered PF */
+> +	struct pci_dev *self;	/* this PF */
+> +	struct mutex lock;	/* lock for VF bus */
+> +	struct work_struct mtask; /* VF Migration task */
+> +	u8 __iomem *mstate;	/* VF Migration State Array */
+> +};
+> +
+>  /*
+>   * The pci_dev structure is used to describe PCI devices.
+>   */
+> @@ -1616,6 +1637,21 @@ int pci_ext_cfg_avail(void);
+>  void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
+>  
+>  #ifdef CONFIG_PCI_IOV
+> +static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
+> +{
+> +	if (!dev->is_physfn)
+> +		return -EINVAL;
+> +	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
+> +				    dev->sriov->stride * id) >> 8);
+> +}
+> +static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
+> +{
+> +	if (!dev->is_physfn)
+> +		return -EINVAL;
+> +	return (dev->devfn + dev->sriov->offset +
+> +		dev->sriov->stride * id) & 0xff;
+> +}
+
+Do these really need to be inline?  If they weren't inline, we wouldn't
+have to move struct pci_sriov to the public header file.
+
+> +
+>  int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+>  void pci_disable_sriov(struct pci_dev *dev);
+>  int pci_num_vf(struct pci_dev *dev);
+> @@ -1623,6 +1659,14 @@ int pci_vfs_assigned(struct pci_dev *dev);
+>  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+>  int pci_sriov_get_totalvfs(struct pci_dev *dev);
+>  #else
+> +static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
+> +{
+> +	return -ENXIO;
+> +}
+> +static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
+> +{
+> +	return -ENXIO;
+> +}
+>  static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+>  { return -ENODEV; }
+>  static inline void pci_disable_sriov(struct pci_dev *dev) { }
 > -- 
-> 1.7.7.6
-
-Ack.
-
--- steve
-
+> 1.7.9.5
+> 
