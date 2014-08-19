@@ -1,62 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:38043 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755870AbaHHGgt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Aug 2014 02:36:49 -0400
-Received: by mail-pd0-f176.google.com with SMTP id y10so6477800pdj.7
-        for <linux-pci@vger.kernel.org>; Thu, 07 Aug 2014 23:36:49 -0700 (PDT)
-From: Tim Harvey <tharvey@gateworks.com>
-To: l.stach@pengutronix.de
-Cc: Fabio Estevam <festevam@gmail.com>, shawn.guo@freescale.com,
-	stable@vger.kernel.org, marex@denx.de, bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-Subject: [PATCH] PCI: imx6: fix occasional link failure
-Date: Thu,  7 Aug 2014 23:36:40 -0700
-Message-Id: <1407479800-6730-1-git-send-email-tharvey@gateworks.com>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:42696 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752336AbaHSBoM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Aug 2014 21:44:12 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 19 Aug 2014 11:44:10 +1000
+Date: Tue, 19 Aug 2014 09:44:01 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v9 02/12] PCI: OF: Parse and map the IRQ when adding the
+ PCI device.
+Message-ID: <20140819014401.GB9558@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+ <1407860725-25202-3-git-send-email-Liviu.Dudau@arm.com>
+ <20140814145804.GA5586@richard>
+ <20140814154959.GG25761@e106497-lin.cambridge.arm.com>
+ <20140815085632.GA4954@richard>
+ <20140815103052.GD27553@e106497-lin.cambridge.arm.com>
+ <20140818142550.GN20043@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140818142550.GN20043@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to the IMX6 reference manuals, REF_SSP_EN (Reference clock enable
-for SS function) must remain deasserted until the reference clock is running
-at the appropriate frequency.
+On Mon, Aug 18, 2014 at 03:25:50PM +0100, Catalin Marinas wrote:
+>...
+>> Well, it will become necessary as old code gets dismantled and converted towards
+>> this patchset. To give you an example that I'm familiar with, for arch/arm the
+>> host bridge drivers have moved into drivers/pci/host, but they still depend/use
+>> the bios32 infrastructure that takes care of setting up the irq. When they switch
+>> to my version they would have to go and debug the "irq not being assigned" issue
+>> and it is quite likely that some of the people doing the conversion will complain
+>> about my code rather than understanding the issue. What I'm trying to do is to
+>> make switching to my patchset as painless as possible, with a cleanup to remove
+>> redundant operations coming after the switchover.
+>
+>While the goal is fine, until we see a common pattern for what needs to
+>go into pcibios_add_device() I think we should have an arm64-specific
+>implementation (and probably an arm32 specific one as well). I can see
+>powerpc uses it for setting the DMA ops. Would we have a similar need on
+>arm64 to choose between coherent and non-coherent dma_ops?
 
-Without this patch we find a high link failure rate (>5%) on certain
-IMX6 boards at various temperatures.
+Liviu,
 
-Signed-off-by: Tim Harvey <tharvey@gateworks.com>
----
- drivers/pci/host/pci-imx6.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+I have the same feeling with Catalin. An arm64-specific implementation of
+pcibios_add_device() would be better.
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 1be6073..9b6bab9 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -256,11 +256,6 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
- 	int ret;
- 
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
--
- 	ret = clk_prepare_enable(imx6_pcie->pcie_phy);
- 	if (ret) {
- 		dev_err(pp->dev, "unable to enable pcie_phy clock\n");
-@@ -282,6 +277,12 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 	/* allow the clocks to stabilize */
- 	usleep_range(200, 500);
- 
-+	/* power up core phy and enable ref clock */
-+	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
-+	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
-+
- 	/* Some boards don't have PCIe reset GPIO. */
- 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
- 		gpio_set_value(imx6_pcie->reset_gpio, 0);
+No more other concerns from my side.
+
+>
+>Also at some point we'll get ACPI support, so I'm not sure what we do
+>with assigning the dev->irq here but definitely of_* functions won't
+>work.
+>
+>-- 
+>Catalin
+
 -- 
-1.8.3.2
+Richard Yang
+Help you, Help me
 
