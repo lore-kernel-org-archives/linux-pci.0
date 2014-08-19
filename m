@@ -1,51 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nbfkord-smmo04.seg.att.com ([209.65.160.86]:9264 "EHLO
-	nbfkord-smmo04.seg.att.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755234AbaHAMPq convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 1 Aug 2014 08:15:46 -0400
-Message-ID: <53DB84E6.1070206@solarflare.com>
-Date: Fri, 1 Aug 2014 13:15:34 +0100
-From: Edward Cree <ecree@solarflare.com>
-MIME-Version: 1.0
-To: Ethan Zhao <ethan.kernel@gmail.com>
-CC: linux-pci <linux-pci@vger.kernel.org>,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Vasundhara Volam <vasundhara.volam@emulex.com>
-Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
-References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com> <alpine.LFD.2.03.1407311500570.16821@solarflare.com> <CABawtvPwxovKV==8RVCL1OcsdfnZDDjr=d1uYp-A=bAzYbmKww@mail.gmail.com>
-In-Reply-To: <CABawtvPwxovKV==8RVCL1OcsdfnZDDjr=d1uYp-A=bAzYbmKww@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:39760 "EHLO
+	dhcp-27-160.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751284AbaHSUSL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Aug 2014 16:18:11 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Tadeusz Struk <tadeusz.struk@intel.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	"David S. Miller" <davem@davemloft.net>, qat-linux@intel.com,
+	linux-crypto@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH] crypto: qat - Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Tue, 19 Aug 2014 09:32:04 +0200
+Message-Id: <1408433524-11487-1-git-send-email-agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/08/14 04:51, Ethan Zhao wrote:
-> Though I like this patch, it shows direct style, but it will change
-> the meaning of a function not mentioned here.
->
->   int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
-Am I missing something here, or is that exactly the function mentioned
-in the patch title / subject line?
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-> So far seems no driver call pci_sriov_set_totalvfs() with numvfs = 0
-> and the patch will change the behavior of the drivers, but it will
-> definitely change the test cases and documents related to IOV.
-As for test cases and documents, I can't find any in the kernel tree -
-if I grep for pci_sriov_set_totalvfs, the only mentions I find are:
-* The declaration in include/linux/pci.h.  Doesn't have any comments.
-* The definition in drivers/pci/iov.c.  The comment doesn't document the
-behaviour in the numvfs = 0 case.
-* Documentation/ABI/testing/sysfs-bus-pci.  Describes the function's
-purpose "reduce the value read from [the sriov_totalvfs sysfs file]" but
-doesn't say anything about the numvfs = 0 case.
-* the Intel igb and ixgbe ethernet drivers.  Both pass nonzero constants
-for numvfs.
-* the Emulex benet driver.  This went into Dave Miller's net-next branch
-on 30/06/2014 (so hasn't hit Linus' or other trees yet), but it looks to
-me like it might call with numvfs = 0.  CCing the author of that patch
-(Vasundhara Volam) for comments.
+Cc: Tadeusz Struk <tadeusz.struk@intel.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: qat-linux@intel.com
+Cc: linux-crypto@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/crypto/qat/qat_dh895xcc/adf_isr.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
--Edward
-The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
+diff --git a/drivers/crypto/qat/qat_dh895xcc/adf_isr.c b/drivers/crypto/qat/qat_dh895xcc/adf_isr.c
+index d4172de..1082e3b 100644
+--- a/drivers/crypto/qat/qat_dh895xcc/adf_isr.c
++++ b/drivers/crypto/qat/qat_dh895xcc/adf_isr.c
+@@ -70,9 +70,9 @@ static int adf_enable_msix(struct adf_accel_dev *accel_dev)
+ 	for (i = 0; i < msix_num_entries; i++)
+ 		pci_dev_info->msix_entries.entries[i].entry = i;
+ 
+-	if (pci_enable_msix(pci_dev_info->pci_dev,
+-			    pci_dev_info->msix_entries.entries,
+-			    msix_num_entries)) {
++	if (pci_enable_msix_exact(pci_dev_info->pci_dev,
++				  pci_dev_info->msix_entries.entries,
++				  msix_num_entries)) {
+ 		pr_err("QAT: Failed to enable MSIX IRQ\n");
+ 		return -EFAULT;
+ 	}
+-- 
+1.9.3
+
