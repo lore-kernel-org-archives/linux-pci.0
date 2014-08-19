@@ -1,85 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 15 Aug 2014 10:48:03 -0500
-From: scameron@beardog.cce.hp.com
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, iss_storagedev@hp.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
-	scameron@beardog.cce.hp.com
-Subject: Re: [PATCH v2 RESEND 09/23] hpsa: Use pci_enable_msix_range() instead of pci_enable_msix()
-Message-ID: <20140815154803.GY19666@beardog.cce.hp.com>
-References: <cover.1405533479.git.agordeev@redhat.com> <fa8dc16252a7afa6186b78af4b90590755f45507.1405533479.git.agordeev@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <fa8dc16252a7afa6186b78af4b90590755f45507.1405533479.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Tue, 19 Aug 2014 13:05:30 +0100
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v9 02/12] PCI: OF: Parse and map the IRQ when adding the
+ PCI device.
+Message-ID: <20140819120530.GF13147@bart.dudau.co.uk>
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+ <1407860725-25202-3-git-send-email-Liviu.Dudau@arm.com>
+ <20140814145804.GA5586@richard>
+ <20140814154959.GG25761@e106497-lin.cambridge.arm.com>
+ <20140815085632.GA4954@richard>
+ <20140815103052.GD27553@e106497-lin.cambridge.arm.com>
+ <20140818142550.GN20043@localhost>
+ <20140819014401.GB9558@richard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140819014401.GB9558@richard>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 16, 2014 at 08:05:13PM +0200, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
+On Tue, Aug 19, 2014 at 09:44:01AM +0800, Wei Yang wrote:
+> On Mon, Aug 18, 2014 at 03:25:50PM +0100, Catalin Marinas wrote:
+> >...
+> >> Well, it will become necessary as old code gets dismantled and converted towards
+> >> this patchset. To give you an example that I'm familiar with, for arch/arm the
+> >> host bridge drivers have moved into drivers/pci/host, but they still depend/use
+> >> the bios32 infrastructure that takes care of setting up the irq. When they switch
+> >> to my version they would have to go and debug the "irq not being assigned" issue
+> >> and it is quite likely that some of the people doing the conversion will complain
+> >> about my code rather than understanding the issue. What I'm trying to do is to
+> >> make switching to my patchset as painless as possible, with a cleanup to remove
+> >> redundant operations coming after the switchover.
+> >
+> >While the goal is fine, until we see a common pattern for what needs to
+> >go into pcibios_add_device() I think we should have an arm64-specific
+> >implementation (and probably an arm32 specific one as well). I can see
+> >powerpc uses it for setting the DMA ops. Would we have a similar need on
+> >arm64 to choose between coherent and non-coherent dma_ops?
 > 
-> Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-> Cc: iss_storagedev@hp.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->  drivers/scsi/hpsa.c |   27 ++++++++++++---------------
->  1 files changed, 12 insertions(+), 15 deletions(-)
+> Liviu,
 > 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 648dec2..5c4ab6e 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -6160,25 +6160,22 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
->  		h->msix_vector = MAX_REPLY_QUEUES;
->  		if (h->msix_vector > num_online_cpus())
->  			h->msix_vector = num_online_cpus();
-> -		err = pci_enable_msix(h->pdev, hpsa_msix_entries,
-> -				      h->msix_vector);
-> -		if (err > 0) {
-> +		err = pci_enable_msix_range(h->pdev, hpsa_msix_entries,
-> +					    1, h->msix_vector);
-> +		if (err < 0) {
-> +			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n", err);
-> +			h->msix_vector = 0;
-> +			goto single_msi_mode;
-> +		} else if (err < h->msix_vector) {
->  			dev_warn(&h->pdev->dev, "only %d MSI-X vectors "
->  			       "available\n", err);
-> -			h->msix_vector = err;
-> -			err = pci_enable_msix(h->pdev, hpsa_msix_entries,
-> -					      h->msix_vector);
-> -		}
-> -		if (!err) {
-> -			for (i = 0; i < h->msix_vector; i++)
-> -				h->intr[i] = hpsa_msix_entries[i].vector;
-> -			return;
-> -		} else {
-> -			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
-> -			       err);
-> -			h->msix_vector = 0;
->  		}
-> +		h->msix_vector = err;
-> +		for (i = 0; i < h->msix_vector; i++)
-> +			h->intr[i] = hpsa_msix_entries[i].vector;
-> +		return;
->  	}
-> +single_msi_mode:
->  	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
->  		dev_info(&h->pdev->dev, "MSI\n");
->  		if (!pci_enable_msi(h->pdev))
+> I have the same feeling with Catalin. An arm64-specific implementation of
+> pcibios_add_device() would be better.
+> 
+> No more other concerns from my side.
+
+OK, I will make the change when returning from my holiday at the beginning of September,
+when I plan to send v10.
+
+Best regards,
+Liviu
+
+> 
+> >
+> >Also at some point we'll get ACPI support, so I'm not sure what we do
+> >with assigning the dev->irq here but definitely of_* functions won't
+> >work.
+> >
+> >-- 
+> >Catalin
+> 
 > -- 
-> 1.7.7.6
+> Richard Yang
+> Help you, Help me
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Ack. 
+-- 
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
 
-I had previously acked an older, but seemingly semantically identical patch.
-Was requested to ack this one as well.
-
--- steve
+ One small step
+   for me ...
 
