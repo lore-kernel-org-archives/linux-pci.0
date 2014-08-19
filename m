@@ -1,205 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:44087 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752360AbaHKKQv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 06:16:51 -0400
-Received: by mail-ig0-f179.google.com with SMTP id h18so3980127igc.12
-        for <linux-pci@vger.kernel.org>; Mon, 11 Aug 2014 03:16:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140808012017.GA11712@richard>
-References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
-	<1407255083-9356-2-git-send-email-matthew_minter@xyratex.com>
-	<20140807034338.GA13444@richard>
-	<CAFJTrDuzdoOPoQ_rpNsYU+OeE380sY37aQaMSudhu_MVKo352g@mail.gmail.com>
-	<20140808012017.GA11712@richard>
-Date: Mon, 11 Aug 2014 11:16:50 +0100
-Message-ID: <CAFJTrDs0oELF3FNaf6axQvPkLv1skK1f3j_Hgre2VX9XDFBOag@mail.gmail.com>
-Subject: Re: [PATCH 01/22] Added some infrastructure to allow assigning PCI
- device IRQs at device enable time and removed pci_fixup_irqs as the other
- change obsolites it.
-From: Matthew Minter <matthew_minter@xyratex.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 19 Aug 2014 13:05:54 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] drivers: pci: convert generic host controller to DT host
+ bridge creation API
+Message-ID: <20140819120553.GA23128@arm.com>
+References: <1407861695-25549-1-git-send-email-Liviu.Dudau@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1407861695-25549-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It seems that by coincidence, my testing boxes did not have any
-devices which needed the PCI_INTERRUPT_PIN fixed up. Therefore I had
-not noticed the fact the fixed value was not used in the enable path.
+Hi guys,
 
-I would assume that someone with a different setup would have had a
-problem there however so thank you for pointing out this bug. I have
-integrated your fix into version 2 of the patch set.
+On Tue, Aug 12, 2014 at 05:41:35PM +0100, Liviu Dudau wrote:
+> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> 
+> In order to consolidate DT configuration for PCI host controllers in the
+> kernel, a new API was introduced that allows creating a host bridge
+> and its PCI bus from DT, removing duplicated code present in the
+> majority of pci host driver implementations.
+> 
+> This patch converts the existing PCI generic host controller driver to
+> the new API. Most of the code parsing ranges and creating resources is
+> now delegated to of_create_pci_host_bridge() API which also triggers
+> a scan of the root bus.
+> 
+> The setup hook passed by the host controller code to the generic DT
+> layer completes the initialization by performing resource filtering
+> (ie it checks that at least one non-prefetchable memory resource is
+> present), remapping IO and configuration regions and initializing
+> the required PCI flags.
 
-Many thanks.
+[...]
 
-On 8 August 2014 02:20, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
-> On Thu, Aug 07, 2014 at 12:35:41PM +0100, Matthew Minter wrote:
->>Just to confirm, are you saying that:
->>
->>>+
->>>+      pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
->>>+      pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
->>>+
->>
->>Should become:
->>
->>>+
->>>+     pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
->>>+     pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
->>>+
->>
->>So that we read the config byte after running the assignment and fixup?
->>
->>I had not thought about the case where the fixup changes the
->>PCI_INTERRUPT_PIN value.
->>It looks to me like you are correct there and this should indeed be fixed.
->>I can certainly swap those around for the next patch revision if that
->>is what you are suggesting?
->>
->
-> Yes, pci_read_config_byte() should be called after pdev_assign_irq().
->
->>I will give that a quick test but it sounds like you are correct.
->
-> I am willing to know the result, especially in the original one, what pin
-> value you retrieved from pci_dev.
->
->>
->>Many thanks,
->>Matthew
->>
->>On 7 August 2014 04:43, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->>> On Tue, Aug 05, 2014 at 05:11:02PM +0100, matthew_minter@xyratex.com wrote:
->>>>From: matthew_minter <matthew_minter@xyratex.com>
->>>>
->>>>---
->>>> drivers/pci/Makefile      | 15 ++-------------
->>>> drivers/pci/host-bridge.c |  2 +-
->>>> drivers/pci/pci.c         |  6 +++++-
->>>> drivers/pci/pci.h         |  1 +
->>>> drivers/pci/probe.c       | 12 ------------
->>>> drivers/pci/setup-irq.c   | 25 +++++++++----------------
->>>> include/linux/pci.h       |  8 ++++----
->>>> 7 files changed, 22 insertions(+), 47 deletions(-)
->>>>
->>>>diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
->>>>index e04fe2d..38c4cb0 100644
->>>>--- a/drivers/pci/Makefile
->>>>+++ b/drivers/pci/Makefile
->>>>@@ -4,7 +4,8 @@
->>>>
->>>> obj-y         += access.o bus.o probe.o host-bridge.o remove.o pci.o \
->>>>                       pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
->>>>-                      irq.o vpd.o setup-bus.o vc.o
->>>>+                      irq.o vpd.o setup-bus.o vc.o setup-irq.o
->>>>+
->>>> obj-$(CONFIG_PROC_FS) += proc.o
->>>> obj-$(CONFIG_SYSFS) += slot.o
->>>>
->>>>@@ -31,18 +32,6 @@ obj-$(CONFIG_PCI_ATS) += ats.o
->>>> obj-$(CONFIG_PCI_IOV) += iov.o
->>>>
->>>> #
->>>>-# Some architectures use the generic PCI setup functions
->>>>-#
->>>>-obj-$(CONFIG_ALPHA) += setup-irq.o
->>>>-obj-$(CONFIG_ARM) += setup-irq.o
->>>>-obj-$(CONFIG_UNICORE32) += setup-irq.o
->>>>-obj-$(CONFIG_SUPERH) += setup-irq.o
->>>>-obj-$(CONFIG_MIPS) += setup-irq.o
->>>>-obj-$(CONFIG_TILE) += setup-irq.o
->>>>-obj-$(CONFIG_SPARC_LEON) += setup-irq.o
->>>>-obj-$(CONFIG_M68K) += setup-irq.o
->>>>-
->>>>-#
->>>> # ACPI Related PCI FW Functions
->>>> # ACPI _DSM provided firmware instance and string name
->>>> #
->>>>diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
->>>>index 0e5f3c9..8ed186f 100644
->>>>--- a/drivers/pci/host-bridge.c
->>>>+++ b/drivers/pci/host-bridge.c
->>>>@@ -16,7 +16,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
->>>>       return bus;
->>>> }
->>>>
->>>>-static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
->>>>+struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
->>>> {
->>>>       struct pci_bus *root_bus = find_pci_root_bus(bus);
->>>>
->>>>diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>>>index 63a54a3..d51d076 100644
->>>>--- a/drivers/pci/pci.c
->>>>+++ b/drivers/pci/pci.c
->>>>@@ -1197,10 +1197,15 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
->>>>       int err;
->>>>       u16 cmd;
->>>>       u8 pin;
->>>>+      struct pci_host_bridge *hbrg = find_pci_host_bridge(dev->bus);
->>>>
->>>>       err = pci_set_power_state(dev, PCI_D0);
->>>>       if (err < 0 && err != -EIO)
->>>>               return err;
->>>>+
->>>>+      pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
->>>>+      pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
->>>>+
->>>>       err = pcibios_enable_device(dev, bars);
->>>>       if (err < 0)
->>>>               return err;
->>>>@@ -1209,7 +1214,6 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
->>>>       if (dev->msi_enabled || dev->msix_enabled)
->>>>               return 0;
->>>>
->>>>-      pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
->>>
->>> Not sure why you move this up.
->>>
->>> Before your change, the call flow would be like this:
->>>
->>> | scan_bus
->>> |   + pci_fixup_irqs
->>> |      +    pci_dev->irq and PCI_INTERRUPT_PIN assigned with correct number
->>> |
->>> | pci_enable_device, called from driver
->>> |   + do_pci_enable_device, read the pin from pci_dev
->>>
->>> As my understanding, this ensures the pin read from hardware is fixuped. While
->>> after your change, the pci_fixup_irqs is removed and the pin will be assigned
->>> in pdev_assign_irq() after you fix it properly.
->>>
->>> Do I missed something?
->>>
->>>>       if (pin) {
->>>>               pci_read_config_word(dev, PCI_COMMAND, &cmd);
->>>>               if (cmd & PCI_COMMAND_INTX_DISABLE)
->>>
->>> --
->>> Richard Yang
->>> Help you, Help me
->>>
->>
->>--
->>
->>
->>------------------------------
->>For additional information including the registered office and the treatment of Xyratex confidential information please visit www.xyratex.com
->>
->>------------------------------
->
-> --
-> Richard Yang
-> Help you, Help me
->
+> -static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
+> -{
+> -	struct pci_host_bridge_window *win;
+> -
+> -	list_for_each_entry(win, &pci->resources, list)
+> -		release_resource(win->res);
+> -
+> -	pci_free_resource_list(&pci->resources);
+> -}
 
--- 
+I take it Liviu's core patches take care of this clean-up now if we fail mid
+way through requesting the resources?
 
+> -static int gen_pci_setup(int nr, struct pci_sys_data *sys)
+> +static int gen_pci_setup(struct pci_host_bridge *host,
+> +			 resource_size_t io_cpuaddr)
+>  {
+> -	struct gen_pci *pci = sys->private_data;
+> -	list_splice_init(&pci->resources, &sys->resources);
+> -	return 1;
+> +	int err;
+> +	struct pci_host_bridge_window *window;
+> +	u32 restype, prefetchable;
+> +	struct device *dev = host->dev.parent;
+> +	struct resource *iores = NULL;
+> +	bool res_valid = false;
+> +
+> +	list_for_each_entry(window, &host->windows, list) {
+> +		restype = window->res->flags & IORESOURCE_TYPE_BITS;
+> +		prefetchable = window->res->flags & IORESOURCE_PREFETCH;
+> +
+> +		/*
+> +		 * Require at least one non-prefetchable MEM resource
+> +		 */
+> +		if ((restype == IORESOURCE_MEM) && !prefetchable)
+> +			res_valid = true;
+> +
+> +		if (restype == IORESOURCE_IO)
+> +			iores = window->res;
+> +	}
+> +
+> +	if (!res_valid) {
+> +		dev_err(dev, "non-prefetchable memory resource required\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	if (iores) {
+> +		if (!PAGE_ALIGNED(io_cpuaddr))
+> +			return -EINVAL;
 
-------------------------------
-For additional information including the registered office and the treatment of Xyratex confidential information please visit www.xyratex.com
+Why is this alignment check not in the core code? Probably a question for
+somebody like Arnd, but do we need to deal with multiple IO resources?
+Currently we'll just silently take the last one that we found, which doesn't
+sound ideal.
 
-------------------------------
+> +		if (err)
+> +			return err;
+> +	}
+> +
+> +	/* Parse and map our Configuration Space windows */
+> +	err = gen_pci_parse_map_cfg_windows(host);
+> +	if (err)
+> +		return err;
+> +
+> +	pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
+> +	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
+
+Why does this belong in the host controller driver and how does it interact
+with the probe-only property?
+
+Will
