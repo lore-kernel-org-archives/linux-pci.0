@@ -1,134 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([122.248.162.2]:52490 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751738AbaHTCbY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Aug 2014 22:31:24 -0400
-Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 20 Aug 2014 08:01:21 +0530
-Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 21D49394004C
-	for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 08:01:20 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay05.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s7K2Vi6T4521994
-	for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 08:01:44 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s7K2VJKf016665
-	for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 08:01:19 +0530
-Date: Wed, 20 Aug 2014 10:31:18 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
-Subject: Re: [PATCH V7 02/17] PCI/IOV: Get VF BAR size from hardware directly
- when platform needs
-Message-ID: <20140820023118.GB6904@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1406182947-11302-3-git-send-email-weiyang@linux.vnet.ibm.com>
- <20140819214459.GC6295@google.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:55623 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753425AbaHSRCV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Aug 2014 13:02:21 -0400
+Message-ID: <53F38328.3060409@ti.com>
+Date: Tue, 19 Aug 2014 13:02:32 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140819214459.GC6295@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [GIT PULL] PCI changes for v3.17 (part 3)
+References: <20140819044050.GA15551@google.com> <53F368F7.1070707@ti.com> <CAErSpo6GfCE8yT2Dda1JJsoPQhFD_b0GhB=OZ6w854ZB_B6eqA@mail.gmail.com>
+In-Reply-To: <CAErSpo6GfCE8yT2Dda1JJsoPQhFD_b0GhB=OZ6w854ZB_B6eqA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 19, 2014 at 03:44:59PM -0600, Bjorn Helgaas wrote:
->On Thu, Jul 24, 2014 at 02:22:12PM +0800, Wei Yang wrote:
->> Current implementation calculates VF BAR size from dividing the total size of
->> IOV BAR by total VF number. It won't work on PowerNV platform because we're
->> going to expand IOV BAR size for finely alignment.
->> 
->> The patch enforces getting IOV BAR size from hardware and then calculate
->> the VF BAR size based on that when platform wants so.
->> 
->> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->> ---
->>  drivers/pci/iov.c      |   28 ++++++++++++++++++++++++----
->>  include/linux/ioport.h |    1 +
->>  2 files changed, 25 insertions(+), 4 deletions(-)
->> 
->> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->> index 7566238..ef1c546 100644
->> --- a/drivers/pci/iov.c
->> +++ b/drivers/pci/iov.c
->> @@ -55,6 +55,9 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
->>  	struct resource *res;
->>  	struct pci_sriov *iov = dev->sriov;
->>  	struct pci_bus *bus;
->> +	struct resource tmp;
->> +	enum pci_bar_type type;
->> +	int reg;
->>  
->>  	mutex_lock(&iov->dev->sriov->lock);
->>  	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
->> @@ -80,12 +83,29 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
->>  			continue;
->>  		virtfn->resource[i].name = pci_name(virtfn);
->>  		virtfn->resource[i].flags = res->flags;
->> -		size = resource_size(res);
->> -		do_div(size, iov->total_VFs);
->> +		/* When res has IORESOURCE_ARCH, retrieve the IOV BAR size
->> +		 * from hardware directly.
->> +		 */
->> +		if (res->flags & IORESOURCE_ARCH) {
->> +			reg = pci_iov_resource_bar(dev, i + PCI_IOV_RESOURCES, &type);
->> +			__pci_read_base(dev, type, &tmp, reg);
->> +			size = resource_size(&tmp);
->> +			/* When __pci_read_base fails, flags is set to 0.
->> +			 * In this case, reset size to 0, which means the VF
->> +			 * will not be enabled.
->> +			 */
->> +			if (!tmp.flags)
->> +				size = 0;
->
->I don't like the IORESOURCE_ARCH flag because it really doesn't have any
->specific meaning.  You're using it to enable some arch-specific code here
->for this specific case.  But there are any number of other places that
->could do something similar, and there's no way to coordinate them all.
->
->I'd rather have some sort of pcibios_*() hook here where powerpc could
->override the default implementation.
+Bjorn,
 
-Yep, got it. I will write a pcibios_sriov_resource_size() and override it in
-powerpc arch.
-
->
->> +		} else {
->> +			size = resource_size(res);
->> +			do_div(size, iov->total_VFs);
->> +		}
->>  		virtfn->resource[i].start = res->start + size * id;
->>  		virtfn->resource[i].end = virtfn->resource[i].start + size - 1;
->> -		rc = request_resource(res, &virtfn->resource[i]);
->> -		BUG_ON(rc);
->> +		if (resource_size(&virtfn->resource[i])) {
->> +			rc = request_resource(res, &virtfn->resource[i]);
->> +			BUG_ON(rc);
->> +		}
->>  	}
->>  
->>  	if (reset)
->> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
->> index 5e3a906..de8b57c 100644
->> --- a/include/linux/ioport.h
->> +++ b/include/linux/ioport.h
->> @@ -48,6 +48,7 @@ struct resource {
->>  #define IORESOURCE_MEM_64	0x00100000
->>  #define IORESOURCE_WINDOW	0x00200000	/* forwarded by bridge */
->>  #define IORESOURCE_MUXED	0x00400000	/* Resource is software muxed */
->> +#define IORESOURCE_ARCH		0x00800000	/* Resource arch tagged */
+On 08/19/2014 12:30 PM, Bjorn Helgaas wrote:
+> On Tue, Aug 19, 2014 at 10:10 AM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
+>> Hi Bjorn,
 >>
->>  #define IORESOURCE_EXCLUSIVE	0x08000000	/* Userland may not map this resource */
->>  #define IORESOURCE_DISABLED	0x10000000
->> -- 
->> 1.7.9.5
->> 
+>> I see you have pulled in my designware related patches for Keystone PCI in
+>> this request. When do you think you can pull in Keystone PCI driver (v8) on
+>> the list?
+>
+> The things in this pull request have been in linux-next for a month.
+> I'm ready to apply the Keystone driver, but since we're after the
+> merge window and the Keystone driver hasn't been in -next at all, I
+> plan to put it in v3.18.
+>
+> I know I hoped to get this in v3.17, but even if I merged it today I
+> would let it soak in -next for a week or so, and then we'd be past
+> v3.17-rc2, and that feels past the reasonable point for a pull
+> request.
+>
 
--- 
-Richard Yang
-Help you, Help me
+Looks good to me. Thanks and regards,
+
+Murali
+> Bjorn
+>
+>> -------- Original Message --------
+>> Subject: [GIT PULL] PCI changes for v3.17 (part 3)
+>> Date: Mon, 18 Aug 2014 22:40:50 -0600
+>> From: Bjorn Helgaas<bhelgaas@google.com>
+>> To: Linus Torvalds<torvalds@linux-foundation.org>
+>> CC:<linux-pci@vger.kernel.org>,<linux-kernel@vger.kernel.org>, "Murali
+>> Karicheri"<m-karicheri2@ti.com>, Kishon Vijay Abraham I<kishon@ti.com>,
+>> Thierry Reding<treding@nvidia.com>, Andrew Lunn<andrew@lunn.ch>
+>>
+>> Hi Linus,
+>>
+>> I screwed up.  I intended these changes for v3.17, and I put them in my
+>> 'next' branch just before leaving on vacation, but I forgot to include them
+>> in my merge window pull request when I returned.  They're low-risk, so I'm
+>> sending them to you now (late), but the world won't end if they wait until
+>> v3.18.
+>>
+>> The main reason to include them would be to support the TI DRA7xx.
+>>
+>> Bjorn
+>>
+>>
+>> The following changes since commit 792688fde431b4fdb2cf10a6f7589a8176b6b14a:
+>>
+>>    Merge branches 'pci/host-generic', 'pci/host-mvebu', 'pci/host-rcar',
+>> 'pci/host-tegra', 'pci/msi', 'pci/misc', 'pci/resource' and
+>> 'pci/virtualization' into next (2014-07-16 17:09:47 -0600)
+>>
+>> are available in the git repository at:
+>>
+>>    git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+>> tags/pci-v3.17-changes-3
+>>
+>> for you to fetch changes up to 981c191778a4f92bc82456205a444d522843a630:
+>>
+>>    Merge branches 'pci/host-designware', 'pci/host-mvebu' and
+>> 'pci/host-tegra' into next (2014-07-22 17:55:50 -0600)
+>>
+>> ----------------------------------------------------------------
+>> PCI changes for v3.17 (part 3):
+>>
+>>    Marvell MVEBU
+>>      - Remove ARCH_KIRKWOOD dependency (Andrew Lunn)
+>>
+>>    NVIDIA Tegra
+>>      - Add debugfs support (Thierry Reding)
+>>
+>>    Synopsys DesignWare
+>>      - Look for configuration space in 'reg', not 'ranges' (Kishon Vijay
+>> Abraham I)
+>>      - Program ATU with untranslated address (Kishon Vijay Abraham I)
+>>      - Add config access-related pcie_host_ops for v3.65 hardware (Murali
+>> Karicheri)
+>>      - Add MSI-related pcie_host_ops for v3.65 hardware (Murali Karicheri)
+>>
+>>    TI DRA7xx
+>>      - Add TI DR7xx PCIe driver (Kishon Vijay Abraham I)
+>>
+>> ----------------------------------------------------------------
+>> Andrew Lunn (1):
+>>        PCI: mvebu: Remove ARCH_KIRKWOOD dependency
+>>
+>> Bjorn Helgaas (1):
+>>        Merge branches 'pci/host-designware', 'pci/host-mvebu' and
+>> 'pci/host-tegra' into next
+>>
+>> Kishon Vijay Abraham I (3):
+>>        PCI: designware: Look for configuration space in 'reg', not 'ranges'
+>>        PCI: designware: Program ATU with untranslated address
+>>        PCI: dra7xx: Add TI DRA7xx PCIe driver
+>>
+>> Murali Karicheri (2):
+>>        PCI: designware: Add config access-related pcie_host_ops for v3.65
+>> hardware
+>>        PCI: designware: Add MSI-related pcie_host_ops for v3.65 hardware
+>>
+>> Thierry Reding (1):
+>>        PCI: tegra: Add debugfs support
+>>
+>>   .../devicetree/bindings/pci/designware-pcie.txt    |   4 +
+>>   Documentation/devicetree/bindings/pci/ti-pci.txt   |  59 +++
+>>   MAINTAINERS                                        |   8 +
+>>   drivers/pci/host/Kconfig                           |  11 +-
+>>   drivers/pci/host/Makefile                          |   1 +
+>>   drivers/pci/host/pci-dra7xx.c                      | 458
+>> +++++++++++++++++++++
+>>   drivers/pci/host/pci-tegra.c                       | 118 ++++++
+>>   drivers/pci/host/pcie-designware.c                 | 134 ++++--
+>>   drivers/pci/host/pcie-designware.h                 |  11 +
+>>   9 files changed, 771 insertions(+), 33 deletions(-)
+>>   create mode 100644 Documentation/devicetree/bindings/pci/ti-pci.txt
+>>   create mode 100644 drivers/pci/host/pci-dra7xx.c
 
