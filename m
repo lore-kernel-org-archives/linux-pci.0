@@ -1,50 +1,34 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:43383 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751612AbaHFTFu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Aug 2014 15:05:50 -0400
-Message-ID: <53E27C7B.80200@ti.com>
-Date: Wed, 6 Aug 2014 15:05:31 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 19 Aug 2014 10:00:47 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org,
+	Anil Ravindranath <anil_ravindranath@pmc-sierra.com>,
+	James Smart <james.smart@emulex.com>,
+	Naresh Kumar Inna <naresh@chelsio.com>,
+	Arvind Bhushan <arvindb@chelsio.com>,
+	Jayamohan Kallickal <jayamohan.kallickal@emulex.com>,
+	Chad Dupuis <chad.dupuis@qlogic.com>,
+	Tomas Henzl <thenzl@redhat.com>,
+	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
+	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>,
+	Kashyap Desai <Kashyap.desai@avagotech.com>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	"Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
+	iss_storagedev@hp.com, support@lsi.com, DL-MPTFusionLinux@lsi.com,
+	qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 00/13] scsi: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Message-ID: <20140819170047.GA7237@infradead.org>
+References: <cover.1408335523.git.agordeev@redhat.com>
 MIME-Version: 1.0
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: keystone: add a pci quirk to limit mrrs
-References: <1407338300-9146-1-git-send-email-m-karicheri2@ti.com> <20140806163021.GB19914@obsidianresearch.com> <53E25E24.8070506@ti.com> <20140806165837.GC19914@obsidianresearch.com> <53E26155.1020107@ti.com> <20140806173014.GD19914@obsidianresearch.com>
-In-Reply-To: <20140806173014.GD19914@obsidianresearch.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1408335523.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/06/2014 01:30 PM, Jason Gunthorpe wrote:
-> On Wed, Aug 06, 2014 at 01:09:41PM -0400, Murali Karicheri wrote:
->
->>>> Yes it works with tuning enabled. Tuning happens afterwards. The
->>>> 'limiting mrrs to 256' below is from my patch.
->>>
->>> That seems backwards to me...
->> Rational? The tuning is reading mrrs and set mps to less than or
->> equal to mrss. So adding this before make sure mrrs used is below
->> keystones's limit.
->
-> The tuning process adjusts the parameters however it sees fit, todays
-> algorithm might not increase a BIOS set MRRS, but tomorrow's could.
->
-> The quirk should be after the tuning to ensure the MRRS is limited..
->
-> Jason
-Ok. I see it.
+Thanks,
 
-The latest possible quirk application point seems to be before enabling
-the ep device. A change in macro as below will achieve this and it works.
+I've applied patches 1 to 7 to the drivers-for-3.18 branch.
 
--DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
-+DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
-
-If this looks reasonable, I will repost my patch with this change.
-
-regards,
-
-Murali
