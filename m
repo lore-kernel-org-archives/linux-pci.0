@@ -1,111 +1,56 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <53E20325.9020303@linux.intel.com>
-Date: Wed, 06 Aug 2014 18:27:49 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: xen-devel@lists.xenproject.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.24]:64342 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751660AbaHSMk4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Aug 2014 08:40:56 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Catalin Marinas <catalin.marinas@arm.com>
+Subject: Re: [PATCH v9 02/12] PCI: OF: Parse and map the IRQ when adding the PCI device.
+Date: Tue, 19 Aug 2014 14:39:56 +0200
+Cc: Liviu Dudau <liviu@dudau.co.uk>, Liviu Dudau <Liviu.Dudau@arm.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [Bugfix 0/2] Fix bugs caused by "use irqdomain to dynamically
- allocate IRQ for IOAPIC"
-References: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com> <20140805130448.GA13057@laptop.dumpdata.com> <53E10136.9000505@linux.intel.com> <20140805175802.GE27240@laptop.dumpdata.com>
-In-Reply-To: <20140805175802.GE27240@laptop.dumpdata.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	"linux-pci" <linux-pci@vger.kernel.org>,
+	"linux-arch" <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com> <20140818213054.GB13147@bart.dudau.co.uk> <20140818220906.GJ24600@localhost>
+In-Reply-To: <20140818220906.GJ24600@localhost>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201408191439.56493.arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tuesday 19 August 2014, Catalin Marinas wrote:
+> On Mon, Aug 18, 2014 at 10:30:54PM +0100, Liviu Dudau wrote:
+> > At this point I would like to hear more from people doing the conversion of
+> > the drivers. I cannot answer fully for all arm or arm64 drivers.
+> 
+> As I read the description of pcibios_add_device(), it is meant as an
+> architecture hook. While it's nice to generalise this, I'm not sure we
+> we can find a common denominator. For example, we may want to call
+> set_dma_ops() as powerpc does but the ops would be arm64 specific (so
+> even the __weak implementation may not be used by any architecture).
 
+Right. I'm a strong advocate of the idea of having no architecture specific
+parts in the PCI support, but I can see the set_dma_ops() call as a
+good reason to make an exception here.
 
-On 2014/8/6 1:58, Konrad Rzeszutek Wilk wrote:
-> On Wed, Aug 06, 2014 at 12:07:18AM +0800, Jiang Liu wrote:
->>
->>
->> On 2014/8/5 21:04, Konrad Rzeszutek Wilk wrote:
->>> On Tue, Aug 05, 2014 at 11:26:16AM +0800, Jiang Liu wrote:
->>>> Two issues have been reported against patch set "use irqdomain to
->>>> dynamically allocate IRQ for IOAPIC" at https://lkml.org/lkml/2014/6/9/44.
->>>>
->>>> This first one causes failure of suspend/hibernation, please refer to
->>>> https://lkml.org/lkml/2014/7/28/822 for more information. And we have
->>>> worked out a patch to fix it (https://lkml.org/lkml/2014/7/30/725) and
->>>> Borislav has tested it. But with more testing and analysis, I found the
->>>> provided patch still has some issues:
->>>> 1) It may cause regression to Xen
->>>
->>> Could you elaborate please?
->>>
->>> Is there a git tree with all of these patches to test it?
->> Hi Konrad,
->> 	The patch at https://lkml.org/lkml/2014/7/30/725 skips invoking
->> xen_pcifront_enable_irq() on resume from suspend or restore from
->> hibernation. I'm not sure whether that will affect suspend/hibernation
->> with Xen. This patch series won't affect Xen anymore.
-> 
-> Ah, it looks like:
-> 
-> 415         pcibios_enable_irq = xen_pcifront_enable_irq;                           
-> 416         pcibios_disable_irq = NULL;                                             
-> 
-> Is the culprit right? If there was an pcibios_disable_irq set, then said
-> patch would not been needed?
-> 
-> 
->> 	I have prepared a tree for you at
->> https://github.com/jiangliu/linux.git suspend
-> 
-> Thank you. Will give it a spin tomorrow.
-Hi Konrad,
-	Thanks for review.
-	I think no need to test it anymore. We are trying to fix an
-issue caused by IOAPIC related work. The previous version of patch
-is too coarse grain and may affect Xen. And now we have reworked it,
-so it shouldn't affect Xen anymore.
-Regards!
-Gerry
+We could add another layer of indirection for the purpose of API purity
+here, to call an architecture specific DMA setup function, but it doesn't
+really add that much benefits, in particular when the DMA setup is currently
+in flux as well.
 
->>
->> Thanks for help!
->> Gerry
->>
->>>> 2) Flag dev->dev.power.is_prepared has already been cleared when
->>>>    pcibios_enable_device() gets called, so it will cause IOAPIC pin
->>>>    reference count leak.
->>>>
->>>> So I reworked the patch to fix above issues. The first patch fixes issue
->>>> 1 by moving check of dev->dev.power.is_prepared pcibios_enable_irq, so
->>>> it won't affect Xen. The second patch fixes the IOAPIC pin reference
->>>> count leakage issue. It also solves the issue we have discussed at
->>>> http://www.spinics.net/lists/linux-pci/msg32902.html
->>>>
->>>> Regards!
->>>> Gerry
->>>>
->>>> Jiang Liu (2):
->>>>   x86, irq, PCI: Keep IRQ assignment for PCI devices during
->>>>     suspend/hibernation
->>>>   x86, irq: Keep balance of IOAPIC pin reference count
->>>>
->>>>  arch/x86/pci/intel_mid_pci.c |    9 ++++++++-
->>>>  arch/x86/pci/irq.c           |    8 +++++++-
->>>>  drivers/acpi/pci_irq.c       |   15 +++++++++++++--
->>>>  include/linux/pci.h          |    1 +
->>>>  4 files changed, 29 insertions(+), 4 deletions(-)
->>>>
->>>> -- 
->>>> 1.7.10.4
->>>>
+	Arnd
