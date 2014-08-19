@@ -1,84 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:64051 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753668AbaHKNow (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 09:44:52 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH 4/6 v2] x86 / PM: Set IRQCHIP_SKIP_SET_WAKE for IOAPIC IRQ chip objects
-Date: Mon, 11 Aug 2014 16:01:35 +0200
-Message-ID: <2053051.UXUue6nbIp@vostro.rjw.lan>
-In-Reply-To: <26580319.OZP7jvJnA9@vostro.rjw.lan>
-References: <26580319.OZP7jvJnA9@vostro.rjw.lan>
+Received: from mail-bn1lp0139.outbound.protection.outlook.com ([207.46.163.139]:20715
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751599AbaHSXqg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Aug 2014 19:46:36 -0400
+Message-ID: <1408491984.4058.48.camel@snotra.buserror.net>
+Subject: Re: PCIe driver not working properly after upgrading to linux 3.8.13
+From: Scott Wood <scottwood@freescale.com>
+To: Gokul C G <gokul.g@kalkitech.in>
+CC: <linux-pci@vger.kernel.org>, <meta-freescale@yoctoproject.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <djiang@mvista.com>
+Date: Tue, 19 Aug 2014 18:46:24 -0500
+In-Reply-To: <53F3629A.6060208@kalkitech.in>
+References: <53F3629A.6060208@kalkitech.in>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Tue, 2014-08-19 at 20:13 +0530, Gokul C G wrote:
+> HI,
+> 
+>  
+> 
+> I am facing problem with PCIE driver in new Linux kernel compiled for
+> powerpc architecture (Big endian) ,freescales P2040 processor.I was
+> using old kernel Linux version 3.0.48 previously and now updated to
+> Linux version 3.8.13-rt9.After updating to the new kernel, 
 
-Set the IRQCHIP_SKIP_SET_WAKE for IOAPIC IRQ chip objects so that
-interrupts from them can work as wakeup interrupts for suspend-to-idle.
+3.8.13-rt9 is also an old kernel. :-)
 
-After this change, running enable_irq_wake() on one of the IRQs in
-question will succeed and IRQD_WAKEUP_STATE will be set for it, so
-all of the suspend-to-idle wakeup mechanics introduced previously
-will work for it automatically.
+It is also presumably a Freescale SDK kernel (not even the most recent
+one), so it would be best to stick with community.freescale.com (you
+didn't follow up to my response there) or, in the case of problems with
+third party code you've added on to the SDK kernel, the support channels
+of whoever provided you with the software.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
+> PCIe device drivers not working properly and i am getting some error
+> messages in the boot-up .My intention is to use   EXAR PCIe Multiport
+> serial driver and add 8 serial ports in addition to 4 built in serial
+> ports provided by P2040 processor. The PCIe driver form EXAR is
+> compiled and  loaded as kernel module . The same was working with
+> linux kernel 3.0.48 and following prints observed while loading kernel
+> module.
+> 
+> 
+> linux 3.0.48 ,working insmod log
+> 
+> 
+> ========================
+>  
+> 
+> 
+> 
+> Exar PCIe (XR17V35x) serial driver Revision: 1.2
 
-This patch is the same as the previous version.
+I don't see this driver in the kernel tree.  We can't help you with code
+we can't see.  Are you sure that the driver is expected to work with
+3.8?  Have you tried debugging it and/or contacting Exar for support
+with their driver?
 
----
- arch/x86/kernel/apic/io_apic.c |    5 +++++
- 1 file changed, 5 insertions(+)
 
-Index: linux-pm/arch/x86/kernel/apic/io_apic.c
-===================================================================
---- linux-pm.orig/arch/x86/kernel/apic/io_apic.c
-+++ linux-pm/arch/x86/kernel/apic/io_apic.c
-@@ -2507,6 +2507,7 @@ static struct irq_chip ioapic_chip __rea
- 	.irq_eoi		= ack_apic_level,
- 	.irq_set_affinity	= native_ioapic_set_affinity,
- 	.irq_retrigger		= ioapic_retrigger_irq,
-+	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
- 
- static inline void init_IO_APIC_traps(void)
-@@ -3030,6 +3031,7 @@ static struct irq_chip msi_chip = {
- 	.irq_ack		= ack_apic_edge,
- 	.irq_set_affinity	= msi_set_affinity,
- 	.irq_retrigger		= ioapic_retrigger_irq,
-+	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
- 
- int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
-@@ -3128,6 +3130,7 @@ static struct irq_chip dmar_msi_type = {
- 	.irq_ack		= ack_apic_edge,
- 	.irq_set_affinity	= dmar_msi_set_affinity,
- 	.irq_retrigger		= ioapic_retrigger_irq,
-+	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
- 
- int arch_setup_dmar_msi(unsigned int irq)
-@@ -3178,6 +3181,7 @@ static struct irq_chip hpet_msi_type = {
- 	.irq_ack = ack_apic_edge,
- 	.irq_set_affinity = hpet_msi_set_affinity,
- 	.irq_retrigger = ioapic_retrigger_irq,
-+	.flags = IRQCHIP_SKIP_SET_WAKE,
- };
- 
- int default_setup_hpet_msi(unsigned int irq, unsigned int id)
-@@ -3241,6 +3245,7 @@ static struct irq_chip ht_irq_chip = {
- 	.irq_ack		= ack_apic_edge,
- 	.irq_set_affinity	= ht_set_affinity,
- 	.irq_retrigger		= ioapic_retrigger_irq,
-+	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
- 
- int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
+> PCI: Probing PCI hardware
+> 
+> fsl-pci ffe201000.pcie: PCI host bridge to bus 0000:00
+> 
+> pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+> 
+> pci_bus 0000:00: root bus resource [mem 0xc20000000-0xc3fffffff] (bus
+> address [0xe0000000-0xffffffff])
+> 
+> pci_bus 0000:00: root bus resource [bus 00-ff]
+> 
+> PCIE error(s) detected
+> 
+> PCIE ERR_DR register: 0x80020000
+> 
+> PCIE ERR_CAP_STAT register: 0x80000001
+> 
+> PCIE ERR_CAP_R0 register: 0x00000800
+> 
+> pci 0000:00:00.0: PCI bridge to [bus 01-ff]
+> 
+> PCIE ERR_CAP_R1 register: 0x00000000
+> 
+> PCIE ERR_CAP_R2 register: 0x00000000
+> 
+> PCIE ERR_CAP_R3 register: 0x00000000
+> 
+> PCI: Cannot allocate resource region 0 of device 0000:00:00.0, will
+> remap
+> 
+> pci 0000:00:00.0: BAR 0: can't assign mem (size 0x1000000)
+> 
+> pci 0000:00:00.0: BAR 9: can't assign mem pref (size 0x200000)
+> 
+> pci 0000:00:00.0: PCI bridge to [bus 01]
+> 
+> pci 0000:00:00.0:   bridge window [io  0x0000-0xffff]
+> 
+> pci 0000:00:00.0:   bridge window [mem 0xc20000000-0xc3fffffff]
+> 
+>  
+> 
+I get very similar errors on Freescale's SDK 1.5 kernel (based on
+v3.8.13-rt9), and it doesn't stop a PCIe network card from working.  So
+I wouldn't focus too much on these errors.
+
+-Scott
+
+
