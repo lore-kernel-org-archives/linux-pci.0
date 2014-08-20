@@ -1,40 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31961 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752552AbaHWBPl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 21:15:41 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] PCI: remove not needed pcie_disable_notification
-Date: Fri, 22 Aug 2014 18:15:12 -0700
-Message-Id: <1408756512-16885-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1408756512-16885-1-git-send-email-yinghai@kernel.org>
-References: <1408756512-16885-1-git-send-email-yinghai@kernel.org>
+Received: from exprod7og129.obsmtp.com ([64.18.2.122]:32866 "EHLO
+	exprod7og129.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751258AbaHTLJG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Aug 2014 07:09:06 -0400
+Received: by mail-qc0-f181.google.com with SMTP id x13so7493496qcv.26
+        for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 04:09:05 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 20 Aug 2014 16:39:05 +0530
+Message-ID: <CAK=zhgrv=e20s11v7Ls5ioWZrbyvp9Rzyv+QRDLR3mffr9E61A@mail.gmail.com>
+Subject: How to get the number of VFs assigned to the guests in XEN
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, konrad.wilk@oracle.com
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+	Christoph Hellwig <hch@lst.de>, boris.ostrovsky@oracle.com,
+	Sathya Prakash <sathya.prakash@avagotech.com>,
+	Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-disable and enable notification in a row will cause 1 second delay
-per hotplug slot on system with Intel chip that only have command
-complete for real hotplut operations.
+HI,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+For SRIOV support, currently in the KVM environment, mpt3sas driver
+can use the API pci_vfs_assigned() to know the number of VFs that are
+currently assigned to the running VMs. So that during the PF driver
+unload time, if the return value of this API is greater than zero the
+our driver won't call the pci_disable_sriov() to disable the VFs.
 
----
- drivers/pci/hotplug/pciehp_hpc.c |    3 ---
- 1 file changed, 3 deletions(-)
+Now for the same purpose in XEN environment, is there any API similar
+to pci_vfs_assigned() which the low lever device driver can use to
+know 'the number of VFs that are currently assigned to the running
+VMs'. In XEN environment this API pci_vfs_assigned() will return
+always zero even though VFs are assigned to the running VMs.
 
-Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-===================================================================
---- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
-+++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-@@ -785,9 +785,6 @@ struct controller *pcie_init(struct pcie
- 		PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
- 		PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
- 
--	/* Disable software notification */
--	pcie_disable_notification(ctrl);
--
- 	ctrl_info(ctrl, "Slot #%d AttnBtn%c AttnInd%c PwrInd%c PwrCtrl%c MRL%c Interlock%c NoCompl%c LLActRep%c\n",
- 		(slot_cap & PCI_EXP_SLTCAP_PSN) >> 19,
- 		FLAG(slot_cap, PCI_EXP_SLTCAP_ABP),
+Regards,
+Sreekanth
