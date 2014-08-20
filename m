@@ -1,50 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p50936449.dip0.t-ipconnect.de ([80.147.100.73]:30499 "EHLO
-	dhcp-27-160.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752442AbaHRIzc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Aug 2014 04:55:32 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Naresh Kumar Inna <naresh@chelsio.com>,
-	Arvind Bhushan <arvindb@chelsio.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v3 09/13] csiostor: Remove superfluous call to pci_disable_msix()
-Date: Mon, 18 Aug 2014 08:01:49 +0200
-Message-Id: <32f317b013341f51bab2a4869108772781862da6.1408335523.git.agordeev@redhat.com>
-In-Reply-To: <cover.1408335523.git.agordeev@redhat.com>
-References: <cover.1408335523.git.agordeev@redhat.com>
+Received: from dliviu.plus.com ([80.229.23.120]:60730 "EHLO smtp.dudau.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752522AbaHTMbd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 Aug 2014 08:31:33 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by smtp.dudau.co.uk (Postfix) with SMTP id E121AFFD93
+	for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 13:31:31 +0100 (BST)
+Date: Wed, 20 Aug 2014 13:31:12 +0100
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] drivers: pci: convert generic host controller to DT host
+ bridge creation API
+Message-ID: <20140820123112.GG13147@bart.dudau.co.uk>
+References: <1407861695-25549-1-git-send-email-Liviu.Dudau@arm.com>
+ <201408201327.57376.arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <201408201327.57376.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is no need to call pci_disable_msix() in case
-the previous call to pci_enable_msix() failed
+On Wed, Aug 20, 2014 at 01:27:57PM +0200, Arnd Bergmann wrote:
+> On Tuesday 12 August 2014, Liviu Dudau wrote:
+> > +       return of_create_pci_host_bridge(dev, 0, 0xff, &gen_pci_ops,
+> > +                                       gen_pci_setup, pci);
+> 
+> I had not noticed it earlier, but the setup callback is actually a feature
+> of the arm32 PCI code that I had hoped to avoid when moving to the
+> generic API. Can we do this as a more regular sequence of
+> 
+> 
+> 	ret = of_create_pci_host_bridge(dev, 0, 0xff, &gen_pci_ops, pci);
+> 	if (ret)
+> 		return ret;
+> 
+> 	ret = gen_pci_setup(pci);
+> 	if (ret)
+> 		pci_destroy_host_bridge(dev, pci);
+> 	return ret;
+> 
+> ?
+> 
+> 	Arnd
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Naresh Kumar Inna <naresh@chelsio.com>
-Cc: Arvind Bhushan <arvindb@chelsio.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/csiostor/csio_isr.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Hi Arnd,
 
-diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
-index 7ee9777..91ba91d 100644
---- a/drivers/scsi/csiostor/csio_isr.c
-+++ b/drivers/scsi/csiostor/csio_isr.c
-@@ -529,10 +529,8 @@ csio_enable_msix(struct csio_hw *hw)
- 			csio_reduce_sqsets(hw, cnt - extra);
- 		}
- 	} else {
--		if (rv > 0) {
--			pci_disable_msix(hw->pdev);
-+		if (rv > 0)
- 			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
--		}
- 
- 		kfree(entries);
- 		return -ENOMEM;
+That has been the general approach of my patchset up to v9. But, as Bjorn has
+mentioned in his v8 review and I have put in my cover letter, the regular
+aproach means that architectures that use pci_scan_root_bus() will have to
+drop their one liner and replace it with the more verbose of_create_pci_host_bridge()
+followed by pci_scan_child_bus() and pci_bus_add_devices() (basically, the content
+of pci_scan_root_bus()). For those architectures it will lead to a net increase of
+lines of code.
+
+The patch for pci-host-generic.c is the first to use the callback setup function, but
+not the only one. My PCI host bridge driver for Juno has the same need, and I'm betting
+all other host bridge controllers will use it as it will be the only opportunity to
+finish the controller setup before we start scanning the child busses. I'm trying to
+balance ease of read vs ease of use here and it is the best version I've come up with
+so far.
+
+Best regards,
+Liviu
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-1.9.3
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
+
+ One small step
+   for me ...
 
