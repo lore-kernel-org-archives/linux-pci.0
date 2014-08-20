@@ -1,239 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f173.google.com ([209.85.160.173]:47926 "EHLO
-	mail-yk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751186AbaHSVhe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Aug 2014 17:37:34 -0400
-Received: by mail-yk0-f173.google.com with SMTP id 131so5917179ykp.18
-        for <linux-pci@vger.kernel.org>; Tue, 19 Aug 2014 14:37:33 -0700 (PDT)
-Date: Tue, 19 Aug 2014 15:37:26 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
-Subject: Re: [PATCH V7 01/17] PCI/IOV: Export interface for retrieve VF's BDF
-Message-ID: <20140819213726.GB6295@google.com>
-References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1406182947-11302-2-git-send-email-weiyang@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1406182947-11302-2-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:27992 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752434AbaHTRLd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 Aug 2014 13:11:33 -0400
+Message-ID: <1408554623.11383.63.camel@ul30vt.home>
+Subject: Re: LPC IOMMU and VFIO MicroConference - Call for Participation
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Olav Haugan <ohaugan@codeaurora.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	ddutile <ddutile@redhat.com>, Jerome Glisse <j.glisse@gmail.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date: Wed, 20 Aug 2014 11:10:23 -0600
+In-Reply-To: <20140812092019.GY9809@8bytes.org>
+References: <20140812092019.GY9809@8bytes.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 24, 2014 at 02:22:11PM +0800, Wei Yang wrote:
-> When implementing the SR-IOV on PowerNV platform, some resource reservation is
-> needed for VFs which don't exist at the bootup stage. To do the match between
-> resources and VFs, the code need to get the VF's BDF in advance.
 
-Ben started explaining this whole hardware PE/VF/etc stuff to me, but it
-hasn't all sunk in yet.  We need to describe it somewhere (it sounds pretty
-involved, so maybe an extended description in Documentation/ would be
-appropriate).
+Ok folks, it's time to submit your discussion proposals for the LPC
+IOMMU and VFIO uconf.  If you added an idea to the wiki, now is the time
+to formally propose it as a discussion topic.  If you have ideas how to
+make the IOMMU or VFIO subsystems better, now is the time to propose it.
+If you can't figure out how to make something work in the current
+infrastructure, now is the time to propose a discussion.  If you're
+adding new features and want to make sure we can support them, now is
+the time to propose a discussion.
 
-What I'm concerned about is that PCI resource assignment is a huge mess,
-and this obviously complicates it even more.  That's necessary and OK, but
-I want to at least preserve the possibility that somebody could rework it
-to make it manageable, and that means we need to know what the special
-constraints of PowerNV are.
+I don't think we've seen a formal schedule yet, but many of us have
+conflicts with KVM Forum this year and I expect the LPC planning
+committee to take that into account, so please submit your proposals
+anyway and feel free to note your availability/conflicts in the "Note to
+organizers" section.
 
-Code question below.
+LPC is full, but there is a waiting list and the sooner you can get on
+it, the more likely you are to be registered.  I expect uconf discussion
+leads to have an advantage in moving through the queue and we may be
+able to provide discounted registration for discussion leads.  Thanks,
 
-> In this patch, it exports the interface to retrieve VF's BDF:
->    * Make the virtfn_bus as an interface
->    * Make the virtfn_devfn as an interface
->    * rename them with more specific name
->    * code cleanup in pci_sriov_resource_alignment()
+Alex
+
+On Tue, 2014-08-12 at 11:20 +0200, Joerg Roedel wrote:
+> LPC IOMMU and VFIO MicroConference - Call for Participation
+> ===========================================================
 > 
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> ---
->  drivers/pci/iov.c   |   26 +++++++-------------------
->  drivers/pci/pci.h   |   19 -------------------
->  include/linux/pci.h |   44 ++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 51 insertions(+), 38 deletions(-)
+> We are pleased to announce that this year there will be the first IOMMU
+> and VFIO MicroConference held at Linux Plumbers Conference in
+> Düsseldorf. An initial request for support of this micro conference
+> generated, among others, the following possible topic ideas:
 > 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index cb6f247..7566238 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -19,18 +19,6 @@
->  
->  #define VIRTFN_ID_LEN	16
->  
-> -static inline u8 virtfn_bus(struct pci_dev *dev, int id)
-> -{
-> -	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
-> -				    dev->sriov->stride * id) >> 8);
-> -}
-> -
-> -static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
-> -{
-> -	return (dev->devfn + dev->sriov->offset +
-> -		dev->sriov->stride * id) & 0xff;
-> -}
-> -
->  static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
->  {
->  	struct pci_bus *child;
-> @@ -69,7 +57,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
->  	struct pci_bus *bus;
->  
->  	mutex_lock(&iov->dev->sriov->lock);
-> -	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
-> +	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
->  	if (!bus)
->  		goto failed;
->  
-> @@ -77,7 +65,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
->  	if (!virtfn)
->  		goto failed0;
->  
-> -	virtfn->devfn = virtfn_devfn(dev, id);
-> +	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
->  	virtfn->vendor = dev->vendor;
->  	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
->  	pci_setup_device(virtfn);
-> @@ -140,8 +128,8 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
->  	struct pci_sriov *iov = dev->sriov;
->  
->  	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
-> -					     virtfn_bus(dev, id),
-> -					     virtfn_devfn(dev, id));
-> +					     pci_iov_virtfn_bus(dev, id),
-> +					     pci_iov_virtfn_devfn(dev, id));
->  	if (!virtfn)
->  		return;
->  
-> @@ -216,7 +204,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->  	iov->offset = offset;
->  	iov->stride = stride;
->  
-> -	if (virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
-> +	if (pci_iov_virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
->  		dev_err(&dev->dev, "SR-IOV: bus number out of range\n");
->  		return -ENOMEM;
->  	}
-> @@ -516,7 +504,7 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
->  	if (!reg)
->  		return 0;
->  
-> -	 __pci_read_base(dev, type, &tmp, reg);
-> +	__pci_read_base(dev, type, &tmp, reg);
->  	return resource_alignment(&tmp);
->  }
->  
-> @@ -546,7 +534,7 @@ int pci_iov_bus_range(struct pci_bus *bus)
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
->  		if (!dev->is_physfn)
->  			continue;
-> -		busnr = virtfn_bus(dev, dev->sriov->total_VFs - 1);
-> +		busnr = pci_iov_virtfn_bus(dev, dev->sriov->total_VFs - 1);
->  		if (busnr > max)
->  			max = busnr;
->  	}
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 0601890..a3158b2 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -221,25 +221,6 @@ static inline int pci_ari_enabled(struct pci_bus *bus)
->  void pci_reassigndev_resource_alignment(struct pci_dev *dev);
->  void pci_disable_bridge_window(struct pci_dev *dev);
->  
-> -/* Single Root I/O Virtualization */
-> -struct pci_sriov {
-> -	int pos;		/* capability position */
-> -	int nres;		/* number of resources */
-> -	u32 cap;		/* SR-IOV Capabilities */
-> -	u16 ctrl;		/* SR-IOV Control */
-> -	u16 total_VFs;		/* total VFs associated with the PF */
-> -	u16 initial_VFs;	/* initial VFs associated with the PF */
-> -	u16 num_VFs;		/* number of VFs available */
-> -	u16 offset;		/* first VF Routing ID offset */
-> -	u16 stride;		/* following VF stride */
-> -	u32 pgsz;		/* page size for BAR alignment */
-> -	u8 link;		/* Function Dependency Link */
-> -	u16 driver_max_VFs;	/* max num VFs driver supports */
-> -	struct pci_dev *dev;	/* lowest numbered PF */
-> -	struct pci_dev *self;	/* this PF */
-> -	struct mutex lock;	/* lock for VF bus */
-> -};
-> -
->  #ifdef CONFIG_PCI_ATS
->  void pci_restore_ats_state(struct pci_dev *dev);
->  #else
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 466bcd1..194db52 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -245,6 +245,27 @@ struct pci_vpd;
->  struct pci_sriov;
->  struct pci_ats;
->  
-> +/* Single Root I/O Virtualization */
-> +struct pci_sriov {
-> +	int pos;		/* capability position */
-> +	int nres;		/* number of resources */
-> +	u32 cap;		/* SR-IOV Capabilities */
-> +	u16 ctrl;		/* SR-IOV Control */
-> +	u16 total_VFs;		/* total VFs associated with the PF */
-> +	u16 initial_VFs;	/* initial VFs associated with the PF */
-> +	u16 num_VFs;		/* number of VFs available */
-> +	u16 offset;		/* first VF Routing ID offset */
-> +	u16 stride;		/* following VF stride */
-> +	u32 pgsz;		/* page size for BAR alignment */
-> +	u8 link;		/* Function Dependency Link */
-> +	u16 driver_max_VFs;	/* max num VFs driver supports */
-> +	struct pci_dev *dev;	/* lowest numbered PF */
-> +	struct pci_dev *self;	/* this PF */
-> +	struct mutex lock;	/* lock for VF bus */
-> +	struct work_struct mtask; /* VF Migration task */
-> +	u8 __iomem *mstate;	/* VF Migration State Array */
-> +};
-> +
->  /*
->   * The pci_dev structure is used to describe PCI devices.
->   */
-> @@ -1616,6 +1637,21 @@ int pci_ext_cfg_avail(void);
->  void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
->  
->  #ifdef CONFIG_PCI_IOV
-> +static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
-> +{
-> +	if (!dev->is_physfn)
-> +		return -EINVAL;
-> +	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
-> +				    dev->sriov->stride * id) >> 8);
-> +}
-> +static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
-> +{
-> +	if (!dev->is_physfn)
-> +		return -EINVAL;
-> +	return (dev->devfn + dev->sriov->offset +
-> +		dev->sriov->stride * id) & 0xff;
-> +}
-
-Do these really need to be inline?  If they weren't inline, we wouldn't
-have to move struct pci_sriov to the public header file.
-
-> +
->  int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
->  void pci_disable_sriov(struct pci_dev *dev);
->  int pci_num_vf(struct pci_dev *dev);
-> @@ -1623,6 +1659,14 @@ int pci_vfs_assigned(struct pci_dev *dev);
->  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
->  int pci_sriov_get_totalvfs(struct pci_dev *dev);
->  #else
-> +static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
-> +{
-> +	return -ENXIO;
-> +}
-> +static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
-> +{
-> +	return -ENXIO;
-> +}
->  static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
->  { return -ENODEV; }
->  static inline void pci_disable_sriov(struct pci_dev *dev) { }
-> -- 
-> 1.7.9.5
+> 	* Improving generic IOMMU code and move code out of drivers
+> 	* IOMMU device error handling
+> 	* IOMMU Power Management
+> 	* Virtualizing IOMMUs
+> 	* Interface between IOMMUs an memory management
 > 
+> More suggested topics can be found at the wiki page of the micro
+> conference:
+> 
+> 	http://wiki.linuxplumbersconf.org/2014:iommu_microconference
+> 
+> We now ask for formal proposals for these discussions along with any
+> other topics or problems that need to be discussed in this area.
+> 
+> The format of the micro conference will be roughly half-hour slots for
+> each topic, where the discussion lead gives a short introduction to the
+> problem and maybe sketches possible solutions. The rest of the slot is
+> open for discussions so that we come to an agreement how to move
+> forward.
+> 
+> Please submit your formal proposal on the Linux Plumbers website (OpenID
+> login required) until August 31st at:
+> 
+> 	http://www.linuxplumbersconf.org/2014/how-to-submit-microconference-discussions-topics/
+> 
+> Hope to see you in Düsseldorf!
+> 
+> 
+> 	Joerg Roedel and Alex Williamson
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+
+
+
