@@ -1,59 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod7og123.obsmtp.com ([64.18.2.24]:52252 "EHLO
-	exprod7og123.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752902AbaHTNo0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Aug 2014 09:44:26 -0400
-Received: by mail-qa0-f53.google.com with SMTP id v10so6916282qac.26
-        for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 06:44:25 -0700 (PDT)
+Received: from mout.kundenserver.de ([212.227.17.13]:49382 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751827AbaHTL2f (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Aug 2014 07:28:35 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: Re: [PATCH] drivers: pci: convert generic host controller to DT host bridge creation API
+Date: Wed, 20 Aug 2014 13:27:57 +0200
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	"linux-pci" <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+References: <1407861695-25549-1-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1407861695-25549-1-git-send-email-Liviu.Dudau@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <1408538771.11383.33.camel@ul30vt.home>
-References: <CAK=zhgrv=e20s11v7Ls5ioWZrbyvp9Rzyv+QRDLR3mffr9E61A@mail.gmail.com>
-	<1408538771.11383.33.camel@ul30vt.home>
-Date: Wed, 20 Aug 2014 19:14:25 +0530
-Message-ID: <CAK=zhgrFV10k0yzOrkSnmYJge3M+kQrcNz9e5qZZ5q180NY2xQ@mail.gmail.com>
-Subject: Re: How to get the number of VFs assigned to the guests in XEN
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, konrad.wilk@oracle.com,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Christoph Hellwig <hch@lst.de>, boris.ostrovsky@oracle.com,
-	Sathya Prakash <sathya.prakash@avagotech.com>,
-	Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201408201327.57376.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks Alex,
+On Tuesday 12 August 2014, Liviu Dudau wrote:
+> +       return of_create_pci_host_bridge(dev, 0, 0xff, &gen_pci_ops,
+> +                                       gen_pci_setup, pci);
 
-Then, Is there any other ways to stop accidental unload of PF driver
-while still some VFs are accessing by the running VMs.
+I had not noticed it earlier, but the setup callback is actually a feature
+of the arm32 PCI code that I had hoped to avoid when moving to the
+generic API. Can we do this as a more regular sequence of
 
-Regards,
-Sreekanth
 
-On Wed, Aug 20, 2014 at 6:16 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Wed, 2014-08-20 at 16:39 +0530, Sreekanth Reddy wrote:
->> HI,
->>
->> For SRIOV support, currently in the KVM environment, mpt3sas driver
->> can use the API pci_vfs_assigned() to know the number of VFs that are
->> currently assigned to the running VMs. So that during the PF driver
->> unload time, if the return value of this API is greater than zero the
->> our driver won't call the pci_disable_sriov() to disable the VFs.
->>
->> Now for the same purpose in XEN environment, is there any API similar
->> to pci_vfs_assigned() which the low lever device driver can use to
->> know 'the number of VFs that are currently assigned to the running
->> VMs'. In XEN environment this API pci_vfs_assigned() will return
->> always zero even though VFs are assigned to the running VMs.
->
-> Note that pci_vfs_assigned() assigned is only used by legacy KVM device
-> assignment and primarily as a workaround for not using an actual
-> host-based device driver to manage device ownership.  When using
-> VFIO-based device assignment with KVM, pci_vfs_assigned() is not
-> updated.  Please don't rely on this interface.  Thanks,
->
-> Alex
->
+	ret = of_create_pci_host_bridge(dev, 0, 0xff, &gen_pci_ops, pci);
+	if (ret)
+		return ret;
+
+	ret = gen_pci_setup(pci);
+	if (ret)
+		pci_destroy_host_bridge(dev, pci);
+	return ret;
+
+?
+
+	Arnd
