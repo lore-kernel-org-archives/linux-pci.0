@@ -1,141 +1,273 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:52834 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753174AbaHNUWv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Aug 2014 16:22:51 -0400
-Received: by mail-ig0-f174.google.com with SMTP id c1so27337igq.1
-        for <linux-pci@vger.kernel.org>; Thu, 14 Aug 2014 13:22:50 -0700 (PDT)
-Date: Thu, 14 Aug 2014 14:22:48 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: linux-pci@vger.kernel.org,
-	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
-	Shawn Guo <Shawn.Guo@freescale.com>, kernel@pengutronix.de
-Subject: Re: [PATCH 2/2] PCI: imx6: fix boot hang when link already enabled
-Message-ID: <20140814202248.GA2071@google.com>
-References: <1406830565-23450-1-git-send-email-l.stach@pengutronix.de>
- <1406830565-23450-3-git-send-email-l.stach@pengutronix.de>
+Received: from e28smtp02.in.ibm.com ([122.248.162.2]:51696 "EHLO
+	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750952AbaHTGOO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Aug 2014 02:14:14 -0400
+Received: from /spool/local
+	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 20 Aug 2014 11:44:08 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id B0368E0053
+	for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 11:46:11 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay01.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s7K6E0ua54001666
+	for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 11:44:00 +0530
+Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s7K6E49j015728
+	for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 11:44:04 +0530
+Date: Wed, 20 Aug 2014 14:14:02 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
+Subject: Re: [PATCH V7 04/17] PCI: Take additional IOV BAR alignment in
+ sizing and assigning
+Message-ID: <20140820061402.GA8381@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1406182947-11302-5-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20140820030841.GD6295@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1406830565-23450-3-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <20140820030841.GD6295@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 31, 2014 at 08:16:05PM +0200, Lucas Stach wrote:
-> This fixes a boot hang observed when the bootloader
-> already enabled the PCIe link for it's own use. The
-> fundamental problem is that Freescale forgot to wire
-> up the core reset, so software doesn't have a sane way
-> to get the core into a defined state.
-> 
-> According to the DW PCIe core reference manual configuration
-> of the core may only happen when the LTSSM is disabled, so
-> this is one of the first things we need to do. Apparently
-> this isn't safe to do when the LTSSM is in any other state
-> than "detect" as we observe an instant machine hang when
-> trying to do so while the link is already up.
-> 
-> As a workaround force LTSSM into detect state right before
-> hitting the disable switch.
-
-I don't know anything about this hardware, but from the description, this
-sounds racy.  As I understand it, LTSSM is a hardware-managed state
-machine.  What prevents the hardware from transitioning out of the "Detect"
-state after you force it into "Detect" but before you hit the disable
-switch?
-
-> Reported-by: Fabio Estevam <fabio.estevam@freescale.com>
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> Acked-by: Tim Harvey <tharvey@gateworks.com>
-> ---
-> v2: - messed up the first submission by omitting a chunk
-> v3: - check if bootloader actually enabled link before
->       touching any core registers
->     - add a comment to explain things a bit
->     - add shutdown hook to clean state on reboot
-> 
-> Fabios delay workaround worked because of the following
-> conditions:
-> 1. The driver gets probed and pulls the peripheral reset GPIO
-> 2. Peripheral is held in reset, so won't answer any link
-> negotiation requests
-> 3. The LTSSM times out and falls back into detect state
-> after 24ms (that's why a 30ms delay helps)
-> 4. After LTSSM entered detect state it's safe to hit the
-> disable switch
-> ---
->  drivers/pci/host/pci-imx6.c | 37 +++++++++++++++++++++++++++++++++++++
->  1 file changed, 37 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index a568efaa331c..1be607360988 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -49,6 +49,9 @@ struct imx6_pcie {
->  
->  /* PCIe Port Logic registers (memory-mapped) */
->  #define PL_OFFSET 0x700
-> +#define PCIE_PL_PFLR (PL_OFFSET + 0x08)
-> +#define PCIE_PL_PFLR_LINK_STATE_MASK		(0x3f << 16)
-> +#define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
->  #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
->  #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
->  #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
-> @@ -214,6 +217,31 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
->  static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
+On Tue, Aug 19, 2014 at 09:08:41PM -0600, Bjorn Helgaas wrote:
+>On Thu, Jul 24, 2014 at 02:22:14PM +0800, Wei Yang wrote:
+>> At resource sizing/assigning stage, resources are divided into two lists,
+>> requested list and additional list, while the alignement of the additional
+>> IOV BAR is not taken into the sizeing and assigning procedure.
+>> 
+>> This is reasonable in the original implementation, since IOV BAR's alignment is
+>> mostly the size of a PF BAR alignemt. This means the alignment is already taken
+>> into consideration. While this rule may be violated on some platform.
+>> 
+>> This patch take the additional IOV BAR alignment in sizing and assigning stage
+>> explicitly.
+>> 
+>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> ---
+>>  drivers/pci/setup-bus.c |   68 +++++++++++++++++++++++++++++++++++++++++------
+>>  1 file changed, 60 insertions(+), 8 deletions(-)
+>> 
+>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>> index a5a63ec..d83681f 100644
+>> --- a/drivers/pci/setup-bus.c
+>> +++ b/drivers/pci/setup-bus.c
+>> @@ -120,6 +120,28 @@ static resource_size_t get_res_add_size(struct list_head *head,
+>>  	return 0;
+>>  }
+>>  
+>> +static resource_size_t get_res_add_align(struct list_head *head,
+>> +		struct resource *res)
+>> +{
+>> +	struct pci_dev_resource *dev_res;
+>> +
+>> +	list_for_each_entry(dev_res, head, list) {
+>> +		if (dev_res->res == res) {
+>> +			int idx = res - &dev_res->dev->resource[0];
+>> +
+>> +			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+>> +				   "res[%d]=%pR get_res_add_align min_align %llx\n",
+>> +				   idx, dev_res->res,
+>> +				   (unsigned long long)dev_res->min_align);
+>> +
+>> +			return dev_res->min_align;
+>> +		}
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>
+>I see that you copied the structure of the existing get_res_add_size()
+>here.  But I don't understand *that* function.  It looks basically like
+>this:
+>
+>  resource_size_t get_res_add_size(list, res)
 >  {
->  	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-> +	u32 val, gpr1, gpr12;
-> +
-> +	/*
-> +	 * If the bootloader already enabled the link we need some special
-> +	 * handling to get the core back into a state where it is safe to
-> +	 * touch it for configuration. As there is no dedicated reset signal
-> +	 * wired up for MX6QDL, we need to manually force LTSSM into "detect"
-> +	 * state before completely disabling LTSSM, which is a prerequisite
-> +	 * for core configuration.
-> +	 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
-> +	 * indication that the bootloader activated the link.
-> +	 */
-> +	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
-> +	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
-> +
-> +	if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
-> +	    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
-> +		val = readl(pp->dbi_base + PCIE_PL_PFLR);
-> +		val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
-> +		val |= PCIE_PL_PFLR_FORCE_LINK;
-> +		writel(val, pp->dbi_base + PCIE_PL_PFLR);
-> +
-> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> +				IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
-> +	}
->  
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
->  			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
-> @@ -589,6 +617,14 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
->  	return 0;
+>    list_for_each_entry(dev_res, head, list) {
+>      if (dev_res->res == res)
+>        return dev_res->add_size;
+>    }
+>    return 0;
 >  }
->  
-> +static void imx6_pcie_shutdown(struct platform_device *pdev)
-> +{
-> +	struct imx6_pcie *imx6_pcie = platform_get_drvdata(pdev);
-> +
-> +	/* bring down link, so bootloader gets clean state in case of reboot */
-> +	imx6_pcie_assert_core_reset(&imx6_pcie->pp);
-> +}
-> +
->  static const struct of_device_id imx6_pcie_of_match[] = {
->  	{ .compatible = "fsl,imx6q-pcie", },
->  	{},
-> @@ -601,6 +637,7 @@ static struct platform_driver imx6_pcie_driver = {
->  		.owner	= THIS_MODULE,
->  		.of_match_table = imx6_pcie_of_match,
->  	},
-> +	.shutdown = imx6_pcie_shutdown,
->  };
->  
->  /* Freescale PCIe driver does not allow module unload */
-> -- 
-> 2.0.1
-> 
+>
+>and we call it like this:
+>
+>  dev_res->res->end += get_res_add_size(realloc_head, dev_res->res);
+>
+>So we start out with dev_res", pass in dev_res->res, search the
+>realloc_head list to find dev_res again, and return dev_res->add_size.
+>That looks equivalent to just:
+>
+>  dev_res->res->end += dev_res->add_size;
+>
+>It looks like get_res_add_size() merely adds a printk and some complexity.
+>Am I missing something?
+>
+
+Let me try to explain it, if not correct, please let know :-)
+
+  dev_res->res->end += get_res_add_size(realloc_head, dev_res->res);
+
+would be expanded to:
+
+  dev_res->res->end += dev_res_1->add_size;
+
+with the dev_res_1 is another one from dev_res which is stored in realloc_head.
+
+>I do see that there are other callers where we don't actually start with
+>dev_res, which makes it a little more complicated.  But I think you should
+>either add something like this:
+>
+>  struct pci_dev_resource *res_to_dev_res(list, res)
+>  {
+>    list_for_each_entry(dev_res, head, list) {
+>      if (dev_res->res == res)
+>        return dev_res;
+>    }
+>    return NULL;
+>  }
+>
+
+Ok, we can extract the common part of these two functions.
+
+>which can be used to replace get_res_add_size() and get_res_add_align(), OR
+>figure out whether the dev_res of interest is always one we've just added.
+>If it is, maybe you can just make add_to_list() return the dev_res pointer
+>instead of an errno, and hang onto the pointer.  I'd like that much better
+>if that's possible.
+>
+
+Sorry, I don't get this point.
+
+add_to_list() is used to create the pci_dev_resource list, get_res_add_size()
+and get_res_add_align() is to retrieve the information in the list. I am not
+sure how to leverage add_to_list() in these two functions?
+
+>> +
+>> +
+>>  /* Sort resources by alignment */
+>>  static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+>>  {
+>> @@ -368,8 +390,9 @@ static void __assign_resources_sorted(struct list_head *head,
+>>  	LIST_HEAD(save_head);
+>>  	LIST_HEAD(local_fail_head);
+>>  	struct pci_dev_resource *save_res;
+>> -	struct pci_dev_resource *dev_res, *tmp_res;
+>> +	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
+>>  	unsigned long fail_type;
+>> +	resource_size_t add_align, align;
+>>  
+>>  	/* Check if optional add_size is there */
+>>  	if (!realloc_head || list_empty(realloc_head))
+>> @@ -384,10 +407,31 @@ static void __assign_resources_sorted(struct list_head *head,
+>>  	}
+>>  
+>>  	/* Update res in head list with add_size in realloc_head list */
+>> -	list_for_each_entry(dev_res, head, list)
+>> +	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
+>>  		dev_res->res->end += get_res_add_size(realloc_head,
+>>  							dev_res->res);
+>>  
+>> +		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
+>> +			continue;
+>> +
+>> +		add_align = get_res_add_align(realloc_head, dev_res->res);
+>> +
+>> +		if (add_align > dev_res->res->start) {
+>> +			dev_res->res->start = add_align;
+>> +			dev_res->res->end = add_align +
+>> +				            resource_size(dev_res->res);
+>> +
+>> +			list_for_each_entry(dev_res2, head, list) {
+>> +				align = pci_resource_alignment(dev_res2->dev,
+>> +							       dev_res2->res);
+>> +				if (add_align > align)
+>> +					list_move_tail(&dev_res->list,
+>> +						       &dev_res2->list);
+>> +			}
+>> +               }
+>> +
+>> +	}
+>> +
+>>  	/* Try updated head list with add_size added */
+>>  	assign_requested_resources_sorted(head, &local_fail_head);
+>>  
+>> @@ -930,6 +974,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>>  	struct resource *b_res = find_free_bus_resource(bus,
+>>  					mask | IORESOURCE_PREFETCH, type);
+>>  	resource_size_t children_add_size = 0;
+>> +	resource_size_t children_add_align = 0;
+>> +	resource_size_t add_align = 0;
+>>  
+>>  	if (!b_res)
+>>  		return -ENOSPC;
+>> @@ -954,6 +1000,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>>  			/* put SRIOV requested res to the optional list */
+>>  			if (realloc_head && i >= PCI_IOV_RESOURCES &&
+>>  					i <= PCI_IOV_RESOURCE_END) {
+>> +				add_align = max(pci_resource_alignment(dev, r), add_align);
+>>  				r->end = r->start - 1;
+>>  				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
+>>  				children_add_size += r_size;
+>> @@ -984,8 +1031,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>>  			if (order > max_order)
+>>  				max_order = order;
+>>  
+>> -			if (realloc_head)
+>> +			if (realloc_head) {
+>>  				children_add_size += get_res_add_size(realloc_head, r);
+>> +				children_add_align = get_res_add_align(realloc_head, r);
+>> +				add_align = max(add_align, children_add_align);
+>> +			}
+>>  		}
+>>  	}
+>>  
+>> @@ -996,7 +1046,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>>  		add_size = children_add_size;
+>>  	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+>>  		calculate_memsize(size, min_size, add_size,
+>> -				resource_size(b_res), min_align);
+>> +				resource_size(b_res), max(min_align, add_align));
+>>  	if (!size0 && !size1) {
+>>  		if (b_res->start || b_res->end)
+>>  			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
+>> @@ -1008,10 +1058,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>>  	b_res->end = size0 + min_align - 1;
+>>  	b_res->flags |= IORESOURCE_STARTALIGN;
+>>  	if (size1 > size0 && realloc_head) {
+>> -		add_to_list(realloc_head, bus->self, b_res, size1-size0, min_align);
+>> -		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
+>> -			   b_res, &bus->busn_res,
+>> -			   (unsigned long long)size1-size0);
+>> +		add_to_list(realloc_head, bus->self, b_res, size1-size0,
+>> +				max(min_align, add_align));
+>> +		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
+>> +				 "%pR to %pR add_size %llx add_align %llx\n", b_res,
+>> +				 &bus->busn_res, (unsigned long long)size1-size0,
+>> +				 max(min_align, add_align));
+>
+>Factor out this "max(min_align, add_align)" thing so we don't have to
+>change these lines.  Bonus points if you can also factor it out of the
+>calculate_memsize() call above.  That one is a pretty complicated ternary
+>expression that should probably be turned into an "if" instead anyway.
+>
+
+Ok, I get your point. Let me make it more easy to read.
+
+>>  	}
+>>  	return 0;
+>>  }
+>> -- 
+>> 1.7.9.5
+>> 
+
+-- 
+Richard Yang
+Help you, Help me
+
