@@ -1,72 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:44568 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754797AbaHEQMP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 12:12:15 -0400
-Received: by mail-wg0-f51.google.com with SMTP id b13so1256830wgh.34
-        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2014 09:12:14 -0700 (PDT)
-From: matthew_minter@xyratex.com
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: matthew_minter <matthew_minter@xyratex.com>
-Subject: [PATCH 22/22] Tidy up including documentation and messages
-Date: Tue,  5 Aug 2014 17:11:23 +0100
-Message-Id: <1407255083-9356-23-git-send-email-matthew_minter@xyratex.com>
-In-Reply-To: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
-References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+Received: from e28smtp08.in.ibm.com ([122.248.162.8]:38219 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751738AbaHTCeM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Aug 2014 22:34:12 -0400
+Received: from /spool/local
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 20 Aug 2014 08:04:10 +0530
+Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 961B23940048
+	for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 08:04:06 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s7K2aUYH3211542
+	for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 08:06:30 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s7K2Y5VM006938
+	for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 08:04:06 +0530
+Date: Wed, 20 Aug 2014 10:34:04 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
+Subject: Re: [PATCH V7 00/17] Enable SRIOV on POWER8
+Message-ID: <20140820023404.GC6904@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20140819211942.GA6295@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140819211942.GA6295@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: matthew_minter <matthew_minter@xyratex.com>
+On Tue, Aug 19, 2014 at 03:19:42PM -0600, Bjorn Helgaas wrote:
+>On Thu, Jul 24, 2014 at 02:22:10PM +0800, Wei Yang wrote:
+>> This patch set enables the SRIOV on POWER8.
+>> 
+>> The gerneral idea is put each VF into one individual PE and allocate required
+>> resources like DMA/MSI.
+>> 
+>> One thing special for VF PE is we use M64BT to cover the IOV BAR. M64BT is one
+>> hardware on POWER platform to map MMIO address to PE. By using M64BT, we could
+>> map one individual VF to a VF PE, which introduce more flexiblity to users.
+>> 
+>> To achieve this effect, we need to do some hack on pci devices's resources.
+>> 1. Expand the IOV BAR properly.
+>>    Done by pnv_pci_ioda_fixup_iov_resources().
+>> 2. Shift the IOV BAR properly.
+>>    Done by pnv_pci_vf_resource_shift().
+>> 3. IOV BAR alignment is the total size instead of an individual size on
+>>    powernv platform.
+>>    Done by pnv_pcibios_sriov_resource_alignment().
+>> 4. Take the IOV BAR alignment into consideration in the sizing and assigning.
+>>    This is achieved by commit: "PCI: Take additional IOV BAR alignment in
+>>    sizing and assigning"
+>> 
+>> Test Environment:
+>>        The SRIOV device tested is Emulex Lancer and Mellanox ConnectX-3 on
+>>        POWER8.
+>> 
+>> Examples on pass through a VF to guest through vfio:
+>> 	1. install necessary modules
+>> 	   modprobe vfio
+>> 	   modprobe vfio-pci
+>> 	2. retrieve the iommu_group the device belongs to
+>> 	   readlink /sys/bus/pci/devices/0000:06:0d.0/iommu_group
+>> 	   ../../../../kernel/iommu_groups/26
+>> 	   This means it belongs to group 26
+>> 	3. see how many devices under this iommu_group
+>> 	   ls /sys/kernel/iommu_groups/26/devices/
+>> 	4. unbind the original driver and bind to vfio-pci driver
+>> 	   echo 0000:06:0d.0 > /sys/bus/pci/devices/0000:06:0d.0/driver/unbind
+>> 	   echo  1102 0002 > /sys/bus/pci/drivers/vfio-pci/new_id
+>> 	   Note: this should be done for each device in the same iommu_group
+>> 	5. Start qemu and pass device through vfio
+>> 	   /home/ywywyang/git/qemu-impreza/ppc64-softmmu/qemu-system-ppc64 \
+>> 		   -M pseries -m 2048 -enable-kvm -nographic \
+>> 		   -drive file=/home/ywywyang/kvm/fc19.img \
+>> 		   -monitor telnet:localhost:5435,server,nowait -boot cd \
+>> 		   -device "spapr-pci-vfio-host-bridge,id=CXGB3,iommu=26,index=6"
+>> 
+>> Verify this is the exact VF response:
+>> 	1. ping from a machine in the same subnet(the broadcast domain)
+>> 	2. run arp -n on this machine
+>> 	   9.115.251.20             ether   00:00:c9:df:ed:bf   C eth0
+>> 	3. ifconfig in the guest
+>> 	   # ifconfig eth1
+>> 	   eth1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+>> 	        inet 9.115.251.20  netmask 255.255.255.0  broadcast 9.115.251.255
+>> 		inet6 fe80::200:c9ff:fedf:edbf  prefixlen 64  scopeid 0x20<link>
+>> 	        ether 00:00:c9:df:ed:bf  txqueuelen 1000 (Ethernet)
+>> 	        RX packets 175  bytes 13278 (12.9 KiB)
+>> 	        RX errors 0  dropped 0  overruns 0  frame 0
+>> 		TX packets 58  bytes 9276 (9.0 KiB)
+>> 	        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+>> 	4. They have the same MAC address
+>> 
+>> 	Note: make sure you shutdown other network interfaces in guest.
+>> 
+>> ---
+>> v6 -> v7:
+>>    1. add IORESOURCE_ARCH flag for IOV BAR on powernv platform.
+>>    2. when IOV BAR has IORESOURCE_ARCH flag, the size is retrieved from
+>>       hardware directly. If not, calculate as usual.
+>>    3. reorder the patch set, group them by subsystem:
+>>       PCI, powerpc, powernv
+>>    4. rebase it on 3.16-rc6
+>
+>This doesn't apply for me on v3.16-rc6:
+>
+>  02:48:57 ~/linux$ stg rebase v3.16-rc6
+>  Checking for changes in the working directory ... done
+>  Rebasing to "v3.16-rc6" ... done
+>  No patches applied
+>  02:49:14 ~/linux$ stg import -M --sign m/wy
+>  Checking for changes in the working directory ... done
+>  Importing patch "pci-iov-export-interface-for" ... done
+>  Importing patch "pci-iov-get-vf-bar-size-from" ... done
+>  Importing patch "pci-add-weak" ... done
+>  Importing patch "pci-take-additional-iov-bar" ... done
+>  Importing patch "powerpc-pci-don-t-unset-pci" ... done
+>  Importing patch "powerpc-pci-define" ... done
+>  Importing patch "powrepc-pci-refactor-pci_dn" ... done
+>  Importing patch "powerpc-powernv-use-pci_dn-in" ... error: patch failed:
+>  arch/powerpc/platforms/powernv/pci.c:376
+>  error: arch/powerpc/platforms/powernv/pci.c: patch does not apply
+>  stg import: Diff does not apply cleanly
+>
+>What am I missing?
+>
+>I assume you intend these all to go through my tree just to keep them all
+>together.  The ideal rebase target for me would be v3.17-rc1.
 
----
- drivers/of/of_pci_irq.c | 2 +-
- drivers/pci/setup-irq.c | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+Ok, I will rebase it on v3.17-rc1 upstream. While I guess the conflict is due
+to some patches from Gavin, which is not merged at that moment. I will make
+sure it applies to v3.17-rc1.
 
-diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
-index 1710d9d..205eb7a 100644
---- a/drivers/of/of_pci_irq.c
-+++ b/drivers/of/of_pci_irq.c
-@@ -97,7 +97,7 @@ EXPORT_SYMBOL_GPL(of_irq_parse_pci);
-  * @pin: PCI irq pin number; passed when used as map_irq callback. Unused
-  *
-  * @slot and @pin are unused, but included in the function so that this
-- * function can be used directly as the map_irq callback to pci_fixup_irqs().
-+ * function can be used directly as the map_irq callback to pdev_assign_irq().
-  */
- int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
- {
-diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-index 7bb4356..203bf7e 100644
---- a/drivers/pci/setup-irq.c
-+++ b/drivers/pci/setup-irq.c
-@@ -31,7 +31,7 @@ void pdev_assign_irq(struct pci_dev *dev,
- 	int irq = 0;
- 
- 	if (!map_irq) {
--		dev_dbg(&dev->dev, "map_irq not provided by arch\n", dev->irq);
-+		dev_dbg(&dev->dev, "runtime irq mapping not provided by arch\n");
- 		return;
- 	}
- 
-@@ -46,7 +46,7 @@ void pdev_assign_irq(struct pci_dev *dev,
- 	if (pin > 4)
- 		pin = 1;
- 
--	if (pin != 0) {
-+	if (pin) {
- 		/* Follow the chain of bridges, swizzling as we go. */
- 		if(swizzle)
- 			slot = (*swizzle)(dev, &pin);
-@@ -57,7 +57,7 @@ void pdev_assign_irq(struct pci_dev *dev,
- 			irq = 0;
- 	}
- 
--	dev_dbg(&dev->dev, "fixup irq: got %d\n", dev->irq);
-+	dev_dbg(&dev->dev, "assign irq: got %d\n", dev->irq);
- 	dev->irq = irq;
- 	/* Always tell the device, so the driver knows what is
- 	   the real IRQ to use; the device does not use it. */
+>
+>Given the arch/powerpc parts, I'll want an ack from Ben.  I just chatted
+>with him about these, so I assume that's not a problem, but we should make
+>it explicit.
+>
+>Bjorn
+
 -- 
-2.0.4
+Richard Yang
+Help you, Help me
 
