@@ -1,34 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61860 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754528AbaHULPk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 21 Aug 2014 07:15:40 -0400
-Message-ID: <53F5D4D7.6000600@redhat.com>
-Date: Thu, 21 Aug 2014 13:15:35 +0200
-From: Tomas Henzl <thenzl@redhat.com>
+Received: from mout.kundenserver.de ([212.227.126.131]:52011 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752762AbaHTLYg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Aug 2014 07:24:36 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Will Deacon <will.deacon@arm.com>
+Subject: Re: [PATCH] drivers: pci: convert generic host controller to DT host bridge creation API
+Date: Wed, 20 Aug 2014 13:23:52 +0200
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	"linux-pci" <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+References: <1407861695-25549-1-git-send-email-Liviu.Dudau@arm.com> <20140819120553.GA23128@arm.com>
+In-Reply-To: <20140819120553.GA23128@arm.com>
 MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>,
-	linux-kernel@vger.kernel.org
-CC: Naresh Kumar Inna <naresh@chelsio.com>,
-	Arvind Bhushan <arvindb@chelsio.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 10/13] csiostor: Use pci_enable_msix_range() instead
- of pci_enable_msix()
-References: <cover.1408335523.git.agordeev@redhat.com> <3ddc5fb60e32d05996a539d7007bfb3a5e5f09b2.1408335523.git.agordeev@redhat.com>
-In-Reply-To: <3ddc5fb60e32d05996a539d7007bfb3a5e5f09b2.1408335523.git.agordeev@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201408201323.52404.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/18/2014 08:01 AM, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
+On Tuesday 19 August 2014, Will Deacon wrote:
+> On Tue, Aug 12, 2014 at 05:41:35PM +0100, Liviu Dudau wrote:
 
-Patch looks good to me.
+> > +     if (!res_valid) {
+> > +             dev_err(dev, "non-prefetchable memory resource required\n");
+> > +             return -EINVAL;
+> > +     }
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+I don't see why this part should be in the host controller driver. It's really
+a sanity check that could apply anywhere, so could we just move it into the
+common code, or alternatively drop it?
 
+> > +     if (iores) {
+> > +             if (!PAGE_ALIGNED(io_cpuaddr))
+> > +                     return -EINVAL;
+> 
+> Why is this alignment check not in the core code?
+
+This confused me too. I have to look back at the core code, but I assume it's
+either aligned already based on the way this number gets created, or it
+can have an offset within the page that is the same as the offset within the
+physical address of iores and that hould be handled internally by
+pci_remap_iospace().
+
+> Probably a question for
+> somebody like Arnd, but do we need to deal with multiple IO resources?
+> Currently we'll just silently take the last one that we found, which doesn't
+> sound ideal.
+
+I can't think of a case where you'd actually have multiple IO resources,
+but I agree we should either treat that as an error or handle it right.
+My guess is that handling it is actually easier.
+
+	Arnd
