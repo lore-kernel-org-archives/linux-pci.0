@@ -1,124 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:60176 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752498AbaHNR4N (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Aug 2014 13:56:13 -0400
-Date: Thu, 14 Aug 2014 18:55:26 +0100
-From: Mark Rutland <mark.rutland@arm.com>
-To: "suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Cc: Marc Zyngier <Marc.Zyngier@arm.com>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 1/2 V4] irqchip: gic: Add supports for ARM GICv2m MSI(-X)
-Message-ID: <20140814175525.GI24018@leverpostej>
-References: <1407942041-3291-1-git-send-email-suravee.suthikulpanit@amd.com>
- <1407942041-3291-2-git-send-email-suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1407942041-3291-2-git-send-email-suravee.suthikulpanit@amd.com>
+Received: from smtprelay.restena.lu ([158.64.1.62]:40729 "EHLO
+	smtprelay.restena.lu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750745AbaHTHLx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Aug 2014 03:11:53 -0400
+Date: Wed, 20 Aug 2014 09:11:52 +0200
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dave Airlie <airlied@linux.ie>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 0/2] x86, ia64: Move EFI_FB vga_default_device()
+ initialization to pci_vga_fixup()
+Message-ID: <20140820091152.76cd4e1a@pluto>
+In-Reply-To: <20140820075508.74f5b622@pluto>
+References: <20140514224339.7f8be3a9@neptune.home>
+	<20140527234255.GJ11907@google.com>
+	<20140602201650.35f0e936@neptune.home>
+	<20140602201926.4d476818@neptune.home>
+	<20140625005501.7ff7e982@neptune.home>
+	<20140705171503.GC6247@google.com>
+	<CAMxnaaXxAZAJAdr5AYYRZC_xKFCuyrfY=qpJu8x+P-S+osm5vw@mail.gmail.com>
+	<CAMxnaaXGQe4vg9cY5e2KZBnG4F-z49OriwxEGUE-DCE6MKUryQ@mail.gmail.com>
+	<20140810112654.1bf684d6@neptune.home>
+	<CAMxnaaUsd+XHppMmPMXdFL13d1-OhLzoH_yjv_9abOx_uP=_Ug@mail.gmail.com>
+	<20140810183411.19370721@neptune.home>
+	<CAMxnaaVNpiSZmhQsHa_ZHJckgzG+xHyOL6hOT3Ts8GdcGN_A9g@mail.gmail.com>
+	<20140816192135.34260115@neptune.home>
+	<CAMxnaaWQoX9KMQVCKHTkeqSxGEybz5u1qU6AVBqzW3+mj_nJHQ@mail.gmail.com>
+	<20140820075508.74f5b622@pluto>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 13, 2014 at 04:00:40PM +0100, suravee.suthikulpanit@amd.com wrote:
-> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+On Wed, 20 Aug 2014 07:55:08 +0200 Bruno Prémont wrote:
+> On Tue, 19 Aug 2014 17:45:00 +0200 Andreas Noever wrote:
+> > On Sat, Aug 16, 2014 at 7:21 PM, Bruno Prémont wrote:
+> > > This series improves on commit 20cde694027e (x86, ia64: Move EFI_FB
+> > > vga_default_device() initialization to pci_vga_fixup()):
+> > > - cleanup remaining but always-true #ifndefs
+> > > - fix boot regression on dual-GPU Macs
+> > >
+> > > Andreas, can you please test this series? It is a modification from
+> > > previous testing patch that should still work fine for you.
+> > > That testing patch would have been failing X startup on old BIOS systems
+> > > booted with vga=normal (or otherwise in VGA text mode).
+> > >
+> > >
+> > > Greg, in case you have scheduled above-mentioned commit for your next
+> > > stable iteration, please hold it back in the queue until this follow-up
+> > > has landed and can be included within the same stable update as alone
+> > > that patch regresses for Macs with dual-GPU and using efifb.
+> > >
+> > > Bruno
+> > 
+> > Fails again (with and without efifb).
+> > 
+> > The vga_set_default_device in vga_arbiter_add_pci_device is at fault.
+> > It sets the boot video device to intel. Removing it makes the system
+> > bootable again.
 > 
-> ARM GICv2m specification extends GICv2 to support MSI(-X) with
-> a new set of register frame. This patch introduces support for
-> the non-secure GICv2m register frame. Currently, GICV2m is available
-> in certain version of GIC-400.
+> Could you provide your whole kernel log? I would like to understand
+> how your vga devices are setup and why it starts the wrong way.
 > 
-> The patch introduces a new property in ARM gic binding, the v2m subnode.
-> It is optional.
-> 
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> Cc: Mark Rutland <Mark.Rutland@arm.com>
-> Cc: Marc Zyngier <Marc.Zyngier@arm.com>
-> Cc: Jason Cooper <jason@lakedaemon.net>
-> Cc: Catalin Marinas <Catalin.Marinas@arm.com>
-> Cc: Will Deacon <Will.Deacon@arm.com>
-> ---
->  Documentation/devicetree/bindings/arm/gic.txt |  32 ++++
->  drivers/irqchip/Kconfig                       |   7 +
->  drivers/irqchip/Makefile                      |   1 +
->  drivers/irqchip/irq-gic-v2m.c                 | 215 ++++++++++++++++++++++++++
->  drivers/irqchip/irq-gic.c                     |  75 +++++----
->  drivers/irqchip/irq-gic.h                     |  48 ++++++
->  6 files changed, 348 insertions(+), 30 deletions(-)
->  create mode 100644 drivers/irqchip/irq-gic-v2m.c
->  create mode 100644 drivers/irqchip/irq-gic.h
-> 
-> diff --git a/Documentation/devicetree/bindings/arm/gic.txt b/Documentation/devicetree/bindings/arm/gic.txt
-> index 5573c08..8a64179 100644
-> --- a/Documentation/devicetree/bindings/arm/gic.txt
-> +++ b/Documentation/devicetree/bindings/arm/gic.txt
-> @@ -95,3 +95,35 @@ Example:
->                       <0x2c006000 0x2000>;
->                 interrupts = <1 9 0xf04>;
->         };
-> +
-> +
-> +* GICv2m extension for MSI/MSI-x support (Optional)
-> +
-> +Certain revision of GIC-400 supports MSI/MSI-x via V2M register frame.
-> +This is enabled by specifying v2m sub-node.
-> +
-> +Required properties:
-> +
-> +- msi-controller : Identifies the node as an MSI controller.
-> +
-> +- reg : GICv2m MSI interface register base and size
-> +
-> +Example:
-> +
-> +       interrupt-controller@e1101000 {
-> +               compatible = "arm,gic-400";
-> +               #interrupt-cells = <3>;
-> +               #address-cells = <2>;
-> +               #size-cells = <2>;
-> +               interrupt-controller;
-> +               interrupts = <1 8 0xf04>;
-> +               ranges = <0 0 0 0xe1100000 0 0x100000>;
-> +               reg = <0x0 0xe1110000 0 0x01000>,
-> +                     <0x0 0xe112f000 0 0x02000>,
-> +                     <0x0 0xe1140000 0 0x10000>,
-> +                     <0x0 0xe1160000 0 0x10000>;
-> +               v2m {
-> +                       msi-controller;
-> +                       reg = <0x0 0x80000 0 0x1000>;
-> +               };
-> +       };
+> If you can grab kernel log from both working and failing setups it
+> would be even better. The failing one is interesting for where exactly it
+> starts failing at boot.
 
-[...]
+While collecting debug logs, please apply following patch to get
+PCI command and bridge control registers as configured when vgaarb looks
+at them.
 
-> @@ -1009,6 +1012,16 @@ gic_of_init(struct device_node *node, struct device_node *parent)
->         if (of_property_read_u32(node, "cpu-offset", &percpu_offset))
->                 percpu_offset = 0;
-> 
-> +       gic_data[gic_cnt].irq_chip = &gic_chip;
-> +
-> +       /* Currently, we only support one v2m subnode. */
-> +       child = of_get_child_by_name(node, "v2m");
-> +       if (child) {
-> +               ret = gicv2m_of_init(child, &gic_data[gic_cnt]);
-> +               if (ret)
-> +                       return ret;
-> +       }
 
-I can't see how you'd sanely expand this to multiple children, which was
-the main point of having a separate node for the M block.
 
-Give the M block a compatible string and look for children with that
-string.
-
-Thanks,
-Mark.
+diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+index af02597..8c8e7af 100644
+--- a/drivers/gpu/vga/vgaarb.c
++++ b/drivers/gpu/vga/vgaarb.c
+@@ -554,6 +554,7 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
+ 	 * clear that below if the bridge isn't forwarding
+ 	 */
+ 	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
++	pr_info("vgaarb: PCI:%s PCI_COMMAND=%04x\n", pci_name(pdev), (unsigned int)cmd);
+ 	if (cmd & PCI_COMMAND_IO)
+ 		vgadev->owns |= VGA_RSRC_LEGACY_IO;
+ 	if (cmd & PCI_COMMAND_MEMORY)
+@@ -567,6 +568,7 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
+ 			u16 l;
+ 			pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
+ 					     &l);
++			pr_info("vgaarb: PCI:%s, bridge PCI:%s PCI_BRIDGE_CONTROL=%04x\n", pci_name(pdev), pci_name(bridge), (unsigned int)l);
+ 			if (!(l & PCI_BRIDGE_CTL_VGA)) {
+ 				vgadev->owns = 0;
+ 				break;
