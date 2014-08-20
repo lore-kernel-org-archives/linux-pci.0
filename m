@@ -1,206 +1,229 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f177.google.com ([209.85.220.177]:57084 "EHLO
-	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750831AbaHVFAD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 01:00:03 -0400
+Received: from mail-yk0-f175.google.com ([209.85.160.175]:52494 "EHLO
+	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751727AbaHTDIy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Aug 2014 23:08:54 -0400
+Received: by mail-yk0-f175.google.com with SMTP id q200so6163792ykb.20
+        for <linux-pci@vger.kernel.org>; Tue, 19 Aug 2014 20:08:53 -0700 (PDT)
+Date: Tue, 19 Aug 2014 21:08:41 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
+Subject: Re: [PATCH V7 04/17] PCI: Take additional IOV BAR alignment in
+ sizing and assigning
+Message-ID: <20140820030841.GD6295@google.com>
+References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1406182947-11302-5-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <1407860725-25202-4-git-send-email-Liviu.Dudau@arm.com>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com> <1407860725-25202-4-git-send-email-Liviu.Dudau@arm.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Thu, 21 Aug 2014 23:59:41 -0500
-Message-ID: <CAL_JsqKgW=HN35YnYBtAVDPxMYQfR35Bw3ekonXPmNhjrsVDUg@mail.gmail.com>
-Subject: Re: [PATCH v9 03/12] PCI: Introduce helper functions to deal with PCI
- I/O ranges.
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1406182947-11302-5-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 12, 2014 at 11:25 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> Some architectures do not have a simple view of the PCI I/O space
-> and instead use a range of CPU addresses that map to bus addresses.
-> For some architectures these ranges will be expressed by OF bindings
-> in a device tree file.
->
-> This patch introduces a pci_register_io_range() helper function with
-> a generic implementation that can be used by such architectures to
-> keep track of the I/O ranges described by the PCI bindings. If the
-> PCI_IOBASE macro is not defined that signals lack of support for PCI
-> and we return an error.
->
-> In order to retrieve the CPU address associated with an I/O port, a
-> new helper function pci_pio_to_address() is introduced. This will
-> search in the list of ranges registered with pci_register_io_range()
-> and return the CPU address that corresponds to the given port.
->
-> Cc: Grant Likely <grant.likely@linaro.org>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-
-Acked-by: Rob Herring <robh@kernel.org>
-
-
+On Thu, Jul 24, 2014 at 02:22:14PM +0800, Wei Yang wrote:
+> At resource sizing/assigning stage, resources are divided into two lists,
+> requested list and additional list, while the alignement of the additional
+> IOV BAR is not taken into the sizeing and assigning procedure.
+> 
+> This is reasonable in the original implementation, since IOV BAR's alignment is
+> mostly the size of a PF BAR alignemt. This means the alignment is already taken
+> into consideration. While this rule may be violated on some platform.
+> 
+> This patch take the additional IOV BAR alignment in sizing and assigning stage
+> explicitly.
+> 
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 > ---
->  drivers/of/address.c       | 95 ++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/of_address.h |  2 +
->  2 files changed, 97 insertions(+)
->
-> diff --git a/drivers/of/address.c b/drivers/of/address.c
-> index 5edfcb0..4dab700 100644
-> --- a/drivers/of/address.c
-> +++ b/drivers/of/address.c
-> @@ -5,6 +5,7 @@
->  #include <linux/module.h>
->  #include <linux/of_address.h>
->  #include <linux/pci_regs.h>
-> +#include <linux/slab.h>
->  #include <linux/string.h>
->
->  /* Max address size we deal with */
-> @@ -601,12 +602,106 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+>  drivers/pci/setup-bus.c |   68 +++++++++++++++++++++++++++++++++++++++++------
+>  1 file changed, 60 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index a5a63ec..d83681f 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -120,6 +120,28 @@ static resource_size_t get_res_add_size(struct list_head *head,
+>  	return 0;
 >  }
->  EXPORT_SYMBOL(of_get_address);
->
-> +#ifdef PCI_IOBASE
-> +struct io_range {
-> +       struct list_head list;
-> +       phys_addr_t start;
-> +       resource_size_t size;
-> +};
-> +
-> +static LIST_HEAD(io_range_list);
-> +static DEFINE_SPINLOCK(io_range_lock);
-> +#endif
-> +
-> +/*
-> + * Record the PCI IO range (expressed as CPU physical address + size).
-> + * Return a negative value if an error has occured, zero otherwise
-> + */
-> +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+>  
+> +static resource_size_t get_res_add_align(struct list_head *head,
+> +		struct resource *res)
 > +{
-> +#ifdef PCI_IOBASE
-> +       struct io_range *range;
-> +       resource_size_t allocated_size = 0;
+> +	struct pci_dev_resource *dev_res;
 > +
-> +       /* check if the range hasn't been previously recorded */
-> +       spin_lock(&io_range_lock);
-> +       list_for_each_entry(range, &io_range_list, list) {
-> +               if (addr >= range->start && addr + size <= range->start + size)
-> +                       return 0;
-> +               allocated_size += range->size;
-> +       }
-> +       spin_unlock(&io_range_lock);
+> +	list_for_each_entry(dev_res, head, list) {
+> +		if (dev_res->res == res) {
+> +			int idx = res - &dev_res->dev->resource[0];
 > +
-> +       /* range not registed yet, check for available space */
-> +       if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
-> +               /* if it's too big check if 64K space can be reserved */
-> +               if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT)
-> +                       return -E2BIG;
+> +			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+> +				   "res[%d]=%pR get_res_add_align min_align %llx\n",
+> +				   idx, dev_res->res,
+> +				   (unsigned long long)dev_res->min_align);
 > +
-> +               size = SZ_64K;
-> +               pr_warn("Requested IO range too big, new size set to 64K\n");
-> +       }
+> +			return dev_res->min_align;
+> +		}
+> +	}
 > +
-> +       /* add the range to the list */
-> +       range = kzalloc(sizeof(*range), GFP_KERNEL);
-> +       if (!range)
-> +               return -ENOMEM;
-> +
-> +       range->start = addr;
-> +       range->size = size;
-> +
-> +       list_add_tail(&range->list, &io_range_list);
-> +#endif
-> +
-> +       return 0;
+> +	return 0;
 > +}
+
+I see that you copied the structure of the existing get_res_add_size()
+here.  But I don't understand *that* function.  It looks basically like
+this:
+
+  resource_size_t get_res_add_size(list, res)
+  {
+    list_for_each_entry(dev_res, head, list) {
+      if (dev_res->res == res)
+        return dev_res->add_size;
+    }
+    return 0;
+  }
+
+and we call it like this:
+
+  dev_res->res->end += get_res_add_size(realloc_head, dev_res->res);
+
+So we start out with dev_res", pass in dev_res->res, search the
+realloc_head list to find dev_res again, and return dev_res->add_size.
+That looks equivalent to just:
+
+  dev_res->res->end += dev_res->add_size;
+
+It looks like get_res_add_size() merely adds a printk and some complexity.
+Am I missing something?
+
+I do see that there are other callers where we don't actually start with
+dev_res, which makes it a little more complicated.  But I think you should
+either add something like this:
+
+  struct pci_dev_resource *res_to_dev_res(list, res)
+  {
+    list_for_each_entry(dev_res, head, list) {
+      if (dev_res->res == res)
+        return dev_res;
+    }
+    return NULL;
+  }
+
+which can be used to replace get_res_add_size() and get_res_add_align(), OR
+figure out whether the dev_res of interest is always one we've just added.
+If it is, maybe you can just make add_to_list() return the dev_res pointer
+instead of an errno, and hang onto the pointer.  I'd like that much better
+if that's possible.
+
 > +
-> +phys_addr_t pci_pio_to_address(unsigned long pio)
-> +{
-> +       phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
 > +
-> +#ifdef PCI_IOBASE
-> +       struct io_range *range;
-> +       resource_size_t allocated_size = 0;
-> +
-> +       if (pio > IO_SPACE_LIMIT)
-> +               return address;
-> +
-> +       spin_lock(&io_range_lock);
-> +       list_for_each_entry(range, &io_range_list, list) {
-> +               if (pio >= allocated_size && pio < allocated_size + range->size) {
-> +                       address = range->start + pio - allocated_size;
-> +                       break;
-> +               }
-> +               allocated_size += range->size;
-> +       }
-> +       spin_unlock(&io_range_lock);
-> +#endif
-> +
-> +       return address;
-> +}
-> +
->  unsigned long __weak pci_address_to_pio(phys_addr_t address)
+>  /* Sort resources by alignment */
+>  static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
 >  {
-> +#ifdef PCI_IOBASE
-> +       struct io_range *res;
-> +       resource_size_t offset = 0;
+> @@ -368,8 +390,9 @@ static void __assign_resources_sorted(struct list_head *head,
+>  	LIST_HEAD(save_head);
+>  	LIST_HEAD(local_fail_head);
+>  	struct pci_dev_resource *save_res;
+> -	struct pci_dev_resource *dev_res, *tmp_res;
+> +	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
+>  	unsigned long fail_type;
+> +	resource_size_t add_align, align;
+>  
+>  	/* Check if optional add_size is there */
+>  	if (!realloc_head || list_empty(realloc_head))
+> @@ -384,10 +407,31 @@ static void __assign_resources_sorted(struct list_head *head,
+>  	}
+>  
+>  	/* Update res in head list with add_size in realloc_head list */
+> -	list_for_each_entry(dev_res, head, list)
+> +	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
+>  		dev_res->res->end += get_res_add_size(realloc_head,
+>  							dev_res->res);
+>  
+> +		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
+> +			continue;
 > +
-> +       list_for_each_entry(res, &io_range_list, list) {
-> +               if (address >= res->start &&
-> +                       address < res->start + res->size) {
-> +                       return res->start - address + offset;
+> +		add_align = get_res_add_align(realloc_head, dev_res->res);
+> +
+> +		if (add_align > dev_res->res->start) {
+> +			dev_res->res->start = add_align;
+> +			dev_res->res->end = add_align +
+> +				            resource_size(dev_res->res);
+> +
+> +			list_for_each_entry(dev_res2, head, list) {
+> +				align = pci_resource_alignment(dev_res2->dev,
+> +							       dev_res2->res);
+> +				if (add_align > align)
+> +					list_move_tail(&dev_res->list,
+> +						       &dev_res2->list);
+> +			}
 > +               }
-> +               offset += res->size;
-> +       }
 > +
-> +       return (unsigned long)-1;
-> +#else
->         if (address > IO_SPACE_LIMIT)
->                 return (unsigned long)-1;
->
->         return (unsigned long) address;
-> +#endif
+> +	}
+> +
+>  	/* Try updated head list with add_size added */
+>  	assign_requested_resources_sorted(head, &local_fail_head);
+>  
+> @@ -930,6 +974,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>  	struct resource *b_res = find_free_bus_resource(bus,
+>  					mask | IORESOURCE_PREFETCH, type);
+>  	resource_size_t children_add_size = 0;
+> +	resource_size_t children_add_align = 0;
+> +	resource_size_t add_align = 0;
+>  
+>  	if (!b_res)
+>  		return -ENOSPC;
+> @@ -954,6 +1000,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>  			/* put SRIOV requested res to the optional list */
+>  			if (realloc_head && i >= PCI_IOV_RESOURCES &&
+>  					i <= PCI_IOV_RESOURCE_END) {
+> +				add_align = max(pci_resource_alignment(dev, r), add_align);
+>  				r->end = r->start - 1;
+>  				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
+>  				children_add_size += r_size;
+> @@ -984,8 +1031,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>  			if (order > max_order)
+>  				max_order = order;
+>  
+> -			if (realloc_head)
+> +			if (realloc_head) {
+>  				children_add_size += get_res_add_size(realloc_head, r);
+> +				children_add_align = get_res_add_align(realloc_head, r);
+> +				add_align = max(add_align, children_add_align);
+> +			}
+>  		}
+>  	}
+>  
+> @@ -996,7 +1046,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>  		add_size = children_add_size;
+>  	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+>  		calculate_memsize(size, min_size, add_size,
+> -				resource_size(b_res), min_align);
+> +				resource_size(b_res), max(min_align, add_align));
+>  	if (!size0 && !size1) {
+>  		if (b_res->start || b_res->end)
+>  			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
+> @@ -1008,10 +1058,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>  	b_res->end = size0 + min_align - 1;
+>  	b_res->flags |= IORESOURCE_STARTALIGN;
+>  	if (size1 > size0 && realloc_head) {
+> -		add_to_list(realloc_head, bus->self, b_res, size1-size0, min_align);
+> -		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
+> -			   b_res, &bus->busn_res,
+> -			   (unsigned long long)size1-size0);
+> +		add_to_list(realloc_head, bus->self, b_res, size1-size0,
+> +				max(min_align, add_align));
+> +		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
+> +				 "%pR to %pR add_size %llx add_align %llx\n", b_res,
+> +				 &bus->busn_res, (unsigned long long)size1-size0,
+> +				 max(min_align, add_align));
+
+Factor out this "max(min_align, add_align)" thing so we don't have to
+change these lines.  Bonus points if you can also factor it out of the
+calculate_memsize() call above.  That one is a pretty complicated ternary
+expression that should probably be turned into an "if" instead anyway.
+
+>  	}
+>  	return 0;
 >  }
->
->  static int __of_address_to_resource(struct device_node *dev,
-> diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-> index c13b878..28e6836 100644
-> --- a/include/linux/of_address.h
-> +++ b/include/linux/of_address.h
-> @@ -55,7 +55,9 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
->  extern const __be32 *of_get_address(struct device_node *dev, int index,
->                            u64 *size, unsigned int *flags);
->
-> +extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
->  extern unsigned long pci_address_to_pio(phys_addr_t addr);
-> +extern phys_addr_t pci_pio_to_address(unsigned long pio);
->
->  extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
->                         struct device_node *node);
-> --
-> 2.0.4
->
->
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> -- 
+> 1.7.9.5
+> 
