@@ -1,90 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:57998 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754902AbaHGDJa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Aug 2014 23:09:30 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 7 Aug 2014 13:09:28 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 10FA32BB0054
-	for <linux-pci@vger.kernel.org>; Thu,  7 Aug 2014 13:09:26 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay07.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s7739vrA14811334
-	for <linux-pci@vger.kernel.org>; Thu, 7 Aug 2014 13:09:58 +1000
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s7739Osl022331
-	for <linux-pci@vger.kernel.org>; Thu, 7 Aug 2014 13:09:24 +1000
-Date: Thu, 7 Aug 2014 13:09:16 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	Eli Cohen <eli@mellanox.com>, Amir Vadai <amirv@mellanox.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yevgeny Petrilin <yevgenyp@mellanox.com>,
-	Peter Paneah <peter@mellanox.com>
-Subject: Re: [PATCH v2] PCI: Mark broken INTx masking for Mellanox devices
-Message-ID: <20140807030916.GA13426@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1406868871-350-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <53DDE9EC.5040303@mellanox.com>
- <20140803082046.GA8962@shangw>
- <CFE9BFE80FFE4D4892AA5D31387E310F014FC1968B@MTLDAG02.mtl.com>
- <20140803143007.GA4692@shangw>
- <1407078486.14674.5.camel@ul30vt.home>
- <20140804003437.GA4039@shangw>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140804003437.GA4039@shangw>
+Received: from mx1.redhat.com ([209.132.183.28]:31430 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750819AbaHTOKk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 Aug 2014 10:10:40 -0400
+Message-ID: <1408543798.11383.42.camel@ul30vt.home>
+Subject: Re: How to get the number of VFs assigned to the guests in XEN
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, konrad.wilk@oracle.com,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Christoph Hellwig <hch@lst.de>, boris.ostrovsky@oracle.com,
+	Sathya Prakash <sathya.prakash@avagotech.com>,
+	Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
+Date: Wed, 20 Aug 2014 08:09:58 -0600
+In-Reply-To: <CAK=zhgrFV10k0yzOrkSnmYJge3M+kQrcNz9e5qZZ5q180NY2xQ@mail.gmail.com>
+References: <CAK=zhgrv=e20s11v7Ls5ioWZrbyvp9Rzyv+QRDLR3mffr9E61A@mail.gmail.com>
+	 <1408538771.11383.33.camel@ul30vt.home>
+	 <CAK=zhgrFV10k0yzOrkSnmYJge3M+kQrcNz9e5qZZ5q180NY2xQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 04, 2014 at 10:34:38AM +1000, Gavin Shan wrote:
->On Sun, Aug 03, 2014 at 09:08:06AM -0600, Alex Williamson wrote:
->>On Mon, 2014-08-04 at 00:30 +1000, Gavin Shan wrote:
->>> On Sun, Aug 03, 2014 at 08:57:39AM +0000, Eli Cohen wrote:
->>> >>>
->>> >>>What is the problem with masking the interrupts with the PCI command 
->>> >>>register? I'm asking because I want to understand in which devices we 
->>> >>>have the problem, and if it could be fixed by firmware guys.
->>> >>>What are the implications of having the quirk?
->>> >>>
->>> >
->>> >>The way to mask the interrupt through PCI command register isn't taking effect on IBM power platform. So we have to have the >quirk so that the interrupt could be masked from interrupt controller side with function disable_irq_nosync().
->>> >>
->>> >>If the interrupt can't be masked properly, we detect interrupt storm reported from host/guest when passing through those devices >via VFIO without suprise.
->>> >
->>> >Hi Gavin,
->>> >Does it have any effect on performance. Also, can you tell in which cases interrupts need to be masked?
->>> >
->>> 
->>> Eli, more code needed to be run for masking the LSI from interrupt controller
->>> side than from PCI command register.
->>> 
->>> I was passing through Mellanox devices from host to guest with VFIO, and I
->>> designated to use LSI in the guest side. More details could be found in
->>> drivers/vfio/pci/vfio_pci_intrs.c::vfio_intx_handler()
->>
->>INTx is relatively high overhead already for device assignment since the
->>interrupt is level triggered and needs to be masked on the host while
->>the guest is processing it.  The more important restriction imposed by
->>marking broken INTx masking is that the device needs an exclusive
->>interrupt line in order to be assigned to a guest.  That may be common
->>practice on IBM power, but on x86 it can make it much harder to
->>configure the system for this use case.  Thanks,
->>
->
->Power platform has the similar situation: Each PCI controller has 4
->LSIs shared by all child devices attached to the PHB. It would be
->racy if one LSI is shared by 2 or more devices. So masking LSI with
->PCI command register is the preferred mechanism. Unfortunately, it
->doesn't work on those 2 Mellanox devices. With the quirk, it's workable
->at least.
->
+On Wed, 2014-08-20 at 19:14 +0530, Sreekanth Reddy wrote:
+> Thanks Alex,
+> 
+> Then, Is there any other ways to stop accidental unload of PF driver
+> while still some VFs are accessing by the running VMs.
 
-ping, Any more comments on this? :-)
+I believe the reason pci_vfs_assigned() and the pci_dev flag that backs
+it exists is because legacy KVM device assignment does not require a
+host driver for the device.  At best, the assigned device is bound to
+pci-stub, which is more than happy to release a device at any point in
+time.  This flag was therefore added to indicate that the device was in
+use, please don't make it disappear.  With VFIO, the device is bound to
+vfio-pci in the host which will only release the device when it is
+unused, just like any other device driver.  If the device is in use,
+either assigned to a VM or otherwise in use by a userspace driver,
+vfio-pci will block until unused.
 
-Thanks,
-Gavin
+There are opportunities that we have yet to implement that we could
+notify the user of the removal request, triggering a hot-unplug in a
+guest.  Assuming some sort of revoke() functionality gets pushed
+upstream we could also make an unplug request, wait from some time, then
+revoke the device from the user.  The point however is that device
+assignment shouldn't be handled as a special case.  When
+pci_disable_sriov() is called, the release functions for any drivers
+owning an affected VF should be called where we have the opportunity to
+block until unused.  Thanks,
+
+Alex
+
+> On Wed, Aug 20, 2014 at 6:16 PM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> > On Wed, 2014-08-20 at 16:39 +0530, Sreekanth Reddy wrote:
+> >> HI,
+> >>
+> >> For SRIOV support, currently in the KVM environment, mpt3sas driver
+> >> can use the API pci_vfs_assigned() to know the number of VFs that are
+> >> currently assigned to the running VMs. So that during the PF driver
+> >> unload time, if the return value of this API is greater than zero the
+> >> our driver won't call the pci_disable_sriov() to disable the VFs.
+> >>
+> >> Now for the same purpose in XEN environment, is there any API similar
+> >> to pci_vfs_assigned() which the low lever device driver can use to
+> >> know 'the number of VFs that are currently assigned to the running
+> >> VMs'. In XEN environment this API pci_vfs_assigned() will return
+> >> always zero even though VFs are assigned to the running VMs.
+> >
+> > Note that pci_vfs_assigned() assigned is only used by legacy KVM device
+> > assignment and primarily as a workaround for not using an actual
+> > host-based device driver to manage device ownership.  When using
+> > VFIO-based device assignment with KVM, pci_vfs_assigned() is not
+> > updated.  Please don't rely on this interface.  Thanks,
+> >
+> > Alex
+> >
+
+
 
