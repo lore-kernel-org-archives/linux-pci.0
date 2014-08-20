@@ -1,263 +1,273 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:52437 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752364AbaHEQMA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 12:12:00 -0400
-Received: by mail-wi0-f176.google.com with SMTP id bs8so7254316wib.15
-        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2014 09:11:58 -0700 (PDT)
-From: matthew_minter@xyratex.com
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: matthew_minter <matthew_minter@xyratex.com>
-Subject: [PATCH 02/22] Modified x86 initialisation to accomodate PCI irq changes
-Date: Tue,  5 Aug 2014 17:11:03 +0100
-Message-Id: <1407255083-9356-3-git-send-email-matthew_minter@xyratex.com>
-In-Reply-To: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
-References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:59469 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751738AbaHTCZg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Aug 2014 22:25:36 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 20 Aug 2014 12:25:32 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 26AE12CE8054
+	for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 12:25:30 +1000 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s7K2QHuq10289334
+	for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 12:26:17 +1000
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s7K2PSZ3021299
+	for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 12:25:29 +1000
+Date: Wed, 20 Aug 2014 10:25:20 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
+Subject: Re: [PATCH V7 01/17] PCI/IOV: Export interface for retrieve VF's BDF
+Message-ID: <20140820022520.GA6904@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1406182947-11302-2-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20140819213726.GB6295@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140819213726.GB6295@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: matthew_minter <matthew_minter@xyratex.com>
+On Tue, Aug 19, 2014 at 03:37:26PM -0600, Bjorn Helgaas wrote:
+>On Thu, Jul 24, 2014 at 02:22:11PM +0800, Wei Yang wrote:
+>> When implementing the SR-IOV on PowerNV platform, some resource reservation is
+>> needed for VFs which don't exist at the bootup stage. To do the match between
+>> resources and VFs, the code need to get the VF's BDF in advance.
+>
+>Ben started explaining this whole hardware PE/VF/etc stuff to me, but it
+>hasn't all sunk in yet.  We need to describe it somewhere (it sounds pretty
+>involved, so maybe an extended description in Documentation/ would be
+>appropriate).
 
----
- arch/x86/include/asm/pci_x86.h |  5 ++-
- arch/x86/kernel/x86_init.c     |  1 -
- arch/x86/pci/acpi.c            |  5 ++-
- arch/x86/pci/common.c          |  2 -
- arch/x86/pci/irq.c             | 95 +++++++++++++++++++++++-------------------
- 5 files changed, 58 insertions(+), 50 deletions(-)
+Yes, this is not that easy to understand the whole stuff. I'd like to write a
+file in Documentation/. By scaning the directory, I am not sure which one
+would be proper, the Documentation/powerpc/ would be fine?
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index fa1195d..436b9e5 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -90,6 +90,7 @@ extern unsigned int pcibios_irq_mask;
- 
- extern raw_spinlock_t pci_config_lock;
- 
-+extern int pci_map_irq(struct pci_dev *dev, u8 slot, u8 pin);
- extern int (*pcibios_enable_irq)(struct pci_dev *dev);
- extern void (*pcibios_disable_irq)(struct pci_dev *dev);
- 
-@@ -119,7 +120,7 @@ extern int __init pci_acpi_init(void);
- extern void __init pcibios_irq_init(void);
- extern int __init pcibios_init(void);
- extern int pci_legacy_init(void);
--extern void pcibios_fixup_irqs(void);
-+extern int pcibios_fixup_irq(struct pci_dev *dev, u8 pin);
- 
- /* pci-mmconfig.c */
- 
-@@ -200,7 +201,7 @@ static inline void mmio_config_writel(void __iomem *pos, u32 val)
- #  define x86_default_pci_init		pci_legacy_init
- # endif
- # define x86_default_pci_init_irq	pcibios_irq_init
--# define x86_default_pci_fixup_irqs	pcibios_fixup_irqs
-+# define x86_default_pci_fixup_irq	pcibios_fixup_irq
- #else
- # define x86_default_pci_init		NULL
- # define x86_default_pci_init_irq	NULL
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index e48b674..064457f 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -81,7 +81,6 @@ struct x86_init_ops x86_init __initdata = {
- 	.pci = {
- 		.init			= x86_default_pci_init,
- 		.init_irq		= x86_default_pci_init_irq,
--		.fixup_irqs		= x86_default_pci_fixup_irqs,
- 	},
- };
- 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 5075371..4ffad2f 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -311,7 +311,7 @@ static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
- 	} else if (orig_end != end) {
- 		dev_info(&info->bridge->dev,
- 			"host bridge window [%#llx-%#llx] "
--			"([%#llx-%#llx] ignored, not CPU addressable)\n", 
-+			"([%#llx-%#llx] ignored, not CPU addressable)\n",
- 			start, orig_end, end + 1, orig_end);
- 	}
- 
-@@ -571,6 +571,9 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- 	struct pci_sysdata *sd = bridge->bus->sysdata;
- 
- 	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
-+
-+	bridge->swizzle_irq = NULL;
-+	bridge->map_irq = pci_map_irq;
- 	return 0;
- }
- 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 059a76c..d4ed0b0 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -662,8 +662,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	if ((err = pci_enable_resources(dev, mask)) < 0)
- 		return err;
- 
--	if (!pci_dev_msi_enabled(dev))
--		return pcibios_enable_irq(dev);
- 	return 0;
- }
- 
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 84112f5..0e2cfe8 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -593,9 +593,9 @@ static __init int intel_router_probe(struct irq_router *r, struct pci_dev *route
- 		return 1;
- 	}
- 
--	if ((device >= PCI_DEVICE_ID_INTEL_5_3400_SERIES_LPC_MIN && 
--	     device <= PCI_DEVICE_ID_INTEL_5_3400_SERIES_LPC_MAX) 
--	||  (device >= PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MIN && 
-+	if ((device >= PCI_DEVICE_ID_INTEL_5_3400_SERIES_LPC_MIN &&
-+	     device <= PCI_DEVICE_ID_INTEL_5_3400_SERIES_LPC_MAX)
-+	||  (device >= PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MIN &&
- 	     device <= PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MAX)
- 	||  (device >= PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MIN &&
- 	     device <= PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MAX)
-@@ -874,9 +874,8 @@ static struct irq_info *pirq_get_info(struct pci_dev *dev)
- 	return NULL;
- }
- 
--static int pcibios_lookup_irq(struct pci_dev *dev, int assign)
-+static int pcibios_lookup_irq(struct pci_dev *dev, u8 pin, int assign)
- {
--	u8 pin;
- 	struct irq_info *info;
- 	int i, pirq, newirq;
- 	int irq = 0;
-@@ -886,7 +885,6 @@ static int pcibios_lookup_irq(struct pci_dev *dev, int assign)
- 	char *msg = NULL;
- 
- 	/* Find IRQ pin */
--	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
- 	if (!pin) {
- 		dev_dbg(&dev->dev, "no interrupt pin\n");
- 		return 0;
-@@ -1016,50 +1014,45 @@ static int pcibios_lookup_irq(struct pci_dev *dev, int assign)
- 					 irq, pci_name(dev2));
- 		}
- 	}
--	return 1;
-+	/*
-+	 * Due to the complicated platform specific behvaiour we cannot defer
-+	 * assigning dev->irq to the caller but will return it anyway
-+	 */
-+	return dev->irq;
- }
- 
--void __init pcibios_fixup_irqs(void)
-+int pcibios_fixup_irq(struct pci_dev *dev, u8 pin)
- {
--	struct pci_dev *dev = NULL;
--	u8 pin;
--
-+	int irq = dev->irq;
- 	DBG(KERN_DEBUG "PCI: IRQ fixup\n");
--	for_each_pci_dev(dev) {
--		/*
--		 * If the BIOS has set an out of range IRQ number, just
--		 * ignore it.  Also keep track of which IRQ's are
--		 * already in use.
--		 */
--		if (dev->irq >= 16) {
--			dev_dbg(&dev->dev, "ignoring bogus IRQ %d\n", dev->irq);
--			dev->irq = 0;
--		}
--		/*
--		 * If the IRQ is already assigned to a PCI device,
--		 * ignore its ISA use penalty
--		 */
--		if (pirq_penalty[dev->irq] >= 100 &&
--				pirq_penalty[dev->irq] < 100000)
--			pirq_penalty[dev->irq] = 0;
--		pirq_penalty[dev->irq]++;
-+	/*
-+	 * If the BIOS has set an out of range IRQ number, just
-+	 * ignore it.  Also keep track of which IRQ's are
-+	 * already in use.
-+	 */
-+	if (irq >= 16) {
-+		dev_dbg(&dev->dev, "ignoring bogus IRQ %d\n", irq);
-+		irq = 0;
- 	}
-+	/*
-+	 * If the IRQ is already assigned to a PCI device,
-+	 * ignore its ISA use penalty
-+	 */
-+	if (pirq_penalty[irq] >= 100 &&
-+			pirq_penalty[irq] < 100000)
-+		pirq_penalty[irq] = 0;
-+	pirq_penalty[irq]++;
- 
--	if (io_apic_assign_pci_irqs)
--		return;
-+	if (io_apic_assign_pci_irqs || !pin)
-+		return irq;
- 
--	dev = NULL;
--	for_each_pci_dev(dev) {
--		pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
--		if (!pin)
--			continue;
-+	/*
-+	 * Still no IRQ? Try to lookup one...
-+	 */
-+	if (!irq)
-+		irq = pcibios_lookup_irq(dev, pin, 0);
- 
--		/*
--		 * Still no IRQ? Try to lookup one...
--		 */
--		if (!dev->irq)
--			pcibios_lookup_irq(dev, 0);
--	}
-+	return irq;
- }
- 
- /*
-@@ -1160,6 +1153,13 @@ void __init pcibios_irq_init(void)
- 	}
- }
- 
-+int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->swizzle_irq = NULL;
-+	bridge->map_irq = pci_map_irq;
-+	return 0;
-+}
-+
- static void pirq_penalize_isa_irq(int irq, int active)
- {
- 	/*
-@@ -1184,12 +1184,19 @@ void pcibios_penalize_isa_irq(int irq, int active)
- 		pirq_penalize_isa_irq(irq, active);
- }
- 
-+int pci_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
-+{
-+	dev->irq = pcibios_fixup_irq(dev, pin);
-+	if (pcibios_enable_irq(dev))
-+		return -1;
-+	return dev->irq;
-+}
-+
- static int pirq_enable_irq(struct pci_dev *dev)
- {
- 	u8 pin;
--
- 	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
--	if (pin && !pcibios_lookup_irq(dev, 1)) {
-+	if (pin && !pcibios_lookup_irq(dev, pin, 1)) {
- 		char *msg = "";
- 
- 		if (!io_apic_assign_pci_irqs && dev->irq)
+>
+>What I'm concerned about is that PCI resource assignment is a huge mess,
+>and this obviously complicates it even more.  That's necessary and OK, but
+>I want to at least preserve the possibility that somebody could rework it
+>to make it manageable, and that means we need to know what the special
+>constraints of PowerNV are.
+
+Sure, let me try my best to explain it, my English is not that good, hope it
+is understandable. :-)
+
+>
+>Code question below.
+>
+>> In this patch, it exports the interface to retrieve VF's BDF:
+>>    * Make the virtfn_bus as an interface
+>>    * Make the virtfn_devfn as an interface
+>>    * rename them with more specific name
+>>    * code cleanup in pci_sriov_resource_alignment()
+>> 
+>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> ---
+>>  drivers/pci/iov.c   |   26 +++++++-------------------
+>>  drivers/pci/pci.h   |   19 -------------------
+>>  include/linux/pci.h |   44 ++++++++++++++++++++++++++++++++++++++++++++
+>>  3 files changed, 51 insertions(+), 38 deletions(-)
+>> 
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index cb6f247..7566238 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -19,18 +19,6 @@
+>>  
+>>  #define VIRTFN_ID_LEN	16
+>>  
+>> -static inline u8 virtfn_bus(struct pci_dev *dev, int id)
+>> -{
+>> -	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
+>> -				    dev->sriov->stride * id) >> 8);
+>> -}
+>> -
+>> -static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
+>> -{
+>> -	return (dev->devfn + dev->sriov->offset +
+>> -		dev->sriov->stride * id) & 0xff;
+>> -}
+>> -
+>>  static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+>>  {
+>>  	struct pci_bus *child;
+>> @@ -69,7 +57,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+>>  	struct pci_bus *bus;
+>>  
+>>  	mutex_lock(&iov->dev->sriov->lock);
+>> -	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
+>> +	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
+>>  	if (!bus)
+>>  		goto failed;
+>>  
+>> @@ -77,7 +65,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+>>  	if (!virtfn)
+>>  		goto failed0;
+>>  
+>> -	virtfn->devfn = virtfn_devfn(dev, id);
+>> +	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
+>>  	virtfn->vendor = dev->vendor;
+>>  	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
+>>  	pci_setup_device(virtfn);
+>> @@ -140,8 +128,8 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+>>  	struct pci_sriov *iov = dev->sriov;
+>>  
+>>  	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
+>> -					     virtfn_bus(dev, id),
+>> -					     virtfn_devfn(dev, id));
+>> +					     pci_iov_virtfn_bus(dev, id),
+>> +					     pci_iov_virtfn_devfn(dev, id));
+>>  	if (!virtfn)
+>>  		return;
+>>  
+>> @@ -216,7 +204,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>>  	iov->offset = offset;
+>>  	iov->stride = stride;
+>>  
+>> -	if (virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
+>> +	if (pci_iov_virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
+>>  		dev_err(&dev->dev, "SR-IOV: bus number out of range\n");
+>>  		return -ENOMEM;
+>>  	}
+>> @@ -516,7 +504,7 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
+>>  	if (!reg)
+>>  		return 0;
+>>  
+>> -	 __pci_read_base(dev, type, &tmp, reg);
+>> +	__pci_read_base(dev, type, &tmp, reg);
+>>  	return resource_alignment(&tmp);
+>>  }
+>>  
+>> @@ -546,7 +534,7 @@ int pci_iov_bus_range(struct pci_bus *bus)
+>>  	list_for_each_entry(dev, &bus->devices, bus_list) {
+>>  		if (!dev->is_physfn)
+>>  			continue;
+>> -		busnr = virtfn_bus(dev, dev->sriov->total_VFs - 1);
+>> +		busnr = pci_iov_virtfn_bus(dev, dev->sriov->total_VFs - 1);
+>>  		if (busnr > max)
+>>  			max = busnr;
+>>  	}
+>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+>> index 0601890..a3158b2 100644
+>> --- a/drivers/pci/pci.h
+>> +++ b/drivers/pci/pci.h
+>> @@ -221,25 +221,6 @@ static inline int pci_ari_enabled(struct pci_bus *bus)
+>>  void pci_reassigndev_resource_alignment(struct pci_dev *dev);
+>>  void pci_disable_bridge_window(struct pci_dev *dev);
+>>  
+>> -/* Single Root I/O Virtualization */
+>> -struct pci_sriov {
+>> -	int pos;		/* capability position */
+>> -	int nres;		/* number of resources */
+>> -	u32 cap;		/* SR-IOV Capabilities */
+>> -	u16 ctrl;		/* SR-IOV Control */
+>> -	u16 total_VFs;		/* total VFs associated with the PF */
+>> -	u16 initial_VFs;	/* initial VFs associated with the PF */
+>> -	u16 num_VFs;		/* number of VFs available */
+>> -	u16 offset;		/* first VF Routing ID offset */
+>> -	u16 stride;		/* following VF stride */
+>> -	u32 pgsz;		/* page size for BAR alignment */
+>> -	u8 link;		/* Function Dependency Link */
+>> -	u16 driver_max_VFs;	/* max num VFs driver supports */
+>> -	struct pci_dev *dev;	/* lowest numbered PF */
+>> -	struct pci_dev *self;	/* this PF */
+>> -	struct mutex lock;	/* lock for VF bus */
+>> -};
+>> -
+>>  #ifdef CONFIG_PCI_ATS
+>>  void pci_restore_ats_state(struct pci_dev *dev);
+>>  #else
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 466bcd1..194db52 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -245,6 +245,27 @@ struct pci_vpd;
+>>  struct pci_sriov;
+>>  struct pci_ats;
+>>  
+>> +/* Single Root I/O Virtualization */
+>> +struct pci_sriov {
+>> +	int pos;		/* capability position */
+>> +	int nres;		/* number of resources */
+>> +	u32 cap;		/* SR-IOV Capabilities */
+>> +	u16 ctrl;		/* SR-IOV Control */
+>> +	u16 total_VFs;		/* total VFs associated with the PF */
+>> +	u16 initial_VFs;	/* initial VFs associated with the PF */
+>> +	u16 num_VFs;		/* number of VFs available */
+>> +	u16 offset;		/* first VF Routing ID offset */
+>> +	u16 stride;		/* following VF stride */
+>> +	u32 pgsz;		/* page size for BAR alignment */
+>> +	u8 link;		/* Function Dependency Link */
+>> +	u16 driver_max_VFs;	/* max num VFs driver supports */
+>> +	struct pci_dev *dev;	/* lowest numbered PF */
+>> +	struct pci_dev *self;	/* this PF */
+>> +	struct mutex lock;	/* lock for VF bus */
+>> +	struct work_struct mtask; /* VF Migration task */
+>> +	u8 __iomem *mstate;	/* VF Migration State Array */
+>> +};
+>> +
+>>  /*
+>>   * The pci_dev structure is used to describe PCI devices.
+>>   */
+>> @@ -1616,6 +1637,21 @@ int pci_ext_cfg_avail(void);
+>>  void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
+>>  
+>>  #ifdef CONFIG_PCI_IOV
+>> +static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
+>> +{
+>> +	if (!dev->is_physfn)
+>> +		return -EINVAL;
+>> +	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
+>> +				    dev->sriov->stride * id) >> 8);
+>> +}
+>> +static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
+>> +{
+>> +	if (!dev->is_physfn)
+>> +		return -EINVAL;
+>> +	return (dev->devfn + dev->sriov->offset +
+>> +		dev->sriov->stride * id) & 0xff;
+>> +}
+>
+>Do these really need to be inline?  If they weren't inline, we wouldn't
+>have to move struct pci_sriov to the public header file.
+>
+
+Not necessary to be inline, I think.
+
+I will rework it and hide pci_sriov from public.
+
+>> +
+>>  int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+>>  void pci_disable_sriov(struct pci_dev *dev);
+>>  int pci_num_vf(struct pci_dev *dev);
+>> @@ -1623,6 +1659,14 @@ int pci_vfs_assigned(struct pci_dev *dev);
+>>  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+>>  int pci_sriov_get_totalvfs(struct pci_dev *dev);
+>>  #else
+>> +static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
+>> +{
+>> +	return -ENXIO;
+>> +}
+>> +static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
+>> +{
+>> +	return -ENXIO;
+>> +}
+>>  static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+>>  { return -ENODEV; }
+>>  static inline void pci_disable_sriov(struct pci_dev *dev) { }
+>> -- 
+>> 1.7.9.5
+>> 
+
 -- 
-2.0.4
+Richard Yang
+Help you, Help me
 
