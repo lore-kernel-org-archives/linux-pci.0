@@ -1,74 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39442 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751026AbaH2JCI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Aug 2014 05:02:08 -0400
-Date: Fri, 29 Aug 2014 10:10:55 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Tadeusz Struk <tadeusz.struk@intel.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	"David S. Miller" <davem@davemloft.net>, qat-linux@intel.com,
-	linux-crypto@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] crypto: qat - Use pci_enable_msix_exact() instead of
- pci_enable_msix()
-Message-ID: <20140829091055.GA1035@agordeev.usersys.redhat.com>
-References: <1408433524-11487-1-git-send-email-agordeev@redhat.com>
+Received: from mail-qg0-f53.google.com ([209.85.192.53]:38098 "EHLO
+	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751565AbaHTDMs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Aug 2014 23:12:48 -0400
+Received: by mail-qg0-f53.google.com with SMTP id z60so3376066qgd.40
+        for <linux-pci@vger.kernel.org>; Tue, 19 Aug 2014 20:12:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1408433524-11487-1-git-send-email-agordeev@redhat.com>
+In-Reply-To: <20140820023404.GC6904@richard>
+References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20140819211942.GA6295@google.com> <20140820023404.GC6904@richard>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 19 Aug 2014 22:12:27 -0500
+Message-ID: <CAErSpo5Dm4Eu0TcvJn2fYLVd005OgJCy-yZAhqsttjbb8jwm=A@mail.gmail.com>
+Subject: Re: [PATCH V7 00/17] Enable SRIOV on POWER8
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	Mike Qiu <qiudayu@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 19, 2014 at 09:32:04AM +0200, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
+On Tue, Aug 19, 2014 at 9:34 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+> On Tue, Aug 19, 2014 at 03:19:42PM -0600, Bjorn Helgaas wrote:
+>>On Thu, Jul 24, 2014 at 02:22:10PM +0800, Wei Yang wrote:
+>>> This patch set enables the SRIOV on POWER8.
+>>>
+>>> The gerneral idea is put each VF into one individual PE and allocate required
+>>> resources like DMA/MSI.
+>>>
+>>> One thing special for VF PE is we use M64BT to cover the IOV BAR. M64BT is one
+>>> hardware on POWER platform to map MMIO address to PE. By using M64BT, we could
+>>> map one individual VF to a VF PE, which introduce more flexiblity to users.
+>>>
+>>> To achieve this effect, we need to do some hack on pci devices's resources.
+>>> 1. Expand the IOV BAR properly.
+>>>    Done by pnv_pci_ioda_fixup_iov_resources().
+>>> 2. Shift the IOV BAR properly.
+>>>    Done by pnv_pci_vf_resource_shift().
+>>> 3. IOV BAR alignment is the total size instead of an individual size on
+>>>    powernv platform.
+>>>    Done by pnv_pcibios_sriov_resource_alignment().
+>>> 4. Take the IOV BAR alignment into consideration in the sizing and assigning.
+>>>    This is achieved by commit: "PCI: Take additional IOV BAR alignment in
+>>>    sizing and assigning"
+>>>
+>>> Test Environment:
+>>>        The SRIOV device tested is Emulex Lancer and Mellanox ConnectX-3 on
+>>>        POWER8.
+>>>
+>>> Examples on pass through a VF to guest through vfio:
+>>>      1. install necessary modules
+>>>         modprobe vfio
+>>>         modprobe vfio-pci
+>>>      2. retrieve the iommu_group the device belongs to
+>>>         readlink /sys/bus/pci/devices/0000:06:0d.0/iommu_group
+>>>         ../../../../kernel/iommu_groups/26
+>>>         This means it belongs to group 26
+>>>      3. see how many devices under this iommu_group
+>>>         ls /sys/kernel/iommu_groups/26/devices/
+>>>      4. unbind the original driver and bind to vfio-pci driver
+>>>         echo 0000:06:0d.0 > /sys/bus/pci/devices/0000:06:0d.0/driver/unbind
+>>>         echo  1102 0002 > /sys/bus/pci/drivers/vfio-pci/new_id
+>>>         Note: this should be done for each device in the same iommu_group
+>>>      5. Start qemu and pass device through vfio
+>>>         /home/ywywyang/git/qemu-impreza/ppc64-softmmu/qemu-system-ppc64 \
+>>>                 -M pseries -m 2048 -enable-kvm -nographic \
+>>>                 -drive file=/home/ywywyang/kvm/fc19.img \
+>>>                 -monitor telnet:localhost:5435,server,nowait -boot cd \
+>>>                 -device "spapr-pci-vfio-host-bridge,id=CXGB3,iommu=26,index=6"
+>>>
+>>> Verify this is the exact VF response:
+>>>      1. ping from a machine in the same subnet(the broadcast domain)
+>>>      2. run arp -n on this machine
+>>>         9.115.251.20             ether   00:00:c9:df:ed:bf   C eth0
+>>>      3. ifconfig in the guest
+>>>         # ifconfig eth1
+>>>         eth1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+>>>              inet 9.115.251.20  netmask 255.255.255.0  broadcast 9.115.251.255
+>>>              inet6 fe80::200:c9ff:fedf:edbf  prefixlen 64  scopeid 0x20<link>
+>>>              ether 00:00:c9:df:ed:bf  txqueuelen 1000 (Ethernet)
+>>>              RX packets 175  bytes 13278 (12.9 KiB)
+>>>              RX errors 0  dropped 0  overruns 0  frame 0
+>>>              TX packets 58  bytes 9276 (9.0 KiB)
+>>>              TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+>>>      4. They have the same MAC address
+>>>
+>>>      Note: make sure you shutdown other network interfaces in guest.
+>>>
+>>> ---
+>>> v6 -> v7:
+>>>    1. add IORESOURCE_ARCH flag for IOV BAR on powernv platform.
+>>>    2. when IOV BAR has IORESOURCE_ARCH flag, the size is retrieved from
+>>>       hardware directly. If not, calculate as usual.
+>>>    3. reorder the patch set, group them by subsystem:
+>>>       PCI, powerpc, powernv
+>>>    4. rebase it on 3.16-rc6
+>>
+>>This doesn't apply for me on v3.16-rc6:
+>>
+>>  02:48:57 ~/linux$ stg rebase v3.16-rc6
+>>  Checking for changes in the working directory ... done
+>>  Rebasing to "v3.16-rc6" ... done
+>>  No patches applied
+>>  02:49:14 ~/linux$ stg import -M --sign m/wy
+>>  Checking for changes in the working directory ... done
+>>  Importing patch "pci-iov-export-interface-for" ... done
+>>  Importing patch "pci-iov-get-vf-bar-size-from" ... done
+>>  Importing patch "pci-add-weak" ... done
+>>  Importing patch "pci-take-additional-iov-bar" ... done
+>>  Importing patch "powerpc-pci-don-t-unset-pci" ... done
+>>  Importing patch "powerpc-pci-define" ... done
+>>  Importing patch "powrepc-pci-refactor-pci_dn" ... done
+>>  Importing patch "powerpc-powernv-use-pci_dn-in" ... error: patch failed:
+>>  arch/powerpc/platforms/powernv/pci.c:376
+>>  error: arch/powerpc/platforms/powernv/pci.c: patch does not apply
+>>  stg import: Diff does not apply cleanly
+>>
+>>What am I missing?
+>>
+>>I assume you intend these all to go through my tree just to keep them all
+>>together.  The ideal rebase target for me would be v3.17-rc1.
+>
+> Ok, I will rebase it on v3.17-rc1 upstream. While I guess the conflict is due
+> to some patches from Gavin, which is not merged at that moment. I will make
+> sure it applies to v3.17-rc1.
 
-Hello Gentleman,
+I tried applying them on v3.16-rc6 as well as on every change to
+arch/powerpc/platforms/powernv/pci.c between v3.16-rc6 and v3.17-rc1,
+and none applied cleanly.  Patches you post should be based on some
+upstream tag, not on something that includes unmerged patches.
 
-This trivial patch blocks phasing out of deprecated
-pci_enable_msix() function. Could someone review and
-accept it, please?
-
-Thanks!
-
-> Cc: Tadeusz Struk <tadeusz.struk@intel.com>
-> Cc: Herbert Xu <herbert@gondor.apana.org.au>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: qat-linux@intel.com
-> Cc: linux-crypto@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->  drivers/crypto/qat/qat_dh895xcc/adf_isr.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/crypto/qat/qat_dh895xcc/adf_isr.c b/drivers/crypto/qat/qat_dh895xcc/adf_isr.c
-> index d4172de..1082e3b 100644
-> --- a/drivers/crypto/qat/qat_dh895xcc/adf_isr.c
-> +++ b/drivers/crypto/qat/qat_dh895xcc/adf_isr.c
-> @@ -70,9 +70,9 @@ static int adf_enable_msix(struct adf_accel_dev *accel_dev)
->  	for (i = 0; i < msix_num_entries; i++)
->  		pci_dev_info->msix_entries.entries[i].entry = i;
->  
-> -	if (pci_enable_msix(pci_dev_info->pci_dev,
-> -			    pci_dev_info->msix_entries.entries,
-> -			    msix_num_entries)) {
-> +	if (pci_enable_msix_exact(pci_dev_info->pci_dev,
-> +				  pci_dev_info->msix_entries.entries,
-> +				  msix_num_entries)) {
->  		pr_err("QAT: Failed to enable MSIX IRQ\n");
->  		return -EFAULT;
->  	}
-> -- 
-> 1.9.3
-> 
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Bjorn
