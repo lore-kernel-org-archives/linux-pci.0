@@ -1,163 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:61963 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755242AbaHZXg6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Aug 2014 19:36:58 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dmitry Torokhov <dtor@google.com>,
-	Aubrey Li <aubrey.li@intel.com>
-Subject: [PATCH 4/5 v3] PCI / PM: Make PCIe PME interrupts wake up from suspend-to-idle
-Date: Wed, 27 Aug 2014 01:51:31 +0200
-Message-ID: <3100042.GU96J7QUhN@vostro.rjw.lan>
-In-Reply-To: <5320472.coYotHR1d0@vostro.rjw.lan>
-References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan>
+Received: from exprod7og123.obsmtp.com ([64.18.2.24]:52252 "EHLO
+	exprod7og123.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752902AbaHTNo0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Aug 2014 09:44:26 -0400
+Received: by mail-qa0-f53.google.com with SMTP id v10so6916282qac.26
+        for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 06:44:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1408538771.11383.33.camel@ul30vt.home>
+References: <CAK=zhgrv=e20s11v7Ls5ioWZrbyvp9Rzyv+QRDLR3mffr9E61A@mail.gmail.com>
+	<1408538771.11383.33.camel@ul30vt.home>
+Date: Wed, 20 Aug 2014 19:14:25 +0530
+Message-ID: <CAK=zhgrFV10k0yzOrkSnmYJge3M+kQrcNz9e5qZZ5q180NY2xQ@mail.gmail.com>
+Subject: Re: How to get the number of VFs assigned to the guests in XEN
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, konrad.wilk@oracle.com,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Christoph Hellwig <hch@lst.de>, boris.ostrovsky@oracle.com,
+	Sathya Prakash <sathya.prakash@avagotech.com>,
+	Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Thanks Alex,
 
-To make PCIe PME interrupts wake up the system from suspend to idle,
-make the PME driver use enable_irq_wake() on the IRQ during system
-suspend (if there are any wakeup devices below the given PCIe port)
-without disabling PME interrupts.  This way, an interrupt will still
-trigger if a wakeup event happens and the system will be woken up (or
-system suspend in progress will be aborted) by means of the new
-mechanics introduced previously.
+Then, Is there any other ways to stop accidental unload of PF driver
+while still some VFs are accessing by the running VMs.
 
-This change allows Wake-on-LAN to be used for wakeup from
-suspend-to-idle on my MSI Wind tesbed netbook.
+Regards,
+Sreekanth
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pcie/pme.c |   61 ++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 51 insertions(+), 10 deletions(-)
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-pm" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-Index: linux-pm/drivers/pci/pcie/pme.c
-===================================================================
---- linux-pm.orig/drivers/pci/pcie/pme.c
-+++ linux-pm/drivers/pci/pcie/pme.c
-@@ -41,11 +41,17 @@ static int __init pcie_pme_setup(char *s
- }
- __setup("pcie_pme=", pcie_pme_setup);
- 
-+enum pme_suspend_level {
-+	PME_SUSPEND_NONE = 0,
-+	PME_SUSPEND_WAKEUP,
-+	PME_SUSPEND_NOIRQ,
-+};
-+
- struct pcie_pme_service_data {
- 	spinlock_t lock;
- 	struct pcie_device *srv;
- 	struct work_struct work;
--	bool noirq; /* Don't enable the PME interrupt used by this service. */
-+	enum pme_suspend_level suspend_level;
- };
- 
- /**
-@@ -223,7 +229,7 @@ static void pcie_pme_work_fn(struct work
- 	spin_lock_irq(&data->lock);
- 
- 	for (;;) {
--		if (data->noirq)
-+		if (data->suspend_level != PME_SUSPEND_NONE)
- 			break;
- 
- 		pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
-@@ -250,7 +256,7 @@ static void pcie_pme_work_fn(struct work
- 		spin_lock_irq(&data->lock);
- 	}
- 
--	if (!data->noirq)
-+	if (data->suspend_level == PME_SUSPEND_NONE)
- 		pcie_pme_interrupt_enable(port, true);
- 
- 	spin_unlock_irq(&data->lock);
-@@ -367,6 +373,21 @@ static int pcie_pme_probe(struct pcie_de
- 	return ret;
- }
- 
-+static bool pcie_pme_check_wakeup(struct pci_bus *bus)
-+{
-+	struct pci_dev *dev;
-+
-+	if (!bus)
-+		return false;
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list)
-+		if (device_may_wakeup(&dev->dev)
-+		    || pcie_pme_check_wakeup(dev->subordinate))
-+			return true;
-+
-+	return false;
-+}
-+
- /**
-  * pcie_pme_suspend - Suspend PCIe PME service device.
-  * @srv: PCIe service device to suspend.
-@@ -375,11 +396,26 @@ static int pcie_pme_suspend(struct pcie_
- {
- 	struct pcie_pme_service_data *data = get_service_data(srv);
- 	struct pci_dev *port = srv->port;
-+	bool wakeup;
- 
-+	if (device_may_wakeup(&port->dev)) {
-+		wakeup = true;
-+	} else {
-+		down_read(&pci_bus_sem);
-+		wakeup = pcie_pme_check_wakeup(port->subordinate);
-+		up_read(&pci_bus_sem);
-+	}
- 	spin_lock_irq(&data->lock);
--	pcie_pme_interrupt_enable(port, false);
--	pcie_clear_root_pme_status(port);
--	data->noirq = true;
-+	if (wakeup) {
-+		enable_irq_wake(srv->irq);
-+		data->suspend_level = PME_SUSPEND_WAKEUP;
-+	} else {
-+		struct pci_dev *port = srv->port;
-+
-+		pcie_pme_interrupt_enable(port, false);
-+		pcie_clear_root_pme_status(port);
-+		data->suspend_level = PME_SUSPEND_NOIRQ;
-+	}
- 	spin_unlock_irq(&data->lock);
- 
- 	synchronize_irq(srv->irq);
-@@ -394,12 +430,17 @@ static int pcie_pme_suspend(struct pcie_
- static int pcie_pme_resume(struct pcie_device *srv)
- {
- 	struct pcie_pme_service_data *data = get_service_data(srv);
--	struct pci_dev *port = srv->port;
- 
- 	spin_lock_irq(&data->lock);
--	data->noirq = false;
--	pcie_clear_root_pme_status(port);
--	pcie_pme_interrupt_enable(port, true);
-+	if (data->suspend_level == PME_SUSPEND_NOIRQ) {
-+		struct pci_dev *port = srv->port;
-+
-+		pcie_clear_root_pme_status(port);
-+		pcie_pme_interrupt_enable(port, true);
-+	} else {
-+		disable_irq_wake(srv->irq);
-+	}
-+	data->suspend_level = PME_SUSPEND_NONE;
- 	spin_unlock_irq(&data->lock);
- 
- 	return 0;
-
+On Wed, Aug 20, 2014 at 6:16 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Wed, 2014-08-20 at 16:39 +0530, Sreekanth Reddy wrote:
+>> HI,
+>>
+>> For SRIOV support, currently in the KVM environment, mpt3sas driver
+>> can use the API pci_vfs_assigned() to know the number of VFs that are
+>> currently assigned to the running VMs. So that during the PF driver
+>> unload time, if the return value of this API is greater than zero the
+>> our driver won't call the pci_disable_sriov() to disable the VFs.
+>>
+>> Now for the same purpose in XEN environment, is there any API similar
+>> to pci_vfs_assigned() which the low lever device driver can use to
+>> know 'the number of VFs that are currently assigned to the running
+>> VMs'. In XEN environment this API pci_vfs_assigned() will return
+>> always zero even though VFs are assigned to the running VMs.
+>
+> Note that pci_vfs_assigned() assigned is only used by legacy KVM device
+> assignment and primarily as a workaround for not using an actual
+> host-based device driver to manage device ownership.  When using
+> VFIO-based device assignment with KVM, pci_vfs_assigned() is not
+> updated.  Please don't rely on this interface.  Thanks,
+>
+> Alex
+>
