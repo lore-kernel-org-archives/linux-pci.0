@@ -1,50 +1,40 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Yijing Wang <wangyijing@huawei.com>
-Subject: Re: [RFC PATCH 00/11] Refactor MSI to support Non-PCI device
-Date: Fri, 1 Aug 2014 15:16:26 +0200
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	Paul.Mundt@huawei.com, Marc Zyngier <marc.zyngier@arm.com>,
-	linux-pci@vger.kernel.org,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	virtualization@lists.linux-foundation.org,
-	Xinwei Hu <huxinwei@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>, Wuyun <wuyun.wu@huawei.com>
-References: <1406344128-27055-1-git-send-email-wangyijing@huawei.com> <53D89502.60506@linux.intel.com> <53D89CA1.7000501@huawei.com>
-In-Reply-To: <53D89CA1.7000501@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:38217 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751625AbaHTTHD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 Aug 2014 15:07:03 -0400
+Date: Wed, 20 Aug 2014 20:14:17 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-kernel@vger.kernel.org,
+	Naresh Kumar Inna <naresh@chelsio.com>,
+	Arvind Bhushan <arvindb@chelsio.com>,
+	Jayamohan Kallickal <jayamohan.kallickal@emulex.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	"James E.J. Bottomley" <JBottomley@parallels.com>
+Subject: Re: [PATCH v3 00/13] scsi: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Message-ID: <20140820191416.GA1886@agordeev.usersys.redhat.com>
+References: <cover.1408335523.git.agordeev@redhat.com>
+ <20140819170047.GA7237@infradead.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201408011516.26253.arnd@arndb.de>
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140819170047.GA7237@infradead.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 30 July 2014, Yijing Wang wrote:
-> >>>
-> >>> The other part I'm not completely sure about is how you want to
-> >>> have MSIs map into normal IRQ descriptors. At the moment, all
-> >>> MSI users are based on IRQ numbers, but this has known scalability problems.
-> >>
-> >> Hmmm, I still use the IRQ number to map the MSIs to IRQ description.
-> >> I'm sorry, I don't understand you meaning.
-> >> What are the scalability problems you mentioned ?
-> > We have soft limitation of nr_irqs or hard limitation NR_IRQS,
-> > we couldn't allocate as much irq number as we need in some cases,
-> > such as to support MSI-x.
+On Tue, Aug 19, 2014 at 10:00:47AM -0700, Christoph Hellwig wrote:
+> Thanks,
 > 
-> Oh, yes, this is a potential issue. Gerry, thanks for you explanation. :)
+> I've applied patches 1 to 7 to the drivers-for-3.18 branch.
 
-This should no longer be an issue, as arm64 uses CONFIG_SPARSE_IRQ
-and the number of interrupts is not limited in any form.
+Thanks, Christoph!
 
-My point was more that the device driver should not need to care about
-the interrupt number: it gets made up on the spot when the MSI is
-needed, and then it is only used to request the IRQ. This can be
-simplified into one interface at the device driver level, even though
-the internal still use numbers somewhere. If we ever remove IRQ numbers
-from the driver API, this part doesn't need to get touched again.
+Not sure how to handle the rest, though. Chelsio driver has no
+maintainers and none of be2iscsi, pmcraid and csiostor has been
+reviewed for several months.
 
-	Arnd
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
