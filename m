@@ -1,46 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43784 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751868AbaHUQvQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 21 Aug 2014 12:51:16 -0400
-Date: Thu, 21 Aug 2014 17:58:34 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Tomas Henzl <thenzl@redhat.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	James Smart <james.smart@emulex.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 11/13] lpfc: Use pci_enable_msix_range() instead of
- pci_enable_msix()
-Message-ID: <20140821165833.GA5853@agordeev.usersys.redhat.com>
-References: <cover.1408335523.git.agordeev@redhat.com>
- <e7470e484083c9eeb6b4f34f3e69e332ad5998c2.1408335523.git.agordeev@redhat.com>
- <53F5D8DF.4060705@redhat.com>
- <53F5DEEF.4070406@redhat.com>
+Received: from mail-qc0-f180.google.com ([209.85.216.180]:58758 "EHLO
+	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755374AbaHUOQW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Aug 2014 10:16:22 -0400
+Received: by mail-qc0-f180.google.com with SMTP id l6so9236819qcy.39
+        for <linux-pci@vger.kernel.org>; Thu, 21 Aug 2014 07:16:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53F5DEEF.4070406@redhat.com>
+In-Reply-To: <72232BCB-CCF2-4BA3-9F40-53D385C83D6B@borea.si>
+References: <72232BCB-CCF2-4BA3-9F40-53D385C83D6B@borea.si>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 21 Aug 2014 09:16:01 -0500
+Message-ID: <CAErSpo5oyxSZsYnkqs2kXWN01biNv-ATVRuuKyU-4GgRksEwUQ@mail.gmail.com>
+Subject: Re: PCI: minimal alignment of resources
+To: Matevz Langus <matevz.langus@borea.si>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 21, 2014 at 01:58:39PM +0200, Tomas Henzl wrote:
-> my bad, this was already fixed in
-> commit 029165acfa611a3a8838723f6978586ae35ff53d lpfc: Remove superfluous call to pci_disable_msix()
-> 
-> so patch looks good to me now
+[+cc linux-pci]
 
-Many thanks for your reviews, Tomas!
+On Wed, Aug 20, 2014 at 4:05 PM, Matevz Langus <matevz.langus@borea.si> wrote:
+> Hi,
+>
+> I would like to ask if somebody is aware of a correct way to change they way kernel aligns PCI resources. By default it uses minimal alignment of 1 MB.
 
-> Reviewed-by: Tomas Henzl
+Do you mean alignment of bridge windows?  Normal device BARs are
+aligned on their size, but mem bridge windows are aligned to a minimum
+of 1MB.  This is a consequence of the fact that the low 20 bits of the
+bridge's Memory Base register are assumed to be zero (see PCI Bridge
+spec, r1.2, sec 3.2.5.8).
 
-Christoph, this patch was declined by James few times.
-I think it needs his approval as well.
+Similarly, the low 20 bits of the Memory Limit register are assumed to
+be 0xfffff, which means the memory window is a multiple of 1MB in
+size.
 
-James?
+> Due to the hardware limitation I would need to change that down to 64 kB. With this change PCI Endpoints with many small BARs would fit into limited memory space available on the RC.
+> This could be useful for all smaller embedded systems.
 
-Thanks!
+What's your system topology, e.g., can you share the complete "lspci
+-vv" output?  If the bridge window alignment is an issue, it sounds
+like maybe you have several bridges.  Each memory window will take at
+least 1MB of space.  If you have, e.g., four bridges, with devices
+behind all of them, each bridge will require at least 1MB of memory
+space.  If your RC only has 2MB of MMIO space, the bridges won't all
+fit.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+I/O port windows are normally a minimum of 64K, but we do support a
+quirk (see io_window_1k) that allows smaller windows on bridges that
+support it.  If you have bridges with an extension to allow smaller
+memory windows, maybe we could do something similar.
+
+> It looks just changing aligns in pbus_size_mem (in file setup-bus.c) works but not with all PCI EP drivers. Some will crash during init.
+>
+> Regards,
+>   Matevz Langus--
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
