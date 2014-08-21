@@ -1,61 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19194 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755719AbaHHFhM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Aug 2014 01:37:12 -0400
-From: Ethan Zhao <ethan.zhao@oracle.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
-	kvm@vger.kernel.org, konrad.wilk@oracle.com,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
-	xen-devel@lists.xenproject.org
-Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
-	ethan.kernel@gmail.com
-Subject: [PATCH 1/4] PCI: introduce helper functions for device flag operation
-Date: Fri,  8 Aug 2014 13:36:04 +0800
-Message-Id: <1407476167-18935-2-git-send-email-ethan.zhao@oracle.com>
-In-Reply-To: <1407476167-18935-1-git-send-email-ethan.zhao@oracle.com>
-References: <1407476167-18935-1-git-send-email-ethan.zhao@oracle.com>
+Received: from mx1.redhat.com ([209.132.183.28]:61860 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754528AbaHULPk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 21 Aug 2014 07:15:40 -0400
+Message-ID: <53F5D4D7.6000600@redhat.com>
+Date: Thu, 21 Aug 2014 13:15:35 +0200
+From: Tomas Henzl <thenzl@redhat.com>
+MIME-Version: 1.0
+To: Alexander Gordeev <agordeev@redhat.com>,
+	linux-kernel@vger.kernel.org
+CC: Naresh Kumar Inna <naresh@chelsio.com>,
+	Arvind Bhushan <arvindb@chelsio.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 10/13] csiostor: Use pci_enable_msix_range() instead
+ of pci_enable_msix()
+References: <cover.1408335523.git.agordeev@redhat.com> <3ddc5fb60e32d05996a539d7007bfb3a5e5f09b2.1408335523.git.agordeev@redhat.com>
+In-Reply-To: <3ddc5fb60e32d05996a539d7007bfb3a5e5f09b2.1408335523.git.agordeev@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch introduced three helper functions to hide direct
-device flag operation.
+On 08/18/2014 08:01 AM, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
 
-void pci_set_dev_assigned(struct pci_dev *pdev);
-void pci_clear_dev_assigned(struct pci_dev *pdev);
-bool pci_is_dev_assigned(struct pci_dev *pdev);
+Patch looks good to me.
 
-Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
----
- v2: simplify unnecessory ternary operation in function pci_is_dev_assigned();
- v3: amend helper functions naming.
----
- include/linux/pci.h |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 466bcd1..b610ab3 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1829,4 +1829,17 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
-  */
- struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
- 
-+/* helper functions for operation of device flag */
-+static inline void pci_set_dev_assigned(struct pci_dev *pdev)
-+{
-+	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-+}
-+static inline void pci_clear_dev_assigned(struct pci_dev *pdev)
-+{
-+	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-+}
-+static inline bool pci_is_dev_assigned(struct pci_dev *pdev)
-+{
-+	return pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED;
-+}
- #endif /* LINUX_PCI_H */
--- 
-1.7.1
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
