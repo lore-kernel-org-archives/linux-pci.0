@@ -1,46 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:56222 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755086AbaHEQMJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Aug 2014 12:12:09 -0400
-Received: by mail-we0-f173.google.com with SMTP id q58so1253819wes.32
-        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2014 09:12:06 -0700 (PDT)
-From: matthew_minter@xyratex.com
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: matthew_minter <matthew_minter@xyratex.com>
-Subject: [PATCH 12/22] Added (untested) workaround to parisc architecture to accomodate new irq init code. Unfortunately adding runtime irq assignment will not work but avoided breaking the existing code.
-Date: Tue,  5 Aug 2014 17:11:13 +0100
-Message-Id: <1407255083-9356-13-git-send-email-matthew_minter@xyratex.com>
-In-Reply-To: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
-References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+Received: from mx1.redhat.com ([209.132.183.28]:58048 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754527AbaHULcw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 21 Aug 2014 07:32:52 -0400
+Message-ID: <53F5D8DF.4060705@redhat.com>
+Date: Thu, 21 Aug 2014 13:32:47 +0200
+From: Tomas Henzl <thenzl@redhat.com>
+MIME-Version: 1.0
+To: Alexander Gordeev <agordeev@redhat.com>,
+	linux-kernel@vger.kernel.org
+CC: James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 11/13] lpfc: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+References: <cover.1408335523.git.agordeev@redhat.com> <e7470e484083c9eeb6b4f34f3e69e332ad5998c2.1408335523.git.agordeev@redhat.com>
+In-Reply-To: <e7470e484083c9eeb6b4f34f3e69e332ad5998c2.1408335523.git.agordeev@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: matthew_minter <matthew_minter@xyratex.com>
+On 08/18/2014 08:01 AM, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
+>
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: James Smart <james.smart@emulex.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/scsi/lpfc/lpfc_init.c | 39 +++++++++++++++++----------------------
+>  1 file changed, 17 insertions(+), 22 deletions(-)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index a5769a9..37f2a20 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -8211,9 +8211,9 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
+>   * @phba: pointer to lpfc hba data structure.
+>   *
+>   * This routine is invoked to enable the MSI-X interrupt vectors to device
+> - * with SLI-3 interface specs. The kernel function pci_enable_msix() is
+> - * called to enable the MSI-X vectors. Note that pci_enable_msix(), once
+> - * invoked, enables either all or nothing, depending on the current
+> + * with SLI-3 interface specs. The kernel function pci_enable_msix_exact()
+> + * is called to enable the MSI-X vectors. Note that pci_enable_msix_exact(),
+> + * once invoked, enables either all or nothing, depending on the current
+>   * availability of PCI vector resources. The device driver is responsible
+>   * for calling the individual request_irq() to register each MSI-X vector
+>   * with a interrupt handler, which is done in this function. Note that
+> @@ -8237,8 +8237,8 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
+>  		phba->msix_entries[i].entry = i;
+>  
+>  	/* Configure MSI-X capability structure */
+> -	rc = pci_enable_msix(phba->pcidev, phba->msix_entries,
+> -				ARRAY_SIZE(phba->msix_entries));
+> +	rc = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
+> +				   LPFC_MSIX_VECTORS);
+>  	if (rc) {
+>  		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+>  				"0420 PCI enable MSI-X failed (%d)\n", rc);
 
----
- arch/parisc/kernel/pci.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+Hi Alexander 
 
-diff --git a/arch/parisc/kernel/pci.c b/arch/parisc/kernel/pci.c
-index 64f2764..9654c69 100644
---- a/arch/parisc/kernel/pci.c
-+++ b/arch/parisc/kernel/pci.c
-@@ -105,7 +105,13 @@ PCI_PORT_OUT(b,  8)
- PCI_PORT_OUT(w, 16)
- PCI_PORT_OUT(l, 32)
- 
--
-+/* We do not support hot-add irq assignment */
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->swizzle_irq = NULL;
-+	bridge->map_irq = NULL;
-+	return 0;
-+}
- 
- /*
-  * BIOS32 replacement.
--- 
-2.0.4
+the code continues with:
+goto ->  pci_disable_msix(phba->pcidev);
+that call to disable_msix is also superfluous I think
+shouldn't that be fixed too?
+the same is also in lpfc_sli4_enable_msix
+
+Tomas
+
+> @@ -8775,16 +8775,14 @@ out:
+>   * @phba: pointer to lpfc hba data structure.
+>   *
+>   * This routine is invoked to enable the MSI-X interrupt vectors to device
+> - * with SLI-4 interface spec. The kernel function pci_enable_msix() is called
+> - * to enable the MSI-X vectors. Note that pci_enable_msix(), once invoked,
+> - * enables either all or nothing, depending on the current availability of
+> - * PCI vector resources. The device driver is responsible for calling the
+> - * individual request_irq() to register each MSI-X vector with a interrupt
+> - * handler, which is done in this function. Note that later when device is
+> - * unloading, the driver should always call free_irq() on all MSI-X vectors
+> - * it has done request_irq() on before calling pci_disable_msix(). Failure
+> - * to do so results in a BUG_ON() and a device will be left with MSI-X
+> - * enabled and leaks its vectors.
+> + * with SLI-4 interface spec. The kernel function pci_enable_msix_range()
+> + * is called to enable the MSI-X vectors. The device driver is responsible
+> + * for calling the individual request_irq() to register each MSI-X vector
+> + * with a interrupt handler, which is done in this function. Note that
+> + * later when device is unloading, the driver should always call free_irq()
+> + * on all MSI-X vectors it has done request_irq() on before calling
+> + * pci_disable_msix(). Failure to do so results in a BUG_ON() and a device
+> + * will be left with MSI-X enabled and leaks its vectors.
+>   *
+>   * Return codes
+>   * 0 - successful
+> @@ -8805,17 +8803,14 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
+>  		phba->sli4_hba.msix_entries[index].entry = index;
+>  		vectors++;
+>  	}
+> -enable_msix_vectors:
+> -	rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
+> -			     vectors);
+> -	if (rc > 1) {
+> -		vectors = rc;
+> -		goto enable_msix_vectors;
+> -	} else if (rc) {
+> +	rc = pci_enable_msix_range(phba->pcidev, phba->sli4_hba.msix_entries,
+> +				   2, vectors);
+> +	if (rc < 0) {
+>  		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+>  				"0484 PCI enable MSI-X failed (%d)\n", rc);
+>  		goto vec_fail_out;
+>  	}
+> +	vectors = rc;
+>  
+>  	/* Log MSI-X vector assignment */
+>  	for (index = 0; index < vectors; index++)
 
