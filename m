@@ -1,131 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hygieia.santi-shop.eu ([78.46.175.2]:49130 "EHLO
-	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751538AbaHPRb6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Aug 2014 13:31:58 -0400
-Date: Sat, 16 Aug 2014 19:25:16 +0200
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	DRI mailing list <dri-devel@lists.freedesktop.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dave Airlie <airlied@linux.ie>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 1/2] vgaarb: Drop obsolete #ifndef
- __ARCH_HAS_VGA_DEFAULT_DEVICE
-Message-ID: <20140816192516.43d762d2@neptune.home>
-In-Reply-To: <20140816192135.34260115@neptune.home>
-References: <20140514224339.7f8be3a9@neptune.home>
-	<20140527234255.GJ11907@google.com>
-	<20140602201650.35f0e936@neptune.home>
-	<20140602201926.4d476818@neptune.home>
-	<20140625005501.7ff7e982@neptune.home>
-	<20140705171503.GC6247@google.com>
-	<CAMxnaaXxAZAJAdr5AYYRZC_xKFCuyrfY=qpJu8x+P-S+osm5vw@mail.gmail.com>
-	<CAMxnaaXGQe4vg9cY5e2KZBnG4F-z49OriwxEGUE-DCE6MKUryQ@mail.gmail.com>
-	<20140810112654.1bf684d6@neptune.home>
-	<CAMxnaaUsd+XHppMmPMXdFL13d1-OhLzoH_yjv_9abOx_uP=_Ug@mail.gmail.com>
-	<20140810183411.19370721@neptune.home>
-	<CAMxnaaVNpiSZmhQsHa_ZHJckgzG+xHyOL6hOT3Ts8GdcGN_A9g@mail.gmail.com>
-	<20140816192135.34260115@neptune.home>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from e28smtp07.in.ibm.com ([122.248.162.7]:57743 "EHLO
+	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752988AbaHUJiu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Aug 2014 05:38:50 -0400
+Received: from /spool/local
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 21 Aug 2014 15:08:46 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 4CDA5E0053
+	for <linux-pci@vger.kernel.org>; Thu, 21 Aug 2014 15:10:50 +0530 (IST)
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s7L9d53S19398674
+	for <linux-pci@vger.kernel.org>; Thu, 21 Aug 2014 15:09:05 +0530
+Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s7L9cffN029794
+	for <linux-pci@vger.kernel.org>; Thu, 21 Aug 2014 15:08:41 +0530
+Date: Thu, 21 Aug 2014 17:38:39 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 2/3] MSI: Use __read_msi_msg() instead of read_msi_msg()
+Message-ID: <20140821093839.GA15667@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1408072469-9959-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1408072469-9959-1-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With commit 20cde694027e boot video device detection was moved from
-efifb to x86 and ia64 pci/fixup.c.
+On Fri, Aug 15, 2014 at 11:14:29AM +0800, Yijing Wang wrote:
+>Read_msi_msg() only be called in rtas_setup_msi_irqs(),
 
-Remove the left-over #ifndef check that will allways match since
-the corresponding arch-specific define is gone with above patch.
+ read_msi_msg()
 
-Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
-CC: Matthew Garrett <matthew.garrett@nebula.com>
-CC: stable@vger.kernel.org # v3.5+
----
-May be applied to stable as cleanup for upstream commit
-20cde694027e7477cc532833e38ab9fcaa83fb64 which is marked for
-stable.
+This code looks good to me, while I can't apply on top of 3.17-rc1.
+If you rebase it, it would be more convenient for maintainer to merge.
 
- drivers/gpu/vga/vgaarb.c | 8 --------
- include/linux/vgaarb.h   | 2 --
- 2 files changed, 10 deletions(-)
+>use __read_msi_msg() instead of read_msi_msg for
+>simplification. And rename __read_msi_msg() to
+>read_msi_msg().
+>
+>Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>CC: linuxppc-dev@lists.ozlabs.org
+>---
+> arch/powerpc/platforms/pseries/msi.c |    2 +-
+> arch/x86/pci/xen.c                   |    2 +-
+> drivers/pci/msi.c                    |    9 +--------
+> include/linux/msi.h                  |    3 +--
+> 4 files changed, 4 insertions(+), 12 deletions(-)
+>
+>diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
+>index 0c882e8..591650b 100644
+>--- a/arch/powerpc/platforms/pseries/msi.c
+>+++ b/arch/powerpc/platforms/pseries/msi.c
+>@@ -484,7 +484,7 @@ again:
+> 		irq_set_msi_desc(virq, entry);
+>
+> 		/* Read config space back so we can restore after reset */
+>-		read_msi_msg(virq, &msg);
+>+		read_msi_msg(entry, &msg);
+> 		entry->msg = msg;
+> 	}
+>
+>diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+>index 905956f..4656099 100644
+>--- a/arch/x86/pci/xen.c
+>+++ b/arch/x86/pci/xen.c
+>@@ -228,7 +228,7 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+> 		return 1;
+>
+> 	list_for_each_entry(msidesc, &dev->msi_list, list) {
+>-		__read_msi_msg(msidesc, &msg);
+>+		read_msi_msg(msidesc, &msg);
+> 		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
+> 			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
+> 		if (msg.data != XEN_PIRQ_MSI_DATA ||
+>diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>index 988224f..cbb41d6 100644
+>--- a/drivers/pci/msi.c
+>+++ b/drivers/pci/msi.c
+>@@ -259,7 +259,7 @@ void default_restore_msi_irqs(struct pci_dev *dev)
+> 	}
+> }
+>
+>-void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+>+void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+> {
+> 	BUG_ON(entry->dev->current_state != PCI_D0);
+>
+>@@ -289,13 +289,6 @@ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+> 	}
+> }
+>
+>-void read_msi_msg(unsigned int irq, struct msi_msg *msg)
+>-{
+>-	struct msi_desc *entry = irq_get_msi_desc(irq);
+>-
+>-	__read_msi_msg(entry, msg);
+>-}
+>-
+> void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+> {
+> 	/* Assert that the cache is valid, assuming that
+>diff --git a/include/linux/msi.h b/include/linux/msi.h
+>index e3adf93..4d7c0f5 100644
+>--- a/include/linux/msi.h
+>+++ b/include/linux/msi.h
+>@@ -15,10 +15,9 @@ struct irq_data;
+> struct msi_desc;
+> void mask_msi_irq(struct irq_data *data);
+> void unmask_msi_irq(struct irq_data *data);
+>-void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+>+void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+> void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+> void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+>-void read_msi_msg(unsigned int irq, struct msi_msg *msg);
+> void write_msi_msg(unsigned int irq, struct msi_msg *msg);
+>
+> struct msi_desc {
+>-- 
+>1.7.1
+>
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-index d2077f0..257674d 100644
---- a/drivers/gpu/vga/vgaarb.c
-+++ b/drivers/gpu/vga/vgaarb.c
-@@ -112,10 +112,8 @@ both:
- 	return 1;
- }
- 
--#ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
- /* this is only used a cookie - it should not be dereferenced */
- static struct pci_dev *vga_default;
--#endif
- 
- static void vga_arb_device_card_gone(struct pci_dev *pdev);
- 
-@@ -131,7 +129,6 @@ static struct vga_device *vgadev_find(struct pci_dev *pdev)
- }
- 
- /* Returns the default VGA device (vgacon's babe) */
--#ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
- struct pci_dev *vga_default_device(void)
- {
- 	return vga_default;
-@@ -147,7 +144,6 @@ void vga_set_default_device(struct pci_dev *pdev)
- 	pci_dev_put(vga_default);
- 	vga_default = pci_dev_get(pdev);
- }
--#endif
- 
- static inline void vga_irq_set_state(struct vga_device *vgadev, bool state)
- {
-@@ -583,11 +579,9 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
- 	/* Deal with VGA default device. Use first enabled one
- 	 * by default if arch doesn't have it's own hook
- 	 */
--#ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
- 	if (vga_default == NULL &&
- 	    ((vgadev->owns & VGA_RSRC_LEGACY_MASK) == VGA_RSRC_LEGACY_MASK))
- 		vga_set_default_device(pdev);
--#endif
- 
- 	vga_arbiter_check_bridge_sharing(vgadev);
- 
-@@ -621,10 +615,8 @@ static bool vga_arbiter_del_pci_device(struct pci_dev *pdev)
- 		goto bail;
- 	}
- 
--#ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
- 	if (vga_default == pdev)
- 		vga_set_default_device(NULL);
--#endif
- 
- 	if (vgadev->decodes & (VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM))
- 		vga_decode_count--;
-diff --git a/include/linux/vgaarb.h b/include/linux/vgaarb.h
-index 2c02f3a..c37bd4d 100644
---- a/include/linux/vgaarb.h
-+++ b/include/linux/vgaarb.h
-@@ -182,7 +182,6 @@ extern void vga_put(struct pci_dev *pdev, unsigned int rsrc);
-  *     vga_get()...
-  */
- 
--#ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
- #ifdef CONFIG_VGA_ARB
- extern struct pci_dev *vga_default_device(void);
- extern void vga_set_default_device(struct pci_dev *pdev);
-@@ -190,7 +189,6 @@ extern void vga_set_default_device(struct pci_dev *pdev);
- static inline struct pci_dev *vga_default_device(void) { return NULL; };
- static inline void vga_set_default_device(struct pci_dev *pdev) { };
- #endif
--#endif
- 
- /**
-  *     vga_conflicts
 -- 
-1.8.5.5
+Richard Yang
+Help you, Help me
 
