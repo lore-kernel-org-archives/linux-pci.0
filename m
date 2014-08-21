@@ -1,42 +1,102 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <53F5596C.6040106@linux.intel.com>
+Date: Thu, 21 Aug 2014 10:29:00 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1406344128-27055-4-git-send-email-wangyijing@huawei.com>
-References: <1406344128-27055-1-git-send-email-wangyijing@huawei.com>
-	<1406344128-27055-4-git-send-email-wangyijing@huawei.com>
-Date: Tue, 5 Aug 2014 17:35:04 -0500
-Message-ID: <CALRxmdB0Ltt3_G=D4i7x47pHCtCKo8RHgn-hgN+u=px22dimOA@mail.gmail.com>
-Subject: Re: [RFC PATCH 03/11] PCI/MSI: Refactor pci_dev_msi_enabled()
-From: Stuart Yoder <b08248@gmail.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Paul.Mundt@huawei.com,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	virtualization@lists.linux-foundation.org,
-	Hanjun Guo <guohanjun@huawei.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>
+CC: iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Olav Haugan <ohaugan@codeaurora.org>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	ddutile <ddutile@redhat.com>, Jerome Glisse <j.glisse@gmail.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: LPC IOMMU and VFIO MicroConference - Call for Participation
+References: <20140812092019.GY9809@8bytes.org> <1408554623.11383.63.camel@ul30vt.home>
+In-Reply-To: <1408554623.11383.63.camel@ul30vt.home>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 25, 2014 at 10:08 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Pci_dev_msi_enabled() is used to check whether device
-> MSI/MSIX enabled. Refactor this function  to suuport
-> checking only device MSI or MSIX enabled.
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Hi Alex and Joerg,
+	I have my travel request approved but missed the registration window.
+Hope I will be lucky:)
+Regards!
+Gerry
 
-So this patch refactors things so that checks like this:
-   > -       if (!dev->msi_enabled)
-
-are moved into a function:
-   > +       if (!pci_dev_msi_enabled(dev, MSI_TYPE))
-
-Can you explain a bit more why this  needed.   Is it just cleanup?
-
-Thanks,
-Stuart
+On 2014/8/21 1:10, Alex Williamson wrote:
+> 
+> Ok folks, it's time to submit your discussion proposals for the LPC
+> IOMMU and VFIO uconf.  If you added an idea to the wiki, now is the time
+> to formally propose it as a discussion topic.  If you have ideas how to
+> make the IOMMU or VFIO subsystems better, now is the time to propose it.
+> If you can't figure out how to make something work in the current
+> infrastructure, now is the time to propose a discussion.  If you're
+> adding new features and want to make sure we can support them, now is
+> the time to propose a discussion.
+> 
+> I don't think we've seen a formal schedule yet, but many of us have
+> conflicts with KVM Forum this year and I expect the LPC planning
+> committee to take that into account, so please submit your proposals
+> anyway and feel free to note your availability/conflicts in the "Note to
+> organizers" section.
+> 
+> LPC is full, but there is a waiting list and the sooner you can get on
+> it, the more likely you are to be registered.  I expect uconf discussion
+> leads to have an advantage in moving through the queue and we may be
+> able to provide discounted registration for discussion leads.  Thanks,
+> 
+> Alex
+> 
+> On Tue, 2014-08-12 at 11:20 +0200, Joerg Roedel wrote:
+>> LPC IOMMU and VFIO MicroConference - Call for Participation
+>> ===========================================================
+>>
+>> We are pleased to announce that this year there will be the first IOMMU
+>> and VFIO MicroConference held at Linux Plumbers Conference in
+>> Düsseldorf. An initial request for support of this micro conference
+>> generated, among others, the following possible topic ideas:
+>>
+>> 	* Improving generic IOMMU code and move code out of drivers
+>> 	* IOMMU device error handling
+>> 	* IOMMU Power Management
+>> 	* Virtualizing IOMMUs
+>> 	* Interface between IOMMUs an memory management
+>>
+>> More suggested topics can be found at the wiki page of the micro
+>> conference:
+>>
+>> 	http://wiki.linuxplumbersconf.org/2014:iommu_microconference
+>>
+>> We now ask for formal proposals for these discussions along with any
+>> other topics or problems that need to be discussed in this area.
+>>
+>> The format of the micro conference will be roughly half-hour slots for
+>> each topic, where the discussion lead gives a short introduction to the
+>> problem and maybe sketches possible solutions. The rest of the slot is
+>> open for discussions so that we come to an agreement how to move
+>> forward.
+>>
+>> Please submit your formal proposal on the Linux Plumbers website (OpenID
+>> login required) until August 31st at:
+>>
+>> 	http://www.linuxplumbersconf.org/2014/how-to-submit-microconference-discussions-topics/
+>>
+>> Hope to see you in Düsseldorf!
+>>
+>>
+>> 	Joerg Roedel and Alex Williamson
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+> 
+> 
