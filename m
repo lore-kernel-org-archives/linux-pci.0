@@ -1,228 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:34666 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750823AbaHZPcp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Aug 2014 11:32:45 -0400
-Received: by mail-ig0-f176.google.com with SMTP id hn18so4691000igb.15
-        for <linux-pci@vger.kernel.org>; Tue, 26 Aug 2014 08:32:44 -0700 (PDT)
+Received: from szxga01-in.huawei.com ([119.145.14.64]:43130 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751007AbaHUKYt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Aug 2014 06:24:49 -0400
+Message-ID: <53F5C847.3000402@huawei.com>
+Date: Thu, 21 Aug 2014 18:21:59 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20140824230953.7c04890f@neptune.home>
-References: <20140514224339.7f8be3a9@neptune.home> <20140625005501.7ff7e982@neptune.home>
- <20140705171503.GC6247@google.com> <CAMxnaaXxAZAJAdr5AYYRZC_xKFCuyrfY=qpJu8x+P-S+osm5vw@mail.gmail.com>
- <CAMxnaaXGQe4vg9cY5e2KZBnG4F-z49OriwxEGUE-DCE6MKUryQ@mail.gmail.com>
- <20140810112654.1bf684d6@neptune.home> <CAMxnaaUsd+XHppMmPMXdFL13d1-OhLzoH_yjv_9abOx_uP=_Ug@mail.gmail.com>
- <20140810183411.19370721@neptune.home> <CAMxnaaVNpiSZmhQsHa_ZHJckgzG+xHyOL6hOT3Ts8GdcGN_A9g@mail.gmail.com>
- <20140816192135.34260115@neptune.home> <CAMxnaaWQoX9KMQVCKHTkeqSxGEybz5u1qU6AVBqzW3+mj_nJHQ@mail.gmail.com>
- <20140820075508.74f5b622@pluto> <20140820091152.76cd4e1a@pluto>
- <CAMxnaaUodONkqmdPWedN-Q1qheHiJAScFcG_XbX1--ZmiOQZDg@mail.gmail.com>
- <20140821233435.19a9cffa@neptune.home> <CAErSpo6D1B+dPLrYoAF4OA1KeWuW8VZW2_RR5jB1GbCRo+6vHg@mail.gmail.com>
- <20140822082324.12cb6e93@pluto> <CAMxnaaU9EiMcne-aQjS1sY1Orn6xGbVHEnd057ogcZ77p74Y=Q@mail.gmail.com>
- <20140823130624.06ecc057@neptune.home> <20140824230953.7c04890f@neptune.home>
-From: Andreas Noever <andreas.noever@gmail.com>
-Date: Tue, 26 Aug 2014 17:32:24 +0200
-Message-ID: <CAMxnaaUoLBbN1gNgD3qvPV1mx3JoM6FPV9EndQG9vJSpux2xMw@mail.gmail.com>
-Subject: Re: [PATCH 1/2 v2] vgaarb: Don't default exclusively to first video
- device with mem+io
-To: =?UTF-8?Q?Bruno_Pr=C3=A9mont?= <bonbons@linux-vserver.org>
-Cc: DRI mailing list <dri-devel@lists.freedesktop.org>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=UTF-8
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [PATCH 2/3] MSI: Use __read_msi_msg() instead of read_msi_msg()
+References: <1408072469-9959-1-git-send-email-wangyijing@huawei.com> <20140821093839.GA15667@richard>
+In-Reply-To: <20140821093839.GA15667@richard>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Aug 24, 2014 at 11:09 PM, Bruno Prémont
-<bonbons@linux-vserver.org> wrote:
-> With commit 20cde694027e boot video device detection was moved from
-> efifb to x86 and ia64 pci/fixup.c.
->
-> For dual-GPU Apple computers above change represents a regression as
-> code in efifb did forcefully override vga_default_device while the
-> merge did not (vgaarb happens prior to PCI fixup).
->
-> To improve on initial device selection by vgaarb (it cannot know if
-> PCI device not behind bridges see/decode legacy VGA I/O or not), move
-> the screen_info based check from pci_video_fixup to vgaarb's init
-> function and use it to refine/override decision taken while adding
-> the individual PCI VGA devices.
-> This way PCI fixup has no reason to adjust vga_default_device
-> anymore but can depend on its value for flagging shadowed VBIOS.
->
-> This has the nice benefit of removing duplicated code but does
-> introduce a #if defined() block in vgaarb.
-> Not all architectures have screen_info and would cause compile to
-> fail without it.
->
-> Reported-By: Andreas Noever <andreas.noever@gmail.com>
-> CC: Matthew Garrett <matthew.garrett@nebula.com>
-> CC: stable@vger.kernel.org # v3.5+
-> Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
-> ---
-> Andreas, does this work properly for you, including the improvement
-> on i915 complaint about VBIOS going from KERN_ERR to KERN_INFO?
-Yep, thanks!
+On 2014/8/21 17:38, Wei Yang wrote:
+> On Fri, Aug 15, 2014 at 11:14:29AM +0800, Yijing Wang wrote:
+>> Read_msi_msg() only be called in rtas_setup_msi_irqs(),
+> 
+>  read_msi_msg()
+> 
+> This code looks good to me, while I can't apply on top of 3.17-rc1.
+> If you rebase it, it would be more convenient for maintainer to merge.
 
->
-> Other arches using PCI and vgaarb that have screen_info may want
-> to be added to the #if defined() block or even introduce a new
-> CONFIG_HAVE_SCREEN_INFO or similar...
->
->
->  arch/ia64/pci/fixup.c    | 24 +-----------------------
->  arch/x86/pci/fixup.c     | 24 +-----------------------
->  drivers/gpu/vga/vgaarb.c | 38 +++++++++++++++++++++++++++++++++++++-
->  3 files changed, 39 insertions(+), 47 deletions(-)
->
-> diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
-> index ec73b2c..fc505d5 100644
-> --- a/arch/ia64/pci/fixup.c
-> +++ b/arch/ia64/pci/fixup.c
-> @@ -38,27 +38,6 @@ static void pci_fixup_video(struct pci_dev *pdev)
->                 return;
->         /* Maybe, this machine supports legacy memory map. */
->
-> -       if (!vga_default_device()) {
-> -               resource_size_t start, end;
-> -               int i;
-> -
-> -               /* Does firmware framebuffer belong to us? */
-> -               for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-> -                       if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
-> -                               continue;
-> -
-> -                       start = pci_resource_start(pdev, i);
-> -                       end  = pci_resource_end(pdev, i);
-> -
-> -                       if (!start || !end)
-> -                               continue;
-> -
-> -                       if (screen_info.lfb_base >= start &&
-> -                           (screen_info.lfb_base + screen_info.lfb_size) < end)
-> -                               vga_set_default_device(pdev);
-> -               }
-> -       }
-> -
->         /* Is VGA routed to us? */
->         bus = pdev->bus;
->         while (bus) {
-> @@ -83,8 +62,7 @@ static void pci_fixup_video(struct pci_dev *pdev)
->                 pci_read_config_word(pdev, PCI_COMMAND, &config);
->                 if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
->                         pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
-> -                       dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
-> -                       vga_set_default_device(pdev);
-> +                       dev_printk(KERN_DEBUG, &pdev->dev, "Video device with shadowed ROM\n");
->                 }
->         }
->  }
-> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> index c61ea57..9a2b710 100644
-> --- a/arch/x86/pci/fixup.c
-> +++ b/arch/x86/pci/fixup.c
-> @@ -326,27 +326,6 @@ static void pci_fixup_video(struct pci_dev *pdev)
->         struct pci_bus *bus;
->         u16 config;
->
-> -       if (!vga_default_device()) {
-> -               resource_size_t start, end;
-> -               int i;
-> -
-> -               /* Does firmware framebuffer belong to us? */
-> -               for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-> -                       if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
-> -                               continue;
-> -
-> -                       start = pci_resource_start(pdev, i);
-> -                       end  = pci_resource_end(pdev, i);
-> -
-> -                       if (!start || !end)
-> -                               continue;
-> -
-> -                       if (screen_info.lfb_base >= start &&
-> -                           (screen_info.lfb_base + screen_info.lfb_size) < end)
-> -                               vga_set_default_device(pdev);
-> -               }
-> -       }
-> -
->         /* Is VGA routed to us? */
->         bus = pdev->bus;
->         while (bus) {
-> @@ -371,8 +350,7 @@ static void pci_fixup_video(struct pci_dev *pdev)
->                 pci_read_config_word(pdev, PCI_COMMAND, &config);
->                 if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
->                         pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
-> -                       dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
-> -                       vga_set_default_device(pdev);
-> +                       dev_printk(KERN_DEBUG, &pdev->dev, "Video device with shadowed ROM\n");
->                 }
->         }
->  }
-> diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-> index d2077f0..cffdff9 100644
-> --- a/drivers/gpu/vga/vgaarb.c
-> +++ b/drivers/gpu/vga/vgaarb.c
-> @@ -41,6 +41,7 @@
->  #include <linux/poll.h>
->  #include <linux/miscdevice.h>
->  #include <linux/slab.h>
-> +#include <linux/screen_info.h>
->
->  #include <linux/uaccess.h>
->
-> @@ -585,8 +586,11 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
->          */
->  #ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
->         if (vga_default == NULL &&
-> -           ((vgadev->owns & VGA_RSRC_LEGACY_MASK) == VGA_RSRC_LEGACY_MASK))
-> +           ((vgadev->owns & VGA_RSRC_LEGACY_MASK) == VGA_RSRC_LEGACY_MASK)) {
-> +               pr_info("vgaarb: setting as boot device: PCI:%s\n",
-> +                       pci_name(pdev));
->                 vga_set_default_device(pdev);
-> +       }
->  #endif
->
->         vga_arbiter_check_bridge_sharing(vgadev);
-> @@ -1320,6 +1324,38 @@ static int __init vga_arb_device_init(void)
->         pr_info("vgaarb: loaded\n");
->
->         list_for_each_entry(vgadev, &vga_list, list) {
-> +#if defined(CONFIG_X86) || defined(CONFIG_IA64)
-> +               /* Override I/O based detection done by vga_arbiter_add_pci_device()
-> +                * as it may take the wrong device (e.g. on Apple system under EFI).
-> +                *
-> +                * Select the device owning the boot framebuffer if there is one.
-> +                */
-> +               resource_size_t start, end;
-> +               int i;
-> +
-> +               /* Does firmware framebuffer belong to us? */
-> +               for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-> +                       if (!(pci_resource_flags(vgadev->pdev, i) & IORESOURCE_MEM))
-> +                               continue;
-> +
-> +                       start = pci_resource_start(vgadev->pdev, i);
-> +                       end  = pci_resource_end(vgadev->pdev, i);
-> +
-> +                       if (!start || !end)
-> +                               continue;
-> +
-> +                       if (screen_info.lfb_base < start ||
-> +                           (screen_info.lfb_base + screen_info.lfb_size) >= end)
-> +                               continue;
-> +                       if (!vga_default_device())
-> +                               pr_info("vgaarb: setting as boot device: PCI:%s\n",
-> +                                       pci_name(vgadev->pdev));
-> +                       else if (vgadev->pdev != vga_default_device())
-> +                               pr_info("vgaarb: overriding boot device: PCI:%s\n",
-> +                                       pci_name(vgadev->pdev));
-> +                       vga_set_default_device(vgadev->pdev);
-> +               }
-> +#endif
->                 if (vgadev->bridge_has_one_vga)
->                         pr_info("vgaarb: bridge control possible %s\n", pci_name(vgadev->pdev));
->                 else
-> --
-> 1.8.5.5
->
+OK, thanks!
+
+> 
+>> use __read_msi_msg() instead of read_msi_msg for
+>> simplification. And rename __read_msi_msg() to
+>> read_msi_msg().
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>> CC: linuxppc-dev@lists.ozlabs.org
+>> ---
+>> arch/powerpc/platforms/pseries/msi.c |    2 +-
+>> arch/x86/pci/xen.c                   |    2 +-
+>> drivers/pci/msi.c                    |    9 +--------
+>> include/linux/msi.h                  |    3 +--
+>> 4 files changed, 4 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
+>> index 0c882e8..591650b 100644
+>> --- a/arch/powerpc/platforms/pseries/msi.c
+>> +++ b/arch/powerpc/platforms/pseries/msi.c
+>> @@ -484,7 +484,7 @@ again:
+>> 		irq_set_msi_desc(virq, entry);
+>>
+>> 		/* Read config space back so we can restore after reset */
+>> -		read_msi_msg(virq, &msg);
+>> +		read_msi_msg(entry, &msg);
+>> 		entry->msg = msg;
+>> 	}
+>>
+>> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+>> index 905956f..4656099 100644
+>> --- a/arch/x86/pci/xen.c
+>> +++ b/arch/x86/pci/xen.c
+>> @@ -228,7 +228,7 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+>> 		return 1;
+>>
+>> 	list_for_each_entry(msidesc, &dev->msi_list, list) {
+>> -		__read_msi_msg(msidesc, &msg);
+>> +		read_msi_msg(msidesc, &msg);
+>> 		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
+>> 			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
+>> 		if (msg.data != XEN_PIRQ_MSI_DATA ||
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index 988224f..cbb41d6 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -259,7 +259,7 @@ void default_restore_msi_irqs(struct pci_dev *dev)
+>> 	}
+>> }
+>>
+>> -void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+>> +void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+>> {
+>> 	BUG_ON(entry->dev->current_state != PCI_D0);
+>>
+>> @@ -289,13 +289,6 @@ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+>> 	}
+>> }
+>>
+>> -void read_msi_msg(unsigned int irq, struct msi_msg *msg)
+>> -{
+>> -	struct msi_desc *entry = irq_get_msi_desc(irq);
+>> -
+>> -	__read_msi_msg(entry, msg);
+>> -}
+>> -
+>> void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+>> {
+>> 	/* Assert that the cache is valid, assuming that
+>> diff --git a/include/linux/msi.h b/include/linux/msi.h
+>> index e3adf93..4d7c0f5 100644
+>> --- a/include/linux/msi.h
+>> +++ b/include/linux/msi.h
+>> @@ -15,10 +15,9 @@ struct irq_data;
+>> struct msi_desc;
+>> void mask_msi_irq(struct irq_data *data);
+>> void unmask_msi_irq(struct irq_data *data);
+>> -void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+>> +void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+>> void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+>> void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+>> -void read_msi_msg(unsigned int irq, struct msi_msg *msg);
+>> void write_msi_msg(unsigned int irq, struct msi_msg *msg);
+>>
+>> struct msi_desc {
+>> -- 
+>> 1.7.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
+-- 
+Thanks!
+Yijing
+
