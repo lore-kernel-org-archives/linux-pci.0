@@ -1,76 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:16973 "EHLO mga14.intel.com"
+Received: from dliviu.plus.com ([80.229.23.120]:40304 "EHLO smtp.dudau.co.uk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750812AbaHDOh2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 Aug 2014 10:37:28 -0400
-Message-ID: <53DF9A9F.9060600@intel.com>
-Date: Mon, 04 Aug 2014 07:37:19 -0700
-From: Alexander Duyck <alexander.h.duyck@intel.com>
+	id S1754763AbaHUXH6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 21 Aug 2014 19:07:58 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by smtp.dudau.co.uk (Postfix) with SMTP id 3C1D9FFD90
+	for <linux-pci@vger.kernel.org>; Fri, 22 Aug 2014 00:07:57 +0100 (BST)
+Date: Fri, 22 Aug 2014 00:07:40 +0100
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] drivers: pci: convert generic host controller to DT host
+ bridge creation API
+Message-ID: <20140821230740.GJ13147@bart.dudau.co.uk>
+References: <1407861695-25549-1-git-send-email-Liviu.Dudau@arm.com>
+ <201408201327.57376.arnd@arndb.de>
+ <20140820123112.GG13147@bart.dudau.co.uk>
+ <201408202139.27678.arnd@arndb.de>
 MIME-Version: 1.0
-To: Edward Cree <ecree@solarflare.com>, Don Dutile <ddutile@redhat.com>
-CC: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
-References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com> <alpine.LFD.2.03.1407311500570.16821@solarflare.com> <53DA5EF4.1030500@intel.com> <53DA674A.9030305@solarflare.com> <53DA718A.9040407@intel.com> <53DA7574.4050103@solarflare.com> <53DA82AF.7000503@redhat.com> <53DA8745.2070405@solarflare.com> <53DF92B4.1040505@solarflare.com>
-In-Reply-To: <53DF92B4.1040505@solarflare.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <201408202139.27678.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/04/2014 07:03 AM, Edward Cree wrote:
-> On 31/07/14 19:13, Edward Cree wrote:
->> On 31/07/14 18:53, Don Dutile wrote:
->>> Ideally, when the device is configured in different modes, the SRIOV
->>> cap structure
->>> should be modified so the pci sriov code doesn't try to act or reflect
->>> the
->>> non-reality the device is in.
->> That would be much nicer of course, and I'll ask our firmware team if
->> that's possible.  But I don't think it will be.
-> As I feared, it's not practical for the device to do this.
-> (Unfortunately, the IMEM (instruction memory) on the device is rather
-> small and the firmware team are struggling to fit all the required
-> features into it.)
-> However, I also found out that in principle, the device _is_ capable of
-> supporting VFs in PF-IOV mode, by attaching them directly to the
-> underlying v-switch.  The firmware may or may not already do this; the
-> person who's likely to know this isn't in today.  The driver at present
-> doesn't support it because it assumes it always needs to attach VFs to
-> its own v-switch, but it could (again, in principle) be taught otherwise.
+On Wed, Aug 20, 2014 at 09:39:27PM +0200, Arnd Bergmann wrote:
+> On Wednesday 20 August 2014, Liviu Dudau wrote:
+> > That has been the general approach of my patchset up to v9. But, as Bjorn has
+> > mentioned in his v8 review and I have put in my cover letter, the regular
+> > aproach means that architectures that use pci_scan_root_bus() will have to
+> > drop their one liner and replace it with the more verbose of_create_pci_host_bridge()
+> > followed by pci_scan_child_bus() and pci_bus_add_devices() (basically, the content
+> > of pci_scan_root_bus()). For those architectures it will lead to a net increase of
+> > lines of code.
 > 
-> So at this point it becomes a policy question of whether we want to
-> support this, and our opinion is that this isn't a valid use-case (as
-> the only time you'd want PF-IOV is if your system doesn't support VFs)
-> and thus shouldn't be supported (as it creates extra testing and
-> maintenance work).  The driver should probe the device, detect PF-IOV
-> mode, recognise that it (the driver) doesn't have support for VFs in
-> that mode, and set totalvfs to 0.
-> Others may demur, of course, but that's likely to be decided when
-> sending the driver patches to davem.  It's my belief that, uncertainty
-> about my use case notwithstanding, pci_sriov_set_totalvfs(dev, 0) should
-> be a valid operation with the semantics I've implemented in my patch.
+> I'll try to get hold of Bjorn here and discuss it with him in person. I'd
+> rather see a few extra lines in each driver than the complexity of callback
+> funtions.
 > 
-> -Edward
+> > The patch for pci-host-generic.c is the first to use the callback setup function, but
+> > not the only one. My PCI host bridge driver for Juno has the same need, and I'm betting
+> > all other host bridge controllers will use it as it will be the only opportunity to
+> > finish the controller setup before we start scanning the child busses. I'm trying to
+> > balance ease of read vs ease of use here and it is the best version I've come up with
+> > so far.
+> 
+> My main objection to the new approach is that it's different from most other
+> subsystems doing the same thing. For a person reading the pci host driver
+> implementation, when they are familiar with other device drivers, I think it's
+> much clearer what is going on when smaller functions are called in sequence
+> than to see one function passed into some other interface that you now have
+> to read as well in order to understand when it gets called.
 
-How is it you get yourself into the PF-IOV mode?  Is this something that
-is stored in the NVM of the adapter, or is it something where the driver
-has to issue a request for it?  Also does each PF advertise SR-IOV
-support in PF-IOV mode or only function 0?
+Would it be more clear if (when) the currently opaque sysdata becomes a structure
+to be filled by the host bridge driver with a .setup member pointing to the
+callback? That would be my preferred way of expressing the API, tbh, but it means
+duplicating the existing pci_{create,scan}_root_bus() functions.
 
-Modifying the total VFs and/or the initial VFs in the configuration
-space is not practical.  You would likely run into issues as one of
-these fields is read at probe time and the other is read at SR-IOV
-enablement and if the two differ you cannot enable SR-IOV.
+Best regards,
+Liviu
 
-I'm not sure what davem has to do with any of this.  We are discussing
-PCI at this point, not the network drivers.  As such Dave won't be the
-one accepting the pci_sriov_set_totalvfs changes you proposed.  If you
-are just wanting to get a patch through Dave for this you would be much
-better off just returning an error on sriov_configure if the vswitch
-isn't available rather than trying to change the SR-IOV API to match
-your use case.
+> 
+> 	Arnd
+> 
 
-Thanks,
+-- 
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
 
-Alex
-
+ One small step
+   for me ...
 
