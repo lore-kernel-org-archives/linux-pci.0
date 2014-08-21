@@ -1,74 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:51291 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753645AbaHLQ2y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 12:28:54 -0400
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Cc: linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v9 11/12] arm64: Add pgprot_device() interface for device mappings.
-Date: Tue, 12 Aug 2014 17:25:24 +0100
-Message-Id: <1407860725-25202-12-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+Received: from exprod7og117.obsmtp.com ([64.18.2.6]:39450 "EHLO
+	exprod7og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753943AbaHUIUm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Aug 2014 04:20:42 -0400
+Received: by mail-qc0-f178.google.com with SMTP id x3so9078797qcv.9
+        for <linux-pci@vger.kernel.org>; Thu, 21 Aug 2014 01:20:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140820222922.GA7387@laptop.dumpdata.com>
+References: <CAK=zhgpH2tG-EG4QP1SE46e+uHXA+GJGOPA1vi8UqAfRZ-EFTA@mail.gmail.com>
+	<20140820222922.GA7387@laptop.dumpdata.com>
+Date: Thu, 21 Aug 2014 13:50:22 +0530
+Message-ID: <CAK=zhgoU0EywreqEWo+sG8Qy60V4a8fBb4i7Uh30NEj0w+v7bA@mail.gmail.com>
+Subject: Re: How to get the number of VFs assigned to the guests in XEN
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Sathya Prakash <sathya.prakash@avagotech.com>,
+	Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>,
+	boris.ostrovsky@oracle.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add pgprot_device(). It will be aliased to pgprot_noncached for
-architectures that do not support special attributes for device
-mapping. Used by arm64 to define new attributes for devices.
+Yes, devices are binded to pci-back.
 
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
----
- include/asm-generic/pgtable.h    | 4 ++++
- arch/arm64/include/asm/pgtable.h | 2 ++
- 2 files changed, 6 insertions(+)
-
-diff --git a/include/asm-generic/pgtable.h b/include/asm-generic/pgtable.h
-index 53b2acc..977e545 100644
---- a/include/asm-generic/pgtable.h
-+++ b/include/asm-generic/pgtable.h
-@@ -249,6 +249,10 @@ static inline int pmd_same(pmd_t pmd_a, pmd_t pmd_b)
- #define pgprot_writecombine pgprot_noncached
- #endif
- 
-+#ifndef pgprot_device
-+#define pgprot_device pgprot_noncached
-+#endif
-+
- /*
-  * When walking page tables, get the address of the next boundary,
-  * or the end address of the range if that comes earlier.  Although no
-diff --git a/arch/arm64/include/asm/pgtable.h b/arch/arm64/include/asm/pgtable.h
-index e0ccceb..7dbacaf 100644
---- a/arch/arm64/include/asm/pgtable.h
-+++ b/arch/arm64/include/asm/pgtable.h
-@@ -277,6 +277,8 @@ static inline int has_transparent_hugepage(void)
- 	__pgprot_modify(prot, PTE_ATTRINDX_MASK, PTE_ATTRINDX(MT_DEVICE_nGnRnE) | PTE_PXN | PTE_UXN)
- #define pgprot_writecombine(prot) \
- 	__pgprot_modify(prot, PTE_ATTRINDX_MASK, PTE_ATTRINDX(MT_NORMAL_NC) | PTE_PXN | PTE_UXN)
-+#define pgprot_device(prot) \
-+	__pgprot_modify(prot, PTE_ATTRINDX_MASK, PTE_ATTRINDX(MT_DEVICE_nGnRE) | PTE_PXN | PTE_UXN)
- #define __HAVE_PHYS_MEM_ACCESS_PROT
- struct file;
- extern pgprot_t phys_mem_access_prot(struct file *file, unsigned long pfn,
--- 
-2.0.4
-
+On Thu, Aug 21, 2014 at 3:59 AM, Konrad Rzeszutek Wilk
+<konrad.wilk@oracle.com> wrote:
+> On Wed, Aug 20, 2014 at 04:33:29PM +0530, Sreekanth Reddy wrote:
+>> HI,
+>>
+>>
+>>
+>> For SRIOV support, currently in the KVM environment, mpt3sas driver can use
+>> the API pci_vfs_assigned() to know the number of VFs that are currently
+>> assigned to the running VMs. So that during the PF driver unload time, if
+>> the return value of this API is greater than zero the our driver won't call
+>> the pci_disable_sriov() to disable the VFs.
+>>
+>>
+>>
+>> Now for the same purpose in XEN environment, is there any API similar to
+>> pci_vfs_assigned() which the low lever device driver can use to know 'the
+>> number of VFs that are currently assigned to the running VMs'. In XEN
+>> environment this API pci_vfs_assigned() will return always zero even though
+>> VFs are assigned to the running VMs.
+>
+> Odd. It should return the same value. Are the devices binded to pci-back?
+>
+>>
+>>
+>>
+>> Regards,
+>>
+>> Sreekanth
