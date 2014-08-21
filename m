@@ -1,34 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:61239 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754444AbaHGCcw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Aug 2014 22:32:52 -0400
+Received: from mail-vc0-f173.google.com ([209.85.220.173]:60341 "EHLO
+	mail-vc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750843AbaHUAPY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Aug 2014 20:15:24 -0400
+Received: by mail-vc0-f173.google.com with SMTP id hy10so10043844vcb.18
+        for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 17:15:23 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20140807021246.GL2167@dragon>
-References: <1407356079-28908-1-git-send-email-festevam@gmail.com>
-	<20140807021246.GL2167@dragon>
-Date: Wed, 6 Aug 2014 23:32:49 -0300
-Message-ID: <CAOMZO5AEjPmW6xSeTn6WBc9SMMeKed+NJZDE3oDV0bb6bVNSPg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: imx6: fix boot hang when link already enabled
-From: Fabio Estevam <festevam@gmail.com>
-To: Shawn Guo <shawn.guo@freescale.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Zhu <r65037@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	=?UTF-8?B?TWFyZWsgVmHFoXV0?= <marex@denx.de>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Tim Harvey <tharvey@gateworks.com>,
-	=?UTF-8?Q?David_M=C3=BCller_=28ELSOFT_AG=29?= <d.mueller@elsoft.ch>,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	stable@vger.kernel.org
+Date: Wed, 20 Aug 2014 19:15:23 -0500
+Message-ID: <CA+55aFwH4UL-76-=ygDww4=vC9U=6_Yhs0D0H-nwtAkKXC6Vag@mail.gmail.com>
+Subject: Annoying and insane pci kernel messages..
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 6, 2014 at 11:12 PM, Shawn Guo <shawn.guo@freescale.com> wrote:
+So I don't know when this started happening, and it may well be an
+age-old issue, possibly made worse by configurations copied from
+distro makers that enable various random PCI hotplug logic, but my
+laptop dmesg is full of these annoying and worthless messages after
+suspend/resume:
 
-> I believe Lucas already had a new version of his patch.
->
-> http://thread.gmane.org/gmane.linux.kernel.pci/33712/focus=33711
+  ...
+  pci 0000:00:00.0: no hotplug settings from platform
+  pci 0000:00:00.0: using default PCI settings
+  i915 0000:00:02.0: no hotplug settings from platform
+  i915 0000:00:02.0: using default PCI settings
+  ...
 
-Ok, I wasn't aware of the updated version.
+basically repeating mindlessly for each PCI device. It's insane. It
+adds zero value. Why do we print out those inane messages?
+
+The reason _seems_ to be that some ACPI hotplug logic basically ends
+up doing "pci_configure_slot()" on every PCI slot, whether something
+is hotpluggable or not. Trust me, those things aren't. Printing
+pointless hotplug information for them is just crazy, and takes up
+kernel message space and hides _real_ messages for no good reason.
+
+Lookie here:
+
+  [torvalds@vaio linux]$ dmesg | grep "no hotplug settings" | wc
+     1006    8658   71574
+
+yeah, that's a thousand lines of crap. There's another 568 lines of
+the "using default PCI settings". In fact, there's *more* of this, but
+there's been so much of it that it's scrolled off the kernel message
+buffer.
+
+Could we please not do this?
+
+          Linus
