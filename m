@@ -1,94 +1,56 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	EmanueL Czirai <amanual@openmailbox.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Subject: Re: [Patch v4] x86, irq, PCI: Keep IRQ assignment for runtime power management
-Date: Sat, 30 Aug 2014 01:24:53 +0200
-Message-ID: <8823237.zCdVqYrZ5W@vostro.rjw.lan>
-In-Reply-To: <CAJZ5v0ikimRs4XJihULUdS-ZtU=xBMJECbKmzpUf1ZnzXijihQ@mail.gmail.com>
-References: <1409304383-18806-1-git-send-email-jiang.liu@linux.intel.com> <CAJZ5v0ikimRs4XJihULUdS-ZtU=xBMJECbKmzpUf1ZnzXijihQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vc0-f173.google.com ([209.85.220.173]:49957 "EHLO
+	mail-vc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750703AbaHUARa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Aug 2014 20:17:30 -0400
+Received: by mail-vc0-f173.google.com with SMTP id hy10so10045479vcb.18
+        for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2014 17:17:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Date: Wed, 20 Aug 2014 19:17:30 -0500
+Message-ID: <CA+55aFyjn5BYHL0b6mTDmKc4pBSS9aViPNJH+8ks87M8wb3UYQ@mail.gmail.com>
+Subject: Annoying and insane pci kernel messages..
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, August 29, 2014 04:42:34 PM Rafael J. Wysocki wrote:
-> On Fri, Aug 29, 2014 at 11:26 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> > Now IOAPIC driver dynamically allocates IRQ numbers for IOAPIC pins.
-> > We need to keep IRQ assignment for PCI devices during runtime power
-> > management, otherwise it may cause failure of device wakeups.
-> >
-> > Commit 3eec595235c17a7 "x86, irq, PCI: Keep IRQ assignment for PCI
-> > devices during suspend/hibernation" has fixed the issue for suspend/
-> > hibernation, we also need the same fix for runtime device sleep too.
-> >
-> > Fix: https://bugzilla.kernel.org/show_bug.cgi?id=83271
-> > Reported-and-Tested-by: EmanueL Czirai <amanual@openmailbox.org>
-> > Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> > ---
-> >  arch/x86/include/asm/io_apic.h |    2 ++
-> >  arch/x86/kernel/apic/io_apic.c |   12 ++++++++++++
-> >  arch/x86/pci/intel_mid_pci.c   |    2 +-
-> >  arch/x86/pci/irq.c             |    2 +-
-> >  drivers/acpi/pci_irq.c         |    4 ++++
-> >  5 files changed, 20 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-> > index 0aeed5ca356e..478c490f3654 100644
-> > --- a/arch/x86/include/asm/io_apic.h
-> > +++ b/arch/x86/include/asm/io_apic.h
-> > @@ -227,6 +227,8 @@ static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned
-> >
-> >  extern void io_apic_eoi(unsigned int apic, unsigned int vector);
-> >
-> > +extern bool mp_should_keep_irq(struct device *dev);
-> > +
-> >  #else  /* !CONFIG_X86_IO_APIC */
-> >
-> >  #define io_apic_assign_pci_irqs 0
-> > diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-> > index 29290f554e79..1e9a921d9701 100644
-> > --- a/arch/x86/kernel/apic/io_apic.c
-> > +++ b/arch/x86/kernel/apic/io_apic.c
-> > @@ -3946,6 +3946,18 @@ int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
-> >         return ret;
-> >  }
-> >
-> > +bool mp_should_keep_irq(struct device *dev)
-> > +{
-> > +       if (dev->power.is_prepared)
-> > +               return true;
-> > +#ifdef CONFIG_PM_RUNTIME
-> > +       if (dev->power.runtime_status == RPM_SUSPENDING)
-> > +               return true;
-> > +#endif
-> 
-> No, you can't do that.  It is racy and incorrect.
+[ Oops, my mail client ended up picking an old address for Bjorn, so
+resending with the correct one ]
 
-Well, maybe not.
+So I don't know when this started happening, and it may well be an
+age-old issue, possibly made worse by configurations copied from
+distro makers that enable various random PCI hotplug logic, but my
+laptop dmesg is full of these annoying and worthless messages after
+suspend/resume:
 
-> Please give me some time for looking into this.
+  ...
+  pci 0000:00:00.0: no hotplug settings from platform
+  pci 0000:00:00.0: using default PCI settings
+  i915 0000:00:02.0: no hotplug settings from platform
+  i915 0000:00:02.0: using default PCI settings
+  ...
 
-So I guess the intended check is "Am I running in a suspend callback"?
+basically repeating mindlessly for each PCI device. It's insane. It
+adds zero value. Why do we print out those inane messages?
 
-Rafael
+The reason _seems_ to be that some ACPI hotplug logic basically ends
+up doing "pci_configure_slot()" on every PCI slot, whether something
+is hotpluggable or not. Trust me, those things aren't. Printing
+pointless hotplug information for them is just crazy, and takes up
+kernel message space and hides _real_ messages for no good reason.
 
+Lookie here:
+
+  [torvalds@vaio linux]$ dmesg | grep "no hotplug settings" | wc
+     1006    8658   71574
+
+yeah, that's a thousand lines of crap. There's another 568 lines of
+the "using default PCI settings". In fact, there's *more* of this, but
+there's been so much of it that it's scrolled off the kernel message
+buffer.
+
+Could we please not do this?
+
+          Linus
