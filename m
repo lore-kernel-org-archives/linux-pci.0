@@ -1,60 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andy Lutomirski <luto@amacapital.net>
-To: Mauro Carvalho Chehab <m.chehab@samsung.com>,
-	Doug Thompson <dougthompson@xmission.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Borislav Petkov <bp@alien8.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-edac@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Andy Lutomirski <luto@amacapital.net>,
-	Rui Wang <ruiv.wang@gmail.com>
-Subject: [PATCH 2/2] sb_edac: Claim a different PCI device
-Date: Thu, 14 Aug 2014 14:45:41 -0700
-Message-Id: <59f55d679cc596731589516a71075b6059fcaaa5.1408051536.git.luto@amacapital.net>
-In-Reply-To: <cover.1408051536.git.luto@amacapital.net>
-References: <cover.1408051536.git.luto@amacapital.net>
-In-Reply-To: <cover.1408051536.git.luto@amacapital.net>
-References: <cover.1408051536.git.luto@amacapital.net>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:54689 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754296AbaHVHrb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 03:47:31 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2 3/5] PCI/MSI: Change msi_bus attribute to support enable/disable MSI for EP
+Date: Fri, 22 Aug 2014 16:07:58 +0800
+Message-ID: <1408694880-8260-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1408694880-8260-1-git-send-email-wangyijing@huawei.com>
+References: <1408694880-8260-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-sb_edac controls a large number of different PCI functions.  Rather
-than registering as a normal PCI driver for all of them, it
-registers for just one so that it gets probed and, at probe time, it
-looks for all the others.
+Msi_bus attribute is only valid for bridge device.
+We can enable or disable MSI capability for a bus,
+if we echo 1/0 > /sys/bus/pci/devices/$EP/msi_bus,
+the action will be ignored. Sometime we need to
+only enable/disable a EP device MSI capability,
+not all devices share the same bus.
 
-Coincidentally, the device it registers for also contains the SMBUS
-registers, so the PCI core will refuse to probe both sb_edac and a
-future iMC SMBUS driver.  The drivers don't actually conflict, so
-just change sb_edac's device table to probe a different device.
-
-An alternative fix would be to merge the two drivers, but sb_edac
-will also refuse to load on non-ECC systems, whereas i2c_imc would
-still be useful without ECC.
-
-The only user-visible change should be that sb_edac appears to bind
-a different device.
-
-Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>
-Cc: Rui Wang <ruiv.wang@gmail.com>
-Signed-off-by: Andy Lutomirski <luto@amacapital.net>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/edac/sb_edac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/pci-sysfs.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/edac/sb_edac.c b/drivers/edac/sb_edac.c
-index a2597e9313c6..e3bc2cced580 100644
---- a/drivers/edac/sb_edac.c
-+++ b/drivers/edac/sb_edac.c
-@@ -432,7 +432,7 @@ static const struct pci_id_table pci_dev_descr_ibridge_table[] = {
-  *	pci_device_id	table for which devices we are looking for
-  */
- static const struct pci_device_id sbridge_pci_tbl[] = {
--	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TA)},
-+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_HA0)},
- 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IBRIDGE_IMC_HA0_TA)},
- 	{0,}			/* 0 terminated list. */
- };
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 9ff0a90..b199ad9 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -251,11 +251,9 @@ static ssize_t msi_bus_show(struct device *dev, struct device_attribute *attr,
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+-	if (!pdev->subordinate)
+-		return 0;
+-
+-	return sprintf(buf, "%u\n",
+-		       !(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI));
++	return sprintf(buf, "%u\n", pdev->subordinate ?
++		       !(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI)
++			   : !pdev->no_msi);
+ }
+ 
+ static ssize_t msi_bus_store(struct device *dev, struct device_attribute *attr,
+@@ -278,8 +276,10 @@ static ssize_t msi_bus_store(struct device *dev, struct device_attribute *attr,
+ 	 * Maybe devices without subordinate buses shouldn't have this
+ 	 * attribute in the first place?
+ 	 */
+-	if (!pdev->subordinate)
++	if (!pdev->subordinate) {
++		pdev->no_msi = !val;
+ 		return count;
++	}
+ 
+ 	/* Is the flag going to change, or keep the value it already had? */
+ 	if (!(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI) ^
 -- 
-1.9.3
+1.7.1
 
