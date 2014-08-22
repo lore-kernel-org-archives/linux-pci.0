@@ -1,88 +1,149 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:4136 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751116AbaHMGys (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Aug 2014 02:54:48 -0400
-From: "Chen, Gong" <gong.chen@linux.intel.com>
-To: bhelgaas@google.com, rdunlap@infradead.org
-Cc: bp@alien8.de, tony.luck@intel.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Chen, Gong" <gong.chen@linux.intel.com>
-Subject: [RESEND 1/5] RAS, trace: Update error definition format
-Date: Wed, 13 Aug 2014 02:22:37 -0400
-Message-Id: <1407910961-7798-2-git-send-email-gong.chen@linux.intel.com>
-In-Reply-To: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
-References: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Fri, 22 Aug 2014 13:43:26 +0100
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v9 12/12] PCI: Introduce pci_remap_iospace() for
+ remapping PCI I/O bus resources into CPU space
+Message-ID: <20140822124326.GL13147@bart.dudau.co.uk>
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+ <1407860725-25202-13-git-send-email-Liviu.Dudau@arm.com>
+ <CAL_JsqK6XiuS7OJ_2F16ySA8oj9AHqP0fAft21AOtJxXP2SqnQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAL_JsqK6XiuS7OJ_2F16ySA8oj9AHqP0fAft21AOtJxXP2SqnQ@mail.gmail.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Previous format definition uses MACRO BIT(...), which is not very
-maintainable as Bjorn mentioned before:
-"I'd like to see all those "BIT(...)" things changed to use the #defines
-that already exist in include/uapi/linux/pci_regs.h, e.g.,
-PCI_ERR_COR_RCVR.  That way grep will find these uses, which will make
-maintenance easier."
+On Thu, Aug 21, 2014 at 11:16:16PM -0500, Rob Herring wrote:
+> On Tue, Aug 12, 2014 at 11:25 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > Introduce a default implementation for remapping PCI bus I/O resources
+> > onto the CPU address space. Architectures with special needs may
+> > provide their own version, but most should be able to use this one.
+> >
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Rob Herring <robh+dt@kernel.org>
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> 
+> Reviewed-by: Rob Herring <robh@kernel.org>
 
-Now here it is.
+Thanks, Rob, much appreciated!
 
-Signed-off-by: Chen, Gong <gong.chen@linux.intel.com>
----
- include/ras/ras_event.h | 33 +++++++++++++++++----------------
- 1 file changed, 17 insertions(+), 16 deletions(-)
+> 
+> However, I would like to see ARM pci_ioremap_io converted over to this function.
 
-diff --git a/include/ras/ras_event.h b/include/ras/ras_event.h
-index 47da53c27ffa..0f2cca4ccbf0 100644
---- a/include/ras/ras_event.h
-+++ b/include/ras/ras_event.h
-@@ -8,6 +8,7 @@
- #include <linux/tracepoint.h>
- #include <linux/edac.h>
- #include <linux/ktime.h>
-+#include <linux/pci.h>
- #include <linux/aer.h>
- #include <linux/cper.h>
- 
-@@ -174,24 +175,24 @@ TRACE_EVENT(mc_event,
-  */
- 
- #define aer_correctable_errors		\
--	{BIT(0),	"Receiver Error"},		\
--	{BIT(6),	"Bad TLP"},			\
--	{BIT(7),	"Bad DLLP"},			\
--	{BIT(8),	"RELAY_NUM Rollover"},		\
--	{BIT(12),	"Replay Timer Timeout"},	\
--	{BIT(13),	"Advisory Non-Fatal"}
-+	{PCI_ERR_COR_RCVR,	"Receiver Error"},	\
-+	{PCI_ERR_COR_BAD_TLP,	"Bad TLP"},		\
-+	{PCI_ERR_COR_BAD_DLLP,	"Bad DLLP"},		\
-+	{PCI_ERR_COR_REP_ROLL,	"RELAY_NUM Rollover"},	\
-+	{PCI_ERR_COR_REP_TIMER,	"Replay Timer Timeout"},\
-+	{PCI_ERR_COR_ADV_NFAT,	"Advisory Non-Fatal"}
- 
- #define aer_uncorrectable_errors		\
--	{BIT(4),	"Data Link Protocol"},		\
--	{BIT(12),	"Poisoned TLP"},		\
--	{BIT(13),	"Flow Control Protocol"},	\
--	{BIT(14),	"Completion Timeout"},		\
--	{BIT(15),	"Completer Abort"},		\
--	{BIT(16),	"Unexpected Completion"},	\
--	{BIT(17),	"Receiver Overflow"},		\
--	{BIT(18),	"Malformed TLP"},		\
--	{BIT(19),	"ECRC"},			\
--	{BIT(20),	"Unsupported Request"}
-+	{PCI_ERR_UNC_DLP,	"Data Link Protocol"},		\
-+	{PCI_ERR_UNC_POISON_TLP,"Poisoned TLP"},		\
-+	{PCI_ERR_UNC_FCP,	"Flow Control Protocol"},	\
-+	{PCI_ERR_UNC_COMP_TIME,	"Completion Timeout"},		\
-+	{PCI_ERR_UNC_COMP_ABORT,"Completer Abort"},		\
-+	{PCI_ERR_UNC_UNX_COMP,	"Unexpected Completion"},	\
-+	{PCI_ERR_UNC_RX_OVER,	"Receiver Overflow"},		\
-+	{PCI_ERR_UNC_MALF_TLP,	"Malformed TLP"},		\
-+	{PCI_ERR_UNC_ECRC,	"ECRC"},			\
-+	{PCI_ERR_UNC_UNSUP,	"Unsupported Request"}
- 
- TRACE_EVENT(aer_event,
- 	TP_PROTO(const char *dev_name,
+Do you care if this is done as a separate patch?
+
+Best regards,
+Liviu
+
+> 
+> Rob
+> 
+> > ---
+> >  drivers/pci/pci.c   | 33 +++++++++++++++++++++++++++++++++
+> >  include/linux/pci.h |  3 +++
+> >  2 files changed, 36 insertions(+)
+> >
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index 29d1775..76d21b6 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -2707,6 +2707,39 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
+> >  }
+> >  EXPORT_SYMBOL(pci_request_regions_exclusive);
+> >
+> > +/**
+> > + *     pci_remap_iospace - Remap the memory mapped I/O space
+> > + *     @res: Resource describing the I/O space
+> > + *     @phys_addr: physical address where the range will be mapped.
+> > + *
+> > + *     Remap the memory mapped I/O space described by the @res
+> > + *     into the CPU physical address space. Only architectures
+> > + *     that have memory mapped IO defined (and hence PCI_IOBASE)
+> > + *     should call this function.
+> > + */
+> > +int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+> > +{
+> > +       int err = -ENODEV;
+> > +
+> > +#ifdef PCI_IOBASE
+> > +       if (!(res->flags & IORESOURCE_IO))
+> > +               return -EINVAL;
+> > +
+> > +       if (res->end > IO_SPACE_LIMIT)
+> > +               return -EINVAL;
+> > +
+> > +       err = ioremap_page_range(res->start + (unsigned long)PCI_IOBASE,
+> > +                               res->end + 1 + (unsigned long)PCI_IOBASE,
+> > +                               phys_addr, pgprot_device(PAGE_KERNEL));
+> > +#else
+> > +       /* this architecture does not have memory mapped I/O space,
+> > +          so this function should never be called */
+> > +       WARN_ON(1);
+> > +#endif
+> > +
+> > +       return err;
+> > +}
+> > +
+> >  static void __pci_set_master(struct pci_dev *dev, bool enable)
+> >  {
+> >         u16 old_cmd, cmd;
+> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > index e1e0d80..988c2f5 100644
+> > --- a/include/linux/pci.h
+> > +++ b/include/linux/pci.h
+> > @@ -1098,6 +1098,9 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
+> >                                                   resource_size_t),
+> >                         void *alignf_data);
+> >
+> > +
+> > +int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
+> > +
+> >  static inline dma_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
+> >  {
+> >         struct pci_bus_region region;
+> > --
+> > 2.0.4
+> >
+> >
+> > _______________________________________________
+> > linux-arm-kernel mailing list
+> > linux-arm-kernel@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-2.0.0.rc2
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
+
+ One small step
+   for me ...
 
