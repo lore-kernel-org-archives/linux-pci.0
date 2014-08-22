@@ -1,96 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1blp0181.outbound.protection.outlook.com ([207.46.163.181]:5572
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753781AbaHHIEX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Aug 2014 04:04:23 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Tim Harvey <tharvey@gateworks.com>,
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>
-CC: Fabio Estevam <festevam@gmail.com>,
-	Shawn Guo <Shawn.Guo@freescale.com>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	"marex@denx.de" <marex@denx.de>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:58162 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756271AbaHVOkw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 10:40:52 -0400
+From: Jayamohan Kallickal <Jayamohan.Kallickal@Emulex.Com>
+To: Tomas Henzl <thenzl@redhat.com>,
+	Alexander Gordeev <agordeev@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH] PCI: imx6: fix occasional link failure
-Date: Fri, 8 Aug 2014 08:04:18 +0000
-Message-ID: <b5b3f50464b641f89a8f7809ccbe6346@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1407479800-6730-1-git-send-email-tharvey@gateworks.com>
-In-Reply-To: <1407479800-6730-1-git-send-email-tharvey@gateworks.com>
+Subject: RE: [PATCH v3 08/13] be2iscsi: Use pci_enable_msix_range()
+Date: Fri, 22 Aug 2014 14:40:25 +0000
+Message-ID: <37724B2049F71D4C9B086F99DDB2DE11572409D6@CMEXMB2.ad.emulex.com>
+References: <cover.1408335523.git.agordeev@redhat.com>
+ <1cf2c3d3243067edac8d170cda0450c82bbfc025.1408335523.git.agordeev@redhat.com>
+ <53F5D397.2020508@redhat.com>
+In-Reply-To: <53F5D397.2020508@redhat.com>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tim:
 
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org]
-> On Behalf Of Tim Harvey
-> Sent: Friday, August 08, 2014 2:37 PM
-> To: l.stach@pengutronix.de
-> Cc: Fabio Estevam; Guo Shawn-R65073; stable@vger.kernel.org; marex@denx.de;
-> bhelgaas@google.com; linux-pci@vger.kernel.org
-> Subject: [PATCH] PCI: imx6: fix occasional link failure
-> 
-> According to the IMX6 reference manuals, REF_SSP_EN (Reference clock enable
-> for SS function) must remain deasserted until the reference clock is running
-> at the appropriate frequency.
-> 
-> Without this patch we find a high link failure rate (>5%) on certain
-> IMX6 boards at various temperatures.
-> 
-> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+
+-----Original Message-----
+From: Tomas Henzl [mailto:thenzl@redhat.com] 
+Sent: Thursday, August 21, 2014 4:10 AM
+To: Alexander Gordeev; linux-kernel@vger.kernel.org
+Cc: Jayamohan Kallickal; linux-scsi@vger.kernel.org; linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 08/13] be2iscsi: Use pci_enable_msix_range()
+
+On 08/18/2014 08:01 AM, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers using these 
+> two interfaces need to be updated to use the new 
+> pci_enable_msi_range() and pci_enable_msix_range() interfaces.
+
+Patch looks good to me.
+
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
 > ---
->  drivers/pci/host/pci-imx6.c | 11 ++++++-----
->  1 file changed, 6 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c index
-> 1be6073..9b6bab9 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -256,11 +256,6 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port
-> *pp)
->  	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
->  	int ret;
-> 
-> -	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> -			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
-> -	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> -			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
-> -
->  	ret = clk_prepare_enable(imx6_pcie->pcie_phy);
->  	if (ret) {
->  		dev_err(pp->dev, "unable to enable pcie_phy clock\n"); @@ -282,6
-> +277,12 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
->  	/* allow the clocks to stabilize */
->  	usleep_range(200, 500);
-> 
-> +	/* power up core phy and enable ref clock */
-> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> +			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
-> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> +			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
-> +
+>  drivers/scsi/be2iscsi/be_main.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/be2iscsi/be_main.c 
+> b/drivers/scsi/be2iscsi/be_main.c index 915c26b..b422659 100644
+> --- a/drivers/scsi/be2iscsi/be_main.c
+> +++ b/drivers/scsi/be2iscsi/be_main.c
+> @@ -5276,9 +5276,9 @@ static void beiscsi_msix_enable(struct beiscsi_hba *phba)
+>  	for (i = 0; i <= phba->num_cpus; i++)
+>  		phba->msix_entries[i].entry = i;
+>  
+> -	status = pci_enable_msix(phba->pcidev, phba->msix_entries,
+> -				 (phba->num_cpus + 1));
+> -	if (!status)
+> +	status = pci_enable_msix_range(phba->pcidev, phba->msix_entries,
+> +				       phba->num_cpus + 1, phba->num_cpus + 1);
+> +	if (status > 0)
+>  		phba->msix_enabled = true;
+>  
+>  	return;
 
-[Richard] It's better add some comments into the codes, why
-Enable_pcie_clock should be placed before ssp_en is set.
-For example:
-    - enable_pcie_clock should be call before ssp_en is set,
-      since that ssp_en control the phy_ref clk gate, turn on
-      it after the source of the pcie clks are stable.
 
-Best Regards
-Richard Zhu
+Looks Good.
 
->  	/* Some boards don't have PCIe reset GPIO. */
->  	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
->  		gpio_set_value(imx6_pcie->reset_gpio, 0);
-> --
-> 1.8.3.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
-> body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+Acked-by:  Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+--
