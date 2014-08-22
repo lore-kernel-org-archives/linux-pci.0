@@ -1,44 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:61963 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754813AbaHYQbt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Aug 2014 12:31:49 -0400
-Received: by mail-ie0-f174.google.com with SMTP id rp18so9736880iec.5
-        for <linux-pci@vger.kernel.org>; Mon, 25 Aug 2014 09:31:48 -0700 (PDT)
+Received: from szxga03-in.huawei.com ([119.145.14.66]:53472 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754517AbaHVHpc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 03:45:32 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>,
+	"Tony Luck" <tony.luck@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>, <x86@kernel.org>,
+	<linux-ia64@vger.kernel.org>
+Subject: [PATCH v2 4/5] MSI: Use __get_cached_msi_msg() instead of get_cached_msi_msg()
+Date: Fri, 22 Aug 2014 16:07:59 +0800
+Message-ID: <1408694880-8260-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1408694880-8260-1-git-send-email-wangyijing@huawei.com>
+References: <1408694880-8260-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20140825163518.GB5853@agordeev.usersys.redhat.com>
-References: <cover.1394128952.git.agordeev@redhat.com>
-	<2ba22558b5db90740d5833c35570c3e7cc1e359e.1394128952.git.agordeev@redhat.com>
-	<CAPcyv4jW19zxApviDdbofbXB1OvvN2sCriL3Paszfk9o3T8x0w@mail.gmail.com>
-	<20140306214356.GA16376@dhcp-26-207.brq.redhat.com>
-	<CAPcyv4ivvxHvyT_5oybVvRJAUKABQQ1ZH4Eua-1KVDeri5kpkA@mail.gmail.com>
-	<20140307074932.GC2670@dhcp-26-207.brq.redhat.com>
-	<20140825163518.GB5853@agordeev.usersys.redhat.com>
-Date: Mon, 25 Aug 2014 09:31:48 -0700
-Message-ID: <CAPcyv4hhM+EFsgr66Tdr4CrsnvJdnDoS0S9LLnZCP65nJ59CBw@mail.gmail.com>
-Subject: Re: [PATCH v2] ioat: Use pci_enable_msix_exact() instead of pci_enable_msix()
-From: Dan Williams <dan.j.williams@intel.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Vinod Koul <vinod.koul@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 25, 2014 at 9:35 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> On Fri, Mar 07, 2014 at 08:49:32AM +0100, Alexander Gordeev wrote:
->> As result of deprecation of MSI-X/MSI enablement functions
->> pci_enable_msix() and pci_enable_msi_block() all drivers
->> using these two interfaces need to be updated to use the
->> new pci_enable_msi_range()  or pci_enable_msi_exact()
->> and pci_enable_msix_range() or pci_enable_msix_exact()
->> interfaces.
->
-> Dan, Vinod,
->
-> This patch hangs in -next for quite some time.
-> Would you release it, please?
+Get_cached_msi_msg() only be called in two places,
+ia64_set_msi_irq_affinity() and sn_set_msi_irq_affinity().
 
-On its way... apologies for the delay.
+The code flow is:
+irq = irq_data->irq
+    get_cached_msi_msg(irq)
+	    irq_get_msi_desc(irq)
+		    irq_get_irq_data(irq)
+			    msi_desc = irq_data->desc
+        __get_cached_msi_msg(msi_desc, msg)
+
+This is crazy, we should use __get_cached_msi_msg(irq_data->desc, msg)
+directly to simplify the flow, and remove get_cached_msi_msg().
+Finally, rename __get_cached_msi_msg() to get_cached_msi_msg().
+
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Tony Luck <tony.luck@intel.com>
+CC: Thomas Gleixner <tglx@linutronix.de>
+CC: x86@kernel.org
+CC: linux-ia64@vger.kernel.org
+---
+ arch/ia64/kernel/msi_ia64.c    |    2 +-
+ arch/ia64/sn/kernel/msi_sn.c   |    4 ++--
+ arch/x86/kernel/apic/io_apic.c |    2 +-
+ drivers/pci/msi.c              |    9 +--------
+ include/linux/msi.h            |    3 +--
+ 5 files changed, 6 insertions(+), 14 deletions(-)
+
+diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
+index c430f91..4efe748 100644
+--- a/arch/ia64/kernel/msi_ia64.c
++++ b/arch/ia64/kernel/msi_ia64.c
+@@ -23,7 +23,7 @@ static int ia64_set_msi_irq_affinity(struct irq_data *idata,
+ 	if (irq_prepare_move(irq, cpu))
+ 		return -1;
+ 
+-	get_cached_msi_msg(irq, &msg);
++	get_cached_msi_msg(idata->msi_desc, &msg);
+ 
+ 	addr = msg.address_lo;
+ 	addr &= MSI_ADDR_DEST_ID_MASK;
+diff --git a/arch/ia64/sn/kernel/msi_sn.c b/arch/ia64/sn/kernel/msi_sn.c
+index afc58d2..8bec242 100644
+--- a/arch/ia64/sn/kernel/msi_sn.c
++++ b/arch/ia64/sn/kernel/msi_sn.c
+@@ -175,8 +175,8 @@ static int sn_set_msi_irq_affinity(struct irq_data *data,
+ 	 * Release XIO resources for the old MSI PCI address
+ 	 */
+ 
+-	get_cached_msi_msg(irq, &msg);
+-        sn_pdev = (struct pcidev_info *)sn_irq_info->irq_pciioinfo;
++	get_cached_msi_msg(data->msi_desc, &msg);
++	sn_pdev = (struct pcidev_info *)sn_irq_info->irq_pciioinfo;
+ 	pdev = sn_pdev->pdi_linux_pcidev;
+ 	provider = SN_PCIDEV_BUSPROVIDER(pdev);
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 29290f5..e877cfb 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3145,7 +3145,7 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+ 	if (ret)
+ 		return ret;
+ 
+-	__get_cached_msi_msg(data->msi_desc, &msg);
++	get_cached_msi_msg(data->msi_desc, &msg);
+ 
+ 	msg.data &= ~MSI_DATA_VECTOR_MASK;
+ 	msg.data |= MSI_DATA_VECTOR(cfg->vector);
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 0d0f163..8746ecd 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -296,7 +296,7 @@ void read_msi_msg(unsigned int irq, struct msi_msg *msg)
+ 	__read_msi_msg(entry, msg);
+ }
+ 
+-void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
++void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	/* Assert that the cache is valid, assuming that
+ 	 * valid messages are not all-zeroes. */
+@@ -306,13 +306,6 @@ void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ 	*msg = entry->msg;
+ }
+ 
+-void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg)
+-{
+-	struct msi_desc *entry = irq_get_msi_desc(irq);
+-
+-	__get_cached_msi_msg(entry, msg);
+-}
+-
+ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	if (entry->dev->current_state != PCI_D0) {
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index fff7201..329ec73 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -16,10 +16,9 @@ struct msi_desc;
+ void mask_msi_irq(struct irq_data *data);
+ void unmask_msi_irq(struct irq_data *data);
+ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+-void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
++void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void read_msi_msg(unsigned int irq, struct msi_msg *msg);
+-void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
+ void write_msi_msg(unsigned int irq, struct msi_msg *msg);
+ 
+ struct msi_desc {
+-- 
+1.7.1
+
