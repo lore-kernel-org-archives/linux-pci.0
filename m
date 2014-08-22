@@ -1,71 +1,206 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:59442 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756618AbaHYV1O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Aug 2014 17:27:14 -0400
-Received: by mail-wg0-f41.google.com with SMTP id z12so13892626wgg.24
-        for <linux-pci@vger.kernel.org>; Mon, 25 Aug 2014 14:27:13 -0700 (PDT)
-From: Mathias Krause <minipli@googlemail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Mathias Krause <minipli@googlemail.com>
-Subject: [PATCH 5/5] x86/PCI: Mark PCI BIOS initialization code as such
-Date: Mon, 25 Aug 2014 23:26:39 +0200
-Message-Id: <1409001999-23161-6-git-send-email-minipli@googlemail.com>
-In-Reply-To: <1409001999-23161-1-git-send-email-minipli@googlemail.com>
-References: <1409001999-23161-1-git-send-email-minipli@googlemail.com>
+Received: from mail-vc0-f177.google.com ([209.85.220.177]:57084 "EHLO
+	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750831AbaHVFAD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 01:00:03 -0400
+MIME-Version: 1.0
+In-Reply-To: <1407860725-25202-4-git-send-email-Liviu.Dudau@arm.com>
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com> <1407860725-25202-4-git-send-email-Liviu.Dudau@arm.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Thu, 21 Aug 2014 23:59:41 -0500
+Message-ID: <CAL_JsqKgW=HN35YnYBtAVDPxMYQfR35Bw3ekonXPmNhjrsVDUg@mail.gmail.com>
+Subject: Re: [PATCH v9 03/12] PCI: Introduce helper functions to deal with PCI
+ I/O ranges.
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pci_find_bios() function is only ever called from initialization
-code, therefore can be marked as such, too. This, in turn, allows
-marking other functions called only in this context as well.
+On Tue, Aug 12, 2014 at 11:25 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> Some architectures do not have a simple view of the PCI I/O space
+> and instead use a range of CPU addresses that map to bus addresses.
+> For some architectures these ranges will be expressed by OF bindings
+> in a device tree file.
+>
+> This patch introduces a pci_register_io_range() helper function with
+> a generic implementation that can be used by such architectures to
+> keep track of the I/O ranges described by the PCI bindings. If the
+> PCI_IOBASE macro is not defined that signals lack of support for PCI
+> and we return an error.
+>
+> In order to retrieve the CPU address associated with an I/O port, a
+> new helper function pci_pio_to_address() is introduced. This will
+> search in the list of ranges registered with pci_register_io_range()
+> and return the CPU address that corresponds to the given port.
+>
+> Cc: Grant Likely <grant.likely@linaro.org>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-The bios32_indirect variable can be marked as __initdata as it is only
-referenced from __init functions now.
+Acked-by: Rob Herring <robh@kernel.org>
 
-Signed-off-by: Mathias Krause <minipli@googlemail.com>
----
- arch/x86/pci/pcbios.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/arch/x86/pci/pcbios.c b/arch/x86/pci/pcbios.c
-index c77b24a8b2..9b83b9051a 100644
---- a/arch/x86/pci/pcbios.c
-+++ b/arch/x86/pci/pcbios.c
-@@ -79,13 +79,13 @@ union bios32 {
- static struct {
- 	unsigned long address;
- 	unsigned short segment;
--} bios32_indirect = { 0, __KERNEL_CS };
-+} bios32_indirect __initdata = { 0, __KERNEL_CS };
- 
- /*
-  * Returns the entry point for the given service, NULL on error
-  */
- 
--static unsigned long bios32_service(unsigned long service)
-+static unsigned long __init bios32_service(unsigned long service)
- {
- 	unsigned char return_code;	/* %al */
- 	unsigned long address;		/* %ebx */
-@@ -124,7 +124,7 @@ static struct {
- 
- static int pci_bios_present;
- 
--static int check_pcibios(void)
-+static int __init check_pcibios(void)
- {
- 	u32 signature, eax, ebx, ecx;
- 	u8 status, major_ver, minor_ver, hw_mech;
-@@ -312,7 +312,7 @@ static const struct pci_raw_ops pci_bios_access = {
-  * Try to find PCI BIOS.
-  */
- 
--static const struct pci_raw_ops *pci_find_bios(void)
-+static const struct pci_raw_ops *__init pci_find_bios(void)
- {
- 	union bios32 *check;
- 	unsigned char sum;
--- 
-1.7.10.4
-
+> ---
+>  drivers/of/address.c       | 95 ++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/of_address.h |  2 +
+>  2 files changed, 97 insertions(+)
+>
+> diff --git a/drivers/of/address.c b/drivers/of/address.c
+> index 5edfcb0..4dab700 100644
+> --- a/drivers/of/address.c
+> +++ b/drivers/of/address.c
+> @@ -5,6 +5,7 @@
+>  #include <linux/module.h>
+>  #include <linux/of_address.h>
+>  #include <linux/pci_regs.h>
+> +#include <linux/slab.h>
+>  #include <linux/string.h>
+>
+>  /* Max address size we deal with */
+> @@ -601,12 +602,106 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+>  }
+>  EXPORT_SYMBOL(of_get_address);
+>
+> +#ifdef PCI_IOBASE
+> +struct io_range {
+> +       struct list_head list;
+> +       phys_addr_t start;
+> +       resource_size_t size;
+> +};
+> +
+> +static LIST_HEAD(io_range_list);
+> +static DEFINE_SPINLOCK(io_range_lock);
+> +#endif
+> +
+> +/*
+> + * Record the PCI IO range (expressed as CPU physical address + size).
+> + * Return a negative value if an error has occured, zero otherwise
+> + */
+> +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> +{
+> +#ifdef PCI_IOBASE
+> +       struct io_range *range;
+> +       resource_size_t allocated_size = 0;
+> +
+> +       /* check if the range hasn't been previously recorded */
+> +       spin_lock(&io_range_lock);
+> +       list_for_each_entry(range, &io_range_list, list) {
+> +               if (addr >= range->start && addr + size <= range->start + size)
+> +                       return 0;
+> +               allocated_size += range->size;
+> +       }
+> +       spin_unlock(&io_range_lock);
+> +
+> +       /* range not registed yet, check for available space */
+> +       if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
+> +               /* if it's too big check if 64K space can be reserved */
+> +               if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT)
+> +                       return -E2BIG;
+> +
+> +               size = SZ_64K;
+> +               pr_warn("Requested IO range too big, new size set to 64K\n");
+> +       }
+> +
+> +       /* add the range to the list */
+> +       range = kzalloc(sizeof(*range), GFP_KERNEL);
+> +       if (!range)
+> +               return -ENOMEM;
+> +
+> +       range->start = addr;
+> +       range->size = size;
+> +
+> +       list_add_tail(&range->list, &io_range_list);
+> +#endif
+> +
+> +       return 0;
+> +}
+> +
+> +phys_addr_t pci_pio_to_address(unsigned long pio)
+> +{
+> +       phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
+> +
+> +#ifdef PCI_IOBASE
+> +       struct io_range *range;
+> +       resource_size_t allocated_size = 0;
+> +
+> +       if (pio > IO_SPACE_LIMIT)
+> +               return address;
+> +
+> +       spin_lock(&io_range_lock);
+> +       list_for_each_entry(range, &io_range_list, list) {
+> +               if (pio >= allocated_size && pio < allocated_size + range->size) {
+> +                       address = range->start + pio - allocated_size;
+> +                       break;
+> +               }
+> +               allocated_size += range->size;
+> +       }
+> +       spin_unlock(&io_range_lock);
+> +#endif
+> +
+> +       return address;
+> +}
+> +
+>  unsigned long __weak pci_address_to_pio(phys_addr_t address)
+>  {
+> +#ifdef PCI_IOBASE
+> +       struct io_range *res;
+> +       resource_size_t offset = 0;
+> +
+> +       list_for_each_entry(res, &io_range_list, list) {
+> +               if (address >= res->start &&
+> +                       address < res->start + res->size) {
+> +                       return res->start - address + offset;
+> +               }
+> +               offset += res->size;
+> +       }
+> +
+> +       return (unsigned long)-1;
+> +#else
+>         if (address > IO_SPACE_LIMIT)
+>                 return (unsigned long)-1;
+>
+>         return (unsigned long) address;
+> +#endif
+>  }
+>
+>  static int __of_address_to_resource(struct device_node *dev,
+> diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+> index c13b878..28e6836 100644
+> --- a/include/linux/of_address.h
+> +++ b/include/linux/of_address.h
+> @@ -55,7 +55,9 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
+>  extern const __be32 *of_get_address(struct device_node *dev, int index,
+>                            u64 *size, unsigned int *flags);
+>
+> +extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+>  extern unsigned long pci_address_to_pio(phys_addr_t addr);
+> +extern phys_addr_t pci_pio_to_address(unsigned long pio);
+>
+>  extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+>                         struct device_node *node);
+> --
+> 2.0.4
+>
+>
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
