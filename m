@@ -1,145 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <53EABC7E.6080103@huawei.com>
-Date: Wed, 13 Aug 2014 09:16:46 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qa0-f51.google.com ([209.85.216.51]:34861 "EHLO
+	mail-qa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755831AbaHVEjw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 00:39:52 -0400
+Received: by mail-qa0-f51.google.com with SMTP id k15so9087141qaq.24
+        for <linux-pci@vger.kernel.org>; Thu, 21 Aug 2014 21:39:51 -0700 (PDT)
 MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>, <linux-pci@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<arnab.basu@freescale.com>, <x86@kernel.org>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, <xen-devel@lists.xenproject.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>
-Subject: Re: [RFC PATCH 07/20] x86/MSI: Use msi_chip instead of arch func
- to configure MSI/MSI-X
-References: <1407828373-24322-1-git-send-email-wangyijing@huawei.com> <1407828373-24322-8-git-send-email-wangyijing@huawei.com> <20140812190947.GD13996@laptop.dumpdata.com>
-In-Reply-To: <20140812190947.GD13996@laptop.dumpdata.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140821233435.19a9cffa@neptune.home>
+References: <20140514224339.7f8be3a9@neptune.home> <20140527234255.GJ11907@google.com>
+ <20140602201650.35f0e936@neptune.home> <20140602201926.4d476818@neptune.home>
+ <20140625005501.7ff7e982@neptune.home> <20140705171503.GC6247@google.com>
+ <CAMxnaaXxAZAJAdr5AYYRZC_xKFCuyrfY=qpJu8x+P-S+osm5vw@mail.gmail.com>
+ <CAMxnaaXGQe4vg9cY5e2KZBnG4F-z49OriwxEGUE-DCE6MKUryQ@mail.gmail.com>
+ <20140810112654.1bf684d6@neptune.home> <CAMxnaaUsd+XHppMmPMXdFL13d1-OhLzoH_yjv_9abOx_uP=_Ug@mail.gmail.com>
+ <20140810183411.19370721@neptune.home> <CAMxnaaVNpiSZmhQsHa_ZHJckgzG+xHyOL6hOT3Ts8GdcGN_A9g@mail.gmail.com>
+ <20140816192135.34260115@neptune.home> <CAMxnaaWQoX9KMQVCKHTkeqSxGEybz5u1qU6AVBqzW3+mj_nJHQ@mail.gmail.com>
+ <20140820075508.74f5b622@pluto> <20140820091152.76cd4e1a@pluto>
+ <CAMxnaaUodONkqmdPWedN-Q1qheHiJAScFcG_XbX1--ZmiOQZDg@mail.gmail.com> <20140821233435.19a9cffa@neptune.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 21 Aug 2014 23:39:31 -0500
+Message-ID: <CAErSpo6D1B+dPLrYoAF4OA1KeWuW8VZW2_RR5jB1GbCRo+6vHg@mail.gmail.com>
+Subject: Re: [PATCH 0/2] x86, ia64: Move EFI_FB vga_default_device()
+ initialization to pci_vga_fixup()
+To: =?UTF-8?Q?Bruno_Pr=C3=A9mont?= <bonbons@linux-vserver.org>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dave Airlie <airlied@linux.ie>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/8/13 3:09, Konrad Rzeszutek Wilk wrote:
-> On Tue, Aug 12, 2014 at 03:26:00PM +0800, Yijing Wang wrote:
->> Introduce a new struct msi_chip apic_msi_chip instead of weak arch
->> functions to configure MSI/MSI-X in x86.
-> 
-> Why not 'x86_msi_ops' (see  arch/x86/kernel/x86_init.c)
+On Thu, Aug 21, 2014 at 4:34 PM, Bruno Prémont
+<bonbons@linux-vserver.org> wrote:
 
-Hi Konrad, I think currently lots of weak arch functions make MSI code
-complex, we have following weak arch functions
+> A second step would then be to tune vgaarb's initial selection.
+> Bjorn, is it possible to verify which I/O ports are decoded by a PCI
+> device at the time of adding it to vgaarb? If so, how? I would like to
+> check for legacy VGA I/O range (0x03B0-0x03DF) and only let vgaarb set
+> a device as default if that I/O range is decoded by the device.
 
-arch_setup_msi_irqs
-arch_setup_msi_irq
-arch_msi_check_device
-arch_teardown_msi_irqs
-arch_teardown_msi_irq
-arch_restore_msi_irqs
-arch_msi_mask_irq
-arch_msix_mask_irq
+I don't know of a way.  I'm pretty sure VGA devices are allowed to
+respond to those legacy addresses even if there's no BAR for them, but
+I haven't found a spec reference for this.  There is the VGA Enable
+bit in bridges, of course (PCI Bridge spec, sec 12.1.1.  If the VGA
+device is behind a bridge that doesn't have the VGA Enable bit set, it
+probably isn't the default device.
 
-And Thierry Reding and Thomas Petazzoni introduce a new MSI chip infrastructure which
-is used in arm platform now. Use msi_chip let us focus on implementing msi_chip ops functions(no need to implement all),
-but now, we should know much of MSI enable flow, then override the weak functions.
-I think use the unified MSI framework in all platforms is better.
-Also this series is preparation to support Non-PCI MSI device use common MSI framework in linux. Non-PCI MSI devices
-include hpet, dmar and the coming consolidator(introduced in ARM GICv3 spec, which is similar to MSI relay device).
-
-
-Thanks!
-Yijing.
-
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  arch/x86/include/asm/pci.h     |    1 +
->>  arch/x86/kernel/apic/io_apic.c |   20 ++++++++++++++++----
->>  2 files changed, 17 insertions(+), 4 deletions(-)
->>
->> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
->> index 0892ea0..878a06d 100644
->> --- a/arch/x86/include/asm/pci.h
->> +++ b/arch/x86/include/asm/pci.h
->> @@ -101,6 +101,7 @@ void native_teardown_msi_irq(unsigned int irq);
->>  void native_restore_msi_irqs(struct pci_dev *dev);
->>  int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
->>  		  unsigned int irq_base, unsigned int irq_offset);
->> +extern struct msi_chip *x86_msi_chip;
->>  #else
->>  #define native_setup_msi_irqs		NULL
->>  #define native_teardown_msi_irq		NULL
->> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
->> index 2609dcd..eb8ab7c 100644
->> --- a/arch/x86/kernel/apic/io_apic.c
->> +++ b/arch/x86/kernel/apic/io_apic.c
->> @@ -3077,24 +3077,25 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
->>  	return 0;
->>  }
->>  
->> -int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->> +int native_setup_msi_irqs(struct device *dev, int nvec, int type)
->>  {
->>  	struct msi_desc *msidesc;
->>  	unsigned int irq;
->>  	int node, ret;
->> +	struct pci_dev *pdev = to_pci_dev(dev);
->>  
->>  	/* Multiple MSI vectors only supported with interrupt remapping */
->>  	if (type == PCI_CAP_ID_MSI && nvec > 1)
->>  		return 1;
->>  
->> -	node = dev_to_node(&dev->dev);
->> +	node = dev_to_node(dev);
->>  
->> -	list_for_each_entry(msidesc, &dev->msi_list, list) {
->> +	list_for_each_entry(msidesc, &pdev->msi_list, list) {
->>  		irq = irq_alloc_hwirq(node);
->>  		if (!irq)
->>  			return -ENOSPC;
->>  
->> -		ret = setup_msi_irq(dev, msidesc, irq, 0);
->> +		ret = setup_msi_irq(pdev, msidesc, irq, 0);
->>  		if (ret < 0) {
->>  			irq_free_hwirq(irq);
->>  			return ret;
->> @@ -3214,6 +3215,17 @@ int default_setup_hpet_msi(unsigned int irq, unsigned int id)
->>  }
->>  #endif
->>  
->> +struct msi_chip apic_msi_chip = {
->> +	.setup_irqs = native_setup_msi_irqs,
->> +	.teardown_irq = native_teardown_msi_irq,
->> +};
->> +
->> +struct msi_chip *arch_get_match_msi_chip(struct device *dev)
->> +{
->> +	return x86_msi_chip;
->> +}
->> +
->> +struct msi_chip *x86_msi_chip = &apic_msi_chip;
->>  #endif /* CONFIG_PCI_MSI */
->>  /*
->>   * Hypertransport interrupt support
->> -- 
->> 1.7.1
->>
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+Bjorn
