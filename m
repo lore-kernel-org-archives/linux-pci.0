@@ -1,89 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:51008 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751590AbaHRO7a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 18 Aug 2014 10:59:30 -0400
-Message-ID: <53F21485.9000700@ti.com>
-Date: Mon, 18 Aug 2014 10:58:13 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
+In-Reply-To: <1407860725-25202-13-git-send-email-Liviu.Dudau@arm.com>
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com> <1407860725-25202-13-git-send-email-Liviu.Dudau@arm.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Thu, 21 Aug 2014 23:16:16 -0500
+Message-ID: <CAL_JsqK6XiuS7OJ_2F16ySA8oj9AHqP0fAft21AOtJxXP2SqnQ@mail.gmail.com>
+Subject: Re: [PATCH v9 12/12] PCI: Introduce pci_remap_iospace() for remapping
+ PCI I/O bus resources into CPU space
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
 	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v7 0/5] Add Keystone PCIe controller driver
-References: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com> <20140722225708.GB27965@google.com> <53CFD444.4010700@ti.com> <CAErSpo6gEVP7XbiPZ90MP4zn5mrjaJLZTW0_sdjg9Q6HjnnkFg@mail.gmail.com>
-In-Reply-To: <CAErSpo6gEVP7XbiPZ90MP4zn5mrjaJLZTW0_sdjg9Q6HjnnkFg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
-
-On 07/23/2014 12:43 PM, Bjorn Helgaas wrote:
-> On Wed, Jul 23, 2014 at 9:27 AM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
->>
->> Bjorn,
->>
->>
->> On 07/22/2014 06:57 PM, Bjorn Helgaas wrote:
->>>
->>> On Mon, Jul 21, 2014 at 12:58:40PM -0400, Murali Karicheri wrote:
->>
->>
->>>> Murali Karicheri (5):
->>>>     PCI: designware: add rd[wr]_other_conf API
->>>>     PCI: designware: refactor MSI code to work with v3.65 dw hardware
->>>
->>>
->>> I applied the above two to my pci/host-designware branch.  The rest didn't
->>> apply cleanly because I applied Kishon's DRA7xx changes first, and there
->>> are several conflicts.  Can you rebase the rest of them on top of
->>> pci/host-designware?
->>
->>
->> Thanks for applying 1 and 2.
->>
->> I will fix up 3 based on your branch and send you updated patch 3 and 4
->> today.  Hope you can apply this updated patch so that I don't have to
->> address any rebase issues. Regarding the MRSS comment, I will discuss it on
->> that thread and send you a fix for removing the bootargs depedency based on
->> what comes out of that discussion. Is that fine?
+On Tue, Aug 12, 2014 at 11:25 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> Introduce a default implementation for remapping PCI bus I/O resources
+> onto the CPU address space. Architectures with special needs may
+> provide their own version, but most should be able to use this one.
 >
-> Yep, sounds reasonable.  I'm about to leave for vacation, so I won't
-> be able to apply these until mid-August, but I think we can still get
-> them into v3.17 since it's new hardware that shouldn't affect anything
-> else.
-Could you please apply my re-send patches [1] on top of patch 1 and 2? I 
-have reposted it addressing some of the comments and replied to others 
-as there are no action.
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-[1] http://www.spinics.net/lists/linux-pci/msg33178.html
+Reviewed-by: Rob Herring <robh@kernel.org>
 
+However, I would like to see ARM pci_ioremap_io converted over to this function.
+
+Rob
+
+> ---
+>  drivers/pci/pci.c   | 33 +++++++++++++++++++++++++++++++++
+>  include/linux/pci.h |  3 +++
+>  2 files changed, 36 insertions(+)
 >
-> For MRSS, I'll probably open a bugzilla and reference it in the
-> changelog just so we don't forget about it.
-
-I have posted another pactch to remove the bootarg depedency and already 
-incorporated comments from Jason Gunthorpe who has discussed this on the 
-list. Please review and apply it if it looks good or comment.
-
-https://lkml.org/lkml/2014/8/8/486
-
-Thanks and regards,
-
-Murali
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 29d1775..76d21b6 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2707,6 +2707,39 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
+>  }
+>  EXPORT_SYMBOL(pci_request_regions_exclusive);
+>
+> +/**
+> + *     pci_remap_iospace - Remap the memory mapped I/O space
+> + *     @res: Resource describing the I/O space
+> + *     @phys_addr: physical address where the range will be mapped.
+> + *
+> + *     Remap the memory mapped I/O space described by the @res
+> + *     into the CPU physical address space. Only architectures
+> + *     that have memory mapped IO defined (and hence PCI_IOBASE)
+> + *     should call this function.
+> + */
+> +int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+> +{
+> +       int err = -ENODEV;
+> +
+> +#ifdef PCI_IOBASE
+> +       if (!(res->flags & IORESOURCE_IO))
+> +               return -EINVAL;
+> +
+> +       if (res->end > IO_SPACE_LIMIT)
+> +               return -EINVAL;
+> +
+> +       err = ioremap_page_range(res->start + (unsigned long)PCI_IOBASE,
+> +                               res->end + 1 + (unsigned long)PCI_IOBASE,
+> +                               phys_addr, pgprot_device(PAGE_KERNEL));
+> +#else
+> +       /* this architecture does not have memory mapped I/O space,
+> +          so this function should never be called */
+> +       WARN_ON(1);
+> +#endif
+> +
+> +       return err;
+> +}
+> +
+>  static void __pci_set_master(struct pci_dev *dev, bool enable)
+>  {
+>         u16 old_cmd, cmd;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index e1e0d80..988c2f5 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1098,6 +1098,9 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
+>                                                   resource_size_t),
+>                         void *alignf_data);
+>
+> +
+> +int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
+> +
+>  static inline dma_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
+>  {
+>         struct pci_bus_region region;
+> --
+> 2.0.4
+>
+>
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
