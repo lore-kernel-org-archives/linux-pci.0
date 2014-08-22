@@ -1,213 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:58294 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751138AbaHKLDA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 07:03:00 -0400
-Content-Type: multipart/mixed;
-	boundary="_000_20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6avmb2qlogicorg_"
-From: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
-To: Alexander Gordeev <agordeev@redhat.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-CC: Anil Gurumurthy <agurumur@brocade.com>,
-	Vijaya Mohan Guvva <vmohan@brocade.com>,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Sudarsana Kalluru <Sudarsana.Kalluru@qlogic.com>
-Subject: RE: [PATCH v2 RESEND 04/23] bfa: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-Date: Mon, 11 Aug 2014 11:02:56 +0000
-Message-ID: <20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6@avmb2.qlogic.org>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <bc13ddf17d035921de994d2f8a52902e0a5d1a60.1405533479.git.agordeev@redhat.com>
- <20140811073902.GB16504@dhcp-27-160.brq.redhat.com>
-In-Reply-To: <20140811073902.GB16504@dhcp-27-160.brq.redhat.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:53470 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754425AbaHVHpc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 03:45:32 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2 1/5] PCI/MSI: Clean up the kobject in struct msi_desc
+Date: Fri, 22 Aug 2014 16:07:56 +0800
+Message-ID: <1408694880-8260-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1408694880-8260-1-git-send-email-wangyijing@huawei.com>
+References: <1408694880-8260-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---_000_20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6avmb2qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+commit 1c51b50c2995 using attributes to export MSI mode
+instead of kobject. So clean up the kobject in struct
+msi_desc.
 
-Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/pci/msi.c   |   11 -----------
+ include/linux/msi.h |    2 --
+ 2 files changed, 0 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 5a40516..e2aa74e 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -384,17 +384,6 @@ static void free_msi_irqs(struct pci_dev *dev)
+ 				iounmap(entry->mask_base);
+ 		}
+ 
+-		/*
+-		 * Its possible that we get into this path
+-		 * When populate_msi_sysfs fails, which means the entries
+-		 * were not registered with sysfs.  In that case don't
+-		 * unregister them.
+-		 */
+-		if (entry->kobj.parent) {
+-			kobject_del(&entry->kobj);
+-			kobject_put(&entry->kobj);
+-		}
+-
+ 		list_del(&entry->list);
+ 		kfree(entry);
+ 	}
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 8103f32..8892d41 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -47,8 +47,6 @@ struct msi_desc {
+ 
+ 	/* Last set MSI message */
+ 	struct msi_msg msg;
+-
+-	struct kobject kobj;
+ };
+ 
+ /*
+-- 
+1.7.1
 
------Original Message-----
-From: Alexander Gordeev [mailto:agordeev@redhat.com]=20
-Sent: 11 August 2014 13:09
-To: linux-kernel
-Cc: Anil Gurumurthy; Vijaya Mohan Guvva; linux-scsi; linux-pci; Anil Gurumu=
-rthy; Sudarsana Kalluru
-Subject: Re: [PATCH v2 RESEND 04/23] bfa: Use pci_enable_msix_exact() inste=
-ad of pci_enable_msix()
-
-On Wed, Jul 16, 2014 at 08:05:08PM +0200, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers using these=20
-> two interfaces need to be updated to use the new=20
-> pci_enable_msi_range()  or pci_enable_msi_exact() and=20
-> pci_enable_msix_range() or pci_enable_msix_exact() interfaces.
-
-Anil, Sudarsana,
-
-Could you please review bfa patches in this series?
-
-Thanks!
-
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Anil Gurumurthy <agurumur@brocade.com>
-> Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
-> ---
->  drivers/scsi/bfa/bfad.c |   20 ++++++--------------
->  1 files changed, 6 insertions(+), 14 deletions(-)
->=20
-> diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c index=20
-> c18279f..e90a374 100644
-> --- a/drivers/scsi/bfa/bfad.c
-> +++ b/drivers/scsi/bfa/bfad.c
-> @@ -1234,29 +1234,21 @@ bfad_setup_intr(struct bfad_s *bfad)
->  	if ((bfa_asic_id_ctc(pdev->device) && !msix_disable_ct) ||
->  	   (bfa_asic_id_cb(pdev->device) && !msix_disable_cb)) {
-> =20
-> -		error =3D pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
-> +		error =3D pci_enable_msix_exact(bfad->pcidev,
-> +					      msix_entries, bfad->nvec);
->  		/* In CT1 & CT2, try to allocate just one vector */
-> -		if (error > 0 && bfa_asic_id_ctc(pdev->device)) {
-> +		if (error =3D=3D -ENOSPC && bfa_asic_id_ctc(pdev->device)) {
->  			printk(KERN_WARNING "bfa %s: trying one msix "
->  			       "vector failed to allocate %d[%d]\n",
->  			       bfad->pci_name, bfad->nvec, error);
->  			bfad->nvec =3D 1;
-> -			error =3D pci_enable_msix(bfad->pcidev,
-> -						msix_entries, bfad->nvec);
-> +			error =3D pci_enable_msix_exact(bfad->pcidev,
-> +						      msix_entries, 1);
->  		}
-> =20
-> -		/*
-> -		 * Only error number of vector is available.
-> -		 * We don't have a mechanism to map multiple
-> -		 * interrupts into one vector, so even if we
-> -		 * can try to request less vectors, we don't
-> -		 * know how to associate interrupt events to
-> -		 *  vectors. Linux doesn't duplicate vectors
-> -		 * in the MSIX table for this case.
-> -		 */
->  		if (error) {
->  			printk(KERN_WARNING "bfad%d: "
-> -			       "pci_enable_msix failed (%d), "
-> +			       "pci_enable_msix_exact failed (%d), "
->  			       "use line based.\n",
->  				bfad->inst_no, error);
->  			goto line_based;
-> --
-> 1.7.7.6
->=20
-
---_000_20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6avmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-dQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBU
-AFAAAAAAAAIBGQwBAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEEAbgBpAGwAIABHAHUA
-cgB1AG0AdQByAHQAaAB5AAAAUwBNAFQAUAAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQAaAB5
-AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0A
-dQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwD4PwEAAAAgAAAAQQBuAGkAbAAg
-AEcAdQByAHUAbQB1AHIAdABoAHkAAAAfACNAAQAAADYAAABBAG4AaQBsAC4ARwB1AHIAdQBtAHUA
-cgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAA
-AAIB+T8BAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEEAbgBpAGwAIABHAHUAcgB1AG0A
-dQByAHQAaAB5AAAAUwBNAFQAUAAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBs
-AG8AZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQA
-aAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAxQAEAAAACAAAAAAAAAAsAQDoBAAAAHwAw
-QAEAAAACAAAAAAAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6
-AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAAL1ILGyVxNE+hZskOsGcS+QMAFwABAAAAQAA5AAAw/81T
-tc8BQAAIMI6Bi85Ttc8BCwApAAAAAAALACMAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4A
-AABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAACwAA
-gAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAAALQAAABSAEUAOgAgAFsAUABBAFQA
-QwBIACAAdgAyACAAUgBFAFMARQBOAEQAIAAwADQALwAyADMAXQAgAGIAZgBhADoAIABVAHMAZQAg
-AHAAYwBpAF8AZQBuAGEAYgBsAGUAXwBtAHMAaQB4AF8AZQB4AGEAYwB0ACgAKQAgAGkAbgBzAHQA
-ZQBhAGQAIABvAGYAIABwAGMAaQBfAGUAbgBhAGIAbABlAF8AbQBzAGkAeAAoACkAAAAfAD0AAQAA
-AAoAAABSAEUAOgAgAAAAAAADADYAAAAAAAMALgAAAAAAHwBCEAEAAABoAAAAPAAyADAAMQA0ADAA
-OAAxADEAMAA3ADMAOQAwADIALgBHAEIAMQA2ADUAMAA0AEAAZABoAGMAcAAtADIANwAtADEANgAw
-AC4AYgByAHEALgByAGUAZABoAGEAdAAuAGMAbwBtAD4AAAACAXEAAQAAACAAAAABAc+hISUFTX80
-05F1Samxct+djBtUm8uhugD//8OMoB8AcAABAAAArAAAAFsAUABBAFQAQwBIACAAdgAyACAAUgBF
-AFMARQBOAEQAIAAwADQALwAyADMAXQAgAGIAZgBhADoAIABVAHMAZQAgAHAAYwBpAF8AZQBuAGEA
-YgBsAGUAXwBtAHMAaQB4AF8AZQB4AGEAYwB0ACgAKQAgAGkAbgBzAHQAZQBhAGQAIABvAGYAIABw
-AGMAaQBfAGUAbgBhAGIAbABlAF8AbQBzAGkAeAAoACkAAAAfADUQAQAAAHQAAAA8ADIAMABCADEA
-QQAzAEMAQgBEADkAOABGADMAOAA0ADUAQgAzAEYANQBGADUANgBEADgANQA5ADcARQBGADUAOQBG
-AEEAMABDAEYANgBAAGEAdgBtAGIAMgAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAA
-WgEAADwAYwBvAHYAZQByAC4AMQA0ADAANQA1ADMAMwA0ADcAOQAuAGcAaQB0AC4AYQBnAG8AcgBk
-AGUAZQB2AEAAcgBlAGQAaABhAHQALgBjAG8AbQA+ACAAPABiAGMAMQAzAGQAZABmADEANwBkADAA
-MwA1ADkAMgAxAGQAZQA5ADkANABkADIAZgA4AGEANQAyADkAMAAyAGUAMABhADUAZAAxAGEANgAw
-AC4AMQA0ADAANQA1ADMAMwA0ADcAOQAuAGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQA
-aABhAHQALgBjAG8AbQA+ACAAPAAyADAAMQA0ADAAOAAxADEAMAA3ADMAOQAwADIALgBHAEIAMQA2
-ADUAMAA0AEAAZABoAGMAcAAtADIANwAtADEANgAwAC4AYgByAHEALgByAGUAZABoAGEAdAAuAGMA
-bwBtAD4AAAAAAAMA3j+fTgAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAA4UAAAAAAAADAACACCAG
-AAAAAADAAAAAAAAARgAAAAABhQAAAAAAAAMAgBD/////QAAHMO5Ig81Ttc8BCwACAAEAAAADACYA
-AAAAAAsAKwAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7cD1RTG9naWM7bD1BVk1CMi0xNDA4MTEx
-MTAyNTZaLTUwOTczAAAAAgEQMAEAAABGAAAAAAAAAKX2ulj4lJxAl6rmQzpEVr8HACCxo8vZjzhF
-s/X1bYWX71kAAAD0jRgAAGcEMYzLcaJIpV3ex7oIX3kAS3qmF6AAAAAAHwD6PwEAAAAgAAAAQQBu
-AGkAbAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAAADAAlZAQAAAAMAAIAIIAYAAAAAAMAAAAAAAABG
-AAAAABCFAAAAAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAADoUAAAAAAAADAACACCAGAAAAAADA
-AAAAAAAARgAAAAAYhQAAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAIKFAAAAAAAAHwAAgAgg
-BgAAAAAAwAAAAAAAAEYAAAAA2IUAAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAA00/T8A
-AB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMA
-aAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBp
-AG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGAAAAFsAMQAwAC4AMQAuADQALgAxADAAXQAAAB8A
-AICGAwIAAAAAAMAAAAAAAABGAQAAABYAAABkAGkAcwBjAGwAYQBpAG0AZQByAAAAAAABAAAADgAA
-AGIAeQBwAGEAcwBzAAAAAAB9rg==
-
---_000_20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6avmb2qlogicorg_--
