@@ -1,114 +1,191 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cthulhu.worldbroken.com ([173.230.133.178]:34509 "EHLO
-	cthulhu.worldbroken.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751427AbaH3TEb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Aug 2014 15:04:31 -0400
-From: wfp5p@worldbroken.com
-To: gregkh@linuxfoundation.org
-Cc: cascardo@linux.vnet.ibm.com, linux-serial@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	lidza.louina@gmail.com, devel@driverdev.osuosl.org
-Subject: [PATCH 1/2] jsm: add support for additional Neo cards
-Date: Sat, 30 Aug 2014 14:54:36 -0400
-Message-Id: <1409424877-2304-2-git-send-email-wfp5p@worldbroken.com>
-In-Reply-To: <1409424877-2304-1-git-send-email-wfp5p@worldbroken.com>
-References: <1409424877-2304-1-git-send-email-wfp5p@worldbroken.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Fri, 22 Aug 2014 14:06:40 +0100
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v9 04/12] PCI: OF: Fix the conversion of IO ranges into
+ IO resources.
+Message-ID: <20140822130640.GM13147@bart.dudau.co.uk>
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+ <1407860725-25202-5-git-send-email-Liviu.Dudau@arm.com>
+ <CAL_JsqJm6qWNdrJ2F8xddFUj46y42n6hQVu1nkTaA-5Tbg--XQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAL_JsqJm6qWNdrJ2F8xddFUj46y42n6hQVu1nkTaA-5Tbg--XQ@mail.gmail.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bill Pemberton <wfp5p@worldbroken.com>
+On Thu, Aug 21, 2014 at 11:08:48PM -0500, Rob Herring wrote:
+> On Tue, Aug 12, 2014 at 11:25 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > The ranges property for a host bridge controller in DT describes
+> > the mapping between the PCI bus address and the CPU physical address.
+> > The resources framework however expects that the IO resources start
+> > at a pseudo "port" address 0 (zero) and have a maximum size of IO_SPACE_LIMIT.
+> > The conversion from pci ranges to resources failed to take that into account.
+> >
+> > In the process move the function into drivers/of/address.c as it now
+> > depends on pci_address_to_pio() code and make it return an error code.
+> >
+> > Cc: Grant Likely <grant.likely@linaro.org>
+> > Cc: Rob Herring <robh+dt@kernel.org>
+> 
+> Humm, this says I'm cc'ed, but I'm not which defeats the point of
+> recording the Cc's in the commit.
 
-Add device ids for additional Neo cards.  The ids come from the dgnc
-driver.
+Appologies, I've screwed up my git send-email arguments.
 
-Signed-off-by: Bill Pemberton <wfp5p@worldbroken.com>
----
- drivers/tty/serial/jsm/jsm_driver.c | 38 +++++++++++++++++++++++++++++++++----
- include/linux/pci_ids.h             |  8 ++++++++
- 2 files changed, 42 insertions(+), 4 deletions(-)
+> 
+> I still have the same concerns that this will break existing users.
+> Are you sure integrator is the only platform affected?
 
-diff --git a/drivers/tty/serial/jsm/jsm_driver.c b/drivers/tty/serial/jsm/jsm_driver.c
-index a47d882d6743..d2885a7bb090 100644
---- a/drivers/tty/serial/jsm/jsm_driver.c
-+++ b/drivers/tty/serial/jsm/jsm_driver.c
-@@ -93,12 +93,34 @@ static int jsm_probe_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	/* store the info for the board we've found */
- 	brd->boardnum = adapter_count++;
- 	brd->pci_dev = pdev;
--	if (pdev->device == PCIE_DEVICE_ID_NEO_4_IBM)
-+
-+	switch (pdev->device) {
-+
-+	case PCI_DEVICE_ID_NEO_2DB9:
-+	case PCI_DEVICE_ID_NEO_2DB9PRI:
-+	case PCI_DEVICE_ID_NEO_2RJ45:
-+	case PCI_DEVICE_ID_NEO_2RJ45PRI:
-+	case PCI_DEVICE_ID_NEO_2_422_485:
-+		brd->maxports = 2;
-+		break;
-+
-+	case PCI_DEVICE_ID_NEO_4:
-+	case PCIE_DEVICE_ID_NEO_4:
-+	case PCIE_DEVICE_ID_NEO_4RJ45:
-+	case PCIE_DEVICE_ID_NEO_4_IBM:
- 		brd->maxports = 4;
--	else if (pdev->device == PCI_DEVICE_ID_DIGI_NEO_8)
-+		break;
-+
-+	case PCI_DEVICE_ID_DIGI_NEO_8:
-+	case PCIE_DEVICE_ID_NEO_8:
-+	case PCIE_DEVICE_ID_NEO_8RJ45:
- 		brd->maxports = 8;
--	else
--		brd->maxports = 2;
-+		break;
-+
-+	default:
-+		brd->maxports = 1;
-+		break;
-+	}
- 
- 	spin_lock_init(&brd->bd_intr_lock);
- 
-@@ -209,6 +231,14 @@ static struct pci_device_id jsm_pci_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCI_DEVICE_ID_NEO_2RJ45PRI), 0, 0, 3 },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCIE_DEVICE_ID_NEO_4_IBM), 0, 0, 4 },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCI_DEVICE_ID_DIGI_NEO_8), 0, 0, 5 },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCI_DEVICE_ID_NEO_4), 0, 0, 6 },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCI_DEVICE_ID_NEO_1_422), 0, 0, 7 },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCI_DEVICE_ID_NEO_1_422_485), 0, 0, 8 },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCI_DEVICE_ID_NEO_2_422_485), 0, 0, 9 },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCIE_DEVICE_ID_NEO_8), 0, 0, 10 },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCIE_DEVICE_ID_NEO_4), 0, 0, 11 },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCIE_DEVICE_ID_NEO_4RJ45), 0, 0, 12 },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCIE_DEVICE_ID_NEO_8RJ45), 0, 0, 13 },
- 	{ 0, }
- };
- MODULE_DEVICE_TABLE(pci, jsm_pci_tbl);
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 6ed0bb73a864..f0f610c94bb2 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -1516,11 +1516,19 @@
- #define PCI_DEVICE_ID_DIGI_DF_M_E	0x0071
- #define PCI_DEVICE_ID_DIGI_DF_M_IOM2_A	0x0072
- #define PCI_DEVICE_ID_DIGI_DF_M_A	0x0073
-+#define PCI_DEVICE_ID_NEO_4             0x00B0
- #define PCI_DEVICE_ID_DIGI_NEO_8	0x00B1
- #define PCI_DEVICE_ID_NEO_2DB9          0x00C8
- #define PCI_DEVICE_ID_NEO_2DB9PRI       0x00C9
- #define PCI_DEVICE_ID_NEO_2RJ45         0x00CA
- #define PCI_DEVICE_ID_NEO_2RJ45PRI      0x00CB
-+#define PCI_DEVICE_ID_NEO_1_422         0x00CC
-+#define PCI_DEVICE_ID_NEO_1_422_485     0x00CD
-+#define PCI_DEVICE_ID_NEO_2_422_485     0x00CE
-+#define PCIE_DEVICE_ID_NEO_8            0x00F0
-+#define PCIE_DEVICE_ID_NEO_4            0x00F1
-+#define PCIE_DEVICE_ID_NEO_4RJ45        0x00F2
-+#define PCIE_DEVICE_ID_NEO_8RJ45        0x00F3
- #define PCIE_DEVICE_ID_NEO_4_IBM        0x00F4
- 
- #define PCI_VENDOR_ID_XIRCOM		0x115d
+microblaze and powerpc have their similar handcoded routine for parsing ranges
+where they pre-compute the io_base and adjust the values again when registering
+resources. I'm not absolutely sure they are not broken as I lack the appropriate
+platforms to test (I've been asking for an FPGA engineer to build me a microblaze
+image with all the bits included but haven't received anything yet and it is
+possible Xilinx has now shifted their interests towards ARM + PCI as the ML605
+board that I have seems to have been discontinued).
+
+mips is doing the same thing and I believe is not affected, pci-host-generic.c
+was adjusting the returned values afterwards so that will not be needed and Lorenzo
+has a patch for the driver to adapt it to this series anyway.
+
+pcie-designware.c also recalculates the io.start and io.end values, so that's fine
+for now. The only ones that I believe are still affected are pci-tegra.c and
+pcie-rcar.c for which I will need to provide a patch similar to integrator unless
+the code gets converted to the new range parsing.
+
+Best regards,
+Liviu
+
+> 
+> Rob
+> 
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > ---
+> >  drivers/of/address.c       | 46 ++++++++++++++++++++++++++++++++++++++++++++++
+> >  include/linux/of_address.h | 13 ++-----------
+> >  2 files changed, 48 insertions(+), 11 deletions(-)
+> >
+> > diff --git a/drivers/of/address.c b/drivers/of/address.c
+> > index 4dab700..3735ac7 100644
+> > --- a/drivers/of/address.c
+> > +++ b/drivers/of/address.c
+> > @@ -906,3 +906,49 @@ bool of_dma_is_coherent(struct device_node *np)
+> >         return false;
+> >  }
+> >  EXPORT_SYMBOL_GPL(of_dma_is_coherent);
+> > +
+> > +/*
+> > + * of_pci_range_to_resource - Create a resource from an of_pci_range
+> > + * @range:     the PCI range that describes the resource
+> > + * @np:                device node where the range belongs to
+> > + * @res:       pointer to a valid resource that will be updated to
+> > + *              reflect the values contained in the range.
+> > + *
+> > + * Returns EINVAL if the range cannot be converted to resource.
+> > + *
+> > + * Note that if the range is an IO range, the resource will be converted
+> > + * using pci_address_to_pio() which can fail if it is called too early or
+> > + * if the range cannot be matched to any host bridge IO space (our case here).
+> > + * To guard against that we try to register the IO range first.
+> > + * If that fails we know that pci_address_to_pio() will do too.
+> > + */
+> > +int of_pci_range_to_resource(struct of_pci_range *range,
+> > +       struct device_node *np, struct resource *res)
+> > +{
+> > +       int err;
+> > +       res->flags = range->flags;
+> > +       res->parent = res->child = res->sibling = NULL;
+> > +       res->name = np->full_name;
+> > +
+> > +       if (res->flags & IORESOURCE_IO) {
+> > +               unsigned long port = -1;
+> > +               err = pci_register_io_range(range->cpu_addr, range->size);
+> > +               if (err)
+> > +                       goto invalid_range;
+> > +               port = pci_address_to_pio(range->cpu_addr);
+> > +               if (port == (unsigned long)-1) {
+> > +                       err = -EINVAL;
+> > +                       goto invalid_range;
+> > +               }
+> > +               res->start = port;
+> > +       } else {
+> > +               res->start = range->cpu_addr;
+> > +       }
+> > +       res->end = res->start + range->size - 1;
+> > +       return 0;
+> > +
+> > +invalid_range:
+> > +       res->start = (resource_size_t)OF_BAD_ADDR;
+> > +       res->end = (resource_size_t)OF_BAD_ADDR;
+> > +       return err;
+> > +}
+> > diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+> > index 28e6836..6015f21 100644
+> > --- a/include/linux/of_address.h
+> > +++ b/include/linux/of_address.h
+> > @@ -23,17 +23,8 @@ struct of_pci_range {
+> >  #define for_each_of_pci_range(parser, range) \
+> >         for (; of_pci_range_parser_one(parser, range);)
+> >
+> > -static inline void of_pci_range_to_resource(struct of_pci_range *range,
+> > -                                           struct device_node *np,
+> > -                                           struct resource *res)
+> > -{
+> > -       res->flags = range->flags;
+> > -       res->start = range->cpu_addr;
+> > -       res->end = range->cpu_addr + range->size - 1;
+> > -       res->parent = res->child = res->sibling = NULL;
+> > -       res->name = np->full_name;
+> > -}
+> > -
+> > +extern int of_pci_range_to_resource(struct of_pci_range *range,
+> > +               struct device_node *np, struct resource *res);
+> >  /* Translate a DMA address from device space to CPU space */
+> >  extern u64 of_translate_dma_address(struct device_node *dev,
+> >                                     const __be32 *in_addr);
+> > --
+> > 2.0.4
+> >
+> >
+> > _______________________________________________
+> > linux-arm-kernel mailing list
+> > linux-arm-kernel@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-1.9.3
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
+
+ One small step
+   for me ...
 
