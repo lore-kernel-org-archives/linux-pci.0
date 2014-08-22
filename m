@@ -1,90 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:31725 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932090AbaH0EiB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Aug 2014 00:38:01 -0400
-Received: from epcpsbgr3.samsung.com
- (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0NAY00IL37JCSA00@mailout1.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 27 Aug 2014 13:38:00 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
-References: <000601cf7f30$31b53270$951f9750$%han@samsung.com>
- <20140617220538.GB30559@google.com>
-In-reply-to: <20140617220538.GB30559@google.com>
-Subject: Re: [PATCH] PCI: exynos: Add exynos prefix before
- add_pcie_port/pcie_init
-Date: Wed, 27 Aug 2014 13:37:59 +0900
-Message-id: <000d01cfc1b0$ae31fc30$0a95f490$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from szxga03-in.huawei.com ([119.145.14.66]:55023 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755903AbaHVHrr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 03:47:47 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>,
+	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>
+Subject: [PATCH v2 5/5] MSI: Use __read_msi_msg() instead of read_msi_msg()
+Date: Fri, 22 Aug 2014 16:08:00 +0800
+Message-ID: <1408694880-8260-6-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1408694880-8260-1-git-send-email-wangyijing@huawei.com>
+References: <1408694880-8260-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, June 18, 2014 7:06 AM, Bjorn Helgaas wrote:
-> On Tue, Jun 03, 2014 at 10:31:58PM +0900, Jingoo Han wrote:
-> > The add_pcie_port/pcie_init functions are Exynos-specific.
-> > Add exynos prefix to avoid collision in global name space.
-> >
-> > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> 
-> Applied to pci/host-exynos for v3.17, thanks!
+Read_msi_msg() only be called in rtas_setup_msi_irqs(),
+use __read_msi_msg() instead of read_msi_msg for
+simplification. And rename __read_msi_msg() to
+read_msi_msg().
 
-Hi Bjorn,
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: linuxppc-dev@lists.ozlabs.org
+---
+ arch/powerpc/platforms/pseries/msi.c |    2 +-
+ arch/x86/pci/xen.c                   |    2 +-
+ drivers/pci/msi.c                    |    9 +--------
+ include/linux/msi.h                  |    3 +--
+ 4 files changed, 4 insertions(+), 12 deletions(-)
 
-I cannot find this patch from pci git.
-Please apply this patch to pci git.
-Thank you.
-
-Best regards,
-Jingoo Han
-
-> 
-> > ---
-> >  drivers/pci/host/pci-exynos.c |   10 +++++-----
-> >  1 file changed, 5 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-> > index 1632661..2f59851 100644
-> > --- a/drivers/pci/host/pci-exynos.c
-> > +++ b/drivers/pci/host/pci-exynos.c
-> > @@ -509,8 +509,8 @@ static struct pcie_host_ops exynos_pcie_host_ops = {
-> >  	.host_init = exynos_pcie_host_init,
-> >  };
-> >
-> > -static int __init add_pcie_port(struct pcie_port *pp,
-> > -				struct platform_device *pdev)
-> > +static int __init exynos_add_pcie_port(struct pcie_port *pp,
-> > +				       struct platform_device *pdev)
-> >  {
-> >  	int ret;
-> >
-> > @@ -616,7 +616,7 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
-> >  		goto fail_bus_clk;
-> >  	}
-> >
-> > -	ret = add_pcie_port(pp, pdev);
-> > +	ret = exynos_add_pcie_port(pp, pdev);
-> >  	if (ret < 0)
-> >  		goto fail_bus_clk;
-> >
-> > @@ -657,11 +657,11 @@ static struct platform_driver exynos_pcie_driver = {
-> >
-> >  /* Exynos PCIe driver does not allow module unload */
-> >
-> > -static int __init pcie_init(void)
-> > +static int __init exynos_pcie_init(void)
-> >  {
-> >  	return platform_driver_probe(&exynos_pcie_driver, exynos_pcie_probe);
-> >  }
-> > -subsys_initcall(pcie_init);
-> > +subsys_initcall(exynos_pcie_init);
-> >
-> >  MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
-> >  MODULE_DESCRIPTION("Samsung PCIe host controller driver");
-> > --
-> > 1.7.10.4
+diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
+index 18ff462..7e87878 100644
+--- a/arch/powerpc/platforms/pseries/msi.c
++++ b/arch/powerpc/platforms/pseries/msi.c
+@@ -485,7 +485,7 @@ again:
+ 		irq_set_msi_desc(virq, entry);
+ 
+ 		/* Read config space back so we can restore after reset */
+-		read_msi_msg(virq, &msg);
++		read_msi_msg(entry, &msg);
+ 		entry->msg = msg;
+ 	}
+ 
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index 093f5f4..ad03739 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -229,7 +229,7 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 		return 1;
+ 
+ 	list_for_each_entry(msidesc, &dev->msi_list, list) {
+-		__read_msi_msg(msidesc, &msg);
++		read_msi_msg(msidesc, &msg);
+ 		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
+ 			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
+ 		if (msg.data != XEN_PIRQ_MSI_DATA ||
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 8746ecd..aff384a 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -259,7 +259,7 @@ void default_restore_msi_irqs(struct pci_dev *dev)
+ 	}
+ }
+ 
+-void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
++void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	BUG_ON(entry->dev->current_state != PCI_D0);
+ 
+@@ -289,13 +289,6 @@ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ 	}
+ }
+ 
+-void read_msi_msg(unsigned int irq, struct msi_msg *msg)
+-{
+-	struct msi_desc *entry = irq_get_msi_desc(irq);
+-
+-	__read_msi_msg(entry, msg);
+-}
+-
+ void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	/* Assert that the cache is valid, assuming that
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 329ec73..6be66f4 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -15,10 +15,9 @@ struct irq_data;
+ struct msi_desc;
+ void mask_msi_irq(struct irq_data *data);
+ void unmask_msi_irq(struct irq_data *data);
+-void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
++void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+-void read_msi_msg(unsigned int irq, struct msi_msg *msg);
+ void write_msi_msg(unsigned int irq, struct msi_msg *msg);
+ 
+ struct msi_desc {
+-- 
+1.7.1
 
