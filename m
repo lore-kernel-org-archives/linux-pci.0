@@ -1,126 +1,40 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: EmanueL Czirai <amanual@openmailbox.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v4] x86, irq, PCI: Keep IRQ assignment for runtime power management
-Date: Fri, 29 Aug 2014 17:26:23 +0800
-Message-Id: <1409304383-18806-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:51785 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752365AbaHWBP1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 21:15:27 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI: print out exact timeout in pciehp for wait_cmd
+Date: Fri, 22 Aug 2014 18:15:09 -0700
+Message-Id: <1408756512-16885-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1408756512-16885-1-git-send-email-yinghai@kernel.org>
+References: <1408756512-16885-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now IOAPIC driver dynamically allocates IRQ numbers for IOAPIC pins.
-We need to keep IRQ assignment for PCI devices during runtime power
-management, otherwise it may cause failure of device wakeups.
+debug print out should add back timeout that pass during wait event or
+polling.
 
-Commit 3eec595235c17a7 "x86, irq, PCI: Keep IRQ assignment for PCI
-devices during suspend/hibernation" has fixed the issue for suspend/
-hibernation, we also need the same fix for runtime device sleep too.
+That now is cached vaule before wait.
 
-Fix: https://bugzilla.kernel.org/show_bug.cgi?id=83271
-Reported-and-Tested-by: EmanueL Czirai <amanual@openmailbox.org>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
 ---
- arch/x86/include/asm/io_apic.h |    2 ++
- arch/x86/kernel/apic/io_apic.c |   12 ++++++++++++
- arch/x86/pci/intel_mid_pci.c   |    2 +-
- arch/x86/pci/irq.c             |    2 +-
- drivers/acpi/pci_irq.c         |    4 ++++
- 5 files changed, 20 insertions(+), 2 deletions(-)
+ drivers/pci/hotplug/pciehp_hpc.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 0aeed5ca356e..478c490f3654 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -227,6 +227,8 @@ static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned
- 
- extern void io_apic_eoi(unsigned int apic, unsigned int vector);
- 
-+extern bool mp_should_keep_irq(struct device *dev);
-+
- #else  /* !CONFIG_X86_IO_APIC */
- 
- #define io_apic_assign_pci_irqs 0
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 29290f554e79..1e9a921d9701 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3946,6 +3946,18 @@ int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
- 	return ret;
+Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
++++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+@@ -173,7 +173,7 @@ static void pcie_wait_cmd(struct control
+ 	if (!rc)
+ 		ctrl_info(ctrl, "Timeout on hotplug command %#010x (issued %u msec ago)\n",
+ 			  ctrl->slot_ctrl,
+-			  jiffies_to_msecs(now - ctrl->cmd_started));
++			  jiffies_to_msecs(now - ctrl->cmd_started + timeout));
  }
  
-+bool mp_should_keep_irq(struct device *dev)
-+{
-+	if (dev->power.is_prepared)
-+		return true;
-+#ifdef	CONFIG_PM_RUNTIME
-+	if (dev->power.runtime_status == RPM_SUSPENDING)
-+		return true;
-+#endif
-+
-+	return false;
-+}
-+
- /* Enable IOAPIC early just for system timer */
- void __init pre_init_apic_IRQ0(void)
- {
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 3865116c51fb..b9958c364075 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -229,7 +229,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 
- static void intel_mid_pci_irq_disable(struct pci_dev *dev)
- {
--	if (!dev->dev.power.is_prepared && dev->irq > 0)
-+	if (!mp_should_keep_irq(&dev->dev) && dev->irq > 0)
- 		mp_unmap_irq(dev->irq);
- }
- 
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index bc1a2c341891..eb500c2592ad 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1256,7 +1256,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 
- static void pirq_disable_irq(struct pci_dev *dev)
- {
--	if (io_apic_assign_pci_irqs && !dev->dev.power.is_prepared &&
-+	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
- 	    dev->irq) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq = 0;
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index c96887d5289e..6e6b80eb0bba 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -484,6 +484,10 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	/* Keep IOAPIC pin configuration when suspending */
- 	if (dev->dev.power.is_prepared)
- 		return;
-+#ifdef	CONFIG_PM_RUNTIME
-+	if (dev->dev.power.runtime_status == RPM_SUSPENDING)
-+		return;
-+#endif
- 
- 	entry = acpi_pci_irq_lookup(dev, pin);
- 	if (!entry)
--- 
-1.7.10.4
-
+ /**
