@@ -1,73 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 7 Aug 2014 13:03:32 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: tip/x86/apic (was: Re: [Bugfix 1/2] x86, irq, PCI: Keep IRQ
- assignment for PCI devices during suspend/hibernation)
-Message-ID: <20140807110332.GB10043@pd.tnic>
-References: <1407209178-18644-1-git-send-email-jiang.liu@linux.intel.com>
- <1407209178-18644-2-git-send-email-jiang.liu@linux.intel.com>
- <20140805183729.GA23068@pd.tnic>
- <53E201FC.6010102@linux.intel.com>
- <20140806170937.GA4895@pd.tnic>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140806170937.GA4895@pd.tnic>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:31918 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752445AbaHWBPe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 21:15:34 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI: more debug printout for pcie_write_cmd in pciehp
+Date: Fri, 22 Aug 2014 18:15:11 -0700
+Message-Id: <1408756512-16885-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1408756512-16885-1-git-send-email-yinghai@kernel.org>
+References: <1408756512-16885-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 06, 2014 at 07:09:37PM +0200, Borislav Petkov wrote:
-> On Wed, Aug 06, 2014 at 06:22:52PM +0800, Jiang Liu wrote:
-> > 	I have prepared a tree for you at
-> > https://github.com/jiangliu/linux.git suspend2
-> > 
-> > It's based on tip/master and includes:
-> > 1) the patch to fix warning caused  by USB controller
-> > 2) these two patches to fix failure of suspend/hibernation
-> > 
-> > Could you please help to check whether suspend/hibernation works as
-> > expect on your platforms?
-> 
-> Seems to work - just did 10-ish successful s/r cycles. The IO page
-> faults are still there though.
+Also move down one printout after pcie_write_cmd to be consistent with
+other debug print out.
 
-Ok, tip guys, so Jörg and I talked about the IOPFs a bit and we feel
-that while they still need to be taken care of, they're harmless and
-there's no need to hold off tip/x86/apic anymore unless there are other
-problems with it.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-So, from my POV, it can go in so that it doesn't miss this merge window
-and we'd deal with the IOPFs later.
+---
+ drivers/pci/hotplug/pciehp_hpc.c |   10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-I'm guessing Jiang needs to give you some updated versions of patches
-from this thread for the branch to be complete. Jiang, please add my
-
-Tested-by: Borislav Petkov <bp@suse.de>
-
-for those.
-
-Thanks to everyone involved.
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
++++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+@@ -422,9 +422,9 @@ void pciehp_set_attention_status(struct
+ 	default:
+ 		return;
+ 	}
++	pcie_write_cmd(ctrl, slot_cmd, PCI_EXP_SLTCTL_AIC);
+ 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
+-	pcie_write_cmd(ctrl, slot_cmd, PCI_EXP_SLTCTL_AIC);
+ }
+ 
+ void pciehp_green_led_on(struct slot *slot)
+@@ -602,6 +602,8 @@ void pcie_enable_notification(struct con
+ 		PCI_EXP_SLTCTL_DLLSCE);
+ 
+ 	pcie_write_cmd(ctrl, cmd, mask);
++	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
++		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, cmd);
+ }
+ 
+ static void pcie_disable_notification(struct controller *ctrl)
+@@ -613,6 +615,8 @@ static void pcie_disable_notification(st
+ 		PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE |
+ 		PCI_EXP_SLTCTL_DLLSCE);
+ 	pcie_write_cmd(ctrl, 0, mask);
++	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
++		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, 0);
+ }
+ 
+ /*
+@@ -640,6 +644,8 @@ int pciehp_reset_slot(struct slot *slot,
+ 	stat_mask |= PCI_EXP_SLTSTA_DLLSC;
+ 
+ 	pcie_write_cmd(ctrl, 0, ctrl_mask);
++	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
++		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, 0);
+ 	if (pciehp_poll_mode)
+ 		del_timer_sync(&ctrl->poll_timer);
+ 
+@@ -647,6 +653,8 @@ int pciehp_reset_slot(struct slot *slot,
+ 
+ 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, stat_mask);
+ 	pcie_write_cmd(ctrl, ctrl_mask, ctrl_mask);
++	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
++		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, ctrl_mask);
+ 	if (pciehp_poll_mode)
+ 		int_poll_timeout(ctrl->poll_timer.data);
+ 
