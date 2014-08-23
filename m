@@ -1,85 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:33214 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754829AbaHFIl1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Aug 2014 04:41:27 -0400
-Message-ID: <1407314357.5208.2.camel@weser.hi.pengutronix.de>
-Subject: Re: designware: missing *config* reg space
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Pratyush Anand <pratyush.anand@st.com>,
-	Fabio Estevam <festevam@gmail.com>
-Cc: "kishon@ti.com" <kishon@ti.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shawn Guo <shawn.guo@freescale.com>,
-	Marek =?UTF-8?Q?Va=C5=A1ut?= <marex@denx.de>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>
-Date: Wed, 06 Aug 2014 10:39:17 +0200
-In-Reply-To: <20140806043204.GA2755@pratyush-vbox>
-References: <CAOMZO5CmDa4=AcHZpWcaLanDZQ3fXNfQbcN_0Oc04MWPw9bY1Q@mail.gmail.com>
-	 <20140806043204.GA2755@pratyush-vbox>
-Content-Type: text/plain; charset="UTF-8"
+Received: from hygieia.santi-shop.eu ([78.46.175.2]:41822 "EHLO
+	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752454AbaHWLGb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Aug 2014 07:06:31 -0400
+Date: Sat, 23 Aug 2014 13:06:24 +0200
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: dri-devel@lists.freedesktop.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 0/2] x86, ia64: Move EFI_FB vga_default_device()
+ initialization to pci_vga_fixup()
+Message-ID: <20140823130624.06ecc057@neptune.home>
+In-Reply-To: <CAMxnaaU9EiMcne-aQjS1sY1Orn6xGbVHEnd057ogcZ77p74Y=Q@mail.gmail.com>
+References: <20140514224339.7f8be3a9@neptune.home>
+	<20140602201926.4d476818@neptune.home>
+	<20140625005501.7ff7e982@neptune.home>
+	<20140705171503.GC6247@google.com>
+	<CAMxnaaXxAZAJAdr5AYYRZC_xKFCuyrfY=qpJu8x+P-S+osm5vw@mail.gmail.com>
+	<CAMxnaaXGQe4vg9cY5e2KZBnG4F-z49OriwxEGUE-DCE6MKUryQ@mail.gmail.com>
+	<20140810112654.1bf684d6@neptune.home>
+	<CAMxnaaUsd+XHppMmPMXdFL13d1-OhLzoH_yjv_9abOx_uP=_Ug@mail.gmail.com>
+	<20140810183411.19370721@neptune.home>
+	<CAMxnaaVNpiSZmhQsHa_ZHJckgzG+xHyOL6hOT3Ts8GdcGN_A9g@mail.gmail.com>
+	<20140816192135.34260115@neptune.home>
+	<CAMxnaaWQoX9KMQVCKHTkeqSxGEybz5u1qU6AVBqzW3+mj_nJHQ@mail.gmail.com>
+	<20140820075508.74f5b622@pluto>
+	<20140820091152.76cd4e1a@pluto>
+	<CAMxnaaUodONkqmdPWedN-Q1qheHiJAScFcG_XbX1--ZmiOQZDg@mail.gmail.com>
+	<20140821233435.19a9cffa@neptune.home>
+	<CAErSpo6D1B+dPLrYoAF4OA1KeWuW8VZW2_RR5jB1GbCRo+6vHg@mail.gmail.com>
+	<20140822082324.12cb6e93@pluto>
+	<CAMxnaaU9EiMcne-aQjS1sY1Orn6xGbVHEnd057ogcZ77p74Y=Q@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Mittwoch, den 06.08.2014, 10:02 +0530 schrieb Pratyush Anand:
-> Hi,
-> 
-> On Wed, Aug 06, 2014 at 02:26:10AM +0800, Fabio Estevam wrote:
-> > Hi,
-> > 
-> > I am running linux-next 20140805 on a imx6q-sabresd board and noticed
-> > the following error:
-> > 
-> > root@freescale /$ dmesg | grep pci
-> > [    0.168095] imx6q-pcie 1ffc000.pcie: missing *config* reg space
-> > [    0.501019] imx6q-pcie 1ffc000.pcie: phy link never came up
-> > [    0.501579] imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
-> > 
-> > This 'missing *config* reg space' was introduced by:
-> 
-> dev_err printing the above message should be dev_dbg until all the
-> platform specifies its configuration space definition through *reg*
-> instead of *ranges*.
-> 
-No it's completely right. Printing errors actually triggers people to
-fix their DTs.
+On Fri, 22 August 2014 Andreas Noever <andreas.noever@gmail.com> wrote:
+> > For Andreas's system the discrete nvidia GPU has no I/O enabled
+> > according to PCI_COMMAND flags while the integrated intel one does have
+> > them (that's why the Intel GPU is chosen).
+> >
+> > Unfortunately I don't know what makes his system choke at boot time as
+> > he did not provide logs for the failing case.
+> Attached dmesg for the failing case (obtained via ssh).
+>
+> Without blacklisting a small horizontal bar of vertical green bars
+> appears (no x, no console).
 
-> > commit 4dd964df36d0e548e1806ec2ec275b62d4dc46e8
-> > Author: Kishon Vijay Abraham I <kishon@ti.com>
-> > Date:   Thu Jul 17 14:30:40 2014 +0530
-> > 
-> >     PCI: designware: Look for configuration space in 'reg', not 'ranges'
-> > 
-> >     The configuration address space has so far been specified in *ranges*,
-> >     however it should be specified in *reg* making it a platform MEM resource.
-> >     Hence used 'platform_get_resource_*' API to get configuration address space
-> >     in the designware driver.
-> > 
-> >     Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> >     Acked-by: Mohit Kumar <mohit.kumar@st.com>
-> >     Acked-by: Jingoo Han <jg1.han@samsung.com>
-> >     Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> >     Cc: Marek Vasut <marex@denx.de>
-> >     Cc: Arnd Bergmann <arnd@arndb.de>
-> > 
-> > Wouldn't this break dt compatibility?
-> 
-> In spite of the above missing *config* message, your system should
-> work fine. This patch should not affect any older platform.They will
-> assign their cfg space through restype == 0.
-> 
-As Pratyush said things should work fine despite this warning. I'll send
-a DT patch out to Shawn today to get rid of this warning.
+It's good to know that it's just the graphics (console / X) that are not
+displaying properly.
 
-Regards,
-Lucas
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+> If nouveau is blacklisted then I get a console, but X will not start
+> (No devices found).
 
+The console you get is EFIFB (on the nvidia GPU to which display is routed).
+
+Here the reason why X does not start is probably that i915 did not find
+its VBIOS tables nor any connected monitor and thus X thinks "no active
+output => I don't start".
+Though your X would be able to start if it did not find xf86-video-intel
+(intel_drv.so) and/or did find/had an explicit reference to xf86-video-fbdev
+(fbdev_drv.so).
+
+If under OSX you told your system to start on intel GPU (I think there
+is an option in this direction) you system would probably boot fine as the
+initial choice by vgaarb would match gmux/switcheroo settings.
+
+> If i915 is blacklisted then I do not get a console. The screen just
+> freezes after a few boot messages.
+
+This is more interesting.
+
+Initially you had efifb printing kernel logs until nouveau gets loaded
+by udev and replaces efifb. From there on possibly applegmux does not
+take over correctly (it may need both i915 and nouveau active to properly
+route framebuffer to panel or connector).
+
+Though your X should be telling the same thing as for nouveau blacklisted
+as nvidia GPU is not the one having boot_vga set...
+
+If not it may be worth finding out in what state your system exactly is
+with regards to graphics.
+
+> What is vga_default_device() used for? Is it supposed to hold the
+> device that is controlling the (boot) screen? Why can't we just read
+> the configuration from vga_switcheroo/gmux?
+
+For systems not using vga_switcheroo:
+  vga_default_device represents the PCI GPU that was used to boot (and
+  normally handles legacy VGA I/O).
+  It's never changed after boot (except eventually when a GPU gets
+  hotplugged)
+
+For systems with vga_switcheroo
+  vga_default_device represents the active GPU (the one that would be
+  handling legacy VGA I/O if used - and the one controlling the output
+  connectors)
+  vga_switcheroo is actively changing vga_default_device.
+
+
+gmux is a driver for vga_switcheroo to perform the low-level platform
+operations allowing switching (outputs) from one GPU to the other.
+
+
+So a guess on my side would be that with both i915 and nouveau loaded
+you may be able to get your display working if you can tell X to
+switch GPU twice (and thus end up with matching vga_default_device
+and device selected by gmux) - though I don't know how one asks for this
+switch to happen.
+
+> > If there is no better way to detect the proper legacy VGA device the
+> > only remaining option would be to perform the screen_info testing in
+> > vga_arb_device_init() enclosed in arch #ifdef...
+
+I will propose a patch in this direction later this weekend.
+
+Bruno
