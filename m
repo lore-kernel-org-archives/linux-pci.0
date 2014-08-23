@@ -1,51 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1blp0184.outbound.protection.outlook.com ([207.46.163.184]:40052
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750938AbaHYSrY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Aug 2014 14:47:24 -0400
-Message-ID: <1408992434.6510.47.camel@snotra.buserror.net>
-Subject: Re: PCIe driver not working properly after upgrading to linux 3.8.13
-From: Scott Wood <scottwood@freescale.com>
-To: Gokul C G <gokul.g@kalkitech.in>
-CC: <linux-pci@vger.kernel.org>
-Date: Mon, 25 Aug 2014 13:47:14 -0500
-In-Reply-To: <53F9E486.9050801@kalkitech.in>
-References: <53F3629A.6060208@kalkitech.in>
-	 <1408491984.4058.48.camel@snotra.buserror.net>
-	 <53F9E486.9050801@kalkitech.in>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Received: from aserp1040.oracle.com ([141.146.126.69]:51751 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751947AbaHWBPR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 21:15:17 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI: add back missing MEM_64 mask check for hotplug path
+Date: Fri, 22 Aug 2014 18:15:07 -0700
+Message-Id: <1408756512-16885-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 2014-08-24 at 18:41 +0530, Gokul C G wrote:
-> HI all,
-> 
-> Thank you very much for your information .I solved my problem !!!
-> 
-> Here is my findings 
-> =====================
->  I found out that support for the PCIe serial extension for
-> ( XR17V35x) has been added to the standard Linux serial driver. If I
-> just need to transmit/receive data, then this driver will work
-> perfectly fine. The deficiencies is that you can not use any of the
-> enhanced features in the XR17V35x such as the larger FIFOs, automatic
-> hardware/software flow control, auto RS-485 half-duplex control, etc.
-> 
-> Now I have 2 options:
-> 1. Remove support for the XR17V35x IDs and re-compile the kernel, then
-> use the module driver.
-> 2. Use an external EEPROM to use different Vendor and/or Device IDs so
-> that you can use the module driver.
+We missed that in
+|  commit 5b28541552ef5eeffc41d6936105f38c2508e566
+|    PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources
+for pci hotplug path.
 
-3. Remove the generic PCI serial driver from your config.
-4. Dynamically unbind the device using sysfs, and either defer module
-loading until after this, or rebind it to the already-loaded specialized
-driver using sysfs.
-5. Add these features to the standard PCI serial driver. :-)
+We have MEM_64 in type_mask from pci_assign_unassigned_root_bus_resources()
+for boot path.
 
--Scott
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
+---
+ drivers/pci/setup-bus.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -1652,7 +1652,7 @@ void pci_assign_unassigned_bridge_resour
+ 	struct pci_dev_resource *fail_res;
+ 	int retval;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+-				  IORESOURCE_PREFETCH;
++				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+ 
+ again:
+ 	__pci_bus_size_bridges(parent, &add_list);
