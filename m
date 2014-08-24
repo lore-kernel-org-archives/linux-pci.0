@@ -1,83 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:59492 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755541AbaHZXg6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Aug 2014 19:36:58 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+Received: from hygieia.santi-shop.eu ([78.46.175.2]:38925 "EHLO
+	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753117AbaHXVNU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 24 Aug 2014 17:13:20 -0400
+Date: Sun, 24 Aug 2014 23:13:15 +0200
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: dri-devel@lists.freedesktop.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
 	Linux PCI <linux-pci@vger.kernel.org>,
-	Dmitry Torokhov <dtor@google.com>,
-	Aubrey Li <aubrey.li@intel.com>
-Subject: [PATCH 3/5 v3] x86 / PM: Set IRQCHIP_SKIP_SET_WAKE for IOAPIC IRQ chip objects
-Date: Wed, 27 Aug 2014 01:50:49 +0200
-Message-ID: <5572679.hklRpx9fCZ@vostro.rjw.lan>
-In-Reply-To: <5320472.coYotHR1d0@vostro.rjw.lan>
-References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan>
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 2/2 v2] vgaarb: Drop obsolete #ifndef
+Message-ID: <20140824231315.648a4cf6@neptune.home>
+In-Reply-To: <20140823130624.06ecc057@neptune.home>
+References: <20140514224339.7f8be3a9@neptune.home>
+	<20140625005501.7ff7e982@neptune.home>
+	<20140705171503.GC6247@google.com>
+	<CAMxnaaXxAZAJAdr5AYYRZC_xKFCuyrfY=qpJu8x+P-S+osm5vw@mail.gmail.com>
+	<CAMxnaaXGQe4vg9cY5e2KZBnG4F-z49OriwxEGUE-DCE6MKUryQ@mail.gmail.com>
+	<20140810112654.1bf684d6@neptune.home>
+	<CAMxnaaUsd+XHppMmPMXdFL13d1-OhLzoH_yjv_9abOx_uP=_Ug@mail.gmail.com>
+	<20140810183411.19370721@neptune.home>
+	<CAMxnaaVNpiSZmhQsHa_ZHJckgzG+xHyOL6hOT3Ts8GdcGN_A9g@mail.gmail.com>
+	<20140816192135.34260115@neptune.home>
+	<CAMxnaaWQoX9KMQVCKHTkeqSxGEybz5u1qU6AVBqzW3+mj_nJHQ@mail.gmail.com>
+	<20140820075508.74f5b622@pluto>
+	<20140820091152.76cd4e1a@pluto>
+	<CAMxnaaUodONkqmdPWedN-Q1qheHiJAScFcG_XbX1--ZmiOQZDg@mail.gmail.com>
+	<20140821233435.19a9cffa@neptune.home>
+	<CAErSpo6D1B+dPLrYoAF4OA1KeWuW8VZW2_RR5jB1GbCRo+6vHg@mail.gmail.com>
+	<20140822082324.12cb6e93@pluto>
+	<CAMxnaaU9EiMcne-aQjS1sY1Orn6xGbVHEnd057ogcZ77p74Y=Q@mail.gmail.com>
+	<20140823130624.06ecc057@neptune.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+With commit 20cde694027e boot video device detection was moved from
+efifb to x86 and ia64 pci/fixup.c.
 
-Set the IRQCHIP_SKIP_SET_WAKE for IOAPIC IRQ chip objects so that
-interrupts from them can work as wakeup interrupts for suspend-to-idle.
+Remove the left-over #ifndef check that will allways match since
+the corresponding arch-specific define is gone with above patch.
 
-After this change, running enable_irq_wake() on one of the IRQs in
-question will succeed and IRQD_WAKEUP_STATE will be set for it, so
-all of the suspend-to-idle wakeup mechanics introduced previously
-will work for it automatically.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
+CC: Matthew Garrett <matthew.garrett@nebula.com>
 ---
- arch/x86/kernel/apic/io_apic.c |    5 +++++
- 1 file changed, 5 insertions(+)
 
-Index: linux-pm/arch/x86/kernel/apic/io_apic.c
-===================================================================
---- linux-pm.orig/arch/x86/kernel/apic/io_apic.c
-+++ linux-pm/arch/x86/kernel/apic/io_apic.c
-@@ -2618,6 +2618,7 @@ static struct irq_chip ioapic_chip __rea
- 	.irq_eoi		= ack_apic_level,
- 	.irq_set_affinity	= native_ioapic_set_affinity,
- 	.irq_retrigger		= ioapic_retrigger_irq,
-+	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
+No fundamental change from previous iteration, just reversed the
+patch ordering and dropped the stable@ tag as this is just clean-up.
+
+
+ drivers/gpu/vga/vgaarb.c | 8 --------
+ include/linux/vgaarb.h   | 2 --
+ 2 files changed, 10 deletions(-)
+
+diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+index cffdff9..fb28314 100644
+--- a/drivers/gpu/vga/vgaarb.c
++++ b/drivers/gpu/vga/vgaarb.c
+@@ -113,10 +113,8 @@ both:
+ 	return 1;
+ }
  
- static inline void init_IO_APIC_traps(void)
-@@ -3168,6 +3169,7 @@ static struct irq_chip msi_chip = {
- 	.irq_ack		= ack_apic_edge,
- 	.irq_set_affinity	= msi_set_affinity,
- 	.irq_retrigger		= ioapic_retrigger_irq,
-+	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
+-#ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
+ /* this is only used a cookie - it should not be dereferenced */
+ static struct pci_dev *vga_default;
+-#endif
  
- int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
-@@ -3266,6 +3268,7 @@ static struct irq_chip dmar_msi_type = {
- 	.irq_ack		= ack_apic_edge,
- 	.irq_set_affinity	= dmar_msi_set_affinity,
- 	.irq_retrigger		= ioapic_retrigger_irq,
-+	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
+ static void vga_arb_device_card_gone(struct pci_dev *pdev);
  
- int arch_setup_dmar_msi(unsigned int irq)
-@@ -3316,6 +3319,7 @@ static struct irq_chip hpet_msi_type = {
- 	.irq_ack = ack_apic_edge,
- 	.irq_set_affinity = hpet_msi_set_affinity,
- 	.irq_retrigger = ioapic_retrigger_irq,
-+	.flags = IRQCHIP_SKIP_SET_WAKE,
- };
+@@ -132,7 +130,6 @@ static struct vga_device *vgadev_find(struct pci_dev *pdev)
+ }
  
- int default_setup_hpet_msi(unsigned int irq, unsigned int id)
-@@ -3379,6 +3383,7 @@ static struct irq_chip ht_irq_chip = {
- 	.irq_ack		= ack_apic_edge,
- 	.irq_set_affinity	= ht_set_affinity,
- 	.irq_retrigger		= ioapic_retrigger_irq,
-+	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
+ /* Returns the default VGA device (vgacon's babe) */
+-#ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
+ struct pci_dev *vga_default_device(void)
+ {
+ 	return vga_default;
+@@ -148,7 +145,6 @@ void vga_set_default_device(struct pci_dev *pdev)
+ 	pci_dev_put(vga_default);
+ 	vga_default = pci_dev_get(pdev);
+ }
+-#endif
  
- int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
+ static inline void vga_irq_set_state(struct vga_device *vgadev, bool state)
+ {
+@@ -584,14 +580,12 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
+ 	/* Deal with VGA default device. Use first enabled one
+ 	 * by default if arch doesn't have it's own hook
+ 	 */
+-#ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
+ 	if (vga_default == NULL &&
+ 	    ((vgadev->owns & VGA_RSRC_LEGACY_MASK) == VGA_RSRC_LEGACY_MASK)) {
+ 		pr_info("vgaarb: setting as boot device: PCI:%s\n",
+ 			pci_name(pdev));
+ 		vga_set_default_device(pdev);
+ 	}
+-#endif
+ 
+ 	vga_arbiter_check_bridge_sharing(vgadev);
+ 
+@@ -625,10 +619,8 @@ static bool vga_arbiter_del_pci_device(struct pci_dev *pdev)
+ 		goto bail;
+ 	}
+ 
+-#ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
+ 	if (vga_default == pdev)
+ 		vga_set_default_device(NULL);
+-#endif
+ 
+ 	if (vgadev->decodes & (VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM))
+ 		vga_decode_count--;
+diff --git a/include/linux/vgaarb.h b/include/linux/vgaarb.h
+index 2c02f3a..c37bd4d 100644
+--- a/include/linux/vgaarb.h
++++ b/include/linux/vgaarb.h
+@@ -182,7 +182,6 @@ extern void vga_put(struct pci_dev *pdev, unsigned int rsrc);
+  *     vga_get()...
+  */
+ 
+-#ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
+ #ifdef CONFIG_VGA_ARB
+ extern struct pci_dev *vga_default_device(void);
+ extern void vga_set_default_device(struct pci_dev *pdev);
+@@ -190,7 +189,6 @@ extern void vga_set_default_device(struct pci_dev *pdev);
+ static inline struct pci_dev *vga_default_device(void) { return NULL; };
+ static inline void vga_set_default_device(struct pci_dev *pdev) { };
+ #endif
+-#endif
+ 
+ /**
+  *     vga_conflicts
+-- 
+1.8.5.5
 
