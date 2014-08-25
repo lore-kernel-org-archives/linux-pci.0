@@ -1,56 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:51230 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753147AbaHLWBD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 18:01:03 -0400
-Received: by mail-ig0-f182.google.com with SMTP id c1so8170193igq.3
-        for <linux-pci@vger.kernel.org>; Tue, 12 Aug 2014 15:01:01 -0700 (PDT)
-Date: Tue, 12 Aug 2014 16:00:58 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Sandeep Mann <sandeep@purestorage.com>
-Cc: linux-pci@vger.kernel.org, Rajat Jain <rajatxjain@gmail.com>
-Subject: Re: [PATCH] PCI: pciehp: Use ordered workqueue for HPC events
-Message-ID: <20140812213626.GA6333@google.com>
-References: <1406933232-1560-1-git-send-email-sandeep@purestorage.com>
+Received: from mail-bn1blp0184.outbound.protection.outlook.com ([207.46.163.184]:40052
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750938AbaHYSrY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Aug 2014 14:47:24 -0400
+Message-ID: <1408992434.6510.47.camel@snotra.buserror.net>
+Subject: Re: PCIe driver not working properly after upgrading to linux 3.8.13
+From: Scott Wood <scottwood@freescale.com>
+To: Gokul C G <gokul.g@kalkitech.in>
+CC: <linux-pci@vger.kernel.org>
+Date: Mon, 25 Aug 2014 13:47:14 -0500
+In-Reply-To: <53F9E486.9050801@kalkitech.in>
+References: <53F3629A.6060208@kalkitech.in>
+	 <1408491984.4058.48.camel@snotra.buserror.net>
+	 <53F9E486.9050801@kalkitech.in>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1406933232-1560-1-git-send-email-sandeep@purestorage.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rajat]
-
-On Fri, Aug 01, 2014 at 03:47:12PM -0700, Sandeep Mann wrote:
-> Using an ordered workqueue serializes processing of hotplug event. Processing
-> an hotplug event for some devices can take a relatively "long" time, which
-> means if a device is added and removed in quick succession (or due to flacky
-> hardware), it can lead to multiple outstanding hotplug events. Processing
-> these events concurrently can lead to unknown internal state and/or kernel
-> panics.
-
-Did you find this by code inspection, or did you actually observe a
-problem?  If the latter, what were the symptoms?
-
-shpchp does the same thing, so I assume it requires the same fix.
-
-> Signed-off-by: Sandeep Mann <sandeep@purestorage.com>
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+On Sun, 2014-08-24 at 18:41 +0530, Gokul C G wrote:
+> HI all,
 > 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 42914e0..c4eedab 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -681,7 +681,7 @@ static int pcie_init_slot(struct controller *ctrl)
->  	if (!slot)
->  		return -ENOMEM;
->  
-> -	slot->wq = alloc_workqueue("pciehp-%u", 0, 0, PSN(ctrl));
-> +	slot->wq = alloc_ordered_workqueue("pciehp-%u", 0, PSN(ctrl));
->  	if (!slot->wq)
->  		goto abort;
->  
-> -- 
-> 1.8.3.2
+> Thank you very much for your information .I solved my problem !!!
 > 
+> Here is my findings 
+> =====================
+>  I found out that support for the PCIe serial extension for
+> ( XR17V35x) has been added to the standard Linux serial driver. If I
+> just need to transmit/receive data, then this driver will work
+> perfectly fine. The deficiencies is that you can not use any of the
+> enhanced features in the XR17V35x such as the larger FIFOs, automatic
+> hardware/software flow control, auto RS-485 half-duplex control, etc.
+> 
+> Now I have 2 options:
+> 1. Remove support for the XR17V35x IDs and re-compile the kernel, then
+> use the module driver.
+> 2. Use an external EEPROM to use different Vendor and/or Device IDs so
+> that you can use the module driver.
+
+3. Remove the generic PCI serial driver from your config.
+4. Dynamically unbind the device using sysfs, and either defer module
+loading until after this, or rebind it to the already-loaded specialized
+driver using sysfs.
+5. Add these features to the standard PCI serial driver. :-)
+
+-Scott
+
+
+
