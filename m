@@ -1,111 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p50936449.dip0.t-ipconnect.de ([80.147.100.73]:30499 "EHLO
-	dhcp-27-160.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752380AbaHRIz2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Aug 2014 04:55:28 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	James Smart <james.smart@emulex.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v3 11/13] lpfc: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Mon, 18 Aug 2014 08:01:51 +0200
-Message-Id: <e7470e484083c9eeb6b4f34f3e69e332ad5998c2.1408335523.git.agordeev@redhat.com>
-In-Reply-To: <cover.1408335523.git.agordeev@redhat.com>
-References: <cover.1408335523.git.agordeev@redhat.com>
+Received: from smtprelay.restena.lu ([158.64.1.62]:42863 "EHLO
+	smtprelay.restena.lu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754455AbaHYMjE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Aug 2014 08:39:04 -0400
+Date: Mon, 25 Aug 2014 14:39:01 +0200
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+To: Daniel Vetter <daniel@ffwll.ch>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH 0/2] x86, ia64: Move EFI_FB vga_default_device()
+ initialization to pci_vga_fixup()
+Message-ID: <20140825143901.18357759@pluto>
+In-Reply-To: <20140825121602.GB15520@phenom.ffwll.local>
+References: <20140810183411.19370721@neptune.home>
+	<CAMxnaaVNpiSZmhQsHa_ZHJckgzG+xHyOL6hOT3Ts8GdcGN_A9g@mail.gmail.com>
+	<20140816192135.34260115@neptune.home>
+	<CAMxnaaWQoX9KMQVCKHTkeqSxGEybz5u1qU6AVBqzW3+mj_nJHQ@mail.gmail.com>
+	<20140820075508.74f5b622@pluto>
+	<20140820091152.76cd4e1a@pluto>
+	<CAMxnaaUodONkqmdPWedN-Q1qheHiJAScFcG_XbX1--ZmiOQZDg@mail.gmail.com>
+	<20140821233435.19a9cffa@neptune.home>
+	<CAErSpo6D1B+dPLrYoAF4OA1KeWuW8VZW2_RR5jB1GbCRo+6vHg@mail.gmail.com>
+	<20140822082324.12cb6e93@pluto>
+	<20140825121602.GB15520@phenom.ffwll.local>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+Hi Daniel,
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: James Smart <james.smart@emulex.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/lpfc/lpfc_init.c | 39 +++++++++++++++++----------------------
- 1 file changed, 17 insertions(+), 22 deletions(-)
+On Mon, 25 Aug 2014 14:16:02 +0200 Daniel Vetter wrote:
+> Very often when something goes wrong with a kms driver we hang while doing
+> the initial modeset. Which is all done while holding the console_lock
+> (because fbdev+vt locking is just insane). You can try to get a closer
+> look with I915_FBDEV=n which will avoid the console_lock, but which also
+> won't register the legacy/compat i915 fbdev emulation any more, so greatly
+> changes boot behaviour.
+> 
+> If that doesn't lead to clues the next approach is to "carefully"
+> drop&reacquire console_lock at a few "interesting" places to get a few
+> printks out over netconsole or similar. Or just hack up entire netconsole
+> loggin infrastructure which bypasses printk and so all the console_lock
+> insanity.
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index a5769a9..37f2a20 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -8211,9 +8211,9 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine is invoked to enable the MSI-X interrupt vectors to device
-- * with SLI-3 interface specs. The kernel function pci_enable_msix() is
-- * called to enable the MSI-X vectors. Note that pci_enable_msix(), once
-- * invoked, enables either all or nothing, depending on the current
-+ * with SLI-3 interface specs. The kernel function pci_enable_msix_exact()
-+ * is called to enable the MSI-X vectors. Note that pci_enable_msix_exact(),
-+ * once invoked, enables either all or nothing, depending on the current
-  * availability of PCI vector resources. The device driver is responsible
-  * for calling the individual request_irq() to register each MSI-X vector
-  * with a interrupt handler, which is done in this function. Note that
-@@ -8237,8 +8237,8 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
- 		phba->msix_entries[i].entry = i;
- 
- 	/* Configure MSI-X capability structure */
--	rc = pci_enable_msix(phba->pcidev, phba->msix_entries,
--				ARRAY_SIZE(phba->msix_entries));
-+	rc = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
-+				   LPFC_MSIX_VECTORS);
- 	if (rc) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0420 PCI enable MSI-X failed (%d)\n", rc);
-@@ -8775,16 +8775,14 @@ out:
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine is invoked to enable the MSI-X interrupt vectors to device
-- * with SLI-4 interface spec. The kernel function pci_enable_msix() is called
-- * to enable the MSI-X vectors. Note that pci_enable_msix(), once invoked,
-- * enables either all or nothing, depending on the current availability of
-- * PCI vector resources. The device driver is responsible for calling the
-- * individual request_irq() to register each MSI-X vector with a interrupt
-- * handler, which is done in this function. Note that later when device is
-- * unloading, the driver should always call free_irq() on all MSI-X vectors
-- * it has done request_irq() on before calling pci_disable_msix(). Failure
-- * to do so results in a BUG_ON() and a device will be left with MSI-X
-- * enabled and leaks its vectors.
-+ * with SLI-4 interface spec. The kernel function pci_enable_msix_range()
-+ * is called to enable the MSI-X vectors. The device driver is responsible
-+ * for calling the individual request_irq() to register each MSI-X vector
-+ * with a interrupt handler, which is done in this function. Note that
-+ * later when device is unloading, the driver should always call free_irq()
-+ * on all MSI-X vectors it has done request_irq() on before calling
-+ * pci_disable_msix(). Failure to do so results in a BUG_ON() and a device
-+ * will be left with MSI-X enabled and leaks its vectors.
-  *
-  * Return codes
-  * 0 - successful
-@@ -8805,17 +8803,14 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
- 		phba->sli4_hba.msix_entries[index].entry = index;
- 		vectors++;
- 	}
--enable_msix_vectors:
--	rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
--			     vectors);
--	if (rc > 1) {
--		vectors = rc;
--		goto enable_msix_vectors;
--	} else if (rc) {
-+	rc = pci_enable_msix_range(phba->pcidev, phba->sli4_hba.msix_entries,
-+				   2, vectors);
-+	if (rc < 0) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0484 PCI enable MSI-X failed (%d)\n", rc);
- 		goto vec_fail_out;
- 	}
-+	vectors = rc;
- 
- 	/* Log MSI-X vector assignment */
- 	for (index = 0; index < vectors; index++)
--- 
-1.9.3
+In this case it's not that bad as Andreas could send the logs for all
+cases (captured via ssh).
 
+So probably console lock is not held (unless he did have to do
+terminal-free ssh which I doubt).
+It looks much more as if it's just the output routing that gets weird
+on his Mac (or possibly any other dual-GPU MacBook where discrete GPU is
+primary). Black screen but alive system :)
+
+See follow-up posts in this thread.
+
+If you have some uncommon or otherwise weird (EFI) multi-GPU systems
+around and want to give my patches sent yesterday evening a try, you're
+welcome! Some with non-Apple GPU multiplexer would be nice to have
+tested as well.
+
+
+The following part mentioned earlier by Andreas might be of interest to
+you though (and my latest patch series should bring the improvement):
+> > vga_arbiter_add_pci_device chooses intel simply because it is the
+> > first device. Next pci_fixup_video(intel) sees that it is the default
+> > device, sets the IORESOURCE_ROM_SHADOW flag and calls
+> > vga_set_default_device again. And finally (if the check is removed)
+> > pci_fixup_video(nvidia) sees that it owns the framebuffer and sets
+> > itself as the default device which allows the system to boot again.
+> >
+> > Does setting the ROM_SHADOW flag on (possibly) the wrong device have
+> > any effect?  
+> Yes it does. Removing the line changes a long standing
+> i915 0000:00:02.0: Invalid ROM contents
+> into a
+> i915 0000:00:02.0: BAR 6: can't assign [??? 0x00000000 flags 0x20000000] (bogus alignment).
+> 
+> The first is logged at KERN_ERR and the second one only at KERN_INFO.
+> We are making progress.
+
+Bruno
