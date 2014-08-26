@@ -1,47 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p50936449.dip0.t-ipconnect.de ([80.147.100.73]:30499 "EHLO
-	dhcp-27-160.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751551AbaHRIzI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Aug 2014 04:55:08 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, iss_storagedev@hp.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v3 01/13] hpsa: Fallback to MSI rather than to INTx if MSI-X failed
-Date: Mon, 18 Aug 2014 08:01:41 +0200
-Message-Id: <16baf29bf7cd9d45de63a4192a9ef9e87ba12936.1408335523.git.agordeev@redhat.com>
-In-Reply-To: <cover.1408335523.git.agordeev@redhat.com>
-References: <cover.1408335523.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Bugfix] x86, irq: Fix bug in setting IOAPIC pin attributes
+Date: Tue, 26 Aug 2014 16:45:01 +0800
+Message-Id: <1409042706-11958-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <20140822124145.GF1660@lahna.fi.intel.com>
+References: <20140822124145.GF1660@lahna.fi.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently the driver falls back to INTx mode when MSI-X
-initialization failed. This is a suboptimal behaviour
-for chips that also support MSI. This update changes that
-behaviour and falls back to MSI mode in case MSI-X mode
-initialization failed.
+On startup, IOAPIC driver preallocates IRQ descriptors and programs
+IOAPIC pins with default level and polarity attributes for all legacy
+IRQs. Later legacy IRQ users may fail to set IOAPIC pin attributes
+if the requested attributes conflicts with the default IOAPIC pin
+attributes. So change mp_irqdomain_map() to allow the first legacy IRQ
+user to reprogram IOAPIC pin with different attributes.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Acked-by: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: iss_storagedev@hp.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/scsi/hpsa.c | 1 -
- 1 file changed, 1 deletion(-)
+ arch/x86/kernel/apic/io_apic.c |   10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 6b35d0d..a9c4c9f 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -6176,7 +6176,6 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
- 			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
- 			       err);
- 			h->msix_vector = 0;
--			goto default_int_mode;
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 29290f554e79..66c2700c9f83 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3896,7 +3896,15 @@ int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			info->polarity = 1;
  		}
+ 		info->node = NUMA_NO_NODE;
+-		info->set = 1;
++
++		/*
++		 * setup_IO_APIC_irqs() programs all legacy IRQs with default
++		 * trigger and polarity attirbutes. Don't set the flag for that
++		 * case so the first legacy IRQ user could reprogram the pin
++		 * with real trigger and polarity attributes.
++		 */
++		if (virq >= nr_legacy_irqs() || info->count)
++			info->set = 1;
  	}
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
+ 	set_io_apic_irq_attr(&attr, ioapic, hwirq, info->trigger,
+ 			     info->polarity);
 -- 
-1.9.3
+1.7.10.4
 
