@@ -1,49 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1lp0144.outbound.protection.outlook.com ([207.46.163.144]:8116
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934783AbaH1JPa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 Aug 2014 05:15:30 -0400
-Message-ID: <53FEF325.20505@amd.com>
-Date: Thu, 28 Aug 2014 04:15:17 -0500
-From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Received: from www.linutronix.de ([62.245.132.108]:56996 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753774AbaHZVVP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Aug 2014 17:21:15 -0400
+Date: Tue, 26 Aug 2014 23:20:41 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Prarit Bhargava <prarit@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: Re: [Bugfix] x86, irq: Fix bug in setting IOAPIC pin attributes
+In-Reply-To: <20140826095221.GO1660@lahna.fi.intel.com>
+Message-ID: <alpine.DEB.2.10.1408262319500.3323@nanos>
+References: <20140822124145.GF1660@lahna.fi.intel.com> <1409042706-11958-1-git-send-email-jiang.liu@linux.intel.com> <20140826095221.GO1660@lahna.fi.intel.com>
 MIME-Version: 1.0
-To: Jingoo Han <jg1.han@samsung.com>
-CC: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
-	<jason@lakedaemon.net>, <pawel.moll@arm.com>,
-	<Catalin.Marinas@arm.com>, <Will.Deacon@arm.com>,
-	<tglx@linutronix.de>, <Harish.Kasiviswanathan@amd.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 1/2 V4] irqchip: gic: Add supports for ARM GICv2m MSI(-X)
-References: <1407942041-3291-1-git-send-email-suravee.suthikulpanit@amd.com>
- <1407942041-3291-2-git-send-email-suravee.suthikulpanit@amd.com>
- <003d01cfb76b$629b43c0$27d1cb40$%han@samsung.com>
-In-Reply-To: <003d01cfb76b$629b43c0$27d1cb40$%han@samsung.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, 26 Aug 2014, Mika Westerberg wrote:
 
+> On Tue, Aug 26, 2014 at 04:45:01PM +0800, Jiang Liu wrote:
+> > On startup, IOAPIC driver preallocates IRQ descriptors and programs
+> > IOAPIC pins with default level and polarity attributes for all legacy
+> > IRQs. Later legacy IRQ users may fail to set IOAPIC pin attributes
+> > if the requested attributes conflicts with the default IOAPIC pin
+> > attributes. So change mp_irqdomain_map() to allow the first legacy IRQ
+> > user to reprogram IOAPIC pin with different attributes.
+> > 
+> > Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> 
+> I tried this and now we get further in setting up the IOAPIC but it
+> still doesn't work :-(
+> 
+> I noticed that mp_set_gsi_attr() never programs the IOAPIC in case
+> info->set is 0 so I added following on top of your patch. With the below
+> patch, the system seems to work as expected.
+> 
+> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+> index 66c2700c9f83..777762a0ad09 100644
+> --- a/arch/x86/kernel/apic/io_apic.c
+> +++ b/arch/x86/kernel/apic/io_apic.c
+> @@ -3942,10 +3942,16 @@ int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
+>  
+>  	mutex_lock(&ioapic_mutex);
+>  	if (!info->set) {
+> +		struct io_apic_irq_attr attr;
+> +
+>  		info->trigger = trigger;
+>  		info->polarity = polarity;
+>  		info->node = node;
+>  		info->set = 1;
+> +
+> +		/* Now program the IOAPIC with the new attributes */
+> +		set_io_apic_irq_attr(&attr, ioapic, pin, trigger, polarity);
+> +		ret = io_apic_setup_irq_pin(gsi, node, &attr);
+>  	} else if (info->trigger != trigger || info->polarity != polarity) {
+>  		ret = -EBUSY;
+>  	}
 
-On 08/13/2014 09:56 PM, Jingoo Han wrote:
-> On Thursday, August 14, 2014 12:01 AM, Suravee Suthikulpanit wrote:
->>
->> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->>
->> ARM GICv2m specification extends GICv2 to support MSI(-X) with
->> a new set of register frame. This patch introduces support for
->> the non-secure GICv2m register frame. Currently, GICV2m is available
->> in certain version of GIC-400.
->>
->> The patch introduces a new property in ARM gic binding, the v2m subnode.
->> It is optional.
->
-> Hi Suravee Suthikulpanit,
->
-> I added some minor comments.
+Can someone please combine this into a single patch with a proper
+changelog?
 
-Thanks for the cleaning up comments.
+Thanks,
 
-Suravee
+	tglx
+
