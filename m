@@ -1,184 +1,151 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v4 09/16] x86, irq: Keep balance of IOAPIC pin reference count
-Date: Thu, 28 Aug 2014 10:22:34 +0800
-Message-Id: <1409192561-19744-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-we0-f176.google.com ([74.125.82.176]:61616 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752309AbaHZPLo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Aug 2014 11:11:44 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3 1/6] resource: Add device-managed request/release_resource()
+Date: Tue, 26 Aug 2014 17:11:33 +0200
+Message-Id: <1409065898-26887-2-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <1409065898-26887-1-git-send-email-thierry.reding@gmail.com>
+References: <1409065898-26887-1-git-send-email-thierry.reding@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To keep balance of IOAPIC pin reference count, we need to protect
-pirq_enable_irq(), acpi_pci_irq_enable() and intel_mid_pci_irq_enable()
-from reentrance. There are two cases which will cause reentrance.
+From: Thierry Reding <treding@nvidia.com>
 
-The first case is caused by suspend/hibernation. If pcibios_disable_irq
-is called during suspending/hibernating, we don't release the assigned
-IRQ number, otherwise it may break the suspend/hibernation. So late when
-pcibios_enable_irq is called during resume, we shouldn't allocate IRQ
-number again.
+Provide device-managed implementations of the request_resource() and
+release_resource() functions. Upon failure to request a resource, the
+new devm_request_resource() function will output an error message for
+consistent error reporting.
 
-The second case is that function acpi_pci_irq_enable() may be called
-twice for PCI devices present at boot time as below:
-1) pci_acpi_init()
-	--> acpi_pci_irq_enable() if pci_routeirq is true
-2) pci_enable_device()
-	--> pcibios_enable_device()
-		--> acpi_pci_irq_enable()
-We can't kill kernel parameter pci_routeirq yet because it's still
-needed for debugging purpose.
-
-So flag irq_managed is introduced to track whether IRQ number is
-assigned by OS and to protect pirq_enable_irq(), acpi_pci_irq_enable()
-and intel_mid_pci_irq_enable() from reentrance.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
- arch/x86/pci/intel_mid_pci.c |    9 ++++++++-
- arch/x86/pci/irq.c           |    7 ++++++-
- drivers/acpi/pci_irq.c       |   11 +++++++++--
- include/linux/pci.h          |    1 +
- 4 files changed, 24 insertions(+), 4 deletions(-)
+Changes in v2:
+- use more natural flow for error handling
+- don't needlessly check for NULL pointers
 
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 3865116c51fb..6a855fef78fc 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -210,6 +210,9 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- {
- 	int polarity;
+ Documentation/driver-model/devres.txt |  2 +
+ include/linux/ioport.h                |  5 +++
+ kernel/resource.c                     | 70 +++++++++++++++++++++++++++++++++++
+ 3 files changed, 77 insertions(+)
+
+diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
+index d14710b04439..befc3fe12ba6 100644
+--- a/Documentation/driver-model/devres.txt
++++ b/Documentation/driver-model/devres.txt
+@@ -264,8 +264,10 @@ IIO
+ IO region
+   devm_release_mem_region()
+   devm_release_region()
++  devm_release_resource()
+   devm_request_mem_region()
+   devm_request_region()
++  devm_request_resource()
  
-+	if (dev->irq_managed && dev->irq > 0)
-+		return 0;
+ IOMAP
+   devm_ioport_map()
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 142ec544167c..2c5250222278 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -215,6 +215,11 @@ static inline int __deprecated check_region(resource_size_t s,
+ 
+ /* Wrappers for managed devices */
+ struct device;
 +
- 	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
- 		polarity = 0; /* active high */
- 	else
-@@ -224,13 +227,17 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 	if (mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC) < 0)
- 		return -EBUSY;
- 
-+	dev->irq_managed = 1;
++extern int devm_request_resource(struct device *dev, struct resource *root,
++				 struct resource *new);
++extern void devm_release_resource(struct device *dev, struct resource *new);
 +
- 	return 0;
- }
- 
- static void intel_mid_pci_irq_disable(struct pci_dev *dev)
- {
--	if (!dev->dev.power.is_prepared && dev->irq > 0)
-+	if (!dev->dev.power.is_prepared && dev->irq_managed && dev->irq > 0) {
- 		mp_unmap_irq(dev->irq);
-+		dev->irq_managed = 0;
+ #define devm_request_region(dev,start,n,name) \
+ 	__devm_request_region(dev, &ioport_resource, (start), (n), (name))
+ #define devm_request_mem_region(dev,start,n,name) \
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 60c5a3856ab7..46322019ab7d 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -1245,6 +1245,76 @@ int release_mem_region_adjustable(struct resource *parent,
+ /*
+  * Managed region resource
+  */
++static void devm_resource_release(struct device *dev, void *ptr)
++{
++	struct resource **r = ptr;
++
++	release_resource(*r);
++}
++
++/**
++ * devm_request_resource() - request and reserve an I/O or memory resource
++ * @dev: device for which to request the resource
++ * @root: root of the resource tree from which to request the resource
++ * @new: descriptor of the resource to request
++ *
++ * This is a device-managed version of request_resource(). There is usually
++ * no need to release resources requested by this function explicitly since
++ * that will be taken care of when the device is unbound from its driver.
++ * If for some reason the resource needs to be released explicitly, because
++ * of ordering issues for example, drivers must call devm_release_resource()
++ * rather than the regular release_resource().
++ *
++ * When a conflict is detected between any existing resources and the newly
++ * requested resource, an error message will be printed.
++ *
++ * Returns 0 on success or a negative error code on failure.
++ */
++int devm_request_resource(struct device *dev, struct resource *root,
++			  struct resource *new)
++{
++	struct resource *conflict, **ptr;
++
++	ptr = devres_alloc(devm_resource_release, sizeof(*ptr), GFP_KERNEL);
++	if (!ptr)
++		return -ENOMEM;
++
++	*ptr = new;
++
++	conflict = request_resource_conflict(root, new);
++	if (conflict) {
++		dev_err(dev, "resource collision: %pR conflicts with %s %pR\n",
++			new, conflict->name, conflict);
++		devres_free(ptr);
++		return -EBUSY;
 +	}
- }
- 
- struct pci_ops intel_mid_pci_ops = {
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index bc1a2c341891..dd1369dbcc42 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1202,6 +1202,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 			int irq;
- 			struct io_apic_irq_attr irq_attr;
- 
-+			if (dev->irq_managed && dev->irq > 0)
-+				return 0;
 +
- 			irq = IO_APIC_get_PCI_irq_vector(dev->bus->number,
- 						PCI_SLOT(dev->devfn),
- 						pin - 1, &irq_attr);
-@@ -1228,6 +1231,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 			}
- 			dev = temp_dev;
- 			if (irq >= 0) {
-+				dev->irq_managed = 1;
- 				dev->irq = irq;
- 				dev_info(&dev->dev, "PCI->APIC IRQ transform: "
- 					 "INT %c -> IRQ %d\n", 'A' + pin - 1, irq);
-@@ -1257,8 +1261,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
- static void pirq_disable_irq(struct pci_dev *dev)
- {
- 	if (io_apic_assign_pci_irqs && !dev->dev.power.is_prepared &&
--	    dev->irq) {
-+	    dev->irq_managed && dev->irq > 0) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq = 0;
-+		dev->irq_managed = 0;
- 	}
- }
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index c96887d5289e..4a89701dfe36 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -413,6 +413,9 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 		return 0;
- 	}
- 
-+	if (dev->irq_managed && dev->irq > 0)
-+		return 0;
++	devres_add(dev, ptr);
++	return 0;
++}
++EXPORT_SYMBOL(devm_request_resource);
 +
- 	entry = acpi_pci_irq_lookup(dev, pin);
- 	if (!entry) {
- 		/*
-@@ -456,6 +459,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 		return rc;
- 	}
- 	dev->irq = rc;
-+	dev->irq_managed = 1;
- 
- 	if (link)
- 		snprintf(link_desc, sizeof(link_desc), " -> Link[%s]", link);
-@@ -478,7 +482,7 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	u8 pin;
- 
- 	pin = dev->pin;
--	if (!pin)
-+	if (!pin || !dev->irq_managed || dev->irq <= 0)
- 		return;
- 
- 	/* Keep IOAPIC pin configuration when suspending */
-@@ -502,6 +506,9 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	 */
- 
- 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
--	if (gsi >= 0 && dev->irq > 0)
-+	if (gsi >= 0) {
- 		acpi_unregister_gsi(gsi);
-+		dev->irq = 0;
-+		dev->irq_managed = 0;
-+	}
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 61978a460841..3e0b92715512 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -347,6 +347,7 @@ struct pci_dev {
- 	unsigned int	__aer_firmware_first:1;
- 	unsigned int	broken_intx_masking:1;
- 	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
-+	unsigned int	irq_managed:1;
- 	pci_dev_flags_t dev_flags;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
- 
++static int devm_resource_match(struct device *dev, void *res, void *data)
++{
++	struct resource **ptr = res;
++
++	return *ptr == data;
++}
++
++/**
++ * devm_release_resource() - release a previously requested resource
++ * @dev: device for which to release the resource
++ * @new: descriptor of the resource to release
++ *
++ * Releases a resource previously requested using devm_request_resource().
++ */
++void devm_release_resource(struct device *dev, struct resource *new)
++{
++	WARN_ON(devres_release(dev, devm_resource_release, devm_resource_match,
++			       new));
++}
++EXPORT_SYMBOL(devm_release_resource);
++
+ struct region_devres {
+ 	struct resource *parent;
+ 	resource_size_t start;
 -- 
-1.7.10.4
+2.0.4
 
