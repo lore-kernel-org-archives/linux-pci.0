@@ -1,57 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37482 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753849AbaHULKS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 21 Aug 2014 07:10:18 -0400
-Message-ID: <53F5D397.2020508@redhat.com>
-Date: Thu, 21 Aug 2014 13:10:15 +0200
-From: Tomas Henzl <thenzl@redhat.com>
+Received: from mail-vc0-f173.google.com ([209.85.220.173]:49654 "EHLO
+	mail-vc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757109AbaHZC4D (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Aug 2014 22:56:03 -0400
+Received: by mail-vc0-f173.google.com with SMTP id hy10so16229269vcb.32
+        for <linux-pci@vger.kernel.org>; Mon, 25 Aug 2014 19:56:02 -0700 (PDT)
 MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>,
-	linux-kernel@vger.kernel.org
-CC: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 08/13] be2iscsi: Use pci_enable_msix_range()
-References: <cover.1408335523.git.agordeev@redhat.com> <1cf2c3d3243067edac8d170cda0450c82bbfc025.1408335523.git.agordeev@redhat.com>
-In-Reply-To: <1cf2c3d3243067edac8d170cda0450c82bbfc025.1408335523.git.agordeev@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20140813172155.GB7298@google.com>
+References: <5303286.K45Li7B92z@wuerfel>
+	<20140813172155.GB7298@google.com>
+Date: Mon, 25 Aug 2014 19:56:02 -0700
+Message-ID: <CAOesGMgJtP-A9x_OSAkGd9HNPt9sTCtDQJJ1BZMmuQZm-nZoUg@mail.gmail.com>
+Subject: Re: [RFC] PCI: pcie-designware: allow drivers as loadable modules
+From: Olof Johansson <olof@lixom.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/18/2014 08:01 AM, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range() and pci_enable_msix_range()
-> interfaces.
-
-Patch looks good to me.
-
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/scsi/be2iscsi/be_main.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+On Wed, Aug 13, 2014 at 10:21 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Jul 24, 2014 at 11:17:45AM +0200, Arnd Bergmann wrote:
+>> From 0ee79c7451851a34e5a7c33eb6020befcdcb2b24 Mon Sep 17 00:00:00 2001
+>> From: Arnd Bergmann <arnd@arndb.de>
+>> Date: Thu, 24 Jul 2014 11:12:48 +0200
+>> Subject: [PATCH] PCI: pcie-designware: allow drivers as loadable modules
+>>
+>> The new pcie-spear13xx driver uses the pcie-designware library
+>> and in the current form it can be built as a loadable module.
+>> However, the functions it uses from the base driver are not exported,
+>> so this results in a build failure and a module that can never
+>> be loaded:
+>>
+>> ERROR: "dw_pcie_host_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+>> ERROR: "dw_handle_msi_irq" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+>> ERROR: "dw_pcie_msi_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+>> ERROR: "dw_pcie_cfg_write" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+>> ERROR: "dw_pcie_cfg_read" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+>> ERROR: "dw_pcie_setup_rc" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+>> ERROR: "dw_pcie_link_up" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+>>
+>> If we want to allow loadable pcie-designware drivers, we have to
+>> export all those symbols and ensure none of them are marked as __init.
+>> This also requires making pci_assign_unassigned_resources available
+>> after boot.
+>>
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>> ---
+>> If we don't want this patch for some reason, we should instead mark
+>> this driver 'bool' in Kconfig, so it becomes impossible to encounter
+>> this build error.
 >
-> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-> index 915c26b..b422659 100644
-> --- a/drivers/scsi/be2iscsi/be_main.c
-> +++ b/drivers/scsi/be2iscsi/be_main.c
-> @@ -5276,9 +5276,9 @@ static void beiscsi_msix_enable(struct beiscsi_hba *phba)
->  	for (i = 0; i <= phba->num_cpus; i++)
->  		phba->msix_entries[i].entry = i;
->  
-> -	status = pci_enable_msix(phba->pcidev, phba->msix_entries,
-> -				 (phba->num_cpus + 1));
-> -	if (!status)
-> +	status = pci_enable_msix_range(phba->pcidev, phba->msix_entries,
-> +				       phba->num_cpus + 1, phba->num_cpus + 1);
-> +	if (status > 0)
->  		phba->msix_enabled = true;
->  
->  	return;
+> I'm not opposed to doing this, but I applied Sachin's patch that changes
+> the Kconfig option to bool, so I'll drop this one for now.
 
+
+Hi Bjorn,
+
+Are you going to send this as a 3.17 fix, or is it queued only for
+3.18? The former would be preferrable here.
+
+
+-Olof
