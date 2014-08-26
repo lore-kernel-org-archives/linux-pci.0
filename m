@@ -1,68 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56281 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750800AbaHKHye (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Aug 2014 03:54:34 -0400
-Date: Mon, 11 Aug 2014 09:53:20 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
-	iss_storagedev@hp.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 RESEND 08/23] hpsa: Fallback to MSI rather than to
- INTx if MSI-X failed
-Message-ID: <20140811075320.GE16504@dhcp-27-160.brq.redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <3ca64c251518a2db8810534b4e63ec696bcfeefd.1405533479.git.agordeev@redhat.com>
- <20140726081647.GE21129@agordeev.usersys.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140726081647.GE21129@agordeev.usersys.redhat.com>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:62452 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751665AbaHZPLm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Aug 2014 11:11:42 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3 0/6] PCI: tegra: Fixes and Tegra124 support
+Date: Tue, 26 Aug 2014 17:11:32 +0200
+Message-Id: <1409065898-26887-1-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jul 26, 2014 at 09:16:47AM +0100, Alexander Gordeev wrote:
-> On Wed, Jul 16, 2014 at 08:05:12PM +0200, Alexander Gordeev wrote:
-> > Currently the driver falls back to INTx mode when MSI-X
-> > initialization failed. This is a suboptimal behaviour
-> > for chips that also support MSI. This update changes that
-> > behaviour and falls back to MSI mode in case MSI-X mode
-> > initialization failed.
-> 
-> Hi Stephen,
-> 
-> Could you please reveiew hpsa patches in this series?
+From: Thierry Reding <treding@nvidia.com>
 
-Stephen?
+This series implements various fixes and adds support for Tegra124 to the
+Tegra PCIe controller driver.
 
-> Thanks!
-> 
-> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> > Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-> > Cc: iss_storagedev@hp.com
-> > Cc: linux-scsi@vger.kernel.org
-> > Cc: linux-pci@vger.kernel.org
-> > ---
-> >  drivers/scsi/hpsa.c |    1 -
-> >  1 files changed, 0 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> > index 31184b3..648dec2 100644
-> > --- a/drivers/scsi/hpsa.c
-> > +++ b/drivers/scsi/hpsa.c
-> > @@ -6177,7 +6177,6 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
-> >  			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
-> >  			       err);
-> >  			h->msix_vector = 0;
-> > -			goto default_int_mode;
-> >  		}
-> >  	}
-> >  	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
-> > -- 
-> > 1.7.7.6
-> > 
-> 
-> -- 
-> Regards,
-> Alexander Gordeev
-> agordeev@redhat.com
+Patches 1 and 2 were already sent out separately earlier on but haven't been
+applied yet, so I'm including them here for convenience.
+
+Patches 3 to 5 are various fixes that should make the driver more reliable,
+though they don't (except maybe for patch 4) fix any known issues.
+
+Patch 6 finally adds support for Tegra124.
+
+Thierry
+
+Eric Yuen (1):
+  PCI: tegra: Make sure the PCIe PLL is really reset
+
+Peter Daifuku (1):
+  PCI: tegra: Fix extended configuration space mapping
+
+Thierry Reding (4):
+  resource: Add device-managed request/release_resource()
+  PCI: tegra: Implement a proper resource hierarchy
+  PCI: tegra: Clear CLKREQ# enable on port disable
+  PCI: tegra: Add Tegra124 support
+
+ .../bindings/pci/nvidia,tegra20-pcie.txt           |  25 +-
+ Documentation/driver-model/devres.txt              |   2 +
+ drivers/pci/host/pci-tegra.c                       | 257 ++++++++++++++++++---
+ include/linux/ioport.h                             |   5 +
+ kernel/resource.c                                  |  70 ++++++
+ 5 files changed, 323 insertions(+), 36 deletions(-)
+
+-- 
+2.0.4
+
