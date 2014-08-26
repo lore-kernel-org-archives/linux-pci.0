@@ -1,54 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nbfkord-smmo03.seg.att.com ([209.65.160.84]:15985 "EHLO
-	nbfkord-smmo03.seg.att.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752753AbaHDODi convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 Aug 2014 10:03:38 -0400
-Message-ID: <53DF92B4.1040505@solarflare.com>
-Date: Mon, 4 Aug 2014 15:03:32 +0100
-From: Edward Cree <ecree@solarflare.com>
-MIME-Version: 1.0
-To: Don Dutile <ddutile@redhat.com>
-CC: Alexander Duyck <alexander.h.duyck@intel.com>,
-	<linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
-References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com> <alpine.LFD.2.03.1407311500570.16821@solarflare.com> <53DA5EF4.1030500@intel.com> <53DA674A.9030305@solarflare.com> <53DA718A.9040407@intel.com> <53DA7574.4050103@solarflare.com> <53DA82AF.7000503@redhat.com> <53DA8745.2070405@solarflare.com>
-In-Reply-To: <53DA8745.2070405@solarflare.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-we0-f174.google.com ([74.125.82.174]:58000 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934497AbaHZO6A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Aug 2014 10:58:00 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 5/6] PCI: tegra: Make sure the PCIe PLL is really reset
+Date: Tue, 26 Aug 2014 16:57:43 +0200
+Message-Id: <1409065064-17617-6-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <1409065064-17617-1-git-send-email-thierry.reding@gmail.com>
+References: <1409065064-17617-1-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 31/07/14 19:13, Edward Cree wrote:
-> On 31/07/14 18:53, Don Dutile wrote:
->> Ideally, when the device is configured in different modes, the SRIOV
->> cap structure
->> should be modified so the pci sriov code doesn't try to act or reflect
->> the
->> non-reality the device is in.
-> That would be much nicer of course, and I'll ask our firmware team if
-> that's possible.  But I don't think it will be.
-As I feared, it's not practical for the device to do this.
-(Unfortunately, the IMEM (instruction memory) on the device is rather
-small and the firmware team are struggling to fit all the required
-features into it.)
-However, I also found out that in principle, the device _is_ capable of
-supporting VFs in PF-IOV mode, by attaching them directly to the
-underlying v-switch.  The firmware may or may not already do this; the
-person who's likely to know this isn't in today.  The driver at present
-doesn't support it because it assumes it always needs to attach VFs to
-its own v-switch, but it could (again, in principle) be taught otherwise.
+From: Eric Yuen <eyuen@nvidia.com>
 
-So at this point it becomes a policy question of whether we want to
-support this, and our opinion is that this isn't a valid use-case (as
-the only time you'd want PF-IOV is if your system doesn't support VFs)
-and thus shouldn't be supported (as it creates extra testing and
-maintenance work).  The driver should probe the device, detect PF-IOV
-mode, recognise that it (the driver) doesn't have support for VFs in
-that mode, and set totalvfs to 0.
-Others may demur, of course, but that's likely to be decided when
-sending the driver patches to davem.  It's my belief that, uncertainty
-about my use case notwithstanding, pci_sriov_set_totalvfs(dev, 0) should
-be a valid operation with the semantics I've implemented in my patch.
+Depending on the prior state of the controller, the PLL reset may not be
+pulsed. Clear the register bit and set it after a small delay to ensure
+that the PLL is really reset.
 
--Edward
-The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
+Signed-off-by: Eric Yuen <eyuen@nvidia.com>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ drivers/pci/host/pci-tegra.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 8264bce77750..0ce43764dd36 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -849,6 +849,13 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+ 	value |= PADS_PLL_CTL_REFCLK_INTERNAL_CML | soc->tx_ref_sel;
+ 	pads_writel(pcie, value, soc->pads_pll_ctl);
+ 
++	/* reset PLL */
++	value = pads_readl(pcie, soc->pads_pll_ctl);
++	value &= ~PADS_PLL_CTL_RST_B4SM;
++	pads_writel(pcie, value, soc->pads_pll_ctl);
++
++	usleep_range(20, 100);
++
+ 	/* take PLL out of reset  */
+ 	value = pads_readl(pcie, soc->pads_pll_ctl);
+ 	value |= PADS_PLL_CTL_RST_B4SM;
+-- 
+2.0.4
+
