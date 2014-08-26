@@ -1,49 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:56540 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751069AbaH1EVx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Aug 2014 00:21:53 -0400
-Received: by mail-ig0-f171.google.com with SMTP id l13so7416691iga.4
-        for <linux-pci@vger.kernel.org>; Wed, 27 Aug 2014 21:21:50 -0700 (PDT)
+Received: from v094114.home.net.pl ([79.96.170.134]:60808 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755930AbaHZXhB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Aug 2014 19:37:01 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Peter Zijlstra <peterz@infradead.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dmitry Torokhov <dtor@google.com>,
+	Aubrey Li <aubrey.li@intel.com>
+Subject: [PATCH 0/5 v3] irq / PM: Suspend-to-idle wakeup interrupts
+Date: Wed, 27 Aug 2014 01:46:23 +0200
+Message-ID: <5320472.coYotHR1d0@vostro.rjw.lan>
+In-Reply-To: <26580319.OZP7jvJnA9@vostro.rjw.lan>
+References: <26580319.OZP7jvJnA9@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5KBNmeh+pjZXyk47w28tHr95kO64KJKBKSky9ODWuM2w@mail.gmail.com>
-References: <CAErSpo5KBNmeh+pjZXyk47w28tHr95kO64KJKBKSky9ODWuM2w@mail.gmail.com>
-Date: Wed, 27 Aug 2014 21:21:50 -0700
-Message-ID: <CAE9FiQW2WSAB93F80toP+MQAGrOd3CkM9-a=J0kW+d7YVaL87Q@mail.gmail.com>
-Subject: Re: pciehp PCI_BASE_CLASS_DISPLAY check
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 27, 2014 at 3:03 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+Hi,
 
->
-> Only pciehp_configure_device() has the PCI_BASE_CLASS_DISPLAY check.
+On Monday, August 11, 2014 03:56:46 PM Rafael J. Wysocki wrote:
+> Hi,
+> 
+> I thought I'd just refresh the previous patchset, but in the meantime I found
+> a way to avoid adding overhead to note_interrupt(), so I decided to change the
+> approach.
+> 
+> Patch [2/6] fixes the problem with IRQF_NO_SUSPEND and shared interrupts.  The
+> idea is to use wrapper handlers for all irqactions of the shared IRQs where at
+> least one of them has IRQF_NO_SUSPEND set.  Since the wrapper handler is now
+> installed for all irqactions in the given irq_desc, it can track the return
+> codes from the original handlers and "suspend" the IRQ if the interrupt is going
+> to be unhandled eventually.  All described in the changelog.  This is independent
+> of the handling of wakeup interrupts for suspend-to-idle.
+> 
+> Patch [3/6] makes IRQs configured for system wakeup with enable_irq_wake() work
+> for suspend to idle.  It does that by using a (different) wrapper handler for
+> all irqactions in the wakeup irq_descs and that wrapper handler takes care of
+> all the ugly details.  Again, all described in the changelog.
+> 
+> Patches [1/6], [4-5/6] are unmodified and the last one addes documentation.
 
-That commit actually split the loop to two loops, so second loop still
-have check.
+It has occured to me recently that trying to address two different issues at
+once in one patchset may be more confusing than it has to be, so the following
+series has one and only one purpose which is to make enable_irq_wake() interrupts
+wake up from suspend-to-idle while avoiding the shared interrupts pain.
 
-but later
+The way it works is that for each IRQD_WAKEUP_STATE IRQ (a) all of the interrupt
+handlers are substituted for by a special "wakeup mode" handler and (b) the
+IRQ is re-enabled right before entering the suspend-to-idle loop.  After a wakeup
+interrupt all is restored to the previous state left by suspend_device_irqs().
 
-| Author: Praveen Kalamegham <praveen@nextio.com>
-| Date:   Wed May 19 17:03:12 2010 -0500
-|
-|    PCI: hotplug: pciehp: Removed check for hotplug of display devices
-|
-|    Removed check to prevent hotplug of display devices within pciehp.
-|    Originally this was thought to have been required within the PCI
-|    Hotplug specification for some legacy devices.  However there is
-|    no such requirement in the most recent revision. The check prevents
-|    hotplug of not only display devices but also computational GPUs
-|    which require serviceability.
+The "wakeup mode" handler triggers a system wakeup, disables the IRQ and marks
+it as "suspended" and "pending".
 
-only removed the first one in pciehp_configure_device().
+To me, all of this is relatively straightforward and the handling of
+IRQF_NO_SUSPEND for shared interrupts, which is a separate problem, can be
+addressed on top of it later (make no mistake, I still think that it should be
+addressed).
 
-So you can drop that checking.
+The patches are as follows:
 
-Thanks
+[1/5] Mechanism to wake up the system or abort suspend in progress automatically.
+[2/5] Wakeup interrupts support for suspend-to-idle.
+[3/5] Set IRQCHIP_SKIP_SET_WAKE for x86 IOAPIC IRQ chips.
+[4/5] Make PCIe PME wake up from suspend to idle.
+[5/5] Documentation.
 
-Yinghai
+Patches [1/5] and [3-4/5] have not been changed since I posted them previously
+and patch [5/5] has been updated to reflect the focus on wakeup (I removed the
+paragraph on IRQF_NO_SUSPEND vs shared interrupts from it).
+
+All tested on MSI Wind.
+
+Rafael
+
