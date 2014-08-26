@@ -1,59 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:55673 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750883AbaHDGxv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Aug 2014 02:53:51 -0400
-From: Sathya Perla <Sathya.Perla@Emulex.Com>
-To: Edward Cree <ecree@solarflare.com>,
-	Ethan Zhao <ethan.kernel@gmail.com>
-CC: linux-pci <linux-pci@vger.kernel.org>,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Vasundhara Volam <Vasundhara.Volam@Emulex.Com>
-Subject: RE: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
-Date: Mon, 4 Aug 2014 06:53:14 +0000
-Message-ID: <379c0701-9e78-4216-94ec-678f98f784e3@CMEXHTCAS2.ad.emulex.com>
-References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com>
- <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com>
- <53DA3180.5040302@solarflare.com>
- <alpine.LFD.2.03.1407311500570.16821@solarflare.com>
- <CABawtvPwxovKV==8RVCL1OcsdfnZDDjr=d1uYp-A=bAzYbmKww@mail.gmail.com>
- <53DB84E6.1070206@solarflare.com>
-In-Reply-To: <53DB84E6.1070206@solarflare.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from v094114.home.net.pl ([79.96.170.134]:59108 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755660AbaHZXhA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Aug 2014 19:37:00 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Peter Zijlstra <peterz@infradead.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dmitry Torokhov <dtor@google.com>,
+	Aubrey Li <aubrey.li@intel.com>
+Subject: [PATCH 1/5 v3] PM / sleep: Mechanism for aborting system suspends unconditionally
+Date: Wed, 27 Aug 2014 01:47:47 +0200
+Message-ID: <3280095.tp6RTXXLdN@vostro.rjw.lan>
+In-Reply-To: <5320472.coYotHR1d0@vostro.rjw.lan>
+References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1wY2ktb3duZXJAdmdl
-ci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtcGNpLQ0KPiANCj4gT24gMDEvMDgvMTQgMDQ6NTEs
-IEV0aGFuIFpoYW8gd3JvdGU6DQo+ID4gVGhvdWdoIEkgbGlrZSB0aGlzIHBhdGNoLCBpdCBzaG93
-cyBkaXJlY3Qgc3R5bGUsIGJ1dCBpdCB3aWxsIGNoYW5nZQ0KPiA+IHRoZSBtZWFuaW5nIG9mIGEg
-ZnVuY3Rpb24gbm90IG1lbnRpb25lZCBoZXJlLg0KPiA+DQo+ID4gICBpbnQgcGNpX3NyaW92X3Nl
-dF90b3RhbHZmcyhzdHJ1Y3QgcGNpX2RldiAqZGV2LCB1MTYgbnVtdmZzKQ0KPiBBbSBJIG1pc3Np
-bmcgc29tZXRoaW5nIGhlcmUsIG9yIGlzIHRoYXQgZXhhY3RseSB0aGUgZnVuY3Rpb24gbWVudGlv
-bmVkDQo+IGluIHRoZSBwYXRjaCB0aXRsZSAvIHN1YmplY3QgbGluZT8NCj4gDQo+ID4gU28gZmFy
-IHNlZW1zIG5vIGRyaXZlciBjYWxsIHBjaV9zcmlvdl9zZXRfdG90YWx2ZnMoKSB3aXRoIG51bXZm
-cyA9IDANCj4gPiBhbmQgdGhlIHBhdGNoIHdpbGwgY2hhbmdlIHRoZSBiZWhhdmlvciBvZiB0aGUg
-ZHJpdmVycywgYnV0IGl0IHdpbGwNCj4gPiBkZWZpbml0ZWx5IGNoYW5nZSB0aGUgdGVzdCBjYXNl
-cyBhbmQgZG9jdW1lbnRzIHJlbGF0ZWQgdG8gSU9WLg0KPiBBcyBmb3IgdGVzdCBjYXNlcyBhbmQg
-ZG9jdW1lbnRzLCBJIGNhbid0IGZpbmQgYW55IGluIHRoZSBrZXJuZWwgdHJlZSAtDQo+IGlmIEkg
-Z3JlcCBmb3IgcGNpX3NyaW92X3NldF90b3RhbHZmcywgdGhlIG9ubHkgbWVudGlvbnMgSSBmaW5k
-IGFyZToNCj4gKiBUaGUgZGVjbGFyYXRpb24gaW4gaW5jbHVkZS9saW51eC9wY2kuaC4gIERvZXNu
-J3QgaGF2ZSBhbnkgY29tbWVudHMuDQo+ICogVGhlIGRlZmluaXRpb24gaW4gZHJpdmVycy9wY2kv
-aW92LmMuICBUaGUgY29tbWVudCBkb2Vzbid0IGRvY3VtZW50IHRoZQ0KPiBiZWhhdmlvdXIgaW4g
-dGhlIG51bXZmcyA9IDAgY2FzZS4NCj4gKiBEb2N1bWVudGF0aW9uL0FCSS90ZXN0aW5nL3N5c2Zz
-LWJ1cy1wY2kuICBEZXNjcmliZXMgdGhlIGZ1bmN0aW9uJ3MNCj4gcHVycG9zZSAicmVkdWNlIHRo
-ZSB2YWx1ZSByZWFkIGZyb20gW3RoZSBzcmlvdl90b3RhbHZmcyBzeXNmcyBmaWxlXSIgYnV0DQo+
-IGRvZXNuJ3Qgc2F5IGFueXRoaW5nIGFib3V0IHRoZSBudW12ZnMgPSAwIGNhc2UuDQo+ICogdGhl
-IEludGVsIGlnYiBhbmQgaXhnYmUgZXRoZXJuZXQgZHJpdmVycy4gIEJvdGggcGFzcyBub256ZXJv
-IGNvbnN0YW50cw0KPiBmb3IgbnVtdmZzLg0KPiAqIHRoZSBFbXVsZXggYmVuZXQgZHJpdmVyLiAg
-VGhpcyB3ZW50IGludG8gRGF2ZSBNaWxsZXIncyBuZXQtbmV4dCBicmFuY2gNCj4gb24gMzAvMDYv
-MjAxNCAoc28gaGFzbid0IGhpdCBMaW51cycgb3Igb3RoZXIgdHJlZXMgeWV0KSwgYnV0IGl0IGxv
-b2tzIHRvDQo+IG1lIGxpa2UgaXQgbWlnaHQgY2FsbCB3aXRoIG51bXZmcyA9IDAuICBDQ2luZyB0
-aGUgYXV0aG9yIG9mIHRoYXQgcGF0Y2gNCj4gKFZhc3VuZGhhcmEgVm9sYW0pIGZvciBjb21tZW50
-cy4NCj4gDQoNCkluY2lkZW50YWxseSwgYWZ0ZXIgbXkgbW9zdCByZWNlbnQgcGF0Y2ggLSBjb21t
-aXQgZDNkMTgzMTINCigiYmUybmV0OiBpZ25vcmUgZ2V0L3NldCBwcm9maWxlIEZXIGNtZCBmYWls
-dXJlcyIpLCBiZTJuZXQgbm8gbG9uZ2VyDQpjYWxscyBwY2lfc3Jpb3Zfc2V0X3RvdGFsdmZzKCkg
-d2l0aCBudW1fdmZzPTAuIA0KSG9wZSB0aGlzIGhlbHBzLg0KDQp0aGFua3MsDQotU2F0aHlhDQo=
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+It sometimes may be necessary to abort a system suspend in
+progress or wake up the system from suspend-to-idle even if the
+pm_wakeup_event()/pm_stay_awake() mechanism is not enabled.
+
+For this purpose, introduce a new global variable abort_suspend and
+make pm_wakeup_pending() check its value.  Also add routines for
+manipulating that variable.
+
+This is going to be used in subsequent changes.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/base/power/wakeup.c |   20 ++++++++++++++++++++
+ include/linux/suspend.h     |    4 ++++
+ kernel/power/process.c      |    1 +
+ 3 files changed, 25 insertions(+)
+
+Index: linux-pm/include/linux/suspend.h
+===================================================================
+--- linux-pm.orig/include/linux/suspend.h
++++ linux-pm/include/linux/suspend.h
+@@ -371,6 +371,8 @@ extern int unregister_pm_notifier(struct
+ extern bool events_check_enabled;
+ 
+ extern bool pm_wakeup_pending(void);
++extern void pm_system_wakeup(void);
++extern void pm_wakeup_clear(void);
+ extern bool pm_get_wakeup_count(unsigned int *count, bool block);
+ extern bool pm_save_wakeup_count(unsigned int count);
+ extern void pm_wakep_autosleep_enabled(bool set);
+@@ -418,6 +420,8 @@ static inline int unregister_pm_notifier
+ #define pm_notifier(fn, pri)	do { (void)(fn); } while (0)
+ 
+ static inline bool pm_wakeup_pending(void) { return false; }
++static inline void pm_system_wakeup(void) {}
++static inline void pm_wakeup_clear(void) {}
+ 
+ static inline void lock_system_sleep(void) {}
+ static inline void unlock_system_sleep(void) {}
+Index: linux-pm/drivers/base/power/wakeup.c
+===================================================================
+--- linux-pm.orig/drivers/base/power/wakeup.c
++++ linux-pm/drivers/base/power/wakeup.c
+@@ -691,6 +691,8 @@ void pm_print_active_wakeup_sources(void
+ }
+ EXPORT_SYMBOL_GPL(pm_print_active_wakeup_sources);
+ 
++static bool abort_suspend;
++
+ /**
+  * pm_wakeup_pending - Check if power transition in progress should be aborted.
+  *
+@@ -712,6 +714,7 @@ bool pm_wakeup_pending(void)
+ 		ret = (cnt != saved_count || inpr > 0);
+ 		events_check_enabled = !ret;
+ 	}
++	ret = ret || abort_suspend;
+ 	spin_unlock_irqrestore(&events_lock, flags);
+ 
+ 	if (ret) {
+@@ -722,6 +725,23 @@ bool pm_wakeup_pending(void)
+ 	return ret;
+ }
+ 
++void pm_system_wakeup(void)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&events_lock, flags);
++	abort_suspend = true;
++	spin_unlock_irqrestore(&events_lock, flags);
++	freeze_wake();
++}
++
++void pm_wakeup_clear(void)
++{
++	spin_lock_irq(&events_lock);
++	abort_suspend = false;
++	spin_unlock_irq(&events_lock);
++}
++
+ /**
+  * pm_get_wakeup_count - Read the number of registered wakeup events.
+  * @count: Address to store the value at.
+Index: linux-pm/kernel/power/process.c
+===================================================================
+--- linux-pm.orig/kernel/power/process.c
++++ linux-pm/kernel/power/process.c
+@@ -129,6 +129,7 @@ int freeze_processes(void)
+ 	if (!pm_freezing)
+ 		atomic_inc(&system_freezing_cnt);
+ 
++	pm_wakeup_clear();
+ 	printk("Freezing user space processes ... ");
+ 	pm_freezing = true;
+ 	error = try_to_freeze_tasks(true);
+
