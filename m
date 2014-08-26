@@ -1,263 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:64766 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751798AbaHLHC7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 03:02:59 -0400
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:42544 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932832AbaHZO5w (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Aug 2014 10:57:52 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>, <linux-pci@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<arnab.basu@freescale.com>, <x86@kernel.org>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [RFC PATCH 01/20] x86/xen/MSI: Eliminate arch_msix_mask_irq() and arch_msi_mask_irq()
-Date: Tue, 12 Aug 2014 15:25:54 +0800
-Message-ID: <1407828373-24322-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1407828373-24322-1-git-send-email-wangyijing@huawei.com>
-References: <1407828373-24322-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: Stephen Warren <swarren@wwwdotorg.org>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 1/6] resource: Add device-managed request/release_resource()
+Date: Tue, 26 Aug 2014 16:57:39 +0200
+Message-Id: <1409065064-17617-2-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <1409065064-17617-1-git-send-email-thierry.reding@gmail.com>
+References: <1409065064-17617-1-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 0e4ccb150 added two __weak arch functions arch_msix_mask_irq()
-and arch_msi_mask_irq() to fix a bug found when running xen in x86.
-Introduced these two funcntions make MSI code complex. This patch
-reverted commit 0e4ccb150 and add #ifdef for x86 msi_chip to fix this
-bug for simplicity. Also this is preparation for using struct
-msi_chip instead of weak arch MSI functions in all platforms.
+From: Thierry Reding <treding@nvidia.com>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Provide device-managed implementations of the request_resource() and
+release_resource() functions. Upon failure to request a resource, the
+new devm_request_resource() function will output an error message for
+consistent error reporting.
+
+Acked-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
- arch/x86/include/asm/x86_init.h |    3 ---
- arch/x86/kernel/apic/io_apic.c  |   15 +++++++++++++++
- arch/x86/kernel/x86_init.c      |   10 ----------
- arch/x86/pci/xen.c              |   13 +------------
- drivers/pci/msi.c               |   22 ++++++----------------
- include/linux/msi.h             |    2 --
- 6 files changed, 22 insertions(+), 43 deletions(-)
+Changes in v2:
+- use more natural flow for error handling
+- don't needlessly check for NULL pointers
 
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index e45e4da..f58a9c7 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -172,7 +172,6 @@ struct x86_platform_ops {
+ Documentation/driver-model/devres.txt |  2 +
+ include/linux/ioport.h                |  5 +++
+ kernel/resource.c                     | 70 +++++++++++++++++++++++++++++++++++
+ 3 files changed, 77 insertions(+)
+
+diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
+index d14710b04439..befc3fe12ba6 100644
+--- a/Documentation/driver-model/devres.txt
++++ b/Documentation/driver-model/devres.txt
+@@ -264,8 +264,10 @@ IIO
+ IO region
+   devm_release_mem_region()
+   devm_release_region()
++  devm_release_resource()
+   devm_request_mem_region()
+   devm_request_region()
++  devm_request_resource()
  
- struct pci_dev;
- struct msi_msg;
--struct msi_desc;
+ IOMAP
+   devm_ioport_map()
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 142ec544167c..2c5250222278 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -215,6 +215,11 @@ static inline int __deprecated check_region(resource_size_t s,
  
- struct x86_msi_ops {
- 	int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
-@@ -183,8 +182,6 @@ struct x86_msi_ops {
- 	void (*teardown_msi_irqs)(struct pci_dev *dev);
- 	void (*restore_msi_irqs)(struct pci_dev *dev);
- 	int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
--	u32 (*msi_mask_irq)(struct msi_desc *desc, u32 mask, u32 flag);
--	u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
- };
- 
- struct IO_APIC_route_entry;
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 81e08ef..2609dcd 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3019,14 +3019,29 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
- 	return IRQ_SET_MASK_OK_NOCOPY;
- }
- 
-+#ifdef CONFIG_XEN
-+static void nop_unmask_msi_irq(struct irq_data *data)
+ /* Wrappers for managed devices */
+ struct device;
++
++extern int devm_request_resource(struct device *dev, struct resource *root,
++				 struct resource *new);
++extern void devm_release_resource(struct device *dev, struct resource *new);
++
+ #define devm_request_region(dev,start,n,name) \
+ 	__devm_request_region(dev, &ioport_resource, (start), (n), (name))
+ #define devm_request_mem_region(dev,start,n,name) \
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 60c5a3856ab7..46322019ab7d 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -1245,6 +1245,76 @@ int release_mem_region_adjustable(struct resource *parent,
+ /*
+  * Managed region resource
+  */
++static void devm_resource_release(struct device *dev, void *ptr)
 +{
++	struct resource **r = ptr;
++
++	release_resource(*r);
 +}
 +
-+static void nop_mask_msi_irq(struct irq_data *data)
++/**
++ * devm_request_resource() - request and reserve an I/O or memory resource
++ * @dev: device for which to request the resource
++ * @root: root of the resource tree from which to request the resource
++ * @new: descriptor of the resource to request
++ *
++ * This is a device-managed version of request_resource(). There is usually
++ * no need to release resources requested by this function explicitly since
++ * that will be taken care of when the device is unbound from its driver.
++ * If for some reason the resource needs to be released explicitly, because
++ * of ordering issues for example, drivers must call devm_release_resource()
++ * rather than the regular release_resource().
++ *
++ * When a conflict is detected between any existing resources and the newly
++ * requested resource, an error message will be printed.
++ *
++ * Returns 0 on success or a negative error code on failure.
++ */
++int devm_request_resource(struct device *dev, struct resource *root,
++			  struct resource *new)
 +{
++	struct resource *conflict, **ptr;
++
++	ptr = devres_alloc(devm_resource_release, sizeof(*ptr), GFP_KERNEL);
++	if (!ptr)
++		return -ENOMEM;
++
++	*ptr = new;
++
++	conflict = request_resource_conflict(root, new);
++	if (conflict) {
++		dev_err(dev, "resource collision: %pR conflicts with %s %pR\n",
++			new, conflict->name, conflict);
++		devres_free(ptr);
++		return -EBUSY;
++	}
++
++	devres_add(dev, ptr);
++	return 0;
 +}
-+#endif
++EXPORT_SYMBOL(devm_request_resource);
 +
- /*
-  * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
-  * which implement the MSI or MSI-X Capability Structure.
-  */
- static struct irq_chip msi_chip = {
- 	.name			= "PCI-MSI",
-+#ifdef CONFIG_XEN
-+	.irq_unmask		= nop_unmask_msi_irq,
-+	.irq_mask		= nop_mask_msi_irq,
-+#else
- 	.irq_unmask		= unmask_msi_irq,
- 	.irq_mask		= mask_msi_irq,
-+#endif
- 	.irq_ack		= ack_apic_edge,
- 	.irq_set_affinity	= msi_set_affinity,
- 	.irq_retrigger		= ioapic_retrigger_irq,
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index e48b674..234b072 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -116,8 +116,6 @@ struct x86_msi_ops x86_msi = {
- 	.teardown_msi_irqs	= default_teardown_msi_irqs,
- 	.restore_msi_irqs	= default_restore_msi_irqs,
- 	.setup_hpet_msi		= default_setup_hpet_msi,
--	.msi_mask_irq		= default_msi_mask_irq,
--	.msix_mask_irq		= default_msix_mask_irq,
- };
- 
- /* MSI arch specific hooks */
-@@ -140,14 +138,6 @@ void arch_restore_msi_irqs(struct pci_dev *dev)
- {
- 	x86_msi.restore_msi_irqs(dev);
- }
--u32 arch_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
--{
--	return x86_msi.msi_mask_irq(desc, mask, flag);
--}
--u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
--{
--	return x86_msi.msix_mask_irq(desc, flag);
--}
- #endif
- 
- struct x86_io_apic_ops x86_io_apic_ops = {
-diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index 905956f..55c7858 100644
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -393,14 +393,7 @@ static void xen_teardown_msi_irq(unsigned int irq)
- {
- 	xen_destroy_irq(irq);
- }
--static u32 xen_nop_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
--{
--	return 0;
--}
--static u32 xen_nop_msix_mask_irq(struct msi_desc *desc, u32 flag)
--{
--	return 0;
--}
++static int devm_resource_match(struct device *dev, void *res, void *data)
++{
++	struct resource **ptr = res;
 +
- #endif
- 
- int __init pci_xen_init(void)
-@@ -424,8 +417,6 @@ int __init pci_xen_init(void)
- 	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
- 	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
- 	x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
--	x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
--	x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
- #endif
- 	return 0;
- }
-@@ -505,8 +496,6 @@ int __init pci_xen_initial_domain(void)
- 	x86_msi.setup_msi_irqs = xen_initdom_setup_msi_irqs;
- 	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
- 	x86_msi.restore_msi_irqs = xen_initdom_restore_msi_irqs;
--	x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
--	x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
- #endif
- 	xen_setup_acpi_sci();
- 	__acpi_register_gsi = acpi_register_gsi_xen;
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 5a40516..bff25df 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -173,7 +173,7 @@ static inline __attribute_const__ u32 msi_mask(unsigned x)
-  * reliably as devices without an INTx disable bit will then generate a
-  * level IRQ which will never be cleared.
-  */
--u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
-+static u32 __msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
- {
- 	u32 mask_bits = desc->masked;
- 
-@@ -187,14 +187,9 @@ u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
- 	return mask_bits;
- }
- 
--__weak u32 arch_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
--{
--	return default_msi_mask_irq(desc, mask, flag);
--}
--
- static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
- {
--	desc->masked = arch_msi_mask_irq(desc, mask, flag);
-+	desc->masked = __msi_mask_irq(desc, mask, flag);
- }
- 
- /*
-@@ -204,7 +199,7 @@ static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
-  * file.  This saves a few milliseconds when initialising devices with lots
-  * of MSI-X interrupts.
-  */
--u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag)
-+static u32 __msix_mask_irq(struct msi_desc *desc, u32 flag)
- {
- 	u32 mask_bits = desc->masked;
- 	unsigned offset = desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
-@@ -217,14 +212,9 @@ u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag)
- 	return mask_bits;
- }
- 
--__weak u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
--{
--	return default_msix_mask_irq(desc, flag);
--}
--
- static void msix_mask_irq(struct msi_desc *desc, u32 flag)
- {
--	desc->masked = arch_msix_mask_irq(desc, flag);
-+	desc->masked = __msix_mask_irq(desc, flag);
- }
- 
- static void msi_set_mask_bit(struct irq_data *data, u32 flag)
-@@ -893,7 +883,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
- 	/* Return the device with MSI unmasked as initial states */
- 	mask = msi_mask(desc->msi_attrib.multi_cap);
- 	/* Keep cached state to be restored */
--	arch_msi_mask_irq(desc, mask, ~mask);
-+	__msi_mask_irq(desc, mask, ~mask);
- 
- 	/* Restore dev->irq to its default pin-assertion irq */
- 	dev->irq = desc->msi_attrib.default_irq;
-@@ -993,7 +983,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
- 	/* Return the device with MSI-X masked as initial states */
- 	list_for_each_entry(entry, &dev->msi_list, list) {
- 		/* Keep cached states to be restored */
--		arch_msix_mask_irq(entry, 1);
-+		__msix_mask_irq(entry, 1);
- 	}
- 
- 	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 8103f32..78e6b6e 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -65,8 +65,6 @@ void arch_restore_msi_irqs(struct pci_dev *dev);
- 
- void default_teardown_msi_irqs(struct pci_dev *dev);
- void default_restore_msi_irqs(struct pci_dev *dev);
--u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag);
--u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag);
- 
- struct msi_chip {
- 	struct module *owner;
++	return *ptr == data;
++}
++
++/**
++ * devm_release_resource() - release a previously requested resource
++ * @dev: device for which to release the resource
++ * @new: descriptor of the resource to release
++ *
++ * Releases a resource previously requested using devm_request_resource().
++ */
++void devm_release_resource(struct device *dev, struct resource *new)
++{
++	WARN_ON(devres_release(dev, devm_resource_release, devm_resource_match,
++			       new));
++}
++EXPORT_SYMBOL(devm_release_resource);
++
+ struct region_devres {
+ 	struct resource *parent;
+ 	resource_size_t start;
 -- 
-1.7.1
+2.0.4
 
