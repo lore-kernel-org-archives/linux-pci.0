@@ -1,168 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20724 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751787AbaHKLpp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Aug 2014 07:45:45 -0400
-Date: Mon, 11 Aug 2014 13:45:36 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:38012 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758413AbaHZPIS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Aug 2014 11:08:18 -0400
+Date: Tue, 26 Aug 2014 17:08:14 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 2/2] PCI/MSI: Remove arch_msi_check_device()
-Message-ID: <20140811114536.GA3427@dhcp-27-160.brq.redhat.com>
-References: <cover.1405160163.git.agordeev@redhat.com>
- <1005232855c3af2c0c669818ee63be445389b6ad.1405160163.git.agordeev@redhat.com>
- <20140716222024.GE14366@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/6] PCI: tegra: Fixes and Tegra124 support
+Message-ID: <20140826150812.GA26603@ulmo>
+References: <1409065064-17617-1-git-send-email-thierry.reding@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140716222024.GE14366@google.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="pWyiEgJYm5f9v55/"
+In-Reply-To: <1409065064-17617-1-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are no archs that override arch_msi_check_device()
-hook. Remove it as it is completely redundant.
 
-If an arch would need to check MSI/MSI-X possibility for a
-device it should make it within arch_setup_msi_irqs() hook.
+--pWyiEgJYm5f9v55/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/pci/msi.c   | 49 +++++++++++++------------------------------------
- include/linux/msi.h |  3 ---
- 2 files changed, 13 insertions(+), 39 deletions(-)
+On Tue, Aug 26, 2014 at 04:57:38PM +0200, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
+>=20
+> This series implements various fixes and adds support for Tegra124 to the
+> Tegra PCIe controller driver.
+>=20
+> Patches 1 and 2 were already sent out separately earlier on but haven't b=
+een
+> applied yet, so I'm including them here for convenience.
+>=20
+> Patches 3 to 5 are various fixes that should make the driver more reliabl=
+e,
+> though they don't (except maybe for patch 4) fix any known issues.
+>=20
+> Patch 6 finally adds support for Tegra124.
+>=20
+> Thierry
+>=20
+> Eric Yuen (1):
+>   PCI: tegra: Make sure the PCIe PLL is really reset
+>=20
+> Peter Daifuku (1):
+>   PCI: tegra: Fix extended configuration space mapping
+>=20
+> Thierry Reding (4):
+>   resource: Add device-managed request/release_resource()
+>   PCI: tegra: Implement a proper resource hierarchy
+>   PCI: tegra: Clear CLKREQ# enable on port disable
+>   PCI: tegra: Add Tegra124 support
+>=20
+>  .../bindings/pci/nvidia,tegra20-pcie.txt           |  25 +-
+>  Documentation/driver-model/devres.txt              |   2 +
+>  drivers/pci/host/pci-tegra.c                       | 257 +++++++++++++++=
++++---
+>  include/linux/ioport.h                             |   5 +
+>  kernel/resource.c                                  |  70 ++++++
+>  5 files changed, 323 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 5a40516..6c2cc41 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -56,16 +56,6 @@ void __weak arch_teardown_msi_irq(unsigned int irq)
- 	chip->teardown_irq(chip, irq);
- }
- 
--int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
--{
--	struct msi_chip *chip = dev->bus->msi;
--
--	if (!chip || !chip->check_device)
--		return 0;
--
--	return chip->check_device(chip, dev, nvec, type);
--}
--
- int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- {
- 	struct msi_desc *entry;
-@@ -806,22 +796,23 @@ out_free:
- }
- 
- /**
-- * pci_msi_check_device - check whether MSI may be enabled on a device
-+ * pci_msi_supported - check whether MSI may be enabled on a device
-  * @dev: pointer to the pci_dev data structure of MSI device function
-  * @nvec: how many MSIs have been requested ?
-- * @type: are we checking for MSI or MSI-X ?
-  *
-  * Look at global flags, the device itself, and its parent buses
-  * to determine if MSI/-X are supported for the device. If MSI/-X is
-  * supported return 0, else return an error code.
-  **/
--static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
-+static int pci_msi_supported(struct pci_dev *dev, int nvec)
- {
- 	struct pci_bus *bus;
--	int ret;
- 
- 	/* MSI must be globally enabled and supported by the device */
--	if (!pci_msi_enable || !dev || dev->no_msi)
-+	if (!pci_msi_enable)
-+		return -EINVAL;
-+
-+	if (!dev || dev->no_msi || dev->current_state != PCI_D0)
- 		return -EINVAL;
- 
- 	/*
-@@ -843,10 +834,6 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
- 		if (bus->bus_flags & PCI_BUS_FLAGS_NO_MSI)
- 			return -EINVAL;
- 
--	ret = arch_msi_check_device(dev, nvec, type);
--	if (ret)
--		return ret;
--
- 	return 0;
- }
- 
-@@ -949,13 +936,13 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
- 	int status, nr_entries;
- 	int i, j;
- 
--	if (!entries || !dev->msix_cap || dev->current_state != PCI_D0)
--		return -EINVAL;
--
--	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
-+	status = pci_msi_supported(dev, nvec);
- 	if (status)
- 		return status;
- 
-+	if (!entries)
-+		return -EINVAL;
-+
- 	nr_entries = pci_msix_vec_count(dev);
- 	if (nr_entries < 0)
- 		return nr_entries;
-@@ -1062,8 +1049,9 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
- 	int nvec;
- 	int rc;
- 
--	if (dev->current_state != PCI_D0)
--		return -EINVAL;
-+	rc = pci_msi_supported(dev, minvec);
-+	if (rc)
-+		return rc;
- 
- 	WARN_ON(!!dev->msi_enabled);
- 
-@@ -1086,17 +1074,6 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
- 		nvec = maxvec;
- 
- 	do {
--		rc = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
--		if (rc < 0) {
--			return rc;
--		} else if (rc > 0) {
--			if (rc < minvec)
--				return -ENOSPC;
--			nvec = rc;
--		}
--	} while (rc);
--
--	do {
- 		rc = msi_capability_init(dev, nvec);
- 		if (rc < 0) {
- 			return rc;
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 8103f32..dbf7cc9 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -60,7 +60,6 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
- void arch_teardown_msi_irq(unsigned int irq);
- int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- void arch_teardown_msi_irqs(struct pci_dev *dev);
--int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
- void arch_restore_msi_irqs(struct pci_dev *dev);
- 
- void default_teardown_msi_irqs(struct pci_dev *dev);
-@@ -77,8 +76,6 @@ struct msi_chip {
- 	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
- 			 struct msi_desc *desc);
- 	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
--	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
--			    int nvec, int type);
- };
- 
- #endif /* LINUX_MSI_H */
--- 
-1.9.3
+Hi Bjorn,
 
+Right after sending this out I noticed that this series is missing a
+change to the device tree binding that I've only had in my local tree,
+so please don't apply this. I'll send out a v3 with that fixed shortly.
+
+Thierry
+
+--pWyiEgJYm5f9v55/
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJT/KLcAAoJEN0jrNd/PrOhqy8QAJJz/7sn8q1x3zNl3rfJvUS0
+3OC1wh8w9ZR0OPz5d215xnzQnJx8bBOF4vzXzJicj+Jibg+19FzfB905Atqam8KI
+4vGh473Vms+FNHuz1EkDtJDkCN3iufj11Eic4s5cfn9vqEDygdphATQPUIAwKnux
+FDlpm1SI254j5voIXmyfflH5dTI/4Ms1FkTgOudoQBhpv3QCw08DqBSHqdzAM7Ph
+T9ItnrjOymbyS5iRHG8ETY+vPDXNXGuxrxfRSKDY4VdtwaDQugi+xtLWkO/foGTZ
+1rSJjg4YwY9EBLjoXo81U5lz971Hwe2YA+zET0HScluwIyRFGI9kw7IVHB4ixc+n
+smhlRW0p154li2p4pvKPAE3fWv7MuSS3MG7lRjJCQ6np1JjQp7wFHhRE8LawySfJ
+s6L0eYIJiIorlvBt6MLF6loxboXm6xBsEYHn9kxXF9uqWFFXR3PrFSmieUbwC7ib
+zpoLUAyIy14Zk9F6plDKCRn7ikYSwbuVpujnvd4ou9Tj2Vd9aOIalXy9Zo3bNE8Q
+3cgebwv5+PuY9Kq3PH17u8F/2DkjeKb4Qho8PFJTmmJV1u9/uLSUw3S4mhtaBMG4
+gg/ZhpfETTOGpsNkev9FuCH3jMy5uz/4c/4QLUqFtGWZP+ZcvkQwuzX8no9bDDJw
+d+9cl2VrFmBba2MI4zlB
+=7vkZ
+-----END PGP SIGNATURE-----
+
+--pWyiEgJYm5f9v55/--
