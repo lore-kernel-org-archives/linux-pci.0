@@ -1,56 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:64342 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751660AbaHSMk4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Aug 2014 08:40:56 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Subject: Re: [PATCH v9 02/12] PCI: OF: Parse and map the IRQ when adding the PCI device.
-Date: Tue, 19 Aug 2014 14:39:56 +0200
-Cc: Liviu Dudau <liviu@dudau.co.uk>, Liviu Dudau <Liviu.Dudau@arm.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 26 Aug 2014 12:52:21 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	"linux-pci" <linux-pci@vger.kernel.org>,
-	"linux-arch" <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com> <20140818213054.GB13147@bart.dudau.co.uk> <20140818220906.GJ24600@localhost>
-In-Reply-To: <20140818220906.GJ24600@localhost>
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Prarit Bhargava <prarit@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: Re: [Bugfix] x86, irq: Fix bug in setting IOAPIC pin attributes
+Message-ID: <20140826095221.GO1660@lahna.fi.intel.com>
+References: <20140822124145.GF1660@lahna.fi.intel.com>
+ <1409042706-11958-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201408191439.56493.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1409042706-11958-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 19 August 2014, Catalin Marinas wrote:
-> On Mon, Aug 18, 2014 at 10:30:54PM +0100, Liviu Dudau wrote:
-> > At this point I would like to hear more from people doing the conversion of
-> > the drivers. I cannot answer fully for all arm or arm64 drivers.
+On Tue, Aug 26, 2014 at 04:45:01PM +0800, Jiang Liu wrote:
+> On startup, IOAPIC driver preallocates IRQ descriptors and programs
+> IOAPIC pins with default level and polarity attributes for all legacy
+> IRQs. Later legacy IRQ users may fail to set IOAPIC pin attributes
+> if the requested attributes conflicts with the default IOAPIC pin
+> attributes. So change mp_irqdomain_map() to allow the first legacy IRQ
+> user to reprogram IOAPIC pin with different attributes.
 > 
-> As I read the description of pcibios_add_device(), it is meant as an
-> architecture hook. While it's nice to generalise this, I'm not sure we
-> we can find a common denominator. For example, we may want to call
-> set_dma_ops() as powerpc does but the ops would be arm64 specific (so
-> even the __weak implementation may not be used by any architecture).
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 
-Right. I'm a strong advocate of the idea of having no architecture specific
-parts in the PCI support, but I can see the set_dma_ops() call as a
-good reason to make an exception here.
+I tried this and now we get further in setting up the IOAPIC but it
+still doesn't work :-(
 
-We could add another layer of indirection for the purpose of API purity
-here, to call an architecture specific DMA setup function, but it doesn't
-really add that much benefits, in particular when the DMA setup is currently
-in flux as well.
+I noticed that mp_set_gsi_attr() never programs the IOAPIC in case
+info->set is 0 so I added following on top of your patch. With the below
+patch, the system seems to work as expected.
 
-	Arnd
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 66c2700c9f83..777762a0ad09 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3942,10 +3942,16 @@ int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
+ 
+ 	mutex_lock(&ioapic_mutex);
+ 	if (!info->set) {
++		struct io_apic_irq_attr attr;
++
+ 		info->trigger = trigger;
+ 		info->polarity = polarity;
+ 		info->node = node;
+ 		info->set = 1;
++
++		/* Now program the IOAPIC with the new attributes */
++		set_io_apic_irq_attr(&attr, ioapic, pin, trigger, polarity);
++		ret = io_apic_setup_irq_pin(gsi, node, &attr);
+ 	} else if (info->trigger != trigger || info->polarity != polarity) {
+ 		ret = -EBUSY;
+ 	}
