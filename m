@@ -1,31 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:56373 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751426AbaHFJc3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Aug 2014 05:32:29 -0400
-Date: Wed, 6 Aug 2014 11:32:23 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: "Chen, Gong" <gong.chen@linux.intel.com>
-Cc: bhelgaas@google.com, rdunlap@infradead.org, tony.luck@intel.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/5] RAS, trace: Update error definition format
-Message-ID: <20140806093223.GA27033@pd.tnic>
-References: <1407313964-20794-1-git-send-email-gong.chen@linux.intel.com>
+Received: from mail-qa0-f49.google.com ([209.85.216.49]:59744 "EHLO
+	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932305AbaH0WEH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Aug 2014 18:04:07 -0400
+Received: by mail-qa0-f49.google.com with SMTP id i13so140591qae.22
+        for <linux-pci@vger.kernel.org>; Wed, 27 Aug 2014 15:04:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1407313964-20794-1-git-send-email-gong.chen@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 27 Aug 2014 16:03:43 -0600
+Message-ID: <CAErSpo5KBNmeh+pjZXyk47w28tHr95kO64KJKBKSky9ODWuM2w@mail.gmail.com>
+Subject: pciehp PCI_BASE_CLASS_DISPLAY check
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 06, 2014 at 04:32:40AM -0400, Chen, Gong wrote:
-> Previous format definition uses MACRO BIT(...), which is not very
-> maintainable.
+Hi Yinghai,
 
-What does that "not very maintainable" mean?
+In 9789ac979b6b ("PCI: pciehp: cleanup flow in
+pciehp_configure_device") [1], you added a check that prevents us from
+calling pci_configure_slot() for PCI_BASE_CLASS_DISPLAY devices.
 
--- 
-Regards/Gruss,
-    Boris.
+Do you remember why we need that check?  I would like to configure
+devices in the pci_device_add() path instead of doing it in the
+hotplug drivers.  pci_configure_device() is currently called from:
 
-Sent from a fat crate under my desk. Formatting is fine.
---
+  acpiphp_set_hpp_values()
+  pciehp_configure_device()
+  shpchp_configure_device()
+
+Only pciehp_configure_device() has the PCI_BASE_CLASS_DISPLAY check.
+
+Bjorn
+
+[1] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=9789ac979b6b
