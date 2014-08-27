@@ -1,73 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50750 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932284AbaH1CUq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 Aug 2014 22:20:46 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v4 03/16] ACPI: Fix minor syntax issues in processor_core.c
-Date: Thu, 28 Aug 2014 10:22:28 +0800
-Message-Id: <1409192561-19744-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:56114 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935598AbaH0UXC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Aug 2014 16:23:02 -0400
+Date: Wed, 27 Aug 2014 13:23:01 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci/pci-sysfs: Set pci interface in uppercase
+Message-ID: <20140827202301.GA13800@kroah.com>
+References: <1409144277-23379-1-git-send-email-ricardo.ribalda@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1409144277-23379-1-git-send-email-ricardo.ribalda@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix minor syntax issues in processor.c to follow coding styles.
+On Wed, Aug 27, 2014 at 02:57:57PM +0200, Ricardo Ribalda Delgado wrote:
+> There is a missmatch between the way file2alias generates the modalias
+> and the way the pci driver generates it.
+> 
+> Some implementations of modprobe will fail to load the driver for a pci
+> device automatically when the pci interface is defined on the driver. As
+> one will be in uppercase and the other in lowercase.
+> 
+> Fortunatelly not many drivers define this.
+> 
+> Signed-off-by: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+> ---
+>  drivers/pci/pci-sysfs.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 9ff0a90..76ef791 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -177,7 +177,7 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+>  {
+>  	struct pci_dev *pci_dev = to_pci_dev(dev);
+>  
+> -	return sprintf(buf, "pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x\n",
+> +	return sprintf(buf, "pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02X\n",
+>  		       pci_dev->vendor, pci_dev->device,
+>  		       pci_dev->subsystem_vendor, pci_dev->subsystem_device,
+>  		       (u8)(pci_dev->class >> 16), (u8)(pci_dev->class >> 8),
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/processor_core.c |    9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+As said in the other thread about this issue, no, this code has been
+here for over 9 years just fine.  Please fix your userspace code that is
+trying to compare hex values as a string and not a numeric value, that
+is the stuff that is wrong, not the kernel.
 
-diff --git a/drivers/acpi/processor_core.c b/drivers/acpi/processor_core.c
-index e32321ce9a5c..b048f3752c2b 100644
---- a/drivers/acpi/processor_core.c
-+++ b/drivers/acpi/processor_core.c
-@@ -125,13 +125,12 @@ static int map_mat_entry(acpi_handle handle, int type, u32 acpi_id)
- 	}
- 
- 	header = (struct acpi_subtable_header *)obj->buffer.pointer;
--	if (header->type == ACPI_MADT_TYPE_LOCAL_APIC) {
-+	if (header->type == ACPI_MADT_TYPE_LOCAL_APIC)
- 		map_lapic_id(header, acpi_id, &apic_id);
--	} else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC) {
-+	else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC)
- 		map_lsapic_id(header, type, acpi_id, &apic_id);
--	} else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC) {
-+	else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC)
- 		map_x2apic_id(header, type, acpi_id, &apic_id);
--	}
- 
- exit:
- 	kfree(buffer.pointer);
-@@ -164,7 +163,7 @@ int acpi_map_cpuid(int apic_id, u32 acpi_id)
- 		 * For example,
- 		 *
- 		 * Scope (_PR)
--                 * {
-+		 * {
- 		 *     Processor (CPU0, 0x00, 0x00000410, 0x06) {}
- 		 *     Processor (CPU1, 0x01, 0x00000410, 0x06) {}
- 		 *     Processor (CPU2, 0x02, 0x00000410, 0x06) {}
--- 
-1.7.10.4
+thanks,
 
+greg k-h
