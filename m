@@ -1,73 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog120.obsmtp.com ([207.126.144.149]:47272 "EHLO
-	eu1sys200aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751107AbaHCHxb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Aug 2014 03:53:31 -0400
-Message-ID: <53DDE9EC.5040303@mellanox.com>
-Date: Sun, 3 Aug 2014 10:51:08 +0300
-From: Amir Vadai <amirv@mellanox.com>
-MIME-Version: 1.0
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>, <linux-pci@vger.kernel.org>
-CC: <alex.williamson@redhat.com>,
-	Yevgeny Petrilin <yevgenyp@mellanox.com>,
-	Peter Paneah <peter@mellanox.com>, Eli Cohen <eli@mellanox.com>
-Subject: Re: [PATCH v2] PCI: Mark broken INTx masking for Mellanox devices
-References: <1406868871-350-1-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1406868871-350-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Bugfix] x86, irq: Fix bug in setting IOAPIC pin attributes
+Date: Wed, 27 Aug 2014 13:53:11 +0800
+Message-Id: <1409118795-17046-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <20140826095221.GO1660@lahna.fi.intel.com>
+References: <20140826095221.GO1660@lahna.fi.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/1/2014 7:54 AM, Gavin Shan wrote:
-> The VFIO driver is routing LSI interrupts by capturing, masking,
-> and then delivering. When passing though Mallanox adapters from
-> host to guest, interrupt storm was reported from host and guest.
-> That's because we can't mask the LSI interrupt with help of PCI
-> command register.
-Hi Gavin,
+Commit 15a3c7cc9154321fc3 "x86, irq: Introduce two helper functions
+to support irqdomain map operation" breaks LPSS ACPI enumerated
+devices.
 
-What is the problem with masking the interrupts with the PCI command
-register? I'm asking because I want to understand in which devices we
-have the problem, and if it could be fixed by firmware guys.
-What are the implications of having the quirk?
+On startup, IOAPIC driver preallocates IRQ descriptors and programs
+IOAPIC pins with default level and polarity attributes for all legacy
+IRQs. Later legacy IRQ users may fail to set IOAPIC pin attributes
+if the requested attributes conflicts with the default IOAPIC pin
+attributes. So change mp_irqdomain_map() to allow the first legacy IRQ
+user to reprogram IOAPIC pin with different attributes.
 
-> 
-> [root@ncc-1701 ~]# lspci | grep Mellanox
-> 0001:05:00.0 Ethernet controller: Mellanox Technologies MT27500 \
->              Family [ConnectX-3]
-> 0005:01:00.0 Ethernet controller: Mellanox Technologies MT26448 \
->              [ConnectX EN 10GigE, PCIe 2.0 5GT/s] (rev b0)
-> 
-> The patch marks broken INTx masking for Mellanox devices so that
-> the VFIO driver will always mask the interrupt from interrupt
-> controller side to avoid interrupt storm.
-> 
-> Cc: Amir Vadai <amirv@mellanox.com>
-> Suggested-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->  drivers/pci/quirks.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index d0f6926..8c2b96f 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2977,6 +2977,10 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CHELSIO, 0x0030,
->  			 quirk_broken_intx_masking);
->  DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
->  			 quirk_broken_intx_masking);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, 0x1003,
-> +			 quirk_broken_intx_masking);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, 0x6750,
-> +			 quirk_broken_intx_masking);
-I still don't understand what exactly is the problem, but I assume that
-there are other Mellanox devices that suffer from it.
+Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+Hi Mika,
+	We have a plan to kill function mp_set_gsi_attr() later, so
+I have slightly modified your changes. Could you please help to test
+it again?
+Regards!
+Gerry
+---
+ arch/x86/kernel/apic/io_apic.c |   15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
->  /*
->   * Realtek RTL8169 PCI Gigabit Ethernet Controller (rev 10)
->   * Subsystem: Realtek RTL8169/8110 Family PCI Gigabit Ethernet NIC
-> 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 29290f554e79..40a4aa3f4061 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1070,6 +1070,11 @@ static int mp_map_pin_to_irq(u32 gsi, int idx, int ioapic, int pin,
+ 	}
+ 
+ 	if (flags & IOAPIC_MAP_ALLOC) {
++		/* special handling for legacy IRQs */
++		if (irq < nr_legacy_irqs() && info->count == 1 &&
++		    mp_irqdomain_map(domain, irq, pin) != 0)
++			irq = -1;
++
+ 		if (irq > 0)
+ 			info->count++;
+ 		else if (info->count == 0)
+@@ -3896,7 +3901,15 @@ int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			info->polarity = 1;
+ 		}
+ 		info->node = NUMA_NO_NODE;
+-		info->set = 1;
++
++		/*
++		 * setup_IO_APIC_irqs() programs all legacy IRQs with default
++		 * trigger and polarity attributes. Don't set the flag for that
++		 * case so the first legacy IRQ user could reprogram the pin
++		 * with real trigger and polarity attributes.
++		 */
++		if (virq >= nr_legacy_irqs() || info->count)
++			info->set = 1;
+ 	}
+ 	set_io_apic_irq_attr(&attr, ioapic, hwirq, info->trigger,
+ 			     info->polarity);
+-- 
+1.7.10.4
 
-Thanks,
-Amir
