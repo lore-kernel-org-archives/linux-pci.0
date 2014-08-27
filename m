@@ -1,63 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:59527 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965316AbaH0XlW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Aug 2014 19:41:22 -0400
-Date: Wed, 27 Aug 2014 16:41:21 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20140827205129.GA25227@kroah.com>
+References: <1409144277-23379-1-git-send-email-ricardo.ribalda@gmail.com>
+ <20140827202301.GA13800@kroah.com> <20140827205129.GA25227@kroah.com>
+From: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+Date: Wed, 27 Aug 2014 22:56:57 +0200
+Message-ID: <CAPybu_2p0UroO=WwUOC3LybPq0HQymoD50v6-6gA+aVweveOHw@mail.gmail.com>
+Subject: Re: [PATCH] pci/pci-sysfs: Set pci interface in uppercase
+To: Greg KH <gregkh@linuxfoundation.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
 	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pci/pci-sysfs: Set pci interface in uppercase
-Message-ID: <20140827234121.GA12195@kroah.com>
-References: <1409144277-23379-1-git-send-email-ricardo.ribalda@gmail.com>
- <20140827202301.GA13800@kroah.com>
- <20140827205129.GA25227@kroah.com>
- <CAPybu_2p0UroO=WwUOC3LybPq0HQymoD50v6-6gA+aVweveOHw@mail.gmail.com>
- <20140827210405.GA26372@kroah.com>
- <CAPybu_2p6+VXj0s+yWGRvTO-1W-=rkhCBVKFHqa25joEO+Q3zA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPybu_2p6+VXj0s+yWGRvTO-1W-=rkhCBVKFHqa25joEO+Q3zA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 27, 2014 at 11:10:42PM +0200, Ricardo Ribalda Delgado wrote:
-> Hello Greg
-> 
-> On Wed, Aug 27, 2014 at 11:04 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> > On Wed, Aug 27, 2014 at 10:56:57PM +0200, Ricardo Ribalda Delgado wrote:
-> >> No worries,
-> >>
-> >> I have to mark for stable it or Bjorn? It it is me, how :) ?
-> >
-> > Bjorn can when he applies it, for details on the process, see the kernel
-> > file Documentation/stable_kernel_rules.txt
-> >
-> >> ps: For other people reading this thread, the kmod/modprobe is in
-> >> http://anonscm.debian.org/cgit/users/md/kmod.git/tree/libkmod/libkmod-index.c
-> >> and handles all the modalias as strings without differing the type.
-> >
-> > That sounds wrong, and odds are, will cause more problems over time.
-> > These are hex values, not strings :(
-> 
-> I totally see your point, but I disagree on the method.
-> 
-> I think is our resposibility (modalias/file2alias) to provide a
-> matcheable string, otherwise modprobe should be aware of all the types
-> (pci, usb, spi, vmbus.....)
-> 
-> As we keep adding types, and they don't follow any standard, we would
-> be adding a dependecy between kmod and the kernel, and duplicating
-> code.  That is bad systemwise
-> 
-> Maybe the code on kmod should not be case sensitive, that is all :)
+No worries,
 
-But this is a class field, which is a bit field, so it can't be compared
-with a string compare, as it's a numerical value, not a string...
+I have to mark for stable it or Bjorn? It it is me, how :) ?
 
-So maybe kmod needs to be fixed up?
 
-thanks,
+Regards!
 
-greg k-h
+
+ps: For other people reading this thread, the kmod/modprobe is in
+http://anonscm.debian.org/cgit/users/md/kmod.git/tree/libkmod/libkmod-index.c
+and handles all the modalias as strings without differing the type.
+
+On Wed, Aug 27, 2014 at 10:51 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> On Wed, Aug 27, 2014 at 01:23:01PM -0700, Greg KH wrote:
+>> On Wed, Aug 27, 2014 at 02:57:57PM +0200, Ricardo Ribalda Delgado wrote:
+>> > There is a missmatch between the way file2alias generates the modalias
+>> > and the way the pci driver generates it.
+>> >
+>> > Some implementations of modprobe will fail to load the driver for a pci
+>> > device automatically when the pci interface is defined on the driver. As
+>> > one will be in uppercase and the other in lowercase.
+>> >
+>> > Fortunatelly not many drivers define this.
+>> >
+>> > Signed-off-by: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+>> > ---
+>> >  drivers/pci/pci-sysfs.c | 2 +-
+>> >  1 file changed, 1 insertion(+), 1 deletion(-)
+>> >
+>> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>> > index 9ff0a90..76ef791 100644
+>> > --- a/drivers/pci/pci-sysfs.c
+>> > +++ b/drivers/pci/pci-sysfs.c
+>> > @@ -177,7 +177,7 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+>> >  {
+>> >     struct pci_dev *pci_dev = to_pci_dev(dev);
+>> >
+>> > -   return sprintf(buf, "pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x\n",
+>> > +   return sprintf(buf, "pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02X\n",
+>> >                    pci_dev->vendor, pci_dev->device,
+>> >                    pci_dev->subsystem_vendor, pci_dev->subsystem_device,
+>> >                    (u8)(pci_dev->class >> 16), (u8)(pci_dev->class >> 8),
+>>
+>> As said in the other thread about this issue, no, this code has been
+>> here for over 9 years just fine.  Please fix your userspace code that is
+>> trying to compare hex values as a string and not a numeric value, that
+>> is the stuff that is wrong, not the kernel.
+>
+> Oh wait, I see what you are worried about now, the mis-match for just
+> the upper bits of the class value.
+>
+> Yeah, that's a bug, sorry about that, a 9+ year old one, nice catch :)
+>
+> Bjorn, feel free to apply this, sorry for the earlier objection.  Also
+> please mark it for stable tree inclusion so this gets backported
+> properly.
+>
+> thanks,
+>
+> greg k-h
+
+
+
+-- 
+Ricardo Ribalda
