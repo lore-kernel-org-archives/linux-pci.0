@@ -1,70 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f169.google.com ([209.85.216.169]:63711 "EHLO
-	mail-qc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751927AbaHVF1s (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 01:27:48 -0400
-Received: by mail-qc0-f169.google.com with SMTP id c9so10373301qcz.0
-        for <linux-pci@vger.kernel.org>; Thu, 21 Aug 2014 22:27:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+55aFyjn5BYHL0b6mTDmKc4pBSS9aViPNJH+8ks87M8wb3UYQ@mail.gmail.com>
-References: <CA+55aFyjn5BYHL0b6mTDmKc4pBSS9aViPNJH+8ks87M8wb3UYQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 22 Aug 2014 00:27:27 -0500
-Message-ID: <CAErSpo4y=4uEADB7JpX5ceotUiUzstXsoAg-it_WjHWvv5aLcQ@mail.gmail.com>
-Subject: Re: Annoying and insane pci kernel messages..
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from mailout1.samsung.com ([203.254.224.24]:31725 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932090AbaH0EiB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Aug 2014 00:38:01 -0400
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0NAY00IL37JCSA00@mailout1.samsung.com> for
+ linux-pci@vger.kernel.org; Wed, 27 Aug 2014 13:38:00 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
+References: <000601cf7f30$31b53270$951f9750$%han@samsung.com>
+ <20140617220538.GB30559@google.com>
+In-reply-to: <20140617220538.GB30559@google.com>
+Subject: Re: [PATCH] PCI: exynos: Add exynos prefix before
+ add_pcie_port/pcie_init
+Date: Wed, 27 Aug 2014 13:37:59 +0900
+Message-id: <000d01cfc1b0$ae31fc30$0a95f490$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael]
+On Wednesday, June 18, 2014 7:06 AM, Bjorn Helgaas wrote:
+> On Tue, Jun 03, 2014 at 10:31:58PM +0900, Jingoo Han wrote:
+> > The add_pcie_port/pcie_init functions are Exynos-specific.
+> > Add exynos prefix to avoid collision in global name space.
+> >
+> > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> 
+> Applied to pci/host-exynos for v3.17, thanks!
 
-On Wed, Aug 20, 2014 at 7:17 PM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> [ Oops, my mail client ended up picking an old address for Bjorn, so
-> resending with the correct one ]
->
-> So I don't know when this started happening, and it may well be an
-> age-old issue, possibly made worse by configurations copied from
-> distro makers that enable various random PCI hotplug logic, but my
-> laptop dmesg is full of these annoying and worthless messages after
-> suspend/resume:
->
->   ...
->   pci 0000:00:00.0: no hotplug settings from platform
->   pci 0000:00:00.0: using default PCI settings
->   i915 0000:00:02.0: no hotplug settings from platform
->   i915 0000:00:02.0: using default PCI settings
->   ...
->
-> basically repeating mindlessly for each PCI device. It's insane. It
-> adds zero value. Why do we print out those inane messages?
->
-> The reason _seems_ to be that some ACPI hotplug logic basically ends
-> up doing "pci_configure_slot()" on every PCI slot, whether something
-> is hotpluggable or not. Trust me, those things aren't. Printing
-> pointless hotplug information for them is just crazy, and takes up
-> kernel message space and hides _real_ messages for no good reason.
->
-> Lookie here:
->
->   [torvalds@vaio linux]$ dmesg | grep "no hotplug settings" | wc
->      1006    8658   71574
->
-> yeah, that's a thousand lines of crap. There's another 568 lines of
-> the "using default PCI settings". In fact, there's *more* of this, but
-> there's been so much of it that it's scrolled off the kernel message
-> buffer.
->
-> Could we please not do this?
+Hi Bjorn,
 
-Yeah, this really seems broken.  It's not really news if the firmware
-doesn't supply settings, so we could just drop the printk.  On the
-other hand, it *might* be news if it *does* supply settings, so maybe
-we should reverse the sense.  But I want to look at it a little more
-because it seems like we shouldn't even be calling
-pci_configure_slot() that many times to begin with.
+I cannot find this patch from pci git.
+Please apply this patch to pci git.
+Thank you.
 
-Bjorn
+Best regards,
+Jingoo Han
+
+> 
+> > ---
+> >  drivers/pci/host/pci-exynos.c |   10 +++++-----
+> >  1 file changed, 5 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> > index 1632661..2f59851 100644
+> > --- a/drivers/pci/host/pci-exynos.c
+> > +++ b/drivers/pci/host/pci-exynos.c
+> > @@ -509,8 +509,8 @@ static struct pcie_host_ops exynos_pcie_host_ops = {
+> >  	.host_init = exynos_pcie_host_init,
+> >  };
+> >
+> > -static int __init add_pcie_port(struct pcie_port *pp,
+> > -				struct platform_device *pdev)
+> > +static int __init exynos_add_pcie_port(struct pcie_port *pp,
+> > +				       struct platform_device *pdev)
+> >  {
+> >  	int ret;
+> >
+> > @@ -616,7 +616,7 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
+> >  		goto fail_bus_clk;
+> >  	}
+> >
+> > -	ret = add_pcie_port(pp, pdev);
+> > +	ret = exynos_add_pcie_port(pp, pdev);
+> >  	if (ret < 0)
+> >  		goto fail_bus_clk;
+> >
+> > @@ -657,11 +657,11 @@ static struct platform_driver exynos_pcie_driver = {
+> >
+> >  /* Exynos PCIe driver does not allow module unload */
+> >
+> > -static int __init pcie_init(void)
+> > +static int __init exynos_pcie_init(void)
+> >  {
+> >  	return platform_driver_probe(&exynos_pcie_driver, exynos_pcie_probe);
+> >  }
+> > -subsys_initcall(pcie_init);
+> > +subsys_initcall(exynos_pcie_init);
+> >
+> >  MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
+> >  MODULE_DESCRIPTION("Samsung PCIe host controller driver");
+> > --
+> > 1.7.10.4
+
