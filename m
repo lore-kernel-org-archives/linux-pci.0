@@ -1,35 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56193 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752708AbaHSHmr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 Aug 2014 03:42:47 -0400
-Date: Tue, 19 Aug 2014 08:50:20 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI/MSI/PPC: Remove arch_msi_check_device()
-Message-ID: <20140819075019.GA23751@agordeev.usersys.redhat.com>
-References: <cover.1405160163.git.agordeev@redhat.com>
- <18276ae8c0b212b8d40dfd186e1c84b8ae949525.1405160163.git.agordeev@redhat.com>
- <20140731135333.GA10517@dhcp-26-207.brq.redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 27 Aug 2014 11:04:42 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Prarit Bhargava <prarit@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: Re: [Bugfix] x86, irq: Fix bug in setting IOAPIC pin attributes
+Message-ID: <20140827080238.GH1785@lahna.fi.intel.com>
+References: <20140826095221.GO1660@lahna.fi.intel.com>
+ <1409118795-17046-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140731135333.GA10517@dhcp-26-207.brq.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1409118795-17046-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 31, 2014 at 03:53:33PM +0200, Alexander Gordeev wrote:
-> Michael, Ben,
+On Wed, Aug 27, 2014 at 01:53:11PM +0800, Jiang Liu wrote:
+> Commit 15a3c7cc9154321fc3 "x86, irq: Introduce two helper functions
+> to support irqdomain map operation" breaks LPSS ACPI enumerated
+> devices.
 > 
-> Any feedback?
+> On startup, IOAPIC driver preallocates IRQ descriptors and programs
+> IOAPIC pins with default level and polarity attributes for all legacy
+> IRQs. Later legacy IRQ users may fail to set IOAPIC pin attributes
+> if the requested attributes conflicts with the default IOAPIC pin
+> attributes. So change mp_irqdomain_map() to allow the first legacy IRQ
+> user to reprogram IOAPIC pin with different attributes.
+> 
+> Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+> Hi Mika,
+> 	We have a plan to kill function mp_set_gsi_attr() later, so
+> I have slightly modified your changes. Could you please help to test
+> it again?
 
-Michael, Ben?
+Works fine here, thanks!
 
-> Thanks!
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
