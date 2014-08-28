@@ -1,50 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:4194 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751227AbaHMGzM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Aug 2014 02:55:12 -0400
-From: "Chen, Gong" <gong.chen@linux.intel.com>
-To: bhelgaas@google.com, rdunlap@infradead.org
-Cc: bp@alien8.de, tony.luck@intel.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Chen, Gong" <gong.chen@linux.intel.com>
-Subject: [RESEND RFC 5/5] PCIe, AER: Update initial value of UC error mask
-Date: Wed, 13 Aug 2014 02:22:41 -0400
-Message-Id: <1407910961-7798-6-git-send-email-gong.chen@linux.intel.com>
-In-Reply-To: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
-References: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:56540 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751069AbaH1EVx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Aug 2014 00:21:53 -0400
+Received: by mail-ig0-f171.google.com with SMTP id l13so7416691iga.4
+        for <linux-pci@vger.kernel.org>; Wed, 27 Aug 2014 21:21:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5KBNmeh+pjZXyk47w28tHr95kO64KJKBKSky9ODWuM2w@mail.gmail.com>
+References: <CAErSpo5KBNmeh+pjZXyk47w28tHr95kO64KJKBKSky9ODWuM2w@mail.gmail.com>
+Date: Wed, 27 Aug 2014 21:21:50 -0700
+Message-ID: <CAE9FiQW2WSAB93F80toP+MQAGrOd3CkM9-a=J0kW+d7YVaL87Q@mail.gmail.com>
+Subject: Re: pciehp PCI_BASE_CLASS_DISPLAY check
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In PCI-e SPEC r3.0, BIT 0 of Uncorrectable Error Status Register
-is redefined and it has an explicit requirement that when writing
-this field, a value of 1b is the only choice. So change previous
-initial maks from 0 to 1.
+On Wed, Aug 27, 2014 at 3:03 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-Signed-off-by: Chen, Gong <gong.chen@linux.intel.com>
----
-NOTE: After scratching all use cases, this is the most obvious use
-case to violate the SPEC. Most of use cases just read first and
-then overwrite for clear purpose. Even so, such fix is obvious to
-not compatiable with previous SPEC definition. Do we need a dirty
-hack?
+>
+> Only pciehp_configure_device() has the PCI_BASE_CLASS_DISPLAY check.
 
- arch/mips/pci/pci-octeon.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+That commit actually split the loop to two loops, so second loop still
+have check.
 
-diff --git a/arch/mips/pci/pci-octeon.c b/arch/mips/pci/pci-octeon.c
-index 59cccd95688b..f1bfdc201297 100644
---- a/arch/mips/pci/pci-octeon.c
-+++ b/arch/mips/pci/pci-octeon.c
-@@ -134,7 +134,7 @@ int pcibios_plat_dev_init(struct pci_dev *dev)
- 				       dconfig);
- 		/* Enable reporting of all uncorrectable errors */
- 		/* Uncorrectable Error Mask - turned on bits disable errors */
--		pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, 0);
-+		pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, 1);
- 		/*
- 		 * Leave severity at HW default. This only controls if
- 		 * errors are reported as uncorrectable or
--- 
-2.0.0.rc2
+but later
 
+| Author: Praveen Kalamegham <praveen@nextio.com>
+| Date:   Wed May 19 17:03:12 2010 -0500
+|
+|    PCI: hotplug: pciehp: Removed check for hotplug of display devices
+|
+|    Removed check to prevent hotplug of display devices within pciehp.
+|    Originally this was thought to have been required within the PCI
+|    Hotplug specification for some legacy devices.  However there is
+|    no such requirement in the most recent revision. The check prevents
+|    hotplug of not only display devices but also computational GPUs
+|    which require serviceability.
+
+only removed the first one in pciehp_configure_device().
+
+So you can drop that checking.
+
+Thanks
+
+Yinghai
