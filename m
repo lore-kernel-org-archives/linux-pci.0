@@ -1,74 +1,188 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:51057 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751008AbaHBAeN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Aug 2014 20:34:13 -0400
-Received: by mail-pa0-f47.google.com with SMTP id kx10so6652449pab.6
-        for <linux-pci@vger.kernel.org>; Fri, 01 Aug 2014 17:34:12 -0700 (PDT)
-Content-Type: text/plain;
-	charset=gb2312
-Mime-Version: 1.0 (1.0)
-Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
-From: Ethan Zhao <ethan.kernel@gmail.com>
-In-Reply-To: <53DB7F4E.2010407@solarflare.com>
-Date: Sat, 2 Aug 2014 08:34:03 +0800
-Cc: Alexander Duyck <alexander.h.duyck@intel.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Message-Id: <E84505B9-370F-4A53-89CC-47711CDA3909@gmail.com>
-References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com> <alpine.LFD.2.03.1407311500570.16821@solarflare.com> <53DA5EF4.1030500@intel.com> <53DA674A.9030305@solarflare.com> <CABawtvMK=FrquFm-imovjjCV9YMj-fH1mWYd=5G=kpJccdETPQ@mail.gmail.com> <53DB7F4E.2010407@solarflare.com>
-To: Edward Cree <ecree@solarflare.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Patch v4 10/16] x86, irq: Refine mp_register_ioapic() to prepare for IOAPIC hotplug
+Date: Thu, 28 Aug 2014 10:22:35 +0800
+Message-Id: <1409192561-19744-11-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Refine mp_register_ioapic() to prepare for IOAPIC hotplug by:
+1) change return value from void to int.
+2) check for gsi range conflicts
+3) check for IOAPIC physical address conflicts
+4) enhance the way to allocate IOAPIC index
 
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h |    4 +-
+ arch/x86/kernel/apic/io_apic.c |   80 ++++++++++++++++++++++++----------------
+ 2 files changed, 51 insertions(+), 33 deletions(-)
 
-> 在 2014年8月1日，下午7:51，Edward Cree <ecree@solarflare.com> 写道：
-> 
->> On 01/08/14 04:18, Ethan Zhao wrote:
->>> On Thu, Jul 31, 2014 at 11:56 PM, Edward Cree <ecree@solarflare.com> wrote:
->>> Clearing dev->is_physfn in the driver probe routine isn't safe:
->>> dev->sriov memory can get leaked, for example, as sriov_init will get
->>> called at device add, but sriov_release won't be called at removal.
->>  I think this memory leak bug doesn't exist.
->> 
->>  The dev->sriov memory was allocated when pci_device_add() called.
->> whenever devices
->>  were hot-pluged into system or built-in devices were scanned while booting.
->> 
->>  The memory of dev->sriov is to be freed by kobject->kobject_release() when
->> the device reference counter reaches zero when put_device() was called.
->> for hot-plug, that is pciehp_unconfigure_device()....etc.  but not in
->> driver->remove().
-> Yes, but the problem is in pci_iov_release(), not how it gets called;
-> its code is
->    if (dev->is_physfn)
->        sriov_release(dev);
-> So if the device driver clears dev->is_physfn, and later on the device
-> is hot-unplugged, pci_iov_release() won't call sriov_release().
-> Thus any device driver that changes dev->is_physfn will, if the device
-> is hot-unplugged, leak dev->sriov.
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 0b31aebd9405..94d05bd6586f 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -188,8 +188,8 @@ extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
+ extern u32 mp_pin_to_gsi(int ioapic, int pin);
+ extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
+ extern void mp_unmap_irq(int irq);
+-extern void mp_register_ioapic(int id, u32 address, u32 gsi_base,
+-			       struct ioapic_domain_cfg *cfg);
++extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
++			      struct ioapic_domain_cfg *cfg);
+ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			    irq_hw_number_t hwirq);
+ extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 1ac868128a61..6e67af0c5f99 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3830,20 +3830,6 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
+ 	return gsi - gsi_cfg->gsi_base;
+ }
+ 
+-static int bad_ioapic(unsigned long address)
+-{
+-	if (nr_ioapics >= MAX_IO_APICS) {
+-		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
+-			MAX_IO_APICS, nr_ioapics);
+-		return 1;
+-	}
+-	if (!address) {
+-		pr_warn("WARNING: Bogus (zero) I/O APIC address found in table, skipping!\n");
+-		return 1;
+-	}
+-	return 0;
+-}
+-
+ static int bad_ioapic_register(int idx)
+ {
+ 	union IO_APIC_reg_00 reg_00;
+@@ -3863,29 +3849,44 @@ static int bad_ioapic_register(int idx)
+ 	return 0;
+ }
+ 
+-void mp_register_ioapic(int id, u32 address, u32 gsi_base,
+-			struct ioapic_domain_cfg *cfg)
++static int find_free_ioapic_entry(void)
+ {
+-	int idx = 0;
+-	int entries;
++	return nr_ioapics;
++}
++
++int mp_register_ioapic(int id, u32 address, u32 gsi_base,
++		       struct ioapic_domain_cfg *cfg)
++{
++	u32 gsi_end;
++	int idx, ioapic, entries;
+ 	struct mp_ioapic_gsi *gsi_cfg;
+ 
+-	if (bad_ioapic(address))
+-		return;
++	if (!address) {
++		pr_warn("Bogus (zero) I/O APIC address found, skipping!\n");
++		return -EINVAL;
++	}
++	for_each_ioapic(ioapic)
++		if (ioapics[ioapic].mp_config.apicaddr == address) {
++			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
++				address, ioapic);
++			return -EEXIST;
++		}
+ 
+-	idx = nr_ioapics;
++	idx = find_free_ioapic_entry();
++	if (idx >= MAX_IO_APICS) {
++		pr_warn("Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
++			MAX_IO_APICS, idx);
++		return -ENOSPC;
++	}
+ 
+ 	ioapics[idx].mp_config.type = MP_IOAPIC;
+ 	ioapics[idx].mp_config.flags = MPC_APIC_USABLE;
+ 	ioapics[idx].mp_config.apicaddr = address;
+-	ioapics[idx].irqdomain = NULL;
+-	ioapics[idx].irqdomain_cfg = *cfg;
+ 
+ 	set_fixmap_nocache(FIX_IO_APIC_BASE_0 + idx, address);
+-
+ 	if (bad_ioapic_register(idx)) {
+ 		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
+-		return;
++		return -ENODEV;
+ 	}
+ 
+ 	ioapics[idx].mp_config.apicid = io_apic_unique_id(idx, id);
+@@ -3896,24 +3897,41 @@ void mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 	 * and to prevent reprogramming of IOAPIC pins (PCI GSIs).
+ 	 */
+ 	entries = io_apic_get_redir_entries(idx);
++	gsi_end = gsi_base + entries - 1;
++	for_each_ioapic(ioapic) {
++		gsi_cfg = mp_ioapic_gsi_routing(ioapic);
++		if ((gsi_base >= gsi_cfg->gsi_base &&
++		     gsi_base <= gsi_cfg->gsi_end) ||
++		    (gsi_end >= gsi_cfg->gsi_base &&
++		     gsi_end <= gsi_cfg->gsi_end)) {
++			pr_warn("GSI range [%u-%u] for new IOAPIC conflicts with GSI[%u-%u]\n",
++				gsi_base, gsi_end,
++				gsi_cfg->gsi_base, gsi_cfg->gsi_end);
++			clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
++			return -ENOSPC;
++		}
++	}
+ 	gsi_cfg = mp_ioapic_gsi_routing(idx);
+ 	gsi_cfg->gsi_base = gsi_base;
+-	gsi_cfg->gsi_end = gsi_base + entries - 1;
++	gsi_cfg->gsi_end = gsi_end;
+ 
+-	/*
+-	 * The number of IO-APIC IRQ registers (== #pins):
+-	 */
+-	ioapics[idx].nr_registers = entries;
++	ioapics[idx].irqdomain = NULL;
++	ioapics[idx].irqdomain_cfg = *cfg;
+ 
+ 	if (gsi_cfg->gsi_end >= gsi_top)
+ 		gsi_top = gsi_cfg->gsi_end + 1;
++	if (nr_ioapics <= idx)
++		nr_ioapics = idx + 1;
++
++	/* Set nr_registers to mark entry present */
++	ioapics[idx].nr_registers = entries;
+ 
+ 	pr_info("IOAPIC[%d]: apic_id %d, version %d, address 0x%x, GSI %d-%d\n",
+ 		idx, mpc_ioapic_id(idx),
+ 		mpc_ioapic_ver(idx), mpc_ioapic_addr(idx),
+ 		gsi_cfg->gsi_base, gsi_cfg->gsi_end);
+ 
+-	nr_ioapics++;
++	return 0;
+ }
+ 
+ int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+-- 
+1.7.10.4
 
-Currently , we set dev->is_physfn when PF' SRIOV cap is detected, no reason to
-Change it later in driver.
-
-Thanks
-Ethan
-
-> Fortunately a quick grep shows no drivers doing this, so there's no
-> actual bug in existing code.  It's just that we can't use this approach
-> to disable SR-IOV from the driver's probe routine.
-> -Edward
->>     put_device()
->>        kobject_put()
->>           kobject_release()
->>               kobject_cleanup()
->>                   device_release()
->>                       dev->release(dev)
->>                             pci_release_dev()
->>                                  pci_release_capabilities()
->>                                     pci_iov_release()
->>                                         sriov_release(dev);
->>                                               kfree(dev->sriov);
-> The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
