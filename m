@@ -1,107 +1,183 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:55023 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755903AbaHVHrr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Aug 2014 03:47:47 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>
-Subject: [PATCH v2 5/5] MSI: Use __read_msi_msg() instead of read_msi_msg()
-Date: Fri, 22 Aug 2014 16:08:00 +0800
-Message-ID: <1408694880-8260-6-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1408694880-8260-1-git-send-email-wangyijing@huawei.com>
-References: <1408694880-8260-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga01.intel.com ([192.55.52.88]:7808 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965297AbaH1CWL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 27 Aug 2014 22:22:11 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
+	linux-pm@vger.kernel.org
+Subject: [Patch v4 13/16] x86, irq, ACPI: Implement interfaces to support ACPI based IOAPIC hot-removal
+Date: Thu, 28 Aug 2014 10:22:38 +0800
+Message-Id: <1409192561-19744-14-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Read_msi_msg() only be called in rtas_setup_msi_irqs(),
-use __read_msi_msg() instead of read_msi_msg for
-simplification. And rename __read_msi_msg() to
-read_msi_msg().
+Implement acpi_unregister_ioapic() to support ACPI based IOAPIC hot-removal.
+An IOAPIC could only be removed when all its pins are unused.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: linuxppc-dev@lists.ozlabs.org
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/powerpc/platforms/pseries/msi.c |    2 +-
- arch/x86/pci/xen.c                   |    2 +-
- drivers/pci/msi.c                    |    9 +--------
- include/linux/msi.h                  |    3 +--
- 4 files changed, 4 insertions(+), 12 deletions(-)
+ arch/x86/include/asm/io_apic.h |    1 +
+ arch/x86/kernel/acpi/boot.c    |   13 +++++++---
+ arch/x86/kernel/apic/io_apic.c |   55 ++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 65 insertions(+), 4 deletions(-)
 
-diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-index 18ff462..7e87878 100644
---- a/arch/powerpc/platforms/pseries/msi.c
-+++ b/arch/powerpc/platforms/pseries/msi.c
-@@ -485,7 +485,7 @@ again:
- 		irq_set_msi_desc(virq, entry);
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 94d05bd6586f..ce63cf34c93c 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -190,6 +190,7 @@ extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
+ extern void mp_unmap_irq(int irq);
+ extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 			      struct ioapic_domain_cfg *cfg);
++extern int mp_unregister_ioapic(u32 gsi_base);
+ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			    irq_hw_number_t hwirq);
+ extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 796cd9e31ef3..560a6d1cb0f4 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -794,15 +794,20 @@ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
  
- 		/* Read config space back so we can restore after reset */
--		read_msi_msg(virq, &msg);
-+		read_msi_msg(entry, &msg);
- 		entry->msg = msg;
- 	}
- 
-diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index 093f5f4..ad03739 100644
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -229,7 +229,7 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 		return 1;
- 
- 	list_for_each_entry(msidesc, &dev->msi_list, list) {
--		__read_msi_msg(msidesc, &msg);
-+		read_msi_msg(msidesc, &msg);
- 		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
- 			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
- 		if (msg.data != XEN_PIRQ_MSI_DATA ||
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 8746ecd..aff384a 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -259,7 +259,7 @@ void default_restore_msi_irqs(struct pci_dev *dev)
- 	}
+ 	return ret;
  }
- 
--void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
-+void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	BUG_ON(entry->dev->current_state != PCI_D0);
- 
-@@ -289,13 +289,6 @@ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 	}
- }
- 
--void read_msi_msg(unsigned int irq, struct msi_msg *msg)
--{
--	struct msi_desc *entry = irq_get_msi_desc(irq);
 -
--	__read_msi_msg(entry, msg);
+ EXPORT_SYMBOL(acpi_register_ioapic);
+ 
+ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
+ {
+-	/* TBD */
+-	return -EINVAL;
 -}
--
- void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	/* Assert that the cache is valid, assuming that
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 329ec73..6be66f4 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -15,10 +15,9 @@ struct irq_data;
- struct msi_desc;
- void mask_msi_irq(struct irq_data *data);
- void unmask_msi_irq(struct irq_data *data);
--void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-+void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
--void read_msi_msg(unsigned int irq, struct msi_msg *msg);
- void write_msi_msg(unsigned int irq, struct msi_msg *msg);
++	int ret = -ENOSYS;
++
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++	down_write(&acpi_ioapic_rwsem);
++	ret  = mp_unregister_ioapic(gsi_base);
++	up_write(&acpi_ioapic_rwsem);
++#endif
  
- struct msi_desc {
++	return ret;
++}
+ EXPORT_SYMBOL(acpi_unregister_ioapic);
+ 
+ static int __init acpi_parse_sbf(struct acpi_table_header *table)
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index b286461cabf9..fc1e1f9567bc 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -112,6 +112,7 @@ static struct ioapic {
+ 	struct ioapic_domain_cfg irqdomain_cfg;
+ 	struct irq_domain *irqdomain;
+ 	struct mp_pin_info *pin_info;
++	struct resource *iomem_res;
+ } ioapics[MAX_IO_APICS];
+ 
+ #define mpc_ioapic_ver(ioapic_idx)	ioapics[ioapic_idx].mp_config.apicver
+@@ -250,6 +251,12 @@ static void alloc_ioapic_saved_registers(int idx)
+ 		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
+ }
+ 
++static void free_ioapic_saved_registers(int idx)
++{
++	kfree(ioapics[idx].saved_registers);
++	ioapics[idx].saved_registers = NULL;
++}
++
+ int __init arch_early_irq_init(void)
+ {
+ 	struct irq_cfg *cfg;
+@@ -2972,6 +2979,16 @@ static int mp_irqdomain_create(int ioapic)
+ 	return 0;
+ }
+ 
++static void ioapic_destroy_irqdomain(int idx)
++{
++	if (ioapics[idx].irqdomain) {
++		irq_domain_remove(ioapics[idx].irqdomain);
++		ioapics[idx].irqdomain = NULL;
++	}
++	kfree(ioapics[idx].pin_info);
++	ioapics[idx].pin_info = NULL;
++}
++
+ void __init setup_IO_APIC(void)
+ {
+ 	int ioapic;
+@@ -3733,6 +3750,7 @@ static struct resource * __init ioapic_setup_resources(void)
+ 		snprintf(mem, IOAPIC_RESOURCE_NAME_SIZE, "IOAPIC %u", i);
+ 		mem += IOAPIC_RESOURCE_NAME_SIZE;
+ 		num++;
++		ioapics[i].iomem_res = res;
+ 	}
+ 
+ 	ioapic_resources = res;
+@@ -3955,6 +3973,43 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 	return 0;
+ }
+ 
++int mp_unregister_ioapic(u32 gsi_base)
++{
++	int ioapic, pin;
++	int found = 0;
++	struct mp_pin_info *pin_info;
++
++	for_each_ioapic(ioapic)
++		if (ioapics[ioapic].gsi_config.gsi_base == gsi_base) {
++			found = 1;
++			break;
++		}
++	if (!found) {
++		pr_warn("can't find IOAPIC for GSI %d\n", gsi_base);
++		return -ENODEV;
++	}
++
++	for_each_pin(ioapic, pin) {
++		pin_info = mp_pin_info(ioapic, pin);
++		if (pin_info->count) {
++			pr_warn("pin%d on IOAPIC%d is still in use.\n",
++				pin, ioapic);
++			return -EBUSY;
++		}
++	}
++
++	/* Mark entry not present */
++	ioapics[ioapic].nr_registers  = 0;
++	ioapic_destroy_irqdomain(ioapic);
++	free_ioapic_saved_registers(ioapic);
++	if (ioapics[ioapic].iomem_res)
++		release_resource(ioapics[ioapic].iomem_res);
++	clear_fixmap(FIX_IO_APIC_BASE_0 + ioapic);
++	memset(&ioapics[ioapic], 0, sizeof(ioapics[ioapic]));
++
++	return 0;
++}
++
+ int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 		     irq_hw_number_t hwirq)
+ {
 -- 
-1.7.1
+1.7.10.4
 
