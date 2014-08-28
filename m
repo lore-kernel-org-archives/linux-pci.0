@@ -1,58 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod7og117.obsmtp.com ([64.18.2.6]:39450 "EHLO
-	exprod7og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753943AbaHUIUm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Aug 2014 04:20:42 -0400
-Received: by mail-qc0-f178.google.com with SMTP id x3so9078797qcv.9
-        for <linux-pci@vger.kernel.org>; Thu, 21 Aug 2014 01:20:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140820222922.GA7387@laptop.dumpdata.com>
-References: <CAK=zhgpH2tG-EG4QP1SE46e+uHXA+GJGOPA1vi8UqAfRZ-EFTA@mail.gmail.com>
-	<20140820222922.GA7387@laptop.dumpdata.com>
-Date: Thu, 21 Aug 2014 13:50:22 +0530
-Message-ID: <CAK=zhgoU0EywreqEWo+sG8Qy60V4a8fBb4i7Uh30NEj0w+v7bA@mail.gmail.com>
-Subject: Re: How to get the number of VFs assigned to the guests in XEN
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Christoph Hellwig <hch@lst.de>,
-	Sathya Prakash <sathya.prakash@avagotech.com>,
-	Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>,
-	boris.ostrovsky@oracle.com
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Ingo Molnar <mingo@kernel.org>
+Subject: [Patch v4 06/16] x86, irq: Split out alloc_ioapic_save_registers()
+Date: Thu, 28 Aug 2014 10:22:31 +0800
+Message-Id: <1409192561-19744-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yes, devices are binded to pci-back.
+From: Yinghai Lu <yinghai@kernel.org>
 
-On Thu, Aug 21, 2014 at 3:59 AM, Konrad Rzeszutek Wilk
-<konrad.wilk@oracle.com> wrote:
-> On Wed, Aug 20, 2014 at 04:33:29PM +0530, Sreekanth Reddy wrote:
->> HI,
->>
->>
->>
->> For SRIOV support, currently in the KVM environment, mpt3sas driver can use
->> the API pci_vfs_assigned() to know the number of VFs that are currently
->> assigned to the running VMs. So that during the PF driver unload time, if
->> the return value of this API is greater than zero the our driver won't call
->> the pci_disable_sriov() to disable the VFs.
->>
->>
->>
->> Now for the same purpose in XEN environment, is there any API similar to
->> pci_vfs_assigned() which the low lever device driver can use to know 'the
->> number of VFs that are currently assigned to the running VMs'. In XEN
->> environment this API pci_vfs_assigned() will return always zero even though
->> VFs are assigned to the running VMs.
->
-> Odd. It should return the same value. Are the devices binded to pci-back?
->
->>
->>
->>
->> Regards,
->>
->> Sreekanth
+Split alloc_ioapic_save_registers() from early_irq_init(),
+so it will be used per ioapic.
+
+Will call that later for hot-added ioapic controller.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/kernel/apic/io_apic.c |   22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 40a4aa3f4061..3faf9599ff29 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -237,6 +237,19 @@ static struct irq_pin_list *alloc_irq_pin_list(int node)
+ 	return kzalloc_node(sizeof(struct irq_pin_list), GFP_KERNEL, node);
+ }
+ 
++static void alloc_ioapic_saved_registers(int idx)
++{
++	size_t size;
++
++	if (ioapics[idx].saved_registers)
++		return;
++
++	size = sizeof(struct IO_APIC_route_entry) * ioapics[idx].nr_registers;
++	ioapics[idx].saved_registers = kzalloc(size, GFP_KERNEL);
++	if (!ioapics[idx].saved_registers)
++		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
++}
++
+ int __init arch_early_irq_init(void)
+ {
+ 	struct irq_cfg *cfg;
+@@ -245,13 +258,8 @@ int __init arch_early_irq_init(void)
+ 	if (!nr_legacy_irqs())
+ 		io_apic_irqs = ~0UL;
+ 
+-	for_each_ioapic(i) {
+-		ioapics[i].saved_registers =
+-			kzalloc(sizeof(struct IO_APIC_route_entry) *
+-				ioapics[i].nr_registers, GFP_KERNEL);
+-		if (!ioapics[i].saved_registers)
+-			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
+-	}
++	for_each_ioapic(i)
++		alloc_ioapic_saved_registers(i);
+ 
+ 	/*
+ 	 * For legacy IRQ's, start with assigning irq0 to irq15 to
+-- 
+1.7.10.4
+
