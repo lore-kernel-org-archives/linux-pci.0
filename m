@@ -1,148 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:47355 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753113AbaHFQA0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Aug 2014 12:00:26 -0400
-Received: by mail-ig0-f179.google.com with SMTP id h18so3073955igc.12
-        for <linux-pci@vger.kernel.org>; Wed, 06 Aug 2014 09:00:25 -0700 (PDT)
+Received: from mail-bn1blp0189.outbound.protection.outlook.com ([207.46.163.189]:3894
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S936348AbaH1JDL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 Aug 2014 05:03:11 -0400
+Message-ID: <53FEF046.4030804@amd.com>
+Date: Thu, 28 Aug 2014 04:03:02 -0500
+From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4A_71Lqnb_xCU3ddHmpD-iPdOAYTSO36d8KiEyf_5J2Q@mail.gmail.com>
-References: <CAFJTrDt146269JkQ7eRcgGxk=4EEQ2XK+Rbe11Y+6URr=LQzrA@mail.gmail.com>
-	<20140716220046.GD14366@google.com>
-	<CAFJTrDtvbnY+-bLySWyOBYtbsujSf+E-wpb=FtAptZvquxzKuA@mail.gmail.com>
-	<CAErSpo4A_71Lqnb_xCU3ddHmpD-iPdOAYTSO36d8KiEyf_5J2Q@mail.gmail.com>
-Date: Wed, 6 Aug 2014 17:00:25 +0100
-Message-ID: <CAFJTrDunHPoba3UXjYE3L8UHrycqScojyzL=_xoALJcK9oxCbA@mail.gmail.com>
-Subject: Re: [PATCH RFC] Added code to ensure hot-added PCI devices are given
- an IRQ on rescan
-From: Matthew Minter <matthew_minter@xyratex.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Mark Rutland <mark.rutland@arm.com>
+CC: Marc Zyngier <Marc.Zyngier@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH 1/2 V4] irqchip: gic: Add supports for ARM GICv2m MSI(-X)
+References: <1407942041-3291-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <1407942041-3291-2-git-send-email-suravee.suthikulpanit@amd.com>
+ <20140814175525.GI24018@leverpostej>
+In-Reply-To: <20140814175525.GI24018@leverpostej>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> This is basically the way ExpressCard works.  We use pciehp for
-> ExpressCard, and it likely would work for you, too.
->
->> Having said that, this has the additional implication that this form
->> of hot-plug works on architectures which seem to have no PCIe hot-plug
->> support such as ARM. On the board we have here (based on an ARM server
->> chip-set) the PCIe switch we are using supports resource
->> pre-allocation for hot-adding but does not support power control or
->> plug/unplug interrupts but this is fine again as the connectors are
->> all physically hot-plug safe.
->
-> The hotplug drivers are generally architecture-independent.  I haven't
-> exercised pciehp on ARM, but it should work.
->
-> I assume this:
-> http://lists.infradead.org/pipermail/linux-arm-kernel/2013-October/202371.html
->
-> is your system, and the Downstream Ports on bus 03 lead to the 8639
-> connectors.  These ports claim to support hotplug, e.g.,
->
->         SltCap:    AttnBtn+ PwrCtrl+ MRL+ AttnInd+ PwrInd+ HotPlug+ Surprise-
->             Slot #1, PowerLimit 25.000W; Interlock+ NoCompl-
->
-> so pciehp should claim these slots and should notice device addition
-> and removal.
->
-> Sure, you *can* use /sys/bus/pci/rescan, but you shouldn't have to.
-> That basically exists as a workaround for various inadequacies in
-> Linux PCI.
-
-It appears that the HOTPLUG_PCI option has not been added to the
-arch/arm/Kconfig file, thus making it hidden in the configuration tools.
-
-This can simply be fixed as so:
-
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 245058b..cab167f 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -1369,6 +1369,7 @@ config PCI_HOST_ITE8152
-        select DMABOUNCE
-
- source "drivers/pci/Kconfig"
-+source "drivers/pci/hotplug/Kconfig"
- source "drivers/pci/pcie/Kconfig"
-
- source "drivers/pcmcia/Kconfig"
 
 
-However I would therefore suppose that it has probably not been tested
-before.
-
-After some testing, I can say, the PCIe hotplug driver does seem to work
-on arm, at least in the context of my own board. The only caveat seems
-to be that my PCIe bridge does not correctly report the GPIOs for hotplug
-forcing me to hard-code them into the device tree to make plug detection
-work properly.
-
-If the above patch was applied it should be possible to enable this on
-any arm based board.
-
-Thanks kindly for the suggestion to try that!
-
->> Hopefully this explains the situation a little. Please note however,
->> this applies to a wider issue, any system where there is no BIOS/BIOS
->> like object/ACPI to map irqs to unused slots (or if the firmware is
->> buggy and will not do so) currently has no way to allocate an irq to
->> those slots later should a device become connected to them. It does
->> not seem correct that this code should be reserved only to boot time
->> and would seem beneficial to have routines to do this later.
+On 08/14/2014 12:55 PM, Mark Rutland wrote:
+> On Wed, Aug 13, 2014 at 04:00:40PM +0100, suravee.suthikulpanit@amd.com wrote:
+>> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 >>
->>> pci_fixup_irqs() has been broken from the beginning because it is only
->>> done for devices present at boot-time, and nothing happens for
->>> hot-added devices.
->>>
->>> I think you're on the right path by looking at the generic
->>> pci_bus_add_device() path that is used both at boot-time and hot
->>> add-time.  I would like to see something that works the same way at
->>> both times and gets rid of pci_fixup_irqs() altogether.
->>>
->>> I'm not sure this needs to be done as early as pci_bus_add_device();
->>> it could probably be done somewhere in the pci_enable_device() path,
->>> since drivers can't use interrupts before that anyway.
->>>
->>> Bjorn
+>> ARM GICv2m specification extends GICv2 to support MSI(-X) with
+>> a new set of register frame. This patch introduces support for
+>> the non-secure GICv2m register frame. Currently, GICV2m is available
+>> in certain version of GIC-400.
 >>
->> It should be entirely possible to factor out pci_fixup_irqs
->> completely, it seems most of the calls to it are in the virtual PCI
->> BIOSes of platforms which have no BIOS, I agree it would be far neater
->> to avoid the platform independent code as far as possible and unify
->> PCI irqs into a single place.
+>> The patch introduces a new property in ARM gic binding, the v2m subnode.
+>> It is optional.
 >>
->> If it is OK with you I would like to rework the patch-set so that that
->> instead of the boot time PCI code assigning the irqs it can instead
->> register an irq swizzling and an irq mapping function (which would
->> probably be stored either in the pci_host_bridge struct) or a default
->> could be used. Thich can then be called during the drvice-add code
->> path to both fix hot-plug irqs and unify the infrastructure a little
->> so it relies less on platform code. This registration could be done in
->> pcibios_root_bridge_prepare (as this can be overridden by each arch).
+>> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>> Cc: Mark Rutland <Mark.Rutland@arm.com>
+>> Cc: Marc Zyngier <Marc.Zyngier@arm.com>
+>> Cc: Jason Cooper <jason@lakedaemon.net>
+>> Cc: Catalin Marinas <Catalin.Marinas@arm.com>
+>> Cc: Will Deacon <Will.Deacon@arm.com>
+>> ---
+>>   Documentation/devicetree/bindings/arm/gic.txt |  32 ++++
+>>   drivers/irqchip/Kconfig                       |   7 +
+>>   drivers/irqchip/Makefile                      |   1 +
+>>   drivers/irqchip/irq-gic-v2m.c                 | 215 ++++++++++++++++++++++++++
+>>   drivers/irqchip/irq-gic.c                     |  75 +++++----
+>>   drivers/irqchip/irq-gic.h                     |  48 ++++++
+>>   6 files changed, 348 insertions(+), 30 deletions(-)
+>>   create mode 100644 drivers/irqchip/irq-gic-v2m.c
+>>   create mode 100644 drivers/irqchip/irq-gic.h
+>>
+>> diff --git a/Documentation/devicetree/bindings/arm/gic.txt b/Documentation/devicetree/bindings/arm/gic.txt
+>> index 5573c08..8a64179 100644
+>> --- a/Documentation/devicetree/bindings/arm/gic.txt
+>> +++ b/Documentation/devicetree/bindings/arm/gic.txt
+>> @@ -95,3 +95,35 @@ Example:
+>>                        <0x2c006000 0x2000>;
+>>                  interrupts = <1 9 0xf04>;
+>>          };
+>> +
+>> +
+>> +* GICv2m extension for MSI/MSI-x support (Optional)
+>> +
+>> +Certain revision of GIC-400 supports MSI/MSI-x via V2M register frame.
+>> +This is enabled by specifying v2m sub-node.
+>> +
+>> +Required properties:
+>> +
+>> +- msi-controller : Identifies the node as an MSI controller.
+>> +
+>> +- reg : GICv2m MSI interface register base and size
+>> +
+>> +Example:
+>> +
+>> +       interrupt-controller@e1101000 {
+>> +               compatible = "arm,gic-400";
+>> +               #interrupt-cells = <3>;
+>> +               #address-cells = <2>;
+>> +               #size-cells = <2>;
+>> +               interrupt-controller;
+>> +               interrupts = <1 8 0xf04>;
+>> +               ranges = <0 0 0 0xe1100000 0 0x100000>;
+>> +               reg = <0x0 0xe1110000 0 0x01000>,
+>> +                     <0x0 0xe112f000 0 0x02000>,
+>> +                     <0x0 0xe1140000 0 0x10000>,
+>> +                     <0x0 0xe1160000 0 0x10000>;
+>> +               v2m {
+>> +                       msi-controller;
+>> +                       reg = <0x0 0x80000 0 0x1000>;
+>> +               };
+>> +       };
 >
-> That seems reasonable.
+> [...]
+>
+>> @@ -1009,6 +1012,16 @@ gic_of_init(struct device_node *node, struct device_node *parent)
+>>          if (of_property_read_u32(node, "cpu-offset", &percpu_offset))
+>>                  percpu_offset = 0;
+>>
+>> +       gic_data[gic_cnt].irq_chip = &gic_chip;
+>> +
+>> +       /* Currently, we only support one v2m subnode. */
+>> +       child = of_get_child_by_name(node, "v2m");
+>> +       if (child) {
+>> +               ret = gicv2m_of_init(child, &gic_data[gic_cnt]);
+>> +               if (ret)
+>> +                       return ret;
+>> +       }
+>
+> I can't see how you'd sanely expand this to multiple children, which was
+> the main point of having a separate node for the M block.
+>
+> Give the M block a compatible string and look for children with that
+> string.
+>
+> Thanks,
+> Mark.
+>
+Good point. I can try that.
 
-I have just emailed out the second version of this patch set, it should be a lot
-more stable, eliminates pci_fixup_irqs completely and simplifies some of
-the PCI init and fixup code.The only flaw is that it has required me to edit
-architecture specific code for arches which I don't have and as such I have
-not been able to test some of the small changes.
+Thank,
 
-Thanks for the suggestions regarding  delaying the assignment until the device
-is being enabled, I had not noticed that IRQs were unavailable before then.
-
-In the mean time I hope that your holiday goes well.
-
-Many thanks,
-Matthew
-
--- 
-
-
-------------------------------
-For additional information including the registered office and the treatment of Xyratex confidential information please visit www.xyratex.com
-
-------------------------------
+Suravee
