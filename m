@@ -1,94 +1,183 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63372 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751444AbaHKI5P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Aug 2014 04:57:15 -0400
-Date: Mon, 11 Aug 2014 10:57:10 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: qla2xxx-upstream@qlogic.com
-Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 RESEND 21/23] qla2xxx: Use pci_enable_msix_range()
- instead of pci_enable_msix()
-Message-ID: <20140811085709.GM16504@dhcp-27-160.brq.redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <cf38d1596543fd61c099bc0b834c2ea7a11f8b28.1405533479.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cf38d1596543fd61c099bc0b834c2ea7a11f8b28.1405533479.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Len Brown <lenb@kernel.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch v4 05/16] ACPI: Add interfaces to parse IOAPIC ID for IOAPIC hotplug
+Date: Thu, 28 Aug 2014 10:22:30 +0800
+Message-Id: <1409192561-19744-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 16, 2014 at 08:05:25PM +0200, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
-> 
-> Log message code 0x00c6 preserved, although it is reported
-> after successful call to pci_enable_msix_range(), not before
-> possibly unsuccessful call to pci_enable_msix(). Consumers
-> of the error code should not notice the difference.
+From: Yinghai Lu <yinghai@kernel.org>
 
-Hello,
+We need to parse APIC ID for IOAPIC registration for IOAPIC hotplug.
+ACPI _MAT method and MADT table are used to figure out IOAPIC ID, just
+like parsing CPU APIC ID for CPU hotplug.
 
-Please, anyone (from QLogic especially) review this patch.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/apic_id.c |   96 +++++++++++++++++++++++++++++++++++++++++++++++-
+ include/linux/acpi.h   |    4 ++
+ 2 files changed, 98 insertions(+), 2 deletions(-)
 
-Thanks!
+diff --git a/drivers/acpi/apic_id.c b/drivers/acpi/apic_id.c
+index ada5fd48bad4..ad2e2679c104 100644
+--- a/drivers/acpi/apic_id.c
++++ b/drivers/acpi/apic_id.c
+@@ -4,11 +4,18 @@
+  *
+  *	Alex Chiang <achiang@hp.com>
+  *	- Unified x86/ia64 implementations
++ *
++ * I/O APIC hotplug support
++ *	Yinghai Lu <yinghai@kernel.org>
++ *	Jiang Liu <jiang.liu@intel.com>
+  */
+ #include <linux/export.h>
+ #include <linux/acpi.h>
+ #include "internal.h"
+ 
++static struct acpi_table_madt *madt;
++static int read_madt;
++
+ static int map_lapic_id(struct acpi_subtable_header *entry,
+ 		 u32 acpi_id, int *apic_id)
+ {
+@@ -64,8 +71,6 @@ static int map_lsapic_id(struct acpi_subtable_header *entry,
+ static int map_madt_entry(int type, u32 acpi_id)
+ {
+ 	unsigned long madt_end, entry;
+-	static struct acpi_table_madt *madt;
+-	static int read_madt;
+ 	int apic_id = -1;
+ 
+ 	if (!read_madt) {
+@@ -200,3 +205,90 @@ int acpi_get_cpuid(acpi_handle handle, int type, u32 acpi_id)
+ 	return acpi_map_cpuid(apic_id, acpi_id);
+ }
+ EXPORT_SYMBOL_GPL(acpi_get_cpuid);
++
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++static int map_ioapic_id(struct acpi_subtable_header *entry, u32 gsi_base,
++			 u64 *phys_addr, int *ioapic_id)
++{
++	struct acpi_madt_io_apic *ioapic = (struct acpi_madt_io_apic *)entry;
++
++	if (ioapic->global_irq_base != gsi_base)
++		return 0;
++
++	*phys_addr = ioapic->address;
++	*ioapic_id = ioapic->id;
++	return 1;
++}
++
++static int map_madt_ioapic_entry(u32 gsi_base, u64 *phys_addr)
++{
++	struct acpi_subtable_header *hdr;
++	unsigned long madt_end, entry;
++	int apic_id = -1;
++
++	if (!read_madt) {
++		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
++					(struct acpi_table_header **)&madt)))
++			madt = NULL;
++		read_madt++;
++	}
++
++	if (!madt)
++		return apic_id;
++
++	entry = (unsigned long)madt;
++	madt_end = entry + madt->header.length;
++
++	/* Parse all entries looking for a match. */
++	entry += sizeof(struct acpi_table_madt);
++	while (entry + sizeof(struct acpi_subtable_header) < madt_end) {
++		hdr = (struct acpi_subtable_header *)entry;
++		if (hdr->type == ACPI_MADT_TYPE_IO_APIC &&
++		    map_ioapic_id(hdr, gsi_base, phys_addr, &apic_id))
++			break;
++		else
++			entry += hdr->length;
++	}
++
++	return apic_id;
++}
++
++static int map_mat_ioapic_entry(acpi_handle handle, u32 gsi_base,
++				u64 *phys_addr)
++{
++	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
++	union acpi_object *obj;
++	struct acpi_subtable_header *header;
++	int apic_id = -1;
++
++	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_MAT", NULL, &buffer)))
++		goto exit;
++
++	if (!buffer.length || !buffer.pointer)
++		goto exit;
++
++	obj = buffer.pointer;
++	if (obj->type != ACPI_TYPE_BUFFER ||
++	    obj->buffer.length < sizeof(struct acpi_subtable_header))
++		goto exit;
++
++	header = (struct acpi_subtable_header *)obj->buffer.pointer;
++	if (header->type == ACPI_MADT_TYPE_IO_APIC)
++		map_ioapic_id(header, gsi_base, phys_addr, &apic_id);
++
++exit:
++	kfree(buffer.pointer);
++	return apic_id;
++}
++
++int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr)
++{
++	int apic_id;
++
++	apic_id = map_mat_ioapic_entry(handle, gsi_base, phys_addr);
++	if (apic_id == -1)
++		apic_id = map_madt_ioapic_entry(gsi_base, phys_addr);
++
++	return apic_id;
++}
++#endif /* CONFIG_ACPI_HOTPLUG_IOAPIC */
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 05ed6886f1f8..b41c5aef5336 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -149,6 +149,10 @@ int acpi_map_lsapic(acpi_handle handle, int physid, int *pcpu);
+ int acpi_unmap_lsapic(int cpu);
+ #endif /* CONFIG_ACPI_HOTPLUG_CPU */
+ 
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
++#endif
++
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
+ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
+ void acpi_irq_stats_init(void);
+-- 
+1.7.10.4
 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: qla2xxx-upstream@qlogic.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/scsi/qla2xxx/qla_isr.c |   27 +++++++++++----------------
->  1 files changed, 11 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-> index a56825c..52d420f 100644
-> --- a/drivers/scsi/qla2xxx/qla_isr.c
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -2923,27 +2923,22 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
->  	for (i = 0; i < ha->msix_count; i++)
->  		entries[i].entry = i;
->  
-> -	ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
-> -	if (ret) {
-> -		if (ret < MIN_MSIX_COUNT)
-> -			goto msix_failed;
-> -
-> +	ret = pci_enable_msix_range(ha->pdev,
-> +				    entries, MIN_MSIX_COUNT, ha->msix_count);
-> +	if (ret < 0) {
-> +		ql_log(ql_log_fatal, vha, 0x00c7,
-> +		    "MSI-X: Failed to enable support, "
-> +		    "giving   up -- %d/%d.\n",
-> +		    ha->msix_count, ret);
-> +		goto msix_out;
-> +	} else if (ret < ha->msix_count) {
->  		ql_log(ql_log_warn, vha, 0x00c6,
->  		    "MSI-X: Failed to enable support "
->  		    "-- %d/%d\n Retry with %d vectors.\n",
->  		    ha->msix_count, ret, ret);
-> -		ha->msix_count = ret;
-> -		ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
-> -		if (ret) {
-> -msix_failed:
-> -			ql_log(ql_log_fatal, vha, 0x00c7,
-> -			    "MSI-X: Failed to enable support, "
-> -			    "giving   up -- %d/%d.\n",
-> -			    ha->msix_count, ret);
-> -			goto msix_out;
-> -		}
-> -		ha->max_rsp_queues = ha->msix_count - 1;
->  	}
-> +	ha->msix_count = ret;
-> +	ha->max_rsp_queues = ha->msix_count - 1;
->  	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
->  				ha->msix_count, GFP_KERNEL);
->  	if (!ha->msix_entries) {
-> -- 
-> 1.7.7.6
-> 
