@@ -1,64 +1,184 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f180.google.com ([209.85.192.180]:58079 "EHLO
-	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751648AbaHBAZu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Aug 2014 20:25:50 -0400
-Received: by mail-pd0-f180.google.com with SMTP id y13so6417348pdi.11
-        for <linux-pci@vger.kernel.org>; Fri, 01 Aug 2014 17:25:49 -0700 (PDT)
-Content-Type: text/plain;
-	charset=gb2312
-Mime-Version: 1.0 (1.0)
-Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
-From: Ethan Zhao <ethan.kernel@gmail.com>
-In-Reply-To: <53DB84E6.1070206@solarflare.com>
-Date: Sat, 2 Aug 2014 08:25:40 +0800
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	Don Dutile <ddutile@redhat.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Vasundhara Volam <vasundhara.volam@emulex.com>
-Message-Id: <107835EF-8941-4621-952F-E1583F7E3636@gmail.com>
-References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com> <alpine.LFD.2.03.1407311500570.16821@solarflare.com> <CABawtvPwxovKV==8RVCL1OcsdfnZDDjr=d1uYp-A=bAzYbmKww@mail.gmail.com> <53DB84E6.1070206@solarflare.com>
-To: Edward Cree <ecree@solarflare.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v4 09/16] x86, irq: Keep balance of IOAPIC pin reference count
+Date: Thu, 28 Aug 2014 10:22:34 +0800
+Message-Id: <1409192561-19744-10-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+To keep balance of IOAPIC pin reference count, we need to protect
+pirq_enable_irq(), acpi_pci_irq_enable() and intel_mid_pci_irq_enable()
+from reentrance. There are two cases which will cause reentrance.
 
+The first case is caused by suspend/hibernation. If pcibios_disable_irq
+is called during suspending/hibernating, we don't release the assigned
+IRQ number, otherwise it may break the suspend/hibernation. So late when
+pcibios_enable_irq is called during resume, we shouldn't allocate IRQ
+number again.
 
-> 在 2014年8月1日，下午8:15，Edward Cree <ecree@solarflare.com> 写道：
-> 
->> On 01/08/14 04:51, Ethan Zhao wrote:
->> Though I like this patch, it shows direct style, but it will change
->> the meaning of a function not mentioned here.
->> 
->>  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
-> Am I missing something here, or is that exactly the function mentioned
-> in the patch title / subject line?
-> 
->> So far seems no driver call pci_sriov_set_totalvfs() with numvfs = 0
->> and the patch will change the behavior of the drivers, but it will
->> definitely change the test cases and documents related to IOV.
-> As for test cases and documents, I can't find any in the kernel tree -
-> if I grep for pci_sriov_set_totalvfs, the only mentions I find are:
-> * The declaration in include/linux/pci.h.  Doesn't have any comments.
-> * The definition in drivers/pci/iov.c.  The comment doesn't document the
-> behaviour in the numvfs = 0 case.
-> * Documentation/ABI/testing/sysfs-bus-pci.  Describes the function's
-> purpose "reduce the value read from [the sriov_totalvfs sysfs file]" but
-> doesn't say anything about the numvfs = 0 case.
-> * the Intel igb and ixgbe ethernet drivers.  Both pass nonzero constants
-> for numvfs.
-> * the Emulex benet driver.  This went into Dave Miller's net-next branch
-> on 30/06/2014 (so hasn't hit Linus' or other trees yet), but it looks to
-> me like it might call with numvfs = 0.  CCing the author of that patch
-> (Vasundhara Volam) for comments.
+The second case is that function acpi_pci_irq_enable() may be called
+twice for PCI devices present at boot time as below:
+1) pci_acpi_init()
+	--> acpi_pci_irq_enable() if pci_routeirq is true
+2) pci_enable_device()
+	--> pcibios_enable_device()
+		--> acpi_pci_irq_enable()
+We can't kill kernel parameter pci_routeirq yet because it's still
+needed for debugging purpose.
 
-I mean some test cases or doc that are out of kernel tree ... such as some Distro, 
-not only Hardware vendors.
+So flag irq_managed is introduced to track whether IRQ number is
+assigned by OS and to protect pirq_enable_irq(), acpi_pci_irq_enable()
+and intel_mid_pci_irq_enable() from reentrance.
 
-Thanks.
-Ethan
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/pci/intel_mid_pci.c |    9 ++++++++-
+ arch/x86/pci/irq.c           |    7 ++++++-
+ drivers/acpi/pci_irq.c       |   11 +++++++++--
+ include/linux/pci.h          |    1 +
+ 4 files changed, 24 insertions(+), 4 deletions(-)
 
-> 
-> -Edward
-> The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index 3865116c51fb..6a855fef78fc 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -210,6 +210,9 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ {
+ 	int polarity;
+ 
++	if (dev->irq_managed && dev->irq > 0)
++		return 0;
++
+ 	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
+ 		polarity = 0; /* active high */
+ 	else
+@@ -224,13 +227,17 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 	if (mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC) < 0)
+ 		return -EBUSY;
+ 
++	dev->irq_managed = 1;
++
+ 	return 0;
+ }
+ 
+ static void intel_mid_pci_irq_disable(struct pci_dev *dev)
+ {
+-	if (!dev->dev.power.is_prepared && dev->irq > 0)
++	if (!dev->dev.power.is_prepared && dev->irq_managed && dev->irq > 0) {
+ 		mp_unmap_irq(dev->irq);
++		dev->irq_managed = 0;
++	}
+ }
+ 
+ struct pci_ops intel_mid_pci_ops = {
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index bc1a2c341891..dd1369dbcc42 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1202,6 +1202,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 			int irq;
+ 			struct io_apic_irq_attr irq_attr;
+ 
++			if (dev->irq_managed && dev->irq > 0)
++				return 0;
++
+ 			irq = IO_APIC_get_PCI_irq_vector(dev->bus->number,
+ 						PCI_SLOT(dev->devfn),
+ 						pin - 1, &irq_attr);
+@@ -1228,6 +1231,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 			}
+ 			dev = temp_dev;
+ 			if (irq >= 0) {
++				dev->irq_managed = 1;
+ 				dev->irq = irq;
+ 				dev_info(&dev->dev, "PCI->APIC IRQ transform: "
+ 					 "INT %c -> IRQ %d\n", 'A' + pin - 1, irq);
+@@ -1257,8 +1261,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ static void pirq_disable_irq(struct pci_dev *dev)
+ {
+ 	if (io_apic_assign_pci_irqs && !dev->dev.power.is_prepared &&
+-	    dev->irq) {
++	    dev->irq_managed && dev->irq > 0) {
+ 		mp_unmap_irq(dev->irq);
+ 		dev->irq = 0;
++		dev->irq_managed = 0;
+ 	}
+ }
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index c96887d5289e..4a89701dfe36 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -413,6 +413,9 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+ 		return 0;
+ 	}
+ 
++	if (dev->irq_managed && dev->irq > 0)
++		return 0;
++
+ 	entry = acpi_pci_irq_lookup(dev, pin);
+ 	if (!entry) {
+ 		/*
+@@ -456,6 +459,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+ 		return rc;
+ 	}
+ 	dev->irq = rc;
++	dev->irq_managed = 1;
+ 
+ 	if (link)
+ 		snprintf(link_desc, sizeof(link_desc), " -> Link[%s]", link);
+@@ -478,7 +482,7 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	u8 pin;
+ 
+ 	pin = dev->pin;
+-	if (!pin)
++	if (!pin || !dev->irq_managed || dev->irq <= 0)
+ 		return;
+ 
+ 	/* Keep IOAPIC pin configuration when suspending */
+@@ -502,6 +506,9 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	 */
+ 
+ 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
+-	if (gsi >= 0 && dev->irq > 0)
++	if (gsi >= 0) {
+ 		acpi_unregister_gsi(gsi);
++		dev->irq = 0;
++		dev->irq_managed = 0;
++	}
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 61978a460841..3e0b92715512 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -347,6 +347,7 @@ struct pci_dev {
+ 	unsigned int	__aer_firmware_first:1;
+ 	unsigned int	broken_intx_masking:1;
+ 	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
++	unsigned int	irq_managed:1;
+ 	pci_dev_flags_t dev_flags;
+ 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+ 
+-- 
+1.7.10.4
+
