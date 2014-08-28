@@ -1,56 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:56420 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754092AbaHNInl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Aug 2014 04:43:41 -0400
-Message-ID: <1408005693.4649.15.camel@weser.hi.pengutronix.de>
-Subject: Re: [PATCH] PCI: designware: check private_data validity in single
- place
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: linux-pci@vger.kernel.org, 'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Mohit Kumar' <mohit.kumar@st.com>, kernel@pengutronix.de
-Date: Thu, 14 Aug 2014 10:41:33 +0200
-In-Reply-To: <007901cfad75$58974040$09c5c0c0$%han@samsung.com>
-References: <1406884222-23974-1-git-send-email-l.stach@pengutronix.de>
-	 <007901cfad75$58974040$09c5c0c0$%han@samsung.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
+	linux-pm@vger.kernel.org
+Subject: [Patch v4 14/16] x86, irq: Introduce helper to check whether an IOAPIC has been registered
+Date: Thu, 28 Aug 2014 10:22:39 +0800
+Message-Id: <1409192561-19744-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jingoo,
+Introduce acpi_ioapic_registered() to check whether an IOAPIC has already
+been registered, it will be used when enabling IOAPIC hotplug.
 
-Am Freitag, den 01.08.2014, 19:42 +0900 schrieb Jingoo Han:
-> On Friday, August 01, 2014 6:10 PM, Lucas Stach wrote:
-> > 
-> > The driver had checks for this sprinkled all over. As we call
-> > sys_to_pcie() before every instance of this check, we can as well
-> > move the check to this single location to make things clear.
-> > 
-> > Removing the statements after BUG[_ON]() is safe as the kernel
-> > is halted at this point anyway.
-> > 
-> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> 
-> Acked-by: Jingoo Han <jg1.han@samsung.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h |    1 +
+ arch/x86/kernel/acpi/boot.c    |   11 +++++++++++
+ arch/x86/kernel/apic/io_apic.c |   11 +++++++++++
+ include/linux/acpi.h           |    1 +
+ 4 files changed, 24 insertions(+)
 
-Does this mean this addresses your concerns with the original series and
-you are okay with it now? If so please provide an Ack to the patches of
-this series also, so Bjorn knows if he can pick those up.
-
-Thanks,
-Lucas
-> 
-> > ---
-> > This is a follow on patch to the series
-> > "PCI: designware: init order/resource alloc fixes", which
-> > addresses Jingoos review feedback, so this series should
-> > be hopefully good to go now.
-> > ---
-> 
-
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index ce63cf34c93c..0db2b7037e4b 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -191,6 +191,7 @@ extern void mp_unmap_irq(int irq);
+ extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 			      struct ioapic_domain_cfg *cfg);
+ extern int mp_unregister_ioapic(u32 gsi_base);
++extern int mp_ioapic_registered(u32 gsi_base);
+ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			    irq_hw_number_t hwirq);
+ extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 560a6d1cb0f4..6aa796f77b71 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -810,6 +810,17 @@ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
+ }
+ EXPORT_SYMBOL(acpi_unregister_ioapic);
+ 
++int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base)
++{
++	int ret;
++
++	down_write(&acpi_ioapic_rwsem);
++	ret  = mp_ioapic_registered(gsi_base);
++	up_write(&acpi_ioapic_rwsem);
++
++	return ret;
++}
++
+ static int __init acpi_parse_sbf(struct acpi_table_header *table)
+ {
+ 	struct acpi_table_boot *sb;
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index fc1e1f9567bc..e104993a2394 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -4010,6 +4010,17 @@ int mp_unregister_ioapic(u32 gsi_base)
+ 	return 0;
+ }
+ 
++int mp_ioapic_registered(u32 gsi_base)
++{
++	int ioapic;
++
++	for_each_ioapic(ioapic)
++		if (ioapics[ioapic].gsi_config.gsi_base == gsi_base)
++			return 1;
++
++	return 0;
++}
++
+ int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 		     irq_hw_number_t hwirq)
+ {
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index b41c5aef5336..754d99d5f258 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -155,6 +155,7 @@ int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
+ 
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
+ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
++int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base);
+ void acpi_irq_stats_init(void);
+ extern u32 acpi_irq_handled;
+ extern u32 acpi_irq_not_handled;
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+1.7.10.4
 
