@@ -1,101 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:53493 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754029AbaHLR1F (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 13:27:05 -0400
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v9] Add architectural support for PCI in AArch64
-Date: Tue, 12 Aug 2014 17:25:59 +0100
-Message-Id: <1407860760-25252-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [Patch v4 11/16] x86, irq, ACPI: Introduce a rwsem to protect IOAPIC operations from hotplug
+Date: Thu, 28 Aug 2014 10:22:36 +0800
+Message-Id: <1409192561-19744-12-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+We are going to support ACPI based IOAPIC hotplug, so introduce a rwsem
+to protect IOAPIC data structures from IOAPIC hotplug. We choose to
+serialize in ACPI instead of in the IOAPIC core because:
+1) currently we are only plan to support ACPI based IOAPIC hotplug
+2) it's much more cleaner and easier
+3) It does't affect IOAPIC discovered by devicetree, SFI and mpparse.
 
-This patch adds support for PCI to AArch64. It is based on my v9 patch
-that adds support for creating generic host bridge structure from
-device tree. With that in place, I was able to boot a platform that
-has PCIe host bridge support and use a PCIe network card.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/acpi/boot.c |   13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-Changes from v8:
-  - Added support for generic PCI domains
-
-Changes from v7:
-  - Rebased to v3.16-rc3
-  - Removed pci_ioremap_io() function as it is provided by my v8 generic
-    PCI host bridge patches under a different name.
-
-Changes from v6:
-  - Guard the pci_domain_nr() inline implementation with #ifdef CONFIG_PCI as
-    to avoid conflict with default empty version present in include/linux/pci.h.
-    Thanks to Jingoo Han for catching this.
-
-Changes from v5:
-  - Removed pcibios_fixup_bridge_ranges() as the week default version is fine.
-  - Removed the ALIGN() call in pcibios_align_resource()
-  - Stopped exporting pcibios_align_resource()
-
-Changes from v4:
-  - Fixed the pci_domain_nr() implementation for arm64. Now we use
-    find_pci_host_bride() to find the host bridge before we retrieve
-    the domain number.
-
-Changes from v3:
-  - Added Acks accumulated so far ;)
-  - Still carrying Catalin's patch for moving the PCI_IO_BASE until it
-    lands in linux-next or mainline, in order to ease applying the series
-
-Changes from v2:
-  - Implement an arch specific version of pci_register_io_range() and
-    pci_address_to_pio().
-  - Return 1 from pci_proc_domain().
-
-Changes from v1:
-  - Added Catalin's patch for moving the PCI_IO_BASE location and extend
-    its size to 16MB
-  - Integrated Arnd's version of pci_ioremap_io that uses a bitmap for
-    keeping track of assigned IO space and returns an io_offset. At the
-    moment the code is added in arch/arm64 but it can be moved in drivers/pci.
-  - Added a fix for the generic ioport_map() function when !CONFIG_GENERIC_IOMAP
-    as suggested by Arnd.
-
-v8 thread here: https://lkml.org/lkml/2014/7/1/705
-v7 thread here: https://lkml.org/lkml/2014/3/14/320
-v6 thread here: https://lkml.org/lkml/2014/3/5/41
-v5 thread here: https://lkml.org/lkml/2014/3/4/307
-v4 thread here: https://lkml.org/lkml/2014/3/3/298
-v3 thread here: https://lkml.org/lkml/2014/2/28/211
-v2 thread here: https://lkml.org/lkml/2014/2/27/255
-v1 thread here: https://lkml.org/lkml/2014/2/3/389
-
-Liviu Dudau (1):
-  arm64: Add architectural support for PCIe
-
- arch/arm64/Kconfig            | 22 +++++++++++++++++++-
- arch/arm64/include/asm/Kbuild |  1 +
- arch/arm64/include/asm/io.h   |  3 ++-
- arch/arm64/include/asm/pci.h  | 37 +++++++++++++++++++++++++++++++++
- arch/arm64/kernel/Makefile    |  1 +
- arch/arm64/kernel/pci.c       | 48 +++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 110 insertions(+), 2 deletions(-)
- create mode 100644 arch/arm64/include/asm/pci.h
- create mode 100644 arch/arm64/kernel/pci.c
-
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index b436fc735aa4..e23f7460c3f8 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -76,6 +76,8 @@ int acpi_fix_pin2_polarity __initdata;
+ static u64 acpi_lapic_addr __initdata = APIC_DEFAULT_PHYS_BASE;
+ #endif
+ 
++static DECLARE_RWSEM(acpi_ioapic_rwsem);
++
+ /* --------------------------------------------------------------------------
+                               Boot-time Configuration
+    -------------------------------------------------------------------------- */
+@@ -604,8 +606,11 @@ void __init acpi_pic_sci_set_trigger(unsigned int irq, u16 trigger)
+ 
+ int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
+ {
+-	int irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
++	int irq;
+ 
++	down_read(&acpi_ioapic_rwsem);
++	irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
++	up_read(&acpi_ioapic_rwsem);
+ 	if (irq >= 0) {
+ 		*irqp = irq;
+ 		return 0;
+@@ -646,7 +651,9 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
+ 	int irq = gsi;
+ 
+ #ifdef CONFIG_X86_IO_APIC
++	down_read(&acpi_ioapic_rwsem);
+ 	irq = mp_register_gsi(dev, gsi, trigger, polarity);
++	up_read(&acpi_ioapic_rwsem);
+ #endif
+ 
+ 	return irq;
+@@ -655,7 +662,9 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
+ static void acpi_unregister_gsi_ioapic(u32 gsi)
+ {
+ #ifdef CONFIG_X86_IO_APIC
++	down_read(&acpi_ioapic_rwsem);
+ 	mp_unregister_gsi(gsi);
++	up_read(&acpi_ioapic_rwsem);
+ #endif
+ }
+ 
+@@ -1181,7 +1190,9 @@ static void __init acpi_process_madt(void)
+ 			/*
+ 			 * Parse MADT IO-APIC entries
+ 			 */
++			down_write(&acpi_ioapic_rwsem);
+ 			error = acpi_parse_madt_ioapic_entries();
++			up_write(&acpi_ioapic_rwsem);
+ 			if (!error) {
+ 				acpi_set_irq_model_ioapic();
+ 
 -- 
-2.0.4
+1.7.10.4
 
