@@ -1,98 +1,211 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:43627 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751995AbaHLDwk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 23:52:40 -0400
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 12 Aug 2014 13:52:38 +1000
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 691032BB0047
-	for <linux-pci@vger.kernel.org>; Tue, 12 Aug 2014 13:52:36 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s7C3TF9I1180130
-	for <linux-pci@vger.kernel.org>; Tue, 12 Aug 2014 13:29:15 +1000
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s7C3qUTC001748
-	for <linux-pci@vger.kernel.org>; Tue, 12 Aug 2014 13:52:30 +1000
-Date: Tue, 12 Aug 2014 13:52:26 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	amirv@mellanox.com, alex.williamson@redhat.com
-Subject: Re: [PATCH v2] PCI: Mark broken INTx masking for Mellanox devices
-Message-ID: <20140812035226.GA15421@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1406868871-350-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <20140811134854.GA5794@richard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140811134854.GA5794@richard>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v4 01/16] x86, PCI, ACPI: Kill private function resource_to_addr() in arch/x86/pci/acpi.c
+Date: Thu, 28 Aug 2014 10:22:26 +0800
+Message-Id: <1409192561-19744-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 11, 2014 at 09:48:54PM +0800, Wei Yang wrote:
->On Fri, Aug 01, 2014 at 02:54:31PM +1000, Gavin Shan wrote:
->>The VFIO driver is routing LSI interrupts by capturing, masking,
->>and then delivering. When passing though Mallanox adapters from
->
->one typo                                  Mellanox
->
->Others, looks good to me.
->
+Private function resource_to_addr() is used to parse ACPI resources
+for PCI host bridge. There are public interfaces available for that
+purpose, so replace resource_to_addr() with public interfaces.
 
-Thanks, Richard. I'll correct it in next revision. However, I'm
-still waiting for comments or ACK from Alex/Eli/Amir.
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/pci/acpi.c |  142 ++++++++++++++++++---------------------------------
+ 1 file changed, 51 insertions(+), 91 deletions(-)
 
-Thanks,
-Gavin
-
->>host to guest, interrupt storm was reported from host and guest.
->>That's because we can't mask the LSI interrupt with help of PCI
->>command register.
->>
->>[root@ncc-1701 ~]# lspci | grep Mellanox
->>0001:05:00.0 Ethernet controller: Mellanox Technologies MT27500 \
->>             Family [ConnectX-3]
->>0005:01:00.0 Ethernet controller: Mellanox Technologies MT26448 \
->>             [ConnectX EN 10GigE, PCIe 2.0 5GT/s] (rev b0)
->>
->>The patch marks broken INTx masking for Mellanox devices so that
->>the VFIO driver will always mask the interrupt from interrupt
->>controller side to avoid interrupt storm.
->>
->>Cc: Amir Vadai <amirv@mellanox.com>
->>Suggested-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
->>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>---
->> drivers/pci/quirks.c | 4 ++++
->> 1 file changed, 4 insertions(+)
->>
->>diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>index d0f6926..8c2b96f 100644
->>--- a/drivers/pci/quirks.c
->>+++ b/drivers/pci/quirks.c
->>@@ -2977,6 +2977,10 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CHELSIO, 0x0030,
->> 			 quirk_broken_intx_masking);
->> DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
->> 			 quirk_broken_intx_masking);
->>+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, 0x1003,
->>+			 quirk_broken_intx_masking);
->>+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, 0x6750,
->>+			 quirk_broken_intx_masking);
->> /*
->>  * Realtek RTL8169 PCI Gigabit Ethernet Controller (rev 10)
->>  * Subsystem: Realtek RTL8169/8110 Family PCI Gigabit Ethernet NIC
->>-- 
->>1.8.3.2
->>
->>--
->>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>the body of a message to majordomo@vger.kernel.org
->>More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->-- 
->Richard Yang
->Help you, Help me
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index cfd1b132b8e3..0e716fa56ae5 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -218,114 +218,74 @@ static void teardown_mcfg_map(struct pci_root_info *info)
+ }
+ #endif
+ 
+-static acpi_status resource_to_addr(struct acpi_resource *resource,
+-				    struct acpi_resource_address64 *addr)
+-{
+-	acpi_status status;
+-	struct acpi_resource_memory24 *memory24;
+-	struct acpi_resource_memory32 *memory32;
+-	struct acpi_resource_fixed_memory32 *fixed_memory32;
+-
+-	memset(addr, 0, sizeof(*addr));
+-	switch (resource->type) {
+-	case ACPI_RESOURCE_TYPE_MEMORY24:
+-		memory24 = &resource->data.memory24;
+-		addr->resource_type = ACPI_MEMORY_RANGE;
+-		addr->minimum = memory24->minimum;
+-		addr->address_length = memory24->address_length;
+-		addr->maximum = addr->minimum + addr->address_length - 1;
+-		return AE_OK;
+-	case ACPI_RESOURCE_TYPE_MEMORY32:
+-		memory32 = &resource->data.memory32;
+-		addr->resource_type = ACPI_MEMORY_RANGE;
+-		addr->minimum = memory32->minimum;
+-		addr->address_length = memory32->address_length;
+-		addr->maximum = addr->minimum + addr->address_length - 1;
+-		return AE_OK;
+-	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+-		fixed_memory32 = &resource->data.fixed_memory32;
+-		addr->resource_type = ACPI_MEMORY_RANGE;
+-		addr->minimum = fixed_memory32->address;
+-		addr->address_length = fixed_memory32->address_length;
+-		addr->maximum = addr->minimum + addr->address_length - 1;
+-		return AE_OK;
+-	case ACPI_RESOURCE_TYPE_ADDRESS16:
+-	case ACPI_RESOURCE_TYPE_ADDRESS32:
+-	case ACPI_RESOURCE_TYPE_ADDRESS64:
+-		status = acpi_resource_to_address64(resource, addr);
+-		if (ACPI_SUCCESS(status) &&
+-		    (addr->resource_type == ACPI_MEMORY_RANGE ||
+-		    addr->resource_type == ACPI_IO_RANGE) &&
+-		    addr->address_length > 0) {
+-			return AE_OK;
+-		}
+-		break;
+-	}
+-	return AE_ERROR;
+-}
+-
+ static acpi_status count_resource(struct acpi_resource *acpi_res, void *data)
+ {
+ 	struct pci_root_info *info = data;
+-	struct acpi_resource_address64 addr;
+-	acpi_status status;
++	struct resource r = {
++		.flags = 0
++	};
+ 
+-	status = resource_to_addr(acpi_res, &addr);
+-	if (ACPI_SUCCESS(status))
++	if (!acpi_dev_resource_memory(acpi_res, &r) &&
++	    !acpi_dev_resource_address_space(acpi_res, &r))
++		return AE_OK;
++
++	if ((r.flags & (IORESOURCE_IO | IORESOURCE_MEM)) && resource_size(&r))
+ 		info->res_num++;
++
+ 	return AE_OK;
+ }
+ 
+ static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
+ {
+ 	struct pci_root_info *info = data;
+-	struct resource *res;
+-	struct acpi_resource_address64 addr;
+-	acpi_status status;
+-	unsigned long flags;
+-	u64 start, orig_end, end;
++	struct resource *res = &info->res[info->res_num];
++	u64 translation_offset = 0;
++
++	memset(res, 0, sizeof(*res));
++	if (acpi_dev_resource_memory(acpi_res, res)) {
++		res->flags &= IORESOURCE_MEM | IORESOURCE_IO;
++	} else if (acpi_dev_resource_address_space(acpi_res, res)) {
++		u64 orig_end;
++		struct acpi_resource_address64 addr;
++
++		res->flags &= IORESOURCE_MEM | IORESOURCE_IO;
++		if (res->flags == 0)
++			return AE_OK;
+ 
+-	status = resource_to_addr(acpi_res, &addr);
+-	if (!ACPI_SUCCESS(status))
+-		return AE_OK;
++		if (ACPI_FAILURE(acpi_resource_to_address64(acpi_res, &addr)))
++			return AE_OK;
+ 
+-	if (addr.resource_type == ACPI_MEMORY_RANGE) {
+-		flags = IORESOURCE_MEM;
+-		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
+-			flags |= IORESOURCE_PREFETCH;
+-	} else if (addr.resource_type == ACPI_IO_RANGE) {
+-		flags = IORESOURCE_IO;
+-	} else
+-		return AE_OK;
++		if (addr.resource_type == ACPI_MEMORY_RANGE &&
++		    addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
++			res->flags |= IORESOURCE_PREFETCH;
+ 
+-	start = addr.minimum + addr.translation_offset;
+-	orig_end = end = addr.maximum + addr.translation_offset;
++		translation_offset = addr.translation_offset;
++		orig_end = res->end;
++		res->start += translation_offset;
++		res->end += translation_offset;
+ 
+-	/* Exclude non-addressable range or non-addressable portion of range */
+-	end = min(end, (u64)iomem_resource.end);
+-	if (end <= start) {
+-		dev_info(&info->bridge->dev,
+-			"host bridge window [%#llx-%#llx] "
+-			"(ignored, not CPU addressable)\n", start, orig_end);
+-		return AE_OK;
+-	} else if (orig_end != end) {
+-		dev_info(&info->bridge->dev,
+-			"host bridge window [%#llx-%#llx] "
+-			"([%#llx-%#llx] ignored, not CPU addressable)\n", 
+-			start, orig_end, end + 1, orig_end);
++		/* Exclude non-addressable range or non-addressable portion of range */
++		res->end = min(res->end, (u64)iomem_resource.end);
++		if (res->end <= res->start) {
++			dev_info(&info->bridge->dev,
++				"host bridge window [%#llx-%#llx] (ignored, not CPU addressable)\n",
++				 res->start, orig_end);
++			return AE_OK;
++		} else if (orig_end != res->end) {
++			dev_info(&info->bridge->dev,
++				"host bridge window [%#llx-%#llx] ([%#llx-%#llx] ignored, not CPU addressable)\n",
++				res->start, orig_end, res->end + 1, orig_end);
++		}
+ 	}
+ 
+-	res = &info->res[info->res_num];
+-	res->name = info->name;
+-	res->flags = flags;
+-	res->start = start;
+-	res->end = end;
+-	info->res_offset[info->res_num] = addr.translation_offset;
+-	info->res_num++;
+-
+-	if (!pci_use_crs)
+-		dev_printk(KERN_DEBUG, &info->bridge->dev,
+-			   "host bridge window %pR (ignored)\n", res);
++	if (res->flags && resource_size(res)) {
++		res->name = info->name;
++		info->res_offset[info->res_num] = translation_offset;
++		info->res_num++;
++		if (!pci_use_crs)
++			dev_printk(KERN_DEBUG, &info->bridge->dev,
++				   "host bridge window %pR (ignored)\n", res);
++	}
+ 
+ 	return AE_OK;
+ }
+-- 
+1.7.10.4
 
