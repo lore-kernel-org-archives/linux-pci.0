@@ -1,120 +1,174 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7672 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S936119AbaH1CV2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 Aug 2014 22:21:28 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Prarit Bhargava <prarit@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch v4 08/16] x86, irq: Remove __init marker for functions will be used by IOAPIC hotplug
-Date: Thu, 28 Aug 2014 10:22:33 +0800
-Message-Id: <1409192561-19744-9-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <53FEEF7C.1090902@amd.com>
+Date: Thu, 28 Aug 2014 03:59:40 -0500
+From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+MIME-Version: 1.0
+To: Marc Zyngier <marc.zyngier@arm.com>
+CC: Mark Rutland <Mark.Rutland@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH 1/2 V4] irqchip: gic: Add supports for ARM GICv2m MSI(-X)
+References: <1407942041-3291-1-git-send-email-suravee.suthikulpanit@amd.com>
+	<1407942041-3291-2-git-send-email-suravee.suthikulpanit@amd.com>
+ <87fvgxrgte.fsf@approximate.cambridge.arm.com>
+In-Reply-To: <87fvgxrgte.fsf@approximate.cambridge.arm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove __init marker for functions which will be used by IOAPIC hotplug
-at runtime.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |    4 ++--
- arch/x86/kernel/apic/io_apic.c |   14 +++++++-------
- 2 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 0aeed5ca356e..0b31aebd9405 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -188,8 +188,8 @@ extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
- extern u32 mp_pin_to_gsi(int ioapic, int pin);
- extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
- extern void mp_unmap_irq(int irq);
--extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
--				      struct ioapic_domain_cfg *cfg);
-+extern void mp_register_ioapic(int id, u32 address, u32 gsi_base,
-+			       struct ioapic_domain_cfg *cfg);
- extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 			    irq_hw_number_t hwirq);
- extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 196d9c15fdec..1ac868128a61 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3454,7 +3454,7 @@ io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
- 	return ret;
- }
- 
--static int __init io_apic_get_redir_entries(int ioapic)
-+static int io_apic_get_redir_entries(int ioapic)
- {
- 	union IO_APIC_reg_01	reg_01;
- 	unsigned long flags;
-@@ -3500,7 +3500,7 @@ int __init arch_probe_nr_irqs(void)
- }
- 
- #ifdef CONFIG_X86_32
--static int __init io_apic_get_unique_id(int ioapic, int apic_id)
-+static int io_apic_get_unique_id(int ioapic, int apic_id)
- {
- 	union IO_APIC_reg_00 reg_00;
- 	static physid_mask_t apic_id_map = PHYSID_MASK_NONE;
-@@ -3626,7 +3626,7 @@ static u8 io_apic_unique_id(int idx, u8 id)
- }
- #endif
- 
--static int __init io_apic_get_version(int ioapic)
-+static int io_apic_get_version(int ioapic)
- {
- 	union IO_APIC_reg_01	reg_01;
- 	unsigned long flags;
-@@ -3830,7 +3830,7 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
- 	return gsi - gsi_cfg->gsi_base;
- }
- 
--static __init int bad_ioapic(unsigned long address)
-+static int bad_ioapic(unsigned long address)
- {
- 	if (nr_ioapics >= MAX_IO_APICS) {
- 		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
-@@ -3844,7 +3844,7 @@ static __init int bad_ioapic(unsigned long address)
- 	return 0;
- }
- 
--static __init int bad_ioapic_register(int idx)
-+static int bad_ioapic_register(int idx)
- {
- 	union IO_APIC_reg_00 reg_00;
- 	union IO_APIC_reg_01 reg_01;
-@@ -3863,8 +3863,8 @@ static __init int bad_ioapic_register(int idx)
- 	return 0;
- }
- 
--void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
--			       struct ioapic_domain_cfg *cfg)
-+void mp_register_ioapic(int id, u32 address, u32 gsi_base,
-+			struct ioapic_domain_cfg *cfg)
- {
- 	int idx = 0;
- 	int entries;
--- 
-1.7.10.4
+On 08/15/2014 09:03 AM, Marc Zyngier wrote:
+>> +
+>> +static struct irq_chip gicv2m_chip;
+>> +
+>> +#ifdef CONFIG_OF
+>
+> Is there any reason why this should be guarded by CONFIG_OF? Surely the
+> v2m capability should only be enabled if OF is.
 
+[Suravee]
+We are also planning to support ACPI in the future also, which will be 
+using a different init function.  Also, there is the same #ifdef in the 
+irq-gic.c for the gic_of_init().  So, I am just trying to be consistent 
+here.
+
+
+>> +
+>> +       memcpy(&gicv2m_chip, gic->irq_chip, sizeof(struct irq_chip));
+>> +       gicv2m_chip.name = "GICv2m",
+>> +       gicv2m_chip.irq_mask = gicv2m_mask_irq;
+>> +       gicv2m_chip.irq_unmask = gicv2m_unmask_irq;
+>> +       gic->irq_chip = &gicv2m_chip;
+>
+> I liked it until this last line. You're overriding the irq_chip for the
+> whole GIC. I was expecting you'd only use it for the MSI range
+> (basically return a range to the caller, together with your brand new
+> irq_chip).
+
+[Suravee]
+I'm not sure if I understand you point here. Actually, I don't see the 
+whole point of the need to have a whole different irq_chip for v2m 
+stuff.  All I need is just a way to overwrite the irq_chip.irq_mask() 
+and irq_chip.irq_unmask() with the v2m version which should check for 
+MSI before calling mask/unmask_msi_irq(). I should be able to just do:
+
+	gic->irq_chip.irq_mask = gicv2m_mask_irq;
+	gic->irq_chip.irq_unmask = gicv2m_unmask_irq;
+
+
+>> @@ -768,19 +768,21 @@ void __init gic_init_physaddr(struct device_node *node)
+>>   static int gic_irq_domain_map(struct irq_domain *d, unsigned int irq,
+>>                                  irq_hw_number_t hw)
+>>   {
+>> +       struct gic_chip_data *gic = d->host_data;
+>> +
+>>          if (hw < 32) {
+>>                  irq_set_percpu_devid(irq);
+>> -               irq_set_chip_and_handler(irq, &gic_chip,
+>> +               irq_set_chip_and_handler(irq, gic->irq_chip,
+>>                                           handle_percpu_devid_irq);
+>>                  set_irq_flags(irq, IRQF_VALID | IRQF_NOAUTOEN);
+>>          } else {
+>> -               irq_set_chip_and_handler(irq, &gic_chip,
+>> +               irq_set_chip_and_handler(irq, gic->irq_chip,
+>>                                           handle_fasteoi_irq);
+>
+> And here you should discriminate on whether this is MSI or not, based on
+> the range you got from above.
+>
+
+[Suravee]
+ From above, since we only use one irq_chip (i.e. the gic_chip), there 
+is no need to differentiate here, and I don't need to make these two 
+line changes.
+
+>> @@ -1009,6 +1012,16 @@ gic_of_init(struct device_node *node, struct device_node *parent)
+>>          if (of_property_read_u32(node, "cpu-offset", &percpu_offset))
+>>                  percpu_offset = 0;
+>>
+>> +       gic_data[gic_cnt].irq_chip = &gic_chip;
+>> +
+>> +       /* Currently, we only support one v2m subnode. */
+>> +       child = of_get_child_by_name(node, "v2m");
+>
+> If you only support one v2m node, then you should also enforce it for
+> potential secondaty GICs (just probing it for gic_cnt == 0 should be
+> enough).
+
+[Suravee]
+Actually, if we have multiple (N) GICs, we should be able to also 
+support multiple (N) V2Ms with the followings entries.
+	gic0 {
+		.....
+		v2m {
+			....
+		}
+	}
+
+	gic1 {
+		.....
+		v2m {
+			....
+		}
+	}
+
+What I am not trying to support at this point is the following:
+
+	gic0 {
+		....
+		v2m {
+			....
+		}
+		v2m {
+			....
+		}
+	}
+
+
+>> diff --git a/drivers/irqchip/irq-gic.h b/drivers/irqchip/irq-gic.h
+>> new file mode 100644
+>> index 0000000..2ec6bc3
+>> --- /dev/null
+>> +++ b/drivers/irqchip/irq-gic.h
+>> @@ -0,0 +1,48 @@
+>> +#ifndef _IRQ_GIC_H_
+>> +#define _IRQ_GIC_H_
+>> +
+>> +#include <linux/msi.h>
+>> +
+>> +union gic_base {
+>> +       void __iomem *common_base;
+>> +       void __percpu * __iomem *percpu_base;
+>> +};
+>> +
+>> +#ifdef CONFIG_ARM_GIC_V2M
+>> +struct v2m_data {
+>> +       spinlock_t msi_cnt_lock;
+>> +       struct msi_chip msi_chip;
+>> +       struct resource res;      /* GICv2m resource */
+>> +       void __iomem *base;       /* GICv2m virt address */
+>> +       unsigned int spi_start;   /* The SPI number that MSIs start */
+>> +       unsigned int nr_spis;     /* The number of SPIs for MSIs */
+>> +       unsigned long *bm;        /* MSI vector bitmap */
+>> +};
+>> +#endif
+>
+> So if you put the #ifdef/#endif *inside* the v2m_data structure...
+
+[Suravee] Are you suggesting an empty struct v2m_data{}; Hm.. I guess I 
+can do that.
+
+Thanks,
+
+Suravee
