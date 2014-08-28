@@ -1,188 +1,137 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Prarit Bhargava <prarit@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch v4 10/16] x86, irq: Refine mp_register_ioapic() to prepare for IOAPIC hotplug
-Date: Thu, 28 Aug 2014 10:22:35 +0800
-Message-Id: <1409192561-19744-11-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:39575 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752015AbaH1VzL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Aug 2014 17:55:11 -0400
+Message-ID: <53FFA54D.9000907@gmail.com>
+Date: Thu, 28 Aug 2014 14:55:25 -0700
+From: Rajat Jain <rajatxjain@gmail.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+CC: rajatjain@juniper.net, groeck@juniper.net
+Subject: [PATCH] pci/probe: Enable CRS for Intel Haswell root ports
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refine mp_register_ioapic() to prepare for IOAPIC hotplug by:
-1) change return value from void to int.
-2) check for gsi range conflicts
-3) check for IOAPIC physical address conflicts
-4) enhance the way to allocate IOAPIC index
+The PCIe root port of the Intel Haswell CPU, has a behavior to endlessly
+retry the configuration cycles, if an endpoint responds with a CRS
+(Configuration Request Retry Status), and the "CRS Software Visibility"
+flag is not set at the root port. This results in a CPU hang, when the
+kernel tries to enumerate the device that responds with CRS.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Please note that this root port behavior (of endless retries) is still
+compliant with PCIe spec as the spec leaves the behavior open to
+implementation, on how many retries to do if "CRS visibility flag" is
+not enabled and it receives a CRS. (Intel has chosen to retry indefinitely)
+
+Ref1:
+https://www.pcisig.com/specifications/pciexpress/ECN_CRS_Software_Visibility_No27.pdf
+
+Ref2:
+PCIe spec V3.0, pg119, pg127 for "Configuration Request Retry Status"
+
+Following CPUs are affected:
+http://ark.intel.com/products/codename/42174/Haswell#@All
+
+Thus we need to enable the CRS visibility flag for such root ports. The
+commit ad7edfe04908 ("[PCI] Do not enable CRS Software Visibility by
+default") suggests to maintain a whitelist of the systems for which CRS
+should be enabled. This patch does the same.
+
+Note: Looking at the spec and reading about the CRS, IMHO the "CRS
+visibility" looks like a good thing to me that should always be enabled
+on the root ports that support it. And may be we should always enable
+it if supported and maintain a blacklist of devices on which should be
+disabled (because of known issues).
+
+How I stumbled upon this and tested the fix:
+
+Root port: PCI bridge: Intel Corporation Device 2f02 (rev 01)
+
+I have a PCIe endpoint (a PLX 8713 NT bridge) that will keep on responding
+with CRS for a long time when the kernel tries to enumerate the
+endpoint, trying to indicate that the device is not yet ready. This is
+because it needs some configuration over I2C in order to complete its
+reset sequence. This results in a CPU hang during enumeration.
+
+I used this setup to fix and test this issue. After enabling the CRS
+visibility flag at the root port, I see that CPU moves on as expected
+declaring the following (instead of freezing):
+
+pci 0000:30:00.0 id reading try 50 times with interval 20 ms to get
+ffff0001
+
+Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+Signed-off-by: Guenter Roeck <groeck@juniper.net>
 ---
- arch/x86/include/asm/io_apic.h |    4 +-
- arch/x86/kernel/apic/io_apic.c |   80 ++++++++++++++++++++++++----------------
- 2 files changed, 51 insertions(+), 33 deletions(-)
+Hi Bjorn / folks,
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 0b31aebd9405..94d05bd6586f 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -188,8 +188,8 @@ extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
- extern u32 mp_pin_to_gsi(int ioapic, int pin);
- extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
- extern void mp_unmap_irq(int irq);
--extern void mp_register_ioapic(int id, u32 address, u32 gsi_base,
--			       struct ioapic_domain_cfg *cfg);
-+extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
-+			      struct ioapic_domain_cfg *cfg);
- extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 			    irq_hw_number_t hwirq);
- extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 1ac868128a61..6e67af0c5f99 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3830,20 +3830,6 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
- 	return gsi - gsi_cfg->gsi_base;
+I had also saught suggestions on how this patch should be modelled.
+Please find a suggestive alternative here:
+
+https://lkml.org/lkml/2014/8/1/186
+
+Please let me know your thoughts.
+
+Thanks,
+
+Rajat
+
+
+
+
+ drivers/pci/probe.c |   28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index e3cf8a2..909ca75 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -740,6 +740,32 @@ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
  }
+ EXPORT_SYMBOL(pci_add_new_bus);
  
--static int bad_ioapic(unsigned long address)
--{
--	if (nr_ioapics >= MAX_IO_APICS) {
--		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
--			MAX_IO_APICS, nr_ioapics);
--		return 1;
--	}
--	if (!address) {
--		pr_warn("WARNING: Bogus (zero) I/O APIC address found in table, skipping!\n");
--		return 1;
--	}
--	return 0;
--}
--
- static int bad_ioapic_register(int idx)
- {
- 	union IO_APIC_reg_00 reg_00;
-@@ -3863,29 +3849,44 @@ static int bad_ioapic_register(int idx)
- 	return 0;
- }
- 
--void mp_register_ioapic(int id, u32 address, u32 gsi_base,
--			struct ioapic_domain_cfg *cfg)
-+static int find_free_ioapic_entry(void)
- {
--	int idx = 0;
--	int entries;
-+	return nr_ioapics;
++static const struct pci_device_id crs_whitelist[] = {
++	{ PCI_VDEVICE(INTEL, 0x2f00), },
++	{ PCI_VDEVICE(INTEL, 0x2f01), },
++	{ PCI_VDEVICE(INTEL, 0x2f02), },
++	{ PCI_VDEVICE(INTEL, 0x2f03), },
++	{ PCI_VDEVICE(INTEL, 0x2f04), },
++	{ PCI_VDEVICE(INTEL, 0x2f05), },
++	{ PCI_VDEVICE(INTEL, 0x2f06), },
++	{ PCI_VDEVICE(INTEL, 0x2f07), },
++	{ PCI_VDEVICE(INTEL, 0x2f08), },
++	{ PCI_VDEVICE(INTEL, 0x2f09), },
++	{ PCI_VDEVICE(INTEL, 0x2f0a), },
++	{ PCI_VDEVICE(INTEL, 0x2f0b), },
++	{ },
++};
++
++static void pci_enable_crs(struct pci_dev *dev)
++{
++	/* Enable CRS Software visibility only for whitelisted systems */
++	if (pci_is_pcie(dev) &&
++	    pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
++	    pci_match_id(crs_whitelist, dev))
++		pcie_capability_set_word(dev, PCI_EXP_RTCTL,
++					 PCI_EXP_RTCTL_CRSSVE);
 +}
 +
-+int mp_register_ioapic(int id, u32 address, u32 gsi_base,
-+		       struct ioapic_domain_cfg *cfg)
-+{
-+	u32 gsi_end;
-+	int idx, ioapic, entries;
- 	struct mp_ioapic_gsi *gsi_cfg;
+ /*
+  * If it's a bridge, configure it and scan the bus behind it.
+  * For CardBus bridges, we don't scan behind as the devices will
+@@ -787,6 +813,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 	pci_write_config_word(dev, PCI_BRIDGE_CONTROL,
+ 			      bctl & ~PCI_BRIDGE_CTL_MASTER_ABORT);
  
--	if (bad_ioapic(address))
--		return;
-+	if (!address) {
-+		pr_warn("Bogus (zero) I/O APIC address found, skipping!\n");
-+		return -EINVAL;
-+	}
-+	for_each_ioapic(ioapic)
-+		if (ioapics[ioapic].mp_config.apicaddr == address) {
-+			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
-+				address, ioapic);
-+			return -EEXIST;
-+		}
- 
--	idx = nr_ioapics;
-+	idx = find_free_ioapic_entry();
-+	if (idx >= MAX_IO_APICS) {
-+		pr_warn("Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
-+			MAX_IO_APICS, idx);
-+		return -ENOSPC;
-+	}
- 
- 	ioapics[idx].mp_config.type = MP_IOAPIC;
- 	ioapics[idx].mp_config.flags = MPC_APIC_USABLE;
- 	ioapics[idx].mp_config.apicaddr = address;
--	ioapics[idx].irqdomain = NULL;
--	ioapics[idx].irqdomain_cfg = *cfg;
- 
- 	set_fixmap_nocache(FIX_IO_APIC_BASE_0 + idx, address);
--
- 	if (bad_ioapic_register(idx)) {
- 		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
--		return;
-+		return -ENODEV;
- 	}
- 
- 	ioapics[idx].mp_config.apicid = io_apic_unique_id(idx, id);
-@@ -3896,24 +3897,41 @@ void mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 	 * and to prevent reprogramming of IOAPIC pins (PCI GSIs).
- 	 */
- 	entries = io_apic_get_redir_entries(idx);
-+	gsi_end = gsi_base + entries - 1;
-+	for_each_ioapic(ioapic) {
-+		gsi_cfg = mp_ioapic_gsi_routing(ioapic);
-+		if ((gsi_base >= gsi_cfg->gsi_base &&
-+		     gsi_base <= gsi_cfg->gsi_end) ||
-+		    (gsi_end >= gsi_cfg->gsi_base &&
-+		     gsi_end <= gsi_cfg->gsi_end)) {
-+			pr_warn("GSI range [%u-%u] for new IOAPIC conflicts with GSI[%u-%u]\n",
-+				gsi_base, gsi_end,
-+				gsi_cfg->gsi_base, gsi_cfg->gsi_end);
-+			clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
-+			return -ENOSPC;
-+		}
-+	}
- 	gsi_cfg = mp_ioapic_gsi_routing(idx);
- 	gsi_cfg->gsi_base = gsi_base;
--	gsi_cfg->gsi_end = gsi_base + entries - 1;
-+	gsi_cfg->gsi_end = gsi_end;
- 
--	/*
--	 * The number of IO-APIC IRQ registers (== #pins):
--	 */
--	ioapics[idx].nr_registers = entries;
-+	ioapics[idx].irqdomain = NULL;
-+	ioapics[idx].irqdomain_cfg = *cfg;
- 
- 	if (gsi_cfg->gsi_end >= gsi_top)
- 		gsi_top = gsi_cfg->gsi_end + 1;
-+	if (nr_ioapics <= idx)
-+		nr_ioapics = idx + 1;
++	pci_enable_crs(dev);
 +
-+	/* Set nr_registers to mark entry present */
-+	ioapics[idx].nr_registers = entries;
- 
- 	pr_info("IOAPIC[%d]: apic_id %d, version %d, address 0x%x, GSI %d-%d\n",
- 		idx, mpc_ioapic_id(idx),
- 		mpc_ioapic_ver(idx), mpc_ioapic_addr(idx),
- 		gsi_cfg->gsi_base, gsi_cfg->gsi_end);
- 
--	nr_ioapics++;
-+	return 0;
- }
- 
- int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 	if ((secondary || subordinate) && !pcibios_assign_all_busses() &&
+ 	    !is_cardbus && !broken) {
+ 		unsigned int cmax;
 -- 
-1.7.10.4
+1.7.9.5
 
