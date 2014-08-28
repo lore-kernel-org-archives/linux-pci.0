@@ -1,46 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:59725 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934467AbaHZO55 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Aug 2014 10:57:57 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 4/6] PCI: tegra: Fix extended configuration space mapping
-Date: Tue, 26 Aug 2014 16:57:42 +0200
-Message-Id: <1409065064-17617-5-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1409065064-17617-1-git-send-email-thierry.reding@gmail.com>
-References: <1409065064-17617-1-git-send-email-thierry.reding@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:50750 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932284AbaH1CUq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 27 Aug 2014 22:20:46 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v4 03/16] ACPI: Fix minor syntax issues in processor_core.c
+Date: Thu, 28 Aug 2014 10:22:28 +0800
+Message-Id: <1409192561-19744-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Peter Daifuku <pdaifuku@nvidia.com>
+Fix minor syntax issues in processor.c to follow coding styles.
 
-The 16 chunks of 64 KiB that need to be stitched together to make up the
-configuration space for one bus (1 MiB) are located 24 bits (== 16 MiB)
-apart in physical address space. This is determined by the start of the
-extended register field (bits 24-27) in the physical mapping.
-
-Signed-off-by: Peter Daifuku <pdaifuku@nvidia.com>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/host/pci-tegra.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/acpi/processor_core.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index bd53b123218b..8264bce77750 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -383,7 +383,7 @@ static struct tegra_pcie_bus *tegra_pcie_bus_alloc(struct tegra_pcie *pcie,
- 	for (i = 0; i < 16; i++) {
- 		unsigned long virt = (unsigned long)bus->area->addr +
- 				     i * SZ_64K;
--		phys_addr_t phys = cs + i * SZ_1M + busnr * SZ_64K;
-+		phys_addr_t phys = cs + i * SZ_16M + busnr * SZ_64K;
+diff --git a/drivers/acpi/processor_core.c b/drivers/acpi/processor_core.c
+index e32321ce9a5c..b048f3752c2b 100644
+--- a/drivers/acpi/processor_core.c
++++ b/drivers/acpi/processor_core.c
+@@ -125,13 +125,12 @@ static int map_mat_entry(acpi_handle handle, int type, u32 acpi_id)
+ 	}
  
- 		err = ioremap_page_range(virt, virt + SZ_64K, phys, prot);
- 		if (err < 0) {
+ 	header = (struct acpi_subtable_header *)obj->buffer.pointer;
+-	if (header->type == ACPI_MADT_TYPE_LOCAL_APIC) {
++	if (header->type == ACPI_MADT_TYPE_LOCAL_APIC)
+ 		map_lapic_id(header, acpi_id, &apic_id);
+-	} else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC) {
++	else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC)
+ 		map_lsapic_id(header, type, acpi_id, &apic_id);
+-	} else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC) {
++	else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC)
+ 		map_x2apic_id(header, type, acpi_id, &apic_id);
+-	}
+ 
+ exit:
+ 	kfree(buffer.pointer);
+@@ -164,7 +163,7 @@ int acpi_map_cpuid(int apic_id, u32 acpi_id)
+ 		 * For example,
+ 		 *
+ 		 * Scope (_PR)
+-                 * {
++		 * {
+ 		 *     Processor (CPU0, 0x00, 0x00000410, 0x06) {}
+ 		 *     Processor (CPU1, 0x01, 0x00000410, 0x06) {}
+ 		 *     Processor (CPU2, 0x02, 0x00000410, 0x06) {}
 -- 
-2.0.4
+1.7.10.4
 
