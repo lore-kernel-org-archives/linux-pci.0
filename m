@@ -1,145 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:56531 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756792AbaHGDnp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Aug 2014 23:43:45 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 7 Aug 2014 13:43:43 +1000
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 5C0542BB0052
-	for <linux-pci@vger.kernel.org>; Thu,  7 Aug 2014 13:43:41 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s773KVxg10682774
-	for <linux-pci@vger.kernel.org>; Thu, 7 Aug 2014 13:20:31 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s773hesP009255
-	for <linux-pci@vger.kernel.org>; Thu, 7 Aug 2014 13:43:40 +1000
-Date: Thu, 7 Aug 2014 11:43:39 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: matthew_minter@xyratex.com
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 01/22] Added some infrastructure to allow assigning PCI
- device IRQs at device enable time and removed pci_fixup_irqs as the other
- change obsolites it.
-Message-ID: <20140807034338.GA13444@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
- <1407255083-9356-2-git-send-email-matthew_minter@xyratex.com>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:51846 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751244AbaH1R2w (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Aug 2014 13:28:52 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1407255083-9356-2-git-send-email-matthew_minter@xyratex.com>
+Date: Thu, 28 Aug 2014 22:58:50 +0530
+Message-ID: <CANwwZzXowyGmg-cfCHQqeJ_iqjT+Ec+JPy+OWzNGeyN=hRqmPg@mail.gmail.com>
+Subject: mlx4 query in sriov mode
+From: Bob Biloxi <iambobbiloxi@gmail.com>
+To: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 05, 2014 at 05:11:02PM +0100, matthew_minter@xyratex.com wrote:
->From: matthew_minter <matthew_minter@xyratex.com>
->
->---
-> drivers/pci/Makefile      | 15 ++-------------
-> drivers/pci/host-bridge.c |  2 +-
-> drivers/pci/pci.c         |  6 +++++-
-> drivers/pci/pci.h         |  1 +
-> drivers/pci/probe.c       | 12 ------------
-> drivers/pci/setup-irq.c   | 25 +++++++++----------------
-> include/linux/pci.h       |  8 ++++----
-> 7 files changed, 22 insertions(+), 47 deletions(-)
->
->diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
->index e04fe2d..38c4cb0 100644
->--- a/drivers/pci/Makefile
->+++ b/drivers/pci/Makefile
->@@ -4,7 +4,8 @@
->
-> obj-y		+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
-> 			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
->-			irq.o vpd.o setup-bus.o vc.o
->+			irq.o vpd.o setup-bus.o vc.o setup-irq.o
->+
-> obj-$(CONFIG_PROC_FS) += proc.o
-> obj-$(CONFIG_SYSFS) += slot.o
->
->@@ -31,18 +32,6 @@ obj-$(CONFIG_PCI_ATS) += ats.o
-> obj-$(CONFIG_PCI_IOV) += iov.o
->
-> #
->-# Some architectures use the generic PCI setup functions
->-#
->-obj-$(CONFIG_ALPHA) += setup-irq.o
->-obj-$(CONFIG_ARM) += setup-irq.o
->-obj-$(CONFIG_UNICORE32) += setup-irq.o
->-obj-$(CONFIG_SUPERH) += setup-irq.o
->-obj-$(CONFIG_MIPS) += setup-irq.o
->-obj-$(CONFIG_TILE) += setup-irq.o
->-obj-$(CONFIG_SPARC_LEON) += setup-irq.o
->-obj-$(CONFIG_M68K) += setup-irq.o
->-
->-#
-> # ACPI Related PCI FW Functions
-> # ACPI _DSM provided firmware instance and string name
-> #
->diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
->index 0e5f3c9..8ed186f 100644
->--- a/drivers/pci/host-bridge.c
->+++ b/drivers/pci/host-bridge.c
->@@ -16,7 +16,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
-> 	return bus;
-> }
->
->-static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
->+struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-> {
-> 	struct pci_bus *root_bus = find_pci_root_bus(bus);
->
->diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->index 63a54a3..d51d076 100644
->--- a/drivers/pci/pci.c
->+++ b/drivers/pci/pci.c
->@@ -1197,10 +1197,15 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
-> 	int err;
-> 	u16 cmd;
-> 	u8 pin;
->+	struct pci_host_bridge *hbrg = find_pci_host_bridge(dev->bus);
->
-> 	err = pci_set_power_state(dev, PCI_D0);
-> 	if (err < 0 && err != -EIO)
-> 		return err;
->+
->+	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
->+	pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
->+
-> 	err = pcibios_enable_device(dev, bars);
-> 	if (err < 0)
-> 		return err;
->@@ -1209,7 +1214,6 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
-> 	if (dev->msi_enabled || dev->msix_enabled)
-> 		return 0;
->
->-	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+Hi All,
 
-Not sure why you move this up.
 
-Before your change, the call flow would be like this:
+I really appreciate this wonderful community which has immensely
+helped me broaden my knowledge and understanding.
 
-| scan_bus
-|   + pci_fixup_irqs
-|      +    pci_dev->irq and PCI_INTERRUPT_PIN assigned with correct number
-|
-| pci_enable_device, called from driver
-|   + do_pci_enable_device, read the pin from pci_dev
 
-As my understanding, this ensures the pin read from hardware is fixuped. While
-after your change, the pci_fixup_irqs is removed and the pin will be assigned
-in pdev_assign_irq() after you fix it properly.
+I was going through the mlx4 sriov code, trying to understand the
+communication between the VF driver and the PF driver.
 
-Do I missed something?
+I was having a few queries..hoping to get a better understanding.
 
-> 	if (pin) {
-> 		pci_read_config_word(dev, PCI_COMMAND, &cmd);
-> 		if (cmd & PCI_COMMAND_INTX_DISABLE)
 
--- 
-Richard Yang
-Help you, Help me
+As I understand, the commands are communicated between VF and PF
+through a mechanism called communication channel. VF writes to
+specific address in its BAR space, PF gets an event and then proceeds
+ahead to read the command from its BAR space and then complete the
+execution of it..
 
+
+Now, my query is, lets say the VF driver is not yet present and only
+the PF driver is there...
+
+In this case, can we simulate a VF command write and get notified
+through an event?
+
+For eg. we write to some offset in the PF BAR space itself upon
+completion of which, an event is generated because of the write? kind
+of like loopback mechanism.
+
+
+I searched through the code but couldn't find anywhere.
+
+Can anyone please help me understand if this is possible? And if there
+is any location in the code where i can find this?
+
+Thanks a lot in advance!!
+
+
+Best Regards,
+Bob
