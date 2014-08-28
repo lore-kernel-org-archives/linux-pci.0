@@ -1,69 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from na3sys010aog113.obsmtp.com ([74.125.245.94]:58908 "HELO
-	na3sys010aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751494AbaHMAJO convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Aug 2014 20:09:14 -0400
-Received: by mail-pa0-f51.google.com with SMTP id ey11so13940364pad.10
-        for <linux-pci@vger.kernel.org>; Tue, 12 Aug 2014 17:09:13 -0700 (PDT)
-Content-Type: text/plain; charset=windows-1252
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Subject: Re: [PATCH] PCI: pciehp: Use ordered workqueue for HPC events
-From: Sandeep S Mann <sandeep@purestorage.com>
-In-Reply-To: <CAA93t1rZ23dUQ4mJfLaHHdDBzEwnm=oYbv=B4fpYxuDieOapew@mail.gmail.com>
-Date: Tue, 12 Aug 2014 17:09:11 -0700
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Message-Id: <E43BF28E-A4E6-4114-81D5-A7D4C1E22D49@purestorage.com>
-References: <1406933232-1560-1-git-send-email-sandeep@purestorage.com> <20140812213626.GA6333@google.com> <361417F9-AEA8-4C83-BD04-D5DD8CD4A391@purestorage.com> <CAA93t1rZ23dUQ4mJfLaHHdDBzEwnm=oYbv=B4fpYxuDieOapew@mail.gmail.com>
-To: rajatxjain@gmail.com
+Received: from hygieia.santi-shop.eu ([78.46.175.2]:37289 "EHLO
+	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750875AbaH1Ur4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Aug 2014 16:47:56 -0400
+Date: Thu, 28 Aug 2014 22:47:50 +0200
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	dri-devel@lists.freedesktop.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/2 v2] vgaarb: Don't default exclusively to first video
+ device with mem+io
+Message-ID: <20140828224750.23148125@neptune.home>
+In-Reply-To: <CAMxnaaUoLBbN1gNgD3qvPV1mx3JoM6FPV9EndQG9vJSpux2xMw@mail.gmail.com>
+References: <20140514224339.7f8be3a9@neptune.home>
+	<CAMxnaaXGQe4vg9cY5e2KZBnG4F-z49OriwxEGUE-DCE6MKUryQ@mail.gmail.com>
+	<20140810112654.1bf684d6@neptune.home>
+	<CAMxnaaUsd+XHppMmPMXdFL13d1-OhLzoH_yjv_9abOx_uP=_Ug@mail.gmail.com>
+	<20140810183411.19370721@neptune.home>
+	<CAMxnaaVNpiSZmhQsHa_ZHJckgzG+xHyOL6hOT3Ts8GdcGN_A9g@mail.gmail.com>
+	<20140816192135.34260115@neptune.home>
+	<CAMxnaaWQoX9KMQVCKHTkeqSxGEybz5u1qU6AVBqzW3+mj_nJHQ@mail.gmail.com>
+	<20140820075508.74f5b622@pluto>
+	<20140820091152.76cd4e1a@pluto>
+	<CAMxnaaUodONkqmdPWedN-Q1qheHiJAScFcG_XbX1--ZmiOQZDg@mail.gmail.com>
+	<20140821233435.19a9cffa@neptune.home>
+	<CAErSpo6D1B+dPLrYoAF4OA1KeWuW8VZW2_RR5jB1GbCRo+6vHg@mail.gmail.com>
+	<20140822082324.12cb6e93@pluto>
+	<CAMxnaaU9EiMcne-aQjS1sY1Orn6xGbVHEnd057ogcZ77p74Y=Q@mail.gmail.com>
+	<20140823130624.06ecc057@neptune.home>
+	<20140824230953.7c04890f@neptune.home>
+	<CAMxnaaUoLBbN1gNgD3qvPV1mx3JoM6FPV9EndQG9vJSpux2xMw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-Hi Rajat,
-
-
->> 
->> This issue was observed on a system, where I was experimenting with
->> pcie hot-plug and the device being hot plugged is not the most well
->> behaved.  It exhibits the following behavior:
->> 
->>  - Initialization of the device can take ìrelativelyî long (order 100s ms)
->>  - On hot add the link presence can toggle before stabilizing
+On Tue, 26 August 2014 Andreas Noever <andreas.noever@gmail.com> wrote:
+> On Sun, Aug 24, 2014 at 11:09 PM, Bruno Pr√©mont wrote:
+> > With commit 20cde694027e boot video device detection was moved from
+> > efifb to x86 and ia64 pci/fixup.c.
+> >
+> > For dual-GPU Apple computers above change represents a regression as
+> > code in efifb did forcefully override vga_default_device while the
+> > merge did not (vgaarb happens prior to PCI fixup).
+> >
+> > To improve on initial device selection by vgaarb (it cannot know if
+> > PCI device not behind bridges see/decode legacy VGA I/O or not), move
+> > the screen_info based check from pci_video_fixup to vgaarb's init
+> > function and use it to refine/override decision taken while adding
+> > the individual PCI VGA devices.
+> > This way PCI fixup has no reason to adjust vga_default_device
+> > anymore but can depend on its value for flagging shadowed VBIOS.
+> >
+> > This has the nice benefit of removing duplicated code but does
+> > introduce a #if defined() block in vgaarb.
+> > Not all architectures have screen_info and would cause compile to
+> > fail without it.
+> >
+> > Reported-By: Andreas Noever <andreas.noever@gmail.com>
+> > CC: Matthew Garrett <matthew.garrett@nebula.com>
+> > CC: stable@vger.kernel.org # v3.5+
+> > Signed-off-by: Bruno Pr√©mont <bonbons@linux-vserver.org>
+> > ---
+> > Andreas, does this work properly for you, including the improvement
+> > on i915 complaint about VBIOS going from KERN_ERR to KERN_INFO?
+> Yep, thanks!
 > 
-> Yup, this would be a problem if the work queue was reordered in this case.
-> 
->> 
->> The toggle of device presence can generate multiple events on a single
->> hot plug, where one hot add event can lead to following events
->> ADD->REMOVE->ADD.  And given the device can take some time to initialize,
->> we can have three HP events being processed concurrently.
-> 
-> The HP events are actually serialized, but only from the perspective
-> if PCI subsystem (i.e. once they have been dispatched from the
-> workqueue):
-> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=50b52fdee050745935d92e7026373edea2647e60
-> 
+> >
+> > Other arches using PCI and vgaarb that have screen_info may want
+> > to be added to the #if defined() block or even introduce a new
+> > CONFIG_HAVE_SCREEN_INFO or similar...
 
-With an ordered workqueue I am wondering if the locking is needed.  My kernel tree
-seems to be a bit behind and does not contain this change.  I suppose there
-could still be a race between pciehp_probe and the processing of the HP event.  
+Bjorn, can you queue these two patches, probably going through -next
+for a week and passing them to Linus for -rc4, adding Andreas's Tested-by
+to Patch 1/2 v2?
 
->> 
->> Also note this seen with surprise ADD and REMOVE.
->> 
-> 
-> Can you please send lspci -vvvv for the slot? I suspect that your
-> device has a power controller. In absense of it, the link state
-> changes would generate HP events regardless of "surprise" bit.
-
-Yes we are behind a slot with power management.
-
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
 Thanks,
-Sandeep
-
-
+Bruno
