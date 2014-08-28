@@ -1,135 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:55252 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932113AbaHOCtN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Aug 2014 22:49:13 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>,
-	"Tony Luck" <tony.luck@intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>, <x86@kernel.org>,
-	<linux-ia64@vger.kernel.org>
-Subject: [PATCH 1/3] MSI: Use __get_cached_msi_msg() instead of get_cached_msi_msg()
-Date: Fri, 15 Aug 2014 11:14:21 +0800
-Message-ID: <1408072461-9914-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
+	linux-pm@vger.kernel.org
+Subject: [Patch v4 12/16] x86, irq, ACPI: Implement interface to support ACPI based IOAPIC hot-addition
+Date: Thu, 28 Aug 2014 10:22:37 +0800
+Message-Id: <1409192561-19744-13-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Get_cached_msi_msg() only be called in two places,
-ia64_set_msi_irq_affinity() and sn_set_msi_irq_affinity().
+Implement acpi_register_ioapic() and enhance mp_register_ioapic()
+to support ACPI based IOAPIC hot-addition.
 
-The code flow is:
-irq = irq_data->irq
-    get_cached_msi_msg(irq)
-	    irq_get_msi_desc(irq)
-		    irq_get_irq_data(irq)
-			    msi_desc = irq_data->desc
-        __get_cached_msi_msg(msi_desc, msg)
-
-This is crazy, we can use __get_cached_msi_msg(irq_data->desc, msg)
-directly to simplify the flow. Now no one use get_cached_msi_msg(),
-let's remove it. Then we rename __get_cached_msi_msg() to
-get_cached_msi_msg().
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Tony Luck <tony.luck@intel.com>
-CC: Thomas Gleixner <tglx@linutronix.de>
-CC: x86@kernel.org
-CC: linux-ia64@vger.kernel.org
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/ia64/kernel/msi_ia64.c    |    2 +-
- arch/ia64/sn/kernel/msi_sn.c   |    4 ++--
- arch/x86/kernel/apic/io_apic.c |    2 +-
- drivers/pci/msi.c              |    9 +--------
- include/linux/msi.h            |    3 +--
- 5 files changed, 6 insertions(+), 14 deletions(-)
+ arch/x86/kernel/acpi/boot.c    |   31 +++++++++++++++++++++++++++++--
+ arch/x86/kernel/apic/io_apic.c |   27 ++++++++++++++++++++++++---
+ 2 files changed, 53 insertions(+), 5 deletions(-)
 
-diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
-index c430f91..4efe748 100644
---- a/arch/ia64/kernel/msi_ia64.c
-+++ b/arch/ia64/kernel/msi_ia64.c
-@@ -23,7 +23,7 @@ static int ia64_set_msi_irq_affinity(struct irq_data *idata,
- 	if (irq_prepare_move(irq, cpu))
- 		return -1;
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index e23f7460c3f8..796cd9e31ef3 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -764,8 +764,35 @@ EXPORT_SYMBOL(acpi_unmap_lsapic);
  
--	get_cached_msi_msg(irq, &msg);
-+	get_cached_msi_msg(idata->msi_desc, &msg);
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
+ {
+-	/* TBD */
+-	return -EINVAL;
++	int ret = -ENOSYS;
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++	int ioapic_id;
++	u64 addr;
++	struct ioapic_domain_cfg cfg = {
++		.type = IOAPIC_DOMAIN_DYNAMIC,
++		.ops = &acpi_irqdomain_ops,
++	};
++
++	ioapic_id = acpi_get_ioapic_id(handle, gsi_base, &addr);
++	if (ioapic_id < 0) {
++		unsigned long long uid;
++		acpi_status status;
++
++		status = acpi_evaluate_integer(handle, METHOD_NAME__UID,
++					       NULL, &uid);
++		if (ACPI_FAILURE(status)) {
++			acpi_handle_warn(handle, "failed to get IOAPIC ID.\n");
++			return -EINVAL;
++		}
++		ioapic_id = (int)uid;
++	}
++
++	down_write(&acpi_ioapic_rwsem);
++	ret  = mp_register_ioapic(ioapic_id, phys_addr, gsi_base, &cfg);
++	up_write(&acpi_ioapic_rwsem);
++#endif
++
++	return ret;
+ }
  
- 	addr = msg.address_lo;
- 	addr &= MSI_ADDR_DEST_ID_MASK;
-diff --git a/arch/ia64/sn/kernel/msi_sn.c b/arch/ia64/sn/kernel/msi_sn.c
-index afc58d2..8bec242 100644
---- a/arch/ia64/sn/kernel/msi_sn.c
-+++ b/arch/ia64/sn/kernel/msi_sn.c
-@@ -175,8 +175,8 @@ static int sn_set_msi_irq_affinity(struct irq_data *data,
- 	 * Release XIO resources for the old MSI PCI address
- 	 */
- 
--	get_cached_msi_msg(irq, &msg);
--        sn_pdev = (struct pcidev_info *)sn_irq_info->irq_pciioinfo;
-+	get_cached_msi_msg(data->msi_desc, &msg);
-+	sn_pdev = (struct pcidev_info *)sn_irq_info->irq_pciioinfo;
- 	pdev = sn_pdev->pdi_linux_pcidev;
- 	provider = SN_PCIDEV_BUSPROVIDER(pdev);
- 
+ EXPORT_SYMBOL(acpi_register_ioapic);
 diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 81e08ef..a1b34f6 100644
+index 6e67af0c5f99..b286461cabf9 100644
 --- a/arch/x86/kernel/apic/io_apic.c
 +++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3007,7 +3007,7 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
- 	if (ret)
- 		return ret;
+@@ -3851,7 +3851,13 @@ static int bad_ioapic_register(int idx)
  
--	__get_cached_msi_msg(data->msi_desc, &msg);
-+	get_cached_msi_msg(data->msi_desc, &msg);
- 
- 	msg.data &= ~MSI_DATA_VECTOR_MASK;
- 	msg.data |= MSI_DATA_VECTOR(cfg->vector);
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 5a40516..988224f 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -296,7 +296,7 @@ void read_msi_msg(unsigned int irq, struct msi_msg *msg)
- 	__read_msi_msg(entry, msg);
+ static int find_free_ioapic_entry(void)
+ {
+-	return nr_ioapics;
++	int idx;
++
++	for (idx = 0; idx < MAX_IO_APICS; idx++)
++		if (ioapics[idx].nr_registers == 0)
++			return idx;
++
++	return MAX_IO_APICS;
  }
  
--void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
-+void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	/* Assert that the cache is valid, assuming that
- 	 * valid messages are not all-zeroes. */
-@@ -306,13 +306,6 @@ void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 	*msg = entry->msg;
- }
+ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+@@ -3867,8 +3873,15 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 	}
+ 	for_each_ioapic(ioapic)
+ 		if (ioapics[ioapic].mp_config.apicaddr == address) {
+-			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
+-				address, ioapic);
++			/*
++			 * IOAPIC unit may also be visible in PCI scope.
++			 * When ioapic PCI driver's probe() is called,
++			 * the IOAPIC unit may have already been initialized
++			 * at boot time.
++			 */
++			if (!ioapic_initialized)
++				pr_warn("address 0x%x conflicts with IOAPIC%d\n",
++					address, ioapic);
+ 			return -EEXIST;
+ 		}
  
--void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg)
--{
--	struct msi_desc *entry = irq_get_msi_desc(irq);
--
--	__get_cached_msi_msg(entry, msg);
--}
--
- void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	if (entry->dev->current_state != PCI_D0) {
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 8103f32..e3adf93 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -16,10 +16,9 @@ struct msi_desc;
- void mask_msi_irq(struct irq_data *data);
- void unmask_msi_irq(struct irq_data *data);
- void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
--void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-+void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void read_msi_msg(unsigned int irq, struct msi_msg *msg);
--void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
- void write_msi_msg(unsigned int irq, struct msi_msg *msg);
+@@ -3918,6 +3931,14 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 	ioapics[idx].irqdomain = NULL;
+ 	ioapics[idx].irqdomain_cfg = *cfg;
  
- struct msi_desc {
++	if (ioapic_initialized) {
++		if (mp_irqdomain_create(idx)) {
++			clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
++			return -ENOMEM;
++		}
++		alloc_ioapic_saved_registers(idx);
++	}
++
+ 	if (gsi_cfg->gsi_end >= gsi_top)
+ 		gsi_top = gsi_cfg->gsi_end + 1;
+ 	if (nr_ioapics <= idx)
 -- 
-1.7.1
+1.7.10.4
 
