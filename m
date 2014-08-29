@@ -1,231 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp09.in.ibm.com ([122.248.162.9]:60976 "EHLO
-	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751321AbaHLBpb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Aug 2014 21:45:31 -0400
-Received: from /spool/local
-	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 12 Aug 2014 07:15:28 +0530
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id F00BC394001E
-	for <linux-pci@vger.kernel.org>; Tue, 12 Aug 2014 07:15:25 +0530 (IST)
-Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
-	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s7C1jl8U59703488
-	for <linux-pci@vger.kernel.org>; Tue, 12 Aug 2014 07:15:47 +0530
-Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
-	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s7C1jOxr011470
-	for <linux-pci@vger.kernel.org>; Tue, 12 Aug 2014 07:15:25 +0530
-Date: Tue, 12 Aug 2014 09:45:23 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Matthew Minter <matthew_minter@xyratex.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 01/22] Added some infrastructure to allow assigning PCI
- device IRQs at device enable time and removed pci_fixup_irqs as the other
- change obsolites it.
-Message-ID: <20140812014523.GA10573@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
- <1407255083-9356-2-git-send-email-matthew_minter@xyratex.com>
- <20140807034338.GA13444@richard>
- <CAFJTrDuzdoOPoQ_rpNsYU+OeE380sY37aQaMSudhu_MVKo352g@mail.gmail.com>
- <20140808012017.GA11712@richard>
- <CAFJTrDs0oELF3FNaf6axQvPkLv1skK1f3j_Hgre2VX9XDFBOag@mail.gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAFJTrDs0oELF3FNaf6axQvPkLv1skK1f3j_Hgre2VX9XDFBOag@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1409304383-18806-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1409304383-18806-1-git-send-email-jiang.liu@linux.intel.com>
+Date: Fri, 29 Aug 2014 16:42:34 +0200
+Message-ID: <CAJZ5v0ikimRs4XJihULUdS-ZtU=xBMJECbKmzpUf1ZnzXijihQ@mail.gmail.com>
+Subject: Re: [Patch v4] x86, irq, PCI: Keep IRQ assignment for runtime power management
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: EmanueL Czirai <amanual@openmailbox.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 11, 2014 at 11:16:50AM +0100, Matthew Minter wrote:
->It seems that by coincidence, my testing boxes did not have any
->devices which needed the PCI_INTERRUPT_PIN fixed up. Therefore I had
->not noticed the fact the fixed value was not used in the enable path.
+On Fri, Aug 29, 2014 at 11:26 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> Now IOAPIC driver dynamically allocates IRQ numbers for IOAPIC pins.
+> We need to keep IRQ assignment for PCI devices during runtime power
+> management, otherwise it may cause failure of device wakeups.
+>
+> Commit 3eec595235c17a7 "x86, irq, PCI: Keep IRQ assignment for PCI
+> devices during suspend/hibernation" has fixed the issue for suspend/
+> hibernation, we also need the same fix for runtime device sleep too.
+>
+> Fix: https://bugzilla.kernel.org/show_bug.cgi?id=83271
+> Reported-and-Tested-by: EmanueL Czirai <amanual@openmailbox.org>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  arch/x86/include/asm/io_apic.h |    2 ++
+>  arch/x86/kernel/apic/io_apic.c |   12 ++++++++++++
+>  arch/x86/pci/intel_mid_pci.c   |    2 +-
+>  arch/x86/pci/irq.c             |    2 +-
+>  drivers/acpi/pci_irq.c         |    4 ++++
+>  5 files changed, 20 insertions(+), 2 deletions(-)
+>
+> diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+> index 0aeed5ca356e..478c490f3654 100644
+> --- a/arch/x86/include/asm/io_apic.h
+> +++ b/arch/x86/include/asm/io_apic.h
+> @@ -227,6 +227,8 @@ static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned
+>
+>  extern void io_apic_eoi(unsigned int apic, unsigned int vector);
+>
+> +extern bool mp_should_keep_irq(struct device *dev);
+> +
+>  #else  /* !CONFIG_X86_IO_APIC */
+>
+>  #define io_apic_assign_pci_irqs 0
+> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+> index 29290f554e79..1e9a921d9701 100644
+> --- a/arch/x86/kernel/apic/io_apic.c
+> +++ b/arch/x86/kernel/apic/io_apic.c
+> @@ -3946,6 +3946,18 @@ int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
+>         return ret;
+>  }
+>
+> +bool mp_should_keep_irq(struct device *dev)
+> +{
+> +       if (dev->power.is_prepared)
+> +               return true;
+> +#ifdef CONFIG_PM_RUNTIME
+> +       if (dev->power.runtime_status == RPM_SUSPENDING)
+> +               return true;
+> +#endif
 
-ok
+No, you can't do that.  It is racy and incorrect.
 
->
->I would assume that someone with a different setup would have had a
->problem there however so thank you for pointing out this bug. I have
->integrated your fix into version 2 of the patch set.
+Please give me some time for looking into this.
 
-thanks
-
->
->Many thanks.
->
->On 8 August 2014 02:20, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->> On Thu, Aug 07, 2014 at 12:35:41PM +0100, Matthew Minter wrote:
->>>Just to confirm, are you saying that:
->>>
->>>>+
->>>>+      pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
->>>>+      pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
->>>>+
->>>
->>>Should become:
->>>
->>>>+
->>>>+     pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
->>>>+     pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
->>>>+
->>>
->>>So that we read the config byte after running the assignment and fixup?
->>>
->>>I had not thought about the case where the fixup changes the
->>>PCI_INTERRUPT_PIN value.
->>>It looks to me like you are correct there and this should indeed be fixed.
->>>I can certainly swap those around for the next patch revision if that
->>>is what you are suggesting?
->>>
->>
->> Yes, pci_read_config_byte() should be called after pdev_assign_irq().
->>
->>>I will give that a quick test but it sounds like you are correct.
->>
->> I am willing to know the result, especially in the original one, what pin
->> value you retrieved from pci_dev.
->>
->>>
->>>Many thanks,
->>>Matthew
->>>
->>>On 7 August 2014 04:43, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->>>> On Tue, Aug 05, 2014 at 05:11:02PM +0100, matthew_minter@xyratex.com wrote:
->>>>>From: matthew_minter <matthew_minter@xyratex.com>
->>>>>
->>>>>---
->>>>> drivers/pci/Makefile      | 15 ++-------------
->>>>> drivers/pci/host-bridge.c |  2 +-
->>>>> drivers/pci/pci.c         |  6 +++++-
->>>>> drivers/pci/pci.h         |  1 +
->>>>> drivers/pci/probe.c       | 12 ------------
->>>>> drivers/pci/setup-irq.c   | 25 +++++++++----------------
->>>>> include/linux/pci.h       |  8 ++++----
->>>>> 7 files changed, 22 insertions(+), 47 deletions(-)
->>>>>
->>>>>diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
->>>>>index e04fe2d..38c4cb0 100644
->>>>>--- a/drivers/pci/Makefile
->>>>>+++ b/drivers/pci/Makefile
->>>>>@@ -4,7 +4,8 @@
->>>>>
->>>>> obj-y         += access.o bus.o probe.o host-bridge.o remove.o pci.o \
->>>>>                       pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
->>>>>-                      irq.o vpd.o setup-bus.o vc.o
->>>>>+                      irq.o vpd.o setup-bus.o vc.o setup-irq.o
->>>>>+
->>>>> obj-$(CONFIG_PROC_FS) += proc.o
->>>>> obj-$(CONFIG_SYSFS) += slot.o
->>>>>
->>>>>@@ -31,18 +32,6 @@ obj-$(CONFIG_PCI_ATS) += ats.o
->>>>> obj-$(CONFIG_PCI_IOV) += iov.o
->>>>>
->>>>> #
->>>>>-# Some architectures use the generic PCI setup functions
->>>>>-#
->>>>>-obj-$(CONFIG_ALPHA) += setup-irq.o
->>>>>-obj-$(CONFIG_ARM) += setup-irq.o
->>>>>-obj-$(CONFIG_UNICORE32) += setup-irq.o
->>>>>-obj-$(CONFIG_SUPERH) += setup-irq.o
->>>>>-obj-$(CONFIG_MIPS) += setup-irq.o
->>>>>-obj-$(CONFIG_TILE) += setup-irq.o
->>>>>-obj-$(CONFIG_SPARC_LEON) += setup-irq.o
->>>>>-obj-$(CONFIG_M68K) += setup-irq.o
->>>>>-
->>>>>-#
->>>>> # ACPI Related PCI FW Functions
->>>>> # ACPI _DSM provided firmware instance and string name
->>>>> #
->>>>>diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
->>>>>index 0e5f3c9..8ed186f 100644
->>>>>--- a/drivers/pci/host-bridge.c
->>>>>+++ b/drivers/pci/host-bridge.c
->>>>>@@ -16,7 +16,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
->>>>>       return bus;
->>>>> }
->>>>>
->>>>>-static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
->>>>>+struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
->>>>> {
->>>>>       struct pci_bus *root_bus = find_pci_root_bus(bus);
->>>>>
->>>>>diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>>>>index 63a54a3..d51d076 100644
->>>>>--- a/drivers/pci/pci.c
->>>>>+++ b/drivers/pci/pci.c
->>>>>@@ -1197,10 +1197,15 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
->>>>>       int err;
->>>>>       u16 cmd;
->>>>>       u8 pin;
->>>>>+      struct pci_host_bridge *hbrg = find_pci_host_bridge(dev->bus);
->>>>>
->>>>>       err = pci_set_power_state(dev, PCI_D0);
->>>>>       if (err < 0 && err != -EIO)
->>>>>               return err;
->>>>>+
->>>>>+      pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
->>>>>+      pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
->>>>>+
->>>>>       err = pcibios_enable_device(dev, bars);
->>>>>       if (err < 0)
->>>>>               return err;
->>>>>@@ -1209,7 +1214,6 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
->>>>>       if (dev->msi_enabled || dev->msix_enabled)
->>>>>               return 0;
->>>>>
->>>>>-      pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
->>>>
->>>> Not sure why you move this up.
->>>>
->>>> Before your change, the call flow would be like this:
->>>>
->>>> | scan_bus
->>>> |   + pci_fixup_irqs
->>>> |      +    pci_dev->irq and PCI_INTERRUPT_PIN assigned with correct number
->>>> |
->>>> | pci_enable_device, called from driver
->>>> |   + do_pci_enable_device, read the pin from pci_dev
->>>>
->>>> As my understanding, this ensures the pin read from hardware is fixuped. While
->>>> after your change, the pci_fixup_irqs is removed and the pin will be assigned
->>>> in pdev_assign_irq() after you fix it properly.
->>>>
->>>> Do I missed something?
->>>>
->>>>>       if (pin) {
->>>>>               pci_read_config_word(dev, PCI_COMMAND, &cmd);
->>>>>               if (cmd & PCI_COMMAND_INTX_DISABLE)
->>>>
->>>> --
->>>> Richard Yang
->>>> Help you, Help me
->>>>
->>>
->>>--
->>>
->>>
->>>------------------------------
->>>For additional information including the registered office and the treatment of Xyratex confidential information please visit www.xyratex.com
->>>
->>>------------------------------
->>
->> --
->> Richard Yang
->> Help you, Help me
->>
->
->-- 
->
->
->------------------------------
->For additional information including the registered office and the treatment of Xyratex confidential information please visit www.xyratex.com
->
->------------------------------
-
--- 
-Richard Yang
-Help you, Help me
-
+Rafael
