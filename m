@@ -1,129 +1,26 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:43130 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751007AbaHUKYt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Aug 2014 06:24:49 -0400
-Message-ID: <53F5C847.3000402@huawei.com>
-Date: Thu, 21 Aug 2014 18:21:59 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-qc0-f177.google.com ([209.85.216.177]:51805 "EHLO
+	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751444AbaH2WhN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Aug 2014 18:37:13 -0400
+Received: by mail-qc0-f177.google.com with SMTP id i8so3130121qcq.36
+        for <linux-pci@vger.kernel.org>; Fri, 29 Aug 2014 15:37:13 -0700 (PDT)
 MIME-Version: 1.0
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [PATCH 2/3] MSI: Use __read_msi_msg() instead of read_msi_msg()
-References: <1408072469-9959-1-git-send-email-wangyijing@huawei.com> <20140821093839.GA15667@richard>
-In-Reply-To: <20140821093839.GA15667@richard>
-Content-Type: text/plain; charset="ISO-8859-1"
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 29 Aug 2014 16:36:52 -0600
+Message-ID: <CAErSpo68rteOFbbX5n6GccPc9kpt-UL9FRS7JbOMAoDLR-7mtA@mail.gmail.com>
+Subject: pciehp regression (bug #79701)
+To: Rajat Jain <rajatxjain@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/8/21 17:38, Wei Yang wrote:
-> On Fri, Aug 15, 2014 at 11:14:29AM +0800, Yijing Wang wrote:
->> Read_msi_msg() only be called in rtas_setup_msi_irqs(),
-> 
->  read_msi_msg()
-> 
-> This code looks good to me, while I can't apply on top of 3.17-rc1.
-> If you rebase it, it would be more convenient for maintainer to merge.
+Hi Rajat,
 
-OK, thanks!
+This bug report: https://bugzilla.kernel.org/show_bug.cgi?id=79701 was
+bisected to 02e93a8a7c1d ("PCI: pciehp: Don't check adapter or latch
+status while disabling").  Can you take a look?
 
-> 
->> use __read_msi_msg() instead of read_msi_msg for
->> simplification. And rename __read_msi_msg() to
->> read_msi_msg().
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
->> CC: linuxppc-dev@lists.ozlabs.org
->> ---
->> arch/powerpc/platforms/pseries/msi.c |    2 +-
->> arch/x86/pci/xen.c                   |    2 +-
->> drivers/pci/msi.c                    |    9 +--------
->> include/linux/msi.h                  |    3 +--
->> 4 files changed, 4 insertions(+), 12 deletions(-)
->>
->> diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
->> index 0c882e8..591650b 100644
->> --- a/arch/powerpc/platforms/pseries/msi.c
->> +++ b/arch/powerpc/platforms/pseries/msi.c
->> @@ -484,7 +484,7 @@ again:
->> 		irq_set_msi_desc(virq, entry);
->>
->> 		/* Read config space back so we can restore after reset */
->> -		read_msi_msg(virq, &msg);
->> +		read_msi_msg(entry, &msg);
->> 		entry->msg = msg;
->> 	}
->>
->> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
->> index 905956f..4656099 100644
->> --- a/arch/x86/pci/xen.c
->> +++ b/arch/x86/pci/xen.c
->> @@ -228,7 +228,7 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->> 		return 1;
->>
->> 	list_for_each_entry(msidesc, &dev->msi_list, list) {
->> -		__read_msi_msg(msidesc, &msg);
->> +		read_msi_msg(msidesc, &msg);
->> 		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
->> 			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
->> 		if (msg.data != XEN_PIRQ_MSI_DATA ||
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index 988224f..cbb41d6 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -259,7 +259,7 @@ void default_restore_msi_irqs(struct pci_dev *dev)
->> 	}
->> }
->>
->> -void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->> +void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->> {
->> 	BUG_ON(entry->dev->current_state != PCI_D0);
->>
->> @@ -289,13 +289,6 @@ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->> 	}
->> }
->>
->> -void read_msi_msg(unsigned int irq, struct msi_msg *msg)
->> -{
->> -	struct msi_desc *entry = irq_get_msi_desc(irq);
->> -
->> -	__read_msi_msg(entry, msg);
->> -}
->> -
->> void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->> {
->> 	/* Assert that the cache is valid, assuming that
->> diff --git a/include/linux/msi.h b/include/linux/msi.h
->> index e3adf93..4d7c0f5 100644
->> --- a/include/linux/msi.h
->> +++ b/include/linux/msi.h
->> @@ -15,10 +15,9 @@ struct irq_data;
->> struct msi_desc;
->> void mask_msi_irq(struct irq_data *data);
->> void unmask_msi_irq(struct irq_data *data);
->> -void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->> +void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->> void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->> void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->> -void read_msi_msg(unsigned int irq, struct msi_msg *msg);
->> void write_msi_msg(unsigned int irq, struct msi_msg *msg);
->>
->> struct msi_desc {
->> -- 
->> 1.7.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
--- 
-Thanks!
-Yijing
-
+Bjorn
