@@ -1,70 +1,91 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Mon, 18 Aug 2014 22:35:47 +0100
-From: Liviu Dudau <liviu@dudau.co.uk>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v9 00/12] Support for creating generic PCI host bridges
- from DT
-Message-ID: <20140818213546.GD13147@bart.dudau.co.uk>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
- <20140818142622.GP20043@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:51257 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750800AbaH2JHD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Aug 2014 05:07:03 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140818142622.GP20043@localhost>
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <20140829042121.GA31486@richard>
+References: <CANwwZzXowyGmg-cfCHQqeJ_iqjT+Ec+JPy+OWzNGeyN=hRqmPg@mail.gmail.com>
+	<20140829042121.GA31486@richard>
+Date: Fri, 29 Aug 2014 14:37:01 +0530
+Message-ID: <CANwwZzVbx5TdFwK=8-FOHzT4FVyk6ZX+2P2kNmW0MkSDzyOSug@mail.gmail.com>
+Subject: Re: mlx4 query in sriov mode
+From: Bob Biloxi <iambobbiloxi@gmail.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 18, 2014 at 03:26:22PM +0100, Catalin Marinas wrote:
-> On Tue, Aug 12, 2014 at 05:25:13PM +0100, Liviu Dudau wrote:
-> > This is my updated attempt at adding support for generic PCI host
-> > bridge controllers that make use of device tree information to
-> > configure themselves. This version incorporates Catalin's proposal
-> > for managing domain numbers that got Bjorn's approval. I am now requesting
-> > ACKs from the relevant maintainers as I would like to get the upstream ball
-> > rolling.
-> 
-> As this series kept me busy on a long flight, you can add:
+Hi,
 
-Damn, I don't know wether I should be proud or scared.
+> Where you fund the communication between PF and VF is by writing its BAR?
+http://lxr.free-electrons.com/source/drivers/net/ethernet/mellanox/mlx4/cmd.c#L1964
 
-> 
-> Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
 
-Thanks! :)
+Best Regards,
+Bob
 
-Liviu
-
+On Fri, Aug 29, 2014 at 9:51 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+> On Thu, Aug 28, 2014 at 10:58:50PM +0530, Bob Biloxi wrote:
+>>Hi All,
+>>
+>>
+>>I really appreciate this wonderful community which has immensely
+>>helped me broaden my knowledge and understanding.
+>>
+>>
+>>I was going through the mlx4 sriov code, trying to understand the
+>>communication between the VF driver and the PF driver.
+>>
+>>I was having a few queries..hoping to get a better understanding.
+>>
+>>
+>>As I understand, the commands are communicated between VF and PF
+>>through a mechanism called communication channel. VF writes to
+>>specific address in its BAR space, PF gets an event and then proceeds
+>>ahead to read the command from its BAR space and then complete the
+>>execution of it..
+>>
+>>
+>>Now, my query is, lets say the VF driver is not yet present and only
+>>the PF driver is there...
+>>
+>>In this case, can we simulate a VF command write and get notified
+>>through an event?
+>>
+>
+> Hi,
+>
+> I am not that familiar with mlx4 driver. As you mentioned in previous, VF
+> communicate with PF by writing some word in BAR and PF gets it. If this is
+> true, I believe it would works.
+>
+>>For eg. we write to some offset in the PF BAR space itself upon
+>>completion of which, an event is generated because of the write? kind
+>>of like loopback mechanism.
+>>
+>>
+>>I searched through the code but couldn't find anywhere.
+>>
+>>Can anyone please help me understand if this is possible? And if there
+>>is any location in the code where i can find this?
+>
+> Where you fund the communication between PF and VF is by writing its BAR?
+>
+>>
+>>Thanks a lot in advance!!
+>>
+>>
+>>Best Regards,
+>>Bob
+>>--
+>>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>the body of a message to majordomo@vger.kernel.org
+>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
--------------------
-   .oooO
-   (   )
-    \ (  Oooo.
-     \_) (   )
-          ) /
-         (_/
-
- One small step
-   for me ...
-
+> Richard Yang
+> Help you, Help me
+>
