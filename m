@@ -1,78 +1,126 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Mon, 18 Aug 2014 22:52:25 +0100
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Liviu Dudau <liviu@dudau.co.uk>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: EmanueL Czirai <amanual@openmailbox.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v9 03/12] PCI: Introduce helper functions to deal with
- PCI I/O ranges.
-Message-ID: <20140818215225.GI24600@localhost>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
- <1407860725-25202-4-git-send-email-Liviu.Dudau@arm.com>
- <20140818142604.GO20043@localhost>
- <20140818213446.GC13147@bart.dudau.co.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140818213446.GC13147@bart.dudau.co.uk>
-Sender: linux-arch-owner@vger.kernel.org
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v4] x86, irq, PCI: Keep IRQ assignment for runtime power management
+Date: Fri, 29 Aug 2014 17:26:23 +0800
+Message-Id: <1409304383-18806-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 18, 2014 at 10:34:46PM +0100, Liviu Dudau wrote:
-> On Mon, Aug 18, 2014 at 03:26:04PM +0100, Catalin Marinas wrote:
-> > On Tue, Aug 12, 2014 at 05:25:16PM +0100, Liviu Dudau wrote:
-> > > Some architectures do not have a simple view of the PCI I/O space
-> > > and instead use a range of CPU addresses that map to bus addresses.
-> > > For some architectures these ranges will be expressed by OF bindings
-> > > in a device tree file.
-> > > 
-> > > This patch introduces a pci_register_io_range() helper function with
-> > > a generic implementation that can be used by such architectures to
-> > > keep track of the I/O ranges described by the PCI bindings. If the
-> > > PCI_IOBASE macro is not defined that signals lack of support for PCI
-> > > and we return an error.
-> > > 
-> > > In order to retrieve the CPU address associated with an I/O port, a
-> > > new helper function pci_pio_to_address() is introduced. This will
-> > > search in the list of ranges registered with pci_register_io_range()
-> > > and return the CPU address that corresponds to the given port.
-> > > 
-> > > Cc: Grant Likely <grant.likely@linaro.org>
-> > > Cc: Rob Herring <robh+dt@kernel.org>
-> > > Cc: Arnd Bergmann <arnd@arndb.de>
-> > > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > > ---
-> > >  drivers/of/address.c       | 95 ++++++++++++++++++++++++++++++++++++++++++++++
-> > >  include/linux/of_address.h |  2 +
-> > >  2 files changed, 97 insertions(+)
-> > 
-> > Actually, I think we moved too much code into drivers/of/. Is there
-> > anything OF specific about this code to live here (apart from
-> > OF_BAD_ADDR)? I think driver/pci/ more appropriate?
-> 
-> I have no strong preference for one place vs the other. While this does
-> not use any OF specific code, it should be called only from OF enabled
-> code. So the relationship is not one of depending on of_* but on being
-> dependent on.
+Now IOAPIC driver dynamically allocates IRQ numbers for IOAPIC pins.
+We need to keep IRQ assignment for PCI devices during runtime power
+management, otherwise it may cause failure of device wakeups.
 
-In this case it's probably ok to keep them here for the time being.
+Commit 3eec595235c17a7 "x86, irq, PCI: Keep IRQ assignment for PCI
+devices during suspend/hibernation" has fixed the issue for suspend/
+hibernation, we also need the same fix for runtime device sleep too.
 
-I wonder whether it would also be useful for ACPI. But I have no idea
-how ACPI would fit with the ACPI patches.
+Fix: https://bugzilla.kernel.org/show_bug.cgi?id=83271
+Reported-and-Tested-by: EmanueL Czirai <amanual@openmailbox.org>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h |    2 ++
+ arch/x86/kernel/apic/io_apic.c |   12 ++++++++++++
+ arch/x86/pci/intel_mid_pci.c   |    2 +-
+ arch/x86/pci/irq.c             |    2 +-
+ drivers/acpi/pci_irq.c         |    4 ++++
+ 5 files changed, 20 insertions(+), 2 deletions(-)
 
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 0aeed5ca356e..478c490f3654 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -227,6 +227,8 @@ static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned
+ 
+ extern void io_apic_eoi(unsigned int apic, unsigned int vector);
+ 
++extern bool mp_should_keep_irq(struct device *dev);
++
+ #else  /* !CONFIG_X86_IO_APIC */
+ 
+ #define io_apic_assign_pci_irqs 0
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 29290f554e79..1e9a921d9701 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3946,6 +3946,18 @@ int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
+ 	return ret;
+ }
+ 
++bool mp_should_keep_irq(struct device *dev)
++{
++	if (dev->power.is_prepared)
++		return true;
++#ifdef	CONFIG_PM_RUNTIME
++	if (dev->power.runtime_status == RPM_SUSPENDING)
++		return true;
++#endif
++
++	return false;
++}
++
+ /* Enable IOAPIC early just for system timer */
+ void __init pre_init_apic_IRQ0(void)
+ {
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index 3865116c51fb..b9958c364075 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -229,7 +229,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 
+ static void intel_mid_pci_irq_disable(struct pci_dev *dev)
+ {
+-	if (!dev->dev.power.is_prepared && dev->irq > 0)
++	if (!mp_should_keep_irq(&dev->dev) && dev->irq > 0)
+ 		mp_unmap_irq(dev->irq);
+ }
+ 
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index bc1a2c341891..eb500c2592ad 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1256,7 +1256,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 
+ static void pirq_disable_irq(struct pci_dev *dev)
+ {
+-	if (io_apic_assign_pci_irqs && !dev->dev.power.is_prepared &&
++	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
+ 	    dev->irq) {
+ 		mp_unmap_irq(dev->irq);
+ 		dev->irq = 0;
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index c96887d5289e..6e6b80eb0bba 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -484,6 +484,10 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	/* Keep IOAPIC pin configuration when suspending */
+ 	if (dev->dev.power.is_prepared)
+ 		return;
++#ifdef	CONFIG_PM_RUNTIME
++	if (dev->dev.power.runtime_status == RPM_SUSPENDING)
++		return;
++#endif
+ 
+ 	entry = acpi_pci_irq_lookup(dev, pin);
+ 	if (!entry)
 -- 
-Catalin
+1.7.10.4
+
