@@ -1,78 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([122.248.162.2]:34003 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933663AbaHZA6T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Aug 2014 20:58:19 -0400
-Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 26 Aug 2014 06:28:16 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 2F671394004E
-	for <linux-pci@vger.kernel.org>; Tue, 26 Aug 2014 06:28:13 +0530 (IST)
-Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
-	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s7Q10Zwk65929350
-	for <linux-pci@vger.kernel.org>; Tue, 26 Aug 2014 06:30:36 +0530
-Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
-	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s7Q0wB2h018007
-	for <linux-pci@vger.kernel.org>; Tue, 26 Aug 2014 06:28:12 +0530
-Date: Tue, 26 Aug 2014 10:58:02 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Amir Vadai <amirv@mellanox.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	alex.williamson@redhat.com, eli@mellanox.com,
-	weiyang@linux.vnet.ibm.com, bhelgaas@google.com
-Subject: Re: [PATCH v3] PCI: Mark broken INTx masking for Mellanox devices
-Message-ID: <20140826005801.GA4399@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1407844091-20815-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <53EA01B5.5020900@mellanox.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	EmanueL Czirai <amanual@openmailbox.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [Patch v4] x86, irq, PCI: Keep IRQ assignment for runtime power management
+Date: Sat, 30 Aug 2014 01:24:53 +0200
+Message-ID: <8823237.zCdVqYrZ5W@vostro.rjw.lan>
+In-Reply-To: <CAJZ5v0ikimRs4XJihULUdS-ZtU=xBMJECbKmzpUf1ZnzXijihQ@mail.gmail.com>
+References: <1409304383-18806-1-git-send-email-jiang.liu@linux.intel.com> <CAJZ5v0ikimRs4XJihULUdS-ZtU=xBMJECbKmzpUf1ZnzXijihQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53EA01B5.5020900@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 12, 2014 at 02:59:49PM +0300, Amir Vadai wrote:
->On 8/12/2014 2:48 PM, Gavin Shan wrote:
+On Friday, August 29, 2014 04:42:34 PM Rafael J. Wysocki wrote:
+> On Fri, Aug 29, 2014 at 11:26 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> > Now IOAPIC driver dynamically allocates IRQ numbers for IOAPIC pins.
+> > We need to keep IRQ assignment for PCI devices during runtime power
+> > management, otherwise it may cause failure of device wakeups.
+> >
+> > Commit 3eec595235c17a7 "x86, irq, PCI: Keep IRQ assignment for PCI
+> > devices during suspend/hibernation" has fixed the issue for suspend/
+> > hibernation, we also need the same fix for runtime device sleep too.
+> >
+> > Fix: https://bugzilla.kernel.org/show_bug.cgi?id=83271
+> > Reported-and-Tested-by: EmanueL Czirai <amanual@openmailbox.org>
+> > Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> > ---
+> >  arch/x86/include/asm/io_apic.h |    2 ++
+> >  arch/x86/kernel/apic/io_apic.c |   12 ++++++++++++
+> >  arch/x86/pci/intel_mid_pci.c   |    2 +-
+> >  arch/x86/pci/irq.c             |    2 +-
+> >  drivers/acpi/pci_irq.c         |    4 ++++
+> >  5 files changed, 20 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+> > index 0aeed5ca356e..478c490f3654 100644
+> > --- a/arch/x86/include/asm/io_apic.h
+> > +++ b/arch/x86/include/asm/io_apic.h
+> > @@ -227,6 +227,8 @@ static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned
+> >
+> >  extern void io_apic_eoi(unsigned int apic, unsigned int vector);
+> >
+> > +extern bool mp_should_keep_irq(struct device *dev);
+> > +
+> >  #else  /* !CONFIG_X86_IO_APIC */
+> >
+> >  #define io_apic_assign_pci_irqs 0
+> > diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+> > index 29290f554e79..1e9a921d9701 100644
+> > --- a/arch/x86/kernel/apic/io_apic.c
+> > +++ b/arch/x86/kernel/apic/io_apic.c
+> > @@ -3946,6 +3946,18 @@ int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
+> >         return ret;
+> >  }
+> >
+> > +bool mp_should_keep_irq(struct device *dev)
+> > +{
+> > +       if (dev->power.is_prepared)
+> > +               return true;
+> > +#ifdef CONFIG_PM_RUNTIME
+> > +       if (dev->power.runtime_status == RPM_SUSPENDING)
+> > +               return true;
+> > +#endif
+> 
+> No, you can't do that.  It is racy and incorrect.
 
-Cc Bjorn so that he can pick it up if possible.
+Well, maybe not.
 
->> The VFIO driver is routing LSI interrupts by capturing, masking,
->> and then delivering. When passing though Mellanox adapters from
->> host to guest, interrupt storm was reported from host and guest.
->> That's because we can't mask the LSI interrupt with help of PCI
->> command register.
->> 
->>  # lspci | grep Mellanox
->>  0001:05:00.0 Ethernet controller: Mellanox Technologies MT27500 \
->>               Family [ConnectX-3]
->>  0005:01:00.0 Ethernet controller: Mellanox Technologies MT26448 \
->>               [ConnectX EN 10GigE, PCIe 2.0 5GT/s] (rev b0)
->> 
->> It's confirmed by Amir Vadai that all Mellanox devices have same
->> problem. The patch marks broken INTx masking for all Mellanox
->> adapters.
->> 
->> Cc: Amir Vadai <amirv@mellanox.com>
->> Suggested-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
->> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> ---
->> v3: Mark broken INTx masking for all Mellanox adapters
->> ---
->>  drivers/pci/quirks.c | 2 ++
->>  1 file changed, 2 insertions(+)
->> 
->
->Acked-By: Amir Vadai <amirv@mellanox.com>
->
+> Please give me some time for looking into this.
 
-Thanks,
-Gavin
+So I guess the intended check is "Am I running in a suspend callback"?
 
->--
->To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Rafael
 
