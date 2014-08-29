@@ -1,48 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog126.obsmtp.com ([207.126.144.174]:51624 "EHLO
-	eu1sys200aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752248AbaHLMAY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Aug 2014 08:00:24 -0400
-Message-ID: <53EA01B5.5020900@mellanox.com>
-Date: Tue, 12 Aug 2014 14:59:49 +0300
-From: Amir Vadai <amirv@mellanox.com>
+Received: from mx1.redhat.com ([209.132.183.28]:39442 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751026AbaH2JCI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 29 Aug 2014 05:02:08 -0400
+Date: Fri, 29 Aug 2014 10:10:55 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Tadeusz Struk <tadeusz.struk@intel.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	"David S. Miller" <davem@davemloft.net>, qat-linux@intel.com,
+	linux-crypto@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] crypto: qat - Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+Message-ID: <20140829091055.GA1035@agordeev.usersys.redhat.com>
+References: <1408433524-11487-1-git-send-email-agordeev@redhat.com>
 MIME-Version: 1.0
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>, <linux-pci@vger.kernel.org>
-CC: <alex.williamson@redhat.com>, <eli@mellanox.com>,
-	<weiyang@linux.vnet.ibm.com>
-Subject: Re: [PATCH v3] PCI: Mark broken INTx masking for Mellanox devices
-References: <1407844091-20815-1-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1407844091-20815-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1408433524-11487-1-git-send-email-agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/12/2014 2:48 PM, Gavin Shan wrote:
-> The VFIO driver is routing LSI interrupts by capturing, masking,
-> and then delivering. When passing though Mellanox adapters from
-> host to guest, interrupt storm was reported from host and guest.
-> That's because we can't mask the LSI interrupt with help of PCI
-> command register.
-> 
->  # lspci | grep Mellanox
->  0001:05:00.0 Ethernet controller: Mellanox Technologies MT27500 \
->               Family [ConnectX-3]
->  0005:01:00.0 Ethernet controller: Mellanox Technologies MT26448 \
->               [ConnectX EN 10GigE, PCIe 2.0 5GT/s] (rev b0)
-> 
-> It's confirmed by Amir Vadai that all Mellanox devices have same
-> problem. The patch marks broken INTx masking for all Mellanox
-> adapters.
-> 
-> Cc: Amir Vadai <amirv@mellanox.com>
-> Suggested-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+On Tue, Aug 19, 2014 at 09:32:04AM +0200, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
+
+Hello Gentleman,
+
+This trivial patch blocks phasing out of deprecated
+pci_enable_msix() function. Could someone review and
+accept it, please?
+
+Thanks!
+
+> Cc: Tadeusz Struk <tadeusz.struk@intel.com>
+> Cc: Herbert Xu <herbert@gondor.apana.org.au>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: qat-linux@intel.com
+> Cc: linux-crypto@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 > ---
-> v3: Mark broken INTx masking for all Mellanox adapters
-> ---
->  drivers/pci/quirks.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/crypto/qat/qat_dh895xcc/adf_isr.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/crypto/qat/qat_dh895xcc/adf_isr.c b/drivers/crypto/qat/qat_dh895xcc/adf_isr.c
+> index d4172de..1082e3b 100644
+> --- a/drivers/crypto/qat/qat_dh895xcc/adf_isr.c
+> +++ b/drivers/crypto/qat/qat_dh895xcc/adf_isr.c
+> @@ -70,9 +70,9 @@ static int adf_enable_msix(struct adf_accel_dev *accel_dev)
+>  	for (i = 0; i < msix_num_entries; i++)
+>  		pci_dev_info->msix_entries.entries[i].entry = i;
+>  
+> -	if (pci_enable_msix(pci_dev_info->pci_dev,
+> -			    pci_dev_info->msix_entries.entries,
+> -			    msix_num_entries)) {
+> +	if (pci_enable_msix_exact(pci_dev_info->pci_dev,
+> +				  pci_dev_info->msix_entries.entries,
+> +				  msix_num_entries)) {
+>  		pr_err("QAT: Failed to enable MSIX IRQ\n");
+>  		return -EFAULT;
+>  	}
+> -- 
+> 1.9.3
 > 
 
-Acked-By: Amir Vadai <amirv@mellanox.com>
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
