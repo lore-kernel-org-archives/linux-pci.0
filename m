@@ -1,38 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:47659 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757305AbaHFQ6m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Aug 2014 12:58:42 -0400
-Date: Wed, 6 Aug 2014 10:58:37 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH] PCI: keystone: add a pci quirk to limit mrrs
-Message-ID: <20140806165837.GC19914@obsidianresearch.com>
-References: <1407338300-9146-1-git-send-email-m-karicheri2@ti.com>
- <20140806163021.GB19914@obsidianresearch.com>
- <53E25E24.8070506@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53E25E24.8070506@ti.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v4] x86, irq: Fix build error caused by 9eabc99a635a77cbf09
+Date: Sat, 30 Aug 2014 15:15:16 +0800
+Message-Id: <1409382916-10649-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1409304383-18806-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1409304383-18806-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 06, 2014 at 12:56:04PM -0400, Murali Karicheri wrote:
-> On 08/06/2014 12:30 PM, Jason Gunthorpe wrote:
-> >On Wed, Aug 06, 2014 at 11:18:20AM -0400, Murali Karicheri wrote:
-> >>Keystone PCI controller has a limitation that memory read request
-> >>size must not exceed 256 bytes. This is a hardware limitation and
-> >>add a quirk to force this limit on all downstream devices by
-> >>updating mrrs.
-> >
-> >Does this still work if the tuning is enabled, or does the tuning run
-> >after this?
-> 
-> Yes it works with tuning enabled. Tuning happens afterwards. The
-> 'limiting mrrs to 256' below is from my patch.
+Commit 9eabc99a635a77cbf09 causes following build error when
+IOAPIC is disabled.
+   arch/x86/pci/irq.c: In function 'pirq_disable_irq':
+>> arch/x86/pci/irq.c:1259:2: error: implicit declaration of function 'mp_should_keep_irq' [-Werror=implicit-function-declaration]
+     if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
+     ^
+   cc1: some warnings being treated as errors
 
-That seems backwards to me...
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+Hi Thomas and HPA,
+	Really sorry about this. I only tested CONFIG_PM_RUNTIME,
+but forgot CONFIG_X86_IO_APIC. Could you please help to merge or
+fold this patch?
+Regards!
+Gerry
+---
+ arch/x86/include/asm/io_apic.h |    1 +
+ 1 file changed, 1 insertion(+)
 
-Jason
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 478c490f3654..1733ab49ac5e 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -239,6 +239,7 @@ static inline int mp_find_ioapic(u32 gsi) { return 0; }
+ static inline u32 mp_pin_to_gsi(int ioapic, int pin) { return UINT_MAX; }
+ static inline int mp_map_gsi_to_irq(u32 gsi, unsigned int flags) { return gsi; }
+ static inline void mp_unmap_irq(int irq) { }
++static inline bool mp_should_keep_irq(struct device *dev) { return 1; }
+ 
+ static inline int save_ioapic_entries(void)
+ {
+-- 
+1.7.10.4
+
