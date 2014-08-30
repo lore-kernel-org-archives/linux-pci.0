@@ -1,89 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:58498 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751002AbaHHTpw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Aug 2014 15:45:52 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <jgunthorpe@obsidianresearch.com>,
-	Murali Karicheri <m-karicheri2@ti.com>
-Subject: [PATCH v2] PCI: keystone: add a pci quirk to limit mrrs
-Date: Fri, 8 Aug 2014 15:45:32 -0400
-Message-ID: <1407527132-3294-1-git-send-email-m-karicheri2@ti.com>
+Received: from mail-la0-f53.google.com ([209.85.215.53]:65057 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751757AbaH3NHc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Aug 2014 09:07:32 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1409401476-5002-1-git-send-email-matwey@sai.msu.ru>
+References: <1409401476-5002-1-git-send-email-matwey@sai.msu.ru>
+Date: Sat, 30 Aug 2014 10:07:30 -0300
+Message-ID: <CAOMZO5DzNo3Y6=R4mA=h0+RjWoM6UBCqXxqeEqUM4iu5RjrBEA@mail.gmail.com>
+Subject: Re: [PATCH] Export functions from pcie-designware
+From: Fabio Estevam <festevam@gmail.com>
+To: matwey@sai.msu.ru
+Cc: Mohit Kumar <mohit.kumar@st.com>, Jingoo Han <jg1.han@samsung.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	matwey.kornilov@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Keystone PCI controller has a limitation that memory read request
-size must not exceed 256 bytes. This is a hardware limitation and
-add a quirk to force this limit on all downstream devices by
-updating mrrs.
+On Sat, Aug 30, 2014 at 9:24 AM,  <matwey@sai.msu.ru> wrote:
+> From: "Matwey V. Kornilov" <matwey@sai.msu.ru>
+>
+> pcie-spear13xx when built as module requires the functions from pcie-designware.
+> Export them properly.
+>
+> Signed-off-by: Matwey V. Kornilov <matwey@sai.msu.ru>
+> ---
+>  drivers/pci/host/pcie-designware.c |  7 +++++++
+>  drivers/pci/host/pcie-designware.h | 14 +++++++-------
+>  2 files changed, 14 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 52bd3a1..7914b92c 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -89,6 +89,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+>
+>         return PCIBIOS_SUCCESSFUL;
+>  }
+> +EXPORT_SYMBOL(dw_pcie_cfg_read);
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
----
- -v2: made the quirk happens after tuning
- -v1: changed printk to indicate PCI bdf
- This applies on top of the Keystone PCI controller patch series
- at http://thread.gmane.org/gmane.linux.kernel.pci/33523
- drivers/pci/host/pci-keystone.c |   40 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+What about using EXPORT_SYMBOL_GPL instead?
 
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-index c1cfaef..a132622 100644
---- a/drivers/pci/host/pci-keystone.c
-+++ b/drivers/pci/host/pci-keystone.c
-@@ -42,8 +42,48 @@
- /* DEV_STAT_CTRL */
- #define PCIE_CAP_BASE		0x70
- 
-+/* PCIE controller device IDs */
-+#define PCIE_RC_K2HK		0xb008
-+#define PCIE_RC_K2E		0xb009
-+#define PCIE_RC_K2L		0xb00a
-+
- #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
- 
-+static void quirk_limit_mrrs(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus = dev->bus;
-+	struct pci_dev *bridge = bus->self;
-+
-+	if (pci_is_root_bus(bus))
-+		return;
-+
-+	/* look for the host bridge */
-+	while (!pci_is_root_bus(bus)) {
-+		bridge = bus->self;
-+		bus = bus->parent;
-+	}
-+
-+	if (bridge) {
-+		u16 id;
-+
-+		/*
-+		 * Keystone PCI controller has a h/w limitation of
-+		 * 256 bytes maximum read request size. It can't handle
-+		 * anything higher than this. So force this limit on
-+		 * all downstream devices
-+		 */
-+		pci_read_config_word(bridge, PCI_DEVICE_ID, &id);
-+		if ((id == PCIE_RC_K2HK) || (id == PCIE_RC_K2E) ||
-+		    (id == PCIE_RC_K2L)) {
-+			if (pcie_get_readrq(dev) > 256) {
-+				dev_info(&dev->dev, "limiting mrrs to 256\n");
-+				pcie_set_readrq(dev, 256);
-+			}
-+		}
-+	}
-+}
-+DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
-+
- static int ks_pcie_establish_link(struct keystone_pcie *ks_pcie)
- {
- 	struct pcie_port *pp = &ks_pcie->pp;
--- 
-1.7.9.5
+> -int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+> -int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
+> -irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+> -void dw_pcie_msi_init(struct pcie_port *pp);
+> -int dw_pcie_link_up(struct pcie_port *pp);
+> -void dw_pcie_setup_rc(struct pcie_port *pp);
+> -int dw_pcie_host_init(struct pcie_port *pp);
+> +extern int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+> +extern int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
+> +extern irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+> +extern void dw_pcie_msi_init(struct pcie_port *pp);
+> +extern int dw_pcie_link_up(struct pcie_port *pp);
+> +extern void dw_pcie_setup_rc(struct pcie_port *pp);
+> +extern int dw_pcie_host_init(struct pcie_port *pp);
 
+Why is this needed?
