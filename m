@@ -1,56 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:57303 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751553AbaHTTkQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Aug 2014 15:40:16 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <liviu@dudau.co.uk>
-Subject: Re: [PATCH] drivers: pci: convert generic host controller to DT host bridge creation API
-Date: Wed, 20 Aug 2014 21:39:27 +0200
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	"linux-pci" <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-References: <1407861695-25549-1-git-send-email-Liviu.Dudau@arm.com> <201408201327.57376.arnd@arndb.de> <20140820123112.GG13147@bart.dudau.co.uk>
-In-Reply-To: <20140820123112.GG13147@bart.dudau.co.uk>
+Received: from cthulhu.worldbroken.com ([173.230.133.178]:34513 "EHLO
+	cthulhu.worldbroken.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751790AbaH3UIJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Aug 2014 16:08:09 -0400
+Message-ID: <54022F26.6040603@worldbroken.com>
+Date: Sat, 30 Aug 2014 16:08:06 -0400
+From: Bill Pemberton <wfp5p@worldbroken.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201408202139.27678.arnd@arndb.de>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: cascardo@linux.vnet.ibm.com, linux-serial@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	lidza.louina@gmail.com, devel@driverdev.osuosl.org
+Subject: Re: [PATCH 1/2] jsm: add support for additional Neo cards
+References: <1409424877-2304-1-git-send-email-wfp5p@worldbroken.com> <1409424877-2304-2-git-send-email-wfp5p@worldbroken.com> <20140830185914.GA17371@kroah.com>
+In-Reply-To: <20140830185914.GA17371@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 20 August 2014, Liviu Dudau wrote:
-> That has been the general approach of my patchset up to v9. But, as Bjorn has
-> mentioned in his v8 review and I have put in my cover letter, the regular
-> aproach means that architectures that use pci_scan_root_bus() will have to
-> drop their one liner and replace it with the more verbose of_create_pci_host_bridge()
-> followed by pci_scan_child_bus() and pci_bus_add_devices() (basically, the content
-> of pci_scan_root_bus()). For those architectures it will lead to a net increase of
-> lines of code.
+On 08/30/2014 02:59 PM, Greg KH wrote:
+> On Sat, Aug 30, 2014 at 02:54:36PM -0400, wfp5p@worldbroken.com wrote:
+>> From: Bill Pemberton <wfp5p@worldbroken.com>
+>>
+>> Add device ids for additional Neo cards.  The ids come from the dgnc
+>> driver.
+>>
+>> Signed-off-by: Bill Pemberton <wfp5p@worldbroken.com>
+>> ---
+>>   drivers/tty/serial/jsm/jsm_driver.c | 38 +++++++++++++++++++++++++++++++++----
+>>   include/linux/pci_ids.h             |  8 ++++++++
+>>   2 files changed, 42 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/tty/serial/jsm/jsm_driver.c b/drivers/tty/serial/jsm/jsm_driver.c
+>> index a47d882d6743..d2885a7bb090 100644
+>> --- a/drivers/tty/serial/jsm/jsm_driver.c
+>> +++ b/drivers/tty/serial/jsm/jsm_driver.c
+>> @@ -93,12 +93,34 @@ static int jsm_probe_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>>   	/* store the info for the board we've found */
+>>   	brd->boardnum = adapter_count++;
+>>   	brd->pci_dev = pdev;
+>> -	if (pdev->device == PCIE_DEVICE_ID_NEO_4_IBM)
+>> +
+>> +	switch (pdev->device) {
+>> +
+>> +	case PCI_DEVICE_ID_NEO_2DB9:
+>> +	case PCI_DEVICE_ID_NEO_2DB9PRI:
+>> +	case PCI_DEVICE_ID_NEO_2RJ45:
+>> +	case PCI_DEVICE_ID_NEO_2RJ45PRI:
+>> +	case PCI_DEVICE_ID_NEO_2_422_485:
+>> +		brd->maxports = 2;
+>> +		break;
+>> +
+>> +	case PCI_DEVICE_ID_NEO_4:
+>> +	case PCIE_DEVICE_ID_NEO_4:
+>> +	case PCIE_DEVICE_ID_NEO_4RJ45:
+>> +	case PCIE_DEVICE_ID_NEO_4_IBM:
+>>   		brd->maxports = 4;
+>> -	else if (pdev->device == PCI_DEVICE_ID_DIGI_NEO_8)
+>> +		break;
+>> +
+>> +	case PCI_DEVICE_ID_DIGI_NEO_8:
+>> +	case PCIE_DEVICE_ID_NEO_8:
+>> +	case PCIE_DEVICE_ID_NEO_8RJ45:
+>>   		brd->maxports = 8;
+>> -	else
+>> -		brd->maxports = 2;
+>> +		break;
+>> +
+>> +	default:
+>> +		brd->maxports = 1;
+>> +		break;
+>> +	}
+>>
+>>   	spin_lock_init(&brd->bd_intr_lock);
+>>
+>> @@ -209,6 +231,14 @@ static struct pci_device_id jsm_pci_tbl[] = {
+>>   	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCI_DEVICE_ID_NEO_2RJ45PRI), 0, 0, 3 },
+>>   	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCIE_DEVICE_ID_NEO_4_IBM), 0, 0, 4 },
+>>   	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCI_DEVICE_ID_DIGI_NEO_8), 0, 0, 5 },
+>> +	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCI_DEVICE_ID_NEO_4), 0, 0, 6 },
+>> +	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCI_DEVICE_ID_NEO_1_422), 0, 0, 7 },
+>> +	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCI_DEVICE_ID_NEO_1_422_485), 0, 0, 8 },
+>> +	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCI_DEVICE_ID_NEO_2_422_485), 0, 0, 9 },
+>> +	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCIE_DEVICE_ID_NEO_8), 0, 0, 10 },
+>> +	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCIE_DEVICE_ID_NEO_4), 0, 0, 11 },
+>> +	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCIE_DEVICE_ID_NEO_4RJ45), 0, 0, 12 },
+>> +	{ PCI_DEVICE(PCI_VENDOR_ID_DIGI, PCIE_DEVICE_ID_NEO_8RJ45), 0, 0, 13 },
+>>   	{ 0, }
+>>   };
+>>   MODULE_DEVICE_TABLE(pci, jsm_pci_tbl);
+>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+>> index 6ed0bb73a864..f0f610c94bb2 100644
+>> --- a/include/linux/pci_ids.h
+>> +++ b/include/linux/pci_ids.h
+>> @@ -1516,11 +1516,19 @@
+>>   #define PCI_DEVICE_ID_DIGI_DF_M_E	0x0071
+>>   #define PCI_DEVICE_ID_DIGI_DF_M_IOM2_A	0x0072
+>>   #define PCI_DEVICE_ID_DIGI_DF_M_A	0x0073
+>> +#define PCI_DEVICE_ID_NEO_4             0x00B0
+>>   #define PCI_DEVICE_ID_DIGI_NEO_8	0x00B1
+>>   #define PCI_DEVICE_ID_NEO_2DB9          0x00C8
+>>   #define PCI_DEVICE_ID_NEO_2DB9PRI       0x00C9
+>>   #define PCI_DEVICE_ID_NEO_2RJ45         0x00CA
+>>   #define PCI_DEVICE_ID_NEO_2RJ45PRI      0x00CB
+>> +#define PCI_DEVICE_ID_NEO_1_422         0x00CC
+>> +#define PCI_DEVICE_ID_NEO_1_422_485     0x00CD
+>> +#define PCI_DEVICE_ID_NEO_2_422_485     0x00CE
+>> +#define PCIE_DEVICE_ID_NEO_8            0x00F0
+>> +#define PCIE_DEVICE_ID_NEO_4            0x00F1
+>> +#define PCIE_DEVICE_ID_NEO_4RJ45        0x00F2
+>> +#define PCIE_DEVICE_ID_NEO_8RJ45        0x00F3
+>>   #define PCIE_DEVICE_ID_NEO_4_IBM        0x00F4
+>
+> As per the information in the top of this file, we only add new ids when
+> they cross multiple files.  Right now these values you are adding are
+> only for a single driver, so they don't need to be added here.
+>
+> Can you redo this series without touching the pci_ids.h file?
+>
 
-I'll try to get hold of Bjorn here and discuss it with him in person. I'd
-rather see a few extra lines in each driver than the complexity of callback
-funtions.
+Ah, my apologies, obviously I didn't read the top of the pci_ids.h. 
+I'll redo these.
 
-> The patch for pci-host-generic.c is the first to use the callback setup function, but
-> not the only one. My PCI host bridge driver for Juno has the same need, and I'm betting
-> all other host bridge controllers will use it as it will be the only opportunity to
-> finish the controller setup before we start scanning the child busses. I'm trying to
-> balance ease of read vs ease of use here and it is the best version I've come up with
-> so far.
+-- 
+Bill
 
-My main objection to the new approach is that it's different from most other
-subsystems doing the same thing. For a person reading the pci host driver
-implementation, when they are familiar with other device drivers, I think it's
-much clearer what is going on when smaller functions are called in sequence
-than to see one function passed into some other interface that you now have
-to read as well in order to understand when it gets called.
-
-	Arnd
