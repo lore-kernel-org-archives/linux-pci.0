@@ -1,159 +1,255 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hygieia.santi-shop.eu ([78.46.175.2]:42650 "EHLO
-	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751545AbaHPRb7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Aug 2014 13:31:59 -0400
-Date: Sat, 16 Aug 2014 19:30:39 +0200
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	DRI mailing list <dri-devel@lists.freedesktop.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dave Airlie <airlied@linux.ie>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 2/2] x86, ia64: Don't default to first video device
-Message-ID: <20140816193039.76304abb@neptune.home>
-In-Reply-To: <20140816192135.34260115@neptune.home>
-References: <20140514224339.7f8be3a9@neptune.home>
-	<20140527234255.GJ11907@google.com>
-	<20140602201650.35f0e936@neptune.home>
-	<20140602201926.4d476818@neptune.home>
-	<20140625005501.7ff7e982@neptune.home>
-	<20140705171503.GC6247@google.com>
-	<CAMxnaaXxAZAJAdr5AYYRZC_xKFCuyrfY=qpJu8x+P-S+osm5vw@mail.gmail.com>
-	<CAMxnaaXGQe4vg9cY5e2KZBnG4F-z49OriwxEGUE-DCE6MKUryQ@mail.gmail.com>
-	<20140810112654.1bf684d6@neptune.home>
-	<CAMxnaaUsd+XHppMmPMXdFL13d1-OhLzoH_yjv_9abOx_uP=_Ug@mail.gmail.com>
-	<20140810183411.19370721@neptune.home>
-	<CAMxnaaVNpiSZmhQsHa_ZHJckgzG+xHyOL6hOT3Ts8GdcGN_A9g@mail.gmail.com>
-	<20140816192135.34260115@neptune.home>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from e28smtp02.in.ibm.com ([122.248.162.2]:42132 "EHLO
+	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751097AbaHaNbu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 31 Aug 2014 09:31:50 -0400
+Received: from /spool/local
+	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Sun, 31 Aug 2014 19:01:48 +0530
+Date: Sun, 31 Aug 2014 21:31:40 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Rajat Jain <rajatxjain@gmail.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>
+Subject: Re: [PATCH] pci/probe: Enable CRS for Intel Haswell root ports
+Message-ID: <20140831133140.GA5129@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <53FFA54D.9000907@gmail.com>
+ <20140829040419.GA11664@richard>
+ <CAA93t1oqJ3tKiSpCsnN-L+iTCjXbk4FY_VjRVyAR5ZWELrB97g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAA93t1oqJ3tKiSpCsnN-L+iTCjXbk4FY_VjRVyAR5ZWELrB97g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With commit 20cde694027e boot video device detection was moved from
-efifb to x86 and ia64 pci/fixup.c.
+On Fri, Aug 29, 2014 at 10:11:16AM -0700, Rajat Jain wrote:
+>Hello Wei Yang,
+>
+>Thanks for your mail and review.
+>
+>On Thu, Aug 28, 2014 at 9:04 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>> On Thu, Aug 28, 2014 at 02:55:25PM -0700, Rajat Jain wrote:
+>>>The PCIe root port of the Intel Haswell CPU, has a behavior to endlessly
+>>>retry the configuration cycles, if an endpoint responds with a CRS
+>>>(Configuration Request Retry Status), and the "CRS Software Visibility"
+>>>flag is not set at the root port. This results in a CPU hang, when the
+>>>kernel tries to enumerate the device that responds with CRS.
+>>>
+>>>Please note that this root port behavior (of endless retries) is still
+>>>compliant with PCIe spec as the spec leaves the behavior open to
+>>>implementation, on how many retries to do if "CRS visibility flag" is
+>>>not enabled and it receives a CRS. (Intel has chosen to retry indefinitely)
+>>>
+>>>Ref1:
+>>>https://www.pcisig.com/specifications/pciexpress/ECN_CRS_Software_Visibility_No27.pdf
+>>>
+>>>Ref2:
+>>>PCIe spec V3.0, pg119, pg127 for "Configuration Request Retry Status"
+>>>
+>>>Following CPUs are affected:
+>>>http://ark.intel.com/products/codename/42174/Haswell#@All
+>>>
+>>>Thus we need to enable the CRS visibility flag for such root ports. The
+>>>commit ad7edfe04908 ("[PCI] Do not enable CRS Software Visibility by
+>>>default") suggests to maintain a whitelist of the systems for which CRS
+>>>should be enabled. This patch does the same.
+>>>
+>>>Note: Looking at the spec and reading about the CRS, IMHO the "CRS
+>>>visibility" looks like a good thing to me that should always be enabled
+>>>on the root ports that support it. And may be we should always enable
+>>>it if supported and maintain a blacklist of devices on which should be
+>>>disabled (because of known issues).
+>>>
+>>>How I stumbled upon this and tested the fix:
+>>>
+>>>Root port: PCI bridge: Intel Corporation Device 2f02 (rev 01)
+>>>
+>>>I have a PCIe endpoint (a PLX 8713 NT bridge) that will keep on responding
+>>>with CRS for a long time when the kernel tries to enumerate the
+>>>endpoint, trying to indicate that the device is not yet ready. This is
+>>>because it needs some configuration over I2C in order to complete its
+>>>reset sequence. This results in a CPU hang during enumeration.
+>>>
+>>>I used this setup to fix and test this issue. After enabling the CRS
+>>>visibility flag at the root port, I see that CPU moves on as expected
+>>>declaring the following (instead of freezing):
+>>>
+>>>pci 0000:30:00.0 id reading try 50 times with interval 20 ms to get
+>>>ffff0001
+>>>
+>>>Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+>>>Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+>>>Signed-off-by: Guenter Roeck <groeck@juniper.net>
+>>>---
+>>>Hi Bjorn / folks,
+>>>
+>>>I had also saught suggestions on how this patch should be modelled.
+>>>Please find a suggestive alternative here:
+>>>
+>>>https://lkml.org/lkml/2014/8/1/186
+>>>
+>>>Please let me know your thoughts.
+>>>
+>>>Thanks,
+>>>
+>>>Rajat
+>>>
+>>>
+>>>
+>>>
+>>> drivers/pci/probe.c |   28 ++++++++++++++++++++++++++++
+>>> 1 file changed, 28 insertions(+)
+>>>
+>>>diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>>index e3cf8a2..909ca75 100644
+>>>--- a/drivers/pci/probe.c
+>>>+++ b/drivers/pci/probe.c
+>>>@@ -740,6 +740,32 @@ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+>>> }
+>>> EXPORT_SYMBOL(pci_add_new_bus);
+>>>
+>>>+static const struct pci_device_id crs_whitelist[] = {
+>>>+      { PCI_VDEVICE(INTEL, 0x2f00), },
+>>>+      { PCI_VDEVICE(INTEL, 0x2f01), },
+>>>+      { PCI_VDEVICE(INTEL, 0x2f02), },
+>>>+      { PCI_VDEVICE(INTEL, 0x2f03), },
+>>>+      { PCI_VDEVICE(INTEL, 0x2f04), },
+>>>+      { PCI_VDEVICE(INTEL, 0x2f05), },
+>>>+      { PCI_VDEVICE(INTEL, 0x2f06), },
+>>>+      { PCI_VDEVICE(INTEL, 0x2f07), },
+>>>+      { PCI_VDEVICE(INTEL, 0x2f08), },
+>>>+      { PCI_VDEVICE(INTEL, 0x2f09), },
+>>>+      { PCI_VDEVICE(INTEL, 0x2f0a), },
+>>>+      { PCI_VDEVICE(INTEL, 0x2f0b), },
+>>>+      { },
+>>>+};
+>>>+
+>>>+static void pci_enable_crs(struct pci_dev *dev)
+>>>+{
+>>>+      /* Enable CRS Software visibility only for whitelisted systems */
+>>>+      if (pci_is_pcie(dev) &&
+>>>+          pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
+>>>+          pci_match_id(crs_whitelist, dev))
+>>>+              pcie_capability_set_word(dev, PCI_EXP_RTCTL,
+>>>+                                       PCI_EXP_RTCTL_CRSSVE);
+>>>+}
+>>>+
+>>> /*
+>>>  * If it's a bridge, configure it and scan the bus behind it.
+>>>  * For CardBus bridges, we don't scan behind as the devices will
+>>>@@ -787,6 +813,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+>>>       pci_write_config_word(dev, PCI_BRIDGE_CONTROL,
+>>>                             bctl & ~PCI_BRIDGE_CTL_MASTER_ABORT);
+>>>
+>>>+      pci_enable_crs(dev);
+>>>+
+>>
+>> Rajat,
+>>
+>> I am not familiar with the CRS Software Visibility, but I think your code
+>> could fix the problem.
+>>
+>> While I have one tiny suggestion. I see the commit
+>> "ad7edfe04908 [PCI] Do not enable CRS Software Visibility by default" has the
+>> pci_enable_crs() called in pci_scan_bridge(), while I think this may not be a
+>> very good place for this fix.
+>>
+>> How about have a early fixup for these intel devices? Since the original code
+>> is called on each bridge, while this fix is just invoked on specific devices.
+>> And sounds we are not planing to have this enabled by default in a short term.
+>
+>Yes, my current patch is like that.
+>
+>However to the extent I could understand, the CRS seemed only a good
+>thing to me and I could not really visualize in what conditions could
+>it create a problem. I was actually seeking opinion on if we should
+>enable it always and instead maintain a blacklist of systems on which
+>it is known to cause problems and should be disabled. But I do
+>understand that obtaining such a blacklist may not be possible since
+>the original commit is pretty old. The good thing with a black list
+>woulds that there may be other PCI root port bridges with the same
+>(PCIe compliant) behavior and will hang.. Such cases will be
+>automatically taken care since it is very difficult in those cases to
+>debug and trace the problem to this CRS issue.
+>
+>> If we have other devices to be in the white list in the future, we would
+>> expand this list. This will make the probe.c not that generic.
+>
+>I agree that we shouldn't really be putting things like device lists
+>in  a generic file such as probe.c. However, I think it is important
+>that we make the call to enable CRS visibility somewhere in the common
+>PCI root port initialization path (although the decision whether or
+>not to enable it, or enable it for certain devices only can be taken
+>from a platform / device specific file). That is so that any developer
+>seeing similar issues and trying to debug the PCI code should be able
+>to stumble upon CRS and think "Hmmm ... maybe I need this for my
+>device also?". I did not want to separate this out as just a quirk,
+>because quirks are typically seen as a device anomaly (which in this
+>case it is not). And developers wouldn't' tend to delve into unrelated
+>device quirks, to debug a problem they are seeing on a different
+>device.
+>
+>To this end, I had a different suggestive patch posted here, that
+>maintains device lists in platform specific files:
+>
+>https://lkml.org/lkml/2014/8/1/186
+>
+>Please let me know if you think this is any better?
+>
 
-For dual-GPU Apple computers above above change represents a regression
-as code in efifb did forcefully override vga_default_device while the
-merge did not (changed ordering of actions).
+Hmm... I see this one, you make pcibios_enable_crs() a weak function and
+implement it in x86 arch. 
 
-This stops setting default_vga_device when applying
-IORESOURCE_ROM_SHADOW (only doing so for the detected boot GPU) and
-updates logging of boot video device selection, in vgaarb which covers
-VGA text-mode booting and first half of pci_fixup_video which covers
-framebuffer mode (EFI, VESA).
+I see you concern to have them in a generic code instead of putting them in
+quirk. If so, this is a good solution. Sounds I don't find a better one.
 
-By setting IORESOURCE_ROM_SHADOW only on effective boot GPU we also
-corrects a longstanding complaint from intel driver as reported by
-Andreas:
-  > Does setting the ROM_SHADOW flag on (possibly) the wrong device
-  > have any effect?
-  Yes it does. Removing the line changes a long standing
-    i915 0000:00:02.0: Invalid ROM contents
-  into a
-    i915 0000:00:02.0: BAR 6: can't assign [??? 0x00000000 flags
-    0x20000000] (bogus alignment).
-  The first is logged at KERN_ERR while the second is at KERN_INFO.
+Let's see whether others have better idea. :-)
 
-Reported-By: Andreas Noever <andreas.noever@gmail.com>
-Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
-CC: Matthew Garrett <matthew.garrett@nebula.com>
-CC: stable@vger.kernel.org # v3.5+
----
-Must be applied to stable when upstream commit
-20cde694027e7477cc532833e38ab9fcaa83fb64, which is marked for
-stable, gets applied.
+>>
+>> Hmm... to me, enable this in the eary fixup is a different stage as you did in
+>> pci_scan_bridge(). Not sure enable them in a different stage will effect the
+>> behavior. If this matters, my suggestion is not a good one.
+>
+>
+>Your suggestions are very welcome, thus please keep them coming. I can
+>try moving the call to "enable_crs" around - however since the
+>original commit had it in this place, I had decided to keep it here.
+>The other thing that I was not clear was under which reset conditions
+>would the CRS visibility flag get cleared? Would it get cleared if we
+>do a root port reset (or any PCI resets)? If so a quirk might not
+>work. I looked though the PCIe specs and did not find any hint on when
+>could this be cleared. So I decided to play safe and leave it in the
+>place it originally was.
+>
+>Thanks,
+>
+>Rajat
+>
+>
+>>
+>>>       if ((secondary || subordinate) && !pcibios_assign_all_busses() &&
+>>>           !is_cardbus && !broken) {
+>>>               unsigned int cmax;
+>>>--
+>>>1.7.9.5
+>>>
+>>>--
+>>>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>>the body of a message to majordomo@vger.kernel.org
+>>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>> --
+>> Richard Yang
+>> Help you, Help me
+>>
 
-Can be applied without patch 1/2 from this series though dropped
-#ifndefs will cause this patch not to apply cleanly.
-
-
- arch/ia64/pci/fixup.c    | 9 +++++----
- arch/x86/pci/fixup.c     | 9 +++++----
- drivers/gpu/vga/vgaarb.c | 4 +++-
- 3 files changed, 13 insertions(+), 9 deletions(-)
-
-diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
-index ec73b2c..05198f8 100644
---- a/arch/ia64/pci/fixup.c
-+++ b/arch/ia64/pci/fixup.c
-@@ -54,8 +54,10 @@ static void pci_fixup_video(struct pci_dev *pdev)
- 				continue;
- 
- 			if (screen_info.lfb_base >= start &&
--			    (screen_info.lfb_base + screen_info.lfb_size) < end)
-+			    (screen_info.lfb_base + screen_info.lfb_size) < end) {
-+				dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
- 				vga_set_default_device(pdev);
-+			}
- 		}
- 	}
- 
-@@ -79,12 +81,11 @@ static void pci_fixup_video(struct pci_dev *pdev)
- 		}
- 		bus = bus->parent;
- 	}
--	if (!vga_default_device() || pdev == vga_default_device()) {
-+	if (pdev == vga_default_device()) {
- 		pci_read_config_word(pdev, PCI_COMMAND, &config);
- 		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
- 			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
--			dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
--			vga_set_default_device(pdev);
-+			dev_printk(KERN_DEBUG, &pdev->dev, "Video device with shadowed ROM\n");
- 		}
- 	}
- }
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index c61ea57..5b392d2 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -342,8 +342,10 @@ static void pci_fixup_video(struct pci_dev *pdev)
- 				continue;
- 
- 			if (screen_info.lfb_base >= start &&
--			    (screen_info.lfb_base + screen_info.lfb_size) < end)
-+			    (screen_info.lfb_base + screen_info.lfb_size) < end) {
-+				dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
- 				vga_set_default_device(pdev);
-+			}
- 		}
- 	}
- 
-@@ -367,12 +369,11 @@ static void pci_fixup_video(struct pci_dev *pdev)
- 		}
- 		bus = bus->parent;
- 	}
--	if (!vga_default_device() || pdev == vga_default_device()) {
-+	if (pdev == vga_default_device()) {
- 		pci_read_config_word(pdev, PCI_COMMAND, &config);
- 		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
- 			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
--			dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
--			vga_set_default_device(pdev);
-+			dev_printk(KERN_DEBUG, &pdev->dev, "Video device with shadowed ROM\n");
- 		}
- 	}
- }
-diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-index 257674d..c6eeed5 100644
---- a/drivers/gpu/vga/vgaarb.c
-+++ b/drivers/gpu/vga/vgaarb.c
-@@ -580,8 +580,10 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
- 	 * by default if arch doesn't have it's own hook
- 	 */
- 	if (vga_default == NULL &&
--	    ((vgadev->owns & VGA_RSRC_LEGACY_MASK) == VGA_RSRC_LEGACY_MASK))
-+	    ((vgadev->owns & VGA_RSRC_LEGACY_MASK) == VGA_RSRC_LEGACY_MASK)) {
-+		pr_info("vgaarb: Boot video device: PCI:%s\n", pci_name(pdev));
- 		vga_set_default_device(pdev);
-+	}
- 
- 	vga_arbiter_check_bridge_sharing(vgadev);
- 
 -- 
-1.8.5.5
+Richard Yang
+Help you, Help me
 
