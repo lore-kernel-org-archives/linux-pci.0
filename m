@@ -1,47 +1,131 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH 0/2] PCI: Ignore hotplug events for dual GPU systems
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: SpacemanSpiff <a818958@trbvm.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Dave Airlie <airlied@linux.ie>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Pali =?utf-8?b?Um9ow6Fy?= <pali.rohar@gmail.com>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	"Jose P." <lbdkmjdf@sharklasers.com>
-Date: Thu, 11 Sep 2014 16:23:54 -0600
-Message-ID: <20140911222022.16809.57079.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:64127 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753740AbaIAOLX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Sep 2014 10:11:23 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dmitry Torokhov <dtor@google.com>,
+	Aubrey Li <aubrey.li@intel.com>
+Subject: [PATCH 08/13] genirq: Create helper for flow handler entry check
+Date: Mon, 01 Sep 2014 16:24:57 +0200
+Message-ID: <1951365.DpvK0R7Nqk@vostro.rjw.lan>
+In-Reply-To: <2516134.pmOxkEuOOy@vostro.rjw.lan>
+References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan> <2516134.pmOxkEuOOy@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These are intended to resolve problems on dual GPU systems where the radeon
-driver becomes unusable because of problems suspending or resuming a GPU.
-When the GPU is powered off, we may get hotplug remove events, and we 
-would normally unbind the driver and destroy the pci_dev.  But in this
-case, the radeon and nouveau drivers expect to remain bound to the device
-because it isn't really removable, and they may power it back on later.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-Links to the bug reports in the patch changelogs.
+All flow handlers - except the per cpu ones - check for an interrupt
+in progress and an eventual concurrent polling on another cpu.
 
-I would like to get these into v3.17 if they seem reasonable.
+Create a helper function for the repeated code pattern.
 
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
+ kernel/irq/chip.c |   48 ++++++++++++++++++++----------------------------
+ 1 file changed, 20 insertions(+), 28 deletions(-)
 
-Bjorn Helgaas (2):
-      PCI: Add pci_ignore_hotplug() to ignore hotplug events for a device
-      ACPIPHP / radeon / nouveau: Remove acpi_bus_no_hotplug()
+Index: linux/kernel/irq/chip.c
+===================================================================
+--- linux.orig/kernel/irq/chip.c
++++ linux/kernel/irq/chip.c
+@@ -342,6 +342,13 @@ static bool irq_check_poll(struct irq_de
+ 	return irq_wait_for_poll(desc);
+ }
+ 
++static bool irq_may_run(struct irq_desc *desc)
++{
++	if (!irqd_irq_inprogress(&desc->irq_data))
++		return true;
++	return irq_check_poll(desc);
++}
++
+ /**
+  *	handle_simple_irq - Simple and software-decoded IRQs.
+  *	@irq:	the interrupt number
+@@ -359,9 +366,8 @@ handle_simple_irq(unsigned int irq, stru
+ {
+ 	raw_spin_lock(&desc->lock);
+ 
+-	if (unlikely(irqd_irq_inprogress(&desc->irq_data)))
+-		if (!irq_check_poll(desc))
+-			goto out_unlock;
++	if (!irq_may_run(desc))
++		goto out_unlock;
+ 
+ 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
+ 	kstat_incr_irqs_this_cpu(irq, desc);
+@@ -412,9 +418,8 @@ handle_level_irq(unsigned int irq, struc
+ 	raw_spin_lock(&desc->lock);
+ 	mask_ack_irq(desc);
+ 
+-	if (unlikely(irqd_irq_inprogress(&desc->irq_data)))
+-		if (!irq_check_poll(desc))
+-			goto out_unlock;
++	if (!irq_may_run(desc))
++		goto out_unlock;
+ 
+ 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
+ 	kstat_incr_irqs_this_cpu(irq, desc);
+@@ -485,9 +490,8 @@ handle_fasteoi_irq(unsigned int irq, str
+ 
+ 	raw_spin_lock(&desc->lock);
+ 
+-	if (unlikely(irqd_irq_inprogress(&desc->irq_data)))
+-		if (!irq_check_poll(desc))
+-			goto out;
++	if (!irq_may_run(desc))
++		goto out;
+ 
+ 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
+ 	kstat_incr_irqs_this_cpu(irq, desc);
+@@ -541,16 +545,10 @@ handle_edge_irq(unsigned int irq, struct
+ 
+ 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
+ 
+-	/*
+-	 * If the handler is currently running, mark it pending,
+-	 * handle the necessary masking and go out
+-	 */
+-	if (unlikely(irqd_irq_inprogress(&desc->irq_data))) {
+-		if (!irq_check_poll(desc)) {
+-			desc->istate |= IRQS_PENDING;
+-			mask_ack_irq(desc);
+-			goto out_unlock;
+-		}
++	if (!irq_may_run(desc)) {
++		desc->istate |= IRQS_PENDING;
++		mask_ack_irq(desc);
++		goto out_unlock;
+ 	}
+ 
+ 	/*
+@@ -612,15 +610,9 @@ void handle_edge_eoi_irq(unsigned int ir
+ 
+ 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
+ 
+-	/*
+-	 * If the handler is currently running, mark it pending,
+-	 * handle the necessary masking and go out
+-	 */
+-	if (unlikely(irqd_irq_inprogress(&desc->irq_data))) {
+-		if (!irq_check_poll(desc)) {
+-			desc->istate |= IRQS_PENDING;
+-			goto out_eoi;
+-		}
++	if (!irq_may_run(desc)) {
++		desc->istate |= IRQS_PENDING;
++		goto out_eoi;
+ 	}
+ 
+ 	/*
 
-
- drivers/acpi/bus.c                           |   10 ----------
- drivers/gpu/drm/nouveau/nouveau_acpi.c       |   16 ++--------------
- drivers/gpu/drm/nouveau/nouveau_drm.c        |    1 +
- drivers/gpu/drm/radeon/radeon_atpx_handler.c |   16 ++--------------
- drivers/gpu/drm/radeon/radeon_drv.c          |    1 +
- drivers/pci/hotplug/acpiphp_glue.c           |   16 ++++++----------
- drivers/pci/hotplug/pciehp_hpc.c             |   12 ++++++++++++
- include/acpi/acpi_bus.h                      |    4 +---
- include/linux/pci.h                          |    6 ++++++
- 9 files changed, 31 insertions(+), 51 deletions(-)
