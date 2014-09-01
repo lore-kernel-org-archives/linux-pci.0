@@ -1,83 +1,235 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:55585 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752327AbaIOHyf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Sep 2014 03:54:35 -0400
-Message-ID: <54169B1B.1070709@huawei.com>
-Date: Mon, 15 Sep 2014 15:54:03 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:57111 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753438AbaIAOLV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Sep 2014 10:11:21 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dmitry Torokhov <dtor@google.com>,
+	Aubrey Li <aubrey.li@intel.com>
+Subject: [PATCH 10/13] genirq: Simplify wakeup mechanism
+Date: Mon, 01 Sep 2014 16:27:22 +0200
+Message-ID: <1618455.xcqKAKx7vG@vostro.rjw.lan>
+In-Reply-To: <2516134.pmOxkEuOOy@vostro.rjw.lan>
+References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan> <2516134.pmOxkEuOOy@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	"Vinod Koul" <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-CC: Ashok Raj <ashok.raj@intel.com>, Tony Luck <tony.luck@intel.com>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	<linux-hotplug@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<dmaengine@vger.kernel.org>
-Subject: Re: [Patch Part3 V5 0/8] Enable support of Intel DMAR device hotplug
-References: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I built and boot this series in Huawei RH5885 (Intel(R) Xeon(R) CPU E7- 4807, two IOHs and two IOMMUs),
-It works fine, IRQ remap and DMA remap are both look good.
-But because my platform BIOS has no _DSM, so I didn't test the hotplug case yet.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-Thanks!
-Yijing.
+Currently we suspend wakeup interrupts by lazy disabling them and
+check later whether the interrupt has fired, but that's not sufficient
+for suspend to idle as there is no way to check that once we
+transitioned into the CPU idle state.
 
+So we change the mechanism in the following way:
 
-On 2014/9/12 10:10, Jiang Liu wrote:
-> When hot plugging a descrete IOH or a physical processor with embedded
-> IIO, we need to handle DMAR(or IOMMU) unit in the PCIe host bridge if
-> DMAR is in use. This patch set tries to enhance current DMAR/IOMMU/IR
-> drivers to support hotplug and is based on latest Linus master branch.
-> 
-> All prerequisite patches to support DMAR device hotplug have been merged
-> into the mainstream kernel, and this is the last patch set to enable
-> DMAR device hotplug.
-> 
-> You may access the patch set at:
-> https://github.com/jiangliu/linux.git iommu/hotplug_v5
-> 
-> This patch set has been tested on Intel development machine.
-> Appreciate any comments and tests.
-> 
-> Patch 1-4 enhances DMAR framework to support hotplug
-> Patch 5 enhances Intel interrupt remapping driver to support hotplug
-> Patch 6 enhances error handling in Intel IR driver
-> Patch 7 enhance Intel IOMMU to support hotplug
-> Patch 8 enhance ACPI pci_root driver to handle DMAR units
-> 
-> Jiang Liu (8):
->   iommu/vt-d: Introduce helper function dmar_walk_resources()
->   iommu/vt-d: Dynamically allocate and free seq_id for DMAR units
->   iommu/vt-d: Implement DMAR unit hotplug framework
->   iommu/vt-d: Search for ACPI _DSM method for DMAR hotplug
->   iommu/vt-d: Enhance intel_irq_remapping driver to support DMAR unit
->     hotplug
->   iommu/vt-d: Enhance error recovery in function
->     intel_enable_irq_remapping()
->   iommu/vt-d: Enhance intel-iommu driver to support DMAR unit hotplug
->   pci, ACPI, iommu: Enhance pci_root to support DMAR device hotplug
-> 
->  drivers/acpi/pci_root.c             |   16 +-
->  drivers/iommu/dmar.c                |  532 ++++++++++++++++++++++++++++-------
->  drivers/iommu/intel-iommu.c         |  297 ++++++++++++++-----
->  drivers/iommu/intel_irq_remapping.c |  233 +++++++++++----
->  include/linux/dmar.h                |   50 +++-
->  5 files changed, 888 insertions(+), 240 deletions(-)
-> 
+1) Leave the wakeup interrupts enabled across suspend
 
+2) Add a check to irq_may_run() which is called at the beginning of
+   each flow handler whether the interrupt is an armed wakeup source.
 
--- 
-Thanks!
-Yijing
+   This check is basically free as it just extends the existing check
+   for IRQD_IRQ_INPROGRESS. So no new conditional in the hot path.
+
+   If the IRQD_WAKEUP_ARMED flag is set, then the interrupt is
+   disabled, marked as pending/suspended and the pm core is notified
+   about the wakeup event.
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+[ rjw: syscore.c and irq_pm_check_wakeup() in pm.c ]
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/base/syscore.c    |    7 ++---
+ include/linux/interrupt.h |    5 ----
+ kernel/irq/chip.c         |   20 +++++++++++++++-
+ kernel/irq/internals.h    |    2 +
+ kernel/irq/pm.c           |   55 ++++++++++++++++++++++++----------------------
+ 5 files changed, 53 insertions(+), 36 deletions(-)
+
+Index: linux-pm/drivers/base/syscore.c
+===================================================================
+--- linux-pm.orig/drivers/base/syscore.c
++++ linux-pm/drivers/base/syscore.c
+@@ -9,7 +9,7 @@
+ #include <linux/syscore_ops.h>
+ #include <linux/mutex.h>
+ #include <linux/module.h>
+-#include <linux/interrupt.h>
++#include <linux/suspend.h>
+ #include <trace/events/power.h>
+ 
+ static LIST_HEAD(syscore_ops_list);
+@@ -54,9 +54,8 @@ int syscore_suspend(void)
+ 	pr_debug("Checking wakeup interrupts\n");
+ 
+ 	/* Return error code if there are any wakeup interrupts pending. */
+-	ret = check_wakeup_irqs();
+-	if (ret)
+-		return ret;
++	if (pm_wakeup_pending())
++		return -EBUSY;
+ 
+ 	WARN_ONCE(!irqs_disabled(),
+ 		"Interrupts enabled before system core suspend.\n");
+Index: linux-pm/include/linux/interrupt.h
+===================================================================
+--- linux-pm.orig/include/linux/interrupt.h
++++ linux-pm/include/linux/interrupt.h
+@@ -193,11 +193,6 @@ extern void irq_wake_thread(unsigned int
+ /* The following three functions are for the core kernel use only. */
+ extern void suspend_device_irqs(void);
+ extern void resume_device_irqs(void);
+-#ifdef CONFIG_PM_SLEEP
+-extern int check_wakeup_irqs(void);
+-#else
+-static inline int check_wakeup_irqs(void) { return 0; }
+-#endif
+ 
+ /**
+  * struct irq_affinity_notify - context for notification of IRQ affinity changes
+Index: linux-pm/kernel/irq/chip.c
+===================================================================
+--- linux-pm.orig/kernel/irq/chip.c
++++ linux-pm/kernel/irq/chip.c
+@@ -344,8 +344,26 @@ static bool irq_check_poll(struct irq_de
+ 
+ static bool irq_may_run(struct irq_desc *desc)
+ {
+-	if (!irqd_irq_inprogress(&desc->irq_data))
++	unsigned int mask = IRQD_IRQ_INPROGRESS | IRQD_WAKEUP_ARMED;
++
++	/*
++	 * If the interrupt is not in progress and is not an armed
++	 * wakeup interrupt, proceed.
++	 */
++	if (!irqd_has_set(&desc->irq_data, mask))
+ 		return true;
++
++	/*
++	 * If the interrupt is an armed wakeup source, mark it pending
++	 * and suspended, disable it and notify the pm core about the
++	 * event.
++	 */
++	if (irq_pm_check_wakeup(desc))
++		return false;
++
++	/*
++	 * Handle a potential concurrent poll on a different core.
++	 */
+ 	return irq_check_poll(desc);
+ }
+ 
+Index: linux-pm/kernel/irq/pm.c
+===================================================================
+--- linux-pm.orig/kernel/irq/pm.c
++++ linux-pm/kernel/irq/pm.c
+@@ -9,10 +9,24 @@
+ #include <linux/irq.h>
+ #include <linux/module.h>
+ #include <linux/interrupt.h>
++#include <linux/suspend.h>
+ #include <linux/syscore_ops.h>
+ 
+ #include "internals.h"
+ 
++bool irq_pm_check_wakeup(struct irq_desc *desc)
++{
++	if (irqd_is_wakeup_armed(&desc->irq_data)) {
++		irqd_clear(&desc->irq_data, IRQD_WAKEUP_ARMED);
++		desc->istate |= IRQS_SUSPENDED | IRQS_PENDING;
++		desc->depth++;
++		irq_disable(desc);
++		pm_system_wakeup();
++		return true;
++	}
++	return false;
++}
++
+ /*
+  * Called from __setup_irq() with desc->lock held after @action has
+  * been installed in the action chain.
+@@ -54,8 +68,16 @@ static bool suspend_device_irq(struct ir
+ 	if (!desc->action || desc->no_suspend_depth)
+ 		return false;
+ 
+-	if (irqd_is_wakeup_set(&desc->irq_data))
++	if (irqd_is_wakeup_set(&desc->irq_data)) {
+ 		irqd_set(&desc->irq_data, IRQD_WAKEUP_ARMED);
++		/*
++		 * We return true here to force the caller to issue
++		 * synchronize_irq(). We need to make sure that the
++		 * IRQD_WAKEUP_ARMED is visible before we return from
++		 * suspend_device_irqs().
++		 */
++		return true;
++	}
+ 
+ 	desc->istate |= IRQS_SUSPENDED;
+ 	__disable_irq(desc, irq);
+@@ -79,9 +101,13 @@ static bool suspend_device_irq(struct ir
+  * for this purpose.
+  *
+  * So we disable all interrupts and mark them IRQS_SUSPENDED except
+- * for those which are unused and those which are marked as not
++ * for those which are unused, those which are marked as not
+  * suspendable via an interrupt request with the flag IRQF_NO_SUSPEND
+- * set.
++ * set and those which are marked as active wakeup sources.
++ *
++ * The active wakeup sources are handled by the flow handler entry
++ * code which checks for the IRQD_WAKEUP_ARMED flag, suspends the
++ * interrupt and notifies the pm core about the wakeup.
+  */
+ void suspend_device_irqs(void)
+ {
+@@ -173,26 +199,3 @@ void resume_device_irqs(void)
+ 	resume_irqs(false);
+ }
+ EXPORT_SYMBOL_GPL(resume_device_irqs);
+-
+-/**
+- * check_wakeup_irqs - check if any wake-up interrupts are pending
+- */
+-int check_wakeup_irqs(void)
+-{
+-	struct irq_desc *desc;
+-	int irq;
+-
+-	for_each_irq_desc(irq, desc) {
+-		/*
+-		 * Only interrupts which are marked as wakeup source
+-		 * and have not been disabled before the suspend check
+-		 * can abort suspend.
+-		 */
+-		if (irqd_is_wakeup_set(&desc->irq_data)) {
+-			if (desc->depth == 1 && desc->istate & IRQS_PENDING)
+-				return -EBUSY;
+-		}
+-	}
+-
+-	return 0;
+-}
+Index: linux-pm/kernel/irq/internals.h
+===================================================================
+--- linux-pm.orig/kernel/irq/internals.h
++++ linux-pm/kernel/irq/internals.h
+@@ -196,9 +196,11 @@ static inline void kstat_incr_irqs_this_
+ }
+ 
+ #ifdef CONFIG_PM_SLEEP
++bool irq_pm_check_wakeup(struct irq_desc *desc);
+ void irq_pm_install_action(struct irq_desc *desc, struct irqaction *action);
+ void irq_pm_remove_action(struct irq_desc *desc, struct irqaction *action);
+ #else
++static inline bool irq_pm_check_wakeup(struct irq_desc *desc) { return false; }
+ static inline void
+ irq_pm_install_action(struct irq_desc *desc, struct irqaction *action) { }
+ static inline void
 
