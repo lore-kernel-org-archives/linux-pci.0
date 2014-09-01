@@ -1,110 +1,157 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC Part1 v1 06/18] x86, irq: Protect __clear_irq_vector() with vector_lock
-Date: Thu, 11 Sep 2014 16:24:53 +0800
-Message-Id: <1410423905-26239-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:59578 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753398AbaIAOLV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Sep 2014 10:11:21 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dmitry Torokhov <dtor@google.com>,
+	Aubrey Li <aubrey.li@intel.com>
+Subject: [PATCH 12/13] PCI / PM: Make PCIe PME interrupts wake up from suspend-to-idle
+Date: Mon, 01 Sep 2014 16:28:50 +0200
+Message-ID: <6235319.4FdiIbbmKj@vostro.rjw.lan>
+In-Reply-To: <2516134.pmOxkEuOOy@vostro.rjw.lan>
+References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan> <2516134.pmOxkEuOOy@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function __clear_irq_vector() accesses vector related data structure,
-so protect it with vector_lock. Also rename it as clear_irq_vector().
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+To make PCIe PME interrupts wake up the system from suspend to idle,
+make the PME driver use enable_irq_wake() on the IRQ during system
+suspend (if there are any wakeup devices below the given PCIe port)
+without disabling PME interrupts.  This way, an interrupt will still
+trigger if a wakeup event happens and the system will be woken up (or
+system suspend in progress will be aborted) by means of the new
+mechanics introduced previously.
+
+This change allows Wake-on-LAN to be used for wakeup from
+suspend-to-idle on my MSI Wind tesbed netbook.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- arch/x86/kernel/apic/io_apic.c |   19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+ drivers/pci/pcie/pme.c |   61 ++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 51 insertions(+), 10 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 814527753563..ee3d3ff521a3 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1349,10 +1349,12 @@ int assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
- 	return err;
+Index: linux-pm/drivers/pci/pcie/pme.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pcie/pme.c
++++ linux-pm/drivers/pci/pcie/pme.c
+@@ -41,11 +41,17 @@ static int __init pcie_pme_setup(char *s
  }
+ __setup("pcie_pme=", pcie_pme_setup);
  
--static void __clear_irq_vector(int irq, struct irq_cfg *cfg)
-+static void clear_irq_vector(int irq, struct irq_cfg *cfg)
- {
- 	int cpu, vector;
-+	unsigned long flags;
- 
-+	raw_spin_lock_irqsave(&vector_lock, flags);
- 	BUG_ON(!cfg->vector);
- 
- 	vector = cfg->vector;
-@@ -1362,8 +1364,11 @@ static void __clear_irq_vector(int irq, struct irq_cfg *cfg)
- 	cfg->vector = 0;
- 	cpumask_clear(cfg->domain);
- 
--	if (likely(!cfg->move_in_progress))
-+	if (likely(!cfg->move_in_progress)) {
-+		raw_spin_unlock_irqrestore(&vector_lock, flags);
- 		return;
-+	}
++enum pme_suspend_level {
++	PME_SUSPEND_NONE = 0,
++	PME_SUSPEND_WAKEUP,
++	PME_SUSPEND_NOIRQ,
++};
 +
- 	for_each_cpu_and(cpu, cfg->old_domain, cpu_online_mask) {
- 		for (vector = FIRST_EXTERNAL_VECTOR; vector < NR_VECTORS; vector++) {
- 			if (per_cpu(vector_irq, cpu)[vector] != irq)
-@@ -1373,6 +1378,7 @@ static void __clear_irq_vector(int irq, struct irq_cfg *cfg)
- 		}
+ struct pcie_pme_service_data {
+ 	spinlock_t lock;
+ 	struct pcie_device *srv;
+ 	struct work_struct work;
+-	bool noirq; /* Don't enable the PME interrupt used by this service. */
++	enum pme_suspend_level suspend_level;
+ };
+ 
+ /**
+@@ -223,7 +229,7 @@ static void pcie_pme_work_fn(struct work
+ 	spin_lock_irq(&data->lock);
+ 
+ 	for (;;) {
+-		if (data->noirq)
++		if (data->suspend_level != PME_SUSPEND_NONE)
+ 			break;
+ 
+ 		pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
+@@ -250,7 +256,7 @@ static void pcie_pme_work_fn(struct work
+ 		spin_lock_irq(&data->lock);
  	}
- 	cfg->move_in_progress = 0;
-+	raw_spin_unlock_irqrestore(&vector_lock, flags);
+ 
+-	if (!data->noirq)
++	if (data->suspend_level == PME_SUSPEND_NONE)
+ 		pcie_pme_interrupt_enable(port, true);
+ 
+ 	spin_unlock_irq(&data->lock);
+@@ -367,6 +373,21 @@ static int pcie_pme_probe(struct pcie_de
+ 	return ret;
  }
  
- void __setup_vector_irq(int cpu)
-@@ -1499,7 +1505,7 @@ static void setup_ioapic_irq(unsigned int irq, struct irq_cfg *cfg,
- 					 &dest)) {
- 		pr_warn("Failed to obtain apicid for ioapic %d, pin %d\n",
- 			mpc_ioapic_id(attr->ioapic), attr->ioapic_pin);
--		__clear_irq_vector(irq, cfg);
-+		clear_irq_vector(irq, cfg);
- 
- 		return;
- 	}
-@@ -1513,7 +1519,7 @@ static void setup_ioapic_irq(unsigned int irq, struct irq_cfg *cfg,
- 	if (x86_io_apic_ops.setup_entry(irq, &entry, dest, cfg->vector, attr)) {
- 		pr_warn("Failed to setup ioapic entry for ioapic  %d, pin %d\n",
- 			mpc_ioapic_id(attr->ioapic), attr->ioapic_pin);
--		__clear_irq_vector(irq, cfg);
-+		clear_irq_vector(irq, cfg);
- 
- 		return;
- 	}
-@@ -3082,12 +3088,9 @@ int arch_setup_hwirq(unsigned int irq, int node)
- void arch_teardown_hwirq(unsigned int irq)
++static bool pcie_pme_check_wakeup(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
++
++	if (!bus)
++		return false;
++
++	list_for_each_entry(dev, &bus->devices, bus_list)
++		if (device_may_wakeup(&dev->dev)
++		    || pcie_pme_check_wakeup(dev->subordinate))
++			return true;
++
++	return false;
++}
++
+ /**
+  * pcie_pme_suspend - Suspend PCIe PME service device.
+  * @srv: PCIe service device to suspend.
+@@ -375,11 +396,26 @@ static int pcie_pme_suspend(struct pcie_
  {
- 	struct irq_cfg *cfg = irq_cfg(irq);
--	unsigned long flags;
+ 	struct pcie_pme_service_data *data = get_service_data(srv);
+ 	struct pci_dev *port = srv->port;
++	bool wakeup;
  
- 	free_remapped_irq(irq);
--	raw_spin_lock_irqsave(&vector_lock, flags);
--	__clear_irq_vector(irq, cfg);
--	raw_spin_unlock_irqrestore(&vector_lock, flags);
-+	clear_irq_vector(irq, cfg);
- 	free_irq_cfg(irq, cfg);
- }
++	if (device_may_wakeup(&port->dev)) {
++		wakeup = true;
++	} else {
++		down_read(&pci_bus_sem);
++		wakeup = pcie_pme_check_wakeup(port->subordinate);
++		up_read(&pci_bus_sem);
++	}
+ 	spin_lock_irq(&data->lock);
+-	pcie_pme_interrupt_enable(port, false);
+-	pcie_clear_root_pme_status(port);
+-	data->noirq = true;
++	if (wakeup) {
++		enable_irq_wake(srv->irq);
++		data->suspend_level = PME_SUSPEND_WAKEUP;
++	} else {
++		struct pci_dev *port = srv->port;
++
++		pcie_pme_interrupt_enable(port, false);
++		pcie_clear_root_pme_status(port);
++		data->suspend_level = PME_SUSPEND_NOIRQ;
++	}
+ 	spin_unlock_irq(&data->lock);
  
--- 
-1.7.10.4
+ 	synchronize_irq(srv->irq);
+@@ -394,12 +430,17 @@ static int pcie_pme_suspend(struct pcie_
+ static int pcie_pme_resume(struct pcie_device *srv)
+ {
+ 	struct pcie_pme_service_data *data = get_service_data(srv);
+-	struct pci_dev *port = srv->port;
+ 
+ 	spin_lock_irq(&data->lock);
+-	data->noirq = false;
+-	pcie_clear_root_pme_status(port);
+-	pcie_pme_interrupt_enable(port, true);
++	if (data->suspend_level == PME_SUSPEND_NOIRQ) {
++		struct pci_dev *port = srv->port;
++
++		pcie_clear_root_pme_status(port);
++		pcie_pme_interrupt_enable(port, true);
++	} else {
++		disable_irq_wake(srv->irq);
++	}
++	data->suspend_level = PME_SUSPEND_NONE;
+ 	spin_unlock_irq(&data->lock);
+ 
+ 	return 0;
 
