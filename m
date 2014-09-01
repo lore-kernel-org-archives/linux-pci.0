@@ -1,119 +1,153 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:53615 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754022AbaIAOL1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Sep 2014 10:11:27 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dmitry Torokhov <dtor@google.com>,
+	Aubrey Li <aubrey.li@intel.com>
+Subject: [PATCH 03/13] genirq: Add sanity checks for PM options on shared interrupt lines
+Date: Mon, 01 Sep 2014 16:21:18 +0200
+Message-ID: <1858713.x4D7GFtaer@vostro.rjw.lan>
+In-Reply-To: <2516134.pmOxkEuOOy@vostro.rjw.lan>
+References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan> <2516134.pmOxkEuOOy@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20140926212052.GA6030@borg.dudau.co.uk>
-References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
- <1411498874-9864-9-git-send-email-Liviu.Dudau@arm.com> <CAL_Jsq+j40Xf208wCf4as3H=cDU=htJ-JWinB0DjpcORjatNXQ@mail.gmail.com>
- <20140926212052.GA6030@borg.dudau.co.uk>
-From: Rob Herring <robherring2@gmail.com>
-Date: Fri, 26 Sep 2014 16:53:26 -0500
-Message-ID: <CAL_JsqKJ6bfPuOofo4grVm3qW_WOpUzcS1juZvHxZdFyyF_19A@mail.gmail.com>
-Subject: Re: [PATCH v12 08/12] PCI: OF: Introduce helper function for
- retrieving PCI domain numbers
-To: Rob Herring <robherring2@gmail.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Grant Likely <grant.likely@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 26, 2014 at 4:20 PM,  <liviu@dudau.co.uk> wrote:
-> On Fri, Sep 26, 2014 at 01:20:39PM -0500, Rob Herring wrote:
->> On Tue, Sep 23, 2014 at 2:01 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
->> > Add pci_get_new_domain_nr() to allocate a new domain number
->> > and of_get_pci_domain_nr() to retrieve the PCI domain number
->> > of a given device from DT. Host bridge drivers or architecture
->> > specific code can choose to implement their PCI domain number
->> > policy using these two functions.
->> >
->> > Using of_get_pci_domain_nr() guarantees a stable PCI domain
->> > number on every boot provided that all host bridge controllers
->> > are assigned a number in the device tree using "linux,pci-domain"
->> > property. Mix use of pci_get_new_domain_nr() and of_get_pci_domain_nr()
->> > is not recommended as it can lead to potentially conflicting
->> > domain numbers being assigned to root busses behind different
->> > host bridges.
->> >
->> > Cc: Bjorn Helgaas <bhelgaas@google.com>
->> > Cc: Arnd Bergmann <arnd@arndb.de>
->> > Cc: Grant Likely <grant.likely@linaro.org>
->> > Cc: Rob Herring <robh+dt@kernel.org>
->> > Cc: Catalin Marinas <catalin.marinas@arm.com>
->> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
->>
->> Looks pretty good, but a couple of comments that can be addressed as
->> follow-up patches.
->>
->> > ---
->> >  drivers/of/of_pci.c    | 25 +++++++++++++++++++++++++
->> >  drivers/pci/pci.c      |  9 +++++++++
->> >  include/linux/of_pci.h |  7 +++++++
->> >  include/linux/pci.h    |  3 +++
->> >  4 files changed, 44 insertions(+)
->> >
->> > diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
->> > index 8481996..82d172f 100644
->> > --- a/drivers/of/of_pci.c
->> > +++ b/drivers/of/of_pci.c
->> > @@ -89,6 +89,31 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
->> >  }
->> >  EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
->> >
->> > +/**
->> > + * This function will try to obtain the host bridge domain number by
->> > + * finding a property called "linux,pci-domain" of the given device node.
->> > + *
->> > + * @node: device tree node with the domain information
->> > + *
->> > + * Returns the associated domain number from DT in the range [0-0xffff], or
->> > + * a negative value if the required property is not found.
->> > + */
->> > +int of_get_pci_domain_nr(struct device_node *node)
->> > +{
->> > +       const __be32 *value;
->> > +       int len;
->> > +       u16 domain;
->> > +
->> > +       value = of_get_property(node, "linux,pci-domain", &len);
->>
->> This needs to be documented.
->
-> I would say needs agreed on *and* documented.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-I thought Bjorn already applied the series. Who's agreement are you
-waiting for specifically.
+Account the IRQF_NO_SUSPEND and IRQF_RESUME_EARLY actions on shared
+interrupt lines and yell loudly if there is a mismatch.
 
->>
->> > +       if (!value || len < sizeof(*value))
->> > +               return -EINVAL;
->> > +
->> > +       domain = (u16)be32_to_cpup(value);
->>
->> of_property_read_u32 would not work here?
->
-> It should, I guess, but I want to limit the domain number range to 16 bits.
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ include/linux/irqdesc.h |   10 ++++++++++
+ kernel/irq/internals.h  |   10 ++++++++++
+ kernel/irq/manage.c     |    4 ++++
+ kernel/irq/pm.c         |   36 ++++++++++++++++++++++++++++++++++++
+ 4 files changed, 60 insertions(+)
 
-Okay, but it would still be fewer lines to use of_property_read_u32
-and then cast it. You could use the u16 variant and make the property
-be defined to be 16-bit in the documentation.
+Index: linux/include/linux/irqdesc.h
+===================================================================
+--- linux.orig/include/linux/irqdesc.h
++++ linux/include/linux/irqdesc.h
+@@ -36,6 +36,11 @@ struct irq_desc;
+  * @threads_oneshot:	bitfield to handle shared oneshot threads
+  * @threads_active:	number of irqaction threads currently running
+  * @wait_for_threads:	wait queue for sync_irq to wait for threaded handlers
++ * @nr_actions:		number of installed actions on this descriptor
++ * @no_suspend_depth:	number of irqactions on a irq descriptor with
++ *			IRQF_NO_SUSPEND set
++ * @force_resume_depth:	number of irqactions on a irq descriptor with
++ *			IRQF_FORCE_RESUME set
+  * @dir:		/proc/irq/ procfs entry
+  * @name:		flow handler name for /proc/interrupts output
+  */
+@@ -68,6 +73,11 @@ struct irq_desc {
+ 	unsigned long		threads_oneshot;
+ 	atomic_t		threads_active;
+ 	wait_queue_head_t       wait_for_threads;
++#ifdef CONFIG_PM_SLEEP
++	unsigned int		nr_actions;
++	unsigned int		no_suspend_depth;
++	unsigned int		force_resume_depth;
++#endif
+ #ifdef CONFIG_PROC_FS
+ 	struct proc_dir_entry	*dir;
+ #endif
+Index: linux/kernel/irq/internals.h
+===================================================================
+--- linux.orig/kernel/irq/internals.h
++++ linux/kernel/irq/internals.h
+@@ -194,3 +194,13 @@ static inline void kstat_incr_irqs_this_
+ 	__this_cpu_inc(*desc->kstat_irqs);
+ 	__this_cpu_inc(kstat.irqs_sum);
+ }
++
++#ifdef CONFIG_PM_SLEEP
++void irq_pm_install_action(struct irq_desc *desc, struct irqaction *action);
++void irq_pm_remove_action(struct irq_desc *desc, struct irqaction *action);
++#else
++static inline void
++irq_pm_install_action(struct irq_desc *desc, struct irqaction *action) { }
++static inline void
++irq_pm_remove_action(struct irq_desc *desc, struct irqaction *action) { }
++#endif
+Index: linux/kernel/irq/manage.c
+===================================================================
+--- linux.orig/kernel/irq/manage.c
++++ linux/kernel/irq/manage.c
+@@ -1200,6 +1200,8 @@ __setup_irq(unsigned int irq, struct irq
+ 	new->irq = irq;
+ 	*old_ptr = new;
+ 
++	irq_pm_install_action(desc, new);
++
+ 	/* Reset broken irq detection when installing new handler */
+ 	desc->irq_count = 0;
+ 	desc->irqs_unhandled = 0;
+@@ -1318,6 +1320,8 @@ static struct irqaction *__free_irq(unsi
+ 	/* Found it - now remove it from the list of entries: */
+ 	*action_ptr = action->next;
+ 
++	irq_pm_remove_action(desc, action);
++
+ 	/* If this was the last handler, shut down the IRQ line: */
+ 	if (!desc->action) {
+ 		irq_shutdown(desc);
+Index: linux/kernel/irq/pm.c
+===================================================================
+--- linux.orig/kernel/irq/pm.c
++++ linux/kernel/irq/pm.c
+@@ -13,6 +13,42 @@
+ 
+ #include "internals.h"
+ 
++/*
++ * Called from __setup_irq() with desc->lock held after @action has
++ * been installed in the action chain.
++ */
++void irq_pm_install_action(struct irq_desc *desc, struct irqaction *action)
++{
++	desc->nr_actions++;
++
++	if (action->flags & IRQF_FORCE_RESUME)
++		desc->force_resume_depth++;
++
++	WARN_ON_ONCE(desc->force_resume_depth &&
++		     desc->force_resume_depth != desc->nr_actions);
++
++	if (action->flags & IRQF_NO_SUSPEND)
++		desc->no_suspend_depth++;
++
++	WARN_ON_ONCE(desc->no_suspend_depth &&
++		     desc->no_suspend_depth != desc->nr_actions);
++}
++
++/*
++ * Called from __free_irq() with desc->lock held after @action has
++ * been removed from the action chain.
++ */
++void irq_pm_remove_action(struct irq_desc *desc, struct irqaction *action)
++{
++	desc->nr_actions--;
++
++	if (action->flags & IRQF_FORCE_RESUME)
++		desc->force_resume_depth--;
++
++	if (action->flags & IRQF_NO_SUSPEND)
++		desc->no_suspend_depth--;
++}
++
+ static void suspend_device_irq(struct irq_desc *desc, int irq)
+ {
+ 	if (!desc->action || (desc->action->flags & IRQF_NO_SUSPEND))
 
-Rob
