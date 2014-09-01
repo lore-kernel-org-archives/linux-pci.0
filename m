@@ -1,70 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f51.google.com ([209.85.216.51]:51974 "EHLO
-	mail-qa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752880AbaIJWNb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Sep 2014 18:13:31 -0400
-Received: by mail-qa0-f51.google.com with SMTP id i13so139149qae.38
-        for <linux-pci@vger.kernel.org>; Wed, 10 Sep 2014 15:13:31 -0700 (PDT)
+Received: from v094114.home.net.pl ([79.96.170.134]:52284 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753729AbaIAOL3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Sep 2014 10:11:29 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Cc: Peter Zijlstra <peterz@infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dmitry Torokhov <dtor@google.com>,
+	Aubrey Li <aubrey.li@intel.com>
+Subject: [PATCH 00/13] genirq / PM: Wakeup interrupts handling rework (related to suspend-to-idle)
+Date: Mon, 01 Sep 2014 16:18:47 +0200
+Message-ID: <2516134.pmOxkEuOOy@vostro.rjw.lan>
+In-Reply-To: <5320472.coYotHR1d0@vostro.rjw.lan>
+References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CAG-92OOEkNOPmmyHP0=UGcT+qusPkWp7vy_qZCe6YEwKG27B6g@mail.gmail.com>
-References: <CAG-92OOEkNOPmmyHP0=UGcT+qusPkWp7vy_qZCe6YEwKG27B6g@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 10 Sep 2014 16:13:10 -0600
-Message-ID: <CAErSpo4g6GXwWLvh4qGLvXH-1bCrWKf-Pjf4pAWsoB05NYSmFw@mail.gmail.com>
-Subject: Re: Running Adobe Flash triggers PCI bus failure
-To: aw ful <awfl.awfl@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Josh Boyer <jwboyer@redhat.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Josh, Myron]
+Hi,
 
-On Wed, Sep 10, 2014 at 10:10 AM, aw ful <awfl.awfl@gmail.com> wrote:
-> I have a hardware system that is otherwise extremely stable, however,
-> after 1 minute to 1 day of viewing Flash videos via Firefox a PCI bus
-> fails and manifests in several different ways, including massive
-> ethernet errors and frozen sata devices. This failure can also be
-> invoked using multiple Live distributions, where the only thing I add
-> is installing the Flash plugin from Adobe. Initially believed to be a
-> hardware problem, I now believe it is a long term obscure bug as I
-> have seen related symptoms in various bug reports which were never
-> clearly resolved, and never associated with the flash plugin.
->
-> I am writing to the kernel devs as I can easily make this occur on two
-> distinct Linux distributions - standard Fedora 19, 20 Live, and 21 TC6
-> Live, and Linux Mint 17 Live, experienced across many recent 3.14.17,
-> 3.16.2 kernel versions. The failure occurs on a Asrock AM3+ system
-> with AMD NB and SB. I was not clear how and where to write a further
-> bug report because I can now demonstrate it on multiple distributions.
-> Any assistance is appreciated.
->
-> Detailed information can be found here:
-> https://bugzilla.redhat.com/show_bug.cgi?id=1135801
-> which includes dmesg and lspci -vv
+This set of patches reworks the handling of system wakeup interrupts so that
+suspend-to-idle is covered in the same way as full system suspend.
 
-Thanks for the report!  It sounds like you've reproduced the problem
-on a non-RedHat kernel, so can you open a report at
-http://bugzilla.kernel.org using an unmodified upstream kernel,
-please?
+This time we have several new patches from Thomas and hopefully we're nailed
+down that thing at last.
 
-Please attach "lspci -vv" output (as root) from before the problem and
-another from after, as well as the complete dmesg log.  You mention
-several other bugzilla reports; please include URLs to those as well.
+[01/13] Mechanism to wake up the system or abort suspend in progress
+        automatically (this is different from the previous versions, because
+        I eventually convinced myself that pm_abort_suspend didn't really
+        require any locking).
+[02/13] Move PM-related IRQ code to kernel/irq/pm.c.
+[03/13] Add accounting for IRQF_NO_SUSPEND and IRQF_RESUME_EARLY.
+[04/13] Use the accoundint added by [03/13].
+[05/13] Make suspend_device_irqs() mask non-wakeup interruts if
+        IRQCHIP_MASK_ON_SUSPEND is set.
+[06/13] Synchronize IRQs in the same loop in which they are reconfigured
+        in suspend_device_irqs().
+[07/13] Separate irq_check_poll() checks from disabled/no action checks in
+        kernel/irq/chip.c.
+[08/13] Add a helper for checks made by many IRQ flow handlers in the same way.
+[09/13] Mark wakeup sources as "armed" on suspend (using a new flag).
+[10/13] Make suspend_device_irqs() leave wakeup interrupts enabled, but handle
+        them so that the first interrupt triggers system wakeup.
+[11/13] Set IRQCHIP_SKIP_SET_WAKE for x86 IOAPIC IRQ chips (same as before).
+[12/13] Make PCIe PME wake up from suspend to idle (same as before).
+[13/13] Document rules related to system suspend and interrupts (updated).
 
-You mention "taking down PCI bus"; what specifically do you mean by
-that?  I do see some FFFFFFFF data from ata7 and ata8 in your dmesg,
-which can be a symptom of a device not responding.  ata7 and ata8 seem
-to be on 06:00.0, and your lspci shows UnsupReq+ set in that device's
-AER Capability.  Please also attach "lspci -xxxxs06:00.0" output so we
-can look at that in more detail.
+The series have been tested on MSI Wind, but more testing is welcome.
 
-The atl1c device is at 03:00.0, and your lspci also shows UnsupReq+
-for it, so please also attach "lspci -xxxxs03:00.0" output.
+There is a pm-genirq branch in the linux-pm.git tree containing these patches:
 
-Does your kernel have CONFIG_PCIEAER=y?  If not, can you turn that on
-and see if you see anything useful in dmesg when the problem occurs?
+git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git pm-genirq
 
-Bjorn
+that can be pulled from.
+
+Kind regards,
+Rafael
+
