@@ -1,166 +1,200 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:43367 "EHLO
-	dhcp-27-160.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752711AbaIGS63 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 7 Sep 2014 14:58:29 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 3/3] PCI/MSI: Remove arch_msi_check_device()
-Date: Sun,  7 Sep 2014 20:57:55 +0200
-Message-Id: <50a2f79ce58b6b67b40d7737b21c168131240c31.1410078503.git.agordeev@redhat.com>
-In-Reply-To: <cover.1410078503.git.agordeev@redhat.com>
-References: <cover.1410078503.git.agordeev@redhat.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:53639 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754045AbaIAOL1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Sep 2014 10:11:27 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dmitry Torokhov <dtor@google.com>,
+	Aubrey Li <aubrey.li@intel.com>
+Subject: [PATCH 02/13] genirq: Move suspend/resume logic into irq/pm code
+Date: Mon, 01 Sep 2014 16:20:37 +0200
+Message-ID: <1504806.eH5pWVEYTM@vostro.rjw.lan>
+In-Reply-To: <2516134.pmOxkEuOOy@vostro.rjw.lan>
+References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan> <2516134.pmOxkEuOOy@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are no archs that override arch_msi_check_device()
-hook. Remove it as it is completely redundant.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-If an arch would need to check MSI/MSI-X possibility for a
-device it should make it within arch_setup_msi_irqs() hook.
+No functional change. Preparatory patch for cleaning up the suspend
+abort functionality. Update the comments while at it.
 
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/pci/msi.c   | 49 +++++++++++++------------------------------------
- include/linux/msi.h |  3 ---
- 2 files changed, 13 insertions(+), 39 deletions(-)
+ kernel/irq/internals.h |    4 ++--
+ kernel/irq/manage.c    |   28 +++++-----------------------
+ kernel/irq/pm.c        |   44 ++++++++++++++++++++++++++++++++++++++------
+ 3 files changed, 45 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 5a40516..6c2cc41 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -56,16 +56,6 @@ void __weak arch_teardown_msi_irq(unsigned int irq)
- 	chip->teardown_irq(chip, irq);
+Index: linux/kernel/irq/internals.h
+===================================================================
+--- linux.orig/kernel/irq/internals.h
++++ linux/kernel/irq/internals.h
+@@ -63,8 +63,8 @@ enum {
+ 
+ extern int __irq_set_trigger(struct irq_desc *desc, unsigned int irq,
+ 		unsigned long flags);
+-extern void __disable_irq(struct irq_desc *desc, unsigned int irq, bool susp);
+-extern void __enable_irq(struct irq_desc *desc, unsigned int irq, bool resume);
++extern void __disable_irq(struct irq_desc *desc, unsigned int irq);
++extern void __enable_irq(struct irq_desc *desc, unsigned int irq);
+ 
+ extern int irq_startup(struct irq_desc *desc, bool resend);
+ extern void irq_shutdown(struct irq_desc *desc);
+Index: linux/kernel/irq/manage.c
+===================================================================
+--- linux.orig/kernel/irq/manage.c
++++ linux/kernel/irq/manage.c
+@@ -382,14 +382,8 @@ setup_affinity(unsigned int irq, struct
  }
+ #endif
  
--int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
--{
--	struct msi_chip *chip = dev->bus->msi;
--
--	if (!chip || !chip->check_device)
--		return 0;
--
--	return chip->check_device(chip, dev, nvec, type);
--}
--
- int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+-void __disable_irq(struct irq_desc *desc, unsigned int irq, bool suspend)
++void __disable_irq(struct irq_desc *desc, unsigned int irq)
  {
- 	struct msi_desc *entry;
-@@ -806,22 +796,23 @@ out_free:
+-	if (suspend) {
+-		if (!desc->action || (desc->action->flags & IRQF_NO_SUSPEND))
+-			return;
+-		desc->istate |= IRQS_SUSPENDED;
+-	}
+-
+ 	if (!desc->depth++)
+ 		irq_disable(desc);
  }
+@@ -401,7 +395,7 @@ static int __disable_irq_nosync(unsigned
  
- /**
-- * pci_msi_check_device - check whether MSI may be enabled on a device
-+ * pci_msi_supported - check whether MSI may be enabled on a device
-  * @dev: pointer to the pci_dev data structure of MSI device function
-  * @nvec: how many MSIs have been requested ?
-- * @type: are we checking for MSI or MSI-X ?
-  *
-  * Look at global flags, the device itself, and its parent buses
-  * to determine if MSI/-X are supported for the device. If MSI/-X is
-  * supported return 0, else return an error code.
-  **/
--static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
-+static int pci_msi_supported(struct pci_dev *dev, int nvec)
- {
- 	struct pci_bus *bus;
--	int ret;
- 
- 	/* MSI must be globally enabled and supported by the device */
--	if (!pci_msi_enable || !dev || dev->no_msi)
-+	if (!pci_msi_enable)
-+		return -EINVAL;
-+
-+	if (!dev || dev->no_msi || dev->current_state != PCI_D0)
+ 	if (!desc)
  		return -EINVAL;
- 
- 	/*
-@@ -843,10 +834,6 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
- 		if (bus->bus_flags & PCI_BUS_FLAGS_NO_MSI)
- 			return -EINVAL;
- 
--	ret = arch_msi_check_device(dev, nvec, type);
--	if (ret)
--		return ret;
--
+-	__disable_irq(desc, irq, false);
++	__disable_irq(desc, irq);
+ 	irq_put_desc_busunlock(desc, flags);
  	return 0;
  }
+@@ -442,20 +436,8 @@ void disable_irq(unsigned int irq)
+ }
+ EXPORT_SYMBOL(disable_irq);
  
-@@ -949,13 +936,13 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
- 	int status, nr_entries;
- 	int i, j;
- 
--	if (!entries || !dev->msix_cap || dev->current_state != PCI_D0)
--		return -EINVAL;
--
--	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
-+	status = pci_msi_supported(dev, nvec);
- 	if (status)
- 		return status;
- 
-+	if (!entries)
-+		return -EINVAL;
-+
- 	nr_entries = pci_msix_vec_count(dev);
- 	if (nr_entries < 0)
- 		return nr_entries;
-@@ -1062,8 +1049,9 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
- 	int nvec;
- 	int rc;
- 
--	if (dev->current_state != PCI_D0)
--		return -EINVAL;
-+	rc = pci_msi_supported(dev, minvec);
-+	if (rc)
-+		return rc;
- 
- 	WARN_ON(!!dev->msi_enabled);
- 
-@@ -1086,17 +1074,6 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
- 		nvec = maxvec;
- 
- 	do {
--		rc = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
--		if (rc < 0) {
--			return rc;
--		} else if (rc > 0) {
--			if (rc < minvec)
--				return -ENOSPC;
--			nvec = rc;
+-void __enable_irq(struct irq_desc *desc, unsigned int irq, bool resume)
++void __enable_irq(struct irq_desc *desc, unsigned int irq)
+ {
+-	if (resume) {
+-		if (!(desc->istate & IRQS_SUSPENDED)) {
+-			if (!desc->action)
+-				return;
+-			if (!(desc->action->flags & IRQF_FORCE_RESUME))
+-				return;
+-			/* Pretend that it got disabled ! */
+-			desc->depth++;
 -		}
--	} while (rc);
+-		desc->istate &= ~IRQS_SUSPENDED;
+-	}
 -
--	do {
- 		rc = msi_capability_init(dev, nvec);
- 		if (rc < 0) {
- 			return rc;
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 8103f32..dbf7cc9 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -60,7 +60,6 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
- void arch_teardown_msi_irq(unsigned int irq);
- int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- void arch_teardown_msi_irqs(struct pci_dev *dev);
--int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
- void arch_restore_msi_irqs(struct pci_dev *dev);
+ 	switch (desc->depth) {
+ 	case 0:
+  err_out:
+@@ -497,7 +479,7 @@ void enable_irq(unsigned int irq)
+ 		 KERN_ERR "enable_irq before setup/request_irq: irq %u\n", irq))
+ 		goto out;
  
- void default_teardown_msi_irqs(struct pci_dev *dev);
-@@ -77,8 +76,6 @@ struct msi_chip {
- 	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
- 			 struct msi_desc *desc);
- 	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
--	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
--			    int nvec, int type);
- };
+-	__enable_irq(desc, irq, false);
++	__enable_irq(desc, irq);
+ out:
+ 	irq_put_desc_busunlock(desc, flags);
+ }
+@@ -1228,7 +1210,7 @@ __setup_irq(unsigned int irq, struct irq
+ 	 */
+ 	if (shared && (desc->istate & IRQS_SPURIOUS_DISABLED)) {
+ 		desc->istate &= ~IRQS_SPURIOUS_DISABLED;
+-		__enable_irq(desc, irq, false);
++		__enable_irq(desc, irq);
+ 	}
  
- #endif /* LINUX_MSI_H */
--- 
-1.9.3
+ 	raw_spin_unlock_irqrestore(&desc->lock, flags);
+Index: linux/kernel/irq/pm.c
+===================================================================
+--- linux.orig/kernel/irq/pm.c
++++ linux/kernel/irq/pm.c
+@@ -13,13 +13,26 @@
+ 
+ #include "internals.h"
+ 
++static void suspend_device_irq(struct irq_desc *desc, int irq)
++{
++	if (!desc->action || (desc->action->flags & IRQF_NO_SUSPEND))
++		return;
++
++	desc->istate |= IRQS_SUSPENDED;
++	__disable_irq(desc, irq);
++}
++
+ /**
+  * suspend_device_irqs - disable all currently enabled interrupt lines
+  *
+- * During system-wide suspend or hibernation device drivers need to be prevented
+- * from receiving interrupts and this function is provided for this purpose.
+- * It marks all interrupt lines in use, except for the timer ones, as disabled
+- * and sets the IRQS_SUSPENDED flag for each of them.
++ * During system-wide suspend or hibernation device drivers need to be
++ * prevented from receiving interrupts and this function is provided
++ * for this purpose.
++ *
++ * So we disable all interrupts and mark them IRQS_SUSPENDED except
++ * for those which are unused and those which are marked as not
++ * suspendable via an interrupt request with the flag IRQF_NO_SUSPEND
++ * set.
+  */
+ void suspend_device_irqs(void)
+ {
+@@ -30,7 +43,7 @@ void suspend_device_irqs(void)
+ 		unsigned long flags;
+ 
+ 		raw_spin_lock_irqsave(&desc->lock, flags);
+-		__disable_irq(desc, irq, true);
++		suspend_device_irq(desc, irq);
+ 		raw_spin_unlock_irqrestore(&desc->lock, flags);
+ 	}
+ 
+@@ -40,6 +53,25 @@ void suspend_device_irqs(void)
+ }
+ EXPORT_SYMBOL_GPL(suspend_device_irqs);
+ 
++static void resume_irq(struct irq_desc *desc, int irq)
++{
++	if (desc->istate & IRQS_SUSPENDED)
++		goto resume;
++
++	if (!desc->action)
++		return;
++
++	/* Interrupts marked with that flag are force reenabled */
++	if (!(desc->action->flags & IRQF_FORCE_RESUME))
++		return;
++
++	/* Pretend that it got disabled ! */
++	desc->depth++;
++resume:
++	desc->istate &= ~IRQS_SUSPENDED;
++	__enable_irq(desc, irq);
++}
++
+ static void resume_irqs(bool want_early)
+ {
+ 	struct irq_desc *desc;
+@@ -54,7 +86,7 @@ static void resume_irqs(bool want_early)
+ 			continue;
+ 
+ 		raw_spin_lock_irqsave(&desc->lock, flags);
+-		__enable_irq(desc, irq, true);
++		resume_irq(desc, irq);
+ 		raw_spin_unlock_irqrestore(&desc->lock, flags);
+ 	}
+ }
 
