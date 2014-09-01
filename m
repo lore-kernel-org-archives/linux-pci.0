@@ -1,45 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51571 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751789AbaIGTHM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 7 Sep 2014 15:07:12 -0400
-Date: Sun, 7 Sep 2014 21:07:00 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 0/2] PCI/MSI: Remove arch_msi_check_device()
-Message-ID: <20140907190659.GA23249@dhcp-27-160.brq.redhat.com>
-References: <cover.1405160163.git.agordeev@redhat.com>
- <20140905212528.GG8080@google.com>
- <CAErSpo4XN01hgTUpcca=i-=LFV_bM-Cok8614LJzrOfVbx8MAA@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dmitry Torokhov <dtor@google.com>,
+	Aubrey Li <aubrey.li@intel.com>
+Subject: [PATCH 11/13] x86 / PM: Set IRQCHIP_SKIP_SET_WAKE for IOAPIC IRQ chip objects
+Date: Mon, 01 Sep 2014 16:28:01 +0200
+Message-ID: <1604186.gKriExSOTM@vostro.rjw.lan>
+In-Reply-To: <2516134.pmOxkEuOOy@vostro.rjw.lan>
+References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan> <2516134.pmOxkEuOOy@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4XN01hgTUpcca=i-=LFV_bM-Cok8614LJzrOfVbx8MAA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 05, 2014 at 03:27:49PM -0600, Bjorn Helgaas wrote:
-> > I applied these (with Michael's ack on the first, and v2 of the second) to
-> > pci/msi for v3.18, thanks!
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Hi Bjorn,
+Set the IRQCHIP_SKIP_SET_WAKE for IOAPIC IRQ chip objects so that
+interrupts from them can work as wakeup interrupts for suspend-to-idle.
 
-I resent a series with updates that fix kbuild robot errors.
-Hopefully, the rebase for pci/msi would not cause trouble for anyone.
+After this change, running enable_irq_wake() on one of the IRQs in
+question will succeed and IRQD_WAKEUP_STATE will be set for it, so
+all of the suspend-to-idle wakeup mechanics introduced previously
+will work for it automatically.
 
-> Oh, I forgot -- if you'd rather take the first one through the PPC
-> tree, you can do that and I can merge the second one later.  Let me
-> know if you want to do that.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ arch/x86/kernel/apic/io_apic.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-Nah, your treee is just fine.
+Index: linux-pm/arch/x86/kernel/apic/io_apic.c
+===================================================================
+--- linux-pm.orig/arch/x86/kernel/apic/io_apic.c
++++ linux-pm/arch/x86/kernel/apic/io_apic.c
+@@ -2618,6 +2618,7 @@ static struct irq_chip ioapic_chip __rea
+ 	.irq_eoi		= ack_apic_level,
+ 	.irq_set_affinity	= native_ioapic_set_affinity,
+ 	.irq_retrigger		= ioapic_retrigger_irq,
++	.flags			= IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+ static inline void init_IO_APIC_traps(void)
+@@ -3168,6 +3169,7 @@ static struct irq_chip msi_chip = {
+ 	.irq_ack		= ack_apic_edge,
+ 	.irq_set_affinity	= msi_set_affinity,
+ 	.irq_retrigger		= ioapic_retrigger_irq,
++	.flags			= IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+@@ -3266,6 +3268,7 @@ static struct irq_chip dmar_msi_type = {
+ 	.irq_ack		= ack_apic_edge,
+ 	.irq_set_affinity	= dmar_msi_set_affinity,
+ 	.irq_retrigger		= ioapic_retrigger_irq,
++	.flags			= IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+ int arch_setup_dmar_msi(unsigned int irq)
+@@ -3316,6 +3319,7 @@ static struct irq_chip hpet_msi_type = {
+ 	.irq_ack = ack_apic_edge,
+ 	.irq_set_affinity = hpet_msi_set_affinity,
+ 	.irq_retrigger = ioapic_retrigger_irq,
++	.flags = IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+ int default_setup_hpet_msi(unsigned int irq, unsigned int id)
+@@ -3379,6 +3383,7 @@ static struct irq_chip ht_irq_chip = {
+ 	.irq_ack		= ack_apic_edge,
+ 	.irq_set_affinity	= ht_set_affinity,
+ 	.irq_retrigger		= ioapic_retrigger_irq,
++	.flags			= IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+ int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
 
-Thanks!
-
-> Bjorn
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
