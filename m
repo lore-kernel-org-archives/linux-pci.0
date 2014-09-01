@@ -1,44 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:62128 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750701AbaIBEDt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Sep 2014 00:03:49 -0400
-Received: by mail-ie0-f182.google.com with SMTP id rd18so6962476iec.41
-        for <linux-pci@vger.kernel.org>; Mon, 01 Sep 2014 21:03:49 -0700 (PDT)
-Subject: [PATCH] lspci: Correct Root Capabilities "CRS Software Visibility"
- bit
-To: Martin Mares <mj@ucw.cz>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, rajatxjain@gmail.com
-Date: Mon, 01 Sep 2014 22:03:46 -0600
-Message-ID: <20140902040346.18691.58345.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:50204 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753987AbaIAOLZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Sep 2014 10:11:25 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dmitry Torokhov <dtor@google.com>,
+	Aubrey Li <aubrey.li@intel.com>
+Subject: [PATCH 05/13] genirq: Move MASK_ON_SUSPEND handling into suspend_device_irqs()
+Date: Mon, 01 Sep 2014 16:22:48 +0200
+Message-ID: <2238551.UOAGsm8nN1@vostro.rjw.lan>
+In-Reply-To: <2516134.pmOxkEuOOy@vostro.rjw.lan>
+References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan> <2516134.pmOxkEuOOy@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-lspci incorrectly tests bit 4, not bit 0, for "CRS Software Visibility" in
-the Root Capabilities register, so it shows "RootCap: CRSVisible-" even for
-devices that do support Software Visibility.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-Use the correct definition for PCI_EXP_RTCAP_CRSVIS.
+There is no reason why we should delay the masking of interrupts whose
+interrupt chip requests MASK_ON_SUSPEND to the point where we check
+the wakeup interrupts. We can do it right at the point where we mark
+the interrupt as suspended.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- lib/header.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ kernel/irq/pm.c |   21 +++++++++------------
+ 1 file changed, 9 insertions(+), 12 deletions(-)
 
-diff --git a/lib/header.h b/lib/header.h
-index db85df1..8ee7565 100644
---- a/lib/header.h
-+++ b/lib/header.h
-@@ -842,7 +842,7 @@
- #define  PCI_EXP_RTCTL_PMEIE	0x0008	/* PME Interrupt Enable */
- #define  PCI_EXP_RTCTL_CRSVIS	0x0010	/* Configuration Request Retry Status Visible to SW */
- #define PCI_EXP_RTCAP		0x1e	/* Root Capabilities */
--#define  PCI_EXP_RTCAP_CRSVIS	0x0010	/* Configuration Request Retry Status Visible to SW */
-+#define  PCI_EXP_RTCAP_CRSVIS	0x0001	/* Configuration Request Retry Status Visible to SW */
- #define PCI_EXP_RTSTA		0x20	/* Root Status */
- #define  PCI_EXP_RTSTA_PME_REQID   0x0000ffff /* PME Requester ID */
- #define  PCI_EXP_RTSTA_PME_STATUS  0x00010000 /* PME Status */
+Index: linux/kernel/irq/pm.c
+===================================================================
+--- linux.orig/kernel/irq/pm.c
++++ linux/kernel/irq/pm.c
+@@ -56,6 +56,15 @@ static void suspend_device_irq(struct ir
+ 
+ 	desc->istate |= IRQS_SUSPENDED;
+ 	__disable_irq(desc, irq);
++
++	/*
++	 * Hardware which has no wakeup source configuration facility
++	 * requires that the non wakeup interrupts are masked at the
++	 * chip level. The chip implementation indicates that with
++	 * IRQCHIP_MASK_ON_SUSPEND.
++	 */
++	if (irq_desc_get_chip(desc)->flags & IRQCHIP_MASK_ON_SUSPEND)
++		mask_irq(desc);
+ }
+ 
+ /**
+@@ -176,19 +185,7 @@ int check_wakeup_irqs(void)
+ 		if (irqd_is_wakeup_set(&desc->irq_data)) {
+ 			if (desc->depth == 1 && desc->istate & IRQS_PENDING)
+ 				return -EBUSY;
+-			continue;
+ 		}
+-		/*
+-		 * Check the non wakeup interrupts whether they need
+-		 * to be masked before finally going into suspend
+-		 * state. That's for hardware which has no wakeup
+-		 * source configuration facility. The chip
+-		 * implementation indicates that with
+-		 * IRQCHIP_MASK_ON_SUSPEND.
+-		 */
+-		if (desc->istate & IRQS_SUSPENDED &&
+-		    irq_desc_get_chip(desc)->flags & IRQCHIP_MASK_ON_SUSPEND)
+-			mask_irq(desc);
+ 	}
+ 
+ 	return 0;
 
