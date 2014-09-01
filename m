@@ -1,64 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:56240 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751091AbaI3JLh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 05:11:37 -0400
+Received: from v094114.home.net.pl ([79.96.170.134]:55801 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754016AbaIAOL0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Sep 2014 10:11:26 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dmitry Torokhov <dtor@google.com>,
+	Aubrey Li <aubrey.li@intel.com>
+Subject: [PATCH 04/13] genirq: Make use of pm misfeature accounting
+Date: Mon, 01 Sep 2014 16:22:02 +0200
+Message-ID: <1544653.nbssNZd6vM@vostro.rjw.lan>
+In-Reply-To: <2516134.pmOxkEuOOy@vostro.rjw.lan>
+References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan> <2516134.pmOxkEuOOy@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CAL_JsqK2bqsbjEf2OngL2=Xr8t0AUobb_bd43BV4t9iXY-n6KQ@mail.gmail.com>
-References: <1411573068-12952-1-git-send-email-rric@kernel.org>
-	<1411573068-12952-4-git-send-email-rric@kernel.org>
-	<3082935.e3X4GsVUDn@wuerfel>
-	<CAL_JsqK2bqsbjEf2OngL2=Xr8t0AUobb_bd43BV4t9iXY-n6KQ@mail.gmail.com>
-Date: Tue, 30 Sep 2014 14:41:35 +0530
-Message-ID: <CA+sq2Cc3isZThykhCU=nzFx0BYFvmv+qCTHTuE48bjN+FdVjfA@mail.gmail.com>
-Subject: Re: [PATCH 3/6] pci, thunder: Add PCIe host controller devicetree bindings
-From: Sunil Kovvuri <sunil.kovvuri@gmail.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Robert Richter <rric@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Robert Richter <rrichter@cavium.com>,
-	Sunil Goutham <sgoutham@cavium.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks for pointing correction ROB.
-Will fix it.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-On Fri, Sep 26, 2014 at 11:56 PM, Rob Herring <robherring2@gmail.com> wrote:
-> On Wed, Sep 24, 2014 at 11:06 AM, Arnd Bergmann <arnd@arndb.de> wrote:
->> On Wednesday 24 September 2014 17:37:45 Robert Richter wrote:
->>>
->>> +       pcie0@0x8480,00000000 {
->>
->> The name should be pci, not pci0.
->
-> And the address should be "@848000000000". There was some confusion
-> about when the comma should be used and it is only if you have things
-> like PCI bus, device, function for the addressing.
->
->
->>
->>> +               compatible = "cavium,thunder-pcie";
->
-> A bit too generic as many of the Cavium bindings have been.
->
-> Rob
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Use the accounting fields which got introduced for snity checking for
+the various PM options.
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ kernel/irq/pm.c |    9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+Index: linux/kernel/irq/pm.c
+===================================================================
+--- linux.orig/kernel/irq/pm.c
++++ linux/kernel/irq/pm.c
+@@ -51,7 +51,7 @@ void irq_pm_remove_action(struct irq_des
+ 
+ static void suspend_device_irq(struct irq_desc *desc, int irq)
+ {
+-	if (!desc->action || (desc->action->flags & IRQF_NO_SUSPEND))
++	if (!desc->action || desc->no_suspend_depth)
+ 		return;
+ 
+ 	desc->istate |= IRQS_SUSPENDED;
+@@ -94,11 +94,8 @@ static void resume_irq(struct irq_desc *
+ 	if (desc->istate & IRQS_SUSPENDED)
+ 		goto resume;
+ 
+-	if (!desc->action)
+-		return;
+-
+-	/* Interrupts marked with that flag are force reenabled */
+-	if (!(desc->action->flags & IRQF_FORCE_RESUME))
++	/* Force resume the interrupt? */
++	if (!desc->force_resume_depth)
+ 		return;
+ 
+ 	/* Pretend that it got disabled ! */
+
