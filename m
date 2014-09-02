@@ -1,82 +1,207 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:36036 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754681AbaIWJ4e (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 05:56:34 -0400
-Message-ID: <1411466190.3256.7.camel@pengutronix.de>
-Subject: Re: [PATCH v2 2/5] PCI: imx6: wait the clocks to stabilize after
- ref_en
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Richard Zhu <r65037@freescale.com>
-Cc: linux-pci-owner@vger.kernel.org, linux-pci@vger.kernel.org,
-	shawn.guo@freescale.com, festevam@gmail.com, tharvey@gateworks.com
-Date: Tue, 23 Sep 2014 11:56:30 +0200
-In-Reply-To: <1411445498-20250-3-git-send-email-r65037@freescale.com>
-References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
-	 <1411445498-20250-3-git-send-email-r65037@freescale.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:63453 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751832AbaIBDpl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Sep 2014 23:45:41 -0400
+Message-ID: <54053CDD.90300@huawei.com>
+Date: Tue, 2 Sep 2014 11:43:25 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+CC: linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v9 03/12] PCI: Introduce helper functions to deal with
+ PCI I/O ranges.
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com> <1407860725-25202-4-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1407860725-25202-4-git-send-email-Liviu.Dudau@arm.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Dienstag, den 23.09.2014, 12:11 +0800 schrieb Richard Zhu:
-> - a while delay is mandatory required after pcie_ref_clk_en
-> is set. Otherwise, the system would be hang on imx6qdl ard
-> boards, because that imx6qdl boards don't have the reset_gpio.
-> - the clocks should be stable already after the
-> "clk_prepare_enable" is return. So I think it's ok to move the
-> usleep delay after the pcie_ref_en is set.
+On 2014/8/13 0:25, Liviu Dudau wrote:
+> Some architectures do not have a simple view of the PCI I/O space
+> and instead use a range of CPU addresses that map to bus addresses.
+> For some architectures these ranges will be expressed by OF bindings
+> in a device tree file.
 > 
-
-You are describing a lot of the conditions around the issue, but not the
-issue itself, which makes it hard to follow your commit message. After
-looking at the code I think the problem is this (and should be described
-accordingly):
-
-For boards without a reset gpio we skip the delay between enabling the
-pcie_ref_clk and touching the RC registers for configuration. Apparently
-this hangs when the clocks are not yet settled in the DW PCIe core. So
-we need to make sure that there is always an appropriate delay between
-those two actions.
-
-I have not found this constraint anywhere in the i.MX6 Reference Manual,
-nor in the DW PCIe documents I have access to, which makes me a bit feel
-a bit unhappy about this. Richard, do you have better info on why this
-delay is needed and how long it needs to be? Or is this just empirical?
-
-In general I'm ok with this patch, but still want a confirmation from
-Tim that this doesn't break anything.
-
-> Signed-off-by: Richard Zhu <r65037@freescale.com>
+> This patch introduces a pci_register_io_range() helper function with
+> a generic implementation that can be used by such architectures to
+> keep track of the I/O ranges described by the PCI bindings. If the
+> PCI_IOBASE macro is not defined that signals lack of support for PCI
+> and we return an error.
+> 
+> In order to retrieve the CPU address associated with an I/O port, a
+> new helper function pci_pio_to_address() is introduced. This will
+> search in the list of ranges registered with pci_register_io_range()
+> and return the CPU address that corresponds to the given port.
+> 
+> Cc: Grant Likely <grant.likely@linaro.org>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 > ---
->  drivers/pci/host/pci-imx6.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+>  drivers/of/address.c       | 95 ++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/of_address.h |  2 +
+>  2 files changed, 97 insertions(+)
 > 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 233fe8a..bc4222b 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -275,15 +275,15 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
->  		goto err_pcie;
->  	}
+> diff --git a/drivers/of/address.c b/drivers/of/address.c
+> index 5edfcb0..4dab700 100644
+> --- a/drivers/of/address.c
+> +++ b/drivers/of/address.c
+> @@ -5,6 +5,7 @@
+>  #include <linux/module.h>
+>  #include <linux/of_address.h>
+>  #include <linux/pci_regs.h>
+> +#include <linux/slab.h>
+>  #include <linux/string.h>
 >  
-> -	/* allow the clocks to stabilize */
-> -	usleep_range(200, 500);
-> -
->  	/* power up core phy and enable ref clock */
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
->  			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
->  			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+>  /* Max address size we deal with */
+> @@ -601,12 +602,106 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+>  }
+>  EXPORT_SYMBOL(of_get_address);
 >  
-> +	/* allow the clocks to stabilize */
-> +	usleep_range(200, 500);
+> +#ifdef PCI_IOBASE
+> +struct io_range {
+> +	struct list_head list;
+> +	phys_addr_t start;
+> +	resource_size_t size;
+> +};
 > +
->  	/* Some boards don't have PCIe reset GPIO. */
->  	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
->  		gpio_set_value(imx6_pcie->reset_gpio, 0);
+> +static LIST_HEAD(io_range_list);
+> +static DEFINE_SPINLOCK(io_range_lock);
+> +#endif
+> +
+> +/*
+> + * Record the PCI IO range (expressed as CPU physical address + size).
+> + * Return a negative value if an error has occured, zero otherwise
+> + */
+> +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> +{
+> +#ifdef PCI_IOBASE
+> +	struct io_range *range;
+> +	resource_size_t allocated_size = 0;
+> +
+> +	/* check if the range hasn't been previously recorded */
+> +	spin_lock(&io_range_lock);
+> +	list_for_each_entry(range, &io_range_list, list) {
+> +		if (addr >= range->start && addr + size <= range->start + size)
+> +			return 0;
+> +		allocated_size += range->size;
+> +	}
+> +	spin_unlock(&io_range_lock);
+> +
+> +	/* range not registed yet, check for available space */
+> +	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
+> +		/* if it's too big check if 64K space can be reserved */
+> +		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT)
+> +			return -E2BIG;
+> +
+> +		size = SZ_64K;
+> +		pr_warn("Requested IO range too big, new size set to 64K\n");
+> +	}
+> +
+> +	/* add the range to the list */
+> +	range = kzalloc(sizeof(*range), GFP_KERNEL);
+> +	if (!range)
+> +		return -ENOMEM;
+> +
+> +	range->start = addr;
+> +	range->size = size;
+> +
+> +	list_add_tail(&range->list, &io_range_list);
+
+Need spin_lock() here ?
+
+> +#endif
+> +
+> +	return 0;
+> +}
+> +
+> +phys_addr_t pci_pio_to_address(unsigned long pio)
+> +{
+> +	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
+> +
+> +#ifdef PCI_IOBASE
+> +	struct io_range *range;
+> +	resource_size_t allocated_size = 0;
+> +
+> +	if (pio > IO_SPACE_LIMIT)
+> +		return address;
+> +
+> +	spin_lock(&io_range_lock);
+> +	list_for_each_entry(range, &io_range_list, list) {
+> +		if (pio >= allocated_size && pio < allocated_size + range->size) {
+> +			address = range->start + pio - allocated_size;
+> +			break;
+> +		}
+> +		allocated_size += range->size;
+> +	}
+> +	spin_unlock(&io_range_lock);
+> +#endif
+> +
+> +	return address;
+> +}
+> +
+>  unsigned long __weak pci_address_to_pio(phys_addr_t address)
+>  {
+> +#ifdef PCI_IOBASE
+> +	struct io_range *res;
+> +	resource_size_t offset = 0;
+> +
+> +	list_for_each_entry(res, &io_range_list, list) {
+
+And here.
+
+> +		if (address >= res->start &&
+> +			address < res->start + res->size) {
+> +			return res->start - address + offset;
+> +		}
+> +		offset += res->size;
+> +	}
+> +
+> +	return (unsigned long)-1;
+> +#else
+>  	if (address > IO_SPACE_LIMIT)
+>  		return (unsigned long)-1;
+>  
+>  	return (unsigned long) address;
+> +#endif
+>  }
+>  
+>  static int __of_address_to_resource(struct device_node *dev,
+> diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+> index c13b878..28e6836 100644
+> --- a/include/linux/of_address.h
+> +++ b/include/linux/of_address.h
+> @@ -55,7 +55,9 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
+>  extern const __be32 *of_get_address(struct device_node *dev, int index,
+>  			   u64 *size, unsigned int *flags);
+>  
+> +extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+>  extern unsigned long pci_address_to_pio(phys_addr_t addr);
+> +extern phys_addr_t pci_pio_to_address(unsigned long pio);
+>  
+>  extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+>  			struct device_node *node);
+> 
+
 
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+Thanks!
+Yijing
 
