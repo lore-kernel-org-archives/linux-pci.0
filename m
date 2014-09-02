@@ -1,109 +1,74 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 1 Sep 2014 21:31:59 -0400
+From: "Chen, Gong" <gong.chen@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Randy Dunlap <rdunlap@infradead.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RESEND 0/5] PCIe, AER: Misc cleanup
+Message-ID: <20140902013159.GA14916@gchen.bj.intel.com>
+References: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
+ <CAErSpo4DZboL75xa1Ahxr9aoDg_wyad1gZpXeAAiqcmx=8N8sg@mail.gmail.com>
+ <20140814015236.GB28066@gchen.bj.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CAMxnaaWS+nxBM0gdLo0Qv3-x4fVwT0ePTr20miZvnpJUMgQ-NQ@mail.gmail.com>
-References: <CAE9FiQXQesrDMqf1b6ZhHdmY_wEEUrOEvNO4N_d6WtaNMGNLww@mail.gmail.com>
- <gh4mwcef0r.fsf@quad.gouders.net> <CAE9FiQWgioBeVmfWCaE38BrkjbWKaS+_FYYdmdd+7X8fpeEgnQ@mail.gmail.com>
- <ghoaukcx6b.fsf@quad.gouders.net> <CAE9FiQUk-sAHnjfBvNeHQWibJRqbPE1V0UtDtARtwxmS=7aQrw@mail.gmail.com>
- <ghk358crbe.fsf@quad.gouders.net> <CAE9FiQUeP84585-4b+Y6WBVD3zqOi7ch_OXytsTmKEz9AyZ3Vg@mail.gmail.com>
- <20140913040716.GA28080@google.com> <gh8ulnn9yo.fsf@quad.gouders.net>
- <gh8uln71g1.fsf@lena.gouders.net> <20140919183943.GD19374@google.com>
- <ghvboit9qt.fsf@lena.gouders.net> <CAErSpo4Z1s7u08W6o+8Yxu7-QYN6YS9zt11=hH535YFYAwVKNw@mail.gmail.com>
- <CAMxnaaWS+nxBM0gdLo0Qv3-x4fVwT0ePTr20miZvnpJUMgQ-NQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 22 Sep 2014 09:23:14 -0600
-Message-ID: <CAErSpo4ppHnpRZEY5Rw-y3J7wgQ61tBKn+iiqav13-m2tfdDcA@mail.gmail.com>
-Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: Dirk Gouders <dirk@gouders.net>, Yinghai Lu <yinghai@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ew6BAiZeqk4r7MaW"
+In-Reply-To: <20140814015236.GB28066@gchen.bj.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 22, 2014 at 8:53 AM, Andreas Noever
-<andreas.noever@gmail.com> wrote:
-> On Mon, Sep 22, 2014 at 4:25 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Sat, Sep 20, 2014 at 12:41 PM, Dirk Gouders <dirk@gouders.net> wrote:
->>> Bjorn Helgaas <bhelgaas@google.com> writes:
->>>
->>>> On Sat, Sep 13, 2014 at 09:41:34PM +0200, Dirk Gouders wrote:
->>>>> So, I did some tests on the VX50 which probably wasn't the worst idea,
->>>>> because it behaves different than the test machine.
->>>>>
->>>>> Summary:
->>>>>
->>>>> 1) Bjorn's back pocket patch works on the VX50.
->>>>>
->>>>>    On the test machine it causes a trace, mount_root has to do with
->>>>>    it.  I tried to use netconsole but it complained the interface were
->>>>>    not ready.
->>>>
->>>> OK, that's good.  I put this revert patch in for-linus for v3.17.  I regard
->>>> this as a temporary fix, not the real solution.  My guess is the test
->>>> machine doesn't boot because you're missing a driver, so not related to the
->>>> revert patch.
->>>
->>> I assumed my limit-host-bridge-aperture-and-ignore-bridges-patch on top
->>> of your patch caused this, so I took a closer look.
->>>
->>> Your patch works fine with current rc5+ on the test machine -- with and
->>> without my additional patch.
->>
->> Great, thanks for testing that!
->>
->>> Other various today's test results (VX50) will be appended to bugzilla
->>> in a few moments.
->>
->> The Windows Server 2008 boot shows that Windows reconfigures the
->> 00:0e.0 bridge so it fits inside the [bus 00-07] aperture reported by
->> the host bridge _CRS, and the LSI FC adapter is not enumerated at all.
->> That's basically the same behavior that prompted your bug report.
->> This suggests that Windows does *not* reset the secondary bus when
->> changing the bridge configuration.
->>
->> For v3.17, I reverted 1820ffdccb9b ("PCI: Make sure bus number
->> resources stay within their parents bounds").  For the future, I think
->> we should do a quirk to fix the _CRS, similar to what Andreas has
->> posted, and apply 1820ffdccb9b again.
->>
->> But I think the quirk should be specific to this system and BIOS.  I
->> don't want to add a workaround that silently covers up Linux and BIOS
->> bugs.  The reason amd_bus.c exists is because Linux was not smart
->> enough to pay attention to _CRS.  Linux is now pretty good at that, so
->> the reason for amd_bus.c is mostly gone.  I don't want to add new
->> dependencies on amd_bus.c that will prevent us from phasing it out.
-> Why not always trust amd_bus over _CRS? Is there a scenario in which
-> amd_bus is wrong?
 
-amd_bus.c requires ongoing maintenance to keep it working for new
-processors and topologies.  The ACPI description of the platform is
-the one the OEM intended, and it's the one that is tested.  There are
-cases where the ACPI description omits things that amd_bus.c would
-find, e.g., when the BIOS reserves hardware that it doesn't want the
-OS to touch.
+--ew6BAiZeqk4r7MaW
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> Are these methods (like _CRS) meant to set limits for us, or are they
-> simply used to report the configuration decisions made by the BIOS? So
-> if _CRS says that the window is [00-07] would it be ok for us to
-> simply increase it (possibly after reprogramming the registers in
-> amd_bus)?
+On Wed, Aug 13, 2014 at 09:52:36PM -0400, Chen, Gong wrote:
+> Date:	Wed, 13 Aug 2014 21:52:36 -0400
+> From: "Chen, Gong" <gong.chen@linux.intel.com>
+> To: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Randy Dunlap <rdunlap@infradead.org>, Borislav Petkov <bp@alien8.de>,
+>  Tony Luck <tony.luck@intel.com>, "linux-pci@vger.kernel.org"
+>  <linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+>  <linux-kernel@vger.kernel.org>
+> Subject: Re: [RESEND 0/5] PCIe, AER: Misc cleanup
+> User-Agent: Mutt/1.5.23 (2014-03-12)
+>=20
+> On Wed, Aug 13, 2014 at 07:52:45AM -0600, Bjorn Helgaas wrote:
+> > I haven't responded because I've been on vacation for the past three
+> > weeks.  If there's no change in the patches themselves, and if they
+> > are still in http://patchwork.ozlabs.org/project/linux-pci/list, the
+> > only thing reposting them does is make more work for me.
+> >=20
+> There is one difference existed in Patch 1. I add more explanation in
+> the comments as Boris suggested.
 
-_CRS tells us how a device is configured.  _PRS tells us what other
-settings are possible.  _SRS chooses other settings.  If BIOS supplies
-_PRS and _SRS, we can change the settings.  But I've never seen _PRS
-and _SRS for host bridges, and Linux doesn't support them for host
-bridges today.
+Hi, Bjorn
 
-It would not be OK for us to use amd_bus.c to reprogram registers.
-The rest of ACPI assumes that the bridge is configured per _CRS, and
-it assumes that any changes are done via _SRS.  For example, there
-could be AML that uses those assumptions.
+Any comments?
 
-I don't think a hybrid ACPI + native solution is really viable.
-One-off bug workarounds are fine, but in the long run, I think we're
-better off if we work from the same system description that Windows
-does.  Otherwise we'll continually trip over unexpected things.
+--ew6BAiZeqk4r7MaW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-Bjorn
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUBR4PAAoJEI01n1+kOSLHG8wP/3c5jeGxOLELLqUsLXVN1S5R
+N6EUZ0xpgSWGRlJrHD/mnUAiygSJ4G04DKUqTLMNET9Abfalsr1lMmI+Q762QYY1
+OsayTtuwwaaeJtfk1p0pFlMmjXDNhhIuv8scfq9AV2vm9WqxxEd9rpcLUIcLsp2z
+AcutviE66XR5G3nB3zxY9ASIVJDJ7A8So7EgF9ajGlHYpAmp6xbW2qzry1gDoeZJ
+QDXcEFp9MbUUfewdGuvYq+epOpfEr2OpwNfSlnAl949cDap/RdvXgdrQs+U1gvM7
+cqatmDoB/qWhRs+jfI5zPq1BdACO5njCtxntHDrWaKBGpSA+hm/1xmC/g/5En7Kz
+cqQJC+NHM2wkhphmktQVJsmzWMxDLkxUvGpBJ3wJqYQSG/KLFy1fl9SneKTztlGz
+4D7I/BpRBMF9QA1LS7LBMh7XJ64tJJOp8+TLRtNuoH0BSVuATPH6pNKrKRx0k3bX
+4qm1TU4KzERMjbYTitv33Cu/SHj9SNL5E0IXzCtu12SAIEam6bS3/2szDCUGTd8L
+de9UbIMkvUaQlVduxav5K/3SpoDrjKtfsE3wtf2+CqQzxzZvkhGwXeC92GzYiZqt
+kLY9ZAzMbRvD8Sbsx7JKEZ5N7U4Ifnrb6B26x4s2Qa0r3gDJqBZR3jOXh3lMTVVh
+K08O7/VnKCCAJiHswJFm
+=y6e5
+-----END PGP SIGNATURE-----
+
+--ew6BAiZeqk4r7MaW--
