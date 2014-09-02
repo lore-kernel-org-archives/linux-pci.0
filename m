@@ -1,134 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:54522 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756174AbaIRBcE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Sep 2014 21:32:04 -0400
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v11 05/10] PCI: Create pci_host_bridge before its associated bus in pci_create_root_bus.
-Date: Thu, 18 Sep 2014 02:30:20 +0100
-Message-Id: <1411003825-21521-6-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:58798 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754945AbaIBTWW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Sep 2014 15:22:22 -0400
+MIME-Version: 1.0
+In-Reply-To: <20140827205129.GA25227@kroah.com>
+References: <1409144277-23379-1-git-send-email-ricardo.ribalda@gmail.com>
+ <20140827202301.GA13800@kroah.com> <20140827205129.GA25227@kroah.com>
+From: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+Date: Tue, 2 Sep 2014 21:22:01 +0200
+Message-ID: <CAPybu_37y9XoMp+qfvo_qsJYQhJQiOpPsrXtyC5ofD2SMbinwg@mail.gmail.com>
+Subject: Re: [PATCH] pci/pci-sysfs: Set pci interface in uppercase
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
-As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
-the creation order has been changed for no good reason. Revert the order of
-creation as we are going to depend on the pci_host_bridge structure to retrieve the
-domain number of the root bus.
+Hej Bjorn
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Acked-by: Grant Likely <grant.likely@linaro.org>
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-Tested-by: Tanmay Inamdar <tinamdar@apm.com>
----
- drivers/pci/probe.c | 32 +++++++++++++++++---------------
- 1 file changed, 17 insertions(+), 15 deletions(-)
+I have seen that you have updated your pci tree without this patch. Is
+there something wrong with it?
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e3cf8a2..5ff72ec 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -515,7 +515,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
- 	kfree(bridge);
- }
- 
--static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
-+static struct pci_host_bridge *pci_alloc_host_bridge(void)
- {
- 	struct pci_host_bridge *bridge;
- 
-@@ -524,7 +524,8 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
- 		return NULL;
- 
- 	INIT_LIST_HEAD(&bridge->windows);
--	bridge->bus = b;
-+	bridge->dev.release = pci_release_host_bridge_dev;
-+
- 	return bridge;
- }
- 
-@@ -1761,9 +1762,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	char bus_addr[64];
- 	char *fmt;
- 
-+	bridge = pci_alloc_host_bridge();
-+	if (!bridge)
-+		return NULL;
-+
-+	bridge->dev.parent = parent;
-+
- 	b = pci_alloc_bus();
- 	if (!b)
--		return NULL;
-+		goto err_out;
- 
- 	b->sysdata = sysdata;
- 	b->ops = ops;
-@@ -1772,26 +1779,19 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	if (b2) {
- 		/* If we already got to this bus through a different bridge, ignore it */
- 		dev_dbg(&b2->dev, "bus already known\n");
--		goto err_out;
-+		goto err_bus_out;
- 	}
- 
--	bridge = pci_alloc_host_bridge(b);
--	if (!bridge)
--		goto err_out;
--
--	bridge->dev.parent = parent;
--	bridge->dev.release = pci_release_host_bridge_dev;
-+	bridge->bus = b;
- 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
- 	error = pcibios_root_bridge_prepare(bridge);
--	if (error) {
--		kfree(bridge);
-+	if (error)
- 		goto err_out;
--	}
- 
- 	error = device_register(&bridge->dev);
- 	if (error) {
- 		put_device(&bridge->dev);
--		goto err_out;
-+		goto err_bus_out;
- 	}
- 	b->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(b->bridge);
-@@ -1848,8 +1848,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- class_dev_reg_err:
- 	put_device(&bridge->dev);
- 	device_unregister(&bridge->dev);
--err_out:
-+err_bus_out:
- 	kfree(b);
-+err_out:
-+	kfree(bridge);
- 	return NULL;
- }
- 
+If you are already considering it, sorry for the mail, but I wanted to
+make sure that it is in 3.17 and then back ported.
+
+
+Thanks!!
+
+On Wed, Aug 27, 2014 at 10:51 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> On Wed, Aug 27, 2014 at 01:23:01PM -0700, Greg KH wrote:
+>> On Wed, Aug 27, 2014 at 02:57:57PM +0200, Ricardo Ribalda Delgado wrote:
+>> > There is a missmatch between the way file2alias generates the modalias
+>> > and the way the pci driver generates it.
+>> >
+>> > Some implementations of modprobe will fail to load the driver for a pci
+>> > device automatically when the pci interface is defined on the driver. As
+>> > one will be in uppercase and the other in lowercase.
+>> >
+>> > Fortunatelly not many drivers define this.
+>> >
+>> > Signed-off-by: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+>> > ---
+>> >  drivers/pci/pci-sysfs.c | 2 +-
+>> >  1 file changed, 1 insertion(+), 1 deletion(-)
+>> >
+>> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>> > index 9ff0a90..76ef791 100644
+>> > --- a/drivers/pci/pci-sysfs.c
+>> > +++ b/drivers/pci/pci-sysfs.c
+>> > @@ -177,7 +177,7 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+>> >  {
+>> >     struct pci_dev *pci_dev = to_pci_dev(dev);
+>> >
+>> > -   return sprintf(buf, "pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x\n",
+>> > +   return sprintf(buf, "pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02X\n",
+>> >                    pci_dev->vendor, pci_dev->device,
+>> >                    pci_dev->subsystem_vendor, pci_dev->subsystem_device,
+>> >                    (u8)(pci_dev->class >> 16), (u8)(pci_dev->class >> 8),
+>>
+>> As said in the other thread about this issue, no, this code has been
+>> here for over 9 years just fine.  Please fix your userspace code that is
+>> trying to compare hex values as a string and not a numeric value, that
+>> is the stuff that is wrong, not the kernel.
+>
+> Oh wait, I see what you are worried about now, the mis-match for just
+> the upper bits of the class value.
+>
+> Yeah, that's a bug, sorry about that, a 9+ year old one, nice catch :)
+>
+> Bjorn, feel free to apply this, sorry for the earlier objection.  Also
+> please mark it for stable tree inclusion so this gets backported
+> properly.
+>
+> thanks,
+>
+> greg k-h
+
+
+
 -- 
-2.1.0
-
+Ricardo Ribalda
