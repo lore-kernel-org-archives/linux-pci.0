@@ -1,55 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f52.google.com ([209.85.192.52]:51579 "EHLO
-	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932286AbaIKU4j (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Sep 2014 16:56:39 -0400
-Received: by mail-qg0-f52.google.com with SMTP id i50so6900039qgf.25
-        for <linux-pci@vger.kernel.org>; Thu, 11 Sep 2014 13:56:38 -0700 (PDT)
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:55935 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752980AbaIBXvw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Sep 2014 19:51:52 -0400
+Message-ID: <54065208.3080309@gmail.com>
+Date: Tue, 02 Sep 2014 16:26:00 -0700
+From: Rajat Jain <rajatxjain@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <DUB130-DS11BD5E00A5726DD8D15192DBCC0@phx.gbl>
-References: <DUB130-DS10845119A34A53DA8A6430DBC50@phx.gbl> <CAErSpo4GRh2LzeoDu-84h1+YfkYuCz4yLE2xGV8V4GG8ajsrcw@mail.gmail.com>
- <DUB130-DS63ED85165793FD03D1CB1DBC50@phx.gbl> <CAErSpo4_S_9OLrODQO8u0VZU-7sv2XbhcAUd7CxjaV37zcY_Sg@mail.gmail.com>
- <DUB130-DS11BD5E00A5726DD8D15192DBCC0@phx.gbl>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 11 Sep 2014 14:56:18 -0600
-Message-ID: <CAErSpo6oma4rJwJbAF55pL6x1Es+eQxgOSpnPPOro+SkMrzufw@mail.gmail.com>
-Subject: Re: PCIe root bridge and memory ranges.
-To: Robert <RJSmith92@live.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Richard Yang <weiyang@linux.vnet.ibm.com>,
+	Matthew Wilcox <matthew.r.wilcox@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2] pci/probe: Enable CRS for root port if it is supported
+References: <53FFA54D.9000907@gmail.com> <CAErSpo5_WMUmnTHpPZt+j04VZoiW1pthQoGV90A5BDQpQgjwOQ@mail.gmail.com>
+In-Reply-To: <CAErSpo5_WMUmnTHpPZt+j04VZoiW1pthQoGV90A5BDQpQgjwOQ@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 10, 2014 at 6:18 PM, Robert <RJSmith92@live.com> wrote:
 
->> We did a lot of work a few years ago to support an arbitrary number of
->> apertures, e.g.,
->>
->> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=2fe2abf896c1
->
-> ... but in basic terms, does it allow for a root bridge to
-> have 2 or more memory address windows e.g. 0xC0000000 - 0xCFFFFFFF and
-> 0xD0000000 - 0xFFFFFFFF?
+As per the PCIe spec, an endpoint may return the configuration cycles
+with CRS if it is not yet fully ready to be accessed. If the CRS visibility
+is not enabled at the root port, the spec leaves the retry behaviour open
+to implementation in such a case. The Intel root ports have chosen to retry
+endlessly in this situation. Thus, the root controller may "hang" (repeatedly
+retrying the configuration requests until it gets a status other than CRS) if
+a device returns CRS for a long time. This can cause a broken endpoint to bring
+down the whole PCI hierarchy.
 
-Yes, that's very common.  For example, my laptop reports these windows:
+This was recently known to cause problems on Intel systems and
+was discussed here:
+http://marc.info/?t=140926298500002&r=1&w=2
 
-  pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7]
-  pci_bus 0000:00: root bus resource [io  0x0d00-0xffff]
-  pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff]
-  pci_bus 0000:00: root bus resource [mem 0xbf200000-0xdfffffff]
-  pci_bus 0000:00: root bus resource [mem 0xf0000000-0xfedfffff]
-  pci_bus 0000:00: root bus resource [mem 0xfee01000-0xffffffff]
+Ref1:
+https://www.pcisig.com/specifications/pciexpress/ECN_CRS_Software_Visibility_No27.pdf
 
-> 1 last question :) Regarding PCIe, I understand that it is a packet based
-> protocol but where are the packets created? Online a lot of resources say
-> the Root Complex generates a PCIe transaction on behalf of the processor,
-> but isn't the Root Complex made up of multiple devices (host bridge/s and
-> memory controller etc.) Do you know which specific device generates the PCIe
-> packet, is it the root bridge?
+Ref2:
+PCIe spec V3.0, pg119, pg127 for "Configuration Request Retry Status"
 
-I'm not a hardware person, and I would only be guessing here.
-Obviously packets leave a Root Port, so they have to be created there
-or farther inside the Root Complex.  My understanding is that a Root
-Port is conceptually part of a Root Complex.
+Thus enable the CRS visibility for the root ports that support it. This
+patch reverts the following commit, but enables CRS visibility only
+when the root port supports it:
 
-Bjorn
+ad7edfe04908 ("[PCI] Do not enable CRS Software Visibility by default")
+
+(Linus' response: http://marc.info/?l=linux-pci&m=140968622520192&w=2)
+
+Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+Signed-off-by: Guenter Roeck <groeck@juniper.net>
+---
+v2: Remove the white list, that was enabling the CRS for certain known Intel systems.
+    Rather now enable it for all systems that support this capability.
+v1: Enable CRS for only some given Intel systems (maintain a whitelist)
+
+ drivers/pci/probe.c           |   13 +++++++++++++
+ include/uapi/linux/pci_regs.h |    1 +
+ 2 files changed, 14 insertions(+)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index e3cf8a2..3c4c35c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -740,6 +740,17 @@ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+ }
+ EXPORT_SYMBOL(pci_add_new_bus);
+ 
++static void pci_enable_crs(struct pci_dev *pdev)
++{
++	u16 root_cap = 0;
++
++	/* Enable CRS Software visibility if supported */
++	pcie_capability_read_word(pdev, PCI_EXP_RTCAP, &root_cap);
++	if (root_cap & PCI_EXP_RTCAP_CRSVIS)
++		pcie_capability_set_word(pdev, PCI_EXP_RTCTL,
++					 PCI_EXP_RTCTL_CRSSVE);
++}
++
+ /*
+  * If it's a bridge, configure it and scan the bus behind it.
+  * For CardBus bridges, we don't scan behind as the devices will
+@@ -787,6 +798,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 	pci_write_config_word(dev, PCI_BRIDGE_CONTROL,
+ 			      bctl & ~PCI_BRIDGE_CTL_MASTER_ABORT);
+ 
++	pci_enable_crs(dev);
++
+ 	if ((secondary || subordinate) && !pcibios_assign_all_busses() &&
+ 	    !is_cardbus && !broken) {
+ 		unsigned int cmax;
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 30db069..a75106d 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -552,6 +552,7 @@
+ #define  PCI_EXP_RTCTL_PMEIE	0x0008	/* PME Interrupt Enable */
+ #define  PCI_EXP_RTCTL_CRSSVE	0x0010	/* CRS Software Visibility Enable */
+ #define PCI_EXP_RTCAP		30	/* Root Capabilities */
++#define  PCI_EXP_RTCAP_CRSVIS	0x0001	/* CRS software visibility capability */
+ #define PCI_EXP_RTSTA		32	/* Root Status */
+ #define PCI_EXP_RTSTA_PME	0x00010000 /* PME status */
+ #define PCI_EXP_RTSTA_PENDING	0x00020000 /* PME pending */
+-- 
+1.7.9.5
