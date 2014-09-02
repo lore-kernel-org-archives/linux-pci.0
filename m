@@ -1,72 +1,59 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Mon, 29 Sep 2014 13:43:35 -0600
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 2 Sep 2014 17:16:13 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH v13 00/12] Support for creating generic PCI host bridges
- from DT
-Message-ID: <20140929194335.GA13747@google.com>
-References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Huang Ying <huang.ying.caritas@gmail.com>
+Subject: Re: [Update][PATCH] PCI / PM: Allow PCI devices to be put into
+ D3cold during system suspend
+Message-ID: <20140902231613.GC12657@google.com>
+References: <3331155.XU3LgTaBr4@vostro.rjw.lan>
+ <2273188.7kGSSgiQeA@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <2273188.7kGSSgiQeA@vostro.rjw.lan>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 29, 2014 at 03:29:19PM +0100, Liviu Dudau wrote:
-> This is my version 13 of the attempt at adding support for generic PCI host
-> bridge controllers. It contains only cleanups to make it play nice with the
-> linux-next tree as of 09/25. If Bjorn deems it safe, now that it looks like
-> asm-generic is going to revert some of its more aggresive patches, he has the
-> choice of queueing it into linux-next again.
-> ...
+On Mon, Jul 21, 2014 at 03:18:24AM +0200, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> Commit 448bd857d48e (PCI/PM: add PCIe runtime D3cold support) added
+> a check to prevent PCI devices from being put into D3cold during
+> system suspend without giving any particular reason.
+> 
+> Also the check isn't really necessary, because acpi_pci_set_power_state()
+> maps PCI_D3hot to ACPI_STATE_D3_COLD anyway.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-These patches above were already on my pci/host-generic branch and in
-linux-next:
+Added to pci/pm for v3.18, thanks!
 
-   asm-generic/io.h: Fix ioport_map() for !CONFIG_GENERIC_IOMAP
-   of/pci: Add pci_register_io_range() and pci_pio_to_address()
-   ARM: Define PCI_IOBASE as the base of virtual PCI IO space
-   of/pci: Define of_pci_range_to_resource() only when CONFIG_PCI=y
-   of/pci: Move of_pci_range_to_resources() to of/address.c
-   of/pci: Fix the conversion of IO ranges into IO resources
-
-I added these three patches to my pci/host-generic branch:
-
-   PCI: Add generic domain handling
-   of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()
-   of/pci: Add support for parsing PCI host bridge resources from DT
-
-Yinghai pointed out a problem with this one, so I omitted it:
-
-   PCI: Assign unassigned bus resources in pci_scan_root_bus()
-
-I added this one to my pci/host-generic branch:
-
-   PCI: Add pci_remap_iospace() to map bus I/O resources
-
-I assume this depends on the pci_scan_root_bus() change (if not, let me
-know), so I omitted this one:
-
-   arm64: Add architectural support for PCI
-
-Bjorn
+> ---
+> 
+> Ying notices that acpi_pci_set_power_state() maps PCI D3hot to ACPI
+> D3cold, so the check actually isn't effective even, but that means
+> that the second part of my original changelog was in fact incorrect.
+> 
+> ---
+>  drivers/pci/pci.c |    4 ----
+>  1 file changed, 4 deletions(-)
+> 
+> Index: linux-pm/drivers/pci/pci.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci.c
+> +++ linux-pm/drivers/pci/pci.c
+> @@ -1907,10 +1907,6 @@ int pci_prepare_to_sleep(struct pci_dev
+>  	if (target_state == PCI_POWER_ERROR)
+>  		return -EIO;
+>  
+> -	/* D3cold during system suspend/hibernate is not supported */
+> -	if (target_state > PCI_D3hot)
+> -		target_state = PCI_D3hot;
+> -
+>  	pci_enable_wake(dev, target_state, device_may_wakeup(&dev->dev));
+>  
+>  	error = pci_set_power_state(dev, target_state);
+> 
