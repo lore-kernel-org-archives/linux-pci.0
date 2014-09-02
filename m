@@ -1,34 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:40836 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751282AbaI3Qgg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 12:36:36 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Mohit Kumar <mohit.kumar@st.com>, Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Subject: [PATCH 0/2] Designware MSI fixes
-Date: Tue, 30 Sep 2014 18:36:25 +0200
-Message-Id: <1412094987-1894-1-git-send-email-l.stach@pengutronix.de>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:62128 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750701AbaIBEDt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Sep 2014 00:03:49 -0400
+Received: by mail-ie0-f182.google.com with SMTP id rd18so6962476iec.41
+        for <linux-pci@vger.kernel.org>; Mon, 01 Sep 2014 21:03:49 -0700 (PDT)
+Subject: [PATCH] lspci: Correct Root Capabilities "CRS Software Visibility"
+ bit
+To: Martin Mares <mj@ucw.cz>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, rajatxjain@gmail.com
+Date: Mon, 01 Sep 2014 22:03:46 -0600
+Message-ID: <20140902040346.18691.58345.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Those two patches were part of my designware multi-msi series. I decided
-to postpone that one a little bit until the treewide MSI chip patches from
-Yijing Wang have landed, but those two patches are just too obvious
-fixes/style corrections to let them wait any longer.
+lspci incorrectly tests bit 4, not bit 0, for "CRS Software Visibility" in
+the Root Capabilities register, so it shows "RootCap: CRSVisible-" even for
+devices that do support Software Visibility.
 
-Both patches were tested by Jingoo Han as part of the earlier series, but
-I had to modify them a bit for the rebase, so any review/testing much
-appreciated. Patches are on top of the pci/host-designware branch.
+Use the correct definition for PCI_EXP_RTCAP_CRSVIS.
 
-Lucas Stach (2):
-  PCI: designware: remove bogus multiple MSI setup
-  PCI: designware: remove open-coded bitmap operations
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ lib/header.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/pci/host/pcie-designware.c | 98 ++++++--------------------------------
- 1 file changed, 14 insertions(+), 84 deletions(-)
-
--- 
-2.1.0
+diff --git a/lib/header.h b/lib/header.h
+index db85df1..8ee7565 100644
+--- a/lib/header.h
++++ b/lib/header.h
+@@ -842,7 +842,7 @@
+ #define  PCI_EXP_RTCTL_PMEIE	0x0008	/* PME Interrupt Enable */
+ #define  PCI_EXP_RTCTL_CRSVIS	0x0010	/* Configuration Request Retry Status Visible to SW */
+ #define PCI_EXP_RTCAP		0x1e	/* Root Capabilities */
+-#define  PCI_EXP_RTCAP_CRSVIS	0x0010	/* Configuration Request Retry Status Visible to SW */
++#define  PCI_EXP_RTCAP_CRSVIS	0x0001	/* Configuration Request Retry Status Visible to SW */
+ #define PCI_EXP_RTSTA		0x20	/* Root Status */
+ #define  PCI_EXP_RTSTA_PME_REQID   0x0000ffff /* PME Requester ID */
+ #define  PCI_EXP_RTSTA_PME_STATUS  0x00010000 /* PME Status */
 
