@@ -1,59 +1,51 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v10 09/10] PCI: Assign unassigned bus resources in pci_scan_root_bus()
-Date: Mon,  8 Sep 2014 14:54:31 +0100
-Message-Id: <1410184472-17630-10-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vc0-f180.google.com ([209.85.220.180]:35104 "EHLO
+	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755106AbaIBTaW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Sep 2014 15:30:22 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5_WMUmnTHpPZt+j04VZoiW1pthQoGV90A5BDQpQgjwOQ@mail.gmail.com>
+References: <53FFA54D.9000907@gmail.com>
+	<CAErSpo5_WMUmnTHpPZt+j04VZoiW1pthQoGV90A5BDQpQgjwOQ@mail.gmail.com>
+Date: Tue, 2 Sep 2014 12:30:21 -0700
+Message-ID: <CA+55aFy63sEs2zvr0LzKSjxSRuH5paLG378qQ6_QyLmmJw=D3w@mail.gmail.com>
+Subject: Re: [PATCH] pci/probe: Enable CRS for Intel Haswell root ports
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatxjain@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>,
+	Richard Yang <weiyang@linux.vnet.ibm.com>,
+	Matthew Wilcox <matthew.r.wilcox@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the firmware has not assigned all the bus resources and
-we are not just probing the PCIe busses, it makes sense to
-assign the unassigned resources in pci_scan_root_bus().
+On Mon, Sep 1, 2014 at 9:14 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+> I'm not a fan of adding a whitelist for devices that work correctly.
+> I don't think that's a maintainable solution.  Since we haven't had
+> many systems yet that care about CRS, some kind of "enable CRS on
+> machines newer than X" might work.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Rob Herring <robh+dt@kernel.org>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
----
- drivers/pci/probe.c | 3 +++
- 1 file changed, 3 insertions(+)
+I'd suggest trying to just enable CRS unconditionally (ie revert my
+old commit ad7edfe04908). We've done other changes in this area since,
+and in particular, it's entirely possible that the original problem we
+had doesn't even trigger any more.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ef891d2..508cf61 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1953,6 +1953,9 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- 	if (!found)
- 		pci_bus_update_busn_res_end(b, max);
- 
-+	if (!pci_has_flag(PCI_PROBE_ONLY))
-+		pci_assign_unassigned_bus_resources(b);
-+
- 	pci_bus_add_devices(b);
- 	return b;
- }
--- 
-2.0.4
+In particular, looking at one of the old reports, I don't see that
+"Device %04x:%02x:%02x.%d not responding" warning that we *should*
+have triggered in pci_scan_device(). So I wonder if we had some case
+that read the vendor ID without that whole loop, and that _that_ was
+our fundamental problem.
 
+It would be great if somebody could test with the old hardware that
+triggered the problem originally, but those reports are from 2007, so
+it might be hard to find anything relevant today. But trying to just
+go back to unconditionally enabling CRS (say, in 3.18-rc1) and seeing
+if anybody hollers, might just be the right approach.
+
+            Linus
