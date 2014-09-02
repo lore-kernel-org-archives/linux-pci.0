@@ -1,93 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:19478 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753419AbaIKIXr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Sep 2014 04:23:47 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC Part1 v1 17/18] iommu/vt-d: Use helpers to access irq_cfg data structure associated with IRQ
-Date: Thu, 11 Sep 2014 16:25:04 +0800
-Message-Id: <1410423905-26239-18-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-qa0-f50.google.com ([209.85.216.50]:56950 "EHLO
+	mail-qa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755103AbaIBUNc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Sep 2014 16:13:32 -0400
+Received: by mail-qa0-f50.google.com with SMTP id cm18so6746140qab.37
+        for <linux-pci@vger.kernel.org>; Tue, 02 Sep 2014 13:13:32 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAPybu_37y9XoMp+qfvo_qsJYQhJQiOpPsrXtyC5ofD2SMbinwg@mail.gmail.com>
+References: <1409144277-23379-1-git-send-email-ricardo.ribalda@gmail.com>
+ <20140827202301.GA13800@kroah.com> <20140827205129.GA25227@kroah.com> <CAPybu_37y9XoMp+qfvo_qsJYQhJQiOpPsrXtyC5ofD2SMbinwg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 2 Sep 2014 14:13:11 -0600
+Message-ID: <CAErSpo6h62aKNH-cP4hA8Zzayc6D_u324z1PQ7JAdK=AtJr0Sg@mail.gmail.com>
+Subject: Re: [PATCH] pci/pci-sysfs: Set pci interface in uppercase
+To: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use helpers to access irq_cfg data structure associated with IRQ,
-instead of accessing irq_data->chip_data directly. Later we could
-rewrite those helpers to support hierarchy irqdomain.
+On Tue, Sep 2, 2014 at 1:22 PM, Ricardo Ribalda Delgado
+<ricardo.ribalda@gmail.com> wrote:
+> Hej Bjorn
+>
+> I have seen that you have updated your pci tree without this patch. Is
+> there something wrong with it?
+>
+> If you are already considering it, sorry for the mail, but I wanted to
+> make sure that it is in 3.17 and then back ported.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel_irq_remapping.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+I haven't even looked at it yet; I'm just starting to get caught up.
+Since this looks like a fix for a very old bug, I'll probably apply it
+for v3.18, and mark it for stable.
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 0df41f6264f5..319b39edcf7e 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -55,7 +55,7 @@ static int __init parse_ioapics_under_ir(void);
- 
- static struct irq_2_iommu *irq_2_iommu(unsigned int irq)
- {
--	struct irq_cfg *cfg = irq_get_chip_data(irq);
-+	struct irq_cfg *cfg = irq_cfg(irq);
- 	return cfg ? &cfg->irq_2_iommu : NULL;
- }
- 
-@@ -86,7 +86,7 @@ static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
- {
- 	struct ir_table *table = iommu->ir_table;
- 	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
--	struct irq_cfg *cfg = irq_get_chip_data(irq);
-+	struct irq_cfg *cfg = irq_cfg(irq);
- 	unsigned int mask = 0;
- 	unsigned long flags;
- 	int index;
-@@ -154,7 +154,7 @@ static int map_irq_to_irte_handle(int irq, u16 *sub_handle)
- static int set_irte_irq(int irq, struct intel_iommu *iommu, u16 index, u16 subhandle)
- {
- 	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
--	struct irq_cfg *cfg = irq_get_chip_data(irq);
-+	struct irq_cfg *cfg = irq_cfg(irq);
- 	unsigned long flags;
- 
- 	if (!irq_iommu)
-@@ -1009,7 +1009,7 @@ static int
- intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 			  bool force)
- {
--	struct irq_cfg *cfg = data->chip_data;
-+	struct irq_cfg *cfg = irqd_cfg(data);
- 	unsigned int dest, irq = data->irq;
- 	struct irte irte;
- 	int err;
-@@ -1064,7 +1064,7 @@ static void intel_compose_msi_msg(struct pci_dev *pdev,
- 	u16 sub_handle = 0;
- 	int ir_index;
- 
--	cfg = irq_get_chip_data(irq);
-+	cfg = irq_cfg(irq);
- 
- 	ir_index = map_irq_to_irte_handle(irq, &sub_handle);
- 	BUG_ON(ir_index == -1);
--- 
-1.7.10.4
-
+> On Wed, Aug 27, 2014 at 10:51 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
+>> On Wed, Aug 27, 2014 at 01:23:01PM -0700, Greg KH wrote:
+>>> On Wed, Aug 27, 2014 at 02:57:57PM +0200, Ricardo Ribalda Delgado wrote:
+>>> > There is a missmatch between the way file2alias generates the modalias
+>>> > and the way the pci driver generates it.
+>>> >
+>>> > Some implementations of modprobe will fail to load the driver for a pci
+>>> > device automatically when the pci interface is defined on the driver. As
+>>> > one will be in uppercase and the other in lowercase.
+>>> >
+>>> > Fortunatelly not many drivers define this.
+>>> >
+>>> > Signed-off-by: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+>>> > ---
+>>> >  drivers/pci/pci-sysfs.c | 2 +-
+>>> >  1 file changed, 1 insertion(+), 1 deletion(-)
+>>> >
+>>> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>>> > index 9ff0a90..76ef791 100644
+>>> > --- a/drivers/pci/pci-sysfs.c
+>>> > +++ b/drivers/pci/pci-sysfs.c
+>>> > @@ -177,7 +177,7 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+>>> >  {
+>>> >     struct pci_dev *pci_dev = to_pci_dev(dev);
+>>> >
+>>> > -   return sprintf(buf, "pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x\n",
+>>> > +   return sprintf(buf, "pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02X\n",
+>>> >                    pci_dev->vendor, pci_dev->device,
+>>> >                    pci_dev->subsystem_vendor, pci_dev->subsystem_device,
+>>> >                    (u8)(pci_dev->class >> 16), (u8)(pci_dev->class >> 8),
+>>>
+>>> As said in the other thread about this issue, no, this code has been
+>>> here for over 9 years just fine.  Please fix your userspace code that is
+>>> trying to compare hex values as a string and not a numeric value, that
+>>> is the stuff that is wrong, not the kernel.
+>>
+>> Oh wait, I see what you are worried about now, the mis-match for just
+>> the upper bits of the class value.
+>>
+>> Yeah, that's a bug, sorry about that, a 9+ year old one, nice catch :)
+>>
+>> Bjorn, feel free to apply this, sorry for the earlier objection.  Also
+>> please mark it for stable tree inclusion so this gets backported
+>> properly.
+>>
+>> thanks,
+>>
+>> greg k-h
+>
+>
+>
+> --
+> Ricardo Ribalda
