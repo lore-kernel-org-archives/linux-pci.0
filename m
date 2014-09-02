@@ -1,133 +1,214 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:60274 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751347AbaIEXnV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 19:43:21 -0400
-Received: by mail-lb0-f182.google.com with SMTP id u10so14412512lbd.13
-        for <linux-pci@vger.kernel.org>; Fri, 05 Sep 2014 16:43:20 -0700 (PDT)
+Received: from mail-qa0-f45.google.com ([209.85.216.45]:61344 "EHLO
+	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750785AbaIBEOu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Sep 2014 00:14:50 -0400
+Received: by mail-qa0-f45.google.com with SMTP id f12so5710496qad.18
+        for <linux-pci@vger.kernel.org>; Mon, 01 Sep 2014 21:14:49 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20140905234152.GM8080@google.com>
-References: <cover.1408051536.git.luto@amacapital.net> <9b0cfe601627a19901d40053daadbaea025a9a70.1408051536.git.luto@amacapital.net>
- <20140905234152.GM8080@google.com>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Fri, 5 Sep 2014 16:42:59 -0700
-Message-ID: <CALCETrXM5X=wMAVP7bnc15adyN_muFLn4bbJMJ0g8vCO7RzXdA@mail.gmail.com>
-Subject: Re: [PATCH 1/2] Move Intel SNB device ids from sb_edac to pci_ids.h
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>,
-	Doug Thompson <dougthompson@xmission.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Borislav Petkov <bp@alien8.de>, linux-edac@vger.kernel.org,
+In-Reply-To: <53FFA54D.9000907@gmail.com>
+References: <53FFA54D.9000907@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 1 Sep 2014 22:14:29 -0600
+Message-ID: <CAErSpo5_WMUmnTHpPZt+j04VZoiW1pthQoGV90A5BDQpQgjwOQ@mail.gmail.com>
+Subject: Re: [PATCH] pci/probe: Enable CRS for Intel Haswell root ports
+To: Rajat Jain <rajatxjain@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rui Wang <ruiv.wang@gmail.com>
+	Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Richard Yang <weiyang@linux.vnet.ibm.com>,
+	Matthew Wilcox <matthew.r.wilcox@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 5, 2014 at 4:41 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Aug 14, 2014 at 02:45:40PM -0700, Andy Lutomirski wrote:
->> The i2c_imc driver will use two of them, and moving only part of
->> the list seems messier.
->>
->> Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>
->> Cc: Rui Wang <ruiv.wang@gmail.com>
->> Signed-off-by: Andy Lutomirski <luto@amacapital.net>
+[+cc Linus (author of ad7edfe04908), Matthew (author of 07ff9220908c
+from full history), Yinghai (author of 2f5d8e4ff947), Richard]
+
+On Thu, Aug 28, 2014 at 3:55 PM, Rajat Jain <rajatxjain@gmail.com> wrote:
+> The PCIe root port of the Intel Haswell CPU, has a behavior to endlessly
+> retry the configuration cycles, if an endpoint responds with a CRS
+> (Configuration Request Retry Status), and the "CRS Software Visibility"
+> flag is not set at the root port. This results in a CPU hang, when the
+> kernel tries to enumerate the device that responds with CRS.
+
+Help me understand this.  I thought a config read of Vendor ID would see:
+
+  - 0xffff if no device is present, or
+  - 0x0001 if the device is present but not ready yet, and the OS
+should retry the read.  This only happens when Software Visibility is
+enabled.
+  - Normal Vendor ID if device is present and ready.  If Software
+Visibility is disabled (as it is in Linux today) and the endpoint
+responds with CRS, the Root Complex may retry the config read
+invisibly to software.
+
+I suppose these retries are causing your hang, but since the device is
+actually present, I would think the CPU would see a read that took a
+very long time to complete, but that did eventually complete.  Is this
+causing a CPU timeout?  Is the endpoint broken and returning CRS
+endlessly?
+
+> Please note that this root port behavior (of endless retries) is still
+> compliant with PCIe spec as the spec leaves the behavior open to
+> implementation, on how many retries to do if "CRS visibility flag" is
+> not enabled and it receives a CRS. (Intel has chosen to retry indefinitely)
 >
-> Will these IDs actually be used by two drivers by time you're done?  It
-> looks like maybe you're removing them from sb_edac.c and adding them to
-> i2c_imc.c, which would still only be one place.
+> Ref1:
+> https://www.pcisig.com/specifications/pciexpress/ECN_CRS_Software_Visibility_No27.pdf
 >
-> But if they will end up being used in more than one place,
+> Ref2:
+> PCIe spec V3.0, pg119, pg127 for "Configuration Request Retry Status"
 >
-
-They will.  Both drivers will need to poke at (different)
-configuration space registers on the same devices.  There's one shared
-register, but that one is read-only.
-
---Andy
-
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> Following CPUs are affected:
+> http://ark.intel.com/products/codename/42174/Haswell#@All
 >
->> ---
->>  drivers/edac/sb_edac.c  | 30 ------------------------------
->>  include/linux/pci_ids.h | 15 +++++++++++++++
->>  2 files changed, 15 insertions(+), 30 deletions(-)
->>
->> diff --git a/drivers/edac/sb_edac.c b/drivers/edac/sb_edac.c
->> index deea0dc9999b..a2597e9313c6 100644
->> --- a/drivers/edac/sb_edac.c
->> +++ b/drivers/edac/sb_edac.c
->> @@ -52,36 +52,6 @@ static int probed;
->>  #define GET_BITFIELD(v, lo, hi)      \
->>       (((v) & GENMASK_ULL(hi, lo)) >> (lo))
->>
->> -/*
->> - * sbridge Memory Controller Registers
->> - */
->> -
->> -/*
->> - * FIXME: For now, let's order by device function, as it makes
->> - * easier for driver's development process. This table should be
->> - * moved to pci_id.h when submitted upstream
->> - */
->> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_SAD0     0x3cf4  /* 12.6 */
->> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_SAD1     0x3cf6  /* 12.7 */
->> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_BR               0x3cf5  /* 13.6 */
->> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_HA0  0x3ca0  /* 14.0 */
->> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TA   0x3ca8  /* 15.0 */
->> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_RAS  0x3c71  /* 15.1 */
->> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD0 0x3caa  /* 15.2 */
->> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD1 0x3cab  /* 15.3 */
->> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD2 0x3cac  /* 15.4 */
->> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD3 0x3cad  /* 15.5 */
->> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_DDRIO        0x3cb8  /* 17.0 */
->> -
->> -     /*
->> -      * Currently, unused, but will be needed in the future
->> -      * implementations, as they hold the error counters
->> -      */
->> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR0 0x3c72  /* 16.2 */
->> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR1 0x3c73  /* 16.3 */
->> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR2 0x3c76  /* 16.6 */
->> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR3 0x3c77  /* 16.7 */
->> -
->>  /* Devices 12 Function 6, Offsets 0x80 to 0xcc */
->>  static const u32 sbridge_dram_rule[] = {
->>       0x80, 0x88, 0x90, 0x98, 0xa0,
->> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
->> index 7fa31731c854..e0e6801c3d80 100644
->> --- a/include/linux/pci_ids.h
->> +++ b/include/linux/pci_ids.h
->> @@ -2816,7 +2816,22 @@
->>  #define PCI_DEVICE_ID_INTEL_UNC_R2PCIE       0x3c43
->>  #define PCI_DEVICE_ID_INTEL_UNC_R3QPI0       0x3c44
->>  #define PCI_DEVICE_ID_INTEL_UNC_R3QPI1       0x3c45
->> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_RAS  0x3c71  /* 15.1 */
->> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR0 0x3c72  /* 16.2 */
->> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR1 0x3c73  /* 16.3 */
->> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR2 0x3c76  /* 16.6 */
->> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR3 0x3c77  /* 16.7 */
->> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_HA0  0x3ca0  /* 14.0 */
->> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TA   0x3ca8  /* 15.0 */
->> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD0 0x3caa  /* 15.2 */
->> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD1 0x3cab  /* 15.3 */
->> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD2 0x3cac  /* 15.4 */
->> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD3 0x3cad  /* 15.5 */
->> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_DDRIO        0x3cb8  /* 17.0 */
->>  #define PCI_DEVICE_ID_INTEL_JAKETOWN_UBOX    0x3ce0
->> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_SAD0     0x3cf4  /* 12.6 */
->> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_BR               0x3cf5  /* 13.6 */
->> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_SAD1     0x3cf6  /* 12.7 */
->>  #define PCI_DEVICE_ID_INTEL_IOAT_SNB 0x402f
->>  #define PCI_DEVICE_ID_INTEL_5100_16  0x65f0
->>  #define PCI_DEVICE_ID_INTEL_5100_19  0x65f3
->> --
->> 1.9.3
->>
+> Thus we need to enable the CRS visibility flag for such root ports. The
+> commit ad7edfe04908 ("[PCI] Do not enable CRS Software Visibility by
+> default") suggests to maintain a whitelist of the systems for which CRS
+> should be enabled. This patch does the same.
 
+I'm not a fan of adding a whitelist for devices that work correctly.
+I don't think that's a maintainable solution.  Since we haven't had
+many systems yet that care about CRS, some kind of "enable CRS on
+machines newer than X" might work.
 
+>From Linus' email (https://lkml.org/lkml/2007/12/27/92), the only
+detailed data I found was from Ciaran McCreesh
+(https://lkml.org/lkml/2007/10/29/500).  That case is interesting
+because RootCap claims CRSVisible is not supported, but RootCtl claims
+it is enabled:
 
--- 
-Andy Lutomirski
-AMA Capital Management, LLC
+  00:04.0 PCI bridge: ATI Technologies Inc Unknown device 7934
+(prog-if 00 [Normal decode])
+      Bus: primary=00, secondary=02, subordinate=02, sec-latency=0
+      Capabilities: [58] Express (v1) Root Port (Slot+), MSI 00
+          RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna-
+CRSVisible+
+          RootCap: CRSVisible-
+  02:00.0 Ethernet controller: Unknown device 0001:8168 (rev 01)
+
+The Linux code removed by ad7edfe04908 doesn't bother to check the
+RootCap bit; it simply tries to set the RootCtl enable.  Per spec,
+that would be safe because the RootCtl enable bit should be hardwired
+to 0 if the Root Port doesn't implement the capability, but I can
+imagine a hardware bug where CRSVisible is partly implemented and the
+designer assumes it won't be used because he doesn't advertise that
+it's supported.
+
+I think you should add that RootCap test to your patch.  It would be
+very interesting to test that on some of these machines where we found
+problems.
+
+> Note: Looking at the spec and reading about the CRS, IMHO the "CRS
+> visibility" looks like a good thing to me that should always be enabled
+> on the root ports that support it. And may be we should always enable
+> it if supported and maintain a blacklist of devices on which should be
+> disabled (because of known issues).
+>
+> How I stumbled upon this and tested the fix:
+>
+> Root port: PCI bridge: Intel Corporation Device 2f02 (rev 01)
+>
+> I have a PCIe endpoint (a PLX 8713 NT bridge) that will keep on responding
+> with CRS for a long time when the kernel tries to enumerate the
+> endpoint, trying to indicate that the device is not yet ready. This is
+> because it needs some configuration over I2C in order to complete its
+> reset sequence. This results in a CPU hang during enumeration.
+
+Is the I2C configuration something the OS needs to do?  If so, I
+suppose we will always get CRS after reset, and we'll always have to
+wait for a timeout, then do that I2C configuration, then somehow try
+to re-enumerate the device?  That seems like a broken usage model.  I
+guess maybe the I2C configurator could initiate a rescan to sort of
+patch things up, but it still seems wrong that we have the timeout and
+generate a warning.
+
+> I used this setup to fix and test this issue. After enabling the CRS
+> visibility flag at the root port, I see that CPU moves on as expected
+> declaring the following (instead of freezing):
+>
+> pci 0000:30:00.0 id reading try 50 times with interval 20 ms to get
+> ffff0001
+
+This message is from pci_bus_check_dev() (added by 2f5d8e4ff947).
+pci_bus_read_dev_vendor_id() already has an internal timeout mechanism
+with a message that makes sense.  I don't understand why we need
+another one with a different, unintelligible, message in
+pci_bus_check_dev().
+
+> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+> Signed-off-by: Guenter Roeck <groeck@juniper.net>
+> ---
+> Hi Bjorn / folks,
+>
+> I had also saught suggestions on how this patch should be modelled.
+> Please find a suggestive alternative here:
+>
+> https://lkml.org/lkml/2014/8/1/186
+>
+> Please let me know your thoughts.
+>
+> Thanks,
+>
+> Rajat
+>
+>
+>
+>
+>  drivers/pci/probe.c |   28 ++++++++++++++++++++++++++++
+>  1 file changed, 28 insertions(+)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index e3cf8a2..909ca75 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -740,6 +740,32 @@ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+>  }
+>  EXPORT_SYMBOL(pci_add_new_bus);
+>
+> +static const struct pci_device_id crs_whitelist[] = {
+> +       { PCI_VDEVICE(INTEL, 0x2f00), },
+> +       { PCI_VDEVICE(INTEL, 0x2f01), },
+> +       { PCI_VDEVICE(INTEL, 0x2f02), },
+> +       { PCI_VDEVICE(INTEL, 0x2f03), },
+> +       { PCI_VDEVICE(INTEL, 0x2f04), },
+> +       { PCI_VDEVICE(INTEL, 0x2f05), },
+> +       { PCI_VDEVICE(INTEL, 0x2f06), },
+> +       { PCI_VDEVICE(INTEL, 0x2f07), },
+> +       { PCI_VDEVICE(INTEL, 0x2f08), },
+> +       { PCI_VDEVICE(INTEL, 0x2f09), },
+> +       { PCI_VDEVICE(INTEL, 0x2f0a), },
+> +       { PCI_VDEVICE(INTEL, 0x2f0b), },
+> +       { },
+> +};
+> +
+> +static void pci_enable_crs(struct pci_dev *dev)
+> +{
+> +       /* Enable CRS Software visibility only for whitelisted systems */
+> +       if (pci_is_pcie(dev) &&
+> +           pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
+> +           pci_match_id(crs_whitelist, dev))
+> +               pcie_capability_set_word(dev, PCI_EXP_RTCTL,
+> +                                        PCI_EXP_RTCTL_CRSSVE);
+> +}
+> +
+>  /*
+>   * If it's a bridge, configure it and scan the bus behind it.
+>   * For CardBus bridges, we don't scan behind as the devices will
+> @@ -787,6 +813,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+>         pci_write_config_word(dev, PCI_BRIDGE_CONTROL,
+>                               bctl & ~PCI_BRIDGE_CTL_MASTER_ABORT);
+>
+> +       pci_enable_crs(dev);
+> +
+>         if ((secondary || subordinate) && !pcibios_assign_all_busses() &&
+>             !is_cardbus && !broken) {
+>                 unsigned int cmax;
+> --
+> 1.7.9.5
+>
