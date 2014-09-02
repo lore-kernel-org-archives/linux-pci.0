@@ -1,292 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:34597 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752285AbaIKT0z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Sep 2014 15:26:55 -0400
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:44187 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754190AbaIBR6g (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Sep 2014 13:58:36 -0400
+Received: by mail-ie0-f169.google.com with SMTP id tr6so8145246ieb.14
+        for <linux-pci@vger.kernel.org>; Tue, 02 Sep 2014 10:58:35 -0700 (PDT)
+Date: Tue, 2 Sep 2014 11:58:31 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Mark Brown <broonie@kernel.org>,
+	Mohit Kumar <mohit.kumar@st.com>
+Subject: [GIT PULL] PCI fixes for v3.17
+Message-ID: <20140902175831.GA10577@google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo7j=a3y2MVsvEQGQ4B63_mNCyZSRNXNEZa-2++xs88NmQ@mail.gmail.com>
-References: <ghiol53r9u.fsf@lena.gouders.net>
-	<CAMxnaaXiEZeJOsgQ6ZSbiqy5Z1zNoXonwNSQNRyRhV0t5jveYQ@mail.gmail.com>
-	<ghwq9k3m6z.fsf@lena.gouders.net>
-	<CAMxnaaUqTMf1uEQUqrAGjym8ZrQaBf2QbE4Jqxh2t6a2JgJkOQ@mail.gmail.com>
-	<ghioku5l29.fsf@lena.gouders.net>
-	<CAErSpo7j=a3y2MVsvEQGQ4B63_mNCyZSRNXNEZa-2++xs88NmQ@mail.gmail.com>
-Date: Thu, 11 Sep 2014 12:26:54 -0700
-Message-ID: <CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com>
-Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Dirk Gouders <dirk@gouders.net>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=089e0149c866b1c3570502cf265c
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---089e0149c866b1c3570502cf265c
-Content-Type: text/plain; charset=UTF-8
+Hi Linus,
 
-On Thu, Sep 11, 2014 at 10:30 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc linux-pci]
->
->
-> On Thu, Sep 11, 2014 at 7:43 AM, Dirk Gouders <dirk@gouders.net> wrote:
->> Andreas Noever <andreas.noever@gmail.com> writes:
->>
->>> On Wed, Sep 3, 2014 at 2:47 PM, Dirk Gouders <dirk@gouders.net> wrote:
->>>> Andreas Noever <andreas.noever@gmail.com> writes:
->>>>
->>>>> On Wed, Sep 3, 2014 at 12:57 PM, Dirk Gouders <dirk@gouders.net> wrote:
->>>>>> On a Tyan VX50 (B4985) I ran into problems when updating the kernel: the
->>>>>> PCI FC Adapter is no longer recognized.
->>>>>
->>>>> Can you provide the output of lspci -vvv and the output of dmesg from
->>>>> a working boot? Which card is the one that is not recognized?
->>>>
->>>> Sure, the card that disappeared is:
->>>>
->>>> 0a:00.0 Fibre Channel: LSI Logic / Symbios Logic FC949ES Fibre Channel Adapter (rev 02)
->>>
->>> As far as I can tell the following is happening:
->>> The root bus resource window (advertised by the bios?) is to small:
->>> pci_bus 0000:00: root bus resource [bus 00-07]
->>> Previously we didn't really care. There is a resource conflict but we
->>> ignored it:
->>> pci_bus 0000:0a: busn_res: can not insert [bus 0a] under [bus 00-07]
->>> (conflicts with (null) [bus 00-07])
->>> With the patch we mark the bridge as broken and reassign the bus to 06:
->>> pci 0000:00:0e.0: bridge configuration invalid ([bus 0a-0a]), reconfiguring
->>> pci 0000:00:0e.0: PCI bridge to [bus 06-07]
->>> pci 0000:00:0e.0:   bridge window [io  0x3000-0x3fff]
->>> pci 0000:00:0e.0:   bridge window [mem 0xd4200000-0xd42fffff]
->>> pci_bus 0000:06: busn_res: [bus 06-07] end is updated to 06
+This fixes an ARM allmodconfig build problem.
 
-> Thanks for following up on this.  It had fallen off my radar, so I
-> opened https://bugzilla.kernel.org/show_bug.cgi?id=84281 to make sure
-> I don't forget again.  Please continue the debug discussion here in
-> email.
+Bjorn
 
-Two problems here:
-1. This is amd two node systems. amd_bus.c tell us bus [00, 7f] is from
-first socket, but _OSC says only [0,7] is from first socket.
 
-So solution (1):
-According to Linus's principle, we should always trust HW than firmware,
-so should we just adjust bus range from _OSC before we use it?
+The following changes since commit 7d1311b93e58ed55f3a31cc8f94c4b8fe988a2b9:
 
-2. After moving, LSI FC card from bus 0a to bus 07, the LSI refuse to respond.
+  Linux 3.17-rc1 (2014-08-16 10:40:26 -0600)
 
-During my testing with pci busn allocation patchset, I found that if changing
-LSI Erie card to different bus, it will refuse to responding. Only
-thing that will
-make the LSI card again, is resetting the pcie link. This should be LSI firmware
-bug.
+are available in the git repository at:
 
-Dirk, please check if you can apply attached patches to use
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.17-fixes-1
 
-echo 1 > /sys/bus/pci/devices/0000\:00\0e.0/link_disable
-echo 0 > /sys/bus/pci/devices/0000\:00\0e.0/link_disable
+for you to fetch changes up to 8d7004a6904cf089e0ebfe5a27e9674cee5db9dc:
 
-to reset the link.
+  PCI: spear: Remove module option (2014-08-17 22:09:16 -0600)
 
-Solution (2)
-To workaround the problem, we could reset the pcie link after change bus num
-in the pcie bridges ?
+----------------------------------------------------------------
+PCI update for v3.17:
 
-Soultion (3)
-Or we just revert the offending 1820ffdccb9b4398 (PCI: Make sure
-bus number resources stay within their parents bounds) ?
+  ST Microelectronics SPEAr13xx
+    - Remove module option (Sachin Kamat)
 
-Thanks
+----------------------------------------------------------------
+Sachin Kamat (1):
+      PCI: spear: Remove module option
 
-Yinghai
-
---089e0149c866b1c3570502cf265c
-Content-Type: text/x-patch; charset=US-ASCII; name="move_pcie_link_disable_1.patch"
-Content-Disposition: attachment; filename="move_pcie_link_disable_1.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hzyh9lhz0
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IEFkZCBnZW5lcmljIHBjaWVfbGlua19kaXNhYmxlCgpSZW1v
-dmUgbm90IG5lZWRlZCByZXR1cm4gdmFsdWUgY2hlY2tpbmcgdGhhdCBMaW51cyBwb2ludGVkIG91
-dCBiZWZvcmUuCgpXaWxsIHVzZSBpdCBmcm9tIC9zeXMvLi4uL3BjaWUvbGlua19kaXNhYmxlCgpT
-aWduZWQtb2ZmLWJ5OiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgotLS0KIGRyaXZl
-cnMvcGNpL01ha2VmaWxlICAgIHwgICAgMiArLQogZHJpdmVycy9wY2kvcGNpZS1saW5rLmMgfCAg
-IDQyICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKwogaW5jbHVkZS9s
-aW51eC9wY2kuaCAgICAgfCAgICAyICsrCiAzIGZpbGVzIGNoYW5nZWQsIDQ1IGluc2VydGlvbnMo
-KyksIDEgZGVsZXRpb24oLSkKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvcGNpZS1saW5r
-LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PQotLS0gL2Rldi9udWxsCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvcGNp
-ZS1saW5rLmMKQEAgLTAsMCArMSw0MiBAQAorI2luY2x1ZGUgPGxpbnV4L2tlcm5lbC5oPgorI2lu
-Y2x1ZGUgPGxpbnV4L21vZHVsZS5oPgorI2luY2x1ZGUgPGxpbnV4L3BjaS5oPgorI2luY2x1ZGUg
-PGxpbnV4L2Vycm5vLmg+CisjaW5jbHVkZSA8bGludXgvamlmZmllcy5oPgorI2luY2x1ZGUgPGxp
-bnV4L2RlbGF5Lmg+CisKK2ludCBwY2llX2xpbmtfZGlzYWJsZV9nZXQoc3RydWN0IHBjaV9kZXYg
-KmRldikKK3sKKwl1MTYgbG5rX2N0cmw7CisJaWYgKCFwY2lfaXNfcGNpZShkZXYpKQorCQlyZXR1
-cm4gMDsKKworCXBjaWVfY2FwYWJpbGl0eV9yZWFkX3dvcmQoZGV2LCBQQ0lfRVhQX0xOS0NUTCwg
-Jmxua19jdHJsKTsKKworCXJldHVybiAhIShsbmtfY3RybCAmIFBDSV9FWFBfTE5LQ1RMX0xEKTsK
-K30KKwordm9pZCBwY2llX2xpbmtfZGlzYWJsZV9zZXQoc3RydWN0IHBjaV9kZXYgKmRldiwgaW50
-IGJpdCkKK3sKKwl1MTYgbG5rX2N0cmwsIG9sZF9sbmtfY3RybDsKKworCWlmICghcGNpX2lzX3Bj
-aWUoZGV2KSkKKwkJcmV0dXJuOworCisJcGNpZV9jYXBhYmlsaXR5X3JlYWRfd29yZChkZXYsIFBD
-SV9FWFBfTE5LQ1RMLCAmbG5rX2N0cmwpOworCW9sZF9sbmtfY3RybCA9IGxua19jdHJsOworCisJ
-aWYgKCFiaXQpCisJCWxua19jdHJsICY9IH5QQ0lfRVhQX0xOS0NUTF9MRDsKKwllbHNlCisJCWxu
-a19jdHJsIHw9IFBDSV9FWFBfTE5LQ1RMX0xEOworCisJaWYgKG9sZF9sbmtfY3RybCA9PSBsbmtf
-Y3RybCkKKwkJcmV0dXJuOworCisJcGNpZV9jYXBhYmlsaXR5X3dyaXRlX3dvcmQoZGV2LCBQQ0lf
-RVhQX0xOS0NUTCwgbG5rX2N0cmwpOworCisJZGV2X3ByaW50ayhLRVJOX0RFQlVHLCAmZGV2LT5k
-ZXYsICIlczogbG5rX2N0cmwgPSAleFxuIiwgX19mdW5jX18sCisJCQkgbG5rX2N0cmwpOworfQor
-RVhQT1JUX1NZTUJPTChwY2llX2xpbmtfZGlzYWJsZV9zZXQpOwpJbmRleDogbGludXgtMi42L2lu
-Y2x1ZGUvbGludXgvcGNpLmgKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvaW5jbHVkZS9s
-aW51eC9wY2kuaAorKysgbGludXgtMi42L2luY2x1ZGUvbGludXgvcGNpLmgKQEAgLTg0Miw2ICs4
-NDIsOCBAQCBzdHJ1Y3QgcGNpX2J1cyAqcGNpX3NjYW5fcm9vdF9idXMoc3RydWN0CiBzdHJ1Y3Qg
-cGNpX2J1cyAqcGNpX2FkZF9uZXdfYnVzKHN0cnVjdCBwY2lfYnVzICpwYXJlbnQsIHN0cnVjdCBw
-Y2lfZGV2ICpkZXYsCiAJCQkJaW50IGJ1c25yKTsKIHZvaWQgcGNpZV91cGRhdGVfbGlua19zcGVl
-ZChzdHJ1Y3QgcGNpX2J1cyAqYnVzLCB1MTYgbGlua19zdGF0dXMpOwordm9pZCBwY2llX2xpbmtf
-ZGlzYWJsZV9zZXQoc3RydWN0IHBjaV9kZXYgKmRldiwgaW50IGJpdCk7CitpbnQgcGNpZV9saW5r
-X2Rpc2FibGVfZ2V0KHN0cnVjdCBwY2lfZGV2ICpkZXYpOwogc3RydWN0IHBjaV9zbG90ICpwY2lf
-Y3JlYXRlX3Nsb3Qoc3RydWN0IHBjaV9idXMgKnBhcmVudCwgaW50IHNsb3RfbnIsCiAJCQkJIGNv
-bnN0IGNoYXIgKm5hbWUsCiAJCQkJIHN0cnVjdCBob3RwbHVnX3Nsb3QgKmhvdHBsdWcpOwpJbmRl
-eDogbGludXgtMi42L2RyaXZlcnMvcGNpL01ha2VmaWxlCj09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIu
-Ni5vcmlnL2RyaXZlcnMvcGNpL01ha2VmaWxlCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvTWFr
-ZWZpbGUKQEAgLTQsNyArNCw3IEBACiAKIG9iai15CQkrPSBhY2Nlc3MubyBidXMubyBwcm9iZS5v
-IGhvc3QtYnJpZGdlLm8gcmVtb3ZlLm8gcGNpLm8gXAogCQkJcGNpLWRyaXZlci5vIHNlYXJjaC5v
-IHBjaS1zeXNmcy5vIHJvbS5vIHNldHVwLXJlcy5vIFwKLQkJCWlycS5vIHZwZC5vIHNldHVwLWJ1
-cy5vIHZjLm8KKwkJCWlycS5vIHZwZC5vIHNldHVwLWJ1cy5vIHBjaWUtbGluay5vIHZjLm8KIG9i
-ai0kKENPTkZJR19QUk9DX0ZTKSArPSBwcm9jLm8KIG9iai0kKENPTkZJR19TWVNGUykgKz0gc2xv
-dC5vCiAK
---089e0149c866b1c3570502cf265c
-Content-Type: text/x-patch; charset=US-ASCII; name="move_pcie_link_disable_2.patch"
-Content-Disposition: attachment; filename="move_pcie_link_disable_2.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hzyh9ws61
-
-U3ViamVjdDogW1BBVENIXSBQQ0ksIHBjaWVocDogVXNlIGdlbmVyaWMgcGNpZV9saW5rX2Rpc2Fi
-bGUKCkFsc28gcmVtb3ZlIG9sZCB2ZXJzaW9uIHdpdGggbm90IG5lZWRlZCByZXR1cm4gY2hlY2su
-CgpTaWduZWQtb2ZmLWJ5OiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgotLS0KIGRy
-aXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX2hwYy5jIHwgICAzMCArKystLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDI3IGRlbGV0aW9u
-cygtKQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYwo9
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9o
-cGMuYworKysgbGludXgtMi42L2RyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX2hwYy5jCkBAIC0z
-MDUsMjggKzMwNSw2IEBAIGludCBwY2llaHBfY2hlY2tfbGlua19zdGF0dXMoc3RydWN0IGNvbnQK
-IAlyZXR1cm4gMDsKIH0KIAotc3RhdGljIGludCBfX3BjaWVocF9saW5rX3NldChzdHJ1Y3QgY29u
-dHJvbGxlciAqY3RybCwgYm9vbCBlbmFibGUpCi17Ci0Jc3RydWN0IHBjaV9kZXYgKnBkZXYgPSBj
-dHJsX2RldihjdHJsKTsKLQl1MTYgbG5rX2N0cmw7Ci0KLQlwY2llX2NhcGFiaWxpdHlfcmVhZF93
-b3JkKHBkZXYsIFBDSV9FWFBfTE5LQ1RMLCAmbG5rX2N0cmwpOwotCi0JaWYgKGVuYWJsZSkKLQkJ
-bG5rX2N0cmwgJj0gflBDSV9FWFBfTE5LQ1RMX0xEOwotCWVsc2UKLQkJbG5rX2N0cmwgfD0gUENJ
-X0VYUF9MTktDVExfTEQ7Ci0KLQlwY2llX2NhcGFiaWxpdHlfd3JpdGVfd29yZChwZGV2LCBQQ0lf
-RVhQX0xOS0NUTCwgbG5rX2N0cmwpOwotCWN0cmxfZGJnKGN0cmwsICIlczogbG5rX2N0cmwgPSAl
-eFxuIiwgX19mdW5jX18sIGxua19jdHJsKTsKLQlyZXR1cm4gMDsKLX0KLQotc3RhdGljIGludCBw
-Y2llaHBfbGlua19lbmFibGUoc3RydWN0IGNvbnRyb2xsZXIgKmN0cmwpCi17Ci0JcmV0dXJuIF9f
-cGNpZWhwX2xpbmtfc2V0KGN0cmwsIHRydWUpOwotfQotCiB2b2lkIHBjaWVocF9nZXRfYXR0ZW50
-aW9uX3N0YXR1cyhzdHJ1Y3Qgc2xvdCAqc2xvdCwgdTggKnN0YXR1cykKIHsKIAlzdHJ1Y3QgY29u
-dHJvbGxlciAqY3RybCA9IHNsb3QtPmN0cmw7CkBAIC00NzMsNyArNDUxLDYgQEAgaW50IHBjaWVo
-cF9wb3dlcl9vbl9zbG90KHN0cnVjdCBzbG90ICogcwogCXN0cnVjdCBjb250cm9sbGVyICpjdHJs
-ID0gc2xvdC0+Y3RybDsKIAlzdHJ1Y3QgcGNpX2RldiAqcGRldiA9IGN0cmxfZGV2KGN0cmwpOwog
-CXUxNiBzbG90X3N0YXR1czsKLQlpbnQgcmV0dmFsOwogCiAJLyogQ2xlYXIgc3RpY2t5IHBvd2Vy
-LWZhdWx0IGJpdCBmcm9tIHByZXZpb3VzIHBvd2VyIGZhaWx1cmVzICovCiAJcGNpZV9jYXBhYmls
-aXR5X3JlYWRfd29yZChwZGV2LCBQQ0lfRVhQX1NMVFNUQSwgJnNsb3Rfc3RhdHVzKTsKQEAgLTQ4
-NywxMSArNDY0LDEwIEBAIGludCBwY2llaHBfcG93ZXJfb25fc2xvdChzdHJ1Y3Qgc2xvdCAqIHMK
-IAkJIHBjaV9wY2llX2NhcChjdHJsLT5wY2llLT5wb3J0KSArIFBDSV9FWFBfU0xUQ1RMLAogCQkg
-UENJX0VYUF9TTFRDVExfUFdSX09OKTsKIAotCXJldHZhbCA9IHBjaWVocF9saW5rX2VuYWJsZShj
-dHJsKTsKLQlpZiAocmV0dmFsKQotCQljdHJsX2VycihjdHJsLCAiJXM6IENhbiBub3QgZW5hYmxl
-IHRoZSBsaW5rIVxuIiwgX19mdW5jX18pOworCS8qIEVuYWJsZSB0aGUgbGluayAqLworCXBjaWVf
-bGlua19kaXNhYmxlX3NldChjdHJsLT5wY2llLT5wb3J0LCAwKTsKIAotCXJldHVybiByZXR2YWw7
-CisJcmV0dXJuIDA7CiB9CiAKIHZvaWQgcGNpZWhwX3Bvd2VyX29mZl9zbG90KHN0cnVjdCBzbG90
-ICogc2xvdCkK
---089e0149c866b1c3570502cf265c
-Content-Type: text/x-patch; charset=US-ASCII; name="pci_express_link.patch"
-Content-Disposition: attachment; filename="pci_express_link.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hzyhac7w2
-
-U3ViamVjdDogW1BBVENIXSBQQ0ksIHN5c2ZzOiBBZGQgcGNpZSBhdHRycyBmb3IgcGNpZSBkZXZp
-Y2UgdW5kZXIgcGNpIGRldiBkaXIuCgpXaWxsIHB1dCBsaW5rX2Rpc2FibGUgYW5kIGxpbmtfcmV0
-cmFpbgoKU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0t
-CiBkcml2ZXJzL3BjaS9NYWtlZmlsZSAgICAgfCAgICAyICstCiBkcml2ZXJzL3BjaS9wY2ktc3lz
-ZnMuYyAgfCAgICAxICsKIGRyaXZlcnMvcGNpL3BjaS5oICAgICAgICB8ICAgIDEgKwogZHJpdmVy
-cy9wY2kvcGNpZS1zeXNmcy5jIHwgICAyMyArKysrKysrKysrKysrKysrKysrKysrKwogNCBmaWxl
-cyBjaGFuZ2VkLCAyNiBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCgpJbmRleDogbGludXgt
-Mi42L2RyaXZlcnMvcGNpL3BjaS1zeXNmcy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmln
-L2RyaXZlcnMvcGNpL3BjaS1zeXNmcy5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvcGNpLXN5
-c2ZzLmMKQEAgLTE2MDgsNiArMTYwOCw3IEBAIHN0YXRpYyBzdHJ1Y3QgYXR0cmlidXRlX2dyb3Vw
-IHBjaV9kZXZfYnIKIHN0YXRpYyBjb25zdCBzdHJ1Y3QgYXR0cmlidXRlX2dyb3VwICpwY2lfZGV2
-X2F0dHJfZ3JvdXBzW10gPSB7CiAJJnBjaV9kZXZfYXR0cl9ncm91cCwKIAkmcGNpX2Rldl9icmlk
-Z2VfYXR0cl9ncm91cCwKKwkmcGNpX2Rldl9wY2llX2F0dHJfZ3JvdXAsCiAJJnBjaV9kZXZfaHBf
-YXR0cl9ncm91cCwKICNpZmRlZiBDT05GSUdfUENJX0lPVgogCSZzcmlvdl9kZXZfYXR0cl9ncm91
-cCwKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9wY2llLXN5c2ZzLmMKPT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQot
-LS0gL2Rldi9udWxsCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvcGNpZS1zeXNmcy5jCkBAIC0w
-LDAgKzEsMjMgQEAKKyNpbmNsdWRlIDxsaW51eC9rZXJuZWwuaD4KKyNpbmNsdWRlIDxsaW51eC9w
-Y2kuaD4KKworc3RhdGljIHN0cnVjdCBhdHRyaWJ1dGUgKnBjaV9kZXZfcGNpZV9kZXZfYXR0cnNb
-XSA9IHsKKwlOVUxMLAorfTsKKworc3RhdGljIHVtb2RlX3QgcGNpX2Rldl9wY2llX2F0dHJzX2Fy
-ZV92aXNpYmxlKHN0cnVjdCBrb2JqZWN0ICprb2JqLAorCQkJCQkJc3RydWN0IGF0dHJpYnV0ZSAq
-YSwgaW50IG4pCit7CisJc3RydWN0IGRldmljZSAqZGV2ID0gY29udGFpbmVyX29mKGtvYmosIHN0
-cnVjdCBkZXZpY2UsIGtvYmopOworCXN0cnVjdCBwY2lfZGV2ICpwZGV2ID0gdG9fcGNpX2Rldihk
-ZXYpOworCisJaWYgKCFwY2lfaXNfcGNpZShwZGV2KSkKKwkJcmV0dXJuIDA7CisKKwlyZXR1cm4g
-YS0+bW9kZTsKK30KKworc3RydWN0IGF0dHJpYnV0ZV9ncm91cCBwY2lfZGV2X3BjaWVfYXR0cl9n
-cm91cCA9IHsKKwkuaXNfdmlzaWJsZSA9IHBjaV9kZXZfcGNpZV9hdHRyc19hcmVfdmlzaWJsZSwK
-KwkuYXR0cnMJICAgID0gcGNpX2Rldl9wY2llX2Rldl9hdHRycywKK307CkluZGV4OiBsaW51eC0y
-LjYvZHJpdmVycy9wY2kvcGNpLmgKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVy
-cy9wY2kvcGNpLmgKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9wY2kuaApAQCAtMTUyLDYgKzE1
-Miw3IEBAIHN0YXRpYyBpbmxpbmUgaW50IHBjaV9ub19kMWQyKHN0cnVjdCBwY2kKIGV4dGVybiBj
-b25zdCBzdHJ1Y3QgYXR0cmlidXRlX2dyb3VwICpwY2lfZGV2X2dyb3Vwc1tdOwogZXh0ZXJuIGNv
-bnN0IHN0cnVjdCBhdHRyaWJ1dGVfZ3JvdXAgKnBjaWJ1c19ncm91cHNbXTsKIGV4dGVybiBzdHJ1
-Y3QgZGV2aWNlX3R5cGUgcGNpX2Rldl90eXBlOworZXh0ZXJuIHN0cnVjdCBhdHRyaWJ1dGVfZ3Jv
-dXAgcGNpX2Rldl9wY2llX2F0dHJfZ3JvdXA7CiBleHRlcm4gY29uc3Qgc3RydWN0IGF0dHJpYnV0
-ZV9ncm91cCAqcGNpX2J1c19ncm91cHNbXTsKIAogCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9w
-Y2kvTWFrZWZpbGUKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvTWFr
-ZWZpbGUKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9NYWtlZmlsZQpAQCAtNCw3ICs0LDcgQEAK
-IAogb2JqLXkJCSs9IGFjY2Vzcy5vIGJ1cy5vIHByb2JlLm8gaG9zdC1icmlkZ2UubyByZW1vdmUu
-byBwY2kubyBcCiAJCQlwY2ktZHJpdmVyLm8gc2VhcmNoLm8gcGNpLXN5c2ZzLm8gcm9tLm8gc2V0
-dXAtcmVzLm8gXAotCQkJaXJxLm8gdnBkLm8gc2V0dXAtYnVzLm8gcGNpZS1saW5rLm8gdmMubwor
-CQkJaXJxLm8gdnBkLm8gc2V0dXAtYnVzLm8gcGNpZS1saW5rLm8gcGNpZS1zeXNmcy5vIHZjLm8K
-IG9iai0kKENPTkZJR19QUk9DX0ZTKSArPSBwcm9jLm8KIG9iai0kKENPTkZJR19TWVNGUykgKz0g
-c2xvdC5vCiAK
---089e0149c866b1c3570502cf265c
-Content-Type: text/x-patch; charset=US-ASCII; name="pci_express_link_disable.patch"
-Content-Disposition: attachment; filename="pci_express_link_disable.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hzyham9g3
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IEFkZCBsaW5rX2Rpc2FibGUgaW4gL3N5c2ZzIGZvciBwY2ll
-IGRldmljZQoKRm91bmQgUENJZSBjYXJkcyBmcm9tIG9uZSB2ZW5kb3IsIHdpbGwgbm90IHJlc3Bv
-bmQgdG8gc2NhbiBmcm9tIGJyaWRnZSwKaWYgd2UgY2hhbmdlIGJ1cyBudW1iZXIgc2V0dGluZyBp
-biBicmlkZ2UgZGV2aWNlLgoKSGF2ZSB0byBkbyBsaW5rIGRpc2FibGUvZW5hYmxlIG9uIHRoZSBw
-Y2llIHJvb3QgcG9ydC4KClNvIHRyeSB0byBleHBvc2UgbGluayBkaXNhYmxlIGJpdCBvZiBwY2ll
-IGxpbmsgY29udHJvbCByZWdpc3Rlci4gV2UgY2FuIHVzZQogZWNobyAxID4gL3N5cy8uLi4uL2xp
-bmtfZGlzYWJsZQogZWNobyAwID4gL3N5cy8uLi4uL2xpbmtfZGlzYWJsZQp0byBicmluZyB0aGUg
-cGNpZSBkZXZpY2UgYmFjayB0byByZXNwb25kIHRvIHNjYW4uCgpTaWduZWQtb2ZmLWJ5OiBZaW5n
-aGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgotLS0KIGRyaXZlcnMvcGNpL3BjaWUtc3lzZnMu
-YyB8ICAgMzMgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrCiAxIGZpbGUgY2hhbmdl
-ZCwgMzMgaW5zZXJ0aW9ucygrKQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9wY2llLXN5
-c2ZzLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvcGNpZS1zeXNm
-cy5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvcGNpZS1zeXNmcy5jCkBAIC0xLDcgKzEsMzUg
-QEAKICNpbmNsdWRlIDxsaW51eC9rZXJuZWwuaD4KICNpbmNsdWRlIDxsaW51eC9wY2kuaD4KIAor
-c3RhdGljIHNzaXplX3QKK3BjaWVfbGlua19kaXNhYmxlX3Nob3coc3RydWN0IGRldmljZSAqZGV2
-LCBzdHJ1Y3QgZGV2aWNlX2F0dHJpYnV0ZSAqYXR0ciwKKwkJCWNoYXIgKmJ1ZikKK3sKKwlzdHJ1
-Y3QgcGNpX2RldiAqcGRldiA9IHRvX3BjaV9kZXYoZGV2KTsKKworCXJldHVybiBzcHJpbnRmKGJ1
-ZiwgIiV1XG4iLCBwY2llX2xpbmtfZGlzYWJsZV9nZXQocGRldikpOworfQorc3RhdGljIHNzaXpl
-X3QKK3BjaWVfbGlua19kaXNhYmxlX3N0b3JlKHN0cnVjdCBkZXZpY2UgKmRldiwgc3RydWN0IGRl
-dmljZV9hdHRyaWJ1dGUgKmF0dHIsCisJCQljb25zdCBjaGFyICpidWYsIHNpemVfdCBjb3VudCkK
-K3sKKwlzdHJ1Y3QgcGNpX2RldiAqcGRldiA9IHRvX3BjaV9kZXYoZGV2KTsKKwl1bnNpZ25lZCBs
-b25nIHZhbDsKKworCWlmIChrc3RydG91bChidWYsIDAsICZ2YWwpIDwgMCkKKwkJcmV0dXJuIC1F
-SU5WQUw7CisKKwlwY2llX2xpbmtfZGlzYWJsZV9zZXQocGRldiwgdmFsKTsKKworCXJldHVybiBj
-b3VudDsKK30KKworc3RhdGljIHN0cnVjdCBkZXZpY2VfYXR0cmlidXRlIHBjaWVfbGlua19kaXNh
-YmxlX2F0dHIgPQorCQlfX0FUVFIocGNpZV9saW5rX2Rpc2FibGUsIDA2NDQsCisJCSAgICAgICBw
-Y2llX2xpbmtfZGlzYWJsZV9zaG93LCBwY2llX2xpbmtfZGlzYWJsZV9zdG9yZSk7CisKIHN0YXRp
-YyBzdHJ1Y3QgYXR0cmlidXRlICpwY2lfZGV2X3BjaWVfZGV2X2F0dHJzW10gPSB7CisJJnBjaWVf
-bGlua19kaXNhYmxlX2F0dHIuYXR0ciwKIAlOVUxMLAogfTsKIApAQCAtMTQsNiArNDIsMTEgQEAg
-c3RhdGljIHVtb2RlX3QgcGNpX2Rldl9wY2llX2F0dHJzX2FyZV92aQogCWlmICghcGNpX2lzX3Bj
-aWUocGRldikpCiAJCXJldHVybiAwOwogCisJaWYgKGEgPT0gJnBjaWVfbGlua19kaXNhYmxlX2F0
-dHIuYXR0cikKKwkJaWYgKChwY2lfcGNpZV90eXBlKHBkZXYpICE9IFBDSV9FWFBfVFlQRV9ST09U
-X1BPUlQpICYmCisJCSAgICAocGNpX3BjaWVfdHlwZShwZGV2KSAhPSBQQ0lfRVhQX1RZUEVfRE9X
-TlNUUkVBTSkpCisJCQlyZXR1cm4gMDsKKwogCXJldHVybiBhLT5tb2RlOwogfQogCg==
---089e0149c866b1c3570502cf265c--
+ drivers/pci/host/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
