@@ -1,68 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:48068 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750968AbaI2ULr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 16:11:47 -0400
-Received: by mail-ig0-f181.google.com with SMTP id h18so4137974igc.2
-        for <linux-pci@vger.kernel.org>; Mon, 29 Sep 2014 13:11:46 -0700 (PDT)
-Date: Mon, 29 Sep 2014 14:11:44 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Minghuan Lian <Minghuan.Lian@freescale.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v4] PCI: Layerscape: Add Layerscape PCIe driver
-Message-ID: <20140929201144.GB15712@google.com>
-References: <1411888107-27640-1-git-send-email-Minghuan.Lian@freescale.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <5406BFFF.9000505@huawei.com>
+Date: Wed, 3 Sep 2014 15:15:11 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411888107-27640-1-git-send-email-Minghuan.Lian@freescale.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: "Bharat.Bhushan@freescale.com" <Bharat.Bhushan@freescale.com>,
+	"arnab.basu@freescale.com" <arnab.basu@freescale.com>
+CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Paul.Mundt@huawei.com" <Paul.Mundt@huawei.com>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+	"virtualization@lists.linux-foundation.org"
+	<virtualization@lists.linux-foundation.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC PATCH 00/11] Refactor MSI to support Non-PCI device
+References: <1406344128-27055-1-git-send-email-wangyijing@huawei.com> <c6d34fe1bbe9457ea8cff7dcd97902b8@DM2PR03MB317.namprd03.prod.outlook.com> <53DEF80C.1010608@huawei.com> <8a2b4e237f2d4c7e95ef72867658b53a@BLUPR03MB566.namprd03.prod.outlook.com> <53F44022.6030706@huawei.com> <c3b2bd89ef3d462cb302f6ede56a0d44@BLUPR03MB566.namprd03.prod.outlook.com>
+In-Reply-To: <c3b2bd89ef3d462cb302f6ede56a0d44@BLUPR03MB566.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Sep 28, 2014 at 03:08:27PM +0800, Minghuan Lian wrote:
-> Add support for Freescale Layerscape PCIe controller. This driver
-> re-uses the designware core code.
-> ...
+>> Provide the private MSI setup functions in bus-driver layer can't apply to all
+>> Non-PCI MSI devices, because we can not guarantee Non-PCI MSI devices are always
+>> on a bus. The existing HPET, DMAR device both have no bus bind.
+> 
+> Yes, that's why I was not sure of bus-driver or device-driver model.
+> 
+>> I'm working on a
+>> new MSI setup framework, as you mentioned before, in device-driver model.
+>>
+>> I abstracted a new virtual device (called struct msi_dev), this msi_dev will
+>> manage all MSI info,
+> 
+> Will this "struct msi_dev" will be part of "struct device"?
+> 
+>> and a new bus named msi_bus, also introduced a new driver
+>> msi_driver, msi_bus is responsible for binding msi_dev and msi_driver.
+>> All MSI devices will be classified into different MSI device types, like
+>> MSI_TYPE_PCI, MSI_TYPE_HPET, MSI_TYPE_DMAR, etc..
+>>
+>> Each MSI type device should provide a private struct msi_driver. msi_driver
+>> should contain the type specific MSI ops functions to help setup and enable MSI
+>> device, request MSI irq.
+>>
+>> I almost finish the first draft, and will post out next week in plan :)
+> 
+> Will be looking forward to next version.
 
-This looks pretty good to me.  I have a couple trivial comments below.
-Anybody else have any suggestions?  I'd like to get this merged in the next
-day or two so we can get this into v3.18.
+Hi Bharat, I'm sorry I had to delay to send out the new version :(. I found some risks in the
+new MSI framework, i.e. DMAR MSI initialized the MSI before the linux device-driver tree be built.
+And we also found some problems during test. So I think I need more time to review and test.
 
-I'd like a MAINTAINERS update, too, so I know who to expect patches and
-acks from.
+Thanks!
+Yijing.
 
-> +static irqreturn_t ls_pcie_msi_irq_handler(int irq, void *data)
-> +{
-> +	struct pcie_port *pp = data;
-> +	struct ls_pcie *pcie = to_ls_pcie(pp);
-> +	unsigned int msi_irq;
-> +
-> +	/* clear the interrupt */
-> +	regmap_write(pcie->scfg, SCFG_SPIMSICLRCR,
-> +		     MSI_LS1021A_DATA(pcie->index));
-> +
-> +	msi_irq = irq_find_mapping(pp->irq_domain, 0);
-> +	if (!msi_irq) {
-> +		/*
-> +		 * that's weird who triggered this?
-> +		 * just clear it
-> +		 */
-> +		dev_err(pcie->dev, "unexpected MSI\n");
+> 
+> Thanks
+> -Bharat
+> 
+>>
+>>
+>> Thanks!
+>> Yijing.
+>>
+>>>
+>>> Thanks
+>>> -Bharat
+>>>
+>>>>
+>>>> My patchset is just a RFC draft, I will update it later, all we want
+>>>> to do is make kernel support Non-PCI MSI devices.
+>>>>
+>>>> Thanks!
+>>>> Yijing.
+>>>>
+>>>>
+>>>>>
+>>>>> Thanks
+>>>>> Arnab
+>>>>> --
+>>>>> To unsubscribe from this list: send the line "unsubscribe
+>>>>> linux-kernel" in the body of a message to majordomo@vger.kernel.org
+>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>> Please read the FAQ at  http://www.tux.org/lkml/
+>>>>>
+>>>>> .
+>>>>>
+>>>>
+>>>>
+>>>> --
+>>>> Thanks!
+>>>> Yijing
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci"
+>>>> in the body of a message to majordomo@vger.kernel.org More majordomo
+>>>> info at http://vger.kernel.org/majordomo-info.html
+>>>
+>>> .
+>>>
+>>
+>>
+>> --
+>> Thanks!
+>> Yijing
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the body
+>> of a message to majordomo@vger.kernel.org More majordomo info at
+>> http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+> .
+> 
 
-Scott suggested either using dev_dbg or rate-limiting this dev_err.
 
-> +static int ls_add_pcie_port(struct ls_pcie *pcie)
-> +{
-> +	struct pcie_port *pp;
-> +	int ret;
-> +
-> +	if (!pcie)
-> +		return -EINVAL;
+-- 
+Thanks!
+Yijing
 
-Unnecessary NULL pointer check (we already checked it below).
-
-Bjorn
