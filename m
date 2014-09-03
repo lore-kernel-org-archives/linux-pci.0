@@ -1,107 +1,393 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:64769 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750935AbaI3McC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 08:32:02 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>
-Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
-Date: Tue, 30 Sep 2014 14:31:44 +0200
-Message-ID: <3090148.OUdB0fsdsR@wuerfel>
-In-Reply-To: <20140930120344.GA14215@e102568-lin.cambridge.arm.com>
-References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com> <8631927.qWHZsjCs8e@wuerfel> <20140930120344.GA14215@e102568-lin.cambridge.arm.com>
+Received: from mail-qc0-f179.google.com ([209.85.216.179]:39130 "EHLO
+	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932836AbaICRF0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Sep 2014 13:05:26 -0400
+Received: by mail-qc0-f179.google.com with SMTP id l6so8867097qcy.38
+        for <linux-pci@vger.kernel.org>; Wed, 03 Sep 2014 10:05:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1409763617-17074-2-git-send-email-sudeep.holla@arm.com>
+References: <1409763617-17074-1-git-send-email-sudeep.holla@arm.com> <1409763617-17074-2-git-send-email-sudeep.holla@arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 3 Sep 2014 11:05:04 -0600
+Message-ID: <CAErSpo6wOjh6PitcPudyZBVKy7vyEafNSzxgf5jSxFq+vrQHQQ@mail.gmail.com>
+Subject: Re: [PATCH v4 01/11] cpumask: factor out show_cpumap into separate
+ helper function
+To: Sudeep Holla <sudeep.holla@arm.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 30 September 2014 13:03:44 Lorenzo Pieralisi wrote:
-> > >  static int gen_pci_probe(struct platform_device *pdev)
-> > >  {
-> > > @@ -326,6 +385,7 @@ static int gen_pci_probe(struct platform_device *pdev)
-> > >         struct device *dev = &pdev->dev;
-> > >         struct device_node *np = dev->of_node;
-> > >         struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-> > > +#ifndef CONFIG_ARM64
-> > >         struct hw_pci hw = {
-> > >                 .nr_controllers = 1,
-> > >                 .private_data   = (void **)&pci,
-> > > @@ -333,6 +393,7 @@ static int gen_pci_probe(struct platform_device *pdev)
-> > >                 .map_irq        = of_irq_parse_and_map_pci,
-> > >                 .ops            = &gen_pci_ops,
-> > >         };
-> > > +#endif
-> > >  
-> > 
-> > Same here, I'd suggest marking this "#ifdef CONFIG_ARM" instead, as hw_pci
-> > is an arm32 specific data structure.
-> 
-> I do not think we need hw struct at all, see below, we can write code so
-> that we do not rely on ARM32 PCI bios, I will have a stab at that and
-> post the resulting code.
+On Wed, Sep 3, 2014 at 11:00 AM, Sudeep Holla <sudeep.holla@arm.com> wrote:
+> From: Sudeep Holla <sudeep.holla@arm.com>
+>
+> Many sysfs *_show function use cpu{list,mask}_scnprintf to copy cpumap
+> to the buffer aligned to PAGE_SIZE, append '\n' and '\0' to return null
+> terminated buffer with newline.
+>
+> This patch creates a new helper function cpumap_copy_to_buf in
+> cpumask.h and consolidates most of them using this new helper.
+>
+> Signed-off-by: Sudeep Holla <sudeep.holla@arm.com>
+> Suggested-by: Stephen Boyd <sboyd@codeaurora.org>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: x86@kernel.org
+> Cc: linux-acpi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
 
-That would of course be best. I think it needs some rework of the
-arm32 PCI code though, or you'd still have to create pci_sys_data
-manually, and that is currently allocated by pcibios_init_hw.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com> (drivers/pci part)
 
-> > > +       if (!gen_scan_root_bus(&pdev->dev, pci->cfg.bus_range.start,
-> > > +                              &gen_pci_ops, pci, &pci->resources)) {
-> > > +               dev_err(&pdev->dev, "failed to enable PCIe ports\n");
-> > > +               return -ENODEV;
-> > > +       }
-> > > +#else
-> > >         pci_common_init_dev(dev, &hw);
-> > > +#endif /* CONFIG_ARM64 */
-> > > 
-> > 
-> > Again, just make the pci_common_init_dev() call #ifdef CONFIG_ARM, and move
-> > the generic case after it, outside of the #ifdef.
-> 
-> I went through the code quickly but I think we can (and should) remove
-> this quite ugly ifdeffery altogether. Most of the functionality in
-> pci_common_init_dev() can be implemented through the common PCI API (and this
-> would make this driver arch agnostic as it should be), I will go through ARM32
-> PCI bios code to check what is executed in detail in pci_common_init_dev() and
-> make sure that we follow those initialization steps in the resulting probe code
-> for this PCI generic host controller driver.
+I assume you'll merge this via a non-PCI tree.
 
-These are the functions I found that refer to pci_sys_data on arm32:
-
-pcibios_add_bus
-pcibios_remove_bus
-pcibios_align_resource
-pci_mmap_page_range
-pci_domain_nr
-pci_proc_domain
-
-This is not as bad as I had feared, but we still have to ensure that
-any caller of these functions will work with both the generic PCI support
-and the arm32 specific drivers that today use hw_pci.
-
-My idea for dealing with this was to convert all host drivers in
-drivers/pci/host to the generic PCI code and never build the arm32
-bios32 code when CONFIG_ARCH_MULTIPLATFORM is set. Unfortunately that
-requires either doing them all at once or coming up with a migration
-strategy so we don't break things in the process.
-
-Note that arch/arm/mach-cns3xxx/pcie.c also belongs in the drivers/pci/host
-category and should probably be moved there. The integrator and versatile
-PCI drivers are currently not used with MULTIPLATFORM but will at some point
-and we can convert them as we get there.
-
-	Arnd
+> ---
+>  arch/x86/kernel/cpu/perf_event_amd_iommu.c    |  5 +---
+>  arch/x86/kernel/cpu/perf_event_amd_uncore.c   |  6 +----
+>  arch/x86/kernel/cpu/perf_event_intel_rapl.c   |  6 +----
+>  arch/x86/kernel/cpu/perf_event_intel_uncore.c |  6 +----
+>  drivers/acpi/acpi_pad.c                       |  6 +----
+>  drivers/base/cpu.c                            |  5 +---
+>  drivers/base/node.c                           | 14 +++-------
+>  drivers/base/topology.c                       | 22 ++-------------
+>  drivers/pci/pci-sysfs.c                       | 39 +++++++--------------------
+>  include/linux/cpumask.h                       | 27 +++++++++++++++++++
+>  10 files changed, 49 insertions(+), 87 deletions(-)
+>
+> diff --git a/arch/x86/kernel/cpu/perf_event_amd_iommu.c b/arch/x86/kernel/cpu/perf_event_amd_iommu.c
+> index 639d1289b1ba..61a670de0ef2 100644
+> --- a/arch/x86/kernel/cpu/perf_event_amd_iommu.c
+> +++ b/arch/x86/kernel/cpu/perf_event_amd_iommu.c
+> @@ -130,10 +130,7 @@ static ssize_t _iommu_cpumask_show(struct device *dev,
+>                                    struct device_attribute *attr,
+>                                    char *buf)
+>  {
+> -       int n = cpulist_scnprintf(buf, PAGE_SIZE - 2, &iommu_cpumask);
+> -       buf[n++] = '\n';
+> -       buf[n] = '\0';
+> -       return n;
+> +       return cpumap_copy_to_buf(true, &iommu_cpumask, buf);
+>  }
+>  static DEVICE_ATTR(cpumask, S_IRUGO, _iommu_cpumask_show, NULL);
+>
+> diff --git a/arch/x86/kernel/cpu/perf_event_amd_uncore.c b/arch/x86/kernel/cpu/perf_event_amd_uncore.c
+> index 30790d798e6b..d96a37ed8570 100644
+> --- a/arch/x86/kernel/cpu/perf_event_amd_uncore.c
+> +++ b/arch/x86/kernel/cpu/perf_event_amd_uncore.c
+> @@ -219,7 +219,6 @@ static ssize_t amd_uncore_attr_show_cpumask(struct device *dev,
+>                                             struct device_attribute *attr,
+>                                             char *buf)
+>  {
+> -       int n;
+>         cpumask_t *active_mask;
+>         struct pmu *pmu = dev_get_drvdata(dev);
+>
+> @@ -230,10 +229,7 @@ static ssize_t amd_uncore_attr_show_cpumask(struct device *dev,
+>         else
+>                 return 0;
+>
+> -       n = cpulist_scnprintf(buf, PAGE_SIZE - 2, active_mask);
+> -       buf[n++] = '\n';
+> -       buf[n] = '\0';
+> -       return n;
+> +       return cpumap_copy_to_buf(true, active_mask, buf);
+>  }
+>  static DEVICE_ATTR(cpumask, S_IRUGO, amd_uncore_attr_show_cpumask, NULL);
+>
+> diff --git a/arch/x86/kernel/cpu/perf_event_intel_rapl.c b/arch/x86/kernel/cpu/perf_event_intel_rapl.c
+> index 619f7699487a..8a673e138e2e 100644
+> --- a/arch/x86/kernel/cpu/perf_event_intel_rapl.c
+> +++ b/arch/x86/kernel/cpu/perf_event_intel_rapl.c
+> @@ -365,11 +365,7 @@ static void rapl_pmu_event_read(struct perf_event *event)
+>  static ssize_t rapl_get_attr_cpumask(struct device *dev,
+>                                 struct device_attribute *attr, char *buf)
+>  {
+> -       int n = cpulist_scnprintf(buf, PAGE_SIZE - 2, &rapl_cpu_mask);
+> -
+> -       buf[n++] = '\n';
+> -       buf[n] = '\0';
+> -       return n;
+> +       return cpumap_copy_to_buf(true, &rapl_cpu_mask, buf);
+>  }
+>
+>  static DEVICE_ATTR(cpumask, S_IRUGO, rapl_get_attr_cpumask, NULL);
+> diff --git a/arch/x86/kernel/cpu/perf_event_intel_uncore.c b/arch/x86/kernel/cpu/perf_event_intel_uncore.c
+> index 0939f86f543d..a0b810951743 100644
+> --- a/arch/x86/kernel/cpu/perf_event_intel_uncore.c
+> +++ b/arch/x86/kernel/cpu/perf_event_intel_uncore.c
+> @@ -3617,11 +3617,7 @@ static int uncore_pmu_event_init(struct perf_event *event)
+>  static ssize_t uncore_get_attr_cpumask(struct device *dev,
+>                                 struct device_attribute *attr, char *buf)
+>  {
+> -       int n = cpulist_scnprintf(buf, PAGE_SIZE - 2, &uncore_cpu_mask);
+> -
+> -       buf[n++] = '\n';
+> -       buf[n] = '\0';
+> -       return n;
+> +       return cpumap_copy_to_buf(true, &uncore_cpu_mask, buf);
+>  }
+>
+>  static DEVICE_ATTR(cpumask, S_IRUGO, uncore_get_attr_cpumask, NULL);
+> diff --git a/drivers/acpi/acpi_pad.c b/drivers/acpi/acpi_pad.c
+> index f148a0580e04..0dbe52ed6a0d 100644
+> --- a/drivers/acpi/acpi_pad.c
+> +++ b/drivers/acpi/acpi_pad.c
+> @@ -350,11 +350,7 @@ static ssize_t acpi_pad_idlecpus_store(struct device *dev,
+>  static ssize_t acpi_pad_idlecpus_show(struct device *dev,
+>         struct device_attribute *attr, char *buf)
+>  {
+> -       int n = 0;
+> -       n = cpumask_scnprintf(buf, PAGE_SIZE-2, to_cpumask(pad_busy_cpus_bits));
+> -       buf[n++] = '\n';
+> -       buf[n] = '\0';
+> -       return n;
+> +       return cpumap_copy_to_buf(false, to_cpumask(pad_busy_cpus_bits), buf);
+>  }
+>  static DEVICE_ATTR(idlecpus, S_IRUGO|S_IWUSR,
+>         acpi_pad_idlecpus_show,
+> diff --git a/drivers/base/cpu.c b/drivers/base/cpu.c
+> index 006b1bc5297d..277a9cfa9040 100644
+> --- a/drivers/base/cpu.c
+> +++ b/drivers/base/cpu.c
+> @@ -207,11 +207,8 @@ static ssize_t show_cpus_attr(struct device *dev,
+>                               char *buf)
+>  {
+>         struct cpu_attr *ca = container_of(attr, struct cpu_attr, attr);
+> -       int n = cpulist_scnprintf(buf, PAGE_SIZE-2, *(ca->map));
+>
+> -       buf[n++] = '\n';
+> -       buf[n] = '\0';
+> -       return n;
+> +       return cpumap_copy_to_buf(true, *ca->map, buf);
+>  }
+>
+>  #define _CPU_ATTR(name, map) \
+> diff --git a/drivers/base/node.c b/drivers/base/node.c
+> index c6d3ae05f1ca..6e58ad566c13 100644
+> --- a/drivers/base/node.c
+> +++ b/drivers/base/node.c
+> @@ -25,32 +25,26 @@ static struct bus_type node_subsys = {
+>  };
+>
+>
+> -static ssize_t node_read_cpumap(struct device *dev, int type, char *buf)
+> +static ssize_t node_read_cpumap(struct device *dev, bool list, char *buf)
+>  {
+>         struct node *node_dev = to_node(dev);
+>         const struct cpumask *mask = cpumask_of_node(node_dev->dev.id);
+> -       int len;
+>
+>         /* 2008/04/07: buf currently PAGE_SIZE, need 9 chars per 32 bits. */
+>         BUILD_BUG_ON((NR_CPUS/32 * 9) > (PAGE_SIZE-1));
+>
+> -       len = type?
+> -               cpulist_scnprintf(buf, PAGE_SIZE-2, mask) :
+> -               cpumask_scnprintf(buf, PAGE_SIZE-2, mask);
+> -       buf[len++] = '\n';
+> -       buf[len] = '\0';
+> -       return len;
+> +       return cpumap_copy_to_buf(list, mask, buf);
+>  }
+>
+>  static inline ssize_t node_read_cpumask(struct device *dev,
+>                                 struct device_attribute *attr, char *buf)
+>  {
+> -       return node_read_cpumap(dev, 0, buf);
+> +       return node_read_cpumap(dev, false, buf);
+>  }
+>  static inline ssize_t node_read_cpulist(struct device *dev,
+>                                 struct device_attribute *attr, char *buf)
+>  {
+> -       return node_read_cpumap(dev, 1, buf);
+> +       return node_read_cpumap(dev, true, buf);
+>  }
+>
+>  static DEVICE_ATTR(cpumap,  S_IRUGO, node_read_cpumask, NULL);
+> diff --git a/drivers/base/topology.c b/drivers/base/topology.c
+> index be7c1fb7c0c9..39b294bd769b 100644
+> --- a/drivers/base/topology.c
+> +++ b/drivers/base/topology.c
+> @@ -42,29 +42,11 @@ static ssize_t show_##name(struct device *dev,                      \
+>         return sprintf(buf, "%d\n", topology_##name(dev->id));  \
+>  }
+>
+> -#if defined(topology_thread_cpumask) || defined(topology_core_cpumask) || \
+> -    defined(topology_book_cpumask)
+> -static ssize_t show_cpumap(int type, const struct cpumask *mask, char *buf)
+> -{
+> -       ptrdiff_t len = PTR_ALIGN(buf + PAGE_SIZE - 1, PAGE_SIZE) - buf;
+> -       int n = 0;
+> -
+> -       if (len > 1) {
+> -               n = type?
+> -                       cpulist_scnprintf(buf, len-2, mask) :
+> -                       cpumask_scnprintf(buf, len-2, mask);
+> -               buf[n++] = '\n';
+> -               buf[n] = '\0';
+> -       }
+> -       return n;
+> -}
+> -#endif
+> -
+>  #define define_siblings_show_map(name)                                 \
+>  static ssize_t show_##name(struct device *dev,                         \
+>                            struct device_attribute *attr, char *buf)    \
+>  {                                                                      \
+> -       return show_cpumap(0, topology_##name(dev->id), buf);           \
+> +       return cpumap_copy_to_buf(false, topology_##name(dev->id), buf);\
+>  }
+>
+>  #define define_siblings_show_list(name)                                        \
+> @@ -72,7 +54,7 @@ static ssize_t show_##name##_list(struct device *dev,                 \
+>                                   struct device_attribute *attr,        \
+>                                   char *buf)                            \
+>  {                                                                      \
+> -       return show_cpumap(1, topology_##name(dev->id), buf);           \
+> +       return cpumap_copy_to_buf(true, topology_##name(dev->id), buf); \
+>  }
+>
+>  #define define_siblings_show_func(name)                \
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 9ff0a901ecf7..aa0f1359ef30 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -77,11 +77,10 @@ static ssize_t broken_parity_status_store(struct device *dev,
+>  }
+>  static DEVICE_ATTR_RW(broken_parity_status);
+>
+> -static ssize_t pci_dev_show_local_cpu(struct device *dev, int type,
+> +static ssize_t pci_dev_show_local_cpu(struct device *dev, bool list,
+>                                       struct device_attribute *attr, char *buf)
+>  {
+>         const struct cpumask *mask;
+> -       int len;
+>
+>  #ifdef CONFIG_NUMA
+>         mask = (dev_to_node(dev) == -1) ? cpu_online_mask :
+> @@ -89,59 +88,41 @@ static ssize_t pci_dev_show_local_cpu(struct device *dev, int type,
+>  #else
+>         mask = cpumask_of_pcibus(to_pci_dev(dev)->bus);
+>  #endif
+> -       len = type ?
+> -               cpumask_scnprintf(buf, PAGE_SIZE-2, mask) :
+> -               cpulist_scnprintf(buf, PAGE_SIZE-2, mask);
+> -
+> -       buf[len++] = '\n';
+> -       buf[len] = '\0';
+> -       return len;
+> +       return cpumap_copy_to_buf(list, mask, buf);
+>  }
+>
+>  static ssize_t local_cpus_show(struct device *dev,
+>                                struct device_attribute *attr, char *buf)
+>  {
+> -       return pci_dev_show_local_cpu(dev, 1, attr, buf);
+> +       return pci_dev_show_local_cpu(dev, false, attr, buf);
+>  }
+>  static DEVICE_ATTR_RO(local_cpus);
+>
+>  static ssize_t local_cpulist_show(struct device *dev,
+>                                   struct device_attribute *attr, char *buf)
+>  {
+> -       return pci_dev_show_local_cpu(dev, 0, attr, buf);
+> +       return pci_dev_show_local_cpu(dev, true, attr, buf);
+>  }
+>  static DEVICE_ATTR_RO(local_cpulist);
+>
+>  /*
+>   * PCI Bus Class Devices
+>   */
+> -static ssize_t pci_bus_show_cpuaffinity(struct device *dev, int type,
+> -                                       struct device_attribute *attr,
+> -                                       char *buf)
+> -{
+> -       int ret;
+> -       const struct cpumask *cpumask;
+> -
+> -       cpumask = cpumask_of_pcibus(to_pci_bus(dev));
+> -       ret = type ?
+> -               cpulist_scnprintf(buf, PAGE_SIZE-2, cpumask) :
+> -               cpumask_scnprintf(buf, PAGE_SIZE-2, cpumask);
+> -       buf[ret++] = '\n';
+> -       buf[ret] = '\0';
+> -       return ret;
+> -}
+> -
+>  static ssize_t cpuaffinity_show(struct device *dev,
+>                                 struct device_attribute *attr, char *buf)
+>  {
+> -       return pci_bus_show_cpuaffinity(dev, 0, attr, buf);
+> +       const struct cpumask *cpumask = cpumask_of_pcibus(to_pci_bus(dev));
+> +
+> +       return cpumap_copy_to_buf(false, cpumask, buf);
+>  }
+>  static DEVICE_ATTR_RO(cpuaffinity);
+>
+>  static ssize_t cpulistaffinity_show(struct device *dev,
+>                                     struct device_attribute *attr, char *buf)
+>  {
+> -       return pci_bus_show_cpuaffinity(dev, 1, attr, buf);
+> +       const struct cpumask *cpumask = cpumask_of_pcibus(to_pci_bus(dev));
+> +
+> +       return cpumap_copy_to_buf(true, cpumask, buf);
+>  }
+>  static DEVICE_ATTR_RO(cpulistaffinity);
+>
+> diff --git a/include/linux/cpumask.h b/include/linux/cpumask.h
+> index 2997af6d2ccd..26d8348292dd 100644
+> --- a/include/linux/cpumask.h
+> +++ b/include/linux/cpumask.h
+> @@ -11,6 +11,8 @@
+>  #include <linux/bitmap.h>
+>  #include <linux/bug.h>
+>
+> +#include <asm/page.h>
+> +
+>  typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
+>
+>  /**
+> @@ -792,6 +794,31 @@ static inline const struct cpumask *get_cpu_mask(unsigned int cpu)
+>  }
+>  #endif /* NR_CPUS > BITS_PER_LONG */
+>
+> +/**
+> + * cpumap_copy_to_buf  - copies the cpumask into the buffer either
+> + *     as comma-separated list of cpus or hex values of cpumask
+> + * @list: indicates whether the cpumap must be list
+> + * @mask: the cpumask to copy
+> + * @buf: the buffer to copy into
+> + *
+> + * Returns the length of the (null-terminated) @buf string, zero if
+> + * nothing is copied.
+> + */
+> +static inline ssize_t
+> +cpumap_copy_to_buf(bool list, const struct cpumask *mask, char *buf)
+> +{
+> +       ptrdiff_t len = PTR_ALIGN(buf + PAGE_SIZE - 1, PAGE_SIZE) - buf - 2;
+> +       int n = 0;
+> +
+> +       if (len > 1) {
+> +               n = list ? cpulist_scnprintf(buf, len, mask) :
+> +                          cpumask_scnprintf(buf, len, mask);
+> +               buf[n++] = '\n';
+> +               buf[n] = '\0';
+> +       }
+> +       return n;
+> +}
+> +
+>  /*
+>   *
+>   * From here down, all obsolete.  Use cpumask_ variants!
+> --
+> 1.8.3.2
+>
