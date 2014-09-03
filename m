@@ -1,644 +1,390 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:12864 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751332AbaIKOCA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Sep 2014 10:02:00 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
+Received: from v094114.home.net.pl ([79.96.170.134]:49625 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755659AbaICV1K (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Sep 2014 17:27:10 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Sudeep Holla <sudeep.holla@arm.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC Part2 v1 01/21] irqdomain: Introduce new interfaces to support hierarchy irqdomains
-Date: Thu, 11 Sep 2014 22:03:28 +0800
-Message-Id: <1410444228-3134-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
+	Peter Zijlstra <a.p.zijlstra@chello.nl>,
+	Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4 01/11] cpumask: factor out show_cpumap into separate helper function
+Date: Wed, 03 Sep 2014 23:46:29 +0200
+Message-ID: <1563710.eKkP9Mjix0@vostro.rjw.lan>
+In-Reply-To: <1409763617-17074-2-git-send-email-sudeep.holla@arm.com>
+References: <1409763617-17074-1-git-send-email-sudeep.holla@arm.com> <1409763617-17074-2-git-send-email-sudeep.holla@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We plan to use hierarchy irqdomain to suppport CPU vector assignment,
-interrupt remapping controller, IO-APIC controller, MSI interrupt
-and hypertransport interrupt etc on x86 platforms. So extend irqdomain
-interfaces to support hierarchy irqdomain.
+On Wednesday, September 03, 2014 06:00:07 PM Sudeep Holla wrote:
+> From: Sudeep Holla <sudeep.holla@arm.com>
+> 
+> Many sysfs *_show function use cpu{list,mask}_scnprintf to copy cpumap
+> to the buffer aligned to PAGE_SIZE, append '\n' and '\0' to return null
+> terminated buffer with newline.
+> 
+> This patch creates a new helper function cpumap_copy_to_buf in
+> cpumask.h and consolidates most of them using this new helper.
 
-There are already many clients of current irqdomain interfaces.
-To minimize the changes, we choose to introduce new version 2 interfaces
-to support hierarchy instead of extending existing irqdomain interfaces.
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com> for the ACPI PAD
+part.
 
-According to Thomas's suggestion, the most important design decision is
-to build hierarchy struct irq_data to support hierarchy irqdomain, so
-hierarchy irqdomain related data could be saved in struct irq_data.
-With support of hierarchy irq_data, we could also support stacked
-irq_chips. This is most useful in case of set_affinity().
+Thanks!
 
-The new hierarchy irqdomain introduces following interfaces:
-1) irq_domain_alloc_irqs()/irq_domain_free_irqs(): allocate/release IRQ
-   and related resources.
-2) __irq_domain_alloc_irqs(): a special version to support legacy IRQs.
-3) irq_domain_activate_irq()/irq_domain_deactivate_irq(): program
-   interrupt controllers to activate/deactivate interrupt.
+> Signed-off-by: Sudeep Holla <sudeep.holla@arm.com>
+> Suggested-by: Stephen Boyd <sboyd@codeaurora.org>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: x86@kernel.org
+> Cc: linux-acpi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  arch/x86/kernel/cpu/perf_event_amd_iommu.c    |  5 +---
+>  arch/x86/kernel/cpu/perf_event_amd_uncore.c   |  6 +----
+>  arch/x86/kernel/cpu/perf_event_intel_rapl.c   |  6 +----
+>  arch/x86/kernel/cpu/perf_event_intel_uncore.c |  6 +----
+>  drivers/acpi/acpi_pad.c                       |  6 +----
+>  drivers/base/cpu.c                            |  5 +---
+>  drivers/base/node.c                           | 14 +++-------
+>  drivers/base/topology.c                       | 22 ++-------------
+>  drivers/pci/pci-sysfs.c                       | 39 +++++++--------------------
+>  include/linux/cpumask.h                       | 27 +++++++++++++++++++
+>  10 files changed, 49 insertions(+), 87 deletions(-)
+> 
+> diff --git a/arch/x86/kernel/cpu/perf_event_amd_iommu.c b/arch/x86/kernel/cpu/perf_event_amd_iommu.c
+> index 639d1289b1ba..61a670de0ef2 100644
+> --- a/arch/x86/kernel/cpu/perf_event_amd_iommu.c
+> +++ b/arch/x86/kernel/cpu/perf_event_amd_iommu.c
+> @@ -130,10 +130,7 @@ static ssize_t _iommu_cpumask_show(struct device *dev,
+>  				   struct device_attribute *attr,
+>  				   char *buf)
+>  {
+> -	int n = cpulist_scnprintf(buf, PAGE_SIZE - 2, &iommu_cpumask);
+> -	buf[n++] = '\n';
+> -	buf[n] = '\0';
+> -	return n;
+> +	return cpumap_copy_to_buf(true, &iommu_cpumask, buf);
+>  }
+>  static DEVICE_ATTR(cpumask, S_IRUGO, _iommu_cpumask_show, NULL);
+>  
+> diff --git a/arch/x86/kernel/cpu/perf_event_amd_uncore.c b/arch/x86/kernel/cpu/perf_event_amd_uncore.c
+> index 30790d798e6b..d96a37ed8570 100644
+> --- a/arch/x86/kernel/cpu/perf_event_amd_uncore.c
+> +++ b/arch/x86/kernel/cpu/perf_event_amd_uncore.c
+> @@ -219,7 +219,6 @@ static ssize_t amd_uncore_attr_show_cpumask(struct device *dev,
+>  					    struct device_attribute *attr,
+>  					    char *buf)
+>  {
+> -	int n;
+>  	cpumask_t *active_mask;
+>  	struct pmu *pmu = dev_get_drvdata(dev);
+>  
+> @@ -230,10 +229,7 @@ static ssize_t amd_uncore_attr_show_cpumask(struct device *dev,
+>  	else
+>  		return 0;
+>  
+> -	n = cpulist_scnprintf(buf, PAGE_SIZE - 2, active_mask);
+> -	buf[n++] = '\n';
+> -	buf[n] = '\0';
+> -	return n;
+> +	return cpumap_copy_to_buf(true, active_mask, buf);
+>  }
+>  static DEVICE_ATTR(cpumask, S_IRUGO, amd_uncore_attr_show_cpumask, NULL);
+>  
+> diff --git a/arch/x86/kernel/cpu/perf_event_intel_rapl.c b/arch/x86/kernel/cpu/perf_event_intel_rapl.c
+> index 619f7699487a..8a673e138e2e 100644
+> --- a/arch/x86/kernel/cpu/perf_event_intel_rapl.c
+> +++ b/arch/x86/kernel/cpu/perf_event_intel_rapl.c
+> @@ -365,11 +365,7 @@ static void rapl_pmu_event_read(struct perf_event *event)
+>  static ssize_t rapl_get_attr_cpumask(struct device *dev,
+>  				struct device_attribute *attr, char *buf)
+>  {
+> -	int n = cpulist_scnprintf(buf, PAGE_SIZE - 2, &rapl_cpu_mask);
+> -
+> -	buf[n++] = '\n';
+> -	buf[n] = '\0';
+> -	return n;
+> +	return cpumap_copy_to_buf(true, &rapl_cpu_mask, buf);
+>  }
+>  
+>  static DEVICE_ATTR(cpumask, S_IRUGO, rapl_get_attr_cpumask, NULL);
+> diff --git a/arch/x86/kernel/cpu/perf_event_intel_uncore.c b/arch/x86/kernel/cpu/perf_event_intel_uncore.c
+> index 0939f86f543d..a0b810951743 100644
+> --- a/arch/x86/kernel/cpu/perf_event_intel_uncore.c
+> +++ b/arch/x86/kernel/cpu/perf_event_intel_uncore.c
+> @@ -3617,11 +3617,7 @@ static int uncore_pmu_event_init(struct perf_event *event)
+>  static ssize_t uncore_get_attr_cpumask(struct device *dev,
+>  				struct device_attribute *attr, char *buf)
+>  {
+> -	int n = cpulist_scnprintf(buf, PAGE_SIZE - 2, &uncore_cpu_mask);
+> -
+> -	buf[n++] = '\n';
+> -	buf[n] = '\0';
+> -	return n;
+> +	return cpumap_copy_to_buf(true, &uncore_cpu_mask, buf);
+>  }
+>  
+>  static DEVICE_ATTR(cpumask, S_IRUGO, uncore_get_attr_cpumask, NULL);
+> diff --git a/drivers/acpi/acpi_pad.c b/drivers/acpi/acpi_pad.c
+> index f148a0580e04..0dbe52ed6a0d 100644
+> --- a/drivers/acpi/acpi_pad.c
+> +++ b/drivers/acpi/acpi_pad.c
+> @@ -350,11 +350,7 @@ static ssize_t acpi_pad_idlecpus_store(struct device *dev,
+>  static ssize_t acpi_pad_idlecpus_show(struct device *dev,
+>  	struct device_attribute *attr, char *buf)
+>  {
+> -	int n = 0;
+> -	n = cpumask_scnprintf(buf, PAGE_SIZE-2, to_cpumask(pad_busy_cpus_bits));
+> -	buf[n++] = '\n';
+> -	buf[n] = '\0';
+> -	return n;
+> +	return cpumap_copy_to_buf(false, to_cpumask(pad_busy_cpus_bits), buf);
+>  }
+>  static DEVICE_ATTR(idlecpus, S_IRUGO|S_IWUSR,
+>  	acpi_pad_idlecpus_show,
+> diff --git a/drivers/base/cpu.c b/drivers/base/cpu.c
+> index 006b1bc5297d..277a9cfa9040 100644
+> --- a/drivers/base/cpu.c
+> +++ b/drivers/base/cpu.c
+> @@ -207,11 +207,8 @@ static ssize_t show_cpus_attr(struct device *dev,
+>  			      char *buf)
+>  {
+>  	struct cpu_attr *ca = container_of(attr, struct cpu_attr, attr);
+> -	int n = cpulist_scnprintf(buf, PAGE_SIZE-2, *(ca->map));
+>  
+> -	buf[n++] = '\n';
+> -	buf[n] = '\0';
+> -	return n;
+> +	return cpumap_copy_to_buf(true, *ca->map, buf);
+>  }
+>  
+>  #define _CPU_ATTR(name, map) \
+> diff --git a/drivers/base/node.c b/drivers/base/node.c
+> index c6d3ae05f1ca..6e58ad566c13 100644
+> --- a/drivers/base/node.c
+> +++ b/drivers/base/node.c
+> @@ -25,32 +25,26 @@ static struct bus_type node_subsys = {
+>  };
+>  
+>  
+> -static ssize_t node_read_cpumap(struct device *dev, int type, char *buf)
+> +static ssize_t node_read_cpumap(struct device *dev, bool list, char *buf)
+>  {
+>  	struct node *node_dev = to_node(dev);
+>  	const struct cpumask *mask = cpumask_of_node(node_dev->dev.id);
+> -	int len;
+>  
+>  	/* 2008/04/07: buf currently PAGE_SIZE, need 9 chars per 32 bits. */
+>  	BUILD_BUG_ON((NR_CPUS/32 * 9) > (PAGE_SIZE-1));
+>  
+> -	len = type?
+> -		cpulist_scnprintf(buf, PAGE_SIZE-2, mask) :
+> -		cpumask_scnprintf(buf, PAGE_SIZE-2, mask);
+> - 	buf[len++] = '\n';
+> - 	buf[len] = '\0';
+> -	return len;
+> +	return cpumap_copy_to_buf(list, mask, buf);
+>  }
+>  
+>  static inline ssize_t node_read_cpumask(struct device *dev,
+>  				struct device_attribute *attr, char *buf)
+>  {
+> -	return node_read_cpumap(dev, 0, buf);
+> +	return node_read_cpumap(dev, false, buf);
+>  }
+>  static inline ssize_t node_read_cpulist(struct device *dev,
+>  				struct device_attribute *attr, char *buf)
+>  {
+> -	return node_read_cpumap(dev, 1, buf);
+> +	return node_read_cpumap(dev, true, buf);
+>  }
+>  
+>  static DEVICE_ATTR(cpumap,  S_IRUGO, node_read_cpumask, NULL);
+> diff --git a/drivers/base/topology.c b/drivers/base/topology.c
+> index be7c1fb7c0c9..39b294bd769b 100644
+> --- a/drivers/base/topology.c
+> +++ b/drivers/base/topology.c
+> @@ -42,29 +42,11 @@ static ssize_t show_##name(struct device *dev,			\
+>  	return sprintf(buf, "%d\n", topology_##name(dev->id));	\
+>  }
+>  
+> -#if defined(topology_thread_cpumask) || defined(topology_core_cpumask) || \
+> -    defined(topology_book_cpumask)
+> -static ssize_t show_cpumap(int type, const struct cpumask *mask, char *buf)
+> -{
+> -	ptrdiff_t len = PTR_ALIGN(buf + PAGE_SIZE - 1, PAGE_SIZE) - buf;
+> -	int n = 0;
+> -
+> -	if (len > 1) {
+> -		n = type?
+> -			cpulist_scnprintf(buf, len-2, mask) :
+> -			cpumask_scnprintf(buf, len-2, mask);
+> -		buf[n++] = '\n';
+> -		buf[n] = '\0';
+> -	}
+> -	return n;
+> -}
+> -#endif
+> -
+>  #define define_siblings_show_map(name)					\
+>  static ssize_t show_##name(struct device *dev,				\
+>  			   struct device_attribute *attr, char *buf)	\
+>  {									\
+> -	return show_cpumap(0, topology_##name(dev->id), buf);		\
+> +	return cpumap_copy_to_buf(false, topology_##name(dev->id), buf);\
+>  }
+>  
+>  #define define_siblings_show_list(name)					\
+> @@ -72,7 +54,7 @@ static ssize_t show_##name##_list(struct device *dev,			\
+>  				  struct device_attribute *attr,	\
+>  				  char *buf)				\
+>  {									\
+> -	return show_cpumap(1, topology_##name(dev->id), buf);		\
+> +	return cpumap_copy_to_buf(true, topology_##name(dev->id), buf);	\
+>  }
+>  
+>  #define define_siblings_show_func(name)		\
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 9ff0a901ecf7..aa0f1359ef30 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -77,11 +77,10 @@ static ssize_t broken_parity_status_store(struct device *dev,
+>  }
+>  static DEVICE_ATTR_RW(broken_parity_status);
+>  
+> -static ssize_t pci_dev_show_local_cpu(struct device *dev, int type,
+> +static ssize_t pci_dev_show_local_cpu(struct device *dev, bool list,
+>  				      struct device_attribute *attr, char *buf)
+>  {
+>  	const struct cpumask *mask;
+> -	int len;
+>  
+>  #ifdef CONFIG_NUMA
+>  	mask = (dev_to_node(dev) == -1) ? cpu_online_mask :
+> @@ -89,59 +88,41 @@ static ssize_t pci_dev_show_local_cpu(struct device *dev, int type,
+>  #else
+>  	mask = cpumask_of_pcibus(to_pci_dev(dev)->bus);
+>  #endif
+> -	len = type ?
+> -		cpumask_scnprintf(buf, PAGE_SIZE-2, mask) :
+> -		cpulist_scnprintf(buf, PAGE_SIZE-2, mask);
+> -
+> -	buf[len++] = '\n';
+> -	buf[len] = '\0';
+> -	return len;
+> +	return cpumap_copy_to_buf(list, mask, buf);
+>  }
+>  
+>  static ssize_t local_cpus_show(struct device *dev,
+>  			       struct device_attribute *attr, char *buf)
+>  {
+> -	return pci_dev_show_local_cpu(dev, 1, attr, buf);
+> +	return pci_dev_show_local_cpu(dev, false, attr, buf);
+>  }
+>  static DEVICE_ATTR_RO(local_cpus);
+>  
+>  static ssize_t local_cpulist_show(struct device *dev,
+>  				  struct device_attribute *attr, char *buf)
+>  {
+> -	return pci_dev_show_local_cpu(dev, 0, attr, buf);
+> +	return pci_dev_show_local_cpu(dev, true, attr, buf);
+>  }
+>  static DEVICE_ATTR_RO(local_cpulist);
+>  
+>  /*
+>   * PCI Bus Class Devices
+>   */
+> -static ssize_t pci_bus_show_cpuaffinity(struct device *dev, int type,
+> -					struct device_attribute *attr,
+> -					char *buf)
+> -{
+> -	int ret;
+> -	const struct cpumask *cpumask;
+> -
+> -	cpumask = cpumask_of_pcibus(to_pci_bus(dev));
+> -	ret = type ?
+> -		cpulist_scnprintf(buf, PAGE_SIZE-2, cpumask) :
+> -		cpumask_scnprintf(buf, PAGE_SIZE-2, cpumask);
+> -	buf[ret++] = '\n';
+> -	buf[ret] = '\0';
+> -	return ret;
+> -}
+> -
+>  static ssize_t cpuaffinity_show(struct device *dev,
+>  				struct device_attribute *attr, char *buf)
+>  {
+> -	return pci_bus_show_cpuaffinity(dev, 0, attr, buf);
+> +	const struct cpumask *cpumask = cpumask_of_pcibus(to_pci_bus(dev));
+> +
+> +	return cpumap_copy_to_buf(false, cpumask, buf);
+>  }
+>  static DEVICE_ATTR_RO(cpuaffinity);
+>  
+>  static ssize_t cpulistaffinity_show(struct device *dev,
+>  				    struct device_attribute *attr, char *buf)
+>  {
+> -	return pci_bus_show_cpuaffinity(dev, 1, attr, buf);
+> +	const struct cpumask *cpumask = cpumask_of_pcibus(to_pci_bus(dev));
+> +
+> +	return cpumap_copy_to_buf(true, cpumask, buf);
+>  }
+>  static DEVICE_ATTR_RO(cpulistaffinity);
+>  
+> diff --git a/include/linux/cpumask.h b/include/linux/cpumask.h
+> index 2997af6d2ccd..26d8348292dd 100644
+> --- a/include/linux/cpumask.h
+> +++ b/include/linux/cpumask.h
+> @@ -11,6 +11,8 @@
+>  #include <linux/bitmap.h>
+>  #include <linux/bug.h>
+>  
+> +#include <asm/page.h>
+> +
+>  typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
+>  
+>  /**
+> @@ -792,6 +794,31 @@ static inline const struct cpumask *get_cpu_mask(unsigned int cpu)
+>  }
+>  #endif /* NR_CPUS > BITS_PER_LONG */
+>  
+> +/**
+> + * cpumap_copy_to_buf  - copies the cpumask into the buffer either
+> + *	as comma-separated list of cpus or hex values of cpumask
+> + * @list: indicates whether the cpumap must be list
+> + * @mask: the cpumask to copy
+> + * @buf: the buffer to copy into
+> + *
+> + * Returns the length of the (null-terminated) @buf string, zero if
+> + * nothing is copied.
+> + */
+> +static inline ssize_t
+> +cpumap_copy_to_buf(bool list, const struct cpumask *mask, char *buf)
+> +{
+> +	ptrdiff_t len = PTR_ALIGN(buf + PAGE_SIZE - 1, PAGE_SIZE) - buf - 2;
+> +	int n = 0;
+> +
+> +	if (len > 1) {
+> +		n = list ? cpulist_scnprintf(buf, len, mask) :
+> +			   cpumask_scnprintf(buf, len, mask);
+> +		buf[n++] = '\n';
+> +		buf[n] = '\0';
+> +	}
+> +	return n;
+> +}
+> +
+>  /*
+>   *
+>   * From here down, all obsolete.  Use cpumask_ variants!
+> 
 
-There are also several help functions to ease irqdomain implemenations:
-1) irq_domain_get_irq_data(): get irq_data associated with a specific
-   irqdomain.
-2) irq_domain_set_hwirq_and_chip(): save irqdomain specific data into
-   irq_data.
-3) irq_domain_alloc_irqs_parent()/irq_domain_free_irqs_parent(): invoke
-   parent irqdomain's alloc/free callbacks.
-
-We also changed irq_startup()/irq_shutdown() to invoke
-irq_domain_activate_irq()/irq_domain_deactivate_irq() to program
-interrupt controller when start/stop interrupts.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- include/linux/irq.h       |    3 +
- include/linux/irqdomain.h |   60 ++++++++
- kernel/irq/Kconfig        |    3 +
- kernel/irq/chip.c         |    3 +
- kernel/irq/irqdomain.c    |  349 +++++++++++++++++++++++++++++++++++++++++++--
- 5 files changed, 404 insertions(+), 14 deletions(-)
-
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 62af59242ddc..4b74565690ce 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -151,6 +151,9 @@ struct irq_data {
- 	unsigned int		state_use_accessors;
- 	struct irq_chip		*chip;
- 	struct irq_domain	*domain;
-+#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-+	struct irq_data		*parent_data;
-+#endif
- 	void			*handler_data;
- 	void			*chip_data;
- 	struct msi_desc		*msi_desc;
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index b0f9d16e48f6..a9ddc8534c63 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -38,6 +38,7 @@
- struct device_node;
- struct irq_domain;
- struct of_device_id;
-+struct irq_chip;
- 
- /* Number of irqs reserved for a legacy isa controller */
- #define NUM_ISA_INTERRUPTS	16
-@@ -64,6 +65,16 @@ struct irq_domain_ops {
- 	int (*xlate)(struct irq_domain *d, struct device_node *node,
- 		     const u32 *intspec, unsigned int intsize,
- 		     unsigned long *out_hwirq, unsigned int *out_type);
-+
-+#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-+	/* extended V2 interfaces to support hierarchy irqdomains */
-+	int (*alloc)(struct irq_domain *d, unsigned int virq,
-+		     unsigned int nr_irqs, void *arg);
-+	void (*free)(struct irq_domain *d, unsigned int virq,
-+		     unsigned int nr_irqs);
-+	int (*activate)(struct irq_domain *d, struct irq_data *irq_data);
-+	int (*deactivate)(struct irq_domain *d, struct irq_data *irq_data);
-+#endif
- };
- 
- extern struct irq_domain_ops irq_generic_chip_ops;
-@@ -101,6 +112,9 @@ struct irq_domain {
- 	/* Optional data */
- 	struct device_node *of_node;
- 	struct irq_domain_chip_generic *gc;
-+#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-+	struct irq_domain *parent;
-+#endif
- 
- 	/* reverse map data. The linear map gets appended to the irq_domain */
- 	irq_hw_number_t hwirq_max;
-@@ -220,8 +234,54 @@ int irq_domain_xlate_onetwocell(struct irq_domain *d, struct device_node *ctrlr,
- 			const u32 *intspec, unsigned int intsize,
- 			irq_hw_number_t *out_hwirq, unsigned int *out_type);
- 
-+#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-+/* V2 interfaces to support hierarchy IRQ domains. */
-+extern struct irq_data *irq_domain_get_irq_data(struct irq_domain *domain,
-+						unsigned int virq);
-+extern int irq_domain_set_hwirq_and_chip(struct irq_domain *domain,
-+					 unsigned int virq,
-+					 irq_hw_number_t hwirq,
-+					 struct irq_chip *chip,
-+					 void *chip_data);
-+extern void irq_domain_reset_irq_data(struct irq_data *irq_data);
-+extern int __irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
-+				   unsigned int nr_irqs, int node, void *arg,
-+				   bool realloc);
-+extern void irq_domain_free_irqs(unsigned int virq, unsigned int nr_irqs);
-+extern int irq_domain_activate_irq(struct irq_data *irq_data);
-+extern int irq_domain_deactivate_irq(struct irq_data *irq_data);
-+
-+static inline int irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
-+				unsigned int nr_irqs, int node, void *arg)
-+{
-+	return __irq_domain_alloc_irqs(domain, irq_base, nr_irqs, node,
-+				       arg, false);
-+}
-+
-+static inline int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
-+				int irq_base, unsigned int nr_irqs, void *arg)
-+{
-+	if (domain->parent && domain->parent->ops->alloc)
-+		return domain->parent->ops->alloc(domain->parent, irq_base,
-+						  nr_irqs, arg);
-+	return -ENOSYS;
-+}
-+
-+static inline void irq_domain_free_irqs_parent(struct irq_domain *domain,
-+					int irq_base, unsigned int nr_irqs)
-+{
-+	if (domain->parent && domain->parent->ops->free)
-+		domain->parent->ops->free(domain->parent, irq_base, nr_irqs);
-+}
-+#else	/* CONFIG_IRQ_DOMAIN_HIERARCHY */
-+static inline int irq_domain_activate_irq(struct irq_data *data) { return 0; }
-+static inline int irq_domain_deactivate_irq(struct irq_data *data) { return 0; }
-+#endif	/* CONFIG_IRQ_DOMAIN_HIERARCHY */
-+
- #else /* CONFIG_IRQ_DOMAIN */
- static inline void irq_dispose_mapping(unsigned int virq) { }
-+static inline int irq_domain_activate_irq(struct irq_data *data) { return 0; }
-+static inline int irq_domain_deactivate_irq(struct irq_data *data) { return 0; }
- #endif /* !CONFIG_IRQ_DOMAIN */
- 
- #endif /* _LINUX_IRQDOMAIN_H */
-diff --git a/kernel/irq/Kconfig b/kernel/irq/Kconfig
-index d269cecdfbf0..dc1f3d08892e 100644
---- a/kernel/irq/Kconfig
-+++ b/kernel/irq/Kconfig
-@@ -55,6 +55,9 @@ config GENERIC_IRQ_CHIP
- config IRQ_DOMAIN
- 	bool
- 
-+config IRQ_DOMAIN_HIERARCHY
-+	bool
-+
- config IRQ_DOMAIN_DEBUG
- 	bool "Expose hardware/virtual IRQ mapping via debugfs"
- 	depends on IRQ_DOMAIN && DEBUG_FS
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index 6223fab9a9d2..46bd5e2190c3 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -15,6 +15,7 @@
- #include <linux/module.h>
- #include <linux/interrupt.h>
- #include <linux/kernel_stat.h>
-+#include <linux/irqdomain.h>
- 
- #include <trace/events/irq.h>
- 
-@@ -178,6 +179,7 @@ int irq_startup(struct irq_desc *desc, bool resend)
- 	irq_state_clr_disabled(desc);
- 	desc->depth = 0;
- 
-+	irq_domain_activate_irq(&desc->irq_data);
- 	if (desc->irq_data.chip->irq_startup) {
- 		ret = desc->irq_data.chip->irq_startup(&desc->irq_data);
- 		irq_state_clr_masked(desc);
-@@ -199,6 +201,7 @@ void irq_shutdown(struct irq_desc *desc)
- 		desc->irq_data.chip->irq_disable(&desc->irq_data);
- 	else
- 		desc->irq_data.chip->irq_mask(&desc->irq_data);
-+	irq_domain_deactivate_irq(&desc->irq_data);
- 	irq_state_set_masked(desc);
- }
- 
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 6534ff6ce02e..e285f3abc595 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -23,6 +23,9 @@ static DEFINE_MUTEX(irq_domain_mutex);
- static DEFINE_MUTEX(revmap_trees_mutex);
- static struct irq_domain *irq_default_domain;
- 
-+static int irq_domain_alloc_descs(int virq, unsigned int nr_irqs,
-+				  irq_hw_number_t hwirq, int node);
-+
- /**
-  * __irq_domain_add() - Allocate a new irq_domain data structure
-  * @of_node: optional device-tree node of the interrupt controller
-@@ -30,7 +33,7 @@ static struct irq_domain *irq_default_domain;
-  * @hwirq_max: Maximum number of interrupts supported by controller
-  * @direct_max: Maximum value of direct maps; Use ~0 for no limit; 0 for no
-  *              direct mapping
-- * @ops: map/unmap domain callbacks
-+ * @ops: domain callbacks
-  * @host_data: Controller private data pointer
-  *
-  * Allocates and initialize and irq_domain structure.
-@@ -109,7 +112,7 @@ EXPORT_SYMBOL_GPL(irq_domain_remove);
-  * @first_irq: first number of irq block assigned to the domain,
-  *	pass zero to assign irqs on-the-fly. If first_irq is non-zero, then
-  *	pre-map all of the irqs in the domain to virqs starting at first_irq.
-- * @ops: map/unmap domain callbacks
-+ * @ops: domain callbacks
-  * @host_data: Controller private data pointer
-  *
-  * Allocates an irq_domain, and optionally if first_irq is positive then also
-@@ -174,10 +177,8 @@ struct irq_domain *irq_domain_add_legacy(struct device_node *of_node,
- 
- 	domain = __irq_domain_add(of_node, first_hwirq + size,
- 				  first_hwirq + size, 0, ops, host_data);
--	if (!domain)
--		return NULL;
--
--	irq_domain_associate_many(domain, first_irq, first_hwirq, size);
-+	if (domain)
-+		irq_domain_associate_many(domain, first_irq, first_hwirq, size);
- 
- 	return domain;
- }
-@@ -388,7 +389,6 @@ EXPORT_SYMBOL_GPL(irq_create_direct_mapping);
- unsigned int irq_create_mapping(struct irq_domain *domain,
- 				irq_hw_number_t hwirq)
- {
--	unsigned int hint;
- 	int virq;
- 
- 	pr_debug("irq_create_mapping(0x%p, 0x%lx)\n", domain, hwirq);
-@@ -410,12 +410,8 @@ unsigned int irq_create_mapping(struct irq_domain *domain,
- 	}
- 
- 	/* Allocate a virtual interrupt number */
--	hint = hwirq % nr_irqs;
--	if (hint == 0)
--		hint++;
--	virq = irq_alloc_desc_from(hint, of_node_to_nid(domain->of_node));
--	if (virq <= 0)
--		virq = irq_alloc_desc_from(1, of_node_to_nid(domain->of_node));
-+	virq = irq_domain_alloc_descs(-1, 1, hwirq,
-+				      of_node_to_nid(domain->of_node));
- 	if (virq <= 0) {
- 		pr_debug("-> virq allocation failed\n");
- 		return 0;
-@@ -490,7 +486,13 @@ unsigned int irq_create_of_mapping(struct of_phandle_args *irq_data)
- 	}
- 
- 	/* Create mapping */
--	virq = irq_create_mapping(domain, hwirq);
-+#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-+	if (domain->ops->alloc)
-+		virq = irq_domain_alloc_irqs(domain, -1, 1, NUMA_NO_NODE,
-+					     irq_data);
-+	else
-+#endif
-+		virq = irq_create_mapping(domain, hwirq);
- 	if (!virq)
- 		return virq;
- 
-@@ -540,7 +542,11 @@ unsigned int irq_find_mapping(struct irq_domain *domain,
- 		return 0;
- 
- 	if (hwirq < domain->revmap_direct_max_irq) {
-+#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-+		data = irq_domain_get_irq_data(domain, hwirq);
-+#else
- 		data = irq_get_irq_data(hwirq);
-+#endif
- 		if (data && (data->domain == domain) && (data->hwirq == hwirq))
- 			return hwirq;
- 	}
-@@ -709,3 +715,318 @@ const struct irq_domain_ops irq_domain_simple_ops = {
- 	.xlate = irq_domain_xlate_onetwocell,
- };
- EXPORT_SYMBOL_GPL(irq_domain_simple_ops);
-+
-+static int irq_domain_alloc_descs(int virq, unsigned int nr_irqs,
-+				  irq_hw_number_t hwirq, int node)
-+{
-+	unsigned int hint;
-+
-+	if (virq >= 0) {
-+		virq = irq_alloc_descs(virq, virq, nr_irqs, node);
-+	} else {
-+		hint = hwirq % nr_irqs;
-+		if (hint == 0)
-+			hint++;
-+		virq = irq_alloc_descs_from(hint, nr_irqs, node);
-+		if (virq <= 0 && hint > 1)
-+			virq = irq_alloc_descs_from(1, nr_irqs, node);
-+	}
-+
-+	return virq;
-+}
-+
-+#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-+static void irq_domain_free_descs(unsigned int virq, unsigned int nr_irqs)
-+{
-+	unsigned int i;
-+
-+	for (i = 0; i < nr_irqs; i++)
-+		irq_free_desc(virq + i);
-+}
-+
-+static void irq_domain_insert_irq(int virq)
-+{
-+	struct irq_data *data;
-+
-+	for (data = irq_get_irq_data(virq); data; data = data->parent_data) {
-+		struct irq_domain *domain = data->domain;
-+		irq_hw_number_t hwirq = data->hwirq;
-+
-+		if (hwirq < domain->revmap_size) {
-+			domain->linear_revmap[hwirq] = virq;
-+		} else {
-+			mutex_lock(&revmap_trees_mutex);
-+			radix_tree_insert(&domain->revmap_tree, hwirq, data);
-+			mutex_unlock(&revmap_trees_mutex);
-+		}
-+
-+		/* If not already assigned, give the domain the chip's name */
-+		if (!domain->name && data->chip)
-+			domain->name = data->chip->name;
-+	}
-+
-+	irq_clear_status_flags(virq, IRQ_NOREQUEST);
-+}
-+
-+static void irq_domain_remove_irq(int virq)
-+{
-+	struct irq_data *data;
-+
-+	irq_set_status_flags(virq, IRQ_NOREQUEST);
-+	irq_set_chip_and_handler(virq, NULL, NULL);
-+	synchronize_irq(virq);
-+	smp_mb();
-+
-+	for (data = irq_get_irq_data(virq); data; data = data->parent_data) {
-+		struct irq_domain *domain = data->domain;
-+		irq_hw_number_t hwirq = data->hwirq;
-+
-+		if (hwirq < domain->revmap_size) {
-+			domain->linear_revmap[hwirq] = 0;
-+		} else {
-+			mutex_lock(&revmap_trees_mutex);
-+			radix_tree_delete(&domain->revmap_tree, hwirq);
-+			mutex_unlock(&revmap_trees_mutex);
-+		}
-+	}
-+}
-+
-+static struct irq_data *irq_domain_insert_irq_data(struct irq_domain *domain,
-+						   struct irq_data *child)
-+{
-+	struct irq_data *irq_data;
-+
-+	irq_data = kzalloc_node(sizeof(*irq_data), GFP_KERNEL, child->node);
-+	if (irq_data) {
-+		child->parent_data = irq_data;
-+		irq_data->irq = child->irq;
-+		irq_data->node = child->node;
-+		irq_data->domain = domain;
-+	}
-+
-+	return irq_data;
-+}
-+
-+static void irq_domain_free_irq_data(unsigned int virq, unsigned int nr_irqs)
-+{
-+	int i;
-+	struct irq_data *irq_data, *tmp;
-+
-+	for (i = 0; i < nr_irqs; i++) {
-+		irq_data = irq_get_irq_data(virq + i);
-+		tmp = irq_data->parent_data;
-+		irq_data->parent_data = NULL;
-+		irq_data->domain = NULL;
-+
-+		while (tmp) {
-+			irq_data = tmp;
-+			tmp = tmp->parent_data;
-+			kfree(irq_data);
-+		}
-+	}
-+}
-+
-+static int irq_domain_alloc_irq_data(struct irq_domain *domain,
-+				     unsigned int virq, unsigned int nr_irqs)
-+{
-+	int i;
-+	struct irq_data *irq_data;
-+	struct irq_domain *parent;
-+
-+	/* The outmost irq_data is embedded in struct irq_desc */
-+	for (i = 0; i < nr_irqs; i++) {
-+		irq_data = irq_get_irq_data(virq + i);
-+		irq_data->domain = domain;
-+
-+		for (parent = domain->parent; parent; parent = parent->parent) {
-+			irq_data = irq_domain_insert_irq_data(parent, irq_data);
-+			if (!irq_data) {
-+				irq_domain_free_irq_data(virq, i + 1);
-+				return -ENOMEM;
-+			}
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-+ * irq_domain_get_irq_data - Get irq_data assoicated with @virq and  @domain
-+ * @domain: domain to match
-+ * @virq: IRQ number to get irq_data
-+ */
-+struct irq_data *irq_domain_get_irq_data(struct irq_domain *domain,
-+					 unsigned int virq)
-+{
-+	struct irq_data *irq_data;
-+
-+	for (irq_data = irq_get_irq_data(virq); irq_data;
-+	     irq_data = irq_data->parent_data)
-+		if (irq_data->domain == domain)
-+			return irq_data;
-+
-+	return NULL;
-+}
-+
-+int irq_domain_set_hwirq_and_chip(struct irq_domain *domain, unsigned int virq,
-+				  irq_hw_number_t hwirq, struct irq_chip *chip,
-+				  void *chip_data)
-+{
-+	struct irq_data *irq_data = irq_domain_get_irq_data(domain, virq);
-+
-+	if (!irq_data)
-+		return -ENOENT;
-+
-+	irq_data->hwirq = hwirq;
-+	irq_data->chip = chip;
-+	irq_data->chip_data = chip_data;
-+
-+	return 0;
-+}
-+
-+void irq_domain_reset_irq_data(struct irq_data *irq_data)
-+{
-+	irq_data->hwirq = 0;
-+	irq_data->chip = NULL;
-+	irq_data->chip_data = NULL;
-+}
-+
-+/**
-+ * irq_domain_alloc_irqs - Allocate IRQs from domain
-+ * @domain: domain to allocate from
-+ * @irq_base: allocate specified IRQ nubmer if irq_base >= 0
-+ * @nr_irqs: number of IRQs to allocate
-+ * @node: NUMA node id for memory allocation
-+ * @arg: domain specific argument
-+ * @realloc: IRQ descriptors have already been allocated if true
-+ *
-+ * Allocate IRQ numbers and initialized all data structures to support
-+ * hiearchy IRQ domains.
-+ * Parameter @realloc is mainly to support legacy IRQs.
-+ * Returns error code or allocated IRQ number
-+ */
-+int __irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
-+			    unsigned int nr_irqs, int node, void *arg,
-+			    bool realloc)
-+{
-+	int i, ret, virq;
-+
-+	if (domain == NULL) {
-+		domain = irq_default_domain;
-+		if (WARN(!domain, "domain is NULL; cannot allocate IRQ\n"))
-+			return -EINVAL;
-+	}
-+
-+	if (!domain->ops->alloc) {
-+		pr_debug("domain->ops->alloc() is NULL\n");
-+		return -ENOSYS;
-+	}
-+
-+	if (realloc && irq_base >= 0) {
-+		virq =  irq_base;
-+	} else {
-+		virq = irq_domain_alloc_descs(irq_base, nr_irqs, 0, node);
-+		if (virq < 0) {
-+			pr_debug("cannot allocate IRQ(base %d, count %d)\n",
-+				 irq_base, nr_irqs);
-+			return virq;
-+		}
-+	}
-+
-+	if (irq_domain_alloc_irq_data(domain, virq, nr_irqs)) {
-+		pr_debug("cannot allocate memory for IRQ%d\n", virq);
-+		ret = -ENOMEM;
-+		goto out_free_desc;
-+	}
-+
-+	mutex_lock(&irq_domain_mutex);
-+	ret = domain->ops->alloc(domain, virq, nr_irqs, arg);
-+	if (ret < 0) {
-+		mutex_unlock(&irq_domain_mutex);
-+		goto out_free_irq_data;
-+	}
-+	for (i = 0; i < nr_irqs; i++)
-+		irq_domain_insert_irq(virq + i);
-+	mutex_unlock(&irq_domain_mutex);
-+
-+	return virq;
-+
-+out_free_irq_data:
-+	irq_domain_free_irq_data(virq, nr_irqs);
-+out_free_desc:
-+	irq_domain_free_descs(virq, nr_irqs);
-+	return ret;
-+}
-+
-+/**
-+ * irq_domain_free_irqs - Free IRQ number and assoicated data structures
-+ * @virq: base IRQ number
-+ * @nr_irqs: number of IRQs to free
-+ */
-+void irq_domain_free_irqs(unsigned int virq, unsigned int nr_irqs)
-+{
-+	int i;
-+	struct irq_data *data = irq_get_irq_data(virq);
-+
-+	if (WARN(!data || !data->domain || !data->domain->ops->free,
-+		 "NULL pointer, cannot free irq\n"))
-+		return;
-+
-+	mutex_lock(&irq_domain_mutex);
-+	for (i = 0; i < nr_irqs; i++)
-+		irq_domain_remove_irq(virq + i);
-+	data->domain->ops->free(data->domain, virq, nr_irqs);
-+	mutex_unlock(&irq_domain_mutex);
-+
-+	irq_domain_free_irq_data(virq, nr_irqs);
-+	irq_domain_free_descs(virq, nr_irqs);
-+}
-+
-+/**
-+ * irq_domain_activate_irq - Call domain_ops->activate recursively to activate
-+ *			     interrupt
-+ * @irq_data: out most irq_data associated with interrupt
-+ *
-+ * It calls domain_ops->activate to program interrupt controllers, so the
-+ * interrupt could actually delivered.
-+ */
-+int irq_domain_activate_irq(struct irq_data *irq_data)
-+{
-+	int ret = 0;
-+
-+	if (irq_data && irq_data->domain) {
-+		struct irq_domain *domain = irq_data->domain;
-+
-+		if (irq_data->parent_data)
-+			ret = irq_domain_activate_irq(irq_data->parent_data);
-+		if (ret == 0 && domain->ops->activate)
-+			ret = domain->ops->activate(domain, irq_data);
-+	}
-+
-+	return ret;
-+}
-+
-+/**
-+ * irq_domain_deactivate_irq - Call domain_ops->deactivate recursively to
-+ *			       deactivate interrupt
-+ * @irq_data: out most irq_data associated with interrupt
-+ *
-+ * It calls domain_ops->deactivate to program interrupt controllers to disable
-+ * interrupt delivery.
-+ */
-+int irq_domain_deactivate_irq(struct irq_data *irq_data)
-+{
-+	int ret = 0;
-+
-+	if (irq_data && irq_data->domain) {
-+		struct irq_domain *domain = irq_data->domain;
-+
-+		if (domain->ops->deactivate)
-+			ret = domain->ops->deactivate(domain, irq_data);
-+		if (ret == 0 && irq_data->parent_data)
-+			ret = irq_domain_deactivate_irq(irq_data->parent_data);
-+	}
-+
-+	return ret;
-+}
-+#endif	/* CONFIG_IRQ_DOMAIN_HIERARCHY */
 -- 
-1.7.10.4
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
