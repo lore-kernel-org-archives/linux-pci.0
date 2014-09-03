@@ -1,62 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:59360 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750802AbaIXNZz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 09:25:55 -0400
-Received: by mail-ie0-f181.google.com with SMTP id tr6so11382094ieb.40
-        for <linux-pci@vger.kernel.org>; Wed, 24 Sep 2014 06:25:54 -0700 (PDT)
-Date: Wed, 24 Sep 2014 07:25:51 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Minghuan Lian <Minghuan.Lian@freescale.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] PCI: designware: Fix configuration base address
-Message-ID: <20140924132551.GA13850@google.com>
-References: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:41897 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750723AbaICEFa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Sep 2014 00:05:30 -0400
+Received: by mail-pa0-f42.google.com with SMTP id lf10so16375323pab.1
+        for <linux-pci@vger.kernel.org>; Tue, 02 Sep 2014 21:05:30 -0700 (PDT)
+From: Tim Harvey <tharvey@gateworks.com>
+To: l.stach@pengutronix.de
+Cc: Fabio Estevam <festevam@gmail.com>, shawn.guo@freescale.com,
+	marex@denx.de, bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: [PATCH] PCI: imx6: fix occasional link failure
+Date: Tue,  2 Sep 2014 21:04:37 -0700
+Message-Id: <1409717077-26662-1-git-send-email-tharvey@gateworks.com>
+In-Reply-To: <Message-Id: <1407479800-6730-1-git-send-email-tharvey@gateworks.com>
+References: <Message-Id: <1407479800-6730-1-git-send-email-tharvey@gateworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 23, 2014 at 10:28:56PM +0800, Minghuan Lian wrote:
-> The code has calculated cfg0_base and cfg1_base when parsing 'reg'
-> or 'ranges' property of PCI DTS node. so remove duplicate calculation.
-> And when using 'reg', resource cfg is not used, the removed code
-> will get incorrect configuration base.
-> 
-> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+According to the IMX6 reference manuals, REF_SSP_EN (Reference clock enable
+for SS function) must remain deasserted until the reference clock is running
+at the appropriate frequency.
 
-Applied to pci/host-designware with Mohit's ack for v3.18, thanks!
+Without this patch we find a high link failure rate (>5%) on certain
+IMX6 boards at various temperatures.
 
-> ---
->  drivers/pci/host/pcie-designware.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index c28ca05..0f3cb2a 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -515,7 +515,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  	pp->mem_base = pp->mem.start;
->  
->  	if (!pp->va_cfg0_base) {
-> -		pp->cfg0_base = pp->cfg.start;
->  		pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
->  						pp->cfg0_size);
->  		if (!pp->va_cfg0_base) {
-> @@ -525,7 +524,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  	}
->  
->  	if (!pp->va_cfg1_base) {
-> -		pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
->  		pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
->  						pp->cfg1_size);
->  		if (!pp->va_cfg1_base) {
-> -- 
-> 1.9.1
-> 
+Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+Tested-by: Fabio Estevam <festevam@gmail.com>
+Acked-by: Marek Vasut <marex@denx.de>
+---
+
+v2:
+ - added Tested-by Fabio Estevam
+ - added Acked-by Marek Vasut
+
+---
+ drivers/pci/host/pci-imx6.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 1be6073..9b6bab9 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -256,11 +256,6 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ 	int ret;
+ 
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+-
+ 	ret = clk_prepare_enable(imx6_pcie->pcie_phy);
+ 	if (ret) {
+ 		dev_err(pp->dev, "unable to enable pcie_phy clock\n");
+@@ -282,6 +277,12 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 	/* allow the clocks to stabilize */
+ 	usleep_range(200, 500);
+ 
++	/* power up core phy and enable ref clock */
++	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
++	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
++
+ 	/* Some boards don't have PCIe reset GPIO. */
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+ 		gpio_set_value(imx6_pcie->reset_gpio, 0);
+-- 
+1.8.3.2
+
