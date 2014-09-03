@@ -1,176 +1,128 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Tue, 9 Sep 2014 14:35:46 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v10 08/10] OF: PCI: Add support for parsing PCI host
- bridge resources from DT
-Message-ID: <20140909133546.GB2636@e102568-lin.cambridge.arm.com>
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
- <1410184472-17630-9-git-send-email-Liviu.Dudau@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:46080 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750833AbaICFUz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Sep 2014 01:20:55 -0400
+Received: from pps.filterd (m0046660.ppops.net [127.0.0.1])
+	by mx08-00178001.pphosted.com (8.14.5/8.14.5) with SMTP id s835IUGY003844
+	for <linux-pci@vger.kernel.org>; Wed, 3 Sep 2014 07:20:53 +0200
+Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
+	by mx08-00178001.pphosted.com with ESMTP id 1p5v5jr573-1
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 03 Sep 2014 07:20:53 +0200
+Received: from zeta.dmz-ap.st.com (ns6.st.com [138.198.234.13])
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 9123221
+	for <linux-pci@vger.kernel.org>; Wed,  3 Sep 2014 05:20:49 +0000 (GMT)
+Received: from Webmail-ap.st.com (eapex1hubcas4.st.com [10.80.176.69])
+	by zeta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 8B7CBB2B
+	for <linux-pci@vger.kernel.org>; Wed,  3 Sep 2014 05:20:48 +0000 (GMT)
+Date: Wed, 3 Sep 2014 10:50:35 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCIe: SPEAr13XX: Pass config resource through reg
+ property
+Message-ID: <20140903052035.GA2693@pratyush-vbox>
+References: <d1df374113d9d4a4ed1f22b4b83e8a2aeb6a8cff.1409156450.git.pratyush.anand@st.com>
+ <2CC2A0A4A178534D93D5159BF3BCB661A70E51E466@EAPEX1MAIL1.st.com>
 MIME-Version: 1.0
-In-Reply-To: <1410184472-17630-9-git-send-email-Liviu.Dudau@arm.com>
-Content-Type: text/plain; charset=WINDOWS-1252
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB661A70E51E466@EAPEX1MAIL1.st.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 08, 2014 at 02:54:30PM +0100, Liviu Dudau wrote:
-> Provide a function to parse the PCI DT ranges that can be used to
-> create a pci_host_bridge structure together with its associated
-> bus.
+On Wed, Sep 03, 2014 at 01:01:00PM +0800, Mohit KUMAR DCG wrote:
+> Hello Pratyush,
 > 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Grant Likely <grant.likely@linaro.org>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Catalin Marinas <catalin.marinas@arm.com>
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> ---
->  drivers/of/of_pci.c    | 102 +++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/of_pci.h |  11 ++++++
->  2 files changed, 113 insertions(+)
+> > -----Original Message-----
+> > From: Pratyush ANAND
+> > Sent: Thursday, August 28, 2014 9:01 AM
+> > To: Mohit KUMAR DCG
+> > Cc: linux-pci@vger.kernel.org; Pratyush ANAND
+> > Subject: [PATCH] PCIe: SPEAr13XX: Pass config resource through reg
+> > property
+> > 
+> > PCIe configuration space should be passed through reg property, rather than
+> > through ranges property. This patch does the correction for SPEAr13XX SOCs.
+> > 
+> > Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+> > ---
+> >  arch/arm/boot/dts/spear1310.dtsi  | 18 +++++++++---------
+> > arch/arm/boot/dts/spear1340.dtsi  |  6 +++---  drivers/pci/host/pcie-
+> > spear13xx.c |  2 +-
+> >  3 files changed, 13 insertions(+), 13 deletions(-)
+> > 
+> > diff --git a/arch/arm/boot/dts/spear1310.dtsi
+> > b/arch/arm/boot/dts/spear1310.dtsi
+> > index fa5f2bb5f106..51de3876caf4 100644
+> > --- a/arch/arm/boot/dts/spear1310.dtsi
+> > +++ b/arch/arm/boot/dts/spear1310.dtsi
+> > @@ -85,7 +85,8 @@
+> > 
+> >  		pcie0: pcie@b1000000 {
+> >  			compatible = "st,spear1340-pcie", "snps,dw-pcie";
+> > -			reg = <0xb1000000 0x4000>;
+> > +			reg = <0xb1000000 0x4000>, <0x80000000 0x20000>;
+> > +			reg-names = "dbi", "config";
+> >  			interrupts = <0 68 0x4>;
+> >  			interrupt-map-mask = <0 0 0 0>;
+> >  			interrupt-map = <0x0 0 &gic 0 68 0x4>; @@ -95,15
+> > +96,15 @@
+> >  			#address-cells = <3>;
+> >  			#size-cells = <2>;
+> >  			device_type = "pci";
+> > -			ranges = <0x00000800 0 0x80000000 0x80000000 0
+> > 0x00020000   /* configuration space */
+> > -				0x81000000 0 0	 0x80020000 0 0x00010000   /*
+> > downstream I/O */
+> > +			ranges = <0x81000000 0 0	 0x80020000 0
+> > 0x00010000   /* downstream I/O */
+> >  				0x82000000 0 0x80030000 0xc0030000 0
+> > 0x0ffd0000>; /* non-prefetchable memory */
+> >  			status = "disabled";
+> >  		};
+> > 
+> >  		pcie1: pcie@b1800000 {
+> >  			compatible = "st,spear1340-pcie", "snps,dw-pcie";
+> > -			reg = <0xb1800000 0x4000>;
+> > +			reg = <0xb1000000 0x4000>, <0x90000000 0x20000>;
 > 
-> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> index a107edb..36701da 100644
-> --- a/drivers/of/of_pci.c
-> +++ b/drivers/of/of_pci.c
-> @@ -1,7 +1,9 @@
->  #include <linux/kernel.h>
->  #include <linux/export.h>
->  #include <linux/of.h>
-> +#include <linux/of_address.h>
->  #include <linux/of_pci.h>
-> +#include <linux/slab.h>
->  
->  static inline int __of_pci_pci_compare(struct device_node *node,
->  				       unsigned int data)
-> @@ -123,6 +125,106 @@ int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
->  }
->  EXPORT_SYMBOL_GPL(of_pci_get_domain_nr);
->  
-> +/**
-> + * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
-> + * @dev: device node of the host bridge having the range property
-> + * @busno: bus number associated with the bridge root bus
-> + * @bus_max: maximum number of busses for this bridge
-> + * @resources: list where the range of resources will be added after DT parsing
-> + * @io_base: pointer to a variable that will contain on return the physical
-> + * address for the start of the I/O range.
-> + *
-> + * It is the callers job to free the @resources list.
-> + *
-> + * This function will parse the "ranges" property of a PCI host bridge device
-> + * node and setup the resource mapping based on its content. It is expected
-> + * that the property conforms with the Power ePAPR document.
+> - should be reg = <0xb18000000 0x4000>, <0x90000000 0x20000>;
+> 
+> > +			reg-names = "dbi", "config";
+> >  			interrupts = <0 69 0x4>;
+> >  			interrupt-map-mask = <0 0 0 0>;
+> >  			interrupt-map = <0x0 0 &gic 0 69 0x4>; @@ -113,15
+> > +114,15 @@
+> >  			#address-cells = <3>;
+> >  			#size-cells = <2>;
+> >  			device_type = "pci";
+> > -			ranges = <0x00000800 0 0x90000000 0x90000000 0
+> > 0x00020000   /* configuration space */
+> > -				0x81000000 0 0  0x90020000 0 0x00010000   /*
+> > downstream I/O */
+> > +			ranges = <0x81000000 0 0  0x90020000 0 0x00010000
+> > /* downstream I/O */
+> >  				0x82000000 0 0x90030000 0x90030000 0
+> > 0x0ffd0000>; /* non-prefetchable memory */
+> >  			status = "disabled";
+> >  		};
+> > 
+> >  		pcie2: pcie@b4000000 {
+> >  			compatible = "st,spear1340-pcie", "snps,dw-pcie";
+> > -			reg = <0xb4000000 0x4000>;
+> > +			reg = <0xb1000000 0x4000>, <0xc0000000 0x20000>;
+> 
+> - should be reg = <0xb4000000 0x4000>, <0xc0000000 0x20000>;
 
-You should also define what it returns and when.
 
-> + *
-> + */
-> +int of_pci_get_host_bridge_resources(struct device_node *dev,
-> +			unsigned char busno, unsigned char bus_max,
-> +			struct list_head *resources, resource_size_t *io_base)
-> +{
-> +	struct resource *res;
-> +	struct resource *bus_range;
-> +	struct of_pci_range range;
-> +	struct of_pci_range_parser parser;
-> +	char range_type[4];
-> +	int err;
-> +
-> +	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
-> +	if (!bus_range)
-> +		return -ENOMEM;
-> +
-> +	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
-> +
-> +	err = of_pci_parse_bus_range(dev, bus_range);
-> +	if (err) {
-> +		bus_range->start = busno;
-> +		bus_range->end = bus_max;
-> +		bus_range->flags = IORESOURCE_BUS;
-> +		pr_info("  No bus range found for %s, using %pR\n",
-> +			dev->full_name, &bus_range);
-> +	} else {
-> +		if (bus_range->end > bus_range->start + bus_max)
-> +			bus_range->end = bus_range->start + bus_max;
-> +	}
-> +	pci_add_resource(resources, bus_range);
+oops..will send v2.
 
-This means that eg in the PCI generic host controller I cannot "filter"
-the bus resource, unless I remove it, "filter" it, and add it again.
+~Pratyush
 
-I certainly can't filter a resource that has been already added without
-removing it first.
-
-Thoughts ?
-
-> +
-> +	/* Check for ranges property */
-> +	err = of_pci_range_parser_init(&parser, dev);
-> +	if (err)
-> +		goto parse_failed;
-> +
-> +	pr_debug("Parsing ranges property...\n");
-> +	for_each_of_pci_range(&parser, &range) {
-> +		/* Read next ranges element */
-> +		if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
-> +			snprintf(range_type, 4, " IO");
-> +		else if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_MEM)
-> +			snprintf(range_type, 4, "MEM");
-> +		else
-> +			snprintf(range_type, 4, "err");
-> +		pr_info("  %s %#010llx..%#010llx -> %#010llx\n", range_type,
-> +			range.cpu_addr, range.cpu_addr + range.size - 1,
-> +			range.pci_addr);
-> +
-> +		/*
-> +		 * If we failed translation or got a zero-sized region
-> +		 * then skip this range
-> +		 */
-> +		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
-> +			continue;
-> +
-> +		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
-> +		if (!res) {
-> +			err = -ENOMEM;
-> +			goto parse_failed;
-> +		}
-> +
-> +		err = of_pci_range_to_resource(&range, dev, res);
-> +		if (err) {
-> +			kfree(res);
-
-You might want to add a label to free res to make things more uniform.
-
-> +			goto parse_failed;
-> +		}
-> +
-> +		if (resource_type(res) == IORESOURCE_IO) {
-> +			if (*io_base)
-
-You do not zero io_base in the first place so you should ask the API
-user to do that. Is 0 a valid value BTW ? If it is you've got to resort
-to something else to detect multiple IO resources.
-
-Lorenzo
-
+> 
+> Otherwise looks good and removes warning "spear-pcie b4000000.pcie: missing
+>  *config* reg space", now config space is passed as reg property.
+> 
+> Thanks
+> Mohit
