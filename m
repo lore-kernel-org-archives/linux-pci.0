@@ -1,143 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:21857 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751860AbaIWMkb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 08:40:31 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Simon Horman <horms@verge.net.au>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: RE: [PATCH 0/3] Add PCI domain support to R-Car drivers
-Date: Tue, 23 Sep 2014 12:40:25 +0000
-Message-ID: <9b5a473bfaa3497bbf64f81fc548416b@HKXPR06MB168.apcprd06.prod.outlook.com>
-References: <1411379470-20639-1-git-send-email-phil.edworthy@renesas.com>
- <20140922210038.GJ1880@google.com>
- <84672882bcaa4730aae409f092bcbcfb@HKXPR06MB168.apcprd06.prod.outlook.com>
- <20140923103224.GO1994@e106497-lin.cambridge.arm.com>
- <99f5c020d74b465384e42ef2c883a479@HKXPR06MB168.apcprd06.prod.outlook.com>
- <20140923111000.GQ1994@e106497-lin.cambridge.arm.com>
- <028b0606cca84f619d1007bbde9693fd@HKXPR06MB168.apcprd06.prod.outlook.com>
- <20140923121050.GR1994@e106497-lin.cambridge.arm.com>
-In-Reply-To: <20140923121050.GR1994@e106497-lin.cambridge.arm.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:40366 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751114AbaICEUF convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 3 Sep 2014 00:20:05 -0400
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Zhu <r65037@freescale.com>,
+	Jingoo Han <jg1.han@samsung.com>, Marek Vasut <marex@denx.de>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	"kernel@pengutronix.de" <kernel@pengutronix.de>
+Date: Wed, 3 Sep 2014 12:19:35 +0800
+Subject: RE: [PATCH 0/4] PCI: designware: init order/resource alloc fixes
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB661A70E51E43D@EAPEX1MAIL1.st.com>
+References: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
+ <20140902231003.GA12657@google.com>
+In-Reply-To: <20140902231003.GA12657@google.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgTGl2aXUsDQoNCk9uIDIzIFNlcHRlbWJlciAyMDE0IDEzOjExLCBMaXZpdSB3cm90ZToNCj4g
-T24gVHVlLCBTZXAgMjMsIDIwMTQgYXQgMTI6Mzg6MjhQTSArMDEwMCwgUGhpbCBFZHdvcnRoeSB3
-cm90ZToNCj4gPiBPbiAyMyBTZXB0ZW1iZXIgMjAxNCAxMjoxMCwgTGl2aXUgd3JvdGU6DQo+ID4g
-PiBPbiBUdWUsIFNlcCAyMywgMjAxNCBhdCAxMjowMDo0MVBNICswMTAwLCBQaGlsIEVkd29ydGh5
-IHdyb3RlOg0KPiA+ID4gPiBPbiAyMyBTZXB0ZW1iZXIgMjAxNCAxMTozMiwgTGl2aXUgd3JvdGU6
-DQo+ID4gPiA+ID4gT24gVHVlLCBTZXAgMjMsIDIwMTQgYXQgMTE6MTA6MjlBTSArMDEwMCwgUGhp
-bCBFZHdvcnRoeSB3cm90ZToNCj4gPiA+ID4gPiA+IEhpIEJqb3JuLA0KPiA+ID4gPiA+ID4NCj4g
-PiA+ID4gPiA+IE9uIDIyIFNlcHRlbWJlciAyMDE0IDIyOjAxLCBCam9ybiB3cm90ZToNCj4gPiA+
-ID4gPiA+ID4gT24gTW9uLCBTZXAgMjIsIDIwMTQgYXQgMTA6NTE6MDdBTSArMDEwMCwgUGhpbCBF
-ZHdvcnRoeSB3cm90ZToNCj4gPiA+ID4gPiA+ID4gPiBUaGUgUmVuZXNhcyBSLUNhciBkZXZpY2Vz
-IChyOGE3NzkwIGFuZCByOGE3NzkxKSB1c2UgdHdvIFBDSSBjb250cm9sbGVyDQo+ID4gPiA+ID4g
-PiA+IGRyaXZlcnMsDQo+ID4gPiA+ID4gPiA+ID4gb25lIGZvciBhbiBleHRlcm5hbCBQQ0llIHNs
-b3QsIHRoZSBvdGhlciBmb3IgYW4gaW50ZXJuYWwgUENJIGJyaWRnZSB0byBVU0INCj4gPiA+ID4g
-PiA+ID4gPiBjb250cm9sbGVycy4NCj4gPiA+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gPiA+IEhv
-d2V2ZXIsIHRoZXkgY3VycmVudGx5IGRvIG5vdCB3b3JrIGF0IHRoZSBzYW1lIHRpbWUgYXMgdGhl
-eSB1c2UgdGhlDQo+ID4gPiA+ID4gPiA+IHNhbWUgUENJDQo+ID4gPiA+ID4gPiA+ID4gZG9tYWlu
-IGFuZCB1c2UgdGhlIHNhbWUgcm9vdCBidXMgbnVtYmVyLiBXZSBjYW4ndCB1c2UgZGlmZmVyZW50
-IHJvb3QNCj4gPiA+ID4gPiA+ID4gYnVzIG51bWJlcnMNCj4gPiA+ID4gPiA+ID4gPiBkdWUgdG8g
-dGhlIHdheSByb290IGJ1cyBudW1iZXJzIGFyZSBhc3NpZ25lZCBpbiBwY2liaW9zX2luaXRfaHco
-KSBpbg0KPiA+ID4gPiA+ID4gPiA+IGFyY2gvYXJtL2tlcm5lbC9iaW9zMzIuYy4NCj4gPiA+ID4g
-PiA+ID4gPg0KPiA+ID4gPiA+ID4gPiA+IFNpbmNlIHRoZSB0d28gUENJIGNvbnRyb2xsZXJzIGFy
-ZSBjb21wbGV0ZWx5IGluZGVwZW5kZW50LCBJIHRoaW5rIGl0IG1ha2VzDQo+ID4gPiA+ID4gPiA+
-IHNlbnNlDQo+ID4gPiA+ID4gPiA+ID4gdG8gdXNlIGRpZmZlcmVudCBQQ0kgZG9tYWlucyBmb3Ig
-dGhlbS4NCj4gPiA+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gPiA+IEkndmUgbWFya2VkIHRoZSB0
-aGlyZCBwYXRjaCBhcyBSRkMgYXMgSSBhbSBub3Qgc3VyZSBvZiB0aGUgaW1wYWN0IG9mDQo+ID4g
-PiA+ID4gPiA+IGVuYWJsaW5nDQo+ID4gPiA+ID4gPiA+ID4gUENJIGRvbWFpbnMgZm9yIGFsbCBB
-Uk0gZGV2aWNlcy4gSW4gdGhlIG1hcmNoIHRvICdvbmUga2VybmVsIHRvIHJ1bGUgdGhlbQ0KPiA+
-ID4gPiA+ID4gPiBhbGwnLA0KPiA+ID4gPiA+ID4gPiA+IEkgc3RlZXJlZCBjbGVhciBvZiBtYWNo
-IHNwZWNpZmljIGNoYW5nZXMuDQo+ID4gPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gPiBUaGVz
-ZSBwYXRjaGVzIHJlcXVpcmUgdGhlIGZvbGxvd2luZyBwYXRjaCBmcm9tIExpdml1IER1ZGF1Og0K
-PiA+ID4gPiA+ID4gPiA+ICAgW1BBVENIIHYxMSAwNy8xMF0gT0Y6IEludHJvZHVjZSBoZWxwZXIg
-ZnVuY3Rpb24gZm9yIGdldHRpbmcgUENJDQo+ID4gPiA+ID4gPiA+IGRvbWFpbl9ucg0KPiA+ID4g
-PiA+ID4gPiA+IEJhc2VkIG9uIGNvbW1lbnRzIG9uIHRoaXMgcGF0Y2ggZnJvbSBKYXNvbiBHdW50
-aG9ycGUsIHRoZXJlIGlzIHN0aWxsIHRoZQ0KPiA+ID4gPiA+ID4gPiBpc3N1ZQ0KPiA+ID4gPiA+
-ID4gPiA+IHRoYXQgdGhlIGRvbWFpbiBudW1iZXJzIG1heSBjaGFuZ2UgZGVwZW5kaW5nIG9uIHRo
-ZSBvcmRlcmluZyBhdCBwcm9iZQ0KPiA+ID4gPiA+ID4gPiB0aW1lLg0KPiA+ID4gPiA+ID4gPiA+
-IEhvd2V2ZXIsIHRoaXMgY2FuIGJlIGZpeGVkIGxhdGVyIG9uIGJ5IGFkZGluZyB0aGUgZW50cmll
-cyBpbiB0aGUgRFQgZmlsZXMuDQo+ID4gPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gPg0KPiA+
-ID4gPiA+ID4gPiA+IFBoaWwgRWR3b3J0aHkgKDMpOg0KPiA+ID4gPiA+ID4gPiA+ICAgUENJOiBy
-Y2FyLXBjaWU6IEFkZCBjYWxsIHRvIGdldCBkb21haW4gbnINCj4gPiA+ID4gPiA+ID4gPiAgIFBD
-STogcmNhci1pbnRlcm5hbC1wY2k6IEFkZCBjYWxsIHRvIGdldCBkb21haW4gbnINCj4gPiA+ID4g
-PiA+ID4gPiAgIEFSTTogRW5hYmxlIFBDSSBkb21haW5zDQo+ID4gPiA+ID4gPiA+DQo+ID4gPiA+
-ID4gPiA+IEknbSBkZWZlcnJpbmcgdGhlc2UgZm9yIG5vdyBiZWNhdXNlIHRoZXkgZGVwZW5kIG9u
-IExpdml1J3Mgd29yaywgd2hpY2ggSQ0KPiA+ID4gPiA+ID4gPiBoYXZlbid0IG1lcmdlZCB5ZXQs
-IGFuZCBJIHN1c3BlY3Qgc29tZSBtaW5vciBhZGFwdGF0aW9uIHdpbGwgYmUgcmVxdWlyZWQNCj4g
-PiA+ID4gPiA+ID4gaGVyZS4NCj4gPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gRm9yIHdoYXQg
-aXQncyB3b3J0aCwgSSBhZ3JlZSB3aXRoIFJvYidzIGhlc2l0YXRpb24gYWJvdXQgbWl4aW5nIGxv
-b2t1cCB3aXRoDQo+ID4gPiA+ID4gPiA+IGRvbWFpbiBudW1iZXIgYWxsb2NhdGlvbiBpbiBvZl9w
-Y2lfZ2V0X2RvbWFpbl9ucigpLiAgVGhhdCBzZWVtcw0KPiA+ID4gPiA+ID4gPiB1bm5lY2Vzc2Fy
-aWx5IGNvbXBsaWNhdGVkLg0KPiA+ID4gPiA+ID4gSSBjb3VsZCBjcmVhdGUgcGF0Y2hlcyB0byBh
-ZGQgYW4gb3B0aW9uYWwgInBjaS1kb21haW4iIHByb3BlcnR5IGZvciB0aGUgUi1DYXINCj4gPiA+
-ID4gPiA+IFBDSSBkcml2ZXJzLCBhbmQganVzdCBhdHRlbXB0IHRvIGdldCB0aGUgcHJvcGVydHkg
-aW4gdGhlIGRyaXZlcnMuIElmIG5vdCBmb3VuZCwNCj4gPiA+ID4gPiA+IHRoZSBkcml2ZXJzIHdp
-bGwgYXNzdW1lIHRoZSBkb21haW4gaXMgMC4NCj4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiBXZSB3
-b3VsZCB0aGVuIGhhdmUgZml4ZWQgUENJIGRvbWFpbiBudW1iZXJpbmcgYW5kIEkgZG9uJ3QgaGF2
-ZSB0byB3b3JyeSBhYm91dA0KPiA+ID4gPiA+ID4gTGl2aXUncyB3b3JrLg0KPiA+ID4gPiA+DQo+
-ID4gPiA+ID4gSSB3aWxsIHNwbGl0IHRoZSBjdXJyZW50IG9mX3BjaV9nZXRfZG9tYWluX25yKCkg
-ZXZlbiBmdXJ0aGVyIGFuZCByZXBsYWNlIGl0IHdpdGgNCj4gPiA+ID4gPiB0d28gZnVuY3Rpb25z
-OiBwY2lfZ2V0X2RvbWFpbl9ucigpIHdoaWNoIHdpbGwgZG8ganVzdCB0aGUgYWxsb2NhdGlvbiAo
-c3RpbGwgYmFzZWQNCj4gPiA+ID4gPiBvbiB0aGUgYm9vbGVhbiBmbGFnIHBhc3NlZCBhcyBwYXJh
-bWV0ZXIpIGFuZCBvZl9nZXRfcGNpX2RvbWFpbl9ucigpIHRoYXQgd2lsbA0KPiA+ID4gPiA+IHJl
-dHJpZXZlIGEgImxpbnV4LHBjaS1kb21haW4iIHZhbHVlIGZyb20gYSBwcm9wZXJ0eSBiZWxvbmdp
-bmcgdG8gYSBnaXZlbiBkZXZpY2UNCj4gPiA+ID4gPiBub2RlLg0KPiA+ID4gPiBUaGlzIGRvZXNu
-J3Qgc29sdmUgdGhlIHByb2JsZW0gb2YgZGlmZmVyZW50IGRvbWFpbiBudW1iZXJzIGJhc2VkIG9u
-IGRpZmZlcmVudA0KPiA+ID4gPiBwcm9iZSBvcmRlcmluZy4gSWYgeW91IGhhdmUgbXVsdGlwbGUg
-ZG9tYWlucyB0aGVuIEkgdGhpbmsgeW91IG11c3QgaGF2ZSB0aGUNCj4gPiA+ID4gImxpbnV4LHBj
-aS1kb21haW4iIHByb3BlcnR5IGZvciBlYWNoIGNvbnRyb2xsZXIuDQo+ID4gPg0KPiA+ID4gQ29y
-cmVjdCwgYnV0IEkndmUgc2FpZCBJJ20gZ29pbmcgdG8gbGVhdmUgZm9yIHRoZSBtb21lbnQgdGhl
-IGNoZWNrIHRvIHRoZSBob3N0DQo+ID4gPiBjb250cm9sbGVyKHMpLg0KPiA+ID4gU28gaWYgeW91
-IGNhcmUgYWJvdXQgb3JkZXJpbmcgb3IgbWFuZGF0aW5nIHRoZSBwcmVzZW5jZSBvZiAibGludXgs
-cGNpLQ0KPiA+ID4gZG9tYWluIiBpbiB0aGUgRFQsIHBsZWFzZSBhZGQgdGhlIGNoZWNrIGluIHlv
-dXIgZHJpdmVyLg0KPiA+ID4NCj4gPiA+ID4NCj4gPiA+ID4gSWYgd2UgYXNzdW1lIHRoZSBhYm92
-ZSwgb2ZfZ2V0X3BjaV9kb21haW5fbnIoKSBjYW4ganVzdCByZXR1cm4gYSBidXMgbnVtYmVyIG9m
-DQo+ID4gPiA+IDAgaWYgdGhlICJsaW51eCxwY2ktZG9tYWluIiBwcm9wZXJ0eSBkb2Vzbid0IGV4
-aXN0Lg0KPiA+ID4NCj4gPiA+IFlvdSBtZWFuICpkb21haW4qIG51bWJlciBvZiAwLiBCdXQgdGhh
-dCBpcyBzdGlsbCBhIHZhbGlkIHZhbHVlIGFuZCB5b3Ugd29uJ3QNCj4gPiA+IGJlIGFibGUgdG8g
-ZGlzdGluZ3Vpc2ggYmV0d2VlbiBEVCBwcm92aWRpbmcgYSAibGludXgscGNpLWRvbWFpbiIgdmFs
-dWUgb2YgemVybyBhbmQNCj4gPiA+IHRoZSBwcm9wZXJ0eSBub3QgYmVpbmcgcHJlc2VudC4NCj4g
-PiBZZXMsIEkgbWVhbnQgZG9tYWluLg0KPiA+IElmIGEgZGV2aWNlIG9ubHkgaGFzIGEgc2luZ2xl
-IFBDSSBkb21haW4sIG5vICJsaW51eCxwY2ktZG9tYWluIiBwcm9wIGlzIG5lZWRlZA0KPiA+IGFu
-ZCBhIGRlZmF1bHQgZG9tYWluIG51bWJlciBvZiAwIGlzIG9rLg0KPiANCj4gQWdyZWUsIGV4Y2Vw
-dCBpdCBpcyBub3QgYSAiZGV2aWNlIiBjaG9pY2UgYnV0IGEgcGxhdGZvcm0gY2hvaWNlLiBJbiBv
-dGhlciB3b3JkcywNCj4gaGF2aW5nIGEgaG9zdCBicmlkZ2UgY2FwYWJsZSBvZiBydW5uaW5nIG9u
-IG11bHRpLWhvc3QtYnJpZGdlIHNldHVwcywgdGhlbg0KPiB5b3VyIEhCIGRyaXZlciB3aWxsIGhh
-dmUgdG8gbWFuZGF0ZSAibGludXgscGNpLWRvbWFpbiIgcHJlc2VuY2UuIEJ1dCB0aGUNCj4gZGVj
-aXNpb24NCj4gdG8gaGF2ZSBtb3JlIHRoYW4gb25lIEhCIHdpbGwgYmUgcHJlc2VudCBpbiB0aGUg
-ZGV2aWNlIHRyZWUsIG5vdCBpbiB0aGUNCj4gZHJpdmVyLg0KT2ssIEkgYWN0dWFsbHkgbWVhbnQg
-dGhlIGRldmljZSBkdHNpLCBidXQgeWVzIHRoZSBkZWNpc2lvbiBsaWVzIHdpdGggdGhlIERULg0K
-DQoNCj4gPiBJZiB0aGVyZSBpcyBtb3JlIHRoYW4gb25lIGRvbWFpbiwgdXNlcnNwYWNlIG5lZWRz
-IHRvIGhhdmUgY29uc2lzdGVudCBkb21haW4NCj4gPiBudW1iZXJpbmcgb3ZlciBrZXJuZWwgdmVy
-c2lvbnMsIHNvIHdlIGhhdmUgdG8gc3BlY2lmeSB0aGUgZG9tYWluIGluIHRoZSBEVC4NCj4gDQo+
-IEFncmVlLCBhbmQgdGhlIERUIHdpbGwgcGluIGRvd24gdGhlIGRvbWFpbiBudW1iZXJzLg0KPiAN
-Cj4gPg0KPiA+IEkgYW0gcHJvYmFibHkgbWlzc2luZyBzb21ldGhpbmcsIGl0IHdvdWxkbid0IGJl
-IHRoZSBmaXJzdCB0aW1lLCBidXQgSSBkb24ndCBzZWUNCj4gPiB3aHkgb2ZfZ2V0X3BjaV9kb21h
-aW5fbnIoKSBuZWVkcyB0byBhbGxvY2F0ZSBkb21haW4gbnVtYmVycy4NCj4gDQo+IE1heWJlIGJl
-Y2F1c2UgSSBoYXZlIGNvbmZ1c2VkIHlvdS4gTGV0J3MgdHJ5IGFnYWluOg0KPiAgIC0gb2ZfcGNp
-X2dldF9kb21haW5fbnIoKTogZnVuY3Rpb24gcHJlc2VudCBpbiB2MTEsIHBhcnNlcyAicGNpLWRv
-bWFpbiIgYWxpYXMsDQo+ICAgICBhbGxvY2F0ZXMgYSBuZXcgZG9tYWluIG51bWJlciBpZiAicGNp
-LWRvbWFpbiIgaW5mbyBpcyBtaXNzaW5nLiBXaWxsIGJlDQo+ICAgICByZW1vdmVkIGluIHYxMi4N
-Cj4gICAtIG9mX2dldF9wY2lfZG9tYWluX25yKCk6IHN1YnRsZSBjaGFuZ2Ugb2YgbmFtZSB0byBm
-bGFnIHRoZSBjaGFuZ2Ugb2YgYmVoYXZpb3VyDQo+ICAgICBmcm9tIHRoZSBwcmV2aW91cyBmdW5j
-dGlvbi4gT25seSBwYXJzZXMgImxpbnV4LHBjaS1kb21haW4iIHByb3BlcnR5IG9mIHRoZQ0KPiAg
-ICAgaG9zdCBicmlkZ2Ugbm9kZSwgcmV0dXJucyB0aGUgcHJvcGVydHkgdmFsdWUgYXMgYW4gaW50
-ZWdlciBiZXR3ZWVuIDAgYW5kIDI1NSwNCj4gICAgIG9yIGEgbmVnYXRpdmUgdmFsdWUgaWYgdGhl
-IHByb3BlcnR5IGlzIG1pc3NpbmcuDQo+ICAgLSBwY2lfZ2V0X25ld19kb21haW5fbnIoKTogdGhp
-cyBmdW5jdGlvbiBpcyBvbmx5IHByZXNlbnQgaW4gdjEyIGFuZCBhbGxvY2F0ZXMNCj4gICAgIGEg
-bmV3IGRvbWFpbiBudW1iZXIgZWFjaCB0aW1lIGl0IGlzIGNhbGxlZC4NCk9rLCBJIG1pc3NlZCB0
-aGUgc3VidGxlIG5hbWUgY2hhbmdlIGFuZCBleHRyYSBmdW5jdGlvbiBmb3IgdjEyLg0KDQpTb3Vu
-ZHMgZ29vZCB0byBtZSENCg0KVGhhbmtzDQpQaGlsDQo=
+Hello Lucas,
+
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Sent: Wednesday, September 03, 2014 4:40 AM
+> To: Lucas Stach
+> Cc: linux-pci@vger.kernel.org; Richard Zhu; Mohit KUMAR DCG; Jingoo Han;
+> Marek Vasut; Kishon Vijay Abraham I; kernel@pengutronix.de
+> Subject: Re: [PATCH 0/4] PCI: designware: init order/resource alloc fixes
+> 
+> On Wed, Jul 23, 2014 at 07:52:37PM +0200, Lucas Stach wrote:
+> > This series fixes a couple of issues with the initialisation ordering
+> > and ressource allocation handling in the designware driver and moves
+> > its behavior much closer to other PCI host controller drivers like
+> > MVEBU and Tegra.
+> > For more detailed explanation see the commit messages.
+> >
+> > This effectively enables the i.MX6 pcie driver to be probed from
+> > module initcall level, instead of relying on being probed early.
+> >
+> > Lucas Stach (4):
+> >   PCI: designware: start parsing bus-range
+> >   PCI: designware: get rid of pci_scan_root_bus
+> >   PCI: designware: remove pci_assign_unassigned_resources call
+> >   PCI: imx6: move to module_init
+> >
+> >  .../devicetree/bindings/pci/designware-pcie.txt    |  3 +++
+> >  drivers/pci/host/pci-imx6.c                        |  2 +-
+> >  drivers/pci/host/pcie-designware.c                 | 29 ++++++++++++++--------
+> >  drivers/pci/host/pcie-designware.h                 |  1 +
+> >  4 files changed, 24 insertions(+), 11 deletions(-)
+> 
+> I'm waiting for an ack from Mohit and/or Jingoo before applying these.
+> I think Richard already acked the one that touches IMX6.
+> 
+> Bjorn
+
+- I have tested patch#1,2 and3 and looks fine to me.
+
+Sorry for my delayed response due to some problem with my platform.
+
+Acked-by: Mohit Kumar <mohit.kumar@st.com>
+
+Regards
+Mohit
