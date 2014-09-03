@@ -1,139 +1,289 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC v1 07/28] x86, irq: Kill x86_io_apic_ops.print_entries and related interfaces
-Date: Fri, 26 Sep 2014 22:57:37 +0800
-Message-Id: <1411743478-31435-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:57245 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750727AbaICELX convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 3 Sep 2014 00:11:23 -0400
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Pratyush ANAND <pratyush.anand@st.com>,
+	"jg1.han@samsung.com" <jg1.han@samsung.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Wed, 3 Sep 2014 12:11:08 +0800
+Subject: RE: [PATCH] PCIe: Designware: Extract struct pcie_port_info
+ elements into struct pcie_port
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB661A70E51E437@EAPEX1MAIL1.st.com>
+References: <67297b465f1b531aec9f290246698b23aa994381.1407906240.git.pratyush.anand@st.com>
+In-Reply-To: <67297b465f1b531aec9f290246698b23aa994381.1407906240.git.pratyush.anand@st.com>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there is no user of x86_io_apic_ops.print_entries anymore, so kill
-it.
+Hello Pratyush,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h      |    3 ---
- arch/x86/include/asm/x86_init.h     |    1 -
- arch/x86/kernel/apic/io_apic.c      |    8 ++++----
- arch/x86/kernel/x86_init.c          |    1 -
- drivers/iommu/intel_irq_remapping.c |    7 -------
- 5 files changed, 4 insertions(+), 16 deletions(-)
+> -----Original Message-----
+> From: Pratyush ANAND
+> Sent: Saturday, August 16, 2014 12:53 PM
+> To: jg1.han@samsung.com; Mohit KUMAR DCG
+> Cc: linux-pci@vger.kernel.org; Pratyush ANAND
+> Subject: [PATCH] PCIe: Designware: Extract struct pcie_port_info elements
+> into struct pcie_port
+> 
+> struct pcie_port_info elements are not containing any exclusive information
+> compared to other elements of struct pcie_port. So, keeping a separate
+> structure like struct pcie_port_info does not seem very logical. Therefore
+> remove this struct  and embed its elements directly into struct pcie_port.
+> 
+> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+> ---
+>  drivers/pci/host/pcie-designware.c | 53 +++++++++++++++++++--------------
+> -----
+>  drivers/pci/host/pcie-designware.h | 16 +++++-------
+>  2 files changed, 32 insertions(+), 37 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-
+> designware.c
+> index 52bd3a143563..8b5237fe162f 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -435,16 +435,16 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> 
+>  	cfg_res = platform_get_resource_byname(pdev,
+> IORESOURCE_MEM, "config");
+>  	if (cfg_res) {
+> -		pp->config.cfg0_size = resource_size(cfg_res)/2;
+> -		pp->config.cfg1_size = resource_size(cfg_res)/2;
+> +		pp->cfg0_size = resource_size(cfg_res)/2;
+> +		pp->cfg1_size = resource_size(cfg_res)/2;
+>  		pp->cfg0_base = cfg_res->start;
+> -		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
+> +		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
+> 
+>  		/* Find the untranslated configuration space address */
+>  		index = of_property_match_string(np, "reg-names",
+> "config");
+>  		addrp = of_get_address(np, index, false, false);
+>  		pp->cfg0_mod_base = of_read_number(addrp, ns);
+> -		pp->cfg1_mod_base = pp->cfg0_mod_base + pp-
+> >config.cfg0_size;
+> +		pp->cfg1_mod_base = pp->cfg0_mod_base + pp->cfg0_size;
+>  	} else {
+>  		dev_err(pp->dev, "missing *config* reg space\n");
+>  	}
+> @@ -467,8 +467,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>  					   IO_SPACE_LIMIT,
+>  					   range.pci_addr + range.size
+>  					   + global_io_offset);
+> -			pp->config.io_size = resource_size(&pp->io);
+> -			pp->config.io_bus_addr = range.pci_addr;
+> +			pp->io_size = resource_size(&pp->io);
+> +			pp->io_bus_addr = range.pci_addr;
+>  			pp->io_base = range.cpu_addr;
+> 
+>  			/* Find the untranslated IO space address */ @@ -
+> 478,8 +478,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>  		if (restype == IORESOURCE_MEM) {
+>  			of_pci_range_to_resource(&range, np, &pp->mem);
+>  			pp->mem.name = "MEM";
+> -			pp->config.mem_size = resource_size(&pp->mem);
+> -			pp->config.mem_bus_addr = range.pci_addr;
+> +			pp->mem_size = resource_size(&pp->mem);
+> +			pp->mem_bus_addr = range.pci_addr;
+> 
+>  			/* Find the untranslated MEM space address */
+>  			pp->mem_mod_base =
+> of_read_number(parser.range - @@ -487,16 +487,16 @@ int __init
+> dw_pcie_host_init(struct pcie_port *pp)
+>  		}
+>  		if (restype == 0) {
+>  			of_pci_range_to_resource(&range, np, &pp->cfg);
+> -			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
+> -			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
+> +			pp->cfg0_size = resource_size(&pp->cfg)/2;
+> +			pp->cfg1_size = resource_size(&pp->cfg)/2;
+>  			pp->cfg0_base = pp->cfg.start;
+> -			pp->cfg1_base = pp->cfg.start + pp-
+> >config.cfg0_size;
+> +			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
+> 
+>  			/* Find the untranslated configuration space address
+> */
+>  			pp->cfg0_mod_base =
+> of_read_number(parser.range -
+>  							   parser.np + na, ns);
+>  			pp->cfg1_mod_base = pp->cfg0_mod_base +
+> -					    pp->config.cfg0_size;
+> +					    pp->cfg0_size;
+>  		}
+>  	}
+> 
+> @@ -512,13 +512,13 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>  	pp->mem_base = pp->mem.start;
+> 
+>  	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+> -					pp->config.cfg0_size);
+> +					pp->cfg0_size);
+>  	if (!pp->va_cfg0_base) {
+>  		dev_err(pp->dev, "error with ioremap in function\n");
+>  		return -ENOMEM;
+>  	}
+>  	pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
+> -					pp->config.cfg1_size);
+> +					pp->cfg1_size);
+>  	if (!pp->va_cfg1_base) {
+>  		dev_err(pp->dev, "error with ioremap\n");
+>  		return -ENOMEM;
+> @@ -573,7 +573,7 @@ static void dw_pcie_prog_viewport_cfg0(struct
+> pcie_port *pp, u32 busdev)
+>  			  PCIE_ATU_VIEWPORT);
+>  	dw_pcie_writel_rc(pp, pp->cfg0_mod_base,
+> PCIE_ATU_LOWER_BASE);
+>  	dw_pcie_writel_rc(pp, (pp->cfg0_mod_base >> 32),
+> PCIE_ATU_UPPER_BASE);
+> -	dw_pcie_writel_rc(pp, pp->cfg0_mod_base + pp->config.cfg0_size -
+> 1,
+> +	dw_pcie_writel_rc(pp, pp->cfg0_mod_base + pp->cfg0_size - 1,
+>  			  PCIE_ATU_LIMIT);
+>  	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
+>  	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET); @@ -589,7
+> +589,7 @@ static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp,
+> u32 busdev)
+>  	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
+>  	dw_pcie_writel_rc(pp, pp->cfg1_mod_base,
+> PCIE_ATU_LOWER_BASE);
+>  	dw_pcie_writel_rc(pp, (pp->cfg1_mod_base >> 32),
+> PCIE_ATU_UPPER_BASE);
+> -	dw_pcie_writel_rc(pp, pp->cfg1_mod_base + pp->config.cfg1_size -
+> 1,
+> +	dw_pcie_writel_rc(pp, pp->cfg1_mod_base + pp->cfg1_size - 1,
+>  			  PCIE_ATU_LIMIT);
+>  	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
+>  	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET); @@ -604,10
+> +604,10 @@ static void dw_pcie_prog_viewport_mem_outbound(struct
+> pcie_port *pp)
+>  	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
+>  	dw_pcie_writel_rc(pp, pp->mem_mod_base,
+> PCIE_ATU_LOWER_BASE);
+>  	dw_pcie_writel_rc(pp, (pp->mem_mod_base >> 32),
+> PCIE_ATU_UPPER_BASE);
+> -	dw_pcie_writel_rc(pp, pp->mem_mod_base + pp-
+> >config.mem_size - 1,
+> +	dw_pcie_writel_rc(pp, pp->mem_mod_base + pp->mem_size - 1,
+>  			  PCIE_ATU_LIMIT);
+> -	dw_pcie_writel_rc(pp, pp->config.mem_bus_addr,
+> PCIE_ATU_LOWER_TARGET);
+> -	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.mem_bus_addr),
+> +	dw_pcie_writel_rc(pp, pp->mem_bus_addr,
+> PCIE_ATU_LOWER_TARGET);
+> +	dw_pcie_writel_rc(pp, upper_32_bits(pp->mem_bus_addr),
+>  			  PCIE_ATU_UPPER_TARGET);
+>  	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);  } @@ -
+> 620,10 +620,10 @@ static void dw_pcie_prog_viewport_io_outbound(struct
+> pcie_port *pp)
+>  	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
+>  	dw_pcie_writel_rc(pp, pp->io_mod_base,
+> PCIE_ATU_LOWER_BASE);
+>  	dw_pcie_writel_rc(pp, (pp->io_mod_base >> 32),
+> PCIE_ATU_UPPER_BASE);
+> -	dw_pcie_writel_rc(pp, pp->io_mod_base + pp->config.io_size - 1,
+> +	dw_pcie_writel_rc(pp, pp->io_mod_base + pp->io_size - 1,
+>  			  PCIE_ATU_LIMIT);
+> -	dw_pcie_writel_rc(pp, pp->config.io_bus_addr,
+> PCIE_ATU_LOWER_TARGET);
+> -	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.io_bus_addr),
+> +	dw_pcie_writel_rc(pp, pp->io_bus_addr,
+> PCIE_ATU_LOWER_TARGET);
+> +	dw_pcie_writel_rc(pp, upper_32_bits(pp->io_bus_addr),
+>  			  PCIE_ATU_UPPER_TARGET);
+>  	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);  } @@ -
+> 771,15 +771,15 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+>  	if (!pp)
+>  		return 0;
+> 
+> -	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
+> -		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
+> +	if (global_io_offset < SZ_1M && pp->io_size > 0) {
+> +		sys->io_offset = global_io_offset - pp->io_bus_addr;
+>  		pci_ioremap_io(global_io_offset, pp->io_base);
+>  		global_io_offset += SZ_64K;
+>  		pci_add_resource_offset(&sys->resources, &pp->io,
+>  					sys->io_offset);
+>  	}
+> 
+> -	sys->mem_offset = pp->mem.start - pp->config.mem_bus_addr;
+> +	sys->mem_offset = pp->mem.start - pp->mem_bus_addr;
+>  	pci_add_resource_offset(&sys->resources, &pp->mem, sys-
+> >mem_offset);
+> 
+>  	return 1;
+> @@ -833,7 +833,6 @@ static struct hw_pci dw_pci = {
+> 
+>  void dw_pcie_setup_rc(struct pcie_port *pp)  {
+> -	struct pcie_port_info *config = &pp->config;
+>  	u32 val;
+>  	u32 membase;
+>  	u32 memlimit;
+> @@ -888,7 +887,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+> 
+>  	/* setup memory base, memory limit */
+>  	membase = ((u32)pp->mem_base & 0xfff00000) >> 16;
+> -	memlimit = (config->mem_size + (u32)pp->mem_base) &
+> 0xfff00000;
+> +	memlimit = (pp->mem_size + (u32)pp->mem_base) & 0xfff00000;
+>  	val = memlimit | membase;
+>  	dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
+> 
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-
+> designware.h
+> index daf81f922cda..80c1cd07c373 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -14,15 +14,6 @@
+>  #ifndef _PCIE_DESIGNWARE_H
+>  #define _PCIE_DESIGNWARE_H
+> 
+> -struct pcie_port_info {
+> -	u32		cfg0_size;
+> -	u32		cfg1_size;
+> -	u32		io_size;
+> -	u32		mem_size;
+> -	phys_addr_t	io_bus_addr;
+> -	phys_addr_t	mem_bus_addr;
+> -};
+> -
+>  /*
+>   * Maximum number of MSI IRQs can be 256 per controller. But keep
+>   * it 32 as of now. Probably we will never need more than 32. If needed, @@
+> -38,17 +29,22 @@ struct pcie_port {
+>  	u64			cfg0_base;
+>  	u64			cfg0_mod_base;
+>  	void __iomem		*va_cfg0_base;
+> +	u32			cfg0_size;
+>  	u64			cfg1_base;
+>  	u64			cfg1_mod_base;
+>  	void __iomem		*va_cfg1_base;
+> +	u32			cfg1_size;
+>  	u64			io_base;
+>  	u64			io_mod_base;
+> +	phys_addr_t		io_bus_addr;
+> +	u32			io_size;
+>  	u64			mem_base;
+>  	u64			mem_mod_base;
+> +	phys_addr_t		mem_bus_addr;
+> +	u32			mem_size;
+>  	struct resource		cfg;
+>  	struct resource		io;
+>  	struct resource		mem;
+> -	struct pcie_port_info	config;
+>  	int			irq;
+>  	u32			lanes;
+>  	struct pcie_host_ops	*ops;
+> --
+> 1.8.1.2
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 051011adff9b..fb501ec46ee8 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -226,8 +226,6 @@ extern unsigned int native_io_apic_read(unsigned int apic, unsigned int reg);
- extern void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int val);
- extern void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int val);
- extern void native_disable_io_apic(void);
--extern void native_io_apic_print_entries(unsigned int apic, unsigned int nr_entries);
--extern void intel_ir_io_apic_print_entries(unsigned int apic, unsigned int nr_entries);
- extern int native_ioapic_set_affinity(struct irq_data *,
- 				      const struct cpumask *,
- 				      bool);
-@@ -292,7 +290,6 @@ static inline void disable_ioapic_support(void) { }
- #define native_io_apic_write		NULL
- #define native_io_apic_modify		NULL
- #define native_disable_io_apic		NULL
--#define native_io_apic_print_entries	NULL
- #define native_ioapic_set_affinity	NULL
- #define native_setup_ioapic_entry	NULL
- #define native_eoi_ioapic_pin		NULL
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index 9b53cb2acfbb..d49791d2aacf 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -194,7 +194,6 @@ struct x86_io_apic_ops {
- 	void		(*write)  (unsigned int apic, unsigned int reg, unsigned int value);
- 	void		(*modify) (unsigned int apic, unsigned int reg, unsigned int value);
- 	void		(*disable)(void);
--	void		(*print_entries)(unsigned int apic, unsigned int nr_entries);
- 	int		(*set_affinity)(struct irq_data *data,
- 					const struct cpumask *mask,
- 					bool force);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index b0121560f05d..d6df6da203f6 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1331,7 +1331,8 @@ static void __init setup_IO_APIC_irqs(void)
- 	}
- }
- 
--void native_io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
-+static void native_io_apic_print_entries(unsigned int apic,
-+					 unsigned int nr_entries)
- {
- 	int i;
- 
-@@ -1356,8 +1357,7 @@ void native_io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
- 	}
- }
- 
--void intel_ir_io_apic_print_entries(unsigned int apic,
--				    unsigned int nr_entries)
-+static void ir_io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
- {
- 	int i;
- 
-@@ -1448,7 +1448,7 @@ static void __init print_IO_APIC(int ioapic_idx)
- 
- 	domain = mp_ioapic_irqdomain(ioapic_idx);
- 	if (domain && irq_remapping_domain_is_remapped(domain))
--		intel_ir_io_apic_print_entries(ioapic_idx, reg_01.bits.entries);
-+		ir_io_apic_print_entries(ioapic_idx, reg_01.bits.entries);
- 	else
- 		native_io_apic_print_entries(ioapic_idx, reg_01.bits.entries);
- }
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index 814fcbadaad1..ba5ab975bb5b 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -154,7 +154,6 @@ struct x86_io_apic_ops x86_io_apic_ops = {
- 	.write			= native_io_apic_write,
- 	.modify			= native_io_apic_modify,
- 	.disable		= native_disable_io_apic,
--	.print_entries		= native_io_apic_print_entries,
- 	.set_affinity		= native_ioapic_set_affinity,
- 	.setup_entry		= native_setup_ioapic_entry,
- 	.eoi_ioapic_pin		= native_eoi_ioapic_pin,
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 8be4f924cb7c..07705d2bf48e 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -663,13 +663,6 @@ static int __init intel_enable_irq_remapping(void)
- 
- 	irq_remapping_enabled = 1;
- 
--	/*
--	 * VT-d has a different layout for IO-APIC entries when
--	 * interrupt remapping is enabled. So it needs a special routine
--	 * to print IO-APIC entries for debugging purposes too.
--	 */
--	x86_io_apic_ops.print_entries = intel_ir_io_apic_print_entries;
--
- 	pr_info("Enabled IRQ remapping in %s mode\n", eim ? "x2apic" : "xapic");
- 
- 	return eim ? IRQ_REMAP_X2APIC_MODE : IRQ_REMAP_XAPIC_MODE;
--- 
-1.7.10.4
+- Thanks, it cleaned up some unnecessary nesting.
 
+Acked-by: Mohit Kumar <mohit.kumar@st.com>
+
+Regards
+Mohit
