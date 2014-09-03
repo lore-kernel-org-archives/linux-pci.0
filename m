@@ -1,100 +1,177 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:45849 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750833AbaJACbn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Sep 2014 22:31:43 -0400
-Message-ID: <1412129383.4285.193.camel@pasglop>
-Subject: [PATCH 3/4] sound/hda/radeon: Generalize 64-bit MSI quirks
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Alex Deucher <alexdeucher@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dave Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Date: Wed, 01 Oct 2014 12:09:43 +1000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:36652 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751447AbaICGTr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 3 Sep 2014 02:19:47 -0400
+Received: from pps.filterd (m0046661.ppops.net [127.0.0.1])
+	by mx08-00178001.pphosted.com (8.14.5/8.14.5) with SMTP id s836J7mW032445
+	for <linux-pci@vger.kernel.org>; Wed, 3 Sep 2014 08:19:45 +0200
+Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
+	by mx08-00178001.pphosted.com with ESMTP id 1p59xfdpte-1
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 03 Sep 2014 08:19:45 +0200
+Received: from zeta.dmz-ap.st.com (ns6.st.com [138.198.234.13])
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 229C821
+	for <linux-pci@vger.kernel.org>; Wed,  3 Sep 2014 06:19:41 +0000 (GMT)
+Received: from Webmail-ap.st.com (eapex1hubcas2.st.com [10.80.176.10])
+	by zeta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 1A279ABE
+	for <linux-pci@vger.kernel.org>; Wed,  3 Sep 2014 06:19:41 +0000 (GMT)
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Pratyush ANAND <pratyush.anand@st.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Wed, 3 Sep 2014 14:19:38 +0800
+Subject: RE: [PATCH V2] PCIe: SPEAr13XX: Pass config resource through reg
+ property
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB661A70E51E4BE@EAPEX1MAIL1.st.com>
+References: <c5feb916f14d19e4c636a5af89be48df5097b500.1409720201.git.pratyush.anand@st.com>
+In-Reply-To: <c5feb916f14d19e4c636a5af89be48df5097b500.1409720201.git.pratyush.anand@st.com>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A number of radeon cards have a HW limitation causing them to be
-unable to generate the full 64-bit of address bits for MSIs. This
-breaks MSIs on some platforms such as POWER machines.
+> -----Original Message-----
+> From: Pratyush ANAND
+> Sent: Wednesday, September 03, 2014 10:51 AM
+> To: Mohit KUMAR DCG
+> Cc: linux-pci@vger.kernel.org; Pratyush ANAND
+> Subject: [PATCH V2] PCIe: SPEAr13XX: Pass config resource through reg
+> property
+> 
+> PCIe configuration space should be passed through reg property, rather than
+> through ranges property. This patch does the correction for SPEAr13XX SOCs.
+> 
+> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+> ---
+>  arch/arm/boot/dts/spear1310.dtsi  | 18 +++++++++---------
+> arch/arm/boot/dts/spear1340.dtsi  |  6 +++---  drivers/pci/host/pcie-
+> spear13xx.c |  2 +-
+>  3 files changed, 13 insertions(+), 13 deletions(-)
+> 
+> diff --git a/arch/arm/boot/dts/spear1310.dtsi
+> b/arch/arm/boot/dts/spear1310.dtsi
+> index fa5f2bb5f106..9d342920695a 100644
+> --- a/arch/arm/boot/dts/spear1310.dtsi
+> +++ b/arch/arm/boot/dts/spear1310.dtsi
+> @@ -85,7 +85,8 @@
+> 
+>  		pcie0: pcie@b1000000 {
+>  			compatible = "st,spear1340-pcie", "snps,dw-pcie";
+> -			reg = <0xb1000000 0x4000>;
+> +			reg = <0xb1000000 0x4000>, <0x80000000 0x20000>;
+> +			reg-names = "dbi", "config";
+>  			interrupts = <0 68 0x4>;
+>  			interrupt-map-mask = <0 0 0 0>;
+>  			interrupt-map = <0x0 0 &gic 0 68 0x4>; @@ -95,15
+> +96,15 @@
+>  			#address-cells = <3>;
+>  			#size-cells = <2>;
+>  			device_type = "pci";
+> -			ranges = <0x00000800 0 0x80000000 0x80000000 0
+> 0x00020000   /* configuration space */
+> -				0x81000000 0 0	 0x80020000 0 0x00010000   /*
+> downstream I/O */
+> +			ranges = <0x81000000 0 0	 0x80020000 0
+> 0x00010000   /* downstream I/O */
+>  				0x82000000 0 0x80030000 0xc0030000 0
+> 0x0ffd0000>; /* non-prefetchable memory */
+>  			status = "disabled";
+>  		};
+> 
+>  		pcie1: pcie@b1800000 {
+>  			compatible = "st,spear1340-pcie", "snps,dw-pcie";
+> -			reg = <0xb1800000 0x4000>;
+> +			reg = <0xb1800000 0x4000>, <0x90000000 0x20000>;
+> +			reg-names = "dbi", "config";
+>  			interrupts = <0 69 0x4>;
+>  			interrupt-map-mask = <0 0 0 0>;
+>  			interrupt-map = <0x0 0 &gic 0 69 0x4>; @@ -113,15
+> +114,15 @@
+>  			#address-cells = <3>;
+>  			#size-cells = <2>;
+>  			device_type = "pci";
+> -			ranges = <0x00000800 0 0x90000000 0x90000000 0
+> 0x00020000   /* configuration space */
+> -				0x81000000 0 0  0x90020000 0 0x00010000   /*
+> downstream I/O */
+> +			ranges = <0x81000000 0 0  0x90020000 0 0x00010000
+> /* downstream I/O */
+>  				0x82000000 0 0x90030000 0x90030000 0
+> 0x0ffd0000>; /* non-prefetchable memory */
+>  			status = "disabled";
+>  		};
+> 
+>  		pcie2: pcie@b4000000 {
+>  			compatible = "st,spear1340-pcie", "snps,dw-pcie";
+> -			reg = <0xb4000000 0x4000>;
+> +			reg = <0xb4000000 0x4000>, <0xc0000000 0x20000>;
+> +			reg-names = "dbi", "config";
+>  			interrupts = <0 70 0x4>;
+>  			interrupt-map-mask = <0 0 0 0>;
+>  			interrupt-map = <0x0 0 &gic 0 70 0x4>; @@ -131,8
+> +132,7 @@
+>  			#address-cells = <3>;
+>  			#size-cells = <2>;
+>  			device_type = "pci";
+> -			ranges = <0x00000800 0 0xc0000000 0xc0000000 0
+> 0x00020000   /* configuration space */
+> -				0x81000000 0 0	 0xc0020000 0 0x00010000   /*
+> downstream I/O */
+> +			ranges = <0x81000000 0 0	 0xc0020000 0
+> 0x00010000   /* downstream I/O */
+>  				0x82000000 0 0xc0030000 0xc0030000 0
+> 0x0ffd0000>; /* non-prefetchable memory */
+>  			status = "disabled";
+>  		};
+> diff --git a/arch/arm/boot/dts/spear1340.dtsi
+> b/arch/arm/boot/dts/spear1340.dtsi
+> index e71df0f2cb52..13e1aa33daa2 100644
+> --- a/arch/arm/boot/dts/spear1340.dtsi
+> +++ b/arch/arm/boot/dts/spear1340.dtsi
+> @@ -50,7 +50,8 @@
+> 
+>  		pcie0: pcie@b1000000 {
+>  			compatible = "st,spear1340-pcie", "snps,dw-pcie";
+> -			reg = <0xb1000000 0x4000>;
+> +			reg = <0xb1000000 0x4000>, <0x80000000 0x20000>;
+> +			reg-names = "dbi", "config";
+>  			interrupts = <0 68 0x4>;
+>  			interrupt-map-mask = <0 0 0 0>;
+>  			interrupt-map = <0x0 0 &gic 0 68 0x4>; @@ -60,8
+> +61,7 @@
+>  			#address-cells = <3>;
+>  			#size-cells = <2>;
+>  			device_type = "pci";
+> -			ranges = <0x00000800 0 0x80000000 0x80000000 0
+> 0x00020000   /* configuration space */
+> -				0x81000000 0 0	 0x80020000 0 0x00010000   /*
+> downstream I/O */
+> +			ranges = <0x81000000 0 0	 0x80020000 0
+> 0x00010000   /* downstream I/O */
+>  				0x82000000 0 0x80030000 0xc0030000 0
+> 0x0ffd0000>; /* non-prefetchable memory */
+>  			status = "disabled";
+>  		};
+> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-
+> spear13xx.c
+> index 6dea9e43a75c..85f594e1708f 100644
+> --- a/drivers/pci/host/pcie-spear13xx.c
+> +++ b/drivers/pci/host/pcie-spear13xx.c
+> @@ -340,7 +340,7 @@ static int __init spear13xx_pcie_probe(struct
+> platform_device *pdev)
+> 
+>  	pp->dev = dev;
+> 
+> -	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> +	dbi_base = platform_get_resource_byname(pdev,
+> IORESOURCE_MEM, "dbi");
+>  	pp->dbi_base = devm_ioremap_resource(dev, dbi_base);
+>  	if (IS_ERR(pp->dbi_base)) {
+>  		dev_err(dev, "couldn't remap dbi base %p\n", dbi_base);
 
-We used to have a powerpc specific quirk to address that on a
-single card, but this doesn't scale very well, this is better
-put under control of the drivers who know precisely what a given
-HW revision can do.
+Acked-by: Mohit Kumar <mohit.kumar@st.com>
 
-This moves the setting of the quirk flag to the HDA driver when
-detecting the radeon audio interface.
-
-Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: <stable@vger.kernel.org>
----
- arch/powerpc/kernel/pci_64.c |  6 ------
- sound/pci/hda/hda_intel.c    | 10 ++++++++--
- sound/pci/hda/hda_priv.h     |  1 +
- 3 files changed, 9 insertions(+), 8 deletions(-)
-
-diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
-index 66e1cd0..b15194e 100644
---- a/arch/powerpc/kernel/pci_64.c
-+++ b/arch/powerpc/kernel/pci_64.c
-@@ -266,9 +266,3 @@ int pcibus_to_node(struct pci_bus *bus)
- }
- EXPORT_SYMBOL(pcibus_to_node);
- #endif
--
--static void quirk_radeon_32bit_msi(struct pci_dev *dev)
--{
--	dev->force_32bit_msi = true;
--}
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
-diff --git a/sound/pci/hda/hda_intel.c b/sound/pci/hda/hda_intel.c
-index aa302fb..3e6d22d 100644
---- a/sound/pci/hda/hda_intel.c
-+++ b/sound/pci/hda/hda_intel.c
-@@ -296,7 +296,8 @@ enum {
- 
- /* quirks for ATI/AMD HDMI */
- #define AZX_DCAPS_PRESET_ATI_HDMI \
--	(AZX_DCAPS_NO_TCSEL | AZX_DCAPS_SYNC_WRITE | AZX_DCAPS_POSFIX_LPIB)
-+	(AZX_DCAPS_NO_TCSEL | AZX_DCAPS_SYNC_WRITE | AZX_DCAPS_POSFIX_LPIB|\
-+	 AZX_DCAPS_NO_MSI64)
- 
- /* quirks for Nvidia */
- #define AZX_DCAPS_PRESET_NVIDIA \
-@@ -1505,9 +1506,14 @@ static int azx_first_init(struct azx *chip)
- 		return -ENXIO;
- 	}
- 
--	if (chip->msi)
-+	if (chip->msi) {
-+		if (chip->driver_caps & AZX_DCAPS_NO_MSI64) {
-+			dev_dbg(card->dev, "Disabling 64bit MSI\n");
-+			pci->force_32bit_msi = true;
-+		}
- 		if (pci_enable_msi(pci) < 0)
- 			chip->msi = 0;
-+	}
- 
- 	if (azx_acquire_irq(chip, 0) < 0)
- 		return -EBUSY;
-diff --git a/sound/pci/hda/hda_priv.h b/sound/pci/hda/hda_priv.h
-index 949cd43..5016014 100644
---- a/sound/pci/hda/hda_priv.h
-+++ b/sound/pci/hda/hda_priv.h
-@@ -171,6 +171,7 @@ enum { SDI0, SDI1, SDI2, SDI3, SDO0, SDO1, SDO2, SDO3 };
- #define AZX_DCAPS_PM_RUNTIME	(1 << 26)	/* runtime PM support */
- #define AZX_DCAPS_I915_POWERWELL (1 << 27)	/* HSW i915 powerwell support */
- #define AZX_DCAPS_CORBRP_SELF_CLEAR (1 << 28)	/* CORBRP clears itself after reset */
-+#define AZX_DCAPS_NO_MSI64      (1 << 29)	/* Stick to 32-bit MSIs */
- 
- /* HD Audio class code */
- #define PCI_CLASS_MULTIMEDIA_HD_AUDIO	0x0403
-
-
+Regards
+Mohit
 
