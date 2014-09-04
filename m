@@ -1,121 +1,67 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v6 14/15] x86, irq: Introduce helper to check whether an IOAPIC has been registered
-Date: Wed, 24 Sep 2014 16:59:35 +0800
-Message-Id: <1411549176-30780-15-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from dub004-omc4s6.hotmail.com ([157.55.2.81]:55835 "EHLO
+	DUB004-OMC4S6.hotmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750810AbaIDPDJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 11:03:09 -0400
+Message-ID: <DUB130-DS10845119A34A53DA8A6430DBC50@phx.gbl>
+From: "Robert" <RJSmith92@live.com>
+To: <linux-pci@vger.kernel.org>
+Subject: PCIe root bridge and memory ranges.
+Date: Thu, 4 Sep 2014 15:57:47 +0100
+MIME-Version: 1.0
+Content-Type: text/plain;
+	format=flowed;
+	charset="UTF-8";
+	reply-type=original
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce acpi_ioapic_registered() to check whether an IOAPIC has already
-been registered, it will be used when enabling IOAPIC hotplug.
+Hello All,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |    1 +
- arch/x86/kernel/acpi/boot.c    |   22 ++++++++++++++++++++++
- arch/x86/kernel/apic/io_apic.c |   11 +++++++++++
- include/linux/acpi.h           |    1 +
- 4 files changed, 35 insertions(+)
+I am having trouble understanding what memory ranges go through the PCIe 
+root bridge on a Haswell CPU (what I have in my system) and similarly on 
+other modern CPUs. From what I can gather from sources online (including 
+many datasheets) is that the PCIE root complex contains a PCI host bridge, 
+which produces 1 PCI root bridge (ACPI\PNP0A08). This root bridge then 
+forwards certain memory ranges onto the PCI/PCIe bus.
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 7c04b8ec22a4..ca742d5249db 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -191,6 +191,7 @@ extern void mp_unmap_irq(int irq);
- extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 			      struct ioapic_domain_cfg *cfg);
- extern int mp_unregister_ioapic(u32 gsi_base);
-+extern int mp_ioapic_registered(u32 gsi_base);
- extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 			    irq_hw_number_t hwirq);
- extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 0e67d792741d..5a69df5dba56 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -821,6 +821,28 @@ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
- }
- EXPORT_SYMBOL(acpi_unregister_ioapic);
- 
-+/**
-+ * acpi_ioapic_registered - Check whether IOAPIC assoicatied with @gsi_base
-+ *			    has been registered
-+ * @handle:	ACPI handle of the IOAPIC deivce
-+ * @gsi_base:	GSI base associated with the IOAPIC
-+ *
-+ * Assume caller holds some type of lock to serialize acpi_ioapic_registered()
-+ * with acpi_register_ioapic()/acpi_unregister_ioapic().
-+ */
-+int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base)
-+{
-+	int ret = 0;
-+
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+	down_read(&acpi_ioapic_rwsem);
-+	ret  = mp_ioapic_registered(gsi_base);
-+	up_read(&acpi_ioapic_rwsem);
-+#endif
-+
-+	return ret;
-+}
-+
- static int __init acpi_parse_sbf(struct acpi_table_header *table)
- {
- 	struct acpi_table_boot *sb;
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 7fec2a8f72f3..eba25bccefd2 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -4013,6 +4013,17 @@ int mp_unregister_ioapic(u32 gsi_base)
- 	return 0;
- }
- 
-+int mp_ioapic_registered(u32 gsi_base)
-+{
-+	int ioapic;
-+
-+	for_each_ioapic(ioapic)
-+		if (ioapics[ioapic].gsi_config.gsi_base == gsi_base)
-+			return 1;
-+
-+	return 0;
-+}
-+
- int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 		     irq_hw_number_t hwirq)
- {
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 3574f137242e..e916cc9ca5a8 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -152,6 +152,7 @@ int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
- 
- int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
- int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
-+int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base);
- void acpi_irq_stats_init(void);
- extern u32 acpi_irq_handled;
- extern u32 acpi_irq_not_handled;
--- 
-1.7.10.4
+First of all if I take something like PAM registers, when something is 
+written to this address the PAM register forwards it to DMI (if set to do so 
+E.G. 0xD0000), so this transaction never goes through the PCI root bridge? 
+What's confusing is if I look at the DSDT ACPI table and look at the 
+ACPI\PNP0A08 device, it says that the PAM registers ranges go through it. I 
+guess this is just for an OS purpose as it doesn’t need to know what exact 
+ranges go through the root bridge? I'm not entirely sure on that and if 
+anyone could clarify it would be appreciated.
+
+As well as the PAM register ranges for the root bridge it also has the PCIe 
+device memory range, which in my case is 0xC0000000 – 0xFEAFFFFF, now does 
+that mean that anything above that range isn't going through the PCI root 
+bridge, or is it just like that so an OS doesn't try map a device in that 
+region. If I look at the Haswell datasheet it has small regions in that area 
+between things like APIC and BIOS that reach the DMI.
+
+It seems as if the PCI root bridge is using some sort of subtractive 
+decoding that picks up whatever isn't sent to DRAM etc. and to make it easy 
+for an OS the BIOS gives it a block of address space.
+
+Finally, I was on a forum related to external GPUs, and some Windows users 
+didn’t have enough space to map the device below 4GB. To resolve this they 
+manually edited the DSDT table and added another entry above the 4GB 
+barrier, now Windows mapped the GPU in the 64bit space. Now I presume 
+changing the entry in the DSDT table didn't make any difference to how the 
+hardware was set up, it just told the OS that the root bridge will in fact 
+pick up this address range and therefore it knew it could map it there.
+
+So am I write in thinking the ranges in the ACPI table are for the OSs 
+purpose, and don't actually have to accurately represent what the hardware 
+does.
+
+..and does anyone know what ranges do actually go through a single PCIe root 
+bridge on a modern system?
+
+If anyone could help it would be greatly appreciated :)
+
+Kind Regards,
+Robert 
 
