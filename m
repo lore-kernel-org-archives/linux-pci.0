@@ -1,128 +1,85 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <540FB3EA.5030109@linux.intel.com>
-Date: Wed, 10 Sep 2014 10:14:02 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qg0-f47.google.com ([209.85.192.47]:38197 "EHLO
+	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751635AbaIDNUl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 09:20:41 -0400
+Received: by mail-qg0-f47.google.com with SMTP id z60so9829357qgd.20
+        for <linux-pci@vger.kernel.org>; Thu, 04 Sep 2014 06:20:40 -0700 (PDT)
 MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
-	Prarit Bhargava <prarit@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	Ingo Molnar <mingo@kernel.org>
-Subject: Re: [Patch v4 07/16] x86, irq: Prefer assigned ID in APIC ID register
- for x86_64
-References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com> <1409192561-19744-8-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1409091256270.11037@nanos>
-In-Reply-To: <alpine.DEB.2.10.1409091256270.11037@nanos>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1409856338-1730-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1409856338-1730-1-git-send-email-Minghuan.Lian@freescale.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 4 Sep 2014 07:20:19 -0600
+Message-ID: <CAErSpo5kEVSKmZn9CxZ=G=PbnKcAaso=ZwCwp=aEvJsnS_AKyQ@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: designware: change MSI-related pcie_host_ops
+To: Minghuan Lian <Minghuan.Lian@freescale.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Sep 4, 2014 at 12:45 PM, Minghuan Lian
+<Minghuan.Lian@freescale.com> wrote:
+> 1. Change original get_msi_data() to get_msi_addr(), since this
+> function returns MSI message address.
+> 2. Add a new function get_msi_data() to return MSI message data.
 
+This looks like two patches: one that merely renames a function, with
+no functional change at all, and a second that adds a new function.
+Please split them.
 
-On 2014/9/9 19:04, Thomas Gleixner wrote:
-> On Thu, 28 Aug 2014, Jiang Liu wrote:
-> 
->> From: Yinghai Lu <yinghai@kernel.org>
->>
->> Perfer the assigned ID in APIC ID register for x86_64 if it's still
->> available.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> Cc: Joerg Roedel <joro@8bytes.org>
->> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
->> Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> ---
->>  arch/x86/kernel/apic/io_apic.c |   38 +++++++++++++++++++++++++++++++++-----
->>  1 file changed, 33 insertions(+), 5 deletions(-)
->>
->> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
->> index 3faf9599ff29..196d9c15fdec 100644
->> --- a/arch/x86/kernel/apic/io_apic.c
->> +++ b/arch/x86/kernel/apic/io_apic.c
->> @@ -3575,26 +3575,54 @@ static int __init io_apic_get_unique_id(int ioapic, int apic_id)
->>  	return apic_id;
->>  }
->>  
->> -static u8 __init io_apic_unique_id(u8 id)
->> +static u8 io_apic_unique_id(int idx, u8 id)
-> 
-> How is that change related to the changelog?
-My bad, removal of __init marker belongs to next patch.
-
-> 
->>  {
->>  	if ((boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) &&
->>  	    !APIC_XAPIC(apic_version[boot_cpu_physical_apicid]))
->> -		return io_apic_get_unique_id(nr_ioapics, id);
->> +		return io_apic_get_unique_id(idx, id);
->>  	else
->>  		return id;
->>  }
->>  #else
->> -static u8 __init io_apic_unique_id(u8 id)
->> +static u8 io_apic_unique_id(int idx, u8 id)
->>  {
->>  	int i;
->> +	u8 new_id;
->> +	unsigned long flags;
->>  	DECLARE_BITMAP(used, 256);
->> +	union IO_APIC_reg_00 reg_00;
->>  
->>  	bitmap_zero(used, 256);
->>  	for_each_ioapic(i)
->>  		__set_bit(mpc_ioapic_id(i), used);
->>  	if (!test_bit(id, used))
->>  		return id;
->> -	return find_first_zero_bit(used, 256);
->> +
->> +	/* check register at first */
->> +	raw_spin_lock_irqsave(&ioapic_lock, flags);
->> +	reg_00.raw = io_apic_read(idx, 0);
->> +	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
->> +	new_id = reg_00.bits.ID;
->> +	if (!test_bit(new_id, used)) {
->> +		apic_printk(APIC_VERBOSE, KERN_INFO
->> +			"IOAPIC[%d]: Using reg apic_id %d instead of %d\n",
->> +			 idx, new_id, id);
->> +		return new_id;
->> +	}
->> +
->> +	new_id = find_first_zero_bit(used, 256);
->> +	reg_00.bits.ID = new_id;
->> +	raw_spin_lock_irqsave(&ioapic_lock, flags);
->> +	io_apic_write(idx, 0, reg_00.raw);
->> +	reg_00.raw = io_apic_read(idx, 0);
->> +	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
->> +
->> +	/* Sanity check */
->> +	if (reg_00.bits.ID != new_id)
->> +		pr_warn("IOAPIC[%d]: Unable to change apic_id to %d!\n",
->> +			idx, new_id);
-> 
-> So we detect, that the ID could not be changed and we return it
-> nevertheless?
-Seems it deserves a BUG_ON here. We have tried the ID from ACPI table,
-the ID from hardware register, they all fails. And we can't change the
-hardware register too. Seems no way out here.
-Regards!
-Gerry
-> 
-> Thanks,
-> 
-> 	tglx
-> 
+> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> ---
+>  drivers/pci/host/pcie-designware.c | 11 ++++++++---
+>  drivers/pci/host/pcie-designware.h |  3 ++-
+>  2 files changed, 10 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 52bd3a1..c84913e 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -373,12 +373,17 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+>          */
+>         desc->msi_attrib.multiple = msgvec;
+>
+> -       if (pp->ops->get_msi_data)
+> -               msg.address_lo = pp->ops->get_msi_data(pp);
+> +       if (pp->ops->get_msi_addr)
+> +               msg.address_lo = pp->ops->get_msi_addr(pp);
+>         else
+>                 msg.address_lo = virt_to_phys((void *)pp->msi_data);
+>         msg.address_hi = 0x0;
+> -       msg.data = pos;
+> +
+> +       if (pp->ops->get_msi_data)
+> +               msg.data = pp->ops->get_msi_data(pp, pos);
+> +       else
+> +               msg.data = pos;
+> +
+>         write_msi_msg(irq, &msg);
+>
+>         return 0;
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index daf81f9..7f08807 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -73,7 +73,8 @@ struct pcie_host_ops {
+>         void (*host_init)(struct pcie_port *pp);
+>         void (*msi_set_irq)(struct pcie_port *pp, int irq);
+>         void (*msi_clear_irq)(struct pcie_port *pp, int irq);
+> -       u32 (*get_msi_data)(struct pcie_port *pp);
+> +       u32 (*get_msi_addr)(struct pcie_port *pp);
+> +       u32 (*get_msi_data)(struct pcie_port *pp, int pos);
+>  };
+>
+>  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+> --
+> 1.9.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
