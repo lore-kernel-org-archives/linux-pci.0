@@ -1,51 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:52988 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751347AbaI2Oip (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 10:38:45 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: suravee.suthikulpanit@amd.com
-Cc: will.deacon@arm.com, liviu.dudau@arm.com, marc.zyngier@arm.com,
-	mark.rutland@arm.com, catalin.marinas@arm.com,
-	jason@lakedaemon.net, tglx@linutronix.de, robh+dt@kernel.org,
-	bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-doc@vger.kernel.org, devicetree@vger.kernel.org,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [RFC 3/4] arm64: Do not call enable PCI resources when specify PCI_PROBE_ONLY
-Date: Mon, 29 Sep 2014 16:38:09 +0200
-Message-ID: <4139946.HEULtVYyUh@wuerfel>
-In-Reply-To: <1411937610-22125-4-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com> <1411937610-22125-4-git-send-email-suravee.suthikulpanit@amd.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 4 Sep 2014 13:25:51 +0200
+From: Peter Zijlstra <peterz@infradead.org>
+To: Sudeep Holla <sudeep.holla@arm.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v4 01/11] cpumask: factor out show_cpumap into separate
+ helper function
+Message-ID: <20140904112551.GC346@worktop.programming.kicks-ass.net>
+References: <1409763617-17074-1-git-send-email-sudeep.holla@arm.com>
+ <1409763617-17074-2-git-send-email-sudeep.holla@arm.com>
+ <20140904062006.GC3190@worktop.ger.corp.intel.com>
+ <54082ADD.6040004@arm.com>
+ <20140904092135.GA346@worktop.programming.kicks-ass.net>
+ <54084246.7010705@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54084246.7010705@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday 28 September 2014 15:53:29 suravee.suthikulpanit@amd.com wrote:
-> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> index ce5836c..7fd4d2b 100644
-> --- a/arch/arm64/kernel/pci.c
-> +++ b/arch/arm64/kernel/pci.c
-> @@ -68,3 +68,11 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
->         bus->domain_nr = domain;
->  }
->  #endif
-> +
-> +int pcibios_enable_device(struct pci_dev *dev, int mask)
-> +{
-> +       if (pci_has_flag(PCI_PROBE_ONLY))
-> +               return 0;
-> +
-> +       return pci_enable_resources(dev, mask);
-> +}
+On Thu, Sep 04, 2014 at 11:43:18AM +0100, Sudeep Holla wrote:
+> >You could make it bitmap_copy_to_buf() I suppose, and then have a
+> >cpumask inline wrapper, to be fully consistent with the rest of the
+> >implementations.
+> >
+> 
+> I liked the second approach, how about patch below ?
+> If will munge it into original patch.
 
-This doesn't look arm64 specific to me, and there is already a generic
-pcibios_enable_device() function in drivers/pci/pci.c. Would it
-be possible to move the check for PCI_PROBE_ONLY there without breaking
-other architectures?
+Looks good, one more nit if you will permit :-)
 
-If that works, please do so.
+> +int bitmap_copy_to_pagebuf(bool list, const unsigned long *maskp, char *buf)
 
-	Arnd
+Maybe s/copy/print/ or something? Its not really a 'copy' as such since
+it very much transforms the bitmap.
