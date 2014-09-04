@@ -1,100 +1,121 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <540E6095.8030409@huawei.com>
-Date: Tue, 9 Sep 2014 10:06:13 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:47838 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751228AbaIDQCW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 12:02:22 -0400
+Date: Thu, 4 Sep 2014 17:02:17 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Will Deacon <Will.Deacon@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] drivers: pci: convert generic host controller to DT host
+ bridge creation API
+Message-ID: <20140904160217.GC12351@e102568-lin.cambridge.arm.com>
+References: <1407861695-25549-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140819120553.GA23128@arm.com>
+ <20140904133956.GA12351@e102568-lin.cambridge.arm.com>
+ <6930538.Get2YiuMvJ@wuerfel>
 MIME-Version: 1.0
-To: David Vrabel <david.vrabel@citrix.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-mips@linux-mips.org>, <linux-ia64@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <Bharat.Bhushan@freescale.com>,
-	<sparclinux@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-	<linux-s390@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"Joerg Roedel" <joro@8bytes.org>, <x86@kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<xen-devel@lists.xenproject.org>, <arnab.basu@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Xinwei Hu <huxinwei@huawei.com>,
-	"Tony Luck" <tony.luck@intel.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	<iommu@lists.linux-foundation.org>, Wuyun <wuyun.wu@huawei.com>,
-	<linuxppc-dev@lists.ozlabs.org>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [Xen-devel] [PATCH v1 08/21] x86/xen/MSI: Use MSI chip framework
- to configure MSI/MSI-X irq
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com> <1409911806-10519-9-git-send-email-wangyijing@huawei.com> <5409C8C0.8020200@citrix.com>
-In-Reply-To: <5409C8C0.8020200@citrix.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <6930538.Get2YiuMvJ@wuerfel>
+Content-Type: text/plain; charset=WINDOWS-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/5 22:29, David Vrabel wrote:
-> On 05/09/14 11:09, Yijing Wang wrote:
->> Use MSI chip framework instead of arch MSI functions to configure
->> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
-> [...]
->> --- a/arch/x86/pci/xen.c
->> +++ b/arch/x86/pci/xen.c
-> [...]
->> @@ -418,9 +430,9 @@ int __init pci_xen_init(void)
->>  #endif
->>  
->>  #ifdef CONFIG_PCI_MSI
->> -	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
->> -	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
->> -	x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
->> +	xen_msi_chip.setup_irqs = xen_setup_msi_irqs;
->> +	xen_msi_chip.teardown_irqs = xen_teardown_msi_irqs;
->> +	x86_msi_chip = &xen_msi_chip;
->>  	msi_chip.irq_mask = xen_nop_msi_mask;
->>  	msi_chip.irq_unmask = xen_nop_msi_mask;
+Hi Arnd,
+
+thanks for having a look.
+
+On Thu, Sep 04, 2014 at 03:05:53PM +0100, Arnd Bergmann wrote:
+> On Thursday 04 September 2014 14:39:56 Lorenzo Pieralisi wrote:
+> > > > +   if (!res_valid) {
+> > > > +           dev_err(dev, "non-prefetchable memory resource required\n");
+> > > > +           return -EINVAL;
+> > > > +   }
+> > > > +
+> > > > +   if (iores) {
+> > > > +           if (!PAGE_ALIGNED(io_cpuaddr))
+> > > > +                   return -EINVAL;
+> > > 
+> > > Why is this alignment check not in the core code? Probably a question for
+> > > somebody like Arnd, but do we need to deal with multiple IO resources?
+> > > Currently we'll just silently take the last one that we found, which doesn't
+> > > sound ideal.
+> > 
+> > (1) Yes, the alignment check should be made in core code
 > 
-> Why have these not been changed to set the x86_msi_chip.mask/unmask
-> fields instead?
-
-Hi David, x86_msi_chip here is struct msi_chip data type, used to configure MSI/MSI-X
-irq. msi_chip above is struct irq_chip data type, represent the MSI irq controller. They are
-not the same object. Their name easily confusing people.
-
-Defined in arch/x86/kernel/apic/io_apic.c
-/*
- * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
- * which implement the MSI or MSI-X Capability Structure.
- */
-static struct irq_chip msi_chip = {
-	.name			= "PCI-MSI",
-	.irq_unmask		= unmask_msi_irq,
-	.irq_mask		= mask_msi_irq,
-	.irq_ack		= ack_apic_edge,
-	.irq_set_affinity	= msi_set_affinity,
-	.irq_retrigger		= ioapic_retrigger_irq,
-};
-
-
-Defined in arch/x86/kernel/apic/io_apic.c, introduced in patch 7/21
-struct msi_chip apic_msi_chip = {
-	.setup_irqs = native_setup_msi_irqs,
-	.teardown_irq = native_teardown_msi_irq,
-};
-[...]
-struct msi_chip *x86_msi_chip = &apic_msi_chip;
-
-
-Thanks!
-Yijing.
-
+> Makes sense. In theory we could support unaligned addresses (as long as
+> the offset in the page is the same for virtual and physical), but I don't
+> see why we should implement that unless some implementation absolutely
+> requires it.
 > 
-> David
+> > (2) I could take the first IO resource and warn on multiple IO resources if
+> >     they are detected. Thoughts ?
 > 
-> .
+> I think we should either warn, or be reasonably sure that it will work.
+> Again, in theory this should work, but no sane hardware implementation
+> would do it like that.
+
+Ok, I will refactor the IO resources mapping code on top of Livius's v10.
+
+> > > > +           if (err)
+> > > > +                   return err;
+> > > > +   }
+> > > > +
+> > > > +   /* Parse and map our Configuration Space windows */
+> > > > +   err = gen_pci_parse_map_cfg_windows(host);
+> > > > +   if (err)
+> > > > +           return err;
+> > > > +
+> > > > +   pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
+> > > > +   pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
+> > > 
+> > > Why does this belong in the host controller driver and how does it interact
+> > > with the probe-only property?
+> > 
+> > That's a very good question and it is one that confuses me too.
+> > 
+> > Current code in pci_common_init_dev() sets PCI_REASSIGN_ALL_RSRC behind
+> > our backs silently. That flag has a side effect only if the probing code
+> > detects PCI bridges in the list of devices, since PCI core probing code
+> > will try to reassign the bus numbers upon PCI bridge detection IIUC. I do
+> > not think that PCI_REASSIGN_ALL_BUS has any side effect on ARM (by grepping
+> > around I noticed that PCI_REASSIGN_ALL_RSRC is used in
+> > 
+> > pcibios_assign_all_busses()
+> > 
+> > which in turn is triggered only if PCI bridges are detected, still grokking
+> > the code though).
 > 
+> Interesting point: the generic implementation should probably not default
+> to reassigning all buses at all. We could have a (host controller specific,
+> but with standardized name) DT property for it, but it would be best if
+> firmware already probes it to not have to do it again.
 
+I think that makes sense, let me point out though that this is
+*not* how the code works today, since the pcibios code sets:
 
--- 
-Thanks!
-Yijing
+PCI_REASSIGN_ALL_RSRC (pci_common_init_dev() in arch/arm/kernel/bios32.c)
+
+by default. I won't set the PCI_REASSIGN_ALL_RSRC and PCI_REASSIGN_ALL_BUS
+flags.
+
+> > Apart from the PCI_ENABLE_PROC_DOMAINS flag which I think it is safe to
+> > set by default (but let me check that too),
+> 
+> I think it should be enabled here, as no legacy machine will use this
+> driver.
+
++1
+
+I will wait for Liviu's v10 and repost accordingly.
+
+Lorenzo
 
