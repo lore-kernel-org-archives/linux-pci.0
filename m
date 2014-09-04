@@ -1,58 +1,209 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v12 01/12] Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
-Date: Tue, 23 Sep 2014 20:01:03 +0100
-Message-Id: <1411498874-9864-2-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:48365 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751163AbaIDWAu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 18:00:50 -0400
+Received: by mail-pa0-f53.google.com with SMTP id fa1so20535671pad.26
+        for <linux-pci@vger.kernel.org>; Thu, 04 Sep 2014 15:00:49 -0700 (PDT)
+Date: Thu, 4 Sep 2014 16:00:44 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Matthew Minter <matthew_minter@xyratex.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 01/22] Added some infrastructure to allow assigning PCI
+ device IRQs at device enable time and removed pci_fixup_irqs as the other
+ change obsolites it.
+Message-ID: <20140904220044.GG17125@google.com>
+References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
+ <1407255083-9356-2-git-send-email-matthew_minter@xyratex.com>
+ <20140807034338.GA13444@richard>
+ <CAFJTrDuzdoOPoQ_rpNsYU+OeE380sY37aQaMSudhu_MVKo352g@mail.gmail.com>
+ <20140808012017.GA11712@richard>
+ <CAFJTrDs0oELF3FNaf6axQvPkLv1skK1f3j_Hgre2VX9XDFBOag@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAFJTrDs0oELF3FNaf6axQvPkLv1skK1f3j_Hgre2VX9XDFBOag@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The inline version of ioport_map() that gets used when !CONFIG_GENERIC_IOMAP
-is wrong. It returns a mapped (i.e. virtual) address that can start from
-zero and completely ignores the PCI_IOBASE and IO_SPACE_LIMIT that most
-architectures that use !CONFIG_GENERIC_MAP define.
+On Mon, Aug 11, 2014 at 11:16:50AM +0100, Matthew Minter wrote:
+> It seems that by coincidence, my testing boxes did not have any
+> devices which needed the PCI_INTERRUPT_PIN fixed up. Therefore I had
+> not noticed the fact the fixed value was not used in the enable path.
+> 
+> I would assume that someone with a different setup would have had a
+> problem there however so thank you for pointing out this bug. I have
+> integrated your fix into version 2 of the patch set.
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
-Tested-by: Tanmay Inamdar <tinamdar@apm.com>
----
- include/asm-generic/io.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I'm dropping this series and I'll watch for v2.
 
-diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-index 975e1cc..2e2161b 100644
---- a/include/asm-generic/io.h
-+++ b/include/asm-generic/io.h
-@@ -331,7 +331,7 @@ static inline void iounmap(void __iomem *addr)
- #ifndef CONFIG_GENERIC_IOMAP
- static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
- {
--	return (void __iomem *) port;
-+	return (void __iomem *)(PCI_IOBASE + (port & IO_SPACE_LIMIT));
- }
- 
- static inline void ioport_unmap(void __iomem *p)
--- 
-2.1.0
-
+> Many thanks.
+> 
+> On 8 August 2014 02:20, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+> > On Thu, Aug 07, 2014 at 12:35:41PM +0100, Matthew Minter wrote:
+> >>Just to confirm, are you saying that:
+> >>
+> >>>+
+> >>>+      pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+> >>>+      pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
+> >>>+
+> >>
+> >>Should become:
+> >>
+> >>>+
+> >>>+     pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
+> >>>+     pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+> >>>+
+> >>
+> >>So that we read the config byte after running the assignment and fixup?
+> >>
+> >>I had not thought about the case where the fixup changes the
+> >>PCI_INTERRUPT_PIN value.
+> >>It looks to me like you are correct there and this should indeed be fixed.
+> >>I can certainly swap those around for the next patch revision if that
+> >>is what you are suggesting?
+> >>
+> >
+> > Yes, pci_read_config_byte() should be called after pdev_assign_irq().
+> >
+> >>I will give that a quick test but it sounds like you are correct.
+> >
+> > I am willing to know the result, especially in the original one, what pin
+> > value you retrieved from pci_dev.
+> >
+> >>
+> >>Many thanks,
+> >>Matthew
+> >>
+> >>On 7 August 2014 04:43, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+> >>> On Tue, Aug 05, 2014 at 05:11:02PM +0100, matthew_minter@xyratex.com wrote:
+> >>>>From: matthew_minter <matthew_minter@xyratex.com>
+> >>>>
+> >>>>---
+> >>>> drivers/pci/Makefile      | 15 ++-------------
+> >>>> drivers/pci/host-bridge.c |  2 +-
+> >>>> drivers/pci/pci.c         |  6 +++++-
+> >>>> drivers/pci/pci.h         |  1 +
+> >>>> drivers/pci/probe.c       | 12 ------------
+> >>>> drivers/pci/setup-irq.c   | 25 +++++++++----------------
+> >>>> include/linux/pci.h       |  8 ++++----
+> >>>> 7 files changed, 22 insertions(+), 47 deletions(-)
+> >>>>
+> >>>>diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> >>>>index e04fe2d..38c4cb0 100644
+> >>>>--- a/drivers/pci/Makefile
+> >>>>+++ b/drivers/pci/Makefile
+> >>>>@@ -4,7 +4,8 @@
+> >>>>
+> >>>> obj-y         += access.o bus.o probe.o host-bridge.o remove.o pci.o \
+> >>>>                       pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
+> >>>>-                      irq.o vpd.o setup-bus.o vc.o
+> >>>>+                      irq.o vpd.o setup-bus.o vc.o setup-irq.o
+> >>>>+
+> >>>> obj-$(CONFIG_PROC_FS) += proc.o
+> >>>> obj-$(CONFIG_SYSFS) += slot.o
+> >>>>
+> >>>>@@ -31,18 +32,6 @@ obj-$(CONFIG_PCI_ATS) += ats.o
+> >>>> obj-$(CONFIG_PCI_IOV) += iov.o
+> >>>>
+> >>>> #
+> >>>>-# Some architectures use the generic PCI setup functions
+> >>>>-#
+> >>>>-obj-$(CONFIG_ALPHA) += setup-irq.o
+> >>>>-obj-$(CONFIG_ARM) += setup-irq.o
+> >>>>-obj-$(CONFIG_UNICORE32) += setup-irq.o
+> >>>>-obj-$(CONFIG_SUPERH) += setup-irq.o
+> >>>>-obj-$(CONFIG_MIPS) += setup-irq.o
+> >>>>-obj-$(CONFIG_TILE) += setup-irq.o
+> >>>>-obj-$(CONFIG_SPARC_LEON) += setup-irq.o
+> >>>>-obj-$(CONFIG_M68K) += setup-irq.o
+> >>>>-
+> >>>>-#
+> >>>> # ACPI Related PCI FW Functions
+> >>>> # ACPI _DSM provided firmware instance and string name
+> >>>> #
+> >>>>diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> >>>>index 0e5f3c9..8ed186f 100644
+> >>>>--- a/drivers/pci/host-bridge.c
+> >>>>+++ b/drivers/pci/host-bridge.c
+> >>>>@@ -16,7 +16,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+> >>>>       return bus;
+> >>>> }
+> >>>>
+> >>>>-static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+> >>>>+struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+> >>>> {
+> >>>>       struct pci_bus *root_bus = find_pci_root_bus(bus);
+> >>>>
+> >>>>diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> >>>>index 63a54a3..d51d076 100644
+> >>>>--- a/drivers/pci/pci.c
+> >>>>+++ b/drivers/pci/pci.c
+> >>>>@@ -1197,10 +1197,15 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+> >>>>       int err;
+> >>>>       u16 cmd;
+> >>>>       u8 pin;
+> >>>>+      struct pci_host_bridge *hbrg = find_pci_host_bridge(dev->bus);
+> >>>>
+> >>>>       err = pci_set_power_state(dev, PCI_D0);
+> >>>>       if (err < 0 && err != -EIO)
+> >>>>               return err;
+> >>>>+
+> >>>>+      pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+> >>>>+      pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
+> >>>>+
+> >>>>       err = pcibios_enable_device(dev, bars);
+> >>>>       if (err < 0)
+> >>>>               return err;
+> >>>>@@ -1209,7 +1214,6 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+> >>>>       if (dev->msi_enabled || dev->msix_enabled)
+> >>>>               return 0;
+> >>>>
+> >>>>-      pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+> >>>
+> >>> Not sure why you move this up.
+> >>>
+> >>> Before your change, the call flow would be like this:
+> >>>
+> >>> | scan_bus
+> >>> |   + pci_fixup_irqs
+> >>> |      +    pci_dev->irq and PCI_INTERRUPT_PIN assigned with correct number
+> >>> |
+> >>> | pci_enable_device, called from driver
+> >>> |   + do_pci_enable_device, read the pin from pci_dev
+> >>>
+> >>> As my understanding, this ensures the pin read from hardware is fixuped. While
+> >>> after your change, the pci_fixup_irqs is removed and the pin will be assigned
+> >>> in pdev_assign_irq() after you fix it properly.
+> >>>
+> >>> Do I missed something?
+> >>>
+> >>>>       if (pin) {
+> >>>>               pci_read_config_word(dev, PCI_COMMAND, &cmd);
+> >>>>               if (cmd & PCI_COMMAND_INTX_DISABLE)
+> >>>
+> >>> --
+> >>> Richard Yang
+> >>> Help you, Help me
+> >>>
+> >>
+> >>--
+> >>
+> >>
+> >>------------------------------
+> >>For additional information including the registered office and the treatment of Xyratex confidential information please visit www.xyratex.com
+> >>
+> >>------------------------------
+> >
+> > --
+> > Richard Yang
+> > Help you, Help me
+> >
+> 
+> -- 
+> 
+> 
+> ------------------------------
+> For additional information including the registered office and the treatment of Xyratex confidential information please visit www.xyratex.com
+> 
+> ------------------------------
