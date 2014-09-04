@@ -1,80 +1,52 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <5410FA6E.8080708@huawei.com>
-Date: Thu, 11 Sep 2014 09:27:10 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qa0-f50.google.com ([209.85.216.50]:37774 "EHLO
+	mail-qa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754941AbaIDVFX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 17:05:23 -0400
+Received: by mail-qa0-f50.google.com with SMTP id cm18so10254616qab.9
+        for <linux-pci@vger.kernel.org>; Thu, 04 Sep 2014 14:05:23 -0700 (PDT)
 MIME-Version: 1.0
-To: David Vrabel <david.vrabel@citrix.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-mips@linux-mips.org>, <linux-ia64@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	<sparclinux@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-	<linux-s390@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"Joerg Roedel" <joro@8bytes.org>, <x86@kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<xen-devel@lists.xenproject.org>, <arnab.basu@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<Bharat.Bhushan@freescale.com>, "Tony Luck" <tony.luck@intel.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	<iommu@lists.linux-foundation.org>, Wuyun <wuyun.wu@huawei.com>,
-	<linuxppc-dev@lists.ozlabs.org>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [Xen-devel] [PATCH v1 08/21] x86/xen/MSI: Use MSI chip framework
- to configure MSI/MSI-X irq
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>	<1409911806-10519-9-git-send-email-wangyijing@huawei.com>	<5409C8C0.8020200@citrix.com> <540E6095.8030409@huawei.com> <54104641.7020007@citrix.com>
-In-Reply-To: <54104641.7020007@citrix.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <5405D9C8.1000308@ti.com>
+References: <20140819044050.GA15551@google.com> <53F368F7.1070707@ti.com>
+ <CAErSpo6GfCE8yT2Dda1JJsoPQhFD_b0GhB=OZ6w854ZB_B6eqA@mail.gmail.com> <5405D9C8.1000308@ti.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 4 Sep 2014 15:05:02 -0600
+Message-ID: <CAErSpo5xi6evzeLB4H=+6SHjh=bp+7ZWDO8DP_sMLbE0xQePmQ@mail.gmail.com>
+Subject: Re: [GIT PULL] PCI changes for v3.17 (part 3)
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/10 20:38, David Vrabel wrote:
-> On 09/09/14 03:06, Yijing Wang wrote:
->> On 2014/9/5 22:29, David Vrabel wrote:
->>> On 05/09/14 11:09, Yijing Wang wrote:
->>>> Use MSI chip framework instead of arch MSI functions to configure
->>>> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
->>> [...]
->>>> --- a/arch/x86/pci/xen.c
->>>> +++ b/arch/x86/pci/xen.c
->>> [...]
->>>> @@ -418,9 +430,9 @@ int __init pci_xen_init(void)
->>>>  #endif
->>>>  
->>>>  #ifdef CONFIG_PCI_MSI
->>>> -	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
->>>> -	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
->>>> -	x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
->>>> +	xen_msi_chip.setup_irqs = xen_setup_msi_irqs;
->>>> +	xen_msi_chip.teardown_irqs = xen_teardown_msi_irqs;
->>>> +	x86_msi_chip = &xen_msi_chip;
->>>>  	msi_chip.irq_mask = xen_nop_msi_mask;
->>>>  	msi_chip.irq_unmask = xen_nop_msi_mask;
->>>
->>> Why have these not been changed to set the x86_msi_chip.mask/unmask
->>> fields instead?
+On Tue, Sep 2, 2014 at 8:52 AM, Murali Karicheri <m-karicheri2@ti.com> wrote:
+> On 08/19/2014 12:30 PM, Bjorn Helgaas wrote:
 >>
->> Hi David, x86_msi_chip here is struct msi_chip data type, used to configure MSI/MSI-X
->> irq. msi_chip above is struct irq_chip data type, represent the MSI irq controller. They are
->> not the same object. Their name easily confusing people.
-> 
-> Ok, it all makes sense now.
-> 
-> Acked-by: David Vrabel <david.vrabel@citrix.com>
+>> On Tue, Aug 19, 2014 at 10:10 AM, Murali Karicheri<m-karicheri2@ti.com>
+>> wrote:
+>>>
+>>> Hi Bjorn,
+>>>
+>>> I see you have pulled in my designware related patches for Keystone PCI
+>>> in
+>>> this request. When do you think you can pull in Keystone PCI driver (v8)
+>>> on
+>>> the list?
+>>
+>>
+>> The things in this pull request have been in linux-next for a month.
+>> I'm ready to apply the Keystone driver, but since we're after the
+>> merge window and the Keystone driver hasn't been in -next at all, I
+>> plan to put it in v3.18.
+>>
+> BJorn,
+>
+> Do you have a v3.18 next branch that you can add this patch to? I need to
+> send out additional patches on top of this to support PCIe and SATA on
+> another K2 platform, K2E and will be good if I can base it on a merged
+> branch. Also I am afraid, we will have nasty merge issues to deal with if
+> others start making changes in parallel and conflict with this patch series.
 
-Thanks!
+Yes.  I put it on a pci/host-keystone branch for v3.18.
 
-> 
-> David
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+Bjorn
