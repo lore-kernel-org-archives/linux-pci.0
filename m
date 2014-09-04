@@ -1,159 +1,196 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:52745 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751146AbaI3QnB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 12:43:01 -0400
-Date: Tue, 30 Sep 2014 17:42:56 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>
-Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
-Message-ID: <20140930164256.GS841@e106497-lin.cambridge.arm.com>
-References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
- <8631927.qWHZsjCs8e@wuerfel>
- <20140930120344.GA14215@e102568-lin.cambridge.arm.com>
- <3090148.OUdB0fsdsR@wuerfel>
- <20140930161241.GA16583@e102568-lin.cambridge.arm.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:11345 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756622AbaIDGNC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 02:13:02 -0400
+Message-ID: <540802D9.6000903@huawei.com>
+Date: Thu, 4 Sep 2014 14:12:41 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20140930161241.GA16583@e102568-lin.cambridge.arm.com>
-Content-Type: text/plain; charset=UTF-8
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <Jordan_Hargrave@Dell.com>,
+	<keith.busch@intel.com>, <jon.mason@intel.com>,
+	Jon Mason <jdmason@kudzu.us>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com> <20140903224201.GD26073@google.com>
+In-Reply-To: <20140903224201.GD26073@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 30, 2014 at 05:12:41PM +0100, Lorenzo Pieralisi wrote:
-> On Tue, Sep 30, 2014 at 01:31:44PM +0100, Arnd Bergmann wrote:
-> > On Tuesday 30 September 2014 13:03:44 Lorenzo Pieralisi wrote:
-> > > > >  static int gen_pci_probe(struct platform_device *pdev)
-> > > > >  {
-> > > > > @@ -326,6 +385,7 @@ static int gen_pci_probe(struct platform_device *pdev)
-> > > > >         struct device *dev = &pdev->dev;
-> > > > >         struct device_node *np = dev->of_node;
-> > > > >         struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-> > > > > +#ifndef CONFIG_ARM64
-> > > > >         struct hw_pci hw = {
-> > > > >                 .nr_controllers = 1,
-> > > > >                 .private_data   = (void **)&pci,
-> > > > > @@ -333,6 +393,7 @@ static int gen_pci_probe(struct platform_device *pdev)
-> > > > >                 .map_irq        = of_irq_parse_and_map_pci,
-> > > > >                 .ops            = &gen_pci_ops,
-> > > > >         };
-> > > > > +#endif
-> > > > >  
-> > > > 
-> > > > Same here, I'd suggest marking this "#ifdef CONFIG_ARM" instead, as hw_pci
-> > > > is an arm32 specific data structure.
-> > > 
-> > > I do not think we need hw struct at all, see below, we can write code so
-> > > that we do not rely on ARM32 PCI bios, I will have a stab at that and
-> > > post the resulting code.
-> > 
-> > That would of course be best. I think it needs some rework of the
-> > arm32 PCI code though, or you'd still have to create pci_sys_data
-> > manually, and that is currently allocated by pcibios_init_hw.
+>> + * pcie_bus_update_set - update device mps when device doing hot-add
+>> + * @dev: PCI device to set
+>> + * 
+>> + * After device hot add, mps will be set to default(128B), But the 
+>> + * upstream port device's mps may be larger than 128B which was set 
+>> + * by firmware during system bootup. Then we should update the device
+>> + * mps to equal to its parent mps, Or the device can not work normally.
+>> + */
+>> +static void pcie_bus_update_set(struct pci_dev *dev)
+>> +{
+>> +	int mps, p_mps, mpss;
+>> +	struct pci_dev *parent;
+>> +
+>> +	if (!pci_is_pcie(dev) || !dev->bus->self 
+>> +			|| !dev->bus->self->is_hotplug_bridge)
+> 
+> Part of this looks redundant because pcie_bus_configure_set() already
+> checks pci_is_pcie().  And I don't know why we need to test
+> is_hotplug_bridge here; MPS settings need to be consistent regardless of
+> whether the upstream bridge supports hotplug.
 
-I don't see why we need to involve the arm32 code here at all. A host bridge can
-be fully functional with the generic code without having to use any of the
-arm32 code (unless I'm missing something here).
+Hi Bjorn, I added is_hotplug_bridge() here is mainly to touch the hotplug case only.
+It was more like a temporary solution and not perfect one.
 
 > 
-> Right, as far as I can see, creating a pci_sys_data struct
-> that's all we would need. "Problem" is that it does not exist on ARM64
-> so to avoid ifdeffery we have to declare a struct with the same
-> fields (ie only pci_sys_data.private_data is used by this driver -
-> apart from arm32 specific functions usage) that is passed to the PCI layer
-> and stored in the bus.sysdata, but that's extremely ugly (and we won't
-> need this when the arm32 conversion is completed).
+>> +		return;
+>> +	
+>> +	parent = dev->bus->self;
+>> +	mps = pcie_get_mps(dev);
+>> +	p_mps = pcie_get_mps(parent);
+>> +
+>> +	if (mps >= p_mps)
+>> +		return;
+>> +
+>> +	mpss = 128 << dev->pcie_mpss;
+>> +	if (mpss < p_mps) {
+>> +		dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
+>> +				"If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
+>> +				mpss, p_mps);
+>> +		return;
 > 
-> > > > > +       if (!gen_scan_root_bus(&pdev->dev, pci->cfg.bus_range.start,
-> > > > > +                              &gen_pci_ops, pci, &pci->resources)) {
-> > > > > +               dev_err(&pdev->dev, "failed to enable PCIe ports\n");
-> > > > > +               return -ENODEV;
-> > > > > +       }
-> > > > > +#else
-> > > > >         pci_common_init_dev(dev, &hw);
-> > > > > +#endif /* CONFIG_ARM64 */
-> > > > > 
-> > > > 
-> > > > Again, just make the pci_common_init_dev() call #ifdef CONFIG_ARM, and move
-> > > > the generic case after it, outside of the #ifdef.
-> > > 
-> > > I went through the code quickly but I think we can (and should) remove
-> > > this quite ugly ifdeffery altogether. Most of the functionality in
-> > > pci_common_init_dev() can be implemented through the common PCI API (and this
-> > > would make this driver arch agnostic as it should be), I will go through ARM32
-> > > PCI bios code to check what is executed in detail in pci_common_init_dev() and
-> > > make sure that we follow those initialization steps in the resulting probe code
-> > > for this PCI generic host controller driver.
-> > 
-> > These are the functions I found that refer to pci_sys_data on arm32:
-> > 
-> > pcibios_add_bus
-> > pcibios_remove_bus
-> > pcibios_align_resource
-> > pci_mmap_page_range
-> > pci_domain_nr
-> > pci_proc_domain
-> > 
-> > This is not as bad as I had feared, but we still have to ensure that
-> > any caller of these functions will work with both the generic PCI support
-> > and the arm32 specific drivers that today use hw_pci.
-> > 
-> > My idea for dealing with this was to convert all host drivers in
-> > drivers/pci/host to the generic PCI code and never build the arm32
-> > bios32 code when CONFIG_ARCH_MULTIPLATFORM is set. Unfortunately that
-> > requires either doing them all at once or coming up with a migration
-> > strategy so we don't break things in the process.
-> 
-> That makes sense. Related to the migration strategy, thoughts
-> appreciated. Declaring a static pci_sys_data (with some ifdef around it)
-> seems a horrible hack to me. Calling pci_common_init() only if CONFIG_ARM
-> is rather horrible too, but we can probably live with that.
-> 
-> I do not see anything else as possible solution at the moment unless
-> we go the whole nine yards and do what you suggest above, might take a
-> little while though.
-> 
-> Probably leaving pci_common_init() call (and related hw_pci struct, and
-> related ifdeffery to differentiate between different sysdata layouts for ARM
-> and ARM64) is the fastest path but I still think it is not nice at all.
+> Since we can't configure the new device correctly, we really shouldn't
+> allow a driver to bind to it.  The current design doesn't have much
+> provision for doing that, so warning is probably all we can do.
 
-Rob Herring found the conversion of mach-integrator/pci_v3.c to the generic
-framework quite painless. We might have to go through a lot of testing, but I don't
-see the process to be too horrendous.
-
-That being said, I think we first need to make sure we have all the features
-needed by the host bridge drivers in place before we start the conversion. MSI
-support is amongst them.
-
-Best regards,
-Liviu
+Yes, bind a driver to the device which mps is not correctly set will cause another problem.
 
 > 
-> Thanks,
-> Lorenzo
+>> +	}
+>> +
+>> +	pcie_write_mps(dev, p_mps);
+>> +	dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n", 
+>> +			pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
+>> +}
+>> +
+>>  static void pcie_bus_detect_mps(struct pci_dev *dev)
+>>  {
+>>  	struct pci_dev *bridge = dev->bus->self;
+>> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+>>  		return 0;
+>>  
+>>  	if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
+>> +		pcie_bus_update_set(dev);
+> 
+> You're only adding this to the PCIE_BUS_TUNE_OFF path.  Can't the same
+> problem occur for other pcie_bus_config settings?
+
+We only found the problem during PCIE_BUS_TUNE_OFF set. Other mode like PCIE_BUS_SAFE and PCIE_BUS_PEER2PEER.
+This issue won't happen.
+
+> 
+>>  		pcie_bus_detect_mps(dev);
+>>  		return 0;
+>>  	}
+> 
+> I have some long-term ideas here (below), but to make progress in the short
+> term, I think we just need to make sure this handles all pcie_bus_config
+> settings.
+> 
+> Bjorn
+> 
+> 
+> 
+> Stepping back a long ways, I think the current design is hard to use.
+> It's set up with the idea that we (1) enumerate all the devices in the
+> system, and then (2) configure MPS for everything all at once.
+> 
+> That's not a very good fit when we start hotplugging devices, and it's
+> part of the reason MPS configuration is not well integrated into the PCI
+> core and doesn't get done at all for most architectures.
+
+Agree, arch code should not be involved the MPS setting. It's arch independent.
+
+> 
+> What I'd prefer is something that could be done in the core as each device
+> is enumerated, e.g., in or near pci_device_add().  I know there's tension
+> between the need to do this before drivers bind to the device and the
+> desire to enumerate the whole hierarchy before committing to MPS settings.
+> But we need to handle that tension anyway for hot-added devices, so we
+> might as well deal with it at boot-time and use the same code path for
+> both boot-time and hot-add time.
+> 
+> I have in mind something like this:
+> 
+>   pcie_configure_mps(struct pci_dev *dev)
+>   {
+>     int ret;
+> 
+>     if (!pci_is_pci(dev))
+>       return;
+> 
+>     if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
+>       /* set my MPS to dev->pcie_mpss (max supported size) */
+>       return;
+>     }
+> 
+>     if (dev->pcie_mpss >= upstream bridge MPS) {
+>       /* set my MPS to upstream bridge MPS */
+>       return;
+>     }
+> 
+>     ret = pcie_set_hierarchy_mps(pcie_root_port(dev), dev->mpss);
+>     if (ret == failure)
+>       /* emit warning, can't enable this device */
+
+If got failure here, should roll back ? What about set hierarchy mps in reverse order(down to top).
+
+>   }
+> 
+>   struct pci_dev *pcie_root_port(struct pci_dev *dev)
+>   {
+>     if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
+>       return dev;
+> 
+>     return pcie_root_port(dev->bus->self);
+>   }
+> 
+>   pcie_set_hierarchy_mps(struct pci_dev *root, int mpss)
+>   {
+>     struct pci_bus *secondary;
+>     struct pci_dev *dev;
+>     int ret;
+> 
+>     if (root->driver)
+>       return -EINVAL;
+
+Maybe it's not safe enough, change device's mps has risk unless all its children devices have no driver bound(disabled).
+A root port may has no pcieport driver bound, if pcieport driver probe failed. But its children device can work normally.
+
+> 
+>     secondary = root->subordinate;
+>     if (secondary) {
+>       list_for_each_entry(dev, &secondary->devices, bus_list) {
+> 	ret = pcie_set_hierarchy(dev, mpss);
+> 	if (ret)
+> 	  return ret;
+>       }
+>     }
+> 
+>     /* set my MPS to mpss */
+>     return 0;
+>   }
+
+
+
+
+
+> 
+> .
+> 
+
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+Thanks!
+Yijing
 
