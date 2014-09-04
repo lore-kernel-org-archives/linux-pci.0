@@ -1,192 +1,160 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54084246.7010705@arm.com>
-Date: Thu, 04 Sep 2014 11:43:18 +0100
-From: Sudeep Holla <sudeep.holla@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:56833 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753855AbaIDUxw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 16:53:52 -0400
+Received: by mail-pd0-f178.google.com with SMTP id y13so14495948pdi.9
+        for <linux-pci@vger.kernel.org>; Thu, 04 Sep 2014 13:53:52 -0700 (PDT)
+Date: Thu, 4 Sep 2014 14:53:48 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] resource: Add device-managed
+ request/release_resource()
+Message-ID: <20140904205348.GC17125@google.com>
+References: <1406895311-18869-1-git-send-email-thierry.reding@gmail.com>
 MIME-Version: 1.0
-To: Peter Zijlstra <peterz@infradead.org>
-CC: Sudeep Holla <sudeep.holla@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v4 01/11] cpumask: factor out show_cpumap into separate
- helper function
-References: <1409763617-17074-1-git-send-email-sudeep.holla@arm.com> <1409763617-17074-2-git-send-email-sudeep.holla@arm.com> <20140904062006.GC3190@worktop.ger.corp.intel.com> <54082ADD.6040004@arm.com> <20140904092135.GA346@worktop.programming.kicks-ass.net>
-In-Reply-To: <20140904092135.GA346@worktop.programming.kicks-ass.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1406895311-18869-1-git-send-email-thierry.reding@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Peter,
+On Fri, Aug 01, 2014 at 02:15:10PM +0200, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
+> 
+> Provide device-managed implementations of the request_resource() and
+> release_resource() functions. Upon failure to request a resource, the
+> new devm_request_resource() function will output an error message for
+> consistent error reporting.
+> 
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
 
-On 04/09/14 10:21, Peter Zijlstra wrote:
-> On Thu, Sep 04, 2014 at 10:03:25AM +0100, Sudeep Holla wrote:
->> If I don't, every file including this header generates "warning:
->> ‘cpumap_copy_to_buf’ defined but not used". Alternatively I can just
->> declare here and define it elsewhere but I could not find more apt
->> place than this. Any suggestions ? kernel/cpu.c ?
->
-> Sure the tail of cpu.c seems to have various other cpumask gunk in
-> already so it fits there. The other alternative would've been
-> lib/bitmap.c since that's where the various bitmap printf
-> implementations live.
->
-> You could make it bitmap_copy_to_buf() I suppose, and then have a
-> cpumask inline wrapper, to be fully consistent with the rest of the
-> implementations.
->
+Applied both, with Tejun's ack on the first, for v3.18, thanks!
 
-I liked the second approach, how about patch below ?
-If will munge it into original patch.
-
---->8
-
-diff --git a/include/linux/bitmap.h b/include/linux/bitmap.h
-index e1c8d080c427..34586d386c1f 100644
---- a/include/linux/bitmap.h
-+++ b/include/linux/bitmap.h
-@@ -60,6 +60,7 @@
-    * bitmap_find_free_region(bitmap, bits, order)        Find and 
-allocate bit region
-    * bitmap_release_region(bitmap, pos, order)   Free specified bit region
-    * bitmap_allocate_region(bitmap, pos, order)  Allocate specified bit 
-region
-+ * bitmap_copy_to_pagebuf(list, src, buf)      Print bitmap src as 
-list/hex to buf
-    */
-
-   /*
-@@ -145,6 +146,8 @@ extern void bitmap_release_region(unsigned long 
-*bitmap, unsigned int pos, int o
-   extern int bitmap_allocate_region(unsigned long *bitmap, unsigned int 
-pos, int order);
-   extern void bitmap_copy_le(void *dst, const unsigned long *src, int 
-nbits);
-   extern int bitmap_ord_to_pos(const unsigned long *bitmap, int n, int 
-bits);
-+extern int bitmap_copy_to_pagebuf(bool list, const unsigned long *maskp,
-+                                 char *buf);
-
-   #define BITMAP_FIRST_WORD_MASK(start) (~0UL << ((start) % BITS_PER_LONG))
-   #define BITMAP_LAST_WORD_MASK(nbits)                                   \
-diff --git a/include/linux/cpumask.h b/include/linux/cpumask.h
-index 26d8348292dd..5b3bd163c5a0 100644
---- a/include/linux/cpumask.h
-+++ b/include/linux/cpumask.h
-@@ -807,16 +807,7 @@ static inline const struct cpumask 
-*get_cpu_mask(unsigned int cpu)
-   static inline ssize_t
-   cpumap_copy_to_buf(bool list, const struct cpumask *mask, char *buf)
-   {
--       ptrdiff_t len = PTR_ALIGN(buf + PAGE_SIZE - 1, PAGE_SIZE) - buf - 2;
--       int n = 0;
--
--       if (len > 1) {
--               n = list ? cpulist_scnprintf(buf, len, mask) :
--                          cpumask_scnprintf(buf, len, mask);
--               buf[n++] = '\n';
--               buf[n] = '\0';
--       }
--       return n;
-+       return bitmap_copy_to_pagebuf(list, cpumask_bits(mask), buf);
-   }
-
-sudeep@e103737-lin:~/work/power/kernel$ git diff > /tmp/log
-sudeep@e103737-lin:~/work/power/kernel$ cat /tmp/log
-diff --git a/include/linux/bitmap.h b/include/linux/bitmap.h
-index e1c8d080c427..34586d386c1f 100644
---- a/include/linux/bitmap.h
-+++ b/include/linux/bitmap.h
-@@ -60,6 +60,7 @@
-    * bitmap_find_free_region(bitmap, bits, order)	Find and allocate bit 
-region
-    * bitmap_release_region(bitmap, pos, order)	Free specified bit region
-    * bitmap_allocate_region(bitmap, pos, order)	Allocate specified bit 
-region
-+ * bitmap_copy_to_pagebuf(list, src, buf)	Print bitmap src as list/hex 
-to buf
-    */
-
-   /*
-@@ -145,6 +146,8 @@ extern void bitmap_release_region(unsigned long 
-*bitmap, unsigned int pos, int o
-   extern int bitmap_allocate_region(unsigned long *bitmap, unsigned int 
-pos, int order);
-   extern void bitmap_copy_le(void *dst, const unsigned long *src, int 
-nbits);
-   extern int bitmap_ord_to_pos(const unsigned long *bitmap, int n, int 
-bits);
-+extern int bitmap_copy_to_pagebuf(bool list, const unsigned long *maskp,
-+				  char *buf);
-
-   #define BITMAP_FIRST_WORD_MASK(start) (~0UL << ((start) % BITS_PER_LONG))
-   #define BITMAP_LAST_WORD_MASK(nbits)					\
-diff --git a/include/linux/cpumask.h b/include/linux/cpumask.h
-index 26d8348292dd..5b3bd163c5a0 100644
---- a/include/linux/cpumask.h
-+++ b/include/linux/cpumask.h
-@@ -807,16 +807,7 @@ static inline const struct cpumask 
-*get_cpu_mask(unsigned int cpu)
-   static inline ssize_t
-   cpumap_copy_to_buf(bool list, const struct cpumask *mask, char *buf)
-   {
--	ptrdiff_t len = PTR_ALIGN(buf + PAGE_SIZE - 1, PAGE_SIZE) - buf - 2;
--	int n = 0;
--
--	if (len > 1) {
--		n = list ? cpulist_scnprintf(buf, len, mask) :
--			   cpumask_scnprintf(buf, len, mask);
--		buf[n++] = '\n';
--		buf[n] = '\0';
--	}
--	return n;
-+	return bitmap_copy_to_pagebuf(list, cpumask_bits(mask), buf);
-   }
-
-   /*
-diff --git a/lib/bitmap.c b/lib/bitmap.c
-index 1e031f2c9aba..b23adef04d7e 100644
---- a/lib/bitmap.c
-+++ b/lib/bitmap.c
-@@ -580,6 +580,32 @@ int bitmap_scnlistprintf(char *buf, unsigned int 
-buflen,
-   EXPORT_SYMBOL(bitmap_scnlistprintf);
-
-   /**
-+ * bitmap_copy_to_pagebuf - convert bitmap to list or hex format ASCII 
-string
-+ * @list: indicates whether the bitmap must be list
-+ * @maskp: pointer to bitmap to convert
-+ * @buf: page aligned buffer into which string is placed
-+ *
-+ * Output format is a comma-separated list of decimal numbers and
-+ * ranges if list is specified or hex digits grouped into comma-separated
-+ * sets of 8 digits/set. Returns the number of characters written to buf.
-+ */
-+int bitmap_copy_to_pagebuf(bool list, const unsigned long *maskp, char 
-*buf)
-+{
-+	ptrdiff_t len = PTR_ALIGN(buf + PAGE_SIZE - 1, PAGE_SIZE) - buf - 2;
-+	int n = 0;
-+
-+	if (len > 1) {
-+		n = list ?
-+		    bitmap_scnlistprintf(buf, len, maskp, nr_cpumask_bits) :
-+		    bitmap_scnprintf(buf, len, maskp, nr_cpumask_bits);
-+		buf[n++] = '\n';
-+		buf[n] = '\0';
-+	}
-+	return n;
-+}
-+EXPORT_SYMBOL(bitmap_copy_to_pagebuf);
-+
-+/**
-    * __bitmap_parselist - convert list format ASCII string to bitmap
-    * @buf: read nul-terminated user string from this buffer
-    * @buflen: buffer size in bytes.  If string is smaller than this
-
+> ---
+> Changes in v2:
+> - use more natural flow for error handling
+> - don't needlessly check for NULL pointers
+> 
+>  Documentation/driver-model/devres.txt |  2 +
+>  include/linux/ioport.h                |  5 +++
+>  kernel/resource.c                     | 70 +++++++++++++++++++++++++++++++++++
+>  3 files changed, 77 insertions(+)
+> 
+> diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
+> index d14710b04439..befc3fe12ba6 100644
+> --- a/Documentation/driver-model/devres.txt
+> +++ b/Documentation/driver-model/devres.txt
+> @@ -264,8 +264,10 @@ IIO
+>  IO region
+>    devm_release_mem_region()
+>    devm_release_region()
+> +  devm_release_resource()
+>    devm_request_mem_region()
+>    devm_request_region()
+> +  devm_request_resource()
+>  
+>  IOMAP
+>    devm_ioport_map()
+> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+> index 142ec544167c..2c5250222278 100644
+> --- a/include/linux/ioport.h
+> +++ b/include/linux/ioport.h
+> @@ -215,6 +215,11 @@ static inline int __deprecated check_region(resource_size_t s,
+>  
+>  /* Wrappers for managed devices */
+>  struct device;
+> +
+> +extern int devm_request_resource(struct device *dev, struct resource *root,
+> +				 struct resource *new);
+> +extern void devm_release_resource(struct device *dev, struct resource *new);
+> +
+>  #define devm_request_region(dev,start,n,name) \
+>  	__devm_request_region(dev, &ioport_resource, (start), (n), (name))
+>  #define devm_request_mem_region(dev,start,n,name) \
+> diff --git a/kernel/resource.c b/kernel/resource.c
+> index da14b8d09296..ca24f19f9d18 100644
+> --- a/kernel/resource.c
+> +++ b/kernel/resource.c
+> @@ -1248,6 +1248,76 @@ int release_mem_region_adjustable(struct resource *parent,
+>  /*
+>   * Managed region resource
+>   */
+> +static void devm_resource_release(struct device *dev, void *ptr)
+> +{
+> +	struct resource **r = ptr;
+> +
+> +	release_resource(*r);
+> +}
+> +
+> +/**
+> + * devm_request_resource() - request and reserve an I/O or memory resource
+> + * @dev: device for which to request the resource
+> + * @root: root of the resource tree from which to request the resource
+> + * @new: descriptor of the resource to request
+> + *
+> + * This is a device-managed version of request_resource(). There is usually
+> + * no need to release resources requested by this function explicitly since
+> + * that will be taken care of when the device is unbound from its driver.
+> + * If for some reason the resource needs to be released explicitly, because
+> + * of ordering issues for example, drivers must call devm_release_resource()
+> + * rather than the regular release_resource().
+> + *
+> + * When a conflict is detected between any existing resources and the newly
+> + * requested resource, an error message will be printed.
+> + *
+> + * Returns 0 on success or a negative error code on failure.
+> + */
+> +int devm_request_resource(struct device *dev, struct resource *root,
+> +			  struct resource *new)
+> +{
+> +	struct resource *conflict, **ptr;
+> +
+> +	ptr = devres_alloc(devm_resource_release, sizeof(*ptr), GFP_KERNEL);
+> +	if (!ptr)
+> +		return -ENOMEM;
+> +
+> +	*ptr = new;
+> +
+> +	conflict = request_resource_conflict(root, new);
+> +	if (conflict) {
+> +		dev_err(dev, "resource collision: %pR conflicts with %s %pR\n",
+> +			new, conflict->name, conflict);
+> +		devres_free(ptr);
+> +		return -EBUSY;
+> +	}
+> +
+> +	devres_add(dev, ptr);
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL(devm_request_resource);
+> +
+> +static int devm_resource_match(struct device *dev, void *res, void *data)
+> +{
+> +	struct resource **ptr = res;
+> +
+> +	return *ptr == data;
+> +}
+> +
+> +/**
+> + * devm_release_resource() - release a previously requested resource
+> + * @dev: device for which to release the resource
+> + * @new: descriptor of the resource to release
+> + *
+> + * Releases a resource previously requested using devm_request_resource().
+> + */
+> +void devm_release_resource(struct device *dev, struct resource *new)
+> +{
+> +	WARN_ON(devres_release(dev, devm_resource_release, devm_resource_match,
+> +			       new));
+> +}
+> +EXPORT_SYMBOL(devm_release_resource);
+> +
+>  struct region_devres {
+>  	struct resource *parent;
+>  	resource_size_t start;
+> -- 
+> 2.0.3
+> 
