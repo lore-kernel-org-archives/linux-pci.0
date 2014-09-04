@@ -1,140 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:46471 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753762AbaI2KNY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 06:13:24 -0400
-Message-ID: <1411985600.2625.11.camel@pengutronix.de>
-Subject: Re: [PATCH v3 3/9] PCI: imx6: update dts and binding for imx6sx pcie
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Richard Zhu <r65037@freescale.com>
-Cc: linux-pci-owner@vger.kernel.org, linux-pci@vger.kernel.org,
-	shawn.guo@freescale.com, festevam@gmail.com, tharvey@gateworks.com
-Date: Mon, 29 Sep 2014 12:13:20 +0200
-In-Reply-To: <1411966997-27118-4-git-send-email-r65037@freescale.com>
-References: <1411966997-27118-1-git-send-email-r65037@freescale.com>
-	 <1411966997-27118-4-git-send-email-r65037@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qg0-f52.google.com ([209.85.192.52]:46082 "EHLO
+	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751063AbaIDNQh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 09:16:37 -0400
+Received: by mail-qg0-f52.google.com with SMTP id z60so9877077qgd.39
+        for <linux-pci@vger.kernel.org>; Thu, 04 Sep 2014 06:16:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <540802D9.6000903@huawei.com>
+References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com>
+ <20140903224201.GD26073@google.com> <540802D9.6000903@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 4 Sep 2014 07:16:15 -0600
+Message-ID: <CAErSpo6qy76zTX07Ufm0n1_HUA5G0MrAYxauEFa5QkibWsejFQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	Keith Busch <keith.busch@intel.com>,
+	Jon Mason <jon.mason@intel.com>, Jon Mason <jdmason@kudzu.us>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Montag, den 29.09.2014, 13:03 +0800 schrieb Richard Zhu:
-> - imx6sx pcie phy has its own power regulator. Add the
-> pcie phy power suppy into im6sx pcie dts and binding.
-> - in order to align with imx6qdl's pcie dts, re-format
-> imx6sx pcie dts.
-> - in order to align with imx6qdl pcie dts format and
-> keep clean of imx6 pcie driver, keep the pcie phy clock
-> in imx6sx pcie dts, although it's the parent clk of the
-> pcie bus clock now, and would be enabled automatically
-> when pcie bus clock is enabled. secondly, it's
-> possible that the external osc maybe used as source
-> of the pcie_bus clk in board design in future.
-> - disp_axi clock is required by pcie inbound axi port.
-> Add one more clock for imx6sx pcie.
-> 
-> Signed-off-by: Richard Zhu <r65037@freescale.com>
-> ---
->  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  5 +++-
->  arch/arm/boot/dts/imx6sx.dtsi                      | 30 ++++++++++++----------
->  2 files changed, 21 insertions(+), 14 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> index 9455fd0..981e41d 100644
-> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> @@ -4,7 +4,7 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
->  and thus inherits all the common properties defined in designware-pcie.txt.
->  
->  Required properties:
-> -- compatible: "fsl,imx6q-pcie"
-> +- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie"
->  - reg: base addresse and length of the pcie controller
->  - interrupts: A list of interrupt outputs of the controller. Must contain an
->    entry for each entry in the interrupt-names property.
-> @@ -13,6 +13,9 @@ Required properties:
->  - clock-names: Must include the following additional entries:
->  	- "pcie_phy"
->  
-> +Power supplies for imx6sx:
-> +- pcie_phy-supply: regulator used by imx6sx pcie phy.
-> +
-To align with the previous practice of naming regulator supplies please
-don't use underscores in the name. Also you aren't documenting the
-additional clock (which also needs a descriptive name, NOT "disp_axi").
-I would recommend the documentation change to look like this:
+On Thu, Sep 4, 2014 at 12:12 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>> + * pcie_bus_update_set - update device mps when device doing hot-add
+>>> + * @dev: PCI device to set
+>>> + *
+>>> + * After device hot add, mps will be set to default(128B), But the
+>>> + * upstream port device's mps may be larger than 128B which was set
+>>> + * by firmware during system bootup. Then we should update the device
+>>> + * mps to equal to its parent mps, Or the device can not work normally.
+>>> + */
+>>> +static void pcie_bus_update_set(struct pci_dev *dev)
+>>> +{
+>>> +    int mps, p_mps, mpss;
+>>> +    struct pci_dev *parent;
+>>> +
+>>> +    if (!pci_is_pcie(dev) || !dev->bus->self
+>>> +                    || !dev->bus->self->is_hotplug_bridge)
+>>
+>> Part of this looks redundant because pcie_bus_configure_set() already
+>> checks pci_is_pcie().  And I don't know why we need to test
+>> is_hotplug_bridge here; MPS settings need to be consistent regardless of
+>> whether the upstream bridge supports hotplug.
+>
+> Hi Bjorn, I added is_hotplug_bridge() here is mainly to touch the hotplug case only.
+> It was more like a temporary solution and not perfect one.
+>
+>>
+>>> +            return;
+>>> +
+>>> +    parent = dev->bus->self;
+>>> +    mps = pcie_get_mps(dev);
+>>> +    p_mps = pcie_get_mps(parent);
+>>> +
+>>> +    if (mps >= p_mps)
+>>> +            return;
+>>> +
+>>> +    mpss = 128 << dev->pcie_mpss;
+>>> +    if (mpss < p_mps) {
+>>> +            dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
+>>> +                            "If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
+>>> +                            mpss, p_mps);
+>>> +            return;
+>>
+>> Since we can't configure the new device correctly, we really shouldn't
+>> allow a driver to bind to it.  The current design doesn't have much
+>> provision for doing that, so warning is probably all we can do.
+>
+> Yes, bind a driver to the device which mps is not correctly set will cause another problem.
+>
+>>
+>>> +    }
+>>> +
+>>> +    pcie_write_mps(dev, p_mps);
+>>> +    dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n",
+>>> +                    pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
+>>> +}
+>>> +
+>>>  static void pcie_bus_detect_mps(struct pci_dev *dev)
+>>>  {
+>>>      struct pci_dev *bridge = dev->bus->self;
+>>> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+>>>              return 0;
+>>>
+>>>      if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
+>>> +            pcie_bus_update_set(dev);
+>>
+>> You're only adding this to the PCIE_BUS_TUNE_OFF path.  Can't the same
+>> problem occur for other pcie_bus_config settings?
+>
+> We only found the problem during PCIE_BUS_TUNE_OFF set. Other mode like PCIE_BUS_SAFE and PCIE_BUS_PEER2PEER.
+> This issue won't happen.
 
-Additional required properties for imx6sx-pcie:
-- clock names: Must include the following additional entries:
-	- "pcie_inbound_axi"
-- power supplies:
-	- pcie-phy-supply: regulator used to power the PCIe PHY
+Sorry, I can't parse this.  Are you saying the problem won't happen in
+the other modes?  Why not?
 
-Please update the DTS and driver accordingly.
-
->  Example:
->  
->  	pcie@0x01000000 {
-> diff --git a/arch/arm/boot/dts/imx6sx.dtsi b/arch/arm/boot/dts/imx6sx.dtsi
-> index f4b9da6..b4ca94b 100644
-> --- a/arch/arm/boot/dts/imx6sx.dtsi
-> +++ b/arch/arm/boot/dts/imx6sx.dtsi
-> @@ -599,9 +599,9 @@
->  					anatop-max-voltage = <1450000>;
->  				};
->  
-> -				reg_pcie: regulator-vddpcie@140 {
-> +				reg_pcie_phy: regulator-vddpcie_phy@140 {
->  					compatible = "fsl,anatop-regulator";
-> -					regulator-name = "vddpcie";
-> +					regulator-name = "vddpcie_phy";
->  					regulator-min-microvolt = <725000>;
->  					regulator-max-microvolt = <1450000>;
->  					anatop-reg-offset = <0x140>;
-> @@ -1188,20 +1188,24 @@
->  			#address-cells = <3>;
->  			#size-cells = <2>;
->  			device_type = "pci";
-> -				  /* configuration space */
-> -			ranges = <0x00000800 0 0x08f00000 0x08f00000 0 0x00080000
-> -				  /* downstream I/O */
-> -				  0x81000000 0 0          0x08f80000 0 0x00010000
-> -				  /* non-prefetchable memory */
-> -				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>;
-> +			ranges = <0x00000800 0 0x08f00000 0x08f00000 0 0x00080000 /* configuration space */
-> +				  0x81000000 0 0          0x08f80000 0 0x00010000 /* downstream I/O */
-> +				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>; /* non-prefetchable memory */
->  			num-lanes = <1>;
-> -			interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>;
-> -			clocks = <&clks IMX6SX_CLK_PCIE_REF_125M>,
-> -				 <&clks IMX6SX_CLK_PCIE_AXI>,
-> +			interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
-> +			interrupt-names = "msi";
-> +			#interrupt-cells = <1>;
-> +			interrupt-map-mask = <0 0 0 0x7>;
-> +			interrupt-map = <0 0 0 1 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
-> +			                <0 0 0 2 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
-> +			                <0 0 0 3 &intc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
-> +			                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
-> +			clocks = <&clks IMX6SX_CLK_PCIE_AXI>,
->  				 <&clks IMX6SX_CLK_LVDS1_OUT>,
-> +				 <&clks IMX6SX_CLK_PCIE_REF_125M>,
->  				 <&clks IMX6SX_CLK_DISPLAY_AXI>;
-> -			clock-names = "pcie_ref_125m", "pcie_axi",
-> -				      "lvds_gate", "display_axi";
-> +			clock-names = "pcie", "pcie_bus", "pcie_phy", "disp_axi";
-> +			pcie_phy-supply = <&reg_pcie_phy>;
->  			status = "disabled";
->  		};
->  	};
-
-You are still missing the "config" reg space. Please look at the
-designware-pcie.txt base binding, it's a required property now. Also
-please be more careful to address my review comments.
-
-Regards,
-Lucas
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
-
+>>>              pcie_bus_detect_mps(dev);
+>>>              return 0;
+>>>      }
