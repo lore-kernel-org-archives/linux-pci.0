@@ -1,104 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:23798 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492AbaI3GKG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 02:10:06 -0400
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <54082ADD.6040004@arm.com>
+Date: Thu, 04 Sep 2014 10:03:25 +0100
+From: Sudeep Holla <sudeep.holla@arm.com>
+MIME-Version: 1.0
+To: Peter Zijlstra <peterz@infradead.org>
+CC: Sudeep Holla <sudeep.holla@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Carolyn Wyborny <carolyn.wyborny@intel.com>,
-	Don Skidmore <donald.c.skidmore@intel.com>,
-	Greg Rose <gregory.v.rose@intel.com>,
-	Alex Duyck <alexander.h.duyck@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Mitch Williams <mitch.a.williams@intel.com>,
-	Linux NICS <linux.nics@intel.com>,
-	<e1000-devel@lists.sourceforge.net>, <linda.knippers@hp.com>,
-	"Li, Zhen-Hua" <zhen-hual@hp.com>
-Subject: [PATCH 1/1] pci/quirks: fix a dmar fault for intel 82599 card
-Date: Tue, 30 Sep 2014 14:09:54 +0800
-Message-Id: <1412057394-7186-1-git-send-email-zhen-hual@hp.com>
-Sender: linux-pci-owner@vger.kernel.org
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v4 01/11] cpumask: factor out show_cpumap into separate
+ helper function
+References: <1409763617-17074-1-git-send-email-sudeep.holla@arm.com> <1409763617-17074-2-git-send-email-sudeep.holla@arm.com> <20140904062006.GC3190@worktop.ger.corp.intel.com>
+In-Reply-To: <20140904062006.GC3190@worktop.ger.corp.intel.com>
+Content-Type: text/plain; charset=WINDOWS-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On a HP system with Intel Corporation 82599 ethernet adapter, when kernel
-crashed and the kdump kernel boots with intel_iommu=on, there may be some
-unexpected DMA requests on this adapter, which will cause DMA Remapping
-faults like:
-    dmar: DRHD: handling fault status reg 102
-    dmar: DMAR:[DMA Read] Request device [41:00.0] fault addr fff81000
-    DMAR:[fault reason 01] Present bit in root entry is clear
+Hi Peter,
 
-Analysis for this bug:
+On 04/09/14 07:20, Peter Zijlstra wrote:
+> On Wed, Sep 03, 2014 at 06:00:07PM +0100, Sudeep Holla wrote:
+>> diff --git a/include/linux/cpumask.h b/include/linux/cpumask.h
+>> index 2997af6d2ccd..26d8348292dd 100644
+>> --- a/include/linux/cpumask.h
+>> +++ b/include/linux/cpumask.h
+>> @@ -11,6 +11,8 @@
+>>   #include <linux/bitmap.h>
+>>   #include <linux/bug.h>
+>>
+>> +#include <asm/page.h>
+>> +
+>>   typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
+>>
+>>   /**
+>> @@ -792,6 +794,31 @@ static inline const struct cpumask *get_cpu_mask(unsigned int cpu)
+>>   }
+>>   #endif /* NR_CPUS > BITS_PER_LONG */
+>>
+>> +/**
+>> + * cpumap_copy_to_buf  - copies the cpumask into the buffer either
+>> + *	as comma-separated list of cpus or hex values of cpumask
+>> + * @list: indicates whether the cpumap must be list
+>> + * @mask: the cpumask to copy
+>> + * @buf: the buffer to copy into
+>> + *
+>> + * Returns the length of the (null-terminated) @buf string, zero if
+>> + * nothing is copied.
+>> + */
+>> +static inline ssize_t
+>> +cpumap_copy_to_buf(bool list, const struct cpumask *mask, char *buf)
+>> +{
+>> +	ptrdiff_t len = PTR_ALIGN(buf + PAGE_SIZE - 1, PAGE_SIZE) - buf - 2;
+>> +	int n = 0;
+>> +
+>> +	if (len > 1) {
+>> +		n = list ? cpulist_scnprintf(buf, len, mask) :
+>> +			   cpumask_scnprintf(buf, len, mask);
+>> +		buf[n++] = '\n';
+>> +		buf[n] = '\0';
+>> +	}
+>> +	return n;
+>> +}
+>> +
+>
+> Does that really make sense as an inline?
+>
 
-The present bit is set in this function:
+If I don't, every file including this header generates "warning:
+‘cpumap_copy_to_buf’ defined but not used". Alternatively I can just
+declare here and define it elsewhere but I could not find more apt
+place than this. Any suggestions ? kernel/cpu.c ?
 
-static struct context_entry * device_to_context_entry(
-		struct intel_iommu *iommu, u8 bus, u8 devfn)
-{
-    ......
-                set_root_present(root);
-    ......
-}
-
-Calling tree:
-ixgbe_open
-    ixgbe_setup_tx_resources
-        intel_alloc_coherent
-            __intel_map_single
-                domain_context_mapping
-                    domain_context_mapping_one
-                        device_to_context_entry
-
-This means, the present bit in root entry will not be set until the device
- driver is loaded.
-
-But in the kdump kernel, some hardware device does not know the OS is the
- second kernel and the drivers should be loaded again, this causes there are
- some unexpected DMA requsts on this device when it has not been initialized,
- and then the DMA Remapping errors come.
-
-To fix this DMAR fault, we need to reset the bus that this device on. Reset
- the device itself does not work.
-
-There also was a discussion:
-https://lkml.org/lkml/2013/5/14/9
-
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
----
- drivers/pci/quirks.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 80c2d01..5198af3 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -25,6 +25,7 @@
- #include <linux/sched.h>
- #include <linux/ktime.h>
- #include <asm/dma.h>	/* isa_dma_bridge_buggy */
-+#include <linux/crash_dump.h>
- #include "pci.h"
- 
- /*
-@@ -3832,3 +3833,13 @@ void pci_dev_specific_enable_acs(struct pci_dev *dev)
- 		}
- 	}
- }
-+
-+#ifdef CONFIG_CRASH_DUMP
-+void quirk_reset_buggy_devices(struct pci_dev *dev)
-+{
-+	if (unlikely(is_kdump_kernel()))
-+		pci_try_reset_bus(dev->bus);
-+}
-+DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_INTEL, 0x10f8,
-+		PCI_CLASS_NETWORK_ETHERNET, 8, quirk_reset_buggy_devices);
-+#endif
--- 
-2.0.0-rc0
+Regards,
+Sudeep
 
