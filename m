@@ -1,53 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:51039 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753000AbaIVUya (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 16:54:30 -0400
-Received: by mail-ig0-f171.google.com with SMTP id hn15so3492733igb.10
-        for <linux-pci@vger.kernel.org>; Mon, 22 Sep 2014 13:54:29 -0700 (PDT)
-Date: Mon, 22 Sep 2014 14:54:26 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Fabio Estevam <fabio.estevam@freescale.com>
-Cc: mohit.kumar@st.com, jg1.han@samsung.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: designware: Use NULL instead of false
-Message-ID: <20140922205426.GI1880@google.com>
-References: <1411134450-806-1-git-send-email-fabio.estevam@freescale.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:61029 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755316AbaIDVMR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 17:12:17 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Fabio Estevam <festevam@gmail.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Zang Roy-R61911 <r61911@freescale.com>
+Subject: Re: [PATCH 2/2] PCI: Layerscape: Add Layerscape PCIe driver
+Date: Thu, 04 Sep 2014 23:12:09 +0200
+Message-ID: <4843064.4PPheKAzXq@wuerfel>
+In-Reply-To: <CAOMZO5BtOO42sde_Eco2=p06WQsJn3+1J44k6i+Dg7qxOK8qdw@mail.gmail.com>
+References: <1409856338-1730-1-git-send-email-Minghuan.Lian@freescale.com> <1409856338-1730-2-git-send-email-Minghuan.Lian@freescale.com> <CAOMZO5BtOO42sde_Eco2=p06WQsJn3+1J44k6i+Dg7qxOK8qdw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411134450-806-1-git-send-email-fabio.estevam@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 19, 2014 at 10:47:30AM -0300, Fabio Estevam wrote:
-> of_get_address() expects pointers in the third and fourth parameters.
+On Thursday 04 September 2014 17:21:48 Fabio Estevam wrote:
+> On Thu, Sep 4, 2014 at 3:45 PM, Minghuan Lian
+> <Minghuan.Lian@freescale.com> wrote:
+> > Add support for Freescale Layerscape PCIe controller. This driver
+> > re-uses the designware core code.
 > 
-> Pass NULL in order to fix the following sparse warnings:
+> It seems that this is the same IP as on mx6, right?
 > 
-> drivers/pci/host/pcie-designware.c:433:51: warning: Using plain integer as NULL pointer
-> drivers/pci/host/pcie-designware.c:433:58: warning: Using plain integer as NULL pointer 
-> 
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+> Is it possible to adapt drivers/pci/host/pci-imx6.c to work on Layerscape?
 
-Applied with acks from Lucas and Jingoo to pci/host-designware for v3.18,
-thanks!
+For all I can tell, the common parts are already shared in pcie-designware.c,
+while the new file contains only those parts that are specific to layerscape
+and different from imx.
 
-> ---
->  drivers/pci/host/pcie-designware.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 12c42fc..f1f0b7a 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -430,7 +430,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  
->  		/* Find the untranslated configuration space address */
->  		index = of_property_match_string(np, "reg-names", "config");
-> -		addrp = of_get_address(np, index, false, false);
-> +		addrp = of_get_address(np, index, NULL, NULL);
->  		pp->cfg0_mod_base = of_read_number(addrp, ns);
->  		pp->cfg1_mod_base = pp->cfg0_mod_base + pp->config.cfg0_size;
->  	} else {
-> -- 
-> 1.9.1
-> 
+If there are parts in there that are the same between layerscape and imx,
+the implementation should also be moved to a shared file.
+
+	Arnd
