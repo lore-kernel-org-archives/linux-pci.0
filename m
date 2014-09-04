@@ -1,237 +1,84 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v6 05/15] PCI: Remove PCI ioapic driver
-Date: Wed, 24 Sep 2014 16:59:26 +0800
-Message-Id: <1411549176-30780-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qg0-f45.google.com ([209.85.192.45]:62335 "EHLO
+	mail-qg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754339AbaIDDfC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Sep 2014 23:35:02 -0400
+Received: by mail-qg0-f45.google.com with SMTP id e89so9373467qgf.18
+        for <linux-pci@vger.kernel.org>; Wed, 03 Sep 2014 20:35:00 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAA8O7Crwi7=afUpLoC1O5H9ymjYEPyb63kO8QdFuPx6RUJ8NpQ@mail.gmail.com>
+References: <CAA8O7Crwi7=afUpLoC1O5H9ymjYEPyb63kO8QdFuPx6RUJ8NpQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 3 Sep 2014 21:34:40 -0600
+Message-ID: <CAErSpo4dUjpGVVtDO6m7uf6MKRcybetg2_nUJ5ve0_Ykr=nXzg@mail.gmail.com>
+Subject: Re: designware: prefetch and 64-bit addr support?
+To: L H <swdevgid@gmail.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To support IOAPIC hotplug on x86 and IA64 platforms, OS needs to figure
-out global interrupt source number(GSI) and IOAPIC enumeration ID
-through ACPI interfaces. So BIOS must implement an ACPI IOAPIC device
-with _GSB/_UID or _MAT method to support IOAPIC hotplug. OS also needs
-to figure out base physical address to access IOAPIC registers. OS may
-get the base physical address through PCI BARs if IOAPIC device is
-visible in PCI domain, otherwise OS may get the address by ACPI _CRS
-method if IOAPIC device is hidden from PCI domain by BIOS.
+[+cc Mohit, Jingoo (from MAINTAINERS)]
 
-When adding a PCI subtree, we need to add IOAPIC devices before enabling
-all other PCI devices because other PCI devices may use the IOAPIC to
-allocate PCI interrupts.
+On Wed, Sep 3, 2014 at 2:57 PM, L H <swdevgid@gmail.com> wrote:
+> Greetings my fellow PCI designware developers.  I'm working on an
+> implementation that relies on the PCIe DesignWare IP and am writing a
+> platform-specific layer to link with the designware code, but have run
+> into a couple challenges.
+>
+> Reading the pcie-designware.c (looking at the master branch of a repo
+> cloned from git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git --
+> is that the best branch/repo to view?),
 
-So we plan to reimplement IOAPIC driver as an ACPI instead of PCI driver
-due to:
-1) hot-pluggable IOAPIC devices are always visible in ACPI domain,
-   but may or may not be visible in PCI domain.
-2) we could explicitly control the order between IOAPIC and other PCI
-   devices.
+That's a good place to look.  If I have pending changes for that code,
+they will be on the pci/host-designware branch in that same repo.
+Changes in that branch will generally be merged immediately after the
+next major Linux release.  For example, right now we're in the middle
+of the v3.17 cycle.  v3.16 was released August 3, the v3.17 release
+will probably be in early October, and the contents of my
+pci/host-designware branch will be merged in mid-October and be
+released as part of v3.18, probably in mid-December.
 
-We also have another choice to use a PCI driver to manage IOAPIC device
-if it's visible in PCI domain and use an ACPI driver if it's only
-visible in ACPI domain. But this solution is a little complex.
-
-It shouldn't cause serious backward compatibility issues because:
-1) IOAPIC hotplug is never supported on x86 yet because it hasn't
-   implemented the required acpi_register_ioapic() and
-   acpi_unregister_ioapic().
-2) Currently only ACPI based IOAPIC hotplug is possible on x86 and
-   IA64, we don't know other specifications and interfaces to support
-   IOAPIC hotplug yet.
-3) We will reimplement an ACPI IOAPICｔdriver support IOAPIC hotplug.
-
-This change also helps to get rid of the false alarm on all current
-Linux distributions:
-[    6.952497] ioapic: probe of 0000:00:05.4 failed with error -22
-[    6.959542] ioapic: probe of 0000:80:05.4 failed with error -22
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/pci/Kconfig  |    7 ---
- drivers/pci/Makefile |    2 -
- drivers/pci/ioapic.c |  121 --------------------------------------------------
- 3 files changed, 130 deletions(-)
- delete mode 100644 drivers/pci/ioapic.c
-
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 893503fa1782..39866d18004e 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -104,13 +104,6 @@ config PCI_PASID
- 
- 	  If unsure, say N.
- 
--config PCI_IOAPIC
--	bool "PCI IO-APIC hotplug support" if X86
--	depends on PCI
--	depends on ACPI
--	depends on X86_IO_APIC
--	default !X86
--
- config PCI_LABEL
- 	def_bool y if (DMI || ACPI)
- 	select NLS
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index e04fe2d9df3b..73e4af400a5a 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -13,8 +13,6 @@ obj-$(CONFIG_PCI_QUIRKS) += quirks.o
- # Build PCI Express stuff if needed
- obj-$(CONFIG_PCIEPORTBUS) += pcie/
- 
--obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
--
- # Build the PCI Hotplug drivers if we were asked to
- obj-$(CONFIG_HOTPLUG_PCI) += hotplug/
- ifdef CONFIG_HOTPLUG_PCI
-diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
-deleted file mode 100644
-index f6219d36227f..000000000000
---- a/drivers/pci/ioapic.c
-+++ /dev/null
-@@ -1,121 +0,0 @@
--/*
-- * IOAPIC/IOxAPIC/IOSAPIC driver
-- *
-- * Copyright (C) 2009 Fujitsu Limited.
-- * (c) Copyright 2009 Hewlett-Packard Development Company, L.P.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as
-- * published by the Free Software Foundation.
-- */
--
--/*
-- * This driver manages PCI I/O APICs added by hotplug after boot.  We try to
-- * claim all I/O APIC PCI devices, but those present at boot were registered
-- * when we parsed the ACPI MADT, so we'll fail when we try to re-register
-- * them.
-- */
--
--#include <linux/pci.h>
--#include <linux/module.h>
--#include <linux/acpi.h>
--#include <linux/slab.h>
--
--struct ioapic {
--	acpi_handle	handle;
--	u32		gsi_base;
--};
--
--static int ioapic_probe(struct pci_dev *dev, const struct pci_device_id *ent)
--{
--	acpi_handle handle;
--	acpi_status status;
--	unsigned long long gsb;
--	struct ioapic *ioapic;
--	int ret;
--	char *type;
--	struct resource *res;
--
--	handle = ACPI_HANDLE(&dev->dev);
--	if (!handle)
--		return -EINVAL;
--
--	status = acpi_evaluate_integer(handle, "_GSB", NULL, &gsb);
--	if (ACPI_FAILURE(status))
--		return -EINVAL;
--
--	/*
--	 * The previous code in acpiphp evaluated _MAT if _GSB failed, but
--	 * ACPI spec 4.0 sec 6.2.2 requires _GSB for hot-pluggable I/O APICs.
--	 */
--
--	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
--	if (!ioapic)
--		return -ENOMEM;
--
--	ioapic->handle = handle;
--	ioapic->gsi_base = (u32) gsb;
--
--	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
--		type = "IOAPIC";
--	else
--		type = "IOxAPIC";
--
--	ret = pci_enable_device(dev);
--	if (ret < 0)
--		goto exit_free;
--
--	pci_set_master(dev);
--
--	if (pci_request_region(dev, 0, type))
--		goto exit_disable;
--
--	res = &dev->resource[0];
--	if (acpi_register_ioapic(ioapic->handle, res->start, ioapic->gsi_base))
--		goto exit_release;
--
--	pci_set_drvdata(dev, ioapic);
--	dev_info(&dev->dev, "%s at %pR, GSI %u\n", type, res, ioapic->gsi_base);
--	return 0;
--
--exit_release:
--	pci_release_region(dev, 0);
--exit_disable:
--	pci_disable_device(dev);
--exit_free:
--	kfree(ioapic);
--	return -ENODEV;
--}
--
--static void ioapic_remove(struct pci_dev *dev)
--{
--	struct ioapic *ioapic = pci_get_drvdata(dev);
--
--	acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base);
--	pci_release_region(dev, 0);
--	pci_disable_device(dev);
--	kfree(ioapic);
--}
--
--
--static const struct pci_device_id ioapic_devices[] = {
--	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOAPIC, ~0) },
--	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOXAPIC, ~0) },
--	{ }
--};
--MODULE_DEVICE_TABLE(pci, ioapic_devices);
--
--static struct pci_driver ioapic_driver = {
--	.name		= "ioapic",
--	.id_table	= ioapic_devices,
--	.probe		= ioapic_probe,
--	.remove		= ioapic_remove,
--};
--
--static int __init ioapic_init(void)
--{
--	return pci_register_driver(&ioapic_driver);
--}
--module_init(ioapic_init);
--
--MODULE_LICENSE("GPL");
--- 
-1.7.10.4
-
+> it appears to me that the
+> dw_pcie_host_init() code doesn't comprehend prefetch memory ranges,
+> but instead just assumes that a memory range is non-prefetch despite
+> its encoding in the device-tree.  Am I reading that correctly?  The
+> loop for walking the ranges begins with:
+>
+>     for_each_of_pci_range(&parser, &range) {
+>         unsigned long restype = range.flags & IORESOURCE_TYPE_BITS;
+>
+> The bitmask for IORESOURCE_TYPE_BITS would result in a restype
+> ignorant of the IORESOURCE_PREFETCH bit, right?   The ensuing code
+> flow then treats the range as non-prefetch unless I missed something.
+>
+> Curiously, I also noted that the for_each_of_pcie_range() which calls
+> of_pci_range_parser_one() that in turn includes calls to
+> of_bus_pci_get_flags() does not set the IORESOURCE_MEM_64 bit parsed
+> from the range either.
+>
+> If I followed that all correctly, is the proper assumption that all of
+> the current implementations relying on the designware code only use
+> 32-bit non-prefetch memory ranges?
+>
+> The platform which I'm working on will use a large 64-bit PCI memory
+> address space, and thus I need 64-bit memory apertures which implies,
+> I think, only prefetch memory.
+>
+> I hasten to add this isn't a complaint or critique of the valuable
+> work developed up to this point. I'm very grateful to have it as a
+> rich starting point.  I'm reaching out to the list here as a newbie to
+> verify my comprehension of the designware code, and if valid, to
+> inquire if there's any effort by anyone currently to support 64-bit
+> prefetch ranges.  I've accepted the real possibility that I might be
+> blazing this trail myself, but just wanted to check if anyone else has
+> considered it or working on this support to avoid a redundant effort.
+>
+> thanks,
+> LH
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
