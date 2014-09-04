@@ -1,80 +1,126 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:44294 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750742AbaIDN2y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 09:28:54 -0400
+Received: by mail-pd0-f175.google.com with SMTP id z10so339224pdj.34
+        for <linux-pci@vger.kernel.org>; Thu, 04 Sep 2014 06:28:53 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <542A3593.4020108@gmail.com>
-References: <542A3593.4020108@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 30 Sep 2014 14:45:37 -0600
-Message-ID: <CAErSpo7BkXDHOZwHzwEu2BN3=39xFwQOyrjgVo6afWKMsnYT=A@mail.gmail.com>
-Subject: Re: [PATCH 0/4] Driver for talking to PLX PEX8xxx PCIe switch over I2C
-To: Rajat Jain <rajatxjain@gmail.com>
-Cc: Jiri Kosina <jkosina@suse.cz>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-i2c <linux-i2c@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+Reply-To: rajatxjain@gmail.com
+In-Reply-To: <CAA93t1rLa27HY11ZEEGqZ6X5+01adgizR6U=+smcKD9pxHJk5Q@mail.gmail.com>
+References: <CAErSpo68rteOFbbX5n6GccPc9kpt-UL9FRS7JbOMAoDLR-7mtA@mail.gmail.com>
+	<CAA93t1rLa27HY11ZEEGqZ6X5+01adgizR6U=+smcKD9pxHJk5Q@mail.gmail.com>
+Date: Thu, 4 Sep 2014 06:28:52 -0700
+Message-ID: <CAA93t1o5t4VSNbLHKxBpRyUDH_U3yzU1F00BjO04YvwYqSwhvw@mail.gmail.com>
+Subject: Re: pciehp regression (bug #79701)
+From: Rajat Jain <rajatxjain@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>,
-	Wolfram Sang <wsa@the-dreams.de>
+	Guenter Roeck <groeck@juniper.net>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Wolfram]
+Updated
 
-On Mon, Sep 29, 2014 at 10:46 PM, Rajat Jain <rajatxjain@gmail.com> wrote:
-> Most of the PLX PCI Express switches (and also switches from other vendors such
-> IDT) provide an I2C based secondary interface to access and program the switch.
-> This can be used to program the switch in situations where the PCIe interface
-> may not be suitable, or even available. (For instance, we may need to program
-> the device in a particular fashion before we even begin enumerating on the PCI,
-> or to even enable the PCIe interface of the device). More information on
-> usecases and other details has been provided in the documentation being added
-> as part of this patchset.
->
-> This is a driver that allows talking to the PLX PEX8xxx family of PCIe switches
-> over its I2C interface. Here are the patch descriptions:
->
-> [Patch 1/4] - Adds the PEX8xxx driver that exports API calls to read / write.
-> [Patch 2/4] - Adds a sysfs interface, to allow access to the switch.
-> [Patch 3/4] - Adds the MAINTAINERS entry.
-> [Patch 4/4] - Adds the documentation in Documentation/PCI/pex8xxx_i2c.txt
->
-> Since this is a driver for a PCIe switch, I currently put it under /driver/pci/.
-> I'm very open to suggestions for moving this around (Does introducing
-> drivers/pci/switch/ seem any better?). Especially I can see that the
-> drivers/pci/Kconfig appears under "Bus Options" in the main menu which does not
-> look like the right place for this driver. I am looking for suggestions here.
+https://bugzilla.kernel.org/show_bug.cgi?id=79701
 
-Definitely interesting work.  I have no idea where to put it.  It
-doesn't have anything to do with PCI core services or structures, so
-drivers/pci doesn't seem like the ideal place for it, but I don't have
-any better ideas.  If it did end up under drivers/pci, I agree that a
-drivers/pci/switch or something similar would probably be better than
-having it directly in drivers/pci.
+with the possible options to make forward progress.
 
-Maybe Wolfram or other I2C folks will have an idea.
+Thanks,
 
-> Rajat Jain (4):
->   pci: Add I2C driver for the PLX PEX8xxx PCIe switch
->   pci/pex8xxx: Add sysfs interface for userspace access.
->   MAINTAINERS: Add new device driver entry for PEX pex8xxx
->   Documentation: Add documentation for the PCI switch PEX8xxx I2C
->     driver
+Rajat
+
+
+On Fri, Aug 29, 2014 at 7:25 PM, Rajat Jain <rajatxjain@gmail.com> wrote:
+> Hello,
 >
->  Documentation/PCI/pex8xxx_i2c.txt |  134 +++++++++
->  MAINTAINERS                       |    7 +
->  drivers/pci/Kconfig               |   13 +
->  drivers/pci/Makefile              |    2 +
->  drivers/pci/pex8xxx_i2c.c         |  538 +++++++++++++++++++++++++++++++++++++
->  include/linux/i2c/pex8xxx_i2c.h   |   36 +++
->  6 files changed, 730 insertions(+)
->  create mode 100644 Documentation/PCI/pex8xxx_i2c.txt
->  create mode 100644 drivers/pci/pex8xxx_i2c.c
->  create mode 100644 include/linux/i2c/pex8xxx_i2c.h
+> On Fri, Aug 29, 2014 at 3:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> Hi Rajat,
+>>
+>> This bug report: https://bugzilla.kernel.org/show_bug.cgi?id=79701 was
+>> bisected to 02e93a8a7c1d ("PCI: pciehp: Don't check adapter or latch
+>> status while disabling").  Can you take a look?
+>>
 >
-> --
-> 1.7.9.5
+> Hi,
 >
+> I looked at this and wanted to share by observations:
+>
+> The Basic Issue
+> ==============
+> There are a bunch of quick hotplug events (unplug followed by the
+> hot-plug) that are received by the hotplug driver. While both the
+> hotplug drivers (pciehp and acpiphp) are fine with it, the radeon
+> driver itself is probably not equipped enough to handle them so well?
+> [   41.224428] trying to unbind memory from uninitialized GART !
+>
+> When acpiphp was being used
+> =======================
+> As Rafael mentions in this commit log, this is a problem with the VGA
+> subsystem, that requires the hot-plug driver to ignore such hot-plug
+> events associated with a slot that connects to such known Radeon
+> controllers. This was done for acpiphp by introducing a "no_hotplug"
+> flag for the ACPI:
+> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=f244d8b623dae7a7bc695b0336f67729b95a9736
+> The above commit would fix the problem if the acpiphp is used, by
+> ignoring the hot-plug events for that slot.
+>
+> Switch to using pciehp
+> =================
+> 1) For some reason, the system now seems to use pciehp for these slots
+> instead of the acpiphp (can someone please tell if this looks OK? I
+> only ask because I see the concerned Rafael's log getting printed that
+> seems to indicate that he is expecting the acpiphp to control this
+> slot?). But I also see that the pciehp has already grabbed the slot by
+> the time this messages gets printed:
+> [    4.419180] VGA switcheroo: detected switching method
+> \_SB_.PCI0.VGA_.ATPX handle
+>
+> Even with using pciehp, things were still all right until the commit
+> 02e93a8a7, beacuse the pciehp used to ignore the hot-unplug events
+> (including loss-of-presence-detect and link-down) if (1) SURPRISE
+> removal is not supported or (2) ADAPTER is not present (which is what
+> this commit addresses). Thus the hot unplug event used to come, the
+> pciehp_disable_slot() used to find no adapter and refused to do
+> anything.
+>
+> Why problem started with pciehp
+> ==========================
+> Essentially the commits 02e93a8a7 and 2b3940b60 made the pciehp handle
+> all hot-unplug events (loss-of-presence-detect and link-downs)
+> irrespective of whether the the SURPRISE removal was supported or not,
+> and also if ADAPTER is not present. Now, I would think that both these
+> commits are still valid because it makes no sense to ignore an unplug
+> event (and let the kernel continue with stale data structures) just
+> because SURPRISE is not set, or the ADAPTER is not present (The latter
+> is an even better reason to process the unplug event).
+>
+> My recommendations / Options
+> ========================
+> 1) I would first like an opinion on whether it is OK to see the pciehp
+> handle these hotplug slots. The radeon code seems to be ACPI
+> intensive, and Rafael's commit also seems to say that this was
+> supposed to be handled by acpiphp.
+>
+> 2) If it is expected to continue using pciehp, may be we could handle
+> it in the same way as Rafael did for acpiphp. We could add a flag in
+> the pci_dev ("ignore_hp_events" or something) and set it for the hot
+> pluggable slot from radeon code, just like acpi_bus_no_hotplug() is
+> called today.
+>
+> I'll be going out for vacation for the 3 days, and would be glad to
+> submit a patch if needed.
+>
+> One question to the gentleman who bisected this. (SpacemanSpiff).
+> Would it be possible for you to look for the following messages while
+> trying out the image just before the commit 02e93a8a7c?
+> ...
+> No adapter on slot(2)
+> ...
+>
+> Thanks & Best Regards,
+>
+> Rajat Jain
