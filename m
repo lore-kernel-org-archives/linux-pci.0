@@ -1,111 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f180.google.com ([209.85.216.180]:51476 "EHLO
-	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751663AbaIFOSF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 6 Sep 2014 10:18:05 -0400
-Received: by mail-qc0-f180.google.com with SMTP id c9so13599259qcz.39
-        for <linux-pci@vger.kernel.org>; Sat, 06 Sep 2014 07:18:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1409963143-11951-1-git-send-email-tinamdar@apm.com>
-References: <1409963143-11951-1-git-send-email-tinamdar@apm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 4 Sep 2014 15:58:21 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 6 Sep 2014 08:17:43 -0600
-Message-ID: <CAErSpo643rAAqR0AAy5CwSkMv28Cw8Y55EYrYo0AHvQZxgvgXg@mail.gmail.com>
-Subject: Re: [PATCH v6 0/4] APM X-Gene PCIe host controller
-To: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/AER: Make linux/aer.h standalone includable
+Message-ID: <20140904215821.GF17125@google.com>
+References: <1407240535-19564-1-git-send-email-thierry.reding@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1407240535-19564-1-git-send-email-thierry.reding@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 5, 2014 at 6:25 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
-> This patch adds support for AppliedMicro X-Gene PCIe host controller. The
-> driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
-> cards.
->
-> X-Gene PCIe controller driver has depedency on the pcie arm64 arch support.
-> Liviu Dudau from ARM has sent a patch set for pcie arm64 arch support and
-> support for creating generic pcie bridge from device tree. Liviu's patches
-> are available here
-> 1. https://lkml.org/lkml/2014/8/12/361
+On Tue, Aug 05, 2014 at 02:08:55PM +0200, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
+> 
+> The header file references u16, u32 and struct pci_dev types, but they
+> are not defined in the header nor does the header pull in the necessary
+> includes for them. This causes build breakage when the file is included
+> without any of the dependencies being satisfied from somewhere else.
+> 
+> Fix this by including linux/types.h (for u16 and u32) and by adding a
+> forward-declaration of struct pci_dev.
+> 
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
 
-I'm hoping to merge Liviu's patches and this X-Gene support for v3.18.
-I'm currently waiting for Liviu's v10 series (hopefully based on
-v3.17-rc2), and since your series depends on that, I'm going to wait
-for a v7 of your series that is rebased on top of Liviu's v10.  Does
-that make sense?
+Applied to pci/misc for v3.18, thanks!  I dropped the struct pci_dev
+declaration because it was already added by 5ccb8225abf2 ("x86/ras: Fix
+build warnings in <linux/aer.h>")
 
-> If someone wishes to test PCIe on X-Gene with this patch set, above mentioned
-> patches from Liviu must be applied before the patches in this patch set. Also
-> please use latest xgene u-boot firmware.
->
-> changes since V5:
-> 1. Port driver to changed interface of 'of_create_pci_host_bridge'
-> 2. Fix the prefetch bit setting
-> 3. Removed bunch of register programming which is already done by firmware
->
-> changes since V4:
-> 1. fix section mismatch warnings
-> 2. fix the patch description
-> 3. fix indentation
-> 4. update read/write cfg functions by passing both addr and offset.
-> 5. use 'time_before' for timeout.
-> 6. remove unnecessary 'IS_ERR_OR_NULL'. Keep 'IS_ERR' for 'clk_get'
-> 7. remove BUG_ON for pci_ioremap_io.
->
-> changes since V3:
-> 1. remove 'struct hw_pci' and supporting ops in hw_pci
-> 2. add code to create the host bridge from dts
-> 3. add code to scan the the host bridge
-> 4. modify outbound windows setup function to get resource information from
->    'bridge->windows'
-> 5. add compatible string in pcie dts node with current X-Gene SOC name.
->
-> changes since V2:
-> 1. redefined each PCI port in different PCI domain correctly.
-> 2. removed setup_lane and setup_link functions from driver.
-> 3. removed scan_bus wrapper and set_primary_bus hack.
-> 4. added pci_ioremap_io for io resources.
->
-> changes since V1:
-> 1. added PCI domain support
-> 2. reading cpu and pci addresses from device tree to configure regions.
-> 3. got rid of unnecessary wrappers for readl and writel.
-> 4. got rid of endpoint configuration code.
-> 5. added 'dma-ranges' property support to read inbound region configuration.
-> 6. renamed host driver file to 'pci-xgene.c' from 'pcie-xgene.c'
-> 7. dropped 'clock-names' property from bindings
-> 8. added comments whereever requested.
->
-> Tanmay Inamdar (4):
->   pci:host: APM X-Gene PCIe controller driver
->   arm64: dts: APM X-Gene PCIe device tree nodes
->   dt-bindings: pci: xgene pcie device tree bindings
->   MAINTAINERS: entry for APM X-Gene PCIe host driver
->
->  .../devicetree/bindings/pci/xgene-pci.txt          |  55 ++
->  MAINTAINERS                                        |   8 +
->  arch/arm64/boot/dts/apm-mustang.dts                |   8 +
->  arch/arm64/boot/dts/apm-storm.dtsi                 | 160 ++++++
->  drivers/pci/host/Kconfig                           |  10 +
->  drivers/pci/host/Makefile                          |   1 +
->  drivers/pci/host/pci-xgene.c                       | 638 +++++++++++++++++++++
->  7 files changed, 880 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
->  create mode 100644 drivers/pci/host/pci-xgene.c
->
-> --
-> 1.9.1
->
+> ---
+>  include/linux/aer.h | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/include/linux/aer.h b/include/linux/aer.h
+> index 4dbaa7081530..04bcf33a3e3a 100644
+> --- a/include/linux/aer.h
+> +++ b/include/linux/aer.h
+> @@ -7,6 +7,10 @@
+>  #ifndef _AER_H_
+>  #define _AER_H_
+>  
+> +#include <linux/types.h>
+> +
+> +struct pci_dev;
+> +
+>  #define AER_NONFATAL			0
+>  #define AER_FATAL			1
+>  #define AER_CORRECTABLE			2
+> -- 
+> 2.0.4
+> 
