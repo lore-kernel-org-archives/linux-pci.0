@@ -1,53 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:57780 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755453AbaIZS0d (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Sep 2014 14:26:33 -0400
+Received: from mail-la0-f47.google.com ([209.85.215.47]:46252 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751960AbaIDUVu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 16:21:50 -0400
+Received: by mail-la0-f47.google.com with SMTP id el20so3968022lab.20
+        for <linux-pci@vger.kernel.org>; Thu, 04 Sep 2014 13:21:48 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <3082935.e3X4GsVUDn@wuerfel>
-References: <1411573068-12952-1-git-send-email-rric@kernel.org>
- <1411573068-12952-4-git-send-email-rric@kernel.org> <3082935.e3X4GsVUDn@wuerfel>
-From: Rob Herring <robherring2@gmail.com>
-Date: Fri, 26 Sep 2014 13:26:09 -0500
-Message-ID: <CAL_JsqK2bqsbjEf2OngL2=Xr8t0AUobb_bd43BV4t9iXY-n6KQ@mail.gmail.com>
-Subject: Re: [PATCH 3/6] pci, thunder: Add PCIe host controller devicetree bindings
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
+In-Reply-To: <1409856338-1730-2-git-send-email-Minghuan.Lian@freescale.com>
+References: <1409856338-1730-1-git-send-email-Minghuan.Lian@freescale.com>
+	<1409856338-1730-2-git-send-email-Minghuan.Lian@freescale.com>
+Date: Thu, 4 Sep 2014 17:21:48 -0300
+Message-ID: <CAOMZO5BtOO42sde_Eco2=p06WQsJn3+1J44k6i+Dg7qxOK8qdw@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: Layerscape: Add Layerscape PCIe driver
+From: Fabio Estevam <festevam@gmail.com>
+To: Minghuan Lian <Minghuan.Lian@freescale.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	Robert Richter <rric@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Robert Richter <rrichter@cavium.com>,
-	Sunil Goutham <sgoutham@cavium.com>
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Scott Wood <scottwood@freescale.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 24, 2014 at 11:06 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Wednesday 24 September 2014 17:37:45 Robert Richter wrote:
->>
->> +       pcie0@0x8480,00000000 {
->
-> The name should be pci, not pci0.
+On Thu, Sep 4, 2014 at 3:45 PM, Minghuan Lian
+<Minghuan.Lian@freescale.com> wrote:
+> Add support for Freescale Layerscape PCIe controller. This driver
+> re-uses the designware core code.
 
-And the address should be "@848000000000". There was some confusion
-about when the comma should be used and it is only if you have things
-like PCI bus, device, function for the addressing.
+It seems that this is the same IP as on mx6, right?
 
+Is it possible to adapt drivers/pci/host/pci-imx6.c to work on Layerscape?
 
->
->> +               compatible = "cavium,thunder-pcie";
+> +#define PCIE_LS1021A_BASE      0x3400000
+> +#define PCIE_LS1021A_REG_SIZE  0x0100000
 
-A bit too generic as many of the Cavium bindings have been.
-
-Rob
+You should retrieve base and reg size from the dtsi file.
