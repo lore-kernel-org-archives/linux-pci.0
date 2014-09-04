@@ -1,25 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0116.outbound.protection.outlook.com ([157.56.110.116]:37216
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751070AbaIVJpB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Sep 2014 05:45:01 -0400
-From: Richard Zhu <r65037@freescale.com>
-To: <linux-pci-owner@vger.kernel.org>
-CC: <stable@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<l.stach@pengutronix.de>
-Subject: 
-Date: Mon, 22 Sep 2014 17:01:36 +0800
-Message-ID: <1411376498-14653-1-git-send-email-r65037@freescale.com>
+Received: from mx1.redhat.com ([209.132.183.28]:59346 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750784AbaIDNUi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Sep 2014 09:20:38 -0400
+Date: Thu, 4 Sep 2014 14:29:39 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: James Smart <james.smart@emulex.com>
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 11/13] lpfc: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Message-ID: <20140904132939.GA1225@agordeev.usersys.redhat.com>
+References: <cover.1408335523.git.agordeev@redhat.com>
+ <e7470e484083c9eeb6b4f34f3e69e332ad5998c2.1408335523.git.agordeev@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <e7470e484083c9eeb6b4f34f3e69e332ad5998c2.1408335523.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Subject: [PATCH RFC]PCI: imx6: enable pcie on imx6sx sdb and imx6qdl sabresd/sabreauto.
+On Mon, Aug 18, 2014 at 08:01:51AM +0200, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
 
-- enable pcie on imx6qdl sabresd and sabreauto boards.
-- enable pcie on imx6sx sdb board.
+James?
 
-[PATCH RFC 1/2] PCI: imx6: enable pcie on imx6qdl sabresd and
-[PATCH RFC 2/2] PCI: imx6: add imx6sx pcie support
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
