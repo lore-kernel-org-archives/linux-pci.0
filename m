@@ -1,97 +1,168 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 10 Sep 2014 22:06:02 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:36379 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750980AbaIDNkE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 09:40:04 -0400
+Date: Thu, 4 Sep 2014 14:39:56 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org, Prarit Bhargava <prarit@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: Re: [Patch v4 12/16] x86, irq, ACPI: Implement interface to support
- ACPI based IOAPIC hot-addition
-In-Reply-To: <540FC1C2.40100@linux.intel.com>
-Message-ID: <alpine.DEB.2.10.1409102202530.4178@nanos>
-References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com> <1409192561-19744-13-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1409091417120.11037@nanos> <540FC1C2.40100@linux.intel.com>
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] drivers: pci: convert generic host controller to DT host
+ bridge creation API
+Message-ID: <20140904133956.GA12351@e102568-lin.cambridge.arm.com>
+References: <1407861695-25549-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140819120553.GA23128@arm.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20140819120553.GA23128@arm.com>
+Content-Type: text/plain; charset=WINDOWS-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 10 Sep 2014, Jiang Liu wrote:
-> >>  int mp_register_ioapic(int id, u32 address, u32 gsi_base,
-> >> @@ -3867,8 +3873,15 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
-> >>  	}
-> >>  	for_each_ioapic(ioapic)
-> >>  		if (ioapics[ioapic].mp_config.apicaddr == address) {
-> >> -			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
-> >> -				address, ioapic);
-> >> +			/*
-> >> +			 * IOAPIC unit may also be visible in PCI scope.
-> >> +			 * When ioapic PCI driver's probe() is called,
-> >> +			 * the IOAPIC unit may have already been initialized
-> >> +			 * at boot time.
-> >> +			 */
-> >> +			if (!ioapic_initialized)
-> >> +				pr_warn("address 0x%x conflicts with IOAPIC%d\n",
-> >> +					address, ioapic);
-> > 
-> > Hmm. This smells fishy. Why do we allow multiple initializations of
-> > the same IOAPIC in the first place. Either it's done via ACPI or via
-> > PCI, but not both.
-> The ACPI subsystem will register and initialize all IOAPICs when walking
-> ACPI MADT table during boot, before initializing PCI subsystem.
-> Later when binding ioapic PCI driver to IOAPIC PCI device, it will try
-> to register the IOAPIC device again.
+Hi Will,
+
+sorry for the delay in replying (I was not copied in).
+
+On Tue, Aug 19, 2014 at 01:05:54PM +0100, Will Deacon wrote:
+> Hi guys,
 > 
-> After this patchset is applied, we could remove the !ioapic_initialized
-> check. We check acpi_ioapic_register() before calling
-> acpi_register_ioapic(). So the check becomes redundant.
-> Or we could remove the temporary code from this patch.
-
-How about removing the disfunctional ioapic PCI driver first and then
-implementing the whole thing cleanly?
- 
+> On Tue, Aug 12, 2014 at 05:41:35PM +0100, Liviu Dudau wrote:
+> > From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 > > 
-> >>  			return -EEXIST;
-> >>  		}
-> >>  
-> >> @@ -3918,6 +3931,14 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
-> >>  	ioapics[idx].irqdomain = NULL;
-> >>  	ioapics[idx].irqdomain_cfg = *cfg;
-> >>  
-> >> +	if (ioapic_initialized) {
+> > In order to consolidate DT configuration for PCI host controllers in the
+> > kernel, a new API was introduced that allows creating a host bridge
+> > and its PCI bus from DT, removing duplicated code present in the
+> > majority of pci host driver implementations.
 > > 
-> > I have a hard time to understand this conditional. Why can't we do
-> > that unconditionally?
-> How about following comments?
-> /*
->  * If mp_register_ioapic() is called during early boot stage when
->  * walking ACPI/SFI/DT tables, it's too early to create irqdomain,
->  * we are still using bootmem allocator. So delay it to setup_IO_APIC().
->  */
+> > This patch converts the existing PCI generic host controller driver to
+> > the new API. Most of the code parsing ranges and creating resources is
+> > now delegated to of_create_pci_host_bridge() API which also triggers
+> > a scan of the root bus.
+> > 
+> > The setup hook passed by the host controller code to the generic DT
+> > layer completes the initialization by performing resource filtering
+> > (ie it checks that at least one non-prefetchable memory resource is
+> > present), remapping IO and configuration regions and initializing
+> > the required PCI flags.
+> 
+> [...]
+> 
+> > -static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
+> > -{
+> > -	struct pci_host_bridge_window *win;
+> > -
+> > -	list_for_each_entry(win, &pci->resources, list)
+> > -		release_resource(win->res);
+> > -
+> > -	pci_free_resource_list(&pci->resources);
+> > -}
+> 
+> I take it Liviu's core patches take care of this clean-up now if we fail mid
+> way through requesting the resources?
 
-Fine, but then the "if (ioapic_initialized)" conditional still does
-not make sense. We surely have some global non ioapic specific
-indicator that bootmem is done and the proper memory allocator is
-available, right?
+Liviu's core patches free the resource list, but do _not_ request the
+resources (so they won't release them). This is still a moot point that
+needs clarification.
 
-Aside of that is there a point to walk those tables before we actually
-can make any use of their content?
+> > -static int gen_pci_setup(int nr, struct pci_sys_data *sys)
+> > +static int gen_pci_setup(struct pci_host_bridge *host,
+> > +			 resource_size_t io_cpuaddr)
+> >  {
+> > -	struct gen_pci *pci = sys->private_data;
+> > -	list_splice_init(&pci->resources, &sys->resources);
+> > -	return 1;
+> > +	int err;
+> > +	struct pci_host_bridge_window *window;
+> > +	u32 restype, prefetchable;
+> > +	struct device *dev = host->dev.parent;
+> > +	struct resource *iores = NULL;
+> > +	bool res_valid = false;
+> > +
+> > +	list_for_each_entry(window, &host->windows, list) {
+> > +		restype = window->res->flags & IORESOURCE_TYPE_BITS;
+> > +		prefetchable = window->res->flags & IORESOURCE_PREFETCH;
+> > +
+> > +		/*
+> > +		 * Require at least one non-prefetchable MEM resource
+> > +		 */
+> > +		if ((restype == IORESOURCE_MEM) && !prefetchable)
+> > +			res_valid = true;
+> > +
+> > +		if (restype == IORESOURCE_IO)
+> > +			iores = window->res;
+> > +	}
+> > +
+> > +	if (!res_valid) {
+> > +		dev_err(dev, "non-prefetchable memory resource required\n");
+> > +		return -EINVAL;
+> > +	}
+> > +
+> > +	if (iores) {
+> > +		if (!PAGE_ALIGNED(io_cpuaddr))
+> > +			return -EINVAL;
+> 
+> Why is this alignment check not in the core code? Probably a question for
+> somebody like Arnd, but do we need to deal with multiple IO resources?
+> Currently we'll just silently take the last one that we found, which doesn't
+> sound ideal.
+
+(1) Yes, the alignment check should be made in core code
+(2) I could take the first IO resource and warn on multiple IO resources if
+    they are detected. Thoughts ?
+
+> > +		if (err)
+> > +			return err;
+> > +	}
+> > +
+> > +	/* Parse and map our Configuration Space windows */
+> > +	err = gen_pci_parse_map_cfg_windows(host);
+> > +	if (err)
+> > +		return err;
+> > +
+> > +	pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
+> > +	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
+> 
+> Why does this belong in the host controller driver and how does it interact
+> with the probe-only property?
+
+That's a very good question and it is one that confuses me too.
+
+Current code in pci_common_init_dev() sets PCI_REASSIGN_ALL_RSRC behind
+our backs silently. That flag has a side effect only if the probing code
+detects PCI bridges in the list of devices, since PCI core probing code
+will try to reassign the bus numbers upon PCI bridge detection IIUC. I do
+not think that PCI_REASSIGN_ALL_BUS has any side effect on ARM (by grepping
+around I noticed that PCI_REASSIGN_ALL_RSRC is used in
+
+pcibios_assign_all_busses()
+
+which in turn is triggered only if PCI bridges are detected, still grokking
+the code though).
+
+Apart from the PCI_ENABLE_PROC_DOMAINS flag which I think it is safe to
+set by default (but let me check that too), I *think* that setting of
+
+PCI_REASSIGN_ALL_BUS and PCI_REASSIGN_ALL_RSRC
+
+should be set by DT, as the probe-only flag is. At the moment this is not a
+problem (well...) since:
+
+(a) PCI_REASSIGN_ALL_RSRC is forced by pcibios on ARM
+(b) it has no implications on the generic host controller since it is
+    run on kvmtools with no PCI bridge devices
+
+If Bjorn or Arnd can help me understand the complete reasoning behind
+those flags I would be very grateful and update code according to
+Liviu's v10.
 
 Thanks,
+Lorenzo
 
-	tglx
