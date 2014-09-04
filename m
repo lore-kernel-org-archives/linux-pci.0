@@ -1,49 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<tglx@linutronix.de>, <hpa@zytor.com>, <x86@kernel.org>,
-	<bp@suse.de>, <dan.carpenter@oracle.com>,
-	<dougthompson@xmission.com>, <bp@alien8.de>,
-	<m.chehab@samsung.com>, <linux-edac@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-Subject: [PATCH 2/4] x86, amd_nb: Add device IDs to NB tables for F15h M60h
-Date: Thu, 18 Sep 2014 14:56:45 -0500
-Message-ID: <1411070205-10217-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:58537 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753183AbaIDM1P convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 08:27:15 -0400
+Message-ID: <54085AA1.7020600@arm.com>
+Date: Thu, 04 Sep 2014 13:27:13 +0100
+From: Sudeep Holla <sudeep.holla@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+To: Peter Zijlstra <peterz@infradead.org>
+CC: Sudeep Holla <sudeep.holla@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v4 01/11] cpumask: factor out show_cpumap into separate
+ helper function
+References: <1409763617-17074-1-git-send-email-sudeep.holla@arm.com> <1409763617-17074-2-git-send-email-sudeep.holla@arm.com> <20140904062006.GC3190@worktop.ger.corp.intel.com> <54082ADD.6040004@arm.com> <20140904092135.GA346@worktop.programming.kicks-ass.net> <54084246.7010705@arm.com> <20140904112551.GC346@worktop.programming.kicks-ass.net>
+In-Reply-To: <20140904112551.GC346@worktop.programming.kicks-ass.net>
+Content-Type: text/plain; charset=WINDOWS-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add F3 and F4 PCI device IDs to amd_nb_misc_ids[] and
-amd_nb_link_ids[] respectively. We need this to cache the
-Northbridges.
 
-Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
----
- arch/x86/kernel/amd_nb.c | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
-index f04dbb3..5caed1d 100644
---- a/arch/x86/kernel/amd_nb.c
-+++ b/arch/x86/kernel/amd_nb.c
-@@ -21,6 +21,7 @@ const struct pci_device_id amd_nb_misc_ids[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F3) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M60H_NB_F3) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_M30H_NB_F3) },
- 	{}
-@@ -30,6 +31,7 @@ EXPORT_SYMBOL(amd_nb_misc_ids);
- static const struct pci_device_id amd_nb_link_ids[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F4) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F4) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M60H_NB_F4) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F4) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_M30H_NB_F4) },
- 	{}
--- 
-2.0.2
+On 04/09/14 12:25, Peter Zijlstra wrote:
+> On Thu, Sep 04, 2014 at 11:43:18AM +0100, Sudeep Holla wrote:
+>>> You could make it bitmap_copy_to_buf() I suppose, and then have a
+>>> cpumask inline wrapper, to be fully consistent with the rest of the
+>>> implementations.
+>>>
+>>
+>> I liked the second approach, how about patch below ?
+>> If will munge it into original patch.
+>
+> Looks good, one more nit if you will permit :-)
+>
+
+Ofcourse :)
+
+>> +int bitmap_copy_to_pagebuf(bool list, const unsigned long *maskp, char *buf)
+>
+> Maybe s/copy/print/ or something? Its not really a 'copy' as such since
+> it very much transforms the bitmap.
+>
+
+Makes sense, will update accordingly.
+
+Regards,
+Sudeep
 
