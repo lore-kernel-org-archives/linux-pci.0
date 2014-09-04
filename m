@@ -1,48 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:5339 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751740AbaIPGsI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 02:48:08 -0400
-Message-ID: <5417DD14.60501@huawei.com>
-Date: Tue, 16 Sep 2014 14:47:48 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:49624 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750744AbaIDPLE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 11:11:04 -0400
+Date: Thu, 4 Sep 2014 08:11:03 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 11/13] lpfc: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Message-ID: <20140904151103.GA9093@infradead.org>
+References: <cover.1408335523.git.agordeev@redhat.com>
+ <e7470e484083c9eeb6b4f34f3e69e332ad5998c2.1408335523.git.agordeev@redhat.com>
+ <20140904132939.GA1225@agordeev.usersys.redhat.com>
 MIME-Version: 1.0
-To: Michael Ellerman <mpe@ellerman.id.au>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [PATCH v2 5/5] MSI: Use __read_msi_msg() instead of read_msi_msg()
-References: <1408694880-8260-1-git-send-email-wangyijing@huawei.com>	 <1408694880-8260-6-git-send-email-wangyijing@huawei.com> <1410849257.12488.3.camel@concordia>
-In-Reply-To: <1410849257.12488.3.camel@concordia>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140904132939.GA1225@agordeev.usersys.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/16 14:34, Michael Ellerman wrote:
-> On Fri, 2014-08-22 at 16:08 +0800, Yijing Wang wrote:
->> Read_msi_msg() only be called in rtas_setup_msi_irqs(),
->> use __read_msi_msg() instead of read_msi_msg for
->> simplification. And rename __read_msi_msg() to
->> read_msi_msg().
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
->> CC: linuxppc-dev@lists.ozlabs.org
+On Thu, Sep 04, 2014 at 02:29:39PM +0100, Alexander Gordeev wrote:
+> On Mon, Aug 18, 2014 at 08:01:51AM +0200, Alexander Gordeev wrote:
+> > As result of deprecation of MSI-X/MSI enablement functions
+> > pci_enable_msix() and pci_enable_msi_block() all drivers
+> > using these two interfaces need to be updated to use the
+> > new pci_enable_msi_range()  or pci_enable_msi_exact()
+> > and pci_enable_msix_range() or pci_enable_msix_exact()
+> > interfaces.
 > 
-> LGTM.
-> 
-> Acked-by: Michael Ellerman <mpe@ellerman.id.au> (powerpc)
+> James?
 
-Thanks!
-
-> 
-> cheers
-> 
-> 
-> 
-> 
-
-
--- 
-Thanks!
-Yijing
-
+It's part of the lpfc update he recently sent out.  It's high up on my
+list of things to review.
