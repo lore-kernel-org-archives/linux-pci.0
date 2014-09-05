@@ -1,133 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:42813 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753895AbaIPQUY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 12:20:24 -0400
-Date: Tue, 16 Sep 2014 17:20:19 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Tanmay Inamdar <tinamdar@apm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	patches <patches@apm.com>, "jcm@redhat.com" <jcm@redhat.com>
-Subject: Re: [PATCH v6 0/4] APM X-Gene PCIe host controller
-Message-ID: <20140916162019.GH15899@e106497-lin.cambridge.arm.com>
-References: <1409963143-11951-1-git-send-email-tinamdar@apm.com>
- <CAErSpo643rAAqR0AAy5CwSkMv28Cw8Y55EYrYo0AHvQZxgvgXg@mail.gmail.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <540993B3.1000701@cogentembedded.com>
+Date: Fri, 05 Sep 2014 14:42:59 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo643rAAqR0AAy5CwSkMv28Cw8Y55EYrYo0AHvQZxgvgXg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
+	Bharat.Bhushan@freescale.com, x86@kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [PATCH v1 09/21] Irq_remapping/MSI: Use MSI chip framework to
+ configure MSI/MSI-X irq
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com> <1409911806-10519-10-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1409911806-10519-10-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 06, 2014 at 03:17:43PM +0100, Bjorn Helgaas wrote:
-> On Fri, Sep 5, 2014 at 6:25 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
-> > This patch adds support for AppliedMicro X-Gene PCIe host controller. The
-> > driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
-> > cards.
-> >
-> > X-Gene PCIe controller driver has depedency on the pcie arm64 arch support.
-> > Liviu Dudau from ARM has sent a patch set for pcie arm64 arch support and
-> > support for creating generic pcie bridge from device tree. Liviu's patches
-> > are available here
-> > 1. https://lkml.org/lkml/2014/8/12/361
-> 
-> I'm hoping to merge Liviu's patches and this X-Gene support for v3.18.
-> I'm currently waiting for Liviu's v10 series (hopefully based on
-> v3.17-rc2), and since your series depends on that, I'm going to wait
-> for a v7 of your series that is rebased on top of Liviu's v10.  Does
-> that make sense?
+Hello.
 
-Hi Bjorn,
+On 9/5/2014 2:09 PM, Yijing Wang wrote:
 
-Are you happy so far with my v10 and Tanmay's v7? I will try to chase Rob Herring
-here at Linaro Connect to see if he is happy with my latest update to the
-pci-domain comments, but I would like to know if you think that there is anything
-else preventing you from pulling these series.
+> Use MSI chip framework instead of arch MSI functions to configure
+> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
 
-Best regards,
-Liviu
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>   drivers/iommu/irq_remapping.c |    8 +++++++-
+>   1 files changed, 7 insertions(+), 1 deletions(-)
 
-> 
-> > If someone wishes to test PCIe on X-Gene with this patch set, above mentioned
-> > patches from Liviu must be applied before the patches in this patch set. Also
-> > please use latest xgene u-boot firmware.
-> >
-> > changes since V5:
-> > 1. Port driver to changed interface of 'of_create_pci_host_bridge'
-> > 2. Fix the prefetch bit setting
-> > 3. Removed bunch of register programming which is already done by firmware
-> >
-> > changes since V4:
-> > 1. fix section mismatch warnings
-> > 2. fix the patch description
-> > 3. fix indentation
-> > 4. update read/write cfg functions by passing both addr and offset.
-> > 5. use 'time_before' for timeout.
-> > 6. remove unnecessary 'IS_ERR_OR_NULL'. Keep 'IS_ERR' for 'clk_get'
-> > 7. remove BUG_ON for pci_ioremap_io.
-> >
-> > changes since V3:
-> > 1. remove 'struct hw_pci' and supporting ops in hw_pci
-> > 2. add code to create the host bridge from dts
-> > 3. add code to scan the the host bridge
-> > 4. modify outbound windows setup function to get resource information from
-> >    'bridge->windows'
-> > 5. add compatible string in pcie dts node with current X-Gene SOC name.
-> >
-> > changes since V2:
-> > 1. redefined each PCI port in different PCI domain correctly.
-> > 2. removed setup_lane and setup_link functions from driver.
-> > 3. removed scan_bus wrapper and set_primary_bus hack.
-> > 4. added pci_ioremap_io for io resources.
-> >
-> > changes since V1:
-> > 1. added PCI domain support
-> > 2. reading cpu and pci addresses from device tree to configure regions.
-> > 3. got rid of unnecessary wrappers for readl and writel.
-> > 4. got rid of endpoint configuration code.
-> > 5. added 'dma-ranges' property support to read inbound region configuration.
-> > 6. renamed host driver file to 'pci-xgene.c' from 'pcie-xgene.c'
-> > 7. dropped 'clock-names' property from bindings
-> > 8. added comments whereever requested.
-> >
-> > Tanmay Inamdar (4):
-> >   pci:host: APM X-Gene PCIe controller driver
-> >   arm64: dts: APM X-Gene PCIe device tree nodes
-> >   dt-bindings: pci: xgene pcie device tree bindings
-> >   MAINTAINERS: entry for APM X-Gene PCIe host driver
-> >
-> >  .../devicetree/bindings/pci/xgene-pci.txt          |  55 ++
-> >  MAINTAINERS                                        |   8 +
-> >  arch/arm64/boot/dts/apm-mustang.dts                |   8 +
-> >  arch/arm64/boot/dts/apm-storm.dtsi                 | 160 ++++++
-> >  drivers/pci/host/Kconfig                           |  10 +
-> >  drivers/pci/host/Makefile                          |   1 +
-> >  drivers/pci/host/pci-xgene.c                       | 638 +++++++++++++++++++++
-> >  7 files changed, 880 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
-> >  create mode 100644 drivers/pci/host/pci-xgene.c
-> >
-> > --
-> > 1.9.1
-> >
-> 
+> diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+> index 33c4395..e75026e 100644
+> --- a/drivers/iommu/irq_remapping.c
+> +++ b/drivers/iommu/irq_remapping.c
+[...]
+> @@ -165,9 +170,10 @@ static void __init irq_remapping_modify_x86_ops(void)
+>   	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
+>   	x86_io_apic_ops.setup_entry	= setup_ioapic_remapped_entry;
+>   	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
+> -	x86_msi.setup_msi_irqs		= irq_remapping_setup_msi_irqs;
+> +	x86_msi.setup_msi_irqs          = irq_remapping_setup_msi_irqs;
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+    AFAICS, this change only converts tabs to spaces, so not needed at all.
+
+>   	x86_msi.setup_hpet_msi		= setup_hpet_msi_remapped;
+>   	x86_msi.compose_msi_msg		= compose_remapped_msi_msg;
+> +	x86_msi_chip = &remap_msi_chip;
+
+    Please align = with the rest of assignments.
+
+WBR, Sergei
 
