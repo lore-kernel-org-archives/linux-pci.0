@@ -1,4 +1,8 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:61256 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755939AbaIEJpt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 05:45:49 -0400
 From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
 CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
@@ -20,56 +24,53 @@ CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
 	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
 	Ralf Baechle <ralf@linux-mips.org>,
 	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v1 20/21] tile/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-Date: Fri, 5 Sep 2014 18:10:05 +0800
-Message-ID: <1409911806-10519-21-git-send-email-wangyijing@huawei.com>
+Subject: [PATCH v1 05/21] PCI/MSI: Introduce weak arch_find_msi_chip() to find MSI chip
+Date: Fri, 5 Sep 2014 18:09:50 +0800
+Message-ID: <1409911806-10519-6-git-send-email-wangyijing@huawei.com>
 In-Reply-To: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
 References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI chip framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+Introduce weak arch_find_msi_chip() to find the match msi_chip.
+Currently, MSI chip associates pci bus to msi_chip. Because in
+ARM platform, there may be more than one MSI controller in system.
+Associate pci bus to msi_chip help pci device to find the match
+msi_chip and setup MSI/MSI-X irq correctly. But in other platform,
+like in x86. we only need one MSI chip, because all device use
+the same MSI address/data and irq etc. So it's no need to associate
+pci bus to MSI chip, just use a arch function, arch_find_msi_chip()
+to return the MSI chip for simplicity. The default weak
+arch_find_msi_chip() used in ARM platform, find the MSI chip
+by pci bus.
 
 Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/tile/kernel/pci_gx.c |   14 ++++++++++++--
- 1 files changed, 12 insertions(+), 2 deletions(-)
+ drivers/pci/msi.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
-diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
-index e39f9c5..4912b75 100644
---- a/arch/tile/kernel/pci_gx.c
-+++ b/arch/tile/kernel/pci_gx.c
-@@ -1485,7 +1485,7 @@ static struct irq_chip tilegx_msi_chip = {
- 	/* TBD: support set_affinity. */
- };
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index a77e7f7..539c11d 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -29,9 +29,14 @@ static int pci_msi_enable = 1;
  
--int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
-+static int tile_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
- {
- 	struct pci_controller *controller;
- 	gxio_trio_context_t *trio_context;
-@@ -1604,7 +1604,17 @@ is_64_failure:
- 	return ret;
- }
+ /* Arch hooks */
  
--void arch_teardown_msi_irq(unsigned int irq)
-+void tile_teardown_msi_irq(unsigned int irq)
- {
- 	irq_free_hwirq(irq);
- }
-+
-+static struct msi_chip tile_msi_chip = {
-+	.setup_irq = tile_setup_msi_irq,
-+	.teardown_irq = tile_teardown_msi_irq,
-+};
-+
-+struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
++struct msi_chip * __weak arch_find_msi_chip(struct pci_dev *dev)
 +{
-+	return &tile_msi_chip;
++	return dev->bus->msi;
 +}
++
+ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ {
+-	struct msi_chip *chip = dev->bus->msi;
++	struct msi_chip *chip = arch_find_msi_chip(dev);
+ 	int err;
+ 
+ 	if (!chip || !chip->setup_irq)
 -- 
 1.7.1
 
