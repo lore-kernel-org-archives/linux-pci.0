@@ -1,117 +1,59 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Tue, 30 Sep 2014 11:39:42 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Russell King" <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH v13 00/12] Support for creating generic PCI host bridges
- from DT
-Message-ID: <20140930103942.GO841@e106497-lin.cambridge.arm.com>
-References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
- <20140929194335.GA13747@google.com>
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v1 03/21] MSI: Remove the redundant irq_set_chip_data()
+Date: Fri, 5 Sep 2014 18:09:48 +0800
+Message-ID: <1409911806-10519-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20140929194335.GA13747@google.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 29, 2014 at 08:43:35PM +0100, Bjorn Helgaas wrote:
-> On Mon, Sep 29, 2014 at 03:29:19PM +0100, Liviu Dudau wrote:
-> > This is my version 13 of the attempt at adding support for generic PCI host
-> > bridge controllers. It contains only cleanups to make it play nice with the
-> > linux-next tree as of 09/25. If Bjorn deems it safe, now that it looks like
-> > asm-generic is going to revert some of its more aggresive patches, he has the
-> > choice of queueing it into linux-next again.
-> > ...
-> 
-> These patches above were already on my pci/host-generic branch and in
-> linux-next:
-> 
->    asm-generic/io.h: Fix ioport_map() for !CONFIG_GENERIC_IOMAP
-This ^ ...
+Currently, pcie-designware, pcie-rcar, pci-tegra drivers
+use irq chip_data to save the msi_chip pointer. They
+already call irq_set_chip_data() in their own MSI irq map
+functions. So irq_set_chip_data() in arch_setup_msi_irq()
+is useless.
 
->    of/pci: Add pci_register_io_range() and pci_pio_to_address()
->    ARM: Define PCI_IOBASE as the base of virtual PCI IO space
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/msi.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-and this ^ need to be refreshed from my series otherwise we will get conflicts with
-asm-generic branch (either now or in the future). While the asm-generic/io.h
-cast is arguably superflous, we need to define PCI_IOBASE as a void __iomem* to
-match all other standard declarations of PCI_IOBASE.
-
->    of/pci: Define of_pci_range_to_resource() only when CONFIG_PCI=y
->    of/pci: Move of_pci_range_to_resources() to of/address.c
->    of/pci: Fix the conversion of IO ranges into IO resources
-> 
-> I added these three patches to my pci/host-generic branch:
-> 
->    PCI: Add generic domain handling
->    of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()
->    of/pci: Add support for parsing PCI host bridge resources from DT
-
-I can see these patches added to pci/host-generic but not on pci/next.
-
-> 
-> Yinghai pointed out a problem with this one, so I omitted it:
-> 
->    PCI: Assign unassigned bus resources in pci_scan_root_bus()
-
-Thats fine, host bridge drivers will have to work around pci_scan_root_bus() reduced
-functionality for now.
-
-
-> 
-> I added this one to my pci/host-generic branch:
-> 
->    PCI: Add pci_remap_iospace() to map bus I/O resources
-> 
-> I assume this depends on the pci_scan_root_bus() change (if not, let me
-> know), so I omitted this one:
-> 
->    arm64: Add architectural support for PCI
-
-No, there is no dependency there on pci_scan_root_bus(), it can go in the series.
-The only thing that depends on a feature rich pci_scan_root_bus() is the host
-bridge driver in order to be able to use only one line to process the root bus.
-
-Thanks for huge support in getting these patches in and I do hope I'm not being
-too much of a burden to you.
-
-Best regards,
-Liviu
-
-> 
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index f6cb317..d547f7f 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -41,8 +41,6 @@ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ 	if (err < 0)
+ 		return err;
+ 
+-	irq_set_chip_data(desc->irq, chip);
+-
+ 	return 0;
+ }
+ 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.7.1
 
