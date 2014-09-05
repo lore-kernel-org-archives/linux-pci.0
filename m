@@ -1,36 +1,48 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 4 Sep 2014 15:23:50 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Quentin Lambert <lambert.quentin@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Scott Murray <scott@spiteful.org>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/3] Fixing checkpatch errors and warnings for PCI hotplug
-Message-ID: <20140904212350.GE17125@google.com>
-References: <20140804185923.GA4185@greed>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from top.free-electrons.com ([176.31.233.9]:34160 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750908AbaIESUr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 14:20:47 -0400
+Date: Fri, 5 Sep 2014 20:20:44 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>,
+	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: mvebu: Fix uninitialized variable in
+ mvebu_get_tgt_attr()
+Message-ID: <20140905202044.4c166a43@free-electrons.com>
+In-Reply-To: <20140905174122.GD8080@google.com>
+References: <1407512045-26969-1-git-send-email-geert+renesas@glider.be>
+	<20140905174122.GD8080@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140804185923.GA4185@greed>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 04, 2014 at 08:59:23PM +0200, Quentin Lambert wrote:
-> Patch 1 and 2 fix checkpatch coding style warnings.
-> 
-> Patch 3 fixes chechpatch errors due to assignement
-> in if conditions.
-> 
-> 
-> Quentin Lambert (3):
->   PCI hotplug: fix a missing space coding style issue
->   PCI hotplug: fix a simple if coding style issue
->   PCI hotplug: remove assignement from if conditions
+Dear Bjorn Helgaas,
 
-I don't mind doing changes like these, but when we do, I want to do the
-whole drivers/pci directory at once to minimize the churn.  I don't know
-how you did these, but it looks like there are more instances than are
-fixed by these patches, e.g.,
+On Fri, 5 Sep 2014 11:41:22 -0600, Bjorn Helgaas wrote:
 
-    drivers/pci/hotplug/cpcihp_generic.c:	if(!bridge) {
-    drivers/pci/pci.c:      if ((i = pci_save_pcie_state(dev)) != 0)
+> This fix looks right to me.  I added a stable tag as follows.  Thomas
+> and/or Jason, and you ack this?
+
+Hum, I think I would actually prefer something like:
+
+                if (DT_FLAGS_TO_TYPE(flags) == DT_TYPE_IO)
+                        rtype = IORESOURCE_IO;
+                else if (DT_FLAGS_TO_TYPE(flags) == DT_TYPE_MEM32)
+                        rtype = IORESOURCE_MEM;
++		else
++			continue;
+
+So that we're explicit with the fact that we only care about I/O and
+MEM32 resource types.
+
+Thanks,
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
