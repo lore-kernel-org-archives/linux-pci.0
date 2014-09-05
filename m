@@ -1,109 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:63181 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751091AbaI3JSs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 05:18:48 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Minghuan Lian <Minghuan.Lian@freescale.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v4] PCI: Layerscape: Add Layerscape PCIe driver
-Date: Tue, 30 Sep 2014 11:18:30 +0200
-Message-ID: <8584310.bgN0fYJaqP@wuerfel>
-In-Reply-To: <1411888107-27640-1-git-send-email-Minghuan.Lian@freescale.com>
-References: <1411888107-27640-1-git-send-email-Minghuan.Lian@freescale.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <540A1D54.9030103@ti.com>
+Date: Fri, 5 Sep 2014 16:30:12 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v2] PCI: keystone: add a pci quirk to limit mrrs
+References: <1407527132-3294-1-git-send-email-m-karicheri2@ti.com> <20140905192329.GE8080@google.com>
+In-Reply-To: <20140905192329.GE8080@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday 28 September 2014 15:08:27 Minghuan Lian wrote:
-> Add support for Freescale Layerscape PCIe controller. This driver
-> re-uses the designware core code.
-> 
-> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+On 09/05/2014 03:23 PM, Bjorn Helgaas wrote:
+> On Fri, Aug 08, 2014 at 03:45:32PM -0400, Murali Karicheri wrote:
+>> Keystone PCI controller has a limitation that memory read request
+>> size must not exceed 256 bytes. This is a hardware limitation and
+>> add a quirk to force this limit on all downstream devices by
+>> updating mrrs.
+>>
+>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>> ---
+>>   -v2: made the quirk happens after tuning
+>>   -v1: changed printk to indicate PCI bdf
+>>   This applies on top of the Keystone PCI controller patch series
+>>   at http://thread.gmane.org/gmane.linux.kernel.pci/33523
+>>   drivers/pci/host/pci-keystone.c |   40 +++++++++++++++++++++++++++++++++++++++
+>>   1 file changed, 40 insertions(+)
+>>
+>> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+>> index c1cfaef..a132622 100644
+>> --- a/drivers/pci/host/pci-keystone.c
+>> +++ b/drivers/pci/host/pci-keystone.c
+>> @@ -42,8 +42,48 @@
+>>   /* DEV_STAT_CTRL */
+>>   #define PCIE_CAP_BASE		0x70
+>>
+>> +/* PCIE controller device IDs */
+>> +#define PCIE_RC_K2HK		0xb008
+>> +#define PCIE_RC_K2E		0xb009
+>> +#define PCIE_RC_K2L		0xb00a
+>
+> A Root Complex doesn't appear in config space as a PCI device, so I think
+> these are actually Root Port devices, aren't they?
 
-I'm still not too happy about the MSI handling here. I think you
-really need to have a separate driver for the msi controller.
+Yes.
 
-> +/* SCFG MSI register */
-> +#define SCFG_SPIMSICR		0x40
-> +#define SCFG_SPIMSICLRCR	0x90
-> +
-> +#define MSI_LS1021A_ADDR		0x1570040
-> +#define MSI_LS1021A_DATA(pex_idx)	(0xb3 + pex_idx)
+>
+> I suppose the spec would allow Root Complex Integrated Endpoints, on which
+> MRRS could also be set, but I think your quirk ignores them because they
+> would appear on the root bus.  Is ignoring them OK, or would you want to
+> set MRRS for those as well?
 
->From what I can tell, the 'scfg' registers are mostly for MSI, and
-the MSI_LS1021A_ADDR that you have hardcoded here is actually part of
-the scfg area itself. You should never hardwire that in a PCI host
-driver.
+How does the Root Complex integrated endpoints are designed? Our PCI can 
+act as a RC or EP and not both at the same time. So I guess this is not 
+applicable.
 
-Please make a separate MSI driver instead and use the 'msi-parent'
-property.
+>
+>> +
+>>   #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
+>>
+>> +static void quirk_limit_mrrs(struct pci_dev *dev)
+>> +{
+>> +	struct pci_bus *bus = dev->bus;
+>> +	struct pci_dev *bridge = bus->self;
+>> +
+>> +	if (pci_is_root_bus(bus))
+>> +		return;
+>> +
+>> +	/* look for the host bridge */
+>> +	while (!pci_is_root_bus(bus)) {
+>> +		bridge = bus->self;
+>> +		bus = bus->parent;
+>> +	}
+>> +
+>> +	if (bridge) {
+>> +		u16 id;
+>> +
+>> +		/*
+>> +		 * Keystone PCI controller has a h/w limitation of
+>> +		 * 256 bytes maximum read request size. It can't handle
+>> +		 * anything higher than this. So force this limit on
+>> +		 * all downstream devices
+>> +		 */
+>> +		pci_read_config_word(bridge, PCI_DEVICE_ID,&id);
+>
+> I think you should check the Vendor ID here as well.  Otherwise, there's a
+> possibility of applying this quirk to devices under a bridge with the same
+> Device ID but different Vendor ID.
+>
+> And I think you should be able to use the bridge->vendor and bridge->device
+> fields instead of reading them from config space.  Actually, this might be
+> a good place to use pci_match_id().
 
-> +static u32 ls_pcie_get_msi_addr(struct pcie_port *pp)
-> +{
-> +	return MSI_LS1021A_ADDR;
-> +}
-> +
-> +static u32 ls_pcie_get_msi_data(struct pcie_port *pp, int pos)
-> +{
-> +	struct ls_pcie *pcie = to_ls_pcie(pp);
-> +
-> +	return MSI_LS1021A_DATA(pcie->index);
-> +}
+Ok.
 
-Does this mean you can have only one device on this PCI host that
-uses MSI?
+>
+>> +		if ((id == PCIE_RC_K2HK) || (id == PCIE_RC_K2E) ||
+>> +		    (id == PCIE_RC_K2L)) {
+>> +			if (pcie_get_readrq(dev)>  256) {
+>> +				dev_info(&dev->dev, "limiting mrrs to 256\n");
+>> +				pcie_set_readrq(dev, 256);
+>> +			}
+>> +		}
+>> +	}
+>> +}
+>> +DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
+>> +
+>>   static int ks_pcie_establish_link(struct keystone_pcie *ks_pcie)
+>>   {
+>>   	struct pcie_port *pp =&ks_pcie->pp;
+>> --
+>> 1.7.9.5
+>>
 
-> +static irqreturn_t ls_pcie_msi_irq_handler(int irq, void *data)
-> +{
-> +	struct pcie_port *pp = data;
-> +	struct ls_pcie *pcie = to_ls_pcie(pp);
-> +	unsigned int msi_irq;
-> +
-> +	/* clear the interrupt */
-> +	regmap_write(pcie->scfg, SCFG_SPIMSICLRCR,
-> +		     MSI_LS1021A_DATA(pcie->index));
-> +
-> +	msi_irq = irq_find_mapping(pp->irq_domain, 0);
-> +	if (!msi_irq) {
-> +		/*
-> +		 * that's weird who triggered this?
-> +		 * just clear it
-> +		 */
-> +		dev_err(pcie->dev, "unexpected MSI\n");
-> +		return IRQ_NONE;
-> +	}
-> +
-> +	generic_handle_irq(msi_irq);
-> +	return IRQ_HANDLED;
-> +}
-
-Since you have only one addr/data value per host controller, does that mean
-that you can have only one device on this host that uses one interrupt?
-
-How do you ensure that the second user that tries to call pci_enable_msi
-gets an error? Is there only one internal device attached to the host?
-
-> +	if (of_device_is_compatible(pcie->dev->of_node, "fsl,ls1021a-pcie")) {
-> +		/*
-> +		 * LS1021A Workaround for internal TKT228622
-> +		 * to fix the INTx hang issue
-> +		 */
-> +		val = ioread32(pcie->dbi + PCIE_STRFMR1);
-> +		val &= 0xffff;
-> +		iowrite32(val, pcie->dbi + PCIE_STRFMR1);
-> +
-> +		ls1021a_pcie_msi_fixup(pp);
-> +	}
-> +}
-
-"fsl,ls1021a-pcie" is the only one supported by this driver, so the
-check is useless.
-
-	Arnd
