@@ -1,79 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dmitry Torokhov <dtor@google.com>,
-	Aubrey Li <aubrey.li@intel.com>
-Subject: [PATCH 11/13] x86 / PM: Set IRQCHIP_SKIP_SET_WAKE for IOAPIC IRQ chip objects
-Date: Mon, 01 Sep 2014 16:28:01 +0200
-Message-ID: <1604186.gKriExSOTM@vostro.rjw.lan>
-In-Reply-To: <2516134.pmOxkEuOOy@vostro.rjw.lan>
-References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan> <2516134.pmOxkEuOOy@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.24]:49881 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750940AbaIERv7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 13:51:59 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	linux-pci@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: mvebu: Fix uninitialized variable in mvebu_get_tgt_attr()
+Date: Fri, 05 Sep 2014 19:51:27 +0200
+Message-ID: <89457154.qOQEu4X27r@wuerfel>
+In-Reply-To: <20140905174122.GD8080@google.com>
+References: <1407512045-26969-1-git-send-email-geert+renesas@glider.be> <20140905174122.GD8080@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Friday 05 September 2014 11:41:22 Bjorn Helgaas wrote:
+> On Fri, Aug 08, 2014 at 05:34:05PM +0200, Geert Uytterhoeven wrote:
+> > drivers/pci/host/pci-mvebu.c: In function 'mvebu_get_tgt_attr':
+> > drivers/pci/host/pci-mvebu.c:887:39: warning: 'rtype' may be used uninitialized in this function [-Wmaybe-uninitialized]
+> >    if (slot == PCI_SLOT(devfn) && type == rtype) {
+> >                                        ^
+> > 
+> > If there's ever gonna be a configuration space or 64-bit memory space
+> > entry in DT, rtype will be uninitialized, and the wrong entry may be
+> > returned.
+> > 
+> > Initialize rtype to 0 (which is an unused IORESOURCE_* type) to fix this.
+> > 
+> > Introduced in commit 11be65472a427dcf7a11ab6e3e3628f1c6768b5b ("PCI:
+> > mvebu: Adapt to the new device tree layout").
+> > 
+> > Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> > ---
+> > Alternatively, should the "else if (DT_FLAGS_TO_TYPE(flags) ==
+> > DT_TYPE_MEM32)" just be changed to "else", assuming there can never be
+> > other entries than for I/O or 32-bit memory space?
+> > ---
+> >  drivers/pci/host/pci-mvebu.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> > index ce23e0f076b6..9515f0d13fd4 100644
+> > --- a/drivers/pci/host/pci-mvebu.c
+> > +++ b/drivers/pci/host/pci-mvebu.c
+> > @@ -877,7 +877,7 @@ static int mvebu_get_tgt_attr(struct device_node *np, int devfn,
+> >  		u32 flags = of_read_number(range, 1);
+> >  		u32 slot = of_read_number(range + 1, 1);
+> >  		u64 cpuaddr = of_read_number(range + na, pna);
+> > -		unsigned long rtype;
+> > +		unsigned long rtype = 0;
+> >  
+> >  		if (DT_FLAGS_TO_TYPE(flags) == DT_TYPE_IO)
+> >  			rtype = IORESOURCE_IO;
+> 
+> This fix looks right to me.  I added a stable tag as follows.  Thomas
+> and/or Jason, and you ack this?
 
-Set the IRQCHIP_SKIP_SET_WAKE for IOAPIC IRQ chip objects so that
-interrupts from them can work as wakeup interrupts for suspend-to-idle.
 
-After this change, running enable_irq_wake() on one of the IRQs in
-question will succeed and IRQD_WAKEUP_STATE will be set for it, so
-all of the suspend-to-idle wakeup mechanics introduced previously
-will work for it automatically.
+I had a local fix for this, which I haven't gotten around to
+send a proper changelog for, but it seems like a more appropriate
+fix, avoiding the spurious initialization.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- arch/x86/kernel/apic/io_apic.c |    5 +++++
- 1 file changed, 5 insertions(+)
+The other fix looks technically correct as well though.
 
-Index: linux-pm/arch/x86/kernel/apic/io_apic.c
-===================================================================
---- linux-pm.orig/arch/x86/kernel/apic/io_apic.c
-+++ linux-pm/arch/x86/kernel/apic/io_apic.c
-@@ -2618,6 +2618,7 @@ static struct irq_chip ioapic_chip __rea
- 	.irq_eoi		= ack_apic_level,
- 	.irq_set_affinity	= native_ioapic_set_affinity,
- 	.irq_retrigger		= ioapic_retrigger_irq,
-+	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
+	Arnd
+
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index a8c6f1a92e0f..678849836649 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -883,6 +883,8 @@ static int mvebu_get_tgt_attr(struct device_node *np, int devfn,
+ 			rtype = IORESOURCE_IO;
+ 		else if (DT_FLAGS_TO_TYPE(flags) == DT_TYPE_MEM32)
+ 			rtype = IORESOURCE_MEM;
++		else
++			rtype = -1;
  
- static inline void init_IO_APIC_traps(void)
-@@ -3168,6 +3169,7 @@ static struct irq_chip msi_chip = {
- 	.irq_ack		= ack_apic_edge,
- 	.irq_set_affinity	= msi_set_affinity,
- 	.irq_retrigger		= ioapic_retrigger_irq,
-+	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
- 
- int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
-@@ -3266,6 +3268,7 @@ static struct irq_chip dmar_msi_type = {
- 	.irq_ack		= ack_apic_edge,
- 	.irq_set_affinity	= dmar_msi_set_affinity,
- 	.irq_retrigger		= ioapic_retrigger_irq,
-+	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
- 
- int arch_setup_dmar_msi(unsigned int irq)
-@@ -3316,6 +3319,7 @@ static struct irq_chip hpet_msi_type = {
- 	.irq_ack = ack_apic_edge,
- 	.irq_set_affinity = hpet_msi_set_affinity,
- 	.irq_retrigger = ioapic_retrigger_irq,
-+	.flags = IRQCHIP_SKIP_SET_WAKE,
- };
- 
- int default_setup_hpet_msi(unsigned int irq, unsigned int id)
-@@ -3379,6 +3383,7 @@ static struct irq_chip ht_irq_chip = {
- 	.irq_ack		= ack_apic_edge,
- 	.irq_set_affinity	= ht_set_affinity,
- 	.irq_retrigger		= ioapic_retrigger_irq,
-+	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
- 
- int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
+ 		if (slot == PCI_SLOT(devfn) && type == rtype) {
+ 			*tgt = DT_CPUADDR_TO_TARGET(cpuaddr);
 
