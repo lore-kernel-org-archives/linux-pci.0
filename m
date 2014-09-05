@@ -1,59 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:39946 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752920AbaIDUYn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 16:24:43 -0400
-Received: by mail-pa0-f54.google.com with SMTP id fb1so20726097pad.27
-        for <linux-pci@vger.kernel.org>; Thu, 04 Sep 2014 13:24:43 -0700 (PDT)
-Date: Thu, 4 Sep 2014 14:24:36 -0600
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:47167 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751110AbaIEXl5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 19:41:57 -0400
+Received: by mail-pa0-f47.google.com with SMTP id ey11so1040005pad.34
+        for <linux-pci@vger.kernel.org>; Fri, 05 Sep 2014 16:41:57 -0700 (PDT)
+Date: Fri, 5 Sep 2014 17:41:52 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: linux-pci@vger.kernel.org,
-	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
-	Shawn Guo <Shawn.Guo@freescale.com>
-Subject: Re: [PATCH 2/2] PCI: imx6: fix boot hang when link already enabled
-Message-ID: <20140904202436.GA17125@google.com>
-References: <1406830565-23450-1-git-send-email-l.stach@pengutronix.de>
- <1406830565-23450-3-git-send-email-l.stach@pengutronix.de>
- <20140814202248.GA2071@google.com>
- <1409743007.1535.1.camel@pengutronix.de>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>,
+	Doug Thompson <dougthompson@xmission.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Borislav Petkov <bp@alien8.de>, linux-edac@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Rui Wang <ruiv.wang@gmail.com>
+Subject: Re: [PATCH 1/2] Move Intel SNB device ids from sb_edac to pci_ids.h
+Message-ID: <20140905234152.GM8080@google.com>
+References: <cover.1408051536.git.luto@amacapital.net>
+ <9b0cfe601627a19901d40053daadbaea025a9a70.1408051536.git.luto@amacapital.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1409743007.1535.1.camel@pengutronix.de>
+In-Reply-To: <9b0cfe601627a19901d40053daadbaea025a9a70.1408051536.git.luto@amacapital.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 03, 2014 at 01:16:47PM +0200, Lucas Stach wrote:
-> Am Donnerstag, den 14.08.2014, 14:22 -0600 schrieb Bjorn Helgaas:
-> > On Thu, Jul 31, 2014 at 08:16:05PM +0200, Lucas Stach wrote:
-> > > This fixes a boot hang observed when the bootloader
-> > > already enabled the PCIe link for it's own use. The
-> > > fundamental problem is that Freescale forgot to wire
-> > > up the core reset, so software doesn't have a sane way
-> > > to get the core into a defined state.
-> > > 
-> > > According to the DW PCIe core reference manual configuration
-> > > of the core may only happen when the LTSSM is disabled, so
-> > > this is one of the first things we need to do. Apparently
-> > > this isn't safe to do when the LTSSM is in any other state
-> > > than "detect" as we observe an instant machine hang when
-> > > trying to do so while the link is already up.
-> > > 
-> > > As a workaround force LTSSM into detect state right before
-> > > hitting the disable switch.
-> > 
+On Thu, Aug 14, 2014 at 02:45:40PM -0700, Andy Lutomirski wrote:
+> The i2c_imc driver will use two of them, and moving only part of
+> the list seems messier.
 > 
-> Bjorn,
+> Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>
+> Cc: Rui Wang <ruiv.wang@gmail.com>
+> Signed-off-by: Andy Lutomirski <luto@amacapital.net>
+
+Will these IDs actually be used by two drivers by time you're done?  It
+looks like maybe you're removing them from sb_edac.c and adding them to
+i2c_imc.c, which would still only be one place.
+
+But if they will end up being used in more than one place,
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> ---
+>  drivers/edac/sb_edac.c  | 30 ------------------------------
+>  include/linux/pci_ids.h | 15 +++++++++++++++
+>  2 files changed, 15 insertions(+), 30 deletions(-)
 > 
-> I would have expected for this to show up in 3.17 as it fixes a real bug
-> and has been posted some time ago. While you have picked it up into your
-> pci/host-imx6 branch it doesn't show up in Linus tree nor in any pull
-> requests AFAICS.
-> Was it intentional from you to hold this patch or is this just an
-> oversight?
-
-Nope, I just missed it, thanks for the reminder.  I put in my
-for-linus branch and will ask Linus to pull it after it's been
-in -next for a few days.
-
-Bjorn
+> diff --git a/drivers/edac/sb_edac.c b/drivers/edac/sb_edac.c
+> index deea0dc9999b..a2597e9313c6 100644
+> --- a/drivers/edac/sb_edac.c
+> +++ b/drivers/edac/sb_edac.c
+> @@ -52,36 +52,6 @@ static int probed;
+>  #define GET_BITFIELD(v, lo, hi)	\
+>  	(((v) & GENMASK_ULL(hi, lo)) >> (lo))
+>  
+> -/*
+> - * sbridge Memory Controller Registers
+> - */
+> -
+> -/*
+> - * FIXME: For now, let's order by device function, as it makes
+> - * easier for driver's development process. This table should be
+> - * moved to pci_id.h when submitted upstream
+> - */
+> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_SAD0	0x3cf4	/* 12.6 */
+> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_SAD1	0x3cf6	/* 12.7 */
+> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_BR		0x3cf5	/* 13.6 */
+> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_HA0	0x3ca0	/* 14.0 */
+> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TA	0x3ca8	/* 15.0 */
+> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_RAS	0x3c71	/* 15.1 */
+> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD0	0x3caa	/* 15.2 */
+> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD1	0x3cab	/* 15.3 */
+> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD2	0x3cac	/* 15.4 */
+> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD3	0x3cad	/* 15.5 */
+> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_DDRIO	0x3cb8	/* 17.0 */
+> -
+> -	/*
+> -	 * Currently, unused, but will be needed in the future
+> -	 * implementations, as they hold the error counters
+> -	 */
+> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR0	0x3c72	/* 16.2 */
+> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR1	0x3c73	/* 16.3 */
+> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR2	0x3c76	/* 16.6 */
+> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR3	0x3c77	/* 16.7 */
+> -
+>  /* Devices 12 Function 6, Offsets 0x80 to 0xcc */
+>  static const u32 sbridge_dram_rule[] = {
+>  	0x80, 0x88, 0x90, 0x98, 0xa0,
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 7fa31731c854..e0e6801c3d80 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2816,7 +2816,22 @@
+>  #define PCI_DEVICE_ID_INTEL_UNC_R2PCIE	0x3c43
+>  #define PCI_DEVICE_ID_INTEL_UNC_R3QPI0	0x3c44
+>  #define PCI_DEVICE_ID_INTEL_UNC_R3QPI1	0x3c45
+> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_RAS	0x3c71	/* 15.1 */
+> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR0	0x3c72	/* 16.2 */
+> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR1	0x3c73	/* 16.3 */
+> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR2	0x3c76	/* 16.6 */
+> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR3	0x3c77	/* 16.7 */
+> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_HA0	0x3ca0	/* 14.0 */
+> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TA	0x3ca8	/* 15.0 */
+> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD0	0x3caa	/* 15.2 */
+> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD1	0x3cab	/* 15.3 */
+> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD2	0x3cac	/* 15.4 */
+> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD3	0x3cad	/* 15.5 */
+> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_DDRIO	0x3cb8	/* 17.0 */
+>  #define PCI_DEVICE_ID_INTEL_JAKETOWN_UBOX	0x3ce0
+> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_SAD0	0x3cf4	/* 12.6 */
+> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_BR		0x3cf5	/* 13.6 */
+> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_SAD1	0x3cf6	/* 12.7 */
+>  #define PCI_DEVICE_ID_INTEL_IOAT_SNB	0x402f
+>  #define PCI_DEVICE_ID_INTEL_5100_16	0x65f0
+>  #define PCI_DEVICE_ID_INTEL_5100_19	0x65f3
+> -- 
+> 1.9.3
+> 
