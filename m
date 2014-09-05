@@ -1,88 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:57390 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751687AbaIPUVk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 16:21:40 -0400
-Message-ID: <54189BCE.2010206@canonical.com>
-Date: Tue, 16 Sep 2014 16:21:34 -0400
-From: Joseph Salisbury <joseph.salisbury@canonical.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:48912 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750832AbaIESeM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 14:34:12 -0400
+Message-ID: <540A0212.6060303@ti.com>
+Date: Fri, 5 Sep 2014 14:33:54 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit
- mmio
-References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>	<1386546869-31900-3-git-send-email-yinghai@kernel.org>	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>	<52A8BAC5.70006@canonical.com>	<CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>	<52D01D82.5070202@canonical.com> <CAE9FiQUD0XvPJNFNMoqX6J67TKuGcj+pSbj+iPUf=fvC-4UXOQ@mail.gmail.com>
-In-Reply-To: <CAE9FiQUD0XvPJNFNMoqX6J67TKuGcj+pSbj+iPUf=fvC-4UXOQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Herring <robh+dt@kernel.org>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: keystone: update to support multiple pci ports
+References: <1409938782-31460-1-git-send-email-m-karicheri2@ti.com> <7260053.FoBVhTXVfj@wuerfel>
+In-Reply-To: <7260053.FoBVhTXVfj@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/10/2014 12:13 PM, Yinghai Lu wrote:
-> On Fri, Jan 10, 2014 at 8:19 AM, Joseph Salisbury
-> <joseph.salisbury@canonical.com> wrote:
->> On 12/11/2013 02:55 PM, Yinghai Lu wrote:
->>> On Wed, Dec 11, 2013 at 11:19 AM, Joseph Salisbury
->>> <joseph.salisbury@canonical.com> wrote:
->>>> On 12/09/2013 03:10 PM, Yinghai Lu wrote:
->>>>> On Mon, Dec 9, 2013 at 11:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>>>> That doesn't answer my question at all.
->>>>>>
->>>>>> I understand that this change makes it so Joseph doesn't have to use
->>>>>> "pci=realloc=off".  But why should auto-reallocation be limited to
->>>>>> buses that have resources above 4GB?  That doesn't make any sense.
->>>>>>
->>>>>> We should fix the reallocation code so it can deal with this case.  If
->>>>>> there's not enough space for everything, obviously we have to leave
->>>>>> something unassigned.  A ROM BAR is a good candidate for leaving
->>>>>> unassigned, because most of the time we can get along without it.
->>>>> Yes, that is ideal and not that simple.
->>>>> but that would be hard to backport to old kernels.
->>>>>
->>>>> BTW, Joseph, can you try
->>>>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->>>>> for-pci-3.14
->>>>> with pci=realloc=on
->>>>>
->>>>> on that system?
->>>>>
->>>>> Thanks
->>>>>
->>>>> Yinghai
->>>> I noticed there was some back and forth on this thread.  Do you still
->>>> want me to test this version, Yinghai?
->>> Yes, if that works, we would not need to put the patch in upstream for limiting
->>> realloc auto scope.
->>>
->> Another user has confirmed that at test kernel from your branch[0] does
->> resolve the bug.
-> Hi, Joe,
+On 09/05/2014 01:54 PM, Arnd Bergmann wrote:
+> On Friday 05 September 2014 13:39:42 Murali Karicheri wrote:
+>> +
+>>          /* enable RC mode in devcfg */
+>>          val = readl(reg_p);
+>> -       val&= ~PCIE_MODE_MASK;
+>> -       val |= PCIE_RC_MODE;
+>> +       port_id<<= 1;
+>> +       val&= ~(PCIE_MODE_MASK<<  port_id);
+>> +       val |= (PCIE_RC_MODE<<  port_id);
+>>          writel(val, reg_p);
+>> +       devm_iounmap(dev, reg_p);
+>> +       devm_release_mem_region(dev, res->start, resource_size(res));
 >
-> Bjorn does not want to limit auto realloc, so this patch can not make
-> to upstream at this point.
+> This looks like it's a shared register of some sort that doesn't
+> really belong into the registers of a particular port. Could it
+> be that it's actually for the PHY?
 >
-> so we may have to ask user to append "pci=realloc=off" before we find
-> more smart way to realloc
-> resource.
->
-> Thanks
->
-> Yinghai
+> 	Arnd
+Arnd,
 
-Hi Yinghai,
+This a shared device configuration register between the two ports the 
+desciption states it is bootstrap configuration of the PCIe module as 
+Endpoint or Root complex and Not Phy. Hope below text will help.
 
-A new bug[0] was opened due to enabling PCI_REALLOC_ENABLE_AUTO, which
-is similar to the original bug[1] we discussed.
-
-Just wondering if there have been any additional ideas on realloc since
-this was last discussed?
-
-Thanks,
-
-Joe
+Table 3-23 Device Configuration Register (DEVCFG)
 
 
-[0] http://pad.lv/1363313
-[1] http://pad.lv/1245938
+PCIESSMODE[1:0] 00b PCIESSMODE is used to control the
+functionality of PCIESS module out of
+reset. This MMR output is connected to
+DEVTYPE input of PCIESS
+(Changes from
+Nysh) : Note that in Nysh this value came
+from a bootstrap pin.
+00 : Endpoint
+01 : Legacy Endpoint
+10 : Rootcomplex
+11 : Reserved
+PCIESS_1_MODE[1:0
+]
+00b PCIESSMODE is used to control the
+functionality of PCIE_1 module out of
+reset. This MMR output is connected to
+DEVTYPE input of PCIE_1
+00 : Endpoint
+01 : Legacy Endpoint
+10 : Rootcomplex
+11 : Reserv
+
