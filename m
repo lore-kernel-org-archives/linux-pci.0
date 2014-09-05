@@ -1,114 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:63137 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757630AbaISSjt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Sep 2014 14:39:49 -0400
-Received: by mail-pd0-f171.google.com with SMTP id y13so441385pdi.16
-        for <linux-pci@vger.kernel.org>; Fri, 19 Sep 2014 11:39:49 -0700 (PDT)
-Date: Fri, 19 Sep 2014 12:39:43 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Dirk Gouders <dirk@gouders.net>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
-Message-ID: <20140919183943.GD19374@google.com>
-References: <CAE9FiQXQesrDMqf1b6ZhHdmY_wEEUrOEvNO4N_d6WtaNMGNLww@mail.gmail.com>
- <gh4mwcef0r.fsf@quad.gouders.net>
- <CAE9FiQWgioBeVmfWCaE38BrkjbWKaS+_FYYdmdd+7X8fpeEgnQ@mail.gmail.com>
- <ghoaukcx6b.fsf@quad.gouders.net>
- <CAE9FiQUk-sAHnjfBvNeHQWibJRqbPE1V0UtDtARtwxmS=7aQrw@mail.gmail.com>
- <ghk358crbe.fsf@quad.gouders.net>
- <CAE9FiQUeP84585-4b+Y6WBVD3zqOi7ch_OXytsTmKEz9AyZ3Vg@mail.gmail.com>
- <20140913040716.GA28080@google.com>
- <gh8ulnn9yo.fsf@quad.gouders.net>
- <gh8uln71g1.fsf@lena.gouders.net>
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:60274 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751347AbaIEXnV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 19:43:21 -0400
+Received: by mail-lb0-f182.google.com with SMTP id u10so14412512lbd.13
+        for <linux-pci@vger.kernel.org>; Fri, 05 Sep 2014 16:43:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <gh8uln71g1.fsf@lena.gouders.net>
+In-Reply-To: <20140905234152.GM8080@google.com>
+References: <cover.1408051536.git.luto@amacapital.net> <9b0cfe601627a19901d40053daadbaea025a9a70.1408051536.git.luto@amacapital.net>
+ <20140905234152.GM8080@google.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Fri, 5 Sep 2014 16:42:59 -0700
+Message-ID: <CALCETrXM5X=wMAVP7bnc15adyN_muFLn4bbJMJ0g8vCO7RzXdA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] Move Intel SNB device ids from sb_edac to pci_ids.h
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>,
+	Doug Thompson <dougthompson@xmission.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Borislav Petkov <bp@alien8.de>, linux-edac@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rui Wang <ruiv.wang@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 13, 2014 at 09:41:34PM +0200, Dirk Gouders wrote:
-> So, I did some tests on the VX50 which probably wasn't the worst idea,
-> because it behaves different than the test machine.
-> 
-> Summary:
-> 
-> 1) Bjorn's back pocket patch works on the VX50.
-> 
->    On the test machine it causes a trace, mount_root has to do with
->    it.  I tried to use netconsole but it complained the interface were
->    not ready.
+On Fri, Sep 5, 2014 at 4:41 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Aug 14, 2014 at 02:45:40PM -0700, Andy Lutomirski wrote:
+>> The i2c_imc driver will use two of them, and moving only part of
+>> the list seems messier.
+>>
+>> Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>
+>> Cc: Rui Wang <ruiv.wang@gmail.com>
+>> Signed-off-by: Andy Lutomirski <luto@amacapital.net>
+>
+> Will these IDs actually be used by two drivers by time you're done?  It
+> looks like maybe you're removing them from sb_edac.c and adding them to
+> i2c_imc.c, which would still only be one place.
+>
+> But if they will end up being used in more than one place,
+>
 
-OK, that's good.  I put this revert patch in for-linus for v3.17.  I regard
-this as a temporary fix, not the real solution.  My guess is the test
-machine doesn't boot because you're missing a driver, so not related to the
-revert patch.
+They will.  Both drivers will need to poke at (different)
+configuration space registers on the same devices.  There's one shared
+register, but that one is read-only.
 
-> 3) Reset with Bjorn's commands
-> 
->    DEV=00:0e.0
->    setpci -s$DEV BRIDGE_CONTROL.W=0x0040
->    sleep 1
->    setpci -s$DEV BRIDGE_CONTROL.W=0x0000
->    sleep 1
->    echo 1 > /sys/bus/pci/rescan
-> 
->    let the FC adapter appear but there are errors that I cannot really
->    interpret.
-> 
-> 4) Reset with Yinghai's patches and 
-> 
->    echo 1 > /sys/bus/pci/devices/0000\:00\:0e.0/pcie_link_disable
->    echo 0 > /sys/bus/pci/devices/0000\:00\:0e.0/pcie_link_disable
->    echo 1 > /sys/bus/pci/rescan
-> 
->    gives a similar resut to 3).
+--Andy
 
-Resetting the device or simply disabling and re-enabling the link was
-enough to fix things from the device's perspective.  In both cases, it
-responded as one would expect:
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+>> ---
+>>  drivers/edac/sb_edac.c  | 30 ------------------------------
+>>  include/linux/pci_ids.h | 15 +++++++++++++++
+>>  2 files changed, 15 insertions(+), 30 deletions(-)
+>>
+>> diff --git a/drivers/edac/sb_edac.c b/drivers/edac/sb_edac.c
+>> index deea0dc9999b..a2597e9313c6 100644
+>> --- a/drivers/edac/sb_edac.c
+>> +++ b/drivers/edac/sb_edac.c
+>> @@ -52,36 +52,6 @@ static int probed;
+>>  #define GET_BITFIELD(v, lo, hi)      \
+>>       (((v) & GENMASK_ULL(hi, lo)) >> (lo))
+>>
+>> -/*
+>> - * sbridge Memory Controller Registers
+>> - */
+>> -
+>> -/*
+>> - * FIXME: For now, let's order by device function, as it makes
+>> - * easier for driver's development process. This table should be
+>> - * moved to pci_id.h when submitted upstream
+>> - */
+>> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_SAD0     0x3cf4  /* 12.6 */
+>> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_SAD1     0x3cf6  /* 12.7 */
+>> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_BR               0x3cf5  /* 13.6 */
+>> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_HA0  0x3ca0  /* 14.0 */
+>> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TA   0x3ca8  /* 15.0 */
+>> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_RAS  0x3c71  /* 15.1 */
+>> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD0 0x3caa  /* 15.2 */
+>> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD1 0x3cab  /* 15.3 */
+>> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD2 0x3cac  /* 15.4 */
+>> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD3 0x3cad  /* 15.5 */
+>> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_DDRIO        0x3cb8  /* 17.0 */
+>> -
+>> -     /*
+>> -      * Currently, unused, but will be needed in the future
+>> -      * implementations, as they hold the error counters
+>> -      */
+>> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR0 0x3c72  /* 16.2 */
+>> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR1 0x3c73  /* 16.3 */
+>> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR2 0x3c76  /* 16.6 */
+>> -#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR3 0x3c77  /* 16.7 */
+>> -
+>>  /* Devices 12 Function 6, Offsets 0x80 to 0xcc */
+>>  static const u32 sbridge_dram_rule[] = {
+>>       0x80, 0x88, 0x90, 0x98, 0xa0,
+>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+>> index 7fa31731c854..e0e6801c3d80 100644
+>> --- a/include/linux/pci_ids.h
+>> +++ b/include/linux/pci_ids.h
+>> @@ -2816,7 +2816,22 @@
+>>  #define PCI_DEVICE_ID_INTEL_UNC_R2PCIE       0x3c43
+>>  #define PCI_DEVICE_ID_INTEL_UNC_R3QPI0       0x3c44
+>>  #define PCI_DEVICE_ID_INTEL_UNC_R3QPI1       0x3c45
+>> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_RAS  0x3c71  /* 15.1 */
+>> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR0 0x3c72  /* 16.2 */
+>> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR1 0x3c73  /* 16.3 */
+>> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR2 0x3c76  /* 16.6 */
+>> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_ERR3 0x3c77  /* 16.7 */
+>> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_HA0  0x3ca0  /* 14.0 */
+>> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TA   0x3ca8  /* 15.0 */
+>> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD0 0x3caa  /* 15.2 */
+>> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD1 0x3cab  /* 15.3 */
+>> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD2 0x3cac  /* 15.4 */
+>> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TAD3 0x3cad  /* 15.5 */
+>> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_DDRIO        0x3cb8  /* 17.0 */
+>>  #define PCI_DEVICE_ID_INTEL_JAKETOWN_UBOX    0x3ce0
+>> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_SAD0     0x3cf4  /* 12.6 */
+>> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_BR               0x3cf5  /* 13.6 */
+>> +#define PCI_DEVICE_ID_INTEL_SBRIDGE_SAD1     0x3cf6  /* 12.7 */
+>>  #define PCI_DEVICE_ID_INTEL_IOAT_SNB 0x402f
+>>  #define PCI_DEVICE_ID_INTEL_5100_16  0x65f0
+>>  #define PCI_DEVICE_ID_INTEL_5100_19  0x65f3
+>> --
+>> 1.9.3
+>>
 
-  pci_scan_child_bus: pci_bus 0000:06: scanning bus
-  pci 0000:06:00.0: [1000:0646] type 00 class 0x0c0400
-  pci 0000:06:00.0: reg 0x10: [io  0x0000-0x00ff] 
-  pci 0000:06:00.0: reg 0x14: [mem 0x00000000-0x00003fff 64bit]
-  pci 0000:06:00.0: reg 0x1c: [mem 0x00000000-0x0000ffff 64bit]
-  pci 0000:06:00.0: reg 0x30: [mem 0x00000000-0x000fffff pref]
 
-Linux tried to assign MMIO space to the device, but failed:
 
-  pci 0000:06:00.0: BAR 6: assigned [mem 0xd4200000-0xd42fffff pref]
-  pci 0000:06:00.0: BAR 3: no space for [mem size 0x00010000 64bit]
-  pci 0000:06:00.0: BAR 3: failed to assign [mem size 0x00010000 64bit]
-  pci 0000:06:00.0: BAR 1: no space for [mem size 0x00004000 64bit]
-  pci 0000:06:00.0: BAR 1: failed to assign [mem size 0x00004000 64bit]
-
-The upstream bridge windows are:
-
-  pci 0000:00:0e.0: PCI bridge to [bus 06]	# was originally to bus 0a
-  pci 0000:00:0e.0:   bridge window [io  0x3000-0x3fff] 
-  pci 0000:00:0e.0:   bridge window [mem 0xd4200000-0xd42fffff]
-
-So the ROM BAR (reg 0x30/BAR 6) takes up the whole window, leaving nothing
-for BARs 1 and 3.  This is something that Linux could do better.  For
-example, we could assign normal BARs first, followed by ROM BARs, since the
-normal ones are more important.  It's possible we could also try to expand
-the bridge window so all the BARs would fit.
-
-In any case, resetting the device is not a simple fix all by itself.  So
-our possibilities are:
-
-  1) Quirk to work around _CRS bug.  This works but requires us to maintain
-     CPU-specific code that I really don't want.
-
-  2) Reset device when changing bus number.  This works from the device
-     point of view, but would require additional Linux changes.
-
-  3) Revert 1820ffdccb9b.  This works but is ugly because we're ignoring
-     some of what _CRS tells us.
-
-Bjorn
+-- 
+Andy Lutomirski
+AMA Capital Management, LLC
