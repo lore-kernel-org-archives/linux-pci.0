@@ -1,78 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC v1 21/28] x86, irq: Kill struct io_apic_irq_attr
-Date: Fri, 26 Sep 2014 22:57:51 +0800
-Message-Id: <1411743478-31435-22-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:45984 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750826AbaIEQhN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Sep 2014 12:37:13 -0400
+Message-ID: <5409E6CF.8060109@ti.com>
+Date: Fri, 5 Sep 2014 12:37:35 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: PCI Keystone driver on host-designware
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there's no user of struct io_apic_irq_attr anymore, so kill it.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |    7 -------
- arch/x86/kernel/apic/io_apic.c |   10 ----------
- 2 files changed, 17 deletions(-)
+Bjorn,
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index f58cf21ced59..c2c1a8b7f39d 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -157,13 +157,6 @@ extern int restore_ioapic_entries(void);
- extern void setup_ioapic_ids_from_mpc(void);
- extern void setup_ioapic_ids_from_mpc_nocheck(void);
- 
--struct io_apic_irq_attr {
--	int ioapic;
--	int ioapic_pin;
--	int trigger;
--	int polarity;
--};
--
- enum ioapic_domain_type {
- 	IOAPIC_DOMAIN_INVALID,
- 	IOAPIC_DOMAIN_LEGACY,
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index ffa87ef3a2aa..2ccccfdbb682 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -2953,16 +2953,6 @@ int mp_ioapic_registered(u32 gsi_base)
- 	return 0;
- }
- 
--static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
--					int ioapic, int ioapic_pin,
--					int trigger, int polarity)
--{
--	irq_attr->ioapic	= ioapic;
--	irq_attr->ioapic_pin	= ioapic_pin;
--	irq_attr->trigger	= trigger;
--	irq_attr->polarity	= polarity;
--}
--
- static int mp_irqdomain_get_attr(int irq, u32 gsi, struct mp_pin_info *pinfo,
- 				 struct irq_alloc_info *info)
- {
--- 
-1.7.10.4
+Thank you first for queueing the Keystone PCI driver patch for v3.18.
 
+I have pulled today from pci/host-designware branch at 
+git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+and tested PCI driver on Keystone and it works as expected.
+
+Could you also clarify the following?
+
+1. The DT documentation 
+(Documentation/devicetree/bindings/pci/pci-keystone.txt) that was part 
+of the PCI driver commit is missing in the branch. Was this intentional? 
+Do you want me to send a patch for this or it gets merged through some 
+other subystem (Documentation?)
+
+2. I have subsequently send a patch to the list and got some reviews 
+done to remove the bootargs dependency on the Keystone PCI driver. The 
+same is available at
+https://lkml.org/lkml/2014/8/8/486
+Could you please apply this as well?
+
+Regards,
+
+Murali
