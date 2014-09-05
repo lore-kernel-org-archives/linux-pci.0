@@ -1,87 +1,64 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Thu, 25 Sep 2014 09:15:38 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 01/22] PCI/MSI: Clean up struct msi_chip argument
-Message-ID: <20140925071536.GG12423@ulmo>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
- <1411614872-4009-2-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:49669 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750820AbaIESOT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Sep 2014 14:14:19 -0400
+Message-ID: <5409FD90.5060508@ti.com>
+Date: Fri, 5 Sep 2014 14:14:40 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="EDJsL2R9iCFAt7IV"
-In-Reply-To: <1411614872-4009-2-git-send-email-wangyijing@huawei.com>
-Sender: linux-arch-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: PCI Keystone driver on host-designware
+References: <5409E6CF.8060109@ti.com> <CAErSpo5FRyyL88yQCcqM71NKsETPBOG9yihLoK_JhawFxA=g4A@mail.gmail.com>
+In-Reply-To: <CAErSpo5FRyyL88yQCcqM71NKsETPBOG9yihLoK_JhawFxA=g4A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 09/05/2014 01:04 PM, Bjorn Helgaas wrote:
+> On Fri, Sep 5, 2014 at 10:37 AM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
+>>
+>> Bjorn,
+>>
+>> Thank you first for queueing the Keystone PCI driver patch for v3.18.
+>>
+>> I have pulled today from pci/host-designware branch at
+>> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+>> and tested PCI driver on Keystone and it works as expected.
+>
+> Good.  I reorganized those branches a little bit, so the Keystone
+> stuff is now on the pci/host-keystone branch, but it's functionally
+> identical.
+>
+>> Could you also clarify the following?
+>>
+>> 1. The DT documentation
+>> (Documentation/devicetree/bindings/pci/pci-keystone.txt) that was part of
+>> the PCI driver commit is missing in the branch. Was this intentional? Do you
+>> want me to send a patch for this or it gets merged through some other
+>> subystem (Documentation?)
+>
+> Definitely not intentional; I'm not sure how I dropped that.  I
+> amended that commit to add the documentation and updated the
+> pci/host-keystone branch.
+Bjorn,
 
---EDJsL2R9iCFAt7IV
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Thanks and I pulled the branch for my work.
 
-On Thu, Sep 25, 2014 at 11:14:11AM +0800, Yijing Wang wrote:
-> Msi_chip functions setup_irq/teardown_irq rarely use msi_chip
-> argument.
+regards,
 
-That's not true. Out of the four drivers that you modify two use the
-parameter. And the two that don't probably should be using it too.
+Murali
+>
+>> 2. I have subsequently send a patch to the list and got some reviews done to
+>> remove the bootargs dependency on the Keystone PCI driver. The same is
+>> available at
+>> https://lkml.org/lkml/2014/8/8/486
+>> Could you please apply this as well?
+>
+> Yep, I'm working my way through the stuff in
+> https://patchwork.ozlabs.org/project/linux-pci/list/?order=date, and
+> I've almost gotten to that one :)
+>
+> Bjorn
 
-50% is not "rarely". =3D)
-
->           We can look up msi_chip pointer by the device pointer
-> or irq number, so clean up msi_chip argument.
-
-I don't like this particular change. The idea was to keep the API object
-oriented so that drivers wouldn't have to know where to get the MSI chip
-=66rom. It also makes it more resilient against code reorganizations since
-the core code is the only place that needs to know where to get the chip
-=66rom.
-
-Thierry
-
---EDJsL2R9iCFAt7IV
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJUI8EYAAoJEN0jrNd/PrOhKe8P+wRzEsusQS8lMmL8zyqvg5wy
-x0Q4+eSI5aEkUEQz6Mtcld6eIwACphFOHeoDrAFauuxrjVqWslHdYAIAKbYoxG0e
-xV9PJoc5PY24v4vnR5BvWEHxBfzfJ8QmFlDZGRvy3lqTPhTBOzLIbNUMO1gaoH1Q
-MIzSjgl631075wZns41KNNx1TjCaXNeDwjkAyyX4bjJ7SL6ymrsxGo/zhCRCpZSk
-2ks9AFoqFQoIOFeziuAW7WAx8BM9ah1ba5tc3oVZ6LC3JHrvoHZ5KCjITV75Geqb
-dFzQh7Rx0yFdXVmNOX+O6XtFVvb7hNFELV1SAzQQXWl0Hyid6Dp0ZShKLSumNdG8
-WvJFtUil25Prid9JVvpq+PrRGlbOucv0U+wi2cbdrE9/7UwtYoxAHNj/aTXdWwIv
-d6ble8v0UT7l5Sk8QIFMI3VbatPqL/i+Mz8NijIKaMRug9/XmXZIN0Q05JhlbJ2b
-/AWyYKLGAwYMrZcDU2v8CajO/NGUQ9D+mkqcN0NDsxmvP5woL6GC2tQzZABaAipF
-LlbM5T6PfjxRfOvYNAIOJnttoirlQ4UI8CjVEeotPrchQalN7ZESvaHK0z2/Wrv1
-kSvUiqTvOPtRaQn4rIs5MTi7tw5NBsG2MyWfy90WkITpn5vEYrX4JQITTUpa/x9B
-IKT68Y/8ZFK3ksbjHtIe
-=LSxe
------END PGP SIGNATURE-----
-
---EDJsL2R9iCFAt7IV--
