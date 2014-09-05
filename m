@@ -1,81 +1,134 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:57438 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751905AbaIVJgU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 05:36:20 -0400
-Message-ID: <1411378576.2599.3.camel@pengutronix.de>
-Subject: Re: [PATCH RFC 1/2] PCI: imx6: enable pcie on imx6qdl sabresd and
- sabreauto
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Richard Zhu <r65037@freescale.com>
-Cc: linux-pci-owner@vger.kernel.org, stable@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Date: Mon, 22 Sep 2014 11:36:16 +0200
-In-Reply-To: <1411376498-14653-2-git-send-email-r65037@freescale.com>
-References: <1411376498-14653-1-git-send-email-r65037@freescale.com>
-	 <1411376498-14653-2-git-send-email-r65037@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Russell King" <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v1 08/21] x86/xen/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+Date: Fri, 5 Sep 2014 18:09:53 +0800
+Message-ID: <1409911806-10519-9-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Montag, den 22.09.2014, 17:01 +0800 schrieb Richard Zhu:
-> - enable pcie support on imx6qdl sabresd and asbreauto boards.
-> - sabresd board has the pcie power on and reset gpios, but
-> sabreauto doesn't have these two gpios.
-> 
-> Signed-off-by: Richard Zhu <r65037@freescale.com>
-> ---
->  arch/arm/boot/dts/imx6qdl-sabreauto.dtsi | 4 ++++
->  arch/arm/boot/dts/imx6qdl-sabresd.dtsi   | 2 ++
->  2 files changed, 6 insertions(+)
-> 
-> diff --git a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
-> index 009abd6..d6040a5 100644
-> --- a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
-> +++ b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
-> @@ -410,6 +410,10 @@
->  	};
->  };
->  
-> +&pcie {
-> +	status = "okay";
-> +};
-> +
->  &pwm3 {
->  	pinctrl-names = "default";
->  	pinctrl-0 = <&pinctrl_pwm3>;
-> diff --git a/arch/arm/boot/dts/imx6qdl-sabresd.dtsi b/arch/arm/boot/dts/imx6qdl-sabresd.dtsi
-> index ec43dde..c2d3224 100644
-> --- a/arch/arm/boot/dts/imx6qdl-sabresd.dtsi
-> +++ b/arch/arm/boot/dts/imx6qdl-sabresd.dtsi
-> @@ -396,6 +396,7 @@
->  
->  		pinctrl_pcie: pciegrp {
->  			fsl,pins = <
-> +				MX6QDL_PAD_EIM_D19__GPIO3_IO19	0x80000000
->  				MX6QDL_PAD_GPIO_17__GPIO7_IO12	0x80000000
->  			>;
->  		};
-> @@ -502,6 +503,7 @@
->  &pcie {
->  	pinctrl-names = "default";
->  	pinctrl-0 = <&pinctrl_pcie>;
-> +	power-on-gpio = <&gpio3 19 0>;
->  	reset-gpio = <&gpio7 12 0>;
->  	status = "okay";
->  };
+Use MSI chip framework instead of arch MSI functions to configure
+MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
 
-This hunk is wrong. There is no "power-on-gpio" in the binding anymore.
-Also there is already a change in Shawns tree to model this as a
-always-on regulator. If we really want to control pci bus power this
-needs to be done through this regulator, not some arbitrary gpio hack.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+---
+ arch/x86/pci/xen.c |   46 ++++++++++++++++++++++++++++++----------------
+ 1 files changed, 30 insertions(+), 16 deletions(-)
 
-Also I don't see why this would be stable material.
-
-Regards,
-Lucas
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index 84c2fce..e669ee4 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -376,6 +376,11 @@ static void xen_initdom_restore_msi_irqs(struct pci_dev *dev)
+ }
+ #endif
+ 
++static void xen_teardown_msi_irq(unsigned int irq)
++{
++	xen_destroy_irq(irq);
++}
++
+ static void xen_teardown_msi_irqs(struct pci_dev *dev)
+ {
+ 	struct msi_desc *msidesc;
+@@ -385,19 +390,26 @@ static void xen_teardown_msi_irqs(struct pci_dev *dev)
+ 		xen_pci_frontend_disable_msix(dev);
+ 	else
+ 		xen_pci_frontend_disable_msi(dev);
+-
+-	/* Free the IRQ's and the msidesc using the generic code. */
+-	default_teardown_msi_irqs(dev);
+-}
+-
+-static void xen_teardown_msi_irq(unsigned int irq)
+-{
+-	xen_destroy_irq(irq);
++
++	list_for_each_entry(msidesc, &dev->msi_list, list) {
++		int i, nvec;
++		if (msidesc->irq == 0)
++			continue;
++		if (msidesc->nvec_used)
++			nvec = msidesc->nvec_used;
++		else
++			nvec = 1 << msidesc->msi_attrib.multiple;
++		for (i = 0; i < nvec; i++)
++			xen_teardown_msi_irq(msidesc->irq + i);
++	}
+ }
+ 
+ void xen_nop_msi_mask(struct irq_data *data)
+ {
+ }
++
++struct msi_chip xen_msi_chip;
++
+ #endif
+ 
+ int __init pci_xen_init(void)
+@@ -418,9 +430,9 @@ int __init pci_xen_init(void)
+ #endif
+ 
+ #ifdef CONFIG_PCI_MSI
+-	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
+-	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
+-	x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
++	xen_msi_chip.setup_irqs = xen_setup_msi_irqs;
++	xen_msi_chip.teardown_irqs = xen_teardown_msi_irqs;
++	x86_msi_chip = &xen_msi_chip;
+ 	msi_chip.irq_mask = xen_nop_msi_mask;
+ 	msi_chip.irq_unmask = xen_nop_msi_mask;
+ #endif
+@@ -441,8 +453,9 @@ int __init pci_xen_hvm_init(void)
+ #endif
+ 
+ #ifdef CONFIG_PCI_MSI
+-	x86_msi.setup_msi_irqs = xen_hvm_setup_msi_irqs;
+-	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
++	xen_msi_chip.setup_irqs = xen_hvm_setup_msi_irqs;
++	xen_msi_chip.teardown_irq = xen_teardown_msi_irq;
++	x86_msi_chip = &xen_msi_chip;
+ #endif
+ 	return 0;
+ }
+@@ -499,9 +512,10 @@ int __init pci_xen_initial_domain(void)
+ 	int irq;
+ 
+ #ifdef CONFIG_PCI_MSI
+-	x86_msi.setup_msi_irqs = xen_initdom_setup_msi_irqs;
+-	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
+-	x86_msi.restore_msi_irqs = xen_initdom_restore_msi_irqs;
++	xen_msi_chip.setup_irqs = xen_initdom_setup_msi_irqs;
++	xen_msi_chip.teardown_irq = xen_teardown_msi_irq;
++	xen_msi_chip.restore_irqs = xen_initdom_restore_msi_irqs;
++	x86_msi_chip = &xen_msi_chip;
+ 	msi_chip.irq_mask = xen_nop_msi_mask;
+ 	msi_chip.irq_unmask = xen_nop_msi_mask;
+ #endif
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+1.7.1
 
