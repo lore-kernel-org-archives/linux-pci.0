@@ -1,54 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:60151 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751134AbaIYBjd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 21:39:33 -0400
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Russell King" <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yijing Wang <wangyiijng@huawei.com>
+Subject: [PATCH v1 12/21] MIPS/Xlp: Remove the dead function destroy_irq() to fix build error
+Date: Fri, 5 Sep 2014 18:09:57 +0800
+Message-ID: <1409911806-10519-13-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <366bf7b53b044fdd94f12ed21f505841@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
-	<1411445498-20250-2-git-send-email-r65037@freescale.com>
-	<CAOMZO5BuPcw9bJSdLMJ2D=a6EMFMPtKeY352N9-x8dwmRnnfWw@mail.gmail.com>
-	<f72dd09d379d4c1b89cc27612afcea77@BY1PR0301MB0855.namprd03.prod.outlook.com>
-	<CAOMZO5CKZce3AZfm79DVGShx7bY6DJ3YvSC7q9MYx5v+Zwve5g@mail.gmail.com>
-	<366bf7b53b044fdd94f12ed21f505841@DM2PR0301MB0862.namprd03.prod.outlook.com>
-Date: Wed, 24 Sep 2014 22:39:30 -0300
-Message-ID: <CAOMZO5DC55n_2=5qCeGa-cdkRRnc1z9F+hau=jgTkP_66gn=qA@mail.gmail.com>
-Subject: Re: [PATCH v2 1/5] PCI: imx6: enable pcie on imx6qdl sabreauto
-From: Fabio Estevam <festevam@gmail.com>
-To: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-Cc: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Tim Harvey <tharvey@gateworks.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 24, 2014 at 10:21 PM, Hong-Xing.Zhu@freescale.com
-<Hong-Xing.Zhu@freescale.com> wrote:
-> [Richard] Yes it is. On ARD board, the PCIE_RST_B is connected to CPU_PER_RST_B.
-> But this is not one signal that can be controlled by PCIE module itself.
+Commit 465665f78a7 ("mips: Kill pointless destroy_irq()") removed
+the destroy_irq(). So remove the leftover one in xlp_setup_msix()
+to fix build error.
 
-Let's take imx6qdl-sabresd.dtsi for example:
+arch/mips/pci/msi-xlp.c: In function 'xlp_setup_msix':
+arch/mips/pci/msi-xlp.c:447:3: error: implicit declaration of function 'destroy_irq'..
+cc1: some warnings being treated as errors
+make[1]: *** [arch/mips/pci/msi-xlp.o] Error 1
+make: *** [arch/mips/pci/] Error 2
 
-&pcie {
-    pinctrl-names = "default";
-    pinctrl-0 = <&pinctrl_pcie>;
-    reset-gpio = <&gpio7 12 0>;
-    status = "okay";
-};
+Signed-off-by: Yijing Wang <wangyiijng@huawei.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+---
+ arch/mips/pci/msi-xlp.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-It uses GPIO7_12 for PCI reset.
+diff --git a/arch/mips/pci/msi-xlp.c b/arch/mips/pci/msi-xlp.c
+index fa374fe..e469dc7 100644
+--- a/arch/mips/pci/msi-xlp.c
++++ b/arch/mips/pci/msi-xlp.c
+@@ -443,10 +443,8 @@ static int xlp_setup_msix(uint64_t lnkbase, int node, int link,
+ 	msg.data = 0xc00 | msixvec;
+ 
+ 	ret = irq_set_msi_desc(xirq, desc);
+-	if (ret < 0) {
+-		destroy_irq(xirq);
++	if (ret < 0)
+ 		return ret;
+-	}
+ 
+ 	write_msi_msg(xirq, &msg);
+ 	return 0;
+-- 
+1.7.1
 
-For sabreauto we just need to change to something like this format:
-
-reset-gpio = <&max7310_b 2 0>;
-
-> It is kicked once at the moment when the board is powered up.
-
-Yes, the signal is connected to power-on and it can also be
-independently controlled via MAX7310.
-
-Anyway, no need to change this if you don't want. I can send a patch
-adding the reset later :-)
