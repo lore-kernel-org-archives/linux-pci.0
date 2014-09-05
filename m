@@ -1,38 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:54394 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753032AbaIPXxe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 19:53:34 -0400
-From: Marek Vasut <marex@denx.de>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: imx6: fix occasional link failure
-Date: Wed, 17 Sep 2014 01:53:12 +0200
-Cc: Tim Harvey <tharvey@gateworks.com>, l.stach@pengutronix.de,
-	Fabio Estevam <festevam@gmail.com>, shawn.guo@freescale.com,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org
-References: <1407479800-6730-1-git-send-email-tharvey@gateworks.com> <20140916232859.GI5050@google.com>
-In-Reply-To: <20140916232859.GI5050@google.com>
+CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Russell King" <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v1 20/21] tile/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+Date: Fri, 5 Sep 2014 18:10:05 +0800
+Message-ID: <1409911806-10519-21-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201409170153.12783.marex@denx.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, September 17, 2014 at 01:28:59 AM, Bjorn Helgaas wrote:
-> On Thu, Aug 07, 2014 at 11:36:40PM -0700, Tim Harvey wrote:
-> > According to the IMX6 reference manuals, REF_SSP_EN (Reference clock
-> > enable for SS function) must remain deasserted until the reference clock
-> > is running at the appropriate frequency.
-> > 
-> > Without this patch we find a high link failure rate (>5%) on certain
-> > IMX6 boards at various temperatures.
-> > 
-> > Signed-off-by: Tim Harvey <tharvey@gateworks.com>
-> 
-> Applied to pci/host-imx6 for v3.18 with acks from Marek and Lucas, thanks!
+Use MSI chip framework instead of arch MSI functions to configure
+MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
 
-Thanks!
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/tile/kernel/pci_gx.c |   14 ++++++++++++--
+ 1 files changed, 12 insertions(+), 2 deletions(-)
 
-Best regards,
-Marek Vasut
+diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
+index e39f9c5..4912b75 100644
+--- a/arch/tile/kernel/pci_gx.c
++++ b/arch/tile/kernel/pci_gx.c
+@@ -1485,7 +1485,7 @@ static struct irq_chip tilegx_msi_chip = {
+ 	/* TBD: support set_affinity. */
+ };
+ 
+-int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
++static int tile_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
+ {
+ 	struct pci_controller *controller;
+ 	gxio_trio_context_t *trio_context;
+@@ -1604,7 +1604,17 @@ is_64_failure:
+ 	return ret;
+ }
+ 
+-void arch_teardown_msi_irq(unsigned int irq)
++void tile_teardown_msi_irq(unsigned int irq)
+ {
+ 	irq_free_hwirq(irq);
+ }
++
++static struct msi_chip tile_msi_chip = {
++	.setup_irq = tile_setup_msi_irq,
++	.teardown_irq = tile_teardown_msi_irq,
++};
++
++struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
++{
++	return &tile_msi_chip;
++}
+-- 
+1.7.1
+
