@@ -1,187 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:41499 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755898AbaISFQ4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 19 Sep 2014 01:16:56 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V6 2/8] iommu/vt-d: Dynamically allocate and free seq_id for DMAR units
-Date: Fri, 19 Sep 2014 13:18:49 +0800
-Message-Id: <1411103935-31301-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411103935-31301-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411103935-31301-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Russell King" <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v1 13/21] MIPS/Xlp/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+Date: Fri, 5 Sep 2014 18:09:58 +0800
+Message-ID: <1409911806-10519-14-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce functions to support dynamic IOMMU seq_id allocating and
-releasing, which will be used to support DMAR hotplug.
+Use MSI chip framework instead of arch MSI functions to configure
+MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
 
-Also rename IOMMU_UNITS_SUPPORTED as DMAR_UNITS_SUPPORTED.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Reviewed-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/iommu/dmar.c        |   40 ++++++++++++++++++++++++++++++++++------
- drivers/iommu/intel-iommu.c |   13 +++----------
- include/linux/dmar.h        |    6 ++++++
- 3 files changed, 43 insertions(+), 16 deletions(-)
+ arch/mips/pci/msi-xlp.c |   14 ++++++++++++--
+ 1 files changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index a05cf3634efe..ac4f8ee2871f 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -70,6 +70,7 @@ LIST_HEAD(dmar_drhd_units);
- struct acpi_table_header * __initdata dmar_tbl;
- static acpi_size dmar_tbl_size;
- static int dmar_dev_scope_status = 1;
-+static unsigned long dmar_seq_ids[BITS_TO_LONGS(DMAR_UNITS_SUPPORTED)];
+diff --git a/arch/mips/pci/msi-xlp.c b/arch/mips/pci/msi-xlp.c
+index e469dc7..6b791ef 100644
+--- a/arch/mips/pci/msi-xlp.c
++++ b/arch/mips/pci/msi-xlp.c
+@@ -245,7 +245,7 @@ static struct irq_chip xlp_msix_chip = {
+ 	.irq_unmask	= unmask_msi_irq,
+ };
  
- static int alloc_iommu(struct dmar_drhd_unit *drhd);
- static void free_iommu(struct intel_iommu *iommu);
-@@ -927,11 +928,32 @@ out:
- 	return err;
- }
- 
-+static int dmar_alloc_seq_id(struct intel_iommu *iommu)
-+{
-+	iommu->seq_id = find_first_zero_bit(dmar_seq_ids,
-+					    DMAR_UNITS_SUPPORTED);
-+	if (iommu->seq_id >= DMAR_UNITS_SUPPORTED) {
-+		iommu->seq_id = -1;
-+	} else {
-+		set_bit(iommu->seq_id, dmar_seq_ids);
-+		sprintf(iommu->name, "dmar%d", iommu->seq_id);
-+	}
-+
-+	return iommu->seq_id;
-+}
-+
-+static void dmar_free_seq_id(struct intel_iommu *iommu)
-+{
-+	if (iommu->seq_id >= 0) {
-+		clear_bit(iommu->seq_id, dmar_seq_ids);
-+		iommu->seq_id = -1;
-+	}
-+}
-+
- static int alloc_iommu(struct dmar_drhd_unit *drhd)
+-void arch_teardown_msi_irq(unsigned int irq)
++void xlp_teardown_msi_irq(unsigned int irq)
  {
- 	struct intel_iommu *iommu;
- 	u32 ver, sts;
--	static int iommu_allocated = 0;
- 	int agaw = 0;
- 	int msagaw = 0;
- 	int err;
-@@ -945,13 +967,16 @@ static int alloc_iommu(struct dmar_drhd_unit *drhd)
- 	if (!iommu)
- 		return -ENOMEM;
+ }
  
--	iommu->seq_id = iommu_allocated++;
--	sprintf (iommu->name, "dmar%d", iommu->seq_id);
-+	if (dmar_alloc_seq_id(iommu) < 0) {
-+		pr_err("IOMMU: failed to allocate seq_id\n");
-+		err = -ENOSPC;
-+		goto error;
-+	}
- 
- 	err = map_iommu(iommu, drhd->reg_base_addr);
- 	if (err) {
- 		pr_err("IOMMU: failed to map %s\n", iommu->name);
--		goto error;
-+		goto error_free_seq_id;
- 	}
- 
- 	err = -EINVAL;
-@@ -1001,9 +1026,11 @@ static int alloc_iommu(struct dmar_drhd_unit *drhd)
- 
+@@ -450,7 +450,7 @@ static int xlp_setup_msix(uint64_t lnkbase, int node, int link,
  	return 0;
- 
-- err_unmap:
-+err_unmap:
- 	unmap_iommu(iommu);
-- error:
-+error_free_seq_id:
-+	dmar_free_seq_id(iommu);
-+error:
- 	kfree(iommu);
- 	return err;
- }
-@@ -1027,6 +1054,7 @@ static void free_iommu(struct intel_iommu *iommu)
- 	if (iommu->reg)
- 		unmap_iommu(iommu);
- 
-+	dmar_free_seq_id(iommu);
- 	kfree(iommu);
  }
  
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 4af2206e41bc..7daa74ed46d0 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -328,17 +328,10 @@ static int hw_pass_through = 1;
- /* si_domain contains mulitple devices */
- #define DOMAIN_FLAG_STATIC_IDENTITY	(1 << 1)
+-int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
++static int xlp_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ {
+ 	struct pci_dev *lnkdev;
+ 	uint64_t lnkbase;
+@@ -472,6 +472,16 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ 		return xlp_setup_msi(lnkbase, node, link, desc);
+ }
  
--/* define the limit of IOMMUs supported in each domain */
--#ifdef	CONFIG_X86
--# define	IOMMU_UNITS_SUPPORTED	MAX_IO_APICS
--#else
--# define	IOMMU_UNITS_SUPPORTED	64
--#endif
--
- struct dmar_domain {
- 	int	id;			/* domain id */
- 	int	nid;			/* node id */
--	DECLARE_BITMAP(iommu_bmp, IOMMU_UNITS_SUPPORTED);
-+	DECLARE_BITMAP(iommu_bmp, DMAR_UNITS_SUPPORTED);
- 					/* bitmap of iommus this domain uses*/
- 
- 	struct list_head devices; 	/* all devices' list */
-@@ -2728,12 +2721,12 @@ static int __init init_dmars(void)
- 		 * threaded kernel __init code path all other access are read
- 		 * only
- 		 */
--		if (g_num_of_iommus < IOMMU_UNITS_SUPPORTED) {
-+		if (g_num_of_iommus < DMAR_UNITS_SUPPORTED) {
- 			g_num_of_iommus++;
- 			continue;
- 		}
- 		printk_once(KERN_ERR "intel-iommu: exceeded %d IOMMUs\n",
--			  IOMMU_UNITS_SUPPORTED);
-+			  DMAR_UNITS_SUPPORTED);
- 	}
- 
- 	g_iommus = kcalloc(g_num_of_iommus, sizeof(struct intel_iommu *),
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index fac8ca34f9a8..c8a576bc3a98 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -30,6 +30,12 @@
- 
- struct acpi_dmar_header;
- 
-+#ifdef	CONFIG_X86
-+# define	DMAR_UNITS_SUPPORTED	MAX_IO_APICS
-+#else
-+# define	DMAR_UNITS_SUPPORTED	64
-+#endif
++static struct msi_chip xlp_chip = {
++	.setup_irq = xlp_setup_msi_irq,
++	.teardown_irq = xlp_teardown_msi_irq,
++};
 +
- /* DMAR Flags */
- #define DMAR_INTR_REMAP		0x1
- #define DMAR_X2APIC_OPT_OUT	0x2
++struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
++{
++	return &xlp_chip;
++}
++
+ void __init xlp_init_node_msi_irqs(int node, int link)
+ {
+ 	struct nlm_soc_info *nodep;
 -- 
-1.7.10.4
+1.7.1
 
