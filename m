@@ -1,64 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:55425 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752777AbaIYJEC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Sep 2014 05:04:02 -0400
-Date: Thu, 25 Sep 2014 10:04:06 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Robert Richter <rrichter@cavium.com>
-Subject: Re: [PATCH v12 09/12] OF: PCI: Add support for parsing PCI host
- bridge resources from DT
-Message-ID: <20140925090406.GD20043@arm.com>
-References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
- <1411498874-9864-10-git-send-email-Liviu.Dudau@arm.com>
- <20140924164304.GF1994@e106497-lin.cambridge.arm.com>
- <20140924173109.GA20416@google.com>
- <20140924175330.GI1994@e106497-lin.cambridge.arm.com>
- <20140924180119.GN16244@arm.com>
- <20140925085432.GL1994@e106497-lin.cambridge.arm.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:45205 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751447AbaIEUhl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Sep 2014 16:37:41 -0400
+Message-ID: <540A1F05.80706@ti.com>
+Date: Fri, 5 Sep 2014 16:37:25 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140925085432.GL1994@e106497-lin.cambridge.arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Herring <robh+dt@kernel.org>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: keystone: update to support multiple pci ports
+References: <1409938782-31460-1-git-send-email-m-karicheri2@ti.com> <7260053.FoBVhTXVfj@wuerfel> <540A0212.6060303@ti.com> <3654923.JrIGV2dJ70@wuerfel>
+In-Reply-To: <3654923.JrIGV2dJ70@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 25, 2014 at 09:54:32AM +0100, Liviu Dudau wrote:
-> On Wed, Sep 24, 2014 at 07:01:19PM +0100, Will Deacon wrote:
-> > On Wed, Sep 24, 2014 at 06:53:31PM +0100, Liviu Dudau wrote:
-> > > Thanks again and sorry for lack of thorough testing. I still haven't managed
-> > > to get a cross compiler for sparc and as I don't run Ubuntu or debian the
-> > > make.cross script doesn't work for me.
-> > 
-> >   https://www.kernel.org/pub/tools/crosstool/
-> > 
-> > No libc, but good enough for building the kernel. I've asked for an aarch64
-> > compiler there for a while, but it didn't materialise for some reason.
-> 
-> I'm familiar with crosstool and busybox uses a variant of crosstool-ng, but
-> it currently fails with "configure: error: cannot compute suffix of object files: cannot compile"
-> on the stage2 of the compilation.
+On 09/05/2014 03:00 PM, Arnd Bergmann wrote:
+> On Friday 05 September 2014 14:33:54 Murali Karicheri wrote:
+>>> This looks like it's a shared register of some sort that doesn't
+>>> really belong into the registers of a particular port. Could it
+>>> be that it's actually for the PHY?
+>>>
+>> This a shared device configuration register between the two ports the
+>> desciption states it is bootstrap configuration of the PCIe module as
+>> Endpoint or Root complex and Not Phy. Hope below text will help.
+>
+> Ok. Why do you want to have this user-selectable though? Can't it
+> just be set by the boot loader before starting Linux?
 
-Did you even follow the link? There are binary toolchains hosted there --
-you don't have to build anything yourself if you don't want to.
+Arnd,
 
-Will
+As the driver is responsible for configuring the device to support the 
+device functionality, it make sense to do this in the device driver. The 
+driver enables clock to the IP and this is an addition thing to be 
+configured so that when the device is powered up, it should function as 
+RC. The IP can be configured to work as Root Complex or Endpoint. So not 
+sure why you want to me to move this functionality to boot loader.
+
+Murali
+
+>
+> 	Arnd
+>
+>> Table 3-23 Device Configuration Register (DEVCFG)
+>>
+>>
+>> PCIESSMODE[1:0] 00b PCIESSMODE is used to control the
+>> functionality of PCIESS module out of
+>> reset. This MMR output is connected to
+>> DEVTYPE input of PCIESS
+>> (Changes from
+>> Nysh) : Note that in Nysh this value came
+>> from a bootstrap pin.
+>> 00 : Endpoint
+>> 01 : Legacy Endpoint
+>> 10 : Rootcomplex
+>> 11 : Reserved
+>> PCIESS_1_MODE[1:0
+>> ]
+>> 00b PCIESSMODE is used to control the
+>> functionality of PCIE_1 module out of
+>> reset. This MMR output is connected to
+>> DEVTYPE input of PCIE_1
+>> 00 : Endpoint
+>> 01 : Legacy Endpoint
+>> 10 : Rootcomplex
+>> 11 : Reserv
+>>
+>
+
