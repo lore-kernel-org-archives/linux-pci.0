@@ -1,101 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:52247 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750807AbaI1Fyf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 28 Sep 2014 01:54:35 -0400
-Message-ID: <5427A297.7050605@intel.com>
-Date: Sun, 28 Sep 2014 13:54:31 +0800
-From: Aaron Lu <aaron.lu@intel.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Russell King" <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v1 18/21] IA64/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+Date: Fri, 5 Sep 2014 18:10:03 +0800
+Message-ID: <1409911806-10519-19-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Chuansheng Liu <chuansheng.liu@intel.com>,
-	Tejun Heo <tj@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-	mister.freeman@laposte.net, rui.zhang@intel.com,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH V2] ata: Disabling the async PM for JMicron chips
-References: <1411543338-2257-1-git-send-email-chuansheng.liu@intel.com>
-In-Reply-To: <1411543338-2257-1-git-send-email-chuansheng.liu@intel.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/24/2014 03:22 PM, Chuansheng Liu wrote:
-> Like the commit e6b7e41cdd8c ("ata: Disabling the async PM for JMicron chip 363/361"),
-> Barto found the similar issue for JMicron chip 368, that 363/368 has no
-> parent-children relationship, but they have the power dependency.
-> 
-> So here we can exclude the JMicron chips out of pm_async method directly,
-> to avoid further similar issues.
-> 
-> Details in:
-> https://bugzilla.kernel.org/show_bug.cgi?id=84861
+Use MSI chip framework instead of arch MSI functions to configure
+MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
 
-I think we can disable the async PM for JMicron chips in PCI subsystem:
-pci_pm_init, check if it is JMicron chip and then enable_async
-accordingly. The problem doesn't have much to do with ATA, so move them
-to PCI may be more appropriate.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/ia64/kernel/msi_ia64.c |   18 ++++++++++++++----
+ 1 files changed, 14 insertions(+), 4 deletions(-)
 
-Thanks,
-Aaron
-
-> 
-> Reported-and-tested-by: Barto <mister.freeman@laposte.net>
-> Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-> ---
->  drivers/ata/ahci.c         |   11 +++++------
->  drivers/ata/pata_jmicron.c |   11 +++++------
->  2 files changed, 10 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index a0cc0ed..85aa6ec 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1340,15 +1340,14 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  		ahci_pci_bar = AHCI_PCI_BAR_ENMOTUS;
->  
->  	/*
-> -	 * The JMicron chip 361/363 contains one SATA controller and one
-> +	 * The JMicron chip 361/363/368 contains one SATA controller and one
->  	 * PATA controller,for powering on these both controllers, we must
->  	 * follow the sequence one by one, otherwise one of them can not be
-> -	 * powered on successfully, so here we disable the async suspend
-> -	 * method for these chips.
-> +	 * powered on successfully.
-> +	 * Here we can exclude the Jmicron family directly out of pm_async
-> +	 * method to follow the power-on sequence.
->  	 */
-> -	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
-> -		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
-> -		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
-> +	if (pdev->vendor == PCI_VENDOR_ID_JMICRON)
->  		device_disable_async_suspend(&pdev->dev);
->  
->  	/* acquire resources */
-> diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
-> index 47e418b..1d685b6 100644
-> --- a/drivers/ata/pata_jmicron.c
-> +++ b/drivers/ata/pata_jmicron.c
-> @@ -144,15 +144,14 @@ static int jmicron_init_one (struct pci_dev *pdev, const struct pci_device_id *i
->  	const struct ata_port_info *ppi[] = { &info, NULL };
->  
->  	/*
-> -	 * The JMicron chip 361/363 contains one SATA controller and one
-> +	 * The JMicron chip 361/363/368 contains one SATA controller and one
->  	 * PATA controller,for powering on these both controllers, we must
->  	 * follow the sequence one by one, otherwise one of them can not be
-> -	 * powered on successfully, so here we disable the async suspend
-> -	 * method for these chips.
-> +	 * powered on successfully.
-> +	 * Here we can exclude the Jmicron family directly out of pm_async
-> +	 * method to follow the power-on sequence.
->  	 */
-> -	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
-> -		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
-> -		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
-> +	if (pdev->vendor == PCI_VENDOR_ID_JMICRON)
->  		device_disable_async_suspend(&pdev->dev);
->  
->  	return ata_pci_bmdma_init_one(pdev, ppi, &jmicron_sht, NULL, 0);
-> 
+diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
+index 4efe748..55ac859 100644
+--- a/arch/ia64/kernel/msi_ia64.c
++++ b/arch/ia64/kernel/msi_ia64.c
+@@ -112,15 +112,15 @@ static struct irq_chip ia64_msi_chip = {
+ };
+ 
+ 
+-int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
++static int arch_ia64_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ {
+ 	if (platform_setup_msi_irq)
+-		return platform_setup_msi_irq(pdev, desc);
++		return platform_setup_msi_irq(dev, desc);
+ 
+-	return ia64_setup_msi_irq(pdev, desc);
++	return ia64_setup_msi_irq(dev, desc);
+ }
+ 
+-void arch_teardown_msi_irq(unsigned int irq)
++static void arch_ia64_teardown_msi_irq(unsigned int irq)
+ {
+ 	if (platform_teardown_msi_irq)
+ 		return platform_teardown_msi_irq(irq);
+@@ -128,6 +128,16 @@ void arch_teardown_msi_irq(unsigned int irq)
+ 	return ia64_teardown_msi_irq(irq);
+ }
+ 
++static struct msi_chip chip = {
++	.setup_irq = arch_ia64_setup_msi_irq,
++	.teardown_irq = arch_ia64_teardown_msi_irq,
++};
++
++struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
++{
++	return &chip;
++}
++
+ #ifdef CONFIG_INTEL_IOMMU
+ #ifdef CONFIG_SMP
+ static int dmar_msi_set_affinity(struct irq_data *data,
+-- 
+1.7.1
 
