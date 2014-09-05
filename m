@@ -1,62 +1,90 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Rob Herring <robherring2@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI domain_nr
-Date: Thu, 11 Sep 2014 16:49:56 +0200
-Message-ID: <15029597.7ylOekBBOx@wuerfel>
-In-Reply-To: <ae98d68652f1495a857f081c3a6aecb2@HKXPR06MB168.apcprd06.prod.outlook.com>
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com> <2908259.jgJNuDxCCa@wuerfel> <ae98d68652f1495a857f081c3a6aecb2@HKXPR06MB168.apcprd06.prod.outlook.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:56926 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751948AbaIEVNK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 17:13:10 -0400
+Received: by mail-pd0-f169.google.com with SMTP id y10so7098655pdj.28
+        for <linux-pci@vger.kernel.org>; Fri, 05 Sep 2014 14:13:09 -0700 (PDT)
+Date: Fri, 5 Sep 2014 15:13:05 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>, weiyang@linux.vnet.ibm.com
+Subject: Re: [PATCH] pci/msi-x: Sanity check MSI-X table offset
+Message-ID: <20140905211305.GF8080@google.com>
+References: <1407731815.4508.69.camel@pasglop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1407731815.4508.69.camel@pasglop>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 11 September 2014 14:11:05 Phil Edworthy wrote:
-> On 10 September 2014 19:20, Arnd wrote:
-> > On Tuesday 09 September 2014 12:20:54 Catalin Marinas wrote:
-> > >
-> > > We can assume that if a domain is not specified and there is a single
-> > > top level PCIe node, the domain defaults to 0. Are there any arm32
-> > > platforms that require multiple domains (and do not specify a number in
-> > > the DT)?
-> > 
-> > In theory, I think all of them could work with a single domain, but then
-> > you need to partition the bus number space between the host controllers,
-> > so you have the exact same situation that you either need to make up
-> > random bus numbers or put them in DT.
-> > 
-> > Using multiple domains is way cleaner for this, even if we have to
-> > make up the numbers.
+[+cc Wei]
+
+On Mon, Aug 11, 2014 at 02:36:55PM +1000, Benjamin Herrenschmidt wrote:
+> If the hardware device mis-behaves (such as for example crashes or
+> gets unplugged at the wrong time) and provides us with a bogus
+> MSI-X table offset, all sorts of "interesting" and potentially
+> very hard to debug things can happen.
 > 
-> Maybe this is a stupid question, but why would you want to specify the domain
-> in the DT at all? Doesn't every instance of a driver imply a separate domain?
+> For example, on POWER8, such a device caused us to ioremap an area
+> outside of the region assigned to the PCI bus, causing subsequent
+> accesses to cause a PowerBus timeout and checkstop the machine.
+> 
+> Since this isn't a hot path, let's add a good dose of sanity
+> checking to msix_map_region() to flag these issues early and limit
+> the damage.
+> 
+> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> ---
+>  drivers/pci/msi.c | 19 ++++++++++++++++++-
+>  1 file changed, 18 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 5a40516..a584f590 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -666,13 +666,30 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+>  static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
+>  {
+>  	resource_size_t phys_addr;
+> -	u32 table_offset;
+> +	u32 table_offset, table_end;
+>  	u8 bir;
+>  
+>  	pci_read_config_dword(dev, dev->msix_cap + PCI_MSIX_TABLE,
+>  			      &table_offset);
+>  	bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
+> +	if (bir >= DEVICE_COUNT_RESOURCE) {
+> +		dev_err(&dev->dev, "MSI-X points to non-exiting BAR %d !\n",
+> +			bir);
+> +		return NULL;
+> +	}
 
-See Jason Gunthorpe's latest reply on the topic. In short, the domain is
-visible to user space and we want it to be stable across boots when
-user configuration refers to devices by domain:bus:device:function
-numbers.
+I assume we would just get 0xffffffff if something went wrong, wouldn't we?
+If it's possible to get arbitrary bad data, there's no end to the error
+checking we could add when reading config space.
 
-	Arnd
+If we can add a minimal check for the value we get if the device has been
+removed or isolated, I'd rather do that than try to validate every field in
+the register.  An error message along the lines of "config read returned
+0xffffffff" or "can't access device" is probably easier to debug than
+"MSI-X points to non-existing BAR 255" anway.
+
+> +	if ((pci_resource_flags(dev, bir) & IORESOURCE_MEM) == 0) {
+> +		dev_err(&dev->dev, "MSI-X points to non-memory BAR %d !\n",
+> +			bir);
+> +		return NULL;
+> +	}
+>  	table_offset &= PCI_MSIX_TABLE_OFFSET;
+> +	table_end = table_offset + nr_entries * PCI_MSIX_ENTRY_SIZE;
+> +	if (table_end <= table_offset ||
+> +	    table_end > pci_resource_len(dev, bir)) {
+> +		dev_err(&dev->dev, "MSI-X table outside of BAR boundary !"
+> +			" (0x%08x..%08x)\n", table_offset, table_end);
+> +		return NULL;
+> +	}
+>  	phys_addr = pci_resource_start(dev, bir) + table_offset;
+>  
+>  	return ioremap_nocache(phys_addr, nr_entries * PCI_MSIX_ENTRY_SIZE);
+> 
+> 
