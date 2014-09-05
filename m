@@ -1,57 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0114.outbound.protection.outlook.com ([65.55.169.114]:37020
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756408AbaIILP3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Sep 2014 07:15:29 -0400
-Message-ID: <540F51F1.1060909@freescale.com>
-Date: Tue, 9 Sep 2014 19:16:01 +0000
-From: Lian Minghuan-B31939 <B31939@freescale.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <5409A174.3050205@cogentembedded.com>
+Date: Fri, 05 Sep 2014 15:41:40 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+To: wangyijing <wangyijing0307@gmail.com>
+CC: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>
-Subject: Re: =?UTF-8?B?562U5aSNOiBbUEFUQ0ggMi8yXSBQQ0k6IExheWVyc2NhcGU6IEE=?=
- =?UTF-8?B?ZGQgTGF5ZXJzY2FwZSBQQ0llIGRyaXZlcg==?=
-References: <1409856338-1730-1-git-send-email-Minghuan.Lian@freescale.com>
- <6844751.zBSvS2zU47@wuerfel> <540F4B23.5040209@freescale.com>
- <60096763.M59cqLJ4gm@wuerfel>
-In-Reply-To: <60096763.M59cqLJ4gm@wuerfel>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+	Russell King <linux@arm.linux.org.uk>,
+	"linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+	"arnab.basu@freescale.com" <arnab.basu@freescale.com>,
+	"Bharat.Bhushan@freescale.com" <Bharat.Bhushan@freescale.com>,
+	"x86@kernel.org" <x86@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [PATCH v1 15/21] Powerpc/MSI: Use MSI chip framework to configure
+ MSI/MSI-X irq
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com> <1409911806-10519-16-git-send-email-wangyijing@huawei.com> <540994D4.6040500@cogentembedded.com> <43412AE0-85BB-4B4B-A4EA-2C6D3B8B85D7@gmail.com>
+In-Reply-To: <43412AE0-85BB-4B4B-A4EA-2C6D3B8B85D7@gmail.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 9/5/2014 3:33 PM, wangyijing wrote:
 
-On 2014年09月09日 10:50, Arnd Bergmann wrote:
-> On Tuesday 09 September 2014 18:46:59 Lian Minghuan-B31939 wrote:
->> On 2014年09月09日 09:56, Arnd Bergmann wrote:
->>> On Tuesday 09 September 2014 17:25:57 Lian Minghuan-B31939 wrote:
->>>> [Minghuan] I discussed with my colleague. They worry about performance
->>>> degradation if using regmap API,
->>>> because there are some fast device use scfg. We tend to use a simple way
->>>> to map andread/write scfg directly.
->>> I see. In this case, I would probably create a separate msi controller
->>> driver that owns the "fsl,ls1021a-scfg" device, and is referenced
->>> through the "msi-parent" property in the pcie controller.
+>>> Use MSI chip framework instead of arch MSI functions to configure
+>>> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+
+>>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>>> ---
+>>>   arch/powerpc/kernel/msi.c |   14 ++++++++++++--
+>>>   1 files changed, 12 insertions(+), 2 deletions(-)
+
+>>> diff --git a/arch/powerpc/kernel/msi.c b/arch/powerpc/kernel/msi.c
+>>> index 71bd161..01781a4 100644
+>>> --- a/arch/powerpc/kernel/msi.c
+>>> +++ b/arch/powerpc/kernel/msi.c
+>> [...]
+>>> @@ -27,7 +27,17 @@ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+>>>       return ppc_md.setup_msi_irqs(dev, nvec, type);
+>>>   }
 >>>
->>> You can use of_pci_find_msi_chip_by_node() to get the msi_chip
->>> instance and then connect that to your pci host. This will also
->>> take care of the case where you may want to use the main GICv3
->>> on a future SoC.
->> [Minghuan] There is something wrong with LS1021A MSI hardware that it
->> only supports one interrupt not 32 interrupts.  Now, I do not want to
->> create a separate msi controller driver just for incorrect hardware.
->> I may provide complete MSI driver for the new hardware when it is ready.
-> Would you just leave out MSI support for the LS1021A PCIe variant?
-> I guess that's fine because all device drivers should also support
-> legacy interrupts and there is no performance gain in MSI in this
-> case.
-[Minghuan] I have added MSI support for LS1021A PCIe just reserved 31 
-interrupts as used.
+>>> -void arch_teardown_msi_irqs(struct pci_dev *dev)
+>>> +static void ppc_teardown_msi_irqs(struct pci_dev *dev)
 
-> 	Arnd
+>>    Shouldn't this function take IRQ # instead?
+
+> This function need to teardown all msi irqs of the pci dev, we should pass the pci dev as argument .
+
+    Ah, I've mixed up the teardown_irqs() method with teardown_irq()! Too 
+similar. :-)
+
+> Thanks!
+> Yijing.
+
+WBR, Sergei
 
