@@ -1,60 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:60178 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754174AbaICSmw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Sep 2014 14:42:52 -0400
-Received: by mail-pd0-f170.google.com with SMTP id r10so11705662pdi.1
-        for <linux-pci@vger.kernel.org>; Wed, 03 Sep 2014 11:42:48 -0700 (PDT)
-Date: Wed, 3 Sep 2014 12:43:19 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Tobias Klauser <tklauser@distanz.ch>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Remove unnecessary variable in pci_add_dynid()
-Message-ID: <20140903184319.GC26073@google.com>
-References: <1406277374-559-1-git-send-email-tklauser@distanz.ch>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Russell King" <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH v1 02/21] PCI/MSI: Remove useless bus->msi assignment
+Date: Fri, 5 Sep 2014 18:09:47 +0800
+Message-ID: <1409911806-10519-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1406277374-559-1-git-send-email-tklauser@distanz.ch>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 25, 2014 at 10:36:14AM +0200, Tobias Klauser wrote:
-> The variable retval in pci_add_dynid() is only used to store the return
-> value of driver_attach() and is then directly returned. Remove the
-> variable and directly pass on driver_attach()'s return value.
-> 
-> Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
+Currently, PCI drivers will initialize bus->msi in
+pcibios_add_bus(). pcibios_add_bus() will be called
+in every pci bus initialization. So the bus->msi
+assignment in pci_alloc_child_bus() is useless.
 
-Applied to pci/misc for v3.18, thanks!
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Thierry Reding <thierry.reding@avionic-design.de>
+CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/probe.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-> ---
->  drivers/pci/pci-driver.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index d04c5ad..2b3c894 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -55,7 +55,6 @@ int pci_add_dynid(struct pci_driver *drv,
->  		  unsigned long driver_data)
->  {
->  	struct pci_dynid *dynid;
-> -	int retval;
->  
->  	dynid = kzalloc(sizeof(*dynid), GFP_KERNEL);
->  	if (!dynid)
-> @@ -73,9 +72,7 @@ int pci_add_dynid(struct pci_driver *drv,
->  	list_add_tail(&dynid->node, &drv->dynids.list);
->  	spin_unlock(&drv->dynids.lock);
->  
-> -	retval = driver_attach(&drv->driver);
-> -
-> -	return retval;
-> +	return driver_attach(&drv->driver);
->  }
->  EXPORT_SYMBOL_GPL(pci_add_dynid);
->  
-> -- 
-> 2.0.1
-> 
-> 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index e3cf8a2..8296576 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -677,7 +677,6 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 
+ 	child->parent = parent;
+ 	child->ops = parent->ops;
+-	child->msi = parent->msi;
+ 	child->sysdata = parent->sysdata;
+ 	child->bus_flags = parent->bus_flags;
+ 
+-- 
+1.7.1
+
