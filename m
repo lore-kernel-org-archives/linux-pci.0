@@ -1,82 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0133.outbound.protection.outlook.com ([157.56.110.133]:5152
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752368AbaINGac (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 14 Sep 2014 02:30:32 -0400
-From: <suravee.suthikulpanit@amd.com>
-To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
-	<jason@lakedaemon.net>
-CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
-	<Will.Deacon@arm.com>, <tglx@linutronix.de>,
-	<Harish.Kasiviswanathan@amd.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH 0/2 V6] irqchip: gic: Introduce ARM GICv2m MSI(-X) support
-Date: Sun, 14 Sep 2014 01:30:14 -0500
-Message-ID: <1410676216-27953-1-git-send-email-suravee.suthikulpanit@amd.com>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:42967 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751896AbaIERcV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 13:32:21 -0400
+Received: by mail-pa0-f45.google.com with SMTP id bj1so22451561pad.4
+        for <linux-pci@vger.kernel.org>; Fri, 05 Sep 2014 10:32:21 -0700 (PDT)
+Date: Fri, 5 Sep 2014 11:32:16 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Tim Harvey <tharvey@gateworks.com>
+Cc: l.stach@pengutronix.de, Fabio Estevam <festevam@gmail.com>,
+	shawn.guo@freescale.com, marex@denx.de, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: imx6: fix occasional link failure
+Message-ID: <20140905173216.GB8080@google.com>
+References: <1407479800-6730-1-git-send-email-tharvey@gateworks.com>
+ <1409717077-26662-1-git-send-email-tharvey@gateworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1409717077-26662-1-git-send-email-tharvey@gateworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+On Tue, Sep 02, 2014 at 09:04:37PM -0700, Tim Harvey wrote:
+> According to the IMX6 reference manuals, REF_SSP_EN (Reference clock enable
+> for SS function) must remain deasserted until the reference clock is running
+> at the appropriate frequency.
+> 
+> Without this patch we find a high link failure rate (>5%) on certain
+> IMX6 boards at various temperatures.
+> 
+> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+> Tested-by: Fabio Estevam <festevam@gmail.com>
+> Acked-by: Marek Vasut <marex@denx.de>
 
-This patch set introduces support for MSI(-X) in GICv2m specification,
-which is implemented in some variation of GIC400.
+I'm looking for the comment update requested by Richard, and an ack from
+Richard and/or Lucas.  Also, please add the stable tag if you want it
+(see Documentation/stable_kernel_rules.txt for details).
 
-This depends on and has been tested with the following patch set which
-implements PCI supports for ARM64:
- 
-    * https://lkml.org/lkml/2014/8/12/394
-    * https://lkml.org/lkml/2014/8/12/361
+Bjorn
 
-Changes in V6:
-    * Fix the logic in patch 1 in drivers/irqchip/irq-gic.c: gic_of_init()
-      to print warning message when gicv2m_of_init fails instead of
-      returning error since v2m is optional.
-
-    * Minor clean up
-
-Changes in V5:
-    * Rebase to git://git.infradead.org/users/jcooper/linux.git irqchip/core
-
-  Marc Zyngier suggestions:
-    * Only use GICv2m irq_chip for MSI interrupts.
-    * Simplify logic to support multi-MSI in arch/arm64/kernel/msi.c.
-    * Modify gicv2m_setup_msi_irq() to also handle multi-MSI.
-
-  Mark Rutlan suggestions: 
-    * V4 patch set did not support multiple MSI register frame within a GIC.
-      Although, the proposed GICv2m device tree binding should be able to
-      handle the case.  Mark was questioning on how we can properly handle
-      this in the code. Therefore, I try to implement this by iterating through
-      the subnodes and look for msi-controller property. Once found, the code
-      parses v2m register frame information and store it in the v2m_list of
-      each gic_chip_data.
-
-  Jingoo han suggestions:
-    * Misc clean up.
-
-Suravee Suthikulpanit (2):
-  irqchip: gic: Add supports for ARM GICv2m MSI(-X)
-  irqchip: gicv2m: Add support for multiple MSI for ARM64 GICv2m
-
- Documentation/devicetree/bindings/arm/gic.txt |  39 +++
- arch/arm64/kernel/Makefile                    |   1 +
- arch/arm64/kernel/msi.c                       |  41 ++++
- drivers/irqchip/Kconfig                       |   7 +
- drivers/irqchip/Makefile                      |   1 +
- drivers/irqchip/irq-gic-v2m.c                 | 328 ++++++++++++++++++++++++++
- drivers/irqchip/irq-gic.c                     |  88 ++++---
- drivers/irqchip/irq-gic.h                     |  51 ++++
- 8 files changed, 528 insertions(+), 28 deletions(-)
- create mode 100644 arch/arm64/kernel/msi.c
- create mode 100644 drivers/irqchip/irq-gic-v2m.c
- create mode 100644 drivers/irqchip/irq-gic.h
-
--- 
-1.9.3
-
+> ---
+> 
+> v2:
+>  - added Tested-by Fabio Estevam
+>  - added Acked-by Marek Vasut
+> 
+> ---
+>  drivers/pci/host/pci-imx6.c | 11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 1be6073..9b6bab9 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -256,11 +256,6 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+>  	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+>  	int ret;
+>  
+> -	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> -			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+> -	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> -			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+> -
+>  	ret = clk_prepare_enable(imx6_pcie->pcie_phy);
+>  	if (ret) {
+>  		dev_err(pp->dev, "unable to enable pcie_phy clock\n");
+> @@ -282,6 +277,12 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+>  	/* allow the clocks to stabilize */
+>  	usleep_range(200, 500);
+>  
+> +	/* power up core phy and enable ref clock */
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+> +
+>  	/* Some boards don't have PCIe reset GPIO. */
+>  	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+>  		gpio_set_value(imx6_pcie->reset_gpio, 0);
+> -- 
+> 1.8.3.2
+> 
