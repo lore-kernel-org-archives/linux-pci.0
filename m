@@ -1,132 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:37100 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751084AbaIJQdY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 10 Sep 2014 12:33:24 -0400
-Date: Wed, 10 Sep 2014 10:32:50 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
+Received: from szxga03-in.huawei.com ([119.145.14.66]:61259 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756061AbaIEJpt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 05:45:49 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Russell King" <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI
- domain_nr
-Message-ID: <20140910163250.GA22910@obsidianresearch.com>
-References: <CAL_JsqJi8k1Goc3UmXhuxf9v7=4gJrYG_Di7v574PxS8TsJaXw@mail.gmail.com>
- <20140908145459.GO27864@e106497-lin.cambridge.arm.com>
- <CAL_JsqJdGKDVwJOpPp19OkVPGzR7Zqv3nh+ONHHaYnPLYTYoYg@mail.gmail.com>
- <20140908155931.GP27864@e106497-lin.cambridge.arm.com>
- <540E960D.7080408@huawei.com>
- <20140909084621.GS27864@e106497-lin.cambridge.arm.com>
- <540EC8CB.7010106@huawei.com>
- <CAErSpo4cAfom2=07NYDRfTCdHO22M0v+ueiaZuG6v2Xd18wEnQ@mail.gmail.com>
- <20140909154123.GA12906@obsidianresearch.com>
- <CAL_JsqJMRqbwNkB2K6Mg2DU9mSHwAObtD7LLG2_n=4jGDAFhyQ@mail.gmail.com>
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v1 00/21] Use MSI chip to configure MSI/MSI-X in all platforms
+Date: Fri, 5 Sep 2014 18:09:45 +0800
+Message-ID: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL_JsqJMRqbwNkB2K6Mg2DU9mSHwAObtD7LLG2_n=4jGDAFhyQ@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 09, 2014 at 09:44:56PM -0500, Rob Herring wrote:
-> On Tue, Sep 9, 2014 at 10:41 AM, Jason Gunthorpe
-> <jgunthorpe@obsidianresearch.com> wrote:
-> > On Tue, Sep 09, 2014 at 08:26:19AM -0600, Bjorn Helgaas wrote:
-> >
-> >> So as long as the DT tells you the ECAM information for each host
-> >> bridge, that should be sufficient.  The domain number is then just a
-> >> Linux convenience and is not tied to the platform as it is on ia64.
-> >
-> > I think this is right for DT systems - the domain is purely internal
-> > to the kernel and userspace, it is used to locate the proper host
-> > bridge driver instance, which contains the proper config accessor (and
-> > register bases, etc).
-> >
-> > AFAIK the main reason to have a DT alias to learn the domain number is
-> > to make it stable so things like udev/etc can reliably match on the
-> > PCI location.
-> 
-> For what purpose?
+This series is based Bjorn's pci-next branch + Alexander Gordeev's two patches
+"Remove arch_msi_check_device()" link: https://lkml.org/lkml/2014/7/12/41
 
-udev places PCI D:B:D.F's all over the place, eg:
+Currently, there are a lot of weak arch functions in MSI code.
+Thierry Reding Introduced MSI chip framework to configure MSI/MSI-X in arm.
+This series use MSI chip framework to refactor MSI code across all platforms
+to eliminate weak arch functions. It has been tested fine in x86(with or without
+irq remap).
 
-$ ls /dev/serial/by-path/
-pci-0000:00:1a.0-usb-0:1.4.2.5:1.0@
-pci-0000:00:1a.0-usb-0:1.4.2.6:1.0@
-$ ls /dev/disk/by-path/
-pci-0000:03:00.0-sas-0x5fcfffff00000001-lun-0@
-pci-0000:03:00.0-sas-0x5fcfffff00000001-lun-0-part1@
-pci-0000:03:00.0-sas-0x5fcfffff00000001-lun-0-part2@
-pci-0000:03:00.0-sas-0x5fcfffff00000001-lun-0-part3@
-    ^^^^
-domain number
 
-It is part of the stable naming scheme udev uses - and that scheme is
-predicated on the PCI location being stable.
+RFC->v1: Updated "[patch 4/21] x86/xen/MSI: Eliminate...", export msi_chip instead
+         of #ifdef to fix MSI bug in xen running in x86. 
+		 Rename arch_get_match_msi_chip() to arch_find_msi_chip().
+		 Drop use struct device as the msi_chip argument, we will do that
+		 later in another patchset.
 
-> IMO they should not. We really want to move away from aliases, not
-> expand their use. They are used for serial because there was no good
-> way to not break things like "console=ttyS0". I2C I think was more
-> internal, but may have been for i2c-dev. What are we going to break if
-> we don't have consistent domain numbering? 
+Yijing Wang (21):
+  PCI/MSI: Clean up struct msi_chip argument
+  PCI/MSI: Remove useless bus->msi assignment
+  MSI: Remove the redundant irq_set_chip_data()
+  x86/xen/MSI: Eliminate arch_msix_mask_irq() and arch_msi_mask_irq()
+  PCI/MSI: Introduce weak arch_find_msi_chip() to find MSI chip
+  PCI/MSI: Refactor struct msi_chip to make it become more common
+  x86/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+  x86/xen/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+  Irq_remapping/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+  x86/MSI: Remove unused MSI weak arch functions
+  MIPS/Octeon/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+  MIPS/Xlp: Remove the dead function destroy_irq() to fix build error
+  MIPS/Xlp/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+  MIPS/Xlr/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+  Powerpc/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+  s390/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+  arm/iop13xx/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+  IA64/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+  Sparc/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+  tile/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+  PCI/MSI: Clean up unused MSI arch functions
 
-Well, DT needs some kind of solution to produce stable names for
-things. It is no good if the names unpredictably randomize.
+ arch/arm/mach-iop13xx/include/mach/pci.h |    2 +
+ arch/arm/mach-iop13xx/iq81340mc.c        |    1 +
+ arch/arm/mach-iop13xx/iq81340sc.c        |    1 +
+ arch/arm/mach-iop13xx/msi.c              |    9 ++-
+ arch/arm/mach-iop13xx/pci.c              |    6 ++
+ arch/ia64/kernel/msi_ia64.c              |   18 ++++-
+ arch/mips/pci/msi-octeon.c               |   35 +++++---
+ arch/mips/pci/msi-xlp.c                  |   18 +++-
+ arch/mips/pci/pci-xlr.c                  |   15 +++-
+ arch/powerpc/kernel/msi.c                |   14 +++-
+ arch/s390/pci/pci.c                      |   18 ++++-
+ arch/sparc/kernel/pci.c                  |   14 +++-
+ arch/tile/kernel/pci_gx.c                |   14 +++-
+ arch/x86/include/asm/apic.h              |    4 +
+ arch/x86/include/asm/pci.h               |    4 +-
+ arch/x86/include/asm/x86_init.h          |    7 --
+ arch/x86/kernel/apic/io_apic.c           |   16 ++++-
+ arch/x86/kernel/x86_init.c               |   34 --------
+ arch/x86/pci/xen.c                       |   60 +++++++++------
+ drivers/iommu/irq_remapping.c            |    9 ++-
+ drivers/irqchip/irq-armada-370-xp.c      |   12 +--
+ drivers/pci/host/pci-tegra.c             |    8 +-
+ drivers/pci/host/pcie-designware.c       |    4 +-
+ drivers/pci/host/pcie-rcar.c             |    8 +-
+ drivers/pci/msi.c                        |  123 +++++++++++++-----------------
+ drivers/pci/probe.c                      |    1 -
+ include/linux/msi.h                      |   26 ++-----
+ 27 files changed, 268 insertions(+), 213 deletions(-)
 
-Lets use I2C as an example. My embedded systems have multiple I2C
-busses, with multiple drivers (so load order is not easily ensured).
-I am relying on DT aliases to force the bus numbers to stable values,
-but if I don't do that - then how do I find things in user space?
-
-$ ls -l /sys/bus/i2c/devices
-lrwxrwxrwx    1 root     root            0 Sep 10 16:12 i2c-2 -> ../../../devices/pci0000:00/0000:00:01.0/i2c_qsfp.4/i2c-2
-
-Oh, I have to search based on the HW path, which includes the domain
-number.
-
-So that *must* be really stable, or user space has no hope of mapping
-real hardware back to an I2C bus number.
-
-The same is true for pretty much every small IDR scheme in the kernel
-- they rely on the HW path for stable names.
-
-As an aside, I think for embedded being able to directly specify
-things like the bus number for I2C, ethX for ethernet, etc is very
-valuable, I would be sad to see that go away.
-
-> DT, I'd rather see it as part of the PCI root node. But I'm not
-> convinced it is needed.
- 
-> It doesn't really sound like we have any actual need to solve this for
-> DT ATM. It's not clear to me if all buses should be domain 0 or a
-> simple incrementing index for each bus in absence of any firmware set
-> value.
-
-There are already ARM DTs in the kernel that require multiple domains,
-so that ship has sailed.
-
-I don't think it really matters where the number comes from, so long
-as it doesn't change after a kernel upgrade, or with a different
-module load order, or if the DT is recompiled, or whatever. It needs
-to be stable.
-
-Jason
