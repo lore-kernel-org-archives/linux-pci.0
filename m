@@ -1,89 +1,152 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 17/22] s390/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-Date: Thu, 25 Sep 2014 11:14:27 +0800
-Message-ID: <1411614872-4009-18-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from sender1.zohomail.com ([72.5.230.103]:38851 "EHLO
+	sender1.zohomail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755939AbaIEJ0b (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 05:26:31 -0400
+Message-ID: <540974F3.4000507@zoho.com>
+Date: Fri, 05 Sep 2014 01:31:47 -0700
+From: Kyle Auble <kyle.auble@zoho.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+To: linux-pci@vger.kernel.org
+Subject: Kernel Changing PCI Config at Startup, Deactivating GPU
+Content-Type: multipart/mixed;
+ boundary="------------000205030206090506030707"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI chip framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+This is a multi-part message in MIME format.
+--------------000205030206090506030707
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Acked-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
----
- arch/s390/pci/pci.c |   14 ++++++++++++--
- 1 files changed, 12 insertions(+), 2 deletions(-)
+Hello, I emailed a while back for some pointers on debugging a PCI
+problem and wanted to ask again for feedback.
 
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index 552b990..da5316e 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -358,7 +358,7 @@ static void zpci_irq_handler(struct airq_struct *airq)
- 	}
- }
- 
--int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
-+int zpci_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
- {
- 	struct zpci_dev *zdev = get_zdev(pdev);
- 	unsigned int hwirq, msi_vecs;
-@@ -434,7 +434,7 @@ out:
- 	return rc;
- }
- 
--void arch_teardown_msi_irqs(struct pci_dev *pdev)
-+static void zpci_teardown_msi_irqs(struct pci_dev *pdev)
- {
- 	struct zpci_dev *zdev = get_zdev(pdev);
- 	struct msi_desc *msi;
-@@ -464,6 +464,16 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
- 	airq_iv_free_bit(zpci_aisb_iv, zdev->aisb);
- }
- 
-+static struct msi_chip zpci_msi_chip = {
-+	.setup_irqs = zpci_setup_msi_irqs,
-+	.teardown_irqs = zpci_teardown_msi_irqs,
-+};
-+
-+struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
-+{
-+	return &zpci_msi_chip;
-+}
-+
- static void zpci_map_resources(struct zpci_dev *zdev)
- {
- 	struct pci_dev *pdev = zdev->pdev;
--- 
-1.7.1
+I was tracking an issue at:
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1009312,
+where my Nvidia 8400M GT [10de:0426], on a Sony VGN-FZ260E, fails to
+initialize when the kernel loads, before the video driver even becomes
+an issue. I thought it might be a timeout issue, but now I'm thinking
+that something is accidentally shutting down the GPU even earlier than
+link retraining. I can confirm the problem's still there in v3.17-rc2 of
+the x86 kernel.
+
+Recently, through some more googling and debugging, I've figured out
+that passing the "pci=bios" kernel parameter gets the GPU to activate.
+So I can easily treat the problem for myself now, but I'd like to help
+wrap up anything related to an underlying cause. Also, with the
+"pci=earlydump" parameter and an init-script (at priority S98) for
+running lspci, I've found that something is altering parts of the PCI
+config space when the GPU fails. I've included trimmed copies of the
+PCIe config space from those two tests (0000:00:01.0 is the bridge in
+front of the GPU).
+
+While a lot of the changes seem to just reflect the GPU being off in the
+status registers, several other registers get wiped to zero:
+1. The SERR driver is disabled in the command register
+2. Both cache line size and the subsystem pci id are zeroed out
+3. The interrupt line (but not the interrupt pin) goes from 05 to 00
+4. The actual memory addresses in the BARs are cleared, but not the
+    flags like prefetchable or 64-bit.
+
+What's more suspicious to me is the data between the standard config
+space and the first extended capability structure (at 0x60). The
+subsystem id is repeated at 0x40, plus a flag of some sort at 0x50, both
+of which are wiped to zero when the GPU fails to load. There's also a
+single digit at 0x54 and some data at 0x58-0x60 that remain in any case.
+
+I've tried studying the ACPI tables some too, but I'm not experienced
+with ASL so it doesn't mean much that nothing stood out to me. I
+narrowed things down to the DSDT because that seems to be where all the
+action is. Outside of some OSI conditionals and events, the other
+possibility that popped into my head is that somehow an ACPI mutex and a
+kernel lock are colliding. If anyone is interested, I can send a copy of
+the DSDT or any other disassembled tables to the list.
+
+Beyond general ideas and advice about the DSDT, I'm wondering if (or
+where) the kernel code is wiping these PCI config values, or if the
+zeros are all just from the GPU going into hibernation. I've tried a lot
+of grepping for variations of pci_write_config calls but haven't found
+anything yet. Also, if this is ultimately an issue with the GPU, how
+much could I even help with that? I've practiced dumping a video BIOS
+but have no clue how to analyze it.
+
+Thanks in advance,
+Kyle Auble
+
+--------------000205030206090506030707
+Content-Type: text/plain; charset=UTF-8;
+ name="earlydump"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="earlydump"
+
+cGNpIDAwMDA6MDA6MDEuMCBjb25maWcgc3BhY2U6CjAwOiA4NiA4MCAwMSAyYSAwNyAwMSAx
+MCAwMCAwYyAwMCAwNCAwNiAxMCAwMCAwMSAwMAoxMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDEgMDEgMDAgMjAgMjAgMDAgMDAKMjA6IDAwIGNjIGYwIGNlIDAxIGQwIGYxIGRm
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCjMwOiAwMCAwMCAwMCAwMCA4OCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwNSAwMSAxYSAwMAo0MDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDAKNTA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwCjYwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMAo3MDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAKODA6IDAxIDkwIDAzIGM4IDAwIDAwIDAwIDAwIDBkIDgwIDAwIDAw
+IDRkIDEwIDA1IDkwCjkwOiAwNSBhMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMAphMDogMTAgMDAgNDEgMDEgMDAgODAgMDAgMDAgMDAgMDAgMDAgMDAgMDEg
+MmQgMDEgMDIKYjA6IDQzIDAwIDAxIDExIGMwIDI1IDBjIDAwIGMwIDAxIDQ4IDAwIDAwIDAw
+IDAwIDAwCmMwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMAoKCnBjaSAwMDAwOjAxOjAwLjAgY29uZmlnIHNwYWNlOgowMDogZGUgMTAgMjYgMDQg
+MDcgMDEgMTAgMDAgYTEgMDAgMDAgMDMgMTAgMDAgMDAgMDAKMTA6IDAwIDAwIDAwIGNlIDBj
+IDAwIDAwIGQwIDAwIDAwIDAwIDAwIDA0IDAwIDAwIGNjCjIwOiAwMCAwMCAwMCAwMCAwMSAy
+MCAwMCAwMCAwMCAwMCAwMCAwMCA0ZCAxMCAwNSA5MAozMDogMDAgMDAgMDAgMDAgNjAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDUgMDEgMDAgMDAKNDA6IDRkIDEwIDA1IDkwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCjUwOiAwMSAwMCAwMCAwMCAwMSAwMCAwMCAw
+MCBjZSBkNiAyMyAwMCAwMCAwMCAwMCAwMAo2MDogMDEgNjggMDIgMDAgMDAgMDAgMDAgMDAg
+MDUgNzggODAgMDAgMDAgMDAgMDAgMDAKNzA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDEw
+IDAwIDAxIDAwIGUwIDg0IDJjIDAxCjgwOiAxMCAyOCAwMCAwMCAwMSAzZCAwMSAwMCA0YiAw
+MCAwMSAxMSAwMCAwMCAwMCAwMAo5MDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAKYTA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwCmIwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMApjMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAK
+--------------000205030206090506030707
+Content-Type: text/plain; charset=UTF-8;
+ name="init-lspci"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="init-lspci"
+
+cGNpIDAwMDA6MDA6MDEuMCBjb25maWcgc3BhY2U6CjAwOiA4NiA4MCAwMSAyYSAwNyAwNSAx
+MCAwMCAwYyAwMCAwNCAwNiAxMCAwMCAwMSAwMAoxMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDEgMDEgMDAgMjAgMjAgMDAgMjAKMjA6IDAwIGNjIGYwIGNlIDAxIGQwIGYxIGRm
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCjMwOiAwMCAwMCAwMCAwMCA4OCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwNSAwMSAxYSAwMAo0MDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDAKNTA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwCjYwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMAo3MDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAKODA6IDAxIDkwIDAzIGM4IDAwIDAwIDAwIDAwIDBkIDgwIDAwIDAw
+IDRkIDEwIDA1IDkwCjkwOiAwNSBhMCAwMSAwMCAwYyAzMCBlMCBmZSA2OSA0MSAwMCAwMCAw
+MCAwMCAwMCAwMAphMDogMTAgMDAgNDEgMDEgMDAgODAgMDAgMDAgMDAgMDAgMDAgMDAgMDEg
+MmQgMDEgMDIKYjA6IDQzIDAwIDAxIDExIGMwIDI1IDBjIDAwIGMwIDAxIDQ4IDAwIDAwIDAw
+IDAwIDAwCmMwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMApkMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAKZTA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+CmYwOiAwMCAwMCAwMSA4NCAwYyAwMCAwMCBhMCA5MCAwZiAwNCAwMCAzMSAwMCAwMCAwMAoK
+CnBjaSAwMDAwOjAxOjAwLjAgY29uZmlnIHNwYWNlOgowMDogZGUgMTAgMjYgMDQgMDMgMDAg
+MTAgMDAgYTEgMDAgMDAgMDMgMDAgMDAgMDAgMDAKMTA6IDAwIDAwIDAwIDAwIDBjIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDA0IDAwIDAwIDAwCjIwOiAwMCAwMCAwMCAwMCAwMSAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMAozMDogMDAgMDAgMDAgMDAgNjAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDEgMDAgMDAKNDA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwCjUwOiAwMCAwMCAwMCAwMCAwMSAwMCAwMCAwMCBjZSBk
+NiAyMyAwMCAwMCAwMCAwMCAwMAo2MDogMDEgNjggMDIgMDAgMDAgMDAgMDAgMDAgMDUgNzgg
+ODAgMDAgMDAgMDAgMDAgMDAKNzA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDEwIDAwIDAx
+IDAwIGUwIDg0IDJjIDAxCjgwOiAxMCAyOCAwYSAwMCAwMSAzZCAwMSAwMCAwOCAwMCAwMSAx
+MSAwMCAwMCAwMCAwMAo5MDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAKYTA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwCmIwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMApjMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAKZDA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwCmUwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MApmMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAK
+
+--------------000205030206090506030707--
 
