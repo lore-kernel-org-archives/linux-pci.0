@@ -1,105 +1,162 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:39043 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752900AbaIPVyw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 17:54:52 -0400
-Received: by mail-pd0-f173.google.com with SMTP id ft15so635424pdb.32
-        for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 14:54:52 -0700 (PDT)
-Date: Tue, 16 Sep 2014 15:54:48 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, jgunthorpe@obsidianresearch.com
-Subject: Re: [PATCH - v4] PCI: keystone: add a pci quirk to limit mrrs
-Message-ID: <20140916215448.GB5050@google.com>
-References: <1410195814-30414-1-git-send-email-m-karicheri2@ti.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Russell King" <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v1 11/21] MIPS/Octeon/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+Date: Fri, 5 Sep 2014 18:09:56 +0800
+Message-ID: <1409911806-10519-12-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1410195814-30414-1-git-send-email-m-karicheri2@ti.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 08, 2014 at 01:03:34PM -0400, Murali Karicheri wrote:
-> Keystone PCI controller has a limitation that memory read request
-> size must not exceed 256 bytes. This is a hardware limitation and
-> add a quirk to force this limit on all downstream devices by
-> updating mrrs.
-> 
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Use MSI chip framework instead of arch MSI functions to configure
+MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
 
-Applied to pci/host-keystone for v3.18, thanks.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/mips/pci/msi-octeon.c |   35 ++++++++++++++++++++++-------------
+ 1 files changed, 22 insertions(+), 13 deletions(-)
 
-I moved the pci-keystone.txt update regarding pci=pcie_bus_perf into this
-patch.  This is where it belongs, isn't it?  I'm pretty sure it wasn't
-related to setting the PCI device ID dynamically.
+diff --git a/arch/mips/pci/msi-octeon.c b/arch/mips/pci/msi-octeon.c
+index ab0c5d1..0335d75 100644
+--- a/arch/mips/pci/msi-octeon.c
++++ b/arch/mips/pci/msi-octeon.c
+@@ -57,7 +57,7 @@ static int msi_irq_size;
+  *
+  * Returns 0 on success.
+  */
+-int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
++static int octeon_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ {
+ 	struct msi_msg msg;
+ 	u16 control;
+@@ -133,12 +133,12 @@ msi_irq_allocated:
+ 	/* Make sure the search for available interrupts didn't fail */
+ 	if (irq >= 64) {
+ 		if (request_private_bits) {
+-			pr_err("arch_setup_msi_irq: Unable to find %d free interrupts, trying just one",
++			pr_err("octeon_setup_msi_irq: Unable to find %d free interrupts, trying just one",
+ 			       1 << request_private_bits);
+ 			request_private_bits = 0;
+ 			goto try_only_one;
+ 		} else
+-			panic("arch_setup_msi_irq: Unable to find a free MSI interrupt");
++			panic("octeon_setup_msi_irq: Unable to find a free MSI interrupt");
+ 	}
+ 
+ 	/* MSI interrupts start at logical IRQ OCTEON_IRQ_MSI_BIT0 */
+@@ -169,7 +169,7 @@ msi_irq_allocated:
+ 		msg.address_hi = (0 + CVMX_SLI_PCIE_MSI_RCV) >> 32;
+ 		break;
+ 	default:
+-		panic("arch_setup_msi_irq: Invalid octeon_dma_bar_type");
++		panic("octeon_setup_msi_irq: Invalid octeon_dma_bar_type");
+ 	}
+ 	msg.data = irq - OCTEON_IRQ_MSI_BIT0;
+ 
+@@ -184,7 +184,7 @@ msi_irq_allocated:
+ 	return 0;
+ }
+ 
+-int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++static int octeon_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ {
+ 	struct msi_desc *entry;
+ 	int ret;
+@@ -203,7 +203,7 @@ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 		return 1;
+ 
+ 	list_for_each_entry(entry, &dev->msi_list, list) {
+-		ret = arch_setup_msi_irq(dev, entry);
++		ret = octeon_setup_msi_irq(dev, entry);
+ 		if (ret < 0)
+ 			return ret;
+ 		if (ret > 0)
+@@ -212,14 +212,13 @@ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 
+ 	return 0;
+ }
+-
+ /**
+  * Called when a device no longer needs its MSI interrupts. All
+  * MSI interrupts for the device are freed.
+  *
+  * @irq:    The devices first irq number. There may be multple in sequence.
+  */
+-void arch_teardown_msi_irq(unsigned int irq)
++static void octeon_teardown_msi_irq(unsigned int irq)
+ {
+ 	int number_irqs;
+ 	u64 bitmask;
+@@ -228,8 +227,8 @@ void arch_teardown_msi_irq(unsigned int irq)
+ 
+ 	if ((irq < OCTEON_IRQ_MSI_BIT0)
+ 		|| (irq > msi_irq_size + OCTEON_IRQ_MSI_BIT0))
+-		panic("arch_teardown_msi_irq: Attempted to teardown illegal "
+-		      "MSI interrupt (%d)", irq);
++		panic("octeon_teardown_msi_irq: Attempted to teardown illegal "
++			"MSI interrupt (%d)", irq);
+ 
+ 	irq -= OCTEON_IRQ_MSI_BIT0;
+ 	index = irq / 64;
+@@ -242,7 +241,7 @@ void arch_teardown_msi_irq(unsigned int irq)
+ 	 */
+ 	number_irqs = 0;
+ 	while ((irq0 + number_irqs < 64) &&
+-	       (msi_multiple_irq_bitmask[index]
++		(msi_multiple_irq_bitmask[index]
+ 		& (1ull << (irq0 + number_irqs))))
+ 		number_irqs++;
+ 	number_irqs++;
+@@ -251,8 +250,8 @@ void arch_teardown_msi_irq(unsigned int irq)
+ 	/* Shift the mask to the correct bit location */
+ 	bitmask <<= irq0;
+ 	if ((msi_free_irq_bitmask[index] & bitmask) != bitmask)
+-		panic("arch_teardown_msi_irq: Attempted to teardown MSI "
+-		      "interrupt (%d) not in use", irq);
++		panic("octeon_teardown_msi_irq: Attempted to teardown MSI "
++			"interrupt (%d) not in use", irq);
+ 
+ 	/* Checks are done, update the in use bitmask */
+ 	spin_lock(&msi_free_irq_bitmask_lock);
+@@ -261,6 +260,16 @@ void arch_teardown_msi_irq(unsigned int irq)
+ 	spin_unlock(&msi_free_irq_bitmask_lock);
+ }
+ 
++static struct msi_chip octeon_msi_chip = {
++	.setup_irqs = octeon_setup_msi_irqs,
++	.teardown_irq = octeon_teardown_msi_irq,
++};
++
++struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
++{
++	return &octeon_msi_chip;
++}
++
+ static DEFINE_RAW_SPINLOCK(octeon_irq_msi_lock);
+ 
+ static u64 msi_rcv_reg[4];
+-- 
+1.7.1
 
-> ---
->   -v4: re-send removing extra lines
->   -v3: added check for vendor id and use pci_matc_id() to do matching
->   -v2: made the quirk happens after tuning
->   -v1: changed printk to indicate PCI bdf
-> 
->  drivers/pci/host/pci-keystone.c |   45 +++++++++++++++++++++++++++++++++++++++
->  1 file changed, 45 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-> index c1cfaef..ff8ed25 100644
-> --- a/drivers/pci/host/pci-keystone.c
-> +++ b/drivers/pci/host/pci-keystone.c
-> @@ -42,8 +42,53 @@
->  /* DEV_STAT_CTRL */
->  #define PCIE_CAP_BASE		0x70
->  
-> +/* PCIE controller device IDs */
-> +#define PCIE_RC_K2HK		0xb008
-> +#define PCIE_RC_K2E		0xb009
-> +#define PCIE_RC_K2L		0xb00a
-> +
->  #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
->  
-> +static void quirk_limit_mrrs(struct pci_dev *dev)
-> +{
-> +	struct pci_bus *bus = dev->bus;
-> +	struct pci_dev *bridge = bus->self;
-> +	static const struct pci_device_id rc_pci_devids[] = {
-> +		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2HK),
-> +		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
-> +		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2E),
-> +		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
-> +		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2L),
-> +		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
-> +		{ 0, },
-> +	};
-> +
-> +	if (pci_is_root_bus(bus))
-> +		return;
-> +
-> +	/* look for the host bridge */
-> +	while (!pci_is_root_bus(bus)) {
-> +		bridge = bus->self;
-> +		bus = bus->parent;
-> +	}
-> +
-> +	if (bridge) {
-> +		/*
-> +		 * Keystone PCI controller has a h/w limitation of
-> +		 * 256 bytes maximum read request size. It can't handle
-> +		 * anything higher than this. So force this limit on
-> +		 * all downstream devices
-> +		 */
-> +		if (pci_match_id(rc_pci_devids, bridge)) {
-> +			if (pcie_get_readrq(dev) > 256) {
-> +				dev_info(&dev->dev, "limiting mrrs to 256\n");
-> +				pcie_set_readrq(dev, 256);
-> +			}
-> +		}
-> +	}
-> +}
-> +DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
-> +
->  static int ks_pcie_establish_link(struct keystone_pcie *ks_pcie)
->  {
->  	struct pcie_port *pp = &ks_pcie->pp;
-> -- 
-> 1.7.9.5
-> 
