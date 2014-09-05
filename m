@@ -1,140 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:58814 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246AbaIISfH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Sep 2014 14:35:07 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 5 Sep 2014 11:41:22 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: mvebu: Fix uninitialized variable in
+ mvebu_get_tgt_attr()
+Message-ID: <20140905174122.GD8080@google.com>
+References: <1407512045-26969-1-git-send-email-geert+renesas@glider.be>
 MIME-Version: 1.0
-Reply-To: rajatxjain@gmail.com
-In-Reply-To: <20140909053808.GQ8080@google.com>
-References: <53FFA54D.9000907@gmail.com>
-	<CAErSpo5_WMUmnTHpPZt+j04VZoiW1pthQoGV90A5BDQpQgjwOQ@mail.gmail.com>
-	<54065208.3080309@gmail.com>
-	<20140909053808.GQ8080@google.com>
-Date: Tue, 9 Sep 2014 11:35:06 -0700
-Message-ID: <CAA93t1p2PoSCTiXsp8QnDCDPQA=BbtWGPq9a5-JvsXyz2ZKvuA@mail.gmail.com>
-Subject: Re: [PATCH v2] pci/probe: Enable CRS for root port if it is supported
-From: Rajat Jain <rajatxjain@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Richard Yang <weiyang@linux.vnet.ibm.com>,
-	Matthew Wilcox <matthew.r.wilcox@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1407512045-26969-1-git-send-email-geert+renesas@glider.be>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 8, 2014 at 10:38 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Sep 02, 2014 at 04:26:00PM -0700, Rajat Jain wrote:
->>
->> As per the PCIe spec, an endpoint may return the configuration cycles
->> with CRS if it is not yet fully ready to be accessed. If the CRS visibility
->> is not enabled at the root port, the spec leaves the retry behaviour open
->> to implementation in such a case. The Intel root ports have chosen to retry
->> endlessly in this situation. Thus, the root controller may "hang" (repeatedly
->> retrying the configuration requests until it gets a status other than CRS) if
->> a device returns CRS for a long time. This can cause a broken endpoint to bring
->> down the whole PCI hierarchy.
->>
->> This was recently known to cause problems on Intel systems and
->> was discussed here:
->> http://marc.info/?t=140926298500002&r=1&w=2
->>
->> Ref1:
->> https://www.pcisig.com/specifications/pciexpress/ECN_CRS_Software_Visibility_No27.pdf
->>
->> Ref2:
->> PCIe spec V3.0, pg119, pg127 for "Configuration Request Retry Status"
->>
->> Thus enable the CRS visibility for the root ports that support it. This
->> patch reverts the following commit, but enables CRS visibility only
->> when the root port supports it:
->>
->> ad7edfe04908 ("[PCI] Do not enable CRS Software Visibility by default")
->>
->> (Linus' response: http://marc.info/?l=linux-pci&m=140968622520192&w=2)
->>
->> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
->> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
->> Signed-off-by: Guenter Roeck <groeck@juniper.net>
->
-> I put this and the "only look at Vendor ID" patch on a pci/enumeration
-> branch [1].  I rewrote the changelogs to reflect my understanding of what's
-> going on, so probably the real truth is somewhere between your original and
-> mine.  Let me know what should be fixed.
->
-> We should figure out an easy way for Josh to test these.  Ideally, he could
-> test the second patch by itself first, then both together.
+On Fri, Aug 08, 2014 at 05:34:05PM +0200, Geert Uytterhoeven wrote:
+> drivers/pci/host/pci-mvebu.c: In function 'mvebu_get_tgt_attr':
+> drivers/pci/host/pci-mvebu.c:887:39: warning: 'rtype' may be used uninitialized in this function [-Wmaybe-uninitialized]
+>    if (slot == PCI_SLOT(devfn) && type == rtype) {
+>                                        ^
+> 
+> If there's ever gonna be a configuration space or 64-bit memory space
+> entry in DT, rtype will be uninitialized, and the wrong entry may be
+> returned.
+> 
+> Initialize rtype to 0 (which is an unused IORESOURCE_* type) to fix this.
+> 
+> Introduced in commit 11be65472a427dcf7a11ab6e3e3628f1c6768b5b ("PCI:
+> mvebu: Adapt to the new device tree layout").
+> 
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> ---
+> Alternatively, should the "else if (DT_FLAGS_TO_TYPE(flags) ==
+> DT_TYPE_MEM32)" just be changed to "else", assuming there can never be
+> other entries than for I/O or 32-bit memory space?
+> ---
+>  drivers/pci/host/pci-mvebu.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index ce23e0f076b6..9515f0d13fd4 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -877,7 +877,7 @@ static int mvebu_get_tgt_attr(struct device_node *np, int devfn,
+>  		u32 flags = of_read_number(range, 1);
+>  		u32 slot = of_read_number(range + 1, 1);
+>  		u64 cpuaddr = of_read_number(range + na, pna);
+> -		unsigned long rtype;
+> +		unsigned long rtype = 0;
+>  
+>  		if (DT_FLAGS_TO_TYPE(flags) == DT_TYPE_IO)
+>  			rtype = IORESOURCE_IO;
+> -- 
+> 1.9.1
+> 
 
-I just provided the 2 images to Josh:
-
-1) An image with both the patches.
-2) An image with just the patch 2 i.e. "Enable CRS visibility" patch.
-
-Lets hope that results tally with our expectations.
-
-Thanks,
-
-Rajat
+This fix looks right to me.  I added a stable tag as follows.  Thomas
+and/or Jason, and you ack this?
 
 
->
-> [1] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/enumeration
->
->> ---
->> v2: Remove the white list, that was enabling the CRS for certain known Intel systems.
->>     Rather now enable it for all systems that support this capability.
->> v1: Enable CRS for only some given Intel systems (maintain a whitelist)
->>
->>  drivers/pci/probe.c           |   13 +++++++++++++
->>  include/uapi/linux/pci_regs.h |    1 +
->>  2 files changed, 14 insertions(+)
->>
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index e3cf8a2..3c4c35c 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -740,6 +740,17 @@ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
->>  }
->>  EXPORT_SYMBOL(pci_add_new_bus);
->>
->> +static void pci_enable_crs(struct pci_dev *pdev)
->> +{
->> +     u16 root_cap = 0;
->> +
->> +     /* Enable CRS Software visibility if supported */
->> +     pcie_capability_read_word(pdev, PCI_EXP_RTCAP, &root_cap);
->> +     if (root_cap & PCI_EXP_RTCAP_CRSVIS)
->> +             pcie_capability_set_word(pdev, PCI_EXP_RTCTL,
->> +                                      PCI_EXP_RTCTL_CRSSVE);
->> +}
->> +
->>  /*
->>   * If it's a bridge, configure it and scan the bus behind it.
->>   * For CardBus bridges, we don't scan behind as the devices will
->> @@ -787,6 +798,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
->>       pci_write_config_word(dev, PCI_BRIDGE_CONTROL,
->>                             bctl & ~PCI_BRIDGE_CTL_MASTER_ABORT);
->>
->> +     pci_enable_crs(dev);
->> +
->>       if ((secondary || subordinate) && !pcibios_assign_all_busses() &&
->>           !is_cardbus && !broken) {
->>               unsigned int cmax;
->> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
->> index 30db069..a75106d 100644
->> --- a/include/uapi/linux/pci_regs.h
->> +++ b/include/uapi/linux/pci_regs.h
->> @@ -552,6 +552,7 @@
->>  #define  PCI_EXP_RTCTL_PMEIE 0x0008  /* PME Interrupt Enable */
->>  #define  PCI_EXP_RTCTL_CRSSVE        0x0010  /* CRS Software Visibility Enable */
->>  #define PCI_EXP_RTCAP                30      /* Root Capabilities */
->> +#define  PCI_EXP_RTCAP_CRSVIS        0x0001  /* CRS software visibility capability */
->>  #define PCI_EXP_RTSTA                32      /* Root Status */
->>  #define PCI_EXP_RTSTA_PME    0x00010000 /* PME status */
->>  #define PCI_EXP_RTSTA_PENDING        0x00020000 /* PME pending */
->> --
->> 1.7.9.5
+commit f96f4040d0d01b6eeacda212cf7db105d06a55ba
+Author: Geert Uytterhoeven <geert+renesas@glider.be>
+Date:   Fri Aug 8 17:34:05 2014 +0200
+
+    PCI: mvebu: Fix uninitialized "rtype" in mvebu_get_tgt_attr()
+    
+    drivers/pci/host/pci-mvebu.c: In function 'mvebu_get_tgt_attr':
+    drivers/pci/host/pci-mvebu.c:887:39: warning: 'rtype' may be used uninitialized in this function [-Wmaybe-uninitialized]
+       if (slot == PCI_SLOT(devfn) && type == rtype) {
+                                           ^
+    
+    If there's ever a DT entry other than DT_TYPE_IO or DT_TYPE_MEM32,
+    e.g., a configuration space or 64-bit memory space entry, rtype will
+    be uninitialized, and the wrong entry may be returned.
+    
+    Initialize rtype to 0 (which is an unused IORESOURCE_* type) to fix this.
+    
+    Fixes: 11be65472a42 ("PCI: mvebu: Adapt to the new device tree layout")
+    Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    CC: stable@vger.kernel.org	# v3.12+
+
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index a8c6f1a92e0f..081579c0971e 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -877,7 +877,7 @@ static int mvebu_get_tgt_attr(struct device_node *np, int devfn,
+ 		u32 flags = of_read_number(range, 1);
+ 		u32 slot = of_read_number(range + 1, 1);
+ 		u64 cpuaddr = of_read_number(range + na, pna);
+-		unsigned long rtype;
++		unsigned long rtype = 0;
+ 
+ 		if (DT_FLAGS_TO_TYPE(flags) == DT_TYPE_IO)
+ 			rtype = IORESOURCE_IO;
