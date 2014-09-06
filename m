@@ -1,94 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:49669 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751320AbaIJINw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Sep 2014 04:13:52 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 10 Sep 2014 18:13:50 +1000
-Date: Wed, 10 Sep 2014 18:13:42 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: kvm@vger.kernel.org, alex.williamson@redhat.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 4/4] vfio/pci: Restore MSIx message prior to enabling
-Message-ID: <20140910081342.GA18833@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1400468470-11262-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1400468470-11262-5-git-send-email-gwshan@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1400468470-11262-5-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mga01.intel.com ([192.55.52.88]:36217 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751023AbaIFDTO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Sep 2014 23:19:14 -0400
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To: bhelgaas@google.com
+Cc: Megan Kamiya <megan.a.kamiya@intel.com>, linux-pci@vger.kernel.org,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Subject: [PATCH] pci: Parenthesize parameters in PCI_DEVID and PCI_VPD_LRDT_ID macros
+Date: Fri,  5 Sep 2014 20:19:10 -0700
+Message-Id: <1409973550-29434-1-git-send-email-jeffrey.t.kirsher@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 19, 2014 at 01:01:10PM +1000, Gavin Shan wrote:
->The MSIx vector table lives in device memory, which may be cleared as
->part of a backdoor device reset. This is the case on the IBM IPR HBA
->when the BIST is run on the device. When assigned to a QEMU guest,
->the guest driver does a pci_save_state(), issues a BIST, then does a
->pci_restore_state(). The BIST clears the MSIx vector table, but due
->to the way interrupts are configured the pci_restore_state() does not
->restore the vector table as expected. Eventually this results in an
->EEH error on Power platforms when the device attempts to signal an
->interrupt with the zero'd table entry.
->
->Fix the problem by restoring the host cached MSI message prior to
->enabling each vector.
->
->Reported-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
->Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+From: Megan Kamiya <megan.a.kamiya@intel.com>
 
-Alex, please let me know if I need resend this one to you. The patch
-has been pending for long time, I'm not sure if you still can grab
-it somewhere.
+Add parentheses around parameters in PCI_DEVID and PCI_VPD_LRDT_ID
+macros to prevent possible expansion errors as described by the CERT
+Secure Coding Standard: PRE01-C: Use parentheses within macros around
+parameter names
 
-As you might see, Bjorn will take that one with PCI changes. This patch
-depends on the changes.
+Signed-off-by: Megan Kamiya <megan.a.kamiya@intel.com>
+Tested-by: Aaron Brown <aaron.f.brown@intel.com>
+Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+---
+ include/linux/pci.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Thanks,
-Gavin
-
->---
-> drivers/vfio/pci/vfio_pci_intrs.c | 15 +++++++++++++++
-> 1 file changed, 15 insertions(+)
->
->diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
->index 9dd49c9..553212f 100644
->--- a/drivers/vfio/pci/vfio_pci_intrs.c
->+++ b/drivers/vfio/pci/vfio_pci_intrs.c
->@@ -16,6 +16,7 @@
-> #include <linux/device.h>
-> #include <linux/interrupt.h>
-> #include <linux/eventfd.h>
->+#include <linux/msi.h>
-> #include <linux/pci.h>
-> #include <linux/file.h>
-> #include <linux/poll.h>
->@@ -548,6 +549,20 @@ static int vfio_msi_set_vector_signal(struct vfio_pci_device *vdev,
-> 		return PTR_ERR(trigger);
-> 	}
->
->+	/*
->+	 * The MSIx vector table resides in device memory which may be cleared
->+	 * via backdoor resets. We don't allow direct access to the vector
->+	 * table so even if a userspace driver attempts to save/restore around
->+	 * such a reset it would be unsuccessful. To avoid this, restore the
->+	 * cached value of the message prior to enabling.
->+	 */
->+	if (msix) {
->+		struct msi_msg msg;
->+
->+		get_cached_msi_msg(irq, &msg);
->+		write_msi_msg(irq, &msg);
->+	}
->+
-> 	ret = request_irq(irq, vfio_msihandler, 0,
-> 			  vdev->ctx[vector].name, trigger);
-> 	if (ret) {
->-- 
->1.8.3.2
->
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 61978a4..cb744f3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -45,7 +45,7 @@
+  * In the interest of not exposing interfaces to user-space unnecessarily,
+  * the following kernel-only defines are being added here.
+  */
+-#define PCI_DEVID(bus, devfn)  ((((u16)bus) << 8) | devfn)
++#define PCI_DEVID(bus, devfn)  ((((u16)(bus)) << 8) | (devfn))
+ /* return bus from PCI devid = ((u16)bus_number) << 8) | devfn */
+ #define PCI_BUS_NUM(x) (((x) >> 8) & 0xff)
+ 
+@@ -1701,7 +1701,7 @@ bool pci_acs_path_enabled(struct pci_dev *start,
+ 			  struct pci_dev *end, u16 acs_flags);
+ 
+ #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
+-#define PCI_VPD_LRDT_ID(x)		(x | PCI_VPD_LRDT)
++#define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
+ 
+ /* Large Resource Data Type Tag Item Names */
+ #define PCI_VPD_LTIN_ID_STRING		0x02	/* Identifier String */
+-- 
+1.9.3
 
