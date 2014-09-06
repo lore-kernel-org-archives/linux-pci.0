@@ -1,135 +1,150 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Fri, 12 Sep 2014 10:30:18 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v10 00/10] Support for creating generic PCI host bridges
- from DT
-Message-ID: <20140912093018.GX27864@e106497-lin.cambridge.arm.com>
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
- <5412ADE9.2050708@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:37253 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750725AbaIFATG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 20:19:06 -0400
+Received: by mail-pd0-f178.google.com with SMTP id p10so125662pdj.9
+        for <linux-pci@vger.kernel.org>; Fri, 05 Sep 2014 17:19:05 -0700 (PDT)
+Date: Fri, 5 Sep 2014 18:18:59 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Anton Blanchard <anton@samba.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, dllehr@us.ibm.com,
+	miltonm@us.ibm.com
+Subject: Re: [PATCH] PCI: Increase BAR size quirk for IBM ipr SAS Crocodile
+ adapters
+Message-ID: <20140906001859.GO8080@google.com>
+References: <20140821092652.604d7484@kryten>
 MIME-Version: 1.0
-In-Reply-To: <5412ADE9.2050708@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140821092652.604d7484@kryten>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 12, 2014 at 09:25:13AM +0100, Suravee Suthikulpanit wrote:
-> On 9/8/2014 8:54 AM, Liviu Dudau wrote:
-> > This is my version 10 of the attempt at adding support for generic PCI host
-> > bridge controllers that make use of device tree information to
-> > configure themselves. This version reverses v9's attempt to create one function
-> > to drive the whole process of extracting the host bridge ranges, setup the
-> > host bridge driver and then scan the root bus behind the host bridge. While it
-> > would've been quite user friendly, I agree that it would've caused a lot of pain
-> > in the future.
-> >
-> > I would like to get ACKs for the remaining patches as I would like to integrate
-> > this into -next in the following week.
-> >
-> > This version marks an implementation break with the previous versions as
-> > of_create_pci_host_bridge() is now gone. It gets replaced by
-> > of_pci_get_host_bridge_resources() that only parses the DT and extracts the
-> > relevant ranges and converts them to resources. The updated host bridge drivers
-> > will have to follow the guidelines in this example code:
-> >
-> > static int foohb_probe(struct platform_device *pdev)
-> > {
-> > 	struct device_node *dn = pdev->dev.of_node;
-> > 	struct foohb_drv *drv;
-> > 	resource_size_t io_base = 0;  /* phys address for start of IO */
-> > 	struct pci_bus *bus;
-> > 	int err = 0;
-> > 	LIST_HEAD(res);
-> >
-> > 	.....
-> > 	err = of_pci_get_host_bridge_resources(dn, 0, 255, &res, &io_base);
-> > 	if (err)
-> > 		goto err_handling;
-> > 	err = foohb_setup(drv, ...., &res, &io_base);
-> > 	if (err)
-> > 		goto err_handling;
-
-Hi Suravee,
-
+On Thu, Aug 21, 2014 at 09:26:52AM +1000, Anton Blanchard wrote:
+> From: Douglas Lehr <dllehr@us.ibm.com>
 > 
-> My understanding is that the "foohb_setup" above is supposed to be equivalent
-> to the "int (*setup)(struct pci_host_bridge *, resource_size_t)" in V9 that was
-> passed in as an argument of "of_create_pci_hot_bridge()".
-
-Correct. Parameters are probably different, but it is internal to your driver so
-you can do whatever you want there.
-
+> The Crocodile chip occasionally comes up with 4k and 8k BAR sizes.
+> Due to an errata, setting the SR-IOV page size causes the physical
+> function BARs to expand to the system page size.  Since ppc64 uses
+> 64k pages, when Linux tries to assign the smaller resource sizes
+> to the now 64k BARs the address will be truncated and the BARs will
+> overlap.
 > 
-> The problem I have is I need an intermediate step between "pci_create_root_bus()"
-> and "pci_scan_child_bus()" in order to update the information such as the "pci_bus->msi"
-> before this is propagate down to the child bus during the "pci_scan_child_bus"
-> which is also called in the pci_scan_root_bus() function.
-
-How did that work with my v9 patchset? How does it work for other MSI-aware platforms?
-Are they not using pci_scan_child_bus()?
-
+> This quirk will force Linux to allocate the resource as a full page,
+> which will avoid the overlap.
 > 
-> Does this mean that I should not be calling the pci_scan_root_bus(), and tries to
-> re-implement the same logic in my driver?
+> Cc: <stable@vger.kernel.org> 
+> Signed-off-by: Douglas Lehr <dllehr@us.ibm.com>
+> Signed-off-by: Anton Blanchard <anton@samba.org>
+> Acked-by: Milton Miller <miltonm@us.ibm.com>
 
-Bjorn can comment here, but there seems to be a long standing desire to make
-pci_scan_root_bus() more useful. If your change is generic enough, how about proposing
-a patch for pci_scan_root_bus() and see what feedback you get.
+Applied to pci/misc for v3.18, thanks!
 
-Judging by the complete silence I'm getting on my change (patch 9/10) of the same function,
-we might be lucky enough and no one will notice ;) (Bjorn, I'm kidding and I know you
-are busy).
+I tweaked it to print the expanded resource, see below.
 
-Best regards,
-Liviu
+> ---
+>  drivers/pci/quirks.c |   19 +++++++++++++++++++
+>  1 file changed, 19 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 80c2d01..45b946d 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -24,6 +24,7 @@
+>  #include <linux/ioport.h>
+>  #include <linux/sched.h>
+>  #include <linux/ktime.h>
+> +#include <linux/mm.h>
+>  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+>  #include "pci.h"
+>  
+> @@ -287,6 +288,24 @@ static void quirk_citrine(struct pci_dev *dev)
+>  }
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_IBM,	PCI_DEVICE_ID_IBM_CITRINE,	quirk_citrine);
+>  
+> +/*  On IBM Crocodile ipr SAS adapters, expand bar size to system page size. */
+> +static void quirk_extend_bar_to_page(struct pci_dev *dev)
+> +{
+> +	int i;
+> +
+> +	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
+> +		struct resource *r = &dev->resource[i];
+> +
+> +		if (r->flags & IORESOURCE_MEM && resource_size(r) < PAGE_SIZE) {
+> +			dev_info(&dev->dev, "Setting Bar size to Page size");
+> +			r->end = PAGE_SIZE-1;
+> +			r->start = 0;
+> +			r->flags |= IORESOURCE_UNSET;
+> +		}
+> +	}
+> +}
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_IBM, 0x034a, quirk_extend_bar_to_page);
+> +
+>  /*
+>   *  S3 868 and 968 chips report region size equal to 32M, but they decode 64M.
+>   *  If it's needed, re-allocate the region.
+> -- 
 
-> 
-> Thanks,
-> 
-> Suravee
-> 
-> > 	.....
-> > 	pci_add_flags(....);
-> > 	bus = pci_scan_root_bus(&pdev->dev, 0, &foohb_ops, drv, &res);
-> > 	if (!bus)
-> > 		goto err_handling;
-> > 	....
-> > 	return 0;
-> >
-> > err_handling:
-> > 	......
-> > 	return err;
-> > }
-> >
-> 
-> 
-> 
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
 
+commit 86b6431a306ab5a5204c436a45a3337fb17efa21
+Author: Douglas Lehr <dllehr@us.ibm.com>
+Date:   Thu Aug 21 09:26:52 2014 +1000
+
+    PCI: Increase IBM ipr SAS Crocodile BARs to at least system page size
+    
+    The Crocodile chip occasionally comes up with 4k and 8k BAR sizes.  Due to
+    an erratum, setting the SR-IOV page size causes the physical function BARs
+    to expand to the system page size.  Since ppc64 uses 64k pages, when Linux
+    tries to assign the smaller resource sizes to the now 64k BARs the address
+    will be truncated and the BARs will overlap.
+    
+    Force Linux to allocate the resource as a full page, which avoids the
+    overlap.
+    
+    [bhelgaas: print expanded resource, too]
+    Signed-off-by: Douglas Lehr <dllehr@us.ibm.com>
+    Signed-off-by: Anton Blanchard <anton@samba.org>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Acked-by: Milton Miller <miltonm@us.ibm.com>
+    CC: stable@vger.kernel.org
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 80c2d014283d..e73960311fb4 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -24,6 +24,7 @@
+ #include <linux/ioport.h>
+ #include <linux/sched.h>
+ #include <linux/ktime.h>
++#include <linux/mm.h>
+ #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+ #include "pci.h"
+ 
+@@ -287,6 +288,25 @@ static void quirk_citrine(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_IBM,	PCI_DEVICE_ID_IBM_CITRINE,	quirk_citrine);
+ 
++/*  On IBM Crocodile ipr SAS adapters, expand BAR to system page size */
++static void quirk_extend_bar_to_page(struct pci_dev *dev)
++{
++	int i;
++
++	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
++		struct resource *r = &dev->resource[i];
++
++		if (r->flags & IORESOURCE_MEM && resource_size(r) < PAGE_SIZE) {
++			r->end = PAGE_SIZE - 1;
++			r->start = 0;
++			r->flags |= IORESOURCE_UNSET;
++			dev_info(&dev->dev, "expanded BAR %d to page size: %pR\n",
++				 r);
++		}
++	}
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_IBM, 0x034a, quirk_extend_bar_to_page);
++
+ /*
+  *  S3 868 and 968 chips report region size equal to 32M, but they decode 64M.
+  *  If it's needed, re-allocate the region.
