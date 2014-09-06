@@ -1,237 +1,230 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v5 05/15] PCI: Remove PCI ioapic driver
-Date: Thu, 11 Sep 2014 16:05:48 +0800
-Message-Id: <1410422758-24942-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from exprod5og111.obsmtp.com ([64.18.0.22]:52770 "HELO
+	exprod5og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750762AbaIFAdE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 20:33:04 -0400
+Received: by mail-pd0-f171.google.com with SMTP id p10so138468pdj.2
+        for <linux-pci@vger.kernel.org>; Fri, 05 Sep 2014 17:33:02 -0700 (PDT)
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [PATCH v6 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
+Date: Fri,  5 Sep 2014 17:25:41 -0700
+Message-Id: <1409963143-11951-3-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1409963143-11951-1-git-send-email-tinamdar@apm.com>
+References: <1409963143-11951-1-git-send-email-tinamdar@apm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To support IOAPIC hotplug on x86 and IA64 platforms, OS needs to figure
-out global interrupt source number(GSI) and IOAPIC enumeration ID
-through ACPI interfaces. So BIOS must implement an ACPI IOAPIC device
-with _GSB/_UID or _MAT method to support IOAPIC hotplug. OS also needs
-to figure out base physical address to access IOAPIC registers. OS may
-get the base physical address through PCI BARs if IOAPIC device is
-visible in PCI domain, otherwise OS may get the address by ACPI _CRS
-method if IOAPIC device is hidden from PCI domain by BIOS.
+This patch adds the device tree nodes for APM X-Gene PCIe controller and
+PCIe clock interface. Since X-Gene SOC supports maximum 5 ports, 5 dts
+nodes are added.
 
-When adding a PCI subtree, we need to add IOAPIC devices before enabling
-all other PCI devices because other PCI devices may use the IOAPIC to
-allocate PCI interrupts.
-
-So we plan to reimplement IOAPIC driver as an ACPI instead of PCI driver
-due to:
-1) hot-pluggable IOAPIC devices are always visible in ACPI domain,
-   but may or may not be visible in PCI domain.
-2) we could explicitly control the order between IOAPIC and other PCI
-   devices.
-
-We also have another choice to use a PCI driver to manage IOAPIC device
-if it's visible in PCI domain and use an ACPI driver if it's only
-visible in ACPI domain. But this solution is a little complex.
-
-It shouldn't cause serious backward compatibility issues because:
-1) IOAPIC hotplug is never supported on x86 yet because it hasn't
-   implemented the required acpi_register_ioapic() and
-   acpi_unregister_ioapic().
-2) Currently only ACPI based IOAPIC hotplug is possible on x86 and
-   IA64, we don't know other specifications and interfaces to support
-   IOAPIC hotplug yet.
-3) We will reimplement an ACPI IOAPICｔdriver support IOAPIC hotplug.
-
-This change also helps to get rid of the false alarm on all current
-Linux distributions:
-[    6.952497] ioapic: probe of 0000:00:05.4 failed with error -22
-[    6.959542] ioapic: probe of 0000:80:05.4 failed with error -22
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
 ---
- drivers/pci/Kconfig  |    7 ---
- drivers/pci/Makefile |    2 -
- drivers/pci/ioapic.c |  121 --------------------------------------------------
- 3 files changed, 130 deletions(-)
- delete mode 100644 drivers/pci/ioapic.c
+ arch/arm64/boot/dts/apm-mustang.dts |   8 ++
+ arch/arm64/boot/dts/apm-storm.dtsi  | 160 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 168 insertions(+)
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 893503fa1782..39866d18004e 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -104,13 +104,6 @@ config PCI_PASID
+diff --git a/arch/arm64/boot/dts/apm-mustang.dts b/arch/arm64/boot/dts/apm-mustang.dts
+index b2f5622..f649000 100644
+--- a/arch/arm64/boot/dts/apm-mustang.dts
++++ b/arch/arm64/boot/dts/apm-mustang.dts
+@@ -25,6 +25,14 @@
+ 	};
+ };
  
- 	  If unsure, say N.
++&pcie0clk {
++	status = "ok";
++};
++
++&pcie0 {
++	status = "ok";
++};
++
+ &serial0 {
+ 	status = "ok";
+ };
+diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
+index c0aceef..e8a32a2 100644
+--- a/arch/arm64/boot/dts/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm-storm.dtsi
+@@ -269,6 +269,166 @@
+ 				enable-mask = <0x2>;
+ 				clock-output-names = "rtcclk";
+ 			};
++
++			pcie0clk: pcie0clk@1f2bc000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f2bc000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie0clk";
++			};
++
++			pcie1clk: pcie1clk@1f2cc000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f2cc000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie1clk";
++			};
++
++			pcie2clk: pcie2clk@1f2dc000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f2dc000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie2clk";
++			};
++
++			pcie3clk: pcie3clk@1f50c000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f50c000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie3clk";
++			};
++
++			pcie4clk: pcie4clk@1f51c000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f51c000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie4clk";
++			};
++		};
++
++		pcie0: pcie@1f2b0000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
++				0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
++				  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
++			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
++				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
++			clocks = <&pcie0clk 0>;
++		};
++
++		pcie1: pcie@1f2c0000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = < 0x00 0x1f2c0000 0x0 0x00010000   /* Controller registers */
++				0xd0 0xd0000000 0x0 0x00040000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x0 0x00000000 0xd0 0x10000000 0x00 0x00010000   /* io  */
++				  0x02000000 0x0 0x80000000 0xd1 0x80000000 0x00 0x80000000>; /* mem */
++			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
++				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc8 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xc9 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xca 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xcb 0x1>;
++			clocks = <&pcie1clk 0>;
++		};
++
++		pcie2: pcie@1f2d0000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg =  < 0x00 0x1f2d0000 0x0 0x00010000   /* Controller registers */
++				 0x90 0xd0000000 0x0 0x00040000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x0 0x00000000 0x90 0x10000000 0x0 0x00010000   /* io  */
++				  0x02000000 0x0 0x80000000 0x91 0x80000000 0x0 0x80000000>; /* mem */
++			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
++				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xce 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xcf 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xd0 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xd1 0x1>;
++			clocks = <&pcie2clk 0>;
++		};
++
++		pcie3: pcie@1f500000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = < 0x00 0x1f500000 0x0 0x00010000   /* Controller registers */
++				0xa0 0xd0000000 0x0 0x00040000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x0 0x00000000 0xa0 0x10000000 0x0 0x00010000   /* io   */
++				  0x02000000 0x0 0x80000000 0xa1 0x80000000 0x0 0x80000000>; /* mem  */
++			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
++				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xd4 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xd5 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xd6 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xd7 0x1>;
++			clocks = <&pcie3clk 0>;
++		};
++
++		pcie4: pcie@1f510000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = < 0x00 0x1f510000 0x0 0x00010000   /* Controller registers */
++				0xc0 0xd0000000 0x0 0x00200000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x0 0x00000000 0xc0 0x10000000 0x0 0x00010000   /* io  */
++				  0x02000000 0x0 0x80000000 0xc1 0x80000000 0x0 0x80000000>; /* mem */
++			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
++				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xda 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xdb 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xdc 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xdd 0x1>;
++			clocks = <&pcie4clk 0>;
+ 		};
  
--config PCI_IOAPIC
--	bool "PCI IO-APIC hotplug support" if X86
--	depends on PCI
--	depends on ACPI
--	depends on X86_IO_APIC
--	default !X86
--
- config PCI_LABEL
- 	def_bool y if (DMI || ACPI)
- 	select NLS
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index e04fe2d9df3b..73e4af400a5a 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -13,8 +13,6 @@ obj-$(CONFIG_PCI_QUIRKS) += quirks.o
- # Build PCI Express stuff if needed
- obj-$(CONFIG_PCIEPORTBUS) += pcie/
- 
--obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
--
- # Build the PCI Hotplug drivers if we were asked to
- obj-$(CONFIG_HOTPLUG_PCI) += hotplug/
- ifdef CONFIG_HOTPLUG_PCI
-diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
-deleted file mode 100644
-index f6219d36227f..000000000000
---- a/drivers/pci/ioapic.c
-+++ /dev/null
-@@ -1,121 +0,0 @@
--/*
-- * IOAPIC/IOxAPIC/IOSAPIC driver
-- *
-- * Copyright (C) 2009 Fujitsu Limited.
-- * (c) Copyright 2009 Hewlett-Packard Development Company, L.P.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as
-- * published by the Free Software Foundation.
-- */
--
--/*
-- * This driver manages PCI I/O APICs added by hotplug after boot.  We try to
-- * claim all I/O APIC PCI devices, but those present at boot were registered
-- * when we parsed the ACPI MADT, so we'll fail when we try to re-register
-- * them.
-- */
--
--#include <linux/pci.h>
--#include <linux/module.h>
--#include <linux/acpi.h>
--#include <linux/slab.h>
--
--struct ioapic {
--	acpi_handle	handle;
--	u32		gsi_base;
--};
--
--static int ioapic_probe(struct pci_dev *dev, const struct pci_device_id *ent)
--{
--	acpi_handle handle;
--	acpi_status status;
--	unsigned long long gsb;
--	struct ioapic *ioapic;
--	int ret;
--	char *type;
--	struct resource *res;
--
--	handle = ACPI_HANDLE(&dev->dev);
--	if (!handle)
--		return -EINVAL;
--
--	status = acpi_evaluate_integer(handle, "_GSB", NULL, &gsb);
--	if (ACPI_FAILURE(status))
--		return -EINVAL;
--
--	/*
--	 * The previous code in acpiphp evaluated _MAT if _GSB failed, but
--	 * ACPI spec 4.0 sec 6.2.2 requires _GSB for hot-pluggable I/O APICs.
--	 */
--
--	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
--	if (!ioapic)
--		return -ENOMEM;
--
--	ioapic->handle = handle;
--	ioapic->gsi_base = (u32) gsb;
--
--	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
--		type = "IOAPIC";
--	else
--		type = "IOxAPIC";
--
--	ret = pci_enable_device(dev);
--	if (ret < 0)
--		goto exit_free;
--
--	pci_set_master(dev);
--
--	if (pci_request_region(dev, 0, type))
--		goto exit_disable;
--
--	res = &dev->resource[0];
--	if (acpi_register_ioapic(ioapic->handle, res->start, ioapic->gsi_base))
--		goto exit_release;
--
--	pci_set_drvdata(dev, ioapic);
--	dev_info(&dev->dev, "%s at %pR, GSI %u\n", type, res, ioapic->gsi_base);
--	return 0;
--
--exit_release:
--	pci_release_region(dev, 0);
--exit_disable:
--	pci_disable_device(dev);
--exit_free:
--	kfree(ioapic);
--	return -ENODEV;
--}
--
--static void ioapic_remove(struct pci_dev *dev)
--{
--	struct ioapic *ioapic = pci_get_drvdata(dev);
--
--	acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base);
--	pci_release_region(dev, 0);
--	pci_disable_device(dev);
--	kfree(ioapic);
--}
--
--
--static const struct pci_device_id ioapic_devices[] = {
--	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOAPIC, ~0) },
--	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOXAPIC, ~0) },
--	{ }
--};
--MODULE_DEVICE_TABLE(pci, ioapic_devices);
--
--static struct pci_driver ioapic_driver = {
--	.name		= "ioapic",
--	.id_table	= ioapic_devices,
--	.probe		= ioapic_probe,
--	.remove		= ioapic_remove,
--};
--
--static int __init ioapic_init(void)
--{
--	return pci_register_driver(&ioapic_driver);
--}
--module_init(ioapic_init);
--
--MODULE_LICENSE("GPL");
+ 		serial0: serial@1c020000 {
 -- 
-1.7.10.4
+1.9.1
 
