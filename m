@@ -1,59 +1,56 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"Russell King" <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v1 03/21] MSI: Remove the redundant irq_set_chip_data()
-Date: Fri, 5 Sep 2014 18:09:48 +0800
-Message-ID: <1409911806-10519-4-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from exprod5og108.obsmtp.com ([64.18.0.186]:34680 "HELO
+	exprod5og108.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750725AbaIFAcM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 20:32:12 -0400
+Received: by mail-pd0-f171.google.com with SMTP id p10so137475pdj.2
+        for <linux-pci@vger.kernel.org>; Fri, 05 Sep 2014 17:32:11 -0700 (PDT)
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [PATCH v6 4/4] MAINTAINERS: entry for APM X-Gene PCIe host driver
+Date: Fri,  5 Sep 2014 17:25:43 -0700
+Message-Id: <1409963143-11951-5-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1409963143-11951-1-git-send-email-tinamdar@apm.com>
+References: <1409963143-11951-1-git-send-email-tinamdar@apm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, pcie-designware, pcie-rcar, pci-tegra drivers
-use irq chip_data to save the msi_chip pointer. They
-already call irq_set_chip_data() in their own MSI irq map
-functions. So irq_set_chip_data() in arch_setup_msi_irq()
-is useless.
+Add entry for AppliedMicro X-Gene PCIe host driver.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
 ---
- drivers/pci/msi.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+ MAINTAINERS | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index f6cb317..d547f7f 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -41,8 +41,6 @@ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- 	if (err < 0)
- 		return err;
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 5e7866a..cd9bb3da 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6941,6 +6941,14 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/*spear*
  
--	irq_set_chip_data(desc->irq, chip);
--
- 	return 0;
- }
- 
++PCI DRIVER FOR APPLIEDMICRO XGENE
++M:	Tanmay Inamdar <tinamdar@apm.com>
++L:	linux-pci@vger.kernel.org
++L:	linux-arm-kernel@lists.infradead.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/xgene-pci.txt
++F:	drivers/pci/host/pci-xgene.c
++
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
 -- 
-1.7.1
+1.9.1
 
