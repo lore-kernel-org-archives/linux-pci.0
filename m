@@ -1,162 +1,341 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:44063 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750797AbaIERj5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Sep 2014 13:39:57 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sun, 7 Sep 2014 20:02:04 +0200
+From: Quentin Lambert <lambert.quentin@gmail.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>
-Subject: [PATCH] PCI: keystone: update to support multiple pci ports
-Date: Fri, 5 Sep 2014 13:39:42 -0400
-Message-ID: <1409938782-31460-1-git-send-email-m-karicheri2@ti.com>
+	Scott Murray <scott@spiteful.org>
+Cc: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 1/4] PCI: fix a missing space coding style issue
+Message-ID: <20140907180204.GA12386@greed>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-K2E SoC has two PCI ports. The SATA controller is connected to second
-PCI port (port 1). This patch enhances the driver to support multiple
-ports.
+Modified the files in the directory so that they respect
+the coding style with regards to parenthesis being
+preceded by a space.
 
-Update the DT Documentation for the new attribute, ti,pcie-port and
-remove the note for bootargs as this is no longer needed.
-
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Pawel Moll <pawel.moll@arm.com>
-CC: Mark Rutland <mark.rutland@arm.com>
-CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
-CC: Kumar Gala <galak@codeaurora.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+Signed-off-by: Quentin Lambert <lambert.quentin@gmail.com>
 ---
- .../devicetree/bindings/pci/pci-keystone.txt       |    8 ++++---
- drivers/pci/host/pci-keystone.c                    |   23 ++++++++++++++------
- drivers/pci/host/pci-keystone.h                    |    4 ++--
- 3 files changed, 23 insertions(+), 12 deletions(-)
+ drivers/pci/hotplug/acpiphp_ibm.c    |  2 +-
+ drivers/pci/hotplug/cpcihp_generic.c | 28 ++++++++++++++--------------
+ drivers/pci/hotplug/cpcihp_zt5550.c  | 36 ++++++++++++++++++------------------
+ drivers/pci/hotplug/cpqphp.h         |  2 +-
+ drivers/pci/hotplug/cpqphp_ctrl.c    |  4 ++--
+ 5 files changed, 36 insertions(+), 36 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-index ceb3e24..e279143 100644
---- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
-+++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-@@ -58,11 +58,13 @@ Optional properties:-
- 	phy-names: name of the Generic Keystine SerDes phy for PCI
- 	  - If boot loader already does PCI link establishment, then phys and
- 	    phy-names shouldn't be present.
-+	ti,pcie-port: PCI port number. This is used to configure the PCI port
-+	    number. For example K2E SoC supports 2 PCI ports and PCI bindings
-+	    for the second port adds ti,pcie-port = <1> to identify second port
-+	    and driver uses this to configure the PCI mode register for second
-+	    port. If not present, port number 0 is assumed.
- 
- Designware DT Properties not applicable for Keystone PCI
- 
- 1. pcie_bus clock-names not used.  Instead, a phandle to phys is used.
- 
--Note for PCI driver usage
--=========================
--Driver requires pci=pcie_bus_perf in the bootargs for proper functioning.
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-index a132622..b4831e8 100644
---- a/drivers/pci/host/pci-keystone.c
-+++ b/drivers/pci/host/pci-keystone.c
-@@ -252,8 +252,8 @@ static int keystone_pcie_fault(unsigned long addr, unsigned int fsr,
- 
- static void __init ks_pcie_host_init(struct pcie_port *pp)
- {
--	u32 vendor_device_id, val;
- 	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
-+	u32 val;
- 
- 	ks_pcie_establish_link(ks_pcie);
- 	ks_dw_pcie_setup_rc_app_regs(ks_pcie);
-@@ -262,8 +262,7 @@ static void __init ks_pcie_host_init(struct pcie_port *pp)
- 			pp->dbi_base + PCI_IO_BASE);
- 
- 	/* update the Vendor ID */
--	vendor_device_id = readl(ks_pcie->va_reg_pciid);
--	writew((vendor_device_id >> 16), pp->dbi_base + PCI_DEVICE_ID);
-+	writew(ks_pcie->device_id, pp->dbi_base + PCI_DEVICE_ID);
- 
- 	/* update the DEV_STAT_CTRL to publish right mrrs */
- 	val = readl(pp->dbi_base + PCIE_CAP_BASE + PCI_EXP_DEVCTL);
-@@ -344,12 +343,13 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
- static int __init ks_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-+	struct device_node *np = dev->of_node;
- 	struct keystone_pcie *ks_pcie;
-+	int ret = 0, port_id = 0;
- 	struct pcie_port *pp;
- 	struct resource *res;
- 	void __iomem *reg_p;
- 	struct phy *phy;
--	int ret = 0;
- 	u32 val;
- 
- 	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
-@@ -360,17 +360,24 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+diff --git a/drivers/pci/hotplug/acpiphp_ibm.c b/drivers/pci/hotplug/acpiphp_ibm.c
+index 8dcccff..6ca2399 100644
+--- a/drivers/pci/hotplug/acpiphp_ibm.c
++++ b/drivers/pci/hotplug/acpiphp_ibm.c
+@@ -302,7 +302,7 @@ static int ibm_get_table_from_acpi(char **bufp)
+ 		goto read_table_done;
  	}
- 	pp = &ks_pcie->pp;
  
-+	/* read the PCI port id */
-+	of_property_read_u32(np, "ti,pcie-port", &port_id);
-+
- 	/* index 2 is the devcfg register for RC mode settings */
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
- 	reg_p = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(reg_p))
- 		return PTR_ERR(reg_p);
+-	for(size = 0, i = 0; i < package->package.count; i++) {
++	for (size = 0, i = 0; i < package->package.count; i++) {
+ 		if (package->package.elements[i].type != ACPI_TYPE_BUFFER) {
+ 			pr_err("%s:  Invalid APCI element %d\n", __func__, i);
+ 			goto read_table_done;
+diff --git a/drivers/pci/hotplug/cpcihp_generic.c b/drivers/pci/hotplug/cpcihp_generic.c
+index 04fcd78..66b7bbe 100644
+--- a/drivers/pci/hotplug/cpcihp_generic.c
++++ b/drivers/pci/hotplug/cpcihp_generic.c
+@@ -56,7 +56,7 @@
+ 		if (debug)					\
+ 			printk (KERN_DEBUG "%s: " format "\n",	\
+ 				MY_NAME , ## arg);		\
+-	} while(0)
++	} while (0)
+ #define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME , ## arg)
+ #define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME , ## arg)
+ #define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
+@@ -82,28 +82,28 @@ static int __init validate_parameters(void)
+ 	char *p;
+ 	unsigned long tmp;
  
-+
- 	/* enable RC mode in devcfg */
- 	val = readl(reg_p);
--	val &= ~PCIE_MODE_MASK;
--	val |= PCIE_RC_MODE;
-+	port_id <<= 1;
-+	val &= ~(PCIE_MODE_MASK << port_id);
-+	val |= (PCIE_RC_MODE << port_id);
- 	writel(val, reg_p);
-+	devm_iounmap(dev, reg_p);
-+	devm_release_mem_region(dev, res->start, resource_size(res));
+-	if(!bridge) {
++	if (!bridge) {
+ 		info("not configured, disabling.");
+ 		return -EINVAL;
+ 	}
+ 	str = bridge;
+-	if(!*str)
++	if (!*str)
+ 		return -EINVAL;
  
- 	/* initialize SerDes Phy if present */
- 	phy = devm_phy_get(dev, "pcie-phy");
-@@ -385,7 +392,9 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 	reg_p = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(reg_p))
- 		return PTR_ERR(reg_p);
--	ks_pcie->va_reg_pciid = reg_p;
-+	ks_pcie->device_id = readl(reg_p) >> 16;
-+	devm_iounmap(dev, reg_p);
-+	devm_release_mem_region(dev, res->start, resource_size(res));
+ 	tmp = simple_strtoul(str, &p, 16);
+-	if(p == str || tmp > 0xff) {
++	if (p == str || tmp > 0xff) {
+ 		err("Invalid hotplug bus bridge device bus number");
+ 		return -EINVAL;
+ 	}
+ 	bridge_busnr = (u8) tmp;
+ 	dbg("bridge_busnr = 0x%02x", bridge_busnr);
+-	if(*p != ':') {
++	if (*p != ':') {
+ 		err("Invalid hotplug bus bridge device");
+ 		return -EINVAL;
+ 	}
+ 	str = p + 1;
+ 	tmp = simple_strtoul(str, &p, 16);
+-	if(p == str || tmp > 0x1f) {
++	if (p == str || tmp > 0x1f) {
+ 		err("Invalid hotplug bus bridge device slot number");
+ 		return -EINVAL;
+ 	}
+@@ -112,18 +112,18 @@ static int __init validate_parameters(void)
  
- 	pp->dev = dev;
- 	platform_set_drvdata(pdev, ks_pcie);
-diff --git a/drivers/pci/host/pci-keystone.h b/drivers/pci/host/pci-keystone.h
-index 729ea7d..80cfa8e 100644
---- a/drivers/pci/host/pci-keystone.h
-+++ b/drivers/pci/host/pci-keystone.h
-@@ -19,8 +19,8 @@
- struct keystone_pcie {
- 	struct	clk		*clk;
- 	struct	pcie_port	pp;
--	void __iomem		*va_reg_pciid;
--
-+	/* PCI Device ID */
-+	u32			device_id;
- 	int			num_legacy_host_irqs;
- 	int			legacy_host_irqs[MAX_LEGACY_HOST_IRQS];
- 	struct			device_node *legacy_intc_np;
+ 	dbg("first_slot = 0x%02x", first_slot);
+ 	dbg("last_slot = 0x%02x", last_slot);
+-	if(!(first_slot && last_slot)) {
++	if (!(first_slot && last_slot)) {
+ 		err("Need to specify first_slot and last_slot");
+ 		return -EINVAL;
+ 	}
+-	if(last_slot < first_slot) {
++	if (last_slot < first_slot) {
+ 		err("first_slot must be less than last_slot");
+ 		return -EINVAL;
+ 	}
+ 
+ 	dbg("port = 0x%04x", port);
+ 	dbg("enum_bit = 0x%02x", enum_bit);
+-	if(enum_bit > 7) {
++	if (enum_bit > 7) {
+ 		err("Invalid #ENUM bit");
+ 		return -EINVAL;
+ 	}
+@@ -151,12 +151,12 @@ static int __init cpcihp_generic_init(void)
+ 		return status;
+ 
+ 	r = request_region(port, 1, "#ENUM hotswap signal register");
+-	if(!r)
++	if (!r)
+ 		return -EBUSY;
+ 
+ 	dev = pci_get_domain_bus_and_slot(0, bridge_busnr,
+ 					  PCI_DEVFN(bridge_slot, 0));
+-	if(!dev || dev->hdr_type != PCI_HEADER_TYPE_BRIDGE) {
++	if (!dev || dev->hdr_type != PCI_HEADER_TYPE_BRIDGE) {
+ 		err("Invalid bridge device %s", bridge);
+ 		pci_dev_put(dev);
+ 		return -EINVAL;
+@@ -169,21 +169,21 @@ static int __init cpcihp_generic_init(void)
+ 	generic_hpc.ops = &generic_hpc_ops;
+ 
+ 	status = cpci_hp_register_controller(&generic_hpc);
+-	if(status != 0) {
++	if (status != 0) {
+ 		err("Could not register cPCI hotplug controller");
+ 		return -ENODEV;
+ 	}
+ 	dbg("registered controller");
+ 
+ 	status = cpci_hp_register_bus(bus, first_slot, last_slot);
+-	if(status != 0) {
++	if (status != 0) {
+ 		err("Could not register cPCI hotplug bus");
+ 		goto init_bus_register_error;
+ 	}
+ 	dbg("registered bus");
+ 
+ 	status = cpci_hp_start();
+-	if(status != 0) {
++	if (status != 0) {
+ 		err("Could not started cPCI hotplug system");
+ 		goto init_start_error;
+ 	}
+diff --git a/drivers/pci/hotplug/cpcihp_zt5550.c b/drivers/pci/hotplug/cpcihp_zt5550.c
+index 6757b3e..e618020 100644
+--- a/drivers/pci/hotplug/cpcihp_zt5550.c
++++ b/drivers/pci/hotplug/cpcihp_zt5550.c
+@@ -51,7 +51,7 @@
+ 		if (debug)					\
+ 			printk (KERN_DEBUG "%s: " format "\n",	\
+ 				MY_NAME , ## arg);		\
+-	} while(0)
++	} while (0)
+ #define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME , ## arg)
+ #define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME , ## arg)
+ #define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
+@@ -82,13 +82,13 @@ static int zt5550_hc_config(struct pci_dev *pdev)
+ 	int ret;
+ 
+ 	/* Since we know that no boards exist with two HC chips, treat it as an error */
+-	if(hc_dev) {
++	if (hc_dev) {
+ 		err("too many host controller devices?");
+ 		return -EBUSY;
+ 	}
+ 
+ 	ret = pci_enable_device(pdev);
+-	if(ret) {
++	if (ret) {
+ 		err("cannot enable %s\n", pci_name(pdev));
+ 		return ret;
+ 	}
+@@ -98,7 +98,7 @@ static int zt5550_hc_config(struct pci_dev *pdev)
+ 	dbg("pci resource start %llx", (unsigned long long)pci_resource_start(hc_dev, 1));
+ 	dbg("pci resource len %llx", (unsigned long long)pci_resource_len(hc_dev, 1));
+ 
+-	if(!request_mem_region(pci_resource_start(hc_dev, 1),
++	if (!request_mem_region(pci_resource_start(hc_dev, 1),
+ 				pci_resource_len(hc_dev, 1), MY_NAME)) {
+ 		err("cannot reserve MMIO region");
+ 		ret = -ENOMEM;
+@@ -107,7 +107,7 @@ static int zt5550_hc_config(struct pci_dev *pdev)
+ 
+ 	hc_registers =
+ 	    ioremap(pci_resource_start(hc_dev, 1), pci_resource_len(hc_dev, 1));
+-	if(!hc_registers) {
++	if (!hc_registers) {
+ 		err("cannot remap MMIO region %llx @ %llx",
+ 			(unsigned long long)pci_resource_len(hc_dev, 1),
+ 			(unsigned long long)pci_resource_start(hc_dev, 1));
+@@ -146,7 +146,7 @@ exit_disable_device:
+ 
+ static int zt5550_hc_cleanup(void)
+ {
+-	if(!hc_dev)
++	if (!hc_dev)
+ 		return -ENODEV;
+ 
+ 	iounmap(hc_registers);
+@@ -170,9 +170,9 @@ static int zt5550_hc_check_irq(void *dev_id)
+ 	u8 reg;
+ 
+ 	ret = 0;
+-	if(dev_id == zt5550_hpc.dev_id) {
++	if (dev_id == zt5550_hpc.dev_id) {
+ 		reg = readb(csr_int_status);
+-		if(reg)
++		if (reg)
+ 			ret = 1;
+ 	}
+ 	return ret;
+@@ -182,7 +182,7 @@ static int zt5550_hc_enable_irq(void)
+ {
+ 	u8 reg;
+ 
+-	if(hc_dev == NULL) {
++	if (hc_dev == NULL) {
+ 		return -ENODEV;
+ 	}
+ 	reg = readb(csr_int_mask);
+@@ -195,7 +195,7 @@ static int zt5550_hc_disable_irq(void)
+ {
+ 	u8 reg;
+ 
+-	if(hc_dev == NULL) {
++	if (hc_dev == NULL) {
+ 		return -ENODEV;
+ 	}
+ 
+@@ -210,7 +210,7 @@ static int zt5550_hc_init_one (struct pci_dev *pdev, const struct pci_device_id
+ 	int status;
+ 
+ 	status = zt5550_hc_config(pdev);
+-	if(status != 0) {
++	if (status != 0) {
+ 		return status;
+ 	}
+ 	dbg("returned from zt5550_hc_config");
+@@ -218,7 +218,7 @@ static int zt5550_hc_init_one (struct pci_dev *pdev, const struct pci_device_id
+ 	memset(&zt5550_hpc, 0, sizeof (struct cpci_hp_controller));
+ 	zt5550_hpc_ops.query_enum = zt5550_hc_query_enum;
+ 	zt5550_hpc.ops = &zt5550_hpc_ops;
+-	if(!poll) {
++	if (!poll) {
+ 		zt5550_hpc.irq = hc_dev->irq;
+ 		zt5550_hpc.irq_flags = IRQF_SHARED;
+ 		zt5550_hpc.dev_id = hc_dev;
+@@ -231,14 +231,14 @@ static int zt5550_hc_init_one (struct pci_dev *pdev, const struct pci_device_id
+ 	}
+ 
+ 	status = cpci_hp_register_controller(&zt5550_hpc);
+-	if(status != 0) {
++	if (status != 0) {
+ 		err("could not register cPCI hotplug controller");
+ 		goto init_hc_error;
+ 	}
+ 	dbg("registered controller");
+ 
+ 	/* Look for first device matching cPCI bus's bridge vendor and device IDs */
+-	if(!(bus0_dev = pci_get_device(PCI_VENDOR_ID_DEC,
++	if (!(bus0_dev = pci_get_device(PCI_VENDOR_ID_DEC,
+ 					 PCI_DEVICE_ID_DEC_21154, NULL))) {
+ 		status = -ENODEV;
+ 		goto init_register_error;
+@@ -247,14 +247,14 @@ static int zt5550_hc_init_one (struct pci_dev *pdev, const struct pci_device_id
+ 	pci_dev_put(bus0_dev);
+ 
+ 	status = cpci_hp_register_bus(bus0, 0x0a, 0x0f);
+-	if(status != 0) {
++	if (status != 0) {
+ 		err("could not register cPCI hotplug bus");
+ 		goto init_register_error;
+ 	}
+ 	dbg("registered bus");
+ 
+ 	status = cpci_hp_start();
+-	if(status != 0) {
++	if (status != 0) {
+ 		err("could not started cPCI hotplug system");
+ 		cpci_hp_unregister_bus(bus0);
+ 		goto init_register_error;
+@@ -300,11 +300,11 @@ static int __init zt5550_init(void)
+ 
+ 	info(DRIVER_DESC " version: " DRIVER_VERSION);
+ 	r = request_region(ENUM_PORT, 1, "#ENUM hotswap signal register");
+-	if(!r)
++	if (!r)
+ 		return -EBUSY;
+ 
+ 	rc = pci_register_driver(&zt5550_hc_driver);
+-	if(rc < 0)
++	if (rc < 0)
+ 		release_region(ENUM_PORT, 1);
+ 	return rc;
+ }
+diff --git a/drivers/pci/hotplug/cpqphp.h b/drivers/pci/hotplug/cpqphp.h
+index 0450f40..b28b2d2 100644
+--- a/drivers/pci/hotplug/cpqphp.h
++++ b/drivers/pci/hotplug/cpqphp.h
+@@ -690,7 +690,7 @@ static inline int cpq_get_latch_status(struct controller *ctrl,
+ 
+ 	status = (readl(ctrl->hpc_reg + INT_INPUT_CLEAR) & (0x01L << hp_slot));
+ 
+-	return(status == 0) ? 1 : 0;
++	return (status == 0) ? 1 : 0;
+ }
+ 
+ 
+diff --git a/drivers/pci/hotplug/cpqphp_ctrl.c b/drivers/pci/hotplug/cpqphp_ctrl.c
+index bde47fc..476482e 100644
+--- a/drivers/pci/hotplug/cpqphp_ctrl.c
++++ b/drivers/pci/hotplug/cpqphp_ctrl.c
+@@ -1143,7 +1143,7 @@ static u8 set_controller_speed(struct controller *ctrl, u8 adapter_speed, u8 hp_
+ 	/* We don't allow freq/mode changes if we find another adapter running
+ 	 * in another slot on this controller
+ 	 */
+-	for(slot = ctrl->slot; slot; slot = slot->next) {
++	for (slot = ctrl->slot; slot; slot = slot->next) {
+ 		if (slot->device == (hp_slot + ctrl->slot_device_offset))
+ 			continue;
+ 		if (!slot->hotplug_slot || !slot->hotplug_slot->info)
+@@ -1193,7 +1193,7 @@ static u8 set_controller_speed(struct controller *ctrl, u8 adapter_speed, u8 hp_
+ 
+ 	reg16 = readw(ctrl->hpc_reg + NEXT_CURR_FREQ);
+ 	reg16 &= ~0x000F;
+-	switch(adapter_speed) {
++	switch (adapter_speed) {
+ 		case(PCI_SPEED_133MHz_PCIX):
+ 			reg = 0x75;
+ 			reg16 |= 0xB;
 -- 
-1.7.9.5
+1.9.1
 
