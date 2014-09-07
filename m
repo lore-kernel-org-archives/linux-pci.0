@@ -1,158 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:53761 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752628AbaIEUn2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 16:43:28 -0400
-Message-ID: <540A206A.6070503@ti.com>
-Date: Fri, 5 Sep 2014 16:43:22 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sun, 7 Sep 2014 20:00:23 +0200
+From: Quentin Lambert <lambert.quentin@gmail.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Scott Murray <scott@spiteful.org>
+Cc: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 0/4] Extending the first version of the patch to the
+ entire directory
+Message-ID: <20140907180023.GA1849@greed>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v2] PCI: keystone: add a pci quirk to limit mrrs
-References: <1407527132-3294-1-git-send-email-m-karicheri2@ti.com> <20140905192329.GE8080@google.com> <540A1D54.9030103@ti.com> <CAErSpo7LHFbg-CiWr+UYdy4vuvPjcCyERyTzU_F59An-gW-O4w@mail.gmail.com>
-In-Reply-To: <CAErSpo7LHFbg-CiWr+UYdy4vuvPjcCyERyTzU_F59An-gW-O4w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/05/2014 04:40 PM, Bjorn Helgaas wrote:
-> On Fri, Sep 5, 2014 at 2:30 PM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
->> On 09/05/2014 03:23 PM, Bjorn Helgaas wrote:
->>>
->>> On Fri, Aug 08, 2014 at 03:45:32PM -0400, Murali Karicheri wrote:
->>>>
->>>> Keystone PCI controller has a limitation that memory read request
->>>> size must not exceed 256 bytes. This is a hardware limitation and
->>>> add a quirk to force this limit on all downstream devices by
->>>> updating mrrs.
->>>>
->>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->>>> ---
->>>>    -v2: made the quirk happens after tuning
->>>>    -v1: changed printk to indicate PCI bdf
->>>>    This applies on top of the Keystone PCI controller patch series
->>>>    at http://thread.gmane.org/gmane.linux.kernel.pci/33523
->>>>    drivers/pci/host/pci-keystone.c |   40
->>>> +++++++++++++++++++++++++++++++++++++++
->>>>    1 file changed, 40 insertions(+)
->>>>
->>>> diff --git a/drivers/pci/host/pci-keystone.c
->>>> b/drivers/pci/host/pci-keystone.c
->>>> index c1cfaef..a132622 100644
->>>> --- a/drivers/pci/host/pci-keystone.c
->>>> +++ b/drivers/pci/host/pci-keystone.c
->>>> @@ -42,8 +42,48 @@
->>>>    /* DEV_STAT_CTRL */
->>>>    #define PCIE_CAP_BASE         0x70
->>>>
->>>> +/* PCIE controller device IDs */
->>>> +#define PCIE_RC_K2HK           0xb008
->>>> +#define PCIE_RC_K2E            0xb009
->>>> +#define PCIE_RC_K2L            0xb00a
->>>
->>>
->>> A Root Complex doesn't appear in config space as a PCI device, so I think
->>> these are actually Root Port devices, aren't they?
->>
->>
->> Yes.
->>
->>>
->>> I suppose the spec would allow Root Complex Integrated Endpoints, on which
->>> MRRS could also be set, but I think your quirk ignores them because they
->>> would appear on the root bus.  Is ignoring them OK, or would you want to
->>> set MRRS for those as well?
->>
->>
->> How does the Root Complex integrated endpoints are designed? Our PCI can act
->> as a RC or EP and not both at the same time. So I guess this is not
->> applicable.
->
-> My guess is that you probably don't have any integrated endpoints and
-> hence don't need to worry about MRRS for them.  The PCIe spec (r3.0,
-> sec 1.3.2.3) says "A Root Complex Integrated Endpoint is implemented
-> on internal logic of Root Complexes that contains [sic] the Root
-> Ports."
->
-> For example, my laptop has:
->
->    00:03.0 Audio device: Intel Corporation Haswell-ULT HD Audio Controller
->    00:1c.0 PCI bridge: Intel Corporation Lynx Point-LP PCI Express Root Port 1
->    00:1c.3 PCI bridge: Intel Corporation Lynx Point-LP PCI Express Root Port 4
->
-> the 00:03.0 Audio device is a PCIe device but it is a sibling of the
-> Root Ports rather than being downstream from them, i.e., it's an
-> Integrated Endpoint that is part of the Root Complex itself.
-Ok. Got it. This is not applicable for Keystone PCI RC.
+Patch 1 and 2 are straight forward extension from the previous version
+of the patch.
 
-Regards,
+Patch 3 introduces checkpatch warning due to lines surpassing 80
+characters. Another warning concerning too many preceding tabs
+is not fixed either.
 
-Murali
->
->>>> +
->>>>    #define to_keystone_pcie(x)   container_of(x, struct keystone_pcie, pp)
->>>>
->>>> +static void quirk_limit_mrrs(struct pci_dev *dev)
->>>> +{
->>>> +       struct pci_bus *bus = dev->bus;
->>>> +       struct pci_dev *bridge = bus->self;
->>>> +
->>>> +       if (pci_is_root_bus(bus))
->>>> +               return;
->>>> +
->>>> +       /* look for the host bridge */
->>>> +       while (!pci_is_root_bus(bus)) {
->>>> +               bridge = bus->self;
->>>> +               bus = bus->parent;
->>>> +       }
->>>> +
->>>> +       if (bridge) {
->>>> +               u16 id;
->>>> +
->>>> +               /*
->>>> +                * Keystone PCI controller has a h/w limitation of
->>>> +                * 256 bytes maximum read request size. It can't handle
->>>> +                * anything higher than this. So force this limit on
->>>> +                * all downstream devices
->>>> +                */
->>>> +               pci_read_config_word(bridge, PCI_DEVICE_ID,&id);
->>>
->>>
->>> I think you should check the Vendor ID here as well.  Otherwise, there's a
->>> possibility of applying this quirk to devices under a bridge with the same
->>> Device ID but different Vendor ID.
->>>
->>> And I think you should be able to use the bridge->vendor and
->>> bridge->device
->>> fields instead of reading them from config space.  Actually, this might be
->>> a good place to use pci_match_id().
->>
->>
->> Ok.
->>
->>
->>>
->>>> +               if ((id == PCIE_RC_K2HK) || (id == PCIE_RC_K2E) ||
->>>> +                   (id == PCIE_RC_K2L)) {
->>>> +                       if (pcie_get_readrq(dev)>   256) {
->>>> +                               dev_info(&dev->dev, "limiting mrrs to
->>>> 256\n");
->>>> +                               pcie_set_readrq(dev, 256);
->>>> +                       }
->>>> +               }
->>>> +       }
->>>> +}
->>>> +DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
->>>> +
->>>>    static int ks_pcie_establish_link(struct keystone_pcie *ks_pcie)
->>>>    {
->>>>          struct pcie_port *pp =&ks_pcie->pp;
->>>> --
->>>> 1.7.9.5
->>>>
->>
+Patch 4 are less straight forward similar modifications
+the modification made to ibmphp_res.c change the value of len_tmp
+when the first condition in if statement is not met.
+I wasn't quite sure how to solve elegantly the checkpatch error for
+slot.c, I chose to use a label and gotos since it was already used
+and allowed for a slight code factorisation. This being my first patch I
+understand that this may not be the best solution.
+
+
+
+Quentin Lambert (4):
+  PCI: fix a missing space coding style issue
+  PCI: fix a simple if coding style issue
+  PCI: remove assignement from if conditions
+  PCI: remove assignement in non straight forward if condition
+
+ drivers/pci/hotplug/acpi_pcihp.c        |  3 ++-
+ drivers/pci/hotplug/acpiphp_ibm.c       |  2 +-
+ drivers/pci/hotplug/cpci_hotplug_core.c | 13 ++++++----
+ drivers/pci/hotplug/cpcihp_generic.c    | 28 ++++++++++-----------
+ drivers/pci/hotplug/cpcihp_zt5550.c     | 44 ++++++++++++++++-----------------
+ drivers/pci/hotplug/cpqphp.h            |  2 +-
+ drivers/pci/hotplug/cpqphp_core.c       |  3 +--
+ drivers/pci/hotplug/cpqphp_ctrl.c       | 19 ++++++--------
+ drivers/pci/hotplug/cpqphp_nvram.c      | 13 ++++------
+ drivers/pci/hotplug/ibmphp_core.c       | 19 ++++++++------
+ drivers/pci/hotplug/ibmphp_ebda.c       |  3 +--
+ drivers/pci/hotplug/ibmphp_hpc.c        |  3 +--
+ drivers/pci/hotplug/ibmphp_pci.c        |  6 +++--
+ drivers/pci/hotplug/ibmphp_res.c        | 43 ++++++++++++++++++++++----------
+ drivers/pci/hotplug/shpchp_ctrl.c       | 12 ++++++---
+ drivers/pci/hotplug/shpchp_hpc.c        |  3 ++-
+ drivers/pci/pci.c                       | 19 +++++++++++---
+ drivers/pci/slot.c                      | 12 +++++++--
+ 18 files changed, 143 insertions(+), 104 deletions(-)
+
+-- 
+1.9.1
 
