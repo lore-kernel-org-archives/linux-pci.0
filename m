@@ -1,99 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22974 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752059AbaILCI2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Sep 2014 22:08:28 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V5 4/8] iommu/vt-d: Search for ACPI _DSM method for DMAR hotplug
-Date: Fri, 12 Sep 2014 10:10:44 +0800
-Message-Id: <1410487848-6027-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:43367 "EHLO
+	dhcp-27-160.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752711AbaIGS63 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 7 Sep 2014 14:58:29 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 3/3] PCI/MSI: Remove arch_msi_check_device()
+Date: Sun,  7 Sep 2014 20:57:55 +0200
+Message-Id: <50a2f79ce58b6b67b40d7737b21c168131240c31.1410078503.git.agordeev@redhat.com>
+In-Reply-To: <cover.1410078503.git.agordeev@redhat.com>
+References: <cover.1410078503.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to Intel VT-d specification, _DSM method to support DMAR
-hotplug should exist directly under corresponding ACPI object
-representing PCI host bridge. But some BIOSes doesn't conform to
-this, so search for _DSM method in the subtree starting from the
-ACPI object representing the PCI host bridge.
+There are no archs that override arch_msi_check_device()
+hook. Remove it as it is completely redundant.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+If an arch would need to check MSI/MSI-X possibility for a
+device it should make it within arch_setup_msi_irqs() hook.
+
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/iommu/dmar.c |   35 +++++++++++++++++++++++++++++++----
- 1 file changed, 31 insertions(+), 4 deletions(-)
+ drivers/pci/msi.c   | 49 +++++++++++++------------------------------------
+ include/linux/msi.h |  3 ---
+ 2 files changed, 13 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index e77b5d3f2f5c..df2c2591c1a6 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -1926,21 +1926,48 @@ static int dmar_hotplug_remove(acpi_handle handle)
- 	return ret;
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 5a40516..6c2cc41 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -56,16 +56,6 @@ void __weak arch_teardown_msi_irq(unsigned int irq)
+ 	chip->teardown_irq(chip, irq);
  }
  
--static int dmar_device_hotplug(acpi_handle handle, bool insert)
-+static acpi_status dmar_get_dsm_handle(acpi_handle handle, u32 lvl,
-+				       void *context, void **retval)
-+{
-+	acpi_handle *phdl = retval;
-+
-+	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
-+		*phdl = handle;
-+		return AE_CTRL_TERMINATE;
-+	}
-+
-+	return AE_OK;
-+}
-+
-+int dmar_device_hotplug(acpi_handle handle, bool insert)
+-int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+-{
+-	struct msi_chip *chip = dev->bus->msi;
+-
+-	if (!chip || !chip->check_device)
+-		return 0;
+-
+-	return chip->check_device(chip, dev, nvec, type);
+-}
+-
+ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
  {
- 	int ret;
-+	acpi_handle tmp = NULL;
-+	acpi_status status;
+ 	struct msi_desc *entry;
+@@ -806,22 +796,23 @@ out_free:
+ }
  
- 	if (!dmar_in_use())
- 		return 0;
+ /**
+- * pci_msi_check_device - check whether MSI may be enabled on a device
++ * pci_msi_supported - check whether MSI may be enabled on a device
+  * @dev: pointer to the pci_dev data structure of MSI device function
+  * @nvec: how many MSIs have been requested ?
+- * @type: are we checking for MSI or MSI-X ?
+  *
+  * Look at global flags, the device itself, and its parent buses
+  * to determine if MSI/-X are supported for the device. If MSI/-X is
+  * supported return 0, else return an error code.
+  **/
+-static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
++static int pci_msi_supported(struct pci_dev *dev, int nvec)
+ {
+ 	struct pci_bus *bus;
+-	int ret;
  
--	if (!dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD))
-+	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
-+		tmp = handle;
-+	} else {
-+		status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
-+					     ACPI_UINT32_MAX,
-+					     dmar_get_dsm_handle,
-+					     NULL, NULL, &tmp);
-+		if (ACPI_FAILURE(status)) {
-+			pr_warn("Failed to locate _DSM method.\n");
-+			return -ENXIO;
-+		}
-+	}
-+	if (tmp == NULL)
- 		return 0;
+ 	/* MSI must be globally enabled and supported by the device */
+-	if (!pci_msi_enable || !dev || dev->no_msi)
++	if (!pci_msi_enable)
++		return -EINVAL;
++
++	if (!dev || dev->no_msi || dev->current_state != PCI_D0)
+ 		return -EINVAL;
  
- 	down_write(&dmar_global_lock);
- 	if (insert)
--		ret = dmar_hotplug_insert(handle);
-+		ret = dmar_hotplug_insert(tmp);
- 	else
--		ret = dmar_hotplug_remove(handle);
-+		ret = dmar_hotplug_remove(tmp);
- 	up_write(&dmar_global_lock);
+ 	/*
+@@ -843,10 +834,6 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+ 		if (bus->bus_flags & PCI_BUS_FLAGS_NO_MSI)
+ 			return -EINVAL;
  
- 	return ret;
+-	ret = arch_msi_check_device(dev, nvec, type);
+-	if (ret)
+-		return ret;
+-
+ 	return 0;
+ }
+ 
+@@ -949,13 +936,13 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+ 	int status, nr_entries;
+ 	int i, j;
+ 
+-	if (!entries || !dev->msix_cap || dev->current_state != PCI_D0)
+-		return -EINVAL;
+-
+-	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
++	status = pci_msi_supported(dev, nvec);
+ 	if (status)
+ 		return status;
+ 
++	if (!entries)
++		return -EINVAL;
++
+ 	nr_entries = pci_msix_vec_count(dev);
+ 	if (nr_entries < 0)
+ 		return nr_entries;
+@@ -1062,8 +1049,9 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+ 	int nvec;
+ 	int rc;
+ 
+-	if (dev->current_state != PCI_D0)
+-		return -EINVAL;
++	rc = pci_msi_supported(dev, minvec);
++	if (rc)
++		return rc;
+ 
+ 	WARN_ON(!!dev->msi_enabled);
+ 
+@@ -1086,17 +1074,6 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+ 		nvec = maxvec;
+ 
+ 	do {
+-		rc = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
+-		if (rc < 0) {
+-			return rc;
+-		} else if (rc > 0) {
+-			if (rc < minvec)
+-				return -ENOSPC;
+-			nvec = rc;
+-		}
+-	} while (rc);
+-
+-	do {
+ 		rc = msi_capability_init(dev, nvec);
+ 		if (rc < 0) {
+ 			return rc;
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 8103f32..dbf7cc9 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -60,7 +60,6 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
+ void arch_teardown_msi_irq(unsigned int irq);
+ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+ void arch_teardown_msi_irqs(struct pci_dev *dev);
+-int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
+ void arch_restore_msi_irqs(struct pci_dev *dev);
+ 
+ void default_teardown_msi_irqs(struct pci_dev *dev);
+@@ -77,8 +76,6 @@ struct msi_chip {
+ 	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
+ 			 struct msi_desc *desc);
+ 	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
+-	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
+-			    int nvec, int type);
+ };
+ 
+ #endif /* LINUX_MSI_H */
 -- 
-1.7.10.4
+1.9.3
 
