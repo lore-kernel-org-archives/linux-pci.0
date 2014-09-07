@@ -1,444 +1,523 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1blp0189.outbound.protection.outlook.com ([207.46.163.189]:17353
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753589AbaIDKpO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Sep 2014 06:45:14 -0400
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	"Minghuan Lian" <Minghuan.Lian@freescale.com>
-Subject: [PATCH 2/2] PCI: Layerscape: Add Layerscape PCIe driver
-Date: Thu, 4 Sep 2014 18:45:38 +0000
-Message-ID: <1409856338-1730-2-git-send-email-Minghuan.Lian@freescale.com>
-In-Reply-To: <1409856338-1730-1-git-send-email-Minghuan.Lian@freescale.com>
-References: <1409856338-1730-1-git-send-email-Minghuan.Lian@freescale.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Len Brown <lenb@kernel.org>,
+	Robert Moore <robert.moore@intel.com>,
+	Lv Zheng <lv.zheng@intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [Patch v4 04/16] ACPI: Rename processor_core.c as apic_id.c
+Date: Mon, 08 Sep 2014 00:37:22 +0200
+Message-ID: <1957879.bE3ICM6HKO@vostro.rjw.lan>
+In-Reply-To: <1409192561-19744-5-git-send-email-jiang.liu@linux.intel.com>
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com> <1409192561-19744-5-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support for Freescale Layerscape PCIe controller. This driver
-re-uses the designware core code.
+On Thursday, August 28, 2014 10:22:29 AM Jiang Liu wrote:
+> Now all code in processor_core.c is APIC ID related, so rename it as
+> apic_id.c. Later IOAPIC ID related code will be added into apic_id.c.
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
----
- .../devicetree/bindings/pci/fsl,ls-pcie.txt        |  41 +++
- drivers/pci/host/Kconfig                           |   7 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-layerscape.c                  | 315 +++++++++++++++++++++
- include/linux/pci_ids.h                            |   1 +
- 5 files changed, 365 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/fsl,ls-pcie.txt
- create mode 100644 drivers/pci/host/pci-layerscape.c
+Actually, I'm not sure about this one.
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,ls-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,ls-pcie.txt
-new file mode 100644
-index 0000000..af2ee1c0
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/fsl,ls-pcie.txt
-@@ -0,0 +1,41 @@
-+Freescale Layerscape PCIe controller
-+
-+This PCIe host controller is based on the Synopsis Designware PCIe IP
-+and thus inherits all the common properties defined in designware-pcie.txt.
-+
-+Required properties:
-+- compatible: should contain "fsl,ls-pcie", to identify the platform,
-+  plus an identifier for specific instance such as "fsl,ls1021a-pcie"
-+- reg: base addresses and lengths of the PCIe controller
-+- interrupts: A list of interrupt outputs of the controller. Must contain an
-+  entry for each entry in the interrupt-names property.
-+- interrupt-names: Must include the following entries:
-+  "intr": The interrupt that is asserted for controller interrupts
-+  "msi": The interrupt that is asserted when an MSI is received
-+  "pme": The interrupt that is asserted when PME state changes
-+
-+Example:
-+
-+	pcie@3400000 {
-+		compatible = "fsl,ls1021a-pcie", "fsl,ls-pcie", "snps,dw-pcie";
-+		reg = <0x00 0x03400000 0x0 0x00010000   /* controller registers */
-+		       0x40 0x00000000 0x0 0x00080000>; /* configuration space */
-+		reg-names = "regs", "config";
-+		interrupts = <GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
-+			     <GIC_SPI 179 IRQ_TYPE_LEVEL_HIGH>, /* MSI interrupt */
-+			     <GIC_SPI 181 IRQ_TYPE_LEVEL_HIGH>; /* PME interrupt */
-+		interrupt-names = "intr", "msi", "pme";
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		num-lanes = <4>;
-+		bus-range = <0x0 0xff>;
-+		ranges = <0x81000000 0x0 0x00000000 0x40 0x10000000 0x0 0x00010000   /* downstream I/O */
-+			  0x82000000 0x0 0x00000000 0x41 0x00000000 0x1 0x00000000>; /* non-prefetchable memory */
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0000 0 0 1 &gic GIC_SPI 91  IRQ_TYPE_LEVEL_HIGH>,
-+				<0000 0 0 2 &gic GIC_SPI 188 IRQ_TYPE_LEVEL_HIGH>,
-+				<0000 0 0 3 &gic GIC_SPI 190 IRQ_TYPE_LEVEL_HIGH>,
-+				<0000 0 0 4 &gic GIC_SPI 192 IRQ_TYPE_LEVEL_HIGH>;
-+	};
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 8922c37..e0d7bbf 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -63,4 +63,11 @@ config PCIE_SPEAR13XX
- 	help
- 	  Say Y here if you want PCIe support on SPEAr13XX SoCs.
- 
-+config PCI_LAYERSCAPE
-+	bool "Freescale Layerscape PCIe controller"
-+	depends on SOC_LS1021A
-+	select PCIE_DW
-+	help
-+	  Say Y here if you want PCIe controller support on Layerscape SoCs.
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index d0e88f1..54cd9b2 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -8,3 +8,4 @@ obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
- obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
- obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
- obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
-+obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
-diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-new file mode 100644
-index 0000000..077a20b
---- /dev/null
-+++ b/drivers/pci/host/pci-layerscape.c
-@@ -0,0 +1,315 @@
-+/*
-+ * PCIe host controller driver for Freescale Layerscape SoCs
-+ *
-+ * Copyright (C) 2014 Freescale Semiconductor.
-+ *
-+  * Author: Minghuan Lian <Minghuan.Lian@freescale.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/delay.h>
-+#include <linux/interrupt.h>
-+#include <linux/module.h>
-+#include <linux/of_pci.h>
-+#include <linux/of_platform.h>
-+#include <linux/of_irq.h>
-+#include <linux/of_address.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/resource.h>
-+
-+#include "pcie-designware.h"
-+
-+/* PEX1/2 Misc Ports Status Register */
-+#define PEXMSCPORTSR(pex_idx)	(0x94 + (pex_idx) * 4)
-+#define LTSSM_STATE_SHIFT	20
-+#define LTSSM_STATE_MASK	0x3f
-+#define LTSSM_PCIE_L0		0x11 /* L0 state */
-+
-+#define SCFG_SPIMSICR_OFF	0x40
-+#define SCFG_SPIMSICR_ADDR	0x1570040
-+#define SCFG_SPIMSICLRCR_OFF	0x90
-+#define SCFG_SCFGREVCR_OFF	0x200
-+#define SCFG_BIT_REVERSE	0xFFFFFFFF
-+#define SCFG_NO_BIT_REVERSE	0x0
-+
-+#define MSI_LS1021A_DATA(pex_idx)	(0xb3 + pex_idx)
-+
-+/* Symbol Timer Register and Filter Mask Register 1 */
-+#define PCIE_STRFMR1 0x71c
-+
-+#define PCIE_LS1021A_BASE	0x3400000
-+#define PCIE_LS1021A_REG_SIZE	0x0100000
-+
-+struct ls_pcie {
-+	struct list_head node;
-+	struct device *dev;
-+	struct pci_bus *bus;
-+	void __iomem *dbi;
-+	void __iomem *scfg;
-+	struct pcie_port pp;
-+	int id;
-+	int index;
-+	int irq;
-+	int msi_irq;
-+	int pme_irq;
-+};
-+
-+static LIST_HEAD(ls_pcie_list);
-+
-+#define to_ls_pcie(x)	container_of(x, struct ls_pcie, pp)
-+
-+static int ls_pcie_link_up(struct pcie_port *pp)
-+{
-+	u32 rc, tmp;
-+	struct ls_pcie *pcie = to_ls_pcie(pp);
-+
-+	tmp = ioread32(pcie->scfg + SCFG_SCFGREVCR_OFF);
-+	iowrite32(SCFG_NO_BIT_REVERSE, pcie->scfg + SCFG_SCFGREVCR_OFF);
-+
-+	rc = (ioread32(pcie->scfg + PEXMSCPORTSR(pcie->index)) >>
-+	     LTSSM_STATE_SHIFT) & LTSSM_STATE_MASK;
-+
-+	iowrite32(tmp, pcie->scfg + SCFG_SCFGREVCR_OFF);
-+
-+	if (rc < LTSSM_PCIE_L0)
-+		return 0;
-+
-+	return 1;
-+}
-+
-+static u32 ls_pcie_get_msi_addr(struct pcie_port *pp)
-+{
-+	return SCFG_SPIMSICR_ADDR;
-+}
-+
-+static u32 ls_pcie_get_msi_data(struct pcie_port *pp, int pos)
-+{
-+	struct ls_pcie *pcie = to_ls_pcie(pp);
-+
-+	if (pcie->id == PCI_DEVICE_ID_LS1021A)
-+		return MSI_LS1021A_DATA(pcie->index);
-+
-+	return pos;
-+}
-+
-+static irqreturn_t ls_pcie_msi_irq_handler(int irq, void *data)
-+{
-+	struct pcie_port *pp = data;
-+	struct ls_pcie *pcie = to_ls_pcie(pp);
-+	unsigned int msi_irq, processed = 0;
-+
-+	if (pcie->id == PCI_DEVICE_ID_LS1021A) {
-+		/* clear the interrupt */
-+		iowrite32(MSI_LS1021A_DATA(pcie->index),
-+			  pcie->scfg + SCFG_SPIMSICLRCR_OFF);
-+
-+		msi_irq = irq_find_mapping(pp->irq_domain, 0);
-+		if (msi_irq)
-+			generic_handle_irq(msi_irq);
-+		else
-+			/*
-+			 * that's weird who triggered this?
-+			 * just clear it
-+			 */
-+			dev_info(pcie->dev, "unexpected MSI\n");
-+
-+		processed++;
-+	}
-+
-+	return processed > 0 ? IRQ_HANDLED : IRQ_NONE;
-+}
-+
-+static void ls_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
-+{
-+}
-+
-+static void ls_pcie_msi_set_irq(struct pcie_port *pp, int irq)
-+{
-+	struct ls_pcie *pcie = to_ls_pcie(pp);
-+
-+	/* MSI needs to set SCFG bit reverse */
-+	iowrite32(SCFG_BIT_REVERSE, pcie->scfg + SCFG_SCFGREVCR_OFF);
-+}
-+
-+static void ls_pcie_msi_fixup(struct pcie_port *pp)
-+{
-+	struct ls_pcie *pcie = to_ls_pcie(pp);
-+	int i;
-+
-+	if (pcie->id != PCI_DEVICE_ID_LS1021A)
-+		return;
-+
-+	/**
-+	 * LS1021A has only one MSI interrupt
-+	 * Set all msi interrupts as used except the first one
-+	 */
-+	for (i = 1; i < MAX_MSI_IRQS; i++)
-+		set_bit(i, pp->msi_irq_in_use);
-+}
-+
-+static void ls_pcie_host_init(struct pcie_port *pp)
-+{
-+	struct ls_pcie *pcie = to_ls_pcie(pp);
-+	int count = 0;
-+	u32 val;
-+
-+	dw_pcie_setup_rc(pp);
-+
-+	while (!ls_pcie_link_up(pp)) {
-+		usleep_range(100, 1000);
-+		count++;
-+		if (count >= 200) {
-+			dev_err(pp->dev, "phy link never came up\n");
-+			return;
-+		}
-+	}
-+
-+	/* Workaround for internal TKT228622 to fix the INTx hang issue */
-+	val = ioread32(pcie->dbi + PCIE_STRFMR1);
-+	val &= 0xffff;
-+	iowrite32(val, pcie->dbi + PCIE_STRFMR1);
-+
-+	ls_pcie_msi_fixup(pp);
-+}
-+
-+static struct pcie_host_ops ls_pcie_host_ops = {
-+	.link_up = ls_pcie_link_up,
-+	.host_init = ls_pcie_host_init,
-+	.msi_set_irq = ls_pcie_msi_set_irq,
-+	.msi_clear_irq = ls_pcie_msi_clear_irq,
-+	.get_msi_addr = ls_pcie_get_msi_addr,
-+	.get_msi_data = ls_pcie_get_msi_data,
-+};
-+
-+static int ls_add_pcie_port(struct ls_pcie *pcie)
-+{
-+	struct pcie_port *pp;
-+	int ret;
-+
-+	if (!pcie)
-+		return -EINVAL;
-+
-+	pp = &pcie->pp;
-+	pp->dev = pcie->dev;
-+	pp->dbi_base = pcie->dbi;
-+	pp->msi_irq = pcie->msi_irq;
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		ret = devm_request_irq(pp->dev, pp->msi_irq,
-+					ls_pcie_msi_irq_handler,
-+					IRQF_SHARED, "ls-pcie-msi", pp);
-+		if (ret) {
-+			dev_err(pp->dev, "failed to request msi irq\n");
-+			return ret;
-+		}
-+	}
-+
-+	pp->root_bus_nr = -1;
-+	pp->ops = &ls_pcie_host_ops;
-+
-+	ret = dw_pcie_host_init(pp);
-+	if (ret) {
-+		dev_err(pp->dev, "failed to initialize host\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int __init ls_pcie_probe(struct platform_device *pdev)
-+{
-+	struct ls_pcie *pcie;
-+	struct resource *dbi_base;
-+	struct device_node *np;
-+	int ret;
-+
-+	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
-+	if (!pcie)
-+		return -ENOMEM;
-+
-+	pcie->dev = &pdev->dev;
-+
-+	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
-+	if (!dbi_base) {
-+		dev_err(&pdev->dev, "missing *regs* space\n");
-+		return -ENODEV;
-+	}
-+
-+	pcie->dbi = devm_ioremap_resource(&pdev->dev, dbi_base);
-+	if (IS_ERR(pcie->dbi))
-+		return PTR_ERR(pcie->dbi);
-+
-+	if (of_device_is_compatible(pdev->dev.of_node, "fsl,ls1021a-pcie")) {
-+		pcie->id = PCI_DEVICE_ID_LS1021A;
-+		pcie->index = (dbi_base->start - PCIE_LS1021A_BASE) /
-+			      PCIE_LS1021A_REG_SIZE;
-+
-+		/* map SCFG register */
-+		np = of_find_compatible_node(NULL, NULL, "fsl,ls1021a-scfg");
-+		pcie->scfg = of_iomap(np, 0);
-+		if (!pcie->scfg) {
-+			dev_err(&pdev->dev, "unable to find SCFG registers\n");
-+			return PTR_ERR(pcie->scfg);
-+		}
-+	}
-+
-+	/* request interrupt */
-+	pcie->irq = platform_get_irq_byname(pdev, "intr");
-+	if (pcie->irq < 0) {
-+		dev_err(&pdev->dev, "failed to get IRQ: %d\n", pcie->irq);
-+		return pcie->irq;
-+	}
-+
-+	pcie->msi_irq = platform_get_irq_byname(pdev, "msi");
-+	if (pcie->msi_irq < 0) {
-+		dev_err(&pdev->dev,
-+			"failed to get MSI IRQ: %d\n", pcie->msi_irq);
-+		return pcie->msi_irq;
-+	}
-+
-+	pcie->pme_irq = platform_get_irq_byname(pdev, "pme");
-+	if (pcie->pme_irq < 0) {
-+		dev_err(&pdev->dev,
-+			"failed to get PME IRQ: %d\n", pcie->pme_irq);
-+		return pcie->pme_irq;
-+	}
-+
-+	ret = ls_add_pcie_port(pcie);
-+	if (ret < 0)
-+		return ret;
-+
-+	platform_set_drvdata(pdev, pcie);
-+	list_add(&pcie->node, &ls_pcie_list);
-+
-+	return 0;
-+}
-+
-+static const struct of_device_id ls_pcie_of_match[] = {
-+	{ .compatible = "fsl,ls-pcie" },
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
-+
-+static struct platform_driver ls_pcie_driver = {
-+	.driver = {
-+		.name = "layerscape-pcie",
-+		.owner = THIS_MODULE,
-+		.of_match_table = ls_pcie_of_match,
-+	},
-+};
-+
-+/* Freescale PCIe driver does not allow module unload */
-+static int __init ls_pcie_init(void)
-+{
-+	return platform_driver_probe(&ls_pcie_driver, ls_pcie_probe);
-+}
-+subsys_initcall(ls_pcie_init);
-+
-+MODULE_AUTHOR("Minghuan Lian <Minghuan.Lian@freescale.com>");
-+MODULE_DESCRIPTION("Freescale Layerscape PCIe host controller driver");
-+MODULE_LICENSE("GPL v2");
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 6ed0bb7..26d4c30 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2442,6 +2442,7 @@
- #define PCI_DEVICE_ID_P5020		0x0421
- #define PCI_DEVICE_ID_P5010E		0x0428
- #define PCI_DEVICE_ID_P5010		0x0429
-+#define PCI_DEVICE_ID_LS1021A		0x0e0b
- #define PCI_DEVICE_ID_MPC8641		0x7010
- #define PCI_DEVICE_ID_MPC8641D		0x7011
- #define PCI_DEVICE_ID_MPC8610		0x7018
+Renames like this make it difficult to backport things in general
+and kind of break "git blame", so do we have to do that?
+
+What's wrong with leaving the name as is and adding a comment
+about the contents being related to IOAPIC ID?
+
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  drivers/acpi/Makefile         |    2 +-
+>  drivers/acpi/apic_id.c        |  202 ++++++++++++++++++++++++++++++++++++++++
+>  drivers/acpi/processor_core.c |  205 -----------------------------------------
+
+And BTW this doesn't seem to be an exact rename, does it?
+
+>  include/acpi/processor.h      |    3 -
+>  include/linux/acpi.h          |    3 +
+>  5 files changed, 206 insertions(+), 209 deletions(-)
+>  create mode 100644 drivers/acpi/apic_id.c
+>  delete mode 100644 drivers/acpi/processor_core.c
+> 
+> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
+> index 505d4d79fe3e..03ddd03f2bcd 100644
+> --- a/drivers/acpi/Makefile
+> +++ b/drivers/acpi/Makefile
+> @@ -35,7 +35,7 @@ acpi-y				+= bus.o glue.o
+>  acpi-y				+= scan.o
+>  acpi-y				+= resource.o
+>  acpi-y				+= acpi_processor.o
+> -acpi-y				+= processor_core.o
+> +acpi-y				+= apic_id.o
+>  acpi-$(CONFIG_ARCH_MIGHT_HAVE_ACPI_PDC) += processor_pdc.o
+>  acpi-y				+= ec.o
+>  acpi-$(CONFIG_ACPI_DOCK)	+= dock.o
+> diff --git a/drivers/acpi/apic_id.c b/drivers/acpi/apic_id.c
+> new file mode 100644
+> index 000000000000..ada5fd48bad4
+> --- /dev/null
+> +++ b/drivers/acpi/apic_id.c
+> @@ -0,0 +1,202 @@
+> +/*
+> + * Copyright (C) 2005 Intel Corporation
+> + * Copyright (C) 2009 Hewlett-Packard Development Company, L.P.
+> + *
+> + *	Alex Chiang <achiang@hp.com>
+> + *	- Unified x86/ia64 implementations
+> + */
+> +#include <linux/export.h>
+> +#include <linux/acpi.h>
+> +#include "internal.h"
+> +
+> +static int map_lapic_id(struct acpi_subtable_header *entry,
+> +		 u32 acpi_id, int *apic_id)
+> +{
+> +	struct acpi_madt_local_apic *lapic =
+> +		(struct acpi_madt_local_apic *)entry;
+> +
+> +	if (!(lapic->lapic_flags & ACPI_MADT_ENABLED))
+> +		return -ENODEV;
+> +
+> +	if (lapic->processor_id != acpi_id)
+> +		return -EINVAL;
+> +
+> +	*apic_id = lapic->id;
+> +	return 0;
+> +}
+> +
+> +static int map_x2apic_id(struct acpi_subtable_header *entry,
+> +			 int device_declaration, u32 acpi_id, int *apic_id)
+> +{
+> +	struct acpi_madt_local_x2apic *apic =
+> +		(struct acpi_madt_local_x2apic *)entry;
+> +
+> +	if (!(apic->lapic_flags & ACPI_MADT_ENABLED))
+> +		return -ENODEV;
+> +
+> +	if (device_declaration && (apic->uid == acpi_id)) {
+> +		*apic_id = apic->local_apic_id;
+> +		return 0;
+> +	}
+> +
+> +	return -EINVAL;
+> +}
+> +
+> +static int map_lsapic_id(struct acpi_subtable_header *entry,
+> +		int device_declaration, u32 acpi_id, int *apic_id)
+> +{
+> +	struct acpi_madt_local_sapic *lsapic =
+> +		(struct acpi_madt_local_sapic *)entry;
+> +
+> +	if (!(lsapic->lapic_flags & ACPI_MADT_ENABLED))
+> +		return -ENODEV;
+> +
+> +	if (device_declaration) {
+> +		if ((entry->length < 16) || (lsapic->uid != acpi_id))
+> +			return -EINVAL;
+> +	} else if (lsapic->processor_id != acpi_id)
+> +		return -EINVAL;
+> +
+> +	*apic_id = (lsapic->id << 8) | lsapic->eid;
+> +	return 0;
+> +}
+> +
+> +static int map_madt_entry(int type, u32 acpi_id)
+> +{
+> +	unsigned long madt_end, entry;
+> +	static struct acpi_table_madt *madt;
+> +	static int read_madt;
+> +	int apic_id = -1;
+> +
+> +	if (!read_madt) {
+> +		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
+> +					(struct acpi_table_header **)&madt)))
+> +			madt = NULL;
+> +		read_madt++;
+> +	}
+> +
+> +	if (!madt)
+> +		return apic_id;
+> +
+> +	entry = (unsigned long)madt;
+> +	madt_end = entry + madt->header.length;
+> +
+> +	/* Parse all entries looking for a match. */
+> +
+> +	entry += sizeof(struct acpi_table_madt);
+> +	while (entry + sizeof(struct acpi_subtable_header) < madt_end) {
+> +		struct acpi_subtable_header *header =
+> +			(struct acpi_subtable_header *)entry;
+> +		if (header->type == ACPI_MADT_TYPE_LOCAL_APIC) {
+> +			if (!map_lapic_id(header, acpi_id, &apic_id))
+> +				break;
+> +		} else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC) {
+> +			if (!map_x2apic_id(header, type, acpi_id, &apic_id))
+> +				break;
+> +		} else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC) {
+> +			if (!map_lsapic_id(header, type, acpi_id, &apic_id))
+> +				break;
+> +		}
+> +		entry += header->length;
+> +	}
+> +	return apic_id;
+> +}
+> +
+> +static int map_mat_entry(acpi_handle handle, int type, u32 acpi_id)
+> +{
+> +	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
+> +	union acpi_object *obj;
+> +	struct acpi_subtable_header *header;
+> +	int apic_id = -1;
+> +
+> +	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_MAT", NULL, &buffer)))
+> +		goto exit;
+> +
+> +	if (!buffer.length || !buffer.pointer)
+> +		goto exit;
+> +
+> +	obj = buffer.pointer;
+> +	if (obj->type != ACPI_TYPE_BUFFER ||
+> +	    obj->buffer.length < sizeof(struct acpi_subtable_header)) {
+> +		goto exit;
+> +	}
+> +
+> +	header = (struct acpi_subtable_header *)obj->buffer.pointer;
+> +	if (header->type == ACPI_MADT_TYPE_LOCAL_APIC)
+> +		map_lapic_id(header, acpi_id, &apic_id);
+> +	else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC)
+> +		map_lsapic_id(header, type, acpi_id, &apic_id);
+> +	else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC)
+> +		map_x2apic_id(header, type, acpi_id, &apic_id);
+> +
+> +exit:
+> +	kfree(buffer.pointer);
+> +	return apic_id;
+> +}
+> +
+> +int acpi_get_apicid(acpi_handle handle, int type, u32 acpi_id)
+> +{
+> +	int apic_id;
+> +
+> +	apic_id = map_mat_entry(handle, type, acpi_id);
+> +	if (apic_id == -1)
+> +		apic_id = map_madt_entry(type, acpi_id);
+> +
+> +	return apic_id;
+> +}
+> +
+> +int acpi_map_cpuid(int apic_id, u32 acpi_id)
+> +{
+> +#ifdef CONFIG_SMP
+> +	int i;
+> +#endif
+> +
+> +	if (apic_id == -1) {
+> +		/*
+> +		 * On UP processor, there is no _MAT or MADT table.
+> +		 * So above apic_id is always set to -1.
+> +		 *
+> +		 * BIOS may define multiple CPU handles even for UP processor.
+> +		 * For example,
+> +		 *
+> +		 * Scope (_PR)
+> +		 * {
+> +		 *     Processor (CPU0, 0x00, 0x00000410, 0x06) {}
+> +		 *     Processor (CPU1, 0x01, 0x00000410, 0x06) {}
+> +		 *     Processor (CPU2, 0x02, 0x00000410, 0x06) {}
+> +		 *     Processor (CPU3, 0x03, 0x00000410, 0x06) {}
+> +		 * }
+> +		 *
+> +		 * Ignores apic_id and always returns 0 for the processor
+> +		 * handle with acpi id 0 if nr_cpu_ids is 1.
+> +		 * This should be the case if SMP tables are not found.
+> +		 * Return -1 for other CPU's handle.
+> +		 */
+> +		if (nr_cpu_ids <= 1 && acpi_id == 0)
+> +			return acpi_id;
+> +		else
+> +			return apic_id;
+> +	}
+> +
+> +#ifdef CONFIG_SMP
+> +	for_each_possible_cpu(i) {
+> +		if (cpu_physical_id(i) == apic_id)
+> +			return i;
+> +	}
+> +#else
+> +	/* In UP kernel, only processor 0 is valid */
+> +	if (apic_id == 0)
+> +		return apic_id;
+> +#endif
+> +	return -1;
+> +}
+> +
+> +int acpi_get_cpuid(acpi_handle handle, int type, u32 acpi_id)
+> +{
+> +	int apic_id;
+> +
+> +	apic_id = acpi_get_apicid(handle, type, acpi_id);
+> +
+> +	return acpi_map_cpuid(apic_id, acpi_id);
+> +}
+> +EXPORT_SYMBOL_GPL(acpi_get_cpuid);
+> diff --git a/drivers/acpi/processor_core.c b/drivers/acpi/processor_core.c
+> deleted file mode 100644
+> index b048f3752c2b..000000000000
+> --- a/drivers/acpi/processor_core.c
+> +++ /dev/null
+> @@ -1,205 +0,0 @@
+> -/*
+> - * Copyright (C) 2005 Intel Corporation
+> - * Copyright (C) 2009 Hewlett-Packard Development Company, L.P.
+> - *
+> - *	Alex Chiang <achiang@hp.com>
+> - *	- Unified x86/ia64 implementations
+> - */
+> -#include <linux/export.h>
+> -#include <linux/acpi.h>
+> -#include <acpi/processor.h>
+> -
+> -#define _COMPONENT		ACPI_PROCESSOR_COMPONENT
+> -ACPI_MODULE_NAME("processor_core");
+> -
+> -static int map_lapic_id(struct acpi_subtable_header *entry,
+> -		 u32 acpi_id, int *apic_id)
+> -{
+> -	struct acpi_madt_local_apic *lapic =
+> -		(struct acpi_madt_local_apic *)entry;
+> -
+> -	if (!(lapic->lapic_flags & ACPI_MADT_ENABLED))
+> -		return -ENODEV;
+> -
+> -	if (lapic->processor_id != acpi_id)
+> -		return -EINVAL;
+> -
+> -	*apic_id = lapic->id;
+> -	return 0;
+> -}
+> -
+> -static int map_x2apic_id(struct acpi_subtable_header *entry,
+> -			 int device_declaration, u32 acpi_id, int *apic_id)
+> -{
+> -	struct acpi_madt_local_x2apic *apic =
+> -		(struct acpi_madt_local_x2apic *)entry;
+> -
+> -	if (!(apic->lapic_flags & ACPI_MADT_ENABLED))
+> -		return -ENODEV;
+> -
+> -	if (device_declaration && (apic->uid == acpi_id)) {
+> -		*apic_id = apic->local_apic_id;
+> -		return 0;
+> -	}
+> -
+> -	return -EINVAL;
+> -}
+> -
+> -static int map_lsapic_id(struct acpi_subtable_header *entry,
+> -		int device_declaration, u32 acpi_id, int *apic_id)
+> -{
+> -	struct acpi_madt_local_sapic *lsapic =
+> -		(struct acpi_madt_local_sapic *)entry;
+> -
+> -	if (!(lsapic->lapic_flags & ACPI_MADT_ENABLED))
+> -		return -ENODEV;
+> -
+> -	if (device_declaration) {
+> -		if ((entry->length < 16) || (lsapic->uid != acpi_id))
+> -			return -EINVAL;
+> -	} else if (lsapic->processor_id != acpi_id)
+> -		return -EINVAL;
+> -
+> -	*apic_id = (lsapic->id << 8) | lsapic->eid;
+> -	return 0;
+> -}
+> -
+> -static int map_madt_entry(int type, u32 acpi_id)
+> -{
+> -	unsigned long madt_end, entry;
+> -	static struct acpi_table_madt *madt;
+> -	static int read_madt;
+> -	int apic_id = -1;
+> -
+> -	if (!read_madt) {
+> -		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
+> -					(struct acpi_table_header **)&madt)))
+> -			madt = NULL;
+> -		read_madt++;
+> -	}
+> -
+> -	if (!madt)
+> -		return apic_id;
+> -
+> -	entry = (unsigned long)madt;
+> -	madt_end = entry + madt->header.length;
+> -
+> -	/* Parse all entries looking for a match. */
+> -
+> -	entry += sizeof(struct acpi_table_madt);
+> -	while (entry + sizeof(struct acpi_subtable_header) < madt_end) {
+> -		struct acpi_subtable_header *header =
+> -			(struct acpi_subtable_header *)entry;
+> -		if (header->type == ACPI_MADT_TYPE_LOCAL_APIC) {
+> -			if (!map_lapic_id(header, acpi_id, &apic_id))
+> -				break;
+> -		} else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC) {
+> -			if (!map_x2apic_id(header, type, acpi_id, &apic_id))
+> -				break;
+> -		} else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC) {
+> -			if (!map_lsapic_id(header, type, acpi_id, &apic_id))
+> -				break;
+> -		}
+> -		entry += header->length;
+> -	}
+> -	return apic_id;
+> -}
+> -
+> -static int map_mat_entry(acpi_handle handle, int type, u32 acpi_id)
+> -{
+> -	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
+> -	union acpi_object *obj;
+> -	struct acpi_subtable_header *header;
+> -	int apic_id = -1;
+> -
+> -	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_MAT", NULL, &buffer)))
+> -		goto exit;
+> -
+> -	if (!buffer.length || !buffer.pointer)
+> -		goto exit;
+> -
+> -	obj = buffer.pointer;
+> -	if (obj->type != ACPI_TYPE_BUFFER ||
+> -	    obj->buffer.length < sizeof(struct acpi_subtable_header)) {
+> -		goto exit;
+> -	}
+> -
+> -	header = (struct acpi_subtable_header *)obj->buffer.pointer;
+> -	if (header->type == ACPI_MADT_TYPE_LOCAL_APIC)
+> -		map_lapic_id(header, acpi_id, &apic_id);
+> -	else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC)
+> -		map_lsapic_id(header, type, acpi_id, &apic_id);
+> -	else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC)
+> -		map_x2apic_id(header, type, acpi_id, &apic_id);
+> -
+> -exit:
+> -	kfree(buffer.pointer);
+> -	return apic_id;
+> -}
+> -
+> -int acpi_get_apicid(acpi_handle handle, int type, u32 acpi_id)
+> -{
+> -	int apic_id;
+> -
+> -	apic_id = map_mat_entry(handle, type, acpi_id);
+> -	if (apic_id == -1)
+> -		apic_id = map_madt_entry(type, acpi_id);
+> -
+> -	return apic_id;
+> -}
+> -
+> -int acpi_map_cpuid(int apic_id, u32 acpi_id)
+> -{
+> -#ifdef CONFIG_SMP
+> -	int i;
+> -#endif
+> -
+> -	if (apic_id == -1) {
+> -		/*
+> -		 * On UP processor, there is no _MAT or MADT table.
+> -		 * So above apic_id is always set to -1.
+> -		 *
+> -		 * BIOS may define multiple CPU handles even for UP processor.
+> -		 * For example,
+> -		 *
+> -		 * Scope (_PR)
+> -		 * {
+> -		 *     Processor (CPU0, 0x00, 0x00000410, 0x06) {}
+> -		 *     Processor (CPU1, 0x01, 0x00000410, 0x06) {}
+> -		 *     Processor (CPU2, 0x02, 0x00000410, 0x06) {}
+> -		 *     Processor (CPU3, 0x03, 0x00000410, 0x06) {}
+> -		 * }
+> -		 *
+> -		 * Ignores apic_id and always returns 0 for the processor
+> -		 * handle with acpi id 0 if nr_cpu_ids is 1.
+> -		 * This should be the case if SMP tables are not found.
+> -		 * Return -1 for other CPU's handle.
+> -		 */
+> -		if (nr_cpu_ids <= 1 && acpi_id == 0)
+> -			return acpi_id;
+> -		else
+> -			return apic_id;
+> -	}
+> -
+> -#ifdef CONFIG_SMP
+> -	for_each_possible_cpu(i) {
+> -		if (cpu_physical_id(i) == apic_id)
+> -			return i;
+> -	}
+> -#else
+> -	/* In UP kernel, only processor 0 is valid */
+> -	if (apic_id == 0)
+> -		return apic_id;
+> -#endif
+> -	return -1;
+> -}
+> -
+> -int acpi_get_cpuid(acpi_handle handle, int type, u32 acpi_id)
+> -{
+> -	int apic_id;
+> -
+> -	apic_id = acpi_get_apicid(handle, type, acpi_id);
+> -
+> -	return acpi_map_cpuid(apic_id, acpi_id);
+> -}
+> -EXPORT_SYMBOL_GPL(acpi_get_cpuid);
+> diff --git a/include/acpi/processor.h b/include/acpi/processor.h
+> index 9b9b6f29bbf3..99fc22c9e61f 100644
+> --- a/include/acpi/processor.h
+> +++ b/include/acpi/processor.h
+> @@ -314,9 +314,6 @@ static inline int acpi_processor_get_bios_limit(int cpu, unsigned int *limit)
+>  
+>  /* in processor_core.c */
+>  void acpi_processor_set_pdc(acpi_handle handle);
+> -int acpi_get_apicid(acpi_handle, int type, u32 acpi_id);
+> -int acpi_map_cpuid(int apic_id, u32 acpi_id);
+> -int acpi_get_cpuid(acpi_handle, int type, u32 acpi_id);
+>  
+>  /* in processor_throttling.c */
+>  int acpi_processor_tstate_has_changed(struct acpi_processor *pr);
+> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+> index 807cbc46d73e..05ed6886f1f8 100644
+> --- a/include/linux/acpi.h
+> +++ b/include/linux/acpi.h
+> @@ -140,6 +140,9 @@ void acpi_numa_x2apic_affinity_init(struct acpi_srat_x2apic_cpu_affinity *pa);
+>  int acpi_numa_memory_affinity_init (struct acpi_srat_mem_affinity *ma);
+>  void acpi_numa_arch_fixup(void);
+>  
+> +int acpi_get_apicid(acpi_handle, int type, u32 acpi_id);
+> +int acpi_map_cpuid(int apic_id, u32 acpi_id);
+> +int acpi_get_cpuid(acpi_handle, int type, u32 acpi_id);
+>  #ifdef CONFIG_ACPI_HOTPLUG_CPU
+>  /* Arch dependent functions for cpu hotplug support */
+>  int acpi_map_lsapic(acpi_handle handle, int physid, int *pcpu);
+> 
+
 -- 
-1.9.1
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
