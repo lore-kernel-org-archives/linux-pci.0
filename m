@@ -1,103 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:38823 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752517AbaIKTHh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Sep 2014 15:07:37 -0400
-Message-ID: <5411F2F2.20102@ti.com>
-Date: Thu, 11 Sep 2014 15:07:30 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: <bhelgaas@google.com>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH - v4] PCI: keystone: add a pci quirk to limit mrrs
-References: <1410195814-30414-1-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1410195814-30414-1-git-send-email-m-karicheri2@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:43370 "EHLO
+	dhcp-27-160.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752447AbaIGS7a (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 7 Sep 2014 14:59:30 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 0/3] PCI/MSI: Remove arch_msi_check_device()
+Date: Sun,  7 Sep 2014 20:57:52 +0200
+Message-Id: <cover.1410078503.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/08/2014 01:03 PM, Murali Karicheri wrote:
-> Keystone PCI controller has a limitation that memory read request
-> size must not exceed 256 bytes. This is a hardware limitation and
-> add a quirk to force this limit on all downstream devices by
-> updating mrrs.
->
-> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
-> ---
->    -v4: re-send removing extra lines
->    -v3: added check for vendor id and use pci_matc_id() to do matching
->    -v2: made the quirk happens after tuning
->    -v1: changed printk to indicate PCI bdf
->
->   drivers/pci/host/pci-keystone.c |   45 +++++++++++++++++++++++++++++++++++++++
->   1 file changed, 45 insertions(+)
->
-> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-> index c1cfaef..ff8ed25 100644
-> --- a/drivers/pci/host/pci-keystone.c
-> +++ b/drivers/pci/host/pci-keystone.c
-> @@ -42,8 +42,53 @@
->   /* DEV_STAT_CTRL */
->   #define PCIE_CAP_BASE		0x70
->
-> +/* PCIE controller device IDs */
-> +#define PCIE_RC_K2HK		0xb008
-> +#define PCIE_RC_K2E		0xb009
-> +#define PCIE_RC_K2L		0xb00a
-> +
->   #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
->
-> +static void quirk_limit_mrrs(struct pci_dev *dev)
-> +{
-> +	struct pci_bus *bus = dev->bus;
-> +	struct pci_dev *bridge = bus->self;
-> +	static const struct pci_device_id rc_pci_devids[] = {
-> +		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2HK),
-> +		 .class = PCI_CLASS_BRIDGE_PCI<<  8, .class_mask = ~0, },
-> +		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2E),
-> +		 .class = PCI_CLASS_BRIDGE_PCI<<  8, .class_mask = ~0, },
-> +		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2L),
-> +		 .class = PCI_CLASS_BRIDGE_PCI<<  8, .class_mask = ~0, },
-> +		{ 0, },
-> +	};
-> +
-> +	if (pci_is_root_bus(bus))
-> +		return;
-> +
-> +	/* look for the host bridge */
-> +	while (!pci_is_root_bus(bus)) {
-> +		bridge = bus->self;
-> +		bus = bus->parent;
-> +	}
-> +
-> +	if (bridge) {
-> +		/*
-> +		 * Keystone PCI controller has a h/w limitation of
-> +		 * 256 bytes maximum read request size. It can't handle
-> +		 * anything higher than this. So force this limit on
-> +		 * all downstream devices
-> +		 */
-> +		if (pci_match_id(rc_pci_devids, bridge)) {
-> +			if (pcie_get_readrq(dev)>  256) {
-> +				dev_info(&dev->dev, "limiting mrrs to 256\n");
-> +				pcie_set_readrq(dev, 256);
-> +			}
-> +		}
-> +	}
-> +}
-> +DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
-> +
->   static int ks_pcie_establish_link(struct keystone_pcie *ks_pcie)
->   {
->   	struct pcie_port *pp =&ks_pcie->pp;
-Bjorn,
+Hello,
 
-If this version looks good, could you please apply this to host-keystone?
+This is a cleanup effort to get rid of arch_msi_check_device() function.
 
-Thanks
+I am sending v2 series, since kbuild for v1 reports compile errors on
+ppc4xx and Armada 370. Still, I have not checked the fixes on these
+platforms.
 
-Murali
+Changes since v1:
+  - patch 1: 'pdev' undeclared compile error fixed on ppc4xx. I updated
+             changelog and removed ACK from this patch in case there are
+             any objections;
+
+  - patch 2: 'struct msi_chip' has no 'check_device' error fixed on
+             Armada 370 - armada_370_xp_check_msi_device() hook removed;
+
+  - patch 3: msi_check_device() renamed to pci_msi_supported(). This is
+             the very same patch I sent earlier;
+
+Thanks!
+
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Jason Cooper <jason@lakedaemon.net>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org
+
+Alexander Gordeev (3):
+  patch 1 - PCI/MSI/PPC: Remove arch_msi_check_device()
+  patch 2 - PCI/MSI/Armada-370-xp: Remove arch_msi_check_device()
+  patch 3 - PCI/MSI: Remove arch_msi_check_device()
+
+ arch/powerpc/include/asm/machdep.h     |  2 --
+ arch/powerpc/kernel/msi.c              | 12 +--------
+ arch/powerpc/platforms/cell/axon_msi.c |  9 -------
+ arch/powerpc/platforms/powernv/pci.c   | 19 ++++---------
+ arch/powerpc/platforms/pseries/msi.c   | 42 +++++++++++------------------
+ arch/powerpc/sysdev/fsl_msi.c          | 12 +++------
+ arch/powerpc/sysdev/mpic_pasemi_msi.c  | 11 ++------
+ arch/powerpc/sysdev/mpic_u3msi.c       | 28 ++++++++-----------
+ arch/powerpc/sysdev/ppc4xx_hsta_msi.c  | 18 +++++--------
+ arch/powerpc/sysdev/ppc4xx_msi.c       | 19 +++++--------
+ drivers/irqchip/irq-armada-370-xp.c    | 14 +++-------
+ drivers/pci/msi.c                      | 49 +++++++++-------------------------
+ include/linux/msi.h                    |  3 ---
+ 13 files changed, 67 insertions(+), 171 deletions(-)
+
+-- 
+1.9.3
 
