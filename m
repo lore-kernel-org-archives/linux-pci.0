@@ -1,93 +1,161 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 9 Sep 2014 14:37:18 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: Re: [Patch v4 14/16] x86, irq: Introduce helper to check whether an
- IOAPIC has been registered
-In-Reply-To: <1409192561-19744-15-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.10.1409091433150.11037@nanos>
-References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com> <1409192561-19744-15-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Mon, 8 Sep 2014 17:07:50 +0100
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v10 00/10] Support for creating generic PCI host bridges
+ from DT
+Message-ID: <20140908160749.GC1296@bart.dudau.co.uk>
+References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 28 Aug 2014, Jiang Liu wrote:
-
-> Introduce acpi_ioapic_registered() to check whether an IOAPIC has already
-> been registered, it will be used when enabling IOAPIC hotplug.
+On Mon, Sep 08, 2014 at 02:54:22PM +0100, Liviu Dudau wrote:
+> This is my version 10 of the attempt at adding support for generic PCI host
+> bridge controllers that make use of device tree information to
+> configure themselves. This version reverses v9's attempt to create one function
+> to drive the whole process of extracting the host bridge ranges, setup the
+> host bridge driver and then scan the root bus behind the host bridge. While it
+> would've been quite user friendly, I agree that it would've caused a lot of pain
+> in the future.
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  arch/x86/include/asm/io_apic.h |    1 +
->  arch/x86/kernel/acpi/boot.c    |   11 +++++++++++
->  arch/x86/kernel/apic/io_apic.c |   11 +++++++++++
->  include/linux/acpi.h           |    1 +
->  4 files changed, 24 insertions(+)
+> I would like to get ACKs for the remaining patches as I would like to integrate
+> this into -next in the following week.
 > 
-> diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-> index ce63cf34c93c..0db2b7037e4b 100644
-> --- a/arch/x86/include/asm/io_apic.h
-> +++ b/arch/x86/include/asm/io_apic.h
-> @@ -191,6 +191,7 @@ extern void mp_unmap_irq(int irq);
->  extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
->  			      struct ioapic_domain_cfg *cfg);
->  extern int mp_unregister_ioapic(u32 gsi_base);
-> +extern int mp_ioapic_registered(u32 gsi_base);
->  extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
->  			    irq_hw_number_t hwirq);
->  extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
-> diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-> index 560a6d1cb0f4..6aa796f77b71 100644
-> --- a/arch/x86/kernel/acpi/boot.c
-> +++ b/arch/x86/kernel/acpi/boot.c
-> @@ -810,6 +810,17 @@ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
->  }
->  EXPORT_SYMBOL(acpi_unregister_ioapic);
->  
-> +int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base)
-> +{
-> +	int ret;
-> +
-> +	down_write(&acpi_ioapic_rwsem);
+> This version marks an implementation break with the previous versions as
+> of_create_pci_host_bridge() is now gone. It gets replaced by
+> of_pci_get_host_bridge_resources() that only parses the DT and extracts the
+> relevant ranges and converts them to resources. The updated host bridge drivers
+> will have to follow the guidelines in this example code:
+> 
+> static int foohb_probe(struct platform_device *pdev)
+> {
+> 	struct device_node *dn = pdev->dev.of_node;
+> 	struct foohb_drv *drv;
+> 	resource_size_t io_base = 0;  /* phys address for start of IO */
+> 	struct pci_bus *bus;
+> 	int err = 0;
+> 	LIST_HEAD(res);
+> 
+> 	.....
+> 	err = of_pci_get_host_bridge_resources(dn, 0, 255, &res, &io_base);
+> 	if (err)
+> 		goto err_handling;
+> 	err = foohb_setup(drv, ...., &res, &io_base);
+> 	if (err)
+> 		goto err_handling;
+> 	.....
+> 	pci_add_flags(....);
+> 	bus = pci_scan_root_bus(&pdev->dev, 0, &foohb_ops, drv, &res);
+> 	if (!bus)
+> 		goto err_handling;
+> 	....
+> 	return 0;
+> 
+> err_handling:
+> 	......
+> 	return err;
+> }
 
-Why down_write? You are merily checking whether the thing is
-registered already.
+Forgot to mention: the git tree containing the code can be found here:
 
-> +	ret  = mp_ioapic_registered(gsi_base);
-> +	up_write(&acpi_ioapic_rwsem);
-> +
-> +	return ret;
-> +}
+git://linux-arm.org/linux-ld.git for-upstream/pci_v10
 
-So I assume that this is for a particular caller in the apci ioapic
-hotplug code and that call site has its own serialization. Otherwise
-the return value is not protected at all.
+Best regards,
+Liviu
 
-Please add a Docbook comment to that function, and document the
-locking rules as thats pretty non obvious.
+> 
+> Changes from v9:
+>  - Moved the DT parsing and assigning of IRQ patch from this series into arm64
+>    specific patch. This keeps existing pcibios_add_device() unchanged and adds
+>    an arch-specific version that can later be expanded to cater for dma_ops.
+>  - Incorporated the fix for users of of_pci_range_to_resources() into the patch
+>    that changes the behaviour for easier bisection.
+>  - Added fixes for tegra and rcar host drivers in their usage of
+>    of_pci_range_to_resources()
+>  - Broke up of_create_pci_host_bridge() to remove the callback function. The
+>    function left has been renamed into of_pci_get_host_bridge_resources(). The
+>    added benefit of that is that the architectural hook for fixing up host bridge
+>    resources now dissappears.
+>  - Reshuffled the way pgprot_device gets introduced. It is now part of the patch
+>    that adds pci_remap_iospace() function. The arm64 specific override is moved
+>    into the arm64 patchset.
+>  - Added a patch to pci_scan_root_bus() to assign unassigned resources if PCI
+>    flags are not PCI_PROBE_ONLY
+> 
+> v9 thread here, with links to previous threads: https://lkml.org/lkml/2014/8/12/361
+> 
+> Best regards,
+> Liviu
+> 
+> Liviu Dudau (10):
+>   Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
+>   PCI: Introduce helper functions to deal with PCI I/O ranges.
+>   ARM: Define PCI_IOBASE as the base of virtual PCI IO space.
+>   PCI: OF: Fix the conversion of IO ranges into IO resources.
+>   PCI: Create pci_host_bridge before its associated bus in
+>     pci_create_root_bus.
+>   PCI: Introduce generic domain handling for PCI busses.
+>   OF: Introduce helper function for getting PCI domain_nr
+>   OF: PCI: Add support for parsing PCI host bridge resources from DT
+>   PCI: Assign unassigned bus resources in pci_scan_root_bus()
+>   PCI: Introduce pci_remap_iospace() for remapping PCI I/O bus resources
+>     into CPU space
+> 
+>  arch/arm/include/asm/io.h         |   1 +
+>  arch/arm/mach-integrator/pci_v3.c |  23 +++---
+>  drivers/of/address.c              | 146 ++++++++++++++++++++++++++++++++++++++
+>  drivers/of/of_pci.c               | 136 +++++++++++++++++++++++++++++++++++
+>  drivers/pci/host/pci-tegra.c      |  10 ++-
+>  drivers/pci/host/pcie-rcar.c      |  21 ++++--
+>  drivers/pci/pci.c                 |  33 +++++++++
+>  drivers/pci/probe.c               |  46 +++++++-----
+>  include/asm-generic/io.h          |   2 +-
+>  include/asm-generic/pgtable.h     |   4 ++
+>  include/linux/of_address.h        |  15 ++--
+>  include/linux/of_pci.h            |  18 +++++
+>  include/linux/pci.h               |  24 +++++++
+>  13 files changed, 429 insertions(+), 50 deletions(-)
+> 
+> -- 
+> 2.0.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-The such is missing in some other patches as well.
+-- 
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
 
-Thanks,
+ One small step
+   for me ...
 
-	tglx
