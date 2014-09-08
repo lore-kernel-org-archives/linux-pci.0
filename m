@@ -1,67 +1,198 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:50511 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753592AbaIXPiL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 11:38:11 -0400
-From: Robert Richter <rric@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>
-Cc: Liviu Dudau <liviu.dudau@arm.com>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
 	Rob Herring <robh+dt@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Sunil Goutham <sgoutham@cavium.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Robert Richter <rrichter@cavium.com>
-Subject: [PATCH 6/6] pci, thunder: Enable Cavium Thunder PCIe host controller
-Date: Wed, 24 Sep 2014 17:37:48 +0200
-Message-Id: <1411573068-12952-7-git-send-email-rric@kernel.org>
-In-Reply-To: <1411573068-12952-1-git-send-email-rric@kernel.org>
-References: <1411573068-12952-1-git-send-email-rric@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Grant Likely <grant.likely@linaro.org>
+Subject: [PATCH v10 08/10] OF: PCI: Add support for parsing PCI host bridge resources from DT
+Date: Mon,  8 Sep 2014 14:54:30 +0100
+Message-Id: <1410184472-17630-9-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Robert Richter <rrichter@cavium.com>
+Provide a function to parse the PCI DT ranges that can be used to
+create a pci_host_bridge structure together with its associated
+bus.
 
-Enable Cavium Thunder PCIe host controller driver.
-
-IOV is enabled per default if drivers with IOV support are
-enabled. IOV can be disabled.
-
-Signed-off-by: Robert Richter <rrichter@cavium.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 ---
- arch/arm64/Kconfig | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/of/of_pci.c    | 102 +++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/of_pci.h |  11 ++++++
+ 2 files changed, 113 insertions(+)
 
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 97777e1ef5a7..bd9724e5c8a1 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -172,6 +172,14 @@ config PCI
- config PCI_MSI
- 	def_bool PCI
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index a107edb..36701da 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -1,7 +1,9 @@
+ #include <linux/kernel.h>
+ #include <linux/export.h>
+ #include <linux/of.h>
++#include <linux/of_address.h>
+ #include <linux/of_pci.h>
++#include <linux/slab.h>
  
-+config NO_PCI_IOV
-+	def_bool PCI
-+	depends on !PCI_THUNDER
+ static inline int __of_pci_pci_compare(struct device_node *node,
+ 				       unsigned int data)
+@@ -123,6 +125,106 @@ int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
+ }
+ EXPORT_SYMBOL_GPL(of_pci_get_domain_nr);
+ 
++/**
++ * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
++ * @dev: device node of the host bridge having the range property
++ * @busno: bus number associated with the bridge root bus
++ * @bus_max: maximum number of busses for this bridge
++ * @resources: list where the range of resources will be added after DT parsing
++ * @io_base: pointer to a variable that will contain on return the physical
++ * address for the start of the I/O range.
++ *
++ * It is the callers job to free the @resources list.
++ *
++ * This function will parse the "ranges" property of a PCI host bridge device
++ * node and setup the resource mapping based on its content. It is expected
++ * that the property conforms with the Power ePAPR document.
++ *
++ */
++int of_pci_get_host_bridge_resources(struct device_node *dev,
++			unsigned char busno, unsigned char bus_max,
++			struct list_head *resources, resource_size_t *io_base)
++{
++	struct resource *res;
++	struct resource *bus_range;
++	struct of_pci_range range;
++	struct of_pci_range_parser parser;
++	char range_type[4];
++	int err;
 +
-+config PCI_IOV
-+	def_bool PCI
-+	depends on !NO_PCI_IOV
++	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
++	if (!bus_range)
++		return -ENOMEM;
 +
- config PCI_DOMAINS
- 	def_bool PCI
- 
-@@ -185,6 +193,9 @@ source "drivers/pci/Kconfig"
- source "drivers/pci/pcie/Kconfig"
- source "drivers/pci/hotplug/Kconfig"
- 
-+config PCI_THUNDER
-+	def_bool PCI
++	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
 +
- endmenu
++	err = of_pci_parse_bus_range(dev, bus_range);
++	if (err) {
++		bus_range->start = busno;
++		bus_range->end = bus_max;
++		bus_range->flags = IORESOURCE_BUS;
++		pr_info("  No bus range found for %s, using %pR\n",
++			dev->full_name, &bus_range);
++	} else {
++		if (bus_range->end > bus_range->start + bus_max)
++			bus_range->end = bus_range->start + bus_max;
++	}
++	pci_add_resource(resources, bus_range);
++
++	/* Check for ranges property */
++	err = of_pci_range_parser_init(&parser, dev);
++	if (err)
++		goto parse_failed;
++
++	pr_debug("Parsing ranges property...\n");
++	for_each_of_pci_range(&parser, &range) {
++		/* Read next ranges element */
++		if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
++			snprintf(range_type, 4, " IO");
++		else if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_MEM)
++			snprintf(range_type, 4, "MEM");
++		else
++			snprintf(range_type, 4, "err");
++		pr_info("  %s %#010llx..%#010llx -> %#010llx\n", range_type,
++			range.cpu_addr, range.cpu_addr + range.size - 1,
++			range.pci_addr);
++
++		/*
++		 * If we failed translation or got a zero-sized region
++		 * then skip this range
++		 */
++		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
++			continue;
++
++		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
++		if (!res) {
++			err = -ENOMEM;
++			goto parse_failed;
++		}
++
++		err = of_pci_range_to_resource(&range, dev, res);
++		if (err) {
++			kfree(res);
++			goto parse_failed;
++		}
++
++		if (resource_type(res) == IORESOURCE_IO) {
++			if (*io_base)
++				pr_warn("More than one I/O resource converted. CPU offset for old range lost!\n");
++			*io_base = range.cpu_addr;
++		}
++
++		pci_add_resource_offset(resources, res,	res->start - range.pci_addr);
++	}
++
++	return 0;
++
++parse_failed:
++	pci_free_resource_list(resources);
++	return err;
++}
++EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
++
+ #ifdef CONFIG_PCI_MSI
  
- menu "Kernel Features"
+ static LIST_HEAD(of_pci_msi_chip_list);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 3a3824c..a4b8a85 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -16,6 +16,10 @@ int of_pci_get_devfn(struct device_node *np);
+ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+ int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+ int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing);
++int of_pci_get_host_bridge_resources(struct device_node *dev,
++			unsigned char busno, unsigned char bus_max,
++			struct list_head *resources, resource_size_t *io_base);
++
+ #else
+ static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
+ {
+@@ -50,6 +54,13 @@ of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
+ {
+ 	return -1;
+ }
++
++int of_pci_get_host_bridge_resources(struct device_node *dev,
++			unsigned char busno, unsigned char bus_max,
++			struct list_head *resources, resource_size_t *io_base);
++{
++	return -EINVAL;
++}
+ #endif
+ 
+ #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
 -- 
-2.1.0
+2.0.4
 
