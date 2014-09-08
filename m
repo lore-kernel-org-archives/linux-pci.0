@@ -1,91 +1,149 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:46172 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751196AbaI3JOG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 05:14:06 -0400
+Received: from exprod5og120.obsmtp.com ([64.18.0.137]:33199 "HELO
+	exprod5og120.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752994AbaIHR4I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 13:56:08 -0400
+Received: by mail-vc0-f179.google.com with SMTP id im17so1449558vcb.24
+        for <linux-pci@vger.kernel.org>; Mon, 08 Sep 2014 10:56:07 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20140924164946.GI16244@arm.com>
-References: <1411573068-12952-1-git-send-email-rric@kernel.org>
-	<1411573068-12952-2-git-send-email-rric@kernel.org>
-	<27476217.5ToIFGoMDz@wuerfel>
-	<20140924164946.GI16244@arm.com>
-Date: Tue, 30 Sep 2014 14:44:04 +0530
-Message-ID: <CA+sq2CdUW2qr1wD2aF4QU+R0-V_A5+aMHPT+Opo0hA4D5a_QtA@mail.gmail.com>
-Subject: Re: [PATCH 1/6] pci, thunder: Add support for Thunder PCIe host controller
-From: Sunil Kovvuri <sunil.kovvuri@gmail.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Robert Richter <rric@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+In-Reply-To: <20140908135918.GA1296@bart.dudau.co.uk>
+References: <1409963143-11951-1-git-send-email-tinamdar@apm.com>
+	<CAErSpo643rAAqR0AAy5CwSkMv28Cw8Y55EYrYo0AHvQZxgvgXg@mail.gmail.com>
+	<20140908135918.GA1296@bart.dudau.co.uk>
+Date: Mon, 8 Sep 2014 10:56:07 -0700
+Message-ID: <CACoXjckxprMPbEPrzg2yU_KAnc+rRsRLFJfFbc8QA41y4E78LA@mail.gmail.com>
+Subject: Re: [PATCH v6 0/4] APM X-Gene PCIe host controller
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Liviu Dudau <liviu@dudau.co.uk>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
 	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Robert Richter <rrichter@cavium.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Sunil Goutham <sgoutham@cavium.com>
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Will/Arnd
-
-Thanks for the comments.
-There is another patch submitted for adding MSI controller to Generic driver.
-https://lkml.org/lkml/2014/9/28/150
-
-Will go through these and comeback.
-
-On Wed, Sep 24, 2014 at 10:19 PM, Will Deacon <will.deacon@arm.com> wrote:
-> On Wed, Sep 24, 2014 at 05:12:26PM +0100, Arnd Bergmann wrote:
->> On Wednesday 24 September 2014 17:37:43 Robert Richter wrote:
->> > From: Sunil Goutham <sgoutham@cavium.com>
+On Mon, Sep 8, 2014 at 6:59 AM, Liviu Dudau <liviu@dudau.co.uk> wrote:
+> On Sat, Sep 06, 2014 at 08:17:43AM -0600, Bjorn Helgaas wrote:
+>> On Fri, Sep 5, 2014 at 6:25 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
+>> > This patch adds support for AppliedMicro X-Gene PCIe host controller. The
+>> > driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
+>> > cards.
 >> >
->> > This patch adds support for PCI host controller of Cavium Thunder
->> > SoCs.
+>> > X-Gene PCIe controller driver has depedency on the pcie arm64 arch support.
+>> > Liviu Dudau from ARM has sent a patch set for pcie arm64 arch support and
+>> > support for creating generic pcie bridge from device tree. Liviu's patches
+>> > are available here
+>> > 1. https://lkml.org/lkml/2014/8/12/361
 >>
->> I had expected this hardware to be SBSA compliant. Why do you need
->> a hardware specific driver, is this a workaround for buggy hardware
->> or just noncompliant?
+>> I'm hoping to merge Liviu's patches and this X-Gene support for v3.18.
+>> I'm currently waiting for Liviu's v10 series (hopefully based on
+>> v3.17-rc2), and since your series depends on that, I'm going to wait
+>> for a v7 of your series that is rebased on top of Liviu's v10.  Does
+>> that make sense?
 >
-> Patches welcome to pci-host-generic.c :) Lorenzo already has code to port
-> it to Liviu's new API, so do shout if it's not suitable for your needs.
+> Hi Bjorn,
 >
->> > +static int thunder_pcie_msi_enable(struct thunder_pcie *pcie,
->> > +                                   struct pci_bus *bus)
->> > +{
->> > +   struct device_node *msi_node;
->> > +
->> > +   msi_node = of_parse_phandle(pcie->node, "msi-parent", 0);
->> > +   if (!msi_node)
->> > +           return -ENODEV;
->> > +
->> > +   pcie->msi = of_pci_find_msi_chip_by_node(msi_node);
->> > +   if (!pcie->msi)
->> > +           return -ENODEV;
->> > +
->> > +   pcie->msi->dev = pcie->dev;
->> > +   bus->msi = pcie->msi;
->> > +
->> > +   return 0;
->> > +}
+> I've sent v10 based on v3.17-rc4, hope this is OK.
+>
+> Tanmay, unfortunately the API has changed again. I've put in the cover letter
+> of the series how the probe function needs changing. Basically, you need to
+> stop relying on the host bridge being created and use just the resource list
+> coming out of the of_pci_get_host_bridge_resources().
+>
+
+Thanks Bjorn and Liviu. I will start porting X-Gene PCIe driver to Liviu's v10.
+
+> Best regards,
+> Liviu
+>
 >>
->> This is probably something we should add to the generic host driver as well,
->> so it can work with SBSA compliant implementations that come with an MSI
->> controller. Maybe move it into common code so it can be shared with that
->> driver.
+>> > If someone wishes to test PCIe on X-Gene with this patch set, above mentioned
+>> > patches from Liviu must be applied before the patches in this patch set. Also
+>> > please use latest xgene u-boot firmware.
+>> >
+>> > changes since V5:
+>> > 1. Port driver to changed interface of 'of_create_pci_host_bridge'
+>> > 2. Fix the prefetch bit setting
+>> > 3. Removed bunch of register programming which is already done by firmware
+>> >
+>> > changes since V4:
+>> > 1. fix section mismatch warnings
+>> > 2. fix the patch description
+>> > 3. fix indentation
+>> > 4. update read/write cfg functions by passing both addr and offset.
+>> > 5. use 'time_before' for timeout.
+>> > 6. remove unnecessary 'IS_ERR_OR_NULL'. Keep 'IS_ERR' for 'clk_get'
+>> > 7. remove BUG_ON for pci_ioremap_io.
+>> >
+>> > changes since V3:
+>> > 1. remove 'struct hw_pci' and supporting ops in hw_pci
+>> > 2. add code to create the host bridge from dts
+>> > 3. add code to scan the the host bridge
+>> > 4. modify outbound windows setup function to get resource information from
+>> >    'bridge->windows'
+>> > 5. add compatible string in pcie dts node with current X-Gene SOC name.
+>> >
+>> > changes since V2:
+>> > 1. redefined each PCI port in different PCI domain correctly.
+>> > 2. removed setup_lane and setup_link functions from driver.
+>> > 3. removed scan_bus wrapper and set_primary_bus hack.
+>> > 4. added pci_ioremap_io for io resources.
+>> >
+>> > changes since V1:
+>> > 1. added PCI domain support
+>> > 2. reading cpu and pci addresses from device tree to configure regions.
+>> > 3. got rid of unnecessary wrappers for readl and writel.
+>> > 4. got rid of endpoint configuration code.
+>> > 5. added 'dma-ranges' property support to read inbound region configuration.
+>> > 6. renamed host driver file to 'pci-xgene.c' from 'pcie-xgene.c'
+>> > 7. dropped 'clock-names' property from bindings
+>> > 8. added comments whereever requested.
+>> >
+>> > Tanmay Inamdar (4):
+>> >   pci:host: APM X-Gene PCIe controller driver
+>> >   arm64: dts: APM X-Gene PCIe device tree nodes
+>> >   dt-bindings: pci: xgene pcie device tree bindings
+>> >   MAINTAINERS: entry for APM X-Gene PCIe host driver
+>> >
+>> >  .../devicetree/bindings/pci/xgene-pci.txt          |  55 ++
+>> >  MAINTAINERS                                        |   8 +
+>> >  arch/arm64/boot/dts/apm-mustang.dts                |   8 +
+>> >  arch/arm64/boot/dts/apm-storm.dtsi                 | 160 ++++++
+>> >  drivers/pci/host/Kconfig                           |  10 +
+>> >  drivers/pci/host/Makefile                          |   1 +
+>> >  drivers/pci/host/pci-xgene.c                       | 638 +++++++++++++++++++++
+>> >  7 files changed, 880 insertions(+)
+>> >  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
+>> >  create mode 100644 drivers/pci/host/pci-xgene.c
+>> >
+>> > --
+>> > 1.9.1
+>> >
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
 >
-> Agreed. I've been carrying something similar [1] (based on a hacked-up version
-> of bios32, so not bothered to post it) whilst I've been waiting for the
-> arm64 core PCI code to get merged.
->
-> Will
->
-> [1] https://git.kernel.org/cgit/linux/kernel/git/will/linux.git/commit/drivers/pci/host/pci-host-generic.c?h=iommu/pci&id=b719acf062ceccfbd79ee7b1ae0b7904ea4da27e
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -------------------
+>    .oooO
+>    (   )
+>     \ (  Oooo.
+>      \_) (   )
+>           ) /
+>          (_/
+>
+>  One small step
+>    for me ...
+>
