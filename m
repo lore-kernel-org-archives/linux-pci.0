@@ -1,282 +1,66 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v2 11/18] x86, irq: Move HT IRQ related code from io_apic.c into htirq.c
-Date: Fri, 26 Sep 2014 21:29:48 +0800
-Message-Id: <1411738196-29958-12-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:55382 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754330AbaIHRIG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 13:08:06 -0400
+Received: by mail-pa0-f49.google.com with SMTP id lf10so1565733pab.8
+        for <linux-pci@vger.kernel.org>; Mon, 08 Sep 2014 10:08:05 -0700 (PDT)
+Date: Mon, 8 Sep 2014 11:08:01 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Ethan Zhao <ethan.zhao@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	gleb@kernel.org, pbonzini@redhat.com, kvm@vger.kernel.org,
+	konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
+	david.vrabel@citrix.com, xen-devel@lists.xenproject.org,
+	alex.williamson@redhat.com, alexander.h.duyck@intel.com,
+	ethan.kernel@gmail.com
+Subject: Re: [PATCH v3 0/4 resend] Introduce device assignment flag operation
+ helper function
+Message-ID: <20140908170801.GP8080@google.com>
+References: <1407476167-18935-1-git-send-email-ethan.zhao@oracle.com>
+ <20140905171522.GA8080@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140905171522.GA8080@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Create arch/x86/kernel/apic/htirq.c to host Hypertransport IRQ related
-code, preparing for enabling hierarchy irqdomain.
+On Fri, Sep 05, 2014 at 11:15:22AM -0600, Bjorn Helgaas wrote:
+> On Fri, Aug 08, 2014 at 01:36:03PM +0800, Ethan Zhao wrote:
+> > This patch set introduces three PCI device flag operation helper functions
+> > when set pci device PF/VF to assigned or deassigned status also check it.
+> > and patch 2,3,4 apply these helper functions to KVM,XEN and PCI.
+> > 
+> > v2: simplify unnecessory ternary operation in function pci_is_dev_assigned().
+> > v3: amend helper function naming.
+> > 
+> > Appreciate suggestion from
+> > alex.williamson@redhat.com,
+> > david.vrabel@citrix.com,
+> > alexander.h.duyck@intel.com
+> > 
+> > Resend for v3.16 building.
+> > 
+> > Thanks,
+> > Ethan
+> > ---
+> > Ethan Zhao (4):
+> >   PCI: introduce helper functions for device flag operation
+> >   KVM: use pci device flag operation helper functions
+> >   xen-pciback: use pci device flag operation helper function
+> >   PCI: use device flag operation helper function in iov.c
+> > 
+> >  drivers/pci/iov.c                  |    2 +-
+> >  drivers/xen/xen-pciback/pci_stub.c |    4 ++--
+> >  include/linux/pci.h                |   13 +++++++++++++
+> >  virt/kvm/assigned-dev.c            |    2 +-
+> >  virt/kvm/iommu.c                   |    4 ++--
+> >  5 files changed, 19 insertions(+), 6 deletions(-)
+> > 
+> 
+> Applied to pci/virtualization for v3.18, thanks!
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/Makefile  |    1 +
- arch/x86/kernel/apic/htirq.c   |  106 ++++++++++++++++++++++++++++++++++++++++
- arch/x86/kernel/apic/io_apic.c |   91 ----------------------------------
- 3 files changed, 107 insertions(+), 91 deletions(-)
- create mode 100644 arch/x86/kernel/apic/htirq.c
+I dropped these because of build errors from the kbuild-test robot.  Fix
+and resend if you still want them.
 
-diff --git a/arch/x86/kernel/apic/Makefile b/arch/x86/kernel/apic/Makefile
-index aac300750f0e..8bb12ddc5db8 100644
---- a/arch/x86/kernel/apic/Makefile
-+++ b/arch/x86/kernel/apic/Makefile
-@@ -7,6 +7,7 @@ obj-y				+= hw_nmi.o
- 
- obj-$(CONFIG_X86_IO_APIC)	+= io_apic.o
- obj-$(CONFIG_PCI_MSI)		+= msi.o
-+obj-$(CONFIG_HT_IRQ)		+= htirq.o
- obj-$(CONFIG_SMP)		+= ipi.o
- 
- ifeq ($(CONFIG_X86_64),y)
-diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
-new file mode 100644
-index 000000000000..1cd879fe39d7
---- /dev/null
-+++ b/arch/x86/kernel/apic/htirq.c
-@@ -0,0 +1,106 @@
-+/*
-+ * Support Hypertransport IRQ
-+ *
-+ * Copyright (C) 1997, 1998, 1999, 2000, 2009 Ingo Molnar, Hajnalka Szabo
-+ *	Moved from arch/x86/kernel/apic/io_apic.c.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+#include <linux/mm.h>
-+#include <linux/interrupt.h>
-+#include <linux/init.h>
-+#include <linux/device.h>
-+#include <linux/pci.h>
-+#include <linux/htirq.h>
-+#include <asm/hw_irq.h>
-+#include <asm/apic.h>
-+#include <asm/hypertransport.h>
-+
-+/*
-+ * Hypertransport interrupt support
-+ */
-+static void target_ht_irq(unsigned int irq, unsigned int dest, u8 vector)
-+{
-+	struct ht_irq_msg msg;
-+
-+	fetch_ht_irq_msg(irq, &msg);
-+
-+	msg.address_lo &= ~(HT_IRQ_LOW_VECTOR_MASK | HT_IRQ_LOW_DEST_ID_MASK);
-+	msg.address_hi &= ~(HT_IRQ_HIGH_DEST_ID_MASK);
-+
-+	msg.address_lo |= HT_IRQ_LOW_VECTOR(vector) | HT_IRQ_LOW_DEST_ID(dest);
-+	msg.address_hi |= HT_IRQ_HIGH_DEST_ID(dest);
-+
-+	write_ht_irq_msg(irq, &msg);
-+}
-+
-+static int
-+ht_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
-+{
-+	struct irq_cfg *cfg = data->chip_data;
-+	unsigned int dest;
-+	int ret;
-+
-+	ret = apic_set_affinity(data, mask, &dest);
-+	if (ret)
-+		return ret;
-+
-+	target_ht_irq(data->irq, dest, cfg->vector);
-+	return IRQ_SET_MASK_OK_NOCOPY;
-+}
-+
-+static struct irq_chip ht_irq_chip = {
-+	.name			= "PCI-HT",
-+	.irq_mask		= mask_ht_irq,
-+	.irq_unmask		= unmask_ht_irq,
-+	.irq_ack		= apic_ack_edge,
-+	.irq_set_affinity	= ht_set_affinity,
-+	.irq_retrigger		= apic_retrigger_irq,
-+};
-+
-+int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
-+{
-+	struct irq_cfg *cfg;
-+	struct ht_irq_msg msg;
-+	unsigned dest;
-+	int err;
-+
-+	if (disable_apic)
-+		return -ENXIO;
-+
-+	cfg = irq_cfg(irq);
-+	err = assign_irq_vector(irq, cfg, apic->target_cpus());
-+	if (err)
-+		return err;
-+
-+	err = apic->cpu_mask_to_apicid_and(cfg->domain,
-+					   apic->target_cpus(), &dest);
-+	if (err)
-+		return err;
-+
-+	msg.address_hi = HT_IRQ_HIGH_DEST_ID(dest);
-+
-+	msg.address_lo =
-+		HT_IRQ_LOW_BASE |
-+		HT_IRQ_LOW_DEST_ID(dest) |
-+		HT_IRQ_LOW_VECTOR(cfg->vector) |
-+		((apic->irq_dest_mode == 0) ?
-+			HT_IRQ_LOW_DM_PHYSICAL :
-+			HT_IRQ_LOW_DM_LOGICAL) |
-+		HT_IRQ_LOW_RQEOI_EDGE |
-+		((apic->irq_delivery_mode != dest_LowestPrio) ?
-+			HT_IRQ_LOW_MT_FIXED :
-+			HT_IRQ_LOW_MT_ARBITRATED) |
-+		HT_IRQ_LOW_IRQ_MASKED;
-+
-+	write_ht_irq_msg(irq, &msg);
-+
-+	irq_set_chip_and_handler_name(irq, &ht_irq_chip,
-+				      handle_edge_irq, "edge");
-+
-+	dev_dbg(&dev->dev, "irq %d for HT\n", irq);
-+
-+	return 0;
-+}
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 3d40049e5b18..0741d864612a 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -32,7 +32,6 @@
- #include <linux/module.h>
- #include <linux/syscore_ops.h>
- #include <linux/irqdomain.h>
--#include <linux/htirq.h>
- #include <linux/freezer.h>
- #include <linux/kthread.h>
- #include <linux/jiffies.h>	/* time_after() */
-@@ -49,7 +48,6 @@
- #include <asm/dma.h>
- #include <asm/timer.h>
- #include <asm/i8259.h>
--#include <asm/hypertransport.h>
- #include <asm/setup.h>
- #include <asm/irq_remapping.h>
- #include <asm/hw_irq.h>
-@@ -2449,95 +2447,6 @@ static int __init ioapic_init_ops(void)
- 
- device_initcall(ioapic_init_ops);
- 
--/*
-- * Hypertransport interrupt support
-- */
--#ifdef CONFIG_HT_IRQ
--
--static void target_ht_irq(unsigned int irq, unsigned int dest, u8 vector)
--{
--	struct ht_irq_msg msg;
--	fetch_ht_irq_msg(irq, &msg);
--
--	msg.address_lo &= ~(HT_IRQ_LOW_VECTOR_MASK | HT_IRQ_LOW_DEST_ID_MASK);
--	msg.address_hi &= ~(HT_IRQ_HIGH_DEST_ID_MASK);
--
--	msg.address_lo |= HT_IRQ_LOW_VECTOR(vector) | HT_IRQ_LOW_DEST_ID(dest);
--	msg.address_hi |= HT_IRQ_HIGH_DEST_ID(dest);
--
--	write_ht_irq_msg(irq, &msg);
--}
--
--static int
--ht_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
--{
--	struct irq_cfg *cfg = data->chip_data;
--	unsigned int dest;
--	int ret;
--
--	ret = apic_set_affinity(data, mask, &dest);
--	if (ret)
--		return ret;
--
--	target_ht_irq(data->irq, dest, cfg->vector);
--	return IRQ_SET_MASK_OK_NOCOPY;
--}
--
--static struct irq_chip ht_irq_chip = {
--	.name			= "PCI-HT",
--	.irq_mask		= mask_ht_irq,
--	.irq_unmask		= unmask_ht_irq,
--	.irq_ack		= apic_ack_edge,
--	.irq_set_affinity	= ht_set_affinity,
--	.irq_retrigger		= apic_retrigger_irq,
--};
--
--int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
--{
--	struct irq_cfg *cfg;
--	struct ht_irq_msg msg;
--	unsigned dest;
--	int err;
--
--	if (disable_apic)
--		return -ENXIO;
--
--	cfg = irq_cfg(irq);
--	err = assign_irq_vector(irq, cfg, apic->target_cpus());
--	if (err)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(cfg->domain,
--					   apic->target_cpus(), &dest);
--	if (err)
--		return err;
--
--	msg.address_hi = HT_IRQ_HIGH_DEST_ID(dest);
--
--	msg.address_lo =
--		HT_IRQ_LOW_BASE |
--		HT_IRQ_LOW_DEST_ID(dest) |
--		HT_IRQ_LOW_VECTOR(cfg->vector) |
--		((apic->irq_dest_mode == 0) ?
--			HT_IRQ_LOW_DM_PHYSICAL :
--			HT_IRQ_LOW_DM_LOGICAL) |
--		HT_IRQ_LOW_RQEOI_EDGE |
--		((apic->irq_delivery_mode != dest_LowestPrio) ?
--			HT_IRQ_LOW_MT_FIXED :
--			HT_IRQ_LOW_MT_ARBITRATED) |
--		HT_IRQ_LOW_IRQ_MASKED;
--
--	write_ht_irq_msg(irq, &msg);
--
--	irq_set_chip_and_handler_name(irq, &ht_irq_chip,
--				      handle_edge_irq, "edge");
--
--	dev_printk(KERN_DEBUG, &dev->dev, "irq %d for HT\n", irq);
--
--	return 0;
--}
--#endif /* CONFIG_HT_IRQ */
--
- static int
- io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
- {
--- 
-1.7.10.4
-
+Bjorn
