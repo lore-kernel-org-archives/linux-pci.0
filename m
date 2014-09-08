@@ -1,88 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f45.google.com ([209.85.216.45]:49302 "EHLO
-	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752426AbaINKpA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Sep 2014 06:45:00 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
+Received: from dliviu.plus.com ([80.229.23.120]:42785 "EHLO smtp.dudau.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753289AbaIHOIX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Sep 2014 10:08:23 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by smtp.dudau.co.uk (Postfix) with SMTP id 92C79FFD9E
+	for <linux-pci@vger.kernel.org>; Mon,  8 Sep 2014 15:08:21 +0100 (BST)
+Date: Mon, 8 Sep 2014 14:59:18 +0100
+From: Liviu Dudau <liviu@dudau.co.uk>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Dirk Gouders <dirk@gouders.net>
-Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
-Date: Sun, 14 Sep 2014 12:44:51 +0200
-Message-Id: <1410691491-18000-1-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <gh8uln71g1.fsf@lena.gouders.net>
-References: <gh8uln71g1.fsf@lena.gouders.net>
+Cc: Tanmay Inamdar <tinamdar@apm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
+Subject: Re: [PATCH v6 0/4] APM X-Gene PCIe host controller
+Message-ID: <20140908135918.GA1296@bart.dudau.co.uk>
+References: <1409963143-11951-1-git-send-email-tinamdar@apm.com>
+ <CAErSpo643rAAqR0AAy5CwSkMv28Cw8Y55EYrYo0AHvQZxgvgXg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAErSpo643rAAqR0AAy5CwSkMv28Cw8Y55EYrYo0AHvQZxgvgXg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an implementation of fix 1 (Add a quirk to fix the _CRS information
-based on what amd_bus.c read from the hardware) which makes pci=nocrs ignore bus numbers from crs.
+On Sat, Sep 06, 2014 at 08:17:43AM -0600, Bjorn Helgaas wrote:
+> On Fri, Sep 5, 2014 at 6:25 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
+> > This patch adds support for AppliedMicro X-Gene PCIe host controller. The
+> > driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
+> > cards.
+> >
+> > X-Gene PCIe controller driver has depedency on the pcie arm64 arch support.
+> > Liviu Dudau from ARM has sent a patch set for pcie arm64 arch support and
+> > support for creating generic pcie bridge from device tree. Liviu's patches
+> > are available here
+> > 1. https://lkml.org/lkml/2014/8/12/361
+> 
+> I'm hoping to merge Liviu's patches and this X-Gene support for v3.18.
+> I'm currently waiting for Liviu's v10 series (hopefully based on
+> v3.17-rc2), and since your series depends on that, I'm going to wait
+> for a v7 of your series that is rebased on top of Liviu's v10.  Does
+> that make sense?
 
-If this works then we can add the board to the crs blacklist (Dirk can you attach the output of dmidecode to the bugzilla report?).
+Hi Bjorn,
 
+I've sent v10 based on v3.17-rc4, hope this is OK.
 
+Tanmay, unfortunately the API has changed again. I've put in the cover letter
+of the series how the probe function needs changing. Basically, you need to
+stop relying on the host bridge being created and use just the resource list
+coming out of the of_pci_get_host_bridge_resources().
 
----
- arch/x86/pci/acpi.c     |  7 +++----
- arch/x86/pci/bus_numa.c | 12 +-----------
- 2 files changed, 4 insertions(+), 15 deletions(-)
+Best regards,
+Liviu
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index cfd1b13..b073948 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -522,15 +522,14 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	} else {
- 		probe_pci_root_info(info, device, busnum, domain);
- 
--		/* insert busn res at first */
--		pci_add_resource(&resources,  &root->secondary);
- 		/*
- 		 * _CRS with no apertures is normal, so only fall back to
- 		 * defaults or native bridge info if we're ignoring _CRS.
- 		 */
--		if (pci_use_crs)
-+		if (pci_use_crs) {
-+			pci_add_resource(&resources,  &root->secondary);
- 			add_resources(info, &resources);
--		else {
-+		} else {
- 			free_pci_root_info_res(info);
- 			x86_pci_root_bus_resources(busnum, &resources);
- 		}
-diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
-index f3a2cfc..b735d0e 100644
---- a/arch/x86/pci/bus_numa.c
-+++ b/arch/x86/pci/bus_numa.c
-@@ -31,8 +31,6 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
- {
- 	struct pci_root_info *info = x86_find_pci_root_info(bus);
- 	struct pci_root_res *root_res;
--	struct pci_host_bridge_window *window;
--	bool found = false;
- 
- 	if (!info)
- 		goto default_resources;
-@@ -40,15 +38,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
- 	printk(KERN_DEBUG "PCI: root bus %02x: hardware-probed resources\n",
- 	       bus);
- 
--	/* already added by acpi ? */
--	list_for_each_entry(window, resources, list)
--		if (window->res->flags & IORESOURCE_BUS) {
--			found = true;
--			break;
--		}
--
--	if (!found)
--		pci_add_resource(resources, &info->busn);
-+	pci_add_resource(resources, &info->busn);
- 
- 	list_for_each_entry(root_res, &info->resources, list) {
- 		struct resource *res;
+> 
+> > If someone wishes to test PCIe on X-Gene with this patch set, above mentioned
+> > patches from Liviu must be applied before the patches in this patch set. Also
+> > please use latest xgene u-boot firmware.
+> >
+> > changes since V5:
+> > 1. Port driver to changed interface of 'of_create_pci_host_bridge'
+> > 2. Fix the prefetch bit setting
+> > 3. Removed bunch of register programming which is already done by firmware
+> >
+> > changes since V4:
+> > 1. fix section mismatch warnings
+> > 2. fix the patch description
+> > 3. fix indentation
+> > 4. update read/write cfg functions by passing both addr and offset.
+> > 5. use 'time_before' for timeout.
+> > 6. remove unnecessary 'IS_ERR_OR_NULL'. Keep 'IS_ERR' for 'clk_get'
+> > 7. remove BUG_ON for pci_ioremap_io.
+> >
+> > changes since V3:
+> > 1. remove 'struct hw_pci' and supporting ops in hw_pci
+> > 2. add code to create the host bridge from dts
+> > 3. add code to scan the the host bridge
+> > 4. modify outbound windows setup function to get resource information from
+> >    'bridge->windows'
+> > 5. add compatible string in pcie dts node with current X-Gene SOC name.
+> >
+> > changes since V2:
+> > 1. redefined each PCI port in different PCI domain correctly.
+> > 2. removed setup_lane and setup_link functions from driver.
+> > 3. removed scan_bus wrapper and set_primary_bus hack.
+> > 4. added pci_ioremap_io for io resources.
+> >
+> > changes since V1:
+> > 1. added PCI domain support
+> > 2. reading cpu and pci addresses from device tree to configure regions.
+> > 3. got rid of unnecessary wrappers for readl and writel.
+> > 4. got rid of endpoint configuration code.
+> > 5. added 'dma-ranges' property support to read inbound region configuration.
+> > 6. renamed host driver file to 'pci-xgene.c' from 'pcie-xgene.c'
+> > 7. dropped 'clock-names' property from bindings
+> > 8. added comments whereever requested.
+> >
+> > Tanmay Inamdar (4):
+> >   pci:host: APM X-Gene PCIe controller driver
+> >   arm64: dts: APM X-Gene PCIe device tree nodes
+> >   dt-bindings: pci: xgene pcie device tree bindings
+> >   MAINTAINERS: entry for APM X-Gene PCIe host driver
+> >
+> >  .../devicetree/bindings/pci/xgene-pci.txt          |  55 ++
+> >  MAINTAINERS                                        |   8 +
+> >  arch/arm64/boot/dts/apm-mustang.dts                |   8 +
+> >  arch/arm64/boot/dts/apm-storm.dtsi                 | 160 ++++++
+> >  drivers/pci/host/Kconfig                           |  10 +
+> >  drivers/pci/host/Makefile                          |   1 +
+> >  drivers/pci/host/pci-xgene.c                       | 638 +++++++++++++++++++++
+> >  7 files changed, 880 insertions(+)
+> >  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
+> >  create mode 100644 drivers/pci/host/pci-xgene.c
+> >
+> > --
+> > 1.9.1
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-2.1.0
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
+
+ One small step
+   for me ...
 
