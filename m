@@ -1,76 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f182.google.com ([209.85.216.182]:43299 "EHLO
-	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752087AbaIMVef (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 13 Sep 2014 17:34:35 -0400
-Received: by mail-qc0-f182.google.com with SMTP id c9so525448qcz.13
-        for <linux-pci@vger.kernel.org>; Sat, 13 Sep 2014 14:34:34 -0700 (PDT)
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:57979 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753823AbaIHMvx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 08:51:53 -0400
+Received: by mail-pd0-f178.google.com with SMTP id p10so3719871pdj.23
+        for <linux-pci@vger.kernel.org>; Mon, 08 Sep 2014 05:51:53 -0700 (PDT)
+Message-ID: <540DA653.2000901@linaro.org>
+Date: Mon, 08 Sep 2014 20:51:31 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <bug-84471-41252@https.bugzilla.kernel.org/>
-References: <bug-84471-41252@https.bugzilla.kernel.org/>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 13 Sep 2014 15:34:14 -0600
-Message-ID: <CAErSpo52yO3R5sMePz7JeMzL-j5-+9ezfUAi1L92_v-LFRnPGg@mail.gmail.com>
-Subject: Re: [Bug 84471] New: pci=assign-busses breaks power-off of T4215 laptop
-To: thor@math.tu-berlin.de
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Andreas Noever <andreas.noever@gmail.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Len Brown <lenb@kernel.org>,
+	Robert Moore <robert.moore@intel.com>,
+	Lv Zheng <lv.zheng@intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [Patch v4 04/16] ACPI: Rename processor_core.c as apic_id.c
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com> <1409192561-19744-5-git-send-email-jiang.liu@linux.intel.com> <1957879.bE3ICM6HKO@vostro.rjw.lan>
+In-Reply-To: <1957879.bE3ICM6HKO@vostro.rjw.lan>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci, Andreas, switching to email for discussion]
+Hi Gerry, Rafael,
 
-On Sat, Sep 13, 2014 at 10:08 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=84471
+On 2014年09月08日 06:37, Rafael J. Wysocki wrote:
+> On Thursday, August 28, 2014 10:22:29 AM Jiang Liu wrote:
+>> Now all code in processor_core.c is APIC ID related, so rename it as
+>> apic_id.c. Later IOAPIC ID related code will be added into apic_id.c.
+> Actually, I'm not sure about this one.
 >
->             Bug ID: 84471
->            Summary: pci=assign-busses breaks power-off of T4215 laptop
->            Product: Drivers
->            Version: 2.5
->     Kernel Version: 3.17.0-rc4
->           Hardware: x86-64
->                 OS: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: PCI
->           Assignee: drivers_pci@kernel-bugs.osdl.org
->           Reporter: thor@math.tu-berlin.de
->         Regression: No
+> Renames like this make it difficult to backport things in general
+> and kind of break "git blame", so do we have to do that?
 >
-> If the kernel argument "pci=assign-busses" is specified as a kernel boot
-> parameter, power-off does no longer work with the T4215 laptop. The machine
-> goes through the power-down cycle, but then sits idle with a blank screen after
-> reporting "powering down". Without the kernel parameter, power-off works
-> correctly.
+> What's wrong with leaving the name as is and adding a comment
+> about the contents being related to IOAPIC ID?
 
-Thank you very much for the report!
+It will be thankful for not renaming the file into apic_id.c, because apic id is x86 specific,
+and platform like ARM will also add some code to get cpu hardware id via GICC structure
+in MADT table in that file, apic id is not a generic name for both x86 and ARM, I prefer to
+keep it as it is :)
 
-It sounds like this is a regression, i.e., power-off used to work
-correctly with "pci=assign-busses", but it doesn't any more.  If
-that's the case, what's the most recent kernel you know of where it
-worked correctly?
+Thanks
+Hanjun
 
-Can you attach complete dmesg and "lspci -vv" output (as root) both
-with and without "pci=assign-busses" to the bugzilla?  If you have an
-older kernel where power-off works correctly with "pci=assign-busses",
-please attach the same information for that kernel, too.
-
-Why do you use "pci=assign-busses" in the first place?  This is likely
-a different issue, but if "pci=assign-busses" fixes something, I
-consider that a bug in itself, because Linux should be smart enough to
-do the right thing even without "pci=assign-busses".  So if something
-on your machine requires "pci=assign-busses" in order to work, please
-open a second bugzilla for that.
-
-It's possible this is the same problem reported at
-https://bugzilla.kernel.org/show_bug.cgi?id=83441.  We think that is
-related to fc1b253141b3 ("PCI: Don't scan random busses in
-pci_scan_bridge()"), which appeared in v3.15.  I attached a test patch
-to that bugzilla to revert that commit.  If you think it looks like
-the same problem, you might try testing that patch.
-
-Thanks again,
-Bjorn
