@@ -1,83 +1,197 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:54516 "EHLO
-	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750710AbaIXEOp convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Sep 2014 00:14:45 -0400
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>, Jingoo Han <jg1.han@samsung.com>
-Date: Wed, 24 Sep 2014 12:14:02 +0800
-Subject: RE: [PATCH] PCI: designware: Fix configuration base address
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB661ABCDBA8EEB@EAPEX1MAIL1.st.com>
-References: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
- <20140923225306.GF27117@google.com>
-In-Reply-To: <20140923225306.GF27117@google.com>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Grant Likely <grant.likely@linaro.org>
+Subject: [PATCH v10 02/10] PCI: Introduce helper functions to deal with PCI I/O ranges.
+Date: Mon,  8 Sep 2014 14:54:24 +0100
+Message-Id: <1410184472-17630-3-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Minghuan,
+Some architectures do not have a simple view of the PCI I/O space
+and instead use a range of CPU addresses that map to bus addresses.
+For some architectures these ranges will be expressed by OF bindings
+in a device tree file.
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> Sent: Wednesday, September 24, 2014 4:23 AM
-> To: Minghuan Lian
-> Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; Zang
-> Roy-R61911; Hu Mingkai-B21284; Scott Wood; Yoder Stuart-B08248; Arnd
-> Bergmann; Mohit KUMAR DCG; Jingoo Han
-> Subject: Re: [PATCH] PCI: designware: Fix configuration base address
-> 
-> [+cc Mohit, Jingoo]
-> 
-> On Tue, Sep 23, 2014 at 10:28:56PM +0800, Minghuan Lian wrote:
-> > The code has calculated cfg0_base and cfg1_base when parsing 'reg'
-> > or 'ranges' property of PCI DTS node. so remove duplicate calculation.
-> > And when using 'reg', resource cfg is not used, the removed code will
-> > get incorrect configuration base.
-> >
-> > Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-> > ---
-> >  drivers/pci/host/pcie-designware.c | 2 --
-> >  1 file changed, 2 deletions(-)
-> >
-> > diff --git a/drivers/pci/host/pcie-designware.c
-> > b/drivers/pci/host/pcie-designware.c
-> > index c28ca05..0f3cb2a 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -515,7 +515,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> >  	pp->mem_base = pp->mem.start;
-> >
-> >  	if (!pp->va_cfg0_base) {
-> > -		pp->cfg0_base = pp->cfg.start;
-> >  		pp->va_cfg0_base = devm_ioremap(pp->dev, pp-
-> >cfg0_base,
-> >  						pp->cfg0_size);
-> >  		if (!pp->va_cfg0_base) {
-> > @@ -525,7 +524,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> >  	}
-> >
-> >  	if (!pp->va_cfg1_base) {
-> > -		pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
-> >  		pp->va_cfg1_base = devm_ioremap(pp->dev, pp-
-> >cfg1_base,
-> >  						pp->cfg1_size);
-> >  		if (!pp->va_cfg1_base) {
-> > --
-> > 1.9.1
-> >
+This patch introduces a pci_register_io_range() helper function with
+a generic implementation that can be used by such architectures to
+keep track of the I/O ranges described by the PCI bindings. If the
+PCI_IOBASE macro is not defined that signals lack of support for PCI
+and we return an error.
 
-- Acked-by: Mohit KUMAR <mohit.kumar@st.com>
+In order to retrieve the CPU address associated with an I/O port, a
+new helper function pci_pio_to_address() is introduced. This will
+search in the list of ranges registered with pci_register_io_range()
+and return the CPU address that corresponds to the given port.
 
-Thanks
-Mohit
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ drivers/of/address.c       | 100 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/of_address.h |   2 +
+ 2 files changed, 102 insertions(+)
+
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index e371825..2373a92 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -5,6 +5,7 @@
+ #include <linux/module.h>
+ #include <linux/of_address.h>
+ #include <linux/pci_regs.h>
++#include <linux/slab.h>
+ #include <linux/string.h>
+ 
+ /* Max address size we deal with */
+@@ -601,12 +602,111 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+ }
+ EXPORT_SYMBOL(of_get_address);
+ 
++#ifdef PCI_IOBASE
++struct io_range {
++	struct list_head list;
++	phys_addr_t start;
++	resource_size_t size;
++};
++
++static LIST_HEAD(io_range_list);
++static DEFINE_SPINLOCK(io_range_lock);
++#endif
++
++/*
++ * Record the PCI IO range (expressed as CPU physical address + size).
++ * Return a negative value if an error has occured, zero otherwise
++ */
++int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
++{
++#ifdef PCI_IOBASE
++	struct io_range *range;
++	resource_size_t allocated_size = 0;
++
++	/* check if the range hasn't been previously recorded */
++	spin_lock(&io_range_lock);
++	list_for_each_entry(range, &io_range_list, list) {
++		if (addr >= range->start && addr + size <= range->start + size)
++			return 0;
++		allocated_size += range->size;
++	}
++	spin_unlock(&io_range_lock);
++
++	/* range not registed yet, check for available space */
++	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
++		/* if it's too big check if 64K space can be reserved */
++		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT)
++			return -E2BIG;
++
++		size = SZ_64K;
++		pr_warn("Requested IO range too big, new size set to 64K\n");
++	}
++
++	/* add the range to the list */
++	range = kzalloc(sizeof(*range), GFP_KERNEL);
++	if (!range)
++		return -ENOMEM;
++
++	range->start = addr;
++	range->size = size;
++
++	spin_lock(&io_range_lock);
++	list_add_tail(&range->list, &io_range_list);
++	spin_unlock(&io_range_lock);
++#endif
++
++	return 0;
++}
++
++phys_addr_t pci_pio_to_address(unsigned long pio)
++{
++	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
++
++#ifdef PCI_IOBASE
++	struct io_range *range;
++	resource_size_t allocated_size = 0;
++
++	if (pio > IO_SPACE_LIMIT)
++		return address;
++
++	spin_lock(&io_range_lock);
++	list_for_each_entry(range, &io_range_list, list) {
++		if (pio >= allocated_size && pio < allocated_size + range->size) {
++			address = range->start + pio - allocated_size;
++			break;
++		}
++		allocated_size += range->size;
++	}
++	spin_unlock(&io_range_lock);
++#endif
++
++	return address;
++}
++
+ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+ {
++#ifdef PCI_IOBASE
++	struct io_range *res;
++	resource_size_t offset = 0;
++	unsigned long addr = -1;
++
++	spin_lock(&io_range_lock);
++	list_for_each_entry(res, &io_range_list, list) {
++		if (address >= res->start && address < res->start + res->size) {
++			addr = res->start - address + offset;
++			break;
++		}
++		offset += res->size;
++	}
++	spin_unlock(&io_range_lock);
++
++	return addr;
++#else
+ 	if (address > IO_SPACE_LIMIT)
+ 		return (unsigned long)-1;
+ 
+ 	return (unsigned long) address;
++#endif
+ }
+ 
+ static int __of_address_to_resource(struct device_node *dev,
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index fb7b722..f8cc7da 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -55,7 +55,9 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
+ extern const __be32 *of_get_address(struct device_node *dev, int index,
+ 			   u64 *size, unsigned int *flags);
+ 
++extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+ extern unsigned long pci_address_to_pio(phys_addr_t addr);
++extern phys_addr_t pci_pio_to_address(unsigned long pio);
+ 
+ extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+ 			struct device_node *node);
+-- 
+2.0.4
+
