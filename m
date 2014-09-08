@@ -1,75 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:15347 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753540AbaIVJvW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 05:51:22 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
+Received: from mx1.redhat.com ([209.132.183.28]:62248 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753500AbaIHOLB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Sep 2014 10:11:01 -0400
+Date: Mon, 8 Sep 2014 10:10:36 -0400
+From: Aristeu Rozanski <aris@redhat.com>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>,
+	Doug Thompson <dougthompson@xmission.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Borislav Petkov <bp@alien8.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1411379470-20639-1-git-send-email-phil.edworthy@renesas.com>
-References: <1411379470-20639-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1411379470-20639-2-git-send-email-phil.edworthy@renesas.com>
-Date: Mon, 22 Sep 2014 10:51:08 +0100
-Subject: [PATCH 1/3] PCI: rcar-pcie: Add call to get domain nr
+	linux-edac@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Rui Wang <ruiv.wang@gmail.com>
+Subject: Re: [PATCH 2/2] sb_edac: Claim a different PCI device
+Message-ID: <20140908141035.GK22290@redhat.com>
+References: <cover.1408051536.git.luto@amacapital.net>
+ <59f55d679cc596731589516a71075b6059fcaaa5.1408051536.git.luto@amacapital.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <59f55d679cc596731589516a71075b6059fcaaa5.1408051536.git.luto@amacapital.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-R-Car devices (r8a7790 and r8a7791) need to place the internal PCI and external
-PCIe controllers on separate domains so that they can work at the same time.
+On Thu, Aug 14, 2014 at 02:45:41PM -0700, Andy Lutomirski wrote:
+> sb_edac controls a large number of different PCI functions.  Rather
+> than registering as a normal PCI driver for all of them, it
+> registers for just one so that it gets probed and, at probe time, it
+> looks for all the others.
+> 
+> Coincidentally, the device it registers for also contains the SMBUS
+> registers, so the PCI core will refuse to probe both sb_edac and a
+> future iMC SMBUS driver.  The drivers don't actually conflict, so
+> just change sb_edac's device table to probe a different device.
+> 
+> An alternative fix would be to merge the two drivers, but sb_edac
+> will also refuse to load on non-ECC systems, whereas i2c_imc would
+> still be useful without ECC.
+> 
+> The only user-visible change should be that sb_edac appears to bind
+> a different device.
+> 
+> Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>
+> Cc: Rui Wang <ruiv.wang@gmail.com>
+> Signed-off-by: Andy Lutomirski <luto@amacapital.net>
+> ---
+>  drivers/edac/sb_edac.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/edac/sb_edac.c b/drivers/edac/sb_edac.c
+> index a2597e9313c6..e3bc2cced580 100644
+> --- a/drivers/edac/sb_edac.c
+> +++ b/drivers/edac/sb_edac.c
+> @@ -432,7 +432,7 @@ static const struct pci_id_table pci_dev_descr_ibridge_table[] = {
+>   *	pci_device_id	table for which devices we are looking for
+>   */
+>  static const struct pci_device_id sbridge_pci_tbl[] = {
+> -	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TA)},
+> +	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_HA0)},
+>  	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IBRIDGE_IMC_HA0_TA)},
+>  	{0,}			/* 0 terminated list. */
+>  };
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- drivers/pci/host/pcie-rcar.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+Acked-by: Aristeu Rozanski <aris@redhat.com>
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 4884ee5..db74371 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -128,6 +128,7 @@ struct rcar_pcie {
- 	struct device		*dev;
- 	void __iomem		*base;
- 	struct resource		res[RCAR_PCI_MAX_RESOURCES];
-+	int			domain;
- 	struct resource		busn;
- 	int			root_bus_nr;
- 	struct clk		*clk;
-@@ -393,13 +394,13 @@ static void rcar_pcie_enable(struct rcar_pcie *pcie)
- {
- 	struct platform_device *pdev = to_platform_device(pcie->dev);
- 
-+#ifdef CONFIG_PCI_DOMAINS
-+	rcar_pci.domain = pcie->domain;
-+#endif
- 	rcar_pci.nr_controllers = 1;
- 	rcar_pci.private_data = (void **)&pcie;
- 
- 	pci_common_init_dev(&pdev->dev, &rcar_pci);
--#ifdef CONFIG_PCI_DOMAINS
--	rcar_pci.domain++;
--#endif
- }
- 
- static int phy_wait_for_ack(struct rcar_pcie *pcie)
-@@ -917,6 +918,8 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	pcie->dev = &pdev->dev;
- 	platform_set_drvdata(pdev, pcie);
- 
-+	pcie->domain = of_pci_get_domain_nr(pdev->dev.of_node, true);
-+
- 	/* Get the bus range */
- 	if (of_pci_parse_bus_range(pdev->dev.of_node, &pcie->busn)) {
- 		dev_err(&pdev->dev, "failed to parse bus-range property\n");
 -- 
-2.1.0
+Aristeu
 
