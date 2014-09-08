@@ -1,133 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout3.freenet.de ([195.4.92.93]:53887 "EHLO mout3.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753097AbaIWTpP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Sep 2014 15:45:15 -0400
-Received: from [195.4.92.142] (helo=mjail2.freenet.de)
-	by mout3.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.82 #2)
-	id 1XWVuI-0002xL-VP
-	for linux-pci@vger.kernel.org; Tue, 23 Sep 2014 21:37:50 +0200
-Received: from localhost ([::1]:53831 helo=mjail2.freenet.de)
-	by mjail2.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.82 #2)
-	id 1XWVuI-0005dm-RI
-	for linux-pci@vger.kernel.org; Tue, 23 Sep 2014 21:37:50 +0200
-Received: from mx10.freenet.de ([195.4.92.20]:38845)
-	by mjail2.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.82 #2)
-	id 1XWVsB-00030I-NV
-	for linux-pci@vger.kernel.org; Tue, 23 Sep 2014 21:35:39 +0200
-Received: from p4fde0d05.dip0.t-ipconnect.de ([79.222.13.5]:50106 helo=mail.maya.org)
-	by mx10.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1.2:DHE-RSA-AES256-GCM-SHA384:256) (port 587) (Exim 4.82 #2)
-	id 1XWVsB-00041e-F2
-	for linux-pci@vger.kernel.org; Tue, 23 Sep 2014 21:35:39 +0200
-Received: from dualc.maya.org (dualc.maya.org [192.168.1.6])
-	by mail.maya.org (8.14.7/8.13.8) with ESMTP id s8NJ3Jgo001404
-	for <linux-pci@vger.kernel.org>; Tue, 23 Sep 2014 21:03:19 +0200
-Date: Tue, 23 Sep 2014 21:03:18 +0200
-From: Andreas Hartmann <andihartmann@freenet.de>
-To: linux-pci <linux-pci@vger.kernel.org>
-Subject: Hard and silent lock up since linux 3.14 with PCIe pass through
- (vfio)
-Message-ID: <20140923210318.498dacbd@dualc.maya.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from service87.mimecast.com ([91.220.42.44]:33675 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751584AbaIHOzG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 10:55:06 -0400
+Date: Mon, 8 Sep 2014 15:54:59 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI
+ domain_nr
+Message-ID: <20140908145459.GO27864@e106497-lin.cambridge.arm.com>
+References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
+ <1410184472-17630-8-git-send-email-Liviu.Dudau@arm.com>
+ <CAL_JsqJi8k1Goc3UmXhuxf9v7=4gJrYG_Di7v574PxS8TsJaXw@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <CAL_JsqJi8k1Goc3UmXhuxf9v7=4gJrYG_Di7v574PxS8TsJaXw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+On Mon, Sep 08, 2014 at 03:27:56PM +0100, Rob Herring wrote:
+> On Mon, Sep 8, 2014 at 8:54 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > Add of_pci_get_domain_nr() to retrieve the PCI domain number
+> > of a given device from DT. If the information is not present,
+> > the function can be requested to allocate a new domain number.
+> >
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Grant Likely <grant.likely@linaro.org>
+> > Cc: Rob Herring <robh+dt@kernel.org>
+> > Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > ---
+> >  drivers/of/of_pci.c    | 34 ++++++++++++++++++++++++++++++++++
+> >  include/linux/of_pci.h |  7 +++++++
+> >  2 files changed, 41 insertions(+)
+> >
+> > diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> > index 8481996..a107edb 100644
+> > --- a/drivers/of/of_pci.c
+> > +++ b/drivers/of/of_pci.c
+> > @@ -89,6 +89,40 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
+> >  }
+> >  EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
+> >
+> > +static atomic_t of_domain_nr = ATOMIC_INIT(-1);
+> > +
+> > +/**
+> > + * This function will try to obtain the host bridge domain number by
+> > + * using of_alias_get_id() call with "pci-domain" as a stem. If that
+> > + * fails, a local allocator will be used. The local allocator can
+> > + * be requested to return a new domain_nr if the information is missing
+> > + * from the device tree.
+> > + *
+> > + * @node: device tree node with the domain information
+> > + * @allocate_if_missing: if DT lacks information about the domain nr,
+> > + * allocate a new number.
+> > + *
+> > + * Returns the associated domain number from DT, or a new domain number
+> > + * if DT information is missing and @allocate_if_missing is true. If
+> > + * @allocate_if_missing is false then the last allocated domain number
+> > + * will be returned.
+> > + */
+> > +int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
+> > +{
+> > +       int domain;
+> > +
+> > +       domain = of_alias_get_id(node, "pci-domain");
+> > +       if (domain == -ENODEV) {
+> > +               if (allocate_if_missing)
+> > +                       domain = atomic_inc_return(&of_domain_nr);
+> > +               else
+> > +                       domain = atomic_read(&of_domain_nr);
+> 
+> This function seems a bit broken to me. It is overloaded with too many
+> different outcomes. Think about how this would work if you have
+> multiple PCI buses and a mixture of having pci-domain aliases or not.
+> Aren't domain numbers global? Allocation should then start outside of
+> the range of alias ids.
+> 
+> Rob
+> 
 
-Since long time now, I'm using w/o any problem PCIe pass through with a
-Gigabyte GA-990XA-UD3/GA-990XA-UD3 mainboard (AMD 990X chipset) and
-enabled IOMMU with vfio-pci.
+Rob,
 
-The last kernel working w/o any problem is kernel 3.13.7 (I didn't use
-.8 and .9, but I do not think they would have been problematic).
+Would this version make more sense?
 
-Since 3.14.19 (I didn't test any 3.14 kernel before) I'm encountering a
-hard and silent lock up of the complete machine when starting the VM
-with the PCIe card passed through.
+int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
+{
+       int domain;
 
-That's the relevant PCIe card, which locks up the machine (here
-running w/ 3.12.28) when passed to the VM:
+       domain = of_alias_get_id(node, "pci-domain");
+       if (domain == -ENODEV) {
+               if (allocate_if_missing)
+                       domain = atomic_inc_return(&of_domain_nr);
+               else
+                       domain = atomic_read(&of_domain_nr);
+       } else {
+               /* remember the largest value seen */
+               int d = atomic_read(&of_domain_nr);
+               atomic_set(&of_domain_nr, max(domain, d));
+       }
 
-03:00.0 Network controller: Qualcomm Atheros AR93xx Wireless Network Adapter (rev 01)
-        Subsystem: Qualcomm Atheros Device 3112
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 17
-        Region 0: Memory at fdbc0000 (64-bit, non-prefetchable) [size=128K]
-        Expansion ROM at fda00000 [size=64K]
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [50] MSI: Enable- Count=1/4 Maskable+ 64bit+
-                Address: 0000000000000000  Data: 0000
-                Masking: 00000000  Pending: 00000000
-        Capabilities: [70] Express (v2) Endpoint, MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <1us, L1 <8us
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <2us, L1 <64us
-                        ClockPM- Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-                DevCap2: Completion Timeout: Not Supported, TimeoutDis+, LTR-, OBFF Not Supported
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
-                LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
-                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout+ NonFatalErr+
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
-        Capabilities: [140 v1] Virtual Channel
-                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
-                Arb:    Fixed- WRR32- WRR64- WRR128-
-                Ctrl:   ArbSelect=Fixed
-                Status: InProgress-
-                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
-                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-                        Status: NegoPending- InProgress-
-        Capabilities: [300 v1] Device Serial Number 00-00-00-00-00-00-00-00
-        Kernel driver in use: vfio-pci
-        Kernel modules: ath9k
+       return domain;
+}
+EXPORT_SYMBOL_GPL(of_pci_get_domain_nr);
+
+It would still create gaps and possible duplicates, but this is just a number
+and trying to create a new root bus in an existing domain should fail. I have
+no clue on how to generate unique values without parsing the DT and filling
+a sparse array with values found there and then checking for allocated values
+on new requests. This function gets called quite a lot and I'm trying not to
+make it too heavy weight.
 
 
-Unbinding it works w/o any problem. The lock up encounters about 4 s
-after the start of the VM.
+Best regards,
+Liviu
 
-On 3.12.x, I can see the following message on the error terminal when
-starting the VM: 
-vfio-pci: 03:00.0: invalid ROM contents.
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
-I compared AMD-Vi debug output between 3.12 and 3.14, but couldn't see
-any difference. I compared /proc/interrupts between 3.12 and 3.14
-and couldn't see any difference too so far.
-
-
-qemu version I'm using is 1.7.0.
-
-
-It is strange(?), that a second VM using PCI (legacy) pass through works
-w/o any problem. I tried to start the problematic VM even w/o running
-this VM - same result: machine is locked up hard.
-
-
-Do you have any idea, what could be going on there? Or how to debug it
-to see what happened?
-
-
-
-Thanks,
-kind regards,
-Andreas Hartmann
