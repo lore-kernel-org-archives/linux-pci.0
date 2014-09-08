@@ -1,77 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sun, 14 Sep 2014 14:55:22 +0200
-From: Nico Schottelius <nico-kernel-2014-08-14@schottelius.org>
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Nico Schottelius <nico-kernel-2014-08-14@schottelius.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: Linux 3.16: O2 Micro MMC missing in lspci
-Message-ID: <20140914125522.GF26638@schottelius.org>
-References: <20140814105351.GA3110@schottelius.org>
- <20140914102408.391efcaf@kant>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f172.google.com ([209.85.216.172]:55992 "EHLO
+	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753034AbaIHQNv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 12:13:51 -0400
+Received: by mail-qc0-f172.google.com with SMTP id o8so16149766qcw.3
+        for <linux-pci@vger.kernel.org>; Mon, 08 Sep 2014 09:13:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140914102408.391efcaf@kant>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140908044014.GC2464@pratyush-vbox>
+References: <67297b465f1b531aec9f290246698b23aa994381.1407906240.git.pratyush.anand@st.com>
+ <20140906000329.GN8080@google.com> <20140908044014.GC2464@pratyush-vbox>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 8 Sep 2014 10:13:30 -0600
+Message-ID: <CAErSpo5LSunJSfXGGO3asiMYgkzGEeaaKCHRYeaBiv0o8aG3JQ@mail.gmail.com>
+Subject: Re: [PATCH] PCIe: Designware: Extract struct pcie_port_info elements
+ into struct pcie_port
+To: Pratyush Anand <pratyush.anand@st.com>
+Cc: "jg1.han@samsung.com" <jg1.han@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey Stefan,
+On Sun, Sep 7, 2014 at 10:40 PM, Pratyush Anand <pratyush.anand@st.com> wrote:
+> On Sat, Sep 06, 2014 at 08:03:29AM +0800, Bjorn Helgaas wrote:
+>> On Sat, Aug 16, 2014 at 12:52:39PM +0530, Pratyush Anand wrote:
+>> > struct pcie_port_info elements are not containing any exclusive
+>> > information compared to other elements of struct pcie_port. So, keeping
+>> > a separate structure like struct pcie_port_info does not seem very
+>> > logical. Therefore remove this struct  and embed its elements directly
+>> > into struct pcie_port.
+>> >
+>> > Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+>>
+>> Applied with Mohit's ack to pci/host-designware for v3.18, thanks!
+>>
+>> I had to resolve some merge conflicts, so look it over and make sure I
+>> did it correctly.
+>
+> Following diff need to be merged with the commit.
+> Let me know if I need to resend this patch rebased on top of
+> pci/host-designware ~ 1.
+>
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 04a71093bf9a..5d720c21fdc0 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -520,7 +520,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>         }
+>
+>         if (!pp->va_cfg1_base) {
+> -               pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+> +               pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
+>                 pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
+>                                                 pp->cfg1_size);
+>                 if (!pp->va_cfg1_base) {
+>
+>
 
-(un-)fortunately I don't have the device anymore,
-so I cannot test anymore.
+I updated pci/host-designware with this fix, thanks!
 
-Cheers,
-
-Nico
-
-Stefan Richter [Sun, Sep 14, 2014 at 10:24:08AM +0200]:
-> On Aug 14 Nico Schottelius wrote:
-> > Hello,
-> > 
-> > when booting into 3.16.0-2-ARCH I miss the following
-> > entry in lspci:
-> > 
-> > [12:50] gold:debug-sd-card-reader% diff 3.15/lspci 3.16/lspci 
-> > 17d16
-> > < 03:00.0 SD Host controller: O2 Micro, Inc. SD/MMC Card Reader
-> > Controller (rev 01)
-> > 
-> > This causes my system to be unable to mount/see the sd cards.
-> > My hardware is a Dell E7440 notebook.
-> > 
-> > I attached dmesg & lspci of both kernels.
-> > 
-> > Anyone an idea on what might be wrong?
-> > 
-> > The only related issues I found is
-> >     https://bugs.archlinux.org/task/26971
-> > 
-> > and that there was a change in the mmc area:
-> > 
-> >     https://lkml.org/lkml/2014/6/10/491
-> > 
-> > Cheers,
-> > 
-> > Nico
-> > 
-> > p.s.: Please cc on reply
-> 
-> Both the archlinux bug and the pull request very much appear to be
-> unrelated to your issue.  In your case, the MMC subsystem is not involved
-> since the PCI device of the SD controller is not exposed to the MMC
-> subsystem anymore, just like it is not exposed in lspci anymore.
-> 
-> I suggest as next steps:
->   - Test whether the issue still exists in the newest kernel that you are
->     able to install.  (v3.17-rc4 is current, v3.16.2 is the lastest on in
->     the 3.16 branch.)
->   - Post the dmesg output from a successful boot with 3.15 and from an
->     unsuccessful boot with 3.16.
-> 
-> [added Cc: linux-pci]
-> -- 
-> Stefan Richter
-> -=====-====- =--= -===-
-> http://arcgraph.de/sr/
-
--- 
-New PGP key: 659B 0D91 E86E 7E24 FD15  69D0 C729 21A1 293F 2D24
+Bjorn
