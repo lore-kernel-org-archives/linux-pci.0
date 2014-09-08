@@ -1,68 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:49841 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753026AbaIOCZ0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Sep 2014 22:25:26 -0400
-Message-ID: <54164E00.6080109@huawei.com>
-Date: Mon, 15 Sep 2014 10:25:04 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Mon, 8 Sep 2014 15:01:30 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v10] arm64: Add architectural support for PCIe
+Message-ID: <20140908140129.GE22717@arm.com>
+References: <1410184549-17690-1-git-send-email-Liviu.Dudau@arm.com>
+ <1410184549-17690-2-git-send-email-Liviu.Dudau@arm.com>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	"Vinod Koul" <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-CC: Ashok Raj <ashok.raj@intel.com>, Tony Luck <tony.luck@intel.com>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	<linux-hotplug@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<dmaengine@vger.kernel.org>
-Subject: Re: [Patch Part3 V5 6/8] iommu/vt-d: Enhance error recovery in function
- intel_enable_irq_remapping()
-References: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com> <1410487848-6027-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410487848-6027-7-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1410184549-17690-2-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/12 10:10, Jiang Liu wrote:
-> Enhance error recovery in function intel_enable_irq_remapping()
-> by tearing down all created data structures.
+On Mon, Sep 08, 2014 at 02:55:49PM +0100, Liviu Dudau wrote:
+> Use the generic PCI domain and OF functions
+> to provide support for PCI Express on arm64.
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/iommu/intel_irq_remapping.c |    8 +++++---
->  1 file changed, 5 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-> index 7cf31a29f77a..81f110aae6df 100644
-> --- a/drivers/iommu/intel_irq_remapping.c
-> +++ b/drivers/iommu/intel_irq_remapping.c
-> @@ -701,9 +701,11 @@ static int __init intel_enable_irq_remapping(void)
->  	return eim ? IRQ_REMAP_X2APIC_MODE : IRQ_REMAP_XAPIC_MODE;
->  
->  error:
-> -	/*
-> -	 * handle error condition gracefully here!
-> -	 */
-> +	for_each_iommu(iommu, drhd)
-> +		if (ecap_ir_support(iommu->ecap)) {
-> +			iommu_disable_irq_remapping(iommu);
-> +			intel_teardown_irq_remapping(iommu);
-> +		}
->  
->  	if (x2apic_present)
->  		pr_warn("Failed to enable irq remapping.  You are vulnerable to irq-injection attacks.\n");
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> [Generic PCI domain support]
+> Signed-off-by: Catalin Marinas <catalin.marinas@arm.com>
 
-Reviewed-by: Yijing Wang <wangyijing@huawei.com>
+Minor detail: when have I signed this patch off? I'm not the author
+(maybe bits of it but I think most of it is yours). However, you can
+add:
 
-
-> 
-
-
--- 
-Thanks!
-Yijing
-
+Acked-by: Catalin Marinas <catalin.marinas@arm.com>
