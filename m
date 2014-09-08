@@ -1,111 +1,74 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Tue, 16 Sep 2014 13:35:53 +0200 (CEST)
-From: Sebastian Ott <sebott@linux.vnet.ibm.com>
-To: Yijing Wang <wangyijing@huawei.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
+Date: Mon, 8 Sep 2014 10:39:05 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	Rob Herring <robh+dt@kernel.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH v1 16/21] s390/MSI: Use MSI chip framework to configure
- MSI/MSI-X irq
-In-Reply-To: <1409911806-10519-17-git-send-email-wangyijing@huawei.com>
-Message-ID: <alpine.LFD.2.11.1409161325280.1618@denkbrett>
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com> <1409911806-10519-17-git-send-email-wangyijing@huawei.com>
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI
+ domain_nr
+Message-ID: <20140908163905.GC29679@obsidianresearch.com>
+References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
+ <1410184472-17630-8-git-send-email-Liviu.Dudau@arm.com>
+ <CAL_JsqJi8k1Goc3UmXhuxf9v7=4gJrYG_Di7v574PxS8TsJaXw@mail.gmail.com>
+ <20140908145459.GO27864@e106497-lin.cambridge.arm.com>
+ <CAL_JsqJdGKDVwJOpPp19OkVPGzR7Zqv3nh+ONHHaYnPLYTYoYg@mail.gmail.com>
+ <20140908155931.GP27864@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140908155931.GP27864@e106497-lin.cambridge.arm.com>
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Mon, Sep 08, 2014 at 04:59:31PM +0100, Liviu Dudau wrote:
 
-On Fri, 5 Sep 2014, Yijing Wang wrote:
-> Use MSI chip framework instead of arch MSI functions to configure
-> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+> > I don't really understand how domains are used so it's hard to provide
+> > a recommendation here. Do domains even belong in the DT?
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  arch/s390/pci/pci.c |   18 ++++++++++++++----
->  1 files changed, 14 insertions(+), 4 deletions(-)
-> 
-> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-> index 2fa7b14..da5316e 100644
-> --- a/arch/s390/pci/pci.c
-> +++ b/arch/s390/pci/pci.c
-> @@ -358,7 +358,7 @@ static void zpci_irq_handler(struct airq_struct *airq)
->  	}
->  }
-> 
-> -int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
-> +int zpci_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
->  {
->  	struct zpci_dev *zdev = get_zdev(pdev);
->  	unsigned int hwirq, msi_vecs;
-> @@ -434,7 +434,7 @@ out:
->  	return rc;
->  }
-> 
-> -void arch_teardown_msi_irqs(struct pci_dev *pdev)
-> +static void zpci_teardown_msi_irqs(struct pci_dev *pdev)
->  {
->  	struct zpci_dev *zdev = get_zdev(pdev);
->  	struct msi_desc *msi;
-> @@ -448,9 +448,9 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
->  	/* Release MSI interrupts */
->  	list_for_each_entry(msi, &pdev->msi_list, list) {
->  		if (msi->msi_attrib.is_msix)
-> -			default_msix_mask_irq(msi, 1);
-> +			__msix_mask_irq(msi, 1);
->  		else
-> -			default_msi_mask_irq(msi, 1, 1);
-> +			__msi_mask_irq(msi, 1, 1);
+> ACPI calls them segments and the way Bjorn explained it to me at some moment was
+> that it was an attempt to split up a bus in different groups (or alternatively,
+> merge a few busses together). To be honest I haven't seen systems where the domain
+> is anything other than zero, but JasonG (or maybe Benjamin) were floating an
+> idea of using the domain number to identify physical slots.
 
-The default_msi_mask_irq to __msi_mask_irq renaming is hidden in your
-patch "x86/xen/MSI: Eliminate arch_msix_mask_irq() and arch_msi_mask_irq()"
+A PCI domain qualifies the bus:device.function addressing so that we
+can have duplicate BDFs in the system.
 
-This means that between that patch and this one s390 will not compile.
-Could you please move this hunk to the other patch or even make an extra
-patch with the renaming. Other than that:
+So, yes, they belong in DT - each 'top level' PCI node naturally
+represents a unique set of BDF addressing below it, and could alias
+other top level nodes. The first step to resolve a BDF to a DT node is
+to find the correct 'top level' by mapping the domain number.
 
-Acked-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
+In an ideal world no small scale system should ever have domains. They
+were primarily introduced for large scale NUMA system that actually
+have more than 256 PCI busses.
 
-Regards,
-Sebastian
+However, from a DT prespective, we've been saying that if the SOC
+presents a PCI-E root port that shares nothing with other root ports
+(ie aperture, driver instance, config space) then those ports must be
+represented by unique 'top level' DT nodes, and each DT node must be
+assigned to a Linux PCI domain.
 
->  		irq_set_msi_desc(msi->irq, NULL);
->  		irq_free_desc(msi->irq);
->  		msi->msg.address_lo = 0;
-> @@ -464,6 +464,16 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
->  	airq_iv_free_bit(zpci_aisb_iv, zdev->aisb);
->  }
-> 
-> +static struct msi_chip zpci_msi_chip = {
-> +	.setup_irqs = zpci_setup_msi_irqs,
-> +	.teardown_irqs = zpci_teardown_msi_irqs,
-> +};
-> +
-> +struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
-> +{
-> +	return &zpci_msi_chip;
-> +}
-> +
->  static void zpci_map_resources(struct zpci_dev *zdev)
->  {
->  	struct pci_dev *pdev = zdev->pdev;
-> -- 
-> 1.7.1
-> 
-> 
+IMHO, designing such a SOC ignores the API guidelines provides by the
+PCI-E spec itself, and I hope such a thing won't be considered SBSA
+compatible..
 
+Jason
