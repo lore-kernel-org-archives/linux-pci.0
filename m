@@ -1,134 +1,89 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"Russell King" <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v1 08/21] x86/xen/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-Date: Fri, 5 Sep 2014 18:09:53 +0800
-Message-ID: <1409911806-10519-9-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-la0-f54.google.com ([209.85.215.54]:46258 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754735AbaIHVuV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 17:50:21 -0400
+Received: by mail-la0-f54.google.com with SMTP id b17so18615094lan.27
+        for <linux-pci@vger.kernel.org>; Mon, 08 Sep 2014 14:50:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <20140908141035.GK22290@redhat.com>
+References: <cover.1408051536.git.luto@amacapital.net> <59f55d679cc596731589516a71075b6059fcaaa5.1408051536.git.luto@amacapital.net>
+ <20140908141035.GK22290@redhat.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Mon, 8 Sep 2014 14:49:59 -0700
+Message-ID: <CALCETrX3KO=1T1m4Qwn+j7vqqhEuNb8Xdkf_c2Ne4P9AbpwOoA@mail.gmail.com>
+Subject: Re: [PATCH 2/2] sb_edac: Claim a different PCI device
+To: Aristeu Rozanski <aris@redhat.com>
+Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>,
+	Doug Thompson <dougthompson@xmission.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-edac@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rui Wang <ruiv.wang@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI chip framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+On Mon, Sep 8, 2014 at 7:10 AM, Aristeu Rozanski <aris@redhat.com> wrote:
+> On Thu, Aug 14, 2014 at 02:45:41PM -0700, Andy Lutomirski wrote:
+>> sb_edac controls a large number of different PCI functions.  Rather
+>> than registering as a normal PCI driver for all of them, it
+>> registers for just one so that it gets probed and, at probe time, it
+>> looks for all the others.
+>>
+>> Coincidentally, the device it registers for also contains the SMBUS
+>> registers, so the PCI core will refuse to probe both sb_edac and a
+>> future iMC SMBUS driver.  The drivers don't actually conflict, so
+>> just change sb_edac's device table to probe a different device.
+>>
+>> An alternative fix would be to merge the two drivers, but sb_edac
+>> will also refuse to load on non-ECC systems, whereas i2c_imc would
+>> still be useful without ECC.
+>>
+>> The only user-visible change should be that sb_edac appears to bind
+>> a different device.
+>>
+>> Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>
+>> Cc: Rui Wang <ruiv.wang@gmail.com>
+>> Signed-off-by: Andy Lutomirski <luto@amacapital.net>
+>> ---
+>>  drivers/edac/sb_edac.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/edac/sb_edac.c b/drivers/edac/sb_edac.c
+>> index a2597e9313c6..e3bc2cced580 100644
+>> --- a/drivers/edac/sb_edac.c
+>> +++ b/drivers/edac/sb_edac.c
+>> @@ -432,7 +432,7 @@ static const struct pci_id_table pci_dev_descr_ibridge_table[] = {
+>>   *   pci_device_id   table for which devices we are looking for
+>>   */
+>>  static const struct pci_device_id sbridge_pci_tbl[] = {
+>> -     {PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TA)},
+>> +     {PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_HA0)},
+>>       {PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IBRIDGE_IMC_HA0_TA)},
+>>       {0,}                    /* 0 terminated list. */
+>>  };
+>
+> Acked-by: Aristeu Rozanski <aris@redhat.com>
+>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
----
- arch/x86/pci/xen.c |   46 ++++++++++++++++++++++++++++++----------------
- 1 files changed, 30 insertions(+), 16 deletions(-)
+Whose tree will this go through?
 
-diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index 84c2fce..e669ee4 100644
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -376,6 +376,11 @@ static void xen_initdom_restore_msi_irqs(struct pci_dev *dev)
- }
- #endif
- 
-+static void xen_teardown_msi_irq(unsigned int irq)
-+{
-+	xen_destroy_irq(irq);
-+}
-+
- static void xen_teardown_msi_irqs(struct pci_dev *dev)
- {
- 	struct msi_desc *msidesc;
-@@ -385,19 +390,26 @@ static void xen_teardown_msi_irqs(struct pci_dev *dev)
- 		xen_pci_frontend_disable_msix(dev);
- 	else
- 		xen_pci_frontend_disable_msi(dev);
--
--	/* Free the IRQ's and the msidesc using the generic code. */
--	default_teardown_msi_irqs(dev);
--}
--
--static void xen_teardown_msi_irq(unsigned int irq)
--{
--	xen_destroy_irq(irq);
-+
-+	list_for_each_entry(msidesc, &dev->msi_list, list) {
-+		int i, nvec;
-+		if (msidesc->irq == 0)
-+			continue;
-+		if (msidesc->nvec_used)
-+			nvec = msidesc->nvec_used;
-+		else
-+			nvec = 1 << msidesc->msi_attrib.multiple;
-+		for (i = 0; i < nvec; i++)
-+			xen_teardown_msi_irq(msidesc->irq + i);
-+	}
- }
- 
- void xen_nop_msi_mask(struct irq_data *data)
- {
- }
-+
-+struct msi_chip xen_msi_chip;
-+
- #endif
- 
- int __init pci_xen_init(void)
-@@ -418,9 +430,9 @@ int __init pci_xen_init(void)
- #endif
- 
- #ifdef CONFIG_PCI_MSI
--	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
--	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
--	x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
-+	xen_msi_chip.setup_irqs = xen_setup_msi_irqs;
-+	xen_msi_chip.teardown_irqs = xen_teardown_msi_irqs;
-+	x86_msi_chip = &xen_msi_chip;
- 	msi_chip.irq_mask = xen_nop_msi_mask;
- 	msi_chip.irq_unmask = xen_nop_msi_mask;
- #endif
-@@ -441,8 +453,9 @@ int __init pci_xen_hvm_init(void)
- #endif
- 
- #ifdef CONFIG_PCI_MSI
--	x86_msi.setup_msi_irqs = xen_hvm_setup_msi_irqs;
--	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
-+	xen_msi_chip.setup_irqs = xen_hvm_setup_msi_irqs;
-+	xen_msi_chip.teardown_irq = xen_teardown_msi_irq;
-+	x86_msi_chip = &xen_msi_chip;
- #endif
- 	return 0;
- }
-@@ -499,9 +512,10 @@ int __init pci_xen_initial_domain(void)
- 	int irq;
- 
- #ifdef CONFIG_PCI_MSI
--	x86_msi.setup_msi_irqs = xen_initdom_setup_msi_irqs;
--	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
--	x86_msi.restore_msi_irqs = xen_initdom_restore_msi_irqs;
-+	xen_msi_chip.setup_irqs = xen_initdom_setup_msi_irqs;
-+	xen_msi_chip.teardown_irq = xen_teardown_msi_irq;
-+	xen_msi_chip.restore_irqs = xen_initdom_restore_msi_irqs;
-+	x86_msi_chip = &xen_msi_chip;
- 	msi_chip.irq_mask = xen_nop_msi_mask;
- 	msi_chip.irq_unmask = xen_nop_msi_mask;
- #endif
+FWIW, this git am can't apply this to 3.17-rc4, but git am --3way can,
+and it's a one-liner in any case.  Should I send a trivially rebased
+version?
+
+--Andy
+
+> --
+> Aristeu
+>
+
+
+
 -- 
-1.7.1
-
+Andy Lutomirski
+AMA Capital Management, LLC
