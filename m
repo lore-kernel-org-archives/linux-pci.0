@@ -1,202 +1,148 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f181.google.com ([209.85.192.181]:56195 "EHLO
-	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757848AbaISWdF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Sep 2014 18:33:05 -0400
-Received: by mail-pd0-f181.google.com with SMTP id r10so768345pdi.40
-        for <linux-pci@vger.kernel.org>; Fri, 19 Sep 2014 15:33:03 -0700 (PDT)
-Date: Fri, 19 Sep 2014 16:32:58 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	patches@apm.com, jcm@redhat.com
-Subject: Re: [PATCH v9 1/4] pci:host: APM X-Gene PCIe host controller driver
-Message-ID: <20140919223258.GA32208@google.com>
-References: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
- <1410906824-9321-2-git-send-email-tinamdar@apm.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1410906824-9321-2-git-send-email-tinamdar@apm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20140908145459.GO27864@e106497-lin.cambridge.arm.com>
+References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
+ <1410184472-17630-8-git-send-email-Liviu.Dudau@arm.com> <CAL_JsqJi8k1Goc3UmXhuxf9v7=4gJrYG_Di7v574PxS8TsJaXw@mail.gmail.com>
+ <20140908145459.GO27864@e106497-lin.cambridge.arm.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Mon, 8 Sep 2014 10:27:36 -0500
+Message-ID: <CAL_JsqJdGKDVwJOpPp19OkVPGzR7Zqv3nh+ONHHaYnPLYTYoYg@mail.gmail.com>
+Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI domain_nr
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 16, 2014 at 03:33:41PM -0700, Tanmay Inamdar wrote:
-> This patch adds the AppliedMicro X-Gene SOC PCIe host controller driver.
-> X-Gene PCIe controller supports maximum up to 8 lanes and GEN3 speed.
-> X-Gene SOC supports maximum 5 PCIe ports.
-> 
-> Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
-> ---
->  drivers/pci/host/Kconfig     |  10 +
->  drivers/pci/host/Makefile    |   1 +
->  drivers/pci/host/pci-xgene.c | 646 +++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 657 insertions(+)
->  create mode 100644 drivers/pci/host/pci-xgene.c
-> ...
+On Mon, Sep 8, 2014 at 9:54 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> On Mon, Sep 08, 2014 at 03:27:56PM +0100, Rob Herring wrote:
+>> On Mon, Sep 8, 2014 at 8:54 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+>> > Add of_pci_get_domain_nr() to retrieve the PCI domain number
+>> > of a given device from DT. If the information is not present,
+>> > the function can be requested to allocate a new domain number.
+>> >
+>> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> > Cc: Arnd Bergmann <arnd@arndb.de>
+>> > Cc: Grant Likely <grant.likely@linaro.org>
+>> > Cc: Rob Herring <robh+dt@kernel.org>
+>> > Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+>> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+>> > ---
+>> >  drivers/of/of_pci.c    | 34 ++++++++++++++++++++++++++++++++++
+>> >  include/linux/of_pci.h |  7 +++++++
+>> >  2 files changed, 41 insertions(+)
+>> >
+>> > diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+>> > index 8481996..a107edb 100644
+>> > --- a/drivers/of/of_pci.c
+>> > +++ b/drivers/of/of_pci.c
+>> > @@ -89,6 +89,40 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
+>> >  }
+>> >  EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
+>> >
+>> > +static atomic_t of_domain_nr = ATOMIC_INIT(-1);
+>> > +
+>> > +/**
+>> > + * This function will try to obtain the host bridge domain number by
+>> > + * using of_alias_get_id() call with "pci-domain" as a stem. If that
+>> > + * fails, a local allocator will be used. The local allocator can
+>> > + * be requested to return a new domain_nr if the information is missing
+>> > + * from the device tree.
+>> > + *
+>> > + * @node: device tree node with the domain information
+>> > + * @allocate_if_missing: if DT lacks information about the domain nr,
+>> > + * allocate a new number.
+>> > + *
+>> > + * Returns the associated domain number from DT, or a new domain number
+>> > + * if DT information is missing and @allocate_if_missing is true. If
+>> > + * @allocate_if_missing is false then the last allocated domain number
+>> > + * will be returned.
+>> > + */
+>> > +int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
+>> > +{
+>> > +       int domain;
+>> > +
+>> > +       domain = of_alias_get_id(node, "pci-domain");
+>> > +       if (domain == -ENODEV) {
+>> > +               if (allocate_if_missing)
+>> > +                       domain = atomic_inc_return(&of_domain_nr);
+>> > +               else
+>> > +                       domain = atomic_read(&of_domain_nr);
+>>
+>> This function seems a bit broken to me. It is overloaded with too many
+>> different outcomes. Think about how this would work if you have
+>> multiple PCI buses and a mixture of having pci-domain aliases or not.
+>> Aren't domain numbers global? Allocation should then start outside of
+>> the range of alias ids.
+>>
+>> Rob
+>>
+>
+> Rob,
+>
+> Would this version make more sense?
 
-> +static inline void
-> +xgene_pcie_cfg_in16(void __iomem *addr, int offset, u32 *val)
+No.
 
-Whitespace - can fit on one line.  Also others below.
+> int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
+> {
+>        int domain;
+>
+>        domain = of_alias_get_id(node, "pci-domain");
+>        if (domain == -ENODEV) {
+>                if (allocate_if_missing)
+>                        domain = atomic_inc_return(&of_domain_nr);
+>                else
+>                        domain = atomic_read(&of_domain_nr);
+>        } else {
+>                /* remember the largest value seen */
+>                int d = atomic_read(&of_domain_nr);
+>                atomic_set(&of_domain_nr, max(domain, d));
+>        }
+>
+>        return domain;
+> }
+> EXPORT_SYMBOL_GPL(of_pci_get_domain_nr);
+>
+> It would still create gaps and possible duplicates, but this is just a number
+> and trying to create a new root bus in an existing domain should fail. I have
 
-> +{
-> +	*val = readl(addr + (offset & ~0x3));
-> +
-> +	switch (offset & 0x3) {
-> +	case 2:
-> +		*val >>= 16;
-> +		break;
-> +	}
-> +
-> +	*val &= 0xFFFF;
-> +}
-> +
-> +static inline void
-> +xgene_pcie_cfg_in8(void __iomem *addr, int offset, u32 *val)
-> +{
-> +	*val = readl(addr + (offset & ~0x3));
-> +
-> +	switch (offset & 0x3) {
-> +	case 3:
-> +		*val = *val >> 24;
-> +		break;
-> +	case 2:
-> +		*val = *val >> 16;
-> +		break;
-> +	case 1:
-> +		*val = *val >> 8;
-> +		break;
-> +	}
-> +	*val &= 0xFF;
-> +}
-> +
-> +/* When the address bit [17:16] is 2'b01, the Configuration access will be
-> + * treated as Type 1 and it will be forwarded to external PCIe device.
-> + */
+Is failure okay in that case?
 
-Follow usual block comment style:
+> no clue on how to generate unique values without parsing the DT and filling
+> a sparse array with values found there and then checking for allocated values
 
-    /*
-     * text
-     */
+You really only need to know the maximum value and then start the
+non-DT allocations from there.
 
-> ...
-> +static void xgene_pcie_fixup_bridge(struct pci_dev *dev)
-> +{
-> +	int i;
-> +
-> +	/* Hide the PCI host BARs from the kernel as their content doesn't
-> +	 * fit well in the resource management
-> +	 */
+> on new requests. This function gets called quite a lot and I'm trying not to
+> make it too heavy weight.
 
-This needs a better explanation than "doesn't fit well."
+Generally, nothing should be accessing the same DT value frequently.
+It should get cached somewhere.
 
-I *think* you're probably talking about something similar to the MVEBU
-devices mentioned here:
-http://lkml.kernel.org/r/CAErSpo56jB1Bf2JtYCGKXZBZqRF1jXFxGmeewPX_e6vSXueGyA@mail.gmail.com
+I don't really understand how domains are used so it's hard to provide
+a recommendation here. Do domains even belong in the DT? This function
+is just a weird mixture of data retrieval and allocation. I think you
+need to separate it into 2 functions.
 
-where the device can be configured as either an endpoint or a root port,
-and the endpoint BARs are still visible when configured as a root port.
-
-In any event, I'd like a description of exactly what these BARs are and wha
-the problem is.  Presumably the BARs exist and were sized by the PCI core
-in __pci_read_base().  That will generate some log messages and possibly
-some warnings, depending on how the host bridge windows are set up.
-
-We might eventually need a way to skip BARs like that altogether so we
-don't even try to size them.
-
-> +	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-> +		dev->resource[i].start = dev->resource[i].end = 0;
-> +		dev->resource[i].flags = 0;
-> +	}
-> +	dev_info(&dev->dev, "Hiding X-Gene pci host bridge resources %s\n",
-> +		 pci_name(dev));
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(XGENE_PCIE_VENDORID, XGENE_PCIE_DEVICEID,
-> +			 xgene_pcie_fixup_bridge);
-> +
-> ...
-
-> +static void xgene_pcie_setup_ob_reg(struct xgene_pcie_port *port,
-> +				    struct resource *res, u32 offset,
-> +				    u64 cpu_addr, u64 pci_addr)
-> +{
-> +	void __iomem *base = port->csr_base + offset;
-> +	resource_size_t size = resource_size(res);
-> +	u64 restype = resource_type(res);
-> +	u64 mask = 0;
-> +	u32 min_size;
-> +	u32 flag = EN_REG;
-> +
-> +	if (restype == IORESOURCE_MEM) {
-> +		min_size = SZ_128M;
-> +	} else {
-> +		min_size = 128;
-> +		flag |= OB_LO_IO;
-> +	}
-> +
-> +	if (size >= min_size)
-> +		mask = ~(size - 1) | flag;
-> +	else
-> +		dev_warn(port->dev, "res size 0x%llx less than minimum 0x%x\n",
-> +			 (u64)size, min_size);
-
-I'd include a %pR here to help identify the offending resource.
-
-> +static int xgene_pcie_map_ranges(struct xgene_pcie_port *port,
-> +				 struct list_head *res,
-> +				 resource_size_t io_base)
-> +{
-> +	struct pci_host_bridge_window *window;
-> +	struct device *dev = port->dev;
-> +	int ret;
-> +
-> +	list_for_each_entry(window, res, list) {
-> +		struct resource *res = window->res;
-> +		u64 restype = resource_type(res);
-> +
-> +		dev_dbg(port->dev, "0x%08lx 0x%016llx...0x%016llx\n",
-> +			res->flags, res->start, res->end);
-
-Use %pR here.
-
-> +
-> +		switch (restype) {
-> +		case IORESOURCE_IO:
-> +			xgene_pcie_setup_ob_reg(port, res, OMR3BARL, io_base,
-> +						res->start - window->offset);
-> +			ret = pci_remap_iospace(res, io_base);
-> +			if (ret < 0)
-> +				return ret;
-> +			break;
-> +		case IORESOURCE_MEM:
-> +			xgene_pcie_setup_ob_reg(port, res, OMR1BARL, res->start,
-> +						res->start - window->offset);
-> +			break;
-> +		case IORESOURCE_BUS:
-> +			break;
-> +		default:
-> +			dev_err(dev, "invalid io resource!");
-
-If you're going to print something here, you might as well include the type
-that seems invalid.  If you use %pR, I think it will do that automatically.
-
-> +			return -EINVAL;
-> +		}
-> +	}
-> +	xgene_pcie_setup_cfg_reg(port->csr_base, port->cfg_addr);
-> +
-> +	return 0;
-> +}
-
-Bjorn
+Rob
