@@ -1,53 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:54620 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753711AbaIDWWc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 18:22:32 -0400
-Received: by mail-pa0-f51.google.com with SMTP id rd3so20951137pab.38
-        for <linux-pci@vger.kernel.org>; Thu, 04 Sep 2014 15:22:32 -0700 (PDT)
-Date: Thu, 4 Sep 2014 16:22:28 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Matthew Minter <matthew_minter@xyratex.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 01/22] Added some infrastructure to allow assigning PCI
- device IRQs at device enable time and removed pci_fixup_irqs as the other
- change obsolites it.
-Message-ID: <20140904222228.GI17125@google.com>
-References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
- <1407255083-9356-2-git-send-email-matthew_minter@xyratex.com>
- <20140807034338.GA13444@richard>
- <CAFJTrDuzdoOPoQ_rpNsYU+OeE380sY37aQaMSudhu_MVKo352g@mail.gmail.com>
- <20140808012017.GA11712@richard>
- <CAFJTrDs0oELF3FNaf6axQvPkLv1skK1f3j_Hgre2VX9XDFBOag@mail.gmail.com>
- <20140904220044.GG17125@google.com>
- <20140904221843.GH17125@google.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:33752 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754092AbaIHQ6j (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 12:58:39 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <jgunthorpe@obsidianresearch.com>
+CC: Murali Karicheri <m-karicheri2@ti.com>
+Subject: [PATCH - v3] PCI: keystone: add a pci quirk to limit mrrs
+Date: Mon, 8 Sep 2014 12:58:34 -0400
+Message-ID: <1410195514-29945-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140904221843.GH17125@google.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 04, 2014 at 04:18:43PM -0600, Bjorn Helgaas wrote:
-> On Thu, Sep 04, 2014 at 04:00:44PM -0600, Bjorn Helgaas wrote:
-> > On Mon, Aug 11, 2014 at 11:16:50AM +0100, Matthew Minter wrote:
-> > > It seems that by coincidence, my testing boxes did not have any
-> > > devices which needed the PCI_INTERRUPT_PIN fixed up. Therefore I had
-> > > not noticed the fact the fixed value was not used in the enable path.
-> > > 
-> > > I would assume that someone with a different setup would have had a
-> > > problem there however so thank you for pointing out this bug. I have
-> > > integrated your fix into version 2 of the patch set.
-> > 
-> > I'm dropping this series and I'll watch for v2.
-> 
-> BTW, when you do repost this, the individual patches need changelogs, and
-> the summary (subject lines) can be a little shorter and more specific,
-> e.g., no need to mention "untested", but "accomodate new irq init code"
-> doesn't really convey much information to someone who is looking only at
-> the arch/m68k commits.
+Keystone PCI controller has a limitation that memory read request
+size must not exceed 256 bytes. This is a hardware limitation and
+add a quirk to force this limit on all downstream devices by
+updating mrrs.
 
-And they need Signed-off-by tags.  See Documentation/SubmittingPatches for
-more details.
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+---
+  -v3: added check for vendor id and use pci_matc_id() to do matching
+  -v2: made the quirk happens after tuning
+  -v1: changed printk to indicate PCI bdf
+ drivers/pci/host/pci-keystone.c |   47 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
 
-Bjorn
+diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+index c1cfaef..0a477e5 100644
+--- a/drivers/pci/host/pci-keystone.c
++++ b/drivers/pci/host/pci-keystone.c
+@@ -42,8 +42,55 @@
+ /* DEV_STAT_CTRL */
+ #define PCIE_CAP_BASE		0x70
+ 
++/* PCIE controller device IDs */
++#define PCIE_RC_K2HK		0xb008
++#define PCIE_RC_K2E		0xb009
++#define PCIE_RC_K2L		0xb00a
++
+ #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
+ 
++
++
++static void quirk_limit_mrrs(struct pci_dev *dev)
++{
++	struct pci_bus *bus = dev->bus;
++	struct pci_dev *bridge = bus->self;
++	static const struct pci_device_id rc_pci_devids[] = {
++		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2HK),
++		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
++		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2E),
++		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
++		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2L),
++		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
++		{ 0, },
++	};
++
++	if (pci_is_root_bus(bus))
++		return;
++
++	/* look for the host bridge */
++	while (!pci_is_root_bus(bus)) {
++		bridge = bus->self;
++		bus = bus->parent;
++	}
++
++	if (bridge) {
++		/*
++		 * Keystone PCI controller has a h/w limitation of
++		 * 256 bytes maximum read request size. It can't handle
++		 * anything higher than this. So force this limit on
++		 * all downstream devices
++		 */
++		if (pci_match_id(rc_pci_devids, bridge)) {
++			if (pcie_get_readrq(dev) > 256) {
++				dev_info(&dev->dev, "limiting mrrs to 256\n");
++				pcie_set_readrq(dev, 256);
++			}
++		}
++	}
++}
++DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
++
+ static int ks_pcie_establish_link(struct keystone_pcie *ks_pcie)
+ {
+ 	struct pcie_port *pp = &ks_pcie->pp;
+-- 
+1.7.9.5
+
