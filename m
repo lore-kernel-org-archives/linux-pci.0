@@ -1,168 +1,99 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC v1 13/28] x86: irq_remapping: Clean up unsued code
-Date: Fri, 26 Sep 2014 22:57:43 +0800
-Message-Id: <1411743478-31435-14-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:43799 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752963AbaIHSaS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 14:30:18 -0400
+Message-ID: <1410200876.3945.2.camel@pengutronix.de>
+Subject: Re: [PATCH] PCI: imx6: fix occasional link failure
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tim Harvey <tharvey@gateworks.com>,
+	Fabio Estevam <festevam@gmail.com>, shawn.guo@freescale.com,
+	marex@denx.de, linux-pci@vger.kernel.org
+Date: Mon, 08 Sep 2014 20:27:56 +0200
+In-Reply-To: <20140905173216.GB8080@google.com>
+References: <1407479800-6730-1-git-send-email-tharvey@gateworks.com>
+	 <1409717077-26662-1-git-send-email-tharvey@gateworks.com>
+	 <20140905173216.GB8080@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have converted to hierarchy irqdomain, so clean up unused code.
+Am Freitag, den 05.09.2014, 11:32 -0600 schrieb Bjorn Helgaas:
+> On Tue, Sep 02, 2014 at 09:04:37PM -0700, Tim Harvey wrote:
+> > According to the IMX6 reference manuals, REF_SSP_EN (Reference clock enable
+> > for SS function) must remain deasserted until the reference clock is running
+> > at the appropriate frequency.
+> > 
+> > Without this patch we find a high link failure rate (>5%) on certain
+> > IMX6 boards at various temperatures.
+> > 
+> > Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+> > Tested-by: Fabio Estevam <festevam@gmail.com>
+> > Acked-by: Marek Vasut <marex@denx.de>
+> 
+> I'm looking for the comment update requested by Richard, and an ack from
+> Richard and/or Lucas.  Also, please add the stable tag if you want it
+> (see Documentation/stable_kernel_rules.txt for details).
+> 
+We already have a comment some line above regarding clock stabilization,
+so I don't think another one is strictly needed. Especially as this
+initialization order is clearly defined by the reference manual.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/irq_remapping.h |   23 ----------------------
- arch/x86/kernel/apic/vector.c        |    1 -
- drivers/iommu/irq_remapping.c        |   36 ----------------------------------
- 3 files changed, 60 deletions(-)
+So with or without the comment added:
+Acked-by: Lucas Stach <l.stach@pengutronix.de>
 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index 9ed7e2d5fd7d..f78b741ddffc 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -25,12 +25,7 @@
- #include <linux/irqdomain.h>
- #include <asm/io_apic.h>
- 
--struct IO_APIC_route_entry;
--struct io_apic_irq_attr;
--struct irq_chip;
- struct msi_msg;
--struct pci_dev;
--struct irq_cfg;
- struct irq_alloc_info;
- 
- #ifdef CONFIG_IRQ_REMAP
-@@ -43,13 +38,7 @@ extern int irq_remapping_enable(void);
- extern void irq_remapping_disable(void);
- extern int irq_remapping_reenable(int);
- extern int irq_remap_enable_fault_handling(void);
--extern void free_remapped_irq(int irq);
- extern void panic_if_irq_remap(const char *msg);
--extern bool setup_remapped_irq(int irq,
--			       struct irq_cfg *cfg,
--			       struct irq_chip *chip);
--
--void irq_remap_modify_chip_defaults(struct irq_chip *chip);
- 
- extern struct irq_domain *irq_remapping_get_ir_irq_domain(
- 				struct irq_alloc_info *info);
-@@ -93,23 +82,11 @@ static inline int irq_remapping_enable(void) { return -ENODEV; }
- static inline void irq_remapping_disable(void) { }
- static inline int irq_remapping_reenable(int eim) { return -ENODEV; }
- static inline int irq_remap_enable_fault_handling(void) { return -ENODEV; }
--static inline void free_remapped_irq(int irq) { }
- 
- static inline void panic_if_irq_remap(const char *msg)
- {
- }
- 
--static inline void irq_remap_modify_chip_defaults(struct irq_chip *chip)
--{
--}
--
--static inline bool setup_remapped_irq(int irq,
--				      struct irq_cfg *cfg,
--				      struct irq_chip *chip)
--{
--	return false;
--}
--
- static inline struct irq_domain *
- irq_remapping_get_ir_irq_domain(struct irq_alloc_info *info)
- {
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index a149a6b37efe..c3ba34553b29 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -283,7 +283,6 @@ static void x86_vector_free_irqs(struct irq_domain *domain,
- 	for (i = 0; i < nr_irqs; i++) {
- 		irq_data = irq_domain_get_irq_data(x86_vector_domain, virq + i);
- 		if (irq_data && irq_data->chip_data) {
--			free_remapped_irq(virq);
- 			clear_irq_vector(virq + i, irq_data->chip_data);
- 			free_irq_cfg(irq_data->chip_data);
- #ifdef	CONFIG_X86_IO_APIC
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index cebb198ecf16..eb6477c01177 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -25,11 +25,6 @@ int no_x2apic_optout;
- 
- static struct irq_remap_ops *remap_ops;
- 
--static bool irq_remapped(struct irq_cfg *cfg)
--{
--	return (cfg->remapped == 1);
--}
--
- static void irq_remapping_disable_io_apic(void)
- {
- 	/*
-@@ -159,17 +154,6 @@ int __init irq_remap_enable_fault_handling(void)
- 	return remap_ops->enable_faulting();
- }
- 
--void free_remapped_irq(int irq)
--{
--	struct irq_cfg *cfg = irq_cfg(irq);
--
--	if (!remap_ops || !remap_ops->free_irq)
--		return;
--
--	if (irq_remapped(cfg))
--		remap_ops->free_irq(irq);
--}
--
- void panic_if_irq_remap(const char *msg)
- {
- 	if (irq_remapping_enabled)
-@@ -194,26 +178,6 @@ void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p)
- 		seq_printf(p, " %s", data->chip->name);
- }
- 
--static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
--{
--	seq_printf(p, " IR-%s", data->chip->name);
--}
--
--void irq_remap_modify_chip_defaults(struct irq_chip *chip)
--{
--	chip->irq_print_chip = ir_print_prefix;
--	chip->irq_ack = ir_ack_apic_edge;
--}
--
--bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
--{
--	if (!irq_remapped(cfg))
--		return false;
--	irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
--	irq_remap_modify_chip_defaults(chip);
--	return true;
--}
--
- /**
-  * irq_remapping_get_ir_irq_domain - Get the irqdomain associated the IOMMU
-  *				     device serving @info
+> Bjorn
+> 
+> > ---
+> > 
+> > v2:
+> >  - added Tested-by Fabio Estevam
+> >  - added Acked-by Marek Vasut
+> > 
+> > ---
+> >  drivers/pci/host/pci-imx6.c | 11 ++++++-----
+> >  1 file changed, 6 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> > index 1be6073..9b6bab9 100644
+> > --- a/drivers/pci/host/pci-imx6.c
+> > +++ b/drivers/pci/host/pci-imx6.c
+> > @@ -256,11 +256,6 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+> >  	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+> >  	int ret;
+> >  
+> > -	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> > -			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+> > -	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> > -			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+> > -
+> >  	ret = clk_prepare_enable(imx6_pcie->pcie_phy);
+> >  	if (ret) {
+> >  		dev_err(pp->dev, "unable to enable pcie_phy clock\n");
+> > @@ -282,6 +277,12 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+> >  	/* allow the clocks to stabilize */
+> >  	usleep_range(200, 500);
+> >  
+> > +	/* power up core phy and enable ref clock */
+> > +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> > +			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+> > +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> > +			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+> > +
+> >  	/* Some boards don't have PCIe reset GPIO. */
+> >  	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+> >  		gpio_set_value(imx6_pcie->reset_gpio, 0);
+> > -- 
+> > 1.8.3.2
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-1.7.10.4
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
