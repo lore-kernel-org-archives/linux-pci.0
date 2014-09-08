@@ -1,79 +1,58 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"Russell King" <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v1 14/21] MIPS/Xlr/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-Date: Fri, 5 Sep 2014 18:09:59 +0800
-Message-ID: <1409911806-10519-15-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:47159 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755256AbaIHVTc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 17:19:32 -0400
+Message-ID: <540E1D75.5000500@gmail.com>
+Date: Mon, 08 Sep 2014 14:19:49 -0700
+From: Rajat Jain <rajatxjain@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	bhelgaas@google.com
+CC: rajatjain@juniper.net, groeck@juniper.net
+Subject: [PATCH] pci/probe: Ignore the device id while handling CRS
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI chip framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+Some root ports may return the actual device id returned by the
+endpoint, instead of faking up a synthetic id (0xFFFF) as specified
+by the PCIe spec (sec 2.3.2). We have seen such broken devices in the
+past that match this behaviour:
+(Ref: https://lkml.org/lkml/2007/11/1/198)
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+To take care of the same, CRS was disabled then, however, we want to
+enable CRS now (https://lkml.org/lkml/2014/9/2/509), but still do not
+want to break such devices. Thus check only against the
+(vendor id == 1) and ignore the device id.
+
+Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+Signed-off-by: Guenter Roeck <groeck@juniper.net>
 ---
- arch/mips/pci/pci-xlr.c |   15 +++++++++++++--
- 1 files changed, 13 insertions(+), 2 deletions(-)
+ drivers/pci/probe.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/arch/mips/pci/pci-xlr.c b/arch/mips/pci/pci-xlr.c
-index 0dde803..7bd91cc 100644
---- a/arch/mips/pci/pci-xlr.c
-+++ b/arch/mips/pci/pci-xlr.c
-@@ -214,11 +214,11 @@ static int get_irq_vector(const struct pci_dev *dev)
- }
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 3c4c35c..0076a9b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1305,8 +1305,13 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+ 	    *l == 0x0000ffff || *l == 0xffff0000)
+ 		return false;
  
- #ifdef CONFIG_PCI_MSI
--void arch_teardown_msi_irq(unsigned int irq)
-+void xlr_teardown_msi_irq(unsigned int irq)
- {
- }
+-	/* Configuration request Retry Status */
+-	while (*l == 0xffff0001) {
++	/*
++	 * Configuration request Retry Status. Note that some root ports
++	 * are broken and may return actual device ID instead of a synthetic ID
++	 * (0xFFFF) to be faked as per the PCIe spec. Hence ignore the device ID
++	 * and only check for (vendor id == 1)
++	 */
++	while (*l & 0xffff == 0x0001) {
+ 		if (!crs_timeout)
+ 			return false;
  
--int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
-+int xlr_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- {
- 	struct msi_msg msg;
- 	struct pci_dev *lnk;
-@@ -263,6 +263,17 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- 	write_msi_msg(irq, &msg);
- 	return 0;
- }
-+
-+static struct msi_chip xlr_msi_chip = {
-+	.setup_irq = xlr_setup_msi_irq,
-+	.teardown_irq = xlr_teardown_msi_irq,
-+};
-+
-+struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
-+{
-+	return &xlr_msi_chip;
-+}
-+
- #endif
- 
- /* Extra ACK needed for XLR on chip PCI controller */
 -- 
-1.7.1
+1.7.9.5
 
