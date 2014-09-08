@@ -1,74 +1,80 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH v1 10/13] PCI: Preserve BIOS PCI_COMMAND_SERR and
- PCI_COMMAND_PARITY settings
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatxjain@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Date: Fri, 12 Sep 2014 12:03:54 -0600
-Message-ID: <20140912180354.1630.57838.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:36495 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753060AbaIHXlc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 19:41:32 -0400
+Date: Mon, 8 Sep 2014 16:41:31 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: Aristeu Rozanski <aris@redhat.com>,
+	Mauro Carvalho Chehab <m.chehab@samsung.com>,
+	Doug Thompson <dougthompson@xmission.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-edac@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rui Wang <ruiv.wang@gmail.com>
+Subject: Re: [PATCH 2/2] sb_edac: Claim a different PCI device
+Message-ID: <20140908234131.GA14042@kroah.com>
+References: <cover.1408051536.git.luto@amacapital.net>
+ <59f55d679cc596731589516a71075b6059fcaaa5.1408051536.git.luto@amacapital.net>
+ <20140908141035.GK22290@redhat.com>
+ <CALCETrX3KO=1T1m4Qwn+j7vqqhEuNb8Xdkf_c2Ne4P9AbpwOoA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CALCETrX3KO=1T1m4Qwn+j7vqqhEuNb8Xdkf_c2Ne4P9AbpwOoA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Do not clear PCI_COMMAND_SERR or PCI_COMMAND_PARITY based on _HPP.  The
-spec (ACPI rev 5.0, sec 6.2.7) says that when "Enable SERR" is set to 1,
-we should enable SERR in the command register.  It says nothing about
-*disabling* SERR or PERR; in fact, the example in 6.2.7.1 says we should
-leave PERR alone unless "Enable PERR" is 1.
+On Mon, Sep 08, 2014 at 02:49:59PM -0700, Andy Lutomirski wrote:
+> On Mon, Sep 8, 2014 at 7:10 AM, Aristeu Rozanski <aris@redhat.com> wrote:
+> > On Thu, Aug 14, 2014 at 02:45:41PM -0700, Andy Lutomirski wrote:
+> >> sb_edac controls a large number of different PCI functions.  Rather
+> >> than registering as a normal PCI driver for all of them, it
+> >> registers for just one so that it gets probed and, at probe time, it
+> >> looks for all the others.
+> >>
+> >> Coincidentally, the device it registers for also contains the SMBUS
+> >> registers, so the PCI core will refuse to probe both sb_edac and a
+> >> future iMC SMBUS driver.  The drivers don't actually conflict, so
+> >> just change sb_edac's device table to probe a different device.
+> >>
+> >> An alternative fix would be to merge the two drivers, but sb_edac
+> >> will also refuse to load on non-ECC systems, whereas i2c_imc would
+> >> still be useful without ECC.
+> >>
+> >> The only user-visible change should be that sb_edac appears to bind
+> >> a different device.
+> >>
+> >> Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>
+> >> Cc: Rui Wang <ruiv.wang@gmail.com>
+> >> Signed-off-by: Andy Lutomirski <luto@amacapital.net>
+> >> ---
+> >>  drivers/edac/sb_edac.c | 2 +-
+> >>  1 file changed, 1 insertion(+), 1 deletion(-)
+> >>
+> >> diff --git a/drivers/edac/sb_edac.c b/drivers/edac/sb_edac.c
+> >> index a2597e9313c6..e3bc2cced580 100644
+> >> --- a/drivers/edac/sb_edac.c
+> >> +++ b/drivers/edac/sb_edac.c
+> >> @@ -432,7 +432,7 @@ static const struct pci_id_table pci_dev_descr_ibridge_table[] = {
+> >>   *   pci_device_id   table for which devices we are looking for
+> >>   */
+> >>  static const struct pci_device_id sbridge_pci_tbl[] = {
+> >> -     {PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TA)},
+> >> +     {PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_HA0)},
+> >>       {PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IBRIDGE_IMC_HA0_TA)},
+> >>       {0,}                    /* 0 terminated list. */
+> >>  };
+> >
+> > Acked-by: Aristeu Rozanski <aris@redhat.com>
+> >
+> 
+> Whose tree will this go through?
 
-For hot-added devices, this probably doesn't matter because they power up
-with these bits cleared.  But in addition to hot-plugged devices, the spec
-allows the platform to use _HPP for "configuration of PCI devices not
-configured by the BIOS at system boot," and it may make a difference for
-devices present at boot.
+Mauro should have a tree for this as he's the subsystem maintainer.
 
-This change means that if BIOS enables SERR or PERR on a device, and it
-supplies _HPP or _HPX with the SERR or PERR bits *cleared*, we will leave
-SERR or PERR reporting enabled on that device instead of disabling it.
+thanks,
 
-See also 40abb96c51bb ("pciehp: Fix programming hotplug parameters"), where
-this code was first added.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c |    8 --------
- 1 file changed, 8 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 003d112a783d..a16b3472b70d 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1264,12 +1264,8 @@ static void program_hpp_type0(struct pci_dev *dev, struct hpp_type0 *hpp)
- 	pci_read_config_word(dev, PCI_COMMAND, &pci_cmd);
- 	if (hpp->enable_serr)
- 		pci_cmd |= PCI_COMMAND_SERR;
--	else
--		pci_cmd &= ~PCI_COMMAND_SERR;
- 	if (hpp->enable_perr)
- 		pci_cmd |= PCI_COMMAND_PARITY;
--	else
--		pci_cmd &= ~PCI_COMMAND_PARITY;
- 	pci_write_config_word(dev, PCI_COMMAND, pci_cmd);
- 
- 	/* Program bridge control value */
-@@ -1279,12 +1275,8 @@ static void program_hpp_type0(struct pci_dev *dev, struct hpp_type0 *hpp)
- 		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &pci_bctl);
- 		if (hpp->enable_serr)
- 			pci_bctl |= PCI_BRIDGE_CTL_SERR;
--		else
--			pci_bctl &= ~PCI_BRIDGE_CTL_SERR;
- 		if (hpp->enable_perr)
- 			pci_bctl |= PCI_BRIDGE_CTL_PARITY;
--		else
--			pci_bctl &= ~PCI_BRIDGE_CTL_PARITY;
- 		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, pci_bctl);
- 	}
- }
-
+greg k-h
