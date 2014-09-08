@@ -1,108 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f45.google.com ([209.85.192.45]:38539 "EHLO
-	mail-qg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755094AbaITLUQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 20 Sep 2014 07:20:16 -0400
-From: andreas.noever@gmail.com
-To: rjw@rjwysocki.net
-Cc: lenb@kernel.org, robert.moore@intel.com, lv.zheng@intel.com,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.or,
-	linux-pci@vger.kernel.org, bhelgaas@google.com,
-	matthew.garrett@nebula.com,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v2 1/3] ACPI: Don't assume the existence of an SBS charger
-Date: Sat, 20 Sep 2014 13:19:45 +0200
-Message-Id: <291e876fa0a2c963b948e22a7bce963e63e6150a.1411211725.git.andreas.noever@gmail.com>
-In-Reply-To: <cover.1411211725.git.andreas.noever@gmail.com>
-References: <cover.1411211725.git.andreas.noever@gmail.com>
-In-Reply-To: <cover.1411211725.git.andreas.noever@gmail.com>
-References: <cover.1411211725.git.andreas.noever@gmail.com>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:54115 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753124AbaIHOGG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 10:06:06 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v10 03/10] ARM: Define PCI_IOBASE as the base of virtual PCI IO space.
+Date: Mon,  8 Sep 2014 14:54:25 +0100
+Message-Id: <1410184472-17630-4-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Matthew Garrett <matthew.garrett@nebula.com>
+This is needed for calls into OF code that parses PCI ranges.
+It signals support for memory mapped PCI I/O accesses that
+are described be device trees.
 
-From: Matthew Garrett <matthew.garrett@nebula.com>
-
-Apple hardware continues to expose an ACPI AC charger even when using
-SBS to report battery state. The charger status byte returns all 0s in
-this case.  Since the spec requires that bit 4 be 1 at all times, assume
-that there's not really a charger if it's set to zero.
-
-Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Rob Herring <robh+dt@kernel.org>
+Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 ---
- drivers/acpi/sbs.c | 29 ++++++++++++++++++++++-------
- 1 file changed, 22 insertions(+), 7 deletions(-)
+ arch/arm/include/asm/io.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/acpi/sbs.c b/drivers/acpi/sbs.c
-index 366ca40..b1df4ee 100644
---- a/drivers/acpi/sbs.c
-+++ b/drivers/acpi/sbs.c
-@@ -109,6 +109,7 @@ struct acpi_sbs {
- 	u8 batteries_supported:4;
- 	u8 manager_present:1;
- 	u8 charger_present:1;
-+	u8 charger_exists:1;
- };
+diff --git a/arch/arm/include/asm/io.h b/arch/arm/include/asm/io.h
+index 3d23418..22b7529 100644
+--- a/arch/arm/include/asm/io.h
++++ b/arch/arm/include/asm/io.h
+@@ -178,6 +178,7 @@ static inline void __iomem *__typesafe_io(unsigned long addr)
  
- #define to_acpi_sbs(x) container_of(x, struct acpi_sbs, charger)
-@@ -429,9 +430,19 @@ static int acpi_ac_get_present(struct acpi_sbs *sbs)
+ /* PCI fixed i/o mapping */
+ #define PCI_IO_VIRT_BASE	0xfee00000
++#define PCI_IOBASE		PCI_IO_VIRT_BASE
  
- 	result = acpi_smbus_read(sbs->hc, SMBUS_READ_WORD, ACPI_SBS_CHARGER,
- 				 0x13, (u8 *) & status);
--	if (!result)
--		sbs->charger_present = (status >> 15) & 0x1;
--	return result;
-+
-+	if (result)
-+		return result;
-+
-+	/*
-+	 * The spec requires that bit 4 always be 1. If it's not set, assume
-+	 * that the implementation doesn't support an SBS charger
-+	 */
-+	if (!(status >> 4) & 0x1)
-+		return -ENODEV;
-+
-+	sbs->charger_present = (status >> 15) & 0x1;
-+	return 0;
- }
- 
- static ssize_t acpi_battery_alarm_show(struct device *dev,
-@@ -554,6 +565,7 @@ static int acpi_charger_add(struct acpi_sbs *sbs)
- 	if (result)
- 		goto end;
- 
-+	sbs->charger_exists = 1;
- 	sbs->charger.name = "sbs-charger";
- 	sbs->charger.type = POWER_SUPPLY_TYPE_MAINS;
- 	sbs->charger.properties = sbs_ac_props;
-@@ -580,9 +592,12 @@ static void acpi_sbs_callback(void *context)
- 	struct acpi_battery *bat;
- 	u8 saved_charger_state = sbs->charger_present;
- 	u8 saved_battery_state;
--	acpi_ac_get_present(sbs);
--	if (sbs->charger_present != saved_charger_state)
--		kobject_uevent(&sbs->charger.dev->kobj, KOBJ_CHANGE);
-+
-+	if (sbs->charger_exists) {
-+		acpi_ac_get_present(sbs);
-+		if (sbs->charger_present != saved_charger_state)
-+			kobject_uevent(&sbs->charger.dev->kobj, KOBJ_CHANGE);
-+	}
- 
- 	if (sbs->manager_present) {
- 		for (id = 0; id < MAX_SBS_BAT; ++id) {
-@@ -619,7 +634,7 @@ static int acpi_sbs_add(struct acpi_device *device)
- 	device->driver_data = sbs;
- 
- 	result = acpi_charger_add(sbs);
--	if (result)
-+	if (result && result != -ENODEV)
- 		goto end;
- 
- 	result = acpi_manager_get_info(sbs);
+ #if defined(CONFIG_PCI)
+ void pci_ioremap_set_mem_type(int mem_type);
 -- 
-2.1.0
+2.0.4
 
