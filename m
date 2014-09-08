@@ -1,52 +1,162 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:45304 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750749AbaISFba (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Sep 2014 01:31:30 -0400
-Received: by mail-ie0-f176.google.com with SMTP id ar1so2659510iec.7
-        for <linux-pci@vger.kernel.org>; Thu, 18 Sep 2014 22:31:30 -0700 (PDT)
-Date: Thu, 18 Sep 2014 23:31:26 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-Cc: linux-pci@vger.kernel.org, tglx@linutronix.de, hpa@zytor.com,
-	x86@kernel.org, bp@suse.de, dan.carpenter@oracle.com,
-	dougthompson@xmission.com, bp@alien8.de, m.chehab@samsung.com,
-	linux-edac@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/4] pci_ids: Add PCI device IDs for F15h M60h
-Message-ID: <20140919053126.GC21128@google.com>
-References: <1411070195-10177-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Mon, 8 Sep 2014 13:25:49 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [PATCH v9 06/12] ARM: integrator: Correct usage of
+ of_pci_range_to_resource()
+Message-ID: <20140908122549.GI27864@e106497-lin.cambridge.arm.com>
+References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
+ <1407860725-25202-7-git-send-email-Liviu.Dudau@arm.com>
+ <20140905220820.GI8080@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411070195-10177-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20140905220820.GI8080@google.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 18, 2014 at 02:56:35PM -0500, Aravind Gopalakrishnan wrote:
-> Add F3, F4 device IDs to be used in amd_nb.c and amd64_edac.c
+On Fri, Sep 05, 2014 at 11:08:20PM +0100, Bjorn Helgaas wrote:
+> [+cc Linus]
 > 
-> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Please merge this along with the rest of your series.
-
-> ---
->  include/linux/pci_ids.h | 2 ++
->  1 file changed, 2 insertions(+)
+> On Tue, Aug 12, 2014 at 05:25:19PM +0100, Liviu Dudau wrote:
+> > Previously, of_pci_range_to_resource() would return a resource
+> > that contained physical addresses of the IO space even if the
+> > IORESOURCE_IO flags mandate a logical port set of values. Now
+> > that the function has been fixed we need to update the drivers
+> > that were taking advantage of the old behaviour.
+> > 
+> > Cc: Linus Walleij <linus.walleij@linaro.org>
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Rob Herring <robh+dt@kernel.org>
+> > Cc: Russell King <linux@arm.linux.org.uk>
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 > 
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index aa0d390..6a2a72a 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -522,6 +522,8 @@
->  #define PCI_DEVICE_ID_AMD_15H_M10H_F3	0x1403
->  #define PCI_DEVICE_ID_AMD_15H_M30H_NB_F3 0x141d
->  #define PCI_DEVICE_ID_AMD_15H_M30H_NB_F4 0x141e
-> +#define PCI_DEVICE_ID_AMD_15H_M60H_NB_F3 0x1573
-> +#define PCI_DEVICE_ID_AMD_15H_M60H_NB_F4 0x1574
->  #define PCI_DEVICE_ID_AMD_15H_NB_F0	0x1600
->  #define PCI_DEVICE_ID_AMD_15H_NB_F1	0x1601
->  #define PCI_DEVICE_ID_AMD_15H_NB_F2	0x1602
-> -- 
-> 2.0.2
+> Something's wrong with the CC: list.  You list Linus here in the changelog,
+> but I don't see him in the CC: headers.
+
+Yes, turns out one of my .git/config directories had supresscc=all.
+
+Best regards,
+Liviu
+
 > 
+> > ---
+> >  arch/arm/mach-integrator/pci_v3.c | 24 +++++++++++++-----------
+> >  1 file changed, 13 insertions(+), 11 deletions(-)
+> > 
+> > diff --git a/arch/arm/mach-integrator/pci_v3.c b/arch/arm/mach-integrator/pci_v3.c
+> > index 05e1f73..193b7f8 100644
+> > --- a/arch/arm/mach-integrator/pci_v3.c
+> > +++ b/arch/arm/mach-integrator/pci_v3.c
+> > @@ -660,6 +660,7 @@ static void __init pci_v3_preinit(void)
+> >  {
+> >  	unsigned long flags;
+> >  	unsigned int temp;
+> > +	phys_addr_t io_address = pci_pio_to_address(io_mem.start);
+> >  
+> >  	pcibios_min_mem = 0x00100000;
+> >  
+> > @@ -701,7 +702,7 @@ static void __init pci_v3_preinit(void)
+> >  	/*
+> >  	 * Setup window 2 - PCI IO
+> >  	 */
+> > -	v3_writel(V3_LB_BASE2, v3_addr_to_lb_base2(io_mem.start) |
+> > +	v3_writel(V3_LB_BASE2, v3_addr_to_lb_base2(io_address) |
+> >  			V3_LB_BASE_ENABLE);
+> >  	v3_writew(V3_LB_MAP2, v3_addr_to_lb_map2(0));
+> >  
+> > @@ -742,6 +743,7 @@ static void __init pci_v3_preinit(void)
+> >  static void __init pci_v3_postinit(void)
+> >  {
+> >  	unsigned int pci_cmd;
+> > +	phys_addr_t io_address = pci_pio_to_address(io_mem.start);
+> >  
+> >  	pci_cmd = PCI_COMMAND_MEMORY |
+> >  		  PCI_COMMAND_MASTER | PCI_COMMAND_INVALIDATE;
+> > @@ -758,7 +760,7 @@ static void __init pci_v3_postinit(void)
+> >  		       "interrupt: %d\n", ret);
+> >  #endif
+> >  
+> > -	register_isa_ports(non_mem.start, io_mem.start, 0);
+> > +	register_isa_ports(non_mem.start, io_address, 0);
+> >  }
+> >  
+> >  /*
+> > @@ -867,33 +869,33 @@ static int __init pci_v3_probe(struct platform_device *pdev)
+> >  
+> >  	for_each_of_pci_range(&parser, &range) {
+> >  		if (!range.flags) {
+> > -			of_pci_range_to_resource(&range, np, &conf_mem);
+> > +			ret = of_pci_range_to_resource(&range, np, &conf_mem);
+> >  			conf_mem.name = "PCIv3 config";
+> >  		}
+> >  		if (range.flags & IORESOURCE_IO) {
+> > -			of_pci_range_to_resource(&range, np, &io_mem);
+> > +			ret = of_pci_range_to_resource(&range, np, &io_mem);
+> > +			dev_info(&pdev->dev, "IO PCI range converted\n");
+> >  			io_mem.name = "PCIv3 I/O";
+> >  		}
+> >  		if ((range.flags & IORESOURCE_MEM) &&
+> >  			!(range.flags & IORESOURCE_PREFETCH)) {
+> >  			non_mem_pci = range.pci_addr;
+> >  			non_mem_pci_sz = range.size;
+> > -			of_pci_range_to_resource(&range, np, &non_mem);
+> > +			ret = of_pci_range_to_resource(&range, np, &non_mem);
+> >  			non_mem.name = "PCIv3 non-prefetched mem";
+> >  		}
+> >  		if ((range.flags & IORESOURCE_MEM) &&
+> >  			(range.flags & IORESOURCE_PREFETCH)) {
+> >  			pre_mem_pci = range.pci_addr;
+> >  			pre_mem_pci_sz = range.size;
+> > -			of_pci_range_to_resource(&range, np, &pre_mem);
+> > +			ret = of_pci_range_to_resource(&range, np, &pre_mem);
+> >  			pre_mem.name = "PCIv3 prefetched mem";
+> >  		}
+> > -	}
+> >  
+> > -	if (!conf_mem.start || !io_mem.start ||
+> > -	    !non_mem.start || !pre_mem.start) {
+> > -		dev_err(&pdev->dev, "missing ranges in device node\n");
+> > -		return -EINVAL;
+> > +		if (ret < 0) {
+> > +			dev_err(&pdev->dev, "missing ranges in device node\n");
+> > +			return -EINVAL;
+> > +		}
+> >  	}
+> >  
+> >  	pci_v3.map_irq = of_irq_parse_and_map_pci;
+> > -- 
+> > 2.0.4
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
