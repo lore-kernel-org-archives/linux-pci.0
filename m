@@ -1,84 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f48.google.com ([209.85.192.48]:52918 "EHLO
-	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751268AbaI3Tx3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 15:53:29 -0400
-Received: by mail-qg0-f48.google.com with SMTP id i50so3973950qgf.7
-        for <linux-pci@vger.kernel.org>; Tue, 30 Sep 2014 12:53:28 -0700 (PDT)
+Received: from mail-vc0-f169.google.com ([209.85.220.169]:63254 "EHLO
+	mail-vc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753308AbaIHO2S (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 10:28:18 -0400
 MIME-Version: 1.0
-In-Reply-To: <20140930171002.GB15854@bart.dudau.co.uk>
-References: <706416181.hbVGLDA3o6@wuerfel> <20140930160139.GA5625@google.com> <20140930171002.GB15854@bart.dudau.co.uk>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 30 Sep 2014 13:53:06 -0600
-Message-ID: <CAErSpo61favodLTSwCYzFZq-sB60+ZH6_WvwSGHgRx6cPKtXpA@mail.gmail.com>
-Subject: Re: [PATCH] of/pci: add pci_pio_to_address dummy for !CONFIG_OF
-To: Liviu Dudau <liviu@dudau.co.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
+In-Reply-To: <1410184472-17630-8-git-send-email-Liviu.Dudau@arm.com>
+References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com> <1410184472-17630-8-git-send-email-Liviu.Dudau@arm.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Mon, 8 Sep 2014 09:27:56 -0500
+Message-ID: <CAL_JsqJi8k1Goc3UmXhuxf9v7=4gJrYG_Di7v574PxS8TsJaXw@mail.gmail.com>
+Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI domain_nr
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Herring <robh@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Grant Likely <grant.likely@linaro.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 30, 2014 at 11:10 AM, Liviu Dudau <liviu@dudau.co.uk> wrote:
-> On Tue, Sep 30, 2014 at 10:01:39AM -0600, Bjorn Helgaas wrote:
->> On Tue, Sep 30, 2014 at 03:19:05PM +0200, Arnd Bergmann wrote:
->> > The pci_register_io_range() and pci_pio_to_address() were recently
->> > introduced to generalize the handling of memory mapped PCI I/O space,
->> > but they are only valid when CONFIG_OF is set, leading to a possible
->> > build error:
->> >
->> > drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_setup_window':
->> > drivers/pci/host/pcie-rcar.c:340:3: error: implicit declaration of function 'pci_pio_to_address' [-Werror=implicit-function-declaration]
->> >    res_start = pci_pio_to_address(res->start);
->> >    ^
->> > drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_probe':
->> > drivers/pci/host/pcie-rcar.c:945:3: error: implicit declaration of function 'of_pci_range_to_resource' [-Werror=implicit-function-declaration]
->> >    err = of_pci_range_to_resource(&range, pdev->dev.of_node,
->> >    ^
->> > cc1: some warnings being treated as errors
->> >
->> > This provides inline dummy implementations for the case that
->> > CONFIG_OF is disabled, to allow better build testing.
->> >
->> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->> > Fixes: 279c5dd046 ("of/pci: Add pci_register_io_range() and pci_pio_to_address()")
->>
->> I'm rebuilding the pci/host-generic branch to pick up the other v13 fixes,
->> so I folded this fix directly into the "of/pci: Add pci_register_io_range()
->> and pci_pio_to_address()" patch.  Thanks for finding this; the config
->> dependencies are a bit of a mess.
+On Mon, Sep 8, 2014 at 8:54 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> Add of_pci_get_domain_nr() to retrieve the PCI domain number
+> of a given device from DT. If the information is not present,
+> the function can be requested to allocate a new domain number.
 >
-> Bjorn,
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Grant Likely <grant.likely@linaro.org>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> ---
+>  drivers/of/of_pci.c    | 34 ++++++++++++++++++++++++++++++++++
+>  include/linux/of_pci.h |  7 +++++++
+>  2 files changed, 41 insertions(+)
 >
-> I suggest splitting this patch into 2 parts, move the one that adds pci_pio_to_address() in patch 2
-> and the other in patch 5.
+> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> index 8481996..a107edb 100644
+> --- a/drivers/of/of_pci.c
+> +++ b/drivers/of/of_pci.c
+> @@ -89,6 +89,40 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
+>  }
+>  EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
+>
+> +static atomic_t of_domain_nr = ATOMIC_INIT(-1);
+> +
+> +/**
+> + * This function will try to obtain the host bridge domain number by
+> + * using of_alias_get_id() call with "pci-domain" as a stem. If that
+> + * fails, a local allocator will be used. The local allocator can
+> + * be requested to return a new domain_nr if the information is missing
+> + * from the device tree.
+> + *
+> + * @node: device tree node with the domain information
+> + * @allocate_if_missing: if DT lacks information about the domain nr,
+> + * allocate a new number.
+> + *
+> + * Returns the associated domain number from DT, or a new domain number
+> + * if DT information is missing and @allocate_if_missing is true. If
+> + * @allocate_if_missing is false then the last allocated domain number
+> + * will be returned.
+> + */
+> +int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
+> +{
+> +       int domain;
+> +
+> +       domain = of_alias_get_id(node, "pci-domain");
+> +       if (domain == -ENODEV) {
+> +               if (allocate_if_missing)
+> +                       domain = atomic_inc_return(&of_domain_nr);
+> +               else
+> +                       domain = atomic_read(&of_domain_nr);
 
-Yeah, I screwed that up.  I had just applied Arnd's patch completely
-to 279c5dd046, which doesn't quite make sense.
+This function seems a bit broken to me. It is overloaded with too many
+different outcomes. Think about how this would work if you have
+multiple PCI buses and a mixture of having pci-domain aliases or not.
+Aren't domain numbers global? Allocation should then start outside of
+the range of alias ids.
 
-I tried again like this:
-
-  - In "of/pci: Add pci_register_io_range() and pci_pio_to_address()",
-I added the dummy pci_pio_to_address(), so there's an extern and a
-definition in address.c when CONFIG_OF_ADDRESS=y, and an inline dummy
-otherwise.
-
-  - I dropped "of/pci: Define of_pci_range_to_resource() only when
-CONFIG_PCI=y".
-
-  - In "of/pci: Move of_pci_range_to_resource() to of/address.c", I
-added the dummy of_pci_range_to_resource(), so there's an extern an a
-definition in address.c when CONFIG_OF_ADDRESS=y and CONFIG_PCI=y, and
-an inline dummy otherwise.
-
-I'm not really set up to build test this, and my head is swimming a
-bit, so I hope this is it.  I pushed the pci/host-generic branch
-again, so you can look at it yourself.
-
-Bjorn
+Rob
