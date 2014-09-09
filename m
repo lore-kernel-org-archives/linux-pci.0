@@ -1,109 +1,67 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <542505B3.7040208@huawei.com>
-Date: Fri, 26 Sep 2014 14:20:35 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:56839 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751268AbaIIVtc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Sep 2014 17:49:32 -0400
+Message-ID: <540F75DF.5050904@ti.com>
+Date: Tue, 9 Sep 2014 17:49:19 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-To: Liviu Dudau <liviu@dudau.co.uk>,
-	Thierry Reding <thierry.reding@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
- in all platforms
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com> <20140925074235.GN12423@ulmo> <20140925144855.GB31157@bart.dudau.co.uk> <20140925164937.GB30382@ulmo> <20140925171612.GC31157@bart.dudau.co.uk>
-In-Reply-To: <20140925171612.GC31157@bart.dudau.co.uk>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-arch-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arm-kernel@lists.infradead.org>, <robh+dt@kernel.org>,
+	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<bhelgaas@google.com>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] PCI: keystone: update to support multiple pci
+ ports
+References: <1410293835-13050-1-git-send-email-m-karicheri2@ti.com> <3294679.puV171E8qx@wuerfel> <540F6646.3010607@ti.com> <9042477.aRbAhpkfQ5@wuerfel>
+In-Reply-To: <9042477.aRbAhpkfQ5@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> The PCI core can already deal with that. An MSI chip can be set per bus
->> and the weak pcibios_add_bus() can be used to set that. Often it might
->> not even be necessary to do it via pcibios_add_bus() if you create the
->> root bus directly, since you can attach the MSI chip at that time.
-> 
-> But I'm thinking that we need to move away from pcibios_add_bus() interface to do
-> something that should be generic. You don't need to be called for every bus when all
-> you want is just the root bus in order to add the MSI chip. Also, from looking at
-> the current patchset, a lot of architectures would set the MSI chip to a global
-> variable, which means you don't have an option to choose the MSI chip based on the
-> bus.
-
-I also agree to remove the pcibios_add_bus() in arm which call .add_bus() to associate msi_chip
-and PCI bus.
-
-In my opinions, all PCI devices under the same PCI hostbridge must share same msi chip, right ?
-So if we can associate msi chip and PCI hostbridge, every PCI device can find correct msi chip.
-PCI hostbridge private attributes can be saved in PCI sysdata, and this data will be propagate to
-PCI root bus and its child buses.
-
-> 
+On 09/09/2014 05:09 PM, Arnd Bergmann wrote:
+> On Tuesday 09 September 2014 16:42:46 Murali Karicheri wrote:
+>>>>
+>>>>       /* update the Vendor ID */
+>>>> -    vendor_device_id = readl(ks_pcie->va_reg_pciid);
+>>>> -    writew((vendor_device_id>>   16), pp->dbi_base + PCI_DEVICE_ID);
+>>>> +    writew(ks_pcie->device_id, pp->dbi_base + PCI_DEVICE_ID);
+>>>>
+>>>>       /* update the DEV_STAT_CTRL to publish right mrrs */
+>>>>       val = readl(pp->dbi_base + PCIE_CAP_BASE + PCI_EXP_DEVCTL);
+>>>
+>>> This change must have slipped in accidentally, at least it's not
+>>> described in the changelog. Should this be another patch?
+>>> The change seems useful.
+>> Are you referring to mrrs or update to device id?  device id is in a SoC
+>> register at index2 and is read and updated by the driver here. MRRS
+>> update was originally in the code.
 >>
->>> What I would like to see is a way of creating the pci_host_bridge structure outside
->>> the pci_create_root_bus(). That would then allow us to pass this sort of platform
->>> details like associated msi_chip into the host bridge and the child busses will
->>> have an easy way of finding the information needed by finding the root bus and then
->>> the host bridge structure. Then the generic pci_scan_root_bus() can be used by (mostly)
->>> everyone and the drivers can remove their kludges that try to work around the
->>> current limitations.
->>
->> I think both issues are orthogonal. Last time I checked a lot of work
->> was still necessary to unify host bridges enough so that it could be
->> shared across architectures. But perhaps some of that work has
->> happened in the meantime.
-> 
-> Breaking out the host bridge creation from root bus creation is not difficult, just not
-> agree upon. That would be the first step in making the generic host brige structure
-> useful for sharing, specially if used as a sort of "parent" structure that you can
-> wrap with your actual host bridge structure.
+>
+> I meant the device id change. Maybe you accidentally did 'git commit
+> --amend' during a rebase and that replaced the real changelog with
+> the one of the patch in front of it and merged the two patches?
+>
+Actually this is an inteded. The vendor ID is in a register indicated by
+reg offset and as per the device spec, it needs to be read and updated 
+by the software. Now since multiple instances of PCI device needs to be 
+read the same register, the reading happens in the probe() and same is 
+unmapped after that.
 
-Breaking out the host bridge creation is a good idea, but there need a lot of changes, we can
-do it in another series. And if we save msi chip in pci sysdata now, it will be easy to
-move it to generic pci host bridge. We can also move the pci domain number and other common info to it.
++	ks_pcie->device_id = readl(reg_p) >> 16;
++	devm_iounmap(dev, reg_p);
++	devm_release_mem_region(dev, res->start, resource_size(res));
 
-Thanks!
-Yijing.
+Afetr that in ks_pcie_host_init(), it update the device_id in the RC's 
+config space.
 
-> 
->>
->> But like I said, when you create the root bus, you can easily attach the
->> MSI chip to it.
-> 
-> Not if you want to use the generic pci_scan_root_bus() function. One needs to copy the code
-> and add their own needed modifications. Which makes it hard to fix bugs and prevents code
-> reuse.
-> 
-> Best regards,
-> Liviu
-> 
->>
->> Thierry
-> 
-> 
-> 
+Thanks
 
-
--- 
-Thanks!
-Yijing
+Murali
+> That happened to me a few times and would explain the strange mix
+> of two changes.
+>
+> 	Arnd
 
