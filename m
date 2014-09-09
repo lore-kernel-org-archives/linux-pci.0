@@ -1,122 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:51947 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751088AbaIQFQp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Sep 2014 01:16:45 -0400
-Message-ID: <54191927.2040102@linux.intel.com>
-Date: Wed, 17 Sep 2014 13:16:23 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC Part2 v1 14/21] x86, hpet: Enhance HPET IRQ to support hierarchy
- irqdomain
-References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com> <1410444228-3134-15-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1409161104120.4247@nanos>
-In-Reply-To: <alpine.DEB.2.10.1409161104120.4247@nanos>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from userp1040.oracle.com ([156.151.31.81]:51112 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755792AbaIICXY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 22:23:24 -0400
+From: Ethan Zhao <ethan.zhao@oracle.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
+	kvm@vger.kernel.org, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com
+Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
+	ethan.kernel@gmail.com, Ethan Zhao <ethan.zhao@oracle.com>
+Subject: [PATCH V4 2/4 resend] KVM: use pci device flag operation helper functions
+Date: Tue,  9 Sep 2014 10:21:26 +0800
+Message-Id: <1410229288-31829-3-git-send-email-ethan.zhao@oracle.com>
+In-Reply-To: <1410229288-31829-1-git-send-email-ethan.zhao@oracle.com>
+References: <1410229288-31829-1-git-send-email-ethan.zhao@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Use helper function instead of direct operation to pci device
+flag when set device to assigned or deassigned.
 
+Acked-by: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+---
+ virt/kvm/assigned-dev.c |    2 +-
+ virt/kvm/iommu.c        |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-On 2014/9/17 2:31, Thomas Gleixner wrote:
-> On Thu, 11 Sep 2014, Jiang Liu wrote:
->>  #ifdef CONFIG_HPET_TIMER
->> +#define	HPET_DOMAIN_REMAPPED		0x80000000
->> +
->> +static inline int hpet_dev_id(struct irq_domain *domain)
->> +{
->> +	return (int)((long)domain->host_data & ~HPET_DOMAIN_REMAPPED);
->> +}
->> +
->> +static inline bool hpet_remapped(struct irq_domain *domain)
->> +{
->> +	return (bool)((long)domain->host_data & HPET_DOMAIN_REMAPPED);
->> +}
-> 
-> It's kinda odd to have this encoded in domain->host_data.
-Hi Thomas,
-	I have thought about add a "domain_flags" field to struct
-irq_domain to host the remapping flag. But remapping flag is not a
-common flag for all architectures, so I adopted the dirty solution
-to hide the remapped flag in x86 arch specific code.
-How about adding domain_flags field and define IRQ_DOMAIN_FLAG_ARCH1?
+diff --git a/virt/kvm/assigned-dev.c b/virt/kvm/assigned-dev.c
+index bf06577..38581ee 100644
+--- a/virt/kvm/assigned-dev.c
++++ b/virt/kvm/assigned-dev.c
+@@ -302,7 +302,7 @@ static void kvm_free_assigned_device(struct kvm *kvm,
+ 	else
+ 		pci_restore_state(assigned_dev->dev);
+ 
+-	assigned_dev->dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++	pci_clear_dev_assigned(assigned_dev->dev);
+ 
+ 	pci_release_regions(assigned_dev->dev);
+ 	pci_disable_device(assigned_dev->dev);
+diff --git a/virt/kvm/iommu.c b/virt/kvm/iommu.c
+index 0df7d4b..34a8b02 100644
+--- a/virt/kvm/iommu.c
++++ b/virt/kvm/iommu.c
+@@ -194,7 +194,7 @@ int kvm_assign_device(struct kvm *kvm,
+ 			goto out_unmap;
+ 	}
+ 
+-	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
++	pci_set_dev_assigned(pdev);
+ 
+ 	dev_info(&pdev->dev, "kvm assign device\n");
+ 
+@@ -220,7 +220,7 @@ int kvm_deassign_device(struct kvm *kvm,
+ 
+ 	iommu_detach_device(domain, &pdev->dev);
+ 
+-	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++	pci_clear_dev_assigned(pdev);
+ 
+ 	dev_info(&pdev->dev, "kvm deassign device\n");
+ 
+-- 
+1.7.1
 
-> 
->>  static int hpet_msi_set_affinity(struct irq_data *data,
->>  				 const struct cpumask *mask, bool force)
->>  {
->> +	struct irq_data *parent = data->parent_data;
->>  	struct irq_cfg *cfg = irqd_cfg(data);
->>  	struct msi_msg msg;
->> -	unsigned int dest;
->>  	int ret;
->>  
->> -	ret = apic_set_affinity(data, mask, &dest);
->> -	if (ret)
->> -		return ret;
->> -
->> -	hpet_msi_read(data->handler_data, &msg);
->> -
->> -	msg.data &= ~MSI_DATA_VECTOR_MASK;
->> -	msg.data |= MSI_DATA_VECTOR(cfg->vector);
->> -	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
->> -	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
->> -
->> -	hpet_msi_write(data->handler_data, &msg);
->> +	ret = parent->chip->irq_set_affinity(parent, mask, force);
->> +	/* No need to rewrite HPET registers if interrupt is remapped */
->> +	if (ret >= 0 && !hpet_remapped(data->domain)) {
-> 
-> So we really should use irq_data->chip_data for this, i.e. storing
-> 
-> struct hpet_msi {
->        struct msi_msg msg;
->        bool remapped;
->        /* whatever you need here */
-> };
-OK, we add this flag for HPET, MSI and IOAPIC.
-
-> 
->> +		hpet_msi_read(data->handler_data, &msg);
->> +		msg.data &= ~MSI_DATA_VECTOR_MASK;
->> +		msg.data |= MSI_DATA_VECTOR(cfg->vector);
->> +		msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
->> +		msg.address_lo |= MSI_ADDR_DEST_ID(cfg->dest_apicid);
-> 
-> We need the same thing for MSI so this should be a helper function
-> 
->    msi_update_msg(struct msi_msg *msg, struct irq_cfg *cfg)
-Good suggestion, will do it in next version
-Regards!
-Gerry
-
-> 
->> +		hpet_msi_write(data->handler_data, &msg);
->> +	}
->>  
->> -	return IRQ_SET_MASK_OK_NOCOPY;
->> +	return ret;
->>  }
->  
-> Thanks,
-> 
-> 	tglx
-> 
