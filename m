@@ -1,380 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:8226 "EHLO mga11.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:21689 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752270AbaILCI3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Sep 2014 22:08:29 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V5 5/8] iommu/vt-d: Enhance intel_irq_remapping driver to support DMAR unit hotplug
-Date: Fri, 12 Sep 2014 10:10:45 +0800
-Message-Id: <1410487848-6027-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com>
+	id S1755322AbaIIHqo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Sep 2014 03:46:44 -0400
+Date: Tue, 9 Sep 2014 03:12:52 -0400
+From: "Chen, Gong" <gong.chen@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: rdunlap@infradead.org, bp@alien8.de, tony.luck@intel.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RESEND RFC 5/5] PCIe, AER: Update initial value of UC error mask
+Message-ID: <20140909071252.GB27821@gchen.bj.intel.com>
+References: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
+ <1407910961-7798-6-git-send-email-gong.chen@linux.intel.com>
+ <20140905233421.GL8080@google.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Pd0ReVV5GZGQvF3a"
+In-Reply-To: <20140905233421.GL8080@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement required callback functions for intel_irq_remapping driver
-to support DMAR unit hotplug.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel_irq_remapping.c |  222 ++++++++++++++++++++++++++---------
- 1 file changed, 169 insertions(+), 53 deletions(-)
+--Pd0ReVV5GZGQvF3a
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 9b140ed854ec..7cf31a29f77a 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -36,7 +36,6 @@ struct hpet_scope {
- 
- static struct ioapic_scope ir_ioapic[MAX_IO_APICS];
- static struct hpet_scope ir_hpet[MAX_HPET_TBS];
--static int ir_ioapic_num, ir_hpet_num;
- 
- /*
-  * Lock ordering:
-@@ -325,7 +324,7 @@ static int set_ioapic_sid(struct irte *irte, int apic)
- 
- 	down_read(&dmar_global_lock);
- 	for (i = 0; i < MAX_IO_APICS; i++) {
--		if (ir_ioapic[i].id == apic) {
-+		if (ir_ioapic[i].iommu && ir_ioapic[i].id == apic) {
- 			sid = (ir_ioapic[i].bus << 8) | ir_ioapic[i].devfn;
- 			break;
- 		}
-@@ -352,7 +351,7 @@ static int set_hpet_sid(struct irte *irte, u8 id)
- 
- 	down_read(&dmar_global_lock);
- 	for (i = 0; i < MAX_HPET_TBS; i++) {
--		if (ir_hpet[i].id == id) {
-+		if (ir_hpet[i].iommu && ir_hpet[i].id == id) {
- 			sid = (ir_hpet[i].bus << 8) | ir_hpet[i].devfn;
- 			break;
- 		}
-@@ -474,17 +473,17 @@ static void iommu_set_irq_remapping(struct intel_iommu *iommu, int mode)
- 	raw_spin_unlock_irqrestore(&iommu->register_lock, flags);
- }
- 
--
--static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
-+static int intel_setup_irq_remapping(struct intel_iommu *iommu)
- {
- 	struct ir_table *ir_table;
- 	struct page *pages;
- 	unsigned long *bitmap;
- 
--	ir_table = iommu->ir_table = kzalloc(sizeof(struct ir_table),
--					     GFP_ATOMIC);
-+	if (iommu->ir_table)
-+		return 0;
- 
--	if (!iommu->ir_table)
-+	ir_table = kzalloc(sizeof(struct ir_table), GFP_ATOMIC);
-+	if (!ir_table)
- 		return -ENOMEM;
- 
- 	pages = alloc_pages_node(iommu->node, GFP_ATOMIC | __GFP_ZERO,
-@@ -493,7 +492,7 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
- 	if (!pages) {
- 		pr_err("IR%d: failed to allocate pages of order %d\n",
- 		       iommu->seq_id, INTR_REMAP_PAGE_ORDER);
--		kfree(iommu->ir_table);
-+		kfree(ir_table);
- 		return -ENOMEM;
- 	}
- 
-@@ -508,11 +507,22 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
- 
- 	ir_table->base = page_address(pages);
- 	ir_table->bitmap = bitmap;
-+	iommu->ir_table = ir_table;
- 
--	iommu_set_irq_remapping(iommu, mode);
- 	return 0;
- }
- 
-+static void intel_teardown_irq_remapping(struct intel_iommu *iommu)
-+{
-+	if (iommu && iommu->ir_table) {
-+		free_pages((unsigned long)iommu->ir_table->base,
-+			   INTR_REMAP_PAGE_ORDER);
-+		kfree(iommu->ir_table->bitmap);
-+		kfree(iommu->ir_table);
-+		iommu->ir_table = NULL;
-+	}
-+}
-+
- /*
-  * Disable Interrupt Remapping.
-  */
-@@ -667,9 +677,10 @@ static int __init intel_enable_irq_remapping(void)
- 		if (!ecap_ir_support(iommu->ecap))
- 			continue;
- 
--		if (intel_setup_irq_remapping(iommu, eim))
-+		if (intel_setup_irq_remapping(iommu))
- 			goto error;
- 
-+		iommu_set_irq_remapping(iommu, eim);
- 		setup = 1;
- 	}
- 
-@@ -700,12 +711,13 @@ error:
- 	return -1;
- }
- 
--static void ir_parse_one_hpet_scope(struct acpi_dmar_device_scope *scope,
--				      struct intel_iommu *iommu)
-+static int ir_parse_one_hpet_scope(struct acpi_dmar_device_scope *scope,
-+				   struct intel_iommu *iommu,
-+				   struct acpi_dmar_hardware_unit *drhd)
- {
- 	struct acpi_dmar_pci_path *path;
- 	u8 bus;
--	int count;
-+	int count, free = -1;
- 
- 	bus = scope->bus;
- 	path = (struct acpi_dmar_pci_path *)(scope + 1);
-@@ -721,19 +733,36 @@ static void ir_parse_one_hpet_scope(struct acpi_dmar_device_scope *scope,
- 					   PCI_SECONDARY_BUS);
- 		path++;
- 	}
--	ir_hpet[ir_hpet_num].bus   = bus;
--	ir_hpet[ir_hpet_num].devfn = PCI_DEVFN(path->device, path->function);
--	ir_hpet[ir_hpet_num].iommu = iommu;
--	ir_hpet[ir_hpet_num].id    = scope->enumeration_id;
--	ir_hpet_num++;
-+
-+	for (count = 0; count < MAX_HPET_TBS; count++) {
-+		if (ir_hpet[count].iommu == iommu &&
-+		    ir_hpet[count].id == scope->enumeration_id)
-+			return 0;
-+		else if (ir_hpet[count].iommu == NULL && free == -1)
-+			free = count;
-+	}
-+	if (free == -1) {
-+		pr_warn("Exceeded Max HPET blocks\n");
-+		return -ENOSPC;
-+	}
-+
-+	ir_hpet[free].iommu = iommu;
-+	ir_hpet[free].id    = scope->enumeration_id;
-+	ir_hpet[free].bus   = bus;
-+	ir_hpet[free].devfn = PCI_DEVFN(path->device, path->function);
-+	pr_info("HPET id %d under DRHD base 0x%Lx\n",
-+		scope->enumeration_id, drhd->address);
-+
-+	return 0;
- }
- 
--static void ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
--				      struct intel_iommu *iommu)
-+static int ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
-+				     struct intel_iommu *iommu,
-+				     struct acpi_dmar_hardware_unit *drhd)
- {
- 	struct acpi_dmar_pci_path *path;
- 	u8 bus;
--	int count;
-+	int count, free = -1;
- 
- 	bus = scope->bus;
- 	path = (struct acpi_dmar_pci_path *)(scope + 1);
-@@ -750,54 +779,63 @@ static void ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
- 		path++;
- 	}
- 
--	ir_ioapic[ir_ioapic_num].bus   = bus;
--	ir_ioapic[ir_ioapic_num].devfn = PCI_DEVFN(path->device, path->function);
--	ir_ioapic[ir_ioapic_num].iommu = iommu;
--	ir_ioapic[ir_ioapic_num].id    = scope->enumeration_id;
--	ir_ioapic_num++;
-+	for (count = 0; count < MAX_IO_APICS; count++) {
-+		if (ir_ioapic[count].iommu == iommu &&
-+		    ir_ioapic[count].id == scope->enumeration_id)
-+			return 0;
-+		else if (ir_ioapic[count].iommu == NULL && free == -1)
-+			free = count;
-+	}
-+	if (free == -1) {
-+		pr_warn("Exceeded Max IO APICS\n");
-+		return -ENOSPC;
-+	}
-+
-+	ir_ioapic[free].bus   = bus;
-+	ir_ioapic[free].devfn = PCI_DEVFN(path->device, path->function);
-+	ir_ioapic[free].iommu = iommu;
-+	ir_ioapic[free].id    = scope->enumeration_id;
-+	pr_info("IOAPIC id %d under DRHD base  0x%Lx IOMMU %d\n",
-+		scope->enumeration_id, drhd->address, iommu->seq_id);
-+
-+	return 0;
- }
- 
- static int ir_parse_ioapic_hpet_scope(struct acpi_dmar_header *header,
- 				      struct intel_iommu *iommu)
- {
-+	int ret = 0;
- 	struct acpi_dmar_hardware_unit *drhd;
- 	struct acpi_dmar_device_scope *scope;
- 	void *start, *end;
- 
- 	drhd = (struct acpi_dmar_hardware_unit *)header;
--
- 	start = (void *)(drhd + 1);
- 	end = ((void *)drhd) + header->length;
- 
--	while (start < end) {
-+	while (start < end && ret == 0) {
- 		scope = start;
--		if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_IOAPIC) {
--			if (ir_ioapic_num == MAX_IO_APICS) {
--				printk(KERN_WARNING "Exceeded Max IO APICS\n");
--				return -1;
--			}
--
--			printk(KERN_INFO "IOAPIC id %d under DRHD base "
--			       " 0x%Lx IOMMU %d\n", scope->enumeration_id,
--			       drhd->address, iommu->seq_id);
-+		if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_IOAPIC)
-+			ret = ir_parse_one_ioapic_scope(scope, iommu, drhd);
-+		else if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_HPET)
-+			ret = ir_parse_one_hpet_scope(scope, iommu, drhd);
-+		start += scope->length;
-+	}
- 
--			ir_parse_one_ioapic_scope(scope, iommu);
--		} else if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_HPET) {
--			if (ir_hpet_num == MAX_HPET_TBS) {
--				printk(KERN_WARNING "Exceeded Max HPET blocks\n");
--				return -1;
--			}
-+	return ret;
-+}
- 
--			printk(KERN_INFO "HPET id %d under DRHD base"
--			       " 0x%Lx\n", scope->enumeration_id,
--			       drhd->address);
-+static void ir_remove_ioapic_hpet_scope(struct intel_iommu *iommu)
-+{
-+	int i;
- 
--			ir_parse_one_hpet_scope(scope, iommu);
--		}
--		start += scope->length;
--	}
-+	for (i = 0; i < MAX_HPET_TBS; i++)
-+		if (ir_hpet[i].iommu == iommu)
-+			ir_hpet[i].iommu = NULL;
- 
--	return 0;
-+	for (i = 0; i < MAX_IO_APICS; i++)
-+		if (ir_ioapic[i].iommu == iommu)
-+			ir_ioapic[i].iommu = NULL;
- }
- 
- /*
-@@ -1173,7 +1211,85 @@ struct irq_remap_ops intel_irq_remap_ops = {
- 	.setup_hpet_msi		= intel_setup_hpet_msi,
- };
- 
-+/*
-+ * Support of Interrupt Remapping Unit Hotplug
-+ */
-+static int dmar_ir_add(struct dmar_drhd_unit *dmaru, struct intel_iommu *iommu)
-+{
-+	int ret;
-+	int eim = x2apic_enabled();
-+
-+	if (eim && !ecap_eim_support(iommu->ecap)) {
-+		pr_info("DRHD %Lx: EIM not supported by DRHD, ecap %Lx\n",
-+			iommu->reg_phys, iommu->ecap);
-+		return -ENODEV;
-+	}
-+
-+	if (ir_parse_ioapic_hpet_scope(dmaru->hdr, iommu)) {
-+		pr_warn("DRHD %Lx: failed to parse managed IOAPIC/HPET\n",
-+			iommu->reg_phys);
-+		return -ENODEV;
-+	}
-+
-+	/* TODO: check all IOAPICs are covered by IOMMU */
-+
-+	/* Setup Interrupt-remapping now. */
-+	ret = intel_setup_irq_remapping(iommu);
-+	if (ret) {
-+		pr_err("DRHD %Lx: failed to allocate resource\n",
-+		       iommu->reg_phys);
-+		ir_remove_ioapic_hpet_scope(iommu);
-+		return ret;
-+	}
-+
-+	if (!iommu->qi) {
-+		/* Clear previous faults. */
-+		dmar_fault(-1, iommu);
-+		iommu_disable_irq_remapping(iommu);
-+		dmar_disable_qi(iommu);
-+	}
-+
-+	/* Enable queued invalidation */
-+	ret = dmar_enable_qi(iommu);
-+	if (!ret) {
-+		iommu_set_irq_remapping(iommu, eim);
-+	} else {
-+		pr_err("DRHD %Lx: failed to enable queued invalidation, ecap %Lx, ret %d\n",
-+		       iommu->reg_phys, iommu->ecap, ret);
-+		intel_teardown_irq_remapping(iommu);
-+		ir_remove_ioapic_hpet_scope(iommu);
-+	}
-+
-+	return ret;
-+}
-+
- int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
- {
--	return irq_remapping_enabled ? -ENOSYS : 0;
-+	int ret = 0;
-+	struct intel_iommu *iommu = dmaru->iommu;
-+
-+	if (!irq_remapping_enabled)
-+		return 0;
-+	if (iommu == NULL)
-+		return -EINVAL;
-+	if (!ecap_ir_support(iommu->ecap))
-+		return 0;
-+
-+	if (insert) {
-+		if (!iommu->ir_table)
-+			ret = dmar_ir_add(dmaru, iommu);
-+	} else {
-+		if (iommu->ir_table) {
-+			if (!bitmap_empty(iommu->ir_table->bitmap,
-+					  INTR_REMAP_TABLE_ENTRIES)) {
-+				ret = -EBUSY;
-+			} else {
-+				iommu_disable_irq_remapping(iommu);
-+				intel_teardown_irq_remapping(iommu);
-+				ir_remove_ioapic_hpet_scope(iommu);
-+			}
-+		}
-+	}
-+
-+	return ret;
- }
--- 
-1.7.10.4
+On Fri, Sep 05, 2014 at 05:34:21PM -0600, Bjorn Helgaas wrote:
+> Date: Fri, 5 Sep 2014 17:34:21 -0600
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> To: "Chen, Gong" <gong.chen@linux.intel.com>
+> Cc: rdunlap@infradead.org, bp@alien8.de, tony.luck@intel.com,
+>  linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+> Subject: Re: [RESEND RFC 5/5] PCIe, AER: Update initial value of UC error
+>  mask
+> User-Agent: Mutt/1.5.21 (2010-09-15)
+>=20
+> On Wed, Aug 13, 2014 at 02:22:41AM -0400, Chen, Gong wrote:
+> > In PCI-e SPEC r3.0, BIT 0 of Uncorrectable Error Status Register
+> > is redefined and it has an explicit requirement that when writing
+> > this field, a value of 1b is the only choice. So change previous
+> > initial maks from 0 to 1.
+> >=20
+> > Signed-off-by: Chen, Gong <gong.chen@linux.intel.com>
+> > ---
+> > NOTE: After scratching all use cases, this is the most obvious use
+> > case to violate the SPEC. Most of use cases just read first and
+> > then overwrite for clear purpose. Even so, such fix is obvious to
+> > not compatiable with previous SPEC definition. Do we need a dirty
+> > hack?
+> >=20
+> >  arch/mips/pci/pci-octeon.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >=20
+> > diff --git a/arch/mips/pci/pci-octeon.c b/arch/mips/pci/pci-octeon.c
+> > index 59cccd95688b..f1bfdc201297 100644
+> > --- a/arch/mips/pci/pci-octeon.c
+> > +++ b/arch/mips/pci/pci-octeon.c
+> > @@ -134,7 +134,7 @@ int pcibios_plat_dev_init(struct pci_dev *dev)
+> >  				       dconfig);
+> >  		/* Enable reporting of all uncorrectable errors */
+> >  		/* Uncorrectable Error Mask - turned on bits disable errors */
+> > -		pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, 0);
+> > +		pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, 1);
+>=20
+> I see the text in the spec that says we should only write 1 to bit 0 (sec
+> 7.10.3, for anybody following along).  It looks like that change was made
+> between PCIe r1.0 and r1.1.  It would really be nice to have more context
+> about why the change was made, because if there's hardware in the field
+> that implements r1.0 behavior, this patch will change the way it works, a=
+nd
+> I don't know how to verify that is safe.
+>=20
+> Does this actually change fix a problem?  If it fixes a problem that
+> happens on real hardware, that's a much better reason to make a change th=
+an
+> just to comply with the spec.
+>=20
+> Sec 7.10.2 also says we should ignore the value of bit 0 in the
+> Uncorrectable Error Status register, and I don't see any place where we
+> follow that advice.
+>=20
+That's why I mark this patch as RFC. As you mentioned above, these are my
+concerns, too. I submit such a patch not for merging but throwing a potenti=
+al
+issue. As I noted above, I don't know if it is deserved to fix all affected
+placed to comply with spec change. After all, no one reports such an
+issue (or maybe have happened :-))
 
+--Pd0ReVV5GZGQvF3a
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUDqh0AAoJEI01n1+kOSLHy4QP/2BbLr1NORHlsNG7eypswhdJ
+7FrEXWQus8W3+ByjLwxYJsIWEUbkdMMseMkfT2urguUQZQgldgT6W0q0amG8ntCn
+nx37ra9ct4XtUGdicSCCs+zGAIZvl9O9X1HfDjubC+JbXeoiRgUd7Sxd1Zws6Qeh
+rJRKzIyUCdnBjZz23hPFKKNBO3myvuveOmLNpwNTYHBISbzk8hMytZkjAc5viAkQ
+FG2Yj6eh4BGvp9zv02I5lTHUY7RNVLhxwejIbmPb/FMA2hqfq/fav4+ft76rIMn+
+N6xfauxQmukF6IP9YlkZdtxbudLMe8noqy41OJcU3w5d+SLcwHrkPoqp/d0Vmz1N
+wPoX5IcnB/M/vYfKZ5ZWm0h91ctGvI6G/1a3tMeVcMHoFKGUA/GJkhkoIB7+ZttY
+SwHR/axViRs0Jr62+ZM/gwGQi5wxBbz3e0AhgKZqRG8qMy2MIljDbIvMc7c70wA8
+T1dP4nrSZTalqva0+FiFdxsCH3gDc5DLfEH6fwWvP8CvNen53X+4Z0xccMgNUJuR
+FdLl1HSVg+xj7VnP8e+opgKl4ieKRlRQT8i1oU3OaFXdsGVieFauZ2aCsTiZusfI
+oDQs1sflB3uKetWdur5EUzxYmSVp4cEgi2EaRMwDFffRrUGpfch62P3HSt0Wu2gz
+xXL4usDe3xQRRQCwfadQ
+=50d2
+-----END PGP SIGNATURE-----
+
+--Pd0ReVV5GZGQvF3a--
