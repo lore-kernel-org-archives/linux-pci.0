@@ -1,58 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v11 01/10] Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
-Date: Thu, 18 Sep 2014 02:30:16 +0100
-Message-Id: <1411003825-21521-2-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25495 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755773AbaIICXU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 22:23:20 -0400
+From: Ethan Zhao <ethan.zhao@oracle.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
+	kvm@vger.kernel.org, konrad.wilk@oracle.com,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com
+Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
+	ethan.kernel@gmail.com, Ethan Zhao <ethan.zhao@oracle.com>
+Subject: [PATCH V4 1/4 resend] PCI: introduce helper functions for device flag operation
+Date: Tue,  9 Sep 2014 10:21:25 +0800
+Message-Id: <1410229288-31829-2-git-send-email-ethan.zhao@oracle.com>
+In-Reply-To: <1410229288-31829-1-git-send-email-ethan.zhao@oracle.com>
+References: <1410229288-31829-1-git-send-email-ethan.zhao@oracle.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The inline version of ioport_map() that gets used when !CONFIG_GENERIC_IOMAP
-is wrong. It returns a mapped (i.e. virtual) address that can start from
-zero and completely ignores the PCI_IOBASE and IO_SPACE_LIMIT that most
-architectures that use !CONFIG_GENERIC_MAP define.
+This patch introduced three helper functions to hide direct
+device flag operation.
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
-Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+void pci_set_dev_assigned(struct pci_dev *pdev);
+void pci_clear_dev_assigned(struct pci_dev *pdev);
+bool pci_is_dev_assigned(struct pci_dev *pdev);
+
+Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
 ---
- include/asm-generic/io.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ v2: simplify unnecessory ternary operation in function pci_is_dev_assigned();
+ v3: amend helper functions naming.
+ v4: fix incorrect type in return expression warning.
+---
+ include/linux/pci.h |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-index 975e1cc..2e2161b 100644
---- a/include/asm-generic/io.h
-+++ b/include/asm-generic/io.h
-@@ -331,7 +331,7 @@ static inline void iounmap(void __iomem *addr)
- #ifndef CONFIG_GENERIC_IOMAP
- static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
- {
--	return (void __iomem *) port;
-+	return (void __iomem *)(PCI_IOBASE + (port & IO_SPACE_LIMIT));
- }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 466bcd1..b610ab3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1829,4 +1829,17 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
+  */
+ struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
  
- static inline void ioport_unmap(void __iomem *p)
++/* helper functions for operation of device flag */
++static inline void pci_set_dev_assigned(struct pci_dev *pdev)
++{
++	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
++}
++static inline void pci_clear_dev_assigned(struct pci_dev *pdev)
++{
++	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
++}
++static inline bool pci_is_dev_assigned(struct pci_dev *pdev)
++{
++	return (pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED) == PCI_DEV_FLAGS_ASSIGNED;
++}
+ #endif /* LINUX_PCI_H */
 -- 
-2.1.0
+1.7.1
 
