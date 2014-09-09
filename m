@@ -1,86 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.10]:53930 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752626AbaIIKvB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Sep 2014 06:51:01 -0400
 From: Arnd Bergmann <arnd@arndb.de>
-To: Sunil Kovvuri <sunil.kovvuri@gmail.com>
-Cc: LAKML <linux-arm-kernel@lists.infradead.org>,
-	Robert Richter <rric@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Robert Richter <rrichter@cavium.com>,
-	Sunil Goutham <sgoutham@cavium.com>
-Subject: Re: [PATCH 3/6] pci, thunder: Add PCIe host controller devicetree bindings
-Date: Wed, 24 Sep 2014 20:34:14 +0200
-Message-ID: <3414852.SWQ9rRcUDx@wuerfel>
-In-Reply-To: <CA+sq2Ce8sb=YGma05qEk_992Mc9M92TxCk+RWsyi6tY-FVOCXw@mail.gmail.com>
-References: <1411573068-12952-1-git-send-email-rric@kernel.org> <3082935.e3X4GsVUDn@wuerfel> <CA+sq2Ce8sb=YGma05qEk_992Mc9M92TxCk+RWsyi6tY-FVOCXw@mail.gmail.com>
+To: Lian Minghuan-B31939 <B31939@freescale.com>
+Cc: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
+	Roy Zang <tie-fei.zang@freescale.com>
+Subject: Re: =?UTF-8?B?562U5aSNOg==?= [PATCH 2/2] PCI: Layerscape: Add Layerscape PCIe driver
+Date: Tue, 09 Sep 2014 12:50:47 +0200
+Message-ID: <60096763.M59cqLJ4gm@wuerfel>
+In-Reply-To: <540F4B23.5040209@freescale.com>
+References: <1409856338-1730-1-git-send-email-Minghuan.Lian@freescale.com> <6844751.zBSvS2zU47@wuerfel> <540F4B23.5040209@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 24 September 2014 23:34:04 Sunil Kovvuri wrote:
-> On Wed, Sep 24, 2014 at 9:36 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Wednesday 24 September 2014 17:37:45 Robert Richter wrote:
-> >> +               compatible = "cavium,thunder-pcie";
-> >> +               device_type = "pci";
-> >> +               msi-parent = <&its>;
-> >> +               bus-range = <0 255>;
-> >> +               #size-cells = <2>;
-> >> +               #address-cells = <3>;
-> >> +               reg = <0x8480 0x00000000 0 0x10000000>;  /* Configuration space */
-> >> +               ranges = <0x03000000 0x8010 0x00000000 0x8010 0x00000000 0x70 0x00000000>, /* mem ranges */
-> >> +                       <0x03000000 0x8300 0x00000000 0x8300 0x00000000 0x80 0x00000000>,
-> >> +                       <0x03000000 0x87e0 0x00000000 0x87e0 0x00000000 0x01 0x00000000>;
-> >> +        };
+On Tuesday 09 September 2014 18:46:59 Lian Minghuan-B31939 wrote:
+> On 2014年09月09日 09:56, Arnd Bergmann wrote:
+> > On Tuesday 09 September 2014 17:25:57 Lian Minghuan-B31939 wrote:
+> >> [Minghuan] I discussed with my colleague. They worry about performance
+> >> degradation if using regmap API,
+> >> because there are some fast device use scfg. We tend to use a simple way
+> >> to map andread/write scfg directly.
 > >
-> > If you claim the entire 0-255 bus range, I think you should also
-> > specify a domain, otherwise it's not predictable which domain you
-> > get.
+> > I see. In this case, I would probably create a separate msi controller
+> > driver that owns the "fsl,ls1021a-scfg" device, and is referenced
+> > through the "msi-parent" property in the pcie controller.
 > >
-> > The interrupt-map and interrupt-map-mask properties are required for PCI,
-> > otherwise you can't do LSI interrupts.
-> 
-> This PCI controller supports only MSIx interrupts which are edge triggered.
+> > You can use of_pci_find_msi_chip_by_node() to get the msi_chip
+> > instance and then connect that to your pci host. This will also
+> > take care of the case where you may want to use the main GICv3
+>
+> > on a future SoC.
+> [Minghuan] There is something wrong with LS1021A MSI hardware that it 
+> only supports one interrupt not 32 interrupts.  Now, I do not want to 
+> create a separate msi controller driver just for incorrect hardware.
+> I may provide complete MSI driver for the new hardware when it is ready.
 
-Interesting, so it's not PCI compliant then? I assume this will be fixed
-in the production version of the silicon, right?
-
-Having no support for interrupts mean that the majority of PCI device drivers
-will fail.
-
-> > If your hardware can support it, you should also list I/O space and prefetchable
-> > memory spaces. Can you explain why you have multiple non-prefetchable ranges?
-> 
-> Our hardware is an ECAM based host controller and doesn't support I/O
-> and prefetchable memory spaces.
-> All on-board PCI devices connected to this PCI controller have fixed resources
-> and doesn't have to be allocated/reassigned. Some of these devices are
-> SRIOV based.
-
-I think you need to mark the ones that are nonrelocatable with flag
-0x80000000, otherwise the PCI core might decide to reassign them.
-
-> Kernel's SRIOV (pci/iov.c) is expecting 'resource->parent' hierarchy
-> to be set, otherwise doesn't
-> enable SRIOV device. So, here multiple non-prefetchable ranges of root bus
-> aid in resource claiming and setting res->parent hierarchy.
-
-I don't understand. Isn't that just a bug in the code that you are working
-around with the DT. Have you tried fixing the code instead?
-
-> We do call "pci_claim_resource" in controller driver code.
-> "[PATCH 1/6] pci, thunder: Add support for Thunder PCIe host controller."
-
-My guess is that you are using the wrong interface here. Isn't the normal
-request_resource() in the host driver enough?
+Would you just leave out MSI support for the LS1021A PCIe variant?
+I guess that's fine because all device drivers should also support
+legacy interrupts and there is no performance gain in MSI in this
+case.
 
 	Arnd
