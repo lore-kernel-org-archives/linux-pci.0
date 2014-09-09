@@ -1,70 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0142.outbound.protection.outlook.com ([157.56.110.142]:43615
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751070AbaIVK24 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Sep 2014 06:28:56 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH RFC 1/2] PCI: imx6: enable pcie on imx6qdl sabresd and
- sabreauto
-Date: Mon, 22 Sep 2014 09:55:31 +0000
-Message-ID: <e0a2e632d3ff4baf905975404af9217c@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1411376498-14653-1-git-send-email-r65037@freescale.com>
-	 <1411376498-14653-2-git-send-email-r65037@freescale.com>
- <1411378576.2599.3.camel@pengutronix.de>
-In-Reply-To: <1411378576.2599.3.camel@pengutronix.de>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Tue, 9 Sep 2014 09:41:23 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Rob Herring <robherring2@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI
+ domain_nr
+Message-ID: <20140909154123.GA12906@obsidianresearch.com>
+References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
+ <1410184472-17630-8-git-send-email-Liviu.Dudau@arm.com>
+ <CAL_JsqJi8k1Goc3UmXhuxf9v7=4gJrYG_Di7v574PxS8TsJaXw@mail.gmail.com>
+ <20140908145459.GO27864@e106497-lin.cambridge.arm.com>
+ <CAL_JsqJdGKDVwJOpPp19OkVPGzR7Zqv3nh+ONHHaYnPLYTYoYg@mail.gmail.com>
+ <20140908155931.GP27864@e106497-lin.cambridge.arm.com>
+ <540E960D.7080408@huawei.com>
+ <20140909084621.GS27864@e106497-lin.cambridge.arm.com>
+ <540EC8CB.7010106@huawei.com>
+ <CAErSpo4cAfom2=07NYDRfTCdHO22M0v+ueiaZuG6v2Xd18wEnQ@mail.gmail.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4cAfom2=07NYDRfTCdHO22M0v+ueiaZuG6v2Xd18wEnQ@mail.gmail.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgTHVjYXM6DQpUaGFua3MgZm9yIHlvdXIgcXVpY2tseSByZXZpZXctY29tbWVudHMuDQoNCj4g
-LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTHVjYXMgU3RhY2ggW21haWx0bzps
-LnN0YWNoQHBlbmd1dHJvbml4LmRlXQ0KPiBTZW50OiBNb25kYXksIFNlcHRlbWJlciAyMiwgMjAx
-NCA1OjM2IFBNDQo+IFRvOiBaaHUgUmljaGFyZC1SNjUwMzcNCj4gQ2M6IGxpbnV4LXBjaS1vd25l
-ckB2Z2VyLmtlcm5lbC5vcmc7IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LQ0KPiBwY2lA
-dmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggUkZDIDEvMl0gUENJOiBpbXg2
-OiBlbmFibGUgcGNpZSBvbiBpbXg2cWRsIHNhYnJlc2QgYW5kDQo+IHNhYnJlYXV0bw0KPiANCj4g
-QW0gTW9udGFnLCBkZW4gMjIuMDkuMjAxNCwgMTc6MDEgKzA4MDAgc2NocmllYiBSaWNoYXJkIFpo
-dToNCj4gPiAtIGVuYWJsZSBwY2llIHN1cHBvcnQgb24gaW14NnFkbCBzYWJyZXNkIGFuZCBhc2Jy
-ZWF1dG8gYm9hcmRzLg0KPiA+IC0gc2FicmVzZCBib2FyZCBoYXMgdGhlIHBjaWUgcG93ZXIgb24g
-YW5kIHJlc2V0IGdwaW9zLCBidXQgc2FicmVhdXRvDQo+ID4gZG9lc24ndCBoYXZlIHRoZXNlIHR3
-byBncGlvcy4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IFJpY2hhcmQgWmh1IDxyNjUwMzdAZnJl
-ZXNjYWxlLmNvbT4NCj4gPiAtLS0NCj4gPiAgYXJjaC9hcm0vYm9vdC9kdHMvaW14NnFkbC1zYWJy
-ZWF1dG8uZHRzaSB8IDQgKysrKw0KPiA+ICBhcmNoL2FybS9ib290L2R0cy9pbXg2cWRsLXNhYnJl
-c2QuZHRzaSAgIHwgMiArKw0KPiA+ICAyIGZpbGVzIGNoYW5nZWQsIDYgaW5zZXJ0aW9ucygrKQ0K
-PiA+DQo+ID4gZGlmZiAtLWdpdCBhL2FyY2gvYXJtL2Jvb3QvZHRzL2lteDZxZGwtc2FicmVhdXRv
-LmR0c2kNCj4gPiBiL2FyY2gvYXJtL2Jvb3QvZHRzL2lteDZxZGwtc2FicmVhdXRvLmR0c2kNCj4g
-PiBpbmRleCAwMDlhYmQ2Li5kNjA0MGE1IDEwMDY0NA0KPiA+IC0tLSBhL2FyY2gvYXJtL2Jvb3Qv
-ZHRzL2lteDZxZGwtc2FicmVhdXRvLmR0c2kNCj4gPiArKysgYi9hcmNoL2FybS9ib290L2R0cy9p
-bXg2cWRsLXNhYnJlYXV0by5kdHNpDQo+ID4gQEAgLTQxMCw2ICs0MTAsMTAgQEANCj4gPiAgCX07
-DQo+ID4gIH07DQo+ID4NCj4gPiArJnBjaWUgew0KPiA+ICsJc3RhdHVzID0gIm9rYXkiOw0KPiA+
-ICt9Ow0KPiA+ICsNCj4gPiAgJnB3bTMgew0KPiA+ICAJcGluY3RybC1uYW1lcyA9ICJkZWZhdWx0
-IjsNCj4gPiAgCXBpbmN0cmwtMCA9IDwmcGluY3RybF9wd20zPjsNCj4gPiBkaWZmIC0tZ2l0IGEv
-YXJjaC9hcm0vYm9vdC9kdHMvaW14NnFkbC1zYWJyZXNkLmR0c2kNCj4gPiBiL2FyY2gvYXJtL2Jv
-b3QvZHRzL2lteDZxZGwtc2FicmVzZC5kdHNpDQo+ID4gaW5kZXggZWM0M2RkZS4uYzJkMzIyNCAx
-MDA2NDQNCj4gPiAtLS0gYS9hcmNoL2FybS9ib290L2R0cy9pbXg2cWRsLXNhYnJlc2QuZHRzaQ0K
-PiA+ICsrKyBiL2FyY2gvYXJtL2Jvb3QvZHRzL2lteDZxZGwtc2FicmVzZC5kdHNpDQo+ID4gQEAg
-LTM5Niw2ICszOTYsNyBAQA0KPiA+DQo+ID4gIAkJcGluY3RybF9wY2llOiBwY2llZ3JwIHsNCj4g
-PiAgCQkJZnNsLHBpbnMgPSA8DQo+ID4gKwkJCQlNWDZRRExfUEFEX0VJTV9EMTlfX0dQSU8zX0lP
-MTkJMHg4MDAwMDAwMA0KPiA+ICAJCQkJTVg2UURMX1BBRF9HUElPXzE3X19HUElPN19JTzEyCTB4
-ODAwMDAwMDANCj4gPiAgCQkJPjsNCj4gPiAgCQl9Ow0KPiA+IEBAIC01MDIsNiArNTAzLDcgQEAN
-Cj4gPiAgJnBjaWUgew0KPiA+ICAJcGluY3RybC1uYW1lcyA9ICJkZWZhdWx0IjsNCj4gPiAgCXBp
-bmN0cmwtMCA9IDwmcGluY3RybF9wY2llPjsNCj4gPiArCXBvd2VyLW9uLWdwaW8gPSA8JmdwaW8z
-IDE5IDA+Ow0KPiA+ICAJcmVzZXQtZ3BpbyA9IDwmZ3BpbzcgMTIgMD47DQo+ID4gIAlzdGF0dXMg
-PSAib2theSI7DQo+ID4gIH07DQo+IA0KPiBUaGlzIGh1bmsgaXMgd3JvbmcuIFRoZXJlIGlzIG5v
-ICJwb3dlci1vbi1ncGlvIiBpbiB0aGUgYmluZGluZyBhbnltb3JlLg0KPiBBbHNvIHRoZXJlIGlz
-IGFscmVhZHkgYSBjaGFuZ2UgaW4gU2hhd25zIHRyZWUgdG8gbW9kZWwgdGhpcyBhcyBhIGFsd2F5
-cy1vbg0KPiByZWd1bGF0b3IuIElmIHdlIHJlYWxseSB3YW50IHRvIGNvbnRyb2wgcGNpIGJ1cyBw
-b3dlciB0aGlzIG5lZWRzIHRvIGJlIGRvbmUNCj4gdGhyb3VnaCB0aGlzIHJlZ3VsYXRvciwgbm90
-IHNvbWUgYXJiaXRyYXJ5IGdwaW8gaGFjay4NCj4gDQo+IEFsc28gSSBkb24ndCBzZWUgd2h5IHRo
-aXMgd291bGQgYmUgc3RhYmxlIG1hdGVyaWFsLg0KW1JpY2hhcmRdIFllcywgaXQgaXMuIFRoZSAi
-cG93ZXItb24tZ3BpbyIgaXMgbm90IHJlcXVpcmVkIGFueW1vcmUsIHdvdWxkIGJlIHJlbW92ZWQu
-DQpTdGFibGUga2VybmVsIG1haWwtbGlzdCB3b3VsZCBiZSByZW1vdmVkIHRvby4NCj4gDQo+IFJl
-Z2FyZHMsDQo+IEx1Y2FzDQo+IC0tDQo+IFBlbmd1dHJvbml4IGUuSy4gICAgICAgICAgICAgfCBM
-dWNhcyBTdGFjaCAgICAgICAgICAgICAgICAgfA0KPiBJbmR1c3RyaWFsIExpbnV4IFNvbHV0aW9u
-cyAgIHwgaHR0cDovL3d3dy5wZW5ndXRyb25peC5kZS8gIHwNCg0K
+On Tue, Sep 09, 2014 at 08:26:19AM -0600, Bjorn Helgaas wrote:
+
+> So as long as the DT tells you the ECAM information for each host
+> bridge, that should be sufficient.  The domain number is then just a
+> Linux convenience and is not tied to the platform as it is on ia64.
+
+I think this is right for DT systems - the domain is purely internal
+to the kernel and userspace, it is used to locate the proper host
+bridge driver instance, which contains the proper config accessor (and
+register bases, etc).
+
+AFAIK the main reason to have a DT alias to learn the domain number is
+to make it stable so things like udev/etc can reliably match on the
+PCI location.
+
+This is similar to i2c, etc that use the alias scheme, so IMHO
+whatever they do to assign ID's to drivers should be copied for domain
+numbers.
+
+Jason
