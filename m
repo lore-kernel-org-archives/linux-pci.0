@@ -1,81 +1,162 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:40571 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757740AbaISV7M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Sep 2014 17:59:12 -0400
-Received: by mail-pa0-f44.google.com with SMTP id rd3so892534pab.17
-        for <linux-pci@vger.kernel.org>; Fri, 19 Sep 2014 14:59:11 -0700 (PDT)
-Date: Fri, 19 Sep 2014 15:59:05 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v11 00/10] Support for creating generic PCI host bridges
- from DT
-Message-ID: <20140919215905.GB30239@google.com>
-References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 9 Sep 2014 12:54:55 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Len Brown <lenb@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [Patch v4 05/16] ACPI: Add interfaces to parse IOAPIC ID for
+ IOAPIC hotplug
+In-Reply-To: <1409192561-19744-6-git-send-email-jiang.liu@linux.intel.com>
+Message-ID: <alpine.DEB.2.10.1409091248090.11037@nanos>
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com> <1409192561-19744-6-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 18, 2014 at 02:30:15AM +0100, Liviu Dudau wrote:
-> This is my version 11 of the attempt at adding support for generic PCI host
-> bridge controllers that make use of device tree information to
-> configure themselves. It contains minor cleanups compared with v10 to address
-> the existing comments.
-> ...
-> Catalin Marinas (1):
->   PCI: Introduce generic domain handling for PCI busses.
-> 
-> Liviu Dudau (9):
->   Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
->   PCI: Introduce helper functions to deal with PCI I/O ranges.
->   ARM: Define PCI_IOBASE as the base of virtual PCI IO space.
->   PCI: OF: Fix the conversion of IO ranges into IO resources.
->   PCI: Create pci_host_bridge before its associated bus in
->     pci_create_root_bus.
->   OF: Introduce helper function for getting PCI domain_nr
->   OF: PCI: Add support for parsing PCI host bridge resources from DT
->   PCI: Assign unassigned bus resources in pci_scan_root_bus()
->   PCI: Introduce pci_remap_iospace() for remapping PCI I/O bus resources
->     into CPU space
-> 
->  arch/arm/include/asm/io.h         |   1 +
->  arch/arm/mach-integrator/pci_v3.c |  23 +++---
->  drivers/of/address.c              | 146 ++++++++++++++++++++++++++++++++
->  drivers/of/of_pci.c               | 170 ++++++++++++++++++++++++++++++++++++++
->  drivers/pci/host/pci-tegra.c      |  10 ++-
->  drivers/pci/host/pcie-rcar.c      |  21 +++--
->  drivers/pci/pci.c                 |  33 ++++++++
->  drivers/pci/probe.c               |  46 +++++++----
->  include/asm-generic/io.h          |   2 +-
->  include/asm-generic/pgtable.h     |   4 +
->  include/linux/of_address.h        |  15 +---
->  include/linux/of_pci.h            |  18 ++++
->  include/linux/pci.h               |  24 ++++++
->  13 files changed, 463 insertions(+), 50 deletions(-)
+On Thu, 28 Aug 2014, Jiang Liu wrote:
+>  
+> +static struct acpi_table_madt *madt;
+> +static int read_madt;
 
-I put this on a pci/liviu-generic-v11 branch.  I mentioned a couple things
-in response to the individual patches, so I'm hoping you can send me
-incremental patches to address them.  Then I'll update this branch, rename
-it, and get it into linux-next.
+Pretty lousy file visible variable names.
 
-Bjorn
+So we end up with two copies of the butt ugly 
+
+   if (!read_madt) {
+      .....
+   }
+
+stuff instead of creating a helper function which hides that and do
+
+      madr = get_madt();
+      if (!madt)
+		return ...;
+
+at the call sites.
+
+>  static int map_lapic_id(struct acpi_subtable_header *entry,
+>  		 u32 acpi_id, int *apic_id)
+>  {
+> @@ -64,8 +71,6 @@ static int map_lsapic_id(struct acpi_subtable_header *entry,
+>  static int map_madt_entry(int type, u32 acpi_id)
+>  {
+>  	unsigned long madt_end, entry;
+> -	static struct acpi_table_madt *madt;
+> -	static int read_madt;
+>  	int apic_id = -1;
+>  
+>  	if (!read_madt) {
+> @@ -200,3 +205,90 @@ int acpi_get_cpuid(acpi_handle handle, int type, u32 acpi_id)
+>  	return acpi_map_cpuid(apic_id, acpi_id);
+>  }
+>  EXPORT_SYMBOL_GPL(acpi_get_cpuid);
+> +
+> +#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
+> +static int map_ioapic_id(struct acpi_subtable_header *entry, u32 gsi_base,
+> +			 u64 *phys_addr, int *ioapic_id)
+> +{
+> +	struct acpi_madt_io_apic *ioapic = (struct acpi_madt_io_apic *)entry;
+> +
+> +	if (ioapic->global_irq_base != gsi_base)
+> +		return 0;
+> +
+> +	*phys_addr = ioapic->address;
+> +	*ioapic_id = ioapic->id;
+> +	return 1;
+> +}
+> +
+> +static int map_madt_ioapic_entry(u32 gsi_base, u64 *phys_addr)
+> +{
+> +	struct acpi_subtable_header *hdr;
+> +	unsigned long madt_end, entry;
+> +	int apic_id = -1;
+> +
+> +	if (!read_madt) {
+> +		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
+> +					(struct acpi_table_header **)&madt)))
+> +			madt = NULL;
+> +		read_madt++;
+> +	}
+> +
+> +	if (!madt)
+> +		return apic_id;
+> +
+> +	entry = (unsigned long)madt;
+> +	madt_end = entry + madt->header.length;
+> +
+> +	/* Parse all entries looking for a match. */
+> +	entry += sizeof(struct acpi_table_madt);
+> +	while (entry + sizeof(struct acpi_subtable_header) < madt_end) {
+> +		hdr = (struct acpi_subtable_header *)entry;
+> +		if (hdr->type == ACPI_MADT_TYPE_IO_APIC &&
+> +		    map_ioapic_id(hdr, gsi_base, phys_addr, &apic_id))
+> +			break;
+> +		else
+> +			entry += hdr->length;
+> +	}
+> +
+> +	return apic_id;
+> +}
+> +
+> +static int map_mat_ioapic_entry(acpi_handle handle, u32 gsi_base,
+> +				u64 *phys_addr)
+> +{
+> +	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
+> +	union acpi_object *obj;
+> +	struct acpi_subtable_header *header;
+> +	int apic_id = -1;
+> +
+> +	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_MAT", NULL, &buffer)))
+> +		goto exit;
+> +
+> +	if (!buffer.length || !buffer.pointer)
+> +		goto exit;
+> +
+> +	obj = buffer.pointer;
+> +	if (obj->type != ACPI_TYPE_BUFFER ||
+> +	    obj->buffer.length < sizeof(struct acpi_subtable_header))
+> +		goto exit;
+> +
+> +	header = (struct acpi_subtable_header *)obj->buffer.pointer;
+> +	if (header->type == ACPI_MADT_TYPE_IO_APIC)
+> +		map_ioapic_id(header, gsi_base, phys_addr, &apic_id);
+> +
+> +exit:
+> +	kfree(buffer.pointer);
+> +	return apic_id;
+> +}
+
+
+This stuff really wants proper documentation. The lack of comments is
+just annoying.
+
+> +int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr)
+> +{
+> +	int apic_id;
+> +
+> +	apic_id = map_mat_ioapic_entry(handle, gsi_base, phys_addr);
+> +	if (apic_id == -1)
+> +		apic_id = map_madt_ioapic_entry(gsi_base, phys_addr);
+> +
+> +	return apic_id;
+> +}
+
+Thanks,
+
+	tglx
