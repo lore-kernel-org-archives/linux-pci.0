@@ -1,117 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:37356 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754755AbaI3GQE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 02:16:04 -0400
-Message-ID: <542A4A99.4030204@hp.com>
-Date: Tue, 30 Sep 2014 14:15:53 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <540E5C6C.5060802@oracle.com>
+Date: Tue, 09 Sep 2014 09:48:28 +0800
+From: ethan zhao <ethan.zhao@oracle.com>
 MIME-Version: 1.0
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>
-CC: "Li, Zhen-Hua" <zhen-hual@hp.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Carolyn Wyborny <carolyn.wyborny@intel.com>,
-	Don Skidmore <donald.c.skidmore@intel.com>,
-	Greg Rose <gregory.v.rose@intel.com>,
-	Alex Duyck <alexander.h.duyck@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Mitch Williams <mitch.a.williams@intel.com>,
-	Linux NICS <linux.nics@intel.com>,
-	e1000-devel@lists.sourceforge.net, linda.knippers@hp.com
-Subject: Re: [PATCH 1/1] pci/quirks: fix a dmar fault for intel 82599 card
-References: <1412057394-7186-1-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1412057394-7186-1-git-send-email-zhen-hual@hp.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	gleb@kernel.org, pbonzini@redhat.com, kvm@vger.kernel.org,
+	konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
+	david.vrabel@citrix.com, xen-devel@lists.xenproject.org,
+	alex.williamson@redhat.com, alexander.h.duyck@intel.com,
+	ethan.kernel@gmail.com
+Subject: Re: [PATCH v3 0/4 resend] Introduce device assignment flag operation
+ helper function
+References: <1407476167-18935-1-git-send-email-ethan.zhao@oracle.com> <20140905171522.GA8080@google.com> <20140908170801.GP8080@google.com>
+In-Reply-To: <20140908170801.GP8080@google.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add Joerg to CC list. For it is also related to iommu module.
+Bjorn,
+    Thanks, will fix the building issue for new version and resend.
 
-Joerg,
-There was a try for this dmar fault,
-	https://lkml.org/lkml/2014/8/18/118
+Ethan
 
-This patch is trying to fix the same thing.
-
-
-Zhenhua
-On 09/30/2014 02:09 PM, Li, Zhen-Hua wrote:
-> On a HP system with Intel Corporation 82599 ethernet adapter, when kernel
-> crashed and the kdump kernel boots with intel_iommu=on, there may be some
-> unexpected DMA requests on this adapter, which will cause DMA Remapping
-> faults like:
->      dmar: DRHD: handling fault status reg 102
->      dmar: DMAR:[DMA Read] Request device [41:00.0] fault addr fff81000
->      DMAR:[fault reason 01] Present bit in root entry is clear
+On 2014/9/9 1:08, Bjorn Helgaas wrote:
+> On Fri, Sep 05, 2014 at 11:15:22AM -0600, Bjorn Helgaas wrote:
+>> On Fri, Aug 08, 2014 at 01:36:03PM +0800, Ethan Zhao wrote:
+>>> This patch set introduces three PCI device flag operation helper functions
+>>> when set pci device PF/VF to assigned or deassigned status also check it.
+>>> and patch 2,3,4 apply these helper functions to KVM,XEN and PCI.
+>>>
+>>> v2: simplify unnecessory ternary operation in function pci_is_dev_assigned().
+>>> v3: amend helper function naming.
+>>>
+>>> Appreciate suggestion from
+>>> alex.williamson@redhat.com,
+>>> david.vrabel@citrix.com,
+>>> alexander.h.duyck@intel.com
+>>>
+>>> Resend for v3.16 building.
+>>>
+>>> Thanks,
+>>> Ethan
+>>> ---
+>>> Ethan Zhao (4):
+>>>    PCI: introduce helper functions for device flag operation
+>>>    KVM: use pci device flag operation helper functions
+>>>    xen-pciback: use pci device flag operation helper function
+>>>    PCI: use device flag operation helper function in iov.c
+>>>
+>>>   drivers/pci/iov.c                  |    2 +-
+>>>   drivers/xen/xen-pciback/pci_stub.c |    4 ++--
+>>>   include/linux/pci.h                |   13 +++++++++++++
+>>>   virt/kvm/assigned-dev.c            |    2 +-
+>>>   virt/kvm/iommu.c                   |    4 ++--
+>>>   5 files changed, 19 insertions(+), 6 deletions(-)
+>>>
+>> Applied to pci/virtualization for v3.18, thanks!
+> I dropped these because of build errors from the kbuild-test robot.  Fix
+> and resend if you still want them.
 >
-> Analysis for this bug:
->
-> The present bit is set in this function:
->
-> static struct context_entry * device_to_context_entry(
-> 		struct intel_iommu *iommu, u8 bus, u8 devfn)
-> {
->      ......
->                  set_root_present(root);
->      ......
-> }
->
-> Calling tree:
-> ixgbe_open
->      ixgbe_setup_tx_resources
->          intel_alloc_coherent
->              __intel_map_single
->                  domain_context_mapping
->                      domain_context_mapping_one
->                          device_to_context_entry
->
-> This means, the present bit in root entry will not be set until the device
->   driver is loaded.
->
-> But in the kdump kernel, some hardware device does not know the OS is the
->   second kernel and the drivers should be loaded again, this causes there are
->   some unexpected DMA requsts on this device when it has not been initialized,
->   and then the DMA Remapping errors come.
->
-> To fix this DMAR fault, we need to reset the bus that this device on. Reset
->   the device itself does not work.
->
-> There also was a discussion:
-> https://lkml.org/lkml/2013/5/14/9
->
-> Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
-> ---
->   drivers/pci/quirks.c | 11 +++++++++++
->   1 file changed, 11 insertions(+)
->
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 80c2d01..5198af3 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -25,6 +25,7 @@
->   #include <linux/sched.h>
->   #include <linux/ktime.h>
->   #include <asm/dma.h>	/* isa_dma_bridge_buggy */
-> +#include <linux/crash_dump.h>
->   #include "pci.h"
->
->   /*
-> @@ -3832,3 +3833,13 @@ void pci_dev_specific_enable_acs(struct pci_dev *dev)
->   		}
->   	}
->   }
-> +
-> +#ifdef CONFIG_CRASH_DUMP
-> +void quirk_reset_buggy_devices(struct pci_dev *dev)
-> +{
-> +	if (unlikely(is_kdump_kernel()))
-> +		pci_try_reset_bus(dev->bus);
-> +}
-> +DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_INTEL, 0x10f8,
-> +		PCI_CLASS_NETWORK_ETHERNET, 8, quirk_reset_buggy_devices);
-> +#endif
->
+> Bjorn
 
