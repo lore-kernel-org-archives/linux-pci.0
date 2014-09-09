@@ -1,124 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:53526 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753034AbaIHN4W (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 09:56:22 -0400
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v10 10/10] PCI: Introduce pci_remap_iospace() for remapping PCI I/O bus resources into CPU space
-Date: Mon,  8 Sep 2014 14:54:32 +0100
-Message-Id: <1410184472-17630-11-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
+Received: from mail-bl2on0114.outbound.protection.outlook.com ([65.55.169.114]:37020
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756408AbaIILP3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Sep 2014 07:15:29 -0400
+Message-ID: <540F51F1.1060909@freescale.com>
+Date: Tue, 9 Sep 2014 19:16:01 +0000
+From: Lian Minghuan-B31939 <B31939@freescale.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
+	Roy Zang <tie-fei.zang@freescale.com>
+Subject: Re: =?UTF-8?B?562U5aSNOiBbUEFUQ0ggMi8yXSBQQ0k6IExheWVyc2NhcGU6IEE=?=
+ =?UTF-8?B?ZGQgTGF5ZXJzY2FwZSBQQ0llIGRyaXZlcg==?=
+References: <1409856338-1730-1-git-send-email-Minghuan.Lian@freescale.com>
+ <6844751.zBSvS2zU47@wuerfel> <540F4B23.5040209@freescale.com>
+ <60096763.M59cqLJ4gm@wuerfel>
+In-Reply-To: <60096763.M59cqLJ4gm@wuerfel>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce a default implementation for remapping PCI bus I/O resources
-onto the CPU address space. Architectures with special needs may
-provide their own version, but most should be able to use this one.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Rob Herring <robh+dt@kernel.org>
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
----
- drivers/pci/pci.c             | 33 +++++++++++++++++++++++++++++++++
- include/asm-generic/pgtable.h |  4 ++++
- include/linux/pci.h           |  3 +++
- 3 files changed, 40 insertions(+)
+On 2014年09月09日 10:50, Arnd Bergmann wrote:
+> On Tuesday 09 September 2014 18:46:59 Lian Minghuan-B31939 wrote:
+>> On 2014年09月09日 09:56, Arnd Bergmann wrote:
+>>> On Tuesday 09 September 2014 17:25:57 Lian Minghuan-B31939 wrote:
+>>>> [Minghuan] I discussed with my colleague. They worry about performance
+>>>> degradation if using regmap API,
+>>>> because there are some fast device use scfg. We tend to use a simple way
+>>>> to map andread/write scfg directly.
+>>> I see. In this case, I would probably create a separate msi controller
+>>> driver that owns the "fsl,ls1021a-scfg" device, and is referenced
+>>> through the "msi-parent" property in the pcie controller.
+>>>
+>>> You can use of_pci_find_msi_chip_by_node() to get the msi_chip
+>>> instance and then connect that to your pci host. This will also
+>>> take care of the case where you may want to use the main GICv3
+>>> on a future SoC.
+>> [Minghuan] There is something wrong with LS1021A MSI hardware that it
+>> only supports one interrupt not 32 interrupts.  Now, I do not want to
+>> create a separate msi controller driver just for incorrect hardware.
+>> I may provide complete MSI driver for the new hardware when it is ready.
+> Would you just leave out MSI support for the LS1021A PCIe variant?
+> I guess that's fine because all device drivers should also support
+> legacy interrupts and there is no performance gain in MSI in this
+> case.
+[Minghuan] I have added MSI support for LS1021A PCIe just reserved 31 
+interrupts as used.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 2c9ac70..654b44c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2704,6 +2704,39 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
- }
- EXPORT_SYMBOL(pci_request_regions_exclusive);
- 
-+/**
-+ *	pci_remap_iospace - Remap the memory mapped I/O space
-+ *	@res: Resource describing the I/O space
-+ *	@phys_addr: physical address where the range will be mapped.
-+ *
-+ *	Remap the memory mapped I/O space described by the @res
-+ *	into the CPU physical address space. Only architectures
-+ *	that have memory mapped IO defined (and hence PCI_IOBASE)
-+ *	should call this function.
-+ */
-+int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
-+{
-+	int err = -ENODEV;
-+
-+#ifdef PCI_IOBASE
-+	if (!(res->flags & IORESOURCE_IO))
-+		return -EINVAL;
-+
-+	if (res->end > IO_SPACE_LIMIT)
-+		return -EINVAL;
-+
-+	err = ioremap_page_range(res->start + (unsigned long)PCI_IOBASE,
-+				res->end + 1 + (unsigned long)PCI_IOBASE,
-+				phys_addr, pgprot_device(PAGE_KERNEL));
-+#else
-+	/* this architecture does not have memory mapped I/O space,
-+	   so this function should never be called */
-+	WARN_ON(1);
-+#endif
-+
-+	return err;
-+}
-+
- static void __pci_set_master(struct pci_dev *dev, bool enable)
- {
- 	u16 old_cmd, cmd;
-diff --git a/include/asm-generic/pgtable.h b/include/asm-generic/pgtable.h
-index 53b2acc..977e545 100644
---- a/include/asm-generic/pgtable.h
-+++ b/include/asm-generic/pgtable.h
-@@ -249,6 +249,10 @@ static inline int pmd_same(pmd_t pmd_a, pmd_t pmd_b)
- #define pgprot_writecombine pgprot_noncached
- #endif
- 
-+#ifndef pgprot_device
-+#define pgprot_device pgprot_noncached
-+#endif
-+
- /*
-  * When walking page tables, get the address of the next boundary,
-  * or the end address of the range if that comes earlier.  Although no
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a494e5d..fc8c529 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1100,6 +1100,9 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
- 						  resource_size_t),
- 			void *alignf_data);
- 
-+
-+int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
-+
- static inline dma_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
- {
- 	struct pci_bus_region region;
--- 
-2.0.4
+> 	Arnd
 
