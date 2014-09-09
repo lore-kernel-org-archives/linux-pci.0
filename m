@@ -1,61 +1,84 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.187]:60391 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753986AbaIIJQa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Sep 2014 05:16:30 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Rob Herring <robherring2@gmail.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFT v2 16/24] x86, irq: Directly call native_compose_msi_msg() for DMAR IRQ
-Date: Fri, 26 Sep 2014 22:02:17 +0800
-Message-Id: <1411740145-30626-17-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI domain_nr
+Date: Tue, 09 Sep 2014 11:16:04 +0200
+Message-ID: <3780051.0eHpCN6UC9@wuerfel>
+In-Reply-To: <20140909084621.GS27864@e106497-lin.cambridge.arm.com>
+References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com> <540E960D.7080408@huawei.com> <20140909084621.GS27864@e106497-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DMAR interrupt won't be remapped by interrupt remapping hardware,
-so directly call native_compose_msi_msg() for DMAR IRQ to compose MSI
-message data. This will help to simplify MSI code later.
+On Tuesday 09 September 2014 09:46:21 Liviu Dudau wrote:
+> On Tue, Sep 09, 2014 at 06:54:21AM +0100, Yijing Wang wrote:
+> > >>> on new requests. This function gets called quite a lot and I'm trying not to
+> > >>> make it too heavy weight.
+> > >>
+> > >> Generally, nothing should be accessing the same DT value frequently.
+> > >> It should get cached somewhere.
+> > >>
+> > > 
+> > > The problem appears for DTs that don't have the pci-domain info. Then the cached
+> > > value is left at the default non-valid value and attempts to rescan the DT will
+> > > be made every time the function is called.
+> > > 
+> > >> I don't really understand how domains are used so it's hard to provide
+> > >> a recommendation here. Do domains even belong in the DT?
+> > > 
+> > > ACPI calls them segments and the way Bjorn explained it to me at some moment was
+> > > that it was an attempt to split up a bus in different groups (or alternatively,
+> > > merge a few busses together). To be honest I haven't seen systems where the domain
+> > > is anything other than zero, but JasonG (or maybe Benjamin) were floating an
+> > > idea of using the domain number to identify physical slots.
+> > 
+> > PCI domain(or named segment) is provided by firmware, in ACPI system, we evaluated it
+> > by method "_SEG". in IA64 with ACPI, PCI hostbridge driver retrieves the domain from ACPI,
+> > if it's absent, the default domain is zero. So I wonder why in DTS, if it's absent, we get
+> > a auto increment domain value.
+> 
+> Because you can have more than one hostbridge (rare, but not impossible) and unless you
+> want to join the two segments, you might want to give it a different domain.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/msi.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+I think you misunderstood the question. The difference is that in ACPI you
+are required to specify the domain, while in DT it is optional with your
+implementation.
 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 7a6c2710de40..514e19e19b99 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -391,12 +391,10 @@ static struct irq_chip dmar_msi_type = {
- 
- int arch_setup_dmar_msi(unsigned int irq)
- {
--	int ret;
- 	struct msi_msg msg;
-+	struct irq_cfg *cfg = irq_cfg(irq);
- 
--	ret = msi_compose_msg(NULL, irq, &msg, -1);
--	if (ret < 0)
--		return ret;
-+	native_compose_msi_msg(NULL, irq, cfg->dest_apicid, &msg, -1);
- 	dmar_msi_write(irq, &msg);
- 	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
- 				      "edge");
--- 
-1.7.10.4
+I think in general it would be nice if we could mandate that in DT you also
+have to always provide a domain number, however the problem is that we can't
+change the existing DTB files that people are using that do not specify a
+domain.
+
+We could possibly make this an architecture specific setting though and
+mandate that all ARM64 platforms have to set it, while ARM32 does not need
+it.
+
+	Arnd
 
