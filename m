@@ -1,84 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:58798 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754945AbaIBTWW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Sep 2014 15:22:22 -0400
+Received: from comal.ext.ti.com ([198.47.26.152]:38050 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751150AbaIIWu3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Sep 2014 18:50:29 -0400
+Message-ID: <540F8425.70304@ti.com>
+Date: Tue, 9 Sep 2014 18:50:13 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20140827205129.GA25227@kroah.com>
-References: <1409144277-23379-1-git-send-email-ricardo.ribalda@gmail.com>
- <20140827202301.GA13800@kroah.com> <20140827205129.GA25227@kroah.com>
-From: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
-Date: Tue, 2 Sep 2014 21:22:01 +0200
-Message-ID: <CAPybu_37y9XoMp+qfvo_qsJYQhJQiOpPsrXtyC5ofD2SMbinwg@mail.gmail.com>
-Subject: Re: [PATCH] pci/pci-sysfs: Set pci interface in uppercase
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arm-kernel@lists.infradead.org>, <robh+dt@kernel.org>,
+	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<bhelgaas@google.com>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] PCI: keystone: update to support multiple pci
+ ports
+References: <1410293835-13050-1-git-send-email-m-karicheri2@ti.com> <9042477.aRbAhpkfQ5@wuerfel> <540F75DF.5050904@ti.com> <3967092.l9bxcqMaSa@wuerfel>
+In-Reply-To: <3967092.l9bxcqMaSa@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hej Bjorn
-
-I have seen that you have updated your pci tree without this patch. Is
-there something wrong with it?
-
-If you are already considering it, sorry for the mail, but I wanted to
-make sure that it is in 3.17 and then back ported.
-
-
-Thanks!!
-
-On Wed, Aug 27, 2014 at 10:51 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> On Wed, Aug 27, 2014 at 01:23:01PM -0700, Greg KH wrote:
->> On Wed, Aug 27, 2014 at 02:57:57PM +0200, Ricardo Ribalda Delgado wrote:
->> > There is a missmatch between the way file2alias generates the modalias
->> > and the way the pci driver generates it.
->> >
->> > Some implementations of modprobe will fail to load the driver for a pci
->> > device automatically when the pci interface is defined on the driver. As
->> > one will be in uppercase and the other in lowercase.
->> >
->> > Fortunatelly not many drivers define this.
->> >
->> > Signed-off-by: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
->> > ---
->> >  drivers/pci/pci-sysfs.c | 2 +-
->> >  1 file changed, 1 insertion(+), 1 deletion(-)
->> >
->> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
->> > index 9ff0a90..76ef791 100644
->> > --- a/drivers/pci/pci-sysfs.c
->> > +++ b/drivers/pci/pci-sysfs.c
->> > @@ -177,7 +177,7 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
->> >  {
->> >     struct pci_dev *pci_dev = to_pci_dev(dev);
->> >
->> > -   return sprintf(buf, "pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x\n",
->> > +   return sprintf(buf, "pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02X\n",
->> >                    pci_dev->vendor, pci_dev->device,
->> >                    pci_dev->subsystem_vendor, pci_dev->subsystem_device,
->> >                    (u8)(pci_dev->class >> 16), (u8)(pci_dev->class >> 8),
+On 09/09/2014 05:52 PM, Arnd Bergmann wrote:
+> On Tuesday 09 September 2014 17:49:19 Murali Karicheri wrote:
+>> Actually this is an inteded. The vendor ID is in a register indicated by
+>> reg offset and as per the device spec, it needs to be read and updated
+>> by the software. Now since multiple instances of PCI device needs to be
+>> read the same register, the reading happens in the probe() and same is
+>> unmapped after that.
 >>
->> As said in the other thread about this issue, no, this code has been
->> here for over 9 years just fine.  Please fix your userspace code that is
->> trying to compare hex values as a string and not a numeric value, that
->> is the stuff that is wrong, not the kernel.
+>> +       ks_pcie->device_id = readl(reg_p)>>  16;
+>> +       devm_iounmap(dev, reg_p);
+>> +       devm_release_mem_region(dev, res->start, resource_size(res));
+>>
+>> Afetr that in ks_pcie_host_init(), it update the device_id in the RC's
+>> config space.
 >
-> Oh wait, I see what you are worried about now, the mis-match for just
-> the upper bits of the class value.
->
-> Yeah, that's a bug, sorry about that, a 9+ year old one, nice catch :)
->
-> Bjorn, feel free to apply this, sorry for the earlier objection.  Also
-> please mark it for stable tree inclusion so this gets backported
-> properly.
->
-> thanks,
->
-> greg k-h
+> I'm not sure I understand the purpose of this. Do you mean you read
+> the vendor/device ID of whichever device happens to get probed first
+> and then program the same ID into all other devices as well?
 
+My mistake. It is the device ID, not vendor ID. The PCI driver supports 
+PCI h/w on K2HK, K2E and K2L SoCs for which PCI device IDs are assigned as
 
++#define PCIE_RC_K2HK		0xb008
++#define PCIE_RC_K2E		0xb009
++#define PCIE_RC_K2L		0xb00a
++
 
--- 
-Ricardo Ribalda
+and the same driver code runs on all these h/w. The device ID is not 
+filled in by default by the h/w, in the config space of the RC at offset 
+1000h "VENDOR_DEVICE_ID Vendor and Device Identification Register". 
+Same is available in a seperate SoC register whose offset is specified 
+by index 2. This is read by driver and updated in the config space. The 
+Vendor ID is however set by default.
+
+There is a mrrs PCI quirk required for Keystone PCI which depends on 
+this vendor ID to be filled correctly as it match vendor id/ device id 
+of the bridge device to apply the quirk.
+
+Hope this clarify your question.
+
+Murali
+
+>
+> What if the order changes between two boots? Why does the vendor/device
+> ID of the host bridge even matter at all?
+>
+> 	Arnd
+
