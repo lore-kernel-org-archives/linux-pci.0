@@ -1,90 +1,140 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC Part2 v1 06/21] x86, MSI: Use new irqdomain interfaces to allocate/free IRQ
-Date: Thu, 11 Sep 2014 22:03:33 +0800
-Message-Id: <1410444228-3134-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:58814 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751246AbaIISfH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Sep 2014 14:35:07 -0400
+MIME-Version: 1.0
+Reply-To: rajatxjain@gmail.com
+In-Reply-To: <20140909053808.GQ8080@google.com>
+References: <53FFA54D.9000907@gmail.com>
+	<CAErSpo5_WMUmnTHpPZt+j04VZoiW1pthQoGV90A5BDQpQgjwOQ@mail.gmail.com>
+	<54065208.3080309@gmail.com>
+	<20140909053808.GQ8080@google.com>
+Date: Tue, 9 Sep 2014 11:35:06 -0700
+Message-ID: <CAA93t1p2PoSCTiXsp8QnDCDPQA=BbtWGPq9a5-JvsXyz2ZKvuA@mail.gmail.com>
+Subject: Re: [PATCH v2] pci/probe: Enable CRS for root port if it is supported
+From: Rajat Jain <rajatxjain@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Richard Yang <weiyang@linux.vnet.ibm.com>,
+	Matthew Wilcox <matthew.r.wilcox@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ for MSI, so we could
-kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+On Mon, Sep 8, 2014 at 10:38 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Sep 02, 2014 at 04:26:00PM -0700, Rajat Jain wrote:
+>>
+>> As per the PCIe spec, an endpoint may return the configuration cycles
+>> with CRS if it is not yet fully ready to be accessed. If the CRS visibility
+>> is not enabled at the root port, the spec leaves the retry behaviour open
+>> to implementation in such a case. The Intel root ports have chosen to retry
+>> endlessly in this situation. Thus, the root controller may "hang" (repeatedly
+>> retrying the configuration requests until it gets a status other than CRS) if
+>> a device returns CRS for a long time. This can cause a broken endpoint to bring
+>> down the whole PCI hierarchy.
+>>
+>> This was recently known to cause problems on Intel systems and
+>> was discussed here:
+>> http://marc.info/?t=140926298500002&r=1&w=2
+>>
+>> Ref1:
+>> https://www.pcisig.com/specifications/pciexpress/ECN_CRS_Software_Visibility_No27.pdf
+>>
+>> Ref2:
+>> PCIe spec V3.0, pg119, pg127 for "Configuration Request Retry Status"
+>>
+>> Thus enable the CRS visibility for the root ports that support it. This
+>> patch reverts the following commit, but enables CRS visibility only
+>> when the root port supports it:
+>>
+>> ad7edfe04908 ("[PCI] Do not enable CRS Software Visibility by default")
+>>
+>> (Linus' response: http://marc.info/?l=linux-pci&m=140968622520192&w=2)
+>>
+>> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+>> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+>> Signed-off-by: Guenter Roeck <groeck@juniper.net>
+>
+> I put this and the "only look at Vendor ID" patch on a pci/enumeration
+> branch [1].  I rewrote the changelogs to reflect my understanding of what's
+> going on, so probably the real truth is somewhere between your original and
+> mine.  Let me know what should be fixed.
+>
+> We should figure out an easy way for Josh to test these.  Ideally, he could
+> test the second patch by itself first, then both together.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/msi.c |   14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+I just provided the 2 images to Josh:
 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index fb45663395ca..2439d383c10c 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -14,6 +14,7 @@
- #include <linux/dmar.h>
- #include <linux/hpet.h>
- #include <linux/msi.h>
-+#include <linux/irqdomain.h>
- #include <asm/msidef.h>
- #include <asm/hpet.h>
- #include <asm/hw_irq.h>
-@@ -145,23 +146,20 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- {
- 	struct msi_desc *msidesc;
--	unsigned int irq;
--	int node, ret;
-+	int irq, ret;
- 
- 	/* Multiple MSI vectors only supported with interrupt remapping */
- 	if (type == PCI_CAP_ID_MSI && nvec > 1)
- 		return 1;
- 
--	node = dev_to_node(&dev->dev);
--
- 	list_for_each_entry(msidesc, &dev->msi_list, list) {
--		irq = irq_alloc_hwirq(node);
--		if (!irq)
-+		irq = irq_domain_alloc_irqs(NULL, -1, 1, NUMA_NO_NODE, NULL);
-+		if (irq <= 0)
- 			return -ENOSPC;
- 
- 		ret = setup_msi_irq(dev, msidesc, irq, 0);
- 		if (ret < 0) {
--			irq_free_hwirq(irq);
-+			irq_domain_free_irqs(irq, 1);
- 			return ret;
- 		}
- 
-@@ -171,7 +169,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 
- void native_teardown_msi_irq(unsigned int irq)
- {
--	irq_free_hwirq(irq);
-+	irq_domain_free_irqs(irq, 1);
- }
- 
- #ifdef CONFIG_DMAR_TABLE
--- 
-1.7.10.4
+1) An image with both the patches.
+2) An image with just the patch 2 i.e. "Enable CRS visibility" patch.
 
+Lets hope that results tally with our expectations.
+
+Thanks,
+
+Rajat
+
+
+>
+> [1] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/enumeration
+>
+>> ---
+>> v2: Remove the white list, that was enabling the CRS for certain known Intel systems.
+>>     Rather now enable it for all systems that support this capability.
+>> v1: Enable CRS for only some given Intel systems (maintain a whitelist)
+>>
+>>  drivers/pci/probe.c           |   13 +++++++++++++
+>>  include/uapi/linux/pci_regs.h |    1 +
+>>  2 files changed, 14 insertions(+)
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index e3cf8a2..3c4c35c 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -740,6 +740,17 @@ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+>>  }
+>>  EXPORT_SYMBOL(pci_add_new_bus);
+>>
+>> +static void pci_enable_crs(struct pci_dev *pdev)
+>> +{
+>> +     u16 root_cap = 0;
+>> +
+>> +     /* Enable CRS Software visibility if supported */
+>> +     pcie_capability_read_word(pdev, PCI_EXP_RTCAP, &root_cap);
+>> +     if (root_cap & PCI_EXP_RTCAP_CRSVIS)
+>> +             pcie_capability_set_word(pdev, PCI_EXP_RTCTL,
+>> +                                      PCI_EXP_RTCTL_CRSSVE);
+>> +}
+>> +
+>>  /*
+>>   * If it's a bridge, configure it and scan the bus behind it.
+>>   * For CardBus bridges, we don't scan behind as the devices will
+>> @@ -787,6 +798,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+>>       pci_write_config_word(dev, PCI_BRIDGE_CONTROL,
+>>                             bctl & ~PCI_BRIDGE_CTL_MASTER_ABORT);
+>>
+>> +     pci_enable_crs(dev);
+>> +
+>>       if ((secondary || subordinate) && !pcibios_assign_all_busses() &&
+>>           !is_cardbus && !broken) {
+>>               unsigned int cmax;
+>> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+>> index 30db069..a75106d 100644
+>> --- a/include/uapi/linux/pci_regs.h
+>> +++ b/include/uapi/linux/pci_regs.h
+>> @@ -552,6 +552,7 @@
+>>  #define  PCI_EXP_RTCTL_PMEIE 0x0008  /* PME Interrupt Enable */
+>>  #define  PCI_EXP_RTCTL_CRSSVE        0x0010  /* CRS Software Visibility Enable */
+>>  #define PCI_EXP_RTCAP                30      /* Root Capabilities */
+>> +#define  PCI_EXP_RTCAP_CRSVIS        0x0001  /* CRS software visibility capability */
+>>  #define PCI_EXP_RTSTA                32      /* Root Status */
+>>  #define PCI_EXP_RTSTA_PME    0x00010000 /* PME status */
+>>  #define PCI_EXP_RTSTA_PENDING        0x00020000 /* PME pending */
+>> --
+>> 1.7.9.5
