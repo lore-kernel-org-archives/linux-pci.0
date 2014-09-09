@@ -1,52 +1,44 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.187]:57760 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751903AbaIIVwq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Sep 2014 17:52:46 -0400
 From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH v12 10/12] PCI: Assign unassigned bus resources in pci_scan_root_bus()
-Date: Mon, 29 Sep 2014 20:18:02 +0200
-Message-ID: <6332476.od04BfvKGr@wuerfel>
-In-Reply-To: <54287AA5.3060408@amd.com>
-References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com> <CAErSpo5DR+TPYXBWGKRj9SRPjsbJ6kjZmAH1AXT12txEjGdZGQ@mail.gmail.com> <54287AA5.3060408@amd.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: linux-arm-kernel@lists.infradead.org, robh+dt@kernel.org,
+	pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	bhelgaas@google.com, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] PCI: keystone: update to support multiple pci ports
+Date: Tue, 09 Sep 2014 23:52:34 +0200
+Message-ID: <3967092.l9bxcqMaSa@wuerfel>
+In-Reply-To: <540F75DF.5050904@ti.com>
+References: <1410293835-13050-1-git-send-email-m-karicheri2@ti.com> <9042477.aRbAhpkfQ5@wuerfel> <540F75DF.5050904@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday 28 September 2014 16:16:21 Suravee Suthikulpanit wrote:
-> >
-> > I'm not opposed to it, but I have the same question as for setting up
-> > the domain: how does pci_scan_root_bus() learn what to assign to
-> > bus->msi?  It currently only gets a "void *sysdata" so there's no
-> > obvious place to put it there.  You could add a pcibios interface to
-> > retrieve it, I suppose, but I'm starting to get uncomfortable with
-> > adding more of those because we have such a mess of them already.
-> >
+On Tuesday 09 September 2014 17:49:19 Murali Karicheri wrote:
+> Actually this is an inteded. The vendor ID is in a register indicated by
+> reg offset and as per the device spec, it needs to be read and updated 
+> by the software. Now since multiple instances of PCI device needs to be 
+> read the same register, the reading happens in the probe() and same is 
+> unmapped after that.
 > 
-> [Suravee] Liviu and I had a talk during Linaro Connect, and we came up
-> with a new binding for the pcie controller called "msi-parent" which is
-> supposed to contain phandle to the corresponded msi-controller.
+> +       ks_pcie->device_id = readl(reg_p) >> 16;
+> +       devm_iounmap(dev, reg_p);
+> +       devm_release_mem_region(dev, res->start, resource_size(res));
+> 
+> Afetr that in ks_pcie_host_init(), it update the device_id in the RC's 
+> config space.
 
-Is this based on the property that we have in the pci-mvebu driver?
+I'm not sure I understand the purpose of this. Do you mean you read
+the vendor/device ID of whichever device happens to get probed first
+and then program the same ID into all other devices as well?
 
-I hope this is meant to be compatible so we can share the implementation.
+What if the order changes between two boots? Why does the vendor/device
+ID of the host bridge even matter at all?
 
 	Arnd
