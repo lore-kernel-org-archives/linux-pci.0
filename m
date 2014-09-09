@@ -1,94 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:34395 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754306AbaIHRDg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 13:03:36 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <jgunthorpe@obsidianresearch.com>
-CC: Murali Karicheri <m-karicheri2@ti.com>
-Subject: [PATCH - v4] PCI: keystone: add a pci quirk to limit mrrs
-Date: Mon, 8 Sep 2014 13:03:34 -0400
-Message-ID: <1410195814-30414-1-git-send-email-m-karicheri2@ti.com>
+Received: from [217.140.108.86] ([217.140.108.86]:60864 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751744AbaIJQ3B (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Sep 2014 12:29:01 -0400
+Date: Tue, 9 Sep 2014 12:20:54 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Rob Herring <robherring2@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI
+ domain_nr
+Message-ID: <20140909112054.GD29639@arm.com>
+References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
+ <540E960D.7080408@huawei.com>
+ <20140909084621.GS27864@e106497-lin.cambridge.arm.com>
+ <3780051.0eHpCN6UC9@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3780051.0eHpCN6UC9@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Keystone PCI controller has a limitation that memory read request
-size must not exceed 256 bytes. This is a hardware limitation and
-add a quirk to force this limit on all downstream devices by
-updating mrrs.
+On Tue, Sep 09, 2014 at 10:16:04AM +0100, Arnd Bergmann wrote:
+> On Tuesday 09 September 2014 09:46:21 Liviu Dudau wrote:
+> > On Tue, Sep 09, 2014 at 06:54:21AM +0100, Yijing Wang wrote:
+> > > >>> on new requests. This function gets called quite a lot and I'm trying not to
+> > > >>> make it too heavy weight.
+> > > >>
+> > > >> Generally, nothing should be accessing the same DT value frequently.
+> > > >> It should get cached somewhere.
+> > > >>
+> > > > 
+> > > > The problem appears for DTs that don't have the pci-domain info. Then the cached
+> > > > value is left at the default non-valid value and attempts to rescan the DT will
+> > > > be made every time the function is called.
+> > > > 
+> > > >> I don't really understand how domains are used so it's hard to provide
+> > > >> a recommendation here. Do domains even belong in the DT?
+> > > > 
+> > > > ACPI calls them segments and the way Bjorn explained it to me at some moment was
+> > > > that it was an attempt to split up a bus in different groups (or alternatively,
+> > > > merge a few busses together). To be honest I haven't seen systems where the domain
+> > > > is anything other than zero, but JasonG (or maybe Benjamin) were floating an
+> > > > idea of using the domain number to identify physical slots.
+> > > 
+> > > PCI domain(or named segment) is provided by firmware, in ACPI system, we evaluated it
+> > > by method "_SEG". in IA64 with ACPI, PCI hostbridge driver retrieves the domain from ACPI,
+> > > if it's absent, the default domain is zero. So I wonder why in DTS, if it's absent, we get
+> > > a auto increment domain value.
+> > 
+> > Because you can have more than one hostbridge (rare, but not impossible) and unless you
+> > want to join the two segments, you might want to give it a different domain.
+> 
+> I think you misunderstood the question. The difference is that in ACPI you
+> are required to specify the domain, while in DT it is optional with your
+> implementation.
+> 
+> I think in general it would be nice if we could mandate that in DT you also
+> have to always provide a domain number, however the problem is that we can't
+> change the existing DTB files that people are using that do not specify a
+> domain.
+> 
+> We could possibly make this an architecture specific setting though and
+> mandate that all ARM64 platforms have to set it, while ARM32 does not need
+> it.
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
----
-  -v4: re-send removing extra lines
-  -v3: added check for vendor id and use pci_matc_id() to do matching
-  -v2: made the quirk happens after tuning
-  -v1: changed printk to indicate PCI bdf
+We can assume that if a domain is not specified and there is a single
+top level PCIe node, the domain defaults to 0. Are there any arm32
+platforms that require multiple domains (and do not specify a number in
+the DT)?
 
- drivers/pci/host/pci-keystone.c |   45 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 45 insertions(+)
-
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-index c1cfaef..ff8ed25 100644
---- a/drivers/pci/host/pci-keystone.c
-+++ b/drivers/pci/host/pci-keystone.c
-@@ -42,8 +42,53 @@
- /* DEV_STAT_CTRL */
- #define PCIE_CAP_BASE		0x70
- 
-+/* PCIE controller device IDs */
-+#define PCIE_RC_K2HK		0xb008
-+#define PCIE_RC_K2E		0xb009
-+#define PCIE_RC_K2L		0xb00a
-+
- #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
- 
-+static void quirk_limit_mrrs(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus = dev->bus;
-+	struct pci_dev *bridge = bus->self;
-+	static const struct pci_device_id rc_pci_devids[] = {
-+		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2HK),
-+		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
-+		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2E),
-+		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
-+		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2L),
-+		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
-+		{ 0, },
-+	};
-+
-+	if (pci_is_root_bus(bus))
-+		return;
-+
-+	/* look for the host bridge */
-+	while (!pci_is_root_bus(bus)) {
-+		bridge = bus->self;
-+		bus = bus->parent;
-+	}
-+
-+	if (bridge) {
-+		/*
-+		 * Keystone PCI controller has a h/w limitation of
-+		 * 256 bytes maximum read request size. It can't handle
-+		 * anything higher than this. So force this limit on
-+		 * all downstream devices
-+		 */
-+		if (pci_match_id(rc_pci_devids, bridge)) {
-+			if (pcie_get_readrq(dev) > 256) {
-+				dev_info(&dev->dev, "limiting mrrs to 256\n");
-+				pcie_set_readrq(dev, 256);
-+			}
-+		}
-+	}
-+}
-+DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
-+
- static int ks_pcie_establish_link(struct keystone_pcie *ks_pcie)
- {
- 	struct pcie_port *pp = &ks_pcie->pp;
 -- 
-1.7.9.5
-
+Catalin
