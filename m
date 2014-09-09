@@ -1,131 +1,136 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC Part2 v1 09/21] x86, dmar: Use new irqdomain interfaces to allocate/free IRQ
-Date: Thu, 11 Sep 2014 22:03:36 +0800
-Message-Id: <1410444228-3134-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:51782 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752373AbaIIURb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Sep 2014 16:17:31 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<bhelgaas@google.com>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>
+Subject: [PATCH v2 2/2] PCI: keystone: update to support multiple pci ports
+Date: Tue, 9 Sep 2014 16:17:15 -0400
+Message-ID: <1410293835-13050-2-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1410293835-13050-1-git-send-email-m-karicheri2@ti.com>
+References: <1410293835-13050-1-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ for DMAR and interrupt
-remapping, so we could kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+K2E SoC has two PCI ports. The SATA controller is connected to second
+PCI port (port 1). This patch enhances the driver to support multiple
+ports.
 
-The private definition of irq_alloc_hwirqs()/irq_free_hwirqs() are
-temporary solution, it will be removed once we have converted interrupt
-remapping driver to use irqdomain framework.
+Update the DT Documentation for the new attribute, ti,pcie-port and
+remove the note for bootargs as this is no longer needed.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
 ---
- arch/x86/include/asm/irq_remapping.h |    4 ++--
- arch/x86/kernel/apic/msi.c           |   10 ++++++++++
- drivers/iommu/irq_remapping.c        |   17 +++++++++++++++--
- 3 files changed, 27 insertions(+), 4 deletions(-)
+ - updated based on comment against v1
+ .../devicetree/bindings/pci/pci-keystone.txt       |    8 +++++---
+ drivers/pci/host/pci-keystone.c                    |   15 ++++++++++-----
+ drivers/pci/host/pci-keystone.h                    |    4 ++--
+ 3 files changed, 17 insertions(+), 10 deletions(-)
 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index b7747c4c2cf2..230dde9b695e 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -103,7 +103,7 @@ static inline bool setup_remapped_irq(int irq,
- }
- #endif /* CONFIG_IRQ_REMAP */
+diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
+index bedacf0..c8f5773 100644
+--- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
++++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
+@@ -56,11 +56,13 @@ Optional properties:-
+ 	phy-names: name of the Generic Keystine SerDes phy for PCI
+ 	  - If boot loader already does PCI link establishment, then phys and
+ 	    phy-names shouldn't be present.
++	ti,pcie-port: PCI port number. This is used to configure the PCI port
++	    number. For example K2E SoC supports 2 PCI ports and PCI bindings
++	    for the second port adds ti,pcie-port = <1> to identify second port
++	    and driver uses this to configure the PCI mode register for second
++	    port. If not present, port number 0 is assumed.
  
--#define dmar_alloc_hwirq()	irq_alloc_hwirq(-1)
--#define dmar_free_hwirq		irq_free_hwirq
-+extern int dmar_alloc_hwirq(void);
-+extern void dmar_free_hwirq(int irq);
+ Designware DT Properties not applicable for Keystone PCI
  
- #endif /* __X86_IRQ_REMAPPING_H */
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 2439d383c10c..ad2d624a0800 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -221,6 +221,16 @@ int arch_setup_dmar_msi(unsigned int irq)
- 				      "edge");
- 	return 0;
- }
-+
-+int dmar_alloc_hwirq(void)
-+{
-+	return irq_domain_alloc_irqs(NULL, -1, 1, NUMA_NO_NODE, NULL);
-+}
-+
-+void dmar_free_hwirq(int irq)
-+{
-+	irq_domain_free_irqs(irq, 1);
-+}
- #endif
+ 1. pcie_bus clock-names not used.  Instead, a phandle to phys is used.
  
- /*
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 34d01de91bd7..7dd893ee70be 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -6,6 +6,7 @@
- #include <linux/msi.h>
- #include <linux/irq.h>
- #include <linux/pci.h>
-+#include <linux/irqdomain.h>
+-Note for PCI driver usage
+-=========================
+-Driver requires pci=pcie_bus_perf in the bootargs for proper functioning.
+diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+index f1119eb..893820d 100644
+--- a/drivers/pci/host/pci-keystone.c
++++ b/drivers/pci/host/pci-keystone.c
+@@ -253,8 +253,8 @@ static int keystone_pcie_fault(unsigned long addr, unsigned int fsr,
  
- #include <asm/hw_irq.h>
- #include <asm/irq_remapping.h>
-@@ -49,6 +50,18 @@ static void irq_remapping_disable_io_apic(void)
- 		disconnect_bsp_APIC(0);
- }
- 
-+#ifndef CONFIG_GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
-+static unsigned int irq_alloc_hwirqs(int cnt, int node)
-+{
-+	return irq_domain_alloc_irqs(NULL, -1, cnt, node, NULL);
-+}
-+
-+static void irq_free_hwirqs(unsigned int from, int cnt)
-+{
-+	irq_domain_free_irqs(from, cnt);
-+}
-+#endif
-+
- static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
+ static void __init ks_pcie_host_init(struct pcie_port *pp)
  {
- 	int ret, sub_handle, nvec_pow2, index = 0;
-@@ -112,7 +125,7 @@ static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
+-	u32 vendor_device_id, val;
+ 	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
++	u32 val;
  
- 	list_for_each_entry(msidesc, &dev->msi_list, list) {
+ 	ks_pcie_establish_link(ks_pcie);
+ 	ks_dw_pcie_setup_rc_app_regs(ks_pcie);
+@@ -263,8 +263,7 @@ static void __init ks_pcie_host_init(struct pcie_port *pp)
+ 			pp->dbi_base + PCI_IO_BASE);
  
--		irq = irq_alloc_hwirq(node);
-+		irq = irq_alloc_hwirqs(1, node);
- 		if (irq == 0)
- 			return -1;
+ 	/* update the Vendor ID */
+-	vendor_device_id = readl(ks_pcie->va_reg_pciid);
+-	writew((vendor_device_id >> 16), pp->dbi_base + PCI_DEVICE_ID);
++	writew(ks_pcie->device_id, pp->dbi_base + PCI_DEVICE_ID);
  
-@@ -135,7 +148,7 @@ static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
- 	return 0;
+ 	/* update the DEV_STAT_CTRL to publish right mrrs */
+ 	val = readl(pp->dbi_base + PCIE_CAP_BASE + PCI_EXP_DEVCTL);
+@@ -345,12 +344,13 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
+ static int __init ks_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
++	struct device_node *np = dev->of_node;
+ 	struct keystone_pcie *ks_pcie;
++	int ret = 0, port_id = 0;
+ 	struct pcie_port *pp;
+ 	struct resource *res;
+ 	void __iomem *reg_p;
+ 	struct phy *phy;
+-	int ret = 0;
  
- error:
--	irq_free_hwirq(irq);
-+	irq_free_hwirqs(irq, 1);
- 	return ret;
- }
+ 	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
+ 				GFP_KERNEL);
+@@ -360,6 +360,9 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	}
+ 	pp = &ks_pcie->pp;
  
++	/* read the PCI port id */
++	of_property_read_u32(np, "ti,pcie-port", &port_id);
++
+ 	/* initialize SerDes Phy if present */
+ 	phy = devm_phy_get(dev, "pcie-phy");
+ 	if (!IS_ERR_OR_NULL(phy)) {
+@@ -373,7 +376,9 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	reg_p = devm_ioremap_resource(dev, res);
+ 	if (IS_ERR(reg_p))
+ 		return PTR_ERR(reg_p);
+-	ks_pcie->va_reg_pciid = reg_p;
++	ks_pcie->device_id = readl(reg_p) >> 16;
++	devm_iounmap(dev, reg_p);
++	devm_release_mem_region(dev, res->start, resource_size(res));
+ 
+ 	pp->dev = dev;
+ 	platform_set_drvdata(pdev, ks_pcie);
+diff --git a/drivers/pci/host/pci-keystone.h b/drivers/pci/host/pci-keystone.h
+index 729ea7d..80cfa8e 100644
+--- a/drivers/pci/host/pci-keystone.h
++++ b/drivers/pci/host/pci-keystone.h
+@@ -19,8 +19,8 @@
+ struct keystone_pcie {
+ 	struct	clk		*clk;
+ 	struct	pcie_port	pp;
+-	void __iomem		*va_reg_pciid;
+-
++	/* PCI Device ID */
++	u32			device_id;
+ 	int			num_legacy_host_irqs;
+ 	int			legacy_host_irqs[MAX_LEGACY_HOST_IRQS];
+ 	struct			device_node *legacy_intc_np;
 -- 
-1.7.10.4
+1.7.9.5
 
