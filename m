@@ -1,109 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:33938 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753003AbaIPW1d (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 18:27:33 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:50982 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753352AbaIIMMT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Sep 2014 08:12:19 -0400
+Date: Tue, 9 Sep 2014 15:11:50 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Srikanth Thokala <sthokal@xilinx.com>
+Cc: Michal Simek <michal.simek@xilinx.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Srikanth Thokala <sthokal@xilinx.com>,
+	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: [patch] PCI: xilinx: testing wrong variable in setup irq function
+Message-ID: <20140909121150.GD19760@mwanda>
 MIME-Version: 1.0
-In-Reply-To: <54189BCE.2010206@canonical.com>
-References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
-	<1386546869-31900-3-git-send-email-yinghai@kernel.org>
-	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>
-	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>
-	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>
-	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>
-	<52A8BAC5.70006@canonical.com>
-	<CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>
-	<52D01D82.5070202@canonical.com>
-	<CAE9FiQUD0XvPJNFNMoqX6J67TKuGcj+pSbj+iPUf=fvC-4UXOQ@mail.gmail.com>
-	<54189BCE.2010206@canonical.com>
-Date: Tue, 16 Sep 2014 15:27:32 -0700
-Message-ID: <CAE9FiQX1pfciTcuF3_eggQLCn=LvTSLTT0UZxTb+z_RaLHwgJQ@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
-From: Yinghai Lu <yinghai@kernel.org>
-To: Joseph Salisbury <joseph.salisbury@canonical.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 16, 2014 at 1:21 PM, Joseph Salisbury
-<joseph.salisbury@canonical.com> wrote:
->
-> A new bug[0] was opened due to enabling PCI_REALLOC_ENABLE_AUTO, which
-> is similar to the original bug[1] we discussed.
->
-> Just wondering if there have been any additional ideas on realloc since
-> this was last discussed?
->
-> [0] http://pad.lv/1363313
-> [1] http://pad.lv/1245938
+We should be testing "hwirq" instead of "irq".  "irq" is unsigned so
+it's never less than zero.  Also it's uninitialized.
 
-This one looks different, that LSI card support SRIOV, but BIOS does not
-allocate resource to SRIOV bar.
-We release old resource and ...reallocate resource to them with two retries.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-[    0.321983] pci_bus 0000:00: max bus depth: 1 pci_try_num: 2
-[    0.322010] pci 0000:00:03.0: BAR 15: assigned [mem
-0xef800000-0xef8fffff pref]
-[    0.322025] pci 0000:01:00.0: reg 0x174: [mem 0x00000000-0x00003fff 64bit]
-[    0.322033] pci 0000:01:00.0: reg 0x17c: [mem 0x00000000-0x0003ffff 64bit]
-[    0.322040] pci 0000:01:00.0: reg 0x174: [mem 0x00000000-0x00003fff 64bit]
-[    0.322042] pci 0000:01:00.0: BAR 6: assigned [mem
-0xef800000-0xef87ffff pref]
-[    0.322051] pci 0000:01:00.0: reg 0x17c: [mem 0x00000000-0x0003ffff 64bit]
-[    0.322053] pci 0000:01:00.0: BAR 9: can't assign mem (size 0x400000)
-[    0.322061] pci 0000:01:00.0: reg 0x174: [mem 0x00000000-0x00003fff 64bit]
-[    0.322063] pci 0000:01:00.0: BAR 7: assigned [mem
-0xfbd00000-0xfbd3ffff 64bit]
-[    0.322070] pci 0000:00:03.0: PCI bridge to [bus 01]
-[    0.322073] pci 0000:00:03.0:   bridge window [io  0xc000-0xcfff]
-[    0.322077] pci 0000:00:03.0:   bridge window [mem 0xfbd00000-0xfbdfffff]
-[    0.322080] pci 0000:00:03.0:   bridge window [mem
-0xef800000-0xef8fffff pref]
-[    0.322142] pci_bus 0000:00: No. 2 try to assign unassigned res
-[    0.322143] release child resource [mem 0xfbd00000-0xfbd3ffff 64bit]
-[    0.322144] release child resource [mem 0xfbd80000-0xfbdbffff 64bit]
-[    0.322145] release child resource [mem 0xfbdfc000-0xfbdfffff 64bit]
-[    0.322147] pci 0000:00:03.0: resource 14 [mem
-0xfbd00000-0xfbdfffff] released
-[    0.322148] pci 0000:00:03.0: PCI bridge to [bus 01]
-[    0.322156] pci 0000:00:03.0: bridge window [mem
-0x00100000-0x001fffff] to [bus 01] add_size 500000
-[    0.322174] pci 0000:00:03.0: res[14]=[mem 0x00100000-0x001fffff]
-get_res_add_size add_size 500000
-[    0.322176] pci 0000:00:03.0: BAR 14: assigned [mem 0xefb00000-0xf00fffff]
-[    0.322185] pci 0000:01:00.0: reg 0x174: [mem 0xfbd00000-0xfbd03fff 64bit]
-[    0.322192] pci 0000:01:00.0: reg 0x17c: [mem 0x00000000-0x0003ffff 64bit]
-[    0.322194] pci 0000:01:00.0: res[9]=[mem
-0x00000000-0xffffffffffffffff 64bit] get_res_add_size add_size 400000
-[    0.322196] pci 0000:01:00.0: res[7]=[mem
-0x00000000-0xffffffffffffffff 64bit] get_res_add_size add_size 40000
-[    0.322198] pci 0000:01:00.0: BAR 3: assigned [mem
-0xefb00000-0xefb3ffff 64bit]
-[    0.322211] pci 0000:01:00.0: reg 0x17c: [mem 0x00000000-0x0003ffff 64bit]
-[    0.322212] pci 0000:01:00.0: BAR 9: assigned [mem
-0xefb40000-0xeff3ffff 64bit]
-[    0.322219] pci 0000:01:00.0: BAR 1: assigned [mem
-0xeff40000-0xeff43fff 64bit]
-[    0.322232] pci 0000:01:00.0: reg 0x174: [mem 0xfbd00000-0xfbd03fff 64bit]
-[    0.322234] pci 0000:01:00.0: BAR 7: assigned [mem
-0xeff44000-0xeff83fff 64bit]
-[    0.322241] pci 0000:00:03.0: PCI bridge to [bus 01]
-[    0.322244] pci 0000:00:03.0:   bridge window [io  0xc000-0xcfff]
-[    0.322248] pci 0000:00:03.0:   bridge window [mem 0xefb00000-0xf00fffff]
-[    0.322251] pci 0000:00:03.0:   bridge window [mem
-0xef800000-0xef8fffff 64bit pref]
-
-So the resource realloc do work as expected. but LSI firmware has some
-problem again?
-
-We may need to add command after the reset the bridge resource.
-
-Can you get bootlog with "pci=earlydump"?
-
-Thanks
-
-Yinghai
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 44f8944..ccc496b 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -359,8 +359,8 @@ static int xilinx_pcie_msi_setup_irq(struct msi_chip *chip,
+ 	phys_addr_t msg_addr;
+ 
+ 	hwirq = xilinx_pcie_assign_msi(port);
+-	if (irq < 0)
+-		return irq;
++	if (hwirq < 0)
++		return hwirq;
+ 
+ 	irq = irq_create_mapping(port->irq_domain, hwirq);
+ 	if (!irq)
