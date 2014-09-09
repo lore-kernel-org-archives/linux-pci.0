@@ -1,55 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:61298 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932337AbaIWWyA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 18:54:00 -0400
-Received: by mail-ig0-f171.google.com with SMTP id hn15so5513073igb.16
-        for <linux-pci@vger.kernel.org>; Tue, 23 Sep 2014 15:53:59 -0700 (PDT)
-Date: Tue, 23 Sep 2014 16:53:56 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Minghuan Lian <Minghuan.Lian@freescale.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH] PCI: designware: Fix IO resource end address calculation
-Message-ID: <20140923225356.GG27117@google.com>
-References: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
- <1411482540-31297-2-git-send-email-Minghuan.Lian@freescale.com>
+Received: from mout.kundenserver.de ([212.227.17.13]:60332 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751102AbaIIU2j (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Sep 2014 16:28:39 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Murali Karicheri <m-karicheri2@ti.com>, robh+dt@kernel.org,
+	pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	bhelgaas@google.com, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] PCI: keystone: update to support multiple pci ports
+Date: Tue, 09 Sep 2014 22:28:16 +0200
+Message-ID: <3294679.puV171E8qx@wuerfel>
+In-Reply-To: <1410293835-13050-2-git-send-email-m-karicheri2@ti.com>
+References: <1410293835-13050-1-git-send-email-m-karicheri2@ti.com> <1410293835-13050-2-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411482540-31297-2-git-send-email-Minghuan.Lian@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Mohit, Jingoo]
-
-On Tue, Sep 23, 2014 at 10:28:57PM +0800, Minghuan Lian wrote:
-> End address should be equal to start_addr + size - 1.
-> The patch fixes PCI IO resource end address calculation.
+On Tuesday 09 September 2014 16:17:15 Murali Karicheri wrote:
+> K2E SoC has two PCI ports. The SATA controller is connected to second
+> PCI port (port 1). This patch enhances the driver to support multiple
+> ports.
 > 
-> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> Update the DT Documentation for the new attribute, ti,pcie-port and
+> remove the note for bootargs as this is no longer needed.
+> 
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
 > ---
->  drivers/pci/host/pcie-designware.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  - updated based on comment against v1
+>  .../devicetree/bindings/pci/pci-keystone.txt       |    8 +++++---
+>  drivers/pci/host/pci-keystone.c                    |   15 ++++++++++-----
+>  drivers/pci/host/pci-keystone.h                    |    4 ++--
+>  3 files changed, 17 insertions(+), 10 deletions(-)
 > 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 0f3cb2a..c19184f7 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -459,7 +459,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  			pp->io.end = min_t(resource_size_t,
->  					   IO_SPACE_LIMIT,
->  					   range.pci_addr + range.size
-> -					   + global_io_offset);
-> +					   + global_io_offset - 1);
->  			pp->io_size = resource_size(&pp->io);
->  			pp->io_bus_addr = range.pci_addr;
->  			pp->io_base = range.cpu_addr;
-> -- 
-> 1.9.1
-> 
+> diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
+> index bedacf0..c8f5773 100644
+> --- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
+> +++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
+> @@ -56,11 +56,13 @@ Optional properties:-
+>  	phy-names: name of the Generic Keystine SerDes phy for PCI
+>  	  - If boot loader already does PCI link establishment, then phys and
+>  	    phy-names shouldn't be present.
+> +	ti,pcie-port: PCI port number. This is used to configure the PCI port
+> +	    number. For example K2E SoC supports 2 PCI ports and PCI bindings
+> +	    for the second port adds ti,pcie-port = <1> to identify second port
+> +	    and driver uses this to configure the PCI mode register for second
+> +	    port. If not present, port number 0 is assumed.
+
+Is this still needed? I thought with patch 1 removed, we no longer had
+a reason to know the port number.
+
+> -=========================
+> -Driver requires pci=pcie_bus_perf in the bootargs for proper functioning.
+> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+> index f1119eb..893820d 100644
+> --- a/drivers/pci/host/pci-keystone.c
+> +++ b/drivers/pci/host/pci-keystone.c
+> @@ -253,8 +253,8 @@ static int keystone_pcie_fault(unsigned long addr, unsigned int fsr,
+>  
+>  static void __init ks_pcie_host_init(struct pcie_port *pp)
+>  {
+> -	u32 vendor_device_id, val;
+>  	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
+> +	u32 val;
+>  
+>  	ks_pcie_establish_link(ks_pcie);
+>  	ks_dw_pcie_setup_rc_app_regs(ks_pcie);
+> @@ -263,8 +263,7 @@ static void __init ks_pcie_host_init(struct pcie_port *pp)
+>  			pp->dbi_base + PCI_IO_BASE);
+>  
+>  	/* update the Vendor ID */
+> -	vendor_device_id = readl(ks_pcie->va_reg_pciid);
+> -	writew((vendor_device_id >> 16), pp->dbi_base + PCI_DEVICE_ID);
+> +	writew(ks_pcie->device_id, pp->dbi_base + PCI_DEVICE_ID);
+>  
+>  	/* update the DEV_STAT_CTRL to publish right mrrs */
+>  	val = readl(pp->dbi_base + PCIE_CAP_BASE + PCI_EXP_DEVCTL);
+
+This change must have slipped in accidentally, at least it's not
+described in the changelog. Should this be another patch?
+The change seems useful.
+
+	Arnd
