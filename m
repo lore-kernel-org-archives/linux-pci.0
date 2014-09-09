@@ -1,93 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f180.google.com ([209.85.216.180]:39537 "EHLO
-	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751532AbaIFVVn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 6 Sep 2014 17:21:43 -0400
-Received: by mail-qc0-f180.google.com with SMTP id c9so14061152qcz.11
-        for <linux-pci@vger.kernel.org>; Sat, 06 Sep 2014 14:21:42 -0700 (PDT)
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Tue, 9 Sep 2014 09:46:21 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI
+ domain_nr
+Message-ID: <20140909084621.GS27864@e106497-lin.cambridge.arm.com>
+References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
+ <1410184472-17630-8-git-send-email-Liviu.Dudau@arm.com>
+ <CAL_JsqJi8k1Goc3UmXhuxf9v7=4gJrYG_Di7v574PxS8TsJaXw@mail.gmail.com>
+ <20140908145459.GO27864@e106497-lin.cambridge.arm.com>
+ <CAL_JsqJdGKDVwJOpPp19OkVPGzR7Zqv3nh+ONHHaYnPLYTYoYg@mail.gmail.com>
+ <20140908155931.GP27864@e106497-lin.cambridge.arm.com>
+ <540E960D.7080408@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFy63sEs2zvr0LzKSjxSRuH5paLG378qQ6_QyLmmJw=D3w@mail.gmail.com>
-References: <53FFA54D.9000907@gmail.com> <CAErSpo5_WMUmnTHpPZt+j04VZoiW1pthQoGV90A5BDQpQgjwOQ@mail.gmail.com>
- <CA+55aFy63sEs2zvr0LzKSjxSRuH5paLG378qQ6_QyLmmJw=D3w@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 6 Sep 2014 15:21:21 -0600
-Message-ID: <CAErSpo57EyJj1uc+oqvmy+_10AwwhrOQEO=EQbB2zs-7gd9tFA@mail.gmail.com>
-Subject: Re: [PATCH] pci/probe: Enable CRS for Intel Haswell root ports
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Rajat Jain <rajatxjain@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>,
-	Richard Yang <weiyang@linux.vnet.ibm.com>,
-	Matthew Wilcox <matthew.r.wilcox@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Josh Logan <joshtlogan@gmail.com>
+In-Reply-To: <540E960D.7080408@huawei.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Josh]
+On Tue, Sep 09, 2014 at 06:54:21AM +0100, Yijing Wang wrote:
+> >>> on new requests. This function gets called quite a lot and I'm trying not to
+> >>> make it too heavy weight.
+> >>
+> >> Generally, nothing should be accessing the same DT value frequently.
+> >> It should get cached somewhere.
+> >>
+> > 
+> > The problem appears for DTs that don't have the pci-domain info. Then the cached
+> > value is left at the default non-valid value and attempts to rescan the DT will
+> > be made every time the function is called.
+> > 
+> >> I don't really understand how domains are used so it's hard to provide
+> >> a recommendation here. Do domains even belong in the DT?
+> > 
+> > ACPI calls them segments and the way Bjorn explained it to me at some moment was
+> > that it was an attempt to split up a bus in different groups (or alternatively,
+> > merge a few busses together). To be honest I haven't seen systems where the domain
+> > is anything other than zero, but JasonG (or maybe Benjamin) were floating an
+> > idea of using the domain number to identify physical slots.
+> 
+> PCI domain(or named segment) is provided by firmware, in ACPI system, we evaluated it
+> by method "_SEG". in IA64 with ACPI, PCI hostbridge driver retrieves the domain from ACPI,
+> if it's absent, the default domain is zero. So I wonder why in DTS, if it's absent, we get
+> a auto increment domain value.
 
-On Tue, Sep 2, 2014 at 1:30 PM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Mon, Sep 1, 2014 at 9:14 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> I'm not a fan of adding a whitelist for devices that work correctly.
->> I don't think that's a maintainable solution.  Since we haven't had
->> many systems yet that care about CRS, some kind of "enable CRS on
->> machines newer than X" might work.
->
-> I'd suggest trying to just enable CRS unconditionally (ie revert my
-> old commit ad7edfe04908). We've done other changes in this area since,
-> and in particular, it's entirely possible that the original problem we
-> had doesn't even trigger any more.
->
-> In particular, looking at one of the old reports, I don't see that
-> "Device %04x:%02x:%02x.%d not responding" warning that we *should*
-> have triggered in pci_scan_device(). So I wonder if we had some case
-> that read the vendor ID without that whole loop, and that _that_ was
-> our fundamental problem.
->
-> It would be great if somebody could test with the old hardware that
-> triggered the problem originally, but those reports are from 2007, so
-> it might be hard to find anything relevant today. But trying to just
-> go back to unconditionally enabling CRS (say, in 3.18-rc1) and seeing
-> if anybody hollers, might just be the right approach.
+Because you can have more than one hostbridge (rare, but not impossible) and unless you
+want to join the two segments, you might want to give it a different domain.
 
-Josh actually does still have the hardware, so he *might* be able to test it.
+Best regards,
+Liviu
 
-My original theory was that the device didn't advertise CRS SV
-capability, and something went wrong when we enabled it anyway.  But
-lspci incorrectly decoded CRS SV from the RootCap, so we don't know
-whether it was advertised, and I didn't have an explanation for what
-could be going wrong if we enabled it.
+> 
+> PCI get domain by ACPI "_SEG" in IA64(drivers/acpi/pci_root.c)
+> ......
+> 	status = acpi_evaluate_integer(handle, METHOD_NAME__SEG, NULL,
+> 				       &segment);
+> 	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
+> 		dev_err(&device->dev,  "can't evaluate _SEG\n");
+> 		result = -ENODEV;
+> 		goto end;
+> 	}
+> .......
+> 
+> Thanks!
+> Yijing.
+> 
+> > 
+> >> This function
+> >> is just a weird mixture of data retrieval and allocation. I think you
+> >> need to separate it into 2 functions.
+> > 
+> > It is meant to do allocation with the retrieval being a short-cut (or fine
+> > control if you want).
+> > 
+> > I need to think a bit more for a better solution.
+> > 
+> > Best regards,
+> > Liviu
+> > 
+> >>
+> >> Rob
+> >>
+> > 
+> 
+> 
+> -- 
+> Thanks!
+> Yijing
+> 
+> 
 
-But as you point out, we don't see the "not responding" message.  We
-only print that if we read 0xffff0001 (device/vendor ID).  But lspci
-claims the vendor:device ID is 0001:8168.  So my new theory is:
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
-  - Root Port issues Configuration Request to read four bytes at 0x0.
-  - Device generates Completion with Config Request Retry Status,
-returning data of 10ec:8168.
-  - Root Port (with SV disabled) retries the Config Request until it
-succeeds, then returns 0x816810ec.  In this configuration, these
-boards work correctly today.
-  - Root Port (with SV enabled) replaces Vendor ID with 0001 but fails
-to replace Device ID with ffff, so it returns 0x81680001.  This is a
-hardware defect per PCIe r3.0, sec 2.3.2.
-  - Linux sees 0x81680001, but we're looking for 0xffff0001, so we
-think everything's fine and we don't retry or warn about it.
-
-So I think we should try two patches:
-
-  1) Enable CRS SV if support is advertised, i.e., Rajat's current patch
-  2) Change pci_bus_read_dev_vendor_id() to test only the two bytes of
-the vendor ID and ignore the device ID
-
-I suspect that if Josh tested patch 1) alone, he would see the same
-problem he originally reported, and that if he tested both together,
-it would work correctly.  Obviously, if it works out this way, I would
-apply them in the reverse order to avoid a bisection problem.
-
-Bjorn
