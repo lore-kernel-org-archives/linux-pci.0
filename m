@@ -1,88 +1,224 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 14/22] MIPS/Xlp/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-Date: Thu, 25 Sep 2014 11:14:24 +0800
-Message-ID: <1411614872-4009-15-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [PATCH v7 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
+Date: Wed, 10 Sep 2014 16:20:18 -0700
+Message-Id: <1410391220-4866-3-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1410391220-4866-1-git-send-email-tinamdar@apm.com>
+References: <1410391220-4866-1-git-send-email-tinamdar@apm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI chip framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+This patch adds the device tree nodes for APM X-Gene PCIe host controller and
+PCIe clock interface. Since X-Gene SOC supports maximum 5 ports, 5 dts
+nodes are added.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
 ---
- arch/mips/pci/msi-xlp.c |   14 ++++++++++++--
- 1 files changed, 12 insertions(+), 2 deletions(-)
+ arch/arm64/boot/dts/apm-mustang.dts |   8 ++
+ arch/arm64/boot/dts/apm-storm.dtsi  | 160 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 168 insertions(+)
 
-diff --git a/arch/mips/pci/msi-xlp.c b/arch/mips/pci/msi-xlp.c
-index e469dc7..6b791ef 100644
---- a/arch/mips/pci/msi-xlp.c
-+++ b/arch/mips/pci/msi-xlp.c
-@@ -245,7 +245,7 @@ static struct irq_chip xlp_msix_chip = {
- 	.irq_unmask	= unmask_msi_irq,
+diff --git a/arch/arm64/boot/dts/apm-mustang.dts b/arch/arm64/boot/dts/apm-mustang.dts
+index b2f5622..f649000 100644
+--- a/arch/arm64/boot/dts/apm-mustang.dts
++++ b/arch/arm64/boot/dts/apm-mustang.dts
+@@ -25,6 +25,14 @@
+ 	};
  };
  
--void arch_teardown_msi_irq(unsigned int irq)
-+void xlp_teardown_msi_irq(unsigned int irq)
- {
- }
- 
-@@ -450,7 +450,7 @@ static int xlp_setup_msix(uint64_t lnkbase, int node, int link,
- 	return 0;
- }
- 
--int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
-+static int xlp_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- {
- 	struct pci_dev *lnkdev;
- 	uint64_t lnkbase;
-@@ -472,6 +472,16 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- 		return xlp_setup_msi(lnkbase, node, link, desc);
- }
- 
-+static struct msi_chip xlp_chip = {
-+	.setup_irq = xlp_setup_msi_irq,
-+	.teardown_irq = xlp_teardown_msi_irq,
++&pcie0clk {
++	status = "ok";
 +};
 +
-+struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
-+{
-+	return &xlp_chip;
-+}
++&pcie0 {
++	status = "ok";
++};
 +
- void __init xlp_init_node_msi_irqs(int node, int link)
- {
- 	struct nlm_soc_info *nodep;
+ &serial0 {
+ 	status = "ok";
+ };
+diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
+index c0aceef..e8a32a2 100644
+--- a/arch/arm64/boot/dts/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm-storm.dtsi
+@@ -269,6 +269,166 @@
+ 				enable-mask = <0x2>;
+ 				clock-output-names = "rtcclk";
+ 			};
++
++			pcie0clk: pcie0clk@1f2bc000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f2bc000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie0clk";
++			};
++
++			pcie1clk: pcie1clk@1f2cc000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f2cc000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie1clk";
++			};
++
++			pcie2clk: pcie2clk@1f2dc000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f2dc000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie2clk";
++			};
++
++			pcie3clk: pcie3clk@1f50c000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f50c000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie3clk";
++			};
++
++			pcie4clk: pcie4clk@1f51c000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f51c000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie4clk";
++			};
++		};
++
++		pcie0: pcie@1f2b0000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
++				0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
++				  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
++			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
++				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
++			clocks = <&pcie0clk 0>;
++		};
++
++		pcie1: pcie@1f2c0000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = < 0x00 0x1f2c0000 0x0 0x00010000   /* Controller registers */
++				0xd0 0xd0000000 0x0 0x00040000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x0 0x00000000 0xd0 0x10000000 0x00 0x00010000   /* io  */
++				  0x02000000 0x0 0x80000000 0xd1 0x80000000 0x00 0x80000000>; /* mem */
++			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
++				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc8 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xc9 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xca 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xcb 0x1>;
++			clocks = <&pcie1clk 0>;
++		};
++
++		pcie2: pcie@1f2d0000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg =  < 0x00 0x1f2d0000 0x0 0x00010000   /* Controller registers */
++				 0x90 0xd0000000 0x0 0x00040000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x0 0x00000000 0x90 0x10000000 0x0 0x00010000   /* io  */
++				  0x02000000 0x0 0x80000000 0x91 0x80000000 0x0 0x80000000>; /* mem */
++			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
++				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xce 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xcf 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xd0 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xd1 0x1>;
++			clocks = <&pcie2clk 0>;
++		};
++
++		pcie3: pcie@1f500000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = < 0x00 0x1f500000 0x0 0x00010000   /* Controller registers */
++				0xa0 0xd0000000 0x0 0x00040000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x0 0x00000000 0xa0 0x10000000 0x0 0x00010000   /* io   */
++				  0x02000000 0x0 0x80000000 0xa1 0x80000000 0x0 0x80000000>; /* mem  */
++			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
++				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xd4 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xd5 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xd6 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xd7 0x1>;
++			clocks = <&pcie3clk 0>;
++		};
++
++		pcie4: pcie@1f510000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = < 0x00 0x1f510000 0x0 0x00010000   /* Controller registers */
++				0xc0 0xd0000000 0x0 0x00200000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x0 0x00000000 0xc0 0x10000000 0x0 0x00010000   /* io  */
++				  0x02000000 0x0 0x80000000 0xc1 0x80000000 0x0 0x80000000>; /* mem */
++			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
++				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xda 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xdb 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xdc 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xdd 0x1>;
++			clocks = <&pcie4clk 0>;
+ 		};
+ 
+ 		serial0: serial@1c020000 {
 -- 
-1.7.1
+1.9.1
 
