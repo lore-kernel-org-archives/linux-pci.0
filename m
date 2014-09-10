@@ -1,60 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0141.outbound.protection.outlook.com ([157.56.110.141]:40197
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753340AbaIRTyg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Sep 2014 15:54:36 -0400
-From: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<tglx@linutronix.de>, <hpa@zytor.com>, <x86@kernel.org>,
-	<bp@suse.de>, <dan.carpenter@oracle.com>,
-	<dougthompson@xmission.com>, <bp@alien8.de>,
-	<m.chehab@samsung.com>, <linux-edac@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-Subject: [PATCH 0/4] Add Fam15h Model60h support
-Date: Thu, 18 Sep 2014 14:56:25 -0500
-Message-ID: <1411070185-10137-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+Received: from service87.mimecast.com ([91.220.42.44]:36491 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752768AbaIJOPR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Sep 2014 10:15:17 -0400
+Date: Wed, 10 Sep 2014 15:15:14 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: L H <swdevgid@gmail.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: designware: prefetch and 64-bit addr support?
+Message-ID: <20140910141514.GC27864@e106497-lin.cambridge.arm.com>
+References: <CAA8O7Crwi7=afUpLoC1O5H9ymjYEPyb63kO8QdFuPx6RUJ8NpQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAA8O7Crwi7=afUpLoC1O5H9ymjYEPyb63kO8QdFuPx6RUJ8NpQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series is based on top of V5 patch regarding
-Modify usage of amd64_read_dct_pci_cfg().
-Link: http://marc.info/?l=linux-kernel&m=141079846507232&w=2
+On Wed, Sep 03, 2014 at 09:57:11PM +0100, L H wrote:
+> Greetings my fellow PCI designware developers.  I'm working on an
+> implementation that relies on the PCIe DesignWare IP and am writing a
+> platform-specific layer to link with the designware code, but have run
+> into a couple challenges.
+> 
+> Reading the pcie-designware.c (looking at the master branch of a repo
+> cloned from git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git --
+> is that the best branch/repo to view?), it appears to me that the
+> dw_pcie_host_init() code doesn't comprehend prefetch memory ranges,
+> but instead just assumes that a memory range is non-prefetch despite
+> its encoding in the device-tree.  Am I reading that correctly?  The
+> loop for walking the ranges begins with:
+> 
+>     for_each_of_pci_range(&parser, &range) {
+>         unsigned long restype = range.flags & IORESOURCE_TYPE_BITS;
+> 
+> The bitmask for IORESOURCE_TYPE_BITS would result in a restype
+> ignorant of the IORESOURCE_PREFETCH bit, right?   The ensuing code
+> flow then treats the range as non-prefetch unless I missed something.
 
-I had started work on above one earlier and could not test this patch
-series before, so ended up sending it separately. I can meld it together
-if that is desired.
+Hi LH,
 
-Summary of new features in the processor:
- - DDR4 memory support
- - DDR3 LRDIMM support
- - Support for above are in Patches 3,4 of series.
+You are not reading all of the code. The designware code only cares
+about the type of the range (IO, MEM, cfg?). But the conversion from
+range to resource that happens in of_pci_range_to_resource() *does*
+preserve the prefetchable flags and that is being used by the generic
+PCI framework.
 
-Summary of patches in this series:
- - Patch 1: Add PCI device ID definitions
- - Patch 2: Add PCI IDs to NB tables as we need to cache Northbridges
-            for later use in amd64_edac
- - Patch 3: F15hM60h adds support for DDR4 and DDR3 LRDIMMS. Adding them here.
- - Patch 4: Adds bulk of the code necessary to support F15hM60h.
-            Also introduces a change to dbam_to_cs mapper functions.
+> 
+> Curiously, I also noted that the for_each_of_pcie_range() which calls
+> of_pci_range_parser_one() that in turn includes calls to
+> of_bus_pci_get_flags() does not set the IORESOURCE_MEM_64 bit parsed
+> from the range either.
 
-Aravind Gopalakrishnan (4):
-  pci_ids: Add PCI device IDs for F15h M60h
-  x86, amd_nb: Add device IDs to NB tables for F15h M60h
-  edac: Add DDR3 LRDIMM support, entries in edac_mem_types[]
-  edac, amd64_edac: Add F15h M60h support
+Where exactly do you expect those flags to be read into?
 
- arch/x86/kernel/amd_nb.c  |   2 +
- drivers/edac/amd64_edac.c | 226 ++++++++++++++++++++++++++++++++--------------
- drivers/edac/amd64_edac.h |  12 ++-
- drivers/edac/edac_mc.c    |   3 +
- include/linux/edac.h      |   2 +
- include/linux/pci_ids.h   |   2 +
- 6 files changed, 178 insertions(+), 69 deletions(-)
+> 
+> If I followed that all correctly, is the proper assumption that all of
+> the current implementations relying on the designware code only use
+> 32-bit non-prefetch memory ranges?
+
+No, I don't think that is correct. What I would say is that the current
+designware PCIe code does not care whether the memory is prefetcheable
+or not for the DW specific part of the setup.
+
+Best regards,
+Liviu
+
+> 
+> The platform which I'm working on will use a large 64-bit PCI memory
+> address space, and thus I need 64-bit memory apertures which implies,
+> I think, only prefetch memory.
+> 
+> I hasten to add this isn't a complaint or critique of the valuable
+> work developed up to this point. I'm very grateful to have it as a
+> rich starting point.  I'm reaching out to the list here as a newbie to
+> verify my comprehension of the designware code, and if valid, to
+> inquire if there's any effort by anyone currently to support 64-bit
+> prefetch ranges.  I've accepted the real possibility that I might be
+> blazing this trail myself, but just wanted to check if anyone else has
+> considered it or working on this support to avoid a redundant effort.
+> 
+> thanks,
+> LH
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 -- 
-2.0.2
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
