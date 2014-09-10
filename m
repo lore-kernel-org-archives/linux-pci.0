@@ -1,101 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:36480 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751881AbaIWM2t (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 08:28:49 -0400
-Received: by mail-ie0-f181.google.com with SMTP id tr6so8940148ieb.26
-        for <linux-pci@vger.kernel.org>; Tue, 23 Sep 2014 05:28:49 -0700 (PDT)
+Received: from mout.kundenserver.de ([212.227.126.130]:53040 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751048AbaIJIWo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Sep 2014 04:22:44 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: linux-arm-kernel@lists.infradead.org, robh+dt@kernel.org,
+	pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	bhelgaas@google.com, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] PCI: keystone: update to support multiple pci ports
+Date: Wed, 10 Sep 2014 10:22:36 +0200
+Message-ID: <3814561.AbrslYBNjb@wuerfel>
+In-Reply-To: <540F8425.70304@ti.com>
+References: <1410293835-13050-1-git-send-email-m-karicheri2@ti.com> <3967092.l9bxcqMaSa@wuerfel> <540F8425.70304@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <1411466190.3256.7.camel@pengutronix.de>
-References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
-	<1411445498-20250-3-git-send-email-r65037@freescale.com>
-	<1411466190.3256.7.camel@pengutronix.de>
-Date: Tue, 23 Sep 2014 05:28:49 -0700
-Message-ID: <CAJ+vNU30=+YXkBHjzs_4n49TSJU0CuuSx54X3M7AVg8JRSLTfw@mail.gmail.com>
-Subject: Re: [PATCH v2 2/5] PCI: imx6: wait the clocks to stabilize after ref_en
-From: Tim Harvey <tharvey@gateworks.com>
-To: Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <r65037@freescale.com>
-Cc: linux-pci-owner@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shawn Guo <shawn.guo@freescale.com>,
-	Fabio Estevam <festevam@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 23, 2014 at 2:56 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> Am Dienstag, den 23.09.2014, 12:11 +0800 schrieb Richard Zhu:
->> - a while delay is mandatory required after pcie_ref_clk_en
->> is set. Otherwise, the system would be hang on imx6qdl ard
->> boards, because that imx6qdl boards don't have the reset_gpio.
->> - the clocks should be stable already after the
->> "clk_prepare_enable" is return. So I think it's ok to move the
->> usleep delay after the pcie_ref_en is set.
->>
->
-> You are describing a lot of the conditions around the issue, but not the
-> issue itself, which makes it hard to follow your commit message. After
-> looking at the code I think the problem is this (and should be described
-> accordingly):
->
-> For boards without a reset gpio we skip the delay between enabling the
-> pcie_ref_clk and touching the RC registers for configuration. Apparently
-> this hangs when the clocks are not yet settled in the DW PCIe core. So
-> we need to make sure that there is always an appropriate delay between
-> those two actions.
->
-> I have not found this constraint anywhere in the i.MX6 Reference Manual,
-> nor in the DW PCIe documents I have access to, which makes me a bit feel
-> a bit unhappy about this. Richard, do you have better info on why this
-> delay is needed and how long it needs to be? Or is this just empirical?
->
-> In general I'm ok with this patch, but still want a confirmation from
-> Tim that this doesn't break anything.
+On Tuesday 09 September 2014 18:50:13 Murali Karicheri wrote:
+> My mistake. It is the device ID, not vendor ID. The PCI driver supports 
+> PCI h/w on K2HK, K2E and K2L SoCs for which PCI device IDs are assigned as
+> 
+> +#define PCIE_RC_K2HK           0xb008
+> +#define PCIE_RC_K2E            0xb009
+> +#define PCIE_RC_K2L            0xb00a
+> +
+> 
+> and the same driver code runs on all these h/w. The device ID is not 
+> filled in by default by the h/w, in the config space of the RC at offset 
+> 1000h "VENDOR_DEVICE_ID Vendor and Device Identification Register". 
+> Same is available in a seperate SoC register whose offset is specified 
+> by index 2. This is read by driver and updated in the config space. The 
+> Vendor ID is however set by default.
+> 
+> There is a mrrs PCI quirk required for Keystone PCI which depends on 
+> this vendor ID to be filled correctly as it match vendor id/ device id 
+> of the bridge device to apply the quirk.
+> 
+> Hope this clarify your question.
 
-I agree with Lucas' comments and also agree that this can use some
-testing. Based on my previous findings PCI link is very fragile. It
-will take me a few days to get a proper test setup in a thermal
-chamber with a host of boards but I will report back when I have
-findings.
+Ok, I understand now. Yes, this makes sense, though I wonder if it would
+have been easier to handle the quirk in a different way based on the
+driver rather than the PCI ID. It's probably not worth revisiting though,
+unless Bjorn wants to see it done differently now.
 
-Tim
-
->
->> Signed-off-by: Richard Zhu <r65037@freescale.com>
->> ---
->>  drivers/pci/host/pci-imx6.c | 6 +++---
->>  1 file changed, 3 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
->> index 233fe8a..bc4222b 100644
->> --- a/drivers/pci/host/pci-imx6.c
->> +++ b/drivers/pci/host/pci-imx6.c
->> @@ -275,15 +275,15 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
->>               goto err_pcie;
->>       }
->>
->> -     /* allow the clocks to stabilize */
->> -     usleep_range(200, 500);
->> -
->>       /* power up core phy and enable ref clock */
->>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
->>                       IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
->>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
->>                       IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
->>
->> +     /* allow the clocks to stabilize */
->> +     usleep_range(200, 500);
->> +
->>       /* Some boards don't have PCIe reset GPIO. */
->>       if (gpio_is_valid(imx6_pcie->reset_gpio)) {
->>               gpio_set_value(imx6_pcie->reset_gpio, 0);
->
-> --
-> Pengutronix e.K.             | Lucas Stach                 |
-> Industrial Linux Solutions   | http://www.pengutronix.de/  |
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	Arnd
