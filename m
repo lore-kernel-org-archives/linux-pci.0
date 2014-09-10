@@ -1,40 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:53742 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750719AbaIJEAs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 10 Sep 2014 00:00:48 -0400
-Message-ID: <540FCCEA.2080003@linux.intel.com>
-Date: Wed, 10 Sep 2014 12:00:42 +0800
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <540FC1C2.40100@linux.intel.com>
+Date: Wed, 10 Sep 2014 11:13:06 +0800
 From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: Andy Lutomirski <luto@amacapital.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	X86 ML <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: i386 minimal config w/ PCI is broken
-References: <CALCETrUyaSSLCpi3e2tF9-NSgFx54du1D0UH0ofE9E+HX=VqfA@mail.gmail.com>
-In-Reply-To: <CALCETrUyaSSLCpi3e2tF9-NSgFx54du1D0UH0ofE9E+HX=VqfA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org, Prarit Bhargava <prarit@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
+	linux-pm@vger.kernel.org
+Subject: Re: [Patch v4 12/16] x86, irq, ACPI: Implement interface to support
+ ACPI based IOAPIC hot-addition
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com> <1409192561-19744-13-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1409091417120.11037@nanos>
+In-Reply-To: <alpine.DEB.2.10.1409091417120.11037@nanos>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Andy,
-	Sorry for this. It should be fixed by:
-http://marc.info/?l=linux-kernel&m=140938277815528&w=2
+
+
+On 2014/9/9 20:20, Thomas Gleixner wrote:
+> On Thu, 28 Aug 2014, Jiang Liu wrote:
+>>  EXPORT_SYMBOL(acpi_register_ioapic);
+>> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+>> index 6e67af0c5f99..b286461cabf9 100644
+>> --- a/arch/x86/kernel/apic/io_apic.c
+>> +++ b/arch/x86/kernel/apic/io_apic.c
+>> @@ -3851,7 +3851,13 @@ static int bad_ioapic_register(int idx)
+>>  
+>>  static int find_free_ioapic_entry(void)
+>>  {
+>> -	return nr_ioapics;
+>> +	int idx;
+>> +
+>> +	for (idx = 0; idx < MAX_IO_APICS; idx++)
+>> +		if (ioapics[idx].nr_registers == 0)
+>> +			return idx;
+>> +
+>> +	return MAX_IO_APICS;
+>>  }
+>>  
+>>  int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+>> @@ -3867,8 +3873,15 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+>>  	}
+>>  	for_each_ioapic(ioapic)
+>>  		if (ioapics[ioapic].mp_config.apicaddr == address) {
+>> -			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
+>> -				address, ioapic);
+>> +			/*
+>> +			 * IOAPIC unit may also be visible in PCI scope.
+>> +			 * When ioapic PCI driver's probe() is called,
+>> +			 * the IOAPIC unit may have already been initialized
+>> +			 * at boot time.
+>> +			 */
+>> +			if (!ioapic_initialized)
+>> +				pr_warn("address 0x%x conflicts with IOAPIC%d\n",
+>> +					address, ioapic);
+> 
+> Hmm. This smells fishy. Why do we allow multiple initializations of
+> the same IOAPIC in the first place. Either it's done via ACPI or via
+> PCI, but not both.
+The ACPI subsystem will register and initialize all IOAPICs when walking
+ACPI MADT table during boot, before initializing PCI subsystem.
+Later when binding ioapic PCI driver to IOAPIC PCI device, it will try
+to register the IOAPIC device again.
+
+After this patchset is applied, we could remove the !ioapic_initialized
+check. We check acpi_ioapic_register() before calling
+acpi_register_ioapic(). So the check becomes redundant.
+Or we could remove the temporary code from this patch.
+
+> 
+>>  			return -EEXIST;
+>>  		}
+>>  
+>> @@ -3918,6 +3931,14 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+>>  	ioapics[idx].irqdomain = NULL;
+>>  	ioapics[idx].irqdomain_cfg = *cfg;
+>>  
+>> +	if (ioapic_initialized) {
+> 
+> I have a hard time to understand this conditional. Why can't we do
+> that unconditionally?
+How about following comments?
+/*
+ * If mp_register_ioapic() is called during early boot stage when
+ * walking ACPI/SFI/DT tables, it's too early to create irqdomain,
+ * we are still using bootmem allocator. So delay it to setup_IO_APIC().
+ */
 Regards!
 Gerry
-On 2014/9/10 8:08, Andy Lutomirski wrote:
-> The attached config doesn't compile for me w/ Linus' tree from today.
-> It complains about undeclared mp_should_keep_irq in
-> arch/x86/pci/irq.c.
 > 
-> I haven't tested for real, but I think that the offending commit is:
+>> +		if (mp_irqdomain_create(idx)) {
+>> +			clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
+>> +			return -ENOMEM;
+>> +		}
+>> +		alloc_ioapic_saved_registers(idx);
+>> +	}
+>> +
+>>  	if (gsi_cfg->gsi_end >= gsi_top)
+>>  		gsi_top = gsi_cfg->gsi_end + 1;
+>>  	if (nr_ioapics <= idx)
 > 
-> commit c03b3b0738a56cf283b0d05256988d5e3c8bd719
-> Author: Jiang Liu <jiang.liu@linux.intel.com>
-> Date:   Mon Jun 9 16:20:08 2014 +0800
+> Thanks,
 > 
->     x86, irq, mpparse: Release IOAPIC pin when PCI device is disabled
-> 
+> 	tglx
 > 
