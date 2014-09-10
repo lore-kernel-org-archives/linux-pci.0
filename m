@@ -1,181 +1,132 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC v1 09/28] x86, irq: Kill x86_io_apic_ops.set_affinity and related interfaces
-Date: Fri, 26 Sep 2014 22:57:39 +0800
-Message-Id: <1411743478-31435-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:37100 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751084AbaIJQdY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 10 Sep 2014 12:33:24 -0400
+Date: Wed, 10 Sep 2014 10:32:50 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI
+ domain_nr
+Message-ID: <20140910163250.GA22910@obsidianresearch.com>
+References: <CAL_JsqJi8k1Goc3UmXhuxf9v7=4gJrYG_Di7v574PxS8TsJaXw@mail.gmail.com>
+ <20140908145459.GO27864@e106497-lin.cambridge.arm.com>
+ <CAL_JsqJdGKDVwJOpPp19OkVPGzR7Zqv3nh+ONHHaYnPLYTYoYg@mail.gmail.com>
+ <20140908155931.GP27864@e106497-lin.cambridge.arm.com>
+ <540E960D.7080408@huawei.com>
+ <20140909084621.GS27864@e106497-lin.cambridge.arm.com>
+ <540EC8CB.7010106@huawei.com>
+ <CAErSpo4cAfom2=07NYDRfTCdHO22M0v+ueiaZuG6v2Xd18wEnQ@mail.gmail.com>
+ <20140909154123.GA12906@obsidianresearch.com>
+ <CAL_JsqJMRqbwNkB2K6Mg2DU9mSHwAObtD7LLG2_n=4jGDAFhyQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAL_JsqJMRqbwNkB2K6Mg2DU9mSHwAObtD7LLG2_n=4jGDAFhyQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there is no user of x86_io_apic_ops.set_affinity anymore, so kill
-it.
+On Tue, Sep 09, 2014 at 09:44:56PM -0500, Rob Herring wrote:
+> On Tue, Sep 9, 2014 at 10:41 AM, Jason Gunthorpe
+> <jgunthorpe@obsidianresearch.com> wrote:
+> > On Tue, Sep 09, 2014 at 08:26:19AM -0600, Bjorn Helgaas wrote:
+> >
+> >> So as long as the DT tells you the ECAM information for each host
+> >> bridge, that should be sufficient.  The domain number is then just a
+> >> Linux convenience and is not tied to the platform as it is on ia64.
+> >
+> > I think this is right for DT systems - the domain is purely internal
+> > to the kernel and userspace, it is used to locate the proper host
+> > bridge driver instance, which contains the proper config accessor (and
+> > register bases, etc).
+> >
+> > AFAIK the main reason to have a DT alias to learn the domain number is
+> > to make it stable so things like udev/etc can reliably match on the
+> > PCI location.
+> 
+> For what purpose?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h  |    4 ----
- arch/x86/include/asm/x86_init.h |    3 ---
- arch/x86/kernel/apic/io_apic.c  |   25 +------------------------
- arch/x86/kernel/x86_init.c      |    1 -
- drivers/iommu/irq_remapping.c   |   16 ----------------
- 5 files changed, 1 insertion(+), 48 deletions(-)
+udev places PCI D:B:D.F's all over the place, eg:
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index f9f316b2ec1e..e82f78f0c04d 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -223,9 +223,6 @@ extern unsigned int native_io_apic_read(unsigned int apic, unsigned int reg);
- extern void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int val);
- extern void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int val);
- extern void native_disable_io_apic(void);
--extern int native_ioapic_set_affinity(struct irq_data *,
--				      const struct cpumask *,
--				      bool);
- 
- static inline unsigned int io_apic_read(unsigned int apic, unsigned int reg)
- {
-@@ -287,7 +284,6 @@ static inline void disable_ioapic_support(void) { }
- #define native_io_apic_write		NULL
- #define native_io_apic_modify		NULL
- #define native_disable_io_apic		NULL
--#define native_ioapic_set_affinity	NULL
- #define native_eoi_ioapic_pin		NULL
- #endif
- 
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index 7de44a329028..2637e8fb978d 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -194,9 +194,6 @@ struct x86_io_apic_ops {
- 	void		(*write)  (unsigned int apic, unsigned int reg, unsigned int value);
- 	void		(*modify) (unsigned int apic, unsigned int reg, unsigned int value);
- 	void		(*disable)(void);
--	int		(*set_affinity)(struct irq_data *data,
--					const struct cpumask *mask,
--					bool force);
- 	void		(*eoi_ioapic_pin)(int apic, int pin, int vector);
- };
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index e3628c3b6b07..3f4c2cc2772b 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1810,29 +1810,6 @@ static void __target_IO_APIC_irq(unsigned int irq, unsigned int dest, struct irq
- 	}
- }
- 
--int native_ioapic_set_affinity(struct irq_data *data,
--			       const struct cpumask *mask,
--			       bool force)
--{
--	unsigned int dest, irq = data->irq;
--	unsigned long flags;
--	int ret;
--
--	if (!config_enabled(CONFIG_SMP))
--		return -EPERM;
--
--	raw_spin_lock_irqsave(&ioapic_lock, flags);
--	ret = apic_set_affinity(data, mask, &dest);
--	if (!ret) {
--		/* Only the high 8 bits are valid. */
--		dest = SET_APIC_LOGICAL_ID(dest);
--		__target_IO_APIC_irq(irq, dest, irqd_cfg(data));
--		ret = IRQ_SET_MASK_OK_NOCOPY;
--	}
--	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
--	return ret;
--}
--
- atomic_t irq_mis_count;
- 
- #ifdef CONFIG_GENERIC_PENDING_IRQ
-@@ -2710,7 +2687,7 @@ void __init setup_ioapic_dest(void)
- 		else
- 			mask = apic->target_cpus();
- 
--		x86_io_apic_ops.set_affinity(idata, mask, false);
-+		irq_set_affinity(irq, mask);
- 	}
- 
- }
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index 77d0ea3dd1ea..377b22008280 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -154,6 +154,5 @@ struct x86_io_apic_ops x86_io_apic_ops = {
- 	.write			= native_io_apic_write,
- 	.modify			= native_io_apic_modify,
- 	.disable		= native_disable_io_apic,
--	.set_affinity		= native_ioapic_set_affinity,
- 	.eoi_ioapic_pin		= native_eoi_ioapic_pin,
- };
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 0486a123c29b..116796c194d2 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -25,10 +25,6 @@ int no_x2apic_optout;
- 
- static struct irq_remap_ops *remap_ops;
- 
--static int set_remapped_irq_affinity(struct irq_data *data,
--				     const struct cpumask *mask,
--				     bool force);
--
- static bool irq_remapped(struct irq_cfg *cfg)
- {
- 	return (cfg->remapped == 1);
-@@ -61,7 +57,6 @@ static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
- static void __init irq_remapping_modify_x86_ops(void)
- {
- 	x86_io_apic_ops.disable		= irq_remapping_disable_io_apic;
--	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
- 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
- }
- 
-@@ -176,16 +171,6 @@ int __init irq_remap_enable_fault_handling(void)
- 	return remap_ops->enable_faulting();
- }
- 
--static int set_remapped_irq_affinity(struct irq_data *data,
--				     const struct cpumask *mask, bool force)
--{
--	if (!config_enabled(CONFIG_SMP) || !remap_ops ||
--	    !remap_ops->set_affinity)
--		return 0;
--
--	return remap_ops->set_affinity(data, mask, force);
--}
--
- void free_remapped_irq(int irq)
- {
- 	struct irq_cfg *cfg = irq_cfg(irq);
-@@ -237,7 +222,6 @@ void irq_remap_modify_chip_defaults(struct irq_chip *chip)
- 	chip->irq_print_chip = ir_print_prefix;
- 	chip->irq_ack = ir_ack_apic_edge;
- 	chip->irq_eoi = ir_ack_apic_level;
--	chip->irq_set_affinity = x86_io_apic_ops.set_affinity;
- }
- 
- bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
--- 
-1.7.10.4
+$ ls /dev/serial/by-path/
+pci-0000:00:1a.0-usb-0:1.4.2.5:1.0@
+pci-0000:00:1a.0-usb-0:1.4.2.6:1.0@
+$ ls /dev/disk/by-path/
+pci-0000:03:00.0-sas-0x5fcfffff00000001-lun-0@
+pci-0000:03:00.0-sas-0x5fcfffff00000001-lun-0-part1@
+pci-0000:03:00.0-sas-0x5fcfffff00000001-lun-0-part2@
+pci-0000:03:00.0-sas-0x5fcfffff00000001-lun-0-part3@
+    ^^^^
+domain number
 
+It is part of the stable naming scheme udev uses - and that scheme is
+predicated on the PCI location being stable.
+
+> IMO they should not. We really want to move away from aliases, not
+> expand their use. They are used for serial because there was no good
+> way to not break things like "console=ttyS0". I2C I think was more
+> internal, but may have been for i2c-dev. What are we going to break if
+> we don't have consistent domain numbering? 
+
+Well, DT needs some kind of solution to produce stable names for
+things. It is no good if the names unpredictably randomize.
+
+Lets use I2C as an example. My embedded systems have multiple I2C
+busses, with multiple drivers (so load order is not easily ensured).
+I am relying on DT aliases to force the bus numbers to stable values,
+but if I don't do that - then how do I find things in user space?
+
+$ ls -l /sys/bus/i2c/devices
+lrwxrwxrwx    1 root     root            0 Sep 10 16:12 i2c-2 -> ../../../devices/pci0000:00/0000:00:01.0/i2c_qsfp.4/i2c-2
+
+Oh, I have to search based on the HW path, which includes the domain
+number.
+
+So that *must* be really stable, or user space has no hope of mapping
+real hardware back to an I2C bus number.
+
+The same is true for pretty much every small IDR scheme in the kernel
+- they rely on the HW path for stable names.
+
+As an aside, I think for embedded being able to directly specify
+things like the bus number for I2C, ethX for ethernet, etc is very
+valuable, I would be sad to see that go away.
+
+> DT, I'd rather see it as part of the PCI root node. But I'm not
+> convinced it is needed.
+ 
+> It doesn't really sound like we have any actual need to solve this for
+> DT ATM. It's not clear to me if all buses should be domain 0 or a
+> simple incrementing index for each bus in absence of any firmware set
+> value.
+
+There are already ARM DTs in the kernel that require multiple domains,
+so that ship has sailed.
+
+I don't think it really matters where the number comes from, so long
+as it doesn't change after a kernel upgrade, or with a different
+module load order, or if the DT is recompiled, or whatever. It needs
+to be stable.
+
+Jason
