@@ -1,447 +1,115 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFT v2 24/24] x86, uv: Use hierarchy irqdomain to manage UV interrupts
-Date: Fri, 26 Sep 2014 22:02:25 +0800
-Message-Id: <1411740145-30626-25-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f181.google.com ([209.85.216.181]:43924 "EHLO
+	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751727AbaIJSI3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Sep 2014 14:08:29 -0400
+Received: by mail-qc0-f181.google.com with SMTP id r5so62212qcx.40
+        for <linux-pci@vger.kernel.org>; Wed, 10 Sep 2014 11:08:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo6D+8KwM9LJC4VFCtGbQ65zh_2ZjNOuP-JQB1bmt5dwCw@mail.gmail.com>
+References: <1409303414-5196-1-git-send-email-david.henningsson@canonical.com>
+ <CAErSpo5v82xeYGqsiWXpfQdr8kF9x+1K4gjYremfCh3fNQ8Unw@mail.gmail.com>
+ <540091D1.1040902@canonical.com> <CAErSpo6D+8KwM9LJC4VFCtGbQ65zh_2ZjNOuP-JQB1bmt5dwCw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 10 Sep 2014 12:08:08 -0600
+Message-ID: <CAErSpo6DDCkrew8rwkNX8=gzc19vErY5iafPBN4oKw_Ww792=g@mail.gmail.com>
+Subject: Re: [PATCH] Add pci=assign-busses quirk to Dell Latitude D505
+To: David Henningsson <david.henningsson@canonical.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Andreas Noever <andreas.noever@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance UV code to support hierarchy irqdomain, it helps to make
-the architecture more clear.
+[+cc Andreas]
 
-We should construct hwirq based on mmr_blade and mmr_offset, but
-mmr_offset is type of unsigned long, it may exceed the range of
-irq_hw_number_t. So help about the way to construct hwirq based
-on mmr_blade and mmr_offset is welcomed!
+On Fri, Aug 29, 2014 at 11:36 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Aug 29, 2014 at 8:44 AM, David Henningsson
+> <david.henningsson@canonical.com> wrote:
+>>
+>>
+>> On 2014-08-29 16:22, Bjorn Helgaas wrote:
+>>>
+>>> On Fri, Aug 29, 2014 at 3:10 AM, David Henningsson
+>>> <david.henningsson@canonical.com> wrote:
+>>>>
+>>>> Under a 3.16 based kernel (Ubuntu 3.16.0-031600-lowlatency),
+>>>> CardBus is not working unless pci=assign-buses is added to the
+>>>> kernel boot parameters.
+>>>>
+>>>> Signed-off-by: David Henningsson <david.henningsson@canonical.com>
+>>>> ---
+>>>>   arch/x86/pci/common.c | 8 ++++++++
+>>>>   1 file changed, 8 insertions(+)
+>>>>
+>>>> It was working OOTB on a 3.2 based kernel (Ubuntu 3.2.0-67-generic),
+>>>> and I have not thoroughly bisected what made it stop working.
+>>>> Still I'm suggesting to just a quirk to make it work regardless of
+>>>> kernel - it's a ~8 year old laptop, so being a bit lazy about it is
+>>>> probably okay, I hope. :-)
+>>>
+>>>
+>>> Please open a bugzilla and attach complete "lspci -vv" output and
+>>> dmesg logs from the working 3.2 kernel and a non-working current
+>>> kernel.
+>>>
+>>> The quirk might be OK, but it would be better if we could make a
+>>> generic fix that would work on more machines than just this one.
+>>
+>>
+>> All right, you can now find the requested information in this bug:
+>>
+>> https://bugzilla.kernel.org/show_bug.cgi?id=83441
+>
+> Thanks very much.
+>
+> I'm going to resist adding a quirk as long as I can, because quirks
+> tend to paper over issues on individual systems without actually
+> fixing the underlying problem.  Unfortunately, I'm swamped at the
+> moment and won't be able to work on this for a while.  It would be
+> ideal if we could bisect this and pinpoint where the problem started.
+> Bisecting changes to drivers/pci would be sufficient.
+>
+>>>> Extract from dmidecode:
+>>>>
+>>>> Handle 0x0100, DMI type 1, 25 bytes
+>>>> System Information
+>>>>          Manufacturer: Dell Inc.
+>>>>          Product Name: Latitude D505
+>>>>
+>>>> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+>>>> index 059a76c..1849e39 100644
+>>>> --- a/arch/x86/pci/common.c
+>>>> +++ b/arch/x86/pci/common.c
+>>>> @@ -262,6 +262,14 @@ static const struct dmi_system_id
+>>>> pciprobe_dmi_table[] = {
+>>>>                          DMI_MATCH(DMI_PRODUCT_NAME, "SX20S"),
+>>>>                  },
+>>>>          },
+>>>> +       {
+>>>> +               .callback = assign_all_busses,
+>>>> +               .ident = "Dell Latitude D505 Laptop",
+>>>> +               .matches = {
+>>>> +                       DMI_MATCH(DMI_SYS_VENDOR, "Dell Inc."),
+>>>> +                       DMI_MATCH(DMI_PRODUCT_NAME, "Latitude D505"),
+>>>> +               },
+>>>> +       },
+>>>>   #endif         /* __i386__ */
+>>>>          {
+>>>>                  .callback = set_bf_sort,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/hw_irq.h |    9 ++
- arch/x86/platform/uv/uv_irq.c |  290 ++++++++++++++++-------------------------
- 2 files changed, 122 insertions(+), 177 deletions(-)
+v3.16 fails with:
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 35bdc90e5797..1cb6687375f8 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -122,6 +122,7 @@ enum irq_alloc_type {
- 	X86_IRQ_ALLOC_TYPE_MSI,
- 	X86_IRQ_ALLOC_TYPE_MSIX,
- 	X86_IRQ_ALLOC_TYPE_DMAR,
-+	X86_IRQ_ALLOC_TYPE_UV,
- };
- 
- struct irq_alloc_info {
-@@ -164,6 +165,14 @@ struct irq_alloc_info {
- 			void		*ht_update;
- 		};
- #endif
-+#ifdef	CONFIG_X86_UV
-+		struct {
-+			int		uv_limit;
-+			int		uv_blade;
-+			unsigned long	uv_offset;
-+			char		*uv_name;
-+		};
-+#endif
- 	};
- };
- 
-diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
-index 474912d03f40..743b409e966c 100644
---- a/arch/x86/platform/uv/uv_irq.c
-+++ b/arch/x86/platform/uv/uv_irq.c
-@@ -19,17 +19,31 @@
- #include <asm/uv/uv_hub.h>
- 
- /* MMR offset and pnode of hub sourcing interrupts for a given irq */
--struct uv_irq_2_mmr_pnode{
--	struct rb_node		list;
-+struct uv_irq_2_mmr_pnode {
- 	unsigned long		offset;
- 	int			pnode;
--	int			irq;
- };
- 
--static DEFINE_SPINLOCK(uv_irq_lock);
--static struct rb_root		uv_irq_root;
-+static void uv_program_mmr(struct irq_cfg *cfg, struct uv_irq_2_mmr_pnode *info)
-+{
-+	unsigned long mmr_value;
-+	struct uv_IO_APIC_route_entry *entry;
-+
-+	BUILD_BUG_ON(sizeof(struct uv_IO_APIC_route_entry) !=
-+		     sizeof(unsigned long));
-+
-+	mmr_value = 0;
-+	entry = (struct uv_IO_APIC_route_entry *)&mmr_value;
-+	entry->vector		= cfg->vector;
-+	entry->delivery_mode	= apic->irq_delivery_mode;
-+	entry->dest_mode	= apic->irq_dest_mode;
-+	entry->polarity		= 0;
-+	entry->trigger		= 0;
-+	entry->mask		= 0;
-+	entry->dest		= cfg->dest_apicid;
- 
--static int uv_set_irq_affinity(struct irq_data *, const struct cpumask *, bool);
-+	uv_write_global_mmr64(info->pnode, info->offset, mmr_value);
-+}
- 
- static void uv_noop(struct irq_data *data) { }
- 
-@@ -38,6 +52,24 @@ static void uv_ack_apic(struct irq_data *data)
- 	ack_APIC_irq();
- }
- 
-+static int
-+uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
-+		    bool force)
-+{
-+	struct irq_data *parent = data->parent_data;
-+	struct irq_cfg *cfg = irqd_cfg(data);
-+	int ret;
-+
-+	ret = parent->chip->irq_set_affinity(parent, mask, force);
-+	if (ret >= 0) {
-+		uv_program_mmr(cfg, data->chip_data);
-+		if (cfg->move_in_progress)
-+			send_cleanup_vector(cfg);
-+	}
-+
-+	return ret;
-+}
-+
- static struct irq_chip uv_irq_chip = {
- 	.name			= "UV-CORE",
- 	.irq_mask		= uv_noop,
-@@ -46,179 +78,106 @@ static struct irq_chip uv_irq_chip = {
- 	.irq_set_affinity	= uv_set_irq_affinity,
- };
- 
--/*
-- * Add offset and pnode information of the hub sourcing interrupts to the
-- * rb tree for a specific irq.
-- */
--static int uv_set_irq_2_mmr_info(int irq, unsigned long offset, unsigned blade)
-+static int uv_domain_alloc(struct irq_domain *domain, unsigned int virq,
-+			   unsigned int nr_irqs, void *arg)
- {
--	struct rb_node **link = &uv_irq_root.rb_node;
--	struct rb_node *parent = NULL;
--	struct uv_irq_2_mmr_pnode *n;
--	struct uv_irq_2_mmr_pnode *e;
--	unsigned long irqflags;
--
--	n = kmalloc_node(sizeof(struct uv_irq_2_mmr_pnode), GFP_KERNEL,
--				uv_blade_to_memory_nid(blade));
--	if (!n)
-+	struct uv_irq_2_mmr_pnode *chip_data;
-+	struct irq_alloc_info *info = arg;
-+	struct irq_data *irq_data = irq_domain_get_irq_data(domain, virq);
-+	int ret;
-+
-+	if (nr_irqs > 1 || !info || info->type != X86_IRQ_ALLOC_TYPE_UV)
-+		return -EINVAL;
-+
-+	chip_data = kmalloc_node(sizeof(*chip_data), GFP_KERNEL,
-+				 irq_data->node);
-+	if (!chip_data)
- 		return -ENOMEM;
- 
--	n->irq = irq;
--	n->offset = offset;
--	n->pnode = uv_blade_to_pnode(blade);
--	spin_lock_irqsave(&uv_irq_lock, irqflags);
--	/* Find the right place in the rbtree: */
--	while (*link) {
--		parent = *link;
--		e = rb_entry(parent, struct uv_irq_2_mmr_pnode, list);
--
--		if (unlikely(irq == e->irq)) {
--			/* irq entry exists */
--			e->pnode = uv_blade_to_pnode(blade);
--			e->offset = offset;
--			spin_unlock_irqrestore(&uv_irq_lock, irqflags);
--			kfree(n);
--			return 0;
--		}
--
--		if (irq < e->irq)
--			link = &(*link)->rb_left;
-+	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
-+	if (ret >= 0) {
-+		if (info->uv_limit == UV_AFFINITY_CPU)
-+			irq_set_status_flags(virq, IRQ_NO_BALANCING);
- 		else
--			link = &(*link)->rb_right;
-+			irq_set_status_flags(virq, IRQ_MOVE_PCNTXT);
-+
-+		chip_data->pnode = uv_blade_to_pnode(info->uv_blade);
-+		chip_data->offset = info->uv_offset;
-+		irq_domain_set_hwirq_and_chip(domain, virq, virq,
-+					      &uv_irq_chip, chip_data);
-+		__irq_set_handler(virq, handle_percpu_irq, 0, info->uv_name);
-+	} else {
-+		kfree(chip_data);
- 	}
- 
--	/* Insert the node into the rbtree. */
--	rb_link_node(&n->list, parent, link);
--	rb_insert_color(&n->list, &uv_irq_root);
--
--	spin_unlock_irqrestore(&uv_irq_lock, irqflags);
--	return 0;
-+	return ret;
- }
- 
--/* Retrieve offset and pnode information from the rb tree for a specific irq */
--int uv_irq_2_mmr_info(int irq, unsigned long *offset, int *pnode)
-+static void uv_domain_free(struct irq_domain *domain, unsigned int virq,
-+			   unsigned int nr_irqs)
- {
--	struct uv_irq_2_mmr_pnode *e;
--	struct rb_node *n;
--	unsigned long irqflags;
--
--	spin_lock_irqsave(&uv_irq_lock, irqflags);
--	n = uv_irq_root.rb_node;
--	while (n) {
--		e = rb_entry(n, struct uv_irq_2_mmr_pnode, list);
--
--		if (e->irq == irq) {
--			*offset = e->offset;
--			*pnode = e->pnode;
--			spin_unlock_irqrestore(&uv_irq_lock, irqflags);
--			return 0;
--		}
--
--		if (irq < e->irq)
--			n = n->rb_left;
--		else
--			n = n->rb_right;
--	}
--	spin_unlock_irqrestore(&uv_irq_lock, irqflags);
--	return -1;
-+	struct irq_data *irq_data = irq_domain_get_irq_data(domain, virq);
-+
-+	BUG_ON(nr_irqs != 1);
-+	kfree(irq_data->chip_data);
-+	irq_domain_reset_irq_data(irq_data);
-+	irq_set_handler(virq, NULL);
-+	irq_clear_status_flags(virq, IRQ_MOVE_PCNTXT);
-+	irq_clear_status_flags(virq, IRQ_NO_BALANCING);
-+	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
- }
- 
- /*
-  * Re-target the irq to the specified CPU and enable the specified MMR located
-  * on the specified blade to allow the sending of MSIs to the specified CPU.
-  */
--static int
--arch_enable_uv_irq(char *irq_name, unsigned int irq, int cpu, int mmr_blade,
--		       unsigned long mmr_offset, int limit)
-+static int uv_domain_activate(struct irq_domain *domain,
-+			      struct irq_data *irq_data)
- {
--	struct irq_cfg *cfg = irq_cfg(irq);
--	unsigned long mmr_value;
--	struct uv_IO_APIC_route_entry *entry;
--	int mmr_pnode;
--
--	BUILD_BUG_ON(sizeof(struct uv_IO_APIC_route_entry) !=
--			sizeof(unsigned long));
--
--	if (limit == UV_AFFINITY_CPU)
--		irq_set_status_flags(irq, IRQ_NO_BALANCING);
--	else
--		irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
--
--	irq_set_chip_and_handler_name(irq, &uv_irq_chip, handle_percpu_irq,
--				      irq_name);
-+	uv_program_mmr(irqd_cfg(irq_data), irq_data->chip_data);
- 
--	mmr_value = 0;
--	entry = (struct uv_IO_APIC_route_entry *)&mmr_value;
--	entry->vector		= cfg->vector;
--	entry->delivery_mode	= apic->irq_delivery_mode;
--	entry->dest_mode	= apic->irq_dest_mode;
--	entry->polarity		= 0;
--	entry->trigger		= 0;
--	entry->mask		= 0;
--	entry->dest		= cfg->dest_apicid;
--
--	mmr_pnode = uv_blade_to_pnode(mmr_blade);
--	uv_write_global_mmr64(mmr_pnode, mmr_offset, mmr_value);
--
--	if (cfg->move_in_progress)
--		send_cleanup_vector(cfg);
--
--	return irq;
-+	return 0;
- }
- 
- /*
-  * Disable the specified MMR located on the specified blade so that MSIs are
-  * longer allowed to be sent.
-  */
--static void arch_disable_uv_irq(int mmr_pnode, unsigned long mmr_offset)
-+static int uv_domain_deactivate(struct irq_domain *domain,
-+				struct irq_data *irq_data)
- {
- 	unsigned long mmr_value;
- 	struct uv_IO_APIC_route_entry *entry;
- 
--	BUILD_BUG_ON(sizeof(struct uv_IO_APIC_route_entry) !=
--			sizeof(unsigned long));
--
- 	mmr_value = 0;
- 	entry = (struct uv_IO_APIC_route_entry *)&mmr_value;
- 	entry->mask = 1;
-+	uv_program_mmr(irqd_cfg(irq_data), irq_data->chip_data);
- 
--	uv_write_global_mmr64(mmr_pnode, mmr_offset, mmr_value);
-+	return 0;
- }
- 
--static int
--uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
--		    bool force)
--{
--	struct irq_cfg *cfg = irqd_cfg(data);
--	unsigned int dest;
--	unsigned long mmr_value, mmr_offset;
--	struct uv_IO_APIC_route_entry *entry;
--	int mmr_pnode;
--
--	if (apic_set_affinity(data, mask, &dest))
--		return -1;
--
--	mmr_value = 0;
--	entry = (struct uv_IO_APIC_route_entry *)&mmr_value;
--
--	entry->vector		= cfg->vector;
--	entry->delivery_mode	= apic->irq_delivery_mode;
--	entry->dest_mode	= apic->irq_dest_mode;
--	entry->polarity		= 0;
--	entry->trigger		= 0;
--	entry->mask		= 0;
--	entry->dest		= dest;
--
--	/* Get previously stored MMR and pnode of hub sourcing interrupts */
--	if (uv_irq_2_mmr_info(data->irq, &mmr_offset, &mmr_pnode))
--		return -1;
--
--	uv_write_global_mmr64(mmr_pnode, mmr_offset, mmr_value);
-+static struct irq_domain_ops uv_domain_ops = {
-+	.alloc = uv_domain_alloc,
-+	.free = uv_domain_free,
-+	.activate = uv_domain_activate,
-+	.deactivate = uv_domain_deactivate,
-+};
- 
--	if (cfg->move_in_progress)
--		send_cleanup_vector(cfg);
-+static struct irq_domain *uv_get_irq_domain(void)
-+{
-+	static struct irq_domain *uv_domain;
-+	static DEFINE_MUTEX(uv_lock);
-+
-+	mutex_lock(&uv_lock);
-+	if (uv_domain == NULL) {
-+		uv_domain = irq_domain_add_tree(NULL, &uv_domain_ops, NULL);
-+		if (uv_domain)
-+			uv_domain->parent = x86_vector_domain;
-+	}
-+	mutex_unlock(&uv_lock);
- 
--	return IRQ_SET_MASK_OK_NOCOPY;
-+	return uv_domain;
- }
- 
- /*
-@@ -229,23 +188,20 @@ uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
- int uv_setup_irq(char *irq_name, int cpu, int mmr_blade,
- 		 unsigned long mmr_offset, int limit)
- {
--	int ret, irq;
- 	struct irq_alloc_info info;
-+	struct irq_domain *domain = uv_get_irq_domain();
-+
-+	if (!domain)
-+		return -ENOMEM;
- 
- 	init_irq_alloc_info(&info, cpumask_of(cpu));
--	irq = irq_domain_alloc_irqs(NULL, 1, uv_blade_to_memory_nid(mmr_blade),
--				    &info);
--	if (irq <= 0)
--		return -EBUSY;
--
--	ret = arch_enable_uv_irq(irq_name, irq, cpu, mmr_blade, mmr_offset,
--		limit);
--	if (ret == irq)
--		uv_set_irq_2_mmr_info(irq, mmr_offset, mmr_blade);
--	else
--		irq_domain_free_irqs(irq, 1);
-+	info.uv_limit = limit;
-+	info.uv_blade = mmr_blade;
-+	info.uv_offset = mmr_offset;
-+	info.uv_name = irq_name;
- 
--	return ret;
-+	return irq_domain_alloc_irqs(domain, 1,
-+				     uv_blade_to_memory_nid(mmr_blade), &info);
- }
- EXPORT_SYMBOL_GPL(uv_setup_irq);
- 
-@@ -258,26 +214,6 @@ EXPORT_SYMBOL_GPL(uv_setup_irq);
-  */
- void uv_teardown_irq(unsigned int irq)
- {
--	struct uv_irq_2_mmr_pnode *e;
--	struct rb_node *n;
--	unsigned long irqflags;
--
--	spin_lock_irqsave(&uv_irq_lock, irqflags);
--	n = uv_irq_root.rb_node;
--	while (n) {
--		e = rb_entry(n, struct uv_irq_2_mmr_pnode, list);
--		if (e->irq == irq) {
--			arch_disable_uv_irq(e->pnode, e->offset);
--			rb_erase(n, &uv_irq_root);
--			kfree(e);
--			break;
--		}
--		if (irq < e->irq)
--			n = n->rb_left;
--		else
--			n = n->rb_right;
--	}
--	spin_unlock_irqrestore(&uv_irq_lock, irqflags);
- 	irq_domain_free_irqs(irq, 1);
- }
- EXPORT_SYMBOL_GPL(uv_teardown_irq);
--- 
-1.7.10.4
+  pci 0000:01:01.0: can't allocate child bus 01 from [bus 01]
 
+which Andreas added with fc1b253141b3 ("PCI: Don't scan random busses
+in pci_scan_bridge()").  But I don't understand that code well enough
+to know whether this commit is actually the cause of the problem.
+
+And I also haven't figured out how "pci=assign-busses" makes a difference.
+
+David, would you mind turning on CONFIG_DYNAMIC_DEBUG=y in your v3.16
+kernel, adding  'dyndbg="file probe.c +p"' to your boot arguments, and
+collecting another dmesg log?
+
+Bjorn
