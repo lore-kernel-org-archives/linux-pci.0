@@ -1,117 +1,110 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Fri, 26 Sep 2014 09:50:30 +0100
-From: Liviu Dudau <liviu@dudau.co.uk>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
- in all platforms
-Message-ID: <20140926085030.GE31157@bart.dudau.co.uk>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
- <20140925074235.GN12423@ulmo>
- <20140925144855.GB31157@bart.dudau.co.uk>
- <20140925164937.GB30382@ulmo>
- <5424E09F.50701@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:49821 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751077AbaIJRMw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 10 Sep 2014 13:12:52 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<bhelgaas@google.com>, <arnd@arndb.de>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>
+Subject: [PATCH v3 1/2] PCI: keystone: remove handle of PCI mode configuration
+Date: Wed, 10 Sep 2014 13:12:38 -0400
+Message-ID: <1410369159-11564-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <5424E09F.50701@huawei.com>
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 26, 2014 at 11:42:23AM +0800, Yijing Wang wrote:
-> >> I am actually in disagreement with you, Thierry. I don't like the general direction
-> >> of the patches, or at least I don't like the fact that we don't have a portable
-> >> way of setting up the msi_chip without having to rely on weak architectural hooks.
-> > 
-> > Oh, good. That's actually one of the things I said I wasn't happy with
-> > either. =)
-> 
-> Hm, I decide to drop weak arch_find_msi_chip(), no one likes it.
-> Let's find a better solution :)
-> 
-> > 
-> >> I'm surprised no one considers the case of a platform having more than one host
-> >> bridge and possibly more than one MSI unit. With the current proposed patchset I
-> >> can't see how that would work.
-> > 
-> > The PCI core can already deal with that. An MSI chip can be set per bus
-> > and the weak pcibios_add_bus() can be used to set that. Often it might
-> > not even be necessary to do it via pcibios_add_bus() if you create the
-> > root bus directly, since you can attach the MSI chip at that time.
-> 
-> Yes, PCI hostbridge driver find the matched msi chip during its initialization,
-> and assign the msi chip to PCI bus in pcibios_add_bus().
-> 
-> > 
-> >> What I would like to see is a way of creating the pci_host_bridge structure outside
-> >> the pci_create_root_bus(). That would then allow us to pass this sort of platform
-> >> details like associated msi_chip into the host bridge and the child busses will
-> >> have an easy way of finding the information needed by finding the root bus and then
-> >> the host bridge structure. Then the generic pci_scan_root_bus() can be used by (mostly)
-> >> everyone and the drivers can remove their kludges that try to work around the
-> >> current limitations.
-> 
-> So I think maybe save msi chip in PCI arch sysdata is a good candidate.
+Keystone PCI hardware supports both RC and EP modes and devcfg
+register has bits to boot strap the device to either of these modes.
+It seems proper to add this functionality to the boot loader rather
+than in the driver as device will be operating in either mode, not
+both any time. Currently the driver supports only RC mode and hence
+register configuration in the driver is not needed and driver can
+assume this is a RC hardware.
 
-Except that arch sysdata at the moment is an opaque pointer. I am all in favour in
-changing the type of sysdata from void* into pci_host_bridge* and arches can wrap their old
-sysdata around the pci_host_bridge*.
+Also update the DT documentation accordingly.
 
-Best regards,
-Liviu
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+---
+	v3 - No change
+	v2 - Added this separate patch to remove pci mode handling
+ .../devicetree/bindings/pci/pci-keystone.txt       |    4 +---
+ drivers/pci/host/pci-keystone.c                    |   21 ++------------------
+ 2 files changed, 3 insertions(+), 22 deletions(-)
 
-> 
-> > 
-> > I think both issues are orthogonal. Last time I checked a lot of work
-> > was still necessary to unify host bridges enough so that it could be
-> > shared across architectures. But perhaps some of that work has
-> > happened in the meantime.
-> > 
-> > But like I said, when you create the root bus, you can easily attach the
-> > MSI chip to it.
-> > 
-> > Thierry
-> > 
-> 
-> 
-> -- 
-> Thanks!
-> Yijing
-> 
-> 
-
+diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
+index ceb3e24..bedacf0 100644
+--- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
++++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
+@@ -13,9 +13,7 @@ Required Properties:-
+ 
+ compatibility: "ti,keystone-pcie"
+ reg:	index 1 is the base address and length of DW application registers.
+-	index 2 is the base address and length of PCI mode configuration
+-	register.
+-	index 3 is the base address and length of PCI device ID register.
++	index 2 is the base address and length of PCI device ID register.
+ 
+ pcie_msi_intc : Interrupt controller device node for MSI IRQ chip
+ 	interrupt-cells: should be set to 1
+diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+index ff8ed25..f1119eb 100644
+--- a/drivers/pci/host/pci-keystone.c
++++ b/drivers/pci/host/pci-keystone.c
+@@ -35,10 +35,6 @@
+ #define MAX_MSI_HOST_IRQS		8
+ #define MAX_LEGACY_HOST_IRQS		4
+ 
+-/* RC mode settings masks */
+-#define PCIE_RC_MODE		BIT(2)
+-#define PCIE_MODE_MASK		(BIT(1) | BIT(2))
+-
+ /* DEV_STAT_CTRL */
+ #define PCIE_CAP_BASE		0x70
+ 
+@@ -355,7 +351,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	void __iomem *reg_p;
+ 	struct phy *phy;
+ 	int ret = 0;
+-	u32 val;
+ 
+ 	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
+ 				GFP_KERNEL);
+@@ -365,18 +360,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	}
+ 	pp = &ks_pcie->pp;
+ 
+-	/* index 2 is the devcfg register for RC mode settings */
+-	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
+-	reg_p = devm_ioremap_resource(dev, res);
+-	if (IS_ERR(reg_p))
+-		return PTR_ERR(reg_p);
+-
+-	/* enable RC mode in devcfg */
+-	val = readl(reg_p);
+-	val &= ~PCIE_MODE_MASK;
+-	val |= PCIE_RC_MODE;
+-	writel(val, reg_p);
+-
+ 	/* initialize SerDes Phy if present */
+ 	phy = devm_phy_get(dev, "pcie-phy");
+ 	if (!IS_ERR_OR_NULL(phy)) {
+@@ -385,8 +368,8 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 			return ret;
+ 	}
+ 
+-	/* index 3 is to read PCI DEVICE_ID */
+-	res = platform_get_resource(pdev, IORESOURCE_MEM, 3);
++	/* index 2 is to read PCI DEVICE_ID */
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
+ 	reg_p = devm_ioremap_resource(dev, res);
+ 	if (IS_ERR(reg_p))
+ 		return PTR_ERR(reg_p);
 -- 
--------------------
-   .oooO
-   (   )
-    \ (  Oooo.
-     \_) (   )
-          ) /
-         (_/
-
- One small step
-   for me ...
+1.7.9.5
 
