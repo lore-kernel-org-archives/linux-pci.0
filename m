@@ -1,131 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:64127 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753740AbaIAOLX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Sep 2014 10:11:23 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dmitry Torokhov <dtor@google.com>,
-	Aubrey Li <aubrey.li@intel.com>
-Subject: [PATCH 08/13] genirq: Create helper for flow handler entry check
-Date: Mon, 01 Sep 2014 16:24:57 +0200
-Message-ID: <1951365.DpvK0R7Nqk@vostro.rjw.lan>
-In-Reply-To: <2516134.pmOxkEuOOy@vostro.rjw.lan>
-References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan> <2516134.pmOxkEuOOy@vostro.rjw.lan>
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:46310 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750803AbaIJIZ7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Sep 2014 04:25:59 -0400
+Date: Wed, 10 Sep 2014 13:55:19 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Zhudacai <zhudacai@hisilicon.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	"marex@denx.de" <marex@denx.de>,
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+	"wangzhou1@hisilicon.com" <wangzhou1@hisilicon.com>,
+	zhanweitao <zhanweitao@huawei.com>, <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: Re: Designware about Arm64 supported
+Message-ID: <20140910082519.GA5797@pratyush-vbox>
+References: <54017B10.4090004@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <54017B10.4090004@hisilicon.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+Hi Dacai,
 
-All flow handlers - except the per cpu ones - check for an interrupt
-in progress and an eventual concurrent polling on another cpu.
+Sorry for delayed response. I do not work directly with PCIe these
+days. Please always keep PCI mailing list in CC.
 
-Create a helper function for the repeated code pattern.
+On Sat, Aug 30, 2014 at 03:19:44PM +0800, Zhudacai wrote:
+> Hi all,
+> I just use the designware patch for my arm64 board' PCIe .
+> 
+> And here is some conflict while I patched it with the Liviu's PCI patch of ARM64.
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- kernel/irq/chip.c |   48 ++++++++++++++++++++----------------------------
- 1 file changed, 20 insertions(+), 28 deletions(-)
+I just had a quick look on current state of designware driver and
+Liviu's V10 patchset.
 
-Index: linux/kernel/irq/chip.c
-===================================================================
---- linux.orig/kernel/irq/chip.c
-+++ linux/kernel/irq/chip.c
-@@ -342,6 +342,13 @@ static bool irq_check_poll(struct irq_de
- 	return irq_wait_for_poll(desc);
- }
- 
-+static bool irq_may_run(struct irq_desc *desc)
-+{
-+	if (!irqd_irq_inprogress(&desc->irq_data))
-+		return true;
-+	return irq_check_poll(desc);
-+}
-+
- /**
-  *	handle_simple_irq - Simple and software-decoded IRQs.
-  *	@irq:	the interrupt number
-@@ -359,9 +366,8 @@ handle_simple_irq(unsigned int irq, stru
- {
- 	raw_spin_lock(&desc->lock);
- 
--	if (unlikely(irqd_irq_inprogress(&desc->irq_data)))
--		if (!irq_check_poll(desc))
--			goto out_unlock;
-+	if (!irq_may_run(desc))
-+		goto out_unlock;
- 
- 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
- 	kstat_incr_irqs_this_cpu(irq, desc);
-@@ -412,9 +418,8 @@ handle_level_irq(unsigned int irq, struc
- 	raw_spin_lock(&desc->lock);
- 	mask_ack_irq(desc);
- 
--	if (unlikely(irqd_irq_inprogress(&desc->irq_data)))
--		if (!irq_check_poll(desc))
--			goto out_unlock;
-+	if (!irq_may_run(desc))
-+		goto out_unlock;
- 
- 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
- 	kstat_incr_irqs_this_cpu(irq, desc);
-@@ -485,9 +490,8 @@ handle_fasteoi_irq(unsigned int irq, str
- 
- 	raw_spin_lock(&desc->lock);
- 
--	if (unlikely(irqd_irq_inprogress(&desc->irq_data)))
--		if (!irq_check_poll(desc))
--			goto out;
-+	if (!irq_may_run(desc))
-+		goto out;
- 
- 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
- 	kstat_incr_irqs_this_cpu(irq, desc);
-@@ -541,16 +545,10 @@ handle_edge_irq(unsigned int irq, struct
- 
- 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
- 
--	/*
--	 * If the handler is currently running, mark it pending,
--	 * handle the necessary masking and go out
--	 */
--	if (unlikely(irqd_irq_inprogress(&desc->irq_data))) {
--		if (!irq_check_poll(desc)) {
--			desc->istate |= IRQS_PENDING;
--			mask_ack_irq(desc);
--			goto out_unlock;
--		}
-+	if (!irq_may_run(desc)) {
-+		desc->istate |= IRQS_PENDING;
-+		mask_ack_irq(desc);
-+		goto out_unlock;
- 	}
- 
- 	/*
-@@ -612,15 +610,9 @@ void handle_edge_eoi_irq(unsigned int ir
- 
- 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
- 
--	/*
--	 * If the handler is currently running, mark it pending,
--	 * handle the necessary masking and go out
--	 */
--	if (unlikely(irqd_irq_inprogress(&desc->irq_data))) {
--		if (!irq_check_poll(desc)) {
--			desc->istate |= IRQS_PENDING;
--			goto out_eoi;
--		}
-+	if (!irq_may_run(desc)) {
-+		desc->istate |= IRQS_PENDING;
-+		goto out_eoi;
- 	}
- 
- 	/*
+As a first step,
+There would be couple of things which we need to get rid of DW
+driver, before it is usable with generic pci support. 
 
+-- Replace pci_common_init_dev with following:
+
+        dw_pcie_setup
+        pci_scan_root_bus (should help in getting rid of  dw_pcie_scan_bus)
+
+-- Get rid of 'struct hw_pci dw_pci' and 'sys_to_pcie(struct
+pci_sys_data *sys)'
+
+-- in order to get rid of dw_pci, you might need
+        to add following for arch/arm, so that existing platform works:
+                pcibios_add_device : (should help in getting rid of  dw_pcie_map_irq)
+
+-- of_pci_get_host_bridge_resources can be used (may be with some
+modification) to cleanup most of the code of dw_pcie_host_init.
+
+-- Above should help in working with intx. To use msi, I think you might
+need to work on core layer a bit. One easiest way, could be to modify
+pci_scan_root_bus to accept struct msi_chip as additional argument and
+assign msi_chip to bus->msi in this function. 
+
+
+> 
+> however, it's will be accepted at kernel version 3.18 about Liviu's PCI patch of ARM64
+> (http://patchwork.ozlabs.org/patch/379423/).
+> 
+> so ,I wondered if you have some follow-up plan with the designware patch on arm64.
+
+I think Mohit/Jingoo can comment here. What I know, they do not have
+ARM64 bit platform, so they might not be able to work for designware
+patch on arm64. But yes, I agree that designware can be modified on
+top of Liviu's patch to work with ARM 32 bit, while independent of
+arch/arm/kernel/bios32.c code.
+
+~Pratyush
+> 
+> Best regards
+> 
+> Dacai
+> 
