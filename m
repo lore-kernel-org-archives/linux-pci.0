@@ -1,398 +1,301 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:64224 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756666AbaISFRF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 19 Sep 2014 01:17:05 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V6 5/8] iommu/vt-d: Enhance intel_irq_remapping driver to support DMAR unit hotplug
-Date: Fri, 19 Sep 2014 13:18:52 +0800
-Message-Id: <1411103935-31301-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411103935-31301-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411103935-31301-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from service87.mimecast.com ([91.220.42.44]:48561 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751246AbaIJNEk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Sep 2014 09:04:40 -0400
+Date: Wed, 10 Sep 2014 14:04:32 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI
+ domain_nr
+Message-ID: <20140910130432.GB27864@e106497-lin.cambridge.arm.com>
+References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
+ <1410184472-17630-8-git-send-email-Liviu.Dudau@arm.com>
+ <CAL_JsqJi8k1Goc3UmXhuxf9v7=4gJrYG_Di7v574PxS8TsJaXw@mail.gmail.com>
+ <20140908145459.GO27864@e106497-lin.cambridge.arm.com>
+ <CAL_JsqJdGKDVwJOpPp19OkVPGzR7Zqv3nh+ONHHaYnPLYTYoYg@mail.gmail.com>
+ <20140908155931.GP27864@e106497-lin.cambridge.arm.com>
+MIME-Version: 1.0
+In-Reply-To: <20140908155931.GP27864@e106497-lin.cambridge.arm.com>
+Content-Type: multipart/mixed; boundary="d6Gm4EdcadzBjdND"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement required callback functions for intel_irq_remapping driver
-to support DMAR unit hotplug.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+--d6Gm4EdcadzBjdND
+Content-Type: text/plain; charset=UTF-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, Sep 08, 2014 at 04:59:31PM +0100, Liviu Dudau wrote:
+> On Mon, Sep 08, 2014 at 04:27:36PM +0100, Rob Herring wrote:
+> > On Mon, Sep 8, 2014 at 9:54 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote=
+:
+> > > On Mon, Sep 08, 2014 at 03:27:56PM +0100, Rob Herring wrote:
+> > >> On Mon, Sep 8, 2014 at 8:54 AM, Liviu Dudau <Liviu.Dudau@arm.com> wr=
+ote:
+> > >> > Add of_pci_get_domain_nr() to retrieve the PCI domain number
+> > >> > of a given device from DT. If the information is not present,
+> > >> > the function can be requested to allocate a new domain number.
+> > >> >
+> > >> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > >> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > >> > Cc: Grant Likely <grant.likely@linaro.org>
+> > >> > Cc: Rob Herring <robh+dt@kernel.org>
+> > >> > Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+> > >> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > >> > ---
+> > >> >  drivers/of/of_pci.c    | 34 ++++++++++++++++++++++++++++++++++
+> > >> >  include/linux/of_pci.h |  7 +++++++
+> > >> >  2 files changed, 41 insertions(+)
+> > >> >
+> > >> > diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> > >> > index 8481996..a107edb 100644
+> > >> > --- a/drivers/of/of_pci.c
+> > >> > +++ b/drivers/of/of_pci.c
+> > >> > @@ -89,6 +89,40 @@ int of_pci_parse_bus_range(struct device_node *=
+node, struct resource *res)
+> > >> >  }
+> > >> >  EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
+> > >> >
+> > >> > +static atomic_t of_domain_nr =3D ATOMIC_INIT(-1);
+> > >> > +
+> > >> > +/**
+> > >> > + * This function will try to obtain the host bridge domain number=
+ by
+> > >> > + * using of_alias_get_id() call with "pci-domain" as a stem. If t=
+hat
+> > >> > + * fails, a local allocator will be used. The local allocator can
+> > >> > + * be requested to return a new domain_nr if the information is m=
+issing
+> > >> > + * from the device tree.
+> > >> > + *
+> > >> > + * @node: device tree node with the domain information
+> > >> > + * @allocate_if_missing: if DT lacks information about the domain=
+ nr,
+> > >> > + * allocate a new number.
+> > >> > + *
+> > >> > + * Returns the associated domain number from DT, or a new domain =
+number
+> > >> > + * if DT information is missing and @allocate_if_missing is true.=
+ If
+> > >> > + * @allocate_if_missing is false then the last allocated domain n=
+umber
+> > >> > + * will be returned.
+> > >> > + */
+> > >> > +int of_pci_get_domain_nr(struct device_node *node, bool allocate_=
+if_missing)
+> > >> > +{
+> > >> > +       int domain;
+> > >> > +
+> > >> > +       domain =3D of_alias_get_id(node, "pci-domain");
+> > >> > +       if (domain =3D=3D -ENODEV) {
+> > >> > +               if (allocate_if_missing)
+> > >> > +                       domain =3D atomic_inc_return(&of_domain_nr=
+);
+> > >> > +               else
+> > >> > +                       domain =3D atomic_read(&of_domain_nr);
+> > >>
+> > >> This function seems a bit broken to me. It is overloaded with too ma=
+ny
+> > >> different outcomes. Think about how this would work if you have
+> > >> multiple PCI buses and a mixture of having pci-domain aliases or not=
+.
+> > >> Aren't domain numbers global? Allocation should then start outside o=
+f
+> > >> the range of alias ids.
+> > >>
+> > >> Rob
+> > >>
+> > >
+> > > Rob,
+> > >
+> > > Would this version make more sense?
+> >=20
+> > No.
+> >=20
+
+Hi Rob,
+
+Here is an updated version of the patch. I have implemented a separate func=
+tion
+for getting the max domain number from the device tree and use the result a=
+s
+the start value + 1 for the allocator.
+
+Best regards,
+Liviu
+
+--=20
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    =C2=AF\_(=E3=83=84)_/=C2=AF
+--d6Gm4EdcadzBjdND
+Content-Type: text/x-diff; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment; filename="0001-OF-Introduce-helper-function-for-getting-PCI-domain_.patch"
+
+>From 77257fceaa8fbd74d6132fcf57c3af14bd48c0ae Mon Sep 17 00:00:00 2001
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+Date: Mon, 4 Aug 2014 17:03:04 +0100
+Subject: [PATCH v10 07/10] OF: Introduce helper function for getting PCI do=
+main_nr
+
+Add of_pci_get_domain_nr() to retrieve the PCI domain number
+of a given device from DT. If the information is not present,
+the function can be requested to allocate a new domain number.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>
+Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 ---
- drivers/iommu/intel_irq_remapping.c |  226 ++++++++++++++++++++++++++---------
- 1 file changed, 171 insertions(+), 55 deletions(-)
+ drivers/of/of_pci.c    | 62 ++++++++++++++++++++++++++++++++++++++++++++++=
+++++
+ include/linux/of_pci.h |  7 ++++++
+ 2 files changed, 69 insertions(+)
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 9b140ed854ec..1edbbed8c6bc 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -36,7 +36,6 @@ struct hpet_scope {
- 
- static struct ioapic_scope ir_ioapic[MAX_IO_APICS];
- static struct hpet_scope ir_hpet[MAX_HPET_TBS];
--static int ir_ioapic_num, ir_hpet_num;
- 
- /*
-  * Lock ordering:
-@@ -206,7 +205,7 @@ static struct intel_iommu *map_hpet_to_ir(u8 hpet_id)
- 	int i;
- 
- 	for (i = 0; i < MAX_HPET_TBS; i++)
--		if (ir_hpet[i].id == hpet_id)
-+		if (ir_hpet[i].id == hpet_id && ir_hpet[i].iommu)
- 			return ir_hpet[i].iommu;
- 	return NULL;
- }
-@@ -216,7 +215,7 @@ static struct intel_iommu *map_ioapic_to_ir(int apic)
- 	int i;
- 
- 	for (i = 0; i < MAX_IO_APICS; i++)
--		if (ir_ioapic[i].id == apic)
-+		if (ir_ioapic[i].id == apic && ir_ioapic[i].iommu)
- 			return ir_ioapic[i].iommu;
- 	return NULL;
- }
-@@ -325,7 +324,7 @@ static int set_ioapic_sid(struct irte *irte, int apic)
- 
- 	down_read(&dmar_global_lock);
- 	for (i = 0; i < MAX_IO_APICS; i++) {
--		if (ir_ioapic[i].id == apic) {
-+		if (ir_ioapic[i].iommu && ir_ioapic[i].id == apic) {
- 			sid = (ir_ioapic[i].bus << 8) | ir_ioapic[i].devfn;
- 			break;
- 		}
-@@ -352,7 +351,7 @@ static int set_hpet_sid(struct irte *irte, u8 id)
- 
- 	down_read(&dmar_global_lock);
- 	for (i = 0; i < MAX_HPET_TBS; i++) {
--		if (ir_hpet[i].id == id) {
-+		if (ir_hpet[i].iommu && ir_hpet[i].id == id) {
- 			sid = (ir_hpet[i].bus << 8) | ir_hpet[i].devfn;
- 			break;
- 		}
-@@ -474,17 +473,17 @@ static void iommu_set_irq_remapping(struct intel_iommu *iommu, int mode)
- 	raw_spin_unlock_irqrestore(&iommu->register_lock, flags);
- }
- 
--
--static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
-+static int intel_setup_irq_remapping(struct intel_iommu *iommu)
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 8481996..3560401 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -3,6 +3,8 @@
+ #include <linux/of.h>
+ #include <linux/of_pci.h>
+=20
++#include "of_private.h"
++
+ static inline int __of_pci_pci_compare(struct device_node *node,
+ =09=09=09=09       unsigned int data)
  {
- 	struct ir_table *ir_table;
- 	struct page *pages;
- 	unsigned long *bitmap;
- 
--	ir_table = iommu->ir_table = kzalloc(sizeof(struct ir_table),
--					     GFP_ATOMIC);
-+	if (iommu->ir_table)
-+		return 0;
- 
--	if (!iommu->ir_table)
-+	ir_table = kzalloc(sizeof(struct ir_table), GFP_ATOMIC);
-+	if (!ir_table)
- 		return -ENOMEM;
- 
- 	pages = alloc_pages_node(iommu->node, GFP_ATOMIC | __GFP_ZERO,
-@@ -493,7 +492,7 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
- 	if (!pages) {
- 		pr_err("IR%d: failed to allocate pages of order %d\n",
- 		       iommu->seq_id, INTR_REMAP_PAGE_ORDER);
--		kfree(iommu->ir_table);
-+		kfree(ir_table);
- 		return -ENOMEM;
- 	}
- 
-@@ -508,11 +507,22 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
- 
- 	ir_table->base = page_address(pages);
- 	ir_table->bitmap = bitmap;
-+	iommu->ir_table = ir_table;
- 
--	iommu_set_irq_remapping(iommu, mode);
- 	return 0;
+@@ -89,6 +91,66 @@ int of_pci_parse_bus_range(struct device_node *node, str=
+uct resource *res)
  }
- 
-+static void intel_teardown_irq_remapping(struct intel_iommu *iommu)
-+{
-+	if (iommu && iommu->ir_table) {
-+		free_pages((unsigned long)iommu->ir_table->base,
-+			   INTR_REMAP_PAGE_ORDER);
-+		kfree(iommu->ir_table->bitmap);
-+		kfree(iommu->ir_table);
-+		iommu->ir_table = NULL;
-+	}
-+}
+ EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
+=20
++static atomic_t of_domain_nr =3D ATOMIC_INIT(-1);
 +
- /*
-  * Disable Interrupt Remapping.
-  */
-@@ -667,9 +677,10 @@ static int __init intel_enable_irq_remapping(void)
- 		if (!ecap_ir_support(iommu->ecap))
- 			continue;
- 
--		if (intel_setup_irq_remapping(iommu, eim))
-+		if (intel_setup_irq_remapping(iommu))
- 			goto error;
- 
-+		iommu_set_irq_remapping(iommu, eim);
- 		setup = 1;
- 	}
- 
-@@ -700,12 +711,13 @@ error:
- 	return -1;
- }
- 
--static void ir_parse_one_hpet_scope(struct acpi_dmar_device_scope *scope,
--				      struct intel_iommu *iommu)
-+static int ir_parse_one_hpet_scope(struct acpi_dmar_device_scope *scope,
-+				   struct intel_iommu *iommu,
-+				   struct acpi_dmar_hardware_unit *drhd)
- {
- 	struct acpi_dmar_pci_path *path;
- 	u8 bus;
--	int count;
-+	int count, free = -1;
- 
- 	bus = scope->bus;
- 	path = (struct acpi_dmar_pci_path *)(scope + 1);
-@@ -721,19 +733,36 @@ static void ir_parse_one_hpet_scope(struct acpi_dmar_device_scope *scope,
- 					   PCI_SECONDARY_BUS);
- 		path++;
- 	}
--	ir_hpet[ir_hpet_num].bus   = bus;
--	ir_hpet[ir_hpet_num].devfn = PCI_DEVFN(path->device, path->function);
--	ir_hpet[ir_hpet_num].iommu = iommu;
--	ir_hpet[ir_hpet_num].id    = scope->enumeration_id;
--	ir_hpet_num++;
-+
-+	for (count = 0; count < MAX_HPET_TBS; count++) {
-+		if (ir_hpet[count].iommu == iommu &&
-+		    ir_hpet[count].id == scope->enumeration_id)
-+			return 0;
-+		else if (ir_hpet[count].iommu == NULL && free == -1)
-+			free = count;
-+	}
-+	if (free == -1) {
-+		pr_warn("Exceeded Max HPET blocks\n");
-+		return -ENOSPC;
-+	}
-+
-+	ir_hpet[free].iommu = iommu;
-+	ir_hpet[free].id    = scope->enumeration_id;
-+	ir_hpet[free].bus   = bus;
-+	ir_hpet[free].devfn = PCI_DEVFN(path->device, path->function);
-+	pr_info("HPET id %d under DRHD base 0x%Lx\n",
-+		scope->enumeration_id, drhd->address);
-+
-+	return 0;
- }
- 
--static void ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
--				      struct intel_iommu *iommu)
-+static int ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
-+				     struct intel_iommu *iommu,
-+				     struct acpi_dmar_hardware_unit *drhd)
- {
- 	struct acpi_dmar_pci_path *path;
- 	u8 bus;
--	int count;
-+	int count, free = -1;
- 
- 	bus = scope->bus;
- 	path = (struct acpi_dmar_pci_path *)(scope + 1);
-@@ -750,54 +779,63 @@ static void ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
- 		path++;
- 	}
- 
--	ir_ioapic[ir_ioapic_num].bus   = bus;
--	ir_ioapic[ir_ioapic_num].devfn = PCI_DEVFN(path->device, path->function);
--	ir_ioapic[ir_ioapic_num].iommu = iommu;
--	ir_ioapic[ir_ioapic_num].id    = scope->enumeration_id;
--	ir_ioapic_num++;
-+	for (count = 0; count < MAX_IO_APICS; count++) {
-+		if (ir_ioapic[count].iommu == iommu &&
-+		    ir_ioapic[count].id == scope->enumeration_id)
-+			return 0;
-+		else if (ir_ioapic[count].iommu == NULL && free == -1)
-+			free = count;
-+	}
-+	if (free == -1) {
-+		pr_warn("Exceeded Max IO APICS\n");
-+		return -ENOSPC;
-+	}
-+
-+	ir_ioapic[free].bus   = bus;
-+	ir_ioapic[free].devfn = PCI_DEVFN(path->device, path->function);
-+	ir_ioapic[free].iommu = iommu;
-+	ir_ioapic[free].id    = scope->enumeration_id;
-+	pr_info("IOAPIC id %d under DRHD base  0x%Lx IOMMU %d\n",
-+		scope->enumeration_id, drhd->address, iommu->seq_id);
-+
-+	return 0;
- }
- 
- static int ir_parse_ioapic_hpet_scope(struct acpi_dmar_header *header,
- 				      struct intel_iommu *iommu)
- {
-+	int ret = 0;
- 	struct acpi_dmar_hardware_unit *drhd;
- 	struct acpi_dmar_device_scope *scope;
- 	void *start, *end;
- 
- 	drhd = (struct acpi_dmar_hardware_unit *)header;
--
- 	start = (void *)(drhd + 1);
- 	end = ((void *)drhd) + header->length;
- 
--	while (start < end) {
-+	while (start < end && ret == 0) {
- 		scope = start;
--		if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_IOAPIC) {
--			if (ir_ioapic_num == MAX_IO_APICS) {
--				printk(KERN_WARNING "Exceeded Max IO APICS\n");
--				return -1;
--			}
--
--			printk(KERN_INFO "IOAPIC id %d under DRHD base "
--			       " 0x%Lx IOMMU %d\n", scope->enumeration_id,
--			       drhd->address, iommu->seq_id);
-+		if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_IOAPIC)
-+			ret = ir_parse_one_ioapic_scope(scope, iommu, drhd);
-+		else if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_HPET)
-+			ret = ir_parse_one_hpet_scope(scope, iommu, drhd);
-+		start += scope->length;
-+	}
- 
--			ir_parse_one_ioapic_scope(scope, iommu);
--		} else if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_HPET) {
--			if (ir_hpet_num == MAX_HPET_TBS) {
--				printk(KERN_WARNING "Exceeded Max HPET blocks\n");
--				return -1;
--			}
-+	return ret;
-+}
- 
--			printk(KERN_INFO "HPET id %d under DRHD base"
--			       " 0x%Lx\n", scope->enumeration_id,
--			       drhd->address);
-+static void ir_remove_ioapic_hpet_scope(struct intel_iommu *iommu)
-+{
-+	int i;
- 
--			ir_parse_one_hpet_scope(scope, iommu);
--		}
--		start += scope->length;
--	}
-+	for (i = 0; i < MAX_HPET_TBS; i++)
-+		if (ir_hpet[i].iommu == iommu)
-+			ir_hpet[i].iommu = NULL;
- 
--	return 0;
-+	for (i = 0; i < MAX_IO_APICS; i++)
-+		if (ir_ioapic[i].iommu == iommu)
-+			ir_ioapic[i].iommu = NULL;
- }
- 
- /*
-@@ -1173,7 +1211,85 @@ struct irq_remap_ops intel_irq_remap_ops = {
- 	.setup_hpet_msi		= intel_setup_hpet_msi,
- };
- 
 +/*
-+ * Support of Interrupt Remapping Unit Hotplug
++ * Get the maximum value for a domain number from the device tree
 + */
-+static int dmar_ir_add(struct dmar_drhd_unit *dmaru, struct intel_iommu *iommu)
++static int of_get_max_pci_domain_nr(void)
 +{
-+	int ret;
-+	int eim = x2apic_enabled();
++=09struct alias_prop *app;
++=09int max_domain =3D -1;
 +
-+	if (eim && !ecap_eim_support(iommu->ecap)) {
-+		pr_info("DRHD %Lx: EIM not supported by DRHD, ecap %Lx\n",
-+			iommu->reg_phys, iommu->ecap);
-+		return -ENODEV;
-+	}
++=09mutex_lock(&of_mutex);
++=09list_for_each_entry(app, &aliases_lookup, link) {
++=09=09if (strncmp(app->stem, "pci-domain", 10) !=3D 0)
++=09=09=09continue;
 +
-+	if (ir_parse_ioapic_hpet_scope(dmaru->hdr, iommu)) {
-+		pr_warn("DRHD %Lx: failed to parse managed IOAPIC/HPET\n",
-+			iommu->reg_phys);
-+		return -ENODEV;
-+	}
++=09=09max_domain =3D max(max_domain, app->id);
++=09}
++=09mutex_unlock(&of_mutex);
 +
-+	/* TODO: check all IOAPICs are covered by IOMMU */
-+
-+	/* Setup Interrupt-remapping now. */
-+	ret = intel_setup_irq_remapping(iommu);
-+	if (ret) {
-+		pr_err("DRHD %Lx: failed to allocate resource\n",
-+		       iommu->reg_phys);
-+		ir_remove_ioapic_hpet_scope(iommu);
-+		return ret;
-+	}
-+
-+	if (!iommu->qi) {
-+		/* Clear previous faults. */
-+		dmar_fault(-1, iommu);
-+		iommu_disable_irq_remapping(iommu);
-+		dmar_disable_qi(iommu);
-+	}
-+
-+	/* Enable queued invalidation */
-+	ret = dmar_enable_qi(iommu);
-+	if (!ret) {
-+		iommu_set_irq_remapping(iommu, eim);
-+	} else {
-+		pr_err("DRHD %Lx: failed to enable queued invalidation, ecap %Lx, ret %d\n",
-+		       iommu->reg_phys, iommu->ecap, ret);
-+		intel_teardown_irq_remapping(iommu);
-+		ir_remove_ioapic_hpet_scope(iommu);
-+	}
-+
-+	return ret;
++=09return max_domain;
 +}
 +
- int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
++/**
++ * This function will try to obtain the host bridge domain number by
++ * using of_alias_get_id() call with "pci-domain" as a stem. If that
++ * fails, a local allocator will be used. The local allocator can
++ * be requested to return a new domain_nr if the information is missing
++ * from the device tree.
++ *
++ * @node: device tree node with the domain information
++ * @allocate_if_missing: if DT lacks information about the domain nr,
++ * allocate a new number.
++ *
++ * Returns the associated domain number from DT, or a new domain number
++ * if DT information is missing and @allocate_if_missing is true. If
++ * @allocate_if_missing is false then the last allocated domain number
++ * will be returned.
++ */
++int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missin=
+g)
++{
++=09int domain;
++
++=09domain =3D atomic_read(&of_domain_nr);
++=09if (of_domain_nr =3D=3D -1) {
++=09=09/* first run, get max defined domain nr in device tree */
++=09=09domain =3D of_get_max_pci_domain_nr();
++=09=09/* then set the start value for allocator to be max + 1 */
++=09=09atomic_set(&of_domain_nr, domain + 1);
++=09}
++=09domain =3D of_alias_get_id(node, "pci-domain");
++=09if (domain =3D=3D -ENODEV) {
++=09=09domain =3D atomic_read(&of_domain_nr);
++=09=09if (allocate_if_missing)
++=09=09=09atomic_inc(&of_domain_nr);
++=09}
++
++=09return domain;
++}
++EXPORT_SYMBOL_GPL(of_pci_get_domain_nr);
++
+ #ifdef CONFIG_PCI_MSI
+=20
+ static LIST_HEAD(of_pci_msi_chip_list);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index dde3a4a..3a3824c 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -15,6 +15,7 @@ struct device_node *of_pci_find_child_device(struct devic=
+e_node *parent,
+ int of_pci_get_devfn(struct device_node *np);
+ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)=
+;
++int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missin=
+g);
+ #else
+ static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_p=
+handle_args *out_irq)
  {
--	return irq_remapping_enabled ? -ENOSYS : 0;
-+	int ret = 0;
-+	struct intel_iommu *iommu = dmaru->iommu;
-+
-+	if (!irq_remapping_enabled)
-+		return 0;
-+	if (iommu == NULL)
-+		return -EINVAL;
-+	if (!ecap_ir_support(iommu->ecap))
-+		return 0;
-+
-+	if (insert) {
-+		if (!iommu->ir_table)
-+			ret = dmar_ir_add(dmaru, iommu);
-+	} else {
-+		if (iommu->ir_table) {
-+			if (!bitmap_empty(iommu->ir_table->bitmap,
-+					  INTR_REMAP_TABLE_ENTRIES)) {
-+				ret = -EBUSY;
-+			} else {
-+				iommu_disable_irq_remapping(iommu);
-+				intel_teardown_irq_remapping(iommu);
-+				ir_remove_ioapic_hpet_scope(iommu);
-+			}
-+		}
-+	}
-+
-+	return ret;
+@@ -43,6 +44,12 @@ of_pci_parse_bus_range(struct device_node *node, struct =
+resource *res)
+ {
+ =09return -EINVAL;
  }
--- 
-1.7.10.4
++
++static inline int
++of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
++{
++=09return -1;
++}
+ #endif
+=20
+ #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+--=20
+2.0.4
+
+--d6Gm4EdcadzBjdND--
 
