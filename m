@@ -1,104 +1,303 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bn0102.outbound.protection.outlook.com ([157.56.110.102]:63008
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751368AbaIYFV6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 25 Sep 2014 01:21:58 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Tim Harvey <tharvey@gateworks.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
+Received: from e28smtp08.in.ibm.com ([122.248.162.8]:56443 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750968AbaIJD1v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Sep 2014 23:27:51 -0400
+Received: from /spool/local
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 10 Sep 2014 08:57:48 +0530
+Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 70798E0044
+	for <linux-pci@vger.kernel.org>; Wed, 10 Sep 2014 09:00:11 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s8A3U6oe65798382
+	for <linux-pci@vger.kernel.org>; Wed, 10 Sep 2014 09:00:06 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s8A3Ripi006172
+	for <linux-pci@vger.kernel.org>; Wed, 10 Sep 2014 08:57:45 +0530
+Date: Wed, 10 Sep 2014 11:27:43 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	Fabio Estevam <festevam@gmail.com>
-Subject: RE: [PATCH v2 2/5] PCI: imx6: wait the clocks to stabilize after
- ref_en
-Date: Thu, 25 Sep 2014 05:21:54 +0000
-Message-ID: <75b77ae3191746b699b85ccb8f8dcd41@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
-	<1411445498-20250-3-git-send-email-r65037@freescale.com>
-	<1411466190.3256.7.camel@pengutronix.de>
- <CAJ+vNU30=+YXkBHjzs_4n49TSJU0CuuSx54X3M7AVg8JRSLTfw@mail.gmail.com>
-In-Reply-To: <CAJ+vNU30=+YXkBHjzs_4n49TSJU0CuuSx54X3M7AVg8JRSLTfw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Benjamin Herrenschmidt <benh@au1.ibm.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	Mike Qiu <qiudayu@linux.vnet.ibm.com>
+Subject: Re: [PATCH V7 04/17] PCI: Take additional IOV BAR alignment in
+ sizing and assigning
+Message-ID: <20140910032743.GA25108@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1406182947-11302-5-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20140820030841.GD6295@google.com>
+ <20140820061402.GA8381@richard>
+ <CAErSpo5ZSB-=aQtiM5OenfWWfn2b=TOwxM-BkpwxBGRnmMyAzw@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5ZSB-=aQtiM5OenfWWfn2b=TOwxM-BkpwxBGRnmMyAzw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IFRpbSBIYXJ2ZXkgW21haWx0
-bzp0aGFydmV5QGdhdGV3b3Jrcy5jb21dDQo+IFNlbnQ6IFR1ZXNkYXksIFNlcHRlbWJlciAyMywg
-MjAxNCA4OjI5IFBNDQo+IFRvOiBMdWNhcyBTdGFjaDsgWmh1IFJpY2hhcmQtUjY1MDM3DQo+IENj
-OiBsaW51eC1wY2ktb3duZXJAdmdlci5rZXJuZWwub3JnOyBsaW51eC1wY2lAdmdlci5rZXJuZWwu
-b3JnOyBHdW8gU2hhd24tDQo+IFI2NTA3MzsgRmFiaW8gRXN0ZXZhbQ0KPiBTdWJqZWN0OiBSZTog
-W1BBVENIIHYyIDIvNV0gUENJOiBpbXg2OiB3YWl0IHRoZSBjbG9ja3MgdG8gc3RhYmlsaXplIGFm
-dGVyDQo+IHJlZl9lbg0KPiANCj4gT24gVHVlLCBTZXAgMjMsIDIwMTQgYXQgMjo1NiBBTSwgTHVj
-YXMgU3RhY2ggPGwuc3RhY2hAcGVuZ3V0cm9uaXguZGU+IHdyb3RlOg0KPiA+IEFtIERpZW5zdGFn
-LCBkZW4gMjMuMDkuMjAxNCwgMTI6MTEgKzA4MDAgc2NocmllYiBSaWNoYXJkIFpodToNCj4gPj4g
-LSBhIHdoaWxlIGRlbGF5IGlzIG1hbmRhdG9yeSByZXF1aXJlZCBhZnRlciBwY2llX3JlZl9jbGtf
-ZW4gaXMgc2V0Lg0KPiA+PiBPdGhlcndpc2UsIHRoZSBzeXN0ZW0gd291bGQgYmUgaGFuZyBvbiBp
-bXg2cWRsIGFyZCBib2FyZHMsIGJlY2F1c2UNCj4gPj4gdGhhdCBpbXg2cWRsIGJvYXJkcyBkb24n
-dCBoYXZlIHRoZSByZXNldF9ncGlvLg0KPiA+PiAtIHRoZSBjbG9ja3Mgc2hvdWxkIGJlIHN0YWJs
-ZSBhbHJlYWR5IGFmdGVyIHRoZSAiY2xrX3ByZXBhcmVfZW5hYmxlIg0KPiA+PiBpcyByZXR1cm4u
-IFNvIEkgdGhpbmsgaXQncyBvayB0byBtb3ZlIHRoZSB1c2xlZXAgZGVsYXkgYWZ0ZXIgdGhlDQo+
-ID4+IHBjaWVfcmVmX2VuIGlzIHNldC4NCj4gPj4NCj4gPg0KPiA+IFlvdSBhcmUgZGVzY3JpYmlu
-ZyBhIGxvdCBvZiB0aGUgY29uZGl0aW9ucyBhcm91bmQgdGhlIGlzc3VlLCBidXQgbm90DQo+ID4g
-dGhlIGlzc3VlIGl0c2VsZiwgd2hpY2ggbWFrZXMgaXQgaGFyZCB0byBmb2xsb3cgeW91ciBjb21t
-aXQgbWVzc2FnZS4NCj4gPiBBZnRlciBsb29raW5nIGF0IHRoZSBjb2RlIEkgdGhpbmsgdGhlIHBy
-b2JsZW0gaXMgdGhpcyAoYW5kIHNob3VsZCBiZQ0KPiA+IGRlc2NyaWJlZA0KPiA+IGFjY29yZGlu
-Z2x5KToNCj4gPg0KPiA+IEZvciBib2FyZHMgd2l0aG91dCBhIHJlc2V0IGdwaW8gd2Ugc2tpcCB0
-aGUgZGVsYXkgYmV0d2VlbiBlbmFibGluZyB0aGUNCj4gPiBwY2llX3JlZl9jbGsgYW5kIHRvdWNo
-aW5nIHRoZSBSQyByZWdpc3RlcnMgZm9yIGNvbmZpZ3VyYXRpb24uDQo+ID4gQXBwYXJlbnRseSB0
-aGlzIGhhbmdzIHdoZW4gdGhlIGNsb2NrcyBhcmUgbm90IHlldCBzZXR0bGVkIGluIHRoZSBEVw0K
-PiA+IFBDSWUgY29yZS4gU28gd2UgbmVlZCB0byBtYWtlIHN1cmUgdGhhdCB0aGVyZSBpcyBhbHdh
-eXMgYW4gYXBwcm9wcmlhdGUNCj4gPiBkZWxheSBiZXR3ZWVuIHRob3NlIHR3byBhY3Rpb25zLg0K
-W1JpY2hhcmRdIFRoYW5rcy4NCj4gPg0KPiA+IEkgaGF2ZSBub3QgZm91bmQgdGhpcyBjb25zdHJh
-aW50IGFueXdoZXJlIGluIHRoZSBpLk1YNiBSZWZlcmVuY2UNCj4gPiBNYW51YWwsIG5vciBpbiB0
-aGUgRFcgUENJZSBkb2N1bWVudHMgSSBoYXZlIGFjY2VzcyB0bywgd2hpY2ggbWFrZXMgbWUNCj4g
-PiBhIGJpdCBmZWVsIGEgYml0IHVuaGFwcHkgYWJvdXQgdGhpcy4gUmljaGFyZCwgZG8geW91IGhh
-dmUgYmV0dGVyIGluZm8NCj4gPiBvbiB3aHkgdGhpcyBkZWxheSBpcyBuZWVkZWQgYW5kIGhvdyBs
-b25nIGl0IG5lZWRzIHRvIGJlPyBPciBpcyB0aGlzIGp1c3QNCj4gZW1waXJpY2FsPw0KW1JpY2hh
-cmRdIEkgdXNlZCB0byBmaXggb25lIGxlc3MgdGhhbiAwLjMlIHBlcmNlbnRhZ2UgcmFuZG9tbHkg
-bGluayBkb3duIGlzc3VlDQpkdXJpbmcgdGhlIHdhcm0tcmVzZXQgbG9vcCBzdHJlc3MgdGVzdHMu
-DQpJIHVzZWQgZ2V0IHNvbWUgaW5mbyBmcm9tIGRlc2lnbiB0ZWFtIHRoYXQgIiB0aGUgYXN5bmMg
-cmVzZXQgaW5wdXQgbmVlZCByZWYgY2xvY2sgdG8gc3luYyBpbnRlcm5hbGx5LCB3aGVuIHRoZSBy
-ZWYgY2xvY2sgY29tZXMgYWZ0ZXIgcmVzZXQsIGludGVybmFsIHN5bmNlZCByZXNldCB0aW1lIGlz
-IHRvbyBzaG9ydCAsIGNhbm5vdCBtZWV0IHRoZSByZXF1aXJlbWVudC4iICJhdCBsZWFzdCA0dXMg
-ZGVsYXkgaXMgcmVxdWlyZWQgYWZ0ZXIgcmVmIGNsb2NrIHN0YWJsZSBhbmQgYmVmb3JlIHNzcF9l
-biBpcyBhc3NlcnQiDQpJIHdvdWxkIGFkZCBhYm91dCAxMHVzIGRlbGF5IGp1c3QgYmV0d2VlbiBj
-bG9ja3MgYXJlIHN0YWJsZSBhbmQgc3NwX2VuIGlzIGFzc2VydCBsYXRlci4NCj4gPg0KPiA+IElu
-IGdlbmVyYWwgSSdtIG9rIHdpdGggdGhpcyBwYXRjaCwgYnV0IHN0aWxsIHdhbnQgYSBjb25maXJt
-YXRpb24gZnJvbQ0KPiA+IFRpbSB0aGF0IHRoaXMgZG9lc24ndCBicmVhayBhbnl0aGluZy4NCj4g
-DQo+IEkgYWdyZWUgd2l0aCBMdWNhcycgY29tbWVudHMgYW5kIGFsc28gYWdyZWUgdGhhdCB0aGlz
-IGNhbiB1c2Ugc29tZSB0ZXN0aW5nLg0KPiBCYXNlZCBvbiBteSBwcmV2aW91cyBmaW5kaW5ncyBQ
-Q0kgbGluayBpcyB2ZXJ5IGZyYWdpbGUuIEl0IHdpbGwgdGFrZSBtZSBhIGZldw0KPiBkYXlzIHRv
-IGdldCBhIHByb3BlciB0ZXN0IHNldHVwIGluIGEgdGhlcm1hbCBjaGFtYmVyIHdpdGggYSBob3N0
-IG9mIGJvYXJkcyBidXQNCj4gSSB3aWxsIHJlcG9ydCBiYWNrIHdoZW4gSSBoYXZlIGZpbmRpbmdz
-Lg0KPiANCj4gVGltDQo+IA0KDQoNCkJlc3QgUmVnYXJkcw0KUmljaGFyZCBaaHUNCg0KPiA+DQo+
-ID4+IFNpZ25lZC1vZmYtYnk6IFJpY2hhcmQgWmh1IDxyNjUwMzdAZnJlZXNjYWxlLmNvbT4NCj4g
-Pj4gLS0tDQo+ID4+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaS1pbXg2LmMgfCA2ICsrKy0tLQ0KPiA+
-PiAgMSBmaWxlIGNoYW5nZWQsIDMgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkNCj4gPj4N
-Cj4gPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWlteDYuYw0KPiA+PiBiL2Ry
-aXZlcnMvcGNpL2hvc3QvcGNpLWlteDYuYyBpbmRleCAyMzNmZThhLi5iYzQyMjJiIDEwMDY0NA0K
-PiA+PiAtLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaS1pbXg2LmMNCj4gPj4gKysrIGIvZHJpdmVy
-cy9wY2kvaG9zdC9wY2ktaW14Ni5jDQo+ID4+IEBAIC0yNzUsMTUgKzI3NSwxNSBAQCBzdGF0aWMg
-aW50IGlteDZfcGNpZV9kZWFzc2VydF9jb3JlX3Jlc2V0KHN0cnVjdA0KPiBwY2llX3BvcnQgKnBw
-KQ0KPiA+PiAgICAgICAgICAgICAgIGdvdG8gZXJyX3BjaWU7DQo+ID4+ICAgICAgIH0NCj4gPj4N
-Cj4gPj4gLSAgICAgLyogYWxsb3cgdGhlIGNsb2NrcyB0byBzdGFiaWxpemUgKi8NCj4gPj4gLSAg
-ICAgdXNsZWVwX3JhbmdlKDIwMCwgNTAwKTsNCj4gPj4gLQ0KPiA+PiAgICAgICAvKiBwb3dlciB1
-cCBjb3JlIHBoeSBhbmQgZW5hYmxlIHJlZiBjbG9jayAqLw0KPiA+PiAgICAgICByZWdtYXBfdXBk
-YXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNfZ3ByLCBJT01VWENfR1BSMSwNCj4gPj4gICAgICAg
-ICAgICAgICAgICAgICAgIElNWDZRX0dQUjFfUENJRV9URVNUX1BELCAwIDw8IDE4KTsNCj4gPj4g
-ICAgICAgcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+aW9tdXhjX2dwciwgSU9NVVhDX0dQ
-UjEsDQo+ID4+ICAgICAgICAgICAgICAgICAgICAgICBJTVg2UV9HUFIxX1BDSUVfUkVGX0NMS19F
-TiwgMSA8PCAxNik7DQo+ID4+DQo+ID4+ICsgICAgIC8qIGFsbG93IHRoZSBjbG9ja3MgdG8gc3Rh
-YmlsaXplICovDQo+ID4+ICsgICAgIHVzbGVlcF9yYW5nZSgyMDAsIDUwMCk7DQo+ID4+ICsNCj4g
-Pj4gICAgICAgLyogU29tZSBib2FyZHMgZG9uJ3QgaGF2ZSBQQ0llIHJlc2V0IEdQSU8uICovDQo+
-ID4+ICAgICAgIGlmIChncGlvX2lzX3ZhbGlkKGlteDZfcGNpZS0+cmVzZXRfZ3BpbykpIHsNCj4g
-Pj4gICAgICAgICAgICAgICBncGlvX3NldF92YWx1ZShpbXg2X3BjaWUtPnJlc2V0X2dwaW8sIDAp
-Ow0KPiA+DQo+ID4gLS0NCj4gPiBQZW5ndXRyb25peCBlLksuICAgICAgICAgICAgIHwgTHVjYXMg
-U3RhY2ggICAgICAgICAgICAgICAgIHwNCj4gPiBJbmR1c3RyaWFsIExpbnV4IFNvbHV0aW9ucyAg
-IHwgaHR0cDovL3d3dy5wZW5ndXRyb25peC5kZS8gIHwNCj4gPg0KPiA+IC0tDQo+ID4gVG8gdW5z
-dWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4
-LXBjaSINCj4gPiBpbiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2Vy
-bmVsLm9yZyBNb3JlIG1ham9yZG9tbw0KPiA+IGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5v
-cmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+On Tue, Sep 09, 2014 at 02:09:46PM -0600, Bjorn Helgaas wrote:
+>On Wed, Aug 20, 2014 at 12:14 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>> On Tue, Aug 19, 2014 at 09:08:41PM -0600, Bjorn Helgaas wrote:
+>>>On Thu, Jul 24, 2014 at 02:22:14PM +0800, Wei Yang wrote:
+>>>> At resource sizing/assigning stage, resources are divided into two lists,
+>>>> requested list and additional list, while the alignement of the additional
+>>>> IOV BAR is not taken into the sizeing and assigning procedure.
+>>>>
+>>>> This is reasonable in the original implementation, since IOV BAR's alignment is
+>>>> mostly the size of a PF BAR alignemt. This means the alignment is already taken
+>>>> into consideration. While this rule may be violated on some platform.
+>>>>
+>>>> This patch take the additional IOV BAR alignment in sizing and assigning stage
+>>>> explicitly.
+>>>>
+>>>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>>> ---
+>>>>  drivers/pci/setup-bus.c |   68 +++++++++++++++++++++++++++++++++++++++++------
+>>>>  1 file changed, 60 insertions(+), 8 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>>>> index a5a63ec..d83681f 100644
+>>>> --- a/drivers/pci/setup-bus.c
+>>>> +++ b/drivers/pci/setup-bus.c
+>>>> @@ -120,6 +120,28 @@ static resource_size_t get_res_add_size(struct list_head *head,
+>>>>      return 0;
+>>>>  }
+>>>>
+>>>> +static resource_size_t get_res_add_align(struct list_head *head,
+>>>> +            struct resource *res)
+>>>> +{
+>>>> +    struct pci_dev_resource *dev_res;
+>>>> +
+>>>> +    list_for_each_entry(dev_res, head, list) {
+>>>> +            if (dev_res->res == res) {
+>>>> +                    int idx = res - &dev_res->dev->resource[0];
+>>>> +
+>>>> +                    dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+>>>> +                               "res[%d]=%pR get_res_add_align min_align %llx\n",
+>>>> +                               idx, dev_res->res,
+>>>> +                               (unsigned long long)dev_res->min_align);
+>>>> +
+>>>> +                    return dev_res->min_align;
+>>>> +            }
+>>>> +    }
+>>>> +
+>>>> +    return 0;
+>>>> +}
+>>>
+>>>I see that you copied the structure of the existing get_res_add_size()
+>>>here.  But I don't understand *that* function.  It looks basically like
+>>>this:
+>>>
+>>>  resource_size_t get_res_add_size(list, res)
+>>>  {
+>>>    list_for_each_entry(dev_res, head, list) {
+>>>      if (dev_res->res == res)
+>>>        return dev_res->add_size;
+>>>    }
+>>>    return 0;
+>>>  }
+>>>
+>>>and we call it like this:
+>>>
+>>>  dev_res->res->end += get_res_add_size(realloc_head, dev_res->res);
+>>>
+>>>So we start out with dev_res", pass in dev_res->res, search the
+>>>realloc_head list to find dev_res again, and return dev_res->add_size.
+>>>That looks equivalent to just:
+>>>
+>>>  dev_res->res->end += dev_res->add_size;
+>>>
+>>>It looks like get_res_add_size() merely adds a printk and some complexity.
+>>>Am I missing something?
+>>>
+>>
+>> Let me try to explain it, if not correct, please let know :-)
+>>
+>>   dev_res->res->end += get_res_add_size(realloc_head, dev_res->res);
+>>
+>> would be expanded to:
+>>
+>>   dev_res->res->end += dev_res_1->add_size;
+>>
+>> with the dev_res_1 is another one from dev_res which is stored in realloc_head.
+>
+>Yep, I see now.
+>
+>>>I do see that there are other callers where we don't actually start with
+>>>dev_res, which makes it a little more complicated.  But I think you should
+>>>either add something like this:
+>>>
+>>>  struct pci_dev_resource *res_to_dev_res(list, res)
+>>>  {
+>>>    list_for_each_entry(dev_res, head, list) {
+>>>      if (dev_res->res == res)
+>>>        return dev_res;
+>>>    }
+>>>    return NULL;
+>>>  }
+>>>
+>>
+>> Ok, we can extract the common part of these two functions.
+>>
+>>>which can be used to replace get_res_add_size() and get_res_add_align(), OR
+>>>figure out whether the dev_res of interest is always one we've just added.
+>>>If it is, maybe you can just make add_to_list() return the dev_res pointer
+>>>instead of an errno, and hang onto the pointer.  I'd like that much better
+>>>if that's possible.
+>>>
+>>
+>> Sorry, I don't get this point.
+>
+>Don't worry, it didn't make sense.  I was thinking that we knew the
+>dev_res up front and didn't need to look it up, but that's not the
+>case.
+>
+>Sorry it took me so long to respond to this; I'm a bit swamped dealing
+>with some regressions.
+
+:-) Never mind, those regressions are with higher priority then this new
+feature.
+
+And I found some bugs in this version during the test, and will merge those
+fixes in the next version.
+
+>
+>Bjorn
+>
+>> add_to_list() is used to create the pci_dev_resource list, get_res_add_size()
+>> and get_res_add_align() is to retrieve the information in the list. I am not
+>> sure how to leverage add_to_list() in these two functions?
+>>
+>>>> +
+>>>> +
+>>>>  /* Sort resources by alignment */
+>>>>  static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+>>>>  {
+>>>> @@ -368,8 +390,9 @@ static void __assign_resources_sorted(struct list_head *head,
+>>>>      LIST_HEAD(save_head);
+>>>>      LIST_HEAD(local_fail_head);
+>>>>      struct pci_dev_resource *save_res;
+>>>> -    struct pci_dev_resource *dev_res, *tmp_res;
+>>>> +    struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
+>>>>      unsigned long fail_type;
+>>>> +    resource_size_t add_align, align;
+>>>>
+>>>>      /* Check if optional add_size is there */
+>>>>      if (!realloc_head || list_empty(realloc_head))
+>>>> @@ -384,10 +407,31 @@ static void __assign_resources_sorted(struct list_head *head,
+>>>>      }
+>>>>
+>>>>      /* Update res in head list with add_size in realloc_head list */
+>>>> -    list_for_each_entry(dev_res, head, list)
+>>>> +    list_for_each_entry_safe(dev_res, tmp_res, head, list) {
+>>>>              dev_res->res->end += get_res_add_size(realloc_head,
+>>>>                                                      dev_res->res);
+>>>>
+>>>> +            if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
+>>>> +                    continue;
+>>>> +
+>>>> +            add_align = get_res_add_align(realloc_head, dev_res->res);
+>>>> +
+>>>> +            if (add_align > dev_res->res->start) {
+>>>> +                    dev_res->res->start = add_align;
+>>>> +                    dev_res->res->end = add_align +
+>>>> +                                        resource_size(dev_res->res);
+>>>> +
+>>>> +                    list_for_each_entry(dev_res2, head, list) {
+>>>> +                            align = pci_resource_alignment(dev_res2->dev,
+>>>> +                                                           dev_res2->res);
+>>>> +                            if (add_align > align)
+>>>> +                                    list_move_tail(&dev_res->list,
+>>>> +                                                   &dev_res2->list);
+>>>> +                    }
+>>>> +               }
+>>>> +
+>>>> +    }
+>>>> +
+>>>>      /* Try updated head list with add_size added */
+>>>>      assign_requested_resources_sorted(head, &local_fail_head);
+>>>>
+>>>> @@ -930,6 +974,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>>>>      struct resource *b_res = find_free_bus_resource(bus,
+>>>>                                      mask | IORESOURCE_PREFETCH, type);
+>>>>      resource_size_t children_add_size = 0;
+>>>> +    resource_size_t children_add_align = 0;
+>>>> +    resource_size_t add_align = 0;
+>>>>
+>>>>      if (!b_res)
+>>>>              return -ENOSPC;
+>>>> @@ -954,6 +1000,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>>>>                      /* put SRIOV requested res to the optional list */
+>>>>                      if (realloc_head && i >= PCI_IOV_RESOURCES &&
+>>>>                                      i <= PCI_IOV_RESOURCE_END) {
+>>>> +                            add_align = max(pci_resource_alignment(dev, r), add_align);
+>>>>                              r->end = r->start - 1;
+>>>>                              add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
+>>>>                              children_add_size += r_size;
+>>>> @@ -984,8 +1031,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>>>>                      if (order > max_order)
+>>>>                              max_order = order;
+>>>>
+>>>> -                    if (realloc_head)
+>>>> +                    if (realloc_head) {
+>>>>                              children_add_size += get_res_add_size(realloc_head, r);
+>>>> +                            children_add_align = get_res_add_align(realloc_head, r);
+>>>> +                            add_align = max(add_align, children_add_align);
+>>>> +                    }
+>>>>              }
+>>>>      }
+>>>>
+>>>> @@ -996,7 +1046,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>>>>              add_size = children_add_size;
+>>>>      size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+>>>>              calculate_memsize(size, min_size, add_size,
+>>>> -                            resource_size(b_res), min_align);
+>>>> +                            resource_size(b_res), max(min_align, add_align));
+>>>>      if (!size0 && !size1) {
+>>>>              if (b_res->start || b_res->end)
+>>>>                      dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
+>>>> @@ -1008,10 +1058,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>>>>      b_res->end = size0 + min_align - 1;
+>>>>      b_res->flags |= IORESOURCE_STARTALIGN;
+>>>>      if (size1 > size0 && realloc_head) {
+>>>> -            add_to_list(realloc_head, bus->self, b_res, size1-size0, min_align);
+>>>> -            dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
+>>>> -                       b_res, &bus->busn_res,
+>>>> -                       (unsigned long long)size1-size0);
+>>>> +            add_to_list(realloc_head, bus->self, b_res, size1-size0,
+>>>> +                            max(min_align, add_align));
+>>>> +            dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
+>>>> +                             "%pR to %pR add_size %llx add_align %llx\n", b_res,
+>>>> +                             &bus->busn_res, (unsigned long long)size1-size0,
+>>>> +                             max(min_align, add_align));
+>>>
+>>>Factor out this "max(min_align, add_align)" thing so we don't have to
+>>>change these lines.  Bonus points if you can also factor it out of the
+>>>calculate_memsize() call above.  That one is a pretty complicated ternary
+>>>expression that should probably be turned into an "if" instead anyway.
+>>>
+>>
+>> Ok, I get your point. Let me make it more easy to read.
+>>
+>>>>      }
+>>>>      return 0;
+>>>>  }
+>>>> --
+>>>> 1.7.9.5
+>>>>
+>>
+>> --
+>> Richard Yang
+>> Help you, Help me
+>>
+
+-- 
+Richard Yang
+Help you, Help me
+
