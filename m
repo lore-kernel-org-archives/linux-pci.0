@@ -1,82 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:34692 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754192AbaIQHqZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Sep 2014 03:46:25 -0400
+Received: from bear.ext.ti.com ([192.94.94.41]:44539 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750734AbaIJO2r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 10 Sep 2014 10:28:47 -0400
+Message-ID: <54106010.8040206@ti.com>
+Date: Wed, 10 Sep 2014 10:28:32 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQX1pfciTcuF3_eggQLCn=LvTSLTT0UZxTb+z_RaLHwgJQ@mail.gmail.com>
-References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
-	<1386546869-31900-3-git-send-email-yinghai@kernel.org>
-	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>
-	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>
-	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>
-	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>
-	<52A8BAC5.70006@canonical.com>
-	<CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>
-	<52D01D82.5070202@canonical.com>
-	<CAE9FiQUD0XvPJNFNMoqX6J67TKuGcj+pSbj+iPUf=fvC-4UXOQ@mail.gmail.com>
-	<54189BCE.2010206@canonical.com>
-	<CAE9FiQX1pfciTcuF3_eggQLCn=LvTSLTT0UZxTb+z_RaLHwgJQ@mail.gmail.com>
-Date: Wed, 17 Sep 2014 00:46:24 -0700
-Message-ID: <CAE9FiQWphiORhaVNNVGZXY6eYxLH2QYNbHcLdjzrBD98tMKz0Q@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
-From: Yinghai Lu <yinghai@kernel.org>
-To: Joseph Salisbury <joseph.salisbury@canonical.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=90e6ba614fec911ff305033e1010
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arm-kernel@lists.infradead.org>, <robh+dt@kernel.org>,
+	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<bhelgaas@google.com>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] PCI: keystone: update to support multiple pci
+ ports
+References: <1410293835-13050-1-git-send-email-m-karicheri2@ti.com> <3967092.l9bxcqMaSa@wuerfel> <540F8425.70304@ti.com> <3814561.AbrslYBNjb@wuerfel>
+In-Reply-To: <3814561.AbrslYBNjb@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---90e6ba614fec911ff305033e1010
-Content-Type: text/plain; charset=UTF-8
-
-On Tue, Sep 16, 2014 at 3:27 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Sep 16, 2014 at 1:21 PM, Joseph Salisbury
-> <joseph.salisbury@canonical.com> wrote:
+On 09/10/2014 04:22 AM, Arnd Bergmann wrote:
+> On Tuesday 09 September 2014 18:50:13 Murali Karicheri wrote:
+>> My mistake. It is the device ID, not vendor ID. The PCI driver supports
+>> PCI h/w on K2HK, K2E and K2L SoCs for which PCI device IDs are assigned as
 >>
->> A new bug[0] was opened due to enabling PCI_REALLOC_ENABLE_AUTO, which
->> is similar to the original bug[1] we discussed.
+>> +#define PCIE_RC_K2HK           0xb008
+>> +#define PCIE_RC_K2E            0xb009
+>> +#define PCIE_RC_K2L            0xb00a
+>> +
 >>
->> Just wondering if there have been any additional ideas on realloc since
->> this was last discussed?
+>> and the same driver code runs on all these h/w. The device ID is not
+>> filled in by default by the h/w, in the config space of the RC at offset
+>> 1000h "VENDOR_DEVICE_ID Vendor and Device Identification Register".
+>> Same is available in a seperate SoC register whose offset is specified
+>> by index 2. This is read by driver and updated in the config space. The
+>> Vendor ID is however set by default.
 >>
->> [0] http://pad.lv/1363313
+>> There is a mrrs PCI quirk required for Keystone PCI which depends on
+>> this vendor ID to be filled correctly as it match vendor id/ device id
+>> of the bridge device to apply the quirk.
+>>
+>> Hope this clarify your question.
 >
-> So the resource realloc do work as expected. but LSI firmware has some
-> problem again?
+> Ok, I understand now. Yes, this makes sense, though I wonder if it would
+> have been easier to handle the quirk in a different way based on the
+> driver rather than the PCI ID. It's probably not worth revisiting though,
+> unless Bjorn wants to see it done differently now.
+
+Bjorn has reviewed the quirk patch and wanted to check the device ID and 
+vendor ID to avoid applying the quirck when bridge is non TI and same 
+device ID.
+
+So support for two PCI port requires only the PCI device id related 
+change. So I will modify the subject and commit log to reflect the same 
+and re-send the patch.
+
+Thanks again Arnd for your comments.
+
+Regards,
+
+Murali
 >
-> We may need to add command after the reset the bridge resource.
+> 	Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Can you try attached patch?
-
-Thanks
-
-Yinghai
-
---90e6ba614fec911ff305033e1010
-Content-Type: text/x-patch; charset=US-ASCII; name="reset_lsi_pci_devices.patch"
-Content-Disposition: attachment; filename="reset_lsi_pci_devices.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i06d7jpq0
-
-LS0tCiBkcml2ZXJzL3BjaS9zZXR1cC1idXMuYyB8ICAgMTYgKysrKysrKysrKysrKysrKwogMSBm
-aWxlIGNoYW5nZWQsIDE2IGluc2VydGlvbnMoKykKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9w
-Y2kvc2V0dXAtYnVzLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kv
-c2V0dXAtYnVzLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwpAQCAtMTYx
-NSw2ICsxNjE1LDIyIEBAIGFnYWluOgogCQkJCQkJIGZhaWxfcmVzLT5mbGFncyAmIHR5cGVfbWFz
-aywKIAkJCQkJCSByZWxfdHlwZSk7CiAKKwkvKiByZXNldCBMU0kgZGV2aWNlICovCisJbGlzdF9m
-b3JfZWFjaF9lbnRyeShmYWlsX3JlcywgJmZhaWxfaGVhZCwgbGlzdCkgeworCQlzdHJ1Y3QgcGNp
-X2RldiAqcGRldjsKKwkJc3RydWN0IHBjaV9idXMgKnBidXMgPSBmYWlsX3Jlcy0+ZGV2LT5idXM7
-CisKKwkJaWYgKHBjaV9pc19yb290X2J1cyhwYnVzKSB8fCAhcGJ1cy0+c2VsZikKKwkJCWNvbnRp
-bnVlOworCisJCS8qIExTSSBkZXZpY2UgZmlybXdhcmUgaXMgbm90IGhhcHB5IHdpdGggY2hhbmdp
-bmcgQkFSIHZhbHVlICovCisJCWxpc3RfZm9yX2VhY2hfZW50cnkocGRldiwgJnBidXMtPmRldmlj
-ZXMsIGJ1c19saXN0KQorCQkJaWYgKHBkZXYtPnZlbmRvciA9PSBQQ0lfVkVORE9SX0lEX0xTSV9M
-T0dJQykgeworCQkJCXBjaV9yZXNldF9zZWNvbmRhcnlfYnVzKHBidXMtPnNlbGYpOworCQkJCWJy
-ZWFrOworCQkJfQorCX0KKwogCS8qIHJlc3RvcmUgc2l6ZSBhbmQgZmxhZ3MgKi8KIAlsaXN0X2Zv
-cl9lYWNoX2VudHJ5KGZhaWxfcmVzLCAmZmFpbF9oZWFkLCBsaXN0KSB7CiAJCXN0cnVjdCByZXNv
-dXJjZSAqcmVzID0gZmFpbF9yZXMtPnJlczsK
---90e6ba614fec911ff305033e1010--
