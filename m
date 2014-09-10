@@ -1,166 +1,94 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH 2/2] ACPIPHP / radeon / nouveau: Remove acpi_bus_no_hotplug()
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: SpacemanSpiff <a818958@trbvm.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Dave Airlie <airlied@linux.ie>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Pali =?utf-8?b?Um9ow6Fy?= <pali.rohar@gmail.com>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	"Jose P." <lbdkmjdf@sharklasers.com>
-Date: Thu, 11 Sep 2014 16:24:10 -0600
-Message-ID: <20140911222410.16809.69017.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20140911222022.16809.57079.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20140911222022.16809.57079.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:49669 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751320AbaIJINw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Sep 2014 04:13:52 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 10 Sep 2014 18:13:50 +1000
+Date: Wed, 10 Sep 2014 18:13:42 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: kvm@vger.kernel.org, alex.williamson@redhat.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 4/4] vfio/pci: Restore MSIx message prior to enabling
+Message-ID: <20140910081342.GA18833@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1400468470-11262-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1400468470-11262-5-git-send-email-gwshan@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1400468470-11262-5-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Revert parts of f244d8b623da ("ACPIPHP / radeon / nouveau: Fix VGA
-switcheroo problem related to hotplug").
+On Mon, May 19, 2014 at 01:01:10PM +1000, Gavin Shan wrote:
+>The MSIx vector table lives in device memory, which may be cleared as
+>part of a backdoor device reset. This is the case on the IBM IPR HBA
+>when the BIST is run on the device. When assigned to a QEMU guest,
+>the guest driver does a pci_save_state(), issues a BIST, then does a
+>pci_restore_state(). The BIST clears the MSIx vector table, but due
+>to the way interrupts are configured the pci_restore_state() does not
+>restore the vector table as expected. Eventually this results in an
+>EEH error on Power platforms when the device attempts to signal an
+>interrupt with the zero'd table entry.
+>
+>Fix the problem by restoring the host cached MSI message prior to
+>enabling each vector.
+>
+>Reported-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 
-A previous commit 5493b31f0b55 ("PCI: Add pci_ignore_hotplug() to ignore
-hotplug events for a device") added equivalent functionality implemented in
-a different way for both acpiphp and pciehp.
+Alex, please let me know if I need resend this one to you. The patch
+has been pending for long time, I'm not sure if you still can grab
+it somewhere.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/acpi/bus.c                           |   10 ----------
- drivers/gpu/drm/nouveau/nouveau_acpi.c       |   16 ++--------------
- drivers/gpu/drm/radeon/radeon_atpx_handler.c |   16 ++--------------
- include/acpi/acpi_bus.h                      |    4 +---
- 4 files changed, 5 insertions(+), 41 deletions(-)
+As you might see, Bjorn will take that one with PCI changes. This patch
+depends on the changes.
 
-diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
-index 8581f5b84f48..8b67bd0f6bb5 100644
---- a/drivers/acpi/bus.c
-+++ b/drivers/acpi/bus.c
-@@ -177,16 +177,6 @@ void acpi_bus_detach_private_data(acpi_handle handle)
- }
- EXPORT_SYMBOL_GPL(acpi_bus_detach_private_data);
- 
--void acpi_bus_no_hotplug(acpi_handle handle)
--{
--	struct acpi_device *adev = NULL;
--
--	acpi_bus_get_device(handle, &adev);
--	if (adev)
--		adev->flags.no_hotplug = true;
--}
--EXPORT_SYMBOL_GPL(acpi_bus_no_hotplug);
--
- static void acpi_print_osc_error(acpi_handle handle,
- 	struct acpi_osc_context *context, char *error)
- {
-diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-index 279206997e5c..622424692b3b 100644
---- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-@@ -46,7 +46,6 @@ static struct nouveau_dsm_priv {
- 	bool dsm_detected;
- 	bool optimus_detected;
- 	acpi_handle dhandle;
--	acpi_handle other_handle;
- 	acpi_handle rom_handle;
- } nouveau_dsm_priv;
- 
-@@ -222,10 +221,9 @@ static int nouveau_dsm_pci_probe(struct pci_dev *pdev)
- 	if (!dhandle)
- 		return false;
- 
--	if (!acpi_has_method(dhandle, "_DSM")) {
--		nouveau_dsm_priv.other_handle = dhandle;
-+	if (!acpi_has_method(dhandle, "_DSM"))
- 		return false;
--	}
-+
- 	if (acpi_check_dsm(dhandle, nouveau_dsm_muid, 0x00000102,
- 			   1 << NOUVEAU_DSM_POWER))
- 		retval |= NOUVEAU_DSM_HAS_MUX;
-@@ -301,16 +299,6 @@ static bool nouveau_dsm_detect(void)
- 		printk(KERN_INFO "VGA switcheroo: detected DSM switching method %s handle\n",
- 			acpi_method_name);
- 		nouveau_dsm_priv.dsm_detected = true;
--		/*
--		 * On some systems hotplug events are generated for the device
--		 * being switched off when _DSM is executed.  They cause ACPI
--		 * hotplug to trigger and attempt to remove the device from
--		 * the system, which causes it to break down.  Prevent that from
--		 * happening by setting the no_hotplug flag for the involved
--		 * ACPI device objects.
--		 */
--		acpi_bus_no_hotplug(nouveau_dsm_priv.dhandle);
--		acpi_bus_no_hotplug(nouveau_dsm_priv.other_handle);
- 		ret = true;
- 	}
- 
-diff --git a/drivers/gpu/drm/radeon/radeon_atpx_handler.c b/drivers/gpu/drm/radeon/radeon_atpx_handler.c
-index a9fb0d016d38..8bc7d0bbd3c8 100644
---- a/drivers/gpu/drm/radeon/radeon_atpx_handler.c
-+++ b/drivers/gpu/drm/radeon/radeon_atpx_handler.c
-@@ -33,7 +33,6 @@ static struct radeon_atpx_priv {
- 	bool atpx_detected;
- 	/* handle for device - and atpx */
- 	acpi_handle dhandle;
--	acpi_handle other_handle;
- 	struct radeon_atpx atpx;
- } radeon_atpx_priv;
- 
-@@ -453,10 +452,9 @@ static bool radeon_atpx_pci_probe_handle(struct pci_dev *pdev)
- 		return false;
- 
- 	status = acpi_get_handle(dhandle, "ATPX", &atpx_handle);
--	if (ACPI_FAILURE(status)) {
--		radeon_atpx_priv.other_handle = dhandle;
-+	if (ACPI_FAILURE(status))
- 		return false;
--	}
-+
- 	radeon_atpx_priv.dhandle = dhandle;
- 	radeon_atpx_priv.atpx.handle = atpx_handle;
- 	return true;
-@@ -540,16 +538,6 @@ static bool radeon_atpx_detect(void)
- 		printk(KERN_INFO "VGA switcheroo: detected switching method %s handle\n",
- 		       acpi_method_name);
- 		radeon_atpx_priv.atpx_detected = true;
--		/*
--		 * On some systems hotplug events are generated for the device
--		 * being switched off when ATPX is executed.  They cause ACPI
--		 * hotplug to trigger and attempt to remove the device from
--		 * the system, which causes it to break down.  Prevent that from
--		 * happening by setting the no_hotplug flag for the involved
--		 * ACPI device objects.
--		 */
--		acpi_bus_no_hotplug(radeon_atpx_priv.dhandle);
--		acpi_bus_no_hotplug(radeon_atpx_priv.other_handle);
- 		return true;
- 	}
- 	return false;
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index bcfd808b1098..95c506961a13 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -204,10 +204,9 @@ struct acpi_device_flags {
- 	u32 match_driver:1;
- 	u32 initialized:1;
- 	u32 visited:1;
--	u32 no_hotplug:1;
- 	u32 hotplug_notify:1;
- 	u32 is_dock_station:1;
--	u32 reserved:22;
-+	u32 reserved:23;
- };
- 
- /* File System */
-@@ -412,7 +411,6 @@ void acpi_bus_private_data_handler(acpi_handle, void *);
- int acpi_bus_get_private_data(acpi_handle, void **);
- int acpi_bus_attach_private_data(acpi_handle, void *);
- void acpi_bus_detach_private_data(acpi_handle);
--void acpi_bus_no_hotplug(acpi_handle handle);
- extern int acpi_notifier_call_chain(struct acpi_device *, u32, u32);
- extern int register_acpi_notifier(struct notifier_block *);
- extern int unregister_acpi_notifier(struct notifier_block *);
+Thanks,
+Gavin
+
+>---
+> drivers/vfio/pci/vfio_pci_intrs.c | 15 +++++++++++++++
+> 1 file changed, 15 insertions(+)
+>
+>diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
+>index 9dd49c9..553212f 100644
+>--- a/drivers/vfio/pci/vfio_pci_intrs.c
+>+++ b/drivers/vfio/pci/vfio_pci_intrs.c
+>@@ -16,6 +16,7 @@
+> #include <linux/device.h>
+> #include <linux/interrupt.h>
+> #include <linux/eventfd.h>
+>+#include <linux/msi.h>
+> #include <linux/pci.h>
+> #include <linux/file.h>
+> #include <linux/poll.h>
+>@@ -548,6 +549,20 @@ static int vfio_msi_set_vector_signal(struct vfio_pci_device *vdev,
+> 		return PTR_ERR(trigger);
+> 	}
+>
+>+	/*
+>+	 * The MSIx vector table resides in device memory which may be cleared
+>+	 * via backdoor resets. We don't allow direct access to the vector
+>+	 * table so even if a userspace driver attempts to save/restore around
+>+	 * such a reset it would be unsuccessful. To avoid this, restore the
+>+	 * cached value of the message prior to enabling.
+>+	 */
+>+	if (msix) {
+>+		struct msi_msg msg;
+>+
+>+		get_cached_msi_msg(irq, &msg);
+>+		write_msi_msg(irq, &msg);
+>+	}
+>+
+> 	ret = request_irq(irq, vfio_msihandler, 0,
+> 			  vdev->ctx[vector].name, trigger);
+> 	if (ret) {
+>-- 
+>1.8.3.2
+>
 
