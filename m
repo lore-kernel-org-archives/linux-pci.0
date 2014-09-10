@@ -1,74 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:52790 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751931AbaIEViy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 17:38:54 -0400
-Received: by mail-pa0-f47.google.com with SMTP id ey11so899090pad.6
-        for <linux-pci@vger.kernel.org>; Fri, 05 Sep 2014 14:38:54 -0700 (PDT)
-Date: Fri, 5 Sep 2014 15:38:50 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, amirv@mellanox.com,
-	alex.williamson@redhat.com, eli@mellanox.com,
-	weiyang@linux.vnet.ibm.com
-Subject: Re: [PATCH v3] PCI: Mark broken INTx masking for Mellanox devices
-Message-ID: <20140905213850.GH8080@google.com>
-References: <1407844091-20815-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:64394 "EHLO
+	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751475AbaIJQ2H (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Sep 2014 12:28:07 -0400
+Received: by mail-oi0-f66.google.com with SMTP id e131so1477035oig.9
+        for <linux-pci@vger.kernel.org>; Wed, 10 Sep 2014 09:28:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1407844091-20815-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Date: Wed, 10 Sep 2014 12:10:06 -0400
+Message-ID: <CAG-92OOEkNOPmmyHP0=UGcT+qusPkWp7vy_qZCe6YEwKG27B6g@mail.gmail.com>
+Subject: Running Adobe Flash triggers PCI bus failure
+From: aw ful <awfl.awfl@gmail.com>
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 12, 2014 at 09:48:11PM +1000, Gavin Shan wrote:
-> The VFIO driver is routing LSI interrupts by capturing, masking,
-> and then delivering. When passing though Mellanox adapters from
-> host to guest, interrupt storm was reported from host and guest.
-> That's because we can't mask the LSI interrupt with help of PCI
-> command register.
-> 
->  # lspci | grep Mellanox
->  0001:05:00.0 Ethernet controller: Mellanox Technologies MT27500 \
->               Family [ConnectX-3]
->  0005:01:00.0 Ethernet controller: Mellanox Technologies MT26448 \
->               [ConnectX EN 10GigE, PCIe 2.0 5GT/s] (rev b0)
-> 
-> It's confirmed by Amir Vadai that all Mellanox devices have same
-> problem. The patch marks broken INTx masking for all Mellanox
-> adapters.
-> 
-> Cc: Amir Vadai <amirv@mellanox.com>
-> Suggested-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+I have a hardware system that is otherwise extremely stable, however,
+after 1 minute to 1 day of viewing Flash videos via Firefox a PCI bus
+fails and manifests in several different ways, including massive
+ethernet errors and frozen sata devices. This failure can also be
+invoked using multiple Live distributions, where the only thing I add
+is installing the Flash plugin from Adobe. Initially believed to be a
+hardware problem, I now believe it is a long term obscure bug as I
+have seen related symptoms in various bug reports which were never
+clearly resolved, and never associated with the flash plugin.
 
-I applied this with Amir's ack to pci/virtualization for v3.18.
+I am writing to the kernel devs as I can easily make this occur on two
+distinct Linux distributions - standard Fedora 19, 20 Live, and 21 TC6
+Live, and Linux Mint 17 Live, experienced across many recent 3.14.17,
+3.16.2 kernel versions. The failure occurs on a Asrock AM3+ system
+with AMD NB and SB. I was not clear how and where to write a further
+bug report because I can now demonstrate it on multiple distributions.
+Any assistance is appreciated.
 
-It's possible Mellanox will someday make a device where INTx masking works.
-I guess we'll have to deal with that if and when it happens.
+Detailed information can be found here:
+https://bugzilla.redhat.com/show_bug.cgi?id=1135801
+which includes dmesg and lspci -vv
 
-> ---
-> v3: Mark broken INTx masking for all Mellanox adapters
-> ---
->  drivers/pci/quirks.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 80c2d01..da062d8 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2985,6 +2985,8 @@ DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
->   */
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8169,
->  			 quirk_broken_intx_masking);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
-> +			 quirk_broken_intx_masking);
->  
->  #ifdef CONFIG_ACPI
->  /*
-> -- 
-> 1.8.3.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thank You for your time.
+awfl
