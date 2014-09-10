@@ -1,162 +1,173 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Mon, 8 Sep 2014 13:25:49 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Subject: Re: [PATCH v9 06/12] ARM: integrator: Correct usage of
- of_pci_range_to_resource()
-Message-ID: <20140908122549.GI27864@e106497-lin.cambridge.arm.com>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
- <1407860725-25202-7-git-send-email-Liviu.Dudau@arm.com>
- <20140905220820.GI8080@google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <540FB051.3050107@linux.intel.com>
+Date: Wed, 10 Sep 2014 09:58:41 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20140905220820.GI8080@google.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Len Brown <lenb@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [Patch v4 05/16] ACPI: Add interfaces to parse IOAPIC ID for
+ IOAPIC hotplug
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com> <1409192561-19744-6-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1409091248090.11037@nanos>
+In-Reply-To: <alpine.DEB.2.10.1409091248090.11037@nanos>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 05, 2014 at 11:08:20PM +0100, Bjorn Helgaas wrote:
-> [+cc Linus]
+
+
+On 2014/9/9 18:54, Thomas Gleixner wrote:
+> On Thu, 28 Aug 2014, Jiang Liu wrote:
+>>  
+>> +static struct acpi_table_madt *madt;
+>> +static int read_madt;
 > 
-> On Tue, Aug 12, 2014 at 05:25:19PM +0100, Liviu Dudau wrote:
-> > Previously, of_pci_range_to_resource() would return a resource
-> > that contained physical addresses of the IO space even if the
-> > IORESOURCE_IO flags mandate a logical port set of values. Now
-> > that the function has been fixed we need to update the drivers
-> > that were taking advantage of the old behaviour.
-> > 
-> > Cc: Linus Walleij <linus.walleij@linaro.org>
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: Rob Herring <robh+dt@kernel.org>
-> > Cc: Russell King <linux@arm.linux.org.uk>
-> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> Pretty lousy file visible variable names.
 > 
-> Something's wrong with the CC: list.  You list Linus here in the changelog,
-> but I don't see him in the CC: headers.
-
-Yes, turns out one of my .git/config directories had supresscc=all.
-
-Best regards,
-Liviu
+> So we end up with two copies of the butt ugly 
+> 
+>    if (!read_madt) {
+>       .....
+>    }
+> 
+> stuff instead of creating a helper function which hides that and do
+> 
+>       madr = get_madt();
+>       if (!madt)
+> 		return ...;
+> 
+> at the call sites.
+Thanks for suggestion, will improve in that way.
 
 > 
-> > ---
-> >  arch/arm/mach-integrator/pci_v3.c | 24 +++++++++++++-----------
-> >  1 file changed, 13 insertions(+), 11 deletions(-)
-> > 
-> > diff --git a/arch/arm/mach-integrator/pci_v3.c b/arch/arm/mach-integrator/pci_v3.c
-> > index 05e1f73..193b7f8 100644
-> > --- a/arch/arm/mach-integrator/pci_v3.c
-> > +++ b/arch/arm/mach-integrator/pci_v3.c
-> > @@ -660,6 +660,7 @@ static void __init pci_v3_preinit(void)
-> >  {
-> >  	unsigned long flags;
-> >  	unsigned int temp;
-> > +	phys_addr_t io_address = pci_pio_to_address(io_mem.start);
-> >  
-> >  	pcibios_min_mem = 0x00100000;
-> >  
-> > @@ -701,7 +702,7 @@ static void __init pci_v3_preinit(void)
-> >  	/*
-> >  	 * Setup window 2 - PCI IO
-> >  	 */
-> > -	v3_writel(V3_LB_BASE2, v3_addr_to_lb_base2(io_mem.start) |
-> > +	v3_writel(V3_LB_BASE2, v3_addr_to_lb_base2(io_address) |
-> >  			V3_LB_BASE_ENABLE);
-> >  	v3_writew(V3_LB_MAP2, v3_addr_to_lb_map2(0));
-> >  
-> > @@ -742,6 +743,7 @@ static void __init pci_v3_preinit(void)
-> >  static void __init pci_v3_postinit(void)
-> >  {
-> >  	unsigned int pci_cmd;
-> > +	phys_addr_t io_address = pci_pio_to_address(io_mem.start);
-> >  
-> >  	pci_cmd = PCI_COMMAND_MEMORY |
-> >  		  PCI_COMMAND_MASTER | PCI_COMMAND_INVALIDATE;
-> > @@ -758,7 +760,7 @@ static void __init pci_v3_postinit(void)
-> >  		       "interrupt: %d\n", ret);
-> >  #endif
-> >  
-> > -	register_isa_ports(non_mem.start, io_mem.start, 0);
-> > +	register_isa_ports(non_mem.start, io_address, 0);
-> >  }
-> >  
-> >  /*
-> > @@ -867,33 +869,33 @@ static int __init pci_v3_probe(struct platform_device *pdev)
-> >  
-> >  	for_each_of_pci_range(&parser, &range) {
-> >  		if (!range.flags) {
-> > -			of_pci_range_to_resource(&range, np, &conf_mem);
-> > +			ret = of_pci_range_to_resource(&range, np, &conf_mem);
-> >  			conf_mem.name = "PCIv3 config";
-> >  		}
-> >  		if (range.flags & IORESOURCE_IO) {
-> > -			of_pci_range_to_resource(&range, np, &io_mem);
-> > +			ret = of_pci_range_to_resource(&range, np, &io_mem);
-> > +			dev_info(&pdev->dev, "IO PCI range converted\n");
-> >  			io_mem.name = "PCIv3 I/O";
-> >  		}
-> >  		if ((range.flags & IORESOURCE_MEM) &&
-> >  			!(range.flags & IORESOURCE_PREFETCH)) {
-> >  			non_mem_pci = range.pci_addr;
-> >  			non_mem_pci_sz = range.size;
-> > -			of_pci_range_to_resource(&range, np, &non_mem);
-> > +			ret = of_pci_range_to_resource(&range, np, &non_mem);
-> >  			non_mem.name = "PCIv3 non-prefetched mem";
-> >  		}
-> >  		if ((range.flags & IORESOURCE_MEM) &&
-> >  			(range.flags & IORESOURCE_PREFETCH)) {
-> >  			pre_mem_pci = range.pci_addr;
-> >  			pre_mem_pci_sz = range.size;
-> > -			of_pci_range_to_resource(&range, np, &pre_mem);
-> > +			ret = of_pci_range_to_resource(&range, np, &pre_mem);
-> >  			pre_mem.name = "PCIv3 prefetched mem";
-> >  		}
-> > -	}
-> >  
-> > -	if (!conf_mem.start || !io_mem.start ||
-> > -	    !non_mem.start || !pre_mem.start) {
-> > -		dev_err(&pdev->dev, "missing ranges in device node\n");
-> > -		return -EINVAL;
-> > +		if (ret < 0) {
-> > +			dev_err(&pdev->dev, "missing ranges in device node\n");
-> > +			return -EINVAL;
-> > +		}
-> >  	}
-> >  
-> >  	pci_v3.map_irq = of_irq_parse_and_map_pci;
-> > -- 
-> > 2.0.4
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>  static int map_lapic_id(struct acpi_subtable_header *entry,
+>>  		 u32 acpi_id, int *apic_id)
+>>  {
+>> @@ -64,8 +71,6 @@ static int map_lsapic_id(struct acpi_subtable_header *entry,
+>>  static int map_madt_entry(int type, u32 acpi_id)
+>>  {
+>>  	unsigned long madt_end, entry;
+>> -	static struct acpi_table_madt *madt;
+>> -	static int read_madt;
+>>  	int apic_id = -1;
+>>  
+>>  	if (!read_madt) {
+>> @@ -200,3 +205,90 @@ int acpi_get_cpuid(acpi_handle handle, int type, u32 acpi_id)
+>>  	return acpi_map_cpuid(apic_id, acpi_id);
+>>  }
+>>  EXPORT_SYMBOL_GPL(acpi_get_cpuid);
+>> +
+>> +#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
+>> +static int map_ioapic_id(struct acpi_subtable_header *entry, u32 gsi_base,
+>> +			 u64 *phys_addr, int *ioapic_id)
+>> +{
+>> +	struct acpi_madt_io_apic *ioapic = (struct acpi_madt_io_apic *)entry;
+>> +
+>> +	if (ioapic->global_irq_base != gsi_base)
+>> +		return 0;
+>> +
+>> +	*phys_addr = ioapic->address;
+>> +	*ioapic_id = ioapic->id;
+>> +	return 1;
+>> +}
+>> +
+>> +static int map_madt_ioapic_entry(u32 gsi_base, u64 *phys_addr)
+>> +{
+>> +	struct acpi_subtable_header *hdr;
+>> +	unsigned long madt_end, entry;
+>> +	int apic_id = -1;
+>> +
+>> +	if (!read_madt) {
+>> +		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
+>> +					(struct acpi_table_header **)&madt)))
+>> +			madt = NULL;
+>> +		read_madt++;
+>> +	}
+>> +
+>> +	if (!madt)
+>> +		return apic_id;
+>> +
+>> +	entry = (unsigned long)madt;
+>> +	madt_end = entry + madt->header.length;
+>> +
+>> +	/* Parse all entries looking for a match. */
+>> +	entry += sizeof(struct acpi_table_madt);
+>> +	while (entry + sizeof(struct acpi_subtable_header) < madt_end) {
+>> +		hdr = (struct acpi_subtable_header *)entry;
+>> +		if (hdr->type == ACPI_MADT_TYPE_IO_APIC &&
+>> +		    map_ioapic_id(hdr, gsi_base, phys_addr, &apic_id))
+>> +			break;
+>> +		else
+>> +			entry += hdr->length;
+>> +	}
+>> +
+>> +	return apic_id;
+>> +}
+>> +
+>> +static int map_mat_ioapic_entry(acpi_handle handle, u32 gsi_base,
+>> +				u64 *phys_addr)
+>> +{
+>> +	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
+>> +	union acpi_object *obj;
+>> +	struct acpi_subtable_header *header;
+>> +	int apic_id = -1;
+>> +
+>> +	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_MAT", NULL, &buffer)))
+>> +		goto exit;
+>> +
+>> +	if (!buffer.length || !buffer.pointer)
+>> +		goto exit;
+>> +
+>> +	obj = buffer.pointer;
+>> +	if (obj->type != ACPI_TYPE_BUFFER ||
+>> +	    obj->buffer.length < sizeof(struct acpi_subtable_header))
+>> +		goto exit;
+>> +
+>> +	header = (struct acpi_subtable_header *)obj->buffer.pointer;
+>> +	if (header->type == ACPI_MADT_TYPE_IO_APIC)
+>> +		map_ioapic_id(header, gsi_base, phys_addr, &apic_id);
+>> +
+>> +exit:
+>> +	kfree(buffer.pointer);
+>> +	return apic_id;
+>> +}
 > 
+> 
+> This stuff really wants proper documentation. The lack of comments is
+> just annoying.
+Sure, will improve comments in next version.
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+Regards!
+Gerry
 
+> 
+>> +int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr)
+>> +{
+>> +	int apic_id;
+>> +
+>> +	apic_id = map_mat_ioapic_entry(handle, gsi_base, phys_addr);
+>> +	if (apic_id == -1)
+>> +		apic_id = map_madt_ioapic_entry(gsi_base, phys_addr);
+>> +
+>> +	return apic_id;
+>> +}
+> 
+> Thanks,
+> 
+> 	tglx
+> 
