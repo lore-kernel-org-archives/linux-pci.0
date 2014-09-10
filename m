@@ -1,86 +1,120 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Thu, 25 Sep 2014 09:42:36 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+Date: Wed, 10 Sep 2014 17:53:47 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
- in all platforms
-Message-ID: <20140925074235.GN12423@ulmo>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v10 08/10] OF: PCI: Add support for parsing PCI host
+ bridge resources from DT
+Message-ID: <20140910165347.GJ27864@e106497-lin.cambridge.arm.com>
+References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
+ <1410184472-17630-9-git-send-email-Liviu.Dudau@arm.com>
+ <20140909133546.GB2636@e102568-lin.cambridge.arm.com>
+ <20140910142241.GD27864@e106497-lin.cambridge.arm.com>
+ <20140910151026.GB11640@e102568-lin.cambridge.arm.com>
+ <20140910153233.GG27864@e106497-lin.cambridge.arm.com>
+ <20140910163746.GB19662@e102568-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="O27Gs9jTTFWz3gAR"
-In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <20140910163746.GB19662@e102568-lin.cambridge.arm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Sep 10, 2014 at 05:37:47PM +0100, Lorenzo Pieralisi wrote:
+> On Wed, Sep 10, 2014 at 04:32:33PM +0100, Liviu Dudau wrote:
+> 
+> [...]
+> 
+> > > > > > +		/*
+> > > > > > +		 * If we failed translation or got a zero-sized region
+> > > > > > +		 * then skip this range
+> > > > > > +		 */
+> > > > > > +		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+> > > > > > +			continue;
+> > > > > > +
+> > > > > > +		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
+> > > > > > +		if (!res) {
+> > > > > > +			err = -ENOMEM;
+> > > > > > +			goto parse_failed;
+> > > > > > +		}
+> > > > > > +
+> > > > > > +		err = of_pci_range_to_resource(&range, dev, res);
+> > > > > > +		if (err) {
+> > > > > > +			kfree(res);
+> > > > > 
+> > > > > You might want to add a label to free res to make things more uniform.
+> > 
+> > Sorry, not following you. How would a label help here?
+> 
+> It was just a suggestion so ignore it if you do not think it is cleaner.
+> It is to make code more uniform and undo operations in one place instead of
+> doing it piecemeal (you kfree the res here and jump to complete the clean-up,
+> whereas you might want to add a different label and a different goto
+> destination and carry out the kfree there).
 
---O27Gs9jTTFWz3gAR
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+But that kfree is the only done once, while the pci_free_resource_list() is
+done twice.
 
-On Thu, Sep 25, 2014 at 11:14:10AM +0800, Yijing Wang wrote:
-> This series is based Bjorn's pci/msi branch
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/msi
->=20
-> Currently, there are a lot of weak arch functions in MSI code.
-> Thierry Reding Introduced MSI chip framework to configure MSI/MSI-X in ar=
-m.
-> This series use MSI chip framework to refactor MSI code across all platfo=
-rms
-> to eliminate weak arch functions. Then all MSI irqs will be managed in a=
-=20
-> unified framework. Because this series changed a lot of ARCH MSI code,
-> so tests in the platforms which MSI code modified are warmly welcomed!
+> 
+> I do not mind either, it is just what I noticed.
+> 
+> > > > > > +			goto parse_failed;
+> > > > > > +		}
+> > > > > > +
+> > > > > > +		if (resource_type(res) == IORESOURCE_IO) {
+> > > > > > +			if (*io_base)
+> > > > > 
+> > > > > You do not zero io_base in the first place so you should ask the API
+> > > > > user to do that. Is 0 a valid value BTW ? If it is you've got to resort
+> > > > > to something else to detect multiple IO resources.
+> > 
+> > No, zero is not a valid value. It is the cpu_addr value from the IO range, I'm
+> > hopying that no one is crazy enough to map PCI address space at CPU address zero.
+> > Thanks for spotting the lack of initialisation though, I need to fix it.
+> 
+> Mmm...wasn't a trick question sorry :D
+> 
+> PCI host bridge /pci ranges:
+>    IO 0x00000000..0x0000ffff -> 0x00000000
+>    More than one I/O resource converted. CPU offset for old range lost!
+>      MEM 0x41000000..0x7fffffff -> 0x41000000
+>      pci-host-generic 40000000.pci: PCI host bridge to bus 0000:00
+>      pci_bus 0000:00: root bus resource [bu-01]
+>      pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+>      pci_bus 0000:00: root bus resource [mem 0x41000000-0x7fffffff]
+> 
 
-Apart from the comments to the individual patches I very much like where
-this is going. Thanks for taking care of this.
+Your DT puts the IO space at CPU address zero? Could you copy the relevant
+host bridge node from DT here?
 
-Thierry
+Best regards,
+Liviu
 
---O27Gs9jTTFWz3gAR
-Content-Type: application/pgp-signature
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJUI8drAAoJEN0jrNd/PrOhRSAQALsX6+rt+ih0Gd1v6P/pa7qN
-OXrKB5iUQqBdwt1YLNoZ55Ojb03D1gWrXOV4DE2Ot+oWcChhDHqOflN7mOfNHLwj
-94ZiLJMuHN97GQPNxto1U+ExV52tdbA8FIUIxXgeIV+PeDB55N/NQjJPXOLsLj/3
-8yDXEOE3ZTdLDCNCFPBO4NFSRSvzTMkl4He0IOcMTDqom0YZfHzLb+pJR0DPNq0n
-gpUb03/YTMlSgjIM9Ltq2wb5AdttZeJ4+MG7k/gyLJjFJr178R1szKz23l7cYZfq
-7TowM+iBQV/g3v5l/TabQOeBQDYqIl/2iSJAxc17ECtoxrW1SqSckRJfTqcPmcPi
-r0vplvHDqRXBrv+NH92zhjSts8N5nPZMjiDdSknrOJwJUFFQku8U/2A/XMX3SRxn
-H+BbOXdut+fvidu7HPtrEqlfUIK9Lvh0l8XfnBoeZdLOnZoQV4wI9NBSH4D4HLpA
-o/H5Cq5xh6o2xQFABJHoFOIdMEz5NoWZ8BPiqQJ5nWn9ErGrBmbKcll6S2rIRqZP
-/UhLXKnd3ju7cQF1kH6gu2zL8l2mWIEISUZWJ1dPsc51Y4164W6olvTZ95BGmLQc
-QunHexGBsu0mVlTLtcfVey5K9+m8zcJQel6KThgh2MSBNt54p6IEuLT4fS3e4mXE
-VE4kNZ+YiwcZhdZXalp+
-=IFC0
------END PGP SIGNATURE-----
-
---O27Gs9jTTFWz3gAR--
