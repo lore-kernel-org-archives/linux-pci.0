@@ -1,84 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:39354 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754672AbaIZKjT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Sep 2014 06:39:19 -0400
-Date: Fri, 26 Sep 2014 12:38:26 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Yijing Wang <wangyijing@huawei.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 06/22] PCI/MSI: Introduce weak arch_find_msi_chip()
- to find MSI chip
-In-Reply-To: <5424D30A.6040900@huawei.com>
-Message-ID: <alpine.DEB.2.11.1409261236160.4567@nanos>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com> <1411614872-4009-7-git-send-email-wangyijing@huawei.com> <alpine.DEB.2.10.1409251220570.4604@nanos> <5424D30A.6040900@huawei.com>
+Received: from mail-bl2on0123.outbound.protection.outlook.com ([65.55.169.123]:57622
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751231AbaIJJPT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 10 Sep 2014 05:15:19 -0400
+From: <suravee.suthikulpanit@amd.com>
+To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
+	<jason@lakedaemon.net>
+CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
+	<Will.Deacon@arm.com>, <tglx@linutronix.de>,
+	<Harish.Kasiviswanathan@amd.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH 0/2 V5] irqchip: gic: Introduce ARM GICv2m MSI(-X) support
+Date: Wed, 10 Sep 2014 04:14:59 -0500
+Message-ID: <1410340501-30752-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 26 Sep 2014, Yijing Wang wrote:
-> On 2014/9/25 18:38, Thomas Gleixner wrote:
-> > On Thu, 25 Sep 2014, Yijing Wang wrote:
-> > 
-> >> Introduce weak arch_find_msi_chip() to find the match msi_chip.
-> >> Currently, MSI chip associates pci bus to msi_chip. Because in
-> >> ARM platform, there may be more than one MSI controller in system.
-> >> Associate pci bus to msi_chip help pci device to find the match
-> >> msi_chip and setup MSI/MSI-X irq correctly. But in other platform,
-> >> like in x86. we only need one MSI chip, because all device use
-> >> the same MSI address/data and irq etc. So it's no need to associate
-> >> pci bus to MSI chip, just use a arch function, arch_find_msi_chip()
-> >> to return the MSI chip for simplicity. The default weak
-> >> arch_find_msi_chip() used in ARM platform, find the MSI chip
-> >> by pci bus.
-> > 
-> > This is really backwards. On one hand you try to get rid of the weak
-> > arch functions zoo and then you invent new ones for no good
-> > reason. Why can't x86 store the chip in the pci bus?
-> > 
-> > Looking deeper, I'm questioning the whole notion of different
-> > msi_chips. Are this really different MSI controllers with a different
-> > feature set or are this defacto multiple instances of the same
-> > controller which just need a different data set?
-> 
-> MSI chip in this series is to setup MSI irq, including IRQ allocation, Map,
-> compose MSI msg ..., in different platform, many arch specific MSI irq details in it.
-> It's difficult to extract the common data and code.
-> 
-> I have a plan to rework MSI related irq_chips in kernel, PCI and Non-PCI, currently,
-> HPET, DMAR and PCI have their own irq_chip and MSI related functions, write_msi_msg(),
-> mask_msi_irq(), etc... I want to extract the common data set for that, so we can
-> remove lots of unnecessary MSI code.
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-That makes sense. Can you please make sure that this does not conflict
-with the ongoing work Jiang is doing in the x86 irq area with
-hierarchical irqdomains to distangle layered levels like MSI from the
-underlying vector/irqremap mechanics.
+This patch set introduces support for MSI(-X) in GICv2m specification,
+which is implemented in some variation of GIC400.
 
-Thanks,
+This depends on and has been tested with the following patch set which
+implements PCI supports for ARM64:
+ 
+    * https://lkml.org/lkml/2014/8/12/394
+    * https://lkml.org/lkml/2014/8/12/361
 
-	tglx
+Changes in V5:
+    * Rebase to git://git.infradead.org/users/jcooper/linux.git irqchip/core
+
+  Marc Zyngier suggestions:
+    * Only use GICv2m irq_chip for MSI interrupts.
+    * Simplify logic to support multi-MSI in arch/arm64/kernel/msi.c.
+    * Modify gicv2m_setup_msi_irq() to also handle multi-MSI.
+
+  Mark Rutlan suggestions: 
+    * V4 patch set did not support multiple MSI register frame within a GIC.
+      Although, the proposed GICv2m device tree binding should be able to
+      handle the case.  Mark was questioning on how we can properly handle
+      this in the code. Therefore, I try to implement this by iterating through
+      the subnodes and look for msi-controller property. Once found, the code
+      parses v2m register frame information and store it in the v2m_list of
+      each gic_chip_data.
+
+  Jingoo han suggestions:
+    * Misc clean up.
+
+Suravee Suthikulpanit (2):
+  irqchip: gic: Add supports for ARM GICv2m MSI(-X)
+  irqchip: gicv2m: Add support for multiple MSI for ARM64 GICv2m
+
+ Documentation/devicetree/bindings/arm/gic.txt |  39 +++
+ arch/arm64/kernel/Makefile                    |   1 +
+ arch/arm64/kernel/msi.c                       |  41 ++++
+ drivers/irqchip/Kconfig                       |   7 +
+ drivers/irqchip/Makefile                      |   1 +
+ drivers/irqchip/irq-gic-v2m.c                 | 326 ++++++++++++++++++++++++++
+ drivers/irqchip/irq-gic.c                     |  88 ++++---
+ drivers/irqchip/irq-gic.h                     |  51 ++++
+ 8 files changed, 526 insertions(+), 28 deletions(-)
+ create mode 100644 arch/arm64/kernel/msi.c
+ create mode 100644 drivers/irqchip/irq-gic-v2m.c
+ create mode 100644 drivers/irqchip/irq-gic.h
+
+-- 
+1.9.3
+
