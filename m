@@ -1,146 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18515 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755215AbaIQPzX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Sep 2014 11:55:23 -0400
-Message-ID: <5419AE7E.4030203@redhat.com>
-Date: Wed, 17 Sep 2014 10:53:34 -0500
-From: David Milburn <dmilburn@redhat.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [Bug 84761] New: LSI controller not found when specifying pci=assign-busses
-References: <bug-84761-41252@https.bugzilla.kernel.org/> <CAErSpo5yPJxReveBN5ofcr==2fUkfv8D9uO7rqHj_uFK54se1w@mail.gmail.com>
-In-Reply-To: <CAErSpo5yPJxReveBN5ofcr==2fUkfv8D9uO7rqHj_uFK54se1w@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20140909154123.GA12906@obsidianresearch.com>
+References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
+ <1410184472-17630-8-git-send-email-Liviu.Dudau@arm.com> <CAL_JsqJi8k1Goc3UmXhuxf9v7=4gJrYG_Di7v574PxS8TsJaXw@mail.gmail.com>
+ <20140908145459.GO27864@e106497-lin.cambridge.arm.com> <CAL_JsqJdGKDVwJOpPp19OkVPGzR7Zqv3nh+ONHHaYnPLYTYoYg@mail.gmail.com>
+ <20140908155931.GP27864@e106497-lin.cambridge.arm.com> <540E960D.7080408@huawei.com>
+ <20140909084621.GS27864@e106497-lin.cambridge.arm.com> <540EC8CB.7010106@huawei.com>
+ <CAErSpo4cAfom2=07NYDRfTCdHO22M0v+ueiaZuG6v2Xd18wEnQ@mail.gmail.com> <20140909154123.GA12906@obsidianresearch.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Tue, 9 Sep 2014 21:44:56 -0500
+Message-ID: <CAL_JsqJMRqbwNkB2K6Mg2DU9mSHwAObtD7LLG2_n=4jGDAFhyQ@mail.gmail.com>
+Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI domain_nr
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On 09/17/2014 10:38 AM, Bjorn Helgaas wrote:
-> [+cc Andreas, linux-pci, thanks for the bugzilla; please continue
-> discussion in email]
+On Tue, Sep 9, 2014 at 10:41 AM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Tue, Sep 09, 2014 at 08:26:19AM -0600, Bjorn Helgaas wrote:
 >
-> On Wed, Sep 17, 2014 at 7:48 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
->> https://bugzilla.kernel.org/show_bug.cgi?id=84761
->>
->>              Bug ID: 84761
->>             Summary: LSI controller not found when specifying
->>                      pci=assign-busses
->>             Product: Drivers
->>             Version: 2.5
->>      Kernel Version: linux-3.17.0-rc2
->>            Hardware: All
->>                  OS: Linux
->>                Tree: Mainline
->>              Status: NEW
->>            Severity: normal
->>            Priority: P1
->>           Component: PCI
->>            Assignee: drivers_pci@kernel-bugs.osdl.org
->>            Reporter: dmilburn@redhat.com
->>          Regression: No
->>
->> Created attachment 150651
->>    --> https://bugzilla.kernel.org/attachment.cgi?id=150651&action=edit
->> Patch to change pcibios_assign_all_busses check in pci_scan_bridge()
->>
->> When booting with kernel command line option "pci=assign-busses", LSI
->> controller
->> is no longer found.
->>
->> 05:00.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1068E PCI-Express
->> Fusion-MPT SAS (rev 08)
->>
->> It seems the problem is in pci_scan_bridge (drivers/pci/probe.c):
->>
->> [    2.542563] PCI_READ_BRIDGE_BASES:
->> [    2.545953] PCI_SCAN_BRIDGE:
->> [    2.548823] scanning [bus 01-01] behind bridge, pass 0
->> [    2.553947] PCI_SCAN_BRIDGE:
->> [    2.556818] scanning [bus 05-05] behind bridge, pass 0 <=========PROBLEM
->> [    2.561942] PCI_SCAN_BRIDGE:
->> [    2.564812] scanning [bus 06-06] behind bridge, pass 0
->> [    2.569936] PCI_SCAN_BRIDGE:
->> [    2.572806] scanning [bus 03-03] behind bridge, pass 0
->> [    2.577930] PCI_SCAN_BRIDGE:
->> [    2.580800] scanning [bus 02-02] behind bridge, pass 0
->> [    2.585923] PCI_SCAN_BRIDGE:
->> [    2.588793] scanning [bus 04-04] behind bridge, pass 0
->>
->> If I change the pass 0 check from !pcibios_assign_all_busses() to
->> pcibios_assign_all_busses() it finds the LSI controller; however, it looks
->> like pci_scan_bridge has checked !pcibios_assisng_all_bussses() for a
->> very long time.
->>
->> (changed code in pci_scan_bridge, causes driver to head down that first path)
->>    if ((secondary || subordinate) && pcibios_assign_all_busses() &&
->>        !is_cardbus && !broken) {
->>
->> [    2.560225] PCI_SCAN_BRIDGE: secondary 1 subordinate 1 is_cardbus 0 broken 0
->> [    2.567252] PCI_SCAN_BRIDGE: !pcibios_assign_all_busses() 0
->>   .
->>   .
->> [    2.849864] scanning [bus 05-05] behind bridge, pass 0   <=====SCANNING
->> [    2.854988] PCI_SCAN_BRIDGE: CHECKING FOR ASSIGN_ALL_BUSSES
->> [    2.860544] PCI_SCAN_BRIDGE: secondary 5 subordinate 5 is_cardbus 0 broken 0
->> [    2.867572] PCI_SCAN_BRIDGE: !pcibios_assign_all_busses() 0
->> [    2.873126] PCI_SCAN_BRIDGE: ASSIGN_ALL_BUSSES child           (null)
->> [    2.879546] PCI_ADD_NEW_BUS busnr 5:
->> [    2.883109] PCI_ALLOC_CHILD_BUS:
->> [    2.886327] PCI_SET_BUS_SPEED:
->> [    2.889407] PCI_BUS_INSERT_BUSN_RES:
->> [    2.892971] PCI_SCAN_CHILD_BUS:
->> [    2.896100] PCI_SCAN_CHILD_BUS: scanning bus
->> [    2.900357] PCI_SCAN_SLOT:
->> [    2.903053] PCI_SCAN_SINGLE_DEVICE:
->> [    2.906529] PCI_SCAN_DEVICE: devfn 0
->> [    2.910093] PCI_BUS_READ_DEV_VENDOR_ID: devfn 0
->> [    2.914608] PCI_ALLOC_DEV:
->> [    2.917305] PCI_SETUP_DEVICE:
->> [    2.920262] SET_PCIE_PORT_TYPE:       =====DEVICE FOUND BELOW=====
->> [    2.923399] pci 0000:05:00.0: [1000:0058] type 00 class 0x010000
->> [    2.923401] [1000:0058] type 00 class 0x010000
->> [    2.927841] pci 0000:05:00.0: reg 0x10: [io  0xec00-0xecff]
->> [    2.927852] pci 0000:05:00.0: reg 0x14: [mem 0xde2ec000-0xde2effff 64bit]
->> [    2.927863] pci 0000:05:00.0: reg 0x1c: [mem 0xde2f0000-0xde2fffff 64bit]
->> [    2.927877] pci 0000:05:00.0: reg 0x30: [mem 0xde100000-0xde1fffff pref]
->> [    2.927879] PCI_DEVICE_ADD:
+>> So as long as the DT tells you the ECAM information for each host
+>> bridge, that should be sufficient.  The domain number is then just a
+>> Linux convenience and is not tied to the platform as it is on ia64.
 >
-> Tangent: why do you need "pci=assign-busses"?  If that's necessary to
-> make some device work, I think that's a different bug in itself.
-
-User reported trying this as
-
-As a workaround for
-igb 0000:06:00.1: SR-IOV: bus number out of range
-
+> I think this is right for DT systems - the domain is purely internal
+> to the kernel and userspace, it is used to locate the proper host
+> bridge driver instance, which contains the proper config accessor (and
+> register bases, etc).
 >
-> Is this a regression?
+> AFAIK the main reason to have a DT alias to learn the domain number is
+> to make it stable so things like udev/etc can reliably match on the
+> PCI location.
 
-It was reproduced on RHEL6.1, so I don't think so. So far I have
-reproduced on upstream linux-3.17.0-rc2 and -rc5.
+For what purpose?
 
->
-> Can you attach complete dmesg logs with and without "pci=assign-busses"?
+> This is similar to i2c, etc that use the alias scheme, so IMHO
+> whatever they do to assign ID's to drivers should be copied for domain
+> numbers.
 
-Ok, I will attach the logs to the BZ.
+IMO they should not. We really want to move away from aliases, not
+expand their use. They are used for serial because there was no good
+way to not break things like "console=ttyS0". I2C I think was more
+internal, but may have been for i2c-dev. What are we going to break if
+we don't have consistent domain numbering? If the domain goes into the
+DT, I'd rather see it as part of the PCI root node. But I'm not
+convinced it is needed.
 
->
-> We have a couple patches that are candidates for reversion before
-> v3.17 because of similar issues (I think they're good patches, but we
-> may need some additional work to fix some other problems they
-> exposed).  If you want to try them, they're here:
-> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/reverts
+It doesn't really sound like we have any actual need to solve this for
+DT ATM. It's not clear to me if all buses should be domain 0 or a
+simple incrementing index for each bus in absence of any firmware set
+value.
 
-Ok, I will give them a try.
-
-Thanks,
-David
-
->
-> Bjorn
->
-
+Rob
