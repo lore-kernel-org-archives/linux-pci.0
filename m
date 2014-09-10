@@ -1,51 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:64896 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755274AbaIBXKG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Sep 2014 19:10:06 -0400
-Received: by mail-pa0-f45.google.com with SMTP id bj1so15780292pad.32
-        for <linux-pci@vger.kernel.org>; Tue, 02 Sep 2014 16:10:06 -0700 (PDT)
-Date: Tue, 2 Sep 2014 17:10:03 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>, Marek Vasut <marex@denx.de>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	kernel@pengutronix.de
-Subject: Re: [PATCH 0/4] PCI: designware: init order/resource alloc fixes
-Message-ID: <20140902231003.GA12657@google.com>
-References: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <54104641.7020007@citrix.com>
+Date: Wed, 10 Sep 2014 13:38:25 +0100
+From: David Vrabel <david.vrabel@citrix.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+To: Yijing Wang <wangyijing@huawei.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-mips@linux-mips.org>, <linux-ia64@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
+	<sparclinux@vger.kernel.org>, <linux-arch@vger.kernel.org>,
+	<linux-s390@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Joerg Roedel <joro@8bytes.org>, <x86@kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<xen-devel@lists.xenproject.org>, <arnab.basu@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<Bharat.Bhushan@freescale.com>, Tony Luck <tony.luck@intel.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	<iommu@lists.linux-foundation.org>, Wuyun <wuyun.wu@huawei.com>,
+	<linuxppc-dev@lists.ozlabs.org>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [Xen-devel] [PATCH v1 08/21] x86/xen/MSI: Use MSI chip framework
+ to configure MSI/MSI-X irq
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>	<1409911806-10519-9-git-send-email-wangyijing@huawei.com>	<5409C8C0.8020200@citrix.com> <540E6095.8030409@huawei.com>
+In-Reply-To: <540E6095.8030409@huawei.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 23, 2014 at 07:52:37PM +0200, Lucas Stach wrote:
-> This series fixes a couple of issues with the initialisation
-> ordering and ressource allocation handling in the designware
-> driver and moves its behavior much closer to other PCI host
-> controller drivers like MVEBU and Tegra.
-> For more detailed explanation see the commit messages.
+On 09/09/14 03:06, Yijing Wang wrote:
+> On 2014/9/5 22:29, David Vrabel wrote:
+>> On 05/09/14 11:09, Yijing Wang wrote:
+>>> Use MSI chip framework instead of arch MSI functions to configure
+>>> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+>> [...]
+>>> --- a/arch/x86/pci/xen.c
+>>> +++ b/arch/x86/pci/xen.c
+>> [...]
+>>> @@ -418,9 +430,9 @@ int __init pci_xen_init(void)
+>>>  #endif
+>>>  
+>>>  #ifdef CONFIG_PCI_MSI
+>>> -	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
+>>> -	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
+>>> -	x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
+>>> +	xen_msi_chip.setup_irqs = xen_setup_msi_irqs;
+>>> +	xen_msi_chip.teardown_irqs = xen_teardown_msi_irqs;
+>>> +	x86_msi_chip = &xen_msi_chip;
+>>>  	msi_chip.irq_mask = xen_nop_msi_mask;
+>>>  	msi_chip.irq_unmask = xen_nop_msi_mask;
+>>
+>> Why have these not been changed to set the x86_msi_chip.mask/unmask
+>> fields instead?
 > 
-> This effectively enables the i.MX6 pcie driver to be
-> probed from module initcall level, instead of relying on
-> being probed early.
-> 
-> Lucas Stach (4):
->   PCI: designware: start parsing bus-range
->   PCI: designware: get rid of pci_scan_root_bus
->   PCI: designware: remove pci_assign_unassigned_resources call
->   PCI: imx6: move to module_init
-> 
->  .../devicetree/bindings/pci/designware-pcie.txt    |  3 +++
->  drivers/pci/host/pci-imx6.c                        |  2 +-
->  drivers/pci/host/pcie-designware.c                 | 29 ++++++++++++++--------
->  drivers/pci/host/pcie-designware.h                 |  1 +
->  4 files changed, 24 insertions(+), 11 deletions(-)
+> Hi David, x86_msi_chip here is struct msi_chip data type, used to configure MSI/MSI-X
+> irq. msi_chip above is struct irq_chip data type, represent the MSI irq controller. They are
+> not the same object. Their name easily confusing people.
 
-I'm waiting for an ack from Mohit and/or Jingoo before applying these.
-I think Richard already acked the one that touches IMX6.
+Ok, it all makes sense now.
 
-Bjorn
+Acked-by: David Vrabel <david.vrabel@citrix.com>
+
+David
