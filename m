@@ -1,92 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:53192 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753799AbaIVMGv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 08:06:51 -0400
-Message-ID: <1411387607.2599.7.camel@pengutronix.de>
-Subject: Re: [PATCH v1 1/4] PCI: imx6: enable pcie on imx6qdl sabreauto
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Richard Zhu <r65037@freescale.com>
-Cc: linux-pci-owner@vger.kernel.org, linux-pci@vger.kernel.org,
-	shawn.guo@freescale.com, festevam@gmail.com
-Date: Mon, 22 Sep 2014 14:06:47 +0200
-In-Reply-To: <1411382705-15301-2-git-send-email-r65037@freescale.com>
-References: <1411382705-15301-1-git-send-email-r65037@freescale.com>
-	 <1411382705-15301-2-git-send-email-r65037@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from szxga02-in.huawei.com ([119.145.14.65]:2900 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750992AbaIJDXU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Sep 2014 23:23:20 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH] PCI/MSI: Remove the redundant irq_set_msi_desc()
+Date: Wed, 10 Sep 2014 11:47:32 +0800
+Message-ID: <1410320852-17725-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Montag, den 22.09.2014, 18:45 +0800 schrieb Richard Zhu:
-> - enable pcie on imx6qdl sabreauto boards.
-> - wait the clocks to stabilize after the pcie_ref_en
-> (IMX6Q_GPR1_PCIE_REF_CLK_EN) is set.
-> 
+Irq and msi_desc will be associated in arch MSI
+setup code. The irq_set_msi_desc() in msix_program_entries()
+is redundant.
 
-Those are two completely independent changes, even if you enable/fix a
-specific board with those. So please split into DT changes (to be merged
-by Shawn) and PCI changes (to be merged by Bjorn).
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/msi.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-> Signed-off-by: Richard Zhu <r65037@freescale.com>
-> ---
->  arch/arm/boot/dts/imx6qdl-sabreauto.dtsi | 4 ++++
->  drivers/pci/host/pci-imx6.c              | 6 +++---
->  2 files changed, 7 insertions(+), 3 deletions(-)
-> 
-> diff --git a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
-> index 009abd6..d6040a5 100644
-> --- a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
-> +++ b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
-> @@ -410,6 +410,10 @@
->  	};
->  };
->  
-> +&pcie {
-> +	status = "okay";
-> +};
-> +
->  &pwm3 {
->  	pinctrl-names = "default";
->  	pinctrl-0 = <&pinctrl_pwm3>;
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 233fe8a..bc4222b 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -275,15 +275,15 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
->  		goto err_pcie;
->  	}
->  
-> -	/* allow the clocks to stabilize */
-> -	usleep_range(200, 500);
-> -
->  	/* power up core phy and enable ref clock */
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
->  			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
->  			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
->  
-> +	/* allow the clocks to stabilize */
-> +	usleep_range(200, 500);
-> +
->  	/* Some boards don't have PCIe reset GPIO. */
->  	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
->  		gpio_set_value(imx6_pcie->reset_gpio, 0);
-
-Are you fixing a specific issue with this? Otherwise this change doesn't
-look good to me. The reference manual states that the clock must be
-stable before enabling the REF_CLK_EN bit in GPR1. So moving the delay
-without proof that it doesn't have adverse effects and without a good
-justification seems wrong.
-
-If this fixes a specific issue please mention it in the commit message.
-Also I would like at least a confirmation from Tim Harvey that this
-doesn't regress his setup. So please take him on CC for the next version
-of this patch.
-
-Regards,
-Lucas
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 5a40516..902b0cb 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -719,7 +719,6 @@ static void msix_program_entries(struct pci_dev *dev,
+ 						PCI_MSIX_ENTRY_VECTOR_CTRL;
+ 
+ 		entries[i].vector = entry->irq;
+-		irq_set_msi_desc(entry->irq, entry);
+ 		entry->masked = readl(entry->mask_base + offset);
+ 		msix_mask_irq(entry, 1);
+ 		i++;
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+1.7.1
 
