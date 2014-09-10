@@ -1,55 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51132 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755910AbaIICX1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 22:23:27 -0400
-From: Ethan Zhao <ethan.zhao@oracle.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
-	kvm@vger.kernel.org, konrad.wilk@oracle.com,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com
-Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
-	ethan.kernel@gmail.com, Ethan Zhao <ethan.zhao@oracle.com>
-Subject: [PATCH V4 3/4 resend] xen-pciback: use pci device flag operation helper function
-Date: Tue,  9 Sep 2014 10:21:27 +0800
-Message-Id: <1410229288-31829-4-git-send-email-ethan.zhao@oracle.com>
-In-Reply-To: <1410229288-31829-1-git-send-email-ethan.zhao@oracle.com>
-References: <1410229288-31829-1-git-send-email-ethan.zhao@oracle.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 10 Sep 2014 22:06:02 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org, Prarit Bhargava <prarit@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
+	linux-pm@vger.kernel.org
+Subject: Re: [Patch v4 12/16] x86, irq, ACPI: Implement interface to support
+ ACPI based IOAPIC hot-addition
+In-Reply-To: <540FC1C2.40100@linux.intel.com>
+Message-ID: <alpine.DEB.2.10.1409102202530.4178@nanos>
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com> <1409192561-19744-13-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1409091417120.11037@nanos> <540FC1C2.40100@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use pci device flag operation helper functions when set device
-to assigned or deassigned state.
+On Wed, 10 Sep 2014, Jiang Liu wrote:
+> >>  int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+> >> @@ -3867,8 +3873,15 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+> >>  	}
+> >>  	for_each_ioapic(ioapic)
+> >>  		if (ioapics[ioapic].mp_config.apicaddr == address) {
+> >> -			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
+> >> -				address, ioapic);
+> >> +			/*
+> >> +			 * IOAPIC unit may also be visible in PCI scope.
+> >> +			 * When ioapic PCI driver's probe() is called,
+> >> +			 * the IOAPIC unit may have already been initialized
+> >> +			 * at boot time.
+> >> +			 */
+> >> +			if (!ioapic_initialized)
+> >> +				pr_warn("address 0x%x conflicts with IOAPIC%d\n",
+> >> +					address, ioapic);
+> > 
+> > Hmm. This smells fishy. Why do we allow multiple initializations of
+> > the same IOAPIC in the first place. Either it's done via ACPI or via
+> > PCI, but not both.
+> The ACPI subsystem will register and initialize all IOAPICs when walking
+> ACPI MADT table during boot, before initializing PCI subsystem.
+> Later when binding ioapic PCI driver to IOAPIC PCI device, it will try
+> to register the IOAPIC device again.
+> 
+> After this patchset is applied, we could remove the !ioapic_initialized
+> check. We check acpi_ioapic_register() before calling
+> acpi_register_ioapic(). So the check becomes redundant.
+> Or we could remove the temporary code from this patch.
 
-Acked-by: David Vrabel <david.vrabel@citrix.com>
-Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
----
- drivers/xen/xen-pciback/pci_stub.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+How about removing the disfunctional ioapic PCI driver first and then
+implementing the whole thing cleanly?
+ 
+> > 
+> >>  			return -EEXIST;
+> >>  		}
+> >>  
+> >> @@ -3918,6 +3931,14 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+> >>  	ioapics[idx].irqdomain = NULL;
+> >>  	ioapics[idx].irqdomain_cfg = *cfg;
+> >>  
+> >> +	if (ioapic_initialized) {
+> > 
+> > I have a hard time to understand this conditional. Why can't we do
+> > that unconditionally?
+> How about following comments?
+> /*
+>  * If mp_register_ioapic() is called during early boot stage when
+>  * walking ACPI/SFI/DT tables, it's too early to create irqdomain,
+>  * we are still using bootmem allocator. So delay it to setup_IO_APIC().
+>  */
 
-diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
-index d57a173..e593921 100644
---- a/drivers/xen/xen-pciback/pci_stub.c
-+++ b/drivers/xen/xen-pciback/pci_stub.c
-@@ -133,7 +133,7 @@ static void pcistub_device_release(struct kref *kref)
- 	xen_pcibk_config_free_dyn_fields(dev);
- 	xen_pcibk_config_free_dev(dev);
- 
--	dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-+	pci_clear_dev_assigned(dev);
- 	pci_dev_put(dev);
- 
- 	kfree(psdev);
-@@ -413,7 +413,7 @@ static int pcistub_init_device(struct pci_dev *dev)
- 	dev_dbg(&dev->dev, "reset device\n");
- 	xen_pcibk_reset_device(dev);
- 
--	dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-+	pci_set_dev_assigned(dev);
- 	return 0;
- 
- config_release:
--- 
-1.7.1
+Fine, but then the "if (ioapic_initialized)" conditional still does
+not make sense. We surely have some global non ioapic specific
+indicator that bootmem is done and the proper memory allocator is
+available, right?
 
+Aside of that is there a point to walk those tables before we actually
+can make any use of their content?
+
+Thanks,
+
+	tglx
