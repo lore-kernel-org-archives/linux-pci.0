@@ -1,136 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:51782 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752373AbaIIURb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Sep 2014 16:17:31 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<bhelgaas@google.com>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>
-Subject: [PATCH v2 2/2] PCI: keystone: update to support multiple pci ports
-Date: Tue, 9 Sep 2014 16:17:15 -0400
-Message-ID: <1410293835-13050-2-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1410293835-13050-1-git-send-email-m-karicheri2@ti.com>
-References: <1410293835-13050-1-git-send-email-m-karicheri2@ti.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <540FB3EA.5030109@linux.intel.com>
+Date: Wed, 10 Sep 2014 10:14:02 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Prarit Bhargava <prarit@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Ingo Molnar <mingo@kernel.org>
+Subject: Re: [Patch v4 07/16] x86, irq: Prefer assigned ID in APIC ID register
+ for x86_64
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com> <1409192561-19744-8-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1409091256270.11037@nanos>
+In-Reply-To: <alpine.DEB.2.10.1409091256270.11037@nanos>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-K2E SoC has two PCI ports. The SATA controller is connected to second
-PCI port (port 1). This patch enhances the driver to support multiple
-ports.
 
-Update the DT Documentation for the new attribute, ti,pcie-port and
-remove the note for bootargs as this is no longer needed.
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
----
- - updated based on comment against v1
- .../devicetree/bindings/pci/pci-keystone.txt       |    8 +++++---
- drivers/pci/host/pci-keystone.c                    |   15 ++++++++++-----
- drivers/pci/host/pci-keystone.h                    |    4 ++--
- 3 files changed, 17 insertions(+), 10 deletions(-)
+On 2014/9/9 19:04, Thomas Gleixner wrote:
+> On Thu, 28 Aug 2014, Jiang Liu wrote:
+> 
+>> From: Yinghai Lu <yinghai@kernel.org>
+>>
+>> Perfer the assigned ID in APIC ID register for x86_64 if it's still
+>> available.
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> Cc: Joerg Roedel <joro@8bytes.org>
+>> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+>> Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> ---
+>>  arch/x86/kernel/apic/io_apic.c |   38 +++++++++++++++++++++++++++++++++-----
+>>  1 file changed, 33 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+>> index 3faf9599ff29..196d9c15fdec 100644
+>> --- a/arch/x86/kernel/apic/io_apic.c
+>> +++ b/arch/x86/kernel/apic/io_apic.c
+>> @@ -3575,26 +3575,54 @@ static int __init io_apic_get_unique_id(int ioapic, int apic_id)
+>>  	return apic_id;
+>>  }
+>>  
+>> -static u8 __init io_apic_unique_id(u8 id)
+>> +static u8 io_apic_unique_id(int idx, u8 id)
+> 
+> How is that change related to the changelog?
+My bad, removal of __init marker belongs to next patch.
 
-diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-index bedacf0..c8f5773 100644
---- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
-+++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-@@ -56,11 +56,13 @@ Optional properties:-
- 	phy-names: name of the Generic Keystine SerDes phy for PCI
- 	  - If boot loader already does PCI link establishment, then phys and
- 	    phy-names shouldn't be present.
-+	ti,pcie-port: PCI port number. This is used to configure the PCI port
-+	    number. For example K2E SoC supports 2 PCI ports and PCI bindings
-+	    for the second port adds ti,pcie-port = <1> to identify second port
-+	    and driver uses this to configure the PCI mode register for second
-+	    port. If not present, port number 0 is assumed.
- 
- Designware DT Properties not applicable for Keystone PCI
- 
- 1. pcie_bus clock-names not used.  Instead, a phandle to phys is used.
- 
--Note for PCI driver usage
--=========================
--Driver requires pci=pcie_bus_perf in the bootargs for proper functioning.
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-index f1119eb..893820d 100644
---- a/drivers/pci/host/pci-keystone.c
-+++ b/drivers/pci/host/pci-keystone.c
-@@ -253,8 +253,8 @@ static int keystone_pcie_fault(unsigned long addr, unsigned int fsr,
- 
- static void __init ks_pcie_host_init(struct pcie_port *pp)
- {
--	u32 vendor_device_id, val;
- 	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
-+	u32 val;
- 
- 	ks_pcie_establish_link(ks_pcie);
- 	ks_dw_pcie_setup_rc_app_regs(ks_pcie);
-@@ -263,8 +263,7 @@ static void __init ks_pcie_host_init(struct pcie_port *pp)
- 			pp->dbi_base + PCI_IO_BASE);
- 
- 	/* update the Vendor ID */
--	vendor_device_id = readl(ks_pcie->va_reg_pciid);
--	writew((vendor_device_id >> 16), pp->dbi_base + PCI_DEVICE_ID);
-+	writew(ks_pcie->device_id, pp->dbi_base + PCI_DEVICE_ID);
- 
- 	/* update the DEV_STAT_CTRL to publish right mrrs */
- 	val = readl(pp->dbi_base + PCIE_CAP_BASE + PCI_EXP_DEVCTL);
-@@ -345,12 +344,13 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
- static int __init ks_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-+	struct device_node *np = dev->of_node;
- 	struct keystone_pcie *ks_pcie;
-+	int ret = 0, port_id = 0;
- 	struct pcie_port *pp;
- 	struct resource *res;
- 	void __iomem *reg_p;
- 	struct phy *phy;
--	int ret = 0;
- 
- 	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
- 				GFP_KERNEL);
-@@ -360,6 +360,9 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 	}
- 	pp = &ks_pcie->pp;
- 
-+	/* read the PCI port id */
-+	of_property_read_u32(np, "ti,pcie-port", &port_id);
-+
- 	/* initialize SerDes Phy if present */
- 	phy = devm_phy_get(dev, "pcie-phy");
- 	if (!IS_ERR_OR_NULL(phy)) {
-@@ -373,7 +376,9 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 	reg_p = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(reg_p))
- 		return PTR_ERR(reg_p);
--	ks_pcie->va_reg_pciid = reg_p;
-+	ks_pcie->device_id = readl(reg_p) >> 16;
-+	devm_iounmap(dev, reg_p);
-+	devm_release_mem_region(dev, res->start, resource_size(res));
- 
- 	pp->dev = dev;
- 	platform_set_drvdata(pdev, ks_pcie);
-diff --git a/drivers/pci/host/pci-keystone.h b/drivers/pci/host/pci-keystone.h
-index 729ea7d..80cfa8e 100644
---- a/drivers/pci/host/pci-keystone.h
-+++ b/drivers/pci/host/pci-keystone.h
-@@ -19,8 +19,8 @@
- struct keystone_pcie {
- 	struct	clk		*clk;
- 	struct	pcie_port	pp;
--	void __iomem		*va_reg_pciid;
--
-+	/* PCI Device ID */
-+	u32			device_id;
- 	int			num_legacy_host_irqs;
- 	int			legacy_host_irqs[MAX_LEGACY_HOST_IRQS];
- 	struct			device_node *legacy_intc_np;
--- 
-1.7.9.5
-
+> 
+>>  {
+>>  	if ((boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) &&
+>>  	    !APIC_XAPIC(apic_version[boot_cpu_physical_apicid]))
+>> -		return io_apic_get_unique_id(nr_ioapics, id);
+>> +		return io_apic_get_unique_id(idx, id);
+>>  	else
+>>  		return id;
+>>  }
+>>  #else
+>> -static u8 __init io_apic_unique_id(u8 id)
+>> +static u8 io_apic_unique_id(int idx, u8 id)
+>>  {
+>>  	int i;
+>> +	u8 new_id;
+>> +	unsigned long flags;
+>>  	DECLARE_BITMAP(used, 256);
+>> +	union IO_APIC_reg_00 reg_00;
+>>  
+>>  	bitmap_zero(used, 256);
+>>  	for_each_ioapic(i)
+>>  		__set_bit(mpc_ioapic_id(i), used);
+>>  	if (!test_bit(id, used))
+>>  		return id;
+>> -	return find_first_zero_bit(used, 256);
+>> +
+>> +	/* check register at first */
+>> +	raw_spin_lock_irqsave(&ioapic_lock, flags);
+>> +	reg_00.raw = io_apic_read(idx, 0);
+>> +	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
+>> +	new_id = reg_00.bits.ID;
+>> +	if (!test_bit(new_id, used)) {
+>> +		apic_printk(APIC_VERBOSE, KERN_INFO
+>> +			"IOAPIC[%d]: Using reg apic_id %d instead of %d\n",
+>> +			 idx, new_id, id);
+>> +		return new_id;
+>> +	}
+>> +
+>> +	new_id = find_first_zero_bit(used, 256);
+>> +	reg_00.bits.ID = new_id;
+>> +	raw_spin_lock_irqsave(&ioapic_lock, flags);
+>> +	io_apic_write(idx, 0, reg_00.raw);
+>> +	reg_00.raw = io_apic_read(idx, 0);
+>> +	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
+>> +
+>> +	/* Sanity check */
+>> +	if (reg_00.bits.ID != new_id)
+>> +		pr_warn("IOAPIC[%d]: Unable to change apic_id to %d!\n",
+>> +			idx, new_id);
+> 
+> So we detect, that the ID could not be changed and we return it
+> nevertheless?
+Seems it deserves a BUG_ON here. We have tried the ID from ACPI table,
+the ID from hardware register, they all fails. And we can't change the
+hardware register too. Seems no way out here.
+Regards!
+Gerry
+> 
+> Thanks,
+> 
+> 	tglx
+> 
