@@ -1,69 +1,43 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: <suravee.suthikulpanit@amd.com>
-To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
-	<jason@lakedaemon.net>
-CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
-	<Will.Deacon@arm.com>, <liviu.dudau@arm.com>, <tglx@linutronix.de>,
-	<Harish.Kasiviswanathan@amd.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	"Suravee Suthikulpanit" <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH 0/2 V7] irqchip: gic: Introduce ARM GICv2m MSI(-X) support
-Date: Wed, 17 Sep 2014 19:08:24 -0700
-Message-ID: <1411006106-17339-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <2354837.kuMZPK0Y1Q@segfault>
+References: <2354837.kuMZPK0Y1Q@segfault>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 11 Sep 2014 16:26:21 -0600
+Message-ID: <CAErSpo6zLY8RVAHnLe81jjOE8cxGzskjPq3HL7eZVOtC-WF6=w@mail.gmail.com>
+Subject: Re: [3.16-rcX][pciehp][radeon] PCIe HotPlug conflicts with radeon GPU
+To: Shawn Starr <shawn.starr@rogers.com>
+Cc: Kernel development list <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+[+cc linux-pci]
 
-This patch set introduces support for MSI(-X) in GICv2m specification,
-which is implemented in some variation of GIC400.
+On Sat, Aug 2, 2014 at 10:02 AM, Shawn Starr <shawn.starr@rogers.com> wrote:
+> Hello devs,
+>
+> There are two issues I am encountering with the PCIe Hotplug driver on my Lenovo Laptop (W500). I note this goes back further than 3.15.
+>
+> It is noted here:
+> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=f244d8b623dae7a7bc695b0336f67729b95a9736
+> https://bugzilla.kernel.org/show_bug.cgi?id=79701
+>
+> And my open bug here:
+> https://bugzilla.kernel.org/show_bug.cgi?id=77261
+>
+> 1) If I enable the device to use both the integrated and discrete GPU, pciehp will decide to force unload radeon because it puts itself into a power saving state, fails back to the Intel integrated GPU in this case unless I tell radeon.ko to runpm=0 (no power management, then pciehp wont touch it).
+>
+> 2) If the Radeon GPU resets and you use pci_reset=1 for kernel module option, pciehp decides to force unload radeon even though the GPU is trying to setup after failing.
+>
+> Kernel I am using right now: 3.16.0-0.rc7.git3.1.fc21.x86_64 (about to boot into snapshot kernel-core-3.16.0-0.rc7.git4.1.fc21.x86_64)
 
-This depends on and has been tested with the following patch set which
-implements PCI supports for ARM64:
+Hi Shawn,
 
-    [PATCH v10 00/10] Support for creating generic PCI host bridges from DT
-    https://lkml.org/lkml/2014/9/8/333
+Thanks for the report and sorry that it got dropped.  But I see you're
+cc'd on https://bugzilla.kernel.org/show_bug.cgi?id=79701, so you've
+probably seen the work there.  If you can try out the patches I just
+posted, that would be great.
 
-    [PATCH v10] Add support for PCI in AArch64
-    https://lkml.org/lkml/2014/9/8/325
- 
-Changes in V7:
-    * Fix error handling logic in gicv2m_of_init() and gicv2m_init_one().
-      per Marc suggestions.
-    * Restructure the patch to integrate the multi-MSI support for V2m
-      into the patch 2/2.
-    * Introduce "arm,gic-v2m-frame" compatible ID for the v2m DT binding.
-    * Introduce "arm,msi-base-spi" and "arm,msi-num-spi" property in the
-      v2m DT binding for overwriting value in MSI_TYPER register.
-    * Add irq-gic-v2m.c: is_msi_spi_valid() to validate the SPI base and
-      number of SPIs.
-    * Fix various comments from Marc (Many thanks).
-    * Add the missing CONFIG_ARM_GICV2M (per Marcin Juszkiewicz comment)
-
-Suravee Suthikulpanit (2):
-  irqchip: gic: Add support for multiple MSI for ARM64
-  irqchip: gicv2m: Add supports for ARM GICv2m MSI(-X)
-
- Documentation/devicetree/bindings/arm/gic.txt |  55 ++++
- arch/arm64/Kconfig                            |   1 +
- arch/arm64/kernel/Makefile                    |   1 +
- arch/arm64/kernel/msi.c                       |  41 +++
- drivers/irqchip/Kconfig                       |   7 +
- drivers/irqchip/Makefile                      |   1 +
- drivers/irqchip/irq-gic-common.c              |  12 +
- drivers/irqchip/irq-gic-common.h              |   4 +
- drivers/irqchip/irq-gic-v2m.c                 | 356 ++++++++++++++++++++++++++
- drivers/irqchip/irq-gic.c                     |  82 +++---
- drivers/irqchip/irq-gic.h                     |  54 ++++
- 11 files changed, 584 insertions(+), 30 deletions(-)
- create mode 100644 arch/arm64/kernel/msi.c
- create mode 100644 drivers/irqchip/irq-gic-v2m.c
- create mode 100644 drivers/irqchip/irq-gic.h
-
--- 
-1.9.3
-
+Bjorn
