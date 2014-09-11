@@ -1,61 +1,61 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <5424CBF1.4000000@huawei.com>
-Date: Fri, 26 Sep 2014 10:14:09 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 17/22] s390/MSI: Use MSI chip framework to configure
- MSI/MSI-X irq
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com> <1411614872-4009-18-git-send-email-wangyijing@huawei.com> <20140925073800.GM12423@ulmo>
-In-Reply-To: <20140925073800.GM12423@ulmo>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-arch-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC Part2 v1 16/21] x86, irq: Directly call native_compose_msi_msg() for DMAR IRQ
+Date: Thu, 11 Sep 2014 22:03:43 +0800
+Message-Id: <1410444228-3134-17-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/25 15:38, Thierry Reding wrote:
-> On Thu, Sep 25, 2014 at 11:14:27AM +0800, Yijing Wang wrote:
-> [...]
->> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-> [...]
->> @@ -358,7 +358,7 @@ static void zpci_irq_handler(struct airq_struct *airq)
->>  	}
->>  }
->>  
->> -int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
->> +int zpci_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
-> 
-> static?
+DMAR interrupt won't be remapped by interrupt remapping hardware,
+so directly call native_compose_msi_msg() for DMAR IRQ to compose MSI
+message data. This will help to simplify MSI code later.
 
-Yes, Will update.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/msi.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-> 
-
-
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 5696703271af..4f2a349ccef0 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -375,12 +375,10 @@ static struct irq_chip dmar_msi_type = {
+ 
+ int arch_setup_dmar_msi(unsigned int irq)
+ {
+-	int ret;
+ 	struct msi_msg msg;
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 
+-	ret = msi_compose_msg(NULL, irq, &msg, -1);
+-	if (ret < 0)
+-		return ret;
++	native_compose_msi_msg(NULL, irq, cfg->dest_apicid, &msg, -1);
+ 	dmar_msi_write(irq, &msg);
+ 	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
+ 				      "edge");
 -- 
-Thanks!
-Yijing
+1.7.10.4
 
