@@ -1,62 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:34105 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752740AbaIEWLi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 18:11:38 -0400
-Received: by mail-pa0-f44.google.com with SMTP id rd3so22878158pab.17
-        for <linux-pci@vger.kernel.org>; Fri, 05 Sep 2014 15:11:38 -0700 (PDT)
-Date: Fri, 5 Sep 2014 16:11:31 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Liviu Dudau <liviu@dudau.co.uk>, Liviu Dudau <Liviu.Dudau@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v9 04/12] PCI: OF: Fix the conversion of IO ranges into
- IO resources.
-Message-ID: <20140905221131.GJ8080@google.com>
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com>
- <1407860725-25202-5-git-send-email-Liviu.Dudau@arm.com>
- <CAL_JsqJm6qWNdrJ2F8xddFUj46y42n6hQVu1nkTaA-5Tbg--XQ@mail.gmail.com>
- <20140822130640.GM13147@bart.dudau.co.uk>
- <CAL_JsqLGa3em5Phct-H0Q=vB5AnA78h19uA=4xi3xHA1rCVq+A@mail.gmail.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:38823 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752517AbaIKTHh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Sep 2014 15:07:37 -0400
+Message-ID: <5411F2F2.20102@ti.com>
+Date: Thu, 11 Sep 2014 15:07:30 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL_JsqLGa3em5Phct-H0Q=vB5AnA78h19uA=4xi3xHA1rCVq+A@mail.gmail.com>
+To: <bhelgaas@google.com>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH - v4] PCI: keystone: add a pci quirk to limit mrrs
+References: <1410195814-30414-1-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1410195814-30414-1-git-send-email-m-karicheri2@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Aug 24, 2014 at 06:27:48PM -0500, Rob Herring wrote:
-> On Fri, Aug 22, 2014 at 8:06 AM, Liviu Dudau <liviu@dudau.co.uk> wrote:
-> > mips is doing the same thing and I believe is not affected, pci-host-generic.c
-> > was adjusting the returned values afterwards so that will not be needed and Lorenzo
-> > has a patch for the driver to adapt it to this series anyway.
-> >
-> > pcie-designware.c also recalculates the io.start and io.end values, so that's fine
-> > for now. The only ones that I believe are still affected are pci-tegra.c and
-> > pcie-rcar.c for which I will need to provide a patch similar to integrator unless
-> > the code gets converted to the new range parsing.
-> 
-> Well, the latter would be nice, but they certainly have to be fixed.
-> Now that I think about it, this needs to be handled in a bisectable
-> way. So I think you need to fix all affected platforms in this patch
-> rather than a separate patch as you have done.
+On 09/08/2014 01:03 PM, Murali Karicheri wrote:
+> Keystone PCI controller has a limitation that memory read request
+> size must not exceed 256 bytes. This is a hardware limitation and
+> add a quirk to force this limit on all downstream devices by
+> updating mrrs.
+>
+> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+> ---
+>    -v4: re-send removing extra lines
+>    -v3: added check for vendor id and use pci_matc_id() to do matching
+>    -v2: made the quirk happens after tuning
+>    -v1: changed printk to indicate PCI bdf
+>
+>   drivers/pci/host/pci-keystone.c |   45 +++++++++++++++++++++++++++++++++++++++
+>   1 file changed, 45 insertions(+)
+>
+> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+> index c1cfaef..ff8ed25 100644
+> --- a/drivers/pci/host/pci-keystone.c
+> +++ b/drivers/pci/host/pci-keystone.c
+> @@ -42,8 +42,53 @@
+>   /* DEV_STAT_CTRL */
+>   #define PCIE_CAP_BASE		0x70
+>
+> +/* PCIE controller device IDs */
+> +#define PCIE_RC_K2HK		0xb008
+> +#define PCIE_RC_K2E		0xb009
+> +#define PCIE_RC_K2L		0xb00a
+> +
+>   #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
+>
+> +static void quirk_limit_mrrs(struct pci_dev *dev)
+> +{
+> +	struct pci_bus *bus = dev->bus;
+> +	struct pci_dev *bridge = bus->self;
+> +	static const struct pci_device_id rc_pci_devids[] = {
+> +		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2HK),
+> +		 .class = PCI_CLASS_BRIDGE_PCI<<  8, .class_mask = ~0, },
+> +		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2E),
+> +		 .class = PCI_CLASS_BRIDGE_PCI<<  8, .class_mask = ~0, },
+> +		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2L),
+> +		 .class = PCI_CLASS_BRIDGE_PCI<<  8, .class_mask = ~0, },
+> +		{ 0, },
+> +	};
+> +
+> +	if (pci_is_root_bus(bus))
+> +		return;
+> +
+> +	/* look for the host bridge */
+> +	while (!pci_is_root_bus(bus)) {
+> +		bridge = bus->self;
+> +		bus = bus->parent;
+> +	}
+> +
+> +	if (bridge) {
+> +		/*
+> +		 * Keystone PCI controller has a h/w limitation of
+> +		 * 256 bytes maximum read request size. It can't handle
+> +		 * anything higher than this. So force this limit on
+> +		 * all downstream devices
+> +		 */
+> +		if (pci_match_id(rc_pci_devids, bridge)) {
+> +			if (pcie_get_readrq(dev)>  256) {
+> +				dev_info(&dev->dev, "limiting mrrs to 256\n");
+> +				pcie_set_readrq(dev, 256);
+> +			}
+> +		}
+> +	}
+> +}
+> +DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
+> +
+>   static int ks_pcie_establish_link(struct keystone_pcie *ks_pcie)
+>   {
+>   	struct pcie_port *pp =&ks_pcie->pp;
+Bjorn,
 
-Yep, I was about to complain that the "ARM: integrator: Correct usage of
-of_pci_range_to_resource()" patch needs to be squashed into whatever broke
-it, but I see Rob already caught that.
+If this version looks good, could you please apply this to host-keystone?
 
-Bjorn
+Thanks
+
+Murali
+
