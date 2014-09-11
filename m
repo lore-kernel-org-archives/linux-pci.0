@@ -1,54 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:12305 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750940AbaIFKu1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 6 Sep 2014 06:50:27 -0400
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: bhelgaas@google.com
-Cc: Megan Kamiya <megan.a.kamiya@intel.com>, linux-pci@vger.kernel.org,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Subject: [PATCH] pci: Parenthesize parameters in PCI_DEVID and PCI_VPD_LRDT_ID macros
-Date: Sat,  6 Sep 2014 03:49:56 -0700
-Message-Id: <1410000596-24190-1-git-send-email-jeffrey.t.kirsher@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Rob Herring <robherring2@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI domain_nr
+Date: Thu, 11 Sep 2014 16:49:56 +0200
+Message-ID: <15029597.7ylOekBBOx@wuerfel>
+In-Reply-To: <ae98d68652f1495a857f081c3a6aecb2@HKXPR06MB168.apcprd06.prod.outlook.com>
+References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com> <2908259.jgJNuDxCCa@wuerfel> <ae98d68652f1495a857f081c3a6aecb2@HKXPR06MB168.apcprd06.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Megan Kamiya <megan.a.kamiya@intel.com>
+On Thursday 11 September 2014 14:11:05 Phil Edworthy wrote:
+> On 10 September 2014 19:20, Arnd wrote:
+> > On Tuesday 09 September 2014 12:20:54 Catalin Marinas wrote:
+> > >
+> > > We can assume that if a domain is not specified and there is a single
+> > > top level PCIe node, the domain defaults to 0. Are there any arm32
+> > > platforms that require multiple domains (and do not specify a number in
+> > > the DT)?
+> > 
+> > In theory, I think all of them could work with a single domain, but then
+> > you need to partition the bus number space between the host controllers,
+> > so you have the exact same situation that you either need to make up
+> > random bus numbers or put them in DT.
+> > 
+> > Using multiple domains is way cleaner for this, even if we have to
+> > make up the numbers.
+> 
+> Maybe this is a stupid question, but why would you want to specify the domain
+> in the DT at all? Doesn't every instance of a driver imply a separate domain?
 
-Add parentheses around parameters in PCI_DEVID and PCI_VPD_LRDT_ID
-macros to prevent possible expansion errors as described by the CERT
-Secure Coding Standard: PRE01-C: Use parentheses within macros around
-parameter names
+See Jason Gunthorpe's latest reply on the topic. In short, the domain is
+visible to user space and we want it to be stable across boots when
+user configuration refers to devices by domain:bus:device:function
+numbers.
 
-Signed-off-by: Megan Kamiya <megan.a.kamiya@intel.com>
-Tested-by: Aaron Brown <aaron.f.brown@intel.com>
-Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
----
- include/linux/pci.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 61978a4..cb744f3 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -45,7 +45,7 @@
-  * In the interest of not exposing interfaces to user-space unnecessarily,
-  * the following kernel-only defines are being added here.
-  */
--#define PCI_DEVID(bus, devfn)  ((((u16)bus) << 8) | devfn)
-+#define PCI_DEVID(bus, devfn)  ((((u16)(bus)) << 8) | (devfn))
- /* return bus from PCI devid = ((u16)bus_number) << 8) | devfn */
- #define PCI_BUS_NUM(x) (((x) >> 8) & 0xff)
- 
-@@ -1701,7 +1701,7 @@ bool pci_acs_path_enabled(struct pci_dev *start,
- 			  struct pci_dev *end, u16 acs_flags);
- 
- #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
--#define PCI_VPD_LRDT_ID(x)		(x | PCI_VPD_LRDT)
-+#define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
- 
- /* Large Resource Data Type Tag Item Names */
- #define PCI_VPD_LTIN_ID_STRING		0x02	/* Identifier String */
--- 
-1.9.3
-
+	Arnd
