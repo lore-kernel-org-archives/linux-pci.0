@@ -1,35 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:49624 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750744AbaIDPLE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 11:11:04 -0400
-Date: Thu, 4 Sep 2014 08:11:03 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 11/13] lpfc: Use pci_enable_msix_range() instead of
- pci_enable_msix()
-Message-ID: <20140904151103.GA9093@infradead.org>
-References: <cover.1408335523.git.agordeev@redhat.com>
- <e7470e484083c9eeb6b4f34f3e69e332ad5998c2.1408335523.git.agordeev@redhat.com>
- <20140904132939.GA1225@agordeev.usersys.redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC Part1 v1 00/18] Prepare for enabling hierarchy irqdomain on x86
+Date: Thu, 11 Sep 2014 16:24:47 +0800
+Message-Id: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140904132939.GA1225@agordeev.usersys.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 04, 2014 at 02:29:39PM +0100, Alexander Gordeev wrote:
-> On Mon, Aug 18, 2014 at 08:01:51AM +0200, Alexander Gordeev wrote:
-> > As result of deprecation of MSI-X/MSI enablement functions
-> > pci_enable_msix() and pci_enable_msi_block() all drivers
-> > using these two interfaces need to be updated to use the
-> > new pci_enable_msi_range()  or pci_enable_msi_exact()
-> > and pci_enable_msix_range() or pci_enable_msix_exact()
-> > interfaces.
-> 
-> James?
+We plan to restructure x86 interrupt code based on hierarchy irqdomain,
+that is to build irqdomains for CPU vector, interrupt remapping unit,
+IOAPIC, MSI and HPET etc and orgonize those irqdomains in hierarchy mode.
 
-It's part of the lpfc update he recently sent out.  It's high up on my
-list of things to review.
+This patchset is preparation work to enable hierarchy irqdomain on x86
+platforms. It splits out code for vector management, MSI, HTIRQ from
+ioapic.c into separate files. It also introduces some helper functions
+to access irq_cfg, which will ease transition to hierarchy irqdomain
+later.
+
+It's based on patchset at:
+https://lkml.org/lkml/2014/9/11/97
+
+And you may access it at:
+https://github.com/jiangliu/linux.git irqdomain/p1v1
+
+Jiang Liu (17):
+  x86, irq, ACPI: Fix building warning of unused code
+  x86, irq: Kill fourth parameter of IO_APIC_get_PCI_irq_vector()
+  x86, irq: Refine hw_irq.h to prepare for irqdomain support
+  x86, irq: Rename local APIC related functions in io_apic.c as
+    apic_xxx()
+  x86, irq: Protect __clear_irq_vector() with vector_lock
+  x86, irq: Introduce helpers to access struct irq_cfg
+  x86, irq: Move local APIC related code from io_apic.c into vector.c
+  x86, irq: Replace printk(KERN_LVL) with pr_lvl() utilities
+  x86, irq: Move PCI MSI related code from io_apic.c into msi.c
+  x86, irq: Move HT IRQ related code from io_apic.c into htirq.c
+  x86, irq: Move IOAPIC related declarations from hw_irq.h into
+    io_apic.h
+  x86, irq: Move IRQ initialization routines from io_apic.c into
+    vector.c
+  x86, irq: Make MSI and HT_IRQ indepenent of X86_IO_APIC
+  x86, irq: Use helpers to access irq_cfg data structure associated
+    with IRQ
+  x86: irq_remapping: Use helpers to access irq_cfg data structure
+    associated with IRQ
+  iommu/vt-d: Use helpers to access irq_cfg data structure associated
+    with IRQ
+  iommu/amd: Use helpers to access irq_cfg data structure associated
+    with IRQ
+
+Yinghai Lu (1):
+  x86, irq: Convert irq_2_pin list to generic list
+
+ arch/x86/Kconfig                    |    6 +-
+ arch/x86/include/asm/hw_irq.h       |   76 +--
+ arch/x86/include/asm/io_apic.h      |   29 +-
+ arch/x86/include/asm/pci.h          |    3 +
+ arch/x86/kernel/acpi/boot.c         |    2 +
+ arch/x86/kernel/apic/Makefile       |    4 +-
+ arch/x86/kernel/apic/htirq.c        |  106 ++++
+ arch/x86/kernel/apic/io_apic.c      | 1096 ++---------------------------------
+ arch/x86/kernel/apic/msi.c          |  283 +++++++++
+ arch/x86/kernel/apic/vector.c       |  716 +++++++++++++++++++++++
+ arch/x86/kernel/irqinit.c           |   22 -
+ arch/x86/pci/irq.c                  |    6 +-
+ arch/x86/platform/uv/uv_irq.c       |    6 +-
+ drivers/iommu/amd_iommu.c           |   14 +-
+ drivers/iommu/intel_irq_remapping.c |   10 +-
+ drivers/iommu/irq_remapping.c       |    6 +-
+ drivers/pci/Kconfig                 |    2 +-
+ drivers/pci/hotplug/ibmphp_core.c   |    5 +-
+ 18 files changed, 1226 insertions(+), 1166 deletions(-)
+ create mode 100644 arch/x86/kernel/apic/htirq.c
+ create mode 100644 arch/x86/kernel/apic/msi.c
+ create mode 100644 arch/x86/kernel/apic/vector.c
+
+-- 
+1.7.10.4
+
