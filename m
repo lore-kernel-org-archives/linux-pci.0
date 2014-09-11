@@ -1,153 +1,56 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from exprod5og112.obsmtp.com ([64.18.0.24]:59794 "HELO
+	exprod5og112.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753899AbaIKW4h (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Sep 2014 18:56:37 -0400
+Received: by mail-pd0-f173.google.com with SMTP id ft15so12212905pdb.4
+        for <linux-pci@vger.kernel.org>; Thu, 11 Sep 2014 15:56:36 -0700 (PDT)
+From: Tanmay Inamdar <tinamdar@apm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
 	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Grant Likely <grant.likely@linaro.org>
-Subject: [PATCH v11 07/10] OF: Introduce helper function for getting PCI domain_nr
-Date: Thu, 18 Sep 2014 02:30:22 +0100
-Message-Id: <1411003825-21521-8-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [PATCH v8 4/4] MAINTAINERS: entry for APM X-Gene PCIe host driver
+Date: Thu, 11 Sep 2014 15:57:46 -0700
+Message-Id: <1410476266-29426-5-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1410476266-29426-1-git-send-email-tinamdar@apm.com>
+References: <1410476266-29426-1-git-send-email-tinamdar@apm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add of_pci_get_domain_nr() to retrieve the PCI domain number
-of a given device from DT. If the information is not present,
-the function can be requested to allocate a new domain number.
+Add entry for AppliedMicro X-Gene PCIe host driver.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
 ---
- drivers/of/of_pci.c    | 62 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/of_pci.h |  7 ++++++
- 2 files changed, 69 insertions(+)
+ MAINTAINERS | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 8481996..7eaeac2 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -3,6 +3,8 @@
- #include <linux/of.h>
- #include <linux/of_pci.h>
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 5e7866a..cd9bb3da 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6941,6 +6941,14 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/*spear*
  
-+#include "of_private.h"
++PCI DRIVER FOR APPLIEDMICRO XGENE
++M:	Tanmay Inamdar <tinamdar@apm.com>
++L:	linux-pci@vger.kernel.org
++L:	linux-arm-kernel@lists.infradead.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/xgene-pci.txt
++F:	drivers/pci/host/pci-xgene.c
 +
- static inline int __of_pci_pci_compare(struct device_node *node,
- 				       unsigned int data)
- {
-@@ -89,6 +91,66 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
- }
- EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
- 
-+static atomic_t of_domain_nr = ATOMIC_INIT(-1);
-+
-+/*
-+ * Get the maximum value for a domain number from the device tree
-+ */
-+static int of_get_max_pci_domain_nr(void)
-+{
-+	struct alias_prop *app;
-+	int max_domain = -1;
-+
-+	mutex_lock(&of_mutex);
-+	list_for_each_entry(app, &aliases_lookup, link) {
-+		if (strncmp(app->stem, "pci-domain", 10) != 0)
-+			continue;
-+
-+		max_domain = max(max_domain, app->id);
-+	}
-+	mutex_unlock(&of_mutex);
-+
-+	return max_domain;
-+}
-+
-+/**
-+ * This function will try to obtain the host bridge domain number by
-+ * using of_alias_get_id() call with "pci-domain" as a stem. If that
-+ * fails, a local allocator will be used. The local allocator can
-+ * be requested to return a new domain_nr if the information is missing
-+ * from the device tree.
-+ *
-+ * @node: device tree node with the domain information
-+ * @allocate_if_missing: if DT lacks information about the domain nr,
-+ * allocate a new number.
-+ *
-+ * Returns the associated domain number from DT, or a new domain number
-+ * if DT information is missing and @allocate_if_missing is true. If
-+ * @allocate_if_missing is false then the last allocated domain number
-+ * will be returned.
-+ */
-+int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
-+{
-+	int domain;
-+
-+	domain = atomic_read(&of_domain_nr);
-+	if (domain == -1) {
-+		/* first run, get max defined domain nr in device tree */
-+		domain = of_get_max_pci_domain_nr();
-+		/* then set the start value for allocator to be max + 1 */
-+		atomic_set(&of_domain_nr, domain + 1);
-+	}
-+	domain = of_alias_get_id(node, "pci-domain");
-+	if (domain == -ENODEV) {
-+		domain = atomic_read(&of_domain_nr);
-+		if (allocate_if_missing)
-+			atomic_inc(&of_domain_nr);
-+	}
-+
-+	return domain;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_get_domain_nr);
-+
- #ifdef CONFIG_PCI_MSI
- 
- static LIST_HEAD(of_pci_msi_chip_list);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index dde3a4a..3a3824c 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -15,6 +15,7 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
- int of_pci_get_devfn(struct device_node *np);
- int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
-+int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing);
- #else
- static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
- {
-@@ -43,6 +44,12 @@ of_pci_parse_bus_range(struct device_node *node, struct resource *res)
- {
- 	return -EINVAL;
- }
-+
-+static inline int
-+of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
-+{
-+	return -1;
-+}
- #endif
- 
- #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
 -- 
-2.1.0
+1.9.1
 
