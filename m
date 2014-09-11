@@ -1,75 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:40109 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753110AbaIZDYq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Sep 2014 23:24:46 -0400
-Message-ID: <5424DC01.6020906@huawei.com>
-Date: Fri, 26 Sep 2014 11:22:41 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-bn1bon0110.outbound.protection.outlook.com ([157.56.111.110]:56320
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755301AbaIKNIl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Sep 2014 09:08:41 -0400
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Minghuan Lian" <Minghuan.Lian@freescale.com>
+Subject: [PATCH v2 1/3] PCI: designware: Rename get_msi_data to get_msi_addr
+Date: Thu, 11 Sep 2014 21:08:59 +0000
+Message-ID: <1410469741-11634-1-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
-To: Keith Busch <keith.busch@intel.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	"Jon Mason" <jdmason@kudzu.us>
-Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
-References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com> <20140903224201.GD26073@google.com> <540802D9.6000903@huawei.com> <CAErSpo6qy76zTX07Ufm0n1_HUA5G0MrAYxauEFa5QkibWsejFQ@mail.gmail.com> <5409117E.2000002@huawei.com> <alpine.LRH.2.03.1409241547430.4696@AMR> <CAErSpo5upA7KYVo=_SvwJ9pdNot_5ENi3OtiPpuzZjpwj3ghPA@mail.gmail.com> <54236E7B.5000905@huawei.com> <alpine.LRH.2.03.1409251029220.4688@AMR>
-In-Reply-To: <alpine.LRH.2.03.1409251029220.4688@AMR>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/26 0:46, Keith Busch wrote:
-> On Wed, 24 Sep 2014, Yijing Wang wrote:
->> On 2014/9/25 7:30, Bjorn Helgaas wrote:
->>> On Wed, Sep 24, 2014 at 4:41 PM, Keith Busch <keith.busch@intel.com> wrote:
->>>> Just poking this thread to make sure it's not dead. :)
->>>>
->>>> I tested Yijing's proposal and it is successful on our Intel server
->>>> platforms; hoping either this or something that derives similar behavior
->>>> will be applied so we can remove bus tuning kernel parameters.
->>>>
->>>> Tested-by: Keith Busch <keith.busch@intel.com>
->>>
->>> Oops, thanks for poking me, because this was indeed dead.
->>>
->>> My main objection was to testing "is_hotplug_bridge".  That doesn't
->>> seem right, because this issue really isn't specific to hotplug.  I
->>> didn't see a resolution of that, but let me know if I missed it.
->>
->> Why I introduced "is_hotplug_bridge" is to avoid to touch the MPS which is not
->> in hotplug case when pcie_bus_config == PCIE_BUS_TUNE_OFF.
->>
->> It's so sad that PCIe spec doesn't give a detailed guide to configure MPS.
->>
->> I'd like to refactor current MPS framework, but now there are still some puzzles
->> to me. I need to have a deeper understanding of pcie mps. I read Jon's mps patch
->> log from git, I found he turn off all this MPS config, because some issues were found
->> in some platforms, but no platforms detailed info and no bugzilla records.
-> 
-> Just my opinion, I thought the hotplug check was a good idea: it addresses
-> a known issue, and does not mess with current unknowns. Outside a hotplug
-> scenario, I think we expect platform f/w to handle MPS settings and the
-> kernel can stay out of the way because of the unknown platform issues. If
-> it is hotplug, having the kernel set device's MPS to match the parent
-> couldn't make things worse off than doing nothing, right?
+The function get_msi_data is used to return MSI message address.
+In order to accurately express function purpose the patch rename
+it to get_msi_addr.
 
-Yes, I think so, but it all decided by Bjorn. I think he want a better solution,
-and current patch just still is a temporary fix.
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+---
+Change log:
+v2: no change just derived from v1
 
-> 
-> On the side, I'll see if I can ping some comrades on PCI-SIG to propose
-> an ECN to clarify configuring MPS. They usually ignore me though, so no
-> promises. :)
+ drivers/pci/host/pcie-designware.c | 5 +++--
+ drivers/pci/host/pcie-designware.h | 2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-Thanks in advance for your help :)
-
-> 
-> .
-> 
-
-
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 12c42fc..1d37bed 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -361,12 +361,13 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+ 	 */
+ 	desc->msi_attrib.multiple = msgvec;
+ 
+-	if (pp->ops->get_msi_data)
+-		msg.address_lo = pp->ops->get_msi_data(pp);
++	if (pp->ops->get_msi_addr)
++		msg.address_lo = pp->ops->get_msi_addr(pp);
+ 	else
+ 		msg.address_lo = virt_to_phys((void *)pp->msi_data);
+ 	msg.address_hi = 0x0;
+ 	msg.data = pos;
++
+ 	write_msi_msg(irq, &msg);
+ 
+ 	return 0;
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index a476e60..8be2b33 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -74,7 +74,7 @@ struct pcie_host_ops {
+ 	void (*host_init)(struct pcie_port *pp);
+ 	void (*msi_set_irq)(struct pcie_port *pp, int irq);
+ 	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
+-	u32 (*get_msi_data)(struct pcie_port *pp);
++	u32 (*get_msi_addr)(struct pcie_port *pp);
+ 	void (*scan_bus)(struct pcie_port *pp);
+ 	int (*msi_host_init)(struct pcie_port *pp, struct msi_chip *chip);
+ };
 -- 
-Thanks!
-Yijing
+1.9.1
 
