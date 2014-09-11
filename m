@@ -1,73 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:10079 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751236AbaIJCBe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Sep 2014 22:01:34 -0400
-Message-ID: <540FAFA4.1080008@huawei.com>
-Date: Wed, 10 Sep 2014 09:55:48 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Rob Herring <robherring2@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	"Jason Gunthorpe" <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"Will Deacon" <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	"Suravee Suthikulanit" <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Device Tree ML" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI
- domain_nr
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com> <1410184472-17630-8-git-send-email-Liviu.Dudau@arm.com> <CAL_JsqJi8k1Goc3UmXhuxf9v7=4gJrYG_Di7v574PxS8TsJaXw@mail.gmail.com> <20140908145459.GO27864@e106497-lin.cambridge.arm.com> <CAL_JsqJdGKDVwJOpPp19OkVPGzR7Zqv3nh+ONHHaYnPLYTYoYg@mail.gmail.com> <20140908155931.GP27864@e106497-lin.cambridge.arm.com> <540E960D.7080408@huawei.com> <20140909084621.GS27864@e106497-lin.cambridge.arm.com> <540EC8CB.7010106@huawei.com> <CAErSpo4cAfom2=07NYDRfTCdHO22M0v+ueiaZuG6v2Xd18wEnQ@mail.gmail.com>
-In-Reply-To: <CAErSpo4cAfom2=07NYDRfTCdHO22M0v+ueiaZuG6v2Xd18wEnQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC Part1 v1 07/18] x86, irq: Introduce helpers to access struct irq_cfg
+Date: Thu, 11 Sep 2014 16:24:54 +0800
+Message-Id: <1410423905-26239-8-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> OK. Sorry, I have one last question, because domain will be used to calculate the address used to
->> access PCI hardware config registers. So if DTS file doesn't report the domain, how do we know
->> we would access the right registers when we use the auto increment domain vaule ?
->> Has there a mechanism to make sure system can access the correct registers by the domain ?
-> 
-> I think you're referring to config access via ECAM (PCIe r3.0, sec
-> 7.2.2).  In that case, I don't think the domain should be used to
-> compute the memory-mapped configuration address.  Each host bridge is
-> in exactly one domain, and each host bridge has an associated ECAM
-> area base.  The address calculation uses the bus number, device
-> number, function number, and register number to compute an offset into
-> the ECAM area.
-> 
-> So as long as the DT tells you the ECAM information for each host
-> bridge, that should be sufficient.  The domain number is then just a
-> Linux convenience and is not tied to the platform as it is on ia64.
+Change irq_cfg() from static to extern, also introduce helper function
+irqd_cfg(). Later we could rewrite these two helpers when enabling
+hierarchy irqdomain.
 
-Hi Bjorn, you are right, thanks for your detailed explanation! :)
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hw_irq.h  |    2 ++
+ arch/x86/kernel/apic/io_apic.c |    7 ++++++-
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-Thanks!
-Yijing.
-
-> 
-> Bjorn
-> 
-> .
-> 
-
-
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 18e8717bf644..f457fcd0f3ba 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -132,6 +132,8 @@ struct irq_cfg {
+ 	};
+ };
+ 
++extern struct irq_cfg *irq_cfg(unsigned int irq);
++extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
+ extern void setup_vector_irq(int cpu);
+ extern int assign_irq_vector(int, struct irq_cfg *, const struct cpumask *);
+ extern void send_cleanup_vector(struct irq_cfg *);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index ee3d3ff521a3..9b048c239dd4 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -281,11 +281,16 @@ int __init arch_early_irq_init(void)
+ 	return 0;
+ }
+ 
+-static inline struct irq_cfg *irq_cfg(unsigned int irq)
++struct irq_cfg *irq_cfg(unsigned int irq)
+ {
+ 	return irq_get_chip_data(irq);
+ }
+ 
++struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
++{
++	return irq_data->chip_data;
++}
++
+ static struct irq_cfg *alloc_irq_cfg(unsigned int irq, int node)
+ {
+ 	struct irq_cfg *cfg;
 -- 
-Thanks!
-Yijing
+1.7.10.4
 
