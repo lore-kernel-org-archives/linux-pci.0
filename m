@@ -1,39 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:64672 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751426AbaIXVEF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 17:04:05 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Dirk Gouders <dirk@gouders.net>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
+In-Reply-To: <CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com>
+	(Yinghai Lu's message of "Thu, 11 Sep 2014 12:26:54 -0700")
+References: <ghiol53r9u.fsf@lena.gouders.net>
+	<CAMxnaaXiEZeJOsgQ6ZSbiqy5Z1zNoXonwNSQNRyRhV0t5jveYQ@mail.gmail.com>
+	<ghwq9k3m6z.fsf@lena.gouders.net>
+	<CAMxnaaUqTMf1uEQUqrAGjym8ZrQaBf2QbE4Jqxh2t6a2JgJkOQ@mail.gmail.com>
+	<ghioku5l29.fsf@lena.gouders.net>
+	<CAErSpo7j=a3y2MVsvEQGQ4B63_mNCyZSRNXNEZa-2++xs88NmQ@mail.gmail.com>
+	<CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com>
+Date: Thu, 11 Sep 2014 22:35:57 +0200
+Message-ID: <ghoaul51zm.fsf@quad.gouders.net>
 MIME-Version: 1.0
-In-Reply-To: <f72dd09d379d4c1b89cc27612afcea77@BY1PR0301MB0855.namprd03.prod.outlook.com>
-References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
-	<1411445498-20250-2-git-send-email-r65037@freescale.com>
-	<CAOMZO5BuPcw9bJSdLMJ2D=a6EMFMPtKeY352N9-x8dwmRnnfWw@mail.gmail.com>
-	<f72dd09d379d4c1b89cc27612afcea77@BY1PR0301MB0855.namprd03.prod.outlook.com>
-Date: Wed, 24 Sep 2014 18:04:03 -0300
-Message-ID: <CAOMZO5CKZce3AZfm79DVGShx7bY6DJ3YvSC7q9MYx5v+Zwve5g@mail.gmail.com>
-Subject: Re: [PATCH v2 1/5] PCI: imx6: enable pcie on imx6qdl sabreauto
-From: Fabio Estevam <festevam@gmail.com>
-To: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-Cc: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Tim Harvey <tharvey@gateworks.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Richard,
+Yinghai Lu <yinghai@kernel.org> writes:
 
-On Tue, Sep 23, 2014 at 11:54 PM, Hong-Xing.Zhu@freescale.com
-<Hong-Xing.Zhu@freescale.com> wrote:
+> On Thu, Sep 11, 2014 at 10:30 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> [+cc linux-pci]
+>>
+>>
+>> On Thu, Sep 11, 2014 at 7:43 AM, Dirk Gouders <dirk@gouders.net> wrote:
+>>> Andreas Noever <andreas.noever@gmail.com> writes:
+>>>
+>>>> On Wed, Sep 3, 2014 at 2:47 PM, Dirk Gouders <dirk@gouders.net> wrote:
+>>>>> Andreas Noever <andreas.noever@gmail.com> writes:
+>>>>>
+>>>>>> On Wed, Sep 3, 2014 at 12:57 PM, Dirk Gouders <dirk@gouders.net> wrote:
+>>>>>>> On a Tyan VX50 (B4985) I ran into problems when updating the kernel: the
+>>>>>>> PCI FC Adapter is no longer recognized.
+>>>>>>
+>>>>>> Can you provide the output of lspci -vvv and the output of dmesg from
+>>>>>> a working boot? Which card is the one that is not recognized?
+>>>>>
+>>>>> Sure, the card that disappeared is:
+>>>>>
+>>>>> 0a:00.0 Fibre Channel: LSI Logic / Symbios Logic FC949ES Fibre Channel Adapter (rev 02)
+>>>>
+>>>> As far as I can tell the following is happening:
+>>>> The root bus resource window (advertised by the bios?) is to small:
+>>>> pci_bus 0000:00: root bus resource [bus 00-07]
+>>>> Previously we didn't really care. There is a resource conflict but we
+>>>> ignored it:
+>>>> pci_bus 0000:0a: busn_res: can not insert [bus 0a] under [bus 00-07]
+>>>> (conflicts with (null) [bus 00-07])
+>>>> With the patch we mark the bridge as broken and reassign the bus to 06:
+>>>> pci 0000:00:0e.0: bridge configuration invalid ([bus 0a-0a]), reconfiguring
+>>>> pci 0000:00:0e.0: PCI bridge to [bus 06-07]
+>>>> pci 0000:00:0e.0:   bridge window [io  0x3000-0x3fff]
+>>>> pci 0000:00:0e.0:   bridge window [mem 0xd4200000-0xd42fffff]
+>>>> pci_bus 0000:06: busn_res: [bus 06-07] end is updated to 06
+>
+>> Thanks for following up on this.  It had fallen off my radar, so I
+>> opened https://bugzilla.kernel.org/show_bug.cgi?id=84281 to make sure
+>> I don't forget again.  Please continue the debug discussion here in
+>> email.
+>
+> Two problems here:
+> 1. This is amd two node systems. amd_bus.c tell us bus [00, 7f] is from
+> first socket, but _OSC says only [0,7] is from first socket.
+>
+> So solution (1):
+> According to Linus's principle, we should always trust HW than firmware,
+> so should we just adjust bus range from _OSC before we use it?
+>
+> 2. After moving, LSI FC card from bus 0a to bus 07, the LSI refuse to respond.
+>
+> During my testing with pci busn allocation patchset, I found that if changing
+> LSI Erie card to different bus, it will refuse to responding. Only
+> thing that will
+> make the LSI card again, is resetting the pcie link. This should be LSI firmware
+> bug.
+>
+> Dirk, please check if you can apply attached patches to use
+>
+> echo 1 > /sys/bus/pci/devices/0000\:00\0e.0/link_disable
+> echo 0 > /sys/bus/pci/devices/0000\:00\0e.0/link_disable
+>
+> to reset the link.
 
-> [Richard] 6qdl sabreauto boards don't have the pcie reset gpio in the board design at all.
+Thanks, Yinghai, I will apply them tomorrow and report.
 
-I have just downloaded the mx6 sabreauto board schematics from
-freescale.com and it matches the one I have seen before.
+What I was currently trying was to construct a test-environment so that
+I do not need to do tests and diagnosis on a busy machine.
 
-You can search for the CPU_PER_RST_B signal. It is connected via R785
-0 ohm resistor to PCIE_RST_B.
+I noticed that this problem seems to start with the narrow Root
+Bridge window (00-07) but every other machine that I had a look at,
+starts with (00-ff), so those will not trigger my problem.
 
-CPU_PER_RST_B can be controlled via MAX7310 pin IO/2.
+I thought I could perhaps try to shrink the window in
+acpi_pci_root_add() to trigger the problem and that kind of works: it
+triggers it but not exactly the same way, because it basically ends at
+this code in pci_scan_bridge():
+
+	if (max >= bus->busn_res.end) {
+		dev_warn(&dev->dev, "can't allocate child bus %02x from %pR (pass %d)\n",
+			 max, &bus->busn_res, pass);
+		goto out;
+	}
+
+If this could work but I am just missing a small detail, I would be
+glad to hear about it and do the first tests this way.  If it is
+complete nonsense, I will just use the machine that triggers the problem
+for the tests.
+
+Dirk
+
+
+> Solution (2)
+> To workaround the problem, we could reset the pcie link after change bus num
+> in the pcie bridges ?
+>
+> Soultion (3)
+> Or we just revert the offending 1820ffdccb9b4398 (PCI: Make sure
+> bus number resources stay within their parents bounds) ?
+>
+> Thanks
+>
+> Yinghai
