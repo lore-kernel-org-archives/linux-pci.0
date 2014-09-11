@@ -1,114 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:49887 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752656AbaIDOGb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 10:06:31 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] drivers: pci: convert generic host controller to DT host bridge creation API
-Date: Thu, 04 Sep 2014 16:05:53 +0200
-Message-ID: <6930538.Get2YiuMvJ@wuerfel>
-In-Reply-To: <20140904133956.GA12351@e102568-lin.cambridge.arm.com>
-References: <1407861695-25549-1-git-send-email-Liviu.Dudau@arm.com> <20140819120553.GA23128@arm.com> <20140904133956.GA12351@e102568-lin.cambridge.arm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <54114CA4.9030503@linux.intel.com>
+Date: Thu, 11 Sep 2014 15:17:56 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>, x86@kernel.org,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
+	linux-pm@vger.kernel.org
+Subject: Re: [Patch v4 14/16] x86, irq: Introduce helper to check whether
+ an IOAPIC has been registered
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com> <1409192561-19744-15-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1409091433150.11037@nanos> <540FBB93.4020509@linux.intel.com> <alpine.DEB.2.10.1409102206300.4178@nanos>
+In-Reply-To: <alpine.DEB.2.10.1409102206300.4178@nanos>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 04 September 2014 14:39:56 Lorenzo Pieralisi wrote:
-> > > +   if (!res_valid) {
-> > > +           dev_err(dev, "non-prefetchable memory resource required\n");
-> > > +           return -EINVAL;
-> > > +   }
-> > > +
-> > > +   if (iores) {
-> > > +           if (!PAGE_ALIGNED(io_cpuaddr))
-> > > +                   return -EINVAL;
-> > 
-> > Why is this alignment check not in the core code? Probably a question for
-> > somebody like Arnd, but do we need to deal with multiple IO resources?
-> > Currently we'll just silently take the last one that we found, which doesn't
-> > sound ideal.
+
+
+On 2014/9/11 4:08, Thomas Gleixner wrote:
+> On Wed, 10 Sep 2014, Jiang Liu wrote:
+>> On 2014/9/9 20:37, Thomas Gleixner wrote:
+>>>> +	ret  = mp_ioapic_registered(gsi_base);
+>>>> +	up_write(&acpi_ioapic_rwsem);
+>>>> +
+>>>> +	return ret;
+>>>> +}
+>>>
+>>> So I assume that this is for a particular caller in the apci ioapic
+>>> hotplug code and that call site has its own serialization. Otherwise
+>>> the return value is not protected at all.
+>>>
+>>> Please add a Docbook comment to that function, and document the
+>>> locking rules as thats pretty non obvious.
+>> How about this comments about locking rules?
+>> /*
+>>  * Locks related to IOAPIC hotplug
+>>  * Hotplug side:
+>>  *      ->lock_device_hotplug() //device_hotplug_lock
+>>  *              ->acpi_ioapic_rwsem
+>>  *                      ->ioapic_lock
+>>  * Interrupt mapping side:
+>>  *      ->acpi_ioapic_rwsem
+>>  *              ->ioapic_mutex
+>>  *                      ->ioapic_lock
+>>  */
 > 
-> (1) Yes, the alignment check should be made in core code
+> That looks asymetric. Why is the hotplug side not taking ioapic_mutex?
+Hi Thomas,
+	We decide to protect system from IOAPIC hotplug in the ACPI
+layer. For ACPI enumerated IOAPICs, ioapic_mutex is redundant and
+it's used to protect MPPARSE, SFI, OF enumerated IOAPICs.
+Regards!
+Gerry
 
-Makes sense. In theory we could support unaligned addresses (as long as
-the offset in the page is the same for virtual and physical), but I don't
-see why we should implement that unless some implementation absolutely
-requires it.
-
-> (2) I could take the first IO resource and warn on multiple IO resources if
->     they are detected. Thoughts ?
-
-I think we should either warn, or be reasonably sure that it will work.
-Again, in theory this should work, but no sane hardware implementation
-would do it like that.
-
-> > > +           if (err)
-> > > +                   return err;
-> > > +   }
-> > > +
-> > > +   /* Parse and map our Configuration Space windows */
-> > > +   err = gen_pci_parse_map_cfg_windows(host);
-> > > +   if (err)
-> > > +           return err;
-> > > +
-> > > +   pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
-> > > +   pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
-> > 
-> > Why does this belong in the host controller driver and how does it interact
-> > with the probe-only property?
 > 
-> That's a very good question and it is one that confuses me too.
+> Thanks,
 > 
-> Current code in pci_common_init_dev() sets PCI_REASSIGN_ALL_RSRC behind
-> our backs silently. That flag has a side effect only if the probing code
-> detects PCI bridges in the list of devices, since PCI core probing code
-> will try to reassign the bus numbers upon PCI bridge detection IIUC. I do
-> not think that PCI_REASSIGN_ALL_BUS has any side effect on ARM (by grepping
-> around I noticed that PCI_REASSIGN_ALL_RSRC is used in
+> 	tglx
 > 
-> pcibios_assign_all_busses()
-> 
-> which in turn is triggered only if PCI bridges are detected, still grokking
-> the code though).
-
-Interesting point: the generic implementation should probably not default
-to reassigning all buses at all. We could have a (host controller specific,
-but with standardized name) DT property for it, but it would be best if
-firmware already probes it to not have to do it again.
-
-> Apart from the PCI_ENABLE_PROC_DOMAINS flag which I think it is safe to
-> set by default (but let me check that too),
-
-I think it should be enabled here, as no legacy machine will use this
-driver.
-
-> I *think* that setting of
-> 
-> PCI_REASSIGN_ALL_BUS and PCI_REASSIGN_ALL_RSRC
-> 
-> should be set by DT, as the probe-only flag is. At the moment this is not a
-> problem (well...) since:
-> 
-> (a) PCI_REASSIGN_ALL_RSRC is forced by pcibios on ARM
-> (b) it has no implications on the generic host controller since it is
->     run on kvmtools with no PCI bridge devices
-> 
-> If Bjorn or Arnd can help me understand the complete reasoning behind
-> those flags I would be very grateful and update code according to
-> Liviu's v10.
-
-I suspect they were just copied over to preserve the existing behavior.
-
-	Arnd
