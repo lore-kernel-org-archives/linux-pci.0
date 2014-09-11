@@ -1,115 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og112.obsmtp.com ([64.18.0.24]:43293 "HELO
-	exprod5og112.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756287AbaIZVIj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Sep 2014 17:08:39 -0400
-Received: by mail-pa0-f50.google.com with SMTP id lj1so5532760pab.23
-        for <linux-pci@vger.kernel.org>; Fri, 26 Sep 2014 14:08:38 -0700 (PDT)
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v10 0/4] APM X-Gene PCIe host controller
-Date: Fri, 26 Sep 2014 14:08:23 -0700
-Message-Id: <1411765707-28822-1-git-send-email-tinamdar@apm.com>
+Received: from mga09.intel.com ([134.134.136.24]:19478 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753419AbaIKIXr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Sep 2014 04:23:47 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC Part1 v1 17/18] iommu/vt-d: Use helpers to access irq_cfg data structure associated with IRQ
+Date: Thu, 11 Sep 2014 16:25:04 +0800
+Message-Id: <1410423905-26239-18-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds support for AppliedMicro X-Gene PCIe host controller. The
-driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
-cards.
+Use helpers to access irq_cfg data structure associated with IRQ,
+instead of accessing irq_data->chip_data directly. Later we could
+rewrite those helpers to support hierarchy irqdomain.
 
-X-Gene PCIe controller driver has depedency on the pcie arm64 arch support.
-Liviu Dudau from ARM has sent a patch set for pcie arm64 arch support and
-support for creating generic pcie bridge from device tree. Liviu's patches
-are available here
-https://lkml.org/lkml/2014/9/23/852
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel_irq_remapping.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-If someone wishes to test PCIe on X-Gene with this patch set, above mentioned
-patches from Liviu must be applied before the patches in this patch set. Also
-please use latest xgene u-boot firmware.
-
-changes since V9:
-1. Remove 'xgene_pcie_fixup_bridge' and hide the bridge BAR0 and BAR1 by
-   faking bridge's config space read and write to BAR0 and BAR1.
-2. Remove whitespace and fit in one line.
-3. Follow usual block comment.
-4. user '%pR' for printing out resource info
-5. Add device and vendor ID programming to make driver operable with older
-   firmware.
-
-changes since V8:
-1. Add 'dma-coherent' attribute in device node.
-
-changes since V7:
-1. Fix outbound region mapping for IO region. Thanks Liviu for the catch.
-
-changes since V6:
-1. Port driver to changed interface as per Liviu's v10 series.
-
-changes since V5:
-1. Port driver to changed interface of 'of_create_pci_host_bridge'
-2. Fix the prefetch bit setting
-3. Removed bunch of register programming which is already done by firmware
-
-changes since V4:
-1. fix section mismatch warnings
-2. fix the patch description
-3. fix indentation
-4. update read/write cfg functions by passing both addr and offset.
-5. use 'time_before' for timeout.
-6. remove unnecessary 'IS_ERR_OR_NULL'. Keep 'IS_ERR' for 'clk_get'
-7. remove BUG_ON for pci_ioremap_io.
-
-changes since V3:
-1. remove 'struct hw_pci' and supporting ops in hw_pci
-2. add code to create the host bridge from dts
-3. add code to scan the the host bridge
-4. modify outbound windows setup function to get resource information from
-   'bridge->windows'
-5. add compatible string in pcie dts node with current X-Gene SOC name.
-
-changes since V2:
-1. redefined each PCI port in different PCI domain correctly.
-2. removed setup_lane and setup_link functions from driver.
-3. removed scan_bus wrapper and set_primary_bus hack.
-4. added pci_ioremap_io for io resources.
-
-changes since V1:
-1. added PCI domain support
-2. reading cpu and pci addresses from device tree to configure regions.
-3. got rid of unnecessary wrappers for readl and writel.
-4. got rid of endpoint configuration code.
-5. added 'dma-ranges' property support to read inbound region configuration.
-6. renamed host driver file to 'pci-xgene.c' from 'pcie-xgene.c'
-7. dropped 'clock-names' property from bindings
-8. added comments whereever requested.
-
-Tanmay Inamdar (4):
-  pci:host: APM X-Gene PCIe host controller driver
-  arm64: dts: APM X-Gene PCIe device tree nodes
-  dt-bindings: pci: xgene pcie device tree bindings
-  MAINTAINERS: entry for APM X-Gene PCIe host driver
-
- .../devicetree/bindings/pci/xgene-pci.txt          |  57 ++
- MAINTAINERS                                        |   8 +
- arch/arm64/boot/dts/apm-mustang.dts                |   8 +
- arch/arm64/boot/dts/apm-storm.dtsi                 | 165 ++++++
- drivers/pci/host/Kconfig                           |  10 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-xgene.c                       | 659 +++++++++++++++++++++
- 7 files changed, 908 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
- create mode 100644 drivers/pci/host/pci-xgene.c
-
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 0df41f6264f5..319b39edcf7e 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -55,7 +55,7 @@ static int __init parse_ioapics_under_ir(void);
+ 
+ static struct irq_2_iommu *irq_2_iommu(unsigned int irq)
+ {
+-	struct irq_cfg *cfg = irq_get_chip_data(irq);
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 	return cfg ? &cfg->irq_2_iommu : NULL;
+ }
+ 
+@@ -86,7 +86,7 @@ static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
+ {
+ 	struct ir_table *table = iommu->ir_table;
+ 	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
+-	struct irq_cfg *cfg = irq_get_chip_data(irq);
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 	unsigned int mask = 0;
+ 	unsigned long flags;
+ 	int index;
+@@ -154,7 +154,7 @@ static int map_irq_to_irte_handle(int irq, u16 *sub_handle)
+ static int set_irte_irq(int irq, struct intel_iommu *iommu, u16 index, u16 subhandle)
+ {
+ 	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
+-	struct irq_cfg *cfg = irq_get_chip_data(irq);
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 	unsigned long flags;
+ 
+ 	if (!irq_iommu)
+@@ -1009,7 +1009,7 @@ static int
+ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 			  bool force)
+ {
+-	struct irq_cfg *cfg = data->chip_data;
++	struct irq_cfg *cfg = irqd_cfg(data);
+ 	unsigned int dest, irq = data->irq;
+ 	struct irte irte;
+ 	int err;
+@@ -1064,7 +1064,7 @@ static void intel_compose_msi_msg(struct pci_dev *pdev,
+ 	u16 sub_handle = 0;
+ 	int ir_index;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 
+ 	ir_index = map_irq_to_irte_handle(irq, &sub_handle);
+ 	BUG_ON(ir_index == -1);
 -- 
-1.9.1
+1.7.10.4
 
