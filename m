@@ -1,59 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0139.outbound.protection.outlook.com ([207.46.100.139]:53504
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751183AbaIWEji (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Sep 2014 00:39:38 -0400
-From: Richard Zhu <r65037@freescale.com>
-To: <linux-pci-owner@vger.kernel.org>
-CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
-	<festevam@gmail.com>, <l.stach@pengutronix.de>,
-	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
-Subject: [PATCH v2 2/5] PCI: imx6: wait the clocks to stabilize after ref_en
-Date: Tue, 23 Sep 2014 12:11:35 +0800
-Message-ID: <1411445498-20250-3-git-send-email-r65037@freescale.com>
-In-Reply-To: <1411445498-20250-1-git-send-email-r65037@freescale.com>
-References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v5 12/15] x86, irq, ACPI: Implement interface to support ACPI based IOAPIC hot-addition
+Date: Thu, 11 Sep 2014 16:05:55 +0800
+Message-Id: <1410422758-24942-13-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-- a while delay is mandatory required after pcie_ref_clk_en
-is set. Otherwise, the system would be hang on imx6qdl ard
-boards, because that imx6qdl boards don't have the reset_gpio.
-- the clocks should be stable already after the
-"clk_prepare_enable" is return. So I think it's ok to move the
-usleep delay after the pcie_ref_en is set.
+Implement acpi_register_ioapic() and enhance mp_register_ioapic()
+to support ACPI based IOAPIC hot-addition.
 
-Signed-off-by: Richard Zhu <r65037@freescale.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/host/pci-imx6.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ arch/x86/kernel/acpi/boot.c    |   31 +++++++++++++++++++++++++++++--
+ arch/x86/kernel/apic/io_apic.c |   22 +++++++++++++++++++++-
+ 2 files changed, 50 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 233fe8a..bc4222b 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -275,15 +275,15 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 		goto err_pcie;
- 	}
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index c598fd7604d5..238962e7de70 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -775,8 +775,35 @@ EXPORT_SYMBOL(acpi_unmap_lsapic);
  
--	/* allow the clocks to stabilize */
--	usleep_range(200, 500);
--
- 	/* power up core phy and enable ref clock */
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
- 
-+	/* allow the clocks to stabilize */
-+	usleep_range(200, 500);
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
+ {
+-	/* TBD */
+-	return -EINVAL;
++	int ret = -ENOSYS;
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++	int ioapic_id;
++	u64 addr;
++	struct ioapic_domain_cfg cfg = {
++		.type = IOAPIC_DOMAIN_DYNAMIC,
++		.ops = &acpi_irqdomain_ops,
++	};
 +
- 	/* Some boards don't have PCIe reset GPIO. */
- 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
- 		gpio_set_value(imx6_pcie->reset_gpio, 0);
++	ioapic_id = acpi_get_ioapic_id(handle, gsi_base, &addr);
++	if (ioapic_id < 0) {
++		unsigned long long uid;
++		acpi_status status;
++
++		status = acpi_evaluate_integer(handle, METHOD_NAME__UID,
++					       NULL, &uid);
++		if (ACPI_FAILURE(status)) {
++			acpi_handle_warn(handle, "failed to get IOAPIC ID.\n");
++			return -EINVAL;
++		}
++		ioapic_id = (int)uid;
++	}
++
++	down_write(&acpi_ioapic_rwsem);
++	ret  = mp_register_ioapic(ioapic_id, phys_addr, gsi_base, &cfg);
++	up_write(&acpi_ioapic_rwsem);
++#endif
++
++	return ret;
+ }
+ 
+ EXPORT_SYMBOL(acpi_register_ioapic);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 6fa5df9a8551..77c9cc4e8198 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3848,7 +3848,13 @@ static int bad_ioapic_register(int idx)
+ 
+ static int find_free_ioapic_entry(void)
+ {
+-	return nr_ioapics;
++	int idx;
++
++	for (idx = 0; idx < MAX_IO_APICS; idx++)
++		if (ioapics[idx].nr_registers == 0)
++			return idx;
++
++	return MAX_IO_APICS;
+ }
+ 
+ /**
+@@ -3864,6 +3870,7 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 	u32 gsi_end;
+ 	int idx, ioapic, entries;
+ 	struct mp_ioapic_gsi *gsi_cfg;
++	bool hotplug = !!ioapic_initialized;
+ 
+ 	if (!address) {
+ 		pr_warn("Bogus (zero) I/O APIC address found, skipping!\n");
+@@ -3922,6 +3929,19 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 	ioapics[idx].irqdomain = NULL;
+ 	ioapics[idx].irqdomain_cfg = *cfg;
+ 
++	/*
++	 * If mp_register_ioapic() is called during early boot stage when
++	 * walking ACPI/SFI/DT tables, it's too early to create irqdomain,
++	 * we are still using bootmem allocator. So delay it to setup_IO_APIC().
++	 */
++	if (hotplug) {
++		if (mp_irqdomain_create(idx)) {
++			clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
++			return -ENOMEM;
++		}
++		alloc_ioapic_saved_registers(idx);
++	}
++
+ 	if (gsi_cfg->gsi_end >= gsi_top)
+ 		gsi_top = gsi_cfg->gsi_end + 1;
+ 	if (nr_ioapics <= idx)
 -- 
-1.9.1
+1.7.10.4
 
