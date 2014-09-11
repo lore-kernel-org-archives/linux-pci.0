@@ -1,71 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:55255 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932425AbaIDGUV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 02:20:21 -0400
-Date: Thu, 4 Sep 2014 08:20:06 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-To: Sudeep Holla <sudeep.holla@arm.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 01/11] cpumask: factor out show_cpumap into separate
- helper function
-Message-ID: <20140904062006.GC3190@worktop.ger.corp.intel.com>
-References: <1409763617-17074-1-git-send-email-sudeep.holla@arm.com>
- <1409763617-17074-2-git-send-email-sudeep.holla@arm.com>
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC Part1 v1 01/18] x86, irq, ACPI: Fix building warning of unused code
+Date: Thu, 11 Sep 2014 16:24:48 +0800
+Message-Id: <1410423905-26239-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1409763617-17074-2-git-send-email-sudeep.holla@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 03, 2014 at 06:00:07PM +0100, Sudeep Holla wrote:
-> diff --git a/include/linux/cpumask.h b/include/linux/cpumask.h
-> index 2997af6d2ccd..26d8348292dd 100644
-> --- a/include/linux/cpumask.h
-> +++ b/include/linux/cpumask.h
-> @@ -11,6 +11,8 @@
->  #include <linux/bitmap.h>
->  #include <linux/bug.h>
->  
-> +#include <asm/page.h>
-> +
->  typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
->  
->  /**
-> @@ -792,6 +794,31 @@ static inline const struct cpumask *get_cpu_mask(unsigned int cpu)
->  }
->  #endif /* NR_CPUS > BITS_PER_LONG */
->  
-> +/**
-> + * cpumap_copy_to_buf  - copies the cpumask into the buffer either
-> + *	as comma-separated list of cpus or hex values of cpumask
-> + * @list: indicates whether the cpumap must be list
-> + * @mask: the cpumask to copy
-> + * @buf: the buffer to copy into
-> + *
-> + * Returns the length of the (null-terminated) @buf string, zero if
-> + * nothing is copied.
-> + */
-> +static inline ssize_t
-> +cpumap_copy_to_buf(bool list, const struct cpumask *mask, char *buf)
-> +{
-> +	ptrdiff_t len = PTR_ALIGN(buf + PAGE_SIZE - 1, PAGE_SIZE) - buf - 2;
-> +	int n = 0;
-> +
-> +	if (len > 1) {
-> +		n = list ? cpulist_scnprintf(buf, len, mask) :
-> +			   cpumask_scnprintf(buf, len, mask);
-> +		buf[n++] = '\n';
-> +		buf[n] = '\0';
-> +	}
-> +	return n;
-> +}
-> +
+Fix building warning when CONFIG_X86_LOCAL_APIC is disabled.
+arch/x86/kernel/acpi/boot.c:699:20: warning: ‘acpi_set_irq_model_ioapic’ defined but not used [-Wunused-function]
 
-Does that really make sense as an inline?
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/acpi/boot.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 132f98a2288b..7f00bbf7956b 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -706,6 +706,7 @@ void acpi_unregister_gsi(u32 gsi)
+ }
+ EXPORT_SYMBOL_GPL(acpi_unregister_gsi);
+ 
++#ifdef CONFIG_X86_LOCAL_APIC
+ static void __init acpi_set_irq_model_ioapic(void)
+ {
+ 	acpi_irq_model = ACPI_IRQ_MODEL_IOAPIC;
+@@ -713,6 +714,7 @@ static void __init acpi_set_irq_model_ioapic(void)
+ 	__acpi_unregister_gsi = acpi_unregister_gsi_ioapic;
+ 	acpi_ioapic = 1;
+ }
++#endif
+ 
+ /*
+  *  ACPI based hotplug support for CPU
+-- 
+1.7.10.4
+
