@@ -1,303 +1,198 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp08.in.ibm.com ([122.248.162.8]:56443 "EHLO
-	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750968AbaIJD1v (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Sep 2014 23:27:51 -0400
-Received: from /spool/local
-	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 10 Sep 2014 08:57:48 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 70798E0044
-	for <linux-pci@vger.kernel.org>; Wed, 10 Sep 2014 09:00:11 +0530 (IST)
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s8A3U6oe65798382
-	for <linux-pci@vger.kernel.org>; Wed, 10 Sep 2014 09:00:06 +0530
-Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s8A3Ripi006172
-	for <linux-pci@vger.kernel.org>; Wed, 10 Sep 2014 08:57:45 +0530
-Date: Wed, 10 Sep 2014 11:27:43 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	Mike Qiu <qiudayu@linux.vnet.ibm.com>
-Subject: Re: [PATCH V7 04/17] PCI: Take additional IOV BAR alignment in
- sizing and assigning
-Message-ID: <20140910032743.GA25108@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1406182947-11302-5-git-send-email-weiyang@linux.vnet.ibm.com>
- <20140820030841.GD6295@google.com>
- <20140820061402.GA8381@richard>
- <CAErSpo5ZSB-=aQtiM5OenfWWfn2b=TOwxM-BkpwxBGRnmMyAzw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5ZSB-=aQtiM5OenfWWfn2b=TOwxM-BkpwxBGRnmMyAzw@mail.gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:35740 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752986AbaIKIEC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Sep 2014 04:04:02 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v5 10/15] x86, irq: Refine mp_register_ioapic() to prepare for IOAPIC hotplug
+Date: Thu, 11 Sep 2014 16:05:53 +0800
+Message-Id: <1410422758-24942-11-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 09, 2014 at 02:09:46PM -0600, Bjorn Helgaas wrote:
->On Wed, Aug 20, 2014 at 12:14 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->> On Tue, Aug 19, 2014 at 09:08:41PM -0600, Bjorn Helgaas wrote:
->>>On Thu, Jul 24, 2014 at 02:22:14PM +0800, Wei Yang wrote:
->>>> At resource sizing/assigning stage, resources are divided into two lists,
->>>> requested list and additional list, while the alignement of the additional
->>>> IOV BAR is not taken into the sizeing and assigning procedure.
->>>>
->>>> This is reasonable in the original implementation, since IOV BAR's alignment is
->>>> mostly the size of a PF BAR alignemt. This means the alignment is already taken
->>>> into consideration. While this rule may be violated on some platform.
->>>>
->>>> This patch take the additional IOV BAR alignment in sizing and assigning stage
->>>> explicitly.
->>>>
->>>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>>> ---
->>>>  drivers/pci/setup-bus.c |   68 +++++++++++++++++++++++++++++++++++++++++------
->>>>  1 file changed, 60 insertions(+), 8 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->>>> index a5a63ec..d83681f 100644
->>>> --- a/drivers/pci/setup-bus.c
->>>> +++ b/drivers/pci/setup-bus.c
->>>> @@ -120,6 +120,28 @@ static resource_size_t get_res_add_size(struct list_head *head,
->>>>      return 0;
->>>>  }
->>>>
->>>> +static resource_size_t get_res_add_align(struct list_head *head,
->>>> +            struct resource *res)
->>>> +{
->>>> +    struct pci_dev_resource *dev_res;
->>>> +
->>>> +    list_for_each_entry(dev_res, head, list) {
->>>> +            if (dev_res->res == res) {
->>>> +                    int idx = res - &dev_res->dev->resource[0];
->>>> +
->>>> +                    dev_printk(KERN_DEBUG, &dev_res->dev->dev,
->>>> +                               "res[%d]=%pR get_res_add_align min_align %llx\n",
->>>> +                               idx, dev_res->res,
->>>> +                               (unsigned long long)dev_res->min_align);
->>>> +
->>>> +                    return dev_res->min_align;
->>>> +            }
->>>> +    }
->>>> +
->>>> +    return 0;
->>>> +}
->>>
->>>I see that you copied the structure of the existing get_res_add_size()
->>>here.  But I don't understand *that* function.  It looks basically like
->>>this:
->>>
->>>  resource_size_t get_res_add_size(list, res)
->>>  {
->>>    list_for_each_entry(dev_res, head, list) {
->>>      if (dev_res->res == res)
->>>        return dev_res->add_size;
->>>    }
->>>    return 0;
->>>  }
->>>
->>>and we call it like this:
->>>
->>>  dev_res->res->end += get_res_add_size(realloc_head, dev_res->res);
->>>
->>>So we start out with dev_res", pass in dev_res->res, search the
->>>realloc_head list to find dev_res again, and return dev_res->add_size.
->>>That looks equivalent to just:
->>>
->>>  dev_res->res->end += dev_res->add_size;
->>>
->>>It looks like get_res_add_size() merely adds a printk and some complexity.
->>>Am I missing something?
->>>
->>
->> Let me try to explain it, if not correct, please let know :-)
->>
->>   dev_res->res->end += get_res_add_size(realloc_head, dev_res->res);
->>
->> would be expanded to:
->>
->>   dev_res->res->end += dev_res_1->add_size;
->>
->> with the dev_res_1 is another one from dev_res which is stored in realloc_head.
->
->Yep, I see now.
->
->>>I do see that there are other callers where we don't actually start with
->>>dev_res, which makes it a little more complicated.  But I think you should
->>>either add something like this:
->>>
->>>  struct pci_dev_resource *res_to_dev_res(list, res)
->>>  {
->>>    list_for_each_entry(dev_res, head, list) {
->>>      if (dev_res->res == res)
->>>        return dev_res;
->>>    }
->>>    return NULL;
->>>  }
->>>
->>
->> Ok, we can extract the common part of these two functions.
->>
->>>which can be used to replace get_res_add_size() and get_res_add_align(), OR
->>>figure out whether the dev_res of interest is always one we've just added.
->>>If it is, maybe you can just make add_to_list() return the dev_res pointer
->>>instead of an errno, and hang onto the pointer.  I'd like that much better
->>>if that's possible.
->>>
->>
->> Sorry, I don't get this point.
->
->Don't worry, it didn't make sense.  I was thinking that we knew the
->dev_res up front and didn't need to look it up, but that's not the
->case.
->
->Sorry it took me so long to respond to this; I'm a bit swamped dealing
->with some regressions.
+Refine mp_register_ioapic() to prepare for IOAPIC hotplug by:
+1) change return value from void to int.
+2) check for gsi range conflicts
+3) check for IOAPIC physical address conflicts
+4) enhance the way to allocate IOAPIC index
 
-:-) Never mind, those regressions are with higher priority then this new
-feature.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h |    4 +-
+ arch/x86/kernel/apic/io_apic.c |   87 ++++++++++++++++++++++++++--------------
+ 2 files changed, 58 insertions(+), 33 deletions(-)
 
-And I found some bugs in this version during the test, and will merge those
-fixes in the next version.
-
->
->Bjorn
->
->> add_to_list() is used to create the pci_dev_resource list, get_res_add_size()
->> and get_res_add_align() is to retrieve the information in the list. I am not
->> sure how to leverage add_to_list() in these two functions?
->>
->>>> +
->>>> +
->>>>  /* Sort resources by alignment */
->>>>  static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
->>>>  {
->>>> @@ -368,8 +390,9 @@ static void __assign_resources_sorted(struct list_head *head,
->>>>      LIST_HEAD(save_head);
->>>>      LIST_HEAD(local_fail_head);
->>>>      struct pci_dev_resource *save_res;
->>>> -    struct pci_dev_resource *dev_res, *tmp_res;
->>>> +    struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
->>>>      unsigned long fail_type;
->>>> +    resource_size_t add_align, align;
->>>>
->>>>      /* Check if optional add_size is there */
->>>>      if (!realloc_head || list_empty(realloc_head))
->>>> @@ -384,10 +407,31 @@ static void __assign_resources_sorted(struct list_head *head,
->>>>      }
->>>>
->>>>      /* Update res in head list with add_size in realloc_head list */
->>>> -    list_for_each_entry(dev_res, head, list)
->>>> +    list_for_each_entry_safe(dev_res, tmp_res, head, list) {
->>>>              dev_res->res->end += get_res_add_size(realloc_head,
->>>>                                                      dev_res->res);
->>>>
->>>> +            if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
->>>> +                    continue;
->>>> +
->>>> +            add_align = get_res_add_align(realloc_head, dev_res->res);
->>>> +
->>>> +            if (add_align > dev_res->res->start) {
->>>> +                    dev_res->res->start = add_align;
->>>> +                    dev_res->res->end = add_align +
->>>> +                                        resource_size(dev_res->res);
->>>> +
->>>> +                    list_for_each_entry(dev_res2, head, list) {
->>>> +                            align = pci_resource_alignment(dev_res2->dev,
->>>> +                                                           dev_res2->res);
->>>> +                            if (add_align > align)
->>>> +                                    list_move_tail(&dev_res->list,
->>>> +                                                   &dev_res2->list);
->>>> +                    }
->>>> +               }
->>>> +
->>>> +    }
->>>> +
->>>>      /* Try updated head list with add_size added */
->>>>      assign_requested_resources_sorted(head, &local_fail_head);
->>>>
->>>> @@ -930,6 +974,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->>>>      struct resource *b_res = find_free_bus_resource(bus,
->>>>                                      mask | IORESOURCE_PREFETCH, type);
->>>>      resource_size_t children_add_size = 0;
->>>> +    resource_size_t children_add_align = 0;
->>>> +    resource_size_t add_align = 0;
->>>>
->>>>      if (!b_res)
->>>>              return -ENOSPC;
->>>> @@ -954,6 +1000,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->>>>                      /* put SRIOV requested res to the optional list */
->>>>                      if (realloc_head && i >= PCI_IOV_RESOURCES &&
->>>>                                      i <= PCI_IOV_RESOURCE_END) {
->>>> +                            add_align = max(pci_resource_alignment(dev, r), add_align);
->>>>                              r->end = r->start - 1;
->>>>                              add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
->>>>                              children_add_size += r_size;
->>>> @@ -984,8 +1031,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->>>>                      if (order > max_order)
->>>>                              max_order = order;
->>>>
->>>> -                    if (realloc_head)
->>>> +                    if (realloc_head) {
->>>>                              children_add_size += get_res_add_size(realloc_head, r);
->>>> +                            children_add_align = get_res_add_align(realloc_head, r);
->>>> +                            add_align = max(add_align, children_add_align);
->>>> +                    }
->>>>              }
->>>>      }
->>>>
->>>> @@ -996,7 +1046,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->>>>              add_size = children_add_size;
->>>>      size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
->>>>              calculate_memsize(size, min_size, add_size,
->>>> -                            resource_size(b_res), min_align);
->>>> +                            resource_size(b_res), max(min_align, add_align));
->>>>      if (!size0 && !size1) {
->>>>              if (b_res->start || b_res->end)
->>>>                      dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
->>>> @@ -1008,10 +1058,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->>>>      b_res->end = size0 + min_align - 1;
->>>>      b_res->flags |= IORESOURCE_STARTALIGN;
->>>>      if (size1 > size0 && realloc_head) {
->>>> -            add_to_list(realloc_head, bus->self, b_res, size1-size0, min_align);
->>>> -            dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
->>>> -                       b_res, &bus->busn_res,
->>>> -                       (unsigned long long)size1-size0);
->>>> +            add_to_list(realloc_head, bus->self, b_res, size1-size0,
->>>> +                            max(min_align, add_align));
->>>> +            dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
->>>> +                             "%pR to %pR add_size %llx add_align %llx\n", b_res,
->>>> +                             &bus->busn_res, (unsigned long long)size1-size0,
->>>> +                             max(min_align, add_align));
->>>
->>>Factor out this "max(min_align, add_align)" thing so we don't have to
->>>change these lines.  Bonus points if you can also factor it out of the
->>>calculate_memsize() call above.  That one is a pretty complicated ternary
->>>expression that should probably be turned into an "if" instead anyway.
->>>
->>
->> Ok, I get your point. Let me make it more easy to read.
->>
->>>>      }
->>>>      return 0;
->>>>  }
->>>> --
->>>> 1.7.9.5
->>>>
->>
->> --
->> Richard Yang
->> Help you, Help me
->>
-
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index a666dcdeea67..8741c1ea33c3 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -188,8 +188,8 @@ extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
+ extern u32 mp_pin_to_gsi(int ioapic, int pin);
+ extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
+ extern void mp_unmap_irq(int irq);
+-extern void mp_register_ioapic(int id, u32 address, u32 gsi_base,
+-			       struct ioapic_domain_cfg *cfg);
++extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
++			      struct ioapic_domain_cfg *cfg);
+ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			    irq_hw_number_t hwirq);
+ extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 81f014891237..6fa5df9a8551 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3827,20 +3827,6 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
+ 	return gsi - gsi_cfg->gsi_base;
+ }
+ 
+-static int bad_ioapic(unsigned long address)
+-{
+-	if (nr_ioapics >= MAX_IO_APICS) {
+-		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
+-			MAX_IO_APICS, nr_ioapics);
+-		return 1;
+-	}
+-	if (!address) {
+-		pr_warn("WARNING: Bogus (zero) I/O APIC address found in table, skipping!\n");
+-		return 1;
+-	}
+-	return 0;
+-}
+-
+ static int bad_ioapic_register(int idx)
+ {
+ 	union IO_APIC_reg_00 reg_00;
+@@ -3860,29 +3846,51 @@ static int bad_ioapic_register(int idx)
+ 	return 0;
+ }
+ 
+-void mp_register_ioapic(int id, u32 address, u32 gsi_base,
+-			struct ioapic_domain_cfg *cfg)
++static int find_free_ioapic_entry(void)
+ {
+-	int idx = 0;
+-	int entries;
++	return nr_ioapics;
++}
++
++/**
++ * mp_register_ioapic() - Register an IOAPIC device
++ * @id: hardware IOAPIC ID
++ * @address: physical address of IOAPIC register area
++ * @gsi_base: base of GSI associated with the IOAPIC
++ * @cfg: configuration information for the IOAPIC
++ */
++int mp_register_ioapic(int id, u32 address, u32 gsi_base,
++		       struct ioapic_domain_cfg *cfg)
++{
++	u32 gsi_end;
++	int idx, ioapic, entries;
+ 	struct mp_ioapic_gsi *gsi_cfg;
+ 
+-	if (bad_ioapic(address))
+-		return;
++	if (!address) {
++		pr_warn("Bogus (zero) I/O APIC address found, skipping!\n");
++		return -EINVAL;
++	}
++	for_each_ioapic(ioapic)
++		if (ioapics[ioapic].mp_config.apicaddr == address) {
++			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
++				address, ioapic);
++			return -EEXIST;
++		}
+ 
+-	idx = nr_ioapics;
++	idx = find_free_ioapic_entry();
++	if (idx >= MAX_IO_APICS) {
++		pr_warn("Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
++			MAX_IO_APICS, idx);
++		return -ENOSPC;
++	}
+ 
+ 	ioapics[idx].mp_config.type = MP_IOAPIC;
+ 	ioapics[idx].mp_config.flags = MPC_APIC_USABLE;
+ 	ioapics[idx].mp_config.apicaddr = address;
+-	ioapics[idx].irqdomain = NULL;
+-	ioapics[idx].irqdomain_cfg = *cfg;
+ 
+ 	set_fixmap_nocache(FIX_IO_APIC_BASE_0 + idx, address);
+-
+ 	if (bad_ioapic_register(idx)) {
+ 		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
+-		return;
++		return -ENODEV;
+ 	}
+ 
+ 	ioapics[idx].mp_config.apicid = io_apic_unique_id(idx, id);
+@@ -3893,24 +3901,41 @@ void mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 	 * and to prevent reprogramming of IOAPIC pins (PCI GSIs).
+ 	 */
+ 	entries = io_apic_get_redir_entries(idx);
++	gsi_end = gsi_base + entries - 1;
++	for_each_ioapic(ioapic) {
++		gsi_cfg = mp_ioapic_gsi_routing(ioapic);
++		if ((gsi_base >= gsi_cfg->gsi_base &&
++		     gsi_base <= gsi_cfg->gsi_end) ||
++		    (gsi_end >= gsi_cfg->gsi_base &&
++		     gsi_end <= gsi_cfg->gsi_end)) {
++			pr_warn("GSI range [%u-%u] for new IOAPIC conflicts with GSI[%u-%u]\n",
++				gsi_base, gsi_end,
++				gsi_cfg->gsi_base, gsi_cfg->gsi_end);
++			clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
++			return -ENOSPC;
++		}
++	}
+ 	gsi_cfg = mp_ioapic_gsi_routing(idx);
+ 	gsi_cfg->gsi_base = gsi_base;
+-	gsi_cfg->gsi_end = gsi_base + entries - 1;
++	gsi_cfg->gsi_end = gsi_end;
+ 
+-	/*
+-	 * The number of IO-APIC IRQ registers (== #pins):
+-	 */
+-	ioapics[idx].nr_registers = entries;
++	ioapics[idx].irqdomain = NULL;
++	ioapics[idx].irqdomain_cfg = *cfg;
+ 
+ 	if (gsi_cfg->gsi_end >= gsi_top)
+ 		gsi_top = gsi_cfg->gsi_end + 1;
++	if (nr_ioapics <= idx)
++		nr_ioapics = idx + 1;
++
++	/* Set nr_registers to mark entry present */
++	ioapics[idx].nr_registers = entries;
+ 
+ 	pr_info("IOAPIC[%d]: apic_id %d, version %d, address 0x%x, GSI %d-%d\n",
+ 		idx, mpc_ioapic_id(idx),
+ 		mpc_ioapic_ver(idx), mpc_ioapic_addr(idx),
+ 		gsi_cfg->gsi_base, gsi_cfg->gsi_end);
+ 
+-	nr_ioapics++;
++	return 0;
+ }
+ 
+ int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
 -- 
-Richard Yang
-Help you, Help me
+1.7.10.4
 
