@@ -1,101 +1,71 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Fri, 12 Sep 2014 11:34:29 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v10 09/10] PCI: Assign unassigned bus resources in
- pci_scan_root_bus()
-Message-ID: <20140912103429.GA1994@e106497-lin.cambridge.arm.com>
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
- <1410184472-17630-10-git-send-email-Liviu.Dudau@arm.com>
- <5412C75F.30207@amd.com>
-MIME-Version: 1.0
-In-Reply-To: <5412C75F.30207@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC Part2 v1 03/21] x86, irq: Save destination CPU ID in irq_cfg
+Date: Thu, 11 Sep 2014 22:03:30 +0800
+Message-Id: <1410444228-3134-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 12, 2014 at 11:13:51AM +0100, Suravee Suthikulpanit wrote:
-> On 9/8/2014 8:54 AM, Liviu Dudau wrote:
-> > If the firmware has not assigned all the bus resources and
-> > we are not just probing the PCIe busses, it makes sense to
-> > assign the unassigned resources in pci_scan_root_bus().
-> >
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> > Cc: Rob Herring <robh+dt@kernel.org>
-> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > ---
-> >   drivers/pci/probe.c | 3 +++
-> >   1 file changed, 3 insertions(+)
-> >
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index ef891d2..508cf61 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -1953,6 +1953,9 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
-> >   	if (!found)
-> >   		pci_bus_update_busn_res_end(b, max);
-> >
-> > +	if (!pci_has_flag(PCI_PROBE_ONLY))
-> > +		pci_assign_unassigned_bus_resources(b);
-> > +
-> >   	pci_bus_add_devices(b);
-> >   	return b;
-> >   }
-> >
-> 
-> Liviu,
-> 
-> Besides the check for PCI_PROBE_ONLY here, I think we also need to avoid calling
-> "pci_enable_resources()" in the "driver/pci/pci.c: pcibios_enable_device()" for
-> PCI_PROBE_ONLY mode since the resource is not assigned by Linux. Otherwise, the
-> "drivers/pci/setup-res.c: pci_enable_resource()" would fail w/ error:
-> 
->      can't enable device: BAR ..... not assigned
+Cache destination CPU APIC ID into struct irq_cfg when assigning vector
+for interrupt. Upper layer just needs to read the cached APIC ID instead
+of calling apic->cpu_mask_to_apicid_and(), it helps to hide APIC driver
+details from IOAPIC/HPET/MSI drivers..
 
-Hmm, are you sure that is not because the host bridge resources have not been
-requested? pci-host-generic.c uses PCI_PROBE_ONLY and yet it works with the series as
-is. But it does request_resource() for the host bridge resources inside the driver.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hw_irq.h |    1 +
+ arch/x86/kernel/apic/vector.c |    4 ++++
+ 2 files changed, 5 insertions(+)
 
-Best regards,
-Liviu
-
-> 
-> Actually, in "arch/arm/kernel/bios32.c:", the weak "pcibios_enable_device()" function
-> also has the check for PCI_PROBE_ONLY mode before calling pci_enable_resources().
-> 
-> Thanks,
-> 
-> Suravee
-> 
-> 
-
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 7624fffc2822..3d51d74d6c01 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -116,6 +116,7 @@ struct irq_data;
+ struct irq_cfg {
+ 	cpumask_var_t		domain;
+ 	cpumask_var_t		old_domain;
++	unsigned int		dest_apicid;
+ 	u8			vector;
+ 	u8			move_in_progress : 1;
+ #ifdef CONFIG_IRQ_REMAP
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 7562cb15b3bd..287ae4e8d500 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -188,6 +188,10 @@ next:
+ 	}
+ 	free_cpumask_var(tmp_mask);
+ 
++	if (!err)
++		err = apic->cpu_mask_to_apicid_and(mask, cfg->domain,
++						   &cfg->dest_apicid);
++
+ 	return err;
+ }
+ 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.7.10.4
 
