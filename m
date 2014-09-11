@@ -1,75 +1,112 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Wed, 24 Sep 2014 15:23:18 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Liviu Dudau <liviu@dudau.co.uk>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v12 00/12] Support for creating generic PCI host bridges
- from DT
-Message-ID: <20140924142317.GC1994@e106497-lin.cambridge.arm.com>
-References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
- <20140923215435.GD27117@google.com>
- <20140923224810.GA32643@bart.dudau.co.uk>
- <CAErSpo5PBXSUeU_LP2m=9jxibmqxreL4tEeHBsc5To7D=_bAJA@mail.gmail.com>
- <CAL_Jsq+U=1JT0qqZgb=aR66Q4NYDyzOogspOmmpsp61pE+aCUg@mail.gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v5 00/15] Enable support of IOAPIC hotplug on x86 platforms
+Date: Thu, 11 Sep 2014 16:05:43 +0800
+Message-Id: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CAL_Jsq+U=1JT0qqZgb=aR66Q4NYDyzOogspOmmpsp61pE+aCUg@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 24, 2014 at 02:30:37PM +0100, Rob Herring wrote:
-> On Tue, Sep 23, 2014 at 6:00 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Tue, Sep 23, 2014 at 4:48 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
-> >> ...
-> >> While the next immediate target is converting pci-host-generic.c, pci-imx6.c
-> >> and probably pcie-designware.c to my series, I would like to ask you what
-> >> is your longer term plan. Now that I have got my head full of PCI code,
-> >> I have some ideas but feel that meeting with you and all those involved
-> >> in core PCI support would be a better venue than sending emails back and
-> >> forth. When is your next plan to attend a Linux conference?
-> >
-> > That would be nice.  Unfortunately, I don't know what the next
-> > conference will be yet.
-> 
-> Perhaps an irc meeting or Google hangout. These have been happening on
-> several areas like DT and ARM KVM.
+This patch set enhances IOAPIC core and ACPI drivers to support IOAPIC
+hotplug on x86 platforms. It's based on latest mainstream kernel at
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 
-I'm open to the idea. I don't know if there is a recurring one already for
-PCI or how Bjorn has been handling future planning previously.
+You may pull it from 
+https://github.com/jiangliu/linux.git ioapic/hotplug_v5
 
-Best regards,
-Liviu
+We have pick up several patches from Yinghai's original IOAPIC hotplug
+patch set and reimplemented IOAPIC driver as an ACPI driver instead of
+a PCI driver.
 
-> 
-> Rob
-> 
+It has been tested on a 4-socket Intel SDV with socket hot-addition
+capability. Any suggestions are welcomed!
+
+Patch 1-4 are bugfixes and enhancements to ACPI subsystem
+Patch 5 killes PCI IOAPIC driver
+Patch 6-14 enhances IOAPIC core to support IOAPIC hotplug
+Patch 15 reimplements ACPI IOAPIC driver and enables IOAPIC hotplug
+
+V4->V5:
+1) Fix a building error
+2) Don't rename processor_core.c as apic_id.c
+3) Improve comments
+4) Reorder patches to get rid of some temporary code
+V3->V4:
+1) Fix a bug in manage IOAPIC reference count
+2) Rebase to v3.17-rc2
+3) Refine commit messages
+V2->V3:
+1) Refine ACPI resource walk functions for PCI root bus and IOAPIC
+2) Improve commit messages
+3) Reorder patch order for better maintenence
+
+Jiang Liu (12):
+  x86, PCI, ACPI: Kill private function resource_to_addr() in
+    arch/x86/pci/acpi.c
+  ACPI: Correct return value of acpi_dev_resource_address_space()
+  ACPI: Fix minor syntax issues in processor_core.c
+  PCI: Remove PCI ioapic driver
+  x86, irq: Remove __init marker for functions will be used by IOAPIC
+    hotplug
+  x86, irq: Keep balance of IOAPIC pin reference count
+  x86, irq: Refine mp_register_ioapic() to prepare for IOAPIC hotplug
+  x86, irq, ACPI: Introduce a rwsem to protect IOAPIC operations from
+    hotplug
+  x86, irq, ACPI: Implement interface to support ACPI based IOAPIC
+    hot-addition
+  x86, irq, ACPI: Implement interfaces to support ACPI based IOAPIC
+    hot-removal
+  x86, irq: Introduce helper to check whether an IOAPIC has been
+    registered
+  x86, irq, ACPI: Implement ACPI driver to support IOAPIC hotplug
+
+Yinghai Lu (3):
+  ACPI: Add interfaces to parse IOAPIC ID for IOAPIC hotplug
+  x86, irq: Split out alloc_ioapic_save_registers()
+  x86, irq: Prefer assigned ID in APIC ID register for x86_64
+
+ arch/x86/include/asm/io_apic.h |    6 +-
+ arch/x86/kernel/acpi/boot.c    |   90 +++++++++++++--
+ arch/x86/kernel/apic/io_apic.c |  234 +++++++++++++++++++++++++++++++--------
+ arch/x86/pci/acpi.c            |  142 +++++++++---------------
+ arch/x86/pci/intel_mid_pci.c   |   10 +-
+ arch/x86/pci/irq.c             |    7 +-
+ drivers/acpi/Kconfig           |    6 +
+ drivers/acpi/Makefile          |    1 +
+ drivers/acpi/internal.h        |    7 ++
+ drivers/acpi/ioapic.c          |  236 ++++++++++++++++++++++++++++++++++++++++
+ drivers/acpi/pci_irq.c         |   11 +-
+ drivers/acpi/pci_root.c        |    3 +
+ drivers/acpi/processor_core.c  |  131 +++++++++++++++++++---
+ drivers/acpi/resource.c        |    2 +-
+ drivers/pci/Kconfig            |    7 --
+ drivers/pci/Makefile           |    2 -
+ drivers/pci/ioapic.c           |  121 --------------------
+ include/linux/acpi.h           |    5 +
+ include/linux/pci.h            |    1 +
+ 19 files changed, 728 insertions(+), 294 deletions(-)
+ create mode 100644 drivers/acpi/ioapic.c
+ delete mode 100644 drivers/pci/ioapic.c
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.7.10.4
 
