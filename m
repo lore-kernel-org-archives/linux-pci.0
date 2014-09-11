@@ -1,94 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [217.140.108.86] ([217.140.108.86]:60864 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751744AbaIJQ3B (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Sep 2014 12:29:01 -0400
-Date: Tue, 9 Sep 2014 12:20:54 +0100
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Rob Herring <robherring2@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI
- domain_nr
-Message-ID: <20140909112054.GD29639@arm.com>
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
- <540E960D.7080408@huawei.com>
- <20140909084621.GS27864@e106497-lin.cambridge.arm.com>
- <3780051.0eHpCN6UC9@wuerfel>
+Received: from smtp02.citrix.com ([66.165.176.63]:33179 "EHLO
+	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756645AbaIKNJ4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Sep 2014 09:09:56 -0400
+Message-ID: <54119ED2.3070802@citrix.com>
+Date: Thu, 11 Sep 2014 14:08:34 +0100
+From: David Vrabel <david.vrabel@citrix.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3780051.0eHpCN6UC9@wuerfel>
+To: Yijing Wang <wangyijing@huawei.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-mips@linux-mips.org>, <linux-ia64@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
+	<sparclinux@vger.kernel.org>, <linux-arch@vger.kernel.org>,
+	<linux-s390@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"Joerg Roedel" <joro@8bytes.org>, <x86@kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<xen-devel@lists.xenproject.org>, <arnab.basu@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<Bharat.Bhushan@freescale.com>, "Tony Luck" <tony.luck@intel.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	<iommu@lists.linux-foundation.org>, Wuyun <wuyun.wu@huawei.com>,
+	<linuxppc-dev@lists.ozlabs.org>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [Xen-devel] [PATCH v1 04/21] x86/xen/MSI: Eliminate arch_msix_mask_irq()
+ and arch_msi_mask_irq()
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>	<1409911806-10519-5-git-send-email-wangyijing@huawei.com>	<541045BE.9050804@citrix.com> <5410F955.80609@huawei.com>
+In-Reply-To: <5410F955.80609@huawei.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 09, 2014 at 10:16:04AM +0100, Arnd Bergmann wrote:
-> On Tuesday 09 September 2014 09:46:21 Liviu Dudau wrote:
-> > On Tue, Sep 09, 2014 at 06:54:21AM +0100, Yijing Wang wrote:
-> > > >>> on new requests. This function gets called quite a lot and I'm trying not to
-> > > >>> make it too heavy weight.
-> > > >>
-> > > >> Generally, nothing should be accessing the same DT value frequently.
-> > > >> It should get cached somewhere.
-> > > >>
-> > > > 
-> > > > The problem appears for DTs that don't have the pci-domain info. Then the cached
-> > > > value is left at the default non-valid value and attempts to rescan the DT will
-> > > > be made every time the function is called.
-> > > > 
-> > > >> I don't really understand how domains are used so it's hard to provide
-> > > >> a recommendation here. Do domains even belong in the DT?
-> > > > 
-> > > > ACPI calls them segments and the way Bjorn explained it to me at some moment was
-> > > > that it was an attempt to split up a bus in different groups (or alternatively,
-> > > > merge a few busses together). To be honest I haven't seen systems where the domain
-> > > > is anything other than zero, but JasonG (or maybe Benjamin) were floating an
-> > > > idea of using the domain number to identify physical slots.
-> > > 
-> > > PCI domain(or named segment) is provided by firmware, in ACPI system, we evaluated it
-> > > by method "_SEG". in IA64 with ACPI, PCI hostbridge driver retrieves the domain from ACPI,
-> > > if it's absent, the default domain is zero. So I wonder why in DTS, if it's absent, we get
-> > > a auto increment domain value.
-> > 
-> > Because you can have more than one hostbridge (rare, but not impossible) and unless you
-> > want to join the two segments, you might want to give it a different domain.
+On 11/09/14 02:22, Yijing Wang wrote:
+> On 2014/9/10 20:36, David Vrabel wrote:
+>> On 05/09/14 11:09, Yijing Wang wrote:
+>>> Commit 0e4ccb150 added two __weak arch functions arch_msix_mask_irq()
+>>> and arch_msi_mask_irq() to fix a bug found when running xen in x86.
+>>> Introduced these two funcntions make MSI code complex. And mask/unmask
+>>> is the irq actions related to interrupt controller, should not use
+>>> weak arch functions to override mask/unmask interfaces. This patch
+>>> reverted commit 0e4ccb150 and export struct irq_chip msi_chip, modify
+>>> msi_chip->irq_mask/irq_unmask() in xen init functions to fix this
+>>> bug for simplicity. Also this is preparation for using struct
+>>> msi_chip instead of weak arch MSI functions in all platforms.
+>>
+>> Acked-by: David Vrabel <david.vrabel@citrix.com>
+>>
+>> But I wonder if it would be better the Xen subsystem to provide its own
+>> struct irq_chip instead of adjusting the fields in the generic x86 one.
 > 
-> I think you misunderstood the question. The difference is that in ACPI you
-> are required to specify the domain, while in DT it is optional with your
-> implementation.
-> 
-> I think in general it would be nice if we could mandate that in DT you also
-> have to always provide a domain number, however the problem is that we can't
-> change the existing DTB files that people are using that do not specify a
-> domain.
-> 
-> We could possibly make this an architecture specific setting though and
-> mandate that all ARM64 platforms have to set it, while ARM32 does not need
-> it.
+> Thanks! Currently, Xen and the bare x86 system only have the different irq_chip->irq_mask/irq_unmask.
+> So I chose to override the two ops of bare x86 irq_chip in xen. Konrad Rzeszutek Wilk has been tested it
+> ok in his platform, so I think we could use its own irq_chip for xen later if the difference become large.
 
-We can assume that if a domain is not specified and there is a single
-top level PCIe node, the domain defaults to 0. Are there any arm32
-platforms that require multiple domains (and do not specify a number in
-the DT)?
+This sounds reasonable.
 
--- 
-Catalin
+David
