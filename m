@@ -1,60 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:38396 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753382AbaIPWVd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 18:21:33 -0400
-Received: by mail-pa0-f48.google.com with SMTP id hz1so703818pad.21
-        for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 15:21:32 -0700 (PDT)
-Date: Tue, 16 Sep 2014 16:21:29 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Ethan Zhao <ethan.zhao@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	gleb@kernel.org, pbonzini@redhat.com, kvm@vger.kernel.org,
-	konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
-	david.vrabel@citrix.com, alex.williamson@redhat.com,
-	alexander.h.duyck@intel.com, ethan.kernel@gmail.com
-Subject: Re: [PATCH v4 0/4 resend] Introduce device assignment flag operation
- helper function
-Message-ID: <20140916222129.GD5050@google.com>
-References: <1410229288-31829-1-git-send-email-ethan.zhao@oracle.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1410229288-31829-1-git-send-email-ethan.zhao@oracle.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC Part2 v1 05/21] x86, hpet: Use new irqdomain interfaces to allocate/free IRQ
+Date: Thu, 11 Sep 2014 22:03:32 +0800
+Message-Id: <1410444228-3134-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 09, 2014 at 10:21:24AM +0800, Ethan Zhao wrote:
-> This patch set introduces three PCI device flag operation helper functions
-> when set pci device PF/VF to assigned or deassigned status also check it.
-> and patch 2,3,4 apply these helper functions to KVM,XEN and PCI.
-> 
-> v2: simplify unnecessory ternary operation in function pci_is_dev_assigned().
-> v3: amend helper function naming.
-> v4: fix incorrect type in return expression warning found by Fengguang Wu.
-> 
-> Appreciate suggestion from
-> alex.williamson@redhat.com,
-> david.vrabel@citrix.com,
-> alexander.h.duyck@intel.com
-> 
-> Resend for v3.18 building.
+Use new irqdomain interfaces to allocate/free IRQ for HPET, so we could
+kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
 
-Applied to pci/virtualization for v3.18, thanks.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/hpet.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-> 
-> Thanks,
-> Ethan
-> ---
-> Ethan Zhao (4):
->   PCI: introduce helper functions for device flag operation
->   KVM: use pci device flag operation helper functions
->   xen-pciback: use pci device flag operation helper function
->   PCI: use device flag operation helper function in iov.c
-> 
->  drivers/pci/iov.c                  |    2 +-
->  drivers/xen/xen-pciback/pci_stub.c |    4 ++--
->  include/linux/pci.h                |   13 +++++++++++++
->  virt/kvm/assigned-dev.c            |    2 +-
->  virt/kvm/iommu.c                   |    4 ++--
->  5 files changed, 19 insertions(+), 6 deletions(-)
-> 
+diff --git a/arch/x86/kernel/hpet.c b/arch/x86/kernel/hpet.c
+index 319bcb9372fe..cb60652f59a3 100644
+--- a/arch/x86/kernel/hpet.c
++++ b/arch/x86/kernel/hpet.c
+@@ -11,6 +11,7 @@
+ #include <linux/cpu.h>
+ #include <linux/pm.h>
+ #include <linux/io.h>
++#include <linux/irqdomain.h>
+ 
+ #include <asm/fixmap.h>
+ #include <asm/hpet.h>
+@@ -476,7 +477,7 @@ static int hpet_msi_next_event(unsigned long delta,
+ static int hpet_setup_msi_irq(unsigned int irq)
+ {
+ 	if (x86_msi.setup_hpet_msi(irq, hpet_blockid)) {
+-		irq_free_hwirq(irq);
++		irq_domain_free_irqs(irq, 1);
+ 		return -EINVAL;
+ 	}
+ 	return 0;
+@@ -484,9 +485,10 @@ static int hpet_setup_msi_irq(unsigned int irq)
+ 
+ static int hpet_assign_irq(struct hpet_dev *dev)
+ {
+-	unsigned int irq = irq_alloc_hwirq(-1);
++	int irq;
+ 
+-	if (!irq)
++	irq = irq_domain_alloc_irqs(NULL, -1, 1, NUMA_NO_NODE, NULL);
++	if (irq <= 0)
+ 		return -EINVAL;
+ 
+ 	irq_set_handler_data(irq, dev);
+-- 
+1.7.10.4
+
