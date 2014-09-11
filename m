@@ -1,59 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <5410FA6E.8080708@huawei.com>
+Date: Thu, 11 Sep 2014 09:27:10 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <ghbnqkeh9k.fsf@quad.gouders.net>
-References: <ghiol53r9u.fsf@lena.gouders.net> <CAMxnaaXiEZeJOsgQ6ZSbiqy5Z1zNoXonwNSQNRyRhV0t5jveYQ@mail.gmail.com>
- <ghwq9k3m6z.fsf@lena.gouders.net> <CAMxnaaUqTMf1uEQUqrAGjym8ZrQaBf2QbE4Jqxh2t6a2JgJkOQ@mail.gmail.com>
- <ghioku5l29.fsf@lena.gouders.net> <CAErSpo7j=a3y2MVsvEQGQ4B63_mNCyZSRNXNEZa-2++xs88NmQ@mail.gmail.com>
- <CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com>
- <ghppf15236.fsf@quad.gouders.net> <CAErSpo5SVUOz+qa_x5JTC+-Y5ewTyYzA0N=jyPtK9LaguRrt=w@mail.gmail.com>
- <ghd2b1svdw.fsf@quad.gouders.net> <CAErSpo5e0GOdVbZdQYriP+aWziKELpb9BWTgJ4ERPia354CM5w@mail.gmail.com>
- <ghvbotd8es.fsf@quad.gouders.net> <ghzje5f5zt.fsf@lena.gouders.net> <ghbnqkeh9k.fsf@quad.gouders.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 12 Sep 2014 14:38:12 -0600
-Message-ID: <CAErSpo7knOrXNqimWXP0t7eGWYZhEhy1=i6358pBtk9Nd5RO8g@mail.gmail.com>
-Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
-To: Dirk Gouders <dirk@gouders.net>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+To: David Vrabel <david.vrabel@citrix.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-mips@linux-mips.org>, <linux-ia64@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
+	<sparclinux@vger.kernel.org>, <linux-arch@vger.kernel.org>,
+	<linux-s390@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"Joerg Roedel" <joro@8bytes.org>, <x86@kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<xen-devel@lists.xenproject.org>, <arnab.basu@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<Bharat.Bhushan@freescale.com>, "Tony Luck" <tony.luck@intel.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	<iommu@lists.linux-foundation.org>, Wuyun <wuyun.wu@huawei.com>,
+	<linuxppc-dev@lists.ozlabs.org>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [Xen-devel] [PATCH v1 08/21] x86/xen/MSI: Use MSI chip framework
+ to configure MSI/MSI-X irq
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>	<1409911806-10519-9-git-send-email-wangyijing@huawei.com>	<5409C8C0.8020200@citrix.com> <540E6095.8030409@huawei.com> <54104641.7020007@citrix.com>
+In-Reply-To: <54104641.7020007@citrix.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 12, 2014 at 2:05 PM, Dirk Gouders <dirk@gouders.net> wrote:
-> ...
-> Yinghai,
->
-> I now applied your patches and tested them:
->
-> echo 1 > /sys/bus/pci/devices/0000\:00\:0a.0/pcie_link_disable
-> echo 0 > /sys/bus/pci/devices/0000\:00\:0a.0/pcie_link_disable
->
-> The FC Adapter did not show up, this is the dmesg output (I also tested
-> with 0b.0):
->
-> [  143.294168] pcieport 0000:00:0a.0: pcie_link_disable_set: lnk_ctrl = 18
-> [  148.284456] pcieport 0000:00:0a.0: pcie_link_disable_set: lnk_ctrl = 8
-> [  304.065942] pcieport 0000:00:0b.0: pcie_link_disable_set: lnk_ctrl = 18
-> [  309.035278] pcieport 0000:00:0b.0: pcie_link_disable_set: lnk_ctrl = 8
->
-> So, probably my test environment does not work as expected and I have to
-> test it on the failing machine.
+On 2014/9/10 20:38, David Vrabel wrote:
+> On 09/09/14 03:06, Yijing Wang wrote:
+>> On 2014/9/5 22:29, David Vrabel wrote:
+>>> On 05/09/14 11:09, Yijing Wang wrote:
+>>>> Use MSI chip framework instead of arch MSI functions to configure
+>>>> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+>>> [...]
+>>>> --- a/arch/x86/pci/xen.c
+>>>> +++ b/arch/x86/pci/xen.c
+>>> [...]
+>>>> @@ -418,9 +430,9 @@ int __init pci_xen_init(void)
+>>>>  #endif
+>>>>  
+>>>>  #ifdef CONFIG_PCI_MSI
+>>>> -	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
+>>>> -	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
+>>>> -	x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
+>>>> +	xen_msi_chip.setup_irqs = xen_setup_msi_irqs;
+>>>> +	xen_msi_chip.teardown_irqs = xen_teardown_msi_irqs;
+>>>> +	x86_msi_chip = &xen_msi_chip;
+>>>>  	msi_chip.irq_mask = xen_nop_msi_mask;
+>>>>  	msi_chip.irq_unmask = xen_nop_msi_mask;
+>>>
+>>> Why have these not been changed to set the x86_msi_chip.mask/unmask
+>>> fields instead?
+>>
+>> Hi David, x86_msi_chip here is struct msi_chip data type, used to configure MSI/MSI-X
+>> irq. msi_chip above is struct irq_chip data type, represent the MSI irq controller. They are
+>> not the same object. Their name easily confusing people.
+> 
+> Ok, it all makes sense now.
+> 
+> Acked-by: David Vrabel <david.vrabel@citrix.com>
 
-I think you probably did reproduce the problem, it's just that it
-wasn't fixed by bouncing the link.  What if you try the following:
+Thanks!
 
-    DEV=00:0a.0
-    setpci -s$DEV BRIDGE_CONTROL.W=0x0040
-    sleep 1
-    setpci -s$DEV BRIDGE_CONTROL.W=0x0000
-    sleep 1
-    echo 1 > /sys/bus/pci/rescan
+> 
+> David
+> 
+> .
+> 
 
-Thanks to your patch, we reconfigured the secondary bus number of
-bridge 00:0a.0.  The commands above should reset the FC device behind
-that bridge.  I suspect it will then respond when we rescan that bus.
 
-Bjorn
+-- 
+Thanks!
+Yijing
+
