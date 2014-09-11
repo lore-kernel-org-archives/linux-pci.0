@@ -1,74 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 1 Sep 2014 21:31:59 -0400
-From: "Chen, Gong" <gong.chen@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Randy Dunlap <rdunlap@infradead.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
 	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RESEND 0/5] PCIe, AER: Misc cleanup
-Message-ID: <20140902013159.GA14916@gchen.bj.intel.com>
-References: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
- <CAErSpo4DZboL75xa1Ahxr9aoDg_wyad1gZpXeAAiqcmx=8N8sg@mail.gmail.com>
- <20140814015236.GB28066@gchen.bj.intel.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ew6BAiZeqk4r7MaW"
-In-Reply-To: <20140814015236.GB28066@gchen.bj.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC Part1 v1 18/18] iommu/amd: Use helpers to access irq_cfg data structure associated with IRQ
+Date: Thu, 11 Sep 2014 16:25:05 +0800
+Message-Id: <1410423905-26239-19-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Use helpers to access irq_cfg data structure associated with IRQ,
+instead of accessing irq_data->chip_data directly. Later we could
+rewrite those helpers to support hierarchy irqdomain.
 
---ew6BAiZeqk4r7MaW
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/amd_iommu.c |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-On Wed, Aug 13, 2014 at 09:52:36PM -0400, Chen, Gong wrote:
-> Date:	Wed, 13 Aug 2014 21:52:36 -0400
-> From: "Chen, Gong" <gong.chen@linux.intel.com>
-> To: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Randy Dunlap <rdunlap@infradead.org>, Borislav Petkov <bp@alien8.de>,
->  Tony Luck <tony.luck@intel.com>, "linux-pci@vger.kernel.org"
->  <linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
->  <linux-kernel@vger.kernel.org>
-> Subject: Re: [RESEND 0/5] PCIe, AER: Misc cleanup
-> User-Agent: Mutt/1.5.23 (2014-03-12)
->=20
-> On Wed, Aug 13, 2014 at 07:52:45AM -0600, Bjorn Helgaas wrote:
-> > I haven't responded because I've been on vacation for the past three
-> > weeks.  If there's no change in the patches themselves, and if they
-> > are still in http://patchwork.ozlabs.org/project/linux-pci/list, the
-> > only thing reposting them does is make more work for me.
-> >=20
-> There is one difference existed in Patch 1. I add more explanation in
-> the comments as Boris suggested.
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index ecb0109a5360..e0def6249284 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -4049,7 +4049,7 @@ static int setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
+ 	int devid;
+ 	int ret;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 	if (!cfg)
+ 		return -EINVAL;
+ 
+@@ -4112,7 +4112,7 @@ static int set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	if (!config_enabled(CONFIG_SMP))
+ 		return -1;
+ 
+-	cfg       = data->chip_data;
++	cfg       = irqd_cfg(data);
+ 	irq       = data->irq;
+ 	irte_info = &cfg->irq_2_irte;
+ 
+@@ -4150,7 +4150,7 @@ static int free_irq(int irq)
+ 	struct irq_2_irte *irte_info;
+ 	struct irq_cfg *cfg;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 	if (!cfg)
+ 		return -EINVAL;
+ 
+@@ -4169,7 +4169,7 @@ static void compose_msi_msg(struct pci_dev *pdev,
+ 	struct irq_cfg *cfg;
+ 	union irte irte;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 	if (!cfg)
+ 		return;
+ 
+@@ -4198,7 +4198,7 @@ static int msi_alloc_irq(struct pci_dev *pdev, int irq, int nvec)
+ 	if (!pdev)
+ 		return -EINVAL;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 	if (!cfg)
+ 		return -EINVAL;
+ 
+@@ -4218,7 +4218,7 @@ static int msi_setup_irq(struct pci_dev *pdev, unsigned int irq,
+ 	if (!pdev)
+ 		return -EINVAL;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 	if (!cfg)
+ 		return -EINVAL;
+ 
+@@ -4241,7 +4241,7 @@ static int setup_hpet_msi(unsigned int irq, unsigned int id)
+ 	struct irq_cfg *cfg;
+ 	int index, devid;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 	if (!cfg)
+ 		return -EINVAL;
+ 
+-- 
+1.7.10.4
 
-Hi, Bjorn
-
-Any comments?
-
---ew6BAiZeqk4r7MaW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUBR4PAAoJEI01n1+kOSLHG8wP/3c5jeGxOLELLqUsLXVN1S5R
-N6EUZ0xpgSWGRlJrHD/mnUAiygSJ4G04DKUqTLMNET9Abfalsr1lMmI+Q762QYY1
-OsayTtuwwaaeJtfk1p0pFlMmjXDNhhIuv8scfq9AV2vm9WqxxEd9rpcLUIcLsp2z
-AcutviE66XR5G3nB3zxY9ASIVJDJ7A8So7EgF9ajGlHYpAmp6xbW2qzry1gDoeZJ
-QDXcEFp9MbUUfewdGuvYq+epOpfEr2OpwNfSlnAl949cDap/RdvXgdrQs+U1gvM7
-cqatmDoB/qWhRs+jfI5zPq1BdACO5njCtxntHDrWaKBGpSA+hm/1xmC/g/5En7Kz
-cqQJC+NHM2wkhphmktQVJsmzWMxDLkxUvGpBJ3wJqYQSG/KLFy1fl9SneKTztlGz
-4D7I/BpRBMF9QA1LS7LBMh7XJ64tJJOp8+TLRtNuoH0BSVuATPH6pNKrKRx0k3bX
-4qm1TU4KzERMjbYTitv33Cu/SHj9SNL5E0IXzCtu12SAIEam6bS3/2szDCUGTd8L
-de9UbIMkvUaQlVduxav5K/3SpoDrjKtfsE3wtf2+CqQzxzZvkhGwXeC92GzYiZqt
-kLY9ZAzMbRvD8Sbsx7JKEZ5N7U4Ifnrb6B26x4s2Qa0r3gDJqBZR3jOXh3lMTVVh
-K08O7/VnKCCAJiHswJFm
-=y6e5
------END PGP SIGNATURE-----
-
---ew6BAiZeqk4r7MaW--
