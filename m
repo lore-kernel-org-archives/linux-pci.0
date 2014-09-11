@@ -18,51 +18,104 @@ Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	x86@kernel.org, linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v6 03/15] ACPI: Fix minor syntax issues in processor_core.c
-Date: Wed, 24 Sep 2014 16:59:24 +0800
-Message-Id: <1411549176-30780-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
+Subject: [Patch v5 14/15] x86, irq: Introduce helper to check whether an IOAPIC has been registered
+Date: Thu, 11 Sep 2014 16:05:57 +0800
+Message-Id: <1410422758-24942-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix minor syntax issues in processor_core.c to follow coding styles.
+Introduce acpi_ioapic_registered() to check whether an IOAPIC has already
+been registered, it will be used when enabling IOAPIC hotplug.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/acpi/processor_core.c |    9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ arch/x86/include/asm/io_apic.h |    1 +
+ arch/x86/kernel/acpi/boot.c    |   22 ++++++++++++++++++++++
+ arch/x86/kernel/apic/io_apic.c |   11 +++++++++++
+ include/linux/acpi.h           |    1 +
+ 4 files changed, 35 insertions(+)
 
-diff --git a/drivers/acpi/processor_core.c b/drivers/acpi/processor_core.c
-index e32321ce9a5c..b048f3752c2b 100644
---- a/drivers/acpi/processor_core.c
-+++ b/drivers/acpi/processor_core.c
-@@ -125,13 +125,12 @@ static int map_mat_entry(acpi_handle handle, int type, u32 acpi_id)
- 	}
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 7c04b8ec22a4..ca742d5249db 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -191,6 +191,7 @@ extern void mp_unmap_irq(int irq);
+ extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 			      struct ioapic_domain_cfg *cfg);
+ extern int mp_unregister_ioapic(u32 gsi_base);
++extern int mp_ioapic_registered(u32 gsi_base);
+ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			    irq_hw_number_t hwirq);
+ extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 0e67d792741d..132f98a2288b 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -821,6 +821,28 @@ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
+ }
+ EXPORT_SYMBOL(acpi_unregister_ioapic);
  
- 	header = (struct acpi_subtable_header *)obj->buffer.pointer;
--	if (header->type == ACPI_MADT_TYPE_LOCAL_APIC) {
-+	if (header->type == ACPI_MADT_TYPE_LOCAL_APIC)
- 		map_lapic_id(header, acpi_id, &apic_id);
--	} else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC) {
-+	else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC)
- 		map_lsapic_id(header, type, acpi_id, &apic_id);
--	} else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC) {
-+	else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC)
- 		map_x2apic_id(header, type, acpi_id, &apic_id);
--	}
++/**
++ * acpi_ioapic_registered() - Check whether IOAPIC assoicatied with @gsi_base
++ *			      has been registered
++ * @handle: ACPI handle of the IOAPIC deivce
++ * @gsi_base: GSI base associated with the IOAPIC
++ *
++ * Assume caller holds some type of lock to serialize acpi_ioapic_registered()
++ * with acpi_register_ioapic()/acpi_unregister_ioapic().
++ */
++int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base)
++{
++	int ret = 0;
++
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++	down_read(&acpi_ioapic_rwsem);
++	ret  = mp_ioapic_registered(gsi_base);
++	up_read(&acpi_ioapic_rwsem);
++#endif
++
++	return ret;
++}
++
+ static int __init acpi_parse_sbf(struct acpi_table_header *table)
+ {
+ 	struct acpi_table_boot *sb;
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 27a7238418f7..f054c8803939 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -4013,6 +4013,17 @@ int mp_unregister_ioapic(u32 gsi_base)
+ 	return 0;
+ }
  
- exit:
- 	kfree(buffer.pointer);
-@@ -164,7 +163,7 @@ int acpi_map_cpuid(int apic_id, u32 acpi_id)
- 		 * For example,
- 		 *
- 		 * Scope (_PR)
--                 * {
-+		 * {
- 		 *     Processor (CPU0, 0x00, 0x00000410, 0x06) {}
- 		 *     Processor (CPU1, 0x01, 0x00000410, 0x06) {}
- 		 *     Processor (CPU2, 0x02, 0x00000410, 0x06) {}
++int mp_ioapic_registered(u32 gsi_base)
++{
++	int ioapic;
++
++	for_each_ioapic(ioapic)
++		if (ioapics[ioapic].gsi_config.gsi_base == gsi_base)
++			return 1;
++
++	return 0;
++}
++
+ int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 		     irq_hw_number_t hwirq)
+ {
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 3574f137242e..e916cc9ca5a8 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -152,6 +152,7 @@ int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
+ 
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
+ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
++int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base);
+ void acpi_irq_stats_init(void);
+ extern u32 acpi_irq_handled;
+ extern u32 acpi_irq_not_handled;
 -- 
 1.7.10.4
 
