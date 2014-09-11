@@ -1,47 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bbn0105.outbound.protection.outlook.com ([157.56.111.105]:57101
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753380AbaIXCyM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Sep 2014 22:54:12 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Fabio Estevam <festevam@gmail.com>
-CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Tim Harvey <tharvey@gateworks.com>
-Subject: RE: [PATCH v2 1/5] PCI: imx6: enable pcie on imx6qdl sabreauto
-Date: Wed, 24 Sep 2014 02:54:07 +0000
-Message-ID: <f72dd09d379d4c1b89cc27612afcea77@BY1PR0301MB0855.namprd03.prod.outlook.com>
-References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
-	<1411445498-20250-2-git-send-email-r65037@freescale.com>
- <CAOMZO5BuPcw9bJSdLMJ2D=a6EMFMPtKeY352N9-x8dwmRnnfWw@mail.gmail.com>
-In-Reply-To: <CAOMZO5BuPcw9bJSdLMJ2D=a6EMFMPtKeY352N9-x8dwmRnnfWw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-qc0-f181.google.com ([209.85.216.181]:50236 "EHLO
+	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750899AbaIKWvt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Sep 2014 18:51:49 -0400
+Received: by mail-qc0-f181.google.com with SMTP id r5so2117331qcx.40
+        for <linux-pci@vger.kernel.org>; Thu, 11 Sep 2014 15:51:46 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <ghd2b1svdw.fsf@quad.gouders.net>
+References: <ghiol53r9u.fsf@lena.gouders.net> <CAMxnaaXiEZeJOsgQ6ZSbiqy5Z1zNoXonwNSQNRyRhV0t5jveYQ@mail.gmail.com>
+ <ghwq9k3m6z.fsf@lena.gouders.net> <CAMxnaaUqTMf1uEQUqrAGjym8ZrQaBf2QbE4Jqxh2t6a2JgJkOQ@mail.gmail.com>
+ <ghioku5l29.fsf@lena.gouders.net> <CAErSpo7j=a3y2MVsvEQGQ4B63_mNCyZSRNXNEZa-2++xs88NmQ@mail.gmail.com>
+ <CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com>
+ <ghppf15236.fsf@quad.gouders.net> <CAErSpo5SVUOz+qa_x5JTC+-Y5ewTyYzA0N=jyPtK9LaguRrt=w@mail.gmail.com>
+ <ghd2b1svdw.fsf@quad.gouders.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 11 Sep 2014 16:51:25 -0600
+Message-ID: <CAErSpo5e0GOdVbZdQYriP+aWziKELpb9BWTgJ4ERPia354CM5w@mail.gmail.com>
+Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
+To: Dirk Gouders <dirk@gouders.net>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgRmFiaW8NCg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEZhYmlv
-IEVzdGV2YW0gW21haWx0bzpmZXN0ZXZhbUBnbWFpbC5jb21dDQo+IFNlbnQ6IFR1ZXNkYXksIFNl
-cHRlbWJlciAyMywgMjAxNCA4OjQxIFBNDQo+IFRvOiBaaHUgUmljaGFyZC1SNjUwMzcNCj4gQ2M6
-IGxpbnV4LXBjaS1vd25lckB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5v
-cmc7IEd1byBTaGF3bi0NCj4gUjY1MDczOyBMdWNhcyBTdGFjaDsgVGltIEhhcnZleQ0KPiBTdWJq
-ZWN0OiBSZTogW1BBVENIIHYyIDEvNV0gUENJOiBpbXg2OiBlbmFibGUgcGNpZSBvbiBpbXg2cWRs
-IHNhYnJlYXV0bw0KPiANCj4gSGkgUmljaGFyZCwNCj4gDQo+IE9uIFR1ZSwgU2VwIDIzLCAyMDE0
-IGF0IDE6MTEgQU0sIFJpY2hhcmQgWmh1IDxyNjUwMzdAZnJlZXNjYWxlLmNvbT4gd3JvdGU6DQo+
-ID4gLSBlbmFibGUgcGNpZSBvbiBpbXg2cWRsIHNhYnJlYXV0byBib2FyZHMuDQo+ID4NCj4gPiBT
-aWduZWQtb2ZmLWJ5OiBSaWNoYXJkIFpodSA8cjY1MDM3QGZyZWVzY2FsZS5jb20+DQo+ID4gLS0t
-DQo+ID4gIGFyY2gvYXJtL2Jvb3QvZHRzL2lteDZxZGwtc2FicmVhdXRvLmR0c2kgfCA0ICsrKysN
-Cj4gPiAgMSBmaWxlIGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKQ0KPiA+DQo+ID4gZGlmZiAtLWdp
-dCBhL2FyY2gvYXJtL2Jvb3QvZHRzL2lteDZxZGwtc2FicmVhdXRvLmR0c2kNCj4gPiBiL2FyY2gv
-YXJtL2Jvb3QvZHRzL2lteDZxZGwtc2FicmVhdXRvLmR0c2kNCj4gPiBpbmRleCAwMDlhYmQ2Li5k
-NjA0MGE1IDEwMDY0NA0KPiA+IC0tLSBhL2FyY2gvYXJtL2Jvb3QvZHRzL2lteDZxZGwtc2FicmVh
-dXRvLmR0c2kNCj4gPiArKysgYi9hcmNoL2FybS9ib290L2R0cy9pbXg2cWRsLXNhYnJlYXV0by5k
-dHNpDQo+ID4gQEAgLTQxMCw2ICs0MTAsMTAgQEANCj4gPiAgICAgICAgIH07DQo+ID4gIH07DQo+
-ID4NCj4gPiArJnBjaWUgew0KPiA+ICsgICAgICAgc3RhdHVzID0gIm9rYXkiOw0KPiA+ICt9Ow0K
-PiANCj4gSXQgd291bGQgYmUgYmV0dGVyIGlmIHlvdSBjb3VsZCBwYXNzIHRoZSBQQ0kgcmVzZXQg
-cGluIHRoYXQgY29tZXMgZnJvbSB0aGUNCj4gR1BJTyBleHBhbmRlci4NCltSaWNoYXJkXSA2cWRs
-IHNhYnJlYXV0byBib2FyZHMgZG9uJ3QgaGF2ZSB0aGUgcGNpZSByZXNldCBncGlvIGluIHRoZSBi
-b2FyZCBkZXNpZ24gYXQgYWxsLg0KDQpCZXN0IFJlZ2FyZHMNClJpY2hhcmQgWmh1DQo=
+On Thu, Sep 11, 2014 at 3:24 PM, Dirk Gouders <dirk@gouders.net> wrote:
+> Bjorn Helgaas <bhelgaas@google.com> writes:
+>
+>> On Thu, Sep 11, 2014 at 2:33 PM, Dirk Gouders <dirk@gouders.net> wrote:
+>>> What I was currently trying was to construct a test-environment so that
+>>> I do not need to do tests and diagnosis on a busy machine.
+>>>
+>>> I noticed that this problem seems to start with the narrow Root
+>>> Bridge window (00-07) but every other machine that I had a look at,
+>>> starts with (00-ff), so those will not trigger my problem.
+>>>
+>>> I thought I could perhaps try to shrink the window in
+>>> acpi_pci_root_add() to trigger the problem and that kind of works: it
+>>> triggers it but not exactly the same way, because it basically ends at
+>>> this code in pci_scan_bridge():
+>>>
+>>>         if (max >= bus->busn_res.end) {
+>>>                 dev_warn(&dev->dev, "can't allocate child bus %02x from %pR (pass %d)\n",
+>>>                          max, &bus->busn_res, pass);
+>>>                 goto out;
+>>>         }
+>>>
+>>> If this could work but I am just missing a small detail, I would be
+>>> glad to hear about it and do the first tests this way.  If it is
+>>> complete nonsense, I will just use the machine that triggers the problem
+>>> for the tests.
+>>
+>> I was about to suggest the same thing.  If the problem is related to
+>> the bus number change, we should be able to force that to happen on a
+>> different machine.  Your approach sounds good, so I'm guessing we just
+>> need a tweak.
+>>
+>> I would first double-check that the PCI adapters are identical,
+>> including the firmware on the card.  Can you also include your patch
+>> and the resulting dmesg (with debug enabled as before)?
+>
+> Currently I am at home doing just tests for understanding and that I can
+> hopefully use when I am back in the office.
+>
+> I already noticed the the backup FC Adapter on the test machine is not
+> exactly the same: it is Rev. 1 whereas the one on the failing machine is
+> Rev. 2.
+>
+> So, here at home my tests let a NIC disappear.  Different from the
+> original problem but I was just trying to reconstruct the szenario of a
+> misconfigured bridge causing a reconfiguration.
+>
+> What I was trying is:
+>
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index e6ae603..fd146b3 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -556,6 +556,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>         strcpy(acpi_device_name(device), ACPI_PCI_ROOT_DEVICE_NAME);
+>         strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
+>         device->driver_data = root;
+> +       root->secondary.end = 0x02;
+>
+>         pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
+>                acpi_device_name(device), acpi_device_bid(device),
+>
+> The device that disappears is a NIC:
+>
+> 00:00.0 Host bridge: Intel Corporation Xeon E3-1200 v2/3rd Gen Core processor DRAM Controller (rev 09)
+> 00:02.0 VGA compatible controller: Intel Corporation Xeon E3-1200 v2/3rd Gen Core processor Graphics Controller (rev 09)
+> 00:14.0 USB controller: Intel Corporation 7 Series/C210 Series Chipset Family USB xHCI Host Controller (rev 04)
+> 00:16.0 Communication controller: Intel Corporation 7 Series/C210 Series Chipset Family MEI Controller #1 (rev 04)
+> 00:1a.0 USB controller: Intel Corporation 7 Series/C210 Series Chipset Family USB Enhanced Host Controller #2 (rev 04)
+> 00:1b.0 Audio device: Intel Corporation 7 Series/C210 Series Chipset Family High Definition Audio Controller (rev 04)
+> 00:1c.0 PCI bridge: Intel Corporation 7 Series/C210 Series Chipset Family PCI Express Root Port 1 (rev c4)
+> 00:1c.4 PCI bridge: Intel Corporation 7 Series/C210 Series Chipset Family PCI Express Root Port 5 (rev c4)
+> 00:1c.5 PCI bridge: Intel Corporation 7 Series/C210 Series Chipset Family PCI Express Root Port 6 (rev c4)
+> 00:1d.0 USB controller: Intel Corporation 7 Series/C210 Series Chipset Family USB Enhanced Host Controller #1 (rev 04)
+> 00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev a4)
+> 00:1f.0 ISA bridge: Intel Corporation B75 Express Chipset LPC Controller (rev 04)
+> 00:1f.2 SATA controller: Intel Corporation 7 Series/C210 Series Chipset Family 6-port SATA Controller [AHCI mode] (rev 04)
+> 00:1f.3 SMBus: Intel Corporation 7 Series/C210 Series Chipset Family SMBus Controller (rev 04)
+> 02:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 06)
+>
+> This is the one that is missing with the above change:
+> 03:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 06)
+
+This situation is a little different, so I don't think you're
+reproducing the situation we want to test.  On this box, you have:
+
+    pci_bus 0000:00: root bus resource [bus 00-02]
+    pci 0000:00:1c.0: PCI bridge to [bus 01]
+    pci 0000:00:1c.4: PCI bridge to [bus 02]
+
+so we find all the devices on bus 00 and bus 02 (there's nothing on
+bus 01).  My guess is the 03:00.0 device is normally behind the
+00:1c.5 bridge, but we don't even scan behind that bridge because we
+can't allocate a secondary bus number for it (we're not smart enough
+to take advantage of the empty bus 01).
+
+On the failing box, it's different because we *do* have unused bus
+number space, and we do actually reconfigure the bridge to use it.
+It's just that the FC adapter doesn't respond when we use the new bus
+number for it.
+
+You might be able to do something similar on the test box by:
+
+  - Keeping your root->secondary.end = 02 patch, so you still have [bus 00-02].
+  - Ignoring bridges 00:1c.0 and 00:1c.4.  I would just test for those
+devfns in pci_scan_device() and when you see them, return NULL instead
+of trying to read the vendor ID.
+
+Then 00:1c.5 is probably configured by the BIOS for [bus 03], but
+that's outside the root bridge range, so we should reconfigure it to
+use [bus 01].  Then we should scan behind it, and we'll probably
+discover the NIC that was previously at 03:00.0.  The device *should*
+just work at the new bus number, since it probably doesn't have the
+same bug the FC adapter does.
+
+Bjorn
