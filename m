@@ -1,104 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:52322 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753649AbaIIMUx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Sep 2014 08:20:53 -0400
-Date: Tue, 9 Sep 2014 14:20:12 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
+Received: from exprod5og120.obsmtp.com ([64.18.0.137]:60601 "HELO
+	exprod5og120.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751215AbaIKW4g (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Sep 2014 18:56:36 -0400
+Received: by mail-pd0-f177.google.com with SMTP id y10so6374210pdj.8
+        for <linux-pci@vger.kernel.org>; Thu, 11 Sep 2014 15:56:35 -0700 (PDT)
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Grant Likely <grant.likely@linaro.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org, Prarit Bhargava <prarit@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: Re: [Patch v4 12/16] x86, irq, ACPI: Implement interface to support
- ACPI based IOAPIC hot-addition
-In-Reply-To: <1409192561-19744-13-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.10.1409091417120.11037@nanos>
-References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com> <1409192561-19744-13-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [PATCH v8 3/4] dt-bindings: pci: xgene pcie device tree bindings
+Date: Thu, 11 Sep 2014 15:57:45 -0700
+Message-Id: <1410476266-29426-4-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1410476266-29426-1-git-send-email-tinamdar@apm.com>
+References: <1410476266-29426-1-git-send-email-tinamdar@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 28 Aug 2014, Jiang Liu wrote:
->  EXPORT_SYMBOL(acpi_register_ioapic);
-> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-> index 6e67af0c5f99..b286461cabf9 100644
-> --- a/arch/x86/kernel/apic/io_apic.c
-> +++ b/arch/x86/kernel/apic/io_apic.c
-> @@ -3851,7 +3851,13 @@ static int bad_ioapic_register(int idx)
->  
->  static int find_free_ioapic_entry(void)
->  {
-> -	return nr_ioapics;
-> +	int idx;
-> +
-> +	for (idx = 0; idx < MAX_IO_APICS; idx++)
-> +		if (ioapics[idx].nr_registers == 0)
-> +			return idx;
-> +
-> +	return MAX_IO_APICS;
->  }
->  
->  int mp_register_ioapic(int id, u32 address, u32 gsi_base,
-> @@ -3867,8 +3873,15 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
->  	}
->  	for_each_ioapic(ioapic)
->  		if (ioapics[ioapic].mp_config.apicaddr == address) {
-> -			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
-> -				address, ioapic);
-> +			/*
-> +			 * IOAPIC unit may also be visible in PCI scope.
-> +			 * When ioapic PCI driver's probe() is called,
-> +			 * the IOAPIC unit may have already been initialized
-> +			 * at boot time.
-> +			 */
-> +			if (!ioapic_initialized)
-> +				pr_warn("address 0x%x conflicts with IOAPIC%d\n",
-> +					address, ioapic);
+This patch adds the bindings for X-Gene PCIe driver. The driver resides
+under 'drivers/pci/host/pci-xgene.c' file.
 
-Hmm. This smells fishy. Why do we allow multiple initializations of
-the same IOAPIC in the first place. Either it's done via ACPI or via
-PCI, but not both.
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ .../devicetree/bindings/pci/xgene-pci.txt          | 55 ++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
 
->  			return -EEXIST;
->  		}
->  
-> @@ -3918,6 +3931,14 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
->  	ioapics[idx].irqdomain = NULL;
->  	ioapics[idx].irqdomain_cfg = *cfg;
->  
-> +	if (ioapic_initialized) {
+diff --git a/Documentation/devicetree/bindings/pci/xgene-pci.txt b/Documentation/devicetree/bindings/pci/xgene-pci.txt
+new file mode 100644
+index 0000000..683a253
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/xgene-pci.txt
+@@ -0,0 +1,55 @@
++* AppliedMicro X-Gene PCIe interface
++
++Required properties:
++- device_type: set to "pci"
++- compatible: should contain "apm,xgene-pcie" to identify the core.
++- reg: A list of physical base address and length for each set of controller
++       registers. Must contain an entry for each entry in the reg-names
++       property.
++- reg-names: Must include the following entries:
++  "csr": controller configuration registers.
++  "cfg": pcie configuration space registers.
++- #address-cells: set to <3>
++- #size-cells: set to <2>
++- ranges: ranges for the outbound memory, I/O regions.
++- dma-ranges: ranges for the inbound memory regions.
++- #interrupt-cells: set to <1>
++- interrupt-map-mask and interrupt-map: standard PCI properties
++	to define the mapping of the PCIe interface to interrupt
++	numbers.
++- clocks: from common clock binding: handle to pci clock.
++
++Optional properties:
++- status: Either "ok" or "disabled".
++
++Example:
++
++SoC specific DT Entry:
++
++	pcie0: pcie@1f2b0000 {
++		status = "disabled";
++		device_type = "pci";
++		compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++		#interrupt-cells = <1>;
++		#size-cells = <2>;
++		#address-cells = <3>;
++		reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
++			0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
++		reg-names = "csr", "cfg";
++		ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
++			  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
++		dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
++			      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
++		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
++				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
++				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
++				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
++		clocks = <&pcie0clk 0>;
++	};
++
++
++Board specific DT Entry:
++	&pcie0 {
++		status = "ok";
++	};
+-- 
+1.9.1
 
-I have a hard time to understand this conditional. Why can't we do
-that unconditionally?
-
-> +		if (mp_irqdomain_create(idx)) {
-> +			clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
-> +			return -ENOMEM;
-> +		}
-> +		alloc_ioapic_saved_registers(idx);
-> +	}
-> +
->  	if (gsi_cfg->gsi_end >= gsi_top)
->  		gsi_top = gsi_cfg->gsi_end + 1;
->  	if (nr_ioapics <= idx)
-
-Thanks,
-
-	tglx
