@@ -1,120 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:55350 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753270AbaI2Kis (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 06:38:48 -0400
-Message-ID: <1411987122.2625.17.camel@pengutronix.de>
-Subject: Re: [PATCH v3 9/9] PCI: imx6: Fix possible dead lock
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Richard Zhu <r65037@freescale.com>
-Cc: linux-pci-owner@vger.kernel.org, linux-pci@vger.kernel.org,
-	shawn.guo@freescale.com, festevam@gmail.com, tharvey@gateworks.com
-Date: Mon, 29 Sep 2014 12:38:42 +0200
-In-Reply-To: <1411966997-27118-10-git-send-email-r65037@freescale.com>
-References: <1411966997-27118-1-git-send-email-r65037@freescale.com>
-	 <1411966997-27118-10-git-send-email-r65037@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC Part2 v1 06/21] x86, MSI: Use new irqdomain interfaces to allocate/free IRQ
+Date: Thu, 11 Sep 2014 22:03:33 +0800
+Message-Id: <1410444228-3134-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Montag, den 29.09.2014, 13:03 +0800 schrieb Richard Zhu:
-> kernel report one possible dead lock during imx6sx pcie
-> suspend resume stress tests, after enable Lock Debugging.
-> platform: imx6sx sdb board + xhci(pcie2usb3.0 ep)
-> 
-> reason: usleep_range used in imx6_pcie_link_up maybe scheduled
-> out from dw_pcie_valid_config.isra...
-> About details, please see the following logs.
-> 
-> solution: replace the usleep_range(1000, 2000) by udelay(10) and
-> enlarge the loop counter.
-> 
-I don't like this change, as we eat one CPU just to work around a
-slightly wrong behavior of the link-up signaling. I had a look at the
-code in question and it seems there are more things that need different
-handling in there. I'll post a patch to resolve the deadlock without
-using a udelay shortly.
+Use new irqdomain interfaces to allocate/free IRQ for MSI, so we could
+kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
 
-Regards,
-Lucas
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/msi.c |   14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-> logs:
-> [   50.643062] xhci_hcd 0000:01:00.0: Refused to change power state, currently in D3
-> [   50.653390]
-> [   50.654898] =========================================================
-> [   50.661343] [ INFO: possible irq lock inversion dependency detected ]
-> [   50.667792] 3.17.0-rc2-01341-gfc43ff7-dirty #101 Not tainted
-> [   50.673454] ---------------------------------------------------------
-> [   50.679898] kworker/u2:2/48 just changed the state of lock:
-> [   50.685477]  (pci_lock){+.....}, at: [<802d650c>] pci_bus_read_config_dword+0x44/0x94
-> [   50.693394] but this lock was taken by another, HARDIRQ-safe lock in the past:
-> [   50.700619]  (&irq_desc_lock_class){-.-...}
-> 
-> and interrupts could create inverse lock ordering between them.
-> 
-> [   50.710843]
-> [   50.710843] other info that might help us debug this:
-> [   50.717377]  Possible interrupt unsafe locking scenario:
-> [   50.717377]
-> [   50.724169]        CPU0                    CPU1
-> [   50.728702]        ----                    ----
-> [   50.733234]   lock(pci_lock);
-> [   50.736232]                                local_irq_disable();
-> [   50.742154]                                lock(&irq_desc_lock_class);
-> [   50.748713]                                lock(pci_lock);
-> [   50.754229]   <Interrupt>
-> [   50.756852]     lock(&irq_desc_lock_class);
-> [   50.761065]
-> [   50.761065]  *** DEADLOCK ***
-> ...
-> 
-> [   52.119515] [<806e8ad0>] (schedule_hrtimeout_range) from [<80077e90>] (usleep_range+0x50/0x58)
-> [   52.128141] [<80077e40>] (usleep_range) from [<802f3694>] (imx6_pcie_link_up+0x48/0x16c)
-> [   52.136242] [<802f364c>] (imx6_pcie_link_up) from [<802f1b74>] (dw_pcie_valid_config.isra.10+0x40/0x7c)
-> [   52.145637]  r6:ae72606d r5:ae72606c r4:ae711228
-> [   52.150311] [<802f1b34>] (dw_pcie_valid_config.isra.10) from [<802f1ca8>] (dw_pcie_rd_conf+0x4c/0x154)
-> [   52.159620]  r7:00000000 r6:00000000 r5:ae711228 r4:ae726000
-> [   52.165355] [<802f1c5c>] (dw_pcie_rd_conf) from [<802d6534>] (pci_bus_read_config_dword+0x6c/0x94)
-> [   52.174316]  r9:adf4e910 r8:809bc51c r7:00000000 r6:60000153 r5:adc3fd5c r4:ae726000
-> [   52.182152] [<802d64c8>] (pci_bus_read_config_dword) from [<802db588>] (pci_restore_config_dword+0x54/0xa4)
-> [   52.191894]  r6:00000024 r5:0000000a r4:ae61e000
-> [   52.196570] [<802db534>] (pci_restore_config_dword) from [<802dd150>] (pci_restore_state.part.37+0x7c/0x1f8)
-> [   52.206399]  r8:802e086c r7:ae61dfe8 r6:519e2024 r5:ae61e000 r4:ae61dffc
-> [   52.213187] [<802dd0d4>] (pci_restore_state.part.37) from [<802dd2e8>] (pci_restore_state+0x1c/0x20)
-> [   52.222322]  r7:adc3fea8 r6:809d90e0 r5:ae61e000 r4:ae61e068
-> [   52.228056] [<802dd2cc>] (pci_restore_state) from [<802e0894>] (pci_pm_resume_noirq+0x28/0xa4)
-> [   52.236683] [<802e086c>] (pci_pm_resume_noirq) from [<8037ea1c>] (dpm_run_callback.isra.12+0x34/0x7c)
-> 
-> Signed-off-by: Richard Zhu <r65037@freescale.com>
-> ---
->  drivers/pci/host/pci-imx6.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index be953aa..e60c195 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -521,7 +521,7 @@ static void imx6_pcie_reset_phy(struct pcie_port *pp)
->  static int imx6_pcie_link_up(struct pcie_port *pp)
->  {
->  	u32 rc, debug_r0, rx_valid;
-> -	int count = 5;
-> +	int count = 500;
->  
->  	/*
->  	 * Test if the PHY reports that the link is up and also that the LTSSM
-> @@ -552,7 +552,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
->  		 * Wait a little bit, then re-check if the link finished
->  		 * the training.
->  		 */
-> -		usleep_range(1000, 2000);
-> +		udelay(10);
->  	}
->  	/*
->  	 * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
-
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index fb45663395ca..2439d383c10c 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -14,6 +14,7 @@
+ #include <linux/dmar.h>
+ #include <linux/hpet.h>
+ #include <linux/msi.h>
++#include <linux/irqdomain.h>
+ #include <asm/msidef.h>
+ #include <asm/hpet.h>
+ #include <asm/hw_irq.h>
+@@ -145,23 +146,20 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ {
+ 	struct msi_desc *msidesc;
+-	unsigned int irq;
+-	int node, ret;
++	int irq, ret;
+ 
+ 	/* Multiple MSI vectors only supported with interrupt remapping */
+ 	if (type == PCI_CAP_ID_MSI && nvec > 1)
+ 		return 1;
+ 
+-	node = dev_to_node(&dev->dev);
+-
+ 	list_for_each_entry(msidesc, &dev->msi_list, list) {
+-		irq = irq_alloc_hwirq(node);
+-		if (!irq)
++		irq = irq_domain_alloc_irqs(NULL, -1, 1, NUMA_NO_NODE, NULL);
++		if (irq <= 0)
+ 			return -ENOSPC;
+ 
+ 		ret = setup_msi_irq(dev, msidesc, irq, 0);
+ 		if (ret < 0) {
+-			irq_free_hwirq(irq);
++			irq_domain_free_irqs(irq, 1);
+ 			return ret;
+ 		}
+ 
+@@ -171,7 +169,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 
+ void native_teardown_msi_irq(unsigned int irq)
+ {
+-	irq_free_hwirq(irq);
++	irq_domain_free_irqs(irq, 1);
+ }
+ 
+ #ifdef CONFIG_DMAR_TABLE
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+1.7.10.4
 
