@@ -1,58 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:56583 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754483AbaIWJSl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 05:18:41 -0400
-Message-ID: <1411463916.3256.4.camel@pengutronix.de>
-Subject: Re: [PATCH v2]PCI: imx6: enable pcie on imx6sx sdb and imx6qdl
- sabreauto.
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Richard Zhu <r65037@freescale.com>
-Cc: linux-pci-owner@vger.kernel.org, linux-pci@vger.kernel.org,
-	shawn.guo@freescale.com, festevam@gmail.com, tharvey@gateworks.com
-Date: Tue, 23 Sep 2014 11:18:36 +0200
-In-Reply-To: <1411445498-20250-1-git-send-email-r65037@freescale.com>
-References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC Part1 v1 02/18] x86, irq: Kill fourth parameter of IO_APIC_get_PCI_irq_vector()
+Date: Thu, 11 Sep 2014 16:24:49 +0800
+Message-Id: <1410423905-26239-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Richard,
+Now the fourth parameter of IO_APIC_get_PCI_irq_vector() is useless,
+so kill it.  Assume it's only used by ibmphp PCI hotplug driver
+though IO_APIC_get_PCI_irq_vector() has been exported,
 
-Am Dienstag, den 23.09.2014, 12:11 +0800 schrieb Richard Zhu:
-> Hi Tim:
-> After I changed the wait clocks stabilize delay after pcie_ref_en is set
-> in this patch-set.
-> Can you help to make a double check whether it's ok or not at your side?
-> 
-> Thanks in advanced.
-> 
-I'll go through this series today. Please give me some time to properly
-comment on every patch before posting a new version of the series.
-Thanks.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hw_irq.h     |    2 +-
+ arch/x86/kernel/apic/io_apic.c    |   13 +++----------
+ arch/x86/pci/irq.c                |    6 ++----
+ drivers/pci/hotplug/ibmphp_core.c |    5 +----
+ 4 files changed, 7 insertions(+), 19 deletions(-)
 
-> Main changes since the v1:
-> 1. Regarding to Lucas' comments, seperated the enalbe pcie on
-> imx6qdl sabreauto patch.
-> 2. Add the description why the wait clock stabilize delay should
-> be run after pcie_ref_en is set.
-> 3. Return 0 directly in suspend call back.
-> 
-> Main changes since the RFC:
-> Thanks for quick review from Lucas.
-> 1. seperate the smashed patch-set.
-> 2. remove the "power-on-gpio".
-> 3. add/update the pcie-supply of the dts and binding.
-> 4. 
-> 
-> [PATCH v2 1/5] PCI: imx6: enable pcie on imx6qdl sabreauto
-> [PATCH v2 2/5] PCI: imx6: wait the clocks to stabilize after ref_en
-> [PATCH v2 3/5] PCI: imx6: update dts and binding for imx6sx pcie
-> [PATCH v2 4/5] PCI: imx6: add imx6sx pcie related gpr bits
-> [PATCH v2 5/5] PCI: imx6: add imx6sx pcie support
-
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 4615906d83df..64330c2e172e 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -158,7 +158,7 @@ extern void send_cleanup_vector(struct irq_cfg *);
+ struct irq_data;
+ int __ioapic_set_affinity(struct irq_data *, const struct cpumask *,
+ 			  unsigned int *dest_id);
+-extern int IO_APIC_get_PCI_irq_vector(int bus, int devfn, int pin, struct io_apic_irq_attr *irq_attr);
++extern int IO_APIC_get_PCI_irq_vector(int bus, int devfn, int pin);
+ extern void setup_ioapic_dest(void);
+ 
+ extern void enable_IO_APIC(void);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index f054c8803939..20e1be110ddb 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1179,8 +1179,7 @@ void mp_unmap_irq(int irq)
+  * Find a specific PCI IRQ entry.
+  * Not an __init, possibly needed by modules
+  */
+-int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
+-				struct io_apic_irq_attr *irq_attr)
++int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin)
+ {
+ 	int irq, i, best_ioapic = -1, best_idx = -1;
+ 
+@@ -1234,14 +1233,8 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
+ 		return -1;
+ 
+ out:
+-	irq = pin_2_irq(best_idx, best_ioapic, mp_irqs[best_idx].dstirq,
+-			IOAPIC_MAP_ALLOC);
+-	if (irq > 0)
+-		set_io_apic_irq_attr(irq_attr, best_ioapic,
+-				     mp_irqs[best_idx].dstirq,
+-				     irq_trigger(best_idx),
+-				     irq_polarity(best_idx));
+-	return irq;
++	return pin_2_irq(best_idx, best_ioapic, mp_irqs[best_idx].dstirq,
++			 IOAPIC_MAP_ALLOC);
+ }
+ EXPORT_SYMBOL(IO_APIC_get_PCI_irq_vector);
+ 
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index a47e2dea0972..7765b3facd4b 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1200,14 +1200,12 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ #ifdef CONFIG_X86_IO_APIC
+ 			struct pci_dev *temp_dev;
+ 			int irq;
+-			struct io_apic_irq_attr irq_attr;
+ 
+ 			if (dev->irq_managed && dev->irq > 0)
+ 				return 0;
+ 
+ 			irq = IO_APIC_get_PCI_irq_vector(dev->bus->number,
+-						PCI_SLOT(dev->devfn),
+-						pin - 1, &irq_attr);
++						PCI_SLOT(dev->devfn), pin - 1);
+ 			/*
+ 			 * Busses behind bridges are typically not listed in the MP-table.
+ 			 * In this case we have to look up the IRQ based on the parent bus,
+@@ -1221,7 +1219,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 				pin = pci_swizzle_interrupt_pin(dev, pin);
+ 				irq = IO_APIC_get_PCI_irq_vector(bridge->bus->number,
+ 						PCI_SLOT(bridge->devfn),
+-						pin - 1, &irq_attr);
++						pin - 1);
+ 				if (irq >= 0)
+ 					dev_warn(&dev->dev, "using bridge %s "
+ 						 "INT %c to get IRQ %d\n",
+diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+index f7b8684a7739..adb85e1726d1 100644
+--- a/drivers/pci/hotplug/ibmphp_core.c
++++ b/drivers/pci/hotplug/ibmphp_core.c
+@@ -155,13 +155,10 @@ int ibmphp_init_devno(struct slot **cur_slot)
+ 	for (loop = 0; loop < len; loop++) {
+ 		if ((*cur_slot)->number == rtable->slots[loop].slot &&
+ 		    (*cur_slot)->bus == rtable->slots[loop].bus) {
+-			struct io_apic_irq_attr irq_attr;
+-
+ 			(*cur_slot)->device = PCI_SLOT(rtable->slots[loop].devfn);
+ 			for (i = 0; i < 4; i++)
+ 				(*cur_slot)->irq[i] = IO_APIC_get_PCI_irq_vector((int) (*cur_slot)->bus,
+-						(int) (*cur_slot)->device, i,
+-						&irq_attr);
++						(int) (*cur_slot)->device, i);
+ 
+ 			debug("(*cur_slot)->irq[0] = %x\n",
+ 					(*cur_slot)->irq[0]);
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+1.7.10.4
 
