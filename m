@@ -1,223 +1,133 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0130.outbound.protection.outlook.com ([65.55.169.130]:48309
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752494AbaINGbL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 14 Sep 2014 02:31:11 -0400
-From: <suravee.suthikulpanit@amd.com>
-To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
-	<jason@lakedaemon.net>
-CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
-	<Will.Deacon@arm.com>, <tglx@linutronix.de>,
-	<Harish.Kasiviswanathan@amd.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"Marc Zyngier" <Marc.Zyngier@arm.com>
-Subject: [PATCH 2/2 V6] irqchip: gicv2m: Add support for multiple MSI for ARM64 GICv2m
-Date: Sun, 14 Sep 2014 01:30:16 -0500
-Message-ID: <1410676216-27953-3-git-send-email-suravee.suthikulpanit@amd.com>
-In-Reply-To: <1410676216-27953-1-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1410676216-27953-1-git-send-email-suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v5 08/15] x86, irq: Remove __init marker for functions will be used by IOAPIC hotplug
+Date: Thu, 11 Sep 2014 16:05:51 +0800
+Message-Id: <1410422758-24942-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Remove __init marker for functions which will be used by IOAPIC hotplug
+at runtime.
 
-This patch extend GICv2m MSI to support multiple MSI in ARM64.
-
-This requires the common arch_setup_msi_irqs() to be overwriten
-with ARM64 version which does not return 1 for PCI_CAP_ID_MSI and
-nvec > 1.
-
-Cc: Mark Rutland <Mark.Rutland@arm.com>
-Cc: Marc Zyngier <Marc.Zyngier@arm.com>
-Cc: Jason Cooper <jason@lakedaemon.net>
-Cc: Catalin Marinas <Catalin.Marinas@arm.com>
-Cc: Will Deacon <Will.Deacon@arm.com>
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/arm64/kernel/Makefile    |  1 +
- arch/arm64/kernel/msi.c       | 41 ++++++++++++++++++++
- drivers/irqchip/irq-gic-v2m.c | 87 ++++++++++++++++++++++++++++++++++++++-----
- 3 files changed, 119 insertions(+), 10 deletions(-)
- create mode 100644 arch/arm64/kernel/msi.c
+ arch/x86/include/asm/io_apic.h |    4 ++--
+ arch/x86/kernel/apic/io_apic.c |   18 +++++++++---------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
-index df7ef87..a921c42 100644
---- a/arch/arm64/kernel/Makefile
-+++ b/arch/arm64/kernel/Makefile
-@@ -29,6 +29,7 @@ arm64-obj-$(CONFIG_ARM64_CPU_SUSPEND)	+= sleep.o suspend.o
- arm64-obj-$(CONFIG_JUMP_LABEL)		+= jump_label.o
- arm64-obj-$(CONFIG_KGDB)		+= kgdb.o
- arm64-obj-$(CONFIG_EFI)			+= efi.o efi-stub.o efi-entry.o
-+arm64-obj-$(CONFIG_PCI_MSI)		+= msi.o
- 
- obj-y					+= $(arm64-obj-y) vdso/
- obj-m					+= $(arm64-obj-m)
-diff --git a/arch/arm64/kernel/msi.c b/arch/arm64/kernel/msi.c
-new file mode 100644
-index 0000000..a295862
---- /dev/null
-+++ b/arch/arm64/kernel/msi.c
-@@ -0,0 +1,41 @@
-+/*
-+ * ARM64 architectural MSI implemention
-+ *
-+ * Support for Message Signalelled Interrupts for systems that
-+ * implement ARM Generic Interrupt Controller: GICv2m.
-+ *
-+ * Copyright (C) 2014 Advanced Micro Devices, Inc.
-+ * Authors: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License version 2 as published
-+ * by the Free Software Foundation.
-+ */
-+
-+#include <linux/irq.h>
-+#include <linux/msi.h>
-+#include <linux/pci.h>
-+
-+/*
-+ * ARM64 function for seting up MSI irqs.
-+ * Based on driver/pci/msi.c: arch_setup_msi_irqs().
-+ *
-+ * Note:
-+ * Current implementation assumes that all interrupt controller used in
-+ * ARM64 architecture _MUST_ supports multi-MSI.
-+ */
-+int arm64_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+{
-+	struct msi_desc *entry;
-+	int ret;
-+
-+	list_for_each_entry(entry, &dev->msi_list, list) {
-+		ret = arch_setup_msi_irq(dev, entry);
-+		if (ret < 0)
-+			return ret;
-+		if (ret > 0)
-+			return -ENOSPC;
-+	}
-+
-+	return 0;
-+}
-diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
-index 499bfb9..4ddb47d 100644
---- a/drivers/irqchip/irq-gic-v2m.c
-+++ b/drivers/irqchip/irq-gic-v2m.c
-@@ -99,13 +99,26 @@ static void gicv2m_teardown_msi_irq(struct msi_chip *chip, unsigned int irq)
- 	spin_unlock(&data->msi_cnt_lock);
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 1733ab49ac5e..a666dcdeea67 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -188,8 +188,8 @@ extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
+ extern u32 mp_pin_to_gsi(int ioapic, int pin);
+ extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
+ extern void mp_unmap_irq(int irq);
+-extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
+-				      struct ioapic_domain_cfg *cfg);
++extern void mp_register_ioapic(int id, u32 address, u32 gsi_base,
++			       struct ioapic_domain_cfg *cfg);
+ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			    irq_hw_number_t hwirq);
+ extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 9011c5fa5aad..81f014891237 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3454,7 +3454,7 @@ io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
+ 	return ret;
  }
  
-+static int gicv2m_msi_get_vec_count(struct pci_dev *pdev, struct msi_desc *desc)
-+{
-+	int ret = -EINVAL;
-+#ifdef CONFIG_PCI_MSI
-+	if (desc->msi_attrib.is_msix)
-+		ret = pci_msix_vec_count(pdev);
-+	else
-+		ret = pci_msi_vec_count(pdev);
-+#endif
-+	return ret;
-+}
-+
- static int gicv2m_setup_msi_irq(struct msi_chip *chip,
- 				struct pci_dev *pdev,
- 				struct msi_desc *desc)
+-static int __init io_apic_get_redir_entries(int ioapic)
++static int io_apic_get_redir_entries(int ioapic)
  {
--	int irq, avail;
-+	int i, irq, nvec, avail;
- 	struct msi_msg msg;
- 	phys_addr_t addr;
-+	struct msi_desc *entry;
- 	struct v2m_data *data = container_of(chip, struct v2m_data, msi_chip);
+ 	union IO_APIC_reg_01	reg_01;
+ 	unsigned long flags;
+@@ -3500,7 +3500,7 @@ int __init arch_probe_nr_irqs(void)
+ }
  
- 	if (!desc) {
-@@ -114,16 +127,70 @@ static int gicv2m_setup_msi_irq(struct msi_chip *chip,
- 		return -EINVAL;
- 	}
+ #ifdef CONFIG_X86_32
+-static int __init io_apic_get_unique_id(int ioapic, int apic_id)
++static int io_apic_get_unique_id(int ioapic, int apic_id)
+ {
+ 	union IO_APIC_reg_00 reg_00;
+ 	static physid_mask_t apic_id_map = PHYSID_MASK_NONE;
+@@ -3575,7 +3575,7 @@ static int __init io_apic_get_unique_id(int ioapic, int apic_id)
+ 	return apic_id;
+ }
  
--	avail = alloc_msi_irq(data, 1, &irq);
--	if (avail != 0) {
--		dev_err(&pdev->dev,
--			"GICv2m: MSI setup failed. Cannnot allocate IRQ\n");
--		return -ENOSPC;
--	}
-+	if (desc->msi_attrib.is_msix) {
-+		/**
-+		 * For MSIx:
-+		 * We allocate one irq at a time
-+		 */
-+		avail = alloc_msi_irq(data, 1, &irq);
-+		if (avail != 0) {
-+			dev_err(&pdev->dev,
-+				"GICv2m: MSI setup failed. Cannnot allocate IRQ\n");
-+			return -ENOSPC;
-+		}
+-static u8 __init io_apic_unique_id(int idx, u8 id)
++static u8 io_apic_unique_id(int idx, u8 id)
+ {
+ 	if ((boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) &&
+ 	    !APIC_XAPIC(apic_version[boot_cpu_physical_apicid]))
+@@ -3584,7 +3584,7 @@ static u8 __init io_apic_unique_id(int idx, u8 id)
+ 		return id;
+ }
+ #else
+-static u8 __init io_apic_unique_id(int idx, u8 id)
++static u8 io_apic_unique_id(int idx, u8 id)
+ {
+ 	int i;
+ 	u8 new_id;
+@@ -3623,7 +3623,7 @@ static u8 __init io_apic_unique_id(int idx, u8 id)
+ }
+ #endif
  
--	irq_set_chip_data(irq, chip);
--	irq_set_msi_desc(irq, desc);
--	irq_set_irq_type(irq, IRQ_TYPE_EDGE_RISING);
-+		irq_set_chip_data(irq, chip);
-+		irq_set_msi_desc(irq, desc);
-+		irq_set_irq_type(irq, IRQ_TYPE_EDGE_RISING);
-+	} else {
-+		/**
-+		 * For MSI and Multi-MSI:
-+		 * All requested irqs are allocated and setup at
-+		 * once. Subsequent calls to this function would simply return
-+		 * success. This is to avoid having to implement a separate
-+		 * function for setting up multiple irqs.
-+		 */
-+		BUG_ON(list_empty(&pdev->msi_list));
-+		WARN_ON(!list_is_singular(&pdev->msi_list));
-+
-+		nvec = gicv2m_msi_get_vec_count(pdev, desc);
-+		if (WARN_ON(nvec <= 0))
-+			return nvec;
-+
-+		entry = list_first_entry(&pdev->msi_list,
-+					 struct msi_desc, list);
-+
-+		if ((nvec > 1) && (entry->msi_attrib.multiple))
-+			return 0;
-+
-+		avail = alloc_msi_irq(data, nvec, &irq);
-+		if (avail != 0) {
-+			dev_err(&pdev->dev,
-+				"GICv2m: Failed to allocate %d irqs.\n", nvec);
-+			return avail;
-+		}
-+
-+		if (nvec > 1) {
-+			/* Set lowest of the new interrupts assigned
-+			 * to the PCI device
-+			 */
-+			entry->nvec_used = nvec;
-+			entry->msi_attrib.multiple = ilog2(
-+						__roundup_pow_of_two(nvec));
-+		}
-+
-+		for (i = 0; i < nvec; i++) {
-+			irq_set_chip_data(irq+i, chip);
-+			if (irq_set_msi_desc_off(irq, i, entry)) {
-+				dev_err(&pdev->dev,
-+					"GICv2m: Failed to set up MSI irq %d\n",
-+					(irq+i));
-+				return -EINVAL;
-+			}
-+
-+			irq_set_irq_type((irq+i), IRQ_TYPE_EDGE_RISING);
-+		}
-+	}
+-static int __init io_apic_get_version(int ioapic)
++static int io_apic_get_version(int ioapic)
+ {
+ 	union IO_APIC_reg_01	reg_01;
+ 	unsigned long flags;
+@@ -3827,7 +3827,7 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
+ 	return gsi - gsi_cfg->gsi_base;
+ }
  
- 	addr = data->res.start + V2M_MSI_SETSPI_NS;
- 	msg.address_hi = (u32)(addr >> 32);
+-static __init int bad_ioapic(unsigned long address)
++static int bad_ioapic(unsigned long address)
+ {
+ 	if (nr_ioapics >= MAX_IO_APICS) {
+ 		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
+@@ -3841,7 +3841,7 @@ static __init int bad_ioapic(unsigned long address)
+ 	return 0;
+ }
+ 
+-static __init int bad_ioapic_register(int idx)
++static int bad_ioapic_register(int idx)
+ {
+ 	union IO_APIC_reg_00 reg_00;
+ 	union IO_APIC_reg_01 reg_01;
+@@ -3860,8 +3860,8 @@ static __init int bad_ioapic_register(int idx)
+ 	return 0;
+ }
+ 
+-void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
+-			       struct ioapic_domain_cfg *cfg)
++void mp_register_ioapic(int id, u32 address, u32 gsi_base,
++			struct ioapic_domain_cfg *cfg)
+ {
+ 	int idx = 0;
+ 	int entries;
 -- 
-1.9.3
+1.7.10.4
 
