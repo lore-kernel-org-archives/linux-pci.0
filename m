@@ -1,85 +1,282 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:44408 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751070AbaIVOx0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 10:53:26 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo4Z1s7u08W6o+8Yxu7-QYN6YS9zt11=hH535YFYAwVKNw@mail.gmail.com>
-References: <CAE9FiQXQesrDMqf1b6ZhHdmY_wEEUrOEvNO4N_d6WtaNMGNLww@mail.gmail.com>
- <gh4mwcef0r.fsf@quad.gouders.net> <CAE9FiQWgioBeVmfWCaE38BrkjbWKaS+_FYYdmdd+7X8fpeEgnQ@mail.gmail.com>
- <ghoaukcx6b.fsf@quad.gouders.net> <CAE9FiQUk-sAHnjfBvNeHQWibJRqbPE1V0UtDtARtwxmS=7aQrw@mail.gmail.com>
- <ghk358crbe.fsf@quad.gouders.net> <CAE9FiQUeP84585-4b+Y6WBVD3zqOi7ch_OXytsTmKEz9AyZ3Vg@mail.gmail.com>
- <20140913040716.GA28080@google.com> <gh8ulnn9yo.fsf@quad.gouders.net>
- <gh8uln71g1.fsf@lena.gouders.net> <20140919183943.GD19374@google.com>
- <ghvboit9qt.fsf@lena.gouders.net> <CAErSpo4Z1s7u08W6o+8Yxu7-QYN6YS9zt11=hH535YFYAwVKNw@mail.gmail.com>
-From: Andreas Noever <andreas.noever@gmail.com>
-Date: Mon, 22 Sep 2014 16:53:05 +0200
-Message-ID: <CAMxnaaWS+nxBM0gdLo0Qv3-x4fVwT0ePTr20miZvnpJUMgQ-NQ@mail.gmail.com>
-Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dirk Gouders <dirk@gouders.net>, Yinghai Lu <yinghai@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC Part1 v1 11/18] x86, irq: Move HT IRQ related code from io_apic.c into htirq.c
+Date: Thu, 11 Sep 2014 16:24:58 +0800
+Message-Id: <1410423905-26239-12-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 22, 2014 at 4:25 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Sat, Sep 20, 2014 at 12:41 PM, Dirk Gouders <dirk@gouders.net> wrote:
->> Bjorn Helgaas <bhelgaas@google.com> writes:
->>
->>> On Sat, Sep 13, 2014 at 09:41:34PM +0200, Dirk Gouders wrote:
->>>> So, I did some tests on the VX50 which probably wasn't the worst idea,
->>>> because it behaves different than the test machine.
->>>>
->>>> Summary:
->>>>
->>>> 1) Bjorn's back pocket patch works on the VX50.
->>>>
->>>>    On the test machine it causes a trace, mount_root has to do with
->>>>    it.  I tried to use netconsole but it complained the interface were
->>>>    not ready.
->>>
->>> OK, that's good.  I put this revert patch in for-linus for v3.17.  I regard
->>> this as a temporary fix, not the real solution.  My guess is the test
->>> machine doesn't boot because you're missing a driver, so not related to the
->>> revert patch.
->>
->> I assumed my limit-host-bridge-aperture-and-ignore-bridges-patch on top
->> of your patch caused this, so I took a closer look.
->>
->> Your patch works fine with current rc5+ on the test machine -- with and
->> without my additional patch.
->
-> Great, thanks for testing that!
->
->> Other various today's test results (VX50) will be appended to bugzilla
->> in a few moments.
->
-> The Windows Server 2008 boot shows that Windows reconfigures the
-> 00:0e.0 bridge so it fits inside the [bus 00-07] aperture reported by
-> the host bridge _CRS, and the LSI FC adapter is not enumerated at all.
-> That's basically the same behavior that prompted your bug report.
-> This suggests that Windows does *not* reset the secondary bus when
-> changing the bridge configuration.
->
-> For v3.17, I reverted 1820ffdccb9b ("PCI: Make sure bus number
-> resources stay within their parents bounds").  For the future, I think
-> we should do a quirk to fix the _CRS, similar to what Andreas has
-> posted, and apply 1820ffdccb9b again.
->
-> But I think the quirk should be specific to this system and BIOS.  I
-> don't want to add a workaround that silently covers up Linux and BIOS
-> bugs.  The reason amd_bus.c exists is because Linux was not smart
-> enough to pay attention to _CRS.  Linux is now pretty good at that, so
-> the reason for amd_bus.c is mostly gone.  I don't want to add new
-> dependencies on amd_bus.c that will prevent us from phasing it out.
-Why not always trust amd_bus over _CRS? Is there a scenario in which
-amd_bus is wrong?
+Create arch/x86/kernel/apic/htirq.c to host Hypertransport IRQ related
+code, preparing for enabling hierarchy irqdomain.
 
-Are these methods (like _CRS) meant to set limits for us, or are they
-simply used to report the configuration decisions made by the BIOS? So
-if _CRS says that the window is [00-07] would it be ok for us to
-simply increase it (possibly after reprogramming the registers in
-amd_bus)?
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/Makefile  |    1 +
+ arch/x86/kernel/apic/htirq.c   |  106 ++++++++++++++++++++++++++++++++++++++++
+ arch/x86/kernel/apic/io_apic.c |   91 ----------------------------------
+ 3 files changed, 107 insertions(+), 91 deletions(-)
+ create mode 100644 arch/x86/kernel/apic/htirq.c
+
+diff --git a/arch/x86/kernel/apic/Makefile b/arch/x86/kernel/apic/Makefile
+index aac300750f0e..8bb12ddc5db8 100644
+--- a/arch/x86/kernel/apic/Makefile
++++ b/arch/x86/kernel/apic/Makefile
+@@ -7,6 +7,7 @@ obj-y				+= hw_nmi.o
+ 
+ obj-$(CONFIG_X86_IO_APIC)	+= io_apic.o
+ obj-$(CONFIG_PCI_MSI)		+= msi.o
++obj-$(CONFIG_HT_IRQ)		+= htirq.o
+ obj-$(CONFIG_SMP)		+= ipi.o
+ 
+ ifeq ($(CONFIG_X86_64),y)
+diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
+new file mode 100644
+index 000000000000..1cd879fe39d7
+--- /dev/null
++++ b/arch/x86/kernel/apic/htirq.c
+@@ -0,0 +1,106 @@
++/*
++ * Support Hypertransport IRQ
++ *
++ * Copyright (C) 1997, 1998, 1999, 2000, 2009 Ingo Molnar, Hajnalka Szabo
++ *	Moved from arch/x86/kernel/apic/io_apic.c.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++#include <linux/mm.h>
++#include <linux/interrupt.h>
++#include <linux/init.h>
++#include <linux/device.h>
++#include <linux/pci.h>
++#include <linux/htirq.h>
++#include <asm/hw_irq.h>
++#include <asm/apic.h>
++#include <asm/hypertransport.h>
++
++/*
++ * Hypertransport interrupt support
++ */
++static void target_ht_irq(unsigned int irq, unsigned int dest, u8 vector)
++{
++	struct ht_irq_msg msg;
++
++	fetch_ht_irq_msg(irq, &msg);
++
++	msg.address_lo &= ~(HT_IRQ_LOW_VECTOR_MASK | HT_IRQ_LOW_DEST_ID_MASK);
++	msg.address_hi &= ~(HT_IRQ_HIGH_DEST_ID_MASK);
++
++	msg.address_lo |= HT_IRQ_LOW_VECTOR(vector) | HT_IRQ_LOW_DEST_ID(dest);
++	msg.address_hi |= HT_IRQ_HIGH_DEST_ID(dest);
++
++	write_ht_irq_msg(irq, &msg);
++}
++
++static int
++ht_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
++{
++	struct irq_cfg *cfg = data->chip_data;
++	unsigned int dest;
++	int ret;
++
++	ret = apic_set_affinity(data, mask, &dest);
++	if (ret)
++		return ret;
++
++	target_ht_irq(data->irq, dest, cfg->vector);
++	return IRQ_SET_MASK_OK_NOCOPY;
++}
++
++static struct irq_chip ht_irq_chip = {
++	.name			= "PCI-HT",
++	.irq_mask		= mask_ht_irq,
++	.irq_unmask		= unmask_ht_irq,
++	.irq_ack		= apic_ack_edge,
++	.irq_set_affinity	= ht_set_affinity,
++	.irq_retrigger		= apic_retrigger_irq,
++};
++
++int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
++{
++	struct irq_cfg *cfg;
++	struct ht_irq_msg msg;
++	unsigned dest;
++	int err;
++
++	if (disable_apic)
++		return -ENXIO;
++
++	cfg = irq_cfg(irq);
++	err = assign_irq_vector(irq, cfg, apic->target_cpus());
++	if (err)
++		return err;
++
++	err = apic->cpu_mask_to_apicid_and(cfg->domain,
++					   apic->target_cpus(), &dest);
++	if (err)
++		return err;
++
++	msg.address_hi = HT_IRQ_HIGH_DEST_ID(dest);
++
++	msg.address_lo =
++		HT_IRQ_LOW_BASE |
++		HT_IRQ_LOW_DEST_ID(dest) |
++		HT_IRQ_LOW_VECTOR(cfg->vector) |
++		((apic->irq_dest_mode == 0) ?
++			HT_IRQ_LOW_DM_PHYSICAL :
++			HT_IRQ_LOW_DM_LOGICAL) |
++		HT_IRQ_LOW_RQEOI_EDGE |
++		((apic->irq_delivery_mode != dest_LowestPrio) ?
++			HT_IRQ_LOW_MT_FIXED :
++			HT_IRQ_LOW_MT_ARBITRATED) |
++		HT_IRQ_LOW_IRQ_MASKED;
++
++	write_ht_irq_msg(irq, &msg);
++
++	irq_set_chip_and_handler_name(irq, &ht_irq_chip,
++				      handle_edge_irq, "edge");
++
++	dev_dbg(&dev->dev, "irq %d for HT\n", irq);
++
++	return 0;
++}
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index b9fdef0299a4..bca60cd61950 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -32,7 +32,6 @@
+ #include <linux/module.h>
+ #include <linux/syscore_ops.h>
+ #include <linux/irqdomain.h>
+-#include <linux/htirq.h>
+ #include <linux/freezer.h>
+ #include <linux/kthread.h>
+ #include <linux/jiffies.h>	/* time_after() */
+@@ -49,7 +48,6 @@
+ #include <asm/dma.h>
+ #include <asm/timer.h>
+ #include <asm/i8259.h>
+-#include <asm/hypertransport.h>
+ #include <asm/setup.h>
+ #include <asm/irq_remapping.h>
+ #include <asm/hw_irq.h>
+@@ -2449,95 +2447,6 @@ static int __init ioapic_init_ops(void)
+ 
+ device_initcall(ioapic_init_ops);
+ 
+-/*
+- * Hypertransport interrupt support
+- */
+-#ifdef CONFIG_HT_IRQ
+-
+-static void target_ht_irq(unsigned int irq, unsigned int dest, u8 vector)
+-{
+-	struct ht_irq_msg msg;
+-	fetch_ht_irq_msg(irq, &msg);
+-
+-	msg.address_lo &= ~(HT_IRQ_LOW_VECTOR_MASK | HT_IRQ_LOW_DEST_ID_MASK);
+-	msg.address_hi &= ~(HT_IRQ_HIGH_DEST_ID_MASK);
+-
+-	msg.address_lo |= HT_IRQ_LOW_VECTOR(vector) | HT_IRQ_LOW_DEST_ID(dest);
+-	msg.address_hi |= HT_IRQ_HIGH_DEST_ID(dest);
+-
+-	write_ht_irq_msg(irq, &msg);
+-}
+-
+-static int
+-ht_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+-{
+-	struct irq_cfg *cfg = data->chip_data;
+-	unsigned int dest;
+-	int ret;
+-
+-	ret = apic_set_affinity(data, mask, &dest);
+-	if (ret)
+-		return ret;
+-
+-	target_ht_irq(data->irq, dest, cfg->vector);
+-	return IRQ_SET_MASK_OK_NOCOPY;
+-}
+-
+-static struct irq_chip ht_irq_chip = {
+-	.name			= "PCI-HT",
+-	.irq_mask		= mask_ht_irq,
+-	.irq_unmask		= unmask_ht_irq,
+-	.irq_ack		= apic_ack_edge,
+-	.irq_set_affinity	= ht_set_affinity,
+-	.irq_retrigger		= apic_retrigger_irq,
+-};
+-
+-int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
+-{
+-	struct irq_cfg *cfg;
+-	struct ht_irq_msg msg;
+-	unsigned dest;
+-	int err;
+-
+-	if (disable_apic)
+-		return -ENXIO;
+-
+-	cfg = irq_cfg(irq);
+-	err = assign_irq_vector(irq, cfg, apic->target_cpus());
+-	if (err)
+-		return err;
+-
+-	err = apic->cpu_mask_to_apicid_and(cfg->domain,
+-					   apic->target_cpus(), &dest);
+-	if (err)
+-		return err;
+-
+-	msg.address_hi = HT_IRQ_HIGH_DEST_ID(dest);
+-
+-	msg.address_lo =
+-		HT_IRQ_LOW_BASE |
+-		HT_IRQ_LOW_DEST_ID(dest) |
+-		HT_IRQ_LOW_VECTOR(cfg->vector) |
+-		((apic->irq_dest_mode == 0) ?
+-			HT_IRQ_LOW_DM_PHYSICAL :
+-			HT_IRQ_LOW_DM_LOGICAL) |
+-		HT_IRQ_LOW_RQEOI_EDGE |
+-		((apic->irq_delivery_mode != dest_LowestPrio) ?
+-			HT_IRQ_LOW_MT_FIXED :
+-			HT_IRQ_LOW_MT_ARBITRATED) |
+-		HT_IRQ_LOW_IRQ_MASKED;
+-
+-	write_ht_irq_msg(irq, &msg);
+-
+-	irq_set_chip_and_handler_name(irq, &ht_irq_chip,
+-				      handle_edge_irq, "edge");
+-
+-	dev_printk(KERN_DEBUG, &dev->dev, "irq %d for HT\n", irq);
+-
+-	return 0;
+-}
+-#endif /* CONFIG_HT_IRQ */
+-
+ static int
+ io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
+ {
+-- 
+1.7.10.4
+
