@@ -1,126 +1,141 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:44294 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750742AbaIDN2y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 09:28:54 -0400
-Received: by mail-pd0-f175.google.com with SMTP id z10so339224pdj.34
-        for <linux-pci@vger.kernel.org>; Thu, 04 Sep 2014 06:28:53 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: rajatxjain@gmail.com
-In-Reply-To: <CAA93t1rLa27HY11ZEEGqZ6X5+01adgizR6U=+smcKD9pxHJk5Q@mail.gmail.com>
-References: <CAErSpo68rteOFbbX5n6GccPc9kpt-UL9FRS7JbOMAoDLR-7mtA@mail.gmail.com>
-	<CAA93t1rLa27HY11ZEEGqZ6X5+01adgizR6U=+smcKD9pxHJk5Q@mail.gmail.com>
-Date: Thu, 4 Sep 2014 06:28:52 -0700
-Message-ID: <CAA93t1o5t4VSNbLHKxBpRyUDH_U3yzU1F00BjO04YvwYqSwhvw@mail.gmail.com>
-Subject: Re: pciehp regression (bug #79701)
-From: Rajat Jain <rajatxjain@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC Part2 v1 08/21] x86, htirq: Use new irqdomain interfaces to allocate/free IRQ
+Date: Thu, 11 Sep 2014 22:03:35 +0800
+Message-Id: <1410444228-3134-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Updated
+Use new irqdomain interfaces to allocate/free IRQ for HTIRQ, so we could
+kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=79701
+This patch changes the interfaces between arch independent PCI driver
+and arch specific code. Currently HT_IRQ is only enabled on x86, so it
+shouldn't break other architectures.
 
-with the possible options to make forward progress.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/htirq.c |   26 +++++++++++++-------------
+ drivers/pci/htirq.c          |    7 +++----
+ include/linux/htirq.h        |    2 ++
+ 3 files changed, 18 insertions(+), 17 deletions(-)
 
-Thanks,
+diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
+index 6f527b02ac4c..55cb061a95cb 100644
+--- a/arch/x86/kernel/apic/htirq.c
++++ b/arch/x86/kernel/apic/htirq.c
+@@ -14,6 +14,7 @@
+ #include <linux/device.h>
+ #include <linux/pci.h>
+ #include <linux/htirq.h>
++#include <linux/irqdomain.h>
+ #include <asm/hw_irq.h>
+ #include <asm/apic.h>
+ #include <asm/hypertransport.h>
+@@ -60,31 +61,30 @@ static struct irq_chip ht_irq_chip = {
+ 	.irq_retrigger		= apic_retrigger_irq,
+ };
+ 
++int arch_alloc_ht_irq(struct pci_dev *dev)
++{
++	return irq_domain_alloc_irqs(NULL, -1, 1, dev_to_node(&dev->dev), NULL);
++}
++
++void arch_free_ht_irq(int irq)
++{
++	irq_domain_free_irqs(irq, 1);
++}
++
+ int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
+ {
+ 	struct irq_cfg *cfg;
+ 	struct ht_irq_msg msg;
+-	unsigned dest;
+-	int err;
+ 
+ 	if (disable_apic)
+ 		return -ENXIO;
+ 
+ 	cfg = irq_cfg(irq);
+-	err = assign_irq_vector(irq, cfg, apic->target_cpus());
+-	if (err)
+-		return err;
+-
+-	err = apic->cpu_mask_to_apicid_and(cfg->domain,
+-					   apic->target_cpus(), &dest);
+-	if (err)
+-		return err;
+-
+-	msg.address_hi = HT_IRQ_HIGH_DEST_ID(dest);
++	msg.address_hi = HT_IRQ_HIGH_DEST_ID(cfg->dest_apicid);
+ 
+ 	msg.address_lo =
+ 		HT_IRQ_LOW_BASE |
+-		HT_IRQ_LOW_DEST_ID(dest) |
++		HT_IRQ_LOW_DEST_ID(cfg->dest_apicid) |
+ 		HT_IRQ_LOW_VECTOR(cfg->vector) |
+ 		((apic->irq_dest_mode == 0) ?
+ 			HT_IRQ_LOW_DM_PHYSICAL :
+diff --git a/drivers/pci/htirq.c b/drivers/pci/htirq.c
+index a94dd2c4183a..ceb0ebeb7b5f 100644
+--- a/drivers/pci/htirq.c
++++ b/drivers/pci/htirq.c
+@@ -117,8 +117,8 @@ int __ht_create_irq(struct pci_dev *dev, int idx, ht_irq_update_t *update)
+ 	cfg->msg.address_lo = 0xffffffff;
+ 	cfg->msg.address_hi = 0xffffffff;
+ 
+-	irq = irq_alloc_hwirq(dev_to_node(&dev->dev));
+-	if (!irq) {
++	irq = arch_alloc_ht_irq(dev);
++	if (irq <= 0) {
+ 		kfree(cfg);
+ 		return -EBUSY;
+ 	}
+@@ -163,8 +163,7 @@ void ht_destroy_irq(unsigned int irq)
+ 	cfg = irq_get_handler_data(irq);
+ 	irq_set_chip(irq, NULL);
+ 	irq_set_handler_data(irq, NULL);
+-	irq_free_hwirq(irq);
+-
++	arch_free_ht_irq(irq);
+ 	kfree(cfg);
+ }
+ EXPORT_SYMBOL(ht_destroy_irq);
+diff --git a/include/linux/htirq.h b/include/linux/htirq.h
+index 70a1dbbf2093..5caa51b7b95c 100644
+--- a/include/linux/htirq.h
++++ b/include/linux/htirq.h
+@@ -15,6 +15,8 @@ void unmask_ht_irq(struct irq_data *data);
+ 
+ /* The arch hook for getting things started */
+ int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev);
++int arch_alloc_ht_irq(struct pci_dev *dev);
++void arch_free_ht_irq(int irq);
+ 
+ /* For drivers of buggy hardware */
+ typedef void (ht_irq_update_t)(struct pci_dev *dev, int irq,
+-- 
+1.7.10.4
 
-Rajat
-
-
-On Fri, Aug 29, 2014 at 7:25 PM, Rajat Jain <rajatxjain@gmail.com> wrote:
-> Hello,
->
-> On Fri, Aug 29, 2014 at 3:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> Hi Rajat,
->>
->> This bug report: https://bugzilla.kernel.org/show_bug.cgi?id=79701 was
->> bisected to 02e93a8a7c1d ("PCI: pciehp: Don't check adapter or latch
->> status while disabling").  Can you take a look?
->>
->
-> Hi,
->
-> I looked at this and wanted to share by observations:
->
-> The Basic Issue
-> ==============
-> There are a bunch of quick hotplug events (unplug followed by the
-> hot-plug) that are received by the hotplug driver. While both the
-> hotplug drivers (pciehp and acpiphp) are fine with it, the radeon
-> driver itself is probably not equipped enough to handle them so well?
-> [   41.224428] trying to unbind memory from uninitialized GART !
->
-> When acpiphp was being used
-> =======================
-> As Rafael mentions in this commit log, this is a problem with the VGA
-> subsystem, that requires the hot-plug driver to ignore such hot-plug
-> events associated with a slot that connects to such known Radeon
-> controllers. This was done for acpiphp by introducing a "no_hotplug"
-> flag for the ACPI:
-> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=f244d8b623dae7a7bc695b0336f67729b95a9736
-> The above commit would fix the problem if the acpiphp is used, by
-> ignoring the hot-plug events for that slot.
->
-> Switch to using pciehp
-> =================
-> 1) For some reason, the system now seems to use pciehp for these slots
-> instead of the acpiphp (can someone please tell if this looks OK? I
-> only ask because I see the concerned Rafael's log getting printed that
-> seems to indicate that he is expecting the acpiphp to control this
-> slot?). But I also see that the pciehp has already grabbed the slot by
-> the time this messages gets printed:
-> [    4.419180] VGA switcheroo: detected switching method
-> \_SB_.PCI0.VGA_.ATPX handle
->
-> Even with using pciehp, things were still all right until the commit
-> 02e93a8a7, beacuse the pciehp used to ignore the hot-unplug events
-> (including loss-of-presence-detect and link-down) if (1) SURPRISE
-> removal is not supported or (2) ADAPTER is not present (which is what
-> this commit addresses). Thus the hot unplug event used to come, the
-> pciehp_disable_slot() used to find no adapter and refused to do
-> anything.
->
-> Why problem started with pciehp
-> ==========================
-> Essentially the commits 02e93a8a7 and 2b3940b60 made the pciehp handle
-> all hot-unplug events (loss-of-presence-detect and link-downs)
-> irrespective of whether the the SURPRISE removal was supported or not,
-> and also if ADAPTER is not present. Now, I would think that both these
-> commits are still valid because it makes no sense to ignore an unplug
-> event (and let the kernel continue with stale data structures) just
-> because SURPRISE is not set, or the ADAPTER is not present (The latter
-> is an even better reason to process the unplug event).
->
-> My recommendations / Options
-> ========================
-> 1) I would first like an opinion on whether it is OK to see the pciehp
-> handle these hotplug slots. The radeon code seems to be ACPI
-> intensive, and Rafael's commit also seems to say that this was
-> supposed to be handled by acpiphp.
->
-> 2) If it is expected to continue using pciehp, may be we could handle
-> it in the same way as Rafael did for acpiphp. We could add a flag in
-> the pci_dev ("ignore_hp_events" or something) and set it for the hot
-> pluggable slot from radeon code, just like acpi_bus_no_hotplug() is
-> called today.
->
-> I'll be going out for vacation for the 3 days, and would be glad to
-> submit a patch if needed.
->
-> One question to the gentleman who bisected this. (SpacemanSpiff).
-> Would it be possible for you to look for the following messages while
-> trying out the image just before the commit 02e93a8a7c?
-> ...
-> No adapter on slot(2)
-> ...
->
-> Thanks & Best Regards,
->
-> Rajat Jain
