@@ -1,113 +1,62 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <5424CB70.9020800@huawei.com>
-Date: Fri, 26 Sep 2014 10:12:00 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 12/22] MIPS/Octeon/MSI: Use MSI chip framework to configure
- MSI/MSI-X irq
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com> <1411614872-4009-13-git-send-email-wangyijing@huawei.com> <20140925073435.GJ12423@ulmo>
-In-Reply-To: <20140925073435.GJ12423@ulmo>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <ghppf15236.fsf@quad.gouders.net>
+References: <ghiol53r9u.fsf@lena.gouders.net> <CAMxnaaXiEZeJOsgQ6ZSbiqy5Z1zNoXonwNSQNRyRhV0t5jveYQ@mail.gmail.com>
+ <ghwq9k3m6z.fsf@lena.gouders.net> <CAMxnaaUqTMf1uEQUqrAGjym8ZrQaBf2QbE4Jqxh2t6a2JgJkOQ@mail.gmail.com>
+ <ghioku5l29.fsf@lena.gouders.net> <CAErSpo7j=a3y2MVsvEQGQ4B63_mNCyZSRNXNEZa-2++xs88NmQ@mail.gmail.com>
+ <CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com> <ghppf15236.fsf@quad.gouders.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 11 Sep 2014 14:42:47 -0600
+Message-ID: <CAErSpo5SVUOz+qa_x5JTC+-Y5ewTyYzA0N=jyPtK9LaguRrt=w@mail.gmail.com>
+Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
+To: Dirk Gouders <dirk@gouders.net>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/25 15:34, Thierry Reding wrote:
-> On Thu, Sep 25, 2014 at 11:14:22AM +0800, Yijing Wang wrote:
-> [...]
->> diff --git a/arch/mips/pci/msi-octeon.c b/arch/mips/pci/msi-octeon.c
-> [...]
->> @@ -132,12 +132,12 @@ msi_irq_allocated:
->>  	/* Make sure the search for available interrupts didn't fail */
->>  	if (irq >= 64) {
->>  		if (request_private_bits) {
->> -			pr_err("arch_setup_msi_irq: Unable to find %d free interrupts, trying just one",
->> +			pr_err("octeon_setup_msi_irq: Unable to find %d free interrupts, trying just one",
->>  			       1 << request_private_bits);
-> 
-> Perhaps while at it make this (and other similar changes in this patch):
-> 
-> 	pr_err("%s(): Unable to ...", __func__, ...);
+On Thu, Sep 11, 2014 at 2:33 PM, Dirk Gouders <dirk@gouders.net> wrote:
+> What I was currently trying was to construct a test-environment so that
+> I do not need to do tests and diagnosis on a busy machine.
+>
+> I noticed that this problem seems to start with the narrow Root
+> Bridge window (00-07) but every other machine that I had a look at,
+> starts with (00-ff), so those will not trigger my problem.
+>
+> I thought I could perhaps try to shrink the window in
+> acpi_pci_root_add() to trigger the problem and that kind of works: it
+> triggers it but not exactly the same way, because it basically ends at
+> this code in pci_scan_bridge():
+>
+>         if (max >= bus->busn_res.end) {
+>                 dev_warn(&dev->dev, "can't allocate child bus %02x from %pR (pass %d)\n",
+>                          max, &bus->busn_res, pass);
+>                 goto out;
+>         }
+>
+> If this could work but I am just missing a small detail, I would be
+> glad to hear about it and do the first tests this way.  If it is
+> complete nonsense, I will just use the machine that triggers the problem
+> for the tests.
 
-Will update it, thanks!
+I was about to suggest the same thing.  If the problem is related to
+the bus number change, we should be able to force that to happen on a
+different machine.  Your approach sounds good, so I'm guessing we just
+need a tweak.
 
-> 
-> So that it becomes more resilient against this kind of rename?
-> 
->>  			request_private_bits = 0;
->>  			goto try_only_one;
->>  		} else
->> -			panic("arch_setup_msi_irq: Unable to find a free MSI interrupt");
->> +			panic("octeon_setup_msi_irq: Unable to find a free MSI interrupt");
-> 
->> @@ -210,14 +210,13 @@ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->>  
->>  	return 0;
->>  }
->> -
-> 
-> This...
+I would first double-check that the PCI adapters are identical,
+including the firmware on the card.  Can you also include your patch
+and the resulting dmesg (with debug enabled as before)?
 
-OK
+Is the test machine itself similar to the failing one?  Do they have
+the same BIOS version?  From [1], it looks like you already have the
+latest BIOS on the failing machine.  It's interesting that the notes
+for your version mention "Fixed a PCI Bus Number re-allocation error."
 
-> 
->> @@ -240,7 +239,7 @@ void arch_teardown_msi_irq(unsigned int irq)
->>  	 */
->>  	number_irqs = 0;
->>  	while ((irq0 + number_irqs < 64) &&
->> -	       (msi_multiple_irq_bitmask[index]
->> +		(msi_multiple_irq_bitmask[index]
-> 
-> ... and this seem like unrelated whitespace changes.
+Bjorn
 
-OK
-
-> 
->>  		& (1ull << (irq0 + number_irqs))))
->>  		number_irqs++;
->>  	number_irqs++;
->> @@ -249,8 +248,8 @@ void arch_teardown_msi_irq(unsigned int irq)
->>  	/* Shift the mask to the correct bit location */
->>  	bitmask <<= irq0;
->>  	if ((msi_free_irq_bitmask[index] & bitmask) != bitmask)
->> -		panic("arch_teardown_msi_irq: Attempted to teardown MSI "
->> -		      "interrupt (%d) not in use", irq);
->> +		panic("octeon_teardown_msi_irq: Attempted to teardown MSI "
->> +			"interrupt (%d) not in use", irq);
-> 
-> And the second line here also needlessly changes the indentation.
-
-OK
-> 
-> Thierry
-> 
-
-
--- 
-Thanks!
-Yijing
-
+[1] http://www.tyan.com/support_download_bios.aspx?model=B.VX50B4985-E
