@@ -1,204 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
 	Grant Likely <grant.likely@linaro.org>
-Subject: [PATCH v11 08/10] OF: PCI: Add support for parsing PCI host bridge resources from DT
-Date: Thu, 18 Sep 2014 02:30:23 +0100
-Message-Id: <1411003825-21521-9-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v5 03/15] ACPI: Fix minor syntax issues in processor_core.c
+Date: Thu, 11 Sep 2014 16:05:46 +0800
+Message-Id: <1410422758-24942-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Provide a function to parse the PCI DT ranges that can be used to
-create a pci_host_bridge structure together with its associated
-bus.
+Fix minor syntax issues in processor_core.c to follow coding styles.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/of/of_pci.c    | 108 +++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/of_pci.h |  11 +++++
- 2 files changed, 119 insertions(+)
+ drivers/acpi/processor_core.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 7eaeac2..c18b8da 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -1,7 +1,9 @@
- #include <linux/kernel.h>
- #include <linux/export.h>
- #include <linux/of.h>
-+#include <linux/of_address.h>
- #include <linux/of_pci.h>
-+#include <linux/slab.h>
+diff --git a/drivers/acpi/processor_core.c b/drivers/acpi/processor_core.c
+index e32321ce9a5c..b048f3752c2b 100644
+--- a/drivers/acpi/processor_core.c
++++ b/drivers/acpi/processor_core.c
+@@ -125,13 +125,12 @@ static int map_mat_entry(acpi_handle handle, int type, u32 acpi_id)
+ 	}
  
- #include "of_private.h"
+ 	header = (struct acpi_subtable_header *)obj->buffer.pointer;
+-	if (header->type == ACPI_MADT_TYPE_LOCAL_APIC) {
++	if (header->type == ACPI_MADT_TYPE_LOCAL_APIC)
+ 		map_lapic_id(header, acpi_id, &apic_id);
+-	} else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC) {
++	else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC)
+ 		map_lsapic_id(header, type, acpi_id, &apic_id);
+-	} else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC) {
++	else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC)
+ 		map_x2apic_id(header, type, acpi_id, &apic_id);
+-	}
  
-@@ -151,6 +153,112 @@ int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
- }
- EXPORT_SYMBOL_GPL(of_pci_get_domain_nr);
- 
-+/**
-+ * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
-+ * @dev: device node of the host bridge having the range property
-+ * @busno: bus number associated with the bridge root bus
-+ * @bus_max: maximum number of busses for this bridge
-+ * @resources: list where the range of resources will be added after DT parsing
-+ * @io_base: pointer to a variable that will contain on return the physical
-+ * address for the start of the I/O range.
-+ *
-+ * It is the callers job to free the @resources list.
-+ *
-+ * This function will parse the "ranges" property of a PCI host bridge device
-+ * node and setup the resource mapping based on its content. It is expected
-+ * that the property conforms with the Power ePAPR document.
-+ *
-+ * It returns zero if the range parsing has been successful or a standard error
-+ * value if it failed.
-+ */
-+int of_pci_get_host_bridge_resources(struct device_node *dev,
-+			unsigned char busno, unsigned char bus_max,
-+			struct list_head *resources, resource_size_t *io_base)
-+{
-+	struct resource *res;
-+	struct resource *bus_range;
-+	struct of_pci_range range;
-+	struct of_pci_range_parser parser;
-+	char range_type[4];
-+	int err;
-+
-+	if (!io_base)
-+		return -EINVAL;
-+	*io_base = OF_BAD_ADDR;
-+
-+	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
-+	if (!bus_range)
-+		return -ENOMEM;
-+
-+	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
-+
-+	err = of_pci_parse_bus_range(dev, bus_range);
-+	if (err) {
-+		bus_range->start = busno;
-+		bus_range->end = bus_max;
-+		bus_range->flags = IORESOURCE_BUS;
-+		pr_info("  No bus range found for %s, using %pR\n",
-+			dev->full_name, &bus_range);
-+	} else {
-+		if (bus_range->end > bus_range->start + bus_max)
-+			bus_range->end = bus_range->start + bus_max;
-+	}
-+	pci_add_resource(resources, bus_range);
-+
-+	/* Check for ranges property */
-+	err = of_pci_range_parser_init(&parser, dev);
-+	if (err)
-+		goto parse_failed;
-+
-+	pr_debug("Parsing ranges property...\n");
-+	for_each_of_pci_range(&parser, &range) {
-+		/* Read next ranges element */
-+		if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
-+			snprintf(range_type, 4, " IO");
-+		else if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_MEM)
-+			snprintf(range_type, 4, "MEM");
-+		else
-+			snprintf(range_type, 4, "err");
-+		pr_info("  %s %#010llx..%#010llx -> %#010llx\n", range_type,
-+			range.cpu_addr, range.cpu_addr + range.size - 1,
-+			range.pci_addr);
-+
-+		/*
-+		 * If we failed translation or got a zero-sized region
-+		 * then skip this range
-+		 */
-+		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
-+			continue;
-+
-+		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
-+		if (!res) {
-+			err = -ENOMEM;
-+			goto parse_failed;
-+		}
-+
-+		err = of_pci_range_to_resource(&range, dev, res);
-+		if (err) {
-+			kfree(res);
-+			goto parse_failed;
-+		}
-+
-+		if (resource_type(res) == IORESOURCE_IO) {
-+			if (*io_base != OF_BAD_ADDR)
-+				pr_warn("More than one I/O resource converted. CPU offset for old range lost!\n");
-+			*io_base = range.cpu_addr;
-+		}
-+
-+		pci_add_resource_offset(resources, res,	res->start - range.pci_addr);
-+	}
-+
-+	return 0;
-+
-+parse_failed:
-+	pci_free_resource_list(resources);
-+	return err;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
-+
- #ifdef CONFIG_PCI_MSI
- 
- static LIST_HEAD(of_pci_msi_chip_list);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 3a3824c..a4b8a85 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -16,6 +16,10 @@ int of_pci_get_devfn(struct device_node *np);
- int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
- int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing);
-+int of_pci_get_host_bridge_resources(struct device_node *dev,
-+			unsigned char busno, unsigned char bus_max,
-+			struct list_head *resources, resource_size_t *io_base);
-+
- #else
- static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
- {
-@@ -50,6 +54,13 @@ of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
- {
- 	return -1;
- }
-+
-+int of_pci_get_host_bridge_resources(struct device_node *dev,
-+			unsigned char busno, unsigned char bus_max,
-+			struct list_head *resources, resource_size_t *io_base);
-+{
-+	return -EINVAL;
-+}
- #endif
- 
- #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+ exit:
+ 	kfree(buffer.pointer);
+@@ -164,7 +163,7 @@ int acpi_map_cpuid(int apic_id, u32 acpi_id)
+ 		 * For example,
+ 		 *
+ 		 * Scope (_PR)
+-                 * {
++		 * {
+ 		 *     Processor (CPU0, 0x00, 0x00000410, 0x06) {}
+ 		 *     Processor (CPU1, 0x01, 0x00000410, 0x06) {}
+ 		 *     Processor (CPU2, 0x02, 0x00000410, 0x06) {}
 -- 
-2.1.0
+1.7.10.4
 
