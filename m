@@ -1,97 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx.aristanetworks.com ([162.210.130.12]:46481 "EHLO
-	prod-mx.aristanetworks.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751600AbaIXRgG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 13:36:06 -0400
-Date: Wed, 24 Sep 2014 10:29:23 -0700
-To: linux-pci@vger.kernel.org
-Subject: [PATCH 1/1] pci: move PCI_VENDOR_ID_VMWARE to pci_ids.h
-Cc: sbhatewara@vmware.com, linux-kernel@vger.kernel.org,
-	gregkh@linuxfoundation.org, pv-drivers@vmware.com
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-Id: <20140924172923.D112148565B@fruggeri-Arora18.sjc.aristanetworks.com>
-From: fruggeri@aristanetworks.com (Francesco Ruggeri)
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC Part1 v1 06/18] x86, irq: Protect __clear_irq_vector() with vector_lock
+Date: Thu, 11 Sep 2014 16:24:53 +0800
+Message-Id: <1410423905-26239-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From b99b1ec156ab351668eb77a00a57a4ae095eec28 Mon Sep 17 00:00:00 2001
-From: Francesco Ruggeri <fruggeri@arista.com>
-Date: Wed, 24 Sep 2014 10:12:41 -0700
-Subject: [PATCH 1/1] pci: move PCI_VENDOR_ID_VMWARE to pci_ids.h
+Function __clear_irq_vector() accesses vector related data structure,
+so protect it with vector_lock. Also rename it as clear_irq_vector().
 
-Moving PCI_VENDOR_ID_VMWARE from device specific files to pci_ids.h.
-It is useful to always have access to it, especially when accessing
-subsystem_vendor_id on emulated devices.
-
-Signed-off-by: Francesco Ruggeri <fruggeri@arista.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/gpu/drm/vmwgfx/svga_reg.h  | 1 -
- drivers/misc/vmw_vmci/vmci_guest.c | 1 -
- drivers/net/vmxnet3/vmxnet3_int.h  | 1 -
- drivers/scsi/vmw_pvscsi.h          | 1 -
- include/linux/pci_ids.h            | 2 ++
- 5 files changed, 2 insertions(+), 4 deletions(-)
+ arch/x86/kernel/apic/io_apic.c |   19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/gpu/drm/vmwgfx/svga_reg.h b/drivers/gpu/drm/vmwgfx/svga_reg.h
-index 11323dd..e4259c2 100644
---- a/drivers/gpu/drm/vmwgfx/svga_reg.h
-+++ b/drivers/gpu/drm/vmwgfx/svga_reg.h
-@@ -35,7 +35,6 @@
- /*
-  * PCI device IDs.
-  */
--#define PCI_VENDOR_ID_VMWARE            0x15AD
- #define PCI_DEVICE_ID_VMWARE_SVGA2      0x0405
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 814527753563..ee3d3ff521a3 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1349,10 +1349,12 @@ int assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
+ 	return err;
+ }
  
- /*
-diff --git a/drivers/misc/vmw_vmci/vmci_guest.c b/drivers/misc/vmw_vmci/vmci_guest.c
-index 248399a..189b325 100644
---- a/drivers/misc/vmw_vmci/vmci_guest.c
-+++ b/drivers/misc/vmw_vmci/vmci_guest.c
-@@ -35,7 +35,6 @@
- #include "vmci_driver.h"
- #include "vmci_event.h"
+-static void __clear_irq_vector(int irq, struct irq_cfg *cfg)
++static void clear_irq_vector(int irq, struct irq_cfg *cfg)
+ {
+ 	int cpu, vector;
++	unsigned long flags;
  
--#define PCI_VENDOR_ID_VMWARE		0x15AD
- #define PCI_DEVICE_ID_VMWARE_VMCI	0x0740
++	raw_spin_lock_irqsave(&vector_lock, flags);
+ 	BUG_ON(!cfg->vector);
  
- #define VMCI_UTIL_NUM_RESOURCES 1
-diff --git a/drivers/net/vmxnet3/vmxnet3_int.h b/drivers/net/vmxnet3/vmxnet3_int.h
-index 3759479..5f0199f 100644
---- a/drivers/net/vmxnet3/vmxnet3_int.h
-+++ b/drivers/net/vmxnet3/vmxnet3_int.h
-@@ -117,7 +117,6 @@ enum {
- /*
-  * PCI vendor and device IDs.
-  */
--#define PCI_VENDOR_ID_VMWARE            0x15AD
- #define PCI_DEVICE_ID_VMWARE_VMXNET3    0x07B0
- #define MAX_ETHERNET_CARDS		10
- #define MAX_PCI_PASSTHRU_DEVICE		6
-diff --git a/drivers/scsi/vmw_pvscsi.h b/drivers/scsi/vmw_pvscsi.h
-index ce45888..ee16f0c 100644
---- a/drivers/scsi/vmw_pvscsi.h
-+++ b/drivers/scsi/vmw_pvscsi.h
-@@ -32,7 +32,6 @@
+ 	vector = cfg->vector;
+@@ -1362,8 +1364,11 @@ static void __clear_irq_vector(int irq, struct irq_cfg *cfg)
+ 	cfg->vector = 0;
+ 	cpumask_clear(cfg->domain);
  
- #define MASK(n)        ((1 << (n)) - 1)        /* make an n-bit mask */
- 
--#define PCI_VENDOR_ID_VMWARE		0x15AD
- #define PCI_DEVICE_ID_VMWARE_PVSCSI	0x07C0
- 
- /*
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 6ed0bb7..e62b20a 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2971,4 +2971,6 @@
- 
- #define PCI_VENDOR_ID_OCZ		0x1b85
- 
-+#define PCI_VENDOR_ID_VMWARE		0x15AD
+-	if (likely(!cfg->move_in_progress))
++	if (likely(!cfg->move_in_progress)) {
++		raw_spin_unlock_irqrestore(&vector_lock, flags);
+ 		return;
++	}
 +
- #endif /* _LINUX_PCI_IDS_H */
+ 	for_each_cpu_and(cpu, cfg->old_domain, cpu_online_mask) {
+ 		for (vector = FIRST_EXTERNAL_VECTOR; vector < NR_VECTORS; vector++) {
+ 			if (per_cpu(vector_irq, cpu)[vector] != irq)
+@@ -1373,6 +1378,7 @@ static void __clear_irq_vector(int irq, struct irq_cfg *cfg)
+ 		}
+ 	}
+ 	cfg->move_in_progress = 0;
++	raw_spin_unlock_irqrestore(&vector_lock, flags);
+ }
+ 
+ void __setup_vector_irq(int cpu)
+@@ -1499,7 +1505,7 @@ static void setup_ioapic_irq(unsigned int irq, struct irq_cfg *cfg,
+ 					 &dest)) {
+ 		pr_warn("Failed to obtain apicid for ioapic %d, pin %d\n",
+ 			mpc_ioapic_id(attr->ioapic), attr->ioapic_pin);
+-		__clear_irq_vector(irq, cfg);
++		clear_irq_vector(irq, cfg);
+ 
+ 		return;
+ 	}
+@@ -1513,7 +1519,7 @@ static void setup_ioapic_irq(unsigned int irq, struct irq_cfg *cfg,
+ 	if (x86_io_apic_ops.setup_entry(irq, &entry, dest, cfg->vector, attr)) {
+ 		pr_warn("Failed to setup ioapic entry for ioapic  %d, pin %d\n",
+ 			mpc_ioapic_id(attr->ioapic), attr->ioapic_pin);
+-		__clear_irq_vector(irq, cfg);
++		clear_irq_vector(irq, cfg);
+ 
+ 		return;
+ 	}
+@@ -3082,12 +3088,9 @@ int arch_setup_hwirq(unsigned int irq, int node)
+ void arch_teardown_hwirq(unsigned int irq)
+ {
+ 	struct irq_cfg *cfg = irq_cfg(irq);
+-	unsigned long flags;
+ 
+ 	free_remapped_irq(irq);
+-	raw_spin_lock_irqsave(&vector_lock, flags);
+-	__clear_irq_vector(irq, cfg);
+-	raw_spin_unlock_irqrestore(&vector_lock, flags);
++	clear_irq_vector(irq, cfg);
+ 	free_irq_cfg(irq, cfg);
+ }
+ 
 -- 
-1.8.1.4
+1.7.10.4
 
