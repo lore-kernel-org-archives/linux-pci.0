@@ -1,63 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:52284 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753729AbaIAOL3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Sep 2014 10:11:29 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dmitry Torokhov <dtor@google.com>,
-	Aubrey Li <aubrey.li@intel.com>
-Subject: [PATCH 00/13] genirq / PM: Wakeup interrupts handling rework (related to suspend-to-idle)
-Date: Mon, 01 Sep 2014 16:18:47 +0200
-Message-ID: <2516134.pmOxkEuOOy@vostro.rjw.lan>
-In-Reply-To: <5320472.coYotHR1d0@vostro.rjw.lan>
-References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <54113BAC.10505@linux.intel.com>
+Date: Thu, 11 Sep 2014 14:05:32 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org, Prarit Bhargava <prarit@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
+	linux-pm@vger.kernel.org
+Subject: Re: [Patch v4 12/16] x86, irq, ACPI: Implement interface to support
+ ACPI based IOAPIC hot-addition
+References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com> <1409192561-19744-13-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1409091417120.11037@nanos> <540FC1C2.40100@linux.intel.com> <alpine.DEB.2.10.1409102202530.4178@nanos>
+In-Reply-To: <alpine.DEB.2.10.1409102202530.4178@nanos>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On 2014/9/11 4:06, Thomas Gleixner wrote:
+> On Wed, 10 Sep 2014, Jiang Liu wrote:
+>>>>  int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+>>>> @@ -3867,8 +3873,15 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+>>>>  	}
+>>>>  	for_each_ioapic(ioapic)
+>>>>  		if (ioapics[ioapic].mp_config.apicaddr == address) {
+>>>> -			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
+>>>> -				address, ioapic);
+>>>> +			/*
+>>>> +			 * IOAPIC unit may also be visible in PCI scope.
+>>>> +			 * When ioapic PCI driver's probe() is called,
+>>>> +			 * the IOAPIC unit may have already been initialized
+>>>> +			 * at boot time.
+>>>> +			 */
+>>>> +			if (!ioapic_initialized)
+>>>> +				pr_warn("address 0x%x conflicts with IOAPIC%d\n",
+>>>> +					address, ioapic);
+>>>
+>>> Hmm. This smells fishy. Why do we allow multiple initializations of
+>>> the same IOAPIC in the first place. Either it's done via ACPI or via
+>>> PCI, but not both.
+>> The ACPI subsystem will register and initialize all IOAPICs when walking
+>> ACPI MADT table during boot, before initializing PCI subsystem.
+>> Later when binding ioapic PCI driver to IOAPIC PCI device, it will try
+>> to register the IOAPIC device again.
+>>
+>> After this patchset is applied, we could remove the !ioapic_initialized
+>> check. We check acpi_ioapic_register() before calling
+>> acpi_register_ioapic(). So the check becomes redundant.
+>> Or we could remove the temporary code from this patch.
+> 
+> How about removing the disfunctional ioapic PCI driver first and then
+> implementing the whole thing cleanly?
+Good suggestion:)
 
-This set of patches reworks the handling of system wakeup interrupts so that
-suspend-to-idle is covered in the same way as full system suspend.
+>  
+>>>
+>>>>  			return -EEXIST;
+>>>>  		}
+>>>>  
+>>>> @@ -3918,6 +3931,14 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+>>>>  	ioapics[idx].irqdomain = NULL;
+>>>>  	ioapics[idx].irqdomain_cfg = *cfg;
+>>>>  
+>>>> +	if (ioapic_initialized) {
+>>>
+>>> I have a hard time to understand this conditional. Why can't we do
+>>> that unconditionally?
+>> How about following comments?
+>> /*
+>>  * If mp_register_ioapic() is called during early boot stage when
+>>  * walking ACPI/SFI/DT tables, it's too early to create irqdomain,
+>>  * we are still using bootmem allocator. So delay it to setup_IO_APIC().
+>>  */
+> 
+> Fine, but then the "if (ioapic_initialized)" conditional still does
+> not make sense. We surely have some global non ioapic specific
+> indicator that bootmem is done and the proper memory allocator is
+> available, right?
+Flag ioapic_initialized will be used to check whether we have created
+irqdomains for IOAPICs. Currently function arch_dynirq_lower_bound()
+uses that flag, and alloc_irq_from_domain() will use it too later.
 
-This time we have several new patches from Thomas and hopefully we're nailed
-down that thing at last.
+> 
+> Aside of that is there a point to walk those tables before we actually
+> can make any use of their content?
+At least we depend on walking those tables to detect whether system has
+IOAPICs available:)
 
-[01/13] Mechanism to wake up the system or abort suspend in progress
-        automatically (this is different from the previous versions, because
-        I eventually convinced myself that pm_abort_suspend didn't really
-        require any locking).
-[02/13] Move PM-related IRQ code to kernel/irq/pm.c.
-[03/13] Add accounting for IRQF_NO_SUSPEND and IRQF_RESUME_EARLY.
-[04/13] Use the accoundint added by [03/13].
-[05/13] Make suspend_device_irqs() mask non-wakeup interruts if
-        IRQCHIP_MASK_ON_SUSPEND is set.
-[06/13] Synchronize IRQs in the same loop in which they are reconfigured
-        in suspend_device_irqs().
-[07/13] Separate irq_check_poll() checks from disabled/no action checks in
-        kernel/irq/chip.c.
-[08/13] Add a helper for checks made by many IRQ flow handlers in the same way.
-[09/13] Mark wakeup sources as "armed" on suspend (using a new flag).
-[10/13] Make suspend_device_irqs() leave wakeup interrupts enabled, but handle
-        them so that the first interrupt triggers system wakeup.
-[11/13] Set IRQCHIP_SKIP_SET_WAKE for x86 IOAPIC IRQ chips (same as before).
-[12/13] Make PCIe PME wake up from suspend to idle (same as before).
-[13/13] Document rules related to system suspend and interrupts (updated).
-
-The series have been tested on MSI Wind, but more testing is welcome.
-
-There is a pm-genirq branch in the linux-pm.git tree containing these patches:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git pm-genirq
-
-that can be pulled from.
-
-Kind regards,
-Rafael
-
+Regards!
+Gerry
+> 
+> Thanks,
+> 
+> 	tglx
+> 
