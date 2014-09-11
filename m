@@ -18,159 +18,341 @@ Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	x86@kernel.org, linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v5 13/15] x86, irq, ACPI: Implement interfaces to support ACPI based IOAPIC hot-removal
-Date: Thu, 11 Sep 2014 16:05:56 +0800
-Message-Id: <1410422758-24942-14-git-send-email-jiang.liu@linux.intel.com>
+Subject: [Patch v5 15/15] x86, irq, ACPI: Implement ACPI driver to support IOAPIC hotplug
+Date: Thu, 11 Sep 2014 16:05:58 +0800
+Message-Id: <1410422758-24942-16-git-send-email-jiang.liu@linux.intel.com>
 In-Reply-To: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
 References: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement acpi_unregister_ioapic() to support ACPI based IOAPIC hot-removal.
-An IOAPIC could only be removed when all its pins are unused.
+Enable support of IOAPIC hotplug by:
+1) reintroducing ACPI based IOAPIC driver
+2) enhance pci_root driver to hook hotplug events
+
+The ACPI IOAPIC driver is always enabled if all of ACPI, PCI and IOAPIC
+are enabled.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/include/asm/io_apic.h |    1 +
- arch/x86/kernel/acpi/boot.c    |   13 +++++++---
- arch/x86/kernel/apic/io_apic.c |   55 ++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 65 insertions(+), 4 deletions(-)
+ drivers/acpi/Kconfig    |    6 ++
+ drivers/acpi/Makefile   |    1 +
+ drivers/acpi/internal.h |    7 ++
+ drivers/acpi/ioapic.c   |  236 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/acpi/pci_root.c |    3 +
+ 5 files changed, 253 insertions(+)
+ create mode 100644 drivers/acpi/ioapic.c
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 8741c1ea33c3..7c04b8ec22a4 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -190,6 +190,7 @@ extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
- extern void mp_unmap_irq(int irq);
- extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 			      struct ioapic_domain_cfg *cfg);
-+extern int mp_unregister_ioapic(u32 gsi_base);
- extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 			    irq_hw_number_t hwirq);
- extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 238962e7de70..0e67d792741d 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -805,15 +805,20 @@ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
+diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+index d0f3265fb85d..b7b87a1a2252 100644
+--- a/drivers/acpi/Kconfig
++++ b/drivers/acpi/Kconfig
+@@ -315,6 +315,12 @@ config ACPI_HOTPLUG_MEMORY
+ 	  To compile this driver as a module, choose M here:
+ 	  the module will be called acpi_memhotplug.
  
- 	return ret;
- }
--
- EXPORT_SYMBOL(acpi_register_ioapic);
- 
- int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
- {
--	/* TBD */
--	return -EINVAL;
--}
-+	int ret = -ENOSYS;
++config ACPI_HOTPLUG_IOAPIC
++	bool
++	depends on PCI
++	depends on X86_IO_APIC
++	default y
 +
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+	down_write(&acpi_ioapic_rwsem);
-+	ret  = mp_unregister_ioapic(gsi_base);
-+	up_write(&acpi_ioapic_rwsem);
+ config ACPI_SBS
+ 	tristate "Smart Battery System"
+ 	depends on X86
+diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
+index 505d4d79fe3e..ee996253a2bb 100644
+--- a/drivers/acpi/Makefile
++++ b/drivers/acpi/Makefile
+@@ -68,6 +68,7 @@ obj-$(CONFIG_ACPI_PROCESSOR)	+= processor.o
+ obj-y				+= container.o
+ obj-$(CONFIG_ACPI_THERMAL)	+= thermal.o
+ obj-y				+= acpi_memhotplug.o
++obj-$(CONFIG_ACPI_HOTPLUG_IOAPIC) += ioapic.o
+ obj-$(CONFIG_ACPI_BATTERY)	+= battery.o
+ obj-$(CONFIG_ACPI_SBS)		+= sbshc.o
+ obj-$(CONFIG_ACPI_SBS)		+= sbs.o
+diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+index 4c5cf77e7576..817ab2d5975c 100644
+--- a/drivers/acpi/internal.h
++++ b/drivers/acpi/internal.h
+@@ -34,6 +34,13 @@ void acpi_pnp_init(void);
+ int acpi_sysfs_init(void);
+ void acpi_container_init(void);
+ void acpi_memory_hotplug_init(void);
++#ifdef	CONFIG_ACPI_HOTPLUG_IOAPIC
++int acpi_ioapic_add(struct acpi_pci_root *root);
++int acpi_ioapic_remove(struct acpi_pci_root *root);
++#else
++static inline int acpi_ioapic_add(struct acpi_pci_root *root) { return 0; }
++static inline int acpi_ioapic_remove(struct acpi_pci_root *root) { return 0; }
 +#endif
- 
-+	return ret;
-+}
- EXPORT_SYMBOL(acpi_unregister_ioapic);
- 
- static int __init acpi_parse_sbf(struct acpi_table_header *table)
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 77c9cc4e8198..27a7238418f7 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -112,6 +112,7 @@ static struct ioapic {
- 	struct ioapic_domain_cfg irqdomain_cfg;
- 	struct irq_domain *irqdomain;
- 	struct mp_pin_info *pin_info;
-+	struct resource *iomem_res;
- } ioapics[MAX_IO_APICS];
- 
- #define mpc_ioapic_ver(ioapic_idx)	ioapics[ioapic_idx].mp_config.apicver
-@@ -250,6 +251,12 @@ static void alloc_ioapic_saved_registers(int idx)
- 		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
- }
- 
-+static void free_ioapic_saved_registers(int idx)
-+{
-+	kfree(ioapics[idx].saved_registers);
-+	ioapics[idx].saved_registers = NULL;
-+}
+ #ifdef CONFIG_ACPI_DOCK
+ void register_dock_dependent_device(struct acpi_device *adev,
+ 				    acpi_handle dshandle);
+diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
+new file mode 100644
+index 000000000000..66d87a61ee5c
+--- /dev/null
++++ b/drivers/acpi/ioapic.c
+@@ -0,0 +1,236 @@
++/*
++ * IOAPIC/IOxAPIC/IOSAPIC driver
++ *
++ * Copyright (C) 2009 Fujitsu Limited.
++ * (c) Copyright 2009 Hewlett-Packard Development Company, L.P.
++ *
++ * Copyright (C) 2014 Intel Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * Based on original drivers/pci/ioapic.c
++ *	Yinghai Lu <yinghai@kernel.org>
++ *	Jiang Liu <jiang.liu@intel.com>
++ */
 +
- int __init arch_early_irq_init(void)
- {
- 	struct irq_cfg *cfg;
-@@ -2972,6 +2979,16 @@ static int mp_irqdomain_create(int ioapic)
- 	return 0;
- }
- 
-+static void ioapic_destroy_irqdomain(int idx)
++/*
++ * This driver manages I/O APICs added by hotplug after boot.
++ * We try to claim all I/O APIC devices, but those present at boot were
++ * registered when we parsed the ACPI MADT, so we'll fail when we try to
++ * re-register them.
++ */
++
++#define pr_fmt(fmt) "ACPI : IOAPIC: " fmt
++
++#include <linux/slab.h>
++#include <linux/acpi.h>
++#include <linux/pci.h>
++#include <acpi/acpi.h>
++
++struct acpi_pci_ioapic {
++	acpi_handle	root_handle;
++	acpi_handle	handle;
++	u32		gsi_base;
++	struct resource	res;
++	struct pci_dev	*pdev;
++	struct list_head list;
++};
++
++static LIST_HEAD(ioapic_list);
++static DEFINE_MUTEX(ioapic_list_lock);
++
++static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
 +{
-+	if (ioapics[idx].irqdomain) {
-+		irq_domain_remove(ioapics[idx].irqdomain);
-+		ioapics[idx].irqdomain = NULL;
++	struct resource *res = data;
++
++	memset(res, 0, sizeof(*res));
++	if (acpi_dev_resource_memory(acpi_res, res)) {
++		res->flags &= IORESOURCE_MEM;
++		if (res->flags)
++			return AE_OK;
++	} else if (acpi_dev_resource_address_space(acpi_res, res)) {
++		struct acpi_resource_address64 addr;
++
++		res->flags &= IORESOURCE_MEM;
++		if (res->flags &&
++		    ACPI_SUCCESS(acpi_resource_to_address64(acpi_res, &addr)) &&
++		    addr.info.mem.caching != ACPI_PREFETCHABLE_MEMORY) {
++			res->start += addr.translation_offset;
++			res->end += addr.translation_offset;
++			return AE_OK;
++		}
 +	}
-+	kfree(ioapics[idx].pin_info);
-+	ioapics[idx].pin_info = NULL;
++	res->flags = 0;
++
++	return AE_OK;
 +}
 +
- void __init setup_IO_APIC(void)
- {
- 	int ioapic;
-@@ -3730,6 +3747,7 @@ static struct resource * __init ioapic_setup_resources(void)
- 		snprintf(mem, IOAPIC_RESOURCE_NAME_SIZE, "IOAPIC %u", i);
- 		mem += IOAPIC_RESOURCE_NAME_SIZE;
- 		num++;
-+		ioapics[i].iomem_res = res;
++static bool acpi_is_ioapic(acpi_handle handle, char **type)
++{
++	acpi_status status;
++	struct acpi_device_info *info;
++	char *hid = NULL;
++	bool match = false;
++
++	if (!acpi_has_method(handle, "_GSB"))
++		return false;
++
++	status = acpi_get_object_info(handle, &info);
++	if (ACPI_SUCCESS(status)) {
++		if (info->valid & ACPI_VALID_HID)
++			hid = info->hardware_id.string;
++		if (hid) {
++			if (strcmp(hid, "ACPI0009") == 0) {
++				*type = "IOxAPIC";
++				match = true;
++			} else if (strcmp(hid, "ACPI000A") == 0) {
++				*type = "IOAPIC";
++				match = true;
++			}
++		}
++		kfree(info);
++	}
++
++	return match;
++}
++
++static acpi_status handle_ioapic_add(acpi_handle handle, u32 lvl,
++				     void *context, void **rv)
++{
++	acpi_status status;
++	unsigned long long gsi_base;
++	struct acpi_pci_ioapic *ioapic;
++	struct pci_dev *dev = NULL;
++	struct resource *res = NULL;
++	char *type = NULL;
++
++	if (!acpi_is_ioapic(handle, &type))
++		return AE_OK;
++
++	mutex_lock(&ioapic_list_lock);
++	list_for_each_entry(ioapic, &ioapic_list, list)
++		if (ioapic->handle == handle) {
++			mutex_unlock(&ioapic_list_lock);
++			return AE_OK;
++		}
++
++	status = acpi_evaluate_integer(handle, "_GSB", NULL, &gsi_base);
++	if (ACPI_FAILURE(status)) {
++		acpi_handle_warn(handle, "failed to evaluate _GSB method\n");
++		goto exit;
++	}
++
++	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
++	if (!ioapic) {
++		pr_err("cannot allocate memory for new IOAPIC\n");
++		goto exit;
++	} else {
++		ioapic->root_handle = (acpi_handle)context;
++		ioapic->handle = handle;
++		ioapic->gsi_base = (u32)gsi_base;
++		ioapic->res.flags = IORESOURCE_UNSET;
++	}
++
++	if (acpi_ioapic_registered(handle, (u32)gsi_base))
++		goto done;
++
++	dev = acpi_get_pci_dev(handle);
++	if (dev && pci_resource_len(dev, 0)) {
++		if (pci_enable_device(dev) < 0)
++			goto exit_put;
++		pci_set_master(dev);
++		if (pci_request_region(dev, 0, type))
++			goto exit_disable;
++		res = &dev->resource[0];
++		ioapic->pdev = dev;
++	} else {
++		pci_dev_put(dev);
++		dev = NULL;
++
++		res = &ioapic->res;
++		acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, res);
++		if (res->flags == IORESOURCE_UNSET) {
++			acpi_handle_warn(handle, "failed to get resource\n");
++			goto exit_free;
++		} else if (request_resource(&iomem_resource, res)) {
++			acpi_handle_warn(handle, "failed to insert resource\n");
++			goto exit_free;
++		}
++	}
++
++	if (acpi_register_ioapic(handle, res->start, (u32)gsi_base)) {
++		acpi_handle_warn(handle, "failed to register IOAPIC\n");
++		goto exit_release;
++	}
++done:
++	list_add(&ioapic->list, &ioapic_list);
++	mutex_unlock(&ioapic_list_lock);
++
++	if (dev)
++		dev_info(&dev->dev, "%s at %pR, GSI %u\n",
++			 type, res, (u32)gsi_base);
++	else
++		acpi_handle_info(handle, "%s at %pR, GSI %u\n",
++				 type, res, (u32)gsi_base);
++
++	return AE_OK;
++
++exit_release:
++	if (dev)
++		pci_release_region(dev, 0);
++	else
++		release_resource(res);
++exit_disable:
++	if (dev)
++		pci_disable_device(dev);
++exit_put:
++	if (dev)
++		pci_dev_put(dev);
++exit_free:
++	kfree(ioapic);
++exit:
++	mutex_unlock(&ioapic_list_lock);
++	*(acpi_status *)rv = AE_ERROR;
++	return AE_OK;
++}
++
++int acpi_ioapic_add(struct acpi_pci_root *root)
++{
++	acpi_status status, retval = AE_OK;
++
++	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root->device->handle,
++				     UINT_MAX, handle_ioapic_add, NULL,
++				     root->device->handle, (void **)&retval);
++
++	return ACPI_SUCCESS(status) && ACPI_SUCCESS(retval) ? 0 : -ENODEV;
++}
++
++int acpi_ioapic_remove(struct acpi_pci_root *root)
++{
++	int retval = 0;
++	struct acpi_pci_ioapic *ioapic, *tmp;
++
++	mutex_lock(&ioapic_list_lock);
++	list_for_each_entry_safe(ioapic, tmp, &ioapic_list, list) {
++		if (root->device->handle != ioapic->root_handle)
++			continue;
++
++		if (acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base))
++			retval = -EBUSY;
++
++		if (ioapic->pdev) {
++			pci_release_region(ioapic->pdev, 0);
++			pci_disable_device(ioapic->pdev);
++			pci_dev_put(ioapic->pdev);
++		} else if (ioapic->res.flags != IORESOURCE_UNSET) {
++			release_resource(&ioapic->res);
++		}
++		list_del(&ioapic->list);
++		kfree(ioapic);
++	}
++	mutex_unlock(&ioapic_list_lock);
++
++	return retval;
++}
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index e6ae603ed1a1..d83980b18f49 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -600,6 +600,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	if (system_state != SYSTEM_BOOTING) {
+ 		pcibios_resource_survey_bus(root->bus);
+ 		pci_assign_unassigned_root_bus_resources(root->bus);
++		acpi_ioapic_add(root);
  	}
  
- 	ioapic_resources = res;
-@@ -3958,6 +3976,43 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 	return 0;
- }
+ 	pci_lock_rescan_remove();
+@@ -620,6 +621,8 @@ static void acpi_pci_root_remove(struct acpi_device *device)
  
-+int mp_unregister_ioapic(u32 gsi_base)
-+{
-+	int ioapic, pin;
-+	int found = 0;
-+	struct mp_pin_info *pin_info;
+ 	pci_stop_root_bus(root->bus);
+ 
++	WARN_ON(acpi_ioapic_remove(root));
 +
-+	for_each_ioapic(ioapic)
-+		if (ioapics[ioapic].gsi_config.gsi_base == gsi_base) {
-+			found = 1;
-+			break;
-+		}
-+	if (!found) {
-+		pr_warn("can't find IOAPIC for GSI %d\n", gsi_base);
-+		return -ENODEV;
-+	}
-+
-+	for_each_pin(ioapic, pin) {
-+		pin_info = mp_pin_info(ioapic, pin);
-+		if (pin_info->count) {
-+			pr_warn("pin%d on IOAPIC%d is still in use.\n",
-+				pin, ioapic);
-+			return -EBUSY;
-+		}
-+	}
-+
-+	/* Mark entry not present */
-+	ioapics[ioapic].nr_registers  = 0;
-+	ioapic_destroy_irqdomain(ioapic);
-+	free_ioapic_saved_registers(ioapic);
-+	if (ioapics[ioapic].iomem_res)
-+		release_resource(ioapics[ioapic].iomem_res);
-+	clear_fixmap(FIX_IO_APIC_BASE_0 + ioapic);
-+	memset(&ioapics[ioapic], 0, sizeof(ioapics[ioapic]));
-+
-+	return 0;
-+}
-+
- int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 		     irq_hw_number_t hwirq)
- {
+ 	device_set_run_wake(root->bus->bridge, false);
+ 	pci_acpi_remove_bus_pm_notifier(device);
+ 
 -- 
 1.7.10.4
 
