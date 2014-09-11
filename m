@@ -1,159 +1,159 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Fri, 26 Sep 2014 10:54:32 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Liviu Dudau <liviu@dudau.co.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bon0132.outbound.protection.outlook.com ([157.56.111.132]:32416
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751044AbaIKV6y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Sep 2014 17:58:54 -0400
+Message-ID: <1410470694.24184.390.camel@snotra.buserror.net>
+Subject: Re: [PATCH v2 3/3] PCI: Layerscape: Add Layerscape PCIe driver
+From: Scott Wood <scottwood@freescale.com>
+To: Minghuan Lian <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Zang Roy-R61911" <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
- in all platforms
-Message-ID: <20140926085430.GG31106@ulmo>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
- <20140925074235.GN12423@ulmo>
- <20140925144855.GB31157@bart.dudau.co.uk>
- <20140925164937.GB30382@ulmo>
- <20140925171612.GC31157@bart.dudau.co.uk>
- <542505B3.7040208@huawei.com>
+	Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 11 Sep 2014 16:24:54 -0500
+In-Reply-To: <1410469741-11634-3-git-send-email-Minghuan.Lian@freescale.com>
+References: <1410469741-11634-1-git-send-email-Minghuan.Lian@freescale.com>
+	 <1410469741-11634-3-git-send-email-Minghuan.Lian@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="5L6AZ1aJH5mDrqCQ"
-In-Reply-To: <542505B3.7040208@huawei.com>
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, 2014-09-11 at 21:09 +0000, Minghuan Lian wrote:
+> Add support for Freescale Layerscape PCIe controller. This driver
+> re-uses the designware core code.
+> 
+> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> ---
+> Change log:
+> v2:
+> 1. Add pcie-scfg to link scfg device node and remove "fsl, ls-pcie" compatible
+> 2. Use regmap API to access scfg.
+> 3. remove ls1021 PCI device ID.
+> 4. remove unused irq pme_irq and ls_pcie_list.
+> 5. Do not set scfg bit reverse mode
+> 
+>  .../devicetree/bindings/pci/layerscape-pci.txt     |  45 ++++
+>  drivers/pci/host/Kconfig                           |   8 +
+>  drivers/pci/host/Makefile                          |   1 +
+>  drivers/pci/host/pci-layerscape.c                  | 278 +++++++++++++++++++++
+>  4 files changed, 332 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/layerscape-pci.txt
+>  create mode 100644 drivers/pci/host/pci-layerscape.c
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+> new file mode 100644
+> index 0000000..1a5dbd8
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+> @@ -0,0 +1,45 @@
+> +Freescale Layerscape PCIe controller
+> +
+> +This PCIe host controller is based on the Synopsis Designware PCIe IP
+> +and thus inherits all the common properties defined in designware-pcie.txt.
+> +
+> +Required properties:
+> +- compatible: should contain the platform identifier such as "fsl,ls1021a-pcie"
+> +- reg: base addresses and lengths of the PCIe controller
+> +- interrupts: A list of interrupt outputs of the controller. Must contain an
+> +  entry for each entry in the interrupt-names property.
+> +- interrupt-names: Must include the following entries:
+> +  "intr": The interrupt that is asserted for controller interrupts
+> +  "msi": The interrupt that is asserted when an MSI is received
+> +  "pme": The interrupt that is asserted when PME state changes
+> +- pcie-scfg: Must include two entries.
 
---5L6AZ1aJH5mDrqCQ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+fsl,pcie-scfg
 
-On Fri, Sep 26, 2014 at 02:20:35PM +0800, Yijing Wang wrote:
-> >> The PCI core can already deal with that. An MSI chip can be set per bus
-> >> and the weak pcibios_add_bus() can be used to set that. Often it might
-> >> not even be necessary to do it via pcibios_add_bus() if you create the
-> >> root bus directly, since you can attach the MSI chip at that time.
-> >=20
-> > But I'm thinking that we need to move away from pcibios_add_bus() inter=
-face to do
-> > something that should be generic. You don't need to be called for every=
- bus when all
-> > you want is just the root bus in order to add the MSI chip. Also, from =
-looking at
-> > the current patchset, a lot of architectures would set the MSI chip to =
-a global
-> > variable, which means you don't have an option to choose the MSI chip b=
-ased on the
-> > bus.
->=20
-> I also agree to remove the pcibios_add_bus() in arm which call .add_bus()=
- to associate msi_chip
-> and PCI bus.
->=20
-> In my opinions, all PCI devices under the same PCI hostbridge must share =
-same msi chip, right ?
-> So if we can associate msi chip and PCI hostbridge, every PCI device can =
-find correct msi chip.
-> PCI hostbridge private attributes can be saved in PCI sysdata, and this d=
-ata will be propagate to
-> PCI root bus and its child buses.
+> +  The first entry must be a link to the SCFG device node
+> +  The second entry must be '0' or '1' based on physical PCIe controller index.
+> +  used to get SCFG PEXN registers
+> +
+> +Example:
+> +
+> +	pcie@3400000 {
+> +		compatible = "fsl,ls1021a-pcie", "snps,dw-pcie";
 
-struct pci_sys_data is architecture specific, so the code won't become
-any more generic than it is now.
+Can we rely on the config space vendor/device ID instead of hardcoding
+the SoC here?
 
-> >>> What I would like to see is a way of creating the pci_host_bridge str=
-ucture outside
-> >>> the pci_create_root_bus(). That would then allow us to pass this sort=
- of platform
-> >>> details like associated msi_chip into the host bridge and the child b=
-usses will
-> >>> have an easy way of finding the information needed by finding the roo=
-t bus and then
-> >>> the host bridge structure. Then the generic pci_scan_root_bus() can b=
-e used by (mostly)
-> >>> everyone and the drivers can remove their kludges that try to work ar=
-ound the
-> >>> current limitations.
-> >>
-> >> I think both issues are orthogonal. Last time I checked a lot of work
-> >> was still necessary to unify host bridges enough so that it could be
-> >> shared across architectures. But perhaps some of that work has
-> >> happened in the meantime.
-> >=20
-> > Breaking out the host bridge creation from root bus creation is not dif=
-ficult, just not
-> > agree upon. That would be the first step in making the generic host bri=
-ge structure
-> > useful for sharing, specially if used as a sort of "parent" structure t=
-hat you can
-> > wrap with your actual host bridge structure.
->=20
-> Breaking out the host bridge creation is a good idea, but there need a lo=
-t of changes, we can
-> do it in another series.
+> +		reg = <0x00 0x03400000 0x0 0x00010000   /* controller registers */
+> +		       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
+> +		reg-names = "regs", "config";
+> +		interrupts = <GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
+> +			     <GIC_SPI 179 IRQ_TYPE_LEVEL_HIGH>, /* MSI interrupt */
+> +			     <GIC_SPI 181 IRQ_TYPE_LEVEL_HIGH>; /* PME interrupt */
+> +		interrupt-names = "intr", "msi", "pme";
+> +		pcie-scfg = <&scfg 0>;
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		device_type = "pci";
+> +		num-lanes = <4>;
+> +		bus-range = <0x00 0xff>;
+> +		ranges = <0x81000000 0x0 0x00000000 0x40 0x10000000 0x0 0x00010000   /* downstream I/O */
+> +			  0x82000000 0x0 0x00000000 0x41 0x00000000 0x1 0x00000000>; /* non-prefetchable memory */
 
-I agree, this can be done step by step.
+Are these ranges hardcoded in the SoC, or are they the result of iATU
+settings?  If the latter, who configures it and why no prefetchable
+region?
 
-> And if we save msi chip in pci sysdata now, it will be easy to
-> move it to generic pci host bridge. We can also move the pci domain numbe=
-r and other common info to it.
+> +		#interrupt-cells = <1>;
+> +		interrupt-map-mask = <0 0 0 7>;
+> +		interrupt-map = <0000 0 0 1 &gic GIC_SPI 91  IRQ_TYPE_LEVEL_HIGH>,
+> +				<0000 0 0 2 &gic GIC_SPI 188 IRQ_TYPE_LEVEL_HIGH>,
+> +				<0000 0 0 3 &gic GIC_SPI 190 IRQ_TYPE_LEVEL_HIGH>,
+> +				<0000 0 0 4 &gic GIC_SPI 192 IRQ_TYPE_LEVEL_HIGH>;
+> +	};
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 34134d6..c826949 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -82,4 +82,12 @@ config PCIE_XILINX
+>  	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
+>  	  Host Bridge driver.
+>  
+> +config PCI_LAYERSCAPE
+> +	bool "Freescale Layerscape PCIe controller"
+> +	depends on SOC_LS1021A
+> +	select PCIE_DW
+> +	select MFD_SYSCON
+> +	help
+> +	  Say Y here if you want PCIe controller support on Layerscape SoCs.
 
-But like I said above, we wouldn't gain anything by moving the MSI chip
-into struct pci_sys_data, since the core code couldn't access it from
-there. The code wouldn't become more generic than the current approach
-of using pcibios_add_bus(). At least for Tegra it's trivial to just hook
-it up in tegra_pcie_scan_bus() directly (patch attached). So I think a
-generic solution would be to allow it to be easily associated with a
-bus.
+Why does it depend on this particular SoC?  Is the same PCIe controller
+going to be used on other Layerscape chips?
 
-Perhaps it would be as simple as adding a pci_scan_root_bus_with_msi()
-or something with a less awkward name, or extending the existing
-pci_scan_root_bus() with an MSI chip parameter. The function already has
-too many arguments for my taste, though, so I'd like to avoid the
-latter.
+> +static irqreturn_t ls_pcie_msi_irq_handler(int irq, void *data)
+> +{
+> +	struct pcie_port *pp = data;
+> +	struct ls_pcie *pcie = to_ls_pcie(pp);
+> +	unsigned int msi_irq;
+> +
+> +	/* clear the interrupt */
+> +	regmap_write(pcie->scfg, SCFG_SPIMSICLRCR,
+> +		     MSI_LS1021A_DATA(pcie->index));
+> +
+> +	msi_irq = irq_find_mapping(pp->irq_domain, 0);
+> +	if (msi_irq)
+> +		generic_handle_irq(msi_irq);
+> +	else
+> +		/*
+> +		 * that's weird who triggered this?
+> +		 * just clear it
+> +		 */
+> +		dev_info(pcie->dev, "unexpected MSI\n");
+> +
+> +	return IRQ_HANDLED;
+> +}
+> +
 
-Thierry
+Why are you returning IRQ_HANDLED in the "unexpected MSI" case?
 
---5L6AZ1aJH5mDrqCQ
-Content-Type: application/pgp-signature
+-Scott
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
 
-iQIcBAEBAgAGBQJUJSnGAAoJEN0jrNd/PrOh0goP/iGwtiVYdL1p9IiDbqXeyVl7
-QGAF4ZYvzn/3r/fJPxkuPj0OtOLlZL6nC6ldkcJZDW95TNsyFy2sOwj5EaqZ1b5Z
-nIy33WvSqw/dpbWGUQrMtxEFormJGo/eXWUokc4LJjuCtoYwu/DIFG37ER+22UGB
-Bb1RQ/Ds1maXRtIy7jPQuHFgL5W4cDfSVJTJNEJqpmDCs/LTfw1dD/U+8w6BY545
-b/0YYPMQHYsnNJS33wHalb9yXdUnJd3HaEe+X321zPliCHNHjBNGCswxLqCd95Cl
-UyPGX1OlFcsN7IxJkz3pGoe+FSZAB/OybV+90YfxFuEfVBpGe304Q3vNlH8ugcWC
-K/9oBAWG3Qz184JT9w2ZonuFrsxUdSoeL6EqYAY7FBN9w/Lb6lfAgzeSl98a0N/9
-IfjoapMpIWRKt3nPT0EhttoARkum+/qo9LlJ/8SKNbjTY7bmAHplu4ohJAGGe4Xh
-0XF98TY+PGfngwaftMSxdHv9Q4mNfZ7eewmhuxftqvvQ1esIlISwlDEdWwG/BsWn
-brvccYhQp8hsCE1hYNWhnVz2XTPVLgSb6VPLqR1KKWSA73aUdAJgeeh6nIt8qecT
-fqNodyF0aLYQaOZmGzajF0ljxQdB1bhlyZ1awnsbsLlNg9luUO+FzqiLUmQU1D3s
-K2fDZGKlZfFeXJY/oYnO
-=1FJM
------END PGP SIGNATURE-----
-
---5L6AZ1aJH5mDrqCQ--
