@@ -1,61 +1,181 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:61936 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750836AbaI3Sys (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 14:54:48 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>
-Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
-Date: Tue, 30 Sep 2014 20:54:41 +0200
-Message-ID: <3079787.54pZijGjZM@wuerfel>
-In-Reply-To: <20140930174821.GX841@e106497-lin.cambridge.arm.com>
-References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com> <20140930173540.GB16583@e102568-lin.cambridge.arm.com> <20140930174821.GX841@e106497-lin.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC Part1 v1 04/18] x86, irq: Refine hw_irq.h to prepare for irqdomain support
+Date: Thu, 11 Sep 2014 16:24:51 +0800
+Message-Id: <1410423905-26239-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 30 September 2014 18:48:21 Liviu Dudau wrote:
-> > > > > These are the functions I found that refer to pci_sys_data on arm32:
-> > > > > 
-> > > > > pcibios_add_bus
-> > > > > pcibios_remove_bus
-> 
-> These are only needed if you want to do per HB processing of the bus
-> 
-> > > > > pcibios_align_resource
-> 
-> mvebu is the only user of this function.
-> 
-> > > > > pci_mmap_page_range
-> 
-> This is only needed when mapping a PCI resource to userspace. Is that your case here?
-> 
-> > > > > pci_domain_nr
-> > > > > pci_proc_domain
-> 
-> We have equivalent functionality in the generic patches for those.
-> 
+Refine hw_irq.h to prepare for irqdomain support by:
+1) guarding common APIC related interfaces with CONFIG_X86_LOCAL_APIC
+2) guarding interrupt remapping related interfaces with CONFIG_IRQ_REMAP
+3) guarding IOAPIC related interfaces with CONFIG_X86_IO_APIC
 
-We clearly don't need those functions for the new drivers, but that's not
-the point. The problem is that when you build a kernel that has both
-a traditional host bridge driver and a new one in it, you always get those
-functions and they get called from the PCI core, with incorrect arguments.
+There should be no functional changes.
 
-	Arnd
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hw_irq.h |   94 ++++++++++++++++++++++-------------------
+ 1 file changed, 51 insertions(+), 43 deletions(-)
+
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 28f283988c8e..8188d648d48c 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -94,30 +94,7 @@ extern void trace_call_function_single_interrupt(void);
+ #define trace_kvm_posted_intr_ipi kvm_posted_intr_ipi
+ #endif /* CONFIG_TRACING */
+ 
+-/* IOAPIC */
+-#define IO_APIC_IRQ(x) (((x) >= NR_IRQS_LEGACY) || ((1<<(x)) & io_apic_irqs))
+-extern unsigned long io_apic_irqs;
+-
+-extern void setup_IO_APIC(void);
+-extern void disable_IO_APIC(void);
+-
+-struct io_apic_irq_attr {
+-	int ioapic;
+-	int ioapic_pin;
+-	int trigger;
+-	int polarity;
+-};
+-
+-static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
+-					int ioapic, int ioapic_pin,
+-					int trigger, int polarity)
+-{
+-	irq_attr->ioapic	= ioapic;
+-	irq_attr->ioapic_pin	= ioapic_pin;
+-	irq_attr->trigger	= trigger;
+-	irq_attr->polarity	= polarity;
+-}
+-
++#ifdef CONFIG_IRQ_REMAP
+ /* Intel specific interrupt remapping information */
+ struct irq_2_iommu {
+ 	struct intel_iommu *iommu;
+@@ -131,14 +108,10 @@ struct irq_2_irte {
+ 	u16 devid; /* Device ID for IRTE table */
+ 	u16 index; /* Index into IRTE table*/
+ };
++#endif	/* CONFIG_IRQ_REMAP */
+ 
+-/*
+- * This is performance-critical, we want to do it O(1)
+- *
+- * Most irqs are mapped 1:1 with pins.
+- */
++#ifdef	CONFIG_X86_LOCAL_APIC
+ struct irq_cfg {
+-	struct list_head	irq_2_pin;
+ 	cpumask_var_t		domain;
+ 	cpumask_var_t		old_domain;
+ 	u8			vector;
+@@ -150,18 +123,64 @@ struct irq_cfg {
+ 		struct irq_2_irte  irq_2_irte;
+ 	};
+ #endif
++	union {
++#ifdef CONFIG_X86_IO_APIC
++		struct {
++			struct list_head	irq_2_pin;
++		};
++#endif
++	};
+ };
+ 
++extern void setup_vector_irq(int cpu);
+ extern int assign_irq_vector(int, struct irq_cfg *, const struct cpumask *);
+ extern void send_cleanup_vector(struct irq_cfg *);
+ 
+ struct irq_data;
+ int __ioapic_set_affinity(struct irq_data *, const struct cpumask *,
+ 			  unsigned int *dest_id);
+-extern int IO_APIC_get_PCI_irq_vector(int bus, int devfn, int pin);
+-extern void setup_ioapic_dest(void);
++#endif	/* CONFIG_X86_LOCAL_APIC */
++
++#ifdef CONFIG_X86_IO_APIC
++extern void lock_vector_lock(void);
++extern void unlock_vector_lock(void);
++extern void __setup_vector_irq(int cpu);
++#else
++static inline void lock_vector_lock(void) {}
++static inline void unlock_vector_lock(void) {}
++static inline void __setup_vector_irq(int cpu) {}
++#endif
++
++/* IOAPIC */
++#ifdef CONFIG_X86_IO_APIC
++struct io_apic_irq_attr {
++	int ioapic;
++	int ioapic_pin;
++	int trigger;
++	int polarity;
++};
++
++static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
++					int ioapic, int ioapic_pin,
++					int trigger, int polarity)
++{
++	irq_attr->ioapic	= ioapic;
++	irq_attr->ioapic_pin	= ioapic_pin;
++	irq_attr->trigger	= trigger;
++	irq_attr->polarity	= polarity;
++}
+ 
++extern void setup_IO_APIC(void);
+ extern void enable_IO_APIC(void);
++extern void disable_IO_APIC(void);
++extern void setup_ioapic_dest(void);
++extern int IO_APIC_get_PCI_irq_vector(int bus, int devfn, int pin);
++
++extern unsigned long io_apic_irqs;
++#define IO_APIC_IRQ(x) (((x) >= NR_IRQS_LEGACY) || ((1 << (x)) & io_apic_irqs))
++#else	/* CONFIG_X86_IO_APIC */
++#define IO_APIC_IRQ(x)	0
++#endif	/* CONFIG_X86_IO_APIC */
+ 
+ /* Statistics */
+ extern atomic_t irq_err_count;
+@@ -195,17 +214,6 @@ extern void (*__initconst interrupt[NR_VECTORS-FIRST_EXTERNAL_VECTOR])(void);
+ 
+ typedef int vector_irq_t[NR_VECTORS];
+ DECLARE_PER_CPU(vector_irq_t, vector_irq);
+-extern void setup_vector_irq(int cpu);
+-
+-#ifdef CONFIG_X86_IO_APIC
+-extern void lock_vector_lock(void);
+-extern void unlock_vector_lock(void);
+-extern void __setup_vector_irq(int cpu);
+-#else
+-static inline void lock_vector_lock(void) {}
+-static inline void unlock_vector_lock(void) {}
+-static inline void __setup_vector_irq(int cpu) {}
+-#endif
+ 
+ #endif /* !ASSEMBLY_ */
+ 
+-- 
+1.7.10.4
+
