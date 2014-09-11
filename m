@@ -1,118 +1,70 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Grant Likely <grant.likely@linaro.org>
-Subject: [PATCH v10 07/10] OF: Introduce helper function for getting PCI domain_nr
-Date: Mon,  8 Sep 2014 14:54:29 +0100
-Message-Id: <1410184472-17630-8-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bbn0103.outbound.protection.outlook.com ([157.56.111.103]:39060
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755934AbaIKNIo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Sep 2014 09:08:44 -0400
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Minghuan Lian" <Minghuan.Lian@freescale.com>
+Subject: [PATCH v2 2/3] PCI: designware: Add get_msi_data to pcie_host_ops
+Date: Thu, 11 Sep 2014 21:09:00 +0000
+Message-ID: <1410469741-11634-2-git-send-email-Minghuan.Lian@freescale.com>
+In-Reply-To: <1410469741-11634-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1410469741-11634-1-git-send-email-Minghuan.Lian@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add of_pci_get_domain_nr() to retrieve the PCI domain number
-of a given device from DT. If the information is not present,
-the function can be requested to allocate a new domain number.
+The patch adds get_msi_data for some platforms to return their
+special MSI message data.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
 ---
- drivers/of/of_pci.c    | 34 ++++++++++++++++++++++++++++++++++
- include/linux/of_pci.h |  7 +++++++
- 2 files changed, 41 insertions(+)
+Change log:
+v2: no change just derived from v1
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 8481996..a107edb 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -89,6 +89,40 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
- }
- EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
+ drivers/pci/host/pcie-designware.c | 6 +++++-
+ drivers/pci/host/pcie-designware.h | 1 +
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 1d37bed..eae4917 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -366,7 +366,11 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+ 	else
+ 		msg.address_lo = virt_to_phys((void *)pp->msi_data);
+ 	msg.address_hi = 0x0;
+-	msg.data = pos;
++
++	if (pp->ops->get_msi_data)
++		msg.data = pp->ops->get_msi_data(pp, pos);
++	else
++		msg.data = pos;
  
-+static atomic_t of_domain_nr = ATOMIC_INIT(-1);
-+
-+/**
-+ * This function will try to obtain the host bridge domain number by
-+ * using of_alias_get_id() call with "pci-domain" as a stem. If that
-+ * fails, a local allocator will be used. The local allocator can
-+ * be requested to return a new domain_nr if the information is missing
-+ * from the device tree.
-+ *
-+ * @node: device tree node with the domain information
-+ * @allocate_if_missing: if DT lacks information about the domain nr,
-+ * allocate a new number.
-+ *
-+ * Returns the associated domain number from DT, or a new domain number
-+ * if DT information is missing and @allocate_if_missing is true. If
-+ * @allocate_if_missing is false then the last allocated domain number
-+ * will be returned.
-+ */
-+int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
-+{
-+	int domain;
-+
-+	domain = of_alias_get_id(node, "pci-domain");
-+	if (domain == -ENODEV) {
-+		if (allocate_if_missing)
-+			domain = atomic_inc_return(&of_domain_nr);
-+		else
-+			domain = atomic_read(&of_domain_nr);
-+	}
-+
-+	return domain;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_get_domain_nr);
-+
- #ifdef CONFIG_PCI_MSI
+ 	write_msi_msg(irq, &msg);
  
- static LIST_HEAD(of_pci_msi_chip_list);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index dde3a4a..3a3824c 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -15,6 +15,7 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
- int of_pci_get_devfn(struct device_node *np);
- int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
-+int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing);
- #else
- static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
- {
-@@ -43,6 +44,12 @@ of_pci_parse_bus_range(struct device_node *node, struct resource *res)
- {
- 	return -EINVAL;
- }
-+
-+static inline int
-+of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
-+{
-+	return -1;
-+}
- #endif
- 
- #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 8be2b33..c8ec879 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -75,6 +75,7 @@ struct pcie_host_ops {
+ 	void (*msi_set_irq)(struct pcie_port *pp, int irq);
+ 	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
+ 	u32 (*get_msi_addr)(struct pcie_port *pp);
++	u32 (*get_msi_data)(struct pcie_port *pp, int pos);
+ 	void (*scan_bus)(struct pcie_port *pp);
+ 	int (*msi_host_init)(struct pcie_port *pp, struct msi_chip *chip);
+ };
 -- 
-2.0.4
+1.9.1
 
