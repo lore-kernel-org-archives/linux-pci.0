@@ -1,169 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:32780 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752437AbaIZDNG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Sep 2014 23:13:06 -0400
-Message-ID: <5424D99E.2000900@huawei.com>
-Date: Fri, 26 Sep 2014 11:12:30 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-by2on0142.outbound.protection.outlook.com ([207.46.100.142]:35968
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751091AbaILKOX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 12 Sep 2014 06:14:23 -0400
+Message-ID: <5412C75F.30207@amd.com>
+Date: Fri, 12 Sep 2014 05:13:51 -0500
+From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+To: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 04/22] x86/xen/MSI: Eliminate arch_msix_mask_irq()
- and arch_msi_mask_irq()
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com> <1411614872-4009-5-git-send-email-wangyijing@huawei.com> <20140925143346.GF20089@laptop.dumpdata.com>
-In-Reply-To: <20140925143346.GF20089@laptop.dumpdata.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Rob Herring <robh+dt@kernel.org>,
+	"Jason Gunthorpe" <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	"Will Deacon" <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+CC: Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Device Tree ML" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v10 09/10] PCI: Assign unassigned bus resources in pci_scan_root_bus()
+References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
+ <1410184472-17630-10-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1410184472-17630-10-git-send-email-Liviu.Dudau@arm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/25 22:33, Konrad Rzeszutek Wilk wrote:
-> On Thu, Sep 25, 2014 at 11:14:14AM +0800, Yijing Wang wrote:
->> Commit 0e4ccb150 added two __weak arch functions arch_msix_mask_irq()
->> and arch_msi_mask_irq() to fix a bug found when running xen in x86.
->> Introduced these two funcntions make MSI code complex. And mask/unmask
-> 
-> "These two functions made the MSI code more complex."
+On 9/8/2014 8:54 AM, Liviu Dudau wrote:
+> If the firmware has not assigned all the bus resources and
+> we are not just probing the PCIe busses, it makes sense to
+> assign the unassigned resources in pci_scan_root_bus().
+>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> ---
+>   drivers/pci/probe.c | 3 +++
+>   1 file changed, 3 insertions(+)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ef891d2..508cf61 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1953,6 +1953,9 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+>   	if (!found)
+>   		pci_bus_update_busn_res_end(b, max);
+>
+> +	if (!pci_has_flag(PCI_PROBE_ONLY))
+> +		pci_assign_unassigned_bus_resources(b);
+> +
+>   	pci_bus_add_devices(b);
+>   	return b;
+>   }
+>
 
-OK, will update, thanks.
+Liviu,
 
->> is the irq actions related to interrupt controller, should not use
->> weak arch functions to override mask/unmask interfaces. This patch
-> 
-> I am bit baffled of what you are saying.
+Besides the check for PCI_PROBE_ONLY here, I think we also need to avoid calling
+"pci_enable_resources()" in the "driver/pci/pci.c: pcibios_enable_device()" for
+PCI_PROBE_ONLY mode since the resource is not assigned by Linux. Otherwise, the
+"drivers/pci/setup-res.c: pci_enable_resource()" would fail w/ error:
 
-Sorry for my poor English. The meaning is that I think override irq_chip
-mask/unmask irq is better than introduced weak functions.
+     can't enable device: BAR ..... not assigned
 
->> reverted commit 0e4ccb150 and export struct irq_chip msi_chip, modify
->> msi_chip->irq_mask/irq_unmask() in xen init functions to fix this
->> bug for simplicity. Also this is preparation for using struct
->> msi_chip instead of weak arch MSI functions in all platforms.
->> Keep default_msi_mask_irq() and default_msix_mask_irq() in
->> linux/msi.h to make s390 MSI code compile happy, they wiil be removed
-> 
-> s/wiil/will.
+Actually, in "arch/arm/kernel/bios32.c:", the weak "pcibios_enable_device()" function
+also has the check for PCI_PROBE_ONLY mode before calling pci_enable_resources().
 
-Will update, thanks.
+Thanks,
 
-> 
->> in the later patch.
->>
->> Tested-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> 
-> I don't even remember testing it - I guess I did the earlier version.
-
-Yes, I added your tested-by because in last version, you help to test the whole series in xen.
-And I didn't change something in xen part patches in this new version.
-
-> 
-> So a couple of questions since I've totally forgotten about this:
-> 
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index 50f67a3..5f8f3af 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
-...
->>  static void msi_set_mask_bit(struct irq_data *data, u32 flag)
->> @@ -852,7 +842,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
->>  	/* Return the device with MSI unmasked as initial states */
->>  	mask = msi_mask(desc->msi_attrib.multi_cap);
->>  	/* Keep cached state to be restored */
->> -	arch_msi_mask_irq(desc, mask, ~mask);
->> +	__msi_mask_irq(desc, mask, ~mask);
-> 
-> If I am reading this right, it will call the old 'default_msi_mask_irq'
-> which is exactly what we don't want to do under Xen. We want to call
-> the NOP code.
-
-Good catch. I missed this one, it will also be called in xen.
-I need to rework this patch.
-
->>  
->>  	/* Restore dev->irq to its default pin-assertion irq */
->>  	dev->irq = desc->msi_attrib.default_irq;
->> @@ -950,7 +940,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
->>  	/* Return the device with MSI-X masked as initial states */
->>  	list_for_each_entry(entry, &dev->msi_list, list) {
->>  		/* Keep cached states to be restored */
->> -		arch_msix_mask_irq(entry, 1);
->> +		__msix_mask_irq(entry, 1);
-> 
-> Ditto here.
-> 
-> Looking more at this code I have to retract my Reviewed-by and Tested-by
-> on the whole series.
-
-OK, because this patch still need some enhancement.
-
-> 
-> Is it possible to get a git tree for this please?
-
-I will provide a git tree as soon as possible.
-
-Thanks!
-Yijing.
-
-> 
->>  	}
->>  
->>  	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
->> diff --git a/include/linux/msi.h b/include/linux/msi.h
->> index 45ef8cb..cc46a62 100644
->> --- a/include/linux/msi.h
->> +++ b/include/linux/msi.h
->> @@ -19,6 +19,8 @@ void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->>  void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->>  void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->>  void write_msi_msg(unsigned int irq, struct msi_msg *msg);
->> +u32 __msix_mask_irq(struct msi_desc *desc, u32 flag);
->> +u32 __msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag);
->>  
->>  struct msi_desc {
->>  	struct {
->> @@ -59,8 +61,8 @@ void arch_restore_msi_irqs(struct pci_dev *dev);
->>  
->>  void default_teardown_msi_irqs(struct pci_dev *dev);
->>  void default_restore_msi_irqs(struct pci_dev *dev);
->> -u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag);
->> -u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag);
->> +#define default_msi_mask_irq	__msi_mask_irq
->> +#define default_msix_mask_irq	__msix_mask_irq
->>  
->>  struct msi_chip {
->>  	struct module *owner;
->> -- 
->> 1.7.1
->>
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
+Suravee
 
