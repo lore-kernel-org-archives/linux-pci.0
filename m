@@ -1,40 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9599 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755985AbaIQQJF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Sep 2014 12:09:05 -0400
-Date: Wed, 17 Sep 2014 17:17:55 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	linux-pci@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>
-Subject: Re: [PATCH v2 2/3] PCI/MSI/Armada-370-xp: Remove
- arch_msi_check_device()
-Message-ID: <20140917161754.GG8793@agordeev.usersys.redhat.com>
-References: <cover.1410078503.git.agordeev@redhat.com>
- <9f3497a0f478f3ee7d4a16b9a4221d4377e5863d.1410078503.git.agordeev@redhat.com>
- <20140917155554.GE16945@titan.lakedaemon.net>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: [PATCH v1 09/13] PCI: Apply _HPP settings to PCIe devices as well
+ as PCI and PCI-X
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatxjain@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Fri, 12 Sep 2014 12:03:48 -0600
+Message-ID: <20140912180348.1630.24201.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140917155554.GE16945@titan.lakedaemon.net>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 17, 2014 at 11:55:54AM -0400, Jason Cooper wrote:
-> Now that ThomasP has had a chance to test, please adjust the subject
-> line to 'irqchip: armada-370-xp: M...' and
+The ACPI _HPP method was defined before PCIe existed, so its documentation
+only mentions PCI.  The _HPX Type 0 setting record is essentially identical
+to _HPP, but the spec (ACPI rev 5.0, sec 6.2.8.1) says it should be applied
+to PCI, PCI-X, and PCIe devices, with settings being ignored if they are
+not applicable.
 
-Hi Bjorn,
+Some platforms with both conventional PCI and PCIe devices provide only
+_HPP (not _HPX), so treat _HPP the same way as an _HPX Type 0 record and
+apply it to PCIe devices as well as PCI and PCI-X.
 
-Do you want me to resend the patch?
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |    9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-> Acked-by: Jason Cooper <jason@lakedaemon.net>
-> 
-> thx,
-> 
-> Jason.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 4b3b29bc7a82..003d112a783d 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1249,15 +1249,8 @@ static void program_hpp_type0(struct pci_dev *dev, struct hpp_type0 *hpp)
+ {
+ 	u16 pci_cmd, pci_bctl;
+ 
+-	if (!hpp) {
+-		/*
+-		 * Perhaps we *should* use default settings for PCIe, but
+-		 * pciehp didn't, so we won't either.
+-		 */
+-		if (pci_is_pcie(dev))
+-			return;
++	if (!hpp)
+ 		hpp = &pci_default_type0;
+-	}
+ 
+ 	if (hpp->revision > 1) {
+ 		dev_warn(&dev->dev,
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
