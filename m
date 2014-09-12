@@ -1,61 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, SpacemanSpiff <a818958@trbvm.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Dave Airlie <airlied@linux.ie>, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	"Jose P." <lbdkmjdf@sharklasers.com>
-Subject: Re: [PATCH 0/2] PCI: Ignore hotplug events for dual GPU systems
-Date: Sun, 14 Sep 2014 20:04:40 +0200
-Message-ID: <1434331.0IZIM5O2Ci@vostro.rjw.lan>
-In-Reply-To: <20140911222022.16809.57079.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20140911222022.16809.57079.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <ghbnqkeh9k.fsf@quad.gouders.net>
+References: <ghiol53r9u.fsf@lena.gouders.net> <CAMxnaaXiEZeJOsgQ6ZSbiqy5Z1zNoXonwNSQNRyRhV0t5jveYQ@mail.gmail.com>
+ <ghwq9k3m6z.fsf@lena.gouders.net> <CAMxnaaUqTMf1uEQUqrAGjym8ZrQaBf2QbE4Jqxh2t6a2JgJkOQ@mail.gmail.com>
+ <ghioku5l29.fsf@lena.gouders.net> <CAErSpo7j=a3y2MVsvEQGQ4B63_mNCyZSRNXNEZa-2++xs88NmQ@mail.gmail.com>
+ <CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com>
+ <ghppf15236.fsf@quad.gouders.net> <CAErSpo5SVUOz+qa_x5JTC+-Y5ewTyYzA0N=jyPtK9LaguRrt=w@mail.gmail.com>
+ <ghd2b1svdw.fsf@quad.gouders.net> <CAErSpo5e0GOdVbZdQYriP+aWziKELpb9BWTgJ4ERPia354CM5w@mail.gmail.com>
+ <ghvbotd8es.fsf@quad.gouders.net> <ghzje5f5zt.fsf@lena.gouders.net> <ghbnqkeh9k.fsf@quad.gouders.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 12 Sep 2014 14:38:12 -0600
+Message-ID: <CAErSpo7knOrXNqimWXP0t7eGWYZhEhy1=i6358pBtk9Nd5RO8g@mail.gmail.com>
+Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
+To: Dirk Gouders <dirk@gouders.net>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, September 11, 2014 04:23:54 PM Bjorn Helgaas wrote:
-> These are intended to resolve problems on dual GPU systems where the radeon
-> driver becomes unusable because of problems suspending or resuming a GPU.
-> When the GPU is powered off, we may get hotplug remove events, and we 
-> would normally unbind the driver and destroy the pci_dev.  But in this
-> case, the radeon and nouveau drivers expect to remain bound to the device
-> because it isn't really removable, and they may power it back on later.
-> 
-> Links to the bug reports in the patch changelogs.
-> 
-> I would like to get these into v3.17 if they seem reasonable.
+On Fri, Sep 12, 2014 at 2:05 PM, Dirk Gouders <dirk@gouders.net> wrote:
+> ...
+> Yinghai,
+>
+> I now applied your patches and tested them:
+>
+> echo 1 > /sys/bus/pci/devices/0000\:00\:0a.0/pcie_link_disable
+> echo 0 > /sys/bus/pci/devices/0000\:00\:0a.0/pcie_link_disable
+>
+> The FC Adapter did not show up, this is the dmesg output (I also tested
+> with 0b.0):
+>
+> [  143.294168] pcieport 0000:00:0a.0: pcie_link_disable_set: lnk_ctrl = 18
+> [  148.284456] pcieport 0000:00:0a.0: pcie_link_disable_set: lnk_ctrl = 8
+> [  304.065942] pcieport 0000:00:0b.0: pcie_link_disable_set: lnk_ctrl = 18
+> [  309.035278] pcieport 0000:00:0b.0: pcie_link_disable_set: lnk_ctrl = 8
+>
+> So, probably my test environment does not work as expected and I have to
+> test it on the failing machine.
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+I think you probably did reproduce the problem, it's just that it
+wasn't fixed by bouncing the link.  What if you try the following:
 
-for both.
+    DEV=00:0a.0
+    setpci -s$DEV BRIDGE_CONTROL.W=0x0040
+    sleep 1
+    setpci -s$DEV BRIDGE_CONTROL.W=0x0000
+    sleep 1
+    echo 1 > /sys/bus/pci/rescan
 
-> ---
-> 
-> Bjorn Helgaas (2):
->       PCI: Add pci_ignore_hotplug() to ignore hotplug events for a device
->       ACPIPHP / radeon / nouveau: Remove acpi_bus_no_hotplug()
-> 
-> 
->  drivers/acpi/bus.c                           |   10 ----------
->  drivers/gpu/drm/nouveau/nouveau_acpi.c       |   16 ++--------------
->  drivers/gpu/drm/nouveau/nouveau_drm.c        |    1 +
->  drivers/gpu/drm/radeon/radeon_atpx_handler.c |   16 ++--------------
->  drivers/gpu/drm/radeon/radeon_drv.c          |    1 +
->  drivers/pci/hotplug/acpiphp_glue.c           |   16 ++++++----------
->  drivers/pci/hotplug/pciehp_hpc.c             |   12 ++++++++++++
->  include/acpi/acpi_bus.h                      |    4 +---
->  include/linux/pci.h                          |    6 ++++++
->  9 files changed, 31 insertions(+), 51 deletions(-)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks to your patch, we reconfigured the secondary bus number of
+bridge 00:0a.0.  The commands above should reset the FC device behind
+that bridge.  I suspect it will then respond when we rescan that bus.
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Bjorn
