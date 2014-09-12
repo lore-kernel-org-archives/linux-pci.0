@@ -1,74 +1,101 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <5424CBC1.8080702@huawei.com>
-Date: Fri, 26 Sep 2014 10:13:21 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+Date: Fri, 12 Sep 2014 11:34:29 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 14/22] MIPS/Xlp/MSI: Use MSI chip framework to configure
- MSI/MSI-X irq
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com> <1411614872-4009-15-git-send-email-wangyijing@huawei.com> <20140925073608.GK12423@ulmo>
-In-Reply-To: <20140925073608.GK12423@ulmo>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v10 09/10] PCI: Assign unassigned bus resources in
+ pci_scan_root_bus()
+Message-ID: <20140912103429.GA1994@e106497-lin.cambridge.arm.com>
+References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
+ <1410184472-17630-10-git-send-email-Liviu.Dudau@arm.com>
+ <5412C75F.30207@amd.com>
+MIME-Version: 1.0
+In-Reply-To: <5412C75F.30207@amd.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/25 15:36, Thierry Reding wrote:
-> On Thu, Sep 25, 2014 at 11:14:24AM +0800, Yijing Wang wrote:
->> Use MSI chip framework instead of arch MSI functions to configure
->> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+On Fri, Sep 12, 2014 at 11:13:51AM +0100, Suravee Suthikulpanit wrote:
+> On 9/8/2014 8:54 AM, Liviu Dudau wrote:
+> > If the firmware has not assigned all the bus resources and
+> > we are not just probing the PCIe busses, it makes sense to
+> > assign the unassigned resources in pci_scan_root_bus().
+> >
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> > Cc: Rob Herring <robh+dt@kernel.org>
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > ---
+> >   drivers/pci/probe.c | 3 +++
+> >   1 file changed, 3 insertions(+)
+> >
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index ef891d2..508cf61 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -1953,6 +1953,9 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+> >   	if (!found)
+> >   		pci_bus_update_busn_res_end(b, max);
+> >
+> > +	if (!pci_has_flag(PCI_PROBE_ONLY))
+> > +		pci_assign_unassigned_bus_resources(b);
+> > +
+> >   	pci_bus_add_devices(b);
+> >   	return b;
+> >   }
+> >
 > 
-> Nit: s/irq/IRQ/ in the above.
+> Liviu,
 > 
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  arch/mips/pci/msi-xlp.c |   14 ++++++++++++--
->>  1 files changed, 12 insertions(+), 2 deletions(-)
->>
->> diff --git a/arch/mips/pci/msi-xlp.c b/arch/mips/pci/msi-xlp.c
->> index e469dc7..6b791ef 100644
->> --- a/arch/mips/pci/msi-xlp.c
->> +++ b/arch/mips/pci/msi-xlp.c
->> @@ -245,7 +245,7 @@ static struct irq_chip xlp_msix_chip = {
->>  	.irq_unmask	= unmask_msi_irq,
->>  };
->>  
->> -void arch_teardown_msi_irq(unsigned int irq)
->> +void xlp_teardown_msi_irq(unsigned int irq)
+> Besides the check for PCI_PROBE_ONLY here, I think we also need to avoid calling
+> "pci_enable_resources()" in the "driver/pci/pci.c: pcibios_enable_device()" for
+> PCI_PROBE_ONLY mode since the resource is not assigned by Linux. Otherwise, the
+> "drivers/pci/setup-res.c: pci_enable_resource()" would fail w/ error:
 > 
-> Should this not be static now as well?
+>      can't enable device: BAR ..... not assigned
 
-Yes, Will update.
+Hmm, are you sure that is not because the host bridge resources have not been
+requested? pci-host-generic.c uses PCI_PROBE_ONLY and yet it works with the series as
+is. But it does request_resource() for the host bridge resources inside the driver.
+
+Best regards,
+Liviu
 
 > 
-> Thierry
+> Actually, in "arch/arm/kernel/bios32.c:", the weak "pcibios_enable_device()" function
+> also has the check for PCI_PROBE_ONLY mode before calling pci_enable_resources().
 > 
-
+> Thanks,
+> 
+> Suravee
+> 
+> 
 
 -- 
-Thanks!
-Yijing
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
