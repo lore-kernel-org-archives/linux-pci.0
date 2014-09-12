@@ -1,66 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:40103 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751577AbaIVSxV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 14:53:21 -0400
-Received: by mail-ie0-f175.google.com with SMTP id rl12so1744830iec.34
-        for <linux-pci@vger.kernel.org>; Mon, 22 Sep 2014 11:53:21 -0700 (PDT)
-Date: Mon, 22 Sep 2014 12:53:15 -0600
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:56431 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752337AbaILSDn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Sep 2014 14:03:43 -0400
+Received: by mail-ie0-f171.google.com with SMTP id y20so1397091ier.30
+        for <linux-pci@vger.kernel.org>; Fri, 12 Sep 2014 11:03:43 -0700 (PDT)
+Subject: [PATCH v1 08/13] PCI: Remove unused pci_configure_slot()
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Rajat Jain <rajatxjain@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	rajatjain@juniper.net, groeck@juniper.net
-Subject: Re: [PATCH] pci/probe: Ignore the device id while handling CRS
-Message-ID: <20140922185315.GA1880@google.com>
-References: <540E1D75.5000500@gmail.com>
+Cc: Rajat Jain <rajatxjain@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Fri, 12 Sep 2014 12:03:41 -0600
+Message-ID: <20140912180341.1630.25395.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <540E1D75.5000500@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 08, 2014 at 02:19:49PM -0700, Rajat Jain wrote:
-> Some root ports may return the actual device id returned by the
-> endpoint, instead of faking up a synthetic id (0xFFFF) as specified
-> by the PCIe spec (sec 2.3.2). We have seen such broken devices in the
-> past that match this behaviour:
-> (Ref: https://lkml.org/lkml/2007/11/1/198)
-> 
-> To take care of the same, CRS was disabled then, however, we want to
-> enable CRS now (https://lkml.org/lkml/2014/9/2/509), but still do not
-> want to break such devices. Thus check only against the
-> (vendor id == 1) and ignore the device id.
-> 
-> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-> Signed-off-by: Guenter Roeck <groeck@juniper.net>
+All pci_configure_slot() uses have been removed, so remove the definition
+as well.
 
-Applied to pci/enumeration for v3.18, thanks!
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c         |   27 ---------------------------
+ include/linux/pci_hotplug.h |    2 --
+ 2 files changed, 29 deletions(-)
 
-> ---
->  drivers/pci/probe.c |    9 +++++++--
->  1 file changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 3c4c35c..0076a9b 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1305,8 +1305,13 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
->  	    *l == 0x0000ffff || *l == 0xffff0000)
->  		return false;
->  
-> -	/* Configuration request Retry Status */
-> -	while (*l == 0xffff0001) {
-> +	/*
-> +	 * Configuration request Retry Status. Note that some root ports
-> +	 * are broken and may return actual device ID instead of a synthetic ID
-> +	 * (0xFFFF) to be faked as per the PCIe spec. Hence ignore the device ID
-> +	 * and only check for (vendor id == 1)
-> +	 */
-> +	while (*l & 0xffff == 0x0001) {
->  		if (!crs_timeout)
->  			return false;
->  
-> -- 
-> 1.7.9.5
-> 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 93d2b41163fa..4b3b29bc7a82 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1358,33 +1358,6 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+ 	 */
+ }
+ 
+-void pci_configure_slot(struct pci_dev *dev)
+-{
+-	struct pci_dev *cdev;
+-	struct hotplug_params hpp;
+-
+-	if (!(dev->hdr_type == PCI_HEADER_TYPE_NORMAL ||
+-			(dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
+-			(dev->class >> 8) == PCI_CLASS_BRIDGE_PCI)))
+-		return;
+-
+-	pcie_bus_configure_settings(dev->bus);
+-
+-	memset(&hpp, 0, sizeof(hpp));
+-	pci_get_hp_params(dev, &hpp);
+-
+-	program_hpp_type2(dev, hpp.t2);
+-	program_hpp_type1(dev, hpp.t1);
+-	program_hpp_type0(dev, hpp.t0);
+-
+-	if (dev->subordinate) {
+-		list_for_each_entry(cdev, &dev->subordinate->devices,
+-				    bus_list)
+-			pci_configure_slot(cdev);
+-	}
+-}
+-EXPORT_SYMBOL_GPL(pci_configure_slot);
+-
+ static void pci_configure_device(struct pci_dev *dev)
+ {
+ 	struct hotplug_params hpp;
+diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
+index 5f2e559af6b0..2706ee9a4327 100644
+--- a/include/linux/pci_hotplug.h
++++ b/include/linux/pci_hotplug.h
+@@ -187,6 +187,4 @@ static inline int pci_get_hp_params(struct pci_dev *dev,
+ 	return -ENODEV;
+ }
+ #endif
+-
+-void pci_configure_slot(struct pci_dev *dev);
+ #endif
+
