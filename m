@@ -1,57 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:58627 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751678AbaIXCpj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 22:45:39 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v4 2/3] PCI/MSI: Remove unused function read_msi_msg()
-Date: Wed, 24 Sep 2014 11:09:53 +0800
-Message-ID: <1411528193-2032-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: [PATCH v1 01/13] PCI: Remove "no hotplug settings from platform"
+ warning
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatxjain@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Fri, 12 Sep 2014 12:02:54 -0600
+Message-ID: <20140912180254.1630.79691.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now no one uses read_msi_msg(), remove it.
+We print way too many messages like this:
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+    pci 0000:00:00.0: no hotplug settings from platform
+    pci 0000:00:00.0: using default PCI settings
+
+This usually happens when the platform doesn't supply an ACPI _HPP method,
+but the method is optional, so there's no point in warning about it.
+
+Not only are the messages useless, but we call pci_configure_slot() far too
+many times, so they're repeated many times.  I'll fix the overuse of
+pci_configure_slot() too, but that will wait until the next merge window.
+
+For now, just remove both log messages.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=84391
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/msi.c   |    7 -------
- include/linux/msi.h |    1 -
- 2 files changed, 0 insertions(+), 8 deletions(-)
+ drivers/pci/hotplug/pcihp_slot.c |    6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 8746ecd..45da095 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -289,13 +289,6 @@ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+diff --git a/drivers/pci/hotplug/pcihp_slot.c b/drivers/pci/hotplug/pcihp_slot.c
+index e246a10a0d2c..3e36ec8d708a 100644
+--- a/drivers/pci/hotplug/pcihp_slot.c
++++ b/drivers/pci/hotplug/pcihp_slot.c
+@@ -46,7 +46,6 @@ static void program_hpp_type0(struct pci_dev *dev, struct hpp_type0 *hpp)
+ 		 */
+ 		if (pci_is_pcie(dev))
+ 			return;
+-		dev_info(&dev->dev, "using default PCI settings\n");
+ 		hpp = &pci_default_type0;
  	}
- }
  
--void read_msi_msg(unsigned int irq, struct msi_msg *msg)
--{
--	struct msi_desc *entry = irq_get_msi_desc(irq);
--
--	__read_msi_msg(entry, msg);
--}
--
- void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+@@ -153,7 +152,6 @@ void pci_configure_slot(struct pci_dev *dev)
  {
- 	/* Assert that the cache is valid, assuming that
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 329ec73..9ec258e 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -18,7 +18,6 @@ void unmask_msi_irq(struct irq_data *data);
- void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
--void read_msi_msg(unsigned int irq, struct msi_msg *msg);
- void write_msi_msg(unsigned int irq, struct msi_msg *msg);
+ 	struct pci_dev *cdev;
+ 	struct hotplug_params hpp;
+-	int ret;
  
- struct msi_desc {
--- 
-1.7.1
+ 	if (!(dev->hdr_type == PCI_HEADER_TYPE_NORMAL ||
+ 			(dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
+@@ -163,9 +161,7 @@ void pci_configure_slot(struct pci_dev *dev)
+ 	pcie_bus_configure_settings(dev->bus);
+ 
+ 	memset(&hpp, 0, sizeof(hpp));
+-	ret = pci_get_hp_params(dev, &hpp);
+-	if (ret)
+-		dev_warn(&dev->dev, "no hotplug settings from platform\n");
++	pci_get_hp_params(dev, &hpp);
+ 
+ 	program_hpp_type2(dev, hpp.t2);
+ 	program_hpp_type1(dev, hpp.t1);
 
