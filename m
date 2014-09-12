@@ -1,78 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:60165 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750826AbaIXH26 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 03:28:58 -0400
-Date: Wed, 24 Sep 2014 09:28:54 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mathias Krause <minipli@googlemail.com>, linux-pci@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/5] x86/PCI: Minor size reduction by marking init code
- and data as such
-Message-ID: <20140924072853.GB1768@gmail.com>
-References: <1409001999-23161-1-git-send-email-minipli@googlemail.com>
- <20140922202748.GE1880@google.com>
- <20140922203428.GF1880@google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: [PATCH v1 10/13] PCI: Preserve BIOS PCI_COMMAND_SERR and
+ PCI_COMMAND_PARITY settings
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatxjain@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Fri, 12 Sep 2014 12:03:54 -0600
+Message-ID: <20140912180354.1630.57838.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140922203428.GF1880@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Do not clear PCI_COMMAND_SERR or PCI_COMMAND_PARITY based on _HPP.  The
+spec (ACPI rev 5.0, sec 6.2.7) says that when "Enable SERR" is set to 1,
+we should enable SERR in the command register.  It says nothing about
+*disabling* SERR or PERR; in fact, the example in 6.2.7.1 says we should
+leave PERR alone unless "Enable PERR" is 1.
 
-* Bjorn Helgaas <bhelgaas@google.com> wrote:
+For hot-added devices, this probably doesn't matter because they power up
+with these bits cleared.  But in addition to hot-plugged devices, the spec
+allows the platform to use _HPP for "configuration of PCI devices not
+configured by the BIOS at system boot," and it may make a difference for
+devices present at boot.
 
-> [+cc x86 folks]
-> 
-> On Mon, Sep 22, 2014 at 02:27:48PM -0600, Bjorn Helgaas wrote:
-> > On Mon, Aug 25, 2014 at 11:26:34PM +0200, Mathias Krause wrote:
-> > > Hi Bjorn,
-> > > 
-> > > this series is a collection of patches trying to mark initialization
-> > > code and data of the x86 specific PCI code as such. It also contains
-> > > __init annotation cleanups to move them to the spot they belong to
-> > > according to include/linux/init.h.
-> > > 
-> > > The annotation leads to a nice reduction of run-time memory size. At
-> > > least two additional pages can be released after initialization which
-> > > are otherwise occupied by code and data no longer needed.
-> > > 
-> > > Please apply!
-> > > 
-> > > Thanks,
-> > > 
-> > > Mathias Krause (5):
-> > >   x86/PCI: Mark DMI tables as initialization data
-> > >   x86/PCI: Move __init annotation were it belongs to
-> > >   x86/PCI: Mark constants of pci_mmcfg_nvidia_mcp55() as __initconst
-> > >   x86/PCI: Constify pci_mmcfg_probes[] array
-> > >   x86/PCI: Mark PCI BIOS initialization code as such
-> > 
-> > All applied to pci/initdata for v3.18, thanks!
-> 
-> Oops, I didn't notice that you hadn't cc'd the x86 folks.
-> 
-> Guys, if these should go through -tip, here's my ack:
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> I don't have any other arch/x86 changes in my tree, so I don't care which
-> way these go.
-> 
-> > >  arch/x86/pci/common.c          |   20 ++++++++--------
-> > >  arch/x86/pci/mmconfig-shared.c |   40 ++++++++++++++++++--------------
-> > >  arch/x86/pci/pcbios.c          |    8 +++----
-> > >  3 files changed, 36 insertions(+), 32 deletions(-)
+This change means that if BIOS enables SERR or PERR on a device, and it
+supplies _HPP or _HPX with the SERR or PERR bits *cleared*, we will leave
+SERR or PERR reporting enabled on that device instead of disabling it.
 
-They are looking good to me in principle, and merging them via 
-the PCI tree is fine with me as well:
+See also 40abb96c51bb ("pciehp: Fix programming hotplug parameters"), where
+this code was first added.
 
-Acked-by: Ingo Molnar <mingo@kernel.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |    8 --------
+ 1 file changed, 8 deletions(-)
 
-Thanks,
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 003d112a783d..a16b3472b70d 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1264,12 +1264,8 @@ static void program_hpp_type0(struct pci_dev *dev, struct hpp_type0 *hpp)
+ 	pci_read_config_word(dev, PCI_COMMAND, &pci_cmd);
+ 	if (hpp->enable_serr)
+ 		pci_cmd |= PCI_COMMAND_SERR;
+-	else
+-		pci_cmd &= ~PCI_COMMAND_SERR;
+ 	if (hpp->enable_perr)
+ 		pci_cmd |= PCI_COMMAND_PARITY;
+-	else
+-		pci_cmd &= ~PCI_COMMAND_PARITY;
+ 	pci_write_config_word(dev, PCI_COMMAND, pci_cmd);
+ 
+ 	/* Program bridge control value */
+@@ -1279,12 +1275,8 @@ static void program_hpp_type0(struct pci_dev *dev, struct hpp_type0 *hpp)
+ 		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &pci_bctl);
+ 		if (hpp->enable_serr)
+ 			pci_bctl |= PCI_BRIDGE_CTL_SERR;
+-		else
+-			pci_bctl &= ~PCI_BRIDGE_CTL_SERR;
+ 		if (hpp->enable_perr)
+ 			pci_bctl |= PCI_BRIDGE_CTL_PARITY;
+-		else
+-			pci_bctl &= ~PCI_BRIDGE_CTL_PARITY;
+ 		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, pci_bctl);
+ 	}
+ }
 
-	Ingo
