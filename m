@@ -1,49 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f54.google.com ([209.85.216.54]:58653 "EHLO
-	mail-qa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193AbaIETAu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 15:00:50 -0400
-Received: by mail-qa0-f54.google.com with SMTP id x12so11642069qac.27
-        for <linux-pci@vger.kernel.org>; Fri, 05 Sep 2014 12:00:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5898856.RmRf87KNto@wuerfel>
-References: <1407512045-26969-1-git-send-email-geert+renesas@glider.be>
- <20140905174122.GD8080@google.com> <20140905202044.4c166a43@free-electrons.com>
- <5898856.RmRf87KNto@wuerfel>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v1 03/13] PCI: Add pci_configure_device() during enumeration
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 5 Sep 2014 13:00:29 -0600
-Message-ID: <CAErSpo4sEQN6T9knuh4U2x9BCUODJheaAf3S8+W4U4oC-C7mMA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: mvebu: Fix uninitialized variable in mvebu_get_tgt_attr()
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Cc: Rajat Jain <rajatxjain@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Fri, 12 Sep 2014 12:03:07 -0600
+Message-ID: <20140912180307.1630.63799.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 5, 2014 at 12:34 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Friday 05 September 2014 20:20:44 Thomas Petazzoni wrote:
->> Hum, I think I would actually prefer something like:
->>
->>                 if (DT_FLAGS_TO_TYPE(flags) == DT_TYPE_IO)
->>                         rtype = IORESOURCE_IO;
->>                 else if (DT_FLAGS_TO_TYPE(flags) == DT_TYPE_MEM32)
->>                         rtype = IORESOURCE_MEM;
->> +               else
->> +                       continue;
->>
->> So that we're explicit with the fact that we only care about I/O and
->> MEM32 resource types.
->
-> Agreed, that looks better than my patch as well.
+Some platforms can tell the OS how to configure PCI devices, e.g., how to
+set cache line size, error reporting enables, etc.  ACPI defines _HPP and
+_HPX methods for this purpose.
 
-I like it better, too, but we still need the "range += rangesz" part,
-so I don't think it will work.  I suppose that could be moved to the
-update expression of the "for" loop.  Or, since we don't use "i" in
-the loop at all, maybe we could do something like this:
+This configuration was previously done by some of the hotplug drivers using
+pci_configure_slot().  But not all hotplug drivers did this, and per the
+spec (ACPI rev 5.0, sec 6.2.7), we can also do it for "devices not
+configured by the BIOS at system boot."
 
-    for (; range < rend; range += rangesz)
+Move this configuration into the PCI core by adding pci_configure_device()
+and calling it from pci_device_add(), so we do this for all devices as we
+enumerate them.
+
+This is based on pci_configure_slot(), which is used by hotplug drivers.
+I omitted:
+
+  - pcie_bus_configure_settings() because it configures MPS and MRRS, which
+    requires global knowledge of the fabric and must be done later, and
+
+  - configuration of subordinate devices; that will happen when we call
+    pci_device_add() for those devices.
+
+Because pci_configure_slot() was only done by hotplug drivers, this initial
+version of pci_configure_device() only configures hot-added devices,
+ignoring anything added during boot.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |   26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 5d0cc646817a..93d2b41163fa 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1384,6 +1384,30 @@ void pci_configure_slot(struct pci_dev *dev)
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(pci_configure_slot);
++
++static void pci_configure_device(struct pci_dev *dev)
++{
++	struct hotplug_params hpp;
++	int ret;
++
++	if (system_state == SYSTEM_BOOTING)
++		return;
++
++	if (!(dev->hdr_type == PCI_HEADER_TYPE_NORMAL ||
++			(dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
++			(dev->class >> 8) == PCI_CLASS_BRIDGE_PCI)))
++		return;
++
++	memset(&hpp, 0, sizeof(hpp));
++	ret = pci_get_hp_params(dev, &hpp);
++	if (ret)
++		return;
++
++	program_hpp_type2(dev, hpp.t2);
++	program_hpp_type1(dev, hpp.t1);
++	program_hpp_type0(dev, hpp.t0);
++}
++
+ static void pci_release_capabilities(struct pci_dev *dev)
+ {
+ 	pci_vpd_release(dev);
+@@ -1521,6 +1545,8 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ {
+ 	int ret;
+ 
++	pci_configure_device(dev);
++
+ 	device_initialize(&dev->dev);
+ 	dev->dev.release = pci_release_dev;
+ 
+
