@@ -1,88 +1,69 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 20/22] Sparc/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-Date: Thu, 25 Sep 2014 11:14:30 +0800
-Message-ID: <1411614872-4009-21-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:61409 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752059AbaILCIT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Sep 2014 22:08:19 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V5 0/8] Enable support of Intel DMAR device hotplug
+Date: Fri, 12 Sep 2014 10:10:40 +0800
+Message-Id: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI chip framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+When hot plugging a descrete IOH or a physical processor with embedded
+IIO, we need to handle DMAR(or IOMMU) unit in the PCIe host bridge if
+DMAR is in use. This patch set tries to enhance current DMAR/IOMMU/IR
+drivers to support hotplug and is based on latest Linus master branch.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/sparc/kernel/pci.c |   14 ++++++++++++--
- 1 files changed, 12 insertions(+), 2 deletions(-)
+All prerequisite patches to support DMAR device hotplug have been merged
+into the mainstream kernel, and this is the last patch set to enable
+DMAR device hotplug.
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index b36365f..2a89ee2 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -905,7 +905,7 @@ int pci_domain_nr(struct pci_bus *pbus)
- EXPORT_SYMBOL(pci_domain_nr);
- 
- #ifdef CONFIG_PCI_MSI
--int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
-+int sparc_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
- {
- 	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
- 	unsigned int irq;
-@@ -916,7 +916,7 @@ int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
- 	return pbm->setup_msi_irq(&irq, pdev, desc);
- }
- 
--void arch_teardown_msi_irq(unsigned int irq)
-+void sparc_teardown_msi_irq(unsigned int irq)
- {
- 	struct msi_desc *entry = irq_get_msi_desc(irq);
- 	struct pci_dev *pdev = entry->dev;
-@@ -925,6 +925,16 @@ void arch_teardown_msi_irq(unsigned int irq)
- 	if (pbm->teardown_msi_irq)
- 		pbm->teardown_msi_irq(irq, pdev);
- }
-+
-+static struct msi_chip sparc_msi_chip = {
-+	.setup_irq = sparc_setup_msi_irq,
-+	.teardown_irq = sparc_teardown_msi_irq,
-+};
-+
-+struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
-+{
-+	return &sparc_msi_chip;
-+}
- #endif /* !(CONFIG_PCI_MSI) */
- 
- static void ali_sound_dma_hack(struct pci_dev *pdev, int set_bit)
+You may access the patch set at:
+https://github.com/jiangliu/linux.git iommu/hotplug_v5
+
+This patch set has been tested on Intel development machine.
+Appreciate any comments and tests.
+
+Patch 1-4 enhances DMAR framework to support hotplug
+Patch 5 enhances Intel interrupt remapping driver to support hotplug
+Patch 6 enhances error handling in Intel IR driver
+Patch 7 enhance Intel IOMMU to support hotplug
+Patch 8 enhance ACPI pci_root driver to handle DMAR units
+
+Jiang Liu (8):
+  iommu/vt-d: Introduce helper function dmar_walk_resources()
+  iommu/vt-d: Dynamically allocate and free seq_id for DMAR units
+  iommu/vt-d: Implement DMAR unit hotplug framework
+  iommu/vt-d: Search for ACPI _DSM method for DMAR hotplug
+  iommu/vt-d: Enhance intel_irq_remapping driver to support DMAR unit
+    hotplug
+  iommu/vt-d: Enhance error recovery in function
+    intel_enable_irq_remapping()
+  iommu/vt-d: Enhance intel-iommu driver to support DMAR unit hotplug
+  pci, ACPI, iommu: Enhance pci_root to support DMAR device hotplug
+
+ drivers/acpi/pci_root.c             |   16 +-
+ drivers/iommu/dmar.c                |  532 ++++++++++++++++++++++++++++-------
+ drivers/iommu/intel-iommu.c         |  297 ++++++++++++++-----
+ drivers/iommu/intel_irq_remapping.c |  233 +++++++++++----
+ include/linux/dmar.h                |   50 +++-
+ 5 files changed, 888 insertions(+), 240 deletions(-)
+
 -- 
-1.7.1
+1.7.10.4
 
