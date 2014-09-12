@@ -1,81 +1,56 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Thu, 25 Sep 2014 09:38:01 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 17/22] s390/MSI: Use MSI chip framework to configure
- MSI/MSI-X irq
-Message-ID: <20140925073800.GM12423@ulmo>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
- <1411614872-4009-18-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="W4pDZ/VvazBYHhxQ"
-In-Reply-To: <1411614872-4009-18-git-send-email-wangyijing@huawei.com>
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <20140911222022.16809.57079.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20140911222022.16809.57079.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Date: Fri, 12 Sep 2014 10:52:59 -0400
+Message-ID: <CADnq5_NEH52W++SOFJ8NPhKKvESLnt3ZS9RXXGA9Ch9R3aRnjg@mail.gmail.com>
+Subject: Re: [PATCH 0/2] PCI: Ignore hotplug events for dual GPU systems
+From: Alex Deucher <alexdeucher@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	SpacemanSpiff <a818958@trbvm.com>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Dave Airlie <airlied@linux.ie>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	=?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>,
+	"Jose P." <lbdkmjdf@sharklasers.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Sep 11, 2014 at 6:23 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> These are intended to resolve problems on dual GPU systems where the radeon
+> driver becomes unusable because of problems suspending or resuming a GPU.
+> When the GPU is powered off, we may get hotplug remove events, and we
+> would normally unbind the driver and destroy the pci_dev.  But in this
+> case, the radeon and nouveau drivers expect to remain bound to the device
+> because it isn't really removable, and they may power it back on later.
+>
+> Links to the bug reports in the patch changelogs.
+>
+> I would like to get these into v3.17 if they seem reasonable.
 
---W4pDZ/VvazBYHhxQ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Looks good to me.
 
-On Thu, Sep 25, 2014 at 11:14:27AM +0800, Yijing Wang wrote:
-[...]
-> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-[...]
-> @@ -358,7 +358,7 @@ static void zpci_irq_handler(struct airq_struct *airq)
->  	}
->  }
-> =20
-> -int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
-> +int zpci_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+Acked-by: Alex Deucher <alexander.deucher@amd.com>
 
-static?
-
---W4pDZ/VvazBYHhxQ
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJUI8ZYAAoJEN0jrNd/PrOhT54QAIN9jc2i8zDFXQP0O2xLX151
-K/0a6f2Ke1ts4th35u5jkXxtnjEubc8RMuU2k+Dft0pOk1wQqfi7CmdJtG+MrGqI
-IZ78syU0TLzw2I2IhhCW/qIrc0eK9gcVpY5FnYxNGNsErYVOHB5w2lqj65UXkrK1
-KuKTi4wk7SBfs7D0I7UVe9CjiGte3h4Wkm0FExDPekBjlb+NheufDExalF1vv5VW
-Y/Ers3FW9kjTCLWHf+wS7Sg7a/uq8PfTG3hkn7ja7ykCouBoheB+pb1OmV5boizz
-/H9TvN+P3WCd3TCe0pz5qI8icntR/5V09HiM3OM1sGqwWopvZgKiw8RSXwJMKdb3
-4NsDxyu6glUOMpuFyDxzQ+iC94LeTq1L4C4oTfrdMdCQetJQm1DxWQYo4iPy1Luz
-cyWf37Gr7RoNuPlx++ONPfub8xDPP6LpDm7Jf1ztIuHNRnN0D/EYNP/3W6s2en4w
-0n4URoSBn7blmJQPOKQ+oNkw295vAc0bSU+NlqjdnpMhJq/Aq+olHB4Of97IKXtk
-7lLqyJAX6ISNs302AVES9Wch7UW6MWrlpxiQk3HkGZBvFExbGCTD806d0wr9+V9Y
-XcvfTABfe5ycOd28a4HwZx0BpglxbMRwarqwdwhpA9H0500K4lmTPrzZLVY+B0AB
-UxhsWg3u+nU6NtiAWuwY
-=lpw6
------END PGP SIGNATURE-----
-
---W4pDZ/VvazBYHhxQ--
+>
+> ---
+>
+> Bjorn Helgaas (2):
+>       PCI: Add pci_ignore_hotplug() to ignore hotplug events for a device
+>       ACPIPHP / radeon / nouveau: Remove acpi_bus_no_hotplug()
+>
+>
+>  drivers/acpi/bus.c                           |   10 ----------
+>  drivers/gpu/drm/nouveau/nouveau_acpi.c       |   16 ++--------------
+>  drivers/gpu/drm/nouveau/nouveau_drm.c        |    1 +
+>  drivers/gpu/drm/radeon/radeon_atpx_handler.c |   16 ++--------------
+>  drivers/gpu/drm/radeon/radeon_drv.c          |    1 +
+>  drivers/pci/hotplug/acpiphp_glue.c           |   16 ++++++----------
+>  drivers/pci/hotplug/pciehp_hpc.c             |   12 ++++++++++++
+>  include/acpi/acpi_bus.h                      |    4 +---
+>  include/linux/pci.h                          |    6 ++++++
+>  9 files changed, 31 insertions(+), 51 deletions(-)
