@@ -1,62 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sun, 14 Sep 2014 10:24:08 +0200
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-To: Nico Schottelius <nico-kernel-2014-08-14@schottelius.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: Linux 3.16: O2 Micro MMC missing in lspci
-Message-ID: <20140914102408.391efcaf@kant>
-In-Reply-To: <20140814105351.GA3110@schottelius.org>
-References: <20140814105351.GA3110@schottelius.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: [PATCH v1 05/13] PCI: pciehp: Remove pci_configure_slot() usage
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatxjain@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Fri, 12 Sep 2014 12:03:21 -0600
+Message-ID: <20140912180321.1630.88175.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Aug 14 Nico Schottelius wrote:
-> Hello,
-> 
-> when booting into 3.16.0-2-ARCH I miss the following
-> entry in lspci:
-> 
-> [12:50] gold:debug-sd-card-reader% diff 3.15/lspci 3.16/lspci 
-> 17d16
-> < 03:00.0 SD Host controller: O2 Micro, Inc. SD/MMC Card Reader
-> Controller (rev 01)
-> 
-> This causes my system to be unable to mount/see the sd cards.
-> My hardware is a Dell E7440 notebook.
-> 
-> I attached dmesg & lspci of both kernels.
-> 
-> Anyone an idea on what might be wrong?
-> 
-> The only related issues I found is
->     https://bugs.archlinux.org/task/26971
-> 
-> and that there was a change in the mmc area:
-> 
->     https://lkml.org/lkml/2014/6/10/491
-> 
-> Cheers,
-> 
-> Nico
-> 
-> p.s.: Please cc on reply
+We now configure each PCI device as it is enumerated, in pci_device_add(),
+so remove the configuration done in pciehp.
 
-Both the archlinux bug and the pull request very much appear to be
-unrelated to your issue.  In your case, the MMC subsystem is not involved
-since the PCI device of the SD controller is not exposed to the MMC
-subsystem anymore, just like it is not exposed in lspci anymore.
+That configuration, in pci_configure_device(), does not include the
+MPS/MRRS configuration done by pcie_bus_configure_settings(), so keep
+that here.
 
-I suggest as next steps:
-  - Test whether the issue still exists in the newest kernel that you are
-    able to install.  (v3.17-rc4 is current, v3.16.2 is the lastest on in
-    the 3.16 branch.)
-  - Post the dmesg output from a successful boot with 3.15 and from an
-    unsuccessful boot with 3.16.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/hotplug/pciehp_pci.c |    5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-[added Cc: linux-pci]
--- 
-Stefan Richter
--=====-====- =--= -===-
-http://arcgraph.de/sr/
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index b66812703415..9e69403be632 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -65,10 +65,7 @@ int pciehp_configure_device(struct slot *p_slot)
+ 			pci_hp_add_bridge(dev);
+ 
+ 	pci_assign_unassigned_bridge_resources(bridge);
+-
+-	list_for_each_entry(dev, &parent->devices, bus_list)
+-		pci_configure_slot(dev);
+-
++	pcie_bus_configure_settings(parent);
+ 	pci_bus_add_devices(parent);
+ 
+  out:
+
