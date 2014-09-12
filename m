@@ -1,129 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from services.gouders.net ([141.101.32.176]:36626 "EHLO
+Received: from services.gouders.net ([141.101.32.176]:53915 "EHLO
 	services.gouders.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756729AbaITSmx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 20 Sep 2014 14:42:53 -0400
+	with ESMTP id S1751411AbaILUzW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Sep 2014 16:55:22 -0400
 From: Dirk Gouders <dirk@gouders.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Andreas Noever <andreas.noever@gmail.com>,
 	Linux Kernel <linux-kernel@vger.kernel.org>,
 	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>
 Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
-In-Reply-To: <20140919183943.GD19374@google.com> (Bjorn Helgaas's message of
-	"Fri, 19 Sep 2014 12:39:43 -0600")
-References: <CAE9FiQXQesrDMqf1b6ZhHdmY_wEEUrOEvNO4N_d6WtaNMGNLww@mail.gmail.com>
-	<gh4mwcef0r.fsf@quad.gouders.net>
-	<CAE9FiQWgioBeVmfWCaE38BrkjbWKaS+_FYYdmdd+7X8fpeEgnQ@mail.gmail.com>
-	<ghoaukcx6b.fsf@quad.gouders.net>
-	<CAE9FiQUk-sAHnjfBvNeHQWibJRqbPE1V0UtDtARtwxmS=7aQrw@mail.gmail.com>
-	<ghk358crbe.fsf@quad.gouders.net>
-	<CAE9FiQUeP84585-4b+Y6WBVD3zqOi7ch_OXytsTmKEz9AyZ3Vg@mail.gmail.com>
-	<20140913040716.GA28080@google.com> <gh8ulnn9yo.fsf@quad.gouders.net>
-	<gh8uln71g1.fsf@lena.gouders.net> <20140919183943.GD19374@google.com>
-Date: Sat, 20 Sep 2014 20:41:46 +0200
-Message-ID: <ghvboit9qt.fsf@lena.gouders.net>
+In-Reply-To: <CAE9FiQXQesrDMqf1b6ZhHdmY_wEEUrOEvNO4N_d6WtaNMGNLww@mail.gmail.com>
+	(Yinghai Lu's message of "Fri, 12 Sep 2014 13:39:04 -0700")
+References: <ghiol53r9u.fsf@lena.gouders.net>
+	<CAMxnaaXiEZeJOsgQ6ZSbiqy5Z1zNoXonwNSQNRyRhV0t5jveYQ@mail.gmail.com>
+	<ghwq9k3m6z.fsf@lena.gouders.net>
+	<CAMxnaaUqTMf1uEQUqrAGjym8ZrQaBf2QbE4Jqxh2t6a2JgJkOQ@mail.gmail.com>
+	<ghioku5l29.fsf@lena.gouders.net>
+	<CAErSpo7j=a3y2MVsvEQGQ4B63_mNCyZSRNXNEZa-2++xs88NmQ@mail.gmail.com>
+	<CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com>
+	<ghppf15236.fsf@quad.gouders.net>
+	<CAErSpo5SVUOz+qa_x5JTC+-Y5ewTyYzA0N=jyPtK9LaguRrt=w@mail.gmail.com>
+	<ghd2b1svdw.fsf@quad.gouders.net>
+	<CAErSpo5e0GOdVbZdQYriP+aWziKELpb9BWTgJ4ERPia354CM5w@mail.gmail.com>
+	<ghvbotd8es.fsf@quad.gouders.net> <ghzje5f5zt.fsf@lena.gouders.net>
+	<ghbnqkeh9k.fsf@quad.gouders.net>
+	<CAE9FiQXQesrDMqf1b6ZhHdmY_wEEUrOEvNO4N_d6WtaNMGNLww@mail.gmail.com>
+Date: Fri, 12 Sep 2014 22:54:12 +0200
+Message-ID: <gh4mwcef0r.fsf@quad.gouders.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <bhelgaas@google.com> writes:
+Yinghai Lu <yinghai@kernel.org> writes:
 
-> On Sat, Sep 13, 2014 at 09:41:34PM +0200, Dirk Gouders wrote:
->> So, I did some tests on the VX50 which probably wasn't the worst idea,
->> because it behaves different than the test machine.
->> 
->> Summary:
->> 
->> 1) Bjorn's back pocket patch works on the VX50.
->> 
->>    On the test machine it causes a trace, mount_root has to do with
->>    it.  I tried to use netconsole but it complained the interface were
->>    not ready.
+> On Fri, Sep 12, 2014 at 1:05 PM, Dirk Gouders <dirk@gouders.net> wrote:
+>> Dirk Gouders <dirk@gouders.net> writes:
+>>
+>> I now applied your patches and tested them:
+>>
+>> echo 1 > /sys/bus/pci/devices/0000\:00\:0a.0/pcie_link_disable
+>> echo 0 > /sys/bus/pci/devices/0000\:00\:0a.0/pcie_link_disable
+>>
+>> The FC Adapter did not show up, this is the dmesg output (I also tested
+>> with 0b.0):
+>>
+>> [  143.294168] pcieport 0000:00:0a.0: pcie_link_disable_set: lnk_ctrl = 18
+>> [  148.284456] pcieport 0000:00:0a.0: pcie_link_disable_set: lnk_ctrl = 8
+>> [  304.065942] pcieport 0000:00:0b.0: pcie_link_disable_set: lnk_ctrl = 18
+>> [  309.035278] pcieport 0000:00:0b.0: pcie_link_disable_set: lnk_ctrl = 8
+>>
+>> So, probably my test environment does not work as expected and I have to
+>> test it on the failing machine.
 >
-> OK, that's good.  I put this revert patch in for-linus for v3.17.  I regard
-> this as a temporary fix, not the real solution.  My guess is the test
-> machine doesn't boot because you're missing a driver, so not related to the
-> revert patch.
+> You need to rescan the pci devices.
+> like
+>
+> echo 1 >  /sys/bus/pci/rescan
 
-I assumed my limit-host-bridge-aperture-and-ignore-bridges-patch on top
-of your patch caused this, so I took a closer look.
+Thank you (all) for your suggestions.
 
-Your patch works fine with current rc5+ on the test machine -- with and
-without my additional patch.
+I tried both: the plain rescan and Bjorn's suggestion but the FC adapter
+seems to be very shy:
 
-rc2 and "make oldconfig" somehow caused that the root partition couldn't
-be mounted.  With rc5+ everything is fine, again, without touching the
-configuration myself.
+[  143.294168] pcieport 0000:00:0a.0: pcie_link_disable_set: lnk_ctrl = 18
+[  148.284456] pcieport 0000:00:0a.0: pcie_link_disable_set: lnk_ctrl = 8
+[  304.065942] pcieport 0000:00:0b.0: pcie_link_disable_set: lnk_ctrl = 18
+[  309.035278] pcieport 0000:00:0b.0: pcie_link_disable_set: lnk_ctrl = 8
+[ 2514.440442] pcieport 0000:00:0a.0: pcie_link_disable_set: lnk_ctrl = 18
+[ 2554.819381] pcieport 0000:00:0a.0: pcie_link_disable_set: lnk_ctrl = 8
+[ 3339.722154] pci_scan_child_bus: pci_bus 0000:00: scanning bus
+[ 3339.722215] pci_scan_bridge: pci 0000:00:01.0: scanning [bus 01-02] behind bridge, pass 0
+[ 3339.722222] pci_scan_child_bus: pci_bus 0000:01: scanning bus
+[ 3339.722251] pci_scan_bridge: pci 0000:01:0d.0: scanning [bus 02-02] behind bridge, pass 0
+[ 3339.722256] pci_scan_child_bus: pci_bus 0000:02: scanning bus
+[ 3339.722287] pci_scan_child_bus: pci_bus 0000:02: bus scan returning with max=02
+[ 3339.722292] pci_scan_bridge: pci 0000:01:0d.0: scanning [bus 02-02] behind bridge, pass 1
+[ 3339.722297] pci_scan_child_bus: pci_bus 0000:01: bus scan returning with max=02
+[ 3339.722302] pci_scan_bridge: pci 0000:00:06.0: scanning [bus 03-03] behind bridge, pass 0
+[ 3339.722307] pci_scan_child_bus: pci_bus 0000:03: scanning bus
+[ 3339.722332] pci_scan_child_bus: pci_bus 0000:03: bus scan returning with max=03
+[ 3339.722337] pci_scan_bridge: pci 0000:00:07.0: scanning [bus 04-04] behind bridge, pass 0
+[ 3339.722341] pci_scan_child_bus: pci_bus 0000:04: scanning bus
+[ 3339.722364] pci_scan_child_bus: pci_bus 0000:04: bus scan returning with max=04
+[ 3339.722369] pci_scan_bridge: pcieport 0000:00:0a.0: scanning [bus 05-05] behind bridge, pass 0
+[ 3339.722373] pci_scan_child_bus: pci_bus 0000:05: scanning bus
+[ 3339.722377] pci_scan_child_bus: pci_bus 0000:05: bus scan returning with max=05
+[ 3339.722381] pci_scan_bridge: pcieport 0000:00:0b.0: scanning [bus 06-06] behind bridge, pass 0
+[ 3339.722386] pci_scan_child_bus: pci_bus 0000:06: scanning bus
+[ 3339.722389] pci_scan_child_bus: pci_bus 0000:06: bus scan returning with max=06
+[ 3339.722394] pci_scan_bridge: pci 0000:00:01.0: scanning [bus 01-02] behind bridge, pass 1
+[ 3339.722400] pci_scan_bridge: pci 0000:00:06.0: scanning [bus 03-03] behind bridge, pass 1
+[ 3339.722404] pci_scan_bridge: pci 0000:00:07.0: scanning [bus 04-04] behind bridge, pass 1
+[ 3339.722409] pci_scan_bridge: pcieport 0000:00:0a.0: scanning [bus 05-05] behind bridge, pass 1
+[ 3339.722414] pci_scan_bridge: pcieport 0000:00:0b.0: scanning [bus 06-06] behind bridge, pass 1
+[ 3339.722418] pci_scan_child_bus: pci_bus 0000:00: bus scan returning with max=06
+[ 3339.722455] pci 0000:01:0d.0: PCI bridge to [bus 02]
+[ 3339.722466] pci 0000:00:06.0: PCI bridge to [bus 03]
+[ 3583.321906] pci_scan_child_bus: pci_bus 0000:00: scanning bus
+[ 3583.321974] pci_scan_bridge: pci 0000:00:01.0: scanning [bus 01-02] behind bridge, pass 0
+[ 3583.321982] pci_scan_child_bus: pci_bus 0000:01: scanning bus
+[ 3583.322032] pci_scan_bridge: pci 0000:01:0d.0: scanning [bus 02-02] behind bridge, pass 0
+[ 3583.322037] pci_scan_child_bus: pci_bus 0000:02: scanning bus
+[ 3583.322070] pci_scan_child_bus: pci_bus 0000:02: bus scan returning with max=02
+[ 3583.322076] pci_scan_bridge: pci 0000:01:0d.0: scanning [bus 02-02] behind bridge, pass 1
+[ 3583.322081] pci_scan_child_bus: pci_bus 0000:01: bus scan returning with max=02
+[ 3583.322087] pci_scan_bridge: pci 0000:00:06.0: scanning [bus 03-03] behind bridge, pass 0
+[ 3583.322092] pci_scan_child_bus: pci_bus 0000:03: scanning bus
+[ 3583.322121] pci_scan_child_bus: pci_bus 0000:03: bus scan returning with max=03
+[ 3583.322126] pci_scan_bridge: pci 0000:00:07.0: scanning [bus 04-04] behind bridge, pass 0
+[ 3583.322130] pci_scan_child_bus: pci_bus 0000:04: scanning bus
+[ 3583.322155] pci_scan_child_bus: pci_bus 0000:04: bus scan returning with max=04
+[ 3583.322160] pci_scan_bridge: pcieport 0000:00:0a.0: scanning [bus 05-05] behind bridge, pass 0
+[ 3583.322164] pci_scan_child_bus: pci_bus 0000:05: scanning bus
+[ 3583.322168] pci_scan_child_bus: pci_bus 0000:05: bus scan returning with max=05
+[ 3583.322177] pci_scan_bridge: pcieport 0000:00:0b.0: scanning [bus 06-06] behind bridge, pass 0
+[ 3583.322182] pci_scan_child_bus: pci_bus 0000:06: scanning bus
+[ 3583.322185] pci_scan_child_bus: pci_bus 0000:06: bus scan returning with max=06
+[ 3583.322191] pci_scan_bridge: pci 0000:00:01.0: scanning [bus 01-02] behind bridge, pass 1
+[ 3583.322196] pci_scan_bridge: pci 0000:00:06.0: scanning [bus 03-03] behind bridge, pass 1
+[ 3583.322202] pci_scan_bridge: pci 0000:00:07.0: scanning [bus 04-04] behind bridge, pass 1
+[ 3583.322207] pci_scan_bridge: pcieport 0000:00:0a.0: scanning [bus 05-05] behind bridge, pass 1
+[ 3583.322212] pci_scan_bridge: pcieport 0000:00:0b.0: scanning [bus 06-06] behind bridge, pass 1
+[ 3583.322216] pci_scan_child_bus: pci_bus 0000:00: bus scan returning with max=06
+[ 3583.322262] pci 0000:01:0d.0: PCI bridge to [bus 02]
+[ 3583.322273] pci 0000:00:06.0: PCI bridge to [bus 03]
 
-Other various today's test results (VX50) will be appended to bugzilla
-in a few moments.
-
-Dirk
-
->> 3) Reset with Bjorn's commands
->> 
->>    DEV=00:0e.0
->>    setpci -s$DEV BRIDGE_CONTROL.W=0x0040
->>    sleep 1
->>    setpci -s$DEV BRIDGE_CONTROL.W=0x0000
->>    sleep 1
->>    echo 1 > /sys/bus/pci/rescan
->> 
->>    let the FC adapter appear but there are errors that I cannot really
->>    interpret.
->> 
->> 4) Reset with Yinghai's patches and 
->> 
->>    echo 1 > /sys/bus/pci/devices/0000\:00\:0e.0/pcie_link_disable
->>    echo 0 > /sys/bus/pci/devices/0000\:00\:0e.0/pcie_link_disable
->>    echo 1 > /sys/bus/pci/rescan
->> 
->>    gives a similar resut to 3).
->
-> Resetting the device or simply disabling and re-enabling the link was
-> enough to fix things from the device's perspective.  In both cases, it
-> responded as one would expect:
->
->   pci_scan_child_bus: pci_bus 0000:06: scanning bus
->   pci 0000:06:00.0: [1000:0646] type 00 class 0x0c0400
->   pci 0000:06:00.0: reg 0x10: [io  0x0000-0x00ff] 
->   pci 0000:06:00.0: reg 0x14: [mem 0x00000000-0x00003fff 64bit]
->   pci 0000:06:00.0: reg 0x1c: [mem 0x00000000-0x0000ffff 64bit]
->   pci 0000:06:00.0: reg 0x30: [mem 0x00000000-0x000fffff pref]
->
-> Linux tried to assign MMIO space to the device, but failed:
->
->   pci 0000:06:00.0: BAR 6: assigned [mem 0xd4200000-0xd42fffff pref]
->   pci 0000:06:00.0: BAR 3: no space for [mem size 0x00010000 64bit]
->   pci 0000:06:00.0: BAR 3: failed to assign [mem size 0x00010000 64bit]
->   pci 0000:06:00.0: BAR 1: no space for [mem size 0x00004000 64bit]
->   pci 0000:06:00.0: BAR 1: failed to assign [mem size 0x00004000 64bit]
->
-> The upstream bridge windows are:
->
->   pci 0000:00:0e.0: PCI bridge to [bus 06]	# was originally to bus 0a
->   pci 0000:00:0e.0:   bridge window [io  0x3000-0x3fff] 
->   pci 0000:00:0e.0:   bridge window [mem 0xd4200000-0xd42fffff]
->
-> So the ROM BAR (reg 0x30/BAR 6) takes up the whole window, leaving nothing
-> for BARs 1 and 3.  This is something that Linux could do better.  For
-> example, we could assign normal BARs first, followed by ROM BARs, since the
-> normal ones are more important.  It's possible we could also try to expand
-> the bridge window so all the BARs would fit.
->
-> In any case, resetting the device is not a simple fix all by itself.  So
-> our possibilities are:
->
->   1) Quirk to work around _CRS bug.  This works but requires us to maintain
->      CPU-specific code that I really don't want.
->
->   2) Reset device when changing bus number.  This works from the device
->      point of view, but would require additional Linux changes.
->
->   3) Revert 1820ffdccb9b.  This works but is ugly because we're ignoring
->      some of what _CRS tells us.
->
-> Bjorn
+# lspci -tv
+-[0000:00]-+-01.0-[01-02]--+-0d.0-[02]--
+           |               +-0e.0  Broadcom BCM5785 [HT1000] SATA (PATA/IDE Mode)
+           |               \-0e.1  Broadcom BCM5785 [HT1000] SATA (PATA/IDE Mode)
+           +-02.0  Broadcom BCM5785 [HT1000] Legacy South Bridge
+           +-02.1  Broadcom BCM5785 [HT1000] IDE
+           +-02.2  Broadcom BCM5785 [HT1000] LPC
+           +-03.0  Broadcom BCM5785 [HT1000] USB
+           +-03.1  Broadcom BCM5785 [HT1000] USB
+           +-03.2  Broadcom BCM5785 [HT1000] USB
+           +-06.0-[03]--
+           +-07.0-[04]--+-04.0  Broadcom Corporation NetXtreme BCM5780 Gigabit Ethernet
+           |            \-04.1  Broadcom Corporation NetXtreme BCM5780 Gigabit Ethernet
+           +-0a.0-[05]--
+           +-0b.0-[06]--
+           +-0c.0  Advanced Micro Devices, Inc. [AMD/ATI] ES1000
+           +-18.0  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] HyperTransport Technology Configuration
+           +-18.1  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] Address Map
+           +-18.2  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] DRAM Controller
+           +-18.3  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] Miscellaneous Control
+           +-19.0  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] HyperTransport Technology Configuration
+           +-19.1  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] Address Map
+           +-19.2  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] DRAM Controller
+           \-19.3  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] Miscellaneous Control
