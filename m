@@ -1,160 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0144.outbound.protection.outlook.com ([207.46.100.144]:19381
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751012AbaIWEjj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Sep 2014 00:39:39 -0400
-From: Richard Zhu <r65037@freescale.com>
-To: <linux-pci-owner@vger.kernel.org>
-CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
-	<festevam@gmail.com>, <l.stach@pengutronix.de>,
-	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
-Subject: [PATCH v2 3/5] PCI: imx6: update dts and binding for imx6sx pcie
-Date: Tue, 23 Sep 2014 12:11:36 +0800
-Message-ID: <1411445498-20250-4-git-send-email-r65037@freescale.com>
-In-Reply-To: <1411445498-20250-1-git-send-email-r65037@freescale.com>
-References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: [PATCH v1 07/13] ACPI / hotplug / PCI: Remove pci_configure_slot()
+ usage
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatxjain@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Fri, 12 Sep 2014 12:03:34 -0600
+Message-ID: <20140912180334.1630.56528.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-- imx6sx pcie has its own power regulator.
-add the pcie power suppy into dts and binding.
-- enable pcie on imx6sx soc.
+We now configure each PCI device as it is enumerated, in pci_device_add(),
+so remove the configuration done in acpiphp.
 
-Signed-off-by: Richard Zhu <r65037@freescale.com>
+That configuration, in pci_configure_device(), does not include the
+MPS/MRRS configuration done by pcie_bus_configure_settings(), so keep
+that here.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  4 ++-
- arch/arm/boot/dts/imx6sx-sdb.dts                   | 13 +++++++++
- arch/arm/boot/dts/imx6sx.dtsi                      | 33 +++++++++++++---------
- arch/arm/mach-imx/Kconfig                          |  1 +
- 4 files changed, 36 insertions(+), 15 deletions(-)
+ drivers/pci/hotplug/acpiphp_glue.c |   11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index 9455fd0..d3b5704 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -4,7 +4,7 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
- and thus inherits all the common properties defined in designware-pcie.txt.
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 70741c8c46a0..a6f8e0ba0bfe 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -61,7 +61,6 @@ static DEFINE_MUTEX(bridge_mutex);
+ static int acpiphp_hotplug_notify(struct acpi_device *adev, u32 type);
+ static void acpiphp_post_dock_fixup(struct acpi_device *adev);
+ static void acpiphp_sanitize_bus(struct pci_bus *bus);
+-static void acpiphp_set_hpp_values(struct pci_bus *bus);
+ static void hotplug_event(u32 type, struct acpiphp_context *context);
+ static void free_bridge(struct kref *kref);
  
- Required properties:
--- compatible: "fsl,imx6q-pcie"
-+- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie"
- - reg: base addresse and length of the pcie controller
- - interrupts: A list of interrupt outputs of the controller. Must contain an
-   entry for each entry in the interrupt-names property.
-@@ -12,6 +12,7 @@ Required properties:
- 	- "msi": The interrupt that is asserted when an MSI is received
- - clock-names: Must include the following additional entries:
- 	- "pcie_phy"
-+- regulator: regulator used by imx6sx pcie module.
+@@ -510,7 +509,7 @@ static void enable_slot(struct acpiphp_slot *slot)
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
  
- Example:
+ 	acpiphp_sanitize_bus(bus);
+-	acpiphp_set_hpp_values(bus);
++	pcie_bus_configure_settings(bus);
+ 	acpiphp_set_acpi_region(slot);
  
-@@ -35,4 +36,5 @@ Example:
- 		                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
- 		clocks = <&clks 144>, <&clks 206>, <&clks 189>;
- 		clock-names = "pcie", "pcie_bus", "pcie_phy";
-+		pcie-supply = <&reg_pcie>;
- 	};
-diff --git a/arch/arm/boot/dts/imx6sx-sdb.dts b/arch/arm/boot/dts/imx6sx-sdb.dts
-index a3980d9..2976913 100644
---- a/arch/arm/boot/dts/imx6sx-sdb.dts
-+++ b/arch/arm/boot/dts/imx6sx-sdb.dts
-@@ -251,6 +251,13 @@
- 	};
- };
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+@@ -702,14 +701,6 @@ static void acpiphp_check_bridge(struct acpiphp_bridge *bridge)
+ 	}
+ }
  
-+&pcie {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_pcie>;
-+	reset-gpio = <&gpio2 0 0>;
-+	status = "okay";
-+};
-+
- &ssi2 {
- 	status = "okay";
- };
-@@ -365,6 +372,12 @@
- 			>;
- 		};
- 
-+		pinctrl_pcie: pciegrp {
-+			fsl,pins = <
-+				MX6SX_PAD_ENET1_COL__GPIO2_IO_0 0x17059
-+			>;
-+		};
-+
- 		pinctrl_vcc_sd3: vccsd3grp {
- 			fsl,pins = <
- 				MX6SX_PAD_KEY_COL1__GPIO2_IO_11		0x17059
-diff --git a/arch/arm/boot/dts/imx6sx.dtsi b/arch/arm/boot/dts/imx6sx.dtsi
-index f4b9da6..4911160 100644
---- a/arch/arm/boot/dts/imx6sx.dtsi
-+++ b/arch/arm/boot/dts/imx6sx.dtsi
-@@ -689,9 +689,11 @@
- 			};
- 
- 			gpc: gpc@020dc000 {
--				compatible = "fsl,imx6sx-gpc", "fsl,imx6q-gpc";
-+				compatible = "fsl,imx6sx-gpc",
-+					     "fsl,imx6q-gpc", "syscon";
- 				reg = <0x020dc000 0x4000>;
- 				interrupts = <GIC_SPI 89 IRQ_TYPE_LEVEL_HIGH>;
-+				pcie-supply = <&reg_pcie>;
- 			};
- 
- 			iomuxc: iomuxc@020e0000 {
-@@ -1188,20 +1190,23 @@
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
--				  /* configuration space */
--			ranges = <0x00000800 0 0x08f00000 0x08f00000 0 0x00080000
--				  /* downstream I/O */
--				  0x81000000 0 0          0x08f80000 0 0x00010000
--				  /* non-prefetchable memory */
--				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>;
-+			ranges = <0x00000800 0 0x01f00000 0x08f00000 0 0x00080000 /* configuration space */
-+				  0x81000000 0 0          0x08f80000 0 0x00010000 /* downstream I/O */
-+				  0x82000000 0 0x01000000 0x08000000 0 0x00f00000>; /* non-prefetchable memory */
- 			num-lanes = <1>;
--			interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>;
--			clocks = <&clks IMX6SX_CLK_PCIE_REF_125M>,
--				 <&clks IMX6SX_CLK_PCIE_AXI>,
--				 <&clks IMX6SX_CLK_LVDS1_OUT>,
--				 <&clks IMX6SX_CLK_DISPLAY_AXI>;
--			clock-names = "pcie_ref_125m", "pcie_axi",
--				      "lvds_gate", "display_axi";
-+			interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "msi";
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
-+			                <0 0 0 2 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
-+			                <0 0 0 3 &intc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
-+			                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&clks IMX6SX_CLK_PCIE_AXI>,
-+				 <&clks IMX6SX_CLK_DISPLAY_AXI>,
-+				 <&clks IMX6SX_CLK_LVDS1_OUT>;
-+			clock-names = "pcie", "pcie_phy", "pcie_bus";
-+			pcie-supply = <&reg_pcie>;
- 			status = "disabled";
- 		};
- 	};
-diff --git a/arch/arm/mach-imx/Kconfig b/arch/arm/mach-imx/Kconfig
-index be9a51a..0a055f0 100644
---- a/arch/arm/mach-imx/Kconfig
-+++ b/arch/arm/mach-imx/Kconfig
-@@ -718,6 +718,7 @@ config SOC_IMX6SL
- 
- config SOC_IMX6SX
- 	bool "i.MX6 SoloX support"
-+	select PCI_DOMAINS if PCI
- 	select PINCTRL_IMX6SX
- 	select SOC_IMX6
- 
--- 
-1.9.1
+-static void acpiphp_set_hpp_values(struct pci_bus *bus)
+-{
+-	struct pci_dev *dev;
+-
+-	list_for_each_entry(dev, &bus->devices, bus_list)
+-		pci_configure_slot(dev);
+-}
+-
+ /*
+  * Remove devices for which we could not assign resources, call
+  * arch specific code to fix-up the bus
 
