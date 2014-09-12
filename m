@@ -1,215 +1,315 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:35740 "EHLO mga09.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:3016 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751720AbaIKIDY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Sep 2014 04:03:24 -0400
+	id S1752443AbaILCIg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Sep 2014 22:08:36 -0400
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
 Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
 	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v5 01/15] x86, PCI, ACPI: Kill private function resource_to_addr() in arch/x86/pci/acpi.c
-Date: Thu, 11 Sep 2014 16:05:44 +0800
-Message-Id: <1410422758-24942-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V5 7/8] iommu/vt-d: Enhance intel-iommu driver to support DMAR unit hotplug
+Date: Fri, 12 Sep 2014 10:10:47 +0800
+Message-Id: <1410487848-6027-8-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Private function resource_to_addr() is used to parse ACPI resources
-for PCI host bridge. There are public interfaces available for that
-purpose, so replace resource_to_addr() with public interfaces.
+Implement required callback functions for intel-iommu driver
+to support DMAR unit hotplug.
 
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/pci/acpi.c |  142 ++++++++++++++++++---------------------------------
- 1 file changed, 51 insertions(+), 91 deletions(-)
+ drivers/iommu/intel-iommu.c |  206 +++++++++++++++++++++++++++++++------------
+ 1 file changed, 151 insertions(+), 55 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index cfd1b132b8e3..0e716fa56ae5 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -218,114 +218,74 @@ static void teardown_mcfg_map(struct pci_root_info *info)
- }
- #endif
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 70d9d47eaeda..c2d369524960 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1125,8 +1125,11 @@ static int iommu_alloc_root_entry(struct intel_iommu *iommu)
+ 	unsigned long flags;
  
--static acpi_status resource_to_addr(struct acpi_resource *resource,
--				    struct acpi_resource_address64 *addr)
--{
--	acpi_status status;
--	struct acpi_resource_memory24 *memory24;
--	struct acpi_resource_memory32 *memory32;
--	struct acpi_resource_fixed_memory32 *fixed_memory32;
--
--	memset(addr, 0, sizeof(*addr));
--	switch (resource->type) {
--	case ACPI_RESOURCE_TYPE_MEMORY24:
--		memory24 = &resource->data.memory24;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = memory24->minimum;
--		addr->address_length = memory24->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_MEMORY32:
--		memory32 = &resource->data.memory32;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = memory32->minimum;
--		addr->address_length = memory32->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
--		fixed_memory32 = &resource->data.fixed_memory32;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = fixed_memory32->address;
--		addr->address_length = fixed_memory32->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_ADDRESS16:
--	case ACPI_RESOURCE_TYPE_ADDRESS32:
--	case ACPI_RESOURCE_TYPE_ADDRESS64:
--		status = acpi_resource_to_address64(resource, addr);
--		if (ACPI_SUCCESS(status) &&
--		    (addr->resource_type == ACPI_MEMORY_RANGE ||
--		    addr->resource_type == ACPI_IO_RANGE) &&
--		    addr->address_length > 0) {
--			return AE_OK;
--		}
--		break;
--	}
--	return AE_ERROR;
--}
--
- static acpi_status count_resource(struct acpi_resource *acpi_res, void *data)
- {
- 	struct pci_root_info *info = data;
--	struct acpi_resource_address64 addr;
--	acpi_status status;
-+	struct resource r = {
-+		.flags = 0
-+	};
- 
--	status = resource_to_addr(acpi_res, &addr);
--	if (ACPI_SUCCESS(status))
-+	if (!acpi_dev_resource_memory(acpi_res, &r) &&
-+	    !acpi_dev_resource_address_space(acpi_res, &r))
-+		return AE_OK;
-+
-+	if ((r.flags & (IORESOURCE_IO | IORESOURCE_MEM)) && resource_size(&r))
- 		info->res_num++;
-+
- 	return AE_OK;
- }
- 
- static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
- {
- 	struct pci_root_info *info = data;
--	struct resource *res;
--	struct acpi_resource_address64 addr;
--	acpi_status status;
--	unsigned long flags;
--	u64 start, orig_end, end;
-+	struct resource *res = &info->res[info->res_num];
-+	u64 translation_offset = 0;
-+
-+	memset(res, 0, sizeof(*res));
-+	if (acpi_dev_resource_memory(acpi_res, res)) {
-+		res->flags &= IORESOURCE_MEM | IORESOURCE_IO;
-+	} else if (acpi_dev_resource_address_space(acpi_res, res)) {
-+		u64 orig_end;
-+		struct acpi_resource_address64 addr;
-+
-+		res->flags &= IORESOURCE_MEM | IORESOURCE_IO;
-+		if (res->flags == 0)
-+			return AE_OK;
- 
--	status = resource_to_addr(acpi_res, &addr);
--	if (!ACPI_SUCCESS(status))
--		return AE_OK;
-+		if (ACPI_FAILURE(acpi_resource_to_address64(acpi_res, &addr)))
-+			return AE_OK;
- 
--	if (addr.resource_type == ACPI_MEMORY_RANGE) {
--		flags = IORESOURCE_MEM;
--		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
--			flags |= IORESOURCE_PREFETCH;
--	} else if (addr.resource_type == ACPI_IO_RANGE) {
--		flags = IORESOURCE_IO;
--	} else
--		return AE_OK;
-+		if (addr.resource_type == ACPI_MEMORY_RANGE &&
-+		    addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
-+			res->flags |= IORESOURCE_PREFETCH;
- 
--	start = addr.minimum + addr.translation_offset;
--	orig_end = end = addr.maximum + addr.translation_offset;
-+		translation_offset = addr.translation_offset;
-+		orig_end = res->end;
-+		res->start += translation_offset;
-+		res->end += translation_offset;
- 
--	/* Exclude non-addressable range or non-addressable portion of range */
--	end = min(end, (u64)iomem_resource.end);
--	if (end <= start) {
--		dev_info(&info->bridge->dev,
--			"host bridge window [%#llx-%#llx] "
--			"(ignored, not CPU addressable)\n", start, orig_end);
--		return AE_OK;
--	} else if (orig_end != end) {
--		dev_info(&info->bridge->dev,
--			"host bridge window [%#llx-%#llx] "
--			"([%#llx-%#llx] ignored, not CPU addressable)\n", 
--			start, orig_end, end + 1, orig_end);
-+		/* Exclude non-addressable range or non-addressable portion of range */
-+		res->end = min(res->end, (u64)iomem_resource.end);
-+		if (res->end <= res->start) {
-+			dev_info(&info->bridge->dev,
-+				"host bridge window [%#llx-%#llx] (ignored, not CPU addressable)\n",
-+				 res->start, orig_end);
-+			return AE_OK;
-+		} else if (orig_end != res->end) {
-+			dev_info(&info->bridge->dev,
-+				"host bridge window [%#llx-%#llx] ([%#llx-%#llx] ignored, not CPU addressable)\n",
-+				res->start, orig_end, res->end + 1, orig_end);
-+		}
- 	}
- 
--	res = &info->res[info->res_num];
--	res->name = info->name;
--	res->flags = flags;
--	res->start = start;
--	res->end = end;
--	info->res_offset[info->res_num] = addr.translation_offset;
--	info->res_num++;
--
--	if (!pci_use_crs)
--		dev_printk(KERN_DEBUG, &info->bridge->dev,
--			   "host bridge window %pR (ignored)\n", res);
-+	if (res->flags && resource_size(res)) {
-+		res->name = info->name;
-+		info->res_offset[info->res_num] = translation_offset;
-+		info->res_num++;
-+		if (!pci_use_crs)
-+			dev_printk(KERN_DEBUG, &info->bridge->dev,
-+				   "host bridge window %pR (ignored)\n", res);
+ 	root = (struct root_entry *)alloc_pgtable_page(iommu->node);
+-	if (!root)
++	if (!root) {
++		pr_err("IOMMU: allocating root entry for %s failed\n",
++			iommu->name);
+ 		return -ENOMEM;
 +	}
  
- 	return AE_OK;
+ 	__iommu_flush_cache(iommu, root, ROOT_SIZE);
+ 
+@@ -1466,7 +1469,7 @@ static int iommu_init_domains(struct intel_iommu *iommu)
+ 	return 0;
  }
+ 
+-static void free_dmar_iommu(struct intel_iommu *iommu)
++static void disable_dmar_iommu(struct intel_iommu *iommu)
+ {
+ 	struct dmar_domain *domain;
+ 	int i;
+@@ -1490,11 +1493,16 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
+ 
+ 	if (iommu->gcmd & DMA_GCMD_TE)
+ 		iommu_disable_translation(iommu);
++}
+ 
+-	kfree(iommu->domains);
+-	kfree(iommu->domain_ids);
+-	iommu->domains = NULL;
+-	iommu->domain_ids = NULL;
++static void free_dmar_iommu(struct intel_iommu *iommu)
++{
++	if ((iommu->domains) && (iommu->domain_ids)) {
++		kfree(iommu->domains);
++		kfree(iommu->domain_ids);
++		iommu->domains = NULL;
++		iommu->domain_ids = NULL;
++	}
+ 
+ 	g_iommus[iommu->seq_id] = NULL;
+ 
+@@ -2701,6 +2709,41 @@ static int __init iommu_prepare_static_identity_mapping(int hw)
+ 	return 0;
+ }
+ 
++static void intel_iommu_init_qi(struct intel_iommu *iommu)
++{
++	/*
++	 * Start from the sane iommu hardware state.
++	 * If the queued invalidation is already initialized by us
++	 * (for example, while enabling interrupt-remapping) then
++	 * we got the things already rolling from a sane state.
++	 */
++	if (!iommu->qi) {
++		/*
++		 * Clear any previous faults.
++		 */
++		dmar_fault(-1, iommu);
++		/*
++		 * Disable queued invalidation if supported and already enabled
++		 * before OS handover.
++		 */
++		dmar_disable_qi(iommu);
++	}
++
++	if (dmar_enable_qi(iommu)) {
++		/*
++		 * Queued Invalidate not enabled, use Register Based Invalidate
++		 */
++		iommu->flush.flush_context = __iommu_flush_context;
++		iommu->flush.flush_iotlb = __iommu_flush_iotlb;
++		pr_info("IOMMU: %s using Register based invalidation\n",
++			iommu->name);
++	} else {
++		iommu->flush.flush_context = qi_flush_context;
++		iommu->flush.flush_iotlb = qi_flush_iotlb;
++		pr_info("IOMMU: %s using Queued invalidation\n", iommu->name);
++	}
++}
++
+ static int __init init_dmars(void)
+ {
+ 	struct dmar_drhd_unit *drhd;
+@@ -2729,6 +2772,10 @@ static int __init init_dmars(void)
+ 			  DMAR_UNITS_SUPPORTED);
+ 	}
+ 
++	/* Preallocate enough resources for IOMMU hot-addition */
++	if (g_num_of_iommus < DMAR_UNITS_SUPPORTED)
++		g_num_of_iommus = DMAR_UNITS_SUPPORTED;
++
+ 	g_iommus = kcalloc(g_num_of_iommus, sizeof(struct intel_iommu *),
+ 			GFP_KERNEL);
+ 	if (!g_iommus) {
+@@ -2757,58 +2804,14 @@ static int __init init_dmars(void)
+ 		 * among all IOMMU's. Need to Split it later.
+ 		 */
+ 		ret = iommu_alloc_root_entry(iommu);
+-		if (ret) {
+-			printk(KERN_ERR "IOMMU: allocate root entry failed\n");
++		if (ret)
+ 			goto free_iommu;
+-		}
+ 		if (!ecap_pass_through(iommu->ecap))
+ 			hw_pass_through = 0;
+ 	}
+ 
+-	/*
+-	 * Start from the sane iommu hardware state.
+-	 */
+-	for_each_active_iommu(iommu, drhd) {
+-		/*
+-		 * If the queued invalidation is already initialized by us
+-		 * (for example, while enabling interrupt-remapping) then
+-		 * we got the things already rolling from a sane state.
+-		 */
+-		if (iommu->qi)
+-			continue;
+-
+-		/*
+-		 * Clear any previous faults.
+-		 */
+-		dmar_fault(-1, iommu);
+-		/*
+-		 * Disable queued invalidation if supported and already enabled
+-		 * before OS handover.
+-		 */
+-		dmar_disable_qi(iommu);
+-	}
+-
+-	for_each_active_iommu(iommu, drhd) {
+-		if (dmar_enable_qi(iommu)) {
+-			/*
+-			 * Queued Invalidate not enabled, use Register Based
+-			 * Invalidate
+-			 */
+-			iommu->flush.flush_context = __iommu_flush_context;
+-			iommu->flush.flush_iotlb = __iommu_flush_iotlb;
+-			printk(KERN_INFO "IOMMU %d 0x%Lx: using Register based "
+-			       "invalidation\n",
+-				iommu->seq_id,
+-			       (unsigned long long)drhd->reg_base_addr);
+-		} else {
+-			iommu->flush.flush_context = qi_flush_context;
+-			iommu->flush.flush_iotlb = qi_flush_iotlb;
+-			printk(KERN_INFO "IOMMU %d 0x%Lx: using Queued "
+-			       "invalidation\n",
+-				iommu->seq_id,
+-			       (unsigned long long)drhd->reg_base_addr);
+-		}
+-	}
++	for_each_active_iommu(iommu, drhd)
++		intel_iommu_init_qi(iommu);
+ 
+ 	if (iommu_pass_through)
+ 		iommu_identity_mapping |= IDENTMAP_ALL;
+@@ -2894,8 +2897,10 @@ static int __init init_dmars(void)
+ 	return 0;
+ 
+ free_iommu:
+-	for_each_active_iommu(iommu, drhd)
++	for_each_active_iommu(iommu, drhd) {
++		disable_dmar_iommu(iommu);
+ 		free_dmar_iommu(iommu);
++	}
+ 	kfree(deferred_flush);
+ free_g_iommus:
+ 	kfree(g_iommus);
+@@ -3801,9 +3806,100 @@ int dmar_check_one_atsr(struct acpi_dmar_header *hdr, void *arg)
+ 	return 0;
+ }
+ 
++static int intel_iommu_add(struct dmar_drhd_unit *dmaru)
++{
++	int sp, ret = 0;
++	struct intel_iommu *iommu = dmaru->iommu;
++
++	if (g_iommus[iommu->seq_id])
++		return 0;
++
++	if (hw_pass_through && !ecap_pass_through(iommu->ecap)) {
++		pr_warn("IOMMU: %s doesn't support hardware pass through.\n",
++			iommu->name);
++		return -ENXIO;
++	}
++	if (!ecap_sc_support(iommu->ecap) &&
++	    domain_update_iommu_snooping(iommu)) {
++		pr_warn("IOMMU: %s doesn't support snooping.\n",
++			iommu->name);
++		return -ENXIO;
++	}
++	sp = domain_update_iommu_superpage(iommu) - 1;
++	if (sp >= 0 && !(cap_super_page_val(iommu->cap) & (1 << sp))) {
++		pr_warn("IOMMU: %s doesn't support large page.\n",
++			iommu->name);
++		return -ENXIO;
++	}
++
++	/*
++	 * Disable translation if already enabled prior to OS handover.
++	 */
++	if (iommu->gcmd & DMA_GCMD_TE)
++		iommu_disable_translation(iommu);
++
++	g_iommus[iommu->seq_id] = iommu;
++	ret = iommu_init_domains(iommu);
++	if (ret == 0)
++		ret = iommu_alloc_root_entry(iommu);
++	if (ret)
++		goto out;
++
++	if (dmaru->ignored) {
++		/*
++		 * we always have to disable PMRs or DMA may fail on this device
++		 */
++		if (force_on)
++			iommu_disable_protect_mem_regions(iommu);
++		return 0;
++	}
++
++	intel_iommu_init_qi(iommu);
++	iommu_flush_write_buffer(iommu);
++	ret = dmar_set_interrupt(iommu);
++	if (ret)
++		goto disable_iommu;
++
++	iommu_set_root_entry(iommu);
++	iommu->flush.flush_context(iommu, 0, 0, 0, DMA_CCMD_GLOBAL_INVL);
++	iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
++	iommu_enable_translation(iommu);
++
++	if (si_domain) {
++		ret = iommu_attach_domain(si_domain, iommu);
++		if (ret < 0 || si_domain->id != ret)
++			goto disable_iommu;
++		domain_attach_iommu(si_domain, iommu);
++	}
++
++	iommu_disable_protect_mem_regions(iommu);
++	return 0;
++
++disable_iommu:
++	disable_dmar_iommu(iommu);
++out:
++	free_dmar_iommu(iommu);
++	return ret;
++}
++
+ int dmar_iommu_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
+ {
+-	return intel_iommu_enabled ? -ENOSYS : 0;
++	int ret = 0;
++	struct intel_iommu *iommu = dmaru->iommu;
++
++	if (!intel_iommu_enabled)
++		return 0;
++	if (iommu == NULL)
++		return -EINVAL;
++
++	if (insert) {
++		ret = intel_iommu_add(dmaru);
++	} else {
++		disable_dmar_iommu(iommu);
++		free_dmar_iommu(iommu);
++	}
++
++	return ret;
+ }
+ 
+ static void intel_iommu_free_dmars(void)
 -- 
 1.7.10.4
 
