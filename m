@@ -1,80 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:45205 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751447AbaIEUhl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Sep 2014 16:37:41 -0400
-Message-ID: <540A1F05.80706@ti.com>
-Date: Fri, 5 Sep 2014 16:37:25 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from mail-qg0-f43.google.com ([209.85.192.43]:36195 "EHLO
+	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753408AbaILO26 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Sep 2014 10:28:58 -0400
+Received: by mail-qg0-f43.google.com with SMTP id a108so796581qge.16
+        for <linux-pci@vger.kernel.org>; Fri, 12 Sep 2014 07:28:58 -0700 (PDT)
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Rob Herring <robh+dt@kernel.org>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: keystone: update to support multiple pci ports
-References: <1409938782-31460-1-git-send-email-m-karicheri2@ti.com> <7260053.FoBVhTXVfj@wuerfel> <540A0212.6060303@ti.com> <3654923.JrIGV2dJ70@wuerfel>
-In-Reply-To: <3654923.JrIGV2dJ70@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <20140912131919.35c777e5@pluto>
+References: <20140514224339.7f8be3a9@neptune.home> <CAMxnaaXGQe4vg9cY5e2KZBnG4F-z49OriwxEGUE-DCE6MKUryQ@mail.gmail.com>
+ <20140810112654.1bf684d6@neptune.home> <CAMxnaaUsd+XHppMmPMXdFL13d1-OhLzoH_yjv_9abOx_uP=_Ug@mail.gmail.com>
+ <20140810183411.19370721@neptune.home> <CAMxnaaVNpiSZmhQsHa_ZHJckgzG+xHyOL6hOT3Ts8GdcGN_A9g@mail.gmail.com>
+ <20140816192135.34260115@neptune.home> <CAMxnaaWQoX9KMQVCKHTkeqSxGEybz5u1qU6AVBqzW3+mj_nJHQ@mail.gmail.com>
+ <20140820075508.74f5b622@pluto> <20140820091152.76cd4e1a@pluto>
+ <CAMxnaaUodONkqmdPWedN-Q1qheHiJAScFcG_XbX1--ZmiOQZDg@mail.gmail.com>
+ <20140821233435.19a9cffa@neptune.home> <CAErSpo6D1B+dPLrYoAF4OA1KeWuW8VZW2_RR5jB1GbCRo+6vHg@mail.gmail.com>
+ <20140822082324.12cb6e93@pluto> <CAMxnaaU9EiMcne-aQjS1sY1Orn6xGbVHEnd057ogcZ77p74Y=Q@mail.gmail.com>
+ <20140823130624.06ecc057@neptune.home> <20140824230953.7c04890f@neptune.home>
+ <CAMxnaaUoLBbN1gNgD3qvPV1mx3JoM6FPV9EndQG9vJSpux2xMw@mail.gmail.com>
+ <20140828224750.23148125@neptune.home> <20140912131919.35c777e5@pluto>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 12 Sep 2014 08:28:37 -0600
+Message-ID: <CAErSpo5K-whTs7uzki3JHzmbrDzaG6u7BerYG42is_sfuEOGXA@mail.gmail.com>
+Subject: Re: [PATCH 1/2 v2] vgaarb: Don't default exclusively to first video
+ device with mem+io
+To: =?UTF-8?Q?Bruno_Pr=C3=A9mont?= <bonbons@linux-vserver.org>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/05/2014 03:00 PM, Arnd Bergmann wrote:
-> On Friday 05 September 2014 14:33:54 Murali Karicheri wrote:
->>> This looks like it's a shared register of some sort that doesn't
->>> really belong into the registers of a particular port. Could it
->>> be that it's actually for the PHY?
->>>
->> This a shared device configuration register between the two ports the
->> desciption states it is bootstrap configuration of the PCIe module as
->> Endpoint or Root complex and Not Phy. Hope below text will help.
+On Fri, Sep 12, 2014 at 5:19 AM, Bruno Prémont
+<bonbons@linux-vserver.org> wrote:
+> Bjorn,
 >
-> Ok. Why do you want to have this user-selectable though? Can't it
-> just be set by the boot loader before starting Linux?
+> What is missing to get these two patches pushed to Linus?
 
-Arnd,
+Sorry, I've been working on some other regressions and overlooked this
+one.  If you open a bugzilla report and mark it as a regression, that
+will help keep this on my radar.
 
-As the driver is responsible for configuring the device to support the 
-device functionality, it make sense to do this in the device driver. The 
-driver enables clock to the IP and this is an addition thing to be 
-configured so that when the device is powered up, it should function as 
-RC. The IP can be configured to work as Root Complex or Endpoint. So not 
-sure why you want to me to move this functionality to boot loader.
+Bjorn
 
-Murali
-
->
-> 	Arnd
->
->> Table 3-23 Device Configuration Register (DEVCFG)
+> On Thu, 28 Aug 2014 22:47:50 +0200 Bruno Prémont wrote:
+>> On Tue, 26 August 2014 Andreas Noever <andreas.noever@gmail.com> wrote:
+>> > On Sun, Aug 24, 2014 at 11:09 PM, Bruno Prémont wrote:
+>> > > With commit 20cde694027e boot video device detection was moved from
+>> > > efifb to x86 and ia64 pci/fixup.c.
+>> > >
+>> > > For dual-GPU Apple computers above change represents a regression as
+>> > > code in efifb did forcefully override vga_default_device while the
+>> > > merge did not (vgaarb happens prior to PCI fixup).
+>> > >
+>> > > To improve on initial device selection by vgaarb (it cannot know if
+>> > > PCI device not behind bridges see/decode legacy VGA I/O or not), move
+>> > > the screen_info based check from pci_video_fixup to vgaarb's init
+>> > > function and use it to refine/override decision taken while adding
+>> > > the individual PCI VGA devices.
+>> > > This way PCI fixup has no reason to adjust vga_default_device
+>> > > anymore but can depend on its value for flagging shadowed VBIOS.
+>> > >
+>> > > This has the nice benefit of removing duplicated code but does
+>> > > introduce a #if defined() block in vgaarb.
+>> > > Not all architectures have screen_info and would cause compile to
+>> > > fail without it.
+>> > >
+>> > > Reported-By: Andreas Noever <andreas.noever@gmail.com>
+>> > > CC: Matthew Garrett <matthew.garrett@nebula.com>
+>> > > CC: stable@vger.kernel.org # v3.5+
+>> > > Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
+>> > > ---
+>> > > Andreas, does this work properly for you, including the improvement
+>> > > on i915 complaint about VBIOS going from KERN_ERR to KERN_INFO?
+>> > Yep, thanks!
+>> >
+>> > >
+>> > > Other arches using PCI and vgaarb that have screen_info may want
+>> > > to be added to the #if defined() block or even introduce a new
+>> > > CONFIG_HAVE_SCREEN_INFO or similar...
 >>
+>> Bjorn, can you queue these two patches, probably going through -next
+>> for a week and passing them to Linus for -rc4, adding Andreas's Tested-by
+>> to Patch 1/2 v2?
 >>
->> PCIESSMODE[1:0] 00b PCIESSMODE is used to control the
->> functionality of PCIESS module out of
->> reset. This MMR output is connected to
->> DEVTYPE input of PCIESS
->> (Changes from
->> Nysh) : Note that in Nysh this value came
->> from a bootstrap pin.
->> 00 : Endpoint
->> 01 : Legacy Endpoint
->> 10 : Rootcomplex
->> 11 : Reserved
->> PCIESS_1_MODE[1:0
->> ]
->> 00b PCIESSMODE is used to control the
->> functionality of PCIE_1 module out of
->> reset. This MMR output is connected to
->> DEVTYPE input of PCIE_1
->> 00 : Endpoint
->> 01 : Legacy Endpoint
->> 10 : Rootcomplex
->> 11 : Reserv
->>
->
-
+>> Thanks,
+>> Bruno
