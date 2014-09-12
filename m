@@ -1,88 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0148.outbound.protection.outlook.com ([207.46.100.148]:40553
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751070AbaIWDYy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Sep 2014 23:24:54 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	"festevam@gmail.com" <festevam@gmail.com>
-Subject: RE: [PATCH v1 1/4] PCI: imx6: enable pcie on imx6qdl sabreauto
-Date: Tue, 23 Sep 2014 03:25:07 +0000
-Message-ID: <721deffecc5847f3af7b2b4924efa5ee@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1411382705-15301-1-git-send-email-r65037@freescale.com>
-	 <1411382705-15301-2-git-send-email-r65037@freescale.com>
- <1411387607.2599.7.camel@pengutronix.de>
-In-Reply-To: <1411387607.2599.7.camel@pengutronix.de>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: [PATCH v1 12/13] PCI: Preserve MPS and MRRS when applying _HPX
+ settings
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatxjain@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Fri, 12 Sep 2014 12:04:09 -0600
+Message-ID: <20140912180409.1630.66534.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgTHVjYXM6DQpUaGFua3MgZm9yIHlvdXIgY29tbWVudHMuDQoNCj4gLS0tLS1PcmlnaW5hbCBN
-ZXNzYWdlLS0tLS0NCj4gRnJvbTogTHVjYXMgU3RhY2ggW21haWx0bzpsLnN0YWNoQHBlbmd1dHJv
-bml4LmRlXQ0KPiBTZW50OiBNb25kYXksIFNlcHRlbWJlciAyMiwgMjAxNCA4OjA3IFBNDQo+IFRv
-OiBaaHUgUmljaGFyZC1SNjUwMzcNCj4gQ2M6IGxpbnV4LXBjaS1vd25lckB2Z2VyLmtlcm5lbC5v
-cmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IEd1byBTaGF3bi0NCj4gUjY1MDczOyBmZXN0
-ZXZhbUBnbWFpbC5jb20NCj4gU3ViamVjdDogUmU6IFtQQVRDSCB2MSAxLzRdIFBDSTogaW14Njog
-ZW5hYmxlIHBjaWUgb24gaW14NnFkbCBzYWJyZWF1dG8NCj4gDQo+IEFtIE1vbnRhZywgZGVuIDIy
-LjA5LjIwMTQsIDE4OjQ1ICswODAwIHNjaHJpZWIgUmljaGFyZCBaaHU6DQo+ID4gLSBlbmFibGUg
-cGNpZSBvbiBpbXg2cWRsIHNhYnJlYXV0byBib2FyZHMuDQo+ID4gLSB3YWl0IHRoZSBjbG9ja3Mg
-dG8gc3RhYmlsaXplIGFmdGVyIHRoZSBwY2llX3JlZl9lbg0KPiA+IChJTVg2UV9HUFIxX1BDSUVf
-UkVGX0NMS19FTikgaXMgc2V0Lg0KPiA+DQo+IA0KPiBUaG9zZSBhcmUgdHdvIGNvbXBsZXRlbHkg
-aW5kZXBlbmRlbnQgY2hhbmdlcywgZXZlbiBpZiB5b3UgZW5hYmxlL2ZpeCBhDQo+IHNwZWNpZmlj
-IGJvYXJkIHdpdGggdGhvc2UuIFNvIHBsZWFzZSBzcGxpdCBpbnRvIERUIGNoYW5nZXMgKHRvIGJl
-IG1lcmdlZCBieQ0KPiBTaGF3bikgYW5kIFBDSSBjaGFuZ2VzICh0byBiZSBtZXJnZWQgYnkgQmpv
-cm4pLg0KPiANCltSaWNoYXJkXSBPaywgbm8gcHJvYmxlbS4gV291bGQgYmUgc2VwYXJhdGVkIGxh
-dGVyLg0KDQo+ID4gU2lnbmVkLW9mZi1ieTogUmljaGFyZCBaaHUgPHI2NTAzN0BmcmVlc2NhbGUu
-Y29tPg0KPiA+IC0tLQ0KPiA+ICBhcmNoL2FybS9ib290L2R0cy9pbXg2cWRsLXNhYnJlYXV0by5k
-dHNpIHwgNCArKysrDQo+ID4gIGRyaXZlcnMvcGNpL2hvc3QvcGNpLWlteDYuYyAgICAgICAgICAg
-ICAgfCA2ICsrKy0tLQ0KPiA+ICAyIGZpbGVzIGNoYW5nZWQsIDcgaW5zZXJ0aW9ucygrKSwgMyBk
-ZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9hcmNoL2FybS9ib290L2R0cy9pbXg2
-cWRsLXNhYnJlYXV0by5kdHNpDQo+ID4gYi9hcmNoL2FybS9ib290L2R0cy9pbXg2cWRsLXNhYnJl
-YXV0by5kdHNpDQo+ID4gaW5kZXggMDA5YWJkNi4uZDYwNDBhNSAxMDA2NDQNCj4gPiAtLS0gYS9h
-cmNoL2FybS9ib290L2R0cy9pbXg2cWRsLXNhYnJlYXV0by5kdHNpDQo+ID4gKysrIGIvYXJjaC9h
-cm0vYm9vdC9kdHMvaW14NnFkbC1zYWJyZWF1dG8uZHRzaQ0KPiA+IEBAIC00MTAsNiArNDEwLDEw
-IEBADQo+ID4gIAl9Ow0KPiA+ICB9Ow0KPiA+DQo+ID4gKyZwY2llIHsNCj4gPiArCXN0YXR1cyA9
-ICJva2F5IjsNCj4gPiArfTsNCj4gPiArDQo+ID4gICZwd20zIHsNCj4gPiAgCXBpbmN0cmwtbmFt
-ZXMgPSAiZGVmYXVsdCI7DQo+ID4gIAlwaW5jdHJsLTAgPSA8JnBpbmN0cmxfcHdtMz47DQo+ID4g
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWlteDYuYyBiL2RyaXZlcnMvcGNpL2hv
-c3QvcGNpLWlteDYuYw0KPiA+IGluZGV4IDIzM2ZlOGEuLmJjNDIyMmIgMTAwNjQ0DQo+ID4gLS0t
-IGEvZHJpdmVycy9wY2kvaG9zdC9wY2ktaW14Ni5jDQo+ID4gKysrIGIvZHJpdmVycy9wY2kvaG9z
-dC9wY2ktaW14Ni5jDQo+ID4gQEAgLTI3NSwxNSArMjc1LDE1IEBAIHN0YXRpYyBpbnQgaW14Nl9w
-Y2llX2RlYXNzZXJ0X2NvcmVfcmVzZXQoc3RydWN0DQo+IHBjaWVfcG9ydCAqcHApDQo+ID4gIAkJ
-Z290byBlcnJfcGNpZTsNCj4gPiAgCX0NCj4gPg0KPiA+IC0JLyogYWxsb3cgdGhlIGNsb2NrcyB0
-byBzdGFiaWxpemUgKi8NCj4gPiAtCXVzbGVlcF9yYW5nZSgyMDAsIDUwMCk7DQo+ID4gLQ0KPiA+
-ICAJLyogcG93ZXIgdXAgY29yZSBwaHkgYW5kIGVuYWJsZSByZWYgY2xvY2sgKi8NCj4gPiAgCXJl
-Z21hcF91cGRhdGVfYml0cyhpbXg2X3BjaWUtPmlvbXV4Y19ncHIsIElPTVVYQ19HUFIxLA0KPiA+
-ICAJCQlJTVg2UV9HUFIxX1BDSUVfVEVTVF9QRCwgMCA8PCAxOCk7DQo+ID4gIAlyZWdtYXBfdXBk
-YXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNfZ3ByLCBJT01VWENfR1BSMSwNCj4gPiAgCQkJSU1Y
-NlFfR1BSMV9QQ0lFX1JFRl9DTEtfRU4sIDEgPDwgMTYpOw0KPiA+DQo+ID4gKwkvKiBhbGxvdyB0
-aGUgY2xvY2tzIHRvIHN0YWJpbGl6ZSAqLw0KPiA+ICsJdXNsZWVwX3JhbmdlKDIwMCwgNTAwKTsN
-Cj4gPiArDQo+ID4gIAkvKiBTb21lIGJvYXJkcyBkb24ndCBoYXZlIFBDSWUgcmVzZXQgR1BJTy4g
-Ki8NCj4gPiAgCWlmIChncGlvX2lzX3ZhbGlkKGlteDZfcGNpZS0+cmVzZXRfZ3BpbykpIHsNCj4g
-PiAgCQlncGlvX3NldF92YWx1ZShpbXg2X3BjaWUtPnJlc2V0X2dwaW8sIDApOw0KPiANCj4gQXJl
-IHlvdSBmaXhpbmcgYSBzcGVjaWZpYyBpc3N1ZSB3aXRoIHRoaXM/IE90aGVyd2lzZSB0aGlzIGNo
-YW5nZSBkb2Vzbid0IGxvb2sNCj4gZ29vZCB0byBtZS4gVGhlIHJlZmVyZW5jZSBtYW51YWwgc3Rh
-dGVzIHRoYXQgdGhlIGNsb2NrIG11c3QgYmUgc3RhYmxlIGJlZm9yZQ0KPiBlbmFibGluZyB0aGUg
-UkVGX0NMS19FTiBiaXQgaW4gR1BSMS4gU28gbW92aW5nIHRoZSBkZWxheSB3aXRob3V0IHByb29m
-IHRoYXQgaXQNCj4gZG9lc24ndCBoYXZlIGFkdmVyc2UgZWZmZWN0cyBhbmQgd2l0aG91dCBhIGdv
-b2QganVzdGlmaWNhdGlvbiBzZWVtcyB3cm9uZy4NCj4gDQo+IElmIHRoaXMgZml4ZXMgYSBzcGVj
-aWZpYyBpc3N1ZSBwbGVhc2UgbWVudGlvbiBpdCBpbiB0aGUgY29tbWl0IG1lc3NhZ2UuDQo+IEFs
-c28gSSB3b3VsZCBsaWtlIGF0IGxlYXN0IGEgY29uZmlybWF0aW9uIGZyb20gVGltIEhhcnZleSB0
-aGF0IHRoaXMgZG9lc24ndA0KPiByZWdyZXNzIGhpcyBzZXR1cC4gU28gcGxlYXNlIHRha2UgaGlt
-IG9uIENDIGZvciB0aGUgbmV4dCB2ZXJzaW9uIG9mIHRoaXMgcGF0Y2guDQpbUmljaGFyZF0geWVz
-LCBpdCBpcyB1c2VkIHRvIGZpeCBvbmUgaXNzdWUgb24gaW14NnFkbCBhcmQgYm9hcmRzLg0KIEFj
-dHVhbGx5LCB0aGUgYSB3aGlsZSBkZWxheSBpcyBtYW5kYXRvcnkgcmVxdWlyZWQgYWZ0ZXIgcGNp
-ZV9yZWZfY2xrX2VuIGlzIHNldC4NCk90aGVyd2lzZSwgdGhlIHN5c3RlbSB3b3VsZCBiZSBoYW5n
-IG9uIGlteDZxZGwgYXJkIGJvYXJkcywgYmVjYXVzZSB0aGF0IGlteDZxZGwgYm9hcmRzDQogZG9u
-J3QgaGF2ZSB0aGUgcmVzZXRfZ3Bpby4NCkJUVywgYXMgSSBrbm93IHRoYXQgdGhlIGNsb2NrcyBz
-aG91bGQgYmUgc3RhYmxlIGFscmVhZHkgYWZ0ZXIgdGhlICJjbGtfcHJlcGFyZV9lbmFibGUiIGlz
-DQpyZXR1cm4uDQpPaywgSSB3b3VsZCBDQyBUaW0gSGFydmV5IGluIHRoZSBuZXh0IHZlcnNpb24g
-b2YgdGhpcyBwYXRjaC1zZXQuDQpUaGFua3MuDQoNCkJlc3QgUmVnYXJkcw0KUmljaGFyZCBaaHUN
-Cj4gDQo+IFJlZ2FyZHMsDQo+IEx1Y2FzDQo+IC0tDQo+IFBlbmd1dHJvbml4IGUuSy4gICAgICAg
-ICAgICAgfCBMdWNhcyBTdGFjaCAgICAgICAgICAgICAgICAgfA0KPiBJbmR1c3RyaWFsIExpbnV4
-IFNvbHV0aW9ucyAgIHwgaHR0cDovL3d3dy5wZW5ndXRyb25peC5kZS8gIHwNCg0K
+Linux manages MPS and MRRS settings to keep them consistent across the PCIe
+fabric.  BIOS doesn't participate in Linux scheme, so ignore that part of
+any _HPX settings it supplies.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 1ff2105ba401..cb411fbb6435 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1301,6 +1301,16 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+ 		return;
+ 	}
+ 
++	/*
++	 * Don't allow _HPX to change MPS or MRRS settings.  We manage
++	 * those to make sure they're consistent with the rest of the
++	 * platform.
++	 */
++	hpp->pci_exp_devctl_and |= PCI_EXP_DEVCTL_PAYLOAD |
++				    PCI_EXP_DEVCTL_READRQ;
++	hpp->pci_exp_devctl_or &= ~(PCI_EXP_DEVCTL_PAYLOAD |
++				    PCI_EXP_DEVCTL_READRQ);
++
+ 	/* Initialize Device Control Register */
+ 	pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
+ 			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
+
