@@ -1,77 +1,403 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:54319 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755564AbaIEAP7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 20:15:59 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 5 Sep 2014 10:15:57 +1000
-Date: Fri, 5 Sep 2014 10:15:55 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, kvm@vger.kernel.org,
-	alex.williamson@redhat.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/4] PCI: Export MSI message relevant functions
-Message-ID: <20140905001555.GA9963@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1400468470-11262-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1400468470-11262-2-git-send-email-gwshan@linux.vnet.ibm.com>
- <20140904225736.GJ17125@google.com>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:52853 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751919AbaILSDD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Sep 2014 14:03:03 -0400
+Received: by mail-ie0-f182.google.com with SMTP id tr6so1413864ieb.13
+        for <linux-pci@vger.kernel.org>; Fri, 12 Sep 2014 11:03:02 -0700 (PDT)
+Subject: [PATCH v1 02/13] PCI: Move pci_configure_slot() to
+ drivers/pci/probe.c
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatxjain@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Fri, 12 Sep 2014 12:03:00 -0600
+Message-ID: <20140912180300.1630.62966.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140904225736.GJ17125@google.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 04, 2014 at 04:57:36PM -0600, Bjorn Helgaas wrote:
->On Mon, May 19, 2014 at 01:01:07PM +1000, Gavin Shan wrote:
->> The patch exports 2 MSI message relevant functions, which will be
->> used by VFIO PCI driver. The VFIO PCI driver would be built as
->> a module.
->> 
->> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->
->Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
->I think Alex will merge this along with the other ones.  Sorry this
->took so long.  I don't really like this, but I just can't figure out
->any solution that's better.
->
+Move pci_configure_slot() and related functions from
+drivers/pci/hotplug/pcihp_slot to drivers/pci/probe.c.
 
-Thanks, Bjorn. I thought you must forget this. Lets get it in firstly
-and I'll do more investigation later to see if I can figure out something
-better.
+This is to prepare for doing device configuration during the normal
+enumeration process instead of just after hot-add.
 
-Thanks,
-Gavin
+No functional change.
 
->> ---
->>  drivers/pci/msi.c | 2 ++
->>  1 file changed, 2 insertions(+)
->> 
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index 955ab79..2350271 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -324,6 +324,7 @@ void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg)
->>  
->>  	__get_cached_msi_msg(entry, msg);
->>  }
->> +EXPORT_SYMBOL_GPL(get_cached_msi_msg);
->>  
->>  void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->>  {
->> @@ -368,6 +369,7 @@ void write_msi_msg(unsigned int irq, struct msi_msg *msg)
->>  
->>  	__write_msi_msg(entry, msg);
->>  }
->> +EXPORT_SYMBOL_GPL(write_msi_msg);
->>  
->>  static void free_msi_irqs(struct pci_dev *dev)
->>  {
->> -- 
->> 1.8.3.2
->> 
->
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/hotplug/Makefile     |    2 
+ drivers/pci/hotplug/pcihp_slot.c |  176 --------------------------------------
+ drivers/pci/probe.c              |  148 ++++++++++++++++++++++++++++++++
+ 3 files changed, 149 insertions(+), 177 deletions(-)
+ delete mode 100644 drivers/pci/hotplug/pcihp_slot.c
+
+diff --git a/drivers/pci/hotplug/Makefile b/drivers/pci/hotplug/Makefile
+index 3e6532b945c1..4a9aa08b08f1 100644
+--- a/drivers/pci/hotplug/Makefile
++++ b/drivers/pci/hotplug/Makefile
+@@ -24,7 +24,7 @@ obj-$(CONFIG_HOTPLUG_PCI_S390)		+= s390_pci_hpc.o
+ 
+ obj-$(CONFIG_HOTPLUG_PCI_ACPI_IBM)	+= acpiphp_ibm.o
+ 
+-pci_hotplug-objs	:=	pci_hotplug_core.o pcihp_slot.o
++pci_hotplug-objs	:=	pci_hotplug_core.o
+ 
+ ifdef CONFIG_HOTPLUG_PCI_CPCI
+ pci_hotplug-objs	+=	cpci_hotplug_core.o	\
+diff --git a/drivers/pci/hotplug/pcihp_slot.c b/drivers/pci/hotplug/pcihp_slot.c
+deleted file mode 100644
+index 3e36ec8d708a..000000000000
+--- a/drivers/pci/hotplug/pcihp_slot.c
++++ /dev/null
+@@ -1,176 +0,0 @@
+-/*
+- * Copyright (C) 1995,2001 Compaq Computer Corporation
+- * Copyright (C) 2001 Greg Kroah-Hartman (greg@kroah.com)
+- * Copyright (C) 2001 IBM Corp.
+- * Copyright (C) 2003-2004 Intel Corporation
+- * (c) Copyright 2009 Hewlett-Packard Development Company, L.P.
+- *
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or (at
+- * your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, GOOD TITLE or
+- * NON INFRINGEMENT.  See the GNU General Public License for more
+- * details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+- */
+-
+-#include <linux/pci.h>
+-#include <linux/export.h>
+-#include <linux/pci_hotplug.h>
+-
+-static struct hpp_type0 pci_default_type0 = {
+-	.revision = 1,
+-	.cache_line_size = 8,
+-	.latency_timer = 0x40,
+-	.enable_serr = 0,
+-	.enable_perr = 0,
+-};
+-
+-static void program_hpp_type0(struct pci_dev *dev, struct hpp_type0 *hpp)
+-{
+-	u16 pci_cmd, pci_bctl;
+-
+-	if (!hpp) {
+-		/*
+-		 * Perhaps we *should* use default settings for PCIe, but
+-		 * pciehp didn't, so we won't either.
+-		 */
+-		if (pci_is_pcie(dev))
+-			return;
+-		hpp = &pci_default_type0;
+-	}
+-
+-	if (hpp->revision > 1) {
+-		dev_warn(&dev->dev,
+-			 "PCI settings rev %d not supported; using defaults\n",
+-			 hpp->revision);
+-		hpp = &pci_default_type0;
+-	}
+-
+-	pci_write_config_byte(dev, PCI_CACHE_LINE_SIZE, hpp->cache_line_size);
+-	pci_write_config_byte(dev, PCI_LATENCY_TIMER, hpp->latency_timer);
+-	pci_read_config_word(dev, PCI_COMMAND, &pci_cmd);
+-	if (hpp->enable_serr)
+-		pci_cmd |= PCI_COMMAND_SERR;
+-	else
+-		pci_cmd &= ~PCI_COMMAND_SERR;
+-	if (hpp->enable_perr)
+-		pci_cmd |= PCI_COMMAND_PARITY;
+-	else
+-		pci_cmd &= ~PCI_COMMAND_PARITY;
+-	pci_write_config_word(dev, PCI_COMMAND, pci_cmd);
+-
+-	/* Program bridge control value */
+-	if ((dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
+-		pci_write_config_byte(dev, PCI_SEC_LATENCY_TIMER,
+-				      hpp->latency_timer);
+-		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &pci_bctl);
+-		if (hpp->enable_serr)
+-			pci_bctl |= PCI_BRIDGE_CTL_SERR;
+-		else
+-			pci_bctl &= ~PCI_BRIDGE_CTL_SERR;
+-		if (hpp->enable_perr)
+-			pci_bctl |= PCI_BRIDGE_CTL_PARITY;
+-		else
+-			pci_bctl &= ~PCI_BRIDGE_CTL_PARITY;
+-		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, pci_bctl);
+-	}
+-}
+-
+-static void program_hpp_type1(struct pci_dev *dev, struct hpp_type1 *hpp)
+-{
+-	if (hpp)
+-		dev_warn(&dev->dev, "PCI-X settings not supported\n");
+-}
+-
+-static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+-{
+-	int pos;
+-	u32 reg32;
+-
+-	if (!hpp)
+-		return;
+-
+-	if (hpp->revision > 1) {
+-		dev_warn(&dev->dev, "PCIe settings rev %d not supported\n",
+-			 hpp->revision);
+-		return;
+-	}
+-
+-	/* Initialize Device Control Register */
+-	pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
+-			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
+-
+-	/* Initialize Link Control Register */
+-	if (dev->subordinate)
+-		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
+-			~hpp->pci_exp_lnkctl_and, hpp->pci_exp_lnkctl_or);
+-
+-	/* Find Advanced Error Reporting Enhanced Capability */
+-	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+-	if (!pos)
+-		return;
+-
+-	/* Initialize Uncorrectable Error Mask Register */
+-	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, &reg32);
+-	reg32 = (reg32 & hpp->unc_err_mask_and) | hpp->unc_err_mask_or;
+-	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, reg32);
+-
+-	/* Initialize Uncorrectable Error Severity Register */
+-	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &reg32);
+-	reg32 = (reg32 & hpp->unc_err_sever_and) | hpp->unc_err_sever_or;
+-	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, reg32);
+-
+-	/* Initialize Correctable Error Mask Register */
+-	pci_read_config_dword(dev, pos + PCI_ERR_COR_MASK, &reg32);
+-	reg32 = (reg32 & hpp->cor_err_mask_and) | hpp->cor_err_mask_or;
+-	pci_write_config_dword(dev, pos + PCI_ERR_COR_MASK, reg32);
+-
+-	/* Initialize Advanced Error Capabilities and Control Register */
+-	pci_read_config_dword(dev, pos + PCI_ERR_CAP, &reg32);
+-	reg32 = (reg32 & hpp->adv_err_cap_and) | hpp->adv_err_cap_or;
+-	pci_write_config_dword(dev, pos + PCI_ERR_CAP, reg32);
+-
+-	/*
+-	 * FIXME: The following two registers are not supported yet.
+-	 *
+-	 *   o Secondary Uncorrectable Error Severity Register
+-	 *   o Secondary Uncorrectable Error Mask Register
+-	 */
+-}
+-
+-void pci_configure_slot(struct pci_dev *dev)
+-{
+-	struct pci_dev *cdev;
+-	struct hotplug_params hpp;
+-
+-	if (!(dev->hdr_type == PCI_HEADER_TYPE_NORMAL ||
+-			(dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
+-			(dev->class >> 8) == PCI_CLASS_BRIDGE_PCI)))
+-		return;
+-
+-	pcie_bus_configure_settings(dev->bus);
+-
+-	memset(&hpp, 0, sizeof(hpp));
+-	pci_get_hp_params(dev, &hpp);
+-
+-	program_hpp_type2(dev, hpp.t2);
+-	program_hpp_type1(dev, hpp.t1);
+-	program_hpp_type0(dev, hpp.t0);
+-
+-	if (dev->subordinate) {
+-		list_for_each_entry(cdev, &dev->subordinate->devices,
+-				    bus_list)
+-			pci_configure_slot(cdev);
+-	}
+-}
+-EXPORT_SYMBOL_GPL(pci_configure_slot);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index e3cf8a2e6292..5d0cc646817a 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -6,6 +6,7 @@
+ #include <linux/delay.h>
+ #include <linux/init.h>
+ #include <linux/pci.h>
++#include <linux/pci_hotplug.h>
+ #include <linux/slab.h>
+ #include <linux/module.h>
+ #include <linux/cpumask.h>
+@@ -1236,6 +1237,153 @@ int pci_setup_device(struct pci_dev *dev)
+ 	return 0;
+ }
+ 
++static struct hpp_type0 pci_default_type0 = {
++	.revision = 1,
++	.cache_line_size = 8,
++	.latency_timer = 0x40,
++	.enable_serr = 0,
++	.enable_perr = 0,
++};
++
++static void program_hpp_type0(struct pci_dev *dev, struct hpp_type0 *hpp)
++{
++	u16 pci_cmd, pci_bctl;
++
++	if (!hpp) {
++		/*
++		 * Perhaps we *should* use default settings for PCIe, but
++		 * pciehp didn't, so we won't either.
++		 */
++		if (pci_is_pcie(dev))
++			return;
++		hpp = &pci_default_type0;
++	}
++
++	if (hpp->revision > 1) {
++		dev_warn(&dev->dev,
++			 "PCI settings rev %d not supported; using defaults\n",
++			 hpp->revision);
++		hpp = &pci_default_type0;
++	}
++
++	pci_write_config_byte(dev, PCI_CACHE_LINE_SIZE, hpp->cache_line_size);
++	pci_write_config_byte(dev, PCI_LATENCY_TIMER, hpp->latency_timer);
++	pci_read_config_word(dev, PCI_COMMAND, &pci_cmd);
++	if (hpp->enable_serr)
++		pci_cmd |= PCI_COMMAND_SERR;
++	else
++		pci_cmd &= ~PCI_COMMAND_SERR;
++	if (hpp->enable_perr)
++		pci_cmd |= PCI_COMMAND_PARITY;
++	else
++		pci_cmd &= ~PCI_COMMAND_PARITY;
++	pci_write_config_word(dev, PCI_COMMAND, pci_cmd);
++
++	/* Program bridge control value */
++	if ((dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
++		pci_write_config_byte(dev, PCI_SEC_LATENCY_TIMER,
++				      hpp->latency_timer);
++		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &pci_bctl);
++		if (hpp->enable_serr)
++			pci_bctl |= PCI_BRIDGE_CTL_SERR;
++		else
++			pci_bctl &= ~PCI_BRIDGE_CTL_SERR;
++		if (hpp->enable_perr)
++			pci_bctl |= PCI_BRIDGE_CTL_PARITY;
++		else
++			pci_bctl &= ~PCI_BRIDGE_CTL_PARITY;
++		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, pci_bctl);
++	}
++}
++
++static void program_hpp_type1(struct pci_dev *dev, struct hpp_type1 *hpp)
++{
++	if (hpp)
++		dev_warn(&dev->dev, "PCI-X settings not supported\n");
++}
++
++static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
++{
++	int pos;
++	u32 reg32;
++
++	if (!hpp)
++		return;
++
++	if (hpp->revision > 1) {
++		dev_warn(&dev->dev, "PCIe settings rev %d not supported\n",
++			 hpp->revision);
++		return;
++	}
++
++	/* Initialize Device Control Register */
++	pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
++			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
++
++	/* Initialize Link Control Register */
++	if (dev->subordinate)
++		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
++			~hpp->pci_exp_lnkctl_and, hpp->pci_exp_lnkctl_or);
++
++	/* Find Advanced Error Reporting Enhanced Capability */
++	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
++	if (!pos)
++		return;
++
++	/* Initialize Uncorrectable Error Mask Register */
++	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, &reg32);
++	reg32 = (reg32 & hpp->unc_err_mask_and) | hpp->unc_err_mask_or;
++	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, reg32);
++
++	/* Initialize Uncorrectable Error Severity Register */
++	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &reg32);
++	reg32 = (reg32 & hpp->unc_err_sever_and) | hpp->unc_err_sever_or;
++	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, reg32);
++
++	/* Initialize Correctable Error Mask Register */
++	pci_read_config_dword(dev, pos + PCI_ERR_COR_MASK, &reg32);
++	reg32 = (reg32 & hpp->cor_err_mask_and) | hpp->cor_err_mask_or;
++	pci_write_config_dword(dev, pos + PCI_ERR_COR_MASK, reg32);
++
++	/* Initialize Advanced Error Capabilities and Control Register */
++	pci_read_config_dword(dev, pos + PCI_ERR_CAP, &reg32);
++	reg32 = (reg32 & hpp->adv_err_cap_and) | hpp->adv_err_cap_or;
++	pci_write_config_dword(dev, pos + PCI_ERR_CAP, reg32);
++
++	/*
++	 * FIXME: The following two registers are not supported yet.
++	 *
++	 *   o Secondary Uncorrectable Error Severity Register
++	 *   o Secondary Uncorrectable Error Mask Register
++	 */
++}
++
++void pci_configure_slot(struct pci_dev *dev)
++{
++	struct pci_dev *cdev;
++	struct hotplug_params hpp;
++
++	if (!(dev->hdr_type == PCI_HEADER_TYPE_NORMAL ||
++			(dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
++			(dev->class >> 8) == PCI_CLASS_BRIDGE_PCI)))
++		return;
++
++	pcie_bus_configure_settings(dev->bus);
++
++	memset(&hpp, 0, sizeof(hpp));
++	pci_get_hp_params(dev, &hpp);
++
++	program_hpp_type2(dev, hpp.t2);
++	program_hpp_type1(dev, hpp.t1);
++	program_hpp_type0(dev, hpp.t0);
++
++	if (dev->subordinate) {
++		list_for_each_entry(cdev, &dev->subordinate->devices,
++				    bus_list)
++			pci_configure_slot(cdev);
++	}
++}
++EXPORT_SYMBOL_GPL(pci_configure_slot);
+ static void pci_release_capabilities(struct pci_dev *dev)
+ {
+ 	pci_vpd_release(dev);
 
