@@ -1,100 +1,228 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:41499 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756579AbaISFRE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 19 Sep 2014 01:17:04 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V6 4/8] iommu/vt-d: Search for ACPI _DSM method for DMAR hotplug
-Date: Fri, 19 Sep 2014 13:18:51 +0800
-Message-Id: <1411103935-31301-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411103935-31301-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411103935-31301-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+Reply-To: rajatxjain@gmail.com
+In-Reply-To: <20140911222402.16809.94145.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20140911222022.16809.57079.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	<20140911222402.16809.94145.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Date: Fri, 12 Sep 2014 09:40:39 -0700
+Message-ID: <CAA93t1oEFG6d4b+KXw5L5EfNT0EbEYcxpiba-BXo-h8Mqt0zGQ@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: Add pci_ignore_hotplug() to ignore hotplug
+ events for a device
+From: Rajat Jain <rajatxjain@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	SpacemanSpiff <a818958@trbvm.com>,
+	Dave Airlie <airlied@linux.ie>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-acpi@vger.kernel.org,
+	=?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	"Jose P." <lbdkmjdf@sharklasers.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to Intel VT-d specification, _DSM method to support DMAR
-hotplug should exist directly under corresponding ACPI object
-representing PCI host bridge. But some BIOSes doesn't conform to
-this, so search for _DSM method in the subtree starting from the
-ACPI object representing the PCI host bridge.
+Hi,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Reviewed-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/iommu/dmar.c |   35 +++++++++++++++++++++++++++++++----
- 1 file changed, 31 insertions(+), 4 deletions(-)
+On Thu, Sep 11, 2014 at 3:24 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Powering off a hot-pluggable device, e.g., with pci_set_power_state(D3cold),
+> normally generates a hot-remove event that unbinds the driver.
+>
+> Some drivers expect to remain bound to a device even while they power it
+> off and back on again.  This can be dangerous, because if the device is
+> removed or replaced while it is powered off, the driver doesn't know that
+> anything changed.  But some drivers accept that risk.
+>
+> Add pci_ignore_hotplug() for use by drivers that know their device cannot
+> be removed.  Using pci_ignore_hotplug() tells the PCI core that hot-plug
+> events for the device should be ignored.
+>
+> The radeon and nouveau drivers use this to switch between a low-power,
+> integrated GPU and a higher-power, higher-performance discrete GPU.  They
+> power off the unused GPU, but they want to remain bound to it.
+>
+> This is a reimplementation of f244d8b623da ("ACPIPHP / radeon / nouveau:
+> Fix VGA switcheroo problem related to hotplug") but extends it to work with
+> both acpiphp and pciehp.
+>
+> This fixes a problem where systems with dual GPUs using the radeon drivers
+> become unusable, freezing every few seconds (see bugzillas below).  The
+> resume of the radeon device may also fail, e.g.,
+>
+> This fixes problems on dual GPU systems where the radeon driver becomes
+> unusable because of problems while suspending the device, as in bug 79701:
+>
+>     [drm] radeon: finishing device.
+>     radeon 0000:01:00.0: Userspace still has active objects !
+>     radeon 0000:01:00.0: ffff8800cb4ec288 ffff8800cb4ec000 16384 4294967297 force free
+>     ...
+>     WARNING: CPU: 0 PID: 67 at /home/apw/COD/linux/drivers/gpu/drm/radeon/radeon_gart.c:234 radeon_gart_unbind+0xd2/0xe0 [radeon]()
+>     trying to unbind memory from uninitialized GART !
+>
+> or while resuming it, as in bug 77261:
+>
+>     radeon 0000:01:00.0: ring 0 stalled for more than 10158msec
+>     radeon 0000:01:00.0: GPU lockup ...
+>     radeon 0000:01:00.0: GPU pci config reset
+>     pciehp 0000:00:01.0:pcie04: Card not present on Slot(1-1)
+>     radeon 0000:01:00.0: GPU reset succeeded, trying to resume
+>     *ERROR* radeon: dpm resume failed
+>     radeon 0000:01:00.0: Wait for MC idle timedout !
+>
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=77261
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=79701
+> Reported-by: Shawn Starr <shawn.starr@rogers.com>
+> Reported-by: Jose P. <lbdkmjdf@sharklasers.com>
+> Tested-by: SpacemanSpiff <a818958@trbvm.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: stable@vger.kernel.org      # v3.15+
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index ab504cf0f34a..9249836d0a6a 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -1925,21 +1925,48 @@ static int dmar_hotplug_remove(acpi_handle handle)
- 	return ret;
- }
- 
--static int dmar_device_hotplug(acpi_handle handle, bool insert)
-+static acpi_status dmar_get_dsm_handle(acpi_handle handle, u32 lvl,
-+				       void *context, void **retval)
-+{
-+	acpi_handle *phdl = retval;
-+
-+	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
-+		*phdl = handle;
-+		return AE_CTRL_TERMINATE;
-+	}
-+
-+	return AE_OK;
-+}
-+
-+int dmar_device_hotplug(acpi_handle handle, bool insert)
- {
- 	int ret;
-+	acpi_handle tmp = NULL;
-+	acpi_status status;
- 
- 	if (!dmar_in_use())
- 		return 0;
- 
--	if (!dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD))
-+	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
-+		tmp = handle;
-+	} else {
-+		status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
-+					     ACPI_UINT32_MAX,
-+					     dmar_get_dsm_handle,
-+					     NULL, NULL, &tmp);
-+		if (ACPI_FAILURE(status)) {
-+			pr_warn("Failed to locate _DSM method.\n");
-+			return -ENXIO;
-+		}
-+	}
-+	if (tmp == NULL)
- 		return 0;
- 
- 	down_write(&dmar_global_lock);
- 	if (insert)
--		ret = dmar_hotplug_insert(handle);
-+		ret = dmar_hotplug_insert(tmp);
- 	else
--		ret = dmar_hotplug_remove(handle);
-+		ret = dmar_hotplug_remove(tmp);
- 	up_write(&dmar_global_lock);
- 
- 	return ret;
--- 
-1.7.10.4
+Acked-by: Rajat Jain <rajatxjain@gmail.com>
 
+Just some additional notes (not related to the current problem). I
+think there are other places where we could make use of the same newly
+introduced pci_ignore_hotplug():
+
+https://lkml.org/lkml/2013/12/15/151
+
+I think that at least there are 2 places where this can potentially be utilized:
+
+1) While handling AER, we may reset the link while trying to do a
+recovery. This will result in a hot-remove followed by a hot-add. We
+may utilize this call in that situation (will also need a
+pci_resume_hotplug() call to cleat the ignore_hotplug flag)
+
+2) Some drivers [mpt3sas_base.c: _base_diag_reset()] may reset the
+device during a firmware upgrade or diagnostics.
+
+Thanks,
+
+Rajat
+
+
+> ---
+>  drivers/gpu/drm/nouveau/nouveau_drm.c |    1 +
+>  drivers/gpu/drm/radeon/radeon_drv.c   |    1 +
+>  drivers/pci/hotplug/acpiphp_glue.c    |   16 ++++++----------
+>  drivers/pci/hotplug/pciehp_hpc.c      |   12 ++++++++++++
+>  include/linux/pci.h                   |    6 ++++++
+>  5 files changed, 26 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/gpu/drm/nouveau/nouveau_drm.c b/drivers/gpu/drm/nouveau/nouveau_drm.c
+> index 250a5e88c751..9c3af96a7153 100644
+> --- a/drivers/gpu/drm/nouveau/nouveau_drm.c
+> +++ b/drivers/gpu/drm/nouveau/nouveau_drm.c
+> @@ -627,6 +627,7 @@ int nouveau_pmops_suspend(struct device *dev)
+>
+>         pci_save_state(pdev);
+>         pci_disable_device(pdev);
+> +       pci_ignore_hotplug(pdev);
+>         pci_set_power_state(pdev, PCI_D3hot);
+>         return 0;
+>  }
+> diff --git a/drivers/gpu/drm/radeon/radeon_drv.c b/drivers/gpu/drm/radeon/radeon_drv.c
+> index 8df888908833..abbd87adfd75 100644
+> --- a/drivers/gpu/drm/radeon/radeon_drv.c
+> +++ b/drivers/gpu/drm/radeon/radeon_drv.c
+> @@ -440,6 +440,7 @@ static int radeon_pmops_runtime_suspend(struct device *dev)
+>         ret = radeon_suspend_kms(drm_dev, false, false);
+>         pci_save_state(pdev);
+>         pci_disable_device(pdev);
+> +       pci_ignore_hotplug(pdev);
+>         pci_set_power_state(pdev, PCI_D3cold);
+>         drm_dev->switch_power_state = DRM_SWITCH_POWER_DYNAMIC_OFF;
+>
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index 70741c8c46a0..6cd5160fc057 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -560,19 +560,15 @@ static void disable_slot(struct acpiphp_slot *slot)
+>         slot->flags &= (~SLOT_ENABLED);
+>  }
+>
+> -static bool acpiphp_no_hotplug(struct acpi_device *adev)
+> -{
+> -       return adev && adev->flags.no_hotplug;
+> -}
+> -
+>  static bool slot_no_hotplug(struct acpiphp_slot *slot)
+>  {
+> -       struct acpiphp_func *func;
+> +       struct pci_bus *bus = slot->bus;
+> +       struct pci_dev *dev;
+>
+> -       list_for_each_entry(func, &slot->funcs, sibling)
+> -               if (acpiphp_no_hotplug(func_to_acpi_device(func)))
+> +       list_for_each_entry(dev, &bus->devices, bus_list) {
+> +               if (PCI_SLOT(dev->devfn) == slot->device && dev->ignore_hotplug)
+>                         return true;
+> -
+> +       }
+>         return false;
+>  }
+>
+> @@ -645,7 +641,7 @@ static void trim_stale_devices(struct pci_dev *dev)
+>
+>                 status = acpi_evaluate_integer(adev->handle, "_STA", NULL, &sta);
+>                 alive = (ACPI_SUCCESS(status) && device_status_valid(sta))
+> -                       || acpiphp_no_hotplug(adev);
+> +                       || dev->ignore_hotplug;
+>         }
+>         if (!alive)
+>                 alive = pci_device_is_present(dev);
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 9da84b8b27d8..5e01ae39ec46 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -506,6 +506,8 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+>  {
+>         struct controller *ctrl = (struct controller *)dev_id;
+>         struct pci_dev *pdev = ctrl_dev(ctrl);
+> +       struct pci_bus *subordinate = pdev->subordinate;
+> +       struct pci_dev *dev;
+>         struct slot *slot = ctrl->slot;
+>         u16 detected, intr_loc;
+>
+> @@ -539,6 +541,16 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+>                 wake_up(&ctrl->queue);
+>         }
+>
+> +       if (subordinate) {
+> +               list_for_each_entry(dev, &subordinate->devices, bus_list) {
+> +                       if (dev->ignore_hotplug) {
+> +                               ctrl_dbg(ctrl, "ignoring hotplug event %#06x (%s requested no hotplug)\n",
+> +                                        intr_loc, pci_name(dev));
+> +                               return IRQ_HANDLED;
+> +                       }
+> +               }
+> +       }
+> +
+>         if (!(intr_loc & ~PCI_EXP_SLTSTA_CC))
+>                 return IRQ_HANDLED;
+>
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 61978a460841..96453f9bc8ba 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -303,6 +303,7 @@ struct pci_dev {
+>                                                    D3cold, not set for devices
+>                                                    powered on/off by the
+>                                                    corresponding bridge */
+> +       unsigned int    ignore_hotplug:1;       /* Ignore hotplug events */
+>         unsigned int    d3_delay;       /* D3->D0 transition time in ms */
+>         unsigned int    d3cold_delay;   /* D3cold->D0 transition time in ms */
+>
+> @@ -1021,6 +1022,11 @@ bool pci_dev_run_wake(struct pci_dev *dev);
+>  bool pci_check_pme_status(struct pci_dev *dev);
+>  void pci_pme_wakeup_bus(struct pci_bus *bus);
+>
+> +static inline void pci_ignore_hotplug(struct pci_dev *dev)
+> +{
+> +       dev->ignore_hotplug = 1;
+> +}
+> +
+>  static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+>                                   bool enable)
+>  {
+>
