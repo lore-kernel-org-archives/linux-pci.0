@@ -1,107 +1,58 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v2 00/18] Prepare for enabling hierarchy irqdomain on x86
-Date: Fri, 26 Sep 2014 21:29:37 +0800
-Message-Id: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <ghbnqkeh9k.fsf@quad.gouders.net>
+References: <ghiol53r9u.fsf@lena.gouders.net>
+	<CAMxnaaXiEZeJOsgQ6ZSbiqy5Z1zNoXonwNSQNRyRhV0t5jveYQ@mail.gmail.com>
+	<ghwq9k3m6z.fsf@lena.gouders.net>
+	<CAMxnaaUqTMf1uEQUqrAGjym8ZrQaBf2QbE4Jqxh2t6a2JgJkOQ@mail.gmail.com>
+	<ghioku5l29.fsf@lena.gouders.net>
+	<CAErSpo7j=a3y2MVsvEQGQ4B63_mNCyZSRNXNEZa-2++xs88NmQ@mail.gmail.com>
+	<CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com>
+	<ghppf15236.fsf@quad.gouders.net>
+	<CAErSpo5SVUOz+qa_x5JTC+-Y5ewTyYzA0N=jyPtK9LaguRrt=w@mail.gmail.com>
+	<ghd2b1svdw.fsf@quad.gouders.net>
+	<CAErSpo5e0GOdVbZdQYriP+aWziKELpb9BWTgJ4ERPia354CM5w@mail.gmail.com>
+	<ghvbotd8es.fsf@quad.gouders.net>
+	<ghzje5f5zt.fsf@lena.gouders.net>
+	<ghbnqkeh9k.fsf@quad.gouders.net>
+Date: Fri, 12 Sep 2014 13:39:04 -0700
+Message-ID: <CAE9FiQXQesrDMqf1b6ZhHdmY_wEEUrOEvNO4N_d6WtaNMGNLww@mail.gmail.com>
+Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
+From: Yinghai Lu <yinghai@kernel.org>
+To: Dirk Gouders <dirk@gouders.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We plan to restructure x86 interrupt code based on hierarchy irqdomain,
-that is to build irqdomains for CPU vector, interrupt remapping unit,
-IOAPIC, MSI and HPET etc and orgonize those irqdomains in hierarchy mode.
+On Fri, Sep 12, 2014 at 1:05 PM, Dirk Gouders <dirk@gouders.net> wrote:
+> Dirk Gouders <dirk@gouders.net> writes:
+>
+> I now applied your patches and tested them:
+>
+> echo 1 > /sys/bus/pci/devices/0000\:00\:0a.0/pcie_link_disable
+> echo 0 > /sys/bus/pci/devices/0000\:00\:0a.0/pcie_link_disable
+>
+> The FC Adapter did not show up, this is the dmesg output (I also tested
+> with 0b.0):
+>
+> [  143.294168] pcieport 0000:00:0a.0: pcie_link_disable_set: lnk_ctrl = 18
+> [  148.284456] pcieport 0000:00:0a.0: pcie_link_disable_set: lnk_ctrl = 8
+> [  304.065942] pcieport 0000:00:0b.0: pcie_link_disable_set: lnk_ctrl = 18
+> [  309.035278] pcieport 0000:00:0b.0: pcie_link_disable_set: lnk_ctrl = 8
+>
+> So, probably my test environment does not work as expected and I have to
+> test it on the failing machine.
 
-This patchset is preparation work to enable hierarchy irqdomain on x86
-platforms. It splits out code for vector management, MSI, HTIRQ from
-ioapic.c into separate files. It also introduces some helper functions
-to access irq_cfg, which will ease transition to hierarchy irqdomain
-later.
+You need to rescan the pci devices.
+like
 
-It's based on patchset at:
-https://lkml.org/lkml/2014/9/24/206
+echo 1 >  /sys/bus/pci/rescan
 
-And you may access it at:
-https://github.com/jiangliu/linux.git irqdomain/p1v2
+Thanks
 
-V1->V2:
-1) fix a building failure found by 0day test bed
-2) rebase to latest upstream kernel
-
-Jiang Liu (17):
-  x86, irq, ACPI: Fix building warning of unused code
-  x86, irq: Kill fourth parameter of IO_APIC_get_PCI_irq_vector()
-  x86, irq: Refine hw_irq.h to prepare for irqdomain support
-  x86, irq: Rename local APIC related functions in io_apic.c as
-    apic_xxx()
-  x86, irq: Protect __clear_irq_vector() with vector_lock
-  x86, irq: Introduce helpers to access struct irq_cfg
-  x86, irq: Move local APIC related code from io_apic.c into vector.c
-  x86, irq: Replace printk(KERN_LVL) with pr_lvl() utilities
-  x86, irq: Move PCI MSI related code from io_apic.c into msi.c
-  x86, irq: Move HT IRQ related code from io_apic.c into htirq.c
-  x86, irq: Move IOAPIC related declarations from hw_irq.h into
-    io_apic.h
-  x86, irq: Move IRQ initialization routines from io_apic.c into
-    vector.c
-  x86, irq: Make MSI and HT_IRQ indepenent of X86_IO_APIC
-  x86, irq: Use helpers to access irq_cfg data structure associated
-    with IRQ
-  x86: irq_remapping: Use helpers to access irq_cfg data structure
-    associated with IRQ
-  iommu/vt-d: Use helpers to access irq_cfg data structure associated
-    with IRQ
-  iommu/amd: Use helpers to access irq_cfg data structure associated
-    with IRQ
-
-Yinghai Lu (1):
-  x86, irq: Convert irq_2_pin list to generic list
-
- arch/x86/Kconfig                    |    6 +-
- arch/x86/include/asm/hw_irq.h       |   76 +--
- arch/x86/include/asm/io_apic.h      |   29 +-
- arch/x86/include/asm/pci.h          |    3 +
- arch/x86/kernel/acpi/boot.c         |    2 +
- arch/x86/kernel/apic/Makefile       |    4 +-
- arch/x86/kernel/apic/htirq.c        |  106 ++++
- arch/x86/kernel/apic/io_apic.c      | 1096 ++---------------------------------
- arch/x86/kernel/apic/msi.c          |  283 +++++++++
- arch/x86/kernel/apic/vector.c       |  716 +++++++++++++++++++++++
- arch/x86/kernel/crash.c             |    1 +
- arch/x86/kernel/irqinit.c           |   22 -
- arch/x86/kernel/machine_kexec_32.c  |    1 +
- arch/x86/kernel/machine_kexec_64.c  |    1 +
- arch/x86/kernel/reboot.c            |    1 +
- arch/x86/pci/irq.c                  |    6 +-
- arch/x86/platform/uv/uv_irq.c       |    6 +-
- drivers/iommu/amd_iommu.c           |   14 +-
- drivers/iommu/intel_irq_remapping.c |   10 +-
- drivers/iommu/irq_remapping.c       |    6 +-
- drivers/pci/Kconfig                 |    2 +-
- drivers/pci/hotplug/ibmphp_core.c   |    5 +-
- 22 files changed, 1230 insertions(+), 1166 deletions(-)
- create mode 100644 arch/x86/kernel/apic/htirq.c
- create mode 100644 arch/x86/kernel/apic/msi.c
- create mode 100644 arch/x86/kernel/apic/vector.c
-
--- 
-1.7.10.4
-
+Yinghai
