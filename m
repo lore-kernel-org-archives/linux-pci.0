@@ -1,50 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:43466 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754263AbaIPRqH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 13:46:07 -0400
-Date: Tue, 16 Sep 2014 10:45:26 -0700 (PDT)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
+Received: from mga11.intel.com ([192.55.52.93]:22974 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752059AbaILCI2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Sep 2014 22:08:28 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
 	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC Part2 v1 02/21] genirq: Introduce helper functions to
- support stacked irq_chip
-In-Reply-To: <1410444228-3134-3-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.10.1409161044330.4247@nanos>
-References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com> <1410444228-3134-3-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V5 4/8] iommu/vt-d: Search for ACPI _DSM method for DMAR hotplug
+Date: Fri, 12 Sep 2014 10:10:44 +0800
+Message-Id: <1410487848-6027-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 11 Sep 2014, Jiang Liu wrote:
-> +#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-> +void irq_chip_ack_parent(struct irq_data *data)
-> +{
-> +	data = data->parent_data;
-> +	if (data && data->chip && data->chip->irq_ack)
-> +		data->chip->irq_ack(data);
+According to Intel VT-d specification, _DSM method to support DMAR
+hotplug should exist directly under corresponding ACPI object
+representing PCI host bridge. But some BIOSes doesn't conform to
+this, so search for _DSM method in the subtree starting from the
+ACPI object representing the PCI host bridge.
 
-Why is this restricted to a single parent level and does not go down
-the whole stack?
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/dmar.c |   35 +++++++++++++++++++++++++++++++----
+ 1 file changed, 31 insertions(+), 4 deletions(-)
 
-Thanks,
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index e77b5d3f2f5c..df2c2591c1a6 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -1926,21 +1926,48 @@ static int dmar_hotplug_remove(acpi_handle handle)
+ 	return ret;
+ }
+ 
+-static int dmar_device_hotplug(acpi_handle handle, bool insert)
++static acpi_status dmar_get_dsm_handle(acpi_handle handle, u32 lvl,
++				       void *context, void **retval)
++{
++	acpi_handle *phdl = retval;
++
++	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
++		*phdl = handle;
++		return AE_CTRL_TERMINATE;
++	}
++
++	return AE_OK;
++}
++
++int dmar_device_hotplug(acpi_handle handle, bool insert)
+ {
+ 	int ret;
++	acpi_handle tmp = NULL;
++	acpi_status status;
+ 
+ 	if (!dmar_in_use())
+ 		return 0;
+ 
+-	if (!dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD))
++	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
++		tmp = handle;
++	} else {
++		status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
++					     ACPI_UINT32_MAX,
++					     dmar_get_dsm_handle,
++					     NULL, NULL, &tmp);
++		if (ACPI_FAILURE(status)) {
++			pr_warn("Failed to locate _DSM method.\n");
++			return -ENXIO;
++		}
++	}
++	if (tmp == NULL)
+ 		return 0;
+ 
+ 	down_write(&dmar_global_lock);
+ 	if (insert)
+-		ret = dmar_hotplug_insert(handle);
++		ret = dmar_hotplug_insert(tmp);
+ 	else
+-		ret = dmar_hotplug_remove(handle);
++		ret = dmar_hotplug_remove(tmp);
+ 	up_write(&dmar_global_lock);
+ 
+ 	return ret;
+-- 
+1.7.10.4
 
-	tglx
