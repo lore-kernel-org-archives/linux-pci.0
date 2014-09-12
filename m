@@ -1,426 +1,374 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:28212 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751140AbaILJR1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Sep 2014 05:17:27 -0400
+Message-ID: <5412B9EE.3070708@huawei.com>
+Date: Fri, 12 Sep 2014 17:16:30 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFT v2 15/24] x86, MSI: Use hierarchy irqdomain to manage MSI interrupts
-Date: Fri, 26 Sep 2014 22:02:16 +0800
-Message-Id: <1411740145-30626-16-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	"Vinod Koul" <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+CC: Ashok Raj <ashok.raj@intel.com>, Tony Luck <tony.luck@intel.com>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	<linux-hotplug@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<dmaengine@vger.kernel.org>
+Subject: Re: [Patch Part3 V5 1/8] iommu/vt-d: Introduce helper function dmar_walk_resources()
+References: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com> <1410487848-6027-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410487848-6027-2-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance MSI code to support hierarchy irqdomain, it helps to make
-the architecture more clear.
+On 2014/9/12 10:10, Jiang Liu wrote:
+> Introduce helper function dmar_walk_resources to walk resource entries
+> in DMAR table and ACPI buffer object returned by ACPI _DSM method
+> for IOMMU hot-plug.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/hw_irq.h        |    8 +-
- arch/x86/include/asm/irq_remapping.h |    6 +-
- arch/x86/kernel/apic/msi.c           |  230 ++++++++++++++++++++++++++++------
- arch/x86/kernel/apic/vector.c        |    2 +
- drivers/iommu/irq_remapping.c        |    1 -
- 5 files changed, 203 insertions(+), 44 deletions(-)
+Hi Gerry. some comments below.
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 545460d470bd..a5d3b1c46b30 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -110,9 +110,9 @@ struct irq_2_irte {
- };
- #endif	/* CONFIG_IRQ_REMAP */
- 
-+struct irq_domain;
- #ifdef	CONFIG_X86_LOCAL_APIC
- struct irq_data;
--struct irq_domain;
- struct pci_dev;
- struct msi_desc;
- 
-@@ -200,6 +200,12 @@ static inline void lock_vector_lock(void) {}
- static inline void unlock_vector_lock(void) {}
- #endif	/* CONFIG_X86_LOCAL_APIC */
- 
-+#ifdef	CONFIG_PCI_MSI
-+extern void arch_init_msi_domain(struct irq_domain *domain);
-+#else
-+static inline void arch_init_msi_domain(struct irq_domain *domain) { }
-+#endif
-+
- /* Statistics */
- extern atomic_t irq_err_count;
- extern atomic_t irq_mis_count;
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index 3653d10268cf..7f82841b1671 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -74,11 +74,7 @@ extern void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p);
-  * Create MSI/MSIx irqdomain for interrupt remapping device, use @parent as
-  * parent irqdomain.
-  */
--static inline struct irq_domain *
--arch_create_msi_irq_domain(struct irq_domain *parent)
--{
--	return NULL;
--}
-+extern struct irq_domain *arch_create_msi_irq_domain(struct irq_domain *parent);
- 
- /* Get parent irqdomain for interrupt remapping irqdomain */
- static inline struct irq_domain *arch_get_ir_parent_domain(void)
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 6711edcd08e6..7a6c2710de40 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -3,6 +3,8 @@
-  *
-  * Copyright (C) 1997, 1998, 1999, 2000, 2009 Ingo Molnar, Hajnalka Szabo
-  *	Moved from arch/x86/kernel/apic/io_apic.c.
-+ * Jiang Liu <jiang.liu@linux.intel.com>
-+ *	Add support of hierarchy irqdomain
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -21,6 +23,8 @@
- #include <asm/apic.h>
- #include <asm/irq_remapping.h>
- 
-+static struct irq_domain *msi_default_domain;
-+
- static void msi_reset_irq_data_and_handler(struct irq_domain *domain, int virq)
- {
- 	struct irq_data *irq_data = irq_domain_get_irq_data(domain, virq);
-@@ -96,28 +100,28 @@ static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
- 	return 0;
- }
- 
--static int
--msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
-+static bool msi_irq_remapped(struct irq_data *irq_data)
- {
--	struct irq_cfg *cfg = irqd_cfg(data);
--	struct msi_msg msg;
--	unsigned int dest;
--	int ret;
--
--	ret = apic_set_affinity(data, mask, &dest);
--	if (ret)
--		return ret;
-+	return irq_remapping_domain_is_remapped(irq_data->domain);
-+}
- 
--	__get_cached_msi_msg(data->msi_desc, &msg);
-+static int msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
-+			    bool force)
-+{
-+	struct irq_data *parent = data->parent_data;
-+	int ret;
- 
--	msg.data &= ~MSI_DATA_VECTOR_MASK;
--	msg.data |= MSI_DATA_VECTOR(cfg->vector);
--	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
--	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
-+	ret = parent->chip->irq_set_affinity(parent, mask, force);
-+	/* No need to reprogram MSI registers if interrupt is remapped */
-+	if (ret >= 0 && !msi_irq_remapped(data)) {
-+		struct msi_msg msg;
- 
--	__write_msi_msg(data->msi_desc, &msg);
-+		__get_cached_msi_msg(data->msi_desc, &msg);
-+		msi_update_msg(&msg, data);
-+		__write_msi_msg(data->msi_desc, &msg);
-+	}
- 
--	return IRQ_SET_MASK_OK_NOCOPY;
-+	return ret;
- }
- 
- /*
-@@ -128,9 +132,103 @@ static struct irq_chip msi_chip = {
- 	.name			= "PCI-MSI",
- 	.irq_unmask		= unmask_msi_irq,
- 	.irq_mask		= mask_msi_irq,
--	.irq_ack		= apic_ack_edge,
-+	.irq_ack		= irq_chip_ack_parent,
- 	.irq_set_affinity	= msi_set_affinity,
--	.irq_retrigger		= apic_retrigger_irq,
-+	.irq_retrigger		= irq_chip_retrigger_hierarchy,
-+	.irq_print_chip		= irq_remapping_print_chip,
-+};
-+
-+static inline irq_hw_number_t
-+get_hwirq_from_pcidev(struct pci_dev *pdev, struct msi_desc *msidesc)
-+{
-+	return (irq_hw_number_t)msidesc->msi_attrib.entry_nr |
-+		PCI_DEVID(pdev->bus->number, pdev->devfn) << 11 |
-+		(pci_domain_nr(pdev->bus) & 0xFFFFFFFF) << 27;
-+}
-+
-+static int msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
-+			    unsigned int nr_irqs, void *arg)
-+{
-+	int i, ret;
-+	irq_hw_number_t hwirq;
-+	struct irq_alloc_info *info = arg;
-+
-+	hwirq = get_hwirq_from_pcidev(info->msi_dev, info->msi_desc);
-+	if (irq_find_mapping(domain, hwirq) > 0)
-+		return -EEXIST;
-+
-+	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, info);
-+	if (ret < 0)
-+		return ret;
-+
-+	for (i = 0; i < nr_irqs; i++) {
-+		irq_set_msi_desc_off(virq, i, info->msi_desc);
-+		irq_domain_set_hwirq_and_chip(domain, virq + i, hwirq + i,
-+					      &msi_chip, (void *)(long)i);
-+		__irq_set_handler(virq + i, handle_edge_irq, 0, "edge");
-+		dev_dbg(&info->msi_dev->dev, "irq %d for MSI/MSI-X\n",
-+			virq + i);
-+	}
-+
-+	return ret;
-+}
-+
-+static void msi_domain_free(struct irq_domain *domain, unsigned int virq,
-+			    unsigned int nr_irqs)
-+{
-+	int i;
-+	struct msi_desc *msidesc = irq_get_msi_desc(virq);
-+
-+	if (msidesc)
-+		msidesc->irq = 0;
-+	for (i = 0; i < nr_irqs; i++)
-+		msi_reset_irq_data_and_handler(domain, virq + i);
-+	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
-+}
-+
-+static int msi_domain_activate(struct irq_domain *domain,
-+			       struct irq_data *irq_data)
-+{
-+	struct msi_msg msg;
-+	struct irq_cfg *cfg = irqd_cfg(irq_data);
-+
-+	/*
-+	 * irq_data->chip_data is MSI/MSIx offset.
-+	 * MSI-X message is written per-IRQ, the offset is always 0.
-+	 * MSI message denotes a contiguous group of IRQs, written for 0th IRQ.
-+	 */
-+	if (irq_data->chip_data)
-+		return 0;
-+
-+	if (msi_irq_remapped(irq_data))
-+		irq_remapping_get_msi_entry(irq_data->parent_data, &msg);
-+	else
-+		native_compose_msi_msg(NULL, irq_data->irq, cfg->dest_apicid,
-+				       &msg, 0);
-+	write_msi_msg(irq_data->irq, &msg);
-+
-+	return 0;
-+}
-+
-+static int msi_domain_deactivate(struct irq_domain *domain,
-+				 struct irq_data *irq_data)
-+{
-+	struct msi_msg msg;
-+
-+	if (irq_data->chip_data)
-+		return 0;
-+
-+	memset(&msg, 0, sizeof(msg));
-+	write_msi_msg(irq_data->irq, &msg);
-+
-+	return 0;
-+}
-+
-+static struct irq_domain_ops msi_domain_ops = {
-+	.alloc = msi_domain_alloc,
-+	.free = msi_domain_free,
-+	.activate = msi_domain_activate,
-+	.deactivate = msi_domain_deactivate,
- };
- 
- int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
-@@ -165,25 +263,56 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- 
- int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- {
-+	int irq, cnt, nvec_pow2;
-+	struct irq_domain *domain;
- 	struct msi_desc *msidesc;
--	int irq, ret;
-+	struct irq_alloc_info info;
-+	int node = dev_to_node(&dev->dev);
- 
--	/* Multiple MSI vectors only supported with interrupt remapping */
--	if (type == PCI_CAP_ID_MSI && nvec > 1)
--		return 1;
-+	if (disable_apic)
-+		return -ENOSYS;
-+
-+	init_irq_alloc_info(&info, NULL);
-+	info.msi_dev = dev;
-+	if (type == PCI_CAP_ID_MSI) {
-+		msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
-+		WARN_ON(!list_is_singular(&dev->msi_list));
-+		WARN_ON(msidesc->irq);
-+		WARN_ON(msidesc->msi_attrib.multiple);
-+		WARN_ON(msidesc->nvec_used);
-+		info.type = X86_IRQ_ALLOC_TYPE_MSI;
-+		cnt = nvec;
-+	} else {
-+		info.type = X86_IRQ_ALLOC_TYPE_MSIX;
-+		cnt = 1;
-+	}
-+
-+	domain = irq_remapping_get_irq_domain(&info);
-+	if (domain == NULL) {
-+		/*
-+		 * Multiple MSI vectors only supported with interrupt
-+		 * remapping
-+		 */
-+		if (type == PCI_CAP_ID_MSI && nvec > 1)
-+			return 1;
-+		domain = msi_default_domain;
-+	}
-+	if (domain == NULL)
-+		return -ENOSYS;
- 
- 	list_for_each_entry(msidesc, &dev->msi_list, list) {
--		irq = irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
-+		info.msi_desc = msidesc;
-+		irq = irq_domain_alloc_irqs(domain, cnt, node, &info);
- 		if (irq <= 0)
- 			return -ENOSPC;
-+	}
- 
--		ret = setup_msi_irq(dev, msidesc, irq, 0);
--		if (ret < 0) {
--			irq_domain_free_irqs(irq, 1);
--			return ret;
--		}
--
-+	if (type == PCI_CAP_ID_MSI) {
-+		nvec_pow2 = __roundup_pow_of_two(nvec);
-+		msidesc->msi_attrib.multiple = ilog2(nvec_pow2);
-+		msidesc->nvec_used = nvec;
- 	}
-+
- 	return 0;
- }
- 
-@@ -192,6 +321,38 @@ void native_teardown_msi_irq(unsigned int irq)
- 	irq_domain_free_irqs(irq, 1);
- }
- 
-+static struct irq_domain *msi_create_domain(struct irq_domain *parent,
-+					    bool remapped)
-+{
-+	struct irq_domain *domain;
-+
-+	domain = irq_domain_add_tree(NULL, &msi_domain_ops, NULL);
-+	if (domain) {
-+		domain->parent = parent;
-+		if (remapped)
-+			irq_remapping_domain_set_remapped(domain);
-+	}
-+
-+	return domain;
-+}
-+
-+void arch_init_msi_domain(struct irq_domain *parent)
-+{
-+	if (disable_apic)
-+		return;
-+
-+	msi_default_domain = msi_create_domain(parent, false);
-+	if (!msi_default_domain)
-+		pr_warn("failed to initialize irqdomain for MSI/MSI-x.\n");
-+}
-+
-+#ifdef CONFIG_IRQ_REMAP
-+struct irq_domain *arch_create_msi_irq_domain(struct irq_domain *parent)
-+{
-+	return msi_create_domain(parent, true);
-+}
-+#endif
-+
- #ifdef CONFIG_DMAR_TABLE
- static int
- dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
-@@ -262,11 +423,6 @@ static inline int hpet_dev_id(struct irq_domain *domain)
- 	return (int)(long)domain->host_data;
- }
- 
--static inline bool hpet_irq_remapped(struct irq_data *irq_data)
--{
--	return irq_remapping_domain_is_remapped(irq_data->domain);
--}
--
- static int hpet_msi_set_affinity(struct irq_data *data,
- 				 const struct cpumask *mask, bool force)
- {
-@@ -276,7 +432,7 @@ static int hpet_msi_set_affinity(struct irq_data *data,
- 
- 	ret = parent->chip->irq_set_affinity(parent, mask, force);
- 	/* No need to rewrite HPET registers if interrupt is remapped */
--	if (ret >= 0 && !hpet_irq_remapped(data)) {
-+	if (ret >= 0 && !msi_irq_remapped(data)) {
- 		hpet_msi_read(data->handler_data, &msg);
- 		msi_update_msg(&msg, data);
- 		hpet_msi_write(data->handler_data, &msg);
-@@ -353,7 +509,7 @@ static int hpet_domain_activate(struct irq_domain *domain,
- 	struct msi_msg msg;
- 	struct irq_cfg *cfg = irqd_cfg(irq_data);
- 
--	if (hpet_irq_remapped(irq_data))
-+	if (msi_irq_remapped(irq_data))
- 		irq_remapping_get_msi_entry(irq_data->parent_data, &msg);
- 	else
- 		native_compose_msi_msg(NULL, irq_data->irq, cfg->dest_apicid,
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 0ad46c5c58a0..25db76fbe54f 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -359,6 +359,8 @@ int __init arch_early_irq_init(void)
- 	BUG_ON(x86_vector_domain == NULL);
- 	irq_set_default_host(x86_vector_domain);
- 
-+	arch_init_msi_domain(x86_vector_domain);
-+
- 	return arch_early_ioapic_init();
- }
- 
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 7ac44a464be0..bda0d8e73fde 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -178,7 +178,6 @@ static void __init irq_remapping_modify_x86_ops(void)
- 	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
- 	x86_io_apic_ops.setup_entry	= setup_ioapic_remapped_entry;
- 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
--	x86_msi.setup_msi_irqs		= irq_remapping_setup_msi_irqs;
- 	x86_msi.setup_hpet_msi		= setup_hpet_msi_remapped;
- 	x86_msi.compose_msi_msg		= compose_remapped_msi_msg;
- }
+
+> ---
+>  drivers/iommu/dmar.c        |  209 +++++++++++++++++++++++--------------------
+>  drivers/iommu/intel-iommu.c |    4 +-
+>  include/linux/dmar.h        |   19 ++--
+>  3 files changed, 122 insertions(+), 110 deletions(-)
+> 
+> diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+> index 60ab474bfff3..afd46eb9a5de 100644
+> --- a/drivers/iommu/dmar.c
+> +++ b/drivers/iommu/dmar.c
+> @@ -44,6 +44,14 @@
+>  
+>  #include "irq_remapping.h"
+>  
+> +typedef int (*dmar_res_handler_t)(struct acpi_dmar_header *, void *);
+> +struct dmar_res_callback {
+> +	dmar_res_handler_t	cb[ACPI_DMAR_TYPE_RESERVED];
+> +	void			*arg[ACPI_DMAR_TYPE_RESERVED];
+> +	bool			ignore_unhandled;
+> +	bool			print_entry;
+
+Why do we need a switch to control print ?
+
+> +};
+> +
+>  
+> +static int dmar_walk_resources(struct acpi_dmar_header *start, size_t len,
+> +			       struct dmar_res_callback *cb)
+
+The name dmar_walk_resources easily make people think this is related with I/O or memory resources.
+Do you have a better idea of this ?  What about dmar_walk_remapping_entry() or dmar_walk_remapping_structure() ?
+
+> +{
+> +	int ret = 0;
+> +	struct acpi_dmar_header *iter, *next;
+> +	struct acpi_dmar_header *end = ((void *)start) + len;
+> +
+> +	for (iter = start; iter < end && ret == 0; iter = next) {
+> +		next = (void *)iter + iter->length;
+> +		if (iter->length == 0) {
+> +			/* Avoid looping forever on bad ACPI tables */
+> +			pr_debug(FW_BUG "Invalid 0-length structure\n");
+
+What about use pr_warn() instead of pr_debug(), pr_debug() default is off.
+
+> +			break;
+> +		} else if (next > end) {
+> +			/* Avoid passing table end */
+> +			pr_warn(FW_BUG "record passes table end\n");
+> +			ret = -EINVAL;
+> +			break;
+> +		}
+> +
+> +		if (cb->print_entry)
+> +			dmar_table_print_dmar_entry(iter);
+> +
+> +		if (iter->type >= ACPI_DMAR_TYPE_RESERVED) {
+> +			/* continue for forward compatibility */
+> +			pr_debug("Unknown DMAR structure type %d\n",
+> +				 iter->type);
+
+Same as above.
+
+> +		} else if (cb->cb[iter->type]) {
+> +			ret = cb->cb[iter->type](iter, cb->arg[iter->type]);
+> +		} else if (!cb->ignore_unhandled) {
+> +			pr_warn("No handler for DMAR structure type %d\n",
+> +				iter->type);
+> +			ret = -EINVAL;
+> +		}
+> +	}
+> +
+> +	return ret;
+> +}
+> +
+> +static inline int dmar_walk_dmar_table(struct acpi_table_dmar *dmar,
+> +				       struct dmar_res_callback *cb)
+> +{
+> +	return dmar_walk_resources((struct acpi_dmar_header *)(dmar + 1),
+> +				   dmar->header.length - sizeof(*dmar), cb);
+> +}
+> +
+>  /**
+>   * parse_dmar_table - parses the DMA reporting table
+>   */
+> @@ -493,9 +554,18 @@ static int __init
+>  parse_dmar_table(void)
+>  {
+>  	struct acpi_table_dmar *dmar;
+> -	struct acpi_dmar_header *entry_header;
+>  	int ret = 0;
+>  	int drhd_count = 0;
+> +	struct dmar_res_callback cb = {
+> +		.print_entry = true,
+> +		.ignore_unhandled = true,
+> +		.arg[ACPI_DMAR_TYPE_HARDWARE_UNIT] = &drhd_count,
+> +		.cb[ACPI_DMAR_TYPE_HARDWARE_UNIT] = &dmar_parse_one_drhd,
+> +		.cb[ACPI_DMAR_TYPE_RESERVED_MEMORY] = &dmar_parse_one_rmrr,
+> +		.cb[ACPI_DMAR_TYPE_ROOT_ATS] = &dmar_parse_one_atsr,
+> +		.cb[ACPI_DMAR_TYPE_HARDWARE_AFFINITY] = &dmar_parse_one_rhsa,
+> +		.cb[ACPI_DMAR_TYPE_NAMESPACE] = &dmar_parse_one_andd,
+> +	};
+>  
+>  	/*
+>  	 * Do it again, earlier dmar_tbl mapping could be mapped with
+> @@ -519,51 +589,10 @@ parse_dmar_table(void)
+>  	}
+>  
+>  	pr_info("Host address width %d\n", dmar->width + 1);
+> -
+> -	entry_header = (struct acpi_dmar_header *)(dmar + 1);
+> -	while (((unsigned long)entry_header) <
+> -			(((unsigned long)dmar) + dmar_tbl->length)) {
+> -		/* Avoid looping forever on bad ACPI tables */
+> -		if (entry_header->length == 0) {
+> -			pr_warn("Invalid 0-length structure\n");
+> -			ret = -EINVAL;
+> -			break;
+> -		}
+> -
+> -		dmar_table_print_dmar_entry(entry_header);
+> -
+> -		switch (entry_header->type) {
+> -		case ACPI_DMAR_TYPE_HARDWARE_UNIT:
+> -			drhd_count++;
+> -			ret = dmar_parse_one_drhd(entry_header);
+> -			break;
+> -		case ACPI_DMAR_TYPE_RESERVED_MEMORY:
+> -			ret = dmar_parse_one_rmrr(entry_header);
+> -			break;
+> -		case ACPI_DMAR_TYPE_ROOT_ATS:
+> -			ret = dmar_parse_one_atsr(entry_header);
+> -			break;
+> -		case ACPI_DMAR_TYPE_HARDWARE_AFFINITY:
+> -#ifdef CONFIG_ACPI_NUMA
+> -			ret = dmar_parse_one_rhsa(entry_header);
+> -#endif
+> -			break;
+> -		case ACPI_DMAR_TYPE_NAMESPACE:
+> -			ret = dmar_parse_one_andd(entry_header);
+> -			break;
+> -		default:
+> -			pr_warn("Unknown DMAR structure type %d\n",
+> -				entry_header->type);
+> -			ret = 0; /* for forward compatibility */
+> -			break;
+> -		}
+> -		if (ret)
+> -			break;
+> -
+> -		entry_header = ((void *)entry_header + entry_header->length);
+> -	}
+> -	if (drhd_count == 0)
+> +	ret = dmar_walk_dmar_table(dmar, &cb);
+> +	if (ret == 0 && drhd_count == 0)
+>  		pr_warn(FW_BUG "No DRHD structure found in DMAR table\n");
+> +
+>  	return ret;
+>  }
+>  
+> @@ -762,76 +791,60 @@ static void warn_invalid_dmar(u64 addr, const char *message)
+>  		dmi_get_system_info(DMI_PRODUCT_VERSION));
+>  }
+>  
+> -static int __init check_zero_address(void)
+> +static int __ref
+> +dmar_validate_one_drhd(struct acpi_dmar_header *entry, void *arg)
+>  {
+> -	struct acpi_table_dmar *dmar;
+> -	struct acpi_dmar_header *entry_header;
+>  	struct acpi_dmar_hardware_unit *drhd;
+> +	void __iomem *addr;
+> +	u64 cap, ecap;
+>  
+> -	dmar = (struct acpi_table_dmar *)dmar_tbl;
+> -	entry_header = (struct acpi_dmar_header *)(dmar + 1);
+> -
+> -	while (((unsigned long)entry_header) <
+> -			(((unsigned long)dmar) + dmar_tbl->length)) {
+> -		/* Avoid looping forever on bad ACPI tables */
+> -		if (entry_header->length == 0) {
+> -			pr_warn("Invalid 0-length structure\n");
+> -			return 0;
+> -		}
+> -
+> -		if (entry_header->type == ACPI_DMAR_TYPE_HARDWARE_UNIT) {
+> -			void __iomem *addr;
+> -			u64 cap, ecap;
+> -
+> -			drhd = (void *)entry_header;
+> -			if (!drhd->address) {
+> -				warn_invalid_dmar(0, "");
+> -				goto failed;
+> -			}
+> +	drhd = (void *)entry;
+> +	if (!drhd->address) {
+> +		warn_invalid_dmar(0, "");
+> +		return -EINVAL;
+> +	}
+>  
+> -			addr = early_ioremap(drhd->address, VTD_PAGE_SIZE);
+> -			if (!addr ) {
+> -				printk("IOMMU: can't validate: %llx\n", drhd->address);
+> -				goto failed;
+> -			}
+> -			cap = dmar_readq(addr + DMAR_CAP_REG);
+> -			ecap = dmar_readq(addr + DMAR_ECAP_REG);
+> -			early_iounmap(addr, VTD_PAGE_SIZE);
+> -			if (cap == (uint64_t)-1 && ecap == (uint64_t)-1) {
+> -				warn_invalid_dmar(drhd->address,
+> -						  " returns all ones");
+> -				goto failed;
+> -			}
+> -		}
+> +	addr = early_ioremap(drhd->address, VTD_PAGE_SIZE);
+> +	if (!addr) {
+> +		pr_warn("IOMMU: can't validate: %llx\n", drhd->address);
+> +		return -EINVAL;
+> +	}
+> +	cap = dmar_readq(addr + DMAR_CAP_REG);
+> +	ecap = dmar_readq(addr + DMAR_ECAP_REG);
+> +	early_iounmap(addr, VTD_PAGE_SIZE);
+>  
+> -		entry_header = ((void *)entry_header + entry_header->length);
+> +	if (cap == (uint64_t)-1 && ecap == (uint64_t)-1) {
+> +		warn_invalid_dmar(drhd->address, " returns all ones");
+> +		return -EINVAL;
+>  	}
+> -	return 1;
+>  
+> -failed:
+>  	return 0;
+>  }
+>  
+>  int __init detect_intel_iommu(void)
+>  {
+>  	int ret;
+> +	struct dmar_res_callback validate_drhd_cb = {
+> +		.cb[ACPI_DMAR_TYPE_HARDWARE_UNIT] = &dmar_validate_one_drhd,
+> +		.ignore_unhandled = true,
+> +	};
+>  
+>  	down_write(&dmar_global_lock);
+>  	ret = dmar_table_detect();
+>  	if (ret)
+> -		ret = check_zero_address();
+> -	{
+> -		if (ret && !no_iommu && !iommu_detected && !dmar_disabled) {
+> -			iommu_detected = 1;
+> -			/* Make sure ACS will be enabled */
+> -			pci_request_acs();
+> -		}
+> +		ret = !dmar_walk_dmar_table((struct acpi_table_dmar *)dmar_tbl,
+> +					    &validate_drhd_cb);
+> +	if (ret && !no_iommu && !iommu_detected && !dmar_disabled) {
+> +		iommu_detected = 1;
+> +		/* Make sure ACS will be enabled */
+> +		pci_request_acs();
+> +	}
+>  
+>  #ifdef CONFIG_X86
+> -		if (ret)
+> -			x86_init.iommu.iommu_init = intel_iommu_init;
+> +	if (ret)
+> +		x86_init.iommu.iommu_init = intel_iommu_init;
+>  #endif
+> -	}
+> +
+>  	early_acpi_os_unmap_memory((void __iomem *)dmar_tbl, dmar_tbl_size);
+>  	dmar_tbl = NULL;
+>  	up_write(&dmar_global_lock);
+> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+> index 5619f264862d..4af2206e41bc 100644
+> --- a/drivers/iommu/intel-iommu.c
+> +++ b/drivers/iommu/intel-iommu.c
+> @@ -3682,7 +3682,7 @@ static inline void init_iommu_pm_ops(void) {}
+>  #endif	/* CONFIG_PM */
+>  
+>  
+> -int __init dmar_parse_one_rmrr(struct acpi_dmar_header *header)
+> +int __init dmar_parse_one_rmrr(struct acpi_dmar_header *header, void *arg)
+>  {
+>  	struct acpi_dmar_reserved_memory *rmrr;
+>  	struct dmar_rmrr_unit *rmrru;
+> @@ -3708,7 +3708,7 @@ int __init dmar_parse_one_rmrr(struct acpi_dmar_header *header)
+>  	return 0;
+>  }
+>  
+> -int __init dmar_parse_one_atsr(struct acpi_dmar_header *hdr)
+> +int __init dmar_parse_one_atsr(struct acpi_dmar_header *hdr, void *arg)
+>  {
+>  	struct acpi_dmar_atsr *atsr;
+>  	struct dmar_atsr_unit *atsru;
+> diff --git a/include/linux/dmar.h b/include/linux/dmar.h
+> index 1deece46a0ca..fac8ca34f9a8 100644
+> --- a/include/linux/dmar.h
+> +++ b/include/linux/dmar.h
+> @@ -115,22 +115,21 @@ extern int dmar_remove_dev_scope(struct dmar_pci_notify_info *info,
+>  extern int detect_intel_iommu(void);
+>  extern int enable_drhd_fault_handling(void);
+>  
+> +static inline int dmar_res_noop(struct acpi_dmar_header *hdr, void *arg)
+> +{
+> +	return 0;
+> +}
+> +
+>  #ifdef CONFIG_INTEL_IOMMU
+>  extern int iommu_detected, no_iommu;
+>  extern int intel_iommu_init(void);
+> -extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
+> -extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
+> +extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header, void *arg);
+> +extern int dmar_parse_one_atsr(struct acpi_dmar_header *header, void *arg);
+>  extern int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info);
+>  #else /* !CONFIG_INTEL_IOMMU: */
+>  static inline int intel_iommu_init(void) { return -ENODEV; }
+> -static inline int dmar_parse_one_rmrr(struct acpi_dmar_header *header)
+> -{
+> -	return 0;
+> -}
+> -static inline int dmar_parse_one_atsr(struct acpi_dmar_header *header)
+> -{
+> -	return 0;
+> -}
+> +#define	dmar_parse_one_rmrr		dmar_res_noop
+> +#define	dmar_parse_one_atsr		dmar_res_noop
+>  static inline int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
+>  {
+>  	return 0;
+> 
+
+
 -- 
-1.7.10.4
+Thanks!
+Yijing
 
