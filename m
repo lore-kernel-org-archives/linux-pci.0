@@ -1,148 +1,139 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Mon, 22 Sep 2014 12:43:17 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Robert Richter <rric@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Sunil Goutham <sunil.goutham@caviumnetworks.com>
-Subject: Re: [PATCH v11 08/10] OF: PCI: Add support for parsing PCI host
- bridge resources from DT
-Message-ID: <20140922114317.GN1994@e106497-lin.cambridge.arm.com>
-References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
- <1411003825-21521-9-git-send-email-Liviu.Dudau@arm.com>
- <20140922093228.GA20256@rric.localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:56210 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751428AbaIMEHU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 13 Sep 2014 00:07:20 -0400
+Received: by mail-ie0-f182.google.com with SMTP id tr6so2091928ieb.27
+        for <linux-pci@vger.kernel.org>; Fri, 12 Sep 2014 21:07:19 -0700 (PDT)
+Date: Fri, 12 Sep 2014 22:07:16 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Dirk Gouders <dirk@gouders.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
+Message-ID: <20140913040716.GA28080@google.com>
+References: <ghvbotd8es.fsf@quad.gouders.net>
+ <ghzje5f5zt.fsf@lena.gouders.net>
+ <ghbnqkeh9k.fsf@quad.gouders.net>
+ <CAE9FiQXQesrDMqf1b6ZhHdmY_wEEUrOEvNO4N_d6WtaNMGNLww@mail.gmail.com>
+ <gh4mwcef0r.fsf@quad.gouders.net>
+ <CAE9FiQWgioBeVmfWCaE38BrkjbWKaS+_FYYdmdd+7X8fpeEgnQ@mail.gmail.com>
+ <ghoaukcx6b.fsf@quad.gouders.net>
+ <CAE9FiQUk-sAHnjfBvNeHQWibJRqbPE1V0UtDtARtwxmS=7aQrw@mail.gmail.com>
+ <ghk358crbe.fsf@quad.gouders.net>
+ <CAE9FiQUeP84585-4b+Y6WBVD3zqOi7ch_OXytsTmKEz9AyZ3Vg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20140922093228.GA20256@rric.localhost>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQUeP84585-4b+Y6WBVD3zqOi7ch_OXytsTmKEz9AyZ3Vg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 22, 2014 at 10:32:28AM +0100, Robert Richter wrote:
-> On 18.09.14 02:30:23, Liviu Dudau wrote:
-> > +int of_pci_get_host_bridge_resources(struct device_node *dev,
-> > +			unsigned char busno, unsigned char bus_max,
-> > +			struct list_head *resources, resource_size_t *io_base)
-> > +{
-> > +	struct resource *res;
-> > +	struct resource *bus_range;
-> > +	struct of_pci_range range;
-> > +	struct of_pci_range_parser parser;
-> > +	char range_type[4];
-> > +	int err;
-> > +
-> > +	if (!io_base)
-> > +		return -EINVAL;
-> > +	*io_base = OF_BAD_ADDR;
-> 
+I want to fix this regression before v3.17.  Dirk, can you test the
+following patch on top of v3.17-rc2?  I'm hoping you can try this on your
+test machine in conjunction with your acpi_pci_root_add() and
+pci_scan_device() patches.  If I understand correctly,  you were able to
+reproduce the FC adapter not showing up, and if you can verify that it does
+show with those patches + this revert, I think that's good enough for now.
 
-Hi Robert,
+I'm not committed to applying this yet, but I'd like to have a working fix
+in my back pocket in case we don't come up with a better solution soon.
 
-> This breaks for mem-mapped pci host controllers. The patch below fixes
-> this.
+Bjorn
 
-I think you mean PCI host controller that have only memory mapped ranges,
-am I right? Initially I've read your reply as to mean that the host
-controller is accessed through some memory mapped area, which I believe is
-the case for all host controllers.
 
-> 
-> This series was tested with the fix on top for Cavium Thunder.
-> 
-> Tested-by: Robert Richter <rrichter@cavium.com>
+commit 5945a8d28c416fc390a94c8e7fb8fd0a76f5d710
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Fri Sep 12 21:58:19 2014 -0600
 
-Thanks for that!
+    Revert "PCI: Make sure bus number resources stay within their parents bounds"
+    
+    This reverts commit 1820ffdccb9b ("PCI: Make sure bus number resources stay
+    within their parents bounds") because it breaks some systems with LSI Logic
+    FC949ES Fibre Channel Adapters, apparently by exposing a defect in those
+    adapters.
+    
+    Dirk tested a Tyan VX50 (B4985) with this device that worked like this
+    prior to 1820ffdccb9b:
+    
+        bus: [bus 00-7f] on node 0 link 1
+        ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-07])
+        pci 0000:00:0e.0: PCI bridge to [bus 0a]
+        pci_bus 0000:0a: busn_res: can not insert [bus 0a] under [bus 00-07] (conflicts with (null) [bus 00-07])
+        pci 0000:0a:00.0: [1000:0646] type 00 class 0x0c0400 (FC adapter)
+    
+    Note that the root bridge [bus 00-07] aperture is wrong; this is a BIOS
+    defect in the PCI0 _CRS method.  But prior to 1820ffdccb9b, we didn't
+    enforce that aperture, and the FC adapter worked fine at 0a:00.0.
+    
+    After 1820ffdccb9b, we notice that 00:0e.0's aperture is not contained in
+    the root bridge's aperture, so we reconfigure it so it *is* contained:
+    
+        pci 0000:00:0e.0: bridge configuration invalid ([bus 0a-0a]), reconfiguring
+        pci 0000:00:0e.0: PCI bridge to [bus 06-07]
+    
+    This effectively moves the FC device from 0a:00.0 to 07:00.0, which should
+    be legal.  But when we enumerate bus 06, the FC device doesn't respond, so
+    we don't find anything.  This is probably a defect in the FC device.
+    
+    Possible fixes (due to Yinghai):
+    
+        1) Add a quirk to fix the _CRS information based on what amd_bus.c read
+           from the hardware
+    
+        2) Reset the FC device after we change its bus number
+    
+        3) Revert 1820ffdccb9b
+    
+    Fix 1 would be relatively easy, but it does sweep the LSI FC issue under
+    the rug.  We might want to reconfigure bus numbers in the future for some
+    other reason, e.g., hotplug, and then we could trip over this again.
+    
+    For that reason, I like fix 2, but we don't know whether it actually works,
+    and we don't have a patch for it yet.
+    
+    This revert is fix 3, which also sweeps the LSI FC issue under the rug.
+    
+    Link: https://bugzilla.kernel.org/show_bug.cgi?id=84281
+    Reported-by: Dirk Gouders <dirk@gouders.net>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    CC: stable@vger.kernel.org	# v3.15+
+    CC: Yinghai Lu <yinghai@kernel.org>
 
-> 
-> -Robert
-> 
-> 
-> 
-> From e798af4fc2f664d1aff7e863489b8298f90e716e Mon Sep 17 00:00:00 2001
-> From: Robert Richter <rrichter@cavium.com>
-> Date: Mon, 22 Sep 2014 10:46:01 +0200
-> Subject: [PATCH] OF: PCI: Fix creation of mem-mapped pci host bridges
-> 
-> The pci host bridge was not created if io_base was not set when
-> calling of_pci_get_host_bridge_resources(). This is esp. the case for
-> mem-mapped io (IORESOURCE_MEM). This patch fixes this. Function
-> parameter io_base is optional now.
-
-I think the message is misleading. What you want to do is make io_base
-optional for the case where the PCI host bridge only expects to have only
-IORESOURCE_MEM ranges and doesn't care about IORESOURCE_IO ones.
-
-As I'm going to touch this area again to address a comment from Bjorn,
-do you mind if I roll this patch into mine with your Signed-off-by and
-the mention that you have made io_base optional?
-
-Best regards,
-Liviu
-
-> 
-> Signed-off-by: Robert Richter <rrichter@cavium.com>
-> ---
->  drivers/of/of_pci.c | 7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> index ffdb45ed8682..1f0e7c2505ee 100644
-> --- a/drivers/of/of_pci.c
-> +++ b/drivers/of/of_pci.c
-> @@ -182,9 +182,8 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
->  	char range_type[4];
->  	int err;
->  
-> -	if (!io_base)
-> -		return -EINVAL;
-> -	*io_base = OF_BAD_ADDR;
-> +	if (io_base)
-> +		*io_base = OF_BAD_ADDR;
->  
->  	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
->  	if (!bus_range)
-> @@ -242,7 +241,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
->  			goto parse_failed;
->  		}
->  
-> -		if (resource_type(res) == IORESOURCE_IO) {
-> +		if (io_base && resource_type(res) == IORESOURCE_IO) {
->  			if (*io_base != OF_BAD_ADDR)
->  				pr_warn("More than one I/O resource converted. CPU offset for old range lost!\n");
->  			*io_base = range.cpu_addr;
-> -- 
-> 2.1.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index e3cf8a2e6292..f0badff77cff 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -775,7 +775,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 	/* Check if setup is sensible at all */
+ 	if (!pass &&
+ 	    (primary != bus->number || secondary <= bus->number ||
+-	     secondary > subordinate || subordinate > bus->busn_res.end)) {
++	     secondary > subordinate)) {
+ 		dev_info(&dev->dev, "bridge configuration invalid ([bus %02x-%02x]), reconfiguring\n",
+ 			 secondary, subordinate);
+ 		broken = 1;
+@@ -853,8 +853,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 			child = pci_add_new_bus(bus, dev, max+1);
+ 			if (!child)
+ 				goto out;
+-			pci_bus_insert_busn_res(child, max+1,
+-						bus->busn_res.end);
++			pci_bus_insert_busn_res(child, max+1, 0xff);
+ 		}
+ 		max++;
+ 		buses = (buses & 0xff000000)
+@@ -913,11 +912,6 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 		/*
+ 		 * Set the subordinate bus number to its real value.
+ 		 */
+-		if (max > bus->busn_res.end) {
+-			dev_warn(&dev->dev, "max busn %02x is outside %pR\n",
+-				 max, &bus->busn_res);
+-			max = bus->busn_res.end;
+-		}
+ 		pci_bus_update_busn_res_end(child, max);
+ 		pci_write_config_byte(dev, PCI_SUBORDINATE_BUS, max);
+ 	}
