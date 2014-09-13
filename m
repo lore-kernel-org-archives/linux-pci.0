@@ -1,81 +1,122 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 05/22] s390/MSI: Use __msi_mask_irq() instead of default_msi_mask_irq()
-Date: Thu, 25 Sep 2014 11:14:15 +0800
-Message-ID: <1411614872-4009-6-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:61088 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750967AbaIMDSV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Sep 2014 23:18:21 -0400
+Received: by mail-ig0-f182.google.com with SMTP id h18so1551119igc.15
+        for <linux-pci@vger.kernel.org>; Fri, 12 Sep 2014 20:18:21 -0700 (PDT)
+Date: Fri, 12 Sep 2014 21:18:18 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: David Henningsson <david.henningsson@canonical.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH] Add pci=assign-busses quirk to Dell Latitude D505
+Message-ID: <20140913031818.GA25656@google.com>
+References: <1409303414-5196-1-git-send-email-david.henningsson@canonical.com>
+ <CAErSpo5v82xeYGqsiWXpfQdr8kF9x+1K4gjYremfCh3fNQ8Unw@mail.gmail.com>
+ <540091D1.1040902@canonical.com>
+ <CAErSpo6D+8KwM9LJC4VFCtGbQ65zh_2ZjNOuP-JQB1bmt5dwCw@mail.gmail.com>
+ <CAErSpo6DDCkrew8rwkNX8=gzc19vErY5iafPBN4oKw_Ww792=g@mail.gmail.com>
+ <54115995.5020107@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54115995.5020107@canonical.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now only s390/MSI use default_msi_mask_irq() and
-default_msix_mask_irq(), replace them with the common
-msi mask irq functions __msi_mask_irq() and __msix_mask_irq().
-Remove default_msi_mask_irq() and default_msix_mask_irq().
+On Thu, Sep 11, 2014 at 10:13:09AM +0200, David Henningsson wrote:
+> 
+> 
+> On 2014-09-10 20:08, Bjorn Helgaas wrote:
+> >[+cc Andreas]
+> >v3.16 fails with:
+> >
+> >   pci 0000:01:01.0: can't allocate child bus 01 from [bus 01]
+> >
+> >which Andreas added with fc1b253141b3 ("PCI: Don't scan random busses
+> >in pci_scan_bridge()").  But I don't understand that code well enough
+> >to know whether this commit is actually the cause of the problem.
+> >
+> >And I also haven't figured out how "pci=assign-busses" makes a difference.
+> >
+> >David, would you mind turning on CONFIG_DYNAMIC_DEBUG=y in your v3.16
+> >kernel, adding  'dyndbg="file probe.c +p"' to your boot arguments, and
+> >collecting another dmesg log?
+> 
+> Thanks for looking at this (and sorry for not having done a bisect yet).
+> 
+> Anyhow, a new dmesg log has now been posted at kernel bugzilla
+> #83441. It has a few more lines starting with "pci_bus" but nothing
+> that really stands out AFAICT.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/s390/pci/pci.c |    4 ++--
- include/linux/msi.h |    2 --
- 2 files changed, 2 insertions(+), 4 deletions(-)
+We need to make progress on this regression before v3.17.  David, can you
+test the following revert (on top of v3.17-rc2)?  If it works, I plan to
+apply it for v3.17 (unless we have a better solution, of course).
 
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index 2fa7b14..552b990 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -448,9 +448,9 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
- 	/* Release MSI interrupts */
- 	list_for_each_entry(msi, &pdev->msi_list, list) {
- 		if (msi->msi_attrib.is_msix)
--			default_msix_mask_irq(msi, 1);
-+			__msix_mask_irq(msi, 1);
- 		else
--			default_msi_mask_irq(msi, 1, 1);
-+			__msi_mask_irq(msi, 1, 1);
- 		irq_set_msi_desc(msi->irq, NULL);
- 		irq_free_desc(msi->irq);
- 		msi->msg.address_lo = 0;
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index cc46a62..6fdc5c6 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -61,8 +61,6 @@ void arch_restore_msi_irqs(struct pci_dev *dev);
+Bjorn
+
+
+commit 413db4234ebbb9750f01180c04965ad3a5e18986
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Fri Sep 12 20:46:09 2014 -0600
+
+    Revert "PCI: Don't scan random busses in pci_scan_bridge()"
+    
+    This reverts commit fc1b253141b3 ("PCI: Don't scan random busses in
+    pci_scan_bridge()") because it breaks CardBus on some machines.
+    
+    David tested a Dell Latitude D505 that worked like this prior to
+    fc1b253141b3:
+    
+        pci 0000:00:1e.0: PCI bridge to [bus 01]
+        pci 0000:01:01.0: CardBus bridge to [bus 02-05]
+    
+    Note that the 01:01.0 CardBus bridge has a bus number aperture of
+    [bus 02-05], but those buses are all outside the 00:1e.0 PCI bridge bus
+    number aperture, so accesses to buses 02-05 never reach CardBus.  This is
+    later patched up by yenta_fixup_parent_bridge(), which changes the
+    subordinate bus number of the 00:1e.0 PCI bridge:
+    
+        pci_bus 0000:01: Raising subordinate bus# of parent bus (#01) from #01 to #05
+    
+    With fc1b253141b3, pci_scan_bridge() just fails immediately when it notices
+    that we can't allocate a valid secondary bus number for the CardBus bridge,
+    and CardBus doesn't work at all:
+    
+        pci 0000:01:01.0: can't allocate child bus 01 from [bus 01]
+    
+    I'd prefer to fix this by integrating the yenta_fixup_parent_bridge() logic
+    into pci_scan_bridge() so we fix the bus number apertures up front.  But
+    that's a bigger effort, and I want to fix the regression while we're
+    working on it.
+    
+    Link: https://bugzilla.kernel.org/show_bug.cgi?id=83441
+    Link: http://lkml.kernel.org/r/1409303414-5196-1-git-send-email-david.henningsson@canonical.com
+    Reported-by: David Henningsson <david.henningsson@canonical.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    CC: stable@vger.kernel.org	# v3.15+
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index e3cf8a2e6292..7c8ca351beae 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -838,16 +838,12 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 			goto out;
+ 		}
  
- void default_teardown_msi_irqs(struct pci_dev *dev);
- void default_restore_msi_irqs(struct pci_dev *dev);
--#define default_msi_mask_irq	__msi_mask_irq
--#define default_msix_mask_irq	__msix_mask_irq
+-		if (max >= bus->busn_res.end) {
+-			dev_warn(&dev->dev, "can't allocate child bus %02x from %pR\n",
+-				 max, &bus->busn_res);
+-			goto out;
+-		}
+-
+ 		/* Clear errors */
+ 		pci_write_config_word(dev, PCI_STATUS, 0xffff);
  
- struct msi_chip {
- 	struct module *owner;
--- 
-1.7.1
-
+-		/* The bus will already exist if we are rescanning */
++		/* Prevent assigning a bus number that already exists.
++		 * This can happen when a bridge is hot-plugged, so in
++		 * this case we only re-scan this bus. */
+ 		child = pci_find_bus(pci_domain_nr(bus), max+1);
+ 		if (!child) {
+ 			child = pci_add_new_bus(bus, dev, max+1);
