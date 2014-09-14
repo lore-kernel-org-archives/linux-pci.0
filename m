@@ -1,75 +1,82 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC Part2 v1 05/21] x86, hpet: Use new irqdomain interfaces to allocate/free IRQ
-Date: Thu, 11 Sep 2014 22:03:32 +0800
-Message-Id: <1410444228-3134-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1on0133.outbound.protection.outlook.com ([157.56.110.133]:5152
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752368AbaINGac (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 14 Sep 2014 02:30:32 -0400
+From: <suravee.suthikulpanit@amd.com>
+To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
+	<jason@lakedaemon.net>
+CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
+	<Will.Deacon@arm.com>, <tglx@linutronix.de>,
+	<Harish.Kasiviswanathan@amd.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH 0/2 V6] irqchip: gic: Introduce ARM GICv2m MSI(-X) support
+Date: Sun, 14 Sep 2014 01:30:14 -0500
+Message-ID: <1410676216-27953-1-git-send-email-suravee.suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ for HPET, so we could
-kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/hpet.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+This patch set introduces support for MSI(-X) in GICv2m specification,
+which is implemented in some variation of GIC400.
 
-diff --git a/arch/x86/kernel/hpet.c b/arch/x86/kernel/hpet.c
-index 319bcb9372fe..cb60652f59a3 100644
---- a/arch/x86/kernel/hpet.c
-+++ b/arch/x86/kernel/hpet.c
-@@ -11,6 +11,7 @@
- #include <linux/cpu.h>
- #include <linux/pm.h>
- #include <linux/io.h>
-+#include <linux/irqdomain.h>
+This depends on and has been tested with the following patch set which
+implements PCI supports for ARM64:
  
- #include <asm/fixmap.h>
- #include <asm/hpet.h>
-@@ -476,7 +477,7 @@ static int hpet_msi_next_event(unsigned long delta,
- static int hpet_setup_msi_irq(unsigned int irq)
- {
- 	if (x86_msi.setup_hpet_msi(irq, hpet_blockid)) {
--		irq_free_hwirq(irq);
-+		irq_domain_free_irqs(irq, 1);
- 		return -EINVAL;
- 	}
- 	return 0;
-@@ -484,9 +485,10 @@ static int hpet_setup_msi_irq(unsigned int irq)
- 
- static int hpet_assign_irq(struct hpet_dev *dev)
- {
--	unsigned int irq = irq_alloc_hwirq(-1);
-+	int irq;
- 
--	if (!irq)
-+	irq = irq_domain_alloc_irqs(NULL, -1, 1, NUMA_NO_NODE, NULL);
-+	if (irq <= 0)
- 		return -EINVAL;
- 
- 	irq_set_handler_data(irq, dev);
+    * https://lkml.org/lkml/2014/8/12/394
+    * https://lkml.org/lkml/2014/8/12/361
+
+Changes in V6:
+    * Fix the logic in patch 1 in drivers/irqchip/irq-gic.c: gic_of_init()
+      to print warning message when gicv2m_of_init fails instead of
+      returning error since v2m is optional.
+
+    * Minor clean up
+
+Changes in V5:
+    * Rebase to git://git.infradead.org/users/jcooper/linux.git irqchip/core
+
+  Marc Zyngier suggestions:
+    * Only use GICv2m irq_chip for MSI interrupts.
+    * Simplify logic to support multi-MSI in arch/arm64/kernel/msi.c.
+    * Modify gicv2m_setup_msi_irq() to also handle multi-MSI.
+
+  Mark Rutlan suggestions: 
+    * V4 patch set did not support multiple MSI register frame within a GIC.
+      Although, the proposed GICv2m device tree binding should be able to
+      handle the case.  Mark was questioning on how we can properly handle
+      this in the code. Therefore, I try to implement this by iterating through
+      the subnodes and look for msi-controller property. Once found, the code
+      parses v2m register frame information and store it in the v2m_list of
+      each gic_chip_data.
+
+  Jingoo han suggestions:
+    * Misc clean up.
+
+Suravee Suthikulpanit (2):
+  irqchip: gic: Add supports for ARM GICv2m MSI(-X)
+  irqchip: gicv2m: Add support for multiple MSI for ARM64 GICv2m
+
+ Documentation/devicetree/bindings/arm/gic.txt |  39 +++
+ arch/arm64/kernel/Makefile                    |   1 +
+ arch/arm64/kernel/msi.c                       |  41 ++++
+ drivers/irqchip/Kconfig                       |   7 +
+ drivers/irqchip/Makefile                      |   1 +
+ drivers/irqchip/irq-gic-v2m.c                 | 328 ++++++++++++++++++++++++++
+ drivers/irqchip/irq-gic.c                     |  88 ++++---
+ drivers/irqchip/irq-gic.h                     |  51 ++++
+ 8 files changed, 528 insertions(+), 28 deletions(-)
+ create mode 100644 arch/arm64/kernel/msi.c
+ create mode 100644 drivers/irqchip/irq-gic-v2m.c
+ create mode 100644 drivers/irqchip/irq-gic.h
+
 -- 
-1.7.10.4
+1.9.3
 
