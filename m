@@ -1,61 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25495 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755773AbaIICXU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 22:23:20 -0400
-From: Ethan Zhao <ethan.zhao@oracle.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
-	kvm@vger.kernel.org, konrad.wilk@oracle.com,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com
-Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
-	ethan.kernel@gmail.com, Ethan Zhao <ethan.zhao@oracle.com>
-Subject: [PATCH V4 1/4 resend] PCI: introduce helper functions for device flag operation
-Date: Tue,  9 Sep 2014 10:21:25 +0800
-Message-Id: <1410229288-31829-2-git-send-email-ethan.zhao@oracle.com>
-In-Reply-To: <1410229288-31829-1-git-send-email-ethan.zhao@oracle.com>
-References: <1410229288-31829-1-git-send-email-ethan.zhao@oracle.com>
+Received: from services.gouders.net ([141.101.32.176]:54355 "EHLO
+	services.gouders.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752557AbaINLmA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Sep 2014 07:42:00 -0400
+From: Dirk Gouders <dirk@gouders.net>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
+In-Reply-To: <1410691491-18000-1-git-send-email-andreas.noever@gmail.com>
+	(Andreas Noever's message of "Sun, 14 Sep 2014 12:44:51 +0200")
+References: <gh8uln71g1.fsf@lena.gouders.net>
+	<1410691491-18000-1-git-send-email-andreas.noever@gmail.com>
+Date: Sun, 14 Sep 2014 13:40:46 +0200
+Message-ID: <ghfvfu1lc1.fsf@quad.gouders.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch introduced three helper functions to hide direct
-device flag operation.
+Andreas Noever <andreas.noever@gmail.com> writes:
 
-void pci_set_dev_assigned(struct pci_dev *pdev);
-void pci_clear_dev_assigned(struct pci_dev *pdev);
-bool pci_is_dev_assigned(struct pci_dev *pdev);
+> This is an implementation of fix 1 (Add a quirk to fix the _CRS information
+> based on what amd_bus.c read from the hardware) which makes pci=nocrs ignore bus numbers from crs.
+>
+> If this works then we can add the board to the crs blacklist (Dirk can you attach the output of dmidecode to the bugzilla report?).
 
-Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
----
- v2: simplify unnecessory ternary operation in function pci_is_dev_assigned();
- v3: amend helper functions naming.
- v4: fix incorrect type in return expression warning.
----
- include/linux/pci.h |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
+I attached the information to the bugzilla report.
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 466bcd1..b610ab3 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1829,4 +1829,17 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
-  */
- struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
- 
-+/* helper functions for operation of device flag */
-+static inline void pci_set_dev_assigned(struct pci_dev *pdev)
-+{
-+	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-+}
-+static inline void pci_clear_dev_assigned(struct pci_dev *pdev)
-+{
-+	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-+}
-+static inline bool pci_is_dev_assigned(struct pci_dev *pdev)
-+{
-+	return (pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED) == PCI_DEV_FLAGS_ASSIGNED;
-+}
- #endif /* LINUX_PCI_H */
--- 
-1.7.1
+Do you want me to test this fix as is or should I wait (e.g. for an
+updated crs blacklist)?
 
+Dirk
+
+>
+>
+>
+> ---
+>  arch/x86/pci/acpi.c     |  7 +++----
+>  arch/x86/pci/bus_numa.c | 12 +-----------
+>  2 files changed, 4 insertions(+), 15 deletions(-)
+>
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index cfd1b13..b073948 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -522,15 +522,14 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  	} else {
+>  		probe_pci_root_info(info, device, busnum, domain);
+>  
+> -		/* insert busn res at first */
+> -		pci_add_resource(&resources,  &root->secondary);
+>  		/*
+>  		 * _CRS with no apertures is normal, so only fall back to
+>  		 * defaults or native bridge info if we're ignoring _CRS.
+>  		 */
+> -		if (pci_use_crs)
+> +		if (pci_use_crs) {
+> +			pci_add_resource(&resources,  &root->secondary);
+>  			add_resources(info, &resources);
+> -		else {
+> +		} else {
+>  			free_pci_root_info_res(info);
+>  			x86_pci_root_bus_resources(busnum, &resources);
+>  		}
+> diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
+> index f3a2cfc..b735d0e 100644
+> --- a/arch/x86/pci/bus_numa.c
+> +++ b/arch/x86/pci/bus_numa.c
+> @@ -31,8 +31,6 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+>  {
+>  	struct pci_root_info *info = x86_find_pci_root_info(bus);
+>  	struct pci_root_res *root_res;
+> -	struct pci_host_bridge_window *window;
+> -	bool found = false;
+>  
+>  	if (!info)
+>  		goto default_resources;
+> @@ -40,15 +38,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+>  	printk(KERN_DEBUG "PCI: root bus %02x: hardware-probed resources\n",
+>  	       bus);
+>  
+> -	/* already added by acpi ? */
+> -	list_for_each_entry(window, resources, list)
+> -		if (window->res->flags & IORESOURCE_BUS) {
+> -			found = true;
+> -			break;
+> -		}
+> -
+> -	if (!found)
+> -		pci_add_resource(resources, &info->busn);
+> +	pci_add_resource(resources, &info->busn);
+>  
+>  	list_for_each_entry(root_res, &info->resources, list) {
+>  		struct resource *res;
