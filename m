@@ -1,76 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:48912 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750832AbaIESeM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 14:34:12 -0400
-Message-ID: <540A0212.6060303@ti.com>
-Date: Fri, 5 Sep 2014 14:33:54 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Rob Herring <robh+dt@kernel.org>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: keystone: update to support multiple pci ports
-References: <1409938782-31460-1-git-send-email-m-karicheri2@ti.com> <7260053.FoBVhTXVfj@wuerfel>
-In-Reply-To: <7260053.FoBVhTXVfj@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sun, 14 Sep 2014 10:24:08 +0200
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+To: Nico Schottelius <nico-kernel-2014-08-14@schottelius.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: Linux 3.16: O2 Micro MMC missing in lspci
+Message-ID: <20140914102408.391efcaf@kant>
+In-Reply-To: <20140814105351.GA3110@schottelius.org>
+References: <20140814105351.GA3110@schottelius.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/05/2014 01:54 PM, Arnd Bergmann wrote:
-> On Friday 05 September 2014 13:39:42 Murali Karicheri wrote:
->> +
->>          /* enable RC mode in devcfg */
->>          val = readl(reg_p);
->> -       val&= ~PCIE_MODE_MASK;
->> -       val |= PCIE_RC_MODE;
->> +       port_id<<= 1;
->> +       val&= ~(PCIE_MODE_MASK<<  port_id);
->> +       val |= (PCIE_RC_MODE<<  port_id);
->>          writel(val, reg_p);
->> +       devm_iounmap(dev, reg_p);
->> +       devm_release_mem_region(dev, res->start, resource_size(res));
->
-> This looks like it's a shared register of some sort that doesn't
-> really belong into the registers of a particular port. Could it
-> be that it's actually for the PHY?
->
-> 	Arnd
-Arnd,
+On Aug 14 Nico Schottelius wrote:
+> Hello,
+> 
+> when booting into 3.16.0-2-ARCH I miss the following
+> entry in lspci:
+> 
+> [12:50] gold:debug-sd-card-reader% diff 3.15/lspci 3.16/lspci 
+> 17d16
+> < 03:00.0 SD Host controller: O2 Micro, Inc. SD/MMC Card Reader
+> Controller (rev 01)
+> 
+> This causes my system to be unable to mount/see the sd cards.
+> My hardware is a Dell E7440 notebook.
+> 
+> I attached dmesg & lspci of both kernels.
+> 
+> Anyone an idea on what might be wrong?
+> 
+> The only related issues I found is
+>     https://bugs.archlinux.org/task/26971
+> 
+> and that there was a change in the mmc area:
+> 
+>     https://lkml.org/lkml/2014/6/10/491
+> 
+> Cheers,
+> 
+> Nico
+> 
+> p.s.: Please cc on reply
 
-This a shared device configuration register between the two ports the 
-desciption states it is bootstrap configuration of the PCIe module as 
-Endpoint or Root complex and Not Phy. Hope below text will help.
+Both the archlinux bug and the pull request very much appear to be
+unrelated to your issue.  In your case, the MMC subsystem is not involved
+since the PCI device of the SD controller is not exposed to the MMC
+subsystem anymore, just like it is not exposed in lspci anymore.
 
-Table 3-23 Device Configuration Register (DEVCFG)
+I suggest as next steps:
+  - Test whether the issue still exists in the newest kernel that you are
+    able to install.  (v3.17-rc4 is current, v3.16.2 is the lastest on in
+    the 3.16 branch.)
+  - Post the dmesg output from a successful boot with 3.15 and from an
+    unsuccessful boot with 3.16.
 
-
-PCIESSMODE[1:0] 00b PCIESSMODE is used to control the
-functionality of PCIESS module out of
-reset. This MMR output is connected to
-DEVTYPE input of PCIESS
-(Changes from
-Nysh) : Note that in Nysh this value came
-from a bootstrap pin.
-00 : Endpoint
-01 : Legacy Endpoint
-10 : Rootcomplex
-11 : Reserved
-PCIESS_1_MODE[1:0
-]
-00b PCIESSMODE is used to control the
-functionality of PCIE_1 module out of
-reset. This MMR output is connected to
-DEVTYPE input of PCIE_1
-00 : Endpoint
-01 : Legacy Endpoint
-10 : Rootcomplex
-11 : Reserv
-
+[added Cc: linux-pci]
+-- 
+Stefan Richter
+-=====-====- =--= -===-
+http://arcgraph.de/sr/
