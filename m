@@ -1,91 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.w2.samsung.com ([211.189.100.14]:24613 "EHLO
-	usmailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932276AbaIIJZY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Sep 2014 05:25:24 -0400
-Date: Tue, 09 Sep 2014 06:25:16 -0300
-From: Mauro Carvalho Chehab <m.chehab@samsung.com>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Aristeu Rozanski <aris@redhat.com>,
-	Doug Thompson <dougthompson@xmission.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-edac@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rui Wang <ruiv.wang@gmail.com>
-Subject: Re: [PATCH 2/2] sb_edac: Claim a different PCI device
-Message-id: <20140909062516.17abf622.m.chehab@samsung.com>
-In-reply-to: <20140908234131.GA14042@kroah.com>
-References: <cover.1408051536.git.luto@amacapital.net>
- <59f55d679cc596731589516a71075b6059fcaaa5.1408051536.git.luto@amacapital.net>
- <20140908141035.GK22290@redhat.com>
- <CALCETrX3KO=1T1m4Qwn+j7vqqhEuNb8Xdkf_c2Ne4P9AbpwOoA@mail.gmail.com>
- <20140908234131.GA14042@kroah.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=US-ASCII
+Received: from mail-qa0-f45.google.com ([209.85.216.45]:49302 "EHLO
+	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752426AbaINKpA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Sep 2014 06:45:00 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Dirk Gouders <dirk@gouders.net>
+Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
+Date: Sun, 14 Sep 2014 12:44:51 +0200
+Message-Id: <1410691491-18000-1-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <gh8uln71g1.fsf@lena.gouders.net>
+References: <gh8uln71g1.fsf@lena.gouders.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Em Mon, 08 Sep 2014 16:41:31 -0700
-Greg Kroah-Hartman <gregkh@linuxfoundation.org> escreveu:
+This is an implementation of fix 1 (Add a quirk to fix the _CRS information
+based on what amd_bus.c read from the hardware) which makes pci=nocrs ignore bus numbers from crs.
 
-> On Mon, Sep 08, 2014 at 02:49:59PM -0700, Andy Lutomirski wrote:
-> > On Mon, Sep 8, 2014 at 7:10 AM, Aristeu Rozanski <aris@redhat.com> wrote:
-> > > On Thu, Aug 14, 2014 at 02:45:41PM -0700, Andy Lutomirski wrote:
-> > >> sb_edac controls a large number of different PCI functions.  Rather
-> > >> than registering as a normal PCI driver for all of them, it
-> > >> registers for just one so that it gets probed and, at probe time, it
-> > >> looks for all the others.
-> > >>
-> > >> Coincidentally, the device it registers for also contains the SMBUS
-> > >> registers, so the PCI core will refuse to probe both sb_edac and a
-> > >> future iMC SMBUS driver.  The drivers don't actually conflict, so
-> > >> just change sb_edac's device table to probe a different device.
-> > >>
-> > >> An alternative fix would be to merge the two drivers, but sb_edac
-> > >> will also refuse to load on non-ECC systems, whereas i2c_imc would
-> > >> still be useful without ECC.
-> > >>
-> > >> The only user-visible change should be that sb_edac appears to bind
-> > >> a different device.
-> > >>
-> > >> Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>
-> > >> Cc: Rui Wang <ruiv.wang@gmail.com>
-> > >> Signed-off-by: Andy Lutomirski <luto@amacapital.net>
-> > >> ---
-> > >>  drivers/edac/sb_edac.c | 2 +-
-> > >>  1 file changed, 1 insertion(+), 1 deletion(-)
-> > >>
-> > >> diff --git a/drivers/edac/sb_edac.c b/drivers/edac/sb_edac.c
-> > >> index a2597e9313c6..e3bc2cced580 100644
-> > >> --- a/drivers/edac/sb_edac.c
-> > >> +++ b/drivers/edac/sb_edac.c
-> > >> @@ -432,7 +432,7 @@ static const struct pci_id_table pci_dev_descr_ibridge_table[] = {
-> > >>   *   pci_device_id   table for which devices we are looking for
-> > >>   */
-> > >>  static const struct pci_device_id sbridge_pci_tbl[] = {
-> > >> -     {PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TA)},
-> > >> +     {PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_HA0)},
-> > >>       {PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IBRIDGE_IMC_HA0_TA)},
-> > >>       {0,}                    /* 0 terminated list. */
-> > >>  };
-> > >
-> > > Acked-by: Aristeu Rozanski <aris@redhat.com>
-> > >
-> > 
-> > Whose tree will this go through?
-> 
-> Mauro should have a tree for this as he's the subsystem maintainer.
+If this works then we can add the board to the crs blacklist (Dirk can you attach the output of dmidecode to the bugzilla report?).
 
-Yes, I'll handle it.
 
-> > FWIW, this git am can't apply this to 3.17-rc4, but git am --3way can,
-> > and it's a one-liner in any case.  Should I send a trivially rebased
-> > version?
 
-No need. I'll fix any merge conflicts that might arise.
+---
+ arch/x86/pci/acpi.c     |  7 +++----
+ arch/x86/pci/bus_numa.c | 12 +-----------
+ 2 files changed, 4 insertions(+), 15 deletions(-)
 
-Regards.
-Mauro
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index cfd1b13..b073948 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -522,15 +522,14 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	} else {
+ 		probe_pci_root_info(info, device, busnum, domain);
+ 
+-		/* insert busn res at first */
+-		pci_add_resource(&resources,  &root->secondary);
+ 		/*
+ 		 * _CRS with no apertures is normal, so only fall back to
+ 		 * defaults or native bridge info if we're ignoring _CRS.
+ 		 */
+-		if (pci_use_crs)
++		if (pci_use_crs) {
++			pci_add_resource(&resources,  &root->secondary);
+ 			add_resources(info, &resources);
+-		else {
++		} else {
+ 			free_pci_root_info_res(info);
+ 			x86_pci_root_bus_resources(busnum, &resources);
+ 		}
+diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
+index f3a2cfc..b735d0e 100644
+--- a/arch/x86/pci/bus_numa.c
++++ b/arch/x86/pci/bus_numa.c
+@@ -31,8 +31,6 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+ {
+ 	struct pci_root_info *info = x86_find_pci_root_info(bus);
+ 	struct pci_root_res *root_res;
+-	struct pci_host_bridge_window *window;
+-	bool found = false;
+ 
+ 	if (!info)
+ 		goto default_resources;
+@@ -40,15 +38,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+ 	printk(KERN_DEBUG "PCI: root bus %02x: hardware-probed resources\n",
+ 	       bus);
+ 
+-	/* already added by acpi ? */
+-	list_for_each_entry(window, resources, list)
+-		if (window->res->flags & IORESOURCE_BUS) {
+-			found = true;
+-			break;
+-		}
+-
+-	if (!found)
+-		pci_add_resource(resources, &info->busn);
++	pci_add_resource(resources, &info->busn);
+ 
+ 	list_for_each_entry(root_res, &info->resources, list) {
+ 		struct resource *res;
+-- 
+2.1.0
+
