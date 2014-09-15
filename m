@@ -1,122 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42948 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752538AbaI2PlQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 11:41:16 -0400
-Date: Mon, 29 Sep 2014 11:40:55 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: David Vrabel <david.vrabel@citrix.com>
-Cc: Chen Gang <gang.chen.5i5j@gmail.com>, ian.campbell@citrix.com,
-	wei.liu2@citrix.com, boris.ostrovsky@oracle.com,
-	bhelgaas@google.com, jgross@suse.com,
-	yongjun_wei@trendmicro.com.cn, mukesh.rathor@oracle.com,
-	xen-devel@lists.xenproject.org,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] xen/xenbus: Use 'void' instead of 'int' for the return
- of xenbus_switch_state()
-Message-ID: <20140929154055.GA31952@laptop.dumpdata.com>
-References: <5425961A.5000604@gmail.com>
- <20140929140229.GA28279@laptop.dumpdata.com>
- <542969E6.1010104@citrix.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <54164699.9020906@huawei.com>
+Date: Mon, 15 Sep 2014 09:53:29 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <542969E6.1010104@citrix.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	"Vinod Koul" <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+CC: Ashok Raj <ashok.raj@intel.com>, Tony Luck <tony.luck@intel.com>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	<linux-hotplug@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<dmaengine@vger.kernel.org>
+Subject: Re: [Patch Part3 V5 4/8] iommu/vt-d: Search for ACPI _DSM method
+ for DMAR hotplug
+References: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com> <1410487848-6027-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410487848-6027-5-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 29, 2014 at 03:17:10PM +0100, David Vrabel wrote:
-> On 29/09/14 15:02, Konrad Rzeszutek Wilk wrote:
-> > On Sat, Sep 27, 2014 at 12:36:42AM +0800, Chen Gang wrote:
-> >> When xenbus_switch_state() fails, it will call xenbus_switch_fatal()
-> > 
-> > Only on the first depth, not on the subsequent ones (as in if
-> > the first xenbus_switch_fail fails, it won't try to call
-> > xenbus_switch_state again and again).
-> > 
-> >> internally, so need not return any status value, then use 'void' instead
-> >> of 'int' for xenbus_switch_state() and __xenbus_switch_state().
-> > 
-> > When that switch occurs (to XenbusStateConnected) won't the watches
-> > fire - meaning we MUST make sure that the watch functions - if they
-> > use the xenbus_switch_state() they MUST not hold any locks - because
-> > they could be executed once more?
-> > 
-> > Oh wait, we don't have to worry about that right now as the callbacks
-> > that pick up the messages from the XenBus are all gated on one mutex
-> > anyhow.
-> > 
-> > Hm, anyhow, I would add this extra piece of information to the patch:
-> > 
-> > 
-> > diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
-> > index c214daa..f7399fd 100644
-> > --- a/drivers/xen/xen-pciback/xenbus.c
-> > +++ b/drivers/xen/xen-pciback/xenbus.c
-> > @@ -661,6 +661,12 @@ static void xen_pcibk_be_watch(struct xenbus_watch *watch,
-> >  
-> >  	switch (xenbus_read_driver_state(pdev->xdev->nodename)) {
-> >  	case XenbusStateInitWait:
-> > +		/*
-> > +		 * xenbus_switch_state can call xenbus_switch_fatal which will
-> > +		 * immediately set the state to XenbusStateClosing which
-> > +		 * means if we were reading for it here we MUST drop any
-> > +		 * locks so that we don't dead-lock.
-> > +		 */
-> 
-> Watches are asynchronous and serialised by the xenwatch thread.  I can't
-> see what deadlock you're talking about here.  Particularly since the
-> backend doesn't watch its own state node (it watches the frontend one).
-> 
-> >  		xen_pcibk_setup_backend(pdev);
-> >  		break;
-> >  
-> >>
-> >> Also need be sure that all callers which check the return value must let
-> >> 'err' be 0.
-> > 
-> > I am bit uncomfortable with that, that is due to:
-> > 
-> > 
-> > .. snip..
-> >> diff --git a/drivers/net/xen-netback/xenbus.c b/drivers/net/xen-netback/xenbus.c
-> >> index 9c47b89..b5c3d47 100644
-> >> --- a/drivers/net/xen-netback/xenbus.c
-> >> +++ b/drivers/net/xen-netback/xenbus.c
-> >> @@ -337,10 +337,7 @@ static int netback_probe(struct xenbus_device *dev,
-> >>  	if (err)
-> >>  		pr_debug("Error writing multi-queue-max-queues\n");
-> >>  
-> >> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
-> >> -	if (err)
-> >> -		goto fail;
-> >> -
-> >> +	xenbus_switch_state(dev, XenbusStateInitWait);
-> > 
-> > Which if it fails it won't call:
-> > 
-> > 354 fail:                                                                           
-> > 355         pr_debug("failed\n");                                                   
-> > 356         netback_remove(dev);                                                    
-> > 357         return err;         
-> > 
-> > 
-> > And since there is no watch on the backend state to go in Closing it won't
-> > ever call those and we leak memory.
-> 
-> It's not leaking the memory.  All resources will be recovered when the
-> device is removed.
+On 2014/9/12 10:10, Jiang Liu wrote:
+> According to Intel VT-d specification, _DSM method to support DMAR
+> hotplug should exist directly under corresponding ACPI object
+> representing PCI host bridge. But some BIOSes doesn't conform to
+> this, so search for _DSM method in the subtree starting from the
+> ACPI object representing the PCI host bridge.
 
-I presume you mean when the XenBus entries are torn down? It does look
-like it would call the .remove functionality. That should take care of that.
-
-In which case we can just remove all of the 'netback_remove()' and also
-remove some of the labels.
-
+Reviewed-by: Yijing Wang <wangyijing@huawei.com>
 
 > 
-> > The same is for xen-blkback mechanism in the probe function.
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  drivers/iommu/dmar.c |   35 +++++++++++++++++++++++++++++++----
+>  1 file changed, 31 insertions(+), 4 deletions(-)
 > 
-> David
+> diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+> index e77b5d3f2f5c..df2c2591c1a6 100644
+> --- a/drivers/iommu/dmar.c
+> +++ b/drivers/iommu/dmar.c
+> @@ -1926,21 +1926,48 @@ static int dmar_hotplug_remove(acpi_handle handle)
+>  	return ret;
+>  }
+>  
+> -static int dmar_device_hotplug(acpi_handle handle, bool insert)
+> +static acpi_status dmar_get_dsm_handle(acpi_handle handle, u32 lvl,
+> +				       void *context, void **retval)
+> +{
+> +	acpi_handle *phdl = retval;
+> +
+> +	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
+> +		*phdl = handle;
+> +		return AE_CTRL_TERMINATE;
+> +	}
+> +
+> +	return AE_OK;
+> +}
+> +
+> +int dmar_device_hotplug(acpi_handle handle, bool insert)
+>  {
+>  	int ret;
+> +	acpi_handle tmp = NULL;
+> +	acpi_status status;
+>  
+>  	if (!dmar_in_use())
+>  		return 0;
+>  
+> -	if (!dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD))
+> +	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
+> +		tmp = handle;
+> +	} else {
+> +		status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
+> +					     ACPI_UINT32_MAX,
+> +					     dmar_get_dsm_handle,
+> +					     NULL, NULL, &tmp);
+> +		if (ACPI_FAILURE(status)) {
+> +			pr_warn("Failed to locate _DSM method.\n");
+> +			return -ENXIO;
+> +		}
+> +	}
+> +	if (tmp == NULL)
+>  		return 0;
+>  
+>  	down_write(&dmar_global_lock);
+>  	if (insert)
+> -		ret = dmar_hotplug_insert(handle);
+> +		ret = dmar_hotplug_insert(tmp);
+>  	else
+> -		ret = dmar_hotplug_remove(handle);
+> +		ret = dmar_hotplug_remove(tmp);
+>  	up_write(&dmar_global_lock);
+>  
+>  	return ret;
 > 
+
+
+-- 
+Thanks!
+Yijing
+
