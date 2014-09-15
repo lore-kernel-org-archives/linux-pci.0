@@ -1,60 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bbn0102.outbound.protection.outlook.com ([157.56.111.102]:47232
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752082AbaI3KHM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Sep 2014 06:07:12 -0400
-From: Richard Zhu <r65037@freescale.com>
-To: <linux-pci-owner@vger.kernel.org>
-CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
-	<festevam@gmail.com>, <l.stach@pengutronix.de>,
-	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
-Subject: [PATCH v4 10/10] ARM: imx6sx: enable pcie on imx6sx sdb board
-Date: Tue, 30 Sep 2014 17:36:44 +0800
-Message-ID: <1412069804-17162-11-git-send-email-r65037@freescale.com>
-In-Reply-To: <1412069804-17162-1-git-send-email-r65037@freescale.com>
-References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <1410789648.3314.5.camel@pengutronix.de>
+Subject: Re: [PATCH v1 03/21] MSI: Remove the redundant irq_set_chip_data()
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
+	Bharat.Bhushan@freescale.com, x86@kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>
+Date: Mon, 15 Sep 2014 16:00:48 +0200
+In-Reply-To: <1409911806-10519-4-git-send-email-wangyijing@huawei.com>
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
+	 <1409911806-10519-4-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Richard Zhu <r65037@freescale.com>
----
- arch/arm/boot/dts/imx6sx-sdb.dts | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+Am Freitag, den 05.09.2014, 18:09 +0800 schrieb Yijing Wang:
+> Currently, pcie-designware, pcie-rcar, pci-tegra drivers
+> use irq chip_data to save the msi_chip pointer. They
+> already call irq_set_chip_data() in their own MSI irq map
+> functions. So irq_set_chip_data() in arch_setup_msi_irq()
+> is useless.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/msi.c |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index f6cb317..d547f7f 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -41,8 +41,6 @@ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+>  	if (err < 0)
+>  		return err;
+>  
+> -	irq_set_chip_data(desc->irq, chip);
+> -
+>  	return 0;
+>  }
+>  
 
-diff --git a/arch/arm/boot/dts/imx6sx-sdb.dts b/arch/arm/boot/dts/imx6sx-sdb.dts
-index a3980d9..2976913 100644
---- a/arch/arm/boot/dts/imx6sx-sdb.dts
-+++ b/arch/arm/boot/dts/imx6sx-sdb.dts
-@@ -251,6 +251,13 @@
- 	};
- };
- 
-+&pcie {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_pcie>;
-+	reset-gpio = <&gpio2 0 0>;
-+	status = "okay";
-+};
-+
- &ssi2 {
- 	status = "okay";
- };
-@@ -365,6 +372,12 @@
- 			>;
- 		};
- 
-+		pinctrl_pcie: pciegrp {
-+			fsl,pins = <
-+				MX6SX_PAD_ENET1_COL__GPIO2_IO_0 0x17059
-+			>;
-+		};
-+
- 		pinctrl_vcc_sd3: vccsd3grp {
- 			fsl,pins = <
- 				MX6SX_PAD_KEY_COL1__GPIO2_IO_11		0x17059
+arch_teardown_msi_irq() expects to find the msi_chip in the irq
+chip_data field. As this means drivers don't have any reasonable other
+possibility to stuff things into this field, I think it would make sense
+to do the cleanup the other way around: keep the irq_set_chip_data
+arch_setup_msi_irq() and rip it out of the individual drivers.
+
+Regards,
+Lucas
+
 -- 
-1.9.1
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
