@@ -1,124 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:60554 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755185AbaIWLic (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 07:38:32 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Simon Horman <horms@verge.net.au>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: RE: [PATCH 0/3] Add PCI domain support to R-Car drivers
-Date: Tue, 23 Sep 2014 11:38:28 +0000
-Message-ID: <028b0606cca84f619d1007bbde9693fd@HKXPR06MB168.apcprd06.prod.outlook.com>
-References: <1411379470-20639-1-git-send-email-phil.edworthy@renesas.com>
- <20140922210038.GJ1880@google.com>
- <84672882bcaa4730aae409f092bcbcfb@HKXPR06MB168.apcprd06.prod.outlook.com>
- <20140923103224.GO1994@e106497-lin.cambridge.arm.com>
- <99f5c020d74b465384e42ef2c883a479@HKXPR06MB168.apcprd06.prod.outlook.com>
- <20140923111000.GQ1994@e106497-lin.cambridge.arm.com>
-In-Reply-To: <20140923111000.GQ1994@e106497-lin.cambridge.arm.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from szxga03-in.huawei.com ([119.145.14.66]:32682 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752134AbaIOD3T (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Sep 2014 23:29:19 -0400
+Message-ID: <54165CEB.6090903@huawei.com>
+Date: Mon, 15 Sep 2014 11:28:43 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	"Vinod Koul" <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+CC: Ashok Raj <ashok.raj@intel.com>, Tony Luck <tony.luck@intel.com>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	<linux-hotplug@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<dmaengine@vger.kernel.org>
+Subject: Re: [Patch Part3 V5 8/8] pci, ACPI, iommu: Enhance pci_root to support
+ DMAR device hotplug
+References: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com> <1410487848-6027-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410487848-6027-9-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgTGl2aXUsDQoNCk9uIDIzIFNlcHRlbWJlciAyMDE0IDEyOjEwLCBMaXZpdSB3cm90ZToNCj4g
-T24gVHVlLCBTZXAgMjMsIDIwMTQgYXQgMTI6MDA6NDFQTSArMDEwMCwgUGhpbCBFZHdvcnRoeSB3
-cm90ZToNCj4gPiBIaSBMaXZpdSwNCj4gPg0KPiA+IE9uIDIzIFNlcHRlbWJlciAyMDE0IDExOjMy
-LCBMaXZpdSB3cm90ZToNCj4gPiA+IE9uIFR1ZSwgU2VwIDIzLCAyMDE0IGF0IDExOjEwOjI5QU0g
-KzAxMDAsIFBoaWwgRWR3b3J0aHkgd3JvdGU6DQo+ID4gPiA+IEhpIEJqb3JuLA0KPiA+ID4gPg0K
-PiA+ID4gPiBPbiAyMiBTZXB0ZW1iZXIgMjAxNCAyMjowMSwgQmpvcm4gd3JvdGU6DQo+ID4gPiA+
-ID4gT24gTW9uLCBTZXAgMjIsIDIwMTQgYXQgMTA6NTE6MDdBTSArMDEwMCwgUGhpbCBFZHdvcnRo
-eSB3cm90ZToNCj4gPiA+ID4gPiA+IFRoZSBSZW5lc2FzIFItQ2FyIGRldmljZXMgKHI4YTc3OTAg
-YW5kIHI4YTc3OTEpIHVzZSB0d28gUENJIGNvbnRyb2xsZXINCj4gPiA+ID4gPiBkcml2ZXJzLA0K
-PiA+ID4gPiA+ID4gb25lIGZvciBhbiBleHRlcm5hbCBQQ0llIHNsb3QsIHRoZSBvdGhlciBmb3Ig
-YW4gaW50ZXJuYWwgUENJIGJyaWRnZSB0byBVU0INCj4gPiA+ID4gPiA+IGNvbnRyb2xsZXJzLg0K
-PiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IEhvd2V2ZXIsIHRoZXkgY3VycmVudGx5IGRvIG5vdCB3
-b3JrIGF0IHRoZSBzYW1lIHRpbWUgYXMgdGhleSB1c2UgdGhlDQo+ID4gPiA+ID4gc2FtZSBQQ0kN
-Cj4gPiA+ID4gPiA+IGRvbWFpbiBhbmQgdXNlIHRoZSBzYW1lIHJvb3QgYnVzIG51bWJlci4gV2Ug
-Y2FuJ3QgdXNlIGRpZmZlcmVudCByb290DQo+ID4gPiA+ID4gYnVzIG51bWJlcnMNCj4gPiA+ID4g
-PiA+IGR1ZSB0byB0aGUgd2F5IHJvb3QgYnVzIG51bWJlcnMgYXJlIGFzc2lnbmVkIGluIHBjaWJp
-b3NfaW5pdF9odygpIGluDQo+ID4gPiA+ID4gPiBhcmNoL2FybS9rZXJuZWwvYmlvczMyLmMuDQo+
-ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gU2luY2UgdGhlIHR3byBQQ0kgY29udHJvbGxlcnMgYXJl
-IGNvbXBsZXRlbHkgaW5kZXBlbmRlbnQsIEkgdGhpbmsgaXQgbWFrZXMNCj4gPiA+ID4gPiBzZW5z
-ZQ0KPiA+ID4gPiA+ID4gdG8gdXNlIGRpZmZlcmVudCBQQ0kgZG9tYWlucyBmb3IgdGhlbS4NCj4g
-PiA+ID4gPiA+DQo+ID4gPiA+ID4gPiBJJ3ZlIG1hcmtlZCB0aGUgdGhpcmQgcGF0Y2ggYXMgUkZD
-IGFzIEkgYW0gbm90IHN1cmUgb2YgdGhlIGltcGFjdCBvZg0KPiA+ID4gPiA+IGVuYWJsaW5nDQo+
-ID4gPiA+ID4gPiBQQ0kgZG9tYWlucyBmb3IgYWxsIEFSTSBkZXZpY2VzLiBJbiB0aGUgbWFyY2gg
-dG8gJ29uZSBrZXJuZWwgdG8gcnVsZSB0aGVtDQo+ID4gPiA+ID4gYWxsJywNCj4gPiA+ID4gPiA+
-IEkgc3RlZXJlZCBjbGVhciBvZiBtYWNoIHNwZWNpZmljIGNoYW5nZXMuDQo+ID4gPiA+ID4gPg0K
-PiA+ID4gPiA+ID4gVGhlc2UgcGF0Y2hlcyByZXF1aXJlIHRoZSBmb2xsb3dpbmcgcGF0Y2ggZnJv
-bSBMaXZpdSBEdWRhdToNCj4gPiA+ID4gPiA+ICAgW1BBVENIIHYxMSAwNy8xMF0gT0Y6IEludHJv
-ZHVjZSBoZWxwZXIgZnVuY3Rpb24gZm9yIGdldHRpbmcgUENJDQo+ID4gPiA+ID4gZG9tYWluX25y
-DQo+ID4gPiA+ID4gPiBCYXNlZCBvbiBjb21tZW50cyBvbiB0aGlzIHBhdGNoIGZyb20gSmFzb24g
-R3VudGhvcnBlLCB0aGVyZSBpcyBzdGlsbCB0aGUNCj4gPiA+ID4gPiBpc3N1ZQ0KPiA+ID4gPiA+
-ID4gdGhhdCB0aGUgZG9tYWluIG51bWJlcnMgbWF5IGNoYW5nZSBkZXBlbmRpbmcgb24gdGhlIG9y
-ZGVyaW5nIGF0IHByb2JlDQo+ID4gPiA+ID4gdGltZS4NCj4gPiA+ID4gPiA+IEhvd2V2ZXIsIHRo
-aXMgY2FuIGJlIGZpeGVkIGxhdGVyIG9uIGJ5IGFkZGluZyB0aGUgZW50cmllcyBpbiB0aGUgRFQg
-ZmlsZXMuDQo+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IFBoaWwgRWR3b3J0
-aHkgKDMpOg0KPiA+ID4gPiA+ID4gICBQQ0k6IHJjYXItcGNpZTogQWRkIGNhbGwgdG8gZ2V0IGRv
-bWFpbiBucg0KPiA+ID4gPiA+ID4gICBQQ0k6IHJjYXItaW50ZXJuYWwtcGNpOiBBZGQgY2FsbCB0
-byBnZXQgZG9tYWluIG5yDQo+ID4gPiA+ID4gPiAgIEFSTTogRW5hYmxlIFBDSSBkb21haW5zDQo+
-ID4gPiA+ID4NCj4gPiA+ID4gPiBJJ20gZGVmZXJyaW5nIHRoZXNlIGZvciBub3cgYmVjYXVzZSB0
-aGV5IGRlcGVuZCBvbiBMaXZpdSdzIHdvcmssIHdoaWNoIEkNCj4gPiA+ID4gPiBoYXZlbid0IG1l
-cmdlZCB5ZXQsIGFuZCBJIHN1c3BlY3Qgc29tZSBtaW5vciBhZGFwdGF0aW9uIHdpbGwgYmUgcmVx
-dWlyZWQNCj4gPiA+ID4gPiBoZXJlLg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gRm9yIHdoYXQgaXQn
-cyB3b3J0aCwgSSBhZ3JlZSB3aXRoIFJvYidzIGhlc2l0YXRpb24gYWJvdXQgbWl4aW5nIGxvb2t1
-cCB3aXRoDQo+ID4gPiA+ID4gZG9tYWluIG51bWJlciBhbGxvY2F0aW9uIGluIG9mX3BjaV9nZXRf
-ZG9tYWluX25yKCkuICBUaGF0IHNlZW1zDQo+ID4gPiA+ID4gdW5uZWNlc3NhcmlseSBjb21wbGlj
-YXRlZC4NCj4gPiA+ID4gSSBjb3VsZCBjcmVhdGUgcGF0Y2hlcyB0byBhZGQgYW4gb3B0aW9uYWwg
-InBjaS1kb21haW4iIHByb3BlcnR5IGZvciB0aGUgUi1DYXINCj4gPiA+ID4gUENJIGRyaXZlcnMs
-IGFuZCBqdXN0IGF0dGVtcHQgdG8gZ2V0IHRoZSBwcm9wZXJ0eSBpbiB0aGUgZHJpdmVycy4gSWYg
-bm90IGZvdW5kLA0KPiA+ID4gPiB0aGUgZHJpdmVycyB3aWxsIGFzc3VtZSB0aGUgZG9tYWluIGlz
-IDAuDQo+ID4gPiA+DQo+ID4gPiA+IFdlIHdvdWxkIHRoZW4gaGF2ZSBmaXhlZCBQQ0kgZG9tYWlu
-IG51bWJlcmluZyBhbmQgSSBkb24ndCBoYXZlIHRvIHdvcnJ5IGFib3V0DQo+ID4gPiA+IExpdml1
-J3Mgd29yay4NCj4gPiA+DQo+ID4gPiBJIHdpbGwgc3BsaXQgdGhlIGN1cnJlbnQgb2ZfcGNpX2dl
-dF9kb21haW5fbnIoKSBldmVuIGZ1cnRoZXIgYW5kIHJlcGxhY2UgaXQgd2l0aA0KPiA+ID4gdHdv
-IGZ1bmN0aW9uczogcGNpX2dldF9kb21haW5fbnIoKSB3aGljaCB3aWxsIGRvIGp1c3QgdGhlIGFs
-bG9jYXRpb24gKHN0aWxsIGJhc2VkDQo+ID4gPiBvbiB0aGUgYm9vbGVhbiBmbGFnIHBhc3NlZCBh
-cyBwYXJhbWV0ZXIpIGFuZCBvZl9nZXRfcGNpX2RvbWFpbl9ucigpIHRoYXQgd2lsbA0KPiA+ID4g
-cmV0cmlldmUgYSAibGludXgscGNpLWRvbWFpbiIgdmFsdWUgZnJvbSBhIHByb3BlcnR5IGJlbG9u
-Z2luZyB0byBhIGdpdmVuIGRldmljZQ0KPiA+ID4gbm9kZS4NCj4gPiBUaGlzIGRvZXNuJ3Qgc29s
-dmUgdGhlIHByb2JsZW0gb2YgZGlmZmVyZW50IGRvbWFpbiBudW1iZXJzIGJhc2VkIG9uIGRpZmZl
-cmVudA0KPiA+IHByb2JlIG9yZGVyaW5nLiBJZiB5b3UgaGF2ZSBtdWx0aXBsZSBkb21haW5zIHRo
-ZW4gSSB0aGluayB5b3UgbXVzdCBoYXZlIHRoZQ0KPiA+ICJsaW51eCxwY2ktZG9tYWluIiBwcm9w
-ZXJ0eSBmb3IgZWFjaCBjb250cm9sbGVyLg0KPiANCj4gQ29ycmVjdCwgYnV0IEkndmUgc2FpZCBJ
-J20gZ29pbmcgdG8gbGVhdmUgZm9yIHRoZSBtb21lbnQgdGhlIGNoZWNrIHRvIHRoZSBob3N0DQo+
-IGNvbnRyb2xsZXIocykuDQo+IFNvIGlmIHlvdSBjYXJlIGFib3V0IG9yZGVyaW5nIG9yIG1hbmRh
-dGluZyB0aGUgcHJlc2VuY2Ugb2YgImxpbnV4LHBjaS0NCj4gZG9tYWluIiBpbiB0aGUgRFQsIHBs
-ZWFzZSBhZGQgdGhlIGNoZWNrIGluIHlvdXIgZHJpdmVyLg0KPg0KPiA+DQo+ID4gSWYgd2UgYXNz
-dW1lIHRoZSBhYm92ZSwgb2ZfZ2V0X3BjaV9kb21haW5fbnIoKSBjYW4ganVzdCByZXR1cm4gYSBi
-dXMgbnVtYmVyIG9mDQo+ID4gMCBpZiB0aGUgImxpbnV4LHBjaS1kb21haW4iIHByb3BlcnR5IGRv
-ZXNuJ3QgZXhpc3QuDQo+IA0KPiBZb3UgbWVhbiAqZG9tYWluKiBudW1iZXIgb2YgMC4gQnV0IHRo
-YXQgaXMgc3RpbGwgYSB2YWxpZCB2YWx1ZSBhbmQgeW91IHdvbid0DQo+IGJlIGFibGUgdG8gZGlz
-dGluZ3Vpc2ggYmV0d2VlbiBEVCBwcm92aWRpbmcgYSAibGludXgscGNpLWRvbWFpbiIgdmFsdWUg
-b2YgemVybyBhbmQNCj4gdGhlIHByb3BlcnR5IG5vdCBiZWluZyBwcmVzZW50Lg0KWWVzLCBJIG1l
-YW50IGRvbWFpbi4NCklmIGEgZGV2aWNlIG9ubHkgaGFzIGEgc2luZ2xlIFBDSSBkb21haW4sIG5v
-ICJsaW51eCxwY2ktZG9tYWluIiBwcm9wIGlzIG5lZWRlZA0KYW5kIGEgZGVmYXVsdCBkb21haW4g
-bnVtYmVyIG9mIDAgaXMgb2suDQpJZiB0aGVyZSBpcyBtb3JlIHRoYW4gb25lIGRvbWFpbiwgdXNl
-cnNwYWNlIG5lZWRzIHRvIGhhdmUgY29uc2lzdGVudCBkb21haW4NCm51bWJlcmluZyBvdmVyIGtl
-cm5lbCB2ZXJzaW9ucywgc28gd2UgaGF2ZSB0byBzcGVjaWZ5IHRoZSBkb21haW4gaW4gdGhlIERU
-Lg0KDQpJIGFtIHByb2JhYmx5IG1pc3Npbmcgc29tZXRoaW5nLCBpdCB3b3VsZG7igJl0IGJlIHRo
-ZSBmaXJzdCB0aW1lLCBidXQgSSBkb27igJl0IHNlZQ0Kd2h5IG9mX2dldF9wY2lfZG9tYWluX25y
-KCkgbmVlZHMgdG8gYWxsb2NhdGUgZG9tYWluIG51bWJlcnMuDQogDQo+ID4NCj4gPiBJIHN1cHBv
-c2UgeW91IGNvdWxkIGhhdmUgYSB0ZW1wb3Jhcnkgc29sdXRpb24gdGhhdCBhbGxvY2F0ZXMgdGhl
-IGRvbWFpbiBudW1iZXJzDQo+ID4gdW50aWwgdGhlIG5lY2Vzc2FyeSBkcml2ZXJzIGhhdmUgYmVl
-biB1cGRhdGVkLg0KPiANCj4gQW5kIHRoYXQgaXMgd2hhdCBwY2lfZ2V0X2RvbWFpbl9ucigpIHdp
-bGwgZG8uIElmIHlvdSBkb24ndCBjYXJlIGFib3V0IG9yZGVyaW5nLCBvbmUNCj4gd2lsbCB1c2Ug
-dGhhdCBvbmUuIElmIHlvdSBjYXJlIGFib3V0IG9yZGVyaW5nIHRoZW4gImxpbnV4LHBjaS1kb21h
-aW4iIGlzIHJlcXVpcmVkDQo+IGFuZCBvbmUgY2FuIHVzZSBvZl9nZXRfcGNpX2RvbWFpbl9ucigp
-IHRvIHJldHJpZXZlIGl0IGFuZCBmYWlsIGlmIHRoZSBpbmZvcm1hdGlvbg0KPiBpcyBtaXNzaW5n
-Lg0KPiANCj4gRG9lcyB0aGF0IGxvb2sgbGlrZSBhIHdvcmthYmxlIHNvbHV0aW9uPw0KPiANCj4g
-QmVzdCByZWdhcmRzLA0KPiBMaXZpdQ0KPiANCj4gPg0KPiA+ID4gSSBwbGFuIHRvIGxlYXZlIGZv
-ciB0aGUgbW9tZW50IHRoZSBjaGVjayBmb3IgbWFuZGF0b3J5IHByZXNlbmNlIG9mDQo+ID4gPiAi
-bGludXgscGNpLWRvbWFpbiINCj4gPiA+IHRvIHRoZSBob3N0IGJyaWRnZSBkcml2ZXIgc28gdGhh
-dCBldmVyeW9uZSBjYW4gaW1wbGVtZW50IHRoZWlyIG93bg0KPiBwb2xpY2llcy4NCj4gPiA+DQo+
-ID4gPiBIb3cgZG9lcyB0aGF0IHNvdW5kPw0KPiA+DQoNClRoYW5rcw0KUGhpbA0K
+On 2014/9/12 10:10, Jiang Liu wrote:
+> Finally enhance pci_root driver to support DMAR device hotplug when
+> hot-plugging PCI host bridges.
+
+Reviewed-by: Yijing Wang <wangyijing@huawei.com>
+
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  drivers/acpi/pci_root.c |   16 ++++++++++++++--
+>  1 file changed, 14 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index e6ae603ed1a1..4e177daa18e3 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -33,6 +33,7 @@
+>  #include <linux/pci.h>
+>  #include <linux/pci-acpi.h>
+>  #include <linux/pci-aspm.h>
+> +#include <linux/dmar.h>
+>  #include <linux/acpi.h>
+>  #include <linux/slab.h>
+>  #include <acpi/apei.h>	/* for acpi_hest_init() */
+> @@ -511,6 +512,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  	struct acpi_pci_root *root;
+>  	acpi_handle handle = device->handle;
+>  	int no_aspm = 0, clear_aspm = 0;
+> +	bool hotadd = system_state != SYSTEM_BOOTING;
+>  
+>  	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+>  	if (!root)
+> @@ -557,6 +559,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
+>  	device->driver_data = root;
+>  
+> +	if (hotadd && dmar_device_add(handle)) {
+> +		result = -ENXIO;
+> +		goto end;
+> +	}
+> +
+>  	pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
+>  	       acpi_device_name(device), acpi_device_bid(device),
+>  	       root->segment, &root->secondary);
+> @@ -583,7 +590,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  			root->segment, (unsigned int)root->secondary.start);
+>  		device->driver_data = NULL;
+>  		result = -ENODEV;
+> -		goto end;
+> +		goto remove_dmar;
+>  	}
+>  
+>  	if (clear_aspm) {
+> @@ -597,7 +604,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  	if (device->wakeup.flags.run_wake)
+>  		device_set_run_wake(root->bus->bridge, true);
+>  
+> -	if (system_state != SYSTEM_BOOTING) {
+> +	if (hotadd) {
+>  		pcibios_resource_survey_bus(root->bus);
+>  		pci_assign_unassigned_root_bus_resources(root->bus);
+>  	}
+> @@ -607,6 +614,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  	pci_unlock_rescan_remove();
+>  	return 1;
+>  
+> +remove_dmar:
+> +	if (hotadd)
+> +		dmar_device_remove(handle);
+>  end:
+>  	kfree(root);
+>  	return result;
+> @@ -625,6 +635,8 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+>  
+>  	pci_remove_root_bus(root->bus);
+>  
+> +	dmar_device_remove(device->handle);
+> +
+>  	pci_unlock_rescan_remove();
+>  
+>  	kfree(root);
+> 
+
+
+-- 
+Thanks!
+Yijing
+
