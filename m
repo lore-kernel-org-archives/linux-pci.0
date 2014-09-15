@@ -1,142 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:32858 "EHLO
-	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750833AbaICFVP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Sep 2014 01:21:15 -0400
-Received: from pps.filterd (m0046661.ppops.net [127.0.0.1])
-	by mx08-00178001.pphosted.com (8.14.5/8.14.5) with SMTP id s835IUIJ026635
-	for <linux-pci@vger.kernel.org>; Wed, 3 Sep 2014 07:21:14 +0200
-Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
-	by mx08-00178001.pphosted.com with ESMTP id 1p59xfdf1v-1
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 03 Sep 2014 07:21:14 +0200
-Received: from zeta.dmz-ap.st.com (ns6.st.com [138.198.234.13])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 47EA324
-	for <linux-pci@vger.kernel.org>; Wed,  3 Sep 2014 05:21:10 +0000 (GMT)
-Received: from Webmail-ap.st.com (eapex1hubcas4.st.com [10.80.176.69])
-	by zeta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 75266B2F
-	for <linux-pci@vger.kernel.org>; Wed,  3 Sep 2014 05:21:09 +0000 (GMT)
-From: Pratyush Anand <pratyush.anand@st.com>
-To: <mohit.kumar@st.com>
-Cc: <linux-pci@vger.kernel.org>, Pratyush Anand <pratyush.anand@st.com>
-Subject: [PATCH V2] PCIe: SPEAr13XX: Pass config resource through reg property
-Date: Wed, 3 Sep 2014 10:50:49 +0530
-Message-ID: <c5feb916f14d19e4c636a5af89be48df5097b500.1409720201.git.pratyush.anand@st.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 15 Sep 2014 11:53:03 +0100 (IST)
+From: Dave Airlie <airlied@linux.ie>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	SpacemanSpiff <a818958@trbvm.com>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	=?ISO-8859-15?Q?Pali_Roh=E1r?= <pali.rohar@gmail.com>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	"Jose P." <lbdkmjdf@sharklasers.com>
+Subject: Re: [PATCH 0/2] PCI: Ignore hotplug events for dual GPU systems
+In-Reply-To: <1434331.0IZIM5O2Ci@vostro.rjw.lan>
+Message-ID: <alpine.DEB.2.00.1409151152400.28050@skynet.skynet.ie>
+References: <20140911222022.16809.57079.stgit@bhelgaas-glaptop2.roam.corp.google.com> <1434331.0IZIM5O2Ci@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe configuration space should be passed through reg property, rather
-than through ranges property. This patch does the correction for
-SPEAr13XX SOCs.
 
-Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
----
- arch/arm/boot/dts/spear1310.dtsi  | 18 +++++++++---------
- arch/arm/boot/dts/spear1340.dtsi  |  6 +++---
- drivers/pci/host/pcie-spear13xx.c |  2 +-
- 3 files changed, 13 insertions(+), 13 deletions(-)
+> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-diff --git a/arch/arm/boot/dts/spear1310.dtsi b/arch/arm/boot/dts/spear1310.dtsi
-index fa5f2bb5f106..9d342920695a 100644
---- a/arch/arm/boot/dts/spear1310.dtsi
-+++ b/arch/arm/boot/dts/spear1310.dtsi
-@@ -85,7 +85,8 @@
- 
- 		pcie0: pcie@b1000000 {
- 			compatible = "st,spear1340-pcie", "snps,dw-pcie";
--			reg = <0xb1000000 0x4000>;
-+			reg = <0xb1000000 0x4000>, <0x80000000 0x20000>;
-+			reg-names = "dbi", "config";
- 			interrupts = <0 68 0x4>;
- 			interrupt-map-mask = <0 0 0 0>;
- 			interrupt-map = <0x0 0 &gic 0 68 0x4>;
-@@ -95,15 +96,15 @@
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
--			ranges = <0x00000800 0 0x80000000 0x80000000 0 0x00020000   /* configuration space */
--				0x81000000 0 0	 0x80020000 0 0x00010000   /* downstream I/O */
-+			ranges = <0x81000000 0 0	 0x80020000 0 0x00010000   /* downstream I/O */
- 				0x82000000 0 0x80030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
- 			status = "disabled";
- 		};
- 
- 		pcie1: pcie@b1800000 {
- 			compatible = "st,spear1340-pcie", "snps,dw-pcie";
--			reg = <0xb1800000 0x4000>;
-+			reg = <0xb1800000 0x4000>, <0x90000000 0x20000>;
-+			reg-names = "dbi", "config";
- 			interrupts = <0 69 0x4>;
- 			interrupt-map-mask = <0 0 0 0>;
- 			interrupt-map = <0x0 0 &gic 0 69 0x4>;
-@@ -113,15 +114,15 @@
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
--			ranges = <0x00000800 0 0x90000000 0x90000000 0 0x00020000   /* configuration space */
--				0x81000000 0 0  0x90020000 0 0x00010000   /* downstream I/O */
-+			ranges = <0x81000000 0 0  0x90020000 0 0x00010000   /* downstream I/O */
- 				0x82000000 0 0x90030000 0x90030000 0 0x0ffd0000>; /* non-prefetchable memory */
- 			status = "disabled";
- 		};
- 
- 		pcie2: pcie@b4000000 {
- 			compatible = "st,spear1340-pcie", "snps,dw-pcie";
--			reg = <0xb4000000 0x4000>;
-+			reg = <0xb4000000 0x4000>, <0xc0000000 0x20000>;
-+			reg-names = "dbi", "config";
- 			interrupts = <0 70 0x4>;
- 			interrupt-map-mask = <0 0 0 0>;
- 			interrupt-map = <0x0 0 &gic 0 70 0x4>;
-@@ -131,8 +132,7 @@
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
--			ranges = <0x00000800 0 0xc0000000 0xc0000000 0 0x00020000   /* configuration space */
--				0x81000000 0 0	 0xc0020000 0 0x00010000   /* downstream I/O */
-+			ranges = <0x81000000 0 0	 0xc0020000 0 0x00010000   /* downstream I/O */
- 				0x82000000 0 0xc0030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
- 			status = "disabled";
- 		};
-diff --git a/arch/arm/boot/dts/spear1340.dtsi b/arch/arm/boot/dts/spear1340.dtsi
-index e71df0f2cb52..13e1aa33daa2 100644
---- a/arch/arm/boot/dts/spear1340.dtsi
-+++ b/arch/arm/boot/dts/spear1340.dtsi
-@@ -50,7 +50,8 @@
- 
- 		pcie0: pcie@b1000000 {
- 			compatible = "st,spear1340-pcie", "snps,dw-pcie";
--			reg = <0xb1000000 0x4000>;
-+			reg = <0xb1000000 0x4000>, <0x80000000 0x20000>;
-+			reg-names = "dbi", "config";
- 			interrupts = <0 68 0x4>;
- 			interrupt-map-mask = <0 0 0 0>;
- 			interrupt-map = <0x0 0 &gic 0 68 0x4>;
-@@ -60,8 +61,7 @@
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
--			ranges = <0x00000800 0 0x80000000 0x80000000 0 0x00020000   /* configuration space */
--				0x81000000 0 0	 0x80020000 0 0x00010000   /* downstream I/O */
-+			ranges = <0x81000000 0 0	 0x80020000 0 0x00010000   /* downstream I/O */
- 				0x82000000 0 0x80030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
- 			status = "disabled";
- 		};
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 6dea9e43a75c..85f594e1708f 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -340,7 +340,7 @@ static int __init spear13xx_pcie_probe(struct platform_device *pdev)
- 
- 	pp->dev = dev;
- 
--	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
- 	pp->dbi_base = devm_ioremap_resource(dev, dbi_base);
- 	if (IS_ERR(pp->dbi_base)) {
- 		dev_err(dev, "couldn't remap dbi base %p\n", dbi_base);
--- 
-1.8.1.2
-
+Acked-by: Dave Airlie <airlied@redhat.com>
+> 
+> for both.
+> 
+> > ---
+> > 
+> > Bjorn Helgaas (2):
+> >       PCI: Add pci_ignore_hotplug() to ignore hotplug events for a device
+> >       ACPIPHP / radeon / nouveau: Remove acpi_bus_no_hotplug()
+> > 
+> > 
+> >  drivers/acpi/bus.c                           |   10 ----------
+> >  drivers/gpu/drm/nouveau/nouveau_acpi.c       |   16 ++--------------
+> >  drivers/gpu/drm/nouveau/nouveau_drm.c        |    1 +
+> >  drivers/gpu/drm/radeon/radeon_atpx_handler.c |   16 ++--------------
+> >  drivers/gpu/drm/radeon/radeon_drv.c          |    1 +
+> >  drivers/pci/hotplug/acpiphp_glue.c           |   16 ++++++----------
+> >  drivers/pci/hotplug/pciehp_hpc.c             |   12 ++++++++++++
+> >  include/acpi/acpi_bus.h                      |    4 +---
+> >  include/linux/pci.h                          |    6 ++++++
+> >  9 files changed, 31 insertions(+), 51 deletions(-)
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
