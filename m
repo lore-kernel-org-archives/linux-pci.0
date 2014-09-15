@@ -1,68 +1,85 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <54104641.7020007@citrix.com>
-Date: Wed, 10 Sep 2014 13:38:25 +0100
-From: David Vrabel <david.vrabel@citrix.com>
-MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-mips@linux-mips.org>, <linux-ia64@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	<sparclinux@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-	<linux-s390@vger.kernel.org>,
+Message-ID: <1410792154.3314.7.camel@pengutronix.de>
+Subject: Re: [PATCH v1 05/21] PCI/MSI: Introduce weak arch_find_msi_chip()
+ to find MSI chip
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
 	Russell King <linux@arm.linux.org.uk>,
-	Joerg Roedel <joro@8bytes.org>, <x86@kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<xen-devel@lists.xenproject.org>, <arnab.basu@freescale.com>,
+	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
+	Bharat.Bhushan@freescale.com, x86@kernel.org,
 	Arnd Bergmann <arnd@arndb.de>,
-	Chris Metcalf <cmetcalf@tilera.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<Bharat.Bhushan@freescale.com>, Tony Luck <tony.luck@intel.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	<iommu@lists.linux-foundation.org>, Wuyun <wuyun.wu@huawei.com>,
-	<linuxppc-dev@lists.ozlabs.org>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [Xen-devel] [PATCH v1 08/21] x86/xen/MSI: Use MSI chip framework
- to configure MSI/MSI-X irq
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>	<1409911806-10519-9-git-send-email-wangyijing@huawei.com>	<5409C8C0.8020200@citrix.com> <540E6095.8030409@huawei.com>
-In-Reply-To: <540E6095.8030409@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>
+Date: Mon, 15 Sep 2014 16:42:34 +0200
+In-Reply-To: <1409911806-10519-6-git-send-email-wangyijing@huawei.com>
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
+	 <1409911806-10519-6-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/09/14 03:06, Yijing Wang wrote:
-> On 2014/9/5 22:29, David Vrabel wrote:
->> On 05/09/14 11:09, Yijing Wang wrote:
->>> Use MSI chip framework instead of arch MSI functions to configure
->>> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
->> [...]
->>> --- a/arch/x86/pci/xen.c
->>> +++ b/arch/x86/pci/xen.c
->> [...]
->>> @@ -418,9 +430,9 @@ int __init pci_xen_init(void)
->>>  #endif
->>>  
->>>  #ifdef CONFIG_PCI_MSI
->>> -	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
->>> -	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
->>> -	x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
->>> +	xen_msi_chip.setup_irqs = xen_setup_msi_irqs;
->>> +	xen_msi_chip.teardown_irqs = xen_teardown_msi_irqs;
->>> +	x86_msi_chip = &xen_msi_chip;
->>>  	msi_chip.irq_mask = xen_nop_msi_mask;
->>>  	msi_chip.irq_unmask = xen_nop_msi_mask;
->>
->> Why have these not been changed to set the x86_msi_chip.mask/unmask
->> fields instead?
+Am Freitag, den 05.09.2014, 18:09 +0800 schrieb Yijing Wang:
+> Introduce weak arch_find_msi_chip() to find the match msi_chip.
+> Currently, MSI chip associates pci bus to msi_chip. Because in
+> ARM platform, there may be more than one MSI controller in system.
+> Associate pci bus to msi_chip help pci device to find the match
+> msi_chip and setup MSI/MSI-X irq correctly. But in other platform,
+> like in x86. we only need one MSI chip, because all device use
+> the same MSI address/data and irq etc. So it's no need to associate
+> pci bus to MSI chip, just use a arch function, arch_find_msi_chip()
+> to return the MSI chip for simplicity. The default weak
+> arch_find_msi_chip() used in ARM platform, find the MSI chip
+> by pci bus.
 > 
-> Hi David, x86_msi_chip here is struct msi_chip data type, used to configure MSI/MSI-X
-> irq. msi_chip above is struct irq_chip data type, represent the MSI irq controller. They are
-> not the same object. Their name easily confusing people.
+Hm, while one weak function sounds much better than the plethora we have
+now, I wonder how much work it would be to associate the msi_chip with
+the pci bus on other arches the same way as done on ARM. This way we
+could kill this calling into arch specific functions which would make
+things a bit clearer to follow I think.
 
-Ok, it all makes sense now.
+Regards,
+Lucas
 
-Acked-by: David Vrabel <david.vrabel@citrix.com>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/msi.c |    7 ++++++-
+>  1 files changed, 6 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index a77e7f7..539c11d 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -29,9 +29,14 @@ static int pci_msi_enable = 1;
+>  
+>  /* Arch hooks */
+>  
+> +struct msi_chip * __weak arch_find_msi_chip(struct pci_dev *dev)
+> +{
+> +	return dev->bus->msi;
+> +}
+> +
+>  int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+>  {
+> -	struct msi_chip *chip = dev->bus->msi;
+> +	struct msi_chip *chip = arch_find_msi_chip(dev);
+>  	int err;
+>  
+>  	if (!chip || !chip->setup_irq)
 
-David
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
+
