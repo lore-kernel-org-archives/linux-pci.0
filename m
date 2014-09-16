@@ -1,175 +1,111 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54294F1C.30606@huawei.com>
-Date: Mon, 29 Sep 2014 20:22:52 +0800
-From: Abel <wuyun.wu@huawei.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Tue, 16 Sep 2014 13:35:53 +0200 (CEST)
+From: Sebastian Ott <sebott@linux.vnet.ibm.com>
+To: Yijing Wang <wangyijing@huawei.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
+	Bharat.Bhushan@freescale.com, x86@kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	<x86@kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFT v2 01/24] irqdomain: Introduce new interfaces to support
- hierarchy irqdomains
-References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com> <1411740145-30626-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411740145-30626-2-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-acpi-owner@vger.kernel.org
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [PATCH v1 16/21] s390/MSI: Use MSI chip framework to configure
+ MSI/MSI-X irq
+In-Reply-To: <1409911806-10519-17-git-send-email-wangyijing@huawei.com>
+Message-ID: <alpine.LFD.2.11.1409161325280.1618@denkbrett>
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com> <1409911806-10519-17-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jiang,
-Please see my comments and questions below.
-On 2014/9/26 22:02, Jiang Liu wrote:
+Hello,
 
-[...]
-> diff --git a/kernel/irq/Kconfig b/kernel/irq/Kconfig
-> index d269cecdfbf0..dc1f3d08892e 100644
-> --- a/kernel/irq/Kconfig
-> +++ b/kernel/irq/Kconfig
-> @@ -55,6 +55,9 @@ config GENERIC_IRQ_CHIP
->  config IRQ_DOMAIN
->  	bool
->  
-> +config IRQ_DOMAIN_HIERARCHY
-> +	bool
+On Fri, 5 Sep 2014, Yijing Wang wrote:
+> Use MSI chip framework instead of arch MSI functions to configure
+> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  arch/s390/pci/pci.c |   18 ++++++++++++++----
+>  1 files changed, 14 insertions(+), 4 deletions(-)
+> 
+> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+> index 2fa7b14..da5316e 100644
+> --- a/arch/s390/pci/pci.c
+> +++ b/arch/s390/pci/pci.c
+> @@ -358,7 +358,7 @@ static void zpci_irq_handler(struct airq_struct *airq)
+>  	}
+>  }
+> 
+> -int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+> +int zpci_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+>  {
+>  	struct zpci_dev *zdev = get_zdev(pdev);
+>  	unsigned int hwirq, msi_vecs;
+> @@ -434,7 +434,7 @@ out:
+>  	return rc;
+>  }
+> 
+> -void arch_teardown_msi_irqs(struct pci_dev *pdev)
+> +static void zpci_teardown_msi_irqs(struct pci_dev *pdev)
+>  {
+>  	struct zpci_dev *zdev = get_zdev(pdev);
+>  	struct msi_desc *msi;
+> @@ -448,9 +448,9 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
+>  	/* Release MSI interrupts */
+>  	list_for_each_entry(msi, &pdev->msi_list, list) {
+>  		if (msi->msi_attrib.is_msix)
+> -			default_msix_mask_irq(msi, 1);
+> +			__msix_mask_irq(msi, 1);
+>  		else
+> -			default_msi_mask_irq(msi, 1, 1);
+> +			__msi_mask_irq(msi, 1, 1);
+
+The default_msi_mask_irq to __msi_mask_irq renaming is hidden in your
+patch "x86/xen/MSI: Eliminate arch_msix_mask_irq() and arch_msi_mask_irq()"
+
+This means that between that patch and this one s390 will not compile.
+Could you please move this hunk to the other patch or even make an extra
+patch with the renaming. Other than that:
+
+Acked-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
+
+Regards,
+Sebastian
+
+>  		irq_set_msi_desc(msi->irq, NULL);
+>  		irq_free_desc(msi->irq);
+>  		msi->msg.address_lo = 0;
+> @@ -464,6 +464,16 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
+>  	airq_iv_free_bit(zpci_aisb_iv, zdev->aisb);
+>  }
+> 
+> +static struct msi_chip zpci_msi_chip = {
+> +	.setup_irqs = zpci_setup_msi_irqs,
+> +	.teardown_irqs = zpci_teardown_msi_irqs,
+> +};
 > +
-
-Depends on IRQ_DOMAIN?
-
->  config IRQ_DOMAIN_DEBUG
->  	bool "Expose hardware/virtual IRQ mapping via debugfs"
->  	depends on IRQ_DOMAIN && DEBUG_FS
-[...]
-
-> +static void irq_domain_free_descs(unsigned int virq, unsigned int nr_irqs)
+> +struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
 > +{
-> +	unsigned int i;
-> +
-> +	for (i = 0; i < nr_irqs; i++)
-> +		irq_free_desc(virq + i);
-> +}
-
-I am not sure why this function is needed, since it works in the exact same
-way as irq_free_descs(virq, nr_irqs).
-
-> +
-[...]
-> +/**
-> + * __irq_domain_alloc_irqs - Allocate IRQs from domain
-> + * @domain: domain to allocate from
-> + * @irq_base: allocate specified IRQ nubmer if irq_base >= 0
-> + * @nr_irqs: number of IRQs to allocate
-> + * @node: NUMA node id for memory allocation
-> + * @arg: domain specific argument
-> + * @realloc: IRQ descriptors have already been allocated if true
-> + *
-> + * Allocate IRQ numbers and initialized all data structures to support
-> + * hiearchy IRQ domains.
-> + * Parameter @realloc is mainly to support legacy IRQs.
-> + * Returns error code or allocated IRQ number
-> + */
-> +int __irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
-> +			    unsigned int nr_irqs, int node, void *arg,
-> +			    bool realloc)
-> +{
-> +	int i, ret, virq;
-> +
-> +	if (domain == NULL) {
-> +		domain = irq_default_domain;
-> +		if (WARN(!domain, "domain is NULL; cannot allocate IRQ\n"))
-> +			return -EINVAL;
-> +	}
-> +
-> +	if (!domain->ops->alloc) {
-> +		pr_debug("domain->ops->alloc() is NULL\n");
-> +		return -ENOSYS;
-> +	}
-> +
-> +	if (realloc && irq_base >= 0) {
-> +		virq = irq_base;
-> +	} else {
-> +		virq = irq_domain_alloc_descs(irq_base, nr_irqs, 0, node);
-> +		if (virq < 0) {
-> +			pr_debug("cannot allocate IRQ(base %d, count %d)\n",
-> +				 irq_base, nr_irqs);
-> +			return virq;
-> +		}
-> +	}
-> +
-> +	if (irq_domain_alloc_irq_data(domain, virq, nr_irqs)) {
-> +		pr_debug("cannot allocate memory for IRQ%d\n", virq);
-> +		ret = -ENOMEM;
-> +		goto out_free_desc;
-> +	}
-> +
-> +	mutex_lock(&irq_domain_mutex);
-> +	ret = domain->ops->alloc(domain, virq, nr_irqs, arg);
-
-I've been through your patches and noticed that the only domain which does not
-call irq_domain_alloc_irqs_parent() is x86_vector_domain. And this makes sense
-*if* we already knew which domain is the nearest one to the CPU.
-But I don't think a well implemented device driver should assume itself be in
-a particular position of the interrupt delivery path.
-Actually it should be guaranteed by the core infrastructure that all the domains
-in the interrupt delivery path should allocate a hardware interrupt for the
-interrupt source.
-
-> +	if (ret < 0) {
-> +		mutex_unlock(&irq_domain_mutex);
-> +		goto out_free_irq_data;
-> +	}
-> +	for (i = 0; i < nr_irqs; i++)
-> +		irq_domain_insert_irq(virq + i);
-> +	mutex_unlock(&irq_domain_mutex);
-> +
-> +	return virq;
-> +
-> +out_free_irq_data:
-> +	irq_domain_free_irq_data(virq, nr_irqs);
-> +out_free_desc:
-> +	irq_domain_free_descs(virq, nr_irqs);
-> +	return ret;
+> +	return &zpci_msi_chip;
 > +}
 > +
-
-
-And besides the comments/questions I mentioned above, I am also curious about
-how the chained interrupts been processed.
-
-Let's take a 3-level-chained-domains for example.
-Given 3 interrupt controllers A, B and C, and the interrupt delivery path is:
-
-DEV -> A -> B -> C -> CPU
-
-After the hierarchy irqdomains are established, the unique linux interrupt of
-DEV will be mapped with a hardware interrupt in each domain:
-
-DomainA: HWIRQ_A => VIRQ_DEV
-DomainB: HWIRQ_B => VIRQ_DEV
-DomainC: HWIRQ_C => VIRQ_DEV
-
-When the DEV triggered an interrupt signal, the CPU will acknowledge HWIRQ_C,
-and then irq_find_mapping(DomainC, HWIRQ_C) will be called to get the linux
-interrupt VIRQ_DEV, and after the handler of the VIRQ_DEV has been processed,
-the interrupt will end with the level (if have) uncleared on B, which will
-result in the interrupt of DEV cannot be processed again.
-
-Or is there anything I misunderstand?
-
-Thanks,
-Abel.
+>  static void zpci_map_resources(struct zpci_dev *zdev)
+>  {
+>  	struct pci_dev *pdev = zdev->pdev;
+> -- 
+> 1.7.1
+> 
+> 
 
