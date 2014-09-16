@@ -1,77 +1,105 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:61248 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752150AbaIPIIn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 04:08:43 -0400
+Message-ID: <5417EFFA.3090804@huawei.com>
+Date: Tue, 16 Sep 2014 16:08:26 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20140909154123.GA12906@obsidianresearch.com>
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
- <1410184472-17630-8-git-send-email-Liviu.Dudau@arm.com> <CAL_JsqJi8k1Goc3UmXhuxf9v7=4gJrYG_Di7v574PxS8TsJaXw@mail.gmail.com>
- <20140908145459.GO27864@e106497-lin.cambridge.arm.com> <CAL_JsqJdGKDVwJOpPp19OkVPGzR7Zqv3nh+ONHHaYnPLYTYoYg@mail.gmail.com>
- <20140908155931.GP27864@e106497-lin.cambridge.arm.com> <540E960D.7080408@huawei.com>
- <20140909084621.GS27864@e106497-lin.cambridge.arm.com> <540EC8CB.7010106@huawei.com>
- <CAErSpo4cAfom2=07NYDRfTCdHO22M0v+ueiaZuG6v2Xd18wEnQ@mail.gmail.com> <20140909154123.GA12906@obsidianresearch.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Tue, 9 Sep 2014 21:44:56 -0500
-Message-ID: <CAL_JsqJMRqbwNkB2K6Mg2DU9mSHwAObtD7LLG2_n=4jGDAFhyQ@mail.gmail.com>
-Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI domain_nr
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	"Vinod Koul" <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+CC: Ashok Raj <ashok.raj@intel.com>, Tony Luck <tony.luck@intel.com>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	<linux-hotplug@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<dmaengine@vger.kernel.org>
+Subject: Re: [Patch Part3 V5 1/8] iommu/vt-d: Introduce helper function dmar_walk_resources()
+References: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com> <1410487848-6027-2-git-send-email-jiang.liu@linux.intel.com> <5412B9EE.3070708@huawei.com> <5417E322.9090201@linux.intel.com>
+In-Reply-To: <5417E322.9090201@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 9, 2014 at 10:41 AM, Jason Gunthorpe
-<jgunthorpe@obsidianresearch.com> wrote:
-> On Tue, Sep 09, 2014 at 08:26:19AM -0600, Bjorn Helgaas wrote:
->
->> So as long as the DT tells you the ECAM information for each host
->> bridge, that should be sufficient.  The domain number is then just a
->> Linux convenience and is not tied to the platform as it is on ia64.
->
-> I think this is right for DT systems - the domain is purely internal
-> to the kernel and userspace, it is used to locate the proper host
-> bridge driver instance, which contains the proper config accessor (and
-> register bases, etc).
->
-> AFAIK the main reason to have a DT alias to learn the domain number is
-> to make it stable so things like udev/etc can reliably match on the
-> PCI location.
+>>>  #include "irq_remapping.h"
+>>>  
+>>> +typedef int (*dmar_res_handler_t)(struct acpi_dmar_header *, void *);
+>>> +struct dmar_res_callback {
+>>> +	dmar_res_handler_t	cb[ACPI_DMAR_TYPE_RESERVED];
+>>> +	void			*arg[ACPI_DMAR_TYPE_RESERVED];
+>>> +	bool			ignore_unhandled;
+>>> +	bool			print_entry;
+>>
+>> Why do we need a switch to control print ?
+> We will walk DMAR entries several times during hotplug and only
+> want to print once.
 
-For what purpose?
+Fine, thanks for your explanation.
 
-> This is similar to i2c, etc that use the alias scheme, so IMHO
-> whatever they do to assign ID's to drivers should be copied for domain
-> numbers.
+> 
+>>
+>>> +};
+>>> +
+>>>  
+>>> +static int dmar_walk_resources(struct acpi_dmar_header *start, size_t len,
+>>> +			       struct dmar_res_callback *cb)
+>>
+>> The name dmar_walk_resources easily make people think this is related with I/O or memory resources.
+>> Do you have a better idea of this ?  What about dmar_walk_remapping_entry() or dmar_walk_remapping_structure() ?
+> Good suggestion, I like dmar_walk_remapping_entries().
+>>
+>>> +{
+>>> +	int ret = 0;
+>>> +	struct acpi_dmar_header *iter, *next;
+>>> +	struct acpi_dmar_header *end = ((void *)start) + len;
+>>> +
+>>> +	for (iter = start; iter < end && ret == 0; iter = next) {
+>>> +		next = (void *)iter + iter->length;
+>>> +		if (iter->length == 0) {
+>>> +			/* Avoid looping forever on bad ACPI tables */
+>>> +			pr_debug(FW_BUG "Invalid 0-length structure\n");
+>>
+>> What about use pr_warn() instead of pr_debug(), pr_debug() default is off.
+> It seems a common practice for BIOS engineer to mark the last entry with
+> zero length. So it will be annoying if we generate this debug message
+> on product kernel.
 
-IMO they should not. We really want to move away from aliases, not
-expand their use. They are used for serial because there was no good
-way to not break things like "console=ttyS0". I2C I think was more
-internal, but may have been for i2c-dev. What are we going to break if
-we don't have consistent domain numbering? If the domain goes into the
-DT, I'd rather see it as part of the PCI root node. But I'm not
-convinced it is needed.
+OK.
 
-It doesn't really sound like we have any actual need to solve this for
-DT ATM. It's not clear to me if all buses should be domain 0 or a
-simple incrementing index for each bus in absence of any firmware set
-value.
+> 
+>>
+>>> +			break;
+>>> +		} else if (next > end) {
+>>> +			/* Avoid passing table end */
+>>> +			pr_warn(FW_BUG "record passes table end\n");
+>>> +			ret = -EINVAL;
+>>> +			break;
+>>> +		}
+>>> +
+>>> +		if (cb->print_entry)
+>>> +			dmar_table_print_dmar_entry(iter);
+>>> +
+>>> +		if (iter->type >= ACPI_DMAR_TYPE_RESERVED) {
+>>> +			/* continue for forward compatibility */
+>>> +			pr_debug("Unknown DMAR structure type %d\n",
+>>> +				 iter->type);
+>>
+>> Same as above.
+> This is typically caused by new DMAR specification. It will also be
+> annoying too if  we also generate this debug message on an newer
+> hardware platform with older linux kernel.
 
-Rob
+OK.
+
+> 
+>>
+>>> +		} else if (cb->cb[iter->type]) {
+>>> +			ret = cb->cb[iter->type](iter, cb->arg[iter->type]);
+>>> +		} else if (!cb->ignore_unhandled) {
+>>> +			pr_warn("No handler for DMAR structure type %d\n",
+
