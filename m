@@ -1,59 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0142.outbound.protection.outlook.com ([157.56.110.142]:25796
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750828AbaIWDKx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 23:10:53 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>
-Subject: RE: [PATCH RFC 1/2] PCI: imx6: enable pcie on imx6qdl sabresd and
- sabreauto
-Date: Tue, 23 Sep 2014 03:11:06 +0000
-Message-ID: <5ee51ba972f34d36b73aba791e5c8a67@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1411376498-14653-1-git-send-email-r65037@freescale.com>
- <1411376498-14653-2-git-send-email-r65037@freescale.com>
- <20140922131519.GA30055@kroah.com>
-In-Reply-To: <20140922131519.GA30055@kroah.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:60614 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753939AbaIPVz6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 17:55:58 -0400
+Received: by mail-pa0-f42.google.com with SMTP id lj1so675292pab.1
+        for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 14:55:58 -0700 (PDT)
+Date: Tue, 16 Sep 2014 15:55:54 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v3 1/2] PCI: keystone: remove handle of PCI mode
+ configuration
+Message-ID: <20140916215554.GC5050@google.com>
+References: <1410369159-11564-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1410369159-11564-1-git-send-email-m-karicheri2@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Sep 10, 2014 at 01:12:38PM -0400, Murali Karicheri wrote:
+> Keystone PCI hardware supports both RC and EP modes and devcfg
+> register has bits to boot strap the device to either of these modes.
+> It seems proper to add this functionality to the boot loader rather
+> than in the driver as device will be operating in either mode, not
+> both any time. Currently the driver supports only RC mode and hence
+> register configuration in the driver is not needed and driver can
+> assume this is a RC hardware.
+> 
+> Also update the DT documentation accordingly.
+> 
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+> Acked-by: Arnd Bergmann <arnd@arndb.de>
 
-> -----Original Message-----
-> From: Greg KH [mailto:gregkh@linuxfoundation.org]
-> Sent: Monday, September 22, 2014 9:15 PM
-> To: Zhu Richard-R65037
-> Cc: linux-pci-owner@vger.kernel.org; stable@vger.kernel.org; linux-
-> pci@vger.kernel.org; l.stach@pengutronix.de
-> Subject: Re: [PATCH RFC 1/2] PCI: imx6: enable pcie on imx6qdl sabresd and
-> sabreauto
-> 
-> On Mon, Sep 22, 2014 at 05:01:37PM +0800, Richard Zhu wrote:
-> > - enable pcie support on imx6qdl sabresd and asbreauto boards.
-> > - sabresd board has the pcie power on and reset gpios, but sabreauto
-> > doesn't have these two gpios.
-> >
-> > Signed-off-by: Richard Zhu <r65037@freescale.com>
-> > ---
-> >  arch/arm/boot/dts/imx6qdl-sabreauto.dtsi | 4 ++++
-> >  arch/arm/boot/dts/imx6qdl-sabresd.dtsi   | 2 ++
-> >  2 files changed, 6 insertions(+)
-> 
-> <formletter>
-> 
-> This is not the correct way to submit patches for inclusion in the stable
-> kernel tree.  Please read Documentation/stable_kernel_rules.txt
-> for how to do this properly.
-> 
-> </formletter>
-[Richard] Roger that, thanks for your reminder.
-It's my fault to make a mistake to send the patch review to table kernel mail-list. Sorry about that.
+Both applied to pci/host-keystone for v3.18, thanks!
 
-Best Regards
-Richard Zhu
-
+> ---
+> 	v3 - No change
+> 	v2 - Added this separate patch to remove pci mode handling
+>  .../devicetree/bindings/pci/pci-keystone.txt       |    4 +---
+>  drivers/pci/host/pci-keystone.c                    |   21 ++------------------
+>  2 files changed, 3 insertions(+), 22 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
+> index ceb3e24..bedacf0 100644
+> --- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
+> +++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
+> @@ -13,9 +13,7 @@ Required Properties:-
+>  
+>  compatibility: "ti,keystone-pcie"
+>  reg:	index 1 is the base address and length of DW application registers.
+> -	index 2 is the base address and length of PCI mode configuration
+> -	register.
+> -	index 3 is the base address and length of PCI device ID register.
+> +	index 2 is the base address and length of PCI device ID register.
+>  
+>  pcie_msi_intc : Interrupt controller device node for MSI IRQ chip
+>  	interrupt-cells: should be set to 1
+> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+> index ff8ed25..f1119eb 100644
+> --- a/drivers/pci/host/pci-keystone.c
+> +++ b/drivers/pci/host/pci-keystone.c
+> @@ -35,10 +35,6 @@
+>  #define MAX_MSI_HOST_IRQS		8
+>  #define MAX_LEGACY_HOST_IRQS		4
+>  
+> -/* RC mode settings masks */
+> -#define PCIE_RC_MODE		BIT(2)
+> -#define PCIE_MODE_MASK		(BIT(1) | BIT(2))
+> -
+>  /* DEV_STAT_CTRL */
+>  #define PCIE_CAP_BASE		0x70
+>  
+> @@ -355,7 +351,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+>  	void __iomem *reg_p;
+>  	struct phy *phy;
+>  	int ret = 0;
+> -	u32 val;
+>  
+>  	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
+>  				GFP_KERNEL);
+> @@ -365,18 +360,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+>  	}
+>  	pp = &ks_pcie->pp;
+>  
+> -	/* index 2 is the devcfg register for RC mode settings */
+> -	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
+> -	reg_p = devm_ioremap_resource(dev, res);
+> -	if (IS_ERR(reg_p))
+> -		return PTR_ERR(reg_p);
+> -
+> -	/* enable RC mode in devcfg */
+> -	val = readl(reg_p);
+> -	val &= ~PCIE_MODE_MASK;
+> -	val |= PCIE_RC_MODE;
+> -	writel(val, reg_p);
+> -
+>  	/* initialize SerDes Phy if present */
+>  	phy = devm_phy_get(dev, "pcie-phy");
+>  	if (!IS_ERR_OR_NULL(phy)) {
+> @@ -385,8 +368,8 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+>  			return ret;
+>  	}
+>  
+> -	/* index 3 is to read PCI DEVICE_ID */
+> -	res = platform_get_resource(pdev, IORESOURCE_MEM, 3);
+> +	/* index 2 is to read PCI DEVICE_ID */
+> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
+>  	reg_p = devm_ioremap_resource(dev, res);
+>  	if (IS_ERR(reg_p))
+>  		return PTR_ERR(reg_p);
+> -- 
+> 1.7.9.5
+> 
