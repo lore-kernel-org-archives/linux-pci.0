@@ -1,96 +1,101 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v9 3/4] dt-bindings: pci: xgene pcie device tree bindings
-Date: Tue, 16 Sep 2014 15:33:43 -0700
-Message-Id: <1410906824-9321-4-git-send-email-tinamdar@apm.com>
-In-Reply-To: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
-References: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:11607 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752686AbaIPJCc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 16 Sep 2014 05:02:32 -0400
+Message-ID: <5417F13B.7030500@linux.intel.com>
+Date: Tue, 16 Sep 2014 16:13:47 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+To: Yijing Wang <wangyijing@huawei.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+CC: Ashok Raj <ashok.raj@intel.com>, Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: Re: [Patch Part3 V5 5/8] iommu/vt-d: Enhance intel_irq_remapping
+ driver to support DMAR unit hotplug
+References: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com> <1410487848-6027-6-git-send-email-jiang.liu@linux.intel.com> <54164D01.4060003@huawei.com> <5417E00D.5000108@linux.intel.com> <5417EC7B.4060400@huawei.com>
+In-Reply-To: <5417EC7B.4060400@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the bindings for X-Gene PCIe driver. The driver resides
-under 'drivers/pci/host/pci-xgene.c' file.
 
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
----
- .../devicetree/bindings/pci/xgene-pci.txt          | 57 ++++++++++++++++++++++
- 1 file changed, 57 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
 
-diff --git a/Documentation/devicetree/bindings/pci/xgene-pci.txt b/Documentation/devicetree/bindings/pci/xgene-pci.txt
-new file mode 100644
-index 0000000..1070b06
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/xgene-pci.txt
-@@ -0,0 +1,57 @@
-+* AppliedMicro X-Gene PCIe interface
-+
-+Required properties:
-+- device_type: set to "pci"
-+- compatible: should contain "apm,xgene-pcie" to identify the core.
-+- reg: A list of physical base address and length for each set of controller
-+       registers. Must contain an entry for each entry in the reg-names
-+       property.
-+- reg-names: Must include the following entries:
-+  "csr": controller configuration registers.
-+  "cfg": pcie configuration space registers.
-+- #address-cells: set to <3>
-+- #size-cells: set to <2>
-+- ranges: ranges for the outbound memory, I/O regions.
-+- dma-ranges: ranges for the inbound memory regions.
-+- #interrupt-cells: set to <1>
-+- interrupt-map-mask and interrupt-map: standard PCI properties
-+	to define the mapping of the PCIe interface to interrupt
-+	numbers.
-+- clocks: from common clock binding: handle to pci clock.
-+
-+Optional properties:
-+- status: Either "ok" or "disabled".
-+- dma-coherent: Present if dma operations are coherent
-+
-+Example:
-+
-+SoC specific DT Entry:
-+
-+	pcie0: pcie@1f2b0000 {
-+		status = "disabled";
-+		device_type = "pci";
-+		compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-+		#interrupt-cells = <1>;
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
-+			0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
-+		reg-names = "csr", "cfg";
-+		ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
-+			  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
-+		dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
-+			      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
-+		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
-+				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
-+				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
-+				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
-+		dma-coherent;
-+		clocks = <&pcie0clk 0>;
-+	};
-+
-+
-+Board specific DT Entry:
-+	&pcie0 {
-+		status = "ok";
-+	};
--- 
-1.9.1
-
+On 2014/9/16 15:53, Yijing Wang wrote:
+> On 2014/9/16 15:00, Jiang Liu wrote:
+>> On 2014/9/15 10:20, Yijing Wang wrote:
+>>>> +static void ir_remove_ioapic_hpet_scope(struct intel_iommu *iommu)
+>>>> +{
+>>>> +	int i;
+>>>>  
+>>>> -			ir_parse_one_hpet_scope(scope, iommu);
+>>>> -		}
+>>>> -		start += scope->length;
+>>>> -	}
+>>>> +	for (i = 0; i < MAX_HPET_TBS; i++)
+>>>> +		if (ir_hpet[i].iommu == iommu)
+>>>> +			ir_hpet[i].iommu = NULL;
+>>>
+>>> Hi Gerry, why not reset whole ir_hpe and ir_ioapic data struct?
+>> Hi Yijing,
+>> 	Thanks for review. Zero is legal for id, bus and devfn in
+>> struct ioapic_scope and struct hpet_scope. So we use domain field
+>> as a flag to mark entry valid or invalid and only reset iommu field.
+> 
+> Hi Gerry, use iommu field as a flag to mark entry valid may be not safe enough,
+> I found map_hpet_to_ir() and map_ioapic_to_ir() still only check the id field to return the valid iommu.
+> 
+> What about this case:
+> E.g. ir_hpet[2].id = N, ir_hpet[2].iommu = NULL, ir_hpet[4].id = N, ir_hpet[4].iommu = iommu;
+> 
+> ir_hpet[2] maybe released yet, and the hpet now has been saved in ir_hpet[4], but map_hpet_to_irq()
+> will return the wrong iommu(NULL).
+Hi Yijing,
+Good catch, I will enhance map_hpet_to_ir() and map_ioapic_to_ir().
+Regards!
+Gerry
+> 
+> 
+> static struct intel_iommu *map_hpet_to_ir(u8 hpet_id)
+> {
+> 	int i;
+> 
+> 	for (i = 0; i < MAX_HPET_TBS; i++)
+> 		if (ir_hpet[i].id == hpet_id)
+> 			return ir_hpet[i].iommu;
+> 	return NULL;
+> }
+> 
+>>
+>> Regards!
+>> Gerry
+>>>
+>>>
+>>>
+>>>>  
+>>>> -	return 0;
+>>>> +	for (i = 0; i < MAX_IO_APICS; i++)
+>>>> +		if (ir_ioapic[i].iommu == iommu)
+>>>> +			ir_ioapic[i].iommu = NULL;
+>>>>  }
+>>>>  
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>> Please read the FAQ at  http://www.tux.org/lkml/
+>>>
+>>
+>> .
+>>
+> 
+> 
