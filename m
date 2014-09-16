@@ -1,94 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v7 3/4] dt-bindings: pci: xgene pcie device tree bindings
-Date: Wed, 10 Sep 2014 16:20:19 -0700
-Message-Id: <1410391220-4866-4-git-send-email-tinamdar@apm.com>
-In-Reply-To: <1410391220-4866-1-git-send-email-tinamdar@apm.com>
-References: <1410391220-4866-1-git-send-email-tinamdar@apm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:2958 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751540AbaIPQIz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 16 Sep 2014 12:08:55 -0400
+Message-ID: <1410883714.28911.18.camel@jtkirshe-mobl>
+Subject: Re: [PATCH] pci: Parenthesize parameters in PCI_DEVID and
+ PCI_VPD_LRDT_ID macros
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To: bhelgaas@google.com
+Cc: Megan Kamiya <megan.a.kamiya@intel.com>, linux-pci@vger.kernel.org
+Date: Tue, 16 Sep 2014 09:08:34 -0700
+In-Reply-To: <1409973550-29434-1-git-send-email-jeffrey.t.kirsher@intel.com>
+References: <1409973550-29434-1-git-send-email-jeffrey.t.kirsher@intel.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-deyejmnFvbLFKDF1ICDz"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the bindings for X-Gene PCIe driver. The driver resides
-under 'drivers/pci/host/pci-xgene.c' file.
 
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
----
- .../devicetree/bindings/pci/xgene-pci.txt          | 55 ++++++++++++++++++++++
- 1 file changed, 55 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
+--=-deyejmnFvbLFKDF1ICDz
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/Documentation/devicetree/bindings/pci/xgene-pci.txt b/Documentation/devicetree/bindings/pci/xgene-pci.txt
-new file mode 100644
-index 0000000..683a253
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/xgene-pci.txt
-@@ -0,0 +1,55 @@
-+* AppliedMicro X-Gene PCIe interface
-+
-+Required properties:
-+- device_type: set to "pci"
-+- compatible: should contain "apm,xgene-pcie" to identify the core.
-+- reg: A list of physical base address and length for each set of controller
-+       registers. Must contain an entry for each entry in the reg-names
-+       property.
-+- reg-names: Must include the following entries:
-+  "csr": controller configuration registers.
-+  "cfg": pcie configuration space registers.
-+- #address-cells: set to <3>
-+- #size-cells: set to <2>
-+- ranges: ranges for the outbound memory, I/O regions.
-+- dma-ranges: ranges for the inbound memory regions.
-+- #interrupt-cells: set to <1>
-+- interrupt-map-mask and interrupt-map: standard PCI properties
-+	to define the mapping of the PCIe interface to interrupt
-+	numbers.
-+- clocks: from common clock binding: handle to pci clock.
-+
-+Optional properties:
-+- status: Either "ok" or "disabled".
-+
-+Example:
-+
-+SoC specific DT Entry:
-+
-+	pcie0: pcie@1f2b0000 {
-+		status = "disabled";
-+		device_type = "pci";
-+		compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-+		#interrupt-cells = <1>;
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
-+			0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
-+		reg-names = "csr", "cfg";
-+		ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
-+			  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
-+		dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
-+			      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
-+		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
-+				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
-+				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
-+				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
-+		clocks = <&pcie0clk 0>;
-+	};
-+
-+
-+Board specific DT Entry:
-+	&pcie0 {
-+		status = "ok";
-+	};
--- 
-1.9.1
+On Fri, 2014-09-05 at 20:19 -0700, Jeff Kirsher wrote:
+> From: Megan Kamiya <megan.a.kamiya@intel.com>
+>=20
+> Add parentheses around parameters in PCI_DEVID and PCI_VPD_LRDT_ID
+> macros to prevent possible expansion errors as described by the CERT
+> Secure Coding Standard: PRE01-C: Use parentheses within macros around
+> parameter names
+>=20
+> Signed-off-by: Megan Kamiya <megan.a.kamiya@intel.com>
+> Tested-by: Aaron Brown <aaron.f.brown@intel.com>
+> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+> ---
+>  include/linux/pci.h | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+
+Ping Bjorn?
+
+>=20
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 61978a4..cb744f3 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -45,7 +45,7 @@
+>   * In the interest of not exposing interfaces to user-space unnecessaril=
+y,
+>   * the following kernel-only defines are being added here.
+>   */
+> -#define PCI_DEVID(bus, devfn)  ((((u16)bus) << 8) | devfn)
+> +#define PCI_DEVID(bus, devfn)  ((((u16)(bus)) << 8) | (devfn))
+>  /* return bus from PCI devid =3D ((u16)bus_number) << 8) | devfn */
+>  #define PCI_BUS_NUM(x) (((x) >> 8) & 0xff)
+> =20
+> @@ -1701,7 +1701,7 @@ bool pci_acs_path_enabled(struct pci_dev *start,
+>  			  struct pci_dev *end, u16 acs_flags);
+> =20
+>  #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
+> -#define PCI_VPD_LRDT_ID(x)		(x | PCI_VPD_LRDT)
+> +#define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
+> =20
+>  /* Large Resource Data Type Tag Item Names */
+>  #define PCI_VPD_LTIN_ID_STRING		0x02	/* Identifier String */
+
+
+
+--=-deyejmnFvbLFKDF1ICDz
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCgAGBQJUGGCCAAoJEOVv75VaS+3OsqoQAJhWBFOSXZoGVjL2f/bVEpP5
+30yWzxvA6joNxx/rhtE1QLPC1vYJ26Qz0JeAD+NA/5gCQ045j4bXJW1LvGjUM1Bl
+rqaQ0ezHCxe7dze5itt+K6IS5DlNta3xt2tRArzSBIa479aSwPO8GfbNOYODNxcG
+semZidkrfs4arSG9zti32VMiaLRxWFZhQArUy37LPBqNM3v/9tMcSypM4JlIqZIZ
+xW2DEjsU94Gm17AgUO2NvVnJPxBgywJfxYaIjfsWVN0kHtsPF2jjI8e8qdZuBLv+
+I4feNf4q/UN+6yQC0WfxTgemuy2LzTkd1y0WyT5/oxwnc391n5s4OGmSB7AZLcix
+aC1+HdAblFjIEPNlVhSkYeVMeMfBabTpVcHjvhZ1cbT8Ae7AkTWayxT/PUDfue51
+ed70HNoKb4Ffw7ZFH7nffvTsDXheur2t9fyH1dcwjUL1j9DHV4FGKycwdIUPtWDf
+jp/shu5PsGsXdbmB0JWsm4DnXN2P0S38fTcmXSIQlmqszd+6gD0/uCfsHoUwPat+
+lO/hOY8wUKtfUzI/qNWPJxTcoq0Gqlq+XlKCXJN/tS221EAJDj3EVOY0OCLzLj1V
+ATtmBz+12nfc+mtFhy4c1hxSrJnN9kO4HBfKqEnprTj9R6dusAK2HlqEGQbIslpB
+BgvXGHY62NRaooiJtXyV
+=mzEP
+-----END PGP SIGNATURE-----
+
+--=-deyejmnFvbLFKDF1ICDz--
 
