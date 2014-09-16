@@ -1,78 +1,206 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:41276 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754478AbaIWXOW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 19:14:22 -0400
-Received: by mail-ie0-f180.google.com with SMTP id ar1so7589370iec.11
-        for <linux-pci@vger.kernel.org>; Tue, 23 Sep 2014 16:14:22 -0700 (PDT)
-Date: Tue, 23 Sep 2014 17:14:19 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Minghuan Lian <Minghuan.Lian@freescale.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+Received: from mail-bl2on0143.outbound.protection.outlook.com ([65.55.169.143]:45696
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752732AbaIPJxl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 16 Sep 2014 05:53:41 -0400
+Message-ID: <54187590.4070101@freescale.com>
+Date: Tue, 16 Sep 2014 17:38:24 +0000
+From: Lian Minghuan-B31939 <B31939@freescale.com>
+MIME-Version: 1.0
+To: Scott Wood <scottwood@freescale.com>
+CC: Minghuan Lian <Minghuan.Lian@freescale.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
 	Zang Roy-R61911 <r61911@freescale.com>,
 	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	"Yoder Stuart-B08248" <stuart.yoder@freescale.com>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH v3 2/3] PCI: designware: Add get_msi_data() to
- pcie_host_ops
-Message-ID: <20140923231419.GA27357@google.com>
-References: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
- <1411482540-31297-4-git-send-email-Minghuan.Lian@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411482540-31297-4-git-send-email-Minghuan.Lian@freescale.com>
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2 3/3] PCI: Layerscape: Add Layerscape PCIe driver
+References: <1410469741-11634-1-git-send-email-Minghuan.Lian@freescale.com>
+	 <1410469741-11634-3-git-send-email-Minghuan.Lian@freescale.com>
+	 <1410470694.24184.390.camel@snotra.buserror.net>
+	 <5412D4BC.10704@freescale.com>
+ <1410841159.24184.491.camel@snotra.buserror.net>
+In-Reply-To: <1410841159.24184.491.camel@snotra.buserror.net>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Mohit, Jingoo]
 
-On Tue, Sep 23, 2014 at 10:28:59PM +0800, Minghuan Lian wrote:
-> The patch adds get_msi_data() for some platforms to return their
-> special MSI message data.
-> 
-> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-> ---
-> Change log:
-> v3: no change
-> v2: no change just derived from v1
-> 
->  drivers/pci/host/pcie-designware.c | 7 ++++++-
->  drivers/pci/host/pcie-designware.h | 1 +
->  2 files changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 1c09f814..c28ca05 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -366,7 +366,12 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
->  	else
->  		msg.address_lo = virt_to_phys((void *)pp->msi_data);
->  	msg.address_hi = 0x0;
-> -	msg.data = pos;
-> +
-> +	if (pp->ops->get_msi_data)
-> +		msg.data = pp->ops->get_msi_data(pp, pos);
-> +	else
-> +		msg.data = pos;
-> +
->  	write_msi_msg(irq, &msg);
->  
->  	return 0;
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index 904e40a..c625675 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -71,6 +71,7 @@ struct pcie_host_ops {
->  	void (*msi_set_irq)(struct pcie_port *pp, int irq);
->  	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
->  	u32 (*get_msi_addr)(struct pcie_port *pp);
-> +	u32 (*get_msi_data)(struct pcie_port *pp, int pos);
->  	void (*scan_bus)(struct pcie_port *pp);
->  	int (*msi_host_init)(struct pcie_port *pp, struct msi_chip *chip);
->  };
-> -- 
-> 1.9.1
-> 
+On 2014年09月16日 04:19, Scott Wood wrote:
+> On Fri, 2014-09-12 at 11:10 +0000, Lian Minghuan-B31939 wrote:
+>> Hi Scott,
+>>
+>> Please see my comments inline.
+>>
+>> On 2014年09月11日 21:24, Scott Wood wrote:
+>>> On Thu, 2014-09-11 at 21:09 +0000, Minghuan Lian wrote:
+>>>> Add support for Freescale Layerscape PCIe controller. This driver
+>>>> re-uses the designware core code.
+>>>>
+>>>> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+>>>> ---
+>>>> Change log:
+>>>> v2:
+>>>> 1. Add pcie-scfg to link scfg device node and remove "fsl, ls-pcie" compatible
+>>>> 2. Use regmap API to access scfg.
+>>>> 3. remove ls1021 PCI device ID.
+>>>> 4. remove unused irq pme_irq and ls_pcie_list.
+>>>> 5. Do not set scfg bit reverse mode
+>>>>
+>>>>    .../devicetree/bindings/pci/layerscape-pci.txt     |  45 ++++
+>>>>    drivers/pci/host/Kconfig                           |   8 +
+>>>>    drivers/pci/host/Makefile                          |   1 +
+>>>>    drivers/pci/host/pci-layerscape.c                  | 278 +++++++++++++++++++++
+>>>>    4 files changed, 332 insertions(+)
+>>>>    create mode 100644 Documentation/devicetree/bindings/pci/layerscape-pci.txt
+>>>>    create mode 100644 drivers/pci/host/pci-layerscape.c
+>>>>
+>>>> diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+>>>> new file mode 100644
+>>>> index 0000000..1a5dbd8
+>>>> --- /dev/null
+>>>> +++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+>>>> @@ -0,0 +1,45 @@
+>>>> +Freescale Layerscape PCIe controller
+>>>> +
+>>>> +This PCIe host controller is based on the Synopsis Designware PCIe IP
+>>>> +and thus inherits all the common properties defined in designware-pcie.txt.
+>>>> +
+>>>> +Required properties:
+>>>> +- compatible: should contain the platform identifier such as "fsl,ls1021a-pcie"
+>>>> +- reg: base addresses and lengths of the PCIe controller
+>>>> +- interrupts: A list of interrupt outputs of the controller. Must contain an
+>>>> +  entry for each entry in the interrupt-names property.
+>>>> +- interrupt-names: Must include the following entries:
+>>>> +  "intr": The interrupt that is asserted for controller interrupts
+>>>> +  "msi": The interrupt that is asserted when an MSI is received
+>>>> +  "pme": The interrupt that is asserted when PME state changes
+>>>> +- pcie-scfg: Must include two entries.
+>>> fsl,pcie-scfg
+>> [Minghuan] Ok. I will rename the property.
+>>>> +  The first entry must be a link to the SCFG device node
+>>>> +  The second entry must be '0' or '1' based on physical PCIe controller index.
+>>>> +  used to get SCFG PEXN registers
+>>>> +
+>>>> +Example:
+>>>> +
+>>>> +	pcie@3400000 {
+>>>> +		compatible = "fsl,ls1021a-pcie", "snps,dw-pcie";
+>>> Can we rely on the config space vendor/device ID instead of hardcoding
+>>> the SoC here?
+>> [Minghuan] No, for a SoC may have several device ID.
+>> For example:
+>> LS1021A RM says :
+>> 0x0E0A LS1021A with security
+>> 0x0E0B LS1021A without security
+>> But I read device ID 0x0e00  from some LS1021A boards.
+>> 0x0e06 from some LS1021A boards. this may be caused by different CPLD.
+> :-(
+>
+>>>> +		reg = <0x00 0x03400000 0x0 0x00010000   /* controller registers */
+>>>> +		       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
+>>>> +		reg-names = "regs", "config";
+>>>> +		interrupts = <GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
+>>>> +			     <GIC_SPI 179 IRQ_TYPE_LEVEL_HIGH>, /* MSI interrupt */
+>>>> +			     <GIC_SPI 181 IRQ_TYPE_LEVEL_HIGH>; /* PME interrupt */
+>>>> +		interrupt-names = "intr", "msi", "pme";
+>>>> +		pcie-scfg = <&scfg 0>;
+>>>> +		#address-cells = <3>;
+>>>> +		#size-cells = <2>;
+>>>> +		device_type = "pci";
+>>>> +		num-lanes = <4>;
+>>>> +		bus-range = <0x00 0xff>;
+>>>> +		ranges = <0x81000000 0x0 0x00000000 0x40 0x10000000 0x0 0x00010000   /* downstream I/O */
+>>>> +			  0x82000000 0x0 0x00000000 0x41 0x00000000 0x1 0x00000000>; /* non-prefetchable memory */
+>>> Are these ranges hardcoded in the SoC, or are they the result of iATU
+>>> settings?  If the latter, who configures it and why no prefetchable
+>>> region?
+>> [Minghuan] 400000_0000 - 480000_0000 is hardcode assigned to PEX1.
+>> I separates from this 32 region  1M for IO, 4G for non-prefetchable memory.
+>> 4G is the max size iATU supported.
+>> IO and memory region will be set to iATU by pci-designware.c
+>> Because both powerpc and imx do not set prefechable memory,
+>> so  I do not assign prefetchable memory either.
+> If there's spare room in the addres space for a prefetchable region, why
+> not make one, regardless of what PPC and IMX do?
+>
+> FWIW, I believe that ARMv8 can make better use of a prefetchable region
+> due to the "gathering" storage attribute, so even if you don't use one
+> on LS1021A consider using one on ARMv8-based LS chips.
+[Minghuan] Ok, I will add 4G prefetchable memory region.
+>>>> +		#interrupt-cells = <1>;
+>>>> +		interrupt-map-mask = <0 0 0 7>;
+>>>> +		interrupt-map = <0000 0 0 1 &gic GIC_SPI 91  IRQ_TYPE_LEVEL_HIGH>,
+>>>> +				<0000 0 0 2 &gic GIC_SPI 188 IRQ_TYPE_LEVEL_HIGH>,
+>>>> +				<0000 0 0 3 &gic GIC_SPI 190 IRQ_TYPE_LEVEL_HIGH>,
+>>>> +				<0000 0 0 4 &gic GIC_SPI 192 IRQ_TYPE_LEVEL_HIGH>;
+>>>> +	};
+>>>> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+>>>> index 34134d6..c826949 100644
+>>>> --- a/drivers/pci/host/Kconfig
+>>>> +++ b/drivers/pci/host/Kconfig
+>>>> @@ -82,4 +82,12 @@ config PCIE_XILINX
+>>>>    	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
+>>>>    	  Host Bridge driver.
+>>>>    
+>>>> +config PCI_LAYERSCAPE
+>>>> +	bool "Freescale Layerscape PCIe controller"
+>>>> +	depends on SOC_LS1021A
+>>>> +	select PCIE_DW
+>>>> +	select MFD_SYSCON
+>>>> +	help
+>>>> +	  Say Y here if you want PCIe controller support on Layerscape SoCs.
+>>> Why does it depend on this particular SoC?  Is the same PCIe controller
+>>> going to be used on other Layerscape chips?
+>> [Minghuan] LS1021A platform patch only contains SOC name no ARCH name.
+>> Both LS1042 and LS2085 RM do not contain PCI chapter. I am not sure they
+>> will use the same IP.
+>> I can remove 'depends on' and wait for the Layerscape ARCH name then add it.
+>> The other Layerscape will use ARM v8. I am not even sure LS1021 will be
+>> belong
+>> to LS1.
+> Why do you need any dependency here other than what is required to make
+> the driver build?
+>
+[Minghuan] Ok, I will remove "deponds on"
+>>>> +static irqreturn_t ls_pcie_msi_irq_handler(int irq, void *data)
+>>>> +{
+>>>> +	struct pcie_port *pp = data;
+>>>> +	struct ls_pcie *pcie = to_ls_pcie(pp);
+>>>> +	unsigned int msi_irq;
+>>>> +
+>>>> +	/* clear the interrupt */
+>>>> +	regmap_write(pcie->scfg, SCFG_SPIMSICLRCR,
+>>>> +		     MSI_LS1021A_DATA(pcie->index));
+>>>> +
+>>>> +	msi_irq = irq_find_mapping(pp->irq_domain, 0);
+>>>> +	if (msi_irq)
+>>>> +		generic_handle_irq(msi_irq);
+>>>> +	else
+>>>> +		/*
+>>>> +		 * that's weird who triggered this?
+>>>> +		 * just clear it
+>>>> +		 */
+>>>> +		dev_info(pcie->dev, "unexpected MSI\n");
+>>>> +
+>>>> +	return IRQ_HANDLED;
+>>>> +}
+>>>> +
+>>> Why are you returning IRQ_HANDLED in the "unexpected MSI" case?
+>> [Minghuan] The interrupt located in top layer chip is dedicated to 32
+>> MSI interrupts.
+>> This handler has cleaned the interrupt, so I think it can return IRQ_HANDLED
+>> although  the special MSI interrupt belong second layer chip has not
+>> been registered.
+> If it's wrong enough to print "unexpected MSI" (BTW, please use either
+> dev_dbg or a ratelimited dev_err for that, and include the IRQ number),
+> then it's wrong enough to return IRQ_NONE so that the upper layers know
+> the interrupt was not handled.
+[Minghuan] Ok, I will fix it.
+> -Scott
+>
+>
+
