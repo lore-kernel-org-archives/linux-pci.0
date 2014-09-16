@@ -1,50 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0141.outbound.protection.outlook.com ([157.56.111.141]:41189
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755932AbaIWO3F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Sep 2014 10:29:05 -0400
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Minghuan Lian" <Minghuan.Lian@freescale.com>
-Subject: [PATCH] PCI: designware: Fix IO resource end address calculation
-Date: Tue, 23 Sep 2014 22:28:57 +0800
-Message-ID: <1411482540-31297-2-git-send-email-Minghuan.Lian@freescale.com>
-In-Reply-To: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
-References: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:39043 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752900AbaIPVyw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 17:54:52 -0400
+Received: by mail-pd0-f173.google.com with SMTP id ft15so635424pdb.32
+        for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 14:54:52 -0700 (PDT)
+Date: Tue, 16 Sep 2014 15:54:48 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, jgunthorpe@obsidianresearch.com
+Subject: Re: [PATCH - v4] PCI: keystone: add a pci quirk to limit mrrs
+Message-ID: <20140916215448.GB5050@google.com>
+References: <1410195814-30414-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1410195814-30414-1-git-send-email-m-karicheri2@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-End address should be equal to start_addr + size - 1.
-The patch fixes PCI IO resource end address calculation.
+On Mon, Sep 08, 2014 at 01:03:34PM -0400, Murali Karicheri wrote:
+> Keystone PCI controller has a limitation that memory read request
+> size must not exceed 256 bytes. This is a hardware limitation and
+> add a quirk to force this limit on all downstream devices by
+> updating mrrs.
+> 
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
----
- drivers/pci/host/pcie-designware.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Applied to pci/host-keystone for v3.18, thanks.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 0f3cb2a..c19184f7 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -459,7 +459,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 			pp->io.end = min_t(resource_size_t,
- 					   IO_SPACE_LIMIT,
- 					   range.pci_addr + range.size
--					   + global_io_offset);
-+					   + global_io_offset - 1);
- 			pp->io_size = resource_size(&pp->io);
- 			pp->io_bus_addr = range.pci_addr;
- 			pp->io_base = range.cpu_addr;
--- 
-1.9.1
+I moved the pci-keystone.txt update regarding pci=pcie_bus_perf into this
+patch.  This is where it belongs, isn't it?  I'm pretty sure it wasn't
+related to setting the PCI device ID dynamically.
 
+> ---
+>   -v4: re-send removing extra lines
+>   -v3: added check for vendor id and use pci_matc_id() to do matching
+>   -v2: made the quirk happens after tuning
+>   -v1: changed printk to indicate PCI bdf
+> 
+>  drivers/pci/host/pci-keystone.c |   45 +++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 45 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+> index c1cfaef..ff8ed25 100644
+> --- a/drivers/pci/host/pci-keystone.c
+> +++ b/drivers/pci/host/pci-keystone.c
+> @@ -42,8 +42,53 @@
+>  /* DEV_STAT_CTRL */
+>  #define PCIE_CAP_BASE		0x70
+>  
+> +/* PCIE controller device IDs */
+> +#define PCIE_RC_K2HK		0xb008
+> +#define PCIE_RC_K2E		0xb009
+> +#define PCIE_RC_K2L		0xb00a
+> +
+>  #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
+>  
+> +static void quirk_limit_mrrs(struct pci_dev *dev)
+> +{
+> +	struct pci_bus *bus = dev->bus;
+> +	struct pci_dev *bridge = bus->self;
+> +	static const struct pci_device_id rc_pci_devids[] = {
+> +		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2HK),
+> +		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
+> +		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2E),
+> +		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
+> +		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2L),
+> +		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
+> +		{ 0, },
+> +	};
+> +
+> +	if (pci_is_root_bus(bus))
+> +		return;
+> +
+> +	/* look for the host bridge */
+> +	while (!pci_is_root_bus(bus)) {
+> +		bridge = bus->self;
+> +		bus = bus->parent;
+> +	}
+> +
+> +	if (bridge) {
+> +		/*
+> +		 * Keystone PCI controller has a h/w limitation of
+> +		 * 256 bytes maximum read request size. It can't handle
+> +		 * anything higher than this. So force this limit on
+> +		 * all downstream devices
+> +		 */
+> +		if (pci_match_id(rc_pci_devids, bridge)) {
+> +			if (pcie_get_readrq(dev) > 256) {
+> +				dev_info(&dev->dev, "limiting mrrs to 256\n");
+> +				pcie_set_readrq(dev, 256);
+> +			}
+> +		}
+> +	}
+> +}
+> +DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
+> +
+>  static int ks_pcie_establish_link(struct keystone_pcie *ks_pcie)
+>  {
+>  	struct pcie_port *pp = &ks_pcie->pp;
+> -- 
+> 1.7.9.5
+> 
