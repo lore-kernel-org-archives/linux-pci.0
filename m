@@ -1,99 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:54537 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330AbaI3OpK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 10:45:10 -0400
-Date: Tue, 30 Sep 2014 15:45:06 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Rob Herring <robh@kernel.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] of/pci: add pci_pio_to_address dummy for !CONFIG_OF
-Message-ID: <20140930144506.GQ841@e106497-lin.cambridge.arm.com>
-References: <706416181.hbVGLDA3o6@wuerfel>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:45134 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754065AbaIPCJS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Sep 2014 22:09:18 -0400
+Message-ID: <54179BAB.7030506@huawei.com>
+Date: Tue, 16 Sep 2014 10:08:43 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <706416181.hbVGLDA3o6@wuerfel>
-Content-Type: text/plain; charset=UTF-8
+To: Lucas Stach <l.stach@pengutronix.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [PATCH v1 05/21] PCI/MSI: Introduce weak arch_find_msi_chip()
+ to find MSI chip
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>	 <1409911806-10519-6-git-send-email-wangyijing@huawei.com> <1410792154.3314.7.camel@pengutronix.de>
+In-Reply-To: <1410792154.3314.7.camel@pengutronix.de>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 30, 2014 at 02:19:05PM +0100, Arnd Bergmann wrote:
-> The pci_register_io_range() and pci_pio_to_address() were recently
-> introduced to generalize the handling of memory mapped PCI I/O space,
-> but they are only valid when CONFIG_OF is set, leading to a possible
-> build error:
-> 
-> drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_setup_window':
-> drivers/pci/host/pcie-rcar.c:340:3: error: implicit declaration of function 'pci_pio_to_address' [-Werror=implicit-function-declaration]
->    res_start = pci_pio_to_address(res->start);
->    ^
-> drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_probe':
-> drivers/pci/host/pcie-rcar.c:945:3: error: implicit declaration of function 'of_pci_range_to_resource' [-Werror=implicit-function-declaration]
->    err = of_pci_range_to_resource(&range, pdev->dev.of_node,
->    ^
-> cc1: some warnings being treated as errors
-> 
-> This provides inline dummy implementations for the case that
-> CONFIG_OF is disabled, to allow better build testing.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 279c5dd046 ("of/pci: Add pci_register_io_range() and pci_pio_to_address()")
+On 2014/9/15 22:42, Lucas Stach wrote:
+> Am Freitag, den 05.09.2014, 18:09 +0800 schrieb Yijing Wang:
+>> Introduce weak arch_find_msi_chip() to find the match msi_chip.
+>> Currently, MSI chip associates pci bus to msi_chip. Because in
+>> ARM platform, there may be more than one MSI controller in system.
+>> Associate pci bus to msi_chip help pci device to find the match
+>> msi_chip and setup MSI/MSI-X irq correctly. But in other platform,
+>> like in x86. we only need one MSI chip, because all device use
+>> the same MSI address/data and irq etc. So it's no need to associate
+>> pci bus to MSI chip, just use a arch function, arch_find_msi_chip()
+>> to return the MSI chip for simplicity. The default weak
+>> arch_find_msi_chip() used in ARM platform, find the MSI chip
+>> by pci bus.
+>>
+> Hm, while one weak function sounds much better than the plethora we have
+> now, I wonder how much work it would be to associate the msi_chip with
+> the pci bus on other arches the same way as done on ARM. This way we
+> could kill this calling into arch specific functions which would make
+> things a bit clearer to follow I think.
 
-Acked-by: Liviu Dudau <Liviu.Dudau@arm.com>
+That's a heavy work to associate msi_chip with the pci_bus in all platforms,
+And only in ARM platform, there are two or more different msi_chips which maybe
+associate pci hostbridge or irq chip. In other platforms, only one MSI chip
+exists at the same time. Another reason is I don't think associate the msi_chip
+with pci bus is a good idea to make PCI device find its own msi_chip.
+All PCI devices under the same PCI hostbridge should have the same msi_chip,
+and now a property "msi-parent" is defined to help pci hostbridge to find its matched
+msi_chip. I like to associate the msi_chip with a pci hostbridge. So we don't need to
+add a lot of pcibios_add_bus() to do that.
 
-Is that triggered by shmobile_defconfig?
+I inspected all MSI chip drivers, and found there are two different relations between msi_chip and PCI hostbridge
+1. MSI chip is a irq chip, like irq_armada_370_xp, PCI hostbridge platform device use "msi-parent" to find msi_chip by of_node.
+2. MSI chip is integrated into PCI hostbridge, so msi_chip->dev is the PCI hostbridge platform device.
 
-Best regards,
-Liviu
+So long as we use PCI hostbridge platform device as the parent of PCI hostbridge, every PCI device under the hostbridge
+can find the msi_chip by it.
+
+All MSI chip drivers now except pci-mvebu have been passed the hostbridge platform dev as the parent.
+pci_common_init_dev(pcie->dev, &hw);
+			^
+Pseudo code like:
+
+struct msi_chip *pcibios_find_msi_chip(struct pci_dev *dev)
+ {
+       struct pci_bus *root;
+       struct pci_host_bridge *bridge;
+       struct msi_chip *chip;
+       struct device_node *node, *msi_node;
+
+       /* First we find msi_chip by the phb of_node */    <-------- MSI chip is a irq chip
+       root = pci_find_root_bus(dev->bus);
+       node = pcibios_get_phb_of_node(root);
+       if (node) {
+               msi_node = of_parse_phandle(n, "msi-parent", 0);
+               of_node_put(node);
+               if (msi_node)
+                       return of_pci_find_msi_chip_by_node(msi_node);
+       }
+
+
+       /* Some msi_chip are integrated into pci hostbridge,
+        * we find it by phb device pointer.
+        */
+       if (bridge && bridge->dev.parent) {		<-----------MSI chip is integrated into PCI hostbridge
+               down_read(&pci_msi_chip_sem);
+               list_for_each_entry(chip, &pci_msi_chip_list, list) {
+                       if (chip->dev == bridge->dev.parent) {
+                               up_read(pci_msi_chip_sem);
+                               return chip;
+                       }
+                }
+               up_read(&pci_msi_chip_sem);
+        }
+
+
+        return NULL;
+ }
+
+Thanks!
+Yijing.
+
 
 > 
-> diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-> index 7ebb877b07c2..851097aab115 100644
-> --- a/include/linux/of_address.h
-> +++ b/include/linux/of_address.h
-> @@ -71,6 +71,11 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
->  	return NULL;
->  }
->  
-> +static inline phys_addr_t pci_pio_to_address(unsigned long pio)
-> +{
-> +	return 0;
-> +}
-> +
->  static inline int of_pci_range_parser_init(struct of_pci_range_parser *parser,
->  			struct device_node *node)
->  {
-> @@ -144,6 +149,12 @@ static inline const __be32 *of_get_pci_address(struct device_node *dev,
->  {
->  	return NULL;
->  }
-> +static inline int of_pci_range_to_resource(struct of_pci_range *range,
-> +					   struct device_node *np,
-> +					   struct resource *res)
-> +{
-> +	return -ENOSYS;
-> +}
->  #endif /* CONFIG_OF_ADDRESS && CONFIG_PCI */
->  
->  #endif /* __OF_ADDRESS_H */
+> Regards,
+> Lucas
 > 
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  drivers/pci/msi.c |    7 ++++++-
+>>  1 files changed, 6 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index a77e7f7..539c11d 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -29,9 +29,14 @@ static int pci_msi_enable = 1;
+>>  
+>>  /* Arch hooks */
+>>  
+>> +struct msi_chip * __weak arch_find_msi_chip(struct pci_dev *dev)
+>> +{
+>> +	return dev->bus->msi;
+>> +}
+>> +
+>>  int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+>>  {
+>> -	struct msi_chip *chip = dev->bus->msi;
+>> +	struct msi_chip *chip = arch_find_msi_chip(dev);
+>>  	int err;
+>>  
+>>  	if (!chip || !chip->setup_irq)
 > 
-> 
+
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+Thanks!
+Yijing
 
