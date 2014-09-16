@@ -1,82 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:58077 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751143AbaI3QBn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 12:01:43 -0400
-Received: by mail-ie0-f174.google.com with SMTP id tr6so4131821ieb.19
-        for <linux-pci@vger.kernel.org>; Tue, 30 Sep 2014 09:01:42 -0700 (PDT)
-Date: Tue, 30 Sep 2014 10:01:39 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Herring <robh@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] of/pci: add pci_pio_to_address dummy for !CONFIG_OF
-Message-ID: <20140930160139.GA5625@google.com>
-References: <706416181.hbVGLDA3o6@wuerfel>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <541812EC.3000501@huawei.com>
+Date: Tue, 16 Sep 2014 18:37:32 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <706416181.hbVGLDA3o6@wuerfel>
-Sender: linux-pci-owner@vger.kernel.org
+To: Lucas Stach <l.stach@pengutronix.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [PATCH v1 03/21] MSI: Remove the redundant irq_set_chip_data()
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>		 <1409911806-10519-4-git-send-email-wangyijing@huawei.com>	 <1410789648.3314.5.camel@pengutronix.de> <541792C0.9090303@huawei.com> <1410863349.2746.5.camel@pengutronix.de>
+In-Reply-To: <1410863349.2746.5.camel@pengutronix.de>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 30, 2014 at 03:19:05PM +0200, Arnd Bergmann wrote:
-> The pci_register_io_range() and pci_pio_to_address() were recently
-> introduced to generalize the handling of memory mapped PCI I/O space,
-> but they are only valid when CONFIG_OF is set, leading to a possible
-> build error:
+>>> arch_teardown_msi_irq() expects to find the msi_chip in the irq
+>>> chip_data field. As this means drivers don't have any reasonable other
+>>> possibility to stuff things into this field, I think it would make sense
+>>> to do the cleanup the other way around: keep the irq_set_chip_data
+>>> arch_setup_msi_irq() and rip it out of the individual drivers.
+>>
+>> Hi Lucas, thanks for your review and comments!
+>> irq_set_chip_data() should not be placed in MSI core functions, because other arch like x86,
+>> use irq_data->chip_data to stores irq_cfg. So how to set the chip_data is arch dependent.
+>> And this series is mainly to use MSI chip framework in all platforms.
+>> Currently, only ARM platform MSI drivers use the chip_data to store msi_chip, and the drivers call
+>> irq_set_chip_data() in their driver already. So I thought we should clean up it in MSI core code.
+>>
+> Okay I see your point, so the cleanup done this way is okay.
 > 
-> drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_setup_window':
-> drivers/pci/host/pcie-rcar.c:340:3: error: implicit declaration of function 'pci_pio_to_address' [-Werror=implicit-function-declaration]
->    res_start = pci_pio_to_address(res->start);
->    ^
-> drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_probe':
-> drivers/pci/host/pcie-rcar.c:945:3: error: implicit declaration of function 'of_pci_range_to_resource' [-Werror=implicit-function-declaration]
->    err = of_pci_range_to_resource(&range, pdev->dev.of_node,
->    ^
-> cc1: some warnings being treated as errors
+> But then this still introduces a problem: arch_teardown_msi_irq()
+> expects to find the msi_chip in the chip_data field, which is okay for
+> all ARM PCI host drivers, but not for other arch MSI chips.
 > 
-> This provides inline dummy implementations for the case that
-> CONFIG_OF is disabled, to allow better build testing.
+> You fix this by completely removing arch_teardown_msi_irq() at the end
+> of the series, but this still has the potential to introduce issues for
+> other arches than ARM within the series. So this patch should include a
+> change to replace the line
 > 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 279c5dd046 ("of/pci: Add pci_register_io_range() and pci_pio_to_address()")
+> struct msi_chip *chip = irq_get_chip_data(irq);
+> 
+> with something that doesn't rely on the msi_chip being in the irq
+> chip_data field.
 
-I'm rebuilding the pci/host-generic branch to pick up the other v13 fixes,
-so I folded this fix directly into the "of/pci: Add pci_register_io_range()
-and pci_pio_to_address()" patch.  Thanks for finding this; the config
-dependencies are a bit of a mess.
+OK, I will update arch_teardown_msi_irq() in this patch, thanks!
 
-> diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-> index 7ebb877b07c2..851097aab115 100644
-> --- a/include/linux/of_address.h
-> +++ b/include/linux/of_address.h
-> @@ -71,6 +71,11 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
->  	return NULL;
->  }
->  
-> +static inline phys_addr_t pci_pio_to_address(unsigned long pio)
-> +{
-> +	return 0;
-> +}
-> +
->  static inline int of_pci_range_parser_init(struct of_pci_range_parser *parser,
->  			struct device_node *node)
->  {
-> @@ -144,6 +149,12 @@ static inline const __be32 *of_get_pci_address(struct device_node *dev,
->  {
->  	return NULL;
->  }
-> +static inline int of_pci_range_to_resource(struct of_pci_range *range,
-> +					   struct device_node *np,
-> +					   struct resource *res)
-> +{
-> +	return -ENOSYS;
-> +}
->  #endif /* CONFIG_OF_ADDRESS && CONFIG_PCI */
->  
->  #endif /* __OF_ADDRESS_H */
+Thanks!
+Yijing.
+
 > 
+> Regards,
+> Lucas
+> 
+
+
+-- 
+Thanks!
+Yijing
+
