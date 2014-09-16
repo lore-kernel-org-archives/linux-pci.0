@@ -1,150 +1,52 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: andreas.noever@gmail.com
-To: rjw@rjwysocki.net
-Cc: lenb@kernel.org, robert.moore@intel.com, lv.zheng@intel.com,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.or,
-	linux-pci@vger.kernel.org, bhelgaas@google.com,
-	matthew.garrett@nebula.com,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v2 2/3] ACPI: Disable smart battery manager on Apple
-Date: Sat, 20 Sep 2014 13:19:46 +0200
-Message-Id: <5ff86f5736bfc9f6f638c664d33a8e13e1556e56.1411211725.git.andreas.noever@gmail.com>
-In-Reply-To: <cover.1411211725.git.andreas.noever@gmail.com>
-References: <cover.1411211725.git.andreas.noever@gmail.com>
-In-Reply-To: <cover.1411211725.git.andreas.noever@gmail.com>
-References: <cover.1411211725.git.andreas.noever@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.10]:56203 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754503AbaIPQef (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 12:34:35 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: "Lian Minghuan-B31939" <B31939@freescale.com>
+Subject: Re: [PATCH v2 3/3] PCI: Layerscape: Add Layerscape PCIe driver
+Date: Tue, 16 Sep 2014 18:33:52 +0200
+Cc: Scott Wood <scottwood@freescale.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	"Zang Roy-R61911" <r61911@freescale.com>,
+	"Hu Mingkai-B21284" <B21284@freescale.com>,
+	"Yoder Stuart-B08248" <stuart.yoder@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+References: <1410469741-11634-1-git-send-email-Minghuan.Lian@freescale.com> <1410841159.24184.491.camel@snotra.buserror.net> <54187590.4070101@freescale.com>
+In-Reply-To: <54187590.4070101@freescale.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201409161833.53176.arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Matthew Garrett <matthew.garrett@nebula.com>
+On Tuesday 16 September 2014, Lian Minghuan-B31939 wrote:
+> >>>> +          ranges = <0x81000000 0x0 0x00000000 0x40 0x10000000 0x0 0x00010000   /* downstream I/O */
+> >>>> +                    0x82000000 0x0 0x00000000 0x41 0x00000000 0x1 0x00000000>; /* non-prefetchable memory */
+> >>> Are these ranges hardcoded in the SoC, or are they the result of iATU
+> >>> settings?  If the latter, who configures it and why no prefetchable
+> >>> region?
+> >> [Minghuan] 400000_0000 - 480000_0000 is hardcode assigned to PEX1.
+> >> I separates from this 32 region  1M for IO, 4G for non-prefetchable memory.
+> >> 4G is the max size iATU supported.
+> >> IO and memory region will be set to iATU by pci-designware.c
+> >> Because both powerpc and imx do not set prefechable memory,
+> >> so  I do not assign prefetchable memory either.
+> > If there's spare room in the addres space for a prefetchable region, why
+> > not make one, regardless of what PPC and IMX do?
+> >
+> > FWIW, I believe that ARMv8 can make better use of a prefetchable region
+> > due to the "gathering" storage attribute, so even if you don't use one
+> > on LS1021A consider using one on ARMv8-based LS chips.
+> [Minghuan] Ok, I will add 4G prefetchable memory region.
 
-From: Matthew Garrett <matthew.garrett@nebula.com>
+I guess that means you still can't support devices that require 64-bit
+BARs, right? 4GB may be too small for some devices.
 
-Touching the smart battery manager at all on Apple hardware appears to
-make it unhappy - unplugging the AC adapter triggers accesses that hang
-the controller for several minutes. Quirk it out via DMI in order to
-avoid this.  Compensate by changing battery presence if we fail to
-communicate with the battery.
+Do I read this right that you could have multiple adjacent 4GB areas
+but are limited on registers to set up these areas?
 
-Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
----
- drivers/acpi/sbs.c | 51 +++++++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 43 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/acpi/sbs.c b/drivers/acpi/sbs.c
-index b1df4ee..32aecea 100644
---- a/drivers/acpi/sbs.c
-+++ b/drivers/acpi/sbs.c
-@@ -35,6 +35,7 @@
- #include <linux/jiffies.h>
- #include <linux/delay.h>
- #include <linux/power_supply.h>
-+#include <linux/dmi.h>
- 
- #include "sbshc.h"
- #include "battery.h"
-@@ -61,6 +62,8 @@ static unsigned int cache_time = 1000;
- module_param(cache_time, uint, 0644);
- MODULE_PARM_DESC(cache_time, "cache time in milliseconds");
- 
-+static bool sbs_manager_broken;
-+
- #define MAX_SBS_BAT			4
- #define ACPI_SBS_BLOCK_MAX		32
- 
-@@ -494,16 +497,21 @@ static int acpi_battery_read(struct acpi_battery *battery)
- 				  ACPI_SBS_MANAGER, 0x01, (u8 *)&state, 2);
- 	} else if (battery->id == 0)
- 		battery->present = 1;
-+
- 	if (result || !battery->present)
- 		return result;
- 
- 	if (saved_present != battery->present) {
- 		battery->update_time = 0;
- 		result = acpi_battery_get_info(battery);
--		if (result)
-+		if (result) {
-+			battery->present = 0;
- 			return result;
-+		}
- 	}
- 	result = acpi_battery_get_state(battery);
-+	if (result)
-+		battery->present = 0;
- 	return result;
- }
- 
-@@ -535,6 +543,7 @@ static int acpi_battery_add(struct acpi_sbs *sbs, int id)
- 	result = power_supply_register(&sbs->device->dev, &battery->bat);
- 	if (result)
- 		goto end;
-+
- 	result = device_create_file(battery->bat.dev, &alarm_attr);
- 	if (result)
- 		goto end;
-@@ -613,12 +622,31 @@ static void acpi_sbs_callback(void *context)
- 	}
- }
- 
-+static int disable_sbs_manager(const struct dmi_system_id *d)
-+{
-+	sbs_manager_broken = true;
-+	return 0;
-+}
-+
-+static struct dmi_system_id acpi_sbs_dmi_table[] = {
-+	{
-+		.callback = disable_sbs_manager,
-+		.ident = "Apple",
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc.")
-+		},
-+	},
-+	{ },
-+};
-+
- static int acpi_sbs_add(struct acpi_device *device)
- {
- 	struct acpi_sbs *sbs;
- 	int result = 0;
- 	int id;
- 
-+	dmi_check_system(acpi_sbs_dmi_table);
-+
- 	sbs = kzalloc(sizeof(struct acpi_sbs), GFP_KERNEL);
- 	if (!sbs) {
- 		result = -ENOMEM;
-@@ -637,14 +665,21 @@ static int acpi_sbs_add(struct acpi_device *device)
- 	if (result && result != -ENODEV)
- 		goto end;
- 
--	result = acpi_manager_get_info(sbs);
--	if (!result) {
--		sbs->manager_present = 1;
--		for (id = 0; id < MAX_SBS_BAT; ++id)
--			if ((sbs->batteries_supported & (1 << id)))
--				acpi_battery_add(sbs, id);
--	} else
-+	result = 0;
-+
-+	if (!sbs_manager_broken) {
-+		result = acpi_manager_get_info(sbs);
-+		if (!result) {
-+			sbs->manager_present = 0;
-+			for (id = 0; id < MAX_SBS_BAT; ++id)
-+				if ((sbs->batteries_supported & (1 << id)))
-+					acpi_battery_add(sbs, id);
-+		}
-+	}
-+
-+	if (!sbs->manager_present)
- 		acpi_battery_add(sbs, 0);
-+
- 	acpi_smbus_register_callback(sbs->hc, acpi_sbs_callback, sbs);
-       end:
- 	if (result)
--- 
-2.1.0
-
+	Arnd
