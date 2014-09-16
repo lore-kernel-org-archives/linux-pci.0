@@ -1,115 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f181.google.com ([209.85.216.181]:43924 "EHLO
-	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751727AbaIJSI3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Sep 2014 14:08:29 -0400
-Received: by mail-qc0-f181.google.com with SMTP id r5so62212qcx.40
-        for <linux-pci@vger.kernel.org>; Wed, 10 Sep 2014 11:08:29 -0700 (PDT)
+Received: from youngberry.canonical.com ([91.189.89.112]:57390 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751687AbaIPUVk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 16:21:40 -0400
+Message-ID: <54189BCE.2010206@canonical.com>
+Date: Tue, 16 Sep 2014 16:21:34 -0400
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6D+8KwM9LJC4VFCtGbQ65zh_2ZjNOuP-JQB1bmt5dwCw@mail.gmail.com>
-References: <1409303414-5196-1-git-send-email-david.henningsson@canonical.com>
- <CAErSpo5v82xeYGqsiWXpfQdr8kF9x+1K4gjYremfCh3fNQ8Unw@mail.gmail.com>
- <540091D1.1040902@canonical.com> <CAErSpo6D+8KwM9LJC4VFCtGbQ65zh_2ZjNOuP-JQB1bmt5dwCw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 10 Sep 2014 12:08:08 -0600
-Message-ID: <CAErSpo6DDCkrew8rwkNX8=gzc19vErY5iafPBN4oKw_Ww792=g@mail.gmail.com>
-Subject: Re: [PATCH] Add pci=assign-busses quirk to Dell Latitude D505
-To: David Henningsson <david.henningsson@canonical.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Andreas Noever <andreas.noever@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit
+ mmio
+References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>	<1386546869-31900-3-git-send-email-yinghai@kernel.org>	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>	<52A8BAC5.70006@canonical.com>	<CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>	<52D01D82.5070202@canonical.com> <CAE9FiQUD0XvPJNFNMoqX6J67TKuGcj+pSbj+iPUf=fvC-4UXOQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQUD0XvPJNFNMoqX6J67TKuGcj+pSbj+iPUf=fvC-4UXOQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Andreas]
-
-On Fri, Aug 29, 2014 at 11:36 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Aug 29, 2014 at 8:44 AM, David Henningsson
-> <david.henningsson@canonical.com> wrote:
->>
->>
->> On 2014-08-29 16:22, Bjorn Helgaas wrote:
+On 01/10/2014 12:13 PM, Yinghai Lu wrote:
+> On Fri, Jan 10, 2014 at 8:19 AM, Joseph Salisbury
+> <joseph.salisbury@canonical.com> wrote:
+>> On 12/11/2013 02:55 PM, Yinghai Lu wrote:
+>>> On Wed, Dec 11, 2013 at 11:19 AM, Joseph Salisbury
+>>> <joseph.salisbury@canonical.com> wrote:
+>>>> On 12/09/2013 03:10 PM, Yinghai Lu wrote:
+>>>>> On Mon, Dec 9, 2013 at 11:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>>>> That doesn't answer my question at all.
+>>>>>>
+>>>>>> I understand that this change makes it so Joseph doesn't have to use
+>>>>>> "pci=realloc=off".  But why should auto-reallocation be limited to
+>>>>>> buses that have resources above 4GB?  That doesn't make any sense.
+>>>>>>
+>>>>>> We should fix the reallocation code so it can deal with this case.  If
+>>>>>> there's not enough space for everything, obviously we have to leave
+>>>>>> something unassigned.  A ROM BAR is a good candidate for leaving
+>>>>>> unassigned, because most of the time we can get along without it.
+>>>>> Yes, that is ideal and not that simple.
+>>>>> but that would be hard to backport to old kernels.
+>>>>>
+>>>>> BTW, Joseph, can you try
+>>>>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+>>>>> for-pci-3.14
+>>>>> with pci=realloc=on
+>>>>>
+>>>>> on that system?
+>>>>>
+>>>>> Thanks
+>>>>>
+>>>>> Yinghai
+>>>> I noticed there was some back and forth on this thread.  Do you still
+>>>> want me to test this version, Yinghai?
+>>> Yes, if that works, we would not need to put the patch in upstream for limiting
+>>> realloc auto scope.
 >>>
->>> On Fri, Aug 29, 2014 at 3:10 AM, David Henningsson
->>> <david.henningsson@canonical.com> wrote:
->>>>
->>>> Under a 3.16 based kernel (Ubuntu 3.16.0-031600-lowlatency),
->>>> CardBus is not working unless pci=assign-buses is added to the
->>>> kernel boot parameters.
->>>>
->>>> Signed-off-by: David Henningsson <david.henningsson@canonical.com>
->>>> ---
->>>>   arch/x86/pci/common.c | 8 ++++++++
->>>>   1 file changed, 8 insertions(+)
->>>>
->>>> It was working OOTB on a 3.2 based kernel (Ubuntu 3.2.0-67-generic),
->>>> and I have not thoroughly bisected what made it stop working.
->>>> Still I'm suggesting to just a quirk to make it work regardless of
->>>> kernel - it's a ~8 year old laptop, so being a bit lazy about it is
->>>> probably okay, I hope. :-)
->>>
->>>
->>> Please open a bugzilla and attach complete "lspci -vv" output and
->>> dmesg logs from the working 3.2 kernel and a non-working current
->>> kernel.
->>>
->>> The quirk might be OK, but it would be better if we could make a
->>> generic fix that would work on more machines than just this one.
->>
->>
->> All right, you can now find the requested information in this bug:
->>
->> https://bugzilla.kernel.org/show_bug.cgi?id=83441
+>> Another user has confirmed that at test kernel from your branch[0] does
+>> resolve the bug.
+> Hi, Joe,
 >
-> Thanks very much.
+> Bjorn does not want to limit auto realloc, so this patch can not make
+> to upstream at this point.
 >
-> I'm going to resist adding a quirk as long as I can, because quirks
-> tend to paper over issues on individual systems without actually
-> fixing the underlying problem.  Unfortunately, I'm swamped at the
-> moment and won't be able to work on this for a while.  It would be
-> ideal if we could bisect this and pinpoint where the problem started.
-> Bisecting changes to drivers/pci would be sufficient.
+> so we may have to ask user to append "pci=realloc=off" before we find
+> more smart way to realloc
+> resource.
 >
->>>> Extract from dmidecode:
->>>>
->>>> Handle 0x0100, DMI type 1, 25 bytes
->>>> System Information
->>>>          Manufacturer: Dell Inc.
->>>>          Product Name: Latitude D505
->>>>
->>>> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
->>>> index 059a76c..1849e39 100644
->>>> --- a/arch/x86/pci/common.c
->>>> +++ b/arch/x86/pci/common.c
->>>> @@ -262,6 +262,14 @@ static const struct dmi_system_id
->>>> pciprobe_dmi_table[] = {
->>>>                          DMI_MATCH(DMI_PRODUCT_NAME, "SX20S"),
->>>>                  },
->>>>          },
->>>> +       {
->>>> +               .callback = assign_all_busses,
->>>> +               .ident = "Dell Latitude D505 Laptop",
->>>> +               .matches = {
->>>> +                       DMI_MATCH(DMI_SYS_VENDOR, "Dell Inc."),
->>>> +                       DMI_MATCH(DMI_PRODUCT_NAME, "Latitude D505"),
->>>> +               },
->>>> +       },
->>>>   #endif         /* __i386__ */
->>>>          {
->>>>                  .callback = set_bf_sort,
+> Thanks
+>
+> Yinghai
 
-v3.16 fails with:
+Hi Yinghai,
 
-  pci 0000:01:01.0: can't allocate child bus 01 from [bus 01]
+A new bug[0] was opened due to enabling PCI_REALLOC_ENABLE_AUTO, which
+is similar to the original bug[1] we discussed.
 
-which Andreas added with fc1b253141b3 ("PCI: Don't scan random busses
-in pci_scan_bridge()").  But I don't understand that code well enough
-to know whether this commit is actually the cause of the problem.
+Just wondering if there have been any additional ideas on realloc since
+this was last discussed?
 
-And I also haven't figured out how "pci=assign-busses" makes a difference.
+Thanks,
 
-David, would you mind turning on CONFIG_DYNAMIC_DEBUG=y in your v3.16
-kernel, adding  'dyndbg="file probe.c +p"' to your boot arguments, and
-collecting another dmesg log?
+Joe
 
-Bjorn
+
+[0] http://pad.lv/1363313
+[1] http://pad.lv/1245938
