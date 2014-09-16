@@ -1,77 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:58010 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754341AbaIVO1K (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 10:27:10 -0400
+Received: from www.linutronix.de ([62.245.132.108]:43466 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754263AbaIPRqH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 13:46:07 -0400
+Date: Tue, 16 Sep 2014 10:45:26 -0700 (PDT)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC Part2 v1 02/21] genirq: Introduce helper functions to
+ support stacked irq_chip
+In-Reply-To: <1410444228-3134-3-git-send-email-jiang.liu@linux.intel.com>
+Message-ID: <alpine.DEB.2.10.1409161044330.4247@nanos>
+References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com> <1410444228-3134-3-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1411382705-15301-5-git-send-email-r65037@freescale.com>
-References: <1411382705-15301-1-git-send-email-r65037@freescale.com>
-	<1411382705-15301-5-git-send-email-r65037@freescale.com>
-Date: Mon, 22 Sep 2014 11:27:08 -0300
-Message-ID: <CAOMZO5D_s7ST_J0FV+NbrHpw2jVBDSpHprHnwJfPbQ=tqy7PWQ@mail.gmail.com>
-Subject: Re: [PATCH v1 4/4] PCI: imx6: add imx6sx pcie support
-From: Fabio Estevam <festevam@gmail.com>
-To: Richard Zhu <r65037@freescale.com>
-Cc: linux-pci-owner@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shawn Guo <shawn.guo@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Richard,
-
-On Mon, Sep 22, 2014 at 7:45 AM, Richard Zhu <r65037@freescale.com> wrote:
-
-> +#ifdef CONFIG_PM_SLEEP
-> +static int pci_imx_suspend(void)
+On Thu, 11 Sep 2014, Jiang Liu wrote:
+> +#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
+> +void irq_chip_ack_parent(struct irq_data *data)
 > +{
-> +       int rc = 0;
-> +
-> +       if (is_imx6sx_pcie(imx6_pcie)) {
-> +               /* PM_TURN_OFF */
-> +               regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> +                               BIT(16), 1 << 16);
-> +               udelay(10);
-> +               regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> +                               BIT(16), 0 << 16);
-> +       }
-> +
-> +       return rc;
+> +	data = data->parent_data;
+> +	if (data && data->chip && data->chip->irq_ack)
+> +		data->chip->irq_ack(data);
 
-You could get rid of this 'rc' variable and just return 0.
+Why is this restricted to a single parent level and does not go down
+the whole stack?
 
-> +}
-> +
-> +static void pci_imx_resume(void)
-> +{
-> +       struct pcie_port *pp = &imx6_pcie->pp;
-> +
-> +       if (is_imx6sx_pcie(imx6_pcie)) {
-> +               /* reset iMX6SX PCIe */
-> +               regmap_update_bits(imx6_pcie->iomuxc_gpr,
-> +                               IOMUXC_GPR5, BIT(18), 1 << 18);
-> +
-> +               regmap_update_bits(imx6_pcie->iomuxc_gpr,
-> +                               IOMUXC_GPR5, BIT(18), 0 << 18);
-> +
-> +               /*
-> +                * controller maybe turn off, re-configure again
-> +                * Set the CLASS_REV of RC CFG header to
-> +                * PCI_CLASS_BRIDGE_PCI
-> +                */
-> +               writel(readl(pp->dbi_base + PCI_CLASS_REVISION)
-> +                       | (PCI_CLASS_BRIDGE_PCI << 16),
-> +                       pp->dbi_base + PCI_CLASS_REVISION);
-> +
-> +               dw_pcie_setup_rc(pp);
-> +       }
-> +}
+Thanks,
 
-Not related to this patch, but on mx6q/dl  we still get kernel hang
-after doing suspend/resume when a PCI card is inserted.
-
-Is this fixed on mx6solox?
-
-Any idea as to how to fix it for mx6q?
+	tglx
