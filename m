@@ -1,76 +1,49 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <541812EC.3000501@huawei.com>
-Date: Tue, 16 Sep 2014 18:37:32 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:50477 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753163AbaIPXrJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 19:47:09 -0400
+Received: by mail-pd0-f172.google.com with SMTP id v10so842049pde.3
+        for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 16:47:08 -0700 (PDT)
+Date: Tue, 16 Sep 2014 17:47:04 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Srikanth Thokala <sthokal@xilinx.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [patch] PCI: xilinx: testing wrong variable in setup irq function
+Message-ID: <20140916234704.GK5050@google.com>
+References: <20140909121150.GD19760@mwanda>
 MIME-Version: 1.0
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH v1 03/21] MSI: Remove the redundant irq_set_chip_data()
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>		 <1409911806-10519-4-git-send-email-wangyijing@huawei.com>	 <1410789648.3314.5.camel@pengutronix.de> <541792C0.9090303@huawei.com> <1410863349.2746.5.camel@pengutronix.de>
-In-Reply-To: <1410863349.2746.5.camel@pengutronix.de>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140909121150.GD19760@mwanda>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> arch_teardown_msi_irq() expects to find the msi_chip in the irq
->>> chip_data field. As this means drivers don't have any reasonable other
->>> possibility to stuff things into this field, I think it would make sense
->>> to do the cleanup the other way around: keep the irq_set_chip_data
->>> arch_setup_msi_irq() and rip it out of the individual drivers.
->>
->> Hi Lucas, thanks for your review and comments!
->> irq_set_chip_data() should not be placed in MSI core functions, because other arch like x86,
->> use irq_data->chip_data to stores irq_cfg. So how to set the chip_data is arch dependent.
->> And this series is mainly to use MSI chip framework in all platforms.
->> Currently, only ARM platform MSI drivers use the chip_data to store msi_chip, and the drivers call
->> irq_set_chip_data() in their driver already. So I thought we should clean up it in MSI core code.
->>
-> Okay I see your point, so the cleanup done this way is okay.
+On Tue, Sep 09, 2014 at 03:11:50PM +0300, Dan Carpenter wrote:
+> We should be testing "hwirq" instead of "irq".  "irq" is unsigned so
+> it's never less than zero.  Also it's uninitialized.
 > 
-> But then this still introduces a problem: arch_teardown_msi_irq()
-> expects to find the msi_chip in the chip_data field, which is okay for
-> all ARM PCI host drivers, but not for other arch MSI chips.
-> 
-> You fix this by completely removing arch_teardown_msi_irq() at the end
-> of the series, but this still has the potential to introduce issues for
-> other arches than ARM within the series. So this patch should include a
-> change to replace the line
-> 
-> struct msi_chip *chip = irq_get_chip_data(irq);
-> 
-> with something that doesn't rely on the msi_chip being in the irq
-> chip_data field.
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-OK, I will update arch_teardown_msi_irq() in this patch, thanks!
-
-Thanks!
-Yijing.
+Applied with Srikanth's ack to pci/host-xilinx for v3.18, thanks.
 
 > 
-> Regards,
-> Lucas
-> 
-
-
--- 
-Thanks!
-Yijing
-
+> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+> index 44f8944..ccc496b 100644
+> --- a/drivers/pci/host/pcie-xilinx.c
+> +++ b/drivers/pci/host/pcie-xilinx.c
+> @@ -359,8 +359,8 @@ static int xilinx_pcie_msi_setup_irq(struct msi_chip *chip,
+>  	phys_addr_t msg_addr;
+>  
+>  	hwirq = xilinx_pcie_assign_msi(port);
+> -	if (irq < 0)
+> -		return irq;
+> +	if (hwirq < 0)
+> +		return hwirq;
+>  
+>  	irq = irq_create_mapping(port->irq_domain, hwirq);
+>  	if (!irq)
