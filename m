@@ -1,89 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:63573 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753322AbaIYCwo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 22:52:44 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 08/22] x86/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-Date: Thu, 25 Sep 2014 11:14:18 +0800
-Message-ID: <1411614872-4009-9-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-pd0-f171.google.com ([209.85.192.171]:43147 "EHLO
+	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752938AbaIPXRU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 19:17:20 -0400
+Received: by mail-pd0-f171.google.com with SMTP id p10so761635pdj.16
+        for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 16:17:19 -0700 (PDT)
+Date: Tue, 16 Sep 2014 17:17:16 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: mvebu: Fix uninitialized variable in
+ mvebu_get_tgt_attr()
+Message-ID: <20140916231716.GG5050@google.com>
+References: <1407512045-26969-1-git-send-email-geert+renesas@glider.be>
+ <20140905174122.GD8080@google.com>
+ <20140905202044.4c166a43@free-electrons.com>
+ <5898856.RmRf87KNto@wuerfel>
+ <CAErSpo4sEQN6T9knuh4U2x9BCUODJheaAf3S8+W4U4oC-C7mMA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4sEQN6T9knuh4U2x9BCUODJheaAf3S8+W4U4oC-C7mMA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI chip framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+On Fri, Sep 05, 2014 at 01:00:29PM -0600, Bjorn Helgaas wrote:
+> On Fri, Sep 5, 2014 at 12:34 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Friday 05 September 2014 20:20:44 Thomas Petazzoni wrote:
+> >> Hum, I think I would actually prefer something like:
+> >>
+> >>                 if (DT_FLAGS_TO_TYPE(flags) == DT_TYPE_IO)
+> >>                         rtype = IORESOURCE_IO;
+> >>                 else if (DT_FLAGS_TO_TYPE(flags) == DT_TYPE_MEM32)
+> >>                         rtype = IORESOURCE_MEM;
+> >> +               else
+> >> +                       continue;
+> >>
+> >> So that we're explicit with the fact that we only care about I/O and
+> >> MEM32 resource types.
+> >
+> > Agreed, that looks better than my patch as well.
+> 
+> I like it better, too, but we still need the "range += rangesz" part,
+> so I don't think it will work.  I suppose that could be moved to the
+> update expression of the "for" loop.  Or, since we don't use "i" in
+> the loop at all, maybe we could do something like this:
+> 
+>     for (; range < rend; range += rangesz)
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/x86/include/asm/pci.h     |    1 +
- arch/x86/kernel/apic/io_apic.c |   12 ++++++++++++
- 2 files changed, 13 insertions(+), 0 deletions(-)
-
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 0892ea0..878a06d 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -101,6 +101,7 @@ void native_teardown_msi_irq(unsigned int irq);
- void native_restore_msi_irqs(struct pci_dev *dev);
- int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- 		  unsigned int irq_base, unsigned int irq_offset);
-+extern struct msi_chip *x86_msi_chip;
- #else
- #define native_setup_msi_irqs		NULL
- #define native_teardown_msi_irq		NULL
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 2a2ec28..882b95e 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3337,6 +3337,18 @@ int default_setup_hpet_msi(unsigned int irq, unsigned int id)
- }
- #endif
- 
-+struct msi_chip apic_msi_chip = {
-+	.setup_irqs = native_setup_msi_irqs,
-+	.teardown_irq = native_teardown_msi_irq,
-+};
-+
-+struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
-+{
-+	return x86_msi_chip;
-+}
-+
-+struct msi_chip *x86_msi_chip = &apic_msi_chip;
-+
- #endif /* CONFIG_PCI_MSI */
- /*
-  * Hypertransport interrupt support
--- 
-1.7.1
-
+Any more input on this?  I don't think I've seen anything actually acked by
+Thomas or Jason.
