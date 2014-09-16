@@ -1,99 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from services.gouders.net ([141.101.32.176]:54355 "EHLO
-	services.gouders.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752557AbaINLmA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Sep 2014 07:42:00 -0400
-From: Dirk Gouders <dirk@gouders.net>
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
-In-Reply-To: <1410691491-18000-1-git-send-email-andreas.noever@gmail.com>
-	(Andreas Noever's message of "Sun, 14 Sep 2014 12:44:51 +0200")
-References: <gh8uln71g1.fsf@lena.gouders.net>
-	<1410691491-18000-1-git-send-email-andreas.noever@gmail.com>
-Date: Sun, 14 Sep 2014 13:40:46 +0200
-Message-ID: <ghfvfu1lc1.fsf@quad.gouders.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <1410845317.12488.2.camel@concordia>
+Subject: Re: [PATCH v1 15/21] Powerpc/MSI: Use MSI chip framework to
+ configure MSI/MSI-X irq
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-mips@linux-mips.org,
+	linux-ia64@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bharat.Bhushan@freescale.com, sparclinux@vger.kernel.org,
+	linux-arch@vger.kernel.org, linux-s390@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Joerg Roedel <joro@8bytes.org>, x86@kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	xen-devel@lists.xenproject.org, arnab.basu@freescale.com,
+	Arnd Bergmann <arnd@arndb.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Xinwei Hu <huxinwei@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	iommu@lists.linux-foundation.org, Wuyun <wuyun.wu@huawei.com>,
+	linuxppc-dev@lists.ozlabs.org,
+	"David S. Miller" <davem@davemloft.net>
+Date: Tue, 16 Sep 2014 15:28:37 +1000
+In-Reply-To: <1409911806-10519-16-git-send-email-wangyijing@huawei.com>
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
+	 <1409911806-10519-16-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Andreas Noever <andreas.noever@gmail.com> writes:
+On Fri, 2014-09-05 at 18:10 +0800, Yijing Wang wrote:
+> Use MSI chip framework instead of arch MSI functions to configure
+> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 
-> This is an implementation of fix 1 (Add a quirk to fix the _CRS information
-> based on what amd_bus.c read from the hardware) which makes pci=nocrs ignore bus numbers from crs.
->
-> If this works then we can add the board to the crs blacklist (Dirk can you attach the output of dmidecode to the bugzilla report?).
+This looks fine and seems to boot OK.
 
-I attached the information to the bugzilla report.
+Acked-by: Michael Ellerman <mpe@ellerman.id.au> (powerpc)
 
-Do you want me to test this fix as is or should I wait (e.g. for an
-updated crs blacklist)?
+cheers
 
-Dirk
 
->
->
->
-> ---
->  arch/x86/pci/acpi.c     |  7 +++----
->  arch/x86/pci/bus_numa.c | 12 +-----------
->  2 files changed, 4 insertions(+), 15 deletions(-)
->
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index cfd1b13..b073948 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -522,15 +522,14 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  	} else {
->  		probe_pci_root_info(info, device, busnum, domain);
->  
-> -		/* insert busn res at first */
-> -		pci_add_resource(&resources,  &root->secondary);
->  		/*
->  		 * _CRS with no apertures is normal, so only fall back to
->  		 * defaults or native bridge info if we're ignoring _CRS.
->  		 */
-> -		if (pci_use_crs)
-> +		if (pci_use_crs) {
-> +			pci_add_resource(&resources,  &root->secondary);
->  			add_resources(info, &resources);
-> -		else {
-> +		} else {
->  			free_pci_root_info_res(info);
->  			x86_pci_root_bus_resources(busnum, &resources);
->  		}
-> diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
-> index f3a2cfc..b735d0e 100644
-> --- a/arch/x86/pci/bus_numa.c
-> +++ b/arch/x86/pci/bus_numa.c
-> @@ -31,8 +31,6 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
->  {
->  	struct pci_root_info *info = x86_find_pci_root_info(bus);
->  	struct pci_root_res *root_res;
-> -	struct pci_host_bridge_window *window;
-> -	bool found = false;
->  
->  	if (!info)
->  		goto default_resources;
-> @@ -40,15 +38,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
->  	printk(KERN_DEBUG "PCI: root bus %02x: hardware-probed resources\n",
->  	       bus);
->  
-> -	/* already added by acpi ? */
-> -	list_for_each_entry(window, resources, list)
-> -		if (window->res->flags & IORESOURCE_BUS) {
-> -			found = true;
-> -			break;
-> -		}
-> -
-> -	if (!found)
-> -		pci_add_resource(resources, &info->busn);
-> +	pci_add_resource(resources, &info->busn);
->  
->  	list_for_each_entry(root_res, &info->resources, list) {
->  		struct resource *res;
