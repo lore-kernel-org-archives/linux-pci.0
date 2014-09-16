@@ -1,60 +1,199 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:4172 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751981AbaIYQso (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 25 Sep 2014 12:48:44 -0400
-Date: Thu, 25 Sep 2014 10:46:58 -0600 (MDT)
-From: Keith Busch <keith.busch@intel.com>
-To: Yijing Wang <wangyijing@huawei.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Keith Busch <keith.busch@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Jon Mason <jdmason@kudzu.us>
-Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
-In-Reply-To: <54236E7B.5000905@huawei.com>
-Message-ID: <alpine.LRH.2.03.1409251029220.4688@AMR>
-References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com> <20140903224201.GD26073@google.com> <540802D9.6000903@huawei.com> <CAErSpo6qy76zTX07Ufm0n1_HUA5G0MrAYxauEFa5QkibWsejFQ@mail.gmail.com> <5409117E.2000002@huawei.com> <alpine.LRH.2.03.1409241547430.4696@AMR>
- <CAErSpo5upA7KYVo=_SvwJ9pdNot_5ENi3OtiPpuzZjpwj3ghPA@mail.gmail.com> <54236E7B.5000905@huawei.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC Part2 v1] x86, irq: Refine mp_register_ioapic() to prepare for IOAPIC hotplug
+Date: Tue, 16 Sep 2014 14:50:56 +0800
+Message-Id: <1410850256-2561-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410422758-24942-11-git-send-email-jiang.liu@linux.intel.com>
+References: <1410422758-24942-11-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 24 Sep 2014, Yijing Wang wrote:
-> On 2014/9/25 7:30, Bjorn Helgaas wrote:
->> On Wed, Sep 24, 2014 at 4:41 PM, Keith Busch <keith.busch@intel.com> wrote:
->>> Just poking this thread to make sure it's not dead. :)
->>>
->>> I tested Yijing's proposal and it is successful on our Intel server
->>> platforms; hoping either this or something that derives similar behavior
->>> will be applied so we can remove bus tuning kernel parameters.
->>>
->>> Tested-by: Keith Busch <keith.busch@intel.com>
->>
->> Oops, thanks for poking me, because this was indeed dead.
->>
->> My main objection was to testing "is_hotplug_bridge".  That doesn't
->> seem right, because this issue really isn't specific to hotplug.  I
->> didn't see a resolution of that, but let me know if I missed it.
->
-> Why I introduced "is_hotplug_bridge" is to avoid to touch the MPS which is not
-> in hotplug case when pcie_bus_config == PCIE_BUS_TUNE_OFF.
->
-> It's so sad that PCIe spec doesn't give a detailed guide to configure MPS.
->
-> I'd like to refactor current MPS framework, but now there are still some puzzles
-> to me. I need to have a deeper understanding of pcie mps. I read Jon's mps patch
-> log from git, I found he turn off all this MPS config, because some issues were found
-> in some platforms, but no platforms detailed info and no bugzilla records.
+Refine mp_register_ioapic() to prepare for IOAPIC hotplug by:
+1) change return value from void to int.
+2) check for gsi range conflicts
+3) check for IOAPIC physical address conflicts
+4) enhance the way to allocate IOAPIC index
 
-Just my opinion, I thought the hotplug check was a good idea: it addresses
-a known issue, and does not mess with current unknowns. Outside a hotplug
-scenario, I think we expect platform f/w to handle MPS settings and the
-kernel can stay out of the way because of the unknown platform issues. If
-it is hotplug, having the kernel set device's MPS to match the parent
-couldn't make things worse off than doing nothing, right?
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+Hi Thomas,
+	I have fixed docbook issues in this patch.
+Regards!
+Gerry
+---
+ arch/x86/include/asm/io_apic.h |    4 +-
+ arch/x86/kernel/apic/io_apic.c |   87 ++++++++++++++++++++++++++--------------
+ 2 files changed, 58 insertions(+), 33 deletions(-)
 
-On the side, I'll see if I can ping some comrades on PCI-SIG to propose
-an ECN to clarify configuring MPS. They usually ignore me though, so no
-promises. :)
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index a666dcdeea67..8741c1ea33c3 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -188,8 +188,8 @@ extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
+ extern u32 mp_pin_to_gsi(int ioapic, int pin);
+ extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
+ extern void mp_unmap_irq(int irq);
+-extern void mp_register_ioapic(int id, u32 address, u32 gsi_base,
+-			       struct ioapic_domain_cfg *cfg);
++extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
++			      struct ioapic_domain_cfg *cfg);
+ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			    irq_hw_number_t hwirq);
+ extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 81f014891237..9945eb974509 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3827,20 +3827,6 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
+ 	return gsi - gsi_cfg->gsi_base;
+ }
+ 
+-static int bad_ioapic(unsigned long address)
+-{
+-	if (nr_ioapics >= MAX_IO_APICS) {
+-		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
+-			MAX_IO_APICS, nr_ioapics);
+-		return 1;
+-	}
+-	if (!address) {
+-		pr_warn("WARNING: Bogus (zero) I/O APIC address found in table, skipping!\n");
+-		return 1;
+-	}
+-	return 0;
+-}
+-
+ static int bad_ioapic_register(int idx)
+ {
+ 	union IO_APIC_reg_00 reg_00;
+@@ -3860,29 +3846,51 @@ static int bad_ioapic_register(int idx)
+ 	return 0;
+ }
+ 
+-void mp_register_ioapic(int id, u32 address, u32 gsi_base,
+-			struct ioapic_domain_cfg *cfg)
++static int find_free_ioapic_entry(void)
+ {
+-	int idx = 0;
+-	int entries;
++	return nr_ioapics;
++}
++
++/**
++ * mp_register_ioapic - Register an IOAPIC device
++ * @id:		hardware IOAPIC ID
++ * @address:	physical address of IOAPIC register area
++ * @gsi_base:	base of GSI associated with the IOAPIC
++ * @cfg:	configuration information for the IOAPIC
++ */
++int mp_register_ioapic(int id, u32 address, u32 gsi_base,
++		       struct ioapic_domain_cfg *cfg)
++{
++	u32 gsi_end;
++	int idx, ioapic, entries;
+ 	struct mp_ioapic_gsi *gsi_cfg;
+ 
+-	if (bad_ioapic(address))
+-		return;
++	if (!address) {
++		pr_warn("Bogus (zero) I/O APIC address found, skipping!\n");
++		return -EINVAL;
++	}
++	for_each_ioapic(ioapic)
++		if (ioapics[ioapic].mp_config.apicaddr == address) {
++			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
++				address, ioapic);
++			return -EEXIST;
++		}
+ 
+-	idx = nr_ioapics;
++	idx = find_free_ioapic_entry();
++	if (idx >= MAX_IO_APICS) {
++		pr_warn("Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
++			MAX_IO_APICS, idx);
++		return -ENOSPC;
++	}
+ 
+ 	ioapics[idx].mp_config.type = MP_IOAPIC;
+ 	ioapics[idx].mp_config.flags = MPC_APIC_USABLE;
+ 	ioapics[idx].mp_config.apicaddr = address;
+-	ioapics[idx].irqdomain = NULL;
+-	ioapics[idx].irqdomain_cfg = *cfg;
+ 
+ 	set_fixmap_nocache(FIX_IO_APIC_BASE_0 + idx, address);
+-
+ 	if (bad_ioapic_register(idx)) {
+ 		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
+-		return;
++		return -ENODEV;
+ 	}
+ 
+ 	ioapics[idx].mp_config.apicid = io_apic_unique_id(idx, id);
+@@ -3893,24 +3901,41 @@ void mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 	 * and to prevent reprogramming of IOAPIC pins (PCI GSIs).
+ 	 */
+ 	entries = io_apic_get_redir_entries(idx);
++	gsi_end = gsi_base + entries - 1;
++	for_each_ioapic(ioapic) {
++		gsi_cfg = mp_ioapic_gsi_routing(ioapic);
++		if ((gsi_base >= gsi_cfg->gsi_base &&
++		     gsi_base <= gsi_cfg->gsi_end) ||
++		    (gsi_end >= gsi_cfg->gsi_base &&
++		     gsi_end <= gsi_cfg->gsi_end)) {
++			pr_warn("GSI range [%u-%u] for new IOAPIC conflicts with GSI[%u-%u]\n",
++				gsi_base, gsi_end,
++				gsi_cfg->gsi_base, gsi_cfg->gsi_end);
++			clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
++			return -ENOSPC;
++		}
++	}
+ 	gsi_cfg = mp_ioapic_gsi_routing(idx);
+ 	gsi_cfg->gsi_base = gsi_base;
+-	gsi_cfg->gsi_end = gsi_base + entries - 1;
++	gsi_cfg->gsi_end = gsi_end;
+ 
+-	/*
+-	 * The number of IO-APIC IRQ registers (== #pins):
+-	 */
+-	ioapics[idx].nr_registers = entries;
++	ioapics[idx].irqdomain = NULL;
++	ioapics[idx].irqdomain_cfg = *cfg;
+ 
+ 	if (gsi_cfg->gsi_end >= gsi_top)
+ 		gsi_top = gsi_cfg->gsi_end + 1;
++	if (nr_ioapics <= idx)
++		nr_ioapics = idx + 1;
++
++	/* Set nr_registers to mark entry present */
++	ioapics[idx].nr_registers = entries;
+ 
+ 	pr_info("IOAPIC[%d]: apic_id %d, version %d, address 0x%x, GSI %d-%d\n",
+ 		idx, mpc_ioapic_id(idx),
+ 		mpc_ioapic_ver(idx), mpc_ioapic_addr(idx),
+ 		gsi_cfg->gsi_base, gsi_cfg->gsi_end);
+ 
+-	nr_ioapics++;
++	return 0;
+ }
+ 
+ int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+-- 
+1.7.10.4
+
