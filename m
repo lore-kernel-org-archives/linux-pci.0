@@ -1,128 +1,117 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Thu, 25 Sep 2014 09:34:36 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
+Message-ID: <54179BD1.3050608@huawei.com>
+Date: Tue, 16 Sep 2014 10:09:21 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Lucas Stach <l.stach@pengutronix.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
 	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
 	Arnd Bergmann <arnd@arndb.de>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
 	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
 	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 12/22] MIPS/Octeon/MSI: Use MSI chip framework to
- configure MSI/MSI-X irq
-Message-ID: <20140925073435.GJ12423@ulmo>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
- <1411614872-4009-13-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="rwgQ89ZNnFUwFHTC"
-In-Reply-To: <1411614872-4009-13-git-send-email-wangyijing@huawei.com>
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [PATCH v1 06/21] PCI/MSI: Refactor struct msi_chip to make it
+ become more common
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>	 <1409911806-10519-7-git-send-email-wangyijing@huawei.com> <1410792261.3314.9.camel@pengutronix.de>
+In-Reply-To: <1410792261.3314.9.camel@pengutronix.de>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 2014/9/15 22:44, Lucas Stach wrote:
+> Am Freitag, den 05.09.2014, 18:09 +0800 schrieb Yijing Wang:
+>> Now there are a lot of __weak arch functions in MSI code.
+>> These functions make MSI driver complex. Thierry Reding Introduced
+>> a new MSI chip framework to configure MSI/MSI-X irq in ARM. Use
+>> the new MSI chip framework to refactor all other platform MSI
+>> arch code to eliminate weak arch MSI functions. This patch add
+>> .restore_irq() and .setup_irqs() to make it become more common.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> 
+> This change looks good to me:
+> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
 
---rwgQ89ZNnFUwFHTC
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Thanks!
 
-On Thu, Sep 25, 2014 at 11:14:22AM +0800, Yijing Wang wrote:
-[...]
-> diff --git a/arch/mips/pci/msi-octeon.c b/arch/mips/pci/msi-octeon.c
-[...]
-> @@ -132,12 +132,12 @@ msi_irq_allocated:
->  	/* Make sure the search for available interrupts didn't fail */
->  	if (irq >=3D 64) {
->  		if (request_private_bits) {
-> -			pr_err("arch_setup_msi_irq: Unable to find %d free interrupts, trying=
- just one",
-> +			pr_err("octeon_setup_msi_irq: Unable to find %d free interrupts, tryi=
-ng just one",
->  			       1 << request_private_bits);
+> 
+>> ---
+>>  drivers/pci/msi.c   |   15 +++++++++++++++
+>>  include/linux/msi.h |    3 +++
+>>  2 files changed, 18 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index 539c11d..d78d637 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -63,6 +63,11 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+>>  {
+>>  	struct msi_desc *entry;
+>>  	int ret;
+>> +	struct msi_chip *chip;
+>> +
+>> +	chip = arch_find_msi_chip(dev);
+>> +	if (chip && chip->setup_irqs)
+>> +		return chip->setup_irqs(dev, nvec, type);
+>>  
+>>  	/*
+>>  	 * If an architecture wants to support multiple MSI, it needs to
+>> @@ -105,6 +110,11 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
+>>  
+>>  void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
+>>  {
+>> +	struct msi_chip *chip = arch_find_msi_chip(dev);
+>> +
+>> +	if (chip && chip->teardown_irqs)
+>> +		return chip->teardown_irqs(dev);
+>> +
+>>  	return default_teardown_msi_irqs(dev);
+>>  }
+>>  
+>> @@ -128,6 +138,11 @@ static void default_restore_msi_irq(struct pci_dev *dev, int irq)
+>>  
+>>  void __weak arch_restore_msi_irqs(struct pci_dev *dev)
+>>  {
+>> +	struct msi_chip *chip = arch_find_msi_chip(dev);
+>> +
+>> +	if (chip && chip->restore_irqs)
+>> +		return chip->restore_irqs(dev);
+>> +
+>>  	return default_restore_msi_irqs(dev);
+>>  }
+>>  
+>> diff --git a/include/linux/msi.h b/include/linux/msi.h
+>> index 5650848..92a51e7 100644
+>> --- a/include/linux/msi.h
+>> +++ b/include/linux/msi.h
+>> @@ -72,7 +72,10 @@ struct msi_chip {
+>>  	struct list_head list;
+>>  
+>>  	int (*setup_irq)(struct pci_dev *dev, struct msi_desc *desc);
+>> +	int (*setup_irqs)(struct pci_dev *dev, int nvec, int type);
+>>  	void (*teardown_irq)(unsigned int irq);
+>> +	void (*teardown_irqs)(struct pci_dev *dev);
+>> +	void (*restore_irqs)(struct pci_dev *dev);
+>>  };
+>>  
+>>  #endif /* LINUX_MSI_H */
+> 
 
-Perhaps while at it make this (and other similar changes in this patch):
 
-	pr_err("%s(): Unable to ...", __func__, ...);
+-- 
+Thanks!
+Yijing
 
-So that it becomes more resilient against this kind of rename?
-
->  			request_private_bits =3D 0;
->  			goto try_only_one;
->  		} else
-> -			panic("arch_setup_msi_irq: Unable to find a free MSI interrupt");
-> +			panic("octeon_setup_msi_irq: Unable to find a free MSI interrupt");
-
-> @@ -210,14 +210,13 @@ int arch_setup_msi_irqs(struct pci_dev *dev, int nv=
-ec, int type)
-> =20
->  	return 0;
->  }
-> -
-
-This...
-
-> @@ -240,7 +239,7 @@ void arch_teardown_msi_irq(unsigned int irq)
->  	 */
->  	number_irqs =3D 0;
->  	while ((irq0 + number_irqs < 64) &&
-> -	       (msi_multiple_irq_bitmask[index]
-> +		(msi_multiple_irq_bitmask[index]
-
-=2E.. and this seem like unrelated whitespace changes.
-
->  		& (1ull << (irq0 + number_irqs))))
->  		number_irqs++;
->  	number_irqs++;
-> @@ -249,8 +248,8 @@ void arch_teardown_msi_irq(unsigned int irq)
->  	/* Shift the mask to the correct bit location */
->  	bitmask <<=3D irq0;
->  	if ((msi_free_irq_bitmask[index] & bitmask) !=3D bitmask)
-> -		panic("arch_teardown_msi_irq: Attempted to teardown MSI "
-> -		      "interrupt (%d) not in use", irq);
-> +		panic("octeon_teardown_msi_irq: Attempted to teardown MSI "
-> +			"interrupt (%d) not in use", irq);
-
-And the second line here also needlessly changes the indentation.
-
-Thierry
-
---rwgQ89ZNnFUwFHTC
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJUI8WLAAoJEN0jrNd/PrOhp2MQAK6S7hsneW6O97w/t1chjlGR
-ug1JLAxeP84A0Vj4I6KwfrHjux8rDqoByI5bDhH+ywcRQuf90Dx9+L9QEfWlzkcC
-K1qT+twZDUqVFhCIJtuEtNVJbEXb0NlPK74W/6cUubFdAKbY1+MZe66Z0BZlBl36
-bjxEyTh6uZkemh8PLwP45mJQCTD/d5/lNGDCrgzKgurE1HIHXV1r0FoD9zLJZpfA
-UATpp5rQYfePlynE1mCT+G0QXcfo+zf8kp49jLxeciX5QZYs8DbZ2IwbhG4ov2je
-p8SHV5T+c8D1+Q7UjNbXpDGHz12Ctpby/bLd3+FGsmeIZJbE4o5NcE5pChZfI52v
-Rgl0wLOlswsM2xoSGdhA1x51QEHqFxShBf/+FwbxLA7shNWELd6gRpv9mcYSv6oy
-MgALA5tV5r18NZyBm+SsvwUrgAF7e1ndIU/UYhAH1lIz3CMtqTnZ2AZIpXoJeKLo
-rtzWB2MThJnnZXUpW3Umj3UWoZkcAy6zQSWBGV40hC+t3dkr1US9bOgGIrO6huyy
-qTqNG+A20dRO85W7LoslDg5CO401jS8JRiHbYQW9g+QhHkWLpROgcrCoK1dz+Q2B
-QjaLp2fjuM7wyyYXRLcQo68i7Y9AUv2R+k1fidvlfuWXfvzbeK6x0BHSx8nhBec6
-SU2aBh+SOaTeNEFZjRFv
-=dRXg
------END PGP SIGNATURE-----
-
---rwgQ89ZNnFUwFHTC--
