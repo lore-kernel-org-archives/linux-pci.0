@@ -10,106 +10,117 @@ To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Yinghai Lu <yinghai@kernel.org>,
 	Borislav Petkov <bp@alien8.de>,
 	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Patch v5 07/15] x86, irq: Prefer assigned ID in APIC ID register for x86_64
-Date: Thu, 11 Sep 2014 16:05:50 +0800
-Message-Id: <1410422758-24942-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: x86, irq: Introduce helper to check whether an IOAPIC has been registered
+Date: Tue, 16 Sep 2014 14:53:03 +0800
+Message-Id: <1410850383-2784-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410422758-24942-15-git-send-email-jiang.liu@linux.intel.com>
+References: <1410422758-24942-15-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+Introduce acpi_ioapic_registered() to check whether an IOAPIC has already
+been registered, it will be used when enabling IOAPIC hotplug.
 
-Perfer the assigned ID in APIC ID register for x86_64 if it's still
-available.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/kernel/apic/io_apic.c |   35 ++++++++++++++++++++++++++++++-----
- 1 file changed, 30 insertions(+), 5 deletions(-)
+Hi Thomas,
+	I have fixed docbook issues in this patch.
+Regards!
+Gerry
+---
+ arch/x86/include/asm/io_apic.h |    1 +
+ arch/x86/kernel/acpi/boot.c    |   22 ++++++++++++++++++++++
+ arch/x86/kernel/apic/io_apic.c |   11 +++++++++++
+ include/linux/acpi.h           |    1 +
+ 4 files changed, 35 insertions(+)
 
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 7c04b8ec22a4..ca742d5249db 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -191,6 +191,7 @@ extern void mp_unmap_irq(int irq);
+ extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 			      struct ioapic_domain_cfg *cfg);
+ extern int mp_unregister_ioapic(u32 gsi_base);
++extern int mp_ioapic_registered(u32 gsi_base);
+ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			    irq_hw_number_t hwirq);
+ extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 0e67d792741d..5a69df5dba56 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -821,6 +821,28 @@ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
+ }
+ EXPORT_SYMBOL(acpi_unregister_ioapic);
+ 
++/**
++ * acpi_ioapic_registered - Check whether IOAPIC assoicatied with @gsi_base
++ *			    has been registered
++ * @handle:	ACPI handle of the IOAPIC deivce
++ * @gsi_base:	GSI base associated with the IOAPIC
++ *
++ * Assume caller holds some type of lock to serialize acpi_ioapic_registered()
++ * with acpi_register_ioapic()/acpi_unregister_ioapic().
++ */
++int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base)
++{
++	int ret = 0;
++
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++	down_read(&acpi_ioapic_rwsem);
++	ret  = mp_ioapic_registered(gsi_base);
++	up_read(&acpi_ioapic_rwsem);
++#endif
++
++	return ret;
++}
++
+ static int __init acpi_parse_sbf(struct acpi_table_header *table)
+ {
+ 	struct acpi_table_boot *sb;
 diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 003945e71616..9011c5fa5aad 100644
+index 7fec2a8f72f3..eba25bccefd2 100644
 --- a/arch/x86/kernel/apic/io_apic.c
 +++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3575,26 +3575,51 @@ static int __init io_apic_get_unique_id(int ioapic, int apic_id)
- 	return apic_id;
+@@ -4013,6 +4013,17 @@ int mp_unregister_ioapic(u32 gsi_base)
+ 	return 0;
  }
  
--static u8 __init io_apic_unique_id(u8 id)
-+static u8 __init io_apic_unique_id(int idx, u8 id)
++int mp_ioapic_registered(u32 gsi_base)
++{
++	int ioapic;
++
++	for_each_ioapic(ioapic)
++		if (ioapics[ioapic].gsi_config.gsi_base == gsi_base)
++			return 1;
++
++	return 0;
++}
++
+ int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 		     irq_hw_number_t hwirq)
  {
- 	if ((boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) &&
- 	    !APIC_XAPIC(apic_version[boot_cpu_physical_apicid]))
--		return io_apic_get_unique_id(nr_ioapics, id);
-+		return io_apic_get_unique_id(idx, id);
- 	else
- 		return id;
- }
- #else
--static u8 __init io_apic_unique_id(u8 id)
-+static u8 __init io_apic_unique_id(int idx, u8 id)
- {
- 	int i;
-+	u8 new_id;
-+	unsigned long flags;
- 	DECLARE_BITMAP(used, 256);
-+	union IO_APIC_reg_00 reg_00;
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 3574f137242e..e916cc9ca5a8 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -152,6 +152,7 @@ int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
  
- 	bitmap_zero(used, 256);
- 	for_each_ioapic(i)
- 		__set_bit(mpc_ioapic_id(i), used);
- 	if (!test_bit(id, used))
- 		return id;
--	return find_first_zero_bit(used, 256);
-+
-+	/* check register at first */
-+	raw_spin_lock_irqsave(&ioapic_lock, flags);
-+	reg_00.raw = io_apic_read(idx, 0);
-+	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
-+	new_id = reg_00.bits.ID;
-+	if (!test_bit(new_id, used)) {
-+		apic_printk(APIC_VERBOSE, KERN_INFO
-+			"IOAPIC[%d]: Using reg apic_id %d instead of %d\n",
-+			 idx, new_id, id);
-+		return new_id;
-+	}
-+
-+	new_id = find_first_zero_bit(used, 256);
-+	reg_00.bits.ID = new_id;
-+	raw_spin_lock_irqsave(&ioapic_lock, flags);
-+	io_apic_write(idx, 0, reg_00.raw);
-+	reg_00.raw = io_apic_read(idx, 0);
-+	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
-+	/* Sanity check */
-+	BUG_ON(reg_00.bits.ID != new_id);
-+
-+	return new_id;
- }
- #endif
- 
-@@ -3860,7 +3885,7 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 		return;
- 	}
- 
--	ioapics[idx].mp_config.apicid = io_apic_unique_id(id);
-+	ioapics[idx].mp_config.apicid = io_apic_unique_id(idx, id);
- 	ioapics[idx].mp_config.apicver = io_apic_get_version(idx);
- 
- 	/*
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
+ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
++int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base);
+ void acpi_irq_stats_init(void);
+ extern u32 acpi_irq_handled;
+ extern u32 acpi_irq_not_handled;
 -- 
 1.7.10.4
 
