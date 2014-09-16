@@ -1,47 +1,96 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20140923224810.GA32643@bart.dudau.co.uk>
-References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
- <20140923215435.GD27117@google.com> <20140923224810.GA32643@bart.dudau.co.uk>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 23 Sep 2014 17:00:11 -0600
-Message-ID: <CAErSpo5PBXSUeU_LP2m=9jxibmqxreL4tEeHBsc5To7D=_bAJA@mail.gmail.com>
-Subject: Re: [PATCH v12 00/12] Support for creating generic PCI host bridges
- from DT
-To: Liviu Dudau <liviu@dudau.co.uk>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
 	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [PATCH v9 3/4] dt-bindings: pci: xgene pcie device tree bindings
+Date: Tue, 16 Sep 2014 15:33:43 -0700
+Message-Id: <1410906824-9321-4-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
+References: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 23, 2014 at 4:48 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
-> ...
-> While the next immediate target is converting pci-host-generic.c, pci-imx6.c
-> and probably pcie-designware.c to my series, I would like to ask you what
-> is your longer term plan. Now that I have got my head full of PCI code,
-> I have some ideas but feel that meeting with you and all those involved
-> in core PCI support would be a better venue than sending emails back and
-> forth. When is your next plan to attend a Linux conference?
+This patch adds the bindings for X-Gene PCIe driver. The driver resides
+under 'drivers/pci/host/pci-xgene.c' file.
 
-That would be nice.  Unfortunately, I don't know what the next
-conference will be yet.
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ .../devicetree/bindings/pci/xgene-pci.txt          | 57 ++++++++++++++++++++++
+ 1 file changed, 57 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
 
-Bjorn
+diff --git a/Documentation/devicetree/bindings/pci/xgene-pci.txt b/Documentation/devicetree/bindings/pci/xgene-pci.txt
+new file mode 100644
+index 0000000..1070b06
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/xgene-pci.txt
+@@ -0,0 +1,57 @@
++* AppliedMicro X-Gene PCIe interface
++
++Required properties:
++- device_type: set to "pci"
++- compatible: should contain "apm,xgene-pcie" to identify the core.
++- reg: A list of physical base address and length for each set of controller
++       registers. Must contain an entry for each entry in the reg-names
++       property.
++- reg-names: Must include the following entries:
++  "csr": controller configuration registers.
++  "cfg": pcie configuration space registers.
++- #address-cells: set to <3>
++- #size-cells: set to <2>
++- ranges: ranges for the outbound memory, I/O regions.
++- dma-ranges: ranges for the inbound memory regions.
++- #interrupt-cells: set to <1>
++- interrupt-map-mask and interrupt-map: standard PCI properties
++	to define the mapping of the PCIe interface to interrupt
++	numbers.
++- clocks: from common clock binding: handle to pci clock.
++
++Optional properties:
++- status: Either "ok" or "disabled".
++- dma-coherent: Present if dma operations are coherent
++
++Example:
++
++SoC specific DT Entry:
++
++	pcie0: pcie@1f2b0000 {
++		status = "disabled";
++		device_type = "pci";
++		compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++		#interrupt-cells = <1>;
++		#size-cells = <2>;
++		#address-cells = <3>;
++		reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
++			0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
++		reg-names = "csr", "cfg";
++		ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
++			  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
++		dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
++			      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
++		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
++				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
++				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
++				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
++		dma-coherent;
++		clocks = <&pcie0clk 0>;
++	};
++
++
++Board specific DT Entry:
++	&pcie0 {
++		status = "ok";
++	};
+-- 
+1.9.1
+
