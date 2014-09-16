@@ -1,52 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f50.google.com ([209.85.216.50]:37774 "EHLO
-	mail-qa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754941AbaIDVFX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 17:05:23 -0400
-Received: by mail-qa0-f50.google.com with SMTP id cm18so10254616qab.9
-        for <linux-pci@vger.kernel.org>; Thu, 04 Sep 2014 14:05:23 -0700 (PDT)
+Received: from szxga01-in.huawei.com ([119.145.14.64]:33598 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752761AbaIPHx5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 03:53:57 -0400
+Message-ID: <5417EC7B.4060400@huawei.com>
+Date: Tue, 16 Sep 2014 15:53:31 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <5405D9C8.1000308@ti.com>
-References: <20140819044050.GA15551@google.com> <53F368F7.1070707@ti.com>
- <CAErSpo6GfCE8yT2Dda1JJsoPQhFD_b0GhB=OZ6w854ZB_B6eqA@mail.gmail.com> <5405D9C8.1000308@ti.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 4 Sep 2014 15:05:02 -0600
-Message-ID: <CAErSpo5xi6evzeLB4H=+6SHjh=bp+7ZWDO8DP_sMLbE0xQePmQ@mail.gmail.com>
-Subject: Re: [GIT PULL] PCI changes for v3.17 (part 3)
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	"Vinod Koul" <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+CC: Ashok Raj <ashok.raj@intel.com>, Tony Luck <tony.luck@intel.com>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	<linux-hotplug@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<dmaengine@vger.kernel.org>
+Subject: Re: [Patch Part3 V5 5/8] iommu/vt-d: Enhance intel_irq_remapping
+ driver to support DMAR unit hotplug
+References: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com> <1410487848-6027-6-git-send-email-jiang.liu@linux.intel.com> <54164D01.4060003@huawei.com> <5417E00D.5000108@linux.intel.com>
+In-Reply-To: <5417E00D.5000108@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 2, 2014 at 8:52 AM, Murali Karicheri <m-karicheri2@ti.com> wrote:
-> On 08/19/2014 12:30 PM, Bjorn Helgaas wrote:
+On 2014/9/16 15:00, Jiang Liu wrote:
+> On 2014/9/15 10:20, Yijing Wang wrote:
+>>> +static void ir_remove_ioapic_hpet_scope(struct intel_iommu *iommu)
+>>> +{
+>>> +	int i;
+>>>  
+>>> -			ir_parse_one_hpet_scope(scope, iommu);
+>>> -		}
+>>> -		start += scope->length;
+>>> -	}
+>>> +	for (i = 0; i < MAX_HPET_TBS; i++)
+>>> +		if (ir_hpet[i].iommu == iommu)
+>>> +			ir_hpet[i].iommu = NULL;
 >>
->> On Tue, Aug 19, 2014 at 10:10 AM, Murali Karicheri<m-karicheri2@ti.com>
->> wrote:
->>>
->>> Hi Bjorn,
->>>
->>> I see you have pulled in my designware related patches for Keystone PCI
->>> in
->>> this request. When do you think you can pull in Keystone PCI driver (v8)
->>> on
->>> the list?
->>
->>
->> The things in this pull request have been in linux-next for a month.
->> I'm ready to apply the Keystone driver, but since we're after the
->> merge window and the Keystone driver hasn't been in -next at all, I
->> plan to put it in v3.18.
->>
-> BJorn,
->
-> Do you have a v3.18 next branch that you can add this patch to? I need to
-> send out additional patches on top of this to support PCIe and SATA on
-> another K2 platform, K2E and will be good if I can base it on a merged
-> branch. Also I am afraid, we will have nasty merge issues to deal with if
-> others start making changes in parallel and conflict with this patch series.
+>> Hi Gerry, why not reset whole ir_hpe and ir_ioapic data struct?
+> Hi Yijing,
+> 	Thanks for review. Zero is legal for id, bus and devfn in
+> struct ioapic_scope and struct hpet_scope. So we use domain field
+> as a flag to mark entry valid or invalid and only reset iommu field.
 
-Yes.  I put it on a pci/host-keystone branch for v3.18.
+Hi Gerry, use iommu field as a flag to mark entry valid may be not safe enough,
+I found map_hpet_to_ir() and map_ioapic_to_ir() still only check the id field to return the valid iommu.
 
-Bjorn
+What about this case:
+E.g. ir_hpet[2].id = N, ir_hpet[2].iommu = NULL, ir_hpet[4].id = N, ir_hpet[4].iommu = iommu;
+
+ir_hpet[2] maybe released yet, and the hpet now has been saved in ir_hpet[4], but map_hpet_to_irq()
+will return the wrong iommu(NULL).
+
+
+static struct intel_iommu *map_hpet_to_ir(u8 hpet_id)
+{
+	int i;
+
+	for (i = 0; i < MAX_HPET_TBS; i++)
+		if (ir_hpet[i].id == hpet_id)
+			return ir_hpet[i].iommu;
+	return NULL;
+}
+
+> 
+> Regards!
+> Gerry
+>>
+>>
+>>
+>>>  
+>>> -	return 0;
+>>> +	for (i = 0; i < MAX_IO_APICS; i++)
+>>> +		if (ir_ioapic[i].iommu == iommu)
+>>> +			ir_ioapic[i].iommu = NULL;
+>>>  }
+>>>  
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+>>
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
