@@ -1,282 +1,103 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:35504 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751540AbaIPPkx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 11:40:53 -0400
+Received: by mail-pa0-f45.google.com with SMTP id rd3so24578pab.32
+        for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 08:40:53 -0700 (PDT)
+Date: Tue, 16 Sep 2014 09:40:49 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Rajat Jain <rajatxjain@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Richard Yang <weiyang@linux.vnet.ibm.com>,
+	Matthew Wilcox <matthew.r.wilcox@intel.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC Part1 v1 11/18] x86, irq: Move HT IRQ related code from io_apic.c into htirq.c
-Date: Thu, 11 Sep 2014 16:24:58 +0800
-Message-Id: <1410423905-26239-12-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Josh Logan <joshtlogan@gmail.com>
+Subject: Re: [PATCH v2] pci/probe: Enable CRS for root port if it is supported
+Message-ID: <20140916154049.GA832@google.com>
+References: <53FFA54D.9000907@gmail.com>
+ <CAErSpo5_WMUmnTHpPZt+j04VZoiW1pthQoGV90A5BDQpQgjwOQ@mail.gmail.com>
+ <54065208.3080309@gmail.com>
+ <20140909053808.GQ8080@google.com>
+ <CAA93t1rHu+bfJNKfCws=-ezxAOuRJsLQb4n=eVhZha0iW+oSYA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAA93t1rHu+bfJNKfCws=-ezxAOuRJsLQb4n=eVhZha0iW+oSYA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Create arch/x86/kernel/apic/htirq.c to host Hypertransport IRQ related
-code, preparing for enabling hierarchy irqdomain.
+On Mon, Sep 15, 2014 at 10:10:20PM -0700, Rajat Jain wrote:
+> Hi Bjorn,
+> 
+> On Mon, Sep 8, 2014 at 10:38 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Tue, Sep 02, 2014 at 04:26:00PM -0700, Rajat Jain wrote:
+> >>
+> >> As per the PCIe spec, an endpoint may return the configuration cycles
+> >> with CRS if it is not yet fully ready to be accessed. If the CRS visibility
+> >> is not enabled at the root port, the spec leaves the retry behaviour open
+> >> to implementation in such a case. The Intel root ports have chosen to retry
+> >> endlessly in this situation. Thus, the root controller may "hang" (repeatedly
+> >> retrying the configuration requests until it gets a status other than CRS) if
+> >> a device returns CRS for a long time. This can cause a broken endpoint to bring
+> >> down the whole PCI hierarchy.
+> >>
+> >> This was recently known to cause problems on Intel systems and
+> >> was discussed here:
+> >> http://marc.info/?t=140926298500002&r=1&w=2
+> >>
+> >> Ref1:
+> >> https://www.pcisig.com/specifications/pciexpress/ECN_CRS_Software_Visibility_No27.pdf
+> >>
+> >> Ref2:
+> >> PCIe spec V3.0, pg119, pg127 for "Configuration Request Retry Status"
+> >>
+> >> Thus enable the CRS visibility for the root ports that support it. This
+> >> patch reverts the following commit, but enables CRS visibility only
+> >> when the root port supports it:
+> >>
+> >> ad7edfe04908 ("[PCI] Do not enable CRS Software Visibility by default")
+> >>
+> >> (Linus' response: http://marc.info/?l=linux-pci&m=140968622520192&w=2)
+> >>
+> >> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+> >> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+> >> Signed-off-by: Guenter Roeck <groeck@juniper.net>
+> >
+> > I put this and the "only look at Vendor ID" patch on a pci/enumeration
+> > branch [1].  I rewrote the changelogs to reflect my understanding of what's
+> > going on, so probably the real truth is somewhere between your original and
+> > mine.  Let me know what should be fixed.
+> >
+> > We should figure out an easy way for Josh to test these.  Ideally, he could
+> > test the second patch by itself first, then both together.
+> 
+> OK, Josh and I tested this over the last week on his HW (the HW that
+> had originally reported the problem). Somehow his hardware does not
+> show the problem in ANY case. I tried the following, and the original
+> issue (vendor id = 1) was never seen:
+> 
+> 1) 3.17-rc2 (has CRS disabled)
+> 2) 3.17-rc2 + Enable CRS
+> 3) 3.17-rc2 + Enable CRS + Ignore Device ID
+> 
+> The Device always returned the correct Vendor ID and Device ID in all
+> cases. Thus even enabling CRS does not make his system fail in anyway.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/Makefile  |    1 +
- arch/x86/kernel/apic/htirq.c   |  106 ++++++++++++++++++++++++++++++++++++++++
- arch/x86/kernel/apic/io_apic.c |   91 ----------------------------------
- 3 files changed, 107 insertions(+), 91 deletions(-)
- create mode 100644 arch/x86/kernel/apic/htirq.c
+Thanks a lot for all the work to dig out the board and test it.  I really
+appreciate it.
 
-diff --git a/arch/x86/kernel/apic/Makefile b/arch/x86/kernel/apic/Makefile
-index aac300750f0e..8bb12ddc5db8 100644
---- a/arch/x86/kernel/apic/Makefile
-+++ b/arch/x86/kernel/apic/Makefile
-@@ -7,6 +7,7 @@ obj-y				+= hw_nmi.o
- 
- obj-$(CONFIG_X86_IO_APIC)	+= io_apic.o
- obj-$(CONFIG_PCI_MSI)		+= msi.o
-+obj-$(CONFIG_HT_IRQ)		+= htirq.o
- obj-$(CONFIG_SMP)		+= ipi.o
- 
- ifeq ($(CONFIG_X86_64),y)
-diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
-new file mode 100644
-index 000000000000..1cd879fe39d7
---- /dev/null
-+++ b/arch/x86/kernel/apic/htirq.c
-@@ -0,0 +1,106 @@
-+/*
-+ * Support Hypertransport IRQ
-+ *
-+ * Copyright (C) 1997, 1998, 1999, 2000, 2009 Ingo Molnar, Hajnalka Szabo
-+ *	Moved from arch/x86/kernel/apic/io_apic.c.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+#include <linux/mm.h>
-+#include <linux/interrupt.h>
-+#include <linux/init.h>
-+#include <linux/device.h>
-+#include <linux/pci.h>
-+#include <linux/htirq.h>
-+#include <asm/hw_irq.h>
-+#include <asm/apic.h>
-+#include <asm/hypertransport.h>
-+
-+/*
-+ * Hypertransport interrupt support
-+ */
-+static void target_ht_irq(unsigned int irq, unsigned int dest, u8 vector)
-+{
-+	struct ht_irq_msg msg;
-+
-+	fetch_ht_irq_msg(irq, &msg);
-+
-+	msg.address_lo &= ~(HT_IRQ_LOW_VECTOR_MASK | HT_IRQ_LOW_DEST_ID_MASK);
-+	msg.address_hi &= ~(HT_IRQ_HIGH_DEST_ID_MASK);
-+
-+	msg.address_lo |= HT_IRQ_LOW_VECTOR(vector) | HT_IRQ_LOW_DEST_ID(dest);
-+	msg.address_hi |= HT_IRQ_HIGH_DEST_ID(dest);
-+
-+	write_ht_irq_msg(irq, &msg);
-+}
-+
-+static int
-+ht_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
-+{
-+	struct irq_cfg *cfg = data->chip_data;
-+	unsigned int dest;
-+	int ret;
-+
-+	ret = apic_set_affinity(data, mask, &dest);
-+	if (ret)
-+		return ret;
-+
-+	target_ht_irq(data->irq, dest, cfg->vector);
-+	return IRQ_SET_MASK_OK_NOCOPY;
-+}
-+
-+static struct irq_chip ht_irq_chip = {
-+	.name			= "PCI-HT",
-+	.irq_mask		= mask_ht_irq,
-+	.irq_unmask		= unmask_ht_irq,
-+	.irq_ack		= apic_ack_edge,
-+	.irq_set_affinity	= ht_set_affinity,
-+	.irq_retrigger		= apic_retrigger_irq,
-+};
-+
-+int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
-+{
-+	struct irq_cfg *cfg;
-+	struct ht_irq_msg msg;
-+	unsigned dest;
-+	int err;
-+
-+	if (disable_apic)
-+		return -ENXIO;
-+
-+	cfg = irq_cfg(irq);
-+	err = assign_irq_vector(irq, cfg, apic->target_cpus());
-+	if (err)
-+		return err;
-+
-+	err = apic->cpu_mask_to_apicid_and(cfg->domain,
-+					   apic->target_cpus(), &dest);
-+	if (err)
-+		return err;
-+
-+	msg.address_hi = HT_IRQ_HIGH_DEST_ID(dest);
-+
-+	msg.address_lo =
-+		HT_IRQ_LOW_BASE |
-+		HT_IRQ_LOW_DEST_ID(dest) |
-+		HT_IRQ_LOW_VECTOR(cfg->vector) |
-+		((apic->irq_dest_mode == 0) ?
-+			HT_IRQ_LOW_DM_PHYSICAL :
-+			HT_IRQ_LOW_DM_LOGICAL) |
-+		HT_IRQ_LOW_RQEOI_EDGE |
-+		((apic->irq_delivery_mode != dest_LowestPrio) ?
-+			HT_IRQ_LOW_MT_FIXED :
-+			HT_IRQ_LOW_MT_ARBITRATED) |
-+		HT_IRQ_LOW_IRQ_MASKED;
-+
-+	write_ht_irq_msg(irq, &msg);
-+
-+	irq_set_chip_and_handler_name(irq, &ht_irq_chip,
-+				      handle_edge_irq, "edge");
-+
-+	dev_dbg(&dev->dev, "irq %d for HT\n", irq);
-+
-+	return 0;
-+}
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index b9fdef0299a4..bca60cd61950 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -32,7 +32,6 @@
- #include <linux/module.h>
- #include <linux/syscore_ops.h>
- #include <linux/irqdomain.h>
--#include <linux/htirq.h>
- #include <linux/freezer.h>
- #include <linux/kthread.h>
- #include <linux/jiffies.h>	/* time_after() */
-@@ -49,7 +48,6 @@
- #include <asm/dma.h>
- #include <asm/timer.h>
- #include <asm/i8259.h>
--#include <asm/hypertransport.h>
- #include <asm/setup.h>
- #include <asm/irq_remapping.h>
- #include <asm/hw_irq.h>
-@@ -2449,95 +2447,6 @@ static int __init ioapic_init_ops(void)
- 
- device_initcall(ioapic_init_ops);
- 
--/*
-- * Hypertransport interrupt support
-- */
--#ifdef CONFIG_HT_IRQ
--
--static void target_ht_irq(unsigned int irq, unsigned int dest, u8 vector)
--{
--	struct ht_irq_msg msg;
--	fetch_ht_irq_msg(irq, &msg);
--
--	msg.address_lo &= ~(HT_IRQ_LOW_VECTOR_MASK | HT_IRQ_LOW_DEST_ID_MASK);
--	msg.address_hi &= ~(HT_IRQ_HIGH_DEST_ID_MASK);
--
--	msg.address_lo |= HT_IRQ_LOW_VECTOR(vector) | HT_IRQ_LOW_DEST_ID(dest);
--	msg.address_hi |= HT_IRQ_HIGH_DEST_ID(dest);
--
--	write_ht_irq_msg(irq, &msg);
--}
--
--static int
--ht_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
--{
--	struct irq_cfg *cfg = data->chip_data;
--	unsigned int dest;
--	int ret;
--
--	ret = apic_set_affinity(data, mask, &dest);
--	if (ret)
--		return ret;
--
--	target_ht_irq(data->irq, dest, cfg->vector);
--	return IRQ_SET_MASK_OK_NOCOPY;
--}
--
--static struct irq_chip ht_irq_chip = {
--	.name			= "PCI-HT",
--	.irq_mask		= mask_ht_irq,
--	.irq_unmask		= unmask_ht_irq,
--	.irq_ack		= apic_ack_edge,
--	.irq_set_affinity	= ht_set_affinity,
--	.irq_retrigger		= apic_retrigger_irq,
--};
--
--int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
--{
--	struct irq_cfg *cfg;
--	struct ht_irq_msg msg;
--	unsigned dest;
--	int err;
--
--	if (disable_apic)
--		return -ENXIO;
--
--	cfg = irq_cfg(irq);
--	err = assign_irq_vector(irq, cfg, apic->target_cpus());
--	if (err)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(cfg->domain,
--					   apic->target_cpus(), &dest);
--	if (err)
--		return err;
--
--	msg.address_hi = HT_IRQ_HIGH_DEST_ID(dest);
--
--	msg.address_lo =
--		HT_IRQ_LOW_BASE |
--		HT_IRQ_LOW_DEST_ID(dest) |
--		HT_IRQ_LOW_VECTOR(cfg->vector) |
--		((apic->irq_dest_mode == 0) ?
--			HT_IRQ_LOW_DM_PHYSICAL :
--			HT_IRQ_LOW_DM_LOGICAL) |
--		HT_IRQ_LOW_RQEOI_EDGE |
--		((apic->irq_delivery_mode != dest_LowestPrio) ?
--			HT_IRQ_LOW_MT_FIXED :
--			HT_IRQ_LOW_MT_ARBITRATED) |
--		HT_IRQ_LOW_IRQ_MASKED;
--
--	write_ht_irq_msg(irq, &msg);
--
--	irq_set_chip_and_handler_name(irq, &ht_irq_chip,
--				      handle_edge_irq, "edge");
--
--	dev_printk(KERN_DEBUG, &dev->dev, "irq %d for HT\n", irq);
--
--	return 0;
--}
--#endif /* CONFIG_HT_IRQ */
--
- static int
- io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
- {
--- 
-1.7.10.4
+My inclination is to apply both patches.  It doesn't seem strictly
+necessary to ignore the device ID on this platform, but I don't think we
+gain anything by verifying that device ID == 0xffff except confirming spec
+compliance.
 
+We *could* put more effort into reproducing the original problem, e.g.,
+by building v2.6.24-rc1, where this problem was originally reported, and
+(hopefully) reproducing it there, then figuring out where it got fixed
+along the way.  But I'm not sure it's worth the effort.
+
+Bjorn
