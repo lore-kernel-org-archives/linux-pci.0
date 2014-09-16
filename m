@@ -1,128 +1,218 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f177.google.com ([209.85.216.177]:64155 "EHLO
-	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756678AbaIIPuf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Sep 2014 11:50:35 -0400
-Received: by mail-qc0-f177.google.com with SMTP id i8so17557053qcq.22
-        for <linux-pci@vger.kernel.org>; Tue, 09 Sep 2014 08:50:27 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <DUB130-DS63ED85165793FD03D1CB1DBC50@phx.gbl>
-References: <DUB130-DS10845119A34A53DA8A6430DBC50@phx.gbl> <CAErSpo4GRh2LzeoDu-84h1+YfkYuCz4yLE2xGV8V4GG8ajsrcw@mail.gmail.com>
- <DUB130-DS63ED85165793FD03D1CB1DBC50@phx.gbl>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 9 Sep 2014 09:50:06 -0600
-Message-ID: <CAErSpo4_S_9OLrODQO8u0VZU-7sv2XbhcAUd7CxjaV37zcY_Sg@mail.gmail.com>
-Subject: Re: PCIe root bridge and memory ranges.
-To: Robert <RJSmith92@live.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: ACPI: Add interfaces to parse IOAPIC ID for IOAPIC hotplug
+Date: Tue, 16 Sep 2014 14:46:41 +0800
+Message-Id: <1410850001-2242-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410422758-24942-5-git-send-email-jiang.liu@linux.intel.com>
+References: <1410422758-24942-5-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 4, 2014 at 3:41 PM, Robert <RJSmith92@live.com> wrote:
-> Bjorn Helgaas wrote:
->> I don't really know anything about PAM registers.  Conceptually, the
->> PNP0A08 _CRS tells the OS that "if the host bridge sees a transaction
->> to an address in _CRS, it will forward it to PCI."  That allows the OS
->> manage BAR assignments for PCI devices.  If we hot-add a PCI device,
->> the OS can assign space for it from anything in _CRS.
->
->
-> The PAM registers are used for the legacy DOS memory ranges (0xA0000 -
-> 0xFFFFF) and either send reads/writes into DRAM or to the DMI. I was a
-> little confused because they show up in the _CRS for the PCI root bridge,
-> but reading the Haswell datasheet it never mentions that they go through the
-> PCI root bridge, just that they are sent to DMI. I would think that they
-> don't go through the root bridge and are there to let an OS know if it needs
-> to map a legacy device or something (not sure on that)?
+From: Yinghai Lu <yinghai@kernel.org>
 
-I don't know much about DMI, but as far as I know, it is not visible
-in the ACPI platform description.  If the range at 0xA0000 can be used
-for a PCI device, then it needs to be in the _CRS of the host bridge.
+We need to parse APIC ID for IOAPIC registration for IOAPIC hotplug.
+ACPI _MAT method and MADT table are used to figure out IOAPIC ID, just
+like parsing CPU APIC ID for CPU hotplug.
 
->> Theoretically, addresses not mentioned in _CRS should not be passed
->> down to PCI.  This is not always true in practice, of course.
->> Sometimes BIOSes leave PCI BARs assigned with addresses outside the
->> _CRS ranges.  As far as the kernel is concerned, that is illegal, and
->> both Windows and Linux will try to move those BARs so they are inside
->> a _CRS range.  But often those devices actually do work even when they
->> are outside the _CRS ranges, so obviously the bridge is forwarding
->> more than what _CRS describes.
->
->
-> Thanks, that's what I'm thinking as well. For example the Haswell datasheet
-> says that up to the 512GB address mark can be used for MMIO, but the _CRS
-> for the root bridge only mentions the '0xC0000000 – 0xFEAFFFFF' range, and
-> nothing above the 4GB mark. I'd be interested to see what happens if you
-> filled up that space with devices, would the BIOS then create a new _CRS
-> entry to tell the OS it can map devices at regions above 4GB?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+Hi Thomas,
+	I have fixed the docbook issues, and renamed functions with
+more meaningful names.
+Regards!
+Gerry
+---
+ drivers/acpi/processor_core.c |  122 ++++++++++++++++++++++++++++++++++++++---
+ include/linux/acpi.h          |    4 ++
+ 2 files changed, 117 insertions(+), 9 deletions(-)
 
-Sounds possible.  It seems like BIOSes often don't really do anything
-with the bus address space above 4GB even when the hardware supports
-it.  And of course, Linux has no idea what the hardware actually
-supports, since we only look at the ACPI PNP0A03/08 descriptions.
+diff --git a/drivers/acpi/processor_core.c b/drivers/acpi/processor_core.c
+index b048f3752c2b..4a3150f2187c 100644
+--- a/drivers/acpi/processor_core.c
++++ b/drivers/acpi/processor_core.c
+@@ -4,6 +4,10 @@
+  *
+  *	Alex Chiang <achiang@hp.com>
+  *	- Unified x86/ia64 implementations
++ *
++ * I/O APIC hotplug support
++ *	Yinghai Lu <yinghai@kernel.org>
++ *	Jiang Liu <jiang.liu@intel.com>
+  */
+ #include <linux/export.h>
+ #include <linux/acpi.h>
+@@ -12,6 +16,21 @@
+ #define _COMPONENT		ACPI_PROCESSOR_COMPONENT
+ ACPI_MODULE_NAME("processor_core");
+ 
++static struct acpi_table_madt *get_madt_table(void)
++{
++	static struct acpi_table_madt *madt;
++	static int read_madt;
++
++	if (!read_madt) {
++		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
++					(struct acpi_table_header **)&madt)))
++			madt = NULL;
++		read_madt++;
++	}
++
++	return madt;
++}
++
+ static int map_lapic_id(struct acpi_subtable_header *entry,
+ 		 u32 acpi_id, int *apic_id)
+ {
+@@ -67,17 +86,10 @@ static int map_lsapic_id(struct acpi_subtable_header *entry,
+ static int map_madt_entry(int type, u32 acpi_id)
+ {
+ 	unsigned long madt_end, entry;
+-	static struct acpi_table_madt *madt;
+-	static int read_madt;
+ 	int apic_id = -1;
++	struct acpi_table_madt *madt;
+ 
+-	if (!read_madt) {
+-		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
+-					(struct acpi_table_header **)&madt)))
+-			madt = NULL;
+-		read_madt++;
+-	}
+-
++	madt = get_madt_table();
+ 	if (!madt)
+ 		return apic_id;
+ 
+@@ -203,3 +215,95 @@ int acpi_get_cpuid(acpi_handle handle, int type, u32 acpi_id)
+ 	return acpi_map_cpuid(apic_id, acpi_id);
+ }
+ EXPORT_SYMBOL_GPL(acpi_get_cpuid);
++
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++static int get_ioapic_id(struct acpi_subtable_header *entry, u32 gsi_base,
++			 u64 *phys_addr, int *ioapic_id)
++{
++	struct acpi_madt_io_apic *ioapic = (struct acpi_madt_io_apic *)entry;
++
++	if (ioapic->global_irq_base != gsi_base)
++		return 0;
++
++	*phys_addr = ioapic->address;
++	*ioapic_id = ioapic->id;
++	return 1;
++}
++
++static int parse_madt_ioapic_entry(u32 gsi_base, u64 *phys_addr)
++{
++	struct acpi_subtable_header *hdr;
++	unsigned long madt_end, entry;
++	int apic_id = -1;
++	struct acpi_table_madt *madt;
++
++	madt = get_madt_table();
++	if (!madt)
++		return apic_id;
++
++	entry = (unsigned long)madt;
++	madt_end = entry + madt->header.length;
++
++	/* Parse all entries looking for a match. */
++	entry += sizeof(struct acpi_table_madt);
++	while (entry + sizeof(struct acpi_subtable_header) < madt_end) {
++		hdr = (struct acpi_subtable_header *)entry;
++		if (hdr->type == ACPI_MADT_TYPE_IO_APIC &&
++		    get_ioapic_id(hdr, gsi_base, phys_addr, &apic_id))
++			break;
++		else
++			entry += hdr->length;
++	}
++
++	return apic_id;
++}
++
++static int parse_mat_ioapic_entry(acpi_handle handle, u32 gsi_base,
++				  u64 *phys_addr)
++{
++	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
++	union acpi_object *obj;
++	struct acpi_subtable_header *header;
++	int apic_id = -1;
++
++	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_MAT", NULL, &buffer)))
++		goto exit;
++
++	if (!buffer.length || !buffer.pointer)
++		goto exit;
++
++	obj = buffer.pointer;
++	if (obj->type != ACPI_TYPE_BUFFER ||
++	    obj->buffer.length < sizeof(struct acpi_subtable_header))
++		goto exit;
++
++	header = (struct acpi_subtable_header *)obj->buffer.pointer;
++	if (header->type == ACPI_MADT_TYPE_IO_APIC)
++		get_ioapic_id(header, gsi_base, phys_addr, &apic_id);
++
++exit:
++	kfree(buffer.pointer);
++	return apic_id;
++}
++
++/**
++ * acpi_get_ioapic_id - Get IOAPIC ID and physical address matching @gsi_base
++ * @handle:	ACPI object for IOAPIC device
++ * @gsi_base:	GSI base to match with
++ * @phys_add:	hold physical address of matching IOAPIC record
++ *
++ * Walk resources returned by ACPI_MAT method, then ACPI MADT table, to search
++ * for an ACPI IOAPIC record matching @gsi_base.
++ * Return IOAPIC id and physical address if found a match, otherwise return <0.
++ */
++int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr)
++{
++	int apic_id;
++
++	apic_id = parse_mat_ioapic_entry(handle, gsi_base, phys_addr);
++	if (apic_id == -1)
++		apic_id = parse_madt_ioapic_entry(gsi_base, phys_addr);
++
++	return apic_id;
++}
++#endif /* CONFIG_ACPI_HOTPLUG_IOAPIC */
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 807cbc46d73e..3574f137242e 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -146,6 +146,10 @@ int acpi_map_lsapic(acpi_handle handle, int physid, int *pcpu);
+ int acpi_unmap_lsapic(int cpu);
+ #endif /* CONFIG_ACPI_HOTPLUG_CPU */
+ 
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
++#endif
++
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
+ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
+ void acpi_irq_stats_init(void);
+-- 
+1.7.10.4
 
->> That's possible, and I think many older systems used to work that way.
->> But it is not allowed by the ACPI spec, at least partly because you
->> can only have one subtractive decode bridge, and modern systems
->> typically have several PCI host bridges.
->
->
-> Looking at the datasheet again, it says for the PCI regions "PCI MemoryAdd.
-> Range (subtractively decoded to DMI)". I presume this means that the root
-> bridge is using subtractive decoding, as the system only has one root bridge
-> would that be possible?,
-
-A host bridge definitely *can* use subtractive decoding.  But at least
-on ACPI systems, that level of detail is really invisible to Linux.
-We only know about the abstract host bridge described by ACPI, which
-tells us about the positively decoded regions claimed by the bridge.
-
-There actually is a _DEC bit in the ACPI Extended Address Space
-Descriptor (ACPI r5.0, sec 6.4.3.5.4), that means "the bridge
-subtractively decodes this address."  But Linux doesn't look at this
-bit, and I assume it means that ACPI would have explicitly describe
-all the address space that could be subtractively decoded anyway.
-
-> and if you have a system with multiple root bridges
-> then I'd guess that the firmware would need to program each bridge with a
-> specific range?
-
-Yes.
-
-> I was looking at the Intel PCI root bridge spec, which can be found at
-> (http://www.intel.co.uk/content/dam/doc/reference-guide/efi-pci-host-bridge-allocation-protocol-specification.pdf)
-> and it mentions that each root bridge has to request resources from the host
-> bridge that will then allocate it resources etc. It's from 2002 so I'm not
-> sure if it is used anymore but does anyone know if this is still used, and
-> in my system that has one root bridge and looks to be using subtractive
-> decoding, I don't think it would be used in my system. With system that have
-> 2 or more root bridges, would this protocol still be used?
-
-Sorry, I don't know anything about this.  That spec is talking about
-firmware, and really outside the view of the kernel.
-
-> ..and finally, regarding PCI, an ancient HP article says "The PCI 2.2
-> specification (pages 202-204) dictates that root PCI bus must be allocated
-> one block of MMIO addresses. This block of addresses is subdivided into the
-> regions needed for each device on that PCI bus. And each of those device
-> MMIO regions must be aligned on addresses that are multiples of the size of
-> the region". The part that says the root PCI bus must be allocated one block
-> of addresses, is this true? I have looked at the PCI 2.2 spec pages 202 -
-> 204 and it says nothing about this and am I right in thinking the root
-> bridges are chipset specific, so it wouldn't' be in the PCI 2.2 spec anyway?
-> would it be possible for a root bridge to have 2 blocks of addresses go
-> through it (not that you ever would) and then have 2 _CRS entries for that
-> root bridge?
-
-Hmm.  I don't have a copy of the PCI 2.2 spec, but I don't think this
-is true.  As far as I know, there is no restriction on the number of
-regions that a PCI host bridge can claim.  The discovery and
-programming of these regions is device-specific, of course, so this is
-all outside the scope of the PCI specs.
-
-We did a lot of work a few years ago to support an arbitrary number of
-apertures, e.g.,
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=2fe2abf896c1
-
-Bjorn
