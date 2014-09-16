@@ -1,263 +1,78 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC v1 14/28] iommu/vt-d: Clean up unsued code
-Date: Fri, 26 Sep 2014 22:57:44 +0800
-Message-Id: <1411743478-31435-15-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:45173 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754006AbaIPXip (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 19:38:45 -0400
+Received: by mail-pd0-f181.google.com with SMTP id w10so802504pde.12
+        for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 16:38:45 -0700 (PDT)
+Date: Tue, 16 Sep 2014 17:38:41 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: matwey@sai.msu.ru, Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	matwey.kornilov@gmail.com
+Subject: Re: [PATCH] Export functions from pcie-designware
+Message-ID: <20140916233841.GJ5050@google.com>
+References: <1409401476-5002-1-git-send-email-matwey@sai.msu.ru>
+ <CAOMZO5DzNo3Y6=R4mA=h0+RjWoM6UBCqXxqeEqUM4iu5RjrBEA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAOMZO5DzNo3Y6=R4mA=h0+RjWoM6UBCqXxqeEqUM4iu5RjrBEA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have converted to hierarchy irqdomain, so clean up unused code.
+On Sat, Aug 30, 2014 at 10:07:30AM -0300, Fabio Estevam wrote:
+> On Sat, Aug 30, 2014 at 9:24 AM,  <matwey@sai.msu.ru> wrote:
+> > From: "Matwey V. Kornilov" <matwey@sai.msu.ru>
+> >
+> > pcie-spear13xx when built as module requires the functions from pcie-designware.
+> > Export them properly.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel_irq_remapping.c |  186 +----------------------------------
- 1 file changed, 1 insertion(+), 185 deletions(-)
+I don't know how valuable pcie-spear13xx as a module is.  No other host
+drivers are supported as a module.  Maybe we should just change
+pcie-spear13xx from tristate to bool?
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 07705d2bf48e..41ece6b0564e 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -64,35 +64,6 @@ static DEFINE_RAW_SPINLOCK(irq_2_ir_lock);
- 
- static int __init parse_ioapics_under_ir(void);
- 
--static struct irq_2_iommu *irq_2_iommu(unsigned int irq)
--{
--	struct irq_cfg *cfg = irq_cfg(irq);
--	return cfg ? &cfg->irq_2_iommu : NULL;
--}
--
--static int get_irte(int irq, struct irte *entry)
--{
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
--	unsigned long flags;
--	int index;
--
--	if (!entry || !irq_iommu)
--		return -1;
--
--	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
--
--	if (unlikely(!irq_iommu->iommu)) {
--		raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--		return -1;
--	}
--
--	index = irq_iommu->irte_index + irq_iommu->sub_handle;
--	*entry = *(irq_iommu->iommu->ir_table->base + index);
--
--	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--	return 0;
--}
--
- static int alloc_irte(struct intel_iommu *iommu, int irq,
- 		      struct irq_2_iommu *irq_iommu, u16 count)
- {
-@@ -230,29 +201,6 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
- 	return qi_flush_iec(iommu, index, irq_iommu->irte_mask);
- }
- 
--static int free_irte(int irq)
--{
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
--	unsigned long flags;
--	int rc;
--
--	if (!irq_iommu || irq_iommu->iommu == NULL)
--		return -1;
--
--	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
--
--	rc = clear_entries(irq_iommu);
--
--	irq_iommu->iommu = NULL;
--	irq_iommu->irte_index = 0;
--	irq_iommu->sub_handle = 0;
--	irq_iommu->irte_mask = 0;
--
--	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--
--	return rc;
--}
--
- /*
-  * source validation type
-  */
-@@ -878,8 +826,7 @@ error:
- 	return -1;
- }
- 
--static void prepare_irte(struct irte *irte, int vector,
--			 unsigned int dest)
-+static void prepare_irte(struct irte *irte, int vector, unsigned int dest)
- {
- 	memset(irte, 0, sizeof(*irte));
- 
-@@ -899,134 +846,6 @@ static void prepare_irte(struct irte *irte, int vector,
- 	irte->redir_hint = 1;
- }
- 
--static int intel_setup_ioapic_entry(int irq,
--				    struct IO_APIC_route_entry *route_entry,
--				    unsigned int destination, int vector,
--				    struct io_apic_irq_attr *attr)
--{
--	int ioapic_id = mpc_ioapic_id(attr->ioapic);
--	struct intel_iommu *iommu;
--	struct IR_IO_APIC_route_entry *entry;
--	struct irte irte;
--	int index;
--
--	down_read(&dmar_global_lock);
--	iommu = map_ioapic_to_ir(ioapic_id);
--	if (!iommu) {
--		pr_warn("No mapping iommu for ioapic %d\n", ioapic_id);
--		index = -ENODEV;
--	} else {
--		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
--		if (index < 0) {
--			pr_warn("Failed to allocate IRTE for ioapic %d\n",
--				ioapic_id);
--			index = -ENOMEM;
--		}
--	}
--	up_read(&dmar_global_lock);
--	if (index < 0)
--		return index;
--
--	prepare_irte(&irte, vector, destination);
--
--	/* Set source-id of interrupt request */
--	set_ioapic_sid(&irte, ioapic_id);
--
--	modify_irte(irq_2_iommu(irq), &irte);
--
--	apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: "
--		"Set IRTE entry (P:%d FPD:%d Dst_Mode:%d "
--		"Redir_hint:%d Trig_Mode:%d Dlvry_Mode:%X "
--		"Avail:%X Vector:%02X Dest:%08X "
--		"SID:%04X SQ:%X SVT:%X)\n",
--		attr->ioapic, irte.present, irte.fpd, irte.dst_mode,
--		irte.redir_hint, irte.trigger_mode, irte.dlvry_mode,
--		irte.avail, irte.vector, irte.dest_id,
--		irte.sid, irte.sq, irte.svt);
--
--	entry = (struct IR_IO_APIC_route_entry *)route_entry;
--	memset(entry, 0, sizeof(*entry));
--
--	entry->index2	= (index >> 15) & 0x1;
--	entry->zero	= 0;
--	entry->format	= 1;
--	entry->index	= (index & 0x7fff);
--	/*
--	 * IO-APIC RTE will be configured with virtual vector.
--	 * irq handler will do the explicit EOI to the io-apic.
--	 */
--	entry->vector	= attr->ioapic_pin;
--	entry->mask	= 0;			/* enable IRQ */
--	entry->trigger	= attr->trigger;
--	entry->polarity	= attr->polarity;
--
--	/* Mask level triggered irqs.
--	 * Use IRQ_DELAYED_DISABLE for edge triggered irqs.
--	 */
--	if (attr->trigger)
--		entry->mask = 1;
--
--	return 0;
--}
--
--/*
-- * Migrate the IO-APIC irq in the presence of intr-remapping.
-- *
-- * For both level and edge triggered, irq migration is a simple atomic
-- * update(of vector and cpu destination) of IRTE and flush the hardware cache.
-- *
-- * For level triggered, we eliminate the io-apic RTE modification (with the
-- * updated vector information), by using a virtual vector (io-apic pin number).
-- * Real vector that is used for interrupting cpu will be coming from
-- * the interrupt-remapping table entry.
-- *
-- * As the migration is a simple atomic update of IRTE, the same mechanism
-- * is used to migrate MSI irq's in the presence of interrupt-remapping.
-- */
--static int
--intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
--			  bool force)
--{
--	struct irq_cfg *cfg = irqd_cfg(data);
--	unsigned int dest, irq = data->irq;
--	struct irte irte;
--	int err;
--
--	if (get_irte(irq, &irte))
--		return -EBUSY;
--
--	err = assign_irq_vector(irq, cfg, mask);
--	if (err)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(cfg->domain, mask, &dest);
--	if (err) {
--		if (assign_irq_vector(irq, cfg, data->affinity))
--			pr_err("Failed to recover vector for irq %d\n", irq);
--		return err;
--	}
--
--	irte.vector = cfg->vector;
--	irte.dest_id = IRTE_DEST(dest);
--
--	/*
--	 * Atomically updates the IRTE with the new destination, vector
--	 * and flushes the interrupt entry cache.
--	 */
--	modify_irte(irq_2_iommu(irq), &irte);
--
--	/*
--	 * After this point, all the interrupts will start arriving
--	 * at the new destination. So, time to cleanup the previous
--	 * vector allocation.
--	 */
--	if (cfg->move_in_progress)
--		send_cleanup_vector(cfg);
--
--	cpumask_copy(data->affinity, mask);
--	return 0;
--}
--
- static struct irq_domain *intel_get_ir_irq_domain(struct irq_alloc_info *info)
- {
- 	struct intel_iommu *iommu = NULL;
-@@ -1100,9 +919,6 @@ struct irq_remap_ops intel_irq_remap_ops = {
- 	.disable		= disable_irq_remapping,
- 	.reenable		= reenable_irq_remapping,
- 	.enable_faulting	= enable_drhd_fault_handling,
--	.setup_ioapic_entry	= intel_setup_ioapic_entry,
--	.set_affinity		= intel_ioapic_set_affinity,
--	.free_irq		= free_irte,
- 	.get_ir_irq_domain	= intel_get_ir_irq_domain,
- 	.get_irq_domain		= intel_get_irq_domain,
- 	.get_ioapic_entry	= intel_get_ioapic_entry,
--- 
-1.7.10.4
+> >
+> > Signed-off-by: Matwey V. Kornilov <matwey@sai.msu.ru>
+> > ---
+> >  drivers/pci/host/pcie-designware.c |  7 +++++++
+> >  drivers/pci/host/pcie-designware.h | 14 +++++++-------
+> >  2 files changed, 14 insertions(+), 7 deletions(-)
+> >
+> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > index 52bd3a1..7914b92c 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -89,6 +89,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+> >
+> >         return PCIBIOS_SUCCESSFUL;
+> >  }
+> > +EXPORT_SYMBOL(dw_pcie_cfg_read);
+> 
+> What about using EXPORT_SYMBOL_GPL instead?
+> 
+> > -int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+> > -int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
+> > -irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+> > -void dw_pcie_msi_init(struct pcie_port *pp);
+> > -int dw_pcie_link_up(struct pcie_port *pp);
+> > -void dw_pcie_setup_rc(struct pcie_port *pp);
+> > -int dw_pcie_host_init(struct pcie_port *pp);
+> > +extern int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+> > +extern int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
+> > +extern irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+> > +extern void dw_pcie_msi_init(struct pcie_port *pp);
+> > +extern int dw_pcie_link_up(struct pcie_port *pp);
+> > +extern void dw_pcie_setup_rc(struct pcie_port *pp);
+> > +extern int dw_pcie_host_init(struct pcie_port *pp);
+> 
+> Why is this needed?
 
+- This is logically separate from the EXPORT_SYMBOL change, so it should be
+  a separate patch.
+
+- I wouldn't take a patch adding "extern" to function declarations in a
+  header file because I recently removed them all, e.g.,
+  http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=f39d5b72913e.
