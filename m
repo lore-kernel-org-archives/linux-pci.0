@@ -1,80 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:36495 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753060AbaIHXlc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 19:41:32 -0400
-Date: Mon, 8 Sep 2014 16:41:31 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Aristeu Rozanski <aris@redhat.com>,
-	Mauro Carvalho Chehab <m.chehab@samsung.com>,
-	Doug Thompson <dougthompson@xmission.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-edac@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rui Wang <ruiv.wang@gmail.com>
-Subject: Re: [PATCH 2/2] sb_edac: Claim a different PCI device
-Message-ID: <20140908234131.GA14042@kroah.com>
-References: <cover.1408051536.git.luto@amacapital.net>
- <59f55d679cc596731589516a71075b6059fcaaa5.1408051536.git.luto@amacapital.net>
- <20140908141035.GK22290@redhat.com>
- <CALCETrX3KO=1T1m4Qwn+j7vqqhEuNb8Xdkf_c2Ne4P9AbpwOoA@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5417E40A.6030009@linux.intel.com>
+Date: Tue, 16 Sep 2014 15:17:30 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALCETrX3KO=1T1m4Qwn+j7vqqhEuNb8Xdkf_c2Ne4P9AbpwOoA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Yijing Wang <wangyijing@huawei.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+CC: Ashok Raj <ashok.raj@intel.com>, Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: Re: [Patch Part3 V5 0/8] Enable support of Intel DMAR device hotplug
+References: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com> <54169B1B.1070709@huawei.com>
+In-Reply-To: <54169B1B.1070709@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 08, 2014 at 02:49:59PM -0700, Andy Lutomirski wrote:
-> On Mon, Sep 8, 2014 at 7:10 AM, Aristeu Rozanski <aris@redhat.com> wrote:
-> > On Thu, Aug 14, 2014 at 02:45:41PM -0700, Andy Lutomirski wrote:
-> >> sb_edac controls a large number of different PCI functions.  Rather
-> >> than registering as a normal PCI driver for all of them, it
-> >> registers for just one so that it gets probed and, at probe time, it
-> >> looks for all the others.
-> >>
-> >> Coincidentally, the device it registers for also contains the SMBUS
-> >> registers, so the PCI core will refuse to probe both sb_edac and a
-> >> future iMC SMBUS driver.  The drivers don't actually conflict, so
-> >> just change sb_edac's device table to probe a different device.
-> >>
-> >> An alternative fix would be to merge the two drivers, but sb_edac
-> >> will also refuse to load on non-ECC systems, whereas i2c_imc would
-> >> still be useful without ECC.
-> >>
-> >> The only user-visible change should be that sb_edac appears to bind
-> >> a different device.
-> >>
-> >> Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>
-> >> Cc: Rui Wang <ruiv.wang@gmail.com>
-> >> Signed-off-by: Andy Lutomirski <luto@amacapital.net>
-> >> ---
-> >>  drivers/edac/sb_edac.c | 2 +-
-> >>  1 file changed, 1 insertion(+), 1 deletion(-)
-> >>
-> >> diff --git a/drivers/edac/sb_edac.c b/drivers/edac/sb_edac.c
-> >> index a2597e9313c6..e3bc2cced580 100644
-> >> --- a/drivers/edac/sb_edac.c
-> >> +++ b/drivers/edac/sb_edac.c
-> >> @@ -432,7 +432,7 @@ static const struct pci_id_table pci_dev_descr_ibridge_table[] = {
-> >>   *   pci_device_id   table for which devices we are looking for
-> >>   */
-> >>  static const struct pci_device_id sbridge_pci_tbl[] = {
-> >> -     {PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_TA)},
-> >> +     {PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_SBRIDGE_IMC_HA0)},
-> >>       {PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IBRIDGE_IMC_HA0_TA)},
-> >>       {0,}                    /* 0 terminated list. */
-> >>  };
-> >
-> > Acked-by: Aristeu Rozanski <aris@redhat.com>
-> >
+
+
+On 2014/9/15 15:54, Yijing Wang wrote:
+> I built and boot this series in Huawei RH5885 (Intel(R) Xeon(R) CPU E7- 4807, two IOHs and two IOMMUs),
+> It works fine, IRQ remap and DMA remap are both look good.
+> But because my platform BIOS has no _DSM, so I didn't test the hotplug case yet.
 > 
-> Whose tree will this go through?
-
-Mauro should have a tree for this as he's the subsystem maintainer.
-
-thanks,
-
-greg k-h
+> Thanks!
+> Yijing.
+Hi Yijing,
+	Thanks for your great effort to review and test this patch set!
+Regards!
+Gerry
+> 
+> 
+> On 2014/9/12 10:10, Jiang Liu wrote:
+>> When hot plugging a descrete IOH or a physical processor with embedded
+>> IIO, we need to handle DMAR(or IOMMU) unit in the PCIe host bridge if
+>> DMAR is in use. This patch set tries to enhance current DMAR/IOMMU/IR
+>> drivers to support hotplug and is based on latest Linus master branch.
+>>
+>> All prerequisite patches to support DMAR device hotplug have been merged
+>> into the mainstream kernel, and this is the last patch set to enable
+>> DMAR device hotplug.
+>>
+>> You may access the patch set at:
+>> https://github.com/jiangliu/linux.git iommu/hotplug_v5
+>>
+>> This patch set has been tested on Intel development machine.
+>> Appreciate any comments and tests.
+>>
+>> Patch 1-4 enhances DMAR framework to support hotplug
+>> Patch 5 enhances Intel interrupt remapping driver to support hotplug
+>> Patch 6 enhances error handling in Intel IR driver
+>> Patch 7 enhance Intel IOMMU to support hotplug
+>> Patch 8 enhance ACPI pci_root driver to handle DMAR units
+>>
+>> Jiang Liu (8):
+>>   iommu/vt-d: Introduce helper function dmar_walk_resources()
+>>   iommu/vt-d: Dynamically allocate and free seq_id for DMAR units
+>>   iommu/vt-d: Implement DMAR unit hotplug framework
+>>   iommu/vt-d: Search for ACPI _DSM method for DMAR hotplug
+>>   iommu/vt-d: Enhance intel_irq_remapping driver to support DMAR unit
+>>     hotplug
+>>   iommu/vt-d: Enhance error recovery in function
+>>     intel_enable_irq_remapping()
+>>   iommu/vt-d: Enhance intel-iommu driver to support DMAR unit hotplug
+>>   pci, ACPI, iommu: Enhance pci_root to support DMAR device hotplug
+>>
+>>  drivers/acpi/pci_root.c             |   16 +-
+>>  drivers/iommu/dmar.c                |  532 ++++++++++++++++++++++++++++-------
+>>  drivers/iommu/intel-iommu.c         |  297 ++++++++++++++-----
+>>  drivers/iommu/intel_irq_remapping.c |  233 +++++++++++----
+>>  include/linux/dmar.h                |   50 +++-
+>>  5 files changed, 888 insertions(+), 240 deletions(-)
+>>
+> 
+> 
