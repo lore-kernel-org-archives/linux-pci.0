@@ -1,71 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:38050 "EHLO comal.ext.ti.com"
+Received: from mga09.intel.com ([134.134.136.24]:16618 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751150AbaIIWu3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Sep 2014 18:50:29 -0400
-Message-ID: <540F8425.70304@ti.com>
-Date: Tue, 9 Sep 2014 18:50:13 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+	id S1752686AbaIPH3b (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 16 Sep 2014 03:29:31 -0400
+Message-ID: <5417E00D.5000108@linux.intel.com>
+Date: Tue, 16 Sep 2014 15:00:29 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <linux-arm-kernel@lists.infradead.org>, <robh+dt@kernel.org>,
-	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<bhelgaas@google.com>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 2/2] PCI: keystone: update to support multiple pci
- ports
-References: <1410293835-13050-1-git-send-email-m-karicheri2@ti.com> <9042477.aRbAhpkfQ5@wuerfel> <540F75DF.5050904@ti.com> <3967092.l9bxcqMaSa@wuerfel>
-In-Reply-To: <3967092.l9bxcqMaSa@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Yijing Wang <wangyijing@huawei.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+CC: Ashok Raj <ashok.raj@intel.com>, Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: Re: [Patch Part3 V5 5/8] iommu/vt-d: Enhance intel_irq_remapping
+ driver to support DMAR unit hotplug
+References: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com> <1410487848-6027-6-git-send-email-jiang.liu@linux.intel.com> <54164D01.4060003@huawei.com>
+In-Reply-To: <54164D01.4060003@huawei.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/09/2014 05:52 PM, Arnd Bergmann wrote:
-> On Tuesday 09 September 2014 17:49:19 Murali Karicheri wrote:
->> Actually this is an inteded. The vendor ID is in a register indicated by
->> reg offset and as per the device spec, it needs to be read and updated
->> by the software. Now since multiple instances of PCI device needs to be
->> read the same register, the reading happens in the probe() and same is
->> unmapped after that.
->>
->> +       ks_pcie->device_id = readl(reg_p)>>  16;
->> +       devm_iounmap(dev, reg_p);
->> +       devm_release_mem_region(dev, res->start, resource_size(res));
->>
->> Afetr that in ks_pcie_host_init(), it update the device_id in the RC's
->> config space.
->
-> I'm not sure I understand the purpose of this. Do you mean you read
-> the vendor/device ID of whichever device happens to get probed first
-> and then program the same ID into all other devices as well?
+On 2014/9/15 10:20, Yijing Wang wrote:
+>> +static void ir_remove_ioapic_hpet_scope(struct intel_iommu *iommu)
+>> +{
+>> +	int i;
+>>  
+>> -			ir_parse_one_hpet_scope(scope, iommu);
+>> -		}
+>> -		start += scope->length;
+>> -	}
+>> +	for (i = 0; i < MAX_HPET_TBS; i++)
+>> +		if (ir_hpet[i].iommu == iommu)
+>> +			ir_hpet[i].iommu = NULL;
+> 
+> Hi Gerry, why not reset whole ir_hpe and ir_ioapic data struct?
+Hi Yijing,
+	Thanks for review. Zero is legal for id, bus and devfn in
+struct ioapic_scope and struct hpet_scope. So we use domain field
+as a flag to mark entry valid or invalid and only reset iommu field.
 
-My mistake. It is the device ID, not vendor ID. The PCI driver supports 
-PCI h/w on K2HK, K2E and K2L SoCs for which PCI device IDs are assigned as
-
-+#define PCIE_RC_K2HK		0xb008
-+#define PCIE_RC_K2E		0xb009
-+#define PCIE_RC_K2L		0xb00a
-+
-
-and the same driver code runs on all these h/w. The device ID is not 
-filled in by default by the h/w, in the config space of the RC at offset 
-1000h "VENDOR_DEVICE_ID Vendor and Device Identification Register". 
-Same is available in a seperate SoC register whose offset is specified 
-by index 2. This is read by driver and updated in the config space. The 
-Vendor ID is however set by default.
-
-There is a mrrs PCI quirk required for Keystone PCI which depends on 
-this vendor ID to be filled correctly as it match vendor id/ device id 
-of the bridge device to apply the quirk.
-
-Hope this clarify your question.
-
-Murali
-
->
-> What if the order changes between two boots? Why does the vendor/device
-> ID of the host bridge even matter at all?
->
-> 	Arnd
-
+Regards!
+Gerry
+> 
+> 
+> 
+>>  
+>> -	return 0;
+>> +	for (i = 0; i < MAX_IO_APICS; i++)
+>> +		if (ir_ioapic[i].iommu == iommu)
+>> +			ir_ioapic[i].iommu = NULL;
+>>  }
+>>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
