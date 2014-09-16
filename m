@@ -1,362 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:36905 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754825AbaIWLAL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 07:00:11 -0400
-Message-ID: <1411470006.3256.13.camel@pengutronix.de>
-Subject: Re: [PATCH v2 5/5] PCI: imx6: add imx6sx pcie support
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Richard Zhu <r65037@freescale.com>
-Cc: linux-pci-owner@vger.kernel.org, linux-pci@vger.kernel.org,
-	shawn.guo@freescale.com, festevam@gmail.com, tharvey@gateworks.com
-Date: Tue, 23 Sep 2014 13:00:06 +0200
-In-Reply-To: <1411445498-20250-6-git-send-email-r65037@freescale.com>
-References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
-	 <1411445498-20250-6-git-send-email-r65037@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+Reply-To: rajatxjain@gmail.com
+In-Reply-To: <20140909053808.GQ8080@google.com>
+References: <53FFA54D.9000907@gmail.com>
+	<CAErSpo5_WMUmnTHpPZt+j04VZoiW1pthQoGV90A5BDQpQgjwOQ@mail.gmail.com>
+	<54065208.3080309@gmail.com>
+	<20140909053808.GQ8080@google.com>
+Date: Mon, 15 Sep 2014 22:10:20 -0700
+Message-ID: <CAA93t1rHu+bfJNKfCws=-ezxAOuRJsLQb4n=eVhZha0iW+oSYA@mail.gmail.com>
+Subject: Re: [PATCH v2] pci/probe: Enable CRS for root port if it is supported
+From: Rajat Jain <rajatxjain@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Richard Yang <weiyang@linux.vnet.ibm.com>,
+	Matthew Wilcox <matthew.r.wilcox@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Josh Logan <joshtlogan@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Dienstag, den 23.09.2014, 12:11 +0800 schrieb Richard Zhu:
-> - imx6sx pcie has its own standalone pcie power supply.
-> In order to turn on the imx6sx pcie power during
-> initialization. Add the pcie regulator and the gpc regmap
-> into the imx6sx pcie structure.
-> - imx6sx pcie has the new added reset mechanism, add the
-> reset operations into the initialization.
-> - Register one PM call-back, enter/exit L2 state of the ASPM
-> during system suspend/resume.
-> 
-> Signed-off-by: Richard Zhu <r65037@freescale.com>
-> ---
->  drivers/pci/host/pci-imx6.c | 164 +++++++++++++++++++++++++++++++++++++++-----
->  1 file changed, 146 insertions(+), 18 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index bc4222b..99ecb5d 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -18,12 +18,16 @@
->  #include <linux/mfd/syscon.h>
->  #include <linux/mfd/syscon/imx6q-iomuxc-gpr.h>
->  #include <linux/module.h>
-> +#include <linux/of_address.h>
-> +#include <linux/of_device.h>
->  #include <linux/of_gpio.h>
->  #include <linux/pci.h>
->  #include <linux/platform_device.h>
->  #include <linux/regmap.h>
-> +#include <linux/regulator/consumer.h>
->  #include <linux/resource.h>
->  #include <linux/signal.h>
-> +#include <linux/syscore_ops.h>
->  #include <linux/types.h>
->  #include <linux/interrupt.h>
->  
-> @@ -31,15 +35,30 @@
->  
->  #define to_imx6_pcie(x)	container_of(x, struct imx6_pcie, pp)
->  
-> +/* The pcie who have standalone power domain */
-> +#define PCIE_PHY_HAS_PWR_DOMAIN		BIT(0)
-> +
-> +struct imx_pcie_data {
-> +	unsigned int flags;
-> +};
-> +
-> +static const struct imx_pcie_data imx6sx_pcie_data = {
-> +	.flags = PCIE_PHY_HAS_PWR_DOMAIN,
-> +};
-> +
+Hi Bjorn,
 
-You don't use this flag anywhere else so all the above is not needed if
-you rewrite the below...
+On Mon, Sep 8, 2014 at 10:38 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Sep 02, 2014 at 04:26:00PM -0700, Rajat Jain wrote:
+>>
+>> As per the PCIe spec, an endpoint may return the configuration cycles
+>> with CRS if it is not yet fully ready to be accessed. If the CRS visibility
+>> is not enabled at the root port, the spec leaves the retry behaviour open
+>> to implementation in such a case. The Intel root ports have chosen to retry
+>> endlessly in this situation. Thus, the root controller may "hang" (repeatedly
+>> retrying the configuration requests until it gets a status other than CRS) if
+>> a device returns CRS for a long time. This can cause a broken endpoint to bring
+>> down the whole PCI hierarchy.
+>>
+>> This was recently known to cause problems on Intel systems and
+>> was discussed here:
+>> http://marc.info/?t=140926298500002&r=1&w=2
+>>
+>> Ref1:
+>> https://www.pcisig.com/specifications/pciexpress/ECN_CRS_Software_Visibility_No27.pdf
+>>
+>> Ref2:
+>> PCIe spec V3.0, pg119, pg127 for "Configuration Request Retry Status"
+>>
+>> Thus enable the CRS visibility for the root ports that support it. This
+>> patch reverts the following commit, but enables CRS visibility only
+>> when the root port supports it:
+>>
+>> ad7edfe04908 ("[PCI] Do not enable CRS Software Visibility by default")
+>>
+>> (Linus' response: http://marc.info/?l=linux-pci&m=140968622520192&w=2)
+>>
+>> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+>> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+>> Signed-off-by: Guenter Roeck <groeck@juniper.net>
+>
+> I put this and the "only look at Vendor ID" patch on a pci/enumeration
+> branch [1].  I rewrote the changelogs to reflect my understanding of what's
+> going on, so probably the real truth is somewhere between your original and
+> mine.  Let me know what should be fixed.
+>
+> We should figure out an easy way for Josh to test these.  Ideally, he could
+> test the second patch by itself first, then both together.
 
->  struct imx6_pcie {
->  	int			reset_gpio;
-> +	const struct		imx_pcie_data *data;
->  	struct clk		*pcie_bus;
->  	struct clk		*pcie_phy;
->  	struct clk		*pcie;
->  	struct pcie_port	pp;
->  	struct regmap		*iomuxc_gpr;
-> +	struct regmap		*gpc_ips_reg;
-> +	struct regulator	*pcie_regulator;
->  	void __iomem		*mem_base;
->  };
-> +static struct imx6_pcie *imx6_pcie;
->  
->  /* PCIe Root Complex registers (memory-mapped) */
->  #define PCIE_RC_LCR				0x7c
-> @@ -77,6 +96,11 @@ struct imx6_pcie {
->  #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
->  #define PHY_RX_OVRD_IN_LO_RX_PLL_EN (1 << 3)
->  
-> +static inline bool is_imx6sx_pcie(struct imx6_pcie *imx6_pcie)
-> +{
-> +	return imx6_pcie->data == &imx6sx_pcie_data;
+OK, Josh and I tested this over the last week on his HW (the HW that
+had originally reported the problem). Somehow his hardware does not
+show the problem in ANY case. I tried the following, and the original
+issue (vendor id = 1) was never seen:
 
-... to return of_device_is_compatible(np, "fsl,imx6sx-pcie");
+1) 3.17-rc2 (has CRS disabled)
+2) 3.17-rc2 + Enable CRS
+3) 3.17-rc2 + Enable CRS + Ignore Device ID
 
-> +}
-> +
->  static int pcie_phy_poll_ack(void __iomem *dbi_base, int exp_val)
->  {
->  	u32 val;
-> @@ -275,11 +299,17 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
->  		goto err_pcie;
->  	}
->  
-> -	/* power up core phy and enable ref clock */
-> -	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> -			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
-> -	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> -			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
-> +	if (is_imx6sx_pcie(imx6_pcie)) {
-> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> +				IMX6SX_GPR12_PCIE_TEST_PD,
-> +				IMX6SX_GPR12_PCIE_TEST_PD_CLR);
-> +	} else {
-> +		/* power up core phy and enable ref clock */
-> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> +				IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
-> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> +				IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
-> +	}
->  
->  	/* allow the clocks to stabilize */
->  	usleep_range(200, 500);
-> @@ -290,6 +320,18 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
->  		msleep(100);
->  		gpio_set_value(imx6_pcie->reset_gpio, 1);
->  	}
-> +
-> +	/*
-> +	 * iMX6SX PCIe has the stand-alone power domain.
-> +	 * refer to the initialization for iMX6SX PCIe,
-> +	 * release the PCIe PHY reset here,
-> +	 * before LTSSM enable is set.
-> +	 */
+The Device always returned the correct Vendor ID and Device ID in all
+cases. Thus even enabling CRS does not make his system fail in anyway.
 
-This comment is confusing. I don't see how this has something to do with
-the power-domain. It should read something like "Release the PHY reset,
-that we have set in imx6_pcie_init_phy() now."
+Thanks,
 
-> +	if (is_imx6sx_pcie(imx6_pcie))
-> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
-> +				IMX6SX_GPR5_PCIE_BTNRST,
-> +				IMX6SX_GPR5_PCIE_BTNRST_CLR);
-> +
->  	return 0;
->  
->  err_pcie:
-> @@ -304,15 +346,38 @@ err_pcie_phy:
->  static void imx6_pcie_init_phy(struct pcie_port *pp)
->  {
->  	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-> +	int ret;
-> +
-> +	/*
-> +	 * iMX6SX PCIe has the stand-alone power domain
-> +	 * add the initialization here for iMX6SX PCIe.
-> +	 */
+Rajat
 
-Again this could be phrased better: "Power up the separate domain
-available on i.MX6SX"
 
-> +	if (is_imx6sx_pcie(imx6_pcie)) {
-> +		/* Force PCIe PHY reset */
-> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
-> +				IMX6SX_GPR5_PCIE_BTNRST,
-> +				IMX6SX_GPR5_PCIE_BTNRST);
-> +
-> +		regmap_update_bits(imx6_pcie->gpc_ips_reg, 0, 1 << 7, 1 << 7);
-
-Magic values here. Also this is the only time we need to access
-gpc_ips_reg. So if this is a prerequisite to enabling the ANATOP
-regulator, I would argue it should be done in the regulator driver.
-
-> +		/* Power up PCIe PHY, ANATOP_REG_CORE offset 0x140, bit13-9 */
-
-Oh so this is actually a PHY regulator, not feeding the whole core, but
-just the PHY? You could remove the comment it is clear what you are
-doing from the code and the offsets are of no interest in the PCIe
-driver.
-
-> +		regulator_set_voltage(imx6_pcie->pcie_regulator,
-> +				1100000, 1100000);
-> +		ret = regulator_enable(imx6_pcie->pcie_regulator);
-> +		if (ret)
-> +			dev_info(pp->dev, "failed to enable pcie regulator.\n");
-> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> +				IMX6SX_GPR12_RX_EQ_MASK, IMX6SX_GPR12_RX_EQ_2);
-> +	}
->  
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> -			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
-> +			IMX6Q_GPR12_PCIE_CTL_2,
-> +			IMX6Q_GPR12_PCIE_CTL_2_CLR);
->  
->  	/* configure constant input signal to the pcie ctrl and phy */
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
->  			IMX6Q_GPR12_DEVICE_TYPE, PCI_EXP_TYPE_ROOT_PORT << 12);
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> -			IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
-> +			IMX6Q_GPR12_LOS_LEVEL, IMX6Q_GPR12_LOS_LEVEL_9);
->  
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
->  			IMX6Q_GPR8_TX_DEEMPH_GEN1, 0 << 0);
-> @@ -370,7 +435,8 @@ static int imx6_pcie_start_link(struct pcie_port *pp)
->  
->  	/* Start LTSSM. */
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> -			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
-> +			IMX6Q_GPR12_PCIE_CTL_2,
-> +			IMX6Q_GPR12_PCIE_CTL_2);
->  
->  	ret = imx6_pcie_wait_for_link(pp);
->  	if (ret)
-> @@ -546,10 +612,64 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
->  	return 0;
->  }
->  
-> +static const struct of_device_id imx6_pcie_of_match[] = {
-> +	{ .compatible = "fsl,imx6q-pcie", },
-> +	{ .compatible = "fsl,imx6sx-pcie", .data = &imx6sx_pcie_data},
-> +	{},
-> +};
-> +MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
-> +
-
-Why are you moving the match table? This seems like unnecessary churn to
-me.
-
-> +#ifdef CONFIG_PM_SLEEP
-> +static int pci_imx_suspend(void)
-> +{
-> +	if (is_imx6sx_pcie(imx6_pcie)) {
-> +		/* PM_TURN_OFF */
-> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> +				BIT(16), 1 << 16);
-> +		udelay(10);
-> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> +				BIT(16), 0 << 16);
-
-Magic numbers here. Please add defines for those.
-
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static void pci_imx_resume(void)
-> +{
-> +	struct pcie_port *pp = &imx6_pcie->pp;
-> +
-> +	if (is_imx6sx_pcie(imx6_pcie)) {
-> +		/* reset iMX6SX PCIe */
-> +		regmap_update_bits(imx6_pcie->iomuxc_gpr,
-> +				IOMUXC_GPR5, BIT(18), 1 << 18);
-> +
-> +		regmap_update_bits(imx6_pcie->iomuxc_gpr,
-> +				IOMUXC_GPR5, BIT(18), 0 << 18);
-> +
-
-Again magic numbers here. Please add defines for those.
-
-> +		/*
-> +		 * controller maybe turn off, re-configure again
-> +		 * Set the CLASS_REV of RC CFG header to
-> +		 * PCI_CLASS_BRIDGE_PCI
-> +		 */
-> +		writel(readl(pp->dbi_base + PCI_CLASS_REVISION)
-> +			| (PCI_CLASS_BRIDGE_PCI << 16),
-> +			pp->dbi_base + PCI_CLASS_REVISION);
-> +
-
-Can't we just move the call to set this from dw_pcie_host_init() to
-dw_pcie_setup_rc() so we don't need to do this ourselves? It seems to be
-the more logical change.
-
-> +		dw_pcie_setup_rc(pp);
-> +	}
-> +}
-> +
-> +static struct syscore_ops pci_imx_syscore_ops = {
-> +	.suspend = pci_imx_suspend,
-> +	.resume = pci_imx_resume,
-> +};
-> +#endif
-> +
-
-Why does this need to be syscore_ops instead of dev_pm_ops?
-
->  static int __init imx6_pcie_probe(struct platform_device *pdev)
->  {
-> -	struct imx6_pcie *imx6_pcie;
->  	struct pcie_port *pp;
-> +	const struct of_device_id *of_id =
-> +			of_match_device(imx6_pcie_of_match, &pdev->dev);
->  	struct device_node *np = pdev->dev.of_node;
->  	struct resource *dbi_base;
->  	int ret;
-> @@ -560,6 +680,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
->  
->  	pp = &imx6_pcie->pp;
->  	pp->dev = &pdev->dev;
-> +	imx6_pcie->data = of_id->data;
->  
->  	/* Added for PCI abort handling */
->  	hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
-> @@ -603,9 +724,19 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
->  		return PTR_ERR(imx6_pcie->pcie);
->  	}
->  
-> -	/* Grab GPR config register range */
-> -	imx6_pcie->iomuxc_gpr =
-> -		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
-> +	if (is_imx6sx_pcie(imx6_pcie)) {
-> +		imx6_pcie->pcie_regulator = devm_regulator_get(pp->dev, "pcie");
-> +
-> +		imx6_pcie->iomuxc_gpr =
-> +			 syscon_regmap_lookup_by_compatible
-> +			 ("fsl,imx6sx-iomuxc-gpr");
-> +		imx6_pcie->gpc_ips_reg =
-> +			 syscon_regmap_lookup_by_compatible("fsl,imx6sx-gpc");
-> +	} else {
-> +		imx6_pcie->iomuxc_gpr =
-> +			syscon_regmap_lookup_by_compatible
-> +			("fsl,imx6q-iomuxc-gpr");
-> +	}
->  	if (IS_ERR(imx6_pcie->iomuxc_gpr)) {
->  		dev_err(&pdev->dev, "unable to find iomuxc registers\n");
->  		return PTR_ERR(imx6_pcie->iomuxc_gpr);
-> @@ -616,6 +747,9 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
->  		return ret;
->  
->  	platform_set_drvdata(pdev, imx6_pcie);
-> +#ifdef CONFIG_PM_SLEEP
-> +	register_syscore_ops(&pci_imx_syscore_ops);
-> +#endif
->  	return 0;
->  }
->  
-> @@ -627,12 +761,6 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
->  	imx6_pcie_assert_core_reset(&imx6_pcie->pp);
->  }
->  
-> -static const struct of_device_id imx6_pcie_of_match[] = {
-> -	{ .compatible = "fsl,imx6q-pcie", },
-> -	{},
-> -};
-> -MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
-> -
->  static struct platform_driver imx6_pcie_driver = {
->  	.driver = {
->  		.name	= "imx6q-pcie",
-
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
-
+>
+> [1] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/enumeration
+>
+>> ---
+>> v2: Remove the white list, that was enabling the CRS for certain known Intel systems.
+>>     Rather now enable it for all systems that support this capability.
+>> v1: Enable CRS for only some given Intel systems (maintain a whitelist)
+>>
+>>  drivers/pci/probe.c           |   13 +++++++++++++
+>>  include/uapi/linux/pci_regs.h |    1 +
+>>  2 files changed, 14 insertions(+)
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index e3cf8a2..3c4c35c 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -740,6 +740,17 @@ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+>>  }
+>>  EXPORT_SYMBOL(pci_add_new_bus);
+>>
+>> +static void pci_enable_crs(struct pci_dev *pdev)
+>> +{
+>> +     u16 root_cap = 0;
+>> +
+>> +     /* Enable CRS Software visibility if supported */
+>> +     pcie_capability_read_word(pdev, PCI_EXP_RTCAP, &root_cap);
+>> +     if (root_cap & PCI_EXP_RTCAP_CRSVIS)
+>> +             pcie_capability_set_word(pdev, PCI_EXP_RTCTL,
+>> +                                      PCI_EXP_RTCTL_CRSSVE);
+>> +}
+>> +
+>>  /*
+>>   * If it's a bridge, configure it and scan the bus behind it.
+>>   * For CardBus bridges, we don't scan behind as the devices will
+>> @@ -787,6 +798,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+>>       pci_write_config_word(dev, PCI_BRIDGE_CONTROL,
+>>                             bctl & ~PCI_BRIDGE_CTL_MASTER_ABORT);
+>>
+>> +     pci_enable_crs(dev);
+>> +
+>>       if ((secondary || subordinate) && !pcibios_assign_all_busses() &&
+>>           !is_cardbus && !broken) {
+>>               unsigned int cmax;
+>> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+>> index 30db069..a75106d 100644
+>> --- a/include/uapi/linux/pci_regs.h
+>> +++ b/include/uapi/linux/pci_regs.h
+>> @@ -552,6 +552,7 @@
+>>  #define  PCI_EXP_RTCTL_PMEIE 0x0008  /* PME Interrupt Enable */
+>>  #define  PCI_EXP_RTCTL_CRSSVE        0x0010  /* CRS Software Visibility Enable */
+>>  #define PCI_EXP_RTCAP                30      /* Root Capabilities */
+>> +#define  PCI_EXP_RTCAP_CRSVIS        0x0001  /* CRS software visibility capability */
+>>  #define PCI_EXP_RTSTA                32      /* Root Status */
+>>  #define PCI_EXP_RTSTA_PME    0x00010000 /* PME status */
+>>  #define PCI_EXP_RTSTA_PENDING        0x00020000 /* PME pending */
+>> --
+>> 1.7.9.5
