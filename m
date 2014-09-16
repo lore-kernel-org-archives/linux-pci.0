@@ -1,116 +1,205 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v6 00/15] Enable support of IOAPIC hotplug on x86 platforms
-Date: Wed, 24 Sep 2014 16:59:21 +0800
-Message-Id: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bon0138.outbound.protection.outlook.com ([157.56.111.138]:31472
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750878AbaIPETb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 16 Sep 2014 00:19:31 -0400
+Message-ID: <1410841159.24184.491.camel@snotra.buserror.net>
+Subject: Re: [PATCH v2 3/3] PCI: Layerscape: Add Layerscape PCIe driver
+From: Scott Wood <scottwood@freescale.com>
+To: Lian Minghuan-B31939 <B31939@freescale.com>
+CC: Minghuan Lian <Minghuan.Lian@freescale.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	"Yoder Stuart-B08248" <stuart.yoder@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 15 Sep 2014 23:19:19 -0500
+In-Reply-To: <5412D4BC.10704@freescale.com>
+References: <1410469741-11634-1-git-send-email-Minghuan.Lian@freescale.com>
+	 <1410469741-11634-3-git-send-email-Minghuan.Lian@freescale.com>
+	 <1410470694.24184.390.camel@snotra.buserror.net>
+	 <5412D4BC.10704@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set enhances IOAPIC core and ACPI drivers to support IOAPIC
-hotplug on x86 platforms. It's based on latest mainstream kernel at
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+On Fri, 2014-09-12 at 11:10 +0000, Lian Minghuan-B31939 wrote:
+> Hi Scott,
+> 
+> Please see my comments inline.
+> 
+> On 2014年09月11日 21:24, Scott Wood wrote:
+> > On Thu, 2014-09-11 at 21:09 +0000, Minghuan Lian wrote:
+> >> Add support for Freescale Layerscape PCIe controller. This driver
+> >> re-uses the designware core code.
+> >>
+> >> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> >> ---
+> >> Change log:
+> >> v2:
+> >> 1. Add pcie-scfg to link scfg device node and remove "fsl, ls-pcie" compatible
+> >> 2. Use regmap API to access scfg.
+> >> 3. remove ls1021 PCI device ID.
+> >> 4. remove unused irq pme_irq and ls_pcie_list.
+> >> 5. Do not set scfg bit reverse mode
+> >>
+> >>   .../devicetree/bindings/pci/layerscape-pci.txt     |  45 ++++
+> >>   drivers/pci/host/Kconfig                           |   8 +
+> >>   drivers/pci/host/Makefile                          |   1 +
+> >>   drivers/pci/host/pci-layerscape.c                  | 278 +++++++++++++++++++++
+> >>   4 files changed, 332 insertions(+)
+> >>   create mode 100644 Documentation/devicetree/bindings/pci/layerscape-pci.txt
+> >>   create mode 100644 drivers/pci/host/pci-layerscape.c
+> >>
+> >> diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+> >> new file mode 100644
+> >> index 0000000..1a5dbd8
+> >> --- /dev/null
+> >> +++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+> >> @@ -0,0 +1,45 @@
+> >> +Freescale Layerscape PCIe controller
+> >> +
+> >> +This PCIe host controller is based on the Synopsis Designware PCIe IP
+> >> +and thus inherits all the common properties defined in designware-pcie.txt.
+> >> +
+> >> +Required properties:
+> >> +- compatible: should contain the platform identifier such as "fsl,ls1021a-pcie"
+> >> +- reg: base addresses and lengths of the PCIe controller
+> >> +- interrupts: A list of interrupt outputs of the controller. Must contain an
+> >> +  entry for each entry in the interrupt-names property.
+> >> +- interrupt-names: Must include the following entries:
+> >> +  "intr": The interrupt that is asserted for controller interrupts
+> >> +  "msi": The interrupt that is asserted when an MSI is received
+> >> +  "pme": The interrupt that is asserted when PME state changes
+> >> +- pcie-scfg: Must include two entries.
+> > fsl,pcie-scfg
+> [Minghuan] Ok. I will rename the property.
+> >> +  The first entry must be a link to the SCFG device node
+> >> +  The second entry must be '0' or '1' based on physical PCIe controller index.
+> >> +  used to get SCFG PEXN registers
+> >> +
+> >> +Example:
+> >> +
+> >> +	pcie@3400000 {
+> >> +		compatible = "fsl,ls1021a-pcie", "snps,dw-pcie";
+> > Can we rely on the config space vendor/device ID instead of hardcoding
+> > the SoC here?
+> [Minghuan] No, for a SoC may have several device ID.
+> For example:
+> LS1021A RM says :
+> 0x0E0A LS1021A with security
+> 0x0E0B LS1021A without security
+> But I read device ID 0x0e00  from some LS1021A boards.
+> 0x0e06 from some LS1021A boards. this may be caused by different CPLD.
 
-You may pull it from 
-https://github.com/jiangliu/linux.git ioapic/hotplug_v6
+:-(
 
-We have pick up several patches from Yinghai's original IOAPIC hotplug
-patch set and reimplemented IOAPIC driver as an ACPI driver instead of
-a PCI driver.
+> >> +		reg = <0x00 0x03400000 0x0 0x00010000   /* controller registers */
+> >> +		       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
+> >> +		reg-names = "regs", "config";
+> >> +		interrupts = <GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
+> >> +			     <GIC_SPI 179 IRQ_TYPE_LEVEL_HIGH>, /* MSI interrupt */
+> >> +			     <GIC_SPI 181 IRQ_TYPE_LEVEL_HIGH>; /* PME interrupt */
+> >> +		interrupt-names = "intr", "msi", "pme";
+> >> +		pcie-scfg = <&scfg 0>;
+> >> +		#address-cells = <3>;
+> >> +		#size-cells = <2>;
+> >> +		device_type = "pci";
+> >> +		num-lanes = <4>;
+> >> +		bus-range = <0x00 0xff>;
+> >> +		ranges = <0x81000000 0x0 0x00000000 0x40 0x10000000 0x0 0x00010000   /* downstream I/O */
+> >> +			  0x82000000 0x0 0x00000000 0x41 0x00000000 0x1 0x00000000>; /* non-prefetchable memory */
+> > Are these ranges hardcoded in the SoC, or are they the result of iATU
+> > settings?  If the latter, who configures it and why no prefetchable
+> > region?
+> [Minghuan] 400000_0000 - 480000_0000 is hardcode assigned to PEX1.
+> I separates from this 32 region  1M for IO, 4G for non-prefetchable memory.
+> 4G is the max size iATU supported.
+> IO and memory region will be set to iATU by pci-designware.c
+> Because both powerpc and imx do not set prefechable memory,
+> so  I do not assign prefetchable memory either.
 
-It has been tested on a 4-socket Intel SDV with socket hot-addition
-capability. Any suggestions are welcomed!
+If there's spare room in the addres space for a prefetchable region, why
+not make one, regardless of what PPC and IMX do?
 
-Patch 1-4 are bugfixes and enhancements to ACPI subsystem
-Patch 5 killes PCI IOAPIC driver
-Patch 6-14 enhances IOAPIC core to support IOAPIC hotplug
-Patch 15 reimplements ACPI IOAPIC driver and enables IOAPIC hotplug
+FWIW, I believe that ARMv8 can make better use of a prefetchable region
+due to the "gathering" storage attribute, so even if you don't use one
+on LS1021A consider using one on ARMv8-based LS chips.
 
-V5->V6:
-1) Rebase to the latest v3.17-16
-2) Minor fixes for comments
-V4->V5:
-1) Fix a building error
-2) Don't rename processor_core.c as apic_id.c
-3) Improve comments
-4) Reorder patches to get rid of some temporary code
-V3->V4:
-1) Fix a bug in manage IOAPIC reference count
-2) Rebase to v3.17-rc2
-3) Refine commit messages
-V2->V3:
-1) Refine ACPI resource walk functions for PCI root bus and IOAPIC
-2) Improve commit messages
-3) Reorder patch order for better maintenence
+> >> +		#interrupt-cells = <1>;
+> >> +		interrupt-map-mask = <0 0 0 7>;
+> >> +		interrupt-map = <0000 0 0 1 &gic GIC_SPI 91  IRQ_TYPE_LEVEL_HIGH>,
+> >> +				<0000 0 0 2 &gic GIC_SPI 188 IRQ_TYPE_LEVEL_HIGH>,
+> >> +				<0000 0 0 3 &gic GIC_SPI 190 IRQ_TYPE_LEVEL_HIGH>,
+> >> +				<0000 0 0 4 &gic GIC_SPI 192 IRQ_TYPE_LEVEL_HIGH>;
+> >> +	};
+> >> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> >> index 34134d6..c826949 100644
+> >> --- a/drivers/pci/host/Kconfig
+> >> +++ b/drivers/pci/host/Kconfig
+> >> @@ -82,4 +82,12 @@ config PCIE_XILINX
+> >>   	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
+> >>   	  Host Bridge driver.
+> >>   
+> >> +config PCI_LAYERSCAPE
+> >> +	bool "Freescale Layerscape PCIe controller"
+> >> +	depends on SOC_LS1021A
+> >> +	select PCIE_DW
+> >> +	select MFD_SYSCON
+> >> +	help
+> >> +	  Say Y here if you want PCIe controller support on Layerscape SoCs.
+> > Why does it depend on this particular SoC?  Is the same PCIe controller
+> > going to be used on other Layerscape chips?
+> [Minghuan] LS1021A platform patch only contains SOC name no ARCH name.
+> Both LS1042 and LS2085 RM do not contain PCI chapter. I am not sure they
+> will use the same IP.
+> I can remove 'depends on' and wait for the Layerscape ARCH name then add it.
+> The other Layerscape will use ARM v8. I am not even sure LS1021 will be 
+> belong
+> to LS1.
 
+Why do you need any dependency here other than what is required to make
+the driver build?
 
-Jiang Liu (12):
-  x86, PCI, ACPI: Kill private function resource_to_addr() in
-    arch/x86/pci/acpi.c
-  ACPI: Correct return value of acpi_dev_resource_address_space()
-  ACPI: Fix minor syntax issues in processor_core.c
-  PCI: Remove PCI ioapic driver
-  x86, irq: Remove __init marker for functions will be used by IOAPIC
-    hotplug
-  x86, irq: Keep balance of IOAPIC pin reference count
-  x86, irq: Refine mp_register_ioapic() to prepare for IOAPIC hotplug
-  x86, irq, ACPI: Introduce a rwsem to protect IOAPIC operations from
-    hotplug
-  x86, irq, ACPI: Implement interface to support ACPI based IOAPIC
-    hot-addition
-  x86, irq, ACPI: Implement interfaces to support ACPI based IOAPIC
-    hot-removal
-  x86, irq: Introduce helper to check whether an IOAPIC has been
-    registered
-  x86, irq, ACPI: Implement ACPI driver to support IOAPIC hotplug
+> >> +static irqreturn_t ls_pcie_msi_irq_handler(int irq, void *data)
+> >> +{
+> >> +	struct pcie_port *pp = data;
+> >> +	struct ls_pcie *pcie = to_ls_pcie(pp);
+> >> +	unsigned int msi_irq;
+> >> +
+> >> +	/* clear the interrupt */
+> >> +	regmap_write(pcie->scfg, SCFG_SPIMSICLRCR,
+> >> +		     MSI_LS1021A_DATA(pcie->index));
+> >> +
+> >> +	msi_irq = irq_find_mapping(pp->irq_domain, 0);
+> >> +	if (msi_irq)
+> >> +		generic_handle_irq(msi_irq);
+> >> +	else
+> >> +		/*
+> >> +		 * that's weird who triggered this?
+> >> +		 * just clear it
+> >> +		 */
+> >> +		dev_info(pcie->dev, "unexpected MSI\n");
+> >> +
+> >> +	return IRQ_HANDLED;
+> >> +}
+> >> +
+> > Why are you returning IRQ_HANDLED in the "unexpected MSI" case?
+> [Minghuan] The interrupt located in top layer chip is dedicated to 32 
+> MSI interrupts.
+> This handler has cleaned the interrupt, so I think it can return IRQ_HANDLED
+> although  the special MSI interrupt belong second layer chip has not 
+> been registered.
 
-Yinghai Lu (3):
-  ACPI: Add interfaces to parse IOAPIC ID for IOAPIC hotplug
-  x86, irq: Split out alloc_ioapic_save_registers()
-  x86, irq: Prefer assigned ID in APIC ID register for x86_64
+If it's wrong enough to print "unexpected MSI" (BTW, please use either
+dev_dbg or a ratelimited dev_err for that, and include the IRQ number),
+then it's wrong enough to return IRQ_NONE so that the upper layers know
+the interrupt was not handled.
 
- arch/x86/include/asm/io_apic.h |    6 +-
- arch/x86/kernel/acpi/boot.c    |   90 +++++++++++++--
- arch/x86/kernel/apic/io_apic.c |  234 +++++++++++++++++++++++++++++++--------
- arch/x86/pci/acpi.c            |  142 +++++++++---------------
- arch/x86/pci/intel_mid_pci.c   |   10 +-
- arch/x86/pci/irq.c             |    7 +-
- drivers/acpi/Kconfig           |    6 +
- drivers/acpi/Makefile          |    1 +
- drivers/acpi/internal.h        |    7 ++
- drivers/acpi/ioapic.c          |  235 ++++++++++++++++++++++++++++++++++++++++
- drivers/acpi/pci_irq.c         |   11 +-
- drivers/acpi/pci_root.c        |    3 +
- drivers/acpi/processor_core.c  |  131 +++++++++++++++++++---
- drivers/acpi/resource.c        |    2 +-
- drivers/pci/Kconfig            |    7 --
- drivers/pci/Makefile           |    2 -
- drivers/pci/ioapic.c           |  121 ---------------------
- include/linux/acpi.h           |    5 +
- include/linux/pci.h            |    1 +
- 19 files changed, 727 insertions(+), 294 deletions(-)
- create mode 100644 drivers/acpi/ioapic.c
- delete mode 100644 drivers/pci/ioapic.c
+-Scott
 
--- 
-1.7.10.4
 
