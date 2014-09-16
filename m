@@ -1,47 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0115.outbound.protection.outlook.com ([65.55.169.115]:15424
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754085AbaISPVe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 19 Sep 2014 11:21:34 -0400
-From: Fabio Estevam <fabio.estevam@freescale.com>
-To: <bhelgaas@google.com>
-CC: <mohit.kumar@st.com>, <jg1.han@samsung.com>,
-	<linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Subject: [PATCH] PCI: designware: Use NULL instead of false
-Date: Fri, 19 Sep 2014 10:47:30 -0300
-Message-ID: <1411134450-806-1-git-send-email-fabio.estevam@freescale.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 16 Sep 2014 11:31:45 -0700 (PDT)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC Part2 v1 14/21] x86, hpet: Enhance HPET IRQ to support
+ hierarchy irqdomain
+In-Reply-To: <1410444228-3134-15-git-send-email-jiang.liu@linux.intel.com>
+Message-ID: <alpine.DEB.2.10.1409161104120.4247@nanos>
+References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com> <1410444228-3134-15-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-of_get_address() expects pointers in the third and fourth parameters.
+On Thu, 11 Sep 2014, Jiang Liu wrote:
+>  #ifdef CONFIG_HPET_TIMER
+> +#define	HPET_DOMAIN_REMAPPED		0x80000000
+> +
+> +static inline int hpet_dev_id(struct irq_domain *domain)
+> +{
+> +	return (int)((long)domain->host_data & ~HPET_DOMAIN_REMAPPED);
+> +}
+> +
+> +static inline bool hpet_remapped(struct irq_domain *domain)
+> +{
+> +	return (bool)((long)domain->host_data & HPET_DOMAIN_REMAPPED);
+> +}
 
-Pass NULL in order to fix the following sparse warnings:
+It's kinda odd to have this encoded in domain->host_data.
 
-drivers/pci/host/pcie-designware.c:433:51: warning: Using plain integer as NULL pointer
-drivers/pci/host/pcie-designware.c:433:58: warning: Using plain integer as NULL pointer 
+>  static int hpet_msi_set_affinity(struct irq_data *data,
+>  				 const struct cpumask *mask, bool force)
+>  {
+> +	struct irq_data *parent = data->parent_data;
+>  	struct irq_cfg *cfg = irqd_cfg(data);
+>  	struct msi_msg msg;
+> -	unsigned int dest;
+>  	int ret;
+>  
+> -	ret = apic_set_affinity(data, mask, &dest);
+> -	if (ret)
+> -		return ret;
+> -
+> -	hpet_msi_read(data->handler_data, &msg);
+> -
+> -	msg.data &= ~MSI_DATA_VECTOR_MASK;
+> -	msg.data |= MSI_DATA_VECTOR(cfg->vector);
+> -	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+> -	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
+> -
+> -	hpet_msi_write(data->handler_data, &msg);
+> +	ret = parent->chip->irq_set_affinity(parent, mask, force);
+> +	/* No need to rewrite HPET registers if interrupt is remapped */
+> +	if (ret >= 0 && !hpet_remapped(data->domain)) {
 
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
----
- drivers/pci/host/pcie-designware.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+So we really should use irq_data->chip_data for this, i.e. storing
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 12c42fc..f1f0b7a 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -430,7 +430,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+struct hpet_msi {
+       struct msi_msg msg;
+       bool remapped;
+       /* whatever you need here */
+};
+
+> +		hpet_msi_read(data->handler_data, &msg);
+> +		msg.data &= ~MSI_DATA_VECTOR_MASK;
+> +		msg.data |= MSI_DATA_VECTOR(cfg->vector);
+> +		msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+> +		msg.address_lo |= MSI_ADDR_DEST_ID(cfg->dest_apicid);
+
+We need the same thing for MSI so this should be a helper function
+
+   msi_update_msg(struct msi_msg *msg, struct irq_cfg *cfg)
+
+> +		hpet_msi_write(data->handler_data, &msg);
+> +	}
+>  
+> -	return IRQ_SET_MASK_OK_NOCOPY;
+> +	return ret;
+>  }
  
- 		/* Find the untranslated configuration space address */
- 		index = of_property_match_string(np, "reg-names", "config");
--		addrp = of_get_address(np, index, false, false);
-+		addrp = of_get_address(np, index, NULL, NULL);
- 		pp->cfg0_mod_base = of_read_number(addrp, ns);
- 		pp->cfg1_mod_base = pp->cfg0_mod_base + pp->config.cfg0_size;
- 	} else {
--- 
-1.9.1
+Thanks,
 
+	tglx
