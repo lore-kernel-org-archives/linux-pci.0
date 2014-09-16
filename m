@@ -1,141 +1,250 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:44305 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753108AbaIPXXe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 19:23:34 -0400
+Received: by mail-pd0-f170.google.com with SMTP id fp1so778911pdb.29
+        for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 16:23:34 -0700 (PDT)
+Date: Tue, 16 Sep 2014 17:23:30 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
 	Borislav Petkov <bp@alien8.de>,
 	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFT v2 08/24] x86, htirq: Use new irqdomain interfaces to allocate/free IRQ
-Date: Fri, 26 Sep 2014 22:02:09 +0800
-Message-Id: <1411740145-30626-9-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [Patch v5 05/15] PCI: Remove PCI ioapic driver
+Message-ID: <20140916232330.GH5050@google.com>
+References: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
+ <1410422758-24942-6-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1410422758-24942-6-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ for HTIRQ, so we could
-kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+On Thu, Sep 11, 2014 at 04:05:48PM +0800, Jiang Liu wrote:
+> To support IOAPIC hotplug on x86 and IA64 platforms, OS needs to figure
+> out global interrupt source number(GSI) and IOAPIC enumeration ID
+> through ACPI interfaces. So BIOS must implement an ACPI IOAPIC device
+> with _GSB/_UID or _MAT method to support IOAPIC hotplug. OS also needs
+> to figure out base physical address to access IOAPIC registers. OS may
+> get the base physical address through PCI BARs if IOAPIC device is
+> visible in PCI domain, otherwise OS may get the address by ACPI _CRS
+> method if IOAPIC device is hidden from PCI domain by BIOS.
+> 
+> When adding a PCI subtree, we need to add IOAPIC devices before enabling
+> all other PCI devices because other PCI devices may use the IOAPIC to
+> allocate PCI interrupts.
+> 
+> So we plan to reimplement IOAPIC driver as an ACPI instead of PCI driver
+> due to:
+> 1) hot-pluggable IOAPIC devices are always visible in ACPI domain,
+>    but may or may not be visible in PCI domain.
+> 2) we could explicitly control the order between IOAPIC and other PCI
+>    devices.
+> 
+> We also have another choice to use a PCI driver to manage IOAPIC device
+> if it's visible in PCI domain and use an ACPI driver if it's only
+> visible in ACPI domain. But this solution is a little complex.
+> 
+> It shouldn't cause serious backward compatibility issues because:
+> 1) IOAPIC hotplug is never supported on x86 yet because it hasn't
+>    implemented the required acpi_register_ioapic() and
+>    acpi_unregister_ioapic().
+> 2) Currently only ACPI based IOAPIC hotplug is possible on x86 and
+>    IA64, we don't know other specifications and interfaces to support
+>    IOAPIC hotplug yet.
+> 3) We will reimplement an ACPI IOAPICｔdriver support IOAPIC hotplug.
+> 
+> This change also helps to get rid of the false alarm on all current
+> Linux distributions:
+> [    6.952497] ioapic: probe of 0000:00:05.4 failed with error -22
+> [    6.959542] ioapic: probe of 0000:80:05.4 failed with error -22
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 
-This patch changes the interfaces between arch independent PCI driver
-and arch specific code. Currently HT_IRQ is only enabled on x86, so it
-shouldn't break other architectures.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/htirq.c |   26 +++++++++++++-------------
- drivers/pci/htirq.c          |    7 +++----
- include/linux/htirq.h        |    2 ++
- 3 files changed, 18 insertions(+), 17 deletions(-)
+I assume this will be merged with the rest of the series, through a non-PCI
+tree.
 
-diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
-index 6f527b02ac4c..9a662b2d92da 100644
---- a/arch/x86/kernel/apic/htirq.c
-+++ b/arch/x86/kernel/apic/htirq.c
-@@ -14,6 +14,7 @@
- #include <linux/device.h>
- #include <linux/pci.h>
- #include <linux/htirq.h>
-+#include <linux/irqdomain.h>
- #include <asm/hw_irq.h>
- #include <asm/apic.h>
- #include <asm/hypertransport.h>
-@@ -60,31 +61,30 @@ static struct irq_chip ht_irq_chip = {
- 	.irq_retrigger		= apic_retrigger_irq,
- };
- 
-+int arch_alloc_ht_irq(struct pci_dev *dev)
-+{
-+	return irq_domain_alloc_irqs(NULL, 1, dev_to_node(&dev->dev), NULL);
-+}
-+
-+void arch_free_ht_irq(int irq)
-+{
-+	irq_domain_free_irqs(irq, 1);
-+}
-+
- int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
- {
- 	struct irq_cfg *cfg;
- 	struct ht_irq_msg msg;
--	unsigned dest;
--	int err;
- 
- 	if (disable_apic)
- 		return -ENXIO;
- 
- 	cfg = irq_cfg(irq);
--	err = assign_irq_vector(irq, cfg, apic->target_cpus());
--	if (err)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(cfg->domain,
--					   apic->target_cpus(), &dest);
--	if (err)
--		return err;
--
--	msg.address_hi = HT_IRQ_HIGH_DEST_ID(dest);
-+	msg.address_hi = HT_IRQ_HIGH_DEST_ID(cfg->dest_apicid);
- 
- 	msg.address_lo =
- 		HT_IRQ_LOW_BASE |
--		HT_IRQ_LOW_DEST_ID(dest) |
-+		HT_IRQ_LOW_DEST_ID(cfg->dest_apicid) |
- 		HT_IRQ_LOW_VECTOR(cfg->vector) |
- 		((apic->irq_dest_mode == 0) ?
- 			HT_IRQ_LOW_DM_PHYSICAL :
-diff --git a/drivers/pci/htirq.c b/drivers/pci/htirq.c
-index a94dd2c4183a..ceb0ebeb7b5f 100644
---- a/drivers/pci/htirq.c
-+++ b/drivers/pci/htirq.c
-@@ -117,8 +117,8 @@ int __ht_create_irq(struct pci_dev *dev, int idx, ht_irq_update_t *update)
- 	cfg->msg.address_lo = 0xffffffff;
- 	cfg->msg.address_hi = 0xffffffff;
- 
--	irq = irq_alloc_hwirq(dev_to_node(&dev->dev));
--	if (!irq) {
-+	irq = arch_alloc_ht_irq(dev);
-+	if (irq <= 0) {
- 		kfree(cfg);
- 		return -EBUSY;
- 	}
-@@ -163,8 +163,7 @@ void ht_destroy_irq(unsigned int irq)
- 	cfg = irq_get_handler_data(irq);
- 	irq_set_chip(irq, NULL);
- 	irq_set_handler_data(irq, NULL);
--	irq_free_hwirq(irq);
--
-+	arch_free_ht_irq(irq);
- 	kfree(cfg);
- }
- EXPORT_SYMBOL(ht_destroy_irq);
-diff --git a/include/linux/htirq.h b/include/linux/htirq.h
-index 70a1dbbf2093..5caa51b7b95c 100644
---- a/include/linux/htirq.h
-+++ b/include/linux/htirq.h
-@@ -15,6 +15,8 @@ void unmask_ht_irq(struct irq_data *data);
- 
- /* The arch hook for getting things started */
- int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev);
-+int arch_alloc_ht_irq(struct pci_dev *dev);
-+void arch_free_ht_irq(int irq);
- 
- /* For drivers of buggy hardware */
- typedef void (ht_irq_update_t)(struct pci_dev *dev, int irq,
--- 
-1.7.10.4
-
+> ---
+>  drivers/pci/Kconfig  |    7 ---
+>  drivers/pci/Makefile |    2 -
+>  drivers/pci/ioapic.c |  121 --------------------------------------------------
+>  3 files changed, 130 deletions(-)
+>  delete mode 100644 drivers/pci/ioapic.c
+> 
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index 893503fa1782..39866d18004e 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -104,13 +104,6 @@ config PCI_PASID
+>  
+>  	  If unsure, say N.
+>  
+> -config PCI_IOAPIC
+> -	bool "PCI IO-APIC hotplug support" if X86
+> -	depends on PCI
+> -	depends on ACPI
+> -	depends on X86_IO_APIC
+> -	default !X86
+> -
+>  config PCI_LABEL
+>  	def_bool y if (DMI || ACPI)
+>  	select NLS
+> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> index e04fe2d9df3b..73e4af400a5a 100644
+> --- a/drivers/pci/Makefile
+> +++ b/drivers/pci/Makefile
+> @@ -13,8 +13,6 @@ obj-$(CONFIG_PCI_QUIRKS) += quirks.o
+>  # Build PCI Express stuff if needed
+>  obj-$(CONFIG_PCIEPORTBUS) += pcie/
+>  
+> -obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
+> -
+>  # Build the PCI Hotplug drivers if we were asked to
+>  obj-$(CONFIG_HOTPLUG_PCI) += hotplug/
+>  ifdef CONFIG_HOTPLUG_PCI
+> diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+> deleted file mode 100644
+> index f6219d36227f..000000000000
+> --- a/drivers/pci/ioapic.c
+> +++ /dev/null
+> @@ -1,121 +0,0 @@
+> -/*
+> - * IOAPIC/IOxAPIC/IOSAPIC driver
+> - *
+> - * Copyright (C) 2009 Fujitsu Limited.
+> - * (c) Copyright 2009 Hewlett-Packard Development Company, L.P.
+> - *
+> - * This program is free software; you can redistribute it and/or modify
+> - * it under the terms of the GNU General Public License version 2 as
+> - * published by the Free Software Foundation.
+> - */
+> -
+> -/*
+> - * This driver manages PCI I/O APICs added by hotplug after boot.  We try to
+> - * claim all I/O APIC PCI devices, but those present at boot were registered
+> - * when we parsed the ACPI MADT, so we'll fail when we try to re-register
+> - * them.
+> - */
+> -
+> -#include <linux/pci.h>
+> -#include <linux/module.h>
+> -#include <linux/acpi.h>
+> -#include <linux/slab.h>
+> -
+> -struct ioapic {
+> -	acpi_handle	handle;
+> -	u32		gsi_base;
+> -};
+> -
+> -static int ioapic_probe(struct pci_dev *dev, const struct pci_device_id *ent)
+> -{
+> -	acpi_handle handle;
+> -	acpi_status status;
+> -	unsigned long long gsb;
+> -	struct ioapic *ioapic;
+> -	int ret;
+> -	char *type;
+> -	struct resource *res;
+> -
+> -	handle = ACPI_HANDLE(&dev->dev);
+> -	if (!handle)
+> -		return -EINVAL;
+> -
+> -	status = acpi_evaluate_integer(handle, "_GSB", NULL, &gsb);
+> -	if (ACPI_FAILURE(status))
+> -		return -EINVAL;
+> -
+> -	/*
+> -	 * The previous code in acpiphp evaluated _MAT if _GSB failed, but
+> -	 * ACPI spec 4.0 sec 6.2.2 requires _GSB for hot-pluggable I/O APICs.
+> -	 */
+> -
+> -	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
+> -	if (!ioapic)
+> -		return -ENOMEM;
+> -
+> -	ioapic->handle = handle;
+> -	ioapic->gsi_base = (u32) gsb;
+> -
+> -	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
+> -		type = "IOAPIC";
+> -	else
+> -		type = "IOxAPIC";
+> -
+> -	ret = pci_enable_device(dev);
+> -	if (ret < 0)
+> -		goto exit_free;
+> -
+> -	pci_set_master(dev);
+> -
+> -	if (pci_request_region(dev, 0, type))
+> -		goto exit_disable;
+> -
+> -	res = &dev->resource[0];
+> -	if (acpi_register_ioapic(ioapic->handle, res->start, ioapic->gsi_base))
+> -		goto exit_release;
+> -
+> -	pci_set_drvdata(dev, ioapic);
+> -	dev_info(&dev->dev, "%s at %pR, GSI %u\n", type, res, ioapic->gsi_base);
+> -	return 0;
+> -
+> -exit_release:
+> -	pci_release_region(dev, 0);
+> -exit_disable:
+> -	pci_disable_device(dev);
+> -exit_free:
+> -	kfree(ioapic);
+> -	return -ENODEV;
+> -}
+> -
+> -static void ioapic_remove(struct pci_dev *dev)
+> -{
+> -	struct ioapic *ioapic = pci_get_drvdata(dev);
+> -
+> -	acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base);
+> -	pci_release_region(dev, 0);
+> -	pci_disable_device(dev);
+> -	kfree(ioapic);
+> -}
+> -
+> -
+> -static const struct pci_device_id ioapic_devices[] = {
+> -	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOAPIC, ~0) },
+> -	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOXAPIC, ~0) },
+> -	{ }
+> -};
+> -MODULE_DEVICE_TABLE(pci, ioapic_devices);
+> -
+> -static struct pci_driver ioapic_driver = {
+> -	.name		= "ioapic",
+> -	.id_table	= ioapic_devices,
+> -	.probe		= ioapic_probe,
+> -	.remove		= ioapic_remove,
+> -};
+> -
+> -static int __init ioapic_init(void)
+> -{
+> -	return pci_register_driver(&ioapic_driver);
+> -}
+> -module_init(ioapic_init);
+> -
+> -MODULE_LICENSE("GPL");
+> -- 
+> 1.7.10.4
+> 
