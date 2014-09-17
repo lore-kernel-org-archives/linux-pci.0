@@ -1,173 +1,149 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Sun, 28 Sep 2014 12:21:45 +0100
-From: Liviu Dudau <liviu@dudau.co.uk>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
- in all platforms
-Message-ID: <20140928112144.GA4671@bart.dudau.co.uk>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
- <20140925074235.GN12423@ulmo>
- <20140925144855.GB31157@bart.dudau.co.uk>
- <20140925164937.GB30382@ulmo>
- <5424E09F.50701@huawei.com>
- <20140926085030.GE31157@bart.dudau.co.uk>
- <54276F6C.5010705@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:51749 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755921AbaIQR62 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Sep 2014 13:58:28 -0400
+Message-ID: <5419CB58.4010407@redhat.com>
+Date: Wed, 17 Sep 2014 12:56:40 -0500
+From: David Milburn <dmilburn@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <54276F6C.5010705@huawei.com>
-Sender: linux-arch-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [Bug 84761] New: LSI controller not found when specifying pci=assign-busses
+References: <bug-84761-41252@https.bugzilla.kernel.org/> <CAErSpo5yPJxReveBN5ofcr==2fUkfv8D9uO7rqHj_uFK54se1w@mail.gmail.com>
+In-Reply-To: <CAErSpo5yPJxReveBN5ofcr==2fUkfv8D9uO7rqHj_uFK54se1w@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Sep 28, 2014 at 10:16:12AM +0800, Yijing Wang wrote:
-> >>>> What I would like to see is a way of creating the pci_host_bridge structure outside
-> >>>> the pci_create_root_bus(). That would then allow us to pass this sort of platform
-> >>>> details like associated msi_chip into the host bridge and the child busses will
-> >>>> have an easy way of finding the information needed by finding the root bus and then
-> >>>> the host bridge structure. Then the generic pci_scan_root_bus() can be used by (mostly)
-> >>>> everyone and the drivers can remove their kludges that try to work around the
-> >>>> current limitations.
-> >>
-> >> So I think maybe save msi chip in PCI arch sysdata is a good candidate.
-> > 
-> > Except that arch sysdata at the moment is an opaque pointer. I am all in favour in
-> > changing the type of sysdata from void* into pci_host_bridge* and arches can wrap their old
-> > sysdata around the pci_host_bridge*.
-> 
-> I inspected every arch and found there are almost no common stuff,
-
-I will disagree here. Most (all?) of the structures that are passed as sysdata argument to
-pci_create_root_bus() or pci_scan_root_bus() have a set of resources for storing the MEM and
-IO ranges, which struct pci_host_bridge already has. So that can be factored out of the
-arch code. Same for pci_domain_nr. Then there are some variables that are used for communication
-with the platform code due to convoluted way(s) in which PCI code gets instantiated.
-
-What I am arguing here is not that the arch equivalent of pci_host_bridge structure is already
-common, but that by moving the members that are common out of arch sysdata into pci_host_bridge
-we will have more commonality and it will be easier to re-factor the code.
-
-> and generic data struct should
-> be created in generic PCI code.
-
-Not necessarily. What I have in mind is something like this:
-
- - drivers/pci/ exports pci_init_host_bridge() that does the initialisation of bridge->windows
-   and anything else that is needed (like find_pci_host_bridge() function).
- - arch code does:
-
-	struct pci_controller {
-		struct pci_host_bridge bridge;
-		.....
-	};
-
-	#define to_pci_controller(bridge)	container_of(bridge, struct pci_controller, bridge)
-
-	static inline struct pci_controller *get_host_controller(const struct pci_bus *bus)
-	{
-		struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
-		if (bridge)
-			return to_pci_controller(bridge);
-
-		return NULL;
-	}
-
-	int arch_pci_init(....)
-	{
-		struct pci_controller *hose;
-		....
-		hose = kzalloc(sizeof(*hose), GFP_KERNEL);
-		pci_init_host_bridge(&hose->bridge);
-		....
-		pci_scan_root_bus(...., &hose->bridge, &resources);
-		....
-		return 0;
-	}
-
-Then finding the right structure will be easy.
-
-> Another, I don't like associate msi chip and every PCI device, further more,
-> almost all platforms except arm have only one MSI controller, and currently, PCI enumerating code doesn't need
-> to know the MSI chip details, like for legacy IRQ, PCI device doesn't need to know which IRQ controller they
-> should deliver IRQ to. I would think more about it, and hope other PCI guys can give some comments, especially from Bjorn.
+On 09/17/2014 10:38 AM, Bjorn Helgaas wrote:
+> [+cc Andreas, linux-pci, thanks for the bugzilla; please continue
+> discussion in email]
 >
+> On Wed, Sep 17, 2014 at 7:48 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=84761
+>>
+>>              Bug ID: 84761
+>>             Summary: LSI controller not found when specifying
+>>                      pci=assign-busses
+>>             Product: Drivers
+>>             Version: 2.5
+>>      Kernel Version: linux-3.17.0-rc2
+>>            Hardware: All
+>>                  OS: Linux
+>>                Tree: Mainline
+>>              Status: NEW
+>>            Severity: normal
+>>            Priority: P1
+>>           Component: PCI
+>>            Assignee: drivers_pci@kernel-bugs.osdl.org
+>>            Reporter: dmilburn@redhat.com
+>>          Regression: No
+>>
+>> Created attachment 150651
+>>    --> https://bugzilla.kernel.org/attachment.cgi?id=150651&action=edit
+>> Patch to change pcibios_assign_all_busses check in pci_scan_bridge()
+>>
+>> When booting with kernel command line option "pci=assign-busses", LSI
+>> controller
+>> is no longer found.
+>>
+>> 05:00.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1068E PCI-Express
+>> Fusion-MPT SAS (rev 08)
+>>
+>> It seems the problem is in pci_scan_bridge (drivers/pci/probe.c):
+>>
+>> [    2.542563] PCI_READ_BRIDGE_BASES:
+>> [    2.545953] PCI_SCAN_BRIDGE:
+>> [    2.548823] scanning [bus 01-01] behind bridge, pass 0
+>> [    2.553947] PCI_SCAN_BRIDGE:
+>> [    2.556818] scanning [bus 05-05] behind bridge, pass 0 <=========PROBLEM
+>> [    2.561942] PCI_SCAN_BRIDGE:
+>> [    2.564812] scanning [bus 06-06] behind bridge, pass 0
+>> [    2.569936] PCI_SCAN_BRIDGE:
+>> [    2.572806] scanning [bus 03-03] behind bridge, pass 0
+>> [    2.577930] PCI_SCAN_BRIDGE:
+>> [    2.580800] scanning [bus 02-02] behind bridge, pass 0
+>> [    2.585923] PCI_SCAN_BRIDGE:
+>> [    2.588793] scanning [bus 04-04] behind bridge, pass 0
+>>
+>> If I change the pass 0 check from !pcibios_assign_all_busses() to
+>> pcibios_assign_all_busses() it finds the LSI controller; however, it looks
+>> like pci_scan_bridge has checked !pcibios_assisng_all_bussses() for a
+>> very long time.
+>>
+>> (changed code in pci_scan_bridge, causes driver to head down that first path)
+>>    if ((secondary || subordinate) && pcibios_assign_all_busses() &&
+>>        !is_cardbus && !broken) {
+>>
+>> [    2.560225] PCI_SCAN_BRIDGE: secondary 1 subordinate 1 is_cardbus 0 broken 0
+>> [    2.567252] PCI_SCAN_BRIDGE: !pcibios_assign_all_busses() 0
+>>   .
+>>   .
+>> [    2.849864] scanning [bus 05-05] behind bridge, pass 0   <=====SCANNING
+>> [    2.854988] PCI_SCAN_BRIDGE: CHECKING FOR ASSIGN_ALL_BUSSES
+>> [    2.860544] PCI_SCAN_BRIDGE: secondary 5 subordinate 5 is_cardbus 0 broken 0
+>> [    2.867572] PCI_SCAN_BRIDGE: !pcibios_assign_all_busses() 0
+>> [    2.873126] PCI_SCAN_BRIDGE: ASSIGN_ALL_BUSSES child           (null)
+>> [    2.879546] PCI_ADD_NEW_BUS busnr 5:
+>> [    2.883109] PCI_ALLOC_CHILD_BUS:
+>> [    2.886327] PCI_SET_BUS_SPEED:
+>> [    2.889407] PCI_BUS_INSERT_BUSN_RES:
+>> [    2.892971] PCI_SCAN_CHILD_BUS:
+>> [    2.896100] PCI_SCAN_CHILD_BUS: scanning bus
+>> [    2.900357] PCI_SCAN_SLOT:
+>> [    2.903053] PCI_SCAN_SINGLE_DEVICE:
+>> [    2.906529] PCI_SCAN_DEVICE: devfn 0
+>> [    2.910093] PCI_BUS_READ_DEV_VENDOR_ID: devfn 0
+>> [    2.914608] PCI_ALLOC_DEV:
+>> [    2.917305] PCI_SETUP_DEVICE:
+>> [    2.920262] SET_PCIE_PORT_TYPE:       =====DEVICE FOUND BELOW=====
+>> [    2.923399] pci 0000:05:00.0: [1000:0058] type 00 class 0x010000
+>> [    2.923401] [1000:0058] type 00 class 0x010000
+>> [    2.927841] pci 0000:05:00.0: reg 0x10: [io  0xec00-0xecff]
+>> [    2.927852] pci 0000:05:00.0: reg 0x14: [mem 0xde2ec000-0xde2effff 64bit]
+>> [    2.927863] pci 0000:05:00.0: reg 0x1c: [mem 0xde2f0000-0xde2fffff 64bit]
+>> [    2.927877] pci 0000:05:00.0: reg 0x30: [mem 0xde100000-0xde1fffff pref]
+>> [    2.927879] PCI_DEVICE_ADD:
+>
+> Tangent: why do you need "pci=assign-busses"?  If that's necessary to
+> make some device work, I think that's a different bug in itself.
+>
+> Is this a regression?
+>
+> Can you attach complete dmesg logs with and without "pci=assign-busses"?
 
-I wasn't suggesing to associate an msi chip with every PCI device, but with the pci_host_bridge.
-I don't expect a host bridge to have more than one msi chip, so that should be OK. Also, I'm
-thinking that getting the associated msi chip should be some sort of pci_host_bridge ops function,
-and for arches that don't care about MSI it doesn't get implemented.
+Hi,
 
-Best regards,
-Liviu
+Here you go
 
- 
-> Thanks!
-> Yijing.
-> 
-> > 
-> > Best regards,
-> > Liviu
-> > 
-> >>
-> >>>
-> >>> I think both issues are orthogonal. Last time I checked a lot of work
-> >>> was still necessary to unify host bridges enough so that it could be
-> >>> shared across architectures. But perhaps some of that work has
-> >>> happened in the meantime.
-> >>>
-> >>> But like I said, when you create the root bus, you can easily attach the
-> >>> MSI chip to it.
-> >>>
-> >>> Thierry
-> >>>
-> >>
-> >>
-> >> -- 
-> >> Thanks!
-> >> Yijing
-> >>
-> >>
-> > 
-> 
-> 
-> -- 
-> Thanks!
-> Yijing
-> 
-> 
+(successful boot without)
 
--- 
--------------------
-   .oooO
-   (   )
-    \ (  Oooo.
-     \_) (   )
-          ) /
-         (_/
+https://bugzilla.kernel.org/show_bug.cgi?id=84761#c2
 
- One small step
-   for me ...
+(unsuccessful boot with)
+
+https://bugzilla.kernel.org/show_bug.cgi?id=84761#c3
+
+>
+> We have a couple patches that are candidates for reversion before
+> v3.17 because of similar issues (I think they're good patches, but we
+> may need some additional work to fix some other problems they
+> exposed).  If you want to try them, they're here:
+> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/reverts
+
+I reverted the two patches, but saw same result
+
+https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/reverts&id=bf14921636e8716beee7c689ee7960755aecbfb3
+
+https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/reverts&id=c777b2007b078e38aeabfc1341b8b75ee9ff12c2
+
+Thanks,
+David
+
+
+>
+> Bjorn
+>
 
