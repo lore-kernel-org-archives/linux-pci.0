@@ -1,157 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:46623 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757740AbaISVyH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Sep 2014 17:54:07 -0400
-Received: by mail-pa0-f53.google.com with SMTP id hz1so886422pad.12
-        for <linux-pci@vger.kernel.org>; Fri, 19 Sep 2014 14:54:06 -0700 (PDT)
-Date: Fri, 19 Sep 2014 15:54:00 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v11 10/10] PCI: Introduce pci_remap_iospace() for
- remapping PCI I/O bus resources into CPU space
-Message-ID: <20140919215400.GA30239@google.com>
-References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
- <1411003825-21521-11-git-send-email-Liviu.Dudau@arm.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <5418E2BA.4030304@huawei.com>
+Date: Wed, 17 Sep 2014 09:24:10 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411003825-21521-11-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Sebastian Ott <sebott@linux.vnet.ibm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	"Ralf Baechle" <ralf@linux-mips.org>
+Subject: Re: [PATCH v1 16/21] s390/MSI: Use MSI chip framework to configure
+ MSI/MSI-X irq
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com> <1409911806-10519-17-git-send-email-wangyijing@huawei.com> <alpine.LFD.2.11.1409161325280.1618@denkbrett>
+In-Reply-To: <alpine.LFD.2.11.1409161325280.1618@denkbrett>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 18, 2014 at 02:30:25AM +0100, Liviu Dudau wrote:
-> Introduce a default implementation for remapping PCI bus I/O resources
-> onto the CPU address space. Architectures with special needs may
-> provide their own version, but most should be able to use this one.
-
-I see that this is used by Tanmay's APM X-Gene PCIe host controller driver.
-Since it's not used in this series, it'd be nice to mention where it *will*
-be used.
-
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> ---
->  drivers/pci/pci.c             | 33 +++++++++++++++++++++++++++++++++
->  include/asm-generic/pgtable.h |  4 ++++
->  include/linux/pci.h           |  3 +++
->  3 files changed, 40 insertions(+)
+On 2014/9/16 19:35, Sebastian Ott wrote:
+> Hello,
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 2c9ac70..654b44c 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2704,6 +2704,39 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
->  }
->  EXPORT_SYMBOL(pci_request_regions_exclusive);
->  
-> +/**
-> + *	pci_remap_iospace - Remap the memory mapped I/O space
-> + *	@res: Resource describing the I/O space
-> + *	@phys_addr: physical address where the range will be mapped.
-> + *
-> + *	Remap the memory mapped I/O space described by the @res
-> + *	into the CPU physical address space. 
-
-This comment doesn't seem quite right.  I think the space is already in the
-CPU physical address space.  ioremap() and friends normally map existing
-physical space into the *virtual* address space, i.e., they create mappings
-from a virtual address to a physical address.
-
-> Only architectures
-> + *	that have memory mapped IO defined (and hence PCI_IOBASE)
-> + *	should call this function.
-> + */
-> +int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
-> +{
-> +	int err = -ENODEV;
-> +
-> +#ifdef PCI_IOBASE
-> +	if (!(res->flags & IORESOURCE_IO))
-> +		return -EINVAL;
-> +
-> +	if (res->end > IO_SPACE_LIMIT)
-> +		return -EINVAL;
-> +
-
-PCI_IOBASE is a virtual address.  So PCI_IOBASE + res->start is also a
-virtual address (only for IORESOURCE_IO).
-
-Since res->start is normally a *physical* address, I think it would be less
-confusing to do something like this:
-
-    vaddr = PCI_IOBASE + res->start;
-    ioremap_page_range(vaddr, vaddr + resource_size(res), ...);
-
-so we have a hint that the first two ioremap_page_range() parameters are
-virtual addresses.  It's also confusing that it uses "unsigned long" for
-the virtual addresses, when we usually use "void *".  But that's out of
-scope for this patch.
-
-> +	err = ioremap_page_range(res->start + (unsigned long)PCI_IOBASE,
-> +				res->end + 1 + (unsigned long)PCI_IOBASE,
-> +				phys_addr, pgprot_device(PAGE_KERNEL));
-> +#else
-> +	/* this architecture does not have memory mapped I/O space,
-> +	   so this function should never be called */
-> +	WARN_ON(1);
-> +#endif
-> +
-> +	return err;
-> +}
-> +
->  static void __pci_set_master(struct pci_dev *dev, bool enable)
->  {
->  	u16 old_cmd, cmd;
-> diff --git a/include/asm-generic/pgtable.h b/include/asm-generic/pgtable.h
-> index 53b2acc..977e545 100644
-> --- a/include/asm-generic/pgtable.h
-> +++ b/include/asm-generic/pgtable.h
-> @@ -249,6 +249,10 @@ static inline int pmd_same(pmd_t pmd_a, pmd_t pmd_b)
->  #define pgprot_writecombine pgprot_noncached
->  #endif
->  
-> +#ifndef pgprot_device
-> +#define pgprot_device pgprot_noncached
-> +#endif
-> +
->  /*
->   * When walking page tables, get the address of the next boundary,
->   * or the end address of the range if that comes earlier.  Although no
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index a494e5d..fc8c529 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1100,6 +1100,9 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
->  						  resource_size_t),
->  			void *alignf_data);
->  
-> +
-> +int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
-> +
->  static inline dma_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
->  {
->  	struct pci_bus_region region;
-> -- 
-> 2.1.0
+> On Fri, 5 Sep 2014, Yijing Wang wrote:
+>> Use MSI chip framework instead of arch MSI functions to configure
+>> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  arch/s390/pci/pci.c |   18 ++++++++++++++----
+>>  1 files changed, 14 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+>> index 2fa7b14..da5316e 100644
+>> --- a/arch/s390/pci/pci.c
+>> +++ b/arch/s390/pci/pci.c
+>> @@ -358,7 +358,7 @@ static void zpci_irq_handler(struct airq_struct *airq)
+>>  	}
+>>  }
+>>
+>> -int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+>> +int zpci_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+>>  {
+>>  	struct zpci_dev *zdev = get_zdev(pdev);
+>>  	unsigned int hwirq, msi_vecs;
+>> @@ -434,7 +434,7 @@ out:
+>>  	return rc;
+>>  }
+>>
+>> -void arch_teardown_msi_irqs(struct pci_dev *pdev)
+>> +static void zpci_teardown_msi_irqs(struct pci_dev *pdev)
+>>  {
+>>  	struct zpci_dev *zdev = get_zdev(pdev);
+>>  	struct msi_desc *msi;
+>> @@ -448,9 +448,9 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
+>>  	/* Release MSI interrupts */
+>>  	list_for_each_entry(msi, &pdev->msi_list, list) {
+>>  		if (msi->msi_attrib.is_msix)
+>> -			default_msix_mask_irq(msi, 1);
+>> +			__msix_mask_irq(msi, 1);
+>>  		else
+>> -			default_msi_mask_irq(msi, 1, 1);
+>> +			__msi_mask_irq(msi, 1, 1);
 > 
+> The default_msi_mask_irq to __msi_mask_irq renaming is hidden in your
+> patch "x86/xen/MSI: Eliminate arch_msix_mask_irq() and arch_msi_mask_irq()"
+> 
+> This means that between that patch and this one s390 will not compile.
+> Could you please move this hunk to the other patch or even make an extra
+> patch with the renaming. Other than that:
+
+Good catch. I will move this hunk into the patch "x86/xen/MSI: Eliminate arch_msix_mask_irq() and arch_msi_mask_irq()".
+
+> 
+> Acked-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
+
+
+Thanks!
+Yijing.
+
+
+> 
+> Regards,
+> Sebastian
+> 
+>>  		irq_set_msi_desc(msi->irq, NULL);
+>>  		irq_free_desc(msi->irq);
+>>  		msi->msg.address_lo = 0;
+>> @@ -464,6 +464,16 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
+>>  	airq_iv_free_bit(zpci_aisb_iv, zdev->aisb);
+>>  }
+>>
+>> +static struct msi_chip zpci_msi_chip = {
+>> +	.setup_irqs = zpci_setup_msi_irqs,
+>> +	.teardown_irqs = zpci_teardown_msi_irqs,
+>> +};
+>> +
+>> +struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
+>> +{
+>> +	return &zpci_msi_chip;
+>> +}
+>> +
+>>  static void zpci_map_resources(struct zpci_dev *zdev)
+>>  {
+>>  	struct pci_dev *pdev = zdev->pdev;
+>> -- 
+>> 1.7.1
+>>
+>>
+> 
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
