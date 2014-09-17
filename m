@@ -1,120 +1,27 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v11 10/10] PCI: Introduce pci_remap_iospace() for remapping PCI I/O bus resources into CPU space
-Date: Thu, 18 Sep 2014 02:30:25 +0100
-Message-Id: <1411003825-21521-11-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:44518 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755575AbaIQQmP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Sep 2014 12:42:15 -0400
+Message-ID: <1410972133.1199.58.camel@ul30vt.home>
+Subject: Re: [PATCH 0/2] PCI: Remove dead code after DMA alias work
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org
+Date: Wed, 17 Sep 2014 10:42:13 -0600
+In-Reply-To: <20140917163412.21412.51729.stgit@gimli.home>
+References: <20140917163412.21412.51729.stgit@gimli.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce a default implementation for remapping PCI bus I/O resources
-onto the CPU address space. Architectures with special needs may
-provide their own version, but most should be able to use this one.
+On Wed, 2014-09-17 at 10:35 -0600, Alex Williamson wrote:
+> Now that IOMMU drivers have completed the DMA alias transition,
+> remove the left behind dead code.  Thanks,
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Rob Herring <robh+dt@kernel.org>
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
----
- drivers/pci/pci.c             | 33 +++++++++++++++++++++++++++++++++
- include/asm-generic/pgtable.h |  4 ++++
- include/linux/pci.h           |  3 +++
- 3 files changed, 40 insertions(+)
+Grr, resending a v2, my DNS hiccuped just after sending the cover.
+Thanks,
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 2c9ac70..654b44c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2704,6 +2704,39 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
- }
- EXPORT_SYMBOL(pci_request_regions_exclusive);
- 
-+/**
-+ *	pci_remap_iospace - Remap the memory mapped I/O space
-+ *	@res: Resource describing the I/O space
-+ *	@phys_addr: physical address where the range will be mapped.
-+ *
-+ *	Remap the memory mapped I/O space described by the @res
-+ *	into the CPU physical address space. Only architectures
-+ *	that have memory mapped IO defined (and hence PCI_IOBASE)
-+ *	should call this function.
-+ */
-+int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
-+{
-+	int err = -ENODEV;
-+
-+#ifdef PCI_IOBASE
-+	if (!(res->flags & IORESOURCE_IO))
-+		return -EINVAL;
-+
-+	if (res->end > IO_SPACE_LIMIT)
-+		return -EINVAL;
-+
-+	err = ioremap_page_range(res->start + (unsigned long)PCI_IOBASE,
-+				res->end + 1 + (unsigned long)PCI_IOBASE,
-+				phys_addr, pgprot_device(PAGE_KERNEL));
-+#else
-+	/* this architecture does not have memory mapped I/O space,
-+	   so this function should never be called */
-+	WARN_ON(1);
-+#endif
-+
-+	return err;
-+}
-+
- static void __pci_set_master(struct pci_dev *dev, bool enable)
- {
- 	u16 old_cmd, cmd;
-diff --git a/include/asm-generic/pgtable.h b/include/asm-generic/pgtable.h
-index 53b2acc..977e545 100644
---- a/include/asm-generic/pgtable.h
-+++ b/include/asm-generic/pgtable.h
-@@ -249,6 +249,10 @@ static inline int pmd_same(pmd_t pmd_a, pmd_t pmd_b)
- #define pgprot_writecombine pgprot_noncached
- #endif
- 
-+#ifndef pgprot_device
-+#define pgprot_device pgprot_noncached
-+#endif
-+
- /*
-  * When walking page tables, get the address of the next boundary,
-  * or the end address of the range if that comes earlier.  Although no
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a494e5d..fc8c529 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1100,6 +1100,9 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
- 						  resource_size_t),
- 			void *alignf_data);
- 
-+
-+int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
-+
- static inline dma_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
- {
- 	struct pci_bus_region region;
--- 
-2.1.0
+Alex
 
