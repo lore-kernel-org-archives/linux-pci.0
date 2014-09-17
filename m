@@ -1,74 +1,40 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <540994D4.6040500@cogentembedded.com>
-Date: Fri, 05 Sep 2014 14:47:48 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:9599 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755985AbaIQQJF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Sep 2014 12:09:05 -0400
+Date: Wed, 17 Sep 2014 17:17:55 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	linux-pci@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>
+Subject: Re: [PATCH v2 2/3] PCI/MSI/Armada-370-xp: Remove
+ arch_msi_check_device()
+Message-ID: <20140917161754.GG8793@agordeev.usersys.redhat.com>
+References: <cover.1410078503.git.agordeev@redhat.com>
+ <9f3497a0f478f3ee7d4a16b9a4221d4377e5863d.1410078503.git.agordeev@redhat.com>
+ <20140917155554.GE16945@titan.lakedaemon.net>
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH v1 15/21] Powerpc/MSI: Use MSI chip framework to configure
- MSI/MSI-X irq
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com> <1409911806-10519-16-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1409911806-10519-16-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140917155554.GE16945@titan.lakedaemon.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello.
+On Wed, Sep 17, 2014 at 11:55:54AM -0400, Jason Cooper wrote:
+> Now that ThomasP has had a chance to test, please adjust the subject
+> line to 'irqchip: armada-370-xp: M...' and
 
-On 9/5/2014 2:10 PM, Yijing Wang wrote:
+Hi Bjorn,
 
-> Use MSI chip framework instead of arch MSI functions to configure
-> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+Do you want me to resend the patch?
 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->   arch/powerpc/kernel/msi.c |   14 ++++++++++++--
->   1 files changed, 12 insertions(+), 2 deletions(-)
+> Acked-by: Jason Cooper <jason@lakedaemon.net>
+> 
+> thx,
+> 
+> Jason.
 
-> diff --git a/arch/powerpc/kernel/msi.c b/arch/powerpc/kernel/msi.c
-> index 71bd161..01781a4 100644
-> --- a/arch/powerpc/kernel/msi.c
-> +++ b/arch/powerpc/kernel/msi.c
-[...]
-> @@ -27,7 +27,17 @@ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->   	return ppc_md.setup_msi_irqs(dev, nvec, type);
->   }
->
-> -void arch_teardown_msi_irqs(struct pci_dev *dev)
-> +static void ppc_teardown_msi_irqs(struct pci_dev *dev)
-
-    Shouldn't this function take IRQ # instead?
-
->   {
->   	ppc_md.teardown_msi_irqs(dev);
->   }
-> +
-> +static struct msi_chip ppc_msi_chip = {
-> +	.setup_irqs = ppc_setup_msi_irqs,
-> +	.teardown_irqs = ppc_teardown_msi_irqs,
-> +};
-> +
-> +struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
-> +{
-> +	return &ppc_msi_chip;
-> +}
-
-WBR, Sergei
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
