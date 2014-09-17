@@ -1,60 +1,89 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC v1 12/28] x86: Clean up unused forward declarations in x86_init.h
-Date: Fri, 26 Sep 2014 22:57:42 +0800
-Message-Id: <1411743478-31435-13-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH v2 1/2] PCI: Remove pci_find_upstream_pcie_bridge()
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: linux-kernel@vger.kernel.org
+Date: Wed, 17 Sep 2014 10:41:07 -0600
+Message-ID: <20140917164106.21584.20401.stgit@gimli.home>
+In-Reply-To: <20140917163930.21584.69496.stgit@gimli.home>
+References: <20140917163930.21584.69496.stgit@gimli.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/x86_init.h |    6 ------
- 1 file changed, 6 deletions(-)
+This is now dead code.
 
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index fa6b1b5128ee..3755cd2bbb94 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -171,7 +171,6 @@ struct x86_platform_ops {
- };
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+
+ drivers/pci/search.c |   34 ----------------------------------
+ include/linux/pci.h  |   11 -----------
+ 2 files changed, 45 deletions(-)
+
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 827ad83..a81f413 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -103,40 +103,6 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
+ 	return ret;
+ }
  
- struct pci_dev;
--struct msi_msg;
- struct msi_desc;
- 
- struct x86_msi_ops {
-@@ -183,11 +182,6 @@ struct x86_msi_ops {
- 	u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
- };
- 
--struct IO_APIC_route_entry;
--struct io_apic_irq_attr;
--struct irq_data;
--struct cpumask;
+-/*
+- * find the upstream PCIe-to-PCI bridge of a PCI device
+- * if the device is PCIE, return NULL
+- * if the device isn't connected to a PCIe bridge (that is its parent is a
+- * legacy PCI bridge and the bridge is directly connected to bus 0), return its
+- * parent
+- */
+-struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
+-{
+-	struct pci_dev *tmp = NULL;
 -
- struct x86_io_apic_ops {
- 	void		(*init)   (void);
- 	unsigned int	(*read)   (unsigned int apic, unsigned int reg);
--- 
-1.7.10.4
+-	if (pci_is_pcie(pdev))
+-		return NULL;
+-	while (1) {
+-		if (pci_is_root_bus(pdev->bus))
+-			break;
+-		pdev = pdev->bus->self;
+-		/* a p2p bridge */
+-		if (!pci_is_pcie(pdev)) {
+-			tmp = pdev;
+-			continue;
+-		}
+-		/* PCI device should connect to a PCIe bridge */
+-		if (pci_pcie_type(pdev) != PCI_EXP_TYPE_PCI_BRIDGE) {
+-			/* Busted hardware? */
+-			WARN_ON_ONCE(1);
+-			return NULL;
+-		}
+-		return pdev;
+-	}
+-
+-	return tmp;
+-}
+-
+ static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
+ {
+ 	struct pci_bus *child;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 61978a4..b4fb9f4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1828,15 +1828,4 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
+ 			   int (*fn)(struct pci_dev *pdev,
+ 				     u16 alias, void *data), void *data);
+ 
+-/**
+- * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
+- * @pdev: the PCI device
+- *
+- * if the device is PCIE, return NULL
+- * if the device isn't connected to a PCIe bridge (that is its parent is a
+- * legacy PCI bridge and the bridge is directly connected to bus 0), return its
+- * parent
+- */
+-struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
+-
+ #endif /* LINUX_PCI_H */
 
