@@ -1,301 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:48561 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246AbaIJNEk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Sep 2014 09:04:40 -0400
-Date: Wed, 10 Sep 2014 14:04:32 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI
- domain_nr
-Message-ID: <20140910130432.GB27864@e106497-lin.cambridge.arm.com>
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
- <1410184472-17630-8-git-send-email-Liviu.Dudau@arm.com>
- <CAL_JsqJi8k1Goc3UmXhuxf9v7=4gJrYG_Di7v574PxS8TsJaXw@mail.gmail.com>
- <20140908145459.GO27864@e106497-lin.cambridge.arm.com>
- <CAL_JsqJdGKDVwJOpPp19OkVPGzR7Zqv3nh+ONHHaYnPLYTYoYg@mail.gmail.com>
- <20140908155931.GP27864@e106497-lin.cambridge.arm.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:54517 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754856AbaIQOL4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Sep 2014 10:11:56 -0400
+Message-ID: <541996A9.306@ti.com>
+Date: Wed, 17 Sep 2014 10:11:53 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20140908155931.GP27864@e106497-lin.cambridge.arm.com>
-Content-Type: multipart/mixed; boundary="d6Gm4EdcadzBjdND"
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH - v4] PCI: keystone: add a pci quirk to limit mrrs
+References: <1410195814-30414-1-git-send-email-m-karicheri2@ti.com> <20140916215448.GB5050@google.com>
+In-Reply-To: <20140916215448.GB5050@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 09/16/2014 05:54 PM, Bjorn Helgaas wrote:
+> On Mon, Sep 08, 2014 at 01:03:34PM -0400, Murali Karicheri wrote:
+>> Keystone PCI controller has a limitation that memory read request
+>> size must not exceed 256 bytes. This is a hardware limitation and
+>> add a quirk to force this limit on all downstream devices by
+>> updating mrrs.
+>>
+>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>
+> Applied to pci/host-keystone for v3.18, thanks.
+>
+> I moved the pci-keystone.txt update regarding pci=pcie_bus_perf into this
+> patch.  This is where it belongs, isn't it?  I'm pretty sure it wasn't
+> related to setting the PCI device ID dynamically.
+Yes. Thanks for taking care of the documentation part.
 
---d6Gm4EdcadzBjdND
-Content-Type: text/plain; charset=UTF-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Thanks
+Murali
 
-On Mon, Sep 08, 2014 at 04:59:31PM +0100, Liviu Dudau wrote:
-> On Mon, Sep 08, 2014 at 04:27:36PM +0100, Rob Herring wrote:
-> > On Mon, Sep 8, 2014 at 9:54 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote=
-:
-> > > On Mon, Sep 08, 2014 at 03:27:56PM +0100, Rob Herring wrote:
-> > >> On Mon, Sep 8, 2014 at 8:54 AM, Liviu Dudau <Liviu.Dudau@arm.com> wr=
-ote:
-> > >> > Add of_pci_get_domain_nr() to retrieve the PCI domain number
-> > >> > of a given device from DT. If the information is not present,
-> > >> > the function can be requested to allocate a new domain number.
-> > >> >
-> > >> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > >> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > >> > Cc: Grant Likely <grant.likely@linaro.org>
-> > >> > Cc: Rob Herring <robh+dt@kernel.org>
-> > >> > Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-> > >> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > >> > ---
-> > >> >  drivers/of/of_pci.c    | 34 ++++++++++++++++++++++++++++++++++
-> > >> >  include/linux/of_pci.h |  7 +++++++
-> > >> >  2 files changed, 41 insertions(+)
-> > >> >
-> > >> > diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> > >> > index 8481996..a107edb 100644
-> > >> > --- a/drivers/of/of_pci.c
-> > >> > +++ b/drivers/of/of_pci.c
-> > >> > @@ -89,6 +89,40 @@ int of_pci_parse_bus_range(struct device_node *=
-node, struct resource *res)
-> > >> >  }
-> > >> >  EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
-> > >> >
-> > >> > +static atomic_t of_domain_nr =3D ATOMIC_INIT(-1);
-> > >> > +
-> > >> > +/**
-> > >> > + * This function will try to obtain the host bridge domain number=
- by
-> > >> > + * using of_alias_get_id() call with "pci-domain" as a stem. If t=
-hat
-> > >> > + * fails, a local allocator will be used. The local allocator can
-> > >> > + * be requested to return a new domain_nr if the information is m=
-issing
-> > >> > + * from the device tree.
-> > >> > + *
-> > >> > + * @node: device tree node with the domain information
-> > >> > + * @allocate_if_missing: if DT lacks information about the domain=
- nr,
-> > >> > + * allocate a new number.
-> > >> > + *
-> > >> > + * Returns the associated domain number from DT, or a new domain =
-number
-> > >> > + * if DT information is missing and @allocate_if_missing is true.=
- If
-> > >> > + * @allocate_if_missing is false then the last allocated domain n=
-umber
-> > >> > + * will be returned.
-> > >> > + */
-> > >> > +int of_pci_get_domain_nr(struct device_node *node, bool allocate_=
-if_missing)
-> > >> > +{
-> > >> > +       int domain;
-> > >> > +
-> > >> > +       domain =3D of_alias_get_id(node, "pci-domain");
-> > >> > +       if (domain =3D=3D -ENODEV) {
-> > >> > +               if (allocate_if_missing)
-> > >> > +                       domain =3D atomic_inc_return(&of_domain_nr=
-);
-> > >> > +               else
-> > >> > +                       domain =3D atomic_read(&of_domain_nr);
-> > >>
-> > >> This function seems a bit broken to me. It is overloaded with too ma=
-ny
-> > >> different outcomes. Think about how this would work if you have
-> > >> multiple PCI buses and a mixture of having pci-domain aliases or not=
-.
-> > >> Aren't domain numbers global? Allocation should then start outside o=
-f
-> > >> the range of alias ids.
-> > >>
-> > >> Rob
-> > >>
-> > >
-> > > Rob,
-> > >
-> > > Would this version make more sense?
-> >=20
-> > No.
-> >=20
+>
+>> ---
+>>    -v4: re-send removing extra lines
+>>    -v3: added check for vendor id and use pci_matc_id() to do matching
+>>    -v2: made the quirk happens after tuning
+>>    -v1: changed printk to indicate PCI bdf
+>>
+>>   drivers/pci/host/pci-keystone.c |   45 +++++++++++++++++++++++++++++++++++++++
+>>   1 file changed, 45 insertions(+)
+>>
+>> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+>> index c1cfaef..ff8ed25 100644
+>> --- a/drivers/pci/host/pci-keystone.c
+>> +++ b/drivers/pci/host/pci-keystone.c
+>> @@ -42,8 +42,53 @@
+>>   /* DEV_STAT_CTRL */
+>>   #define PCIE_CAP_BASE		0x70
+>>
+>> +/* PCIE controller device IDs */
+>> +#define PCIE_RC_K2HK		0xb008
+>> +#define PCIE_RC_K2E		0xb009
+>> +#define PCIE_RC_K2L		0xb00a
+>> +
+>>   #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
+>>
+>> +static void quirk_limit_mrrs(struct pci_dev *dev)
+>> +{
+>> +	struct pci_bus *bus = dev->bus;
+>> +	struct pci_dev *bridge = bus->self;
+>> +	static const struct pci_device_id rc_pci_devids[] = {
+>> +		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2HK),
+>> +		 .class = PCI_CLASS_BRIDGE_PCI<<  8, .class_mask = ~0, },
+>> +		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2E),
+>> +		 .class = PCI_CLASS_BRIDGE_PCI<<  8, .class_mask = ~0, },
+>> +		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2L),
+>> +		 .class = PCI_CLASS_BRIDGE_PCI<<  8, .class_mask = ~0, },
+>> +		{ 0, },
+>> +	};
+>> +
+>> +	if (pci_is_root_bus(bus))
+>> +		return;
+>> +
+>> +	/* look for the host bridge */
+>> +	while (!pci_is_root_bus(bus)) {
+>> +		bridge = bus->self;
+>> +		bus = bus->parent;
+>> +	}
+>> +
+>> +	if (bridge) {
+>> +		/*
+>> +		 * Keystone PCI controller has a h/w limitation of
+>> +		 * 256 bytes maximum read request size. It can't handle
+>> +		 * anything higher than this. So force this limit on
+>> +		 * all downstream devices
+>> +		 */
+>> +		if (pci_match_id(rc_pci_devids, bridge)) {
+>> +			if (pcie_get_readrq(dev)>  256) {
+>> +				dev_info(&dev->dev, "limiting mrrs to 256\n");
+>> +				pcie_set_readrq(dev, 256);
+>> +			}
+>> +		}
+>> +	}
+>> +}
+>> +DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
+>> +
+>>   static int ks_pcie_establish_link(struct keystone_pcie *ks_pcie)
+>>   {
+>>   	struct pcie_port *pp =&ks_pcie->pp;
+>> --
+>> 1.7.9.5
+>>
 
-Hi Rob,
 
-Here is an updated version of the patch. I have implemented a separate func=
-tion
-for getting the max domain number from the device tree and use the result a=
-s
-the start value + 1 for the allocator.
-
-Best regards,
-Liviu
-
---=20
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    =C2=AF\_(=E3=83=84)_/=C2=AF
---d6Gm4EdcadzBjdND
-Content-Type: text/x-diff; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment; filename="0001-OF-Introduce-helper-function-for-getting-PCI-domain_.patch"
-
->From 77257fceaa8fbd74d6132fcf57c3af14bd48c0ae Mon Sep 17 00:00:00 2001
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-Date: Mon, 4 Aug 2014 17:03:04 +0100
-Subject: [PATCH v10 07/10] OF: Introduce helper function for getting PCI do=
-main_nr
-
-Add of_pci_get_domain_nr() to retrieve the PCI domain number
-of a given device from DT. If the information is not present,
-the function can be requested to allocate a new domain number.
-
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
----
- drivers/of/of_pci.c    | 62 ++++++++++++++++++++++++++++++++++++++++++++++=
-++++
- include/linux/of_pci.h |  7 ++++++
- 2 files changed, 69 insertions(+)
-
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 8481996..3560401 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -3,6 +3,8 @@
- #include <linux/of.h>
- #include <linux/of_pci.h>
-=20
-+#include "of_private.h"
-+
- static inline int __of_pci_pci_compare(struct device_node *node,
- =09=09=09=09       unsigned int data)
- {
-@@ -89,6 +91,66 @@ int of_pci_parse_bus_range(struct device_node *node, str=
-uct resource *res)
- }
- EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
-=20
-+static atomic_t of_domain_nr =3D ATOMIC_INIT(-1);
-+
-+/*
-+ * Get the maximum value for a domain number from the device tree
-+ */
-+static int of_get_max_pci_domain_nr(void)
-+{
-+=09struct alias_prop *app;
-+=09int max_domain =3D -1;
-+
-+=09mutex_lock(&of_mutex);
-+=09list_for_each_entry(app, &aliases_lookup, link) {
-+=09=09if (strncmp(app->stem, "pci-domain", 10) !=3D 0)
-+=09=09=09continue;
-+
-+=09=09max_domain =3D max(max_domain, app->id);
-+=09}
-+=09mutex_unlock(&of_mutex);
-+
-+=09return max_domain;
-+}
-+
-+/**
-+ * This function will try to obtain the host bridge domain number by
-+ * using of_alias_get_id() call with "pci-domain" as a stem. If that
-+ * fails, a local allocator will be used. The local allocator can
-+ * be requested to return a new domain_nr if the information is missing
-+ * from the device tree.
-+ *
-+ * @node: device tree node with the domain information
-+ * @allocate_if_missing: if DT lacks information about the domain nr,
-+ * allocate a new number.
-+ *
-+ * Returns the associated domain number from DT, or a new domain number
-+ * if DT information is missing and @allocate_if_missing is true. If
-+ * @allocate_if_missing is false then the last allocated domain number
-+ * will be returned.
-+ */
-+int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missin=
-g)
-+{
-+=09int domain;
-+
-+=09domain =3D atomic_read(&of_domain_nr);
-+=09if (of_domain_nr =3D=3D -1) {
-+=09=09/* first run, get max defined domain nr in device tree */
-+=09=09domain =3D of_get_max_pci_domain_nr();
-+=09=09/* then set the start value for allocator to be max + 1 */
-+=09=09atomic_set(&of_domain_nr, domain + 1);
-+=09}
-+=09domain =3D of_alias_get_id(node, "pci-domain");
-+=09if (domain =3D=3D -ENODEV) {
-+=09=09domain =3D atomic_read(&of_domain_nr);
-+=09=09if (allocate_if_missing)
-+=09=09=09atomic_inc(&of_domain_nr);
-+=09}
-+
-+=09return domain;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_get_domain_nr);
-+
- #ifdef CONFIG_PCI_MSI
-=20
- static LIST_HEAD(of_pci_msi_chip_list);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index dde3a4a..3a3824c 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -15,6 +15,7 @@ struct device_node *of_pci_find_child_device(struct devic=
-e_node *parent,
- int of_pci_get_devfn(struct device_node *np);
- int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res)=
-;
-+int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missin=
-g);
- #else
- static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_p=
-handle_args *out_irq)
- {
-@@ -43,6 +44,12 @@ of_pci_parse_bus_range(struct device_node *node, struct =
-resource *res)
- {
- =09return -EINVAL;
- }
-+
-+static inline int
-+of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
-+{
-+=09return -1;
-+}
- #endif
-=20
- #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
---=20
-2.0.4
-
---d6Gm4EdcadzBjdND--
-
+-- 
+Murali Karicheri
+Linux Kernel, Texas Instruments
