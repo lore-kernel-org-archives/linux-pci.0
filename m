@@ -1,62 +1,122 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-CC: Yijing Wang <wangyijing@huawei.com>,
-	Rob Herring <robherring2@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	"Jason Gunthorpe" <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	"Linus Walleij" <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	"Grant Likely" <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	"Jingoo Han" <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	"Suravee Suthikulanit" <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Device Tree ML" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: RE: [PATCH v10 07/10] OF: Introduce helper function for getting PCI
- domain_nr
-Date: Thu, 11 Sep 2014 14:11:05 +0000
-Message-ID: <ae98d68652f1495a857f081c3a6aecb2@HKXPR06MB168.apcprd06.prod.outlook.com>
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
- <3780051.0eHpCN6UC9@wuerfel> <20140909112054.GD29639@arm.com>
- <2908259.jgJNuDxCCa@wuerfel>
-In-Reply-To: <2908259.jgJNuDxCCa@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:51947 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751088AbaIQFQp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Sep 2014 01:16:45 -0400
+Message-ID: <54191927.2040102@linux.intel.com>
+Date: Wed, 17 Sep 2014 13:16:23 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Sender: linux-arch-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC Part2 v1 14/21] x86, hpet: Enhance HPET IRQ to support hierarchy
+ irqdomain
+References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com> <1410444228-3134-15-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1409161104120.4247@nanos>
+In-Reply-To: <alpine.DEB.2.10.1409161104120.4247@nanos>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
 
-On 10 September 2014 19:20, Arnd wrote:
-> On Tuesday 09 September 2014 12:20:54 Catalin Marinas wrote:
-> >
-> > We can assume that if a domain is not specified and there is a single
-> > top level PCIe node, the domain defaults to 0. Are there any arm32
-> > platforms that require multiple domains (and do not specify a number in
-> > the DT)?
+
+On 2014/9/17 2:31, Thomas Gleixner wrote:
+> On Thu, 11 Sep 2014, Jiang Liu wrote:
+>>  #ifdef CONFIG_HPET_TIMER
+>> +#define	HPET_DOMAIN_REMAPPED		0x80000000
+>> +
+>> +static inline int hpet_dev_id(struct irq_domain *domain)
+>> +{
+>> +	return (int)((long)domain->host_data & ~HPET_DOMAIN_REMAPPED);
+>> +}
+>> +
+>> +static inline bool hpet_remapped(struct irq_domain *domain)
+>> +{
+>> +	return (bool)((long)domain->host_data & HPET_DOMAIN_REMAPPED);
+>> +}
 > 
-> In theory, I think all of them could work with a single domain, but then
-> you need to partition the bus number space between the host controllers,
-> so you have the exact same situation that you either need to make up
-> random bus numbers or put them in DT.
+> It's kinda odd to have this encoded in domain->host_data.
+Hi Thomas,
+	I have thought about add a "domain_flags" field to struct
+irq_domain to host the remapping flag. But remapping flag is not a
+common flag for all architectures, so I adopted the dirty solution
+to hide the remapped flag in x86 arch specific code.
+How about adding domain_flags field and define IRQ_DOMAIN_FLAG_ARCH1?
+
 > 
-> Using multiple domains is way cleaner for this, even if we have to
-> make up the numbers.
+>>  static int hpet_msi_set_affinity(struct irq_data *data,
+>>  				 const struct cpumask *mask, bool force)
+>>  {
+>> +	struct irq_data *parent = data->parent_data;
+>>  	struct irq_cfg *cfg = irqd_cfg(data);
+>>  	struct msi_msg msg;
+>> -	unsigned int dest;
+>>  	int ret;
+>>  
+>> -	ret = apic_set_affinity(data, mask, &dest);
+>> -	if (ret)
+>> -		return ret;
+>> -
+>> -	hpet_msi_read(data->handler_data, &msg);
+>> -
+>> -	msg.data &= ~MSI_DATA_VECTOR_MASK;
+>> -	msg.data |= MSI_DATA_VECTOR(cfg->vector);
+>> -	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+>> -	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
+>> -
+>> -	hpet_msi_write(data->handler_data, &msg);
+>> +	ret = parent->chip->irq_set_affinity(parent, mask, force);
+>> +	/* No need to rewrite HPET registers if interrupt is remapped */
+>> +	if (ret >= 0 && !hpet_remapped(data->domain)) {
+> 
+> So we really should use irq_data->chip_data for this, i.e. storing
+> 
+> struct hpet_msi {
+>        struct msi_msg msg;
+>        bool remapped;
+>        /* whatever you need here */
+> };
+OK, we add this flag for HPET, MSI and IOAPIC.
 
-Maybe this is a stupid question, but why would you want to specify the domain
-in the DT at all? Doesn't every instance of a driver imply a separate domain?
+> 
+>> +		hpet_msi_read(data->handler_data, &msg);
+>> +		msg.data &= ~MSI_DATA_VECTOR_MASK;
+>> +		msg.data |= MSI_DATA_VECTOR(cfg->vector);
+>> +		msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+>> +		msg.address_lo |= MSI_ADDR_DEST_ID(cfg->dest_apicid);
+> 
+> We need the same thing for MSI so this should be a helper function
+> 
+>    msi_update_msg(struct msi_msg *msg, struct irq_cfg *cfg)
+Good suggestion, will do it in next version
+Regards!
+Gerry
 
-Thanks
-Phil 
+> 
+>> +		hpet_msi_write(data->handler_data, &msg);
+>> +	}
+>>  
+>> -	return IRQ_SET_MASK_OK_NOCOPY;
+>> +	return ret;
+>>  }
+>  
+> Thanks,
+> 
+> 	tglx
+> 
