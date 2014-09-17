@@ -1,47 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0109.outbound.protection.outlook.com ([207.46.100.109]:28351
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752047AbaI3KHK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Sep 2014 06:07:10 -0400
-From: Richard Zhu <r65037@freescale.com>
-To: <linux-pci-owner@vger.kernel.org>
-CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
-	<festevam@gmail.com>, <l.stach@pengutronix.de>,
-	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
-Subject: [PATCH v4 05/10] PCI: designware: fix one potential assignment error of cfg start
-Date: Tue, 30 Sep 2014 17:36:39 +0800
-Message-ID: <1412069804-17162-6-git-send-email-r65037@freescale.com>
-In-Reply-To: <1412069804-17162-1-git-send-email-r65037@freescale.com>
-References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:62886 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750946AbaIQFK2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Sep 2014 01:10:28 -0400
+Received: by mail-pd0-f182.google.com with SMTP id w10so1331934pde.27
+        for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 22:10:28 -0700 (PDT)
+Date: Tue, 16 Sep 2014 23:10:24 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Sachin Kamat <sachin.kamat@samsung.com>
+Cc: linux-pci@vger.kernel.org, pratyush.anand@st.com,
+	viresh.kumar@linaro.org, spk.linux@gmail.com, olof@lixom.net
+Subject: Re: [PATCH 1/1] PCI: spear: Fix build error
+Message-ID: <20140917051024.GA21020@google.com>
+References: <1406892514-27996-1-git-send-email-sachin.kamat@samsung.com>
+ <20140813172032.GA7298@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140813172032.GA7298@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-if va_cfg0_base/va_cfg1_base are initialized by
-designware core, the pp->cfg.start is not initialized
-properly, when IORESOURCE_MEM "config" is represented
-as cfg space resource.
-solution: assign cfg_res->start to pp->cfg.start.
+On Wed, Aug 13, 2014 at 11:20:32AM -0600, Bjorn Helgaas wrote:
+> On Fri, Aug 01, 2014 at 04:58:34PM +0530, Sachin Kamat wrote:
+> > We get the following error when built as a module. Though the general fix would
+> > be in this case to export the below mentioned symbols, considering that
+> > dw_pcie_host_init is marked with __init and other PCI drivers do not support
+> > modular build, I have disabled building this driver as a module too.
+> > 
+> > ERROR: "dw_pcie_host_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> > ERROR: "dw_handle_msi_irq" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> > ERROR: "dw_pcie_msi_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> > ERROR: "dw_pcie_cfg_write" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> > ERROR: "dw_pcie_cfg_read" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> > ERROR: "dw_pcie_setup_rc" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> > ERROR: "dw_pcie_link_up" [drivers/pci/host/pcie-spear13xx.ko] undefined!
+> > make[1]: *** [__modpost] Error 1
+> > make: *** [modules] Error 2
+> > 
+> > Signed-off-by: Sachin Kamat <sachin.kamat@samsung.com>
+> 
+> Applied with ack and reviewed-by from Viresh and Jingoo to pci/spear for
+> v3.17, thanks!
 
-Signed-off-by: Richard Zhu <r65037@freescale.com>
----
- drivers/pci/host/pcie-designware.c | 1 +
- 1 file changed, 1 insertion(+)
+Sorry, I misplaced this somehow.  I did it again and it's now in my
+for-linus branch, so it should still make it for v3.17.  Sorry about that.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index ae1e6c5..f1f127f 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -444,6 +444,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 	if (cfg_res) {
- 		pp->config.cfg0_size = resource_size(cfg_res)/2;
- 		pp->config.cfg1_size = resource_size(cfg_res)/2;
-+		pp->cfg.start = cfg_res->start;
- 		pp->cfg0_base = cfg_res->start;
- 		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
- 
--- 
-1.9.1
-
+> > ---
+> >  drivers/pci/host/Kconfig | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> > index 8922c37..90f5cca 100644
+> > --- a/drivers/pci/host/Kconfig
+> > +++ b/drivers/pci/host/Kconfig
+> > @@ -56,7 +56,7 @@ config PCI_HOST_GENERIC
+> >  	  controller, such as the one emulated by kvmtool.
+> >  
+> >  config PCIE_SPEAR13XX
+> > -	tristate "STMicroelectronics SPEAr PCIe controller"
+> > +	bool "STMicroelectronics SPEAr PCIe controller"
+> >  	depends on ARCH_SPEAR13XX
+> >  	select PCIEPORTBUS
+> >  	select PCIE_DW
+> > -- 
+> > 1.8.1.2
+> > 
