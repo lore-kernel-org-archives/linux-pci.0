@@ -1,578 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:41499 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:18515 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754911AbaISFQ7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 19 Sep 2014 01:16:59 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V6 3/8] iommu/vt-d: Implement DMAR unit hotplug framework
-Date: Fri, 19 Sep 2014 13:18:50 +0800
-Message-Id: <1411103935-31301-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411103935-31301-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411103935-31301-1-git-send-email-jiang.liu@linux.intel.com>
+	id S1755215AbaIQPzX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Sep 2014 11:55:23 -0400
+Message-ID: <5419AE7E.4030203@redhat.com>
+Date: Wed, 17 Sep 2014 10:53:34 -0500
+From: David Milburn <dmilburn@redhat.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [Bug 84761] New: LSI controller not found when specifying pci=assign-busses
+References: <bug-84761-41252@https.bugzilla.kernel.org/> <CAErSpo5yPJxReveBN5ofcr==2fUkfv8D9uO7rqHj_uFK54se1w@mail.gmail.com>
+In-Reply-To: <CAErSpo5yPJxReveBN5ofcr==2fUkfv8D9uO7rqHj_uFK54se1w@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Intel platforms, an IO Hub (PCI/PCIe host bridge) may contain DMAR
-units, so we need to support DMAR hotplug when supporting PCI host
-bridge hotplug on Intel platforms.
+Hi,
 
-According to Section 8.8 "Remapping Hardware Unit Hot Plug" in "Intel
-Virtualization Technology for Directed IO Architecture Specification
-Rev 2.2", ACPI BIOS should implement ACPI _DSM method under the ACPI
-object for the PCI host bridge to support DMAR hotplug.
+On 09/17/2014 10:38 AM, Bjorn Helgaas wrote:
+> [+cc Andreas, linux-pci, thanks for the bugzilla; please continue
+> discussion in email]
+>
+> On Wed, Sep 17, 2014 at 7:48 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=84761
+>>
+>>              Bug ID: 84761
+>>             Summary: LSI controller not found when specifying
+>>                      pci=assign-busses
+>>             Product: Drivers
+>>             Version: 2.5
+>>      Kernel Version: linux-3.17.0-rc2
+>>            Hardware: All
+>>                  OS: Linux
+>>                Tree: Mainline
+>>              Status: NEW
+>>            Severity: normal
+>>            Priority: P1
+>>           Component: PCI
+>>            Assignee: drivers_pci@kernel-bugs.osdl.org
+>>            Reporter: dmilburn@redhat.com
+>>          Regression: No
+>>
+>> Created attachment 150651
+>>    --> https://bugzilla.kernel.org/attachment.cgi?id=150651&action=edit
+>> Patch to change pcibios_assign_all_busses check in pci_scan_bridge()
+>>
+>> When booting with kernel command line option "pci=assign-busses", LSI
+>> controller
+>> is no longer found.
+>>
+>> 05:00.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1068E PCI-Express
+>> Fusion-MPT SAS (rev 08)
+>>
+>> It seems the problem is in pci_scan_bridge (drivers/pci/probe.c):
+>>
+>> [    2.542563] PCI_READ_BRIDGE_BASES:
+>> [    2.545953] PCI_SCAN_BRIDGE:
+>> [    2.548823] scanning [bus 01-01] behind bridge, pass 0
+>> [    2.553947] PCI_SCAN_BRIDGE:
+>> [    2.556818] scanning [bus 05-05] behind bridge, pass 0 <=========PROBLEM
+>> [    2.561942] PCI_SCAN_BRIDGE:
+>> [    2.564812] scanning [bus 06-06] behind bridge, pass 0
+>> [    2.569936] PCI_SCAN_BRIDGE:
+>> [    2.572806] scanning [bus 03-03] behind bridge, pass 0
+>> [    2.577930] PCI_SCAN_BRIDGE:
+>> [    2.580800] scanning [bus 02-02] behind bridge, pass 0
+>> [    2.585923] PCI_SCAN_BRIDGE:
+>> [    2.588793] scanning [bus 04-04] behind bridge, pass 0
+>>
+>> If I change the pass 0 check from !pcibios_assign_all_busses() to
+>> pcibios_assign_all_busses() it finds the LSI controller; however, it looks
+>> like pci_scan_bridge has checked !pcibios_assisng_all_bussses() for a
+>> very long time.
+>>
+>> (changed code in pci_scan_bridge, causes driver to head down that first path)
+>>    if ((secondary || subordinate) && pcibios_assign_all_busses() &&
+>>        !is_cardbus && !broken) {
+>>
+>> [    2.560225] PCI_SCAN_BRIDGE: secondary 1 subordinate 1 is_cardbus 0 broken 0
+>> [    2.567252] PCI_SCAN_BRIDGE: !pcibios_assign_all_busses() 0
+>>   .
+>>   .
+>> [    2.849864] scanning [bus 05-05] behind bridge, pass 0   <=====SCANNING
+>> [    2.854988] PCI_SCAN_BRIDGE: CHECKING FOR ASSIGN_ALL_BUSSES
+>> [    2.860544] PCI_SCAN_BRIDGE: secondary 5 subordinate 5 is_cardbus 0 broken 0
+>> [    2.867572] PCI_SCAN_BRIDGE: !pcibios_assign_all_busses() 0
+>> [    2.873126] PCI_SCAN_BRIDGE: ASSIGN_ALL_BUSSES child           (null)
+>> [    2.879546] PCI_ADD_NEW_BUS busnr 5:
+>> [    2.883109] PCI_ALLOC_CHILD_BUS:
+>> [    2.886327] PCI_SET_BUS_SPEED:
+>> [    2.889407] PCI_BUS_INSERT_BUSN_RES:
+>> [    2.892971] PCI_SCAN_CHILD_BUS:
+>> [    2.896100] PCI_SCAN_CHILD_BUS: scanning bus
+>> [    2.900357] PCI_SCAN_SLOT:
+>> [    2.903053] PCI_SCAN_SINGLE_DEVICE:
+>> [    2.906529] PCI_SCAN_DEVICE: devfn 0
+>> [    2.910093] PCI_BUS_READ_DEV_VENDOR_ID: devfn 0
+>> [    2.914608] PCI_ALLOC_DEV:
+>> [    2.917305] PCI_SETUP_DEVICE:
+>> [    2.920262] SET_PCIE_PORT_TYPE:       =====DEVICE FOUND BELOW=====
+>> [    2.923399] pci 0000:05:00.0: [1000:0058] type 00 class 0x010000
+>> [    2.923401] [1000:0058] type 00 class 0x010000
+>> [    2.927841] pci 0000:05:00.0: reg 0x10: [io  0xec00-0xecff]
+>> [    2.927852] pci 0000:05:00.0: reg 0x14: [mem 0xde2ec000-0xde2effff 64bit]
+>> [    2.927863] pci 0000:05:00.0: reg 0x1c: [mem 0xde2f0000-0xde2fffff 64bit]
+>> [    2.927877] pci 0000:05:00.0: reg 0x30: [mem 0xde100000-0xde1fffff pref]
+>> [    2.927879] PCI_DEVICE_ADD:
+>
+> Tangent: why do you need "pci=assign-busses"?  If that's necessary to
+> make some device work, I think that's a different bug in itself.
 
-This patch introduces interfaces to parse ACPI _DSM method for
-DMAR unit hotplug. It also implements state machines for DMAR unit
-hot-addition and hot-removal.
+User reported trying this as
 
-The PCI host bridge hotplug driver should call dmar_hotplug_hotplug()
-before scanning PCI devices connected for hot-addition and after
-destroying all PCI devices for hot-removal.
+As a workaround for
+igb 0000:06:00.1: SR-IOV: bus number out of range
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Reviewed-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/iommu/dmar.c                |  268 +++++++++++++++++++++++++++++++++--
- drivers/iommu/intel-iommu.c         |   78 +++++++++-
- drivers/iommu/intel_irq_remapping.c |    5 +
- include/linux/dmar.h                |   33 +++++
- 4 files changed, 370 insertions(+), 14 deletions(-)
+>
+> Is this a regression?
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index ac4f8ee2871f..ab504cf0f34a 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -75,7 +75,7 @@ static unsigned long dmar_seq_ids[BITS_TO_LONGS(DMAR_UNITS_SUPPORTED)];
- static int alloc_iommu(struct dmar_drhd_unit *drhd);
- static void free_iommu(struct intel_iommu *iommu);
- 
--static void __init dmar_register_drhd_unit(struct dmar_drhd_unit *drhd)
-+static void dmar_register_drhd_unit(struct dmar_drhd_unit *drhd)
- {
- 	/*
- 	 * add INCLUDE_ALL at the tail, so scan the list will find it at
-@@ -336,24 +336,45 @@ static struct notifier_block dmar_pci_bus_nb = {
- 	.priority = INT_MIN,
- };
- 
-+static struct dmar_drhd_unit *
-+dmar_find_dmaru(struct acpi_dmar_hardware_unit *drhd)
-+{
-+	struct dmar_drhd_unit *dmaru;
-+
-+	list_for_each_entry_rcu(dmaru, &dmar_drhd_units, list)
-+		if (dmaru->segment == drhd->segment &&
-+		    dmaru->reg_base_addr == drhd->address)
-+			return dmaru;
-+
-+	return NULL;
-+}
-+
- /**
-  * dmar_parse_one_drhd - parses exactly one DMA remapping hardware definition
-  * structure which uniquely represent one DMA remapping hardware unit
-  * present in the platform
-  */
--static int __init
--dmar_parse_one_drhd(struct acpi_dmar_header *header, void *arg)
-+static int dmar_parse_one_drhd(struct acpi_dmar_header *header, void *arg)
- {
- 	struct acpi_dmar_hardware_unit *drhd;
- 	struct dmar_drhd_unit *dmaru;
- 	int ret = 0;
- 
- 	drhd = (struct acpi_dmar_hardware_unit *)header;
--	dmaru = kzalloc(sizeof(*dmaru), GFP_KERNEL);
-+	dmaru = dmar_find_dmaru(drhd);
-+	if (dmaru)
-+		goto out;
-+
-+	dmaru = kzalloc(sizeof(*dmaru) + header->length, GFP_KERNEL);
- 	if (!dmaru)
- 		return -ENOMEM;
- 
--	dmaru->hdr = header;
-+	/*
-+	 * If header is allocated from slab by ACPI _DSM method, we need to
-+	 * copy the content because the memory buffer will be freed on return.
-+	 */
-+	dmaru->hdr = (void *)(dmaru + 1);
-+	memcpy(dmaru->hdr, header, header->length);
- 	dmaru->reg_base_addr = drhd->address;
- 	dmaru->segment = drhd->segment;
- 	dmaru->include_all = drhd->flags & 0x1; /* BIT0: INCLUDE_ALL */
-@@ -374,6 +395,7 @@ dmar_parse_one_drhd(struct acpi_dmar_header *header, void *arg)
- 	}
- 	dmar_register_drhd_unit(dmaru);
- 
-+out:
- 	if (arg)
- 		(*(int *)arg)++;
- 
-@@ -411,8 +433,7 @@ static int __init dmar_parse_one_andd(struct acpi_dmar_header *header,
- }
- 
- #ifdef CONFIG_ACPI_NUMA
--static int __init
--dmar_parse_one_rhsa(struct acpi_dmar_header *header, void *arg)
-+static int dmar_parse_one_rhsa(struct acpi_dmar_header *header, void *arg)
- {
- 	struct acpi_dmar_rhsa *rhsa;
- 	struct dmar_drhd_unit *drhd;
-@@ -804,14 +825,22 @@ dmar_validate_one_drhd(struct acpi_dmar_header *entry, void *arg)
- 		return -EINVAL;
- 	}
- 
--	addr = early_ioremap(drhd->address, VTD_PAGE_SIZE);
-+	if (arg)
-+		addr = ioremap(drhd->address, VTD_PAGE_SIZE);
-+	else
-+		addr = early_ioremap(drhd->address, VTD_PAGE_SIZE);
- 	if (!addr) {
- 		pr_warn("IOMMU: can't validate: %llx\n", drhd->address);
- 		return -EINVAL;
- 	}
-+
- 	cap = dmar_readq(addr + DMAR_CAP_REG);
- 	ecap = dmar_readq(addr + DMAR_ECAP_REG);
--	early_iounmap(addr, VTD_PAGE_SIZE);
-+
-+	if (arg)
-+		iounmap(addr);
-+	else
-+		early_iounmap(addr, VTD_PAGE_SIZE);
- 
- 	if (cap == (uint64_t)-1 && ecap == (uint64_t)-1) {
- 		warn_invalid_dmar(drhd->address, " returns all ones");
-@@ -1685,12 +1714,17 @@ int __init dmar_ir_support(void)
- 	return dmar->flags & 0x1;
- }
- 
-+/* Check whether DMAR units are in use */
-+static inline bool dmar_in_use(void)
-+{
-+	return irq_remapping_enabled || intel_iommu_enabled;
-+}
-+
- static int __init dmar_free_unused_resources(void)
- {
- 	struct dmar_drhd_unit *dmaru, *dmaru_n;
- 
--	/* DMAR units are in use */
--	if (irq_remapping_enabled || intel_iommu_enabled)
-+	if (dmar_in_use())
- 		return 0;
- 
- 	if (dmar_dev_scope_status != 1 && !list_empty(&dmar_drhd_units))
-@@ -1708,3 +1742,215 @@ static int __init dmar_free_unused_resources(void)
- 
- late_initcall(dmar_free_unused_resources);
- IOMMU_INIT_POST(detect_intel_iommu);
-+
-+/*
-+ * DMAR Hotplug Support
-+ * For more details, please refer to Intel(R) Virtualization Technology
-+ * for Directed-IO Architecture Specifiction, Rev 2.2, Section 8.8
-+ * "Remapping Hardware Unit Hot Plug".
-+ */
-+static u8 dmar_hp_uuid[] = {
-+	/* 0000 */    0xA6, 0xA3, 0xC1, 0xD8, 0x9B, 0xBE, 0x9B, 0x4C,
-+	/* 0008 */    0x91, 0xBF, 0xC3, 0xCB, 0x81, 0xFC, 0x5D, 0xAF
-+};
-+
-+/*
-+ * Currently there's only one revision and BIOS will not check the revision id,
-+ * so use 0 for safety.
-+ */
-+#define	DMAR_DSM_REV_ID			0
-+#define	DMAR_DSM_FUNC_DRHD		1
-+#define	DMAR_DSM_FUNC_ATSR		2
-+#define	DMAR_DSM_FUNC_RHSA		3
-+
-+static inline bool dmar_detect_dsm(acpi_handle handle, int func)
-+{
-+	return acpi_check_dsm(handle, dmar_hp_uuid, DMAR_DSM_REV_ID, 1 << func);
-+}
-+
-+static int dmar_walk_dsm_resource(acpi_handle handle, int func,
-+				  dmar_res_handler_t handler, void *arg)
-+{
-+	int ret = -ENODEV;
-+	union acpi_object *obj;
-+	struct acpi_dmar_header *start;
-+	struct dmar_res_callback callback;
-+	static int res_type[] = {
-+		[DMAR_DSM_FUNC_DRHD] = ACPI_DMAR_TYPE_HARDWARE_UNIT,
-+		[DMAR_DSM_FUNC_ATSR] = ACPI_DMAR_TYPE_ROOT_ATS,
-+		[DMAR_DSM_FUNC_RHSA] = ACPI_DMAR_TYPE_HARDWARE_AFFINITY,
-+	};
-+
-+	if (!dmar_detect_dsm(handle, func))
-+		return 0;
-+
-+	obj = acpi_evaluate_dsm_typed(handle, dmar_hp_uuid, DMAR_DSM_REV_ID,
-+				      func, NULL, ACPI_TYPE_BUFFER);
-+	if (!obj)
-+		return -ENODEV;
-+
-+	memset(&callback, 0, sizeof(callback));
-+	callback.cb[res_type[func]] = handler;
-+	callback.arg[res_type[func]] = arg;
-+	start = (struct acpi_dmar_header *)obj->buffer.pointer;
-+	ret = dmar_walk_remapping_entries(start, obj->buffer.length, &callback);
-+
-+	ACPI_FREE(obj);
-+
-+	return ret;
-+}
-+
-+static int dmar_hp_add_drhd(struct acpi_dmar_header *header, void *arg)
-+{
-+	int ret;
-+	struct dmar_drhd_unit *dmaru;
-+
-+	dmaru = dmar_find_dmaru((struct acpi_dmar_hardware_unit *)header);
-+	if (!dmaru)
-+		return -ENODEV;
-+
-+	ret = dmar_ir_hotplug(dmaru, true);
-+	if (ret == 0)
-+		ret = dmar_iommu_hotplug(dmaru, true);
-+
-+	return ret;
-+}
-+
-+static int dmar_hp_remove_drhd(struct acpi_dmar_header *header, void *arg)
-+{
-+	int i, ret;
-+	struct device *dev;
-+	struct dmar_drhd_unit *dmaru;
-+
-+	dmaru = dmar_find_dmaru((struct acpi_dmar_hardware_unit *)header);
-+	if (!dmaru)
-+		return 0;
-+
-+	/*
-+	 * All PCI devices managed by this unit should have been destroyed.
-+	 */
-+	if (!dmaru->include_all && dmaru->devices && dmaru->devices_cnt)
-+		for_each_active_dev_scope(dmaru->devices,
-+					  dmaru->devices_cnt, i, dev)
-+			return -EBUSY;
-+
-+	ret = dmar_ir_hotplug(dmaru, false);
-+	if (ret == 0)
-+		ret = dmar_iommu_hotplug(dmaru, false);
-+
-+	return ret;
-+}
-+
-+static int dmar_hp_release_drhd(struct acpi_dmar_header *header, void *arg)
-+{
-+	struct dmar_drhd_unit *dmaru;
-+
-+	dmaru = dmar_find_dmaru((struct acpi_dmar_hardware_unit *)header);
-+	if (dmaru) {
-+		list_del_rcu(&dmaru->list);
-+		synchronize_rcu();
-+		dmar_free_drhd(dmaru);
-+	}
-+
-+	return 0;
-+}
-+
-+static int dmar_hotplug_insert(acpi_handle handle)
-+{
-+	int ret;
-+	int drhd_count = 0;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				     &dmar_validate_one_drhd, (void *)1);
-+	if (ret)
-+		goto out;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				     &dmar_parse_one_drhd, (void *)&drhd_count);
-+	if (ret == 0 && drhd_count == 0) {
-+		pr_warn(FW_BUG "No DRHD structures in buffer returned by _DSM method\n");
-+		goto out;
-+	} else if (ret) {
-+		goto release_drhd;
-+	}
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_RHSA,
-+				     &dmar_parse_one_rhsa, NULL);
-+	if (ret)
-+		goto release_drhd;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_ATSR,
-+				     &dmar_parse_one_atsr, NULL);
-+	if (ret)
-+		goto release_atsr;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				     &dmar_hp_add_drhd, NULL);
-+	if (!ret)
-+		return 0;
-+
-+	dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+			       &dmar_hp_remove_drhd, NULL);
-+release_atsr:
-+	dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_ATSR,
-+			       &dmar_release_one_atsr, NULL);
-+release_drhd:
-+	dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+			       &dmar_hp_release_drhd, NULL);
-+out:
-+	return ret;
-+}
-+
-+static int dmar_hotplug_remove(acpi_handle handle)
-+{
-+	int ret;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_ATSR,
-+				     &dmar_check_one_atsr, NULL);
-+	if (ret)
-+		return ret;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				     &dmar_hp_remove_drhd, NULL);
-+	if (ret == 0) {
-+		WARN_ON(dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_ATSR,
-+					       &dmar_release_one_atsr, NULL));
-+		WARN_ON(dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+					       &dmar_hp_release_drhd, NULL));
-+	} else {
-+		dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				       &dmar_hp_add_drhd, NULL);
-+	}
-+
-+	return ret;
-+}
-+
-+static int dmar_device_hotplug(acpi_handle handle, bool insert)
-+{
-+	int ret;
-+
-+	if (!dmar_in_use())
-+		return 0;
-+
-+	if (!dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD))
-+		return 0;
-+
-+	down_write(&dmar_global_lock);
-+	if (insert)
-+		ret = dmar_hotplug_insert(handle);
-+	else
-+		ret = dmar_hotplug_remove(handle);
-+	up_write(&dmar_global_lock);
-+
-+	return ret;
-+}
-+
-+int dmar_device_add(acpi_handle handle)
-+{
-+	return dmar_device_hotplug(handle, true);
-+}
-+
-+int dmar_device_remove(acpi_handle handle)
-+{
-+	return dmar_device_hotplug(handle, false);
-+}
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 7daa74ed46d0..70d9d47eaeda 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3701,17 +3701,48 @@ int __init dmar_parse_one_rmrr(struct acpi_dmar_header *header, void *arg)
- 	return 0;
- }
- 
--int __init dmar_parse_one_atsr(struct acpi_dmar_header *hdr, void *arg)
-+static struct dmar_atsr_unit *dmar_find_atsr(struct acpi_dmar_atsr *atsr)
-+{
-+	struct dmar_atsr_unit *atsru;
-+	struct acpi_dmar_atsr *tmp;
-+
-+	list_for_each_entry_rcu(atsru, &dmar_atsr_units, list) {
-+		tmp = (struct acpi_dmar_atsr *)atsru->hdr;
-+		if (atsr->segment != tmp->segment)
-+			continue;
-+		if (atsr->header.length != tmp->header.length)
-+			continue;
-+		if (memcmp(atsr, tmp, atsr->header.length) == 0)
-+			return atsru;
-+	}
-+
-+	return NULL;
-+}
-+
-+int dmar_parse_one_atsr(struct acpi_dmar_header *hdr, void *arg)
- {
- 	struct acpi_dmar_atsr *atsr;
- 	struct dmar_atsr_unit *atsru;
- 
-+	if (system_state != SYSTEM_BOOTING && !intel_iommu_enabled)
-+		return 0;
-+
- 	atsr = container_of(hdr, struct acpi_dmar_atsr, header);
--	atsru = kzalloc(sizeof(*atsru), GFP_KERNEL);
-+	atsru = dmar_find_atsr(atsr);
-+	if (atsru)
-+		return 0;
-+
-+	atsru = kzalloc(sizeof(*atsru) + hdr->length, GFP_KERNEL);
- 	if (!atsru)
- 		return -ENOMEM;
- 
--	atsru->hdr = hdr;
-+	/*
-+	 * If memory is allocated from slab by ACPI _DSM method, we need to
-+	 * copy the memory content because the memory buffer will be freed
-+	 * on return.
-+	 */
-+	atsru->hdr = (void *)(atsru + 1);
-+	memcpy(atsru->hdr, hdr, hdr->length);
- 	atsru->include_all = atsr->flags & 0x1;
- 	if (!atsru->include_all) {
- 		atsru->devices = dmar_alloc_dev_scope((void *)(atsr + 1),
-@@ -3734,6 +3765,47 @@ static void intel_iommu_free_atsr(struct dmar_atsr_unit *atsru)
- 	kfree(atsru);
- }
- 
-+int dmar_release_one_atsr(struct acpi_dmar_header *hdr, void *arg)
-+{
-+	struct acpi_dmar_atsr *atsr;
-+	struct dmar_atsr_unit *atsru;
-+
-+	atsr = container_of(hdr, struct acpi_dmar_atsr, header);
-+	atsru = dmar_find_atsr(atsr);
-+	if (atsru) {
-+		list_del_rcu(&atsru->list);
-+		synchronize_rcu();
-+		intel_iommu_free_atsr(atsru);
-+	}
-+
-+	return 0;
-+}
-+
-+int dmar_check_one_atsr(struct acpi_dmar_header *hdr, void *arg)
-+{
-+	int i;
-+	struct device *dev;
-+	struct acpi_dmar_atsr *atsr;
-+	struct dmar_atsr_unit *atsru;
-+
-+	atsr = container_of(hdr, struct acpi_dmar_atsr, header);
-+	atsru = dmar_find_atsr(atsr);
-+	if (!atsru)
-+		return 0;
-+
-+	if (!atsru->include_all && atsru->devices && atsru->devices_cnt)
-+		for_each_active_dev_scope(atsru->devices, atsru->devices_cnt,
-+					  i, dev)
-+			return -EBUSY;
-+
-+	return 0;
-+}
-+
-+int dmar_iommu_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
-+{
-+	return intel_iommu_enabled ? -ENOSYS : 0;
-+}
-+
- static void intel_iommu_free_dmars(void)
- {
- 	struct dmar_rmrr_unit *rmrru, *rmrr_n;
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 0df41f6264f5..9b140ed854ec 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -1172,3 +1172,8 @@ struct irq_remap_ops intel_irq_remap_ops = {
- 	.msi_setup_irq		= intel_msi_setup_irq,
- 	.setup_hpet_msi		= intel_setup_hpet_msi,
- };
-+
-+int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
-+{
-+	return irq_remapping_enabled ? -ENOSYS : 0;
-+}
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index c8a576bc3a98..594d4ac79e75 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -120,6 +120,8 @@ extern int dmar_remove_dev_scope(struct dmar_pci_notify_info *info,
- /* Intel IOMMU detection */
- extern int detect_intel_iommu(void);
- extern int enable_drhd_fault_handling(void);
-+extern int dmar_device_add(acpi_handle handle);
-+extern int dmar_device_remove(acpi_handle handle);
- 
- static inline int dmar_res_noop(struct acpi_dmar_header *hdr, void *arg)
- {
-@@ -131,17 +133,48 @@ extern int iommu_detected, no_iommu;
- extern int intel_iommu_init(void);
- extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header, void *arg);
- extern int dmar_parse_one_atsr(struct acpi_dmar_header *header, void *arg);
-+extern int dmar_check_one_atsr(struct acpi_dmar_header *hdr, void *arg);
-+extern int dmar_release_one_atsr(struct acpi_dmar_header *hdr, void *arg);
-+extern int dmar_iommu_hotplug(struct dmar_drhd_unit *dmaru, bool insert);
- extern int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info);
- #else /* !CONFIG_INTEL_IOMMU: */
- static inline int intel_iommu_init(void) { return -ENODEV; }
-+
- #define	dmar_parse_one_rmrr		dmar_res_noop
- #define	dmar_parse_one_atsr		dmar_res_noop
-+#define	dmar_check_one_atsr		dmar_res_noop
-+#define	dmar_release_one_atsr		dmar_res_noop
-+
- static inline int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
- {
- 	return 0;
- }
-+
-+static inline int dmar_iommu_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
-+{
-+	return 0;
-+}
- #endif /* CONFIG_INTEL_IOMMU */
- 
-+#ifdef CONFIG_IRQ_REMAP
-+extern int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert);
-+#else  /* CONFIG_IRQ_REMAP */
-+static inline int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
-+{ return 0; }
-+#endif /* CONFIG_IRQ_REMAP */
-+
-+#else /* CONFIG_DMAR_TABLE */
-+
-+static inline int dmar_device_add(void *handle)
-+{
-+	return 0;
-+}
-+
-+static inline int dmar_device_remove(void *handle)
-+{
-+	return 0;
-+}
-+
- #endif /* CONFIG_DMAR_TABLE */
- 
- struct irte {
--- 
-1.7.10.4
+It was reproduced on RHEL6.1, so I don't think so. So far I have
+reproduced on upstream linux-3.17.0-rc2 and -rc5.
+
+>
+> Can you attach complete dmesg logs with and without "pci=assign-busses"?
+
+Ok, I will attach the logs to the BZ.
+
+>
+> We have a couple patches that are candidates for reversion before
+> v3.17 because of similar issues (I think they're good patches, but we
+> may need some additional work to fix some other problems they
+> exposed).  If you want to try them, they're here:
+> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/reverts
+
+Ok, I will give them a try.
+
+Thanks,
+David
+
+>
+> Bjorn
+>
 
