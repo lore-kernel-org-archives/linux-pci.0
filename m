@@ -1,64 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50474 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753411AbaI2ObH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 10:31:07 -0400
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [PATCH v13 03/12] ARM: Define PCI_IOBASE as the base of virtual PCI IO space
-Date: Mon, 29 Sep 2014 15:29:22 +0100
-Message-Id: <1412000971-9242-4-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:11591 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755267AbaIQO7l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Sep 2014 10:59:41 -0400
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH] pci: quirks: Add ACS quirk for Solarflare SFC9120 & SFC9140
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: linux-kernel@vger.kernel.org,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Robert Stonehouse <rstonehouse@solarflare.com>
+Date: Wed, 17 Sep 2014 08:59:36 -0600
+Message-ID: <20140917145838.19243.14630.stgit@gimli.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is needed for calls into OF code that parses PCI ranges.  It signals
-support for memory mapped PCI I/O accesses that are described by device
-trees.
+Solarflare confirms that these devices do not allow peer-to-peer
+between functions.  Quirk them to allow IOMMU grouping to expose this
+isolation.
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
-CC: Russell King <linux@arm.linux.org.uk>
-CC: Rob Herring <robh+dt@kernel.org>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: Robert Stonehouse <rstonehouse@solarflare.com>
 ---
- arch/arm/include/asm/io.h | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm/include/asm/io.h b/arch/arm/include/asm/io.h
-index 3d23418..1805674 100644
---- a/arch/arm/include/asm/io.h
-+++ b/arch/arm/include/asm/io.h
-@@ -178,6 +178,7 @@ static inline void __iomem *__typesafe_io(unsigned long addr)
+ drivers/pci/quirks.c |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 80c2d01..78cc83f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3664,6 +3664,21 @@ static int pci_quirk_intel_pch_acs(struct pci_dev *dev, u16 acs_flags)
+ 	return acs_flags & ~flags ? 0 : 1;
+ }
  
- /* PCI fixed i/o mapping */
- #define PCI_IO_VIRT_BASE	0xfee00000
-+#define PCI_IOBASE		((void __iomem *)PCI_IO_VIRT_BASE)
- 
- #if defined(CONFIG_PCI)
- void pci_ioremap_set_mem_type(int mem_type);
--- 
-2.1.1
++static int pci_quirk_solarflare_acs(struct pci_dev *dev, u16 acs_flags)
++{
++	/*
++	 * SV, TB, and UF are not relevant to multifunction endpoints.
++	 *
++	 * Solarflare indicates that peer-to-peer between functions is not
++	 * possible, therefore RR, CR, and DT are not implemented.  Mask
++	 * these out as if they were clear in the ACS capabilities register.
++	 */
++	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
++		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
++
++	return acs_flags ? 0 : 1;
++}
++
+ static const struct pci_dev_acs_enabled {
+ 	u16 vendor;
+ 	u16 device;
+@@ -3675,6 +3690,8 @@ static const struct pci_dev_acs_enabled {
+ 	{ PCI_VENDOR_ID_ATI, 0x439d, pci_quirk_amd_sb_acs },
+ 	{ PCI_VENDOR_ID_ATI, 0x4384, pci_quirk_amd_sb_acs },
+ 	{ PCI_VENDOR_ID_ATI, 0x4399, pci_quirk_amd_sb_acs },
++	{ PCI_VENDOR_ID_SOLARFLARE, 0x0903, pci_quirk_solarflare_acs },
++	{ PCI_VENDOR_ID_SOLARFLARE, 0x0923, pci_quirk_solarflare_acs },
+ 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
+ 	{ 0 }
+ };
 
