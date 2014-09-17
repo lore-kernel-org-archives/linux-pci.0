@@ -1,45 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:40489 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754110AbaIVN1z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 09:27:55 -0400
-Received: by mail-la0-f51.google.com with SMTP id gi9so6615124lab.38
-        for <linux-pci@vger.kernel.org>; Mon, 22 Sep 2014 06:27:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140904202436.GA17125@google.com>
-References: <1406830565-23450-1-git-send-email-l.stach@pengutronix.de>
-	<1406830565-23450-3-git-send-email-l.stach@pengutronix.de>
-	<20140814202248.GA2071@google.com>
-	<1409743007.1535.1.camel@pengutronix.de>
-	<20140904202436.GA17125@google.com>
-Date: Mon, 22 Sep 2014 10:27:54 -0300
-Message-ID: <CAOMZO5AAZXVRu3WkKkU=5SM+t8CYBww+Jmqyz5UFYsdog479wA@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: imx6: fix boot hang when link already enabled
-From: Fabio Estevam <festevam@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:41800 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750985AbaIQEzP convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Sep 2014 00:55:15 -0400
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Fabio Estevam <festevam@gmail.com>
+Cc: "matwey@sai.msu.ru" <matwey@sai.msu.ru>,
+	Jingoo Han <jg1.han@samsung.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
-	Shawn Guo <Shawn.Guo@freescale.com>
-Content-Type: text/plain; charset=UTF-8
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"matwey.kornilov@gmail.com" <matwey.kornilov@gmail.com>
+Date: Wed, 17 Sep 2014 12:54:51 +0800
+Subject: RE: [PATCH] Export functions from pcie-designware
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB661ABCD7BCF19@EAPEX1MAIL1.st.com>
+References: <1409401476-5002-1-git-send-email-matwey@sai.msu.ru>
+ <CAOMZO5DzNo3Y6=R4mA=h0+RjWoM6UBCqXxqeEqUM4iu5RjrBEA@mail.gmail.com>
+ <20140916233841.GJ5050@google.com>
+In-Reply-To: <20140916233841.GJ5050@google.com>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+Hello Bjorn,
 
-On Thu, Sep 4, 2014 at 5:24 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Sent: Wednesday, September 17, 2014 5:09 AM
+> To: Fabio Estevam
+> Cc: matwey@sai.msu.ru; Mohit KUMAR DCG; Jingoo Han; linux-
+> pci@vger.kernel.org; linux-kernel; matwey.kornilov@gmail.com
+> Subject: Re: [PATCH] Export functions from pcie-designware
+> 
+> On Sat, Aug 30, 2014 at 10:07:30AM -0300, Fabio Estevam wrote:
+> > On Sat, Aug 30, 2014 at 9:24 AM,  <matwey@sai.msu.ru> wrote:
+> > > From: "Matwey V. Kornilov" <matwey@sai.msu.ru>
+> > >
+> > > pcie-spear13xx when built as module requires the functions from pcie-
+> designware.
+> > > Export them properly.
+> 
+> I don't know how valuable pcie-spear13xx as a module is.  No other host
+> drivers are supported as a module.  Maybe we should just change pcie-
+> spear13xx from tristate to bool?
+> 
+-  Sachin's patch is already doing this:
+http://www.spinics.net/lists/linux-pci/msg33665.html
 
->> Bjorn,
->>
->> I would have expected for this to show up in 3.17 as it fixes a real bug
->> and has been posted some time ago. While you have picked it up into your
->> pci/host-imx6 branch it doesn't show up in Linus tree nor in any pull
->> requests AFAICS.
->> Was it intentional from you to hold this patch or is this just an
->> oversight?
->
-> Nope, I just missed it, thanks for the reminder.  I put in my
-> for-linus branch and will ask Linus to pull it after it's been
-> in -next for a few days.
+You acknowledge it to apply for v3.17 but somehow it has been left out.
 
-We still don't see this patch applied in linux-next.
+Regards
+Mohit
+
