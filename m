@@ -1,166 +1,422 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:65030 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751223AbaISDIa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Sep 2014 23:08:30 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<tglx@linutronix.de>, <hpa@zytor.com>, <x86@kernel.org>,
+	<bp@suse.de>, <dan.carpenter@oracle.com>,
+	<dougthompson@xmission.com>, <bp@alien8.de>,
+	<m.chehab@samsung.com>, <linux-edac@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Subject: [PATCH 4/4] edac, amd64_edac: Add F15h M60h support
+Date: Thu, 18 Sep 2014 14:57:10 -0500
+Message-ID: <1411070230-10298-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
-References: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
-Date: Fri, 19 Sep 2014 11:08:29 +0800
-Message-ID: <CACVXFVNEFSMjA=h_pyNF1AyYX4C336iM9nkYY=ocGQxjGpDCJA@mail.gmail.com>
-Subject: Re: [PATCH v9 0/4] APM X-Gene PCIe host controller
-From: Ming Lei <tom.leiming@gmail.com>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tanmay,
+This patch adds support for ECC error decoding for F15h M60h processor.
+Aside from the usual changes, the patch adds support for some new features
+in the processor:
+ - DDR4(unbuffered, registered); LRDIMM DDR3 support
+   - relevant debug messages have been modified/added to report these
+     memory types
+ - new dbam_to_cs mappers
+   - if (F15h M60h && LRDIMM); we need a 'multiplier' value to find
+     cs_size. This multiplier value is obtained from the per-dimm
+     DCSM register. So, change the interface to accept a 'cs_mask_nr'
+     value to facilitate this calculation
+Misc cleanup:
+ - amd64_pci_table[] is condensed by using PCI_VDEVICE macro.
 
-On Wed, Sep 17, 2014 at 6:33 AM, Tanmay Inamdar <tinamdar@apm.com> wrote:
-> This patch adds support for AppliedMicro X-Gene PCIe host controller. The
-> driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
-> cards.
->
-> X-Gene PCIe controller driver has depedency on the pcie arm64 arch support.
-> Liviu Dudau from ARM has sent a patch set for pcie arm64 arch support and
-> support for creating generic pcie bridge from device tree. Liviu's patches
-> are available here
-> https://lkml.org/lkml/2014/9/8/333
->
-> If someone wishes to test PCIe on X-Gene with this patch set, above mentioned
-> patches from Liviu must be applied before the patches in this patch set. Also
-> please use latest xgene u-boot firmware.
->
-> changes since V8:
-> 1. Add 'dma-coherent' attribute in device node.
+Testing details:
+Tested the patch by injecting 'ECC' type errors using mce_amd_inj
+and error decoding works fine.
 
+Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+---
+ drivers/edac/amd64_edac.c | 226 ++++++++++++++++++++++++++++++++--------------
+ drivers/edac/amd64_edac.h |  12 ++-
+ 2 files changed, 169 insertions(+), 69 deletions(-)
 
-I just tested your V9 patches plus Liviu's V10 PCI/ARM64 patches
-against 3.17-rc5 on Mustang, and the following failure is triggered:
-
-[    1.190131] bnx2x: Broadcom NetXtreme II 5771x/578xx 10/20-Gigabit
-Ethernet Driver bnx2x 1.78.19-0 (2014/02/10)
-[    1.200249] tg3.c:v3.137 (May 11, 2014)
-[    1.204087] ------------[ cut here ]------------
-[    1.208682] WARNING: CPU: 1 PID: 1 at drivers/pci/pci.c:131
-pci_ioremap_bar+0x70/0x78()
-[    1.216646] Modules linked in:
-[    1.219696] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 3.17.0-rc5+ #1
-[    1.226018] Call trace:
-[    1.228453] [<ffffffc0000884f0>] dump_backtrace+0x0/0x16c
-[    1.233826] [<ffffffc00008866c>] show_stack+0x10/0x1c
-[    1.238851] [<ffffffc0006e3210>] dump_stack+0x74/0x94
-[    1.243878] [<ffffffc0000a934c>] warn_slowpath_common+0x88/0xb0
-[    1.249767] [<ffffffc0000a9438>] warn_slowpath_null+0x14/0x20
-[    1.255485] [<ffffffc0003994c4>] pci_ioremap_bar+0x6c/0x78
-[    1.260942] [<ffffffc0005598cc>] tg3_init_one+0x148/0x16f4
-[    1.266401] [<ffffffc00039ccf0>] pci_device_probe+0x78/0xd4
-[    1.271946] [<ffffffc00042785c>] driver_probe_device+0x94/0x390
-[    1.277834] [<ffffffc000427c44>] __driver_attach+0x98/0xa0
-[    1.283293] [<ffffffc000425a54>] bus_for_each_dev+0x54/0x98
-[    1.288835] [<ffffffc00042730c>] driver_attach+0x1c/0x28
-[    1.294121] [<ffffffc000426f04>] bus_add_driver+0x164/0x240
-[    1.299663] [<ffffffc000428430>] driver_register+0x64/0x130
-[    1.305207] [<ffffffc00039c97c>] __pci_register_driver+0x3c/0x48
-[    1.311181] [<ffffffc000aa8a5c>] tg3_driver_init+0x1c/0x28
-[    1.316640] [<ffffffc0000814e0>] do_one_initcall+0xc4/0x1b4
-[    1.322186] [<ffffffc000a74b64>] kernel_init_freeable+0x1b8/0x25c
-[    1.328246] [<ffffffc0006de318>] kernel_init+0xc/0xd4
-[    1.333278] ---[ end trace f4dca5ab5b436080 ]---
-[    1.337871] tg3 0000:01:00.0: Cannot map device registers, aborting
-[    1.344122] tg3: probe of 0000:01:00.0 failed with error -12
-
-
-
-Thanks,
-
->
-> changes since V7:
-> 1. Fix outbound region mapping for IO region. Thanks Liviu for the catch.
->
-> changes since V6:
-> 1. Port driver to changed interface as per Liviu's v10 series.
->
-> changes since V5:
-> 1. Port driver to changed interface of 'of_create_pci_host_bridge'
-> 2. Fix the prefetch bit setting
-> 3. Removed bunch of register programming which is already done by firmware
->
-> changes since V4:
-> 1. fix section mismatch warnings
-> 2. fix the patch description
-> 3. fix indentation
-> 4. update read/write cfg functions by passing both addr and offset.
-> 5. use 'time_before' for timeout.
-> 6. remove unnecessary 'IS_ERR_OR_NULL'. Keep 'IS_ERR' for 'clk_get'
-> 7. remove BUG_ON for pci_ioremap_io.
->
-> changes since V3:
-> 1. remove 'struct hw_pci' and supporting ops in hw_pci
-> 2. add code to create the host bridge from dts
-> 3. add code to scan the the host bridge
-> 4. modify outbound windows setup function to get resource information from
->    'bridge->windows'
-> 5. add compatible string in pcie dts node with current X-Gene SOC name.
->
-> changes since V2:
-> 1. redefined each PCI port in different PCI domain correctly.
-> 2. removed setup_lane and setup_link functions from driver.
-> 3. removed scan_bus wrapper and set_primary_bus hack.
-> 4. added pci_ioremap_io for io resources.
->
-> changes since V1:
-> 1. added PCI domain support
-> 2. reading cpu and pci addresses from device tree to configure regions.
-> 3. got rid of unnecessary wrappers for readl and writel.
-> 4. got rid of endpoint configuration code.
-> 5. added 'dma-ranges' property support to read inbound region configuration.
-> 6. renamed host driver file to 'pci-xgene.c' from 'pcie-xgene.c'
-> 7. dropped 'clock-names' property from bindings
-> 8. added comments whereever requested.
->
->
-> Tanmay Inamdar (4):
->   pci:host: APM X-Gene PCIe host controller driver
->   arm64: dts: APM X-Gene PCIe device tree nodes
->   dt-bindings: pci: xgene pcie device tree bindings
->   MAINTAINERS: entry for APM X-Gene PCIe host driver
->
->  .../devicetree/bindings/pci/xgene-pci.txt          |  57 ++
->  MAINTAINERS                                        |   8 +
->  arch/arm64/boot/dts/apm-mustang.dts                |   8 +
->  arch/arm64/boot/dts/apm-storm.dtsi                 | 165 ++++++
->  drivers/pci/host/Kconfig                           |  10 +
->  drivers/pci/host/Makefile                          |   1 +
->  drivers/pci/host/pci-xgene.c                       | 646 +++++++++++++++++++++
->  7 files changed, 895 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
->  create mode 100644 drivers/pci/host/pci-xgene.c
->
-> --
-> 1.9.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-
-
-
+diff --git a/drivers/edac/amd64_edac.c b/drivers/edac/amd64_edac.c
+index bbd6514..3e265e0 100644
+--- a/drivers/edac/amd64_edac.c
++++ b/drivers/edac/amd64_edac.c
+@@ -690,11 +690,32 @@ static void debug_display_dimm_sizes(struct amd64_pvt *, u8);
+ 
+ static void debug_dump_dramcfg_low(struct amd64_pvt *pvt, u32 dclr, int chan)
+ {
++	int cs;
++
+ 	edac_dbg(1, "F2x%d90 (DRAM Cfg Low): 0x%08x\n", chan, dclr);
+ 
+-	edac_dbg(1, "  DIMM type: %sbuffered; all DIMMs support ECC: %s\n",
+-		 (dclr & BIT(16)) ?  "un" : "",
+-		 (dclr & BIT(19)) ? "yes" : "no");
++	if (pvt->fam == 0x15 && pvt->model == 0x60) {
++		for_each_chip_select_mask(cs, chan, pvt) {
++			u32 dcsm = pvt->csels[chan].csmasks[cs];
++
++			if (dcsm & 0x3) {
++				/* LRDIMMs */
++				edac_dbg(1, "  DIMM type: LRDIMM %dx rank multiply;"
++					 "CS = %d; all DIMMs support ECC: %s\n",
++					 (dcsm & 0x3), cs,
++					 (dclr & BIT(19)) ? "yes" : "no");
++			} else {
++				edac_dbg(1, "  DIMM type: %sbuffered; CS = %d;"
++					 "all DIMMs support ECC: %s\n",
++					 (dclr & BIT(16)) ?  "un" : "", cs,
++					 (dclr & BIT(19)) ? "yes" : "no");
++			}
++		}
++	} else {
++		edac_dbg(1, "  DIMM type: %sbuffered; all DIMMs support ECC:"
++			    "%s\n", (dclr & BIT(16)) ?  "un" : "",
++				    (dclr & BIT(19)) ? "yes" : "no");
++	}
+ 
+ 	edac_dbg(1, "  PAR/ERR parity: %s\n",
+ 		 (dclr & BIT(8)) ?  "enabled" : "disabled");
+@@ -756,7 +777,7 @@ static void prep_chip_selects(struct amd64_pvt *pvt)
+ 	if (pvt->fam == 0xf && pvt->ext_model < K8_REV_F) {
+ 		pvt->csels[0].b_cnt = pvt->csels[1].b_cnt = 8;
+ 		pvt->csels[0].m_cnt = pvt->csels[1].m_cnt = 8;
+-	} else if (pvt->fam == 0x15 && pvt->model >= 0x30) {
++	} else if (pvt->fam == 0x15 && pvt->model == 0x30) {
+ 		pvt->csels[0].b_cnt = pvt->csels[1].b_cnt = 4;
+ 		pvt->csels[0].m_cnt = pvt->csels[1].m_cnt = 2;
+ 	} else {
+@@ -817,10 +838,26 @@ static enum mem_type determine_memory_type(struct amd64_pvt *pvt, int cs)
+ {
+ 	enum mem_type type;
+ 
+-	/* F15h supports only DDR3 */
+-	if (pvt->fam >= 0x15)
+-		type = (pvt->dclr0 & BIT(16)) ?	MEM_DDR3 : MEM_RDDR3;
+-	else if (pvt->fam == 0x10 || pvt->ext_model >= K8_REV_F) {
++	/* F15h, M60h supports DDR4 too*/
++	if (pvt->fam >= 0x15) {
++		if (pvt->model == 0x60) {
++			/*
++			 * Since in init_csrow we iterate over just DCT0
++			 * use '0' for dct values here when necessary.
++			 */
++			u32 dram_ctrl;
++			u32 dcsm = pvt->csels[0].csmasks[cs];
++
++			amd64_read_dct_pci_cfg(pvt, 0, DRAM_CONTROL,
++					       &dram_ctrl);
++			type = (((dram_ctrl >> 8) & 0x7) == 0x2) ? MEM_DDR4 :
++				(pvt->dclr0 & BIT(16)) ? MEM_DDR3 :
++				(dcsm & 0x3) ? MEM_LRDDR3 : MEM_RDDR3;
++		} else {
++			type = (pvt->dclr0 & BIT(16)) ?	MEM_DDR3 : MEM_RDDR3;
++		}
++
++	} else if (pvt->fam == 0x10 || pvt->ext_model >= K8_REV_F) {
+ 		if (pvt->dchr0 & DDR3_MODE)
+ 			type = (pvt->dclr0 & BIT(16)) ?	MEM_DDR3 : MEM_RDDR3;
+ 		else
+@@ -958,8 +995,12 @@ static void read_dram_base_limit_regs(struct amd64_pvt *pvt, unsigned range)
+ 	if (WARN_ON(!nb))
+ 		return;
+ 
+-	pci_func = (pvt->model == 0x30) ? PCI_DEVICE_ID_AMD_15H_M30H_NB_F1
+-					: PCI_DEVICE_ID_AMD_15H_NB_F1;
++	if (pvt->model == 0x60)
++		pci_func = PCI_DEVICE_ID_AMD_15H_M60H_NB_F1;
++	else if (pvt->model == 0x30)
++		pci_func = PCI_DEVICE_ID_AMD_15H_M30H_NB_F1;
++	else
++		pci_func = PCI_DEVICE_ID_AMD_15H_NB_F1;
+ 
+ 	f1 = pci_get_related_function(nb->misc->vendor, pci_func, nb->misc);
+ 	if (WARN_ON(!f1))
+@@ -1049,7 +1090,7 @@ static int ddr2_cs_size(unsigned i, bool dct_width)
+ }
+ 
+ static int k8_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
+-				  unsigned cs_mode)
++				  unsigned cs_mode, int cs_mask_nr)
+ {
+ 	u32 dclr = dct ? pvt->dclr1 : pvt->dclr0;
+ 
+@@ -1167,8 +1208,43 @@ static int ddr3_cs_size(unsigned i, bool dct_width)
+ 	return cs_size;
+ }
+ 
++static int ddr3_lrdimm_cs_size(unsigned i, unsigned rank_multiply)
++{
++	unsigned shift = 0;
++	int cs_size = 0;
++
++	if (i < 4 || i == 6)
++		cs_size = -1;
++	else if (i == 12)
++		shift = 7;
++	else if (!(i & 0x1))
++		shift = i >> 1;
++	else
++		shift = (i + 1) >> 1;
++
++	if (cs_size != -1)
++		cs_size = rank_multiply * (128 << shift);
++
++	return cs_size;
++}
++
++static int ddr4_cs_size(unsigned i)
++{
++	int cs_size = 0;
++
++	if (i == 0)
++		cs_size = -1;
++	else if (i == 1)
++		cs_size = 1024;
++	else
++		/* Min cs_size = 1G */
++		cs_size = 1024 * (1 << (i >> 1));
++
++	return cs_size;
++}
++
+ static int f10_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
+-				   unsigned cs_mode)
++				   unsigned cs_mode, int cs_mask_nr)
+ {
+ 	u32 dclr = dct ? pvt->dclr1 : pvt->dclr0;
+ 
+@@ -1184,18 +1260,56 @@ static int f10_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
+  * F15h supports only 64bit DCT interfaces
+  */
+ static int f15_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
+-				   unsigned cs_mode)
++				   unsigned cs_mode, int cs_mask_nr)
+ {
+ 	WARN_ON(cs_mode > 12);
+ 
+ 	return ddr3_cs_size(cs_mode, false);
+ }
+ 
++/* F15h M60h supports DDR4 mapping as well.. */
++static int f15_m60h_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
++					unsigned cs_mode, int cs_mask_nr)
++{
++	int cs_size;
++	enum mem_type type;
++	u32 dram_ctrl;
++	u32 dcsm = pvt->csels[dct].csmasks[cs_mask_nr];
++
++	WARN_ON(cs_mode > 12);
++
++	amd64_read_dct_pci_cfg(pvt, dct, DRAM_CONTROL, &dram_ctrl);
++	type = (((dram_ctrl >> 8) & 0x7) == 0x2) ? MEM_DDR4 :
++		(pvt->dclr0 & BIT(16)) ? MEM_DDR3 :
++		(dcsm & 0x3) ? MEM_LRDDR3 : MEM_RDDR3;
++
++	if (type == MEM_DDR4) {
++		if (cs_mode > 9)
++			return -1;
++
++		cs_size = ddr4_cs_size(cs_mode);
++	} else if (type == MEM_LRDDR3) {
++		unsigned rank_multiply = dcsm & 0xf;
++
++		if (rank_multiply == 3)
++			rank_multiply = 4;
++		cs_size = ddr3_lrdimm_cs_size(cs_mode, rank_multiply);
++	} else {
++		/* Minimum cs size is 512mb for F15hM60h*/
++		if (cs_mode == 0x1)
++			return -1;
++
++		cs_size = ddr3_cs_size(cs_mode, false);
++	}
++
++	return cs_size;
++}
++
+ /*
+  * F16h and F15h model 30h have only limited cs_modes.
+  */
+ static int f16_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
+-				unsigned cs_mode)
++				unsigned cs_mode, int cs_mask_nr)
+ {
+ 	WARN_ON(cs_mode > 12);
+ 
+@@ -1757,13 +1871,20 @@ static void debug_display_dimm_sizes(struct amd64_pvt *pvt, u8 ctrl)
+ 
+ 		size0 = 0;
+ 		if (dcsb[dimm*2] & DCSB_CS_ENABLE)
++			/* For f15m60h, need multiplier for LRDIMM cs_size
++			 * calculation. We pass 'dimm' value to the dbam_to_cs
++			 * mapper so we can find the multiplier from the
++			 * corresponding DCSM.
++			 */
+ 			size0 = pvt->ops->dbam_to_cs(pvt, ctrl,
+-						     DBAM_DIMM(dimm, dbam));
++						     DBAM_DIMM(dimm, dbam),
++						     dimm);
+ 
+ 		size1 = 0;
+ 		if (dcsb[dimm*2 + 1] & DCSB_CS_ENABLE)
+ 			size1 = pvt->ops->dbam_to_cs(pvt, ctrl,
+-						     DBAM_DIMM(dimm, dbam));
++						     DBAM_DIMM(dimm, dbam),
++						     dimm);
+ 
+ 		amd64_info(EDAC_MC ": %d: %5dMB %d: %5dMB\n",
+ 				dimm * 2,     size0,
+@@ -1812,6 +1933,16 @@ static struct amd64_family_type family_types[] = {
+ 			.dbam_to_cs		= f16_dbam_to_chip_select,
+ 		}
+ 	},
++	[F15_M60H_CPUS] = {
++		.ctl_name = "F15h_M60h",
++		.f1_id = PCI_DEVICE_ID_AMD_15H_M60H_NB_F1,
++		.f3_id = PCI_DEVICE_ID_AMD_15H_M60H_NB_F3,
++		.ops = {
++			.early_channel_count	= f1x_early_channel_count,
++			.map_sysaddr_to_csrow	= f1x_map_sysaddr_to_csrow,
++			.dbam_to_cs		= f15_m60h_dbam_to_chip_select,
++		}
++	},
+ 	[F16_CPUS] = {
+ 		.ctl_name = "F16h",
+ 		.f1_id = PCI_DEVICE_ID_AMD_16H_NB_F1,
+@@ -2238,7 +2369,8 @@ static u32 get_csrow_nr_pages(struct amd64_pvt *pvt, u8 dct, int csrow_nr)
+ 	 */
+ 	cs_mode = DBAM_DIMM(csrow_nr / 2, dbam);
+ 
+-	nr_pages = pvt->ops->dbam_to_cs(pvt, dct, cs_mode) << (20 - PAGE_SHIFT);
++	nr_pages = pvt->ops->dbam_to_cs(pvt, dct, cs_mode, (csrow_nr / 2))
++							   << (20 - PAGE_SHIFT);
+ 
+ 	edac_dbg(0, "csrow: %d, channel: %d, DBAM idx: %d\n",
+ 		    csrow_nr, dct,  cs_mode);
+@@ -2604,6 +2736,10 @@ static struct amd64_family_type *per_family_init(struct amd64_pvt *pvt)
+ 			fam_type = &family_types[F15_M30H_CPUS];
+ 			pvt->ops = &family_types[F15_M30H_CPUS].ops;
+ 			break;
++		} else if (pvt->model == 0x60) {
++			fam_type = &family_types[F15_M60H_CPUS];
++			pvt->ops = &family_types[F15_M60H_CPUS].ops;
++			break;
+ 		}
+ 
+ 		fam_type	= &family_types[F15_CPUS];
+@@ -2828,55 +2964,13 @@ static void remove_one_instance(struct pci_dev *pdev)
+  * inquiry this table to see if this driver is for a given device found.
+  */
+ static const struct pci_device_id amd64_pci_table[] = {
+-	{
+-		.vendor		= PCI_VENDOR_ID_AMD,
+-		.device		= PCI_DEVICE_ID_AMD_K8_NB_MEMCTL,
+-		.subvendor	= PCI_ANY_ID,
+-		.subdevice	= PCI_ANY_ID,
+-		.class		= 0,
+-		.class_mask	= 0,
+-	},
+-	{
+-		.vendor		= PCI_VENDOR_ID_AMD,
+-		.device		= PCI_DEVICE_ID_AMD_10H_NB_DRAM,
+-		.subvendor	= PCI_ANY_ID,
+-		.subdevice	= PCI_ANY_ID,
+-		.class		= 0,
+-		.class_mask	= 0,
+-	},
+-	{
+-		.vendor		= PCI_VENDOR_ID_AMD,
+-		.device		= PCI_DEVICE_ID_AMD_15H_NB_F2,
+-		.subvendor	= PCI_ANY_ID,
+-		.subdevice	= PCI_ANY_ID,
+-		.class		= 0,
+-		.class_mask	= 0,
+-	},
+-	{
+-		.vendor		= PCI_VENDOR_ID_AMD,
+-		.device		= PCI_DEVICE_ID_AMD_15H_M30H_NB_F2,
+-		.subvendor	= PCI_ANY_ID,
+-		.subdevice	= PCI_ANY_ID,
+-		.class		= 0,
+-		.class_mask	= 0,
+-	},
+-	{
+-		.vendor		= PCI_VENDOR_ID_AMD,
+-		.device		= PCI_DEVICE_ID_AMD_16H_NB_F2,
+-		.subvendor	= PCI_ANY_ID,
+-		.subdevice	= PCI_ANY_ID,
+-		.class		= 0,
+-		.class_mask	= 0,
+-	},
+-	{
+-		.vendor		= PCI_VENDOR_ID_AMD,
+-		.device		= PCI_DEVICE_ID_AMD_16H_M30H_NB_F2,
+-		.subvendor	= PCI_ANY_ID,
+-		.subdevice	= PCI_ANY_ID,
+-		.class		= 0,
+-		.class_mask	= 0,
+-	},
+-
++	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_K8_NB_MEMCTL) },
++	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_10H_NB_DRAM) },
++	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_NB_F2) },
++	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F2) },
++	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M60H_NB_F2) },
++	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_16H_NB_F2) },
++	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_16H_M30H_NB_F2) },
+ 	{0, }
+ };
+ MODULE_DEVICE_TABLE(pci, amd64_pci_table);
+diff --git a/drivers/edac/amd64_edac.h b/drivers/edac/amd64_edac.h
+index 55fb594..dbbae84 100644
+--- a/drivers/edac/amd64_edac.h
++++ b/drivers/edac/amd64_edac.h
+@@ -162,10 +162,12 @@
+ /*
+  * PCI-defined configuration space registers
+  */
+-#define PCI_DEVICE_ID_AMD_15H_M30H_NB_F1 0x141b
+-#define PCI_DEVICE_ID_AMD_15H_M30H_NB_F2 0x141c
+ #define PCI_DEVICE_ID_AMD_15H_NB_F1	0x1601
+ #define PCI_DEVICE_ID_AMD_15H_NB_F2	0x1602
++#define PCI_DEVICE_ID_AMD_15H_M30H_NB_F1 0x141b
++#define PCI_DEVICE_ID_AMD_15H_M30H_NB_F2 0x141c
++#define PCI_DEVICE_ID_AMD_15H_M60H_NB_F1 0x1571
++#define PCI_DEVICE_ID_AMD_15H_M60H_NB_F2 0x1572
+ #define PCI_DEVICE_ID_AMD_16H_NB_F1	0x1531
+ #define PCI_DEVICE_ID_AMD_16H_NB_F2	0x1532
+ #define PCI_DEVICE_ID_AMD_16H_M30H_NB_F1 0x1581
+@@ -221,6 +223,8 @@
+ 
+ #define csrow_enabled(i, dct, pvt)	((pvt)->csels[(dct)].csbases[(i)] & DCSB_CS_ENABLE)
+ 
++#define DRAM_CONTROL			0x78
++
+ #define DBAM0				0x80
+ #define DBAM1				0x180
+ 
+@@ -301,6 +305,7 @@ enum amd_families {
+ 	F10_CPUS,
+ 	F15_CPUS,
+ 	F15_M30H_CPUS,
++	F15_M60H_CPUS,
+ 	F16_CPUS,
+ 	F16_M30H_CPUS,
+ 	NUM_FAMILIES,
+@@ -480,7 +485,8 @@ struct low_ops {
+ 	int (*early_channel_count)	(struct amd64_pvt *pvt);
+ 	void (*map_sysaddr_to_csrow)	(struct mem_ctl_info *mci, u64 sys_addr,
+ 					 struct err_info *);
+-	int (*dbam_to_cs)		(struct amd64_pvt *pvt, u8 dct, unsigned cs_mode);
++	int (*dbam_to_cs)		(struct amd64_pvt *pvt, u8 dct,
++					 unsigned cs_mode, int cs_mask_nr);
+ };
+ 
+ struct amd64_family_type {
 -- 
-Ming Lei
+2.0.2
+
