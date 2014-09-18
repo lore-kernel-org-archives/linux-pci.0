@@ -1,69 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1blp0181.outbound.protection.outlook.com ([207.46.163.181]:4074
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756601AbaIIMbr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Sep 2014 08:31:47 -0400
-From: Srikanth Thokala <srikanth.thokala@xilinx.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Michal Simek <michals@xilinx.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: RE: [patch] PCI: xilinx: testing wrong variable in setup irq
- function
-Date: Tue, 9 Sep 2014 12:31:40 +0000
-References: <20140909121150.GD19760@mwanda>
-In-Reply-To: <20140909121150.GD19760@mwanda>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: <suravee.suthikulpanit@amd.com>
+To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
+	<jason@lakedaemon.net>
+CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
+	<Will.Deacon@arm.com>, <liviu.dudau@arm.com>, <tglx@linutronix.de>,
+	<Harish.Kasiviswanathan@amd.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	"Suravee Suthikulpanit" <Suravee.Suthikulpanit@amd.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Marc Zyngier <Marc.Zyngier@arm.com>
+Subject: [PATCH 1/2 V7] irqchip: gic: Add support for multiple MSI for ARM64
+Date: Wed, 17 Sep 2014 19:14:45 -0700
+Message-ID: <1411006486-17513-2-git-send-email-suravee.suthikulpanit@amd.com>
+In-Reply-To: <1411006486-17513-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1411006486-17513-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Message-ID: <8fa6fe96-183f-4db8-a741-a935793bbc9c@BY2FFO11FD042.protection.gbl>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Dan,
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-> -----Original Message-----
-> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
-> Sent: Tuesday, September 09, 2014 5:42 PM
-> To: Bjorn Helgaas; Srikanth Thokala
-> Cc: Michal Simek; Grant Likely; Rob Herring; Srikanth Thokala; Arnd Bergmann;
-> linux-pci@vger.kernel.org; kernel-janitors@vger.kernel.org
-> Subject: [patch] PCI: xilinx: testing wrong variable in setup irq function
->
-> We should be testing "hwirq" instead of "irq".  "irq" is unsigned so it's never less
-> than zero.  Also it's uninitialized.
->
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->
-> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c index
-> 44f8944..ccc496b 100644
-> --- a/drivers/pci/host/pcie-xilinx.c
-> +++ b/drivers/pci/host/pcie-xilinx.c
-> @@ -359,8 +359,8 @@ static int xilinx_pcie_msi_setup_irq(struct msi_chip
-> *chip,
->       phys_addr_t msg_addr;
->
->       hwirq = xilinx_pcie_assign_msi(port);
-> -     if (irq < 0)
-> -             return irq;
-> +     if (hwirq < 0)
-> +             return hwirq;
+This patch implelments the ARM64 version of arch_setup_msi_irqs(),
+which does not return 1 for when PCI_CAP_ID_MSI and nvec > 1.
 
-It is a typo from my end, thanks for sending this patch.
-Really thanks for helping to improve this.
+Cc: Mark Rutland <Mark.Rutland@arm.com>
+Cc: Marc Zyngier <Marc.Zyngier@arm.com>
+Cc: Jason Cooper <jason@lakedaemon.net>
+Cc: Catalin Marinas <Catalin.Marinas@arm.com>
+Cc: Will Deacon <Will.Deacon@arm.com>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+---
+ arch/arm64/kernel/Makefile |  1 +
+ arch/arm64/kernel/msi.c    | 41 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 42 insertions(+)
+ create mode 100644 arch/arm64/kernel/msi.c
 
-Acked-by: Srikanth Thokala <sthokal@xilinx.com>
-
-- Srikanth
-
->
->       irq = irq_create_mapping(port->irq_domain, hwirq);
->       if (!irq)
-
-
-This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
+diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
+index df7ef87..a921c42 100644
+--- a/arch/arm64/kernel/Makefile
++++ b/arch/arm64/kernel/Makefile
+@@ -29,6 +29,7 @@ arm64-obj-$(CONFIG_ARM64_CPU_SUSPEND)	+= sleep.o suspend.o
+ arm64-obj-$(CONFIG_JUMP_LABEL)		+= jump_label.o
+ arm64-obj-$(CONFIG_KGDB)		+= kgdb.o
+ arm64-obj-$(CONFIG_EFI)			+= efi.o efi-stub.o efi-entry.o
++arm64-obj-$(CONFIG_PCI_MSI)		+= msi.o
+ 
+ obj-y					+= $(arm64-obj-y) vdso/
+ obj-m					+= $(arm64-obj-m)
+diff --git a/arch/arm64/kernel/msi.c b/arch/arm64/kernel/msi.c
+new file mode 100644
+index 0000000..a295862
+--- /dev/null
++++ b/arch/arm64/kernel/msi.c
+@@ -0,0 +1,41 @@
++/*
++ * ARM64 architectural MSI implemention
++ *
++ * Support for Message Signalelled Interrupts for systems that
++ * implement ARM Generic Interrupt Controller: GICv2m.
++ *
++ * Copyright (C) 2014 Advanced Micro Devices, Inc.
++ * Authors: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 as published
++ * by the Free Software Foundation.
++ */
++
++#include <linux/irq.h>
++#include <linux/msi.h>
++#include <linux/pci.h>
++
++/*
++ * ARM64 function for seting up MSI irqs.
++ * Based on driver/pci/msi.c: arch_setup_msi_irqs().
++ *
++ * Note:
++ * Current implementation assumes that all interrupt controller used in
++ * ARM64 architecture _MUST_ supports multi-MSI.
++ */
++int arm64_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++{
++	struct msi_desc *entry;
++	int ret;
++
++	list_for_each_entry(entry, &dev->msi_list, list) {
++		ret = arch_setup_msi_irq(dev, entry);
++		if (ret < 0)
++			return ret;
++		if (ret > 0)
++			return -ENOSPC;
++	}
++
++	return 0;
++}
+-- 
+1.9.3
 
