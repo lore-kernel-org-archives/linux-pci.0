@@ -1,139 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:56210 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751428AbaIMEHU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 13 Sep 2014 00:07:20 -0400
-Received: by mail-ie0-f182.google.com with SMTP id tr6so2091928ieb.27
-        for <linux-pci@vger.kernel.org>; Fri, 12 Sep 2014 21:07:19 -0700 (PDT)
-Date: Fri, 12 Sep 2014 22:07:16 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Dirk Gouders <dirk@gouders.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
-Message-ID: <20140913040716.GA28080@google.com>
-References: <ghvbotd8es.fsf@quad.gouders.net>
- <ghzje5f5zt.fsf@lena.gouders.net>
- <ghbnqkeh9k.fsf@quad.gouders.net>
- <CAE9FiQXQesrDMqf1b6ZhHdmY_wEEUrOEvNO4N_d6WtaNMGNLww@mail.gmail.com>
- <gh4mwcef0r.fsf@quad.gouders.net>
- <CAE9FiQWgioBeVmfWCaE38BrkjbWKaS+_FYYdmdd+7X8fpeEgnQ@mail.gmail.com>
- <ghoaukcx6b.fsf@quad.gouders.net>
- <CAE9FiQUk-sAHnjfBvNeHQWibJRqbPE1V0UtDtARtwxmS=7aQrw@mail.gmail.com>
- <ghk358crbe.fsf@quad.gouders.net>
- <CAE9FiQUeP84585-4b+Y6WBVD3zqOi7ch_OXytsTmKEz9AyZ3Vg@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: <suravee.suthikulpanit@amd.com>
+To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
+	<jason@lakedaemon.net>
+CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
+	<Will.Deacon@arm.com>, <liviu.dudau@arm.com>, <tglx@linutronix.de>,
+	<Harish.Kasiviswanathan@amd.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	"Suravee Suthikulpanit" <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH 0/2 V7] irqchip: gic: Introduce ARM GICv2m MSI(-X) support
+Date: Wed, 17 Sep 2014 19:08:24 -0700
+Message-ID: <1411006106-17339-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQUeP84585-4b+Y6WBVD3zqOi7ch_OXytsTmKEz9AyZ3Vg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I want to fix this regression before v3.17.  Dirk, can you test the
-following patch on top of v3.17-rc2?  I'm hoping you can try this on your
-test machine in conjunction with your acpi_pci_root_add() and
-pci_scan_device() patches.  If I understand correctly,  you were able to
-reproduce the FC adapter not showing up, and if you can verify that it does
-show with those patches + this revert, I think that's good enough for now.
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-I'm not committed to applying this yet, but I'd like to have a working fix
-in my back pocket in case we don't come up with a better solution soon.
+This patch set introduces support for MSI(-X) in GICv2m specification,
+which is implemented in some variation of GIC400.
 
-Bjorn
+This depends on and has been tested with the following patch set which
+implements PCI supports for ARM64:
 
+    [PATCH v10 00/10] Support for creating generic PCI host bridges from DT
+    https://lkml.org/lkml/2014/9/8/333
 
-commit 5945a8d28c416fc390a94c8e7fb8fd0a76f5d710
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Fri Sep 12 21:58:19 2014 -0600
+    [PATCH v10] Add support for PCI in AArch64
+    https://lkml.org/lkml/2014/9/8/325
+ 
+Changes in V7:
+    * Fix error handling logic in gicv2m_of_init() and gicv2m_init_one().
+      per Marc suggestions.
+    * Restructure the patch to integrate the multi-MSI support for V2m
+      into the patch 2/2.
+    * Introduce "arm,gic-v2m-frame" compatible ID for the v2m DT binding.
+    * Introduce "arm,msi-base-spi" and "arm,msi-num-spi" property in the
+      v2m DT binding for overwriting value in MSI_TYPER register.
+    * Add irq-gic-v2m.c: is_msi_spi_valid() to validate the SPI base and
+      number of SPIs.
+    * Fix various comments from Marc (Many thanks).
+    * Add the missing CONFIG_ARM_GICV2M (per Marcin Juszkiewicz comment)
 
-    Revert "PCI: Make sure bus number resources stay within their parents bounds"
-    
-    This reverts commit 1820ffdccb9b ("PCI: Make sure bus number resources stay
-    within their parents bounds") because it breaks some systems with LSI Logic
-    FC949ES Fibre Channel Adapters, apparently by exposing a defect in those
-    adapters.
-    
-    Dirk tested a Tyan VX50 (B4985) with this device that worked like this
-    prior to 1820ffdccb9b:
-    
-        bus: [bus 00-7f] on node 0 link 1
-        ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-07])
-        pci 0000:00:0e.0: PCI bridge to [bus 0a]
-        pci_bus 0000:0a: busn_res: can not insert [bus 0a] under [bus 00-07] (conflicts with (null) [bus 00-07])
-        pci 0000:0a:00.0: [1000:0646] type 00 class 0x0c0400 (FC adapter)
-    
-    Note that the root bridge [bus 00-07] aperture is wrong; this is a BIOS
-    defect in the PCI0 _CRS method.  But prior to 1820ffdccb9b, we didn't
-    enforce that aperture, and the FC adapter worked fine at 0a:00.0.
-    
-    After 1820ffdccb9b, we notice that 00:0e.0's aperture is not contained in
-    the root bridge's aperture, so we reconfigure it so it *is* contained:
-    
-        pci 0000:00:0e.0: bridge configuration invalid ([bus 0a-0a]), reconfiguring
-        pci 0000:00:0e.0: PCI bridge to [bus 06-07]
-    
-    This effectively moves the FC device from 0a:00.0 to 07:00.0, which should
-    be legal.  But when we enumerate bus 06, the FC device doesn't respond, so
-    we don't find anything.  This is probably a defect in the FC device.
-    
-    Possible fixes (due to Yinghai):
-    
-        1) Add a quirk to fix the _CRS information based on what amd_bus.c read
-           from the hardware
-    
-        2) Reset the FC device after we change its bus number
-    
-        3) Revert 1820ffdccb9b
-    
-    Fix 1 would be relatively easy, but it does sweep the LSI FC issue under
-    the rug.  We might want to reconfigure bus numbers in the future for some
-    other reason, e.g., hotplug, and then we could trip over this again.
-    
-    For that reason, I like fix 2, but we don't know whether it actually works,
-    and we don't have a patch for it yet.
-    
-    This revert is fix 3, which also sweeps the LSI FC issue under the rug.
-    
-    Link: https://bugzilla.kernel.org/show_bug.cgi?id=84281
-    Reported-by: Dirk Gouders <dirk@gouders.net>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    CC: stable@vger.kernel.org	# v3.15+
-    CC: Yinghai Lu <yinghai@kernel.org>
+Suravee Suthikulpanit (2):
+  irqchip: gic: Add support for multiple MSI for ARM64
+  irqchip: gicv2m: Add supports for ARM GICv2m MSI(-X)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e3cf8a2e6292..f0badff77cff 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -775,7 +775,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 	/* Check if setup is sensible at all */
- 	if (!pass &&
- 	    (primary != bus->number || secondary <= bus->number ||
--	     secondary > subordinate || subordinate > bus->busn_res.end)) {
-+	     secondary > subordinate)) {
- 		dev_info(&dev->dev, "bridge configuration invalid ([bus %02x-%02x]), reconfiguring\n",
- 			 secondary, subordinate);
- 		broken = 1;
-@@ -853,8 +853,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 			child = pci_add_new_bus(bus, dev, max+1);
- 			if (!child)
- 				goto out;
--			pci_bus_insert_busn_res(child, max+1,
--						bus->busn_res.end);
-+			pci_bus_insert_busn_res(child, max+1, 0xff);
- 		}
- 		max++;
- 		buses = (buses & 0xff000000)
-@@ -913,11 +912,6 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 		/*
- 		 * Set the subordinate bus number to its real value.
- 		 */
--		if (max > bus->busn_res.end) {
--			dev_warn(&dev->dev, "max busn %02x is outside %pR\n",
--				 max, &bus->busn_res);
--			max = bus->busn_res.end;
--		}
- 		pci_bus_update_busn_res_end(child, max);
- 		pci_write_config_byte(dev, PCI_SUBORDINATE_BUS, max);
- 	}
+ Documentation/devicetree/bindings/arm/gic.txt |  55 ++++
+ arch/arm64/Kconfig                            |   1 +
+ arch/arm64/kernel/Makefile                    |   1 +
+ arch/arm64/kernel/msi.c                       |  41 +++
+ drivers/irqchip/Kconfig                       |   7 +
+ drivers/irqchip/Makefile                      |   1 +
+ drivers/irqchip/irq-gic-common.c              |  12 +
+ drivers/irqchip/irq-gic-common.h              |   4 +
+ drivers/irqchip/irq-gic-v2m.c                 | 356 ++++++++++++++++++++++++++
+ drivers/irqchip/irq-gic.c                     |  82 +++---
+ drivers/irqchip/irq-gic.h                     |  54 ++++
+ 11 files changed, 584 insertions(+), 30 deletions(-)
+ create mode 100644 arch/arm64/kernel/msi.c
+ create mode 100644 drivers/irqchip/irq-gic-v2m.c
+ create mode 100644 drivers/irqchip/irq-gic.h
+
+-- 
+1.9.3
+
