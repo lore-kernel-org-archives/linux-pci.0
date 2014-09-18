@@ -1,105 +1,49 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dmitry Torokhov <dtor@google.com>,
-	Aubrey Li <aubrey.li@intel.com>
-Subject: [PATCH 01/13] PM / sleep: Mechanism for aborting system suspends unconditionally
-Date: Mon, 01 Sep 2014 16:19:52 +0200
-Message-ID: <6935419.nmCT0f1CW7@vostro.rjw.lan>
-In-Reply-To: <2516134.pmOxkEuOOy@vostro.rjw.lan>
-References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan> <2516134.pmOxkEuOOy@vostro.rjw.lan>
+From: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<tglx@linutronix.de>, <hpa@zytor.com>, <x86@kernel.org>,
+	<bp@suse.de>, <dan.carpenter@oracle.com>,
+	<dougthompson@xmission.com>, <bp@alien8.de>,
+	<m.chehab@samsung.com>, <linux-edac@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Subject: [PATCH 2/4] x86, amd_nb: Add device IDs to NB tables for F15h M60h
+Date: Thu, 18 Sep 2014 14:56:45 -0500
+Message-ID: <1411070205-10217-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Add F3 and F4 PCI device IDs to amd_nb_misc_ids[] and
+amd_nb_link_ids[] respectively. We need this to cache the
+Northbridges.
 
-It sometimes may be necessary to abort a system suspend in
-progress or wake up the system from suspend-to-idle even if the
-pm_wakeup_event()/pm_stay_awake() mechanism is not enabled.
-
-For this purpose, introduce a new global variable pm_abort_suspend
-and make pm_wakeup_pending() check its value.  Also add routines
-for manipulating that variable.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
 ---
- drivers/base/power/wakeup.c |   16 +++++++++++++++-
- include/linux/suspend.h     |    4 ++++
- kernel/power/process.c      |    1 +
- 3 files changed, 20 insertions(+), 1 deletion(-)
+ arch/x86/kernel/amd_nb.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Index: linux-pm/include/linux/suspend.h
-===================================================================
---- linux-pm.orig/include/linux/suspend.h
-+++ linux-pm/include/linux/suspend.h
-@@ -371,6 +371,8 @@ extern int unregister_pm_notifier(struct
- extern bool events_check_enabled;
- 
- extern bool pm_wakeup_pending(void);
-+extern void pm_system_wakeup(void);
-+extern void pm_wakeup_clear(void);
- extern bool pm_get_wakeup_count(unsigned int *count, bool block);
- extern bool pm_save_wakeup_count(unsigned int count);
- extern void pm_wakep_autosleep_enabled(bool set);
-@@ -418,6 +420,8 @@ static inline int unregister_pm_notifier
- #define pm_notifier(fn, pri)	do { (void)(fn); } while (0)
- 
- static inline bool pm_wakeup_pending(void) { return false; }
-+static inline void pm_system_wakeup(void) {}
-+static inline void pm_wakeup_clear(void) {}
- 
- static inline void lock_system_sleep(void) {}
- static inline void unlock_system_sleep(void) {}
-Index: linux-pm/drivers/base/power/wakeup.c
-===================================================================
---- linux-pm.orig/drivers/base/power/wakeup.c
-+++ linux-pm/drivers/base/power/wakeup.c
-@@ -24,6 +24,9 @@
-  */
- bool events_check_enabled __read_mostly;
- 
-+/* If set and the system is suspending, terminate the suspend. */
-+static bool pm_abort_suspend __read_mostly;
-+
- /*
-  * Combined counters of registered wakeup events and wakeup events in progress.
-  * They need to be modified together atomically, so it's better to use one
-@@ -719,7 +722,18 @@ bool pm_wakeup_pending(void)
- 		pm_print_active_wakeup_sources();
- 	}
- 
--	return ret;
-+	return ret || pm_abort_suspend;
-+}
-+
-+void pm_system_wakeup(void)
-+{
-+	pm_abort_suspend = true;
-+	freeze_wake();
-+}
-+
-+void pm_wakeup_clear(void)
-+{
-+	pm_abort_suspend = false;
- }
- 
- /**
-Index: linux-pm/kernel/power/process.c
-===================================================================
---- linux-pm.orig/kernel/power/process.c
-+++ linux-pm/kernel/power/process.c
-@@ -129,6 +129,7 @@ int freeze_processes(void)
- 	if (!pm_freezing)
- 		atomic_inc(&system_freezing_cnt);
- 
-+	pm_wakeup_clear();
- 	printk("Freezing user space processes ... ");
- 	pm_freezing = true;
- 	error = try_to_freeze_tasks(true);
+diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
+index f04dbb3..5caed1d 100644
+--- a/arch/x86/kernel/amd_nb.c
++++ b/arch/x86/kernel/amd_nb.c
+@@ -21,6 +21,7 @@ const struct pci_device_id amd_nb_misc_ids[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F3) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M60H_NB_F3) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_M30H_NB_F3) },
+ 	{}
+@@ -30,6 +31,7 @@ EXPORT_SYMBOL(amd_nb_misc_ids);
+ static const struct pci_device_id amd_nb_link_ids[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F4) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F4) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M60H_NB_F4) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F4) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_M30H_NB_F4) },
+ 	{}
+-- 
+2.0.2
 
