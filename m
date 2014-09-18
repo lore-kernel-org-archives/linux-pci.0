@@ -1,48 +1,201 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:64063 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751782AbaI3QVb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 12:21:31 -0400
-MIME-Version: 1.0
-In-Reply-To: <1412069804-17162-11-git-send-email-r65037@freescale.com>
-References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
-	<1412069804-17162-11-git-send-email-r65037@freescale.com>
-Date: Tue, 30 Sep 2014 13:21:28 -0300
-Message-ID: <CAOMZO5A3Bdxdspc_UnJcQ-DVrmUXQCKW0W08msnDs7TELzXEJg@mail.gmail.com>
-Subject: Re: [PATCH v4 10/10] ARM: imx6sx: enable pcie on imx6sx sdb board
-From: Fabio Estevam <festevam@gmail.com>
-To: Richard Zhu <r65037@freescale.com>
-Cc: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shawn Guo <shawn.guo@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Tim Harvey <tharvey@gateworks.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:54534 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1757236AbaIRBcJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Sep 2014 21:32:09 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Grant Likely <grant.likely@linaro.org>
+Subject: [PATCH v11 02/10] PCI: Introduce helper functions to deal with PCI I/O ranges.
+Date: Thu, 18 Sep 2014 02:30:17 +0100
+Message-Id: <1411003825-21521-3-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Richard,
+Some architectures do not have a simple view of the PCI I/O space
+and instead use a range of CPU addresses that map to bus addresses.
+For some architectures these ranges will be expressed by OF bindings
+in a device tree file.
 
-On Tue, Sep 30, 2014 at 6:36 AM, Richard Zhu <r65037@freescale.com> wrote:
-> Signed-off-by: Richard Zhu <r65037@freescale.com>
-> ---
->  arch/arm/boot/dts/imx6sx-sdb.dts | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
->
-> diff --git a/arch/arm/boot/dts/imx6sx-sdb.dts b/arch/arm/boot/dts/imx6sx-sdb.dts
-> index a3980d9..2976913 100644
-> --- a/arch/arm/boot/dts/imx6sx-sdb.dts
-> +++ b/arch/arm/boot/dts/imx6sx-sdb.dts
-> @@ -251,6 +251,13 @@
->         };
->  };
->
-> +&pcie {
-> +       pinctrl-names = "default";
-> +       pinctrl-0 = <&pinctrl_pcie>;
-> +       reset-gpio = <&gpio2 0 0>;
-> +       status = "okay";
-> +};
+This patch introduces a pci_register_io_range() helper function with
+a generic implementation that can be used by such architectures to
+keep track of the I/O ranges described by the PCI bindings. If the
+PCI_IOBASE macro is not defined that signals lack of support for PCI
+and we return an error.
 
-There is also GPIO2_1 which is the PCIE_PWR_EN signal and should be
-added as a GPIO controlled regulator.
+In order to retrieve the CPU address associated with an I/O port, a
+new helper function pci_pio_to_address() is introduced. This will
+search in the list of ranges registered with pci_register_io_range()
+and return the CPU address that corresponds to the given port.
+
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ drivers/of/address.c       | 100 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/of_address.h |   2 +
+ 2 files changed, 102 insertions(+)
+
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index e371825..2373a92 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -5,6 +5,7 @@
+ #include <linux/module.h>
+ #include <linux/of_address.h>
+ #include <linux/pci_regs.h>
++#include <linux/slab.h>
+ #include <linux/string.h>
+ 
+ /* Max address size we deal with */
+@@ -601,12 +602,111 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+ }
+ EXPORT_SYMBOL(of_get_address);
+ 
++#ifdef PCI_IOBASE
++struct io_range {
++	struct list_head list;
++	phys_addr_t start;
++	resource_size_t size;
++};
++
++static LIST_HEAD(io_range_list);
++static DEFINE_SPINLOCK(io_range_lock);
++#endif
++
++/*
++ * Record the PCI IO range (expressed as CPU physical address + size).
++ * Return a negative value if an error has occured, zero otherwise
++ */
++int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
++{
++#ifdef PCI_IOBASE
++	struct io_range *range;
++	resource_size_t allocated_size = 0;
++
++	/* check if the range hasn't been previously recorded */
++	spin_lock(&io_range_lock);
++	list_for_each_entry(range, &io_range_list, list) {
++		if (addr >= range->start && addr + size <= range->start + size)
++			return 0;
++		allocated_size += range->size;
++	}
++	spin_unlock(&io_range_lock);
++
++	/* range not registed yet, check for available space */
++	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
++		/* if it's too big check if 64K space can be reserved */
++		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT)
++			return -E2BIG;
++
++		size = SZ_64K;
++		pr_warn("Requested IO range too big, new size set to 64K\n");
++	}
++
++	/* add the range to the list */
++	range = kzalloc(sizeof(*range), GFP_KERNEL);
++	if (!range)
++		return -ENOMEM;
++
++	range->start = addr;
++	range->size = size;
++
++	spin_lock(&io_range_lock);
++	list_add_tail(&range->list, &io_range_list);
++	spin_unlock(&io_range_lock);
++#endif
++
++	return 0;
++}
++
++phys_addr_t pci_pio_to_address(unsigned long pio)
++{
++	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
++
++#ifdef PCI_IOBASE
++	struct io_range *range;
++	resource_size_t allocated_size = 0;
++
++	if (pio > IO_SPACE_LIMIT)
++		return address;
++
++	spin_lock(&io_range_lock);
++	list_for_each_entry(range, &io_range_list, list) {
++		if (pio >= allocated_size && pio < allocated_size + range->size) {
++			address = range->start + pio - allocated_size;
++			break;
++		}
++		allocated_size += range->size;
++	}
++	spin_unlock(&io_range_lock);
++#endif
++
++	return address;
++}
++
+ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+ {
++#ifdef PCI_IOBASE
++	struct io_range *res;
++	resource_size_t offset = 0;
++	unsigned long addr = -1;
++
++	spin_lock(&io_range_lock);
++	list_for_each_entry(res, &io_range_list, list) {
++		if (address >= res->start && address < res->start + res->size) {
++			addr = res->start - address + offset;
++			break;
++		}
++		offset += res->size;
++	}
++	spin_unlock(&io_range_lock);
++
++	return addr;
++#else
+ 	if (address > IO_SPACE_LIMIT)
+ 		return (unsigned long)-1;
+ 
+ 	return (unsigned long) address;
++#endif
+ }
+ 
+ static int __of_address_to_resource(struct device_node *dev,
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index fb7b722..f8cc7da 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -55,7 +55,9 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
+ extern const __be32 *of_get_address(struct device_node *dev, int index,
+ 			   u64 *size, unsigned int *flags);
+ 
++extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+ extern unsigned long pci_address_to_pio(phys_addr_t addr);
++extern phys_addr_t pci_pio_to_address(unsigned long pio);
+ 
+ extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+ 			struct device_node *node);
+-- 
+2.1.0
+
