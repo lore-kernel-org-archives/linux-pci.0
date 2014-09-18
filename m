@@ -1,177 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25795 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751042AbaI3QjW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Sep 2014 12:39:22 -0400
-From: Marcel Apfelbaum <marcel.a@redhat.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linux-kernel@vger.kernel.org, marcel@redhat.com, mst@redhat.com,
-	alex.williamson@redhat.com
-Subject: [PATCH] PCI: add kernel parameter to override devid<->driver mapping.
-Date: Tue, 30 Sep 2014 19:38:35 +0300
-Message-Id: <1412095115-28982-1-git-send-email-marcel.a@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <541A7853.4020303@linux.intel.com>
+Date: Thu, 18 Sep 2014 14:14:43 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC Part2 v1 02/21] genirq: Introduce helper functions to support
+ stacked irq_chip
+References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com> <1410444228-3134-3-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1409161044330.4247@nanos> <5418FAE1.4030008@linux.intel.com> <alpine.DEB.2.10.1409171244090.21313@nanos>
+In-Reply-To: <alpine.DEB.2.10.1409171244090.21313@nanos>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Scanning a lot of devices during boot requires a lot of time.
-On other scenarios there is a need to bind a driver to a specific slot.
 
-Binding devices to pci-stub driver does not work,
-as it will not differentiate between devices of the
-same type. Using some start scripts is error prone.
 
-The solution leverages driver_override functionality introduced by
-
-	commit: 782a985d7af26db39e86070d28f987cad21313c0
-	Author: Alex Williamson <alex.williamson@redhat.com>
-	Date:   Tue May 20 08:53:21 2014 -0600
-
-    	PCI: Introduce new device binding path using pci_dev.driver_override
-
-In order to bind PCI slot 0001:02:03.4 to pci-stub use:
-	driver[0001:02:03.4]=pci-stub
-
-Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
----
-Notes:
- - For the moment only 32 slots can be assigned specific driver.
- - I have further ideas on top of this patch based on your reviews.
-   I thought of:
-   - Use wildcards to specify entire buses/devices, something like:
-     	driver[0001:02:*.*]=pci-stub
-   - Use comma to separate several devices:
-     	driver[0001:02:03.4,0001:02:04.0,...]=pci-stub
-   - Make domain optional:
-   	driver[00:03.0]=pci-stub
-
-Comments will be appreciated,
-Thanks,
-Marcel
-
-Documentation/kernel-parameters.txt |  4 +++
- drivers/pci/bus.c                   |  1 +
- drivers/pci/pci.c                   | 61 +++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h                   |  1 +
- 4 files changed, 67 insertions(+)
-
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 5ae8608..c1cbb4c 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -2631,6 +2631,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 		pcie_scan_all	Scan all possible PCIe devices.  Otherwise we
- 				only look for one device below a PCIe downstream
- 				port.
-+		driver		Provide an override to the devid<->driver mapping
-+				for a specific slot.
-+				Bind PCI slot 0001:02:03.4 to pci-stub by:
-+					driver[0001:02:03.4]=pci-stub
- 
- 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
- 			Management.
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 73aef51..7a7ed85 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -245,6 +245,7 @@ void pci_bus_add_device(struct pci_dev *dev)
- 	 * are not assigned yet for some devices.
- 	 */
- 	pci_fixup_device(pci_fixup_final, dev);
-+	pci_device_setup_driver_override(dev);
- 	pci_create_sysfs_dev_files(dev);
- 	pci_proc_attach_device(dev);
- 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b7678be..0a3e07c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4426,6 +4426,65 @@ void __weak pci_fixup_cardbus(struct pci_bus *bus)
- }
- EXPORT_SYMBOL(pci_fixup_cardbus);
- 
-+#define DRIVER_OVERRIDE_NAME_LENGTH 64
-+#define DRIVER_OVERRIDE_MAP_SIZE 32
-+
-+struct driver_override_entry {
-+	unsigned int domain;
-+	unsigned char bus;
-+	unsigned int devfn;
-+	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
-+};
-+
-+static struct driver_override_entry __initdata
-+	driver_override_map[DRIVER_OVERRIDE_MAP_SIZE];
-+static int driver_override_num_entries __initdata;
-+
-+void pci_device_setup_driver_override(struct pci_dev *dev)
-+{
-+	int i;
-+
-+	for (i = 0; i < driver_override_num_entries; i++) {
-+		if (pci_domain_nr(dev->bus) != driver_override_map[i].domain ||
-+		    dev->bus->number != driver_override_map[i].bus ||
-+		    dev->devfn != driver_override_map[i].devfn)
-+			continue;
-+
-+		dev->driver_override = kstrndup(driver_override_map[i].driver_name,
-+						DRIVER_OVERRIDE_NAME_LENGTH,
-+						GFP_KERNEL);
-+		break;
-+	}
-+}
-+
-+static void __init pci_parse_driver_override(char *str)
-+{
-+	unsigned int domain, bus, dev, fn;
-+	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
-+	int ret, next_entry;
-+	char format[] = "[%4x:%2x:%2x.%2x]=%%%ds";
-+
-+	sprintf(format + 18, "%%%ds", DRIVER_OVERRIDE_NAME_LENGTH);
-+	ret = sscanf(str, format, &domain, &bus, &dev, &fn, driver_name);
-+
-+	if (ret != 5) {
-+		pr_err("PCI: Invalid command line: driver%s\n", str);
-+		return;
-+	}
-+
-+	if (driver_override_num_entries == DRIVER_OVERRIDE_MAP_SIZE) {
-+		pr_err("PCI: Driver map overflow - ignoring driver%s\n", str);
-+		return;
-+	}
-+
-+	next_entry = driver_override_num_entries++;
-+	driver_override_map[next_entry].domain = domain;
-+	driver_override_map[next_entry].bus = bus && 0xff;
-+	driver_override_map[next_entry].devfn = ((dev & 0x1f) << 3) | (fn & 0x7);
-+	memcpy(driver_override_map[next_entry].driver_name,
-+	       driver_name, sizeof(driver_name));
-+}
-+
- static int __init pci_setup(char *str)
- {
- 	while (str) {
-@@ -4468,6 +4527,8 @@ static int __init pci_setup(char *str)
- 				pcie_bus_config = PCIE_BUS_PEER2PEER;
- 			} else if (!strncmp(str, "pcie_scan_all", 13)) {
- 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
-+			} else if (!strncmp(str, "driver", 6)) {
-+				pci_parse_driver_override(str + 6);
- 			} else {
- 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
- 						str);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 0601890..023d78b 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -197,6 +197,7 @@ enum pci_bar_type {
- bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
- 				int crs_timeout);
- int pci_setup_device(struct pci_dev *dev);
-+void pci_device_setup_driver_override(struct pci_dev *dev);
- int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 		    struct resource *res, unsigned int reg);
- int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
--- 
-1.8.3.1
-
+On 2014/9/18 4:58, Thomas Gleixner wrote:
+> On Wed, 17 Sep 2014, Jiang Liu wrote:
+>> On 2014/9/17 1:45, Thomas Gleixner wrote:
+>>> On Thu, 11 Sep 2014, Jiang Liu wrote:
+>>>> +#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
+>>>> +void irq_chip_ack_parent(struct irq_data *data)
+>>>> +{
+>>>> +	data = data->parent_data;
+>>>> +	if (data && data->chip && data->chip->irq_ack)
+>>>> +		data->chip->irq_ack(data);
+>>>
+>>> Why is this restricted to a single parent level and does not go down
+>>> the whole stack?
+>> Hi Thomas,
+>> 	It happens to work on x86, and we want to achieve a bit
+>> performance advantage by not walking down the whole stack.
+>> If preferred, I will change it to walk the whole stack.
+> 
+> Happens to work on my machine is always a bad argument :)
+> 
+> Now, I can see why you want to do that, but if we do an optimization
+> like that then we should really get rid of the conditional.
+> 
+> You surely need a conditional on data->chip and data->chip->callback
+> for a full stackq walk, but for an explicit request to use the parents
+> ack the parent better has a chip with an ack function, right?
+> 
+> void irq_chip_ack_parent(struct irq_data *data)
+> {
+> 	data = data->parent_data;
+> 	data->chip->irq_ack(data);
+> }
+Sure, will optimize it further as above code.
+Regards!
+Gerry
+> 
+> Thanks,
+> 
+> 	tglx
+> 
