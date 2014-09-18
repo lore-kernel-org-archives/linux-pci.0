@@ -1,176 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v6 13/15] x86, irq, ACPI: Implement interfaces to support ACPI based IOAPIC hot-removal
-Date: Wed, 24 Sep 2014 16:59:34 +0800
-Message-Id: <1411549176-30780-14-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:63339 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754451AbaIRX1A convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Sep 2014 19:27:00 -0400
+Received: by mail-lb0-f170.google.com with SMTP id n15so237820lbi.15
+        for <linux-pci@vger.kernel.org>; Thu, 18 Sep 2014 16:26:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5K-whTs7uzki3JHzmbrDzaG6u7BerYG42is_sfuEOGXA@mail.gmail.com>
+References: <20140514224339.7f8be3a9@neptune.home>
+	<CAMxnaaXGQe4vg9cY5e2KZBnG4F-z49OriwxEGUE-DCE6MKUryQ@mail.gmail.com>
+	<20140810112654.1bf684d6@neptune.home>
+	<CAMxnaaUsd+XHppMmPMXdFL13d1-OhLzoH_yjv_9abOx_uP=_Ug@mail.gmail.com>
+	<20140810183411.19370721@neptune.home>
+	<CAMxnaaVNpiSZmhQsHa_ZHJckgzG+xHyOL6hOT3Ts8GdcGN_A9g@mail.gmail.com>
+	<20140816192135.34260115@neptune.home>
+	<CAMxnaaWQoX9KMQVCKHTkeqSxGEybz5u1qU6AVBqzW3+mj_nJHQ@mail.gmail.com>
+	<20140820075508.74f5b622@pluto>
+	<20140820091152.76cd4e1a@pluto>
+	<CAMxnaaUodONkqmdPWedN-Q1qheHiJAScFcG_XbX1--ZmiOQZDg@mail.gmail.com>
+	<20140821233435.19a9cffa@neptune.home>
+	<CAErSpo6D1B+dPLrYoAF4OA1KeWuW8VZW2_RR5jB1GbCRo+6vHg@mail.gmail.com>
+	<20140822082324.12cb6e93@pluto>
+	<CAMxnaaU9EiMcne-aQjS1sY1Orn6xGbVHEnd057ogcZ77p74Y=Q@mail.gmail.com>
+	<20140823130624.06ecc057@neptune.home>
+	<20140824230953.7c04890f@neptune.home>
+	<CAMxnaaUoLBbN1gNgD3qvPV1mx3JoM6FPV9EndQG9vJSpux2xMw@mail.gmail.com>
+	<20140828224750.23148125@neptune.home>
+	<20140912131919.35c777e5@pluto>
+	<CAErSpo5K-whTs7uzki3JHzmbrDzaG6u7BerYG42is_sfuEOGXA@mail.gmail.com>
+Date: Fri, 19 Sep 2014 09:26:58 +1000
+Message-ID: <CAPM=9twe7Ro9gthPbzw77CG3wCvbA2FdsBD2kPeAbhGti_w5bA@mail.gmail.com>
+Subject: Re: [PATCH 1/2 v2] vgaarb: Don't default exclusively to first video
+ device with mem+io
+From: Dave Airlie <airlied@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: =?UTF-8?Q?Bruno_Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement acpi_unregister_ioapic() to support ACPI based IOAPIC hot-removal.
-An IOAPIC could only be removed when all its pins are unused.
+On 13 September 2014 00:28, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Sep 12, 2014 at 5:19 AM, Bruno Prémont
+> <bonbons@linux-vserver.org> wrote:
+>> Bjorn,
+>>
+>> What is missing to get these two patches pushed to Linus?
+>
+> Sorry, I've been working on some other regressions and overlooked this
+> one.  If you open a bugzilla report and mark it as a regression, that
+> will help keep this on my radar.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |    1 +
- arch/x86/kernel/acpi/boot.c    |   13 +++++++---
- arch/x86/kernel/apic/io_apic.c |   55 ++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 65 insertions(+), 4 deletions(-)
+My MBP is crying? can we get these merged, I can handle if if you want
+to ack them for me!
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 8741c1ea33c3..7c04b8ec22a4 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -190,6 +190,7 @@ extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
- extern void mp_unmap_irq(int irq);
- extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 			      struct ioapic_domain_cfg *cfg);
-+extern int mp_unregister_ioapic(u32 gsi_base);
- extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 			    irq_hw_number_t hwirq);
- extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 238962e7de70..0e67d792741d 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -805,15 +805,20 @@ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
- 
- 	return ret;
- }
--
- EXPORT_SYMBOL(acpi_register_ioapic);
- 
- int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
- {
--	/* TBD */
--	return -EINVAL;
--}
-+	int ret = -ENOSYS;
-+
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+	down_write(&acpi_ioapic_rwsem);
-+	ret  = mp_unregister_ioapic(gsi_base);
-+	up_write(&acpi_ioapic_rwsem);
-+#endif
- 
-+	return ret;
-+}
- EXPORT_SYMBOL(acpi_unregister_ioapic);
- 
- static int __init acpi_parse_sbf(struct acpi_table_header *table)
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index be499af10d1c..7fec2a8f72f3 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -112,6 +112,7 @@ static struct ioapic {
- 	struct ioapic_domain_cfg irqdomain_cfg;
- 	struct irq_domain *irqdomain;
- 	struct mp_pin_info *pin_info;
-+	struct resource *iomem_res;
- } ioapics[MAX_IO_APICS];
- 
- #define mpc_ioapic_ver(ioapic_idx)	ioapics[ioapic_idx].mp_config.apicver
-@@ -250,6 +251,12 @@ static void alloc_ioapic_saved_registers(int idx)
- 		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
- }
- 
-+static void free_ioapic_saved_registers(int idx)
-+{
-+	kfree(ioapics[idx].saved_registers);
-+	ioapics[idx].saved_registers = NULL;
-+}
-+
- int __init arch_early_irq_init(void)
- {
- 	struct irq_cfg *cfg;
-@@ -2972,6 +2979,16 @@ static int mp_irqdomain_create(int ioapic)
- 	return 0;
- }
- 
-+static void ioapic_destroy_irqdomain(int idx)
-+{
-+	if (ioapics[idx].irqdomain) {
-+		irq_domain_remove(ioapics[idx].irqdomain);
-+		ioapics[idx].irqdomain = NULL;
-+	}
-+	kfree(ioapics[idx].pin_info);
-+	ioapics[idx].pin_info = NULL;
-+}
-+
- void __init setup_IO_APIC(void)
- {
- 	int ioapic;
-@@ -3730,6 +3747,7 @@ static struct resource * __init ioapic_setup_resources(void)
- 		snprintf(mem, IOAPIC_RESOURCE_NAME_SIZE, "IOAPIC %u", i);
- 		mem += IOAPIC_RESOURCE_NAME_SIZE;
- 		num++;
-+		ioapics[i].iomem_res = res;
- 	}
- 
- 	ioapic_resources = res;
-@@ -3958,6 +3976,43 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 	return 0;
- }
- 
-+int mp_unregister_ioapic(u32 gsi_base)
-+{
-+	int ioapic, pin;
-+	int found = 0;
-+	struct mp_pin_info *pin_info;
-+
-+	for_each_ioapic(ioapic)
-+		if (ioapics[ioapic].gsi_config.gsi_base == gsi_base) {
-+			found = 1;
-+			break;
-+		}
-+	if (!found) {
-+		pr_warn("can't find IOAPIC for GSI %d\n", gsi_base);
-+		return -ENODEV;
-+	}
-+
-+	for_each_pin(ioapic, pin) {
-+		pin_info = mp_pin_info(ioapic, pin);
-+		if (pin_info->count) {
-+			pr_warn("pin%d on IOAPIC%d is still in use.\n",
-+				pin, ioapic);
-+			return -EBUSY;
-+		}
-+	}
-+
-+	/* Mark entry not present */
-+	ioapics[ioapic].nr_registers  = 0;
-+	ioapic_destroy_irqdomain(ioapic);
-+	free_ioapic_saved_registers(ioapic);
-+	if (ioapics[ioapic].iomem_res)
-+		release_resource(ioapics[ioapic].iomem_res);
-+	clear_fixmap(FIX_IO_APIC_BASE_0 + ioapic);
-+	memset(&ioapics[ioapic], 0, sizeof(ioapics[ioapic]));
-+
-+	return 0;
-+}
-+
- int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 		     irq_hw_number_t hwirq)
- {
--- 
-1.7.10.4
-
+Dave.
