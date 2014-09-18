@@ -1,723 +1,781 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og104.obsmtp.com ([64.18.0.178]:59249 "HELO
-	exprod5og104.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752903AbaIPWeS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 18:34:18 -0400
-Received: by mail-pa0-f51.google.com with SMTP id kx10so705242pab.38
-        for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 15:34:17 -0700 (PDT)
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v9 1/4] pci:host: APM X-Gene PCIe host controller driver
-Date: Tue, 16 Sep 2014 15:33:41 -0700
-Message-Id: <1410906824-9321-2-git-send-email-tinamdar@apm.com>
-In-Reply-To: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
-References: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
+Received: from mail-bl2on0120.outbound.protection.outlook.com ([65.55.169.120]:23424
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756264AbaIRCPZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Sep 2014 22:15:25 -0400
+From: <suravee.suthikulpanit@amd.com>
+To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
+	<jason@lakedaemon.net>
+CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
+	<Will.Deacon@arm.com>, <liviu.dudau@arm.com>, <tglx@linutronix.de>,
+	<Harish.Kasiviswanathan@amd.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	"Suravee Suthikulpanit" <Suravee.Suthikulpanit@amd.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Marc Zyngier <Marc.Zyngier@arm.com>
+Subject: [PATCH 2/2 V7] irqchip: gicv2m: Add supports for ARM GICv2m MSI(-X)
+Date: Wed, 17 Sep 2014 19:14:46 -0700
+Message-ID: <1411006486-17513-3-git-send-email-suravee.suthikulpanit@amd.com>
+In-Reply-To: <1411006486-17513-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1411006486-17513-1-git-send-email-suravee.suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the AppliedMicro X-Gene SOC PCIe host controller driver.
-X-Gene PCIe controller supports maximum up to 8 lanes and GEN3 speed.
-X-Gene SOC supports maximum 5 PCIe ports.
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+ARM GICv2m specification extends GICv2 to support MSI(-X) with
+a new set of register frame. This patch introduces support for
+the non-secure GICv2m register frame. Currently, GICV2m is available
+in certain version of GIC-400.
+
+The patch introduces a new property in ARM gic binding, the v2m subnode.
+It is optional.
+
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Cc: Mark Rutland <Mark.Rutland@arm.com>
+Cc: Marc Zyngier <Marc.Zyngier@arm.com>
+Cc: Jason Cooper <jason@lakedaemon.net>
+Cc: Catalin Marinas <Catalin.Marinas@arm.com>
+Cc: Will Deacon <Will.Deacon@arm.com>
 ---
- drivers/pci/host/Kconfig     |  10 +
- drivers/pci/host/Makefile    |   1 +
- drivers/pci/host/pci-xgene.c | 646 +++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 657 insertions(+)
- create mode 100644 drivers/pci/host/pci-xgene.c
+ Documentation/devicetree/bindings/arm/gic.txt |  55 ++++
+ arch/arm64/Kconfig                            |   1 +
+ drivers/irqchip/Kconfig                       |   7 +
+ drivers/irqchip/Makefile                      |   1 +
+ drivers/irqchip/irq-gic-common.c              |  12 +
+ drivers/irqchip/irq-gic-common.h              |   4 +
+ drivers/irqchip/irq-gic-v2m.c                 | 356 ++++++++++++++++++++++++++
+ drivers/irqchip/irq-gic.c                     |  82 +++---
+ drivers/irqchip/irq-gic.h                     |  54 ++++
+ 9 files changed, 542 insertions(+), 30 deletions(-)
+ create mode 100644 drivers/irqchip/irq-gic-v2m.c
+ create mode 100644 drivers/irqchip/irq-gic.h
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 90f5cca..382fd3d 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -63,4 +63,14 @@ config PCIE_SPEAR13XX
- 	help
- 	  Say Y here if you want PCIe support on SPEAr13XX SoCs.
- 
-+config PCI_XGENE
-+	bool "X-Gene PCIe controller"
-+	depends on ARCH_XGENE
-+	depends on OF
-+	select PCIEPORTBUS
-+	help
-+	  Say Y here if you want internal PCI support on APM X-Gene SoC.
-+	  There are 5 internal PCIe ports available. Each port is GEN3 capable
-+	  and have varied lanes from x1 to x8.
+diff --git a/Documentation/devicetree/bindings/arm/gic.txt b/Documentation/devicetree/bindings/arm/gic.txt
+index c7d2fa1..38b2156 100644
+--- a/Documentation/devicetree/bindings/arm/gic.txt
++++ b/Documentation/devicetree/bindings/arm/gic.txt
+@@ -96,3 +96,58 @@ Example:
+ 		      <0x2c006000 0x2000>;
+ 		interrupts = <1 9 0xf04>;
+ 	};
 +
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index d0e88f1..845611f 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -8,3 +8,4 @@ obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
- obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
- obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
- obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
-+obj-$(CONFIG_PCI_XGENE) += pci-xgene.o
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
++
++* GICv2m extension for MSI/MSI-x support (Optional)
++
++Certain revision of GIC-400 supports MSI/MSI-x via V2M register frame.
++This is enabled by specifying v2m sub-node.
++
++Required properties:
++
++- compatible        : The value here should be "arm,gic-v2m-frame".
++
++- msi-controller    : Identifies the node as an MSI controller.
++
++- reg               : GICv2m MSI interface register base and size
++
++Optional properties:
++
++- arm,msi-base-spi  : Specify base SPI the MSI frame.
++                      The SPI base value can be from 32 to 1019.
++
++- arm,msi-num-spi   : Returns the number of contiguous SPIs assigned
++		      to the frame.
++
++Note: "arm,msi-base-spi" and "arm,msi-num-spi" are used mainly for
++       providing HW workaround in the case where the MSI_TYPER register
++       is corrupted.
++
++Example:
++
++	interrupt-controller@e1101000 {
++		compatible = "arm,gic-400";
++		#interrupt-cells = <3>;
++		#address-cells = <2>;
++		#size-cells = <2>;
++		interrupt-controller;
++		interrupts = <1 8 0xf04>;
++		ranges = <0 0 0 0xe1100000 0 0x100000>;
++		reg = <0x0 0xe1110000 0 0x01000>,
++		      <0x0 0xe112f000 0 0x02000>,
++		      <0x0 0xe1140000 0 0x10000>,
++		      <0x0 0xe1160000 0 0x10000>;
++		v2m0: v2m@0x8000 {
++			compatible = "arm,gic-v2m-frame";
++			msi-controller;
++			reg = <0x0 0x80000 0 0x1000>;
++		};
++
++		....
++
++		v2mN: v2m@0x9000 {
++			compatible = "arm,gic-v2m-frame";
++			msi-controller;
++			reg = <0x0 0x90000 0 0x1000>;
++		};
++	};
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index fd4e81a..83d5556 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -12,6 +12,7 @@ config ARM64
+ 	select ARM_ARCH_TIMER
+ 	select ARM_GIC
+ 	select AUDIT_ARCH_COMPAT_GENERIC
++	select ARM_GIC_V2M
+ 	select ARM_GIC_V3
+ 	select BUILDTIME_EXTABLE_SORT
+ 	select CLONE_BACKWARDS
+diff --git a/drivers/irqchip/Kconfig b/drivers/irqchip/Kconfig
+index b8632bf..ddb31ee 100644
+--- a/drivers/irqchip/Kconfig
++++ b/drivers/irqchip/Kconfig
+@@ -7,6 +7,13 @@ config ARM_GIC
+ 	select IRQ_DOMAIN
+ 	select MULTI_IRQ_HANDLER
+ 
++config ARM_GIC_V2M
++	bool
++	select IRQ_DOMAIN
++	select MULTI_IRQ_HANDLER
++	depends on ARM_GIC
++	depends on PCI && PCI_MSI
++
+ config GIC_NON_BANKED
+ 	bool
+ 
+diff --git a/drivers/irqchip/Makefile b/drivers/irqchip/Makefile
+index 73052ba..3bda951 100644
+--- a/drivers/irqchip/Makefile
++++ b/drivers/irqchip/Makefile
+@@ -17,6 +17,7 @@ obj-$(CONFIG_ARCH_SUNXI)		+= irq-sun4i.o
+ obj-$(CONFIG_ARCH_SUNXI)		+= irq-sunxi-nmi.o
+ obj-$(CONFIG_ARCH_SPEAR3XX)		+= spear-shirq.o
+ obj-$(CONFIG_ARM_GIC)			+= irq-gic.o irq-gic-common.o
++obj-$(CONFIG_ARM_GIC_V2M)		+= irq-gic-v2m.o
+ obj-$(CONFIG_ARM_GIC_V3)		+= irq-gic-v3.o irq-gic-common.o
+ obj-$(CONFIG_ARM_NVIC)			+= irq-nvic.o
+ obj-$(CONFIG_ARM_VIC)			+= irq-vic.o
+diff --git a/drivers/irqchip/irq-gic-common.c b/drivers/irqchip/irq-gic-common.c
+index 60ac704..4b8cff2 100644
+--- a/drivers/irqchip/irq-gic-common.c
++++ b/drivers/irqchip/irq-gic-common.c
+@@ -113,3 +113,15 @@ void gic_cpu_config(void __iomem *base, void (*sync_access)(void))
+ 	if (sync_access)
+ 		sync_access();
+ }
++
++int gic_msi_get_vec_count(struct pci_dev *pdev, struct msi_desc *desc)
++{
++	int ret = -EINVAL;
++#ifdef CONFIG_PCI_MSI
++	if (desc->msi_attrib.is_msix)
++		ret = pci_msix_vec_count(pdev);
++	else
++		ret = pci_msi_vec_count(pdev);
++#endif
++	return ret;
++}
+diff --git a/drivers/irqchip/irq-gic-common.h b/drivers/irqchip/irq-gic-common.h
+index b41f024..95049e5 100644
+--- a/drivers/irqchip/irq-gic-common.h
++++ b/drivers/irqchip/irq-gic-common.h
+@@ -19,6 +19,8 @@
+ 
+ #include <linux/of.h>
+ #include <linux/irqdomain.h>
++#include <linux/pci.h>
++#include <linux/msi.h>
+ 
+ void gic_configure_irq(unsigned int irq, unsigned int type,
+                        void __iomem *base, void (*sync_access)(void));
+@@ -26,4 +28,6 @@ void gic_dist_config(void __iomem *base, int gic_irqs,
+ 		     void (*sync_access)(void));
+ void gic_cpu_config(void __iomem *base, void (*sync_access)(void));
+ 
++int gic_msi_get_vec_count(struct pci_dev *pdev, struct msi_desc *desc);
++
+ #endif /* _IRQ_GIC_COMMON_H */
+diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
 new file mode 100644
-index 0000000..dae61a6
+index 0000000..1df5b37
 --- /dev/null
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -0,0 +1,646 @@
-+/**
-+ * APM X-Gene PCIe Driver
++++ b/drivers/irqchip/irq-gic-v2m.c
+@@ -0,0 +1,356 @@
++/*
++ * ARM GIC v2m MSI(-X) support
++ * Support for Message Signaled Interrupts for systems that
++ * implement ARM Generic Interrupt Controller: GICv2m.
 + *
-+ * Copyright (c) 2014 Applied Micro Circuits Corporation.
++ * Copyright (C) 2014 Advanced Micro Devices, Inc.
++ * Authors: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
++ *          Harish Kasiviswanathan <harish.kasiviswanathan@amd.com>
++ *          Brandon Anderson <brandon.anderson@amd.com>
 + *
-+ * Author: Tanmay Inamdar <tinamdar@apm.com>.
-+ *
-+ * This program is free software; you can redistribute  it and/or modify it
-+ * under  the terms of  the GNU General  Public License as published by the
-+ * Free Software Foundation;  either version 2 of the  License, or (at your
-+ * option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 as published
++ * by the Free Software Foundation.
 + */
-+#include <linux/clk-private.h>
-+#include <linux/delay.h>
-+#include <linux/io.h>
-+#include <linux/jiffies.h>
-+#include <linux/memblock.h>
++
++#define pr_fmt(fmt) "GICv2m: " fmt
++
++#include <linux/bitmap.h>
++#include <linux/irq.h>
++#include <linux/kernel.h>
 +#include <linux/module.h>
-+#include <linux/of.h>
 +#include <linux/of_address.h>
-+#include <linux/of_irq.h>
 +#include <linux/of_pci.h>
 +#include <linux/pci.h>
 +#include <linux/platform_device.h>
 +#include <linux/slab.h>
++#include <linux/spinlock.h>
 +
-+#define PCIECORE_CTLANDSTATUS		0x50
-+#define PIM1_1L				0x80
-+#define IBAR2				0x98
-+#define IR2MSK				0x9c
-+#define PIM2_1L				0xa0
-+#define IBAR3L				0xb4
-+#define IR3MSKL				0xbc
-+#define PIM3_1L				0xc4
-+#define OMR1BARL			0x100
-+#define OMR2BARL			0x118
-+#define OMR3BARL			0x130
-+#define CFGBARL				0x154
-+#define CFGBARH				0x158
-+#define CFGCTL				0x15c
-+#define RTDID				0x160
-+#define BRIDGE_CFG_4			0x2010
-+#define BRIDGE_STATUS_0			0x2600
-+
-+#define LINK_UP_MASK			0x00000100
-+#define AXI_EP_CFG_ACCESS		0x10000
-+#define EN_COHERENCY			0xF0000000
-+#define EN_REG				0x00000001
-+#define OB_LO_IO			0x00000002
-+#define XGENE_PCIE_VENDORID		0x10E8
-+#define XGENE_PCIE_DEVICEID		0xE004
-+#define SZ_1T				(SZ_1G*1024ULL)
-+#define PIPE_PHY_RATE_RD(src)		((0xc000 & (u32)(src)) >> 0xe)
-+
-+struct xgene_pcie_port {
-+	struct device_node	*node;
-+	struct device		*dev;
-+	struct clk		*clk;
-+	void __iomem		*csr_base;
-+	void __iomem		*cfg_base;
-+	unsigned long		cfg_addr;
-+	bool			link_up;
-+};
-+
-+static inline u32 pcie_bar_low_val(u32 addr, u32 flags)
-+{
-+	return (addr & PCI_BASE_ADDRESS_MEM_MASK) | flags;
-+}
-+
-+/* PCIE Configuration Out/In */
-+static inline void xgene_pcie_cfg_out32(void __iomem *addr, int offset, u32 val)
-+{
-+	writel(val, addr + offset);
-+}
-+
-+static inline void xgene_pcie_cfg_out16(void __iomem *addr, int offset, u16 val)
-+{
-+	u32 val32 = readl(addr + (offset & ~0x3));
-+
-+	switch (offset & 0x3) {
-+	case 2:
-+		val32 &= ~0xFFFF0000;
-+		val32 |= (u32)val << 16;
-+		break;
-+	case 0:
-+	default:
-+		val32 &= ~0xFFFF;
-+		val32 |= val;
-+		break;
-+	}
-+	writel(val32, addr + (offset & ~0x3));
-+}
-+
-+static inline void xgene_pcie_cfg_out8(void __iomem *addr, int offset, u8 val)
-+{
-+	u32 val32 = readl(addr + (offset & ~0x3));
-+
-+	switch (offset & 0x3) {
-+	case 0:
-+		val32 &= ~0xFF;
-+		val32 |= val;
-+		break;
-+	case 1:
-+		val32 &= ~0xFF00;
-+		val32 |= (u32)val << 8;
-+		break;
-+	case 2:
-+		val32 &= ~0xFF0000;
-+		val32 |= (u32)val << 16;
-+		break;
-+	case 3:
-+	default:
-+		val32 &= ~0xFF000000;
-+		val32 |= (u32)val << 24;
-+		break;
-+	}
-+	writel(val32, addr + (offset & ~0x3));
-+}
-+
-+static inline void xgene_pcie_cfg_in32(void __iomem *addr, int offset, u32 *val)
-+{
-+	*val = readl(addr + offset);
-+}
-+
-+static inline void
-+xgene_pcie_cfg_in16(void __iomem *addr, int offset, u32 *val)
-+{
-+	*val = readl(addr + (offset & ~0x3));
-+
-+	switch (offset & 0x3) {
-+	case 2:
-+		*val >>= 16;
-+		break;
-+	}
-+
-+	*val &= 0xFFFF;
-+}
-+
-+static inline void
-+xgene_pcie_cfg_in8(void __iomem *addr, int offset, u32 *val)
-+{
-+	*val = readl(addr + (offset & ~0x3));
-+
-+	switch (offset & 0x3) {
-+	case 3:
-+		*val = *val >> 24;
-+		break;
-+	case 2:
-+		*val = *val >> 16;
-+		break;
-+	case 1:
-+		*val = *val >> 8;
-+		break;
-+	}
-+	*val &= 0xFF;
-+}
-+
-+/* When the address bit [17:16] is 2'b01, the Configuration access will be
-+ * treated as Type 1 and it will be forwarded to external PCIe device.
-+ */
-+static void __iomem *xgene_pcie_get_cfg_base(struct pci_bus *bus)
-+{
-+	struct xgene_pcie_port *port = bus->sysdata;
-+
-+	if (bus->number >= (bus->primary + 1))
-+		return port->cfg_base + AXI_EP_CFG_ACCESS;
-+
-+	return port->cfg_base;
-+}
-+
-+/* For Configuration request, RTDID register is used as Bus Number,
-+ * Device Number and Function number of the header fields.
-+ */
-+static void xgene_pcie_set_rtdid_reg(struct pci_bus *bus, uint devfn)
-+{
-+	struct xgene_pcie_port *port = bus->sysdata;
-+	unsigned int b, d, f;
-+	u32 rtdid_val = 0;
-+
-+	b = bus->number;
-+	d = PCI_SLOT(devfn);
-+	f = PCI_FUNC(devfn);
-+
-+	if (!pci_is_root_bus(bus))
-+		rtdid_val = (b << 8) | (d << 3) | f;
-+
-+	writel(rtdid_val, port->csr_base + RTDID);
-+	/* read the register back to ensure flush */
-+	readl(port->csr_base + RTDID);
-+}
-+
-+static int xgene_pcie_read_config(struct pci_bus *bus, unsigned int devfn,
-+				  int offset, int len, u32 *val)
-+{
-+	struct xgene_pcie_port *port = bus->sysdata;
-+	void __iomem *addr;
-+
-+	if ((pci_is_root_bus(bus) && devfn != 0) || !port->link_up)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	xgene_pcie_set_rtdid_reg(bus, devfn);
-+	addr = xgene_pcie_get_cfg_base(bus);
-+	switch (len) {
-+	case 1:
-+		xgene_pcie_cfg_in8(addr, offset, val);
-+		break;
-+	case 2:
-+		xgene_pcie_cfg_in16(addr, offset, val);
-+		break;
-+	default:
-+		xgene_pcie_cfg_in32(addr, offset, val);
-+		break;
-+	}
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int xgene_pcie_write_config(struct pci_bus *bus, unsigned int devfn,
-+				   int offset, int len, u32 val)
-+{
-+	struct xgene_pcie_port *port = bus->sysdata;
-+	void __iomem *addr;
-+
-+	if ((pci_is_root_bus(bus) && devfn != 0) || !port->link_up)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	xgene_pcie_set_rtdid_reg(bus, devfn);
-+	addr = xgene_pcie_get_cfg_base(bus);
-+	switch (len) {
-+	case 1:
-+		xgene_pcie_cfg_out8(addr, offset, (u8)val);
-+		break;
-+	case 2:
-+		xgene_pcie_cfg_out16(addr, offset, (u16)val);
-+		break;
-+	default:
-+		xgene_pcie_cfg_out32(addr, offset, val);
-+		break;
-+	}
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static struct pci_ops xgene_pcie_ops = {
-+	.read = xgene_pcie_read_config,
-+	.write = xgene_pcie_write_config
-+};
-+
-+static u64 xgene_pcie_set_ib_mask(void __iomem *csr_base, u32 addr,
-+				  u32 flags, u64 size)
-+{
-+	u64 mask = (~(size - 1) & PCI_BASE_ADDRESS_MEM_MASK) | flags;
-+	u32 val32 = 0;
-+	u32 val;
-+
-+	val32 = readl(csr_base + addr);
-+	val = (val32 & 0x0000ffff) | (lower_32_bits(mask) << 16);
-+	writel(val, csr_base + addr);
-+
-+	val32 = readl(csr_base + addr + 0x04);
-+	val = (val32 & 0xffff0000) | (lower_32_bits(mask) >> 16);
-+	writel(val, csr_base + addr + 0x04);
-+
-+	val32 = readl(csr_base + addr + 0x04);
-+	val = (val32 & 0x0000ffff) | (upper_32_bits(mask) << 16);
-+	writel(val, csr_base + addr + 0x04);
-+
-+	val32 = readl(csr_base + addr + 0x08);
-+	val = (val32 & 0xffff0000) | (upper_32_bits(mask) >> 16);
-+	writel(val, csr_base + addr + 0x08);
-+
-+	return mask;
-+}
-+
-+static void xgene_pcie_linkup(struct xgene_pcie_port *port,
-+				   u32 *lanes, u32 *speed)
-+{
-+	void __iomem *csr_base = port->csr_base;
-+	u32 val32;
-+
-+	port->link_up = false;
-+	val32 = readl(csr_base + PCIECORE_CTLANDSTATUS);
-+	if (val32 & LINK_UP_MASK) {
-+		port->link_up = true;
-+		*speed = PIPE_PHY_RATE_RD(val32);
-+		val32 = readl(csr_base + BRIDGE_STATUS_0);
-+		*lanes = val32 >> 26;
-+	}
-+}
-+
-+static int xgene_pcie_init_port(struct xgene_pcie_port *port)
-+{
-+	int rc;
-+
-+	port->clk = clk_get(port->dev, NULL);
-+	if (IS_ERR(port->clk)) {
-+		dev_err(port->dev, "clock not available\n");
-+		return -ENODEV;
-+	}
-+
-+	rc = clk_prepare_enable(port->clk);
-+	if (rc) {
-+		dev_err(port->dev, "clock enable failed\n");
-+		return rc;
-+	}
-+
-+	return 0;
-+}
-+
-+static void xgene_pcie_fixup_bridge(struct pci_dev *dev)
-+{
-+	int i;
-+
-+	/* Hide the PCI host BARs from the kernel as their content doesn't
-+	 * fit well in the resource management
-+	 */
-+	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-+		dev->resource[i].start = dev->resource[i].end = 0;
-+		dev->resource[i].flags = 0;
-+	}
-+	dev_info(&dev->dev, "Hiding X-Gene pci host bridge resources %s\n",
-+		 pci_name(dev));
-+}
-+DECLARE_PCI_FIXUP_HEADER(XGENE_PCIE_VENDORID, XGENE_PCIE_DEVICEID,
-+			 xgene_pcie_fixup_bridge);
-+
-+static int xgene_pcie_map_reg(struct xgene_pcie_port *port,
-+			      struct platform_device *pdev)
-+{
-+	struct resource *res;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "csr");
-+	port->csr_base = devm_ioremap_resource(port->dev, res);
-+	if (IS_ERR(port->csr_base))
-+		return PTR_ERR(port->csr_base);
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cfg");
-+	port->cfg_base = devm_ioremap_resource(port->dev, res);
-+	if (IS_ERR(port->cfg_base))
-+		return PTR_ERR(port->cfg_base);
-+	port->cfg_addr = res->start;
-+
-+	return 0;
-+}
-+
-+static void xgene_pcie_setup_ob_reg(struct xgene_pcie_port *port,
-+				    struct resource *res, u32 offset,
-+				    u64 cpu_addr, u64 pci_addr)
-+{
-+	void __iomem *base = port->csr_base + offset;
-+	resource_size_t size = resource_size(res);
-+	u64 restype = resource_type(res);
-+	u64 mask = 0;
-+	u32 min_size;
-+	u32 flag = EN_REG;
-+
-+	if (restype == IORESOURCE_MEM) {
-+		min_size = SZ_128M;
-+	} else {
-+		min_size = 128;
-+		flag |= OB_LO_IO;
-+	}
-+
-+	if (size >= min_size)
-+		mask = ~(size - 1) | flag;
-+	else
-+		dev_warn(port->dev, "res size 0x%llx less than minimum 0x%x\n",
-+			 (u64)size, min_size);
-+
-+	writel(lower_32_bits(cpu_addr), base);
-+	writel(upper_32_bits(cpu_addr), base + 0x04);
-+	writel(lower_32_bits(mask), base + 0x08);
-+	writel(upper_32_bits(mask), base + 0x0c);
-+	writel(lower_32_bits(pci_addr), base + 0x10);
-+	writel(upper_32_bits(pci_addr), base + 0x14);
-+}
-+
-+static void xgene_pcie_setup_cfg_reg(void __iomem *csr_base, u64 addr)
-+{
-+	writel(lower_32_bits(addr), csr_base + CFGBARL);
-+	writel(upper_32_bits(addr), csr_base + CFGBARH);
-+	writel(EN_REG, csr_base + CFGCTL);
-+}
-+
-+static int xgene_pcie_map_ranges(struct xgene_pcie_port *port,
-+				 struct list_head *res,
-+				 resource_size_t io_base)
-+{
-+	struct pci_host_bridge_window *window;
-+	struct device *dev = port->dev;
-+	int ret;
-+
-+	list_for_each_entry(window, res, list) {
-+		struct resource *res = window->res;
-+		u64 restype = resource_type(res);
-+
-+		dev_dbg(port->dev, "0x%08lx 0x%016llx...0x%016llx\n",
-+			res->flags, res->start, res->end);
-+
-+		switch (restype) {
-+		case IORESOURCE_IO:
-+			xgene_pcie_setup_ob_reg(port, res, OMR3BARL, io_base,
-+						res->start - window->offset);
-+			ret = pci_remap_iospace(res, io_base);
-+			if (ret < 0)
-+				return ret;
-+			break;
-+		case IORESOURCE_MEM:
-+			xgene_pcie_setup_ob_reg(port, res, OMR1BARL, res->start,
-+						res->start - window->offset);
-+			break;
-+		case IORESOURCE_BUS:
-+			break;
-+		default:
-+			dev_err(dev, "invalid io resource!");
-+			return -EINVAL;
-+		}
-+	}
-+	xgene_pcie_setup_cfg_reg(port->csr_base, port->cfg_addr);
-+
-+	return 0;
-+}
-+
-+static void xgene_pcie_setup_pims(void *addr, u64 pim, u64 size)
-+{
-+	writel(lower_32_bits(pim), addr);
-+	writel(upper_32_bits(pim) | EN_COHERENCY, addr + 0x04);
-+	writel(lower_32_bits(size), addr + 0x10);
-+	writel(upper_32_bits(size), addr + 0x14);
-+}
++#include "irqchip.h"
++#include "irq-gic.h"
++#include "irq-gic-common.h"
 +
 +/*
-+ * X-Gene PCIe support maximum 3 inbound memory regions
-+ * This function helps to select a region based on size of region
++* MSI_TYPER:
++*     [31:26] Reserved
++*     [25:16] lowest SPI assigned to MSI
++*     [15:10] Reserved
++*     [9:0]   Numer of SPIs assigned to MSI
++*/
++#define V2M_MSI_TYPER			0x008
++#define V2M_MSI_TYPER_BASE_SHIFT	16
++#define V2M_MSI_TYPER_BASE_MASK		0x3FF
++#define V2M_MSI_TYPER_NUM_MASK		0x3FF
++#define V2M_MSI_SETSPI_NS		0x040
++#define V2M_MIN_SPI			32
++#define V2M_MAX_SPI			1019
++
++#define V2M_MSI_TYPER_BASE_SPI(x)	\
++		((x >> V2M_MSI_TYPER_BASE_SHIFT) & V2M_MSI_TYPER_BASE_MASK)
++
++#define V2M_MSI_TYPER_NUM_SPI(x)	(x & V2M_MSI_TYPER_NUM_MASK)
++
++/*
++ * alloc_msi_irq - Allocate MSIs from available MSI bitmap.
++ * @data: Pointer to v2m_data
++ * @nvec: Number of interrupts to allocate
++ * @irq: Pointer to the allocated irq
++ *
++ * Allocates interrupts only if the contiguous range of MSIs
++ * with specified nvec are available. Otherwise return the number
++ * of available interrupts. If none are available, then returns -ENOENT.
 + */
-+static int xgene_pcie_select_ib_reg(u8 *ib_reg_mask, u64 size)
++static int alloc_msi_irq(struct v2m_data *data, int nvec, int *irq)
 +{
-+	if ((size > 4) && (size < SZ_16M) && !(*ib_reg_mask & (1 << 1))) {
-+		*ib_reg_mask |= (1 << 1);
-+		return 1;
++	int size = data->nr_spis;
++	int next = size, i = nvec, ret;
++
++	/* We should never allocate more than available nr_spis */
++	if (i >= size)
++		i = size;
++
++	spin_lock(&data->msi_cnt_lock);
++
++	for (; i > 0; i--) {
++		next = bitmap_find_next_zero_area(data->bm,
++					size, 0, i, 0);
++		if (next < size)
++			break;
 +	}
 +
-+	if ((size > SZ_1K) && (size < SZ_1T) && !(*ib_reg_mask & (1 << 0))) {
-+		*ib_reg_mask |= (1 << 0);
-+		return 0;
++	if (i != nvec) {
++		ret = i ? : -ENOENT;
++	} else {
++		bitmap_set(data->bm, next, nvec);
++		*irq = data->spi_start + next;
++		ret = 0;
 +	}
 +
-+	if ((size > SZ_1M) && (size < SZ_1T) && !(*ib_reg_mask & (1 << 2))) {
-+		*ib_reg_mask |= (1 << 2);
-+		return 2;
-+	}
++	spin_unlock(&data->msi_cnt_lock);
 +
-+	return -EINVAL;
++	return ret;
 +}
 +
-+static void xgene_pcie_setup_ib_reg(struct xgene_pcie_port *port,
-+				    struct of_pci_range *range, u8 *ib_reg_mask)
++static void gicv2m_teardown_msi_irq(struct msi_chip *chip, unsigned int irq)
 +{
-+	void __iomem *csr_base = port->csr_base;
-+	void __iomem *cfg_base = port->cfg_base;
-+	void *bar_addr;
-+	void *pim_addr;
-+	u64 cpu_addr = range->cpu_addr;
-+	u64 pci_addr = range->pci_addr;
-+	u64 size = range->size;
-+	u64 mask = ~(size - 1) | EN_REG;
-+	u32 flags = PCI_BASE_ADDRESS_MEM_TYPE_64;
-+	u32 bar_low;
-+	int region;
++	int pos;
++	struct v2m_data *data = container_of(chip, struct v2m_data, msi_chip);
 +
-+	region = xgene_pcie_select_ib_reg(ib_reg_mask, range->size);
-+	if (region < 0) {
-+		dev_warn(port->dev, "invalid pcie dma-range config\n");
-+		return;
-+	}
++	spin_lock(&data->msi_cnt_lock);
 +
-+	if (range->flags & IORESOURCE_PREFETCH)
-+		flags |= PCI_BASE_ADDRESS_MEM_PREFETCH;
++	pos = irq - data->spi_start;
++	if (pos >= 0 && pos < data->nr_spis)
++		bitmap_clear(data->bm, pos, 1);
 +
-+	bar_low = pcie_bar_low_val((u32)cpu_addr, flags);
-+	switch (region) {
-+	case 0:
-+		xgene_pcie_set_ib_mask(csr_base, BRIDGE_CFG_4, flags, size);
-+		bar_addr = cfg_base + PCI_BASE_ADDRESS_0;
-+		writel(bar_low, bar_addr);
-+		writel(upper_32_bits(cpu_addr), bar_addr + 0x4);
-+		pim_addr = csr_base + PIM1_1L;
-+		break;
-+	case 1:
-+		bar_addr = csr_base + IBAR2;
-+		writel(bar_low, bar_addr);
-+		writel(lower_32_bits(mask), csr_base + IR2MSK);
-+		pim_addr = csr_base + PIM2_1L;
-+		break;
-+	case 2:
-+		bar_addr = csr_base + IBAR3L;
-+		writel(bar_low, bar_addr);
-+		writel(upper_32_bits(cpu_addr), bar_addr + 0x4);
-+		writel(lower_32_bits(mask), csr_base + IR3MSKL);
-+		writel(upper_32_bits(mask), csr_base + IR3MSKL + 0x4);
-+		pim_addr = csr_base + PIM3_1L;
-+		break;
-+	}
-+
-+	xgene_pcie_setup_pims(pim_addr, pci_addr, ~(size - 1));
++	spin_unlock(&data->msi_cnt_lock);
 +}
 +
-+static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
-+				     struct device_node *node)
++bool gicv2m_check_msi_range(struct gic_chip_data *gic, irq_hw_number_t hw)
 +{
-+	const int na = 3, ns = 2;
-+	int rlen;
++	struct v2m_data *v2m = NULL;
 +
-+	parser->node = node;
-+	parser->pna = of_n_addr_cells(node);
-+	parser->np = parser->pna + na + ns;
-+
-+	parser->range = of_get_property(node, "dma-ranges", &rlen);
-+	if (!parser->range)
-+		return -ENOENT;
-+	parser->end = parser->range + rlen / sizeof(__be32);
-+
-+	return 0;
++	list_for_each_entry(v2m, &gic->v2m_list, list) {
++		if (hw >= v2m->spi_start &&
++		    hw <  v2m->spi_start + v2m->nr_spis)
++			return true;
++	}
++	return false;
 +}
 +
-+static int xgene_pcie_parse_map_dma_ranges(struct xgene_pcie_port *port)
++static int gicv2m_setup_msi_irq(struct msi_chip *chip,
++				struct pci_dev *pdev,
++				struct msi_desc *desc)
 +{
-+	struct device_node *np = port->node;
-+	struct of_pci_range range;
-+	struct of_pci_range_parser parser;
-+	struct device *dev = port->dev;
-+	u8 ib_reg_mask = 0;
++	int i, irq, nvec, avail;
++	struct msi_msg msg;
++	phys_addr_t addr;
++	struct msi_desc *entry;
++	struct v2m_data *data = container_of(chip, struct v2m_data, msi_chip);
 +
-+	if (pci_dma_range_parser_init(&parser, np)) {
-+		dev_err(dev, "missing dma-ranges property\n");
++	if (!desc) {
++		dev_err(&pdev->dev,
++			"MSI setup failed. Invalid msi descriptor\n");
 +		return -EINVAL;
 +	}
 +
-+	/* Get the dma-ranges from DT */
-+	for_each_of_pci_range(&parser, &range) {
-+		u64 end = range.cpu_addr + range.size - 1;
++	if (desc->msi_attrib.is_msix) {
++		/**
++		 * For MSIx:
++		 * We allocate one irq at a time
++		 */
++		avail = alloc_msi_irq(data, 1, &irq);
++		if (avail != 0) {
++			dev_err(&pdev->dev,
++				"MSI setup failed. Cannnot allocate IRQ\n");
++			return -ENOSPC;
++		}
 +
-+		dev_dbg(port->dev, "0x%08x 0x%016llx..0x%016llx -> 0x%016llx\n",
-+			range.flags, range.cpu_addr, end, range.pci_addr);
-+		xgene_pcie_setup_ib_reg(port, &range, &ib_reg_mask);
++		irq_set_chip_data(irq, chip);
++		irq_set_msi_desc(irq, desc);
++		irq_set_irq_type(irq, IRQ_TYPE_EDGE_RISING);
++	} else {
++		/**
++		 * For MSI and Multi-MSI:
++		 * All requested irqs are allocated and setup at
++		 * once. Subsequent calls to this function would simply return
++		 * success. This is to avoid having to implement a separate
++		 * function for setting up multiple irqs.
++		 */
++		BUG_ON(list_empty(&pdev->msi_list));
++		WARN_ON(!list_is_singular(&pdev->msi_list));
++
++		nvec = gic_msi_get_vec_count(pdev, desc);
++		if (WARN_ON(nvec <= 0))
++			return nvec;
++
++		entry = list_first_entry(&pdev->msi_list,
++					 struct msi_desc, list);
++
++		if ((nvec > 1) && (entry->msi_attrib.multiple))
++			return 0;
++
++		avail = alloc_msi_irq(data, nvec, &irq);
++		if (avail != 0) {
++			dev_err(&pdev->dev,
++				"Failed to allocate %d irqs.\n", nvec);
++			return avail;
++		}
++
++		if (nvec > 1) {
++			/* Set lowest of the new interrupts assigned
++			 * to the PCI device
++			 */
++			entry->nvec_used = nvec;
++			entry->msi_attrib.multiple = ilog2(
++						__roundup_pow_of_two(nvec));
++		}
++
++		for (i = 0; i < nvec; i++) {
++			irq_set_chip_data(irq+i, chip);
++			if (irq_set_msi_desc_off(irq, i, entry)) {
++				dev_err(&pdev->dev,
++					"Failed to set up MSI irq %d\n",
++					(irq+i));
++				return -EINVAL;
++			}
++
++			irq_set_irq_type((irq+i), IRQ_TYPE_EDGE_RISING);
++		}
 +	}
++
++	addr = data->res.start + V2M_MSI_SETSPI_NS;
++	msg.address_hi = (u32)(addr >> 32);
++	msg.address_lo = (u32)(addr);
++	msg.data = irq;
++	write_msi_msg(irq, &msg);
++
 +	return 0;
 +}
 +
-+/* clear bar configuration which was done by firmware */
-+static void xgene_pcie_clear_config(struct xgene_pcie_port *port)
++static void gicv2m_mask_irq(struct irq_data *d)
 +{
-+	int i;
-+
-+	for (i = PIM1_1L; i <= CFGCTL; i += 4)
-+		writel(0x0, port->csr_base + i);
++	gic_mask_irq(d);
++	if (d->msi_desc)
++		mask_msi_irq(d);
 +}
 +
-+static int xgene_pcie_setup(struct xgene_pcie_port *port,
-+			    struct list_head *res,
-+			    resource_size_t io_base)
++static void gicv2m_unmask_irq(struct irq_data *d)
 +{
-+	u32 lanes = 0, speed = 0;
++	gic_unmask_irq(d);
++	if (d->msi_desc)
++		unmask_msi_irq(d);
++}
++
++static bool is_msi_spi_valid(u32 base, u32 num)
++{
++	if (base < V2M_MIN_SPI) {
++		pr_err("Invalid MSI base SPI (base:%u)\n", base);
++		return false;
++	}
++
++	if ((num == 0) || (base + num > V2M_MAX_SPI)) {
++		pr_err("Number of SPIs (%u) exceed maximum (%u)\n",
++		       num, V2M_MAX_SPI - V2M_MIN_SPI + 1);
++		return false;
++	}
++
++	return true;
++}
++
++static int __init
++gicv2m_init_one(struct device_node *node, struct v2m_data **v,
++		struct gic_chip_data *gic)
++{
 +	int ret;
++	struct v2m_data *v2m = NULL;
 +
-+	xgene_pcie_clear_config(port);
++	*v = kzalloc(sizeof(struct v2m_data), GFP_KERNEL);
++	if (!*v) {
++		pr_err("Failed to allocate struct v2m_data.\n");
++		return -ENOMEM;
++	}
 +
-+	ret = xgene_pcie_map_ranges(port, res, io_base);
-+	if (ret)
-+		return ret;
++	v2m = *v;
++	v2m->gic = gic;
++	v2m->msi_chip.owner = THIS_MODULE;
++	v2m->msi_chip.of_node = node;
++	v2m->msi_chip.setup_irq = gicv2m_setup_msi_irq;
++	v2m->msi_chip.teardown_irq = gicv2m_teardown_msi_irq;
++	ret = of_address_to_resource(node, 0, &v2m->res);
++	if (ret) {
++		pr_err("Failed to allocate v2m resource.\n");
++		goto err_out;
++	}
 +
-+	ret = xgene_pcie_parse_map_dma_ranges(port);
-+	if (ret)
-+		return ret;
++	v2m->base = ioremap(v2m->res.start, resource_size(&v2m->res));
++	if (!v2m->base) {
++		pr_err("Failed to map GICv2m resource\n");
++		ret = -EINVAL;
++		goto err_out;
++	}
 +
-+	xgene_pcie_linkup(port, &lanes, &speed);
-+	if (!port->link_up)
-+		dev_info(port->dev, "(rc) link down\n");
-+	else
-+		dev_info(port->dev, "(rc) x%d gen-%d link up\n",
-+				lanes, speed + 1);
++	ret = of_pci_msi_chip_add(&v2m->msi_chip);
++	if (ret) {
++		pr_info("Failed to add msi_chip.\n");
++		goto err_out;
++	}
++
++	if (!of_property_read_u32(node, "arm,msi-base-spi", &v2m->spi_start) &&
++	    !of_property_read_u32(node, "arm,msi-num-spi", &v2m->nr_spis)) {
++		pr_info("Overwriting V2M MSI_TYPER (base:%u, num:%u)\n",
++			v2m->spi_start, v2m->nr_spis);
++	} else {
++		u32 typer = readl_relaxed(v2m->base + V2M_MSI_TYPER);
++
++		v2m->spi_start = V2M_MSI_TYPER_BASE_SPI(typer);
++		v2m->nr_spis = V2M_MSI_TYPER_NUM_SPI(typer);
++	}
++
++	if (!is_msi_spi_valid(v2m->spi_start, v2m->nr_spis)) {
++		ret = -EINVAL;
++		goto err_out;
++	}
++
++	v2m->bm = kzalloc(sizeof(long) * BITS_TO_LONGS(v2m->nr_spis),
++			  GFP_KERNEL);
++	if (!v2m->bm) {
++		pr_err("Failed to allocate MSI bitmap\n");
++		ret = -ENOMEM;
++		goto err_out;
++	}
++
++	spin_lock_init(&v2m->msi_cnt_lock);
++
++	pr_info(" Node %s: range[%#lx : %#lx], SPI[%d:%d]\n", node->name,
++		(unsigned long)v2m->res.start, (unsigned long)v2m->res.end,
++		v2m->spi_start, (v2m->spi_start + v2m->nr_spis));
++
 +	return 0;
++err_out:
++	of_pci_msi_chip_remove(&v2m->msi_chip);
++	if (v2m->base)
++		iounmap(v2m->base);
++	kfree(v2m);
++	return ret;
 +}
 +
-+static int xgene_pcie_probe_bridge(struct platform_device *pdev)
++int __init gicv2m_of_init(struct device_node *node,
++			  struct gic_chip_data *gic,
++			  struct irq_chip *v2m_chip)
 +{
-+	struct device_node *dn = pdev->dev.of_node;
-+	struct xgene_pcie_port *port;
-+	resource_size_t iobase = 0;
-+	struct pci_bus *bus;
-+	int ret;
-+	LIST_HEAD(res);
++	int ret = 0;
++	struct v2m_data *v2m;
++	struct device_node *child = NULL;
 +
-+	port = devm_kzalloc(&pdev->dev, sizeof(*port), GFP_KERNEL);
-+	if (!port)
-+		return -ENOMEM;
-+	port->node = of_node_get(pdev->dev.of_node);
-+	port->dev = &pdev->dev;
++	INIT_LIST_HEAD(&gic->v2m_list);
 +
-+	ret = xgene_pcie_map_reg(port, pdev);
-+	if (ret)
-+		return ret;
++	v2m_chip->irq_mask = gicv2m_mask_irq;
++	v2m_chip->irq_unmask = gicv2m_unmask_irq;
 +
-+	ret = xgene_pcie_init_port(port);
-+	if (ret)
-+		return ret;
++	for (;;) {
++		child = of_get_next_child(node, child);
++		if (!child)
++			break;
 +
-+	ret = of_pci_get_host_bridge_resources(dn, 0, 0xff, &res, &iobase);
-+	if (ret)
-+		return ret;
++		if (!of_device_is_compatible(child, "arm,gic-v2m-frame"))
++			continue;
 +
-+	ret = xgene_pcie_setup(port, &res, iobase);
-+	if (ret)
-+		return ret;
++		if (!of_find_property(child, "msi-controller", NULL))
++			continue;
 +
-+	bus = pci_scan_root_bus(&pdev->dev, 0, &xgene_pcie_ops, port, &res);
-+	if (!bus)
-+		return -ENOMEM;
++		ret = gicv2m_init_one(child, &v2m, gic);
++		if (ret) {
++			of_node_put(node);
++			break;
++		}
 +
-+	platform_set_drvdata(pdev, port);
-+	return 0;
++		list_add_tail(&v2m->list, &gic->v2m_list);
++	}
++
++	if (ret && list_empty(&gic->v2m_list)) {
++		pr_warn("Warning: Failed to enable GICv2m support.\n");
++		return -EINVAL;
++	}
++
++	return ret;
++}
+diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
+index 4b959e6..9f8e1e0 100644
+--- a/drivers/irqchip/irq-gic.c
++++ b/drivers/irqchip/irq-gic.c
+@@ -46,30 +46,9 @@
+ #include <asm/smp_plat.h>
+ 
+ #include "irq-gic-common.h"
++#include "irq-gic.h"
+ #include "irqchip.h"
+ 
+-union gic_base {
+-	void __iomem *common_base;
+-	void __percpu * __iomem *percpu_base;
+-};
+-
+-struct gic_chip_data {
+-	union gic_base dist_base;
+-	union gic_base cpu_base;
+-#ifdef CONFIG_CPU_PM
+-	u32 saved_spi_enable[DIV_ROUND_UP(1020, 32)];
+-	u32 saved_spi_conf[DIV_ROUND_UP(1020, 16)];
+-	u32 saved_spi_target[DIV_ROUND_UP(1020, 4)];
+-	u32 __percpu *saved_ppi_enable;
+-	u32 __percpu *saved_ppi_conf;
+-#endif
+-	struct irq_domain *domain;
+-	unsigned int gic_irqs;
+-#ifdef CONFIG_GIC_NON_BANKED
+-	void __iomem *(*get_base)(union gic_base *);
+-#endif
+-};
+-
+ static DEFINE_RAW_SPINLOCK(irq_controller_lock);
+ 
+ /*
+@@ -131,15 +110,36 @@ static inline void gic_set_base_accessor(struct gic_chip_data *data,
+ #define gic_set_base_accessor(d, f)
+ #endif
+ 
++static inline
++struct gic_chip_data *irq_data_get_gic_chip_data(struct irq_data *d)
++{
++	struct gic_chip_data *gic_data;
++	struct msi_chip *mchip;
++	struct v2m_data *v2mdat;
++
++	/*
++	 * For MSI, irq_data.chip_data points to struct msi_chip.
++	 * For non-MSI, irq_data.chip_data points to struct gic_chip_data.
++	 */
++	if (d->msi_desc) {
++		mchip = irq_data_get_irq_chip_data(d);
++		v2mdat = container_of(mchip, struct v2m_data, msi_chip);
++		gic_data = v2mdat->gic;
++	} else {
++		gic_data = irq_data_get_irq_chip_data(d);
++	}
++	return gic_data;
 +}
 +
-+static const struct of_device_id xgene_pcie_match_table[] = {
-+	{.compatible = "apm,xgene-pcie",},
-+	{},
+ static inline void __iomem *gic_dist_base(struct irq_data *d)
+ {
+-	struct gic_chip_data *gic_data = irq_data_get_irq_chip_data(d);
++	struct gic_chip_data *gic_data = irq_data_get_gic_chip_data(d);
+ 	return gic_data_dist_base(gic_data);
+ }
+ 
+ static inline void __iomem *gic_cpu_base(struct irq_data *d)
+ {
+-	struct gic_chip_data *gic_data = irq_data_get_irq_chip_data(d);
++	struct gic_chip_data *gic_data = irq_data_get_gic_chip_data(d);
+ 	return gic_data_cpu_base(gic_data);
+ }
+ 
+@@ -151,7 +151,7 @@ static inline unsigned int gic_irq(struct irq_data *d)
+ /*
+  * Routines to acknowledge, disable and enable interrupts
+  */
+-static void gic_mask_irq(struct irq_data *d)
++void gic_mask_irq(struct irq_data *d)
+ {
+ 	u32 mask = 1 << (gic_irq(d) % 32);
+ 
+@@ -162,7 +162,7 @@ static void gic_mask_irq(struct irq_data *d)
+ 	raw_spin_unlock(&irq_controller_lock);
+ }
+ 
+-static void gic_unmask_irq(struct irq_data *d)
++void gic_unmask_irq(struct irq_data *d)
+ {
+ 	u32 mask = 1 << (gic_irq(d) % 32);
+ 
+@@ -325,6 +325,15 @@ static struct irq_chip gic_chip = {
+ 	.irq_set_wake		= gic_set_wake,
+ };
+ 
++static struct irq_chip v2m_chip = {
++	.name			= "GICv2m",
++	.irq_eoi		= gic_eoi_irq,
++	.irq_set_type		= gic_set_type,
++#ifdef CONFIG_SMP
++	.irq_set_affinity	= gic_set_affinity,
++#endif
 +};
 +
-+static struct platform_driver xgene_pcie_driver = {
-+	.driver = {
-+		   .name = "xgene-pcie",
-+		   .owner = THIS_MODULE,
-+		   .of_match_table = of_match_ptr(xgene_pcie_match_table),
-+	},
-+	.probe = xgene_pcie_probe_bridge,
-+};
-+module_platform_driver(xgene_pcie_driver);
+ void __init gic_cascade_irq(unsigned int gic_nr, unsigned int irq)
+ {
+ 	if (gic_nr >= MAX_GIC_NR)
+@@ -767,19 +776,29 @@ void __init gic_init_physaddr(struct device_node *node)
+ static int gic_irq_domain_map(struct irq_domain *d, unsigned int irq,
+ 				irq_hw_number_t hw)
+ {
++	struct gic_chip_data *gic = d->host_data;
 +
-+MODULE_AUTHOR("Tanmay Inamdar <tinamdar@apm.com>");
-+MODULE_DESCRIPTION("APM X-Gene PCIe driver");
-+MODULE_LICENSE("GPL v2");
++	irq_set_chip_data(irq, gic);
++
+ 	if (hw < 32) {
++		/* PPIs */
+ 		irq_set_percpu_devid(irq);
+ 		irq_set_chip_and_handler(irq, &gic_chip,
+ 					 handle_percpu_devid_irq);
+ 		set_irq_flags(irq, IRQF_VALID | IRQF_NOAUTOEN);
+ 	} else {
+-		irq_set_chip_and_handler(irq, &gic_chip,
+-					 handle_fasteoi_irq);
++		/* SPIs */
+ 		set_irq_flags(irq, IRQF_VALID | IRQF_PROBE);
+ 
+-		gic_routable_irq_domain_ops->map(d, irq, hw);
++		if (!gicv2m_check_msi_range(gic, hw)) {
++			irq_set_chip_and_handler(irq, &gic_chip,
++						 handle_fasteoi_irq);
++			gic_routable_irq_domain_ops->map(d, irq, hw);
++		} else {
++			irq_set_chip_and_handler(irq, &v2m_chip,
++					 handle_fasteoi_irq);
++		}
+ 	}
+-	irq_set_chip_data(irq, d->host_data);
+ 	return 0;
+ }
+ 
+@@ -1010,6 +1029,9 @@ gic_of_init(struct device_node *node, struct device_node *parent)
+ 	if (of_property_read_u32(node, "cpu-offset", &percpu_offset))
+ 		percpu_offset = 0;
+ 
++	if (IS_ENABLED(CONFIG_ARM_GIC_V2M))
++		gicv2m_of_init(node, &gic_data[gic_cnt], &v2m_chip);
++
+ 	gic_init_bases(gic_cnt, -1, dist_base, cpu_base, percpu_offset, node);
+ 	if (!gic_cnt)
+ 		gic_init_physaddr(node);
+diff --git a/drivers/irqchip/irq-gic.h b/drivers/irqchip/irq-gic.h
+new file mode 100644
+index 0000000..3021665
+--- /dev/null
++++ b/drivers/irqchip/irq-gic.h
+@@ -0,0 +1,54 @@
++#ifndef _IRQ_GIC_H_
++#define _IRQ_GIC_H_
++
++#include <linux/msi.h>
++#include <linux/pci.h>
++
++union gic_base {
++	void __iomem *common_base;
++	void __percpu * __iomem *percpu_base;
++};
++
++struct gic_chip_data;
++
++struct v2m_data {
++#ifdef CONFIG_ARM_GIC_V2M
++	struct list_head list;
++	spinlock_t msi_cnt_lock;
++	struct msi_chip msi_chip;
++	struct resource res;      /* GICv2m resource */
++	void __iomem *base;       /* GICv2m virt address */
++	unsigned int spi_start;   /* The SPI number that MSIs start */
++	unsigned int nr_spis;     /* The number of SPIs for MSIs */
++	unsigned long *bm;        /* MSI vector bitmap */
++	struct gic_chip_data *gic;
++#endif
++};
++
++struct gic_chip_data {
++	union gic_base dist_base;
++	union gic_base cpu_base;
++#ifdef CONFIG_CPU_PM
++	u32 saved_spi_enable[DIV_ROUND_UP(1020, 32)];
++	u32 saved_spi_conf[DIV_ROUND_UP(1020, 16)];
++	u32 saved_spi_target[DIV_ROUND_UP(1020, 4)];
++	u32 __percpu *saved_ppi_enable;
++	u32 __percpu *saved_ppi_conf;
++#endif
++	struct irq_domain *domain;
++	unsigned int gic_irqs;
++#ifdef CONFIG_GIC_NON_BANKED
++	void __iomem *(*get_base)(union gic_base *);
++#endif
++#ifdef CONFIG_ARM_GIC_V2M
++	struct list_head v2m_list;
++#endif
++};
++
++void gic_mask_irq(struct irq_data *d);
++void gic_unmask_irq(struct irq_data *d);
++int gicv2m_of_init(struct device_node *node, struct gic_chip_data *gic,
++		   struct irq_chip *v2m_chip) __init;
++bool gicv2m_check_msi_range(struct gic_chip_data *gic, irq_hw_number_t hw);
++
++#endif /* _IRQ_GIC_H_ */
 -- 
-1.9.1
+1.9.3
 
