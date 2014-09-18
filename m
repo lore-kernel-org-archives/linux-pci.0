@@ -1,64 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:62738 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752512AbaIPXKp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 19:10:45 -0400
-Received: by mail-pa0-f41.google.com with SMTP id bj1so769283pad.28
-        for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 16:10:44 -0700 (PDT)
-Date: Tue, 16 Sep 2014 17:10:40 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: Megan Kamiya <megan.a.kamiya@intel.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci: Parenthesize parameters in PCI_DEVID and
- PCI_VPD_LRDT_ID macros
-Message-ID: <20140916231040.GF5050@google.com>
-References: <1409973550-29434-1-git-send-email-jeffrey.t.kirsher@intel.com>
+Received: from mail-bn1on0141.outbound.protection.outlook.com ([157.56.110.141]:40197
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753340AbaIRTyg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Sep 2014 15:54:36 -0400
+From: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<tglx@linutronix.de>, <hpa@zytor.com>, <x86@kernel.org>,
+	<bp@suse.de>, <dan.carpenter@oracle.com>,
+	<dougthompson@xmission.com>, <bp@alien8.de>,
+	<m.chehab@samsung.com>, <linux-edac@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Subject: [PATCH 0/4] Add Fam15h Model60h support
+Date: Thu, 18 Sep 2014 14:56:25 -0500
+Message-ID: <1411070185-10137-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1409973550-29434-1-git-send-email-jeffrey.t.kirsher@intel.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 05, 2014 at 08:19:10PM -0700, Jeff Kirsher wrote:
-> From: Megan Kamiya <megan.a.kamiya@intel.com>
-> 
-> Add parentheses around parameters in PCI_DEVID and PCI_VPD_LRDT_ID
-> macros to prevent possible expansion errors as described by the CERT
-> Secure Coding Standard: PRE01-C: Use parentheses within macros around
-> parameter names
-> 
-> Signed-off-by: Megan Kamiya <megan.a.kamiya@intel.com>
-> Tested-by: Aaron Brown <aaron.f.brown@intel.com>
-> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+This patch series is based on top of V5 patch regarding
+Modify usage of amd64_read_dct_pci_cfg().
+Link: http://marc.info/?l=linux-kernel&m=141079846507232&w=2
 
-Applied to pci/misc for v3.18, thanks!
+I had started work on above one earlier and could not test this patch
+series before, so ended up sending it separately. I can meld it together
+if that is desired.
 
-> ---
->  include/linux/pci.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 61978a4..cb744f3 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -45,7 +45,7 @@
->   * In the interest of not exposing interfaces to user-space unnecessarily,
->   * the following kernel-only defines are being added here.
->   */
-> -#define PCI_DEVID(bus, devfn)  ((((u16)bus) << 8) | devfn)
-> +#define PCI_DEVID(bus, devfn)  ((((u16)(bus)) << 8) | (devfn))
->  /* return bus from PCI devid = ((u16)bus_number) << 8) | devfn */
->  #define PCI_BUS_NUM(x) (((x) >> 8) & 0xff)
->  
-> @@ -1701,7 +1701,7 @@ bool pci_acs_path_enabled(struct pci_dev *start,
->  			  struct pci_dev *end, u16 acs_flags);
->  
->  #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
-> -#define PCI_VPD_LRDT_ID(x)		(x | PCI_VPD_LRDT)
-> +#define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
->  
->  /* Large Resource Data Type Tag Item Names */
->  #define PCI_VPD_LTIN_ID_STRING		0x02	/* Identifier String */
-> -- 
-> 1.9.3
-> 
+Summary of new features in the processor:
+ - DDR4 memory support
+ - DDR3 LRDIMM support
+ - Support for above are in Patches 3,4 of series.
+
+Summary of patches in this series:
+ - Patch 1: Add PCI device ID definitions
+ - Patch 2: Add PCI IDs to NB tables as we need to cache Northbridges
+            for later use in amd64_edac
+ - Patch 3: F15hM60h adds support for DDR4 and DDR3 LRDIMMS. Adding them here.
+ - Patch 4: Adds bulk of the code necessary to support F15hM60h.
+            Also introduces a change to dbam_to_cs mapper functions.
+
+Aravind Gopalakrishnan (4):
+  pci_ids: Add PCI device IDs for F15h M60h
+  x86, amd_nb: Add device IDs to NB tables for F15h M60h
+  edac: Add DDR3 LRDIMM support, entries in edac_mem_types[]
+  edac, amd64_edac: Add F15h M60h support
+
+ arch/x86/kernel/amd_nb.c  |   2 +
+ drivers/edac/amd64_edac.c | 226 ++++++++++++++++++++++++++++++++--------------
+ drivers/edac/amd64_edac.h |  12 ++-
+ drivers/edac/edac_mc.c    |   3 +
+ include/linux/edac.h      |   2 +
+ include/linux/pci_ids.h   |   2 +
+ 6 files changed, 178 insertions(+), 69 deletions(-)
+
+-- 
+2.0.2
+
