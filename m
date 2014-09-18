@@ -1,10 +1,10 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <542279D0.1040603@jp.fujitsu.com>
-Date: Wed, 24 Sep 2014 16:59:12 +0900
-From: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
+Message-ID: <541A9EAB.3060000@linux.intel.com>
+Date: Thu, 18 Sep 2014 16:58:19 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+To: "Joe.C" <srv_yingjoe.chen@mediatek.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
@@ -14,129 +14,47 @@ To: Jiang Liu <jiang.liu@linux.intel.com>,
 	Yinghai Lu <yinghai@kernel.org>,
 	Borislav Petkov <bp@alien8.de>,
 	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
 	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	<x86@kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC Part2 v1 00/21] Enable hierarchy irqdomian on x86 platforms
-References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset="ISO-2022-JP"
+	Joerg Roedel <joro@8bytes.org>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC Part2 v1 01/21] irqdomain: Introduce new interfaces to support
+ hierarchy irqdomains
+References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>	 <1410444228-3134-2-git-send-email-jiang.liu@linux.intel.com> <1411030087.14746.2.camel@mtksdaap41>
+In-Reply-To: <1411030087.14746.2.camel@mtksdaap41>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2014/09/11 23:03), Jiang Liu wrote:
-> We plan to restructure x86 interrupt code based on hierarchy irqdomain,
-> that is to build irqdomains for CPU vector, interrupt remapping unit,
-> IOAPIC, MSI and HPET etc and organize those irqdomains in hierarchy mode.
-> Each irqdomain manages corresponding interrupt controller and talks to
-> parent interrupt controller through public irqdomain interfaces. We also
-> support stacked irq_chip based on hierarchy irqdomain. It will make the
-> x86 interrupt architecture much more clear and more easy to maintain
-> with hierarchy irqdomain and stacked irq_chip. It may also help ARM
-> interrupt management architecture too.
-
-Do you have a documentation which more detailed information is written?
-I'm interested in this feature. And I want to know more detailed information.
-
-I cannot imagine why the feature makes x86 irq architecture much more clear
-and more easy to maintain in this description. Of course, I have read the
-following threads:
-
-https://lkml.org/lkml/2014/9/11/101
-
-Thanks,
-Yasuaki Ishimatsu
-
+On 2014/9/18 16:48, Joe.C wrote:
+> On Thu, 2014-09-11 at 22:03 +0800, Jiang Liu wrote:
+>> +#else	/* CONFIG_IRQ_DOMAIN_HIERARCHY */
+>> +static inline int irq_domain_activate_irq(struct irq_data *data) { return 0; }
+>> +static inline int irq_domain_deactivate_irq(struct irq_data *data) { return 0; }
+>> +#endif	/* CONFIG_IRQ_DOMAIN_HIERARCHY */
+>> +
 > 
-> This is the second patch set to enable support of hierarchy irqdomain
-> on x86 platforms. It depends on the first part at:
-> https://lkml.org/lkml/2014/9/11/101
-> And you may access it at:
-> https://github.com/jiangliu/linux.git irqdomain/p2v1
+> I get the following build warnings on these lines:
 > 
-> And there will be a third patch set to convert IOAPIC driver to support
-> hierarchy irqdomain and clean up code.
+> ../include/linux/irqdomain.h:75:47: warning: 'struct irq_data' declared
+> inside parameter list [enabled by default]
+> ../include/linux/irqdomain.h:75:47: warning: its scope is only this
+> definition or declaration, which is probably not what you want [enabled
+> by default]
+> ../include/linux/irqdomain.h:76:49: warning: 'struct irq_data' declared
+> inside parameter list [enabled by default
+Hi Joe,
+	Thanks for testing. We should add a forward declaration of
+struct irq_data to the top of include/linux/irqdomain.h.
+Will fix it in next version.
+Regards!
+Gerry
 > 
-> The first patch extends irqdomain interfaces to support hierarchy
-> irqdomain. Hope this interface could be used by other architectures too,
-> such as ARM/ARM64.
-> The second patch introduces two helper functions to support stacked
-> irq_chip.
-> Patch 3-9 implements an irqdomain to manange CPU interrupt vectors, and
-> it's the root irqdomain for x86 platforms.
-> Patch 10-13 converts Intel and AMD interrupt remapping drivers to
-> support hierarchy irqdomain.
-> Patch 14-17 converts HPET, MSI and HT_IRQ drivers to support hierarchy
-> irqdomain.
-> Patch 18-21 cleans up unsued code in x86 arch and interrupt remapping
-> drivers.
+> Joe.C
 > 
-> We have tested this patchset on Intel 32-bit and 64-bit systems. But we
-> have only done compilation tests for HT_IRQ and AMD interrupt remapping
-> drivers due to hardware resource limitation. Tests on AMD platforms are
-> warmly welcomed!
 > 
-> Jiang Liu (21):
->    irqdomain: Introduce new interfaces to support hierarchy irqdomains
->    genirq: Introduce helper functions to support stacked irq_chip
->    x86, irq: Save destination CPU ID in irq_cfg
->    x86, irq: Use hierarchy irqdomain to manage CPU interrupt vectors
->    x86, hpet: Use new irqdomain interfaces to allocate/free IRQ
->    x86, MSI: Use new irqdomain interfaces to allocate/free IRQ
->    x86, uv: Use new irqdomain interfaces to allocate/free IRQ
->    x86, htirq: Use new irqdomain interfaces to allocate/free IRQ
->    x86, dmar: Use new irqdomain interfaces to allocate/free IRQ
->    x86: irq_remapping: Introduce new interfaces to support hierarchy
->      irqdomain
->    iommu/vt-d: Change prototypes to prepare for enabling hierarchy
->      irqdomain
->    iommu/vt-d: Enhance Intel IR driver to suppport hierarchy irqdomain
->    iommu/amd: Enhance AMD IR driver to suppport hierarchy irqdomain
->    x86, hpet: Enhance HPET IRQ to support hierarchy irqdomain
->    x86, MSI: Use hierarchy irqdomain to manage MSI interrupts
->    x86, irq: Directly call native_compose_msi_msg() for DMAR IRQ
->    x86, htirq: Use hierarchy irqdomain to manage Hypertransport
->      interrupts
->    iommu/vt-d: Clean up unused MSI related code
->    iommu/amd: Clean up unused MSI related code
->    x86: irq_remapping: Clean up unused MSI related code
->    x86, irq: Clean up unused MSI related code and interfaces
-> 
->   arch/x86/Kconfig                     |    3 +-
->   arch/x86/include/asm/hpet.h          |   16 +-
->   arch/x86/include/asm/hw_irq.h        |   64 +++++
->   arch/x86/include/asm/irq_remapping.h |   66 +++--
->   arch/x86/include/asm/pci.h           |    5 -
->   arch/x86/include/asm/x86_init.h      |    4 -
->   arch/x86/kernel/apic/htirq.c         |  179 +++++++++----
->   arch/x86/kernel/apic/io_apic.c       |    3 -
->   arch/x86/kernel/apic/msi.c           |  430 +++++++++++++++++++++++--------
->   arch/x86/kernel/apic/vector.c        |  158 +++++++++++-
->   arch/x86/kernel/hpet.c               |   57 ++---
->   arch/x86/kernel/x86_init.c           |    2 -
->   arch/x86/platform/uv/uv_irq.c        |   27 +-
->   drivers/iommu/amd_iommu.c            |  385 ++++++++++++++++++++++------
->   drivers/iommu/amd_iommu_init.c       |    4 +
->   drivers/iommu/amd_iommu_proto.h      |    9 +
->   drivers/iommu/amd_iommu_types.h      |    5 +
->   drivers/iommu/intel_irq_remapping.c  |  468 +++++++++++++++++++++++-----------
->   drivers/iommu/irq_remapping.c        |  221 ++++++----------
->   drivers/iommu/irq_remapping.h        |   22 +-
->   drivers/pci/htirq.c                  |   48 +---
->   include/linux/htirq.h                |   22 +-
->   include/linux/intel-iommu.h          |    4 +
->   include/linux/irq.h                  |    8 +
->   include/linux/irqdomain.h            |   60 +++++
->   kernel/irq/Kconfig                   |    3 +
->   kernel/irq/chip.c                    |   21 ++
->   kernel/irq/irqdomain.c               |  349 ++++++++++++++++++++++++-
->   28 files changed, 1934 insertions(+), 709 deletions(-)
-> 
-
-
