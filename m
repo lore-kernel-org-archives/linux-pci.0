@@ -1,59 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:53446 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750837AbaIWFDT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 01:03:19 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v3 8/9] PCI/MSI: Remove unused function read_msi_msg()
-Date: Tue, 23 Sep 2014 13:27:29 +0800
-Message-ID: <1411450050-1510-9-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1411450050-1510-1-git-send-email-wangyijing@huawei.com>
-References: <1411450050-1510-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v11] Add support for PCI in AArch64
+Date: Thu, 18 Sep 2014 02:31:12 +0100
+Message-Id: <1411003873-21574-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now no one uses read_msi_msg(), remove it.
+Hi,
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/msi.c   |    7 -------
- include/linux/msi.h |    1 -
- 2 files changed, 0 insertions(+), 8 deletions(-)
+This patch adds support for PCIe to AArch64. It depends on my v11 patch
+that adds support for creating generic host bridge resources from device
+trees. With that in place, I was able to boot a platform that
+has PCIe host bridge support and use a PCIe network card.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 8746ecd..45da095 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -289,13 +289,6 @@ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 	}
- }
- 
--void read_msi_msg(unsigned int irq, struct msi_msg *msg)
--{
--	struct msi_desc *entry = irq_get_msi_desc(irq);
--
--	__read_msi_msg(entry, msg);
--}
--
- void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	/* Assert that the cache is valid, assuming that
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 329ec73..9ec258e 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -18,7 +18,6 @@ void unmask_msi_irq(struct irq_data *data);
- void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
--void read_msi_msg(unsigned int irq, struct msi_msg *msg);
- void write_msi_msg(unsigned int irq, struct msi_msg *msg);
- 
- struct msi_desc {
+Changes from v10:
+ - Added Catalin's Acked-by
+
+Changes from v9:
+ - Moved the pcibios_add_device() patch that parses the IRQ number from DT into here.
+ - Moved the arm64-specific redefine of pgprot_device here from the generic patchset.
+ - Readability fix for definition of IO_SPACE_LIMIT
+
+Changes from v8:
+  - Added support for generic PCI domains
+
+Changes from v7:
+  - Rebased to v3.16-rc3
+  - Removed pci_ioremap_io() function as it is provided by my v8 generic
+    PCI host bridge patches under a different name.
+
+Changes from v6:
+  - Guard the pci_domain_nr() inline implementation with #ifdef CONFIG_PCI as
+    to avoid conflict with default empty version present in include/linux/pci.h.
+    Thanks to Jingoo Han for catching this.
+
+Changes from v5:
+  - Removed pcibios_fixup_bridge_ranges() as the week default version is fine.
+  - Removed the ALIGN() call in pcibios_align_resource()
+  - Stopped exporting pcibios_align_resource()
+
+Changes from v4:
+  - Fixed the pci_domain_nr() implementation for arm64. Now we use
+    find_pci_host_bride() to find the host bridge before we retrieve
+    the domain number.
+
+Changes from v3:
+  - Added Acks accumulated so far ;)
+  - Still carrying Catalin's patch for moving the PCI_IO_BASE until it
+    lands in linux-next or mainline, in order to ease applying the series
+
+Changes from v2:
+  - Implement an arch specific version of pci_register_io_range() and
+    pci_address_to_pio().
+  - Return 1 from pci_proc_domain().
+
+Changes from v1:
+  - Added Catalin's patch for moving the PCI_IO_BASE location and extend
+    its size to 16MB
+  - Integrated Arnd's version of pci_ioremap_io that uses a bitmap for
+    keeping track of assigned IO space and returns an io_offset. At the
+    moment the code is added in arch/arm64 but it can be moved in drivers/pci.
+  - Added a fix for the generic ioport_map() function when !CONFIG_GENERIC_IOMAP
+    as suggested by Arnd.
+
+v10 thread here: https://lkml.org/lkml/2014/9/8/325
+v9 thread here: https://lkml.org/lkml/2014/8/12/394
+v8 thread here: https://lkml.org/lkml/2014/7/1/705
+v7 thread here: https://lkml.org/lkml/2014/3/14/320
+v6 thread here: https://lkml.org/lkml/2014/3/5/41
+v5 thread here: https://lkml.org/lkml/2014/3/4/307
+v4 thread here: https://lkml.org/lkml/2014/3/3/298
+v3 thread here: https://lkml.org/lkml/2014/2/28/211
+v2 thread here: https://lkml.org/lkml/2014/2/27/255
+v1 thread here: https://lkml.org/lkml/2014/2/3/389
+
+Best regards,
+Liviu
+
+Liviu Dudau (1):
+  arm64: Add architectural support for PCIe
+
+ arch/arm64/Kconfig               | 22 ++++++++++++++-
+ arch/arm64/include/asm/Kbuild    |  1 +
+ arch/arm64/include/asm/io.h      |  3 +-
+ arch/arm64/include/asm/pci.h     | 37 +++++++++++++++++++++++++
+ arch/arm64/include/asm/pgtable.h |  2 ++
+ arch/arm64/kernel/Makefile       |  1 +
+ arch/arm64/kernel/pci.c          | 59 ++++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 123 insertions(+), 2 deletions(-)
+ create mode 100644 arch/arm64/include/asm/pci.h
+ create mode 100644 arch/arm64/kernel/pci.c
+
 -- 
-1.7.1
+2.1.0
 
