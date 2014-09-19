@@ -1,200 +1,407 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:53639 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754045AbaIAOL1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Sep 2014 10:11:27 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dmitry Torokhov <dtor@google.com>,
-	Aubrey Li <aubrey.li@intel.com>
-Subject: [PATCH 02/13] genirq: Move suspend/resume logic into irq/pm code
-Date: Mon, 01 Sep 2014 16:20:37 +0200
-Message-ID: <1504806.eH5pWVEYTM@vostro.rjw.lan>
-In-Reply-To: <2516134.pmOxkEuOOy@vostro.rjw.lan>
-References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan> <2516134.pmOxkEuOOy@vostro.rjw.lan>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:33482 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751464AbaISGuK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Sep 2014 02:50:10 -0400
+Message-ID: <541BD202.5080200@huawei.com>
+Date: Fri, 19 Sep 2014 14:49:38 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	"Vinod Koul" <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+CC: Ashok Raj <ashok.raj@intel.com>, Tony Luck <tony.luck@intel.com>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	<linux-hotplug@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<dmaengine@vger.kernel.org>
+Subject: Re: [Patch Part3 V6 5/8] iommu/vt-d: Enhance intel_irq_remapping
+ driver to support DMAR unit hotplug
+References: <1411103935-31301-1-git-send-email-jiang.liu@linux.intel.com> <1411103935-31301-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411103935-31301-6-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+On 2014/9/19 13:18, Jiang Liu wrote:
+> Implement required callback functions for intel_irq_remapping driver
+> to support DMAR unit hotplug.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 
-No functional change. Preparatory patch for cleaning up the suspend
-abort functionality. Update the comments while at it.
+Reviewed-by: Yijing Wang <wangyijing@huawei.com>
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- kernel/irq/internals.h |    4 ++--
- kernel/irq/manage.c    |   28 +++++-----------------------
- kernel/irq/pm.c        |   44 ++++++++++++++++++++++++++++++++++++++------
- 3 files changed, 45 insertions(+), 31 deletions(-)
+> ---
+>  drivers/iommu/intel_irq_remapping.c |  226 ++++++++++++++++++++++++++---------
+>  1 file changed, 171 insertions(+), 55 deletions(-)
+> 
+> diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+> index 9b140ed854ec..1edbbed8c6bc 100644
+> --- a/drivers/iommu/intel_irq_remapping.c
+> +++ b/drivers/iommu/intel_irq_remapping.c
+> @@ -36,7 +36,6 @@ struct hpet_scope {
+>  
+>  static struct ioapic_scope ir_ioapic[MAX_IO_APICS];
+>  static struct hpet_scope ir_hpet[MAX_HPET_TBS];
+> -static int ir_ioapic_num, ir_hpet_num;
+>  
+>  /*
+>   * Lock ordering:
+> @@ -206,7 +205,7 @@ static struct intel_iommu *map_hpet_to_ir(u8 hpet_id)
+>  	int i;
+>  
+>  	for (i = 0; i < MAX_HPET_TBS; i++)
+> -		if (ir_hpet[i].id == hpet_id)
+> +		if (ir_hpet[i].id == hpet_id && ir_hpet[i].iommu)
+>  			return ir_hpet[i].iommu;
+>  	return NULL;
+>  }
+> @@ -216,7 +215,7 @@ static struct intel_iommu *map_ioapic_to_ir(int apic)
+>  	int i;
+>  
+>  	for (i = 0; i < MAX_IO_APICS; i++)
+> -		if (ir_ioapic[i].id == apic)
+> +		if (ir_ioapic[i].id == apic && ir_ioapic[i].iommu)
+>  			return ir_ioapic[i].iommu;
+>  	return NULL;
+>  }
+> @@ -325,7 +324,7 @@ static int set_ioapic_sid(struct irte *irte, int apic)
+>  
+>  	down_read(&dmar_global_lock);
+>  	for (i = 0; i < MAX_IO_APICS; i++) {
+> -		if (ir_ioapic[i].id == apic) {
+> +		if (ir_ioapic[i].iommu && ir_ioapic[i].id == apic) {
+>  			sid = (ir_ioapic[i].bus << 8) | ir_ioapic[i].devfn;
+>  			break;
+>  		}
+> @@ -352,7 +351,7 @@ static int set_hpet_sid(struct irte *irte, u8 id)
+>  
+>  	down_read(&dmar_global_lock);
+>  	for (i = 0; i < MAX_HPET_TBS; i++) {
+> -		if (ir_hpet[i].id == id) {
+> +		if (ir_hpet[i].iommu && ir_hpet[i].id == id) {
+>  			sid = (ir_hpet[i].bus << 8) | ir_hpet[i].devfn;
+>  			break;
+>  		}
+> @@ -474,17 +473,17 @@ static void iommu_set_irq_remapping(struct intel_iommu *iommu, int mode)
+>  	raw_spin_unlock_irqrestore(&iommu->register_lock, flags);
+>  }
+>  
+> -
+> -static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
+> +static int intel_setup_irq_remapping(struct intel_iommu *iommu)
+>  {
+>  	struct ir_table *ir_table;
+>  	struct page *pages;
+>  	unsigned long *bitmap;
+>  
+> -	ir_table = iommu->ir_table = kzalloc(sizeof(struct ir_table),
+> -					     GFP_ATOMIC);
+> +	if (iommu->ir_table)
+> +		return 0;
+>  
+> -	if (!iommu->ir_table)
+> +	ir_table = kzalloc(sizeof(struct ir_table), GFP_ATOMIC);
+> +	if (!ir_table)
+>  		return -ENOMEM;
+>  
+>  	pages = alloc_pages_node(iommu->node, GFP_ATOMIC | __GFP_ZERO,
+> @@ -493,7 +492,7 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
+>  	if (!pages) {
+>  		pr_err("IR%d: failed to allocate pages of order %d\n",
+>  		       iommu->seq_id, INTR_REMAP_PAGE_ORDER);
+> -		kfree(iommu->ir_table);
+> +		kfree(ir_table);
+>  		return -ENOMEM;
+>  	}
+>  
+> @@ -508,11 +507,22 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
+>  
+>  	ir_table->base = page_address(pages);
+>  	ir_table->bitmap = bitmap;
+> +	iommu->ir_table = ir_table;
+>  
+> -	iommu_set_irq_remapping(iommu, mode);
+>  	return 0;
+>  }
+>  
+> +static void intel_teardown_irq_remapping(struct intel_iommu *iommu)
+> +{
+> +	if (iommu && iommu->ir_table) {
+> +		free_pages((unsigned long)iommu->ir_table->base,
+> +			   INTR_REMAP_PAGE_ORDER);
+> +		kfree(iommu->ir_table->bitmap);
+> +		kfree(iommu->ir_table);
+> +		iommu->ir_table = NULL;
+> +	}
+> +}
+> +
+>  /*
+>   * Disable Interrupt Remapping.
+>   */
+> @@ -667,9 +677,10 @@ static int __init intel_enable_irq_remapping(void)
+>  		if (!ecap_ir_support(iommu->ecap))
+>  			continue;
+>  
+> -		if (intel_setup_irq_remapping(iommu, eim))
+> +		if (intel_setup_irq_remapping(iommu))
+>  			goto error;
+>  
+> +		iommu_set_irq_remapping(iommu, eim);
+>  		setup = 1;
+>  	}
+>  
+> @@ -700,12 +711,13 @@ error:
+>  	return -1;
+>  }
+>  
+> -static void ir_parse_one_hpet_scope(struct acpi_dmar_device_scope *scope,
+> -				      struct intel_iommu *iommu)
+> +static int ir_parse_one_hpet_scope(struct acpi_dmar_device_scope *scope,
+> +				   struct intel_iommu *iommu,
+> +				   struct acpi_dmar_hardware_unit *drhd)
+>  {
+>  	struct acpi_dmar_pci_path *path;
+>  	u8 bus;
+> -	int count;
+> +	int count, free = -1;
+>  
+>  	bus = scope->bus;
+>  	path = (struct acpi_dmar_pci_path *)(scope + 1);
+> @@ -721,19 +733,36 @@ static void ir_parse_one_hpet_scope(struct acpi_dmar_device_scope *scope,
+>  					   PCI_SECONDARY_BUS);
+>  		path++;
+>  	}
+> -	ir_hpet[ir_hpet_num].bus   = bus;
+> -	ir_hpet[ir_hpet_num].devfn = PCI_DEVFN(path->device, path->function);
+> -	ir_hpet[ir_hpet_num].iommu = iommu;
+> -	ir_hpet[ir_hpet_num].id    = scope->enumeration_id;
+> -	ir_hpet_num++;
+> +
+> +	for (count = 0; count < MAX_HPET_TBS; count++) {
+> +		if (ir_hpet[count].iommu == iommu &&
+> +		    ir_hpet[count].id == scope->enumeration_id)
+> +			return 0;
+> +		else if (ir_hpet[count].iommu == NULL && free == -1)
+> +			free = count;
+> +	}
+> +	if (free == -1) {
+> +		pr_warn("Exceeded Max HPET blocks\n");
+> +		return -ENOSPC;
+> +	}
+> +
+> +	ir_hpet[free].iommu = iommu;
+> +	ir_hpet[free].id    = scope->enumeration_id;
+> +	ir_hpet[free].bus   = bus;
+> +	ir_hpet[free].devfn = PCI_DEVFN(path->device, path->function);
+> +	pr_info("HPET id %d under DRHD base 0x%Lx\n",
+> +		scope->enumeration_id, drhd->address);
+> +
+> +	return 0;
+>  }
+>  
+> -static void ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
+> -				      struct intel_iommu *iommu)
+> +static int ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
+> +				     struct intel_iommu *iommu,
+> +				     struct acpi_dmar_hardware_unit *drhd)
+>  {
+>  	struct acpi_dmar_pci_path *path;
+>  	u8 bus;
+> -	int count;
+> +	int count, free = -1;
+>  
+>  	bus = scope->bus;
+>  	path = (struct acpi_dmar_pci_path *)(scope + 1);
+> @@ -750,54 +779,63 @@ static void ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
+>  		path++;
+>  	}
+>  
+> -	ir_ioapic[ir_ioapic_num].bus   = bus;
+> -	ir_ioapic[ir_ioapic_num].devfn = PCI_DEVFN(path->device, path->function);
+> -	ir_ioapic[ir_ioapic_num].iommu = iommu;
+> -	ir_ioapic[ir_ioapic_num].id    = scope->enumeration_id;
+> -	ir_ioapic_num++;
+> +	for (count = 0; count < MAX_IO_APICS; count++) {
+> +		if (ir_ioapic[count].iommu == iommu &&
+> +		    ir_ioapic[count].id == scope->enumeration_id)
+> +			return 0;
+> +		else if (ir_ioapic[count].iommu == NULL && free == -1)
+> +			free = count;
+> +	}
+> +	if (free == -1) {
+> +		pr_warn("Exceeded Max IO APICS\n");
+> +		return -ENOSPC;
+> +	}
+> +
+> +	ir_ioapic[free].bus   = bus;
+> +	ir_ioapic[free].devfn = PCI_DEVFN(path->device, path->function);
+> +	ir_ioapic[free].iommu = iommu;
+> +	ir_ioapic[free].id    = scope->enumeration_id;
+> +	pr_info("IOAPIC id %d under DRHD base  0x%Lx IOMMU %d\n",
+> +		scope->enumeration_id, drhd->address, iommu->seq_id);
+> +
+> +	return 0;
+>  }
+>  
+>  static int ir_parse_ioapic_hpet_scope(struct acpi_dmar_header *header,
+>  				      struct intel_iommu *iommu)
+>  {
+> +	int ret = 0;
+>  	struct acpi_dmar_hardware_unit *drhd;
+>  	struct acpi_dmar_device_scope *scope;
+>  	void *start, *end;
+>  
+>  	drhd = (struct acpi_dmar_hardware_unit *)header;
+> -
+>  	start = (void *)(drhd + 1);
+>  	end = ((void *)drhd) + header->length;
+>  
+> -	while (start < end) {
+> +	while (start < end && ret == 0) {
+>  		scope = start;
+> -		if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_IOAPIC) {
+> -			if (ir_ioapic_num == MAX_IO_APICS) {
+> -				printk(KERN_WARNING "Exceeded Max IO APICS\n");
+> -				return -1;
+> -			}
+> -
+> -			printk(KERN_INFO "IOAPIC id %d under DRHD base "
+> -			       " 0x%Lx IOMMU %d\n", scope->enumeration_id,
+> -			       drhd->address, iommu->seq_id);
+> +		if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_IOAPIC)
+> +			ret = ir_parse_one_ioapic_scope(scope, iommu, drhd);
+> +		else if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_HPET)
+> +			ret = ir_parse_one_hpet_scope(scope, iommu, drhd);
+> +		start += scope->length;
+> +	}
+>  
+> -			ir_parse_one_ioapic_scope(scope, iommu);
+> -		} else if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_HPET) {
+> -			if (ir_hpet_num == MAX_HPET_TBS) {
+> -				printk(KERN_WARNING "Exceeded Max HPET blocks\n");
+> -				return -1;
+> -			}
+> +	return ret;
+> +}
+>  
+> -			printk(KERN_INFO "HPET id %d under DRHD base"
+> -			       " 0x%Lx\n", scope->enumeration_id,
+> -			       drhd->address);
+> +static void ir_remove_ioapic_hpet_scope(struct intel_iommu *iommu)
+> +{
+> +	int i;
+>  
+> -			ir_parse_one_hpet_scope(scope, iommu);
+> -		}
+> -		start += scope->length;
+> -	}
+> +	for (i = 0; i < MAX_HPET_TBS; i++)
+> +		if (ir_hpet[i].iommu == iommu)
+> +			ir_hpet[i].iommu = NULL;
+>  
+> -	return 0;
+> +	for (i = 0; i < MAX_IO_APICS; i++)
+> +		if (ir_ioapic[i].iommu == iommu)
+> +			ir_ioapic[i].iommu = NULL;
+>  }
+>  
+>  /*
+> @@ -1173,7 +1211,85 @@ struct irq_remap_ops intel_irq_remap_ops = {
+>  	.setup_hpet_msi		= intel_setup_hpet_msi,
+>  };
+>  
+> +/*
+> + * Support of Interrupt Remapping Unit Hotplug
+> + */
+> +static int dmar_ir_add(struct dmar_drhd_unit *dmaru, struct intel_iommu *iommu)
+> +{
+> +	int ret;
+> +	int eim = x2apic_enabled();
+> +
+> +	if (eim && !ecap_eim_support(iommu->ecap)) {
+> +		pr_info("DRHD %Lx: EIM not supported by DRHD, ecap %Lx\n",
+> +			iommu->reg_phys, iommu->ecap);
+> +		return -ENODEV;
+> +	}
+> +
+> +	if (ir_parse_ioapic_hpet_scope(dmaru->hdr, iommu)) {
+> +		pr_warn("DRHD %Lx: failed to parse managed IOAPIC/HPET\n",
+> +			iommu->reg_phys);
+> +		return -ENODEV;
+> +	}
+> +
+> +	/* TODO: check all IOAPICs are covered by IOMMU */
+> +
+> +	/* Setup Interrupt-remapping now. */
+> +	ret = intel_setup_irq_remapping(iommu);
+> +	if (ret) {
+> +		pr_err("DRHD %Lx: failed to allocate resource\n",
+> +		       iommu->reg_phys);
+> +		ir_remove_ioapic_hpet_scope(iommu);
+> +		return ret;
+> +	}
+> +
+> +	if (!iommu->qi) {
+> +		/* Clear previous faults. */
+> +		dmar_fault(-1, iommu);
+> +		iommu_disable_irq_remapping(iommu);
+> +		dmar_disable_qi(iommu);
+> +	}
+> +
+> +	/* Enable queued invalidation */
+> +	ret = dmar_enable_qi(iommu);
+> +	if (!ret) {
+> +		iommu_set_irq_remapping(iommu, eim);
+> +	} else {
+> +		pr_err("DRHD %Lx: failed to enable queued invalidation, ecap %Lx, ret %d\n",
+> +		       iommu->reg_phys, iommu->ecap, ret);
+> +		intel_teardown_irq_remapping(iommu);
+> +		ir_remove_ioapic_hpet_scope(iommu);
+> +	}
+> +
+> +	return ret;
+> +}
+> +
+>  int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
+>  {
+> -	return irq_remapping_enabled ? -ENOSYS : 0;
+> +	int ret = 0;
+> +	struct intel_iommu *iommu = dmaru->iommu;
+> +
+> +	if (!irq_remapping_enabled)
+> +		return 0;
+> +	if (iommu == NULL)
+> +		return -EINVAL;
+> +	if (!ecap_ir_support(iommu->ecap))
+> +		return 0;
+> +
+> +	if (insert) {
+> +		if (!iommu->ir_table)
+> +			ret = dmar_ir_add(dmaru, iommu);
+> +	} else {
+> +		if (iommu->ir_table) {
+> +			if (!bitmap_empty(iommu->ir_table->bitmap,
+> +					  INTR_REMAP_TABLE_ENTRIES)) {
+> +				ret = -EBUSY;
+> +			} else {
+> +				iommu_disable_irq_remapping(iommu);
+> +				intel_teardown_irq_remapping(iommu);
+> +				ir_remove_ioapic_hpet_scope(iommu);
+> +			}
+> +		}
+> +	}
+> +
+> +	return ret;
+>  }
+> 
 
-Index: linux/kernel/irq/internals.h
-===================================================================
---- linux.orig/kernel/irq/internals.h
-+++ linux/kernel/irq/internals.h
-@@ -63,8 +63,8 @@ enum {
- 
- extern int __irq_set_trigger(struct irq_desc *desc, unsigned int irq,
- 		unsigned long flags);
--extern void __disable_irq(struct irq_desc *desc, unsigned int irq, bool susp);
--extern void __enable_irq(struct irq_desc *desc, unsigned int irq, bool resume);
-+extern void __disable_irq(struct irq_desc *desc, unsigned int irq);
-+extern void __enable_irq(struct irq_desc *desc, unsigned int irq);
- 
- extern int irq_startup(struct irq_desc *desc, bool resend);
- extern void irq_shutdown(struct irq_desc *desc);
-Index: linux/kernel/irq/manage.c
-===================================================================
---- linux.orig/kernel/irq/manage.c
-+++ linux/kernel/irq/manage.c
-@@ -382,14 +382,8 @@ setup_affinity(unsigned int irq, struct
- }
- #endif
- 
--void __disable_irq(struct irq_desc *desc, unsigned int irq, bool suspend)
-+void __disable_irq(struct irq_desc *desc, unsigned int irq)
- {
--	if (suspend) {
--		if (!desc->action || (desc->action->flags & IRQF_NO_SUSPEND))
--			return;
--		desc->istate |= IRQS_SUSPENDED;
--	}
--
- 	if (!desc->depth++)
- 		irq_disable(desc);
- }
-@@ -401,7 +395,7 @@ static int __disable_irq_nosync(unsigned
- 
- 	if (!desc)
- 		return -EINVAL;
--	__disable_irq(desc, irq, false);
-+	__disable_irq(desc, irq);
- 	irq_put_desc_busunlock(desc, flags);
- 	return 0;
- }
-@@ -442,20 +436,8 @@ void disable_irq(unsigned int irq)
- }
- EXPORT_SYMBOL(disable_irq);
- 
--void __enable_irq(struct irq_desc *desc, unsigned int irq, bool resume)
-+void __enable_irq(struct irq_desc *desc, unsigned int irq)
- {
--	if (resume) {
--		if (!(desc->istate & IRQS_SUSPENDED)) {
--			if (!desc->action)
--				return;
--			if (!(desc->action->flags & IRQF_FORCE_RESUME))
--				return;
--			/* Pretend that it got disabled ! */
--			desc->depth++;
--		}
--		desc->istate &= ~IRQS_SUSPENDED;
--	}
--
- 	switch (desc->depth) {
- 	case 0:
-  err_out:
-@@ -497,7 +479,7 @@ void enable_irq(unsigned int irq)
- 		 KERN_ERR "enable_irq before setup/request_irq: irq %u\n", irq))
- 		goto out;
- 
--	__enable_irq(desc, irq, false);
-+	__enable_irq(desc, irq);
- out:
- 	irq_put_desc_busunlock(desc, flags);
- }
-@@ -1228,7 +1210,7 @@ __setup_irq(unsigned int irq, struct irq
- 	 */
- 	if (shared && (desc->istate & IRQS_SPURIOUS_DISABLED)) {
- 		desc->istate &= ~IRQS_SPURIOUS_DISABLED;
--		__enable_irq(desc, irq, false);
-+		__enable_irq(desc, irq);
- 	}
- 
- 	raw_spin_unlock_irqrestore(&desc->lock, flags);
-Index: linux/kernel/irq/pm.c
-===================================================================
---- linux.orig/kernel/irq/pm.c
-+++ linux/kernel/irq/pm.c
-@@ -13,13 +13,26 @@
- 
- #include "internals.h"
- 
-+static void suspend_device_irq(struct irq_desc *desc, int irq)
-+{
-+	if (!desc->action || (desc->action->flags & IRQF_NO_SUSPEND))
-+		return;
-+
-+	desc->istate |= IRQS_SUSPENDED;
-+	__disable_irq(desc, irq);
-+}
-+
- /**
-  * suspend_device_irqs - disable all currently enabled interrupt lines
-  *
-- * During system-wide suspend or hibernation device drivers need to be prevented
-- * from receiving interrupts and this function is provided for this purpose.
-- * It marks all interrupt lines in use, except for the timer ones, as disabled
-- * and sets the IRQS_SUSPENDED flag for each of them.
-+ * During system-wide suspend or hibernation device drivers need to be
-+ * prevented from receiving interrupts and this function is provided
-+ * for this purpose.
-+ *
-+ * So we disable all interrupts and mark them IRQS_SUSPENDED except
-+ * for those which are unused and those which are marked as not
-+ * suspendable via an interrupt request with the flag IRQF_NO_SUSPEND
-+ * set.
-  */
- void suspend_device_irqs(void)
- {
-@@ -30,7 +43,7 @@ void suspend_device_irqs(void)
- 		unsigned long flags;
- 
- 		raw_spin_lock_irqsave(&desc->lock, flags);
--		__disable_irq(desc, irq, true);
-+		suspend_device_irq(desc, irq);
- 		raw_spin_unlock_irqrestore(&desc->lock, flags);
- 	}
- 
-@@ -40,6 +53,25 @@ void suspend_device_irqs(void)
- }
- EXPORT_SYMBOL_GPL(suspend_device_irqs);
- 
-+static void resume_irq(struct irq_desc *desc, int irq)
-+{
-+	if (desc->istate & IRQS_SUSPENDED)
-+		goto resume;
-+
-+	if (!desc->action)
-+		return;
-+
-+	/* Interrupts marked with that flag are force reenabled */
-+	if (!(desc->action->flags & IRQF_FORCE_RESUME))
-+		return;
-+
-+	/* Pretend that it got disabled ! */
-+	desc->depth++;
-+resume:
-+	desc->istate &= ~IRQS_SUSPENDED;
-+	__enable_irq(desc, irq);
-+}
-+
- static void resume_irqs(bool want_early)
- {
- 	struct irq_desc *desc;
-@@ -54,7 +86,7 @@ static void resume_irqs(bool want_early)
- 			continue;
- 
- 		raw_spin_lock_irqsave(&desc->lock, flags);
--		__enable_irq(desc, irq, true);
-+		resume_irq(desc, irq);
- 		raw_spin_unlock_irqrestore(&desc->lock, flags);
- 	}
- }
+
+-- 
+Thanks!
+Yijing
 
