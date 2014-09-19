@@ -1,45 +1,49 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Mon, 8 Sep 2014 15:01:30 +0100
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v10] arm64: Add architectural support for PCIe
-Message-ID: <20140908140129.GE22717@arm.com>
-References: <1410184549-17690-1-git-send-email-Liviu.Dudau@arm.com>
- <1410184549-17690-2-git-send-email-Liviu.Dudau@arm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <541CACD1.8070507@codeaurora.org>
+Date: Fri, 19 Sep 2014 15:23:13 -0700
+From: Stephen Boyd <sboyd@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1410184549-17690-2-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+To: Sudeep Holla <sudeep.holla@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>
+CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>, x86@kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4 01/11 UPDATE] cpumask: factor out show_cpumap into
+ separate helper function
+References: <1409763617-17074-2-git-send-email-sudeep.holla@arm.com> <1409845592-27739-1-git-send-email-sudeep.holla@arm.com>
+In-Reply-To: <1409845592-27739-1-git-send-email-sudeep.holla@arm.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 08, 2014 at 02:55:49PM +0100, Liviu Dudau wrote:
-> Use the generic PCI domain and OF functions
-> to provide support for PCI Express on arm64.
-> 
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> [Generic PCI domain support]
-> Signed-off-by: Catalin Marinas <catalin.marinas@arm.com>
+On 09/04/14 08:46, Sudeep Holla wrote:
+> From: Sudeep Holla <sudeep.holla@arm.com>
+>
+> Many sysfs *_show function use cpu{list,mask}_scnprintf to copy cpumap
+> to the buffer aligned to PAGE_SIZE, append '\n' and '\0' to return null
+> terminated buffer with newline.
+>
+> This patch creates a new helper function cpumap_print_to_pagebuf in
+> cpumask.h using newly added bitmap_print_to_pagebuf and consolidates
+> most of those sysfs functions using the new helper function.
+>
+> Signed-off-by: Sudeep Holla <sudeep.holla@arm.com>
+> Suggested-by: Stephen Boyd <sboyd@codeaurora.org>
+> Acked-by: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
+> Cc: x86@kernel.org
+> Cc: linux-acpi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+>
 
-Minor detail: when have I signed this patch off? I'm not the author
-(maybe bits of it but I think most of it is yours). However, you can
-add:
+Tested-by: Stephen Boyd <sboyd@codeaurora.org>
 
-Acked-by: Catalin Marinas <catalin.marinas@arm.com>
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+hosted by The Linux Foundation
+
