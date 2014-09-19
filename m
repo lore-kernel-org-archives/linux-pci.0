@@ -1,100 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:39854 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751250AbaIDEcH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 00:32:07 -0400
-Received: by mail-pd0-f179.google.com with SMTP id g10so590344pdj.38
-        for <linux-pci@vger.kernel.org>; Wed, 03 Sep 2014 21:32:05 -0700 (PDT)
-Date: Wed, 3 Sep 2014 22:32:52 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Edward Cree <ecree@solarflare.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH trivial] PCI: convert struct pci_sriov comments to
- kernel-doc
-Message-ID: <20140904043252.GH26073@google.com>
-References: <alpine.LFD.2.03.1407311546190.19970@solarflare.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LFD.2.03.1407311546190.19970@solarflare.com>
+Received: from mga01.intel.com ([192.55.52.88]:4377 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757042AbaISFRL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 19 Sep 2014 01:17:11 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V6 8/8] pci, ACPI, iommu: Enhance pci_root to support DMAR device hotplug
+Date: Fri, 19 Sep 2014 13:18:55 +0800
+Message-Id: <1411103935-31301-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411103935-31301-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411103935-31301-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 31, 2014 at 03:56:19PM +0100, Edward Cree wrote:
-> No changes to the field descriptions, just move them.
-> 
-> Signed-off-by: Edward Cree <ecree@solarflare.com>
-> ---
->  drivers/pci/pci.h | 50 ++++++++++++++++++++++++++++++++++----------------
->  1 file changed, 34 insertions(+), 16 deletions(-)
+Finally enhance pci_root driver to support DMAR device hotplug when
+hot-plugging PCI host bridges.
 
-I don't think this is an improvement.  It adds 18 lines of code and moves
-the description away from the actual field.  Does this make a major
-improvement in kernel-doc somehow?  I have to admit that I only read the
-code and never the kernel-doc.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Reviewed-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/acpi/pci_root.c |   16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
-> 
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 0601890..28fcce8 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -221,23 +221,41 @@ static inline int pci_ari_enabled(struct pci_bus *bus)
->  void pci_reassigndev_resource_alignment(struct pci_dev *dev);
->  void pci_disable_bridge_window(struct pci_dev *dev);
-> 
-> -/* Single Root I/O Virtualization */
-> +/**
-> + *     struct pci_sriov - Single Root I/O Virtualization
-> + *
-> + *     @pos:           capability position
-> + *     @nres:          number of resources
-> + *     @cap:           SR-IOV Capabilities
-> + *     @ctrl:          SR-IOV Control
-> + *     @total_VFs:     total VFs associated with the PF
-> + *     @initial_VFs:   initial VFs associated with the PF
-> + *     @num_vfs:       number of VFs available
-> + *     @offset:        first VF Routing ID offset
-> + *     @stride:        following VF stride
-> + *     @pgsz:          page size for BAR alignment
-> + *     @link:          Function Dependency Link
-> + *     @driver_max_VFs:max num VFs driver supports
-> + *     @dev:           lowest numbered PF
-> + *     @self:          this PF
-> + *     @lock:          lock for VF bus
-> + */
->  struct pci_sriov {
-> -       int pos;                /* capability position */
-> -       int nres;               /* number of resources */
-> -       u32 cap;                /* SR-IOV Capabilities */
-> -       u16 ctrl;               /* SR-IOV Control */
-> -       u16 total_VFs;          /* total VFs associated with the PF */
-> -       u16 initial_VFs;        /* initial VFs associated with the PF */
-> -       u16 num_VFs;            /* number of VFs available */
-> -       u16 offset;             /* first VF Routing ID offset */
-> -       u16 stride;             /* following VF stride */
-> -       u32 pgsz;               /* page size for BAR alignment */
-> -       u8 link;                /* Function Dependency Link */
-> -       u16 driver_max_VFs;     /* max num VFs driver supports */
-> -       struct pci_dev *dev;    /* lowest numbered PF */
-> -       struct pci_dev *self;   /* this PF */
-> -       struct mutex lock;      /* lock for VF bus */
-> +       int pos;
-> +       int nres;
-> +       u32 cap;
-> +       u16 ctrl;
-> +       u16 total_VFs;
-> +       u16 initial_VFs;
-> +       u16 num_VFs;
-> +       u16 offset;
-> +       u16 stride;
-> +       u32 pgsz;
-> +       u8 link;
-> +       u16 driver_max_VFs;
-> +       struct pci_dev *dev;
-> +       struct pci_dev *self;
-> +       struct mutex lock;
->  };
-> 
->  #ifdef CONFIG_PCI_ATS
-> --
-> 1.7.11.7
-> The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index e6ae603ed1a1..4e177daa18e3 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -33,6 +33,7 @@
+ #include <linux/pci.h>
+ #include <linux/pci-acpi.h>
+ #include <linux/pci-aspm.h>
++#include <linux/dmar.h>
+ #include <linux/acpi.h>
+ #include <linux/slab.h>
+ #include <acpi/apei.h>	/* for acpi_hest_init() */
+@@ -511,6 +512,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	struct acpi_pci_root *root;
+ 	acpi_handle handle = device->handle;
+ 	int no_aspm = 0, clear_aspm = 0;
++	bool hotadd = system_state != SYSTEM_BOOTING;
+ 
+ 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+ 	if (!root)
+@@ -557,6 +559,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
+ 	device->driver_data = root;
+ 
++	if (hotadd && dmar_device_add(handle)) {
++		result = -ENXIO;
++		goto end;
++	}
++
+ 	pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
+ 	       acpi_device_name(device), acpi_device_bid(device),
+ 	       root->segment, &root->secondary);
+@@ -583,7 +590,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 			root->segment, (unsigned int)root->secondary.start);
+ 		device->driver_data = NULL;
+ 		result = -ENODEV;
+-		goto end;
++		goto remove_dmar;
+ 	}
+ 
+ 	if (clear_aspm) {
+@@ -597,7 +604,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	if (device->wakeup.flags.run_wake)
+ 		device_set_run_wake(root->bus->bridge, true);
+ 
+-	if (system_state != SYSTEM_BOOTING) {
++	if (hotadd) {
+ 		pcibios_resource_survey_bus(root->bus);
+ 		pci_assign_unassigned_root_bus_resources(root->bus);
+ 	}
+@@ -607,6 +614,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	pci_unlock_rescan_remove();
+ 	return 1;
+ 
++remove_dmar:
++	if (hotadd)
++		dmar_device_remove(handle);
+ end:
+ 	kfree(root);
+ 	return result;
+@@ -625,6 +635,8 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+ 
+ 	pci_remove_root_bus(root->bus);
+ 
++	dmar_device_remove(device->handle);
++
+ 	pci_unlock_rescan_remove();
+ 
+ 	kfree(root);
+-- 
+1.7.10.4
+
