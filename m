@@ -1,122 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47232 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754478AbaIWUH5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Sep 2014 16:07:57 -0400
-Message-ID: <1411502866.24563.8.camel@ul30vt.home>
-Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass through
- (vfio)
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Andreas Hartmann <andihartmann@freenet.de>
-Cc: linux-pci <linux-pci@vger.kernel.org>
-Date: Tue, 23 Sep 2014 14:07:46 -0600
-In-Reply-To: <20140923210318.498dacbd@dualc.maya.org>
-References: <20140923210318.498dacbd@dualc.maya.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:40324 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757739AbaISUsX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Sep 2014 16:48:23 -0400
+Received: by mail-pd0-f179.google.com with SMTP id ft15so627006pdb.38
+        for <linux-pci@vger.kernel.org>; Fri, 19 Sep 2014 13:48:23 -0700 (PDT)
+Date: Fri, 19 Sep 2014 14:48:17 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Grant Likely <grant.likely@linaro.org>
+Subject: Re: [PATCH v11 02/10] PCI: Introduce helper functions to deal with
+ PCI I/O ranges.
+Message-ID: <20140919204817.GF19374@google.com>
+References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411003825-21521-3-git-send-email-Liviu.Dudau@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1411003825-21521-3-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-09-23 at 21:03 +0200, Andreas Hartmann wrote:
-> Hello!
+On Thu, Sep 18, 2014 at 02:30:17AM +0100, Liviu Dudau wrote:
+> Some architectures do not have a simple view of the PCI I/O space
+> and instead use a range of CPU addresses that map to bus addresses.
+> For some architectures these ranges will be expressed by OF bindings
+> in a device tree file.
 > 
-> Since long time now, I'm using w/o any problem PCIe pass through with a
-> Gigabyte GA-990XA-UD3/GA-990XA-UD3 mainboard (AMD 990X chipset) and
-> enabled IOMMU with vfio-pci.
+> This patch introduces a pci_register_io_range() helper function with
+> a generic implementation that can be used by such architectures to
+> keep track of the I/O ranges described by the PCI bindings. If the
+> PCI_IOBASE macro is not defined that signals lack of support for PCI
+> and we return an error.
 > 
-> The last kernel working w/o any problem is kernel 3.13.7 (I didn't use
-> .8 and .9, but I do not think they would have been problematic).
+> In order to retrieve the CPU address associated with an I/O port, a
+> new helper function pci_pio_to_address() is introduced. This will
+> search in the list of ranges registered with pci_register_io_range()
+> and return the CPU address that corresponds to the given port.
 > 
-> Since 3.14.19 (I didn't test any 3.14 kernel before) I'm encountering a
-> hard and silent lock up of the complete machine when starting the VM
-> with the PCIe card passed through.
+> Cc: Grant Likely <grant.likely@linaro.org>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+> Acked-by: Rob Herring <robh@kernel.org>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> ---
+>  drivers/of/address.c       | 100 +++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/of_address.h |   2 +
+>  2 files changed, 102 insertions(+)
 > 
-> That's the relevant PCIe card, which locks up the machine (here
-> running w/ 3.12.28) when passed to the VM:
-> 
-> 03:00.0 Network controller: Qualcomm Atheros AR93xx Wireless Network Adapter (rev 01)
->         Subsystem: Qualcomm Atheros Device 3112
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
->         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 0, Cache Line Size: 64 bytes
->         Interrupt: pin A routed to IRQ 17
->         Region 0: Memory at fdbc0000 (64-bit, non-prefetchable) [size=128K]
->         Expansion ROM at fda00000 [size=64K]
->         Capabilities: [40] Power Management version 3
->                 Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
->                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
->         Capabilities: [50] MSI: Enable- Count=1/4 Maskable+ 64bit+
->                 Address: 0000000000000000  Data: 0000
->                 Masking: 00000000  Pending: 00000000
->         Capabilities: [70] Express (v2) Endpoint, MSI 00
->                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <1us, L1 <8us
->                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
->                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
->                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
->                         MaxPayload 128 bytes, MaxReadReq 512 bytes
->                 DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
->                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <2us, L1 <64us
->                         ClockPM- Surprise- LLActRep- BwNot-
->                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
->                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
->                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
->                 DevCap2: Completion Timeout: Not Supported, TimeoutDis+, LTR-, OBFF Not Supported
->                 DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
->                 LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
->                          Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
->                          Compliance De-emphasis: -6dB
->                 LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
->                          EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
->         Capabilities: [100 v1] Advanced Error Reporting
->                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->                 UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
->                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout+ NonFatalErr+
->                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
->                 AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
->         Capabilities: [140 v1] Virtual Channel
->                 Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
->                 Arb:    Fixed- WRR32- WRR64- WRR128-
->                 Ctrl:   ArbSelect=Fixed
->                 Status: InProgress-
->                 VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
->                         Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
->                         Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
->                         Status: NegoPending- InProgress-
->         Capabilities: [300 v1] Device Serial Number 00-00-00-00-00-00-00-00
->         Kernel driver in use: vfio-pci
->         Kernel modules: ath9k
-> 
-> 
-> Unbinding it works w/o any problem. The lock up encounters about 4 s
-> after the start of the VM.
-> 
-> On 3.12.x, I can see the following message on the error terminal when
-> starting the VM: 
-> vfio-pci: 03:00.0: invalid ROM contents.
-> 
-> I compared AMD-Vi debug output between 3.12 and 3.14, but couldn't see
-> any difference. I compared /proc/interrupts between 3.12 and 3.14
-> and couldn't see any difference too so far.
-> 
-> 
-> qemu version I'm using is 1.7.0.
-> 
-> 
-> It is strange(?), that a second VM using PCI (legacy) pass through works
-> w/o any problem. I tried to start the problematic VM even w/o running
-> this VM - same result: machine is locked up hard.
-> 
-> 
-> Do you have any idea, what could be going on there? Or how to debug it
-> to see what happened?
+> diff --git a/drivers/of/address.c b/drivers/of/address.c
+> index e371825..2373a92 100644
+> --- a/drivers/of/address.c
+> +++ b/drivers/of/address.c
+> @@ -5,6 +5,7 @@
+>  #include <linux/module.h>
+>  #include <linux/of_address.h>
+>  #include <linux/pci_regs.h>
+> +#include <linux/slab.h>
+>  #include <linux/string.h>
+>  
+>  /* Max address size we deal with */
+> @@ -601,12 +602,111 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+>  }
+>  EXPORT_SYMBOL(of_get_address);
+>  
+> +#ifdef PCI_IOBASE
+> +struct io_range {
+> +	struct list_head list;
+> +	phys_addr_t start;
+> +	resource_size_t size;
+> +};
+> +
+> +static LIST_HEAD(io_range_list);
+> +static DEFINE_SPINLOCK(io_range_lock);
+> +#endif
+> +
+> +/*
+> + * Record the PCI IO range (expressed as CPU physical address + size).
+> + * Return a negative value if an error has occured, zero otherwise
+> + */
+> +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> +{
+> +#ifdef PCI_IOBASE
+> +	struct io_range *range;
+> +	resource_size_t allocated_size = 0;
+> +
+> +	/* check if the range hasn't been previously recorded */
+> +	spin_lock(&io_range_lock);
+> +	list_for_each_entry(range, &io_range_list, list) {
+> +		if (addr >= range->start && addr + size <= range->start + size)
+> +			return 0;
 
-Are you able to setup a serial console on this system?  Enabling sysrq
-and getting a dump of task states (t) via serial is often the best way
-to determine the problem.  There weren't many vfio changes between 3.13
-and 3.14.  Have you tested whether the problem still occurs on 3.16 +
-newer QEMU?  Maybe also remove the ROM from the equation with the
-rombar=0 option for the vfio-pci device in QEMU.  Thanks,
+This returns while holding io_range_lock.
 
-Alex
+> +		allocated_size += range->size;
+> +	}
+> +	spin_unlock(&io_range_lock);
 
+I think this is racy; because you drop the lock between (1) checking
+whether the range is already recorded and (2) adding the range to the list,
+it's still possible for two callers to add the same range.
+
+> +	/* range not registed yet, check for available space */
+> +	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
+> +		/* if it's too big check if 64K space can be reserved */
+> +		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT)
+> +			return -E2BIG;
+> +
+> +		size = SZ_64K;
+> +		pr_warn("Requested IO range too big, new size set to 64K\n");
+> +	}
+> +
+> +	/* add the range to the list */
+> +	range = kzalloc(sizeof(*range), GFP_KERNEL);
+> +	if (!range)
+> +		return -ENOMEM;
+> +
+> +	range->start = addr;
+> +	range->size = size;
+> +
+> +	spin_lock(&io_range_lock);
+> +	list_add_tail(&range->list, &io_range_list);
+> +	spin_unlock(&io_range_lock);
+> +#endif
+> +
+> +	return 0;
+> +}
