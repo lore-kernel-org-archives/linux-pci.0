@@ -1,312 +1,145 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V6 7/8] iommu/vt-d: Enhance intel-iommu driver to support DMAR unit hotplug
-Date: Fri, 19 Sep 2014 13:18:54 +0800
-Message-Id: <1411103935-31301-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411103935-31301-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411103935-31301-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:37569 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756107AbaISRMg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Sep 2014 13:12:36 -0400
+Received: by mail-pa0-f41.google.com with SMTP id ey11so545923pad.14
+        for <linux-pci@vger.kernel.org>; Fri, 19 Sep 2014 10:12:36 -0700 (PDT)
+Date: Fri, 19 Sep 2014 11:12:31 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Dirk Gouders <dirk@gouders.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
+Message-ID: <20140919171231.GC19374@google.com>
+References: <ghzje5f5zt.fsf@lena.gouders.net>
+ <ghbnqkeh9k.fsf@quad.gouders.net>
+ <CAE9FiQXQesrDMqf1b6ZhHdmY_wEEUrOEvNO4N_d6WtaNMGNLww@mail.gmail.com>
+ <gh4mwcef0r.fsf@quad.gouders.net>
+ <CAE9FiQWgioBeVmfWCaE38BrkjbWKaS+_FYYdmdd+7X8fpeEgnQ@mail.gmail.com>
+ <ghoaukcx6b.fsf@quad.gouders.net>
+ <CAE9FiQUk-sAHnjfBvNeHQWibJRqbPE1V0UtDtARtwxmS=7aQrw@mail.gmail.com>
+ <ghk358crbe.fsf@quad.gouders.net>
+ <CAE9FiQUeP84585-4b+Y6WBVD3zqOi7ch_OXytsTmKEz9AyZ3Vg@mail.gmail.com>
+ <20140913040716.GA28080@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140913040716.GA28080@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement required callback functions for intel-iommu driver
-to support DMAR unit hotplug.
+On Fri, Sep 12, 2014 at 10:07:16PM -0600, Bjorn Helgaas wrote:
+> I want to fix this regression before v3.17.  Dirk, can you test the
+> following patch on top of v3.17-rc2?  I'm hoping you can try this on your
+> test machine in conjunction with your acpi_pci_root_add() and
+> pci_scan_device() patches.  If I understand correctly,  you were able to
+> reproduce the FC adapter not showing up, and if you can verify that it does
+> show with those patches + this revert, I think that's good enough for now.
+> 
+> I'm not committed to applying this yet, but I'd like to have a working fix
+> in my back pocket in case we don't come up with a better solution soon.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Reviewed-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/iommu/intel-iommu.c |  206 +++++++++++++++++++++++++++++++------------
- 1 file changed, 151 insertions(+), 55 deletions(-)
+Since Dirk confirmed that the revert below avoids the problem for now, I
+applied it to my for-linus branch for v3.17.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 70d9d47eaeda..c2d369524960 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1125,8 +1125,11 @@ static int iommu_alloc_root_entry(struct intel_iommu *iommu)
- 	unsigned long flags;
- 
- 	root = (struct root_entry *)alloc_pgtable_page(iommu->node);
--	if (!root)
-+	if (!root) {
-+		pr_err("IOMMU: allocating root entry for %s failed\n",
-+			iommu->name);
- 		return -ENOMEM;
-+	}
- 
- 	__iommu_flush_cache(iommu, root, ROOT_SIZE);
- 
-@@ -1466,7 +1469,7 @@ static int iommu_init_domains(struct intel_iommu *iommu)
- 	return 0;
- }
- 
--static void free_dmar_iommu(struct intel_iommu *iommu)
-+static void disable_dmar_iommu(struct intel_iommu *iommu)
- {
- 	struct dmar_domain *domain;
- 	int i;
-@@ -1490,11 +1493,16 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
- 
- 	if (iommu->gcmd & DMA_GCMD_TE)
- 		iommu_disable_translation(iommu);
-+}
- 
--	kfree(iommu->domains);
--	kfree(iommu->domain_ids);
--	iommu->domains = NULL;
--	iommu->domain_ids = NULL;
-+static void free_dmar_iommu(struct intel_iommu *iommu)
-+{
-+	if ((iommu->domains) && (iommu->domain_ids)) {
-+		kfree(iommu->domains);
-+		kfree(iommu->domain_ids);
-+		iommu->domains = NULL;
-+		iommu->domain_ids = NULL;
-+	}
- 
- 	g_iommus[iommu->seq_id] = NULL;
- 
-@@ -2701,6 +2709,41 @@ static int __init iommu_prepare_static_identity_mapping(int hw)
- 	return 0;
- }
- 
-+static void intel_iommu_init_qi(struct intel_iommu *iommu)
-+{
-+	/*
-+	 * Start from the sane iommu hardware state.
-+	 * If the queued invalidation is already initialized by us
-+	 * (for example, while enabling interrupt-remapping) then
-+	 * we got the things already rolling from a sane state.
-+	 */
-+	if (!iommu->qi) {
-+		/*
-+		 * Clear any previous faults.
-+		 */
-+		dmar_fault(-1, iommu);
-+		/*
-+		 * Disable queued invalidation if supported and already enabled
-+		 * before OS handover.
-+		 */
-+		dmar_disable_qi(iommu);
-+	}
-+
-+	if (dmar_enable_qi(iommu)) {
-+		/*
-+		 * Queued Invalidate not enabled, use Register Based Invalidate
-+		 */
-+		iommu->flush.flush_context = __iommu_flush_context;
-+		iommu->flush.flush_iotlb = __iommu_flush_iotlb;
-+		pr_info("IOMMU: %s using Register based invalidation\n",
-+			iommu->name);
-+	} else {
-+		iommu->flush.flush_context = qi_flush_context;
-+		iommu->flush.flush_iotlb = qi_flush_iotlb;
-+		pr_info("IOMMU: %s using Queued invalidation\n", iommu->name);
-+	}
-+}
-+
- static int __init init_dmars(void)
- {
- 	struct dmar_drhd_unit *drhd;
-@@ -2729,6 +2772,10 @@ static int __init init_dmars(void)
- 			  DMAR_UNITS_SUPPORTED);
- 	}
- 
-+	/* Preallocate enough resources for IOMMU hot-addition */
-+	if (g_num_of_iommus < DMAR_UNITS_SUPPORTED)
-+		g_num_of_iommus = DMAR_UNITS_SUPPORTED;
-+
- 	g_iommus = kcalloc(g_num_of_iommus, sizeof(struct intel_iommu *),
- 			GFP_KERNEL);
- 	if (!g_iommus) {
-@@ -2757,58 +2804,14 @@ static int __init init_dmars(void)
- 		 * among all IOMMU's. Need to Split it later.
- 		 */
- 		ret = iommu_alloc_root_entry(iommu);
--		if (ret) {
--			printk(KERN_ERR "IOMMU: allocate root entry failed\n");
-+		if (ret)
- 			goto free_iommu;
--		}
- 		if (!ecap_pass_through(iommu->ecap))
- 			hw_pass_through = 0;
- 	}
- 
--	/*
--	 * Start from the sane iommu hardware state.
--	 */
--	for_each_active_iommu(iommu, drhd) {
--		/*
--		 * If the queued invalidation is already initialized by us
--		 * (for example, while enabling interrupt-remapping) then
--		 * we got the things already rolling from a sane state.
--		 */
--		if (iommu->qi)
--			continue;
--
--		/*
--		 * Clear any previous faults.
--		 */
--		dmar_fault(-1, iommu);
--		/*
--		 * Disable queued invalidation if supported and already enabled
--		 * before OS handover.
--		 */
--		dmar_disable_qi(iommu);
--	}
--
--	for_each_active_iommu(iommu, drhd) {
--		if (dmar_enable_qi(iommu)) {
--			/*
--			 * Queued Invalidate not enabled, use Register Based
--			 * Invalidate
--			 */
--			iommu->flush.flush_context = __iommu_flush_context;
--			iommu->flush.flush_iotlb = __iommu_flush_iotlb;
--			printk(KERN_INFO "IOMMU %d 0x%Lx: using Register based "
--			       "invalidation\n",
--				iommu->seq_id,
--			       (unsigned long long)drhd->reg_base_addr);
--		} else {
--			iommu->flush.flush_context = qi_flush_context;
--			iommu->flush.flush_iotlb = qi_flush_iotlb;
--			printk(KERN_INFO "IOMMU %d 0x%Lx: using Queued "
--			       "invalidation\n",
--				iommu->seq_id,
--			       (unsigned long long)drhd->reg_base_addr);
--		}
--	}
-+	for_each_active_iommu(iommu, drhd)
-+		intel_iommu_init_qi(iommu);
- 
- 	if (iommu_pass_through)
- 		iommu_identity_mapping |= IDENTMAP_ALL;
-@@ -2894,8 +2897,10 @@ static int __init init_dmars(void)
- 	return 0;
- 
- free_iommu:
--	for_each_active_iommu(iommu, drhd)
-+	for_each_active_iommu(iommu, drhd) {
-+		disable_dmar_iommu(iommu);
- 		free_dmar_iommu(iommu);
-+	}
- 	kfree(deferred_flush);
- free_g_iommus:
- 	kfree(g_iommus);
-@@ -3801,9 +3806,100 @@ int dmar_check_one_atsr(struct acpi_dmar_header *hdr, void *arg)
- 	return 0;
- }
- 
-+static int intel_iommu_add(struct dmar_drhd_unit *dmaru)
-+{
-+	int sp, ret = 0;
-+	struct intel_iommu *iommu = dmaru->iommu;
-+
-+	if (g_iommus[iommu->seq_id])
-+		return 0;
-+
-+	if (hw_pass_through && !ecap_pass_through(iommu->ecap)) {
-+		pr_warn("IOMMU: %s doesn't support hardware pass through.\n",
-+			iommu->name);
-+		return -ENXIO;
-+	}
-+	if (!ecap_sc_support(iommu->ecap) &&
-+	    domain_update_iommu_snooping(iommu)) {
-+		pr_warn("IOMMU: %s doesn't support snooping.\n",
-+			iommu->name);
-+		return -ENXIO;
-+	}
-+	sp = domain_update_iommu_superpage(iommu) - 1;
-+	if (sp >= 0 && !(cap_super_page_val(iommu->cap) & (1 << sp))) {
-+		pr_warn("IOMMU: %s doesn't support large page.\n",
-+			iommu->name);
-+		return -ENXIO;
-+	}
-+
-+	/*
-+	 * Disable translation if already enabled prior to OS handover.
-+	 */
-+	if (iommu->gcmd & DMA_GCMD_TE)
-+		iommu_disable_translation(iommu);
-+
-+	g_iommus[iommu->seq_id] = iommu;
-+	ret = iommu_init_domains(iommu);
-+	if (ret == 0)
-+		ret = iommu_alloc_root_entry(iommu);
-+	if (ret)
-+		goto out;
-+
-+	if (dmaru->ignored) {
-+		/*
-+		 * we always have to disable PMRs or DMA may fail on this device
-+		 */
-+		if (force_on)
-+			iommu_disable_protect_mem_regions(iommu);
-+		return 0;
-+	}
-+
-+	intel_iommu_init_qi(iommu);
-+	iommu_flush_write_buffer(iommu);
-+	ret = dmar_set_interrupt(iommu);
-+	if (ret)
-+		goto disable_iommu;
-+
-+	iommu_set_root_entry(iommu);
-+	iommu->flush.flush_context(iommu, 0, 0, 0, DMA_CCMD_GLOBAL_INVL);
-+	iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
-+	iommu_enable_translation(iommu);
-+
-+	if (si_domain) {
-+		ret = iommu_attach_domain(si_domain, iommu);
-+		if (ret < 0 || si_domain->id != ret)
-+			goto disable_iommu;
-+		domain_attach_iommu(si_domain, iommu);
-+	}
-+
-+	iommu_disable_protect_mem_regions(iommu);
-+	return 0;
-+
-+disable_iommu:
-+	disable_dmar_iommu(iommu);
-+out:
-+	free_dmar_iommu(iommu);
-+	return ret;
-+}
-+
- int dmar_iommu_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
- {
--	return intel_iommu_enabled ? -ENOSYS : 0;
-+	int ret = 0;
-+	struct intel_iommu *iommu = dmaru->iommu;
-+
-+	if (!intel_iommu_enabled)
-+		return 0;
-+	if (iommu == NULL)
-+		return -EINVAL;
-+
-+	if (insert) {
-+		ret = intel_iommu_add(dmaru);
-+	} else {
-+		disable_dmar_iommu(iommu);
-+		free_dmar_iommu(iommu);
-+	}
-+
-+	return ret;
- }
- 
- static void intel_iommu_free_dmars(void)
--- 
-1.7.10.4
+I don't think this is the right fix, but it will buy us some time to figure
+out a better fix after v3.17.
 
+Bjorn
+
+> commit 5945a8d28c416fc390a94c8e7fb8fd0a76f5d710
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Fri Sep 12 21:58:19 2014 -0600
+> 
+>     Revert "PCI: Make sure bus number resources stay within their parents bounds"
+>     
+>     This reverts commit 1820ffdccb9b ("PCI: Make sure bus number resources stay
+>     within their parents bounds") because it breaks some systems with LSI Logic
+>     FC949ES Fibre Channel Adapters, apparently by exposing a defect in those
+>     adapters.
+>     
+>     Dirk tested a Tyan VX50 (B4985) with this device that worked like this
+>     prior to 1820ffdccb9b:
+>     
+>         bus: [bus 00-7f] on node 0 link 1
+>         ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-07])
+>         pci 0000:00:0e.0: PCI bridge to [bus 0a]
+>         pci_bus 0000:0a: busn_res: can not insert [bus 0a] under [bus 00-07] (conflicts with (null) [bus 00-07])
+>         pci 0000:0a:00.0: [1000:0646] type 00 class 0x0c0400 (FC adapter)
+>     
+>     Note that the root bridge [bus 00-07] aperture is wrong; this is a BIOS
+>     defect in the PCI0 _CRS method.  But prior to 1820ffdccb9b, we didn't
+>     enforce that aperture, and the FC adapter worked fine at 0a:00.0.
+>     
+>     After 1820ffdccb9b, we notice that 00:0e.0's aperture is not contained in
+>     the root bridge's aperture, so we reconfigure it so it *is* contained:
+>     
+>         pci 0000:00:0e.0: bridge configuration invalid ([bus 0a-0a]), reconfiguring
+>         pci 0000:00:0e.0: PCI bridge to [bus 06-07]
+>     
+>     This effectively moves the FC device from 0a:00.0 to 07:00.0, which should
+>     be legal.  But when we enumerate bus 06, the FC device doesn't respond, so
+>     we don't find anything.  This is probably a defect in the FC device.
+>     
+>     Possible fixes (due to Yinghai):
+>     
+>         1) Add a quirk to fix the _CRS information based on what amd_bus.c read
+>            from the hardware
+>     
+>         2) Reset the FC device after we change its bus number
+>     
+>         3) Revert 1820ffdccb9b
+>     
+>     Fix 1 would be relatively easy, but it does sweep the LSI FC issue under
+>     the rug.  We might want to reconfigure bus numbers in the future for some
+>     other reason, e.g., hotplug, and then we could trip over this again.
+>     
+>     For that reason, I like fix 2, but we don't know whether it actually works,
+>     and we don't have a patch for it yet.
+>     
+>     This revert is fix 3, which also sweeps the LSI FC issue under the rug.
+>     
+>     Link: https://bugzilla.kernel.org/show_bug.cgi?id=84281
+>     Reported-by: Dirk Gouders <dirk@gouders.net>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     CC: stable@vger.kernel.org	# v3.15+
+>     CC: Yinghai Lu <yinghai@kernel.org>
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index e3cf8a2e6292..f0badff77cff 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -775,7 +775,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+>  	/* Check if setup is sensible at all */
+>  	if (!pass &&
+>  	    (primary != bus->number || secondary <= bus->number ||
+> -	     secondary > subordinate || subordinate > bus->busn_res.end)) {
+> +	     secondary > subordinate)) {
+>  		dev_info(&dev->dev, "bridge configuration invalid ([bus %02x-%02x]), reconfiguring\n",
+>  			 secondary, subordinate);
+>  		broken = 1;
+> @@ -853,8 +853,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+>  			child = pci_add_new_bus(bus, dev, max+1);
+>  			if (!child)
+>  				goto out;
+> -			pci_bus_insert_busn_res(child, max+1,
+> -						bus->busn_res.end);
+> +			pci_bus_insert_busn_res(child, max+1, 0xff);
+>  		}
+>  		max++;
+>  		buses = (buses & 0xff000000)
+> @@ -913,11 +912,6 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+>  		/*
+>  		 * Set the subordinate bus number to its real value.
+>  		 */
+> -		if (max > bus->busn_res.end) {
+> -			dev_warn(&dev->dev, "max busn %02x is outside %pR\n",
+> -				 max, &bus->busn_res);
+> -			max = bus->busn_res.end;
+> -		}
+>  		pci_bus_update_busn_res_end(child, max);
+>  		pci_write_config_byte(dev, PCI_SUBORDINATE_BUS, max);
+>  	}
