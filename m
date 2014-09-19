@@ -1,82 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:43976 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752914AbaIJRGr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Sep 2014 13:06:47 -0400
-Date: Wed, 10 Sep 2014 18:06:41 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v10 08/10] OF: PCI: Add support for parsing PCI host
- bridge resources from DT
-Message-ID: <20140910170641.GC19662@e102568-lin.cambridge.arm.com>
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
- <1410184472-17630-9-git-send-email-Liviu.Dudau@arm.com>
- <20140909133546.GB2636@e102568-lin.cambridge.arm.com>
- <20140910142241.GD27864@e106497-lin.cambridge.arm.com>
- <20140910151026.GB11640@e102568-lin.cambridge.arm.com>
- <20140910153233.GG27864@e106497-lin.cambridge.arm.com>
- <20140910163746.GB19662@e102568-lin.cambridge.arm.com>
- <20140910165347.GJ27864@e106497-lin.cambridge.arm.com>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:55813 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756666AbaISFST (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Sep 2014 01:18:19 -0400
+Received: by mail-ie0-f180.google.com with SMTP id rd18so2697908iec.25
+        for <linux-pci@vger.kernel.org>; Thu, 18 Sep 2014 22:18:18 -0700 (PDT)
+Date: Thu, 18 Sep 2014 23:18:15 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Dave Airlie <airlied@gmail.com>
+Cc: Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 1/2 v2] vgaarb: Don't default exclusively to first video
+ device with mem+io
+Message-ID: <20140919051815.GB21128@google.com>
+References: <CAErSpo6D1B+dPLrYoAF4OA1KeWuW8VZW2_RR5jB1GbCRo+6vHg@mail.gmail.com>
+ <20140822082324.12cb6e93@pluto>
+ <CAMxnaaU9EiMcne-aQjS1sY1Orn6xGbVHEnd057ogcZ77p74Y=Q@mail.gmail.com>
+ <20140823130624.06ecc057@neptune.home>
+ <20140824230953.7c04890f@neptune.home>
+ <CAMxnaaUoLBbN1gNgD3qvPV1mx3JoM6FPV9EndQG9vJSpux2xMw@mail.gmail.com>
+ <20140828224750.23148125@neptune.home>
+ <20140912131919.35c777e5@pluto>
+ <CAErSpo5K-whTs7uzki3JHzmbrDzaG6u7BerYG42is_sfuEOGXA@mail.gmail.com>
+ <CAPM=9twe7Ro9gthPbzw77CG3wCvbA2FdsBD2kPeAbhGti_w5bA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20140910165347.GJ27864@e106497-lin.cambridge.arm.com>
-Content-Type: text/plain; charset=WINDOWS-1252
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAPM=9twe7Ro9gthPbzw77CG3wCvbA2FdsBD2kPeAbhGti_w5bA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 10, 2014 at 05:53:47PM +0100, Liviu Dudau wrote:
-
-[...]
-
-> > > > > > > +		if (resource_type(res) == IORESOURCE_IO) {
-> > > > > > > +			if (*io_base)
-> > > > > > 
-> > > > > > You do not zero io_base in the first place so you should ask the API
-> > > > > > user to do that. Is 0 a valid value BTW ? If it is you've got to resort
-> > > > > > to something else to detect multiple IO resources.
-> > > 
-> > > No, zero is not a valid value. It is the cpu_addr value from the IO range, I'm
-> > > hopying that no one is crazy enough to map PCI address space at CPU address zero.
-> > > Thanks for spotting the lack of initialisation though, I need to fix it.
-> > 
-> > Mmm...wasn't a trick question sorry :D
-> > 
-> > PCI host bridge /pci ranges:
-> >    IO 0x00000000..0x0000ffff -> 0x00000000
-> >    More than one I/O resource converted. CPU offset for old range lost!
-> >      MEM 0x41000000..0x7fffffff -> 0x41000000
-> >      pci-host-generic 40000000.pci: PCI host bridge to bus 0000:00
-> >      pci_bus 0000:00: root bus resource [bu-01]
-> >      pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-> >      pci_bus 0000:00: root bus resource [mem 0x41000000-0x7fffffff]
-> > 
+On Fri, Sep 19, 2014 at 09:26:58AM +1000, Dave Airlie wrote:
+> On 13 September 2014 00:28, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Fri, Sep 12, 2014 at 5:19 AM, Bruno Prémont
+> > <bonbons@linux-vserver.org> wrote:
+> >> Bjorn,
+> >>
+> >> What is missing to get these two patches pushed to Linus?
+> >
+> > Sorry, I've been working on some other regressions and overlooked this
+> > one.  If you open a bugzilla report and mark it as a regression, that
+> > will help keep this on my radar.
 > 
-> Your DT puts the IO space at CPU address zero? Could you copy the relevant
-> host bridge node from DT here?
+> My MBP is crying? can we get these merged, I can handle if if you want
+> to ack them for me!
 
-It is kvmtools generated dts, may not be representative of real HW but
-that's what it is. For the whole story:
+Yep, it's in linux-next and I'll send Linus a pull request for the tag [1]
+tomorrow.  I meant to send it tonight, but I had to fix my for-linus branch
+to remove a duplicate commit and I don't want to send the pull request
+immediately afterwards.
 
-http://comments.gmane.org/gmane.linux.kernel.pci/29199
+Bjorn
 
-Lorenzo
-
+[1] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/tag/?h=for-linus&id=pci-v3.17-fixes-2
