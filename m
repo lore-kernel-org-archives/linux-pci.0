@@ -1,76 +1,47 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Mon, 22 Sep 2014 12:05:22 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v11 07/10] OF: Introduce helper function for getting PCI
- domain_nr
-Message-ID: <20140922110522.GK1994@e106497-lin.cambridge.arm.com>
-References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
- <1411003825-21521-8-git-send-email-Liviu.Dudau@arm.com>
- <20140919210313.GH19374@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2on0115.outbound.protection.outlook.com ([65.55.169.115]:15424
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754085AbaISPVe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 19 Sep 2014 11:21:34 -0400
+From: Fabio Estevam <fabio.estevam@freescale.com>
+To: <bhelgaas@google.com>
+CC: <mohit.kumar@st.com>, <jg1.han@samsung.com>,
+	<linux-pci@vger.kernel.org>,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: [PATCH] PCI: designware: Use NULL instead of false
+Date: Fri, 19 Sep 2014 10:47:30 -0300
+Message-ID: <1411134450-806-1-git-send-email-fabio.estevam@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <20140919210313.GH19374@google.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 19, 2014 at 10:03:13PM +0100, Bjorn Helgaas wrote:
-> On Thu, Sep 18, 2014 at 02:30:22AM +0100, Liviu Dudau wrote:
-> > Add of_pci_get_domain_nr() to retrieve the PCI domain number
-> > of a given device from DT. If the information is not present,
-> > the function can be requested to allocate a new domain number.
-> 
-> Is of_pci_get_domain_nr() used somewhere?  If the use is in some future
-> series, please mention it explicitly.  I'm just trying to avoid merging
-> unused code.
+of_get_address() expects pointers in the third and fourth parameters.
 
-It is used in the arm64 specific patch that I have dropped out of my
-pull request. After discussions with Catalin I will add the patch back
-into the tree that you've pulled from as he is OK with your tree carrying
-the whole package.
+Pass NULL in order to fix the following sparse warnings:
 
-I need to ask for some guidance here: for addressing some of your comments
-and Rob's I can add more patches in my v11 branch and you can pull them
-when you think they are ready. But one of your comments was requesting
-splitting a patch into two blocks - one that moves of_pci_range_to_resource()
-into drivers/of/address.c and one that fixes it's behaviour - and I don't
-know how you would like that handled. Should I revert the original patch
-and add the new ones, or should I rebase the whole series into a different
-branch that you can pull from?
+drivers/pci/host/pcie-designware.c:433:51: warning: Using plain integer as NULL pointer
+drivers/pci/host/pcie-designware.c:433:58: warning: Using plain integer as NULL pointer 
 
-Best regards,
-Liviu
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+---
+ drivers/pci/host/pcie-designware.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> 
-> Bjorn
-> 
-
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 12c42fc..f1f0b7a 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -430,7 +430,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 		/* Find the untranslated configuration space address */
+ 		index = of_property_match_string(np, "reg-names", "config");
+-		addrp = of_get_address(np, index, false, false);
++		addrp = of_get_address(np, index, NULL, NULL);
+ 		pp->cfg0_mod_base = of_read_number(addrp, ns);
+ 		pp->cfg1_mod_base = pp->cfg0_mod_base + pp->config.cfg0_size;
+ 	} else {
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.9.1
 
