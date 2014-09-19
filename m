@@ -1,124 +1,202 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <541A89AC.9000706@linux.intel.com>
-Date: Thu, 18 Sep 2014 15:28:44 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:56195 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757848AbaISWdF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Sep 2014 18:33:05 -0400
+Received: by mail-pd0-f181.google.com with SMTP id r10so768345pdi.40
+        for <linux-pci@vger.kernel.org>; Fri, 19 Sep 2014 15:33:03 -0700 (PDT)
+Date: Fri, 19 Sep 2014 16:32:58 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Tanmay Inamdar <tinamdar@apm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC Part2 v1 01/21] irqdomain: Introduce new interfaces to support
- hierarchy irqdomains
-References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com> <1410444228-3134-2-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1409160859080.4247@nanos>
-In-Reply-To: <alpine.DEB.2.10.1409160859080.4247@nanos>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	patches@apm.com, jcm@redhat.com
+Subject: Re: [PATCH v9 1/4] pci:host: APM X-Gene PCIe host controller driver
+Message-ID: <20140919223258.GA32208@google.com>
+References: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
+ <1410906824-9321-2-git-send-email-tinamdar@apm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1410906824-9321-2-git-send-email-tinamdar@apm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/17 1:43, Thomas Gleixner wrote:
-> Jiang,
+On Tue, Sep 16, 2014 at 03:33:41PM -0700, Tanmay Inamdar wrote:
+> This patch adds the AppliedMicro X-Gene SOC PCIe host controller driver.
+> X-Gene PCIe controller supports maximum up to 8 lanes and GEN3 speed.
+> X-Gene SOC supports maximum 5 PCIe ports.
 > 
-> On Thu, 11 Sep 2014, Jiang Liu wrote:
->> diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
->>  	/* Create mapping */
->> -	virq = irq_create_mapping(domain, hwirq);
->> +#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
->> +	if (domain->ops->alloc)
->> +		virq = irq_domain_alloc_irqs(domain, -1, 1, NUMA_NO_NODE,
->> +					     irq_data);
->> +	else
->> +#endif
->> +		virq = irq_create_mapping(domain, hwirq);
-> 
-> I'd prefer to get rid of the #ifdef CONFIG...s in the code. So this
-> can be written:
-> 
->         if (irq_domain_has_hierarchy(domain))
-> 		virq = irq_domain_alloc_irqs(domain, -1, 1, NUMA_NO_NODE,
-> 					     irq_data);
-> 	else
-> 		virq = irq_create_mapping(domain, hwirq);
-Sure, will kill the ifdef. 	
+> Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+> ---
+>  drivers/pci/host/Kconfig     |  10 +
+>  drivers/pci/host/Makefile    |   1 +
+>  drivers/pci/host/pci-xgene.c | 646 +++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 657 insertions(+)
+>  create mode 100644 drivers/pci/host/pci-xgene.c
+> ...
 
-> 	   
-> 
->>  	if (!virq)
->>  		return virq;
->>  
->> @@ -540,7 +542,11 @@ unsigned int irq_find_mapping(struct irq_domain *domain,
->>  		return 0;
->>  
->>  	if (hwirq < domain->revmap_direct_max_irq) {
->> +#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
->> +		data = irq_domain_get_irq_data(domain, hwirq);
->> +#else
->>  		data = irq_get_irq_data(hwirq);
->> +#endif
-> 
-> Similar here. Make irq_domain_get_irq_data() map to irq_get_irq_data() for
-> the non hierarchy mode so you end up with a single line:
-> 
-> -  		data = irq_get_irq_data(hwirq);
-> +		data = irq_domain_get_irq_data(domain, hwirq);
-Sure.
+> +static inline void
+> +xgene_pcie_cfg_in16(void __iomem *addr, int offset, u32 *val)
 
->> +#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
->> +/**
->> + * irq_domain_alloc_irqs - Allocate IRQs from domain
->> + * @domain: domain to allocate from
->> + * @irq_base: allocate specified IRQ nubmer if irq_base >= 0
->> + * @nr_irqs: number of IRQs to allocate
->> + * @node: NUMA node id for memory allocation
->> + * @arg: domain specific argument
->> + * @realloc: IRQ descriptors have already been allocated if true
->> + *
->> + * Allocate IRQ numbers and initialized all data structures to support
->> + * hiearchy IRQ domains.
->> + * Parameter @realloc is mainly to support legacy IRQs.
-> 
-> What's the issue with the legacy irqs? So this has the interrupt
-> descriptors allocated already. Are they already wired up for serving
-> interrupts and what's the state of those lines?
-Function arch_early_ioapic_init() will allocate irq descriptors and
-irq_cfg structures for all legacy IRQ for three purposes:
-1) To support ISA IRQs managed by 8259.
-2) To reserve vectors on all CPUs for legacy IRQs
-3) Prepare data structures to support pre_init_apic_IRQ0().
-We will kill pre_init_apic_IRQ0() soon, so item 3 above won't be needed
-anymore.
+Whitespace - can fit on one line.  Also others below.
 
-When __irq_domain_alloc_irqs() is called, only irq descriptor and
-irq_cfg have been allocated, but the interrupt controller hardware
-should be untouched yet.
+> +{
+> +	*val = readl(addr + (offset & ~0x3));
+> +
+> +	switch (offset & 0x3) {
+> +	case 2:
+> +		*val >>= 16;
+> +		break;
+> +	}
+> +
+> +	*val &= 0xFFFF;
+> +}
+> +
+> +static inline void
+> +xgene_pcie_cfg_in8(void __iomem *addr, int offset, u32 *val)
+> +{
+> +	*val = readl(addr + (offset & ~0x3));
+> +
+> +	switch (offset & 0x3) {
+> +	case 3:
+> +		*val = *val >> 24;
+> +		break;
+> +	case 2:
+> +		*val = *val >> 16;
+> +		break;
+> +	case 1:
+> +		*val = *val >> 8;
+> +		break;
+> +	}
+> +	*val &= 0xFF;
+> +}
+> +
+> +/* When the address bit [17:16] is 2'b01, the Configuration access will be
+> + * treated as Type 1 and it will be forwarded to external PCIe device.
+> + */
 
-> 
->> + * Returns error code or allocated IRQ number
-> 
-> Can you please add some documentation how the hierarchical allocation
-> is supposed to work and how the domains are connected. That should
-> probably go to Documentation/IRQ-domains.txt.
-Sure, I will do my best to add documentations for it.
-> 
-> Other than that this looks pretty good! Nice work!
-Thanks!
-Gerry
-> 
-> Thanks,
-> 
-> 	tglx
-> 
+Follow usual block comment style:
+
+    /*
+     * text
+     */
+
+> ...
+> +static void xgene_pcie_fixup_bridge(struct pci_dev *dev)
+> +{
+> +	int i;
+> +
+> +	/* Hide the PCI host BARs from the kernel as their content doesn't
+> +	 * fit well in the resource management
+> +	 */
+
+This needs a better explanation than "doesn't fit well."
+
+I *think* you're probably talking about something similar to the MVEBU
+devices mentioned here:
+http://lkml.kernel.org/r/CAErSpo56jB1Bf2JtYCGKXZBZqRF1jXFxGmeewPX_e6vSXueGyA@mail.gmail.com
+
+where the device can be configured as either an endpoint or a root port,
+and the endpoint BARs are still visible when configured as a root port.
+
+In any event, I'd like a description of exactly what these BARs are and wha
+the problem is.  Presumably the BARs exist and were sized by the PCI core
+in __pci_read_base().  That will generate some log messages and possibly
+some warnings, depending on how the host bridge windows are set up.
+
+We might eventually need a way to skip BARs like that altogether so we
+don't even try to size them.
+
+> +	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+> +		dev->resource[i].start = dev->resource[i].end = 0;
+> +		dev->resource[i].flags = 0;
+> +	}
+> +	dev_info(&dev->dev, "Hiding X-Gene pci host bridge resources %s\n",
+> +		 pci_name(dev));
+> +}
+> +DECLARE_PCI_FIXUP_HEADER(XGENE_PCIE_VENDORID, XGENE_PCIE_DEVICEID,
+> +			 xgene_pcie_fixup_bridge);
+> +
+> ...
+
+> +static void xgene_pcie_setup_ob_reg(struct xgene_pcie_port *port,
+> +				    struct resource *res, u32 offset,
+> +				    u64 cpu_addr, u64 pci_addr)
+> +{
+> +	void __iomem *base = port->csr_base + offset;
+> +	resource_size_t size = resource_size(res);
+> +	u64 restype = resource_type(res);
+> +	u64 mask = 0;
+> +	u32 min_size;
+> +	u32 flag = EN_REG;
+> +
+> +	if (restype == IORESOURCE_MEM) {
+> +		min_size = SZ_128M;
+> +	} else {
+> +		min_size = 128;
+> +		flag |= OB_LO_IO;
+> +	}
+> +
+> +	if (size >= min_size)
+> +		mask = ~(size - 1) | flag;
+> +	else
+> +		dev_warn(port->dev, "res size 0x%llx less than minimum 0x%x\n",
+> +			 (u64)size, min_size);
+
+I'd include a %pR here to help identify the offending resource.
+
+> +static int xgene_pcie_map_ranges(struct xgene_pcie_port *port,
+> +				 struct list_head *res,
+> +				 resource_size_t io_base)
+> +{
+> +	struct pci_host_bridge_window *window;
+> +	struct device *dev = port->dev;
+> +	int ret;
+> +
+> +	list_for_each_entry(window, res, list) {
+> +		struct resource *res = window->res;
+> +		u64 restype = resource_type(res);
+> +
+> +		dev_dbg(port->dev, "0x%08lx 0x%016llx...0x%016llx\n",
+> +			res->flags, res->start, res->end);
+
+Use %pR here.
+
+> +
+> +		switch (restype) {
+> +		case IORESOURCE_IO:
+> +			xgene_pcie_setup_ob_reg(port, res, OMR3BARL, io_base,
+> +						res->start - window->offset);
+> +			ret = pci_remap_iospace(res, io_base);
+> +			if (ret < 0)
+> +				return ret;
+> +			break;
+> +		case IORESOURCE_MEM:
+> +			xgene_pcie_setup_ob_reg(port, res, OMR1BARL, res->start,
+> +						res->start - window->offset);
+> +			break;
+> +		case IORESOURCE_BUS:
+> +			break;
+> +		default:
+> +			dev_err(dev, "invalid io resource!");
+
+If you're going to print something here, you might as well include the type
+that seems invalid.  If you use %pR, I think it will do that automatically.
+
+> +			return -EINVAL;
+> +		}
+> +	}
+> +	xgene_pcie_setup_cfg_reg(port->csr_base, port->cfg_addr);
+> +
+> +	return 0;
+> +}
+
+Bjorn
