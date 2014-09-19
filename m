@@ -1,39 +1,73 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 24 Sep 2014 12:20:16 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-To: Sudeep Holla <sudeep.holla@arm.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 01/11 UPDATE] cpumask: factor out show_cpumap into
- separate helper function
-Message-ID: <20140924102016.GW16043@twins.programming.kicks-ass.net>
-References: <1409763617-17074-2-git-send-email-sudeep.holla@arm.com>
- <1409845592-27739-1-git-send-email-sudeep.holla@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1409845592-27739-1-git-send-email-sudeep.holla@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:41499 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754818AbaISFQy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 19 Sep 2014 01:16:54 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V6 0/8] Enable support of Intel DMAR device hotplug
+Date: Fri, 19 Sep 2014 13:18:47 +0800
+Message-Id: <1411103935-31301-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 04, 2014 at 04:46:32PM +0100, Sudeep Holla wrote:
-> From: Sudeep Holla <sudeep.holla@arm.com>
-> 
-> Many sysfs *_show function use cpu{list,mask}_scnprintf to copy cpumap
-> to the buffer aligned to PAGE_SIZE, append '\n' and '\0' to return null
-> terminated buffer with newline.
-> 
-> This patch creates a new helper function cpumap_print_to_pagebuf in
-> cpumask.h using newly added bitmap_print_to_pagebuf and consolidates
-> most of those sysfs functions using the new helper function.
-> 
-> Signed-off-by: Sudeep Holla <sudeep.holla@arm.com>
-> Suggested-by: Stephen Boyd <sboyd@codeaurora.org>
-> Acked-by: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+When hot plugging a descrete IOH or a physical processor with embedded
+IIO, we need to handle DMAR(or IOMMU) unit in the PCIe host bridge if
+DMAR is in use. This patch set tries to enhance current DMAR/IOMMU/IR
+drivers to support hotplug and is based on latest Linus master branch.
 
-Acked-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+All prerequisite patches to support DMAR device hotplug have been merged
+into the mainstream kernel, and this is the last patch set to enable
+DMAR device hotplug.
+
+You may access the patch set at:
+https://github.com/jiangliu/linux.git iommu/hotplug_v6
+
+This patch set has been tested on Intel development machine.
+Appreciate any comments and tests.
+
+V5->V6:
+1) Fix a race condition found during review
+2) Refine dmar_walk_resources() to dmar_walk_remapping_entries()
+
+Patch 1-4 enhances DMAR framework to support hotplug
+Patch 5 enhances Intel interrupt remapping driver to support hotplug
+Patch 6 enhances error handling in Intel IR driver
+Patch 7 enhance Intel IOMMU to support hotplug
+Patch 8 enhance ACPI pci_root driver to handle DMAR units
+
+Jiang Liu (8):
+  iommu/vt-d: Introduce helper function dmar_walk_resources()
+  iommu/vt-d: Dynamically allocate and free seq_id for DMAR units
+  iommu/vt-d: Implement DMAR unit hotplug framework
+  iommu/vt-d: Search for ACPI _DSM method for DMAR hotplug
+  iommu/vt-d: Enhance intel_irq_remapping driver to support DMAR unit
+    hotplug
+  iommu/vt-d: Enhance error recovery in function
+    intel_enable_irq_remapping()
+  iommu/vt-d: Enhance intel-iommu driver to support DMAR unit hotplug
+  pci, ACPI, iommu: Enhance pci_root to support DMAR device hotplug
+
+ drivers/acpi/pci_root.c             |   16 +-
+ drivers/iommu/dmar.c                |  532 ++++++++++++++++++++++++++++-------
+ drivers/iommu/intel-iommu.c         |  297 ++++++++++++++-----
+ drivers/iommu/intel_irq_remapping.c |  237 ++++++++++++----
+ include/linux/dmar.h                |   50 +++-
+ 5 files changed, 890 insertions(+), 242 deletions(-)
+
+-- 
+1.7.10.4
+
