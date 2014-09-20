@@ -1,43 +1,106 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: andreas.noever@gmail.com, matthew.garrett@nebula.com
-Cc: lenb@kernel.org, robert.moore@intel.com, lv.zheng@intel.com,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.or,
-	linux-pci@vger.kernel.org, bhelgaas@google.com,
-	Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH v2 0/3] ACPI: Improve behaviour on Apple hardware
-Date: Sun, 21 Sep 2014 02:22:42 +0200
-Message-ID: <2602701.nnkzbmBANY@vostro.rjw.lan>
-In-Reply-To: <cover.1411211725.git.andreas.noever@gmail.com>
-References: <cover.1411211725.git.andreas.noever@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2on0114.outbound.protection.outlook.com ([65.55.169.114]:40194
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756137AbaITQb7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 20 Sep 2014 12:31:59 -0400
+From: <suravee.suthikulpanit@amd.com>
+To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
+	<jason@lakedaemon.net>
+CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
+	<Will.Deacon@arm.com>, <liviu.dudau@arm.com>, <tglx@linutronix.de>,
+	<Harish.Kasiviswanathan@amd.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	"Suravee Suthikulpanit" <Suravee.Suthikulpanit@amd.com>,
+	Mark Rutland <Mark.Rutland@arm.com>
+Subject: [V8 1/2] irqchip: gic: Add support for multiple MSI for ARM64
+Date: Sat, 20 Sep 2014 09:31:37 -0700
+Message-ID: <1411230698-8081-2-git-send-email-suravee.suthikulpanit@amd.com>
+In-Reply-To: <1411230698-8081-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1411230698-8081-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, September 20, 2014 01:19:44 PM andreas.noever@gmail.com wrote:
-> From: Andreas Noever <andreas.noever@gmail.com>
-> 
-> This is a resend of Matthew's patches from https://lkml.org/lkml/2014/6/1/165
-> which are needed to fully support Thunderbolt on Apple hardware:
-> > Apple hardware behaves differently depending on whether or not the OS claims
-> > to be Darwin. Failing to report Darwin results in some hardware being
-> > disabled.  However, claiming to be Darwin also alters the behaviour of
-> > battery reporting and PCI handling. These patches add support for reporting
-> > Darwin support and fixing up the behavioural quirks that are exposed as a
-> > result.
-> Without these patches the firmware will cut power to the controller after
-> suspend (at the latest) and the thunderbolt driver will fail.
-> 
-> I have reordered them such that the two battery fixes/quirks come before the
-> _OSI change that breaks battery reporting. I have also merged "ACPI: Don't call
-> PCI OSC on Apple hardware when claiming to be Darwin" into "ACPI: Support
-> _OSI("Darwin") correctly" to avoid (temporarily) breaking hotplug events and
-> modified the patch to not touch ACPICA, as requested by Rafael.
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-This looks good to me, but I'd like Matthew to say a word here.
+This patch implelments the ARM64 version of arch_setup_msi_irqs(),
+which does not return 1 for when PCI_CAP_ID_MSI and nvec > 1.
 
-Mattew, is this fine by you?
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Acked-by: Marc Zyngier <Marc.Zyngier@arm.com>
+Cc: Mark Rutland <Mark.Rutland@arm.com>
+Cc: Jason Cooper <jason@lakedaemon.net>
+Cc: Catalin Marinas <Catalin.Marinas@arm.com>
+Cc: Will Deacon <Will.Deacon@arm.com>
+---
+ arch/arm64/kernel/Makefile |  1 +
+ arch/arm64/kernel/msi.c    | 41 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 42 insertions(+)
+ create mode 100644 arch/arm64/kernel/msi.c
 
-Rafael
+diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
+index df7ef87..a921c42 100644
+--- a/arch/arm64/kernel/Makefile
++++ b/arch/arm64/kernel/Makefile
+@@ -29,6 +29,7 @@ arm64-obj-$(CONFIG_ARM64_CPU_SUSPEND)	+= sleep.o suspend.o
+ arm64-obj-$(CONFIG_JUMP_LABEL)		+= jump_label.o
+ arm64-obj-$(CONFIG_KGDB)		+= kgdb.o
+ arm64-obj-$(CONFIG_EFI)			+= efi.o efi-stub.o efi-entry.o
++arm64-obj-$(CONFIG_PCI_MSI)		+= msi.o
+ 
+ obj-y					+= $(arm64-obj-y) vdso/
+ obj-m					+= $(arm64-obj-m)
+diff --git a/arch/arm64/kernel/msi.c b/arch/arm64/kernel/msi.c
+new file mode 100644
+index 0000000..a295862
+--- /dev/null
++++ b/arch/arm64/kernel/msi.c
+@@ -0,0 +1,41 @@
++/*
++ * ARM64 architectural MSI implemention
++ *
++ * Support for Message Signalelled Interrupts for systems that
++ * implement ARM Generic Interrupt Controller: GICv2m.
++ *
++ * Copyright (C) 2014 Advanced Micro Devices, Inc.
++ * Authors: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 as published
++ * by the Free Software Foundation.
++ */
++
++#include <linux/irq.h>
++#include <linux/msi.h>
++#include <linux/pci.h>
++
++/*
++ * ARM64 function for seting up MSI irqs.
++ * Based on driver/pci/msi.c: arch_setup_msi_irqs().
++ *
++ * Note:
++ * Current implementation assumes that all interrupt controller used in
++ * ARM64 architecture _MUST_ supports multi-MSI.
++ */
++int arm64_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++{
++	struct msi_desc *entry;
++	int ret;
++
++	list_for_each_entry(entry, &dev->msi_list, list) {
++		ret = arch_setup_msi_irq(dev, entry);
++		if (ret < 0)
++			return ret;
++		if (ret > 0)
++			return -ENOSPC;
++	}
++
++	return 0;
++}
+-- 
+1.9.3
 
