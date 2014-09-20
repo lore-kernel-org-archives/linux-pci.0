@@ -1,115 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:58972 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756139AbaIZO53 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 26 Sep 2014 10:57:29 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <541CCA36.8010606@gmail.com>
+Date: Fri, 19 Sep 2014 19:28:38 -0500
+From: Rob Herring <robherring2@gmail.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
 	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC v1 26/28] x86, irq: Kill function apic_set_affinity()
-Date: Fri, 26 Sep 2014 22:57:56 +0800
-Message-Id: <1411743478-31435-27-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v11 08/10] OF: PCI: Add support for parsing PCI host bridge
+ resources from DT
+References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com> <1411003825-21521-9-git-send-email-Liviu.Dudau@arm.com> <20140919210610.GI19374@google.com>
+In-Reply-To: <20140919210610.GI19374@google.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there's no user of apic_set_affinity(), so kill it.
-Also rename vector_set_affinity() to apic_set_affinity() for consistency.
+On 09/19/2014 04:06 PM, Bjorn Helgaas wrote:
+> On Thu, Sep 18, 2014 at 02:30:23AM +0100, Liviu Dudau wrote:
+>> Provide a function to parse the PCI DT ranges that can be used to
+>> create a pci_host_bridge structure together with its associated
+>> bus.
+>>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Arnd Bergmann <arnd@arndb.de>
+>> Cc: Grant Likely <grant.likely@linaro.org>
+>> Cc: Rob Herring <robh+dt@kernel.org>
+>> Cc: Catalin Marinas <catalin.marinas@arm.com>
+>> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+>> ---
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/hw_irq.h |    2 --
- arch/x86/kernel/apic/vector.c |   40 +++-------------------------------------
- 2 files changed, 3 insertions(+), 39 deletions(-)
+[...]
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index fdf8300dcc29..6c6002e386d4 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -185,8 +185,6 @@ extern void send_cleanup_vector(struct irq_cfg *);
- extern void irq_complete_move(struct irq_cfg *cfg);
- 
- extern void apic_ack_edge(struct irq_data *data);
--extern int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
--			     unsigned int *dest_id);
- #else	/*  CONFIG_X86_LOCAL_APIC */
- static inline void lock_vector_lock(void) {}
- static inline void unlock_vector_lock(void) {}
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index ec2b991884f2..01311ddec2de 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -457,42 +457,8 @@ void apic_ack_edge(struct irq_data *data)
- 	ack_APIC_irq();
- }
- 
--/*
-- * Either sets data->affinity to a valid value, and returns
-- * ->cpu_mask_to_apicid of that in dest_id, or returns -1 and
-- * leaves data->affinity untouched.
-- */
--int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
--		      unsigned int *dest_id)
--{
--	struct irq_cfg *cfg = irqd_cfg(data);
--	unsigned int irq = data->irq;
--	int err;
--
--	if (!config_enabled(CONFIG_SMP))
--		return -EPERM;
--
--	if (!cpumask_intersects(mask, cpu_online_mask))
--		return -EINVAL;
--
--	err = assign_irq_vector(irq, cfg, mask);
--	if (err)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(mask, cfg->domain, dest_id);
--	if (err) {
--		if (assign_irq_vector(irq, cfg, data->affinity))
--			pr_err("Failed to recover vector for irq %d\n", irq);
--		return err;
--	}
--
--	cpumask_copy(data->affinity, mask);
--
--	return 0;
--}
--
--static int vector_set_affinity(struct irq_data *irq_data,
--			       const struct cpumask *dest, bool force)
-+static int apic_set_affinity(struct irq_data *irq_data,
-+			     const struct cpumask *dest, bool force)
- {
- 	int err;
- 	int irq = irq_data->irq;
-@@ -518,7 +484,7 @@ static int vector_set_affinity(struct irq_data *irq_data,
- 
- static struct irq_chip vector_chip = {
- 	.irq_ack = apic_ack_edge,
--	.irq_set_affinity = vector_set_affinity,
-+	.irq_set_affinity = apic_set_affinity,
- 	.irq_retrigger = apic_retrigger_irq,
- };
- 
--- 
-1.7.10.4
+>> +int of_pci_get_host_bridge_resources(struct device_node *dev,
+>> +			unsigned char busno, unsigned char bus_max,
+>> +			struct list_head *resources, resource_size_t *io_base)
+>> +{
+>> +	struct resource *res;
+>> +	struct resource *bus_range;
+>> +	struct of_pci_range range;
+>> +	struct of_pci_range_parser parser;
+>> +	char range_type[4];
+>> +	int err;
+>> +
+>> +	if (!io_base)
+>> +		return -EINVAL;
+>> +	*io_base = OF_BAD_ADDR;
+>> +
+>> +	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
 
+This function does a lot of kalloc's but there is not an easy way to
+undo those allocations. Hot unplug of a host bridge or probe error
+handling would leak memory.
+
+You could pass in struct device and use the devm_ variant (also
+addressing Bjorn's comment), but not having an uninit/remove function
+make what clean-up drivers have to do error prone. For example, on
+uninit a driver needs to call pci_free_resource_list.
+
+Rob
