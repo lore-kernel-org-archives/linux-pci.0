@@ -1,62 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:43824 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753271AbaIDVKu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 17:10:50 -0400
-Received: by mail-pd0-f174.google.com with SMTP id v10so1048725pde.5
-        for <linux-pci@vger.kernel.org>; Thu, 04 Sep 2014 14:10:48 -0700 (PDT)
-Date: Thu, 4 Sep 2014 15:10:42 -0600
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:33998 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758232AbaITCPe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Sep 2014 22:15:34 -0400
+Received: by mail-ig0-f171.google.com with SMTP id hn15so127862igb.4
+        for <linux-pci@vger.kernel.org>; Fri, 19 Sep 2014 19:15:34 -0700 (PDT)
+Date: Fri, 19 Sep 2014 20:15:30 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Sandeep Mann <sandeep@purestorage.com>
+To: Matteo <rootkit85@yahoo.it>
 Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: pciehp: Use ordered workqueue for HPC events
-Message-ID: <20140904211042.GD17125@google.com>
-References: <1406933232-1560-1-git-send-email-sandeep@purestorage.com>
+Subject: Re: [Bug 84821] New: Compex WLE900VX-7A not recognized
+Message-ID: <20140920021530.GA2275@google.com>
+References: <bug-84821-41252@https.bugzilla.kernel.org/>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1406933232-1560-1-git-send-email-sandeep@purestorage.com>
+In-Reply-To: <bug-84821-41252@https.bugzilla.kernel.org/>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 01, 2014 at 03:47:12PM -0700, Sandeep Mann wrote:
-> Using an ordered workqueue serializes processing of hotplug event. Processing
-> an hotplug event for some devices can take a relatively "long" time, which
-> means if a device is added and removed in quick succession (or due to flacky
-> hardware), it can lead to multiple outstanding hotplug events. Processing
-> these events concurrently can lead to unknown internal state and/or kernel
-> panics.
+[+cc linux-pci to make this more searchable]
+
+On Fri, Sep 19, 2014 at 04:08:40PM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=84821
 > 
-> Signed-off-by: Sandeep Mann <sandeep@purestorage.com>
+>             Bug ID: 84821
+>            Summary: Compex WLE900VX-7A not recognized
+>            Product: Drivers
+>            Version: 2.5
+>     Kernel Version: 3.16
+>           Hardware: All
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: PCI
+>           Assignee: drivers_pci@kernel-bugs.osdl.org
+>           Reporter: rootkit85@yahoo.it
+>         Regression: No
+> 
+> I have some mini PCI-express cards that fails to be recognized.
+> 
+> The card is a Compex WLE900VX-7A
+> http://www.compex.com.sg/productdetailinfo.asp?model=WLE900VX
+> 
+> and it can't be enumerated as PCI device.
+> 
+> On a Lenovo Thinkpad notebook it can't never be enumerated, on my Samsung
+> NP350V5C-S09IT it appears in the devices list only after a reboot (ie. must
+> boot, then reboot)
+> 
+> I'm not sure it's a Linux bug, it could be an hardware bug, but maybe it's
+> possible to bring the interface up with some quirk.
+> 
+> I attach syslog and lspci output of the first and second boot
 
-What's the status of this?  I see Rajat's ack, but there was a lot of
-subsequent discussion, and I'm not sure whether there was a conclusion.
+Based on subsequent testing, it doesn't work with Windows either.  That
+makes me think it might be some kind of defect in the card itself.  But it
+sounds like maybe it happens with multiple copies of the same card?
 
-Given that, I'd like to see a bugzilla with the relevant background
-(lspci -vv, dmesg log).  Also, shpchp_core.c has similar code, so I'd like
-to see either a similar patch for it or an explanation of why that driver
-doesn't need it.
-
-So I'll drop this for now, pending these updates.
+I really don't know what to say.  Unless you have some way to attach a PCIe
+analyzer and verify that the card is responding and the OS is doing
+something wrong, I would probably just return it and get a different card.
 
 Bjorn
-
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 42914e0..c4eedab 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -681,7 +681,7 @@ static int pcie_init_slot(struct controller *ctrl)
->  	if (!slot)
->  		return -ENOMEM;
->  
-> -	slot->wq = alloc_workqueue("pciehp-%u", 0, 0, PSN(ctrl));
-> +	slot->wq = alloc_ordered_workqueue("pciehp-%u", 0, PSN(ctrl));
->  	if (!slot->wq)
->  		goto abort;
->  
-> -- 
-> 1.8.3.2
-> 
