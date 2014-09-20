@@ -1,44 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:44349 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756167AbaIKUnA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Sep 2014 16:43:00 -0400
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <541DBEEC.6010305@gmail.com>
+Date: Sat, 20 Sep 2014 12:52:44 -0500
+From: Rob Herring <robherring2@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com>
-References: <ghiol53r9u.fsf@lena.gouders.net>
-	<CAMxnaaXiEZeJOsgQ6ZSbiqy5Z1zNoXonwNSQNRyRhV0t5jveYQ@mail.gmail.com>
-	<ghwq9k3m6z.fsf@lena.gouders.net>
-	<CAMxnaaUqTMf1uEQUqrAGjym8ZrQaBf2QbE4Jqxh2t6a2JgJkOQ@mail.gmail.com>
-	<ghioku5l29.fsf@lena.gouders.net>
-	<CAErSpo7j=a3y2MVsvEQGQ4B63_mNCyZSRNXNEZa-2++xs88NmQ@mail.gmail.com>
-	<CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com>
-Date: Thu, 11 Sep 2014 13:42:59 -0700
-Message-ID: <CA+55aFx_Kgb6FcOoyQOb=7ud9VL4T3g2EoeOhuPAHUPa-+eG+A@mail.gmail.com>
-Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dirk Gouders <dirk@gouders.net>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+CC: Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Grant Likely <grant.likely@linaro.org>
+Subject: Re: [PATCH v11 07/10] OF: Introduce helper function for getting PCI
+ domain_nr
+References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com> <1411003825-21521-8-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1411003825-21521-8-git-send-email-Liviu.Dudau@arm.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 11, 2014 at 12:26 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->
-> This is amd two node systems. amd_bus.c tell us bus [00, 7f] is from
-> first socket, but _OSC says only [0,7] is from first socket.
+On 09/17/2014 08:30 PM, Liviu Dudau wrote:
+> Add of_pci_get_domain_nr() to retrieve the PCI domain number
+> of a given device from DT. If the information is not present,
+> the function can be requested to allocate a new domain number.
+> 
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Grant Likely <grant.likely@linaro.org>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> ---
 
-That might also explain why Dirk doesn't see it on his other machine.
-The other machine doesn't have a buggy ACPI table bus limit.
+[...]
 
-So yeah, trusting actual hw more than the _OSC entry sounds like the
-fix. I don't understand why hardware designers seem to think that ACPI
-is a good model, when it would have been so much better to just
-introduce hardware standards instead.
+> +/**
+> + * This function will try to obtain the host bridge domain number by
+> + * using of_alias_get_id() call with "pci-domain" as a stem. If that
+> + * fails, a local allocator will be used. The local allocator can
+> + * be requested to return a new domain_nr if the information is missing
+> + * from the device tree.
+> + *
+> + * @node: device tree node with the domain information
+> + * @allocate_if_missing: if DT lacks information about the domain nr,
+> + * allocate a new number.
+> + *
+> + * Returns the associated domain number from DT, or a new domain number
+> + * if DT information is missing and @allocate_if_missing is true. If
+> + * @allocate_if_missing is false then the last allocated domain number
+> + * will be returned.
+> + */
+> +int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
+> +{
+> +	int domain;
+> +
+> +	domain = atomic_read(&of_domain_nr);
+> +	if (domain == -1) {
+> +		/* first run, get max defined domain nr in device tree */
+> +		domain = of_get_max_pci_domain_nr();
+> +		/* then set the start value for allocator to be max + 1 */
+> +		atomic_set(&of_domain_nr, domain + 1);
 
-Oh well. I guess that boat sailed long long ago.
+atomic_read followed by atomic_set is not an atomic operation.
 
-             Linus
+As I previously said, I don't like how this function is a mixture of
+data retrieval and domian # allocation. I think we need 2 functions.
+
+> +	}
+> +	domain = of_alias_get_id(node, "pci-domain");
+
+I still do not like using aliases here. Just put pci-domain or
+linux,pci-domain into the PCI node.
+
+I think we should assume all PCI root buses either have a domain
+property or they don't and a mixture is an error. I'm not sure if that
+simplifies the code or not though.
+
+In the interest of merging, I think you should just do a simple
+allocation and add the DT domain handling as a second step. You will
+also need to document the DT part.
+
+Rob
+
