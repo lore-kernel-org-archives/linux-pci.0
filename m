@@ -1,68 +1,124 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v5 03/15] ACPI: Fix minor syntax issues in processor_core.c
-Date: Thu, 11 Sep 2014 16:05:46 +0800
-Message-Id: <1410422758-24942-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
+From: andreas.noever@gmail.com
+To: rjw@rjwysocki.net
+Cc: lenb@kernel.org, robert.moore@intel.com, lv.zheng@intel.com,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.or,
+	linux-pci@vger.kernel.org, bhelgaas@google.com,
+	matthew.garrett@nebula.com,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v2 3/3] ACPI: Support _OSI("Darwin") correctly
+Date: Sat, 20 Sep 2014 13:19:47 +0200
+Message-Id: <bf5856a35c5ba95c4da960f797514ef4cfaf71b2.1411211725.git.andreas.noever@gmail.com>
+In-Reply-To: <cover.1411211725.git.andreas.noever@gmail.com>
+References: <cover.1411211725.git.andreas.noever@gmail.com>
+In-Reply-To: <cover.1411211725.git.andreas.noever@gmail.com>
+References: <cover.1411211725.git.andreas.noever@gmail.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix minor syntax issues in processor_core.c to follow coding styles.
+From: Matthew Garrett <matthew.garrett@nebula.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+From: Matthew Garrett <matthew.garrett@nebula.com>
+
+Apple hardware queries _OSI("Darwin") in order to determine whether the
+system is running OS X, and changes firmware behaviour based on the
+answer.  The most obvious difference in behaviour is that Thunderbolt
+hardware is forcibly powered down unless the system is running OS X. The
+obvious solution would be to simply add Darwin to the list of supported
+_OSI strings, but this causes problems.
+
+Recent Apple hardware includes two separate methods for checking _OSI
+strings. The first will check whether Darwin is supported, and if so
+will exit. The second will check whether Darwin is supported, but will
+then continue to check for further operating systems. If a further
+operating system is found then later firmware code will assume that the
+OS is not OS X.  This results in the unfortunate situation where the
+Thunderbolt controller is available at boot time but remains powered
+down after suspend.
+
+The easiest way to handle this is to special-case it in the
+Linux-specific OSI handling code. If we see Darwin, we should answer
+true and then disable all other _OSI vendor strings.
+
+The next problem is that the Apple PCI _OSC method has the following
+code:
+
+if (LEqual (0x01, OSDW ()))
+  if (LAnd (LEqual (Arg0, GUID), NEXP)
+    (do stuff)
+  else
+    (fail)
+NEXP is a value in high memory and is presumably under the control of
+the firmware. No methods sets it. The methods that are called in the "do
+stuff" path are dummies. Unless there's some additional firmware call in
+early boot, there's no way for this call to succeed - and even if it
+does, it doesn't do anything.
+
+The easiest way to handle this is simply to ignore it. We know which
+flags would be set, so just set them by hand if the platform is running
+in Darwin mode.
+
+Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+[andreas.noever@gmail.com: merged two patches, do not touch ACPICA]
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
- drivers/acpi/processor_core.c |    9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/acpi/osl.c      | 10 ++++++++++
+ drivers/acpi/pci_root.c | 14 ++++++++++++++
+ 2 files changed, 24 insertions(+)
 
-diff --git a/drivers/acpi/processor_core.c b/drivers/acpi/processor_core.c
-index e32321ce9a5c..b048f3752c2b 100644
---- a/drivers/acpi/processor_core.c
-+++ b/drivers/acpi/processor_core.c
-@@ -125,13 +125,12 @@ static int map_mat_entry(acpi_handle handle, int type, u32 acpi_id)
+diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+index 3abe9b2..938b6ac 100644
+--- a/drivers/acpi/osl.c
++++ b/drivers/acpi/osl.c
+@@ -152,6 +152,16 @@ static u32 acpi_osi_handler(acpi_string interface, u32 supported)
+ 			osi_linux.dmi ? " via DMI" : "");
  	}
  
- 	header = (struct acpi_subtable_header *)obj->buffer.pointer;
--	if (header->type == ACPI_MADT_TYPE_LOCAL_APIC) {
-+	if (header->type == ACPI_MADT_TYPE_LOCAL_APIC)
- 		map_lapic_id(header, acpi_id, &apic_id);
--	} else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC) {
-+	else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC)
- 		map_lsapic_id(header, type, acpi_id, &apic_id);
--	} else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC) {
-+	else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC)
- 		map_x2apic_id(header, type, acpi_id, &apic_id);
--	}
++	if (!strcmp("Darwin", interface)) {
++		/*
++		 * Apple firmware will behave poorly if it receives positive
++		 * answers to "Darwin" and any other OS. Respond positively
++		 * to Darwin and then disable all other vendor strings.
++		 */
++		acpi_update_interfaces(ACPI_DISABLE_ALL_VENDOR_STRINGS);
++		supported = ACPI_UINT32_MAX;
++	}
++
+ 	return supported;
+ }
  
- exit:
- 	kfree(buffer.pointer);
-@@ -164,7 +163,7 @@ int acpi_map_cpuid(int apic_id, u32 acpi_id)
- 		 * For example,
- 		 *
- 		 * Scope (_PR)
--                 * {
-+		 * {
- 		 *     Processor (CPU0, 0x00, 0x00000410, 0x06) {}
- 		 *     Processor (CPU1, 0x01, 0x00000410, 0x06) {}
- 		 *     Processor (CPU2, 0x02, 0x00000410, 0x06) {}
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index e6ae603..cd4de7e 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -35,6 +35,7 @@
+ #include <linux/pci-aspm.h>
+ #include <linux/acpi.h>
+ #include <linux/slab.h>
++#include <linux/dmi.h>
+ #include <acpi/apei.h>	/* for acpi_hest_init() */
+ 
+ #include "internal.h"
+@@ -430,6 +431,19 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 	acpi_handle handle = device->handle;
+ 
+ 	/*
++	 * Apple always return failure on _OSC calls when _OSI("Darwin") has
++	 * been called successfully. We know the feature set supported by the
++	 * platform, so avoid calling _OSC at all
++	 */
++
++	if (dmi_match(DMI_SYS_VENDOR, "Apple Inc.")) {
++		root->osc_control_set = ~OSC_PCI_EXPRESS_PME_CONTROL;
++		decode_osc_control(root, "OS assumes control of",
++				   root->osc_control_set);
++		return;
++	}
++
++	/*
+ 	 * All supported architectures that use ACPI have support for
+ 	 * PCI domains, so we indicate this in _OSC support capabilities.
+ 	 */
 -- 
-1.7.10.4
+2.1.0
 
