@@ -1,152 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0103.outbound.protection.outlook.com ([207.46.100.103]:29824
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753060AbaIHXsu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Sep 2014 19:48:50 -0400
-Message-ID: <540E3639.5080807@amd.com>
-Date: Mon, 8 Sep 2014 18:05:29 -0500
-From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <541CCBA8.8030406@gmail.com>
+Date: Fri, 19 Sep 2014 19:34:48 -0500
+From: Rob Herring <robherring2@gmail.com>
 MIME-Version: 1.0
-To: Mark Rutland <mark.rutland@arm.com>
-CC: Marc Zyngier <Marc.Zyngier@arm.com>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
+To: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 1/2 V4] irqchip: gic: Add supports for ARM GICv2m MSI(-X)
-References: <1407942041-3291-1-git-send-email-suravee.suthikulpanit@amd.com>
- <1407942041-3291-2-git-send-email-suravee.suthikulpanit@amd.com>
- <20140814175525.GI24018@leverpostej>
-In-Reply-To: <20140814175525.GI24018@leverpostej>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+CC: Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v11 10/10] PCI: Introduce pci_remap_iospace() for remapping
+ PCI I/O bus resources into CPU space
+References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com> <1411003825-21521-11-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1411003825-21521-11-git-send-email-Liviu.Dudau@arm.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/14/2014 12:55 PM, Mark Rutland wrote:
-> On Wed, Aug 13, 2014 at 04:00:40PM +0100, suravee.suthikulpanit@amd.com wrote:
->> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->>
->> ARM GICv2m specification extends GICv2 to support MSI(-X) with
->> a new set of register frame. This patch introduces support for
->> the non-secure GICv2m register frame. Currently, GICV2m is available
->> in certain version of GIC-400.
->>
->> The patch introduces a new property in ARM gic binding, the v2m subnode.
->> It is optional.
->>
->> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->> Cc: Mark Rutland <Mark.Rutland@arm.com>
->> Cc: Marc Zyngier <Marc.Zyngier@arm.com>
->> Cc: Jason Cooper <jason@lakedaemon.net>
->> Cc: Catalin Marinas <Catalin.Marinas@arm.com>
->> Cc: Will Deacon <Will.Deacon@arm.com>
->> ---
->>   Documentation/devicetree/bindings/arm/gic.txt |  32 ++++
->>   drivers/irqchip/Kconfig                       |   7 +
->>   drivers/irqchip/Makefile                      |   1 +
->>   drivers/irqchip/irq-gic-v2m.c                 | 215 ++++++++++++++++++++++++++
->>   drivers/irqchip/irq-gic.c                     |  75 +++++----
->>   drivers/irqchip/irq-gic.h                     |  48 ++++++
->>   6 files changed, 348 insertions(+), 30 deletions(-)
->>   create mode 100644 drivers/irqchip/irq-gic-v2m.c
->>   create mode 100644 drivers/irqchip/irq-gic.h
->>
->> diff --git a/Documentation/devicetree/bindings/arm/gic.txt b/Documentation/devicetree/bindings/arm/gic.txt
->> index 5573c08..8a64179 100644
->> --- a/Documentation/devicetree/bindings/arm/gic.txt
->> +++ b/Documentation/devicetree/bindings/arm/gic.txt
->> @@ -95,3 +95,35 @@ Example:
->>                        <0x2c006000 0x2000>;
->>                  interrupts = <1 9 0xf04>;
->>          };
->> +
->> +
->> +* GICv2m extension for MSI/MSI-x support (Optional)
->> +
->> +Certain revision of GIC-400 supports MSI/MSI-x via V2M register frame.
->> +This is enabled by specifying v2m sub-node.
->> +
->> +Required properties:
->> +
->> +- msi-controller : Identifies the node as an MSI controller.
->> +
->> +- reg : GICv2m MSI interface register base and size
->> +
->> +Example:
->> +
->> +       interrupt-controller@e1101000 {
->> +               compatible = "arm,gic-400";
->> +               #interrupt-cells = <3>;
->> +               #address-cells = <2>;
->> +               #size-cells = <2>;
->> +               interrupt-controller;
->> +               interrupts = <1 8 0xf04>;
->> +               ranges = <0 0 0 0xe1100000 0 0x100000>;
->> +               reg = <0x0 0xe1110000 0 0x01000>,
->> +                     <0x0 0xe112f000 0 0x02000>,
->> +                     <0x0 0xe1140000 0 0x10000>,
->> +                     <0x0 0xe1160000 0 0x10000>;
->> +               v2m {
->> +                       msi-controller;
->> +                       reg = <0x0 0x80000 0 0x1000>;
->> +               };
->> +       };
->
-> [...]
->
->> @@ -1009,6 +1012,16 @@ gic_of_init(struct device_node *node, struct device_node *parent)
->>          if (of_property_read_u32(node, "cpu-offset", &percpu_offset))
->>                  percpu_offset = 0;
->>
->> +       gic_data[gic_cnt].irq_chip = &gic_chip;
->> +
->> +       /* Currently, we only support one v2m subnode. */
->> +       child = of_get_child_by_name(node, "v2m");
->> +       if (child) {
->> +               ret = gicv2m_of_init(child, &gic_data[gic_cnt]);
->> +               if (ret)
->> +                       return ret;
->> +       }
->
-> I can't see how you'd sanely expand this to multiple children, which was
-> the main point of having a separate node for the M block.
->
-> Give the M block a compatible string and look for children with that
-> string.
+On 09/17/2014 08:30 PM, Liviu Dudau wrote:
+> Introduce a default implementation for remapping PCI bus I/O resources
+> onto the CPU address space. Architectures with special needs may
+> provide their own version, but most should be able to use this one.
+> 
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-Mark,
+One nit below, otherwise:
 
-I am making change in the struct gic_chip_data to contain "v2m_list" (instead of just
-a single struct v2m_data). This way, it is clear on how we should handle multiple v2m nodes
-within a GIC.
+Reviewed-by: Rob Herring <robh@kernel.org>
 
-As for the device tree binding, in order to handle multiple v2m nodes within a GIC,
-it should not require adding another compatibility ID as it seems too complicate
-to have GIC node with multiple compat IDs).
+> ---
+>  drivers/pci/pci.c             | 33 +++++++++++++++++++++++++++++++++
+>  include/asm-generic/pgtable.h |  4 ++++
+>  include/linux/pci.h           |  3 +++
+>  3 files changed, 40 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 2c9ac70..654b44c 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2704,6 +2704,39 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
+>  }
+>  EXPORT_SYMBOL(pci_request_regions_exclusive);
+>  
+> +/**
+> + *	pci_remap_iospace - Remap the memory mapped I/O space
+> + *	@res: Resource describing the I/O space
+> + *	@phys_addr: physical address where the range will be mapped.
+> + *
+> + *	Remap the memory mapped I/O space described by the @res
+> + *	into the CPU physical address space. Only architectures
+> + *	that have memory mapped IO defined (and hence PCI_IOBASE)
+> + *	should call this function.
+> + */
+> +int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+> +{
+> +	int err = -ENODEV;
+> +
+> +#ifdef PCI_IOBASE
+> +	if (!(res->flags & IORESOURCE_IO))
+> +		return -EINVAL;
+> +
+> +	if (res->end > IO_SPACE_LIMIT)
+> +		return -EINVAL;
+> +
+> +	err = ioremap_page_range(res->start + (unsigned long)PCI_IOBASE,
+> +				res->end + 1 + (unsigned long)PCI_IOBASE,
+> +				phys_addr, pgprot_device(PAGE_KERNEL));
+> +#else
+> +	/* this architecture does not have memory mapped I/O space,
+> +	   so this function should never be called */
+> +	WARN_ON(1);
 
-	v2m0 {
-		msi-controller;
-		reg = <0 0x80000 0 0x10000>;	
-	};
+Printing what the comment says in the warning would be better than
+making the user look-up why they got a warning.
 
-	v2m1 {
-		msi-controller;
-		reg = <0 0x90000 0 0x10000>;
-	};
-
-This should work since the PCI controller uses "of_pci_find_msi_chip_by_node()" to locate the msi_chip,
-we can simply just use "v2m0" or "v2m1" to specify this.
-
-Thanks,
-
-Suravee.
+Rob
 
