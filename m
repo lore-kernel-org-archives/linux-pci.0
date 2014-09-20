@@ -1,56 +1,150 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og105.obsmtp.com ([64.18.0.180]:50237 "HELO
-	exprod5og105.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756360AbaIZVIs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Sep 2014 17:08:48 -0400
-Received: by mail-pa0-f46.google.com with SMTP id kq14so675175pab.19
-        for <linux-pci@vger.kernel.org>; Fri, 26 Sep 2014 14:08:47 -0700 (PDT)
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v10 4/4] MAINTAINERS: entry for APM X-Gene PCIe host driver
-Date: Fri, 26 Sep 2014 14:08:27 -0700
-Message-Id: <1411765707-28822-5-git-send-email-tinamdar@apm.com>
-In-Reply-To: <1411765707-28822-1-git-send-email-tinamdar@apm.com>
-References: <1411765707-28822-1-git-send-email-tinamdar@apm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: andreas.noever@gmail.com
+To: rjw@rjwysocki.net
+Cc: lenb@kernel.org, robert.moore@intel.com, lv.zheng@intel.com,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.or,
+	linux-pci@vger.kernel.org, bhelgaas@google.com,
+	matthew.garrett@nebula.com,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v2 2/3] ACPI: Disable smart battery manager on Apple
+Date: Sat, 20 Sep 2014 13:19:46 +0200
+Message-Id: <5ff86f5736bfc9f6f638c664d33a8e13e1556e56.1411211725.git.andreas.noever@gmail.com>
+In-Reply-To: <cover.1411211725.git.andreas.noever@gmail.com>
+References: <cover.1411211725.git.andreas.noever@gmail.com>
+In-Reply-To: <cover.1411211725.git.andreas.noever@gmail.com>
+References: <cover.1411211725.git.andreas.noever@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add entry for AppliedMicro X-Gene PCIe host driver.
+From: Matthew Garrett <matthew.garrett@nebula.com>
 
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+From: Matthew Garrett <matthew.garrett@nebula.com>
+
+Touching the smart battery manager at all on Apple hardware appears to
+make it unhappy - unplugging the AC adapter triggers accesses that hang
+the controller for several minutes. Quirk it out via DMI in order to
+avoid this.  Compensate by changing battery presence if we fail to
+communicate with the battery.
+
+Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
- MAINTAINERS | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/acpi/sbs.c | 51 +++++++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 43 insertions(+), 8 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 670b3dc..b18bc49 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6942,6 +6942,14 @@ L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	drivers/pci/host/*spear*
+diff --git a/drivers/acpi/sbs.c b/drivers/acpi/sbs.c
+index b1df4ee..32aecea 100644
+--- a/drivers/acpi/sbs.c
++++ b/drivers/acpi/sbs.c
+@@ -35,6 +35,7 @@
+ #include <linux/jiffies.h>
+ #include <linux/delay.h>
+ #include <linux/power_supply.h>
++#include <linux/dmi.h>
  
-+PCI DRIVER FOR APPLIEDMICRO XGENE
-+M:	Tanmay Inamdar <tinamdar@apm.com>
-+L:	linux-pci@vger.kernel.org
-+L:	linux-arm-kernel@lists.infradead.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/xgene-pci.txt
-+F:	drivers/pci/host/pci-xgene.c
+ #include "sbshc.h"
+ #include "battery.h"
+@@ -61,6 +62,8 @@ static unsigned int cache_time = 1000;
+ module_param(cache_time, uint, 0644);
+ MODULE_PARM_DESC(cache_time, "cache time in milliseconds");
+ 
++static bool sbs_manager_broken;
 +
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
- L:	linux-pcmcia@lists.infradead.org
+ #define MAX_SBS_BAT			4
+ #define ACPI_SBS_BLOCK_MAX		32
+ 
+@@ -494,16 +497,21 @@ static int acpi_battery_read(struct acpi_battery *battery)
+ 				  ACPI_SBS_MANAGER, 0x01, (u8 *)&state, 2);
+ 	} else if (battery->id == 0)
+ 		battery->present = 1;
++
+ 	if (result || !battery->present)
+ 		return result;
+ 
+ 	if (saved_present != battery->present) {
+ 		battery->update_time = 0;
+ 		result = acpi_battery_get_info(battery);
+-		if (result)
++		if (result) {
++			battery->present = 0;
+ 			return result;
++		}
+ 	}
+ 	result = acpi_battery_get_state(battery);
++	if (result)
++		battery->present = 0;
+ 	return result;
+ }
+ 
+@@ -535,6 +543,7 @@ static int acpi_battery_add(struct acpi_sbs *sbs, int id)
+ 	result = power_supply_register(&sbs->device->dev, &battery->bat);
+ 	if (result)
+ 		goto end;
++
+ 	result = device_create_file(battery->bat.dev, &alarm_attr);
+ 	if (result)
+ 		goto end;
+@@ -613,12 +622,31 @@ static void acpi_sbs_callback(void *context)
+ 	}
+ }
+ 
++static int disable_sbs_manager(const struct dmi_system_id *d)
++{
++	sbs_manager_broken = true;
++	return 0;
++}
++
++static struct dmi_system_id acpi_sbs_dmi_table[] = {
++	{
++		.callback = disable_sbs_manager,
++		.ident = "Apple",
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc.")
++		},
++	},
++	{ },
++};
++
+ static int acpi_sbs_add(struct acpi_device *device)
+ {
+ 	struct acpi_sbs *sbs;
+ 	int result = 0;
+ 	int id;
+ 
++	dmi_check_system(acpi_sbs_dmi_table);
++
+ 	sbs = kzalloc(sizeof(struct acpi_sbs), GFP_KERNEL);
+ 	if (!sbs) {
+ 		result = -ENOMEM;
+@@ -637,14 +665,21 @@ static int acpi_sbs_add(struct acpi_device *device)
+ 	if (result && result != -ENODEV)
+ 		goto end;
+ 
+-	result = acpi_manager_get_info(sbs);
+-	if (!result) {
+-		sbs->manager_present = 1;
+-		for (id = 0; id < MAX_SBS_BAT; ++id)
+-			if ((sbs->batteries_supported & (1 << id)))
+-				acpi_battery_add(sbs, id);
+-	} else
++	result = 0;
++
++	if (!sbs_manager_broken) {
++		result = acpi_manager_get_info(sbs);
++		if (!result) {
++			sbs->manager_present = 0;
++			for (id = 0; id < MAX_SBS_BAT; ++id)
++				if ((sbs->batteries_supported & (1 << id)))
++					acpi_battery_add(sbs, id);
++		}
++	}
++
++	if (!sbs->manager_present)
+ 		acpi_battery_add(sbs, 0);
++
+ 	acpi_smbus_register_callback(sbs->hc, acpi_sbs_callback, sbs);
+       end:
+ 	if (result)
 -- 
-1.9.1
+2.1.0
 
