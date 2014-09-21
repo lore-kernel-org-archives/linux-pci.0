@@ -1,107 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:40835 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751263AbaI3Qgg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 12:36:36 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Mohit Kumar <mohit.kumar@st.com>, Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Subject: [PATCH 1/2] PCI: designware: remove bogus multiple MSI setup
-Date: Tue, 30 Sep 2014 18:36:26 +0200
-Message-Id: <1412094987-1894-2-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1412094987-1894-1-git-send-email-l.stach@pengutronix.de>
-References: <1412094987-1894-1-git-send-email-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: andreas.noever@gmail.com, matthew.garrett@nebula.com
+Cc: lenb@kernel.org, robert.moore@intel.com, lv.zheng@intel.com,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.or,
+	linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [PATCH v2 0/3] ACPI: Improve behaviour on Apple hardware
+Date: Sun, 21 Sep 2014 02:22:42 +0200
+Message-ID: <2602701.nnkzbmBANY@vostro.rjw.lan>
+In-Reply-To: <cover.1411211725.git.andreas.noever@gmail.com>
+References: <cover.1411211725.git.andreas.noever@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The setup_irq function is supposed to set up exactly one MSI
-irq. Multiple IRQ setup is handled differently, to respect
-the choices made by the upper layers.
+On Saturday, September 20, 2014 01:19:44 PM andreas.noever@gmail.com wrote:
+> From: Andreas Noever <andreas.noever@gmail.com>
+> 
+> This is a resend of Matthew's patches from https://lkml.org/lkml/2014/6/1/165
+> which are needed to fully support Thunderbolt on Apple hardware:
+> > Apple hardware behaves differently depending on whether or not the OS claims
+> > to be Darwin. Failing to report Darwin results in some hardware being
+> > disabled.  However, claiming to be Darwin also alters the behaviour of
+> > battery reporting and PCI handling. These patches add support for reporting
+> > Darwin support and fixing up the behavioural quirks that are exposed as a
+> > result.
+> Without these patches the firmware will cut power to the controller after
+> suspend (at the latest) and the thunderbolt driver will fail.
+> 
+> I have reordered them such that the two battery fixes/quirks come before the
+> _OSI change that breaks battery reporting. I have also merged "ACPI: Don't call
+> PCI OSC on Apple hardware when claiming to be Darwin" into "ACPI: Support
+> _OSI("Darwin") correctly" to avoid (temporarily) breaking hotplug events and
+> modified the patch to not touch ACPICA, as requested by Rafael.
 
-Also only clear one MSI irq at a time, the PCI core will
-call into this function multiple times if it has to tear
-down more than one MSI irq.
+This looks good to me, but I'd like Matthew to say a word here.
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
- drivers/pci/host/pcie-designware.c | 47 ++++++--------------------------------
- 1 file changed, 7 insertions(+), 40 deletions(-)
+Mattew, is this fine by you?
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 34e736601259..339296cbc823 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -313,54 +313,17 @@ no_valid_irq:
- 	return -ENOSPC;
- }
- 
--static void clear_irq(unsigned int irq)
--{
--	unsigned int pos, nvec;
--	struct msi_desc *msi;
--	struct pcie_port *pp;
--	struct irq_data *data = irq_get_irq_data(irq);
--
--	/* get the port structure */
--	msi = irq_data_get_msi(data);
--	pp = sys_to_pcie(msi->dev->bus->sysdata);
--
--	/* undo what was done in assign_irq */
--	pos = data->hwirq;
--	nvec = 1 << msi->msi_attrib.multiple;
--
--	clear_irq_range(pp, irq, nvec, pos);
--
--	/* all irqs cleared; reset attributes */
--	msi->irq = 0;
--	msi->msi_attrib.multiple = 0;
--}
--
- static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
- 			struct msi_desc *desc)
- {
--	int irq, pos, msgvec;
--	u16 msg_ctr;
-+	int irq, pos;
- 	struct msi_msg msg;
- 	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
- 
--	pci_read_config_word(pdev, desc->msi_attrib.pos+PCI_MSI_FLAGS,
--				&msg_ctr);
--	msgvec = (msg_ctr&PCI_MSI_FLAGS_QSIZE) >> 4;
--	if (msgvec == 0)
--		msgvec = (msg_ctr & PCI_MSI_FLAGS_QMASK) >> 1;
--	if (msgvec > 5)
--		msgvec = 0;
--
--	irq = assign_irq((1 << msgvec), desc, &pos);
-+	irq = assign_irq(1, desc, &pos);
- 	if (irq < 0)
- 		return irq;
- 
--	/*
--	 * write_msi_msg() will update PCI_MSI_FLAGS so there is
--	 * no need to explicitly call pci_write_config_word().
--	 */
--	desc->msi_attrib.multiple = msgvec;
--
- 	if (pp->ops->get_msi_addr)
- 		msg.address_lo = pp->ops->get_msi_addr(pp);
- 	else
-@@ -379,7 +342,11 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
- 
- static void dw_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
- {
--	clear_irq(irq);
-+	struct irq_data *data = irq_get_irq_data(irq);
-+	struct msi_desc *msi = irq_data_get_msi(data);
-+	struct pcie_port *pp = sys_to_pcie(msi->dev->bus->sysdata);
-+
-+	clear_irq_range(pp, irq, 1, data->hwirq);
- }
- 
- static struct msi_chip dw_pcie_msi_chip = {
--- 
-2.1.0
+Rafael
 
