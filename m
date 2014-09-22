@@ -1,132 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:49470 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755322AbaIIHip (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Sep 2014 03:38:45 -0400
-Date: Tue, 9 Sep 2014 03:03:22 -0400
-From: "Chen, Gong" <gong.chen@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: rdunlap@infradead.org, bp@alien8.de, tony.luck@intel.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RESEND 2/5] PCIe, AER: Replenish missed AER status bits for AER
- driver
-Message-ID: <20140909070321.GA27821@gchen.bj.intel.com>
-References: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
- <1407910961-7798-3-git-send-email-gong.chen@linux.intel.com>
- <20140905231543.GK8080@google.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:33422 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754930AbaIVVFu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 17:05:50 -0400
+Received: by mail-ie0-f178.google.com with SMTP id at20so8354218iec.9
+        for <linux-pci@vger.kernel.org>; Mon, 22 Sep 2014 14:05:50 -0700 (PDT)
+Date: Mon, 22 Sep 2014 15:05:47 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Robert Stonehouse <rstonehouse@solarflare.com>
+Subject: Re: [PATCH] pci: quirks: Add ACS quirk for Solarflare SFC9120 &
+ SFC9140
+Message-ID: <20140922210547.GK1880@google.com>
+References: <20140917145838.19243.14630.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="6c2NcOVqGQ03X4Wi"
-In-Reply-To: <20140905231543.GK8080@google.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140917145838.19243.14630.stgit@gimli.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Sep 17, 2014 at 08:59:36AM -0600, Alex Williamson wrote:
+> Solarflare confirms that these devices do not allow peer-to-peer
+> between functions.  Quirk them to allow IOMMU grouping to expose this
+> isolation.
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Cc: Robert Stonehouse <rstonehouse@solarflare.com>
 
---6c2NcOVqGQ03X4Wi
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Applied with Robert's ack to pci/virtualization for v3.18, thanks!
 
-On Fri, Sep 05, 2014 at 05:15:43PM -0600, Bjorn Helgaas wrote:
-> Date: Fri, 5 Sep 2014 17:15:43 -0600
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> To: "Chen, Gong" <gong.chen@linux.intel.com>
-> Cc: rdunlap@infradead.org, bp@alien8.de, tony.luck@intel.com,
->  linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-> Subject: Re: [RESEND 2/5] PCIe, AER: Replenish missed AER status bits for
->  AER driver
-> User-Agent: Mutt/1.5.21 (2010-09-15)
->=20
-> On Wed, Aug 13, 2014 at 02:22:38AM -0400, Chen, Gong wrote:
-> > Since commit 6c2b374d is commited, the capability of PCI-e AER
-> > has changed a lot. This patch adds all missed CE/UC error bits
-> > existed in PCI-e SPEC r3.0. Meanwhile, adjust the code format
-> > to make it simpler to read/maintain.
-> >=20
-> > Signed-off-by: Chen, Gong <gong.chen@linux.intel.com>
-> > ---
-> >  drivers/pci/pcie/aer/aerdrv_errprint.c | 60 ++++++++++++++------------=
---------
-> >  1 file changed, 25 insertions(+), 35 deletions(-)
-> >=20
-> > diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/=
-aer/aerdrv_errprint.c
-> > index 35d06e177917..5c4f7e252e5e 100644
-> > --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-> > +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> > @@ -75,44 +75,34 @@ static const char *aer_error_layer[] =3D {
-> >  };
-> > =20
-> >  static const char *aer_correctable_error_string[] =3D {
-> > -	"Receiver Error",		/* Bit Position 0	*/
-> > -	NULL,
-> > -	NULL,
-> > -	NULL,
-> > -	NULL,
-> > -	NULL,
-> > -	"Bad TLP",			/* Bit Position 6	*/
-> > -	"Bad DLLP",			/* Bit Position 7	*/
-> > -	"RELAY_NUM Rollover",		/* Bit Position 8	*/
-> > -	NULL,
-> > -	NULL,
-> > -	NULL,
-> > -	"Replay Timer Timeout",		/* Bit Position 12	*/
-> > -	"Advisory Non-Fatal",		/* Bit Position 13	*/
-> > +	[0] =3D "Receiver Error",
-> > +	[6] =3D "Bad TLP",
-> > +	[7] =3D "Bad DLLP",
-> > +	[8] =3D "RELAY_NUM Rollover",
-> > +	[12] =3D "Replay Timer Timeout",
-> > +	[13] =3D "Advisory Non-Fatal Error",
-> > +	[14] =3D "Corrected Internal Error",
-> > +	[15] =3D "Header Log Overflow",
->=20
-> You replaced bare numbers with the existing #defines in the previous patch
-> (thank you), but now we're adding them here.  I'm pretty sure you can use
-> the #defines here, e.g.,
->=20
->     [PCI_ERR_COR_RCVR] =3D "Receiver Error",
-Considering PCI_ERR_COR_* stuff are not BIT offset, I need a conversion like
-[ilog2(PCI_ERR_COR_RCVR)] =3D "xxx". But in ras_event.h I need the same
-conversion like aer_correctable_error_string[ilog2(PCI_ERR_COR_RCVR)]. It l=
-ooks
-like a little bit clumsy and suboptimal. I can add extra BIT definition in
-include/uapi/linux/pci_regs.h like below:
-
-#define  PCI_ERR_COR_RCVR       0x00000001      /* Receiver Error Status */
-+#define  PCI_ERR_COR_RCVR_BIT   ilog2(PCI_ERR_COR_RCVR)
-
-or more direct way:
-#define  PCI_ERR_COR_RCVR       0x00000001      /* Receiver Error Status */
-+#define  PCI_ERR_COR_RCVR_BIT   0
-
-I can't find better method by now.
->=20
-> In fact, it would be really nice if you could figure out a way to have on=
-ly
-> one set of these strings.  Right now, we have the set in
-As above implied, I can export aer_correctable_error_string etc.
-
---6c2NcOVqGQ03X4Wi
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUDqY5AAoJEI01n1+kOSLHfLcP/jlEkegqXCk7gP7haEfcB/PQ
-J/mDiASICQRiaTJICGZhfRjo7OxKE/kfkraL0Dwq/Xx3UDbOq+7KnSgV35jdj7A+
-KEgNv/TYXTy+WVGf1k/3TlJghkY13qkvnBQ3KoO7JyaulpQ+x0vTBC6ZE75QzjuL
-TjJIjpOA74w6OuSr42OoIDmUWfymdRscX0VH5kdlMeY5Ssy7/OT1MUnuLaK5HunS
-UGqwpcDdNClUr8P9CTkGLD1G7YZwjFQUOVw2gx8SHTW6NUK1t4aXCcHZC/2Spv6p
-IQQhEfdLWaBLa+wyaTXLI/FmMoDYrq7iikymZk40NYZRX+HX5h20bxf2IOmQASYf
-fWok9OBO/BHKgU9HWa57tUSFL+x3AukFMeCbCsv38o/v8aHSCyh1ZVSzh4y52Pqj
-nGheI0oj1EXo+pf16lOM+vFvSNN6U38teA2pFZLev07g85Zo/ppT5I+a5Ddv7Qoi
-DyzRujanKZ+7AHi2QWTzbCzTHzlTxR1o4hIxJWj8VJYVMUVp59kZs3pF2cifc3Qs
-hz1ESXye1+u4cG0LCPp38DRJxAZdgxgnr3qsW8uBDiAb+yxZzOzYb8U9PYAIRtch
-PE7dZpACWwvpF1RAM7xvi7lqwYD4yu//iteN0lVPfBdJxLiQeZHXjCRravaNkmkt
-OcGA8vx09Q2hqAKn+BBA
-=xm6t
------END PGP SIGNATURE-----
-
---6c2NcOVqGQ03X4Wi--
+> ---
+> 
+>  drivers/pci/quirks.c |   17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 80c2d01..78cc83f 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3664,6 +3664,21 @@ static int pci_quirk_intel_pch_acs(struct pci_dev *dev, u16 acs_flags)
+>  	return acs_flags & ~flags ? 0 : 1;
+>  }
+>  
+> +static int pci_quirk_solarflare_acs(struct pci_dev *dev, u16 acs_flags)
+> +{
+> +	/*
+> +	 * SV, TB, and UF are not relevant to multifunction endpoints.
+> +	 *
+> +	 * Solarflare indicates that peer-to-peer between functions is not
+> +	 * possible, therefore RR, CR, and DT are not implemented.  Mask
+> +	 * these out as if they were clear in the ACS capabilities register.
+> +	 */
+> +	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+> +		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
+> +
+> +	return acs_flags ? 0 : 1;
+> +}
+> +
+>  static const struct pci_dev_acs_enabled {
+>  	u16 vendor;
+>  	u16 device;
+> @@ -3675,6 +3690,8 @@ static const struct pci_dev_acs_enabled {
+>  	{ PCI_VENDOR_ID_ATI, 0x439d, pci_quirk_amd_sb_acs },
+>  	{ PCI_VENDOR_ID_ATI, 0x4384, pci_quirk_amd_sb_acs },
+>  	{ PCI_VENDOR_ID_ATI, 0x4399, pci_quirk_amd_sb_acs },
+> +	{ PCI_VENDOR_ID_SOLARFLARE, 0x0903, pci_quirk_solarflare_acs },
+> +	{ PCI_VENDOR_ID_SOLARFLARE, 0x0923, pci_quirk_solarflare_acs },
+>  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
+>  	{ 0 }
+>  };
+> 
