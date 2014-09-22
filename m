@@ -1,60 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:52032 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752085AbaI2ILc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 04:11:32 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 1/2] PCI/MSI: Simplify default_restore_msi_irq()
-Date: Mon, 29 Sep 2014 16:35:33 +0800
-Message-ID: <1411979733-28523-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Mon, 22 Sep 2014 16:20:48 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v11 07/10] OF: Introduce helper function for getting PCI
+ domain_nr
+Message-ID: <20140922152048.GZ1994@e106497-lin.cambridge.arm.com>
+References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411003825-21521-8-git-send-email-Liviu.Dudau@arm.com>
+ <201409200424.20538.arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <201409200424.20538.arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Both MSI and MSI-X irq will be associated to msi_desc
-in arch MSI code, e.g. in x86
-arch_setup_msi_irqs()
-	native_setup_msi_irqs()
-		setup_msi_irq()
-			irq_set_msi_desc_off()
+On Sat, Sep 20, 2014 at 03:24:20AM +0100, Arnd Bergmann wrote:
+> On Thursday 18 September 2014, Liviu Dudau wrote:
+> > 
+> > Add of_pci_get_domain_nr() to retrieve the PCI domain number
+> > of a given device from DT. If the information is not present,
+> > the function can be requested to allocate a new domain number.
+> > 
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Grant Likely <grant.likely@linaro.org>
+> > Cc: Rob Herring <robh+dt@kernel.org>
+> > Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> 
+> This is more elaborate than I remember it, and while the simpler
+> version (which potentially resulted in a conflict for inconsistent
+> DTs) was fine, this one also seems ok.
+> 
+> Acked-by: Arnd Bergmann <arnd@arndb.de>
 
-Use irq_get_msi_desc() to get the MSI-X msi_desc for
-simplification. Also use __write_msi_msg() instead
-of write_msi_msg() to avoid the redundant calls.
+Thanks Arnd!
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/msi.c |   13 ++-----------
- 1 files changed, 2 insertions(+), 11 deletions(-)
+Best regards,
+Liviu
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index d077749..e0916ad 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -109,18 +109,9 @@ static void default_restore_msi_irq(struct pci_dev *dev, int irq)
- {
- 	struct msi_desc *entry;
- 
--	entry = NULL;
--	if (dev->msix_enabled) {
--		list_for_each_entry(entry, &dev->msi_list, list) {
--			if (irq == entry->irq)
--				break;
--		}
--	} else if (dev->msi_enabled)  {
--		entry = irq_get_msi_desc(irq);
--	}
--
-+	entry = irq_get_msi_desc(irq);
- 	if (entry)
--		write_msi_msg(irq, &entry->msg);
-+		__write_msi_msg(entry, &entry->msg);
- }
- 
- void __weak arch_restore_msi_irqs(struct pci_dev *dev)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-1.7.1
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
