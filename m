@@ -1,121 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:54449 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750953AbaI0FdK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Sep 2014 01:33:10 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Sat, 27 Sep 2014 15:33:08 +1000
-Date: Sat, 27 Sep 2014 15:33:07 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, kvm@vger.kernel.org,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 4/4] vfio/pci: Restore MSIx message prior to enabling
-Message-ID: <20140927053306.GA18847@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1400468470-11262-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1400468470-11262-5-git-send-email-gwshan@linux.vnet.ibm.com>
- <20140910081342.GA18833@shangw>
- <20140926031958.GA30285@shangw>
- <1411703204.7360.5.camel@ul30vt.home>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:58010 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754341AbaIVO1K (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 10:27:10 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411703204.7360.5.camel@ul30vt.home>
+In-Reply-To: <1411382705-15301-5-git-send-email-r65037@freescale.com>
+References: <1411382705-15301-1-git-send-email-r65037@freescale.com>
+	<1411382705-15301-5-git-send-email-r65037@freescale.com>
+Date: Mon, 22 Sep 2014 11:27:08 -0300
+Message-ID: <CAOMZO5D_s7ST_J0FV+NbrHpw2jVBDSpHprHnwJfPbQ=tqy7PWQ@mail.gmail.com>
+Subject: Re: [PATCH v1 4/4] PCI: imx6: add imx6sx pcie support
+From: Fabio Estevam <festevam@gmail.com>
+To: Richard Zhu <r65037@freescale.com>
+Cc: linux-pci-owner@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shawn Guo <shawn.guo@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 25, 2014 at 09:46:44PM -0600, Alex Williamson wrote:
->On Fri, 2014-09-26 at 13:19 +1000, Gavin Shan wrote:
->> On Wed, Sep 10, 2014 at 06:13:42PM +1000, Gavin Shan wrote:
->> >On Mon, May 19, 2014 at 01:01:10PM +1000, Gavin Shan wrote:
->> >>The MSIx vector table lives in device memory, which may be cleared as
->> >>part of a backdoor device reset. This is the case on the IBM IPR HBA
->> >>when the BIST is run on the device. When assigned to a QEMU guest,
->> >>the guest driver does a pci_save_state(), issues a BIST, then does a
->> >>pci_restore_state(). The BIST clears the MSIx vector table, but due
->> >>to the way interrupts are configured the pci_restore_state() does not
->> >>restore the vector table as expected. Eventually this results in an
->> >>EEH error on Power platforms when the device attempts to signal an
->> >>interrupt with the zero'd table entry.
->> >>
->> >>Fix the problem by restoring the host cached MSI message prior to
->> >>enabling each vector.
->> >>
->> >>Reported-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
->> >>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> >>Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
->> >
->> >Alex, please let me know if I need resend this one to you. The patch
->> >has been pending for long time, I'm not sure if you still can grab
->> >it somewhere.
->> >
->> >As you might see, Bjorn will take that one with PCI changes. This patch
->> >depends on the changes.
->> >
->> 
->> Alex, I guess you probably missed last reply. Bjorn acked the first
->> patch and you can pick both of them if I understand correctly. Please
->> let me know if I need resend those 2 patches?
->
->Please update the patches, add Bjorn's ACK, test and resend.  I'd like
->to at least know that it still applies and resolves the problem on the
->current code base since the patch is 4 months old.  Thanks,
->
+Hi Richard,
 
-Retested and it helps avoiding unexpected EEH error as before though
-the error because of MSIx message lost is eventually progagated to
-guest and the adapter is recovered successfully by the feature
-"EEH support for guest". I'll resend it with Bjorn's ack.
+On Mon, Sep 22, 2014 at 7:45 AM, Richard Zhu <r65037@freescale.com> wrote:
 
-Thanks,
-Gavin
+> +#ifdef CONFIG_PM_SLEEP
+> +static int pci_imx_suspend(void)
+> +{
+> +       int rc = 0;
+> +
+> +       if (is_imx6sx_pcie(imx6_pcie)) {
+> +               /* PM_TURN_OFF */
+> +               regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> +                               BIT(16), 1 << 16);
+> +               udelay(10);
+> +               regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> +                               BIT(16), 0 << 16);
+> +       }
+> +
+> +       return rc;
 
->Alex
->
->> >>---
->> >> drivers/vfio/pci/vfio_pci_intrs.c | 15 +++++++++++++++
->> >> 1 file changed, 15 insertions(+)
->> >>
->> >>diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
->> >>index 9dd49c9..553212f 100644
->> >>--- a/drivers/vfio/pci/vfio_pci_intrs.c
->> >>+++ b/drivers/vfio/pci/vfio_pci_intrs.c
->> >>@@ -16,6 +16,7 @@
->> >> #include <linux/device.h>
->> >> #include <linux/interrupt.h>
->> >> #include <linux/eventfd.h>
->> >>+#include <linux/msi.h>
->> >> #include <linux/pci.h>
->> >> #include <linux/file.h>
->> >> #include <linux/poll.h>
->> >>@@ -548,6 +549,20 @@ static int vfio_msi_set_vector_signal(struct vfio_pci_device *vdev,
->> >> 		return PTR_ERR(trigger);
->> >> 	}
->> >>
->> >>+	/*
->> >>+	 * The MSIx vector table resides in device memory which may be cleared
->> >>+	 * via backdoor resets. We don't allow direct access to the vector
->> >>+	 * table so even if a userspace driver attempts to save/restore around
->> >>+	 * such a reset it would be unsuccessful. To avoid this, restore the
->> >>+	 * cached value of the message prior to enabling.
->> >>+	 */
->> >>+	if (msix) {
->> >>+		struct msi_msg msg;
->> >>+
->> >>+		get_cached_msi_msg(irq, &msg);
->> >>+		write_msi_msg(irq, &msg);
->> >>+	}
->> >>+
->> >> 	ret = request_irq(irq, vfio_msihandler, 0,
->> >> 			  vdev->ctx[vector].name, trigger);
->> >> 	if (ret) {
->> >>-- 
->> >>1.8.3.2
->> >>
->> 
->
->
->
+You could get rid of this 'rc' variable and just return 0.
 
+> +}
+> +
+> +static void pci_imx_resume(void)
+> +{
+> +       struct pcie_port *pp = &imx6_pcie->pp;
+> +
+> +       if (is_imx6sx_pcie(imx6_pcie)) {
+> +               /* reset iMX6SX PCIe */
+> +               regmap_update_bits(imx6_pcie->iomuxc_gpr,
+> +                               IOMUXC_GPR5, BIT(18), 1 << 18);
+> +
+> +               regmap_update_bits(imx6_pcie->iomuxc_gpr,
+> +                               IOMUXC_GPR5, BIT(18), 0 << 18);
+> +
+> +               /*
+> +                * controller maybe turn off, re-configure again
+> +                * Set the CLASS_REV of RC CFG header to
+> +                * PCI_CLASS_BRIDGE_PCI
+> +                */
+> +               writel(readl(pp->dbi_base + PCI_CLASS_REVISION)
+> +                       | (PCI_CLASS_BRIDGE_PCI << 16),
+> +                       pp->dbi_base + PCI_CLASS_REVISION);
+> +
+> +               dw_pcie_setup_rc(pp);
+> +       }
+> +}
+
+Not related to this patch, but on mx6q/dl  we still get kernel hang
+after doing suspend/resume when a PCI card is inserted.
+
+Is this fixed on mx6solox?
+
+Any idea as to how to fix it for mx6q?
