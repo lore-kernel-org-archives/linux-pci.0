@@ -1,110 +1,148 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:43436 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753000AbaIPRop (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 13:44:45 -0400
-Date: Tue, 16 Sep 2014 10:43:50 -0700 (PDT)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC Part2 v1 01/21] irqdomain: Introduce new interfaces to
- support hierarchy irqdomains
-In-Reply-To: <1410444228-3134-2-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.10.1409160859080.4247@nanos>
-References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com> <1410444228-3134-2-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Mon, 22 Sep 2014 12:43:17 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Robert Richter <rric@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Sunil Goutham <sunil.goutham@caviumnetworks.com>
+Subject: Re: [PATCH v11 08/10] OF: PCI: Add support for parsing PCI host
+ bridge resources from DT
+Message-ID: <20140922114317.GN1994@e106497-lin.cambridge.arm.com>
+References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411003825-21521-9-git-send-email-Liviu.Dudau@arm.com>
+ <20140922093228.GA20256@rric.localhost>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20140922093228.GA20256@rric.localhost>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Jiang,
+On Mon, Sep 22, 2014 at 10:32:28AM +0100, Robert Richter wrote:
+> On 18.09.14 02:30:23, Liviu Dudau wrote:
+> > +int of_pci_get_host_bridge_resources(struct device_node *dev,
+> > +			unsigned char busno, unsigned char bus_max,
+> > +			struct list_head *resources, resource_size_t *io_base)
+> > +{
+> > +	struct resource *res;
+> > +	struct resource *bus_range;
+> > +	struct of_pci_range range;
+> > +	struct of_pci_range_parser parser;
+> > +	char range_type[4];
+> > +	int err;
+> > +
+> > +	if (!io_base)
+> > +		return -EINVAL;
+> > +	*io_base = OF_BAD_ADDR;
+> 
 
-On Thu, 11 Sep 2014, Jiang Liu wrote:
-> diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
->  	/* Create mapping */
-> -	virq = irq_create_mapping(domain, hwirq);
-> +#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-> +	if (domain->ops->alloc)
-> +		virq = irq_domain_alloc_irqs(domain, -1, 1, NUMA_NO_NODE,
-> +					     irq_data);
-> +	else
-> +#endif
-> +		virq = irq_create_mapping(domain, hwirq);
+Hi Robert,
 
-I'd prefer to get rid of the #ifdef CONFIG...s in the code. So this
-can be written:
+> This breaks for mem-mapped pci host controllers. The patch below fixes
+> this.
 
-        if (irq_domain_has_hierarchy(domain))
-		virq = irq_domain_alloc_irqs(domain, -1, 1, NUMA_NO_NODE,
-					     irq_data);
-	else
-		virq = irq_create_mapping(domain, hwirq);
-	   
-	   
+I think you mean PCI host controller that have only memory mapped ranges,
+am I right? Initially I've read your reply as to mean that the host
+controller is accessed through some memory mapped area, which I believe is
+the case for all host controllers.
 
->  	if (!virq)
->  		return virq;
+> 
+> This series was tested with the fix on top for Cavium Thunder.
+> 
+> Tested-by: Robert Richter <rrichter@cavium.com>
+
+Thanks for that!
+
+> 
+> -Robert
+> 
+> 
+> 
+> From e798af4fc2f664d1aff7e863489b8298f90e716e Mon Sep 17 00:00:00 2001
+> From: Robert Richter <rrichter@cavium.com>
+> Date: Mon, 22 Sep 2014 10:46:01 +0200
+> Subject: [PATCH] OF: PCI: Fix creation of mem-mapped pci host bridges
+> 
+> The pci host bridge was not created if io_base was not set when
+> calling of_pci_get_host_bridge_resources(). This is esp. the case for
+> mem-mapped io (IORESOURCE_MEM). This patch fixes this. Function
+> parameter io_base is optional now.
+
+I think the message is misleading. What you want to do is make io_base
+optional for the case where the PCI host bridge only expects to have only
+IORESOURCE_MEM ranges and doesn't care about IORESOURCE_IO ones.
+
+As I'm going to touch this area again to address a comment from Bjorn,
+do you mind if I roll this patch into mine with your Signed-off-by and
+the mention that you have made io_base optional?
+
+Best regards,
+Liviu
+
+> 
+> Signed-off-by: Robert Richter <rrichter@cavium.com>
+> ---
+>  drivers/of/of_pci.c | 7 +++----
+>  1 file changed, 3 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> index ffdb45ed8682..1f0e7c2505ee 100644
+> --- a/drivers/of/of_pci.c
+> +++ b/drivers/of/of_pci.c
+> @@ -182,9 +182,8 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+>  	char range_type[4];
+>  	int err;
 >  
-> @@ -540,7 +542,11 @@ unsigned int irq_find_mapping(struct irq_domain *domain,
->  		return 0;
+> -	if (!io_base)
+> -		return -EINVAL;
+> -	*io_base = OF_BAD_ADDR;
+> +	if (io_base)
+> +		*io_base = OF_BAD_ADDR;
 >  
->  	if (hwirq < domain->revmap_direct_max_irq) {
-> +#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-> +		data = irq_domain_get_irq_data(domain, hwirq);
-> +#else
->  		data = irq_get_irq_data(hwirq);
-> +#endif
+>  	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
+>  	if (!bus_range)
+> @@ -242,7 +241,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+>  			goto parse_failed;
+>  		}
+>  
+> -		if (resource_type(res) == IORESOURCE_IO) {
+> +		if (io_base && resource_type(res) == IORESOURCE_IO) {
+>  			if (*io_base != OF_BAD_ADDR)
+>  				pr_warn("More than one I/O resource converted. CPU offset for old range lost!\n");
+>  			*io_base = range.cpu_addr;
+> -- 
+> 2.1.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Similar here. Make irq_domain_get_irq_data() map to irq_get_irq_data() for
-the non hierarchy mode so you end up with a single line:
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
--  		data = irq_get_irq_data(hwirq);
-+		data = irq_domain_get_irq_data(domain, hwirq);
-
-
-> +#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-> +/**
-> + * irq_domain_alloc_irqs - Allocate IRQs from domain
-> + * @domain: domain to allocate from
-> + * @irq_base: allocate specified IRQ nubmer if irq_base >= 0
-> + * @nr_irqs: number of IRQs to allocate
-> + * @node: NUMA node id for memory allocation
-> + * @arg: domain specific argument
-> + * @realloc: IRQ descriptors have already been allocated if true
-> + *
-> + * Allocate IRQ numbers and initialized all data structures to support
-> + * hiearchy IRQ domains.
-> + * Parameter @realloc is mainly to support legacy IRQs.
-
-What's the issue with the legacy irqs? So this has the interrupt
-descriptors allocated already. Are they already wired up for serving
-interrupts and what's the state of those lines?
-
-> + * Returns error code or allocated IRQ number
-
-Can you please add some documentation how the hierarchical allocation
-is supposed to work and how the domains are connected. That should
-probably go to Documentation/IRQ-domains.txt.
-
-Other than that this looks pretty good! Nice work!
-
-Thanks,
-
-	tglx
