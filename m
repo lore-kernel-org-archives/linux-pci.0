@@ -1,72 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:51821 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752528AbaIEXe1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 19:34:27 -0400
-Received: by mail-pa0-f48.google.com with SMTP id hz1so1968656pad.7
-        for <linux-pci@vger.kernel.org>; Fri, 05 Sep 2014 16:34:26 -0700 (PDT)
-Date: Fri, 5 Sep 2014 17:34:21 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Chen, Gong" <gong.chen@linux.intel.com>
-Cc: rdunlap@infradead.org, bp@alien8.de, tony.luck@intel.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RESEND RFC 5/5] PCIe, AER: Update initial value of UC error mask
-Message-ID: <20140905233421.GL8080@google.com>
-References: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
- <1407910961-7798-6-git-send-email-gong.chen@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1407910961-7798-6-git-send-email-gong.chen@linux.intel.com>
+Received: from relmlor2.renesas.com ([210.160.252.172]:25225 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753090AbaIVJvV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 05:51:21 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1411379470-20639-1-git-send-email-phil.edworthy@renesas.com>
+References: <1411379470-20639-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1411379470-20639-3-git-send-email-phil.edworthy@renesas.com>
+Date: Mon, 22 Sep 2014 10:51:09 +0100
+Subject: [PATCH 2/3] PCI: rcar-internal-pci: Add call to get domain nr
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 13, 2014 at 02:22:41AM -0400, Chen, Gong wrote:
-> In PCI-e SPEC r3.0, BIT 0 of Uncorrectable Error Status Register
-> is redefined and it has an explicit requirement that when writing
-> this field, a value of 1b is the only choice. So change previous
-> initial maks from 0 to 1.
-> 
-> Signed-off-by: Chen, Gong <gong.chen@linux.intel.com>
-> ---
-> NOTE: After scratching all use cases, this is the most obvious use
-> case to violate the SPEC. Most of use cases just read first and
-> then overwrite for clear purpose. Even so, such fix is obvious to
-> not compatiable with previous SPEC definition. Do we need a dirty
-> hack?
-> 
->  arch/mips/pci/pci-octeon.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/arch/mips/pci/pci-octeon.c b/arch/mips/pci/pci-octeon.c
-> index 59cccd95688b..f1bfdc201297 100644
-> --- a/arch/mips/pci/pci-octeon.c
-> +++ b/arch/mips/pci/pci-octeon.c
-> @@ -134,7 +134,7 @@ int pcibios_plat_dev_init(struct pci_dev *dev)
->  				       dconfig);
->  		/* Enable reporting of all uncorrectable errors */
->  		/* Uncorrectable Error Mask - turned on bits disable errors */
-> -		pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, 0);
-> +		pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, 1);
+R-Car devices (r8a7790 and r8a7791) need to place the internal PCI and external
+PCIe controllers on separate domains so that they can work at the same time.
 
-I see the text in the spec that says we should only write 1 to bit 0 (sec
-7.10.3, for anybody following along).  It looks like that change was made
-between PCIe r1.0 and r1.1.  It would really be nice to have more context
-about why the change was made, because if there's hardware in the field
-that implements r1.0 behavior, this patch will change the way it works, and
-I don't know how to verify that is safe.
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ drivers/pci/host/pci-rcar-gen2.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Does this actually change fix a problem?  If it fixes a problem that
-happens on real hardware, that's a much better reason to make a change than
-just to comply with the spec.
+diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+index 3ef854f..17681ea 100644
+--- a/drivers/pci/host/pci-rcar-gen2.c
++++ b/drivers/pci/host/pci-rcar-gen2.c
+@@ -99,6 +99,7 @@ struct rcar_pci_priv {
+ 	struct resource io_res;
+ 	struct resource mem_res;
+ 	struct resource *cfg_res;
++	int domain;
+ 	unsigned busnr;
+ 	int irq;
+ 	unsigned long window_size;
+@@ -373,6 +374,8 @@ static int rcar_pci_probe(struct platform_device *pdev)
+ 
+ 	priv->window_size = SZ_1G;
+ 
++	priv->domain = of_pci_get_domain_nr(pdev->dev.of_node, true);
++
+ 	if (pdev->dev.of_node) {
+ 		struct resource busnr;
+ 		int ret;
+@@ -397,6 +400,9 @@ static int rcar_pci_probe(struct platform_device *pdev)
+ 	hw.map_irq = rcar_pci_map_irq;
+ 	hw.ops = &rcar_pci_ops;
+ 	hw.setup = rcar_pci_setup;
++#ifdef CONFIG_PCI_DOMAINS
++	hw.domain = priv->domain;
++#endif
+ 	pci_common_init_dev(&pdev->dev, &hw);
+ 	return 0;
+ }
+-- 
+2.1.0
 
-Sec 7.10.2 also says we should ignore the value of bit 0 in the
-Uncorrectable Error Status register, and I don't see any place where we
-follow that advice.
-
-Bjorn
-
->  		 * Leave severity at HW default. This only controls if
->  		 * errors are reported as uncorrectable or
-> -- 
-> 2.0.0.rc2
-> 
