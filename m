@@ -1,123 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:51288 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751028AbaI2WRc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 18:17:32 -0400
-From: "Ronciak, John" <john.ronciak@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] PCI: Intel 10G NIC ACS quirks
-Date: Mon, 29 Sep 2014 22:17:28 +0000
-Message-ID: <D38E8E86660E514AB505863C19C9287C74064FB1@ORSMSX102.amr.corp.intel.com>
-References: <20140926230717.17458.59969.stgit@gimli.home>
- <20140929194855.GA15712@google.com>
-In-Reply-To: <20140929194855.GA15712@google.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 22 Sep 2014 12:54:18 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Rajat Jain <rajatxjain@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Richard Yang <weiyang@linux.vnet.ibm.com>,
+	Matthew Wilcox <matthew.r.wilcox@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH v2] pci/probe: Enable CRS for root port if it is supported
+Message-ID: <20140922185418.GB1880@google.com>
+References: <53FFA54D.9000907@gmail.com>
+ <CAErSpo5_WMUmnTHpPZt+j04VZoiW1pthQoGV90A5BDQpQgjwOQ@mail.gmail.com>
+ <54065208.3080309@gmail.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54065208.3080309@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 26, 2014 at 05:07:59PM -0600, Alex Williamson wrote:
-> Intel has verified there is no peer-to-peer between functions for the 
-> below selection of 82598, 82599, and X520 10G NICs.  These NICs lack 
-> an ACS capability, so we're not able to determine this isolation 
-> without the help of quirks.  Generalize the Solarflare quirk and add 
-> these.
+On Tue, Sep 02, 2014 at 04:26:00PM -0700, Rajat Jain wrote:
 > 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> Cc: John Ronciak <john.ronciak@intel.com>
-
-> Applied to pci/virtualization for v3.18, thanks!
-Acked-by: John Ronciak <John.ronciak@intel.com>
-
-(I don't k now if this is needed at this point but since Alex asked for it, here it is.
-
-
-Cheers,
-John
-
------Original Message-----
-From: Bjorn Helgaas [mailto:bhelgaas@google.com] 
-Sent: Monday, September 29, 2014 12:49 PM
-To: Alex Williamson
-Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; Ronciak, John
-Subject: Re: [PATCH] PCI: Intel 10G NIC ACS quirks
-
-On Fri, Sep 26, 2014 at 05:07:59PM -0600, Alex Williamson wrote:
-> Intel has verified there is no peer-to-peer between functions for the 
-> below selection of 82598, 82599, and X520 10G NICs.  These NICs lack 
-> an ACS capability, so we're not able to determine this isolation 
-> without the help of quirks.  Generalize the Solarflare quirk and add 
-> these.
+> As per the PCIe spec, an endpoint may return the configuration cycles
+> with CRS if it is not yet fully ready to be accessed. If the CRS visibility
+> is not enabled at the root port, the spec leaves the retry behaviour open
+> to implementation in such a case. The Intel root ports have chosen to retry
+> endlessly in this situation. Thus, the root controller may "hang" (repeatedly
+> retrying the configuration requests until it gets a status other than CRS) if
+> a device returns CRS for a long time. This can cause a broken endpoint to bring
+> down the whole PCI hierarchy.
 > 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> Cc: John Ronciak <john.ronciak@intel.com>
+> This was recently known to cause problems on Intel systems and
+> was discussed here:
+> http://marc.info/?t=140926298500002&r=1&w=2
+> 
+> Ref1:
+> https://www.pcisig.com/specifications/pciexpress/ECN_CRS_Software_Visibility_No27.pdf
+> 
+> Ref2:
+> PCIe spec V3.0, pg119, pg127 for "Configuration Request Retry Status"
+> 
+> Thus enable the CRS visibility for the root ports that support it. This
+> patch reverts the following commit, but enables CRS visibility only
+> when the root port supports it:
+> 
+> ad7edfe04908 ("[PCI] Do not enable CRS Software Visibility by default")
+> 
+> (Linus' response: http://marc.info/?l=linux-pci&m=140968622520192&w=2)
+> 
+> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+> Signed-off-by: Guenter Roeck <groeck@juniper.net>
 
-Applied to pci/virtualization for v3.18, thanks!
+Applied to pci/enumeration for v3.18, thanks!
 
 > ---
+> v2: Remove the white list, that was enabling the CRS for certain known Intel systems.
+>     Rather now enable it for all systems that support this capability.
+> v1: Enable CRS for only some given Intel systems (maintain a whitelist)
 > 
->  drivers/pci/quirks.c |   34 ++++++++++++++++++++++++++++------
->  1 file changed, 28 insertions(+), 6 deletions(-)
+>  drivers/pci/probe.c           |   13 +++++++++++++
+>  include/uapi/linux/pci_regs.h |    1 +
+>  2 files changed, 14 insertions(+)
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index 
-> 95239e0..b6c6500 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3635,14 +3635,16 @@ static int pci_quirk_intel_pch_acs(struct pci_dev *dev, u16 acs_flags)
->  	return acs_flags & ~flags ? 0 : 1;
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index e3cf8a2..3c4c35c 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -740,6 +740,17 @@ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
 >  }
+>  EXPORT_SYMBOL(pci_add_new_bus);
 >  
-> -static int pci_quirk_solarflare_acs(struct pci_dev *dev, u16 
-> acs_flags)
-> +static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 
-> +acs_flags)
->  {
->  	/*
->  	 * SV, TB, and UF are not relevant to multifunction endpoints.
->  	 *
-> -	 * Solarflare indicates that peer-to-peer between functions is not
-> -	 * possible, therefore RR, CR, and DT are not implemented.  Mask
-> -	 * these out as if they were clear in the ACS capabilities register.
-> +	 * Multifunction devices are only required to implement RR, CR, and DT
-> +	 * in their ACS capability if they support peer-to-peer transactions.
-> +	 * Devices matching this quirk have been verified by the vendor to not
-> +	 * perform peer-to-peer with other functions, allowing us to mask out
-> +	 * these bits as if they were unimplemented in the ACS capability.
->  	 */
->  	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
->  		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT); @@ -3661,8 +3663,28 
-> @@ static const struct pci_dev_acs_enabled {
->  	{ PCI_VENDOR_ID_ATI, 0x439d, pci_quirk_amd_sb_acs },
->  	{ PCI_VENDOR_ID_ATI, 0x4384, pci_quirk_amd_sb_acs },
->  	{ PCI_VENDOR_ID_ATI, 0x4399, pci_quirk_amd_sb_acs },
-> -	{ PCI_VENDOR_ID_SOLARFLARE, 0x0903, pci_quirk_solarflare_acs },
-> -	{ PCI_VENDOR_ID_SOLARFLARE, 0x0923, pci_quirk_solarflare_acs },
-> +	{ PCI_VENDOR_ID_SOLARFLARE, 0x0903, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_SOLARFLARE, 0x0923, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10C6, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10DB, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10DD, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10E1, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10F1, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10F7, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10F8, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10F9, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10FA, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10FB, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10FC, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x1507, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x1514, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x151C, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x1529, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x152A, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x154D, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x154F, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x1551, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x1558, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
->  	{ 0 }
->  };
-> 
+> +static void pci_enable_crs(struct pci_dev *pdev)
+> +{
+> +	u16 root_cap = 0;
+> +
+> +	/* Enable CRS Software visibility if supported */
+> +	pcie_capability_read_word(pdev, PCI_EXP_RTCAP, &root_cap);
+> +	if (root_cap & PCI_EXP_RTCAP_CRSVIS)
+> +		pcie_capability_set_word(pdev, PCI_EXP_RTCTL,
+> +					 PCI_EXP_RTCTL_CRSSVE);
+> +}
+> +
+>  /*
+>   * If it's a bridge, configure it and scan the bus behind it.
+>   * For CardBus bridges, we don't scan behind as the devices will
+> @@ -787,6 +798,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+>  	pci_write_config_word(dev, PCI_BRIDGE_CONTROL,
+>  			      bctl & ~PCI_BRIDGE_CTL_MASTER_ABORT);
+>  
+> +	pci_enable_crs(dev);
+> +
+>  	if ((secondary || subordinate) && !pcibios_assign_all_busses() &&
+>  	    !is_cardbus && !broken) {
+>  		unsigned int cmax;
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 30db069..a75106d 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -552,6 +552,7 @@
+>  #define  PCI_EXP_RTCTL_PMEIE	0x0008	/* PME Interrupt Enable */
+>  #define  PCI_EXP_RTCTL_CRSSVE	0x0010	/* CRS Software Visibility Enable */
+>  #define PCI_EXP_RTCAP		30	/* Root Capabilities */
+> +#define  PCI_EXP_RTCAP_CRSVIS	0x0001	/* CRS software visibility capability */
+>  #define PCI_EXP_RTSTA		32	/* Root Status */
+>  #define PCI_EXP_RTSTA_PME	0x00010000 /* PME status */
+>  #define PCI_EXP_RTSTA_PENDING	0x00020000 /* PME pending */
+> -- 
+> 1.7.9.5
