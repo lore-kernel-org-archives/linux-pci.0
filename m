@@ -1,12 +1,12 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Mon, 22 Sep 2014 16:20:48 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
+Date: Mon, 22 Sep 2014 11:32:28 +0200
+From: Robert Richter <rric@kernel.org>
+To: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
 	Russell King <linux@arm.linux.org.uk>,
 	linux-pci <linux-pci@vger.kernel.org>,
@@ -21,57 +21,86 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	LKML <linux-kernel@vger.kernel.org>,
 	Device Tree ML <devicetree@vger.kernel.org>,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v11 07/10] OF: Introduce helper function for getting PCI
- domain_nr
-Message-ID: <20140922152048.GZ1994@e106497-lin.cambridge.arm.com>
+	Grant Likely <grant.likely@linaro.org>,
+	Sunil Goutham <sunil.goutham@caviumnetworks.com>
+Subject: Re: [PATCH v11 08/10] OF: PCI: Add support for parsing PCI host
+ bridge resources from DT
+Message-ID: <20140922093228.GA20256@rric.localhost>
 References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
- <1411003825-21521-8-git-send-email-Liviu.Dudau@arm.com>
- <201409200424.20538.arnd@arndb.de>
+ <1411003825-21521-9-git-send-email-Liviu.Dudau@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <201409200424.20538.arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1411003825-21521-9-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 20, 2014 at 03:24:20AM +0100, Arnd Bergmann wrote:
-> On Thursday 18 September 2014, Liviu Dudau wrote:
-> > 
-> > Add of_pci_get_domain_nr() to retrieve the PCI domain number
-> > of a given device from DT. If the information is not present,
-> > the function can be requested to allocate a new domain number.
-> > 
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: Grant Likely <grant.likely@linaro.org>
-> > Cc: Rob Herring <robh+dt@kernel.org>
-> > Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> 
-> This is more elaborate than I remember it, and while the simpler
-> version (which potentially resulted in a conflict for inconsistent
-> DTs) was fine, this one also seems ok.
-> 
-> Acked-by: Arnd Bergmann <arnd@arndb.de>
+On 18.09.14 02:30:23, Liviu Dudau wrote:
+> +int of_pci_get_host_bridge_resources(struct device_node *dev,
+> +			unsigned char busno, unsigned char bus_max,
+> +			struct list_head *resources, resource_size_t *io_base)
+> +{
+> +	struct resource *res;
+> +	struct resource *bus_range;
+> +	struct of_pci_range range;
+> +	struct of_pci_range_parser parser;
+> +	char range_type[4];
+> +	int err;
+> +
+> +	if (!io_base)
+> +		return -EINVAL;
+> +	*io_base = OF_BAD_ADDR;
 
-Thanks Arnd!
+This breaks for mem-mapped pci host controllers. The patch below fixes
+this.
 
-Best regards,
-Liviu
+This series was tested with the fix on top for Cavium Thunder.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Tested-by: Robert Richter <rrichter@cavium.com>
 
+-Robert
+
+
+
+>From e798af4fc2f664d1aff7e863489b8298f90e716e Mon Sep 17 00:00:00 2001
+From: Robert Richter <rrichter@cavium.com>
+Date: Mon, 22 Sep 2014 10:46:01 +0200
+Subject: [PATCH] OF: PCI: Fix creation of mem-mapped pci host bridges
+
+The pci host bridge was not created if io_base was not set when
+calling of_pci_get_host_bridge_resources(). This is esp. the case for
+mem-mapped io (IORESOURCE_MEM). This patch fixes this. Function
+parameter io_base is optional now.
+
+Signed-off-by: Robert Richter <rrichter@cavium.com>
+---
+ drivers/of/of_pci.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index ffdb45ed8682..1f0e7c2505ee 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -182,9 +182,8 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 	char range_type[4];
+ 	int err;
+ 
+-	if (!io_base)
+-		return -EINVAL;
+-	*io_base = OF_BAD_ADDR;
++	if (io_base)
++		*io_base = OF_BAD_ADDR;
+ 
+ 	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
+ 	if (!bus_range)
+@@ -242,7 +241,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 			goto parse_failed;
+ 		}
+ 
+-		if (resource_type(res) == IORESOURCE_IO) {
++		if (io_base && resource_type(res) == IORESOURCE_IO) {
+ 			if (*io_base != OF_BAD_ADDR)
+ 				pr_warn("More than one I/O resource converted. CPU offset for old range lost!\n");
+ 			*io_base = range.cpu_addr;
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+2.1.0
 
