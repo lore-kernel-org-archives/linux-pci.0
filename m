@@ -1,95 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0078.outbound.protection.outlook.com ([157.56.110.78]:45024
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752137AbaILLJE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Sep 2014 07:09:04 -0400
-From: Srikanth Thokala <srikanth.thokala@xilinx.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: PCI: xilinx: Add Xilinx AXI PCIe Host Bridge IP driver
-Date: Fri, 12 Sep 2014 10:35:46 +0000
-References: <20140911125440.GA17279@mwanda>
-In-Reply-To: <20140911125440.GA17279@mwanda>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Mon, 22 Sep 2014 16:33:12 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v11 07/10] OF: Introduce helper function for getting PCI
+ domain_nr
+Message-ID: <20140922153311.GB1994@e106497-lin.cambridge.arm.com>
+References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411003825-21521-8-git-send-email-Liviu.Dudau@arm.com>
+ <20140919210313.GH19374@google.com>
+ <20140922110522.GK1994@e106497-lin.cambridge.arm.com>
+ <CAErSpo7bnOFo4-uZmVsMqNpVQS+dQaMNedjmJ=sH_d9Kp2fGPg@mail.gmail.com>
 MIME-Version: 1.0
-Message-ID: <b7d26984-7424-4af5-a69f-e7bf28bf71fc@BL2FFO11FD011.protection.gbl>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAErSpo7bnOFo4-uZmVsMqNpVQS+dQaMNedjmJ=sH_d9Kp2fGPg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Dan,
+On Mon, Sep 22, 2014 at 04:25:13PM +0100, Bjorn Helgaas wrote:
+> On Mon, Sep 22, 2014 at 5:05 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > On Fri, Sep 19, 2014 at 10:03:13PM +0100, Bjorn Helgaas wrote:
+> >> On Thu, Sep 18, 2014 at 02:30:22AM +0100, Liviu Dudau wrote:
+> >> > Add of_pci_get_domain_nr() to retrieve the PCI domain number
+> >> > of a given device from DT. If the information is not present,
+> >> > the function can be requested to allocate a new domain number.
+> >>
+> >> Is of_pci_get_domain_nr() used somewhere?  If the use is in some future
+> >> series, please mention it explicitly.  I'm just trying to avoid merging
+> >> unused code.
+> >
+> > It is used in the arm64 specific patch that I have dropped out of my
+> > pull request. After discussions with Catalin I will add the patch back
+> > into the tree that you've pulled from as he is OK with your tree carrying
+> > the whole package.
+> >
+> > I need to ask for some guidance here: for addressing some of your comments
+> > and Rob's I can add more patches in my v11 branch and you can pull them
+> > when you think they are ready. But one of your comments was requesting
+> > splitting a patch into two blocks - one that moves of_pci_range_to_resource()
+> > into drivers/of/address.c and one that fixes it's behaviour - and I don't
+> > know how you would like that handled. Should I revert the original patch
+> > and add the new ones, or should I rebase the whole series into a different
+> > branch that you can pull from?
+> 
+> I guess the easiest thing is probably just to send a v12 series.  I
+> was hoping we were close enough for me to just hand-integrate minor
+> tweaks into my branch, but I think that will just create more
+> confusion.
 
-I will look into it and will send a fix, thanks.
+OK, I will send v12 then with all the acquired ACKs and fixes.
 
-Srikanth
+Best regards,
+Liviu
 
-> -----Original Message-----
-> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
-> Sent: Thursday, September 11, 2014 6:25 PM
-> To: Srikanth Thokala
-> Cc: linux-pci@vger.kernel.org
-> Subject: re: PCI: xilinx: Add Xilinx AXI PCIe Host Bridge IP driver
->
-> Hello Srikanth Thokala,
->
-> The patch 8961def56845: "PCI: xilinx: Add Xilinx AXI PCIe Host Bridge IP driver"
-> from Aug 20, 2014, leads to the following static checker
-> warnings:
->
-> drivers/pci/host/pcie-xilinx.c:647 xilinx_pcie_init_irq_domain() warn: passing
-> zero to 'PTR_ERR'
-> drivers/pci/host/pcie-xilinx.c:655 xilinx_pcie_init_irq_domain() warn: passing
-> zero to 'PTR_ERR'
-> drivers/pci/host/pcie-xilinx.c:666 xilinx_pcie_init_irq_domain() warn: passing
-> zero to 'PTR_ERR'
->
-> drivers/pci/host/pcie-xilinx.c
->    637  static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
->    638  {
->    639          struct device *dev = port->dev;
->    640          struct device_node *node = dev->of_node;
->    641          struct device_node *pcie_intc_node;
->    642
->    643          /* Setup INTx */
->    644          pcie_intc_node = of_get_next_child(node, NULL);
->    645          if (!pcie_intc_node) {
->    646                  dev_err(dev, "No PCIe Intc node found\n");
->    647                  return PTR_ERR(pcie_intc_node);
->                                ^^^^^^^^^^^^^^^^^^^^^^ Returning success when a
-> negative error code was intended.
->
->    648          }
->    649
->    650          port->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
->    651                                                   &intx_domain_ops,
->    652                                                   port);
->    653          if (!port->irq_domain) {
->    654                  dev_err(dev, "Failed to get a INTx IRQ domain\n");
->    655                  return PTR_ERR(port->irq_domain);
->                                ^^^^^^^^^^^^^^^^^^^^^^^^^
->    656          }
->    657
->    658          /* Setup MSI */
->    659          if (IS_ENABLED(CONFIG_PCI_MSI)) {
->    660                  port->irq_domain = irq_domain_add_linear(node,
->    661                                                           XILINX_NUM_MSI_IRQS,
->    662                                                           &msi_domain_ops,
->    663                                                           &xilinx_pcie_msi_chip);
->    664                  if (!port->irq_domain) {
->    665                          dev_err(dev, "Failed to get a MSI IRQ domain\n");
->    666                          return PTR_ERR(port->irq_domain);
->                                        ^^^^^^^^^^^^^^^^^^^^^^^^^
->    667                  }
->    668
->    669                  xilinx_pcie_enable_msi(port);
->    670          }
->    671
->    672          return 0;
->    673  }
->
-> regards,
-> dan carpenter
+> 
+> Bjorn
+> 
 
-
-This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
