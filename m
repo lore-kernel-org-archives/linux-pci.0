@@ -1,108 +1,105 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from exprod5og107.obsmtp.com ([64.18.0.184]:59759 "HELO
+	exprod5og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755118AbaIVW7h (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 18:59:37 -0400
+Received: by mail-wg0-f52.google.com with SMTP id n12so1745701wgh.11
+        for <linux-pci@vger.kernel.org>; Mon, 22 Sep 2014 15:59:36 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <3414852.SWQ9rRcUDx@wuerfel>
-References: <1411573068-12952-1-git-send-email-rric@kernel.org>
-	<3082935.e3X4GsVUDn@wuerfel>
-	<CA+sq2Ce8sb=YGma05qEk_992Mc9M92TxCk+RWsyi6tY-FVOCXw@mail.gmail.com>
-	<3414852.SWQ9rRcUDx@wuerfel>
-Date: Thu, 25 Sep 2014 00:37:00 +0530
-Message-ID: <CA+sq2CcXCVrk=fxH79n88ZJj5fBQmbyhnzj08qHNO8EmpZT1Yg@mail.gmail.com>
-Subject: Re: [PATCH 3/6] pci, thunder: Add PCIe host controller devicetree bindings
-From: Sunil Kovvuri <sunil.kovvuri@gmail.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: LAKML <linux-arm-kernel@lists.infradead.org>,
-	Robert Richter <rric@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+In-Reply-To: <20140922222727.GC15822@obsidianresearch.com>
+References: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
+	<1410906824-9321-2-git-send-email-tinamdar@apm.com>
+	<20140919223258.GA32208@google.com>
+	<CACoXjcnVU3+fQHQ0-zEVRjoedrrod-aua6AVybj7UuSHO9HBaw@mail.gmail.com>
+	<CAErSpo4C_6mh7hais14254rYBeMYArvf=nETmgvBjgP290aD4Q@mail.gmail.com>
+	<20140922222727.GC15822@obsidianresearch.com>
+Date: Mon, 22 Sep 2014 15:59:35 -0700
+Message-ID: <CACoXjcmuVZbAQcHyunxu4DaY3Wew2tttydWsSmneYiUf73dRow@mail.gmail.com>
+Subject: Re: [PATCH v9 1/4] pci:host: APM X-Gene PCIe host controller driver
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
 	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
 	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
+	Rob Landley <rob@landley.net>,
 	Liviu Dudau <liviu.dudau@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Robert Richter <rrichter@cavium.com>,
-	Sunil Goutham <sgoutham@cavium.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 25, 2014 at 12:04 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Wednesday 24 September 2014 23:34:04 Sunil Kovvuri wrote:
->> On Wed, Sep 24, 2014 at 9:36 PM, Arnd Bergmann <arnd@arndb.de> wrote:
->> > On Wednesday 24 September 2014 17:37:45 Robert Richter wrote:
->> >> +               compatible = "cavium,thunder-pcie";
->> >> +               device_type = "pci";
->> >> +               msi-parent = <&its>;
->> >> +               bus-range = <0 255>;
->> >> +               #size-cells = <2>;
->> >> +               #address-cells = <3>;
->> >> +               reg = <0x8480 0x00000000 0 0x10000000>;  /* Configuration space */
->> >> +               ranges = <0x03000000 0x8010 0x00000000 0x8010 0x00000000 0x70 0x00000000>, /* mem ranges */
->> >> +                       <0x03000000 0x8300 0x00000000 0x8300 0x00000000 0x80 0x00000000>,
->> >> +                       <0x03000000 0x87e0 0x00000000 0x87e0 0x00000000 0x01 0x00000000>;
->> >> +        };
->> >
->> > If you claim the entire 0-255 bus range, I think you should also
->> > specify a domain, otherwise it's not predictable which domain you
->> > get.
->> >
->> > The interrupt-map and interrupt-map-mask properties are required for PCI,
->> > otherwise you can't do LSI interrupts.
+On Mon, Sep 22, 2014 at 3:27 PM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Mon, Sep 22, 2014 at 04:09:03PM -0600, Bjorn Helgaas wrote:
+>> On Mon, Sep 22, 2014 at 3:33 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
 >>
->> This PCI controller supports only MSIx interrupts which are edge triggered.
->
-> Interesting, so it's not PCI compliant then? I assume this will be fixed
-> in the production version of the silicon, right?
->
-> Having no support for interrupts mean that the majority of PCI device drivers
-> will fail.
-
-This controller is for on-board PCI devices and all of them do support
-MSIx interrupts.
-
->
->> > If your hardware can support it, you should also list I/O space and prefetchable
->> > memory spaces. Can you explain why you have multiple non-prefetchable ranges?
+>> >>> +static void xgene_pcie_fixup_bridge(struct pci_dev *dev)
+>> >>> +{
+>> >>> +     int i;
+>> >>> +
+>> >>> +     /* Hide the PCI host BARs from the kernel as their content doesn't
+>> >>> +      * fit well in the resource management
+>> >>> +      */
+>> >>
+>> >> This needs a better explanation than "doesn't fit well."
+>> >>
+>> >> I *think* you're probably talking about something similar to the MVEBU
+>> >> devices mentioned here:
+>> >> http://lkml.kernel.org/r/CAErSpo56jB1Bf2JtYCGKXZBZqRF1jXFxGmeewPX_e6vSXueGyA@mail.gmail.com
+>> >>
+>> >> where the device can be configured as either an endpoint or a root port,
+>> >> and the endpoint BARs are still visible when configured as a root port.
+>> >>
+>> >
+>> > It is true that X-Gene PCIe port can be configured as EP, however the
+>> > the FIXUP is required not because of the BARs are still visible when
+>> > configured as EP in past. X-Gene PCIe port, when configured as RC,
+>> > uses BAR0-BAR1 of RC's configuration space as inbound BARs. Entire DDR
+>> > region is mapped in these BARs so that it is accessible for EP devices
+>> > for DMA. So if the fixup is not done during enumeration, whole
+>> > outbound memory resource space gets assigned to RC and nothing is left
+>> > EP devices.
 >>
->> Our hardware is an ECAM based host controller and doesn't support I/O
->> and prefetchable memory spaces.
->> All on-board PCI devices connected to this PCI controller have fixed resources
->> and doesn't have to be allocated/reassigned. Some of these devices are
->> SRIOV based.
+>> I'm not familiar with the concept of an "inbound BAR"; at least I'm
+>> not aware of anything like this in the PCI specs.  I think it might
+>> reduce confusion if we avoided calling them "BARs".  They happen to be
+>> at the same addresses where real BARs would be, but they certainly
+>> don't behave like real BARs.
 >
-> I think you need to mark the ones that are nonrelocatable with flag
-> 0x80000000, otherwise the PCI core might decide to reassign them.
-
-Is this flag part of DT pci node properties ?
-I am using IORESOURCE_PCI_FIXED flag. Its there in other patches of
-the same series.
-
+> So what does the lspci look like?
 >
->> Kernel's SRIOV (pci/iov.c) is expecting 'resource->parent' hierarchy
->> to be set, otherwise doesn't
->> enable SRIOV device. So, here multiple non-prefetchable ranges of root bus
->> aid in resource claiming and setting res->parent hierarchy.
->
-> I don't understand. Isn't that just a bug in the code that you are working
-> around with the DT. Have you tried fixing the code instead?
 
-I tried but wasn't sure if its going to impact existing SRIOV devices.
-Will have a deeper look again .
+[root@mustang ~]# lspci -s 0000:00:00.0 -v
+0000:00:00.0 PCI bridge: Applied Micro Circuits Corp. Device e004 (rev
+04) (prog-if 00 [Normal decode])
+Flags: bus master, fast devsel, latency 0
+Memory at <ignored> (64-bit, prefetchable)
+Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+Memory behind bridge: 80800000-809fffff
+Prefetchable memory behind bridge: 0000000080000000-00000000807fffff
+Capabilities: [40] Express Root Port (Slot+), MSI 00
+Capabilities: [80] Power Management version 3
+Capabilities: [100] Advanced Error Reporting
+Capabilities: [180] #19
+Capabilities: [150] Vendor Specific Information: ID=0001 Rev=1 Len=010 <?>
+Kernel driver in use: pcieport
 
+> If x-gene has an otherwise correct bridge config space and only the
+> 0/1 BARs have a non-standard meaning, that I'd agree with Bjorn, hide
+> all access to these registers from the kernel (and tell your HW crew
+> to read the specs, because it is very clear what those registers are
+> supposed to do) .
 >
->> We do call "pci_claim_resource" in controller driver code.
->> "[PATCH 1/6] pci, thunder: Add support for Thunder PCIe host controller."
->
-> My guess is that you are using the wrong interface here. Isn't the normal
-> request_resource() in the host driver enough?
 
-Isn't that host driver calls "request_resource" only for resources of root port.
-i.e requesting from iomem_resource/ioport_resource. Here i am referring
-to SRIOV devices enumerated upon scan of root port.
+Ok.
 
+> If x-gene doesn't even have a bridge config space, then there are much
+> bigger problems, and these corrupt BARs are just the start.
 >
->         Arnd
+> Jason
