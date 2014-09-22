@@ -1,70 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:51512 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750926AbaISFPh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Sep 2014 01:15:37 -0400
-Received: by mail-ig0-f173.google.com with SMTP id l13so471507iga.12
-        for <linux-pci@vger.kernel.org>; Thu, 18 Sep 2014 22:15:36 -0700 (PDT)
-Date: Thu, 18 Sep 2014 23:15:34 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-Cc: Fabio Estevam <festevam@gmail.com>,
-	"matwey@sai.msu.ru" <matwey@sai.msu.ru>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"matwey.kornilov@gmail.com" <matwey.kornilov@gmail.com>
-Subject: Re: [PATCH] Export functions from pcie-designware
-Message-ID: <20140919051534.GA21128@google.com>
-References: <1409401476-5002-1-git-send-email-matwey@sai.msu.ru>
- <CAOMZO5DzNo3Y6=R4mA=h0+RjWoM6UBCqXxqeEqUM4iu5RjrBEA@mail.gmail.com>
- <20140916233841.GJ5050@google.com>
- <2CC2A0A4A178534D93D5159BF3BCB661ABCD7BCF19@EAPEX1MAIL1.st.com>
- <CAErSpo55KbMR9hPR_MssnDTCdN731QP_u_xVbYw1c8iWWGvBVA@mail.gmail.com>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:44408 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751070AbaIVOx0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 10:53:26 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo55KbMR9hPR_MssnDTCdN731QP_u_xVbYw1c8iWWGvBVA@mail.gmail.com>
+In-Reply-To: <CAErSpo4Z1s7u08W6o+8Yxu7-QYN6YS9zt11=hH535YFYAwVKNw@mail.gmail.com>
+References: <CAE9FiQXQesrDMqf1b6ZhHdmY_wEEUrOEvNO4N_d6WtaNMGNLww@mail.gmail.com>
+ <gh4mwcef0r.fsf@quad.gouders.net> <CAE9FiQWgioBeVmfWCaE38BrkjbWKaS+_FYYdmdd+7X8fpeEgnQ@mail.gmail.com>
+ <ghoaukcx6b.fsf@quad.gouders.net> <CAE9FiQUk-sAHnjfBvNeHQWibJRqbPE1V0UtDtARtwxmS=7aQrw@mail.gmail.com>
+ <ghk358crbe.fsf@quad.gouders.net> <CAE9FiQUeP84585-4b+Y6WBVD3zqOi7ch_OXytsTmKEz9AyZ3Vg@mail.gmail.com>
+ <20140913040716.GA28080@google.com> <gh8ulnn9yo.fsf@quad.gouders.net>
+ <gh8uln71g1.fsf@lena.gouders.net> <20140919183943.GD19374@google.com>
+ <ghvboit9qt.fsf@lena.gouders.net> <CAErSpo4Z1s7u08W6o+8Yxu7-QYN6YS9zt11=hH535YFYAwVKNw@mail.gmail.com>
+From: Andreas Noever <andreas.noever@gmail.com>
+Date: Mon, 22 Sep 2014 16:53:05 +0200
+Message-ID: <CAMxnaaWS+nxBM0gdLo0Qv3-x4fVwT0ePTr20miZvnpJUMgQ-NQ@mail.gmail.com>
+Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dirk Gouders <dirk@gouders.net>, Yinghai Lu <yinghai@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 16, 2014 at 10:11:22PM -0700, Bjorn Helgaas wrote:
-> On Tue, Sep 16, 2014 at 9:54 PM, Mohit KUMAR DCG <Mohit.KUMAR@st.com> wrote:
-> > Hello Bjorn,
-> >
-> >> -----Original Message-----
-> >> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> >> Sent: Wednesday, September 17, 2014 5:09 AM
-> >> To: Fabio Estevam
-> >> Cc: matwey@sai.msu.ru; Mohit KUMAR DCG; Jingoo Han; linux-
-> >> pci@vger.kernel.org; linux-kernel; matwey.kornilov@gmail.com
-> >> Subject: Re: [PATCH] Export functions from pcie-designware
-> >>
-> >> On Sat, Aug 30, 2014 at 10:07:30AM -0300, Fabio Estevam wrote:
-> >> > On Sat, Aug 30, 2014 at 9:24 AM,  <matwey@sai.msu.ru> wrote:
-> >> > > From: "Matwey V. Kornilov" <matwey@sai.msu.ru>
-> >> > >
-> >> > > pcie-spear13xx when built as module requires the functions from pcie-
-> >> designware.
-> >> > > Export them properly.
-> >>
-> >> I don't know how valuable pcie-spear13xx as a module is.  No other host
-> >> drivers are supported as a module.  Maybe we should just change pcie-
-> >> spear13xx from tristate to bool?
-> >>
-> > -  Sachin's patch is already doing this:
-> > http://www.spinics.net/lists/linux-pci/msg33665.html
-> >
-> > You acknowledge it to apply for v3.17 but somehow it has been left out.
-> 
-> Oops, sorry!  I was pretty sure I remembered a patch like this, but
-> somehow I deleted the branch before it got fully merged.  Anyway, I
-> re-did it.  Thanks for the reminder.
+On Mon, Sep 22, 2014 at 4:25 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Sat, Sep 20, 2014 at 12:41 PM, Dirk Gouders <dirk@gouders.net> wrote:
+>> Bjorn Helgaas <bhelgaas@google.com> writes:
+>>
+>>> On Sat, Sep 13, 2014 at 09:41:34PM +0200, Dirk Gouders wrote:
+>>>> So, I did some tests on the VX50 which probably wasn't the worst idea,
+>>>> because it behaves different than the test machine.
+>>>>
+>>>> Summary:
+>>>>
+>>>> 1) Bjorn's back pocket patch works on the VX50.
+>>>>
+>>>>    On the test machine it causes a trace, mount_root has to do with
+>>>>    it.  I tried to use netconsole but it complained the interface were
+>>>>    not ready.
+>>>
+>>> OK, that's good.  I put this revert patch in for-linus for v3.17.  I regard
+>>> this as a temporary fix, not the real solution.  My guess is the test
+>>> machine doesn't boot because you're missing a driver, so not related to the
+>>> revert patch.
+>>
+>> I assumed my limit-host-bridge-aperture-and-ignore-bridges-patch on top
+>> of your patch caused this, so I took a closer look.
+>>
+>> Your patch works fine with current rc5+ on the test machine -- with and
+>> without my additional patch.
+>
+> Great, thanks for testing that!
+>
+>> Other various today's test results (VX50) will be appended to bugzilla
+>> in a few moments.
+>
+> The Windows Server 2008 boot shows that Windows reconfigures the
+> 00:0e.0 bridge so it fits inside the [bus 00-07] aperture reported by
+> the host bridge _CRS, and the LSI FC adapter is not enumerated at all.
+> That's basically the same behavior that prompted your bug report.
+> This suggests that Windows does *not* reset the secondary bus when
+> changing the bridge configuration.
+>
+> For v3.17, I reverted 1820ffdccb9b ("PCI: Make sure bus number
+> resources stay within their parents bounds").  For the future, I think
+> we should do a quirk to fix the _CRS, similar to what Andreas has
+> posted, and apply 1820ffdccb9b again.
+>
+> But I think the quirk should be specific to this system and BIOS.  I
+> don't want to add a workaround that silently covers up Linux and BIOS
+> bugs.  The reason amd_bus.c exists is because Linux was not smart
+> enough to pay attention to _CRS.  Linux is now pretty good at that, so
+> the reason for amd_bus.c is mostly gone.  I don't want to add new
+> dependencies on amd_bus.c that will prevent us from phasing it out.
+Why not always trust amd_bus over _CRS? Is there a scenario in which
+amd_bus is wrong?
 
-Actually, I *had* already merged it, and it's been in Linus' tree since
-2014-09-03 15:45:48 (GMT) and appeared in v3.17-rc4:
-
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/pci/host/Kconfig?id=f16c15a0e0ea
-
-Or am I still missing something?
-
-Bjorn
+Are these methods (like _CRS) meant to set limits for us, or are they
+simply used to report the configuration decisions made by the BIOS? So
+if _CRS says that the window is [00-07] would it be ok for us to
+simply increase it (possibly after reprogramming the registers in
+amd_bus)?
