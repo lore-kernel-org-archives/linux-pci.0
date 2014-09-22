@@ -1,230 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og111.obsmtp.com ([64.18.0.22]:52770 "HELO
-	exprod5og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750762AbaIFAdE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 20:33:04 -0400
-Received: by mail-pd0-f171.google.com with SMTP id p10so138468pdj.2
-        for <linux-pci@vger.kernel.org>; Fri, 05 Sep 2014 17:33:02 -0700 (PDT)
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v6 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
-Date: Fri,  5 Sep 2014 17:25:41 -0700
-Message-Id: <1409963143-11951-3-git-send-email-tinamdar@apm.com>
-In-Reply-To: <1409963143-11951-1-git-send-email-tinamdar@apm.com>
-References: <1409963143-11951-1-git-send-email-tinamdar@apm.com>
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:46899 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751730AbaIVUVa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 16:21:30 -0400
+Received: by mail-ig0-f181.google.com with SMTP id h18so3435861igc.2
+        for <linux-pci@vger.kernel.org>; Mon, 22 Sep 2014 13:21:29 -0700 (PDT)
+Date: Mon, 22 Sep 2014 14:21:26 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Pratyush Anand <pratyush.anand@st.com>
+Cc: mohit.kumar@st.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V2] PCIe: SPEAr13XX: Pass config resource through reg
+ property
+Message-ID: <20140922202126.GD1880@google.com>
+References: <c5feb916f14d19e4c636a5af89be48df5097b500.1409720201.git.pratyush.anand@st.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c5feb916f14d19e4c636a5af89be48df5097b500.1409720201.git.pratyush.anand@st.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the device tree nodes for APM X-Gene PCIe controller and
-PCIe clock interface. Since X-Gene SOC supports maximum 5 ports, 5 dts
-nodes are added.
+On Wed, Sep 03, 2014 at 10:50:49AM +0530, Pratyush Anand wrote:
+> PCIe configuration space should be passed through reg property, rather
+> than through ranges property. This patch does the correction for
+> SPEAr13XX SOCs.
+> 
+> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
 
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
----
- arch/arm64/boot/dts/apm-mustang.dts |   8 ++
- arch/arm64/boot/dts/apm-storm.dtsi  | 160 ++++++++++++++++++++++++++++++++++++
- 2 files changed, 168 insertions(+)
+Applied with Mohit's ack to pci/host-spear for v3.18, thanks!
 
-diff --git a/arch/arm64/boot/dts/apm-mustang.dts b/arch/arm64/boot/dts/apm-mustang.dts
-index b2f5622..f649000 100644
---- a/arch/arm64/boot/dts/apm-mustang.dts
-+++ b/arch/arm64/boot/dts/apm-mustang.dts
-@@ -25,6 +25,14 @@
- 	};
- };
- 
-+&pcie0clk {
-+	status = "ok";
-+};
-+
-+&pcie0 {
-+	status = "ok";
-+};
-+
- &serial0 {
- 	status = "ok";
- };
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index c0aceef..e8a32a2 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -269,6 +269,166 @@
- 				enable-mask = <0x2>;
- 				clock-output-names = "rtcclk";
- 			};
-+
-+			pcie0clk: pcie0clk@1f2bc000 {
-+				status = "disabled";
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				reg = <0x0 0x1f2bc000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie0clk";
-+			};
-+
-+			pcie1clk: pcie1clk@1f2cc000 {
-+				status = "disabled";
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				reg = <0x0 0x1f2cc000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie1clk";
-+			};
-+
-+			pcie2clk: pcie2clk@1f2dc000 {
-+				status = "disabled";
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				reg = <0x0 0x1f2dc000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie2clk";
-+			};
-+
-+			pcie3clk: pcie3clk@1f50c000 {
-+				status = "disabled";
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				reg = <0x0 0x1f50c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie3clk";
-+			};
-+
-+			pcie4clk: pcie4clk@1f51c000 {
-+				status = "disabled";
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				reg = <0x0 0x1f51c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie4clk";
-+			};
-+		};
-+
-+		pcie0: pcie@1f2b0000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
-+				0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
-+			reg-names = "csr", "cfg";
-+			ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
-+				  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
-+			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
-+				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
-+					 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
-+					 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
-+					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
-+			clocks = <&pcie0clk 0>;
-+		};
-+
-+		pcie1: pcie@1f2c0000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg = < 0x00 0x1f2c0000 0x0 0x00010000   /* Controller registers */
-+				0xd0 0xd0000000 0x0 0x00040000>; /* PCI config space */
-+			reg-names = "csr", "cfg";
-+			ranges = <0x01000000 0x0 0x00000000 0xd0 0x10000000 0x00 0x00010000   /* io  */
-+				  0x02000000 0x0 0x80000000 0xd1 0x80000000 0x00 0x80000000>; /* mem */
-+			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
-+				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc8 0x1
-+					 0x0 0x0 0x0 0x2 &gic 0x0 0xc9 0x1
-+					 0x0 0x0 0x0 0x3 &gic 0x0 0xca 0x1
-+					 0x0 0x0 0x0 0x4 &gic 0x0 0xcb 0x1>;
-+			clocks = <&pcie1clk 0>;
-+		};
-+
-+		pcie2: pcie@1f2d0000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg =  < 0x00 0x1f2d0000 0x0 0x00010000   /* Controller registers */
-+				 0x90 0xd0000000 0x0 0x00040000>; /* PCI config space */
-+			reg-names = "csr", "cfg";
-+			ranges = <0x01000000 0x0 0x00000000 0x90 0x10000000 0x0 0x00010000   /* io  */
-+				  0x02000000 0x0 0x80000000 0x91 0x80000000 0x0 0x80000000>; /* mem */
-+			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
-+				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xce 0x1
-+					 0x0 0x0 0x0 0x2 &gic 0x0 0xcf 0x1
-+					 0x0 0x0 0x0 0x3 &gic 0x0 0xd0 0x1
-+					 0x0 0x0 0x0 0x4 &gic 0x0 0xd1 0x1>;
-+			clocks = <&pcie2clk 0>;
-+		};
-+
-+		pcie3: pcie@1f500000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg = < 0x00 0x1f500000 0x0 0x00010000   /* Controller registers */
-+				0xa0 0xd0000000 0x0 0x00040000>; /* PCI config space */
-+			reg-names = "csr", "cfg";
-+			ranges = <0x01000000 0x0 0x00000000 0xa0 0x10000000 0x0 0x00010000   /* io   */
-+				  0x02000000 0x0 0x80000000 0xa1 0x80000000 0x0 0x80000000>; /* mem  */
-+			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
-+				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xd4 0x1
-+					 0x0 0x0 0x0 0x2 &gic 0x0 0xd5 0x1
-+					 0x0 0x0 0x0 0x3 &gic 0x0 0xd6 0x1
-+					 0x0 0x0 0x0 0x4 &gic 0x0 0xd7 0x1>;
-+			clocks = <&pcie3clk 0>;
-+		};
-+
-+		pcie4: pcie@1f510000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg = < 0x00 0x1f510000 0x0 0x00010000   /* Controller registers */
-+				0xc0 0xd0000000 0x0 0x00200000>; /* PCI config space */
-+			reg-names = "csr", "cfg";
-+			ranges = <0x01000000 0x0 0x00000000 0xc0 0x10000000 0x0 0x00010000   /* io  */
-+				  0x02000000 0x0 0x80000000 0xc1 0x80000000 0x0 0x80000000>; /* mem */
-+			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
-+				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xda 0x1
-+					 0x0 0x0 0x0 0x2 &gic 0x0 0xdb 0x1
-+					 0x0 0x0 0x0 0x3 &gic 0x0 0xdc 0x1
-+					 0x0 0x0 0x0 0x4 &gic 0x0 0xdd 0x1>;
-+			clocks = <&pcie4clk 0>;
- 		};
- 
- 		serial0: serial@1c020000 {
--- 
-1.9.1
-
+> ---
+>  arch/arm/boot/dts/spear1310.dtsi  | 18 +++++++++---------
+>  arch/arm/boot/dts/spear1340.dtsi  |  6 +++---
+>  drivers/pci/host/pcie-spear13xx.c |  2 +-
+>  3 files changed, 13 insertions(+), 13 deletions(-)
+> 
+> diff --git a/arch/arm/boot/dts/spear1310.dtsi b/arch/arm/boot/dts/spear1310.dtsi
+> index fa5f2bb5f106..9d342920695a 100644
+> --- a/arch/arm/boot/dts/spear1310.dtsi
+> +++ b/arch/arm/boot/dts/spear1310.dtsi
+> @@ -85,7 +85,8 @@
+>  
+>  		pcie0: pcie@b1000000 {
+>  			compatible = "st,spear1340-pcie", "snps,dw-pcie";
+> -			reg = <0xb1000000 0x4000>;
+> +			reg = <0xb1000000 0x4000>, <0x80000000 0x20000>;
+> +			reg-names = "dbi", "config";
+>  			interrupts = <0 68 0x4>;
+>  			interrupt-map-mask = <0 0 0 0>;
+>  			interrupt-map = <0x0 0 &gic 0 68 0x4>;
+> @@ -95,15 +96,15 @@
+>  			#address-cells = <3>;
+>  			#size-cells = <2>;
+>  			device_type = "pci";
+> -			ranges = <0x00000800 0 0x80000000 0x80000000 0 0x00020000   /* configuration space */
+> -				0x81000000 0 0	 0x80020000 0 0x00010000   /* downstream I/O */
+> +			ranges = <0x81000000 0 0	 0x80020000 0 0x00010000   /* downstream I/O */
+>  				0x82000000 0 0x80030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
+>  			status = "disabled";
+>  		};
+>  
+>  		pcie1: pcie@b1800000 {
+>  			compatible = "st,spear1340-pcie", "snps,dw-pcie";
+> -			reg = <0xb1800000 0x4000>;
+> +			reg = <0xb1800000 0x4000>, <0x90000000 0x20000>;
+> +			reg-names = "dbi", "config";
+>  			interrupts = <0 69 0x4>;
+>  			interrupt-map-mask = <0 0 0 0>;
+>  			interrupt-map = <0x0 0 &gic 0 69 0x4>;
+> @@ -113,15 +114,15 @@
+>  			#address-cells = <3>;
+>  			#size-cells = <2>;
+>  			device_type = "pci";
+> -			ranges = <0x00000800 0 0x90000000 0x90000000 0 0x00020000   /* configuration space */
+> -				0x81000000 0 0  0x90020000 0 0x00010000   /* downstream I/O */
+> +			ranges = <0x81000000 0 0  0x90020000 0 0x00010000   /* downstream I/O */
+>  				0x82000000 0 0x90030000 0x90030000 0 0x0ffd0000>; /* non-prefetchable memory */
+>  			status = "disabled";
+>  		};
+>  
+>  		pcie2: pcie@b4000000 {
+>  			compatible = "st,spear1340-pcie", "snps,dw-pcie";
+> -			reg = <0xb4000000 0x4000>;
+> +			reg = <0xb4000000 0x4000>, <0xc0000000 0x20000>;
+> +			reg-names = "dbi", "config";
+>  			interrupts = <0 70 0x4>;
+>  			interrupt-map-mask = <0 0 0 0>;
+>  			interrupt-map = <0x0 0 &gic 0 70 0x4>;
+> @@ -131,8 +132,7 @@
+>  			#address-cells = <3>;
+>  			#size-cells = <2>;
+>  			device_type = "pci";
+> -			ranges = <0x00000800 0 0xc0000000 0xc0000000 0 0x00020000   /* configuration space */
+> -				0x81000000 0 0	 0xc0020000 0 0x00010000   /* downstream I/O */
+> +			ranges = <0x81000000 0 0	 0xc0020000 0 0x00010000   /* downstream I/O */
+>  				0x82000000 0 0xc0030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
+>  			status = "disabled";
+>  		};
+> diff --git a/arch/arm/boot/dts/spear1340.dtsi b/arch/arm/boot/dts/spear1340.dtsi
+> index e71df0f2cb52..13e1aa33daa2 100644
+> --- a/arch/arm/boot/dts/spear1340.dtsi
+> +++ b/arch/arm/boot/dts/spear1340.dtsi
+> @@ -50,7 +50,8 @@
+>  
+>  		pcie0: pcie@b1000000 {
+>  			compatible = "st,spear1340-pcie", "snps,dw-pcie";
+> -			reg = <0xb1000000 0x4000>;
+> +			reg = <0xb1000000 0x4000>, <0x80000000 0x20000>;
+> +			reg-names = "dbi", "config";
+>  			interrupts = <0 68 0x4>;
+>  			interrupt-map-mask = <0 0 0 0>;
+>  			interrupt-map = <0x0 0 &gic 0 68 0x4>;
+> @@ -60,8 +61,7 @@
+>  			#address-cells = <3>;
+>  			#size-cells = <2>;
+>  			device_type = "pci";
+> -			ranges = <0x00000800 0 0x80000000 0x80000000 0 0x00020000   /* configuration space */
+> -				0x81000000 0 0	 0x80020000 0 0x00010000   /* downstream I/O */
+> +			ranges = <0x81000000 0 0	 0x80020000 0 0x00010000   /* downstream I/O */
+>  				0x82000000 0 0x80030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
+>  			status = "disabled";
+>  		};
+> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+> index 6dea9e43a75c..85f594e1708f 100644
+> --- a/drivers/pci/host/pcie-spear13xx.c
+> +++ b/drivers/pci/host/pcie-spear13xx.c
+> @@ -340,7 +340,7 @@ static int __init spear13xx_pcie_probe(struct platform_device *pdev)
+>  
+>  	pp->dev = dev;
+>  
+> -	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> +	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+>  	pp->dbi_base = devm_ioremap_resource(dev, dbi_base);
+>  	if (IS_ERR(pp->dbi_base)) {
+>  		dev_err(dev, "couldn't remap dbi base %p\n", dbi_base);
+> -- 
+> 1.8.1.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
