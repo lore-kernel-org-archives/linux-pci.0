@@ -1,8 +1,17 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Mon, 22 Sep 2014 16:33:12 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+MIME-Version: 1.0
+In-Reply-To: <20140922175505.GH1994@e106497-lin.cambridge.arm.com>
+References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411003825-21521-9-git-send-email-Liviu.Dudau@arm.com> <20140919210610.GI19374@google.com>
+ <541CCA36.8010606@gmail.com> <20140922175505.GH1994@e106497-lin.cambridge.arm.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Mon, 22 Sep 2014 17:11:29 -0500
+Message-ID: <CAL_JsqKw-KSdDGgFuHytONKA-53-z+QtQd+0JzLhW+Xs0+knsQ@mail.gmail.com>
+Subject: Re: [PATCH v11 08/10] OF: PCI: Add support for parsing PCI host
+ bridge resources from DT
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Catalin Marinas <Catalin.Marinas@arm.com>,
@@ -21,67 +30,65 @@ Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
 	Device Tree ML <devicetree@vger.kernel.org>,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
 	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v11 07/10] OF: Introduce helper function for getting PCI
- domain_nr
-Message-ID: <20140922153311.GB1994@e106497-lin.cambridge.arm.com>
-References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
- <1411003825-21521-8-git-send-email-Liviu.Dudau@arm.com>
- <20140919210313.GH19374@google.com>
- <20140922110522.GK1994@e106497-lin.cambridge.arm.com>
- <CAErSpo7bnOFo4-uZmVsMqNpVQS+dQaMNedjmJ=sH_d9Kp2fGPg@mail.gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo7bnOFo4-uZmVsMqNpVQS+dQaMNedjmJ=sH_d9Kp2fGPg@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 22, 2014 at 04:25:13PM +0100, Bjorn Helgaas wrote:
-> On Mon, Sep 22, 2014 at 5:05 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> > On Fri, Sep 19, 2014 at 10:03:13PM +0100, Bjorn Helgaas wrote:
-> >> On Thu, Sep 18, 2014 at 02:30:22AM +0100, Liviu Dudau wrote:
-> >> > Add of_pci_get_domain_nr() to retrieve the PCI domain number
-> >> > of a given device from DT. If the information is not present,
-> >> > the function can be requested to allocate a new domain number.
-> >>
-> >> Is of_pci_get_domain_nr() used somewhere?  If the use is in some future
-> >> series, please mention it explicitly.  I'm just trying to avoid merging
-> >> unused code.
-> >
-> > It is used in the arm64 specific patch that I have dropped out of my
-> > pull request. After discussions with Catalin I will add the patch back
-> > into the tree that you've pulled from as he is OK with your tree carrying
-> > the whole package.
-> >
-> > I need to ask for some guidance here: for addressing some of your comments
-> > and Rob's I can add more patches in my v11 branch and you can pull them
-> > when you think they are ready. But one of your comments was requesting
-> > splitting a patch into two blocks - one that moves of_pci_range_to_resource()
-> > into drivers/of/address.c and one that fixes it's behaviour - and I don't
-> > know how you would like that handled. Should I revert the original patch
-> > and add the new ones, or should I rebase the whole series into a different
-> > branch that you can pull from?
-> 
-> I guess the easiest thing is probably just to send a v12 series.  I
-> was hoping we were close enough for me to just hand-integrate minor
-> tweaks into my branch, but I think that will just create more
-> confusion.
+On Mon, Sep 22, 2014 at 12:55 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> On Sat, Sep 20, 2014 at 01:28:38AM +0100, Rob Herring wrote:
+>> On 09/19/2014 04:06 PM, Bjorn Helgaas wrote:
+>> > On Thu, Sep 18, 2014 at 02:30:23AM +0100, Liviu Dudau wrote:
+>> >> Provide a function to parse the PCI DT ranges that can be used to
+>> >> create a pci_host_bridge structure together with its associated
+>> >> bus.
+>> >>
+>> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> >> Cc: Arnd Bergmann <arnd@arndb.de>
+>> >> Cc: Grant Likely <grant.likely@linaro.org>
+>> >> Cc: Rob Herring <robh+dt@kernel.org>
+>> >> Cc: Catalin Marinas <catalin.marinas@arm.com>
+>> >> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+>> >> ---
+>>
+>> [...]
+>>
+>> >> +int of_pci_get_host_bridge_resources(struct device_node *dev,
+>> >> +                  unsigned char busno, unsigned char bus_max,
+>> >> +                  struct list_head *resources, resource_size_t *io_base)
+>> >> +{
+>> >> +  struct resource *res;
+>> >> +  struct resource *bus_range;
+>> >> +  struct of_pci_range range;
+>> >> +  struct of_pci_range_parser parser;
+>> >> +  char range_type[4];
+>> >> +  int err;
+>> >> +
+>> >> +  if (!io_base)
+>> >> +          return -EINVAL;
+>> >> +  *io_base = OF_BAD_ADDR;
+>> >> +
+>> >> +  bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
+>>
+>> This function does a lot of kalloc's but there is not an easy way to
+>> undo those allocations. Hot unplug of a host bridge or probe error
+>> handling would leak memory.
+>>
+>> You could pass in struct device and use the devm_ variant (also
+>> addressing Bjorn's comment), but not having an uninit/remove function
+>> make what clean-up drivers have to do error prone. For example, on
+>> uninit a driver needs to call pci_free_resource_list.
+>
+> If the function fails to parse the ranges for whatever reason it will
+> call pci_free_resource_list on the resources that have been added already
+> and it will clean up. If it is successful, then it is the job of the caller
+> to free the list, as mentioned in the comment associated with the function.
+>
+> The reason why I am reluctant to use devm_ here is that the ranges are only
+> parsed here, no filtering is applied. Architectures and/or host bridge
+> drivers can/could impose additional restrictions to the list before passing
+> it to pci_scan_root_bus() for example.
 
-OK, I will send v12 then with all the acquired ACKs and fixes.
+Okay, as long as the caller has a single clean-up responsibility, I
+guess it is fine.
 
-Best regards,
-Liviu
-
-> 
-> Bjorn
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+Rob
