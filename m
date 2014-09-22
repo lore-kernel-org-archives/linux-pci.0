@@ -1,71 +1,78 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH v1 01/13] PCI: Remove "no hotplug settings from platform"
- warning
-To: linux-pci@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:41987 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754679AbaIVXD0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 19:03:26 -0400
+Received: by mail-ie0-f171.google.com with SMTP id rd18so3634188iec.2
+        for <linux-pci@vger.kernel.org>; Mon, 22 Sep 2014 16:03:25 -0700 (PDT)
+Date: Mon, 22 Sep 2014 17:03:23 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatxjain@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Date: Fri, 12 Sep 2014 12:02:54 -0600
-Message-ID: <20140912180254.1630.79691.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 3/5] PCI/MSI: Change msi_bus attribute to support
+ enable/disable MSI for EP
+Message-ID: <20140922230323.GL1880@google.com>
+References: <1408694880-8260-1-git-send-email-wangyijing@huawei.com>
+ <1408694880-8260-4-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1408694880-8260-4-git-send-email-wangyijing@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We print way too many messages like this:
+On Fri, Aug 22, 2014 at 04:07:58PM +0800, Yijing Wang wrote:
+> Msi_bus attribute is only valid for bridge device.
+> We can enable or disable MSI capability for a bus,
+> if we echo 1/0 > /sys/bus/pci/devices/$EP/msi_bus,
+> the action will be ignored. Sometime we need to
+> only enable/disable a EP device MSI capability,
+> not all devices share the same bus.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 
-    pci 0000:00:00.0: no hotplug settings from platform
-    pci 0000:00:00.0: using default PCI settings
+What's the purpose of this?  Is this just for debugging?  I assume that if
+you have an endpoint that requires MSI to be disabled, you'd have a quirk
+to do that, not a sysfs interface.
 
-This usually happens when the platform doesn't supply an ACPI _HPP method,
-but the method is optional, so there's no point in warning about it.
+This should probably be mentioned in
+Documentation/ABI/testing/sysfs-bus-pci while you're at it.  I know it's
+not there yet, but this seems like a good time to rectify that omission.
 
-Not only are the messages useless, but we call pci_configure_slot() far too
-many times, so they're repeated many times.  I'll fix the overuse of
-pci_configure_slot() too, but that will wait until the next merge window.
-
-For now, just remove both log messages.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=84391
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/hotplug/pcihp_slot.c |    6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pcihp_slot.c b/drivers/pci/hotplug/pcihp_slot.c
-index e246a10a0d2c..3e36ec8d708a 100644
---- a/drivers/pci/hotplug/pcihp_slot.c
-+++ b/drivers/pci/hotplug/pcihp_slot.c
-@@ -46,7 +46,6 @@ static void program_hpp_type0(struct pci_dev *dev, struct hpp_type0 *hpp)
- 		 */
- 		if (pci_is_pcie(dev))
- 			return;
--		dev_info(&dev->dev, "using default PCI settings\n");
- 		hpp = &pci_default_type0;
- 	}
- 
-@@ -153,7 +152,6 @@ void pci_configure_slot(struct pci_dev *dev)
- {
- 	struct pci_dev *cdev;
- 	struct hotplug_params hpp;
--	int ret;
- 
- 	if (!(dev->hdr_type == PCI_HEADER_TYPE_NORMAL ||
- 			(dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
-@@ -163,9 +161,7 @@ void pci_configure_slot(struct pci_dev *dev)
- 	pcie_bus_configure_settings(dev->bus);
- 
- 	memset(&hpp, 0, sizeof(hpp));
--	ret = pci_get_hp_params(dev, &hpp);
--	if (ret)
--		dev_warn(&dev->dev, "no hotplug settings from platform\n");
-+	pci_get_hp_params(dev, &hpp);
- 
- 	program_hpp_type2(dev, hpp.t2);
- 	program_hpp_type1(dev, hpp.t1);
-
+> ---
+>  drivers/pci/pci-sysfs.c |   12 ++++++------
+>  1 files changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 9ff0a90..b199ad9 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -251,11 +251,9 @@ static ssize_t msi_bus_show(struct device *dev, struct device_attribute *attr,
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+>  
+> -	if (!pdev->subordinate)
+> -		return 0;
+> -
+> -	return sprintf(buf, "%u\n",
+> -		       !(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI));
+> +	return sprintf(buf, "%u\n", pdev->subordinate ?
+> +		       !(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI)
+> +			   : !pdev->no_msi);
+>  }
+>  
+>  static ssize_t msi_bus_store(struct device *dev, struct device_attribute *attr,
+> @@ -278,8 +276,10 @@ static ssize_t msi_bus_store(struct device *dev, struct device_attribute *attr,
+>  	 * Maybe devices without subordinate buses shouldn't have this
+>  	 * attribute in the first place?
+>  	 */
+> -	if (!pdev->subordinate)
+> +	if (!pdev->subordinate) {
+> +		pdev->no_msi = !val;
+>  		return count;
+> +	}
+>  
+>  	/* Is the flag going to change, or keep the value it already had? */
+>  	if (!(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI) ^
+> -- 
+> 1.7.1
+> 
