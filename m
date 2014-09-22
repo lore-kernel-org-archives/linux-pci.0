@@ -1,82 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:64620 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751447AbaICGPF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Sep 2014 02:15:05 -0400
+Received: from mail-bl2on0143.outbound.protection.outlook.com ([65.55.169.143]:2102
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753225AbaIVLMw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Sep 2014 07:12:52 -0400
+From: Richard Zhu <r65037@freescale.com>
+To: <linux-pci-owner@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
+	<festevam@gmail.com>, <l.stach@pengutronix.de>,
+	Richard Zhu <r65037@freescale.com>
+Subject: [PATCH v1 1/4] PCI: imx6: enable pcie on imx6qdl sabreauto
+Date: Mon, 22 Sep 2014 18:45:02 +0800
+Message-ID: <1411382705-15301-2-git-send-email-r65037@freescale.com>
+In-Reply-To: <1411382705-15301-1-git-send-email-r65037@freescale.com>
+References: <1411382705-15301-1-git-send-email-r65037@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <CANwwZzXowyGmg-cfCHQqeJ_iqjT+Ec+JPy+OWzNGeyN=hRqmPg@mail.gmail.com>
-References: <CANwwZzXowyGmg-cfCHQqeJ_iqjT+Ec+JPy+OWzNGeyN=hRqmPg@mail.gmail.com>
-Date: Wed, 3 Sep 2014 11:45:03 +0530
-Message-ID: <CANwwZzW5L7-L-PW4b+a4VSwqHTYfBL2kpB20mRjvVcjJiiOqUQ@mail.gmail.com>
-Subject: Re: mlx4 query in sriov mode
-From: Bob Biloxi <iambobbiloxi@gmail.com>
-To: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+- enable pcie on imx6qdl sabreauto boards.
+- wait the clocks to stabilize after the pcie_ref_en
+(IMX6Q_GPR1_PCIE_REF_CLK_EN) is set.
 
-Can anyone from Mellanox please help me understand this better? really
-hoping for any pointers that will be helpful...
+Signed-off-by: Richard Zhu <r65037@freescale.com>
+---
+ arch/arm/boot/dts/imx6qdl-sabreauto.dtsi | 4 ++++
+ drivers/pci/host/pci-imx6.c              | 6 +++---
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-Specifically:
+diff --git a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
+index 009abd6..d6040a5 100644
+--- a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
++++ b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
+@@ -410,6 +410,10 @@
+ 	};
+ };
+ 
++&pcie {
++	status = "okay";
++};
++
+ &pwm3 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_pwm3>;
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 233fe8a..bc4222b 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -275,15 +275,15 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		goto err_pcie;
+ 	}
+ 
+-	/* allow the clocks to stabilize */
+-	usleep_range(200, 500);
+-
+ 	/* power up core phy and enable ref clock */
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+ 
++	/* allow the clocks to stabilize */
++	usleep_range(200, 500);
++
+ 	/* Some boards don't have PCIe reset GPIO. */
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+ 		gpio_set_value(imx6_pcie->reset_gpio, 0);
+-- 
+1.9.1
 
-> Now, my query is, lets say the VF driver is not yet present and only
-> the PF driver is there...
->
-> In this case, can we simulate a VF command write and get notified
-> through an event?
->
-> For eg. we write to some offset in the PF BAR space itself upon
-> completion of which, an event is generated because of the write? kind
-> of like loopback mechanism.
->
-
-
-Thanks so much,
-Bob
-
-On Thu, Aug 28, 2014 at 10:58 PM, Bob Biloxi <iambobbiloxi@gmail.com> wrote:
-> Hi All,
->
->
-> I really appreciate this wonderful community which has immensely
-> helped me broaden my knowledge and understanding.
->
->
-> I was going through the mlx4 sriov code, trying to understand the
-> communication between the VF driver and the PF driver.
->
-> I was having a few queries..hoping to get a better understanding.
->
->
-> As I understand, the commands are communicated between VF and PF
-> through a mechanism called communication channel. VF writes to
-> specific address in its BAR space, PF gets an event and then proceeds
-> ahead to read the command from its BAR space and then complete the
-> execution of it..
->
->
-> Now, my query is, lets say the VF driver is not yet present and only
-> the PF driver is there...
->
-> In this case, can we simulate a VF command write and get notified
-> through an event?
->
-> For eg. we write to some offset in the PF BAR space itself upon
-> completion of which, an event is generated because of the write? kind
-> of like loopback mechanism.
->
->
-> I searched through the code but couldn't find anywhere.
->
-> Can anyone please help me understand if this is possible? And if there
-> is any location in the code where i can find this?
->
-> Thanks a lot in advance!!
->
->
-> Best Regards,
-> Bob
