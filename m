@@ -1,69 +1,71 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <5410F955.80609@huawei.com>
-Date: Thu, 11 Sep 2014 09:22:29 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f170.google.com ([209.85.216.170]:62241 "EHLO
+	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754421AbaIVPZe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 11:25:34 -0400
+Received: by mail-qc0-f170.google.com with SMTP id c9so227372qcz.1
+        for <linux-pci@vger.kernel.org>; Mon, 22 Sep 2014 08:25:34 -0700 (PDT)
 MIME-Version: 1.0
-To: David Vrabel <david.vrabel@citrix.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-mips@linux-mips.org>, <linux-ia64@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <Bharat.Bhushan@freescale.com>,
-	<sparclinux@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-	<linux-s390@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"Joerg Roedel" <joro@8bytes.org>, <x86@kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+In-Reply-To: <20140922110522.GK1994@e106497-lin.cambridge.arm.com>
+References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411003825-21521-8-git-send-email-Liviu.Dudau@arm.com> <20140919210313.GH19374@google.com>
+ <20140922110522.GK1994@e106497-lin.cambridge.arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 22 Sep 2014 09:25:13 -0600
+Message-ID: <CAErSpo7bnOFo4-uZmVsMqNpVQS+dQaMNedjmJ=sH_d9Kp2fGPg@mail.gmail.com>
+Subject: Re: [PATCH v11 07/10] OF: Introduce helper function for getting PCI domain_nr
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<xen-devel@lists.xenproject.org>, <arnab.basu@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Xinwei Hu <huxinwei@huawei.com>,
-	"Tony Luck" <tony.luck@intel.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	<iommu@lists.linux-foundation.org>, Wuyun <wuyun.wu@huawei.com>,
-	<linuxppc-dev@lists.ozlabs.org>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [Xen-devel] [PATCH v1 04/21] x86/xen/MSI: Eliminate arch_msix_mask_irq()
- and arch_msi_mask_irq()
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com> <1409911806-10519-5-git-send-email-wangyijing@huawei.com> <541045BE.9050804@citrix.com>
-In-Reply-To: <541045BE.9050804@citrix.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-arch-owner@vger.kernel.org
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/10 20:36, David Vrabel wrote:
-> On 05/09/14 11:09, Yijing Wang wrote:
->> Commit 0e4ccb150 added two __weak arch functions arch_msix_mask_irq()
->> and arch_msi_mask_irq() to fix a bug found when running xen in x86.
->> Introduced these two funcntions make MSI code complex. And mask/unmask
->> is the irq actions related to interrupt controller, should not use
->> weak arch functions to override mask/unmask interfaces. This patch
->> reverted commit 0e4ccb150 and export struct irq_chip msi_chip, modify
->> msi_chip->irq_mask/irq_unmask() in xen init functions to fix this
->> bug for simplicity. Also this is preparation for using struct
->> msi_chip instead of weak arch MSI functions in all platforms.
-> 
-> Acked-by: David Vrabel <david.vrabel@citrix.com>
-> 
-> But I wonder if it would be better the Xen subsystem to provide its own
-> struct irq_chip instead of adjusting the fields in the generic x86 one.
+On Mon, Sep 22, 2014 at 5:05 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> On Fri, Sep 19, 2014 at 10:03:13PM +0100, Bjorn Helgaas wrote:
+>> On Thu, Sep 18, 2014 at 02:30:22AM +0100, Liviu Dudau wrote:
+>> > Add of_pci_get_domain_nr() to retrieve the PCI domain number
+>> > of a given device from DT. If the information is not present,
+>> > the function can be requested to allocate a new domain number.
+>>
+>> Is of_pci_get_domain_nr() used somewhere?  If the use is in some future
+>> series, please mention it explicitly.  I'm just trying to avoid merging
+>> unused code.
+>
+> It is used in the arm64 specific patch that I have dropped out of my
+> pull request. After discussions with Catalin I will add the patch back
+> into the tree that you've pulled from as he is OK with your tree carrying
+> the whole package.
+>
+> I need to ask for some guidance here: for addressing some of your comments
+> and Rob's I can add more patches in my v11 branch and you can pull them
+> when you think they are ready. But one of your comments was requesting
+> splitting a patch into two blocks - one that moves of_pci_range_to_resource()
+> into drivers/of/address.c and one that fixes it's behaviour - and I don't
+> know how you would like that handled. Should I revert the original patch
+> and add the new ones, or should I rebase the whole series into a different
+> branch that you can pull from?
 
-Thanks! Currently, Xen and the bare x86 system only have the different irq_chip->irq_mask/irq_unmask.
-So I chose to override the two ops of bare x86 irq_chip in xen. Konrad Rzeszutek Wilk has been tested it
-ok in his platform, so I think we could use its own irq_chip for xen later if the difference become large.
+I guess the easiest thing is probably just to send a v12 series.  I
+was hoping we were close enough for me to just hand-integrate minor
+tweaks into my branch, but I think that will just create more
+confusion.
 
-Thanks!
-Yijing.
-
-> 
-> David
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+Bjorn
