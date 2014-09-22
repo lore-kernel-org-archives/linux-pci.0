@@ -1,49 +1,81 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <541CACD1.8070507@codeaurora.org>
-Date: Fri, 19 Sep 2014 15:23:13 -0700
-From: Stephen Boyd <sboyd@codeaurora.org>
-MIME-Version: 1.0
-To: Sudeep Holla <sudeep.holla@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>
-CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Peter Zijlstra <a.p.zijlstra@chello.nl>, x86@kernel.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 01/11 UPDATE] cpumask: factor out show_cpumap into
- separate helper function
-References: <1409763617-17074-2-git-send-email-sudeep.holla@arm.com> <1409845592-27739-1-git-send-email-sudeep.holla@arm.com>
-In-Reply-To: <1409845592-27739-1-git-send-email-sudeep.holla@arm.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:57438 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751905AbaIVJgU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 05:36:20 -0400
+Message-ID: <1411378576.2599.3.camel@pengutronix.de>
+Subject: Re: [PATCH RFC 1/2] PCI: imx6: enable pcie on imx6qdl sabresd and
+ sabreauto
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Richard Zhu <r65037@freescale.com>
+Cc: linux-pci-owner@vger.kernel.org, stable@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Date: Mon, 22 Sep 2014 11:36:16 +0200
+In-Reply-To: <1411376498-14653-2-git-send-email-r65037@freescale.com>
+References: <1411376498-14653-1-git-send-email-r65037@freescale.com>
+	 <1411376498-14653-2-git-send-email-r65037@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/04/14 08:46, Sudeep Holla wrote:
-> From: Sudeep Holla <sudeep.holla@arm.com>
->
-> Many sysfs *_show function use cpu{list,mask}_scnprintf to copy cpumap
-> to the buffer aligned to PAGE_SIZE, append '\n' and '\0' to return null
-> terminated buffer with newline.
->
-> This patch creates a new helper function cpumap_print_to_pagebuf in
-> cpumask.h using newly added bitmap_print_to_pagebuf and consolidates
-> most of those sysfs functions using the new helper function.
->
-> Signed-off-by: Sudeep Holla <sudeep.holla@arm.com>
-> Suggested-by: Stephen Boyd <sboyd@codeaurora.org>
-> Acked-by: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
-> Cc: x86@kernel.org
-> Cc: linux-acpi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
->
+Am Montag, den 22.09.2014, 17:01 +0800 schrieb Richard Zhu:
+> - enable pcie support on imx6qdl sabresd and asbreauto boards.
+> - sabresd board has the pcie power on and reset gpios, but
+> sabreauto doesn't have these two gpios.
+> 
+> Signed-off-by: Richard Zhu <r65037@freescale.com>
+> ---
+>  arch/arm/boot/dts/imx6qdl-sabreauto.dtsi | 4 ++++
+>  arch/arm/boot/dts/imx6qdl-sabresd.dtsi   | 2 ++
+>  2 files changed, 6 insertions(+)
+> 
+> diff --git a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
+> index 009abd6..d6040a5 100644
+> --- a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
+> +++ b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
+> @@ -410,6 +410,10 @@
+>  	};
+>  };
+>  
+> +&pcie {
+> +	status = "okay";
+> +};
+> +
+>  &pwm3 {
+>  	pinctrl-names = "default";
+>  	pinctrl-0 = <&pinctrl_pwm3>;
+> diff --git a/arch/arm/boot/dts/imx6qdl-sabresd.dtsi b/arch/arm/boot/dts/imx6qdl-sabresd.dtsi
+> index ec43dde..c2d3224 100644
+> --- a/arch/arm/boot/dts/imx6qdl-sabresd.dtsi
+> +++ b/arch/arm/boot/dts/imx6qdl-sabresd.dtsi
+> @@ -396,6 +396,7 @@
+>  
+>  		pinctrl_pcie: pciegrp {
+>  			fsl,pins = <
+> +				MX6QDL_PAD_EIM_D19__GPIO3_IO19	0x80000000
+>  				MX6QDL_PAD_GPIO_17__GPIO7_IO12	0x80000000
+>  			>;
+>  		};
+> @@ -502,6 +503,7 @@
+>  &pcie {
+>  	pinctrl-names = "default";
+>  	pinctrl-0 = <&pinctrl_pcie>;
+> +	power-on-gpio = <&gpio3 19 0>;
+>  	reset-gpio = <&gpio7 12 0>;
+>  	status = "okay";
+>  };
 
-Tested-by: Stephen Boyd <sboyd@codeaurora.org>
+This hunk is wrong. There is no "power-on-gpio" in the binding anymore.
+Also there is already a change in Shawns tree to model this as a
+always-on regulator. If we really want to control pci bus power this
+needs to be done through this regulator, not some arbitrary gpio hack.
 
+Also I don't see why this would be stable material.
+
+Regards,
+Lucas
 -- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-hosted by The Linux Foundation
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
