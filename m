@@ -1,89 +1,100 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH v2 1/2] PCI: Remove pci_find_upstream_pcie_bridge()
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linux-kernel@vger.kernel.org
-Date: Wed, 17 Sep 2014 10:41:07 -0600
-Message-ID: <20140917164106.21584.20401.stgit@gimli.home>
-In-Reply-To: <20140917163930.21584.69496.stgit@gimli.home>
-References: <20140917163930.21584.69496.stgit@gimli.home>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Mon, 22 Sep 2014 12:35:23 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v11 00/10] Support for creating generic PCI host bridges
+ from DT
+Message-ID: <20140922113523.GM1994@e106497-lin.cambridge.arm.com>
+References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140919215905.GB30239@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140919215905.GB30239@google.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is now dead code.
+On Fri, Sep 19, 2014 at 10:59:05PM +0100, Bjorn Helgaas wrote:
+> On Thu, Sep 18, 2014 at 02:30:15AM +0100, Liviu Dudau wrote:
+> > This is my version 11 of the attempt at adding support for generic PCI host
+> > bridge controllers that make use of device tree information to
+> > configure themselves. It contains minor cleanups compared with v10 to address
+> > the existing comments.
+> > ...
+> > Catalin Marinas (1):
+> >   PCI: Introduce generic domain handling for PCI busses.
+> > 
+> > Liviu Dudau (9):
+> >   Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
+> >   PCI: Introduce helper functions to deal with PCI I/O ranges.
+> >   ARM: Define PCI_IOBASE as the base of virtual PCI IO space.
+> >   PCI: OF: Fix the conversion of IO ranges into IO resources.
+> >   PCI: Create pci_host_bridge before its associated bus in
+> >     pci_create_root_bus.
+> >   OF: Introduce helper function for getting PCI domain_nr
+> >   OF: PCI: Add support for parsing PCI host bridge resources from DT
+> >   PCI: Assign unassigned bus resources in pci_scan_root_bus()
+> >   PCI: Introduce pci_remap_iospace() for remapping PCI I/O bus resources
+> >     into CPU space
+> > 
+> >  arch/arm/include/asm/io.h         |   1 +
+> >  arch/arm/mach-integrator/pci_v3.c |  23 +++---
+> >  drivers/of/address.c              | 146 ++++++++++++++++++++++++++++++++
+> >  drivers/of/of_pci.c               | 170 ++++++++++++++++++++++++++++++++++++++
+> >  drivers/pci/host/pci-tegra.c      |  10 ++-
+> >  drivers/pci/host/pcie-rcar.c      |  21 +++--
+> >  drivers/pci/pci.c                 |  33 ++++++++
+> >  drivers/pci/probe.c               |  46 +++++++----
+> >  include/asm-generic/io.h          |   2 +-
+> >  include/asm-generic/pgtable.h     |   4 +
+> >  include/linux/of_address.h        |  15 +---
+> >  include/linux/of_pci.h            |  18 ++++
+> >  include/linux/pci.h               |  24 ++++++
+> >  13 files changed, 463 insertions(+), 50 deletions(-)
+> 
+> I put this on a pci/liviu-generic-v11 branch.  I mentioned a couple things
+> in response to the individual patches, so I'm hoping you can send me
+> incremental patches to address them.  Then I'll update this branch, rename
+> it, and get it into linux-next.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+Thanks a lot for that!
 
- drivers/pci/search.c |   34 ----------------------------------
- include/linux/pci.h  |   11 -----------
- 2 files changed, 45 deletions(-)
+As I've mentioned in the other email, I can send incremental patches for most
+of the comments (and Acks?). Don't know how to handle the split of 
+"[PATH v11 4/10] PCI: OF: Fix the conversion of IO ranges into IO resources."
+that you are asking for.
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index 827ad83..a81f413 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -103,40 +103,6 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
- 	return ret;
- }
- 
--/*
-- * find the upstream PCIe-to-PCI bridge of a PCI device
-- * if the device is PCIE, return NULL
-- * if the device isn't connected to a PCIe bridge (that is its parent is a
-- * legacy PCI bridge and the bridge is directly connected to bus 0), return its
-- * parent
-- */
--struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
--{
--	struct pci_dev *tmp = NULL;
--
--	if (pci_is_pcie(pdev))
--		return NULL;
--	while (1) {
--		if (pci_is_root_bus(pdev->bus))
--			break;
--		pdev = pdev->bus->self;
--		/* a p2p bridge */
--		if (!pci_is_pcie(pdev)) {
--			tmp = pdev;
--			continue;
--		}
--		/* PCI device should connect to a PCIe bridge */
--		if (pci_pcie_type(pdev) != PCI_EXP_TYPE_PCI_BRIDGE) {
--			/* Busted hardware? */
--			WARN_ON_ONCE(1);
--			return NULL;
--		}
--		return pdev;
--	}
--
--	return tmp;
--}
--
- static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
- {
- 	struct pci_bus *child;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 61978a4..b4fb9f4 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1828,15 +1828,4 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
- 			   int (*fn)(struct pci_dev *pdev,
- 				     u16 alias, void *data), void *data);
- 
--/**
-- * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
-- * @pdev: the PCI device
-- *
-- * if the device is PCIE, return NULL
-- * if the device isn't connected to a PCIe bridge (that is its parent is a
-- * legacy PCI bridge and the bridge is directly connected to bus 0), return its
-- * parent
-- */
--struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
--
- #endif /* LINUX_PCI_H */
+Best regards,
+Liviu
+
+> 
+> Bjorn
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
