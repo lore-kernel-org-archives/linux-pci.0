@@ -1,115 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:62698 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754034AbaIDMPY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 08:15:24 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Minghuan Lian <Minghuan.Lian@freescale.com>,
-	linux-pci@vger.kernel.org,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Zang Roy-R61911 <r61911@freescale.com>
-Subject: Re: [PATCH 2/2] PCI: Layerscape: Add Layerscape PCIe driver
-Date: Thu, 04 Sep 2014 14:14:48 +0200
-Message-ID: <2799937.bNtU9KXR6t@wuerfel>
-In-Reply-To: <1409856338-1730-2-git-send-email-Minghuan.Lian@freescale.com>
-References: <1409856338-1730-1-git-send-email-Minghuan.Lian@freescale.com> <1409856338-1730-2-git-send-email-Minghuan.Lian@freescale.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Mon, 22 Sep 2014 17:29:48 +0200
+From: Robert Richter <rric@kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v11 10/10] PCI: Introduce pci_remap_iospace() for
+ remapping PCI I/O bus resources into CPU space
+Message-ID: <20140922152948.GB20256@rric.localhost>
+References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411003825-21521-11-git-send-email-Liviu.Dudau@arm.com>
+ <20140919215400.GA30239@google.com>
+ <201409200420.31433.arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <201409200420.31433.arnd@arndb.de>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 04 September 2014 18:45:38 Minghuan Lian wrote:
+On 20.09.14 04:20:31, Arnd Bergmann wrote:
+> On Friday 19 September 2014, Bjorn Helgaas wrote:
+> > On Thu, Sep 18, 2014 at 02:30:25AM +0100, Liviu Dudau wrote:
+> 
+> > PCI_IOBASE is a virtual address.  So PCI_IOBASE + res->start is also a
+> > virtual address (only for IORESOURCE_IO).
+> > 
+> > Since res->start is normally a *physical* address, I think it would be less
+> > confusing to do something like this:
+> > 
+> >     vaddr = PCI_IOBASE + res->start;
+> >     ioremap_page_range(vaddr, vaddr + resource_size(res), ...);
+> > 
+> > so we have a hint that the first two ioremap_page_range() parameters are
+> > virtual addresses.  It's also confusing that it uses "unsigned long" for
+> > the virtual addresses, when we usually use "void *".  But that's out of
+> > scope for this patch.
+> 
+> Good idea. I think it will have to be (unsigned long)PCI_IOBASE above then,
+> since ioremap_page_range takes a 'unsigned long' virtual address and PCI_IOBASE
+> should really remain an __iomem pointer.
 
-> +
-> +#define PCIE_LS1021A_BASE	0x3400000
-> +#define PCIE_LS1021A_REG_SIZE	0x0100000
+Right, I see this warning here:
 
-This does not belong here. All addresses must come from DT,
-and you should not do the calculation below based on the address.
+drivers/pci/pci.c: In function ‘pci_remap_iospace’:
+drivers/pci/pci.c:2728:8: warning: assignment makes integer from pointer without a cast [enabled by default]
 
-> +struct ls_pcie {
-> +	struct list_head node;
-> +	struct device *dev;
-> +	struct pci_bus *bus;
-> +	void __iomem *dbi;
-> +	void __iomem *scfg;
-> +	struct pcie_port pp;
-> +	int id;
-> +	int index;
-> +	int irq;
-> +	int msi_irq;
-> +	int pme_irq;
-> +};
-
-irq and pme_irq seem to be completely unused, so better
-not add them until they are actually used.
-
-The scfg registers seem to belong to another device that
-is responsible for multiple instances. Unfortunately,
-this "fsl,ls1021a-scfg" device is not documented anywhere
-that I can see.
-
-Is this some sort of syscon node, or is it specific to the
-pcie controller(s)?
-
-> +static LIST_HEAD(ls_pcie_list);
-
-Don't maintain your own lists please.
-
-> +static int ls_pcie_link_up(struct pcie_port *pp)
-> +{
-> +	u32 rc, tmp;
-> +	struct ls_pcie *pcie = to_ls_pcie(pp);
-> +
-> +	tmp = ioread32(pcie->scfg + SCFG_SCFGREVCR_OFF);
-> +	iowrite32(SCFG_NO_BIT_REVERSE, pcie->scfg + SCFG_SCFGREVCR_OFF);
-> +
-> +	rc = (ioread32(pcie->scfg + PEXMSCPORTSR(pcie->index)) >>
-> +	     LTSSM_STATE_SHIFT) & LTSSM_STATE_MASK;
-> +
-> +	iowrite32(tmp, pcie->scfg + SCFG_SCFGREVCR_OFF);
-> +
-> +	if (rc < LTSSM_PCIE_L0)
-> +		return 0;
-> +
-> +	return 1;
-> +}
-
-This looks like it is really a phy driver, although a pretty minimal
-one.
-
-> +static u32 ls_pcie_get_msi_addr(struct pcie_port *pp)
-> +{
-> +	return SCFG_SPIMSICR_ADDR;
-> +}
-> +
-> +static u32 ls_pcie_get_msi_data(struct pcie_port *pp, int pos)
-> +{
-> +	struct ls_pcie *pcie = to_ls_pcie(pp);
-> +
-> +	if (pcie->id == PCI_DEVICE_ID_LS1021A)
-> +		return MSI_LS1021A_DATA(pcie->index);
-> +
-> +	return pos;
-> +}
-
-My impression is that you have two distinct MSI controller
-implementations, one for LS1021A and the other one for everything
-else. How about using separate pcie_host_ops for them, possibly
-also moving them into separate files?
-
-A good way to deal with this is to put the pointers to the two
-pcie_host_ops into the data fields of the ls_pcie_of_match table.
-
-> +/* Freescale PCIe driver does not allow module unload */
-> +static int __init ls_pcie_init(void)
-> +{
-> +	return platform_driver_probe(&ls_pcie_driver, ls_pcie_probe);
-> +}
-> +subsys_initcall(ls_pcie_init);
-
-Better change to platform_driver_register, so you can use deferred probing.
-
-	Arnd
-
+-Robert
