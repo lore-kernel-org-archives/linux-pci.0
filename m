@@ -1,357 +1,107 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v6 15/15] x86, irq, ACPI: Implement ACPI driver to support IOAPIC hotplug
-Date: Wed, 24 Sep 2014 16:59:36 +0800
-Message-Id: <1411549176-30780-16-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Mon, 22 Sep 2014 18:55:06 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v11 08/10] OF: PCI: Add support for parsing PCI host
+ bridge resources from DT
+Message-ID: <20140922175505.GH1994@e106497-lin.cambridge.arm.com>
+References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411003825-21521-9-git-send-email-Liviu.Dudau@arm.com>
+ <20140919210610.GI19374@google.com>
+ <541CCA36.8010606@gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <541CCA36.8010606@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable support of IOAPIC hotplug by:
-1) reintroducing ACPI based IOAPIC driver
-2) enhance pci_root driver to hook hotplug events
+On Sat, Sep 20, 2014 at 01:28:38AM +0100, Rob Herring wrote:
+> On 09/19/2014 04:06 PM, Bjorn Helgaas wrote:
+> > On Thu, Sep 18, 2014 at 02:30:23AM +0100, Liviu Dudau wrote:
+> >> Provide a function to parse the PCI DT ranges that can be used to
+> >> create a pci_host_bridge structure together with its associated
+> >> bus.
+> >>
+> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> >> Cc: Arnd Bergmann <arnd@arndb.de>
+> >> Cc: Grant Likely <grant.likely@linaro.org>
+> >> Cc: Rob Herring <robh+dt@kernel.org>
+> >> Cc: Catalin Marinas <catalin.marinas@arm.com>
+> >> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> >> ---
+> 
+> [...]
+> 
+> >> +int of_pci_get_host_bridge_resources(struct device_node *dev,
+> >> +			unsigned char busno, unsigned char bus_max,
+> >> +			struct list_head *resources, resource_size_t *io_base)
+> >> +{
+> >> +	struct resource *res;
+> >> +	struct resource *bus_range;
+> >> +	struct of_pci_range range;
+> >> +	struct of_pci_range_parser parser;
+> >> +	char range_type[4];
+> >> +	int err;
+> >> +
+> >> +	if (!io_base)
+> >> +		return -EINVAL;
+> >> +	*io_base = OF_BAD_ADDR;
+> >> +
+> >> +	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
+> 
+> This function does a lot of kalloc's but there is not an easy way to
+> undo those allocations. Hot unplug of a host bridge or probe error
+> handling would leak memory.
+> 
+> You could pass in struct device and use the devm_ variant (also
+> addressing Bjorn's comment), but not having an uninit/remove function
+> make what clean-up drivers have to do error prone. For example, on
+> uninit a driver needs to call pci_free_resource_list.
 
-The ACPI IOAPIC driver is always enabled if all of ACPI, PCI and IOAPIC
-are enabled.
+If the function fails to parse the ranges for whatever reason it will
+call pci_free_resource_list on the resources that have been added already
+and it will clean up. If it is successful, then it is the job of the caller
+to free the list, as mentioned in the comment associated with the function.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/Kconfig    |    6 ++
- drivers/acpi/Makefile   |    1 +
- drivers/acpi/internal.h |    7 ++
- drivers/acpi/ioapic.c   |  235 +++++++++++++++++++++++++++++++++++++++++++++++
- drivers/acpi/pci_root.c |    3 +
- 5 files changed, 252 insertions(+)
- create mode 100644 drivers/acpi/ioapic.c
+The reason why I am reluctant to use devm_ here is that the ranges are only
+parsed here, no filtering is applied. Architectures and/or host bridge
+drivers can/could impose additional restrictions to the list before passing
+it to pci_scan_root_bus() for example.
 
-diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-index d0f3265fb85d..b7b87a1a2252 100644
---- a/drivers/acpi/Kconfig
-+++ b/drivers/acpi/Kconfig
-@@ -315,6 +315,12 @@ config ACPI_HOTPLUG_MEMORY
- 	  To compile this driver as a module, choose M here:
- 	  the module will be called acpi_memhotplug.
- 
-+config ACPI_HOTPLUG_IOAPIC
-+	bool
-+	depends on PCI
-+	depends on X86_IO_APIC
-+	default y
-+
- config ACPI_SBS
- 	tristate "Smart Battery System"
- 	depends on X86
-diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
-index 505d4d79fe3e..ee996253a2bb 100644
---- a/drivers/acpi/Makefile
-+++ b/drivers/acpi/Makefile
-@@ -68,6 +68,7 @@ obj-$(CONFIG_ACPI_PROCESSOR)	+= processor.o
- obj-y				+= container.o
- obj-$(CONFIG_ACPI_THERMAL)	+= thermal.o
- obj-y				+= acpi_memhotplug.o
-+obj-$(CONFIG_ACPI_HOTPLUG_IOAPIC) += ioapic.o
- obj-$(CONFIG_ACPI_BATTERY)	+= battery.o
- obj-$(CONFIG_ACPI_SBS)		+= sbshc.o
- obj-$(CONFIG_ACPI_SBS)		+= sbs.o
-diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-index 4c5cf77e7576..817ab2d5975c 100644
---- a/drivers/acpi/internal.h
-+++ b/drivers/acpi/internal.h
-@@ -34,6 +34,13 @@ void acpi_pnp_init(void);
- int acpi_sysfs_init(void);
- void acpi_container_init(void);
- void acpi_memory_hotplug_init(void);
-+#ifdef	CONFIG_ACPI_HOTPLUG_IOAPIC
-+int acpi_ioapic_add(struct acpi_pci_root *root);
-+int acpi_ioapic_remove(struct acpi_pci_root *root);
-+#else
-+static inline int acpi_ioapic_add(struct acpi_pci_root *root) { return 0; }
-+static inline int acpi_ioapic_remove(struct acpi_pci_root *root) { return 0; }
-+#endif
- #ifdef CONFIG_ACPI_DOCK
- void register_dock_dependent_device(struct acpi_device *adev,
- 				    acpi_handle dshandle);
-diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
-new file mode 100644
-index 000000000000..9a631a61e270
---- /dev/null
-+++ b/drivers/acpi/ioapic.c
-@@ -0,0 +1,235 @@
-+/*
-+ * IOAPIC/IOxAPIC/IOSAPIC driver
-+ *
-+ * Copyright (C) 2009 Fujitsu Limited.
-+ * (c) Copyright 2009 Hewlett-Packard Development Company, L.P.
-+ *
-+ * Copyright (C) 2014 Intel Corporation
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * Based on original drivers/pci/ioapic.c
-+ *	Yinghai Lu <yinghai@kernel.org>
-+ *	Jiang Liu <jiang.liu@intel.com>
-+ */
-+
-+/*
-+ * This driver manages I/O APICs added by hotplug after boot.
-+ * We try to claim all I/O APIC devices, but those present at boot were
-+ * registered when we parsed the ACPI MADT.
-+ */
-+
-+#define pr_fmt(fmt) "ACPI : IOAPIC: " fmt
-+
-+#include <linux/slab.h>
-+#include <linux/acpi.h>
-+#include <linux/pci.h>
-+#include <acpi/acpi.h>
-+
-+struct acpi_pci_ioapic {
-+	acpi_handle	root_handle;
-+	acpi_handle	handle;
-+	u32		gsi_base;
-+	struct resource	res;
-+	struct pci_dev	*pdev;
-+	struct list_head list;
-+};
-+
-+static LIST_HEAD(ioapic_list);
-+static DEFINE_MUTEX(ioapic_list_lock);
-+
-+static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
-+{
-+	struct resource *res = data;
-+
-+	memset(res, 0, sizeof(*res));
-+	if (acpi_dev_resource_memory(acpi_res, res)) {
-+		res->flags &= IORESOURCE_MEM;
-+		if (res->flags)
-+			return AE_OK;
-+	} else if (acpi_dev_resource_address_space(acpi_res, res)) {
-+		struct acpi_resource_address64 addr;
-+
-+		res->flags &= IORESOURCE_MEM;
-+		if (res->flags &&
-+		    ACPI_SUCCESS(acpi_resource_to_address64(acpi_res, &addr)) &&
-+		    addr.info.mem.caching != ACPI_PREFETCHABLE_MEMORY) {
-+			res->start += addr.translation_offset;
-+			res->end += addr.translation_offset;
-+			return AE_OK;
-+		}
-+	}
-+	res->flags = 0;
-+
-+	return AE_OK;
-+}
-+
-+static bool acpi_is_ioapic(acpi_handle handle, char **type)
-+{
-+	acpi_status status;
-+	struct acpi_device_info *info;
-+	char *hid = NULL;
-+	bool match = false;
-+
-+	if (!acpi_has_method(handle, "_GSB"))
-+		return false;
-+
-+	status = acpi_get_object_info(handle, &info);
-+	if (ACPI_SUCCESS(status)) {
-+		if (info->valid & ACPI_VALID_HID)
-+			hid = info->hardware_id.string;
-+		if (hid) {
-+			if (strcmp(hid, "ACPI0009") == 0) {
-+				*type = "IOxAPIC";
-+				match = true;
-+			} else if (strcmp(hid, "ACPI000A") == 0) {
-+				*type = "IOAPIC";
-+				match = true;
-+			}
-+		}
-+		kfree(info);
-+	}
-+
-+	return match;
-+}
-+
-+static acpi_status handle_ioapic_add(acpi_handle handle, u32 lvl,
-+				     void *context, void **rv)
-+{
-+	acpi_status status;
-+	unsigned long long gsi_base;
-+	struct acpi_pci_ioapic *ioapic;
-+	struct pci_dev *dev = NULL;
-+	struct resource *res = NULL;
-+	char *type = NULL;
-+
-+	if (!acpi_is_ioapic(handle, &type))
-+		return AE_OK;
-+
-+	mutex_lock(&ioapic_list_lock);
-+	list_for_each_entry(ioapic, &ioapic_list, list)
-+		if (ioapic->handle == handle) {
-+			mutex_unlock(&ioapic_list_lock);
-+			return AE_OK;
-+		}
-+
-+	status = acpi_evaluate_integer(handle, "_GSB", NULL, &gsi_base);
-+	if (ACPI_FAILURE(status)) {
-+		acpi_handle_warn(handle, "failed to evaluate _GSB method\n");
-+		goto exit;
-+	}
-+
-+	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
-+	if (!ioapic) {
-+		pr_err("cannot allocate memory for new IOAPIC\n");
-+		goto exit;
-+	} else {
-+		ioapic->root_handle = (acpi_handle)context;
-+		ioapic->handle = handle;
-+		ioapic->gsi_base = (u32)gsi_base;
-+		ioapic->res.flags = IORESOURCE_UNSET;
-+	}
-+
-+	if (acpi_ioapic_registered(handle, (u32)gsi_base))
-+		goto done;
-+
-+	dev = acpi_get_pci_dev(handle);
-+	if (dev && pci_resource_len(dev, 0)) {
-+		if (pci_enable_device(dev) < 0)
-+			goto exit_put;
-+		pci_set_master(dev);
-+		if (pci_request_region(dev, 0, type))
-+			goto exit_disable;
-+		res = &dev->resource[0];
-+		ioapic->pdev = dev;
-+	} else {
-+		pci_dev_put(dev);
-+		dev = NULL;
-+
-+		res = &ioapic->res;
-+		acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, res);
-+		if (res->flags == IORESOURCE_UNSET) {
-+			acpi_handle_warn(handle, "failed to get resource\n");
-+			goto exit_free;
-+		} else if (request_resource(&iomem_resource, res)) {
-+			acpi_handle_warn(handle, "failed to insert resource\n");
-+			goto exit_free;
-+		}
-+	}
-+
-+	if (acpi_register_ioapic(handle, res->start, (u32)gsi_base)) {
-+		acpi_handle_warn(handle, "failed to register IOAPIC\n");
-+		goto exit_release;
-+	}
-+done:
-+	list_add(&ioapic->list, &ioapic_list);
-+	mutex_unlock(&ioapic_list_lock);
-+
-+	if (dev)
-+		dev_info(&dev->dev, "%s at %pR, GSI %u\n",
-+			 type, res, (u32)gsi_base);
-+	else
-+		acpi_handle_info(handle, "%s at %pR, GSI %u\n",
-+				 type, res, (u32)gsi_base);
-+
-+	return AE_OK;
-+
-+exit_release:
-+	if (dev)
-+		pci_release_region(dev, 0);
-+	else
-+		release_resource(res);
-+exit_disable:
-+	if (dev)
-+		pci_disable_device(dev);
-+exit_put:
-+	if (dev)
-+		pci_dev_put(dev);
-+exit_free:
-+	kfree(ioapic);
-+exit:
-+	mutex_unlock(&ioapic_list_lock);
-+	*(acpi_status *)rv = AE_ERROR;
-+	return AE_OK;
-+}
-+
-+int acpi_ioapic_add(struct acpi_pci_root *root)
-+{
-+	acpi_status status, retval = AE_OK;
-+
-+	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root->device->handle,
-+				     UINT_MAX, handle_ioapic_add, NULL,
-+				     root->device->handle, (void **)&retval);
-+
-+	return ACPI_SUCCESS(status) && ACPI_SUCCESS(retval) ? 0 : -ENODEV;
-+}
-+
-+int acpi_ioapic_remove(struct acpi_pci_root *root)
-+{
-+	int retval = 0;
-+	struct acpi_pci_ioapic *ioapic, *tmp;
-+
-+	mutex_lock(&ioapic_list_lock);
-+	list_for_each_entry_safe(ioapic, tmp, &ioapic_list, list) {
-+		if (root->device->handle != ioapic->root_handle)
-+			continue;
-+
-+		if (acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base))
-+			retval = -EBUSY;
-+
-+		if (ioapic->pdev) {
-+			pci_release_region(ioapic->pdev, 0);
-+			pci_disable_device(ioapic->pdev);
-+			pci_dev_put(ioapic->pdev);
-+		} else if (ioapic->res.flags != IORESOURCE_UNSET) {
-+			release_resource(&ioapic->res);
-+		}
-+		list_del(&ioapic->list);
-+		kfree(ioapic);
-+	}
-+	mutex_unlock(&ioapic_list_lock);
-+
-+	return retval;
-+}
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index e6ae603ed1a1..d83980b18f49 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -600,6 +600,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	if (system_state != SYSTEM_BOOTING) {
- 		pcibios_resource_survey_bus(root->bus);
- 		pci_assign_unassigned_root_bus_resources(root->bus);
-+		acpi_ioapic_add(root);
- 	}
- 
- 	pci_lock_rescan_remove();
-@@ -620,6 +621,8 @@ static void acpi_pci_root_remove(struct acpi_device *device)
- 
- 	pci_stop_root_bus(root->bus);
- 
-+	WARN_ON(acpi_ioapic_remove(root));
-+
- 	device_set_run_wake(root->bus->bridge, false);
- 	pci_acpi_remove_bus_pm_notifier(device);
- 
+Best regards,
+Liviu
+
+> 
+> Rob
+> 
+
 -- 
-1.7.10.4
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
