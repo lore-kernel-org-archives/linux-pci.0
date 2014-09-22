@@ -1,75 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:24721 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750821AbaIXWlK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Sep 2014 18:41:10 -0400
-Date: Wed, 24 Sep 2014 16:41:09 -0600 (MDT)
-From: Keith Busch <keith.busch@intel.com>
-To: Yijing Wang <wangyijing@huawei.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Keith Busch <keith.busch@intel.com>,
-	Jon Mason <jon.mason@intel.com>, Jon Mason <jdmason@kudzu.us>
-Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
-In-Reply-To: <5409117E.2000002@huawei.com>
-Message-ID: <alpine.LRH.2.03.1409241547430.4696@AMR>
-References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com> <20140903224201.GD26073@google.com> <540802D9.6000903@huawei.com> <CAErSpo6qy76zTX07Ufm0n1_HUA5G0MrAYxauEFa5QkibWsejFQ@mail.gmail.com> <5409117E.2000002@huawei.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Mon, 22 Sep 2014 12:05:22 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v11 07/10] OF: Introduce helper function for getting PCI
+ domain_nr
+Message-ID: <20140922110522.GK1994@e106497-lin.cambridge.arm.com>
+References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411003825-21521-8-git-send-email-Liviu.Dudau@arm.com>
+ <20140919210313.GH19374@google.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20140919210313.GH19374@google.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just poking this thread to make sure it's not dead. :)
+On Fri, Sep 19, 2014 at 10:03:13PM +0100, Bjorn Helgaas wrote:
+> On Thu, Sep 18, 2014 at 02:30:22AM +0100, Liviu Dudau wrote:
+> > Add of_pci_get_domain_nr() to retrieve the PCI domain number
+> > of a given device from DT. If the information is not present,
+> > the function can be requested to allocate a new domain number.
+> 
+> Is of_pci_get_domain_nr() used somewhere?  If the use is in some future
+> series, please mention it explicitly.  I'm just trying to avoid merging
+> unused code.
 
-I tested Yijing's proposal and it is successful on our Intel server
-platforms; hoping either this or something that derives similar behavior
-will be applied so we can remove bus tuning kernel parameters.
+It is used in the arm64 specific patch that I have dropped out of my
+pull request. After discussions with Catalin I will add the patch back
+into the tree that you've pulled from as he is OK with your tree carrying
+the whole package.
 
-Tested-by: Keith Busch <keith.busch@intel.com>
+I need to ask for some guidance here: for addressing some of your comments
+and Rob's I can add more patches in my v11 branch and you can pull them
+when you think they are ready. But one of your comments was requesting
+splitting a patch into two blocks - one that moves of_pci_range_to_resource()
+into drivers/of/address.c and one that fixes it's behaviour - and I don't
+know how you would like that handled. Should I revert the original patch
+and add the new ones, or should I rebase the whole series into a different
+branch that you can pull from?
 
-On Thu, 4 Sep 2014, Yijing Wang wrote:
->>>>>      if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
->>>>> +            pcie_bus_update_set(dev);
->>>>
->>>> You're only adding this to the PCIE_BUS_TUNE_OFF path.  Can't the same
->>>> problem occur for other pcie_bus_config settings?
->>>
->>> We only found the problem during PCIE_BUS_TUNE_OFF set. Other mode like PCIE_BUS_SAFE and PCIE_BUS_PEER2PEER.
->>> This issue won't happen.
->>
->> Sorry, I can't parse this.  Are you saying the problem won't happen in
->> the other modes?  Why not?
->
-> Hi Bjorn, when in PCIE_BUS_SAFE mode, pcie_find_smpss() will find the largest available mpss in a pcie path.
-> Then call pcie_bus_configure_set() to set all devices' mps to the largest available mps in this path, so
-> all devices in the path will have the same mps. When in PCIE_BUS_PEER2PEER, all devices' mps will be set to 128B
-> for safety. And to the PCIE_BUS_PERFORMANCE mode, I found Jon's comment in pcie_write_mps(),
->
-> 			/* For "Performance", the assumption is made that
-> 			 * downstream communication will never be larger than
-> 			 * the MRRS.  So, the MPS only needs to be configured
-> 			 * for the upstream communication.  This being the case, <------
-> 			 * walk from the top down and set the MPS of the child
-> 			 * to that of the parent bus.
->
-> So I think the problem won't happen in other modes.
->
-> Thanks!
-> Yijing.
->
->
->>
->>>>>              pcie_bus_detect_mps(dev);
->>>>>              return 0;
->>>>>      }
->>
->> .
->>
->
->
-> -- 
-> Thanks!
-> Yijing
->
->
+Best regards,
+Liviu
+
+> 
+> Bjorn
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
