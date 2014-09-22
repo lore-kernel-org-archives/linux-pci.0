@@ -1,77 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:41136 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751883AbaIXQuQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 12:50:16 -0400
-Date: Wed, 24 Sep 2014 17:49:46 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Robert Richter <rric@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Robert Richter <rrichter@cavium.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Sunil Goutham <sgoutham@cavium.com>
-Subject: Re: [PATCH 1/6] pci, thunder: Add support for Thunder PCIe host
- controller
-Message-ID: <20140924164946.GI16244@arm.com>
-References: <1411573068-12952-1-git-send-email-rric@kernel.org>
- <1411573068-12952-2-git-send-email-rric@kernel.org>
- <27476217.5ToIFGoMDz@wuerfel>
+Received: from mail-bn1on0130.outbound.protection.outlook.com ([157.56.110.130]:33566
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750961AbaIVKCf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Sep 2014 06:02:35 -0400
+From: Richard Zhu <r65037@freescale.com>
+To: <linux-pci-owner@vger.kernel.org>
+CC: <stable@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<l.stach@pengutronix.de>, Richard Zhu <r65037@freescale.com>
+Subject: [PATCH RFC 1/2] PCI: imx6: enable pcie on imx6qdl sabresd and sabreauto
+Date: Mon, 22 Sep 2014 17:01:37 +0800
+Message-ID: <1411376498-14653-2-git-send-email-r65037@freescale.com>
+In-Reply-To: <1411376498-14653-1-git-send-email-r65037@freescale.com>
+References: <1411376498-14653-1-git-send-email-r65037@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <27476217.5ToIFGoMDz@wuerfel>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 24, 2014 at 05:12:26PM +0100, Arnd Bergmann wrote:
-> On Wednesday 24 September 2014 17:37:43 Robert Richter wrote:
-> > From: Sunil Goutham <sgoutham@cavium.com>
-> > 
-> > This patch adds support for PCI host controller of Cavium Thunder
-> > SoCs.
-> 
-> I had expected this hardware to be SBSA compliant. Why do you need
-> a hardware specific driver, is this a workaround for buggy hardware
-> or just noncompliant?
+- enable pcie support on imx6qdl sabresd and asbreauto boards.
+- sabresd board has the pcie power on and reset gpios, but
+sabreauto doesn't have these two gpios.
 
-Patches welcome to pci-host-generic.c :) Lorenzo already has code to port
-it to Liviu's new API, so do shout if it's not suitable for your needs.
+Signed-off-by: Richard Zhu <r65037@freescale.com>
+---
+ arch/arm/boot/dts/imx6qdl-sabreauto.dtsi | 4 ++++
+ arch/arm/boot/dts/imx6qdl-sabresd.dtsi   | 2 ++
+ 2 files changed, 6 insertions(+)
 
-> > +static int thunder_pcie_msi_enable(struct thunder_pcie *pcie,
-> > +					struct pci_bus *bus)
-> > +{
-> > +	struct device_node *msi_node;
-> > +
-> > +	msi_node = of_parse_phandle(pcie->node, "msi-parent", 0);
-> > +	if (!msi_node)
-> > +		return -ENODEV;
-> > +
-> > +	pcie->msi = of_pci_find_msi_chip_by_node(msi_node);
-> > +	if (!pcie->msi)
-> > +		return -ENODEV;
-> > +
-> > +	pcie->msi->dev = pcie->dev;
-> > +	bus->msi = pcie->msi;
-> > +
-> > +	return 0;
-> > +}
-> 
-> This is probably something we should add to the generic host driver as well,
-> so it can work with SBSA compliant implementations that come with an MSI
-> controller. Maybe move it into common code so it can be shared with that
-> driver.
+diff --git a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
+index 009abd6..d6040a5 100644
+--- a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
++++ b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
+@@ -410,6 +410,10 @@
+ 	};
+ };
+ 
++&pcie {
++	status = "okay";
++};
++
+ &pwm3 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_pwm3>;
+diff --git a/arch/arm/boot/dts/imx6qdl-sabresd.dtsi b/arch/arm/boot/dts/imx6qdl-sabresd.dtsi
+index ec43dde..c2d3224 100644
+--- a/arch/arm/boot/dts/imx6qdl-sabresd.dtsi
++++ b/arch/arm/boot/dts/imx6qdl-sabresd.dtsi
+@@ -396,6 +396,7 @@
+ 
+ 		pinctrl_pcie: pciegrp {
+ 			fsl,pins = <
++				MX6QDL_PAD_EIM_D19__GPIO3_IO19	0x80000000
+ 				MX6QDL_PAD_GPIO_17__GPIO7_IO12	0x80000000
+ 			>;
+ 		};
+@@ -502,6 +503,7 @@
+ &pcie {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_pcie>;
++	power-on-gpio = <&gpio3 19 0>;
+ 	reset-gpio = <&gpio7 12 0>;
+ 	status = "okay";
+ };
+-- 
+1.9.1
 
-Agreed. I've been carrying something similar [1] (based on a hacked-up version
-of bios32, so not bothered to post it) whilst I've been waiting for the
-arm64 core PCI code to get merged.
-
-Will
-
-[1] https://git.kernel.org/cgit/linux/kernel/git/will/linux.git/commit/drivers/pci/host/pci-host-generic.c?h=iommu/pci&id=b719acf062ceccfbd79ee7b1ae0b7904ea4da27e
