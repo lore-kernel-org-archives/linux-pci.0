@@ -1,81 +1,165 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:43492 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754623AbaIPRsI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 13:48:08 -0400
-Date: Tue, 16 Sep 2014 10:47:27 -0700 (PDT)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC Part2 v1 03/21] x86, irq: Save destination CPU ID in
- irq_cfg
-In-Reply-To: <1410444228-3134-4-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.10.1409161046460.4247@nanos>
-References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com> <1410444228-3134-4-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-we0-f173.google.com ([74.125.82.173]:54757 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753491AbaIVMPx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 08:15:53 -0400
+Date: Mon, 22 Sep 2014 14:15:47 +0200
+From: Robert Richter <rric@kernel.org>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Sunil Goutham <sunil.goutham@caviumnetworks.com>
+Subject: Re: [PATCH v11 08/10] OF: PCI: Add support for parsing PCI host
+ bridge resources from DT
+Message-ID: <20140922121547.GD20170@rric.localhost>
+References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411003825-21521-9-git-send-email-Liviu.Dudau@arm.com>
+ <20140922093228.GA20256@rric.localhost>
+ <20140922114317.GN1994@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140922114317.GN1994@e106497-lin.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On Thu, 11 Sep 2014, Jiang Liu wrote:
-
-> Cache destination CPU APIC ID into struct irq_cfg when assigning vector
-> for interrupt. Upper layer just needs to read the cached APIC ID instead
-> of calling apic->cpu_mask_to_apicid_and(), it helps to hide APIC driver
-> details from IOAPIC/HPET/MSI drivers..
+On 22.09.14 12:43:17, Liviu Dudau wrote:
+> On Mon, Sep 22, 2014 at 10:32:28AM +0100, Robert Richter wrote:
+> > On 18.09.14 02:30:23, Liviu Dudau wrote:
+> > > +int of_pci_get_host_bridge_resources(struct device_node *dev,
+> > > +			unsigned char busno, unsigned char bus_max,
+> > > +			struct list_head *resources, resource_size_t *io_base)
+> > > +{
+> > > +	struct resource *res;
+> > > +	struct resource *bus_range;
+> > > +	struct of_pci_range range;
+> > > +	struct of_pci_range_parser parser;
+> > > +	char range_type[4];
+> > > +	int err;
+> > > +
+> > > +	if (!io_base)
+> > > +		return -EINVAL;
+> > > +	*io_base = OF_BAD_ADDR;
+> > 
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  arch/x86/include/asm/hw_irq.h |    1 +
->  arch/x86/kernel/apic/vector.c |    4 ++++
->  2 files changed, 5 insertions(+)
+> Hi Robert,
 > 
-> diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-> index 7624fffc2822..3d51d74d6c01 100644
-> --- a/arch/x86/include/asm/hw_irq.h
-> +++ b/arch/x86/include/asm/hw_irq.h
-> @@ -116,6 +116,7 @@ struct irq_data;
->  struct irq_cfg {
->  	cpumask_var_t		domain;
->  	cpumask_var_t		old_domain;
-> +	unsigned int		dest_apicid;
->  	u8			vector;
->  	u8			move_in_progress : 1;
->  #ifdef CONFIG_IRQ_REMAP
-> diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-> index 7562cb15b3bd..287ae4e8d500 100644
-> --- a/arch/x86/kernel/apic/vector.c
-> +++ b/arch/x86/kernel/apic/vector.c
-> @@ -188,6 +188,10 @@ next:
->  	}
->  	free_cpumask_var(tmp_mask);
+> > This breaks for mem-mapped pci host controllers. The patch below fixes
+> > this.
+> 
+> I think you mean PCI host controller that have only memory mapped ranges,
+> am I right? Initially I've read your reply as to mean that the host
+> controller is accessed through some memory mapped area, which I believe is
+> the case for all host controllers.
 
-Lacks a comment what this call is actually doing.
-  
-> +	if (!err)
-> +		err = apic->cpu_mask_to_apicid_and(mask, cfg->domain,
-> +						   &cfg->dest_apicid);
-> +
+Right, that's meant here. Sorry for the misleading comment.
+
+> 
+> > 
+> > This series was tested with the fix on top for Cavium Thunder.
+> > 
+> > Tested-by: Robert Richter <rrichter@cavium.com>
+> 
+> Thanks for that!
+> 
+> > 
+> > -Robert
+> > 
+> > 
+> > 
+> > From e798af4fc2f664d1aff7e863489b8298f90e716e Mon Sep 17 00:00:00 2001
+> > From: Robert Richter <rrichter@cavium.com>
+> > Date: Mon, 22 Sep 2014 10:46:01 +0200
+> > Subject: [PATCH] OF: PCI: Fix creation of mem-mapped pci host bridges
+> > 
+> > The pci host bridge was not created if io_base was not set when
+> > calling of_pci_get_host_bridge_resources(). This is esp. the case for
+> > mem-mapped io (IORESOURCE_MEM). This patch fixes this. Function
+> > parameter io_base is optional now.
+> 
+> I think the message is misleading. What you want to do is make io_base
+> optional for the case where the PCI host bridge only expects to have only
+> IORESOURCE_MEM ranges and doesn't care about IORESOURCE_IO ones.
+> 
+> As I'm going to touch this area again to address a comment from Bjorn,
+> do you mind if I roll this patch into mine with your Signed-off-by and
+> the mention that you have made io_base optional?
+
+Sure, fine with me.
 
 Thanks,
 
-	tglx
+-Robert
+
+
+> 
+> Best regards,
+> Liviu
+> 
+> > 
+> > Signed-off-by: Robert Richter <rrichter@cavium.com>
+> > ---
+> >  drivers/of/of_pci.c | 7 +++----
+> >  1 file changed, 3 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> > index ffdb45ed8682..1f0e7c2505ee 100644
+> > --- a/drivers/of/of_pci.c
+> > +++ b/drivers/of/of_pci.c
+> > @@ -182,9 +182,8 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+> >  	char range_type[4];
+> >  	int err;
+> >  
+> > -	if (!io_base)
+> > -		return -EINVAL;
+> > -	*io_base = OF_BAD_ADDR;
+> > +	if (io_base)
+> > +		*io_base = OF_BAD_ADDR;
+> >  
+> >  	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
+> >  	if (!bus_range)
+> > @@ -242,7 +241,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+> >  			goto parse_failed;
+> >  		}
+> >  
+> > -		if (resource_type(res) == IORESOURCE_IO) {
+> > +		if (io_base && resource_type(res) == IORESOURCE_IO) {
+> >  			if (*io_base != OF_BAD_ADDR)
+> >  				pr_warn("More than one I/O resource converted. CPU offset for old range lost!\n");
+> >  			*io_base = range.cpu_addr;
+> > -- 
+> > 2.1.0
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> 
+> -- 
+> ====================
+> | I would like to |
+> | fix the world,  |
+> | but they're not |
+> | giving me the   |
+>  \ source code!  /
+>   ---------------
+>     ¯\_(ツ)_/¯
+> 
