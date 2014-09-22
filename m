@@ -1,76 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: <suravee.suthikulpanit@amd.com>
-To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
-	<jason@lakedaemon.net>
-CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
-	<Will.Deacon@arm.com>, <liviu.dudau@arm.com>, <tglx@linutronix.de>,
-	<Harish.Kasiviswanathan@amd.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	"Suravee Suthikulpanit" <Suravee.Suthikulpanit@amd.com>
-Subject: [V8 0/2] irqchip: gic: Introduce ARM GICv2m MSI(-X) support
-Date: Sat, 20 Sep 2014 09:31:36 -0700
-Message-ID: <1411230698-8081-1-git-send-email-suravee.suthikulpanit@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from exprod5og117.obsmtp.com ([64.18.0.149]:47480 "HELO
+	exprod5og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755155AbaIVWkF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 18:40:05 -0400
+Received: by mail-we0-f174.google.com with SMTP id w62so3239903wes.33
+        for <linux-pci@vger.kernel.org>; Mon, 22 Sep 2014 15:40:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAErSpo4C_6mh7hais14254rYBeMYArvf=nETmgvBjgP290aD4Q@mail.gmail.com>
+References: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
+	<1410906824-9321-2-git-send-email-tinamdar@apm.com>
+	<20140919223258.GA32208@google.com>
+	<CACoXjcnVU3+fQHQ0-zEVRjoedrrod-aua6AVybj7UuSHO9HBaw@mail.gmail.com>
+	<CAErSpo4C_6mh7hais14254rYBeMYArvf=nETmgvBjgP290aD4Q@mail.gmail.com>
+Date: Mon, 22 Sep 2014 15:40:03 -0700
+Message-ID: <CACoXjc=od24kz4RbMLOZNGbMwsAjc8+Ko0rEXNc=2yKnN_3NkQ@mail.gmail.com>
+Subject: Re: [PATCH v9 1/4] pci:host: APM X-Gene PCIe host controller driver
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+On Mon, Sep 22, 2014 at 3:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Sep 22, 2014 at 3:33 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
+>
+>>>> +static void xgene_pcie_fixup_bridge(struct pci_dev *dev)
+>>>> +{
+>>>> +     int i;
+>>>> +
+>>>> +     /* Hide the PCI host BARs from the kernel as their content doesn't
+>>>> +      * fit well in the resource management
+>>>> +      */
+>>>
+>>> This needs a better explanation than "doesn't fit well."
+>>>
+>>> I *think* you're probably talking about something similar to the MVEBU
+>>> devices mentioned here:
+>>> http://lkml.kernel.org/r/CAErSpo56jB1Bf2JtYCGKXZBZqRF1jXFxGmeewPX_e6vSXueGyA@mail.gmail.com
+>>>
+>>> where the device can be configured as either an endpoint or a root port,
+>>> and the endpoint BARs are still visible when configured as a root port.
+>>>
+>>
+>> It is true that X-Gene PCIe port can be configured as EP, however the
+>> the FIXUP is required not because of the BARs are still visible when
+>> configured as EP in past. X-Gene PCIe port, when configured as RC,
+>> uses BAR0-BAR1 of RC's configuration space as inbound BARs. Entire DDR
+>> region is mapped in these BARs so that it is accessible for EP devices
+>> for DMA. So if the fixup is not done during enumeration, whole
+>> outbound memory resource space gets assigned to RC and nothing is left
+>> EP devices.
+>
+> I'm not familiar with the concept of an "inbound BAR"; at least I'm
+> not aware of anything like this in the PCI specs.  I think it might
+> reduce confusion if we avoided calling them "BARs".  They happen to be
+> at the same addresses where real BARs would be, but they certainly
+> don't behave like real BARs.
+>
+> It sounds like this is basically a trivial IOMMU that determines which
+> DMA accesses can reach main memory.
+>
 
-This patch set introduces support for MSI(-X) in GICv2m specification,
-which is implemented in some variation of GIC400.
+Yes. That is correct.
 
-This depends on and has been tested with the following patch set which
-implements PCI supports for ARM64:
+>>> In any event, I'd like a description of exactly what these BARs are and wha
+>>> the problem is.
+>>
+>> Is it ok to put above description in comment to explain the fixup?
+>>
+>>> Presumably the BARs exist and were sized by the PCI core
+>>> in __pci_read_base().  That will generate some log messages and possibly
+>>> some warnings, depending on how the host bridge windows are set up.
+>
+> Instead of doing this in a fixup, can you change the PCI config
+> accessors so that when accessing these inbound DMA mapping registers,
+> they drop writes and return zeros for reads?  Then the PCI core won't
+> think there are BARs there, and it won't mistakenly corrupt them when
+> it tries to size them.
+>
 
-    [PATCH v11 00/10] Support for creating generic PCI host bridges from DT
-    https://lkml.org/lkml/2014/9/17/732
+I suppose this can be done. I will fix this in next revision.
 
-    [PATCH v11] Add support for PCI in AArch64
-    https://lkml.org/lkml/2014/9/17/736
-
-This patch set is rebased from:
-    git://git.infradead.org/users/jcooper/linux.git irqchip/core
- 
-Changes in V8:
-    * Minor clean up suggested by Marc
-    * Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-
-Changes in V7:
-    * Fix error handling logic in gicv2m_of_init() and gicv2m_init_one().
-      per Marc suggestions.
-    * Restructure the patch to integrate the multi-MSI support for V2m
-      into the patch 2/2.
-    * Introduce "arm,gic-v2m-frame" compatible ID for the v2m DT binding.
-    * Introduce "arm,msi-base-spi" and "arm,msi-num-spi" property in the
-      v2m DT binding for overwriting value in MSI_TYPER register.
-    * Add irq-gic-v2m.c: is_msi_spi_valid() to validate the SPI base and
-      number of SPIs.
-    * Fix various comments from Marc (Many thanks).
-    * Add the missing CONFIG_ARM_GICV2M (per Marcin Juszkiewicz comment)
-
-Suravee Suthikulpanit (2):
-  irqchip: gic: Add support for multiple MSI for ARM64
-  irqchip: gicv2m: Add supports for ARM GICv2m MSI(-X)
-
- Documentation/devicetree/bindings/arm/gic.txt |  55 ++++
- arch/arm64/Kconfig                            |   1 +
- arch/arm64/kernel/Makefile                    |   1 +
- arch/arm64/kernel/msi.c                       |  41 +++
- drivers/irqchip/Kconfig                       |   5 +
- drivers/irqchip/Makefile                      |   1 +
- drivers/irqchip/irq-gic-common.c              |  12 +
- drivers/irqchip/irq-gic-common.h              |   4 +
- drivers/irqchip/irq-gic-v2m.c                 | 356 ++++++++++++++++++++++++++
- drivers/irqchip/irq-gic.c                     |  82 +++---
- drivers/irqchip/irq-gic.h                     |  54 ++++
- 11 files changed, 582 insertions(+), 30 deletions(-)
- create mode 100644 arch/arm64/kernel/msi.c
- create mode 100644 drivers/irqchip/irq-gic-v2m.c
- create mode 100644 drivers/irqchip/irq-gic.h
-
--- 
-1.9.3
-
+> Bjorn
