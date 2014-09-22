@@ -1,91 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qa0-f43.google.com ([209.85.216.43]:41373 "EHLO
+	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754719AbaIVWJY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 18:09:24 -0400
+Received: by mail-qa0-f43.google.com with SMTP id i13so838756qae.30
+        for <linux-pci@vger.kernel.org>; Mon, 22 Sep 2014 15:09:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CACoXjcnVU3+fQHQ0-zEVRjoedrrod-aua6AVybj7UuSHO9HBaw@mail.gmail.com>
+References: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
+ <1410906824-9321-2-git-send-email-tinamdar@apm.com> <20140919223258.GA32208@google.com>
+ <CACoXjcnVU3+fQHQ0-zEVRjoedrrod-aua6AVybj7UuSHO9HBaw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 22 Sep 2014 16:09:03 -0600
+Message-ID: <CAErSpo4C_6mh7hais14254rYBeMYArvf=nETmgvBjgP290aD4Q@mail.gmail.com>
+Subject: Re: [PATCH v9 1/4] pci:host: APM X-Gene PCIe host controller driver
+To: Tanmay Inamdar <tinamdar@apm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
 	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [PATCH v13 04/12] of/pci: Define of_pci_range_to_resource() only when CONFIG_PCI=y
-Date: Mon, 29 Sep 2014 15:29:23 +0100
-Message-Id: <1412000971-9242-5-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Mon, Sep 22, 2014 at 3:33 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
 
-of_pci_range_to_resource() was previously defined always, but it's only
-used by PCI code, so move the definition inside the CONFIG_OF_ADDRESS &&
-CONFIG_PCI block.
+>>> +static void xgene_pcie_fixup_bridge(struct pci_dev *dev)
+>>> +{
+>>> +     int i;
+>>> +
+>>> +     /* Hide the PCI host BARs from the kernel as their content doesn't
+>>> +      * fit well in the resource management
+>>> +      */
+>>
+>> This needs a better explanation than "doesn't fit well."
+>>
+>> I *think* you're probably talking about something similar to the MVEBU
+>> devices mentioned here:
+>> http://lkml.kernel.org/r/CAErSpo56jB1Bf2JtYCGKXZBZqRF1jXFxGmeewPX_e6vSXueGyA@mail.gmail.com
+>>
+>> where the device can be configured as either an endpoint or a root port,
+>> and the endpoint BARs are still visible when configured as a root port.
+>>
+>
+> It is true that X-Gene PCIe port can be configured as EP, however the
+> the FIXUP is required not because of the BARs are still visible when
+> configured as EP in past. X-Gene PCIe port, when configured as RC,
+> uses BAR0-BAR1 of RC's configuration space as inbound BARs. Entire DDR
+> region is mapped in these BARs so that it is accessible for EP devices
+> for DMA. So if the fixup is not done during enumeration, whole
+> outbound memory resource space gets assigned to RC and nothing is left
+> EP devices.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- include/linux/of_address.h | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+I'm not familiar with the concept of an "inbound BAR"; at least I'm
+not aware of anything like this in the PCI specs.  I think it might
+reduce confusion if we avoided calling them "BARs".  They happen to be
+at the same addresses where real BARs would be, but they certainly
+don't behave like real BARs.
 
-diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-index f8cc7da..ecf913c 100644
---- a/include/linux/of_address.h
-+++ b/include/linux/of_address.h
-@@ -23,17 +23,6 @@ struct of_pci_range {
- #define for_each_of_pci_range(parser, range) \
- 	for (; of_pci_range_parser_one(parser, range);)
- 
--static inline void of_pci_range_to_resource(struct of_pci_range *range,
--					    struct device_node *np,
--					    struct resource *res)
--{
--	res->flags = range->flags;
--	res->start = range->cpu_addr;
--	res->end = range->cpu_addr + range->size - 1;
--	res->parent = res->child = res->sibling = NULL;
--	res->name = np->full_name;
--}
--
- /* Translate a DMA address from device space to CPU space */
- extern u64 of_translate_dma_address(struct device_node *dev,
- 				    const __be32 *in_addr);
-@@ -140,6 +129,18 @@ extern const __be32 *of_get_pci_address(struct device_node *dev, int bar_no,
- 			       u64 *size, unsigned int *flags);
- extern int of_pci_address_to_resource(struct device_node *dev, int bar,
- 				      struct resource *r);
-+
-+static inline void of_pci_range_to_resource(struct of_pci_range *range,
-+					    struct device_node *np,
-+					    struct resource *res)
-+{
-+	res->flags = range->flags;
-+	res->start = range->cpu_addr;
-+	res->end = range->cpu_addr + range->size - 1;
-+	res->parent = res->child = res->sibling = NULL;
-+	res->name = np->full_name;
-+}
-+
- #else /* CONFIG_OF_ADDRESS && CONFIG_PCI */
- static inline int of_pci_address_to_resource(struct device_node *dev, int bar,
- 				             struct resource *r)
-@@ -155,4 +156,3 @@ static inline const __be32 *of_get_pci_address(struct device_node *dev,
- #endif /* CONFIG_OF_ADDRESS && CONFIG_PCI */
- 
- #endif /* __OF_ADDRESS_H */
--
--- 
-2.1.1
+It sounds like this is basically a trivial IOMMU that determines which
+DMA accesses can reach main memory.
 
+>> In any event, I'd like a description of exactly what these BARs are and wha
+>> the problem is.
+>
+> Is it ok to put above description in comment to explain the fixup?
+>
+>> Presumably the BARs exist and were sized by the PCI core
+>> in __pci_read_base().  That will generate some log messages and possibly
+>> some warnings, depending on how the host bridge windows are set up.
+
+Instead of doing this in a fixup, can you change the PCI config
+accessors so that when accessing these inbound DMA mapping registers,
+they drop writes and return zeros for reads?  Then the PCI core won't
+think there are BARs there, and it won't mistakenly corrupt them when
+it tries to size them.
+
+Bjorn
