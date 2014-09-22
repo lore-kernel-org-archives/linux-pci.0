@@ -1,71 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bn0108.outbound.protection.outlook.com ([157.56.110.108]:1872
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752957AbaIWOot (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Sep 2014 10:44:49 -0400
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Minghuan Lian" <Minghuan.Lian@freescale.com>
-Subject: [PATCH v3 1/3] PCI: designware: Rename get_msi_data to get_msi_addr
-Date: Tue, 23 Sep 2014 22:28:58 +0800
-Message-ID: <1411482540-31297-3-git-send-email-Minghuan.Lian@freescale.com>
-In-Reply-To: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
-References: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:48536 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754754AbaIVW1k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Sep 2014 18:27:40 -0400
+Date: Mon, 22 Sep 2014 16:27:27 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tanmay Inamdar <tinamdar@apm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
+Subject: Re: [PATCH v9 1/4] pci:host: APM X-Gene PCIe host controller driver
+Message-ID: <20140922222727.GC15822@obsidianresearch.com>
+References: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
+ <1410906824-9321-2-git-send-email-tinamdar@apm.com>
+ <20140919223258.GA32208@google.com>
+ <CACoXjcnVU3+fQHQ0-zEVRjoedrrod-aua6AVybj7UuSHO9HBaw@mail.gmail.com>
+ <CAErSpo4C_6mh7hais14254rYBeMYArvf=nETmgvBjgP290aD4Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4C_6mh7hais14254rYBeMYArvf=nETmgvBjgP290aD4Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The function get_msi_data is used to return MSI message address.
-In order to accurately express function purpose the patch rename
-it to get_msi_addr.
+On Mon, Sep 22, 2014 at 04:09:03PM -0600, Bjorn Helgaas wrote:
+> On Mon, Sep 22, 2014 at 3:33 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
+> 
+> >>> +static void xgene_pcie_fixup_bridge(struct pci_dev *dev)
+> >>> +{
+> >>> +     int i;
+> >>> +
+> >>> +     /* Hide the PCI host BARs from the kernel as their content doesn't
+> >>> +      * fit well in the resource management
+> >>> +      */
+> >>
+> >> This needs a better explanation than "doesn't fit well."
+> >>
+> >> I *think* you're probably talking about something similar to the MVEBU
+> >> devices mentioned here:
+> >> http://lkml.kernel.org/r/CAErSpo56jB1Bf2JtYCGKXZBZqRF1jXFxGmeewPX_e6vSXueGyA@mail.gmail.com
+> >>
+> >> where the device can be configured as either an endpoint or a root port,
+> >> and the endpoint BARs are still visible when configured as a root port.
+> >>
+> >
+> > It is true that X-Gene PCIe port can be configured as EP, however the
+> > the FIXUP is required not because of the BARs are still visible when
+> > configured as EP in past. X-Gene PCIe port, when configured as RC,
+> > uses BAR0-BAR1 of RC's configuration space as inbound BARs. Entire DDR
+> > region is mapped in these BARs so that it is accessible for EP devices
+> > for DMA. So if the fixup is not done during enumeration, whole
+> > outbound memory resource space gets assigned to RC and nothing is left
+> > EP devices.
+> 
+> I'm not familiar with the concept of an "inbound BAR"; at least I'm
+> not aware of anything like this in the PCI specs.  I think it might
+> reduce confusion if we avoided calling them "BARs".  They happen to be
+> at the same addresses where real BARs would be, but they certainly
+> don't behave like real BARs.
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
----
-Change log:
-v3: no change
-v2: no change just derived from v1
+So what does the lspci look like?
 
- drivers/pci/host/pcie-designware.c | 4 ++--
- drivers/pci/host/pcie-designware.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+If x-gene has an otherwise correct bridge config space and only the
+0/1 BARs have a non-standard meaning, that I'd agree with Bjorn, hide
+all access to these registers from the kernel (and tell your HW crew
+to read the specs, because it is very clear what those registers are
+supposed to do) .
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 5d720c2..1c09f814 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -361,8 +361,8 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
- 	 */
- 	desc->msi_attrib.multiple = msgvec;
- 
--	if (pp->ops->get_msi_data)
--		msg.address_lo = pp->ops->get_msi_data(pp);
-+	if (pp->ops->get_msi_addr)
-+		msg.address_lo = pp->ops->get_msi_addr(pp);
- 	else
- 		msg.address_lo = virt_to_phys((void *)pp->msi_data);
- 	msg.address_hi = 0x0;
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 48f8670..904e40a 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -70,7 +70,7 @@ struct pcie_host_ops {
- 	void (*host_init)(struct pcie_port *pp);
- 	void (*msi_set_irq)(struct pcie_port *pp, int irq);
- 	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
--	u32 (*get_msi_data)(struct pcie_port *pp);
-+	u32 (*get_msi_addr)(struct pcie_port *pp);
- 	void (*scan_bus)(struct pcie_port *pp);
- 	int (*msi_host_init)(struct pcie_port *pp, struct msi_chip *chip);
- };
--- 
-1.9.1
+If x-gene doesn't even have a bridge config space, then there are much
+bigger problems, and these corrupt BARs are just the start.
 
+Jason
