@@ -1,94 +1,69 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Thu, 25 Sep 2014 09:36:09 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor4.renesas.com ([210.160.252.174]:63279 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753225AbaIVLkq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 07:40:46 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
 	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 14/22] MIPS/Xlp/MSI: Use MSI chip framework to
- configure MSI/MSI-X irq
-Message-ID: <20140925073608.GK12423@ulmo>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
- <1411614872-4009-15-git-send-email-wangyijing@huawei.com>
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: RE: [PATCH 0/3] Add PCI domain support to R-Car drivers
+Date: Mon, 22 Sep 2014 11:40:42 +0000
+Message-ID: <a9539cb545eb4ce6b6636a28ff498f90@HKXPR06MB168.apcprd06.prod.outlook.com>
+References: <1411379470-20639-1-git-send-email-phil.edworthy@renesas.com>
+ <20140922112849.GL1994@e106497-lin.cambridge.arm.com>
+In-Reply-To: <20140922112849.GL1994@e106497-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="6K2R/cS9K4qvcBNq"
-In-Reply-To: <1411614872-4009-15-git-send-email-wangyijing@huawei.com>
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
---6K2R/cS9K4qvcBNq
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, Sep 25, 2014 at 11:14:24AM +0800, Yijing Wang wrote:
-> Use MSI chip framework instead of arch MSI functions to configure
-> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
-
-Nit: s/irq/IRQ/ in the above.
-
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  arch/mips/pci/msi-xlp.c |   14 ++++++++++++--
->  1 files changed, 12 insertions(+), 2 deletions(-)
->=20
-> diff --git a/arch/mips/pci/msi-xlp.c b/arch/mips/pci/msi-xlp.c
-> index e469dc7..6b791ef 100644
-> --- a/arch/mips/pci/msi-xlp.c
-> +++ b/arch/mips/pci/msi-xlp.c
-> @@ -245,7 +245,7 @@ static struct irq_chip xlp_msix_chip =3D {
->  	.irq_unmask	=3D unmask_msi_irq,
->  };
-> =20
-> -void arch_teardown_msi_irq(unsigned int irq)
-> +void xlp_teardown_msi_irq(unsigned int irq)
-
-Should this not be static now as well?
-
-Thierry
-
---6K2R/cS9K4qvcBNq
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJUI8XoAAoJEN0jrNd/PrOhrs4P/Rg10uO2/sCyBwOPDpHaskVO
-8blYsnipag0xv7pyGtAeiEVLgpzcQpv+zjXPmti+R1qI1OVkUXblvYhNtz/CDMvg
-AN6CaoZI3llRg3fZwiayj3m/i1HpiXTPqYPK3sWanCUMmZJe73eUj8zMt6bH7yPG
-WsuUwWTrc2hcscIDucigcNopQ0fuh0vLYLWgiZe+qJdJIrvGkvGN4h0pHuqIkk0o
-DUyMUme8HOL1irxSWYnnmkTPx3TOAWDn7VJVxJgpIKEG0A/X1GCi/4wCkMMxtuxH
-1V0aRu/k9AsOR5BVDROfyZCHvuTVLZeXP54ehWxAyA1GwS55Z36FNsl/JLtZ2WhO
-95CX6ac9NMDLgmGr9W19SAffXn47Yy/1fvK5zq0F+taK005ajIxufmnoSVrzZsH8
-dS8MoFslKB8B2EKW5874CFVUKGx5hZTARp12WWvTfJehLTYfJNpSpdjRdI7LBggj
-/PNzvpDkiwwSVzXcJUU45wOZvaS0ImoH3Xn2GF91D/kO+jfFc52lI8Tv8Ixw7Hgl
-pJObojrzrQJe20K2NJP9xuCNXUXiI0/EbfwZf/MxE5u/FSxigS8vajMY8CFMlQ5N
-4sSi2qWsKa2ZrGMo5dyDfblWSjy1U1O752LQXn+8ddng18wDV/tk/tzZU0Xsywy6
-jGgaMyNaRi22AESZhUqv
-=xvjk
------END PGP SIGNATURE-----
-
---6K2R/cS9K4qvcBNq--
+SGkgTGl2aXUsDQoNCk9uIDIyIFNlcHRlbWJlciAyMDE0IDEyOjI5LCBMaXZpdSB3cm90ZToNCj4g
+T24gTW9uLCBTZXAgMjIsIDIwMTQgYXQgMTA6NTE6MDdBTSArMDEwMCwgUGhpbCBFZHdvcnRoeSB3
+cm90ZToNCj4gPiBUaGUgUmVuZXNhcyBSLUNhciBkZXZpY2VzIChyOGE3NzkwIGFuZCByOGE3Nzkx
+KSB1c2UgdHdvIFBDSSBjb250cm9sbGVyDQo+IGRyaXZlcnMsDQo+ID4gb25lIGZvciBhbiBleHRl
+cm5hbCBQQ0llIHNsb3QsIHRoZSBvdGhlciBmb3IgYW4gaW50ZXJuYWwgUENJIGJyaWRnZSB0byBV
+U0INCj4gPiBjb250cm9sbGVycy4NCj4gPg0KPiA+IEhvd2V2ZXIsIHRoZXkgY3VycmVudGx5IGRv
+IG5vdCB3b3JrIGF0IHRoZSBzYW1lIHRpbWUgYXMgdGhleSB1c2UgdGhlDQo+IHNhbWUgUENJDQo+
+ID4gZG9tYWluIGFuZCB1c2UgdGhlIHNhbWUgcm9vdCBidXMgbnVtYmVyLiBXZSBjYW4ndCB1c2Ug
+ZGlmZmVyZW50IHJvb3QNCj4gYnVzIG51bWJlcnMNCj4gPiBkdWUgdG8gdGhlIHdheSByb290IGJ1
+cyBudW1iZXJzIGFyZSBhc3NpZ25lZCBpbiBwY2liaW9zX2luaXRfaHcoKSBpbg0KPiA+IGFyY2gv
+YXJtL2tlcm5lbC9iaW9zMzIuYy4NCj4gPg0KPiA+IFNpbmNlIHRoZSB0d28gUENJIGNvbnRyb2xs
+ZXJzIGFyZSBjb21wbGV0ZWx5IGluZGVwZW5kZW50LCBJIHRoaW5rIGl0IG1ha2VzDQo+IHNlbnNl
+DQo+ID4gdG8gdXNlIGRpZmZlcmVudCBQQ0kgZG9tYWlucyBmb3IgdGhlbS4NCj4gPg0KPiA+IEkn
+dmUgbWFya2VkIHRoZSB0aGlyZCBwYXRjaCBhcyBSRkMgYXMgSSBhbSBub3Qgc3VyZSBvZiB0aGUg
+aW1wYWN0IG9mDQo+IGVuYWJsaW5nDQo+ID4gUENJIGRvbWFpbnMgZm9yIGFsbCBBUk0gZGV2aWNl
+cy4gSW4gdGhlIG1hcmNoIHRvICdvbmUga2VybmVsIHRvIHJ1bGUgdGhlbQ0KPiBhbGwnLA0KPiA+
+IEkgc3RlZXJlZCBjbGVhciBvZiBtYWNoIHNwZWNpZmljIGNoYW5nZXMuDQo+ID4NCj4gPiBUaGVz
+ZSBwYXRjaGVzIHJlcXVpcmUgdGhlIGZvbGxvd2luZyBwYXRjaCBmcm9tIExpdml1IER1ZGF1Og0K
+PiA+ICAgW1BBVENIIHYxMSAwNy8xMF0gT0Y6IEludHJvZHVjZSBoZWxwZXIgZnVuY3Rpb24gZm9y
+IGdldHRpbmcgUENJDQo+IGRvbWFpbl9ucg0KPiA+IEJhc2VkIG9uIGNvbW1lbnRzIG9uIHRoaXMg
+cGF0Y2ggZnJvbSBKYXNvbiBHdW50aG9ycGUsIHRoZXJlIGlzIHN0aWxsIHRoZQ0KPiBpc3N1ZQ0K
+PiA+IHRoYXQgdGhlIGRvbWFpbiBudW1iZXJzIG1heSBjaGFuZ2UgZGVwZW5kaW5nIG9uIHRoZSBv
+cmRlcmluZyBhdCBwcm9iZQ0KPiB0aW1lLg0KPiA+IEhvd2V2ZXIsIHRoaXMgY2FuIGJlIGZpeGVk
+IGxhdGVyIG9uIGJ5IGFkZGluZyB0aGUgZW50cmllcyBpbiB0aGUgRFQgZmlsZXMuDQo+IA0KPiBI
+aSBQaGlsLA0KPiANCj4gSSdtIGhhcHB5IHRoYXQgeW91IGZvdW5kIHVzZSBmb3IgbXkgcGF0Y2gs
+IGJ1dCBJIGNhbid0IGhlbHAgd29uZGVyaW5nIGlmIGl0IGlzDQo+IG5vdCBhIGJldHRlciBpZGVh
+IHRvIGNvbnZlcnQgeW91ciBkcml2ZXJzIHRvIHRoZSB3aG9sZSBuZXcgQVBJIGluIG15IHNlcmll
+cy4NCj4gRG8geW91IGhhdmUgYW55IHRob3VnaHRzIG9uIHRoYXQ/DQpUaGUgbWFpbiByZWFzb24g
+YmVpbmcgdGhhdCBSZW5lc2FzIGFsc28gc3VwcG9ydHMgdGhlIExUU0kgdHJlZXMsIHNvIHRoaXMg
+Zml4DQp3aWxsIGFsc28gbmVlZCBiYWNrcG9ydGluZyB0byB2My4xMC4gDQoNCj4gT25lIG90aGVy
+IHRoaW5nIHRvIG5vdGU6IFJvYiBIZXJyaW5nIGlzIG5vdCB2ZXJ5IGhhcHB5IHdpdGggdGhlIG1p
+eCBvZiBPRg0KPiBwYXJzaW5nIGFuZCBkb21haW4gbnVtYmVyIGFsbG9jYXRpb24gZ29pbmcgaW4g
+dG9nZXRoZXIsIHNvIEkgbWlnaHQgcmVtb3ZlDQo+IHRoZQ0KPiBPRiBwYXJzaW5nIGVudGlyZWx5
+IGZvciBub3cuIFdvdWxkIHRoYXQgY2F1c2UgeW91IGFueSBwcm9ibGVtcyAob3RoZXIgdGhhbg0K
+PiB0aGUgZmFjdCB0aGF0IGlmIG9mX3BjaV9nZXRfZG9tYWluX25yKCkgZG9lc24ndCBkbyBhbnl0
+aGluZyBPRiByZWxhdGVkIEkNCj4gbWlnaHQNCj4gcmVuYW1lIGl0IHRvIHBjaV9nZXRfZG9tYWlu
+X25yKCkpLiBZb3UgZG9uJ3Qgc2VlbSB0byBoYXZlIGFueSBhbGlhcyBkZWZpbmVkDQo+IGZvciBw
+Y2ktZG9tYWluIGluIHRoZSBEVCwgc28gSSdsbCBndWVzcyBub3QuDQpJbiB0aGUgY292ZXJpbmcg
+bGV0dGVyIEkgbWVudGlvbmVkIHRoYXQgY29udHJvbGxlcnMgc2hvdWxkIGFsd2F5cyB1c2UgdGhl
+IHNhbWUNCmRvbWFpbiBudW1iZXIsIHNvIEkgd2FzIHBsYW5uaW5nIHRvIGFkZCBwY2ktZG9tYWlu
+IGludG8gdGhlIERUcyBsYXRlciBvbi4NCg0KVGhhbmtzDQpQaGlsDQo=
