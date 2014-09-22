@@ -1,257 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:63303 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751980AbaIFADe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 20:03:34 -0400
-Received: by mail-pa0-f44.google.com with SMTP id rd3so23339018pab.31
-        for <linux-pci@vger.kernel.org>; Fri, 05 Sep 2014 17:03:33 -0700 (PDT)
-Date: Fri, 5 Sep 2014 18:03:29 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Pratyush Anand <pratyush.anand@st.com>
-Cc: jg1.han@samsung.com, mohit.kumar@st.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCIe: Designware: Extract struct pcie_port_info elements
- into struct pcie_port
-Message-ID: <20140906000329.GN8080@google.com>
-References: <67297b465f1b531aec9f290246698b23aa994381.1407906240.git.pratyush.anand@st.com>
+Received: from service87.mimecast.com ([91.220.42.44]:52932 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752372AbaIVL2y convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 07:28:54 -0400
+Date: Mon, 22 Sep 2014 12:28:50 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 0/3] Add PCI domain support to R-Car drivers
+Message-ID: <20140922112849.GL1994@e106497-lin.cambridge.arm.com>
+References: <1411379470-20639-1-git-send-email-phil.edworthy@renesas.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <67297b465f1b531aec9f290246698b23aa994381.1407906240.git.pratyush.anand@st.com>
+In-Reply-To: <1411379470-20639-1-git-send-email-phil.edworthy@renesas.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 16, 2014 at 12:52:39PM +0530, Pratyush Anand wrote:
-> struct pcie_port_info elements are not containing any exclusive
-> information compared to other elements of struct pcie_port. So, keeping
-> a separate structure like struct pcie_port_info does not seem very
-> logical. Therefore remove this struct  and embed its elements directly
-> into struct pcie_port.
+On Mon, Sep 22, 2014 at 10:51:07AM +0100, Phil Edworthy wrote:
+> The Renesas R-Car devices (r8a7790 and r8a7791) use two PCI controller drivers,
+> one for an external PCIe slot, the other for an internal PCI bridge to USB
+> controllers.
 > 
-> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-
-Applied with Mohit's ack to pci/host-designware for v3.18, thanks!
-
-I had to resolve some merge conflicts, so look it over and make sure I
-did it correctly.
-
-> ---
->  drivers/pci/host/pcie-designware.c | 53 +++++++++++++++++++-------------------
->  drivers/pci/host/pcie-designware.h | 16 +++++-------
->  2 files changed, 32 insertions(+), 37 deletions(-)
+> However, they currently do not work at the same time as they use the same PCI
+> domain and use the same root bus number. We can't use different root bus numbers
+> due to the way root bus numbers are assigned in pcibios_init_hw() in
+> arch/arm/kernel/bios32.c.
 > 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 52bd3a143563..8b5237fe162f 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -435,16 +435,16 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  
->  	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
->  	if (cfg_res) {
-> -		pp->config.cfg0_size = resource_size(cfg_res)/2;
-> -		pp->config.cfg1_size = resource_size(cfg_res)/2;
-> +		pp->cfg0_size = resource_size(cfg_res)/2;
-> +		pp->cfg1_size = resource_size(cfg_res)/2;
->  		pp->cfg0_base = cfg_res->start;
-> -		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
-> +		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
->  
->  		/* Find the untranslated configuration space address */
->  		index = of_property_match_string(np, "reg-names", "config");
->  		addrp = of_get_address(np, index, false, false);
->  		pp->cfg0_mod_base = of_read_number(addrp, ns);
-> -		pp->cfg1_mod_base = pp->cfg0_mod_base + pp->config.cfg0_size;
-> +		pp->cfg1_mod_base = pp->cfg0_mod_base + pp->cfg0_size;
->  	} else {
->  		dev_err(pp->dev, "missing *config* reg space\n");
->  	}
-> @@ -467,8 +467,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  					   IO_SPACE_LIMIT,
->  					   range.pci_addr + range.size
->  					   + global_io_offset);
-> -			pp->config.io_size = resource_size(&pp->io);
-> -			pp->config.io_bus_addr = range.pci_addr;
-> +			pp->io_size = resource_size(&pp->io);
-> +			pp->io_bus_addr = range.pci_addr;
->  			pp->io_base = range.cpu_addr;
->  
->  			/* Find the untranslated IO space address */
-> @@ -478,8 +478,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  		if (restype == IORESOURCE_MEM) {
->  			of_pci_range_to_resource(&range, np, &pp->mem);
->  			pp->mem.name = "MEM";
-> -			pp->config.mem_size = resource_size(&pp->mem);
-> -			pp->config.mem_bus_addr = range.pci_addr;
-> +			pp->mem_size = resource_size(&pp->mem);
-> +			pp->mem_bus_addr = range.pci_addr;
->  
->  			/* Find the untranslated MEM space address */
->  			pp->mem_mod_base = of_read_number(parser.range -
-> @@ -487,16 +487,16 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  		}
->  		if (restype == 0) {
->  			of_pci_range_to_resource(&range, np, &pp->cfg);
-> -			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
-> -			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
-> +			pp->cfg0_size = resource_size(&pp->cfg)/2;
-> +			pp->cfg1_size = resource_size(&pp->cfg)/2;
->  			pp->cfg0_base = pp->cfg.start;
-> -			pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
-> +			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
->  
->  			/* Find the untranslated configuration space address */
->  			pp->cfg0_mod_base = of_read_number(parser.range -
->  							   parser.np + na, ns);
->  			pp->cfg1_mod_base = pp->cfg0_mod_base +
-> -					    pp->config.cfg0_size;
-> +					    pp->cfg0_size;
->  		}
->  	}
->  
-> @@ -512,13 +512,13 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  	pp->mem_base = pp->mem.start;
->  
->  	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
-> -					pp->config.cfg0_size);
-> +					pp->cfg0_size);
->  	if (!pp->va_cfg0_base) {
->  		dev_err(pp->dev, "error with ioremap in function\n");
->  		return -ENOMEM;
->  	}
->  	pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
-> -					pp->config.cfg1_size);
-> +					pp->cfg1_size);
->  	if (!pp->va_cfg1_base) {
->  		dev_err(pp->dev, "error with ioremap\n");
->  		return -ENOMEM;
-> @@ -573,7 +573,7 @@ static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
->  			  PCIE_ATU_VIEWPORT);
->  	dw_pcie_writel_rc(pp, pp->cfg0_mod_base, PCIE_ATU_LOWER_BASE);
->  	dw_pcie_writel_rc(pp, (pp->cfg0_mod_base >> 32), PCIE_ATU_UPPER_BASE);
-> -	dw_pcie_writel_rc(pp, pp->cfg0_mod_base + pp->config.cfg0_size - 1,
-> +	dw_pcie_writel_rc(pp, pp->cfg0_mod_base + pp->cfg0_size - 1,
->  			  PCIE_ATU_LIMIT);
->  	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
->  	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
-> @@ -589,7 +589,7 @@ static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
->  	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
->  	dw_pcie_writel_rc(pp, pp->cfg1_mod_base, PCIE_ATU_LOWER_BASE);
->  	dw_pcie_writel_rc(pp, (pp->cfg1_mod_base >> 32), PCIE_ATU_UPPER_BASE);
-> -	dw_pcie_writel_rc(pp, pp->cfg1_mod_base + pp->config.cfg1_size - 1,
-> +	dw_pcie_writel_rc(pp, pp->cfg1_mod_base + pp->cfg1_size - 1,
->  			  PCIE_ATU_LIMIT);
->  	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
->  	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
-> @@ -604,10 +604,10 @@ static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
->  	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
->  	dw_pcie_writel_rc(pp, pp->mem_mod_base, PCIE_ATU_LOWER_BASE);
->  	dw_pcie_writel_rc(pp, (pp->mem_mod_base >> 32), PCIE_ATU_UPPER_BASE);
-> -	dw_pcie_writel_rc(pp, pp->mem_mod_base + pp->config.mem_size - 1,
-> +	dw_pcie_writel_rc(pp, pp->mem_mod_base + pp->mem_size - 1,
->  			  PCIE_ATU_LIMIT);
-> -	dw_pcie_writel_rc(pp, pp->config.mem_bus_addr, PCIE_ATU_LOWER_TARGET);
-> -	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.mem_bus_addr),
-> +	dw_pcie_writel_rc(pp, pp->mem_bus_addr, PCIE_ATU_LOWER_TARGET);
-> +	dw_pcie_writel_rc(pp, upper_32_bits(pp->mem_bus_addr),
->  			  PCIE_ATU_UPPER_TARGET);
->  	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
->  }
-> @@ -620,10 +620,10 @@ static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
->  	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
->  	dw_pcie_writel_rc(pp, pp->io_mod_base, PCIE_ATU_LOWER_BASE);
->  	dw_pcie_writel_rc(pp, (pp->io_mod_base >> 32), PCIE_ATU_UPPER_BASE);
-> -	dw_pcie_writel_rc(pp, pp->io_mod_base + pp->config.io_size - 1,
-> +	dw_pcie_writel_rc(pp, pp->io_mod_base + pp->io_size - 1,
->  			  PCIE_ATU_LIMIT);
-> -	dw_pcie_writel_rc(pp, pp->config.io_bus_addr, PCIE_ATU_LOWER_TARGET);
-> -	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.io_bus_addr),
-> +	dw_pcie_writel_rc(pp, pp->io_bus_addr, PCIE_ATU_LOWER_TARGET);
-> +	dw_pcie_writel_rc(pp, upper_32_bits(pp->io_bus_addr),
->  			  PCIE_ATU_UPPER_TARGET);
->  	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
->  }
-> @@ -771,15 +771,15 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
->  	if (!pp)
->  		return 0;
->  
-> -	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
-> -		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
-> +	if (global_io_offset < SZ_1M && pp->io_size > 0) {
-> +		sys->io_offset = global_io_offset - pp->io_bus_addr;
->  		pci_ioremap_io(global_io_offset, pp->io_base);
->  		global_io_offset += SZ_64K;
->  		pci_add_resource_offset(&sys->resources, &pp->io,
->  					sys->io_offset);
->  	}
->  
-> -	sys->mem_offset = pp->mem.start - pp->config.mem_bus_addr;
-> +	sys->mem_offset = pp->mem.start - pp->mem_bus_addr;
->  	pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
->  
->  	return 1;
-> @@ -833,7 +833,6 @@ static struct hw_pci dw_pci = {
->  
->  void dw_pcie_setup_rc(struct pcie_port *pp)
->  {
-> -	struct pcie_port_info *config = &pp->config;
->  	u32 val;
->  	u32 membase;
->  	u32 memlimit;
-> @@ -888,7 +887,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  
->  	/* setup memory base, memory limit */
->  	membase = ((u32)pp->mem_base & 0xfff00000) >> 16;
-> -	memlimit = (config->mem_size + (u32)pp->mem_base) & 0xfff00000;
-> +	memlimit = (pp->mem_size + (u32)pp->mem_base) & 0xfff00000;
->  	val = memlimit | membase;
->  	dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
->  
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index daf81f922cda..80c1cd07c373 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -14,15 +14,6 @@
->  #ifndef _PCIE_DESIGNWARE_H
->  #define _PCIE_DESIGNWARE_H
->  
-> -struct pcie_port_info {
-> -	u32		cfg0_size;
-> -	u32		cfg1_size;
-> -	u32		io_size;
-> -	u32		mem_size;
-> -	phys_addr_t	io_bus_addr;
-> -	phys_addr_t	mem_bus_addr;
-> -};
-> -
->  /*
->   * Maximum number of MSI IRQs can be 256 per controller. But keep
->   * it 32 as of now. Probably we will never need more than 32. If needed,
-> @@ -38,17 +29,22 @@ struct pcie_port {
->  	u64			cfg0_base;
->  	u64			cfg0_mod_base;
->  	void __iomem		*va_cfg0_base;
-> +	u32			cfg0_size;
->  	u64			cfg1_base;
->  	u64			cfg1_mod_base;
->  	void __iomem		*va_cfg1_base;
-> +	u32			cfg1_size;
->  	u64			io_base;
->  	u64			io_mod_base;
-> +	phys_addr_t		io_bus_addr;
-> +	u32			io_size;
->  	u64			mem_base;
->  	u64			mem_mod_base;
-> +	phys_addr_t		mem_bus_addr;
-> +	u32			mem_size;
->  	struct resource		cfg;
->  	struct resource		io;
->  	struct resource		mem;
-> -	struct pcie_port_info	config;
->  	int			irq;
->  	u32			lanes;
->  	struct pcie_host_ops	*ops;
+> Since the two PCI controllers are completely independent, I think it makes sense
+> to use different PCI domains for them.
+> 
+> I've marked the third patch as RFC as I am not sure of the impact of enabling
+> PCI domains for all ARM devices. In the march to 'one kernel to rule them all',
+> I steered clear of mach specific changes.
+> 
+> These patches require the following patch from Liviu Dudau:
+>   [PATCH v11 07/10] OF: Introduce helper function for getting PCI domain_nr
+> Based on comments on this patch from Jason Gunthorpe, there is still the issue
+> that the domain numbers may change depending on the ordering at probe time.
+> However, this can be fixed later on by adding the entries in the DT files.
+
+Hi Phil,
+
+I'm happy that you found use for my patch, but I can't help wondering if it is
+not a better idea to convert your drivers to the whole new API in my series.
+Do you have any thoughts on that?
+
+One other thing to note: Rob Herring is not very happy with the mix of OF
+parsing and domain number allocation going in together, so I might remove the
+OF parsing entirely for now. Would that cause you any problems (other than
+the fact that if of_pci_get_domain_nr() doesn't do anything OF related I might
+rename it to pci_get_domain_nr()). You don't seem to have any alias defined
+for pci-domain in the DT, so I'll guess not.
+
+Best regards,
+Liviu
+
+> 
+> 
+> Phil Edworthy (3):
+>   PCI: rcar-pcie: Add call to get domain nr
+>   PCI: rcar-internal-pci: Add call to get domain nr
+>   ARM: Enable PCI domains
+> 
+>  arch/arm/Kconfig                 | 2 +-
+>  drivers/pci/host/pci-rcar-gen2.c | 6 ++++++
+>  drivers/pci/host/pcie-rcar.c     | 9 ++++++---
+>  3 files changed, 13 insertions(+), 4 deletions(-)
+> 
 > -- 
-> 1.8.1.2
+> 2.1.0
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
