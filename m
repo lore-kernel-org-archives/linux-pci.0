@@ -1,113 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:50423 "EHLO
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:32844 "EHLO
 	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752778AbaIOOob (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Sep 2014 10:44:31 -0400
-Message-ID: <1410792261.3314.9.camel@pengutronix.de>
-Subject: Re: [PATCH v1 06/21] PCI/MSI: Refactor struct msi_chip to make it
- become more common
+	with ESMTP id S1751070AbaIVNcl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 09:32:41 -0400
+Message-ID: <1411392758.2599.9.camel@pengutronix.de>
+Subject: Re: [PATCH 2/2] PCI: imx6: fix boot hang when link already enabled
 From: Lucas Stach <l.stach@pengutronix.de>
-To: Yijing Wang <wangyijing@huawei.com>
+To: Fabio Estevam <festevam@gmail.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>
-Date: Mon, 15 Sep 2014 16:44:21 +0200
-In-Reply-To: <1409911806-10519-7-git-send-email-wangyijing@huawei.com>
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
-	 <1409911806-10519-7-git-send-email-wangyijing@huawei.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
+	Shawn Guo <Shawn.Guo@freescale.com>
+Date: Mon, 22 Sep 2014 15:32:38 +0200
+In-Reply-To: <CAOMZO5AAZXVRu3WkKkU=5SM+t8CYBww+Jmqyz5UFYsdog479wA@mail.gmail.com>
+References: <1406830565-23450-1-git-send-email-l.stach@pengutronix.de>
+	 <1406830565-23450-3-git-send-email-l.stach@pengutronix.de>
+	 <20140814202248.GA2071@google.com> <1409743007.1535.1.camel@pengutronix.de>
+	 <20140904202436.GA17125@google.com>
+	 <CAOMZO5AAZXVRu3WkKkU=5SM+t8CYBww+Jmqyz5UFYsdog479wA@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, den 05.09.2014, 18:09 +0800 schrieb Yijing Wang:
-> Now there are a lot of __weak arch functions in MSI code.
-> These functions make MSI driver complex. Thierry Reding Introduced
-> a new MSI chip framework to configure MSI/MSI-X irq in ARM. Use
-> the new MSI chip framework to refactor all other platform MSI
-> arch code to eliminate weak arch MSI functions. This patch add
-> .restore_irq() and .setup_irqs() to make it become more common.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Hi Fabio,
 
-This change looks good to me:
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-
-> ---
->  drivers/pci/msi.c   |   15 +++++++++++++++
->  include/linux/msi.h |    3 +++
->  2 files changed, 18 insertions(+), 0 deletions(-)
+Am Montag, den 22.09.2014, 10:27 -0300 schrieb Fabio Estevam:
+> Bjorn,
 > 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 539c11d..d78d637 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -63,6 +63,11 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->  {
->  	struct msi_desc *entry;
->  	int ret;
-> +	struct msi_chip *chip;
-> +
-> +	chip = arch_find_msi_chip(dev);
-> +	if (chip && chip->setup_irqs)
-> +		return chip->setup_irqs(dev, nvec, type);
->  
->  	/*
->  	 * If an architecture wants to support multiple MSI, it needs to
-> @@ -105,6 +110,11 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
->  
->  void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
->  {
-> +	struct msi_chip *chip = arch_find_msi_chip(dev);
-> +
-> +	if (chip && chip->teardown_irqs)
-> +		return chip->teardown_irqs(dev);
-> +
->  	return default_teardown_msi_irqs(dev);
->  }
->  
-> @@ -128,6 +138,11 @@ static void default_restore_msi_irq(struct pci_dev *dev, int irq)
->  
->  void __weak arch_restore_msi_irqs(struct pci_dev *dev)
->  {
-> +	struct msi_chip *chip = arch_find_msi_chip(dev);
-> +
-> +	if (chip && chip->restore_irqs)
-> +		return chip->restore_irqs(dev);
-> +
->  	return default_restore_msi_irqs(dev);
->  }
->  
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index 5650848..92a51e7 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -72,7 +72,10 @@ struct msi_chip {
->  	struct list_head list;
->  
->  	int (*setup_irq)(struct pci_dev *dev, struct msi_desc *desc);
-> +	int (*setup_irqs)(struct pci_dev *dev, int nvec, int type);
->  	void (*teardown_irq)(unsigned int irq);
-> +	void (*teardown_irqs)(struct pci_dev *dev);
-> +	void (*restore_irqs)(struct pci_dev *dev);
->  };
->  
->  #endif /* LINUX_MSI_H */
+> On Thu, Sep 4, 2014 at 5:24 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> 
+> >> Bjorn,
+> >>
+> >> I would have expected for this to show up in 3.17 as it fixes a real bug
+> >> and has been posted some time ago. While you have picked it up into your
+> >> pci/host-imx6 branch it doesn't show up in Linus tree nor in any pull
+> >> requests AFAICS.
+> >> Was it intentional from you to hold this patch or is this just an
+> >> oversight?
+> >
+> > Nope, I just missed it, thanks for the reminder.  I put in my
+> > for-linus branch and will ask Linus to pull it after it's been
+> > in -next for a few days.
+> 
+> We still don't see this patch applied in linux-next.
+
+I see this commit in -next for some time now. It changed subject tho, so
+look out for a patch called "PCI: imx6: Put LTSSM in "Detect" state
+before disabling it".
+
+Also Bjorn issued a pull request including this patch last Friday, so
+things should go ok.
+
+Regards,
+Lucas
 
 -- 
 Pengutronix e.K.             | Lucas Stach                 |
