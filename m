@@ -1,110 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:54188 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752686AbaIXR4c (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 13:56:32 -0400
-Received: by mail-ig0-f182.google.com with SMTP id hn15so6978857igb.9
-        for <linux-pci@vger.kernel.org>; Wed, 24 Sep 2014 10:56:32 -0700 (PDT)
-Date: Wed, 24 Sep 2014 11:56:29 -0600
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:42558 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754414AbaIVTRS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 15:17:18 -0400
+Received: by mail-ie0-f171.google.com with SMTP id rd18so3277638iec.2
+        for <linux-pci@vger.kernel.org>; Mon, 22 Sep 2014 12:17:17 -0700 (PDT)
+Date: Mon, 22 Sep 2014 13:17:14 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Francesco Ruggeri <fruggeri@aristanetworks.com>
-Cc: linux-pci@vger.kernel.org, sbhatewara@vmware.com,
-	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
-	pv-drivers@vmware.com
-Subject: Re: [PATCH 1/1] pci: move PCI_VENDOR_ID_VMWARE to pci_ids.h
-Message-ID: <20140924175629.GD20416@google.com>
-References: <20140924172923.D112148565B@fruggeri-Arora18.sjc.aristanetworks.com>
+To: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+Cc: gregkh@linuxfoundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci/pci-sysfs: Set pci interface in uppercase
+Message-ID: <20140922191714.GC1880@google.com>
+References: <1409144277-23379-1-git-send-email-ricardo.ribalda@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140924172923.D112148565B@fruggeri-Arora18.sjc.aristanetworks.com>
+In-Reply-To: <1409144277-23379-1-git-send-email-ricardo.ribalda@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 24, 2014 at 10:29:23AM -0700, Francesco Ruggeri wrote:
-> From b99b1ec156ab351668eb77a00a57a4ae095eec28 Mon Sep 17 00:00:00 2001
-> From: Francesco Ruggeri <fruggeri@arista.com>
-> Date: Wed, 24 Sep 2014 10:12:41 -0700
-> Subject: [PATCH 1/1] pci: move PCI_VENDOR_ID_VMWARE to pci_ids.h
+On Wed, Aug 27, 2014 at 02:57:57PM +0200, Ricardo Ribalda Delgado wrote:
+> There is a missmatch between the way file2alias generates the modalias
+> and the way the pci driver generates it.
 > 
-> Moving PCI_VENDOR_ID_VMWARE from device specific files to pci_ids.h.
-> It is useful to always have access to it, especially when accessing
-> subsystem_vendor_id on emulated devices.
+> Some implementations of modprobe will fail to load the driver for a pci
+> device automatically when the pci interface is defined on the driver. As
+> one will be in uppercase and the other in lowercase.
 > 
-> Signed-off-by: Francesco Ruggeri <fruggeri@arista.com>
+> Fortunatelly not many drivers define this.
+> 
+> Signed-off-by: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
 
-Applied to pci/misc for v3.18, thanks!
+Applied to pci/enumeration for v3.18, with Greg's ack and marked for
+stable.
 
 > ---
->  drivers/gpu/drm/vmwgfx/svga_reg.h  | 1 -
->  drivers/misc/vmw_vmci/vmci_guest.c | 1 -
->  drivers/net/vmxnet3/vmxnet3_int.h  | 1 -
->  drivers/scsi/vmw_pvscsi.h          | 1 -
->  include/linux/pci_ids.h            | 2 ++
->  5 files changed, 2 insertions(+), 4 deletions(-)
+>  drivers/pci/pci-sysfs.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/gpu/drm/vmwgfx/svga_reg.h b/drivers/gpu/drm/vmwgfx/svga_reg.h
-> index 11323dd..e4259c2 100644
-> --- a/drivers/gpu/drm/vmwgfx/svga_reg.h
-> +++ b/drivers/gpu/drm/vmwgfx/svga_reg.h
-> @@ -35,7 +35,6 @@
->  /*
->   * PCI device IDs.
->   */
-> -#define PCI_VENDOR_ID_VMWARE            0x15AD
->  #define PCI_DEVICE_ID_VMWARE_SVGA2      0x0405
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 9ff0a90..76ef791 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -177,7 +177,7 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+>  {
+>  	struct pci_dev *pci_dev = to_pci_dev(dev);
 >  
->  /*
-> diff --git a/drivers/misc/vmw_vmci/vmci_guest.c b/drivers/misc/vmw_vmci/vmci_guest.c
-> index 248399a..189b325 100644
-> --- a/drivers/misc/vmw_vmci/vmci_guest.c
-> +++ b/drivers/misc/vmw_vmci/vmci_guest.c
-> @@ -35,7 +35,6 @@
->  #include "vmci_driver.h"
->  #include "vmci_event.h"
->  
-> -#define PCI_VENDOR_ID_VMWARE		0x15AD
->  #define PCI_DEVICE_ID_VMWARE_VMCI	0x0740
->  
->  #define VMCI_UTIL_NUM_RESOURCES 1
-> diff --git a/drivers/net/vmxnet3/vmxnet3_int.h b/drivers/net/vmxnet3/vmxnet3_int.h
-> index 3759479..5f0199f 100644
-> --- a/drivers/net/vmxnet3/vmxnet3_int.h
-> +++ b/drivers/net/vmxnet3/vmxnet3_int.h
-> @@ -117,7 +117,6 @@ enum {
->  /*
->   * PCI vendor and device IDs.
->   */
-> -#define PCI_VENDOR_ID_VMWARE            0x15AD
->  #define PCI_DEVICE_ID_VMWARE_VMXNET3    0x07B0
->  #define MAX_ETHERNET_CARDS		10
->  #define MAX_PCI_PASSTHRU_DEVICE		6
-> diff --git a/drivers/scsi/vmw_pvscsi.h b/drivers/scsi/vmw_pvscsi.h
-> index ce45888..ee16f0c 100644
-> --- a/drivers/scsi/vmw_pvscsi.h
-> +++ b/drivers/scsi/vmw_pvscsi.h
-> @@ -32,7 +32,6 @@
->  
->  #define MASK(n)        ((1 << (n)) - 1)        /* make an n-bit mask */
->  
-> -#define PCI_VENDOR_ID_VMWARE		0x15AD
->  #define PCI_DEVICE_ID_VMWARE_PVSCSI	0x07C0
->  
->  /*
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 6ed0bb7..e62b20a 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2971,4 +2971,6 @@
->  
->  #define PCI_VENDOR_ID_OCZ		0x1b85
->  
-> +#define PCI_VENDOR_ID_VMWARE		0x15AD
-> +
->  #endif /* _LINUX_PCI_IDS_H */
+> -	return sprintf(buf, "pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x\n",
+> +	return sprintf(buf, "pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02X\n",
+>  		       pci_dev->vendor, pci_dev->device,
+>  		       pci_dev->subsystem_vendor, pci_dev->subsystem_device,
+>  		       (u8)(pci_dev->class >> 16), (u8)(pci_dev->class >> 8),
 > -- 
-> 1.8.1.4
+> 2.1.0
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
