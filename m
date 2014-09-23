@@ -1,100 +1,30 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:37662 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751610AbaI3O6b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 10:58:31 -0400
-Message-ID: <1412089108.2473.5.camel@pengutronix.de>
-Subject: Re: [PATCH v4 04/10] PCI: designware: refine setup_rc and add msi
- data restore
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Richard Zhu <r65037@freescale.com>
-Cc: linux-pci-owner@vger.kernel.org, linux-pci@vger.kernel.org,
-	shawn.guo@freescale.com, festevam@gmail.com, tharvey@gateworks.com
-Date: Tue, 30 Sep 2014 16:58:28 +0200
-In-Reply-To: <1412069804-17162-5-git-send-email-r65037@freescale.com>
-References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
-	 <1412069804-17162-5-git-send-email-r65037@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-la0-f50.google.com ([209.85.215.50]:52186 "EHLO
+	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754231AbaIWWS4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 18:18:56 -0400
+MIME-Version: 1.0
+In-Reply-To: <8f7c463a0c7c4bd2a4a4416bd8b046b3@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1411382705-15301-1-git-send-email-r65037@freescale.com>
+	<1411382705-15301-5-git-send-email-r65037@freescale.com>
+	<CAOMZO5D_s7ST_J0FV+NbrHpw2jVBDSpHprHnwJfPbQ=tqy7PWQ@mail.gmail.com>
+	<8f7c463a0c7c4bd2a4a4416bd8b046b3@DM2PR0301MB0862.namprd03.prod.outlook.com>
+Date: Tue, 23 Sep 2014 19:18:54 -0300
+Message-ID: <CAOMZO5BQQdVvyh56dO6CWJF23NN17hgsEEeBBzruhjV4FpSyXQ@mail.gmail.com>
+Subject: Re: [PATCH v1 4/4] PCI: imx6: add imx6sx pcie support
+From: Fabio Estevam <festevam@gmail.com>
+To: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+Cc: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shengchao Guo <Shawn.Guo@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Dienstag, den 30.09.2014, 17:36 +0800 schrieb Richard Zhu:
-> - move "program correct class for RC" from dw_pcie_host_init()
-> to dw_pcie_setup_rc(). since this is RC setup, it's
-> better to contained in dw_pcie_setup_rc function.
-> Then, RC can be re-setup really by dw_pcie_setup_rc().
-> - add one re-store msi data function. Because that
-> pcie controller maybe powered off during system suspend,
-> and the msi data configuration would be lost.
-> this functions can be used to restore the msi data
-> during the resume callback.
-> 
-> Signed-off-by: Richard Zhu <r65037@freescale.com>
+On Tue, Sep 23, 2014 at 12:09 AM, Hong-Xing.Zhu@freescale.com
+<Hong-Xing.Zhu@freescale.com> wrote:
 
-NACK. I asked you to split this patch and move it before the imx6 pcie
-changes in the series in order to not break compilation within the
-series.
+> As I know that, there is one similar fix on the next mx6q to.
 
-> ---
->  drivers/pci/host/pcie-designware.c | 15 ++++++++++++---
->  drivers/pci/host/pcie-designware.h |  1 +
->  2 files changed, 13 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 538bbf3..ae1e6c5 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -194,6 +194,13 @@ void dw_pcie_msi_init(struct pcie_port *pp)
->  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
->  }
->  
-> +void dw_pcie_msi_cfg_restore(struct pcie_port *pp)
-> +{
-> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
-> +			virt_to_phys((void *)pp->msi_data));
-> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
-> +}
-> +
->  static int find_valid_pos0(struct pcie_port *pp, int msgvec, int pos, int *pos0)
->  {
->  	int flag = 1;
-> @@ -570,9 +577,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  
->  	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
->  
-> -	/* program correct class for RC */
-> -	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
-> -
->  	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
->  	val |= PORT_LOGIC_SPEED_CHANGE;
->  	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
-> @@ -917,6 +921,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  	val = memlimit | membase;
->  	dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
->  
-> +	/* program correct class for RC */
-> +	dw_pcie_readl_rc(pp, PCI_CLASS_REVISION, &val);
-> +	val |= PCI_CLASS_BRIDGE_PCI << 16;
-> +	dw_pcie_writel_rc(pp, val, PCI_CLASS_REVISION);
-> +
->  	/* setup command register */
->  	dw_pcie_readl_rc(pp, PCI_COMMAND, &val);
->  	val &= 0xffff0000;
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index a476e60..bb75715 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -83,6 +83,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
->  int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
->  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
->  void dw_pcie_msi_init(struct pcie_port *pp);
-> +void dw_pcie_msi_cfg_restore(struct pcie_port *pp);
->  int dw_pcie_link_up(struct pcie_port *pp);
->  void dw_pcie_setup_rc(struct pcie_port *pp);
->  int dw_pcie_host_init(struct pcie_port *pp);
-
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
-
+What about the existing mx6q silicon version? How can we fix the hang?
