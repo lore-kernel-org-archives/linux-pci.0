@@ -1,84 +1,45 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Tue, 23 Sep 2014 15:09:36 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
+	Bharat.Bhushan@freescale.com, x86@kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC Part2 v1 02/21] genirq: Introduce helper functions to support stacked irq_chip
-Date: Thu, 11 Sep 2014 22:03:29 +0800
-Message-Id: <1410444228-3134-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [PATCH v1 00/21] Use MSI chip to configure MSI/MSI-X in all
+ platforms
+Message-ID: <20140923210936.GC27117@google.com>
+References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we already support hierarchy irq_datas, so introduce several helpers
-to support stacked irq_chips.
+On Fri, Sep 05, 2014 at 06:09:45PM +0800, Yijing Wang wrote:
+> This series is based Bjorn's pci-next branch + Alexander Gordeev's two patches
+> "Remove arch_msi_check_device()" link: https://lkml.org/lkml/2014/7/12/41
+> 
+> Currently, there are a lot of weak arch functions in MSI code.
+> Thierry Reding Introduced MSI chip framework to configure MSI/MSI-X in arm.
+> This series use MSI chip framework to refactor MSI code across all platforms
+> to eliminate weak arch functions. It has been tested fine in x86(with or without
+> irq remap).
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- include/linux/irq.h |    5 +++++
- kernel/irq/chip.c   |   18 ++++++++++++++++++
- 2 files changed, 23 insertions(+)
+I see you plan some updates, so I'll look for a v2 posting after v3.17 releases.
+It will be great to get rid of some of those weak functions!
 
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 4b74565690ce..bfa027f6814a 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -433,6 +433,11 @@ extern void handle_percpu_devid_irq(unsigned int irq, struct irq_desc *desc);
- extern void handle_bad_irq(unsigned int irq, struct irq_desc *desc);
- extern void handle_nested_irq(unsigned int irq);
- 
-+#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-+extern void irq_chip_ack_parent(struct irq_data *data);
-+extern int irq_chip_retrigger_hierarchy(struct irq_data *data);
-+#endif
-+
- /* Handling of unhandled and spurious interrupts: */
- extern void note_interrupt(unsigned int irq, struct irq_desc *desc,
- 			   irqreturn_t action_ret);
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index 46bd5e2190c3..b8ee27efde73 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -821,3 +821,21 @@ void irq_cpu_offline(void)
- 		raw_spin_unlock_irqrestore(&desc->lock, flags);
- 	}
- }
-+
-+#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-+void irq_chip_ack_parent(struct irq_data *data)
-+{
-+	data = data->parent_data;
-+	if (data && data->chip && data->chip->irq_ack)
-+		data->chip->irq_ack(data);
-+}
-+
-+int irq_chip_retrigger_hierarchy(struct irq_data *data)
-+{
-+	for (data = data->parent_data; data; data = data->parent_data)
-+		if (data->chip && data->chip->irq_retrigger)
-+			return data->chip->irq_retrigger(data);
-+
-+	return -ENOSYS;
-+}
-+#endif
--- 
-1.7.10.4
-
+Bjorn
