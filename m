@@ -1,16 +1,6 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo5PBXSUeU_LP2m=9jxibmqxreL4tEeHBsc5To7D=_bAJA@mail.gmail.com>
-References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
- <20140923215435.GD27117@google.com> <20140923224810.GA32643@bart.dudau.co.uk> <CAErSpo5PBXSUeU_LP2m=9jxibmqxreL4tEeHBsc5To7D=_bAJA@mail.gmail.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Wed, 24 Sep 2014 08:30:37 -0500
-Message-ID: <CAL_Jsq+U=1JT0qqZgb=aR66Q4NYDyzOogspOmmpsp61pE+aCUg@mail.gmail.com>
-Subject: Re: [PATCH v12 00/12] Support for creating generic PCI host bridges
- from DT
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Liviu Dudau <liviu@dudau.co.uk>, Liviu Dudau <Liviu.Dudau@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
 	Rob Herring <robh+dt@kernel.org>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
@@ -18,8 +8,8 @@ Cc: Liviu Dudau <liviu@dudau.co.uk>, Liviu Dudau <Liviu.Dudau@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
 	Russell King <linux@arm.linux.org.uk>,
 	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
+	Linus Walleij <linus.walleij@linaro.org>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
 	Grant Likely <grant.likely@secretlab.ca>,
 	Sinan Kaya <okaya@codeaurora.org>,
 	Jingoo Han <jg1.han@samsung.com>,
@@ -28,25 +18,189 @@ Cc: Liviu Dudau <liviu@dudau.co.uk>, Liviu Dudau <Liviu.Dudau@arm.com>,
 	linux-arch <linux-arch@vger.kernel.org>,
 	LKML <linux-kernel@vger.kernel.org>,
 	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Grant Likely <grant.likely@linaro.org>
+Subject: [PATCH v12 02/12] PCI: Introduce helper functions to deal with PCI I/O ranges.
+Date: Tue, 23 Sep 2014 20:01:04 +0100
+Message-Id: <1411498874-9864-3-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 23, 2014 at 6:00 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Sep 23, 2014 at 4:48 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
->> ...
->> While the next immediate target is converting pci-host-generic.c, pci-imx6.c
->> and probably pcie-designware.c to my series, I would like to ask you what
->> is your longer term plan. Now that I have got my head full of PCI code,
->> I have some ideas but feel that meeting with you and all those involved
->> in core PCI support would be a better venue than sending emails back and
->> forth. When is your next plan to attend a Linux conference?
->
-> That would be nice.  Unfortunately, I don't know what the next
-> conference will be yet.
+Some architectures do not have a simple view of the PCI I/O space
+and instead use a range of CPU addresses that map to bus addresses.
+For some architectures these ranges will be expressed by OF bindings
+in a device tree file.
 
-Perhaps an irc meeting or Google hangout. These have been happening on
-several areas like DT and ARM KVM.
+This patch introduces a pci_register_io_range() helper function with
+a generic implementation that can be used by such architectures to
+keep track of the I/O ranges described by the PCI bindings. If the
+PCI_IOBASE macro is not defined that signals lack of support for PCI
+and we return an error.
 
-Rob
+In order to retrieve the CPU address associated with an I/O port, a
+new helper function pci_pio_to_address() is introduced. This will
+search in the list of ranges registered with pci_register_io_range()
+and return the CPU address that corresponds to the given port.
+
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ drivers/of/address.c       | 109 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/of_address.h |   2 +
+ 2 files changed, 111 insertions(+)
+
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index e371825..758d4f0 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -5,6 +5,8 @@
+ #include <linux/module.h>
+ #include <linux/of_address.h>
+ #include <linux/pci_regs.h>
++#include <linux/sizes.h>
++#include <linux/slab.h>
+ #include <linux/string.h>
+ 
+ /* Max address size we deal with */
+@@ -601,12 +603,119 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+ }
+ EXPORT_SYMBOL(of_get_address);
+ 
++#ifdef PCI_IOBASE
++struct io_range {
++	struct list_head list;
++	phys_addr_t start;
++	resource_size_t size;
++};
++
++static LIST_HEAD(io_range_list);
++static DEFINE_SPINLOCK(io_range_lock);
++#endif
++
++/*
++ * Record the PCI IO range (expressed as CPU physical address + size).
++ * Return a negative value if an error has occured, zero otherwise
++ */
++int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
++{
++	int err = 0;
++
++#ifdef PCI_IOBASE
++	struct io_range *range;
++	resource_size_t allocated_size = 0;
++
++	/* check if the range hasn't been previously recorded */
++	spin_lock(&io_range_lock);
++	list_for_each_entry(range, &io_range_list, list) {
++		if (addr >= range->start && addr + size <= range->start + size) {
++			/* range already registered, bail out */
++			goto end_register;
++		}
++		allocated_size += range->size;
++	}
++
++	/* range not registed yet, check for available space */
++	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
++		/* if it's too big check if 64K space can be reserved */
++		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
++			err = -E2BIG;
++			goto end_register;
++		}
++
++		size = SZ_64K;
++		pr_warn("Requested IO range too big, new size set to 64K\n");
++	}
++
++	/* add the range to the list */
++	range = kzalloc(sizeof(*range), GFP_KERNEL);
++	if (!range) {
++		err = -ENOMEM;
++		goto end_register;
++	}
++
++	range->start = addr;
++	range->size = size;
++
++	list_add_tail(&range->list, &io_range_list);
++
++end_register:
++	spin_unlock(&io_range_lock);
++#endif
++
++	return err;
++}
++
++phys_addr_t pci_pio_to_address(unsigned long pio)
++{
++	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
++
++#ifdef PCI_IOBASE
++	struct io_range *range;
++	resource_size_t allocated_size = 0;
++
++	if (pio > IO_SPACE_LIMIT)
++		return address;
++
++	spin_lock(&io_range_lock);
++	list_for_each_entry(range, &io_range_list, list) {
++		if (pio >= allocated_size && pio < allocated_size + range->size) {
++			address = range->start + pio - allocated_size;
++			break;
++		}
++		allocated_size += range->size;
++	}
++	spin_unlock(&io_range_lock);
++#endif
++
++	return address;
++}
++
+ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+ {
++#ifdef PCI_IOBASE
++	struct io_range *res;
++	resource_size_t offset = 0;
++	unsigned long addr = -1;
++
++	spin_lock(&io_range_lock);
++	list_for_each_entry(res, &io_range_list, list) {
++		if (address >= res->start && address < res->start + res->size) {
++			addr = res->start - address + offset;
++			break;
++		}
++		offset += res->size;
++	}
++	spin_unlock(&io_range_lock);
++
++	return addr;
++#else
+ 	if (address > IO_SPACE_LIMIT)
+ 		return (unsigned long)-1;
+ 
+ 	return (unsigned long) address;
++#endif
+ }
+ 
+ static int __of_address_to_resource(struct device_node *dev,
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index fb7b722..f8cc7da 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -55,7 +55,9 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
+ extern const __be32 *of_get_address(struct device_node *dev, int index,
+ 			   u64 *size, unsigned int *flags);
+ 
++extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+ extern unsigned long pci_address_to_pio(phys_addr_t addr);
++extern phys_addr_t pci_pio_to_address(unsigned long pio);
+ 
+ extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+ 			struct device_node *node);
+-- 
+2.1.0
+
