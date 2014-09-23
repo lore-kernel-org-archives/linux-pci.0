@@ -1,86 +1,68 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [Patch v5 06/15] x86, irq: Split out alloc_ioapic_save_registers()
-Date: Thu, 11 Sep 2014 16:05:49 +0800
-Message-Id: <1410422758-24942-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from nm18-vm10.access.bullet.mail.bf1.yahoo.com ([216.109.115.89]:52264
+	"EHLO nm18-vm10.access.bullet.mail.bf1.yahoo.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751412AbaIWTAI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 23 Sep 2014 15:00:08 -0400
+From: Shawn Starr <shawn.starr@rogers.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kernel development list <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [3.16-rcX][pciehp][radeon] PCIe HotPlug conflicts with radeon GPU
+Date: Tue, 23 Sep 2014 14:53:35 -0400
+Message-ID: <1722798.naFc0gpZgU@segfault>
+In-Reply-To: <CAErSpo6zLY8RVAHnLe81jjOE8cxGzskjPq3HL7eZVOtC-WF6=w@mail.gmail.com>
+References: <2354837.kuMZPK0Y1Q@segfault> <CAErSpo6zLY8RVAHnLe81jjOE8cxGzskjPq3HL7eZVOtC-WF6=w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+On September 11, 2014 04:26:21 PM Bjorn Helgaas wrote:
+> [+cc linux-pci]
+> 
+> On Sat, Aug 2, 2014 at 10:02 AM, Shawn Starr <shawn.starr@rogers.com> wrote:
+> > Hello devs,
+> > 
+> > There are two issues I am encountering with the PCIe Hotplug driver on my
+> > Lenovo Laptop (W500). I note this goes back further than 3.15.
+> > 
+> > It is noted here:
+> > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=
+> > f244d8b623dae7a7bc695b0336f67729b95a9736
+> > https://bugzilla.kernel.org/show_bug.cgi?id=79701
+> > 
+> > And my open bug here:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=77261
+> > 
+> > 1) If I enable the device to use both the integrated and discrete GPU,
+> > pciehp will decide to force unload radeon because it puts itself into a
+> > power saving state, fails back to the Intel integrated GPU in this case
+> > unless I tell radeon.ko to runpm=0 (no power management, then pciehp wont
+> > touch it).
+> > 
+> > 2) If the Radeon GPU resets and you use pci_reset=1 for kernel module
+> > option, pciehp decides to force unload radeon even though the GPU is
+> > trying to setup after failing.
+> > 
+> > Kernel I am using right now: 3.16.0-0.rc7.git3.1.fc21.x86_64 (about to
+> > boot into snapshot kernel-core-3.16.0-0.rc7.git4.1.fc21.x86_64)
+> Hi Shawn,
+> 
+> Thanks for the report and sorry that it got dropped.  But I see you're
+> cc'd on https://bugzilla.kernel.org/show_bug.cgi?id=79701, so you've
+> probably seen the work there.  If you can try out the patches I just
+> posted, that would be great.
+> 
+> Bjorn
 
-Split out alloc_ioapic_save_registers() from early_irq_init(),
-so it could be used for ioapic hotplug later.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/kernel/apic/io_apic.c |   22 +++++++++++++++-------
- 1 file changed, 15 insertions(+), 7 deletions(-)
+Hi Bjorn,
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 337ce5a9b15c..003945e71616 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -237,6 +237,19 @@ static struct irq_pin_list *alloc_irq_pin_list(int node)
- 	return kzalloc_node(sizeof(struct irq_pin_list), GFP_KERNEL, node);
- }
- 
-+static void alloc_ioapic_saved_registers(int idx)
-+{
-+	size_t size;
-+
-+	if (ioapics[idx].saved_registers)
-+		return;
-+
-+	size = sizeof(struct IO_APIC_route_entry) * ioapics[idx].nr_registers;
-+	ioapics[idx].saved_registers = kzalloc(size, GFP_KERNEL);
-+	if (!ioapics[idx].saved_registers)
-+		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
-+}
-+
- int __init arch_early_irq_init(void)
- {
- 	struct irq_cfg *cfg;
-@@ -245,13 +258,8 @@ int __init arch_early_irq_init(void)
- 	if (!nr_legacy_irqs())
- 		io_apic_irqs = ~0UL;
- 
--	for_each_ioapic(i) {
--		ioapics[i].saved_registers =
--			kzalloc(sizeof(struct IO_APIC_route_entry) *
--				ioapics[i].nr_registers, GFP_KERNEL);
--		if (!ioapics[i].saved_registers)
--			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
--	}
-+	for_each_ioapic(i)
-+		alloc_ioapic_saved_registers(i);
- 
- 	/*
- 	 * For legacy IRQ's, start with assigning irq0 to irq15 to
--- 
-1.7.10.4
+I will be testing this in 3.17-rcX if it hits 3.17, otherwise manually patch 
+it in.
+
+Thanks,
+Shawn
+
 
