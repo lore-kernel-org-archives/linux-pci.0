@@ -1,187 +1,259 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC v1 08/28] x86, irq: Kill x86_io_apic_ops.setup_entry and related interfaces
-Date: Fri, 26 Sep 2014 22:57:38 +0800
-Message-Id: <1411743478-31435-9-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v12 12/12] arm64: Add architectural support for PCIe
+Date: Tue, 23 Sep 2014 20:01:14 +0100
+Message-Id: <1411498874-9864-13-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there is no user of x86_io_apic_ops.setup_entry anymore, so kill it.
+Use the generic PCI domain and OF functions
+to provide support for PCI Express on arm64.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Acked-by: Catalin Marinas <catalin.marinas@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 ---
- arch/x86/include/asm/io_apic.h       |    4 ----
- arch/x86/include/asm/irq_remapping.h |   13 -------------
- arch/x86/include/asm/x86_init.h      |    3 ---
- arch/x86/kernel/apic/io_apic.c       |   24 ------------------------
- arch/x86/kernel/x86_init.c           |    1 -
- drivers/iommu/irq_remapping.c        |   13 -------------
- 6 files changed, 58 deletions(-)
+ arch/arm64/Kconfig               | 22 ++++++++++++-
+ arch/arm64/include/asm/Kbuild    |  1 +
+ arch/arm64/include/asm/io.h      |  3 +-
+ arch/arm64/include/asm/pci.h     | 37 +++++++++++++++++++++
+ arch/arm64/include/asm/pgtable.h |  2 ++
+ arch/arm64/kernel/Makefile       |  1 +
+ arch/arm64/kernel/pci.c          | 70 ++++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 134 insertions(+), 2 deletions(-)
+ create mode 100644 arch/arm64/include/asm/pci.h
+ create mode 100644 arch/arm64/kernel/pci.c
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index fb501ec46ee8..f9f316b2ec1e 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -150,9 +150,6 @@ struct irq_cfg;
- extern void ioapic_insert_resources(void);
- extern int arch_early_ioapic_init(void);
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index fd4e81a..6b01df9 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -81,7 +81,7 @@ config MMU
+ 	def_bool y
  
--extern int native_setup_ioapic_entry(int, struct IO_APIC_route_entry *,
--				     unsigned int, int,
--				     struct io_apic_irq_attr *);
- extern void eoi_ioapic_irq(unsigned int irq, struct irq_cfg *cfg);
+ config NO_IOPORT_MAP
+-	def_bool y
++	def_bool y if !PCI
  
- extern void native_eoi_ioapic_pin(int apic, int pin, int vector);
-@@ -291,7 +288,6 @@ static inline void disable_ioapic_support(void) { }
- #define native_io_apic_modify		NULL
- #define native_disable_io_apic		NULL
- #define native_ioapic_set_affinity	NULL
--#define native_setup_ioapic_entry	NULL
- #define native_eoi_ioapic_pin		NULL
- #endif
+ config STACKTRACE_SUPPORT
+ 	def_bool y
+@@ -156,6 +156,26 @@ menu "Bus support"
+ config ARM_AMBA
+ 	bool
  
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index de1a5d3277e2..9ed7e2d5fd7d 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -43,11 +43,6 @@ extern int irq_remapping_enable(void);
- extern void irq_remapping_disable(void);
- extern int irq_remapping_reenable(int);
- extern int irq_remap_enable_fault_handling(void);
--extern int setup_ioapic_remapped_entry(int irq,
--				       struct IO_APIC_route_entry *entry,
--				       unsigned int destination,
--				       int vector,
--				       struct io_apic_irq_attr *attr);
- extern void free_remapped_irq(int irq);
- extern void panic_if_irq_remap(const char *msg);
- extern bool setup_remapped_irq(int irq,
-@@ -98,14 +93,6 @@ static inline int irq_remapping_enable(void) { return -ENODEV; }
- static inline void irq_remapping_disable(void) { }
- static inline int irq_remapping_reenable(int eim) { return -ENODEV; }
- static inline int irq_remap_enable_fault_handling(void) { return -ENODEV; }
--static inline int setup_ioapic_remapped_entry(int irq,
--					      struct IO_APIC_route_entry *entry,
--					      unsigned int destination,
--					      int vector,
--					      struct io_apic_irq_attr *attr)
--{
--	return -ENODEV;
--}
- static inline void free_remapped_irq(int irq) { }
++config PCI
++	bool "PCI support"
++	help
++	  This feature enables support for PCIe bus system. If you say Y
++	  here, the kernel will include drivers and infrastructure code
++	  to support PCIe bus devices.
++
++config PCI_DOMAINS
++	def_bool PCI
++
++config PCI_DOMAINS_GENERIC
++	def_bool PCI
++
++config PCI_SYSCALL
++	def_bool PCI
++
++source "drivers/pci/Kconfig"
++source "drivers/pci/pcie/Kconfig"
++source "drivers/pci/hotplug/Kconfig"
++
+ endmenu
  
- static inline void panic_if_irq_remap(const char *msg)
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index d49791d2aacf..7de44a329028 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -197,9 +197,6 @@ struct x86_io_apic_ops {
- 	int		(*set_affinity)(struct irq_data *data,
- 					const struct cpumask *mask,
- 					bool force);
--	int		(*setup_entry)(int irq, struct IO_APIC_route_entry *entry,
--				       unsigned int destination, int vector,
--				       struct io_apic_irq_attr *attr);
- 	void		(*eoi_ioapic_pin)(int apic, int pin, int vector);
- };
+ menu "Kernel Features"
+diff --git a/arch/arm64/include/asm/Kbuild b/arch/arm64/include/asm/Kbuild
+index 0b3fcf8..07cb417 100644
+--- a/arch/arm64/include/asm/Kbuild
++++ b/arch/arm64/include/asm/Kbuild
+@@ -29,6 +29,7 @@ generic-y += mman.h
+ generic-y += msgbuf.h
+ generic-y += mutex.h
+ generic-y += pci.h
++generic-y += pci-bridge.h
+ generic-y += poll.h
+ generic-y += preempt.h
+ generic-y += resource.h
+diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+index e0ecdcf..f998d90 100644
+--- a/arch/arm64/include/asm/io.h
++++ b/arch/arm64/include/asm/io.h
+@@ -121,7 +121,8 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+ /*
+  *  I/O port access primitives.
+  */
+-#define IO_SPACE_LIMIT		0xffff
++#define arch_has_dev_port()	(1)
++#define IO_SPACE_LIMIT		(SZ_32M - 1)
+ #define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_32M))
  
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index d6df6da203f6..e3628c3b6b07 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1288,30 +1288,6 @@ static inline int IO_APIC_irq_trigger(int irq)
- }
- #endif
+ static inline u8 inb(unsigned long addr)
+diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
+new file mode 100644
+index 0000000..872ba93
+--- /dev/null
++++ b/arch/arm64/include/asm/pci.h
+@@ -0,0 +1,37 @@
++#ifndef __ASM_PCI_H
++#define __ASM_PCI_H
++#ifdef __KERNEL__
++
++#include <linux/types.h>
++#include <linux/slab.h>
++#include <linux/dma-mapping.h>
++
++#include <asm/io.h>
++#include <asm-generic/pci-bridge.h>
++#include <asm-generic/pci-dma-compat.h>
++
++#define PCIBIOS_MIN_IO		0x1000
++#define PCIBIOS_MIN_MEM		0
++
++/*
++ * Set to 1 if the kernel should re-assign all PCI bus numbers
++ */
++#define pcibios_assign_all_busses() \
++	(pci_has_flag(PCI_REASSIGN_ALL_BUS))
++
++/*
++ * PCI address space differs from physical memory address space
++ */
++#define PCI_DMA_BUS_IS_PHYS	(0)
++
++extern int isa_dma_bridge_buggy;
++
++#ifdef CONFIG_PCI
++static inline int pci_proc_domain(struct pci_bus *bus)
++{
++	return 1;
++}
++#endif  /* CONFIG_PCI */
++
++#endif  /* __KERNEL__ */
++#endif  /* __ASM_PCI_H */
+diff --git a/arch/arm64/include/asm/pgtable.h b/arch/arm64/include/asm/pgtable.h
+index ffe1ba0..a968523 100644
+--- a/arch/arm64/include/asm/pgtable.h
++++ b/arch/arm64/include/asm/pgtable.h
+@@ -296,6 +296,8 @@ static inline int has_transparent_hugepage(void)
+ 	__pgprot_modify(prot, PTE_ATTRINDX_MASK, PTE_ATTRINDX(MT_DEVICE_nGnRnE) | PTE_PXN | PTE_UXN)
+ #define pgprot_writecombine(prot) \
+ 	__pgprot_modify(prot, PTE_ATTRINDX_MASK, PTE_ATTRINDX(MT_NORMAL_NC) | PTE_PXN | PTE_UXN)
++#define pgprot_device(prot) \
++	__pgprot_modify(prot, PTE_ATTRINDX_MASK, PTE_ATTRINDX(MT_DEVICE_nGnRE) | PTE_PXN | PTE_UXN)
+ #define __HAVE_PHYS_MEM_ACCESS_PROT
+ struct file;
+ extern pgprot_t phys_mem_access_prot(struct file *file, unsigned long pfn,
+diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
+index df7ef87..1ed5a06 100644
+--- a/arch/arm64/kernel/Makefile
++++ b/arch/arm64/kernel/Makefile
+@@ -29,6 +29,7 @@ arm64-obj-$(CONFIG_ARM64_CPU_SUSPEND)	+= sleep.o suspend.o
+ arm64-obj-$(CONFIG_JUMP_LABEL)		+= jump_label.o
+ arm64-obj-$(CONFIG_KGDB)		+= kgdb.o
+ arm64-obj-$(CONFIG_EFI)			+= efi.o efi-stub.o efi-entry.o
++arm64-obj-$(CONFIG_PCI)			+= pci.o
  
--int native_setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
--			      unsigned int destination, int vector,
--			      struct io_apic_irq_attr *attr)
--{
--	memset(entry, 0, sizeof(*entry));
--
--	entry->delivery_mode = apic->irq_delivery_mode;
--	entry->dest_mode     = apic->irq_dest_mode;
--	entry->dest	     = destination;
--	entry->vector	     = vector;
--	entry->mask	     = 0;			/* enable IRQ */
--	entry->trigger	     = attr->trigger;
--	entry->polarity	     = attr->polarity;
--
--	/*
--	 * Mask level triggered irqs.
--	 * Use IRQ_DELAYED_DISABLE for edge triggered irqs.
--	 */
--	if (attr->trigger)
--		entry->mask = 1;
--
--	return 0;
--}
--
- static void __init setup_IO_APIC_irqs(void)
- {
- 	unsigned int ioapic, pin;
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index ba5ab975bb5b..77d0ea3dd1ea 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -155,6 +155,5 @@ struct x86_io_apic_ops x86_io_apic_ops = {
- 	.modify			= native_io_apic_modify,
- 	.disable		= native_disable_io_apic,
- 	.set_affinity		= native_ioapic_set_affinity,
--	.setup_entry		= native_setup_ioapic_entry,
- 	.eoi_ioapic_pin		= native_eoi_ioapic_pin,
- };
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index d72094e01dec..0486a123c29b 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -62,7 +62,6 @@ static void __init irq_remapping_modify_x86_ops(void)
- {
- 	x86_io_apic_ops.disable		= irq_remapping_disable_io_apic;
- 	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
--	x86_io_apic_ops.setup_entry	= setup_ioapic_remapped_entry;
- 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
- }
- 
-@@ -177,18 +176,6 @@ int __init irq_remap_enable_fault_handling(void)
- 	return remap_ops->enable_faulting();
- }
- 
--int setup_ioapic_remapped_entry(int irq,
--				struct IO_APIC_route_entry *entry,
--				unsigned int destination, int vector,
--				struct io_apic_irq_attr *attr)
--{
--	if (!remap_ops || !remap_ops->setup_ioapic_entry)
--		return -ENODEV;
--
--	return remap_ops->setup_ioapic_entry(irq, entry, destination,
--					     vector, attr);
--}
--
- static int set_remapped_irq_affinity(struct irq_data *data,
- 				     const struct cpumask *mask, bool force)
- {
+ obj-y					+= $(arm64-obj-y) vdso/
+ obj-m					+= $(arm64-obj-m)
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+new file mode 100644
+index 0000000..ce5836c
+--- /dev/null
++++ b/arch/arm64/kernel/pci.c
+@@ -0,0 +1,70 @@
++/*
++ * Code borrowed from powerpc/kernel/pci-common.c
++ *
++ * Copyright (C) 2003 Anton Blanchard <anton@au.ibm.com>, IBM
++ * Copyright (C) 2014 ARM Ltd.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * version 2 as published by the Free Software Foundation.
++ *
++ */
++
++#include <linux/init.h>
++#include <linux/io.h>
++#include <linux/kernel.h>
++#include <linux/mm.h>
++#include <linux/of_pci.h>
++#include <linux/of_platform.h>
++#include <linux/slab.h>
++
++#include <asm/pci-bridge.h>
++
++/*
++ * Called after each bus is probed, but before its children are examined
++ */
++void pcibios_fixup_bus(struct pci_bus *bus)
++{
++	/* nothing to do, expected to be removed in the future */
++}
++
++/*
++ * We don't have to worry about legacy ISA devices, so nothing to do here
++ */
++resource_size_t pcibios_align_resource(void *data, const struct resource *res,
++				resource_size_t size, resource_size_t align)
++{
++	return res->start;
++}
++
++/*
++ * Try to assign the IRQ number from DT when adding a new device
++ */
++int pcibios_add_device(struct pci_dev *dev)
++{
++	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
++
++	return 0;
++}
++
++
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
++static bool dt_domain_found = false;
++
++void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++{
++	int domain = of_get_pci_domain_nr(parent->of_node);
++
++	if (domain >= 0) {
++		dt_domain_found = true;
++	} else if (dt_domain_found == true) {
++		dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
++			parent->of_node->full_name);
++		return;
++	} else {
++		domain = pci_get_new_domain_nr();
++	}
++
++	bus->domain_nr = domain;
++}
++#endif
 -- 
-1.7.10.4
+2.1.0
 
