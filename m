@@ -1,65 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0138.outbound.protection.outlook.com ([157.56.110.138]:29664
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750945AbaI3JuW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Sep 2014 05:50:22 -0400
-From: Richard Zhu <r65037@freescale.com>
-To: <linux-pci-owner@vger.kernel.org>
-CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
-	<festevam@gmail.com>, <l.stach@pengutronix.de>,
-	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
-Subject: [PATCH v4 01/10] PCI: imx6: wait the clocks to stabilize after ref_en
-Date: Tue, 30 Sep 2014 17:19:48 +0800
-Message-ID: <1412068796-16931-2-git-send-email-r65037@freescale.com>
-In-Reply-To: <1412068796-16931-1-git-send-email-r65037@freescale.com>
-References: <1412068796-16931-1-git-send-email-r65037@freescale.com>
+Received: from relmlor3.renesas.com ([210.160.252.173]:21857 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751860AbaIWMkb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 08:40:31 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Simon Horman <horms@verge.net.au>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: RE: [PATCH 0/3] Add PCI domain support to R-Car drivers
+Date: Tue, 23 Sep 2014 12:40:25 +0000
+Message-ID: <9b5a473bfaa3497bbf64f81fc548416b@HKXPR06MB168.apcprd06.prod.outlook.com>
+References: <1411379470-20639-1-git-send-email-phil.edworthy@renesas.com>
+ <20140922210038.GJ1880@google.com>
+ <84672882bcaa4730aae409f092bcbcfb@HKXPR06MB168.apcprd06.prod.outlook.com>
+ <20140923103224.GO1994@e106497-lin.cambridge.arm.com>
+ <99f5c020d74b465384e42ef2c883a479@HKXPR06MB168.apcprd06.prod.outlook.com>
+ <20140923111000.GQ1994@e106497-lin.cambridge.arm.com>
+ <028b0606cca84f619d1007bbde9693fd@HKXPR06MB168.apcprd06.prod.outlook.com>
+ <20140923121050.GR1994@e106497-lin.cambridge.arm.com>
+In-Reply-To: <20140923121050.GR1994@e106497-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For boards without a reset gpio we skip the delay between enabling
-the pcie_ref_clk and touching the RC registers for configuration.
-System would be hangs when the clocks are not yet settled in the DW
-PCIe core. So we need to make sure that there is always an
-appropriate delay between those two actions.
-
-Signed-off-by: Richard Zhu <r65037@freescale.com>
----
- drivers/pci/host/pci-imx6.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 233fe8a..eac96fb 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -275,15 +275,22 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 		goto err_pcie;
- 	}
- 
--	/* allow the clocks to stabilize */
--	usleep_range(200, 500);
--
- 	/* power up core phy and enable ref clock */
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
-+	/*
-+	 * the async reset input need ref clock to sync internally,
-+	 * when the ref clock comes after reset, internal synced
-+	 * reset time is too short , cannot meet the requirement.
-+	 * add one ~10us delay here.
-+	 */
-+	udelay(10);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
- 
-+	/* allow the clocks to stabilize */
-+	usleep_range(200, 500);
-+
- 	/* Some boards don't have PCIe reset GPIO. */
- 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
- 		gpio_set_value(imx6_pcie->reset_gpio, 0);
--- 
-1.9.1
-
+SGkgTGl2aXUsDQoNCk9uIDIzIFNlcHRlbWJlciAyMDE0IDEzOjExLCBMaXZpdSB3cm90ZToNCj4g
+T24gVHVlLCBTZXAgMjMsIDIwMTQgYXQgMTI6Mzg6MjhQTSArMDEwMCwgUGhpbCBFZHdvcnRoeSB3
+cm90ZToNCj4gPiBPbiAyMyBTZXB0ZW1iZXIgMjAxNCAxMjoxMCwgTGl2aXUgd3JvdGU6DQo+ID4g
+PiBPbiBUdWUsIFNlcCAyMywgMjAxNCBhdCAxMjowMDo0MVBNICswMTAwLCBQaGlsIEVkd29ydGh5
+IHdyb3RlOg0KPiA+ID4gPiBPbiAyMyBTZXB0ZW1iZXIgMjAxNCAxMTozMiwgTGl2aXUgd3JvdGU6
+DQo+ID4gPiA+ID4gT24gVHVlLCBTZXAgMjMsIDIwMTQgYXQgMTE6MTA6MjlBTSArMDEwMCwgUGhp
+bCBFZHdvcnRoeSB3cm90ZToNCj4gPiA+ID4gPiA+IEhpIEJqb3JuLA0KPiA+ID4gPiA+ID4NCj4g
+PiA+ID4gPiA+IE9uIDIyIFNlcHRlbWJlciAyMDE0IDIyOjAxLCBCam9ybiB3cm90ZToNCj4gPiA+
+ID4gPiA+ID4gT24gTW9uLCBTZXAgMjIsIDIwMTQgYXQgMTA6NTE6MDdBTSArMDEwMCwgUGhpbCBF
+ZHdvcnRoeSB3cm90ZToNCj4gPiA+ID4gPiA+ID4gPiBUaGUgUmVuZXNhcyBSLUNhciBkZXZpY2Vz
+IChyOGE3NzkwIGFuZCByOGE3NzkxKSB1c2UgdHdvIFBDSSBjb250cm9sbGVyDQo+ID4gPiA+ID4g
+PiA+IGRyaXZlcnMsDQo+ID4gPiA+ID4gPiA+ID4gb25lIGZvciBhbiBleHRlcm5hbCBQQ0llIHNs
+b3QsIHRoZSBvdGhlciBmb3IgYW4gaW50ZXJuYWwgUENJIGJyaWRnZSB0byBVU0INCj4gPiA+ID4g
+PiA+ID4gPiBjb250cm9sbGVycy4NCj4gPiA+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gPiA+IEhv
+d2V2ZXIsIHRoZXkgY3VycmVudGx5IGRvIG5vdCB3b3JrIGF0IHRoZSBzYW1lIHRpbWUgYXMgdGhl
+eSB1c2UgdGhlDQo+ID4gPiA+ID4gPiA+IHNhbWUgUENJDQo+ID4gPiA+ID4gPiA+ID4gZG9tYWlu
+IGFuZCB1c2UgdGhlIHNhbWUgcm9vdCBidXMgbnVtYmVyLiBXZSBjYW4ndCB1c2UgZGlmZmVyZW50
+IHJvb3QNCj4gPiA+ID4gPiA+ID4gYnVzIG51bWJlcnMNCj4gPiA+ID4gPiA+ID4gPiBkdWUgdG8g
+dGhlIHdheSByb290IGJ1cyBudW1iZXJzIGFyZSBhc3NpZ25lZCBpbiBwY2liaW9zX2luaXRfaHco
+KSBpbg0KPiA+ID4gPiA+ID4gPiA+IGFyY2gvYXJtL2tlcm5lbC9iaW9zMzIuYy4NCj4gPiA+ID4g
+PiA+ID4gPg0KPiA+ID4gPiA+ID4gPiA+IFNpbmNlIHRoZSB0d28gUENJIGNvbnRyb2xsZXJzIGFy
+ZSBjb21wbGV0ZWx5IGluZGVwZW5kZW50LCBJIHRoaW5rIGl0IG1ha2VzDQo+ID4gPiA+ID4gPiA+
+IHNlbnNlDQo+ID4gPiA+ID4gPiA+ID4gdG8gdXNlIGRpZmZlcmVudCBQQ0kgZG9tYWlucyBmb3Ig
+dGhlbS4NCj4gPiA+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gPiA+IEkndmUgbWFya2VkIHRoZSB0
+aGlyZCBwYXRjaCBhcyBSRkMgYXMgSSBhbSBub3Qgc3VyZSBvZiB0aGUgaW1wYWN0IG9mDQo+ID4g
+PiA+ID4gPiA+IGVuYWJsaW5nDQo+ID4gPiA+ID4gPiA+ID4gUENJIGRvbWFpbnMgZm9yIGFsbCBB
+Uk0gZGV2aWNlcy4gSW4gdGhlIG1hcmNoIHRvICdvbmUga2VybmVsIHRvIHJ1bGUgdGhlbQ0KPiA+
+ID4gPiA+ID4gPiBhbGwnLA0KPiA+ID4gPiA+ID4gPiA+IEkgc3RlZXJlZCBjbGVhciBvZiBtYWNo
+IHNwZWNpZmljIGNoYW5nZXMuDQo+ID4gPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gPiBUaGVz
+ZSBwYXRjaGVzIHJlcXVpcmUgdGhlIGZvbGxvd2luZyBwYXRjaCBmcm9tIExpdml1IER1ZGF1Og0K
+PiA+ID4gPiA+ID4gPiA+ICAgW1BBVENIIHYxMSAwNy8xMF0gT0Y6IEludHJvZHVjZSBoZWxwZXIg
+ZnVuY3Rpb24gZm9yIGdldHRpbmcgUENJDQo+ID4gPiA+ID4gPiA+IGRvbWFpbl9ucg0KPiA+ID4g
+PiA+ID4gPiA+IEJhc2VkIG9uIGNvbW1lbnRzIG9uIHRoaXMgcGF0Y2ggZnJvbSBKYXNvbiBHdW50
+aG9ycGUsIHRoZXJlIGlzIHN0aWxsIHRoZQ0KPiA+ID4gPiA+ID4gPiBpc3N1ZQ0KPiA+ID4gPiA+
+ID4gPiA+IHRoYXQgdGhlIGRvbWFpbiBudW1iZXJzIG1heSBjaGFuZ2UgZGVwZW5kaW5nIG9uIHRo
+ZSBvcmRlcmluZyBhdCBwcm9iZQ0KPiA+ID4gPiA+ID4gPiB0aW1lLg0KPiA+ID4gPiA+ID4gPiA+
+IEhvd2V2ZXIsIHRoaXMgY2FuIGJlIGZpeGVkIGxhdGVyIG9uIGJ5IGFkZGluZyB0aGUgZW50cmll
+cyBpbiB0aGUgRFQgZmlsZXMuDQo+ID4gPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gPg0KPiA+
+ID4gPiA+ID4gPiA+IFBoaWwgRWR3b3J0aHkgKDMpOg0KPiA+ID4gPiA+ID4gPiA+ICAgUENJOiBy
+Y2FyLXBjaWU6IEFkZCBjYWxsIHRvIGdldCBkb21haW4gbnINCj4gPiA+ID4gPiA+ID4gPiAgIFBD
+STogcmNhci1pbnRlcm5hbC1wY2k6IEFkZCBjYWxsIHRvIGdldCBkb21haW4gbnINCj4gPiA+ID4g
+PiA+ID4gPiAgIEFSTTogRW5hYmxlIFBDSSBkb21haW5zDQo+ID4gPiA+ID4gPiA+DQo+ID4gPiA+
+ID4gPiA+IEknbSBkZWZlcnJpbmcgdGhlc2UgZm9yIG5vdyBiZWNhdXNlIHRoZXkgZGVwZW5kIG9u
+IExpdml1J3Mgd29yaywgd2hpY2ggSQ0KPiA+ID4gPiA+ID4gPiBoYXZlbid0IG1lcmdlZCB5ZXQs
+IGFuZCBJIHN1c3BlY3Qgc29tZSBtaW5vciBhZGFwdGF0aW9uIHdpbGwgYmUgcmVxdWlyZWQNCj4g
+PiA+ID4gPiA+ID4gaGVyZS4NCj4gPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gRm9yIHdoYXQg
+aXQncyB3b3J0aCwgSSBhZ3JlZSB3aXRoIFJvYidzIGhlc2l0YXRpb24gYWJvdXQgbWl4aW5nIGxv
+b2t1cCB3aXRoDQo+ID4gPiA+ID4gPiA+IGRvbWFpbiBudW1iZXIgYWxsb2NhdGlvbiBpbiBvZl9w
+Y2lfZ2V0X2RvbWFpbl9ucigpLiAgVGhhdCBzZWVtcw0KPiA+ID4gPiA+ID4gPiB1bm5lY2Vzc2Fy
+aWx5IGNvbXBsaWNhdGVkLg0KPiA+ID4gPiA+ID4gSSBjb3VsZCBjcmVhdGUgcGF0Y2hlcyB0byBh
+ZGQgYW4gb3B0aW9uYWwgInBjaS1kb21haW4iIHByb3BlcnR5IGZvciB0aGUgUi1DYXINCj4gPiA+
+ID4gPiA+IFBDSSBkcml2ZXJzLCBhbmQganVzdCBhdHRlbXB0IHRvIGdldCB0aGUgcHJvcGVydHkg
+aW4gdGhlIGRyaXZlcnMuIElmIG5vdCBmb3VuZCwNCj4gPiA+ID4gPiA+IHRoZSBkcml2ZXJzIHdp
+bGwgYXNzdW1lIHRoZSBkb21haW4gaXMgMC4NCj4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiBXZSB3
+b3VsZCB0aGVuIGhhdmUgZml4ZWQgUENJIGRvbWFpbiBudW1iZXJpbmcgYW5kIEkgZG9uJ3QgaGF2
+ZSB0byB3b3JyeSBhYm91dA0KPiA+ID4gPiA+ID4gTGl2aXUncyB3b3JrLg0KPiA+ID4gPiA+DQo+
+ID4gPiA+ID4gSSB3aWxsIHNwbGl0IHRoZSBjdXJyZW50IG9mX3BjaV9nZXRfZG9tYWluX25yKCkg
+ZXZlbiBmdXJ0aGVyIGFuZCByZXBsYWNlIGl0IHdpdGgNCj4gPiA+ID4gPiB0d28gZnVuY3Rpb25z
+OiBwY2lfZ2V0X2RvbWFpbl9ucigpIHdoaWNoIHdpbGwgZG8ganVzdCB0aGUgYWxsb2NhdGlvbiAo
+c3RpbGwgYmFzZWQNCj4gPiA+ID4gPiBvbiB0aGUgYm9vbGVhbiBmbGFnIHBhc3NlZCBhcyBwYXJh
+bWV0ZXIpIGFuZCBvZl9nZXRfcGNpX2RvbWFpbl9ucigpIHRoYXQgd2lsbA0KPiA+ID4gPiA+IHJl
+dHJpZXZlIGEgImxpbnV4LHBjaS1kb21haW4iIHZhbHVlIGZyb20gYSBwcm9wZXJ0eSBiZWxvbmdp
+bmcgdG8gYSBnaXZlbiBkZXZpY2UNCj4gPiA+ID4gPiBub2RlLg0KPiA+ID4gPiBUaGlzIGRvZXNu
+J3Qgc29sdmUgdGhlIHByb2JsZW0gb2YgZGlmZmVyZW50IGRvbWFpbiBudW1iZXJzIGJhc2VkIG9u
+IGRpZmZlcmVudA0KPiA+ID4gPiBwcm9iZSBvcmRlcmluZy4gSWYgeW91IGhhdmUgbXVsdGlwbGUg
+ZG9tYWlucyB0aGVuIEkgdGhpbmsgeW91IG11c3QgaGF2ZSB0aGUNCj4gPiA+ID4gImxpbnV4LHBj
+aS1kb21haW4iIHByb3BlcnR5IGZvciBlYWNoIGNvbnRyb2xsZXIuDQo+ID4gPg0KPiA+ID4gQ29y
+cmVjdCwgYnV0IEkndmUgc2FpZCBJJ20gZ29pbmcgdG8gbGVhdmUgZm9yIHRoZSBtb21lbnQgdGhl
+IGNoZWNrIHRvIHRoZSBob3N0DQo+ID4gPiBjb250cm9sbGVyKHMpLg0KPiA+ID4gU28gaWYgeW91
+IGNhcmUgYWJvdXQgb3JkZXJpbmcgb3IgbWFuZGF0aW5nIHRoZSBwcmVzZW5jZSBvZiAibGludXgs
+cGNpLQ0KPiA+ID4gZG9tYWluIiBpbiB0aGUgRFQsIHBsZWFzZSBhZGQgdGhlIGNoZWNrIGluIHlv
+dXIgZHJpdmVyLg0KPiA+ID4NCj4gPiA+ID4NCj4gPiA+ID4gSWYgd2UgYXNzdW1lIHRoZSBhYm92
+ZSwgb2ZfZ2V0X3BjaV9kb21haW5fbnIoKSBjYW4ganVzdCByZXR1cm4gYSBidXMgbnVtYmVyIG9m
+DQo+ID4gPiA+IDAgaWYgdGhlICJsaW51eCxwY2ktZG9tYWluIiBwcm9wZXJ0eSBkb2Vzbid0IGV4
+aXN0Lg0KPiA+ID4NCj4gPiA+IFlvdSBtZWFuICpkb21haW4qIG51bWJlciBvZiAwLiBCdXQgdGhh
+dCBpcyBzdGlsbCBhIHZhbGlkIHZhbHVlIGFuZCB5b3Ugd29uJ3QNCj4gPiA+IGJlIGFibGUgdG8g
+ZGlzdGluZ3Vpc2ggYmV0d2VlbiBEVCBwcm92aWRpbmcgYSAibGludXgscGNpLWRvbWFpbiIgdmFs
+dWUgb2YgemVybyBhbmQNCj4gPiA+IHRoZSBwcm9wZXJ0eSBub3QgYmVpbmcgcHJlc2VudC4NCj4g
+PiBZZXMsIEkgbWVhbnQgZG9tYWluLg0KPiA+IElmIGEgZGV2aWNlIG9ubHkgaGFzIGEgc2luZ2xl
+IFBDSSBkb21haW4sIG5vICJsaW51eCxwY2ktZG9tYWluIiBwcm9wIGlzIG5lZWRlZA0KPiA+IGFu
+ZCBhIGRlZmF1bHQgZG9tYWluIG51bWJlciBvZiAwIGlzIG9rLg0KPiANCj4gQWdyZWUsIGV4Y2Vw
+dCBpdCBpcyBub3QgYSAiZGV2aWNlIiBjaG9pY2UgYnV0IGEgcGxhdGZvcm0gY2hvaWNlLiBJbiBv
+dGhlciB3b3JkcywNCj4gaGF2aW5nIGEgaG9zdCBicmlkZ2UgY2FwYWJsZSBvZiBydW5uaW5nIG9u
+IG11bHRpLWhvc3QtYnJpZGdlIHNldHVwcywgdGhlbg0KPiB5b3VyIEhCIGRyaXZlciB3aWxsIGhh
+dmUgdG8gbWFuZGF0ZSAibGludXgscGNpLWRvbWFpbiIgcHJlc2VuY2UuIEJ1dCB0aGUNCj4gZGVj
+aXNpb24NCj4gdG8gaGF2ZSBtb3JlIHRoYW4gb25lIEhCIHdpbGwgYmUgcHJlc2VudCBpbiB0aGUg
+ZGV2aWNlIHRyZWUsIG5vdCBpbiB0aGUNCj4gZHJpdmVyLg0KT2ssIEkgYWN0dWFsbHkgbWVhbnQg
+dGhlIGRldmljZSBkdHNpLCBidXQgeWVzIHRoZSBkZWNpc2lvbiBsaWVzIHdpdGggdGhlIERULg0K
+DQoNCj4gPiBJZiB0aGVyZSBpcyBtb3JlIHRoYW4gb25lIGRvbWFpbiwgdXNlcnNwYWNlIG5lZWRz
+IHRvIGhhdmUgY29uc2lzdGVudCBkb21haW4NCj4gPiBudW1iZXJpbmcgb3ZlciBrZXJuZWwgdmVy
+c2lvbnMsIHNvIHdlIGhhdmUgdG8gc3BlY2lmeSB0aGUgZG9tYWluIGluIHRoZSBEVC4NCj4gDQo+
+IEFncmVlLCBhbmQgdGhlIERUIHdpbGwgcGluIGRvd24gdGhlIGRvbWFpbiBudW1iZXJzLg0KPiAN
+Cj4gPg0KPiA+IEkgYW0gcHJvYmFibHkgbWlzc2luZyBzb21ldGhpbmcsIGl0IHdvdWxkbid0IGJl
+IHRoZSBmaXJzdCB0aW1lLCBidXQgSSBkb24ndCBzZWUNCj4gPiB3aHkgb2ZfZ2V0X3BjaV9kb21h
+aW5fbnIoKSBuZWVkcyB0byBhbGxvY2F0ZSBkb21haW4gbnVtYmVycy4NCj4gDQo+IE1heWJlIGJl
+Y2F1c2UgSSBoYXZlIGNvbmZ1c2VkIHlvdS4gTGV0J3MgdHJ5IGFnYWluOg0KPiAgIC0gb2ZfcGNp
+X2dldF9kb21haW5fbnIoKTogZnVuY3Rpb24gcHJlc2VudCBpbiB2MTEsIHBhcnNlcyAicGNpLWRv
+bWFpbiIgYWxpYXMsDQo+ICAgICBhbGxvY2F0ZXMgYSBuZXcgZG9tYWluIG51bWJlciBpZiAicGNp
+LWRvbWFpbiIgaW5mbyBpcyBtaXNzaW5nLiBXaWxsIGJlDQo+ICAgICByZW1vdmVkIGluIHYxMi4N
+Cj4gICAtIG9mX2dldF9wY2lfZG9tYWluX25yKCk6IHN1YnRsZSBjaGFuZ2Ugb2YgbmFtZSB0byBm
+bGFnIHRoZSBjaGFuZ2Ugb2YgYmVoYXZpb3VyDQo+ICAgICBmcm9tIHRoZSBwcmV2aW91cyBmdW5j
+dGlvbi4gT25seSBwYXJzZXMgImxpbnV4LHBjaS1kb21haW4iIHByb3BlcnR5IG9mIHRoZQ0KPiAg
+ICAgaG9zdCBicmlkZ2Ugbm9kZSwgcmV0dXJucyB0aGUgcHJvcGVydHkgdmFsdWUgYXMgYW4gaW50
+ZWdlciBiZXR3ZWVuIDAgYW5kIDI1NSwNCj4gICAgIG9yIGEgbmVnYXRpdmUgdmFsdWUgaWYgdGhl
+IHByb3BlcnR5IGlzIG1pc3NpbmcuDQo+ICAgLSBwY2lfZ2V0X25ld19kb21haW5fbnIoKTogdGhp
+cyBmdW5jdGlvbiBpcyBvbmx5IHByZXNlbnQgaW4gdjEyIGFuZCBhbGxvY2F0ZXMNCj4gICAgIGEg
+bmV3IGRvbWFpbiBudW1iZXIgZWFjaCB0aW1lIGl0IGlzIGNhbGxlZC4NCk9rLCBJIG1pc3NlZCB0
+aGUgc3VidGxlIG5hbWUgY2hhbmdlIGFuZCBleHRyYSBmdW5jdGlvbiBmb3IgdjEyLg0KDQpTb3Vu
+ZHMgZ29vZCB0byBtZSENCg0KVGhhbmtzDQpQaGlsDQo=
