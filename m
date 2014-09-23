@@ -1,153 +1,142 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:42662 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752163AbaI3Rfq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 13:35:46 -0400
-Date: Tue, 30 Sep 2014 18:35:40 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Tue, 23 Sep 2014 15:54:35 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
 To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
+Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>
-Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
-Message-ID: <20140930173540.GB16583@e102568-lin.cambridge.arm.com>
-References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
- <8631927.qWHZsjCs8e@wuerfel>
- <20140930120344.GA14215@e102568-lin.cambridge.arm.com>
- <3090148.OUdB0fsdsR@wuerfel>
- <20140930161241.GA16583@e102568-lin.cambridge.arm.com>
- <20140930164256.GS841@e106497-lin.cambridge.arm.com>
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v12 00/12] Support for creating generic PCI host bridges
+ from DT
+Message-ID: <20140923215435.GD27117@google.com>
+References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20140930164256.GS841@e106497-lin.cambridge.arm.com>
-Content-Type: text/plain; charset=WINDOWS-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 30, 2014 at 05:42:56PM +0100, Liviu Dudau wrote:
-> On Tue, Sep 30, 2014 at 05:12:41PM +0100, Lorenzo Pieralisi wrote:
-> > On Tue, Sep 30, 2014 at 01:31:44PM +0100, Arnd Bergmann wrote:
-> > > On Tuesday 30 September 2014 13:03:44 Lorenzo Pieralisi wrote:
-> > > > > >  static int gen_pci_probe(struct platform_device *pdev)
-> > > > > >  {
-> > > > > > @@ -326,6 +385,7 @@ static int gen_pci_probe(struct platform_device *pdev)
-> > > > > >         struct device *dev = &pdev->dev;
-> > > > > >         struct device_node *np = dev->of_node;
-> > > > > >         struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-> > > > > > +#ifndef CONFIG_ARM64
-> > > > > >         struct hw_pci hw = {
-> > > > > >                 .nr_controllers = 1,
-> > > > > >                 .private_data   = (void **)&pci,
-> > > > > > @@ -333,6 +393,7 @@ static int gen_pci_probe(struct platform_device *pdev)
-> > > > > >                 .map_irq        = of_irq_parse_and_map_pci,
-> > > > > >                 .ops            = &gen_pci_ops,
-> > > > > >         };
-> > > > > > +#endif
-> > > > > >  
-> > > > > 
-> > > > > Same here, I'd suggest marking this "#ifdef CONFIG_ARM" instead, as hw_pci
-> > > > > is an arm32 specific data structure.
-> > > > 
-> > > > I do not think we need hw struct at all, see below, we can write code so
-> > > > that we do not rely on ARM32 PCI bios, I will have a stab at that and
-> > > > post the resulting code.
-> > > 
-> > > That would of course be best. I think it needs some rework of the
-> > > arm32 PCI code though, or you'd still have to create pci_sys_data
-> > > manually, and that is currently allocated by pcibios_init_hw.
+On Tue, Sep 23, 2014 at 08:01:02PM +0100, Liviu Dudau wrote:
+> This is my version 12 of the attempt at adding support for generic PCI host
+> bridge controllers that make use of device tree information to
+> configure themselves. It contains cleanups to address comments posted for v11.
 > 
-> I don't see why we need to involve the arm32 code here at all. A host bridge can
-> be fully functional with the generic code without having to use any of the
-> arm32 code (unless I'm missing something here).
-
-Ok so I can remove the pci_common_init() call, use the common PCI API and
-everything will work as expected, even if there is a list of functions (see
-below) that *require* pci_sys_data to exist (and that's allocated in arm32
-pcibios code in pcibios_init_hw(), called from pci_common_init()) ?
-
-I like the idea but I think that's optimistic, or at least we did not
-trigger the code paths that can cause issues.
-
-> > Right, as far as I can see, creating a pci_sys_data struct
-> > that's all we would need. "Problem" is that it does not exist on ARM64
-> > so to avoid ifdeffery we have to declare a struct with the same
-> > fields (ie only pci_sys_data.private_data is used by this driver -
-> > apart from arm32 specific functions usage) that is passed to the PCI layer
-> > and stored in the bus.sysdata, but that's extremely ugly (and we won't
-> > need this when the arm32 conversion is completed).
-> > 
-> > > > > > +       if (!gen_scan_root_bus(&pdev->dev, pci->cfg.bus_range.start,
-> > > > > > +                              &gen_pci_ops, pci, &pci->resources)) {
-> > > > > > +               dev_err(&pdev->dev, "failed to enable PCIe ports\n");
-> > > > > > +               return -ENODEV;
-> > > > > > +       }
-> > > > > > +#else
-> > > > > >         pci_common_init_dev(dev, &hw);
-> > > > > > +#endif /* CONFIG_ARM64 */
-> > > > > > 
-> > > > > 
-> > > > > Again, just make the pci_common_init_dev() call #ifdef CONFIG_ARM, and move
-> > > > > the generic case after it, outside of the #ifdef.
-> > > > 
-> > > > I went through the code quickly but I think we can (and should) remove
-> > > > this quite ugly ifdeffery altogether. Most of the functionality in
-> > > > pci_common_init_dev() can be implemented through the common PCI API (and this
-> > > > would make this driver arch agnostic as it should be), I will go through ARM32
-> > > > PCI bios code to check what is executed in detail in pci_common_init_dev() and
-> > > > make sure that we follow those initialization steps in the resulting probe code
-> > > > for this PCI generic host controller driver.
-> > > 
-> > > These are the functions I found that refer to pci_sys_data on arm32:
-> > > 
-> > > pcibios_add_bus
-> > > pcibios_remove_bus
-> > > pcibios_align_resource
-> > > pci_mmap_page_range
-> > > pci_domain_nr
-> > > pci_proc_domain
-> > > 
-> > > This is not as bad as I had feared, but we still have to ensure that
-> > > any caller of these functions will work with both the generic PCI support
-> > > and the arm32 specific drivers that today use hw_pci.
-> > > 
-> > > My idea for dealing with this was to convert all host drivers in
-> > > drivers/pci/host to the generic PCI code and never build the arm32
-> > > bios32 code when CONFIG_ARCH_MULTIPLATFORM is set. Unfortunately that
-> > > requires either doing them all at once or coming up with a migration
-> > > strategy so we don't break things in the process.
-> > 
-> > That makes sense. Related to the migration strategy, thoughts
-> > appreciated. Declaring a static pci_sys_data (with some ifdef around it)
-> > seems a horrible hack to me. Calling pci_common_init() only if CONFIG_ARM
-> > is rather horrible too, but we can probably live with that.
-> > 
-> > I do not see anything else as possible solution at the moment unless
-> > we go the whole nine yards and do what you suggest above, might take a
-> > little while though.
-> > 
-> > Probably leaving pci_common_init() call (and related hw_pci struct, and
-> > related ifdeffery to differentiate between different sysdata layouts for ARM
-> > and ARM64) is the fastest path but I still think it is not nice at all.
+> Bjorn intends to pull this series into his tree and send it to linux-next if
+> no major issues arise.
 > 
-> Rob Herring found the conversion of mach-integrator/pci_v3.c to the generic
-> framework quite painless. We might have to go through a lot of testing, but I don't
-> see the process to be too horrendous.
+> 
+> Changes from v11:
+>  - fixed race condition in pci_register_io_range() and bug where the function
+>    would return with the io_range_lock held.
+>  - split patch 4/10 that fixes the convertion of IO ranges into resources into
+>    two patches. The new 4/12 just moves the function into drivers/of/address.c
+>    and 5/12 makes the functional changes.
+>  - Added Linus Walleij ACK on 5/12 for the arch/arm/mach-integrator/pci_v3.c
+>    part
+>  - Removed the old PCI domain number parser and allocator and split the code
+>    into two independent functions: 'int pci_get_new_domain_nr(void)' will
+>    always return a new domain number when called while 'of_get_pci_domain_nr()'
+>    will parse the DT and try to find a property of the given node called
+>    'linux,pci-domain'. The property value, if found, will be truncated to
+>    16-bit value and returned, or a negative value if an error occurs.
+>  - Made the io_base pointer parameter that gets passed to
+>    of_pci_get_host_bridge_resources() optional (thanks Robert Richter) and
+>    be explicit when detecting multiple IO ranges about the device used.
+>  - Fixed comments on commits to explain who uses pci_remap_iospace() as well
+>    as making clear that the value used inside the function is a virtual address
+>    and not a physical one. Also be explicit in the warning generated when
+>    architectures without memory mapped IO support make use of this function
+>  - Merged the arm64 patch into this series as Bjorn is going to pull it
+>    into his tree.
+> 
+> Changes from v10:
+>  - Addressed Lorenzo's comments wrt io_base not being initialised inside the
+>    function that is supposed to modify it and also updated the comments to
+>    explain the values returned by the function
+>  - Updated pci_domain_nr helper function to split the allocation of the domain
+>    number from the parsing of the device tree to find maximum defined domain
+>    value
+>  - Fixed up the commit author for commit 6/10
+> 
+> Changes from v9:
+>  - Moved the DT parsing and assigning of IRQ patch from this series into arm64
+>    specific patch. This keeps existing pcibios_add_device() unchanged and adds
+>    an arch-specific version that can later be expanded to cater for dma_ops.
+>  - Incorporated the fix for users of of_pci_range_to_resources() into the patch
+>    that changes the behaviour for easier bisection.
+>  - Added fixes for tegra and rcar host drivers in their usage of
+>    of_pci_range_to_resources()
+>  - Broke up of_create_pci_host_bridge() to remove the callback function. The
+>    function left has been renamed into of_pci_get_host_bridge_resources(). The
+>    added benefit of that is that the architectural hook for fixing up host bridge
+>    resources now dissappears.
+>  - Reshuffled the way pgprot_device gets introduced. It is now part of the patch
+>    that adds pci_remap_iospace() function. The arm64 specific override is moved
+>    into the arm64 patchset.
+>  - Added a patch to pci_scan_root_bus() to assign unassigned resources if PCI
+>    flags are not PCI_PROBE_ONLY
+> 
+> v11 thread here: https://lkml.org/lkml/2014/9/17/732
+> v10 thread here: https://lkml.org/lkml/2014/9/8/333
+> v9 thread here, with links to previous threads: https://lkml.org/lkml/2014/8/12/361
+> 
+> Best regards,
+> Liviu
+> 
+> Catalin Marinas (1):
+>   PCI: Introduce generic domain handling for PCI busses.
+> 
+> Liviu Dudau (11):
+>   Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
+>   PCI: Introduce helper functions to deal with PCI I/O ranges.
+>   ARM: Define PCI_IOBASE as the base of virtual PCI IO space.
+>   PCI: OF: Move of_pci_range_to_resources() into address.c
+>   PCI: OF: Fix the conversion of IO ranges into IO resources.
+>   PCI: Create pci_host_bridge before its associated bus in pci_create_root_bus.
+>   PCI: OF: Introduce helper function for retrieving PCI domain numbers
+>   OF: PCI: Add support for parsing PCI host bridge resources from DT
+>   PCI: Assign unassigned bus resources in pci_scan_root_bus()
+>   PCI: Introduce pci_remap_iospace() for remapping PCI I/O bus resources into CPU space
+>   arm64: Add architectural support for PCIe
+> 
+>  arch/arm/include/asm/io.h         |   1 +
+>  arch/arm/mach-integrator/pci_v3.c |  23 +++---
+>  arch/arm64/Kconfig                |  22 +++++-
+>  arch/arm64/include/asm/Kbuild     |   1 +
+>  arch/arm64/include/asm/io.h       |   3 +-
+>  arch/arm64/include/asm/pci.h      |  37 +++++++++
+>  arch/arm64/include/asm/pgtable.h  |   2 +
+>  arch/arm64/kernel/Makefile        |   1 +
+>  arch/arm64/kernel/pci.c           |  70 +++++++++++++++++
+>  drivers/of/address.c              | 155 ++++++++++++++++++++++++++++++++++++++
+>  drivers/of/of_pci.c               | 140 ++++++++++++++++++++++++++++++++++
+>  drivers/pci/host/pci-tegra.c      |  10 ++-
+>  drivers/pci/host/pcie-rcar.c      |  21 ++++--
+>  drivers/pci/pci.c                 |  43 +++++++++++
+>  drivers/pci/probe.c               |  46 ++++++-----
+>  include/asm-generic/io.h          |   2 +-
+>  include/asm-generic/pgtable.h     |   4 +
+>  include/linux/of_address.h        |  22 +++---
+>  include/linux/of_pci.h            |  18 +++++
+>  include/linux/pci.h               |  27 +++++++
+>  20 files changed, 596 insertions(+), 52 deletions(-)
+>  create mode 100644 arch/arm64/include/asm/pci.h
+>  create mode 100644 arch/arm64/kernel/pci.c
 
-See my comments above, I have not said that the conversion is complicated,
-what I am saying is that I am not sure we can get rid of pcibios code calls
-yet, as Arnd pointed out.
+Applied to pci/host-generic, headed for v3.18, thanks!
 
-Lorenzo
-
+Bjorn
