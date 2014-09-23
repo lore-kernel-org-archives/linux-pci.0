@@ -1,115 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5411F356.2090405@ti.com>
-Date: Thu, 11 Sep 2014 15:09:10 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:25068 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754020AbaIWBVK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 21:21:10 -0400
+Message-ID: <5420CAF7.2080007@huawei.com>
+Date: Tue, 23 Sep 2014 09:20:55 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Murali Karicheri <m-karicheri2@ti.com>
-CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<bhelgaas@google.com>, <arnd@arndb.de>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v3 1/2] PCI: keystone: remove handle of PCI mode configuration
-References: <1410369159-11564-1-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1410369159-11564-1-git-send-email-m-karicheri2@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 3/5] PCI/MSI: Change msi_bus attribute to support enable/disable
+ MSI for EP
+References: <1408694880-8260-1-git-send-email-wangyijing@huawei.com> <1408694880-8260-4-git-send-email-wangyijing@huawei.com> <20140922230323.GL1880@google.com>
+In-Reply-To: <20140922230323.GL1880@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/10/2014 01:12 PM, Murali Karicheri wrote:
-> Keystone PCI hardware supports both RC and EP modes and devcfg
-> register has bits to boot strap the device to either of these modes.
-> It seems proper to add this functionality to the boot loader rather
-> than in the driver as device will be operating in either mode, not
-> both any time. Currently the driver supports only RC mode and hence
-> register configuration in the driver is not needed and driver can
-> assume this is a RC hardware.
->
-> Also update the DT documentation accordingly.
->
-> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
-> Acked-by: Arnd Bergmann<arnd@arndb.de>
-> ---
-> 	v3 - No change
-> 	v2 - Added this separate patch to remove pci mode handling
->   .../devicetree/bindings/pci/pci-keystone.txt       |    4 +---
->   drivers/pci/host/pci-keystone.c                    |   21 ++------------------
->   2 files changed, 3 insertions(+), 22 deletions(-)
->
-> diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-> index ceb3e24..bedacf0 100644
-> --- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
-> +++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-> @@ -13,9 +13,7 @@ Required Properties:-
->
->   compatibility: "ti,keystone-pcie"
->   reg:	index 1 is the base address and length of DW application registers.
-> -	index 2 is the base address and length of PCI mode configuration
-> -	register.
-> -	index 3 is the base address and length of PCI device ID register.
-> +	index 2 is the base address and length of PCI device ID register.
->
->   pcie_msi_intc : Interrupt controller device node for MSI IRQ chip
->   	interrupt-cells: should be set to 1
-> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-> index ff8ed25..f1119eb 100644
-> --- a/drivers/pci/host/pci-keystone.c
-> +++ b/drivers/pci/host/pci-keystone.c
-> @@ -35,10 +35,6 @@
->   #define MAX_MSI_HOST_IRQS		8
->   #define MAX_LEGACY_HOST_IRQS		4
->
-> -/* RC mode settings masks */
-> -#define PCIE_RC_MODE		BIT(2)
-> -#define PCIE_MODE_MASK		(BIT(1) | BIT(2))
-> -
->   /* DEV_STAT_CTRL */
->   #define PCIE_CAP_BASE		0x70
->
-> @@ -355,7 +351,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
->   	void __iomem *reg_p;
->   	struct phy *phy;
->   	int ret = 0;
-> -	u32 val;
->
->   	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
->   				GFP_KERNEL);
-> @@ -365,18 +360,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
->   	}
->   	pp =&ks_pcie->pp;
->
-> -	/* index 2 is the devcfg register for RC mode settings */
-> -	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
-> -	reg_p = devm_ioremap_resource(dev, res);
-> -	if (IS_ERR(reg_p))
-> -		return PTR_ERR(reg_p);
-> -
-> -	/* enable RC mode in devcfg */
-> -	val = readl(reg_p);
-> -	val&= ~PCIE_MODE_MASK;
-> -	val |= PCIE_RC_MODE;
-> -	writel(val, reg_p);
-> -
->   	/* initialize SerDes Phy if present */
->   	phy = devm_phy_get(dev, "pcie-phy");
->   	if (!IS_ERR_OR_NULL(phy)) {
-> @@ -385,8 +368,8 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
->   			return ret;
->   	}
->
-> -	/* index 3 is to read PCI DEVICE_ID */
-> -	res = platform_get_resource(pdev, IORESOURCE_MEM, 3);
-> +	/* index 2 is to read PCI DEVICE_ID */
-> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
->   	reg_p = devm_ioremap_resource(dev, res);
->   	if (IS_ERR(reg_p))
->   		return PTR_ERR(reg_p);
-Bjorn,
+On 2014/9/23 7:03, Bjorn Helgaas wrote:
+> On Fri, Aug 22, 2014 at 04:07:58PM +0800, Yijing Wang wrote:
+>> Msi_bus attribute is only valid for bridge device.
+>> We can enable or disable MSI capability for a bus,
+>> if we echo 1/0 > /sys/bus/pci/devices/$EP/msi_bus,
+>> the action will be ignored. Sometime we need to
+>> only enable/disable a EP device MSI capability,
+>> not all devices share the same bus.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> 
+> What's the purpose of this?  Is this just for debugging?  I assume that if
+> you have an endpoint that requires MSI to be disabled, you'd have a quirk
+> to do that, not a sysfs interface.
 
-These patches need to go onto host-keystone as well for v3.18. If you 
-you have any comments, please let me know so that I can address them. I 
-have incorporated comments from Arnd already.
+Hi Bjorn, yes, the purpose of doing this is to debug and provide a interface to control
+device MSI capability. Sometimes we only want to force a EP device to use legacy interrupt,
+Eg. in x86, there are limit vector resources, and now most device driver uses MSI to
+deliver interrupts, so the vector resources will be easy to be exhausted. Implement it for
+EP will let system administrator have more ability to optimize MSI interrupts.
 
-Thanks.
+> 
+> This should probably be mentioned in
+> Documentation/ABI/testing/sysfs-bus-pci while you're at it.  I know it's
+> not there yet, but this seems like a good time to rectify that omission.
 
-Murali
+OK, I will do it.
+
+Thanks!
+Yijing.
+
+> 
+>> ---
+>>  drivers/pci/pci-sysfs.c |   12 ++++++------
+>>  1 files changed, 6 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>> index 9ff0a90..b199ad9 100644
+>> --- a/drivers/pci/pci-sysfs.c
+>> +++ b/drivers/pci/pci-sysfs.c
+>> @@ -251,11 +251,9 @@ static ssize_t msi_bus_show(struct device *dev, struct device_attribute *attr,
+>>  {
+>>  	struct pci_dev *pdev = to_pci_dev(dev);
+>>  
+>> -	if (!pdev->subordinate)
+>> -		return 0;
+>> -
+>> -	return sprintf(buf, "%u\n",
+>> -		       !(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI));
+>> +	return sprintf(buf, "%u\n", pdev->subordinate ?
+>> +		       !(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI)
+>> +			   : !pdev->no_msi);
+>>  }
+>>  
+>>  static ssize_t msi_bus_store(struct device *dev, struct device_attribute *attr,
+>> @@ -278,8 +276,10 @@ static ssize_t msi_bus_store(struct device *dev, struct device_attribute *attr,
+>>  	 * Maybe devices without subordinate buses shouldn't have this
+>>  	 * attribute in the first place?
+>>  	 */
+>> -	if (!pdev->subordinate)
+>> +	if (!pdev->subordinate) {
+>> +		pdev->no_msi = !val;
+>>  		return count;
+>> +	}
+>>  
+>>  	/* Is the flag going to change, or keep the value it already had? */
+>>  	if (!(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI) ^
+>> -- 
+>> 1.7.1
+>>
+> 
+> 
+
+
+-- 
+Thanks!
+Yijing
+
