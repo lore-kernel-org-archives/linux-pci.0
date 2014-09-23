@@ -1,49 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:36268 "EHLO
-	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750750AbaJAE2j (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 00:28:39 -0400
-Date: Wed, 1 Oct 2014 09:58:15 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 0/2] Designware MSI fixes
-Message-ID: <20141001042815.GA24581@pratyush-vbox>
-References: <1412094987-1894-1-git-send-email-l.stach@pengutronix.de>
+Received: from mail-by2on0139.outbound.protection.outlook.com ([207.46.100.139]:53504
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751183AbaIWEji (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 23 Sep 2014 00:39:38 -0400
+From: Richard Zhu <r65037@freescale.com>
+To: <linux-pci-owner@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
+	<festevam@gmail.com>, <l.stach@pengutronix.de>,
+	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
+Subject: [PATCH v2 2/5] PCI: imx6: wait the clocks to stabilize after ref_en
+Date: Tue, 23 Sep 2014 12:11:35 +0800
+Message-ID: <1411445498-20250-3-git-send-email-r65037@freescale.com>
+In-Reply-To: <1411445498-20250-1-git-send-email-r65037@freescale.com>
+References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1412094987-1894-1-git-send-email-l.stach@pengutronix.de>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 01, 2014 at 12:36:25AM +0800, Lucas Stach wrote:
-> Those two patches were part of my designware multi-msi series. I decided
-> to postpone that one a little bit until the treewide MSI chip patches from
-> Yijing Wang have landed, but those two patches are just too obvious
-> fixes/style corrections to let them wait any longer.
-> 
-> Both patches were tested by Jingoo Han as part of the earlier series, but
-> I had to modify them a bit for the rebase, so any review/testing much
-> appreciated. Patches are on top of the pci/host-designware branch.
-> 
-> Lucas Stach (2):
->   PCI: designware: remove bogus multiple MSI setup
->   PCI: designware: remove open-coded bitmap operations
-> 
+- a while delay is mandatory required after pcie_ref_clk_en
+is set. Otherwise, the system would be hang on imx6qdl ard
+boards, because that imx6qdl boards don't have the reset_gpio.
+- the clocks should be stable already after the
+"clk_prepare_enable" is return. So I think it's ok to move the
+usleep delay after the pcie_ref_en is set.
 
-Looks cleaner to me.
-Reviewed-by: Pratyush Anand <pratyush.anand@st.com>
+Signed-off-by: Richard Zhu <r65037@freescale.com>
+---
+ drivers/pci/host/pci-imx6.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
->  drivers/pci/host/pcie-designware.c | 98 ++++++--------------------------------
->  1 file changed, 14 insertions(+), 84 deletions(-)
-> 
-> -- 
-> 2.1.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 233fe8a..bc4222b 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -275,15 +275,15 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		goto err_pcie;
+ 	}
+ 
+-	/* allow the clocks to stabilize */
+-	usleep_range(200, 500);
+-
+ 	/* power up core phy and enable ref clock */
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+ 
++	/* allow the clocks to stabilize */
++	usleep_range(200, 500);
++
+ 	/* Some boards don't have PCIe reset GPIO. */
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+ 		gpio_set_value(imx6_pcie->reset_gpio, 0);
+-- 
+1.9.1
+
