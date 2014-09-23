@@ -1,75 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:53403 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693AbaIXSk5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 14:40:57 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Robert Richter <robert.richter@caviumnetworks.com>,
-	Robert Richter <rric@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Sunil Goutham <sgoutham@cavium.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
+Received: from mail-bn1on0142.outbound.protection.outlook.com ([157.56.110.142]:25796
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750828AbaIWDKx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 23:10:53 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 5/6] arm64, defconfig: Enable PCI
-Date: Wed, 24 Sep 2014 20:40:18 +0200
-Message-ID: <3120493.DIoQFCi5Am@wuerfel>
-In-Reply-To: <20140924171047.GO15842@e104818-lin.cambridge.arm.com>
-References: <1411573068-12952-1-git-send-email-rric@kernel.org> <20140924162631.GI31556@rric.localhost> <20140924171047.GO15842@e104818-lin.cambridge.arm.com>
-MIME-Version: 1.0
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>
+Subject: RE: [PATCH RFC 1/2] PCI: imx6: enable pcie on imx6qdl sabresd and
+ sabreauto
+Date: Tue, 23 Sep 2014 03:11:06 +0000
+Message-ID: <5ee51ba972f34d36b73aba791e5c8a67@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1411376498-14653-1-git-send-email-r65037@freescale.com>
+ <1411376498-14653-2-git-send-email-r65037@freescale.com>
+ <20140922131519.GA30055@kroah.com>
+In-Reply-To: <20140922131519.GA30055@kroah.com>
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 24 September 2014 18:10:48 Catalin Marinas wrote:
-> On Wed, Sep 24, 2014 at 05:26:31PM +0100, Robert Richter wrote:
-> > On 24.09.14 18:14:11, Arnd Bergmann wrote:
-> > > On Wednesday 24 September 2014 17:37:47 Robert Richter wrote:
-> > > >  config PCI
-> > > >         bool "PCI support"
-> > > > +       default y
-> > > >         help
-> > > >           This feature enables support for PCIe bus system. If you say Y
-> > > >           here, the kernel will include drivers and infrastructure code
-> > > >           to support PCIe bus devices.
-> > > >  
-> > > > +config PCI_MSI
-> > > > +       def_bool PCI
-> > > > +
-> > > >  config PCI_DOMAINS
-> > > >         def_bool PCI
-> > > 
-> > > There is already a PCI_MSI symbol in drivers/pci/Kconfig. Just select that
-> > > from the PCI symbol above rather than defining a second one.
-> > 
-> > The intention is not to have a second definition, instead this should
-> > enable the default value just for arm64. Thus I put it to
-> > arch/arm64/Kconfig. Otherwise it would be enabled per default on all
-> > archs.
 
-I don't think other architectures actually see the PCI symbol that is
-defined in the arm64 Kconfig file, but I might be wrong.
+> -----Original Message-----
+> From: Greg KH [mailto:gregkh@linuxfoundation.org]
+> Sent: Monday, September 22, 2014 9:15 PM
+> To: Zhu Richard-R65037
+> Cc: linux-pci-owner@vger.kernel.org; stable@vger.kernel.org; linux-
+> pci@vger.kernel.org; l.stach@pengutronix.de
+> Subject: Re: [PATCH RFC 1/2] PCI: imx6: enable pcie on imx6qdl sabresd and
+> sabreauto
+> 
+> On Mon, Sep 22, 2014 at 05:01:37PM +0800, Richard Zhu wrote:
+> > - enable pcie support on imx6qdl sabresd and asbreauto boards.
+> > - sabresd board has the pcie power on and reset gpios, but sabreauto
+> > doesn't have these two gpios.
+> >
+> > Signed-off-by: Richard Zhu <r65037@freescale.com>
+> > ---
+> >  arch/arm/boot/dts/imx6qdl-sabreauto.dtsi | 4 ++++
+> >  arch/arm/boot/dts/imx6qdl-sabresd.dtsi   | 2 ++
+> >  2 files changed, 6 insertions(+)
+> 
+> <formletter>
+> 
+> This is not the correct way to submit patches for inclusion in the stable
+> kernel tree.  Please read Documentation/stable_kernel_rules.txt
+> for how to do this properly.
+> 
+> </formletter>
+[Richard] Roger that, thanks for your reminder.
+It's my fault to make a mistake to send the patch review to table kernel mail-list. Sorry about that.
 
-> > We could have used select in config ARM64, but I tried to avoid using
-> > select due to the dependency issue and instead implement this with
-> > default-y/depends-on. Doing so it can be manually disabled too.
+Best Regards
+Richard Zhu
 
-How about adding a new symbol like
-
-config ARM64_PCI
-	def_bool PCI
-	select PCI_MSI
-
-
-> It may be better to simply set PCI and PCI_MSI as defaults in defconfig
-> rather than "default y" and an additional config PCI_MSI entry.
-
-Selecting PCI_MSI unconditionally seems fine to me. We won't have any
-ARM64 systems that only do classic PCI, and MSI is mandatory for PCIe.
-
-	Arnd
