@@ -1,117 +1,45 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <54179BD1.3050608@huawei.com>
-Date: Tue, 16 Sep 2014 10:09:21 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1on0111.outbound.protection.outlook.com ([157.56.110.111]:21504
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751272AbaIWEjj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 23 Sep 2014 00:39:39 -0400
+From: Richard Zhu <r65037@freescale.com>
+To: <linux-pci-owner@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
+	<festevam@gmail.com>, <l.stach@pengutronix.de>,
+	<tharvey@gateworks.com>
+Subject: [PATCH v2]PCI: imx6: enable pcie on imx6sx sdb and imx6qdl sabreauto.
+Date: Tue, 23 Sep 2014 12:11:33 +0800
+Message-ID: <1411445498-20250-1-git-send-email-r65037@freescale.com>
 MIME-Version: 1.0
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH v1 06/21] PCI/MSI: Refactor struct msi_chip to make it
- become more common
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>	 <1409911806-10519-7-git-send-email-wangyijing@huawei.com> <1410792261.3314.9.camel@pengutronix.de>
-In-Reply-To: <1410792261.3314.9.camel@pengutronix.de>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/15 22:44, Lucas Stach wrote:
-> Am Freitag, den 05.09.2014, 18:09 +0800 schrieb Yijing Wang:
->> Now there are a lot of __weak arch functions in MSI code.
->> These functions make MSI driver complex. Thierry Reding Introduced
->> a new MSI chip framework to configure MSI/MSI-X irq in ARM. Use
->> the new MSI chip framework to refactor all other platform MSI
->> arch code to eliminate weak arch MSI functions. This patch add
->> .restore_irq() and .setup_irqs() to make it become more common.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> 
-> This change looks good to me:
-> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+Hi Tim:
+After I changed the wait clocks stabilize delay after pcie_ref_en is set
+in this patch-set.
+Can you help to make a double check whether it's ok or not at your side?
 
-Thanks!
+Thanks in advanced.
 
-> 
->> ---
->>  drivers/pci/msi.c   |   15 +++++++++++++++
->>  include/linux/msi.h |    3 +++
->>  2 files changed, 18 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index 539c11d..d78d637 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -63,6 +63,11 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->>  {
->>  	struct msi_desc *entry;
->>  	int ret;
->> +	struct msi_chip *chip;
->> +
->> +	chip = arch_find_msi_chip(dev);
->> +	if (chip && chip->setup_irqs)
->> +		return chip->setup_irqs(dev, nvec, type);
->>  
->>  	/*
->>  	 * If an architecture wants to support multiple MSI, it needs to
->> @@ -105,6 +110,11 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
->>  
->>  void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
->>  {
->> +	struct msi_chip *chip = arch_find_msi_chip(dev);
->> +
->> +	if (chip && chip->teardown_irqs)
->> +		return chip->teardown_irqs(dev);
->> +
->>  	return default_teardown_msi_irqs(dev);
->>  }
->>  
->> @@ -128,6 +138,11 @@ static void default_restore_msi_irq(struct pci_dev *dev, int irq)
->>  
->>  void __weak arch_restore_msi_irqs(struct pci_dev *dev)
->>  {
->> +	struct msi_chip *chip = arch_find_msi_chip(dev);
->> +
->> +	if (chip && chip->restore_irqs)
->> +		return chip->restore_irqs(dev);
->> +
->>  	return default_restore_msi_irqs(dev);
->>  }
->>  
->> diff --git a/include/linux/msi.h b/include/linux/msi.h
->> index 5650848..92a51e7 100644
->> --- a/include/linux/msi.h
->> +++ b/include/linux/msi.h
->> @@ -72,7 +72,10 @@ struct msi_chip {
->>  	struct list_head list;
->>  
->>  	int (*setup_irq)(struct pci_dev *dev, struct msi_desc *desc);
->> +	int (*setup_irqs)(struct pci_dev *dev, int nvec, int type);
->>  	void (*teardown_irq)(unsigned int irq);
->> +	void (*teardown_irqs)(struct pci_dev *dev);
->> +	void (*restore_irqs)(struct pci_dev *dev);
->>  };
->>  
->>  #endif /* LINUX_MSI_H */
-> 
+Main changes since the v1:
+1. Regarding to Lucas' comments, seperated the enalbe pcie on
+imx6qdl sabreauto patch.
+2. Add the description why the wait clock stabilize delay should
+be run after pcie_ref_en is set.
+3. Return 0 directly in suspend call back.
 
+Main changes since the RFC:
+Thanks for quick review from Lucas.
+1. seperate the smashed patch-set.
+2. remove the "power-on-gpio".
+3. add/update the pcie-supply of the dts and binding.
+4. 
 
--- 
-Thanks!
-Yijing
-
+[PATCH v2 1/5] PCI: imx6: enable pcie on imx6qdl sabreauto
+[PATCH v2 2/5] PCI: imx6: wait the clocks to stabilize after ref_en
+[PATCH v2 3/5] PCI: imx6: update dts and binding for imx6sx pcie
+[PATCH v2 4/5] PCI: imx6: add imx6sx pcie related gpr bits
+[PATCH v2 5/5] PCI: imx6: add imx6sx pcie support
