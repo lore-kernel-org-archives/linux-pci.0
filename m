@@ -1,61 +1,69 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <54223FE8.4070101@huawei.com>
-Date: Wed, 24 Sep 2014 11:52:08 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:53447 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751173AbaIWFDU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 01:03:20 -0400
 From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"Russell King" <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH v1 00/21] Use MSI chip to configure MSI/MSI-X in all platforms
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com> <20140923210936.GC27117@google.com>
-In-Reply-To: <20140923210936.GC27117@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-arch-owner@vger.kernel.org
+CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v3 9/9] PCI/MSI: Rename __read_msi_msg() to read_msi_msg()
+Date: Tue, 23 Sep 2014 13:27:30 +0800
+Message-ID: <1411450050-1510-10-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1411450050-1510-1-git-send-email-wangyijing@huawei.com>
+References: <1411450050-1510-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/24 5:09, Bjorn Helgaas wrote:
-> On Fri, Sep 05, 2014 at 06:09:45PM +0800, Yijing Wang wrote:
->> This series is based Bjorn's pci-next branch + Alexander Gordeev's two patches
->> "Remove arch_msi_check_device()" link: https://lkml.org/lkml/2014/7/12/41
->>
->> Currently, there are a lot of weak arch functions in MSI code.
->> Thierry Reding Introduced MSI chip framework to configure MSI/MSI-X in arm.
->> This series use MSI chip framework to refactor MSI code across all platforms
->> to eliminate weak arch functions. It has been tested fine in x86(with or without
->> irq remap).
-> 
-> I see you plan some updates, so I'll look for a v2 posting after v3.17 releases.
-> It will be great to get rid of some of those weak functions!
+Rename __read_msi_msg() to read_msi_msg().
 
-Thanks, I will send out the new version soon.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/x86/pci/xen.c  |    2 +-
+ drivers/pci/msi.c   |    2 +-
+ include/linux/msi.h |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-Thanks!
-Yijing.
-
-> 
-> Bjorn
-> 
-> .
-> 
-
-
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index 093f5f4..ad03739 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -229,7 +229,7 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 		return 1;
+ 
+ 	list_for_each_entry(msidesc, &dev->msi_list, list) {
+-		__read_msi_msg(msidesc, &msg);
++		read_msi_msg(msidesc, &msg);
+ 		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
+ 			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
+ 		if (msg.data != XEN_PIRQ_MSI_DATA ||
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 45da095..aff384a 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -259,7 +259,7 @@ void default_restore_msi_irqs(struct pci_dev *dev)
+ 	}
+ }
+ 
+-void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
++void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	BUG_ON(entry->dev->current_state != PCI_D0);
+ 
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 9ec258e..6be66f4 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -15,7 +15,7 @@ struct irq_data;
+ struct msi_desc;
+ void mask_msi_irq(struct irq_data *data);
+ void unmask_msi_irq(struct irq_data *data);
+-void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
++void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void write_msi_msg(unsigned int irq, struct msi_msg *msg);
 -- 
-Thanks!
-Yijing
+1.7.1
 
