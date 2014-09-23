@@ -1,60 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0115.outbound.protection.outlook.com ([157.56.111.115]:58795
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751607AbaI2FdY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Sep 2014 01:33:24 -0400
-From: Richard Zhu <r65037@freescale.com>
-To: <linux-pci-owner@vger.kernel.org>
-CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
-	<festevam@gmail.com>, <l.stach@pengutronix.de>,
-	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
-Subject: [PATCH v3 6/9] PCI: imx6: enable pcie on imx6sx sdb board
-Date: Mon, 29 Sep 2014 13:03:14 +0800
-Message-ID: <1411966997-27118-7-git-send-email-r65037@freescale.com>
-In-Reply-To: <1411966997-27118-1-git-send-email-r65037@freescale.com>
-References: <1411966997-27118-1-git-send-email-r65037@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:54215 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753540AbaIWT7s (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 15:59:48 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v12 03/12] ARM: Define PCI_IOBASE as the base of virtual PCI IO space.
+Date: Tue, 23 Sep 2014 20:01:05 +0100
+Message-Id: <1411498874-9864-4-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Richard Zhu <r65037@freescale.com>
----
- arch/arm/boot/dts/imx6sx-sdb.dts | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+This is needed for calls into OF code that parses PCI ranges.
+It signals support for memory mapped PCI I/O accesses that
+are described be device trees.
 
-diff --git a/arch/arm/boot/dts/imx6sx-sdb.dts b/arch/arm/boot/dts/imx6sx-sdb.dts
-index a3980d9..2976913 100644
---- a/arch/arm/boot/dts/imx6sx-sdb.dts
-+++ b/arch/arm/boot/dts/imx6sx-sdb.dts
-@@ -251,6 +251,13 @@
- 	};
- };
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Rob Herring <robh+dt@kernel.org>
+Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ arch/arm/include/asm/io.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/include/asm/io.h b/arch/arm/include/asm/io.h
+index 3d23418..22b7529 100644
+--- a/arch/arm/include/asm/io.h
++++ b/arch/arm/include/asm/io.h
+@@ -178,6 +178,7 @@ static inline void __iomem *__typesafe_io(unsigned long addr)
  
-+&pcie {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_pcie>;
-+	reset-gpio = <&gpio2 0 0>;
-+	status = "okay";
-+};
-+
- &ssi2 {
- 	status = "okay";
- };
-@@ -365,6 +372,12 @@
- 			>;
- 		};
+ /* PCI fixed i/o mapping */
+ #define PCI_IO_VIRT_BASE	0xfee00000
++#define PCI_IOBASE		PCI_IO_VIRT_BASE
  
-+		pinctrl_pcie: pciegrp {
-+			fsl,pins = <
-+				MX6SX_PAD_ENET1_COL__GPIO2_IO_0 0x17059
-+			>;
-+		};
-+
- 		pinctrl_vcc_sd3: vccsd3grp {
- 			fsl,pins = <
- 				MX6SX_PAD_KEY_COL1__GPIO2_IO_11		0x17059
+ #if defined(CONFIG_PCI)
+ void pci_ioremap_set_mem_type(int mem_type);
 -- 
-1.9.1
+2.1.0
 
