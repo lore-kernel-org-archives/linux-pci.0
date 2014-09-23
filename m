@@ -1,50 +1,85 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 15 Sep 2014 11:53:03 +0100 (IST)
-From: Dave Airlie <airlied@linux.ie>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	SpacemanSpiff <a818958@trbvm.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	=?ISO-8859-15?Q?Pali_Roh=E1r?= <pali.rohar@gmail.com>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	"Jose P." <lbdkmjdf@sharklasers.com>
-Subject: Re: [PATCH 0/2] PCI: Ignore hotplug events for dual GPU systems
-In-Reply-To: <1434331.0IZIM5O2Ci@vostro.rjw.lan>
-Message-ID: <alpine.DEB.2.00.1409151152400.28050@skynet.skynet.ie>
-References: <20140911222022.16809.57079.stgit@bhelgaas-glaptop2.roam.corp.google.com> <1434331.0IZIM5O2Ci@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:53432 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750762AbaIWFDS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 01:03:18 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v3 3/9] PCI/MSI: Change msi_bus attribute to support enable/disable MSI for EP
+Date: Tue, 23 Sep 2014 13:27:24 +0800
+Message-ID: <1411450050-1510-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1411450050-1510-1-git-send-email-wangyijing@huawei.com>
+References: <1411450050-1510-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Msi_bus attribute is only valid for bridge device.
+We can enable or disable MSI capability for a bus,
+if we echo 1/0 > /sys/bus/pci/devices/$EP/msi_bus,
+the action will be ignored. Sometime we need to
+only enable/disable a EP device MSI capability,
+not all devices share the same bus.
 
-> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ Documentation/ABI/testing/sysfs-bus-pci |    9 +++++++++
+ drivers/pci/pci-sysfs.c                 |   12 ++++++------
+ 2 files changed, 15 insertions(+), 6 deletions(-)
 
-Acked-by: Dave Airlie <airlied@redhat.com>
-> 
-> for both.
-> 
-> > ---
-> > 
-> > Bjorn Helgaas (2):
-> >       PCI: Add pci_ignore_hotplug() to ignore hotplug events for a device
-> >       ACPIPHP / radeon / nouveau: Remove acpi_bus_no_hotplug()
-> > 
-> > 
-> >  drivers/acpi/bus.c                           |   10 ----------
-> >  drivers/gpu/drm/nouveau/nouveau_acpi.c       |   16 ++--------------
-> >  drivers/gpu/drm/nouveau/nouveau_drm.c        |    1 +
-> >  drivers/gpu/drm/radeon/radeon_atpx_handler.c |   16 ++--------------
-> >  drivers/gpu/drm/radeon/radeon_drv.c          |    1 +
-> >  drivers/pci/hotplug/acpiphp_glue.c           |   16 ++++++----------
-> >  drivers/pci/hotplug/pciehp_hpc.c             |   12 ++++++++++++
-> >  include/acpi/acpi_bus.h                      |    4 +---
-> >  include/linux/pci.h                          |    6 ++++++
-> >  9 files changed, 31 insertions(+), 51 deletions(-)
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index 6615fda..edc4e8d 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -65,6 +65,15 @@ Description:
+ 		force a rescan of all PCI buses in the system, and
+ 		re-discover previously removed devices.
+ 
++What:		/sys/bus/pci/devices/.../msi_bus
++Date:		September 2014
++Contact:	Linux PCI developers <linux-pci@vger.kernel.org>
++Description:
++		Writing a zero value to this attribute will turn off
++		MSI capability for device. If device is a bridge, all
++		child devices under the bridge will be set to no MSI.
++		Drivers need to be reloaded to valid the new setting.
++
+ What:		/sys/bus/pci/devices/.../msi_irqs/
+ Date:		September, 2011
+ Contact:	Neil Horman <nhorman@tuxdriver.com>
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 9ff0a90..b199ad9 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -251,11 +251,9 @@ static ssize_t msi_bus_show(struct device *dev, struct device_attribute *attr,
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+-	if (!pdev->subordinate)
+-		return 0;
+-
+-	return sprintf(buf, "%u\n",
+-		       !(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI));
++	return sprintf(buf, "%u\n", pdev->subordinate ?
++		       !(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI)
++			   : !pdev->no_msi);
+ }
+ 
+ static ssize_t msi_bus_store(struct device *dev, struct device_attribute *attr,
+@@ -278,8 +276,10 @@ static ssize_t msi_bus_store(struct device *dev, struct device_attribute *attr,
+ 	 * Maybe devices without subordinate buses shouldn't have this
+ 	 * attribute in the first place?
+ 	 */
+-	if (!pdev->subordinate)
++	if (!pdev->subordinate) {
++		pdev->no_msi = !val;
+ 		return count;
++	}
+ 
+ 	/* Is the flag going to change, or keep the value it already had? */
+ 	if (!(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI) ^
+-- 
+1.7.1
+
