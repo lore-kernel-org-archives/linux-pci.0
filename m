@@ -1,73 +1,67 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFT v2 03/24] x86, irq: Save destination CPU ID in irq_cfg
-Date: Fri, 26 Sep 2014 22:02:04 +0800
-Message-Id: <1411740145-30626-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:53415 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750917AbaIWFDQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 01:03:16 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v3 1/9] PCI/MSI: Clean up the kobject in struct msi_desc
+Date: Tue, 23 Sep 2014 13:27:22 +0800
+Message-ID: <1411450050-1510-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1411450050-1510-1-git-send-email-wangyijing@huawei.com>
+References: <1411450050-1510-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Cache destination CPU APIC ID into struct irq_cfg when assigning vector
-for interrupt. Upper layer just needs to read the cached APIC ID instead
-of calling apic->cpu_mask_to_apicid_and(), it helps to hide APIC driver
-details from IOAPIC/HPET/MSI drivers..
+commit 1c51b50c299 using attributes to export MSI mode
+instead of kobject. So clean up the kobject in struct
+msi_desc.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- arch/x86/include/asm/hw_irq.h |    1 +
- arch/x86/kernel/apic/vector.c |    6 ++++++
- 2 files changed, 7 insertions(+)
+ drivers/pci/msi.c   |   11 -----------
+ include/linux/msi.h |    2 --
+ 2 files changed, 0 insertions(+), 13 deletions(-)
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 7624fffc2822..3d51d74d6c01 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -116,6 +116,7 @@ struct irq_data;
- struct irq_cfg {
- 	cpumask_var_t		domain;
- 	cpumask_var_t		old_domain;
-+	unsigned int		dest_apicid;
- 	u8			vector;
- 	u8			move_in_progress : 1;
- #ifdef CONFIG_IRQ_REMAP
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 7562cb15b3bd..5d3fd8f840db 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -188,6 +188,12 @@ next:
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 5a40516..e2aa74e 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -384,17 +384,6 @@ static void free_msi_irqs(struct pci_dev *dev)
+ 				iounmap(entry->mask_base);
+ 		}
+ 
+-		/*
+-		 * Its possible that we get into this path
+-		 * When populate_msi_sysfs fails, which means the entries
+-		 * were not registered with sysfs.  In that case don't
+-		 * unregister them.
+-		 */
+-		if (entry->kobj.parent) {
+-			kobject_del(&entry->kobj);
+-			kobject_put(&entry->kobj);
+-		}
+-
+ 		list_del(&entry->list);
+ 		kfree(entry);
  	}
- 	free_cpumask_var(tmp_mask);
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 8103f32..8892d41 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -47,8 +47,6 @@ struct msi_desc {
  
-+	if (!err) {
-+		/* cache destination APIC IDs into cfg->dest_apicid */
-+		err = apic->cpu_mask_to_apicid_and(mask, cfg->domain,
-+						   &cfg->dest_apicid);
-+	}
-+
- 	return err;
- }
+ 	/* Last set MSI message */
+ 	struct msi_msg msg;
+-
+-	struct kobject kobj;
+ };
  
+ /*
 -- 
-1.7.10.4
+1.7.1
 
