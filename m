@@ -1,125 +1,74 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Tue, 30 Sep 2014 17:54:31 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+MIME-Version: 1.0
+In-Reply-To: <8687285.EH4RPBeOB5@wuerfel>
+References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140922093228.GA20256@rric.localhost> <20140922114317.GN1994@e106497-lin.cambridge.arm.com>
+ <8687285.EH4RPBeOB5@wuerfel>
+From: Rob Herring <robherring2@gmail.com>
+Date: Tue, 23 Sep 2014 08:30:08 -0500
+Message-ID: <CAL_JsqK3yH-uf++haBovWdX6er1PtzeiZ-2-yT1TRfYPxAjFow@mail.gmail.com>
+Subject: Re: [PATCH v11 08/10] OF: PCI: Add support for parsing PCI host
+ bridge resources from DT
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Robert Richter <rric@kernel.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
 	linux-pci <linux-pci@vger.kernel.org>,
 	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
 	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
 	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
 	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH v13 00/12] Support for creating generic PCI host bridges
- from DT
-Message-ID: <20140930165431.GV841@e106497-lin.cambridge.arm.com>
-References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
- <20140929194335.GA13747@google.com>
- <20140930103942.GO841@e106497-lin.cambridge.arm.com>
- <20140930161805.GB5625@google.com>
-MIME-Version: 1.0
-In-Reply-To: <20140930161805.GB5625@google.com>
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Sunil Goutham <sunil.goutham@caviumnetworks.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 30, 2014 at 05:18:05PM +0100, Bjorn Helgaas wrote:
-> On Tue, Sep 30, 2014 at 11:39:42AM +0100, Liviu Dudau wrote:
-> > On Mon, Sep 29, 2014 at 08:43:35PM +0100, Bjorn Helgaas wrote:
-> > > On Mon, Sep 29, 2014 at 03:29:19PM +0100, Liviu Dudau wrote:
-> > > > This is my version 13 of the attempt at adding support for generic PCI host
-> > > > bridge controllers. It contains only cleanups to make it play nice with the
-> > > > linux-next tree as of 09/25. If Bjorn deems it safe, now that it looks like
-> > > > asm-generic is going to revert some of its more aggresive patches, he has the
-> > > > choice of queueing it into linux-next again.
-> > > > ...
-> > > 
-> > > These patches above were already on my pci/host-generic branch and in
-> > > linux-next:
-> > > 
-> > >    asm-generic/io.h: Fix ioport_map() for !CONFIG_GENERIC_IOMAP
-> > This ^ ...
-> > 
-> > >    of/pci: Add pci_register_io_range() and pci_pio_to_address()
-> > >    ARM: Define PCI_IOBASE as the base of virtual PCI IO space
-> > 
-> > and this ^ need to be refreshed from my series otherwise we will get conflicts with
-> > asm-generic branch (either now or in the future). While the asm-generic/io.h
-> > cast is arguably superflous, we need to define PCI_IOBASE as a void __iomem* to
-> > match all other standard declarations of PCI_IOBASE.
-> > 
-> > >    of/pci: Define of_pci_range_to_resource() only when CONFIG_PCI=y
-> > >    of/pci: Move of_pci_range_to_resources() to of/address.c
-> > >    of/pci: Fix the conversion of IO ranges into IO resources
-> > > 
-> > > I added these three patches to my pci/host-generic branch:
-> > > 
-> > >    PCI: Add generic domain handling
-> > >    of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()
-> > >    of/pci: Add support for parsing PCI host bridge resources from DT
-> > 
-> > I can see these patches added to pci/host-generic but not on pci/next.
-> 
-> Right.  I leave things on topic branches for a day or two to give a chance
-> for Fengguang's auto-builder to find problems before I merge them into the
-> more public "next" or "for-linus" branches.
-> 
-> > > Yinghai pointed out a problem with this one, so I omitted it:
-> > > 
-> > >    PCI: Assign unassigned bus resources in pci_scan_root_bus()
-> > 
-> > Thats fine, host bridge drivers will have to work around pci_scan_root_bus() reduced
-> > functionality for now.
-> 
-> Well, it's not really "reduced functionality."  It is unchanged by this
-> series and host bridge drivers can continue using it the same way they have
-> in the past.  It's just that we'd like to make it smarter someday.
-> 
-> > > I added this one to my pci/host-generic branch:
-> > > 
-> > >    PCI: Add pci_remap_iospace() to map bus I/O resources
-> > > 
-> > > I assume this depends on the pci_scan_root_bus() change (if not, let me
-> > > know), so I omitted this one:
-> > > 
-> > >    arm64: Add architectural support for PCI
-> > 
-> > No, there is no dependency there on pci_scan_root_bus(), it can go in the series.
-> > The only thing that depends on a feature rich pci_scan_root_bus() is the host
-> > bridge driver in order to be able to use only one line to process the root bus.
-> 
-> OK, I rebuilt pci/host-generic from scratch.  It consists of your v13
-> patches + Arnd's build fix for pci_pio_to_address() in !CONFIG_OF configs.
+On Tue, Sep 23, 2014 at 2:56 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Monday 22 September 2014 12:43:17 Liviu Dudau wrote:
+>> >
+>> > From e798af4fc2f664d1aff7e863489b8298f90e716e Mon Sep 17 00:00:00 2001
+>> > From: Robert Richter <rrichter@cavium.com>
+>> > Date: Mon, 22 Sep 2014 10:46:01 +0200
+>> > Subject: [PATCH] OF: PCI: Fix creation of mem-mapped pci host bridges
+>> >
+>> > The pci host bridge was not created if io_base was not set when
+>> > calling of_pci_get_host_bridge_resources(). This is esp. the case for
+>> > mem-mapped io (IORESOURCE_MEM). This patch fixes this. Function
+>> > parameter io_base is optional now.
+>>
+>> I think the message is misleading. What you want to do is make io_base
+>> optional for the case where the PCI host bridge only expects to have only
+>> IORESOURCE_MEM ranges and doesn't care about IORESOURCE_IO ones.
+>>
+>> As I'm going to touch this area again to address a comment from Bjorn,
+>> do you mind if I roll this patch into mine with your Signed-off-by and
+>> the mention that you have made io_base optional?
+>
+> I think the best way to deal with this is to move the check for
+> io_base down into the place where it is used: As long as the DT only
+> specifies IORESOURCE_MEM windows, we don't need to look at io_base,
+> but if the host controller driver does not support IORESOURCE_IO
+> while the DT specifies it, I guess it would be nice to return an
+> error.
 
-Something went wrong with the integration, patch 02 adds another definition of 
-of_pci_range_to_resource() before it is moved out of the header file for some reason.
+The DT may specify it, but the h/w could be broken in some way so the
+host driver chooses to ignore it. I don't think we should force the
+host driver to provide a pointer in that case. Also, would we want it
+added to the resource list if it is not going to be used?
 
-Best regards,
-Liviu
-
-> 
-> Bjorn
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+Rob
