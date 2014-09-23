@@ -1,202 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:53959 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751194AbaIVBXw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 21 Sep 2014 21:23:52 -0400
+Received: from szxga01-in.huawei.com ([119.145.14.64]:53419 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751209AbaIWFDQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 01:03:16 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v3 6/9] PCI/MSI: Rename __get_cached_msi_msg() to get_cached_msi_msg()
+Date: Tue, 23 Sep 2014 13:27:27 +0800
+Message-ID: <1411450050-1510-7-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1411450050-1510-1-git-send-email-wangyijing@huawei.com>
+References: <1411450050-1510-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CACoXjc=eA0nnK2_dRxktFeSKsfV6fQr=mDfN09sbe34H4GADrA@mail.gmail.com>
-References: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
-	<CACVXFVNEFSMjA=h_pyNF1AyYX4C336iM9nkYY=ocGQxjGpDCJA@mail.gmail.com>
-	<CACoXjc=eA0nnK2_dRxktFeSKsfV6fQr=mDfN09sbe34H4GADrA@mail.gmail.com>
-Date: Mon, 22 Sep 2014 09:23:51 +0800
-Message-ID: <CACVXFVMWTeOnVMp2SCzjhPEc1M=zTLg4O8yFhv_jDPYn_6DfeQ@mail.gmail.com>
-Subject: Re: [PATCH v9 0/4] APM X-Gene PCIe host controller
-From: Ming Lei <tom.leiming@gmail.com>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tanmay,
+Rename __get_cached_msi_msg() to get_cached_msi_msg().
 
-On Sat, Sep 20, 2014 at 1:15 AM, Tanmay Inamdar <tinamdar@apm.com> wrote:
-> Hi Ming Lei,
->
-> On Thu, Sep 18, 2014 at 8:08 PM, Ming Lei <tom.leiming@gmail.com> wrote:
->> Hi Tanmay,
->>
->> On Wed, Sep 17, 2014 at 6:33 AM, Tanmay Inamdar <tinamdar@apm.com> wrote:
->>> This patch adds support for AppliedMicro X-Gene PCIe host controller. The
->>> driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
->>> cards.
->>>
->>> X-Gene PCIe controller driver has depedency on the pcie arm64 arch support.
->>> Liviu Dudau from ARM has sent a patch set for pcie arm64 arch support and
->>> support for creating generic pcie bridge from device tree. Liviu's patches
->>> are available here
->>> https://lkml.org/lkml/2014/9/8/333
->>>
->>> If someone wishes to test PCIe on X-Gene with this patch set, above mentioned
->>> patches from Liviu must be applied before the patches in this patch set. Also
->>> please use latest xgene u-boot firmware.
->>>
->>> changes since V8:
->>> 1. Add 'dma-coherent' attribute in device node.
->>
->>
->> I just tested your V9 patches plus Liviu's V10 PCI/ARM64 patches
->> against 3.17-rc5 on Mustang, and the following failure is triggered:
->>
->> [    1.190131] bnx2x: Broadcom NetXtreme II 5771x/578xx 10/20-Gigabit
->> Ethernet Driver bnx2x 1.78.19-0 (2014/02/10)
->> [    1.200249] tg3.c:v3.137 (May 11, 2014)
->> [    1.204087] ------------[ cut here ]------------
->> [    1.208682] WARNING: CPU: 1 PID: 1 at drivers/pci/pci.c:131
->> pci_ioremap_bar+0x70/0x78()
->> [    1.216646] Modules linked in:
->> [    1.219696] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 3.17.0-rc5+ #1
->> [    1.226018] Call trace:
->> [    1.228453] [<ffffffc0000884f0>] dump_backtrace+0x0/0x16c
->> [    1.233826] [<ffffffc00008866c>] show_stack+0x10/0x1c
->> [    1.238851] [<ffffffc0006e3210>] dump_stack+0x74/0x94
->> [    1.243878] [<ffffffc0000a934c>] warn_slowpath_common+0x88/0xb0
->> [    1.249767] [<ffffffc0000a9438>] warn_slowpath_null+0x14/0x20
->> [    1.255485] [<ffffffc0003994c4>] pci_ioremap_bar+0x6c/0x78
->> [    1.260942] [<ffffffc0005598cc>] tg3_init_one+0x148/0x16f4
->> [    1.266401] [<ffffffc00039ccf0>] pci_device_probe+0x78/0xd4
->> [    1.271946] [<ffffffc00042785c>] driver_probe_device+0x94/0x390
->> [    1.277834] [<ffffffc000427c44>] __driver_attach+0x98/0xa0
->> [    1.283293] [<ffffffc000425a54>] bus_for_each_dev+0x54/0x98
->> [    1.288835] [<ffffffc00042730c>] driver_attach+0x1c/0x28
->> [    1.294121] [<ffffffc000426f04>] bus_add_driver+0x164/0x240
->> [    1.299663] [<ffffffc000428430>] driver_register+0x64/0x130
->> [    1.305207] [<ffffffc00039c97c>] __pci_register_driver+0x3c/0x48
->> [    1.311181] [<ffffffc000aa8a5c>] tg3_driver_init+0x1c/0x28
->> [    1.316640] [<ffffffc0000814e0>] do_one_initcall+0xc4/0x1b4
->> [    1.322186] [<ffffffc000a74b64>] kernel_init_freeable+0x1b8/0x25c
->> [    1.328246] [<ffffffc0006de318>] kernel_init+0xc/0xd4
->> [    1.333278] ---[ end trace f4dca5ab5b436080 ]---
->> [    1.337871] tg3 0000:01:00.0: Cannot map device registers, aborting
->> [    1.344122] tg3: probe of 0000:01:00.0 failed with error -12
->>
->>
->
-> Thanks for trying out the patches. Which firmware version are you
-> using? We may have release new firmware version for PCI to work if not
-> released yet.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/ia64/kernel/msi_ia64.c    |    2 +-
+ arch/ia64/sn/kernel/msi_sn.c   |    2 +-
+ arch/x86/kernel/apic/io_apic.c |    2 +-
+ drivers/pci/msi.c              |    2 +-
+ include/linux/msi.h            |    2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
 
-U-Boot 2013.04-mustang_sw_1.13.28-beta (Aug 25 2014 - 14:16:10)
-
-I will check if there is newer fw available.
-
-> Also can you please send out the entire boot log?
-
-Please see below link:
-
-      http://pastebin.com/fLqaDn6t
-
-Thanks,
---
-Ming Lei
-
->
-> Thanks,
-> Tanmay
->
->>
->> Thanks,
->>
->>>
->>> changes since V7:
->>> 1. Fix outbound region mapping for IO region. Thanks Liviu for the catch.
->>>
->>> changes since V6:
->>> 1. Port driver to changed interface as per Liviu's v10 series.
->>>
->>> changes since V5:
->>> 1. Port driver to changed interface of 'of_create_pci_host_bridge'
->>> 2. Fix the prefetch bit setting
->>> 3. Removed bunch of register programming which is already done by firmware
->>>
->>> changes since V4:
->>> 1. fix section mismatch warnings
->>> 2. fix the patch description
->>> 3. fix indentation
->>> 4. update read/write cfg functions by passing both addr and offset.
->>> 5. use 'time_before' for timeout.
->>> 6. remove unnecessary 'IS_ERR_OR_NULL'. Keep 'IS_ERR' for 'clk_get'
->>> 7. remove BUG_ON for pci_ioremap_io.
->>>
->>> changes since V3:
->>> 1. remove 'struct hw_pci' and supporting ops in hw_pci
->>> 2. add code to create the host bridge from dts
->>> 3. add code to scan the the host bridge
->>> 4. modify outbound windows setup function to get resource information from
->>>    'bridge->windows'
->>> 5. add compatible string in pcie dts node with current X-Gene SOC name.
->>>
->>> changes since V2:
->>> 1. redefined each PCI port in different PCI domain correctly.
->>> 2. removed setup_lane and setup_link functions from driver.
->>> 3. removed scan_bus wrapper and set_primary_bus hack.
->>> 4. added pci_ioremap_io for io resources.
->>>
->>> changes since V1:
->>> 1. added PCI domain support
->>> 2. reading cpu and pci addresses from device tree to configure regions.
->>> 3. got rid of unnecessary wrappers for readl and writel.
->>> 4. got rid of endpoint configuration code.
->>> 5. added 'dma-ranges' property support to read inbound region configuration.
->>> 6. renamed host driver file to 'pci-xgene.c' from 'pcie-xgene.c'
->>> 7. dropped 'clock-names' property from bindings
->>> 8. added comments whereever requested.
->>>
->>>
->>> Tanmay Inamdar (4):
->>>   pci:host: APM X-Gene PCIe host controller driver
->>>   arm64: dts: APM X-Gene PCIe device tree nodes
->>>   dt-bindings: pci: xgene pcie device tree bindings
->>>   MAINTAINERS: entry for APM X-Gene PCIe host driver
->>>
->>>  .../devicetree/bindings/pci/xgene-pci.txt          |  57 ++
->>>  MAINTAINERS                                        |   8 +
->>>  arch/arm64/boot/dts/apm-mustang.dts                |   8 +
->>>  arch/arm64/boot/dts/apm-storm.dtsi                 | 165 ++++++
->>>  drivers/pci/host/Kconfig                           |  10 +
->>>  drivers/pci/host/Makefile                          |   1 +
->>>  drivers/pci/host/pci-xgene.c                       | 646 +++++++++++++++++++++
->>>  7 files changed, 895 insertions(+)
->>>  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
->>>  create mode 100644 drivers/pci/host/pci-xgene.c
->>>
->>> --
->>> 1.9.1
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>> Please read the FAQ at  http://www.tux.org/lkml/
->>
->>
->>
->> --
->> Ming Lei
-
-
-
+diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
+index 8c3730c..4efe748 100644
+--- a/arch/ia64/kernel/msi_ia64.c
++++ b/arch/ia64/kernel/msi_ia64.c
+@@ -23,7 +23,7 @@ static int ia64_set_msi_irq_affinity(struct irq_data *idata,
+ 	if (irq_prepare_move(irq, cpu))
+ 		return -1;
+ 
+-	__get_cached_msi_msg(idata->msi_desc, &msg);
++	get_cached_msi_msg(idata->msi_desc, &msg);
+ 
+ 	addr = msg.address_lo;
+ 	addr &= MSI_ADDR_DEST_ID_MASK;
+diff --git a/arch/ia64/sn/kernel/msi_sn.c b/arch/ia64/sn/kernel/msi_sn.c
+index 446e779..8bec242 100644
+--- a/arch/ia64/sn/kernel/msi_sn.c
++++ b/arch/ia64/sn/kernel/msi_sn.c
+@@ -175,7 +175,7 @@ static int sn_set_msi_irq_affinity(struct irq_data *data,
+ 	 * Release XIO resources for the old MSI PCI address
+ 	 */
+ 
+-	__get_cached_msi_msg(data->msi_desc, &msg);
++	get_cached_msi_msg(data->msi_desc, &msg);
+ 	sn_pdev = (struct pcidev_info *)sn_irq_info->irq_pciioinfo;
+ 	pdev = sn_pdev->pdi_linux_pcidev;
+ 	provider = SN_PCIDEV_BUSPROVIDER(pdev);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 29290f5..e877cfb 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3145,7 +3145,7 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+ 	if (ret)
+ 		return ret;
+ 
+-	__get_cached_msi_msg(data->msi_desc, &msg);
++	get_cached_msi_msg(data->msi_desc, &msg);
+ 
+ 	msg.data &= ~MSI_DATA_VECTOR_MASK;
+ 	msg.data |= MSI_DATA_VECTOR(cfg->vector);
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index fa66e2f..8746ecd 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -296,7 +296,7 @@ void read_msi_msg(unsigned int irq, struct msi_msg *msg)
+ 	__read_msi_msg(entry, msg);
+ }
+ 
+-void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
++void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	/* Assert that the cache is valid, assuming that
+ 	 * valid messages are not all-zeroes. */
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 3fae781..329ec73 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -16,7 +16,7 @@ struct msi_desc;
+ void mask_msi_irq(struct irq_data *data);
+ void unmask_msi_irq(struct irq_data *data);
+ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+-void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
++void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void read_msi_msg(unsigned int irq, struct msi_msg *msg);
+ void write_msi_msg(unsigned int irq, struct msi_msg *msg);
 -- 
-Ming Lei
+1.7.1
+
