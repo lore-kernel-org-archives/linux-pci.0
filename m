@@ -1,79 +1,146 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Thu, 25 Sep 2014 09:19:20 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:58826 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755661AbaIWLKE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 07:10:04 -0400
+Date: Tue, 23 Sep 2014 12:10:00 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Simon Horman <horms@verge.net.au>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
 	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 03/22] MSI: Remove the redundant irq_set_chip_data()
-Message-ID: <20140925071919.GH12423@ulmo>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
- <1411614872-4009-4-git-send-email-wangyijing@huawei.com>
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 0/3] Add PCI domain support to R-Car drivers
+Message-ID: <20140923111000.GQ1994@e106497-lin.cambridge.arm.com>
+References: <1411379470-20639-1-git-send-email-phil.edworthy@renesas.com>
+ <20140922210038.GJ1880@google.com>
+ <84672882bcaa4730aae409f092bcbcfb@HKXPR06MB168.apcprd06.prod.outlook.com>
+ <20140923103224.GO1994@e106497-lin.cambridge.arm.com>
+ <99f5c020d74b465384e42ef2c883a479@HKXPR06MB168.apcprd06.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="mhjHhnbe5PrRcwjY"
-In-Reply-To: <1411614872-4009-4-git-send-email-wangyijing@huawei.com>
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <99f5c020d74b465384e42ef2c883a479@HKXPR06MB168.apcprd06.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Sep 23, 2014 at 12:00:41PM +0100, Phil Edworthy wrote:
+> Hi Liviu,
+> 
+> On 23 September 2014 11:32, Liviu wrote:
+> > On Tue, Sep 23, 2014 at 11:10:29AM +0100, Phil Edworthy wrote:
+> > > Hi Bjorn,
+> > >
+> > > On 22 September 2014 22:01, Bjorn wrote:
+> > > > On Mon, Sep 22, 2014 at 10:51:07AM +0100, Phil Edworthy wrote:
+> > > > > The Renesas R-Car devices (r8a7790 and r8a7791) use two PCI controller
+> > > > drivers,
+> > > > > one for an external PCIe slot, the other for an internal PCI bridge to USB
+> > > > > controllers.
+> > > > >
+> > > > > However, they currently do not work at the same time as they use the
+> > > > same PCI
+> > > > > domain and use the same root bus number. We can't use different root
+> > > > bus numbers
+> > > > > due to the way root bus numbers are assigned in pcibios_init_hw() in
+> > > > > arch/arm/kernel/bios32.c.
+> > > > >
+> > > > > Since the two PCI controllers are completely independent, I think it makes
+> > > > sense
+> > > > > to use different PCI domains for them.
+> > > > >
+> > > > > I've marked the third patch as RFC as I am not sure of the impact of
+> > > > enabling
+> > > > > PCI domains for all ARM devices. In the march to 'one kernel to rule them
+> > > > all',
+> > > > > I steered clear of mach specific changes.
+> > > > >
+> > > > > These patches require the following patch from Liviu Dudau:
+> > > > >   [PATCH v11 07/10] OF: Introduce helper function for getting PCI
+> > > > domain_nr
+> > > > > Based on comments on this patch from Jason Gunthorpe, there is still the
+> > > > issue
+> > > > > that the domain numbers may change depending on the ordering at probe
+> > > > time.
+> > > > > However, this can be fixed later on by adding the entries in the DT files.
+> > > > >
+> > > > >
+> > > > > Phil Edworthy (3):
+> > > > >   PCI: rcar-pcie: Add call to get domain nr
+> > > > >   PCI: rcar-internal-pci: Add call to get domain nr
+> > > > >   ARM: Enable PCI domains
+> > > >
+> > > > I'm deferring these for now because they depend on Liviu's work, which I
+> > > > haven't merged yet, and I suspect some minor adaptation will be required
+> > > > here.
+> > > >
+> > > > For what it's worth, I agree with Rob's hesitation about mixing lookup with
+> > > > domain number allocation in of_pci_get_domain_nr().  That seems
+> > > > unnecessarily complicated.
+> > > I could create patches to add an optional "pci-domain" property for the R-Car
+> > > PCI drivers, and just attempt to get the property in the drivers. If not found,
+> > > the drivers will assume the domain is 0.
+> > >
+> > > We would then have fixed PCI domain numbering and I don't have to worry about
+> > > Liviu's work.
+> > 
+> > I will split the current of_pci_get_domain_nr() even further and replace it with
+> > two functions: pci_get_domain_nr() which will do just the allocation (still based
+> > on the boolean flag passed as parameter) and of_get_pci_domain_nr() that will
+> > retrieve a "linux,pci-domain" value from a property belonging to a given device
+> > node.
+> This doesn't solve the problem of different domain numbers based on different
+> probe ordering. If you have multiple domains then I think you must have the
+> "linux,pci-domain" property for each controller.
 
---mhjHhnbe5PrRcwjY
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Correct, but I've said I'm going to leave for the moment the check to the host controller(s).
+So if you care about ordering or mandating the presence of "linux,pci-domain" in the
+DT, please add the check in your driver.
 
-On Thu, Sep 25, 2014 at 11:14:13AM +0800, Yijing Wang wrote:
-> Currently, pcie-designware, pcie-rcar, pci-tegra drivers
-> use irq chip_data to save the msi_chip pointer. They
-> already call irq_set_chip_data() in their own MSI irq map
-> functions. So irq_set_chip_data() in arch_setup_msi_irq()
-> is useless.
+> 
+> If we assume the above, of_get_pci_domain_nr() can just return a bus number of
+> 0 if the "linux,pci-domain" property doesn't exist.
 
-Again, I think this should be the other way around. If drivers do
-something that's already handled by the core, then the duplicate code
-should be dropped from the drivers.
+You mean *domain* number of 0. But that is still a valid value and you won't be able
+to distinguish between DT providing a "linux,pci-domain" value of zero and the
+property not being present.
 
-Thierry
+> 
+> I suppose you could have a temporary solution that allocates the domain numbers
+> until the necessary drivers have been updated.
 
---mhjHhnbe5PrRcwjY
-Content-Type: application/pgp-signature
+And that is what pci_get_domain_nr() will do. If you don't care about ordering, one
+will use that one. If you care about ordering then "linux,pci-domain" is required
+and one can use of_get_pci_domain_nr() to retrieve it and fail if the information
+is missing.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+Does that look like a workable solution?
 
-iQIcBAEBAgAGBQJUI8H3AAoJEN0jrNd/PrOhD9gP/irz9NSH3coHma+k59CgfNee
-Eadp8ruJoWHsk+kNc+VP4X8QUfFbawc4Y9GarISl2soj926zV/hj8I7CSKn7im1g
-OEWOG1+IoZY+1142DUhZRfqgw+kPIsHL2nKRK6RJCWhpIxIrh1f7/LcSyrWUbS9r
-7t6FJUljEAZ4oSmW8FDuK4hrK9s53zIKQkvv2zfbOv7sAvnYuJM4r5EteKEkxVqy
-VEwvbqgS5Ccf4PKJKnISrCAV9z4H8kYF2PN0e7+8x9l6WOsdz5yEszOJmoREGMzG
-eCUaBYi7Tl7jAqdQkJfEePdK7BotGIbuffF2j76j1TTgOKp2HEoMlTxLv9SldxMa
-9NoNSP5NzJzSyK6Pawx84xkhKnMd5TWLD7IMcDvfcMIbQ+IZiXDnNjQ9diG3RjhT
-zLyMRZc5MdOfL8ScPzrYYUATbIEFmJdB0rUZ6u9ivHdRsVqZ6pJbRz/C/QPfd92M
-dDXoVvcRDGGgaM66PbfYykArWhGI+hPG4ip3t5CpA2KLqLm9BapvqSc0H6V9y5w8
-nuBHS0pk3mojCR9naMzuOy0nqME7SU9QiOiMMvv6uZztE2y3udRmkZNHX32DSi7l
-6YLq84EA/LyOtPp9jrRH1eKZLty5qyY2mO9Le46GAragc909SMnKpNAWJyV+RLLm
-9fhn8sFnEUFKzDPptCkB
-=WmVy
------END PGP SIGNATURE-----
+Best regards,
+Liviu
 
---mhjHhnbe5PrRcwjY--
+> 
+> > I plan to leave for the moment the check for mandatory presence of
+> > "linux,pci-domain"
+> > to the host bridge driver so that everyone can implement their own policies.
+> > 
+> > How does that sound?
+> 
+> Thanks
+> Phil
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
