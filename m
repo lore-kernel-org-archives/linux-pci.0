@@ -1,56 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:42558 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754414AbaIVTRS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 15:17:18 -0400
-Received: by mail-ie0-f171.google.com with SMTP id rd18so3277638iec.2
-        for <linux-pci@vger.kernel.org>; Mon, 22 Sep 2014 12:17:17 -0700 (PDT)
-Date: Mon, 22 Sep 2014 13:17:14 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
-Cc: gregkh@linuxfoundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci/pci-sysfs: Set pci interface in uppercase
-Message-ID: <20140922191714.GC1880@google.com>
-References: <1409144277-23379-1-git-send-email-ricardo.ribalda@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1409144277-23379-1-git-send-email-ricardo.ribalda@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v12 10/12] PCI: Assign unassigned bus resources in pci_scan_root_bus()
+Date: Tue, 23 Sep 2014 20:01:12 +0100
+Message-Id: <1411498874-9864-11-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 27, 2014 at 02:57:57PM +0200, Ricardo Ribalda Delgado wrote:
-> There is a missmatch between the way file2alias generates the modalias
-> and the way the pci driver generates it.
-> 
-> Some implementations of modprobe will fail to load the driver for a pci
-> device automatically when the pci interface is defined on the driver. As
-> one will be in uppercase and the other in lowercase.
-> 
-> Fortunatelly not many drivers define this.
-> 
-> Signed-off-by: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+If the firmware has not assigned all the bus resources and
+we are not just probing the PCIe busses, it makes sense to
+assign the unassigned resources in pci_scan_root_bus().
 
-Applied to pci/enumeration for v3.18, with Greg's ack and marked for
-stable.
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Rob Herring <robh+dt@kernel.org>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ drivers/pci/probe.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-> ---
->  drivers/pci/pci-sysfs.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 9ff0a90..76ef791 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -177,7 +177,7 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
->  {
->  	struct pci_dev *pci_dev = to_pci_dev(dev);
->  
-> -	return sprintf(buf, "pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x\n",
-> +	return sprintf(buf, "pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02X\n",
->  		       pci_dev->vendor, pci_dev->device,
->  		       pci_dev->subsystem_vendor, pci_dev->subsystem_device,
->  		       (u8)(pci_dev->class >> 16), (u8)(pci_dev->class >> 8),
-> -- 
-> 2.1.0
-> 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ef891d2..508cf61 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1953,6 +1953,9 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ 	if (!found)
+ 		pci_bus_update_busn_res_end(b, max);
+ 
++	if (!pci_has_flag(PCI_PROBE_ONLY))
++		pci_assign_unassigned_bus_resources(b);
++
+ 	pci_bus_add_devices(b);
+ 	return b;
+ }
+-- 
+2.1.0
+
