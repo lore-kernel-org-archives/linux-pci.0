@@ -1,48 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:61585 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753582AbaIDWSs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 18:18:48 -0400
-Received: by mail-pa0-f46.google.com with SMTP id eu11so20793737pac.5
-        for <linux-pci@vger.kernel.org>; Thu, 04 Sep 2014 15:18:47 -0700 (PDT)
-Date: Thu, 4 Sep 2014 16:18:43 -0600
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:60080 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754575AbaIWVB6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 17:01:58 -0400
+Received: by mail-ig0-f172.google.com with SMTP id a13so5361011igq.17
+        for <linux-pci@vger.kernel.org>; Tue, 23 Sep 2014 14:01:57 -0700 (PDT)
+Date: Tue, 23 Sep 2014 15:01:54 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Matthew Minter <matthew_minter@xyratex.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 01/22] Added some infrastructure to allow assigning PCI
- device IRQs at device enable time and removed pci_fixup_irqs as the other
- change obsolites it.
-Message-ID: <20140904221843.GH17125@google.com>
-References: <1407255083-9356-1-git-send-email-matthew_minter@xyratex.com>
- <1407255083-9356-2-git-send-email-matthew_minter@xyratex.com>
- <20140807034338.GA13444@richard>
- <CAFJTrDuzdoOPoQ_rpNsYU+OeE380sY37aQaMSudhu_MVKo352g@mail.gmail.com>
- <20140808012017.GA11712@richard>
- <CAFJTrDs0oELF3FNaf6axQvPkLv1skK1f3j_Hgre2VX9XDFBOag@mail.gmail.com>
- <20140904220044.GG17125@google.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/3] PCI/MSI: Remove arch_msi_check_device()
+Message-ID: <20140923210154.GB27117@google.com>
+References: <cover.1410078503.git.agordeev@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140904220044.GG17125@google.com>
+In-Reply-To: <cover.1410078503.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 04, 2014 at 04:00:44PM -0600, Bjorn Helgaas wrote:
-> On Mon, Aug 11, 2014 at 11:16:50AM +0100, Matthew Minter wrote:
-> > It seems that by coincidence, my testing boxes did not have any
-> > devices which needed the PCI_INTERRUPT_PIN fixed up. Therefore I had
-> > not noticed the fact the fixed value was not used in the enable path.
-> > 
-> > I would assume that someone with a different setup would have had a
-> > problem there however so thank you for pointing out this bug. I have
-> > integrated your fix into version 2 of the patch set.
+On Sun, Sep 07, 2014 at 08:57:52PM +0200, Alexander Gordeev wrote:
+> Hello,
 > 
-> I'm dropping this series and I'll watch for v2.
+> This is a cleanup effort to get rid of arch_msi_check_device() function.
+> 
+> I am sending v2 series, since kbuild for v1 reports compile errors on
+> ppc4xx and Armada 370. Still, I have not checked the fixes on these
+> platforms.
+> 
+> Changes since v1:
+>   - patch 1: 'pdev' undeclared compile error fixed on ppc4xx. I updated
+>              changelog and removed ACK from this patch in case there are
+>              any objections;
+> 
+>   - patch 2: 'struct msi_chip' has no 'check_device' error fixed on
+>              Armada 370 - armada_370_xp_check_msi_device() hook removed;
+> 
+>   - patch 3: msi_check_device() renamed to pci_msi_supported(). This is
+>              the very same patch I sent earlier;
+> 
+> Thanks!
+> 
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Cc: Jason Cooper <jason@lakedaemon.net>
+> Cc: Michael Ellerman <mpe@ellerman.id.au>
+> Cc: linuxppc-dev@lists.ozlabs.org
+> Cc: linux-pci@vger.kernel.org
+> 
+> Alexander Gordeev (3):
+>   patch 1 - PCI/MSI/PPC: Remove arch_msi_check_device()
+>   patch 2 - PCI/MSI/Armada-370-xp: Remove arch_msi_check_device()
+>   patch 3 - PCI/MSI: Remove arch_msi_check_device()
 
-BTW, when you do repost this, the individual patches need changelogs, and
-the summary (subject lines) can be a little shorter and more specific,
-e.g., no need to mention "untested", but "accomodate new irq init code"
-doesn't really convey much information to someone who is looking only at
-the arch/m68k commits.
+Applied (with some changes to 3/3) to pci/msi for v3.18, thanks!  Let me
+know if you see any issues.
 
 Bjorn
