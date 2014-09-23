@@ -1,97 +1,47 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com> <1409911806-10519-16-git-send-email-wangyijing@huawei.com> <540994D4.6040500@cogentembedded.com>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <540994D4.6040500@cogentembedded.com>
-Content-Type: text/plain;
-	charset=gb2312
-Message-Id: <43412AE0-85BB-4B4B-A4EA-2C6D3B8B85D7@gmail.com>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:41330 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751558AbaIWMkf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 08:40:35 -0400
+MIME-Version: 1.0
+In-Reply-To: <1411445498-20250-2-git-send-email-r65037@freescale.com>
+References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
+	<1411445498-20250-2-git-send-email-r65037@freescale.com>
+Date: Tue, 23 Sep 2014 09:40:33 -0300
+Message-ID: <CAOMZO5BuPcw9bJSdLMJ2D=a6EMFMPtKeY352N9-x8dwmRnnfWw@mail.gmail.com>
+Subject: Re: [PATCH v2 1/5] PCI: imx6: enable pcie on imx6qdl sabreauto
+From: Fabio Estevam <festevam@gmail.com>
+To: Richard Zhu <r65037@freescale.com>
+Cc: linux-pci-owner@vger.kernel.org,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-	"arnab.basu@freescale.com" <arnab.basu@freescale.com>,
-	"Bharat.Bhushan@freescale.com" <Bharat.Bhushan@freescale.com>,
-	"x86@kernel.org" <x86@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>
-From: wangyijing <wangyijing0307@gmail.com>
-Subject: Re: [PATCH v1 15/21] Powerpc/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-Date: Fri, 5 Sep 2014 19:33:08 +0800
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Sender: linux-arch-owner@vger.kernel.org
+	Shawn Guo <shawn.guo@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Tim Harvey <tharvey@gateworks.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Richard,
 
+On Tue, Sep 23, 2014 at 1:11 AM, Richard Zhu <r65037@freescale.com> wrote:
+> - enable pcie on imx6qdl sabreauto boards.
+>
+> Signed-off-by: Richard Zhu <r65037@freescale.com>
+> ---
+>  arch/arm/boot/dts/imx6qdl-sabreauto.dtsi | 4 ++++
+>  1 file changed, 4 insertions(+)
+>
+> diff --git a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
+> index 009abd6..d6040a5 100644
+> --- a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
+> +++ b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
+> @@ -410,6 +410,10 @@
+>         };
+>  };
+>
+> +&pcie {
+> +       status = "okay";
+> +};
 
-> 在 2014年9月5日，18:47，Sergei Shtylyov <sergei.shtylyov@cogentembedded.com> 写道：
-> 
-> Hello.
-> 
->> On 9/5/2014 2:10 PM, Yijing Wang wrote:
->> 
->> Use MSI chip framework instead of arch MSI functions to configure
->> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
-> 
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  arch/powerpc/kernel/msi.c |   14 ++++++++++++--
->>  1 files changed, 12 insertions(+), 2 deletions(-)
-> 
->> diff --git a/arch/powerpc/kernel/msi.c b/arch/powerpc/kernel/msi.c
->> index 71bd161..01781a4 100644
->> --- a/arch/powerpc/kernel/msi.c
->> +++ b/arch/powerpc/kernel/msi.c
-> [...]
->> @@ -27,7 +27,17 @@ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->>      return ppc_md.setup_msi_irqs(dev, nvec, type);
->>  }
->> 
->> -void arch_teardown_msi_irqs(struct pci_dev *dev)
->> +static void ppc_teardown_msi_irqs(struct pci_dev *dev)
-> 
->   Shouldn't this function take IRQ # instead?
-
-This function need to teardown all msi irqs of the pci dev, we should pass the pci dev as argument .
-
-Thanks!
-Yijing.
-
-> 
->>  {
->>      ppc_md.teardown_msi_irqs(dev);
->>  }
->> +
->> +static struct msi_chip ppc_msi_chip = {
->> +    .setup_irqs = ppc_setup_msi_irqs,
->> +    .teardown_irqs = ppc_teardown_msi_irqs,
->> +};
->> +
->> +struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
->> +{
->> +    return &ppc_msi_chip;
->> +}
-> 
-> WBR, Sergei
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+It would be better if you could pass the PCI reset pin that comes from
+the GPIO expander.
