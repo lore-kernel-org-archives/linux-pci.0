@@ -1,53 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30335 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751429AbaISAWX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Sep 2014 20:22:23 -0400
-Message-ID: <541B770A.8070502@redhat.com>
-Date: Thu, 18 Sep 2014 20:21:30 -0400
-From: Jon Masters <jcm@redhat.com>
-MIME-Version: 1.0
-To: Catalin Marinas <catalin.marinas@arm.com>,
-	Tanmay Inamdar <tinamdar@apm.com>
-CC: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Landley <rob@landley.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:54647 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932433AbaIWWHW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 18:07:22 -0400
+Date: Tue, 23 Sep 2014 15:07:17 -0700
+From: Guenter Roeck <linux@roeck-us.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatjain@juniper.net>,
+	Andreas Noever <andreas.noever@gmail.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"patches@apm.com" <patches@apm.com>
-Subject: Re: [PATCH v8 1/4] pci:host: APM X-Gene PCIe host controller driver
-References: <1410476266-29426-1-git-send-email-tinamdar@apm.com> <1410476266-29426-2-git-send-email-tinamdar@apm.com> <20140912091816.GU27864@e106497-lin.cambridge.arm.com> <CACoXjckWYhe=PpWE+xYSC9Q72FyAq__3uUh2gGeGtgpC5SrpzQ@mail.gmail.com> <20140917160337.GA15261@e104818-lin.cambridge.arm.com>
-In-Reply-To: <20140917160337.GA15261@e104818-lin.cambridge.arm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Guenter Roeck <groeck@juniper.net>,
+	"rajatxjain@gmail.com" <rajatxjain@gmail.com>
+Subject: Re: [PATCH] PCI: Prevent NULL dereference during pciehp probe
+Message-ID: <20140923220717.GA16279@roeck-us.net>
+References: <1402347812-8059-1-git-send-email-andreas.noever@gmail.com>
+ <580c2c85f8424369910b69a8f871f82e@DM2PR05MB671.namprd05.prod.outlook.com>
+ <20140923215509.GB15481@roeck-us.net>
+ <CAErSpo6dEevVxCS2bqq=+_99uLvN0tccbAdvH2cn12xRVSv2oQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo6dEevVxCS2bqq=+_99uLvN0tccbAdvH2cn12xRVSv2oQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/17/2014 12:03 PM, Catalin Marinas wrote:
+On Tue, Sep 23, 2014 at 04:04:42PM -0600, Bjorn Helgaas wrote:
+> On Tue, Sep 23, 2014 at 3:55 PM, Guenter Roeck <linux@roeck-us.net> wrote:
+> > On Mon, Sep 15, 2014 at 10:20:41PM +0000, Rajat Jain wrote:
+> >> Hello Bjorn,
+> >>
+> >> I think this patch needs to be applied to all -stable branches (all the way back to 3.2).
+> >>
+> >> I encounter this same issue on my platform that is running 3.14.y.
+> >>
+> > Bjorn,
+> >
+> > can you send this to -stable, or is it ok if I do it ?
+> 
+> I forgot to mention it, but I did mark it for stable, so it should
+> happen automatically:
+> 
+> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/hotplug&id=bceee4a97eb58bd0e80e39eff11b506ddd9e7ad3
 
-> So for arm64 currently we have some hooks in dma-mapping.c to intercept
-> when a device is added to a bus. What I need to do though is check
-> recursively whether the parent (bus) had the 'dma-coherent' property
-> (pointed out by Jon). I think something like this would do (not tested):
+Ah, sorry, I didn't realize that.
 
-We've got a patch now that I posted internally and we've tested. I've
-asked Mark Salter to send it upstream (but hey, you'll probably just
-want to switch the default over to recurse up the tree and then simply
-add a new notifier register for pci_bus_type). For this stuff to work,
-we need v10 of the APM X-Gene patches because (as I noticed earlier when
-going through their code and testing on a board with an actual card -
-and a modified devicetree node for the PCI root) that's the point they
-add a call to setup the root of_nodes correctly via pci_scan_root_bus.
-Prior to that the trivially obvious patch for dma-coherent doesn't work.
-Today, there are two platform PCIe devices that do it right, plus the
-latest APM rev of their driver just posted.
-
-Jon.
-
+Thanks,
+Guenter
