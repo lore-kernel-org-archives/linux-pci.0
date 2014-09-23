@@ -1,131 +1,116 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <5418E2BA.4030304@huawei.com>
-Date: Wed, 17 Sep 2014 09:24:10 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:58033 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755648AbaIWKc2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 06:32:28 -0400
+Date: Tue, 23 Sep 2014 11:32:24 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Simon Horman <horms@verge.net.au>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 0/3] Add PCI domain support to R-Car drivers
+Message-ID: <20140923103224.GO1994@e106497-lin.cambridge.arm.com>
+References: <1411379470-20639-1-git-send-email-phil.edworthy@renesas.com>
+ <20140922210038.GJ1880@google.com>
+ <84672882bcaa4730aae409f092bcbcfb@HKXPR06MB168.apcprd06.prod.outlook.com>
 MIME-Version: 1.0
-To: Sebastian Ott <sebott@linux.vnet.ibm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	"Ralf Baechle" <ralf@linux-mips.org>
-Subject: Re: [PATCH v1 16/21] s390/MSI: Use MSI chip framework to configure
- MSI/MSI-X irq
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com> <1409911806-10519-17-git-send-email-wangyijing@huawei.com> <alpine.LFD.2.11.1409161325280.1618@denkbrett>
-In-Reply-To: <alpine.LFD.2.11.1409161325280.1618@denkbrett>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <84672882bcaa4730aae409f092bcbcfb@HKXPR06MB168.apcprd06.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/16 19:35, Sebastian Ott wrote:
-> Hello,
+On Tue, Sep 23, 2014 at 11:10:29AM +0100, Phil Edworthy wrote:
+> Hi Bjorn,
 > 
-> On Fri, 5 Sep 2014, Yijing Wang wrote:
->> Use MSI chip framework instead of arch MSI functions to configure
->> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  arch/s390/pci/pci.c |   18 ++++++++++++++----
->>  1 files changed, 14 insertions(+), 4 deletions(-)
->>
->> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
->> index 2fa7b14..da5316e 100644
->> --- a/arch/s390/pci/pci.c
->> +++ b/arch/s390/pci/pci.c
->> @@ -358,7 +358,7 @@ static void zpci_irq_handler(struct airq_struct *airq)
->>  	}
->>  }
->>
->> -int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
->> +int zpci_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
->>  {
->>  	struct zpci_dev *zdev = get_zdev(pdev);
->>  	unsigned int hwirq, msi_vecs;
->> @@ -434,7 +434,7 @@ out:
->>  	return rc;
->>  }
->>
->> -void arch_teardown_msi_irqs(struct pci_dev *pdev)
->> +static void zpci_teardown_msi_irqs(struct pci_dev *pdev)
->>  {
->>  	struct zpci_dev *zdev = get_zdev(pdev);
->>  	struct msi_desc *msi;
->> @@ -448,9 +448,9 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
->>  	/* Release MSI interrupts */
->>  	list_for_each_entry(msi, &pdev->msi_list, list) {
->>  		if (msi->msi_attrib.is_msix)
->> -			default_msix_mask_irq(msi, 1);
->> +			__msix_mask_irq(msi, 1);
->>  		else
->> -			default_msi_mask_irq(msi, 1, 1);
->> +			__msi_mask_irq(msi, 1, 1);
+> On 22 September 2014 22:01, Bjorn wrote:
+> > On Mon, Sep 22, 2014 at 10:51:07AM +0100, Phil Edworthy wrote:
+> > > The Renesas R-Car devices (r8a7790 and r8a7791) use two PCI controller
+> > drivers,
+> > > one for an external PCIe slot, the other for an internal PCI bridge to USB
+> > > controllers.
+> > >
+> > > However, they currently do not work at the same time as they use the
+> > same PCI
+> > > domain and use the same root bus number. We can't use different root
+> > bus numbers
+> > > due to the way root bus numbers are assigned in pcibios_init_hw() in
+> > > arch/arm/kernel/bios32.c.
+> > >
+> > > Since the two PCI controllers are completely independent, I think it makes
+> > sense
+> > > to use different PCI domains for them.
+> > >
+> > > I've marked the third patch as RFC as I am not sure of the impact of
+> > enabling
+> > > PCI domains for all ARM devices. In the march to 'one kernel to rule them
+> > all',
+> > > I steered clear of mach specific changes.
+> > >
+> > > These patches require the following patch from Liviu Dudau:
+> > >   [PATCH v11 07/10] OF: Introduce helper function for getting PCI
+> > domain_nr
+> > > Based on comments on this patch from Jason Gunthorpe, there is still the
+> > issue
+> > > that the domain numbers may change depending on the ordering at probe
+> > time.
+> > > However, this can be fixed later on by adding the entries in the DT files.
+> > >
+> > >
+> > > Phil Edworthy (3):
+> > >   PCI: rcar-pcie: Add call to get domain nr
+> > >   PCI: rcar-internal-pci: Add call to get domain nr
+> > >   ARM: Enable PCI domains
+> > 
+> > I'm deferring these for now because they depend on Liviu's work, which I
+> > haven't merged yet, and I suspect some minor adaptation will be required
+> > here.
+> > 
+> > For what it's worth, I agree with Rob's hesitation about mixing lookup with
+> > domain number allocation in of_pci_get_domain_nr().  That seems
+> > unnecessarily complicated.
+> I could create patches to add an optional "pci-domain" property for the R-Car
+> PCI drivers, and just attempt to get the property in the drivers. If not found,
+> the drivers will assume the domain is 0.
 > 
-> The default_msi_mask_irq to __msi_mask_irq renaming is hidden in your
-> patch "x86/xen/MSI: Eliminate arch_msix_mask_irq() and arch_msi_mask_irq()"
-> 
-> This means that between that patch and this one s390 will not compile.
-> Could you please move this hunk to the other patch or even make an extra
-> patch with the renaming. Other than that:
+> We would then have fixed PCI domain numbering and I don't have to worry about
+> Liviu's work.
 
-Good catch. I will move this hunk into the patch "x86/xen/MSI: Eliminate arch_msix_mask_irq() and arch_msi_mask_irq()".
+I will split the current of_pci_get_domain_nr() even further and replace it with
+two functions: pci_get_domain_nr() which will do just the allocation (still based
+on the boolean flag passed as parameter) and of_get_pci_domain_nr() that will
+retrieve a "linux,pci-domain" value from a property belonging to a given device
+node.
+
+I plan to leave for the moment the check for mandatory presence of "linux,pci-domain"
+to the host bridge driver so that everyone can implement their own policies.
+
+How does that sound?
+
+Best regards,
+Liviu
 
 > 
-> Acked-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
-
-
-Thanks!
-Yijing.
-
-
+> Would that be ok?
+>  
+> Thanks
+> Phil
 > 
-> Regards,
-> Sebastian
-> 
->>  		irq_set_msi_desc(msi->irq, NULL);
->>  		irq_free_desc(msi->irq);
->>  		msi->msg.address_lo = 0;
->> @@ -464,6 +464,16 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
->>  	airq_iv_free_bit(zpci_aisb_iv, zdev->aisb);
->>  }
->>
->> +static struct msi_chip zpci_msi_chip = {
->> +	.setup_irqs = zpci_setup_msi_irqs,
->> +	.teardown_irqs = zpci_teardown_msi_irqs,
->> +};
->> +
->> +struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
->> +{
->> +	return &zpci_msi_chip;
->> +}
->> +
->>  static void zpci_map_resources(struct zpci_dev *zdev)
->>  {
->>  	struct pci_dev *pdev = zdev->pdev;
->> -- 
->> 1.7.1
->>
->>
-> 
-> 
-> .
-> 
-
 
 -- 
-Thanks!
-Yijing
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
