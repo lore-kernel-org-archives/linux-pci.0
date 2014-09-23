@@ -1,100 +1,72 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Mon, 22 Sep 2014 12:35:23 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v11 00/10] Support for creating generic PCI host bridges
- from DT
-Message-ID: <20140922113523.GM1994@e106497-lin.cambridge.arm.com>
-References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
- <20140919215905.GB30239@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2on0145.outbound.protection.outlook.com ([207.46.100.145]:22448
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756063AbaIWO3G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 23 Sep 2014 10:29:06 -0400
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Minghuan Lian" <Minghuan.Lian@freescale.com>
+Subject: [PATCH v3 2/3] PCI: designware: Add get_msi_data() to pcie_host_ops
+Date: Tue, 23 Sep 2014 22:28:59 +0800
+Message-ID: <1411482540-31297-4-git-send-email-Minghuan.Lian@freescale.com>
+In-Reply-To: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <20140919215905.GB30239@google.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 19, 2014 at 10:59:05PM +0100, Bjorn Helgaas wrote:
-> On Thu, Sep 18, 2014 at 02:30:15AM +0100, Liviu Dudau wrote:
-> > This is my version 11 of the attempt at adding support for generic PCI host
-> > bridge controllers that make use of device tree information to
-> > configure themselves. It contains minor cleanups compared with v10 to address
-> > the existing comments.
-> > ...
-> > Catalin Marinas (1):
-> >   PCI: Introduce generic domain handling for PCI busses.
-> > 
-> > Liviu Dudau (9):
-> >   Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
-> >   PCI: Introduce helper functions to deal with PCI I/O ranges.
-> >   ARM: Define PCI_IOBASE as the base of virtual PCI IO space.
-> >   PCI: OF: Fix the conversion of IO ranges into IO resources.
-> >   PCI: Create pci_host_bridge before its associated bus in
-> >     pci_create_root_bus.
-> >   OF: Introduce helper function for getting PCI domain_nr
-> >   OF: PCI: Add support for parsing PCI host bridge resources from DT
-> >   PCI: Assign unassigned bus resources in pci_scan_root_bus()
-> >   PCI: Introduce pci_remap_iospace() for remapping PCI I/O bus resources
-> >     into CPU space
-> > 
-> >  arch/arm/include/asm/io.h         |   1 +
-> >  arch/arm/mach-integrator/pci_v3.c |  23 +++---
-> >  drivers/of/address.c              | 146 ++++++++++++++++++++++++++++++++
-> >  drivers/of/of_pci.c               | 170 ++++++++++++++++++++++++++++++++++++++
-> >  drivers/pci/host/pci-tegra.c      |  10 ++-
-> >  drivers/pci/host/pcie-rcar.c      |  21 +++--
-> >  drivers/pci/pci.c                 |  33 ++++++++
-> >  drivers/pci/probe.c               |  46 +++++++----
-> >  include/asm-generic/io.h          |   2 +-
-> >  include/asm-generic/pgtable.h     |   4 +
-> >  include/linux/of_address.h        |  15 +---
-> >  include/linux/of_pci.h            |  18 ++++
-> >  include/linux/pci.h               |  24 ++++++
-> >  13 files changed, 463 insertions(+), 50 deletions(-)
-> 
-> I put this on a pci/liviu-generic-v11 branch.  I mentioned a couple things
-> in response to the individual patches, so I'm hoping you can send me
-> incremental patches to address them.  Then I'll update this branch, rename
-> it, and get it into linux-next.
+The patch adds get_msi_data() for some platforms to return their
+special MSI message data.
 
-Thanks a lot for that!
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+---
+Change log:
+v3: no change
+v2: no change just derived from v1
 
-As I've mentioned in the other email, I can send incremental patches for most
-of the comments (and Acks?). Don't know how to handle the split of 
-"[PATH v11 4/10] PCI: OF: Fix the conversion of IO ranges into IO resources."
-that you are asking for.
+ drivers/pci/host/pcie-designware.c | 7 ++++++-
+ drivers/pci/host/pcie-designware.h | 1 +
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
-Best regards,
-Liviu
-
-> 
-> Bjorn
-> 
-
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 1c09f814..c28ca05 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -366,7 +366,12 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+ 	else
+ 		msg.address_lo = virt_to_phys((void *)pp->msi_data);
+ 	msg.address_hi = 0x0;
+-	msg.data = pos;
++
++	if (pp->ops->get_msi_data)
++		msg.data = pp->ops->get_msi_data(pp, pos);
++	else
++		msg.data = pos;
++
+ 	write_msi_msg(irq, &msg);
+ 
+ 	return 0;
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 904e40a..c625675 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -71,6 +71,7 @@ struct pcie_host_ops {
+ 	void (*msi_set_irq)(struct pcie_port *pp, int irq);
+ 	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
+ 	u32 (*get_msi_addr)(struct pcie_port *pp);
++	u32 (*get_msi_data)(struct pcie_port *pp, int pos);
+ 	void (*scan_bus)(struct pcie_port *pp);
+ 	int (*msi_host_init)(struct pcie_port *pp, struct msi_chip *chip);
+ };
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.9.1
 
