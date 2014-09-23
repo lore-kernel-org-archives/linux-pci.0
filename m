@@ -1,41 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0132.outbound.protection.outlook.com ([157.56.110.132]:23173
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753380AbaIXCz6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Sep 2014 22:55:58 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Fabio Estevam <festevam@gmail.com>
-CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Subject: RE: [PATCH v1 4/4] PCI: imx6: add imx6sx pcie support
-Date: Wed, 24 Sep 2014 02:55:53 +0000
-Message-ID: <d61b12831f97408badd1850d6a8782b1@BY1PR0301MB0855.namprd03.prod.outlook.com>
-References: <1411382705-15301-1-git-send-email-r65037@freescale.com>
-	<1411382705-15301-5-git-send-email-r65037@freescale.com>
-	<CAOMZO5D_s7ST_J0FV+NbrHpw2jVBDSpHprHnwJfPbQ=tqy7PWQ@mail.gmail.com>
-	<8f7c463a0c7c4bd2a4a4416bd8b046b3@DM2PR0301MB0862.namprd03.prod.outlook.com>
- <CAOMZO5BQQdVvyh56dO6CWJF23NN17hgsEEeBBzruhjV4FpSyXQ@mail.gmail.com>
-In-Reply-To: <CAOMZO5BQQdVvyh56dO6CWJF23NN17hgsEEeBBzruhjV4FpSyXQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from szxga01-in.huawei.com ([119.145.14.64]:53420 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751239AbaIWFDQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 01:03:16 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v3 2/9] PCI/MSI: Remove msi_attrib->pos in struct msi_desc
+Date: Tue, 23 Sep 2014 13:27:23 +0800
+Message-ID: <1411450050-1510-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1411450050-1510-1-git-send-email-wangyijing@huawei.com>
+References: <1411450050-1510-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEZhYmlvIEVzdGV2YW0gW21h
-aWx0bzpmZXN0ZXZhbUBnbWFpbC5jb21dDQo+IFNlbnQ6IFdlZG5lc2RheSwgU2VwdGVtYmVyIDI0
-LCAyMDE0IDY6MTkgQU0NCj4gVG86IFpodSBSaWNoYXJkLVI2NTAzNw0KPiBDYzogbGludXgtcGNp
-LW93bmVyQHZnZXIua2VybmVsLm9yZzsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgR3VvIFNo
-YXduLQ0KPiBSNjUwNzM7IEx1Y2FzIFN0YWNoDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjEgNC80
-XSBQQ0k6IGlteDY6IGFkZCBpbXg2c3ggcGNpZSBzdXBwb3J0DQo+IA0KPiBPbiBUdWUsIFNlcCAy
-MywgMjAxNCBhdCAxMjowOSBBTSwgSG9uZy1YaW5nLlpodUBmcmVlc2NhbGUuY29tIDxIb25nLQ0K
-PiBYaW5nLlpodUBmcmVlc2NhbGUuY29tPiB3cm90ZToNCj4gDQo+ID4gQXMgSSBrbm93IHRoYXQs
-IHRoZXJlIGlzIG9uZSBzaW1pbGFyIGZpeCBvbiB0aGUgbmV4dCBteDZxIHRvLg0KPiANCj4gV2hh
-dCBhYm91dCB0aGUgZXhpc3RpbmcgbXg2cSBzaWxpY29uIHZlcnNpb24/IEhvdyBjYW4gd2UgZml4
-IHRoZSBoYW5nPw0KW1JpY2hhcmRdIFRoZXJlIGlzIGFscmVhZHkgb25lIFNXIHdvcmthcm91bmQo
-dG9nZ2xlIHRoZSBURVNUX1BEIGJpdCBpbiBhcmNoL2FybS9tYWNoLWlteC9wbS5jKSBmb3IgdGhp
-cyBpc3N1ZS4NCkl0IGNhbiB3b3JrYXJvdW5kIHRoaXMgaXNzdWUsIGFsdGhvdWdoIHdlIGRvbid0
-IGdldCBndWFyYW50ZWUgZnJvbSBkZXNpZ24gdGVhbS4NCg0KQmVzdCBSZWdhcmRzDQpSaWNoYXJk
-IFpodQ0K
+Use pci_dev->msi_cap or pci_dev->msix_cap instead of
+msi_desc->msi_attrib.pos, and remove pos member.
+
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/mips/pci/msi-octeon.c         |    6 +++---
+ drivers/pci/host/pcie-designware.c |    2 +-
+ drivers/pci/msi.c                  |    2 --
+ include/linux/msi.h                |    1 -
+ 4 files changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/arch/mips/pci/msi-octeon.c b/arch/mips/pci/msi-octeon.c
+index ab0c5d1..c8814be 100644
+--- a/arch/mips/pci/msi-octeon.c
++++ b/arch/mips/pci/msi-octeon.c
+@@ -73,8 +73,8 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ 	 * wants.  Most devices only want 1, which will give
+ 	 * configured_private_bits and request_private_bits equal 0.
+ 	 */
+-	pci_read_config_word(dev, desc->msi_attrib.pos + PCI_MSI_FLAGS,
+-			     &control);
++	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS,
++			&control);
+ 
+ 	/*
+ 	 * If the number of private bits has been configured then use
+@@ -176,7 +176,7 @@ msi_irq_allocated:
+ 	/* Update the number of IRQs the device has available to it */
+ 	control &= ~PCI_MSI_FLAGS_QSIZE;
+ 	control |= request_private_bits << 4;
+-	pci_write_config_word(dev, desc->msi_attrib.pos + PCI_MSI_FLAGS,
++	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS,
+ 			      control);
+ 
+ 	irq_set_msi_desc(irq, desc);
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 5d720c2..0927177 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -343,7 +343,7 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+ 	struct msi_msg msg;
+ 	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+ 
+-	pci_read_config_word(pdev, desc->msi_attrib.pos+PCI_MSI_FLAGS,
++	pci_read_config_word(pdev, pdev->msi_cap + PCI_MSI_FLAGS,
+ 				&msg_ctr);
+ 	msgvec = (msg_ctr&PCI_MSI_FLAGS_QSIZE) >> 4;
+ 	if (msgvec == 0)
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index e2aa74e..0d0f163 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -584,7 +584,6 @@ static struct msi_desc *msi_setup_entry(struct pci_dev *dev)
+ 	entry->msi_attrib.entry_nr	= 0;
+ 	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
+ 	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
+-	entry->msi_attrib.pos		= dev->msi_cap;
+ 	entry->msi_attrib.multi_cap	= (control & PCI_MSI_FLAGS_QMASK) >> 1;
+ 
+ 	if (control & PCI_MSI_FLAGS_64BIT)
+@@ -688,7 +687,6 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
+ 		entry->msi_attrib.is_64		= 1;
+ 		entry->msi_attrib.entry_nr	= entries[i].entry;
+ 		entry->msi_attrib.default_irq	= dev->irq;
+-		entry->msi_attrib.pos		= dev->msix_cap;
+ 		entry->mask_base		= base;
+ 
+ 		list_add_tail(&entry->list, &dev->msi_list);
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 8892d41..fff7201 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -29,7 +29,6 @@ struct msi_desc {
+ 		__u8	multi_cap : 3;	/* log2 num of messages supported */
+ 		__u8	maskbit	: 1;	/* mask-pending bit supported ? */
+ 		__u8	is_64	: 1;	/* Address size: 0=32bit 1=64bit */
+-		__u8	pos;		/* Location of the msi capability */
+ 		__u16	entry_nr;	/* specific enabled entry */
+ 		unsigned default_irq;	/* default pre-assigned irq */
+ 	} msi_attrib;
+-- 
+1.7.1
+
