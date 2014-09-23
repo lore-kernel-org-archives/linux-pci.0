@@ -1,64 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.citrix.com ([66.165.176.89]:10315 "EHLO SMTP.CITRIX.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751898AbaI2Ilx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Sep 2014 04:41:53 -0400
-Date: Mon, 29 Sep 2014 09:41:51 +0100
-From: Wei Liu <wei.liu2@citrix.com>
-To: David Vrabel <david.vrabel@citrix.com>
-CC: Chen Gang <gang.chen.5i5j@gmail.com>, <konrad.wilk@oracle.com>,
-	<ian.campbell@citrix.com>, <wei.liu2@citrix.com>,
-	<boris.ostrovsky@oracle.com>, <bhelgaas@google.com>,
-	<jgross@suse.com>, <yongjun_wei@trendmicro.com.cn>,
-	<mukesh.rathor@oracle.com>, <xen-devel@lists.xenproject.org>,
-	<linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	<linux-scsi@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [Xen-devel] [PATCH] xen/xenbus: Use 'void' instead of 'int' for
- the return of xenbus_switch_state()
-Message-ID: <20140929084102.GE28628@zion.uk.xensource.com>
-References: <5425961A.5000604@gmail.com>
- <5425AB57.8040804@citrix.com>
+Received: from mail-by2on0105.outbound.protection.outlook.com ([207.46.100.105]:46466
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752025AbaIWDJR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Sep 2014 23:09:17 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Fabio Estevam <festevam@gmail.com>
+CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shengchao Guo <Shawn.Guo@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+Subject: RE: [PATCH v1 4/4] PCI: imx6: add imx6sx pcie support
+Date: Tue, 23 Sep 2014 03:09:30 +0000
+Message-ID: <8f7c463a0c7c4bd2a4a4416bd8b046b3@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1411382705-15301-1-git-send-email-r65037@freescale.com>
+	<1411382705-15301-5-git-send-email-r65037@freescale.com>
+ <CAOMZO5D_s7ST_J0FV+NbrHpw2jVBDSpHprHnwJfPbQ=tqy7PWQ@mail.gmail.com>
+In-Reply-To: <CAOMZO5D_s7ST_J0FV+NbrHpw2jVBDSpHprHnwJfPbQ=tqy7PWQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <5425AB57.8040804@citrix.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 26, 2014 at 07:07:19PM +0100, David Vrabel wrote:
-> On 26/09/14 17:36, Chen Gang wrote:
-> > When xenbus_switch_state() fails, it will call xenbus_switch_fatal()
-> > internally, so need not return any status value, then use 'void' instead
-> > of 'int' for xenbus_switch_state() and __xenbus_switch_state().
-> > 
-> > Also need be sure that all callers which check the return value must let
-> > 'err' be 0.
-> 
-> I've rewritten the commit message as:
-> 
->     xen/xenbus: don't return errors from xenbus_switch_state()
-> 
->     Most users of xenbus_switch_state() weren't handling the failure of
->     xenbus_switch_state() correctly.  They either called
->     xenbus_dev_fatal() (which xenbus_switch_state() has effectively
->     already tried to do), or ignored errors.
-> 
->     xenbus_switch_state() may fail because:
-> 
->     a) The device is being unplugged by the toolstack. The device will
->     shortly be removed and the error does not need to be handled.
-> 
->     b) Xenstore is broken.  There isn't much the driver can do in this
->     case since xenstore is required to signal failure to the toolstack.
-> 
->     So, don't report any errors from xenbus_switch_state() which removes
->     some unnecessary error handling in some of the drivers.
-> 
-> I'd appreciate a review from some of the other front/backend driver
-> maintainers on whether this is sensible reasoning.
-> 
-
-Looks reasonable to me.
-
-Wei.
+SGkgRmFiaW86DQpUaGFua3MgZm9yIHlvdXIgY29tbWVudHMuDQoNCg0KPiAtLS0tLU9yaWdpbmFs
+IE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBGYWJpbyBFc3RldmFtIFttYWlsdG86ZmVzdGV2YW1AZ21h
+aWwuY29tXQ0KPiBTZW50OiBNb25kYXksIFNlcHRlbWJlciAyMiwgMjAxNCAxMDoyNyBQTQ0KPiBU
+bzogWmh1IFJpY2hhcmQtUjY1MDM3DQo+IENjOiBsaW51eC1wY2ktb3duZXJAdmdlci5rZXJuZWwu
+b3JnOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBHdW8gU2hhd24tDQo+IFI2NTA3MzsgTHVj
+YXMgU3RhY2gNCj4gU3ViamVjdDogUmU6IFtQQVRDSCB2MSA0LzRdIFBDSTogaW14NjogYWRkIGlt
+eDZzeCBwY2llIHN1cHBvcnQNCj4gDQo+IEhpIFJpY2hhcmQsDQo+IA0KPiBPbiBNb24sIFNlcCAy
+MiwgMjAxNCBhdCA3OjQ1IEFNLCBSaWNoYXJkIFpodSA8cjY1MDM3QGZyZWVzY2FsZS5jb20+IHdy
+b3RlOg0KPiANCj4gPiArI2lmZGVmIENPTkZJR19QTV9TTEVFUA0KPiA+ICtzdGF0aWMgaW50IHBj
+aV9pbXhfc3VzcGVuZCh2b2lkKQ0KPiA+ICt7DQo+ID4gKyAgICAgICBpbnQgcmMgPSAwOw0KPiA+
+ICsNCj4gPiArICAgICAgIGlmIChpc19pbXg2c3hfcGNpZShpbXg2X3BjaWUpKSB7DQo+ID4gKyAg
+ICAgICAgICAgICAgIC8qIFBNX1RVUk5fT0ZGICovDQo+ID4gKyAgICAgICAgICAgICAgIHJlZ21h
+cF91cGRhdGVfYml0cyhpbXg2X3BjaWUtPmlvbXV4Y19ncHIsIElPTVVYQ19HUFIxMiwNCj4gPiAr
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIEJJVCgxNiksIDEgPDwgMTYpOw0KPiA+ICsg
+ICAgICAgICAgICAgICB1ZGVsYXkoMTApOw0KPiA+ICsgICAgICAgICAgICAgICByZWdtYXBfdXBk
+YXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNfZ3ByLCBJT01VWENfR1BSMTIsDQo+ID4gKyAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICBCSVQoMTYpLCAwIDw8IDE2KTsNCj4gPiArICAgICAg
+IH0NCj4gPiArDQo+ID4gKyAgICAgICByZXR1cm4gcmM7DQo+IA0KPiBZb3UgY291bGQgZ2V0IHJp
+ZCBvZiB0aGlzICdyYycgdmFyaWFibGUgYW5kIGp1c3QgcmV0dXJuIDAuDQo+IA0KW1JpY2hhcmRd
+IE9LLiBBY2NlcHRlZC4NCj4gPiArfQ0KPiA+ICsNCj4gPiArc3RhdGljIHZvaWQgcGNpX2lteF9y
+ZXN1bWUodm9pZCkNCj4gPiArew0KPiA+ICsgICAgICAgc3RydWN0IHBjaWVfcG9ydCAqcHAgPSAm
+aW14Nl9wY2llLT5wcDsNCj4gPiArDQo+ID4gKyAgICAgICBpZiAoaXNfaW14NnN4X3BjaWUoaW14
+Nl9wY2llKSkgew0KPiA+ICsgICAgICAgICAgICAgICAvKiByZXNldCBpTVg2U1ggUENJZSAqLw0K
+PiA+ICsgICAgICAgICAgICAgICByZWdtYXBfdXBkYXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNf
+Z3ByLA0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgSU9NVVhDX0dQUjUsIEJJ
+VCgxOCksIDEgPDwgMTgpOw0KPiA+ICsNCj4gPiArICAgICAgICAgICAgICAgcmVnbWFwX3VwZGF0
+ZV9iaXRzKGlteDZfcGNpZS0+aW9tdXhjX2dwciwNCj4gPiArICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgIElPTVVYQ19HUFI1LCBCSVQoMTgpLCAwIDw8IDE4KTsNCj4gPiArDQo+ID4gKyAg
+ICAgICAgICAgICAgIC8qDQo+ID4gKyAgICAgICAgICAgICAgICAqIGNvbnRyb2xsZXIgbWF5YmUg
+dHVybiBvZmYsIHJlLWNvbmZpZ3VyZSBhZ2Fpbg0KPiA+ICsgICAgICAgICAgICAgICAgKiBTZXQg
+dGhlIENMQVNTX1JFViBvZiBSQyBDRkcgaGVhZGVyIHRvDQo+ID4gKyAgICAgICAgICAgICAgICAq
+IFBDSV9DTEFTU19CUklER0VfUENJDQo+ID4gKyAgICAgICAgICAgICAgICAqLw0KPiA+ICsgICAg
+ICAgICAgICAgICB3cml0ZWwocmVhZGwocHAtPmRiaV9iYXNlICsgUENJX0NMQVNTX1JFVklTSU9O
+KQ0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgIHwgKFBDSV9DTEFTU19CUklER0VfUENJIDw8
+IDE2KSwNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICBwcC0+ZGJpX2Jhc2UgKyBQQ0lfQ0xB
+U1NfUkVWSVNJT04pOw0KPiA+ICsNCj4gPiArICAgICAgICAgICAgICAgZHdfcGNpZV9zZXR1cF9y
+YyhwcCk7DQo+ID4gKyAgICAgICB9DQo+ID4gK30NCj4gDQo+IE5vdCByZWxhdGVkIHRvIHRoaXMg
+cGF0Y2gsIGJ1dCBvbiBteDZxL2RsICB3ZSBzdGlsbCBnZXQga2VybmVsIGhhbmcgYWZ0ZXINCj4g
+ZG9pbmcgc3VzcGVuZC9yZXN1bWUgd2hlbiBhIFBDSSBjYXJkIGlzIGluc2VydGVkLg0KPiANCj4g
+SXMgdGhpcyBmaXhlZCBvbiBteDZzb2xveD8NCltSaWNoYXJkXSB0aGlzIGlzIGEgcGFydCBvZiB0
+aGUgZml4IG9uIGlteDZzb2xveC4NCkFzIEkga25vdyB0aGF0LCB0aGVyZSBpcyBvbmUgc2ltaWxh
+ciBmaXggb24gdGhlIG5leHQgbXg2cSB0by4NCj4gDQo+IEFueSBpZGVhIGFzIHRvIGhvdyB0byBm
+aXggaXQgZm9yIG14NnE/DQoNCkJlc3QgUmVnYXJkcw0KUmljaGFyZCBaaHUNCg==
