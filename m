@@ -1,108 +1,71 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Wed, 24 Sep 2014 02:48:09 +0100
-From: Liviu Dudau <liviu@dudau.co.uk>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v12 10/12] PCI: Assign unassigned bus resources in
- pci_scan_root_bus()
-Message-ID: <20140924014809.GF32643@bart.dudau.co.uk>
-References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
- <1411498874-9864-11-git-send-email-Liviu.Dudau@arm.com>
- <20140924011851.GD32643@bart.dudau.co.uk>
- <CAErSpo5DR+TPYXBWGKRj9SRPjsbJ6kjZmAH1AXT12txEjGdZGQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2on0121.outbound.protection.outlook.com ([65.55.169.121]:3072
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751539AbaIWEjm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 23 Sep 2014 00:39:42 -0400
+From: Richard Zhu <r65037@freescale.com>
+To: <linux-pci-owner@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
+	<festevam@gmail.com>, <l.stach@pengutronix.de>,
+	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
+Subject: [PATCH v2 4/5] PCI: imx6: add imx6sx pcie related gpr bits definitions
+Date: Tue, 23 Sep 2014 12:11:37 +0800
+Message-ID: <1411445498-20250-5-git-send-email-r65037@freescale.com>
+In-Reply-To: <1411445498-20250-1-git-send-email-r65037@freescale.com>
+References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAErSpo5DR+TPYXBWGKRj9SRPjsbJ6kjZmAH1AXT12txEjGdZGQ@mail.gmail.com>
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 23, 2014 at 07:41:35PM -0600, Bjorn Helgaas wrote:
-> On Tue, Sep 23, 2014 at 7:18 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
-> > On Tue, Sep 23, 2014 at 08:01:12PM +0100, Liviu Dudau wrote:
-> >> If the firmware has not assigned all the bus resources and
-> >> we are not just probing the PCIe busses, it makes sense to
-> >> assign the unassigned resources in pci_scan_root_bus().
-> >>
-> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >> Cc: Arnd Bergmann <arnd@arndb.de>
-> >> Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> >> Cc: Rob Herring <robh+dt@kernel.org>
-> >> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> >> ---
-> >>  drivers/pci/probe.c | 3 +++
-> >>  1 file changed, 3 insertions(+)
-> >>
-> >> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> >> index ef891d2..508cf61 100644
-> >> --- a/drivers/pci/probe.c
-> >> +++ b/drivers/pci/probe.c
-> >> @@ -1953,6 +1953,9 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
-> >>       if (!found)
-> >>               pci_bus_update_busn_res_end(b, max);
-> >>
-> >> +     if (!pci_has_flag(PCI_PROBE_ONLY))
-> >> +             pci_assign_unassigned_bus_resources(b);
-> >> +
-> >>       pci_bus_add_devices(b);
-> >>       return b;
-> >>  }
-> >> --
-> >> 2.1.0
-> >>
-> >
-> > Bjorn,
-> >
-> > If you are OK with this patch, can you let me know how do you feel about
-> > making pci_scan_root_bus() set up the bus->msi pointer as well?
-> 
-> I'm not opposed to it, but I have the same question as for setting up
-> the domain: how does pci_scan_root_bus() learn what to assign to
-> bus->msi?  It currently only gets a "void *sysdata" so there's no
-> obvious place to put it there.  You could add a pcibios interface to
-> retrieve it, I suppose, but I'm starting to get uncomfortable with
-> adding more of those because we have such a mess of them already.
+Signed-off-by: Richard Zhu <r65037@freescale.com>
+---
+ include/linux/mfd/syscon/imx6q-iomuxc-gpr.h | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-My long term view is that the creation of the pci_host_bridge structure
-needs to be separated from the creation and scanning of the root bus.
-Then we can add host bridge ops or some other API to the structure
-that should allow for less friction in passing information to the bridge.
-
-Best regards,
-Liviu
-
-> 
-> Bjorn
-> 
-> > Side note: I don't know exactly how to do it now, but setting bus->msi is
-> > needed by platforms that are based on my patches and want to use MSI,
-> > otherwise they have to open code pci_scan_root_bus() to set it. I haven't
-> > made any attempts to do it in this series as the GICv2m patches are not
-> > ready yet, but I can see the need arriving soon.
-> >
-> > Best regards,
-> > Liviu
-> >
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>
+diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+index ff44374..f02875e 100644
+--- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
++++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+@@ -113,10 +113,12 @@
+ #define IMX6Q_GPR1_MIPI_IPU1_MUX_GASKET		0x0
+ #define IMX6Q_GPR1_MIPI_IPU1_MUX_IOMUX		BIT(19)
+ #define IMX6Q_GPR1_PCIE_TEST_PD			BIT(18)
++#define IMX6Q_GPR1_PCIE_TEST_PD_CLR		0x0
+ #define IMX6Q_GPR1_IPU_VPU_MUX_MASK		BIT(17)
+ #define IMX6Q_GPR1_IPU_VPU_MUX_IPU1		0x0
+ #define IMX6Q_GPR1_IPU_VPU_MUX_IPU2		BIT(17)
+ #define IMX6Q_GPR1_PCIE_REF_CLK_EN		BIT(16)
++#define IMX6Q_GPR1_PCIE_REF_CLK_CLR		0x0
+ #define IMX6Q_GPR1_USB_EXP_MODE			BIT(15)
+ #define IMX6Q_GPR1_PCIE_INT			BIT(14)
+ #define IMX6Q_GPR1_USB_OTG_ID_SEL_MASK		BIT(13)
+@@ -300,7 +302,9 @@
+ #define IMX6Q_GPR12_ARMP_APB_CLK_EN		BIT(24)
+ #define IMX6Q_GPR12_DEVICE_TYPE			(0xf << 12)
+ #define IMX6Q_GPR12_PCIE_CTL_2			BIT(10)
++#define IMX6Q_GPR12_PCIE_CTL_2_CLR		0x0
+ #define IMX6Q_GPR12_LOS_LEVEL			(0x1f << 4)
++#define IMX6Q_GPR12_LOS_LEVEL_9			(0x9 << 4)
+ 
+ #define IMX6Q_GPR13_SDMA_STOP_REQ		BIT(30)
+ #define IMX6Q_GPR13_CAN2_STOP_REQ		BIT(29)
+@@ -395,4 +399,14 @@
+ #define IMX6SL_GPR1_FEC_CLOCK_MUX1_SEL_MASK    (0x3 << 17)
+ #define IMX6SL_GPR1_FEC_CLOCK_MUX2_SEL_MASK    (0x1 << 14)
+ 
++/* For imx6sx iomux gpr register field define */
++#define IMX6SX_GPR5_PCIE_BTNRST			BIT(19)
++#define IMX6SX_GPR5_PCIE_BTNRST_CLR		0x0
++#define IMX6SX_GPR5_PCIE_PERST			BIT(18)
++#define IMX6SX_GPR5_PCIE_PERST_CLR		0x0
++
++#define IMX6SX_GPR12_PCIE_TEST_PD		BIT(30)
++#define IMX6SX_GPR12_PCIE_TEST_PD_CLR		0x0
++#define IMX6SX_GPR12_RX_EQ_MASK			(0x7 << 0)
++#define IMX6SX_GPR12_RX_EQ_2			(0x2 << 0)
+ #endif /* __LINUX_IMX6Q_IOMUXC_GPR_H */
+-- 
+1.9.1
 
