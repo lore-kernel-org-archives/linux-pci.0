@@ -1,163 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:41611 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751738AbaJACKA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Sep 2014 22:10:00 -0400
-Message-ID: <1412129363.4285.190.camel@pasglop>
-Subject: [PATCH 1/4] pci/msi: Move "force_32bit_msi" flag from powerpc to
- generic pci_dev
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Alex Deucher <alexdeucher@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dave Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Date: Wed, 01 Oct 2014 12:09:23 +1000
-In-Reply-To: <1412112324.4285.160.camel@pasglop>
-References: <1412048401.4285.128.camel@pasglop>
-	 <CAErSpo4B6kuZJcKwreNvW1qC5sZ=1Ko71vbzNz7T8-_pjf7mww@mail.gmail.com>
-	 <CADnq5_PT+dX=KA4epGNRaoraco2z1pe5K7UgqLmTUhWMnvtWkw@mail.gmail.com>
-	 <1412108504.4285.155.camel@pasglop>
-	 <CADnq5_O_iLAZUKLL4nph8VwuP2NOkWXhBZC2XTSkFm5P42WZ+g@mail.gmail.com>
-	 <1412110946.4285.158.camel@pasglop>
-	 <CADnq5_OXBax1+TKPsR2RDYTWijQKDVw34ECfWzcwN2SibCGYTg@mail.gmail.com>
-	 <1412112324.4285.160.camel@pasglop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:40927 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754231AbaIWWp7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 18:45:59 -0400
+Received: by mail-ie0-f180.google.com with SMTP id ar1so7605428iec.39
+        for <linux-pci@vger.kernel.org>; Tue, 23 Sep 2014 15:45:59 -0700 (PDT)
+Date: Tue, 23 Sep 2014 16:45:55 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Minghuan Lian <Minghuan.Lian@freescale.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH v3 1/3] PCI: designware: Rename get_msi_data to
+ get_msi_addr
+Message-ID: <20140923224555.GE27117@google.com>
+References: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
+ <1411482540-31297-3-git-send-email-Minghuan.Lian@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1411482540-31297-3-git-send-email-Minghuan.Lian@freescale.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+[+cc Mohit, Jingoo]
 
-Some devices have broken 64-bit MSI support which only support some
-address bits (40 to 48 typically). This doesn't work on some platforms
-such as POWER servers, so we need a quirk.
+On Tue, Sep 23, 2014 at 10:28:58PM +0800, Minghuan Lian wrote:
+> The function get_msi_data is used to return MSI message address.
+> In order to accurately express function purpose the patch rename
+> it to get_msi_addr.
+> 
+> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
 
-Currently we keep a flag in a powerpc specific data structure which we
-have per PCI device. However this is impractical as we really want the
-driver to set that flag appropriately (and the driver shouldn't touch
-that arch specific data structure).
+I think this looks like a good idea, but it needs an ack from Mohit and/or
+Jingoo (cc'd).
 
-It's also not unlikely that this limitation will affect other architectures
-in the long run so may as well be prepared for it.
+You previously asked whether .get_msi_addr() should also be changed to
+return u64 instead of u32.  I think it should, and you can do that in a
+separate patch that also changes the use in dw_msi_setup_irq() to split the
+64-bit result into msg.address_lo and msg.address_hi.
 
-So this moves the flag to struct pci_dev instead and adjusts the
-corresponding arch/powerpc code to look for it there. At this point,
-there is no attempt at making other architectures honor it just yet
-though from what I can tell, x86 seems to always use 32-bit addresses
-for MSIs.
+I don't see any implementations of .get_msi_data() or .get_msi_addr(), so 
+this seems pretty straightforward.
 
-Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: <stable@vger.kernel.org>
----
+Bjorn
 
-Note: CC'ing stable as I really want this to hit distros, without that
-(and the three subsequent patches), we crash during boot with a number
-of radeon cards on power machines.
-
-Note2: Alex, we can wait for the response of the HW guys for which revisions
-actually need the quirk in hda_intel but I don't see a big risk or issue in
-just doing it for all AMD/ATI for now and fix that up later
-
- arch/powerpc/include/asm/pci-bridge.h     | 2 --
- arch/powerpc/kernel/pci_64.c              | 5 +----
- arch/powerpc/platforms/powernv/pci-ioda.c | 3 +--
- arch/powerpc/platforms/powernv/pci.c      | 3 +--
- arch/powerpc/platforms/pseries/msi.c      | 2 +-
- include/linux/pci.h                       | 1 +
- 6 files changed, 5 insertions(+), 11 deletions(-)
-
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 4ca90a3..725247b 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -159,8 +159,6 @@ struct pci_dn {
- 
- 	int	pci_ext_config_space;	/* for pci devices */
- 
--	bool	force_32bit_msi;
--
- 	struct	pci_dev *pcidev;	/* back-pointer to the pci device */
- #ifdef CONFIG_EEH
- 	struct eeh_dev *edev;		/* eeh device */
-diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
-index 155013d..a6ce5fe 100644
---- a/arch/powerpc/kernel/pci_64.c
-+++ b/arch/powerpc/kernel/pci_64.c
-@@ -269,10 +269,7 @@ EXPORT_SYMBOL(pcibus_to_node);
- 
- static void quirk_radeon_32bit_msi(struct pci_dev *dev)
- {
--	struct pci_dn *pdn = pci_get_pdn(dev);
--
--	if (pdn)
--		pdn->force_32bit_msi = true;
-+	dev->force_32bit_msi = true;
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x68f2, quirk_radeon_32bit_msi);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index df241b1..9d98475 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1311,7 +1311,6 @@ static int pnv_pci_ioda_msi_setup(struct pnv_phb *phb, struct pci_dev *dev,
- 				  unsigned int is_64, struct msi_msg *msg)
- {
- 	struct pnv_ioda_pe *pe = pnv_ioda_get_pe(dev);
--	struct pci_dn *pdn = pci_get_pdn(dev);
- 	struct irq_data *idata;
- 	struct irq_chip *ichip;
- 	unsigned int xive_num = hwirq - phb->msi_base;
-@@ -1327,7 +1326,7 @@ static int pnv_pci_ioda_msi_setup(struct pnv_phb *phb, struct pci_dev *dev,
- 		return -ENXIO;
- 
- 	/* Force 32-bit MSI on some broken devices */
--	if (pdn && pdn->force_32bit_msi)
-+	if (dev->force_32bit_msi)
- 		is_64 = 0;
- 
- 	/* Assign XIVE to PE */
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index b854b57..4e43a6f 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -50,9 +50,8 @@ static int pnv_msi_check_device(struct pci_dev* pdev, int nvec, int type)
- {
- 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
- 	struct pnv_phb *phb = hose->private_data;
--	struct pci_dn *pdn = pci_get_pdn(pdev);
- 
--	if (pdn && pdn->force_32bit_msi && !phb->msi32_support)
-+	if (pdev->force_32bit_msi && !phb->msi32_support)
- 		return -ENODEV;
- 
- 	return (phb && phb->msi_bmp.bitmap) ? 0 : -ENODEV;
-diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-index 18ff462..b3f2c1a 100644
---- a/arch/powerpc/platforms/pseries/msi.c
-+++ b/arch/powerpc/platforms/pseries/msi.c
-@@ -429,7 +429,7 @@ static int rtas_setup_msi_irqs(struct pci_dev *pdev, int nvec_in, int type)
- 	 */
- again:
- 	if (type == PCI_CAP_ID_MSI) {
--		if (pdn->force_32bit_msi) {
-+		if (pdev->force_32bit_msi) {
- 			rc = rtas_change_msi(pdn, RTAS_CHANGE_32MSI_FN, nvec);
- 			if (rc < 0) {
- 				/*
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 96453f9..740cadd 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -331,6 +331,7 @@ struct pci_dev {
- 	unsigned int	is_added:1;
- 	unsigned int	is_busmaster:1; /* device is busmaster */
- 	unsigned int	no_msi:1;	/* device may not use msi */
-+	unsigned int    force_32bit_msi:1;	/* Device has broken 64-bit MSIs */
- 	unsigned int	block_cfg_access:1;	/* config space access is blocked */
- 	unsigned int	broken_parity_status:1;	/* Device generates false positive parity */
- 	unsigned int	irq_reroute_variant:2;	/* device needs IRQ rerouting variant */
-
-
-
+> ---
+> Change log:
+> v3: no change
+> v2: no change just derived from v1
+> 
+>  drivers/pci/host/pcie-designware.c | 4 ++--
+>  drivers/pci/host/pcie-designware.h | 2 +-
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 5d720c2..1c09f814 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -361,8 +361,8 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+>  	 */
+>  	desc->msi_attrib.multiple = msgvec;
+>  
+> -	if (pp->ops->get_msi_data)
+> -		msg.address_lo = pp->ops->get_msi_data(pp);
+> +	if (pp->ops->get_msi_addr)
+> +		msg.address_lo = pp->ops->get_msi_addr(pp);
+>  	else
+>  		msg.address_lo = virt_to_phys((void *)pp->msi_data);
+>  	msg.address_hi = 0x0;
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index 48f8670..904e40a 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -70,7 +70,7 @@ struct pcie_host_ops {
+>  	void (*host_init)(struct pcie_port *pp);
+>  	void (*msi_set_irq)(struct pcie_port *pp, int irq);
+>  	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
+> -	u32 (*get_msi_data)(struct pcie_port *pp);
+> +	u32 (*get_msi_addr)(struct pcie_port *pp);
+>  	void (*scan_bus)(struct pcie_port *pp);
+>  	int (*msi_host_init)(struct pcie_port *pp, struct msi_chip *chip);
+>  };
+> -- 
+> 1.9.1
+> 
