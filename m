@@ -1,106 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f181.google.com ([209.85.216.181]:40286 "EHLO
-	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755314AbaIDUHW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 16:07:22 -0400
-Received: by mail-qc0-f181.google.com with SMTP id i17so10867206qcy.40
-        for <linux-pci@vger.kernel.org>; Thu, 04 Sep 2014 13:07:20 -0700 (PDT)
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Robert Richter <rric@kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Sunil Goutham <sunil.goutham@caviumnetworks.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Subject: Re: [PATCH v11 08/10] OF: PCI: Add support for parsing PCI host bridge resources from DT
+Date: Tue, 23 Sep 2014 09:56:37 +0200
+Message-ID: <8687285.EH4RPBeOB5@wuerfel>
+In-Reply-To: <20140922114317.GN1994@e106497-lin.cambridge.arm.com>
+References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com> <20140922093228.GA20256@rric.localhost> <20140922114317.GN1994@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-In-Reply-To: <DUB130-DS10845119A34A53DA8A6430DBC50@phx.gbl>
-References: <DUB130-DS10845119A34A53DA8A6430DBC50@phx.gbl>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 4 Sep 2014 14:07:00 -0600
-Message-ID: <CAErSpo4GRh2LzeoDu-84h1+YfkYuCz4yLE2xGV8V4GG8ajsrcw@mail.gmail.com>
-Subject: Re: PCIe root bridge and memory ranges.
-To: Robert <RJSmith92@live.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 4, 2014 at 8:57 AM, Robert <RJSmith92@live.com> wrote:
-> Hello All,
->
-> I am having trouble understanding what memory ranges go through the PCIe
-> root bridge on a Haswell CPU (what I have in my system) and similarly on
-> other modern CPUs. From what I can gather from sources online (including
-> many datasheets) is that the PCIE root complex contains a PCI host bridge,
-> which produces 1 PCI root bridge (ACPI\PNP0A08). This root bridge then
-> forwards certain memory ranges onto the PCI/PCIe bus.
+On Monday 22 September 2014 12:43:17 Liviu Dudau wrote:
+> > 
+> > From e798af4fc2f664d1aff7e863489b8298f90e716e Mon Sep 17 00:00:00 2001
+> > From: Robert Richter <rrichter@cavium.com>
+> > Date: Mon, 22 Sep 2014 10:46:01 +0200
+> > Subject: [PATCH] OF: PCI: Fix creation of mem-mapped pci host bridges
+> > 
+> > The pci host bridge was not created if io_base was not set when
+> > calling of_pci_get_host_bridge_resources(). This is esp. the case for
+> > mem-mapped io (IORESOURCE_MEM). This patch fixes this. Function
+> > parameter io_base is optional now.
+> 
+> I think the message is misleading. What you want to do is make io_base
+> optional for the case where the PCI host bridge only expects to have only
+> IORESOURCE_MEM ranges and doesn't care about IORESOURCE_IO ones.
+> 
+> As I'm going to touch this area again to address a comment from Bjorn,
+> do you mind if I roll this patch into mine with your Signed-off-by and
+> the mention that you have made io_base optional?
 
-Right so far.
+I think the best way to deal with this is to move the check for 
+io_base down into the place where it is used: As long as the DT only
+specifies IORESOURCE_MEM windows, we don't need to look at io_base,
+but if the host controller driver does not support IORESOURCE_IO
+while the DT specifies it, I guess it would be nice to return an
+error.
 
-> First of all if I take something like PAM registers, when something is
-> written to this address the PAM register forwards it to DMI (if set to do so
-> E.G. 0xD0000), so this transaction never goes through the PCI root bridge?
-> What's confusing is if I look at the DSDT ACPI table and look at the
-> ACPI\PNP0A08 device, it says that the PAM registers ranges go through it. I
-> guess this is just for an OS purpose as it doesn’t need to know what exact
-> ranges go through the root bridge? I'm not entirely sure on that and if
-> anyone could clarify it would be appreciated.
-
-I don't really know anything about PAM registers.  Conceptually, the
-PNP0A08 _CRS tells the OS that "if the host bridge sees a transaction
-to an address in _CRS, it will forward it to PCI."  That allows the OS
-manage BAR assignments for PCI devices.  If we hot-add a PCI device,
-the OS can assign space for it from anything in _CRS.
-
-It sounds like PAM is an arch-specific way to control transaction
-routing.  That would probably be outside the purview of ACPI, and if
-the OS uses PAM to re-route things mentioned in a PNP0A08 _CRS, that
-would be some sort of arch-specific code.
-
-> As well as the PAM register ranges for the root bridge it also has the PCIe
-> device memory range, which in my case is 0xC0000000 – 0xFEAFFFFF, now does
-> that mean that anything above that range isn't going through the PCI root
-> bridge, or is it just like that so an OS doesn't try map a device in that
-> region. If I look at the Haswell datasheet it has small regions in that area
-> between things like APIC and BIOS that reach the DMI.
-
-Theoretically, addresses not mentioned in _CRS should not be passed
-down to PCI.  This is not always true in practice, of course.
-Sometimes BIOSes leave PCI BARs assigned with addresses outside the
-_CRS ranges.  As far as the kernel is concerned, that is illegal, and
-both Windows and Linux will try to move those BARs so they are inside
-a _CRS range.  But often those devices actually do work even when they
-are outside the _CRS ranges, so obviously the bridge is forwarding
-more than what _CRS describes.
-
-> It seems as if the PCI root bridge is using some sort of subtractive
-> decoding that picks up whatever isn't sent to DRAM etc. and to make it easy
-> for an OS the BIOS gives it a block of address space.
-
-That's possible, and I think many older systems used to work that way.
-But it is not allowed by the ACPI spec, at least partly because you
-can only have one subtractive decode bridge, and modern systems
-typically have several PCI host bridges.
-
-> Finally, I was on a forum related to external GPUs, and some Windows users
-> didn’t have enough space to map the device below 4GB. To resolve this they
-> manually edited the DSDT table and added another entry above the 4GB
-> barrier, now Windows mapped the GPU in the 64bit space. Now I presume
-> changing the entry in the DSDT table didn't make any difference to how the
-> hardware was set up, it just told the OS that the root bridge will in fact
-> pick up this address range and therefore it knew it could map it there.
->
-> So am I write in thinking the ranges in the ACPI table are for the OSs
-> purpose, and don't actually have to accurately represent what the hardware
-> does.
-
-Well, Linux relies completely on the host bridge _CRS.  We don't have
-any native host bridge drivers (except some amd_bus and broadcom_bus
-stuff that is deprecated and only kept for backwards compability), so
-the PNP0A08 device is really all we have to operate the host bridge
-and manage PCI device BARs.
-
-> ..and does anyone know what ranges do actually go through a single PCIe root
-> bridge on a modern system?
->
-> If anyone could help it would be greatly appreciated :)
->
-> Kind Regards,
-> Robert
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	Arnd
