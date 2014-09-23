@@ -1,115 +1,315 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Thu, 25 Sep 2014 10:23:40 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
- in all platforms
-Message-ID: <20140925142340.GE20089@laptop.dumpdata.com>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1on0145.outbound.protection.outlook.com ([157.56.110.145]:23296
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751414AbaIWEjk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 23 Sep 2014 00:39:40 -0400
+From: Richard Zhu <r65037@freescale.com>
+To: <linux-pci-owner@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
+	<festevam@gmail.com>, <l.stach@pengutronix.de>,
+	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
+Subject: [PATCH v2 5/5] PCI: imx6: add imx6sx pcie support
+Date: Tue, 23 Sep 2014 12:11:38 +0800
+Message-ID: <1411445498-20250-6-git-send-email-r65037@freescale.com>
+In-Reply-To: <1411445498-20250-1-git-send-email-r65037@freescale.com>
+References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 25, 2014 at 11:14:10AM +0800, Yijing Wang wrote:
-> This series is based Bjorn's pci/msi branch
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/msi
+- imx6sx pcie has its own standalone pcie power supply.
+In order to turn on the imx6sx pcie power during
+initialization. Add the pcie regulator and the gpc regmap
+into the imx6sx pcie structure.
+- imx6sx pcie has the new added reset mechanism, add the
+reset operations into the initialization.
+- Register one PM call-back, enter/exit L2 state of the ASPM
+during system suspend/resume.
 
-Is there a git tree for these patches?
-> 
-> Currently, there are a lot of weak arch functions in MSI code.
-> Thierry Reding Introduced MSI chip framework to configure MSI/MSI-X in arm.
-> This series use MSI chip framework to refactor MSI code across all platforms
-> to eliminate weak arch functions. Then all MSI irqs will be managed in a 
-> unified framework. Because this series changed a lot of ARCH MSI code,
-> so tests in the platforms which MSI code modified are warmly welcomed!
-> 
-> v1->v2:
-> Add a patch to make s390 MSI code build happy between patch "x86/xen/MSI: E.."
-> and "s390/MSI: Use MSI..". Fix several typo problems found by Lucas.
-> 
-> RFC->v1: 
-> Updated "[patch 4/21] x86/xen/MSI: Eliminate...", export msi_chip instead
-> of #ifdef to fix MSI bug in xen running in x86. 
-> Rename arch_get_match_msi_chip() to arch_find_msi_chip().
-> Drop use struct device as the msi_chip argument, we will do that
-> later in another patchset.
-> 
-> Yijing Wang (22):
->   PCI/MSI: Clean up struct msi_chip argument
->   PCI/MSI: Remove useless bus->msi assignment
->   MSI: Remove the redundant irq_set_chip_data()
->   x86/xen/MSI: Eliminate arch_msix_mask_irq() and arch_msi_mask_irq()
->   s390/MSI: Use __msi_mask_irq() instead of default_msi_mask_irq()
->   PCI/MSI: Introduce weak arch_find_msi_chip() to find MSI chip
->   PCI/MSI: Refactor struct msi_chip to make it become more common
->   x86/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->   x86/xen/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->   Irq_remapping/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->   x86/MSI: Remove unused MSI weak arch functions
->   MIPS/Octeon/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->   MIPS/Xlp: Remove the dead function destroy_irq() to fix build error
->   MIPS/Xlp/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->   MIPS/Xlr/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->   Powerpc/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->   s390/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->   arm/iop13xx/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->   IA64/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->   Sparc/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->   tile/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->   PCI/MSI: Clean up unused MSI arch functions
-> 
->  arch/arm/mach-iop13xx/include/mach/pci.h |    2 +
->  arch/arm/mach-iop13xx/iq81340mc.c        |    1 +
->  arch/arm/mach-iop13xx/iq81340sc.c        |    1 +
->  arch/arm/mach-iop13xx/msi.c              |    9 ++-
->  arch/arm/mach-iop13xx/pci.c              |    6 ++
->  arch/ia64/kernel/msi_ia64.c              |   18 ++++-
->  arch/mips/pci/msi-octeon.c               |   35 ++++++----
->  arch/mips/pci/msi-xlp.c                  |   18 ++++--
->  arch/mips/pci/pci-xlr.c                  |   15 ++++-
->  arch/powerpc/kernel/msi.c                |   14 +++-
->  arch/s390/pci/pci.c                      |   18 ++++-
->  arch/sparc/kernel/pci.c                  |   14 +++-
->  arch/tile/kernel/pci_gx.c                |   14 +++-
->  arch/x86/include/asm/apic.h              |    4 +
->  arch/x86/include/asm/pci.h               |    4 +-
->  arch/x86/include/asm/x86_init.h          |    7 --
->  arch/x86/kernel/apic/io_apic.c           |   16 ++++-
->  arch/x86/kernel/x86_init.c               |   34 ---------
->  arch/x86/pci/xen.c                       |   60 +++++++++-------
->  drivers/iommu/irq_remapping.c            |    9 ++-
->  drivers/irqchip/irq-armada-370-xp.c      |    8 +--
->  drivers/pci/host/pci-tegra.c             |    8 ++-
->  drivers/pci/host/pcie-designware.c       |    4 +-
->  drivers/pci/host/pcie-rcar.c             |    8 ++-
->  drivers/pci/msi.c                        |  114 ++++++++++++++----------------
->  drivers/pci/probe.c                      |    1 -
->  include/linux/msi.h                      |   26 ++-----
->  27 files changed, 266 insertions(+), 202 deletions(-)
-> 
+Signed-off-by: Richard Zhu <r65037@freescale.com>
+---
+ drivers/pci/host/pci-imx6.c | 164 +++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 146 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index bc4222b..99ecb5d 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -18,12 +18,16 @@
+ #include <linux/mfd/syscon.h>
+ #include <linux/mfd/syscon/imx6q-iomuxc-gpr.h>
+ #include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_device.h>
+ #include <linux/of_gpio.h>
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+ #include <linux/regmap.h>
++#include <linux/regulator/consumer.h>
+ #include <linux/resource.h>
+ #include <linux/signal.h>
++#include <linux/syscore_ops.h>
+ #include <linux/types.h>
+ #include <linux/interrupt.h>
+ 
+@@ -31,15 +35,30 @@
+ 
+ #define to_imx6_pcie(x)	container_of(x, struct imx6_pcie, pp)
+ 
++/* The pcie who have standalone power domain */
++#define PCIE_PHY_HAS_PWR_DOMAIN		BIT(0)
++
++struct imx_pcie_data {
++	unsigned int flags;
++};
++
++static const struct imx_pcie_data imx6sx_pcie_data = {
++	.flags = PCIE_PHY_HAS_PWR_DOMAIN,
++};
++
+ struct imx6_pcie {
+ 	int			reset_gpio;
++	const struct		imx_pcie_data *data;
+ 	struct clk		*pcie_bus;
+ 	struct clk		*pcie_phy;
+ 	struct clk		*pcie;
+ 	struct pcie_port	pp;
+ 	struct regmap		*iomuxc_gpr;
++	struct regmap		*gpc_ips_reg;
++	struct regulator	*pcie_regulator;
+ 	void __iomem		*mem_base;
+ };
++static struct imx6_pcie *imx6_pcie;
+ 
+ /* PCIe Root Complex registers (memory-mapped) */
+ #define PCIE_RC_LCR				0x7c
+@@ -77,6 +96,11 @@ struct imx6_pcie {
+ #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
+ #define PHY_RX_OVRD_IN_LO_RX_PLL_EN (1 << 3)
+ 
++static inline bool is_imx6sx_pcie(struct imx6_pcie *imx6_pcie)
++{
++	return imx6_pcie->data == &imx6sx_pcie_data;
++}
++
+ static int pcie_phy_poll_ack(void __iomem *dbi_base, int exp_val)
+ {
+ 	u32 val;
+@@ -275,11 +299,17 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		goto err_pcie;
+ 	}
+ 
+-	/* power up core phy and enable ref clock */
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				IMX6SX_GPR12_PCIE_TEST_PD,
++				IMX6SX_GPR12_PCIE_TEST_PD_CLR);
++	} else {
++		/* power up core phy and enable ref clock */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
++	}
+ 
+ 	/* allow the clocks to stabilize */
+ 	usleep_range(200, 500);
+@@ -290,6 +320,18 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		msleep(100);
+ 		gpio_set_value(imx6_pcie->reset_gpio, 1);
+ 	}
++
++	/*
++	 * iMX6SX PCIe has the stand-alone power domain.
++	 * refer to the initialization for iMX6SX PCIe,
++	 * release the PCIe PHY reset here,
++	 * before LTSSM enable is set.
++	 */
++	if (is_imx6sx_pcie(imx6_pcie))
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++				IMX6SX_GPR5_PCIE_BTNRST,
++				IMX6SX_GPR5_PCIE_BTNRST_CLR);
++
+ 	return 0;
+ 
+ err_pcie:
+@@ -304,15 +346,38 @@ err_pcie_phy:
+ static void imx6_pcie_init_phy(struct pcie_port *pp)
+ {
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
++	int ret;
++
++	/*
++	 * iMX6SX PCIe has the stand-alone power domain
++	 * add the initialization here for iMX6SX PCIe.
++	 */
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		/* Force PCIe PHY reset */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++				IMX6SX_GPR5_PCIE_BTNRST,
++				IMX6SX_GPR5_PCIE_BTNRST);
++
++		regmap_update_bits(imx6_pcie->gpc_ips_reg, 0, 1 << 7, 1 << 7);
++		/* Power up PCIe PHY, ANATOP_REG_CORE offset 0x140, bit13-9 */
++		regulator_set_voltage(imx6_pcie->pcie_regulator,
++				1100000, 1100000);
++		ret = regulator_enable(imx6_pcie->pcie_regulator);
++		if (ret)
++			dev_info(pp->dev, "failed to enable pcie regulator.\n");
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				IMX6SX_GPR12_RX_EQ_MASK, IMX6SX_GPR12_RX_EQ_2);
++	}
+ 
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
++			IMX6Q_GPR12_PCIE_CTL_2,
++			IMX6Q_GPR12_PCIE_CTL_2_CLR);
+ 
+ 	/* configure constant input signal to the pcie ctrl and phy */
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 			IMX6Q_GPR12_DEVICE_TYPE, PCI_EXP_TYPE_ROOT_PORT << 12);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-			IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
++			IMX6Q_GPR12_LOS_LEVEL, IMX6Q_GPR12_LOS_LEVEL_9);
+ 
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+ 			IMX6Q_GPR8_TX_DEEMPH_GEN1, 0 << 0);
+@@ -370,7 +435,8 @@ static int imx6_pcie_start_link(struct pcie_port *pp)
+ 
+ 	/* Start LTSSM. */
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
++			IMX6Q_GPR12_PCIE_CTL_2,
++			IMX6Q_GPR12_PCIE_CTL_2);
+ 
+ 	ret = imx6_pcie_wait_for_link(pp);
+ 	if (ret)
+@@ -546,10 +612,64 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+ 	return 0;
+ }
+ 
++static const struct of_device_id imx6_pcie_of_match[] = {
++	{ .compatible = "fsl,imx6q-pcie", },
++	{ .compatible = "fsl,imx6sx-pcie", .data = &imx6sx_pcie_data},
++	{},
++};
++MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
++
++#ifdef CONFIG_PM_SLEEP
++static int pci_imx_suspend(void)
++{
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		/* PM_TURN_OFF */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				BIT(16), 1 << 16);
++		udelay(10);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				BIT(16), 0 << 16);
++	}
++
++	return 0;
++}
++
++static void pci_imx_resume(void)
++{
++	struct pcie_port *pp = &imx6_pcie->pp;
++
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		/* reset iMX6SX PCIe */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr,
++				IOMUXC_GPR5, BIT(18), 1 << 18);
++
++		regmap_update_bits(imx6_pcie->iomuxc_gpr,
++				IOMUXC_GPR5, BIT(18), 0 << 18);
++
++		/*
++		 * controller maybe turn off, re-configure again
++		 * Set the CLASS_REV of RC CFG header to
++		 * PCI_CLASS_BRIDGE_PCI
++		 */
++		writel(readl(pp->dbi_base + PCI_CLASS_REVISION)
++			| (PCI_CLASS_BRIDGE_PCI << 16),
++			pp->dbi_base + PCI_CLASS_REVISION);
++
++		dw_pcie_setup_rc(pp);
++	}
++}
++
++static struct syscore_ops pci_imx_syscore_ops = {
++	.suspend = pci_imx_suspend,
++	.resume = pci_imx_resume,
++};
++#endif
++
+ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ {
+-	struct imx6_pcie *imx6_pcie;
+ 	struct pcie_port *pp;
++	const struct of_device_id *of_id =
++			of_match_device(imx6_pcie_of_match, &pdev->dev);
+ 	struct device_node *np = pdev->dev.of_node;
+ 	struct resource *dbi_base;
+ 	int ret;
+@@ -560,6 +680,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 
+ 	pp = &imx6_pcie->pp;
+ 	pp->dev = &pdev->dev;
++	imx6_pcie->data = of_id->data;
+ 
+ 	/* Added for PCI abort handling */
+ 	hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
+@@ -603,9 +724,19 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(imx6_pcie->pcie);
+ 	}
+ 
+-	/* Grab GPR config register range */
+-	imx6_pcie->iomuxc_gpr =
+-		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		imx6_pcie->pcie_regulator = devm_regulator_get(pp->dev, "pcie");
++
++		imx6_pcie->iomuxc_gpr =
++			 syscon_regmap_lookup_by_compatible
++			 ("fsl,imx6sx-iomuxc-gpr");
++		imx6_pcie->gpc_ips_reg =
++			 syscon_regmap_lookup_by_compatible("fsl,imx6sx-gpc");
++	} else {
++		imx6_pcie->iomuxc_gpr =
++			syscon_regmap_lookup_by_compatible
++			("fsl,imx6q-iomuxc-gpr");
++	}
+ 	if (IS_ERR(imx6_pcie->iomuxc_gpr)) {
+ 		dev_err(&pdev->dev, "unable to find iomuxc registers\n");
+ 		return PTR_ERR(imx6_pcie->iomuxc_gpr);
+@@ -616,6 +747,9 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 
+ 	platform_set_drvdata(pdev, imx6_pcie);
++#ifdef CONFIG_PM_SLEEP
++	register_syscore_ops(&pci_imx_syscore_ops);
++#endif
+ 	return 0;
+ }
+ 
+@@ -627,12 +761,6 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
+ 	imx6_pcie_assert_core_reset(&imx6_pcie->pp);
+ }
+ 
+-static const struct of_device_id imx6_pcie_of_match[] = {
+-	{ .compatible = "fsl,imx6q-pcie", },
+-	{},
+-};
+-MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
+-
+ static struct platform_driver imx6_pcie_driver = {
+ 	.driver = {
+ 		.name	= "imx6q-pcie",
+-- 
+1.9.1
+
