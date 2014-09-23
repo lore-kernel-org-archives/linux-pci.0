@@ -1,102 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:61259 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756061AbaIEJpt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 05:45:49 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-pci@vger.kernel.org>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Tue, 23 Sep 2014 11:49:18 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	"Russell King" <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Robert Richter <rric@kernel.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v1 00/21] Use MSI chip to configure MSI/MSI-X in all platforms
-Date: Fri, 5 Sep 2014 18:09:45 +0800
-Message-ID: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Sunil Goutham <sunil.goutham@caviumnetworks.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Subject: Re: [PATCH v11 08/10] OF: PCI: Add support for parsing PCI host
+ bridge resources from DT
+Message-ID: <20140923104918.GP1994@e106497-lin.cambridge.arm.com>
+References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140922093228.GA20256@rric.localhost>
+ <20140922114317.GN1994@e106497-lin.cambridge.arm.com>
+ <8687285.EH4RPBeOB5@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <8687285.EH4RPBeOB5@wuerfel>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series is based Bjorn's pci-next branch + Alexander Gordeev's two patches
-"Remove arch_msi_check_device()" link: https://lkml.org/lkml/2014/7/12/41
+On Tue, Sep 23, 2014 at 08:56:37AM +0100, Arnd Bergmann wrote:
+> On Monday 22 September 2014 12:43:17 Liviu Dudau wrote:
+> > > 
+> > > From e798af4fc2f664d1aff7e863489b8298f90e716e Mon Sep 17 00:00:00 2001
+> > > From: Robert Richter <rrichter@cavium.com>
+> > > Date: Mon, 22 Sep 2014 10:46:01 +0200
+> > > Subject: [PATCH] OF: PCI: Fix creation of mem-mapped pci host bridges
+> > > 
+> > > The pci host bridge was not created if io_base was not set when
+> > > calling of_pci_get_host_bridge_resources(). This is esp. the case for
+> > > mem-mapped io (IORESOURCE_MEM). This patch fixes this. Function
+> > > parameter io_base is optional now.
+> > 
+> > I think the message is misleading. What you want to do is make io_base
+> > optional for the case where the PCI host bridge only expects to have only
+> > IORESOURCE_MEM ranges and doesn't care about IORESOURCE_IO ones.
+> > 
+> > As I'm going to touch this area again to address a comment from Bjorn,
+> > do you mind if I roll this patch into mine with your Signed-off-by and
+> > the mention that you have made io_base optional?
+> 
+> I think the best way to deal with this is to move the check for 
+> io_base down into the place where it is used: As long as the DT only
+> specifies IORESOURCE_MEM windows, we don't need to look at io_base,
+> but if the host controller driver does not support IORESOURCE_IO
+> while the DT specifies it, I guess it would be nice to return an
+> error.
 
-Currently, there are a lot of weak arch functions in MSI code.
-Thierry Reding Introduced MSI chip framework to configure MSI/MSI-X in arm.
-This series use MSI chip framework to refactor MSI code across all platforms
-to eliminate weak arch functions. It has been tested fine in x86(with or without
-irq remap).
+Because the detection of IORESOURCE_{IO|MEM} happens in a loop I still
+need to initialise the io_base to some invalid value before going into the
+for_each_of_pci_range() {...} body. I have added a check in v12 for the
+lack of valid io_base pointer if IORESOURCE_IO range is found.
 
+Best regards,
+Liviu
 
-RFC->v1: Updated "[patch 4/21] x86/xen/MSI: Eliminate...", export msi_chip instead
-         of #ifdef to fix MSI bug in xen running in x86. 
-		 Rename arch_get_match_msi_chip() to arch_find_msi_chip().
-		 Drop use struct device as the msi_chip argument, we will do that
-		 later in another patchset.
+> 
+> 	Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
-Yijing Wang (21):
-  PCI/MSI: Clean up struct msi_chip argument
-  PCI/MSI: Remove useless bus->msi assignment
-  MSI: Remove the redundant irq_set_chip_data()
-  x86/xen/MSI: Eliminate arch_msix_mask_irq() and arch_msi_mask_irq()
-  PCI/MSI: Introduce weak arch_find_msi_chip() to find MSI chip
-  PCI/MSI: Refactor struct msi_chip to make it become more common
-  x86/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-  x86/xen/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-  Irq_remapping/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-  x86/MSI: Remove unused MSI weak arch functions
-  MIPS/Octeon/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-  MIPS/Xlp: Remove the dead function destroy_irq() to fix build error
-  MIPS/Xlp/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-  MIPS/Xlr/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-  Powerpc/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-  s390/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-  arm/iop13xx/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-  IA64/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-  Sparc/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-  tile/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-  PCI/MSI: Clean up unused MSI arch functions
-
- arch/arm/mach-iop13xx/include/mach/pci.h |    2 +
- arch/arm/mach-iop13xx/iq81340mc.c        |    1 +
- arch/arm/mach-iop13xx/iq81340sc.c        |    1 +
- arch/arm/mach-iop13xx/msi.c              |    9 ++-
- arch/arm/mach-iop13xx/pci.c              |    6 ++
- arch/ia64/kernel/msi_ia64.c              |   18 ++++-
- arch/mips/pci/msi-octeon.c               |   35 +++++---
- arch/mips/pci/msi-xlp.c                  |   18 +++-
- arch/mips/pci/pci-xlr.c                  |   15 +++-
- arch/powerpc/kernel/msi.c                |   14 +++-
- arch/s390/pci/pci.c                      |   18 ++++-
- arch/sparc/kernel/pci.c                  |   14 +++-
- arch/tile/kernel/pci_gx.c                |   14 +++-
- arch/x86/include/asm/apic.h              |    4 +
- arch/x86/include/asm/pci.h               |    4 +-
- arch/x86/include/asm/x86_init.h          |    7 --
- arch/x86/kernel/apic/io_apic.c           |   16 ++++-
- arch/x86/kernel/x86_init.c               |   34 --------
- arch/x86/pci/xen.c                       |   60 +++++++++------
- drivers/iommu/irq_remapping.c            |    9 ++-
- drivers/irqchip/irq-armada-370-xp.c      |   12 +--
- drivers/pci/host/pci-tegra.c             |    8 +-
- drivers/pci/host/pcie-designware.c       |    4 +-
- drivers/pci/host/pcie-rcar.c             |    8 +-
- drivers/pci/msi.c                        |  123 +++++++++++++-----------------
- drivers/pci/probe.c                      |    1 -
- include/linux/msi.h                      |   26 ++-----
- 27 files changed, 268 insertions(+), 213 deletions(-)
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
