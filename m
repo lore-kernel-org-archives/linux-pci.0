@@ -1,154 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54227C7E.6060506@linux.intel.com>
-Date: Wed, 24 Sep 2014 16:10:38 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:55139 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752169AbaIWPna (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 11:43:30 -0400
 MIME-Version: 1.0
-To: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
+In-Reply-To: <20140922203428.GF1880@google.com>
+References: <1409001999-23161-1-git-send-email-minipli@googlemail.com>
+	<20140922202748.GE1880@google.com>
+	<20140922203428.GF1880@google.com>
+Date: Tue, 23 Sep 2014 17:43:29 +0200
+Message-ID: <CA+rthh-7onXuO=CVfRxfuUUThSFaAAWF0+gc0eSq3cZLDXyAAQ@mail.gmail.com>
+Subject: Re: [PATCH 0/5] x86/PCI: Minor size reduction by marking init code
+ and data as such
+From: Mathias Krause <minipli@googlemail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC Part2 v1 00/21] Enable hierarchy irqdomian on x86 platforms
-References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com> <542279D0.1040603@jp.fujitsu.com>
-In-Reply-To: <542279D0.1040603@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-2022-JP
-Sender: linux-acpi-owner@vger.kernel.org
+	"H. Peter Anvin" <hpa@zytor.com>, x86-ml <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 22 September 2014 22:34, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc x86 folks]
+>
+> On Mon, Sep 22, 2014 at 02:27:48PM -0600, Bjorn Helgaas wrote:
+>> On Mon, Aug 25, 2014 at 11:26:34PM +0200, Mathias Krause wrote:
+>> > Hi Bjorn,
+>> >
+>> > [...]
+>> >
+>> > Mathias Krause (5):
+>> >   x86/PCI: Mark DMI tables as initialization data
+>> >   x86/PCI: Move __init annotation were it belongs to
+>> >   x86/PCI: Mark constants of pci_mmcfg_nvidia_mcp55() as __initconst
+>> >   x86/PCI: Constify pci_mmcfg_probes[] array
+>> >   x86/PCI: Mark PCI BIOS initialization code as such
+>>
+>> All applied to pci/initdata for v3.18, thanks!
+>
+> Oops, I didn't notice that you hadn't cc'd the x86 folks.
+
+The reason for me not cc'ing the x86 maintainers, but linux-pci
+instead was probably because you're listed as maintainer for these
+files in the MAINTAINERS file. But, true, x86 maintainers should be
+cc'ed for all patches to code below arch/x86/. Just an oversight of
+mine :/
+
+>
+> Guys, if these should go through -tip, here's my ack:
+>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> I don't have any other arch/x86 changes in my tree, so I don't care which
+> way these go.
 
 
-On 2014/9/24 15:59, Yasuaki Ishimatsu wrote:
-> (2014/09/11 23:03), Jiang Liu wrote:
->> We plan to restructure x86 interrupt code based on hierarchy irqdomain,
->> that is to build irqdomains for CPU vector, interrupt remapping unit,
->> IOAPIC, MSI and HPET etc and organize those irqdomains in hierarchy mode.
->> Each irqdomain manages corresponding interrupt controller and talks to
->> parent interrupt controller through public irqdomain interfaces. We also
->> support stacked irq_chip based on hierarchy irqdomain. It will make the
->> x86 interrupt architecture much more clear and more easy to maintain
->> with hierarchy irqdomain and stacked irq_chip. It may also help ARM
->> interrupt management architecture too.
-> 
-> Do you have a documentation which more detailed information is written?
-> I'm interested in this feature. And I want to know more detailed information.
-> 
-> I cannot imagine why the feature makes x86 irq architecture much more clear
-> and more easy to maintain in this description. Of course, I have read the
-> following threads:
-> 
-> https://lkml.org/lkml/2014/9/11/101
-Hi Yasuaki,
-
-Do these help?
-http://www.mail-archive.com/linux-kernel@vger.kernel.org/msg729924.html
-https://lkml.org/lkml/2014/8/1/67
-
-Regards!
-Gerry
-
-> 
-> Thanks,
-> Yasuaki Ishimatsu
-> 
->>
->> This is the second patch set to enable support of hierarchy irqdomain
->> on x86 platforms. It depends on the first part at:
->> https://lkml.org/lkml/2014/9/11/101
->> And you may access it at:
->> https://github.com/jiangliu/linux.git irqdomain/p2v1
->>
->> And there will be a third patch set to convert IOAPIC driver to support
->> hierarchy irqdomain and clean up code.
->>
->> The first patch extends irqdomain interfaces to support hierarchy
->> irqdomain. Hope this interface could be used by other architectures too,
->> such as ARM/ARM64.
->> The second patch introduces two helper functions to support stacked
->> irq_chip.
->> Patch 3-9 implements an irqdomain to manange CPU interrupt vectors, and
->> it's the root irqdomain for x86 platforms.
->> Patch 10-13 converts Intel and AMD interrupt remapping drivers to
->> support hierarchy irqdomain.
->> Patch 14-17 converts HPET, MSI and HT_IRQ drivers to support hierarchy
->> irqdomain.
->> Patch 18-21 cleans up unsued code in x86 arch and interrupt remapping
->> drivers.
->>
->> We have tested this patchset on Intel 32-bit and 64-bit systems. But we
->> have only done compilation tests for HT_IRQ and AMD interrupt remapping
->> drivers due to hardware resource limitation. Tests on AMD platforms are
->> warmly welcomed!
->>
->> Jiang Liu (21):
->>    irqdomain: Introduce new interfaces to support hierarchy irqdomains
->>    genirq: Introduce helper functions to support stacked irq_chip
->>    x86, irq: Save destination CPU ID in irq_cfg
->>    x86, irq: Use hierarchy irqdomain to manage CPU interrupt vectors
->>    x86, hpet: Use new irqdomain interfaces to allocate/free IRQ
->>    x86, MSI: Use new irqdomain interfaces to allocate/free IRQ
->>    x86, uv: Use new irqdomain interfaces to allocate/free IRQ
->>    x86, htirq: Use new irqdomain interfaces to allocate/free IRQ
->>    x86, dmar: Use new irqdomain interfaces to allocate/free IRQ
->>    x86: irq_remapping: Introduce new interfaces to support hierarchy
->>      irqdomain
->>    iommu/vt-d: Change prototypes to prepare for enabling hierarchy
->>      irqdomain
->>    iommu/vt-d: Enhance Intel IR driver to suppport hierarchy irqdomain
->>    iommu/amd: Enhance AMD IR driver to suppport hierarchy irqdomain
->>    x86, hpet: Enhance HPET IRQ to support hierarchy irqdomain
->>    x86, MSI: Use hierarchy irqdomain to manage MSI interrupts
->>    x86, irq: Directly call native_compose_msi_msg() for DMAR IRQ
->>    x86, htirq: Use hierarchy irqdomain to manage Hypertransport
->>      interrupts
->>    iommu/vt-d: Clean up unused MSI related code
->>    iommu/amd: Clean up unused MSI related code
->>    x86: irq_remapping: Clean up unused MSI related code
->>    x86, irq: Clean up unused MSI related code and interfaces
->>
->>   arch/x86/Kconfig                     |    3 +-
->>   arch/x86/include/asm/hpet.h          |   16 +-
->>   arch/x86/include/asm/hw_irq.h        |   64 +++++
->>   arch/x86/include/asm/irq_remapping.h |   66 +++--
->>   arch/x86/include/asm/pci.h           |    5 -
->>   arch/x86/include/asm/x86_init.h      |    4 -
->>   arch/x86/kernel/apic/htirq.c         |  179 +++++++++----
->>   arch/x86/kernel/apic/io_apic.c       |    3 -
->>   arch/x86/kernel/apic/msi.c           |  430 +++++++++++++++++++++++--------
->>   arch/x86/kernel/apic/vector.c        |  158 +++++++++++-
->>   arch/x86/kernel/hpet.c               |   57 ++---
->>   arch/x86/kernel/x86_init.c           |    2 -
->>   arch/x86/platform/uv/uv_irq.c        |   27 +-
->>   drivers/iommu/amd_iommu.c            |  385 ++++++++++++++++++++++------
->>   drivers/iommu/amd_iommu_init.c       |    4 +
->>   drivers/iommu/amd_iommu_proto.h      |    9 +
->>   drivers/iommu/amd_iommu_types.h      |    5 +
->>   drivers/iommu/intel_irq_remapping.c  |  468 +++++++++++++++++++++++-----------
->>   drivers/iommu/irq_remapping.c        |  221 ++++++----------
->>   drivers/iommu/irq_remapping.h        |   22 +-
->>   drivers/pci/htirq.c                  |   48 +---
->>   include/linux/htirq.h                |   22 +-
->>   include/linux/intel-iommu.h          |    4 +
->>   include/linux/irq.h                  |    8 +
->>   include/linux/irqdomain.h            |   60 +++++
->>   kernel/irq/Kconfig                   |    3 +
->>   kernel/irq/chip.c                    |   21 ++
->>   kernel/irq/irqdomain.c               |  349 ++++++++++++++++++++++++-
->>   28 files changed, 1934 insertions(+), 709 deletions(-)
->>
-> 
-> 
+Regards,
+Mathias
