@@ -1,91 +1,142 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <542279D0.1040603@jp.fujitsu.com>
+Date: Wed, 24 Sep 2014 16:59:12 +0900
+From: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
 	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v6 0/4] APM X-Gene PCIe host controller
-Date: Fri,  5 Sep 2014 17:25:39 -0700
-Message-Id: <1409963143-11951-1-git-send-email-tinamdar@apm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	<x86@kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [RFC Part2 v1 00/21] Enable hierarchy irqdomian on x86 platforms
+References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset="ISO-2022-JP"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds support for AppliedMicro X-Gene PCIe host controller. The
-driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
-cards.
+(2014/09/11 23:03), Jiang Liu wrote:
+> We plan to restructure x86 interrupt code based on hierarchy irqdomain,
+> that is to build irqdomains for CPU vector, interrupt remapping unit,
+> IOAPIC, MSI and HPET etc and organize those irqdomains in hierarchy mode.
+> Each irqdomain manages corresponding interrupt controller and talks to
+> parent interrupt controller through public irqdomain interfaces. We also
+> support stacked irq_chip based on hierarchy irqdomain. It will make the
+> x86 interrupt architecture much more clear and more easy to maintain
+> with hierarchy irqdomain and stacked irq_chip. It may also help ARM
+> interrupt management architecture too.
 
-X-Gene PCIe controller driver has depedency on the pcie arm64 arch support.
-Liviu Dudau from ARM has sent a patch set for pcie arm64 arch support and
-support for creating generic pcie bridge from device tree. Liviu's patches
-are available here
-1. https://lkml.org/lkml/2014/8/12/361
+Do you have a documentation which more detailed information is written?
+I'm interested in this feature. And I want to know more detailed information.
 
-If someone wishes to test PCIe on X-Gene with this patch set, above mentioned
-patches from Liviu must be applied before the patches in this patch set. Also
-please use latest xgene u-boot firmware.
+I cannot imagine why the feature makes x86 irq architecture much more clear
+and more easy to maintain in this description. Of course, I have read the
+following threads:
 
-changes since V5:
-1. Port driver to changed interface of 'of_create_pci_host_bridge'
-2. Fix the prefetch bit setting
-3. Removed bunch of register programming which is already done by firmware
+https://lkml.org/lkml/2014/9/11/101
 
-changes since V4:
-1. fix section mismatch warnings
-2. fix the patch description
-3. fix indentation
-4. update read/write cfg functions by passing both addr and offset.
-5. use 'time_before' for timeout.
-6. remove unnecessary 'IS_ERR_OR_NULL'. Keep 'IS_ERR' for 'clk_get'
-7. remove BUG_ON for pci_ioremap_io.
+Thanks,
+Yasuaki Ishimatsu
 
-changes since V3:
-1. remove 'struct hw_pci' and supporting ops in hw_pci
-2. add code to create the host bridge from dts
-3. add code to scan the the host bridge
-4. modify outbound windows setup function to get resource information from
-   'bridge->windows'
-5. add compatible string in pcie dts node with current X-Gene SOC name.
+> 
+> This is the second patch set to enable support of hierarchy irqdomain
+> on x86 platforms. It depends on the first part at:
+> https://lkml.org/lkml/2014/9/11/101
+> And you may access it at:
+> https://github.com/jiangliu/linux.git irqdomain/p2v1
+> 
+> And there will be a third patch set to convert IOAPIC driver to support
+> hierarchy irqdomain and clean up code.
+> 
+> The first patch extends irqdomain interfaces to support hierarchy
+> irqdomain. Hope this interface could be used by other architectures too,
+> such as ARM/ARM64.
+> The second patch introduces two helper functions to support stacked
+> irq_chip.
+> Patch 3-9 implements an irqdomain to manange CPU interrupt vectors, and
+> it's the root irqdomain for x86 platforms.
+> Patch 10-13 converts Intel and AMD interrupt remapping drivers to
+> support hierarchy irqdomain.
+> Patch 14-17 converts HPET, MSI and HT_IRQ drivers to support hierarchy
+> irqdomain.
+> Patch 18-21 cleans up unsued code in x86 arch and interrupt remapping
+> drivers.
+> 
+> We have tested this patchset on Intel 32-bit and 64-bit systems. But we
+> have only done compilation tests for HT_IRQ and AMD interrupt remapping
+> drivers due to hardware resource limitation. Tests on AMD platforms are
+> warmly welcomed!
+> 
+> Jiang Liu (21):
+>    irqdomain: Introduce new interfaces to support hierarchy irqdomains
+>    genirq: Introduce helper functions to support stacked irq_chip
+>    x86, irq: Save destination CPU ID in irq_cfg
+>    x86, irq: Use hierarchy irqdomain to manage CPU interrupt vectors
+>    x86, hpet: Use new irqdomain interfaces to allocate/free IRQ
+>    x86, MSI: Use new irqdomain interfaces to allocate/free IRQ
+>    x86, uv: Use new irqdomain interfaces to allocate/free IRQ
+>    x86, htirq: Use new irqdomain interfaces to allocate/free IRQ
+>    x86, dmar: Use new irqdomain interfaces to allocate/free IRQ
+>    x86: irq_remapping: Introduce new interfaces to support hierarchy
+>      irqdomain
+>    iommu/vt-d: Change prototypes to prepare for enabling hierarchy
+>      irqdomain
+>    iommu/vt-d: Enhance Intel IR driver to suppport hierarchy irqdomain
+>    iommu/amd: Enhance AMD IR driver to suppport hierarchy irqdomain
+>    x86, hpet: Enhance HPET IRQ to support hierarchy irqdomain
+>    x86, MSI: Use hierarchy irqdomain to manage MSI interrupts
+>    x86, irq: Directly call native_compose_msi_msg() for DMAR IRQ
+>    x86, htirq: Use hierarchy irqdomain to manage Hypertransport
+>      interrupts
+>    iommu/vt-d: Clean up unused MSI related code
+>    iommu/amd: Clean up unused MSI related code
+>    x86: irq_remapping: Clean up unused MSI related code
+>    x86, irq: Clean up unused MSI related code and interfaces
+> 
+>   arch/x86/Kconfig                     |    3 +-
+>   arch/x86/include/asm/hpet.h          |   16 +-
+>   arch/x86/include/asm/hw_irq.h        |   64 +++++
+>   arch/x86/include/asm/irq_remapping.h |   66 +++--
+>   arch/x86/include/asm/pci.h           |    5 -
+>   arch/x86/include/asm/x86_init.h      |    4 -
+>   arch/x86/kernel/apic/htirq.c         |  179 +++++++++----
+>   arch/x86/kernel/apic/io_apic.c       |    3 -
+>   arch/x86/kernel/apic/msi.c           |  430 +++++++++++++++++++++++--------
+>   arch/x86/kernel/apic/vector.c        |  158 +++++++++++-
+>   arch/x86/kernel/hpet.c               |   57 ++---
+>   arch/x86/kernel/x86_init.c           |    2 -
+>   arch/x86/platform/uv/uv_irq.c        |   27 +-
+>   drivers/iommu/amd_iommu.c            |  385 ++++++++++++++++++++++------
+>   drivers/iommu/amd_iommu_init.c       |    4 +
+>   drivers/iommu/amd_iommu_proto.h      |    9 +
+>   drivers/iommu/amd_iommu_types.h      |    5 +
+>   drivers/iommu/intel_irq_remapping.c  |  468 +++++++++++++++++++++++-----------
+>   drivers/iommu/irq_remapping.c        |  221 ++++++----------
+>   drivers/iommu/irq_remapping.h        |   22 +-
+>   drivers/pci/htirq.c                  |   48 +---
+>   include/linux/htirq.h                |   22 +-
+>   include/linux/intel-iommu.h          |    4 +
+>   include/linux/irq.h                  |    8 +
+>   include/linux/irqdomain.h            |   60 +++++
+>   kernel/irq/Kconfig                   |    3 +
+>   kernel/irq/chip.c                    |   21 ++
+>   kernel/irq/irqdomain.c               |  349 ++++++++++++++++++++++++-
+>   28 files changed, 1934 insertions(+), 709 deletions(-)
+> 
 
-changes since V2:
-1. redefined each PCI port in different PCI domain correctly.
-2. removed setup_lane and setup_link functions from driver.
-3. removed scan_bus wrapper and set_primary_bus hack.
-4. added pci_ioremap_io for io resources.
-
-changes since V1:
-1. added PCI domain support
-2. reading cpu and pci addresses from device tree to configure regions.
-3. got rid of unnecessary wrappers for readl and writel.
-4. got rid of endpoint configuration code.
-5. added 'dma-ranges' property support to read inbound region configuration.
-6. renamed host driver file to 'pci-xgene.c' from 'pcie-xgene.c'
-7. dropped 'clock-names' property from bindings
-8. added comments whereever requested.
-
-Tanmay Inamdar (4):
-  pci:host: APM X-Gene PCIe controller driver
-  arm64: dts: APM X-Gene PCIe device tree nodes
-  dt-bindings: pci: xgene pcie device tree bindings
-  MAINTAINERS: entry for APM X-Gene PCIe host driver
-
- .../devicetree/bindings/pci/xgene-pci.txt          |  55 ++
- MAINTAINERS                                        |   8 +
- arch/arm64/boot/dts/apm-mustang.dts                |   8 +
- arch/arm64/boot/dts/apm-storm.dtsi                 | 160 ++++++
- drivers/pci/host/Kconfig                           |  10 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-xgene.c                       | 638 +++++++++++++++++++++
- 7 files changed, 880 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
- create mode 100644 drivers/pci/host/pci-xgene.c
-
--- 
-1.9.1
 
