@@ -1,56 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og117.obsmtp.com ([64.18.0.149]:34855 "HELO
-	exprod5og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753068AbaIPWeX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 18:34:23 -0400
-Received: by mail-pa0-f48.google.com with SMTP id hz1so721063pad.7
-        for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 15:34:22 -0700 (PDT)
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v9 4/4] MAINTAINERS: entry for APM X-Gene PCIe host driver
-Date: Tue, 16 Sep 2014 15:33:44 -0700
-Message-Id: <1410906824-9321-5-git-send-email-tinamdar@apm.com>
-In-Reply-To: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
-References: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:50264 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751201AbaIXNlc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 09:41:32 -0400
+Received: by mail-ig0-f174.google.com with SMTP id r10so6519599igi.13
+        for <linux-pci@vger.kernel.org>; Wed, 24 Sep 2014 06:41:31 -0700 (PDT)
+Date: Wed, 24 Sep 2014 07:41:29 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4 0/3] MSI cleanup update
+Message-ID: <20140924134129.GD13850@google.com>
+References: <1411528171-1927-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1411528171-1927-1-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add entry for AppliedMicro X-Gene PCIe host driver.
+On Wed, Sep 24, 2014 at 11:09:31AM +0800, Yijing Wang wrote:
+> v3->v4: fix the build error under powerpc, I missed to replace
+> 		its __read_msi_msg() in last patch.
+> 
+> Yijing Wang (3):
+>   MSI/powerpc: Use __read_msi_msg() instead of read_msi_msg()
+>   PCI/MSI: Remove unused function read_msi_msg()
+>   PCI/MSI: Rename __read_msi_msg() to read_msi_msg()
+> 
+>  arch/powerpc/platforms/pseries/msi.c |    2 +-
+>  arch/x86/pci/xen.c                   |    2 +-
+>  drivers/pci/msi.c                    |    9 +--------
+>  include/linux/msi.h                  |    3 +--
+>  4 files changed, 4 insertions(+), 12 deletions(-)
 
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
----
- MAINTAINERS | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 5e7866a..cd9bb3da 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6941,6 +6941,14 @@ L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	drivers/pci/host/*spear*
- 
-+PCI DRIVER FOR APPLIEDMICRO XGENE
-+M:	Tanmay Inamdar <tinamdar@apm.com>
-+L:	linux-pci@vger.kernel.org
-+L:	linux-arm-kernel@lists.infradead.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/xgene-pci.txt
-+F:	drivers/pci/host/pci-xgene.c
-+
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
- L:	linux-pcmcia@lists.infradead.org
--- 
-1.9.1
-
+Applied to pci/msi for v3.18, thanks!
