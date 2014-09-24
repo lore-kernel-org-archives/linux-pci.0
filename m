@@ -1,78 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0144.outbound.protection.outlook.com ([65.55.169.144]:43952
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750767AbaIXEpK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Sep 2014 00:45:10 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	"festevam@gmail.com" <festevam@gmail.com>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>
-Subject: RE: [PATCH v2 4/5] PCI: imx6: add imx6sx pcie related gpr bits
- definitions
-Date: Wed, 24 Sep 2014 04:45:06 +0000
-Message-ID: <14db87037bda4d568d2677e8131a5ac1@BY1PR0301MB0855.namprd03.prod.outlook.com>
-References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
-	 <1411445498-20250-5-git-send-email-r65037@freescale.com>
- <1411467663.3256.11.camel@pengutronix.de>
-In-Reply-To: <1411467663.3256.11.camel@pengutronix.de>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 24 Sep 2014 21:25:16 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
+cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC Part2 v1 00/21] Enable hierarchy irqdomian on x86
+ platforms
+In-Reply-To: <542279D0.1040603@jp.fujitsu.com>
+Message-ID: <alpine.DEB.2.10.1409242122380.4604@nanos>
+References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com> <542279D0.1040603@jp.fujitsu.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEx1Y2FzIFN0YWNoIFttYWls
-dG86bC5zdGFjaEBwZW5ndXRyb25peC5kZV0NCj4gU2VudDogVHVlc2RheSwgU2VwdGVtYmVyIDIz
-LCAyMDE0IDY6MjEgUE0NCj4gVG86IFpodSBSaWNoYXJkLVI2NTAzNw0KPiBDYzogbGludXgtcGNp
-LW93bmVyQHZnZXIua2VybmVsLm9yZzsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgR3VvIFNo
-YXduLQ0KPiBSNjUwNzM7IGZlc3RldmFtQGdtYWlsLmNvbTsgdGhhcnZleUBnYXRld29ya3MuY29t
-DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjIgNC81XSBQQ0k6IGlteDY6IGFkZCBpbXg2c3ggcGNp
-ZSByZWxhdGVkIGdwciBiaXRzDQo+IGRlZmluaXRpb25zDQo+IA0KPiBBbSBEaWVuc3RhZywgZGVu
-IDIzLjA5LjIwMTQsIDEyOjExICswODAwIHNjaHJpZWIgUmljaGFyZCBaaHU6DQo+ID4gU2lnbmVk
-LW9mZi1ieTogUmljaGFyZCBaaHUgPHI2NTAzN0BmcmVlc2NhbGUuY29tPg0KPiANCj4gSSBkb24n
-dCB0aGluayB0aG9zZSBfQ0xSIGRlZmluZXMgbWFrZSBhbnkgc2Vuc2UuIENhbiB3ZSBqdXN0IHVz
-ZSB0aGUgbWFzayBhbmQNCj4gYSB2YWx1ZSBvZiAwIGluIHRoZSByZWdtYXAgdXBkYXRlcz8gSSBk
-b24ndCBzZWUgaG93IHRob3NlIGRlZmluZXMgYWRkIGFueQ0KPiB2YWx1ZS4NCj4gDQoNCltSaWNo
-YXJkXSBPay4NCkJlc3QgUmVnYXJkcw0KUmljaGFyZCBaaHUNCj4gPiAtLS0NCj4gPiAgaW5jbHVk
-ZS9saW51eC9tZmQvc3lzY29uL2lteDZxLWlvbXV4Yy1ncHIuaCB8IDE0ICsrKysrKysrKysrKysr
-DQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCAxNCBpbnNlcnRpb25zKCspDQo+ID4NCj4gPiBkaWZmIC0t
-Z2l0IGEvaW5jbHVkZS9saW51eC9tZmQvc3lzY29uL2lteDZxLWlvbXV4Yy1ncHIuaA0KPiA+IGIv
-aW5jbHVkZS9saW51eC9tZmQvc3lzY29uL2lteDZxLWlvbXV4Yy1ncHIuaA0KPiA+IGluZGV4IGZm
-NDQzNzQuLmYwMjg3NWUgMTAwNjQ0DQo+ID4gLS0tIGEvaW5jbHVkZS9saW51eC9tZmQvc3lzY29u
-L2lteDZxLWlvbXV4Yy1ncHIuaA0KPiA+ICsrKyBiL2luY2x1ZGUvbGludXgvbWZkL3N5c2Nvbi9p
-bXg2cS1pb211eGMtZ3ByLmgNCj4gPiBAQCAtMTEzLDEwICsxMTMsMTIgQEANCj4gPiAgI2RlZmlu
-ZSBJTVg2UV9HUFIxX01JUElfSVBVMV9NVVhfR0FTS0VUCQkweDANCj4gPiAgI2RlZmluZSBJTVg2
-UV9HUFIxX01JUElfSVBVMV9NVVhfSU9NVVgJCUJJVCgxOSkNCj4gPiAgI2RlZmluZSBJTVg2UV9H
-UFIxX1BDSUVfVEVTVF9QRAkJCUJJVCgxOCkNCj4gPiArI2RlZmluZSBJTVg2UV9HUFIxX1BDSUVf
-VEVTVF9QRF9DTFIJCTB4MA0KPiA+ICAjZGVmaW5lIElNWDZRX0dQUjFfSVBVX1ZQVV9NVVhfTUFT
-SwkJQklUKDE3KQ0KPiA+ICAjZGVmaW5lIElNWDZRX0dQUjFfSVBVX1ZQVV9NVVhfSVBVMQkJMHgw
-DQo+ID4gICNkZWZpbmUgSU1YNlFfR1BSMV9JUFVfVlBVX01VWF9JUFUyCQlCSVQoMTcpDQo+ID4g
-ICNkZWZpbmUgSU1YNlFfR1BSMV9QQ0lFX1JFRl9DTEtfRU4JCUJJVCgxNikNCj4gPiArI2RlZmlu
-ZSBJTVg2UV9HUFIxX1BDSUVfUkVGX0NMS19DTFIJCTB4MA0KPiA+ICAjZGVmaW5lIElNWDZRX0dQ
-UjFfVVNCX0VYUF9NT0RFCQkJQklUKDE1KQ0KPiA+ICAjZGVmaW5lIElNWDZRX0dQUjFfUENJRV9J
-TlQJCQlCSVQoMTQpDQo+ID4gICNkZWZpbmUgSU1YNlFfR1BSMV9VU0JfT1RHX0lEX1NFTF9NQVNL
-CQlCSVQoMTMpDQo+ID4gQEAgLTMwMCw3ICszMDIsOSBAQA0KPiA+ICAjZGVmaW5lIElNWDZRX0dQ
-UjEyX0FSTVBfQVBCX0NMS19FTgkJQklUKDI0KQ0KPiA+ICAjZGVmaW5lIElNWDZRX0dQUjEyX0RF
-VklDRV9UWVBFCQkJKDB4ZiA8PCAxMikNCj4gPiAgI2RlZmluZSBJTVg2UV9HUFIxMl9QQ0lFX0NU
-TF8yCQkJQklUKDEwKQ0KPiA+ICsjZGVmaW5lIElNWDZRX0dQUjEyX1BDSUVfQ1RMXzJfQ0xSCQkw
-eDANCj4gPiAgI2RlZmluZSBJTVg2UV9HUFIxMl9MT1NfTEVWRUwJCQkoMHgxZiA8PCA0KQ0KPiA+
-ICsjZGVmaW5lIElNWDZRX0dQUjEyX0xPU19MRVZFTF85CQkJKDB4OSA8PCA0KQ0KPiA+DQo+ID4g
-ICNkZWZpbmUgSU1YNlFfR1BSMTNfU0RNQV9TVE9QX1JFUQkJQklUKDMwKQ0KPiA+ICAjZGVmaW5l
-IElNWDZRX0dQUjEzX0NBTjJfU1RPUF9SRVEJCUJJVCgyOSkNCj4gPiBAQCAtMzk1LDQgKzM5OSwx
-NCBAQA0KPiA+ICAjZGVmaW5lIElNWDZTTF9HUFIxX0ZFQ19DTE9DS19NVVgxX1NFTF9NQVNLICAg
-ICgweDMgPDwgMTcpDQo+ID4gICNkZWZpbmUgSU1YNlNMX0dQUjFfRkVDX0NMT0NLX01VWDJfU0VM
-X01BU0sgICAgKDB4MSA8PCAxNCkNCj4gPg0KPiA+ICsvKiBGb3IgaW14NnN4IGlvbXV4IGdwciBy
-ZWdpc3RlciBmaWVsZCBkZWZpbmUgKi8NCj4gPiArI2RlZmluZSBJTVg2U1hfR1BSNV9QQ0lFX0JU
-TlJTVAkJCUJJVCgxOSkNCj4gPiArI2RlZmluZSBJTVg2U1hfR1BSNV9QQ0lFX0JUTlJTVF9DTFIJ
-CTB4MA0KPiA+ICsjZGVmaW5lIElNWDZTWF9HUFI1X1BDSUVfUEVSU1QJCQlCSVQoMTgpDQo+ID4g
-KyNkZWZpbmUgSU1YNlNYX0dQUjVfUENJRV9QRVJTVF9DTFIJCTB4MA0KPiA+ICsNCj4gPiArI2Rl
-ZmluZSBJTVg2U1hfR1BSMTJfUENJRV9URVNUX1BECQlCSVQoMzApDQo+ID4gKyNkZWZpbmUgSU1Y
-NlNYX0dQUjEyX1BDSUVfVEVTVF9QRF9DTFIJCTB4MA0KPiA+ICsjZGVmaW5lIElNWDZTWF9HUFIx
-Ml9SWF9FUV9NQVNLCQkJKDB4NyA8PCAwKQ0KPiA+ICsjZGVmaW5lIElNWDZTWF9HUFIxMl9SWF9F
-UV8yCQkJKDB4MiA8PCAwKQ0KPiA+ICAjZW5kaWYgLyogX19MSU5VWF9JTVg2UV9JT01VWENfR1BS
-X0ggKi8NCj4gDQo+IC0tDQo+IFBlbmd1dHJvbml4IGUuSy4gICAgICAgICAgICAgfCBMdWNhcyBT
-dGFjaCAgICAgICAgICAgICAgICAgfA0KPiBJbmR1c3RyaWFsIExpbnV4IFNvbHV0aW9ucyAgIHwg
-aHR0cDovL3d3dy5wZW5ndXRyb25peC5kZS8gIHwNCg0K
+On Wed, 24 Sep 2014, Yasuaki Ishimatsu wrote:
+> I cannot imagine why the feature makes x86 irq architecture much more clear
+> and more easy to maintain in this description. Of course, I have read the
+> following threads:
+> 
+> https://lkml.org/lkml/2014/9/11/101
+
+Here is the long version of the idea:
+
+     https://lkml.org/lkml/2014/8/26/707
+
+Short version is:
+
+Separate the irq handling entities in a clear layered way instead of
+having vector/[io]apic specific knowledge/data in places like msi,
+remap etc.
+
+Thanks,
+
+	tglx
+
