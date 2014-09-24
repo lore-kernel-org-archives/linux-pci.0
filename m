@@ -1,422 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<tglx@linutronix.de>, <hpa@zytor.com>, <x86@kernel.org>,
-	<bp@suse.de>, <dan.carpenter@oracle.com>,
-	<dougthompson@xmission.com>, <bp@alien8.de>,
-	<m.chehab@samsung.com>, <linux-edac@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-Subject: [PATCH 4/4] edac, amd64_edac: Add F15h M60h support
-Date: Thu, 18 Sep 2014 14:57:10 -0500
-Message-ID: <1411070230-10298-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f169.google.com ([209.85.216.169]:57692 "EHLO
+	mail-qc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750914AbaIXXbA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 19:31:00 -0400
+Received: by mail-qc0-f169.google.com with SMTP id r5so3167144qcx.28
+        for <linux-pci@vger.kernel.org>; Wed, 24 Sep 2014 16:30:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <alpine.LRH.2.03.1409241547430.4696@AMR>
+References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com>
+ <20140903224201.GD26073@google.com> <540802D9.6000903@huawei.com>
+ <CAErSpo6qy76zTX07Ufm0n1_HUA5G0MrAYxauEFa5QkibWsejFQ@mail.gmail.com>
+ <5409117E.2000002@huawei.com> <alpine.LRH.2.03.1409241547430.4696@AMR>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 24 Sep 2014 17:30:39 -0600
+Message-ID: <CAErSpo5upA7KYVo=_SvwJ9pdNot_5ENi3OtiPpuzZjpwj3ghPA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+To: Keith Busch <keith.busch@intel.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	Jon Mason <jon.mason@intel.com>, Jon Mason <jdmason@kudzu.us>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds support for ECC error decoding for F15h M60h processor.
-Aside from the usual changes, the patch adds support for some new features
-in the processor:
- - DDR4(unbuffered, registered); LRDIMM DDR3 support
-   - relevant debug messages have been modified/added to report these
-     memory types
- - new dbam_to_cs mappers
-   - if (F15h M60h && LRDIMM); we need a 'multiplier' value to find
-     cs_size. This multiplier value is obtained from the per-dimm
-     DCSM register. So, change the interface to accept a 'cs_mask_nr'
-     value to facilitate this calculation
-Misc cleanup:
- - amd64_pci_table[] is condensed by using PCI_VDEVICE macro.
+On Wed, Sep 24, 2014 at 4:41 PM, Keith Busch <keith.busch@intel.com> wrote:
+> Just poking this thread to make sure it's not dead. :)
+>
+> I tested Yijing's proposal and it is successful on our Intel server
+> platforms; hoping either this or something that derives similar behavior
+> will be applied so we can remove bus tuning kernel parameters.
+>
+> Tested-by: Keith Busch <keith.busch@intel.com>
 
-Testing details:
-Tested the patch by injecting 'ECC' type errors using mce_amd_inj
-and error decoding works fine.
+Oops, thanks for poking me, because this was indeed dead.
 
-Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
----
- drivers/edac/amd64_edac.c | 226 ++++++++++++++++++++++++++++++++--------------
- drivers/edac/amd64_edac.h |  12 ++-
- 2 files changed, 169 insertions(+), 69 deletions(-)
+My main objection was to testing "is_hotplug_bridge".  That doesn't
+seem right, because this issue really isn't specific to hotplug.  I
+didn't see a resolution of that, but let me know if I missed it.
 
-diff --git a/drivers/edac/amd64_edac.c b/drivers/edac/amd64_edac.c
-index bbd6514..3e265e0 100644
---- a/drivers/edac/amd64_edac.c
-+++ b/drivers/edac/amd64_edac.c
-@@ -690,11 +690,32 @@ static void debug_display_dimm_sizes(struct amd64_pvt *, u8);
- 
- static void debug_dump_dramcfg_low(struct amd64_pvt *pvt, u32 dclr, int chan)
- {
-+	int cs;
-+
- 	edac_dbg(1, "F2x%d90 (DRAM Cfg Low): 0x%08x\n", chan, dclr);
- 
--	edac_dbg(1, "  DIMM type: %sbuffered; all DIMMs support ECC: %s\n",
--		 (dclr & BIT(16)) ?  "un" : "",
--		 (dclr & BIT(19)) ? "yes" : "no");
-+	if (pvt->fam == 0x15 && pvt->model == 0x60) {
-+		for_each_chip_select_mask(cs, chan, pvt) {
-+			u32 dcsm = pvt->csels[chan].csmasks[cs];
-+
-+			if (dcsm & 0x3) {
-+				/* LRDIMMs */
-+				edac_dbg(1, "  DIMM type: LRDIMM %dx rank multiply;"
-+					 "CS = %d; all DIMMs support ECC: %s\n",
-+					 (dcsm & 0x3), cs,
-+					 (dclr & BIT(19)) ? "yes" : "no");
-+			} else {
-+				edac_dbg(1, "  DIMM type: %sbuffered; CS = %d;"
-+					 "all DIMMs support ECC: %s\n",
-+					 (dclr & BIT(16)) ?  "un" : "", cs,
-+					 (dclr & BIT(19)) ? "yes" : "no");
-+			}
-+		}
-+	} else {
-+		edac_dbg(1, "  DIMM type: %sbuffered; all DIMMs support ECC:"
-+			    "%s\n", (dclr & BIT(16)) ?  "un" : "",
-+				    (dclr & BIT(19)) ? "yes" : "no");
-+	}
- 
- 	edac_dbg(1, "  PAR/ERR parity: %s\n",
- 		 (dclr & BIT(8)) ?  "enabled" : "disabled");
-@@ -756,7 +777,7 @@ static void prep_chip_selects(struct amd64_pvt *pvt)
- 	if (pvt->fam == 0xf && pvt->ext_model < K8_REV_F) {
- 		pvt->csels[0].b_cnt = pvt->csels[1].b_cnt = 8;
- 		pvt->csels[0].m_cnt = pvt->csels[1].m_cnt = 8;
--	} else if (pvt->fam == 0x15 && pvt->model >= 0x30) {
-+	} else if (pvt->fam == 0x15 && pvt->model == 0x30) {
- 		pvt->csels[0].b_cnt = pvt->csels[1].b_cnt = 4;
- 		pvt->csels[0].m_cnt = pvt->csels[1].m_cnt = 2;
- 	} else {
-@@ -817,10 +838,26 @@ static enum mem_type determine_memory_type(struct amd64_pvt *pvt, int cs)
- {
- 	enum mem_type type;
- 
--	/* F15h supports only DDR3 */
--	if (pvt->fam >= 0x15)
--		type = (pvt->dclr0 & BIT(16)) ?	MEM_DDR3 : MEM_RDDR3;
--	else if (pvt->fam == 0x10 || pvt->ext_model >= K8_REV_F) {
-+	/* F15h, M60h supports DDR4 too*/
-+	if (pvt->fam >= 0x15) {
-+		if (pvt->model == 0x60) {
-+			/*
-+			 * Since in init_csrow we iterate over just DCT0
-+			 * use '0' for dct values here when necessary.
-+			 */
-+			u32 dram_ctrl;
-+			u32 dcsm = pvt->csels[0].csmasks[cs];
-+
-+			amd64_read_dct_pci_cfg(pvt, 0, DRAM_CONTROL,
-+					       &dram_ctrl);
-+			type = (((dram_ctrl >> 8) & 0x7) == 0x2) ? MEM_DDR4 :
-+				(pvt->dclr0 & BIT(16)) ? MEM_DDR3 :
-+				(dcsm & 0x3) ? MEM_LRDDR3 : MEM_RDDR3;
-+		} else {
-+			type = (pvt->dclr0 & BIT(16)) ?	MEM_DDR3 : MEM_RDDR3;
-+		}
-+
-+	} else if (pvt->fam == 0x10 || pvt->ext_model >= K8_REV_F) {
- 		if (pvt->dchr0 & DDR3_MODE)
- 			type = (pvt->dclr0 & BIT(16)) ?	MEM_DDR3 : MEM_RDDR3;
- 		else
-@@ -958,8 +995,12 @@ static void read_dram_base_limit_regs(struct amd64_pvt *pvt, unsigned range)
- 	if (WARN_ON(!nb))
- 		return;
- 
--	pci_func = (pvt->model == 0x30) ? PCI_DEVICE_ID_AMD_15H_M30H_NB_F1
--					: PCI_DEVICE_ID_AMD_15H_NB_F1;
-+	if (pvt->model == 0x60)
-+		pci_func = PCI_DEVICE_ID_AMD_15H_M60H_NB_F1;
-+	else if (pvt->model == 0x30)
-+		pci_func = PCI_DEVICE_ID_AMD_15H_M30H_NB_F1;
-+	else
-+		pci_func = PCI_DEVICE_ID_AMD_15H_NB_F1;
- 
- 	f1 = pci_get_related_function(nb->misc->vendor, pci_func, nb->misc);
- 	if (WARN_ON(!f1))
-@@ -1049,7 +1090,7 @@ static int ddr2_cs_size(unsigned i, bool dct_width)
- }
- 
- static int k8_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
--				  unsigned cs_mode)
-+				  unsigned cs_mode, int cs_mask_nr)
- {
- 	u32 dclr = dct ? pvt->dclr1 : pvt->dclr0;
- 
-@@ -1167,8 +1208,43 @@ static int ddr3_cs_size(unsigned i, bool dct_width)
- 	return cs_size;
- }
- 
-+static int ddr3_lrdimm_cs_size(unsigned i, unsigned rank_multiply)
-+{
-+	unsigned shift = 0;
-+	int cs_size = 0;
-+
-+	if (i < 4 || i == 6)
-+		cs_size = -1;
-+	else if (i == 12)
-+		shift = 7;
-+	else if (!(i & 0x1))
-+		shift = i >> 1;
-+	else
-+		shift = (i + 1) >> 1;
-+
-+	if (cs_size != -1)
-+		cs_size = rank_multiply * (128 << shift);
-+
-+	return cs_size;
-+}
-+
-+static int ddr4_cs_size(unsigned i)
-+{
-+	int cs_size = 0;
-+
-+	if (i == 0)
-+		cs_size = -1;
-+	else if (i == 1)
-+		cs_size = 1024;
-+	else
-+		/* Min cs_size = 1G */
-+		cs_size = 1024 * (1 << (i >> 1));
-+
-+	return cs_size;
-+}
-+
- static int f10_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
--				   unsigned cs_mode)
-+				   unsigned cs_mode, int cs_mask_nr)
- {
- 	u32 dclr = dct ? pvt->dclr1 : pvt->dclr0;
- 
-@@ -1184,18 +1260,56 @@ static int f10_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
-  * F15h supports only 64bit DCT interfaces
-  */
- static int f15_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
--				   unsigned cs_mode)
-+				   unsigned cs_mode, int cs_mask_nr)
- {
- 	WARN_ON(cs_mode > 12);
- 
- 	return ddr3_cs_size(cs_mode, false);
- }
- 
-+/* F15h M60h supports DDR4 mapping as well.. */
-+static int f15_m60h_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
-+					unsigned cs_mode, int cs_mask_nr)
-+{
-+	int cs_size;
-+	enum mem_type type;
-+	u32 dram_ctrl;
-+	u32 dcsm = pvt->csels[dct].csmasks[cs_mask_nr];
-+
-+	WARN_ON(cs_mode > 12);
-+
-+	amd64_read_dct_pci_cfg(pvt, dct, DRAM_CONTROL, &dram_ctrl);
-+	type = (((dram_ctrl >> 8) & 0x7) == 0x2) ? MEM_DDR4 :
-+		(pvt->dclr0 & BIT(16)) ? MEM_DDR3 :
-+		(dcsm & 0x3) ? MEM_LRDDR3 : MEM_RDDR3;
-+
-+	if (type == MEM_DDR4) {
-+		if (cs_mode > 9)
-+			return -1;
-+
-+		cs_size = ddr4_cs_size(cs_mode);
-+	} else if (type == MEM_LRDDR3) {
-+		unsigned rank_multiply = dcsm & 0xf;
-+
-+		if (rank_multiply == 3)
-+			rank_multiply = 4;
-+		cs_size = ddr3_lrdimm_cs_size(cs_mode, rank_multiply);
-+	} else {
-+		/* Minimum cs size is 512mb for F15hM60h*/
-+		if (cs_mode == 0x1)
-+			return -1;
-+
-+		cs_size = ddr3_cs_size(cs_mode, false);
-+	}
-+
-+	return cs_size;
-+}
-+
- /*
-  * F16h and F15h model 30h have only limited cs_modes.
-  */
- static int f16_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
--				unsigned cs_mode)
-+				unsigned cs_mode, int cs_mask_nr)
- {
- 	WARN_ON(cs_mode > 12);
- 
-@@ -1757,13 +1871,20 @@ static void debug_display_dimm_sizes(struct amd64_pvt *pvt, u8 ctrl)
- 
- 		size0 = 0;
- 		if (dcsb[dimm*2] & DCSB_CS_ENABLE)
-+			/* For f15m60h, need multiplier for LRDIMM cs_size
-+			 * calculation. We pass 'dimm' value to the dbam_to_cs
-+			 * mapper so we can find the multiplier from the
-+			 * corresponding DCSM.
-+			 */
- 			size0 = pvt->ops->dbam_to_cs(pvt, ctrl,
--						     DBAM_DIMM(dimm, dbam));
-+						     DBAM_DIMM(dimm, dbam),
-+						     dimm);
- 
- 		size1 = 0;
- 		if (dcsb[dimm*2 + 1] & DCSB_CS_ENABLE)
- 			size1 = pvt->ops->dbam_to_cs(pvt, ctrl,
--						     DBAM_DIMM(dimm, dbam));
-+						     DBAM_DIMM(dimm, dbam),
-+						     dimm);
- 
- 		amd64_info(EDAC_MC ": %d: %5dMB %d: %5dMB\n",
- 				dimm * 2,     size0,
-@@ -1812,6 +1933,16 @@ static struct amd64_family_type family_types[] = {
- 			.dbam_to_cs		= f16_dbam_to_chip_select,
- 		}
- 	},
-+	[F15_M60H_CPUS] = {
-+		.ctl_name = "F15h_M60h",
-+		.f1_id = PCI_DEVICE_ID_AMD_15H_M60H_NB_F1,
-+		.f3_id = PCI_DEVICE_ID_AMD_15H_M60H_NB_F3,
-+		.ops = {
-+			.early_channel_count	= f1x_early_channel_count,
-+			.map_sysaddr_to_csrow	= f1x_map_sysaddr_to_csrow,
-+			.dbam_to_cs		= f15_m60h_dbam_to_chip_select,
-+		}
-+	},
- 	[F16_CPUS] = {
- 		.ctl_name = "F16h",
- 		.f1_id = PCI_DEVICE_ID_AMD_16H_NB_F1,
-@@ -2238,7 +2369,8 @@ static u32 get_csrow_nr_pages(struct amd64_pvt *pvt, u8 dct, int csrow_nr)
- 	 */
- 	cs_mode = DBAM_DIMM(csrow_nr / 2, dbam);
- 
--	nr_pages = pvt->ops->dbam_to_cs(pvt, dct, cs_mode) << (20 - PAGE_SHIFT);
-+	nr_pages = pvt->ops->dbam_to_cs(pvt, dct, cs_mode, (csrow_nr / 2))
-+							   << (20 - PAGE_SHIFT);
- 
- 	edac_dbg(0, "csrow: %d, channel: %d, DBAM idx: %d\n",
- 		    csrow_nr, dct,  cs_mode);
-@@ -2604,6 +2736,10 @@ static struct amd64_family_type *per_family_init(struct amd64_pvt *pvt)
- 			fam_type = &family_types[F15_M30H_CPUS];
- 			pvt->ops = &family_types[F15_M30H_CPUS].ops;
- 			break;
-+		} else if (pvt->model == 0x60) {
-+			fam_type = &family_types[F15_M60H_CPUS];
-+			pvt->ops = &family_types[F15_M60H_CPUS].ops;
-+			break;
- 		}
- 
- 		fam_type	= &family_types[F15_CPUS];
-@@ -2828,55 +2964,13 @@ static void remove_one_instance(struct pci_dev *pdev)
-  * inquiry this table to see if this driver is for a given device found.
-  */
- static const struct pci_device_id amd64_pci_table[] = {
--	{
--		.vendor		= PCI_VENDOR_ID_AMD,
--		.device		= PCI_DEVICE_ID_AMD_K8_NB_MEMCTL,
--		.subvendor	= PCI_ANY_ID,
--		.subdevice	= PCI_ANY_ID,
--		.class		= 0,
--		.class_mask	= 0,
--	},
--	{
--		.vendor		= PCI_VENDOR_ID_AMD,
--		.device		= PCI_DEVICE_ID_AMD_10H_NB_DRAM,
--		.subvendor	= PCI_ANY_ID,
--		.subdevice	= PCI_ANY_ID,
--		.class		= 0,
--		.class_mask	= 0,
--	},
--	{
--		.vendor		= PCI_VENDOR_ID_AMD,
--		.device		= PCI_DEVICE_ID_AMD_15H_NB_F2,
--		.subvendor	= PCI_ANY_ID,
--		.subdevice	= PCI_ANY_ID,
--		.class		= 0,
--		.class_mask	= 0,
--	},
--	{
--		.vendor		= PCI_VENDOR_ID_AMD,
--		.device		= PCI_DEVICE_ID_AMD_15H_M30H_NB_F2,
--		.subvendor	= PCI_ANY_ID,
--		.subdevice	= PCI_ANY_ID,
--		.class		= 0,
--		.class_mask	= 0,
--	},
--	{
--		.vendor		= PCI_VENDOR_ID_AMD,
--		.device		= PCI_DEVICE_ID_AMD_16H_NB_F2,
--		.subvendor	= PCI_ANY_ID,
--		.subdevice	= PCI_ANY_ID,
--		.class		= 0,
--		.class_mask	= 0,
--	},
--	{
--		.vendor		= PCI_VENDOR_ID_AMD,
--		.device		= PCI_DEVICE_ID_AMD_16H_M30H_NB_F2,
--		.subvendor	= PCI_ANY_ID,
--		.subdevice	= PCI_ANY_ID,
--		.class		= 0,
--		.class_mask	= 0,
--	},
--
-+	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_K8_NB_MEMCTL) },
-+	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_10H_NB_DRAM) },
-+	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_NB_F2) },
-+	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F2) },
-+	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_15H_M60H_NB_F2) },
-+	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_16H_NB_F2) },
-+	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_16H_M30H_NB_F2) },
- 	{0, }
- };
- MODULE_DEVICE_TABLE(pci, amd64_pci_table);
-diff --git a/drivers/edac/amd64_edac.h b/drivers/edac/amd64_edac.h
-index 55fb594..dbbae84 100644
---- a/drivers/edac/amd64_edac.h
-+++ b/drivers/edac/amd64_edac.h
-@@ -162,10 +162,12 @@
- /*
-  * PCI-defined configuration space registers
-  */
--#define PCI_DEVICE_ID_AMD_15H_M30H_NB_F1 0x141b
--#define PCI_DEVICE_ID_AMD_15H_M30H_NB_F2 0x141c
- #define PCI_DEVICE_ID_AMD_15H_NB_F1	0x1601
- #define PCI_DEVICE_ID_AMD_15H_NB_F2	0x1602
-+#define PCI_DEVICE_ID_AMD_15H_M30H_NB_F1 0x141b
-+#define PCI_DEVICE_ID_AMD_15H_M30H_NB_F2 0x141c
-+#define PCI_DEVICE_ID_AMD_15H_M60H_NB_F1 0x1571
-+#define PCI_DEVICE_ID_AMD_15H_M60H_NB_F2 0x1572
- #define PCI_DEVICE_ID_AMD_16H_NB_F1	0x1531
- #define PCI_DEVICE_ID_AMD_16H_NB_F2	0x1532
- #define PCI_DEVICE_ID_AMD_16H_M30H_NB_F1 0x1581
-@@ -221,6 +223,8 @@
- 
- #define csrow_enabled(i, dct, pvt)	((pvt)->csels[(dct)].csbases[(i)] & DCSB_CS_ENABLE)
- 
-+#define DRAM_CONTROL			0x78
-+
- #define DBAM0				0x80
- #define DBAM1				0x180
- 
-@@ -301,6 +305,7 @@ enum amd_families {
- 	F10_CPUS,
- 	F15_CPUS,
- 	F15_M30H_CPUS,
-+	F15_M60H_CPUS,
- 	F16_CPUS,
- 	F16_M30H_CPUS,
- 	NUM_FAMILIES,
-@@ -480,7 +485,8 @@ struct low_ops {
- 	int (*early_channel_count)	(struct amd64_pvt *pvt);
- 	void (*map_sysaddr_to_csrow)	(struct mem_ctl_info *mci, u64 sys_addr,
- 					 struct err_info *);
--	int (*dbam_to_cs)		(struct amd64_pvt *pvt, u8 dct, unsigned cs_mode);
-+	int (*dbam_to_cs)		(struct amd64_pvt *pvt, u8 dct,
-+					 unsigned cs_mode, int cs_mask_nr);
- };
- 
- struct amd64_family_type {
--- 
-2.0.2
+Bjorn
 
+> On Thu, 4 Sep 2014, Yijing Wang wrote:
+>>>>>>
+>>>>>>      if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
+>>>>>> +            pcie_bus_update_set(dev);
+>>>>>
+>>>>>
+>>>>> You're only adding this to the PCIE_BUS_TUNE_OFF path.  Can't the same
+>>>>> problem occur for other pcie_bus_config settings?
+>>>>
+>>>>
+>>>> We only found the problem during PCIE_BUS_TUNE_OFF set. Other mode like
+>>>> PCIE_BUS_SAFE and PCIE_BUS_PEER2PEER.
+>>>> This issue won't happen.
+>>>
+>>>
+>>> Sorry, I can't parse this.  Are you saying the problem won't happen in
+>>> the other modes?  Why not?
+>>
+>>
+>> Hi Bjorn, when in PCIE_BUS_SAFE mode, pcie_find_smpss() will find the
+>> largest available mpss in a pcie path.
+>> Then call pcie_bus_configure_set() to set all devices' mps to the largest
+>> available mps in this path, so
+>> all devices in the path will have the same mps. When in
+>> PCIE_BUS_PEER2PEER, all devices' mps will be set to 128B
+>> for safety. And to the PCIE_BUS_PERFORMANCE mode, I found Jon's comment in
+>> pcie_write_mps(),
+>>
+>>                         /* For "Performance", the assumption is made that
+>>                          * downstream communication will never be larger
+>> than
+>>                          * the MRRS.  So, the MPS only needs to be
+>> configured
+>>                          * for the upstream communication.  This being the
+>> case, <------
+>>                          * walk from the top down and set the MPS of the
+>> child
+>>                          * to that of the parent bus.
+>>
+>> So I think the problem won't happen in other modes.
+>>
+>> Thanks!
+>> Yijing.
+>>
+>>
+>>>
+>>>>>>              pcie_bus_detect_mps(dev);
+>>>>>>              return 0;
+>>>>>>      }
+>>>
+>>>
+>>> .
+>>>
+>>
+>>
+>> --
+>> Thanks!
+>> Yijing
+>>
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
