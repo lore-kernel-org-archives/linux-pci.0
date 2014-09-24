@@ -1,51 +1,77 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <541045BE.9050804@citrix.com>
-Date: Wed, 10 Sep 2014 13:36:14 +0100
-From: David Vrabel <david.vrabel@citrix.com>
-MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-mips@linux-mips.org>, <linux-ia64@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <Bharat.Bhushan@freescale.com>,
-	<sparclinux@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-	<linux-s390@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Joerg Roedel <joro@8bytes.org>, <x86@kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<xen-devel@lists.xenproject.org>, <arnab.basu@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:41136 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751883AbaIXQuQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 12:50:16 -0400
+Date: Wed, 24 Sep 2014 17:49:46 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	Xinwei Hu <huxinwei@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	<iommu@lists.linux-foundation.org>, Wuyun <wuyun.wu@huawei.com>,
-	<linuxppc-dev@lists.ozlabs.org>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [Xen-devel] [PATCH v1 04/21] x86/xen/MSI: Eliminate arch_msix_mask_irq()
- and arch_msi_mask_irq()
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com> <1409911806-10519-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1409911806-10519-5-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-arch-owner@vger.kernel.org
+	Robert Richter <rric@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Robert Richter <rrichter@cavium.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Sunil Goutham <sgoutham@cavium.com>
+Subject: Re: [PATCH 1/6] pci, thunder: Add support for Thunder PCIe host
+ controller
+Message-ID: <20140924164946.GI16244@arm.com>
+References: <1411573068-12952-1-git-send-email-rric@kernel.org>
+ <1411573068-12952-2-git-send-email-rric@kernel.org>
+ <27476217.5ToIFGoMDz@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <27476217.5ToIFGoMDz@wuerfel>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/09/14 11:09, Yijing Wang wrote:
-> Commit 0e4ccb150 added two __weak arch functions arch_msix_mask_irq()
-> and arch_msi_mask_irq() to fix a bug found when running xen in x86.
-> Introduced these two funcntions make MSI code complex. And mask/unmask
-> is the irq actions related to interrupt controller, should not use
-> weak arch functions to override mask/unmask interfaces. This patch
-> reverted commit 0e4ccb150 and export struct irq_chip msi_chip, modify
-> msi_chip->irq_mask/irq_unmask() in xen init functions to fix this
-> bug for simplicity. Also this is preparation for using struct
-> msi_chip instead of weak arch MSI functions in all platforms.
+On Wed, Sep 24, 2014 at 05:12:26PM +0100, Arnd Bergmann wrote:
+> On Wednesday 24 September 2014 17:37:43 Robert Richter wrote:
+> > From: Sunil Goutham <sgoutham@cavium.com>
+> > 
+> > This patch adds support for PCI host controller of Cavium Thunder
+> > SoCs.
+> 
+> I had expected this hardware to be SBSA compliant. Why do you need
+> a hardware specific driver, is this a workaround for buggy hardware
+> or just noncompliant?
 
-Acked-by: David Vrabel <david.vrabel@citrix.com>
+Patches welcome to pci-host-generic.c :) Lorenzo already has code to port
+it to Liviu's new API, so do shout if it's not suitable for your needs.
 
-But I wonder if it would be better the Xen subsystem to provide its own
-struct irq_chip instead of adjusting the fields in the generic x86 one.
+> > +static int thunder_pcie_msi_enable(struct thunder_pcie *pcie,
+> > +					struct pci_bus *bus)
+> > +{
+> > +	struct device_node *msi_node;
+> > +
+> > +	msi_node = of_parse_phandle(pcie->node, "msi-parent", 0);
+> > +	if (!msi_node)
+> > +		return -ENODEV;
+> > +
+> > +	pcie->msi = of_pci_find_msi_chip_by_node(msi_node);
+> > +	if (!pcie->msi)
+> > +		return -ENODEV;
+> > +
+> > +	pcie->msi->dev = pcie->dev;
+> > +	bus->msi = pcie->msi;
+> > +
+> > +	return 0;
+> > +}
+> 
+> This is probably something we should add to the generic host driver as well,
+> so it can work with SBSA compliant implementations that come with an MSI
+> controller. Maybe move it into common code so it can be shared with that
+> driver.
 
-David
+Agreed. I've been carrying something similar [1] (based on a hacked-up version
+of bios32, so not bothered to post it) whilst I've been waiting for the
+arm64 core PCI code to get merged.
+
+Will
+
+[1] https://git.kernel.org/cgit/linux/kernel/git/will/linux.git/commit/drivers/pci/host/pci-host-generic.c?h=iommu/pci&id=b719acf062ceccfbd79ee7b1ae0b7904ea4da27e
