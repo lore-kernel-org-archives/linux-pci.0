@@ -1,137 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:48078 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756060AbaIZO5J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 26 Sep 2014 10:57:09 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC v1 22/28] x86, irq: Kill x86_io_apic_ops.write and x86_io_apic_ops.modify
-Date: Fri, 26 Sep 2014 22:57:52 +0800
-Message-Id: <1411743478-31435-23-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:39217 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751434AbaIXPiB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 11:38:01 -0400
+From: Robert Richter <rric@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Liviu Dudau <liviu.dudau@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Will Deacon <will.deacon@arm.com>,
+	Sunil Goutham <sgoutham@cavium.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Robert Richter <rrichter@cavium.com>
+Subject: [PATCH 0/6] pci, thunder: Add Cavium Thunder PCIe host controller
+Date: Wed, 24 Sep 2014 17:37:42 +0200
+Message-Id: <1411573068-12952-1-git-send-email-rric@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-x86_io_apic_ops.write is always set to native_io_apic_write(),
-and nobody overrides it. So get rid of the indirection by changing
-native_io_apic_write() as io_apic_write() and killing
-x86_io_apic_ops.write.
+From: Robert Richter <rrichter@cavium.com>
 
-Do the same for x86_io_apic_ops.modify and native_io_apic_modify().
+This patches add support for the Cavium Thunder PCIe host controller.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h  |   13 -------------
- arch/x86/include/asm/x86_init.h |    2 --
- arch/x86/kernel/apic/io_apic.c  |    6 ++++--
- arch/x86/kernel/x86_init.c      |    2 --
- 4 files changed, 4 insertions(+), 19 deletions(-)
+Patches base on following branches:
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index c2c1a8b7f39d..e978dc335eea 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -209,8 +209,6 @@ extern void disable_ioapic_support(void);
- 
- extern void __init native_io_apic_init_mappings(void);
- extern unsigned int native_io_apic_read(unsigned int apic, unsigned int reg);
--extern void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int val);
--extern void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int val);
- extern void native_disable_io_apic(void);
- 
- static inline unsigned int io_apic_read(unsigned int apic, unsigned int reg)
-@@ -218,15 +216,6 @@ static inline unsigned int io_apic_read(unsigned int apic, unsigned int reg)
- 	return x86_io_apic_ops.read(apic, reg);
- }
- 
--static inline void io_apic_write(unsigned int apic, unsigned int reg, unsigned int value)
--{
--	x86_io_apic_ops.write(apic, reg, value);
--}
--static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned int value)
--{
--	x86_io_apic_ops.modify(apic, reg, value);
--}
--
- extern void setup_IO_APIC(void);
- extern void enable_IO_APIC(void);
- extern void disable_IO_APIC(void);
-@@ -268,8 +257,6 @@ static inline void mp_save_irq(struct mpc_intsrc *m) { };
- static inline void disable_ioapic_support(void) { }
- #define native_io_apic_init_mappings	NULL
- #define native_io_apic_read		NULL
--#define native_io_apic_write		NULL
--#define native_io_apic_modify		NULL
- #define native_disable_io_apic		NULL
- #endif
- 
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index 3755cd2bbb94..398717e7493d 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -185,8 +185,6 @@ struct x86_msi_ops {
- struct x86_io_apic_ops {
- 	void		(*init)   (void);
- 	unsigned int	(*read)   (unsigned int apic, unsigned int reg);
--	void		(*write)  (unsigned int apic, unsigned int reg, unsigned int value);
--	void		(*modify) (unsigned int apic, unsigned int reg, unsigned int value);
- 	void		(*disable)(void);
- };
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 2ccccfdbb682..f55ab3a8de08 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -299,7 +299,8 @@ unsigned int native_io_apic_read(unsigned int apic, unsigned int reg)
- 	return readl(&io_apic->data);
- }
- 
--void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int value)
-+static void io_apic_write(unsigned int apic, unsigned int reg,
-+			  unsigned int value)
- {
- 	struct io_apic __iomem *io_apic = io_apic_base(apic);
- 
-@@ -313,7 +314,8 @@ void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int valu
-  *
-  * Older SiS APIC requires we rewrite the index register
-  */
--void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int value)
-+static void io_apic_modify(unsigned int apic, unsigned int reg,
-+			   unsigned int value)
- {
- 	struct io_apic __iomem *io_apic = io_apic_base(apic);
- 
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index ac2b604c00ec..30140bdf6d62 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -151,7 +151,5 @@ u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
- struct x86_io_apic_ops x86_io_apic_ops = {
- 	.init			= native_io_apic_init_mappings,
- 	.read			= native_io_apic_read,
--	.write			= native_io_apic_write,
--	.modify			= native_io_apic_modify,
- 	.disable		= native_disable_io_apic,
- };
+ git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci pci/liviu-generic-v11
+ git://linux-arm.org/linux-ld for-upstream/pci_arm64_v11
+
+Additionally a fix is required for liviu-generic-v11 to allow the
+generation of mem-mapped pci ranges:
+
+ https://lkml.org/lkml/2014/9/22/150
+
+It also requires Marc's gicv3-its support to work.
+
+The first patch introduces the host controller driver. Patch 2 to 4
+are DT changes including documentation. Patch 5 and 6 enable PCI
+support for arm64 defconfig.
+
+Robert Richter (2):
+  arm64, defconfig: Enable PCI
+  pci, thunder: Enable Cavium Thunder PCIe host controller
+
+Sunil Goutham (3):
+  pci, thunder: Add support for Thunder PCIe host controller
+  pci, thunder: Add PCIe host controller devicetree bindings
+  pci, thunder: Document PCIe host controller devicetree bindings
+
+Tirumalesh Chalamarla (1):
+  GICv3: Add ITS entry to THUNDER dts
+
+ .../devicetree/bindings/pci/cavium,thunder-pci.txt |  32 +++
+ arch/arm64/Kconfig                                 |  15 ++
+ arch/arm64/boot/dts/thunder-88xx.dtsi              |  58 +++++
+ drivers/pci/host/Kconfig                           |   8 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pcie-thunder.c                    | 246 +++++++++++++++++++++
+ include/linux/pci_ids.h                            |   2 +
+ 7 files changed, 362 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/cavium,thunder-pci.txt
+ create mode 100644 drivers/pci/host/pcie-thunder.c
+
 -- 
-1.7.10.4
+2.1.0
 
