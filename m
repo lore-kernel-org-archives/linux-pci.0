@@ -1,50 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:45879 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750833AbaJACdv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Sep 2014 22:33:51 -0400
-Message-ID: <1412129393.4285.195.camel@pasglop>
-Subject: [PATCH 4/4] sounds/hda/radeon: Disable 64-bit DMA on radeon
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Alex Deucher <alexdeucher@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dave Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Date: Wed, 01 Oct 2014 12:09:53 +1000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 24 Sep 2014 11:42:01 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Quentin Lambert <lambert.quentin@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, Scott Murray <scott@spiteful.org>,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/4] Extending the first version of the patch to the
+ entire directory
+Message-ID: <20140924174201.GB20416@google.com>
+References: <20140907180023.GA1849@greed>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140907180023.GA1849@greed>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The chipset has a limitation in the number of address bits it
-can generate. The graphics portion uses a specific mask of
-40 or 48 bits depending on the generation. For audio, it's a bit
-less of an issue, so just mark them as no-64bit for now.
+On Sun, Sep 07, 2014 at 08:00:23PM +0200, Quentin Lambert wrote:
+> Patch 1 and 2 are straight forward extension from the previous version
+> of the patch.
+> 
+> Patch 3 introduces checkpatch warning due to lines surpassing 80
+> characters. Another warning concerning too many preceding tabs
+> is not fixed either.
+> 
+> Patch 4 are less straight forward similar modifications
+> the modification made to ibmphp_res.c change the value of len_tmp
+> when the first condition in if statement is not met.
+> I wasn't quite sure how to solve elegantly the checkpatch error for
+> slot.c, I chose to use a label and gotos since it was already used
+> and allowed for a slight code factorisation. This being my first patch I
+> understand that this may not be the best solution.
 
-Without this, it crashes on POWER machines which can use high bits
-in the DMA address to distinguish between DMA windows. 
+Thanks for splitting out patch 4 from 3; it definitely made it easier to
+review.
 
-Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: <stable@vger.kernel.org>
----
- sound/pci/hda/hda_intel.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I dropped a couple bits from patch 4 that I'll mention in a reply to that patch.
 
-diff --git a/sound/pci/hda/hda_intel.c b/sound/pci/hda/hda_intel.c
-index 3e6d22d..2b679d5 100644
---- a/sound/pci/hda/hda_intel.c
-+++ b/sound/pci/hda/hda_intel.c
-@@ -297,7 +297,7 @@ enum {
- /* quirks for ATI/AMD HDMI */
- #define AZX_DCAPS_PRESET_ATI_HDMI \
- 	(AZX_DCAPS_NO_TCSEL | AZX_DCAPS_SYNC_WRITE | AZX_DCAPS_POSFIX_LPIB|\
--	 AZX_DCAPS_NO_MSI64)
-+	 AZX_DCAPS_NO_MSI64 | AZX_DCAPS_NO_64BIT)
- 
- /* quirks for Nvidia */
- #define AZX_DCAPS_PRESET_NVIDIA \
+I applied the rest to pci/cleanup and plan to merge it toward the end of
+the v3.18 merge window, thanks!
 
+Bjorn
 
+> Quentin Lambert (4):
+>   PCI: fix a missing space coding style issue
+>   PCI: fix a simple if coding style issue
+>   PCI: remove assignement from if conditions
+>   PCI: remove assignement in non straight forward if condition
+> 
+>  drivers/pci/hotplug/acpi_pcihp.c        |  3 ++-
+>  drivers/pci/hotplug/acpiphp_ibm.c       |  2 +-
+>  drivers/pci/hotplug/cpci_hotplug_core.c | 13 ++++++----
+>  drivers/pci/hotplug/cpcihp_generic.c    | 28 ++++++++++-----------
+>  drivers/pci/hotplug/cpcihp_zt5550.c     | 44 ++++++++++++++++-----------------
+>  drivers/pci/hotplug/cpqphp.h            |  2 +-
+>  drivers/pci/hotplug/cpqphp_core.c       |  3 +--
+>  drivers/pci/hotplug/cpqphp_ctrl.c       | 19 ++++++--------
+>  drivers/pci/hotplug/cpqphp_nvram.c      | 13 ++++------
+>  drivers/pci/hotplug/ibmphp_core.c       | 19 ++++++++------
+>  drivers/pci/hotplug/ibmphp_ebda.c       |  3 +--
+>  drivers/pci/hotplug/ibmphp_hpc.c        |  3 +--
+>  drivers/pci/hotplug/ibmphp_pci.c        |  6 +++--
+>  drivers/pci/hotplug/ibmphp_res.c        | 43 ++++++++++++++++++++++----------
+>  drivers/pci/hotplug/shpchp_ctrl.c       | 12 ++++++---
+>  drivers/pci/hotplug/shpchp_hpc.c        |  3 ++-
+>  drivers/pci/pci.c                       | 19 +++++++++++---
+>  drivers/pci/slot.c                      | 12 +++++++--
+>  18 files changed, 143 insertions(+), 104 deletions(-)
+> 
+> -- 
+> 1.9.1
+> 
