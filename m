@@ -1,82 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <542A6411.5040201@gmail.com>
-Date: Tue, 30 Sep 2014 16:04:33 +0800
-From: Chen Gang <gang.chen.5i5j@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx.aristanetworks.com ([162.210.130.12]:46481 "EHLO
+	prod-mx.aristanetworks.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751600AbaIXRgG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 13:36:06 -0400
+Date: Wed, 24 Sep 2014 10:29:23 -0700
+To: linux-pci@vger.kernel.org
+Subject: [PATCH 1/1] pci: move PCI_VENDOR_ID_VMWARE to pci_ids.h
+Cc: sbhatewara@vmware.com, linux-kernel@vger.kernel.org,
+	gregkh@linuxfoundation.org, pv-drivers@vmware.com
 MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: David Vrabel <david.vrabel@citrix.com>, ian.campbell@citrix.com,
-	wei.liu2@citrix.com, boris.ostrovsky@oracle.com,
-	bhelgaas@google.com, jgross@suse.com,
-	yongjun_wei@trendmicro.com.cn, mukesh.rathor@oracle.com,
-	xen-devel@lists.xenproject.org,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] xen/xenbus: Use 'void' instead of 'int' for the return
- of xenbus_switch_state()
-References: <5425961A.5000604@gmail.com> <20140929140229.GA28279@laptop.dumpdata.com>
-In-Reply-To: <20140929140229.GA28279@laptop.dumpdata.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Message-Id: <20140924172923.D112148565B@fruggeri-Arora18.sjc.aristanetworks.com>
+From: fruggeri@aristanetworks.com (Francesco Ruggeri)
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/29/14 22:02, Konrad Rzeszutek Wilk wrote:
-> On Sat, Sep 27, 2014 at 12:36:42AM +0800, Chen Gang wrote:
->> When xenbus_switch_state() fails, it will call xenbus_switch_fatal()
-> 
-> Only on the first depth, not on the subsequent ones (as in if
-> the first xenbus_switch_fail fails, it won't try to call
-> xenbus_switch_state again and again).
-> 
+>From b99b1ec156ab351668eb77a00a57a4ae095eec28 Mon Sep 17 00:00:00 2001
+From: Francesco Ruggeri <fruggeri@arista.com>
+Date: Wed, 24 Sep 2014 10:12:41 -0700
+Subject: [PATCH 1/1] pci: move PCI_VENDOR_ID_VMWARE to pci_ids.h
 
-Yeah, I guess you want to give more completion for this comment, do not
-mean the original comments is incorrect.
+Moving PCI_VENDOR_ID_VMWARE from device specific files to pci_ids.h.
+It is useful to always have access to it, especially when accessing
+subsystem_vendor_id on emulated devices.
 
-[...]
->>
->> Also need be sure that all callers which check the return value must let
->> 'err' be 0.
-> 
-> I am bit uncomfortable with that, that is due to:
-> 
-> 
-> .. snip..
->> diff --git a/drivers/net/xen-netback/xenbus.c b/drivers/net/xen-netback/xenbus.c
->> index 9c47b89..b5c3d47 100644
->> --- a/drivers/net/xen-netback/xenbus.c
->> +++ b/drivers/net/xen-netback/xenbus.c
->> @@ -337,10 +337,7 @@ static int netback_probe(struct xenbus_device *dev,
->>  	if (err)
->>  		pr_debug("Error writing multi-queue-max-queues\n");
->>  
->> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
->> -	if (err)
->> -		goto fail;
->> -
->> +	xenbus_switch_state(dev, XenbusStateInitWait);
-> 
-> Which if it fails it won't call:
-> 
-> 354 fail:                                                                           
-> 355         pr_debug("failed\n");                                                   
-> 356         netback_remove(dev);                                                    
-> 357         return err;         
-> 
+Signed-off-by: Francesco Ruggeri <fruggeri@arista.com>
+---
+ drivers/gpu/drm/vmwgfx/svga_reg.h  | 1 -
+ drivers/misc/vmw_vmci/vmci_guest.c | 1 -
+ drivers/net/vmxnet3/vmxnet3_int.h  | 1 -
+ drivers/scsi/vmw_pvscsi.h          | 1 -
+ include/linux/pci_ids.h            | 2 ++
+ 5 files changed, 2 insertions(+), 4 deletions(-)
 
-Originally, I intended left 'fail' code block for the next patch (which
-I thought the next patch would need it).
-
-Hmm... but any way, originally, I really need give additional comments
-for it.
-
-[...]
-
-I skip all other contents which have already discussed by maintainers,
-if I really miss something, please let me know.
-
-
-Thanks.
+diff --git a/drivers/gpu/drm/vmwgfx/svga_reg.h b/drivers/gpu/drm/vmwgfx/svga_reg.h
+index 11323dd..e4259c2 100644
+--- a/drivers/gpu/drm/vmwgfx/svga_reg.h
++++ b/drivers/gpu/drm/vmwgfx/svga_reg.h
+@@ -35,7 +35,6 @@
+ /*
+  * PCI device IDs.
+  */
+-#define PCI_VENDOR_ID_VMWARE            0x15AD
+ #define PCI_DEVICE_ID_VMWARE_SVGA2      0x0405
+ 
+ /*
+diff --git a/drivers/misc/vmw_vmci/vmci_guest.c b/drivers/misc/vmw_vmci/vmci_guest.c
+index 248399a..189b325 100644
+--- a/drivers/misc/vmw_vmci/vmci_guest.c
++++ b/drivers/misc/vmw_vmci/vmci_guest.c
+@@ -35,7 +35,6 @@
+ #include "vmci_driver.h"
+ #include "vmci_event.h"
+ 
+-#define PCI_VENDOR_ID_VMWARE		0x15AD
+ #define PCI_DEVICE_ID_VMWARE_VMCI	0x0740
+ 
+ #define VMCI_UTIL_NUM_RESOURCES 1
+diff --git a/drivers/net/vmxnet3/vmxnet3_int.h b/drivers/net/vmxnet3/vmxnet3_int.h
+index 3759479..5f0199f 100644
+--- a/drivers/net/vmxnet3/vmxnet3_int.h
++++ b/drivers/net/vmxnet3/vmxnet3_int.h
+@@ -117,7 +117,6 @@ enum {
+ /*
+  * PCI vendor and device IDs.
+  */
+-#define PCI_VENDOR_ID_VMWARE            0x15AD
+ #define PCI_DEVICE_ID_VMWARE_VMXNET3    0x07B0
+ #define MAX_ETHERNET_CARDS		10
+ #define MAX_PCI_PASSTHRU_DEVICE		6
+diff --git a/drivers/scsi/vmw_pvscsi.h b/drivers/scsi/vmw_pvscsi.h
+index ce45888..ee16f0c 100644
+--- a/drivers/scsi/vmw_pvscsi.h
++++ b/drivers/scsi/vmw_pvscsi.h
+@@ -32,7 +32,6 @@
+ 
+ #define MASK(n)        ((1 << (n)) - 1)        /* make an n-bit mask */
+ 
+-#define PCI_VENDOR_ID_VMWARE		0x15AD
+ #define PCI_DEVICE_ID_VMWARE_PVSCSI	0x07C0
+ 
+ /*
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 6ed0bb7..e62b20a 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2971,4 +2971,6 @@
+ 
+ #define PCI_VENDOR_ID_OCZ		0x1b85
+ 
++#define PCI_VENDOR_ID_VMWARE		0x15AD
++
+ #endif /* _LINUX_PCI_IDS_H */
 -- 
-Chen Gang
+1.8.1.4
 
-Open, share, and attitude like air, water, and life which God blessed
