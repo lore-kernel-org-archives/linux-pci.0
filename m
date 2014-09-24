@@ -1,133 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from services.gouders.net ([141.101.32.176]:52416 "EHLO
-	services.gouders.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752058AbaIKVKD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Sep 2014 17:10:03 -0400
-From: Dirk Gouders <dirk@gouders.net>
-To: Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Wed, 24 Sep 2014 15:23:18 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Rob Herring <robherring2@gmail.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
-In-Reply-To: <CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com>
-	(Yinghai Lu's message of "Thu, 11 Sep 2014 12:26:54 -0700")
-References: <ghiol53r9u.fsf@lena.gouders.net>
-	<CAMxnaaXiEZeJOsgQ6ZSbiqy5Z1zNoXonwNSQNRyRhV0t5jveYQ@mail.gmail.com>
-	<ghwq9k3m6z.fsf@lena.gouders.net>
-	<CAMxnaaUqTMf1uEQUqrAGjym8ZrQaBf2QbE4Jqxh2t6a2JgJkOQ@mail.gmail.com>
-	<ghioku5l29.fsf@lena.gouders.net>
-	<CAErSpo7j=a3y2MVsvEQGQ4B63_mNCyZSRNXNEZa-2++xs88NmQ@mail.gmail.com>
-	<CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com>
-Date: Thu, 11 Sep 2014 22:33:49 +0200
-Message-ID: <ghppf15236.fsf@quad.gouders.net>
+	Liviu Dudau <liviu@dudau.co.uk>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v12 00/12] Support for creating generic PCI host bridges
+ from DT
+Message-ID: <20140924142317.GC1994@e106497-lin.cambridge.arm.com>
+References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140923215435.GD27117@google.com>
+ <20140923224810.GA32643@bart.dudau.co.uk>
+ <CAErSpo5PBXSUeU_LP2m=9jxibmqxreL4tEeHBsc5To7D=_bAJA@mail.gmail.com>
+ <CAL_Jsq+U=1JT0qqZgb=aR66Q4NYDyzOogspOmmpsp61pE+aCUg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAL_Jsq+U=1JT0qqZgb=aR66Q4NYDyzOogspOmmpsp61pE+aCUg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yinghai Lu <yinghai@kernel.org> writes:
+On Wed, Sep 24, 2014 at 02:30:37PM +0100, Rob Herring wrote:
+> On Tue, Sep 23, 2014 at 6:00 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Tue, Sep 23, 2014 at 4:48 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
+> >> ...
+> >> While the next immediate target is converting pci-host-generic.c, pci-imx6.c
+> >> and probably pcie-designware.c to my series, I would like to ask you what
+> >> is your longer term plan. Now that I have got my head full of PCI code,
+> >> I have some ideas but feel that meeting with you and all those involved
+> >> in core PCI support would be a better venue than sending emails back and
+> >> forth. When is your next plan to attend a Linux conference?
+> >
+> > That would be nice.  Unfortunately, I don't know what the next
+> > conference will be yet.
+> 
+> Perhaps an irc meeting or Google hangout. These have been happening on
+> several areas like DT and ARM KVM.
 
-> On Thu, Sep 11, 2014 at 10:30 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> [+cc linux-pci]
->>
->>
->> On Thu, Sep 11, 2014 at 7:43 AM, Dirk Gouders <dirk@gouders.net> wrote:
->>> Andreas Noever <andreas.noever@gmail.com> writes:
->>>
->>>> On Wed, Sep 3, 2014 at 2:47 PM, Dirk Gouders <dirk@gouders.net> wrote:
->>>>> Andreas Noever <andreas.noever@gmail.com> writes:
->>>>>
->>>>>> On Wed, Sep 3, 2014 at 12:57 PM, Dirk Gouders <dirk@gouders.net> wrote:
->>>>>>> On a Tyan VX50 (B4985) I ran into problems when updating the kernel: the
->>>>>>> PCI FC Adapter is no longer recognized.
->>>>>>
->>>>>> Can you provide the output of lspci -vvv and the output of dmesg from
->>>>>> a working boot? Which card is the one that is not recognized?
->>>>>
->>>>> Sure, the card that disappeared is:
->>>>>
->>>>> 0a:00.0 Fibre Channel: LSI Logic / Symbios Logic FC949ES Fibre Channel Adapter (rev 02)
->>>>
->>>> As far as I can tell the following is happening:
->>>> The root bus resource window (advertised by the bios?) is to small:
->>>> pci_bus 0000:00: root bus resource [bus 00-07]
->>>> Previously we didn't really care. There is a resource conflict but we
->>>> ignored it:
->>>> pci_bus 0000:0a: busn_res: can not insert [bus 0a] under [bus 00-07]
->>>> (conflicts with (null) [bus 00-07])
->>>> With the patch we mark the bridge as broken and reassign the bus to 06:
->>>> pci 0000:00:0e.0: bridge configuration invalid ([bus 0a-0a]), reconfiguring
->>>> pci 0000:00:0e.0: PCI bridge to [bus 06-07]
->>>> pci 0000:00:0e.0:   bridge window [io  0x3000-0x3fff]
->>>> pci 0000:00:0e.0:   bridge window [mem 0xd4200000-0xd42fffff]
->>>> pci_bus 0000:06: busn_res: [bus 06-07] end is updated to 06
->
->> Thanks for following up on this.  It had fallen off my radar, so I
->> opened https://bugzilla.kernel.org/show_bug.cgi?id=84281 to make sure
->> I don't forget again.  Please continue the debug discussion here in
->> email.
->
-> Two problems here:
-> 1. This is amd two node systems. amd_bus.c tell us bus [00, 7f] is from
-> first socket, but _OSC says only [0,7] is from first socket.
->
-> So solution (1):
-> According to Linus's principle, we should always trust HW than firmware,
-> so should we just adjust bus range from _OSC before we use it?
->
-> 2. After moving, LSI FC card from bus 0a to bus 07, the LSI refuse to respond.
->
-> During my testing with pci busn allocation patchset, I found that if changing
-> LSI Erie card to different bus, it will refuse to responding. Only
-> thing that will
-> make the LSI card again, is resetting the pcie link. This should be LSI firmware
-> bug.
->
-> Dirk, please check if you can apply attached patches to use
->
-> echo 1 > /sys/bus/pci/devices/0000\:00\0e.0/link_disable
-> echo 0 > /sys/bus/pci/devices/0000\:00\0e.0/link_disable
->
-> to reset the link.
+I'm open to the idea. I don't know if there is a recurring one already for
+PCI or how Bjorn has been handling future planning previously.
 
-Thanks, Yinghai, I will apply them tomorrow and report.
+Best regards,
+Liviu
 
-What I was currently trying was to construct a test-environment so that
-I do not need to do tests and diagnosis on a busy machine.
+> 
+> Rob
+> 
 
-I noticed that this problem seems to start with the narrow Root
-Bridge window (00-07) but every other machine that I had a look at,
-starts with (00-ff), so those will not trigger my problem.
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
-I thought I could perhaps try to shrink the window in
-acpi_pci_root_add() to trigger the problem and that kind of works: it
-triggers it but not exactly the same way, because it basically ends at
-this code in pci_scan_bridge():
-
-	if (max >= bus->busn_res.end) {
-		dev_warn(&dev->dev, "can't allocate child bus %02x from %pR (pass %d)\n",
-			 max, &bus->busn_res, pass);
-		goto out;
-	}
-
-If this could work but I am just missing a small detail, I would be
-glad to hear about it and do the first tests this way.  If it is
-complete nonsense, I will just use the machine that triggers the problem
-for the tests.
-
-Dirk
-
-
-> Solution (2)
-> To workaround the problem, we could reset the pcie link after change bus num
-> in the pcie bridges ?
->
-> Soultion (3)
-> Or we just revert the offending 1820ffdccb9b4398 (PCI: Make sure
-> bus number resources stay within their parents bounds) ?
->
-> Thanks
->
-> Yinghai
