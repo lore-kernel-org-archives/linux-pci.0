@@ -1,63 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp02.citrix.com ([66.165.176.63]:33179 "EHLO
-	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756645AbaIKNJ4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Sep 2014 09:09:56 -0400
-Message-ID: <54119ED2.3070802@citrix.com>
-Date: Thu, 11 Sep 2014 14:08:34 +0100
-From: David Vrabel <david.vrabel@citrix.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:15196 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754425AbaIXDPu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 23:15:50 -0400
+Message-ID: <54223755.5010202@huawei.com>
+Date: Wed, 24 Sep 2014 11:15:33 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-mips@linux-mips.org>, <linux-ia64@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	<sparclinux@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-	<linux-s390@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"Joerg Roedel" <joro@8bytes.org>, <x86@kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<xen-devel@lists.xenproject.org>, <arnab.basu@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<Bharat.Bhushan@freescale.com>, "Tony Luck" <tony.luck@intel.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	<iommu@lists.linux-foundation.org>, Wuyun <wuyun.wu@huawei.com>,
-	<linuxppc-dev@lists.ozlabs.org>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [Xen-devel] [PATCH v1 04/21] x86/xen/MSI: Eliminate arch_msix_mask_irq()
- and arch_msi_mask_irq()
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>	<1409911806-10519-5-git-send-email-wangyijing@huawei.com>	<541045BE.9050804@citrix.com> <5410F955.80609@huawei.com>
-In-Reply-To: <5410F955.80609@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: Re: [PATCH] PCI/MSI: Simplify default_restore_msi_irq()
+References: <1410399055-27562-1-git-send-email-wangyijing@huawei.com> <20140923182421.GD6776@google.com>
+In-Reply-To: <20140923182421.GD6776@google.com>
 Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/09/14 02:22, Yijing Wang wrote:
-> On 2014/9/10 20:36, David Vrabel wrote:
->> On 05/09/14 11:09, Yijing Wang wrote:
->>> Commit 0e4ccb150 added two __weak arch functions arch_msix_mask_irq()
->>> and arch_msi_mask_irq() to fix a bug found when running xen in x86.
->>> Introduced these two funcntions make MSI code complex. And mask/unmask
->>> is the irq actions related to interrupt controller, should not use
->>> weak arch functions to override mask/unmask interfaces. This patch
->>> reverted commit 0e4ccb150 and export struct irq_chip msi_chip, modify
->>> msi_chip->irq_mask/irq_unmask() in xen init functions to fix this
->>> bug for simplicity. Also this is preparation for using struct
->>> msi_chip instead of weak arch MSI functions in all platforms.
->>
->> Acked-by: David Vrabel <david.vrabel@citrix.com>
->>
->> But I wonder if it would be better the Xen subsystem to provide its own
->> struct irq_chip instead of adjusting the fields in the generic x86 one.
+On 2014/9/24 2:24, Bjorn Helgaas wrote:
+> On Thu, Sep 11, 2014 at 09:30:55AM +0800, Yijing Wang wrote:
+>> Both MSI and MSI-X irq will be associate to msi_desc,
+>> Use irq_get_msi_desc() to get the msi_desc for MSI-X
+>> to simplify code. Also use __write_msi_msg() instead
+>> of write_msi_msg() to avoid the redundant calls.
 > 
-> Thanks! Currently, Xen and the bare x86 system only have the different irq_chip->irq_mask/irq_unmask.
-> So I chose to override the two ops of bare x86 irq_chip in xen. Konrad Rzeszutek Wilk has been tested it
-> ok in his platform, so I think we could use its own irq_chip for xen later if the difference become large.
+> Again, this should mention exactly where the MSI and MSI-X IRQs are
+> associated with the msi_desc.
 
-This sounds reasonable.
+As mentioned in another mail, ARCH MSI code call irq_set_msi_desc() regardless of MSI or MSI-X type.
 
-David
+So I think use irq_get_msi_desc() for MSI-X is ok .
+
+Thanks!
+Yijing.
+
+> 
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  drivers/pci/msi.c |   13 ++-----------
+>>  1 files changed, 2 insertions(+), 11 deletions(-)
+>>
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index 5a40516..9ad920a 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -119,18 +119,9 @@ static void default_restore_msi_irq(struct pci_dev *dev, int irq)
+>>  {
+>>  	struct msi_desc *entry;
+>>  
+>> -	entry = NULL;
+>> -	if (dev->msix_enabled) {
+>> -		list_for_each_entry(entry, &dev->msi_list, list) {
+>> -			if (irq == entry->irq)
+>> -				break;
+>> -		}
+>> -	} else if (dev->msi_enabled)  {
+>> -		entry = irq_get_msi_desc(irq);
+>> -	}
+>> -
+>> +	entry = irq_get_msi_desc(irq);
+>>  	if (entry)
+>> -		write_msi_msg(irq, &entry->msg);
+>> +		__write_msi_msg(entry, &entry->msg);
+>>  }
+>>  
+>>  void __weak arch_restore_msi_irqs(struct pci_dev *dev)
+>> -- 
+>> 1.7.1
+>>
+> 
+> 
+
+
+-- 
+Thanks!
+Yijing
+
