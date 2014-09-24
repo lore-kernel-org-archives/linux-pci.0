@@ -1,95 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:62301 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754752AbaI2TtG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 15:49:06 -0400
-Received: by mail-ig0-f173.google.com with SMTP id uq10so2606384igb.0
-        for <linux-pci@vger.kernel.org>; Mon, 29 Sep 2014 12:49:06 -0700 (PDT)
-Date: Mon, 29 Sep 2014 13:48:55 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	John Ronciak <john.ronciak@intel.com>
-Subject: Re: [PATCH] PCI: Intel 10G NIC ACS quirks
-Message-ID: <20140929194855.GA15712@google.com>
-References: <20140926230717.17458.59969.stgit@gimli.home>
+Received: from mail-yh0-f51.google.com ([209.85.213.51]:43752 "EHLO
+	mail-yh0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752181AbaIXKOe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 06:14:34 -0400
+Received: by mail-yh0-f51.google.com with SMTP id c41so2840771yho.38
+        for <linux-pci@vger.kernel.org>; Wed, 24 Sep 2014 03:14:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140926230717.17458.59969.stgit@gimli.home>
+In-Reply-To: <20140924002253.GB27357@google.com>
+References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+	<1411498874-9864-6-git-send-email-Liviu.Dudau@arm.com>
+	<20140924002253.GB27357@google.com>
+Date: Wed, 24 Sep 2014 11:14:32 +0100
+Message-ID: <CAPcvp5GeZCkxC-_9e3VQQ=VwiAwFn-kJL_yCr9V3H-Go5eJvyw@mail.gmail.com>
+Subject: Re: [PATCH v12 05/12] PCI: OF: Fix the conversion of IO ranges into
+ IO resources.
+From: Andrew Murray <amurray@embedded-bits.co.uk>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Simon Horman <horms@verge.net.au>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 26, 2014 at 05:07:59PM -0600, Alex Williamson wrote:
-> Intel has verified there is no peer-to-peer between functions for the
-> below selection of 82598, 82599, and X520 10G NICs.  These NICs lack
-> an ACS capability, so we're not able to determine this isolation
-> without the help of quirks.  Generalize the Solarflare quirk and add
-> these.
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> Cc: John Ronciak <john.ronciak@intel.com>
+On 24 September 2014 01:22, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Andrew]
+>
+> On Tue, Sep 23, 2014 at 08:01:07PM +0100, Liviu Dudau wrote:
+>> The ranges property for a host bridge controller in DT describes
+>> the mapping between the PCI bus address and the CPU physical address.
+>> The resources framework however expects that the IO resources start
+>> at a pseudo "port" address 0 (zero) and have a maximum size of IO_SPACE_LIMIT.
+>> The conversion from pci ranges to resources failed to take that into account,
+>> returning a CPU physical address instead of a port number.
+>>
+>> Also fix all the drivers that depend on the old behaviour by fetching
+>> the CPU physical address based on the port number where it is being needed.
+>>
+>> Cc: Grant Likely <grant.likely@linaro.org>
+>> Cc: Rob Herring <robh+dt@kernel.org>
+>> Cc: Arnd Bergmann <arnd@arndb.de>
+>> Acked-by: Linus Walleij <linus.walleij@linaro.org>
+>> Cc: Thierry Reding <thierry.reding@gmail.com>
+>> Cc: Simon Horman <horms@verge.net.au>
+>> Cc: Catalin Marinas <catalin.marinas@arm.com>
+>> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+>> ---
+>>  arch/arm/mach-integrator/pci_v3.c | 23 ++++++++++----------
+>>  drivers/of/address.c              | 44 +++++++++++++++++++++++++++++++++++----
+>>  drivers/pci/host/pci-tegra.c      | 10 ++++++---
+>>  drivers/pci/host/pcie-rcar.c      | 21 +++++++++++++------
+>>  include/linux/of_address.h        | 15 ++++++-------
+>>  5 files changed, 82 insertions(+), 31 deletions(-)
+>> ...
+>
+> The of_pci_range_to_resource() implementation in drivers/of/address.c is
+> always compiled when CONFIG_OF_ADDRESS=y, but when CONFIG_OF_ADDRESS=y and
+> CONFIG_PCI is not set, we get the static inline version from
+> include/linux/of_address.h as well, causing a redefinition error.
+>
+>> diff --git a/drivers/of/address.c b/drivers/of/address.c
+>> @@ -957,12 +957,48 @@ bool of_dma_is_coherent(struct device_node *np)
+>> ...
+>> +int of_pci_range_to_resource(struct of_pci_range *range,
+>> +     struct device_node *np, struct resource *res)
+>
+>> diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+>> ...
+>>  #else /* CONFIG_OF_ADDRESS && CONFIG_PCI */
+>>  static inline int of_pci_address_to_resource(struct device_node *dev, int bar,
+>>                                            struct resource *r)
+>> @@ -144,6 +139,12 @@ static inline int of_pci_address_to_resource(struct device_node *dev, int bar,
+>>       return -ENOSYS;
+>>  }
+>>
+>> +static inline int of_pci_range_to_resource(struct of_pci_range *range,
+>> +             struct device_node *np, struct resource *res)
+>> +{
+>> +     return -ENOSYS;
+>> +}
+>
+> My proposal to fix it is the following three patches.  The first moves the
+> inline version of of_pci_range_to_resource() into the existing "#if
+> defined(CONFIG_OF_ADDRESS) && defined(CONFIG_PCI)" block.
+>
+> Andrew added it (and some other PCI-related things) with 29b635c00f3e
+> ("of/pci: Provide support for parsing PCI DT ranges property") to
+> of_address.h outside of any ifdefs, so it's always available.  Maybe
+> there's a reason that's needed in the non-CONFIG_PCI case, but I didn't see
+> it with a quick look.
+>
 
-Applied to pci/virtualization for v3.18, thanks!
+There was no reason - it probably should have been inside a #ifdef
+like the others.
 
-> ---
-> 
->  drivers/pci/quirks.c |   34 ++++++++++++++++++++++++++++------
->  1 file changed, 28 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 95239e0..b6c6500 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3635,14 +3635,16 @@ static int pci_quirk_intel_pch_acs(struct pci_dev *dev, u16 acs_flags)
->  	return acs_flags & ~flags ? 0 : 1;
->  }
->  
-> -static int pci_quirk_solarflare_acs(struct pci_dev *dev, u16 acs_flags)
-> +static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags)
->  {
->  	/*
->  	 * SV, TB, and UF are not relevant to multifunction endpoints.
->  	 *
-> -	 * Solarflare indicates that peer-to-peer between functions is not
-> -	 * possible, therefore RR, CR, and DT are not implemented.  Mask
-> -	 * these out as if they were clear in the ACS capabilities register.
-> +	 * Multifunction devices are only required to implement RR, CR, and DT
-> +	 * in their ACS capability if they support peer-to-peer transactions.
-> +	 * Devices matching this quirk have been verified by the vendor to not
-> +	 * perform peer-to-peer with other functions, allowing us to mask out
-> +	 * these bits as if they were unimplemented in the ACS capability.
->  	 */
->  	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
->  		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
-> @@ -3661,8 +3663,28 @@ static const struct pci_dev_acs_enabled {
->  	{ PCI_VENDOR_ID_ATI, 0x439d, pci_quirk_amd_sb_acs },
->  	{ PCI_VENDOR_ID_ATI, 0x4384, pci_quirk_amd_sb_acs },
->  	{ PCI_VENDOR_ID_ATI, 0x4399, pci_quirk_amd_sb_acs },
-> -	{ PCI_VENDOR_ID_SOLARFLARE, 0x0903, pci_quirk_solarflare_acs },
-> -	{ PCI_VENDOR_ID_SOLARFLARE, 0x0923, pci_quirk_solarflare_acs },
-> +	{ PCI_VENDOR_ID_SOLARFLARE, 0x0903, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_SOLARFLARE, 0x0923, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10C6, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10DB, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10DD, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10E1, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10F1, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10F7, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10F8, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10F9, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10FA, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10FB, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x10FC, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x1507, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x1514, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x151C, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x1529, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x152A, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x154D, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x154F, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x1551, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x1558, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
->  	{ 0 }
->  };
-> 
+Andrew Murray
