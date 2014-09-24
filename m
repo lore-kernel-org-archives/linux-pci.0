@@ -1,92 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bbn0109.outbound.protection.outlook.com ([157.56.111.109]:20160
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751017AbaI3JuX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Sep 2014 05:50:23 -0400
-From: Richard Zhu <r65037@freescale.com>
-To: <linux-pci-owner@vger.kernel.org>
-CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
-	<festevam@gmail.com>, <l.stach@pengutronix.de>,
-	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
-Subject: [PATCH v4 04/10] PCI: designware: refine setup_rc and add msi data restore
-Date: Tue, 30 Sep 2014 17:19:51 +0800
-Message-ID: <1412068796-16931-5-git-send-email-r65037@freescale.com>
-In-Reply-To: <1412068796-16931-1-git-send-email-r65037@freescale.com>
-References: <1412068796-16931-1-git-send-email-r65037@freescale.com>
+Received: from mga14.intel.com ([192.55.52.115]:24721 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750821AbaIXWlK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Sep 2014 18:41:10 -0400
+Date: Wed, 24 Sep 2014 16:41:09 -0600 (MDT)
+From: Keith Busch <keith.busch@intel.com>
+To: Yijing Wang <wangyijing@huawei.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	Keith Busch <keith.busch@intel.com>,
+	Jon Mason <jon.mason@intel.com>, Jon Mason <jdmason@kudzu.us>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+In-Reply-To: <5409117E.2000002@huawei.com>
+Message-ID: <alpine.LRH.2.03.1409241547430.4696@AMR>
+References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com> <20140903224201.GD26073@google.com> <540802D9.6000903@huawei.com> <CAErSpo6qy76zTX07Ufm0n1_HUA5G0MrAYxauEFa5QkibWsejFQ@mail.gmail.com> <5409117E.2000002@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-- move "program correct class for RC" from dw_pcie_host_init()
-to dw_pcie_setup_rc(). since this is RC setup, it's
-better to contained in dw_pcie_setup_rc function.
-Then, RC can be re-setup really by dw_pcie_setup_rc().
-- add one re-store msi data function. Because that
-pcie controller maybe powered off during system suspend,
-and the msi data configuration would be lost.
-this functions can be used to restore the msi data
-during the resume callback.
+Just poking this thread to make sure it's not dead. :)
 
-Signed-off-by: Richard Zhu <r65037@freescale.com>
----
- drivers/pci/host/pcie-designware.c | 15 ++++++++++++---
- drivers/pci/host/pcie-designware.h |  1 +
- 2 files changed, 13 insertions(+), 3 deletions(-)
+I tested Yijing's proposal and it is successful on our Intel server
+platforms; hoping either this or something that derives similar behavior
+will be applied so we can remove bus tuning kernel parameters.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 538bbf3..ae1e6c5 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -194,6 +194,13 @@ void dw_pcie_msi_init(struct pcie_port *pp)
- 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
- }
- 
-+void dw_pcie_msi_cfg_restore(struct pcie_port *pp)
-+{
-+	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
-+			virt_to_phys((void *)pp->msi_data));
-+	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
-+}
-+
- static int find_valid_pos0(struct pcie_port *pp, int msgvec, int pos, int *pos0)
- {
- 	int flag = 1;
-@@ -570,9 +577,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 
- 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
- 
--	/* program correct class for RC */
--	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
--
- 	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
- 	val |= PORT_LOGIC_SPEED_CHANGE;
- 	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
-@@ -917,6 +921,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	val = memlimit | membase;
- 	dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
- 
-+	/* program correct class for RC */
-+	dw_pcie_readl_rc(pp, PCI_CLASS_REVISION, &val);
-+	val |= PCI_CLASS_BRIDGE_PCI << 16;
-+	dw_pcie_writel_rc(pp, val, PCI_CLASS_REVISION);
-+
- 	/* setup command register */
- 	dw_pcie_readl_rc(pp, PCI_COMMAND, &val);
- 	val &= 0xffff0000;
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index a476e60..bb75715 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -83,6 +83,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
- int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
- void dw_pcie_msi_init(struct pcie_port *pp);
-+void dw_pcie_msi_cfg_restore(struct pcie_port *pp);
- int dw_pcie_link_up(struct pcie_port *pp);
- void dw_pcie_setup_rc(struct pcie_port *pp);
- int dw_pcie_host_init(struct pcie_port *pp);
--- 
-1.9.1
+Tested-by: Keith Busch <keith.busch@intel.com>
 
+On Thu, 4 Sep 2014, Yijing Wang wrote:
+>>>>>      if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
+>>>>> +            pcie_bus_update_set(dev);
+>>>>
+>>>> You're only adding this to the PCIE_BUS_TUNE_OFF path.  Can't the same
+>>>> problem occur for other pcie_bus_config settings?
+>>>
+>>> We only found the problem during PCIE_BUS_TUNE_OFF set. Other mode like PCIE_BUS_SAFE and PCIE_BUS_PEER2PEER.
+>>> This issue won't happen.
+>>
+>> Sorry, I can't parse this.  Are you saying the problem won't happen in
+>> the other modes?  Why not?
+>
+> Hi Bjorn, when in PCIE_BUS_SAFE mode, pcie_find_smpss() will find the largest available mpss in a pcie path.
+> Then call pcie_bus_configure_set() to set all devices' mps to the largest available mps in this path, so
+> all devices in the path will have the same mps. When in PCIE_BUS_PEER2PEER, all devices' mps will be set to 128B
+> for safety. And to the PCIE_BUS_PERFORMANCE mode, I found Jon's comment in pcie_write_mps(),
+>
+> 			/* For "Performance", the assumption is made that
+> 			 * downstream communication will never be larger than
+> 			 * the MRRS.  So, the MPS only needs to be configured
+> 			 * for the upstream communication.  This being the case, <------
+> 			 * walk from the top down and set the MPS of the child
+> 			 * to that of the parent bus.
+>
+> So I think the problem won't happen in other modes.
+>
+> Thanks!
+> Yijing.
+>
+>
+>>
+>>>>>              pcie_bus_detect_mps(dev);
+>>>>>              return 0;
+>>>>>      }
+>>
+>> .
+>>
+>
+>
+> -- 
+> Thanks!
+> Yijing
+>
+>
