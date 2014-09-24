@@ -1,104 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:40616 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752788AbaILXJP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Sep 2014 19:09:15 -0400
+Received: from mail-bn1bon0115.outbound.protection.outlook.com ([157.56.111.115]:24608
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751328AbaIXCRo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 23 Sep 2014 22:17:44 -0400
+Message-ID: <542229D6.50405@freescale.com>
+Date: Wed, 24 Sep 2014 10:17:58 +0800
+From: Lian Minghuan-B31939 <B31939@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <ghoaukcx6b.fsf@quad.gouders.net>
-References: <ghiol53r9u.fsf@lena.gouders.net>
-	<CAMxnaaXiEZeJOsgQ6ZSbiqy5Z1zNoXonwNSQNRyRhV0t5jveYQ@mail.gmail.com>
-	<ghwq9k3m6z.fsf@lena.gouders.net>
-	<CAMxnaaUqTMf1uEQUqrAGjym8ZrQaBf2QbE4Jqxh2t6a2JgJkOQ@mail.gmail.com>
-	<ghioku5l29.fsf@lena.gouders.net>
-	<CAErSpo7j=a3y2MVsvEQGQ4B63_mNCyZSRNXNEZa-2++xs88NmQ@mail.gmail.com>
-	<CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com>
-	<ghppf15236.fsf@quad.gouders.net>
-	<CAErSpo5SVUOz+qa_x5JTC+-Y5ewTyYzA0N=jyPtK9LaguRrt=w@mail.gmail.com>
-	<ghd2b1svdw.fsf@quad.gouders.net>
-	<CAErSpo5e0GOdVbZdQYriP+aWziKELpb9BWTgJ4ERPia354CM5w@mail.gmail.com>
-	<ghvbotd8es.fsf@quad.gouders.net>
-	<ghzje5f5zt.fsf@lena.gouders.net>
-	<ghbnqkeh9k.fsf@quad.gouders.net>
-	<CAE9FiQXQesrDMqf1b6ZhHdmY_wEEUrOEvNO4N_d6WtaNMGNLww@mail.gmail.com>
-	<gh4mwcef0r.fsf@quad.gouders.net>
-	<CAE9FiQWgioBeVmfWCaE38BrkjbWKaS+_FYYdmdd+7X8fpeEgnQ@mail.gmail.com>
-	<ghoaukcx6b.fsf@quad.gouders.net>
-Date: Fri, 12 Sep 2014 16:09:14 -0700
-Message-ID: <CAE9FiQUk-sAHnjfBvNeHQWibJRqbPE1V0UtDtARtwxmS=7aQrw@mail.gmail.com>
-Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
-From: Yinghai Lu <yinghai@kernel.org>
-To: Dirk Gouders <dirk@gouders.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Scott Wood <scottwood@freescale.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Zang Roy-R61911" <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v3 3/3] PCI: Layerscape: Add Layerscape PCIe driver
+References: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
+	 <1411482540-31297-5-git-send-email-Minghuan.Lian@freescale.com>
+ <1411507511.13320.155.camel@snotra.buserror.net>
+In-Reply-To: <1411507511.13320.155.camel@snotra.buserror.net>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 12, 2014 at 3:05 PM, Dirk Gouders <dirk@gouders.net> wrote:
-> Yinghai Lu <yinghai@kernel.org> writes:
->
->> On Fri, Sep 12, 2014 at 1:54 PM, Dirk Gouders <dirk@gouders.net> wrote:
->>> Yinghai Lu <yinghai@kernel.org> writes:
->>>
->>>> On Fri, Sep 12, 2014 at 1:05 PM, Dirk Gouders <dirk@gouders.net> wrote:
->>>>> Dirk Gouders <dirk@gouders.net> writes:
->>> -[0000:00]-+-01.0-[01-02]--+-0d.0-[02]--
->>>            |               +-0e.0  Broadcom BCM5785 [HT1000] SATA (PATA/IDE Mode)
->>>            |               \-0e.1  Broadcom BCM5785 [HT1000] SATA (PATA/IDE Mode)
->>>            +-02.0  Broadcom BCM5785 [HT1000] Legacy South Bridge
->>>            +-02.1  Broadcom BCM5785 [HT1000] IDE
->>>            +-02.2  Broadcom BCM5785 [HT1000] LPC
->>>            +-03.0  Broadcom BCM5785 [HT1000] USB
->>>            +-03.1  Broadcom BCM5785 [HT1000] USB
->>>            +-03.2  Broadcom BCM5785 [HT1000] USB
->>>            +-06.0-[03]--
->>>            +-07.0-[04]--+-04.0  Broadcom Corporation NetXtreme BCM5780 Gigabit Ethernet
->>>            |            \-04.1  Broadcom Corporation NetXtreme BCM5780 Gigabit Ethernet
->>>            +-0a.0-[05]--
->>>            +-0b.0-[06]--
->>
->> what is "lspci -tv" and "lspci -vvxxx" look like before your patch that cut down
->> end bus to 07 ...?
->
-> Rebooted with 3.16 kernel:
->
-> # lspci -tv
->
-> -[0000:00]-+-01.0-[01-02]--+-0d.0-[02]--
->            |               +-0e.0  Broadcom BCM5785 [HT1000] SATA (PATA/IDE Mode)
->            |               \-0e.1  Broadcom BCM5785 [HT1000] SATA (PATA/IDE Mode)
->            +-02.0  Broadcom BCM5785 [HT1000] Legacy South Bridge
->            +-02.1  Broadcom BCM5785 [HT1000] IDE
->            +-02.2  Broadcom BCM5785 [HT1000] LPC
->            +-03.0  Broadcom BCM5785 [HT1000] USB
->            +-03.1  Broadcom BCM5785 [HT1000] USB
->            +-03.2  Broadcom BCM5785 [HT1000] USB
->            +-06.0-[03]--
->            +-07.0-[04]--+-04.0  Broadcom Corporation NetXtreme BCM5780 Gigabit Ethernet
->            |            \-04.1  Broadcom Corporation NetXtreme BCM5780 Gigabit Ethernet
->            +-08.0-[05]--
->            +-09.0-[06]--
->            +-0a.0-[07]----00.0  LSI Logic / Symbios Logic FC949ES Fibre Channel Adapter
->            +-0b.0-[08]--
+Hi Scott,
 
-where are 00:08.0 and 00:09.0 going? Did you just skip them in "cut
-end bus patch" ?
+Please see my comments inline.
 
-Proper simulation could be:
-1. remove 07:00.0
-    echo 1 > /sys/bus/pci/devices/0000:07:00.0/remove
-2. change bus range in 00:0a.0 bus
-    setpci -s 00:0a.0 0x1c.l=0x00101000
-3. remove 00:0a.0
-    echo 1 > /sys/bus/pci/devices/0000:00:0a.0/remove
-4. rescan pci
-    echo 1 > /sys/bus/pci/rescan
-5. reset pcie link from 00:0a.0
-    setpci -s 00:0a.0 0xc0.b=0x18
-    sleep 1s
-    setpci -s 00:0a.0 0xc0.b=0x08
-6. rescan pci bus
-    echo 1 > /sys/bus/pci/rescan
+On 2014年09月24日 05:25, Scott Wood wrote:
+> On Tue, 2014-09-23 at 22:29 +0800, Minghuan Lian wrote:
+>> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+>> index 34134d6..7c49456 100644
+>> --- a/drivers/pci/host/Kconfig
+>> +++ b/drivers/pci/host/Kconfig
+>> @@ -82,4 +82,11 @@ config PCIE_XILINX
+>>   	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
+>>   	  Host Bridge driver.
+>>   
+>> +config PCI_LAYERSCAPE
+>> +	bool "Freescale Layerscape PCIe controller"
+>> +	select PCIE_DW
+>> +	select MFD_SYSCON
+>> +	help
+>> +	  Say Y here if you want PCIe controller support on Layerscape SoCs.
+>> +
+>>   endmenu
+> Are you sure there are no dependencies for this to build?  At the least
+> you need OF.
+>
+> I think you should also be selecting REGMAP.
+[Minghuan] Yes, it does need OF. I will add 'depends on OF' next version.
+Because MFS_SYSCON will select REGMAP, so I think it is enough to select 
+MFS_SYSCON.
+
+> -Scott
+>
+>
+
