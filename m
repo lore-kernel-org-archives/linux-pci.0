@@ -1,98 +1,163 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <5424C77B.2060807@huawei.com>
-Date: Fri, 26 Sep 2014 09:55:07 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <54227CF1.6020305@jp.fujitsu.com>
+Date: Wed, 24 Sep 2014 17:12:33 +0900
+From: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
 MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+To: Jiang Liu <jiang.liu@linux.intel.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [PATCH v2 02/22] PCI/MSI: Remove useless bus->msi assignment
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com> <1411614872-4009-3-git-send-email-wangyijing@huawei.com> <20140925070601.GF12423@ulmo>
-In-Reply-To: <20140925070601.GF12423@ulmo>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-arch-owner@vger.kernel.org
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	<x86@kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [RFC Part2 v1 00/21] Enable hierarchy irqdomian on x86 platforms
+References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com> <542279D0.1040603@jp.fujitsu.com> <54227C7E.6060506@linux.intel.com>
+In-Reply-To: <54227C7E.6060506@linux.intel.com>
+Content-Type: text/plain; charset="ISO-2022-JP"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/25 15:06, Thierry Reding wrote:
-> On Thu, Sep 25, 2014 at 11:14:12AM +0800, Yijing Wang wrote:
->> Currently, PCI drivers will initialize bus->msi in
->> pcibios_add_bus(). pcibios_add_bus() will be called
->> in every pci bus initialization. So the bus->msi
->> assignment in pci_alloc_child_bus() is useless.
+(2014/09/24 17:10), Jiang Liu wrote:
 > 
-> I think this should be the other way around. The default should be to
-> inherit bus->msi from the parent. That way drivers don't typically have
-> to do it, yet they can still opt to override it if they need to.
 > 
-> For Tegra for example I think it would work if we assigned the MSI chip
-> to the root bus (in tegra_pcie_scan_bus()) and then have it propagated
-> to child busses in pci_alloc_child_bus() so that tegra_pcie_add_bus()
-> can be removed altogether.
+> On 2014/9/24 15:59, Yasuaki Ishimatsu wrote:
+>> (2014/09/11 23:03), Jiang Liu wrote:
+>>> We plan to restructure x86 interrupt code based on hierarchy irqdomain,
+>>> that is to build irqdomains for CPU vector, interrupt remapping unit,
+>>> IOAPIC, MSI and HPET etc and organize those irqdomains in hierarchy mode.
+>>> Each irqdomain manages corresponding interrupt controller and talks to
+>>> parent interrupt controller through public irqdomain interfaces. We also
+>>> support stacked irq_chip based on hierarchy irqdomain. It will make the
+>>> x86 interrupt architecture much more clear and more easy to maintain
+>>> with hierarchy irqdomain and stacked irq_chip. It may also help ARM
+>>> interrupt management architecture too.
+>>
+>> Do you have a documentation which more detailed information is written?
+>> I'm interested in this feature. And I want to know more detailed information.
+>>
+>> I cannot imagine why the feature makes x86 irq architecture much more clear
+>> and more easy to maintain in this description. Of course, I have read the
+>> following threads:
+>>
+>> https://lkml.org/lkml/2014/9/11/101
+> Hi Yasuaki,
+> 
+> Do these help?
+> http://www.mail-archive.com/linux-kernel@vger.kernel.org/msg729924.html
+> https://lkml.org/lkml/2014/8/1/67
 
-Hi Thierry, thanks very much for your review and comments!
+Thank you for the information. I'll read it.
 
-Because pcibios_add_bus() and "child->msi = parent->msi;" in pci_alloc_child_bus()
-do the same thing. So I think we should use one and remove another. I like
-the latter.
-
-In addition, I consider several solutions to associate msi chip and PCI device.
-
-1. Add a msi_chip member in PCI arch sysdata to store the msi_chip pointer. Because
-all PCI devices under a PCI hostbridge always share the same msi chip, so every PCI device
-can find the msi chip by pci_bus->sysdata, but in this solution, we also need to add
-ARCH specific functions to extract msi chip from PCI arch sysdata, like pci_domain_nr().
-Then we can remove .add_bus() like tegra_pcie_add_bus() and the msi assignment in  pci_alloc_child_bus().
-
-2. Remove .add_bus() functions, associate PCI root bus and msi chip after PCI root bus created,
-as you mentioned above. In this solution we need to associate PCI root bus and msi chip in all PCI
-hostbridge drivers, like in tegra_pcie_scan_bus().
-
-
-3. Introduce a global msi chip list, currently, only in arm, there maybe more than one type MSI chip,
-but in arm, we can find msi chip by PCI hostbridge platform device's of_node, Eg. use "msi-parent" property
-to find it. Or msi chip is integrated into PCI hostbridge, we can find msi chip by compare msi_chip->dev and
-PCI hostbridge's platform device's struct device *dev pointer. And because PCI hostbridge platform device pass
-to pci_create_root_bus() as the parent device, so every PCI devices can first find the platform device, then
-to find the msi chip, this solution looks a bit ugly, but we only associate pci hostbridge and msi chip, PCI child
-buses and devices do not have to know the msi chip details.
-
-4. Last, in this series, introduced weak arch function arch_find_msi_chip(), it's the simplest one, because all platforms
-except arm, only one msi chip will exist in system.
-
-What do you think about this ?
-
-Thanks!
-Yijing.
+Thanks,
+Yasuaki Ishimatsu
 
 > 
-> Thierry
+> Regards!
+> Gerry
 > 
+>>
+>> Thanks,
+>> Yasuaki Ishimatsu
+>>
+>>>
+>>> This is the second patch set to enable support of hierarchy irqdomain
+>>> on x86 platforms. It depends on the first part at:
+>>> https://lkml.org/lkml/2014/9/11/101
+>>> And you may access it at:
+>>> https://github.com/jiangliu/linux.git irqdomain/p2v1
+>>>
+>>> And there will be a third patch set to convert IOAPIC driver to support
+>>> hierarchy irqdomain and clean up code.
+>>>
+>>> The first patch extends irqdomain interfaces to support hierarchy
+>>> irqdomain. Hope this interface could be used by other architectures too,
+>>> such as ARM/ARM64.
+>>> The second patch introduces two helper functions to support stacked
+>>> irq_chip.
+>>> Patch 3-9 implements an irqdomain to manange CPU interrupt vectors, and
+>>> it's the root irqdomain for x86 platforms.
+>>> Patch 10-13 converts Intel and AMD interrupt remapping drivers to
+>>> support hierarchy irqdomain.
+>>> Patch 14-17 converts HPET, MSI and HT_IRQ drivers to support hierarchy
+>>> irqdomain.
+>>> Patch 18-21 cleans up unsued code in x86 arch and interrupt remapping
+>>> drivers.
+>>>
+>>> We have tested this patchset on Intel 32-bit and 64-bit systems. But we
+>>> have only done compilation tests for HT_IRQ and AMD interrupt remapping
+>>> drivers due to hardware resource limitation. Tests on AMD platforms are
+>>> warmly welcomed!
+>>>
+>>> Jiang Liu (21):
+>>>     irqdomain: Introduce new interfaces to support hierarchy irqdomains
+>>>     genirq: Introduce helper functions to support stacked irq_chip
+>>>     x86, irq: Save destination CPU ID in irq_cfg
+>>>     x86, irq: Use hierarchy irqdomain to manage CPU interrupt vectors
+>>>     x86, hpet: Use new irqdomain interfaces to allocate/free IRQ
+>>>     x86, MSI: Use new irqdomain interfaces to allocate/free IRQ
+>>>     x86, uv: Use new irqdomain interfaces to allocate/free IRQ
+>>>     x86, htirq: Use new irqdomain interfaces to allocate/free IRQ
+>>>     x86, dmar: Use new irqdomain interfaces to allocate/free IRQ
+>>>     x86: irq_remapping: Introduce new interfaces to support hierarchy
+>>>       irqdomain
+>>>     iommu/vt-d: Change prototypes to prepare for enabling hierarchy
+>>>       irqdomain
+>>>     iommu/vt-d: Enhance Intel IR driver to suppport hierarchy irqdomain
+>>>     iommu/amd: Enhance AMD IR driver to suppport hierarchy irqdomain
+>>>     x86, hpet: Enhance HPET IRQ to support hierarchy irqdomain
+>>>     x86, MSI: Use hierarchy irqdomain to manage MSI interrupts
+>>>     x86, irq: Directly call native_compose_msi_msg() for DMAR IRQ
+>>>     x86, htirq: Use hierarchy irqdomain to manage Hypertransport
+>>>       interrupts
+>>>     iommu/vt-d: Clean up unused MSI related code
+>>>     iommu/amd: Clean up unused MSI related code
+>>>     x86: irq_remapping: Clean up unused MSI related code
+>>>     x86, irq: Clean up unused MSI related code and interfaces
+>>>
+>>>    arch/x86/Kconfig                     |    3 +-
+>>>    arch/x86/include/asm/hpet.h          |   16 +-
+>>>    arch/x86/include/asm/hw_irq.h        |   64 +++++
+>>>    arch/x86/include/asm/irq_remapping.h |   66 +++--
+>>>    arch/x86/include/asm/pci.h           |    5 -
+>>>    arch/x86/include/asm/x86_init.h      |    4 -
+>>>    arch/x86/kernel/apic/htirq.c         |  179 +++++++++----
+>>>    arch/x86/kernel/apic/io_apic.c       |    3 -
+>>>    arch/x86/kernel/apic/msi.c           |  430 +++++++++++++++++++++++--------
+>>>    arch/x86/kernel/apic/vector.c        |  158 +++++++++++-
+>>>    arch/x86/kernel/hpet.c               |   57 ++---
+>>>    arch/x86/kernel/x86_init.c           |    2 -
+>>>    arch/x86/platform/uv/uv_irq.c        |   27 +-
+>>>    drivers/iommu/amd_iommu.c            |  385 ++++++++++++++++++++++------
+>>>    drivers/iommu/amd_iommu_init.c       |    4 +
+>>>    drivers/iommu/amd_iommu_proto.h      |    9 +
+>>>    drivers/iommu/amd_iommu_types.h      |    5 +
+>>>    drivers/iommu/intel_irq_remapping.c  |  468 +++++++++++++++++++++++-----------
+>>>    drivers/iommu/irq_remapping.c        |  221 ++++++----------
+>>>    drivers/iommu/irq_remapping.h        |   22 +-
+>>>    drivers/pci/htirq.c                  |   48 +---
+>>>    include/linux/htirq.h                |   22 +-
+>>>    include/linux/intel-iommu.h          |    4 +
+>>>    include/linux/irq.h                  |    8 +
+>>>    include/linux/irqdomain.h            |   60 +++++
+>>>    kernel/irq/Kconfig                   |    3 +
+>>>    kernel/irq/chip.c                    |   21 ++
+>>>    kernel/irq/irqdomain.c               |  349 ++++++++++++++++++++++++-
+>>>    28 files changed, 1934 insertions(+), 709 deletions(-)
+>>>
+>>
+>>
 
-
--- 
-Thanks!
-Yijing
 
