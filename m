@@ -1,99 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:36491 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752768AbaIJOPR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Sep 2014 10:15:17 -0400
-Date: Wed, 10 Sep 2014 15:15:14 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: L H <swdevgid@gmail.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: designware: prefetch and 64-bit addr support?
-Message-ID: <20140910141514.GC27864@e106497-lin.cambridge.arm.com>
-References: <CAA8O7Crwi7=afUpLoC1O5H9ymjYEPyb63kO8QdFuPx6RUJ8NpQ@mail.gmail.com>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:33498 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752587AbaIXN1F (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 09:27:05 -0400
+Received: by mail-ie0-f182.google.com with SMTP id tp5so6161864ieb.41
+        for <linux-pci@vger.kernel.org>; Wed, 24 Sep 2014 06:27:05 -0700 (PDT)
+Date: Wed, 24 Sep 2014 07:27:02 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Minghuan Lian <Minghuan.Lian@freescale.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v3 1/3] PCI: designware: Rename get_msi_data to
+ get_msi_addr
+Message-ID: <20140924132702.GC13850@google.com>
+References: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
+ <1411482540-31297-3-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <CAA8O7Crwi7=afUpLoC1O5H9ymjYEPyb63kO8QdFuPx6RUJ8NpQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1411482540-31297-3-git-send-email-Minghuan.Lian@freescale.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 03, 2014 at 09:57:11PM +0100, L H wrote:
-> Greetings my fellow PCI designware developers.  I'm working on an
-> implementation that relies on the PCIe DesignWare IP and am writing a
-> platform-specific layer to link with the designware code, but have run
-> into a couple challenges.
+On Tue, Sep 23, 2014 at 10:28:58PM +0800, Minghuan Lian wrote:
+> The function get_msi_data is used to return MSI message address.
+> In order to accurately express function purpose the patch rename
+> it to get_msi_addr.
 > 
-> Reading the pcie-designware.c (looking at the master branch of a repo
-> cloned from git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git --
-> is that the best branch/repo to view?), it appears to me that the
-> dw_pcie_host_init() code doesn't comprehend prefetch memory ranges,
-> but instead just assumes that a memory range is non-prefetch despite
-> its encoding in the device-tree.  Am I reading that correctly?  The
-> loop for walking the ranges begins with:
+> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+
+Applied patches 1 and 2 to pci/host-designware with Mohit's ack for v3.18,
+thanks!
+
+> ---
+> Change log:
+> v3: no change
+> v2: no change just derived from v1
 > 
->     for_each_of_pci_range(&parser, &range) {
->         unsigned long restype = range.flags & IORESOURCE_TYPE_BITS;
+>  drivers/pci/host/pcie-designware.c | 4 ++--
+>  drivers/pci/host/pcie-designware.h | 2 +-
+>  2 files changed, 3 insertions(+), 3 deletions(-)
 > 
-> The bitmask for IORESOURCE_TYPE_BITS would result in a restype
-> ignorant of the IORESOURCE_PREFETCH bit, right?   The ensuing code
-> flow then treats the range as non-prefetch unless I missed something.
-
-Hi LH,
-
-You are not reading all of the code. The designware code only cares
-about the type of the range (IO, MEM, cfg?). But the conversion from
-range to resource that happens in of_pci_range_to_resource() *does*
-preserve the prefetchable flags and that is being used by the generic
-PCI framework.
-
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 5d720c2..1c09f814 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -361,8 +361,8 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+>  	 */
+>  	desc->msi_attrib.multiple = msgvec;
+>  
+> -	if (pp->ops->get_msi_data)
+> -		msg.address_lo = pp->ops->get_msi_data(pp);
+> +	if (pp->ops->get_msi_addr)
+> +		msg.address_lo = pp->ops->get_msi_addr(pp);
+>  	else
+>  		msg.address_lo = virt_to_phys((void *)pp->msi_data);
+>  	msg.address_hi = 0x0;
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index 48f8670..904e40a 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -70,7 +70,7 @@ struct pcie_host_ops {
+>  	void (*host_init)(struct pcie_port *pp);
+>  	void (*msi_set_irq)(struct pcie_port *pp, int irq);
+>  	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
+> -	u32 (*get_msi_data)(struct pcie_port *pp);
+> +	u32 (*get_msi_addr)(struct pcie_port *pp);
+>  	void (*scan_bus)(struct pcie_port *pp);
+>  	int (*msi_host_init)(struct pcie_port *pp, struct msi_chip *chip);
+>  };
+> -- 
+> 1.9.1
 > 
-> Curiously, I also noted that the for_each_of_pcie_range() which calls
-> of_pci_range_parser_one() that in turn includes calls to
-> of_bus_pci_get_flags() does not set the IORESOURCE_MEM_64 bit parsed
-> from the range either.
-
-Where exactly do you expect those flags to be read into?
-
-> 
-> If I followed that all correctly, is the proper assumption that all of
-> the current implementations relying on the designware code only use
-> 32-bit non-prefetch memory ranges?
-
-No, I don't think that is correct. What I would say is that the current
-designware PCIe code does not care whether the memory is prefetcheable
-or not for the DW specific part of the setup.
-
-Best regards,
-Liviu
-
-> 
-> The platform which I'm working on will use a large 64-bit PCI memory
-> address space, and thus I need 64-bit memory apertures which implies,
-> I think, only prefetch memory.
-> 
-> I hasten to add this isn't a complaint or critique of the valuable
-> work developed up to this point. I'm very grateful to have it as a
-> rich starting point.  I'm reaching out to the list here as a newbie to
-> verify my comprehension of the designware code, and if valid, to
-> inquire if there's any effort by anyone currently to support 64-bit
-> prefetch ranges.  I've accepted the real possibility that I might be
-> blazing this trail myself, but just wanted to check if anyone else has
-> considered it or working on this support to avoid a redundant effort.
-> 
-> thanks,
-> LH
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
