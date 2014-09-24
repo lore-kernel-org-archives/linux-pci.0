@@ -1,58 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:47159 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755256AbaIHVTc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 17:19:32 -0400
-Message-ID: <540E1D75.5000500@gmail.com>
-Date: Mon, 08 Sep 2014 14:19:49 -0700
-From: Rajat Jain <rajatxjain@gmail.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Wed, 24 Sep 2014 02:18:51 +0100
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v12 10/12] PCI: Assign unassigned bus resources in
+ pci_scan_root_bus()
+Message-ID: <20140924011851.GD32643@bart.dudau.co.uk>
+References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411498874-9864-11-git-send-email-Liviu.Dudau@arm.com>
 MIME-Version: 1.0
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	bhelgaas@google.com
-CC: rajatjain@juniper.net, groeck@juniper.net
-Subject: [PATCH] pci/probe: Ignore the device id while handling CRS
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1411498874-9864-11-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some root ports may return the actual device id returned by the
-endpoint, instead of faking up a synthetic id (0xFFFF) as specified
-by the PCIe spec (sec 2.3.2). We have seen such broken devices in the
-past that match this behaviour:
-(Ref: https://lkml.org/lkml/2007/11/1/198)
+On Tue, Sep 23, 2014 at 08:01:12PM +0100, Liviu Dudau wrote:
+> If the firmware has not assigned all the bus resources and
+> we are not just probing the PCIe busses, it makes sense to
+> assign the unassigned resources in pci_scan_root_bus().
+> 
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> ---
+>  drivers/pci/probe.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ef891d2..508cf61 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1953,6 +1953,9 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+>  	if (!found)
+>  		pci_bus_update_busn_res_end(b, max);
+>  
+> +	if (!pci_has_flag(PCI_PROBE_ONLY))
+> +		pci_assign_unassigned_bus_resources(b);
+> +
+>  	pci_bus_add_devices(b);
+>  	return b;
+>  }
+> -- 
+> 2.1.0
+> 
 
-To take care of the same, CRS was disabled then, however, we want to
-enable CRS now (https://lkml.org/lkml/2014/9/2/509), but still do not
-want to break such devices. Thus check only against the
-(vendor id == 1) and ignore the device id.
+Bjorn,
 
-Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
----
- drivers/pci/probe.c |    9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+If you are OK with this patch, can you let me know how do you feel about
+making pci_scan_root_bus() set up the bus->msi pointer as well?
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 3c4c35c..0076a9b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1305,8 +1305,13 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
- 	    *l == 0x0000ffff || *l == 0xffff0000)
- 		return false;
- 
--	/* Configuration request Retry Status */
--	while (*l == 0xffff0001) {
-+	/*
-+	 * Configuration request Retry Status. Note that some root ports
-+	 * are broken and may return actual device ID instead of a synthetic ID
-+	 * (0xFFFF) to be faked as per the PCIe spec. Hence ignore the device ID
-+	 * and only check for (vendor id == 1)
-+	 */
-+	while (*l & 0xffff == 0x0001) {
- 		if (!crs_timeout)
- 			return false;
- 
+Side note: I don't know exactly how to do it now, but setting bus->msi is
+needed by platforms that are based on my patches and want to use MSI,
+otherwise they have to open code pci_scan_root_bus() to set it. I haven't
+made any attempts to do it in this series as the GICv2m patches are not
+ready yet, but I can see the need arriving soon.
+
+Best regards,
+Liviu
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-1.7.9.5
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
+
+ One small step
+   for me ...
 
