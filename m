@@ -1,47 +1,78 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <1410845317.12488.2.camel@concordia>
-Subject: Re: [PATCH v1 15/21] Powerpc/MSI: Use MSI chip framework to
- configure MSI/MSI-X irq
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-mips@linux-mips.org,
-	linux-ia64@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bharat.Bhushan@freescale.com, sparclinux@vger.kernel.org,
-	linux-arch@vger.kernel.org, linux-s390@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Joerg Roedel <joro@8bytes.org>, x86@kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	xen-devel@lists.xenproject.org, arnab.basu@freescale.com,
-	Arnd Bergmann <arnd@arndb.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Chris Metcalf <cmetcalf@tilera.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:60165 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750826AbaIXH26 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 03:28:58 -0400
+Date: Wed, 24 Sep 2014 09:28:54 +0200
+From: Ingo Molnar <mingo@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mathias Krause <minipli@googlemail.com>, linux-pci@vger.kernel.org,
 	Thomas Gleixner <tglx@linutronix.de>,
-	linux-arm-kernel@lists.infradead.org,
-	Xinwei Hu <huxinwei@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	iommu@lists.linux-foundation.org, Wuyun <wuyun.wu@huawei.com>,
-	linuxppc-dev@lists.ozlabs.org,
-	"David S. Miller" <davem@davemloft.net>
-Date: Tue, 16 Sep 2014 15:28:37 +1000
-In-Reply-To: <1409911806-10519-16-git-send-email-wangyijing@huawei.com>
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
-	 <1409911806-10519-16-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-arch-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/5] x86/PCI: Minor size reduction by marking init code
+ and data as such
+Message-ID: <20140924072853.GB1768@gmail.com>
+References: <1409001999-23161-1-git-send-email-minipli@googlemail.com>
+ <20140922202748.GE1880@google.com>
+ <20140922203428.GF1880@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140922203428.GF1880@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2014-09-05 at 18:10 +0800, Yijing Wang wrote:
-> Use MSI chip framework instead of arch MSI functions to configure
-> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+
+* Bjorn Helgaas <bhelgaas@google.com> wrote:
+
+> [+cc x86 folks]
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> On Mon, Sep 22, 2014 at 02:27:48PM -0600, Bjorn Helgaas wrote:
+> > On Mon, Aug 25, 2014 at 11:26:34PM +0200, Mathias Krause wrote:
+> > > Hi Bjorn,
+> > > 
+> > > this series is a collection of patches trying to mark initialization
+> > > code and data of the x86 specific PCI code as such. It also contains
+> > > __init annotation cleanups to move them to the spot they belong to
+> > > according to include/linux/init.h.
+> > > 
+> > > The annotation leads to a nice reduction of run-time memory size. At
+> > > least two additional pages can be released after initialization which
+> > > are otherwise occupied by code and data no longer needed.
+> > > 
+> > > Please apply!
+> > > 
+> > > Thanks,
+> > > 
+> > > Mathias Krause (5):
+> > >   x86/PCI: Mark DMI tables as initialization data
+> > >   x86/PCI: Move __init annotation were it belongs to
+> > >   x86/PCI: Mark constants of pci_mmcfg_nvidia_mcp55() as __initconst
+> > >   x86/PCI: Constify pci_mmcfg_probes[] array
+> > >   x86/PCI: Mark PCI BIOS initialization code as such
+> > 
+> > All applied to pci/initdata for v3.18, thanks!
+> 
+> Oops, I didn't notice that you hadn't cc'd the x86 folks.
+> 
+> Guys, if these should go through -tip, here's my ack:
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> I don't have any other arch/x86 changes in my tree, so I don't care which
+> way these go.
+> 
+> > >  arch/x86/pci/common.c          |   20 ++++++++--------
+> > >  arch/x86/pci/mmconfig-shared.c |   40 ++++++++++++++++++--------------
+> > >  arch/x86/pci/pcbios.c          |    8 +++----
+> > >  3 files changed, 36 insertions(+), 32 deletions(-)
 
-This looks fine and seems to boot OK.
+They are looking good to me in principle, and merging them via 
+the PCI tree is fine with me as well:
 
-Acked-by: Michael Ellerman <mpe@ellerman.id.au> (powerpc)
+Acked-by: Ingo Molnar <mingo@kernel.org>
 
-cheers
+Thanks,
 
-
+	Ingo
