@@ -1,56 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [119.145.14.66] ([119.145.14.66]:31425 "EHLO
-	szxga03-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1751105AbaIKBHE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Sep 2014 21:07:04 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH] PCI/MSI: Simplify default_restore_msi_irq()
-Date: Thu, 11 Sep 2014 09:30:55 +0800
-Message-ID: <1410399055-27562-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:53089 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750725AbaIXXsX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 19:48:23 -0400
+Received: by mail-ig0-f181.google.com with SMTP id h18so7460096igc.8
+        for <linux-pci@vger.kernel.org>; Wed, 24 Sep 2014 16:48:22 -0700 (PDT)
+Date: Wed, 24 Sep 2014 17:48:19 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Joseph Salisbury <joseph.salisbury@canonical.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has
+ 64bit mmio
+Message-ID: <20140924234819.GF20416@google.com>
+References: <CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>
+ <CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>
+ <CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>
+ <52A8BAC5.70006@canonical.com>
+ <CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>
+ <52D01D82.5070202@canonical.com>
+ <CAE9FiQUD0XvPJNFNMoqX6J67TKuGcj+pSbj+iPUf=fvC-4UXOQ@mail.gmail.com>
+ <54189BCE.2010206@canonical.com>
+ <CAE9FiQX1pfciTcuF3_eggQLCn=LvTSLTT0UZxTb+z_RaLHwgJQ@mail.gmail.com>
+ <CAE9FiQWphiORhaVNNVGZXY6eYxLH2QYNbHcLdjzrBD98tMKz0Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQWphiORhaVNNVGZXY6eYxLH2QYNbHcLdjzrBD98tMKz0Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Both MSI and MSI-X irq will be associate to msi_desc,
-Use irq_get_msi_desc() to get the msi_desc for MSI-X
-to simplify code. Also use __write_msi_msg() instead
-of write_msi_msg() to avoid the redundant calls.
+On Wed, Sep 17, 2014 at 12:46:24AM -0700, Yinghai Lu wrote:
+> On Tue, Sep 16, 2014 at 3:27 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > On Tue, Sep 16, 2014 at 1:21 PM, Joseph Salisbury
+> > <joseph.salisbury@canonical.com> wrote:
+> >>
+> >> A new bug[0] was opened due to enabling PCI_REALLOC_ENABLE_AUTO, which
+> >> is similar to the original bug[1] we discussed.
+> >>
+> >> Just wondering if there have been any additional ideas on realloc since
+> >> this was last discussed?
+> >>
+> >> [0] http://pad.lv/1363313
+> >
+> > So the resource realloc do work as expected. but LSI firmware has some
+> > problem again?
+> >
+> > We may need to add command after the reset the bridge resource.
+> 
+> Can you try attached patch?
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/msi.c |   13 ++-----------
- 1 files changed, 2 insertions(+), 11 deletions(-)
+This sitting in patchwork, but I'm dropping it because there's no changelog
+or signed-off-by.  I don't think the underlying bug has been resolved,
+though.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 5a40516..9ad920a 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -119,18 +119,9 @@ static void default_restore_msi_irq(struct pci_dev *dev, int irq)
- {
- 	struct msi_desc *entry;
- 
--	entry = NULL;
--	if (dev->msix_enabled) {
--		list_for_each_entry(entry, &dev->msi_list, list) {
--			if (irq == entry->irq)
--				break;
--		}
--	} else if (dev->msi_enabled)  {
--		entry = irq_get_msi_desc(irq);
--	}
--
-+	entry = irq_get_msi_desc(irq);
- 	if (entry)
--		write_msi_msg(irq, &entry->msg);
-+		__write_msi_msg(entry, &entry->msg);
- }
- 
- void __weak arch_restore_msi_irqs(struct pci_dev *dev)
--- 
-1.7.1
+Bjorn
+
+> ---
+>  drivers/pci/setup-bus.c |   16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+> 
+> Index: linux-2.6/drivers/pci/setup-bus.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/setup-bus.c
+> +++ linux-2.6/drivers/pci/setup-bus.c
+> @@ -1615,6 +1615,22 @@ again:
+>  						 fail_res->flags & type_mask,
+>  						 rel_type);
+>  
+> +	/* reset LSI device */
+> +	list_for_each_entry(fail_res, &fail_head, list) {
+> +		struct pci_dev *pdev;
+> +		struct pci_bus *pbus = fail_res->dev->bus;
+> +
+> +		if (pci_is_root_bus(pbus) || !pbus->self)
+> +			continue;
+> +
+> +		/* LSI device firmware is not happy with changing BAR value */
+> +		list_for_each_entry(pdev, &pbus->devices, bus_list)
+> +			if (pdev->vendor == PCI_VENDOR_ID_LSI_LOGIC) {
+> +				pci_reset_secondary_bus(pbus->self);
+> +				break;
+> +			}
+> +	}
+> +
+>  	/* restore size and flags */
+>  	list_for_each_entry(fail_res, &fail_head, list) {
+>  		struct resource *res = fail_res->res;
 
