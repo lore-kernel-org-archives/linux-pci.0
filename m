@@ -1,81 +1,244 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f182.google.com ([209.85.216.182]:52808 "EHLO
-	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750827AbaIKRa4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Sep 2014 13:30:56 -0400
-Received: by mail-qc0-f182.google.com with SMTP id x13so8504136qcv.13
-        for <linux-pci@vger.kernel.org>; Thu, 11 Sep 2014 10:30:55 -0700 (PDT)
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Wed, 24 Sep 2014 18:53:31 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Robert Richter <rrichter@cavium.com>
+Subject: Re: [PATCH v12 09/12] OF: PCI: Add support for parsing PCI host
+ bridge resources from DT
+Message-ID: <20140924175330.GI1994@e106497-lin.cambridge.arm.com>
+References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411498874-9864-10-git-send-email-Liviu.Dudau@arm.com>
+ <20140924164304.GF1994@e106497-lin.cambridge.arm.com>
+ <20140924173109.GA20416@google.com>
 MIME-Version: 1.0
-In-Reply-To: <ghioku5l29.fsf@lena.gouders.net>
-References: <ghiol53r9u.fsf@lena.gouders.net> <CAMxnaaXiEZeJOsgQ6ZSbiqy5Z1zNoXonwNSQNRyRhV0t5jveYQ@mail.gmail.com>
- <ghwq9k3m6z.fsf@lena.gouders.net> <CAMxnaaUqTMf1uEQUqrAGjym8ZrQaBf2QbE4Jqxh2t6a2JgJkOQ@mail.gmail.com>
- <ghioku5l29.fsf@lena.gouders.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 11 Sep 2014 11:30:35 -0600
-Message-ID: <CAErSpo7j=a3y2MVsvEQGQ4B63_mNCyZSRNXNEZa-2++xs88NmQ@mail.gmail.com>
-Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
-To: Dirk Gouders <dirk@gouders.net>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <20140924173109.GA20416@google.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+On Wed, Sep 24, 2014 at 06:31:09PM +0100, Bjorn Helgaas wrote:
+> On Wed, Sep 24, 2014 at 05:43:04PM +0100, Liviu Dudau wrote:
+> > Provide a function to parse the PCI DT ranges that can be used to
+> > create a pci_host_bridge structure together with its associated
+> > bus.
+> > 
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Grant Likely <grant.likely@linaro.org>
+> > Cc: Rob Herring <robh+dt@kernel.org>
+> > Cc: Catalin Marinas <catalin.marinas@arm.com>
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > [make io_base parameter optional]
+> > Signed-off-by: Robert Richter <rrichter@cavium.com>
+> > ---
+> > Hi Bjorn,
+> > 
+> > I have fixed the compilation error that this patch was triggering. I
+> > have validated that the patch applies to your pci/host-generic branch
+> > as well as to my series.
+> 
+> I applied this to pci/host-generic along with the following patches and
+> pushed the branch, thanks!
 
+Thanks again and sorry for lack of thorough testing. I still haven't managed
+to get a cross compiler for sparc and as I don't run Ubuntu or debian the
+make.cross script doesn't work for me.
 
-On Thu, Sep 11, 2014 at 7:43 AM, Dirk Gouders <dirk@gouders.net> wrote:
-> Andreas Noever <andreas.noever@gmail.com> writes:
->
->> On Wed, Sep 3, 2014 at 2:47 PM, Dirk Gouders <dirk@gouders.net> wrote:
->>> Andreas Noever <andreas.noever@gmail.com> writes:
->>>
->>>> On Wed, Sep 3, 2014 at 12:57 PM, Dirk Gouders <dirk@gouders.net> wrote:
->>>>> On a Tyan VX50 (B4985) I ran into problems when updating the kernel: the
->>>>> PCI FC Adapter is no longer recognized.
->>>>
->>>> Can you provide the output of lspci -vvv and the output of dmesg from
->>>> a working boot? Which card is the one that is not recognized?
->>>
->>> Sure, the card that disappeared is:
->>>
->>> 0a:00.0 Fibre Channel: LSI Logic / Symbios Logic FC949ES Fibre Channel Adapter (rev 02)
->>
->> As far as I can tell the following is happening:
->> The root bus resource window (advertised by the bios?) is to small:
->> pci_bus 0000:00: root bus resource [bus 00-07]
->> Previously we didn't really care. There is a resource conflict but we
->> ignored it:
->> pci_bus 0000:0a: busn_res: can not insert [bus 0a] under [bus 00-07]
->> (conflicts with (null) [bus 00-07])
->> With the patch we mark the bridge as broken and reassign the bus to 06:
->> pci 0000:00:0e.0: bridge configuration invalid ([bus 0a-0a]), reconfiguring
->> pci 0000:00:0e.0: PCI bridge to [bus 06-07]
->> pci 0000:00:0e.0:   bridge window [io  0x3000-0x3fff]
->> pci 0000:00:0e.0:   bridge window [mem 0xd4200000-0xd42fffff]
->> pci_bus 0000:06: busn_res: [bus 06-07] end is updated to 06
->>
->> We still scan for children but nothing shows up ("PCI bridge to" is
->> from pci_scan_child_bus -> pcibios_fixup_bus -> pci_read_bridge_base,
->> after pci_scan_slot). I have no idea why the device does not respond.
->
-> Andreas,
->
-> I found an identical FC Adapter here (backup) and was hoping to be able to
-> setup a test-machine where I can easily reproduce the problem, but
-> on that machine, the problem does not occur. So, I have to stick to the
-> busy machine for testing and diagnosis.
->
-> What I further did was rebooting the problematic machine and
-> enabling more messages (dyndbg="file drivers/pci/* +pf") with
-> the working and problematic kernel; the dmesg output is attached.
+Best regards,
+Liviu
 
-Dirk,
+> 
+> Bjorn
+> 
+> >  drivers/of/of_pci.c    | 117 +++++++++++++++++++++++++++++++++++++++++++++++++
+> >  include/linux/of_pci.h |   6 +++
+> >  2 files changed, 123 insertions(+)
+> > 
+> > diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> > index 82d172f..3cad1af 100644
+> > --- a/drivers/of/of_pci.c
+> > +++ b/drivers/of/of_pci.c
+> > @@ -1,7 +1,9 @@
+> >  #include <linux/kernel.h>
+> >  #include <linux/export.h>
+> >  #include <linux/of.h>
+> > +#include <linux/of_address.h>
+> >  #include <linux/of_pci.h>
+> > +#include <linux/slab.h>
+> >  
+> >  static inline int __of_pci_pci_compare(struct device_node *node,
+> >  				       unsigned int data)
+> > @@ -114,6 +116,121 @@ int of_get_pci_domain_nr(struct device_node *node)
+> >  }
+> >  EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
+> >  
+> > +#if defined(CONFIG_OF_ADDRESS)
+> > +/**
+> > + * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
+> > + * @dev: device node of the host bridge having the range property
+> > + * @busno: bus number associated with the bridge root bus
+> > + * @bus_max: maximum number of busses for this bridge
+> > + * @resources: list where the range of resources will be added after DT parsing
+> > + * @io_base: pointer to a variable that will contain on return the physical
+> > + * address for the start of the I/O range. Can be NULL if the caller doesn't
+> > + * expect IO ranges to be present in the device tree.
+> > + *
+> > + * It is the callers job to free the @resources list.
+> > + *
+> > + * This function will parse the "ranges" property of a PCI host bridge device
+> > + * node and setup the resource mapping based on its content. It is expected
+> > + * that the property conforms with the Power ePAPR document.
+> > + *
+> > + * It returns zero if the range parsing has been successful or a standard error
+> > + * value if it failed.
+> > + */
+> > +int of_pci_get_host_bridge_resources(struct device_node *dev,
+> > +			unsigned char busno, unsigned char bus_max,
+> > +			struct list_head *resources, resource_size_t *io_base)
+> > +{
+> > +	struct resource *res;
+> > +	struct resource *bus_range;
+> > +	struct of_pci_range range;
+> > +	struct of_pci_range_parser parser;
+> > +	char range_type[4];
+> > +	int err;
+> > +
+> > +	if (io_base)
+> > +		*io_base = (resource_size_t)OF_BAD_ADDR;
+> > +
+> > +	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
+> > +	if (!bus_range)
+> > +		return -ENOMEM;
+> > +
+> > +	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
+> > +
+> > +	err = of_pci_parse_bus_range(dev, bus_range);
+> > +	if (err) {
+> > +		bus_range->start = busno;
+> > +		bus_range->end = bus_max;
+> > +		bus_range->flags = IORESOURCE_BUS;
+> > +		pr_info("  No bus range found for %s, using %pR\n",
+> > +			dev->full_name, bus_range);
+> > +	} else {
+> > +		if (bus_range->end > bus_range->start + bus_max)
+> > +			bus_range->end = bus_range->start + bus_max;
+> > +	}
+> > +	pci_add_resource(resources, bus_range);
+> > +
+> > +	/* Check for ranges property */
+> > +	err = of_pci_range_parser_init(&parser, dev);
+> > +	if (err)
+> > +		goto parse_failed;
+> > +
+> > +	pr_debug("Parsing ranges property...\n");
+> > +	for_each_of_pci_range(&parser, &range) {
+> > +		/* Read next ranges element */
+> > +		if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
+> > +			snprintf(range_type, 4, " IO");
+> > +		else if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_MEM)
+> > +			snprintf(range_type, 4, "MEM");
+> > +		else
+> > +			snprintf(range_type, 4, "err");
+> > +		pr_info("  %s %#010llx..%#010llx -> %#010llx\n", range_type,
+> > +			range.cpu_addr, range.cpu_addr + range.size - 1,
+> > +			range.pci_addr);
+> > +
+> > +		/*
+> > +		 * If we failed translation or got a zero-sized region
+> > +		 * then skip this range
+> > +		 */
+> > +		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+> > +			continue;
+> > +
+> > +		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
+> > +		if (!res) {
+> > +			err = -ENOMEM;
+> > +			goto parse_failed;
+> > +		}
+> > +
+> > +		err = of_pci_range_to_resource(&range, dev, res);
+> > +		if (err)
+> > +			goto conversion_failed;
+> > +
+> > +		if (resource_type(res) == IORESOURCE_IO) {
+> > +			if (!io_base) {
+> > +				pr_err("I/O range found for %s. Please provide an io_base pointer to save CPU base address\n",
+> > +					dev->full_name);
+> > +				err = -EINVAL;
+> > +				goto conversion_failed;
+> > +			}
+> > +			if (*io_base != (resource_size_t)OF_BAD_ADDR)
+> > +				pr_warn("More than one I/O resource converted for %s. CPU base address for old range lost!\n",
+> > +					dev->full_name);
+> > +			*io_base = range.cpu_addr;
+> > +		}
+> > +
+> > +		pci_add_resource_offset(resources, res,	res->start - range.pci_addr);
+> > +	}
+> > +
+> > +	return 0;
+> > +
+> > +conversion_failed:
+> > +	kfree(res);
+> > +parse_failed:
+> > +	pci_free_resource_list(resources);
+> > +	return err;
+> > +}
+> > +EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
+> > +#endif /* CONFIG_OF_ADDRESS */
+> > +
+> >  #ifdef CONFIG_PCI_MSI
+> >  
+> >  static LIST_HEAD(of_pci_msi_chip_list);
+> > diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+> > index 71062e9..1fd207e 100644
+> > --- a/include/linux/of_pci.h
+> > +++ b/include/linux/of_pci.h
+> > @@ -52,6 +52,12 @@ of_get_pci_domain_nr(struct device_node *node)
+> >  }
+> >  #endif
+> >  
+> > +#if defined(CONFIG_OF_ADDRESS)
+> > +int of_pci_get_host_bridge_resources(struct device_node *dev,
+> > +			unsigned char busno, unsigned char bus_max,
+> > +			struct list_head *resources, resource_size_t *io_base);
+> > +#endif
+> > +
+> >  #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+> >  int of_pci_msi_chip_add(struct msi_chip *chip);
+> >  void of_pci_msi_chip_remove(struct msi_chip *chip);
+> > -- 
+> > 2.1.0
+> > 
+> > 
+> 
 
-Thanks for following up on this.  It had fallen off my radar, so I
-opened https://bugzilla.kernel.org/show_bug.cgi?id=84281 to make sure
-I don't forget again.  Please continue the debug discussion here in
-email.
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
-Bjorn
