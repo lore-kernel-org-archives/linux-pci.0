@@ -1,259 +1,133 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v12 12/12] arm64: Add architectural support for PCIe
-Date: Tue, 23 Sep 2014 20:01:14 +0100
-Message-Id: <1411498874-9864-13-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v6 08/15] x86, irq: Remove __init marker for functions will be used by IOAPIC hotplug
+Date: Wed, 24 Sep 2014 16:59:29 +0800
+Message-Id: <1411549176-30780-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the generic PCI domain and OF functions
-to provide support for PCI Express on arm64.
+Remove __init marker for functions which will be used by IOAPIC hotplug
+at runtime.
 
-Acked-by: Catalin Marinas <catalin.marinas@arm.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/arm64/Kconfig               | 22 ++++++++++++-
- arch/arm64/include/asm/Kbuild    |  1 +
- arch/arm64/include/asm/io.h      |  3 +-
- arch/arm64/include/asm/pci.h     | 37 +++++++++++++++++++++
- arch/arm64/include/asm/pgtable.h |  2 ++
- arch/arm64/kernel/Makefile       |  1 +
- arch/arm64/kernel/pci.c          | 70 ++++++++++++++++++++++++++++++++++++++++
- 7 files changed, 134 insertions(+), 2 deletions(-)
- create mode 100644 arch/arm64/include/asm/pci.h
- create mode 100644 arch/arm64/kernel/pci.c
+ arch/x86/include/asm/io_apic.h |    4 ++--
+ arch/x86/kernel/apic/io_apic.c |   18 +++++++++---------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index fd4e81a..6b01df9 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -81,7 +81,7 @@ config MMU
- 	def_bool y
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 1733ab49ac5e..a666dcdeea67 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -188,8 +188,8 @@ extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
+ extern u32 mp_pin_to_gsi(int ioapic, int pin);
+ extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
+ extern void mp_unmap_irq(int irq);
+-extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
+-				      struct ioapic_domain_cfg *cfg);
++extern void mp_register_ioapic(int id, u32 address, u32 gsi_base,
++			       struct ioapic_domain_cfg *cfg);
+ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			    irq_hw_number_t hwirq);
+ extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 9011c5fa5aad..81f014891237 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3454,7 +3454,7 @@ io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
+ 	return ret;
+ }
  
- config NO_IOPORT_MAP
--	def_bool y
-+	def_bool y if !PCI
+-static int __init io_apic_get_redir_entries(int ioapic)
++static int io_apic_get_redir_entries(int ioapic)
+ {
+ 	union IO_APIC_reg_01	reg_01;
+ 	unsigned long flags;
+@@ -3500,7 +3500,7 @@ int __init arch_probe_nr_irqs(void)
+ }
  
- config STACKTRACE_SUPPORT
- 	def_bool y
-@@ -156,6 +156,26 @@ menu "Bus support"
- config ARM_AMBA
- 	bool
+ #ifdef CONFIG_X86_32
+-static int __init io_apic_get_unique_id(int ioapic, int apic_id)
++static int io_apic_get_unique_id(int ioapic, int apic_id)
+ {
+ 	union IO_APIC_reg_00 reg_00;
+ 	static physid_mask_t apic_id_map = PHYSID_MASK_NONE;
+@@ -3575,7 +3575,7 @@ static int __init io_apic_get_unique_id(int ioapic, int apic_id)
+ 	return apic_id;
+ }
  
-+config PCI
-+	bool "PCI support"
-+	help
-+	  This feature enables support for PCIe bus system. If you say Y
-+	  here, the kernel will include drivers and infrastructure code
-+	  to support PCIe bus devices.
-+
-+config PCI_DOMAINS
-+	def_bool PCI
-+
-+config PCI_DOMAINS_GENERIC
-+	def_bool PCI
-+
-+config PCI_SYSCALL
-+	def_bool PCI
-+
-+source "drivers/pci/Kconfig"
-+source "drivers/pci/pcie/Kconfig"
-+source "drivers/pci/hotplug/Kconfig"
-+
- endmenu
+-static u8 __init io_apic_unique_id(int idx, u8 id)
++static u8 io_apic_unique_id(int idx, u8 id)
+ {
+ 	if ((boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) &&
+ 	    !APIC_XAPIC(apic_version[boot_cpu_physical_apicid]))
+@@ -3584,7 +3584,7 @@ static u8 __init io_apic_unique_id(int idx, u8 id)
+ 		return id;
+ }
+ #else
+-static u8 __init io_apic_unique_id(int idx, u8 id)
++static u8 io_apic_unique_id(int idx, u8 id)
+ {
+ 	int i;
+ 	u8 new_id;
+@@ -3623,7 +3623,7 @@ static u8 __init io_apic_unique_id(int idx, u8 id)
+ }
+ #endif
  
- menu "Kernel Features"
-diff --git a/arch/arm64/include/asm/Kbuild b/arch/arm64/include/asm/Kbuild
-index 0b3fcf8..07cb417 100644
---- a/arch/arm64/include/asm/Kbuild
-+++ b/arch/arm64/include/asm/Kbuild
-@@ -29,6 +29,7 @@ generic-y += mman.h
- generic-y += msgbuf.h
- generic-y += mutex.h
- generic-y += pci.h
-+generic-y += pci-bridge.h
- generic-y += poll.h
- generic-y += preempt.h
- generic-y += resource.h
-diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
-index e0ecdcf..f998d90 100644
---- a/arch/arm64/include/asm/io.h
-+++ b/arch/arm64/include/asm/io.h
-@@ -121,7 +121,8 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
- /*
-  *  I/O port access primitives.
-  */
--#define IO_SPACE_LIMIT		0xffff
-+#define arch_has_dev_port()	(1)
-+#define IO_SPACE_LIMIT		(SZ_32M - 1)
- #define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_32M))
+-static int __init io_apic_get_version(int ioapic)
++static int io_apic_get_version(int ioapic)
+ {
+ 	union IO_APIC_reg_01	reg_01;
+ 	unsigned long flags;
+@@ -3827,7 +3827,7 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
+ 	return gsi - gsi_cfg->gsi_base;
+ }
  
- static inline u8 inb(unsigned long addr)
-diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
-new file mode 100644
-index 0000000..872ba93
---- /dev/null
-+++ b/arch/arm64/include/asm/pci.h
-@@ -0,0 +1,37 @@
-+#ifndef __ASM_PCI_H
-+#define __ASM_PCI_H
-+#ifdef __KERNEL__
-+
-+#include <linux/types.h>
-+#include <linux/slab.h>
-+#include <linux/dma-mapping.h>
-+
-+#include <asm/io.h>
-+#include <asm-generic/pci-bridge.h>
-+#include <asm-generic/pci-dma-compat.h>
-+
-+#define PCIBIOS_MIN_IO		0x1000
-+#define PCIBIOS_MIN_MEM		0
-+
-+/*
-+ * Set to 1 if the kernel should re-assign all PCI bus numbers
-+ */
-+#define pcibios_assign_all_busses() \
-+	(pci_has_flag(PCI_REASSIGN_ALL_BUS))
-+
-+/*
-+ * PCI address space differs from physical memory address space
-+ */
-+#define PCI_DMA_BUS_IS_PHYS	(0)
-+
-+extern int isa_dma_bridge_buggy;
-+
-+#ifdef CONFIG_PCI
-+static inline int pci_proc_domain(struct pci_bus *bus)
-+{
-+	return 1;
-+}
-+#endif  /* CONFIG_PCI */
-+
-+#endif  /* __KERNEL__ */
-+#endif  /* __ASM_PCI_H */
-diff --git a/arch/arm64/include/asm/pgtable.h b/arch/arm64/include/asm/pgtable.h
-index ffe1ba0..a968523 100644
---- a/arch/arm64/include/asm/pgtable.h
-+++ b/arch/arm64/include/asm/pgtable.h
-@@ -296,6 +296,8 @@ static inline int has_transparent_hugepage(void)
- 	__pgprot_modify(prot, PTE_ATTRINDX_MASK, PTE_ATTRINDX(MT_DEVICE_nGnRnE) | PTE_PXN | PTE_UXN)
- #define pgprot_writecombine(prot) \
- 	__pgprot_modify(prot, PTE_ATTRINDX_MASK, PTE_ATTRINDX(MT_NORMAL_NC) | PTE_PXN | PTE_UXN)
-+#define pgprot_device(prot) \
-+	__pgprot_modify(prot, PTE_ATTRINDX_MASK, PTE_ATTRINDX(MT_DEVICE_nGnRE) | PTE_PXN | PTE_UXN)
- #define __HAVE_PHYS_MEM_ACCESS_PROT
- struct file;
- extern pgprot_t phys_mem_access_prot(struct file *file, unsigned long pfn,
-diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
-index df7ef87..1ed5a06 100644
---- a/arch/arm64/kernel/Makefile
-+++ b/arch/arm64/kernel/Makefile
-@@ -29,6 +29,7 @@ arm64-obj-$(CONFIG_ARM64_CPU_SUSPEND)	+= sleep.o suspend.o
- arm64-obj-$(CONFIG_JUMP_LABEL)		+= jump_label.o
- arm64-obj-$(CONFIG_KGDB)		+= kgdb.o
- arm64-obj-$(CONFIG_EFI)			+= efi.o efi-stub.o efi-entry.o
-+arm64-obj-$(CONFIG_PCI)			+= pci.o
+-static __init int bad_ioapic(unsigned long address)
++static int bad_ioapic(unsigned long address)
+ {
+ 	if (nr_ioapics >= MAX_IO_APICS) {
+ 		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
+@@ -3841,7 +3841,7 @@ static __init int bad_ioapic(unsigned long address)
+ 	return 0;
+ }
  
- obj-y					+= $(arm64-obj-y) vdso/
- obj-m					+= $(arm64-obj-m)
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-new file mode 100644
-index 0000000..ce5836c
---- /dev/null
-+++ b/arch/arm64/kernel/pci.c
-@@ -0,0 +1,70 @@
-+/*
-+ * Code borrowed from powerpc/kernel/pci-common.c
-+ *
-+ * Copyright (C) 2003 Anton Blanchard <anton@au.ibm.com>, IBM
-+ * Copyright (C) 2014 ARM Ltd.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * version 2 as published by the Free Software Foundation.
-+ *
-+ */
-+
-+#include <linux/init.h>
-+#include <linux/io.h>
-+#include <linux/kernel.h>
-+#include <linux/mm.h>
-+#include <linux/of_pci.h>
-+#include <linux/of_platform.h>
-+#include <linux/slab.h>
-+
-+#include <asm/pci-bridge.h>
-+
-+/*
-+ * Called after each bus is probed, but before its children are examined
-+ */
-+void pcibios_fixup_bus(struct pci_bus *bus)
-+{
-+	/* nothing to do, expected to be removed in the future */
-+}
-+
-+/*
-+ * We don't have to worry about legacy ISA devices, so nothing to do here
-+ */
-+resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-+				resource_size_t size, resource_size_t align)
-+{
-+	return res->start;
-+}
-+
-+/*
-+ * Try to assign the IRQ number from DT when adding a new device
-+ */
-+int pcibios_add_device(struct pci_dev *dev)
-+{
-+	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-+
-+	return 0;
-+}
-+
-+
-+#ifdef CONFIG_PCI_DOMAINS_GENERIC
-+static bool dt_domain_found = false;
-+
-+void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-+{
-+	int domain = of_get_pci_domain_nr(parent->of_node);
-+
-+	if (domain >= 0) {
-+		dt_domain_found = true;
-+	} else if (dt_domain_found == true) {
-+		dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
-+			parent->of_node->full_name);
-+		return;
-+	} else {
-+		domain = pci_get_new_domain_nr();
-+	}
-+
-+	bus->domain_nr = domain;
-+}
-+#endif
+-static __init int bad_ioapic_register(int idx)
++static int bad_ioapic_register(int idx)
+ {
+ 	union IO_APIC_reg_00 reg_00;
+ 	union IO_APIC_reg_01 reg_01;
+@@ -3860,8 +3860,8 @@ static __init int bad_ioapic_register(int idx)
+ 	return 0;
+ }
+ 
+-void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
+-			       struct ioapic_domain_cfg *cfg)
++void mp_register_ioapic(int id, u32 address, u32 gsi_base,
++			struct ioapic_domain_cfg *cfg)
+ {
+ 	int idx = 0;
+ 	int entries;
 -- 
-2.1.0
+1.7.10.4
 
