@@ -1,158 +1,237 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout2.freenet.de ([195.4.92.92]:43370 "EHLO mout2.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752169AbaIXPAg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Sep 2014 11:00:36 -0400
-Message-ID: <5422DB3B.9070502@maya.org>
-Date: Wed, 24 Sep 2014 16:54:51 +0200
-From: Andreas Hartmann <andihartmann@freenet.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v6 05/15] PCI: Remove PCI ioapic driver
+Date: Wed, 24 Sep 2014 16:59:26 +0800
+Message-Id: <1411549176-30780-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass through
- (vfio)
-References: <20140923210318.498dacbd@dualc.maya.org> <1411502866.24563.8.camel@ul30vt.home>
-In-Reply-To: <1411502866.24563.8.camel@ul30vt.home>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Alex Williamson wrote:
-> On Tue, 2014-09-23 at 21:03 +0200, Andreas Hartmann wrote:
->> Hello!
->>
->> Since long time now, I'm using w/o any problem PCIe pass through with a
->> Gigabyte GA-990XA-UD3/GA-990XA-UD3 mainboard (AMD 990X chipset) and
->> enabled IOMMU with vfio-pci.
->>
->> The last kernel working w/o any problem is kernel 3.13.7 (I didn't use
->> .8 and .9, but I do not think they would have been problematic).
->>
->> Since 3.14.19 (I didn't test any 3.14 kernel before) I'm encountering a
->> hard and silent lock up of the complete machine when starting the VM
->> with the PCIe card passed through.
->>
->> That's the relevant PCIe card, which locks up the machine (here
->> running w/ 3.12.28) when passed to the VM:
->>
->> 03:00.0 Network controller: Qualcomm Atheros AR93xx Wireless Network Adapter (rev 01)
->>         Subsystem: Qualcomm Atheros Device 3112
->>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
->>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->>         Latency: 0, Cache Line Size: 64 bytes
->>         Interrupt: pin A routed to IRQ 17
->>         Region 0: Memory at fdbc0000 (64-bit, non-prefetchable) [size=128K]
->>         Expansion ROM at fda00000 [size=64K]
->>         Capabilities: [40] Power Management version 3
->>                 Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
->>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
->>         Capabilities: [50] MSI: Enable- Count=1/4 Maskable+ 64bit+
->>                 Address: 0000000000000000  Data: 0000
->>                 Masking: 00000000  Pending: 00000000
->>         Capabilities: [70] Express (v2) Endpoint, MSI 00
->>                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <1us, L1 <8us
->>                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
->>                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
->>                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
->>                         MaxPayload 128 bytes, MaxReadReq 512 bytes
->>                 DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
->>                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <2us, L1 <64us
->>                         ClockPM- Surprise- LLActRep- BwNot-
->>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
->>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
->>                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
->>                 DevCap2: Completion Timeout: Not Supported, TimeoutDis+, LTR-, OBFF Not Supported
->>                 DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
->>                 LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
->>                          Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
->>                          Compliance De-emphasis: -6dB
->>                 LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
->>                          EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
->>         Capabilities: [100 v1] Advanced Error Reporting
->>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->>                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->>                 UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
->>                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout+ NonFatalErr+
->>                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
->>                 AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
->>         Capabilities: [140 v1] Virtual Channel
->>                 Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
->>                 Arb:    Fixed- WRR32- WRR64- WRR128-
->>                 Ctrl:   ArbSelect=Fixed
->>                 Status: InProgress-
->>                 VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
->>                         Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
->>                         Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
->>                         Status: NegoPending- InProgress-
->>         Capabilities: [300 v1] Device Serial Number 00-00-00-00-00-00-00-00
->>         Kernel driver in use: vfio-pci
->>         Kernel modules: ath9k
->>
->>
->> Unbinding it works w/o any problem. The lock up encounters about 4 s
->> after the start of the VM.
->>
->> On 3.12.x, I can see the following message on the error terminal when
->> starting the VM: 
->> vfio-pci: 03:00.0: invalid ROM contents.
->>
->> I compared AMD-Vi debug output between 3.12 and 3.14, but couldn't see
->> any difference. I compared /proc/interrupts between 3.12 and 3.14
->> and couldn't see any difference too so far.
->>
->>
->> qemu version I'm using is 1.7.0.
->>
->>
->> It is strange(?), that a second VM using PCI (legacy) pass through works
->> w/o any problem. I tried to start the problematic VM even w/o running
->> this VM - same result: machine is locked up hard.
->>
->>
->> Do you have any idea, what could be going on there? Or how to debug it
->> to see what happened?
-> 
-> Are you able to setup a serial console on this system?  Enabling sysrq
-> and getting a dump of task states (t) via serial is often the best way
-> to determine the problem. 
+To support IOAPIC hotplug on x86 and IA64 platforms, OS needs to figure
+out global interrupt source number(GSI) and IOAPIC enumeration ID
+through ACPI interfaces. So BIOS must implement an ACPI IOAPIC device
+with _GSB/_UID or _MAT method to support IOAPIC hotplug. OS also needs
+to figure out base physical address to access IOAPIC registers. OS may
+get the base physical address through PCI BARs if IOAPIC device is
+visible in PCI domain, otherwise OS may get the address by ACPI _CRS
+method if IOAPIC device is hidden from PCI domain by BIOS.
 
-I'll try it.
+When adding a PCI subtree, we need to add IOAPIC devices before enabling
+all other PCI devices because other PCI devices may use the IOAPIC to
+allocate PCI interrupts.
 
+So we plan to reimplement IOAPIC driver as an ACPI instead of PCI driver
+due to:
+1) hot-pluggable IOAPIC devices are always visible in ACPI domain,
+   but may or may not be visible in PCI domain.
+2) we could explicitly control the order between IOAPIC and other PCI
+   devices.
 
-It should be most probably something like
+We also have another choice to use a PCI driver to manage IOAPIC device
+if it's visible in PCI domain and use an ACPI driver if it's only
+visible in ACPI domain. But this solution is a little complex.
 
-console=tty0 console=ttyS0,115200n8
-on the sending machine as kernel option and
+It shouldn't cause serious backward compatibility issues because:
+1) IOAPIC hotplug is never supported on x86 yet because it hasn't
+   implemented the required acpi_register_ioapic() and
+   acpi_unregister_ioapic().
+2) Currently only ACPI based IOAPIC hotplug is possible on x86 and
+   IA64, we don't know other specifications and interfaces to support
+   IOAPIC hotplug yet.
+3) We will reimplement an ACPI IOAPICｔdriver support IOAPIC hotplug.
 
-/sbin/agetty -h -t 60 ttyS0 115200 vt102 on the client.
+This change also helps to get rid of the false alarm on all current
+Linux distributions:
+[    6.952497] ioapic: probe of 0000:00:05.4 failed with error -22
+[    6.959542] ioapic: probe of 0000:80:05.4 failed with error -22
 
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/pci/Kconfig  |    7 ---
+ drivers/pci/Makefile |    2 -
+ drivers/pci/ioapic.c |  121 --------------------------------------------------
+ 3 files changed, 130 deletions(-)
+ delete mode 100644 drivers/pci/ioapic.c
 
-Probably my biggest problem: I don't have a second machine with a serial
-port :-(. I hope this USB to serial adapter will be supported on client
-side (as receiver):
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 893503fa1782..39866d18004e 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -104,13 +104,6 @@ config PCI_PASID
+ 
+ 	  If unsure, say N.
+ 
+-config PCI_IOAPIC
+-	bool "PCI IO-APIC hotplug support" if X86
+-	depends on PCI
+-	depends on ACPI
+-	depends on X86_IO_APIC
+-	default !X86
+-
+ config PCI_LABEL
+ 	def_bool y if (DMI || ACPI)
+ 	select NLS
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index e04fe2d9df3b..73e4af400a5a 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -13,8 +13,6 @@ obj-$(CONFIG_PCI_QUIRKS) += quirks.o
+ # Build PCI Express stuff if needed
+ obj-$(CONFIG_PCIEPORTBUS) += pcie/
+ 
+-obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
+-
+ # Build the PCI Hotplug drivers if we were asked to
+ obj-$(CONFIG_HOTPLUG_PCI) += hotplug/
+ ifdef CONFIG_HOTPLUG_PCI
+diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+deleted file mode 100644
+index f6219d36227f..000000000000
+--- a/drivers/pci/ioapic.c
++++ /dev/null
+@@ -1,121 +0,0 @@
+-/*
+- * IOAPIC/IOxAPIC/IOSAPIC driver
+- *
+- * Copyright (C) 2009 Fujitsu Limited.
+- * (c) Copyright 2009 Hewlett-Packard Development Company, L.P.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2 as
+- * published by the Free Software Foundation.
+- */
+-
+-/*
+- * This driver manages PCI I/O APICs added by hotplug after boot.  We try to
+- * claim all I/O APIC PCI devices, but those present at boot were registered
+- * when we parsed the ACPI MADT, so we'll fail when we try to re-register
+- * them.
+- */
+-
+-#include <linux/pci.h>
+-#include <linux/module.h>
+-#include <linux/acpi.h>
+-#include <linux/slab.h>
+-
+-struct ioapic {
+-	acpi_handle	handle;
+-	u32		gsi_base;
+-};
+-
+-static int ioapic_probe(struct pci_dev *dev, const struct pci_device_id *ent)
+-{
+-	acpi_handle handle;
+-	acpi_status status;
+-	unsigned long long gsb;
+-	struct ioapic *ioapic;
+-	int ret;
+-	char *type;
+-	struct resource *res;
+-
+-	handle = ACPI_HANDLE(&dev->dev);
+-	if (!handle)
+-		return -EINVAL;
+-
+-	status = acpi_evaluate_integer(handle, "_GSB", NULL, &gsb);
+-	if (ACPI_FAILURE(status))
+-		return -EINVAL;
+-
+-	/*
+-	 * The previous code in acpiphp evaluated _MAT if _GSB failed, but
+-	 * ACPI spec 4.0 sec 6.2.2 requires _GSB for hot-pluggable I/O APICs.
+-	 */
+-
+-	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
+-	if (!ioapic)
+-		return -ENOMEM;
+-
+-	ioapic->handle = handle;
+-	ioapic->gsi_base = (u32) gsb;
+-
+-	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
+-		type = "IOAPIC";
+-	else
+-		type = "IOxAPIC";
+-
+-	ret = pci_enable_device(dev);
+-	if (ret < 0)
+-		goto exit_free;
+-
+-	pci_set_master(dev);
+-
+-	if (pci_request_region(dev, 0, type))
+-		goto exit_disable;
+-
+-	res = &dev->resource[0];
+-	if (acpi_register_ioapic(ioapic->handle, res->start, ioapic->gsi_base))
+-		goto exit_release;
+-
+-	pci_set_drvdata(dev, ioapic);
+-	dev_info(&dev->dev, "%s at %pR, GSI %u\n", type, res, ioapic->gsi_base);
+-	return 0;
+-
+-exit_release:
+-	pci_release_region(dev, 0);
+-exit_disable:
+-	pci_disable_device(dev);
+-exit_free:
+-	kfree(ioapic);
+-	return -ENODEV;
+-}
+-
+-static void ioapic_remove(struct pci_dev *dev)
+-{
+-	struct ioapic *ioapic = pci_get_drvdata(dev);
+-
+-	acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base);
+-	pci_release_region(dev, 0);
+-	pci_disable_device(dev);
+-	kfree(ioapic);
+-}
+-
+-
+-static const struct pci_device_id ioapic_devices[] = {
+-	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOAPIC, ~0) },
+-	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOXAPIC, ~0) },
+-	{ }
+-};
+-MODULE_DEVICE_TABLE(pci, ioapic_devices);
+-
+-static struct pci_driver ioapic_driver = {
+-	.name		= "ioapic",
+-	.id_table	= ioapic_devices,
+-	.probe		= ioapic_probe,
+-	.remove		= ioapic_remove,
+-};
+-
+-static int __init ioapic_init(void)
+-{
+-	return pci_register_driver(&ioapic_driver);
+-}
+-module_init(ioapic_init);
+-
+-MODULE_LICENSE("GPL");
+-- 
+1.7.10.4
 
-Logilink USB 2.0 Seriell Adapter
-
-
-> There weren't many vfio changes between 3.13 and 3.14.
-
-It could be a pci problem, too?
-
-> Have you tested whether the problem still occurs on 3.16 +
-
-Same problem.
-
-> newer QEMU?
-
-Reluctantly - it is a production system.
-
->  Maybe also remove the ROM from the equation with the
-> rombar=0 option for the vfio-pci device in QEMU.
-
-Same problem :-(. The machine really is completely dead: it even pings
-any more.
-
-
-
-Regards,
-Andreas
