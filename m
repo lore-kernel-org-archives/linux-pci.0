@@ -1,90 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f50.google.com ([209.85.216.50]:56950 "EHLO
-	mail-qa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755103AbaIBUNc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Sep 2014 16:13:32 -0400
-Received: by mail-qa0-f50.google.com with SMTP id cm18so6746140qab.37
-        for <linux-pci@vger.kernel.org>; Tue, 02 Sep 2014 13:13:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAPybu_37y9XoMp+qfvo_qsJYQhJQiOpPsrXtyC5ofD2SMbinwg@mail.gmail.com>
-References: <1409144277-23379-1-git-send-email-ricardo.ribalda@gmail.com>
- <20140827202301.GA13800@kroah.com> <20140827205129.GA25227@kroah.com> <CAPybu_37y9XoMp+qfvo_qsJYQhJQiOpPsrXtyC5ofD2SMbinwg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 2 Sep 2014 14:13:11 -0600
-Message-ID: <CAErSpo6h62aKNH-cP4hA8Zzayc6D_u324z1PQ7JAdK=AtJr0Sg@mail.gmail.com>
-Subject: Re: [PATCH] pci/pci-sysfs: Set pci interface in uppercase
-To: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:33536 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753119AbaIXPiG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 11:38:06 -0400
+From: Robert Richter <rric@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>
+Cc: Liviu Dudau <liviu.dudau@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Sunil Goutham <sgoutham@cavium.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Robert Richter <rrichter@cavium.com>,
+	devicetree@vger.kernel.org
+Subject: [PATCH 3/6] pci, thunder: Add PCIe host controller devicetree bindings
+Date: Wed, 24 Sep 2014 17:37:45 +0200
+Message-Id: <1411573068-12952-4-git-send-email-rric@kernel.org>
+In-Reply-To: <1411573068-12952-1-git-send-email-rric@kernel.org>
+References: <1411573068-12952-1-git-send-email-rric@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 2, 2014 at 1:22 PM, Ricardo Ribalda Delgado
-<ricardo.ribalda@gmail.com> wrote:
-> Hej Bjorn
->
-> I have seen that you have updated your pci tree without this patch. Is
-> there something wrong with it?
->
-> If you are already considering it, sorry for the mail, but I wanted to
-> make sure that it is in 3.17 and then back ported.
+From: Sunil Goutham <sgoutham@cavium.com>
 
-I haven't even looked at it yet; I'm just starting to get caught up.
-Since this looks like a fix for a very old bug, I'll probably apply it
-for v3.18, and mark it for stable.
+This patch adds the PCIe host controller entry for Cavium Thunder SoCs
+to the devicetree. There are 4 internal PCI controllers available.
 
-> On Wed, Aug 27, 2014 at 10:51 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
->> On Wed, Aug 27, 2014 at 01:23:01PM -0700, Greg KH wrote:
->>> On Wed, Aug 27, 2014 at 02:57:57PM +0200, Ricardo Ribalda Delgado wrote:
->>> > There is a missmatch between the way file2alias generates the modalias
->>> > and the way the pci driver generates it.
->>> >
->>> > Some implementations of modprobe will fail to load the driver for a pci
->>> > device automatically when the pci interface is defined on the driver. As
->>> > one will be in uppercase and the other in lowercase.
->>> >
->>> > Fortunatelly not many drivers define this.
->>> >
->>> > Signed-off-by: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
->>> > ---
->>> >  drivers/pci/pci-sysfs.c | 2 +-
->>> >  1 file changed, 1 insertion(+), 1 deletion(-)
->>> >
->>> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
->>> > index 9ff0a90..76ef791 100644
->>> > --- a/drivers/pci/pci-sysfs.c
->>> > +++ b/drivers/pci/pci-sysfs.c
->>> > @@ -177,7 +177,7 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
->>> >  {
->>> >     struct pci_dev *pci_dev = to_pci_dev(dev);
->>> >
->>> > -   return sprintf(buf, "pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x\n",
->>> > +   return sprintf(buf, "pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02X\n",
->>> >                    pci_dev->vendor, pci_dev->device,
->>> >                    pci_dev->subsystem_vendor, pci_dev->subsystem_device,
->>> >                    (u8)(pci_dev->class >> 16), (u8)(pci_dev->class >> 8),
->>>
->>> As said in the other thread about this issue, no, this code has been
->>> here for over 9 years just fine.  Please fix your userspace code that is
->>> trying to compare hex values as a string and not a numeric value, that
->>> is the stuff that is wrong, not the kernel.
->>
->> Oh wait, I see what you are worried about now, the mis-match for just
->> the upper bits of the class value.
->>
->> Yeah, that's a bug, sorry about that, a 9+ year old one, nice catch :)
->>
->> Bjorn, feel free to apply this, sorry for the earlier objection.  Also
->> please mark it for stable tree inclusion so this gets backported
->> properly.
->>
->> thanks,
->>
->> greg k-h
->
->
->
-> --
-> Ricardo Ribalda
+Signed-off-by: Sunil Goutham <sgoutham@cavium.com>
+Signed-off-by: Robert Richter <rrichter@cavium.com>
+---
+ arch/arm64/boot/dts/thunder-88xx.dtsi | 49 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/thunder-88xx.dtsi b/arch/arm64/boot/dts/thunder-88xx.dtsi
+index 9cb7cf94284a..0b433b0e7af4 100644
+--- a/arch/arm64/boot/dts/thunder-88xx.dtsi
++++ b/arch/arm64/boot/dts/thunder-88xx.dtsi
+@@ -407,4 +407,53 @@
+ 			clock-names = "apb_pclk";
+ 		};
+ 	};
++
++	pcie0@0x8480,00000000 {
++	        compatible = "cavium,thunder-pcie";
++		device_type = "pci";
++		msi-parent = <&its>;
++		bus-range = <0 255>;
++		#size-cells = <2>;
++		#address-cells = <3>;
++		reg = <0x8480 0x00000000 0 0x10000000>;  /* Configuration space */
++		ranges = <0x03000000 0x8010 0x00000000 0x8010 0x00000000 0x70 0x00000000>, /* mem ranges */
++			<0x03000000 0x8300 0x00000000 0x8300 0x00000000 0x80 0x00000000>,
++			<0x03000000 0x87e0 0x00000000 0x87e0 0x00000000 0x01 0x00000000>;
++        };
++
++	pcie1@0x8490,00000000 {
++	        compatible = "cavium,thunder-pcie";
++		device_type = "pci";
++		msi-parent = <&its>;
++		bus-range = <0 255>;
++		#size-cells = <2>;
++		#address-cells = <3>;
++		reg = <0x8490 0x00000000 0 0x10000000>;  /* Configuration space */
++		ranges = <0x03000000 0x8310 0x00000000 0x8310 0x00000000 0x00 0x10000000>, /* mem ranges */
++			<0x03000000 0x8100 0x00000000 0x8100 0x00000000 0x80 0x00000000>;
++        };
++
++	pcie2@0x84a0,00000000 {
++	        compatible = "cavium,thunder-pcie";
++		device_type = "pci";
++		msi-parent = <&its>;
++		bus-range = <0 255>;
++		#size-cells = <2>;
++		#address-cells = <3>;
++		reg = <0x84a0 0x00000000 0 0x10000000>;  /* Configuration space */
++		ranges = <0x03000000 0x8320 0x00000000 0x8320 0x00000000 0x00 0x10000000>, /* mem ranges */
++			<0x03000000 0x8430 0x00000000 0x8430 0x00000000 0x01 0x00000000>;
++        };
++
++	pcie3@0x84b0,00000000 {
++	        compatible = "cavium,thunder-pcie";
++		device_type = "pci";
++		msi-parent = <&its>;
++		bus-range = <0 255>;
++		#size-cells = <2>;
++		#address-cells = <3>;
++		reg = <0x84b0 0x00000000 0 0x10000000>;  /* Configuration space */
++		ranges = <0x03000000 0x8330 0x00000000 0x8330 0x00000000 0x00 0x10000000>, /* mem ranges */
++			<0x03000000 0x8180 0x00000000 0x8180 0x00000000 0x80 0x00000000>;
++        };
+ };
+-- 
+2.1.0
+
