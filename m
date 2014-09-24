@@ -1,278 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:51309 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753872AbaIZQg5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Sep 2014 12:36:57 -0400
-Message-ID: <5425961A.5000604@gmail.com>
-Date: Sat, 27 Sep 2014 00:36:42 +0800
-From: Chen Gang <gang.chen.5i5j@gmail.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:12531 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751358AbaIXDLn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 23:11:43 -0400
+Message-ID: <54223666.8040500@huawei.com>
+Date: Wed, 24 Sep 2014 11:11:34 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: David Vrabel <david.vrabel@citrix.com>, konrad.wilk@oracle.com,
-	ian.campbell@citrix.com, wei.liu2@citrix.com,
-	boris.ostrovsky@oracle.com, bhelgaas@google.com, jgross@suse.com,
-	yongjun_wei@trendmicro.com.cn, mukesh.rathor@oracle.com
-CC: xen-devel@lists.xenproject.org,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH] xen/xenbus: Use 'void' instead of 'int' for the return of
- xenbus_switch_state()
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI/MSI: Remove the redundant irq_set_msi_desc()
+References: <1410320852-17725-1-git-send-email-wangyijing@huawei.com> <20140923182311.GC6776@google.com>
+In-Reply-To: <20140923182311.GC6776@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When xenbus_switch_state() fails, it will call xenbus_switch_fatal()
-internally, so need not return any status value, then use 'void' instead
-of 'int' for xenbus_switch_state() and __xenbus_switch_state().
+On 2014/9/24 2:23, Bjorn Helgaas wrote:
+> On Wed, Sep 10, 2014 at 11:47:32AM +0800, Yijing Wang wrote:
+>> Irq and msi_desc will be associated in arch MSI
+>> setup code. The irq_set_msi_desc() in msix_program_entries()
+>> is redundant.
+> 
+> Can you help me review this by mentioning exactly *where* the IRQ and
+> msi_desc are associated by the arch MSI setup code?
 
-Also need be sure that all callers which check the return value must let
-'err' be 0.
+Hi Bjorn,
+   We have two ARCH MSI interfaces, arch_setup_msi_irqs() and arch_setup_msi_irq().
 
-And also need change the related comments for xenbus_switch_state().
+Use arch_setup_msi_irqs():
+x86:
+native_setup_msi_irqs()
+	setup_msi_irq()
+		irq_set_msi_desc_off();	   ---associate irq and msi_desc
 
-Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
----
- drivers/block/xen-blkback/xenbus.c |  9 ++-------
- drivers/net/xen-netback/xenbus.c   |  5 +----
- drivers/pci/xen-pcifront.c         | 15 ++++++---------
- drivers/xen/xen-pciback/xenbus.c   | 21 ++++-----------------
- drivers/xen/xen-scsiback.c         |  5 +----
- drivers/xen/xenbus/xenbus_client.c | 16 ++++++++--------
- include/xen/xenbus.h               |  3 ++-
- 7 files changed, 24 insertions(+), 50 deletions(-)
+irq remapping also call setup_msi_irq() finally, so irq and msi_desc also will be associated.
 
-diff --git a/drivers/block/xen-blkback/xenbus.c b/drivers/block/xen-blkback/xenbus.c
-index 3a8b810..fdcc584 100644
---- a/drivers/block/xen-blkback/xenbus.c
-+++ b/drivers/block/xen-blkback/xenbus.c
-@@ -587,9 +587,7 @@ static int xen_blkbk_probe(struct xenbus_device *dev,
- 	if (err)
- 		goto fail;
- 
--	err = xenbus_switch_state(dev, XenbusStateInitWait);
--	if (err)
--		goto fail;
-+	xenbus_switch_state(dev, XenbusStateInitWait);
- 
- 	return 0;
- 
-@@ -837,10 +835,7 @@ again:
- 	if (err)
- 		xenbus_dev_fatal(dev, err, "ending transaction");
- 
--	err = xenbus_switch_state(dev, XenbusStateConnected);
--	if (err)
--		xenbus_dev_fatal(dev, err, "%s: switching to Connected state",
--				 dev->nodename);
-+	xenbus_switch_state(dev, XenbusStateConnected);
- 
- 	return;
-  abort:
-diff --git a/drivers/net/xen-netback/xenbus.c b/drivers/net/xen-netback/xenbus.c
-index 9c47b89..b5c3d47 100644
---- a/drivers/net/xen-netback/xenbus.c
-+++ b/drivers/net/xen-netback/xenbus.c
-@@ -337,10 +337,7 @@ static int netback_probe(struct xenbus_device *dev,
- 	if (err)
- 		pr_debug("Error writing multi-queue-max-queues\n");
- 
--	err = xenbus_switch_state(dev, XenbusStateInitWait);
--	if (err)
--		goto fail;
--
-+	xenbus_switch_state(dev, XenbusStateInitWait);
- 	be->state = XenbusStateInitWait;
- 
- 	/* This kicks hotplug scripts, so do it immediately. */
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index 53df39a..c1d73b7 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -901,18 +901,16 @@ static int pcifront_try_connect(struct pcifront_device *pdev)
- 		}
- 	}
- 
--	err = xenbus_switch_state(pdev->xdev, XenbusStateConnected);
--
-+	xenbus_switch_state(pdev->xdev, XenbusStateConnected);
-+	return 0;
- out:
- 	return err;
- }
- 
- static int pcifront_try_disconnect(struct pcifront_device *pdev)
- {
--	int err = 0;
- 	enum xenbus_state prev_state;
- 
--
- 	prev_state = xenbus_read_driver_state(pdev->xdev->nodename);
- 
- 	if (prev_state >= XenbusStateClosing)
-@@ -923,11 +921,10 @@ static int pcifront_try_disconnect(struct pcifront_device *pdev)
- 		pcifront_disconnect(pdev);
- 	}
- 
--	err = xenbus_switch_state(pdev->xdev, XenbusStateClosed);
-+	xenbus_switch_state(pdev->xdev, XenbusStateClosed);
- 
- out:
--
--	return err;
-+	return 0;
- }
- 
- static int pcifront_attach_devices(struct pcifront_device *pdev)
-@@ -1060,8 +1057,8 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
- 			domain, bus, slot, func);
- 	}
- 
--	err = xenbus_switch_state(pdev->xdev, XenbusStateReconfiguring);
--
-+	xenbus_switch_state(pdev->xdev, XenbusStateReconfiguring);
-+	return 0;
- out:
- 	return err;
- }
-diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
-index c214daa..630a215 100644
---- a/drivers/xen/xen-pciback/xenbus.c
-+++ b/drivers/xen/xen-pciback/xenbus.c
-@@ -184,10 +184,7 @@ static int xen_pcibk_attach(struct xen_pcibk_device *pdev)
- 
- 	dev_dbg(&pdev->xdev->dev, "Connecting...\n");
- 
--	err = xenbus_switch_state(pdev->xdev, XenbusStateConnected);
--	if (err)
--		xenbus_dev_fatal(pdev->xdev, err,
--				 "Error switching to connected state!");
-+	xenbus_switch_state(pdev->xdev, XenbusStateConnected);
- 
- 	dev_dbg(&pdev->xdev->dev, "Connected? %d\n", err);
- out:
-@@ -500,12 +497,7 @@ static int xen_pcibk_reconfigure(struct xen_pcibk_device *pdev)
- 		}
- 	}
- 
--	err = xenbus_switch_state(pdev->xdev, XenbusStateReconfigured);
--	if (err) {
--		xenbus_dev_fatal(pdev->xdev, err,
--				 "Error switching to reconfigured state!");
--		goto out;
--	}
-+	xenbus_switch_state(pdev->xdev, XenbusStateReconfigured);
- 
- out:
- 	mutex_unlock(&pdev->dev_lock);
-@@ -640,10 +632,7 @@ static int xen_pcibk_setup_backend(struct xen_pcibk_device *pdev)
- 		goto out;
- 	}
- 
--	err = xenbus_switch_state(pdev->xdev, XenbusStateInitialised);
--	if (err)
--		xenbus_dev_fatal(pdev->xdev, err,
--				 "Error switching to initialised state!");
-+	xenbus_switch_state(pdev->xdev, XenbusStateInitialised);
- 
- out:
- 	mutex_unlock(&pdev->dev_lock);
-@@ -683,9 +672,7 @@ static int xen_pcibk_xenbus_probe(struct xenbus_device *dev,
- 	}
- 
- 	/* wait for xend to configure us */
--	err = xenbus_switch_state(dev, XenbusStateInitWait);
--	if (err)
--		goto out;
-+	xenbus_switch_state(dev, XenbusStateInitWait);
- 
- 	/* watch the backend node for backend configuration information */
- 	err = xenbus_watch_path(dev, dev->nodename, &pdev->be_watch,
-diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
-index ad11258..847bc9c 100644
---- a/drivers/xen/xen-scsiback.c
-+++ b/drivers/xen/xen-scsiback.c
-@@ -1225,10 +1225,7 @@ static int scsiback_probe(struct xenbus_device *dev,
- 	if (err)
- 		xenbus_dev_error(dev, err, "writing feature-sg-grant");
- 
--	err = xenbus_switch_state(dev, XenbusStateInitWait);
--	if (err)
--		goto fail;
--
-+	xenbus_switch_state(dev, XenbusStateInitWait);
- 	return 0;
- 
- fail:
-diff --git a/drivers/xen/xenbus/xenbus_client.c b/drivers/xen/xenbus/xenbus_client.c
-index ca74410..e2bcd1d 100644
---- a/drivers/xen/xenbus/xenbus_client.c
-+++ b/drivers/xen/xenbus/xenbus_client.c
-@@ -166,7 +166,7 @@ EXPORT_SYMBOL_GPL(xenbus_watch_pathfmt);
- static void xenbus_switch_fatal(struct xenbus_device *, int, int,
- 				const char *, ...);
- 
--static int
-+static void
- __xenbus_switch_state(struct xenbus_device *dev,
- 		      enum xenbus_state state, int depth)
- {
-@@ -188,7 +188,7 @@ __xenbus_switch_state(struct xenbus_device *dev,
- 	int err, abort;
- 
- 	if (state == dev->state)
--		return 0;
-+		return;
- 
- again:
- 	abort = 1;
-@@ -196,7 +196,7 @@ again:
- 	err = xenbus_transaction_start(&xbt);
- 	if (err) {
- 		xenbus_switch_fatal(dev, depth, err, "starting transaction");
--		return 0;
-+		return;
- 	}
- 
- 	err = xenbus_scanf(xbt, dev->nodename, "state", "%d", &current_state);
-@@ -219,7 +219,7 @@ abort:
- 	} else
- 		dev->state = state;
- 
--	return 0;
-+	return;
- }
- 
- /**
-@@ -228,12 +228,12 @@ abort:
-  * @state: new state
-  *
-  * Advertise in the store a change of the given driver to the given new_state.
-- * Return 0 on success, or -errno on error.  On error, the device will switch
-- * to XenbusStateClosing, and the error will be saved in the store.
-+ * When failure occurs, it will call xenbus_switch_fatal() internally, so need
-+ * not return value to notify upper caller.
-  */
--int xenbus_switch_state(struct xenbus_device *dev, enum xenbus_state state)
-+void xenbus_switch_state(struct xenbus_device *dev, enum xenbus_state state)
- {
--	return __xenbus_switch_state(dev, state, 0);
-+	__xenbus_switch_state(dev, state, 0);
- }
- 
- EXPORT_SYMBOL_GPL(xenbus_switch_state);
-diff --git a/include/xen/xenbus.h b/include/xen/xenbus.h
-index 0324c6d..587c53d 100644
---- a/include/xen/xenbus.h
-+++ b/include/xen/xenbus.h
-@@ -195,7 +195,8 @@ int xenbus_watch_pathfmt(struct xenbus_device *dev, struct xenbus_watch *watch,
- 					  const char **, unsigned int),
- 			 const char *pathfmt, ...);
- 
--int xenbus_switch_state(struct xenbus_device *dev, enum xenbus_state new_state);
-+void xenbus_switch_state(struct xenbus_device *dev,
-+			 enum xenbus_state new_state);
- int xenbus_grant_ring(struct xenbus_device *dev, unsigned long ring_mfn);
- int xenbus_map_ring_valloc(struct xenbus_device *dev,
- 			   int gnt_ref, void **vaddr);
+xen:
+All xen ARCH MSI funcs also call irq_set_msi_desc() in xen_bind_pirq_msi_to_irq().
+
+mips: Msi-octeon,
+arch_setup_msi_irqs()
+	arch_setup_msi_irq()
+		irq_set_msi_desc()	---associate irq and msi_desc
+
+s390:
+arch_setup_msi_irqs()
+	irq_set_msi_desc()
+
+powerpc:
+axon_msi_setup_msi_irqs()
+fsl_setup_msi_irqs()
+pasemi_msi_setup_msi_irqs()
+u3msi_setup_msi_irqs()
+rtas_setup_msi_irqs()
+pnv_setup_msi_irqs()
+....
+
+All above ARCH MSI func call irq_set_msi_desc().
+
+There are a lot of ARCH MSI code in kernel, and I almost checked each one,
+irq_set_msi_desc() and irq_set_msi_desc_off() always be called in ARCH MSI code.
+
+
+I grep it and we can find almost every ARCH has been called irq_set_msi_desc()
+
+[yijing@localhost linux]$ grep -Rn "irq_set_msi_desc" --include="*.c" .
+./arch/ia64/sn/kernel/msi_sn.c:147:	irq_set_msi_desc(irq, entry);
+./arch/ia64/kernel/msi_ia64.c:56:	irq_set_msi_desc(irq, desc);
+./arch/mips/pci/msi-xlp.c:344:	ret = irq_set_msi_desc(xirq, desc);
+./arch/mips/pci/msi-xlp.c:445:	ret = irq_set_msi_desc(xirq, desc);
+./arch/mips/pci/msi-octeon.c:180:	irq_set_msi_desc(irq, desc);
+./arch/mips/pci/pci-xlr.c:259:	ret = irq_set_msi_desc(irq, desc);
+./arch/powerpc/sysdev/ppc4xx_hsta_msi.c:81:		if (irq_set_msi_desc(hwirq, entry)) {
+./arch/powerpc/sysdev/ppc4xx_hsta_msi.c:119:		irq_set_msi_desc(entry->irq, NULL);
+./arch/powerpc/sysdev/mpic_pasemi_msi.c:76:		irq_set_msi_desc(entry->irq, NULL);
+./arch/powerpc/sysdev/mpic_pasemi_msi.c:128:		irq_set_msi_desc(virq, entry);
+./arch/powerpc/sysdev/ppc4xx_msi.c:117:		irq_set_msi_desc(virq, entry);
+./arch/powerpc/sysdev/ppc4xx_msi.c:134:		irq_set_msi_desc(entry->irq, NULL);
+./arch/powerpc/sysdev/fsl_msi.c:121:		irq_set_msi_desc(entry->irq, NULL);
+./arch/powerpc/sysdev/fsl_msi.c:225:		irq_set_msi_desc(virq, entry);
+./arch/powerpc/sysdev/mpic_u3msi.c:116:		irq_set_msi_desc(entry->irq, NULL);
+./arch/powerpc/sysdev/mpic_u3msi.c:164:		irq_set_msi_desc(virq, entry);
+./arch/powerpc/platforms/cell/axon_msi.c:280:		irq_set_msi_desc(virq, entry);
+./arch/powerpc/platforms/cell/axon_msi.c:298:		irq_set_msi_desc(entry->irq, NULL);
+./arch/powerpc/platforms/pseries/msi.c:123:		irq_set_msi_desc(entry->irq, NULL);
+./arch/powerpc/platforms/pseries/msi.c:476:		irq_set_msi_desc(virq, entry);
+./arch/powerpc/platforms/powernv/pci.c:93:		irq_set_msi_desc(virq, entry);
+./arch/powerpc/platforms/powernv/pci.c:111:		irq_set_msi_desc(entry->irq, NULL);
+./arch/tile/kernel/pci_gx.c:1588:	irq_set_msi_desc(irq, desc);
+./arch/s390/pci/pci.c:398:		rc = irq_set_msi_desc(irq, msi);
+./arch/s390/pci/pci.c:422:		irq_set_msi_desc(msi->irq, NULL);
+./arch/s390/pci/pci.c:454:		irq_set_msi_desc(msi->irq, NULL);
+./arch/arm/mach-iop13xx/msi.c:148:	irq_set_msi_desc(irq, desc);
+./arch/sparc/kernel/pci_msi.c:163:	irq_set_msi_desc(*irq_p, entry);
+./arch/x86/kernel/apic/io_apic.c:3185:	irq_set_msi_desc_off(irq_base, irq_offset, msidesc);
+./drivers/irqchip/irq-armada-370-xp.c:153:	irq_set_msi_desc(virq, desc);
+./drivers/pci/host/pcie-rcar.c:637:	irq_set_msi_desc(irq, desc);
+./drivers/pci/host/pci-tegra.c:1176:	irq_set_msi_desc(irq, desc);
+./drivers/pci/host/pcie-designware.c:238:		irq_set_msi_desc_off(irq_base, i, NULL);
+./drivers/pci/host/pcie-designware.c:299:		if (irq_set_msi_desc_off(irq, i, desc) != 0) {
+./drivers/pci/msi.c:692:		irq_set_msi_desc(entry->irq, entry);
+./drivers/xen/events/events_base.c:742:	ret = irq_set_msi_desc(irq, msidesc);
+./kernel/irq/chip.c:92: *	irq_set_msi_desc_off - set MSI descriptor data for an irq at offset
+./kernel/irq/chip.c:99:int irq_set_msi_desc_off(unsigned int irq_base, unsigned int irq_offset,
+./kernel/irq/chip.c:115: *	irq_set_msi_desc - set MSI descriptor data for an irq
+./kernel/irq/chip.c:121:int irq_set_msi_desc(unsigned int irq, struct msi_desc *entry)
+./kernel/irq/chip.c:123:	return irq_set_msi_desc_off(irq, 0, entry);
+
+[yijing@localhost linux]$ grep -Rn "irq_set_msi_desc_off" --include="*.c" .
+./arch/x86/kernel/apic/io_apic.c:3185:	irq_set_msi_desc_off(irq_base, irq_offset, msidesc);
+./drivers/pci/host/pcie-designware.c:238:		irq_set_msi_desc_off(irq_base, i, NULL);
+./drivers/pci/host/pcie-designware.c:299:		if (irq_set_msi_desc_off(irq, i, desc) != 0) {
+./kernel/irq/chip.c:92: *	irq_set_msi_desc_off - set MSI descriptor data for an irq at offset
+./kernel/irq/chip.c:99:int irq_set_msi_desc_off(unsigned int irq_base, unsigned int irq_offset,
+./kernel/irq/chip.c:123:	return irq_set_msi_desc_off(irq, 0, entry);
+
+
+> 
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  drivers/pci/msi.c |    1 -
+>>  1 files changed, 0 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index 5a40516..902b0cb 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -719,7 +719,6 @@ static void msix_program_entries(struct pci_dev *dev,
+>>  						PCI_MSIX_ENTRY_VECTOR_CTRL;
+>>  
+>>  		entries[i].vector = entry->irq;
+>> -		irq_set_msi_desc(entry->irq, entry);
+>>  		entry->masked = readl(entry->mask_base + offset);
+>>  		msix_mask_irq(entry, 1);
+>>  		i++;
+>> -- 
+>> 1.7.1
+>>
+> 
+> 
+
+
 -- 
-1.9.3
+Thanks!
+Yijing
+
