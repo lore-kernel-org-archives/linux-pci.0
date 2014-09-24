@@ -1,14 +1,20 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Tue, 9 Sep 2014 09:46:21 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Rob Herring <robherring2@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5PBXSUeU_LP2m=9jxibmqxreL4tEeHBsc5To7D=_bAJA@mail.gmail.com>
+References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140923215435.GD27117@google.com> <20140923224810.GA32643@bart.dudau.co.uk> <CAErSpo5PBXSUeU_LP2m=9jxibmqxreL4tEeHBsc5To7D=_bAJA@mail.gmail.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Wed, 24 Sep 2014 08:30:37 -0500
+Message-ID: <CAL_Jsq+U=1JT0qqZgb=aR66Q4NYDyzOogspOmmpsp61pE+aCUg@mail.gmail.com>
+Subject: Re: [PATCH v12 00/12] Support for creating generic PCI host bridges
+ from DT
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Liviu Dudau <liviu@dudau.co.uk>, Liviu Dudau <Liviu.Dudau@arm.com>,
 	Arnd Bergmann <arnd@arndb.de>,
 	Rob Herring <robh+dt@kernel.org>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
 	Russell King <linux@arm.linux.org.uk>,
 	linux-pci <linux-pci@vger.kernel.org>,
@@ -22,103 +28,25 @@ Cc: Rob Herring <robherring2@gmail.com>,
 	linux-arch <linux-arch@vger.kernel.org>,
 	LKML <linux-kernel@vger.kernel.org>,
 	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI
- domain_nr
-Message-ID: <20140909084621.GS27864@e106497-lin.cambridge.arm.com>
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
- <1410184472-17630-8-git-send-email-Liviu.Dudau@arm.com>
- <CAL_JsqJi8k1Goc3UmXhuxf9v7=4gJrYG_Di7v574PxS8TsJaXw@mail.gmail.com>
- <20140908145459.GO27864@e106497-lin.cambridge.arm.com>
- <CAL_JsqJdGKDVwJOpPp19OkVPGzR7Zqv3nh+ONHHaYnPLYTYoYg@mail.gmail.com>
- <20140908155931.GP27864@e106497-lin.cambridge.arm.com>
- <540E960D.7080408@huawei.com>
-MIME-Version: 1.0
-In-Reply-To: <540E960D.7080408@huawei.com>
+	LAKML <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 09, 2014 at 06:54:21AM +0100, Yijing Wang wrote:
-> >>> on new requests. This function gets called quite a lot and I'm trying not to
-> >>> make it too heavy weight.
-> >>
-> >> Generally, nothing should be accessing the same DT value frequently.
-> >> It should get cached somewhere.
-> >>
-> > 
-> > The problem appears for DTs that don't have the pci-domain info. Then the cached
-> > value is left at the default non-valid value and attempts to rescan the DT will
-> > be made every time the function is called.
-> > 
-> >> I don't really understand how domains are used so it's hard to provide
-> >> a recommendation here. Do domains even belong in the DT?
-> > 
-> > ACPI calls them segments and the way Bjorn explained it to me at some moment was
-> > that it was an attempt to split up a bus in different groups (or alternatively,
-> > merge a few busses together). To be honest I haven't seen systems where the domain
-> > is anything other than zero, but JasonG (or maybe Benjamin) were floating an
-> > idea of using the domain number to identify physical slots.
-> 
-> PCI domain(or named segment) is provided by firmware, in ACPI system, we evaluated it
-> by method "_SEG". in IA64 with ACPI, PCI hostbridge driver retrieves the domain from ACPI,
-> if it's absent, the default domain is zero. So I wonder why in DTS, if it's absent, we get
-> a auto increment domain value.
+On Tue, Sep 23, 2014 at 6:00 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Sep 23, 2014 at 4:48 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
+>> ...
+>> While the next immediate target is converting pci-host-generic.c, pci-imx6.c
+>> and probably pcie-designware.c to my series, I would like to ask you what
+>> is your longer term plan. Now that I have got my head full of PCI code,
+>> I have some ideas but feel that meeting with you and all those involved
+>> in core PCI support would be a better venue than sending emails back and
+>> forth. When is your next plan to attend a Linux conference?
+>
+> That would be nice.  Unfortunately, I don't know what the next
+> conference will be yet.
 
-Because you can have more than one hostbridge (rare, but not impossible) and unless you
-want to join the two segments, you might want to give it a different domain.
+Perhaps an irc meeting or Google hangout. These have been happening on
+several areas like DT and ARM KVM.
 
-Best regards,
-Liviu
-
-> 
-> PCI get domain by ACPI "_SEG" in IA64(drivers/acpi/pci_root.c)
-> ......
-> 	status = acpi_evaluate_integer(handle, METHOD_NAME__SEG, NULL,
-> 				       &segment);
-> 	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
-> 		dev_err(&device->dev,  "can't evaluate _SEG\n");
-> 		result = -ENODEV;
-> 		goto end;
-> 	}
-> .......
-> 
-> Thanks!
-> Yijing.
-> 
-> > 
-> >> This function
-> >> is just a weird mixture of data retrieval and allocation. I think you
-> >> need to separate it into 2 functions.
-> > 
-> > It is meant to do allocation with the retrieval being a short-cut (or fine
-> > control if you want).
-> > 
-> > I need to think a bit more for a better solution.
-> > 
-> > Best regards,
-> > Liviu
-> > 
-> >>
-> >> Rob
-> >>
-> > 
-> 
-> 
-> -- 
-> Thanks!
-> Yijing
-> 
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+Rob
