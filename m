@@ -1,88 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f179.google.com ([209.85.216.179]:55339 "EHLO
-	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752426AbaINKm5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Sep 2014 06:42:57 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
+Received: from mga01.intel.com ([192.55.52.88]:18034 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753275AbaIXI5a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Sep 2014 04:57:30 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
-Date: Sun, 14 Sep 2014 12:42:01 +0200
-Message-Id: <1410691321-17860-1-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <gh8uln71g1.fsf@lena.gouders.net>
-References: <gh8uln71g1.fsf@lena.gouders.net>
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [Patch v6 06/15] x86, irq: Split out alloc_ioapic_save_registers()
+Date: Wed, 24 Sep 2014 16:59:27 +0800
+Message-Id: <1411549176-30780-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an implementation of fix 1 (Add a quirk to fix the _CRS information
-based on what amd_bus.c read from the hardware) which makes pci=nocrs ignore bus numbers from crs.
+From: Yinghai Lu <yinghai@kernel.org>
 
-If this works then we can add the board to the crs blacklist (Dirk can you attach the output of dmidecode to the bugzilla report?).
+Split out alloc_ioapic_save_registers() from early_irq_init(),
+so it could be used for ioapic hotplug later.
 
-
-
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
 ---
- arch/x86/pci/acpi.c     |  7 +++----
- arch/x86/pci/bus_numa.c | 12 +-----------
- 2 files changed, 4 insertions(+), 15 deletions(-)
+ arch/x86/kernel/apic/io_apic.c |   22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index cfd1b13..b073948 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -522,15 +522,14 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	} else {
- 		probe_pci_root_info(info, device, busnum, domain);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 337ce5a9b15c..003945e71616 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -237,6 +237,19 @@ static struct irq_pin_list *alloc_irq_pin_list(int node)
+ 	return kzalloc_node(sizeof(struct irq_pin_list), GFP_KERNEL, node);
+ }
  
--		/* insert busn res at first */
--		pci_add_resource(&resources,  &root->secondary);
- 		/*
- 		 * _CRS with no apertures is normal, so only fall back to
- 		 * defaults or native bridge info if we're ignoring _CRS.
- 		 */
--		if (pci_use_crs)
-+		if (pci_use_crs) {
-+			pci_add_resource(&resources,  &root->secondary);
- 			add_resources(info, &resources);
--		else {
-+		} else {
- 			free_pci_root_info_res(info);
- 			x86_pci_root_bus_resources(busnum, &resources);
- 		}
-diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
-index f3a2cfc..b735d0e 100644
---- a/arch/x86/pci/bus_numa.c
-+++ b/arch/x86/pci/bus_numa.c
-@@ -31,8 +31,6 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
++static void alloc_ioapic_saved_registers(int idx)
++{
++	size_t size;
++
++	if (ioapics[idx].saved_registers)
++		return;
++
++	size = sizeof(struct IO_APIC_route_entry) * ioapics[idx].nr_registers;
++	ioapics[idx].saved_registers = kzalloc(size, GFP_KERNEL);
++	if (!ioapics[idx].saved_registers)
++		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
++}
++
+ int __init arch_early_irq_init(void)
  {
- 	struct pci_root_info *info = x86_find_pci_root_info(bus);
- 	struct pci_root_res *root_res;
--	struct pci_host_bridge_window *window;
--	bool found = false;
+ 	struct irq_cfg *cfg;
+@@ -245,13 +258,8 @@ int __init arch_early_irq_init(void)
+ 	if (!nr_legacy_irqs())
+ 		io_apic_irqs = ~0UL;
  
- 	if (!info)
- 		goto default_resources;
-@@ -40,15 +38,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
- 	printk(KERN_DEBUG "PCI: root bus %02x: hardware-probed resources\n",
- 	       bus);
+-	for_each_ioapic(i) {
+-		ioapics[i].saved_registers =
+-			kzalloc(sizeof(struct IO_APIC_route_entry) *
+-				ioapics[i].nr_registers, GFP_KERNEL);
+-		if (!ioapics[i].saved_registers)
+-			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
+-	}
++	for_each_ioapic(i)
++		alloc_ioapic_saved_registers(i);
  
--	/* already added by acpi ? */
--	list_for_each_entry(window, resources, list)
--		if (window->res->flags & IORESOURCE_BUS) {
--			found = true;
--			break;
--		}
--
--	if (!found)
--		pci_add_resource(resources, &info->busn);
-+	pci_add_resource(resources, &info->busn);
- 
- 	list_for_each_entry(root_res, &info->resources, list) {
- 		struct resource *res;
+ 	/*
+ 	 * For legacy IRQ's, start with assigning irq0 to irq15 to
 -- 
-2.1.0
+1.7.10.4
 
