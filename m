@@ -1,99 +1,130 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC Part1 v1 00/18] Prepare for enabling hierarchy irqdomain on x86
-Date: Thu, 11 Sep 2014 16:24:47 +0800
-Message-Id: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f176.google.com ([209.85.216.176]:55068 "EHLO
+	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753635AbaIXBQk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 21:16:40 -0400
+Received: by mail-qc0-f176.google.com with SMTP id o8so2658282qcw.7
+        for <linux-pci@vger.kernel.org>; Tue, 23 Sep 2014 18:16:39 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20140924011249.GC32643@bart.dudau.co.uk>
+References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411498874-9864-6-git-send-email-Liviu.Dudau@arm.com> <20140924002253.GB27357@google.com>
+ <20140924011249.GC32643@bart.dudau.co.uk>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 23 Sep 2014 19:16:19 -0600
+Message-ID: <CAErSpo5GiycLfcx68tocfrGFt67+OPKLVZB1zdsZFU2M6gC_ag@mail.gmail.com>
+Subject: Re: [PATCH v12 05/12] PCI: OF: Fix the conversion of IO ranges into
+ IO resources.
+To: Liviu Dudau <liviu@dudau.co.uk>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Simon Horman <horms@verge.net.au>,
+	Andrew Murray <amurray@embedded-bits.co.uk>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We plan to restructure x86 interrupt code based on hierarchy irqdomain,
-that is to build irqdomains for CPU vector, interrupt remapping unit,
-IOAPIC, MSI and HPET etc and orgonize those irqdomains in hierarchy mode.
+On Tue, Sep 23, 2014 at 7:12 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
+> On Tue, Sep 23, 2014 at 06:22:53PM -0600, Bjorn Helgaas wrote:
+>> [+cc Andrew]
+>>
+>> On Tue, Sep 23, 2014 at 08:01:07PM +0100, Liviu Dudau wrote:
+>> > The ranges property for a host bridge controller in DT describes
+>> > the mapping between the PCI bus address and the CPU physical address.
+>> > The resources framework however expects that the IO resources start
+>> > at a pseudo "port" address 0 (zero) and have a maximum size of IO_SPACE_LIMIT.
+>> > The conversion from pci ranges to resources failed to take that into account,
+>> > returning a CPU physical address instead of a port number.
+>> >
+>> > Also fix all the drivers that depend on the old behaviour by fetching
+>> > the CPU physical address based on the port number where it is being needed.
+>> >
+>> > Cc: Grant Likely <grant.likely@linaro.org>
+>> > Cc: Rob Herring <robh+dt@kernel.org>
+>> > Cc: Arnd Bergmann <arnd@arndb.de>
+>> > Acked-by: Linus Walleij <linus.walleij@linaro.org>
+>> > Cc: Thierry Reding <thierry.reding@gmail.com>
+>> > Cc: Simon Horman <horms@verge.net.au>
+>> > Cc: Catalin Marinas <catalin.marinas@arm.com>
+>> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+>> > ---
+>> >  arch/arm/mach-integrator/pci_v3.c | 23 ++++++++++----------
+>> >  drivers/of/address.c              | 44 +++++++++++++++++++++++++++++++++++----
+>> >  drivers/pci/host/pci-tegra.c      | 10 ++++++---
+>> >  drivers/pci/host/pcie-rcar.c      | 21 +++++++++++++------
+>> >  include/linux/of_address.h        | 15 ++++++-------
+>> >  5 files changed, 82 insertions(+), 31 deletions(-)
+>> > ...
+>>
+>> The of_pci_range_to_resource() implementation in drivers/of/address.c is
+>> always compiled when CONFIG_OF_ADDRESS=y, but when CONFIG_OF_ADDRESS=y and
+>> CONFIG_PCI is not set, we get the static inline version from
+>> include/linux/of_address.h as well, causing a redefinition error.
+>>
+>> > diff --git a/drivers/of/address.c b/drivers/of/address.c
+>> > @@ -957,12 +957,48 @@ bool of_dma_is_coherent(struct device_node *np)
+>> > ...
+>> > +int of_pci_range_to_resource(struct of_pci_range *range,
+>> > +   struct device_node *np, struct resource *res)
+>>
+>> > diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+>> > ...
+>> >  #else /* CONFIG_OF_ADDRESS && CONFIG_PCI */
+>> >  static inline int of_pci_address_to_resource(struct device_node *dev, int bar,
+>> >                                          struct resource *r)
+>> > @@ -144,6 +139,12 @@ static inline int of_pci_address_to_resource(struct device_node *dev, int bar,
+>> >     return -ENOSYS;
+>> >  }
+>> >
+>> > +static inline int of_pci_range_to_resource(struct of_pci_range *range,
+>> > +           struct device_node *np, struct resource *res)
+>> > +{
+>> > +   return -ENOSYS;
+>> > +}
+>>
+>> My proposal to fix it is the following three patches.  The first moves the
+>> inline version of of_pci_range_to_resource() into the existing "#if
+>> defined(CONFIG_OF_ADDRESS) && defined(CONFIG_PCI)" block.
+>>
+>> Andrew added it (and some other PCI-related things) with 29b635c00f3e
+>> ("of/pci: Provide support for parsing PCI DT ranges property") to
+>> of_address.h outside of any ifdefs, so it's always available.  Maybe
+>> there's a reason that's needed in the non-CONFIG_PCI case, but I didn't see
+>> it with a quick look.
+>>
+>> The second moves of_pci_range_to_resource() to address.c, still inside the
+>> "#ifdef CONFIG_PCI" block.
+>
+> Hi Bjorn,
+>
+> Looks good to me. Sorry for messing this up, I've tested a combination of
+> CONFIG_PCI=y and CONFIG_PCI=n but it looks like I've only tested
+> CONFIG_OF_ADDRESS=CONFIG_PCI (both enabled or both disabled).
 
-This patchset is preparation work to enable hierarchy irqdomain on x86
-platforms. It splits out code for vector management, MSI, HTIRQ from
-ioapic.c into separate files. It also introduces some helper functions
-to access irq_cfg, which will ease transition to hierarchy irqdomain
-later.
+You probably saw the subsequent [pci:pci/host-generic 10/13]
+drivers/of/of_pci.c:202:3: error: implicit declaration of function
+'of_pci_range_to_resource' error.
 
-It's based on patchset at:
-https://lkml.org/lkml/2014/9/11/97
+I looked at that a bit, but gave up.  Apparently drivers/of/of_pci.c
+can be compiled with CONFIG_PCI=y but CONFIG_OF_ADDRESS not set..
 
-And you may access it at:
-https://github.com/jiangliu/linux.git irqdomain/p1v1
-
-Jiang Liu (17):
-  x86, irq, ACPI: Fix building warning of unused code
-  x86, irq: Kill fourth parameter of IO_APIC_get_PCI_irq_vector()
-  x86, irq: Refine hw_irq.h to prepare for irqdomain support
-  x86, irq: Rename local APIC related functions in io_apic.c as
-    apic_xxx()
-  x86, irq: Protect __clear_irq_vector() with vector_lock
-  x86, irq: Introduce helpers to access struct irq_cfg
-  x86, irq: Move local APIC related code from io_apic.c into vector.c
-  x86, irq: Replace printk(KERN_LVL) with pr_lvl() utilities
-  x86, irq: Move PCI MSI related code from io_apic.c into msi.c
-  x86, irq: Move HT IRQ related code from io_apic.c into htirq.c
-  x86, irq: Move IOAPIC related declarations from hw_irq.h into
-    io_apic.h
-  x86, irq: Move IRQ initialization routines from io_apic.c into
-    vector.c
-  x86, irq: Make MSI and HT_IRQ indepenent of X86_IO_APIC
-  x86, irq: Use helpers to access irq_cfg data structure associated
-    with IRQ
-  x86: irq_remapping: Use helpers to access irq_cfg data structure
-    associated with IRQ
-  iommu/vt-d: Use helpers to access irq_cfg data structure associated
-    with IRQ
-  iommu/amd: Use helpers to access irq_cfg data structure associated
-    with IRQ
-
-Yinghai Lu (1):
-  x86, irq: Convert irq_2_pin list to generic list
-
- arch/x86/Kconfig                    |    6 +-
- arch/x86/include/asm/hw_irq.h       |   76 +--
- arch/x86/include/asm/io_apic.h      |   29 +-
- arch/x86/include/asm/pci.h          |    3 +
- arch/x86/kernel/acpi/boot.c         |    2 +
- arch/x86/kernel/apic/Makefile       |    4 +-
- arch/x86/kernel/apic/htirq.c        |  106 ++++
- arch/x86/kernel/apic/io_apic.c      | 1096 ++---------------------------------
- arch/x86/kernel/apic/msi.c          |  283 +++++++++
- arch/x86/kernel/apic/vector.c       |  716 +++++++++++++++++++++++
- arch/x86/kernel/irqinit.c           |   22 -
- arch/x86/pci/irq.c                  |    6 +-
- arch/x86/platform/uv/uv_irq.c       |    6 +-
- drivers/iommu/amd_iommu.c           |   14 +-
- drivers/iommu/intel_irq_remapping.c |   10 +-
- drivers/iommu/irq_remapping.c       |    6 +-
- drivers/pci/Kconfig                 |    2 +-
- drivers/pci/hotplug/ibmphp_core.c   |    5 +-
- 18 files changed, 1226 insertions(+), 1166 deletions(-)
- create mode 100644 arch/x86/kernel/apic/htirq.c
- create mode 100644 arch/x86/kernel/apic/msi.c
- create mode 100644 arch/x86/kernel/apic/vector.c
-
--- 
-1.7.10.4
-
+Bjorn
