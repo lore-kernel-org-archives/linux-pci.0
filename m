@@ -1,87 +1,222 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC v1 19/28] iommu/amd: Move struct irq_2_irte into amd_iommu.c
-Date: Fri, 26 Sep 2014 22:57:49 +0800
-Message-Id: <1411743478-31435-20-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Wed, 24 Sep 2014 11:31:09 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Robert Richter <rrichter@cavium.com>
+Subject: Re: [PATCH v12 09/12] OF: PCI: Add support for parsing PCI host
+ bridge resources from DT
+Message-ID: <20140924173109.GA20416@google.com>
+References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411498874-9864-10-git-send-email-Liviu.Dudau@arm.com>
+ <20140924164304.GF1994@e106497-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140924164304.GF1994@e106497-lin.cambridge.arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now only amd_iommu.c access irq_2_irte, so move it from hw_irq.h into
-amd_iommu.c.
+On Wed, Sep 24, 2014 at 05:43:04PM +0100, Liviu Dudau wrote:
+> Provide a function to parse the PCI DT ranges that can be used to
+> create a pci_host_bridge structure together with its associated
+> bus.
+> 
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Grant Likely <grant.likely@linaro.org>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Catalin Marinas <catalin.marinas@arm.com>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> [make io_base parameter optional]
+> Signed-off-by: Robert Richter <rrichter@cavium.com>
+> ---
+> Hi Bjorn,
+> 
+> I have fixed the compilation error that this patch was triggering. I
+> have validated that the patch applies to your pci/host-generic branch
+> as well as to my series.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/hw_irq.h |   13 -------------
- drivers/iommu/amd_iommu.c     |    5 +++++
- 2 files changed, 5 insertions(+), 13 deletions(-)
+I applied this to pci/host-generic along with the following patches and
+pushed the branch, thanks!
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 185c5889daa1..68412c2f97cd 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -94,14 +94,6 @@ extern void trace_call_function_single_interrupt(void);
- #define trace_kvm_posted_intr_ipi kvm_posted_intr_ipi
- #endif /* CONFIG_TRACING */
- 
--#ifdef CONFIG_IRQ_REMAP
--/* AMD specific interrupt remapping information */
--struct irq_2_irte {
--	u16 devid; /* Device ID for IRTE table */
--	u16 index; /* Index into IRTE table*/
--};
--#endif	/* CONFIG_IRQ_REMAP */
--
- struct irq_domain;
- #ifdef	CONFIG_X86_LOCAL_APIC
- struct irq_data;
-@@ -176,11 +168,6 @@ struct irq_cfg {
- 	unsigned int		dest_apicid;
- 	u8			vector;
- 	u8			move_in_progress : 1;
--#ifdef CONFIG_IRQ_REMAP
--	union {
--		struct irq_2_irte  irq_2_irte;
--	};
--#endif
- 	union {
- #ifdef CONFIG_X86_IO_APIC
- 		struct {
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 28d1cd404ff1..fc7363eb29b9 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -3836,6 +3836,11 @@ union irte {
- 	} fields;
- };
- 
-+struct irq_2_irte {
-+	u16 devid; /* Device ID for IRTE table */
-+	u16 index; /* Index into IRTE table*/
-+};
-+
- struct amd_ir_data {
- 	struct irq_2_irte			irq_2_irte;
- 	union irte				irte_entry;
--- 
-1.7.10.4
+Bjorn
 
+>  drivers/of/of_pci.c    | 117 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/of_pci.h |   6 +++
+>  2 files changed, 123 insertions(+)
+> 
+> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> index 82d172f..3cad1af 100644
+> --- a/drivers/of/of_pci.c
+> +++ b/drivers/of/of_pci.c
+> @@ -1,7 +1,9 @@
+>  #include <linux/kernel.h>
+>  #include <linux/export.h>
+>  #include <linux/of.h>
+> +#include <linux/of_address.h>
+>  #include <linux/of_pci.h>
+> +#include <linux/slab.h>
+>  
+>  static inline int __of_pci_pci_compare(struct device_node *node,
+>  				       unsigned int data)
+> @@ -114,6 +116,121 @@ int of_get_pci_domain_nr(struct device_node *node)
+>  }
+>  EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
+>  
+> +#if defined(CONFIG_OF_ADDRESS)
+> +/**
+> + * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
+> + * @dev: device node of the host bridge having the range property
+> + * @busno: bus number associated with the bridge root bus
+> + * @bus_max: maximum number of busses for this bridge
+> + * @resources: list where the range of resources will be added after DT parsing
+> + * @io_base: pointer to a variable that will contain on return the physical
+> + * address for the start of the I/O range. Can be NULL if the caller doesn't
+> + * expect IO ranges to be present in the device tree.
+> + *
+> + * It is the callers job to free the @resources list.
+> + *
+> + * This function will parse the "ranges" property of a PCI host bridge device
+> + * node and setup the resource mapping based on its content. It is expected
+> + * that the property conforms with the Power ePAPR document.
+> + *
+> + * It returns zero if the range parsing has been successful or a standard error
+> + * value if it failed.
+> + */
+> +int of_pci_get_host_bridge_resources(struct device_node *dev,
+> +			unsigned char busno, unsigned char bus_max,
+> +			struct list_head *resources, resource_size_t *io_base)
+> +{
+> +	struct resource *res;
+> +	struct resource *bus_range;
+> +	struct of_pci_range range;
+> +	struct of_pci_range_parser parser;
+> +	char range_type[4];
+> +	int err;
+> +
+> +	if (io_base)
+> +		*io_base = (resource_size_t)OF_BAD_ADDR;
+> +
+> +	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
+> +	if (!bus_range)
+> +		return -ENOMEM;
+> +
+> +	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
+> +
+> +	err = of_pci_parse_bus_range(dev, bus_range);
+> +	if (err) {
+> +		bus_range->start = busno;
+> +		bus_range->end = bus_max;
+> +		bus_range->flags = IORESOURCE_BUS;
+> +		pr_info("  No bus range found for %s, using %pR\n",
+> +			dev->full_name, bus_range);
+> +	} else {
+> +		if (bus_range->end > bus_range->start + bus_max)
+> +			bus_range->end = bus_range->start + bus_max;
+> +	}
+> +	pci_add_resource(resources, bus_range);
+> +
+> +	/* Check for ranges property */
+> +	err = of_pci_range_parser_init(&parser, dev);
+> +	if (err)
+> +		goto parse_failed;
+> +
+> +	pr_debug("Parsing ranges property...\n");
+> +	for_each_of_pci_range(&parser, &range) {
+> +		/* Read next ranges element */
+> +		if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
+> +			snprintf(range_type, 4, " IO");
+> +		else if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_MEM)
+> +			snprintf(range_type, 4, "MEM");
+> +		else
+> +			snprintf(range_type, 4, "err");
+> +		pr_info("  %s %#010llx..%#010llx -> %#010llx\n", range_type,
+> +			range.cpu_addr, range.cpu_addr + range.size - 1,
+> +			range.pci_addr);
+> +
+> +		/*
+> +		 * If we failed translation or got a zero-sized region
+> +		 * then skip this range
+> +		 */
+> +		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+> +			continue;
+> +
+> +		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
+> +		if (!res) {
+> +			err = -ENOMEM;
+> +			goto parse_failed;
+> +		}
+> +
+> +		err = of_pci_range_to_resource(&range, dev, res);
+> +		if (err)
+> +			goto conversion_failed;
+> +
+> +		if (resource_type(res) == IORESOURCE_IO) {
+> +			if (!io_base) {
+> +				pr_err("I/O range found for %s. Please provide an io_base pointer to save CPU base address\n",
+> +					dev->full_name);
+> +				err = -EINVAL;
+> +				goto conversion_failed;
+> +			}
+> +			if (*io_base != (resource_size_t)OF_BAD_ADDR)
+> +				pr_warn("More than one I/O resource converted for %s. CPU base address for old range lost!\n",
+> +					dev->full_name);
+> +			*io_base = range.cpu_addr;
+> +		}
+> +
+> +		pci_add_resource_offset(resources, res,	res->start - range.pci_addr);
+> +	}
+> +
+> +	return 0;
+> +
+> +conversion_failed:
+> +	kfree(res);
+> +parse_failed:
+> +	pci_free_resource_list(resources);
+> +	return err;
+> +}
+> +EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
+> +#endif /* CONFIG_OF_ADDRESS */
+> +
+>  #ifdef CONFIG_PCI_MSI
+>  
+>  static LIST_HEAD(of_pci_msi_chip_list);
+> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+> index 71062e9..1fd207e 100644
+> --- a/include/linux/of_pci.h
+> +++ b/include/linux/of_pci.h
+> @@ -52,6 +52,12 @@ of_get_pci_domain_nr(struct device_node *node)
+>  }
+>  #endif
+>  
+> +#if defined(CONFIG_OF_ADDRESS)
+> +int of_pci_get_host_bridge_resources(struct device_node *dev,
+> +			unsigned char busno, unsigned char bus_max,
+> +			struct list_head *resources, resource_size_t *io_base);
+> +#endif
+> +
+>  #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+>  int of_pci_msi_chip_add(struct msi_chip *chip);
+>  void of_pci_msi_chip_remove(struct msi_chip *chip);
+> -- 
+> 2.1.0
+> 
+> 
