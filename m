@@ -1,61 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:59663 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751070AbaIVJ0H (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 05:26:07 -0400
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0NCA00GQVQ7HJIC0@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Mon, 22 Sep 2014 18:26:05 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Fabio Estevam' <fabio.estevam@freescale.com>
-Cc: bhelgaas@google.com, mohit.kumar@st.com, linux-pci@vger.kernel.org,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1411134450-806-1-git-send-email-fabio.estevam@freescale.com>
-In-reply-to: <1411134450-806-1-git-send-email-fabio.estevam@freescale.com>
-Subject: Re: [PATCH] PCI: designware: Use NULL instead of false
-Date: Mon, 22 Sep 2014 18:26:05 +0900
-Message-id: <00ac01cfd647$3c1ab8c0$b4502a40$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 24 Sep 2014 18:12:50 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Robert Richter <rric@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Sunil Goutham <sgoutham@cavium.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Robert Richter <rrichter@cavium.com>
+Subject: Re: [PATCH 6/6] pci, thunder: Enable Cavium Thunder PCIe host
+ controller
+Message-ID: <20140924171249.GP15842@e104818-lin.cambridge.arm.com>
+References: <1411573068-12952-1-git-send-email-rric@kernel.org>
+ <1411573068-12952-7-git-send-email-rric@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1411573068-12952-7-git-send-email-rric@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, September 19, 2014 10:48 PM, Fabio Estevam wrote:
+On Wed, Sep 24, 2014 at 04:37:48PM +0100, Robert Richter wrote:
+> From: Robert Richter <rrichter@cavium.com>
 > 
-> of_get_address() expects pointers in the third and fourth parameters.
+> Enable Cavium Thunder PCIe host controller driver.
 > 
-> Pass NULL in order to fix the following sparse warnings:
+> IOV is enabled per default if drivers with IOV support are
+> enabled. IOV can be disabled.
 > 
-> drivers/pci/host/pcie-designware.c:433:51: warning: Using plain integer as NULL pointer
-> drivers/pci/host/pcie-designware.c:433:58: warning: Using plain integer as NULL pointer
-> 
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-
-Acked-by: Jingoo Han <jg1.han@samsung.com>
-
-Best regards,
-Jingoo Han
-
+> Signed-off-by: Robert Richter <rrichter@cavium.com>
 > ---
->  drivers/pci/host/pcie-designware.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  arch/arm64/Kconfig | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
 > 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 12c42fc..f1f0b7a 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -430,7 +430,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> 
->  		/* Find the untranslated configuration space address */
->  		index = of_property_match_string(np, "reg-names", "config");
-> -		addrp = of_get_address(np, index, false, false);
-> +		addrp = of_get_address(np, index, NULL, NULL);
->  		pp->cfg0_mod_base = of_read_number(addrp, ns);
->  		pp->cfg1_mod_base = pp->cfg0_mod_base + pp->config.cfg0_size;
->  	} else {
-> --
-> 1.9.1
+> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+> index 97777e1ef5a7..bd9724e5c8a1 100644
+> --- a/arch/arm64/Kconfig
+> +++ b/arch/arm64/Kconfig
+> @@ -172,6 +172,14 @@ config PCI
+>  config PCI_MSI
+>  	def_bool PCI
+>  
+> +config NO_PCI_IOV
+> +	def_bool PCI
+> +	depends on !PCI_THUNDER
+> +
+> +config PCI_IOV
+> +	def_bool PCI
+> +	depends on !NO_PCI_IOV
 
+Does this work with single image where drivers may have different
+PCI_IOV needs?
+
+-- 
+Catalin
