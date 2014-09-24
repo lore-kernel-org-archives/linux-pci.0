@@ -1,290 +1,171 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <54179BE3.5030303@huawei.com>
-Date: Tue, 16 Sep 2014 10:09:39 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH v1 21/21] PCI/MSI: Clean up unused MSI arch functions
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>	 <1409911806-10519-22-git-send-email-wangyijing@huawei.com> <1410792430.3314.10.camel@pengutronix.de>
-In-Reply-To: <1410792430.3314.10.camel@pengutronix.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:37967 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753493AbaIXJqI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 05:46:08 -0400
+Message-ID: <1411551962.2735.2.camel@pengutronix.de>
+Subject: Re: [PATCH v2 5/5] PCI: imx6: add imx6sx pcie support
+From: Lucas Stach <l.stach@pengutronix.de>
+To: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+Cc: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shengchao Guo <Shawn.Guo@freescale.com>,
+	"festevam@gmail.com" <festevam@gmail.com>,
+	"tharvey@gateworks.com" <tharvey@gateworks.com>
+Date: Wed, 24 Sep 2014 11:46:02 +0200
+In-Reply-To: <6300241fd29146f78a46c40e2232c8aa@BY1PR0301MB0855.namprd03.prod.outlook.com>
+References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
+	 <1411445498-20250-6-git-send-email-r65037@freescale.com>
+	 <1411470006.3256.13.camel@pengutronix.de>
+	 <6300241fd29146f78a46c40e2232c8aa@BY1PR0301MB0855.namprd03.prod.outlook.com>
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-arch-owner@vger.kernel.org
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/15 22:47, Lucas Stach wrote:
-> Am Freitag, den 05.09.2014, 18:10 +0800 schrieb Yijing Wang:
->> Now we use struct msi_chip in all platforms to configure
->> MSI/MSI-X. We can clean up the unused arch functions.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> 
-> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+Am Mittwoch, den 24.09.2014, 07:09 +0000 schrieb
+Hong-Xing.Zhu@freescale.com:
 
-Thanks!
+[...]
 
-> 
->> ---
->>  drivers/iommu/irq_remapping.c |    2 +-
->>  drivers/pci/msi.c             |   99 ++++++++++++++++-------------------------
->>  include/linux/msi.h           |   14 ------
->>  3 files changed, 39 insertions(+), 76 deletions(-)
->>
->> diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
->> index 99b1c0f..6e645f0 100644
->> --- a/drivers/iommu/irq_remapping.c
->> +++ b/drivers/iommu/irq_remapping.c
->> @@ -92,7 +92,7 @@ error:
->>  
->>  	/*
->>  	 * Restore altered MSI descriptor fields and prevent just destroyed
->> -	 * IRQs from tearing down again in default_teardown_msi_irqs()
->> +	 * IRQs from tearing down again in teardown_msi_irqs()
->>  	 */
->>  	msidesc->irq = 0;
->>  	msidesc->nvec_used = 0;
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index d78d637..e3e7f4f 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -34,50 +34,31 @@ struct msi_chip * __weak arch_find_msi_chip(struct pci_dev *dev)
->>  	return dev->bus->msi;
->>  }
->>  
->> -int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
->> -{
->> -	struct msi_chip *chip = arch_find_msi_chip(dev);
->> -	int err;
->> -
->> -	if (!chip || !chip->setup_irq)
->> -		return -EINVAL;
->> -
->> -	err = chip->setup_irq(dev, desc);
->> -	if (err < 0)
->> -		return err;
->> -
->> -	return 0;
->> -}
->> -
->> -void __weak arch_teardown_msi_irq(unsigned int irq)
->> -{
->> -	struct msi_chip *chip = irq_get_chip_data(irq);
->> -
->> -	if (!chip || !chip->teardown_irq)
->> -		return;
->> -
->> -	chip->teardown_irq(irq);
->> -}
->> -
->> -int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->> +int setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->>  {
->>  	struct msi_desc *entry;
->>  	int ret;
->>  	struct msi_chip *chip;
->>  
->>  	chip = arch_find_msi_chip(dev);
->> -	if (chip && chip->setup_irqs)
->> +	if (!chip)
->> +		return -EINVAL;
->> +
->> +	if (chip->setup_irqs)
->>  		return chip->setup_irqs(dev, nvec, type);
->>  
->>  	/*
->>  	 * If an architecture wants to support multiple MSI, it needs to
->> -	 * override arch_setup_msi_irqs()
->> +	 * implement chip->setup_irqs().
->>  	 */
->>  	if (type == PCI_CAP_ID_MSI && nvec > 1)
->>  		return 1;
->>  
->> +	if (!chip->setup_irq)
->> +		return -EINVAL;
->> +
->>  	list_for_each_entry(entry, &dev->msi_list, list) {
->> -		ret = arch_setup_msi_irq(dev, entry);
->> +		ret = chip->setup_irq(dev, entry);
->>  		if (ret < 0)
->>  			return ret;
->>  		if (ret > 0)
->> @@ -87,13 +68,20 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->>  	return 0;
->>  }
->>  
->> -/*
->> - * We have a default implementation available as a separate non-weak
->> - * function, as it is used by the Xen x86 PCI code
->> - */
->> -void default_teardown_msi_irqs(struct pci_dev *dev)
->> +static void teardown_msi_irqs(struct pci_dev *dev)
->>  {
->>  	struct msi_desc *entry;
->> +	struct msi_chip *chip;
->> +
->> +	chip = arch_find_msi_chip(dev);
->> +	if (!chip)
->> +		return;
->> +
->> +	if (chip->teardown_irqs)
->> +		return chip->teardown_irqs(dev);
->> +
->> +	if (!chip->teardown_irq)
->> +		return;
->>  
->>  	list_for_each_entry(entry, &dev->msi_list, list) {
->>  		int i, nvec;
->> @@ -104,20 +92,10 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
->>  		else
->>  			nvec = 1 << entry->msi_attrib.multiple;
->>  		for (i = 0; i < nvec; i++)
->> -			arch_teardown_msi_irq(entry->irq + i);
->> +			chip->teardown_irq(entry->irq + i);
->>  	}
->>  }
->>  
->> -void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
->> -{
->> -	struct msi_chip *chip = arch_find_msi_chip(dev);
->> -
->> -	if (chip && chip->teardown_irqs)
->> -		return chip->teardown_irqs(dev);
->> -
->> -	return default_teardown_msi_irqs(dev);
->> -}
->> -
->>  static void default_restore_msi_irq(struct pci_dev *dev, int irq)
->>  {
->>  	struct msi_desc *entry;
->> @@ -136,10 +114,18 @@ static void default_restore_msi_irq(struct pci_dev *dev, int irq)
->>  		write_msi_msg(irq, &entry->msg);
->>  }
->>  
->> -void __weak arch_restore_msi_irqs(struct pci_dev *dev)
->> +static void default_restore_msi_irqs(struct pci_dev *dev)
->>  {
->> -	struct msi_chip *chip = arch_find_msi_chip(dev);
->> +	struct msi_desc *entry = NULL;
->> +
->> +	list_for_each_entry(entry, &dev->msi_list, list) {
->> +		default_restore_msi_irq(dev, entry->irq);
->> +	}
->> +}
->>  
->> +static void restore_msi_irqs(struct pci_dev *dev)
->> +{
->> +	struct msi_chip *chip = arch_find_msi_chip(dev);
->>  	if (chip && chip->restore_irqs)
->>  		return chip->restore_irqs(dev);
->>  
->> @@ -248,15 +234,6 @@ void unmask_msi_irq(struct irq_data *data)
->>  	msi_set_mask_bit(data, 0);
->>  }
->>  
->> -void default_restore_msi_irqs(struct pci_dev *dev)
->> -{
->> -	struct msi_desc *entry;
->> -
->> -	list_for_each_entry(entry, &dev->msi_list, list) {
->> -		default_restore_msi_irq(dev, entry->irq);
->> -	}
->> -}
->> -
->>  void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->>  {
->>  	BUG_ON(entry->dev->current_state != PCI_D0);
->> @@ -360,7 +337,7 @@ static void free_msi_irqs(struct pci_dev *dev)
->>  			BUG_ON(irq_has_action(entry->irq + i));
->>  	}
->>  
->> -	arch_teardown_msi_irqs(dev);
->> +	teardown_msi_irqs(dev);
->>  
->>  	list_for_each_entry_safe(entry, tmp, &dev->msi_list, list) {
->>  		if (entry->msi_attrib.is_msix) {
->> @@ -430,7 +407,7 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
->>  
->>  	pci_intx_for_msi(dev, 0);
->>  	msi_set_enable(dev, 0);
->> -	arch_restore_msi_irqs(dev);
->> +	restore_msi_irqs(dev);
->>  
->>  	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
->>  	msi_mask_irq(entry, msi_mask(entry->msi_attrib.multi_cap),
->> @@ -453,7 +430,7 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
->>  	msix_clear_and_set_ctrl(dev, 0,
->>  				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
->>  
->> -	arch_restore_msi_irqs(dev);
->> +	restore_msi_irqs(dev);
->>  	list_for_each_entry(entry, &dev->msi_list, list) {
->>  		msix_mask_irq(entry, entry->masked);
->>  	}
->> @@ -624,7 +601,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
->>  	list_add_tail(&entry->list, &dev->msi_list);
->>  
->>  	/* Configure MSI capability structure */
->> -	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
->> +	ret = setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
->>  	if (ret) {
->>  		msi_mask_irq(entry, mask, ~mask);
->>  		free_msi_irqs(dev);
->> @@ -740,7 +717,7 @@ static int msix_capability_init(struct pci_dev *dev,
->>  	if (ret)
->>  		return ret;
->>  
->> -	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
->> +	ret = setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
->>  	if (ret)
->>  		goto out_avail;
->>  
->> diff --git a/include/linux/msi.h b/include/linux/msi.h
->> index 92a51e7..d6e1f7c 100644
->> --- a/include/linux/msi.h
->> +++ b/include/linux/msi.h
->> @@ -51,20 +51,6 @@ struct msi_desc {
->>  	struct kobject kobj;
->>  };
->>  
->> -/*
->> - * The arch hooks to setup up msi irqs. Those functions are
->> - * implemented as weak symbols so that they /can/ be overriden by
->> - * architecture specific code if needed.
->> - */
->> -int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
->> -void arch_teardown_msi_irq(unsigned int irq);
->> -int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
->> -void arch_teardown_msi_irqs(struct pci_dev *dev);
->> -void arch_restore_msi_irqs(struct pci_dev *dev);
->> -
->> -void default_teardown_msi_irqs(struct pci_dev *dev);
->> -void default_restore_msi_irqs(struct pci_dev *dev);
->> -
->>  struct msi_chip {
->>  	struct module *owner;
->>  	struct device *dev;
+> > > +	if (is_imx6sx_pcie(imx6_pcie)) {
+> > > +		/* Force PCIe PHY reset */
+> > > +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
+> > > +				IMX6SX_GPR5_PCIE_BTNRST,
+> > > +				IMX6SX_GPR5_PCIE_BTNRST);
+> > > +
+> > > +		regmap_update_bits(imx6_pcie->gpc_ips_reg, 0, 1 << 7, 1 << 7);
+> > 
+> > Magic values here. Also this is the only time we need to access gpc_ips_reg.
+> > So if this is a prerequisite to enabling the ANATOP regulator, I would argue
+> > it should be done in the regulator driver.
+> [Richard]Magic values would be replaced.
+> Yes, this is the only time we need to access gpc_ips_reg.
+> It's a little complex to add the GPC manipulations in
+>  ANATOP/regulator framework/driver codes.
+> Since ANATOP regulator is common framework and driver, it's hard to manipulate
+> GPC bits in ANATOP/regulator driver.
+> In order to be easier, I add the GPC bits manipulation here directly.
+> How do you think about that?
+
+I still think it would be better to handle this in the regulator driver.
+But as I don't yet have a reference manual for the imx6sx: can you
+please describe what this bit does exactly? Maybe this helps me to
+understand where the call should be placed.
+
+
+> > 
+> > > +		/* Power up PCIe PHY, ANATOP_REG_CORE offset 0x140, bit13-9 */
+> > 
+> > Oh so this is actually a PHY regulator, not feeding the whole core, but just
+> > the PHY? You could remove the comment it is clear what you are doing from the
+> > code and the offsets are of no interest in the PCIe driver.
+> [Richard] yes, it is a PHY regulator, not used to feed the whole core.
+
+Ok, so I expect this to be called "pcie-phy-supply" in the binding.
+
+> > 
+> > > +		regulator_set_voltage(imx6_pcie->pcie_regulator,
+> > > +				1100000, 1100000);
+> > > +		ret = regulator_enable(imx6_pcie->pcie_regulator);
+> > > +		if (ret)
+> > > +			dev_info(pp->dev, "failed to enable pcie regulator.\n");
+> > > +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> > > +				IMX6SX_GPR12_RX_EQ_MASK, IMX6SX_GPR12_RX_EQ_2);
+> > > +	}
+> > >
+> > >  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> > > -			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
+> > > +			IMX6Q_GPR12_PCIE_CTL_2,
+> > > +			IMX6Q_GPR12_PCIE_CTL_2_CLR);
+> > >
+> > >  	/* configure constant input signal to the pcie ctrl and phy */
+> > >  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> > >  			IMX6Q_GPR12_DEVICE_TYPE, PCI_EXP_TYPE_ROOT_PORT << 12);
+> > >  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> > > -			IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
+> > > +			IMX6Q_GPR12_LOS_LEVEL, IMX6Q_GPR12_LOS_LEVEL_9);
+> > >
+> > >  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+> > >  			IMX6Q_GPR8_TX_DEEMPH_GEN1, 0 << 0); @@ -370,7 +435,8 @@ static
+
+[...]
+
+> > > +static void pci_imx_resume(void)
+> > > +{
+> > > +	struct pcie_port *pp = &imx6_pcie->pp;
+> > > +
+> > > +	if (is_imx6sx_pcie(imx6_pcie)) {
+> > > +		/* reset iMX6SX PCIe */
+> > > +		regmap_update_bits(imx6_pcie->iomuxc_gpr,
+> > > +				IOMUXC_GPR5, BIT(18), 1 << 18);
+> > > +
+> > > +		regmap_update_bits(imx6_pcie->iomuxc_gpr,
+> > > +				IOMUXC_GPR5, BIT(18), 0 << 18);
+> > > +
+> > 
+> > Again magic numbers here. Please add defines for those.
+> [Richard] Ok.
+> > 
+> > > +		/*
+> > > +		 * controller maybe turn off, re-configure again
+> > > +		 * Set the CLASS_REV of RC CFG header to
+> > > +		 * PCI_CLASS_BRIDGE_PCI
+> > > +		 */
+> > > +		writel(readl(pp->dbi_base + PCI_CLASS_REVISION)
+> > > +			| (PCI_CLASS_BRIDGE_PCI << 16),
+> > > +			pp->dbi_base + PCI_CLASS_REVISION);
+> > > +
+> > 
+> > Can't we just move the call to set this from dw_pcie_host_init() to
+> > dw_pcie_setup_rc() so we don't need to do this ourselves? It seems to be the
+> > more logical change.
+> [Richard]dw_pcie_host_init contains the whole re-initialization and re-link-up
+>  again of the pcie module. It's not proper to re-call dw_pcie_host_init().
+> I find that the msi init should be re-configured again after resume back.
+> So, the definitions of the "PCIE_MSI_ADDR_LO" and "PCIE_MSI_ADDR_HI" would be used
+> here.
 > 
 
+I seems you misunderstood my comment here. I'm not saying we should call
+dw_pcie_host_init() here, which would be clearly wrong.
+
+What I'm saying is that the call to set up the CLASS_REV register is
+currently done in dw_pcie_host_init(), but from a quick look at the code
+I think it is safe to move this call to dw_pcie_setup_rc().
+If you move it to this function there would no need to do it explicitly
+from this resume hook again.
+
+> BTW, do you know why the "/* Synopsis specific PCIE configuration registers */"
+> is not defined in pcie-designware.h, but in pcie-designware.c?
+> 
+
+Most probably because the setup for the DW PCIe core should be handled
+through pcie-designware.c and not through the individual SoC drivers.
+
+> > 
+> > > +		dw_pcie_setup_rc(pp);
+> > > +	}
+> > > +}
+> > > +
+> > > +static struct syscore_ops pci_imx_syscore_ops = {
+> > > +	.suspend = pci_imx_suspend,
+> > > +	.resume = pci_imx_resume,
+> > > +};
+> > > +#endif
+> > > +
+> > 
+> > Why does this need to be syscore_ops instead of dev_pm_ops?
+> [Richard] PM_TURN_OFF msg should be sent out at the end of the suspend of pcie subsystem.
+> Resume and re-configure of rc controller should be done before the resume of pcie subsystem.
+> So, syscore_ops is used here.
+
+Ok, makes sense.
+
+Regards,
+Lucas
 
 -- 
-Thanks!
-Yijing
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
