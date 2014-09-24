@@ -1,72 +1,212 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0145.outbound.protection.outlook.com ([207.46.100.145]:22448
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756063AbaIWO3G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Sep 2014 10:29:06 -0400
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Minghuan Lian" <Minghuan.Lian@freescale.com>
-Subject: [PATCH v3 2/3] PCI: designware: Add get_msi_data() to pcie_host_ops
-Date: Tue, 23 Sep 2014 22:28:59 +0800
-Message-ID: <1411482540-31297-4-git-send-email-Minghuan.Lian@freescale.com>
-In-Reply-To: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
-References: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch v6 04/15] ACPI: Add interfaces to parse IOAPIC ID for IOAPIC hotplug
+Date: Wed, 24 Sep 2014 16:59:25 +0800
+Message-Id: <1411549176-30780-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch adds get_msi_data() for some platforms to return their
-special MSI message data.
+From: Yinghai Lu <yinghai@kernel.org>
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+We need to parse APIC ID for IOAPIC registration for IOAPIC hotplug.
+ACPI _MAT method and MADT table are used to figure out IOAPIC ID, just
+like parsing CPU APIC ID for CPU hotplug.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
-Change log:
-v3: no change
-v2: no change just derived from v1
+ drivers/acpi/processor_core.c |  122 ++++++++++++++++++++++++++++++++++++++---
+ include/linux/acpi.h          |    4 ++
+ 2 files changed, 117 insertions(+), 9 deletions(-)
 
- drivers/pci/host/pcie-designware.c | 7 ++++++-
- drivers/pci/host/pcie-designware.h | 1 +
- 2 files changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 1c09f814..c28ca05 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -366,7 +366,12 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
- 	else
- 		msg.address_lo = virt_to_phys((void *)pp->msi_data);
- 	msg.address_hi = 0x0;
--	msg.data = pos;
-+
-+	if (pp->ops->get_msi_data)
-+		msg.data = pp->ops->get_msi_data(pp, pos);
-+	else
-+		msg.data = pos;
-+
- 	write_msi_msg(irq, &msg);
+diff --git a/drivers/acpi/processor_core.c b/drivers/acpi/processor_core.c
+index b048f3752c2b..4a3150f2187c 100644
+--- a/drivers/acpi/processor_core.c
++++ b/drivers/acpi/processor_core.c
+@@ -4,6 +4,10 @@
+  *
+  *	Alex Chiang <achiang@hp.com>
+  *	- Unified x86/ia64 implementations
++ *
++ * I/O APIC hotplug support
++ *	Yinghai Lu <yinghai@kernel.org>
++ *	Jiang Liu <jiang.liu@intel.com>
+  */
+ #include <linux/export.h>
+ #include <linux/acpi.h>
+@@ -12,6 +16,21 @@
+ #define _COMPONENT		ACPI_PROCESSOR_COMPONENT
+ ACPI_MODULE_NAME("processor_core");
  
- 	return 0;
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 904e40a..c625675 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -71,6 +71,7 @@ struct pcie_host_ops {
- 	void (*msi_set_irq)(struct pcie_port *pp, int irq);
- 	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
- 	u32 (*get_msi_addr)(struct pcie_port *pp);
-+	u32 (*get_msi_data)(struct pcie_port *pp, int pos);
- 	void (*scan_bus)(struct pcie_port *pp);
- 	int (*msi_host_init)(struct pcie_port *pp, struct msi_chip *chip);
- };
++static struct acpi_table_madt *get_madt_table(void)
++{
++	static struct acpi_table_madt *madt;
++	static int read_madt;
++
++	if (!read_madt) {
++		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
++					(struct acpi_table_header **)&madt)))
++			madt = NULL;
++		read_madt++;
++	}
++
++	return madt;
++}
++
+ static int map_lapic_id(struct acpi_subtable_header *entry,
+ 		 u32 acpi_id, int *apic_id)
+ {
+@@ -67,17 +86,10 @@ static int map_lsapic_id(struct acpi_subtable_header *entry,
+ static int map_madt_entry(int type, u32 acpi_id)
+ {
+ 	unsigned long madt_end, entry;
+-	static struct acpi_table_madt *madt;
+-	static int read_madt;
+ 	int apic_id = -1;
++	struct acpi_table_madt *madt;
+ 
+-	if (!read_madt) {
+-		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
+-					(struct acpi_table_header **)&madt)))
+-			madt = NULL;
+-		read_madt++;
+-	}
+-
++	madt = get_madt_table();
+ 	if (!madt)
+ 		return apic_id;
+ 
+@@ -203,3 +215,95 @@ int acpi_get_cpuid(acpi_handle handle, int type, u32 acpi_id)
+ 	return acpi_map_cpuid(apic_id, acpi_id);
+ }
+ EXPORT_SYMBOL_GPL(acpi_get_cpuid);
++
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++static int get_ioapic_id(struct acpi_subtable_header *entry, u32 gsi_base,
++			 u64 *phys_addr, int *ioapic_id)
++{
++	struct acpi_madt_io_apic *ioapic = (struct acpi_madt_io_apic *)entry;
++
++	if (ioapic->global_irq_base != gsi_base)
++		return 0;
++
++	*phys_addr = ioapic->address;
++	*ioapic_id = ioapic->id;
++	return 1;
++}
++
++static int parse_madt_ioapic_entry(u32 gsi_base, u64 *phys_addr)
++{
++	struct acpi_subtable_header *hdr;
++	unsigned long madt_end, entry;
++	int apic_id = -1;
++	struct acpi_table_madt *madt;
++
++	madt = get_madt_table();
++	if (!madt)
++		return apic_id;
++
++	entry = (unsigned long)madt;
++	madt_end = entry + madt->header.length;
++
++	/* Parse all entries looking for a match. */
++	entry += sizeof(struct acpi_table_madt);
++	while (entry + sizeof(struct acpi_subtable_header) < madt_end) {
++		hdr = (struct acpi_subtable_header *)entry;
++		if (hdr->type == ACPI_MADT_TYPE_IO_APIC &&
++		    get_ioapic_id(hdr, gsi_base, phys_addr, &apic_id))
++			break;
++		else
++			entry += hdr->length;
++	}
++
++	return apic_id;
++}
++
++static int parse_mat_ioapic_entry(acpi_handle handle, u32 gsi_base,
++				  u64 *phys_addr)
++{
++	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
++	union acpi_object *obj;
++	struct acpi_subtable_header *header;
++	int apic_id = -1;
++
++	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_MAT", NULL, &buffer)))
++		goto exit;
++
++	if (!buffer.length || !buffer.pointer)
++		goto exit;
++
++	obj = buffer.pointer;
++	if (obj->type != ACPI_TYPE_BUFFER ||
++	    obj->buffer.length < sizeof(struct acpi_subtable_header))
++		goto exit;
++
++	header = (struct acpi_subtable_header *)obj->buffer.pointer;
++	if (header->type == ACPI_MADT_TYPE_IO_APIC)
++		get_ioapic_id(header, gsi_base, phys_addr, &apic_id);
++
++exit:
++	kfree(buffer.pointer);
++	return apic_id;
++}
++
++/**
++ * acpi_get_ioapic_id - Get IOAPIC ID and physical address matching @gsi_base
++ * @handle:	ACPI object for IOAPIC device
++ * @gsi_base:	GSI base to match with
++ * @phys_add:	hold physical address of matching IOAPIC record
++ *
++ * Walk resources returned by ACPI_MAT method, then ACPI MADT table, to search
++ * for an ACPI IOAPIC record matching @gsi_base.
++ * Return IOAPIC id and physical address if found a match, otherwise return <0.
++ */
++int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr)
++{
++	int apic_id;
++
++	apic_id = parse_mat_ioapic_entry(handle, gsi_base, phys_addr);
++	if (apic_id == -1)
++		apic_id = parse_madt_ioapic_entry(gsi_base, phys_addr);
++
++	return apic_id;
++}
++#endif /* CONFIG_ACPI_HOTPLUG_IOAPIC */
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 807cbc46d73e..3574f137242e 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -146,6 +146,10 @@ int acpi_map_lsapic(acpi_handle handle, int physid, int *pcpu);
+ int acpi_unmap_lsapic(int cpu);
+ #endif /* CONFIG_ACPI_HOTPLUG_CPU */
+ 
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
++#endif
++
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
+ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
+ void acpi_irq_stats_init(void);
 -- 
-1.9.1
+1.7.10.4
 
