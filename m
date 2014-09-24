@@ -1,133 +1,83 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFT v2 11/24] iommu/vt-d: Change prototypes to prepare for enabling hierarchy irqdomain
-Date: Fri, 26 Sep 2014 22:02:12 +0800
-Message-Id: <1411740145-30626-12-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:54516 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750710AbaIXEOp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Sep 2014 00:14:45 -0400
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>, Jingoo Han <jg1.han@samsung.com>
+Date: Wed, 24 Sep 2014 12:14:02 +0800
+Subject: RE: [PATCH] PCI: designware: Fix configuration base address
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB661ABCDBA8EEB@EAPEX1MAIL1.st.com>
+References: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
+ <20140923225306.GF27117@google.com>
+In-Reply-To: <20140923225306.GF27117@google.com>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Prepare for support hierarchy irqdomain by changing function prototypes,
-should be no function changes.
+Hello Minghuan,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel_irq_remapping.c |   22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Sent: Wednesday, September 24, 2014 4:23 AM
+> To: Minghuan Lian
+> Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; Zang
+> Roy-R61911; Hu Mingkai-B21284; Scott Wood; Yoder Stuart-B08248; Arnd
+> Bergmann; Mohit KUMAR DCG; Jingoo Han
+> Subject: Re: [PATCH] PCI: designware: Fix configuration base address
+> 
+> [+cc Mohit, Jingoo]
+> 
+> On Tue, Sep 23, 2014 at 10:28:56PM +0800, Minghuan Lian wrote:
+> > The code has calculated cfg0_base and cfg1_base when parsing 'reg'
+> > or 'ranges' property of PCI DTS node. so remove duplicate calculation.
+> > And when using 'reg', resource cfg is not used, the removed code will
+> > get incorrect configuration base.
+> >
+> > Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> > ---
+> >  drivers/pci/host/pcie-designware.c | 2 --
+> >  1 file changed, 2 deletions(-)
+> >
+> > diff --git a/drivers/pci/host/pcie-designware.c
+> > b/drivers/pci/host/pcie-designware.c
+> > index c28ca05..0f3cb2a 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -515,7 +515,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >  	pp->mem_base = pp->mem.start;
+> >
+> >  	if (!pp->va_cfg0_base) {
+> > -		pp->cfg0_base = pp->cfg.start;
+> >  		pp->va_cfg0_base = devm_ioremap(pp->dev, pp-
+> >cfg0_base,
+> >  						pp->cfg0_size);
+> >  		if (!pp->va_cfg0_base) {
+> > @@ -525,7 +524,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >  	}
+> >
+> >  	if (!pp->va_cfg1_base) {
+> > -		pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
+> >  		pp->va_cfg1_base = devm_ioremap(pp->dev, pp-
+> >cfg1_base,
+> >  						pp->cfg1_size);
+> >  		if (!pp->va_cfg1_base) {
+> > --
+> > 1.9.1
+> >
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 319b39edcf7e..0c679369e08a 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -82,10 +82,10 @@ static int get_irte(int irq, struct irte *entry)
- 	return 0;
- }
- 
--static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
-+static int alloc_irte(struct intel_iommu *iommu, int irq,
-+		      struct irq_2_iommu *irq_iommu, u16 count)
- {
- 	struct ir_table *table = iommu->ir_table;
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
- 	struct irq_cfg *cfg = irq_cfg(irq);
- 	unsigned int mask = 0;
- 	unsigned long flags;
-@@ -173,9 +173,9 @@ static int set_irte_irq(int irq, struct intel_iommu *iommu, u16 index, u16 subha
- 	return 0;
- }
- 
--static int modify_irte(int irq, struct irte *irte_modified)
-+static int modify_irte(struct irq_2_iommu *irq_iommu,
-+		       struct irte *irte_modified)
- {
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
- 	struct intel_iommu *iommu;
- 	unsigned long flags;
- 	struct irte *irte;
-@@ -242,7 +242,7 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
- 		return 0;
- 
- 	iommu = irq_iommu->iommu;
--	index = irq_iommu->irte_index + irq_iommu->sub_handle;
-+	index = irq_iommu->irte_index;
- 
- 	start = iommu->ir_table->base + index;
- 	end = start + (1 << irq_iommu->irte_mask);
-@@ -938,7 +938,7 @@ static int intel_setup_ioapic_entry(int irq,
- 		pr_warn("No mapping iommu for ioapic %d\n", ioapic_id);
- 		index = -ENODEV;
- 	} else {
--		index = alloc_irte(iommu, irq, 1);
-+		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
- 		if (index < 0) {
- 			pr_warn("Failed to allocate IRTE for ioapic %d\n",
- 				ioapic_id);
-@@ -954,7 +954,7 @@ static int intel_setup_ioapic_entry(int irq,
- 	/* Set source-id of interrupt request */
- 	set_ioapic_sid(&irte, ioapic_id);
- 
--	modify_irte(irq, &irte);
-+	modify_irte(irq_2_iommu(irq), &irte);
- 
- 	apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: "
- 		"Set IRTE entry (P:%d FPD:%d Dst_Mode:%d "
-@@ -1041,7 +1041,7 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 	 * Atomically updates the IRTE with the new destination, vector
- 	 * and flushes the interrupt entry cache.
- 	 */
--	modify_irte(irq, &irte);
-+	modify_irte(irq_2_iommu(irq), &irte);
- 
- 	/*
- 	 * After this point, all the interrupts will start arriving
-@@ -1077,7 +1077,7 @@ static void intel_compose_msi_msg(struct pci_dev *pdev,
- 	else
- 		set_hpet_sid(&irte, hpet_id);
- 
--	modify_irte(irq, &irte);
-+	modify_irte(irq_2_iommu(irq), &irte);
- 
- 	msg->address_hi = MSI_ADDR_BASE_HI;
- 	msg->data = sub_handle;
-@@ -1104,7 +1104,7 @@ static int intel_msi_alloc_irq(struct pci_dev *dev, int irq, int nvec)
- 		       "Unable to map PCI %s to iommu\n", pci_name(dev));
- 		index = -ENOENT;
- 	} else {
--		index = alloc_irte(iommu, irq, nvec);
-+		index = alloc_irte(iommu, irq, irq_2_iommu(irq), nvec);
- 		if (index < 0) {
- 			printk(KERN_ERR
- 			       "Unable to allocate %d IRTE for PCI %s\n",
-@@ -1148,7 +1148,7 @@ static int intel_setup_hpet_msi(unsigned int irq, unsigned int id)
- 	down_read(&dmar_global_lock);
- 	iommu = map_hpet_to_ir(id);
- 	if (iommu) {
--		index = alloc_irte(iommu, irq, 1);
-+		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
- 		if (index >= 0)
- 			ret = 0;
- 	}
--- 
-1.7.10.4
+- Acked-by: Mohit KUMAR <mohit.kumar@st.com>
 
+Thanks
+Mohit
