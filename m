@@ -1,79 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:50337 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751547AbaI2Ihw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 04:37:52 -0400
-Message-ID: <1411979850.2625.7.camel@pengutronix.de>
-Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
- in all platforms
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:50908 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753343AbaIXPiJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 11:38:09 -0400
+From: Robert Richter <rric@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>
+Cc: Liviu Dudau <liviu.dudau@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Date: Mon, 29 Sep 2014 10:37:30 +0200
-In-Reply-To: <5427A6A0.5040703@huawei.com>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
-	 <20140925074235.GN12423@ulmo> <20140925144855.GB31157@bart.dudau.co.uk>
-	 <20140925164937.GB30382@ulmo> <20140925171612.GC31157@bart.dudau.co.uk>
-	 <542505B3.7040208@huawei.com> <20140926085430.GG31106@ulmo>
-	 <20140926090537.GH31106@ulmo> <54277327.6070500@huawei.com>
-	 <5427A6A0.5040703@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sunil Goutham <sgoutham@cavium.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Robert Richter <rrichter@cavium.com>
+Subject: [PATCH 5/6] arm64, defconfig: Enable PCI
+Date: Wed, 24 Sep 2014 17:37:47 +0200
+Message-Id: <1411573068-12952-6-git-send-email-rric@kernel.org>
+In-Reply-To: <1411573068-12952-1-git-send-email-rric@kernel.org>
+References: <1411573068-12952-1-git-send-email-rric@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Sonntag, den 28.09.2014, 14:11 +0800 schrieb Yijing Wang:
-> On 2014/9/28 10:32, Yijing Wang wrote:
-> > On 2014/9/26 17:05, Thierry Reding wrote:
-> >> On Fri, Sep 26, 2014 at 10:54:32AM +0200, Thierry Reding wrote:
-> >> [...]
-> >>> At least for Tegra it's trivial to just hook it up in tegra_pcie_scan_bus()
-> >>> directly (patch attached).
-> >>
-> >> Really attached this time.
-> >>
-> >> Thierry
-> >>
-> > 
-> > It looks good to me, so I will update the arm pci hostbridge driver to assign
-> > pci root bus the msi chip instead of current pcibios_add_bus(). But for other
-> > platforms which only have a one msi chip, I will kept the arch_find_msi_chip()
-> > temporarily for more comments, especially from Bjorn.
-> 
-> Oh, sorry, I found designware and rcar use pci_scan_root_bus(), so we can not simply
-> assign msi chip to root bus in all host drivers's scan functions.
+From: Robert Richter <rrichter@cavium.com>
 
-Designware will switch away from pci_scan_root_bus() in the 3.18 cycle
-and I would think it would be no problem to to the same with rcar.
+Enable the PCI subsystem in defconfig. There will be more and more
+systems with pci support, so default enable it. This also implicitly
+enables the MSI feature.
 
-Regards,
-Lucas
+Signed-off-by: Robert Richter <rrichter@cavium.com>
+---
+ arch/arm64/Kconfig | 4 ++++
+ 1 file changed, 4 insertions(+)
 
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index ca3f7e9afd4d..97777e1ef5a7 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -163,11 +163,15 @@ config ARM_AMBA
+ 
+ config PCI
+ 	bool "PCI support"
++	default y
+ 	help
+ 	  This feature enables support for PCIe bus system. If you say Y
+ 	  here, the kernel will include drivers and infrastructure code
+ 	  to support PCIe bus devices.
+ 
++config PCI_MSI
++	def_bool PCI
++
+ config PCI_DOMAINS
+ 	def_bool PCI
+ 
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+2.1.0
 
