@@ -1,101 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11607 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752686AbaIPJCc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 16 Sep 2014 05:02:32 -0400
-Message-ID: <5417F13B.7030500@linux.intel.com>
-Date: Tue, 16 Sep 2014 16:13:47 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Sunil Kovvuri <sunil.kovvuri@gmail.com>
+Cc: LAKML <linux-arm-kernel@lists.infradead.org>,
+	Robert Richter <rric@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-CC: Ashok Raj <ashok.raj@intel.com>, Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: Re: [Patch Part3 V5 5/8] iommu/vt-d: Enhance intel_irq_remapping
- driver to support DMAR unit hotplug
-References: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com> <1410487848-6027-6-git-send-email-jiang.liu@linux.intel.com> <54164D01.4060003@huawei.com> <5417E00D.5000108@linux.intel.com> <5417EC7B.4060400@huawei.com>
-In-Reply-To: <5417EC7B.4060400@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Robert Richter <rrichter@cavium.com>,
+	Sunil Goutham <sgoutham@cavium.com>
+Subject: Re: [PATCH 3/6] pci, thunder: Add PCIe host controller devicetree bindings
+Date: Wed, 24 Sep 2014 20:34:14 +0200
+Message-ID: <3414852.SWQ9rRcUDx@wuerfel>
+In-Reply-To: <CA+sq2Ce8sb=YGma05qEk_992Mc9M92TxCk+RWsyi6tY-FVOCXw@mail.gmail.com>
+References: <1411573068-12952-1-git-send-email-rric@kernel.org> <3082935.e3X4GsVUDn@wuerfel> <CA+sq2Ce8sb=YGma05qEk_992Mc9M92TxCk+RWsyi6tY-FVOCXw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wednesday 24 September 2014 23:34:04 Sunil Kovvuri wrote:
+> On Wed, Sep 24, 2014 at 9:36 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Wednesday 24 September 2014 17:37:45 Robert Richter wrote:
+> >> +               compatible = "cavium,thunder-pcie";
+> >> +               device_type = "pci";
+> >> +               msi-parent = <&its>;
+> >> +               bus-range = <0 255>;
+> >> +               #size-cells = <2>;
+> >> +               #address-cells = <3>;
+> >> +               reg = <0x8480 0x00000000 0 0x10000000>;  /* Configuration space */
+> >> +               ranges = <0x03000000 0x8010 0x00000000 0x8010 0x00000000 0x70 0x00000000>, /* mem ranges */
+> >> +                       <0x03000000 0x8300 0x00000000 0x8300 0x00000000 0x80 0x00000000>,
+> >> +                       <0x03000000 0x87e0 0x00000000 0x87e0 0x00000000 0x01 0x00000000>;
+> >> +        };
+> >
+> > If you claim the entire 0-255 bus range, I think you should also
+> > specify a domain, otherwise it's not predictable which domain you
+> > get.
+> >
+> > The interrupt-map and interrupt-map-mask properties are required for PCI,
+> > otherwise you can't do LSI interrupts.
+> 
+> This PCI controller supports only MSIx interrupts which are edge triggered.
 
+Interesting, so it's not PCI compliant then? I assume this will be fixed
+in the production version of the silicon, right?
 
-On 2014/9/16 15:53, Yijing Wang wrote:
-> On 2014/9/16 15:00, Jiang Liu wrote:
->> On 2014/9/15 10:20, Yijing Wang wrote:
->>>> +static void ir_remove_ioapic_hpet_scope(struct intel_iommu *iommu)
->>>> +{
->>>> +	int i;
->>>>  
->>>> -			ir_parse_one_hpet_scope(scope, iommu);
->>>> -		}
->>>> -		start += scope->length;
->>>> -	}
->>>> +	for (i = 0; i < MAX_HPET_TBS; i++)
->>>> +		if (ir_hpet[i].iommu == iommu)
->>>> +			ir_hpet[i].iommu = NULL;
->>>
->>> Hi Gerry, why not reset whole ir_hpe and ir_ioapic data struct?
->> Hi Yijing,
->> 	Thanks for review. Zero is legal for id, bus and devfn in
->> struct ioapic_scope and struct hpet_scope. So we use domain field
->> as a flag to mark entry valid or invalid and only reset iommu field.
+Having no support for interrupts mean that the majority of PCI device drivers
+will fail.
+
+> > If your hardware can support it, you should also list I/O space and prefetchable
+> > memory spaces. Can you explain why you have multiple non-prefetchable ranges?
 > 
-> Hi Gerry, use iommu field as a flag to mark entry valid may be not safe enough,
-> I found map_hpet_to_ir() and map_ioapic_to_ir() still only check the id field to return the valid iommu.
-> 
-> What about this case:
-> E.g. ir_hpet[2].id = N, ir_hpet[2].iommu = NULL, ir_hpet[4].id = N, ir_hpet[4].iommu = iommu;
-> 
-> ir_hpet[2] maybe released yet, and the hpet now has been saved in ir_hpet[4], but map_hpet_to_irq()
-> will return the wrong iommu(NULL).
-Hi Yijing,
-Good catch, I will enhance map_hpet_to_ir() and map_ioapic_to_ir().
-Regards!
-Gerry
-> 
-> 
-> static struct intel_iommu *map_hpet_to_ir(u8 hpet_id)
-> {
-> 	int i;
-> 
-> 	for (i = 0; i < MAX_HPET_TBS; i++)
-> 		if (ir_hpet[i].id == hpet_id)
-> 			return ir_hpet[i].iommu;
-> 	return NULL;
-> }
-> 
->>
->> Regards!
->> Gerry
->>>
->>>
->>>
->>>>  
->>>> -	return 0;
->>>> +	for (i = 0; i < MAX_IO_APICS; i++)
->>>> +		if (ir_ioapic[i].iommu == iommu)
->>>> +			ir_ioapic[i].iommu = NULL;
->>>>  }
->>>>  
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>> Please read the FAQ at  http://www.tux.org/lkml/
->>>
->>
->> .
->>
-> 
-> 
+> Our hardware is an ECAM based host controller and doesn't support I/O
+> and prefetchable memory spaces.
+> All on-board PCI devices connected to this PCI controller have fixed resources
+> and doesn't have to be allocated/reassigned. Some of these devices are
+> SRIOV based.
+
+I think you need to mark the ones that are nonrelocatable with flag
+0x80000000, otherwise the PCI core might decide to reassign them.
+
+> Kernel's SRIOV (pci/iov.c) is expecting 'resource->parent' hierarchy
+> to be set, otherwise doesn't
+> enable SRIOV device. So, here multiple non-prefetchable ranges of root bus
+> aid in resource claiming and setting res->parent hierarchy.
+
+I don't understand. Isn't that just a bug in the code that you are working
+around with the DT. Have you tried fixing the code instead?
+
+> We do call "pci_claim_resource" in controller driver code.
+> "[PATCH 1/6] pci, thunder: Add support for Thunder PCIe host controller."
+
+My guess is that you are using the wrong interface here. Isn't the normal
+request_resource() in the host driver enough?
+
+	Arnd
