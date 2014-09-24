@@ -1,61 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:55287 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752943AbaIVJvU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 05:51:20 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1411379470-20639-1-git-send-email-phil.edworthy@renesas.com>
-References: <1411379470-20639-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1411379470-20639-4-git-send-email-phil.edworthy@renesas.com>
-Date: Mon, 22 Sep 2014 10:51:10 +0100
-Subject: [RFC PATCH 3/3] ARM: Enable PCI domains
-Sender: linux-pci-owner@vger.kernel.org
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v6 03/15] ACPI: Fix minor syntax issues in processor_core.c
+Date: Wed, 24 Sep 2014 16:59:24 +0800
+Message-Id: <1411549176-30780-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since there are ARM devices with multiple independant PCI controllers, enable
-PCI domains for all ARM devices.
+Fix minor syntax issues in processor_core.c to follow coding styles.
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
-Marked as RFC as I am not sure of the impact of enabling PCI domains for all
-ARM devices. In the march to 'one kernel to rule them all', I steered clear of
-mach specific changes.
+ drivers/acpi/processor_core.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
- arch/arm/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 32cbbd5..8741d3d 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -1274,6 +1274,7 @@ config ISA_DMA_API
+diff --git a/drivers/acpi/processor_core.c b/drivers/acpi/processor_core.c
+index e32321ce9a5c..b048f3752c2b 100644
+--- a/drivers/acpi/processor_core.c
++++ b/drivers/acpi/processor_core.c
+@@ -125,13 +125,12 @@ static int map_mat_entry(acpi_handle handle, int type, u32 acpi_id)
+ 	}
  
- config PCI
- 	bool "PCI support" if MIGHT_HAVE_PCI
-+	select PCI_DOMAINS
- 	help
- 	  Find out whether you have a PCI motherboard. PCI is the name of a
- 	  bus system, i.e. the way the CPU talks to the other stuff inside
-@@ -1282,7 +1283,6 @@ config PCI
+ 	header = (struct acpi_subtable_header *)obj->buffer.pointer;
+-	if (header->type == ACPI_MADT_TYPE_LOCAL_APIC) {
++	if (header->type == ACPI_MADT_TYPE_LOCAL_APIC)
+ 		map_lapic_id(header, acpi_id, &apic_id);
+-	} else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC) {
++	else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC)
+ 		map_lsapic_id(header, type, acpi_id, &apic_id);
+-	} else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC) {
++	else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC)
+ 		map_x2apic_id(header, type, acpi_id, &apic_id);
+-	}
  
- config PCI_DOMAINS
- 	bool
--	depends on PCI
- 
- config PCI_NANOENGINE
- 	bool "BSE nanoEngine PCI support"
+ exit:
+ 	kfree(buffer.pointer);
+@@ -164,7 +163,7 @@ int acpi_map_cpuid(int apic_id, u32 acpi_id)
+ 		 * For example,
+ 		 *
+ 		 * Scope (_PR)
+-                 * {
++		 * {
+ 		 *     Processor (CPU0, 0x00, 0x00000410, 0x06) {}
+ 		 *     Processor (CPU1, 0x01, 0x00000410, 0x06) {}
+ 		 *     Processor (CPU2, 0x02, 0x00000410, 0x06) {}
 -- 
-2.1.0
+1.7.10.4
 
