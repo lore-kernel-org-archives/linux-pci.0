@@ -1,20 +1,12 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1412024521.4285.98.camel@pasglop>
-References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
- <1412000971-9242-11-git-send-email-Liviu.Dudau@arm.com> <CAE9FiQXEUZvkuzwOrK+2zGVj0ywFaQsiWH7SHufZk9BRWnwddQ@mail.gmail.com>
- <CAE9FiQUkcPRMUEn01VJMyXz8aYvk6C5MBNZi5NCV2m3qkNabeg@mail.gmail.com> <1412024521.4285.98.camel@pasglop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 29 Sep 2014 15:33:37 -0600
-Message-ID: <CAErSpo62ap1YkzvuZ6MCpXry9=VpLv+Skzrwr10h=+Lc4VfVgQ@mail.gmail.com>
-Subject: Re: [PATCH v13 10/12] PCI: Assign unassigned bus resources in pci_scan_root_bus()
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Yinghai Lu <yinghai@kernel.org>, Liviu Dudau <Liviu.Dudau@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
+Date: Wed, 24 Sep 2014 19:01:19 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
 	Rob Herring <robh+dt@kernel.org>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Russell King <linux@arm.linux.org.uk>,
 	linux-pci <linux-pci@vger.kernel.org>,
 	Linus Walleij <linus.walleij@linaro.org>,
@@ -28,64 +20,54 @@ Cc: Yinghai Lu <yinghai@kernel.org>, Liviu Dudau <Liviu.Dudau@arm.com>,
 	LKML <linux-kernel@vger.kernel.org>,
 	Device Tree ML <devicetree@vger.kernel.org>,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Robert Richter <rrichter@cavium.com>
+Subject: Re: [PATCH v12 09/12] OF: PCI: Add support for parsing PCI host
+ bridge resources from DT
+Message-ID: <20140924180119.GN16244@arm.com>
+References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411498874-9864-10-git-send-email-Liviu.Dudau@arm.com>
+ <20140924164304.GF1994@e106497-lin.cambridge.arm.com>
+ <20140924173109.GA20416@google.com>
+ <20140924175330.GI1994@e106497-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140924175330.GI1994@e106497-lin.cambridge.arm.com>
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 29, 2014 at 3:02 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Mon, 2014-09-29 at 12:06 -0700, Yinghai Lu wrote:
->> On Mon, Sep 29, 2014 at 11:25 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> > On Mon, Sep 29, 2014 at 7:29 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
->> >> If the firmware has not assigned all the bus resources and we are not just
->> >> probing the PCI buses, it makes sense to assign the unassigned resources
->> >> in pci_scan_root_bus().
->> >>
->> >> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
->> >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> >> CC: Arnd Bergmann <arnd@arndb.de>
->> >> CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
->> >> CC: Rob Herring <robh+dt@kernel.org>
->> >> ---
->> >>  drivers/pci/probe.c | 3 +++
->> >>  1 file changed, 3 insertions(+)
->> >>
->> >> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> >> index 636d1c9..d2ebd49 100644
->> >> --- a/drivers/pci/probe.c
->> >> +++ b/drivers/pci/probe.c
->> >> @@ -1951,6 +1951,9 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
->> >>         if (!found)
->> >>                 pci_bus_update_busn_res_end(b, max);
->> >>
->> >> +       if (!pci_has_flag(PCI_PROBE_ONLY))
->> >> +               pci_assign_unassigned_bus_resources(b);
->> >> +
->> >>         pci_bus_add_devices(b);
->> >>         return b;
->> >>  }
->> >
->> > No, you can not do it that early.
->> >
->> > On x86, we need to call
->> > pcibios_resource_survey_bus at first.
->>
->> on x86:
->> pcibios_init
->> pcibios_resource_survey()
->> pcibios_assign_resources() via fs_initcall
->
-> Right and on powerpc and others as well. We need to survey existing
-> resources. We also have a number of platform things that might need
-> to happen before we do the final re-assignment pass.
+On Wed, Sep 24, 2014 at 06:53:31PM +0100, Liviu Dudau wrote:
+> On Wed, Sep 24, 2014 at 06:31:09PM +0100, Bjorn Helgaas wrote:
+> > On Wed, Sep 24, 2014 at 05:43:04PM +0100, Liviu Dudau wrote:
+> > > Provide a function to parse the PCI DT ranges that can be used to
+> > > create a pci_host_bridge structure together with its associated
+> > > bus.
+> > > 
+> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > Cc: Arnd Bergmann <arnd@arndb.de>
+> > > Cc: Grant Likely <grant.likely@linaro.org>
+> > > Cc: Rob Herring <robh+dt@kernel.org>
+> > > Cc: Catalin Marinas <catalin.marinas@arm.com>
+> > > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > > [make io_base parameter optional]
+> > > Signed-off-by: Robert Richter <rrichter@cavium.com>
+> > > ---
+> > > Hi Bjorn,
+> > > 
+> > > I have fixed the compilation error that this patch was triggering. I
+> > > have validated that the patch applies to your pci/host-generic branch
+> > > as well as to my series.
+> > 
+> > I applied this to pci/host-generic along with the following patches and
+> > pushed the branch, thanks!
+> 
+> Thanks again and sorry for lack of thorough testing. I still haven't managed
+> to get a cross compiler for sparc and as I don't run Ubuntu or debian the
+> make.cross script doesn't work for me.
 
-That's true today.  But I don't know whether it *has* to be this way
-forever.  On x86, pcibios_resource_survey() throws in E820 information
-(which we know long before we do any PCI enumeration) and some IO-APIC
-resources (it looks like we also know these before PCI enumeration).
-Powerpc has pcibios_reserve_legacy_regions(), but that looks like
-mostly stuff that could be done when we find the host bridge, before
-we enumerate PCI devices below it.
+  https://www.kernel.org/pub/tools/crosstool/
 
-Bjorn
+No libc, but good enough for building the kernel. I've asked for an aarch64
+compiler there for a while, but it didn't materialise for some reason.
+
+Will
