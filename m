@@ -1,347 +1,158 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC Part2 v1 10/21] x86: irq_remapping: Introduce new interfaces to support hierarchy irqdomain
-Date: Thu, 11 Sep 2014 22:03:37 +0800
-Message-Id: <1410444228-3134-11-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:38668 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750711AbaIXDvI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 23:51:08 -0400
+Message-ID: <54223F9D.8040707@huawei.com>
+Date: Wed, 24 Sep 2014 11:50:53 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3 3/9] PCI/MSI: Change msi_bus attribute to support enable/disable
+ MSI for EP
+References: <1411450050-1510-1-git-send-email-wangyijing@huawei.com> <1411450050-1510-4-git-send-email-wangyijing@huawei.com> <20140923175428.GA6776@google.com>
+In-Reply-To: <20140923175428.GA6776@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce new interfaces for interrupt remapping drivers to support
-hierarchy irqdomain:
-1) irq_remapping_get_ir_irq_domain(): get irqdomain associated with an
-   interrupt remapping unit. IOAPIC/HPET drivers use this interface to
-   get parent interrupt remapping irqdomain.
-2) irq_remapping_get_irq_domain(): get irqdomain for an IRQ allocation.
-   This is mainly used to support MSI irqdomain. We must build one MSI
-   irqdomain for each interrupt remapping unit. MSI driver calls this
-   interface to get MSI irqdomain associated with an IR irqdomain which
-   manages the PCI devices.
-3) irq_remapping_get_ioapic_entry(): get IOAPIC entry content rewritten
-   by the interrupt remapping driver for remapped IOAPIC interrupt.
-4) irq_remapping_get_msi_entry(): get MSI/HPET entry content rewritten
-   by the interrupt remapping driver for remapped MSI/HPET interrupt.
+> I propose the following, which rewords the changelog, documentation, and
+> comments.  It also adds a printk for the endpoint case and makes the bridge
+> printk unconditional.  And it simplifies the code to set the bus flag.
+> 
+> Let me know if you object to anything.
 
-Architecture specific needs to implement two hooks:
-1) arch_get_ir_parent_domain(): get parent irqdomain for IR irqdomain,
-   which is x86_vector_domain on x86 platforms.
-2) arch_create_msi_irq_domain(): create an MSI irqdomain associated with
-   the interrupt remapping unit.
+Thanks a lot for optimizing the patch!
+It's much better now.
 
-We also add follwing callbacks into struct irq_remap_ops:
-	struct irq_domain *(*get_ir_irq_domain)(struct irq_alloc_info *);
-	struct irq_domain *(*get_irq_domain)(struct irq_alloc_info *);
-	int (*get_ioapic_entry)(struct irq_data *,
-				struct IR_IO_APIC_route_entry *);
-	int (*get_msi_entry)(struct irq_data *, struct msi_msg *);
+Thanks!
+Yijing.
 
-Once all clients of IR have been converted to new hierarchy irqdomain
-interfaces, we will:
-1) Remove set_ioapic_entry, set_affinity, free_irq, compose_msi_msg,
-   msi_alloc_irq, msi_setup_irq, setup_hpet_msi from struct remap_osp
-2) Kill setup_ioapic_remapped_entry, free_remapped_irq,
-   compose_remapped_msi_msg, setup_hpet_msi_remapped, setup_remapped_irq.
-3) Simplify x86_io_apic_ops and x86_msi.
+> 
+> Bjorn
+> 
+> 
+> commit 8ca0ecc79e6b154d3e16f443c1dd520f4c8af4ac
+> Author: Yijing Wang <wangyijing@huawei.com>
+> Date:   Tue Sep 23 13:27:24 2014 +0800
+> 
+>     PCI/MSI: Add "msi_bus" sysfs MSI/MSI-X control for endpoints
+>     
+>     The "msi_bus" sysfs file for bridges sets a bus flag to allow or disallow
+>     future driver requests for MSI or MSI-X.  Previously, the sysfs file
+>     existed for endpoints but did nothing.
+>     
+>     Add "msi_bus" support for endpoints, so an administrator can prevent the
+>     use of MSI and MSI-X for individual devices.
+>     
+>     Note that as for bridges, these changes only affect future driver requests
+>     for MSI or MSI-X, so drivers may need to be reloaded.
+>     
+>     Add documentation for the "msi_bus" sysfs file.
+>     
+>     [bhelgaas: changelog, comments, add "subordinate", add endpoint printk,
+>     rework bus_flags setting, make bus_flags printk unconditional]
+>     Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+> index 6615fda0abfb..ee6c04036492 100644
+> --- a/Documentation/ABI/testing/sysfs-bus-pci
+> +++ b/Documentation/ABI/testing/sysfs-bus-pci
+> @@ -65,6 +65,16 @@ Description:
+>  		force a rescan of all PCI buses in the system, and
+>  		re-discover previously removed devices.
+>  
+> +What:		/sys/bus/pci/devices/.../msi_bus
+> +Date:		September 2014
+> +Contact:	Linux PCI developers <linux-pci@vger.kernel.org>
+> +Description:
+> +		Writing a zero value to this attribute disallows MSI and
+> +		MSI-X for any future drivers of the device.  If the device
+> +		is a bridge, MSI and MSI-X will be disallowed for future
+> +		drivers of all child devices under the bridge.  Drivers
+> +		must be reloaded for the new setting to take effect.
+> +
+>  What:		/sys/bus/pci/devices/.../msi_irqs/
+>  Date:		September, 2011
+>  Contact:	Neil Horman <nhorman@tuxdriver.com>
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 9ff0a901ecf7..dbf63e23988d 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -250,46 +250,45 @@ static ssize_t msi_bus_show(struct device *dev, struct device_attribute *attr,
+>  			    char *buf)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+> +	struct pci_bus *subordinate = pdev->subordinate;
+>  
+> -	if (!pdev->subordinate)
+> -		return 0;
+> -
+> -	return sprintf(buf, "%u\n",
+> -		       !(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI));
+> +	return sprintf(buf, "%u\n", subordinate ?
+> +		       !(subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI)
+> +			   : !pdev->no_msi);
+>  }
+>  
+>  static ssize_t msi_bus_store(struct device *dev, struct device_attribute *attr,
+>  			     const char *buf, size_t count)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+> +	struct pci_bus *subordinate = pdev->subordinate;
+>  	unsigned long val;
+>  
+>  	if (kstrtoul(buf, 0, &val) < 0)
+>  		return -EINVAL;
+>  
+> -	/*
+> -	 * Bad things may happen if the no_msi flag is changed
+> -	 * while drivers are loaded.
+> -	 */
+>  	if (!capable(CAP_SYS_ADMIN))
+>  		return -EPERM;
+>  
+>  	/*
+> -	 * Maybe devices without subordinate buses shouldn't have this
+> -	 * attribute in the first place?
+> +	 * "no_msi" and "bus_flags" only affect what happens when a driver
+> +	 * requests MSI or MSI-X.  They don't affect any drivers that have
+> +	 * already requested MSI or MSI-X.
+>  	 */
+> -	if (!pdev->subordinate)
+> +	if (!subordinate) {
+> +		pdev->no_msi = !val;
+> +		dev_info(&pdev->dev, "MSI/MSI-X %s for future drivers\n",
+> +			 val ? "allowed" : "disallowed");
+>  		return count;
+> -
+> -	/* Is the flag going to change, or keep the value it already had? */
+> -	if (!(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI) ^
+> -	    !!val) {
+> -		pdev->subordinate->bus_flags ^= PCI_BUS_FLAGS_NO_MSI;
+> -
+> -		dev_warn(&pdev->dev, "forced subordinate bus to%s support MSI, bad things could happen\n",
+> -			 val ? "" : " not");
+>  	}
+>  
+> +	if (val)
+> +		subordinate->bus_flags &= ~PCI_BUS_FLAGS_NO_MSI;
+> +	else
+> +		subordinate->bus_flags |= PCI_BUS_FLAGS_NO_MSI;
+> +
+> +	dev_info(&subordinate->dev, "MSI/MSI-X %s for future drivers of devices on this bus\n",
+> +		 val ? "allowed" : "disallowed");
+>  	return count;
+>  }
+>  static DEVICE_ATTR_RW(msi_bus);
+> 
+> .
+> 
 
-We could achieve a much more clear architecture with all these changes
-applied.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/hw_irq.h        |   36 +++++++++++++++-
- arch/x86/include/asm/irq_remapping.h |   53 +++++++++++++++++++++++
- drivers/iommu/irq_remapping.c        |   78 +++++++++++++++++++++++++++++++++-
- drivers/iommu/irq_remapping.h        |   17 ++++++++
- 4 files changed, 182 insertions(+), 2 deletions(-)
-
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 313ae21a0784..57f81f5a9686 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -112,9 +112,43 @@ struct irq_2_irte {
- 
- #ifdef	CONFIG_X86_LOCAL_APIC
- struct irq_data;
-+struct pci_dev;
-+struct msi_desc;
-+
-+enum irq_alloc_type {
-+	X86_IRQ_ALLOC_TYPE_IOAPIC = 1,
-+	X86_IRQ_ALLOC_TYPE_HPET,
-+	X86_IRQ_ALLOC_TYPE_MSI,
-+	X86_IRQ_ALLOC_TYPE_MSIX,
-+};
- 
- struct irq_alloc_info {
--	const struct cpumask *mask;	/* CPU mask for vector allocation */
-+	const struct cpumask	*mask;	/* CPU mask for vector allocation */
-+	enum irq_alloc_type	type;
-+	union {
-+		int		unused;
-+#ifdef	CONFIG_HPET_TIMER
-+		struct {
-+			int		hpet_id;
-+			int		hpet_index;
-+			void		*hpet_data;
-+		};
-+#endif
-+#ifdef	CONFIG_PCI_MSI
-+		struct {
-+			struct pci_dev	*msi_dev;
-+			struct msi_desc *msi_desc;
-+		};
-+#endif
-+#ifdef	CONFIG_X86_IO_APIC
-+		struct {
-+			int		ioapic_id;
-+			int		ioapic_pin;
-+			u32		ioapic_trigger : 1;
-+			u32		ioapic_polarity : 1;
-+		};
-+#endif
-+	};
- };
- 
- struct irq_cfg {
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index 230dde9b695e..428b4e6d637c 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -30,6 +30,7 @@ struct irq_chip;
- struct msi_msg;
- struct pci_dev;
- struct irq_cfg;
-+struct irq_alloc_info;
- 
- #ifdef CONFIG_IRQ_REMAP
- 
-@@ -58,6 +59,32 @@ extern bool setup_remapped_irq(int irq,
- 
- void irq_remap_modify_chip_defaults(struct irq_chip *chip);
- 
-+extern struct irq_domain *irq_remapping_get_ir_irq_domain(
-+				struct irq_alloc_info *info);
-+extern struct irq_domain *irq_remapping_get_irq_domain(
-+				struct irq_alloc_info *info);
-+extern int irq_remapping_get_ioapic_entry(struct irq_data *irq_data,
-+					  struct IR_IO_APIC_route_entry *entry);
-+extern int irq_remapping_get_msi_entry(struct irq_data *irq_data,
-+				       struct msi_msg *entry);
-+extern void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p);
-+
-+/*
-+ * Create MSI/MSIx irqdomain for interrupt remapping device, use @parent as
-+ * parent irqdomain.
-+ */
-+static inline struct irq_domain *
-+arch_create_msi_irq_domain(struct irq_domain *parent)
-+{
-+	return NULL;
-+}
-+
-+/* Get parent irqdomain for interrupt remapping irqdomain */
-+static inline struct irq_domain *arch_get_ir_parent_domain(void)
-+{
-+	return x86_vector_domain;
-+}
-+
- #else  /* CONFIG_IRQ_REMAP */
- 
- static inline void setup_irq_remapping_ops(void) { }
-@@ -101,6 +128,32 @@ static inline bool setup_remapped_irq(int irq,
- {
- 	return false;
- }
-+
-+static inline struct irq_domain *
-+irq_remapping_get_ir_irq_domain(struct irq_alloc_info *info)
-+{
-+	return NULL;
-+}
-+
-+static inline struct irq_domain *
-+irq_remapping_get_irq_domain(struct irq_alloc_info *info)
-+{
-+	return NULL;
-+}
-+
-+static inline int irq_remapping_get_ioapic_entry(struct irq_data *irq_data,
-+				struct IR_IO_APIC_route_entry *entry)
-+{
-+	return -ENOSYS;
-+}
-+
-+static inline int irq_remapping_get_msi_entry(struct irq_data *irq_data,
-+					      struct msi_msg *entry)
-+{
-+	return -ENOSYS;
-+}
-+
-+#define	irq_remapping_print_chip	NULL
- #endif /* CONFIG_IRQ_REMAP */
- 
- extern int dmar_alloc_hwirq(void);
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 7dd893ee70be..7ac44a464be0 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -370,7 +370,7 @@ void panic_if_irq_remap(const char *msg)
- 		panic(msg);
- }
- 
--static void ir_ack_apic_edge(struct irq_data *data)
-+void ir_ack_apic_edge(struct irq_data *data)
- {
- 	ack_APIC_irq();
- }
-@@ -381,6 +381,19 @@ static void ir_ack_apic_level(struct irq_data *data)
- 	eoi_ioapic_irq(data->irq, irqd_cfg(data));
- }
- 
-+void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p)
-+{
-+	/*
-+	 * Assume interrupt is remapped if the parent irqdomain isn't the
-+	 * vector domain, which is true for MSI, HPET and IOAPIC on x86
-+	 * platforms.
-+	 */
-+	if (data->domain && data->domain->parent != arch_get_ir_parent_domain())
-+		seq_printf(p, " IR-%s", data->chip->name);
-+	else
-+		seq_printf(p, " %s", data->chip->name);
-+}
-+
- static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
- {
- 	seq_printf(p, " IR-%s", data->chip->name);
-@@ -402,3 +415,66 @@ bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
- 	irq_remap_modify_chip_defaults(chip);
- 	return true;
- }
-+
-+/**
-+ * irq_remapping_get_ir_irq_domain - Get the irqdomain associated the IOMMU
-+ *				     device serving @info
-+ * @info: interrupt allocation information, used to find the IOMMU device
-+ *
-+ * It's used to get parent irqdomain for HPET and IOAPIC domains.
-+ * Returns pointer to IRQ domain, or NULL on failure.
-+ */
-+struct irq_domain *
-+irq_remapping_get_ir_irq_domain(struct irq_alloc_info *info)
-+{
-+	if (!remap_ops || !remap_ops->get_ir_irq_domain)
-+		return NULL;
-+
-+	return remap_ops->get_ir_irq_domain(info);
-+}
-+
-+/**
-+ * irq_remapping_get_irq_domain - Get the irqdomain serving the MSI interrupt
-+ * @info: interrupt allocation information, used to find the IOMMU device
-+ *
-+ * It's used to get irqdomain for MSI/MSIx interrupt allocation.
-+ * Returns pointer to IRQ domain, or NULL on failure.
-+ */
-+struct irq_domain *
-+irq_remapping_get_irq_domain(struct irq_alloc_info *info)
-+{
-+	if (!remap_ops || !remap_ops->get_irq_domain)
-+		return NULL;
-+
-+	return remap_ops->get_irq_domain(info);
-+}
-+
-+/**
-+ * irq_remapping_get_ioapic_entry - Get IOAPIC entry content rewritten by
-+ *				    interrupt remapping driver
-+ * @irq_data: irq_data associated with interrupt remapping irqdomain
-+ * @entry: host returned data
-+ *
-+ * Caller must make sure that the interrupt is remapped.
-+ * Return 0 on success, otherwise return error code
-+ */
-+int irq_remapping_get_ioapic_entry(struct irq_data *irq_data,
-+				   struct IR_IO_APIC_route_entry *entry)
-+{
-+	return remap_ops->get_ioapic_entry(irq_data, entry);
-+}
-+
-+/**
-+ * irq_remapping_get_ioapic_entry - Get MSI data rewritten by interrupt
-+ *				    remapping driver
-+ * @irq_data: irq_data associated with interrupt remapping irqdomain
-+ * @entry: host returned data
-+ *
-+ * Caller must make sure that the interrupt is remapped.
-+ * Return 0 on success, otherwise return error code
-+ */
-+int irq_remapping_get_msi_entry(struct irq_data *irq_data,
-+				struct msi_msg *entry)
-+{
-+	return remap_ops->get_msi_entry(irq_data, entry);
-+}
-diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
-index 90c4dae5a46b..6e46074f06d0 100644
---- a/drivers/iommu/irq_remapping.h
-+++ b/drivers/iommu/irq_remapping.h
-@@ -30,6 +30,8 @@ struct irq_data;
- struct cpumask;
- struct pci_dev;
- struct msi_msg;
-+struct irq_domain;
-+struct irq_alloc_info;
- 
- extern int disable_irq_remap;
- extern int irq_remap_broken;
-@@ -81,11 +83,26 @@ struct irq_remap_ops {
- 
- 	/* Setup interrupt remapping for an HPET MSI */
- 	int (*setup_hpet_msi)(unsigned int, unsigned int);
-+
-+	/* Get the irqdomain associated the IOMMU device */
-+	struct irq_domain *(*get_ir_irq_domain)(struct irq_alloc_info *);
-+
-+	/* Get the MSI irqdomain associated with the IOMMU device */
-+	struct irq_domain *(*get_irq_domain)(struct irq_alloc_info *);
-+
-+	/* Get IOAPIC entry content rewritten by interrupt remapping driver */
-+	int (*get_ioapic_entry)(struct irq_data *,
-+				struct IR_IO_APIC_route_entry *);
-+
-+	/*  Get MSI data rewritten by interrupt remapping driver */
-+	int (*get_msi_entry)(struct irq_data *, struct msi_msg *);
- };
- 
- extern struct irq_remap_ops intel_irq_remap_ops;
- extern struct irq_remap_ops amd_iommu_irq_ops;
- 
-+extern void ir_ack_apic_edge(struct irq_data *data);
-+
- #else  /* CONFIG_IRQ_REMAP */
- 
- #define irq_remapping_enabled 0
 -- 
-1.7.10.4
+Thanks!
+Yijing
 
