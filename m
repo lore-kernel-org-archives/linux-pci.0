@@ -1,39 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:49790 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753880AbaIVNQK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 09:16:10 -0400
-Date: Mon, 22 Sep 2014 06:15:19 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Richard Zhu <r65037@freescale.com>
-Cc: linux-pci-owner@vger.kernel.org, stable@vger.kernel.org,
-	linux-pci@vger.kernel.org, l.stach@pengutronix.de
-Subject: Re: [PATCH RFC 1/2] PCI: imx6: enable pcie on imx6qdl sabresd and
- sabreauto
-Message-ID: <20140922131519.GA30055@kroah.com>
-References: <1411376498-14653-1-git-send-email-r65037@freescale.com>
- <1411376498-14653-2-git-send-email-r65037@freescale.com>
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:53644 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753059AbaIXN0N (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 09:26:13 -0400
+Received: by mail-ig0-f180.google.com with SMTP id a13so6476938igq.7
+        for <linux-pci@vger.kernel.org>; Wed, 24 Sep 2014 06:26:13 -0700 (PDT)
+Date: Wed, 24 Sep 2014 07:26:10 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Minghuan Lian <Minghuan.Lian@freescale.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] PCI: designware: Fix IO resource end address calculation
+Message-ID: <20140924132610.GB13850@google.com>
+References: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
+ <1411482540-31297-2-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411376498-14653-2-git-send-email-r65037@freescale.com>
+In-Reply-To: <1411482540-31297-2-git-send-email-Minghuan.Lian@freescale.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 22, 2014 at 05:01:37PM +0800, Richard Zhu wrote:
-> - enable pcie support on imx6qdl sabresd and asbreauto boards.
-> - sabresd board has the pcie power on and reset gpios, but
-> sabreauto doesn't have these two gpios.
+On Tue, Sep 23, 2014 at 10:28:57PM +0800, Minghuan Lian wrote:
+> End address should be equal to start_addr + size - 1.
+> The patch fixes PCI IO resource end address calculation.
 > 
-> Signed-off-by: Richard Zhu <r65037@freescale.com>
+> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+
+Applied to pci/host-designware with Mohit's ack for v3.18, thanks!
+
 > ---
->  arch/arm/boot/dts/imx6qdl-sabreauto.dtsi | 4 ++++
->  arch/arm/boot/dts/imx6qdl-sabresd.dtsi   | 2 ++
->  2 files changed, 6 insertions(+)
-
-<formletter>
-
-This is not the correct way to submit patches for inclusion in the
-stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
-for how to do this properly.
-
-</formletter>
+>  drivers/pci/host/pcie-designware.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 0f3cb2a..c19184f7 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -459,7 +459,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>  			pp->io.end = min_t(resource_size_t,
+>  					   IO_SPACE_LIMIT,
+>  					   range.pci_addr + range.size
+> -					   + global_io_offset);
+> +					   + global_io_offset - 1);
+>  			pp->io_size = resource_size(&pp->io);
+>  			pp->io_bus_addr = range.pci_addr;
+>  			pp->io_base = range.cpu_addr;
+> -- 
+> 1.9.1
+> 
