@@ -1,67 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from dub004-omc4s6.hotmail.com ([157.55.2.81]:55835 "EHLO
-	DUB004-OMC4S6.hotmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750810AbaIDPDJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 11:03:09 -0400
-Message-ID: <DUB130-DS10845119A34A53DA8A6430DBC50@phx.gbl>
-From: "Robert" <RJSmith92@live.com>
-To: <linux-pci@vger.kernel.org>
-Subject: PCIe root bridge and memory ranges.
-Date: Thu, 4 Sep 2014 15:57:47 +0100
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Thu, 25 Sep 2014 09:34:36 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
+	Bharat.Bhushan@freescale.com, x86@kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 12/22] MIPS/Octeon/MSI: Use MSI chip framework to
+ configure MSI/MSI-X irq
+Message-ID: <20140925073435.GJ12423@ulmo>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+ <1411614872-4009-13-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="UTF-8";
-	reply-type=original
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="rwgQ89ZNnFUwFHTC"
+In-Reply-To: <1411614872-4009-13-git-send-email-wangyijing@huawei.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello All,
 
-I am having trouble understanding what memory ranges go through the PCIe 
-root bridge on a Haswell CPU (what I have in my system) and similarly on 
-other modern CPUs. From what I can gather from sources online (including 
-many datasheets) is that the PCIE root complex contains a PCI host bridge, 
-which produces 1 PCI root bridge (ACPI\PNP0A08). This root bridge then 
-forwards certain memory ranges onto the PCI/PCIe bus.
+--rwgQ89ZNnFUwFHTC
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-First of all if I take something like PAM registers, when something is 
-written to this address the PAM register forwards it to DMI (if set to do so 
-E.G. 0xD0000), so this transaction never goes through the PCI root bridge? 
-What's confusing is if I look at the DSDT ACPI table and look at the 
-ACPI\PNP0A08 device, it says that the PAM registers ranges go through it. I 
-guess this is just for an OS purpose as it doesn’t need to know what exact 
-ranges go through the root bridge? I'm not entirely sure on that and if 
-anyone could clarify it would be appreciated.
+On Thu, Sep 25, 2014 at 11:14:22AM +0800, Yijing Wang wrote:
+[...]
+> diff --git a/arch/mips/pci/msi-octeon.c b/arch/mips/pci/msi-octeon.c
+[...]
+> @@ -132,12 +132,12 @@ msi_irq_allocated:
+>  	/* Make sure the search for available interrupts didn't fail */
+>  	if (irq >=3D 64) {
+>  		if (request_private_bits) {
+> -			pr_err("arch_setup_msi_irq: Unable to find %d free interrupts, trying=
+ just one",
+> +			pr_err("octeon_setup_msi_irq: Unable to find %d free interrupts, tryi=
+ng just one",
+>  			       1 << request_private_bits);
 
-As well as the PAM register ranges for the root bridge it also has the PCIe 
-device memory range, which in my case is 0xC0000000 – 0xFEAFFFFF, now does 
-that mean that anything above that range isn't going through the PCI root 
-bridge, or is it just like that so an OS doesn't try map a device in that 
-region. If I look at the Haswell datasheet it has small regions in that area 
-between things like APIC and BIOS that reach the DMI.
+Perhaps while at it make this (and other similar changes in this patch):
 
-It seems as if the PCI root bridge is using some sort of subtractive 
-decoding that picks up whatever isn't sent to DRAM etc. and to make it easy 
-for an OS the BIOS gives it a block of address space.
+	pr_err("%s(): Unable to ...", __func__, ...);
 
-Finally, I was on a forum related to external GPUs, and some Windows users 
-didn’t have enough space to map the device below 4GB. To resolve this they 
-manually edited the DSDT table and added another entry above the 4GB 
-barrier, now Windows mapped the GPU in the 64bit space. Now I presume 
-changing the entry in the DSDT table didn't make any difference to how the 
-hardware was set up, it just told the OS that the root bridge will in fact 
-pick up this address range and therefore it knew it could map it there.
+So that it becomes more resilient against this kind of rename?
 
-So am I write in thinking the ranges in the ACPI table are for the OSs 
-purpose, and don't actually have to accurately represent what the hardware 
-does.
+>  			request_private_bits =3D 0;
+>  			goto try_only_one;
+>  		} else
+> -			panic("arch_setup_msi_irq: Unable to find a free MSI interrupt");
+> +			panic("octeon_setup_msi_irq: Unable to find a free MSI interrupt");
 
-..and does anyone know what ranges do actually go through a single PCIe root 
-bridge on a modern system?
+> @@ -210,14 +210,13 @@ int arch_setup_msi_irqs(struct pci_dev *dev, int nv=
+ec, int type)
+> =20
+>  	return 0;
+>  }
+> -
 
-If anyone could help it would be greatly appreciated :)
+This...
 
-Kind Regards,
-Robert 
+> @@ -240,7 +239,7 @@ void arch_teardown_msi_irq(unsigned int irq)
+>  	 */
+>  	number_irqs =3D 0;
+>  	while ((irq0 + number_irqs < 64) &&
+> -	       (msi_multiple_irq_bitmask[index]
+> +		(msi_multiple_irq_bitmask[index]
 
+=2E.. and this seem like unrelated whitespace changes.
+
+>  		& (1ull << (irq0 + number_irqs))))
+>  		number_irqs++;
+>  	number_irqs++;
+> @@ -249,8 +248,8 @@ void arch_teardown_msi_irq(unsigned int irq)
+>  	/* Shift the mask to the correct bit location */
+>  	bitmask <<=3D irq0;
+>  	if ((msi_free_irq_bitmask[index] & bitmask) !=3D bitmask)
+> -		panic("arch_teardown_msi_irq: Attempted to teardown MSI "
+> -		      "interrupt (%d) not in use", irq);
+> +		panic("octeon_teardown_msi_irq: Attempted to teardown MSI "
+> +			"interrupt (%d) not in use", irq);
+
+And the second line here also needlessly changes the indentation.
+
+Thierry
+
+--rwgQ89ZNnFUwFHTC
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJUI8WLAAoJEN0jrNd/PrOhp2MQAK6S7hsneW6O97w/t1chjlGR
+ug1JLAxeP84A0Vj4I6KwfrHjux8rDqoByI5bDhH+ywcRQuf90Dx9+L9QEfWlzkcC
+K1qT+twZDUqVFhCIJtuEtNVJbEXb0NlPK74W/6cUubFdAKbY1+MZe66Z0BZlBl36
+bjxEyTh6uZkemh8PLwP45mJQCTD/d5/lNGDCrgzKgurE1HIHXV1r0FoD9zLJZpfA
+UATpp5rQYfePlynE1mCT+G0QXcfo+zf8kp49jLxeciX5QZYs8DbZ2IwbhG4ov2je
+p8SHV5T+c8D1+Q7UjNbXpDGHz12Ctpby/bLd3+FGsmeIZJbE4o5NcE5pChZfI52v
+Rgl0wLOlswsM2xoSGdhA1x51QEHqFxShBf/+FwbxLA7shNWELd6gRpv9mcYSv6oy
+MgALA5tV5r18NZyBm+SsvwUrgAF7e1ndIU/UYhAH1lIz3CMtqTnZ2AZIpXoJeKLo
+rtzWB2MThJnnZXUpW3Umj3UWoZkcAy6zQSWBGV40hC+t3dkr1US9bOgGIrO6huyy
+qTqNG+A20dRO85W7LoslDg5CO401jS8JRiHbYQW9g+QhHkWLpROgcrCoK1dz+Q2B
+QjaLp2fjuM7wyyYXRLcQo68i7Y9AUv2R+k1fidvlfuWXfvzbeK6x0BHSx8nhBec6
+SU2aBh+SOaTeNEFZjRFv
+=dRXg
+-----END PGP SIGNATURE-----
+
+--rwgQ89ZNnFUwFHTC--
