@@ -1,107 +1,134 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Mon, 22 Sep 2014 18:55:06 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
 	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v11 08/10] OF: PCI: Add support for parsing PCI host
- bridge resources from DT
-Message-ID: <20140922175505.GH1994@e106497-lin.cambridge.arm.com>
-References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
- <1411003825-21521-9-git-send-email-Liviu.Dudau@arm.com>
- <20140919210610.GI19374@google.com>
- <541CCA36.8010606@gmail.com>
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2 18/22] arm/iop13xx/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+Date: Thu, 25 Sep 2014 11:14:28 +0800
+Message-ID: <1411614872-4009-19-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <541CCA36.8010606@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 20, 2014 at 01:28:38AM +0100, Rob Herring wrote:
-> On 09/19/2014 04:06 PM, Bjorn Helgaas wrote:
-> > On Thu, Sep 18, 2014 at 02:30:23AM +0100, Liviu Dudau wrote:
-> >> Provide a function to parse the PCI DT ranges that can be used to
-> >> create a pci_host_bridge structure together with its associated
-> >> bus.
-> >>
-> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >> Cc: Arnd Bergmann <arnd@arndb.de>
-> >> Cc: Grant Likely <grant.likely@linaro.org>
-> >> Cc: Rob Herring <robh+dt@kernel.org>
-> >> Cc: Catalin Marinas <catalin.marinas@arm.com>
-> >> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> >> ---
-> 
-> [...]
-> 
-> >> +int of_pci_get_host_bridge_resources(struct device_node *dev,
-> >> +			unsigned char busno, unsigned char bus_max,
-> >> +			struct list_head *resources, resource_size_t *io_base)
-> >> +{
-> >> +	struct resource *res;
-> >> +	struct resource *bus_range;
-> >> +	struct of_pci_range range;
-> >> +	struct of_pci_range_parser parser;
-> >> +	char range_type[4];
-> >> +	int err;
-> >> +
-> >> +	if (!io_base)
-> >> +		return -EINVAL;
-> >> +	*io_base = OF_BAD_ADDR;
-> >> +
-> >> +	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
-> 
-> This function does a lot of kalloc's but there is not an easy way to
-> undo those allocations. Hot unplug of a host bridge or probe error
-> handling would leak memory.
-> 
-> You could pass in struct device and use the devm_ variant (also
-> addressing Bjorn's comment), but not having an uninit/remove function
-> make what clean-up drivers have to do error prone. For example, on
-> uninit a driver needs to call pci_free_resource_list.
+Use MSI chip framework instead of arch MSI functions to configure
+MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
 
-If the function fails to parse the ranges for whatever reason it will
-call pci_free_resource_list on the resources that have been added already
-and it will clean up. If it is successful, then it is the job of the caller
-to free the list, as mentioned in the comment associated with the function.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/arm/mach-iop13xx/include/mach/pci.h |    2 ++
+ arch/arm/mach-iop13xx/iq81340mc.c        |    1 +
+ arch/arm/mach-iop13xx/iq81340sc.c        |    1 +
+ arch/arm/mach-iop13xx/msi.c              |    9 +++++++--
+ arch/arm/mach-iop13xx/pci.c              |    6 ++++++
+ 5 files changed, 17 insertions(+), 2 deletions(-)
 
-The reason why I am reluctant to use devm_ here is that the ranges are only
-parsed here, no filtering is applied. Architectures and/or host bridge
-drivers can/could impose additional restrictions to the list before passing
-it to pci_scan_root_bus() for example.
-
-Best regards,
-Liviu
-
-> 
-> Rob
-> 
-
+diff --git a/arch/arm/mach-iop13xx/include/mach/pci.h b/arch/arm/mach-iop13xx/include/mach/pci.h
+index 59f42b5..7a073cb 100644
+--- a/arch/arm/mach-iop13xx/include/mach/pci.h
++++ b/arch/arm/mach-iop13xx/include/mach/pci.h
+@@ -10,6 +10,8 @@ struct pci_bus *iop13xx_scan_bus(int nr, struct pci_sys_data *);
+ void iop13xx_atu_select(struct hw_pci *plat_pci);
+ void iop13xx_pci_init(void);
+ void iop13xx_map_pci_memory(void);
++void iop13xx_add_bus(struct pci_bus *bus);
++extern struct msi_chip iop13xx_msi_chip;
+ 
+ #define IOP_PCI_STATUS_ERROR (PCI_STATUS_PARITY |	     \
+ 			       PCI_STATUS_SIG_TARGET_ABORT | \
+diff --git a/arch/arm/mach-iop13xx/iq81340mc.c b/arch/arm/mach-iop13xx/iq81340mc.c
+index 9cd07d3..19d47cb 100644
+--- a/arch/arm/mach-iop13xx/iq81340mc.c
++++ b/arch/arm/mach-iop13xx/iq81340mc.c
+@@ -59,6 +59,7 @@ static struct hw_pci iq81340mc_pci __initdata = {
+ 	.map_irq	= iq81340mc_pcix_map_irq,
+ 	.scan		= iop13xx_scan_bus,
+ 	.preinit	= iop13xx_pci_init,
++	.add_bus	= iop13xx_add_bus;
+ };
+ 
+ static int __init iq81340mc_pci_init(void)
+diff --git a/arch/arm/mach-iop13xx/iq81340sc.c b/arch/arm/mach-iop13xx/iq81340sc.c
+index b3ec11c..4d56993 100644
+--- a/arch/arm/mach-iop13xx/iq81340sc.c
++++ b/arch/arm/mach-iop13xx/iq81340sc.c
+@@ -61,6 +61,7 @@ static struct hw_pci iq81340sc_pci __initdata = {
+ 	.scan		= iop13xx_scan_bus,
+ 	.map_irq	= iq81340sc_atux_map_irq,
+ 	.preinit	= iop13xx_pci_init
++	.add_bus	= iop13xx_add_bus;
+ };
+ 
+ static int __init iq81340sc_pci_init(void)
+diff --git a/arch/arm/mach-iop13xx/msi.c b/arch/arm/mach-iop13xx/msi.c
+index e7730cf..1a8cb2f 100644
+--- a/arch/arm/mach-iop13xx/msi.c
++++ b/arch/arm/mach-iop13xx/msi.c
+@@ -132,7 +132,7 @@ static struct irq_chip iop13xx_msi_chip = {
+ 	.irq_unmask = unmask_msi_irq,
+ };
+ 
+-int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
++static int iop13xx_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ {
+ 	int id, irq = irq_alloc_desc_from(IRQ_IOP13XX_MSI_0, -1);
+ 	struct msi_msg msg;
+@@ -159,7 +159,12 @@ int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
+ 	return 0;
+ }
+ 
+-void arch_teardown_msi_irq(unsigned int irq)
++static void iop13xx_teardown_msi_irq(unsigned int irq)
+ {
+ 	irq_free_desc(irq);
+ }
++
++struct msi_chip iop13xx_chip = {
++	.setup_irq = iop13xx_setup_msi_irq,
++	.teardown_irq = iop13xx_teardown_msi_irq,
++};
+diff --git a/arch/arm/mach-iop13xx/pci.c b/arch/arm/mach-iop13xx/pci.c
+index 9082b84..f498800 100644
+--- a/arch/arm/mach-iop13xx/pci.c
++++ b/arch/arm/mach-iop13xx/pci.c
+@@ -962,6 +962,12 @@ void __init iop13xx_atu_select(struct hw_pci *plat_pci)
+ 	}
+ }
+ 
++void iop13xx_add_bus(struct pci_bus *bus)
++{
++	if (IS_ENABLED(CONFIG_PCI_MSI)) 
++		bus->msi = &iop13xx_msi_chip;
++}
++
+ void __init iop13xx_pci_init(void)
+ {
+ 	/* clear pre-existing south bridge errors */
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.7.1
 
