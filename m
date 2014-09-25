@@ -1,90 +1,64 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Thu, 25 Sep 2014 12:38:34 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Yijing Wang <wangyijing@huawei.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
+	Bharat.Bhushan@freescale.com, x86@kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC v1 25/28] x86, irq: Change functions only used in vector.c as static
-Date: Fri, 26 Sep 2014 22:57:55 +0800
-Message-Id: <1411743478-31435-26-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 06/22] PCI/MSI: Introduce weak arch_find_msi_chip()
+ to find MSI chip
+In-Reply-To: <1411614872-4009-7-git-send-email-wangyijing@huawei.com>
+Message-ID: <alpine.DEB.2.10.1409251220570.4604@nanos>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com> <1411614872-4009-7-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function {assign|clear}_irq_vector() and apic_retrigger_irq() are only
-used in file vector.c, so change them as static.
+On Thu, 25 Sep 2014, Yijing Wang wrote:
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/hw_irq.h |    3 ---
- arch/x86/kernel/apic/vector.c |    7 ++++---
- 2 files changed, 4 insertions(+), 6 deletions(-)
+> Introduce weak arch_find_msi_chip() to find the match msi_chip.
+> Currently, MSI chip associates pci bus to msi_chip. Because in
+> ARM platform, there may be more than one MSI controller in system.
+> Associate pci bus to msi_chip help pci device to find the match
+> msi_chip and setup MSI/MSI-X irq correctly. But in other platform,
+> like in x86. we only need one MSI chip, because all device use
+> the same MSI address/data and irq etc. So it's no need to associate
+> pci bus to MSI chip, just use a arch function, arch_find_msi_chip()
+> to return the MSI chip for simplicity. The default weak
+> arch_find_msi_chip() used in ARM platform, find the MSI chip
+> by pci bus.
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 9f8436fb3770..fdf8300dcc29 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -180,13 +180,10 @@ extern struct irq_cfg *irq_cfg(unsigned int irq);
- extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
- extern void lock_vector_lock(void);
- extern void unlock_vector_lock(void);
--extern int assign_irq_vector(int, struct irq_cfg *, const struct cpumask *);
--extern void clear_irq_vector(int irq, struct irq_cfg *cfg);
- extern void setup_vector_irq(int cpu);
- extern void send_cleanup_vector(struct irq_cfg *);
- extern void irq_complete_move(struct irq_cfg *cfg);
- 
--extern int apic_retrigger_irq(struct irq_data *data);
- extern void apic_ack_edge(struct irq_data *data);
- extern int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 			     unsigned int *dest_id);
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index f21820622edf..ec2b991884f2 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -185,7 +185,8 @@ next:
- 	return err;
- }
- 
--int assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
-+static int assign_irq_vector(int irq, struct irq_cfg *cfg,
-+			     const struct cpumask *mask)
- {
- 	int err;
- 	unsigned long flags;
-@@ -196,7 +197,7 @@ int assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
- 	return err;
- }
- 
--void clear_irq_vector(int irq, struct irq_cfg *cfg)
-+static void clear_irq_vector(int irq, struct irq_cfg *cfg)
- {
- 	int cpu, vector;
- 	unsigned long flags;
-@@ -435,7 +436,7 @@ void setup_vector_irq(int cpu)
- 	__setup_vector_irq(cpu);
- }
- 
--int apic_retrigger_irq(struct irq_data *data)
-+static int apic_retrigger_irq(struct irq_data *data)
- {
- 	struct irq_cfg *cfg = irqd_cfg(data);
- 	unsigned long flags;
--- 
-1.7.10.4
+This is really backwards. On one hand you try to get rid of the weak
+arch functions zoo and then you invent new ones for no good
+reason. Why can't x86 store the chip in the pci bus?
 
+Looking deeper, I'm questioning the whole notion of different
+msi_chips. Are this really different MSI controllers with a different
+feature set or are this defacto multiple instances of the same
+controller which just need a different data set?
+
+Thanks,
+
+	tglx
