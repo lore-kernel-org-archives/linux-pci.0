@@ -1,90 +1,87 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Thu, 25 Sep 2014 09:15:38 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
+	Bharat.Bhushan@freescale.com, x86@kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [Patch v4 00/16] Enable support of IOAPIC hotplug on x86 platforms
-Date: Mon, 08 Sep 2014 00:05:42 +0200
-Message-ID: <1786205.ifzMNBRd6l@vostro.rjw.lan>
-In-Reply-To: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com>
+	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 01/22] PCI/MSI: Clean up struct msi_chip argument
+Message-ID: <20140925071536.GG12423@ulmo>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+ <1411614872-4009-2-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="EDJsL2R9iCFAt7IV"
+In-Reply-To: <1411614872-4009-2-git-send-email-wangyijing@huawei.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, August 28, 2014 10:22:25 AM Jiang Liu wrote:
-> This patch set enhances IOAPIC core and ACPI drivers to support IOAPIC
-> hotplug on x86 platforms. It's based on latest mainstream kernel at
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
-> 
-> You may pull it from 
-> https://github.com/jiangliu/linux.git ioapic/hotplug_v4
-> 
-> We have pick up several patches from Yinghai's original IOAPIC hotplug
-> patch set and reimplemented IOAPIC driver as an ACPI driver instead of
-> a PCI driver.
-> 
-> It has been tested on a 4-socket Intel SDV with socket hot-addition
-> capability. Any suggestions are welcomed!
-> 
-> Patch 1-5 are bugfixes and enhancements to ACPI subsystem
-> Patch 6-14 enhances IOAPIC core to support IOAPIC hotplug
-> Patch 15 killes PCI IOAPIC driver
-> Patch 16 reimplements ACPI IOAPIC driver and enables IOAPIC hotplug
-> 
-> V3->V4:
-> 1) Fix a bug in manage IOAPIC reference count
-> 2) Rebase to v3.17-rc2
-> 3) Refine commit messages
-> V2->V3:
-> 1) Refine ACPI resource walk functions for PCI root bus and IOAPIC
-> 2) Improve commit messages
-> 3) Reorder patch order for better maintenence
-> 
-> Jiang Liu (13):
->   x86, PCI, ACPI: Kill private function resource_to_addr() in
->     arch/x86/pci/acpi.c
->   ACPI: Correct return value of acpi_dev_resource_address_space()
->   ACPI: Fix minor syntax issues in processor_core.c
->   ACPI: Rename processor_core.c as apic_id.c
->   x86, irq: Remove __init marker for functions will be used by IOAPIC
->     hotplug
->   x86, irq: Keep balance of IOAPIC pin reference count
->   x86, irq: Refine mp_register_ioapic() to prepare for IOAPIC hotplug
->   x86, irq, ACPI: Introduce a rwsem to protect IOAPIC operations from
->     hotplug
->   x86, irq, ACPI: Implement interface to support ACPI based IOAPIC
->     hot-addition
->   x86, irq, ACPI: Implement interfaces to support ACPI based IOAPIC
->     hot-removal
->   x86, irq: Introduce helper to check whether an IOAPIC has been
->     registered
->   PCI: Remove PCI ioapic driver
->   x86, irq, ACPI: Implement ACPI driver to support IOAPIC hotplug
-> 
-> Yinghai Lu (3):
->   ACPI: Add interfaces to parse IOAPIC ID for IOAPIC hotplug
->   x86, irq: Split out alloc_ioapic_save_registers()
->   x86, irq: Prefer assigned ID in APIC ID register for x86_64
 
-I don't see any major problems in this patchset, but I'd prefer it to
-go through the tip tree if possible.
+--EDJsL2R9iCFAt7IV
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+On Thu, Sep 25, 2014 at 11:14:11AM +0800, Yijing Wang wrote:
+> Msi_chip functions setup_irq/teardown_irq rarely use msi_chip
+> argument.
+
+That's not true. Out of the four drivers that you modify two use the
+parameter. And the two that don't probably should be using it too.
+
+50% is not "rarely". =3D)
+
+>           We can look up msi_chip pointer by the device pointer
+> or irq number, so clean up msi_chip argument.
+
+I don't like this particular change. The idea was to keep the API object
+oriented so that drivers wouldn't have to know where to get the MSI chip
+=66rom. It also makes it more resilient against code reorganizations since
+the core code is the only place that needs to know where to get the chip
+=66rom.
+
+Thierry
+
+--EDJsL2R9iCFAt7IV
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJUI8EYAAoJEN0jrNd/PrOhKe8P+wRzEsusQS8lMmL8zyqvg5wy
+x0Q4+eSI5aEkUEQz6Mtcld6eIwACphFOHeoDrAFauuxrjVqWslHdYAIAKbYoxG0e
+xV9PJoc5PY24v4vnR5BvWEHxBfzfJ8QmFlDZGRvy3lqTPhTBOzLIbNUMO1gaoH1Q
+MIzSjgl631075wZns41KNNx1TjCaXNeDwjkAyyX4bjJ7SL6ymrsxGo/zhCRCpZSk
+2ks9AFoqFQoIOFeziuAW7WAx8BM9ah1ba5tc3oVZ6LC3JHrvoHZ5KCjITV75Geqb
+dFzQh7Rx0yFdXVmNOX+O6XtFVvb7hNFELV1SAzQQXWl0Hyid6Dp0ZShKLSumNdG8
+WvJFtUil25Prid9JVvpq+PrRGlbOucv0U+wi2cbdrE9/7UwtYoxAHNj/aTXdWwIv
+d6ble8v0UT7l5Sk8QIFMI3VbatPqL/i+Mz8NijIKaMRug9/XmXZIN0Q05JhlbJ2b
+/AWyYKLGAwYMrZcDU2v8CajO/NGUQ9D+mkqcN0NDsxmvP5woL6GC2tQzZABaAipF
+LlbM5T6PfjxRfOvYNAIOJnttoirlQ4UI8CjVEeotPrchQalN7ZESvaHK0z2/Wrv1
+kSvUiqTvOPtRaQn4rIs5MTi7tw5NBsG2MyWfy90WkITpn5vEYrX4JQITTUpa/x9B
+IKT68Y/8ZFK3ksbjHtIe
+=LSxe
+-----END PGP SIGNATURE-----
+
+--EDJsL2R9iCFAt7IV--
