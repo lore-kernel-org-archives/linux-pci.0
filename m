@@ -1,95 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v7 0/4] APM X-Gene PCIe host controller
-Date: Wed, 10 Sep 2014 16:20:16 -0700
-Message-Id: <1410391220-4866-1-git-send-email-tinamdar@apm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:62656 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750774AbaIYGum (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Sep 2014 02:50:42 -0400
+MIME-Version: 1.0
+In-Reply-To: <CA+sq2CdKkuOpqwPZdAVT90Xkf_K97ArcUUJjv2f9v4WTDmwXxA@mail.gmail.com>
+References: <CANwwZzUvLHVGshgqrf_w4Pz8wP1H95YAXWLpWFTLD1hWKE_voA@mail.gmail.com>
+	<CA+sq2CdKkuOpqwPZdAVT90Xkf_K97ArcUUJjv2f9v4WTDmwXxA@mail.gmail.com>
+Date: Thu, 25 Sep 2014 12:20:40 +0530
+Message-ID: <CANwwZzVrB+OndT4HSwe7eje0dMJqBCZaCCemh4EdPB=3SDtRkw@mail.gmail.com>
+Subject: Re: Can a PF driver access the VF config space, BAR(MMIO) etc?
+From: Bob Biloxi <iambobbiloxi@gmail.com>
+To: Sunil Kovvuri <sunil.kovvuri@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds support for AppliedMicro X-Gene PCIe host controller. The
-driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
-cards.
+Hi,
 
-X-Gene PCIe controller driver has depedency on the pcie arm64 arch support.
-Liviu Dudau from ARM has sent a patch set for pcie arm64 arch support and
-support for creating generic pcie bridge from device tree. Liviu's patches
-are available here
-https://lkml.org/lkml/2014/9/8/333
-
-If someone wishes to test PCIe on X-Gene with this patch set, above mentioned
-patches from Liviu must be applied before the patches in this patch set. Also
-please use latest xgene u-boot firmware.
-
-changes since V6:
-1. Port driver to changed interface as per Liviu's v10 series.
-
-changes since V5:
-1. Port driver to changed interface of 'of_create_pci_host_bridge'
-2. Fix the prefetch bit setting
-3. Removed bunch of register programming which is already done by firmware
-
-changes since V4:
-1. fix section mismatch warnings
-2. fix the patch description
-3. fix indentation
-4. update read/write cfg functions by passing both addr and offset.
-5. use 'time_before' for timeout.
-6. remove unnecessary 'IS_ERR_OR_NULL'. Keep 'IS_ERR' for 'clk_get'
-7. remove BUG_ON for pci_ioremap_io.
-
-changes since V3:
-1. remove 'struct hw_pci' and supporting ops in hw_pci
-2. add code to create the host bridge from dts
-3. add code to scan the the host bridge
-4. modify outbound windows setup function to get resource information from
-   'bridge->windows'
-5. add compatible string in pcie dts node with current X-Gene SOC name.
-
-changes since V2:
-1. redefined each PCI port in different PCI domain correctly.
-2. removed setup_lane and setup_link functions from driver.
-3. removed scan_bus wrapper and set_primary_bus hack.
-4. added pci_ioremap_io for io resources.
-
-changes since V1:
-1. added PCI domain support
-2. reading cpu and pci addresses from device tree to configure regions.
-3. got rid of unnecessary wrappers for readl and writel.
-4. got rid of endpoint configuration code.
-5. added 'dma-ranges' property support to read inbound region configuration.
-6. renamed host driver file to 'pci-xgene.c' from 'pcie-xgene.c'
-7. dropped 'clock-names' property from bindings
-8. added comments whereever requested.
+Thanks so much for the quick reply! This is really helpful.
+I will try to do the same and would get back if i face any difficulties.
 
 
-Tanmay Inamdar (4):
-  pci:host: APM X-Gene PCIe host controller driver
-  arm64: dts: APM X-Gene PCIe device tree nodes
-  dt-bindings: pci: xgene pcie device tree bindings
-  MAINTAINERS: entry for APM X-Gene PCIe host driver
+Thanks again!
 
- .../devicetree/bindings/pci/xgene-pci.txt          |  55 ++
- MAINTAINERS                                        |   8 +
- arch/arm64/boot/dts/apm-mustang.dts                |   8 +
- arch/arm64/boot/dts/apm-storm.dtsi                 | 160 +++++
- drivers/pci/host/Kconfig                           |  10 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-xgene.c                       | 647 +++++++++++++++++++++
- 7 files changed, 889 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
- create mode 100644 drivers/pci/host/pci-xgene.c
+Best Regards,
+Bob
 
--- 
-1.9.1
-
+On Wed, Sep 24, 2014 at 11:12 PM, Sunil Kovvuri <sunil.kovvuri@gmail.com> wrote:
+> If you anyway want to simulate VF functionality in PF driver itself,
+> i am not sure why do you need to access VF's config space from PF.
+>
+> FYI, VF's BAR(MMIO) are not used, MMIO regions are carved using
+> VF BARs in PF's SRIOV config space.
+>
+> VFx BAR0 = PF SRIOV BAR0 + BAR_SIZE * x (VF_NUMBER);
+>
+> For accessing VF's MMIO regions you can try mapping
+> PF's pci_dev->resource[PCI_IOV_RESOURCES] and using above formula
+> to get exact MMIO base for corresponding VF.
+>
+> Regards,
+> Sunil.
+>
+> On Wed, Sep 24, 2014 at 10:10 PM, Bob Biloxi <iambobbiloxi@gmail.com> wrote:
+>> Hi,
+>>
+>> I am new to writing pci sriov drivers. So i could use your help and
+>> expertise here....
+>>
+>> As I understand once sriov is enabled, the PF driver can access the
+>> PF(Physical Function) configuration space, BAR(MMIO) etc and the VF
+>> driver can access the VF(Virtual Function) configuration space,
+>> BAR(MMIO)...
+>>
+>> Is it possible for a PF driver to access the VF config space, BAR(MMIO)?
+>> If yes, can you please point me as to what needs to be done in order
+>> to do it(existing driver sources will be really helpful).
+>>
+>> Now as to why this requirement is if the PF driver is ready and the VF
+>> driver is still under development, and I want to simulate the VF
+>> functionality from PF itself.
+>>
+>> It would be of immense help to me if anyone can help me understand my
+>> aforementioned query.
+>>
+>>
+>> Thanks a lot!!!
+>>
+>>
+>> Best Regards,
+>> Bob
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
