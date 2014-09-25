@@ -1,266 +1,203 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0146.outbound.protection.outlook.com ([207.46.100.146]:55764
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750940AbaIXHJg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Sep 2014 03:09:36 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	"festevam@gmail.com" <festevam@gmail.com>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>
-Subject: RE: [PATCH v2 5/5] PCI: imx6: add imx6sx pcie support
-Date: Wed, 24 Sep 2014 07:09:33 +0000
-Message-ID: <6300241fd29146f78a46c40e2232c8aa@BY1PR0301MB0855.namprd03.prod.outlook.com>
-References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
-	 <1411445498-20250-6-git-send-email-r65037@freescale.com>
- <1411470006.3256.13.camel@pengutronix.de>
-In-Reply-To: <1411470006.3256.13.camel@pengutronix.de>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2 01/22] PCI/MSI: Clean up struct msi_chip argument
+Date: Thu, 25 Sep 2014 11:14:11 +0800
+Message-ID: <1411614872-4009-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEx1Y2FzIFN0YWNoIFttYWls
-dG86bC5zdGFjaEBwZW5ndXRyb25peC5kZV0NCj4gU2VudDogVHVlc2RheSwgU2VwdGVtYmVyIDIz
-LCAyMDE0IDc6MDAgUE0NCj4gVG86IFpodSBSaWNoYXJkLVI2NTAzNw0KPiBDYzogbGludXgtcGNp
-LW93bmVyQHZnZXIua2VybmVsLm9yZzsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgR3VvIFNo
-YXduLQ0KPiBSNjUwNzM7IGZlc3RldmFtQGdtYWlsLmNvbTsgdGhhcnZleUBnYXRld29ya3MuY29t
-DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjIgNS81XSBQQ0k6IGlteDY6IGFkZCBpbXg2c3ggcGNp
-ZSBzdXBwb3J0DQo+IA0KPiBBbSBEaWVuc3RhZywgZGVuIDIzLjA5LjIwMTQsIDEyOjExICswODAw
-IHNjaHJpZWIgUmljaGFyZCBaaHU6DQo+ID4gLSBpbXg2c3ggcGNpZSBoYXMgaXRzIG93biBzdGFu
-ZGFsb25lIHBjaWUgcG93ZXIgc3VwcGx5Lg0KPiA+IEluIG9yZGVyIHRvIHR1cm4gb24gdGhlIGlt
-eDZzeCBwY2llIHBvd2VyIGR1cmluZyBpbml0aWFsaXphdGlvbi4gQWRkDQo+ID4gdGhlIHBjaWUg
-cmVndWxhdG9yIGFuZCB0aGUgZ3BjIHJlZ21hcCBpbnRvIHRoZSBpbXg2c3ggcGNpZSBzdHJ1Y3R1
-cmUuDQo+ID4gLSBpbXg2c3ggcGNpZSBoYXMgdGhlIG5ldyBhZGRlZCByZXNldCBtZWNoYW5pc20s
-IGFkZCB0aGUgcmVzZXQNCj4gPiBvcGVyYXRpb25zIGludG8gdGhlIGluaXRpYWxpemF0aW9uLg0K
-PiA+IC0gUmVnaXN0ZXIgb25lIFBNIGNhbGwtYmFjaywgZW50ZXIvZXhpdCBMMiBzdGF0ZSBvZiB0
-aGUgQVNQTSBkdXJpbmcNCj4gPiBzeXN0ZW0gc3VzcGVuZC9yZXN1bWUuDQo+ID4NCj4gPiBTaWdu
-ZWQtb2ZmLWJ5OiBSaWNoYXJkIFpodSA8cjY1MDM3QGZyZWVzY2FsZS5jb20+DQo+ID4gLS0tDQo+
-ID4gIGRyaXZlcnMvcGNpL2hvc3QvcGNpLWlteDYuYyB8IDE2NA0KPiA+ICsrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tDQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCAxNDYg
-aW5zZXJ0aW9ucygrKSwgMTggZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJp
-dmVycy9wY2kvaG9zdC9wY2ktaW14Ni5jIGIvZHJpdmVycy9wY2kvaG9zdC9wY2ktaW14Ni5jDQo+
-ID4gaW5kZXggYmM0MjIyYi4uOTllY2I1ZCAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9o
-b3N0L3BjaS1pbXg2LmMNCj4gPiArKysgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaS1pbXg2LmMNCj4g
-PiBAQCAtMTgsMTIgKzE4LDE2IEBADQo+ID4gICNpbmNsdWRlIDxsaW51eC9tZmQvc3lzY29uLmg+
-DQo+ID4gICNpbmNsdWRlIDxsaW51eC9tZmQvc3lzY29uL2lteDZxLWlvbXV4Yy1ncHIuaD4NCj4g
-PiAgI2luY2x1ZGUgPGxpbnV4L21vZHVsZS5oPg0KPiA+ICsjaW5jbHVkZSA8bGludXgvb2ZfYWRk
-cmVzcy5oPg0KPiA+ICsjaW5jbHVkZSA8bGludXgvb2ZfZGV2aWNlLmg+DQo+ID4gICNpbmNsdWRl
-IDxsaW51eC9vZl9ncGlvLmg+DQo+ID4gICNpbmNsdWRlIDxsaW51eC9wY2kuaD4NCj4gPiAgI2lu
-Y2x1ZGUgPGxpbnV4L3BsYXRmb3JtX2RldmljZS5oPg0KPiA+ICAjaW5jbHVkZSA8bGludXgvcmVn
-bWFwLmg+DQo+ID4gKyNpbmNsdWRlIDxsaW51eC9yZWd1bGF0b3IvY29uc3VtZXIuaD4NCj4gPiAg
-I2luY2x1ZGUgPGxpbnV4L3Jlc291cmNlLmg+DQo+ID4gICNpbmNsdWRlIDxsaW51eC9zaWduYWwu
-aD4NCj4gPiArI2luY2x1ZGUgPGxpbnV4L3N5c2NvcmVfb3BzLmg+DQo+ID4gICNpbmNsdWRlIDxs
-aW51eC90eXBlcy5oPg0KPiA+ICAjaW5jbHVkZSA8bGludXgvaW50ZXJydXB0Lmg+DQo+ID4NCj4g
-PiBAQCAtMzEsMTUgKzM1LDMwIEBADQo+ID4NCj4gPiAgI2RlZmluZSB0b19pbXg2X3BjaWUoeCkJ
-Y29udGFpbmVyX29mKHgsIHN0cnVjdCBpbXg2X3BjaWUsIHBwKQ0KPiA+DQo+ID4gKy8qIFRoZSBw
-Y2llIHdobyBoYXZlIHN0YW5kYWxvbmUgcG93ZXIgZG9tYWluICovDQo+ID4gKyNkZWZpbmUgUENJ
-RV9QSFlfSEFTX1BXUl9ET01BSU4JCUJJVCgwKQ0KPiA+ICsNCj4gPiArc3RydWN0IGlteF9wY2ll
-X2RhdGEgew0KPiA+ICsJdW5zaWduZWQgaW50IGZsYWdzOw0KPiA+ICt9Ow0KPiA+ICsNCj4gPiAr
-c3RhdGljIGNvbnN0IHN0cnVjdCBpbXhfcGNpZV9kYXRhIGlteDZzeF9wY2llX2RhdGEgPSB7DQo+
-ID4gKwkuZmxhZ3MgPSBQQ0lFX1BIWV9IQVNfUFdSX0RPTUFJTiwNCj4gPiArfTsNCj4gPiArDQo+
-IA0KPiBZb3UgZG9uJ3QgdXNlIHRoaXMgZmxhZyBhbnl3aGVyZSBlbHNlIHNvIGFsbCB0aGUgYWJv
-dmUgaXMgbm90IG5lZWRlZCBpZiB5b3UNCj4gcmV3cml0ZSB0aGUgYmVsb3cuLi4NCltSaWNoYXJk
-XSBZb3VyIHN1Z2dlc3QgaXMgZ3JlYXQsIHRoYW5rcy4NCj4gDQo+ID4gIHN0cnVjdCBpbXg2X3Bj
-aWUgew0KPiA+ICAJaW50CQkJcmVzZXRfZ3BpbzsNCj4gPiArCWNvbnN0IHN0cnVjdAkJaW14X3Bj
-aWVfZGF0YSAqZGF0YTsNCj4gPiAgCXN0cnVjdCBjbGsJCSpwY2llX2J1czsNCj4gPiAgCXN0cnVj
-dCBjbGsJCSpwY2llX3BoeTsNCj4gPiAgCXN0cnVjdCBjbGsJCSpwY2llOw0KPiA+ICAJc3RydWN0
-IHBjaWVfcG9ydAlwcDsNCj4gPiAgCXN0cnVjdCByZWdtYXAJCSppb211eGNfZ3ByOw0KPiA+ICsJ
-c3RydWN0IHJlZ21hcAkJKmdwY19pcHNfcmVnOw0KPiA+ICsJc3RydWN0IHJlZ3VsYXRvcgkqcGNp
-ZV9yZWd1bGF0b3I7DQo+ID4gIAl2b2lkIF9faW9tZW0JCSptZW1fYmFzZTsNCj4gPiAgfTsNCj4g
-PiArc3RhdGljIHN0cnVjdCBpbXg2X3BjaWUgKmlteDZfcGNpZTsNCj4gPg0KPiA+ICAvKiBQQ0ll
-IFJvb3QgQ29tcGxleCByZWdpc3RlcnMgKG1lbW9yeS1tYXBwZWQpICovDQo+ID4gICNkZWZpbmUg
-UENJRV9SQ19MQ1IJCQkJMHg3Yw0KPiA+IEBAIC03Nyw2ICs5NiwxMSBAQCBzdHJ1Y3QgaW14Nl9w
-Y2llIHsNCj4gPiAgI2RlZmluZSBQSFlfUlhfT1ZSRF9JTl9MT19SWF9EQVRBX0VOICgxIDw8IDUp
-ICAjZGVmaW5lDQo+ID4gUEhZX1JYX09WUkRfSU5fTE9fUlhfUExMX0VOICgxIDw8IDMpDQo+ID4N
-Cj4gPiArc3RhdGljIGlubGluZSBib29sIGlzX2lteDZzeF9wY2llKHN0cnVjdCBpbXg2X3BjaWUg
-KmlteDZfcGNpZSkgew0KPiA+ICsJcmV0dXJuIGlteDZfcGNpZS0+ZGF0YSA9PSAmaW14NnN4X3Bj
-aWVfZGF0YTsNCj4gDQo+IC4uLiB0byByZXR1cm4gb2ZfZGV2aWNlX2lzX2NvbXBhdGlibGUobnAs
-ICJmc2wsaW14NnN4LXBjaWUiKTsNCj4gDQpbUmljaGFyZF0gRXhhY3RseSwgdGhhbmtzLg0KPiA+
-ICt9DQo+ID4gKw0KPiA+ICBzdGF0aWMgaW50IHBjaWVfcGh5X3BvbGxfYWNrKHZvaWQgX19pb21l
-bSAqZGJpX2Jhc2UsIGludCBleHBfdmFsKSAgew0KPiA+ICAJdTMyIHZhbDsNCj4gPiBAQCAtMjc1
-LDExICsyOTksMTcgQEAgc3RhdGljIGludCBpbXg2X3BjaWVfZGVhc3NlcnRfY29yZV9yZXNldChz
-dHJ1Y3QNCj4gcGNpZV9wb3J0ICpwcCkNCj4gPiAgCQlnb3RvIGVycl9wY2llOw0KPiA+ICAJfQ0K
-PiA+DQo+ID4gLQkvKiBwb3dlciB1cCBjb3JlIHBoeSBhbmQgZW5hYmxlIHJlZiBjbG9jayAqLw0K
-PiA+IC0JcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+aW9tdXhjX2dwciwgSU9NVVhDX0dQ
-UjEsDQo+ID4gLQkJCUlNWDZRX0dQUjFfUENJRV9URVNUX1BELCAwIDw8IDE4KTsNCj4gPiAtCXJl
-Z21hcF91cGRhdGVfYml0cyhpbXg2X3BjaWUtPmlvbXV4Y19ncHIsIElPTVVYQ19HUFIxLA0KPiA+
-IC0JCQlJTVg2UV9HUFIxX1BDSUVfUkVGX0NMS19FTiwgMSA8PCAxNik7DQo+ID4gKwlpZiAoaXNf
-aW14NnN4X3BjaWUoaW14Nl9wY2llKSkgew0KPiA+ICsJCXJlZ21hcF91cGRhdGVfYml0cyhpbXg2
-X3BjaWUtPmlvbXV4Y19ncHIsIElPTVVYQ19HUFIxMiwNCj4gPiArCQkJCUlNWDZTWF9HUFIxMl9Q
-Q0lFX1RFU1RfUEQsDQo+ID4gKwkJCQlJTVg2U1hfR1BSMTJfUENJRV9URVNUX1BEX0NMUik7DQo+
-ID4gKwl9IGVsc2Ugew0KPiA+ICsJCS8qIHBvd2VyIHVwIGNvcmUgcGh5IGFuZCBlbmFibGUgcmVm
-IGNsb2NrICovDQo+ID4gKwkJcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+aW9tdXhjX2dw
-ciwgSU9NVVhDX0dQUjEsDQo+ID4gKwkJCQlJTVg2UV9HUFIxX1BDSUVfVEVTVF9QRCwgMCA8PCAx
-OCk7DQo+ID4gKwkJcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+aW9tdXhjX2dwciwgSU9N
-VVhDX0dQUjEsDQo+ID4gKwkJCQlJTVg2UV9HUFIxX1BDSUVfUkVGX0NMS19FTiwgMSA8PCAxNik7
-DQo+ID4gKwl9DQo+ID4NCj4gPiAgCS8qIGFsbG93IHRoZSBjbG9ja3MgdG8gc3RhYmlsaXplICov
-DQo+ID4gIAl1c2xlZXBfcmFuZ2UoMjAwLCA1MDApOw0KPiA+IEBAIC0yOTAsNiArMzIwLDE4IEBA
-IHN0YXRpYyBpbnQgaW14Nl9wY2llX2RlYXNzZXJ0X2NvcmVfcmVzZXQoc3RydWN0DQo+IHBjaWVf
-cG9ydCAqcHApDQo+ID4gIAkJbXNsZWVwKDEwMCk7DQo+ID4gIAkJZ3Bpb19zZXRfdmFsdWUoaW14
-Nl9wY2llLT5yZXNldF9ncGlvLCAxKTsNCj4gPiAgCX0NCj4gPiArDQo+ID4gKwkvKg0KPiA+ICsJ
-ICogaU1YNlNYIFBDSWUgaGFzIHRoZSBzdGFuZC1hbG9uZSBwb3dlciBkb21haW4uDQo+ID4gKwkg
-KiByZWZlciB0byB0aGUgaW5pdGlhbGl6YXRpb24gZm9yIGlNWDZTWCBQQ0llLA0KPiA+ICsJICog
-cmVsZWFzZSB0aGUgUENJZSBQSFkgcmVzZXQgaGVyZSwNCj4gPiArCSAqIGJlZm9yZSBMVFNTTSBl
-bmFibGUgaXMgc2V0Lg0KPiA+ICsJICovDQo+IA0KPiBUaGlzIGNvbW1lbnQgaXMgY29uZnVzaW5n
-LiBJIGRvbid0IHNlZSBob3cgdGhpcyBoYXMgc29tZXRoaW5nIHRvIGRvIHdpdGggdGhlDQo+IHBv
-d2VyLWRvbWFpbi4gSXQgc2hvdWxkIHJlYWQgc29tZXRoaW5nIGxpa2UgIlJlbGVhc2UgdGhlIFBI
-WSByZXNldCwgdGhhdCB3ZQ0KPiBoYXZlIHNldCBpbiBpbXg2X3BjaWVfaW5pdF9waHkoKSBub3cu
-Ig0KW1JpY2hhcmRdT2suDQo+IA0KPiA+ICsJaWYgKGlzX2lteDZzeF9wY2llKGlteDZfcGNpZSkp
-DQo+ID4gKwkJcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+aW9tdXhjX2dwciwgSU9NVVhD
-X0dQUjUsDQo+ID4gKwkJCQlJTVg2U1hfR1BSNV9QQ0lFX0JUTlJTVCwNCj4gPiArCQkJCUlNWDZT
-WF9HUFI1X1BDSUVfQlROUlNUX0NMUik7DQo+ID4gKw0KPiA+ICAJcmV0dXJuIDA7DQo+ID4NCj4g
-PiAgZXJyX3BjaWU6DQo+ID4gQEAgLTMwNCwxNSArMzQ2LDM4IEBAIGVycl9wY2llX3BoeToNCj4g
-PiAgc3RhdGljIHZvaWQgaW14Nl9wY2llX2luaXRfcGh5KHN0cnVjdCBwY2llX3BvcnQgKnBwKSAg
-ew0KPiA+ICAJc3RydWN0IGlteDZfcGNpZSAqaW14Nl9wY2llID0gdG9faW14Nl9wY2llKHBwKTsN
-Cj4gPiArCWludCByZXQ7DQo+ID4gKw0KPiA+ICsJLyoNCj4gPiArCSAqIGlNWDZTWCBQQ0llIGhh
-cyB0aGUgc3RhbmQtYWxvbmUgcG93ZXIgZG9tYWluDQo+ID4gKwkgKiBhZGQgdGhlIGluaXRpYWxp
-emF0aW9uIGhlcmUgZm9yIGlNWDZTWCBQQ0llLg0KPiA+ICsJICovDQo+IA0KPiBBZ2FpbiB0aGlz
-IGNvdWxkIGJlIHBocmFzZWQgYmV0dGVyOiAiUG93ZXIgdXAgdGhlIHNlcGFyYXRlIGRvbWFpbiBh
-dmFpbGFibGUgb24NCj4gaS5NWDZTWCINCltSaWNoYXJkXSBPay4NCj4gDQo+ID4gKwlpZiAoaXNf
-aW14NnN4X3BjaWUoaW14Nl9wY2llKSkgew0KPiA+ICsJCS8qIEZvcmNlIFBDSWUgUEhZIHJlc2V0
-ICovDQo+ID4gKwkJcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+aW9tdXhjX2dwciwgSU9N
-VVhDX0dQUjUsDQo+ID4gKwkJCQlJTVg2U1hfR1BSNV9QQ0lFX0JUTlJTVCwNCj4gPiArCQkJCUlN
-WDZTWF9HUFI1X1BDSUVfQlROUlNUKTsNCj4gPiArDQo+ID4gKwkJcmVnbWFwX3VwZGF0ZV9iaXRz
-KGlteDZfcGNpZS0+Z3BjX2lwc19yZWcsIDAsIDEgPDwgNywgMSA8PCA3KTsNCj4gDQo+IE1hZ2lj
-IHZhbHVlcyBoZXJlLiBBbHNvIHRoaXMgaXMgdGhlIG9ubHkgdGltZSB3ZSBuZWVkIHRvIGFjY2Vz
-cyBncGNfaXBzX3JlZy4NCj4gU28gaWYgdGhpcyBpcyBhIHByZXJlcXVpc2l0ZSB0byBlbmFibGlu
-ZyB0aGUgQU5BVE9QIHJlZ3VsYXRvciwgSSB3b3VsZCBhcmd1ZQ0KPiBpdCBzaG91bGQgYmUgZG9u
-ZSBpbiB0aGUgcmVndWxhdG9yIGRyaXZlci4NCltSaWNoYXJkXU1hZ2ljIHZhbHVlcyB3b3VsZCBi
-ZSByZXBsYWNlZC4NClllcywgdGhpcyBpcyB0aGUgb25seSB0aW1lIHdlIG5lZWQgdG8gYWNjZXNz
-IGdwY19pcHNfcmVnLg0KSXQncyBhIGxpdHRsZSBjb21wbGV4IHRvIGFkZCB0aGUgR1BDIG1hbmlw
-dWxhdGlvbnMgaW4NCiBBTkFUT1AvcmVndWxhdG9yIGZyYW1ld29yay9kcml2ZXIgY29kZXMuDQpT
-aW5jZSBBTkFUT1AgcmVndWxhdG9yIGlzIGNvbW1vbiBmcmFtZXdvcmsgYW5kIGRyaXZlciwgaXQn
-cyBoYXJkIHRvIG1hbmlwdWxhdGUNCkdQQyBiaXRzIGluIEFOQVRPUC9yZWd1bGF0b3IgZHJpdmVy
-Lg0KSW4gb3JkZXIgdG8gYmUgZWFzaWVyLCBJIGFkZCB0aGUgR1BDIGJpdHMgbWFuaXB1bGF0aW9u
-IGhlcmUgZGlyZWN0bHkuDQpIb3cgZG8geW91IHRoaW5rIGFib3V0IHRoYXQ/DQo+IA0KPiA+ICsJ
-CS8qIFBvd2VyIHVwIFBDSWUgUEhZLCBBTkFUT1BfUkVHX0NPUkUgb2Zmc2V0IDB4MTQwLCBiaXQx
-My05ICovDQo+IA0KPiBPaCBzbyB0aGlzIGlzIGFjdHVhbGx5IGEgUEhZIHJlZ3VsYXRvciwgbm90
-IGZlZWRpbmcgdGhlIHdob2xlIGNvcmUsIGJ1dCBqdXN0DQo+IHRoZSBQSFk/IFlvdSBjb3VsZCBy
-ZW1vdmUgdGhlIGNvbW1lbnQgaXQgaXMgY2xlYXIgd2hhdCB5b3UgYXJlIGRvaW5nIGZyb20gdGhl
-DQo+IGNvZGUgYW5kIHRoZSBvZmZzZXRzIGFyZSBvZiBubyBpbnRlcmVzdCBpbiB0aGUgUENJZSBk
-cml2ZXIuDQpbUmljaGFyZF0geWVzLCBpdCBpcyBhIFBIWSByZWd1bGF0b3IsIG5vdCB1c2VkIHRv
-IGZlZWQgdGhlIHdob2xlIGNvcmUuDQpPaywgdGhlIGNvbW1lbnQgd291bGQgYmUgcmVtb3ZlZC4N
-Cj4gDQo+ID4gKwkJcmVndWxhdG9yX3NldF92b2x0YWdlKGlteDZfcGNpZS0+cGNpZV9yZWd1bGF0
-b3IsDQo+ID4gKwkJCQkxMTAwMDAwLCAxMTAwMDAwKTsNCj4gPiArCQlyZXQgPSByZWd1bGF0b3Jf
-ZW5hYmxlKGlteDZfcGNpZS0+cGNpZV9yZWd1bGF0b3IpOw0KPiA+ICsJCWlmIChyZXQpDQo+ID4g
-KwkJCWRldl9pbmZvKHBwLT5kZXYsICJmYWlsZWQgdG8gZW5hYmxlIHBjaWUgcmVndWxhdG9yLlxu
-Iik7DQo+ID4gKwkJcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+aW9tdXhjX2dwciwgSU9N
-VVhDX0dQUjEyLA0KPiA+ICsJCQkJSU1YNlNYX0dQUjEyX1JYX0VRX01BU0ssIElNWDZTWF9HUFIx
-Ml9SWF9FUV8yKTsNCj4gPiArCX0NCj4gPg0KPiA+ICAJcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZf
-cGNpZS0+aW9tdXhjX2dwciwgSU9NVVhDX0dQUjEyLA0KPiA+IC0JCQlJTVg2UV9HUFIxMl9QQ0lF
-X0NUTF8yLCAwIDw8IDEwKTsNCj4gPiArCQkJSU1YNlFfR1BSMTJfUENJRV9DVExfMiwNCj4gPiAr
-CQkJSU1YNlFfR1BSMTJfUENJRV9DVExfMl9DTFIpOw0KPiA+DQo+ID4gIAkvKiBjb25maWd1cmUg
-Y29uc3RhbnQgaW5wdXQgc2lnbmFsIHRvIHRoZSBwY2llIGN0cmwgYW5kIHBoeSAqLw0KPiA+ICAJ
-cmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+aW9tdXhjX2dwciwgSU9NVVhDX0dQUjEyLA0K
-PiA+ICAJCQlJTVg2UV9HUFIxMl9ERVZJQ0VfVFlQRSwgUENJX0VYUF9UWVBFX1JPT1RfUE9SVCA8
-PCAxMik7DQo+ID4gIAlyZWdtYXBfdXBkYXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNfZ3ByLCBJ
-T01VWENfR1BSMTIsDQo+ID4gLQkJCUlNWDZRX0dQUjEyX0xPU19MRVZFTCwgOSA8PCA0KTsNCj4g
-PiArCQkJSU1YNlFfR1BSMTJfTE9TX0xFVkVMLCBJTVg2UV9HUFIxMl9MT1NfTEVWRUxfOSk7DQo+
-ID4NCj4gPiAgCXJlZ21hcF91cGRhdGVfYml0cyhpbXg2X3BjaWUtPmlvbXV4Y19ncHIsIElPTVVY
-Q19HUFI4LA0KPiA+ICAJCQlJTVg2UV9HUFI4X1RYX0RFRU1QSF9HRU4xLCAwIDw8IDApOyBAQCAt
-MzcwLDcgKzQzNSw4IEBAIHN0YXRpYw0KPiBpbnQNCj4gPiBpbXg2X3BjaWVfc3RhcnRfbGluayhz
-dHJ1Y3QgcGNpZV9wb3J0ICpwcCkNCj4gPg0KPiA+ICAJLyogU3RhcnQgTFRTU00uICovDQo+ID4g
-IAlyZWdtYXBfdXBkYXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNfZ3ByLCBJT01VWENfR1BSMTIs
-DQo+ID4gLQkJCUlNWDZRX0dQUjEyX1BDSUVfQ1RMXzIsIDEgPDwgMTApOw0KPiA+ICsJCQlJTVg2
-UV9HUFIxMl9QQ0lFX0NUTF8yLA0KPiA+ICsJCQlJTVg2UV9HUFIxMl9QQ0lFX0NUTF8yKTsNCj4g
-Pg0KPiA+ICAJcmV0ID0gaW14Nl9wY2llX3dhaXRfZm9yX2xpbmsocHApOw0KPiA+ICAJaWYgKHJl
-dCkNCj4gPiBAQCAtNTQ2LDEwICs2MTIsNjQgQEAgc3RhdGljIGludCBfX2luaXQgaW14Nl9hZGRf
-cGNpZV9wb3J0KHN0cnVjdCBwY2llX3BvcnQNCj4gKnBwLA0KPiA+ICAJcmV0dXJuIDA7DQo+ID4g
-IH0NCj4gPg0KPiA+ICtzdGF0aWMgY29uc3Qgc3RydWN0IG9mX2RldmljZV9pZCBpbXg2X3BjaWVf
-b2ZfbWF0Y2hbXSA9IHsNCj4gPiArCXsgLmNvbXBhdGlibGUgPSAiZnNsLGlteDZxLXBjaWUiLCB9
-LA0KPiA+ICsJeyAuY29tcGF0aWJsZSA9ICJmc2wsaW14NnN4LXBjaWUiLCAuZGF0YSA9ICZpbXg2
-c3hfcGNpZV9kYXRhfSwNCj4gPiArCXt9LA0KPiA+ICt9Ow0KPiA+ICtNT0RVTEVfREVWSUNFX1RB
-QkxFKG9mLCBpbXg2X3BjaWVfb2ZfbWF0Y2gpOw0KPiA+ICsNCj4gDQo+IFdoeSBhcmUgeW91IG1v
-dmluZyB0aGUgbWF0Y2ggdGFibGU/IFRoaXMgc2VlbXMgbGlrZSB1bm5lY2Vzc2FyeSBjaHVybiB0
-byBtZS4NCltSaWNoYXJkXSBpdCBpcyB1c2VkIGJ5IF9wcm9iZSBpbiB2MiBwYXRjaC1zZXQuIENo
-YW5nZXMgd291bGQgYmUgZGlzY2FyZGVkIGluIG5leHQgdmVyc2lvbiBwYXRjaC1zZXQuDQo+IA0K
-PiA+ICsjaWZkZWYgQ09ORklHX1BNX1NMRUVQDQo+ID4gK3N0YXRpYyBpbnQgcGNpX2lteF9zdXNw
-ZW5kKHZvaWQpDQo+ID4gK3sNCj4gPiArCWlmIChpc19pbXg2c3hfcGNpZShpbXg2X3BjaWUpKSB7
-DQo+ID4gKwkJLyogUE1fVFVSTl9PRkYgKi8NCj4gPiArCQlyZWdtYXBfdXBkYXRlX2JpdHMoaW14
-Nl9wY2llLT5pb211eGNfZ3ByLCBJT01VWENfR1BSMTIsDQo+ID4gKwkJCQlCSVQoMTYpLCAxIDw8
-IDE2KTsNCj4gPiArCQl1ZGVsYXkoMTApOw0KPiA+ICsJCXJlZ21hcF91cGRhdGVfYml0cyhpbXg2
-X3BjaWUtPmlvbXV4Y19ncHIsIElPTVVYQ19HUFIxMiwNCj4gPiArCQkJCUJJVCgxNiksIDAgPDwg
-MTYpOw0KPiANCj4gTWFnaWMgbnVtYmVycyBoZXJlLiBQbGVhc2UgYWRkIGRlZmluZXMgZm9yIHRo
-b3NlLg0KW1JpY2hhcmRdIE9rLg0KPiANCj4gPiArCX0NCj4gPiArDQo+ID4gKwlyZXR1cm4gMDsN
-Cj4gPiArfQ0KPiA+ICsNCj4gPiArc3RhdGljIHZvaWQgcGNpX2lteF9yZXN1bWUodm9pZCkNCj4g
-PiArew0KPiA+ICsJc3RydWN0IHBjaWVfcG9ydCAqcHAgPSAmaW14Nl9wY2llLT5wcDsNCj4gPiAr
-DQo+ID4gKwlpZiAoaXNfaW14NnN4X3BjaWUoaW14Nl9wY2llKSkgew0KPiA+ICsJCS8qIHJlc2V0
-IGlNWDZTWCBQQ0llICovDQo+ID4gKwkJcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+aW9t
-dXhjX2dwciwNCj4gPiArCQkJCUlPTVVYQ19HUFI1LCBCSVQoMTgpLCAxIDw8IDE4KTsNCj4gPiAr
-DQo+ID4gKwkJcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+aW9tdXhjX2dwciwNCj4gPiAr
-CQkJCUlPTVVYQ19HUFI1LCBCSVQoMTgpLCAwIDw8IDE4KTsNCj4gPiArDQo+IA0KPiBBZ2FpbiBt
-YWdpYyBudW1iZXJzIGhlcmUuIFBsZWFzZSBhZGQgZGVmaW5lcyBmb3IgdGhvc2UuDQpbUmljaGFy
-ZF0gT2suDQo+IA0KPiA+ICsJCS8qDQo+ID4gKwkJICogY29udHJvbGxlciBtYXliZSB0dXJuIG9m
-ZiwgcmUtY29uZmlndXJlIGFnYWluDQo+ID4gKwkJICogU2V0IHRoZSBDTEFTU19SRVYgb2YgUkMg
-Q0ZHIGhlYWRlciB0bw0KPiA+ICsJCSAqIFBDSV9DTEFTU19CUklER0VfUENJDQo+ID4gKwkJICov
-DQo+ID4gKwkJd3JpdGVsKHJlYWRsKHBwLT5kYmlfYmFzZSArIFBDSV9DTEFTU19SRVZJU0lPTikN
-Cj4gPiArCQkJfCAoUENJX0NMQVNTX0JSSURHRV9QQ0kgPDwgMTYpLA0KPiA+ICsJCQlwcC0+ZGJp
-X2Jhc2UgKyBQQ0lfQ0xBU1NfUkVWSVNJT04pOw0KPiA+ICsNCj4gDQo+IENhbid0IHdlIGp1c3Qg
-bW92ZSB0aGUgY2FsbCB0byBzZXQgdGhpcyBmcm9tIGR3X3BjaWVfaG9zdF9pbml0KCkgdG8NCj4g
-ZHdfcGNpZV9zZXR1cF9yYygpIHNvIHdlIGRvbid0IG5lZWQgdG8gZG8gdGhpcyBvdXJzZWx2ZXM/
-IEl0IHNlZW1zIHRvIGJlIHRoZQ0KPiBtb3JlIGxvZ2ljYWwgY2hhbmdlLg0KW1JpY2hhcmRdZHdf
-cGNpZV9ob3N0X2luaXQgY29udGFpbnMgdGhlIHdob2xlIHJlLWluaXRpYWxpemF0aW9uIGFuZCBy
-ZS1saW5rLXVwDQogYWdhaW4gb2YgdGhlIHBjaWUgbW9kdWxlLiBJdCdzIG5vdCBwcm9wZXIgdG8g
-cmUtY2FsbCBkd19wY2llX2hvc3RfaW5pdCgpLg0KSSBmaW5kIHRoYXQgdGhlIG1zaSBpbml0IHNo
-b3VsZCBiZSByZS1jb25maWd1cmVkIGFnYWluIGFmdGVyIHJlc3VtZSBiYWNrLg0KU28sIHRoZSBk
-ZWZpbml0aW9ucyBvZiB0aGUgIlBDSUVfTVNJX0FERFJfTE8iIGFuZCAiUENJRV9NU0lfQUREUl9I
-SSIgd291bGQgYmUgdXNlZA0KaGVyZS4NCg0KQlRXLCBkbyB5b3Uga25vdyB3aHkgdGhlICIvKiBT
-eW5vcHNpcyBzcGVjaWZpYyBQQ0lFIGNvbmZpZ3VyYXRpb24gcmVnaXN0ZXJzICovIg0KaXMgbm90
-IGRlZmluZWQgaW4gcGNpZS1kZXNpZ253YXJlLmgsIGJ1dCBpbiBwY2llLWRlc2lnbndhcmUuYz8N
-Cg0KPiANCj4gPiArCQlkd19wY2llX3NldHVwX3JjKHBwKTsNCj4gPiArCX0NCj4gPiArfQ0KPiA+
-ICsNCj4gPiArc3RhdGljIHN0cnVjdCBzeXNjb3JlX29wcyBwY2lfaW14X3N5c2NvcmVfb3BzID0g
-ew0KPiA+ICsJLnN1c3BlbmQgPSBwY2lfaW14X3N1c3BlbmQsDQo+ID4gKwkucmVzdW1lID0gcGNp
-X2lteF9yZXN1bWUsDQo+ID4gK307DQo+ID4gKyNlbmRpZg0KPiA+ICsNCj4gDQo+IFdoeSBkb2Vz
-IHRoaXMgbmVlZCB0byBiZSBzeXNjb3JlX29wcyBpbnN0ZWFkIG9mIGRldl9wbV9vcHM/DQpbUmlj
-aGFyZF0gUE1fVFVSTl9PRkYgbXNnIHNob3VsZCBiZSBzZW50IG91dCBhdCB0aGUgZW5kIG9mIHRo
-ZSBzdXNwZW5kIG9mIHBjaWUgc3Vic3lzdGVtLg0KUmVzdW1lIGFuZCByZS1jb25maWd1cmUgb2Yg
-cmMgY29udHJvbGxlciBzaG91bGQgYmUgZG9uZSBiZWZvcmUgdGhlIHJlc3VtZSBvZiBwY2llIHN1
-YnN5c3RlbS4NClNvLCBzeXNjb3JlX29wcyBpcyB1c2VkIGhlcmUuDQo+IA0KPiA+ICBzdGF0aWMg
-aW50IF9faW5pdCBpbXg2X3BjaWVfcHJvYmUoc3RydWN0IHBsYXRmb3JtX2RldmljZSAqcGRldikg
-IHsNCj4gPiAtCXN0cnVjdCBpbXg2X3BjaWUgKmlteDZfcGNpZTsNCj4gPiAgCXN0cnVjdCBwY2ll
-X3BvcnQgKnBwOw0KPiA+ICsJY29uc3Qgc3RydWN0IG9mX2RldmljZV9pZCAqb2ZfaWQgPQ0KPiA+
-ICsJCQlvZl9tYXRjaF9kZXZpY2UoaW14Nl9wY2llX29mX21hdGNoLCAmcGRldi0+ZGV2KTsNCj4g
-PiAgCXN0cnVjdCBkZXZpY2Vfbm9kZSAqbnAgPSBwZGV2LT5kZXYub2Zfbm9kZTsNCj4gPiAgCXN0
-cnVjdCByZXNvdXJjZSAqZGJpX2Jhc2U7DQo+ID4gIAlpbnQgcmV0Ow0KPiA+IEBAIC01NjAsNiAr
-NjgwLDcgQEAgc3RhdGljIGludCBfX2luaXQgaW14Nl9wY2llX3Byb2JlKHN0cnVjdA0KPiA+IHBs
-YXRmb3JtX2RldmljZSAqcGRldikNCj4gPg0KPiA+ICAJcHAgPSAmaW14Nl9wY2llLT5wcDsNCj4g
-PiAgCXBwLT5kZXYgPSAmcGRldi0+ZGV2Ow0KPiA+ICsJaW14Nl9wY2llLT5kYXRhID0gb2ZfaWQt
-PmRhdGE7DQo+ID4NCj4gPiAgCS8qIEFkZGVkIGZvciBQQ0kgYWJvcnQgaGFuZGxpbmcgKi8NCj4g
-PiAgCWhvb2tfZmF1bHRfY29kZSgxNiArIDYsIGlteDZxX3BjaWVfYWJvcnRfaGFuZGxlciwgU0lH
-QlVTLCAwLCBAQA0KPiA+IC02MDMsOSArNzI0LDE5IEBAIHN0YXRpYyBpbnQgX19pbml0IGlteDZf
-cGNpZV9wcm9iZShzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlDQo+ICpwZGV2KQ0KPiA+ICAJCXJldHVy
-biBQVFJfRVJSKGlteDZfcGNpZS0+cGNpZSk7DQo+ID4gIAl9DQo+ID4NCj4gPiAtCS8qIEdyYWIg
-R1BSIGNvbmZpZyByZWdpc3RlciByYW5nZSAqLw0KPiA+IC0JaW14Nl9wY2llLT5pb211eGNfZ3By
-ID0NCj4gPiAtCQkgc3lzY29uX3JlZ21hcF9sb29rdXBfYnlfY29tcGF0aWJsZSgiZnNsLGlteDZx
-LWlvbXV4Yy1ncHIiKTsNCj4gPiArCWlmIChpc19pbXg2c3hfcGNpZShpbXg2X3BjaWUpKSB7DQo+
-ID4gKwkJaW14Nl9wY2llLT5wY2llX3JlZ3VsYXRvciA9IGRldm1fcmVndWxhdG9yX2dldChwcC0+
-ZGV2LCAicGNpZSIpOw0KPiA+ICsNCj4gPiArCQlpbXg2X3BjaWUtPmlvbXV4Y19ncHIgPQ0KPiA+
-ICsJCQkgc3lzY29uX3JlZ21hcF9sb29rdXBfYnlfY29tcGF0aWJsZQ0KPiA+ICsJCQkgKCJmc2ws
-aW14NnN4LWlvbXV4Yy1ncHIiKTsNCj4gPiArCQlpbXg2X3BjaWUtPmdwY19pcHNfcmVnID0NCj4g
-PiArCQkJIHN5c2Nvbl9yZWdtYXBfbG9va3VwX2J5X2NvbXBhdGlibGUoImZzbCxpbXg2c3gtZ3Bj
-Iik7DQo+ID4gKwl9IGVsc2Ugew0KPiA+ICsJCWlteDZfcGNpZS0+aW9tdXhjX2dwciA9DQo+ID4g
-KwkJCXN5c2Nvbl9yZWdtYXBfbG9va3VwX2J5X2NvbXBhdGlibGUNCj4gPiArCQkJKCJmc2wsaW14
-NnEtaW9tdXhjLWdwciIpOw0KPiA+ICsJfQ0KPiA+ICAJaWYgKElTX0VSUihpbXg2X3BjaWUtPmlv
-bXV4Y19ncHIpKSB7DQo+ID4gIAkJZGV2X2VycigmcGRldi0+ZGV2LCAidW5hYmxlIHRvIGZpbmQg
-aW9tdXhjIHJlZ2lzdGVyc1xuIik7DQo+ID4gIAkJcmV0dXJuIFBUUl9FUlIoaW14Nl9wY2llLT5p
-b211eGNfZ3ByKTsgQEAgLTYxNiw2ICs3NDcsOSBAQCBzdGF0aWMNCj4gPiBpbnQgX19pbml0IGlt
-eDZfcGNpZV9wcm9iZShzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2KQ0KPiA+ICAJCXJldHVy
-biByZXQ7DQo+ID4NCj4gPiAgCXBsYXRmb3JtX3NldF9kcnZkYXRhKHBkZXYsIGlteDZfcGNpZSk7
-DQo+ID4gKyNpZmRlZiBDT05GSUdfUE1fU0xFRVANCj4gPiArCXJlZ2lzdGVyX3N5c2NvcmVfb3Bz
-KCZwY2lfaW14X3N5c2NvcmVfb3BzKTsNCj4gPiArI2VuZGlmDQo+ID4gIAlyZXR1cm4gMDsNCj4g
-PiAgfQ0KPiA+DQo+ID4gQEAgLTYyNywxMiArNzYxLDYgQEAgc3RhdGljIHZvaWQgaW14Nl9wY2ll
-X3NodXRkb3duKHN0cnVjdCBwbGF0Zm9ybV9kZXZpY2UNCj4gKnBkZXYpDQo+ID4gIAlpbXg2X3Bj
-aWVfYXNzZXJ0X2NvcmVfcmVzZXQoJmlteDZfcGNpZS0+cHApOw0KPiA+ICB9DQo+ID4NCj4gPiAt
-c3RhdGljIGNvbnN0IHN0cnVjdCBvZl9kZXZpY2VfaWQgaW14Nl9wY2llX29mX21hdGNoW10gPSB7
-DQo+ID4gLQl7IC5jb21wYXRpYmxlID0gImZzbCxpbXg2cS1wY2llIiwgfSwNCj4gPiAtCXt9LA0K
-PiA+IC19Ow0KPiA+IC1NT0RVTEVfREVWSUNFX1RBQkxFKG9mLCBpbXg2X3BjaWVfb2ZfbWF0Y2gp
-Ow0KPiA+IC0NCj4gPiAgc3RhdGljIHN0cnVjdCBwbGF0Zm9ybV9kcml2ZXIgaW14Nl9wY2llX2Ry
-aXZlciA9IHsNCj4gPiAgCS5kcml2ZXIgPSB7DQo+ID4gIAkJLm5hbWUJPSAiaW14NnEtcGNpZSIs
-DQo+IA0KPiAtLQ0KPiBQZW5ndXRyb25peCBlLksuICAgICAgICAgICAgIHwgTHVjYXMgU3RhY2gg
-ICAgICAgICAgICAgICAgIHwNCj4gSW5kdXN0cmlhbCBMaW51eCBTb2x1dGlvbnMgICB8IGh0dHA6
-Ly93d3cucGVuZ3V0cm9uaXguZGUvICB8DQoNCg0KQmVzdCBSZWdhcmRzDQpSaWNoYXJkIFpodQ0K
-DQo=
+Msi_chip functions setup_irq/teardown_irq rarely use msi_chip
+argument. We can look up msi_chip pointer by the device pointer
+or irq number, so clean up msi_chip argument.
+
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Thierry Reding <thierry.reding@gmail.com>
+CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/irqchip/irq-armada-370-xp.c |    8 +++-----
+ drivers/pci/host/pci-tegra.c        |    8 +++++---
+ drivers/pci/host/pcie-designware.c  |    4 ++--
+ drivers/pci/host/pcie-rcar.c        |    8 +++++---
+ drivers/pci/msi.c                   |    4 ++--
+ include/linux/msi.h                 |    5 ++---
+ 6 files changed, 19 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
+index df60eab..3909d06 100644
+--- a/drivers/irqchip/irq-armada-370-xp.c
++++ b/drivers/irqchip/irq-armada-370-xp.c
+@@ -129,9 +129,8 @@ static void armada_370_xp_free_msi(int hwirq)
+ 	mutex_unlock(&msi_used_lock);
+ }
+ 
+-static int armada_370_xp_setup_msi_irq(struct msi_chip *chip,
+-				       struct pci_dev *pdev,
+-				       struct msi_desc *desc)
++static int armada_370_xp_setup_msi_irq(struct pci_dev *pdev, 
++		struct msi_desc *desc)
+ {
+ 	struct msi_msg msg;
+ 	int virq, hwirq;
+@@ -160,8 +159,7 @@ static int armada_370_xp_setup_msi_irq(struct msi_chip *chip,
+ 	return 0;
+ }
+ 
+-static void armada_370_xp_teardown_msi_irq(struct msi_chip *chip,
+-					   unsigned int irq)
++static void armada_370_xp_teardown_msi_irq(unsigned int irq)
+ {
+ 	struct irq_data *d = irq_get_irq_data(irq);
+ 	unsigned long hwirq = d->hwirq;
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 0fb0fdb..edd4040 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -1157,9 +1157,10 @@ static irqreturn_t tegra_pcie_msi_irq(int irq, void *data)
+ 	return processed > 0 ? IRQ_HANDLED : IRQ_NONE;
+ }
+ 
+-static int tegra_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
++static int tegra_msi_setup_irq(struct pci_dev *pdev,
+ 			       struct msi_desc *desc)
+ {
++	struct msi_chip *chip = pdev->bus->msi;
+ 	struct tegra_msi *msi = to_tegra_msi(chip);
+ 	struct msi_msg msg;
+ 	unsigned int irq;
+@@ -1185,10 +1186,11 @@ static int tegra_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+ 	return 0;
+ }
+ 
+-static void tegra_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
++static void tegra_msi_teardown_irq(unsigned int irq)
+ {
+-	struct tegra_msi *msi = to_tegra_msi(chip);
+ 	struct irq_data *d = irq_get_irq_data(irq);
++	struct msi_chip *chip = irq_get_chip_data(irq);
++	struct tegra_msi *msi = to_tegra_msi(chip);
+ 
+ 	tegra_msi_free(msi, d->hwirq);
+ }
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index fa2fa45..517f1e1 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -342,7 +342,7 @@ static void clear_irq(unsigned int irq)
+ 	msi->msi_attrib.multiple = 0;
+ }
+ 
+-static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
++static int dw_msi_setup_irq(struct pci_dev *pdev,
+ 			struct msi_desc *desc)
+ {
+ 	int irq, pos, msgvec;
+@@ -383,7 +383,7 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+ 	return 0;
+ }
+ 
+-static void dw_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
++static void dw_msi_teardown_irq(unsigned int irq)
+ {
+ 	clear_irq(irq);
+ }
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 4884ee5..647bc9f 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -615,9 +615,10 @@ static irqreturn_t rcar_pcie_msi_irq(int irq, void *data)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static int rcar_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
++static int rcar_msi_setup_irq(struct pci_dev *pdev,
+ 			      struct msi_desc *desc)
+ {
++	struct msi_chip *chip = pdev->bus->msi;
+ 	struct rcar_msi *msi = to_rcar_msi(chip);
+ 	struct rcar_pcie *pcie = container_of(chip, struct rcar_pcie, msi.chip);
+ 	struct msi_msg msg;
+@@ -645,10 +646,11 @@ static int rcar_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+ 	return 0;
+ }
+ 
+-static void rcar_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
++static void rcar_msi_teardown_irq(unsigned int irq)
+ {
+-	struct rcar_msi *msi = to_rcar_msi(chip);
+ 	struct irq_data *d = irq_get_irq_data(irq);
++	struct msi_chip *chip = irq_get_chip_data(irq);
++	struct rcar_msi *msi = to_rcar_msi(chip);
+ 
+ 	rcar_msi_free(msi, d->hwirq);
+ }
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index aae2fc8..51d7e62 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -37,7 +37,7 @@ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ 	if (!chip || !chip->setup_irq)
+ 		return -EINVAL;
+ 
+-	err = chip->setup_irq(chip, dev, desc);
++	err = chip->setup_irq(dev, desc);
+ 	if (err < 0)
+ 		return err;
+ 
+@@ -53,7 +53,7 @@ void __weak arch_teardown_msi_irq(unsigned int irq)
+ 	if (!chip || !chip->teardown_irq)
+ 		return;
+ 
+-	chip->teardown_irq(chip, irq);
++	chip->teardown_irq(irq);
+ }
+ 
+ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 36c63cf..45ef8cb 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -68,9 +68,8 @@ struct msi_chip {
+ 	struct device_node *of_node;
+ 	struct list_head list;
+ 
+-	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
+-			 struct msi_desc *desc);
+-	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
++	int (*setup_irq)(struct pci_dev *dev, struct msi_desc *desc);
++	void (*teardown_irq)(unsigned int irq);
+ };
+ 
+ #endif /* LINUX_MSI_H */
+-- 
+1.7.1
+
