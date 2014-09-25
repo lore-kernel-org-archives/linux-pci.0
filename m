@@ -1,52 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0110.outbound.protection.outlook.com ([157.56.111.110]:14752
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932123AbaIWVZU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Sep 2014 17:25:20 -0400
-Message-ID: <1411507511.13320.155.camel@snotra.buserror.net>
-Subject: Re: [PATCH v3 3/3] PCI: Layerscape: Add Layerscape PCIe driver
-From: Scott Wood <scottwood@freescale.com>
-To: Minghuan Lian <Minghuan.Lian@freescale.com>
-CC: <linux-pci@vger.kernel.org>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"Zang Roy-R61911" <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 23 Sep 2014 16:25:11 -0500
-In-Reply-To: <1411482540-31297-5-git-send-email-Minghuan.Lian@freescale.com>
-References: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
-	 <1411482540-31297-5-git-send-email-Minghuan.Lian@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2 20/22] Sparc/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+Date: Thu, 25 Sep 2014 11:14:30 +0800
+Message-ID: <1411614872-4009-21-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-09-23 at 22:29 +0800, Minghuan Lian wrote:
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 34134d6..7c49456 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -82,4 +82,11 @@ config PCIE_XILINX
->  	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
->  	  Host Bridge driver.
->  
-> +config PCI_LAYERSCAPE
-> +	bool "Freescale Layerscape PCIe controller"
-> +	select PCIE_DW
-> +	select MFD_SYSCON
-> +	help
-> +	  Say Y here if you want PCIe controller support on Layerscape SoCs.
-> +
->  endmenu
+Use MSI chip framework instead of arch MSI functions to configure
+MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
 
-Are you sure there are no dependencies for this to build?  At the least
-you need OF.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/sparc/kernel/pci.c |   14 ++++++++++++--
+ 1 files changed, 12 insertions(+), 2 deletions(-)
 
-I think you should also be selecting REGMAP.
-
--Scott
-
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index b36365f..2a89ee2 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -905,7 +905,7 @@ int pci_domain_nr(struct pci_bus *pbus)
+ EXPORT_SYMBOL(pci_domain_nr);
+ 
+ #ifdef CONFIG_PCI_MSI
+-int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
++int sparc_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
+ {
+ 	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
+ 	unsigned int irq;
+@@ -916,7 +916,7 @@ int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
+ 	return pbm->setup_msi_irq(&irq, pdev, desc);
+ }
+ 
+-void arch_teardown_msi_irq(unsigned int irq)
++void sparc_teardown_msi_irq(unsigned int irq)
+ {
+ 	struct msi_desc *entry = irq_get_msi_desc(irq);
+ 	struct pci_dev *pdev = entry->dev;
+@@ -925,6 +925,16 @@ void arch_teardown_msi_irq(unsigned int irq)
+ 	if (pbm->teardown_msi_irq)
+ 		pbm->teardown_msi_irq(irq, pdev);
+ }
++
++static struct msi_chip sparc_msi_chip = {
++	.setup_irq = sparc_setup_msi_irq,
++	.teardown_irq = sparc_teardown_msi_irq,
++};
++
++struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
++{
++	return &sparc_msi_chip;
++}
+ #endif /* !(CONFIG_PCI_MSI) */
+ 
+ static void ali_sound_dma_hack(struct pci_dev *pdev, int set_bit)
+-- 
+1.7.1
 
