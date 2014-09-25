@@ -1,154 +1,79 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <542A8C5E.3040901@huawei.com>
-Date: Tue, 30 Sep 2014 18:56:30 +0800
-From: Abel <wuyun.wu@huawei.com>
-MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: Jiang Liu <jiang.liu@linux.intel.com>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Thu, 25 Sep 2014 09:19:20 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
+	Bharat.Bhushan@freescale.com, x86@kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	<x86@kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFT v2 01/24] irqdomain: Introduce new interfaces to support
- hierarchy irqdomains
-References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com> <1411740145-30626-2-git-send-email-jiang.liu@linux.intel.com> <54294F1C.30606@huawei.com> <alpine.DEB.2.02.1409291707410.22082@ionos.tec.linutronix.de>
-In-Reply-To: <alpine.DEB.2.02.1409291707410.22082@ionos.tec.linutronix.de>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-acpi-owner@vger.kernel.org
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 03/22] MSI: Remove the redundant irq_set_chip_data()
+Message-ID: <20140925071919.GH12423@ulmo>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+ <1411614872-4009-4-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="mhjHhnbe5PrRcwjY"
+In-Reply-To: <1411614872-4009-4-git-send-email-wangyijing@huawei.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thomas,
-On 2014/9/29 23:53, Thomas Gleixner wrote:
 
-> On Mon, 29 Sep 2014, Abel wrote:
->> I've been through your patches and noticed that the only domain
->> which does not call irq_domain_alloc_irqs_parent() is
->> x86_vector_domain. And this makes sense *if* we already knew which
->> domain is the nearest one to the CPU.
-> 
-> Right, and in case of x86 the vector domain _IS_ the one which is
-> always the nearest one to the cpu.
+--mhjHhnbe5PrRcwjY
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Yes, I know that. :)
-What I meant is... (please see below)
+On Thu, Sep 25, 2014 at 11:14:13AM +0800, Yijing Wang wrote:
+> Currently, pcie-designware, pcie-rcar, pci-tegra drivers
+> use irq chip_data to save the msi_chip pointer. They
+> already call irq_set_chip_data() in their own MSI irq map
+> functions. So irq_set_chip_data() in arch_setup_msi_irq()
+> is useless.
 
-> 
->> But I don't think a well implemented device driver should assume
->> itself be in a particular position of the interrupt delivery path.
-> 
-> The device driver has no knowledge of this. The irq domain driver
-> definitely has to know to some extent.
-> 
->> Actually it should be guaranteed by the core infrastructure that all
->> the domains in the interrupt delivery path should allocate a
->> hardware interrupt for the interrupt source.
-> 
-> Well, that's what we do. We allocate down the irq domain hierarchy. If
-> one level fails the whole operation fails.
+Again, I think this should be the other way around. If drivers do
+something that's already handled by the core, then the duplicate code
+should be dropped from the drivers.
 
-Actually the core infrastructure just calls domain->ops->alloc() which is
-the one who really guarantees it by calling irq_domain_alloc_irqs_parent().
-I think it's enough for a particular domain to pick a hwirq from itself for
-that linux irq, and need not to care about its parent.
-What I suggest is something like:
+Thierry
 
-for (iter = domain; iter; iter = iter->parent) {
-	ret = iter->ops->alloc(iter, virq, nr_irqs, arg);
-	if (ret < 0) {
-		mutex_unlock(&irq_domain_mutex);
-		goto out_free_irq_data;
-	}
-}
+--mhjHhnbe5PrRcwjY
+Content-Type: application/pgp-signature
 
-in this way, the core infrastructure guarantees allocating down the irqdomain
-hierarchy, and the implementers of domain_ops->alloc() need not to call
-irq_domain_alloc_irqs_parent() any longer, just do the things they have to.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-> 
->> And besides the comments/questions I mentioned above, I am also curious about
->> how the chained interrupts been processed.
->>
->> Let's take a 3-level-chained-domains for example.
->> Given 3 interrupt controllers A, B and C, and the interrupt delivery path is:
->>
->> DEV -> A -> B -> C -> CPU
->>
->> After the hierarchy irqdomains are established, the unique linux interrupt of
->> DEV will be mapped with a hardware interrupt in each domain:
->>
->> DomainA: HWIRQ_A => VIRQ_DEV
->> DomainB: HWIRQ_B => VIRQ_DEV
->> DomainC: HWIRQ_C => VIRQ_DEV
->>
->> When the DEV triggered an interrupt signal, the CPU will acknowledge HWIRQ_C,
-> 
-> Not necessarily. The CPU will process HWIRQ_C. The acknowledge
-> mechanism depends on the implementation details of the hierarchy.
+iQIcBAEBAgAGBQJUI8H3AAoJEN0jrNd/PrOhD9gP/irz9NSH3coHma+k59CgfNee
+Eadp8ruJoWHsk+kNc+VP4X8QUfFbawc4Y9GarISl2soj926zV/hj8I7CSKn7im1g
+OEWOG1+IoZY+1142DUhZRfqgw+kPIsHL2nKRK6RJCWhpIxIrh1f7/LcSyrWUbS9r
+7t6FJUljEAZ4oSmW8FDuK4hrK9s53zIKQkvv2zfbOv7sAvnYuJM4r5EteKEkxVqy
+VEwvbqgS5Ccf4PKJKnISrCAV9z4H8kYF2PN0e7+8x9l6WOsdz5yEszOJmoREGMzG
+eCUaBYi7Tl7jAqdQkJfEePdK7BotGIbuffF2j76j1TTgOKp2HEoMlTxLv9SldxMa
+9NoNSP5NzJzSyK6Pawx84xkhKnMd5TWLD7IMcDvfcMIbQ+IZiXDnNjQ9diG3RjhT
+zLyMRZc5MdOfL8ScPzrYYUATbIEFmJdB0rUZ6u9ivHdRsVqZ6pJbRz/C/QPfd92M
+dDXoVvcRDGGgaM66PbfYykArWhGI+hPG4ip3t5CpA2KLqLm9BapvqSc0H6V9y5w8
+nuBHS0pk3mojCR9naMzuOy0nqME7SU9QiOiMMvv6uZztE2y3udRmkZNHX32DSi7l
+6YLq84EA/LyOtPp9jrRH1eKZLty5qyY2mO9Le46GAragc909SMnKpNAWJyV+RLLm
+9fhn8sFnEUFKzDPptCkB
+=WmVy
+-----END PGP SIGNATURE-----
 
-Yes, you are right. Thanks for pointing out.
-
-> 
->> and then irq_find_mapping(DomainC, HWIRQ_C) will be called to get the linux
->> interrupt VIRQ_DEV, and after the handler of the VIRQ_DEV has been processed,
->> the interrupt will end with the level (if have) uncleared on B, which will
->> result in the interrupt of DEV cannot be processed again.
->>
->> Or is there anything I misunderstand?
-> 
-> This heavily depends on the properties of the stacked domains.
-> 
-> It depends on the hardware requirements and the implementation of
-> domain A and B how this is handled.
-> 
-> It might be sufficient to have the following code in the irq_ack()
-> callback of domain A:
-> 
-> irq_ack_A(struct irq_data *d)
-> {
-> 	ack_hw_A();
-> }
-> 
-> Another HW or stacking scenario requires
-> 
-> irq_ack_A(struct irq_data *d)
-> {
-> 	ack_hw_A();
-> 	ack_parent();
-> }
-> 
-> where ack_parent() does:
-> 
->       if (d->parent_data)
->       	 d->parent_data->chip->ack(d->parent_data);
-> 
-> and ack_hw_A() can be anything from a nop to some more or less complex
-> hw access.
-> 
-> So we cannot define upfront how deep an ack/mask/unmask/... has to be
-> propagated down the chain. This needs a careful consideration in terms
-> of functionality and we want to be able to do performance shortcuts as
-> well.
-> 
-
-Yes, I got it. And one more thing I concerned is that when hierarchy
-irqdomains is enabled, shouldn't the ack_parent() be called by default
-by the irqchip->irq_ack() of each domain to ensure all the domains in
-the delivery path ack this interrupt?
-
-Thanks,
-	Abel.
-
+--mhjHhnbe5PrRcwjY--
