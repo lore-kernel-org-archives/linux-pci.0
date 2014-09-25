@@ -1,81 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:48536 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754754AbaIVW1k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Sep 2014 18:27:40 -0400
-Date: Mon, 22 Sep 2014 16:27:27 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Tanmay Inamdar <tinamdar@apm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
-Subject: Re: [PATCH v9 1/4] pci:host: APM X-Gene PCIe host controller driver
-Message-ID: <20140922222727.GC15822@obsidianresearch.com>
-References: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
- <1410906824-9321-2-git-send-email-tinamdar@apm.com>
- <20140919223258.GA32208@google.com>
- <CACoXjcnVU3+fQHQ0-zEVRjoedrrod-aua6AVybj7UuSHO9HBaw@mail.gmail.com>
- <CAErSpo4C_6mh7hais14254rYBeMYArvf=nETmgvBjgP290aD4Q@mail.gmail.com>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:43879 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753183AbaIYSXO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Sep 2014 14:23:14 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4C_6mh7hais14254rYBeMYArvf=nETmgvBjgP290aD4Q@mail.gmail.com>
+In-Reply-To: <54243978.3030501@canonical.com>
+References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
+	<1386546869-31900-3-git-send-email-yinghai@kernel.org>
+	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>
+	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>
+	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>
+	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>
+	<52A8BAC5.70006@canonical.com>
+	<CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>
+	<52D01D82.5070202@canonical.com>
+	<CAE9FiQUD0XvPJNFNMoqX6J67TKuGcj+pSbj+iPUf=fvC-4UXOQ@mail.gmail.com>
+	<54189BCE.2010206@canonical.com>
+	<CAE9FiQX1pfciTcuF3_eggQLCn=LvTSLTT0UZxTb+z_RaLHwgJQ@mail.gmail.com>
+	<54243978.3030501@canonical.com>
+Date: Thu, 25 Sep 2014 11:23:13 -0700
+Message-ID: <CAE9FiQX0jt2Y8WQ5Ydx4u-3=ewtumcYxn0QhTZR4mRVOv945Fg@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
+From: Yinghai Lu <yinghai@kernel.org>
+To: Joseph Salisbury <joseph.salisbury@canonical.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 22, 2014 at 04:09:03PM -0600, Bjorn Helgaas wrote:
-> On Mon, Sep 22, 2014 at 3:33 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
-> 
-> >>> +static void xgene_pcie_fixup_bridge(struct pci_dev *dev)
-> >>> +{
-> >>> +     int i;
-> >>> +
-> >>> +     /* Hide the PCI host BARs from the kernel as their content doesn't
-> >>> +      * fit well in the resource management
-> >>> +      */
-> >>
-> >> This needs a better explanation than "doesn't fit well."
-> >>
-> >> I *think* you're probably talking about something similar to the MVEBU
-> >> devices mentioned here:
-> >> http://lkml.kernel.org/r/CAErSpo56jB1Bf2JtYCGKXZBZqRF1jXFxGmeewPX_e6vSXueGyA@mail.gmail.com
-> >>
-> >> where the device can be configured as either an endpoint or a root port,
-> >> and the endpoint BARs are still visible when configured as a root port.
-> >>
-> >
-> > It is true that X-Gene PCIe port can be configured as EP, however the
-> > the FIXUP is required not because of the BARs are still visible when
-> > configured as EP in past. X-Gene PCIe port, when configured as RC,
-> > uses BAR0-BAR1 of RC's configuration space as inbound BARs. Entire DDR
-> > region is mapped in these BARs so that it is accessible for EP devices
-> > for DMA. So if the fixup is not done during enumeration, whole
-> > outbound memory resource space gets assigned to RC and nothing is left
-> > EP devices.
-> 
-> I'm not familiar with the concept of an "inbound BAR"; at least I'm
-> not aware of anything like this in the PCI specs.  I think it might
-> reduce confusion if we avoided calling them "BARs".  They happen to be
-> at the same addresses where real BARs would be, but they certainly
-> don't behave like real BARs.
+On Thu, Sep 25, 2014 at 8:49 AM, Joseph Salisbury
+<joseph.salisbury@canonical.com> wrote:
+> On 09/16/2014 06:27 PM, Yinghai Lu wrote:
+>> On Tue, Sep 16, 2014 at 1:21 PM, Joseph Salisbury
+>> <joseph.salisbury@canonical.com> wrote:
+>>> A new bug[0] was opened due to enabling PCI_REALLOC_ENABLE_AUTO, which
+>>> is similar to the original bug[1] we discussed.
+>>>
+>>> Just wondering if there have been any additional ideas on realloc since
+>>> this was last discussed?
+>>>
+>>> [0] http://pad.lv/1363313
+>>> [1] http://pad.lv/1245938
+>> This one looks different, that LSI card support SRIOV, but BIOS does not
+>> allocate resource to SRIOV bar.
+>> We release old resource and ...reallocate resource to them with two retries.
+>
+> The user collected earlydump data, which can be found here:
+> https://launchpadlibrarian.net/185141163/dmesg-pci%3Dearlydump
 
-So what does the lspci look like?
+Did you ask the user to test reset_lsi_pci_devices.patch?
 
-If x-gene has an otherwise correct bridge config space and only the
-0/1 BARs have a non-standard meaning, that I'd agree with Bjorn, hide
-all access to these registers from the kernel (and tell your HW crew
-to read the specs, because it is very clear what those registers are
-supposed to do) .
+> ---
+>  drivers/pci/setup-bus.c |   16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+>
+> Index: linux-2.6/drivers/pci/setup-
+bus.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/setup-bus.c
+> +++ linux-2.6/drivers/pci/setup-bus.c
+> @@ -1615,6 +1615,22 @@ again:
+>                                                fail_res->flags & type_mask,
+>                                                rel_type);
+>
+> +     /* reset LSI device */
+> +     list_for_each_entry(fail_res, &fail_head, list) {
+> +             struct pci_dev *pdev;
+> +             struct pci_bus *pbus = fail_res->dev->bus;
+> +
+> +             if (pci_is_root_bus(pbus) || !pbus->self)
+> +                     continue;
+> +
+> +             /* LSI device firmware is not happy with changing BAR value */
+> +             list_for_each_entry(pdev, &pbus->devices, bus_list)
+> +                     if (pdev->vendor == PCI_VENDOR_ID_LSI_LOGIC) {
+> +                             pci_reset_secondary_bus(pbus->self);
+> +                             break;
+> +                     }
+> +     }
+> +
+>       /* restore size and flags */
+>       list_for_each_entry(fail_res, &fail_head, list) {
+>               struct resource *res = fail_res->res;
 
-If x-gene doesn't even have a bridge config space, then there are much
-bigger problems, and these corrupt BARs are just the start.
+Thanks
 
-Jason
+Yinghai
