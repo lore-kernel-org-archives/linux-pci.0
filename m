@@ -1,201 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:54534 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757236AbaIRBcJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Sep 2014 21:32:09 -0400
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:59013 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751232AbaIYHhF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Sep 2014 03:37:05 -0400
+Date: Thu, 25 Sep 2014 09:37:01 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	linux-arm-kernel@lists.infradead.org,
 	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Grant Likely <grant.likely@linaro.org>
-Subject: [PATCH v11 02/10] PCI: Introduce helper functions to deal with PCI I/O ranges.
-Date: Thu, 18 Sep 2014 02:30:17 +0100
-Message-Id: <1411003825-21521-3-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
+	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
+	Bharat.Bhushan@freescale.com, x86@kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 15/22] MIPS/Xlr/MSI: Use MSI chip framework to
+ configure MSI/MSI-X irq
+Message-ID: <20140925073700.GL12423@ulmo>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+ <1411614872-4009-16-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="nrM5Z5VIJgwP9LWp"
+In-Reply-To: <1411614872-4009-16-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some architectures do not have a simple view of the PCI I/O space
-and instead use a range of CPU addresses that map to bus addresses.
-For some architectures these ranges will be expressed by OF bindings
-in a device tree file.
 
-This patch introduces a pci_register_io_range() helper function with
-a generic implementation that can be used by such architectures to
-keep track of the I/O ranges described by the PCI bindings. If the
-PCI_IOBASE macro is not defined that signals lack of support for PCI
-and we return an error.
+--nrM5Z5VIJgwP9LWp
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-In order to retrieve the CPU address associated with an I/O port, a
-new helper function pci_pio_to_address() is introduced. This will
-search in the list of ranges registered with pci_register_io_range()
-and return the CPU address that corresponds to the given port.
+On Thu, Sep 25, 2014 at 11:14:25AM +0800, Yijing Wang wrote:
+[...]
+> diff --git a/arch/mips/pci/pci-xlr.c b/arch/mips/pci/pci-xlr.c
+[...]
+> @@ -214,11 +214,11 @@ static int get_irq_vector(const struct pci_dev *dev)
+>  }
+> =20
+>  #ifdef CONFIG_PCI_MSI
+> -void arch_teardown_msi_irq(unsigned int irq)
+> +void xlr_teardown_msi_irq(unsigned int irq)
+>  {
+>  }
+> =20
+> -int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+> +int xlr_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
 
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-Acked-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
----
- drivers/of/address.c       | 100 +++++++++++++++++++++++++++++++++++++++++++++
- include/linux/of_address.h |   2 +
- 2 files changed, 102 insertions(+)
+Can both of these now be static?
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index e371825..2373a92 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -5,6 +5,7 @@
- #include <linux/module.h>
- #include <linux/of_address.h>
- #include <linux/pci_regs.h>
-+#include <linux/slab.h>
- #include <linux/string.h>
- 
- /* Max address size we deal with */
-@@ -601,12 +602,111 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
- }
- EXPORT_SYMBOL(of_get_address);
- 
-+#ifdef PCI_IOBASE
-+struct io_range {
-+	struct list_head list;
-+	phys_addr_t start;
-+	resource_size_t size;
-+};
-+
-+static LIST_HEAD(io_range_list);
-+static DEFINE_SPINLOCK(io_range_lock);
-+#endif
-+
-+/*
-+ * Record the PCI IO range (expressed as CPU physical address + size).
-+ * Return a negative value if an error has occured, zero otherwise
-+ */
-+int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-+{
-+#ifdef PCI_IOBASE
-+	struct io_range *range;
-+	resource_size_t allocated_size = 0;
-+
-+	/* check if the range hasn't been previously recorded */
-+	spin_lock(&io_range_lock);
-+	list_for_each_entry(range, &io_range_list, list) {
-+		if (addr >= range->start && addr + size <= range->start + size)
-+			return 0;
-+		allocated_size += range->size;
-+	}
-+	spin_unlock(&io_range_lock);
-+
-+	/* range not registed yet, check for available space */
-+	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
-+		/* if it's too big check if 64K space can be reserved */
-+		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT)
-+			return -E2BIG;
-+
-+		size = SZ_64K;
-+		pr_warn("Requested IO range too big, new size set to 64K\n");
-+	}
-+
-+	/* add the range to the list */
-+	range = kzalloc(sizeof(*range), GFP_KERNEL);
-+	if (!range)
-+		return -ENOMEM;
-+
-+	range->start = addr;
-+	range->size = size;
-+
-+	spin_lock(&io_range_lock);
-+	list_add_tail(&range->list, &io_range_list);
-+	spin_unlock(&io_range_lock);
-+#endif
-+
-+	return 0;
-+}
-+
-+phys_addr_t pci_pio_to_address(unsigned long pio)
-+{
-+	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
-+
-+#ifdef PCI_IOBASE
-+	struct io_range *range;
-+	resource_size_t allocated_size = 0;
-+
-+	if (pio > IO_SPACE_LIMIT)
-+		return address;
-+
-+	spin_lock(&io_range_lock);
-+	list_for_each_entry(range, &io_range_list, list) {
-+		if (pio >= allocated_size && pio < allocated_size + range->size) {
-+			address = range->start + pio - allocated_size;
-+			break;
-+		}
-+		allocated_size += range->size;
-+	}
-+	spin_unlock(&io_range_lock);
-+#endif
-+
-+	return address;
-+}
-+
- unsigned long __weak pci_address_to_pio(phys_addr_t address)
- {
-+#ifdef PCI_IOBASE
-+	struct io_range *res;
-+	resource_size_t offset = 0;
-+	unsigned long addr = -1;
-+
-+	spin_lock(&io_range_lock);
-+	list_for_each_entry(res, &io_range_list, list) {
-+		if (address >= res->start && address < res->start + res->size) {
-+			addr = res->start - address + offset;
-+			break;
-+		}
-+		offset += res->size;
-+	}
-+	spin_unlock(&io_range_lock);
-+
-+	return addr;
-+#else
- 	if (address > IO_SPACE_LIMIT)
- 		return (unsigned long)-1;
- 
- 	return (unsigned long) address;
-+#endif
- }
- 
- static int __of_address_to_resource(struct device_node *dev,
-diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-index fb7b722..f8cc7da 100644
---- a/include/linux/of_address.h
-+++ b/include/linux/of_address.h
-@@ -55,7 +55,9 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
- extern const __be32 *of_get_address(struct device_node *dev, int index,
- 			   u64 *size, unsigned int *flags);
- 
-+extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
- extern unsigned long pci_address_to_pio(phys_addr_t addr);
-+extern phys_addr_t pci_pio_to_address(unsigned long pio);
- 
- extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
- 			struct device_node *node);
--- 
-2.1.0
+Thierry
 
+--nrM5Z5VIJgwP9LWp
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJUI8YcAAoJEN0jrNd/PrOhmbYP/ikLBs/f/C3q0Ah+1wm0yIQ9
+biLioTIcSkRAsIfmKvheDIwFqrlfVwxThhAFT1+1x9N/KgeZ0hTm7/ZzogCQEn9J
+J90nv0Y1KRdY/exT1wfgVEFtITGMGqDKTScawCJSoqc/4iswAtYkap3QdftgmyDU
+acFImPmiT5rTaF3oQXhgNTgRcMMsdGOYJg/64K0snGcBGCNDYr4ZutMiEzof/G7O
+w5KUk61xP+tvpYWRebsG/ivvFVWXNwVnpAOPAq+j6ziVxLlFLvY/r7QZ0Z95kSTj
+AqufUg6h2cePrzW3VGxKJ5HL0eLS43pMofUkRFqcNv/BEeE8ZEg5wd2mNCtAroXb
+fG5+KClUrEYZ28WO5d7Bagvekb00O2SYJ6HQW9WoASguiLfMMGa0g9w8SxmES0Gv
+axepd0VObagoL/0lUjvSs73S39kzWsShRysZ9hCEsox1Xt3kinX3wwIP+k97dsKC
+LAyXKNzxzU5xtlsZONRwRx2SsBRnUApH6CgDE5SOBgSAM+Juuk/e4NES7iTHW1iA
+7DrbU7XWcMc/SLbIanZv3gig1WuNUR011kUZ9cerQpTMZ5JX+pR/f59jbtgexuEt
+2lqvEs5pj2RZfiZy+pl21B1hMz7UPuQm8Hw0NMsXQP9wPcDwLzYAqT7uhHdaBhLV
+4rVgrCyYNcw+4+MK/Nhv
+=crca
+-----END PGP SIGNATURE-----
+
+--nrM5Z5VIJgwP9LWp--
