@@ -1,90 +1,136 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Thu, 25 Sep 2014 18:49:38 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Liviu Dudau <liviu@dudau.co.uk>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
+	Bharat.Bhushan@freescale.com, x86@kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Daniel J Blueman <daniel@numascale.com>
-Subject: [RFC v1 28/28] x86, irq: Add kernel parameter vector_alloc to set CPU vector allocation policy
-Date: Fri, 26 Sep 2014 22:57:58 +0800
-Message-Id: <1411743478-31435-29-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
+ in all platforms
+Message-ID: <20140925164937.GB30382@ulmo>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+ <20140925074235.GN12423@ulmo>
+ <20140925144855.GB31157@bart.dudau.co.uk>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="aVD9QWMuhilNxW9f"
+In-Reply-To: <20140925144855.GB31157@bart.dudau.co.uk>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Parameter vector_alloc should be set to an integer with:
-bit 0:	enable allocating CPU vector from CPUs on device local node.
-	That's to allocate from cpumask_of_node(irq_data->node).
-bit 1: enable the default policy, which is to allocate from
-       apic->target_cpus().
 
-When allocating vectors, it tries all enabled policies from lower bit
-position to higher bit position.
+--aVD9QWMuhilNxW9f
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-This option could be use to optimize interrupt distribution on large
-system such as NumaChip etc.
+On Thu, Sep 25, 2014 at 03:48:55PM +0100, Liviu Dudau wrote:
+> On Thu, Sep 25, 2014 at 09:42:36AM +0200, Thierry Reding wrote:
+> > On Thu, Sep 25, 2014 at 11:14:10AM +0800, Yijing Wang wrote:
+> > > This series is based Bjorn's pci/msi branch
+> > > git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/msi
+> > >=20
+> > > Currently, there are a lot of weak arch functions in MSI code.
+> > > Thierry Reding Introduced MSI chip framework to configure MSI/MSI-X i=
+n arm.
+> > > This series use MSI chip framework to refactor MSI code across all pl=
+atforms
+> > > to eliminate weak arch functions. Then all MSI irqs will be managed i=
+n a=20
+> > > unified framework. Because this series changed a lot of ARCH MSI code,
+> > > so tests in the platforms which MSI code modified are warmly welcomed!
+> >=20
+> > Apart from the comments to the individual patches I very much like where
+> > this is going. Thanks for taking care of this.
+> >=20
+> > Thierry
+>=20
+> I am actually in disagreement with you, Thierry. I don't like the general=
+ direction
+> of the patches, or at least I don't like the fact that we don't have a po=
+rtable
+> way of setting up the msi_chip without having to rely on weak architectur=
+al hooks.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Daniel J Blueman <daniel@numascale.com>
----
- Documentation/kernel-parameters.txt |    6 ++++++
- arch/x86/kernel/apic/vector.c       |   11 +++++++++++
- 2 files changed, 17 insertions(+)
+Oh, good. That's actually one of the things I said I wasn't happy with
+either. =3D)
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 10d51c2f10d7..895ba404eb0d 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -3586,6 +3586,12 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 	vector=		[IA-64,SMP]
- 			vector=percpu: enable percpu vector domain
- 
-+	vector_alloc=	[x86,SMP]
-+			vector_alloc=policy: policy is a bitmap, bit 0
-+			for allocating CPU vector from CPUs on device local
-+			node; bit 1 for the default policy to allocating from
-+			apic->target_cpus(). All higher bits are reserved.
-+
- 	video=		[FB] Frame buffer configuration
- 			See Documentation/fb/modedb.txt.
- 
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 4a16e0a5ae0f..d1f616374ec0 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -65,6 +65,17 @@ void set_vector_alloc_policy(unsigned int policy)
- 		x86_vector_alloc_policy = policy | X86_VECTOR_POL_CALLER;
- }
- 
-+static int __init apic_parse_vector_policy(char *str)
-+{
-+	int policy;
-+
-+	if (get_option(&str, &policy) == 1)
-+		set_vector_alloc_policy(policy);
-+
-+	return 1;
-+}
-+__setup("vector_alloc=", apic_parse_vector_policy);
-+
- static struct irq_cfg *alloc_irq_cfg(int node)
- {
- 	struct irq_cfg *cfg;
--- 
-1.7.10.4
+> I'm surprised no one considers the case of a platform having more than on=
+e host
+> bridge and possibly more than one MSI unit. With the current proposed pat=
+chset I
+> can't see how that would work.
 
+The PCI core can already deal with that. An MSI chip can be set per bus
+and the weak pcibios_add_bus() can be used to set that. Often it might
+not even be necessary to do it via pcibios_add_bus() if you create the
+root bus directly, since you can attach the MSI chip at that time.
+
+> What I would like to see is a way of creating the pci_host_bridge structu=
+re outside
+> the pci_create_root_bus(). That would then allow us to pass this sort of =
+platform
+> details like associated msi_chip into the host bridge and the child busse=
+s will
+> have an easy way of finding the information needed by finding the root bu=
+s and then
+> the host bridge structure. Then the generic pci_scan_root_bus() can be us=
+ed by (mostly)
+> everyone and the drivers can remove their kludges that try to work around=
+ the
+> current limitations.
+
+I think both issues are orthogonal. Last time I checked a lot of work
+was still necessary to unify host bridges enough so that it could be
+shared across architectures. But perhaps some of that work has
+happened in the meantime.
+
+But like I said, when you create the root bus, you can easily attach the
+MSI chip to it.
+
+Thierry
+
+--aVD9QWMuhilNxW9f
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJUJEehAAoJEN0jrNd/PrOhAr0P/2iiNHf+l+IJjI4PmhgsJm9G
+G4sbMUD6m+4pwYeaDcTdK94XdjseTOgRqew8atpBhNlsrJsLlrSBwC1YtQ++4SOx
+7fY6wHZdYR89gJ0KSObsUNR/Nso7NZIkYBNLSBjWc6ADtryHb8GrwBz3GTZevt6R
+upvjshtkfCM3VYamI9+PgAA/lJ6fIouUfhIL7tfZSoNrDeFwda6/n+ZHCfyFQNDb
+l62EsyzpLQ8qNqxaxQOocboX1Sl114NkcRYiMSEspU/C7ioPnFtCr6w9962Lrxws
+DDgrnQLEf/BV1wWj5y3eVw019uwpy8CTIgqGrqyt4ZZs0wFtzRuulXpoHTAicnhN
+XwfjNup7GgpWrA3eceElnc21zgBO+VUXc0dKYKrJBpm5eEM9+hT5q8HMStx1GvsB
+vOx24Bg7G6aMPT5zh4Ou34AQdxvRbY2Lnv+c7gMZHCNFeNO6sQd2y2FG3X95GkC+
+sFhljOlxF8VZOXZtFzA0MKoPEZEK0m27nhbIDajZWC50Lopba0Sr3OLbN6L8OiTO
+rpQvNiKi+SNTSIt932+/O+pgZFui93w5dWwSnxjW+ny4pvaAAjkNPfQrqedfOk3b
+R4Nw0eX8LkJ2KQEeWCMX4A957F9FDCCEMe2IA8fBiM0Y6GOmkWLyVGYVi0AS6B8s
+n/A0QFMmdPLn7uf5vrs2
+=mBCk
+-----END PGP SIGNATURE-----
+
+--aVD9QWMuhilNxW9f--
