@@ -1,43 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2 10/22] Irq_remapping/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+Date: Thu, 25 Sep 2014 11:14:20 +0800
+Message-ID: <1411614872-4009-11-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <2354837.kuMZPK0Y1Q@segfault>
-References: <2354837.kuMZPK0Y1Q@segfault>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 11 Sep 2014 16:26:21 -0600
-Message-ID: <CAErSpo6zLY8RVAHnLe81jjOE8cxGzskjPq3HL7eZVOtC-WF6=w@mail.gmail.com>
-Subject: Re: [3.16-rcX][pciehp][radeon] PCIe HotPlug conflicts with radeon GPU
-To: Shawn Starr <shawn.starr@rogers.com>
-Cc: Kernel development list <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+Use MSI chip framework instead of arch MSI functions to configure
+MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
 
-On Sat, Aug 2, 2014 at 10:02 AM, Shawn Starr <shawn.starr@rogers.com> wrote:
-> Hello devs,
->
-> There are two issues I am encountering with the PCIe Hotplug driver on my Lenovo Laptop (W500). I note this goes back further than 3.15.
->
-> It is noted here:
-> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=f244d8b623dae7a7bc695b0336f67729b95a9736
-> https://bugzilla.kernel.org/show_bug.cgi?id=79701
->
-> And my open bug here:
-> https://bugzilla.kernel.org/show_bug.cgi?id=77261
->
-> 1) If I enable the device to use both the integrated and discrete GPU, pciehp will decide to force unload radeon because it puts itself into a power saving state, fails back to the Intel integrated GPU in this case unless I tell radeon.ko to runpm=0 (no power management, then pciehp wont touch it).
->
-> 2) If the Radeon GPU resets and you use pci_reset=1 for kernel module option, pciehp decides to force unload radeon even though the GPU is trying to setup after failing.
->
-> Kernel I am using right now: 3.16.0-0.rc7.git3.1.fc21.x86_64 (about to boot into snapshot kernel-core-3.16.0-0.rc7.git4.1.fc21.x86_64)
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/iommu/irq_remapping.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-Hi Shawn,
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 33c4395..7929590 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -148,6 +148,11 @@ static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
+ 		return do_setup_msix_irqs(dev, nvec);
+ }
+ 
++static struct msi_chip remap_msi_chip = {
++	.setup_irqs = irq_remapping_setup_msi_irqs,
++	.teardown_irq = native_teardown_msi_irq,
++};
++
+ static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
+ {
+ 	/*
+@@ -168,6 +173,7 @@ static void __init irq_remapping_modify_x86_ops(void)
+ 	x86_msi.setup_msi_irqs		= irq_remapping_setup_msi_irqs;
+ 	x86_msi.setup_hpet_msi		= setup_hpet_msi_remapped;
+ 	x86_msi.compose_msi_msg		= compose_remapped_msi_msg;
++	x86_msi_chip = &remap_msi_chip;
+ }
+ 
+ static __init int setup_nointremap(char *str)
+-- 
+1.7.1
 
-Thanks for the report and sorry that it got dropped.  But I see you're
-cc'd on https://bugzilla.kernel.org/show_bug.cgi?id=79701, so you've
-probably seen the work there.  If you can try out the patches I just
-posted, that would be great.
-
-Bjorn
