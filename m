@@ -1,59 +1,81 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2 05/22] s390/MSI: Use __msi_mask_irq() instead of default_msi_mask_irq()
+Date: Thu, 25 Sep 2014 11:14:15 +0800
+Message-ID: <1411614872-4009-6-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Reply-To: rajatxjain@gmail.com
-In-Reply-To: <alpine.DEB.2.00.1409151152400.28050@skynet.skynet.ie>
-References: <20140911222022.16809.57079.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<1434331.0IZIM5O2Ci@vostro.rjw.lan>
-	<alpine.DEB.2.00.1409151152400.28050@skynet.skynet.ie>
-Date: Mon, 15 Sep 2014 12:06:42 -0700
-Message-ID: <CAA93t1qEmGkVHOJFjvB3OGecjC3c43SmpJW2yKv-OZTDESBWDw@mail.gmail.com>
-Subject: Re: [PATCH 0/2] PCI: Ignore hotplug events for dual GPU systems
-From: Rajat Jain <rajatxjain@gmail.com>
-To: Dave Airlie <airlied@linux.ie>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	SpacemanSpiff <a818958@trbvm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-acpi@vger.kernel.org,
-	=?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	"Jose P." <lbdkmjdf@sharklasers.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 15, 2014 at 3:53 AM, Dave Airlie <airlied@linux.ie> wrote:
->
->> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Acked-by: Dave Airlie <airlied@redhat.com>
+Now only s390/MSI use default_msi_mask_irq() and
+default_msix_mask_irq(), replace them with the common
+msi mask irq functions __msi_mask_irq() and __msix_mask_irq().
+Remove default_msi_mask_irq() and default_msix_mask_irq().
 
-Acked-by: Rajat Jain <rajatxjain@gmail.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/s390/pci/pci.c |    4 ++--
+ include/linux/msi.h |    2 --
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
->>
->> for both.
->>
->> > ---
->> >
->> > Bjorn Helgaas (2):
->> >       PCI: Add pci_ignore_hotplug() to ignore hotplug events for a device
->> >       ACPIPHP / radeon / nouveau: Remove acpi_bus_no_hotplug()
->> >
->> >
->> >  drivers/acpi/bus.c                           |   10 ----------
->> >  drivers/gpu/drm/nouveau/nouveau_acpi.c       |   16 ++--------------
->> >  drivers/gpu/drm/nouveau/nouveau_drm.c        |    1 +
->> >  drivers/gpu/drm/radeon/radeon_atpx_handler.c |   16 ++--------------
->> >  drivers/gpu/drm/radeon/radeon_drv.c          |    1 +
->> >  drivers/pci/hotplug/acpiphp_glue.c           |   16 ++++++----------
->> >  drivers/pci/hotplug/pciehp_hpc.c             |   12 ++++++++++++
->> >  include/acpi/acpi_bus.h                      |    4 +---
->> >  include/linux/pci.h                          |    6 ++++++
->> >  9 files changed, 31 insertions(+), 51 deletions(-)
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
->> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 2fa7b14..552b990 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -448,9 +448,9 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
+ 	/* Release MSI interrupts */
+ 	list_for_each_entry(msi, &pdev->msi_list, list) {
+ 		if (msi->msi_attrib.is_msix)
+-			default_msix_mask_irq(msi, 1);
++			__msix_mask_irq(msi, 1);
+ 		else
+-			default_msi_mask_irq(msi, 1, 1);
++			__msi_mask_irq(msi, 1, 1);
+ 		irq_set_msi_desc(msi->irq, NULL);
+ 		irq_free_desc(msi->irq);
+ 		msi->msg.address_lo = 0;
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index cc46a62..6fdc5c6 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -61,8 +61,6 @@ void arch_restore_msi_irqs(struct pci_dev *dev);
+ 
+ void default_teardown_msi_irqs(struct pci_dev *dev);
+ void default_restore_msi_irqs(struct pci_dev *dev);
+-#define default_msi_mask_irq	__msi_mask_irq
+-#define default_msix_mask_irq	__msix_mask_irq
+ 
+ struct msi_chip {
+ 	struct module *owner;
+-- 
+1.7.1
+
