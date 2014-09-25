@@ -1,114 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:41380 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751981AbaIGSEx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 7 Sep 2014 14:04:53 -0400
-Date: Sun, 7 Sep 2014 20:04:28 +0200
-From: Quentin Lambert <lambert.quentin@gmail.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Murray <scott@spiteful.org>
-Cc: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 4/4] PCI: remove assignement in non straight forward if
- condition
-Message-ID: <20140907180428.GA12424@greed>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:41596 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751630AbaIYCuw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 22:50:52 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2 09/22] x86/xen/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+Date: Thu, 25 Sep 2014 11:14:19 +0800
+Message-ID: <1411614872-4009-10-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The modifications effectively change the value of len_tmp
-in the case where the first condition is not met.
+Use MSI chip framework instead of arch MSI functions to configure
+MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
 
-Signed-off-by: Quentin Lambert <lambert.quentin@gmail.com>
+Tested-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Acked-by: David Vrabel <david.vrabel@citrix.com>
+Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 ---
- drivers/pci/hotplug/ibmphp_res.c | 13 +++++++++----
- drivers/pci/pci.c                |  6 +++++-
- drivers/pci/slot.c               | 12 ++++++++++--
- 3 files changed, 24 insertions(+), 7 deletions(-)
+ arch/x86/pci/xen.c |   46 ++++++++++++++++++++++++++++++----------------
+ 1 files changed, 30 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/pci/hotplug/ibmphp_res.c b/drivers/pci/hotplug/ibmphp_res.c
-index e07f34e..7066c34 100644
---- a/drivers/pci/hotplug/ibmphp_res.c
-+++ b/drivers/pci/hotplug/ibmphp_res.c
-@@ -1044,7 +1044,9 @@ int ibmphp_check_resource (struct resource_node *res, u8 bridge)
- 		/* found our range */
- 		if (!res_prev) {
- 			/* first time in the loop */
--			if ((res_cur->start != range->start) && ((len_tmp = res_cur->start - 1 - range->start) >= res->len)) {
-+			len_tmp = res_cur->start - 1 - range->start;
-+
-+			if ((res_cur->start != range->start) && (len_tmp >= res->len)) {
- 				debug ("len_tmp = %x\n", len_tmp);
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index 84c2fce..e669ee4 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -376,6 +376,11 @@ static void xen_initdom_restore_msi_irqs(struct pci_dev *dev)
+ }
+ #endif
  
- 				if ((len_tmp < len_cur) || (len_cur == 0)) {
-@@ -1084,7 +1086,9 @@ int ibmphp_check_resource (struct resource_node *res, u8 bridge)
- 		}
- 		if (!res_cur->next) {
- 			/* last device on the range */
--			if ((range->end != res_cur->end) && ((len_tmp = range->end - (res_cur->end + 1)) >= res->len)) {
-+			len_tmp = range->end - (res_cur->end + 1);
++static void xen_teardown_msi_irq(unsigned int irq)
++{
++	xen_destroy_irq(irq);
++}
 +
-+			if ((range->end != res_cur->end) && (len_tmp >= res->len)) {
- 				debug ("len_tmp = %x\n", len_tmp);
- 				if ((len_tmp < len_cur) || (len_cur == 0)) {
- 
-@@ -1123,8 +1127,9 @@ int ibmphp_check_resource (struct resource_node *res, u8 bridge)
- 		if (res_prev) {
- 			if (res_prev->rangeno != res_cur->rangeno) {
- 				/* 1st device on this range */
--				if ((res_cur->start != range->start) &&
--					((len_tmp = res_cur->start - 1 - range->start) >= res->len)) {
-+				len_tmp = res_cur->start - 1 - range->start;
-+
-+				if ((res_cur->start != range->start) &&	(len_tmp >= res->len)) {
- 					if ((len_tmp < len_cur) || (len_cur == 0)) {
- 						if ((range->start % tmp_divide) == 0) {
- 							/* just perfect, starting address is divisible by length */
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 8b63a5b..4c3ef21 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4434,9 +4434,13 @@ static int __init pci_setup(char *str)
+ static void xen_teardown_msi_irqs(struct pci_dev *dev)
  {
- 	while (str) {
- 		char *k = strchr(str, ',');
-+		char tmp = *str;
+ 	struct msi_desc *msidesc;
+@@ -385,19 +390,26 @@ static void xen_teardown_msi_irqs(struct pci_dev *dev)
+ 		xen_pci_frontend_disable_msix(dev);
+ 	else
+ 		xen_pci_frontend_disable_msi(dev);
+-
+-	/* Free the IRQ's and the msidesc using the generic code. */
+-	default_teardown_msi_irqs(dev);
+-}
+-
+-static void xen_teardown_msi_irq(unsigned int irq)
+-{
+-	xen_destroy_irq(irq);
++	
++	list_for_each_entry(msidesc, &dev->msi_list, list) {
++		int i, nvec;
++		if (msidesc->irq == 0)
++			continue;
++		if (msidesc->nvec_used)
++			nvec = msidesc->nvec_used;
++		else
++			nvec = 1 << msidesc->msi_attrib.multiple;
++		for (i = 0; i < nvec; i++)
++			xen_teardown_msi_irq(msidesc->irq + i);
++	}
+ }
+ 
+ void xen_nop_msi_mask(struct irq_data *data)
+ {
+ }
 +
- 		if (k)
- 			*k++ = 0;
--		if (*str && (str = pcibios_setup(str)) && *str) {
++struct msi_chip xen_msi_chip;
 +
-+		str = pcibios_setup(str);
-+		if (tmp && str && *str) {
- 			if (!strcmp(str, "nomsi")) {
- 				pci_no_msi();
- 			} else if (!strcmp(str, "noaer")) {
-diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
-index 396c200..22d20db 100644
---- a/drivers/pci/slot.c
-+++ b/drivers/pci/slot.c
-@@ -265,8 +265,16 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
- 	slot = get_slot(parent, slot_nr);
- 	if (slot) {
- 		if (hotplug) {
--			if ((err = slot->hotplug ? -EBUSY : 0)
--			     || (err = rename_slot(slot, name))) {
-+			err = slot->hotplug ? -EBUSY : 0;
-+			if (err)
-+				goto hotplugerror;
-+
-+			err = rename_slot(slot, name);
-+			if (err)
-+				goto hotplugerror;
-+
-+			if (0) {
-+hotplugerror:
- 				kobject_put(&slot->kobj);
- 				slot = NULL;
- 				goto err;
+ #endif
+ 
+ int __init pci_xen_init(void)
+@@ -418,9 +430,9 @@ int __init pci_xen_init(void)
+ #endif
+ 
+ #ifdef CONFIG_PCI_MSI
+-	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
+-	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
+-	x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
++	xen_msi_chip.setup_irqs = xen_setup_msi_irqs;
++	xen_msi_chip.teardown_irqs = xen_teardown_msi_irqs;
++	x86_msi_chip = &xen_msi_chip;
+ 	msi_chip.irq_mask = xen_nop_msi_mask;
+ 	msi_chip.irq_unmask = xen_nop_msi_mask;
+ #endif
+@@ -441,8 +453,9 @@ int __init pci_xen_hvm_init(void)
+ #endif
+ 
+ #ifdef CONFIG_PCI_MSI
+-	x86_msi.setup_msi_irqs = xen_hvm_setup_msi_irqs;
+-	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
++	xen_msi_chip.setup_irqs = xen_hvm_setup_msi_irqs;
++	xen_msi_chip.teardown_irq = xen_teardown_msi_irq;
++	x86_msi_chip = &xen_msi_chip;
+ #endif
+ 	return 0;
+ }
+@@ -499,9 +512,10 @@ int __init pci_xen_initial_domain(void)
+ 	int irq;
+ 
+ #ifdef CONFIG_PCI_MSI
+-	x86_msi.setup_msi_irqs = xen_initdom_setup_msi_irqs;
+-	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
+-	x86_msi.restore_msi_irqs = xen_initdom_restore_msi_irqs;
++	xen_msi_chip.setup_irqs = xen_initdom_setup_msi_irqs;
++	xen_msi_chip.teardown_irq = xen_teardown_msi_irq;
++	xen_msi_chip.restore_irqs = xen_initdom_restore_msi_irqs;
++	x86_msi_chip = &xen_msi_chip;
+ 	msi_chip.irq_mask = xen_nop_msi_mask;
+ 	msi_chip.irq_unmask = xen_nop_msi_mask;
+ #endif
 -- 
-1.9.1
+1.7.1
 
