@@ -1,211 +1,156 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v6 01/15] x86, PCI, ACPI: Kill private function resource_to_addr() in arch/x86/pci/acpi.c
-Date: Wed, 24 Sep 2014 16:59:22 +0800
-Message-Id: <1411549176-30780-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQXuJZnj74dwTbKJCQNJ+OdEbjSB0fpwqh92+WZ_XGnrxQ@mail.gmail.com>
+References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411498874-9864-7-git-send-email-Liviu.Dudau@arm.com> <CAE9FiQXuJZnj74dwTbKJCQNJ+OdEbjSB0fpwqh92+WZ_XGnrxQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 25 Sep 2014 13:59:26 -0600
+Message-ID: <CAErSpo6eUEV81n1rFjjvRcFVmsFkeUxhdL6JauTmx_Et6XdBuQ@mail.gmail.com>
+Subject: Re: [PATCH v12 06/12] PCI: Create pci_host_bridge before its
+ associated bus in pci_create_root_bus.
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Private function resource_to_addr() is used to parse ACPI resources
-for PCI host bridge. There are public interfaces available for that
-purpose, so replace resource_to_addr() with public interfaces.
+On Thu, Sep 25, 2014 at 12:15 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, Sep 23, 2014 at 12:01 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+>> Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
+>> As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
+>> the creation order has been changed for no good reason. Revert the order of
+>> creation as we are going to depend on the pci_host_bridge structure to retrieve the
+>> domain number of the root bus.
+>>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+>> Acked-by: Grant Likely <grant.likely@linaro.org>
+>> Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+>> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+>> ---
+>>  drivers/pci/probe.c | 32 +++++++++++++++++---------------
+>>  1 file changed, 17 insertions(+), 15 deletions(-)
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index e3cf8a2..5ff72ec 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -515,7 +515,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
+>>         kfree(bridge);
+>>  }
+>>
+>> -static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+>> +static struct pci_host_bridge *pci_alloc_host_bridge(void)
+>>  {
+>>         struct pci_host_bridge *bridge;
+>>
+>> @@ -524,7 +524,8 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+>>                 return NULL;
+>>
+>>         INIT_LIST_HEAD(&bridge->windows);
+>> -       bridge->bus = b;
+>> +       bridge->dev.release = pci_release_host_bridge_dev;
+>> +
+>>         return bridge;
+>>  }
+>>
+>> @@ -1761,9 +1762,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>>         char bus_addr[64];
+>>         char *fmt;
+>>
+>> +       bridge = pci_alloc_host_bridge();
+>> +       if (!bridge)
+>> +               return NULL;
+>> +
+>> +       bridge->dev.parent = parent;
+>> +
+>>         b = pci_alloc_bus();
+>>         if (!b)
+>> -               return NULL;
+>> +               goto err_out;
+>>
+>>         b->sysdata = sysdata;
+>>         b->ops = ops;
+>> @@ -1772,26 +1779,19 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>>         if (b2) {
+>>                 /* If we already got to this bus through a different bridge, ignore it */
+>>                 dev_dbg(&b2->dev, "bus already known\n");
+>> -               goto err_out;
+>> +               goto err_bus_out;
+>>         }
+>>
+>> -       bridge = pci_alloc_host_bridge(b);
+>> -       if (!bridge)
+>> -               goto err_out;
+>> -
+>> -       bridge->dev.parent = parent;
+>> -       bridge->dev.release = pci_release_host_bridge_dev;
+>> +       bridge->bus = b;
+>>         dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+>>         error = pcibios_root_bridge_prepare(bridge);
+>> -       if (error) {
+>> -               kfree(bridge);
+>> +       if (error)
+>>                 goto err_out;
+>> -       }
+>>
+>>         error = device_register(&bridge->dev);
+>>         if (error) {
+>>                 put_device(&bridge->dev);
+>> -               goto err_out;
+>> +               goto err_bus_out;
+>>         }
+>>         b->bridge = get_device(&bridge->dev);
+>>         device_enable_async_suspend(b->bridge);
+>> @@ -1848,8 +1848,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>>  class_dev_reg_err:
+>>         put_device(&bridge->dev);
+>>         device_unregister(&bridge->dev);
+>> -err_out:
+>> +err_bus_out:
+>>         kfree(b);
+>> +err_out:
+>> +       kfree(bridge);
+>>         return NULL;
+>>  }
+>
+> Hi Bjorn,
+>
+> Noticed that you put this one into pci/next.
+>
+> This patch has problem for the class_dev_reg_err path.
+> as device_unregister(&bridge->dev) will trigger pci_release_host_bridge_dev.
+> So will have double free for bridge or else.
+>
+> Please drop this patch from pci/next.
+>
+> Also looks strange that the patch have long CC list, but just omit me
+> and Jiang Liu that
+> touched those code before.
 
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/pci/acpi.c |  142 ++++++++++++++++++---------------------------------
- 1 file changed, 51 insertions(+), 91 deletions(-)
+Thanks for noticing that.  I was concerned, but couldn't remember the details.
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index cfd1b132b8e3..0e716fa56ae5 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -218,114 +218,74 @@ static void teardown_mcfg_map(struct pci_root_info *info)
- }
- #endif
- 
--static acpi_status resource_to_addr(struct acpi_resource *resource,
--				    struct acpi_resource_address64 *addr)
--{
--	acpi_status status;
--	struct acpi_resource_memory24 *memory24;
--	struct acpi_resource_memory32 *memory32;
--	struct acpi_resource_fixed_memory32 *fixed_memory32;
--
--	memset(addr, 0, sizeof(*addr));
--	switch (resource->type) {
--	case ACPI_RESOURCE_TYPE_MEMORY24:
--		memory24 = &resource->data.memory24;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = memory24->minimum;
--		addr->address_length = memory24->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_MEMORY32:
--		memory32 = &resource->data.memory32;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = memory32->minimum;
--		addr->address_length = memory32->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
--		fixed_memory32 = &resource->data.fixed_memory32;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = fixed_memory32->address;
--		addr->address_length = fixed_memory32->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_ADDRESS16:
--	case ACPI_RESOURCE_TYPE_ADDRESS32:
--	case ACPI_RESOURCE_TYPE_ADDRESS64:
--		status = acpi_resource_to_address64(resource, addr);
--		if (ACPI_SUCCESS(status) &&
--		    (addr->resource_type == ACPI_MEMORY_RANGE ||
--		    addr->resource_type == ACPI_IO_RANGE) &&
--		    addr->address_length > 0) {
--			return AE_OK;
--		}
--		break;
--	}
--	return AE_ERROR;
--}
--
- static acpi_status count_resource(struct acpi_resource *acpi_res, void *data)
- {
- 	struct pci_root_info *info = data;
--	struct acpi_resource_address64 addr;
--	acpi_status status;
-+	struct resource r = {
-+		.flags = 0
-+	};
- 
--	status = resource_to_addr(acpi_res, &addr);
--	if (ACPI_SUCCESS(status))
-+	if (!acpi_dev_resource_memory(acpi_res, &r) &&
-+	    !acpi_dev_resource_address_space(acpi_res, &r))
-+		return AE_OK;
-+
-+	if ((r.flags & (IORESOURCE_IO | IORESOURCE_MEM)) && resource_size(&r))
- 		info->res_num++;
-+
- 	return AE_OK;
- }
- 
- static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
- {
- 	struct pci_root_info *info = data;
--	struct resource *res;
--	struct acpi_resource_address64 addr;
--	acpi_status status;
--	unsigned long flags;
--	u64 start, orig_end, end;
-+	struct resource *res = &info->res[info->res_num];
-+	u64 translation_offset = 0;
-+
-+	memset(res, 0, sizeof(*res));
-+	if (acpi_dev_resource_memory(acpi_res, res)) {
-+		res->flags &= IORESOURCE_MEM | IORESOURCE_IO;
-+	} else if (acpi_dev_resource_address_space(acpi_res, res)) {
-+		u64 orig_end;
-+		struct acpi_resource_address64 addr;
-+
-+		res->flags &= IORESOURCE_MEM | IORESOURCE_IO;
-+		if (res->flags == 0)
-+			return AE_OK;
- 
--	status = resource_to_addr(acpi_res, &addr);
--	if (!ACPI_SUCCESS(status))
--		return AE_OK;
-+		if (ACPI_FAILURE(acpi_resource_to_address64(acpi_res, &addr)))
-+			return AE_OK;
- 
--	if (addr.resource_type == ACPI_MEMORY_RANGE) {
--		flags = IORESOURCE_MEM;
--		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
--			flags |= IORESOURCE_PREFETCH;
--	} else if (addr.resource_type == ACPI_IO_RANGE) {
--		flags = IORESOURCE_IO;
--	} else
--		return AE_OK;
-+		if (addr.resource_type == ACPI_MEMORY_RANGE &&
-+		    addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
-+			res->flags |= IORESOURCE_PREFETCH;
- 
--	start = addr.minimum + addr.translation_offset;
--	orig_end = end = addr.maximum + addr.translation_offset;
-+		translation_offset = addr.translation_offset;
-+		orig_end = res->end;
-+		res->start += translation_offset;
-+		res->end += translation_offset;
- 
--	/* Exclude non-addressable range or non-addressable portion of range */
--	end = min(end, (u64)iomem_resource.end);
--	if (end <= start) {
--		dev_info(&info->bridge->dev,
--			"host bridge window [%#llx-%#llx] "
--			"(ignored, not CPU addressable)\n", start, orig_end);
--		return AE_OK;
--	} else if (orig_end != end) {
--		dev_info(&info->bridge->dev,
--			"host bridge window [%#llx-%#llx] "
--			"([%#llx-%#llx] ignored, not CPU addressable)\n", 
--			start, orig_end, end + 1, orig_end);
-+		/* Exclude non-addressable range or non-addressable portion of range */
-+		res->end = min(res->end, (u64)iomem_resource.end);
-+		if (res->end <= res->start) {
-+			dev_info(&info->bridge->dev,
-+				"host bridge window [%#llx-%#llx] (ignored, not CPU addressable)\n",
-+				 res->start, orig_end);
-+			return AE_OK;
-+		} else if (orig_end != res->end) {
-+			dev_info(&info->bridge->dev,
-+				"host bridge window [%#llx-%#llx] ([%#llx-%#llx] ignored, not CPU addressable)\n",
-+				res->start, orig_end, res->end + 1, orig_end);
-+		}
- 	}
- 
--	res = &info->res[info->res_num];
--	res->name = info->name;
--	res->flags = flags;
--	res->start = start;
--	res->end = end;
--	info->res_offset[info->res_num] = addr.translation_offset;
--	info->res_num++;
--
--	if (!pci_use_crs)
--		dev_printk(KERN_DEBUG, &info->bridge->dev,
--			   "host bridge window %pR (ignored)\n", res);
-+	if (res->flags && resource_size(res)) {
-+		res->name = info->name;
-+		info->res_offset[info->res_num] = translation_offset;
-+		info->res_num++;
-+		if (!pci_use_crs)
-+			dev_printk(KERN_DEBUG, &info->bridge->dev,
-+				   "host bridge window %pR (ignored)\n", res);
-+	}
- 
- 	return AE_OK;
- }
--- 
-1.7.10.4
+I dropped this patch and the subsequent ones from pci/host and rebased
+my "next" branch.
 
+Sorry I didn't notice you weren't on the CC list.
+
+Bjorn
