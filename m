@@ -1,207 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:63453 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751832AbaIBDpl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Sep 2014 23:45:41 -0400
-Message-ID: <54053CDD.90300@huawei.com>
-Date: Tue, 2 Sep 2014 11:43:25 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Thu, 25 Sep 2014 15:48:55 +0100
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	linux-arm-kernel@lists.infradead.org,
 	Russell King <linux@arm.linux.org.uk>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-CC: linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v9 03/12] PCI: Introduce helper functions to deal with
- PCI I/O ranges.
-References: <1407860725-25202-1-git-send-email-Liviu.Dudau@arm.com> <1407860725-25202-4-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1407860725-25202-4-git-send-email-Liviu.Dudau@arm.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
+	Bharat.Bhushan@freescale.com, x86@kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
+ in all platforms
+Message-ID: <20140925144855.GB31157@bart.dudau.co.uk>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+ <20140925074235.GN12423@ulmo>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140925074235.GN12423@ulmo>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/8/13 0:25, Liviu Dudau wrote:
-> Some architectures do not have a simple view of the PCI I/O space
-> and instead use a range of CPU addresses that map to bus addresses.
-> For some architectures these ranges will be expressed by OF bindings
-> in a device tree file.
+On Thu, Sep 25, 2014 at 09:42:36AM +0200, Thierry Reding wrote:
+> On Thu, Sep 25, 2014 at 11:14:10AM +0800, Yijing Wang wrote:
+> > This series is based Bjorn's pci/msi branch
+> > git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/msi
+> > 
+> > Currently, there are a lot of weak arch functions in MSI code.
+> > Thierry Reding Introduced MSI chip framework to configure MSI/MSI-X in arm.
+> > This series use MSI chip framework to refactor MSI code across all platforms
+> > to eliminate weak arch functions. Then all MSI irqs will be managed in a 
+> > unified framework. Because this series changed a lot of ARCH MSI code,
+> > so tests in the platforms which MSI code modified are warmly welcomed!
 > 
-> This patch introduces a pci_register_io_range() helper function with
-> a generic implementation that can be used by such architectures to
-> keep track of the I/O ranges described by the PCI bindings. If the
-> PCI_IOBASE macro is not defined that signals lack of support for PCI
-> and we return an error.
+> Apart from the comments to the individual patches I very much like where
+> this is going. Thanks for taking care of this.
 > 
-> In order to retrieve the CPU address associated with an I/O port, a
-> new helper function pci_pio_to_address() is introduced. This will
-> search in the list of ranges registered with pci_register_io_range()
-> and return the CPU address that corresponds to the given port.
-> 
-> Cc: Grant Likely <grant.likely@linaro.org>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> ---
->  drivers/of/address.c       | 95 ++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/of_address.h |  2 +
->  2 files changed, 97 insertions(+)
-> 
-> diff --git a/drivers/of/address.c b/drivers/of/address.c
-> index 5edfcb0..4dab700 100644
-> --- a/drivers/of/address.c
-> +++ b/drivers/of/address.c
-> @@ -5,6 +5,7 @@
->  #include <linux/module.h>
->  #include <linux/of_address.h>
->  #include <linux/pci_regs.h>
-> +#include <linux/slab.h>
->  #include <linux/string.h>
->  
->  /* Max address size we deal with */
-> @@ -601,12 +602,106 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
->  }
->  EXPORT_SYMBOL(of_get_address);
->  
-> +#ifdef PCI_IOBASE
-> +struct io_range {
-> +	struct list_head list;
-> +	phys_addr_t start;
-> +	resource_size_t size;
-> +};
-> +
-> +static LIST_HEAD(io_range_list);
-> +static DEFINE_SPINLOCK(io_range_lock);
-> +#endif
-> +
-> +/*
-> + * Record the PCI IO range (expressed as CPU physical address + size).
-> + * Return a negative value if an error has occured, zero otherwise
-> + */
-> +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-> +{
-> +#ifdef PCI_IOBASE
-> +	struct io_range *range;
-> +	resource_size_t allocated_size = 0;
-> +
-> +	/* check if the range hasn't been previously recorded */
-> +	spin_lock(&io_range_lock);
-> +	list_for_each_entry(range, &io_range_list, list) {
-> +		if (addr >= range->start && addr + size <= range->start + size)
-> +			return 0;
-> +		allocated_size += range->size;
-> +	}
-> +	spin_unlock(&io_range_lock);
-> +
-> +	/* range not registed yet, check for available space */
-> +	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
-> +		/* if it's too big check if 64K space can be reserved */
-> +		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT)
-> +			return -E2BIG;
-> +
-> +		size = SZ_64K;
-> +		pr_warn("Requested IO range too big, new size set to 64K\n");
-> +	}
-> +
-> +	/* add the range to the list */
-> +	range = kzalloc(sizeof(*range), GFP_KERNEL);
-> +	if (!range)
-> +		return -ENOMEM;
-> +
-> +	range->start = addr;
-> +	range->size = size;
-> +
-> +	list_add_tail(&range->list, &io_range_list);
+> Thierry
 
-Need spin_lock() here ?
+I am actually in disagreement with you, Thierry. I don't like the general direction
+of the patches, or at least I don't like the fact that we don't have a portable
+way of setting up the msi_chip without having to rely on weak architectural hooks.
+I'm surprised no one considers the case of a platform having more than one host
+bridge and possibly more than one MSI unit. With the current proposed patchset I
+can't see how that would work.
 
-> +#endif
-> +
-> +	return 0;
-> +}
-> +
-> +phys_addr_t pci_pio_to_address(unsigned long pio)
-> +{
-> +	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
-> +
-> +#ifdef PCI_IOBASE
-> +	struct io_range *range;
-> +	resource_size_t allocated_size = 0;
-> +
-> +	if (pio > IO_SPACE_LIMIT)
-> +		return address;
-> +
-> +	spin_lock(&io_range_lock);
-> +	list_for_each_entry(range, &io_range_list, list) {
-> +		if (pio >= allocated_size && pio < allocated_size + range->size) {
-> +			address = range->start + pio - allocated_size;
-> +			break;
-> +		}
-> +		allocated_size += range->size;
-> +	}
-> +	spin_unlock(&io_range_lock);
-> +#endif
-> +
-> +	return address;
-> +}
-> +
->  unsigned long __weak pci_address_to_pio(phys_addr_t address)
->  {
-> +#ifdef PCI_IOBASE
-> +	struct io_range *res;
-> +	resource_size_t offset = 0;
-> +
-> +	list_for_each_entry(res, &io_range_list, list) {
+What I would like to see is a way of creating the pci_host_bridge structure outside
+the pci_create_root_bus(). That would then allow us to pass this sort of platform
+details like associated msi_chip into the host bridge and the child busses will
+have an easy way of finding the information needed by finding the root bus and then
+the host bridge structure. Then the generic pci_scan_root_bus() can be used by (mostly)
+everyone and the drivers can remove their kludges that try to work around the
+current limitations.
 
-And here.
+Best regards,
+Liviu
 
-> +		if (address >= res->start &&
-> +			address < res->start + res->size) {
-> +			return res->start - address + offset;
-> +		}
-> +		offset += res->size;
-> +	}
-> +
-> +	return (unsigned long)-1;
-> +#else
->  	if (address > IO_SPACE_LIMIT)
->  		return (unsigned long)-1;
->  
->  	return (unsigned long) address;
-> +#endif
->  }
->  
->  static int __of_address_to_resource(struct device_node *dev,
-> diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-> index c13b878..28e6836 100644
-> --- a/include/linux/of_address.h
-> +++ b/include/linux/of_address.h
-> @@ -55,7 +55,9 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
->  extern const __be32 *of_get_address(struct device_node *dev, int index,
->  			   u64 *size, unsigned int *flags);
->  
-> +extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
->  extern unsigned long pci_address_to_pio(phys_addr_t addr);
-> +extern phys_addr_t pci_pio_to_address(unsigned long pio);
->  
->  extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
->  			struct device_node *node);
-> 
+---------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
 
-
--- 
-Thanks!
-Yijing
+ One small step
+   for me ...
 
