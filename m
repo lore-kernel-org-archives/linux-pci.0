@@ -1,88 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24738 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750956AbaIJPBz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Sep 2014 11:01:55 -0400
-Date: Wed, 10 Sep 2014 10:59:57 -0400
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Thu, 25 Sep 2014 10:23:40 -0400
 From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: David Vrabel <david.vrabel@citrix.com>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-mips@linux-mips.org,
-	linux-ia64@vger.kernel.org, linux-pci@vger.kernel.org,
-	Xinwei Hu <huxinwei@huawei.com>, sparclinux@vger.kernel.org,
-	linux-arch@vger.kernel.org, linux-s390@vger.kernel.org,
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	linux-arm-kernel@lists.infradead.org,
 	Russell King <linux@arm.linux.org.uk>,
-	Joerg Roedel <joro@8bytes.org>, x86@kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	xen-devel@lists.xenproject.org, arnab.basu@freescale.com,
+	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
+	Bharat.Bhushan@freescale.com, x86@kernel.org,
 	Arnd Bergmann <arnd@arndb.de>,
-	Chris Metcalf <cmetcalf@tilera.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	linux-arm-kernel@lists.infradead.org, Bharat.Bhushan@freescale.com,
-	Tony Luck <tony.luck@intel.com>,
+	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
 	Ralf Baechle <ralf@linux-mips.org>,
-	iommu@lists.linux-foundation.org, Wuyun <wuyun.wu@huawei.com>,
-	linuxppc-dev@lists.ozlabs.org,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [Xen-devel] [PATCH v1 08/21] x86/xen/MSI: Use MSI chip framework
- to configure MSI/MSI-X irq
-Message-ID: <20140910145957.GD12893@laptop.dumpdata.com>
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
- <1409911806-10519-9-git-send-email-wangyijing@huawei.com>
- <5409C8C0.8020200@citrix.com>
- <540E6095.8030409@huawei.com>
- <54104641.7020007@citrix.com>
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
+ in all platforms
+Message-ID: <20140925142340.GE20089@laptop.dumpdata.com>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54104641.7020007@citrix.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 10, 2014 at 01:38:25PM +0100, David Vrabel wrote:
-> On 09/09/14 03:06, Yijing Wang wrote:
-> > On 2014/9/5 22:29, David Vrabel wrote:
-> >> On 05/09/14 11:09, Yijing Wang wrote:
-> >>> Use MSI chip framework instead of arch MSI functions to configure
-> >>> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
-> >> [...]
-> >>> --- a/arch/x86/pci/xen.c
-> >>> +++ b/arch/x86/pci/xen.c
-> >> [...]
-> >>> @@ -418,9 +430,9 @@ int __init pci_xen_init(void)
-> >>>  #endif
-> >>>  
-> >>>  #ifdef CONFIG_PCI_MSI
-> >>> -	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
-> >>> -	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
-> >>> -	x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
-> >>> +	xen_msi_chip.setup_irqs = xen_setup_msi_irqs;
-> >>> +	xen_msi_chip.teardown_irqs = xen_teardown_msi_irqs;
-> >>> +	x86_msi_chip = &xen_msi_chip;
-> >>>  	msi_chip.irq_mask = xen_nop_msi_mask;
-> >>>  	msi_chip.irq_unmask = xen_nop_msi_mask;
-> >>
-> >> Why have these not been changed to set the x86_msi_chip.mask/unmask
-> >> fields instead?
-> > 
-> > Hi David, x86_msi_chip here is struct msi_chip data type, used to configure MSI/MSI-X
-> > irq. msi_chip above is struct irq_chip data type, represent the MSI irq controller. They are
-> > not the same object. Their name easily confusing people.
-> 
-> Ok, it all makes sense now.
-> 
-> Acked-by: David Vrabel <david.vrabel@citrix.com>
+On Thu, Sep 25, 2014 at 11:14:10AM +0800, Yijing Wang wrote:
+> This series is based Bjorn's pci/msi branch
+> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/msi
 
-You can also add 'Tested-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>'
-
-on the whole series - I ran it through on Xen and on baremetal with a mix of 32/64 builds.
-
-Oh, and also Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com> the Xen parts.
-
+Is there a git tree for these patches?
 > 
-> David
+> Currently, there are a lot of weak arch functions in MSI code.
+> Thierry Reding Introduced MSI chip framework to configure MSI/MSI-X in arm.
+> This series use MSI chip framework to refactor MSI code across all platforms
+> to eliminate weak arch functions. Then all MSI irqs will be managed in a 
+> unified framework. Because this series changed a lot of ARCH MSI code,
+> so tests in the platforms which MSI code modified are warmly welcomed!
 > 
-> _______________________________________________
-> Xen-devel mailing list
-> Xen-devel@lists.xen.org
-> http://lists.xen.org/xen-devel
+> v1->v2:
+> Add a patch to make s390 MSI code build happy between patch "x86/xen/MSI: E.."
+> and "s390/MSI: Use MSI..". Fix several typo problems found by Lucas.
+> 
+> RFC->v1: 
+> Updated "[patch 4/21] x86/xen/MSI: Eliminate...", export msi_chip instead
+> of #ifdef to fix MSI bug in xen running in x86. 
+> Rename arch_get_match_msi_chip() to arch_find_msi_chip().
+> Drop use struct device as the msi_chip argument, we will do that
+> later in another patchset.
+> 
+> Yijing Wang (22):
+>   PCI/MSI: Clean up struct msi_chip argument
+>   PCI/MSI: Remove useless bus->msi assignment
+>   MSI: Remove the redundant irq_set_chip_data()
+>   x86/xen/MSI: Eliminate arch_msix_mask_irq() and arch_msi_mask_irq()
+>   s390/MSI: Use __msi_mask_irq() instead of default_msi_mask_irq()
+>   PCI/MSI: Introduce weak arch_find_msi_chip() to find MSI chip
+>   PCI/MSI: Refactor struct msi_chip to make it become more common
+>   x86/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+>   x86/xen/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+>   Irq_remapping/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+>   x86/MSI: Remove unused MSI weak arch functions
+>   MIPS/Octeon/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+>   MIPS/Xlp: Remove the dead function destroy_irq() to fix build error
+>   MIPS/Xlp/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+>   MIPS/Xlr/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+>   Powerpc/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+>   s390/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+>   arm/iop13xx/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+>   IA64/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+>   Sparc/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+>   tile/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+>   PCI/MSI: Clean up unused MSI arch functions
+> 
+>  arch/arm/mach-iop13xx/include/mach/pci.h |    2 +
+>  arch/arm/mach-iop13xx/iq81340mc.c        |    1 +
+>  arch/arm/mach-iop13xx/iq81340sc.c        |    1 +
+>  arch/arm/mach-iop13xx/msi.c              |    9 ++-
+>  arch/arm/mach-iop13xx/pci.c              |    6 ++
+>  arch/ia64/kernel/msi_ia64.c              |   18 ++++-
+>  arch/mips/pci/msi-octeon.c               |   35 ++++++----
+>  arch/mips/pci/msi-xlp.c                  |   18 ++++--
+>  arch/mips/pci/pci-xlr.c                  |   15 ++++-
+>  arch/powerpc/kernel/msi.c                |   14 +++-
+>  arch/s390/pci/pci.c                      |   18 ++++-
+>  arch/sparc/kernel/pci.c                  |   14 +++-
+>  arch/tile/kernel/pci_gx.c                |   14 +++-
+>  arch/x86/include/asm/apic.h              |    4 +
+>  arch/x86/include/asm/pci.h               |    4 +-
+>  arch/x86/include/asm/x86_init.h          |    7 --
+>  arch/x86/kernel/apic/io_apic.c           |   16 ++++-
+>  arch/x86/kernel/x86_init.c               |   34 ---------
+>  arch/x86/pci/xen.c                       |   60 +++++++++-------
+>  drivers/iommu/irq_remapping.c            |    9 ++-
+>  drivers/irqchip/irq-armada-370-xp.c      |    8 +--
+>  drivers/pci/host/pci-tegra.c             |    8 ++-
+>  drivers/pci/host/pcie-designware.c       |    4 +-
+>  drivers/pci/host/pcie-rcar.c             |    8 ++-
+>  drivers/pci/msi.c                        |  114 ++++++++++++++----------------
+>  drivers/pci/probe.c                      |    1 -
+>  include/linux/msi.h                      |   26 ++-----
+>  27 files changed, 266 insertions(+), 202 deletions(-)
+> 
