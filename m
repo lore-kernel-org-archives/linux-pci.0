@@ -1,115 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:54517 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754856AbaIQOL4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Sep 2014 10:11:56 -0400
-Message-ID: <541996A9.306@ti.com>
-Date: Wed, 17 Sep 2014 10:11:53 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:56519 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753578AbaIYPtY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Sep 2014 11:49:24 -0400
+Message-ID: <54243978.3030501@canonical.com>
+Date: Thu, 25 Sep 2014 11:49:12 -0400
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH - v4] PCI: keystone: add a pci quirk to limit mrrs
-References: <1410195814-30414-1-git-send-email-m-karicheri2@ti.com> <20140916215448.GB5050@google.com>
-In-Reply-To: <20140916215448.GB5050@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit
+ mmio
+References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>	<1386546869-31900-3-git-send-email-yinghai@kernel.org>	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>	<52A8BAC5.70006@canonical.com>	<CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>	<52D01D82.5070202@canonical.com>	<CAE9FiQUD0XvPJNFNMoqX6J67TKuGcj+pSbj+iPUf=fvC-4UXOQ@mail.gmail.com>	<54189BCE.2010206@canonical.com> <CAE9FiQX1pfciTcuF3_eggQLCn=LvTSLTT0UZxTb+z_RaLHwgJQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQX1pfciTcuF3_eggQLCn=LvTSLTT0UZxTb+z_RaLHwgJQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/16/2014 05:54 PM, Bjorn Helgaas wrote:
-> On Mon, Sep 08, 2014 at 01:03:34PM -0400, Murali Karicheri wrote:
->> Keystone PCI controller has a limitation that memory read request
->> size must not exceed 256 bytes. This is a hardware limitation and
->> add a quirk to force this limit on all downstream devices by
->> updating mrrs.
+On 09/16/2014 06:27 PM, Yinghai Lu wrote:
+> On Tue, Sep 16, 2014 at 1:21 PM, Joseph Salisbury
+> <joseph.salisbury@canonical.com> wrote:
+>> A new bug[0] was opened due to enabling PCI_REALLOC_ENABLE_AUTO, which
+>> is similar to the original bug[1] we discussed.
 >>
->> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>> Just wondering if there have been any additional ideas on realloc since
+>> this was last discussed?
+>>
+>> [0] http://pad.lv/1363313
+>> [1] http://pad.lv/1245938
+> This one looks different, that LSI card support SRIOV, but BIOS does not
+> allocate resource to SRIOV bar.
+> We release old resource and ...reallocate resource to them with two retries.
 >
-> Applied to pci/host-keystone for v3.18, thanks.
+> [    0.321983] pci_bus 0000:00: max bus depth: 1 pci_try_num: 2
+> [    0.322010] pci 0000:00:03.0: BAR 15: assigned [mem
+> 0xef800000-0xef8fffff pref]
+> [    0.322025] pci 0000:01:00.0: reg 0x174: [mem 0x00000000-0x00003fff 64bit]
+> [    0.322033] pci 0000:01:00.0: reg 0x17c: [mem 0x00000000-0x0003ffff 64bit]
+> [    0.322040] pci 0000:01:00.0: reg 0x174: [mem 0x00000000-0x00003fff 64bit]
+> [    0.322042] pci 0000:01:00.0: BAR 6: assigned [mem
+> 0xef800000-0xef87ffff pref]
+> [    0.322051] pci 0000:01:00.0: reg 0x17c: [mem 0x00000000-0x0003ffff 64bit]
+> [    0.322053] pci 0000:01:00.0: BAR 9: can't assign mem (size 0x400000)
+> [    0.322061] pci 0000:01:00.0: reg 0x174: [mem 0x00000000-0x00003fff 64bit]
+> [    0.322063] pci 0000:01:00.0: BAR 7: assigned [mem
+> 0xfbd00000-0xfbd3ffff 64bit]
+> [    0.322070] pci 0000:00:03.0: PCI bridge to [bus 01]
+> [    0.322073] pci 0000:00:03.0:   bridge window [io  0xc000-0xcfff]
+> [    0.322077] pci 0000:00:03.0:   bridge window [mem 0xfbd00000-0xfbdfffff]
+> [    0.322080] pci 0000:00:03.0:   bridge window [mem
+> 0xef800000-0xef8fffff pref]
+> [    0.322142] pci_bus 0000:00: No. 2 try to assign unassigned res
+> [    0.322143] release child resource [mem 0xfbd00000-0xfbd3ffff 64bit]
+> [    0.322144] release child resource [mem 0xfbd80000-0xfbdbffff 64bit]
+> [    0.322145] release child resource [mem 0xfbdfc000-0xfbdfffff 64bit]
+> [    0.322147] pci 0000:00:03.0: resource 14 [mem
+> 0xfbd00000-0xfbdfffff] released
+> [    0.322148] pci 0000:00:03.0: PCI bridge to [bus 01]
+> [    0.322156] pci 0000:00:03.0: bridge window [mem
+> 0x00100000-0x001fffff] to [bus 01] add_size 500000
+> [    0.322174] pci 0000:00:03.0: res[14]=[mem 0x00100000-0x001fffff]
+> get_res_add_size add_size 500000
+> [    0.322176] pci 0000:00:03.0: BAR 14: assigned [mem 0xefb00000-0xf00fffff]
+> [    0.322185] pci 0000:01:00.0: reg 0x174: [mem 0xfbd00000-0xfbd03fff 64bit]
+> [    0.322192] pci 0000:01:00.0: reg 0x17c: [mem 0x00000000-0x0003ffff 64bit]
+> [    0.322194] pci 0000:01:00.0: res[9]=[mem
+> 0x00000000-0xffffffffffffffff 64bit] get_res_add_size add_size 400000
+> [    0.322196] pci 0000:01:00.0: res[7]=[mem
+> 0x00000000-0xffffffffffffffff 64bit] get_res_add_size add_size 40000
+> [    0.322198] pci 0000:01:00.0: BAR 3: assigned [mem
+> 0xefb00000-0xefb3ffff 64bit]
+> [    0.322211] pci 0000:01:00.0: reg 0x17c: [mem 0x00000000-0x0003ffff 64bit]
+> [    0.322212] pci 0000:01:00.0: BAR 9: assigned [mem
+> 0xefb40000-0xeff3ffff 64bit]
+> [    0.322219] pci 0000:01:00.0: BAR 1: assigned [mem
+> 0xeff40000-0xeff43fff 64bit]
+> [    0.322232] pci 0000:01:00.0: reg 0x174: [mem 0xfbd00000-0xfbd03fff 64bit]
+> [    0.322234] pci 0000:01:00.0: BAR 7: assigned [mem
+> 0xeff44000-0xeff83fff 64bit]
+> [    0.322241] pci 0000:00:03.0: PCI bridge to [bus 01]
+> [    0.322244] pci 0000:00:03.0:   bridge window [io  0xc000-0xcfff]
+> [    0.322248] pci 0000:00:03.0:   bridge window [mem 0xefb00000-0xf00fffff]
+> [    0.322251] pci 0000:00:03.0:   bridge window [mem
+> 0xef800000-0xef8fffff 64bit pref]
 >
-> I moved the pci-keystone.txt update regarding pci=pcie_bus_perf into this
-> patch.  This is where it belongs, isn't it?  I'm pretty sure it wasn't
-> related to setting the PCI device ID dynamically.
-Yes. Thanks for taking care of the documentation part.
-
-Thanks
-Murali
-
+> So the resource realloc do work as expected. but LSI firmware has some
+> problem again?
 >
->> ---
->>    -v4: re-send removing extra lines
->>    -v3: added check for vendor id and use pci_matc_id() to do matching
->>    -v2: made the quirk happens after tuning
->>    -v1: changed printk to indicate PCI bdf
->>
->>   drivers/pci/host/pci-keystone.c |   45 +++++++++++++++++++++++++++++++++++++++
->>   1 file changed, 45 insertions(+)
->>
->> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
->> index c1cfaef..ff8ed25 100644
->> --- a/drivers/pci/host/pci-keystone.c
->> +++ b/drivers/pci/host/pci-keystone.c
->> @@ -42,8 +42,53 @@
->>   /* DEV_STAT_CTRL */
->>   #define PCIE_CAP_BASE		0x70
->>
->> +/* PCIE controller device IDs */
->> +#define PCIE_RC_K2HK		0xb008
->> +#define PCIE_RC_K2E		0xb009
->> +#define PCIE_RC_K2L		0xb00a
->> +
->>   #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
->>
->> +static void quirk_limit_mrrs(struct pci_dev *dev)
->> +{
->> +	struct pci_bus *bus = dev->bus;
->> +	struct pci_dev *bridge = bus->self;
->> +	static const struct pci_device_id rc_pci_devids[] = {
->> +		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2HK),
->> +		 .class = PCI_CLASS_BRIDGE_PCI<<  8, .class_mask = ~0, },
->> +		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2E),
->> +		 .class = PCI_CLASS_BRIDGE_PCI<<  8, .class_mask = ~0, },
->> +		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2L),
->> +		 .class = PCI_CLASS_BRIDGE_PCI<<  8, .class_mask = ~0, },
->> +		{ 0, },
->> +	};
->> +
->> +	if (pci_is_root_bus(bus))
->> +		return;
->> +
->> +	/* look for the host bridge */
->> +	while (!pci_is_root_bus(bus)) {
->> +		bridge = bus->self;
->> +		bus = bus->parent;
->> +	}
->> +
->> +	if (bridge) {
->> +		/*
->> +		 * Keystone PCI controller has a h/w limitation of
->> +		 * 256 bytes maximum read request size. It can't handle
->> +		 * anything higher than this. So force this limit on
->> +		 * all downstream devices
->> +		 */
->> +		if (pci_match_id(rc_pci_devids, bridge)) {
->> +			if (pcie_get_readrq(dev)>  256) {
->> +				dev_info(&dev->dev, "limiting mrrs to 256\n");
->> +				pcie_set_readrq(dev, 256);
->> +			}
->> +		}
->> +	}
->> +}
->> +DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
->> +
->>   static int ks_pcie_establish_link(struct keystone_pcie *ks_pcie)
->>   {
->>   	struct pcie_port *pp =&ks_pcie->pp;
->> --
->> 1.7.9.5
->>
+> We may need to add command after the reset the bridge resource.
+>
+> Can you get bootlog with "pci=earlydump"?
+>
+> Thanks
+>
+> Yinghai
+Hi Yinghai,
 
-
--- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+The user collected earlydump data, which can be found here:
+https://launchpadlibrarian.net/185141163/dmesg-pci%3Dearlydump
