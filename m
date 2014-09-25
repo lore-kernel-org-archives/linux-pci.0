@@ -1,47 +1,60 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH v1 05/13] PCI: pciehp: Remove pci_configure_slot() usage
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatxjain@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Date: Fri, 12 Sep 2014 12:03:21 -0600
-Message-ID: <20140912180321.1630.88175.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:4172 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751981AbaIYQso (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Sep 2014 12:48:44 -0400
+Date: Thu, 25 Sep 2014 10:46:58 -0600 (MDT)
+From: Keith Busch <keith.busch@intel.com>
+To: Yijing Wang <wangyijing@huawei.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Keith Busch <keith.busch@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	Jon Mason <jdmason@kudzu.us>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+In-Reply-To: <54236E7B.5000905@huawei.com>
+Message-ID: <alpine.LRH.2.03.1409251029220.4688@AMR>
+References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com> <20140903224201.GD26073@google.com> <540802D9.6000903@huawei.com> <CAErSpo6qy76zTX07Ufm0n1_HUA5G0MrAYxauEFa5QkibWsejFQ@mail.gmail.com> <5409117E.2000002@huawei.com> <alpine.LRH.2.03.1409241547430.4696@AMR>
+ <CAErSpo5upA7KYVo=_SvwJ9pdNot_5ENi3OtiPpuzZjpwj3ghPA@mail.gmail.com> <54236E7B.5000905@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We now configure each PCI device as it is enumerated, in pci_device_add(),
-so remove the configuration done in pciehp.
+On Wed, 24 Sep 2014, Yijing Wang wrote:
+> On 2014/9/25 7:30, Bjorn Helgaas wrote:
+>> On Wed, Sep 24, 2014 at 4:41 PM, Keith Busch <keith.busch@intel.com> wrote:
+>>> Just poking this thread to make sure it's not dead. :)
+>>>
+>>> I tested Yijing's proposal and it is successful on our Intel server
+>>> platforms; hoping either this or something that derives similar behavior
+>>> will be applied so we can remove bus tuning kernel parameters.
+>>>
+>>> Tested-by: Keith Busch <keith.busch@intel.com>
+>>
+>> Oops, thanks for poking me, because this was indeed dead.
+>>
+>> My main objection was to testing "is_hotplug_bridge".  That doesn't
+>> seem right, because this issue really isn't specific to hotplug.  I
+>> didn't see a resolution of that, but let me know if I missed it.
+>
+> Why I introduced "is_hotplug_bridge" is to avoid to touch the MPS which is not
+> in hotplug case when pcie_bus_config == PCIE_BUS_TUNE_OFF.
+>
+> It's so sad that PCIe spec doesn't give a detailed guide to configure MPS.
+>
+> I'd like to refactor current MPS framework, but now there are still some puzzles
+> to me. I need to have a deeper understanding of pcie mps. I read Jon's mps patch
+> log from git, I found he turn off all this MPS config, because some issues were found
+> in some platforms, but no platforms detailed info and no bugzilla records.
 
-That configuration, in pci_configure_device(), does not include the
-MPS/MRRS configuration done by pcie_bus_configure_settings(), so keep
-that here.
+Just my opinion, I thought the hotplug check was a good idea: it addresses
+a known issue, and does not mess with current unknowns. Outside a hotplug
+scenario, I think we expect platform f/w to handle MPS settings and the
+kernel can stay out of the way because of the unknown platform issues. If
+it is hotplug, having the kernel set device's MPS to match the parent
+couldn't make things worse off than doing nothing, right?
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/hotplug/pciehp_pci.c |    5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-index b66812703415..9e69403be632 100644
---- a/drivers/pci/hotplug/pciehp_pci.c
-+++ b/drivers/pci/hotplug/pciehp_pci.c
-@@ -65,10 +65,7 @@ int pciehp_configure_device(struct slot *p_slot)
- 			pci_hp_add_bridge(dev);
- 
- 	pci_assign_unassigned_bridge_resources(bridge);
--
--	list_for_each_entry(dev, &parent->devices, bus_list)
--		pci_configure_slot(dev);
--
-+	pcie_bus_configure_settings(parent);
- 	pci_bus_add_devices(parent);
- 
-  out:
-
+On the side, I'll see if I can ping some comrades on PCI-SIG to propose
+an ECN to clarify configuring MPS. They usually ignore me though, so no
+promises. :)
