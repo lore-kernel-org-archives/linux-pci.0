@@ -1,66 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:55382 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754330AbaIHRIG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Sep 2014 13:08:06 -0400
-Received: by mail-pa0-f49.google.com with SMTP id lf10so1565733pab.8
-        for <linux-pci@vger.kernel.org>; Mon, 08 Sep 2014 10:08:05 -0700 (PDT)
-Date: Mon, 8 Sep 2014 11:08:01 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Ethan Zhao <ethan.zhao@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	gleb@kernel.org, pbonzini@redhat.com, kvm@vger.kernel.org,
-	konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
-	david.vrabel@citrix.com, xen-devel@lists.xenproject.org,
-	alex.williamson@redhat.com, alexander.h.duyck@intel.com,
-	ethan.kernel@gmail.com
-Subject: Re: [PATCH v3 0/4 resend] Introduce device assignment flag operation
- helper function
-Message-ID: <20140908170801.GP8080@google.com>
-References: <1407476167-18935-1-git-send-email-ethan.zhao@oracle.com>
- <20140905171522.GA8080@google.com>
+Received: from mail-bn1bn0105.outbound.protection.outlook.com ([157.56.110.105]:47994
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751134AbaIYBXK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Sep 2014 21:23:10 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Fabio Estevam <festevam@gmail.com>
+CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shengchao Guo <Shawn.Guo@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+Subject: RE: [PATCH v1 4/4] PCI: imx6: add imx6sx pcie support
+Date: Thu, 25 Sep 2014 01:23:07 +0000
+Message-ID: <5ecf8c18ffa242b993f42ba5c6d542d7@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1411382705-15301-1-git-send-email-r65037@freescale.com>
+	<1411382705-15301-5-git-send-email-r65037@freescale.com>
+	<CAOMZO5D_s7ST_J0FV+NbrHpw2jVBDSpHprHnwJfPbQ=tqy7PWQ@mail.gmail.com>
+	<8f7c463a0c7c4bd2a4a4416bd8b046b3@DM2PR0301MB0862.namprd03.prod.outlook.com>
+	<CAOMZO5BQQdVvyh56dO6CWJF23NN17hgsEEeBBzruhjV4FpSyXQ@mail.gmail.com>
+	<d61b12831f97408badd1850d6a8782b1@BY1PR0301MB0855.namprd03.prod.outlook.com>
+ <CAOMZO5ADM1ig6=+TiQJJVkBMSK6qW_Vf7vYsnW_KKoGcFtmxJg@mail.gmail.com>
+In-Reply-To: <CAOMZO5ADM1ig6=+TiQJJVkBMSK6qW_Vf7vYsnW_KKoGcFtmxJg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140905171522.GA8080@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 05, 2014 at 11:15:22AM -0600, Bjorn Helgaas wrote:
-> On Fri, Aug 08, 2014 at 01:36:03PM +0800, Ethan Zhao wrote:
-> > This patch set introduces three PCI device flag operation helper functions
-> > when set pci device PF/VF to assigned or deassigned status also check it.
-> > and patch 2,3,4 apply these helper functions to KVM,XEN and PCI.
-> > 
-> > v2: simplify unnecessory ternary operation in function pci_is_dev_assigned().
-> > v3: amend helper function naming.
-> > 
-> > Appreciate suggestion from
-> > alex.williamson@redhat.com,
-> > david.vrabel@citrix.com,
-> > alexander.h.duyck@intel.com
-> > 
-> > Resend for v3.16 building.
-> > 
-> > Thanks,
-> > Ethan
-> > ---
-> > Ethan Zhao (4):
-> >   PCI: introduce helper functions for device flag operation
-> >   KVM: use pci device flag operation helper functions
-> >   xen-pciback: use pci device flag operation helper function
-> >   PCI: use device flag operation helper function in iov.c
-> > 
-> >  drivers/pci/iov.c                  |    2 +-
-> >  drivers/xen/xen-pciback/pci_stub.c |    4 ++--
-> >  include/linux/pci.h                |   13 +++++++++++++
-> >  virt/kvm/assigned-dev.c            |    2 +-
-> >  virt/kvm/iommu.c                   |    4 ++--
-> >  5 files changed, 19 insertions(+), 6 deletions(-)
-> > 
-> 
-> Applied to pci/virtualization for v3.18, thanks!
-
-I dropped these because of build errors from the kbuild-test robot.  Fix
-and resend if you still want them.
-
-Bjorn
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogRmFiaW8gRXN0ZXZhbSBb
+bWFpbHRvOmZlc3RldmFtQGdtYWlsLmNvbV0NCj4gU2VudDogVGh1cnNkYXksIFNlcHRlbWJlciAy
+NSwgMjAxNCA1OjEzIEFNDQo+IFRvOiBaaHUgUmljaGFyZC1SNjUwMzcNCj4gQ2M6IGxpbnV4LXBj
+aS1vd25lckB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IEd1byBT
+aGF3bi0NCj4gUjY1MDczOyBMdWNhcyBTdGFjaA0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYxIDQv
+NF0gUENJOiBpbXg2OiBhZGQgaW14NnN4IHBjaWUgc3VwcG9ydA0KPiANCj4gT24gVHVlLCBTZXAg
+MjMsIDIwMTQgYXQgMTE6NTUgUE0sIEhvbmctWGluZy5aaHVAZnJlZXNjYWxlLmNvbSA8SG9uZy0N
+Cj4gWGluZy5aaHVAZnJlZXNjYWxlLmNvbT4gd3JvdGU6DQo+IA0KPiA+PiBXaGF0IGFib3V0IHRo
+ZSBleGlzdGluZyBteDZxIHNpbGljb24gdmVyc2lvbj8gSG93IGNhbiB3ZSBmaXggdGhlIGhhbmc/
+DQo+ID4gW1JpY2hhcmRdIFRoZXJlIGlzIGFscmVhZHkgb25lIFNXIHdvcmthcm91bmQodG9nZ2xl
+IHRoZSBURVNUX1BEIGJpdCBpbg0KPiBhcmNoL2FybS9tYWNoLWlteC9wbS5jKSBmb3IgdGhpcyBp
+c3N1ZS4NCj4gPiBJdCBjYW4gd29ya2Fyb3VuZCB0aGlzIGlzc3VlLCBhbHRob3VnaCB3ZSBkb24n
+dCBnZXQgZ3VhcmFudGVlIGZyb20gZGVzaWduDQo+IHRlYW0uDQo+IA0KPiBUaGlzIHdvcmthcm91
+bmQgaXMgYXZhaWxhYmxlIGluIHRoZSBGU0wga2VybmVsLiBIb3dldmVyLCBJIGFtIGludGVyZXN0
+ZWQgaW4gYQ0KPiBzb2x1dGlvbiBmb3IgdGhlIG1haW5saW5lIGtlcm5lbC4NCltSaWNoYXJkXSBJ
+TUhPLCBJIGRvbid0IGtub3cgZWl0aGVyLg0KVGhlIFNXIHdvcmthcm91bmQgdXNlZCBpbiB0aGUg
+RlNMIGtlcm5lbCBjYW4gd29ya3MsIGJ1dCBpdCBzdGlsbCBjYW4ndCBnZXQgZ3VhcmFudGVlDQpU
+aGF0IGl0IGNhbiBmaXggdGhpcyBwcm9ibGVtIGZvciBzdXJlIGZyb20gZGVzaWduIHRlYW0geWV0
+Lg0KDQpCZXN0IFJlZ2FyZHMNClJpY2hhcmQgWmh1DQo=
