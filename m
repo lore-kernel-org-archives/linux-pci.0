@@ -1,50 +1,89 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH v1 12/13] PCI: Preserve MPS and MRRS when applying _HPX
- settings
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatxjain@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Date: Fri, 12 Sep 2014 12:04:09 -0600
-Message-ID: <20140912180409.1630.66534.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:63573 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753322AbaIYCwo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 22:52:44 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2 08/22] x86/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+Date: Thu, 25 Sep 2014 11:14:18 +0800
+Message-ID: <1411614872-4009-9-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Linux manages MPS and MRRS settings to keep them consistent across the PCIe
-fabric.  BIOS doesn't participate in Linux scheme, so ignore that part of
-any _HPX settings it supplies.
+Use MSI chip framework instead of arch MSI functions to configure
+MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/pci/probe.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+ arch/x86/include/asm/pci.h     |    1 +
+ arch/x86/kernel/apic/io_apic.c |   12 ++++++++++++
+ 2 files changed, 13 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 1ff2105ba401..cb411fbb6435 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1301,6 +1301,16 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
- 		return;
- 	}
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 0892ea0..878a06d 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -101,6 +101,7 @@ void native_teardown_msi_irq(unsigned int irq);
+ void native_restore_msi_irqs(struct pci_dev *dev);
+ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ 		  unsigned int irq_base, unsigned int irq_offset);
++extern struct msi_chip *x86_msi_chip;
+ #else
+ #define native_setup_msi_irqs		NULL
+ #define native_teardown_msi_irq		NULL
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 2a2ec28..882b95e 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3337,6 +3337,18 @@ int default_setup_hpet_msi(unsigned int irq, unsigned int id)
+ }
+ #endif
  
-+	/*
-+	 * Don't allow _HPX to change MPS or MRRS settings.  We manage
-+	 * those to make sure they're consistent with the rest of the
-+	 * platform.
-+	 */
-+	hpp->pci_exp_devctl_and |= PCI_EXP_DEVCTL_PAYLOAD |
-+				    PCI_EXP_DEVCTL_READRQ;
-+	hpp->pci_exp_devctl_or &= ~(PCI_EXP_DEVCTL_PAYLOAD |
-+				    PCI_EXP_DEVCTL_READRQ);
++struct msi_chip apic_msi_chip = {
++	.setup_irqs = native_setup_msi_irqs,
++	.teardown_irq = native_teardown_msi_irq,
++};
 +
- 	/* Initialize Device Control Register */
- 	pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
- 			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
++struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
++{
++	return x86_msi_chip;
++}
++
++struct msi_chip *x86_msi_chip = &apic_msi_chip;
++
+ #endif /* CONFIG_PCI_MSI */
+ /*
+  * Hypertransport interrupt support
+-- 
+1.7.1
 
