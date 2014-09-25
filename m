@@ -1,222 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:52409 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753027AbaIPDAQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Sep 2014 23:00:16 -0400
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 16 Sep 2014 13:00:13 +1000
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 5C32B2BB0040
-	for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 13:00:11 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay05.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s8G2aCr953870702
-	for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 12:36:13 +1000
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s8G309x7012876
-	for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 13:00:10 +1000
-Date: Tue, 16 Sep 2014 13:00:09 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	David Henningsson <david.henningsson@canonical.com>,
+Received: from mail-bn1bn0102.outbound.protection.outlook.com ([157.56.110.102]:63008
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751368AbaIYFV6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Sep 2014 01:21:58 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Tim Harvey <tharvey@gateworks.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Richter <thor@math.tu-berlin.de>,
-	gwshan@linux.vnet.ibm.com
-Subject: Re: [PATCH] Add pci=assign-busses quirk to Dell Latitude D505
-Message-ID: <20140916030009.GA4305@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <20140913031818.GA25656@google.com>
- <1410732627-25445-1-git-send-email-andreas.noever@gmail.com>
- <20140915095305.GA7669@richard>
- <CAMxnaaXuHHe--wtBAFNwuFngz5pfXVXkGpoOBxm_D3rQkD+TYQ@mail.gmail.com>
- <20140916013704.GA10239@richard>
+	Shengchao Guo <Shawn.Guo@freescale.com>,
+	Fabio Estevam <festevam@gmail.com>
+Subject: RE: [PATCH v2 2/5] PCI: imx6: wait the clocks to stabilize after
+ ref_en
+Date: Thu, 25 Sep 2014 05:21:54 +0000
+Message-ID: <75b77ae3191746b699b85ccb8f8dcd41@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
+	<1411445498-20250-3-git-send-email-r65037@freescale.com>
+	<1411466190.3256.7.camel@pengutronix.de>
+ <CAJ+vNU30=+YXkBHjzs_4n49TSJU0CuuSx54X3M7AVg8JRSLTfw@mail.gmail.com>
+In-Reply-To: <CAJ+vNU30=+YXkBHjzs_4n49TSJU0CuuSx54X3M7AVg8JRSLTfw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140916013704.GA10239@richard>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 16, 2014 at 09:37:04AM +0800, Wei Yang wrote:
->On Mon, Sep 15, 2014 at 12:04:22PM +0200, Andreas Noever wrote:
->>On Mon, Sep 15, 2014 at 11:53 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->>> On Mon, Sep 15, 2014 at 12:10:27AM +0200, Andreas Noever wrote:
->>>>[+cc Thomas, your regression has probably the same cause]
->>>>
->>>>This looks a like it is going to be a little more complicated than anticipated.
->>>>
->>>>pci_scan_bus has two main branches. One for "broken" hardware and cardbus and
->>>>another one for bridges whose configuration looks sane.
->>>>
->>>>David's working 3.2 Kernel does the following:
->>>>pci 0000:00:1e.0: PCI bridge to [bus 01-01] (subtractive decode)
->>>>pci 0000:01:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
->>>>
->>>>The 00:1e bridge is deemed sane and the 01:01 (cardbus) bridge below it is
->>>>deemed broken. pci_scan_bridge than assigns bus [2-5] to 01:01 without touching
->>>>1e (so we just got 4 imaginary busses). We just print a warning:
->>>>pci_bus 0000:02: [bus 02-05] partially hidden behind transparent bridge 0000:01 [bus 01-01]
->>>>
->>>>After returning to 00:1e (in the sane branch) we also do not update our
->>>>subordinate and just return. Later yenta_socket sees that this is nuts and
->>>>carefully increases the subordinate of 00:1e.
->>>>
->>>>My patch series for 3.15 was trying to make sure that pci_scan_bus does not
->>>>overstep its resources. So now we now refuse to create bus 2 under [01-01]
->>>>(fc1b2531 PCI: Don't scan random busses in pci_scan_bridge()) and a little
->>>>later we would forbid the cardbus code in pci_scan_bridge from reserving 4 more
->>>>busses (1820ffdc PCI: Make sure bus number resources stay within their parents
->>>>bounds). At least these two would need to be reverted.
->>>>
->>>>As an alternative the following patch tries grow the bus window, if necessary
->>>>by growing its parents bus window (recursively). This should make the yenta
->>>>fixup unnecessary. I have tested the patch with normal pci bridges + setpci,
->>>>since I don't have access to a cardbus system.
->>>>
->>>>So if you have time please test this and/or try to revert the two mentioned
->>>>commits.
->>>>
->>>>Thanks,
->>>>Andreas
->>>>---
->>>> drivers/pci/probe.c | 45 ++++++++++++++++++++++++++++++++++++---------
->>>> 1 file changed, 36 insertions(+), 9 deletions(-)
->>>>
->>>>diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>>>index e3cf8a2..81dd668 100644
->>>>--- a/drivers/pci/probe.c
->>>>+++ b/drivers/pci/probe.c
->>>>@@ -740,6 +740,30 @@ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
->>>> }
->>>> EXPORT_SYMBOL(pci_add_new_bus);
->>>>
->>>>+int pci_grow_bus(struct pci_bus *bus, int bus_max)
->>>>+{
->>>>+      struct resource *res = &bus->busn_res;
->>>>+      struct resource old_res = *res;
->>>>+      int ret;
->>>>+      if (res->end >= bus_max)
->>>>+              return 0;
->>>>+      if (!bus->self || pci_is_root_bus(bus)) {
->>>>+              dev_printk(KERN_DEBUG, &bus->dev,
->>>>+                         "root busn_res %pR cannot grow\n", &res);
->>>>+              return -EBUSY;
->>>>+      }
->>>>+      ret = pci_grow_bus(bus->parent, bus_max);
->>>>+      if (ret)
->>>>+              return ret;
->>>>+      ret = adjust_resource(res, res->start, bus_max - res->start + 1);
->>>>+      dev_printk(KERN_DEBUG, &bus->dev,
->>>>+                      "busn_res: %pR end %s grown to %02x\n",
->>>>+                      &old_res, ret ? "cannot be" : "has", bus_max);
->>>>+
->>>
->>> If adjust_resource fails, I think we can't write the bus_max into the bridge
->>> register.
->>Right, there is an if statement missing. Thanks.
->>
->>>>+      pci_write_config_byte(bus->self, PCI_SUBORDINATE_BUS, bus_max);
->>>>+      return ret;
->>>>+}
->>>>+
->>>> /*
->>>>  * If it's a bridge, configure it and scan the bus behind it.
->>>>  * For CardBus bridges, we don't scan behind as the devices will
->>>>@@ -814,12 +838,11 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
->>>>               }
->>>>
->>>>               cmax = pci_scan_child_bus(child);
->>>>-              if (cmax > subordinate)
->>>>-                      dev_warn(&dev->dev, "bridge has subordinate %02x but max busn %02x\n",
->>>>-                               subordinate, cmax);
->>>>-              /* subordinate should equal child->busn_res.end */
->>>>-              if (subordinate > max)
->>>>-                      max = subordinate;
->>>>+              if (cmax > child->busn_res.end)
->>>>+                      dev_warn(&dev->dev, "bridge has bus resource %pR but max busn %02x\n",
->>>>+                               &child->busn_res, cmax);
->>>>+              if (child->busn_res.end > max)
->>>>+                      max = child->busn_res.end;
->>>
->>> By a quick look, I don't see some place change the busn_res.end. And in the
->>> pci_bus_insert_busn_res(), the child->busn_res.end is set to subordinate. So I
->>> don't see the reason you change it.
->>adjust_resource in pci_grow_bus changes busn_res.end. The value in
->>'subordinate' is then stale at this point.
->>
->
->Yep, I see it. Thanks
->
->>>
->>> Do I miss something?
->>>
->>>>       } else {
->>>>               /*
->>>>                * We need to assign a number to this bus which we always
->>>>@@ -840,8 +863,10 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
->>>>
->>>>               if (max >= bus->busn_res.end) {
->>>>                       dev_warn(&dev->dev, "can't allocate child bus %02x from %pR\n",
->>>>-                               max, &bus->busn_res);
->>>>-                      goto out;
->>>>+                               max + 1, &bus->busn_res);
->>>>+                      /* Try to resize bus */
->>>>+                      if (pci_grow_bus(bus, max + 1))
->>>>+                              goto out;
->>>
->>> On some platforms, like powerpc, we have some limitations of the bus number a
->>> bridge could have. Sometimes, we need the start bus number to be power 2
->>> aligned.
->>>
->>> Hmm... hope I don't make a mistake, add Gavin in CC list. Gavin, is my
->>> understanding correct?
->>Hm I have not seen any code that would enforce this. Is it possible to
->>do pci=assign-busses on PowerPC?
->>
->
->No code in kernel, while we assign the bus number in firmware.
->
->Usually we don't re-assigned the bus numbers at kernel.
->
-
-Yes, you're correct. But we don't have to have the limitation on P8: Each
-PCI bridge has downstream 2^N spanning buses. That means PCI bridge on P8
-can take any bus numbers assigned by firmware/kernel if I'm correct. Actually,
-it's P7 box specific problem when we have a PCIe-to-PCI bridge and have to put
-everything behind the bridge into one PE. If we don't have PCI domain behind
-PCIe-to-PCI bridge on P7 box, we needn't consider the limitation.
-
-Another reason why we don't expect kernel to reassign bus numbers is related
-to hotplug and EEH. Currently, we don't reconfigure things for (RID mapping,
-IO and MMIO mapping to PE#). So the PCI bus numbers assigned to one particular
-PCI bridge is expected to be fixed. I guess we can improve it when having a
-chance looking at current implementation so that things will be reconfigured
-during hotplug.
-
->>>>               }
->>>>
->>>>               /* Clear errors */
->>>>@@ -908,6 +933,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
->>>>                                       break;
->>>>                               }
->>>>                       }
->>>>+                      dev_info(&dev->dev, "adding %02x bus numbers for cardbus\n", i);
->>>>                       max += i;
->>>>               }
->>>>               /*
->>>>@@ -916,7 +942,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
->>>>               if (max > bus->busn_res.end) {
->>>>                       dev_warn(&dev->dev, "max busn %02x is outside %pR\n",
->>>>                                max, &bus->busn_res);
->>>>-                      max = bus->busn_res.end;
->>>>+                      if (pci_grow_bus(bus, max))
->>>>+                              max = bus->busn_res.end;
->>>>               }
->>>>               pci_bus_update_busn_res_end(child, max);
->>>>               pci_write_config_byte(dev, PCI_SUBORDINATE_BUS, max);
-
-Thanks,
-Gavin
-
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IFRpbSBIYXJ2ZXkgW21haWx0
+bzp0aGFydmV5QGdhdGV3b3Jrcy5jb21dDQo+IFNlbnQ6IFR1ZXNkYXksIFNlcHRlbWJlciAyMywg
+MjAxNCA4OjI5IFBNDQo+IFRvOiBMdWNhcyBTdGFjaDsgWmh1IFJpY2hhcmQtUjY1MDM3DQo+IENj
+OiBsaW51eC1wY2ktb3duZXJAdmdlci5rZXJuZWwub3JnOyBsaW51eC1wY2lAdmdlci5rZXJuZWwu
+b3JnOyBHdW8gU2hhd24tDQo+IFI2NTA3MzsgRmFiaW8gRXN0ZXZhbQ0KPiBTdWJqZWN0OiBSZTog
+W1BBVENIIHYyIDIvNV0gUENJOiBpbXg2OiB3YWl0IHRoZSBjbG9ja3MgdG8gc3RhYmlsaXplIGFm
+dGVyDQo+IHJlZl9lbg0KPiANCj4gT24gVHVlLCBTZXAgMjMsIDIwMTQgYXQgMjo1NiBBTSwgTHVj
+YXMgU3RhY2ggPGwuc3RhY2hAcGVuZ3V0cm9uaXguZGU+IHdyb3RlOg0KPiA+IEFtIERpZW5zdGFn
+LCBkZW4gMjMuMDkuMjAxNCwgMTI6MTEgKzA4MDAgc2NocmllYiBSaWNoYXJkIFpodToNCj4gPj4g
+LSBhIHdoaWxlIGRlbGF5IGlzIG1hbmRhdG9yeSByZXF1aXJlZCBhZnRlciBwY2llX3JlZl9jbGtf
+ZW4gaXMgc2V0Lg0KPiA+PiBPdGhlcndpc2UsIHRoZSBzeXN0ZW0gd291bGQgYmUgaGFuZyBvbiBp
+bXg2cWRsIGFyZCBib2FyZHMsIGJlY2F1c2UNCj4gPj4gdGhhdCBpbXg2cWRsIGJvYXJkcyBkb24n
+dCBoYXZlIHRoZSByZXNldF9ncGlvLg0KPiA+PiAtIHRoZSBjbG9ja3Mgc2hvdWxkIGJlIHN0YWJs
+ZSBhbHJlYWR5IGFmdGVyIHRoZSAiY2xrX3ByZXBhcmVfZW5hYmxlIg0KPiA+PiBpcyByZXR1cm4u
+IFNvIEkgdGhpbmsgaXQncyBvayB0byBtb3ZlIHRoZSB1c2xlZXAgZGVsYXkgYWZ0ZXIgdGhlDQo+
+ID4+IHBjaWVfcmVmX2VuIGlzIHNldC4NCj4gPj4NCj4gPg0KPiA+IFlvdSBhcmUgZGVzY3JpYmlu
+ZyBhIGxvdCBvZiB0aGUgY29uZGl0aW9ucyBhcm91bmQgdGhlIGlzc3VlLCBidXQgbm90DQo+ID4g
+dGhlIGlzc3VlIGl0c2VsZiwgd2hpY2ggbWFrZXMgaXQgaGFyZCB0byBmb2xsb3cgeW91ciBjb21t
+aXQgbWVzc2FnZS4NCj4gPiBBZnRlciBsb29raW5nIGF0IHRoZSBjb2RlIEkgdGhpbmsgdGhlIHBy
+b2JsZW0gaXMgdGhpcyAoYW5kIHNob3VsZCBiZQ0KPiA+IGRlc2NyaWJlZA0KPiA+IGFjY29yZGlu
+Z2x5KToNCj4gPg0KPiA+IEZvciBib2FyZHMgd2l0aG91dCBhIHJlc2V0IGdwaW8gd2Ugc2tpcCB0
+aGUgZGVsYXkgYmV0d2VlbiBlbmFibGluZyB0aGUNCj4gPiBwY2llX3JlZl9jbGsgYW5kIHRvdWNo
+aW5nIHRoZSBSQyByZWdpc3RlcnMgZm9yIGNvbmZpZ3VyYXRpb24uDQo+ID4gQXBwYXJlbnRseSB0
+aGlzIGhhbmdzIHdoZW4gdGhlIGNsb2NrcyBhcmUgbm90IHlldCBzZXR0bGVkIGluIHRoZSBEVw0K
+PiA+IFBDSWUgY29yZS4gU28gd2UgbmVlZCB0byBtYWtlIHN1cmUgdGhhdCB0aGVyZSBpcyBhbHdh
+eXMgYW4gYXBwcm9wcmlhdGUNCj4gPiBkZWxheSBiZXR3ZWVuIHRob3NlIHR3byBhY3Rpb25zLg0K
+W1JpY2hhcmRdIFRoYW5rcy4NCj4gPg0KPiA+IEkgaGF2ZSBub3QgZm91bmQgdGhpcyBjb25zdHJh
+aW50IGFueXdoZXJlIGluIHRoZSBpLk1YNiBSZWZlcmVuY2UNCj4gPiBNYW51YWwsIG5vciBpbiB0
+aGUgRFcgUENJZSBkb2N1bWVudHMgSSBoYXZlIGFjY2VzcyB0bywgd2hpY2ggbWFrZXMgbWUNCj4g
+PiBhIGJpdCBmZWVsIGEgYml0IHVuaGFwcHkgYWJvdXQgdGhpcy4gUmljaGFyZCwgZG8geW91IGhh
+dmUgYmV0dGVyIGluZm8NCj4gPiBvbiB3aHkgdGhpcyBkZWxheSBpcyBuZWVkZWQgYW5kIGhvdyBs
+b25nIGl0IG5lZWRzIHRvIGJlPyBPciBpcyB0aGlzIGp1c3QNCj4gZW1waXJpY2FsPw0KW1JpY2hh
+cmRdIEkgdXNlZCB0byBmaXggb25lIGxlc3MgdGhhbiAwLjMlIHBlcmNlbnRhZ2UgcmFuZG9tbHkg
+bGluayBkb3duIGlzc3VlDQpkdXJpbmcgdGhlIHdhcm0tcmVzZXQgbG9vcCBzdHJlc3MgdGVzdHMu
+DQpJIHVzZWQgZ2V0IHNvbWUgaW5mbyBmcm9tIGRlc2lnbiB0ZWFtIHRoYXQgIiB0aGUgYXN5bmMg
+cmVzZXQgaW5wdXQgbmVlZCByZWYgY2xvY2sgdG8gc3luYyBpbnRlcm5hbGx5LCB3aGVuIHRoZSBy
+ZWYgY2xvY2sgY29tZXMgYWZ0ZXIgcmVzZXQsIGludGVybmFsIHN5bmNlZCByZXNldCB0aW1lIGlz
+IHRvbyBzaG9ydCAsIGNhbm5vdCBtZWV0IHRoZSByZXF1aXJlbWVudC4iICJhdCBsZWFzdCA0dXMg
+ZGVsYXkgaXMgcmVxdWlyZWQgYWZ0ZXIgcmVmIGNsb2NrIHN0YWJsZSBhbmQgYmVmb3JlIHNzcF9l
+biBpcyBhc3NlcnQiDQpJIHdvdWxkIGFkZCBhYm91dCAxMHVzIGRlbGF5IGp1c3QgYmV0d2VlbiBj
+bG9ja3MgYXJlIHN0YWJsZSBhbmQgc3NwX2VuIGlzIGFzc2VydCBsYXRlci4NCj4gPg0KPiA+IElu
+IGdlbmVyYWwgSSdtIG9rIHdpdGggdGhpcyBwYXRjaCwgYnV0IHN0aWxsIHdhbnQgYSBjb25maXJt
+YXRpb24gZnJvbQ0KPiA+IFRpbSB0aGF0IHRoaXMgZG9lc24ndCBicmVhayBhbnl0aGluZy4NCj4g
+DQo+IEkgYWdyZWUgd2l0aCBMdWNhcycgY29tbWVudHMgYW5kIGFsc28gYWdyZWUgdGhhdCB0aGlz
+IGNhbiB1c2Ugc29tZSB0ZXN0aW5nLg0KPiBCYXNlZCBvbiBteSBwcmV2aW91cyBmaW5kaW5ncyBQ
+Q0kgbGluayBpcyB2ZXJ5IGZyYWdpbGUuIEl0IHdpbGwgdGFrZSBtZSBhIGZldw0KPiBkYXlzIHRv
+IGdldCBhIHByb3BlciB0ZXN0IHNldHVwIGluIGEgdGhlcm1hbCBjaGFtYmVyIHdpdGggYSBob3N0
+IG9mIGJvYXJkcyBidXQNCj4gSSB3aWxsIHJlcG9ydCBiYWNrIHdoZW4gSSBoYXZlIGZpbmRpbmdz
+Lg0KPiANCj4gVGltDQo+IA0KDQoNCkJlc3QgUmVnYXJkcw0KUmljaGFyZCBaaHUNCg0KPiA+DQo+
+ID4+IFNpZ25lZC1vZmYtYnk6IFJpY2hhcmQgWmh1IDxyNjUwMzdAZnJlZXNjYWxlLmNvbT4NCj4g
+Pj4gLS0tDQo+ID4+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaS1pbXg2LmMgfCA2ICsrKy0tLQ0KPiA+
+PiAgMSBmaWxlIGNoYW5nZWQsIDMgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkNCj4gPj4N
+Cj4gPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWlteDYuYw0KPiA+PiBiL2Ry
+aXZlcnMvcGNpL2hvc3QvcGNpLWlteDYuYyBpbmRleCAyMzNmZThhLi5iYzQyMjJiIDEwMDY0NA0K
+PiA+PiAtLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaS1pbXg2LmMNCj4gPj4gKysrIGIvZHJpdmVy
+cy9wY2kvaG9zdC9wY2ktaW14Ni5jDQo+ID4+IEBAIC0yNzUsMTUgKzI3NSwxNSBAQCBzdGF0aWMg
+aW50IGlteDZfcGNpZV9kZWFzc2VydF9jb3JlX3Jlc2V0KHN0cnVjdA0KPiBwY2llX3BvcnQgKnBw
+KQ0KPiA+PiAgICAgICAgICAgICAgIGdvdG8gZXJyX3BjaWU7DQo+ID4+ICAgICAgIH0NCj4gPj4N
+Cj4gPj4gLSAgICAgLyogYWxsb3cgdGhlIGNsb2NrcyB0byBzdGFiaWxpemUgKi8NCj4gPj4gLSAg
+ICAgdXNsZWVwX3JhbmdlKDIwMCwgNTAwKTsNCj4gPj4gLQ0KPiA+PiAgICAgICAvKiBwb3dlciB1
+cCBjb3JlIHBoeSBhbmQgZW5hYmxlIHJlZiBjbG9jayAqLw0KPiA+PiAgICAgICByZWdtYXBfdXBk
+YXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNfZ3ByLCBJT01VWENfR1BSMSwNCj4gPj4gICAgICAg
+ICAgICAgICAgICAgICAgIElNWDZRX0dQUjFfUENJRV9URVNUX1BELCAwIDw8IDE4KTsNCj4gPj4g
+ICAgICAgcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+aW9tdXhjX2dwciwgSU9NVVhDX0dQ
+UjEsDQo+ID4+ICAgICAgICAgICAgICAgICAgICAgICBJTVg2UV9HUFIxX1BDSUVfUkVGX0NMS19F
+TiwgMSA8PCAxNik7DQo+ID4+DQo+ID4+ICsgICAgIC8qIGFsbG93IHRoZSBjbG9ja3MgdG8gc3Rh
+YmlsaXplICovDQo+ID4+ICsgICAgIHVzbGVlcF9yYW5nZSgyMDAsIDUwMCk7DQo+ID4+ICsNCj4g
+Pj4gICAgICAgLyogU29tZSBib2FyZHMgZG9uJ3QgaGF2ZSBQQ0llIHJlc2V0IEdQSU8uICovDQo+
+ID4+ICAgICAgIGlmIChncGlvX2lzX3ZhbGlkKGlteDZfcGNpZS0+cmVzZXRfZ3BpbykpIHsNCj4g
+Pj4gICAgICAgICAgICAgICBncGlvX3NldF92YWx1ZShpbXg2X3BjaWUtPnJlc2V0X2dwaW8sIDAp
+Ow0KPiA+DQo+ID4gLS0NCj4gPiBQZW5ndXRyb25peCBlLksuICAgICAgICAgICAgIHwgTHVjYXMg
+U3RhY2ggICAgICAgICAgICAgICAgIHwNCj4gPiBJbmR1c3RyaWFsIExpbnV4IFNvbHV0aW9ucyAg
+IHwgaHR0cDovL3d3dy5wZW5ndXRyb25peC5kZS8gIHwNCj4gPg0KPiA+IC0tDQo+ID4gVG8gdW5z
+dWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4
+LXBjaSINCj4gPiBpbiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2Vy
+bmVsLm9yZyBNb3JlIG1ham9yZG9tbw0KPiA+IGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5v
+cmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
