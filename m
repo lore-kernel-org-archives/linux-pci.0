@@ -1,88 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:37555 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755270AbaIWKKe convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Sep 2014 06:10:34 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Simon Horman <horms@verge.net.au>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: RE: [PATCH 0/3] Add PCI domain support to R-Car drivers
-Date: Tue, 23 Sep 2014 10:10:29 +0000
-Message-ID: <84672882bcaa4730aae409f092bcbcfb@HKXPR06MB168.apcprd06.prod.outlook.com>
-References: <1411379470-20639-1-git-send-email-phil.edworthy@renesas.com>
- <20140922210038.GJ1880@google.com>
-In-Reply-To: <20140922210038.GJ1880@google.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-qg0-f45.google.com ([209.85.192.45]:52581 "EHLO
+	mail-qg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753028AbaIYQFH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Sep 2014 12:05:07 -0400
+Received: by mail-qg0-f45.google.com with SMTP id q108so7647079qgd.18
+        for <linux-pci@vger.kernel.org>; Thu, 25 Sep 2014 09:05:06 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <54243978.3030501@canonical.com>
+References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
+ <1386546869-31900-3-git-send-email-yinghai@kernel.org> <CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>
+ <CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>
+ <CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>
+ <CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>
+ <52A8BAC5.70006@canonical.com> <CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>
+ <52D01D82.5070202@canonical.com> <CAE9FiQUD0XvPJNFNMoqX6J67TKuGcj+pSbj+iPUf=fvC-4UXOQ@mail.gmail.com>
+ <54189BCE.2010206@canonical.com> <CAE9FiQX1pfciTcuF3_eggQLCn=LvTSLTT0UZxTb+z_RaLHwgJQ@mail.gmail.com>
+ <54243978.3030501@canonical.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 25 Sep 2014 10:04:44 -0600
+Message-ID: <CAErSpo7unezE4hRYDUsHbmAV+dxgaMFqBOU=svpUEFKieG=omA@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
+To: Joseph Salisbury <joseph.salisbury@canonical.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Thu, Sep 25, 2014 at 9:49 AM, Joseph Salisbury
+<joseph.salisbury@canonical.com> wrote:
+> On 09/16/2014 06:27 PM, Yinghai Lu wrote:
+>> On Tue, Sep 16, 2014 at 1:21 PM, Joseph Salisbury
+>> <joseph.salisbury@canonical.com> wrote:
+>>> A new bug[0] was opened due to enabling PCI_REALLOC_ENABLE_AUTO, which
+>>> is similar to the original bug[1] we discussed.
+>>>
+>>> Just wondering if there have been any additional ideas on realloc since
+>>> this was last discussed?
+>>>
+>>> [0] http://pad.lv/1363313
+>>> [1] http://pad.lv/1245938
 
-On 22 September 2014 22:01, Bjorn wrote:
-> On Mon, Sep 22, 2014 at 10:51:07AM +0100, Phil Edworthy wrote:
-> > The Renesas R-Car devices (r8a7790 and r8a7791) use two PCI controller
-> drivers,
-> > one for an external PCIe slot, the other for an internal PCI bridge to USB
-> > controllers.
-> >
-> > However, they currently do not work at the same time as they use the
-> same PCI
-> > domain and use the same root bus number. We can't use different root
-> bus numbers
-> > due to the way root bus numbers are assigned in pcibios_init_hw() in
-> > arch/arm/kernel/bios32.c.
-> >
-> > Since the two PCI controllers are completely independent, I think it makes
-> sense
-> > to use different PCI domains for them.
-> >
-> > I've marked the third patch as RFC as I am not sure of the impact of
-> enabling
-> > PCI domains for all ARM devices. In the march to 'one kernel to rule them
-> all',
-> > I steered clear of mach specific changes.
-> >
-> > These patches require the following patch from Liviu Dudau:
-> >   [PATCH v11 07/10] OF: Introduce helper function for getting PCI
-> domain_nr
-> > Based on comments on this patch from Jason Gunthorpe, there is still the
-> issue
-> > that the domain numbers may change depending on the ordering at probe
-> time.
-> > However, this can be fixed later on by adding the entries in the DT files.
-> >
-> >
-> > Phil Edworthy (3):
-> >   PCI: rcar-pcie: Add call to get domain nr
-> >   PCI: rcar-internal-pci: Add call to get domain nr
-> >   ARM: Enable PCI domains
-> 
-> I'm deferring these for now because they depend on Liviu's work, which I
-> haven't merged yet, and I suspect some minor adaptation will be required
-> here.
-> 
-> For what it's worth, I agree with Rob's hesitation about mixing lookup with
-> domain number allocation in of_pci_get_domain_nr().  That seems
-> unnecessarily complicated.
-I could create patches to add an optional "pci-domain" property for the R-Car
-PCI drivers, and just attempt to get the property in the drivers. If not found,
-the drivers will assume the domain is 0.
+As a side-note, this looks like a regression and I should have given
+it more attention, but I don't track all the vendor bug databases.  If
+you open a kernel.bug bugzilla and mark it as a regression, I *do*
+track that regularly.  For regressions, it's helpful if you can attach
+dmesg logs from working and non-working kernels that are as close
+together as possible.  It'd be ideal if those were upstream kernels,
+but I doubt you apply any patches that would be relevant, so I think
+logs from Ubuntu kernels would be enough.
 
-We would then have fixed PCI domain numbering and I don't have to worry about
-Liviu's work.
-
-Would that be ok?
- 
-Thanks
-Phil
+Bjorn
