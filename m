@@ -1,148 +1,62 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20140908145459.GO27864@e106497-lin.cambridge.arm.com>
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
- <1410184472-17630-8-git-send-email-Liviu.Dudau@arm.com> <CAL_JsqJi8k1Goc3UmXhuxf9v7=4gJrYG_Di7v574PxS8TsJaXw@mail.gmail.com>
- <20140908145459.GO27864@e106497-lin.cambridge.arm.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Mon, 8 Sep 2014 10:27:36 -0500
-Message-ID: <CAL_JsqJdGKDVwJOpPp19OkVPGzR7Zqv3nh+ONHHaYnPLYTYoYg@mail.gmail.com>
-Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI domain_nr
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
+In-Reply-To: <54245C94.2020708@canonical.com>
+References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
+	<1386546869-31900-3-git-send-email-yinghai@kernel.org>
+	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>
+	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>
+	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>
+	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>
+	<52A8BAC5.70006@canonical.com>
+	<CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>
+	<52D01D82.5070202@canonical.com>
+	<CAE9FiQUD0XvPJNFNMoqX6J67TKuGcj+pSbj+iPUf=fvC-4UXOQ@mail.gmail.com>
+	<54189BCE.2010206@canonical.com>
+	<CAE9FiQX1pfciTcuF3_eggQLCn=LvTSLTT0UZxTb+z_RaLHwgJQ@mail.gmail.com>
+	<CAE9FiQWphiORhaVNNVGZXY6eYxLH2QYNbHcLdjzrBD98tMKz0Q@mail.gmail.com>
+	<54245C94.2020708@canonical.com>
+Date: Thu, 25 Sep 2014 11:24:01 -0700
+Message-ID: <CAE9FiQX-ZDTOa6fKvHry8XCqPKSLZt8QKYm97cZXJsRNLB9yRg@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
+From: Yinghai Lu <yinghai@kernel.org>
+To: Joseph Salisbury <joseph.salisbury@canonical.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 8, 2014 at 9:54 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> On Mon, Sep 08, 2014 at 03:27:56PM +0100, Rob Herring wrote:
->> On Mon, Sep 8, 2014 at 8:54 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
->> > Add of_pci_get_domain_nr() to retrieve the PCI domain number
->> > of a given device from DT. If the information is not present,
->> > the function can be requested to allocate a new domain number.
->> >
->> > Cc: Bjorn Helgaas <bhelgaas@google.com>
->> > Cc: Arnd Bergmann <arnd@arndb.de>
->> > Cc: Grant Likely <grant.likely@linaro.org>
->> > Cc: Rob Herring <robh+dt@kernel.org>
->> > Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
->> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
->> > ---
->> >  drivers/of/of_pci.c    | 34 ++++++++++++++++++++++++++++++++++
->> >  include/linux/of_pci.h |  7 +++++++
->> >  2 files changed, 41 insertions(+)
->> >
->> > diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
->> > index 8481996..a107edb 100644
->> > --- a/drivers/of/of_pci.c
->> > +++ b/drivers/of/of_pci.c
->> > @@ -89,6 +89,40 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
->> >  }
->> >  EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
->> >
->> > +static atomic_t of_domain_nr = ATOMIC_INIT(-1);
->> > +
->> > +/**
->> > + * This function will try to obtain the host bridge domain number by
->> > + * using of_alias_get_id() call with "pci-domain" as a stem. If that
->> > + * fails, a local allocator will be used. The local allocator can
->> > + * be requested to return a new domain_nr if the information is missing
->> > + * from the device tree.
->> > + *
->> > + * @node: device tree node with the domain information
->> > + * @allocate_if_missing: if DT lacks information about the domain nr,
->> > + * allocate a new number.
->> > + *
->> > + * Returns the associated domain number from DT, or a new domain number
->> > + * if DT information is missing and @allocate_if_missing is true. If
->> > + * @allocate_if_missing is false then the last allocated domain number
->> > + * will be returned.
->> > + */
->> > +int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
->> > +{
->> > +       int domain;
->> > +
->> > +       domain = of_alias_get_id(node, "pci-domain");
->> > +       if (domain == -ENODEV) {
->> > +               if (allocate_if_missing)
->> > +                       domain = atomic_inc_return(&of_domain_nr);
->> > +               else
->> > +                       domain = atomic_read(&of_domain_nr);
+On Thu, Sep 25, 2014 at 11:19 AM, Joseph Salisbury
+<joseph.salisbury@canonical.com> wrote:
+> On 09/17/2014 03:46 AM, Yinghai Lu wrote:
+>> On Tue, Sep 16, 2014 at 3:27 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> On Tue, Sep 16, 2014 at 1:21 PM, Joseph Salisbury
+>>> <joseph.salisbury@canonical.com> wrote:
+>>>> A new bug[0] was opened due to enabling PCI_REALLOC_ENABLE_AUTO, which
+>>>> is similar to the original bug[1] we discussed.
+>>>>
+>>>> Just wondering if there have been any additional ideas on realloc since
+>>>> this was last discussed?
+>>>>
+>>>> [0] http://pad.lv/1363313
+>>> So the resource realloc do work as expected. but LSI firmware has some
+>>> problem again?
+>>>
+>>> We may need to add command after the reset the bridge resource.
+>> Can you try attached patch?
 >>
->> This function seems a bit broken to me. It is overloaded with too many
->> different outcomes. Think about how this would work if you have
->> multiple PCI buses and a mixture of having pci-domain aliases or not.
->> Aren't domain numbers global? Allocation should then start outside of
->> the range of alias ids.
+>> Thanks
 >>
->> Rob
->>
->
-> Rob,
->
-> Would this version make more sense?
+>> Yinghai
+> Sorry, this message was marked as SPAM for some reason.  Do you still
+> want this patch tested?
 
-No.
+Yes, Please.
 
-> int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
-> {
->        int domain;
->
->        domain = of_alias_get_id(node, "pci-domain");
->        if (domain == -ENODEV) {
->                if (allocate_if_missing)
->                        domain = atomic_inc_return(&of_domain_nr);
->                else
->                        domain = atomic_read(&of_domain_nr);
->        } else {
->                /* remember the largest value seen */
->                int d = atomic_read(&of_domain_nr);
->                atomic_set(&of_domain_nr, max(domain, d));
->        }
->
->        return domain;
-> }
-> EXPORT_SYMBOL_GPL(of_pci_get_domain_nr);
->
-> It would still create gaps and possible duplicates, but this is just a number
-> and trying to create a new root bus in an existing domain should fail. I have
+We need special handling for LSI devices.
 
-Is failure okay in that case?
+Thanks
 
-> no clue on how to generate unique values without parsing the DT and filling
-> a sparse array with values found there and then checking for allocated values
-
-You really only need to know the maximum value and then start the
-non-DT allocations from there.
-
-> on new requests. This function gets called quite a lot and I'm trying not to
-> make it too heavy weight.
-
-Generally, nothing should be accessing the same DT value frequently.
-It should get cached somewhere.
-
-I don't really understand how domains are used so it's hard to provide
-a recommendation here. Do domains even belong in the DT? This function
-is just a weird mixture of data retrieval and allocation. I think you
-need to separate it into 2 functions.
-
-Rob
+Yinghai
