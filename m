@@ -1,129 +1,89 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v6 12/15] x86, irq, ACPI: Implement interface to support ACPI based IOAPIC hot-addition
-Date: Wed, 24 Sep 2014 16:59:33 +0800
-Message-Id: <1411549176-30780-13-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2 17/22] s390/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+Date: Thu, 25 Sep 2014 11:14:27 +0800
+Message-ID: <1411614872-4009-18-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement acpi_register_ioapic() and enhance mp_register_ioapic()
-to support ACPI based IOAPIC hot-addition.
+Use MSI chip framework instead of arch MSI functions to configure
+MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Acked-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
 ---
- arch/x86/kernel/acpi/boot.c    |   31 +++++++++++++++++++++++++++++--
- arch/x86/kernel/apic/io_apic.c |   22 +++++++++++++++++++++-
- 2 files changed, 50 insertions(+), 3 deletions(-)
+ arch/s390/pci/pci.c |   14 ++++++++++++--
+ 1 files changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index c598fd7604d5..238962e7de70 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -775,8 +775,35 @@ EXPORT_SYMBOL(acpi_unmap_lsapic);
- 
- int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
- {
--	/* TBD */
--	return -EINVAL;
-+	int ret = -ENOSYS;
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+	int ioapic_id;
-+	u64 addr;
-+	struct ioapic_domain_cfg cfg = {
-+		.type = IOAPIC_DOMAIN_DYNAMIC,
-+		.ops = &acpi_irqdomain_ops,
-+	};
-+
-+	ioapic_id = acpi_get_ioapic_id(handle, gsi_base, &addr);
-+	if (ioapic_id < 0) {
-+		unsigned long long uid;
-+		acpi_status status;
-+
-+		status = acpi_evaluate_integer(handle, METHOD_NAME__UID,
-+					       NULL, &uid);
-+		if (ACPI_FAILURE(status)) {
-+			acpi_handle_warn(handle, "failed to get IOAPIC ID.\n");
-+			return -EINVAL;
-+		}
-+		ioapic_id = (int)uid;
-+	}
-+
-+	down_write(&acpi_ioapic_rwsem);
-+	ret  = mp_register_ioapic(ioapic_id, phys_addr, gsi_base, &cfg);
-+	up_write(&acpi_ioapic_rwsem);
-+#endif
-+
-+	return ret;
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 552b990..da5316e 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -358,7 +358,7 @@ static void zpci_irq_handler(struct airq_struct *airq)
+ 	}
  }
  
- EXPORT_SYMBOL(acpi_register_ioapic);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 9945eb974509..be499af10d1c 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3848,7 +3848,13 @@ static int bad_ioapic_register(int idx)
- 
- static int find_free_ioapic_entry(void)
+-int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
++int zpci_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
  {
--	return nr_ioapics;
-+	int idx;
-+
-+	for (idx = 0; idx < MAX_IO_APICS; idx++)
-+		if (ioapics[idx].nr_registers == 0)
-+			return idx;
-+
-+	return MAX_IO_APICS;
+ 	struct zpci_dev *zdev = get_zdev(pdev);
+ 	unsigned int hwirq, msi_vecs;
+@@ -434,7 +434,7 @@ out:
+ 	return rc;
  }
  
- /**
-@@ -3864,6 +3870,7 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 	u32 gsi_end;
- 	int idx, ioapic, entries;
- 	struct mp_ioapic_gsi *gsi_cfg;
-+	bool hotplug = !!ioapic_initialized;
+-void arch_teardown_msi_irqs(struct pci_dev *pdev)
++static void zpci_teardown_msi_irqs(struct pci_dev *pdev)
+ {
+ 	struct zpci_dev *zdev = get_zdev(pdev);
+ 	struct msi_desc *msi;
+@@ -464,6 +464,16 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
+ 	airq_iv_free_bit(zpci_aisb_iv, zdev->aisb);
+ }
  
- 	if (!address) {
- 		pr_warn("Bogus (zero) I/O APIC address found, skipping!\n");
-@@ -3922,6 +3929,19 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 	ioapics[idx].irqdomain = NULL;
- 	ioapics[idx].irqdomain_cfg = *cfg;
- 
-+	/*
-+	 * If mp_register_ioapic() is called during early boot stage when
-+	 * walking ACPI/SFI/DT tables, it's too early to create irqdomain,
-+	 * we are still using bootmem allocator. So delay it to setup_IO_APIC().
-+	 */
-+	if (hotplug) {
-+		if (mp_irqdomain_create(idx)) {
-+			clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
-+			return -ENOMEM;
-+		}
-+		alloc_ioapic_saved_registers(idx);
-+	}
++static struct msi_chip zpci_msi_chip = {
++	.setup_irqs = zpci_setup_msi_irqs,
++	.teardown_irqs = zpci_teardown_msi_irqs,
++};
 +
- 	if (gsi_cfg->gsi_end >= gsi_top)
- 		gsi_top = gsi_cfg->gsi_end + 1;
- 	if (nr_ioapics <= idx)
++struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
++{
++	return &zpci_msi_chip;
++}
++
+ static void zpci_map_resources(struct zpci_dev *zdev)
+ {
+ 	struct pci_dev *pdev = zdev->pdev;
 -- 
-1.7.10.4
+1.7.1
 
