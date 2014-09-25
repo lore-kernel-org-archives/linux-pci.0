@@ -1,41 +1,33 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:49926 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750818AbaI3P75 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Sep 2014 11:59:57 -0400
-Date: Tue, 30 Sep 2014 17:59:52 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	linux-pci@vger.kernel.org, tglx@linutronix.de, hpa@zytor.com,
-	x86@kernel.org, bp@suse.de, dan.carpenter@oracle.com,
-	dougthompson@xmission.com, m.chehab@samsung.com,
-	linux-edac@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/4] pci_ids: Add PCI device IDs for F15h M60h
-Message-ID: <20140930155952.GG4639@pd.tnic>
-References: <1411070195-10177-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
- <20140919053126.GC21128@google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 25 Sep 2014 09:54:02 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Chen, Gong" <gong.chen@linux.intel.com>
+Cc: rdunlap@infradead.org, bp@alien8.de, tony.luck@intel.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Heather Brown <hbrown@hp.com>
+Subject: Re: [RESEND 0/5] PCIe, AER: Misc cleanup
+Message-ID: <20140925155402.GB12200@google.com>
+References: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140919053126.GC21128@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 18, 2014 at 11:31:26PM -0600, Bjorn Helgaas wrote:
-> On Thu, Sep 18, 2014 at 02:56:35PM -0500, Aravind Gopalakrishnan wrote:
-> > Add F3, F4 device IDs to be used in amd_nb.c and amd64_edac.c
-> > 
-> > Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+[+cc Heather]
+
+On Wed, Aug 13, 2014 at 02:22:36AM -0400, Chen, Gong wrote:
 > 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> No response since last commit so spread it to a bigger range.
 > 
-> Please merge this along with the rest of your series.
+> This patch series is for AER related cleanup & update based on PCIe
+> SPEC r3.0.
 
-Queued for 3.19, thanks.
+I applied patches 1, 2 (modified as described in my response to it), 3, and
+4 to pci/aer for v3.19, thanks!
 
--- 
-Regards/Gruss,
-    Boris.
+I didn't apply patch 5 because it apparently doesn't fix a reported bug,
+and it has the potential to break hardware that used the PCIe r1.0
+definition of the "Training Error" bit.
 
-Sent from a fat crate under my desk. Formatting is fine.
---
+Bjorn
