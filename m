@@ -1,235 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from services.gouders.net ([141.101.32.176]:36098 "EHLO
-	services.gouders.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754085AbaISPEh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Sep 2014 11:04:37 -0400
-From: Dirk Gouders <dirk@gouders.net>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
-In-Reply-To: <CAE9FiQUeP84585-4b+Y6WBVD3zqOi7ch_OXytsTmKEz9AyZ3Vg@mail.gmail.com>
-	(Yinghai Lu's message of "Fri, 12 Sep 2014 18:59:23 -0700")
-References: <ghiol53r9u.fsf@lena.gouders.net>
-	<CAMxnaaXiEZeJOsgQ6ZSbiqy5Z1zNoXonwNSQNRyRhV0t5jveYQ@mail.gmail.com>
-	<ghwq9k3m6z.fsf@lena.gouders.net>
-	<CAMxnaaUqTMf1uEQUqrAGjym8ZrQaBf2QbE4Jqxh2t6a2JgJkOQ@mail.gmail.com>
-	<ghioku5l29.fsf@lena.gouders.net>
-	<CAErSpo7j=a3y2MVsvEQGQ4B63_mNCyZSRNXNEZa-2++xs88NmQ@mail.gmail.com>
-	<CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com>
-	<ghppf15236.fsf@quad.gouders.net>
-	<CAErSpo5SVUOz+qa_x5JTC+-Y5ewTyYzA0N=jyPtK9LaguRrt=w@mail.gmail.com>
-	<ghd2b1svdw.fsf@quad.gouders.net>
-	<CAErSpo5e0GOdVbZdQYriP+aWziKELpb9BWTgJ4ERPia354CM5w@mail.gmail.com>
-	<ghvbotd8es.fsf@quad.gouders.net> <ghzje5f5zt.fsf@lena.gouders.net>
-	<ghbnqkeh9k.fsf@quad.gouders.net>
-	<CAE9FiQXQesrDMqf1b6ZhHdmY_wEEUrOEvNO4N_d6WtaNMGNLww@mail.gmail.com>
-	<gh4mwcef0r.fsf@quad.gouders.net>
-	<CAE9FiQWgioBeVmfWCaE38BrkjbWKaS+_FYYdmdd+7X8fpeEgnQ@mail.gmail.com>
-	<ghoaukcx6b.fsf@quad.gouders.net>
-	<CAE9FiQUk-sAHnjfBvNeHQWibJRqbPE1V0UtDtARtwxmS=7aQrw@mail.gmail.com>
-	<ghk358crbe.fsf@quad.gouders.net>
-	<CAE9FiQUeP84585-4b+Y6WBVD3zqOi7ch_OXytsTmKEz9AyZ3Vg@mail.gmail.com>
-Date: Fri, 19 Sep 2014 17:03:26 +0200
-Message-ID: <ghwq8zzm81.fsf@lena.gouders.net>
+Received: from mail-qc0-f176.google.com ([209.85.216.176]:53773 "EHLO
+	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751702AbaIYUKy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Sep 2014 16:10:54 -0400
+Received: by mail-qc0-f176.google.com with SMTP id o8so5580313qcw.7
+        for <linux-pci@vger.kernel.org>; Thu, 25 Sep 2014 13:10:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201409252126.38945.arnd@arndb.de>
+References: <1411573068-12952-1-git-send-email-rric@kernel.org>
+ <8057985.kyfsioKAVy@wuerfel> <CAErSpo4oFLKbtddzVoXBN-1dXZn5C4pmzY_QiFMwV+RWtmtjiQ@mail.gmail.com>
+ <201409252126.38945.arnd@arndb.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 25 Sep 2014 14:10:33 -0600
+Message-ID: <CAErSpo5rhL7pLha-yWt7sZUBmAnwA6FkacL+sWXBKkSzsuC7Sg@mail.gmail.com>
+Subject: Re: [PATCH 3/6] pci, thunder: Add PCIe host controller devicetree bindings
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Sunil Kovvuri <sunil.kovvuri@gmail.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Robert Richter <rric@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Robert Richter <rrichter@cavium.com>,
+	Sunil Goutham <sgoutham@cavium.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yinghai Lu <yinghai@kernel.org> writes:
-
-> On Fri, Sep 12, 2014 at 5:11 PM, Dirk Gouders <dirk@gouders.net> wrote:
->> Yinghai Lu <yinghai@kernel.org> writes:
+On Thu, Sep 25, 2014 at 1:26 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Thursday 25 September 2014, Bjorn Helgaas wrote:
+>> On Thu, Sep 25, 2014 at 1:31 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> > On Thursday 25 September 2014 00:37:00 Sunil Kovvuri wrote:
+>> >> On Thu, Sep 25, 2014 at 12:04 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> >> > On Wednesday 24 September 2014 23:34:04 Sunil Kovvuri wrote:
 >>
->> Yes, I skip them in pci_scan_device() to get the unused bus number space
->> that 0a.0 and 0b.0 then can use when reconfiguration is triggered.
->
-> That is not right. Can not let two bridges use same bus num.
->
+>> >> >> All on-board PCI devices connected to this PCI controller have fixed resources
+>> >> >> and doesn't have to be allocated/reassigned. Some of these devices are
+>> >> >> SRIOV based.
+>> >> >
+>> >> > I think you need to mark the ones that are nonrelocatable with flag
+>> >> > 0x80000000, otherwise the PCI core might decide to reassign them.
+>> >>
+>> >> Is this flag part of DT pci node properties ?
+>> >> I am using IORESOURCE_PCI_FIXED flag. Its there in other patches of
+>> >> the same series.
+>> >
+>> > Ah, right. I checked the source code again and it seems that we don't handle
+>> > this right at the moment. I think a range that has the nonrelocatable
+>> > flag set should be used for IORESOURCE_PCI_FIXED mappings without any
+>> > host specific code, but that needs to be implemented in common code.
 >>
->>> Proper simulation could be:
->>> 1. remove 07:00.0
->>>     echo 1 > /sys/bus/pci/devices/0000:07:00.0/remove
->>> 2. change bus range in 00:0a.0 bus
->>>     setpci -s 00:0a.0 0x1c.l=0x00101000
->>> 3. remove 00:0a.0
->>>     echo 1 > /sys/bus/pci/devices/0000:00:0a.0/remove
->>> 4. rescan pci
->>>     echo 1 > /sys/bus/pci/rescan
->>> 5. reset pcie link from 00:0a.0
->>>     setpci -s 00:0a.0 0xc0.b=0x18
->>>     sleep 1s
->>>     setpci -s 00:0a.0 0xc0.b=0x08
->>> 6. rescan pci bus
->>>     echo 1 > /sys/bus/pci/rescan
->>
->> OK, I did that (with 3.16) but the reconfiguration code doesn't
->> get triggered.  Here is what dmesg and lspci -tv say:
+>> What connection do you envision between nonrelocatable ranges and
+>> IORESOURCE_PCI_FIXED?  I don't know what a nonrelocatable range is,
+>> but for IORESOURCE_PCI_FIXED, all I intend is that the PCI core should
+>> not try to assign a different address, e.g., because the BAR is
+>> read-only or because it's a legacy IDE/VGA/etc. range for which there
+>> is no BAR at all.
 >
-> 2 should be
->    setpci -s 00:0a.0 0x18.l=0x00101000
+> I think that is exactly the definition of the nonrelocatable flag
+> in http://www.openfirmware.org/1275/bindings/pci/pci2_1.pdf
+>
+> The example given in section 11.1.2 is for a VGA device that has some
+> relocatable BARs and some nonrelocatable BARs.
 
-I'm very sorry for the late test result, Yinghai, I totally overlooked
-this correction.
+OK.  You said "a range that has the nonrelocatable flag set should be
+used for IORESOURCE_PCI_FIXED mappings."  I thought you meant that the
+range was a bridge window, and somehow PCI_FIXED BARs should be put in
+that window.
 
-I'm not sure if it is still of interest but
-I now tried these corrected commands on the test machine with a vanilla
-3.16 kernel.  The FC adapter disappears but I cannot see the 
+But maybe you meant that nonrelocatable ranges should have the
+IORESOURCE_PCI_FIXED bit set in their struct resources.  That would
+mean we couldn't move the window, but we could put relocatable BARs
+inside the window.
 
-"bridge configuration invalid ..., reconfiguring" message,
+What needs to be implemented?  Just the code that would set
+IORESOURCE_PCI_FIXED for nonrelocatable ranges?
 
-so I assume that the test situation is still not exactly matching that
-on the vx50 or am I missing something?
-
-lspci before and lspci + dmesg after above commands attached.
-
-Dirk
-
-- lspci before ---------------------------------------------------------
--[0000:00]-+-01.0-[01-02]--+-0d.0-[02]--
-           |               +-0e.0  Broadcom BCM5785 [HT1000] SATA (PATA/IDE Mode)
-           |               \-0e.1  Broadcom BCM5785 [HT1000] SATA (PATA/IDE Mode)
-           +-02.0  Broadcom BCM5785 [HT1000] Legacy South Bridge
-           +-02.1  Broadcom BCM5785 [HT1000] IDE
-           +-02.2  Broadcom BCM5785 [HT1000] LPC
-           +-03.0  Broadcom BCM5785 [HT1000] USB
-           +-03.1  Broadcom BCM5785 [HT1000] USB
-           +-03.2  Broadcom BCM5785 [HT1000] USB
-           +-06.0-[03]--
-           +-07.0-[04]--+-04.0  Broadcom Corporation NetXtreme BCM5780 Gigabit Ethernet
-           |            \-04.1  Broadcom Corporation NetXtreme BCM5780 Gigabit Ethernet
-           +-08.0-[05]--
-           +-09.0-[06]--
-           +-0a.0-[07]----00.0  LSI Logic / Symbios Logic FC949ES Fibre Channel Adapter
-           +-0b.0-[08]--
-           +-0c.0  Advanced Micro Devices, Inc. [AMD/ATI] ES1000
-           +-18.0  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] HyperTransport Technology Configuration
-           +-18.1  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] Address Map
-           +-18.2  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] DRAM Controller
-           +-18.3  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] Miscellaneous Control
-           +-19.0  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] HyperTransport Technology Configuration
-           +-19.1  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] Address Map
-           +-19.2  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] DRAM Controller
-           \-19.3  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] Miscellaneous Control
-
-- lspci after ----------------------------------------------------------
--[0000:00]-+-01.0-[01-02]--+-0d.0-[02]--
-           |               +-0e.0  Broadcom BCM5785 [HT1000] SATA (PATA/IDE Mode)
-           |               \-0e.1  Broadcom BCM5785 [HT1000] SATA (PATA/IDE Mode)
-           +-02.0  Broadcom BCM5785 [HT1000] Legacy South Bridge
-           +-02.1  Broadcom BCM5785 [HT1000] IDE
-           +-02.2  Broadcom BCM5785 [HT1000] LPC
-           +-03.0  Broadcom BCM5785 [HT1000] USB
-           +-03.1  Broadcom BCM5785 [HT1000] USB
-           +-03.2  Broadcom BCM5785 [HT1000] USB
-           +-06.0-[03]--
-           +-07.0-[04]--+-04.0  Broadcom Corporation NetXtreme BCM5780 Gigabit Ethernet
-           |            \-04.1  Broadcom Corporation NetXtreme BCM5780 Gigabit Ethernet
-           +-08.0-[05]--
-           +-09.0-[06]--
-           +-0a.0-[10]--
-           +-0b.0-[08]--
-           +-0c.0  Advanced Micro Devices, Inc. [AMD/ATI] ES1000
-           +-18.0  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] HyperTransport Technology Configuration
-           +-18.1  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] Address Map
-           +-18.2  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] DRAM Controller
-           +-18.3  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] Miscellaneous Control
-           +-19.0  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] HyperTransport Technology Configuration
-           +-19.1  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] Address Map
-           +-19.2  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] DRAM Controller
-           \-19.3  Advanced Micro Devices, Inc. [AMD] K8 [Athlon64/Opteron] Miscellaneous Control
-
-- dmesg after ----------------------------------------------------------
-[  214.234819] pci_bus 0000:07: busn_res: [bus 07] is released
-[  214.234981] pci_scan_child_bus: pci_bus 0000:00: scanning bus
-[  214.235037] pci 0000:00:0a.0: [1166:0132] type 01 class 0x060400
-[  214.235128] pci 0000:00:0a.0: System wakeup disabled by ACPI
-[  214.235221] pci_scan_bridge: pci 0000:00:01.0: scanning [bus 01-02] behind bridge, pass 0
-[  214.235227] pci_scan_child_bus: pci_bus 0000:01: scanning bus
-[  214.235258] pci_scan_bridge: pci 0000:01:0d.0: scanning [bus 02-02] behind bridge, pass 0
-[  214.235262] pci_scan_child_bus: pci_bus 0000:02: scanning bus
-[  214.235295] pci_scan_child_bus: pci_bus 0000:02: bus scan returning with max=02
-[  214.235301] pci_scan_bridge: pci 0000:01:0d.0: scanning [bus 02-02] behind bridge, pass 1
-[  214.235306] pci_scan_child_bus: pci_bus 0000:01: bus scan returning with max=02
-[  214.235312] pci_scan_bridge: pci 0000:00:06.0: scanning [bus 03-03] behind bridge, pass 0
-[  214.235316] pci_scan_child_bus: pci_bus 0000:03: scanning bus
-[  214.235343] pci_scan_child_bus: pci_bus 0000:03: bus scan returning with max=03
-[  214.235348] pci_scan_bridge: pci 0000:00:07.0: scanning [bus 04-04] behind bridge, pass 0
-[  214.235352] pci_scan_child_bus: pci_bus 0000:04: scanning bus
-[  214.235376] pci_scan_child_bus: pci_bus 0000:04: bus scan returning with max=04
-[  214.235381] pci_scan_bridge: pcieport 0000:00:08.0: scanning [bus 05-05] behind bridge, pass 0
-[  214.235386] pci_scan_child_bus: pci_bus 0000:05: scanning bus
-[  214.235390] pci_scan_child_bus: pci_bus 0000:05: bus scan returning with max=05
-[  214.235394] pci_scan_bridge: pcieport 0000:00:09.0: scanning [bus 06-06] behind bridge, pass 0
-[  214.235398] pci_scan_child_bus: pci_bus 0000:06: scanning bus
-[  214.235402] pci_scan_child_bus: pci_bus 0000:06: bus scan returning with max=06
-[  214.235407] pci_scan_bridge: pcieport 0000:00:0b.0: scanning [bus 08-08] behind bridge, pass 0
-[  214.235411] pci_scan_child_bus: pci_bus 0000:08: scanning bus
-[  214.235415] pci_scan_child_bus: pci_bus 0000:08: bus scan returning with max=08
-[  214.235420] pci_scan_bridge: pci 0000:00:0a.0: scanning [bus 10-10] behind bridge, pass 0
-[  214.235457] pci_scan_child_bus: pci_bus 0000:10: scanning bus
-[  214.235461] pci_scan_child_bus: pci_bus 0000:10: fixups for bus
-[  214.235464] pci 0000:00:0a.0: PCI bridge to [bus 10]
-[  214.235470] pci 0000:00:0a.0:   bridge window [io  0x9000-0xbfff]
-[  214.235475] pci 0000:00:0a.0:   bridge window [mem 0xff300000-0xff5fffff]
-[  214.235480] pci 0000:00:0a.0:   bridge window [mem 0xcfe00000-0xcfefffff 64bit pref]
-[  214.235483] pci_scan_child_bus: pci_bus 0000:10: bus scan returning with max=10
-[  214.235487] pci_scan_bridge: pci 0000:00:01.0: scanning [bus 01-02] behind bridge, pass 1
-[  214.235493] pci_scan_bridge: pci 0000:00:06.0: scanning [bus 03-03] behind bridge, pass 1
-[  214.235498] pci_scan_bridge: pci 0000:00:07.0: scanning [bus 04-04] behind bridge, pass 1
-[  214.235503] pci_scan_bridge: pcieport 0000:00:08.0: scanning [bus 05-05] behind bridge, pass 1
-[  214.235508] pci_scan_bridge: pcieport 0000:00:09.0: scanning [bus 06-06] behind bridge, pass 1
-[  214.235513] pci_scan_bridge: pcieport 0000:00:0b.0: scanning [bus 08-08] behind bridge, pass 1
-[  214.235518] pci_scan_bridge: pci 0000:00:0a.0: scanning [bus 10-10] behind bridge, pass 1
-[  214.235522] pci_scan_child_bus: pci_bus 0000:00: bus scan returning with max=10
-[  214.235567] pci 0000:00:0a.0: BAR 8: assigned [mem 0x80000000-0x802fffff]
-[  214.235574] pci 0000:00:0a.0: BAR 9: assigned [mem 0x280000000-0x2800fffff 64bit pref]
-[  214.235579] pci 0000:00:0a.0: BAR 7: assigned [io  0x1000-0x3fff]
-[  214.235583] pci 0000:01:0d.0: PCI bridge to [bus 02]
-[  214.235592] pci 0000:00:06.0: PCI bridge to [bus 03]
-[  214.235599] pci 0000:00:0a.0: PCI bridge to [bus 10]
-[  214.235603] pci 0000:00:0a.0:   bridge window [io  0x1000-0x3fff]
-[  214.235607] pci 0000:00:0a.0:   bridge window [mem 0x80000000-0x802fffff]
-[  214.235610] pci 0000:00:0a.0:   bridge window [mem 0x280000000-0x2800fffff 64bit pref]
-[  214.235622] fixup_debug_start: pci 0000:00:0a.0: calling quirk_msi_ht_cap+0x0/0x50
-[  214.235627] pci 0000:00:0a.0: Found enabled HT MSI Mapping
-[  215.257656] pci_scan_child_bus: pci_bus 0000:00: scanning bus
-[  215.257713] pci_scan_bridge: pci 0000:00:01.0: scanning [bus 01-02] behind bridge, pass 0
-[  215.257720] pci_scan_child_bus: pci_bus 0000:01: scanning bus
-[  215.257750] pci_scan_bridge: pci 0000:01:0d.0: scanning [bus 02-02] behind bridge, pass 0
-[  215.257755] pci_scan_child_bus: pci_bus 0000:02: scanning bus
-[  215.257788] pci_scan_child_bus: pci_bus 0000:02: bus scan returning with max=02
-[  215.257793] pci_scan_bridge: pci 0000:01:0d.0: scanning [bus 02-02] behind bridge, pass 1
-[  215.257798] pci_scan_child_bus: pci_bus 0000:01: bus scan returning with max=02
-[  215.257803] pci_scan_bridge: pci 0000:00:06.0: scanning [bus 03-03] behind bridge, pass 0
-[  215.257807] pci_scan_child_bus: pci_bus 0000:03: scanning bus
-[  215.257834] pci_scan_child_bus: pci_bus 0000:03: bus scan returning with max=03
-[  215.257839] pci_scan_bridge: pci 0000:00:07.0: scanning [bus 04-04] behind bridge, pass 0
-[  215.257843] pci_scan_child_bus: pci_bus 0000:04: scanning bus
-[  215.257867] pci_scan_child_bus: pci_bus 0000:04: bus scan returning with max=04
-[  215.257872] pci_scan_bridge: pcieport 0000:00:08.0: scanning [bus 05-05] behind bridge, pass 0
-[  215.257876] pci_scan_child_bus: pci_bus 0000:05: scanning bus
-[  215.257880] pci_scan_child_bus: pci_bus 0000:05: bus scan returning with max=05
-[  215.257884] pci_scan_bridge: pcieport 0000:00:09.0: scanning [bus 06-06] behind bridge, pass 0
-[  215.257889] pci_scan_child_bus: pci_bus 0000:06: scanning bus
-[  215.257893] pci_scan_child_bus: pci_bus 0000:06: bus scan returning with max=06
-[  215.257897] pci_scan_bridge: pcieport 0000:00:0b.0: scanning [bus 08-08] behind bridge, pass 0
-[  215.257901] pci_scan_child_bus: pci_bus 0000:08: scanning bus
-[  215.257905] pci_scan_child_bus: pci_bus 0000:08: bus scan returning with max=08
-[  215.257910] pci_scan_bridge: pcieport 0000:00:0a.0: scanning [bus 10-10] behind bridge, pass 0
-[  215.257914] pci_scan_child_bus: pci_bus 0000:10: scanning bus
-[  215.257918] pci_scan_child_bus: pci_bus 0000:10: bus scan returning with max=10
-[  215.257922] pci_scan_bridge: pci 0000:00:01.0: scanning [bus 01-02] behind bridge, pass 1
-[  215.257928] pci_scan_bridge: pci 0000:00:06.0: scanning [bus 03-03] behind bridge, pass 1
-[  215.257933] pci_scan_bridge: pci 0000:00:07.0: scanning [bus 04-04] behind bridge, pass 1
-[  215.257938] pci_scan_bridge: pcieport 0000:00:08.0: scanning [bus 05-05] behind bridge, pass 1
-[  215.257942] pci_scan_bridge: pcieport 0000:00:09.0: scanning [bus 06-06] behind bridge, pass 1
-[  215.257947] pci_scan_bridge: pcieport 0000:00:0b.0: scanning [bus 08-08] behind bridge, pass 1
-[  215.257952] pci_scan_bridge: pcieport 0000:00:0a.0: scanning [bus 10-10] behind bridge, pass 1
-[  215.257956] pci_scan_child_bus: pci_bus 0000:00: bus scan returning with max=10
-[  215.257994] pci 0000:01:0d.0: PCI bridge to [bus 02]
-[  215.258033] pci 0000:00:06.0: PCI bridge to [bus 03]
+Bjorn
