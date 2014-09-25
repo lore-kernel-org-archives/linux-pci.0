@@ -1,42 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:50982 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753352AbaIIMMT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Sep 2014 08:12:19 -0400
-Date: Tue, 9 Sep 2014 15:11:50 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Srikanth Thokala <sthokal@xilinx.com>
-Cc: Michal Simek <michal.simek@xilinx.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Srikanth Thokala <sthokal@xilinx.com>,
-	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [patch] PCI: xilinx: testing wrong variable in setup irq function
-Message-ID: <20140909121150.GD19760@mwanda>
+Received: from mail-qa0-f49.google.com ([209.85.216.49]:42319 "EHLO
+	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753431AbaIYQQ5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Sep 2014 12:16:57 -0400
+Received: by mail-qa0-f49.google.com with SMTP id n8so4743226qaq.8
+        for <linux-pci@vger.kernel.org>; Thu, 25 Sep 2014 09:16:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8057985.kyfsioKAVy@wuerfel>
+References: <1411573068-12952-1-git-send-email-rric@kernel.org>
+ <3414852.SWQ9rRcUDx@wuerfel> <CA+sq2CcXCVrk=fxH79n88ZJj5fBQmbyhnzj08qHNO8EmpZT1Yg@mail.gmail.com>
+ <8057985.kyfsioKAVy@wuerfel>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 25 Sep 2014 10:16:36 -0600
+Message-ID: <CAErSpo4oFLKbtddzVoXBN-1dXZn5C4pmzY_QiFMwV+RWtmtjiQ@mail.gmail.com>
+Subject: Re: [PATCH 3/6] pci, thunder: Add PCIe host controller devicetree bindings
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Sunil Kovvuri <sunil.kovvuri@gmail.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Robert Richter <rric@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Robert Richter <rrichter@cavium.com>,
+	Sunil Goutham <sgoutham@cavium.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We should be testing "hwirq" instead of "irq".  "irq" is unsigned so
-it's never less than zero.  Also it's uninitialized.
+On Thu, Sep 25, 2014 at 1:31 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Thursday 25 September 2014 00:37:00 Sunil Kovvuri wrote:
+>> On Thu, Sep 25, 2014 at 12:04 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> > On Wednesday 24 September 2014 23:34:04 Sunil Kovvuri wrote:
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>> >> All on-board PCI devices connected to this PCI controller have fixed resources
+>> >> and doesn't have to be allocated/reassigned. Some of these devices are
+>> >> SRIOV based.
+>> >
+>> > I think you need to mark the ones that are nonrelocatable with flag
+>> > 0x80000000, otherwise the PCI core might decide to reassign them.
+>>
+>> Is this flag part of DT pci node properties ?
+>> I am using IORESOURCE_PCI_FIXED flag. Its there in other patches of
+>> the same series.
+>
+> Ah, right. I checked the source code again and it seems that we don't handle
+> this right at the moment. I think a range that has the nonrelocatable
+> flag set should be used for IORESOURCE_PCI_FIXED mappings without any
+> host specific code, but that needs to be implemented in common code.
 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 44f8944..ccc496b 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -359,8 +359,8 @@ static int xilinx_pcie_msi_setup_irq(struct msi_chip *chip,
- 	phys_addr_t msg_addr;
- 
- 	hwirq = xilinx_pcie_assign_msi(port);
--	if (irq < 0)
--		return irq;
-+	if (hwirq < 0)
-+		return hwirq;
- 
- 	irq = irq_create_mapping(port->irq_domain, hwirq);
- 	if (!irq)
+What connection do you envision between nonrelocatable ranges and
+IORESOURCE_PCI_FIXED?  I don't know what a nonrelocatable range is,
+but for IORESOURCE_PCI_FIXED, all I intend is that the PCI core should
+not try to assign a different address, e.g., because the BAR is
+read-only or because it's a legacy IDE/VGA/etc. range for which there
+is no BAR at all.
+
+Bjorn
