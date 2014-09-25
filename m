@@ -1,118 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:60614 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753939AbaIPVz6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 17:55:58 -0400
-Received: by mail-pa0-f42.google.com with SMTP id lj1so675292pab.1
-        for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 14:55:58 -0700 (PDT)
-Date: Tue, 16 Sep 2014 15:55:54 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v3 1/2] PCI: keystone: remove handle of PCI mode
- configuration
-Message-ID: <20140916215554.GC5050@google.com>
-References: <1410369159-11564-1-git-send-email-m-karicheri2@ti.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2 03/22] MSI: Remove the redundant irq_set_chip_data()
+Date: Thu, 25 Sep 2014 11:14:13 +0800
+Message-ID: <1411614872-4009-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1410369159-11564-1-git-send-email-m-karicheri2@ti.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 10, 2014 at 01:12:38PM -0400, Murali Karicheri wrote:
-> Keystone PCI hardware supports both RC and EP modes and devcfg
-> register has bits to boot strap the device to either of these modes.
-> It seems proper to add this functionality to the boot loader rather
-> than in the driver as device will be operating in either mode, not
-> both any time. Currently the driver supports only RC mode and hence
-> register configuration in the driver is not needed and driver can
-> assume this is a RC hardware.
-> 
-> Also update the DT documentation accordingly.
-> 
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> Acked-by: Arnd Bergmann <arnd@arndb.de>
+Currently, pcie-designware, pcie-rcar, pci-tegra drivers
+use irq chip_data to save the msi_chip pointer. They
+already call irq_set_chip_data() in their own MSI irq map
+functions. So irq_set_chip_data() in arch_setup_msi_irq()
+is useless.
 
-Both applied to pci/host-keystone for v3.18, thanks!
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/msi.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-> ---
-> 	v3 - No change
-> 	v2 - Added this separate patch to remove pci mode handling
->  .../devicetree/bindings/pci/pci-keystone.txt       |    4 +---
->  drivers/pci/host/pci-keystone.c                    |   21 ++------------------
->  2 files changed, 3 insertions(+), 22 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-> index ceb3e24..bedacf0 100644
-> --- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
-> +++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-> @@ -13,9 +13,7 @@ Required Properties:-
->  
->  compatibility: "ti,keystone-pcie"
->  reg:	index 1 is the base address and length of DW application registers.
-> -	index 2 is the base address and length of PCI mode configuration
-> -	register.
-> -	index 3 is the base address and length of PCI device ID register.
-> +	index 2 is the base address and length of PCI device ID register.
->  
->  pcie_msi_intc : Interrupt controller device node for MSI IRQ chip
->  	interrupt-cells: should be set to 1
-> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-> index ff8ed25..f1119eb 100644
-> --- a/drivers/pci/host/pci-keystone.c
-> +++ b/drivers/pci/host/pci-keystone.c
-> @@ -35,10 +35,6 @@
->  #define MAX_MSI_HOST_IRQS		8
->  #define MAX_LEGACY_HOST_IRQS		4
->  
-> -/* RC mode settings masks */
-> -#define PCIE_RC_MODE		BIT(2)
-> -#define PCIE_MODE_MASK		(BIT(1) | BIT(2))
-> -
->  /* DEV_STAT_CTRL */
->  #define PCIE_CAP_BASE		0x70
->  
-> @@ -355,7 +351,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
->  	void __iomem *reg_p;
->  	struct phy *phy;
->  	int ret = 0;
-> -	u32 val;
->  
->  	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
->  				GFP_KERNEL);
-> @@ -365,18 +360,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
->  	}
->  	pp = &ks_pcie->pp;
->  
-> -	/* index 2 is the devcfg register for RC mode settings */
-> -	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
-> -	reg_p = devm_ioremap_resource(dev, res);
-> -	if (IS_ERR(reg_p))
-> -		return PTR_ERR(reg_p);
-> -
-> -	/* enable RC mode in devcfg */
-> -	val = readl(reg_p);
-> -	val &= ~PCIE_MODE_MASK;
-> -	val |= PCIE_RC_MODE;
-> -	writel(val, reg_p);
-> -
->  	/* initialize SerDes Phy if present */
->  	phy = devm_phy_get(dev, "pcie-phy");
->  	if (!IS_ERR_OR_NULL(phy)) {
-> @@ -385,8 +368,8 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
->  			return ret;
->  	}
->  
-> -	/* index 3 is to read PCI DEVICE_ID */
-> -	res = platform_get_resource(pdev, IORESOURCE_MEM, 3);
-> +	/* index 2 is to read PCI DEVICE_ID */
-> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
->  	reg_p = devm_ioremap_resource(dev, res);
->  	if (IS_ERR(reg_p))
->  		return PTR_ERR(reg_p);
-> -- 
-> 1.7.9.5
-> 
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 51d7e62..50f67a3 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -41,14 +41,13 @@ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ 	if (err < 0)
+ 		return err;
+ 
+-	irq_set_chip_data(desc->irq, chip);
+-
+ 	return 0;
+ }
+ 
+ void __weak arch_teardown_msi_irq(unsigned int irq)
+ {
+-	struct msi_chip *chip = irq_get_chip_data(irq);
++	struct msi_desc *entry = irq_get_msi_desc(irq);
++	struct msi_chip *chip = entry->dev->bus->msi;
+ 
+ 	if (!chip || !chip->teardown_irq)
+ 		return;
+-- 
+1.7.1
+
