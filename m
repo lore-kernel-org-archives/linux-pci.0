@@ -1,97 +1,240 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <1410863349.2746.5.camel@pengutronix.de>
-Subject: Re: [PATCH v1 03/21] MSI: Remove the redundant irq_set_chip_data()
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:54485 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755740AbaIZODO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Sep 2014 10:03:14 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>
-Date: Tue, 16 Sep 2014 12:29:09 +0200
-In-Reply-To: <541792C0.9090303@huawei.com>
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
-		 <1409911806-10519-4-git-send-email-wangyijing@huawei.com>
-	 <1410789648.3314.5.camel@pengutronix.de> <541792C0.9090303@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-arch-owner@vger.kernel.org
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFT v2 22/24] x86, irq: Use hierarchy irqdomain to manage DMAR interrupts
+Date: Fri, 26 Sep 2014 22:02:23 +0800
+Message-Id: <1411740145-30626-23-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Dienstag, den 16.09.2014, 09:30 +0800 schrieb Yijing Wang:
-> On 2014/9/15 22:00, Lucas Stach wrote:
-> > Am Freitag, den 05.09.2014, 18:09 +0800 schrieb Yijing Wang:
-> >> Currently, pcie-designware, pcie-rcar, pci-tegra drivers
-> >> use irq chip_data to save the msi_chip pointer. They
-> >> already call irq_set_chip_data() in their own MSI irq map
-> >> functions. So irq_set_chip_data() in arch_setup_msi_irq()
-> >> is useless.
-> >>
-> >> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> >> ---
-> >>  drivers/pci/msi.c |    2 --
-> >>  1 files changed, 0 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> >> index f6cb317..d547f7f 100644
-> >> --- a/drivers/pci/msi.c
-> >> +++ b/drivers/pci/msi.c
-> >> @@ -41,8 +41,6 @@ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
-> >>  	if (err < 0)
-> >>  		return err;
-> >>  
-> >> -	irq_set_chip_data(desc->irq, chip);
-> >> -
-> >>  	return 0;
-> >>  }
-> >>  
-> > 
-> > arch_teardown_msi_irq() expects to find the msi_chip in the irq
-> > chip_data field. As this means drivers don't have any reasonable other
-> > possibility to stuff things into this field, I think it would make sense
-> > to do the cleanup the other way around: keep the irq_set_chip_data
-> > arch_setup_msi_irq() and rip it out of the individual drivers.
-> 
-> Hi Lucas, thanks for your review and comments!
-> irq_set_chip_data() should not be placed in MSI core functions, because other arch like x86,
-> use irq_data->chip_data to stores irq_cfg. So how to set the chip_data is arch dependent.
-> And this series is mainly to use MSI chip framework in all platforms.
-> Currently, only ARM platform MSI drivers use the chip_data to store msi_chip, and the drivers call
-> irq_set_chip_data() in their driver already. So I thought we should clean up it in MSI core code.
-> 
-Okay I see your point, so the cleanup done this way is okay.
+Enhance DMAR code to support hierarchy irqdomain, it helps to make
+the architecture more clear.
 
-But then this still introduces a problem: arch_teardown_msi_irq()
-expects to find the msi_chip in the chip_data field, which is okay for
-all ARM PCI host drivers, but not for other arch MSI chips.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hw_irq.h |    7 +++
+ arch/x86/kernel/apic/msi.c    |  129 +++++++++++++++++++++++++++++++----------
+ 2 files changed, 106 insertions(+), 30 deletions(-)
 
-You fix this by completely removing arch_teardown_msi_irq() at the end
-of the series, but this still has the potential to introduce issues for
-other arches than ARM within the series. So this patch should include a
-change to replace the line
-
-struct msi_chip *chip = irq_get_chip_data(irq);
-
-with something that doesn't rely on the msi_chip being in the irq
-chip_data field.
-
-Regards,
-Lucas
-
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index a5d3b1c46b30..7ed68ce5929a 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -121,6 +121,7 @@ enum irq_alloc_type {
+ 	X86_IRQ_ALLOC_TYPE_HPET,
+ 	X86_IRQ_ALLOC_TYPE_MSI,
+ 	X86_IRQ_ALLOC_TYPE_MSIX,
++	X86_IRQ_ALLOC_TYPE_DMAR,
+ };
+ 
+ struct irq_alloc_info {
+@@ -149,6 +150,12 @@ struct irq_alloc_info {
+ 			u32		ioapic_polarity : 1;
+ 		};
+ #endif
++#ifdef	CONFIG_DMAR_TABLE
++		struct {
++			int		dmar_id;
++			void		*dmar_data;
++		};
++#endif
+ 	};
+ };
+ 
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 08b6d1987ea6..409638b3918a 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -69,6 +69,9 @@ static void msi_update_msg(struct msi_msg *msg, struct irq_data *irq_data)
+ 	msg->data |= MSI_DATA_VECTOR(cfg->vector);
+ 	msg->address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+ 	msg->address_lo |= MSI_ADDR_DEST_ID(cfg->dest_apicid);
++	if (x2apic_enabled())
++		msg->address_hi = MSI_ADDR_BASE_HI |
++				  MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
+ }
+ 
+ static bool msi_irq_remapped(struct irq_data *irq_data)
+@@ -298,58 +301,124 @@ static int
+ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 		      bool force)
+ {
+-	struct irq_cfg *cfg = irqd_cfg(data);
+-	unsigned int dest, irq = data->irq;
++	struct irq_data *parent = data->parent_data;
+ 	struct msi_msg msg;
+ 	int ret;
+ 
+-	ret = apic_set_affinity(data, mask, &dest);
+-	if (ret)
+-		return ret;
+-
+-	dmar_msi_read(irq, &msg);
+-
+-	msg.data &= ~MSI_DATA_VECTOR_MASK;
+-	msg.data |= MSI_DATA_VECTOR(cfg->vector);
+-	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+-	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
+-	msg.address_hi = MSI_ADDR_BASE_HI | MSI_ADDR_EXT_DEST_ID(dest);
+-
+-	dmar_msi_write(irq, &msg);
++	ret = parent->chip->irq_set_affinity(parent, mask, force);
++	if (ret >= 0) {
++		dmar_msi_read(data->irq, &msg);
++		msi_update_msg(&msg, data);
++		dmar_msi_write(data->irq, &msg);
++	}
+ 
+-	return IRQ_SET_MASK_OK_NOCOPY;
++	return ret;
+ }
+ 
+ static struct irq_chip dmar_msi_type = {
+ 	.name			= "DMAR_MSI",
+ 	.irq_unmask		= dmar_msi_unmask,
+ 	.irq_mask		= dmar_msi_mask,
+-	.irq_ack		= apic_ack_edge,
++	.irq_ack		= irq_chip_ack_parent,
+ 	.irq_set_affinity	= dmar_msi_set_affinity,
+-	.irq_retrigger		= apic_retrigger_irq,
++	.irq_retrigger		= irq_chip_retrigger_hierarchy,
+ };
+ 
+-int dmar_alloc_hwirq(int id, int node, void *arg)
++static int dmar_domain_alloc(struct irq_domain *domain, unsigned int virq,
++			     unsigned int nr_irqs, void *arg)
++{
++	struct irq_alloc_info *info = arg;
++	int ret;
++
++	if (nr_irqs > 1 || !info || info->type != X86_IRQ_ALLOC_TYPE_DMAR)
++		return -EINVAL;
++	if (irq_find_mapping(domain, info->dmar_id)) {
++		pr_warn("IRQ for DMAR%d already exists.\n", info->dmar_id);
++		return -EEXIST;
++	}
++
++	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
++	if (ret >= 0) {
++		irq_domain_set_hwirq_and_chip(domain, virq, info->dmar_id,
++					      &dmar_msi_type, NULL);
++		irq_set_handler_data(virq, info->dmar_data);
++		__irq_set_handler(virq, handle_edge_irq, 0, "edge");
++	}
++
++	return ret;
++}
++
++static void dmar_domain_free(struct irq_domain *domain, unsigned int virq,
++			     unsigned int nr_irqs)
++{
++	BUG_ON(nr_irqs > 1);
++	msi_reset_irq_data_and_handler(domain, virq);
++	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
++}
++
++static int dmar_domain_activate(struct irq_domain *domain,
++				struct irq_data *irq_data)
++{
++	struct msi_msg msg;
++
++	native_compose_msi_msg(irqd_cfg(irq_data), &msg);
++	dmar_msi_write(irq_data->irq, &msg);
++
++	return 0;
++}
++
++static int dmar_domain_deactivate(struct irq_domain *domain,
++				  struct irq_data *irq_data)
+ {
+-	int irq;
+ 	struct msi_msg msg;
+ 
+-	irq = irq_domain_alloc_irqs(NULL, 1, node, NULL);
+-	if (irq > 0) {
+-		irq_set_handler_data(irq, arg);
+-		irq_set_chip_and_handler_name(irq, &dmar_msi_type,
+-					      handle_edge_irq, "edge");
+-		native_compose_msi_msg(irq_cfg(irq), &msg);
+-		dmar_msi_write(irq, &msg);
++	memset(&msg, 0, sizeof(msg));
++	dmar_msi_write(irq_data->irq, &msg);
++
++	return 0;
++}
++
++static struct irq_domain_ops dmar_domain_ops = {
++	.alloc = dmar_domain_alloc,
++	.free = dmar_domain_free,
++	.activate = dmar_domain_activate,
++	.deactivate = dmar_domain_deactivate,
++};
++
++static struct irq_domain *dmar_get_irq_domain(void)
++{
++	static struct irq_domain *dmar_domain;
++	static DEFINE_MUTEX(dmar_lock);
++
++	mutex_lock(&dmar_lock);
++	if (dmar_domain == NULL) {
++		dmar_domain = irq_domain_add_tree(NULL, &dmar_domain_ops, NULL);
++		if (dmar_domain)
++			dmar_domain->parent = x86_vector_domain;
+ 	}
++	mutex_unlock(&dmar_lock);
++
++	return dmar_domain;
++}
++
++int dmar_alloc_hwirq(int id, int node, void *arg)
++{
++	struct irq_domain *domain = dmar_get_irq_domain();
++	struct irq_alloc_info info;
++
++	if (!domain)
++		return -1;
++
++	init_irq_alloc_info(&info, NULL);
++	info.type = X86_IRQ_ALLOC_TYPE_DMAR;
++	info.dmar_id = id;
++	info.dmar_data = arg;
+ 
+-	return irq;
++	return irq_domain_alloc_irqs(domain, 1, node, &info);
+ }
+ 
+ void dmar_free_hwirq(int irq)
+ {
+-	irq_set_handler_data(irq, NULL);
+-	irq_set_handler(irq, NULL);
+ 	irq_domain_free_irqs(irq, 1);
+ }
+ #endif
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+1.7.10.4
 
