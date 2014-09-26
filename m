@@ -1,40 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f196.google.com ([74.125.82.196]:56573 "EHLO
-	mail-we0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751679AbaIPXxO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 19:53:14 -0400
-Received: by mail-we0-f196.google.com with SMTP id p10so158665wes.11
-        for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 16:53:13 -0700 (PDT)
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <5424CB0F.2030406@huawei.com>
+Date: Fri, 26 Sep 2014 10:10:23 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Date: Wed, 17 Sep 2014 07:53:13 +0800
-Message-ID: <CANybWhpt7L2JwKBjn2iU_J1sz-GAgN4Ge4jBM_2ry5srbun0hw@mail.gmail.com>
-Subject: [HELP] PCI error recovery driver routine not called
-From: Alvin Abitria <abitria.alvin@gmail.com>
-To: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Thierry Reding <thierry.reding@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 06/22] PCI/MSI: Introduce weak arch_find_msi_chip()
+ to find MSI chip
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com> <1411614872-4009-7-git-send-email-wangyijing@huawei.com> <20140925072619.GI12423@ulmo>
+In-Reply-To: <20140925072619.GI12423@ulmo>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On 2014/9/25 15:26, Thierry Reding wrote:
+> On Thu, Sep 25, 2014 at 11:14:16AM +0800, Yijing Wang wrote:
+>> Introduce weak arch_find_msi_chip() to find the match msi_chip.
+>> Currently, MSI chip associates pci bus to msi_chip. Because in
+>> ARM platform, there may be more than one MSI controller in system.
+>> Associate pci bus to msi_chip help pci device to find the match
+>> msi_chip and setup MSI/MSI-X irq correctly. But in other platform,
+>> like in x86. we only need one MSI chip, because all device use
+>> the same MSI address/data and irq etc. So it's no need to associate
+>> pci bus to MSI chip, just use a arch function, arch_find_msi_chip()
+>> to return the MSI chip for simplicity. The default weak
+>> arch_find_msi_chip() used in ARM platform, find the MSI chip
+>> by pci bus.
+> 
+> Can't x86 simply set the bus' .msi field anyway? It would seem to be
+> easy to do and unifies the code rather than driving it further apart
+> using even more of the __weak functions.
 
-I have a question regarding PCIe error recovery, because in my
-implementation it's not working.  I've simply implemented and
-registered pcie error handler methods to my driver in order to handle
-error events.  Whenever I trigger an error in my PCIe device that
-causes its PCIe core to reset (and most likely to disconnect).  The
-I/O drops to zero after that and it is expected.  However, I am not
-notified by the err_detected method under the error handlers. Does
-this means the system was unable to detect the error?  Instead I ended
-up with the following console message:
+As mentioned in the first reply, I will rework this one when we find a better solution.
 
-irq 16: nobody cared
-handlers:
-...
-...
-Disabling IRQ # 16
+Thanks!
+Yijing.
 
-What baffles me more is that the injected PCI error seemed to brought
-down that IRQ 16 device as well - which is definitely not the irq # of
-my driver/device.  Why is this message posting, and is it expected?
-Is there anything I could possibly missed during registration of error
-handler methods?
+> 
+> Thierry
+> 
+
+
+-- 
+Thanks!
+Yijing
+
