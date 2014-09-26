@@ -1,47 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0134.outbound.protection.outlook.com ([157.56.110.134]:56640
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752043AbaI3KHJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Sep 2014 06:07:09 -0400
-From: Richard Zhu <r65037@freescale.com>
-To: <linux-pci-owner@vger.kernel.org>
-CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
-	<festevam@gmail.com>, <l.stach@pengutronix.de>,
-	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
-Subject: [PATCH v4 06/10] ARM: imx6qdl: enable pcie on imx6qdl sabreauto
-Date: Tue, 30 Sep 2014 17:36:40 +0800
-Message-ID: <1412069804-17162-7-git-send-email-r65037@freescale.com>
-In-Reply-To: <1412069804-17162-1-git-send-email-r65037@freescale.com>
-References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC v1 25/28] x86, irq: Change functions only used in vector.c as static
+Date: Fri, 26 Sep 2014 22:57:55 +0800
+Message-Id: <1411743478-31435-26-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-- enable pcie on imx6qdl sabreauto boards.
+Function {assign|clear}_irq_vector() and apic_retrigger_irq() are only
+used in file vector.c, so change them as static.
 
-Signed-off-by: Richard Zhu <r65037@freescale.com>
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/arm/boot/dts/imx6qdl-sabreauto.dtsi | 4 ++++
- 1 file changed, 4 insertions(+)
+ arch/x86/include/asm/hw_irq.h |    3 ---
+ arch/x86/kernel/apic/vector.c |    7 ++++---
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
-index 009abd6..d6040a5 100644
---- a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
-+++ b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
-@@ -410,6 +410,10 @@
- 	};
- };
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 9f8436fb3770..fdf8300dcc29 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -180,13 +180,10 @@ extern struct irq_cfg *irq_cfg(unsigned int irq);
+ extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
+ extern void lock_vector_lock(void);
+ extern void unlock_vector_lock(void);
+-extern int assign_irq_vector(int, struct irq_cfg *, const struct cpumask *);
+-extern void clear_irq_vector(int irq, struct irq_cfg *cfg);
+ extern void setup_vector_irq(int cpu);
+ extern void send_cleanup_vector(struct irq_cfg *);
+ extern void irq_complete_move(struct irq_cfg *cfg);
  
-+&pcie {
-+	status = "okay";
-+};
-+
- &pwm3 {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pinctrl_pwm3>;
+-extern int apic_retrigger_irq(struct irq_data *data);
+ extern void apic_ack_edge(struct irq_data *data);
+ extern int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 			     unsigned int *dest_id);
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index f21820622edf..ec2b991884f2 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -185,7 +185,8 @@ next:
+ 	return err;
+ }
+ 
+-int assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
++static int assign_irq_vector(int irq, struct irq_cfg *cfg,
++			     const struct cpumask *mask)
+ {
+ 	int err;
+ 	unsigned long flags;
+@@ -196,7 +197,7 @@ int assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
+ 	return err;
+ }
+ 
+-void clear_irq_vector(int irq, struct irq_cfg *cfg)
++static void clear_irq_vector(int irq, struct irq_cfg *cfg)
+ {
+ 	int cpu, vector;
+ 	unsigned long flags;
+@@ -435,7 +436,7 @@ void setup_vector_irq(int cpu)
+ 	__setup_vector_irq(cpu);
+ }
+ 
+-int apic_retrigger_irq(struct irq_data *data)
++static int apic_retrigger_irq(struct irq_data *data)
+ {
+ 	struct irq_cfg *cfg = irqd_cfg(data);
+ 	unsigned long flags;
 -- 
-1.9.1
+1.7.10.4
 
