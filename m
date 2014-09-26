@@ -1,91 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:40927 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754231AbaIWWp7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 18:45:59 -0400
-Received: by mail-ie0-f180.google.com with SMTP id ar1so7605428iec.39
-        for <linux-pci@vger.kernel.org>; Tue, 23 Sep 2014 15:45:59 -0700 (PDT)
-Date: Tue, 23 Sep 2014 16:45:55 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Minghuan Lian <Minghuan.Lian@freescale.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH v3 1/3] PCI: designware: Rename get_msi_data to
- get_msi_addr
-Message-ID: <20140923224555.GE27117@google.com>
-References: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
- <1411482540-31297-3-git-send-email-Minghuan.Lian@freescale.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <5424C77B.2060807@huawei.com>
+Date: Fri, 26 Sep 2014 09:55:07 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411482540-31297-3-git-send-email-Minghuan.Lian@freescale.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Thierry Reding <thierry.reding@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: Re: [PATCH v2 02/22] PCI/MSI: Remove useless bus->msi assignment
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com> <1411614872-4009-3-git-send-email-wangyijing@huawei.com> <20140925070601.GF12423@ulmo>
+In-Reply-To: <20140925070601.GF12423@ulmo>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Mohit, Jingoo]
-
-On Tue, Sep 23, 2014 at 10:28:58PM +0800, Minghuan Lian wrote:
-> The function get_msi_data is used to return MSI message address.
-> In order to accurately express function purpose the patch rename
-> it to get_msi_addr.
+On 2014/9/25 15:06, Thierry Reding wrote:
+> On Thu, Sep 25, 2014 at 11:14:12AM +0800, Yijing Wang wrote:
+>> Currently, PCI drivers will initialize bus->msi in
+>> pcibios_add_bus(). pcibios_add_bus() will be called
+>> in every pci bus initialization. So the bus->msi
+>> assignment in pci_alloc_child_bus() is useless.
 > 
-> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-
-I think this looks like a good idea, but it needs an ack from Mohit and/or
-Jingoo (cc'd).
-
-You previously asked whether .get_msi_addr() should also be changed to
-return u64 instead of u32.  I think it should, and you can do that in a
-separate patch that also changes the use in dw_msi_setup_irq() to split the
-64-bit result into msg.address_lo and msg.address_hi.
-
-I don't see any implementations of .get_msi_data() or .get_msi_addr(), so 
-this seems pretty straightforward.
-
-Bjorn
-
-> ---
-> Change log:
-> v3: no change
-> v2: no change just derived from v1
+> I think this should be the other way around. The default should be to
+> inherit bus->msi from the parent. That way drivers don't typically have
+> to do it, yet they can still opt to override it if they need to.
 > 
->  drivers/pci/host/pcie-designware.c | 4 ++--
->  drivers/pci/host/pcie-designware.h | 2 +-
->  2 files changed, 3 insertions(+), 3 deletions(-)
+> For Tegra for example I think it would work if we assigned the MSI chip
+> to the root bus (in tegra_pcie_scan_bus()) and then have it propagated
+> to child busses in pci_alloc_child_bus() so that tegra_pcie_add_bus()
+> can be removed altogether.
+
+Hi Thierry, thanks very much for your review and comments!
+
+Because pcibios_add_bus() and "child->msi = parent->msi;" in pci_alloc_child_bus()
+do the same thing. So I think we should use one and remove another. I like
+the latter.
+
+In addition, I consider several solutions to associate msi chip and PCI device.
+
+1. Add a msi_chip member in PCI arch sysdata to store the msi_chip pointer. Because
+all PCI devices under a PCI hostbridge always share the same msi chip, so every PCI device
+can find the msi chip by pci_bus->sysdata, but in this solution, we also need to add
+ARCH specific functions to extract msi chip from PCI arch sysdata, like pci_domain_nr().
+Then we can remove .add_bus() like tegra_pcie_add_bus() and the msi assignment in  pci_alloc_child_bus().
+
+2. Remove .add_bus() functions, associate PCI root bus and msi chip after PCI root bus created,
+as you mentioned above. In this solution we need to associate PCI root bus and msi chip in all PCI
+hostbridge drivers, like in tegra_pcie_scan_bus().
+
+
+3. Introduce a global msi chip list, currently, only in arm, there maybe more than one type MSI chip,
+but in arm, we can find msi chip by PCI hostbridge platform device's of_node, Eg. use "msi-parent" property
+to find it. Or msi chip is integrated into PCI hostbridge, we can find msi chip by compare msi_chip->dev and
+PCI hostbridge's platform device's struct device *dev pointer. And because PCI hostbridge platform device pass
+to pci_create_root_bus() as the parent device, so every PCI devices can first find the platform device, then
+to find the msi chip, this solution looks a bit ugly, but we only associate pci hostbridge and msi chip, PCI child
+buses and devices do not have to know the msi chip details.
+
+4. Last, in this series, introduced weak arch function arch_find_msi_chip(), it's the simplest one, because all platforms
+except arm, only one msi chip will exist in system.
+
+What do you think about this ?
+
+Thanks!
+Yijing.
+
 > 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 5d720c2..1c09f814 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -361,8 +361,8 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
->  	 */
->  	desc->msi_attrib.multiple = msgvec;
->  
-> -	if (pp->ops->get_msi_data)
-> -		msg.address_lo = pp->ops->get_msi_data(pp);
-> +	if (pp->ops->get_msi_addr)
-> +		msg.address_lo = pp->ops->get_msi_addr(pp);
->  	else
->  		msg.address_lo = virt_to_phys((void *)pp->msi_data);
->  	msg.address_hi = 0x0;
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index 48f8670..904e40a 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -70,7 +70,7 @@ struct pcie_host_ops {
->  	void (*host_init)(struct pcie_port *pp);
->  	void (*msi_set_irq)(struct pcie_port *pp, int irq);
->  	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
-> -	u32 (*get_msi_data)(struct pcie_port *pp);
-> +	u32 (*get_msi_addr)(struct pcie_port *pp);
->  	void (*scan_bus)(struct pcie_port *pp);
->  	int (*msi_host_init)(struct pcie_port *pp, struct msi_chip *chip);
->  };
-> -- 
-> 1.9.1
+> Thierry
 > 
+
+
+-- 
+Thanks!
+Yijing
+
