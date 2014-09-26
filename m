@@ -1,214 +1,225 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f45.google.com ([209.85.216.45]:61344 "EHLO
-	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750785AbaIBEOu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Sep 2014 00:14:50 -0400
-Received: by mail-qa0-f45.google.com with SMTP id f12so5710496qad.18
-        for <linux-pci@vger.kernel.org>; Mon, 01 Sep 2014 21:14:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <53FFA54D.9000907@gmail.com>
-References: <53FFA54D.9000907@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 1 Sep 2014 22:14:29 -0600
-Message-ID: <CAErSpo5_WMUmnTHpPZt+j04VZoiW1pthQoGV90A5BDQpQgjwOQ@mail.gmail.com>
-Subject: Re: [PATCH] pci/probe: Enable CRS for Intel Haswell root ports
-To: Rajat Jain <rajatxjain@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Richard Yang <weiyang@linux.vnet.ibm.com>,
-	Matthew Wilcox <matthew.r.wilcox@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v2 12/18] x86, irq: Move IOAPIC related declarations from hw_irq.h into io_apic.h
+Date: Fri, 26 Sep 2014 21:29:49 +0800
+Message-Id: <1411738196-29958-13-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Linus (author of ad7edfe04908), Matthew (author of 07ff9220908c
-from full history), Yinghai (author of 2f5d8e4ff947), Richard]
+Clean up code by moving IOAPIC related declarations from hw_irq.h into
+io_apic.h.
 
-On Thu, Aug 28, 2014 at 3:55 PM, Rajat Jain <rajatxjain@gmail.com> wrote:
-> The PCIe root port of the Intel Haswell CPU, has a behavior to endlessly
-> retry the configuration cycles, if an endpoint responds with a CRS
-> (Configuration Request Retry Status), and the "CRS Software Visibility"
-> flag is not set at the root port. This results in a CPU hang, when the
-> kernel tries to enumerate the device that responds with CRS.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hw_irq.h      |   33 ---------------------------------
+ arch/x86/include/asm/io_apic.h     |   23 ++++++++++++++++++++---
+ arch/x86/kernel/apic/io_apic.c     |   10 ++++++++++
+ arch/x86/kernel/crash.c            |    1 +
+ arch/x86/kernel/machine_kexec_32.c |    1 +
+ arch/x86/kernel/machine_kexec_64.c |    1 +
+ arch/x86/kernel/reboot.c           |    1 +
+ 7 files changed, 34 insertions(+), 36 deletions(-)
 
-Help me understand this.  I thought a config read of Vendor ID would see:
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index dca760e9cd12..7624fffc2822 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -154,39 +154,6 @@ static inline void lock_vector_lock(void) {}
+ static inline void unlock_vector_lock(void) {}
+ #endif	/* CONFIG_X86_LOCAL_APIC */
+ 
+-/* IOAPIC */
+-#ifdef CONFIG_X86_IO_APIC
+-struct io_apic_irq_attr {
+-	int ioapic;
+-	int ioapic_pin;
+-	int trigger;
+-	int polarity;
+-};
+-
+-static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
+-					int ioapic, int ioapic_pin,
+-					int trigger, int polarity)
+-{
+-	irq_attr->ioapic	= ioapic;
+-	irq_attr->ioapic_pin	= ioapic_pin;
+-	irq_attr->trigger	= trigger;
+-	irq_attr->polarity	= polarity;
+-}
+-
+-extern void setup_IO_APIC(void);
+-extern void enable_IO_APIC(void);
+-extern void disable_IO_APIC(void);
+-extern void setup_ioapic_dest(void);
+-extern int IO_APIC_get_PCI_irq_vector(int bus, int devfn, int pin);
+-extern void print_IO_APICs(void);
+-
+-extern unsigned long io_apic_irqs;
+-#define IO_APIC_IRQ(x) (((x) >= NR_IRQS_LEGACY) || ((1 << (x)) & io_apic_irqs))
+-#else	/* CONFIG_X86_IO_APIC */
+-#define IO_APIC_IRQ(x)	0
+-static inline void print_IO_APICs(void) {}
+-#endif	/* CONFIG_X86_IO_APIC */
+-
+ /* Statistics */
+ extern atomic_t irq_err_count;
+ extern atomic_t irq_mis_count;
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index a2245cb5ca3f..533803dc3733 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -132,6 +132,10 @@ extern int noioapicquirk;
+ /* -1 if "noapic" boot option passed */
+ extern int noioapicreroute;
+ 
++extern unsigned long io_apic_irqs;
++
++#define IO_APIC_IRQ(x) (((x) >= NR_IRQS_LEGACY) || ((1 << (x)) & io_apic_irqs))
++
+ /*
+  * If we use the IO-APIC for IRQ routing, disable automatic
+  * assignment of PCI IRQ's.
+@@ -139,7 +143,6 @@ extern int noioapicreroute;
+ #define io_apic_assign_pci_irqs \
+ 	(mp_irq_entries && !skip_ioapic_setup && io_apic_irqs)
+ 
+-struct io_apic_irq_attr;
+ struct irq_cfg;
+ extern void ioapic_insert_resources(void);
+ 
+@@ -157,6 +160,13 @@ extern int restore_ioapic_entries(void);
+ extern void setup_ioapic_ids_from_mpc(void);
+ extern void setup_ioapic_ids_from_mpc_nocheck(void);
+ 
++struct io_apic_irq_attr {
++	int ioapic;
++	int ioapic_pin;
++	int trigger;
++	int polarity;
++};
++
+ enum ioapic_domain_type {
+ 	IOAPIC_DOMAIN_INVALID,
+ 	IOAPIC_DOMAIN_LEGACY,
+@@ -196,6 +206,7 @@ extern int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node);
+ extern void __init pre_init_apic_IRQ0(void);
+ 
+ extern void mp_save_irq(struct mpc_intsrc *m);
++extern bool mp_should_keep_irq(struct device *dev);
+ 
+ extern void disable_ioapic_support(void);
+ 
+@@ -226,13 +237,19 @@ static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned
+ 
+ extern void io_apic_eoi(unsigned int apic, unsigned int vector);
+ 
+-extern bool mp_should_keep_irq(struct device *dev);
+-
++extern void setup_IO_APIC(void);
++extern void enable_IO_APIC(void);
++extern void disable_IO_APIC(void);
++extern void setup_ioapic_dest(void);
++extern int IO_APIC_get_PCI_irq_vector(int bus, int devfn, int pin);
++extern void print_IO_APICs(void);
+ #else  /* !CONFIG_X86_IO_APIC */
+ 
++#define IO_APIC_IRQ(x)		0
+ #define io_apic_assign_pci_irqs 0
+ #define setup_ioapic_ids_from_mpc x86_init_noop
+ static inline void ioapic_insert_resources(void) { }
++static inline void print_IO_APICs(void) {}
+ #define gsi_top (NR_IRQS_LEGACY)
+ static inline int mp_find_ioapic(u32 gsi) { return 0; }
+ static inline u32 mp_pin_to_gsi(int ioapic, int pin) { return UINT_MAX; }
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 0741d864612a..3fc4f540ef0f 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3014,6 +3014,16 @@ int mp_ioapic_registered(u32 gsi_base)
+ 	return 0;
+ }
+ 
++static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
++					int ioapic, int ioapic_pin,
++					int trigger, int polarity)
++{
++	irq_attr->ioapic	= ioapic;
++	irq_attr->ioapic_pin	= ioapic_pin;
++	irq_attr->trigger	= trigger;
++	irq_attr->polarity	= polarity;
++}
++
+ int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 		     irq_hw_number_t hwirq)
+ {
+diff --git a/arch/x86/kernel/crash.c b/arch/x86/kernel/crash.c
+index a618fcd2c07d..71bdb8cf8ba1 100644
+--- a/arch/x86/kernel/crash.c
++++ b/arch/x86/kernel/crash.c
+@@ -28,6 +28,7 @@
+ #include <asm/nmi.h>
+ #include <asm/hw_irq.h>
+ #include <asm/apic.h>
++#include <asm/io_apic.h>
+ #include <asm/hpet.h>
+ #include <linux/kdebug.h>
+ #include <asm/cpu.h>
+diff --git a/arch/x86/kernel/machine_kexec_32.c b/arch/x86/kernel/machine_kexec_32.c
+index 1667b1de8d5d..aad1a49e69c3 100644
+--- a/arch/x86/kernel/machine_kexec_32.c
++++ b/arch/x86/kernel/machine_kexec_32.c
+@@ -20,6 +20,7 @@
+ #include <asm/tlbflush.h>
+ #include <asm/mmu_context.h>
+ #include <asm/apic.h>
++#include <asm/io_apic.h>
+ #include <asm/cpufeature.h>
+ #include <asm/desc.h>
+ #include <asm/cacheflush.h>
+diff --git a/arch/x86/kernel/machine_kexec_64.c b/arch/x86/kernel/machine_kexec_64.c
+index 485981059a40..415480d3ea84 100644
+--- a/arch/x86/kernel/machine_kexec_64.c
++++ b/arch/x86/kernel/machine_kexec_64.c
+@@ -22,6 +22,7 @@
+ #include <asm/pgtable.h>
+ #include <asm/tlbflush.h>
+ #include <asm/mmu_context.h>
++#include <asm/io_apic.h>
+ #include <asm/debugreg.h>
+ #include <asm/kexec-bzimage64.h>
+ 
+diff --git a/arch/x86/kernel/reboot.c b/arch/x86/kernel/reboot.c
+index 17962e667a91..bae6c609888e 100644
+--- a/arch/x86/kernel/reboot.c
++++ b/arch/x86/kernel/reboot.c
+@@ -12,6 +12,7 @@
+ #include <acpi/reboot.h>
+ #include <asm/io.h>
+ #include <asm/apic.h>
++#include <asm/io_apic.h>
+ #include <asm/desc.h>
+ #include <asm/hpet.h>
+ #include <asm/pgtable.h>
+-- 
+1.7.10.4
 
-  - 0xffff if no device is present, or
-  - 0x0001 if the device is present but not ready yet, and the OS
-should retry the read.  This only happens when Software Visibility is
-enabled.
-  - Normal Vendor ID if device is present and ready.  If Software
-Visibility is disabled (as it is in Linux today) and the endpoint
-responds with CRS, the Root Complex may retry the config read
-invisibly to software.
-
-I suppose these retries are causing your hang, but since the device is
-actually present, I would think the CPU would see a read that took a
-very long time to complete, but that did eventually complete.  Is this
-causing a CPU timeout?  Is the endpoint broken and returning CRS
-endlessly?
-
-> Please note that this root port behavior (of endless retries) is still
-> compliant with PCIe spec as the spec leaves the behavior open to
-> implementation, on how many retries to do if "CRS visibility flag" is
-> not enabled and it receives a CRS. (Intel has chosen to retry indefinitely)
->
-> Ref1:
-> https://www.pcisig.com/specifications/pciexpress/ECN_CRS_Software_Visibility_No27.pdf
->
-> Ref2:
-> PCIe spec V3.0, pg119, pg127 for "Configuration Request Retry Status"
->
-> Following CPUs are affected:
-> http://ark.intel.com/products/codename/42174/Haswell#@All
->
-> Thus we need to enable the CRS visibility flag for such root ports. The
-> commit ad7edfe04908 ("[PCI] Do not enable CRS Software Visibility by
-> default") suggests to maintain a whitelist of the systems for which CRS
-> should be enabled. This patch does the same.
-
-I'm not a fan of adding a whitelist for devices that work correctly.
-I don't think that's a maintainable solution.  Since we haven't had
-many systems yet that care about CRS, some kind of "enable CRS on
-machines newer than X" might work.
-
->From Linus' email (https://lkml.org/lkml/2007/12/27/92), the only
-detailed data I found was from Ciaran McCreesh
-(https://lkml.org/lkml/2007/10/29/500).  That case is interesting
-because RootCap claims CRSVisible is not supported, but RootCtl claims
-it is enabled:
-
-  00:04.0 PCI bridge: ATI Technologies Inc Unknown device 7934
-(prog-if 00 [Normal decode])
-      Bus: primary=00, secondary=02, subordinate=02, sec-latency=0
-      Capabilities: [58] Express (v1) Root Port (Slot+), MSI 00
-          RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna-
-CRSVisible+
-          RootCap: CRSVisible-
-  02:00.0 Ethernet controller: Unknown device 0001:8168 (rev 01)
-
-The Linux code removed by ad7edfe04908 doesn't bother to check the
-RootCap bit; it simply tries to set the RootCtl enable.  Per spec,
-that would be safe because the RootCtl enable bit should be hardwired
-to 0 if the Root Port doesn't implement the capability, but I can
-imagine a hardware bug where CRSVisible is partly implemented and the
-designer assumes it won't be used because he doesn't advertise that
-it's supported.
-
-I think you should add that RootCap test to your patch.  It would be
-very interesting to test that on some of these machines where we found
-problems.
-
-> Note: Looking at the spec and reading about the CRS, IMHO the "CRS
-> visibility" looks like a good thing to me that should always be enabled
-> on the root ports that support it. And may be we should always enable
-> it if supported and maintain a blacklist of devices on which should be
-> disabled (because of known issues).
->
-> How I stumbled upon this and tested the fix:
->
-> Root port: PCI bridge: Intel Corporation Device 2f02 (rev 01)
->
-> I have a PCIe endpoint (a PLX 8713 NT bridge) that will keep on responding
-> with CRS for a long time when the kernel tries to enumerate the
-> endpoint, trying to indicate that the device is not yet ready. This is
-> because it needs some configuration over I2C in order to complete its
-> reset sequence. This results in a CPU hang during enumeration.
-
-Is the I2C configuration something the OS needs to do?  If so, I
-suppose we will always get CRS after reset, and we'll always have to
-wait for a timeout, then do that I2C configuration, then somehow try
-to re-enumerate the device?  That seems like a broken usage model.  I
-guess maybe the I2C configurator could initiate a rescan to sort of
-patch things up, but it still seems wrong that we have the timeout and
-generate a warning.
-
-> I used this setup to fix and test this issue. After enabling the CRS
-> visibility flag at the root port, I see that CPU moves on as expected
-> declaring the following (instead of freezing):
->
-> pci 0000:30:00.0 id reading try 50 times with interval 20 ms to get
-> ffff0001
-
-This message is from pci_bus_check_dev() (added by 2f5d8e4ff947).
-pci_bus_read_dev_vendor_id() already has an internal timeout mechanism
-with a message that makes sense.  I don't understand why we need
-another one with a different, unintelligible, message in
-pci_bus_check_dev().
-
-> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-> Signed-off-by: Guenter Roeck <groeck@juniper.net>
-> ---
-> Hi Bjorn / folks,
->
-> I had also saught suggestions on how this patch should be modelled.
-> Please find a suggestive alternative here:
->
-> https://lkml.org/lkml/2014/8/1/186
->
-> Please let me know your thoughts.
->
-> Thanks,
->
-> Rajat
->
->
->
->
->  drivers/pci/probe.c |   28 ++++++++++++++++++++++++++++
->  1 file changed, 28 insertions(+)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index e3cf8a2..909ca75 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -740,6 +740,32 @@ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
->  }
->  EXPORT_SYMBOL(pci_add_new_bus);
->
-> +static const struct pci_device_id crs_whitelist[] = {
-> +       { PCI_VDEVICE(INTEL, 0x2f00), },
-> +       { PCI_VDEVICE(INTEL, 0x2f01), },
-> +       { PCI_VDEVICE(INTEL, 0x2f02), },
-> +       { PCI_VDEVICE(INTEL, 0x2f03), },
-> +       { PCI_VDEVICE(INTEL, 0x2f04), },
-> +       { PCI_VDEVICE(INTEL, 0x2f05), },
-> +       { PCI_VDEVICE(INTEL, 0x2f06), },
-> +       { PCI_VDEVICE(INTEL, 0x2f07), },
-> +       { PCI_VDEVICE(INTEL, 0x2f08), },
-> +       { PCI_VDEVICE(INTEL, 0x2f09), },
-> +       { PCI_VDEVICE(INTEL, 0x2f0a), },
-> +       { PCI_VDEVICE(INTEL, 0x2f0b), },
-> +       { },
-> +};
-> +
-> +static void pci_enable_crs(struct pci_dev *dev)
-> +{
-> +       /* Enable CRS Software visibility only for whitelisted systems */
-> +       if (pci_is_pcie(dev) &&
-> +           pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
-> +           pci_match_id(crs_whitelist, dev))
-> +               pcie_capability_set_word(dev, PCI_EXP_RTCTL,
-> +                                        PCI_EXP_RTCTL_CRSSVE);
-> +}
-> +
->  /*
->   * If it's a bridge, configure it and scan the bus behind it.
->   * For CardBus bridges, we don't scan behind as the devices will
-> @@ -787,6 +813,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
->         pci_write_config_word(dev, PCI_BRIDGE_CONTROL,
->                               bctl & ~PCI_BRIDGE_CTL_MASTER_ABORT);
->
-> +       pci_enable_crs(dev);
-> +
->         if ((secondary || subordinate) && !pcibios_assign_all_busses() &&
->             !is_cardbus && !broken) {
->                 unsigned int cmax;
-> --
-> 1.7.9.5
->
