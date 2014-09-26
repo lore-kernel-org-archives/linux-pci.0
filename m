@@ -1,127 +1,216 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bbn0103.outbound.protection.outlook.com ([157.56.111.103]:55714
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752051AbaI3KHK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Sep 2014 06:07:10 -0400
-From: Richard Zhu <r65037@freescale.com>
-To: <linux-pci-owner@vger.kernel.org>
-CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
-	<festevam@gmail.com>, <l.stach@pengutronix.de>,
-	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
-Subject: [PATCH v4 07/10] ARM: imx6: update dts and binding for imx6sx pcie
-Date: Tue, 30 Sep 2014 17:36:41 +0800
-Message-ID: <1412069804-17162-8-git-send-email-r65037@freescale.com>
-In-Reply-To: <1412069804-17162-1-git-send-email-r65037@freescale.com>
-References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
+Received: from service87.mimecast.com ([91.220.42.44]:43129 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755395AbaIZO7A convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Sep 2014 10:59:00 -0400
+Date: Fri, 26 Sep 2014 15:58:54 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v12 06/12] PCI: Create pci_host_bridge before its
+ associated bus in pci_create_root_bus.
+Message-ID: <20140926145854.GS841@e106497-lin.cambridge.arm.com>
+References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411498874-9864-7-git-send-email-Liviu.Dudau@arm.com>
+ <CAE9FiQXuJZnj74dwTbKJCQNJ+OdEbjSB0fpwqh92+WZ_XGnrxQ@mail.gmail.com>
+ <CAErSpo6eUEV81n1rFjjvRcFVmsFkeUxhdL6JauTmx_Et6XdBuQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAErSpo6eUEV81n1rFjjvRcFVmsFkeUxhdL6JauTmx_Et6XdBuQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-- imx6sx pcie phy has its own power regulator. Add the
-pcie phy power suppy into im6sx pcie dts and binding.
-- in order to align with imx6qdl's pcie dts, re-format
-imx6sx pcie dts.
-- in order to align with imx6qdl pcie dts format and
-keep clean of imx6 pcie driver, keep the pcie phy clock
-in imx6sx pcie dts, although it's the parent clk of the
-pcie bus clock now, and would be enabled automatically
-when pcie bus clock is enabled. secondly, it's
-possible that the external osc maybe used as source
-of the pcie_bus clk in board design in future.
-- disp_axi clock is required by pcie inbound axi port.
-Add one more clock named pcie_inbound_axi for imx6sx pcie.
+On Thu, Sep 25, 2014 at 08:59:26PM +0100, Bjorn Helgaas wrote:
+> On Thu, Sep 25, 2014 at 12:15 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > On Tue, Sep 23, 2014 at 12:01 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> >> Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
+> >> As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
+> >> the creation order has been changed for no good reason. Revert the order of
+> >> creation as we are going to depend on the pci_host_bridge structure to retrieve the
+> >> domain number of the root bus.
+> >>
+> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> >> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> >> Acked-by: Grant Likely <grant.likely@linaro.org>
+> >> Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+> >> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+> >> ---
+> >>  drivers/pci/probe.c | 32 +++++++++++++++++---------------
+> >>  1 file changed, 17 insertions(+), 15 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> >> index e3cf8a2..5ff72ec 100644
+> >> --- a/drivers/pci/probe.c
+> >> +++ b/drivers/pci/probe.c
+> >> @@ -515,7 +515,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
+> >>         kfree(bridge);
+> >>  }
+> >>
+> >> -static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+> >> +static struct pci_host_bridge *pci_alloc_host_bridge(void)
+> >>  {
+> >>         struct pci_host_bridge *bridge;
+> >>
+> >> @@ -524,7 +524,8 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+> >>                 return NULL;
+> >>
+> >>         INIT_LIST_HEAD(&bridge->windows);
+> >> -       bridge->bus = b;
+> >> +       bridge->dev.release = pci_release_host_bridge_dev;
+> >> +
+> >>         return bridge;
+> >>  }
+> >>
+> >> @@ -1761,9 +1762,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> >>         char bus_addr[64];
+> >>         char *fmt;
+> >>
+> >> +       bridge = pci_alloc_host_bridge();
+> >> +       if (!bridge)
+> >> +               return NULL;
+> >> +
+> >> +       bridge->dev.parent = parent;
+> >> +
+> >>         b = pci_alloc_bus();
+> >>         if (!b)
+> >> -               return NULL;
+> >> +               goto err_out;
+> >>
+> >>         b->sysdata = sysdata;
+> >>         b->ops = ops;
+> >> @@ -1772,26 +1779,19 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> >>         if (b2) {
+> >>                 /* If we already got to this bus through a different bridge, ignore it */
+> >>                 dev_dbg(&b2->dev, "bus already known\n");
+> >> -               goto err_out;
+> >> +               goto err_bus_out;
+> >>         }
+> >>
+> >> -       bridge = pci_alloc_host_bridge(b);
+> >> -       if (!bridge)
+> >> -               goto err_out;
+> >> -
+> >> -       bridge->dev.parent = parent;
+> >> -       bridge->dev.release = pci_release_host_bridge_dev;
+> >> +       bridge->bus = b;
+> >>         dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+> >>         error = pcibios_root_bridge_prepare(bridge);
+> >> -       if (error) {
+> >> -               kfree(bridge);
+> >> +       if (error)
+> >>                 goto err_out;
+> >> -       }
+> >>
+> >>         error = device_register(&bridge->dev);
+> >>         if (error) {
+> >>                 put_device(&bridge->dev);
+> >> -               goto err_out;
+> >> +               goto err_bus_out;
+> >>         }
+> >>         b->bridge = get_device(&bridge->dev);
+> >>         device_enable_async_suspend(b->bridge);
+> >> @@ -1848,8 +1848,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> >>  class_dev_reg_err:
+> >>         put_device(&bridge->dev);
+> >>         device_unregister(&bridge->dev);
+> >> -err_out:
+> >> +err_bus_out:
+> >>         kfree(b);
+> >> +err_out:
+> >> +       kfree(bridge);
+> >>         return NULL;
+> >>  }
+> >
+> > Hi Bjorn,
+> >
+> > Noticed that you put this one into pci/next.
+> >
+> > This patch has problem for the class_dev_reg_err path.
+> > as device_unregister(&bridge->dev) will trigger pci_release_host_bridge_dev.
+> > So will have double free for bridge or else.
+> >
+> > Please drop this patch from pci/next.
+> >
+> > Also looks strange that the patch have long CC list, but just omit me
+> > and Jiang Liu that
+> > touched those code before.
+> 
+> Thanks for noticing that.  I was concerned, but couldn't remember the details.
+> 
+> I dropped this patch and the subsequent ones from pci/host and rebased
+> my "next" branch.
+> 
+> Sorry I didn't notice you weren't on the CC list.
+> 
+> Bjorn
+> 
 
-Signed-off-by: Richard Zhu <r65037@freescale.com>
----
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  8 +++++-
- arch/arm/boot/dts/imx6sx.dtsi                      | 32 ++++++++++++----------
- 2 files changed, 25 insertions(+), 15 deletions(-)
+Bjorn,
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index 9455fd0..ad81179 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -4,7 +4,7 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
- and thus inherits all the common properties defined in designware-pcie.txt.
- 
- Required properties:
--- compatible: "fsl,imx6q-pcie"
-+- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie"
- - reg: base addresse and length of the pcie controller
- - interrupts: A list of interrupt outputs of the controller. Must contain an
-   entry for each entry in the interrupt-names property.
-@@ -13,6 +13,12 @@ Required properties:
- - clock-names: Must include the following additional entries:
- 	- "pcie_phy"
- 
-+Additional required properties for imx6sx-pcie:
-+- clock names: Must include the following additional entries:
-+	- "pcie_inbound_axi"
-+- power supplies:
-+	- pcie-phy-supply: regulator used to power the PCIe PHY
-+
- Example:
- 
- 	pcie@0x01000000 {
-diff --git a/arch/arm/boot/dts/imx6sx.dtsi b/arch/arm/boot/dts/imx6sx.dtsi
-index f4b9da6..eefedba 100644
---- a/arch/arm/boot/dts/imx6sx.dtsi
-+++ b/arch/arm/boot/dts/imx6sx.dtsi
-@@ -599,9 +599,9 @@
- 					anatop-max-voltage = <1450000>;
- 				};
- 
--				reg_pcie: regulator-vddpcie@140 {
-+				reg_pcie_phy: regulator-vddpcie-phy@140 {
- 					compatible = "fsl,anatop-regulator";
--					regulator-name = "vddpcie";
-+					regulator-name = "vddpcie-phy";
- 					regulator-min-microvolt = <725000>;
- 					regulator-max-microvolt = <1450000>;
- 					anatop-reg-offset = <0x140>;
-@@ -1184,24 +1184,28 @@
- 
- 		pcie: pcie@0x08000000 {
- 			compatible = "fsl,imx6sx-pcie", "snps,dw-pcie";
--			reg = <0x08ffc000 0x4000>; /* DBI */
-+			reg = <0x08ffc000 0x4000>, <0x08f00000 0x80000>;
-+			reg-names = "rc_dbi", "config";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
--				  /* configuration space */
--			ranges = <0x00000800 0 0x08f00000 0x08f00000 0 0x00080000
--				  /* downstream I/O */
--				  0x81000000 0 0          0x08f80000 0 0x00010000
--				  /* non-prefetchable memory */
--				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>;
-+			ranges = <0x81000000 0 0          0x08f80000 0 0x00010000 /* downstream I/O */
-+				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>; /* non-prefetchable memory */
- 			num-lanes = <1>;
--			interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>;
--			clocks = <&clks IMX6SX_CLK_PCIE_REF_125M>,
--				 <&clks IMX6SX_CLK_PCIE_AXI>,
-+			interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "msi";
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
-+			                <0 0 0 2 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
-+			                <0 0 0 3 &intc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
-+			                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&clks IMX6SX_CLK_PCIE_AXI>,
- 				 <&clks IMX6SX_CLK_LVDS1_OUT>,
-+				 <&clks IMX6SX_CLK_PCIE_REF_125M>,
- 				 <&clks IMX6SX_CLK_DISPLAY_AXI>;
--			clock-names = "pcie_ref_125m", "pcie_axi",
--				      "lvds_gate", "display_axi";
-+			clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_inbound_axi";
-+			pcie-phy-supply = <&reg_pcie_phy>;
- 			status = "disabled";
- 		};
- 	};
+I have refreshed/rebuilt the series from what was on 25th in linux-next and I have
+dropped this patch. I have pushed the series into 
+
+git://linux-arm.org/linux-ld.git for-upstream/pci-next
+
+I hope that I've carried all your Sign-off-bys correctly, but I would like to ask you
+to double check that I haven't screwed up things.
+
+This patch dates from the times I was trying to add the domain number information
+into the pci_host_bridge structure. Now, with Catalin's patch that adds the data in
+the pci_bus structure, this is not needed, so it is safe to drop. I did try to fix
+the patch but I've realised how intricately linked pci_host_bridge and root bus are,
+which to my opinion is a strong hint that the creation of the two should be split
+into separate functions.
+
+I can send an official v13 patchset to the mailing list if you want, but if not, here
+is the changelog:
+
+- updated "[PATCH 01/12] asm-generic/io.h: Fix ioport_map() for !CONFIG_GENERIC_IOMAP" to match
+  the patch that Thierry Reding has submitted through the asm-generic branch. If his
+  series lands first upstream this patch will be skipped.
+- updated "[PATCH 03/12] ARM: Define PCI_IOBASE as the base of virtual PCI IO space" to
+  cast the PCI_IOBASE value to (void __iomem *) as is the case with most #defined versions
+- dropped the patch that was changing the order of initialisation between pci_host_bridge
+  and root bus in pci_create_root_bus()
+- fixed "[PATCH 07/12] PCI: Add generic domain handling" to account for the previous patch
+  being removed
+- fixed the title of commit 08/12 to reflect the name of the functions that are actually
+  added (s/of_pci_get_domain_nr/pci_get_new_domain_nr/)
+
+I've compiled tested the series on sparc, microblaze (no)mmu_defconfig, arm omap2plus_defconfig
+and multi_v7_defconfig and arm64. I've also tested the series on my Juno (arm64) board.
+
+Sorry for causing this amount of churn! And to Yinghai Lu and Jiang Liu: appologies for not
+including you in the Cc list, I'm still getting the grip on the whole submission process.
+
+Best regards,
+Liviu
+
 -- 
-1.9.1
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
