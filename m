@@ -1,97 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og117.obsmtp.com ([64.18.0.149]:47480 "HELO
-	exprod5og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755155AbaIVWkF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 18:40:05 -0400
-Received: by mail-we0-f174.google.com with SMTP id w62so3239903wes.33
-        for <linux-pci@vger.kernel.org>; Mon, 22 Sep 2014 15:40:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo4C_6mh7hais14254rYBeMYArvf=nETmgvBjgP290aD4Q@mail.gmail.com>
-References: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
-	<1410906824-9321-2-git-send-email-tinamdar@apm.com>
-	<20140919223258.GA32208@google.com>
-	<CACoXjcnVU3+fQHQ0-zEVRjoedrrod-aua6AVybj7UuSHO9HBaw@mail.gmail.com>
-	<CAErSpo4C_6mh7hais14254rYBeMYArvf=nETmgvBjgP290aD4Q@mail.gmail.com>
-Date: Mon, 22 Sep 2014 15:40:03 -0700
-Message-ID: <CACoXjc=od24kz4RbMLOZNGbMwsAjc8+Ko0rEXNc=2yKnN_3NkQ@mail.gmail.com>
-Subject: Re: [PATCH v9 1/4] pci:host: APM X-Gene PCIe host controller driver
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v2 17/18] iommu/vt-d: Use helpers to access irq_cfg data structure associated with IRQ
+Date: Fri, 26 Sep 2014 21:29:54 +0800
+Message-Id: <1411738196-29958-18-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 22, 2014 at 3:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Sep 22, 2014 at 3:33 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
->
->>>> +static void xgene_pcie_fixup_bridge(struct pci_dev *dev)
->>>> +{
->>>> +     int i;
->>>> +
->>>> +     /* Hide the PCI host BARs from the kernel as their content doesn't
->>>> +      * fit well in the resource management
->>>> +      */
->>>
->>> This needs a better explanation than "doesn't fit well."
->>>
->>> I *think* you're probably talking about something similar to the MVEBU
->>> devices mentioned here:
->>> http://lkml.kernel.org/r/CAErSpo56jB1Bf2JtYCGKXZBZqRF1jXFxGmeewPX_e6vSXueGyA@mail.gmail.com
->>>
->>> where the device can be configured as either an endpoint or a root port,
->>> and the endpoint BARs are still visible when configured as a root port.
->>>
->>
->> It is true that X-Gene PCIe port can be configured as EP, however the
->> the FIXUP is required not because of the BARs are still visible when
->> configured as EP in past. X-Gene PCIe port, when configured as RC,
->> uses BAR0-BAR1 of RC's configuration space as inbound BARs. Entire DDR
->> region is mapped in these BARs so that it is accessible for EP devices
->> for DMA. So if the fixup is not done during enumeration, whole
->> outbound memory resource space gets assigned to RC and nothing is left
->> EP devices.
->
-> I'm not familiar with the concept of an "inbound BAR"; at least I'm
-> not aware of anything like this in the PCI specs.  I think it might
-> reduce confusion if we avoided calling them "BARs".  They happen to be
-> at the same addresses where real BARs would be, but they certainly
-> don't behave like real BARs.
->
-> It sounds like this is basically a trivial IOMMU that determines which
-> DMA accesses can reach main memory.
->
+Use helpers to access irq_cfg data structure associated with IRQ,
+instead of accessing irq_data->chip_data directly. Later we could
+rewrite those helpers to support hierarchy irqdomain.
 
-Yes. That is correct.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel_irq_remapping.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
->>> In any event, I'd like a description of exactly what these BARs are and wha
->>> the problem is.
->>
->> Is it ok to put above description in comment to explain the fixup?
->>
->>> Presumably the BARs exist and were sized by the PCI core
->>> in __pci_read_base().  That will generate some log messages and possibly
->>> some warnings, depending on how the host bridge windows are set up.
->
-> Instead of doing this in a fixup, can you change the PCI config
-> accessors so that when accessing these inbound DMA mapping registers,
-> they drop writes and return zeros for reads?  Then the PCI core won't
-> think there are BARs there, and it won't mistakenly corrupt them when
-> it tries to size them.
->
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 0df41f6264f5..319b39edcf7e 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -55,7 +55,7 @@ static int __init parse_ioapics_under_ir(void);
+ 
+ static struct irq_2_iommu *irq_2_iommu(unsigned int irq)
+ {
+-	struct irq_cfg *cfg = irq_get_chip_data(irq);
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 	return cfg ? &cfg->irq_2_iommu : NULL;
+ }
+ 
+@@ -86,7 +86,7 @@ static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
+ {
+ 	struct ir_table *table = iommu->ir_table;
+ 	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
+-	struct irq_cfg *cfg = irq_get_chip_data(irq);
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 	unsigned int mask = 0;
+ 	unsigned long flags;
+ 	int index;
+@@ -154,7 +154,7 @@ static int map_irq_to_irte_handle(int irq, u16 *sub_handle)
+ static int set_irte_irq(int irq, struct intel_iommu *iommu, u16 index, u16 subhandle)
+ {
+ 	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
+-	struct irq_cfg *cfg = irq_get_chip_data(irq);
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 	unsigned long flags;
+ 
+ 	if (!irq_iommu)
+@@ -1009,7 +1009,7 @@ static int
+ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 			  bool force)
+ {
+-	struct irq_cfg *cfg = data->chip_data;
++	struct irq_cfg *cfg = irqd_cfg(data);
+ 	unsigned int dest, irq = data->irq;
+ 	struct irte irte;
+ 	int err;
+@@ -1064,7 +1064,7 @@ static void intel_compose_msi_msg(struct pci_dev *pdev,
+ 	u16 sub_handle = 0;
+ 	int ir_index;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 
+ 	ir_index = map_irq_to_irte_handle(irq, &sub_handle);
+ 	BUG_ON(ir_index == -1);
+-- 
+1.7.10.4
 
-I suppose this can be done. I will fix this in next revision.
-
-> Bjorn
