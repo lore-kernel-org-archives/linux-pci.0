@@ -1,65 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0114.outbound.protection.outlook.com ([207.46.100.114]:25952
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751439AbaI2FdU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Sep 2014 01:33:20 -0400
-From: Richard Zhu <r65037@freescale.com>
-To: <linux-pci-owner@vger.kernel.org>
-CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
-	<festevam@gmail.com>, <l.stach@pengutronix.de>,
-	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
-Subject: [PATCH v3 1/9] PCI: imx6: wait the clocks to stabilize after ref_en
-Date: Mon, 29 Sep 2014 13:03:09 +0800
-Message-ID: <1411966997-27118-2-git-send-email-r65037@freescale.com>
-In-Reply-To: <1411966997-27118-1-git-send-email-r65037@freescale.com>
-References: <1411966997-27118-1-git-send-email-r65037@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v2 06/18] x86, irq: Protect __clear_irq_vector() with vector_lock
+Date: Fri, 26 Sep 2014 21:29:43 +0800
+Message-Id: <1411738196-29958-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For boards without a reset gpio we skip the delay between enabling
-the pcie_ref_clk and touching the RC registers for configuration.
-System would be hangs when the clocks are not yet settled in the DW
-PCIe core. So we need to make sure that there is always an
-appropriate delay between those two actions.
+Function __clear_irq_vector() accesses vector related data structure,
+so protect it with vector_lock. Also rename it as clear_irq_vector().
 
-Signed-off-by: Richard Zhu <r65037@freescale.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/host/pci-imx6.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ arch/x86/kernel/apic/io_apic.c |   19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 233fe8a..eac96fb 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -275,15 +275,22 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 		goto err_pcie;
- 	}
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 50681c97b4cd..0022a0c2faac 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1349,10 +1349,12 @@ int assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
+ 	return err;
+ }
  
--	/* allow the clocks to stabilize */
--	usleep_range(200, 500);
--
- 	/* power up core phy and enable ref clock */
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
-+	/*
-+	 * the async reset input need ref clock to sync internally,
-+	 * when the ref clock comes after reset, internal synced
-+	 * reset time is too short , cannot meet the requirement.
-+	 * add one ~10us delay here.
-+	 */
-+	udelay(10);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+-static void __clear_irq_vector(int irq, struct irq_cfg *cfg)
++static void clear_irq_vector(int irq, struct irq_cfg *cfg)
+ {
+ 	int cpu, vector;
++	unsigned long flags;
  
-+	/* allow the clocks to stabilize */
-+	usleep_range(200, 500);
++	raw_spin_lock_irqsave(&vector_lock, flags);
+ 	BUG_ON(!cfg->vector);
+ 
+ 	vector = cfg->vector;
+@@ -1362,8 +1364,11 @@ static void __clear_irq_vector(int irq, struct irq_cfg *cfg)
+ 	cfg->vector = 0;
+ 	cpumask_clear(cfg->domain);
+ 
+-	if (likely(!cfg->move_in_progress))
++	if (likely(!cfg->move_in_progress)) {
++		raw_spin_unlock_irqrestore(&vector_lock, flags);
+ 		return;
++	}
 +
- 	/* Some boards don't have PCIe reset GPIO. */
- 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
- 		gpio_set_value(imx6_pcie->reset_gpio, 0);
+ 	for_each_cpu_and(cpu, cfg->old_domain, cpu_online_mask) {
+ 		for (vector = FIRST_EXTERNAL_VECTOR; vector < NR_VECTORS; vector++) {
+ 			if (per_cpu(vector_irq, cpu)[vector] != irq)
+@@ -1373,6 +1378,7 @@ static void __clear_irq_vector(int irq, struct irq_cfg *cfg)
+ 		}
+ 	}
+ 	cfg->move_in_progress = 0;
++	raw_spin_unlock_irqrestore(&vector_lock, flags);
+ }
+ 
+ void __setup_vector_irq(int cpu)
+@@ -1499,7 +1505,7 @@ static void setup_ioapic_irq(unsigned int irq, struct irq_cfg *cfg,
+ 					 &dest)) {
+ 		pr_warn("Failed to obtain apicid for ioapic %d, pin %d\n",
+ 			mpc_ioapic_id(attr->ioapic), attr->ioapic_pin);
+-		__clear_irq_vector(irq, cfg);
++		clear_irq_vector(irq, cfg);
+ 
+ 		return;
+ 	}
+@@ -1513,7 +1519,7 @@ static void setup_ioapic_irq(unsigned int irq, struct irq_cfg *cfg,
+ 	if (x86_io_apic_ops.setup_entry(irq, &entry, dest, cfg->vector, attr)) {
+ 		pr_warn("Failed to setup ioapic entry for ioapic  %d, pin %d\n",
+ 			mpc_ioapic_id(attr->ioapic), attr->ioapic_pin);
+-		__clear_irq_vector(irq, cfg);
++		clear_irq_vector(irq, cfg);
+ 
+ 		return;
+ 	}
+@@ -3082,12 +3088,9 @@ int arch_setup_hwirq(unsigned int irq, int node)
+ void arch_teardown_hwirq(unsigned int irq)
+ {
+ 	struct irq_cfg *cfg = irq_cfg(irq);
+-	unsigned long flags;
+ 
+ 	free_remapped_irq(irq);
+-	raw_spin_lock_irqsave(&vector_lock, flags);
+-	__clear_irq_vector(irq, cfg);
+-	raw_spin_unlock_irqrestore(&vector_lock, flags);
++	clear_irq_vector(irq, cfg);
+ 	free_irq_cfg(irq, cfg);
+ }
+ 
 -- 
-1.9.1
+1.7.10.4
 
