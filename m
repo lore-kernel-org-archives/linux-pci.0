@@ -1,90 +1,113 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 19 Sep 2014 10:45:18 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Dave Airlie <airlied@redhat.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: [GIT PULL] PCI fixes for v3.17
-Message-ID: <20140919164518.GA19374@google.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <5424CB70.9020800@huawei.com>
+Date: Fri, 26 Sep 2014 10:12:00 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+To: Thierry Reding <thierry.reding@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 12/22] MIPS/Octeon/MSI: Use MSI chip framework to configure
+ MSI/MSI-X irq
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com> <1411614872-4009-13-git-send-email-wangyijing@huawei.com> <20140925073435.GJ12423@ulmo>
+In-Reply-To: <20140925073435.GJ12423@ulmo>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On 2014/9/25 15:34, Thierry Reding wrote:
+> On Thu, Sep 25, 2014 at 11:14:22AM +0800, Yijing Wang wrote:
+> [...]
+>> diff --git a/arch/mips/pci/msi-octeon.c b/arch/mips/pci/msi-octeon.c
+> [...]
+>> @@ -132,12 +132,12 @@ msi_irq_allocated:
+>>  	/* Make sure the search for available interrupts didn't fail */
+>>  	if (irq >= 64) {
+>>  		if (request_private_bits) {
+>> -			pr_err("arch_setup_msi_irq: Unable to find %d free interrupts, trying just one",
+>> +			pr_err("octeon_setup_msi_irq: Unable to find %d free interrupts, trying just one",
+>>  			       1 << request_private_bits);
+> 
+> Perhaps while at it make this (and other similar changes in this patch):
+> 
+> 	pr_err("%s(): Unable to ...", __func__, ...);
 
-These fix:
+Will update it, thanks!
 
-  - Boot video device detection on dual-GPU Apple systems
-  - Hotplug fiascos on VGA switcheroo with radeon & nouveau drivers
-  - Boot hang on Freescale i.MX6 systems
-  - Excessive "no hotplug settings from platform" warnings
+> 
+> So that it becomes more resilient against this kind of rename?
+> 
+>>  			request_private_bits = 0;
+>>  			goto try_only_one;
+>>  		} else
+>> -			panic("arch_setup_msi_irq: Unable to find a free MSI interrupt");
+>> +			panic("octeon_setup_msi_irq: Unable to find a free MSI interrupt");
+> 
+>> @@ -210,14 +210,13 @@ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+>>  
+>>  	return 0;
+>>  }
+>> -
+> 
+> This...
 
-Bjorn
+OK
+
+> 
+>> @@ -240,7 +239,7 @@ void arch_teardown_msi_irq(unsigned int irq)
+>>  	 */
+>>  	number_irqs = 0;
+>>  	while ((irq0 + number_irqs < 64) &&
+>> -	       (msi_multiple_irq_bitmask[index]
+>> +		(msi_multiple_irq_bitmask[index]
+> 
+> ... and this seem like unrelated whitespace changes.
+
+OK
+
+> 
+>>  		& (1ull << (irq0 + number_irqs))))
+>>  		number_irqs++;
+>>  	number_irqs++;
+>> @@ -249,8 +248,8 @@ void arch_teardown_msi_irq(unsigned int irq)
+>>  	/* Shift the mask to the correct bit location */
+>>  	bitmask <<= irq0;
+>>  	if ((msi_free_irq_bitmask[index] & bitmask) != bitmask)
+>> -		panic("arch_teardown_msi_irq: Attempted to teardown MSI "
+>> -		      "interrupt (%d) not in use", irq);
+>> +		panic("octeon_teardown_msi_irq: Attempted to teardown MSI "
+>> +			"interrupt (%d) not in use", irq);
+> 
+> And the second line here also needlessly changes the indentation.
+
+OK
+> 
+> Thierry
+> 
 
 
+-- 
+Thanks!
+Yijing
 
-The following changes since commit 52addcf9d6669fa439387610bc65c92fa0980cef:
-
-  Linux 3.17-rc2 (2014-08-25 15:36:20 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.17-fixes-2
-
-for you to fetch changes up to 649ae75286793304130e747efa7d1a88daaf7e2e:
-
-  Merge branch 'pci/vga'; commit '6a73336bde29' into for-linus (2014-09-18 23:05:06 -0600)
-
-----------------------------------------------------------------
-PCI updates for v3.17:
-
-  Enumeration
-    - Don't default exclusively to first video device (Bruno Prémont)
-
-  PCI device hotplug
-    - Remove "no hotplug settings from platform" warning (Bjorn Helgaas)
-    - Add pci_ignore_hotplug() for VGA switcheroo (Bjorn Helgaas)
-
-  Freescale i.MX6
-    - Put LTSSM in "Detect" state before disabling (Lucas Stach)
-
-----------------------------------------------------------------
-Bjorn Helgaas (6):
-      Merge branch 'pci/host-imx6' into for-linus
-      PCI: Add pci_ignore_hotplug() to ignore hotplug events for a device
-      PCI: Remove "no hotplug settings from platform" warning
-      ACPIPHP / radeon / nouveau: Remove acpi_bus_no_hotplug()
-      Merge branch 'pci/hotplug-vga' into for-linus
-      Merge branch 'pci/vga'; commit '6a73336bde29' into for-linus
-
-Bruno Prémont (2):
-      vgaarb: Don't default exclusively to first video device with mem+io
-      vgaarb: Drop obsolete #ifndef
-
-Lucas Stach (2):
-      MAINTAINERS: Add Lucas Stach as co-maintainer for i.MX6 PCI driver
-      PCI: imx6: Put LTSSM in "Detect" state before disabling it
-
- MAINTAINERS                                  |  2 +-
- arch/ia64/pci/fixup.c                        | 24 +--------------
- arch/x86/pci/fixup.c                         | 24 +--------------
- drivers/acpi/bus.c                           | 10 ------
- drivers/gpu/drm/nouveau/nouveau_acpi.c       | 16 ++--------
- drivers/gpu/drm/nouveau/nouveau_drm.c        |  1 +
- drivers/gpu/drm/radeon/radeon_atpx_handler.c | 16 ++--------
- drivers/gpu/drm/radeon/radeon_drv.c          |  1 +
- drivers/gpu/vga/vgaarb.c                     | 46 ++++++++++++++++++++++------
- drivers/pci/host/pci-imx6.c                  | 38 +++++++++++++++++++++++
- drivers/pci/hotplug/acpiphp_glue.c           | 16 ++++------
- drivers/pci/hotplug/pciehp_hpc.c             | 12 ++++++++
- drivers/pci/hotplug/pcihp_slot.c             |  6 +---
- include/acpi/acpi_bus.h                      |  4 +--
- include/linux/pci.h                          |  6 ++++
- include/linux/vgaarb.h                       |  2 --
- 16 files changed, 110 insertions(+), 114 deletions(-)
