@@ -1,52 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:56203 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754503AbaIPQef (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 12:34:35 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: "Lian Minghuan-B31939" <B31939@freescale.com>
-Subject: Re: [PATCH v2 3/3] PCI: Layerscape: Add Layerscape PCIe driver
-Date: Tue, 16 Sep 2014 18:33:52 +0200
-Cc: Scott Wood <scottwood@freescale.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	"Zang Roy-R61911" <r61911@freescale.com>,
-	"Hu Mingkai-B21284" <B21284@freescale.com>,
-	"Yoder Stuart-B08248" <stuart.yoder@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <1410469741-11634-1-git-send-email-Minghuan.Lian@freescale.com> <1410841159.24184.491.camel@snotra.buserror.net> <54187590.4070101@freescale.com>
-In-Reply-To: <54187590.4070101@freescale.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201409161833.53176.arnd@arndb.de>
+Received: from mga11.intel.com ([192.55.52.93]:27175 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756000AbaIZO4g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Sep 2014 10:56:36 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC v1 16/28] x86: irq_remapping: Clean up unused interfaces
+Date: Fri, 26 Sep 2014 22:57:46 +0800
+Message-Id: <1411743478-31435-17-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 16 September 2014, Lian Minghuan-B31939 wrote:
-> >>>> +          ranges = <0x81000000 0x0 0x00000000 0x40 0x10000000 0x0 0x00010000   /* downstream I/O */
-> >>>> +                    0x82000000 0x0 0x00000000 0x41 0x00000000 0x1 0x00000000>; /* non-prefetchable memory */
-> >>> Are these ranges hardcoded in the SoC, or are they the result of iATU
-> >>> settings?  If the latter, who configures it and why no prefetchable
-> >>> region?
-> >> [Minghuan] 400000_0000 - 480000_0000 is hardcode assigned to PEX1.
-> >> I separates from this 32 region  1M for IO, 4G for non-prefetchable memory.
-> >> 4G is the max size iATU supported.
-> >> IO and memory region will be set to iATU by pci-designware.c
-> >> Because both powerpc and imx do not set prefechable memory,
-> >> so  I do not assign prefetchable memory either.
-> > If there's spare room in the addres space for a prefetchable region, why
-> > not make one, regardless of what PPC and IMX do?
-> >
-> > FWIW, I believe that ARMv8 can make better use of a prefetchable region
-> > due to the "gathering" storage attribute, so even if you don't use one
-> > on LS1021A consider using one on ARMv8-based LS chips.
-> [Minghuan] Ok, I will add 4G prefetchable memory region.
+Now we have converted to hierarchy irqdomain, so clean up unused
+interfaces.
 
-I guess that means you still can't support devices that require 64-bit
-BARs, right? 4GB may be too small for some devices.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/irq_remapping.h |   16 ----------------
+ 1 file changed, 16 deletions(-)
 
-Do I read this right that you could have multiple adjacent 4GB areas
-but are limited on registers to set up these areas?
+diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
+index 474e20be528f..f42805bef314 100644
+--- a/drivers/iommu/irq_remapping.h
++++ b/drivers/iommu/irq_remapping.h
+@@ -24,11 +24,7 @@
+ 
+ #ifdef CONFIG_IRQ_REMAP
+ 
+-struct IO_APIC_route_entry;
+-struct io_apic_irq_attr;
+ struct irq_data;
+-struct cpumask;
+-struct pci_dev;
+ struct msi_msg;
+ struct irq_domain;
+ struct irq_alloc_info;
+@@ -58,18 +54,6 @@ struct irq_remap_ops {
+ 	/* Enable fault handling */
+ 	int  (*enable_faulting)(void);
+ 
+-	/* IO-APIC setup routine */
+-	int (*setup_ioapic_entry)(int irq, struct IO_APIC_route_entry *,
+-				  unsigned int, int,
+-				  struct io_apic_irq_attr *);
+-
+-	/* Set the CPU affinity of a remapped interrupt */
+-	int (*set_affinity)(struct irq_data *data, const struct cpumask *mask,
+-			    bool force);
+-
+-	/* Free an IRQ */
+-	int (*free_irq)(int);
+-
+ 	struct irq_domain *(*get_ir_irq_domain)(struct irq_alloc_info *);
+ 
+ 	/* Get the MSI irqdomain associated with the IOMMU device */
+-- 
+1.7.10.4
 
-	Arnd
