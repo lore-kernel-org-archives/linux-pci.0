@@ -1,122 +1,207 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:61088 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750967AbaIMDSV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Sep 2014 23:18:21 -0400
-Received: by mail-ig0-f182.google.com with SMTP id h18so1551119igc.15
-        for <linux-pci@vger.kernel.org>; Fri, 12 Sep 2014 20:18:21 -0700 (PDT)
-Date: Fri, 12 Sep 2014 21:18:18 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: David Henningsson <david.henningsson@canonical.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH] Add pci=assign-busses quirk to Dell Latitude D505
-Message-ID: <20140913031818.GA25656@google.com>
-References: <1409303414-5196-1-git-send-email-david.henningsson@canonical.com>
- <CAErSpo5v82xeYGqsiWXpfQdr8kF9x+1K4gjYremfCh3fNQ8Unw@mail.gmail.com>
- <540091D1.1040902@canonical.com>
- <CAErSpo6D+8KwM9LJC4VFCtGbQ65zh_2ZjNOuP-JQB1bmt5dwCw@mail.gmail.com>
- <CAErSpo6DDCkrew8rwkNX8=gzc19vErY5iafPBN4oKw_Ww792=g@mail.gmail.com>
- <54115995.5020107@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54115995.5020107@canonical.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC v1 10/28] x86, irq: Kill x86_io_apic_ops.eoi_ioapic_pin and related interfaces
+Date: Fri, 26 Sep 2014 22:57:40 +0800
+Message-Id: <1411743478-31435-11-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 11, 2014 at 10:13:09AM +0200, David Henningsson wrote:
-> 
-> 
-> On 2014-09-10 20:08, Bjorn Helgaas wrote:
-> >[+cc Andreas]
-> >v3.16 fails with:
-> >
-> >   pci 0000:01:01.0: can't allocate child bus 01 from [bus 01]
-> >
-> >which Andreas added with fc1b253141b3 ("PCI: Don't scan random busses
-> >in pci_scan_bridge()").  But I don't understand that code well enough
-> >to know whether this commit is actually the cause of the problem.
-> >
-> >And I also haven't figured out how "pci=assign-busses" makes a difference.
-> >
-> >David, would you mind turning on CONFIG_DYNAMIC_DEBUG=y in your v3.16
-> >kernel, adding  'dyndbg="file probe.c +p"' to your boot arguments, and
-> >collecting another dmesg log?
-> 
-> Thanks for looking at this (and sorry for not having done a bisect yet).
-> 
-> Anyhow, a new dmesg log has now been posted at kernel bugzilla
-> #83441. It has a few more lines starting with "pci_bus" but nothing
-> that really stands out AFAICT.
+Now there is no user of x86_io_apic_ops.eoi_ioapic_pin anymore, so kill
+it.
 
-We need to make progress on this regression before v3.17.  David, can you
-test the following revert (on top of v3.17-rc2)?  If it works, I plan to
-apply it for v3.17 (unless we have a better solution, of course).
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h  |    7 -------
+ arch/x86/include/asm/x86_init.h |    1 -
+ arch/x86/kernel/apic/io_apic.c  |   38 +-------------------------------------
+ arch/x86/kernel/x86_init.c      |    1 -
+ drivers/iommu/irq_remapping.c   |   19 -------------------
+ 5 files changed, 1 insertion(+), 65 deletions(-)
 
-Bjorn
-
-
-commit 413db4234ebbb9750f01180c04965ad3a5e18986
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Fri Sep 12 20:46:09 2014 -0600
-
-    Revert "PCI: Don't scan random busses in pci_scan_bridge()"
-    
-    This reverts commit fc1b253141b3 ("PCI: Don't scan random busses in
-    pci_scan_bridge()") because it breaks CardBus on some machines.
-    
-    David tested a Dell Latitude D505 that worked like this prior to
-    fc1b253141b3:
-    
-        pci 0000:00:1e.0: PCI bridge to [bus 01]
-        pci 0000:01:01.0: CardBus bridge to [bus 02-05]
-    
-    Note that the 01:01.0 CardBus bridge has a bus number aperture of
-    [bus 02-05], but those buses are all outside the 00:1e.0 PCI bridge bus
-    number aperture, so accesses to buses 02-05 never reach CardBus.  This is
-    later patched up by yenta_fixup_parent_bridge(), which changes the
-    subordinate bus number of the 00:1e.0 PCI bridge:
-    
-        pci_bus 0000:01: Raising subordinate bus# of parent bus (#01) from #01 to #05
-    
-    With fc1b253141b3, pci_scan_bridge() just fails immediately when it notices
-    that we can't allocate a valid secondary bus number for the CardBus bridge,
-    and CardBus doesn't work at all:
-    
-        pci 0000:01:01.0: can't allocate child bus 01 from [bus 01]
-    
-    I'd prefer to fix this by integrating the yenta_fixup_parent_bridge() logic
-    into pci_scan_bridge() so we fix the bus number apertures up front.  But
-    that's a bigger effort, and I want to fix the regression while we're
-    working on it.
-    
-    Link: https://bugzilla.kernel.org/show_bug.cgi?id=83441
-    Link: http://lkml.kernel.org/r/1409303414-5196-1-git-send-email-david.henningsson@canonical.com
-    Reported-by: David Henningsson <david.henningsson@canonical.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    CC: stable@vger.kernel.org	# v3.15+
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e3cf8a2e6292..7c8ca351beae 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -838,16 +838,12 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 			goto out;
- 		}
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index e82f78f0c04d..f58cf21ced59 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -150,10 +150,6 @@ struct irq_cfg;
+ extern void ioapic_insert_resources(void);
+ extern int arch_early_ioapic_init(void);
  
--		if (max >= bus->busn_res.end) {
--			dev_warn(&dev->dev, "can't allocate child bus %02x from %pR\n",
--				 max, &bus->busn_res);
--			goto out;
--		}
+-extern void eoi_ioapic_irq(unsigned int irq, struct irq_cfg *cfg);
 -
- 		/* Clear errors */
- 		pci_write_config_word(dev, PCI_STATUS, 0xffff);
+-extern void native_eoi_ioapic_pin(int apic, int pin, int vector);
+-
+ extern int save_ioapic_entries(void);
+ extern void mask_ioapic_entries(void);
+ extern int restore_ioapic_entries(void);
+@@ -238,8 +234,6 @@ static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned
+ 	x86_io_apic_ops.modify(apic, reg, value);
+ }
  
--		/* The bus will already exist if we are rescanning */
-+		/* Prevent assigning a bus number that already exists.
-+		 * This can happen when a bridge is hot-plugged, so in
-+		 * this case we only re-scan this bus. */
- 		child = pci_find_bus(pci_domain_nr(bus), max+1);
- 		if (!child) {
- 			child = pci_add_new_bus(bus, dev, max+1);
+-extern void io_apic_eoi(unsigned int apic, unsigned int vector);
+-
+ extern void setup_IO_APIC(void);
+ extern void enable_IO_APIC(void);
+ extern void disable_IO_APIC(void);
+@@ -284,7 +278,6 @@ static inline void disable_ioapic_support(void) { }
+ #define native_io_apic_write		NULL
+ #define native_io_apic_modify		NULL
+ #define native_disable_io_apic		NULL
+-#define native_eoi_ioapic_pin		NULL
+ #endif
+ 
+ #endif /* _ASM_X86_IO_APIC_H */
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index 2637e8fb978d..fa6b1b5128ee 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -194,7 +194,6 @@ struct x86_io_apic_ops {
+ 	void		(*write)  (unsigned int apic, unsigned int reg, unsigned int value);
+ 	void		(*modify) (unsigned int apic, unsigned int reg, unsigned int value);
+ 	void		(*disable)(void);
+-	void		(*eoi_ioapic_pin)(int apic, int pin, int vector);
+ };
+ 
+ extern struct x86_init_ops x86_init;
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 3f4c2cc2772b..7ab9cea9ae1b 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -290,7 +290,7 @@ static __attribute_const__ struct io_apic __iomem *io_apic_base(int idx)
+ 		+ (mpc_ioapic_addr(idx) & ~PAGE_MASK);
+ }
+ 
+-void io_apic_eoi(unsigned int apic, unsigned int vector)
++static inline void io_apic_eoi(unsigned int apic, unsigned int vector)
+ {
+ 	struct io_apic __iomem *io_apic = io_apic_base(apic);
+ 	writel(vector, &io_apic->eoi);
+@@ -546,30 +546,6 @@ static void unmask_ioapic_irq(struct irq_data *data)
+  * Otherwise, we simulate the EOI message manually by changing the trigger
+  * mode to edge and then back to level, with RTE being masked during this.
+  */
+-void native_eoi_ioapic_pin(int apic, int pin, int vector)
+-{
+-	if (mpc_ioapic_ver(apic) >= 0x20) {
+-		io_apic_eoi(apic, vector);
+-	} else {
+-		struct IO_APIC_route_entry entry, entry1;
+-
+-		entry = entry1 = __ioapic_read_entry(apic, pin);
+-
+-		/*
+-		 * Mask the entry and change the trigger mode to edge.
+-		 */
+-		entry1.mask = 1;
+-		entry1.trigger = IOAPIC_EDGE;
+-
+-		__ioapic_write_entry(apic, pin, entry1);
+-
+-		/*
+-		 * Restore the previous level triggered entry.
+-		 */
+-		__ioapic_write_entry(apic, pin, entry);
+-	}
+-}
+-
+ static void eoi_io_apic(bool remapped, int apic, int pin, int vector)
+ {
+ 	if (unlikely(remapped)) {
+@@ -602,18 +578,6 @@ static void eoi_io_apic(bool remapped, int apic, int pin, int vector)
+ 	}
+ }
+ 
+-void eoi_ioapic_irq(unsigned int irq, struct irq_cfg *cfg)
+-{
+-	struct irq_pin_list *entry;
+-	unsigned long flags;
+-
+-	raw_spin_lock_irqsave(&ioapic_lock, flags);
+-	for_each_irq_pin(entry, cfg->irq_2_pin)
+-		x86_io_apic_ops.eoi_ioapic_pin(entry->apic, entry->pin,
+-					       cfg->vector);
+-	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
+-}
+-
+ static void clear_IO_APIC_pin(unsigned int apic, unsigned int pin)
+ {
+ 	struct IO_APIC_route_entry entry;
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index 377b22008280..ac2b604c00ec 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -154,5 +154,4 @@ struct x86_io_apic_ops x86_io_apic_ops = {
+ 	.write			= native_io_apic_write,
+ 	.modify			= native_io_apic_modify,
+ 	.disable		= native_disable_io_apic,
+-	.eoi_ioapic_pin		= native_eoi_ioapic_pin,
+ };
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 116796c194d2..cebb198ecf16 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -43,21 +43,9 @@ static void irq_remapping_disable_io_apic(void)
+ 		disconnect_bsp_APIC(0);
+ }
+ 
+-static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
+-{
+-	/*
+-	 * Intr-remapping uses pin number as the virtual vector
+-	 * in the RTE. Actual vector is programmed in
+-	 * intr-remapping table entry. Hence for the io-apic
+-	 * EOI we use the pin number.
+-	 */
+-	io_apic_eoi(apic, pin);
+-}
+-
+ static void __init irq_remapping_modify_x86_ops(void)
+ {
+ 	x86_io_apic_ops.disable		= irq_remapping_disable_io_apic;
+-	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
+ }
+ 
+ static __init int setup_nointremap(char *str)
+@@ -193,12 +181,6 @@ void ir_ack_apic_edge(struct irq_data *data)
+ 	ack_APIC_irq();
+ }
+ 
+-static void ir_ack_apic_level(struct irq_data *data)
+-{
+-	ack_APIC_irq();
+-	eoi_ioapic_irq(data->irq, irqd_cfg(data));
+-}
+-
+ void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p)
+ {
+ 	/*
+@@ -221,7 +203,6 @@ void irq_remap_modify_chip_defaults(struct irq_chip *chip)
+ {
+ 	chip->irq_print_chip = ir_print_prefix;
+ 	chip->irq_ack = ir_ack_apic_edge;
+-	chip->irq_eoi = ir_ack_apic_level;
+ }
+ 
+ bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
+-- 
+1.7.10.4
+
