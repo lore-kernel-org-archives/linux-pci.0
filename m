@@ -1,76 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:39062 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751716AbaIXQGz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 12:06:55 -0400
-Received: by mail-ie0-f181.google.com with SMTP id tr6so11787417ieb.12
-        for <linux-pci@vger.kernel.org>; Wed, 24 Sep 2014 09:06:55 -0700 (PDT)
-Date: Wed, 24 Sep 2014 10:06:52 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Dirk Gouders <dirk@gouders.net>,
-	David Henningsson <david.henningsson@canonical.com>,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: [GIT PULL] PCI fixes for v3.17
-Message-ID: <20140924160652.GA17609@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC v1 19/28] iommu/amd: Move struct irq_2_irte into amd_iommu.c
+Date: Fri, 26 Sep 2014 22:57:49 +0800
+Message-Id: <1411743478-31435-20-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+Now only amd_iommu.c access irq_2_irte, so move it from hw_irq.h into
+amd_iommu.c.
 
-Here are a few fixes that should be in v3.17.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hw_irq.h |   13 -------------
+ drivers/iommu/amd_iommu.c     |    5 +++++
+ 2 files changed, 5 insertions(+), 13 deletions(-)
 
-  - Reverting "Don't scan random busses" covers up a CardBus regression
-    having to do with allocating CardBus bus numbers.
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 185c5889daa1..68412c2f97cd 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -94,14 +94,6 @@ extern void trace_call_function_single_interrupt(void);
+ #define trace_kvm_posted_intr_ipi kvm_posted_intr_ipi
+ #endif /* CONFIG_TRACING */
+ 
+-#ifdef CONFIG_IRQ_REMAP
+-/* AMD specific interrupt remapping information */
+-struct irq_2_irte {
+-	u16 devid; /* Device ID for IRTE table */
+-	u16 index; /* Index into IRTE table*/
+-};
+-#endif	/* CONFIG_IRQ_REMAP */
+-
+ struct irq_domain;
+ #ifdef	CONFIG_X86_LOCAL_APIC
+ struct irq_data;
+@@ -176,11 +168,6 @@ struct irq_cfg {
+ 	unsigned int		dest_apicid;
+ 	u8			vector;
+ 	u8			move_in_progress : 1;
+-#ifdef CONFIG_IRQ_REMAP
+-	union {
+-		struct irq_2_irte  irq_2_irte;
+-	};
+-#endif
+ 	union {
+ #ifdef CONFIG_X86_IO_APIC
+ 		struct {
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index 28d1cd404ff1..fc7363eb29b9 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -3836,6 +3836,11 @@ union irte {
+ 	} fields;
+ };
+ 
++struct irq_2_irte {
++	u16 devid; /* Device ID for IRTE table */
++	u16 index; /* Index into IRTE table*/
++};
++
+ struct amd_ir_data {
+ 	struct irq_2_irte			irq_2_irte;
+ 	union irte				irte_entry;
+-- 
+1.7.10.4
 
-  - Reverting "Make sure bus numbers stay within parents bounds" covers up
-    an ACPI _CRS bug that makes us reconfigure a bridge, causing a broken
-    device behind it to stop responding.
-
-  - The pciehp timeout change fixes some code we added in v3.17.  Without
-    the fix, we can send a new hotplug command too early, before the
-    timeout has expired.
-
-I hope for better fixes for the reverts, but those will have to come after
-v3.17.
-
-Bjorn
-
-
-The following changes since commit 649ae75286793304130e747efa7d1a88daaf7e2e:
-
-  Merge branch 'pci/vga'; commit '6a73336bde29' into for-linus (2014-09-18 23:05:06 -0600)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.17-fixes-3
-
-for you to fetch changes up to 7cbeb9f90db8e56856db7568520b735732d34d86:
-
-  PCI: pciehp: Fix pcie_wait_cmd() timeout (2014-09-22 20:05:45 -0600)
-
-----------------------------------------------------------------
-PCI updates for v3.17:
-
-  Enumeration
-    - Revert "PCI: Don't scan random busses in pci_scan_bridge()" (Bjorn Helgaas)
-    - Revert "PCI: Make sure bus number resources stay within their parents bounds" (Bjorn Helgaas)
-
-  PCI device hotplug
-    - Fix pciehp pcie_wait_cmd() timeout (Yinghai Lu)
-
-----------------------------------------------------------------
-Bjorn Helgaas (2):
-      Revert "PCI: Don't scan random busses in pci_scan_bridge()"
-      Revert "PCI: Make sure bus number resources stay within their parents bounds"
-
-Yinghai Lu (1):
-      PCI: pciehp: Fix pcie_wait_cmd() timeout
-
- drivers/pci/hotplug/pciehp_hpc.c |  2 +-
- drivers/pci/probe.c              | 20 +++++---------------
- 2 files changed, 6 insertions(+), 16 deletions(-)
