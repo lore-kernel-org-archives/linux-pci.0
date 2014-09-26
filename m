@@ -1,136 +1,498 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Thu, 25 Sep 2014 18:49:38 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Liviu Dudau <liviu@dudau.co.uk>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
- in all platforms
-Message-ID: <20140925164937.GB30382@ulmo>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
- <20140925074235.GN12423@ulmo>
- <20140925144855.GB31157@bart.dudau.co.uk>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="aVD9QWMuhilNxW9f"
-In-Reply-To: <20140925144855.GB31157@bart.dudau.co.uk>
-Sender: linux-arch-owner@vger.kernel.org
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFT v2 12/24] iommu/vt-d: Enhance Intel IR driver to suppport hierarchy irqdomain
+Date: Fri, 26 Sep 2014 22:02:13 +0800
+Message-Id: <1411740145-30626-13-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Enhance Intel interrupt remapping driver to support hierarchy irqdomain,
+it will simplify the code eventually. It also implements intel_ir_chip
+to support stacked irq_chip.
 
---aVD9QWMuhilNxW9f
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel_irq_remapping.c |  357 +++++++++++++++++++++++++++++++++--
+ include/linux/intel-iommu.h         |    4 +
+ 2 files changed, 343 insertions(+), 18 deletions(-)
 
-On Thu, Sep 25, 2014 at 03:48:55PM +0100, Liviu Dudau wrote:
-> On Thu, Sep 25, 2014 at 09:42:36AM +0200, Thierry Reding wrote:
-> > On Thu, Sep 25, 2014 at 11:14:10AM +0800, Yijing Wang wrote:
-> > > This series is based Bjorn's pci/msi branch
-> > > git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/msi
-> > >=20
-> > > Currently, there are a lot of weak arch functions in MSI code.
-> > > Thierry Reding Introduced MSI chip framework to configure MSI/MSI-X i=
-n arm.
-> > > This series use MSI chip framework to refactor MSI code across all pl=
-atforms
-> > > to eliminate weak arch functions. Then all MSI irqs will be managed i=
-n a=20
-> > > unified framework. Because this series changed a lot of ARCH MSI code,
-> > > so tests in the platforms which MSI code modified are warmly welcomed!
-> >=20
-> > Apart from the comments to the individual patches I very much like where
-> > this is going. Thanks for taking care of this.
-> >=20
-> > Thierry
->=20
-> I am actually in disagreement with you, Thierry. I don't like the general=
- direction
-> of the patches, or at least I don't like the fact that we don't have a po=
-rtable
-> way of setting up the msi_chip without having to rely on weak architectur=
-al hooks.
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 0c679369e08a..166a73a3b551 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -8,6 +8,7 @@
+ #include <linux/irq.h>
+ #include <linux/intel-iommu.h>
+ #include <linux/acpi.h>
++#include <linux/irqdomain.h>
+ #include <asm/io_apic.h>
+ #include <asm/smp.h>
+ #include <asm/cpu.h>
+@@ -31,12 +32,22 @@ struct hpet_scope {
+ 	unsigned int devfn;
+ };
+ 
++struct intel_ir_data {
++	struct irq_2_iommu			irq_2_iommu;
++	struct irte				irte_entry;
++	union {
++		struct msi_msg			msi_entry;
++		struct IR_IO_APIC_route_entry	ioapic_entry;
++	};
++};
++
+ #define IR_X2APIC_MODE(mode) (mode ? (1 << 11) : 0)
+ #define IRTE_DEST(dest) ((x2apic_mode) ? dest : dest << 8)
+ 
+ static struct ioapic_scope ir_ioapic[MAX_IO_APICS];
+ static struct hpet_scope ir_hpet[MAX_HPET_TBS];
+ static int ir_ioapic_num, ir_hpet_num;
++static struct irq_domain_ops intel_ir_domain_ops;
+ 
+ /*
+  * Lock ordering:
+@@ -263,7 +274,7 @@ static int free_irte(int irq)
+ 	unsigned long flags;
+ 	int rc;
+ 
+-	if (!irq_iommu)
++	if (!irq_iommu || irq_iommu->iommu == NULL)
+ 		return -1;
+ 
+ 	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
+@@ -481,36 +492,48 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
+ 	struct page *pages;
+ 	unsigned long *bitmap;
+ 
+-	ir_table = iommu->ir_table = kzalloc(sizeof(struct ir_table),
+-					     GFP_ATOMIC);
+-
+-	if (!iommu->ir_table)
++	ir_table = kzalloc(sizeof(struct ir_table), GFP_ATOMIC);
++	if (!ir_table)
+ 		return -ENOMEM;
+ 
+ 	pages = alloc_pages_node(iommu->node, GFP_ATOMIC | __GFP_ZERO,
+ 				 INTR_REMAP_PAGE_ORDER);
+-
+ 	if (!pages) {
+ 		pr_err("IR%d: failed to allocate pages of order %d\n",
+ 		       iommu->seq_id, INTR_REMAP_PAGE_ORDER);
+-		kfree(iommu->ir_table);
+-		return -ENOMEM;
++		goto out_free_table;
+ 	}
+ 
+ 	bitmap = kcalloc(BITS_TO_LONGS(INTR_REMAP_TABLE_ENTRIES),
+ 			 sizeof(long), GFP_ATOMIC);
+ 	if (bitmap == NULL) {
+ 		pr_err("IR%d: failed to allocate bitmap\n", iommu->seq_id);
+-		__free_pages(pages, INTR_REMAP_PAGE_ORDER);
+-		kfree(ir_table);
+-		return -ENOMEM;
++		goto out_free_pages;
++	}
++
++	iommu->ir_domain = irq_domain_add_linear(NULL, INTR_REMAP_TABLE_ENTRIES,
++						 &intel_ir_domain_ops, iommu);
++	if (!iommu->ir_domain) {
++		pr_err("IR%d: failed to allocate irqdomain\n", iommu->seq_id);
++		goto out_free_bitmap;
+ 	}
++	iommu->ir_domain->parent = arch_get_ir_parent_domain();
++	iommu->ir_msi_domain = arch_create_msi_irq_domain(iommu->ir_domain);
+ 
+ 	ir_table->base = page_address(pages);
+ 	ir_table->bitmap = bitmap;
+-
++	iommu->ir_table = ir_table;
+ 	iommu_set_irq_remapping(iommu, mode);
++
+ 	return 0;
++
++out_free_bitmap:
++	kfree(bitmap);
++out_free_pages:
++	__free_pages(pages, INTR_REMAP_PAGE_ORDER);
++out_free_table:
++	kfree(ir_table);
++	return -ENOMEM;
+ }
+ 
+ /*
+@@ -1014,12 +1037,6 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	struct irte irte;
+ 	int err;
+ 
+-	if (!config_enabled(CONFIG_SMP))
+-		return -EINVAL;
+-
+-	if (!cpumask_intersects(mask, cpu_online_mask))
+-		return -EINVAL;
+-
+ 	if (get_irte(irq, &irte))
+ 		return -EBUSY;
+ 
+@@ -1157,6 +1174,72 @@ static int intel_setup_hpet_msi(unsigned int irq, unsigned int id)
+ 	return ret;
+ }
+ 
++static struct irq_domain *intel_get_ir_irq_domain(struct irq_alloc_info *info)
++{
++	struct intel_iommu *iommu = NULL;
++
++	if (!info)
++		return NULL;
++
++	switch (info->type) {
++	case X86_IRQ_ALLOC_TYPE_IOAPIC:
++		iommu = map_ioapic_to_ir(info->ioapic_id);
++		break;
++	case X86_IRQ_ALLOC_TYPE_HPET:
++		iommu = map_hpet_to_ir(info->hpet_id);
++		break;
++	case X86_IRQ_ALLOC_TYPE_MSI:
++	case X86_IRQ_ALLOC_TYPE_MSIX:
++		iommu = map_dev_to_ir(info->msi_dev);
++		break;
++	default:
++		BUG_ON(1);
++		break;
++	}
++
++	return iommu ? iommu->ir_domain : NULL;
++}
++
++static struct irq_domain *intel_get_irq_domain(struct irq_alloc_info *info)
++{
++	struct intel_iommu *iommu;
++
++	if (!info)
++		return NULL;
++
++	switch (info->type) {
++	case X86_IRQ_ALLOC_TYPE_MSI:
++	case X86_IRQ_ALLOC_TYPE_MSIX:
++		iommu = map_dev_to_ir(info->msi_dev);
++		if (iommu)
++			return iommu->ir_msi_domain;
++		break;
++	default:
++		break;
++	}
++
++	return NULL;
++}
++
++static int intel_get_ioapic_entry(struct irq_data *irq_data,
++				  struct IR_IO_APIC_route_entry *entry)
++{
++	struct intel_ir_data *ir_data = irq_data->chip_data;
++
++	*entry = ir_data->ioapic_entry;
++
++	return 0;
++}
++
++static int intel_get_msi_entry(struct irq_data *irq_data, struct msi_msg *msg)
++{
++	struct intel_ir_data *ir_data = irq_data->chip_data;
++
++	*msg = ir_data->msi_entry;
++
++	return 0;
++}
++
+ struct irq_remap_ops intel_irq_remap_ops = {
+ 	.supported		= intel_irq_remapping_supported,
+ 	.prepare		= dmar_table_init,
+@@ -1171,4 +1254,242 @@ struct irq_remap_ops intel_irq_remap_ops = {
+ 	.msi_alloc_irq		= intel_msi_alloc_irq,
+ 	.msi_setup_irq		= intel_msi_setup_irq,
+ 	.setup_hpet_msi		= intel_setup_hpet_msi,
++	.get_ir_irq_domain	= intel_get_ir_irq_domain,
++	.get_irq_domain		= intel_get_irq_domain,
++	.get_ioapic_entry	= intel_get_ioapic_entry,
++	.get_msi_entry		= intel_get_msi_entry,
++};
++
++/*
++ * Migrate the IO-APIC irq in the presence of intr-remapping.
++ *
++ * For both level and edge triggered, irq migration is a simple atomic
++ * update(of vector and cpu destination) of IRTE and flush the hardware cache.
++ *
++ * For level triggered, we eliminate the io-apic RTE modification (with the
++ * updated vector information), by using a virtual vector (io-apic pin number).
++ * Real vector that is used for interrupting cpu will be coming from
++ * the interrupt-remapping table entry.
++ *
++ * As the migration is a simple atomic update of IRTE, the same mechanism
++ * is used to migrate MSI irq's in the presence of interrupt-remapping.
++ */
++static int
++intel_ir_set_affinity(struct irq_data *data, const struct cpumask *mask,
++		      bool force)
++{
++	struct intel_ir_data *ir_data = data->chip_data;
++	struct irte *irte = &ir_data->irte_entry;
++	struct irq_cfg *cfg = irqd_cfg(data);
++	struct irq_data *parent = data->parent_data;
++	int ret;
++
++	ret = parent->chip->irq_set_affinity(parent, mask, force);
++	if (ret < 0)
++		return ret;
++
++	/*
++	 * Atomically updates the IRTE with the new destination, vector
++	 * and flushes the interrupt entry cache.
++	 */
++	irte->vector = cfg->vector;
++	irte->dest_id = IRTE_DEST(cfg->dest_apicid);
++	modify_irte(&ir_data->irq_2_iommu, irte);
++
++	/*
++	 * After this point, all the interrupts will start arriving
++	 * at the new destination. So, time to cleanup the previous
++	 * vector allocation.
++	 */
++	if (cfg->move_in_progress)
++		send_cleanup_vector(cfg);
++
++	return ret;
++}
++
++static struct irq_chip intel_ir_chip = {
++	.irq_ack = ir_ack_apic_edge,
++	.irq_set_affinity = intel_ir_set_affinity,
++};
++
++static void intel_irq_remapping_prepare_irte(struct intel_ir_data *data,
++					     struct irq_cfg *irq_cfg,
++					     struct irq_alloc_info *info,
++					     int index, int sub_handle)
++{
++	struct irte *irte = &data->irte_entry;
++	struct IR_IO_APIC_route_entry *entry = &data->ioapic_entry;
++	struct msi_msg *msg = &data->msi_entry;
++
++	prepare_irte(irte, irq_cfg->vector, irq_cfg->dest_apicid);
++	switch (info->type) {
++	case X86_IRQ_ALLOC_TYPE_IOAPIC:
++		/* Set source-id of interrupt request */
++		set_ioapic_sid(irte, info->ioapic_id);
++		apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: Set IRTE entry (P:%d FPD:%d Dst_Mode:%d Redir_hint:%d Trig_Mode:%d Dlvry_Mode:%X Avail:%X Vector:%02X Dest:%08X SID:%04X SQ:%X SVT:%X)\n",
++			info->ioapic_id, irte->present, irte->fpd,
++			irte->dst_mode, irte->redir_hint,
++			irte->trigger_mode, irte->dlvry_mode,
++			irte->avail, irte->vector, irte->dest_id,
++			irte->sid, irte->sq, irte->svt);
++
++		memset(entry, 0, sizeof(*entry));
++		entry->index2	= (index >> 15) & 0x1;
++		entry->zero	= 0;
++		entry->format	= 1;
++		entry->index	= (index & 0x7fff);
++		/*
++		 * IO-APIC RTE will be configured with virtual vector.
++		 * irq handler will do the explicit EOI to the io-apic.
++		 */
++		entry->vector	= info->ioapic_pin;
++		entry->mask	= 0;			/* enable IRQ */
++		entry->trigger	= info->ioapic_trigger;
++		entry->polarity	= info->ioapic_polarity;
++		if (info->ioapic_trigger)
++			entry->mask = 1; /* Mask level triggered irqs. */
++		break;
++
++	case X86_IRQ_ALLOC_TYPE_HPET:
++	case X86_IRQ_ALLOC_TYPE_MSI:
++	case X86_IRQ_ALLOC_TYPE_MSIX:
++		if (info->type == X86_IRQ_ALLOC_TYPE_HPET)
++			set_hpet_sid(irte, info->hpet_id);
++		else
++			set_msi_sid(irte, info->msi_dev);
++
++		msg->address_hi = MSI_ADDR_BASE_HI;
++		msg->data = sub_handle;
++		msg->address_lo = MSI_ADDR_BASE_LO | MSI_ADDR_IR_EXT_INT |
++				  MSI_ADDR_IR_SHV |
++				  MSI_ADDR_IR_INDEX1(index) |
++				  MSI_ADDR_IR_INDEX2(index);
++		break;
++
++	default:
++		BUG_ON(1);
++		break;
++	}
++}
++
++static void intel_free_irq_resources(struct irq_domain *domain,
++				     unsigned int virq, unsigned int nr_irqs)
++{
++	struct irq_data *irq_data;
++	struct intel_ir_data *data;
++	struct irq_2_iommu *irq_iommu;
++	unsigned long flags;
++	int i;
++
++	for (i = 0; i < nr_irqs; i++) {
++		irq_data = irq_domain_get_irq_data(domain, virq  + i);
++		if (irq_data && irq_data->chip_data) {
++			data = irq_data->chip_data;
++			irq_iommu = &data->irq_2_iommu;
++			raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
++			clear_entries(irq_iommu);
++			raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
++			irq_domain_reset_irq_data(irq_data);
++			kfree(data);
++		}
++	}
++}
++
++static int intel_irq_remapping_alloc(struct irq_domain *domain,
++				     unsigned int virq, unsigned int nr_irqs,
++				     void *arg)
++{
++	struct intel_iommu *iommu = domain->host_data;
++	struct irq_alloc_info *info = arg;
++	struct intel_ir_data *data;
++	struct irq_data *irq_data;
++	struct irq_cfg *irq_cfg;
++	int i, ret, index;
++
++	if (!info || !iommu)
++		return -EINVAL;
++	if (nr_irqs > 1 && info->type != X86_IRQ_ALLOC_TYPE_MSI &&
++	    info->type != X86_IRQ_ALLOC_TYPE_MSIX)
++		return -EINVAL;
++
++	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
++	if (ret < 0)
++		return ret;
++
++	ret = -ENOMEM;
++	data = kzalloc(sizeof(*data), GFP_KERNEL);
++	if (!data)
++		goto out_free_parent;
++
++	down_read(&dmar_global_lock);
++	index = alloc_irte(iommu, virq, &data->irq_2_iommu, nr_irqs);
++	up_read(&dmar_global_lock);
++	if (index < 0) {
++		pr_warn("Failed to allocate IRTE\n");
++		kfree(data);
++		goto out_free_parent;
++	}
++
++	for (i = 0; i < nr_irqs; i++) {
++		irq_data = irq_domain_get_irq_data(domain, virq + i);
++		irq_cfg = irqd_cfg(irq_data);
++		if (!irq_data || !irq_cfg) {
++			ret = -EINVAL;
++			goto out_free_data;
++		}
++
++		if (i > 0) {
++			data = kzalloc(sizeof(*data), GFP_KERNEL);
++			if (!data)
++				goto out_free_data;
++		}
++		irq_data->hwirq = (index << 16) + i;
++		irq_data->chip_data = data;
++		irq_data->chip = &intel_ir_chip;
++		intel_irq_remapping_prepare_irte(data, irq_cfg, info, index, i);
++		irq_set_status_flags(virq + i, IRQ_MOVE_PCNTXT);
++	}
++	return 0;
++
++out_free_data:
++	intel_free_irq_resources(domain, virq, i);
++out_free_parent:
++	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
++	return ret;
++}
++
++static void intel_irq_remapping_free(struct irq_domain *domain,
++				     unsigned int virq, unsigned int nr_irqs)
++{
++	intel_free_irq_resources(domain, virq, nr_irqs);
++	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
++}
++
++static int intel_irq_remapping_activate(struct irq_domain *domain,
++					struct irq_data *irq_data)
++{
++	struct intel_ir_data *data = irq_data->chip_data;
++
++	modify_irte(&data->irq_2_iommu, &data->irte_entry);
++
++	return 0;
++}
++
++static int intel_irq_remapping_deactivate(struct irq_domain *domain,
++					  struct irq_data *irq_data)
++{
++	struct intel_ir_data *data = irq_data->chip_data;
++	struct irte entry;
++
++	memset(&entry, 0, sizeof(entry));
++	modify_irte(&data->irq_2_iommu, &entry);
++
++	return 0;
++}
++
++static struct irq_domain_ops intel_ir_domain_ops = {
++	.alloc = intel_irq_remapping_alloc,
++	.free = intel_irq_remapping_free,
++	.activate = intel_irq_remapping_activate,
++	.deactivate = intel_irq_remapping_deactivate,
+ };
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index a65208a8fe18..ecaf3a937845 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -286,6 +286,8 @@ struct q_inval {
+ 
+ #define INTR_REMAP_TABLE_ENTRIES	65536
+ 
++struct irq_domain;
++
+ struct ir_table {
+ 	struct irte *base;
+ 	unsigned long *bitmap;
+@@ -335,6 +337,8 @@ struct intel_iommu {
+ 
+ #ifdef CONFIG_IRQ_REMAP
+ 	struct ir_table *ir_table;	/* Interrupt remapping info */
++	struct irq_domain *ir_domain;
++	struct irq_domain *ir_msi_domain;
+ #endif
+ 	struct device	*iommu_dev; /* IOMMU-sysfs device */
+ 	int		node;
+-- 
+1.7.10.4
 
-Oh, good. That's actually one of the things I said I wasn't happy with
-either. =3D)
-
-> I'm surprised no one considers the case of a platform having more than on=
-e host
-> bridge and possibly more than one MSI unit. With the current proposed pat=
-chset I
-> can't see how that would work.
-
-The PCI core can already deal with that. An MSI chip can be set per bus
-and the weak pcibios_add_bus() can be used to set that. Often it might
-not even be necessary to do it via pcibios_add_bus() if you create the
-root bus directly, since you can attach the MSI chip at that time.
-
-> What I would like to see is a way of creating the pci_host_bridge structu=
-re outside
-> the pci_create_root_bus(). That would then allow us to pass this sort of =
-platform
-> details like associated msi_chip into the host bridge and the child busse=
-s will
-> have an easy way of finding the information needed by finding the root bu=
-s and then
-> the host bridge structure. Then the generic pci_scan_root_bus() can be us=
-ed by (mostly)
-> everyone and the drivers can remove their kludges that try to work around=
- the
-> current limitations.
-
-I think both issues are orthogonal. Last time I checked a lot of work
-was still necessary to unify host bridges enough so that it could be
-shared across architectures. But perhaps some of that work has
-happened in the meantime.
-
-But like I said, when you create the root bus, you can easily attach the
-MSI chip to it.
-
-Thierry
-
---aVD9QWMuhilNxW9f
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJUJEehAAoJEN0jrNd/PrOhAr0P/2iiNHf+l+IJjI4PmhgsJm9G
-G4sbMUD6m+4pwYeaDcTdK94XdjseTOgRqew8atpBhNlsrJsLlrSBwC1YtQ++4SOx
-7fY6wHZdYR89gJ0KSObsUNR/Nso7NZIkYBNLSBjWc6ADtryHb8GrwBz3GTZevt6R
-upvjshtkfCM3VYamI9+PgAA/lJ6fIouUfhIL7tfZSoNrDeFwda6/n+ZHCfyFQNDb
-l62EsyzpLQ8qNqxaxQOocboX1Sl114NkcRYiMSEspU/C7ioPnFtCr6w9962Lrxws
-DDgrnQLEf/BV1wWj5y3eVw019uwpy8CTIgqGrqyt4ZZs0wFtzRuulXpoHTAicnhN
-XwfjNup7GgpWrA3eceElnc21zgBO+VUXc0dKYKrJBpm5eEM9+hT5q8HMStx1GvsB
-vOx24Bg7G6aMPT5zh4Ou34AQdxvRbY2Lnv+c7gMZHCNFeNO6sQd2y2FG3X95GkC+
-sFhljOlxF8VZOXZtFzA0MKoPEZEK0m27nhbIDajZWC50Lopba0Sr3OLbN6L8OiTO
-rpQvNiKi+SNTSIt932+/O+pgZFui93w5dWwSnxjW+ny4pvaAAjkNPfQrqedfOk3b
-R4Nw0eX8LkJ2KQEeWCMX4A957F9FDCCEMe2IA8fBiM0Y6GOmkWLyVGYVi0AS6B8s
-n/A0QFMmdPLn7uf5vrs2
-=mBCk
------END PGP SIGNATURE-----
-
---aVD9QWMuhilNxW9f--
