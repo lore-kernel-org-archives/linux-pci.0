@@ -1,60 +1,195 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 24 Sep 2014 18:12:50 +0100
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Robert Richter <rric@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Sunil Goutham <sgoutham@cavium.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Robert Richter <rrichter@cavium.com>
-Subject: Re: [PATCH 6/6] pci, thunder: Enable Cavium Thunder PCIe host
- controller
-Message-ID: <20140924171249.GP15842@e104818-lin.cambridge.arm.com>
-References: <1411573068-12952-1-git-send-email-rric@kernel.org>
- <1411573068-12952-7-git-send-email-rric@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411573068-12952-7-git-send-email-rric@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFT v2 18/24] iommu/amd: Clean up unused MSI related code
+Date: Fri, 26 Sep 2014 22:02:19 +0800
+Message-Id: <1411740145-30626-19-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 24, 2014 at 04:37:48PM +0100, Robert Richter wrote:
-> From: Robert Richter <rrichter@cavium.com>
-> 
-> Enable Cavium Thunder PCIe host controller driver.
-> 
-> IOV is enabled per default if drivers with IOV support are
-> enabled. IOV can be disabled.
-> 
-> Signed-off-by: Robert Richter <rrichter@cavium.com>
-> ---
->  arch/arm64/Kconfig | 11 +++++++++++
->  1 file changed, 11 insertions(+)
-> 
-> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-> index 97777e1ef5a7..bd9724e5c8a1 100644
-> --- a/arch/arm64/Kconfig
-> +++ b/arch/arm64/Kconfig
-> @@ -172,6 +172,14 @@ config PCI
->  config PCI_MSI
->  	def_bool PCI
->  
-> +config NO_PCI_IOV
-> +	def_bool PCI
-> +	depends on !PCI_THUNDER
-> +
-> +config PCI_IOV
-> +	def_bool PCI
-> +	depends on !NO_PCI_IOV
+Now MSI interrupt has been converted to new hierarchy irqdomain
+interfaces, so kill legacy MSI related code.
 
-Does this work with single image where drivers may have different
-PCI_IOV needs?
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/amd_iommu.c |  115 +--------------------------------------------
+ 1 file changed, 2 insertions(+), 113 deletions(-)
 
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index d2b9b5e226ae..f0695e3e2af6 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -3940,8 +3940,7 @@ out_unlock:
+ 	return table;
+ }
+ 
+-static int alloc_irq_index(struct irq_cfg *cfg, struct irq_2_irte *irte_info,
+-			   u16 devid, int count)
++static int alloc_irq_index(u16 devid, int count)
+ {
+ 	struct irq_remap_table *table;
+ 	unsigned long flags;
+@@ -3967,11 +3966,6 @@ static int alloc_irq_index(struct irq_cfg *cfg, struct irq_2_irte *irte_info,
+ 				table->table[index - c + 1] = IRTE_ALLOCATED;
+ 
+ 			index -= count - 1;
+-
+-			cfg->remapped	      = 1;
+-			irte_info->devid      = devid;
+-			irte_info->index      = index;
+-
+ 			goto out;
+ 		}
+ 	}
+@@ -4171,106 +4165,6 @@ static int free_irq(int irq)
+ 	return 0;
+ }
+ 
+-static void compose_msi_msg(struct pci_dev *pdev,
+-			    unsigned int irq, unsigned int dest,
+-			    struct msi_msg *msg, u8 hpet_id)
+-{
+-	struct irq_2_irte *irte_info;
+-	struct irq_cfg *cfg;
+-	union irte irte;
+-
+-	cfg = irq_cfg(irq);
+-	if (!cfg)
+-		return;
+-
+-	irte_info = &cfg->irq_2_irte;
+-
+-	irte.val		= 0;
+-	irte.fields.vector	= cfg->vector;
+-	irte.fields.int_type    = apic->irq_delivery_mode;
+-	irte.fields.destination	= dest;
+-	irte.fields.dm		= apic->irq_dest_mode;
+-	irte.fields.valid	= 1;
+-
+-	modify_irte(irte_info->devid, irte_info->index, irte);
+-
+-	msg->address_hi = MSI_ADDR_BASE_HI;
+-	msg->address_lo = MSI_ADDR_BASE_LO;
+-	msg->data       = irte_info->index;
+-}
+-
+-static int msi_alloc_irq(struct pci_dev *pdev, int irq, int nvec)
+-{
+-	struct irq_cfg *cfg;
+-	int index;
+-	u16 devid;
+-
+-	if (!pdev)
+-		return -EINVAL;
+-
+-	cfg = irq_cfg(irq);
+-	if (!cfg)
+-		return -EINVAL;
+-
+-	devid = get_device_id(&pdev->dev);
+-	index = alloc_irq_index(cfg, &cfg->irq_2_irte, devid, nvec);
+-
+-	return index < 0 ? MAX_IRQS_PER_TABLE : index;
+-}
+-
+-static int msi_setup_irq(struct pci_dev *pdev, unsigned int irq,
+-			 int index, int offset)
+-{
+-	struct irq_2_irte *irte_info;
+-	struct irq_cfg *cfg;
+-	u16 devid;
+-
+-	if (!pdev)
+-		return -EINVAL;
+-
+-	cfg = irq_cfg(irq);
+-	if (!cfg)
+-		return -EINVAL;
+-
+-	if (index >= MAX_IRQS_PER_TABLE)
+-		return 0;
+-
+-	devid		= get_device_id(&pdev->dev);
+-	irte_info	= &cfg->irq_2_irte;
+-
+-	cfg->remapped	      = 1;
+-	irte_info->devid      = devid;
+-	irte_info->index      = index + offset;
+-
+-	return 0;
+-}
+-
+-static int setup_hpet_msi(unsigned int irq, unsigned int id)
+-{
+-	struct irq_2_irte *irte_info;
+-	struct irq_cfg *cfg;
+-	int index, devid;
+-
+-	cfg = irq_cfg(irq);
+-	if (!cfg)
+-		return -EINVAL;
+-
+-	irte_info = &cfg->irq_2_irte;
+-	devid     = get_hpet_devid(id);
+-	if (devid < 0)
+-		return devid;
+-
+-	index = alloc_irq_index(cfg, &cfg->irq_2_irte, devid, 1);
+-	if (index < 0)
+-		return index;
+-
+-	cfg->remapped	      = 1;
+-	irte_info->devid      = devid;
+-	irte_info->index      = index;
+-
+-	return 0;
+-}
+-
+ static int get_devid(struct irq_alloc_info *info)
+ {
+ 	int devid = -1;
+@@ -4366,10 +4260,6 @@ struct irq_remap_ops amd_iommu_irq_ops = {
+ 	.setup_ioapic_entry	= setup_ioapic_entry,
+ 	.set_affinity		= set_affinity,
+ 	.free_irq		= free_irq,
+-	.compose_msi_msg	= compose_msi_msg,
+-	.msi_alloc_irq		= msi_alloc_irq,
+-	.msi_setup_irq		= msi_setup_irq,
+-	.setup_hpet_msi		= setup_hpet_msi,
+ 	.get_ir_irq_domain	= get_ir_irq_domain,
+ 	.get_irq_domain		= get_irq_domain,
+ 	.get_ioapic_entry	= get_ioapic_entry,
+@@ -4460,8 +4350,7 @@ static int irq_remapping_alloc(struct irq_domain *domain, unsigned int virq,
+ 		else
+ 			ret = -ENOMEM;
+ 	} else {
+-		cfg = irq_cfg(virq);
+-		index = alloc_irq_index(cfg, &data->irq_2_irte, devid, nr_irqs);
++		index = alloc_irq_index(devid, nr_irqs);
+ 	}
+ 	if (index < 0) {
+ 		pr_warn("Failed to allocate IRTE\n");
 -- 
-Catalin
+1.7.10.4
+
