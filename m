@@ -1,101 +1,139 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f52.google.com ([209.85.192.52]:46082 "EHLO
-	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751063AbaIDNQh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 09:16:37 -0400
-Received: by mail-qg0-f52.google.com with SMTP id z60so9877077qgd.39
-        for <linux-pci@vger.kernel.org>; Thu, 04 Sep 2014 06:16:36 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <540802D9.6000903@huawei.com>
-References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com>
- <20140903224201.GD26073@google.com> <540802D9.6000903@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 4 Sep 2014 07:16:15 -0600
-Message-ID: <CAErSpo6qy76zTX07Ufm0n1_HUA5G0MrAYxauEFa5QkibWsejFQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Keith Busch <keith.busch@intel.com>,
-	Jon Mason <jon.mason@intel.com>, Jon Mason <jdmason@kudzu.us>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC v1 07/28] x86, irq: Kill x86_io_apic_ops.print_entries and related interfaces
+Date: Fri, 26 Sep 2014 22:57:37 +0800
+Message-Id: <1411743478-31435-8-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 4, 2014 at 12:12 AM, Yijing Wang <wangyijing@huawei.com> wrote:
->>> + * pcie_bus_update_set - update device mps when device doing hot-add
->>> + * @dev: PCI device to set
->>> + *
->>> + * After device hot add, mps will be set to default(128B), But the
->>> + * upstream port device's mps may be larger than 128B which was set
->>> + * by firmware during system bootup. Then we should update the device
->>> + * mps to equal to its parent mps, Or the device can not work normally.
->>> + */
->>> +static void pcie_bus_update_set(struct pci_dev *dev)
->>> +{
->>> +    int mps, p_mps, mpss;
->>> +    struct pci_dev *parent;
->>> +
->>> +    if (!pci_is_pcie(dev) || !dev->bus->self
->>> +                    || !dev->bus->self->is_hotplug_bridge)
->>
->> Part of this looks redundant because pcie_bus_configure_set() already
->> checks pci_is_pcie().  And I don't know why we need to test
->> is_hotplug_bridge here; MPS settings need to be consistent regardless of
->> whether the upstream bridge supports hotplug.
->
-> Hi Bjorn, I added is_hotplug_bridge() here is mainly to touch the hotplug case only.
-> It was more like a temporary solution and not perfect one.
->
->>
->>> +            return;
->>> +
->>> +    parent = dev->bus->self;
->>> +    mps = pcie_get_mps(dev);
->>> +    p_mps = pcie_get_mps(parent);
->>> +
->>> +    if (mps >= p_mps)
->>> +            return;
->>> +
->>> +    mpss = 128 << dev->pcie_mpss;
->>> +    if (mpss < p_mps) {
->>> +            dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
->>> +                            "If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
->>> +                            mpss, p_mps);
->>> +            return;
->>
->> Since we can't configure the new device correctly, we really shouldn't
->> allow a driver to bind to it.  The current design doesn't have much
->> provision for doing that, so warning is probably all we can do.
->
-> Yes, bind a driver to the device which mps is not correctly set will cause another problem.
->
->>
->>> +    }
->>> +
->>> +    pcie_write_mps(dev, p_mps);
->>> +    dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n",
->>> +                    pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
->>> +}
->>> +
->>>  static void pcie_bus_detect_mps(struct pci_dev *dev)
->>>  {
->>>      struct pci_dev *bridge = dev->bus->self;
->>> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
->>>              return 0;
->>>
->>>      if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
->>> +            pcie_bus_update_set(dev);
->>
->> You're only adding this to the PCIE_BUS_TUNE_OFF path.  Can't the same
->> problem occur for other pcie_bus_config settings?
->
-> We only found the problem during PCIE_BUS_TUNE_OFF set. Other mode like PCIE_BUS_SAFE and PCIE_BUS_PEER2PEER.
-> This issue won't happen.
+Now there is no user of x86_io_apic_ops.print_entries anymore, so kill
+it.
 
-Sorry, I can't parse this.  Are you saying the problem won't happen in
-the other modes?  Why not?
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h      |    3 ---
+ arch/x86/include/asm/x86_init.h     |    1 -
+ arch/x86/kernel/apic/io_apic.c      |    8 ++++----
+ arch/x86/kernel/x86_init.c          |    1 -
+ drivers/iommu/intel_irq_remapping.c |    7 -------
+ 5 files changed, 4 insertions(+), 16 deletions(-)
 
->>>              pcie_bus_detect_mps(dev);
->>>              return 0;
->>>      }
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 051011adff9b..fb501ec46ee8 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -226,8 +226,6 @@ extern unsigned int native_io_apic_read(unsigned int apic, unsigned int reg);
+ extern void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int val);
+ extern void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int val);
+ extern void native_disable_io_apic(void);
+-extern void native_io_apic_print_entries(unsigned int apic, unsigned int nr_entries);
+-extern void intel_ir_io_apic_print_entries(unsigned int apic, unsigned int nr_entries);
+ extern int native_ioapic_set_affinity(struct irq_data *,
+ 				      const struct cpumask *,
+ 				      bool);
+@@ -292,7 +290,6 @@ static inline void disable_ioapic_support(void) { }
+ #define native_io_apic_write		NULL
+ #define native_io_apic_modify		NULL
+ #define native_disable_io_apic		NULL
+-#define native_io_apic_print_entries	NULL
+ #define native_ioapic_set_affinity	NULL
+ #define native_setup_ioapic_entry	NULL
+ #define native_eoi_ioapic_pin		NULL
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index 9b53cb2acfbb..d49791d2aacf 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -194,7 +194,6 @@ struct x86_io_apic_ops {
+ 	void		(*write)  (unsigned int apic, unsigned int reg, unsigned int value);
+ 	void		(*modify) (unsigned int apic, unsigned int reg, unsigned int value);
+ 	void		(*disable)(void);
+-	void		(*print_entries)(unsigned int apic, unsigned int nr_entries);
+ 	int		(*set_affinity)(struct irq_data *data,
+ 					const struct cpumask *mask,
+ 					bool force);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index b0121560f05d..d6df6da203f6 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1331,7 +1331,8 @@ static void __init setup_IO_APIC_irqs(void)
+ 	}
+ }
+ 
+-void native_io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
++static void native_io_apic_print_entries(unsigned int apic,
++					 unsigned int nr_entries)
+ {
+ 	int i;
+ 
+@@ -1356,8 +1357,7 @@ void native_io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
+ 	}
+ }
+ 
+-void intel_ir_io_apic_print_entries(unsigned int apic,
+-				    unsigned int nr_entries)
++static void ir_io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
+ {
+ 	int i;
+ 
+@@ -1448,7 +1448,7 @@ static void __init print_IO_APIC(int ioapic_idx)
+ 
+ 	domain = mp_ioapic_irqdomain(ioapic_idx);
+ 	if (domain && irq_remapping_domain_is_remapped(domain))
+-		intel_ir_io_apic_print_entries(ioapic_idx, reg_01.bits.entries);
++		ir_io_apic_print_entries(ioapic_idx, reg_01.bits.entries);
+ 	else
+ 		native_io_apic_print_entries(ioapic_idx, reg_01.bits.entries);
+ }
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index 814fcbadaad1..ba5ab975bb5b 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -154,7 +154,6 @@ struct x86_io_apic_ops x86_io_apic_ops = {
+ 	.write			= native_io_apic_write,
+ 	.modify			= native_io_apic_modify,
+ 	.disable		= native_disable_io_apic,
+-	.print_entries		= native_io_apic_print_entries,
+ 	.set_affinity		= native_ioapic_set_affinity,
+ 	.setup_entry		= native_setup_ioapic_entry,
+ 	.eoi_ioapic_pin		= native_eoi_ioapic_pin,
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 8be4f924cb7c..07705d2bf48e 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -663,13 +663,6 @@ static int __init intel_enable_irq_remapping(void)
+ 
+ 	irq_remapping_enabled = 1;
+ 
+-	/*
+-	 * VT-d has a different layout for IO-APIC entries when
+-	 * interrupt remapping is enabled. So it needs a special routine
+-	 * to print IO-APIC entries for debugging purposes too.
+-	 */
+-	x86_io_apic_ops.print_entries = intel_ir_io_apic_print_entries;
+-
+ 	pr_info("Enabled IRQ remapping in %s mode\n", eim ? "x2apic" : "xapic");
+ 
+ 	return eim ? IRQ_REMAP_X2APIC_MODE : IRQ_REMAP_XAPIC_MODE;
+-- 
+1.7.10.4
+
