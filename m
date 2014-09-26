@@ -1,103 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dmitry Torokhov <dtor@google.com>,
-	Aubrey Li <aubrey.li@intel.com>
-Subject: [PATCH 07/13] genirq: Distangle edge handler entry
-Date: Mon, 01 Sep 2014 16:24:17 +0200
-Message-ID: <2736441.mjEfdRQtUX@vostro.rjw.lan>
-In-Reply-To: <2516134.pmOxkEuOOy@vostro.rjw.lan>
-References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan> <2516134.pmOxkEuOOy@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC v1 17/28] x86, irq: Kill irq_cfg.irq_remapped
+Date: Fri, 26 Sep 2014 22:57:47 +0800
+Message-Id: <1411743478-31435-18-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+Now there is no user of irq_cfg.irq_remapped, so kill it.
 
-If the interrupt is disabled or has no action, then we should not call
-the poll check. Separate the checks.
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- kernel/irq/chip.c |   39 +++++++++++++++++++++++++++++----------
- 1 file changed, 29 insertions(+), 10 deletions(-)
+ arch/x86/include/asm/hw_irq.h       |    1 -
+ drivers/iommu/amd_iommu.c           |    1 -
+ drivers/iommu/intel_irq_remapping.c |    2 --
+ 3 files changed, 4 deletions(-)
 
-Index: linux/kernel/irq/chip.c
-===================================================================
---- linux.orig/kernel/irq/chip.c
-+++ linux/kernel/irq/chip.c
-@@ -540,19 +540,29 @@ handle_edge_irq(unsigned int irq, struct
- 	raw_spin_lock(&desc->lock);
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index ceb0244c3454..990e255ea5d5 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -185,7 +185,6 @@ struct irq_cfg {
+ 	u8			vector;
+ 	u8			move_in_progress : 1;
+ #ifdef CONFIG_IRQ_REMAP
+-	u8			remapped : 1;
+ 	union {
+ 		struct irq_2_iommu irq_2_iommu;
+ 		struct irq_2_irte  irq_2_irte;
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index 21f8edcc0635..28d1cd404ff1 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -4132,7 +4132,6 @@ static void irq_remapping_prepare_irte(struct amd_ir_data *data,
+ 	struct IR_IO_APIC_route_entry *entry = &data->ioapic_entry;
+ 	struct msi_msg *msg = &data->msi_entry;
  
- 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
-+
- 	/*
--	 * If we're currently running this IRQ, or its disabled,
--	 * we shouldn't process the IRQ. Mark it pending, handle
--	 * the necessary masking and go out
-+	 * If the handler is currently running, mark it pending,
-+	 * handle the necessary masking and go out
- 	 */
--	if (unlikely(irqd_irq_disabled(&desc->irq_data) ||
--		     irqd_irq_inprogress(&desc->irq_data) || !desc->action)) {
-+	if (unlikely(irqd_irq_inprogress(&desc->irq_data))) {
- 		if (!irq_check_poll(desc)) {
- 			desc->istate |= IRQS_PENDING;
- 			mask_ack_irq(desc);
- 			goto out_unlock;
- 		}
- 	}
-+
-+	/*
-+	 * If its disabled or no action available then mask it and get
-+	 * out of here.
-+	 */
-+	if (irqd_irq_disabled(&desc->irq_data) || !desc->action) {
-+		desc->istate |= IRQS_PENDING;
-+		mask_ack_irq(desc);
-+		goto out_unlock;
-+	}
-+
- 	kstat_incr_irqs_this_cpu(irq, desc);
+-	irq_cfg->remapped = 1;
+ 	data->irq_2_irte.devid = devid;
+ 	data->irq_2_irte.index = index + sub_handle;
  
- 	/* Start handling the irq */
-@@ -601,18 +611,27 @@ void handle_edge_eoi_irq(unsigned int ir
- 	raw_spin_lock(&desc->lock);
- 
- 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
-+
- 	/*
--	 * If we're currently running this IRQ, or its disabled,
--	 * we shouldn't process the IRQ. Mark it pending, handle
--	 * the necessary masking and go out
-+	 * If the handler is currently running, mark it pending,
-+	 * handle the necessary masking and go out
- 	 */
--	if (unlikely(irqd_irq_disabled(&desc->irq_data) ||
--		     irqd_irq_inprogress(&desc->irq_data) || !desc->action)) {
-+	if (unlikely(irqd_irq_inprogress(&desc->irq_data))) {
- 		if (!irq_check_poll(desc)) {
- 			desc->istate |= IRQS_PENDING;
- 			goto out_eoi;
- 		}
- 	}
-+
-+	/*
-+	 * If its disabled or no action available then mask it and get
-+	 * out of here.
-+	 */
-+	if (irqd_irq_disabled(&desc->irq_data) || !desc->action) {
-+		desc->istate |= IRQS_PENDING;
-+		goto out_eoi;
-+	}
-+
- 	kstat_incr_irqs_this_cpu(irq, desc);
- 
- 	do {
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 41ece6b0564e..5c77d6f04136 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -68,7 +68,6 @@ static int alloc_irte(struct intel_iommu *iommu, int irq,
+ 		      struct irq_2_iommu *irq_iommu, u16 count)
+ {
+ 	struct ir_table *table = iommu->ir_table;
+-	struct irq_cfg *cfg = irq_cfg(irq);
+ 	unsigned int mask = 0;
+ 	unsigned long flags;
+ 	int index;
+@@ -95,7 +94,6 @@ static int alloc_irte(struct intel_iommu *iommu, int irq,
+ 	if (index < 0) {
+ 		pr_warn("IR%d: can't allocate an IRTE\n", iommu->seq_id);
+ 	} else {
+-		cfg->remapped = 1;
+ 		irq_iommu->iommu = iommu;
+ 		irq_iommu->irte_index =  index;
+ 		irq_iommu->sub_handle = 0;
+-- 
+1.7.10.4
 
