@@ -1,59 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:63943 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753263AbaIPXAP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 19:00:15 -0400
-Received: by mail-pd0-f173.google.com with SMTP id ft15so750891pdb.4
-        for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 16:00:15 -0700 (PDT)
-Date: Tue, 16 Sep 2014 17:00:11 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/6] PCI: tegra: Fixes and Tegra124 support
-Message-ID: <20140916230011.GE5050@google.com>
-References: <1409065898-26887-1-git-send-email-thierry.reding@gmail.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:40109 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753110AbaIZDYq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Sep 2014 23:24:46 -0400
+Message-ID: <5424DC01.6020906@huawei.com>
+Date: Fri, 26 Sep 2014 11:22:41 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1409065898-26887-1-git-send-email-thierry.reding@gmail.com>
+To: Keith Busch <keith.busch@intel.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	"Jon Mason" <jdmason@kudzu.us>
+Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
+References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com> <20140903224201.GD26073@google.com> <540802D9.6000903@huawei.com> <CAErSpo6qy76zTX07Ufm0n1_HUA5G0MrAYxauEFa5QkibWsejFQ@mail.gmail.com> <5409117E.2000002@huawei.com> <alpine.LRH.2.03.1409241547430.4696@AMR> <CAErSpo5upA7KYVo=_SvwJ9pdNot_5ENi3OtiPpuzZjpwj3ghPA@mail.gmail.com> <54236E7B.5000905@huawei.com> <alpine.LRH.2.03.1409251029220.4688@AMR>
+In-Reply-To: <alpine.LRH.2.03.1409251029220.4688@AMR>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 26, 2014 at 05:11:32PM +0200, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
+On 2014/9/26 0:46, Keith Busch wrote:
+> On Wed, 24 Sep 2014, Yijing Wang wrote:
+>> On 2014/9/25 7:30, Bjorn Helgaas wrote:
+>>> On Wed, Sep 24, 2014 at 4:41 PM, Keith Busch <keith.busch@intel.com> wrote:
+>>>> Just poking this thread to make sure it's not dead. :)
+>>>>
+>>>> I tested Yijing's proposal and it is successful on our Intel server
+>>>> platforms; hoping either this or something that derives similar behavior
+>>>> will be applied so we can remove bus tuning kernel parameters.
+>>>>
+>>>> Tested-by: Keith Busch <keith.busch@intel.com>
+>>>
+>>> Oops, thanks for poking me, because this was indeed dead.
+>>>
+>>> My main objection was to testing "is_hotplug_bridge".  That doesn't
+>>> seem right, because this issue really isn't specific to hotplug.  I
+>>> didn't see a resolution of that, but let me know if I missed it.
+>>
+>> Why I introduced "is_hotplug_bridge" is to avoid to touch the MPS which is not
+>> in hotplug case when pcie_bus_config == PCIE_BUS_TUNE_OFF.
+>>
+>> It's so sad that PCIe spec doesn't give a detailed guide to configure MPS.
+>>
+>> I'd like to refactor current MPS framework, but now there are still some puzzles
+>> to me. I need to have a deeper understanding of pcie mps. I read Jon's mps patch
+>> log from git, I found he turn off all this MPS config, because some issues were found
+>> in some platforms, but no platforms detailed info and no bugzilla records.
 > 
-> This series implements various fixes and adds support for Tegra124 to the
-> Tegra PCIe controller driver.
-> 
-> Patches 1 and 2 were already sent out separately earlier on but haven't been
-> applied yet, so I'm including them here for convenience.
-> 
-> Patches 3 to 5 are various fixes that should make the driver more reliable,
-> though they don't (except maybe for patch 4) fix any known issues.
-> 
-> Patch 6 finally adds support for Tegra124.
-> 
-> Thierry
-> 
-> Eric Yuen (1):
->   PCI: tegra: Make sure the PCIe PLL is really reset
-> 
-> Peter Daifuku (1):
->   PCI: tegra: Fix extended configuration space mapping
-> 
-> Thierry Reding (4):
->   resource: Add device-managed request/release_resource()
->   PCI: tegra: Implement a proper resource hierarchy
->   PCI: tegra: Clear CLKREQ# enable on port disable
->   PCI: tegra: Add Tegra124 support
-> 
->  .../bindings/pci/nvidia,tegra20-pcie.txt           |  25 +-
->  Documentation/driver-model/devres.txt              |   2 +
->  drivers/pci/host/pci-tegra.c                       | 257 ++++++++++++++++++---
->  include/linux/ioport.h                             |   5 +
->  kernel/resource.c                                  |  70 ++++++
->  5 files changed, 323 insertions(+), 36 deletions(-)
+> Just my opinion, I thought the hotplug check was a good idea: it addresses
+> a known issue, and does not mess with current unknowns. Outside a hotplug
+> scenario, I think we expect platform f/w to handle MPS settings and the
+> kernel can stay out of the way because of the unknown platform issues. If
+> it is hotplug, having the kernel set device's MPS to match the parent
+> couldn't make things worse off than doing nothing, right?
 
-Applied to pci/host-tegra for v3.18, thanks.  I added Stephens's Tested-by
-(though not to the first two because I had applied them before I got to
-this v3 posting).
+Yes, I think so, but it all decided by Bjorn. I think he want a better solution,
+and current patch just still is a temporary fix.
+
+> 
+> On the side, I'll see if I can ping some comrades on PCI-SIG to propose
+> an ECN to clarify configuring MPS. They usually ignore me though, so no
+> promises. :)
+
+Thanks in advance for your help :)
+
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
