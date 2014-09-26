@@ -1,115 +1,311 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Fri, 26 Sep 2014 10:09:22 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:47861 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754422AbaIZO4J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Sep 2014 10:56:09 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 03/22] MSI: Remove the redundant irq_set_chip_data()
-Message-ID: <20140926080921.GE31106@ulmo>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
- <1411614872-4009-4-git-send-email-wangyijing@huawei.com>
- <20140925071919.GH12423@ulmo>
- <5424C9BD.3040506@huawei.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="2qXFWqzzG3v1+95a"
-In-Reply-To: <5424C9BD.3040506@huawei.com>
-Sender: linux-arch-owner@vger.kernel.org
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC v1 06/28] x86, irq: Kill unused old IOAPIC irqdomain interfaces
+Date: Fri, 26 Sep 2014 22:57:36 +0800
+Message-Id: <1411743478-31435-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Now we have converted to hierarchy irqdomain, so kill unused old IOAPIC
+irqdomain interfaces and code.
 
---2qXFWqzzG3v1+95a
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h |    4 -
+ arch/x86/kernel/apic/io_apic.c |  199 ----------------------------------------
+ 2 files changed, 203 deletions(-)
 
-On Fri, Sep 26, 2014 at 10:04:45AM +0800, Yijing Wang wrote:
-> On 2014/9/25 15:19, Thierry Reding wrote:
-> > On Thu, Sep 25, 2014 at 11:14:13AM +0800, Yijing Wang wrote:
-> >> Currently, pcie-designware, pcie-rcar, pci-tegra drivers
-> >> use irq chip_data to save the msi_chip pointer. They
-> >> already call irq_set_chip_data() in their own MSI irq map
-> >> functions. So irq_set_chip_data() in arch_setup_msi_irq()
-> >> is useless.
-> >=20
-> > Again, I think this should be the other way around. If drivers do
-> > something that's already handled by the core, then the duplicate code
-> > should be dropped from the drivers.
->=20
-> Hi Thierry, this is different thing, because chip_data is specific to IRQ
-> controller, and in other platform, like in x86, chip_data is used to save=
- irq_cfg.
-> So we can not call irq_set_chip_data() in core code.
->=20
-> x86 irq piece code
->=20
-> int arch_setup_hwirq(unsigned int irq, int node)
-> {
-> 	struct irq_cfg *cfg;
-> 	unsigned long flags;
-> 	int ret;
->=20
-> 	cfg =3D alloc_irq_cfg(irq, node);
-> 	if (!cfg)
-> 		return -ENOMEM;
->=20
-> 	raw_spin_lock_irqsave(&vector_lock, flags);
-> 	ret =3D __assign_irq_vector(irq, cfg, apic->target_cpus());
-> 	raw_spin_unlock_irqrestore(&vector_lock, flags);
->=20
-> 	if (!ret)
-> 		irq_set_chip_data(irq, cfg);  ------------->Save irq_cfg
-> 	else
-> 		free_irq_cfg(irq, cfg);
-> 	return ret;
-> }
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index bc3bef8f1a4b..051011adff9b 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -204,9 +204,6 @@ extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 			      struct ioapic_domain_cfg *cfg);
+ extern int mp_unregister_ioapic(u32 gsi_base);
+ extern int mp_ioapic_registered(u32 gsi_base);
+-extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+-			    irq_hw_number_t hwirq);
+-extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+ extern int mp_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
+ 			      unsigned int nr_irqs, void *arg);
+ extern void mp_irqdomain_free(struct irq_domain *domain, unsigned int virq,
+@@ -218,7 +215,6 @@ extern int mp_irqdomain_deactivate(struct irq_domain *domain,
+ extern int mp_irqdomain_ioapic_idx(struct irq_domain *domain);
+ extern void ioapic_set_alloc_attr(struct irq_alloc_info *info,
+ 				  int node, int trigger, int polarity);
+-extern int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node);
+ 
+ extern void mp_save_irq(struct mpc_intsrc *m);
+ extern bool mp_should_keep_irq(struct device *dev);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index b87b69e3f3e2..b0121560f05d 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1288,30 +1288,6 @@ static inline int IO_APIC_irq_trigger(int irq)
+ }
+ #endif
+ 
+-static void ioapic_register_intr(unsigned int irq, struct irq_cfg *cfg,
+-				 unsigned long trigger)
+-{
+-	struct irq_chip *chip = &ioapic_chip;
+-	irq_flow_handler_t hdl;
+-	bool fasteoi;
+-
+-	if ((trigger == IOAPIC_AUTO && IO_APIC_irq_trigger(irq)) ||
+-	    trigger == IOAPIC_LEVEL) {
+-		irq_set_status_flags(irq, IRQ_LEVEL);
+-		fasteoi = true;
+-	} else {
+-		irq_clear_status_flags(irq, IRQ_LEVEL);
+-		fasteoi = false;
+-	}
+-
+-	if (setup_remapped_irq(irq, cfg, chip))
+-		fasteoi = trigger != 0;
+-
+-	hdl = fasteoi ? handle_fasteoi_irq : handle_edge_irq;
+-	irq_set_chip_and_handler_name(irq, chip, hdl,
+-				      fasteoi ? "fasteoi" : "edge");
+-}
+-
+ int native_setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
+ 			      unsigned int destination, int vector,
+ 			      struct io_apic_irq_attr *attr)
+@@ -1336,48 +1312,6 @@ int native_setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
+ 	return 0;
+ }
+ 
+-static void setup_ioapic_irq(unsigned int irq, struct irq_cfg *cfg,
+-				struct io_apic_irq_attr *attr)
+-{
+-	struct IO_APIC_route_entry entry;
+-	unsigned int dest;
+-
+-	if (!IO_APIC_IRQ(irq))
+-		return;
+-
+-	if (assign_irq_vector(irq, cfg, apic->target_cpus()))
+-		return;
+-
+-	if (apic->cpu_mask_to_apicid_and(cfg->domain, apic->target_cpus(),
+-					 &dest)) {
+-		pr_warn("Failed to obtain apicid for ioapic %d, pin %d\n",
+-			mpc_ioapic_id(attr->ioapic), attr->ioapic_pin);
+-		clear_irq_vector(irq, cfg);
+-
+-		return;
+-	}
+-
+-	apic_printk(APIC_VERBOSE,KERN_DEBUG
+-		    "IOAPIC[%d]: Set routing entry (%d-%d -> 0x%x -> "
+-		    "IRQ %d Mode:%i Active:%i Dest:%d)\n",
+-		    attr->ioapic, mpc_ioapic_id(attr->ioapic), attr->ioapic_pin,
+-		    cfg->vector, irq, attr->trigger, attr->polarity, dest);
+-
+-	if (x86_io_apic_ops.setup_entry(irq, &entry, dest, cfg->vector, attr)) {
+-		pr_warn("Failed to setup ioapic entry for ioapic  %d, pin %d\n",
+-			mpc_ioapic_id(attr->ioapic), attr->ioapic_pin);
+-		clear_irq_vector(irq, cfg);
+-
+-		return;
+-	}
+-
+-	ioapic_register_intr(irq, cfg, attr->trigger);
+-	if (irq < nr_legacy_irqs())
+-		legacy_pic->mask(irq);
+-
+-	ioapic_write_entry(attr->ioapic, attr->ioapic_pin, entry);
+-}
+-
+ static void __init setup_IO_APIC_irqs(void)
+ {
+ 	unsigned int ioapic, pin;
+@@ -1397,46 +1331,6 @@ static void __init setup_IO_APIC_irqs(void)
+ 	}
+ }
+ 
+-/*
+- * Set up the timer pin, possibly with the 8259A-master behind.
+- */
+-static void __init setup_timer_IRQ0_pin(unsigned int ioapic_idx,
+-					unsigned int pin, int vector)
+-{
+-	struct IO_APIC_route_entry entry;
+-	unsigned int dest;
+-
+-	memset(&entry, 0, sizeof(entry));
+-
+-	/*
+-	 * We use logical delivery to get the timer IRQ
+-	 * to the first CPU.
+-	 */
+-	if (unlikely(apic->cpu_mask_to_apicid_and(apic->target_cpus(),
+-						  apic->target_cpus(), &dest)))
+-		dest = BAD_APICID;
+-
+-	entry.dest_mode = apic->irq_dest_mode;
+-	entry.mask = 0;			/* don't mask IRQ for edge */
+-	entry.dest = dest;
+-	entry.delivery_mode = apic->irq_delivery_mode;
+-	entry.polarity = 0;
+-	entry.trigger = 0;
+-	entry.vector = vector;
+-
+-	/*
+-	 * The timer IRQ doesn't have to know that behind the
+-	 * scene we may have a 8259A-master in AEOI mode ...
+-	 */
+-	irq_set_chip_and_handler_name(0, &ioapic_chip, handle_edge_irq,
+-				      "edge");
+-
+-	/*
+-	 * Add it to the IO-APIC irq-routing table:
+-	 */
+-	ioapic_write_entry(ioapic_idx, pin, entry);
+-}
+-
+ void native_io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
+ {
+ 	int i;
+@@ -2621,20 +2515,6 @@ static int __init ioapic_init_ops(void)
+ 
+ device_initcall(ioapic_init_ops);
+ 
+-static int
+-io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
+-{
+-	struct irq_cfg *cfg = alloc_irq_and_cfg_at(irq, node);
+-	int ret;
+-
+-	if (!cfg)
+-		return -EINVAL;
+-	ret = __add_pin_to_irq_node(cfg, node, attr->ioapic, attr->ioapic_pin);
+-	if (!ret)
+-		setup_ioapic_irq(irq, cfg, attr);
+-	return ret;
+-}
+-
+ static int io_apic_get_redir_entries(int ioapic)
+ {
+ 	union IO_APIC_reg_01	reg_01;
+@@ -3178,56 +3058,6 @@ static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
+ 	irq_attr->polarity	= polarity;
+ }
+ 
+-int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+-		     irq_hw_number_t hwirq)
+-{
+-	int ioapic = mp_irqdomain_ioapic_idx(domain);
+-	struct mp_pin_info *info = mp_pin_info(ioapic, hwirq);
+-	struct io_apic_irq_attr attr;
+-
+-	/* Get default attribute if not set by caller yet */
+-	if (!info->set) {
+-		u32 gsi = mp_pin_to_gsi(ioapic, hwirq);
+-
+-		if (acpi_get_override_irq(gsi, &info->trigger,
+-					  &info->polarity) < 0) {
+-			/*
+-			 * PCI interrupts are always polarity one level
+-			 * triggered.
+-			 */
+-			info->trigger = 1;
+-			info->polarity = 1;
+-		}
+-		info->node = NUMA_NO_NODE;
+-
+-		/*
+-		 * setup_IO_APIC_irqs() programs all legacy IRQs with default
+-		 * trigger and polarity attributes. Don't set the flag for that
+-		 * case so the first legacy IRQ user could reprogram the pin
+-		 * with real trigger and polarity attributes.
+-		 */
+-		if (virq >= nr_legacy_irqs() || info->count)
+-			info->set = 1;
+-	}
+-	set_io_apic_irq_attr(&attr, ioapic, hwirq, info->trigger,
+-			     info->polarity);
+-
+-	return io_apic_setup_irq_pin(virq, info->node, &attr);
+-}
+-
+-void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq)
+-{
+-	struct irq_data *data = irq_get_irq_data(virq);
+-	struct irq_cfg *cfg = irq_cfg(virq);
+-	int ioapic = mp_irqdomain_ioapic_idx(domain);
+-	int pin = (int)data->hwirq;
+-
+-	ioapic_mask_entry(ioapic, pin);
+-	__remove_pin_from_irq(cfg, ioapic, pin);
+-	WARN_ON(!list_empty(&cfg->irq_2_pin));
+-	arch_teardown_hwirq(virq);
+-}
+-
+ static int mp_irqdomain_get_attr(int irq, u32 gsi, struct mp_pin_info *pinfo,
+ 				 struct irq_alloc_info *info)
+ {
+@@ -3418,35 +3248,6 @@ int mp_irqdomain_deactivate(struct irq_domain *domain,
+ 	return 0;
+ }
+ 
+-int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
+-{
+-	int ret = 0;
+-	int ioapic, pin;
+-	struct mp_pin_info *info;
+-
+-	ioapic = mp_find_ioapic(gsi);
+-	if (ioapic < 0)
+-		return -ENODEV;
+-
+-	pin = mp_find_ioapic_pin(ioapic, gsi);
+-	info = mp_pin_info(ioapic, pin);
+-	trigger = trigger ? 1 : 0;
+-	polarity = polarity ? 1 : 0;
+-
+-	mutex_lock(&ioapic_mutex);
+-	if (!info->set) {
+-		info->trigger = trigger;
+-		info->polarity = polarity;
+-		info->node = node;
+-		info->set = 1;
+-	} else if (info->trigger != trigger || info->polarity != polarity) {
+-		ret = -EBUSY;
+-	}
+-	mutex_unlock(&ioapic_mutex);
+-
+-	return ret;
+-}
+-
+ bool mp_should_keep_irq(struct device *dev)
+ {
+ 	if (dev->power.is_prepared)
+-- 
+1.7.10.4
 
-Okay, makes sense to keep irq_set_chip_data() for driver-specific data
-then.
-
-Thierry
-
---2qXFWqzzG3v1+95a
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJUJR8xAAoJEN0jrNd/PrOhmZMP/0tFUjT9MXPrTuCEiBWtia+2
-ElYucD565UV4FjK6aINM4dHtmn0wUW+dDXB2YDSkAp10Ku534Tfi0zNfQd/xSe6M
-SLBNIW/EK67YANcL5AvN2W1wSUn/t24SBwWJIvsoZfNJbsAcETvYySMnmLZJ2L05
-k1v9mR+KAR52QhCs9nwga/dePFV/DBQ2bFrblq6Rxu/+hxki9EqgM9JtkRXS0F7d
-DU1BqMERPy9AtP+oX5Wih6+8P15JALo4n/SETOfeeToDkhN2Zbh8Y3AoAmVAL1l1
-ym3t6fPW7CFvJIX+Qpt02+wVvFu1amMpY8mXfzQmi18VccvTqQ9ylkaaVQ+ZsK/a
-M/8qEyiKUc4T8obwUr8qb484vw7QxAlFynvU5A6AX1zlHU+yUVEklTBlVY9Av5jj
-EW6MzXAPrhro6KKqu3m8h+P0O72K+oSZOT5bPri9/MfRfW3JCzMsCNIjeGXZ50fr
-Komek7HKSPDIaIoavV7Fym7j9zddKbLvAj8DfkztLT7jmQ7i8EVb6eHwy8uMDXI7
-cds9cH4RKRvE3ArNaHaOyEomxAD1fyAsQ3SPM2vuf92pJtiwoXpGc5qgrRusMjHw
-ZfggWh7lVNYq9TP1fXQalqNmFvATMz3s1HW7lCsIf8AeuNvDkAm3pQRojX1vKPvc
-uRsheVegzi0JliNoFkzC
-=m1fq
------END PGP SIGNATURE-----
-
---2qXFWqzzG3v1+95a--
