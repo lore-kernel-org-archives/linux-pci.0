@@ -1,154 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:42184 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752130AbaIYSPC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Sep 2014 14:15:02 -0400
-MIME-Version: 1.0
-In-Reply-To: <1411498874-9864-7-git-send-email-Liviu.Dudau@arm.com>
-References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
-	<1411498874-9864-7-git-send-email-Liviu.Dudau@arm.com>
-Date: Thu, 25 Sep 2014 11:15:01 -0700
-Message-ID: <CAE9FiQXuJZnj74dwTbKJCQNJ+OdEbjSB0fpwqh92+WZ_XGnrxQ@mail.gmail.com>
-Subject: Re: [PATCH v12 06/12] PCI: Create pci_host_bridge before its
- associated bus in pci_create_root_bus.
-From: Yinghai Lu <yinghai@kernel.org>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFT v2 16/24] x86, irq: Directly call native_compose_msi_msg() for DMAR IRQ
+Date: Fri, 26 Sep 2014 22:02:17 +0800
+Message-Id: <1411740145-30626-17-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 23, 2014 at 12:01 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
-> As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
-> the creation order has been changed for no good reason. Revert the order of
-> creation as we are going to depend on the pci_host_bridge structure to retrieve the
-> domain number of the root bus.
->
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> Acked-by: Grant Likely <grant.likely@linaro.org>
-> Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> ---
->  drivers/pci/probe.c | 32 +++++++++++++++++---------------
->  1 file changed, 17 insertions(+), 15 deletions(-)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index e3cf8a2..5ff72ec 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -515,7 +515,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
->         kfree(bridge);
->  }
->
-> -static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
-> +static struct pci_host_bridge *pci_alloc_host_bridge(void)
->  {
->         struct pci_host_bridge *bridge;
->
-> @@ -524,7 +524,8 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
->                 return NULL;
->
->         INIT_LIST_HEAD(&bridge->windows);
-> -       bridge->bus = b;
-> +       bridge->dev.release = pci_release_host_bridge_dev;
-> +
->         return bridge;
->  }
->
-> @@ -1761,9 +1762,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->         char bus_addr[64];
->         char *fmt;
->
-> +       bridge = pci_alloc_host_bridge();
-> +       if (!bridge)
-> +               return NULL;
-> +
-> +       bridge->dev.parent = parent;
-> +
->         b = pci_alloc_bus();
->         if (!b)
-> -               return NULL;
-> +               goto err_out;
->
->         b->sysdata = sysdata;
->         b->ops = ops;
-> @@ -1772,26 +1779,19 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->         if (b2) {
->                 /* If we already got to this bus through a different bridge, ignore it */
->                 dev_dbg(&b2->dev, "bus already known\n");
-> -               goto err_out;
-> +               goto err_bus_out;
->         }
->
-> -       bridge = pci_alloc_host_bridge(b);
-> -       if (!bridge)
-> -               goto err_out;
-> -
-> -       bridge->dev.parent = parent;
-> -       bridge->dev.release = pci_release_host_bridge_dev;
-> +       bridge->bus = b;
->         dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
->         error = pcibios_root_bridge_prepare(bridge);
-> -       if (error) {
-> -               kfree(bridge);
-> +       if (error)
->                 goto err_out;
-> -       }
->
->         error = device_register(&bridge->dev);
->         if (error) {
->                 put_device(&bridge->dev);
-> -               goto err_out;
-> +               goto err_bus_out;
->         }
->         b->bridge = get_device(&bridge->dev);
->         device_enable_async_suspend(b->bridge);
-> @@ -1848,8 +1848,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  class_dev_reg_err:
->         put_device(&bridge->dev);
->         device_unregister(&bridge->dev);
-> -err_out:
-> +err_bus_out:
->         kfree(b);
-> +err_out:
-> +       kfree(bridge);
->         return NULL;
->  }
+DMAR interrupt won't be remapped by interrupt remapping hardware,
+so directly call native_compose_msi_msg() for DMAR IRQ to compose MSI
+message data. This will help to simplify MSI code later.
 
-Hi Bjorn,
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/msi.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-Noticed that you put this one into pci/next.
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 7a6c2710de40..514e19e19b99 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -391,12 +391,10 @@ static struct irq_chip dmar_msi_type = {
+ 
+ int arch_setup_dmar_msi(unsigned int irq)
+ {
+-	int ret;
+ 	struct msi_msg msg;
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 
+-	ret = msi_compose_msg(NULL, irq, &msg, -1);
+-	if (ret < 0)
+-		return ret;
++	native_compose_msi_msg(NULL, irq, cfg->dest_apicid, &msg, -1);
+ 	dmar_msi_write(irq, &msg);
+ 	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
+ 				      "edge");
+-- 
+1.7.10.4
 
-This patch has problem for the class_dev_reg_err path.
-as device_unregister(&bridge->dev) will trigger pci_release_host_bridge_dev.
-So will have double free for bridge or else.
-
-Please drop this patch from pci/next.
-
-Also looks strange that the patch have long CC list, but just omit me
-and Jiang Liu that
-touched those code before.
-
-Thanks
-
-Yinghai
