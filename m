@@ -1,102 +1,309 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from dliviu.plus.com ([80.229.23.120]:59727 "EHLO smtp.dudau.co.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750780AbaI3V33 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Sep 2014 17:29:29 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by smtp.dudau.co.uk (Postfix) with SMTP id 0C796FFDFD
-	for <linux-pci@vger.kernel.org>; Tue, 30 Sep 2014 22:29:28 +0100 (BST)
-Date: Tue, 30 Sep 2014 22:28:55 +0100
-From: Liviu Dudau <liviu@dudau.co.uk>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Herring <robh@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] of/pci: add pci_pio_to_address dummy for !CONFIG_OF
-Message-ID: <20140930212855.GA15713@borg.dudau.co.uk>
-References: <706416181.hbVGLDA3o6@wuerfel>
- <20140930160139.GA5625@google.com>
- <20140930171002.GB15854@bart.dudau.co.uk>
- <CAErSpo61favodLTSwCYzFZq-sB60+ZH6_WvwSGHgRx6cPKtXpA@mail.gmail.com>
+Received: from smtp02.citrix.com ([66.165.176.63]:51932 "EHLO
+	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755231AbaIZSHX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Sep 2014 14:07:23 -0400
+Message-ID: <5425AB57.8040804@citrix.com>
+Date: Fri, 26 Sep 2014 19:07:19 +0100
+From: David Vrabel <david.vrabel@citrix.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAErSpo61favodLTSwCYzFZq-sB60+ZH6_WvwSGHgRx6cPKtXpA@mail.gmail.com>
+To: Chen Gang <gang.chen.5i5j@gmail.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	<konrad.wilk@oracle.com>, <ian.campbell@citrix.com>,
+	<wei.liu2@citrix.com>, <boris.ostrovsky@oracle.com>,
+	<bhelgaas@google.com>, <jgross@suse.com>,
+	<yongjun_wei@trendmicro.com.cn>, <mukesh.rathor@oracle.com>
+CC: <xen-devel@lists.xenproject.org>, <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	<linux-scsi@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [Xen-devel] [PATCH] xen/xenbus: Use 'void' instead of 'int' for
+ the return of xenbus_switch_state()
+References: <5425961A.5000604@gmail.com>
+In-Reply-To: <5425961A.5000604@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 30, 2014 at 01:53:06PM -0600, Bjorn Helgaas wrote:
-> On Tue, Sep 30, 2014 at 11:10 AM, Liviu Dudau <liviu@dudau.co.uk> wrote:
-> > On Tue, Sep 30, 2014 at 10:01:39AM -0600, Bjorn Helgaas wrote:
-> >> On Tue, Sep 30, 2014 at 03:19:05PM +0200, Arnd Bergmann wrote:
-> >> > The pci_register_io_range() and pci_pio_to_address() were recently
-> >> > introduced to generalize the handling of memory mapped PCI I/O space,
-> >> > but they are only valid when CONFIG_OF is set, leading to a possible
-> >> > build error:
-> >> >
-> >> > drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_setup_window':
-> >> > drivers/pci/host/pcie-rcar.c:340:3: error: implicit declaration of function 'pci_pio_to_address' [-Werror=implicit-function-declaration]
-> >> >    res_start = pci_pio_to_address(res->start);
-> >> >    ^
-> >> > drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_probe':
-> >> > drivers/pci/host/pcie-rcar.c:945:3: error: implicit declaration of function 'of_pci_range_to_resource' [-Werror=implicit-function-declaration]
-> >> >    err = of_pci_range_to_resource(&range, pdev->dev.of_node,
-> >> >    ^
-> >> > cc1: some warnings being treated as errors
-> >> >
-> >> > This provides inline dummy implementations for the case that
-> >> > CONFIG_OF is disabled, to allow better build testing.
-> >> >
-> >> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> >> > Fixes: 279c5dd046 ("of/pci: Add pci_register_io_range() and pci_pio_to_address()")
-> >>
-> >> I'm rebuilding the pci/host-generic branch to pick up the other v13 fixes,
-> >> so I folded this fix directly into the "of/pci: Add pci_register_io_range()
-> >> and pci_pio_to_address()" patch.  Thanks for finding this; the config
-> >> dependencies are a bit of a mess.
-> >
-> > Bjorn,
-> >
-> > I suggest splitting this patch into 2 parts, move the one that adds pci_pio_to_address() in patch 2
-> > and the other in patch 5.
+On 26/09/14 17:36, Chen Gang wrote:
+> When xenbus_switch_state() fails, it will call xenbus_switch_fatal()
+> internally, so need not return any status value, then use 'void' instead
+> of 'int' for xenbus_switch_state() and __xenbus_switch_state().
 > 
-> Yeah, I screwed that up.  I had just applied Arnd's patch completely
-> to 279c5dd046, which doesn't quite make sense.
-> 
-> I tried again like this:
-> 
->   - In "of/pci: Add pci_register_io_range() and pci_pio_to_address()",
-> I added the dummy pci_pio_to_address(), so there's an extern and a
-> definition in address.c when CONFIG_OF_ADDRESS=y, and an inline dummy
-> otherwise.
-> 
->   - I dropped "of/pci: Define of_pci_range_to_resource() only when
-> CONFIG_PCI=y".
-> 
->   - In "of/pci: Move of_pci_range_to_resource() to of/address.c", I
-> added the dummy of_pci_range_to_resource(), so there's an extern an a
-> definition in address.c when CONFIG_OF_ADDRESS=y and CONFIG_PCI=y, and
-> an inline dummy otherwise.
-> 
-> I'm not really set up to build test this, and my head is swimming a
-> bit, so I hope this is it.  I pushed the pci/host-generic branch
-> again, so you can look at it yourself.
+> Also need be sure that all callers which check the return value must let
+> 'err' be 0.
 
-Hi Bjorn,
+I've rewritten the commit message as:
 
-It looks good to me. Functionality-wise I can only test it tomorrow UK time,
-but from the diffs I've done I thinks we're good.
+    xen/xenbus: don't return errors from xenbus_switch_state()
 
-Will wait for more reports from the build bot.
+    Most users of xenbus_switch_state() weren't handling the failure of
+    xenbus_switch_state() correctly.  They either called
+    xenbus_dev_fatal() (which xenbus_switch_state() has effectively
+    already tried to do), or ignored errors.
 
-Take care,
-Liviu
+    xenbus_switch_state() may fail because:
+
+    a) The device is being unplugged by the toolstack. The device will
+    shortly be removed and the error does not need to be handled.
+
+    b) Xenstore is broken.  There isn't much the driver can do in this
+    case since xenstore is required to signal failure to the toolstack.
+
+    So, don't report any errors from xenbus_switch_state() which removes
+    some unnecessary error handling in some of the drivers.
+
+I'd appreciate a review from some of the other front/backend driver
+maintainers on whether this is sensible reasoning.
+
+David
 
 > 
-> Bjorn
+> And also need change the related comments for xenbus_switch_state().
+> 
+> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+> ---
+>  drivers/block/xen-blkback/xenbus.c |  9 ++-------
+>  drivers/net/xen-netback/xenbus.c   |  5 +----
+>  drivers/pci/xen-pcifront.c         | 15 ++++++---------
+>  drivers/xen/xen-pciback/xenbus.c   | 21 ++++-----------------
+>  drivers/xen/xen-scsiback.c         |  5 +----
+>  drivers/xen/xenbus/xenbus_client.c | 16 ++++++++--------
+>  include/xen/xenbus.h               |  3 ++-
+>  7 files changed, 24 insertions(+), 50 deletions(-)
+> 
+> diff --git a/drivers/block/xen-blkback/xenbus.c b/drivers/block/xen-blkback/xenbus.c
+> index 3a8b810..fdcc584 100644
+> --- a/drivers/block/xen-blkback/xenbus.c
+> +++ b/drivers/block/xen-blkback/xenbus.c
+> @@ -587,9 +587,7 @@ static int xen_blkbk_probe(struct xenbus_device *dev,
+>  	if (err)
+>  		goto fail;
+>  
+> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+> -	if (err)
+> -		goto fail;
+> +	xenbus_switch_state(dev, XenbusStateInitWait);
+>  
+>  	return 0;
+>  
+> @@ -837,10 +835,7 @@ again:
+>  	if (err)
+>  		xenbus_dev_fatal(dev, err, "ending transaction");
+>  
+> -	err = xenbus_switch_state(dev, XenbusStateConnected);
+> -	if (err)
+> -		xenbus_dev_fatal(dev, err, "%s: switching to Connected state",
+> -				 dev->nodename);
+> +	xenbus_switch_state(dev, XenbusStateConnected);
+>  
+>  	return;
+>   abort:
+> diff --git a/drivers/net/xen-netback/xenbus.c b/drivers/net/xen-netback/xenbus.c
+> index 9c47b89..b5c3d47 100644
+> --- a/drivers/net/xen-netback/xenbus.c
+> +++ b/drivers/net/xen-netback/xenbus.c
+> @@ -337,10 +337,7 @@ static int netback_probe(struct xenbus_device *dev,
+>  	if (err)
+>  		pr_debug("Error writing multi-queue-max-queues\n");
+>  
+> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+> -	if (err)
+> -		goto fail;
+> -
+> +	xenbus_switch_state(dev, XenbusStateInitWait);
+>  	be->state = XenbusStateInitWait;
+>  
+>  	/* This kicks hotplug scripts, so do it immediately. */
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index 53df39a..c1d73b7 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -901,18 +901,16 @@ static int pcifront_try_connect(struct pcifront_device *pdev)
+>  		}
+>  	}
+>  
+> -	err = xenbus_switch_state(pdev->xdev, XenbusStateConnected);
+> -
+> +	xenbus_switch_state(pdev->xdev, XenbusStateConnected);
+> +	return 0;
+>  out:
+>  	return err;
+>  }
+>  
+>  static int pcifront_try_disconnect(struct pcifront_device *pdev)
+>  {
+> -	int err = 0;
+>  	enum xenbus_state prev_state;
+>  
+> -
+>  	prev_state = xenbus_read_driver_state(pdev->xdev->nodename);
+>  
+>  	if (prev_state >= XenbusStateClosing)
+> @@ -923,11 +921,10 @@ static int pcifront_try_disconnect(struct pcifront_device *pdev)
+>  		pcifront_disconnect(pdev);
+>  	}
+>  
+> -	err = xenbus_switch_state(pdev->xdev, XenbusStateClosed);
+> +	xenbus_switch_state(pdev->xdev, XenbusStateClosed);
+>  
+>  out:
+> -
+> -	return err;
+> +	return 0;
+>  }
+>  
+>  static int pcifront_attach_devices(struct pcifront_device *pdev)
+> @@ -1060,8 +1057,8 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
+>  			domain, bus, slot, func);
+>  	}
+>  
+> -	err = xenbus_switch_state(pdev->xdev, XenbusStateReconfiguring);
+> -
+> +	xenbus_switch_state(pdev->xdev, XenbusStateReconfiguring);
+> +	return 0;
+>  out:
+>  	return err;
+>  }
+> diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
+> index c214daa..630a215 100644
+> --- a/drivers/xen/xen-pciback/xenbus.c
+> +++ b/drivers/xen/xen-pciback/xenbus.c
+> @@ -184,10 +184,7 @@ static int xen_pcibk_attach(struct xen_pcibk_device *pdev)
+>  
+>  	dev_dbg(&pdev->xdev->dev, "Connecting...\n");
+>  
+> -	err = xenbus_switch_state(pdev->xdev, XenbusStateConnected);
+> -	if (err)
+> -		xenbus_dev_fatal(pdev->xdev, err,
+> -				 "Error switching to connected state!");
+> +	xenbus_switch_state(pdev->xdev, XenbusStateConnected);
+>  
+>  	dev_dbg(&pdev->xdev->dev, "Connected? %d\n", err);
+>  out:
+> @@ -500,12 +497,7 @@ static int xen_pcibk_reconfigure(struct xen_pcibk_device *pdev)
+>  		}
+>  	}
+>  
+> -	err = xenbus_switch_state(pdev->xdev, XenbusStateReconfigured);
+> -	if (err) {
+> -		xenbus_dev_fatal(pdev->xdev, err,
+> -				 "Error switching to reconfigured state!");
+> -		goto out;
+> -	}
+> +	xenbus_switch_state(pdev->xdev, XenbusStateReconfigured);
+>  
+>  out:
+>  	mutex_unlock(&pdev->dev_lock);
+> @@ -640,10 +632,7 @@ static int xen_pcibk_setup_backend(struct xen_pcibk_device *pdev)
+>  		goto out;
+>  	}
+>  
+> -	err = xenbus_switch_state(pdev->xdev, XenbusStateInitialised);
+> -	if (err)
+> -		xenbus_dev_fatal(pdev->xdev, err,
+> -				 "Error switching to initialised state!");
+> +	xenbus_switch_state(pdev->xdev, XenbusStateInitialised);
+>  
+>  out:
+>  	mutex_unlock(&pdev->dev_lock);
+> @@ -683,9 +672,7 @@ static int xen_pcibk_xenbus_probe(struct xenbus_device *dev,
+>  	}
+>  
+>  	/* wait for xend to configure us */
+> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+> -	if (err)
+> -		goto out;
+> +	xenbus_switch_state(dev, XenbusStateInitWait);
+>  
+>  	/* watch the backend node for backend configuration information */
+>  	err = xenbus_watch_path(dev, dev->nodename, &pdev->be_watch,
+> diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
+> index ad11258..847bc9c 100644
+> --- a/drivers/xen/xen-scsiback.c
+> +++ b/drivers/xen/xen-scsiback.c
+> @@ -1225,10 +1225,7 @@ static int scsiback_probe(struct xenbus_device *dev,
+>  	if (err)
+>  		xenbus_dev_error(dev, err, "writing feature-sg-grant");
+>  
+> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+> -	if (err)
+> -		goto fail;
+> -
+> +	xenbus_switch_state(dev, XenbusStateInitWait);
+>  	return 0;
+>  
+>  fail:
+> diff --git a/drivers/xen/xenbus/xenbus_client.c b/drivers/xen/xenbus/xenbus_client.c
+> index ca74410..e2bcd1d 100644
+> --- a/drivers/xen/xenbus/xenbus_client.c
+> +++ b/drivers/xen/xenbus/xenbus_client.c
+> @@ -166,7 +166,7 @@ EXPORT_SYMBOL_GPL(xenbus_watch_pathfmt);
+>  static void xenbus_switch_fatal(struct xenbus_device *, int, int,
+>  				const char *, ...);
+>  
+> -static int
+> +static void
+>  __xenbus_switch_state(struct xenbus_device *dev,
+>  		      enum xenbus_state state, int depth)
+>  {
+> @@ -188,7 +188,7 @@ __xenbus_switch_state(struct xenbus_device *dev,
+>  	int err, abort;
+>  
+>  	if (state == dev->state)
+> -		return 0;
+> +		return;
+>  
+>  again:
+>  	abort = 1;
+> @@ -196,7 +196,7 @@ again:
+>  	err = xenbus_transaction_start(&xbt);
+>  	if (err) {
+>  		xenbus_switch_fatal(dev, depth, err, "starting transaction");
+> -		return 0;
+> +		return;
+>  	}
+>  
+>  	err = xenbus_scanf(xbt, dev->nodename, "state", "%d", &current_state);
+> @@ -219,7 +219,7 @@ abort:
+>  	} else
+>  		dev->state = state;
+>  
+> -	return 0;
+> +	return;
+>  }
+>  
+>  /**
+> @@ -228,12 +228,12 @@ abort:
+>   * @state: new state
+>   *
+>   * Advertise in the store a change of the given driver to the given new_state.
+> - * Return 0 on success, or -errno on error.  On error, the device will switch
+> - * to XenbusStateClosing, and the error will be saved in the store.
+> + * When failure occurs, it will call xenbus_switch_fatal() internally, so need
+> + * not return value to notify upper caller.
+>   */
+> -int xenbus_switch_state(struct xenbus_device *dev, enum xenbus_state state)
+> +void xenbus_switch_state(struct xenbus_device *dev, enum xenbus_state state)
+>  {
+> -	return __xenbus_switch_state(dev, state, 0);
+> +	__xenbus_switch_state(dev, state, 0);
+>  }
+>  
+>  EXPORT_SYMBOL_GPL(xenbus_switch_state);
+> diff --git a/include/xen/xenbus.h b/include/xen/xenbus.h
+> index 0324c6d..587c53d 100644
+> --- a/include/xen/xenbus.h
+> +++ b/include/xen/xenbus.h
+> @@ -195,7 +195,8 @@ int xenbus_watch_pathfmt(struct xenbus_device *dev, struct xenbus_watch *watch,
+>  					  const char **, unsigned int),
+>  			 const char *pathfmt, ...);
+>  
+> -int xenbus_switch_state(struct xenbus_device *dev, enum xenbus_state new_state);
+> +void xenbus_switch_state(struct xenbus_device *dev,
+> +			 enum xenbus_state new_state);
+>  int xenbus_grant_ring(struct xenbus_device *dev, unsigned long ring_mfn);
+>  int xenbus_map_ring_valloc(struct xenbus_device *dev,
+>  			   int gnt_ref, void **vaddr);
 > 
 
