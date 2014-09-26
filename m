@@ -1,155 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:45134 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754065AbaIPCJS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Sep 2014 22:09:18 -0400
-Message-ID: <54179BAB.7030506@huawei.com>
-Date: Tue, 16 Sep 2014 10:08:43 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH v1 05/21] PCI/MSI: Introduce weak arch_find_msi_chip()
- to find MSI chip
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>	 <1409911806-10519-6-git-send-email-wangyijing@huawei.com> <1410792154.3314.7.camel@pengutronix.de>
-In-Reply-To: <1410792154.3314.7.camel@pengutronix.de>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFT v2 06/24] x86, MSI: Use new irqdomain interfaces to allocate/free IRQ
+Date: Fri, 26 Sep 2014 22:02:07 +0800
+Message-Id: <1411740145-30626-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/15 22:42, Lucas Stach wrote:
-> Am Freitag, den 05.09.2014, 18:09 +0800 schrieb Yijing Wang:
->> Introduce weak arch_find_msi_chip() to find the match msi_chip.
->> Currently, MSI chip associates pci bus to msi_chip. Because in
->> ARM platform, there may be more than one MSI controller in system.
->> Associate pci bus to msi_chip help pci device to find the match
->> msi_chip and setup MSI/MSI-X irq correctly. But in other platform,
->> like in x86. we only need one MSI chip, because all device use
->> the same MSI address/data and irq etc. So it's no need to associate
->> pci bus to MSI chip, just use a arch function, arch_find_msi_chip()
->> to return the MSI chip for simplicity. The default weak
->> arch_find_msi_chip() used in ARM platform, find the MSI chip
->> by pci bus.
->>
-> Hm, while one weak function sounds much better than the plethora we have
-> now, I wonder how much work it would be to associate the msi_chip with
-> the pci bus on other arches the same way as done on ARM. This way we
-> could kill this calling into arch specific functions which would make
-> things a bit clearer to follow I think.
+Use new irqdomain interfaces to allocate/free IRQ for MSI, so we could
+kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
 
-That's a heavy work to associate msi_chip with the pci_bus in all platforms,
-And only in ARM platform, there are two or more different msi_chips which maybe
-associate pci hostbridge or irq chip. In other platforms, only one MSI chip
-exists at the same time. Another reason is I don't think associate the msi_chip
-with pci bus is a good idea to make PCI device find its own msi_chip.
-All PCI devices under the same PCI hostbridge should have the same msi_chip,
-and now a property "msi-parent" is defined to help pci hostbridge to find its matched
-msi_chip. I like to associate the msi_chip with a pci hostbridge. So we don't need to
-add a lot of pcibios_add_bus() to do that.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/msi.c |   14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-I inspected all MSI chip drivers, and found there are two different relations between msi_chip and PCI hostbridge
-1. MSI chip is a irq chip, like irq_armada_370_xp, PCI hostbridge platform device use "msi-parent" to find msi_chip by of_node.
-2. MSI chip is integrated into PCI hostbridge, so msi_chip->dev is the PCI hostbridge platform device.
-
-So long as we use PCI hostbridge platform device as the parent of PCI hostbridge, every PCI device under the hostbridge
-can find the msi_chip by it.
-
-All MSI chip drivers now except pci-mvebu have been passed the hostbridge platform dev as the parent.
-pci_common_init_dev(pcie->dev, &hw);
-			^
-Pseudo code like:
-
-struct msi_chip *pcibios_find_msi_chip(struct pci_dev *dev)
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index fb45663395ca..64561ffa51a9 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -14,6 +14,7 @@
+ #include <linux/dmar.h>
+ #include <linux/hpet.h>
+ #include <linux/msi.h>
++#include <linux/irqdomain.h>
+ #include <asm/msidef.h>
+ #include <asm/hpet.h>
+ #include <asm/hw_irq.h>
+@@ -145,23 +146,20 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
  {
-       struct pci_bus *root;
-       struct pci_host_bridge *bridge;
-       struct msi_chip *chip;
-       struct device_node *node, *msi_node;
-
-       /* First we find msi_chip by the phb of_node */    <-------- MSI chip is a irq chip
-       root = pci_find_root_bus(dev->bus);
-       node = pcibios_get_phb_of_node(root);
-       if (node) {
-               msi_node = of_parse_phandle(n, "msi-parent", 0);
-               of_node_put(node);
-               if (msi_node)
-                       return of_pci_find_msi_chip_by_node(msi_node);
-       }
-
-
-       /* Some msi_chip are integrated into pci hostbridge,
-        * we find it by phb device pointer.
-        */
-       if (bridge && bridge->dev.parent) {		<-----------MSI chip is integrated into PCI hostbridge
-               down_read(&pci_msi_chip_sem);
-               list_for_each_entry(chip, &pci_msi_chip_list, list) {
-                       if (chip->dev == bridge->dev.parent) {
-                               up_read(pci_msi_chip_sem);
-                               return chip;
-                       }
-                }
-               up_read(&pci_msi_chip_sem);
-        }
-
-
-        return NULL;
+ 	struct msi_desc *msidesc;
+-	unsigned int irq;
+-	int node, ret;
++	int irq, ret;
+ 
+ 	/* Multiple MSI vectors only supported with interrupt remapping */
+ 	if (type == PCI_CAP_ID_MSI && nvec > 1)
+ 		return 1;
+ 
+-	node = dev_to_node(&dev->dev);
+-
+ 	list_for_each_entry(msidesc, &dev->msi_list, list) {
+-		irq = irq_alloc_hwirq(node);
+-		if (!irq)
++		irq = irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
++		if (irq <= 0)
+ 			return -ENOSPC;
+ 
+ 		ret = setup_msi_irq(dev, msidesc, irq, 0);
+ 		if (ret < 0) {
+-			irq_free_hwirq(irq);
++			irq_domain_free_irqs(irq, 1);
+ 			return ret;
+ 		}
+ 
+@@ -171,7 +169,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 
+ void native_teardown_msi_irq(unsigned int irq)
+ {
+-	irq_free_hwirq(irq);
++	irq_domain_free_irqs(irq, 1);
  }
-
-Thanks!
-Yijing.
-
-
-> 
-> Regards,
-> Lucas
-> 
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  drivers/pci/msi.c |    7 ++++++-
->>  1 files changed, 6 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index a77e7f7..539c11d 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -29,9 +29,14 @@ static int pci_msi_enable = 1;
->>  
->>  /* Arch hooks */
->>  
->> +struct msi_chip * __weak arch_find_msi_chip(struct pci_dev *dev)
->> +{
->> +	return dev->bus->msi;
->> +}
->> +
->>  int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
->>  {
->> -	struct msi_chip *chip = dev->bus->msi;
->> +	struct msi_chip *chip = arch_find_msi_chip(dev);
->>  	int err;
->>  
->>  	if (!chip || !chip->setup_irq)
-> 
-
-
+ 
+ #ifdef CONFIG_DMAR_TABLE
 -- 
-Thanks!
-Yijing
+1.7.10.4
 
