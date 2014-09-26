@@ -1,284 +1,187 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <1410792430.3314.10.camel@pengutronix.de>
-Subject: Re: [PATCH v1 21/21] PCI/MSI: Clean up unused MSI arch functions
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>
-Date: Mon, 15 Sep 2014 16:47:10 +0200
-In-Reply-To: <1409911806-10519-22-git-send-email-wangyijing@huawei.com>
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
-	 <1409911806-10519-22-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-arch-owner@vger.kernel.org
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC v1 08/28] x86, irq: Kill x86_io_apic_ops.setup_entry and related interfaces
+Date: Fri, 26 Sep 2014 22:57:38 +0800
+Message-Id: <1411743478-31435-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, den 05.09.2014, 18:10 +0800 schrieb Yijing Wang:
-> Now we use struct msi_chip in all platforms to configure
-> MSI/MSI-X. We can clean up the unused arch functions.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Now there is no user of x86_io_apic_ops.setup_entry anymore, so kill it.
 
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h       |    4 ----
+ arch/x86/include/asm/irq_remapping.h |   13 -------------
+ arch/x86/include/asm/x86_init.h      |    3 ---
+ arch/x86/kernel/apic/io_apic.c       |   24 ------------------------
+ arch/x86/kernel/x86_init.c           |    1 -
+ drivers/iommu/irq_remapping.c        |   13 -------------
+ 6 files changed, 58 deletions(-)
 
-> ---
->  drivers/iommu/irq_remapping.c |    2 +-
->  drivers/pci/msi.c             |   99 ++++++++++++++++-------------------------
->  include/linux/msi.h           |   14 ------
->  3 files changed, 39 insertions(+), 76 deletions(-)
-> 
-> diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-> index 99b1c0f..6e645f0 100644
-> --- a/drivers/iommu/irq_remapping.c
-> +++ b/drivers/iommu/irq_remapping.c
-> @@ -92,7 +92,7 @@ error:
->  
->  	/*
->  	 * Restore altered MSI descriptor fields and prevent just destroyed
-> -	 * IRQs from tearing down again in default_teardown_msi_irqs()
-> +	 * IRQs from tearing down again in teardown_msi_irqs()
->  	 */
->  	msidesc->irq = 0;
->  	msidesc->nvec_used = 0;
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index d78d637..e3e7f4f 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -34,50 +34,31 @@ struct msi_chip * __weak arch_find_msi_chip(struct pci_dev *dev)
->  	return dev->bus->msi;
->  }
->  
-> -int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
-> -{
-> -	struct msi_chip *chip = arch_find_msi_chip(dev);
-> -	int err;
-> -
-> -	if (!chip || !chip->setup_irq)
-> -		return -EINVAL;
-> -
-> -	err = chip->setup_irq(dev, desc);
-> -	if (err < 0)
-> -		return err;
-> -
-> -	return 0;
-> -}
-> -
-> -void __weak arch_teardown_msi_irq(unsigned int irq)
-> -{
-> -	struct msi_chip *chip = irq_get_chip_data(irq);
-> -
-> -	if (!chip || !chip->teardown_irq)
-> -		return;
-> -
-> -	chip->teardown_irq(irq);
-> -}
-> -
-> -int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-> +int setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->  {
->  	struct msi_desc *entry;
->  	int ret;
->  	struct msi_chip *chip;
->  
->  	chip = arch_find_msi_chip(dev);
-> -	if (chip && chip->setup_irqs)
-> +	if (!chip)
-> +		return -EINVAL;
-> +
-> +	if (chip->setup_irqs)
->  		return chip->setup_irqs(dev, nvec, type);
->  
->  	/*
->  	 * If an architecture wants to support multiple MSI, it needs to
-> -	 * override arch_setup_msi_irqs()
-> +	 * implement chip->setup_irqs().
->  	 */
->  	if (type == PCI_CAP_ID_MSI && nvec > 1)
->  		return 1;
->  
-> +	if (!chip->setup_irq)
-> +		return -EINVAL;
-> +
->  	list_for_each_entry(entry, &dev->msi_list, list) {
-> -		ret = arch_setup_msi_irq(dev, entry);
-> +		ret = chip->setup_irq(dev, entry);
->  		if (ret < 0)
->  			return ret;
->  		if (ret > 0)
-> @@ -87,13 +68,20 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->  	return 0;
->  }
->  
-> -/*
-> - * We have a default implementation available as a separate non-weak
-> - * function, as it is used by the Xen x86 PCI code
-> - */
-> -void default_teardown_msi_irqs(struct pci_dev *dev)
-> +static void teardown_msi_irqs(struct pci_dev *dev)
->  {
->  	struct msi_desc *entry;
-> +	struct msi_chip *chip;
-> +
-> +	chip = arch_find_msi_chip(dev);
-> +	if (!chip)
-> +		return;
-> +
-> +	if (chip->teardown_irqs)
-> +		return chip->teardown_irqs(dev);
-> +
-> +	if (!chip->teardown_irq)
-> +		return;
->  
->  	list_for_each_entry(entry, &dev->msi_list, list) {
->  		int i, nvec;
-> @@ -104,20 +92,10 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
->  		else
->  			nvec = 1 << entry->msi_attrib.multiple;
->  		for (i = 0; i < nvec; i++)
-> -			arch_teardown_msi_irq(entry->irq + i);
-> +			chip->teardown_irq(entry->irq + i);
->  	}
->  }
->  
-> -void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
-> -{
-> -	struct msi_chip *chip = arch_find_msi_chip(dev);
-> -
-> -	if (chip && chip->teardown_irqs)
-> -		return chip->teardown_irqs(dev);
-> -
-> -	return default_teardown_msi_irqs(dev);
-> -}
-> -
->  static void default_restore_msi_irq(struct pci_dev *dev, int irq)
->  {
->  	struct msi_desc *entry;
-> @@ -136,10 +114,18 @@ static void default_restore_msi_irq(struct pci_dev *dev, int irq)
->  		write_msi_msg(irq, &entry->msg);
->  }
->  
-> -void __weak arch_restore_msi_irqs(struct pci_dev *dev)
-> +static void default_restore_msi_irqs(struct pci_dev *dev)
->  {
-> -	struct msi_chip *chip = arch_find_msi_chip(dev);
-> +	struct msi_desc *entry = NULL;
-> +
-> +	list_for_each_entry(entry, &dev->msi_list, list) {
-> +		default_restore_msi_irq(dev, entry->irq);
-> +	}
-> +}
->  
-> +static void restore_msi_irqs(struct pci_dev *dev)
-> +{
-> +	struct msi_chip *chip = arch_find_msi_chip(dev);
->  	if (chip && chip->restore_irqs)
->  		return chip->restore_irqs(dev);
->  
-> @@ -248,15 +234,6 @@ void unmask_msi_irq(struct irq_data *data)
->  	msi_set_mask_bit(data, 0);
->  }
->  
-> -void default_restore_msi_irqs(struct pci_dev *dev)
-> -{
-> -	struct msi_desc *entry;
-> -
-> -	list_for_each_entry(entry, &dev->msi_list, list) {
-> -		default_restore_msi_irq(dev, entry->irq);
-> -	}
-> -}
-> -
->  void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->  {
->  	BUG_ON(entry->dev->current_state != PCI_D0);
-> @@ -360,7 +337,7 @@ static void free_msi_irqs(struct pci_dev *dev)
->  			BUG_ON(irq_has_action(entry->irq + i));
->  	}
->  
-> -	arch_teardown_msi_irqs(dev);
-> +	teardown_msi_irqs(dev);
->  
->  	list_for_each_entry_safe(entry, tmp, &dev->msi_list, list) {
->  		if (entry->msi_attrib.is_msix) {
-> @@ -430,7 +407,7 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
->  
->  	pci_intx_for_msi(dev, 0);
->  	msi_set_enable(dev, 0);
-> -	arch_restore_msi_irqs(dev);
-> +	restore_msi_irqs(dev);
->  
->  	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
->  	msi_mask_irq(entry, msi_mask(entry->msi_attrib.multi_cap),
-> @@ -453,7 +430,7 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
->  	msix_clear_and_set_ctrl(dev, 0,
->  				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
->  
-> -	arch_restore_msi_irqs(dev);
-> +	restore_msi_irqs(dev);
->  	list_for_each_entry(entry, &dev->msi_list, list) {
->  		msix_mask_irq(entry, entry->masked);
->  	}
-> @@ -624,7 +601,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
->  	list_add_tail(&entry->list, &dev->msi_list);
->  
->  	/* Configure MSI capability structure */
-> -	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
-> +	ret = setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
->  	if (ret) {
->  		msi_mask_irq(entry, mask, ~mask);
->  		free_msi_irqs(dev);
-> @@ -740,7 +717,7 @@ static int msix_capability_init(struct pci_dev *dev,
->  	if (ret)
->  		return ret;
->  
-> -	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
-> +	ret = setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
->  	if (ret)
->  		goto out_avail;
->  
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index 92a51e7..d6e1f7c 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -51,20 +51,6 @@ struct msi_desc {
->  	struct kobject kobj;
->  };
->  
-> -/*
-> - * The arch hooks to setup up msi irqs. Those functions are
-> - * implemented as weak symbols so that they /can/ be overriden by
-> - * architecture specific code if needed.
-> - */
-> -int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
-> -void arch_teardown_msi_irq(unsigned int irq);
-> -int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
-> -void arch_teardown_msi_irqs(struct pci_dev *dev);
-> -void arch_restore_msi_irqs(struct pci_dev *dev);
-> -
-> -void default_teardown_msi_irqs(struct pci_dev *dev);
-> -void default_restore_msi_irqs(struct pci_dev *dev);
-> -
->  struct msi_chip {
->  	struct module *owner;
->  	struct device *dev;
-
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index fb501ec46ee8..f9f316b2ec1e 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -150,9 +150,6 @@ struct irq_cfg;
+ extern void ioapic_insert_resources(void);
+ extern int arch_early_ioapic_init(void);
+ 
+-extern int native_setup_ioapic_entry(int, struct IO_APIC_route_entry *,
+-				     unsigned int, int,
+-				     struct io_apic_irq_attr *);
+ extern void eoi_ioapic_irq(unsigned int irq, struct irq_cfg *cfg);
+ 
+ extern void native_eoi_ioapic_pin(int apic, int pin, int vector);
+@@ -291,7 +288,6 @@ static inline void disable_ioapic_support(void) { }
+ #define native_io_apic_modify		NULL
+ #define native_disable_io_apic		NULL
+ #define native_ioapic_set_affinity	NULL
+-#define native_setup_ioapic_entry	NULL
+ #define native_eoi_ioapic_pin		NULL
+ #endif
+ 
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index de1a5d3277e2..9ed7e2d5fd7d 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -43,11 +43,6 @@ extern int irq_remapping_enable(void);
+ extern void irq_remapping_disable(void);
+ extern int irq_remapping_reenable(int);
+ extern int irq_remap_enable_fault_handling(void);
+-extern int setup_ioapic_remapped_entry(int irq,
+-				       struct IO_APIC_route_entry *entry,
+-				       unsigned int destination,
+-				       int vector,
+-				       struct io_apic_irq_attr *attr);
+ extern void free_remapped_irq(int irq);
+ extern void panic_if_irq_remap(const char *msg);
+ extern bool setup_remapped_irq(int irq,
+@@ -98,14 +93,6 @@ static inline int irq_remapping_enable(void) { return -ENODEV; }
+ static inline void irq_remapping_disable(void) { }
+ static inline int irq_remapping_reenable(int eim) { return -ENODEV; }
+ static inline int irq_remap_enable_fault_handling(void) { return -ENODEV; }
+-static inline int setup_ioapic_remapped_entry(int irq,
+-					      struct IO_APIC_route_entry *entry,
+-					      unsigned int destination,
+-					      int vector,
+-					      struct io_apic_irq_attr *attr)
+-{
+-	return -ENODEV;
+-}
+ static inline void free_remapped_irq(int irq) { }
+ 
+ static inline void panic_if_irq_remap(const char *msg)
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index d49791d2aacf..7de44a329028 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -197,9 +197,6 @@ struct x86_io_apic_ops {
+ 	int		(*set_affinity)(struct irq_data *data,
+ 					const struct cpumask *mask,
+ 					bool force);
+-	int		(*setup_entry)(int irq, struct IO_APIC_route_entry *entry,
+-				       unsigned int destination, int vector,
+-				       struct io_apic_irq_attr *attr);
+ 	void		(*eoi_ioapic_pin)(int apic, int pin, int vector);
+ };
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index d6df6da203f6..e3628c3b6b07 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1288,30 +1288,6 @@ static inline int IO_APIC_irq_trigger(int irq)
+ }
+ #endif
+ 
+-int native_setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
+-			      unsigned int destination, int vector,
+-			      struct io_apic_irq_attr *attr)
+-{
+-	memset(entry, 0, sizeof(*entry));
+-
+-	entry->delivery_mode = apic->irq_delivery_mode;
+-	entry->dest_mode     = apic->irq_dest_mode;
+-	entry->dest	     = destination;
+-	entry->vector	     = vector;
+-	entry->mask	     = 0;			/* enable IRQ */
+-	entry->trigger	     = attr->trigger;
+-	entry->polarity	     = attr->polarity;
+-
+-	/*
+-	 * Mask level triggered irqs.
+-	 * Use IRQ_DELAYED_DISABLE for edge triggered irqs.
+-	 */
+-	if (attr->trigger)
+-		entry->mask = 1;
+-
+-	return 0;
+-}
+-
+ static void __init setup_IO_APIC_irqs(void)
+ {
+ 	unsigned int ioapic, pin;
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index ba5ab975bb5b..77d0ea3dd1ea 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -155,6 +155,5 @@ struct x86_io_apic_ops x86_io_apic_ops = {
+ 	.modify			= native_io_apic_modify,
+ 	.disable		= native_disable_io_apic,
+ 	.set_affinity		= native_ioapic_set_affinity,
+-	.setup_entry		= native_setup_ioapic_entry,
+ 	.eoi_ioapic_pin		= native_eoi_ioapic_pin,
+ };
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index d72094e01dec..0486a123c29b 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -62,7 +62,6 @@ static void __init irq_remapping_modify_x86_ops(void)
+ {
+ 	x86_io_apic_ops.disable		= irq_remapping_disable_io_apic;
+ 	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
+-	x86_io_apic_ops.setup_entry	= setup_ioapic_remapped_entry;
+ 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
+ }
+ 
+@@ -177,18 +176,6 @@ int __init irq_remap_enable_fault_handling(void)
+ 	return remap_ops->enable_faulting();
+ }
+ 
+-int setup_ioapic_remapped_entry(int irq,
+-				struct IO_APIC_route_entry *entry,
+-				unsigned int destination, int vector,
+-				struct io_apic_irq_attr *attr)
+-{
+-	if (!remap_ops || !remap_ops->setup_ioapic_entry)
+-		return -ENODEV;
+-
+-	return remap_ops->setup_ioapic_entry(irq, entry, destination,
+-					     vector, attr);
+-}
+-
+ static int set_remapped_irq_affinity(struct irq_data *data,
+ 				     const struct cpumask *mask, bool force)
+ {
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+1.7.10.4
 
