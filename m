@@ -1,4 +1,8 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:1079 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754539AbaIZOAF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Sep 2014 10:00:05 -0400
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
@@ -9,7 +13,8 @@ To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
 	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>
 Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
@@ -17,124 +22,66 @@ Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v2 13/18] x86, irq: Move IRQ initialization routines from io_apic.c into vector.c
-Date: Fri, 26 Sep 2014 21:29:50 +0800
-Message-Id: <1411738196-29958-14-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFT v2 02/24] genirq: Introduce helper functions to support stacked irq_chip
+Date: Fri, 26 Sep 2014 22:02:03 +0800
+Message-Id: <1411740145-30626-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move IRQ initialization routines from io_apic.c into vector.c,
-preparing for enabling hierarchy irqdomain.
+Now we already support hierarchy irq_datas, so introduce several helpers
+to support stacked irq_chips.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/include/asm/io_apic.h |    2 ++
- arch/x86/kernel/apic/io_apic.c |   22 +---------------------
- arch/x86/kernel/apic/vector.c  |   28 ++++++++++++++++++++++++++++
- 3 files changed, 31 insertions(+), 21 deletions(-)
+ include/linux/irq.h |    5 +++++
+ kernel/irq/chip.c   |   17 +++++++++++++++++
+ 2 files changed, 22 insertions(+)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 533803dc3733..7bf86bfe05b1 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -145,6 +145,7 @@ extern unsigned long io_apic_irqs;
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index b1aa23eea711..07abf5a1cd8e 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -435,6 +435,11 @@ extern void handle_percpu_devid_irq(unsigned int irq, struct irq_desc *desc);
+ extern void handle_bad_irq(unsigned int irq, struct irq_desc *desc);
+ extern void handle_nested_irq(unsigned int irq);
  
- struct irq_cfg;
- extern void ioapic_insert_resources(void);
-+extern int arch_early_ioapic_init(void);
- 
- extern int native_setup_ioapic_entry(int, struct IO_APIC_route_entry *,
- 				     unsigned int, int,
-@@ -249,6 +250,7 @@ extern void print_IO_APICs(void);
- #define io_apic_assign_pci_irqs 0
- #define setup_ioapic_ids_from_mpc x86_init_noop
- static inline void ioapic_insert_resources(void) { }
-+static inline int arch_early_ioapic_init(void) { return 0; }
- static inline void print_IO_APICs(void) {}
- #define gsi_top (NR_IRQS_LEGACY)
- static inline int mp_find_ioapic(u32 gsi) { return 0; }
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 3fc4f540ef0f..b80dd6402647 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -245,7 +245,7 @@ static void free_ioapic_saved_registers(int idx)
- 	ioapics[idx].saved_registers = NULL;
- }
- 
--int __init arch_early_irq_init(void)
-+int __init arch_early_ioapic_init(void)
- {
- 	struct irq_cfg *cfg;
- 	int i, node = cpu_to_node(0);
-@@ -2486,26 +2486,6 @@ unsigned int arch_dynirq_lower_bound(unsigned int from)
- 	return ioapic_initialized ? ioapic_dynirq_base : gsi_top;
- }
- 
--int __init arch_probe_nr_irqs(void)
--{
--	int nr;
--
--	if (nr_irqs > (NR_VECTORS * nr_cpu_ids))
--		nr_irqs = NR_VECTORS * nr_cpu_ids;
--
--	nr = (gsi_top + nr_legacy_irqs()) + 8 * nr_cpu_ids;
--#if defined(CONFIG_PCI_MSI) || defined(CONFIG_HT_IRQ)
--	/*
--	 * for MSI and HT dyn irq
--	 */
--	nr += gsi_top * 16;
--#endif
--	if (nr < nr_irqs)
--		nr_irqs = nr;
--
--	return 0;
--}
--
- #ifdef CONFIG_X86_32
- static int io_apic_get_unique_id(int ioapic, int apic_id)
- {
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index f728cbfc29a9..2df1bff738b1 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -235,6 +235,34 @@ void clear_irq_vector(int irq, struct irq_cfg *cfg)
- 	raw_spin_unlock_irqrestore(&vector_lock, flags);
- }
- 
-+int __init arch_probe_nr_irqs(void)
-+{
-+	int nr;
-+
-+	if (nr_irqs > (NR_VECTORS * nr_cpu_ids))
-+		nr_irqs = NR_VECTORS * nr_cpu_ids;
-+
-+	nr = (gsi_top + nr_legacy_irqs()) + 8 * nr_cpu_ids;
-+#if defined(CONFIG_PCI_MSI) || defined(CONFIG_HT_IRQ)
-+	/*
-+	 * for MSI and HT dyn irq
-+	 */
-+	if (gsi_top <= NR_IRQS_LEGACY)
-+		nr +=  8 * nr_cpu_ids;
-+	else
-+		nr += gsi_top * 16;
++#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
++extern void irq_chip_ack_parent(struct irq_data *data);
++extern int irq_chip_retrigger_hierarchy(struct irq_data *data);
 +#endif
-+	if (nr < nr_irqs)
-+		nr_irqs = nr;
 +
-+	return 0;
-+}
+ /* Handling of unhandled and spurious interrupts: */
+ extern void note_interrupt(unsigned int irq, struct irq_desc *desc,
+ 			   irqreturn_t action_ret);
+diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
+index 46bd5e2190c3..58ed9eda091e 100644
+--- a/kernel/irq/chip.c
++++ b/kernel/irq/chip.c
+@@ -821,3 +821,20 @@ void irq_cpu_offline(void)
+ 		raw_spin_unlock_irqrestore(&desc->lock, flags);
+ 	}
+ }
 +
-+int __init arch_early_irq_init(void)
++#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
++void irq_chip_ack_parent(struct irq_data *data)
 +{
-+	return arch_early_ioapic_init();
++	data = data->parent_data;
++	data->chip->irq_ack(data);
 +}
 +
- static void __setup_vector_irq(int cpu)
- {
- 	/* Initialize vector_irq on a new cpu */
++int irq_chip_retrigger_hierarchy(struct irq_data *data)
++{
++	for (data = data->parent_data; data; data = data->parent_data)
++		if (data->chip && data->chip->irq_retrigger)
++			return data->chip->irq_retrigger(data);
++
++	return -ENOSYS;
++}
++#endif
 -- 
 1.7.10.4
 
