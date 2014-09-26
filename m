@@ -1,154 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:56978 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755254AbaIVXIo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 19:08:44 -0400
-Received: by mail-ie0-f182.google.com with SMTP id tp5so3102743ieb.41
-        for <linux-pci@vger.kernel.org>; Mon, 22 Sep 2014 16:08:43 -0700 (PDT)
-Date: Mon, 22 Sep 2014 17:08:40 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>, x86@kernel.org,
-	linux-ia64@vger.kernel.org
-Subject: Re: [PATCH v2 4/5] MSI: Use __get_cached_msi_msg() instead of
- get_cached_msi_msg()
-Message-ID: <20140922230840.GM1880@google.com>
-References: <1408694880-8260-1-git-send-email-wangyijing@huawei.com>
- <1408694880-8260-5-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <542505B3.7040208@huawei.com>
+Date: Fri, 26 Sep 2014 14:20:35 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1408694880-8260-5-git-send-email-wangyijing@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Liviu Dudau <liviu@dudau.co.uk>,
+	Thierry Reding <thierry.reding@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
+ in all platforms
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com> <20140925074235.GN12423@ulmo> <20140925144855.GB31157@bart.dudau.co.uk> <20140925164937.GB30382@ulmo> <20140925171612.GC31157@bart.dudau.co.uk>
+In-Reply-To: <20140925171612.GC31157@bart.dudau.co.uk>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 22, 2014 at 04:07:59PM +0800, Yijing Wang wrote:
-> Get_cached_msi_msg() only be called in two places,
-> ia64_set_msi_irq_affinity() and sn_set_msi_irq_affinity().
+>> The PCI core can already deal with that. An MSI chip can be set per bus
+>> and the weak pcibios_add_bus() can be used to set that. Often it might
+>> not even be necessary to do it via pcibios_add_bus() if you create the
+>> root bus directly, since you can attach the MSI chip at that time.
 > 
-> The code flow is:
-> irq = irq_data->irq
->     get_cached_msi_msg(irq)
-> 	    irq_get_msi_desc(irq)
-> 		    irq_get_irq_data(irq)
-> 			    msi_desc = irq_data->desc
->         __get_cached_msi_msg(msi_desc, msg)
+> But I'm thinking that we need to move away from pcibios_add_bus() interface to do
+> something that should be generic. You don't need to be called for every bus when all
+> you want is just the root bus in order to add the MSI chip. Also, from looking at
+> the current patchset, a lot of architectures would set the MSI chip to a global
+> variable, which means you don't have an option to choose the MSI chip based on the
+> bus.
+
+I also agree to remove the pcibios_add_bus() in arm which call .add_bus() to associate msi_chip
+and PCI bus.
+
+In my opinions, all PCI devices under the same PCI hostbridge must share same msi chip, right ?
+So if we can associate msi chip and PCI hostbridge, every PCI device can find correct msi chip.
+PCI hostbridge private attributes can be saved in PCI sysdata, and this data will be propagate to
+PCI root bus and its child buses.
+
 > 
-> This is crazy, we should use __get_cached_msi_msg(irq_data->desc, msg)
-> directly to simplify the flow, and remove get_cached_msi_msg().
-> Finally, rename __get_cached_msi_msg() to get_cached_msi_msg().
-
-This looks like a nice cleanup.  It'd be easier to review if this were two
-patches:
-
-  1) Convert all callers to use __get_cached_msi_msg() rather than
-     get_cached_msi_msg().
-  2) Remove the unused get_cached_msi_msg() and rename
-     __get_cached_msi_msg() to get_cached_msi_msg().
-
-Maybe even the second patch should be split into remove and rename patches.
-
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> CC: Tony Luck <tony.luck@intel.com>
-> CC: Thomas Gleixner <tglx@linutronix.de>
-> CC: x86@kernel.org
-> CC: linux-ia64@vger.kernel.org
-> ---
->  arch/ia64/kernel/msi_ia64.c    |    2 +-
->  arch/ia64/sn/kernel/msi_sn.c   |    4 ++--
->  arch/x86/kernel/apic/io_apic.c |    2 +-
->  drivers/pci/msi.c              |    9 +--------
->  include/linux/msi.h            |    3 +--
->  5 files changed, 6 insertions(+), 14 deletions(-)
+>>
+>>> What I would like to see is a way of creating the pci_host_bridge structure outside
+>>> the pci_create_root_bus(). That would then allow us to pass this sort of platform
+>>> details like associated msi_chip into the host bridge and the child busses will
+>>> have an easy way of finding the information needed by finding the root bus and then
+>>> the host bridge structure. Then the generic pci_scan_root_bus() can be used by (mostly)
+>>> everyone and the drivers can remove their kludges that try to work around the
+>>> current limitations.
+>>
+>> I think both issues are orthogonal. Last time I checked a lot of work
+>> was still necessary to unify host bridges enough so that it could be
+>> shared across architectures. But perhaps some of that work has
+>> happened in the meantime.
 > 
-> diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
-> index c430f91..4efe748 100644
-> --- a/arch/ia64/kernel/msi_ia64.c
-> +++ b/arch/ia64/kernel/msi_ia64.c
-> @@ -23,7 +23,7 @@ static int ia64_set_msi_irq_affinity(struct irq_data *idata,
->  	if (irq_prepare_move(irq, cpu))
->  		return -1;
->  
-> -	get_cached_msi_msg(irq, &msg);
-> +	get_cached_msi_msg(idata->msi_desc, &msg);
->  
->  	addr = msg.address_lo;
->  	addr &= MSI_ADDR_DEST_ID_MASK;
-> diff --git a/arch/ia64/sn/kernel/msi_sn.c b/arch/ia64/sn/kernel/msi_sn.c
-> index afc58d2..8bec242 100644
-> --- a/arch/ia64/sn/kernel/msi_sn.c
-> +++ b/arch/ia64/sn/kernel/msi_sn.c
-> @@ -175,8 +175,8 @@ static int sn_set_msi_irq_affinity(struct irq_data *data,
->  	 * Release XIO resources for the old MSI PCI address
->  	 */
->  
-> -	get_cached_msi_msg(irq, &msg);
-> -        sn_pdev = (struct pcidev_info *)sn_irq_info->irq_pciioinfo;
-> +	get_cached_msi_msg(data->msi_desc, &msg);
-> +	sn_pdev = (struct pcidev_info *)sn_irq_info->irq_pciioinfo;
->  	pdev = sn_pdev->pdi_linux_pcidev;
->  	provider = SN_PCIDEV_BUSPROVIDER(pdev);
->  
-> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-> index 29290f5..e877cfb 100644
-> --- a/arch/x86/kernel/apic/io_apic.c
-> +++ b/arch/x86/kernel/apic/io_apic.c
-> @@ -3145,7 +3145,7 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
->  	if (ret)
->  		return ret;
->  
-> -	__get_cached_msi_msg(data->msi_desc, &msg);
-> +	get_cached_msi_msg(data->msi_desc, &msg);
->  
->  	msg.data &= ~MSI_DATA_VECTOR_MASK;
->  	msg.data |= MSI_DATA_VECTOR(cfg->vector);
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 0d0f163..8746ecd 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -296,7 +296,7 @@ void read_msi_msg(unsigned int irq, struct msi_msg *msg)
->  	__read_msi_msg(entry, msg);
->  }
->  
-> -void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
-> +void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->  {
->  	/* Assert that the cache is valid, assuming that
->  	 * valid messages are not all-zeroes. */
-> @@ -306,13 +306,6 @@ void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->  	*msg = entry->msg;
->  }
->  
-> -void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg)
-> -{
-> -	struct msi_desc *entry = irq_get_msi_desc(irq);
-> -
-> -	__get_cached_msi_msg(entry, msg);
-> -}
-> -
->  void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->  {
->  	if (entry->dev->current_state != PCI_D0) {
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index fff7201..329ec73 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -16,10 +16,9 @@ struct msi_desc;
->  void mask_msi_irq(struct irq_data *data);
->  void unmask_msi_irq(struct irq_data *data);
->  void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-> -void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-> +void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->  void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->  void read_msi_msg(unsigned int irq, struct msi_msg *msg);
-> -void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
->  void write_msi_msg(unsigned int irq, struct msi_msg *msg);
->  
->  struct msi_desc {
-> -- 
-> 1.7.1
+> Breaking out the host bridge creation from root bus creation is not difficult, just not
+> agree upon. That would be the first step in making the generic host brige structure
+> useful for sharing, specially if used as a sort of "parent" structure that you can
+> wrap with your actual host bridge structure.
+
+Breaking out the host bridge creation is a good idea, but there need a lot of changes, we can
+do it in another series. And if we save msi chip in pci sysdata now, it will be easy to
+move it to generic pci host bridge. We can also move the pci domain number and other common info to it.
+
+Thanks!
+Yijing.
+
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>> But like I said, when you create the root bus, you can easily attach the
+>> MSI chip to it.
+> 
+> Not if you want to use the generic pci_scan_root_bus() function. One needs to copy the code
+> and add their own needed modifications. Which makes it hard to fix bugs and prevents code
+> reuse.
+> 
+> Best regards,
+> Liviu
+> 
+>>
+>> Thierry
+> 
+> 
+> 
+
+
+-- 
+Thanks!
+Yijing
+
