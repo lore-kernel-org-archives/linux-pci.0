@@ -1,235 +1,151 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:57111 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753438AbaIAOLV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Sep 2014 10:11:21 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dmitry Torokhov <dtor@google.com>,
-	Aubrey Li <aubrey.li@intel.com>
-Subject: [PATCH 10/13] genirq: Simplify wakeup mechanism
-Date: Mon, 01 Sep 2014 16:27:22 +0200
-Message-ID: <1618455.xcqKAKx7vG@vostro.rjw.lan>
-In-Reply-To: <2516134.pmOxkEuOOy@vostro.rjw.lan>
-References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan> <2516134.pmOxkEuOOy@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC v1 04/28] x86, irq: Refine the way to allocate irq_cfg for legacy IRQs
+Date: Fri, 26 Sep 2014 22:57:34 +0800
+Message-Id: <1411743478-31435-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+To support legacy ISA IRQs, we need to preallocate irq_cfg structures
+for legacy ISA IRQs. Refine the way to allocate irq_cfg for legacy ISA
+IRQs, so it's more friend to hierarchy irqdomain implementation.
 
-Currently we suspend wakeup interrupts by lazy disabling them and
-check later whether the interrupt has fired, but that's not sufficient
-for suspend to idle as there is no way to check that once we
-transitioned into the CPU idle state.
-
-So we change the mechanism in the following way:
-
-1) Leave the wakeup interrupts enabled across suspend
-
-2) Add a check to irq_may_run() which is called at the beginning of
-   each flow handler whether the interrupt is an armed wakeup source.
-
-   This check is basically free as it just extends the existing check
-   for IRQD_IRQ_INPROGRESS. So no new conditional in the hot path.
-
-   If the IRQD_WAKEUP_ARMED flag is set, then the interrupt is
-   disabled, marked as pending/suspended and the pm core is notified
-   about the wakeup event.
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-[ rjw: syscore.c and irq_pm_check_wakeup() in pm.c ]
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/base/syscore.c    |    7 ++---
- include/linux/interrupt.h |    5 ----
- kernel/irq/chip.c         |   20 +++++++++++++++-
- kernel/irq/internals.h    |    2 +
- kernel/irq/pm.c           |   55 ++++++++++++++++++++++++----------------------
- 5 files changed, 53 insertions(+), 36 deletions(-)
+ arch/x86/kernel/apic/io_apic.c |   13 +-----------
+ arch/x86/kernel/apic/vector.c  |   43 ++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 42 insertions(+), 14 deletions(-)
 
-Index: linux-pm/drivers/base/syscore.c
-===================================================================
---- linux-pm.orig/drivers/base/syscore.c
-+++ linux-pm/drivers/base/syscore.c
-@@ -9,7 +9,7 @@
- #include <linux/syscore_ops.h>
- #include <linux/mutex.h>
- #include <linux/module.h>
--#include <linux/interrupt.h>
-+#include <linux/suspend.h>
- #include <trace/events/power.h>
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 61cf53b65225..875c40bdbd16 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -264,8 +264,7 @@ static void free_ioapic_saved_registers(int idx)
  
- static LIST_HEAD(syscore_ops_list);
-@@ -54,9 +54,8 @@ int syscore_suspend(void)
- 	pr_debug("Checking wakeup interrupts\n");
- 
- 	/* Return error code if there are any wakeup interrupts pending. */
--	ret = check_wakeup_irqs();
--	if (ret)
--		return ret;
-+	if (pm_wakeup_pending())
-+		return -EBUSY;
- 
- 	WARN_ONCE(!irqs_disabled(),
- 		"Interrupts enabled before system core suspend.\n");
-Index: linux-pm/include/linux/interrupt.h
-===================================================================
---- linux-pm.orig/include/linux/interrupt.h
-+++ linux-pm/include/linux/interrupt.h
-@@ -193,11 +193,6 @@ extern void irq_wake_thread(unsigned int
- /* The following three functions are for the core kernel use only. */
- extern void suspend_device_irqs(void);
- extern void resume_device_irqs(void);
--#ifdef CONFIG_PM_SLEEP
--extern int check_wakeup_irqs(void);
--#else
--static inline int check_wakeup_irqs(void) { return 0; }
--#endif
- 
- /**
-  * struct irq_affinity_notify - context for notification of IRQ affinity changes
-Index: linux-pm/kernel/irq/chip.c
-===================================================================
---- linux-pm.orig/kernel/irq/chip.c
-+++ linux-pm/kernel/irq/chip.c
-@@ -344,8 +344,26 @@ static bool irq_check_poll(struct irq_de
- 
- static bool irq_may_run(struct irq_desc *desc)
+ int __init arch_early_ioapic_init(void)
  {
--	if (!irqd_irq_inprogress(&desc->irq_data))
-+	unsigned int mask = IRQD_IRQ_INPROGRESS | IRQD_WAKEUP_ARMED;
-+
-+	/*
-+	 * If the interrupt is not in progress and is not an armed
-+	 * wakeup interrupt, proceed.
-+	 */
-+	if (!irqd_has_set(&desc->irq_data, mask))
- 		return true;
-+
-+	/*
-+	 * If the interrupt is an armed wakeup source, mark it pending
-+	 * and suspended, disable it and notify the pm core about the
-+	 * event.
-+	 */
-+	if (irq_pm_check_wakeup(desc))
-+		return false;
-+
-+	/*
-+	 * Handle a potential concurrent poll on a different core.
-+	 */
- 	return irq_check_poll(desc);
- }
+-	struct irq_cfg *cfg;
+-	int i, node = cpu_to_node(0);
++	int i;
  
-Index: linux-pm/kernel/irq/pm.c
-===================================================================
---- linux-pm.orig/kernel/irq/pm.c
-+++ linux-pm/kernel/irq/pm.c
-@@ -9,10 +9,24 @@
- #include <linux/irq.h>
- #include <linux/module.h>
- #include <linux/interrupt.h>
-+#include <linux/suspend.h>
- #include <linux/syscore_ops.h>
+ 	if (!nr_legacy_irqs())
+ 		io_apic_irqs = ~0UL;
+@@ -273,16 +272,6 @@ int __init arch_early_ioapic_init(void)
+ 	for_each_ioapic(i)
+ 		alloc_ioapic_saved_registers(i);
  
- #include "internals.h"
- 
-+bool irq_pm_check_wakeup(struct irq_desc *desc)
-+{
-+	if (irqd_is_wakeup_armed(&desc->irq_data)) {
-+		irqd_clear(&desc->irq_data, IRQD_WAKEUP_ARMED);
-+		desc->istate |= IRQS_SUSPENDED | IRQS_PENDING;
-+		desc->depth++;
-+		irq_disable(desc);
-+		pm_system_wakeup();
-+		return true;
-+	}
-+	return false;
-+}
-+
- /*
-  * Called from __setup_irq() with desc->lock held after @action has
-  * been installed in the action chain.
-@@ -54,8 +68,16 @@ static bool suspend_device_irq(struct ir
- 	if (!desc->action || desc->no_suspend_depth)
- 		return false;
- 
--	if (irqd_is_wakeup_set(&desc->irq_data))
-+	if (irqd_is_wakeup_set(&desc->irq_data)) {
- 		irqd_set(&desc->irq_data, IRQD_WAKEUP_ARMED);
-+		/*
-+		 * We return true here to force the caller to issue
-+		 * synchronize_irq(). We need to make sure that the
-+		 * IRQD_WAKEUP_ARMED is visible before we return from
-+		 * suspend_device_irqs().
-+		 */
-+		return true;
-+	}
- 
- 	desc->istate |= IRQS_SUSPENDED;
- 	__disable_irq(desc, irq);
-@@ -79,9 +101,13 @@ static bool suspend_device_irq(struct ir
-  * for this purpose.
-  *
-  * So we disable all interrupts and mark them IRQS_SUSPENDED except
-- * for those which are unused and those which are marked as not
-+ * for those which are unused, those which are marked as not
-  * suspendable via an interrupt request with the flag IRQF_NO_SUSPEND
-- * set.
-+ * set and those which are marked as active wakeup sources.
-+ *
-+ * The active wakeup sources are handled by the flow handler entry
-+ * code which checks for the IRQD_WAKEUP_ARMED flag, suspends the
-+ * interrupt and notifies the pm core about the wakeup.
-  */
- void suspend_device_irqs(void)
- {
-@@ -173,26 +199,3 @@ void resume_device_irqs(void)
- 	resume_irqs(false);
- }
- EXPORT_SYMBOL_GPL(resume_device_irqs);
--
--/**
-- * check_wakeup_irqs - check if any wake-up interrupts are pending
-- */
--int check_wakeup_irqs(void)
--{
--	struct irq_desc *desc;
--	int irq;
--
--	for_each_irq_desc(irq, desc) {
--		/*
--		 * Only interrupts which are marked as wakeup source
--		 * and have not been disabled before the suspend check
--		 * can abort suspend.
--		 */
--		if (irqd_is_wakeup_set(&desc->irq_data)) {
--			if (desc->depth == 1 && desc->istate & IRQS_PENDING)
--				return -EBUSY;
--		}
+-	/*
+-	 * For legacy IRQ's, start with assigning irq0 to irq15 to
+-	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
+-	 */
+-	for (i = 0; i < nr_legacy_irqs(); i++) {
+-		cfg = alloc_irq_and_cfg_at(i, node);
+-		cfg->vector = IRQ0_VECTOR + i;
+-		cpumask_setall(cfg->domain);
 -	}
 -
--	return 0;
--}
-Index: linux-pm/kernel/irq/internals.h
-===================================================================
---- linux-pm.orig/kernel/irq/internals.h
-+++ linux-pm/kernel/irq/internals.h
-@@ -196,9 +196,11 @@ static inline void kstat_incr_irqs_this_
+ 	return 0;
  }
  
- #ifdef CONFIG_PM_SLEEP
-+bool irq_pm_check_wakeup(struct irq_desc *desc);
- void irq_pm_install_action(struct irq_desc *desc, struct irqaction *action);
- void irq_pm_remove_action(struct irq_desc *desc, struct irqaction *action);
- #else
-+static inline bool irq_pm_check_wakeup(struct irq_desc *desc) { return false; }
- static inline void
- irq_pm_install_action(struct irq_desc *desc, struct irqaction *action) { }
- static inline void
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 68f8032d181c..1fb9e602e3ae 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -24,6 +24,9 @@
+ struct irq_domain *x86_vector_domain;
+ static DEFINE_RAW_SPINLOCK(vector_lock);
+ static struct irq_chip vector_chip;
++#ifdef	CONFIG_X86_IO_APIC
++static struct irq_cfg *legacy_irq_cfgs[NR_IRQS_LEGACY];
++#endif
+ 
+ void lock_vector_lock(void)
+ {
+@@ -283,6 +286,10 @@ static void x86_vector_free_irqs(struct irq_domain *domain,
+ 			free_remapped_irq(virq);
+ 			clear_irq_vector(virq + i, irq_data->chip_data);
+ 			free_irq_cfg(irq_data->chip_data);
++#ifdef	CONFIG_X86_IO_APIC
++			if (virq + i < nr_legacy_irqs())
++				legacy_irq_cfgs[virq + i] = NULL;
++#endif
+ 			irq_domain_reset_irq_data(irq_data);
+ 		}
+ 	}
+@@ -303,7 +310,11 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
+ 	for (i = 0; i < nr_irqs; i++) {
+ 		irq_data = irq_domain_get_irq_data(domain, virq + i);
+ 		BUG_ON(!irq_data);
+-		cfg = alloc_irq_cfg(irq_data->node);
++#ifdef	CONFIG_X86_IO_APIC
++		if (virq + i >= nr_legacy_irqs() ||
++		    (cfg = legacy_irq_cfgs[virq + i]) == NULL)
++#endif
++			cfg = alloc_irq_cfg(irq_data->node);
+ 		if (!cfg) {
+ 			err = -ENOMEM;
+ 			goto error;
+@@ -349,11 +360,39 @@ int __init arch_probe_nr_irqs(void)
+ 	if (nr < nr_irqs)
+ 		nr_irqs = nr;
+ 
+-	return 0;
++	return nr_legacy_irqs();
+ }
+ 
++#ifdef	CONFIG_X86_IO_APIC
++static void init_legacy_irqs(void)
++{
++	int i, node = cpu_to_node(0);
++	struct irq_cfg *cfg;
++
++	/*
++	 * For legacy IRQ's, start with assigning irq0 to irq15 to
++	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
++	 */
++	for (i = 0; i < nr_legacy_irqs(); i++) {
++		cfg = legacy_irq_cfgs[i] = alloc_irq_cfg(node);
++		BUG_ON(!cfg);
++		/*
++		 * For legacy IRQ's, start with assigning irq0 to irq15 to
++		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
++		 */
++		cfg->vector = IRQ0_VECTOR + i;
++		cpumask_setall(cfg->domain);
++		irq_set_chip_data(i, cfg);
++	}
++}
++#else
++static void init_legacy_irqs(void) { }
++#endif
++
+ int __init arch_early_irq_init(void)
+ {
++	init_legacy_irqs();
++
+ 	x86_vector_domain = irq_domain_add_tree(NULL, &x86_vector_domain_ops,
+ 						NULL);
+ 	BUG_ON(x86_vector_domain == NULL);
+-- 
+1.7.10.4
 
