@@ -1,130 +1,155 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <5424D3DE.8080406@huawei.com>
-Date: Fri, 26 Sep 2014 10:47:58 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
- in all platforms
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com> <20140925142340.GE20089@laptop.dumpdata.com>
-In-Reply-To: <20140925142340.GE20089@laptop.dumpdata.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-arch-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [Patch v2 03/18] x86, irq: Convert irq_2_pin list to generic list
+Date: Fri, 26 Sep 2014 21:29:40 +0800
+Message-Id: <1411738196-29958-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/25 22:23, Konrad Rzeszutek Wilk wrote:
-> On Thu, Sep 25, 2014 at 11:14:10AM +0800, Yijing Wang wrote:
->> This series is based Bjorn's pci/msi branch
->> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/msi
-> 
-> Is there a git tree for these patches?
+From: Yinghai Lu <yinghai@kernel.org>
 
-Hi Konrad, my git tree in company can not be pulled from outside.
-I will try to update this series to github these days.
+Use generic list to replace private list implementation so we could
+use generic helper functions to operate it.
 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: Joerg Roedel <joro@8bytes.org>
+---
+ arch/x86/include/asm/hw_irq.h  |    2 +-
+ arch/x86/kernel/apic/io_apic.c |   28 +++++++++++-----------------
+ 2 files changed, 12 insertions(+), 18 deletions(-)
 
->>
->> Currently, there are a lot of weak arch functions in MSI code.
->> Thierry Reding Introduced MSI chip framework to configure MSI/MSI-X in arm.
->> This series use MSI chip framework to refactor MSI code across all platforms
->> to eliminate weak arch functions. Then all MSI irqs will be managed in a 
->> unified framework. Because this series changed a lot of ARCH MSI code,
->> so tests in the platforms which MSI code modified are warmly welcomed!
->>
->> v1->v2:
->> Add a patch to make s390 MSI code build happy between patch "x86/xen/MSI: E.."
->> and "s390/MSI: Use MSI..". Fix several typo problems found by Lucas.
->>
->> RFC->v1: 
->> Updated "[patch 4/21] x86/xen/MSI: Eliminate...", export msi_chip instead
->> of #ifdef to fix MSI bug in xen running in x86. 
->> Rename arch_get_match_msi_chip() to arch_find_msi_chip().
->> Drop use struct device as the msi_chip argument, we will do that
->> later in another patchset.
->>
->> Yijing Wang (22):
->>   PCI/MSI: Clean up struct msi_chip argument
->>   PCI/MSI: Remove useless bus->msi assignment
->>   MSI: Remove the redundant irq_set_chip_data()
->>   x86/xen/MSI: Eliminate arch_msix_mask_irq() and arch_msi_mask_irq()
->>   s390/MSI: Use __msi_mask_irq() instead of default_msi_mask_irq()
->>   PCI/MSI: Introduce weak arch_find_msi_chip() to find MSI chip
->>   PCI/MSI: Refactor struct msi_chip to make it become more common
->>   x86/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   x86/xen/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   Irq_remapping/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   x86/MSI: Remove unused MSI weak arch functions
->>   MIPS/Octeon/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   MIPS/Xlp: Remove the dead function destroy_irq() to fix build error
->>   MIPS/Xlp/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   MIPS/Xlr/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   Powerpc/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   s390/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   arm/iop13xx/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   IA64/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   Sparc/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   tile/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   PCI/MSI: Clean up unused MSI arch functions
->>
->>  arch/arm/mach-iop13xx/include/mach/pci.h |    2 +
->>  arch/arm/mach-iop13xx/iq81340mc.c        |    1 +
->>  arch/arm/mach-iop13xx/iq81340sc.c        |    1 +
->>  arch/arm/mach-iop13xx/msi.c              |    9 ++-
->>  arch/arm/mach-iop13xx/pci.c              |    6 ++
->>  arch/ia64/kernel/msi_ia64.c              |   18 ++++-
->>  arch/mips/pci/msi-octeon.c               |   35 ++++++----
->>  arch/mips/pci/msi-xlp.c                  |   18 ++++--
->>  arch/mips/pci/pci-xlr.c                  |   15 ++++-
->>  arch/powerpc/kernel/msi.c                |   14 +++-
->>  arch/s390/pci/pci.c                      |   18 ++++-
->>  arch/sparc/kernel/pci.c                  |   14 +++-
->>  arch/tile/kernel/pci_gx.c                |   14 +++-
->>  arch/x86/include/asm/apic.h              |    4 +
->>  arch/x86/include/asm/pci.h               |    4 +-
->>  arch/x86/include/asm/x86_init.h          |    7 --
->>  arch/x86/kernel/apic/io_apic.c           |   16 ++++-
->>  arch/x86/kernel/x86_init.c               |   34 ---------
->>  arch/x86/pci/xen.c                       |   60 +++++++++-------
->>  drivers/iommu/irq_remapping.c            |    9 ++-
->>  drivers/irqchip/irq-armada-370-xp.c      |    8 +--
->>  drivers/pci/host/pci-tegra.c             |    8 ++-
->>  drivers/pci/host/pcie-designware.c       |    4 +-
->>  drivers/pci/host/pcie-rcar.c             |    8 ++-
->>  drivers/pci/msi.c                        |  114 ++++++++++++++----------------
->>  drivers/pci/probe.c                      |    1 -
->>  include/linux/msi.h                      |   26 ++-----
->>  27 files changed, 266 insertions(+), 202 deletions(-)
->>
-> 
-> .
-> 
-
-
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 64330c2e172e..28f283988c8e 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -138,7 +138,7 @@ struct irq_2_irte {
+  * Most irqs are mapped 1:1 with pins.
+  */
+ struct irq_cfg {
+-	struct irq_pin_list	*irq_2_pin;
++	struct list_head	irq_2_pin;
+ 	cpumask_var_t		domain;
+ 	cpumask_var_t		old_domain;
+ 	u8			vector;
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index bad3b1268070..d8c4339d87e7 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -74,7 +74,7 @@
+ 		for_each_pin((idx), (pin))
+ 
+ #define for_each_irq_pin(entry, head) \
+-	for (entry = head; entry; entry = entry->next)
++	list_for_each_entry(entry, &head, list)
+ 
+ /*
+  *      Is the SiS APIC rmw bug present ?
+@@ -229,8 +229,8 @@ void mp_save_irq(struct mpc_intsrc *m)
+ }
+ 
+ struct irq_pin_list {
++	struct list_head list;
+ 	int apic, pin;
+-	struct irq_pin_list *next;
+ };
+ 
+ static struct irq_pin_list *alloc_irq_pin_list(int node)
+@@ -297,6 +297,7 @@ static struct irq_cfg *alloc_irq_cfg(unsigned int irq, int node)
+ 		goto out_cfg;
+ 	if (!zalloc_cpumask_var_node(&cfg->old_domain, GFP_KERNEL, node))
+ 		goto out_domain;
++	INIT_LIST_HEAD(&cfg->irq_2_pin);
+ 	return cfg;
+ out_domain:
+ 	free_cpumask_var(cfg->domain);
+@@ -460,15 +461,12 @@ static void ioapic_mask_entry(int apic, int pin)
+  */
+ static int __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pin)
+ {
+-	struct irq_pin_list **last, *entry;
++	struct irq_pin_list *entry;
+ 
+ 	/* don't allow duplicates */
+-	last = &cfg->irq_2_pin;
+-	for_each_irq_pin(entry, cfg->irq_2_pin) {
++	for_each_irq_pin(entry, cfg->irq_2_pin)
+ 		if (entry->apic == apic && entry->pin == pin)
+ 			return 0;
+-		last = &entry->next;
+-	}
+ 
+ 	entry = alloc_irq_pin_list(node);
+ 	if (!entry) {
+@@ -479,22 +477,19 @@ static int __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pi
+ 	entry->apic = apic;
+ 	entry->pin = pin;
+ 
+-	*last = entry;
++	list_add_tail(&entry->list, &cfg->irq_2_pin);
+ 	return 0;
+ }
+ 
+ static void __remove_pin_from_irq(struct irq_cfg *cfg, int apic, int pin)
+ {
+-	struct irq_pin_list **last, *entry;
++	struct irq_pin_list *tmp, *entry;
+ 
+-	last = &cfg->irq_2_pin;
+-	for_each_irq_pin(entry, cfg->irq_2_pin)
++	list_for_each_entry_safe(entry, tmp, &cfg->irq_2_pin, list)
+ 		if (entry->apic == apic && entry->pin == pin) {
+-			*last = entry->next;
++			list_del(&entry->list);
+ 			kfree(entry);
+ 			return;
+-		} else {
+-			last = &entry->next;
+ 		}
+ }
+ 
+@@ -1739,8 +1734,7 @@ __apicdebuginit(void) print_IO_APICs(void)
+ 		cfg = irq_cfg(irq);
+ 		if (!cfg)
+ 			continue;
+-		entry = cfg->irq_2_pin;
+-		if (!entry)
++		if (list_empty(&cfg->irq_2_pin))
+ 			continue;
+ 		printk(KERN_DEBUG "IRQ%d ", irq);
+ 		for_each_irq_pin(entry, cfg->irq_2_pin)
+@@ -4063,7 +4057,7 @@ void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq)
+ 
+ 	ioapic_mask_entry(ioapic, pin);
+ 	__remove_pin_from_irq(cfg, ioapic, pin);
+-	WARN_ON(cfg->irq_2_pin != NULL);
++	WARN_ON(!list_empty(&cfg->irq_2_pin));
+ 	arch_teardown_hwirq(virq);
+ }
+ 
 -- 
-Thanks!
-Yijing
+1.7.10.4
 
