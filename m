@@ -1,79 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:62656 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750774AbaIYGum (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Sep 2014 02:50:42 -0400
-MIME-Version: 1.0
-In-Reply-To: <CA+sq2CdKkuOpqwPZdAVT90Xkf_K97ArcUUJjv2f9v4WTDmwXxA@mail.gmail.com>
-References: <CANwwZzUvLHVGshgqrf_w4Pz8wP1H95YAXWLpWFTLD1hWKE_voA@mail.gmail.com>
-	<CA+sq2CdKkuOpqwPZdAVT90Xkf_K97ArcUUJjv2f9v4WTDmwXxA@mail.gmail.com>
-Date: Thu, 25 Sep 2014 12:20:40 +0530
-Message-ID: <CANwwZzVrB+OndT4HSwe7eje0dMJqBCZaCCemh4EdPB=3SDtRkw@mail.gmail.com>
-Subject: Re: Can a PF driver access the VF config space, BAR(MMIO) etc?
-From: Bob Biloxi <iambobbiloxi@gmail.com>
-To: Sunil Kovvuri <sunil.kovvuri@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC v1 21/28] x86, irq: Kill struct io_apic_irq_attr
+Date: Fri, 26 Sep 2014 22:57:51 +0800
+Message-Id: <1411743478-31435-22-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Now there's no user of struct io_apic_irq_attr anymore, so kill it.
 
-Thanks so much for the quick reply! This is really helpful.
-I will try to do the same and would get back if i face any difficulties.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h |    7 -------
+ arch/x86/kernel/apic/io_apic.c |   10 ----------
+ 2 files changed, 17 deletions(-)
 
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index f58cf21ced59..c2c1a8b7f39d 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -157,13 +157,6 @@ extern int restore_ioapic_entries(void);
+ extern void setup_ioapic_ids_from_mpc(void);
+ extern void setup_ioapic_ids_from_mpc_nocheck(void);
+ 
+-struct io_apic_irq_attr {
+-	int ioapic;
+-	int ioapic_pin;
+-	int trigger;
+-	int polarity;
+-};
+-
+ enum ioapic_domain_type {
+ 	IOAPIC_DOMAIN_INVALID,
+ 	IOAPIC_DOMAIN_LEGACY,
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index ffa87ef3a2aa..2ccccfdbb682 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2953,16 +2953,6 @@ int mp_ioapic_registered(u32 gsi_base)
+ 	return 0;
+ }
+ 
+-static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
+-					int ioapic, int ioapic_pin,
+-					int trigger, int polarity)
+-{
+-	irq_attr->ioapic	= ioapic;
+-	irq_attr->ioapic_pin	= ioapic_pin;
+-	irq_attr->trigger	= trigger;
+-	irq_attr->polarity	= polarity;
+-}
+-
+ static int mp_irqdomain_get_attr(int irq, u32 gsi, struct mp_pin_info *pinfo,
+ 				 struct irq_alloc_info *info)
+ {
+-- 
+1.7.10.4
 
-Thanks again!
-
-Best Regards,
-Bob
-
-On Wed, Sep 24, 2014 at 11:12 PM, Sunil Kovvuri <sunil.kovvuri@gmail.com> wrote:
-> If you anyway want to simulate VF functionality in PF driver itself,
-> i am not sure why do you need to access VF's config space from PF.
->
-> FYI, VF's BAR(MMIO) are not used, MMIO regions are carved using
-> VF BARs in PF's SRIOV config space.
->
-> VFx BAR0 = PF SRIOV BAR0 + BAR_SIZE * x (VF_NUMBER);
->
-> For accessing VF's MMIO regions you can try mapping
-> PF's pci_dev->resource[PCI_IOV_RESOURCES] and using above formula
-> to get exact MMIO base for corresponding VF.
->
-> Regards,
-> Sunil.
->
-> On Wed, Sep 24, 2014 at 10:10 PM, Bob Biloxi <iambobbiloxi@gmail.com> wrote:
->> Hi,
->>
->> I am new to writing pci sriov drivers. So i could use your help and
->> expertise here....
->>
->> As I understand once sriov is enabled, the PF driver can access the
->> PF(Physical Function) configuration space, BAR(MMIO) etc and the VF
->> driver can access the VF(Virtual Function) configuration space,
->> BAR(MMIO)...
->>
->> Is it possible for a PF driver to access the VF config space, BAR(MMIO)?
->> If yes, can you please point me as to what needs to be done in order
->> to do it(existing driver sources will be really helpful).
->>
->> Now as to why this requirement is if the PF driver is ready and the VF
->> driver is still under development, and I want to simulate the VF
->> functionality from PF itself.
->>
->> It would be of immense help to me if anyone can help me understand my
->> aforementioned query.
->>
->>
->> Thanks a lot!!!
->>
->>
->> Best Regards,
->> Bob
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
