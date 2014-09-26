@@ -1,67 +1,222 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:62886 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750946AbaIQFK2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Sep 2014 01:10:28 -0400
-Received: by mail-pd0-f182.google.com with SMTP id w10so1331934pde.27
-        for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 22:10:28 -0700 (PDT)
-Date: Tue, 16 Sep 2014 23:10:24 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Sachin Kamat <sachin.kamat@samsung.com>
-Cc: linux-pci@vger.kernel.org, pratyush.anand@st.com,
-	viresh.kumar@linaro.org, spk.linux@gmail.com, olof@lixom.net
-Subject: Re: [PATCH 1/1] PCI: spear: Fix build error
-Message-ID: <20140917051024.GA21020@google.com>
-References: <1406892514-27996-1-git-send-email-sachin.kamat@samsung.com>
- <20140813172032.GA7298@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140813172032.GA7298@google.com>
+Received: from mga01.intel.com ([192.55.52.88]:24798 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755133AbaIZN1p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Sep 2014 09:27:45 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v2 05/18] x86, irq: Rename local APIC related functions in io_apic.c as apic_xxx()
+Date: Fri, 26 Sep 2014 21:29:42 +0800
+Message-Id: <1411738196-29958-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 13, 2014 at 11:20:32AM -0600, Bjorn Helgaas wrote:
-> On Fri, Aug 01, 2014 at 04:58:34PM +0530, Sachin Kamat wrote:
-> > We get the following error when built as a module. Though the general fix would
-> > be in this case to export the below mentioned symbols, considering that
-> > dw_pcie_host_init is marked with __init and other PCI drivers do not support
-> > modular build, I have disabled building this driver as a module too.
-> > 
-> > ERROR: "dw_pcie_host_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
-> > ERROR: "dw_handle_msi_irq" [drivers/pci/host/pcie-spear13xx.ko] undefined!
-> > ERROR: "dw_pcie_msi_init" [drivers/pci/host/pcie-spear13xx.ko] undefined!
-> > ERROR: "dw_pcie_cfg_write" [drivers/pci/host/pcie-spear13xx.ko] undefined!
-> > ERROR: "dw_pcie_cfg_read" [drivers/pci/host/pcie-spear13xx.ko] undefined!
-> > ERROR: "dw_pcie_setup_rc" [drivers/pci/host/pcie-spear13xx.ko] undefined!
-> > ERROR: "dw_pcie_link_up" [drivers/pci/host/pcie-spear13xx.ko] undefined!
-> > make[1]: *** [__modpost] Error 1
-> > make: *** [modules] Error 2
-> > 
-> > Signed-off-by: Sachin Kamat <sachin.kamat@samsung.com>
-> 
-> Applied with ack and reviewed-by from Viresh and Jingoo to pci/spear for
-> v3.17, thanks!
+Rename local APIC related functions in io_apic.c as apic_xxx() instead
+of ioapic_xxx(), later they will be moved into separate file.
 
-Sorry, I misplaced this somehow.  I did it again and it's now in my
-for-linus branch, so it should still make it for v3.17.  Sorry about that.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hw_irq.h  |    4 ++--
+ arch/x86/kernel/apic/io_apic.c |   42 ++++++++++++++++++++--------------------
+ arch/x86/platform/uv/uv_irq.c  |    2 +-
+ 3 files changed, 24 insertions(+), 24 deletions(-)
 
-> > ---
-> >  drivers/pci/host/Kconfig | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> > index 8922c37..90f5cca 100644
-> > --- a/drivers/pci/host/Kconfig
-> > +++ b/drivers/pci/host/Kconfig
-> > @@ -56,7 +56,7 @@ config PCI_HOST_GENERIC
-> >  	  controller, such as the one emulated by kvmtool.
-> >  
-> >  config PCIE_SPEAR13XX
-> > -	tristate "STMicroelectronics SPEAr PCIe controller"
-> > +	bool "STMicroelectronics SPEAr PCIe controller"
-> >  	depends on ARCH_SPEAR13XX
-> >  	select PCIEPORTBUS
-> >  	select PCIE_DW
-> > -- 
-> > 1.8.1.2
-> > 
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 8188d648d48c..18e8717bf644 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -137,8 +137,8 @@ extern int assign_irq_vector(int, struct irq_cfg *, const struct cpumask *);
+ extern void send_cleanup_vector(struct irq_cfg *);
+ 
+ struct irq_data;
+-int __ioapic_set_affinity(struct irq_data *, const struct cpumask *,
+-			  unsigned int *dest_id);
++int apic_set_affinity(struct irq_data *, const struct cpumask *,
++		      unsigned int *dest_id);
+ #endif	/* CONFIG_X86_LOCAL_APIC */
+ 
+ #ifdef CONFIG_X86_IO_APIC
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index d8c4339d87e7..50681c97b4cd 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2252,7 +2252,7 @@ static unsigned int startup_ioapic_irq(struct irq_data *data)
+ 	return was_pending;
+ }
+ 
+-static int ioapic_retrigger_irq(struct irq_data *data)
++static int apic_retrigger_irq(struct irq_data *data)
+ {
+ 	struct irq_cfg *cfg = data->chip_data;
+ 	unsigned long flags;
+@@ -2407,8 +2407,8 @@ static void __target_IO_APIC_irq(unsigned int irq, unsigned int dest, struct irq
+  * ->cpu_mask_to_apicid of that in dest_id, or returns -1 and
+  * leaves data->affinity untouched.
+  */
+-int __ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+-			  unsigned int *dest_id)
++int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
++		      unsigned int *dest_id)
+ {
+ 	struct irq_cfg *cfg = data->chip_data;
+ 	unsigned int irq = data->irq;
+@@ -2449,7 +2449,7 @@ int native_ioapic_set_affinity(struct irq_data *data,
+ 		return -EPERM;
+ 
+ 	raw_spin_lock_irqsave(&ioapic_lock, flags);
+-	ret = __ioapic_set_affinity(data, mask, &dest);
++	ret = apic_set_affinity(data, mask, &dest);
+ 	if (!ret) {
+ 		/* Only the high 8 bits are valid. */
+ 		dest = SET_APIC_LOGICAL_ID(dest);
+@@ -2460,7 +2460,7 @@ int native_ioapic_set_affinity(struct irq_data *data,
+ 	return ret;
+ }
+ 
+-static void ack_apic_edge(struct irq_data *data)
++static void apic_ack_edge(struct irq_data *data)
+ {
+ 	irq_complete_move(data->chip_data);
+ 	irq_move_irq(data);
+@@ -2549,7 +2549,7 @@ static inline void ioapic_irqd_unmask(struct irq_data *data,
+ }
+ #endif
+ 
+-static void ack_apic_level(struct irq_data *data)
++static void ack_ioapic_level(struct irq_data *data)
+ {
+ 	struct irq_cfg *cfg = data->chip_data;
+ 	int i, irq = data->irq;
+@@ -2621,10 +2621,10 @@ static struct irq_chip ioapic_chip __read_mostly = {
+ 	.irq_startup		= startup_ioapic_irq,
+ 	.irq_mask		= mask_ioapic_irq,
+ 	.irq_unmask		= unmask_ioapic_irq,
+-	.irq_ack		= ack_apic_edge,
+-	.irq_eoi		= ack_apic_level,
++	.irq_ack		= apic_ack_edge,
++	.irq_eoi		= ack_ioapic_level,
+ 	.irq_set_affinity	= native_ioapic_set_affinity,
+-	.irq_retrigger		= ioapic_retrigger_irq,
++	.irq_retrigger		= apic_retrigger_irq,
+ };
+ 
+ static inline void init_IO_APIC_traps(void)
+@@ -3158,7 +3158,7 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+ 	unsigned int dest;
+ 	int ret;
+ 
+-	ret = __ioapic_set_affinity(data, mask, &dest);
++	ret = apic_set_affinity(data, mask, &dest);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -3182,9 +3182,9 @@ static struct irq_chip msi_chip = {
+ 	.name			= "PCI-MSI",
+ 	.irq_unmask		= unmask_msi_irq,
+ 	.irq_mask		= mask_msi_irq,
+-	.irq_ack		= ack_apic_edge,
++	.irq_ack		= apic_ack_edge,
+ 	.irq_set_affinity	= msi_set_affinity,
+-	.irq_retrigger		= ioapic_retrigger_irq,
++	.irq_retrigger		= apic_retrigger_irq,
+ };
+ 
+ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+@@ -3259,7 +3259,7 @@ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	struct msi_msg msg;
+ 	int ret;
+ 
+-	ret = __ioapic_set_affinity(data, mask, &dest);
++	ret = apic_set_affinity(data, mask, &dest);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -3280,9 +3280,9 @@ static struct irq_chip dmar_msi_type = {
+ 	.name			= "DMAR_MSI",
+ 	.irq_unmask		= dmar_msi_unmask,
+ 	.irq_mask		= dmar_msi_mask,
+-	.irq_ack		= ack_apic_edge,
++	.irq_ack		= apic_ack_edge,
+ 	.irq_set_affinity	= dmar_msi_set_affinity,
+-	.irq_retrigger		= ioapic_retrigger_irq,
++	.irq_retrigger		= apic_retrigger_irq,
+ };
+ 
+ int arch_setup_dmar_msi(unsigned int irq)
+@@ -3310,7 +3310,7 @@ static int hpet_msi_set_affinity(struct irq_data *data,
+ 	unsigned int dest;
+ 	int ret;
+ 
+-	ret = __ioapic_set_affinity(data, mask, &dest);
++	ret = apic_set_affinity(data, mask, &dest);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -3330,9 +3330,9 @@ static struct irq_chip hpet_msi_type = {
+ 	.name = "HPET_MSI",
+ 	.irq_unmask = hpet_msi_unmask,
+ 	.irq_mask = hpet_msi_mask,
+-	.irq_ack = ack_apic_edge,
++	.irq_ack = apic_ack_edge,
+ 	.irq_set_affinity = hpet_msi_set_affinity,
+-	.irq_retrigger = ioapic_retrigger_irq,
++	.irq_retrigger = apic_retrigger_irq,
+ };
+ 
+ int default_setup_hpet_msi(unsigned int irq, unsigned int id)
+@@ -3381,7 +3381,7 @@ ht_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+ 	unsigned int dest;
+ 	int ret;
+ 
+-	ret = __ioapic_set_affinity(data, mask, &dest);
++	ret = apic_set_affinity(data, mask, &dest);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -3393,9 +3393,9 @@ static struct irq_chip ht_irq_chip = {
+ 	.name			= "PCI-HT",
+ 	.irq_mask		= mask_ht_irq,
+ 	.irq_unmask		= unmask_ht_irq,
+-	.irq_ack		= ack_apic_edge,
++	.irq_ack		= apic_ack_edge,
+ 	.irq_set_affinity	= ht_set_affinity,
+-	.irq_retrigger		= ioapic_retrigger_irq,
++	.irq_retrigger		= apic_retrigger_irq,
+ };
+ 
+ int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
+diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
+index b233681af4de..3e8fab740c1d 100644
+--- a/arch/x86/platform/uv/uv_irq.c
++++ b/arch/x86/platform/uv/uv_irq.c
+@@ -204,7 +204,7 @@ uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	struct uv_IO_APIC_route_entry *entry;
+ 	int mmr_pnode;
+ 
+-	if (__ioapic_set_affinity(data, mask, &dest))
++	if (apic_set_affinity(data, mask, &dest))
+ 		return -1;
+ 
+ 	mmr_value = 0;
+-- 
+1.7.10.4
+
