@@ -1,4 +1,8 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:48078 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756060AbaIZO5J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Sep 2014 10:57:09 -0400
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
@@ -9,8 +13,7 @@ To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
 	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>
+	Grant Likely <grant.likely@linaro.org>
 Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
@@ -18,178 +21,117 @@ Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFT v2 18/24] iommu/amd: Clean up unused MSI related code
-Date: Fri, 26 Sep 2014 22:02:19 +0800
-Message-Id: <1411740145-30626-19-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC v1 22/28] x86, irq: Kill x86_io_apic_ops.write and x86_io_apic_ops.modify
+Date: Fri, 26 Sep 2014 22:57:52 +0800
+Message-Id: <1411743478-31435-23-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now MSI interrupt has been converted to new hierarchy irqdomain
-interfaces, so kill legacy MSI related code.
+x86_io_apic_ops.write is always set to native_io_apic_write(),
+and nobody overrides it. So get rid of the indirection by changing
+native_io_apic_write() as io_apic_write() and killing
+x86_io_apic_ops.write.
+
+Do the same for x86_io_apic_ops.modify and native_io_apic_modify().
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/iommu/amd_iommu.c |  115 +--------------------------------------------
- 1 file changed, 2 insertions(+), 113 deletions(-)
+ arch/x86/include/asm/io_apic.h  |   13 -------------
+ arch/x86/include/asm/x86_init.h |    2 --
+ arch/x86/kernel/apic/io_apic.c  |    6 ++++--
+ arch/x86/kernel/x86_init.c      |    2 --
+ 4 files changed, 4 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index d2b9b5e226ae..f0695e3e2af6 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -3940,8 +3940,7 @@ out_unlock:
- 	return table;
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index c2c1a8b7f39d..e978dc335eea 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -209,8 +209,6 @@ extern void disable_ioapic_support(void);
+ 
+ extern void __init native_io_apic_init_mappings(void);
+ extern unsigned int native_io_apic_read(unsigned int apic, unsigned int reg);
+-extern void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int val);
+-extern void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int val);
+ extern void native_disable_io_apic(void);
+ 
+ static inline unsigned int io_apic_read(unsigned int apic, unsigned int reg)
+@@ -218,15 +216,6 @@ static inline unsigned int io_apic_read(unsigned int apic, unsigned int reg)
+ 	return x86_io_apic_ops.read(apic, reg);
  }
  
--static int alloc_irq_index(struct irq_cfg *cfg, struct irq_2_irte *irte_info,
--			   u16 devid, int count)
-+static int alloc_irq_index(u16 devid, int count)
- {
- 	struct irq_remap_table *table;
- 	unsigned long flags;
-@@ -3967,11 +3966,6 @@ static int alloc_irq_index(struct irq_cfg *cfg, struct irq_2_irte *irte_info,
- 				table->table[index - c + 1] = IRTE_ALLOCATED;
+-static inline void io_apic_write(unsigned int apic, unsigned int reg, unsigned int value)
+-{
+-	x86_io_apic_ops.write(apic, reg, value);
+-}
+-static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned int value)
+-{
+-	x86_io_apic_ops.modify(apic, reg, value);
+-}
+-
+ extern void setup_IO_APIC(void);
+ extern void enable_IO_APIC(void);
+ extern void disable_IO_APIC(void);
+@@ -268,8 +257,6 @@ static inline void mp_save_irq(struct mpc_intsrc *m) { };
+ static inline void disable_ioapic_support(void) { }
+ #define native_io_apic_init_mappings	NULL
+ #define native_io_apic_read		NULL
+-#define native_io_apic_write		NULL
+-#define native_io_apic_modify		NULL
+ #define native_disable_io_apic		NULL
+ #endif
  
- 			index -= count - 1;
--
--			cfg->remapped	      = 1;
--			irte_info->devid      = devid;
--			irte_info->index      = index;
--
- 			goto out;
- 		}
- 	}
-@@ -4171,106 +4165,6 @@ static int free_irq(int irq)
- 	return 0;
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index 3755cd2bbb94..398717e7493d 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -185,8 +185,6 @@ struct x86_msi_ops {
+ struct x86_io_apic_ops {
+ 	void		(*init)   (void);
+ 	unsigned int	(*read)   (unsigned int apic, unsigned int reg);
+-	void		(*write)  (unsigned int apic, unsigned int reg, unsigned int value);
+-	void		(*modify) (unsigned int apic, unsigned int reg, unsigned int value);
+ 	void		(*disable)(void);
+ };
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 2ccccfdbb682..f55ab3a8de08 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -299,7 +299,8 @@ unsigned int native_io_apic_read(unsigned int apic, unsigned int reg)
+ 	return readl(&io_apic->data);
  }
  
--static void compose_msi_msg(struct pci_dev *pdev,
--			    unsigned int irq, unsigned int dest,
--			    struct msi_msg *msg, u8 hpet_id)
--{
--	struct irq_2_irte *irte_info;
--	struct irq_cfg *cfg;
--	union irte irte;
--
--	cfg = irq_cfg(irq);
--	if (!cfg)
--		return;
--
--	irte_info = &cfg->irq_2_irte;
--
--	irte.val		= 0;
--	irte.fields.vector	= cfg->vector;
--	irte.fields.int_type    = apic->irq_delivery_mode;
--	irte.fields.destination	= dest;
--	irte.fields.dm		= apic->irq_dest_mode;
--	irte.fields.valid	= 1;
--
--	modify_irte(irte_info->devid, irte_info->index, irte);
--
--	msg->address_hi = MSI_ADDR_BASE_HI;
--	msg->address_lo = MSI_ADDR_BASE_LO;
--	msg->data       = irte_info->index;
--}
--
--static int msi_alloc_irq(struct pci_dev *pdev, int irq, int nvec)
--{
--	struct irq_cfg *cfg;
--	int index;
--	u16 devid;
--
--	if (!pdev)
--		return -EINVAL;
--
--	cfg = irq_cfg(irq);
--	if (!cfg)
--		return -EINVAL;
--
--	devid = get_device_id(&pdev->dev);
--	index = alloc_irq_index(cfg, &cfg->irq_2_irte, devid, nvec);
--
--	return index < 0 ? MAX_IRQS_PER_TABLE : index;
--}
--
--static int msi_setup_irq(struct pci_dev *pdev, unsigned int irq,
--			 int index, int offset)
--{
--	struct irq_2_irte *irte_info;
--	struct irq_cfg *cfg;
--	u16 devid;
--
--	if (!pdev)
--		return -EINVAL;
--
--	cfg = irq_cfg(irq);
--	if (!cfg)
--		return -EINVAL;
--
--	if (index >= MAX_IRQS_PER_TABLE)
--		return 0;
--
--	devid		= get_device_id(&pdev->dev);
--	irte_info	= &cfg->irq_2_irte;
--
--	cfg->remapped	      = 1;
--	irte_info->devid      = devid;
--	irte_info->index      = index + offset;
--
--	return 0;
--}
--
--static int setup_hpet_msi(unsigned int irq, unsigned int id)
--{
--	struct irq_2_irte *irte_info;
--	struct irq_cfg *cfg;
--	int index, devid;
--
--	cfg = irq_cfg(irq);
--	if (!cfg)
--		return -EINVAL;
--
--	irte_info = &cfg->irq_2_irte;
--	devid     = get_hpet_devid(id);
--	if (devid < 0)
--		return devid;
--
--	index = alloc_irq_index(cfg, &cfg->irq_2_irte, devid, 1);
--	if (index < 0)
--		return index;
--
--	cfg->remapped	      = 1;
--	irte_info->devid      = devid;
--	irte_info->index      = index;
--
--	return 0;
--}
--
- static int get_devid(struct irq_alloc_info *info)
+-void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int value)
++static void io_apic_write(unsigned int apic, unsigned int reg,
++			  unsigned int value)
  {
- 	int devid = -1;
-@@ -4366,10 +4260,6 @@ struct irq_remap_ops amd_iommu_irq_ops = {
- 	.setup_ioapic_entry	= setup_ioapic_entry,
- 	.set_affinity		= set_affinity,
- 	.free_irq		= free_irq,
--	.compose_msi_msg	= compose_msi_msg,
--	.msi_alloc_irq		= msi_alloc_irq,
--	.msi_setup_irq		= msi_setup_irq,
--	.setup_hpet_msi		= setup_hpet_msi,
- 	.get_ir_irq_domain	= get_ir_irq_domain,
- 	.get_irq_domain		= get_irq_domain,
- 	.get_ioapic_entry	= get_ioapic_entry,
-@@ -4460,8 +4350,7 @@ static int irq_remapping_alloc(struct irq_domain *domain, unsigned int virq,
- 		else
- 			ret = -ENOMEM;
- 	} else {
--		cfg = irq_cfg(virq);
--		index = alloc_irq_index(cfg, &data->irq_2_irte, devid, nr_irqs);
-+		index = alloc_irq_index(devid, nr_irqs);
- 	}
- 	if (index < 0) {
- 		pr_warn("Failed to allocate IRTE\n");
+ 	struct io_apic __iomem *io_apic = io_apic_base(apic);
+ 
+@@ -313,7 +314,8 @@ void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int valu
+  *
+  * Older SiS APIC requires we rewrite the index register
+  */
+-void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int value)
++static void io_apic_modify(unsigned int apic, unsigned int reg,
++			   unsigned int value)
+ {
+ 	struct io_apic __iomem *io_apic = io_apic_base(apic);
+ 
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index ac2b604c00ec..30140bdf6d62 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -151,7 +151,5 @@ u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
+ struct x86_io_apic_ops x86_io_apic_ops = {
+ 	.init			= native_io_apic_init_mappings,
+ 	.read			= native_io_apic_read,
+-	.write			= native_io_apic_write,
+-	.modify			= native_io_apic_modify,
+ 	.disable		= native_disable_io_apic,
+ };
 -- 
 1.7.10.4
 
