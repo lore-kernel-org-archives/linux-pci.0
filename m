@@ -1,81 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0133.outbound.protection.outlook.com ([157.56.110.133]:39552
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756222AbaIOWet convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Sep 2014 18:34:49 -0400
-From: Rajat Jain <rajatjain@juniper.net>
-To: Andreas Noever <andreas.noever@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Received: from mga01.intel.com ([192.55.52.88]:3489 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754944AbaIZOz2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Sep 2014 10:55:28 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Guenter Roeck <groeck@juniper.net>,
-	"rajatxjain@gmail.com" <rajatxjain@gmail.com>,
-	"Guenter Roeck" <linux@roeck-us.net>
-Subject: RE: [PATCH] PCI: Prevent NULL dereference during pciehp probe
-Date: Mon, 15 Sep 2014 22:20:41 +0000
-Message-ID: <580c2c85f8424369910b69a8f871f82e@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <1402347812-8059-1-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1402347812-8059-1-git-send-email-andreas.noever@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC Part3 v1 00/28] Enable hierarchy irqdomian on x86 platforms
+Date: Fri, 26 Sep 2014 22:57:30 +0800
+Message-Id: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+This is the last part to enable support of hierarchy domain on x86
+platforms.
 
-I think this patch needs to be applied to all -stable branches (all the way back to 3.2).
+It first converts IOAPIC to support hierarchy irqdomain, then cleans
+up all unused code and interfaces. It also introduces a kernel boot
+parameter to configure CPU vector allocation policies.
 
-I encounter this same issue on my platform that is running 3.14.y. 
+It's based on my previous patch set at:
+https://lkml.org/lkml/2014/9/26/538
+And you may access it at:
+https://github.com/jiangliu/linux.git irqdomain/p3v1
 
-Thanks,
+It has been tested on Intel 64-bit server and 32-bit laptop. It also
+passes Fengguang's 0day tests. Helps are welcomed for testing:
+1) Intel MID platform
+2) Intel CE or OLPC platforms
 
-Rajat
+Patch 1-6 convert IOAPIC to support hierarchy irqdomain.
+Patch 7-16,22 clean up unused code, x86_io_apic_ops and header files.
+Patch 17-20 simplify struct irq_cfg.
+Patch 21, 23-26 clean up code and interfaces further.
+Patch 27-28 introduces a mechanism to configure CPU vector allocation
+	policies.
 
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> owner@vger.kernel.org] On Behalf Of Andreas Noever
-> Sent: Monday, June 09, 2014 2:04 PM
-> To: linux-kernel@vger.kernel.org; Bjorn Helgaas; linux-pci@vger.kernel.org
-> Cc: Andreas Noever
-> Subject: [PATCH] PCI: Prevent NULL dereference during pciehp probe
-> 
-> pciehp assumes that dev->subordinate exists. But we do not assign a bus if
-> we run out of bus numbers during enumeration. This leads to a NULL
-> dereference in init_slot (and other places).
-> 
-> Change pciehp_probe to return -ENODEV when no subordinate bus is
-> present.
-> 
-> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
-> ---
->  drivers/pci/hotplug/pciehp_core.c | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_core.c
-> b/drivers/pci/hotplug/pciehp_core.c
-> index 0e0a2ff..e5abcaf 100644
-> --- a/drivers/pci/hotplug/pciehp_core.c
-> +++ b/drivers/pci/hotplug/pciehp_core.c
-> @@ -255,6 +255,13 @@ static int pciehp_probe(struct pcie_device *dev)
->  	else if (pciehp_acpi_slot_detection_check(dev->port))
->  		goto err_out_none;
-> 
-> +	if (!dev->port->subordinate) {
-> +		/* Can happen if we run out of bus numbers during probe */
-> +		dev_err(&dev->device,
-> +			"Hotplug bridge without secondary bus, ignoring\n");
-> +		goto err_out_none;
-> +	}
-> +
->  	ctrl = pcie_init(dev);
->  	if (!ctrl) {
->  		dev_err(&dev->device, "Controller initialization failed\n");
-> --
-> 2.0.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
-> body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+Jiang Liu (28):
+  x86, irq: Kill unused setup_timer_IRQ0_pin()
+  x86, irq: Prepare IOAPIC interfaces to support hierarchy irqdomain
+  x86, irq: Implement callbacks to enable hierarchy irqdomain on
+    IOAPICs
+  x86, irq: Refine the way to allocate irq_cfg for legacy IRQs
+  x86, irq: Convert IOAPIC to use hierarchy irqdomain interfaces
+  x86, irq: Kill unused old IOAPIC irqdomain interfaces
+  x86, irq: Kill x86_io_apic_ops.print_entries and related interfaces
+  x86, irq: Kill x86_io_apic_ops.setup_entry and related interfaces
+  x86, irq: Kill x86_io_apic_ops.set_affinity and related interfaces
+  x86, irq: Kill x86_io_apic_ops.eoi_ioapic_pin and related interfaces
+  x86, irq: Kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
+  x86: Clean up unused forward declarations in x86_init.h
+  x86: irq_remapping: Clean up unsued code
+  iommu/vt-d: Clean up unsued code
+  iommu/amd: Clean up unsued code
+  x86: irq_remapping: Clean up unused interfaces
+  x86, irq: Kill irq_cfg.irq_remapped
+  iommu/vt-d: Move struct irq_2_iommu into intel_irq_remapping.c
+  iommu/amd: Move struct irq_2_irte into amd_iommu.c
+  x86, irq: Move irq_cfg.irq_2_pin into io_apic.c
+  x86, irq: Kill struct io_apic_irq_attr
+  x86, irq: Kill x86_io_apic_ops.write and x86_io_apic_ops.modify
+  x86, irq: Clean up io_apic.h
+  x86, irq: Kill unused alloc_irq_and_cfg_at()
+  x86, irq: Change functions only used in vector.c as static
+  x86, irq: Kill function apic_set_affinity()
+  x86, irq: Introduce mechanism to support different vector allocation
+    policies
+  x86, irq: Add kernel parameter vector_alloc to set CPU vector
+    allocation policy
+
+ Documentation/kernel-parameters.txt                |    6 +
+ arch/x86/Kconfig                                   |    1 -
+ arch/x86/include/asm/hw_irq.h                      |   50 +-
+ arch/x86/include/asm/io_apic.h                     |   81 +-
+ arch/x86/include/asm/irq_remapping.h               |   36 -
+ arch/x86/include/asm/x86_init.h                    |   16 -
+ arch/x86/kernel/acpi/boot.c                        |   19 +-
+ arch/x86/kernel/apic/io_apic.c                     |  926 +++++++++++---------
+ arch/x86/kernel/apic/vector.c                      |  226 ++---
+ arch/x86/kernel/devicetree.c                       |   39 +-
+ arch/x86/kernel/mpparse.c                          |    6 +-
+ arch/x86/kernel/x86_init.c                         |    6 -
+ arch/x86/pci/intel_mid_pci.c                       |    6 +-
+ .../platform/intel-mid/device_libs/platform_wdt.c  |    5 +-
+ arch/x86/platform/intel-mid/intel-mid.c            |    2 +
+ arch/x86/platform/intel-mid/sfi.c                  |    6 +-
+ arch/x86/platform/sfi/sfi.c                        |    5 +-
+ drivers/iommu/amd_iommu.c                          |  150 +---
+ drivers/iommu/intel_irq_remapping.c                |  202 +----
+ drivers/iommu/irq_remapping.c                      |   84 --
+ drivers/iommu/irq_remapping.h                      |   16 -
+ 21 files changed, 709 insertions(+), 1179 deletions(-)
+
+-- 
+1.7.10.4
+
