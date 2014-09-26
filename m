@@ -1,68 +1,115 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH v1 07/13] ACPI / hotplug / PCI: Remove pci_configure_slot()
- usage
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatxjain@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:58972 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756139AbaIZO53 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Sep 2014 10:57:29 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Date: Fri, 12 Sep 2014 12:03:34 -0600
-Message-ID: <20140912180334.1630.56528.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC v1 26/28] x86, irq: Kill function apic_set_affinity()
+Date: Fri, 26 Sep 2014 22:57:56 +0800
+Message-Id: <1411743478-31435-27-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We now configure each PCI device as it is enumerated, in pci_device_add(),
-so remove the configuration done in acpiphp.
+Now there's no user of apic_set_affinity(), so kill it.
+Also rename vector_set_affinity() to apic_set_affinity() for consistency.
 
-That configuration, in pci_configure_device(), does not include the
-MPS/MRRS configuration done by pcie_bus_configure_settings(), so keep
-that here.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+ arch/x86/include/asm/hw_irq.h |    2 --
+ arch/x86/kernel/apic/vector.c |   40 +++-------------------------------------
+ 2 files changed, 3 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 70741c8c46a0..a6f8e0ba0bfe 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -61,7 +61,6 @@ static DEFINE_MUTEX(bridge_mutex);
- static int acpiphp_hotplug_notify(struct acpi_device *adev, u32 type);
- static void acpiphp_post_dock_fixup(struct acpi_device *adev);
- static void acpiphp_sanitize_bus(struct pci_bus *bus);
--static void acpiphp_set_hpp_values(struct pci_bus *bus);
- static void hotplug_event(u32 type, struct acpiphp_context *context);
- static void free_bridge(struct kref *kref);
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index fdf8300dcc29..6c6002e386d4 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -185,8 +185,6 @@ extern void send_cleanup_vector(struct irq_cfg *);
+ extern void irq_complete_move(struct irq_cfg *cfg);
  
-@@ -510,7 +509,7 @@ static void enable_slot(struct acpiphp_slot *slot)
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
- 
- 	acpiphp_sanitize_bus(bus);
--	acpiphp_set_hpp_values(bus);
-+	pcie_bus_configure_settings(bus);
- 	acpiphp_set_acpi_region(slot);
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
-@@ -702,14 +701,6 @@ static void acpiphp_check_bridge(struct acpiphp_bridge *bridge)
- 	}
+ extern void apic_ack_edge(struct irq_data *data);
+-extern int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+-			     unsigned int *dest_id);
+ #else	/*  CONFIG_X86_LOCAL_APIC */
+ static inline void lock_vector_lock(void) {}
+ static inline void unlock_vector_lock(void) {}
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index ec2b991884f2..01311ddec2de 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -457,42 +457,8 @@ void apic_ack_edge(struct irq_data *data)
+ 	ack_APIC_irq();
  }
  
--static void acpiphp_set_hpp_values(struct pci_bus *bus)
+-/*
+- * Either sets data->affinity to a valid value, and returns
+- * ->cpu_mask_to_apicid of that in dest_id, or returns -1 and
+- * leaves data->affinity untouched.
+- */
+-int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+-		      unsigned int *dest_id)
 -{
--	struct pci_dev *dev;
+-	struct irq_cfg *cfg = irqd_cfg(data);
+-	unsigned int irq = data->irq;
+-	int err;
 -
--	list_for_each_entry(dev, &bus->devices, bus_list)
--		pci_configure_slot(dev);
+-	if (!config_enabled(CONFIG_SMP))
+-		return -EPERM;
+-
+-	if (!cpumask_intersects(mask, cpu_online_mask))
+-		return -EINVAL;
+-
+-	err = assign_irq_vector(irq, cfg, mask);
+-	if (err)
+-		return err;
+-
+-	err = apic->cpu_mask_to_apicid_and(mask, cfg->domain, dest_id);
+-	if (err) {
+-		if (assign_irq_vector(irq, cfg, data->affinity))
+-			pr_err("Failed to recover vector for irq %d\n", irq);
+-		return err;
+-	}
+-
+-	cpumask_copy(data->affinity, mask);
+-
+-	return 0;
 -}
 -
- /*
-  * Remove devices for which we could not assign resources, call
-  * arch specific code to fix-up the bus
+-static int vector_set_affinity(struct irq_data *irq_data,
+-			       const struct cpumask *dest, bool force)
++static int apic_set_affinity(struct irq_data *irq_data,
++			     const struct cpumask *dest, bool force)
+ {
+ 	int err;
+ 	int irq = irq_data->irq;
+@@ -518,7 +484,7 @@ static int vector_set_affinity(struct irq_data *irq_data,
+ 
+ static struct irq_chip vector_chip = {
+ 	.irq_ack = apic_ack_edge,
+-	.irq_set_affinity = vector_set_affinity,
++	.irq_set_affinity = apic_set_affinity,
+ 	.irq_retrigger = apic_retrigger_irq,
+ };
+ 
+-- 
+1.7.10.4
 
