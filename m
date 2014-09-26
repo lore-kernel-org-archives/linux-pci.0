@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:27175 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756000AbaIZO4g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 26 Sep 2014 10:56:36 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
@@ -21,58 +17,74 @@ Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC v1 16/28] x86: irq_remapping: Clean up unused interfaces
-Date: Fri, 26 Sep 2014 22:57:46 +0800
-Message-Id: <1411743478-31435-17-git-send-email-jiang.liu@linux.intel.com>
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Daniel J Blueman <daniel@numascale.com>
+Subject: [RFC v1 28/28] x86, irq: Add kernel parameter vector_alloc to set CPU vector allocation policy
+Date: Fri, 26 Sep 2014 22:57:58 +0800
+Message-Id: <1411743478-31435-29-git-send-email-jiang.liu@linux.intel.com>
 In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
 References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have converted to hierarchy irqdomain, so clean up unused
-interfaces.
+Parameter vector_alloc should be set to an integer with:
+bit 0:	enable allocating CPU vector from CPUs on device local node.
+	That's to allocate from cpumask_of_node(irq_data->node).
+bit 1: enable the default policy, which is to allocate from
+       apic->target_cpus().
+
+When allocating vectors, it tries all enabled policies from lower bit
+position to higher bit position.
+
+This option could be use to optimize interrupt distribution on large
+system such as NumaChip etc.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Daniel J Blueman <daniel@numascale.com>
 ---
- drivers/iommu/irq_remapping.h |   16 ----------------
- 1 file changed, 16 deletions(-)
+ Documentation/kernel-parameters.txt |    6 ++++++
+ arch/x86/kernel/apic/vector.c       |   11 +++++++++++
+ 2 files changed, 17 insertions(+)
 
-diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
-index 474e20be528f..f42805bef314 100644
---- a/drivers/iommu/irq_remapping.h
-+++ b/drivers/iommu/irq_remapping.h
-@@ -24,11 +24,7 @@
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 10d51c2f10d7..895ba404eb0d 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -3586,6 +3586,12 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 	vector=		[IA-64,SMP]
+ 			vector=percpu: enable percpu vector domain
  
- #ifdef CONFIG_IRQ_REMAP
++	vector_alloc=	[x86,SMP]
++			vector_alloc=policy: policy is a bitmap, bit 0
++			for allocating CPU vector from CPUs on device local
++			node; bit 1 for the default policy to allocating from
++			apic->target_cpus(). All higher bits are reserved.
++
+ 	video=		[FB] Frame buffer configuration
+ 			See Documentation/fb/modedb.txt.
  
--struct IO_APIC_route_entry;
--struct io_apic_irq_attr;
- struct irq_data;
--struct cpumask;
--struct pci_dev;
- struct msi_msg;
- struct irq_domain;
- struct irq_alloc_info;
-@@ -58,18 +54,6 @@ struct irq_remap_ops {
- 	/* Enable fault handling */
- 	int  (*enable_faulting)(void);
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 4a16e0a5ae0f..d1f616374ec0 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -65,6 +65,17 @@ void set_vector_alloc_policy(unsigned int policy)
+ 		x86_vector_alloc_policy = policy | X86_VECTOR_POL_CALLER;
+ }
  
--	/* IO-APIC setup routine */
--	int (*setup_ioapic_entry)(int irq, struct IO_APIC_route_entry *,
--				  unsigned int, int,
--				  struct io_apic_irq_attr *);
--
--	/* Set the CPU affinity of a remapped interrupt */
--	int (*set_affinity)(struct irq_data *data, const struct cpumask *mask,
--			    bool force);
--
--	/* Free an IRQ */
--	int (*free_irq)(int);
--
- 	struct irq_domain *(*get_ir_irq_domain)(struct irq_alloc_info *);
- 
- 	/* Get the MSI irqdomain associated with the IOMMU device */
++static int __init apic_parse_vector_policy(char *str)
++{
++	int policy;
++
++	if (get_option(&str, &policy) == 1)
++		set_vector_alloc_policy(policy);
++
++	return 1;
++}
++__setup("vector_alloc=", apic_parse_vector_policy);
++
+ static struct irq_cfg *alloc_irq_cfg(int node)
+ {
+ 	struct irq_cfg *cfg;
 -- 
 1.7.10.4
 
