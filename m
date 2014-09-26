@@ -1,74 +1,111 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Mon, 8 Sep 2014 10:39:05 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Rob Herring <robherring2@gmail.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:11137 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755401AbaIZN2r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Sep 2014 09:28:47 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI
- domain_nr
-Message-ID: <20140908163905.GC29679@obsidianresearch.com>
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
- <1410184472-17630-8-git-send-email-Liviu.Dudau@arm.com>
- <CAL_JsqJi8k1Goc3UmXhuxf9v7=4gJrYG_Di7v574PxS8TsJaXw@mail.gmail.com>
- <20140908145459.GO27864@e106497-lin.cambridge.arm.com>
- <CAL_JsqJdGKDVwJOpPp19OkVPGzR7Zqv3nh+ONHHaYnPLYTYoYg@mail.gmail.com>
- <20140908155931.GP27864@e106497-lin.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140908155931.GP27864@e106497-lin.cambridge.arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v2 18/18] iommu/amd: Use helpers to access irq_cfg data structure associated with IRQ
+Date: Fri, 26 Sep 2014 21:29:55 +0800
+Message-Id: <1411738196-29958-19-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 08, 2014 at 04:59:31PM +0100, Liviu Dudau wrote:
+Use helpers to access irq_cfg data structure associated with IRQ,
+instead of accessing irq_data->chip_data directly. Later we could
+rewrite those helpers to support hierarchy irqdomain.
 
-> > I don't really understand how domains are used so it's hard to provide
-> > a recommendation here. Do domains even belong in the DT?
-> 
-> ACPI calls them segments and the way Bjorn explained it to me at some moment was
-> that it was an attempt to split up a bus in different groups (or alternatively,
-> merge a few busses together). To be honest I haven't seen systems where the domain
-> is anything other than zero, but JasonG (or maybe Benjamin) were floating an
-> idea of using the domain number to identify physical slots.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/amd_iommu.c |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-A PCI domain qualifies the bus:device.function addressing so that we
-can have duplicate BDFs in the system.
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index ecb0109a5360..e0def6249284 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -4049,7 +4049,7 @@ static int setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
+ 	int devid;
+ 	int ret;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 	if (!cfg)
+ 		return -EINVAL;
+ 
+@@ -4112,7 +4112,7 @@ static int set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	if (!config_enabled(CONFIG_SMP))
+ 		return -1;
+ 
+-	cfg       = data->chip_data;
++	cfg       = irqd_cfg(data);
+ 	irq       = data->irq;
+ 	irte_info = &cfg->irq_2_irte;
+ 
+@@ -4150,7 +4150,7 @@ static int free_irq(int irq)
+ 	struct irq_2_irte *irte_info;
+ 	struct irq_cfg *cfg;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 	if (!cfg)
+ 		return -EINVAL;
+ 
+@@ -4169,7 +4169,7 @@ static void compose_msi_msg(struct pci_dev *pdev,
+ 	struct irq_cfg *cfg;
+ 	union irte irte;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 	if (!cfg)
+ 		return;
+ 
+@@ -4198,7 +4198,7 @@ static int msi_alloc_irq(struct pci_dev *pdev, int irq, int nvec)
+ 	if (!pdev)
+ 		return -EINVAL;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 	if (!cfg)
+ 		return -EINVAL;
+ 
+@@ -4218,7 +4218,7 @@ static int msi_setup_irq(struct pci_dev *pdev, unsigned int irq,
+ 	if (!pdev)
+ 		return -EINVAL;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 	if (!cfg)
+ 		return -EINVAL;
+ 
+@@ -4241,7 +4241,7 @@ static int setup_hpet_msi(unsigned int irq, unsigned int id)
+ 	struct irq_cfg *cfg;
+ 	int index, devid;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 	if (!cfg)
+ 		return -EINVAL;
+ 
+-- 
+1.7.10.4
 
-So, yes, they belong in DT - each 'top level' PCI node naturally
-represents a unique set of BDF addressing below it, and could alias
-other top level nodes. The first step to resolve a BDF to a DT node is
-to find the correct 'top level' by mapping the domain number.
-
-In an ideal world no small scale system should ever have domains. They
-were primarily introduced for large scale NUMA system that actually
-have more than 256 PCI busses.
-
-However, from a DT prespective, we've been saying that if the SOC
-presents a PCI-E root port that shares nothing with other root ports
-(ie aperture, driver instance, config space) then those ports must be
-represented by unique 'top level' DT nodes, and each DT node must be
-assigned to a Linux PCI domain.
-
-IMHO, designing such a SOC ignores the API guidelines provides by the
-PCI-E spec itself, and I hope such a thing won't be considered SBSA
-compatible..
-
-Jason
