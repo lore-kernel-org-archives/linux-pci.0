@@ -1,181 +1,141 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og125.obsmtp.com ([64.18.0.245]:40325 "HELO
-	exprod5og125.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757537AbaISRPs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Sep 2014 13:15:48 -0400
-Received: by mail-wg0-f44.google.com with SMTP id z12so34082wgg.3
-        for <linux-pci@vger.kernel.org>; Fri, 19 Sep 2014 10:15:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACVXFVNEFSMjA=h_pyNF1AyYX4C336iM9nkYY=ocGQxjGpDCJA@mail.gmail.com>
-References: <1410906824-9321-1-git-send-email-tinamdar@apm.com>
-	<CACVXFVNEFSMjA=h_pyNF1AyYX4C336iM9nkYY=ocGQxjGpDCJA@mail.gmail.com>
-Date: Fri, 19 Sep 2014 10:15:45 -0700
-Message-ID: <CACoXjc=eA0nnK2_dRxktFeSKsfV6fQr=mDfN09sbe34H4GADrA@mail.gmail.com>
-Subject: Re: [PATCH v9 0/4] APM X-Gene PCIe host controller
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
 	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFT v2 08/24] x86, htirq: Use new irqdomain interfaces to allocate/free IRQ
+Date: Fri, 26 Sep 2014 22:02:09 +0800
+Message-Id: <1411740145-30626-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ming Lei,
+Use new irqdomain interfaces to allocate/free IRQ for HTIRQ, so we could
+kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
 
-On Thu, Sep 18, 2014 at 8:08 PM, Ming Lei <tom.leiming@gmail.com> wrote:
-> Hi Tanmay,
->
-> On Wed, Sep 17, 2014 at 6:33 AM, Tanmay Inamdar <tinamdar@apm.com> wrote:
->> This patch adds support for AppliedMicro X-Gene PCIe host controller. The
->> driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
->> cards.
->>
->> X-Gene PCIe controller driver has depedency on the pcie arm64 arch support.
->> Liviu Dudau from ARM has sent a patch set for pcie arm64 arch support and
->> support for creating generic pcie bridge from device tree. Liviu's patches
->> are available here
->> https://lkml.org/lkml/2014/9/8/333
->>
->> If someone wishes to test PCIe on X-Gene with this patch set, above mentioned
->> patches from Liviu must be applied before the patches in this patch set. Also
->> please use latest xgene u-boot firmware.
->>
->> changes since V8:
->> 1. Add 'dma-coherent' attribute in device node.
->
->
-> I just tested your V9 patches plus Liviu's V10 PCI/ARM64 patches
-> against 3.17-rc5 on Mustang, and the following failure is triggered:
->
-> [    1.190131] bnx2x: Broadcom NetXtreme II 5771x/578xx 10/20-Gigabit
-> Ethernet Driver bnx2x 1.78.19-0 (2014/02/10)
-> [    1.200249] tg3.c:v3.137 (May 11, 2014)
-> [    1.204087] ------------[ cut here ]------------
-> [    1.208682] WARNING: CPU: 1 PID: 1 at drivers/pci/pci.c:131
-> pci_ioremap_bar+0x70/0x78()
-> [    1.216646] Modules linked in:
-> [    1.219696] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 3.17.0-rc5+ #1
-> [    1.226018] Call trace:
-> [    1.228453] [<ffffffc0000884f0>] dump_backtrace+0x0/0x16c
-> [    1.233826] [<ffffffc00008866c>] show_stack+0x10/0x1c
-> [    1.238851] [<ffffffc0006e3210>] dump_stack+0x74/0x94
-> [    1.243878] [<ffffffc0000a934c>] warn_slowpath_common+0x88/0xb0
-> [    1.249767] [<ffffffc0000a9438>] warn_slowpath_null+0x14/0x20
-> [    1.255485] [<ffffffc0003994c4>] pci_ioremap_bar+0x6c/0x78
-> [    1.260942] [<ffffffc0005598cc>] tg3_init_one+0x148/0x16f4
-> [    1.266401] [<ffffffc00039ccf0>] pci_device_probe+0x78/0xd4
-> [    1.271946] [<ffffffc00042785c>] driver_probe_device+0x94/0x390
-> [    1.277834] [<ffffffc000427c44>] __driver_attach+0x98/0xa0
-> [    1.283293] [<ffffffc000425a54>] bus_for_each_dev+0x54/0x98
-> [    1.288835] [<ffffffc00042730c>] driver_attach+0x1c/0x28
-> [    1.294121] [<ffffffc000426f04>] bus_add_driver+0x164/0x240
-> [    1.299663] [<ffffffc000428430>] driver_register+0x64/0x130
-> [    1.305207] [<ffffffc00039c97c>] __pci_register_driver+0x3c/0x48
-> [    1.311181] [<ffffffc000aa8a5c>] tg3_driver_init+0x1c/0x28
-> [    1.316640] [<ffffffc0000814e0>] do_one_initcall+0xc4/0x1b4
-> [    1.322186] [<ffffffc000a74b64>] kernel_init_freeable+0x1b8/0x25c
-> [    1.328246] [<ffffffc0006de318>] kernel_init+0xc/0xd4
-> [    1.333278] ---[ end trace f4dca5ab5b436080 ]---
-> [    1.337871] tg3 0000:01:00.0: Cannot map device registers, aborting
-> [    1.344122] tg3: probe of 0000:01:00.0 failed with error -12
->
->
+This patch changes the interfaces between arch independent PCI driver
+and arch specific code. Currently HT_IRQ is only enabled on x86, so it
+shouldn't break other architectures.
 
-Thanks for trying out the patches. Which firmware version are you
-using? We may have release new firmware version for PCI to work if not
-released yet.
-Also can you please send out the entire boot log?
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/htirq.c |   26 +++++++++++++-------------
+ drivers/pci/htirq.c          |    7 +++----
+ include/linux/htirq.h        |    2 ++
+ 3 files changed, 18 insertions(+), 17 deletions(-)
 
-Thanks,
-Tanmay
+diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
+index 6f527b02ac4c..9a662b2d92da 100644
+--- a/arch/x86/kernel/apic/htirq.c
++++ b/arch/x86/kernel/apic/htirq.c
+@@ -14,6 +14,7 @@
+ #include <linux/device.h>
+ #include <linux/pci.h>
+ #include <linux/htirq.h>
++#include <linux/irqdomain.h>
+ #include <asm/hw_irq.h>
+ #include <asm/apic.h>
+ #include <asm/hypertransport.h>
+@@ -60,31 +61,30 @@ static struct irq_chip ht_irq_chip = {
+ 	.irq_retrigger		= apic_retrigger_irq,
+ };
+ 
++int arch_alloc_ht_irq(struct pci_dev *dev)
++{
++	return irq_domain_alloc_irqs(NULL, 1, dev_to_node(&dev->dev), NULL);
++}
++
++void arch_free_ht_irq(int irq)
++{
++	irq_domain_free_irqs(irq, 1);
++}
++
+ int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
+ {
+ 	struct irq_cfg *cfg;
+ 	struct ht_irq_msg msg;
+-	unsigned dest;
+-	int err;
+ 
+ 	if (disable_apic)
+ 		return -ENXIO;
+ 
+ 	cfg = irq_cfg(irq);
+-	err = assign_irq_vector(irq, cfg, apic->target_cpus());
+-	if (err)
+-		return err;
+-
+-	err = apic->cpu_mask_to_apicid_and(cfg->domain,
+-					   apic->target_cpus(), &dest);
+-	if (err)
+-		return err;
+-
+-	msg.address_hi = HT_IRQ_HIGH_DEST_ID(dest);
++	msg.address_hi = HT_IRQ_HIGH_DEST_ID(cfg->dest_apicid);
+ 
+ 	msg.address_lo =
+ 		HT_IRQ_LOW_BASE |
+-		HT_IRQ_LOW_DEST_ID(dest) |
++		HT_IRQ_LOW_DEST_ID(cfg->dest_apicid) |
+ 		HT_IRQ_LOW_VECTOR(cfg->vector) |
+ 		((apic->irq_dest_mode == 0) ?
+ 			HT_IRQ_LOW_DM_PHYSICAL :
+diff --git a/drivers/pci/htirq.c b/drivers/pci/htirq.c
+index a94dd2c4183a..ceb0ebeb7b5f 100644
+--- a/drivers/pci/htirq.c
++++ b/drivers/pci/htirq.c
+@@ -117,8 +117,8 @@ int __ht_create_irq(struct pci_dev *dev, int idx, ht_irq_update_t *update)
+ 	cfg->msg.address_lo = 0xffffffff;
+ 	cfg->msg.address_hi = 0xffffffff;
+ 
+-	irq = irq_alloc_hwirq(dev_to_node(&dev->dev));
+-	if (!irq) {
++	irq = arch_alloc_ht_irq(dev);
++	if (irq <= 0) {
+ 		kfree(cfg);
+ 		return -EBUSY;
+ 	}
+@@ -163,8 +163,7 @@ void ht_destroy_irq(unsigned int irq)
+ 	cfg = irq_get_handler_data(irq);
+ 	irq_set_chip(irq, NULL);
+ 	irq_set_handler_data(irq, NULL);
+-	irq_free_hwirq(irq);
+-
++	arch_free_ht_irq(irq);
+ 	kfree(cfg);
+ }
+ EXPORT_SYMBOL(ht_destroy_irq);
+diff --git a/include/linux/htirq.h b/include/linux/htirq.h
+index 70a1dbbf2093..5caa51b7b95c 100644
+--- a/include/linux/htirq.h
++++ b/include/linux/htirq.h
+@@ -15,6 +15,8 @@ void unmask_ht_irq(struct irq_data *data);
+ 
+ /* The arch hook for getting things started */
+ int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev);
++int arch_alloc_ht_irq(struct pci_dev *dev);
++void arch_free_ht_irq(int irq);
+ 
+ /* For drivers of buggy hardware */
+ typedef void (ht_irq_update_t)(struct pci_dev *dev, int irq,
+-- 
+1.7.10.4
 
->
-> Thanks,
->
->>
->> changes since V7:
->> 1. Fix outbound region mapping for IO region. Thanks Liviu for the catch.
->>
->> changes since V6:
->> 1. Port driver to changed interface as per Liviu's v10 series.
->>
->> changes since V5:
->> 1. Port driver to changed interface of 'of_create_pci_host_bridge'
->> 2. Fix the prefetch bit setting
->> 3. Removed bunch of register programming which is already done by firmware
->>
->> changes since V4:
->> 1. fix section mismatch warnings
->> 2. fix the patch description
->> 3. fix indentation
->> 4. update read/write cfg functions by passing both addr and offset.
->> 5. use 'time_before' for timeout.
->> 6. remove unnecessary 'IS_ERR_OR_NULL'. Keep 'IS_ERR' for 'clk_get'
->> 7. remove BUG_ON for pci_ioremap_io.
->>
->> changes since V3:
->> 1. remove 'struct hw_pci' and supporting ops in hw_pci
->> 2. add code to create the host bridge from dts
->> 3. add code to scan the the host bridge
->> 4. modify outbound windows setup function to get resource information from
->>    'bridge->windows'
->> 5. add compatible string in pcie dts node with current X-Gene SOC name.
->>
->> changes since V2:
->> 1. redefined each PCI port in different PCI domain correctly.
->> 2. removed setup_lane and setup_link functions from driver.
->> 3. removed scan_bus wrapper and set_primary_bus hack.
->> 4. added pci_ioremap_io for io resources.
->>
->> changes since V1:
->> 1. added PCI domain support
->> 2. reading cpu and pci addresses from device tree to configure regions.
->> 3. got rid of unnecessary wrappers for readl and writel.
->> 4. got rid of endpoint configuration code.
->> 5. added 'dma-ranges' property support to read inbound region configuration.
->> 6. renamed host driver file to 'pci-xgene.c' from 'pcie-xgene.c'
->> 7. dropped 'clock-names' property from bindings
->> 8. added comments whereever requested.
->>
->>
->> Tanmay Inamdar (4):
->>   pci:host: APM X-Gene PCIe host controller driver
->>   arm64: dts: APM X-Gene PCIe device tree nodes
->>   dt-bindings: pci: xgene pcie device tree bindings
->>   MAINTAINERS: entry for APM X-Gene PCIe host driver
->>
->>  .../devicetree/bindings/pci/xgene-pci.txt          |  57 ++
->>  MAINTAINERS                                        |   8 +
->>  arch/arm64/boot/dts/apm-mustang.dts                |   8 +
->>  arch/arm64/boot/dts/apm-storm.dtsi                 | 165 ++++++
->>  drivers/pci/host/Kconfig                           |  10 +
->>  drivers/pci/host/Makefile                          |   1 +
->>  drivers/pci/host/pci-xgene.c                       | 646 +++++++++++++++++++++
->>  7 files changed, 895 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
->>  create mode 100644 drivers/pci/host/pci-xgene.c
->>
->> --
->> 1.9.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Please read the FAQ at  http://www.tux.org/lkml/
->
->
->
-> --
-> Ming Lei
