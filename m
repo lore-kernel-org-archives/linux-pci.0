@@ -1,97 +1,71 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <541CCBA8.8030406@gmail.com>
-Date: Fri, 19 Sep 2014 19:34:48 -0500
-From: Rob Herring <robherring2@gmail.com>
-MIME-Version: 1.0
-To: Liviu Dudau <Liviu.Dudau@arm.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-CC: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v11 10/10] PCI: Introduce pci_remap_iospace() for remapping
- PCI I/O bus resources into CPU space
-References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com> <1411003825-21521-11-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1411003825-21521-11-git-send-email-Liviu.Dudau@arm.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-arch-owner@vger.kernel.org
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v2 16/18] x86: irq_remapping: Use helpers to access irq_cfg data structure associated with IRQ
+Date: Fri, 26 Sep 2014 21:29:53 +0800
+Message-Id: <1411738196-29958-17-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/17/2014 08:30 PM, Liviu Dudau wrote:
-> Introduce a default implementation for remapping PCI bus I/O resources
-> onto the CPU address space. Architectures with special needs may
-> provide their own version, but most should be able to use this one.
-> 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Use helpers to access irq_cfg data structure associated with IRQ,
+instead of accessing irq_data->chip_data directly. Later we could
+rewrite those helpers to support hierarchy irqdomain.
 
-One nit below, otherwise:
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/irq_remapping.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Reviewed-by: Rob Herring <robh@kernel.org>
-
-> ---
->  drivers/pci/pci.c             | 33 +++++++++++++++++++++++++++++++++
->  include/asm-generic/pgtable.h |  4 ++++
->  include/linux/pci.h           |  3 +++
->  3 files changed, 40 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 2c9ac70..654b44c 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2704,6 +2704,39 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
->  }
->  EXPORT_SYMBOL(pci_request_regions_exclusive);
->  
-> +/**
-> + *	pci_remap_iospace - Remap the memory mapped I/O space
-> + *	@res: Resource describing the I/O space
-> + *	@phys_addr: physical address where the range will be mapped.
-> + *
-> + *	Remap the memory mapped I/O space described by the @res
-> + *	into the CPU physical address space. Only architectures
-> + *	that have memory mapped IO defined (and hence PCI_IOBASE)
-> + *	should call this function.
-> + */
-> +int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
-> +{
-> +	int err = -ENODEV;
-> +
-> +#ifdef PCI_IOBASE
-> +	if (!(res->flags & IORESOURCE_IO))
-> +		return -EINVAL;
-> +
-> +	if (res->end > IO_SPACE_LIMIT)
-> +		return -EINVAL;
-> +
-> +	err = ioremap_page_range(res->start + (unsigned long)PCI_IOBASE,
-> +				res->end + 1 + (unsigned long)PCI_IOBASE,
-> +				phys_addr, pgprot_device(PAGE_KERNEL));
-> +#else
-> +	/* this architecture does not have memory mapped I/O space,
-> +	   so this function should never be called */
-> +	WARN_ON(1);
-
-Printing what the comment says in the warning would be better than
-making the user look-up why they got a warning.
-
-Rob
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 33c439524080..34d01de91bd7 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -305,7 +305,7 @@ static int set_remapped_irq_affinity(struct irq_data *data,
+ 
+ void free_remapped_irq(int irq)
+ {
+-	struct irq_cfg *cfg = irq_get_chip_data(irq);
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 
+ 	if (!remap_ops || !remap_ops->free_irq)
+ 		return;
+@@ -318,7 +318,7 @@ void compose_remapped_msi_msg(struct pci_dev *pdev,
+ 			      unsigned int irq, unsigned int dest,
+ 			      struct msi_msg *msg, u8 hpet_id)
+ {
+-	struct irq_cfg *cfg = irq_get_chip_data(irq);
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 
+ 	if (!irq_remapped(cfg))
+ 		native_compose_msi_msg(pdev, irq, dest, msg, hpet_id);
+@@ -365,7 +365,7 @@ static void ir_ack_apic_edge(struct irq_data *data)
+ static void ir_ack_apic_level(struct irq_data *data)
+ {
+ 	ack_APIC_irq();
+-	eoi_ioapic_irq(data->irq, data->chip_data);
++	eoi_ioapic_irq(data->irq, irqd_cfg(data));
+ }
+ 
+ static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
+-- 
+1.7.10.4
 
