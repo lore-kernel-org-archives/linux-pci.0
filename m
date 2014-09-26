@@ -1,59 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:34200 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753930AbaIERPa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 13:15:30 -0400
-Received: by mail-pa0-f48.google.com with SMTP id hz1so1483972pad.35
-        for <linux-pci@vger.kernel.org>; Fri, 05 Sep 2014 10:15:29 -0700 (PDT)
-Date: Fri, 5 Sep 2014 11:15:22 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Ethan Zhao <ethan.zhao@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	gleb@kernel.org, pbonzini@redhat.com, kvm@vger.kernel.org,
-	konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
-	david.vrabel@citrix.com, xen-devel@lists.xenproject.org,
-	alex.williamson@redhat.com, alexander.h.duyck@intel.com,
-	ethan.kernel@gmail.com
-Subject: Re: [PATCH v3 0/4 resend] Introduce device assignment flag operation
- helper function
-Message-ID: <20140905171522.GA8080@google.com>
-References: <1407476167-18935-1-git-send-email-ethan.zhao@oracle.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <5424CBC1.8080702@huawei.com>
+Date: Fri, 26 Sep 2014 10:13:21 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1407476167-18935-1-git-send-email-ethan.zhao@oracle.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Thierry Reding <thierry.reding@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 14/22] MIPS/Xlp/MSI: Use MSI chip framework to configure
+ MSI/MSI-X irq
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com> <1411614872-4009-15-git-send-email-wangyijing@huawei.com> <20140925073608.GK12423@ulmo>
+In-Reply-To: <20140925073608.GK12423@ulmo>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 08, 2014 at 01:36:03PM +0800, Ethan Zhao wrote:
-> This patch set introduces three PCI device flag operation helper functions
-> when set pci device PF/VF to assigned or deassigned status also check it.
-> and patch 2,3,4 apply these helper functions to KVM,XEN and PCI.
+On 2014/9/25 15:36, Thierry Reding wrote:
+> On Thu, Sep 25, 2014 at 11:14:24AM +0800, Yijing Wang wrote:
+>> Use MSI chip framework instead of arch MSI functions to configure
+>> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
 > 
-> v2: simplify unnecessory ternary operation in function pci_is_dev_assigned().
-> v3: amend helper function naming.
+> Nit: s/irq/IRQ/ in the above.
 > 
-> Appreciate suggestion from
-> alex.williamson@redhat.com,
-> david.vrabel@citrix.com,
-> alexander.h.duyck@intel.com
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  arch/mips/pci/msi-xlp.c |   14 ++++++++++++--
+>>  1 files changed, 12 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/arch/mips/pci/msi-xlp.c b/arch/mips/pci/msi-xlp.c
+>> index e469dc7..6b791ef 100644
+>> --- a/arch/mips/pci/msi-xlp.c
+>> +++ b/arch/mips/pci/msi-xlp.c
+>> @@ -245,7 +245,7 @@ static struct irq_chip xlp_msix_chip = {
+>>  	.irq_unmask	= unmask_msi_irq,
+>>  };
+>>  
+>> -void arch_teardown_msi_irq(unsigned int irq)
+>> +void xlp_teardown_msi_irq(unsigned int irq)
 > 
-> Resend for v3.16 building.
+> Should this not be static now as well?
+
+Yes, Will update.
+
 > 
-> Thanks,
-> Ethan
-> ---
-> Ethan Zhao (4):
->   PCI: introduce helper functions for device flag operation
->   KVM: use pci device flag operation helper functions
->   xen-pciback: use pci device flag operation helper function
->   PCI: use device flag operation helper function in iov.c
-> 
->  drivers/pci/iov.c                  |    2 +-
->  drivers/xen/xen-pciback/pci_stub.c |    4 ++--
->  include/linux/pci.h                |   13 +++++++++++++
->  virt/kvm/assigned-dev.c            |    2 +-
->  virt/kvm/iommu.c                   |    4 ++--
->  5 files changed, 19 insertions(+), 6 deletions(-)
+> Thierry
 > 
 
-Applied to pci/virtualization for v3.18, thanks!
+
+-- 
+Thanks!
+Yijing
+
