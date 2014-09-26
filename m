@@ -1,65 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0119.outbound.protection.outlook.com ([157.56.110.119]:30081
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751497AbaI3KHJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Sep 2014 06:07:09 -0400
-From: Richard Zhu <r65037@freescale.com>
-To: <linux-pci-owner@vger.kernel.org>
-CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
-	<festevam@gmail.com>, <l.stach@pengutronix.de>,
-	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
-Subject: [PATCH v4 01/10] PCI: imx6: wait the clocks to stabilize after ref_en
-Date: Tue, 30 Sep 2014 17:36:35 +0800
-Message-ID: <1412069804-17162-2-git-send-email-r65037@freescale.com>
-In-Reply-To: <1412069804-17162-1-git-send-email-r65037@freescale.com>
-References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v2 07/18] x86, irq: Introduce helpers to access struct irq_cfg
+Date: Fri, 26 Sep 2014 21:29:44 +0800
+Message-Id: <1411738196-29958-8-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For boards without a reset gpio we skip the delay between enabling
-the pcie_ref_clk and touching the RC registers for configuration.
-System would be hangs when the clocks are not yet settled in the DW
-PCIe core. So we need to make sure that there is always an
-appropriate delay between those two actions.
+Change irq_cfg() from static to extern, also introduce helper function
+irqd_cfg(). Later we could rewrite these two helpers when enabling
+hierarchy irqdomain.
 
-Signed-off-by: Richard Zhu <r65037@freescale.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/host/pci-imx6.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ arch/x86/include/asm/hw_irq.h  |    2 ++
+ arch/x86/kernel/apic/io_apic.c |    7 ++++++-
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 233fe8a..eac96fb 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -275,15 +275,22 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 		goto err_pcie;
- 	}
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 18e8717bf644..f457fcd0f3ba 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -132,6 +132,8 @@ struct irq_cfg {
+ 	};
+ };
  
--	/* allow the clocks to stabilize */
--	usleep_range(200, 500);
--
- 	/* power up core phy and enable ref clock */
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
-+	/*
-+	 * the async reset input need ref clock to sync internally,
-+	 * when the ref clock comes after reset, internal synced
-+	 * reset time is too short , cannot meet the requirement.
-+	 * add one ~10us delay here.
-+	 */
-+	udelay(10);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
++extern struct irq_cfg *irq_cfg(unsigned int irq);
++extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
+ extern void setup_vector_irq(int cpu);
+ extern int assign_irq_vector(int, struct irq_cfg *, const struct cpumask *);
+ extern void send_cleanup_vector(struct irq_cfg *);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 0022a0c2faac..955700489e9e 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -281,11 +281,16 @@ int __init arch_early_irq_init(void)
+ 	return 0;
+ }
  
-+	/* allow the clocks to stabilize */
-+	usleep_range(200, 500);
+-static inline struct irq_cfg *irq_cfg(unsigned int irq)
++struct irq_cfg *irq_cfg(unsigned int irq)
+ {
+ 	return irq_get_chip_data(irq);
+ }
+ 
++struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
++{
++	return irq_data->chip_data;
++}
 +
- 	/* Some boards don't have PCIe reset GPIO. */
- 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
- 		gpio_set_value(imx6_pcie->reset_gpio, 0);
+ static struct irq_cfg *alloc_irq_cfg(unsigned int irq, int node)
+ {
+ 	struct irq_cfg *cfg;
 -- 
-1.9.1
+1.7.10.4
 
