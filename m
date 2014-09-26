@@ -1,120 +1,87 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Wed, 10 Sep 2014 17:53:47 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v10 08/10] OF: PCI: Add support for parsing PCI host
- bridge resources from DT
-Message-ID: <20140910165347.GJ27864@e106497-lin.cambridge.arm.com>
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
- <1410184472-17630-9-git-send-email-Liviu.Dudau@arm.com>
- <20140909133546.GB2636@e102568-lin.cambridge.arm.com>
- <20140910142241.GD27864@e106497-lin.cambridge.arm.com>
- <20140910151026.GB11640@e102568-lin.cambridge.arm.com>
- <20140910153233.GG27864@e106497-lin.cambridge.arm.com>
- <20140910163746.GB19662@e102568-lin.cambridge.arm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 26 Sep 2014 16:29:31 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFT Part2 v2 00/24] Enable hierarchy irqdomian on x86 platforms
+Message-ID: <20140926142931.GA10066@nazgul.tnic>
+References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20140910163746.GB19662@e102568-lin.cambridge.arm.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 10, 2014 at 05:37:47PM +0100, Lorenzo Pieralisi wrote:
-> On Wed, Sep 10, 2014 at 04:32:33PM +0100, Liviu Dudau wrote:
+On Fri, Sep 26, 2014 at 10:02:01PM +0800, Jiang Liu wrote:
+> We plan to restructure x86 interrupt code based on hierarchy irqdomain,
+> that is to build irqdomains for CPU vector, interrupt remapping unit,
+> IOAPIC, MSI and HPET etc and organize those irqdomains in hierarchy mode.
+> Each irqdomain manages corresponding interrupt controller and talks to
+> parent interrupt controller through public irqdomain interfaces. We also
+> support stacked irq_chip based on hierarchy irqdomain. It will make the
+> x86 interrupt architecture much more clear and more easy to maintain
+> with hierarchy irqdomain and stacked irq_chip. It may also help ARM
+> interrupt management architecture too.
 > 
-> [...]
+> This is the second patch set to enable support of hierarchy irqdomain
+> on x86 platforms. It depends on the first part at:
+> https://lkml.org/lkml/2014/9/26/501
+> And you may access it at:
+> https://github.com/jiangliu/linux.git irqdomain/p2v2
 > 
-> > > > > > +		/*
-> > > > > > +		 * If we failed translation or got a zero-sized region
-> > > > > > +		 * then skip this range
-> > > > > > +		 */
-> > > > > > +		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
-> > > > > > +			continue;
-> > > > > > +
-> > > > > > +		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
-> > > > > > +		if (!res) {
-> > > > > > +			err = -ENOMEM;
-> > > > > > +			goto parse_failed;
-> > > > > > +		}
-> > > > > > +
-> > > > > > +		err = of_pci_range_to_resource(&range, dev, res);
-> > > > > > +		if (err) {
-> > > > > > +			kfree(res);
-> > > > > 
-> > > > > You might want to add a label to free res to make things more uniform.
-> > 
-> > Sorry, not following you. How would a label help here?
+> And there will be a third patch set to convert IOAPIC driver to support
+> hierarchy irqdomain and clean up code.
 > 
-> It was just a suggestion so ignore it if you do not think it is cleaner.
-> It is to make code more uniform and undo operations in one place instead of
-> doing it piecemeal (you kfree the res here and jump to complete the clean-up,
-> whereas you might want to add a different label and a different goto
-> destination and carry out the kfree there).
+> The first patch extends irqdomain interfaces to support hierarchy
+> irqdomain. Hope this interface could be used by other architectures too,
+> such as ARM/ARM64.
+> The second patch introduces two helper functions to support stacked
+> irq_chip.
+> Patch 3-9 implements an irqdomain to manange CPU interrupt vectors, and
+> it's the root irqdomain for x86 platforms.
+> Patch 10-13 converts Intel and AMD interrupt remapping drivers to
+> support hierarchy irqdomain.
+> Patch 14-16 converts HPET and MSI to support hierarchy irqdomain.
+> Patch 17-20 cleans up unsued code in x86 arch and interrupt remapping
+> drivers.
+> Patch 21-24 converts DMAR, HTIRQ and UV to support hierarchy irqdomain.
+> 
+> We have tested this patchset on Intel 32-bit and 64-bit systems. And it
+> also passes Fengguang's 0day tests. But helps are need for testing:
+> 1) AMD interrupt remapping 
+> 2) AMD HT_IRQ
 
-But that kfree is the only done once, while the pci_free_resource_list() is
-done twice.
+Adding Aravind.
 
-> 
-> I do not mind either, it is just what I noticed.
-> 
-> > > > > > +			goto parse_failed;
-> > > > > > +		}
-> > > > > > +
-> > > > > > +		if (resource_type(res) == IORESOURCE_IO) {
-> > > > > > +			if (*io_base)
-> > > > > 
-> > > > > You do not zero io_base in the first place so you should ask the API
-> > > > > user to do that. Is 0 a valid value BTW ? If it is you've got to resort
-> > > > > to something else to detect multiple IO resources.
-> > 
-> > No, zero is not a valid value. It is the cpu_addr value from the IO range, I'm
-> > hopying that no one is crazy enough to map PCI address space at CPU address zero.
-> > Thanks for spotting the lack of initialisation though, I need to fix it.
-> 
-> Mmm...wasn't a trick question sorry :D
-> 
-> PCI host bridge /pci ranges:
->    IO 0x00000000..0x0000ffff -> 0x00000000
->    More than one I/O resource converted. CPU offset for old range lost!
->      MEM 0x41000000..0x7fffffff -> 0x41000000
->      pci-host-generic 40000000.pci: PCI host bridge to bus 0000:00
->      pci_bus 0000:00: root bus resource [bu-01]
->      pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
->      pci_bus 0000:00: root bus resource [mem 0x41000000-0x7fffffff]
-> 
+@Aravind: you might want to give that patchset a run just in case, to
+make sure it doesn't break anything on AMD. You'll need the previous
+patchset to go before too, though:
 
-Your DT puts the IO space at CPU address zero? Could you copy the relevant
-host bridge node from DT here?
+https://lkml.kernel.org/r/1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com
 
-Best regards,
-Liviu
+I'm sure Jiang will help you if you have more questions.
+
+Thanks.
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+Regards/Gruss,
+    Boris.
+--
