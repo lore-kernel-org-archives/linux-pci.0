@@ -1,82 +1,206 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"Russell King" <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:61783 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754935AbaIZN23 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Sep 2014 09:28:29 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v1 13/21] MIPS/Xlp/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-Date: Fri, 5 Sep 2014 18:09:58 +0800
-Message-ID: <1409911806-10519-14-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v2 09/18] x86, irq: Replace printk(KERN_LVL) with pr_lvl() utilities
+Date: Fri, 26 Sep 2014 21:29:46 +0800
+Message-Id: <1411738196-29958-10-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI chip framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+Replace printk(KENR_LVL) with pr_lvl() to keep checkpatch script silent.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/mips/pci/msi-xlp.c |   14 ++++++++++++--
- 1 files changed, 12 insertions(+), 2 deletions(-)
+ arch/x86/kernel/apic/vector.c |   69 ++++++++++++++++++++---------------------
+ 1 file changed, 34 insertions(+), 35 deletions(-)
 
-diff --git a/arch/mips/pci/msi-xlp.c b/arch/mips/pci/msi-xlp.c
-index e469dc7..6b791ef 100644
---- a/arch/mips/pci/msi-xlp.c
-+++ b/arch/mips/pci/msi-xlp.c
-@@ -245,7 +245,7 @@ static struct irq_chip xlp_msix_chip = {
- 	.irq_unmask	= unmask_msi_irq,
- };
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 248ad962c09a..f728cbfc29a9 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -506,27 +506,26 @@ static void __init print_local_APIC(void *dummy)
+ 	unsigned int i, v, ver, maxlvt;
+ 	u64 icr;
  
--void arch_teardown_msi_irq(unsigned int irq)
-+void xlp_teardown_msi_irq(unsigned int irq)
- {
+-	printk(KERN_DEBUG "printing local APIC contents on CPU#%d/%d:\n",
+-		smp_processor_id(), hard_smp_processor_id());
++	pr_debug("printing local APIC contents on CPU#%d/%d:\n",
++		 smp_processor_id(), hard_smp_processor_id());
+ 	v = apic_read(APIC_ID);
+-	printk(KERN_INFO "... APIC ID:      %08x (%01x)\n", v, read_apic_id());
++	pr_info("... APIC ID:      %08x (%01x)\n", v, read_apic_id());
+ 	v = apic_read(APIC_LVR);
+-	printk(KERN_INFO "... APIC VERSION: %08x\n", v);
++	pr_info("... APIC VERSION: %08x\n", v);
+ 	ver = GET_APIC_VERSION(v);
+ 	maxlvt = lapic_get_maxlvt();
+ 
+ 	v = apic_read(APIC_TASKPRI);
+-	printk(KERN_DEBUG "... APIC TASKPRI: %08x (%02x)\n",
+-	       v, v & APIC_TPRI_MASK);
++	pr_debug("... APIC TASKPRI: %08x (%02x)\n", v, v & APIC_TPRI_MASK);
+ 
+ 	if (APIC_INTEGRATED(ver)) {                     /* !82489DX */
+ 		if (!APIC_XAPIC(ver)) {
+ 			v = apic_read(APIC_ARBPRI);
+-			printk(KERN_DEBUG "... APIC ARBPRI: %08x (%02x)\n", v,
+-			       v & APIC_ARBPRI_MASK);
++			pr_debug("... APIC ARBPRI: %08x (%02x)\n",
++				 v, v & APIC_ARBPRI_MASK);
+ 		}
+ 		v = apic_read(APIC_PROCPRI);
+-		printk(KERN_DEBUG "... APIC PROCPRI: %08x\n", v);
++		pr_debug("... APIC PROCPRI: %08x\n", v);
+ 	}
+ 
+ 	/*
+@@ -535,23 +534,23 @@ static void __init print_local_APIC(void *dummy)
+ 	 */
+ 	if (!APIC_INTEGRATED(ver) || maxlvt == 3) {
+ 		v = apic_read(APIC_RRR);
+-		printk(KERN_DEBUG "... APIC RRR: %08x\n", v);
++		pr_debug("... APIC RRR: %08x\n", v);
+ 	}
+ 
+ 	v = apic_read(APIC_LDR);
+-	printk(KERN_DEBUG "... APIC LDR: %08x\n", v);
++	pr_debug("... APIC LDR: %08x\n", v);
+ 	if (!x2apic_enabled()) {
+ 		v = apic_read(APIC_DFR);
+-		printk(KERN_DEBUG "... APIC DFR: %08x\n", v);
++		pr_debug("... APIC DFR: %08x\n", v);
+ 	}
+ 	v = apic_read(APIC_SPIV);
+-	printk(KERN_DEBUG "... APIC SPIV: %08x\n", v);
++	pr_debug("... APIC SPIV: %08x\n", v);
+ 
+-	printk(KERN_DEBUG "... APIC ISR field:\n");
++	pr_debug("... APIC ISR field:\n");
+ 	print_APIC_field(APIC_ISR);
+-	printk(KERN_DEBUG "... APIC TMR field:\n");
++	pr_debug("... APIC TMR field:\n");
+ 	print_APIC_field(APIC_TMR);
+-	printk(KERN_DEBUG "... APIC IRR field:\n");
++	pr_debug("... APIC IRR field:\n");
+ 	print_APIC_field(APIC_IRR);
+ 
+ 	if (APIC_INTEGRATED(ver)) {             /* !82489DX */
+@@ -559,46 +558,46 @@ static void __init print_local_APIC(void *dummy)
+ 			apic_write(APIC_ESR, 0);
+ 
+ 		v = apic_read(APIC_ESR);
+-		printk(KERN_DEBUG "... APIC ESR: %08x\n", v);
++		pr_debug("... APIC ESR: %08x\n", v);
+ 	}
+ 
+ 	icr = apic_icr_read();
+-	printk(KERN_DEBUG "... APIC ICR: %08x\n", (u32)icr);
+-	printk(KERN_DEBUG "... APIC ICR2: %08x\n", (u32)(icr >> 32));
++	pr_debug("... APIC ICR: %08x\n", (u32)icr);
++	pr_debug("... APIC ICR2: %08x\n", (u32)(icr >> 32));
+ 
+ 	v = apic_read(APIC_LVTT);
+-	printk(KERN_DEBUG "... APIC LVTT: %08x\n", v);
++	pr_debug("... APIC LVTT: %08x\n", v);
+ 
+ 	if (maxlvt > 3) {                       /* PC is LVT#4. */
+ 		v = apic_read(APIC_LVTPC);
+-		printk(KERN_DEBUG "... APIC LVTPC: %08x\n", v);
++		pr_debug("... APIC LVTPC: %08x\n", v);
+ 	}
+ 	v = apic_read(APIC_LVT0);
+-	printk(KERN_DEBUG "... APIC LVT0: %08x\n", v);
++	pr_debug("... APIC LVT0: %08x\n", v);
+ 	v = apic_read(APIC_LVT1);
+-	printk(KERN_DEBUG "... APIC LVT1: %08x\n", v);
++	pr_debug("... APIC LVT1: %08x\n", v);
+ 
+ 	if (maxlvt > 2) {			/* ERR is LVT#3. */
+ 		v = apic_read(APIC_LVTERR);
+-		printk(KERN_DEBUG "... APIC LVTERR: %08x\n", v);
++		pr_debug("... APIC LVTERR: %08x\n", v);
+ 	}
+ 
+ 	v = apic_read(APIC_TMICT);
+-	printk(KERN_DEBUG "... APIC TMICT: %08x\n", v);
++	pr_debug("... APIC TMICT: %08x\n", v);
+ 	v = apic_read(APIC_TMCCT);
+-	printk(KERN_DEBUG "... APIC TMCCT: %08x\n", v);
++	pr_debug("... APIC TMCCT: %08x\n", v);
+ 	v = apic_read(APIC_TDCR);
+-	printk(KERN_DEBUG "... APIC TDCR: %08x\n", v);
++	pr_debug("... APIC TDCR: %08x\n", v);
+ 
+ 	if (boot_cpu_has(X86_FEATURE_EXTAPIC)) {
+ 		v = apic_read(APIC_EFEAT);
+ 		maxlvt = (v >> 16) & 0xff;
+-		printk(KERN_DEBUG "... APIC EFEAT: %08x\n", v);
++		pr_debug("... APIC EFEAT: %08x\n", v);
+ 		v = apic_read(APIC_ECTRL);
+-		printk(KERN_DEBUG "... APIC ECTRL: %08x\n", v);
++		pr_debug("... APIC ECTRL: %08x\n", v);
+ 		for (i = 0; i < maxlvt; i++) {
+ 			v = apic_read(APIC_EILVTn(i));
+-			printk(KERN_DEBUG "... APIC EILVT%d: %08x\n", i, v);
++			pr_debug("... APIC EILVT%d: %08x\n", i, v);
+ 		}
+ 	}
+ 	pr_cont("\n");
+@@ -628,15 +627,15 @@ static void __init print_PIC(void)
+ 	if (!nr_legacy_irqs())
+ 		return;
+ 
+-	printk(KERN_DEBUG "\nprinting PIC contents\n");
++	pr_debug("\nprinting PIC contents\n");
+ 
+ 	raw_spin_lock_irqsave(&i8259A_lock, flags);
+ 
+ 	v = inb(0xa1) << 8 | inb(0x21);
+-	printk(KERN_DEBUG "... PIC  IMR: %04x\n", v);
++	pr_debug("... PIC  IMR: %04x\n", v);
+ 
+ 	v = inb(0xa0) << 8 | inb(0x20);
+-	printk(KERN_DEBUG "... PIC  IRR: %04x\n", v);
++	pr_debug("... PIC  IRR: %04x\n", v);
+ 
+ 	outb(0x0b, 0xa0);
+ 	outb(0x0b, 0x20);
+@@ -646,10 +645,10 @@ static void __init print_PIC(void)
+ 
+ 	raw_spin_unlock_irqrestore(&i8259A_lock, flags);
+ 
+-	printk(KERN_DEBUG "... PIC  ISR: %04x\n", v);
++	pr_debug("... PIC  ISR: %04x\n", v);
+ 
+ 	v = inb(0x4d1) << 8 | inb(0x4d0);
+-	printk(KERN_DEBUG "... PIC ELCR: %04x\n", v);
++	pr_debug("... PIC ELCR: %04x\n", v);
  }
  
-@@ -450,7 +450,7 @@ static int xlp_setup_msix(uint64_t lnkbase, int node, int link,
- 	return 0;
- }
- 
--int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
-+static int xlp_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- {
- 	struct pci_dev *lnkdev;
- 	uint64_t lnkbase;
-@@ -472,6 +472,16 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- 		return xlp_setup_msi(lnkbase, node, link, desc);
- }
- 
-+static struct msi_chip xlp_chip = {
-+	.setup_irq = xlp_setup_msi_irq,
-+	.teardown_irq = xlp_teardown_msi_irq,
-+};
-+
-+struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
-+{
-+	return &xlp_chip;
-+}
-+
- void __init xlp_init_node_msi_irqs(int node, int link)
- {
- 	struct nlm_soc_info *nodep;
+ static int show_lapic __initdata = 1;
 -- 
-1.7.1
+1.7.10.4
 
