@@ -1,71 +1,323 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:41820 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750846AbaI3Ep5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 00:45:57 -0400
-Message-ID: <542A3593.4020108@gmail.com>
-Date: Mon, 29 Sep 2014 21:46:11 -0700
-From: Rajat Jain <rajatxjain@gmail.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>, Jiri Kosina <jkosina@suse.cz>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-i2c@vger.kernel.org, linux-doc@vger.kernel.org
-CC: rajatjain@juniper.net, groeck@juniper.net
-Subject: [PATCH 0/4] Driver for talking to PLX PEX8xxx PCIe switch over I2C
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFT v2 19/24] x86: irq_remapping: Clean up unused MSI related code
+Date: Fri, 26 Sep 2014 22:02:20 +0800
+Message-Id: <1411740145-30626-20-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Most of the PLX PCI Express switches (and also switches from other vendors such
-IDT) provide an I2C based secondary interface to access and program the switch.
-This can be used to program the switch in situations where the PCIe interface
-may not be suitable, or even available. (For instance, we may need to program
-the device in a particular fashion before we even begin enumerating on the PCI,
-or to even enable the PCIe interface of the device). More information on
-usecases and other details has been provided in the documentation being added
-as part of this patchset.
+Now MSI interrupt has been converted to new hierarchy irqdomain
+interfaces, so kill legacy MSI related code and interfaces.
 
-This is a driver that allows talking to the PLX PEX8xxx family of PCIe switches
-over its I2C interface. Here are the patch descriptions:
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/irq_remapping.h |   13 ---
+ arch/x86/include/asm/pci.h           |    5 --
+ arch/x86/kernel/x86_init.c           |    2 -
+ drivers/iommu/irq_remapping.c        |  153 ----------------------------------
+ drivers/iommu/irq_remapping.h        |   15 ----
+ 5 files changed, 188 deletions(-)
 
-[Patch 1/4] - Adds the PEX8xxx driver that exports API calls to read / write.
-[Patch 2/4] - Adds a sysfs interface, to allow access to the switch.
-[Patch 3/4] - Adds the MAINTAINERS entry.
-[Patch 4/4] - Adds the documentation in Documentation/PCI/pex8xxx_i2c.txt
-
-Since this is a driver for a PCIe switch, I currently put it under /driver/pci/.
-I'm very open to suggestions for moving this around (Does introducing
-drivers/pci/switch/ seem any better?). Especially I can see that the
-drivers/pci/Kconfig appears under "Bus Options" in the main menu which does not
-look like the right place for this driver. I am looking for suggestions here.
-
-Looking forward to comments,
-
-Thanks,
-
-Rajat
-
-Rajat Jain (4):
-  pci: Add I2C driver for the PLX PEX8xxx PCIe switch
-  pci/pex8xxx: Add sysfs interface for userspace access.
-  MAINTAINERS: Add new device driver entry for PEX pex8xxx
-  Documentation: Add documentation for the PCI switch PEX8xxx I2C
-    driver
-
- Documentation/PCI/pex8xxx_i2c.txt |  134 +++++++++
- MAINTAINERS                       |    7 +
- drivers/pci/Kconfig               |   13 +
- drivers/pci/Makefile              |    2 +
- drivers/pci/pex8xxx_i2c.c         |  538 +++++++++++++++++++++++++++++++++++++
- include/linux/i2c/pex8xxx_i2c.h   |   36 +++
- 6 files changed, 730 insertions(+)
- create mode 100644 Documentation/PCI/pex8xxx_i2c.txt
- create mode 100644 drivers/pci/pex8xxx_i2c.c
- create mode 100644 include/linux/i2c/pex8xxx_i2c.h
-
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index 7f82841b1671..514bb9b73013 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -49,10 +49,6 @@ extern int setup_ioapic_remapped_entry(int irq,
+ 				       int vector,
+ 				       struct io_apic_irq_attr *attr);
+ extern void free_remapped_irq(int irq);
+-extern void compose_remapped_msi_msg(struct pci_dev *pdev,
+-				     unsigned int irq, unsigned int dest,
+-				     struct msi_msg *msg, u8 hpet_id);
+-extern int setup_hpet_msi_remapped(unsigned int irq, unsigned int id);
+ extern void panic_if_irq_remap(const char *msg);
+ extern bool setup_remapped_irq(int irq,
+ 			       struct irq_cfg *cfg,
+@@ -111,15 +107,6 @@ static inline int setup_ioapic_remapped_entry(int irq,
+ 	return -ENODEV;
+ }
+ static inline void free_remapped_irq(int irq) { }
+-static inline void compose_remapped_msi_msg(struct pci_dev *pdev,
+-					    unsigned int irq, unsigned int dest,
+-					    struct msi_msg *msg, u8 hpet_id)
+-{
+-}
+-static inline int setup_hpet_msi_remapped(unsigned int irq, unsigned int id)
+-{
+-	return -ENODEV;
+-}
+ 
+ static inline void panic_if_irq_remap(const char *msg)
+ {
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 4e370a5d8117..d8c80ff32e8c 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -96,15 +96,10 @@ extern void pci_iommu_alloc(void);
+ #ifdef CONFIG_PCI_MSI
+ /* implemented in arch/x86/kernel/apic/io_apic. */
+ struct msi_desc;
+-void native_compose_msi_msg(struct pci_dev *pdev, unsigned int irq,
+-			    unsigned int dest, struct msi_msg *msg, u8 hpet_id);
+ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+ void native_teardown_msi_irq(unsigned int irq);
+ void native_restore_msi_irqs(struct pci_dev *dev);
+-int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+-		  unsigned int irq_base, unsigned int irq_offset);
+ #else
+-#define native_compose_msi_msg		NULL
+ #define native_setup_msi_irqs		NULL
+ #define native_teardown_msi_irq		NULL
+ #endif
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index e48b674639cc..814fcbadaad1 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -111,11 +111,9 @@ EXPORT_SYMBOL_GPL(x86_platform);
+ #if defined(CONFIG_PCI_MSI)
+ struct x86_msi_ops x86_msi = {
+ 	.setup_msi_irqs		= native_setup_msi_irqs,
+-	.compose_msi_msg	= native_compose_msi_msg,
+ 	.teardown_msi_irq	= native_teardown_msi_irq,
+ 	.teardown_msi_irqs	= default_teardown_msi_irqs,
+ 	.restore_msi_irqs	= default_restore_msi_irqs,
+-	.setup_hpet_msi		= default_setup_hpet_msi,
+ 	.msi_mask_irq		= default_msi_mask_irq,
+ 	.msix_mask_irq		= default_msix_mask_irq,
+ };
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index bda0d8e73fde..d72094e01dec 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -25,9 +25,6 @@ int no_x2apic_optout;
+ 
+ static struct irq_remap_ops *remap_ops;
+ 
+-static int msi_alloc_remapped_irq(struct pci_dev *pdev, int irq, int nvec);
+-static int msi_setup_remapped_irq(struct pci_dev *pdev, unsigned int irq,
+-				  int index, int sub_handle);
+ static int set_remapped_irq_affinity(struct irq_data *data,
+ 				     const struct cpumask *mask,
+ 				     bool force);
+@@ -50,117 +47,6 @@ static void irq_remapping_disable_io_apic(void)
+ 		disconnect_bsp_APIC(0);
+ }
+ 
+-#ifndef CONFIG_GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
+-static unsigned int irq_alloc_hwirqs(int cnt, int node)
+-{
+-	return irq_domain_alloc_irqs(NULL, -1, cnt, node, NULL);
+-}
+-
+-static void irq_free_hwirqs(unsigned int from, int cnt)
+-{
+-	irq_domain_free_irqs(from, cnt);
+-}
+-#endif
+-
+-static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
+-{
+-	int ret, sub_handle, nvec_pow2, index = 0;
+-	unsigned int irq;
+-	struct msi_desc *msidesc;
+-
+-	WARN_ON(!list_is_singular(&dev->msi_list));
+-	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
+-	WARN_ON(msidesc->irq);
+-	WARN_ON(msidesc->msi_attrib.multiple);
+-	WARN_ON(msidesc->nvec_used);
+-
+-	irq = irq_alloc_hwirqs(nvec, dev_to_node(&dev->dev));
+-	if (irq == 0)
+-		return -ENOSPC;
+-
+-	nvec_pow2 = __roundup_pow_of_two(nvec);
+-	msidesc->nvec_used = nvec;
+-	msidesc->msi_attrib.multiple = ilog2(nvec_pow2);
+-	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
+-		if (!sub_handle) {
+-			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
+-			if (index < 0) {
+-				ret = index;
+-				goto error;
+-			}
+-		} else {
+-			ret = msi_setup_remapped_irq(dev, irq + sub_handle,
+-						     index, sub_handle);
+-			if (ret < 0)
+-				goto error;
+-		}
+-		ret = setup_msi_irq(dev, msidesc, irq, sub_handle);
+-		if (ret < 0)
+-			goto error;
+-	}
+-	return 0;
+-
+-error:
+-	irq_free_hwirqs(irq, nvec);
+-
+-	/*
+-	 * Restore altered MSI descriptor fields and prevent just destroyed
+-	 * IRQs from tearing down again in default_teardown_msi_irqs()
+-	 */
+-	msidesc->irq = 0;
+-	msidesc->nvec_used = 0;
+-	msidesc->msi_attrib.multiple = 0;
+-
+-	return ret;
+-}
+-
+-static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
+-{
+-	int node, ret, sub_handle, index = 0;
+-	struct msi_desc *msidesc;
+-	unsigned int irq;
+-
+-	node		= dev_to_node(&dev->dev);
+-	sub_handle	= 0;
+-
+-	list_for_each_entry(msidesc, &dev->msi_list, list) {
+-
+-		irq = irq_alloc_hwirqs(1, node);
+-		if (irq == 0)
+-			return -1;
+-
+-		if (sub_handle == 0)
+-			ret = index = msi_alloc_remapped_irq(dev, irq, nvec);
+-		else
+-			ret = msi_setup_remapped_irq(dev, irq, index, sub_handle);
+-
+-		if (ret < 0)
+-			goto error;
+-
+-		ret = setup_msi_irq(dev, msidesc, irq, 0);
+-		if (ret < 0)
+-			goto error;
+-
+-		sub_handle += 1;
+-		irq        += 1;
+-	}
+-
+-	return 0;
+-
+-error:
+-	irq_free_hwirqs(irq, 1);
+-	return ret;
+-}
+-
+-static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
+-					int nvec, int type)
+-{
+-	if (type == PCI_CAP_ID_MSI)
+-		return do_setup_msi_irqs(dev, nvec);
+-	else
+-		return do_setup_msix_irqs(dev, nvec);
+-}
+-
+ static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
+ {
+ 	/*
+@@ -178,8 +64,6 @@ static void __init irq_remapping_modify_x86_ops(void)
+ 	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
+ 	x86_io_apic_ops.setup_entry	= setup_ioapic_remapped_entry;
+ 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
+-	x86_msi.setup_hpet_msi		= setup_hpet_msi_remapped;
+-	x86_msi.compose_msi_msg		= compose_remapped_msi_msg;
+ }
+ 
+ static __init int setup_nointremap(char *str)
+@@ -326,43 +210,6 @@ void free_remapped_irq(int irq)
+ 		remap_ops->free_irq(irq);
+ }
+ 
+-void compose_remapped_msi_msg(struct pci_dev *pdev,
+-			      unsigned int irq, unsigned int dest,
+-			      struct msi_msg *msg, u8 hpet_id)
+-{
+-	struct irq_cfg *cfg = irq_cfg(irq);
+-
+-	if (!irq_remapped(cfg))
+-		native_compose_msi_msg(pdev, irq, dest, msg, hpet_id);
+-	else if (remap_ops && remap_ops->compose_msi_msg)
+-		remap_ops->compose_msi_msg(pdev, irq, dest, msg, hpet_id);
+-}
+-
+-static int msi_alloc_remapped_irq(struct pci_dev *pdev, int irq, int nvec)
+-{
+-	if (!remap_ops || !remap_ops->msi_alloc_irq)
+-		return -ENODEV;
+-
+-	return remap_ops->msi_alloc_irq(pdev, irq, nvec);
+-}
+-
+-static int msi_setup_remapped_irq(struct pci_dev *pdev, unsigned int irq,
+-				  int index, int sub_handle)
+-{
+-	if (!remap_ops || !remap_ops->msi_setup_irq)
+-		return -ENODEV;
+-
+-	return remap_ops->msi_setup_irq(pdev, irq, index, sub_handle);
+-}
+-
+-int setup_hpet_msi_remapped(unsigned int irq, unsigned int id)
+-{
+-	if (!remap_ops || !remap_ops->setup_hpet_msi)
+-		return -ENODEV;
+-
+-	return remap_ops->setup_hpet_msi(irq, id);
+-}
+-
+ void panic_if_irq_remap(const char *msg)
+ {
+ 	if (irq_remapping_enabled)
+diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
+index 6e46074f06d0..474e20be528f 100644
+--- a/drivers/iommu/irq_remapping.h
++++ b/drivers/iommu/irq_remapping.h
+@@ -70,21 +70,6 @@ struct irq_remap_ops {
+ 	/* Free an IRQ */
+ 	int (*free_irq)(int);
+ 
+-	/* Create MSI msg to use for interrupt remapping */
+-	void (*compose_msi_msg)(struct pci_dev *,
+-				unsigned int, unsigned int,
+-				struct msi_msg *, u8);
+-
+-	/* Allocate remapping resources for MSI */
+-	int (*msi_alloc_irq)(struct pci_dev *, int, int);
+-
+-	/* Setup the remapped MSI irq */
+-	int (*msi_setup_irq)(struct pci_dev *, unsigned int, int, int);
+-
+-	/* Setup interrupt remapping for an HPET MSI */
+-	int (*setup_hpet_msi)(unsigned int, unsigned int);
+-
+-	/* Get the irqdomain associated the IOMMU device */
+ 	struct irq_domain *(*get_ir_irq_domain)(struct irq_alloc_info *);
+ 
+ 	/* Get the MSI irqdomain associated with the IOMMU device */
 -- 
-1.7.9.5
+1.7.10.4
 
