@@ -1,286 +1,220 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 22/22] PCI/MSI: Clean up unused MSI arch functions
-Date: Thu, 25 Sep 2014 11:14:32 +0800
-Message-ID: <1411614872-4009-23-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qg0-f54.google.com ([209.85.192.54]:59826 "EHLO
+	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751076AbaIZQVu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Sep 2014 12:21:50 -0400
+Received: by mail-qg0-f54.google.com with SMTP id a108so9178548qge.41
+        for <linux-pci@vger.kernel.org>; Fri, 26 Sep 2014 09:21:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <20140926145854.GS841@e106497-lin.cambridge.arm.com>
+References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411498874-9864-7-git-send-email-Liviu.Dudau@arm.com> <CAE9FiQXuJZnj74dwTbKJCQNJ+OdEbjSB0fpwqh92+WZ_XGnrxQ@mail.gmail.com>
+ <CAErSpo6eUEV81n1rFjjvRcFVmsFkeUxhdL6JauTmx_Et6XdBuQ@mail.gmail.com> <20140926145854.GS841@e106497-lin.cambridge.arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 26 Sep 2014 10:17:21 -0600
+Message-ID: <CAErSpo4e5iWKTW7cHD8D+LwZyVhsaDz2tkL-wEitJ9RNYp+0fg@mail.gmail.com>
+Subject: Re: [PATCH v12 06/12] PCI: Create pci_host_bridge before its
+ associated bus in pci_create_root_bus.
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we use struct msi_chip in all platforms to configure
-MSI/MSI-X. We can clean up the unused arch functions.
+On Fri, Sep 26, 2014 at 8:58 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> On Thu, Sep 25, 2014 at 08:59:26PM +0100, Bjorn Helgaas wrote:
+>> On Thu, Sep 25, 2014 at 12:15 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> > On Tue, Sep 23, 2014 at 12:01 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+>> >> Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
+>> >> As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
+>> >> the creation order has been changed for no good reason. Revert the order of
+>> >> creation as we are going to depend on the pci_host_bridge structure to retrieve the
+>> >> domain number of the root bus.
+>> >>
+>> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> >> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+>> >> Acked-by: Grant Likely <grant.likely@linaro.org>
+>> >> Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+>> >> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+>> >> ---
+>> >>  drivers/pci/probe.c | 32 +++++++++++++++++---------------
+>> >>  1 file changed, 17 insertions(+), 15 deletions(-)
+>> >>
+>> >> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> >> index e3cf8a2..5ff72ec 100644
+>> >> --- a/drivers/pci/probe.c
+>> >> +++ b/drivers/pci/probe.c
+>> >> @@ -515,7 +515,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
+>> >>         kfree(bridge);
+>> >>  }
+>> >>
+>> >> -static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+>> >> +static struct pci_host_bridge *pci_alloc_host_bridge(void)
+>> >>  {
+>> >>         struct pci_host_bridge *bridge;
+>> >>
+>> >> @@ -524,7 +524,8 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+>> >>                 return NULL;
+>> >>
+>> >>         INIT_LIST_HEAD(&bridge->windows);
+>> >> -       bridge->bus = b;
+>> >> +       bridge->dev.release = pci_release_host_bridge_dev;
+>> >> +
+>> >>         return bridge;
+>> >>  }
+>> >>
+>> >> @@ -1761,9 +1762,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>> >>         char bus_addr[64];
+>> >>         char *fmt;
+>> >>
+>> >> +       bridge = pci_alloc_host_bridge();
+>> >> +       if (!bridge)
+>> >> +               return NULL;
+>> >> +
+>> >> +       bridge->dev.parent = parent;
+>> >> +
+>> >>         b = pci_alloc_bus();
+>> >>         if (!b)
+>> >> -               return NULL;
+>> >> +               goto err_out;
+>> >>
+>> >>         b->sysdata = sysdata;
+>> >>         b->ops = ops;
+>> >> @@ -1772,26 +1779,19 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>> >>         if (b2) {
+>> >>                 /* If we already got to this bus through a different bridge, ignore it */
+>> >>                 dev_dbg(&b2->dev, "bus already known\n");
+>> >> -               goto err_out;
+>> >> +               goto err_bus_out;
+>> >>         }
+>> >>
+>> >> -       bridge = pci_alloc_host_bridge(b);
+>> >> -       if (!bridge)
+>> >> -               goto err_out;
+>> >> -
+>> >> -       bridge->dev.parent = parent;
+>> >> -       bridge->dev.release = pci_release_host_bridge_dev;
+>> >> +       bridge->bus = b;
+>> >>         dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+>> >>         error = pcibios_root_bridge_prepare(bridge);
+>> >> -       if (error) {
+>> >> -               kfree(bridge);
+>> >> +       if (error)
+>> >>                 goto err_out;
+>> >> -       }
+>> >>
+>> >>         error = device_register(&bridge->dev);
+>> >>         if (error) {
+>> >>                 put_device(&bridge->dev);
+>> >> -               goto err_out;
+>> >> +               goto err_bus_out;
+>> >>         }
+>> >>         b->bridge = get_device(&bridge->dev);
+>> >>         device_enable_async_suspend(b->bridge);
+>> >> @@ -1848,8 +1848,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>> >>  class_dev_reg_err:
+>> >>         put_device(&bridge->dev);
+>> >>         device_unregister(&bridge->dev);
+>> >> -err_out:
+>> >> +err_bus_out:
+>> >>         kfree(b);
+>> >> +err_out:
+>> >> +       kfree(bridge);
+>> >>         return NULL;
+>> >>  }
+>> >
+>> > Hi Bjorn,
+>> >
+>> > Noticed that you put this one into pci/next.
+>> >
+>> > This patch has problem for the class_dev_reg_err path.
+>> > as device_unregister(&bridge->dev) will trigger pci_release_host_bridge_dev.
+>> > So will have double free for bridge or else.
+>> >
+>> > Please drop this patch from pci/next.
+>> >
+>> > Also looks strange that the patch have long CC list, but just omit me
+>> > and Jiang Liu that
+>> > touched those code before.
+>>
+>> Thanks for noticing that.  I was concerned, but couldn't remember the details.
+>>
+>> I dropped this patch and the subsequent ones from pci/host and rebased
+>> my "next" branch.
+>>
+>> Sorry I didn't notice you weren't on the CC list.
+>>
+>> Bjorn
+>>
+>
+> Bjorn,
+>
+> I have refreshed/rebuilt the series from what was on 25th in linux-next and I have
+> dropped this patch. I have pushed the series into
+>
+> git://linux-arm.org/linux-ld.git for-upstream/pci-next
+>
+> I hope that I've carried all your Sign-off-bys correctly, but I would like to ask you
+> to double check that I haven't screwed up things.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
----
- drivers/iommu/irq_remapping.c |    2 +-
- drivers/pci/msi.c             |  100 +++++++++++++++-------------------------
- include/linux/msi.h           |   14 ------
- 3 files changed, 39 insertions(+), 77 deletions(-)
+I personally don't pull directly from git trees because I'm in the
+habit of applying patches from email.  That's partly just habit, but
+it's also a convenient way to ensure that every patch is posted on
+linux-pci, which in turn helps me use patchwork as a "to-do" list, and
+it allows me to make minor edits (whitespace, changelogs, etc.) for
+consistency.
 
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 99b1c0f..6e645f0 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -92,7 +92,7 @@ error:
- 
- 	/*
- 	 * Restore altered MSI descriptor fields and prevent just destroyed
--	 * IRQs from tearing down again in default_teardown_msi_irqs()
-+	 * IRQs from tearing down again in teardown_msi_irqs()
- 	 */
- 	msidesc->irq = 0;
- 	msidesc->nvec_used = 0;
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index d10edee..9fe427f 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -34,51 +34,31 @@ struct msi_chip * __weak arch_find_msi_chip(struct pci_dev *dev)
- 	return dev->bus->msi;
- }
- 
--int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
--{
--	struct msi_chip *chip = arch_find_msi_chip(dev);
--	int err;
--
--	if (!chip || !chip->setup_irq)
--		return -EINVAL;
--
--	err = chip->setup_irq(dev, desc);
--	if (err < 0)
--		return err;
--
--	return 0;
--}
--
--void __weak arch_teardown_msi_irq(unsigned int irq)
--{
--	struct msi_desc *entry = irq_get_msi_desc(irq);
--	struct msi_chip *chip = entry->dev->bus->msi;
--
--	if (!chip || !chip->teardown_irq)
--		return;
--
--	chip->teardown_irq(irq);
--}
--
--int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+int setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- {
- 	struct msi_desc *entry;
- 	int ret;
- 	struct msi_chip *chip;
- 
- 	chip = arch_find_msi_chip(dev);
--	if (chip && chip->setup_irqs)
-+	if (!chip)
-+		return -EINVAL;
-+
-+	if (chip->setup_irqs)
- 		return chip->setup_irqs(dev, nvec, type);
- 
- 	/*
- 	 * If an architecture wants to support multiple MSI, it needs to
--	 * override arch_setup_msi_irqs()
-+	 * implement chip->setup_irqs().
- 	 */
- 	if (type == PCI_CAP_ID_MSI && nvec > 1)
- 		return 1;
- 
-+	if (!chip->setup_irq)
-+		return -EINVAL;
-+
- 	list_for_each_entry(entry, &dev->msi_list, list) {
--		ret = arch_setup_msi_irq(dev, entry);
-+		ret = chip->setup_irq(dev, entry);
- 		if (ret < 0)
- 			return ret;
- 		if (ret > 0)
-@@ -88,13 +68,20 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 	return 0;
- }
- 
--/*
-- * We have a default implementation available as a separate non-weak
-- * function, as it is used by the Xen x86 PCI code
-- */
--void default_teardown_msi_irqs(struct pci_dev *dev)
-+static void teardown_msi_irqs(struct pci_dev *dev)
- {
- 	struct msi_desc *entry;
-+	struct msi_chip *chip;
-+
-+	chip = arch_find_msi_chip(dev);
-+	if (!chip)
-+		return;
-+
-+	if (chip->teardown_irqs)
-+		return chip->teardown_irqs(dev);
-+
-+	if (!chip->teardown_irq)
-+		return;
- 
- 	list_for_each_entry(entry, &dev->msi_list, list) {
- 		int i, nvec;
-@@ -105,20 +92,10 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
- 		else
- 			nvec = 1 << entry->msi_attrib.multiple;
- 		for (i = 0; i < nvec; i++)
--			arch_teardown_msi_irq(entry->irq + i);
-+			chip->teardown_irq(entry->irq + i);
- 	}
- }
- 
--void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
--{
--	struct msi_chip *chip = arch_find_msi_chip(dev);
--
--	if (chip && chip->teardown_irqs)
--		return chip->teardown_irqs(dev);
--
--	return default_teardown_msi_irqs(dev);
--}
--
- static void default_restore_msi_irq(struct pci_dev *dev, int irq)
- {
- 	struct msi_desc *entry;
-@@ -137,10 +114,18 @@ static void default_restore_msi_irq(struct pci_dev *dev, int irq)
- 		write_msi_msg(irq, &entry->msg);
- }
- 
--void __weak arch_restore_msi_irqs(struct pci_dev *dev)
-+static void default_restore_msi_irqs(struct pci_dev *dev)
- {
--	struct msi_chip *chip = arch_find_msi_chip(dev);
-+	struct msi_desc *entry = NULL;
-+
-+	list_for_each_entry(entry, &dev->msi_list, list) {
-+		default_restore_msi_irq(dev, entry->irq);
-+	}
-+}
- 
-+static void restore_msi_irqs(struct pci_dev *dev)
-+{
-+	struct msi_chip *chip = arch_find_msi_chip(dev);
- 	if (chip && chip->restore_irqs)
- 		return chip->restore_irqs(dev);
- 
-@@ -249,15 +234,6 @@ void unmask_msi_irq(struct irq_data *data)
- 	msi_set_mask_bit(data, 0);
- }
- 
--void default_restore_msi_irqs(struct pci_dev *dev)
--{
--	struct msi_desc *entry;
--
--	list_for_each_entry(entry, &dev->msi_list, list) {
--		default_restore_msi_irq(dev, entry->irq);
--	}
--}
--
- void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	BUG_ON(entry->dev->current_state != PCI_D0);
-@@ -361,7 +337,7 @@ static void free_msi_irqs(struct pci_dev *dev)
- 			BUG_ON(irq_has_action(entry->irq + i));
- 	}
- 
--	arch_teardown_msi_irqs(dev);
-+	teardown_msi_irqs(dev);
- 
- 	list_for_each_entry_safe(entry, tmp, &dev->msi_list, list) {
- 		if (entry->msi_attrib.is_msix) {
-@@ -420,7 +396,7 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
- 
- 	pci_intx_for_msi(dev, 0);
- 	msi_set_enable(dev, 0);
--	arch_restore_msi_irqs(dev);
-+	restore_msi_irqs(dev);
- 
- 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
- 	msi_mask_irq(entry, msi_mask(entry->msi_attrib.multi_cap),
-@@ -443,7 +419,7 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
- 	msix_clear_and_set_ctrl(dev, 0,
- 				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
- 
--	arch_restore_msi_irqs(dev);
-+	restore_msi_irqs(dev);
- 	list_for_each_entry(entry, &dev->msi_list, list) {
- 		msix_mask_irq(entry, entry->masked);
- 	}
-@@ -613,7 +589,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 	list_add_tail(&entry->list, &dev->msi_list);
- 
- 	/* Configure MSI capability structure */
--	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
-+	ret = setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
- 	if (ret) {
- 		msi_mask_irq(entry, mask, ~mask);
- 		free_msi_irqs(dev);
-@@ -728,7 +704,7 @@ static int msix_capability_init(struct pci_dev *dev,
- 	if (ret)
- 		return ret;
- 
--	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
-+	ret = setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
- 	if (ret)
- 		goto out_avail;
- 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 4cf1f31..920ad52 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -48,20 +48,6 @@ struct msi_desc {
- 	struct msi_msg msg;
- };
- 
--/*
-- * The arch hooks to setup up msi irqs. Those functions are
-- * implemented as weak symbols so that they /can/ be overriden by
-- * architecture specific code if needed.
-- */
--int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
--void arch_teardown_msi_irq(unsigned int irq);
--int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
--void arch_teardown_msi_irqs(struct pci_dev *dev);
--void arch_restore_msi_irqs(struct pci_dev *dev);
--
--void default_teardown_msi_irqs(struct pci_dev *dev);
--void default_restore_msi_irqs(struct pci_dev *dev);
--
- struct msi_chip {
- 	struct module *owner;
- 	struct device *dev;
--- 
-1.7.1
+> This patch dates from the times I was trying to add the domain number information
+> into the pci_host_bridge structure. Now, with Catalin's patch that adds the data in
+> the pci_bus structure, this is not needed, so it is safe to drop. I did try to fix
+> the patch but I've realised how intricately linked pci_host_bridge and root bus are,
+> which to my opinion is a strong hint that the creation of the two should be split
+> into separate functions.
+>
+> I can send an official v13 patchset to the mailing list if you want, but if not, here
+> is the changelog:
+>
+> - updated "[PATCH 01/12] asm-generic/io.h: Fix ioport_map() for !CONFIG_GENERIC_IOMAP" to match
+>   the patch that Thierry Reding has submitted through the asm-generic branch. If his
+>   series lands first upstream this patch will be skipped.
+> - updated "[PATCH 03/12] ARM: Define PCI_IOBASE as the base of virtual PCI IO space" to
+>   cast the PCI_IOBASE value to (void __iomem *) as is the case with most #defined versions
+> - dropped the patch that was changing the order of initialisation between pci_host_bridge
+>   and root bus in pci_create_root_bus()
+> - fixed "[PATCH 07/12] PCI: Add generic domain handling" to account for the previous patch
+>   being removed
+> - fixed the title of commit 08/12 to reflect the name of the functions that are actually
+>   added (s/of_pci_get_domain_nr/pci_get_new_domain_nr/)
+>
+> I've compiled tested the series on sparc, microblaze (no)mmu_defconfig, arm omap2plus_defconfig
+> and multi_v7_defconfig and arm64. I've also tested the series on my Juno (arm64) board.
 
+It sounds like the v3.18 merge window is likely to open this weekend.
+Therefore, I don't want to change anything that's already in my "next"
+branch unless it is seriously broken, e.g., introduces a regression or
+build error.
+
+But you can post a series that would apply on top if you want, and
+it's possible we could merge that later in the merge window,
+especially if it is obviously low-risk.  If you go this route, please
+do post it to the mailing list.
+
+Bjorn
