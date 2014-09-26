@@ -1,90 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f43.google.com ([209.85.192.43]:36195 "EHLO
-	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753408AbaILO26 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Sep 2014 10:28:58 -0400
-Received: by mail-qg0-f43.google.com with SMTP id a108so796581qge.16
-        for <linux-pci@vger.kernel.org>; Fri, 12 Sep 2014 07:28:58 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140912131919.35c777e5@pluto>
-References: <20140514224339.7f8be3a9@neptune.home> <CAMxnaaXGQe4vg9cY5e2KZBnG4F-z49OriwxEGUE-DCE6MKUryQ@mail.gmail.com>
- <20140810112654.1bf684d6@neptune.home> <CAMxnaaUsd+XHppMmPMXdFL13d1-OhLzoH_yjv_9abOx_uP=_Ug@mail.gmail.com>
- <20140810183411.19370721@neptune.home> <CAMxnaaVNpiSZmhQsHa_ZHJckgzG+xHyOL6hOT3Ts8GdcGN_A9g@mail.gmail.com>
- <20140816192135.34260115@neptune.home> <CAMxnaaWQoX9KMQVCKHTkeqSxGEybz5u1qU6AVBqzW3+mj_nJHQ@mail.gmail.com>
- <20140820075508.74f5b622@pluto> <20140820091152.76cd4e1a@pluto>
- <CAMxnaaUodONkqmdPWedN-Q1qheHiJAScFcG_XbX1--ZmiOQZDg@mail.gmail.com>
- <20140821233435.19a9cffa@neptune.home> <CAErSpo6D1B+dPLrYoAF4OA1KeWuW8VZW2_RR5jB1GbCRo+6vHg@mail.gmail.com>
- <20140822082324.12cb6e93@pluto> <CAMxnaaU9EiMcne-aQjS1sY1Orn6xGbVHEnd057ogcZ77p74Y=Q@mail.gmail.com>
- <20140823130624.06ecc057@neptune.home> <20140824230953.7c04890f@neptune.home>
- <CAMxnaaUoLBbN1gNgD3qvPV1mx3JoM6FPV9EndQG9vJSpux2xMw@mail.gmail.com>
- <20140828224750.23148125@neptune.home> <20140912131919.35c777e5@pluto>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 12 Sep 2014 08:28:37 -0600
-Message-ID: <CAErSpo5K-whTs7uzki3JHzmbrDzaG6u7BerYG42is_sfuEOGXA@mail.gmail.com>
-Subject: Re: [PATCH 1/2 v2] vgaarb: Don't default exclusively to first video
- device with mem+io
-To: =?UTF-8?Q?Bruno_Pr=C3=A9mont?= <bonbons@linux-vserver.org>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-	DRI mailing list <dri-devel@lists.freedesktop.org>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFT v2 07/24] x86, uv: Use new irqdomain interfaces to allocate/free IRQ
+Date: Fri, 26 Sep 2014 22:02:08 +0800
+Message-Id: <1411740145-30626-8-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 12, 2014 at 5:19 AM, Bruno Prémont
-<bonbons@linux-vserver.org> wrote:
-> Bjorn,
->
-> What is missing to get these two patches pushed to Linus?
+Use new irqdomain interfaces to allocate/free IRQ, so we could
+kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
 
-Sorry, I've been working on some other regressions and overlooked this
-one.  If you open a bugzilla report and mark it as a regression, that
-will help keep this on my radar.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/platform/uv/uv_irq.c |   27 +++++++++++----------------
+ 1 file changed, 11 insertions(+), 16 deletions(-)
 
-Bjorn
+diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
+index 0ce673645432..474912d03f40 100644
+--- a/arch/x86/platform/uv/uv_irq.c
++++ b/arch/x86/platform/uv/uv_irq.c
+@@ -12,6 +12,7 @@
+ #include <linux/rbtree.h>
+ #include <linux/slab.h>
+ #include <linux/irq.h>
++#include <linux/irqdomain.h>
+ 
+ #include <asm/apic.h>
+ #include <asm/uv/uv_irq.h>
+@@ -130,24 +131,14 @@ static int
+ arch_enable_uv_irq(char *irq_name, unsigned int irq, int cpu, int mmr_blade,
+ 		       unsigned long mmr_offset, int limit)
+ {
+-	const struct cpumask *eligible_cpu = cpumask_of(cpu);
+ 	struct irq_cfg *cfg = irq_cfg(irq);
+ 	unsigned long mmr_value;
+ 	struct uv_IO_APIC_route_entry *entry;
+-	int mmr_pnode, err;
+-	unsigned int dest;
++	int mmr_pnode;
+ 
+ 	BUILD_BUG_ON(sizeof(struct uv_IO_APIC_route_entry) !=
+ 			sizeof(unsigned long));
+ 
+-	err = assign_irq_vector(irq, cfg, eligible_cpu);
+-	if (err != 0)
+-		return err;
+-
+-	err = apic->cpu_mask_to_apicid_and(eligible_cpu, eligible_cpu, &dest);
+-	if (err != 0)
+-		return err;
+-
+ 	if (limit == UV_AFFINITY_CPU)
+ 		irq_set_status_flags(irq, IRQ_NO_BALANCING);
+ 	else
+@@ -164,7 +155,7 @@ arch_enable_uv_irq(char *irq_name, unsigned int irq, int cpu, int mmr_blade,
+ 	entry->polarity		= 0;
+ 	entry->trigger		= 0;
+ 	entry->mask		= 0;
+-	entry->dest		= dest;
++	entry->dest		= cfg->dest_apicid;
+ 
+ 	mmr_pnode = uv_blade_to_pnode(mmr_blade);
+ 	uv_write_global_mmr64(mmr_pnode, mmr_offset, mmr_value);
+@@ -238,9 +229,13 @@ uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
+ int uv_setup_irq(char *irq_name, int cpu, int mmr_blade,
+ 		 unsigned long mmr_offset, int limit)
+ {
+-	int ret, irq = irq_alloc_hwirq(uv_blade_to_memory_nid(mmr_blade));
++	int ret, irq;
++	struct irq_alloc_info info;
+ 
+-	if (!irq)
++	init_irq_alloc_info(&info, cpumask_of(cpu));
++	irq = irq_domain_alloc_irqs(NULL, 1, uv_blade_to_memory_nid(mmr_blade),
++				    &info);
++	if (irq <= 0)
+ 		return -EBUSY;
+ 
+ 	ret = arch_enable_uv_irq(irq_name, irq, cpu, mmr_blade, mmr_offset,
+@@ -248,7 +243,7 @@ int uv_setup_irq(char *irq_name, int cpu, int mmr_blade,
+ 	if (ret == irq)
+ 		uv_set_irq_2_mmr_info(irq, mmr_offset, mmr_blade);
+ 	else
+-		irq_free_hwirq(irq);
++		irq_domain_free_irqs(irq, 1);
+ 
+ 	return ret;
+ }
+@@ -283,6 +278,6 @@ void uv_teardown_irq(unsigned int irq)
+ 			n = n->rb_right;
+ 	}
+ 	spin_unlock_irqrestore(&uv_irq_lock, irqflags);
+-	irq_free_hwirq(irq);
++	irq_domain_free_irqs(irq, 1);
+ }
+ EXPORT_SYMBOL_GPL(uv_teardown_irq);
+-- 
+1.7.10.4
 
-> On Thu, 28 Aug 2014 22:47:50 +0200 Bruno Prémont wrote:
->> On Tue, 26 August 2014 Andreas Noever <andreas.noever@gmail.com> wrote:
->> > On Sun, Aug 24, 2014 at 11:09 PM, Bruno Prémont wrote:
->> > > With commit 20cde694027e boot video device detection was moved from
->> > > efifb to x86 and ia64 pci/fixup.c.
->> > >
->> > > For dual-GPU Apple computers above change represents a regression as
->> > > code in efifb did forcefully override vga_default_device while the
->> > > merge did not (vgaarb happens prior to PCI fixup).
->> > >
->> > > To improve on initial device selection by vgaarb (it cannot know if
->> > > PCI device not behind bridges see/decode legacy VGA I/O or not), move
->> > > the screen_info based check from pci_video_fixup to vgaarb's init
->> > > function and use it to refine/override decision taken while adding
->> > > the individual PCI VGA devices.
->> > > This way PCI fixup has no reason to adjust vga_default_device
->> > > anymore but can depend on its value for flagging shadowed VBIOS.
->> > >
->> > > This has the nice benefit of removing duplicated code but does
->> > > introduce a #if defined() block in vgaarb.
->> > > Not all architectures have screen_info and would cause compile to
->> > > fail without it.
->> > >
->> > > Reported-By: Andreas Noever <andreas.noever@gmail.com>
->> > > CC: Matthew Garrett <matthew.garrett@nebula.com>
->> > > CC: stable@vger.kernel.org # v3.5+
->> > > Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
->> > > ---
->> > > Andreas, does this work properly for you, including the improvement
->> > > on i915 complaint about VBIOS going from KERN_ERR to KERN_INFO?
->> > Yep, thanks!
->> >
->> > >
->> > > Other arches using PCI and vgaarb that have screen_info may want
->> > > to be added to the #if defined() block or even introduce a new
->> > > CONFIG_HAVE_SCREEN_INFO or similar...
->>
->> Bjorn, can you queue these two patches, probably going through -next
->> for a week and passing them to Linus for -rc4, adding Andreas's Tested-by
->> to Patch 1/2 v2?
->>
->> Thanks,
->> Bruno
