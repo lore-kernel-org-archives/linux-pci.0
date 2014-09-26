@@ -1,47 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0102.outbound.protection.outlook.com ([207.46.100.102]:58097
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750768AbaI2FdU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Sep 2014 01:33:20 -0400
-From: Richard Zhu <r65037@freescale.com>
-To: <linux-pci-owner@vger.kernel.org>
-CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
-	<festevam@gmail.com>, <l.stach@pengutronix.de>,
-	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
-Subject: [PATCH v3 2/9] PCI: imx6: enable pcie on imx6qdl sabreauto
-Date: Mon, 29 Sep 2014 13:03:10 +0800
-Message-ID: <1411966997-27118-3-git-send-email-r65037@freescale.com>
-In-Reply-To: <1411966997-27118-1-git-send-email-r65037@freescale.com>
-References: <1411966997-27118-1-git-send-email-r65037@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC v1 01/28] x86, irq: Kill unused setup_timer_IRQ0_pin()
+Date: Fri, 26 Sep 2014 22:57:31 +0800
+Message-Id: <1411743478-31435-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-- enable pcie on imx6qdl sabreauto boards.
+Now there's no user of setup_timer_IRQ0_pin(), so kill it.
 
-Signed-off-by: Richard Zhu <r65037@freescale.com>
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/arm/boot/dts/imx6qdl-sabreauto.dtsi | 4 ++++
- 1 file changed, 4 insertions(+)
+Hi all,
+	This patch depends on Thomas' work to remove the last caller of
+setup_timer_IRQ0_pin(). So the "#if 0" is intended, so it won't block
+following up patches.
+Regards!
+Gerry
+---
+ arch/x86/include/asm/io_apic.h          |    1 -
+ arch/x86/kernel/apic/io_apic.c          |   17 -----------------
+ arch/x86/platform/intel-mid/intel-mid.c |    2 ++
+ 3 files changed, 2 insertions(+), 18 deletions(-)
 
-diff --git a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
-index 009abd6..d6040a5 100644
---- a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
-+++ b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
-@@ -410,6 +410,10 @@
- 	};
- };
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 7bf86bfe05b1..f9a99bc28981 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -204,7 +204,6 @@ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			    irq_hw_number_t hwirq);
+ extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+ extern int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node);
+-extern void __init pre_init_apic_IRQ0(void);
  
-+&pcie {
-+	status = "okay";
-+};
-+
- &pwm3 {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pinctrl_pwm3>;
+ extern void mp_save_irq(struct mpc_intsrc *m);
+ extern bool mp_should_keep_irq(struct device *dev);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 37796fcd33e2..5cccf8989507 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3091,20 +3091,3 @@ bool mp_should_keep_irq(struct device *dev)
+ 
+ 	return false;
+ }
+-
+-/* Enable IOAPIC early just for system timer */
+-void __init pre_init_apic_IRQ0(void)
+-{
+-	struct io_apic_irq_attr attr = { 0, 0, 0, 0 };
+-
+-	printk(KERN_INFO "Early APIC setup for system timer0\n");
+-#ifndef CONFIG_SMP
+-	physid_set_mask_of_physid(boot_cpu_physical_apicid,
+-					 &phys_cpu_present_map);
+-#endif
+-	setup_local_APIC();
+-
+-	io_apic_setup_irq_pin(0, 0, &attr);
+-	irq_set_chip_and_handler_name(0, &ioapic_chip, handle_edge_irq,
+-				      "edge");
+-}
+diff --git a/arch/x86/platform/intel-mid/intel-mid.c b/arch/x86/platform/intel-mid/intel-mid.c
+index 1bbedc4b0f88..f8855b703cab 100644
+--- a/arch/x86/platform/intel-mid/intel-mid.c
++++ b/arch/x86/platform/intel-mid/intel-mid.c
+@@ -99,7 +99,9 @@ static void __init intel_mid_time_init(void)
+ 		return;
+ 	}
+ 	/* we need at least one APB timer */
++#if 0
+ 	pre_init_apic_IRQ0();
++#endif
+ 	apbt_time_init();
+ }
+ 
 -- 
-1.9.1
+1.7.10.4
 
