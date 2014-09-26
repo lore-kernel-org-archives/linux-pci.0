@@ -1,113 +1,447 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:21689 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755322AbaIIHqo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Sep 2014 03:46:44 -0400
-Date: Tue, 9 Sep 2014 03:12:52 -0400
-From: "Chen, Gong" <gong.chen@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: rdunlap@infradead.org, bp@alien8.de, tony.luck@intel.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RESEND RFC 5/5] PCIe, AER: Update initial value of UC error mask
-Message-ID: <20140909071252.GB27821@gchen.bj.intel.com>
-References: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
- <1407910961-7798-6-git-send-email-gong.chen@linux.intel.com>
- <20140905233421.GL8080@google.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Pd0ReVV5GZGQvF3a"
-In-Reply-To: <20140905233421.GL8080@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFT v2 24/24] x86, uv: Use hierarchy irqdomain to manage UV interrupts
+Date: Fri, 26 Sep 2014 22:02:25 +0800
+Message-Id: <1411740145-30626-25-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Enhance UV code to support hierarchy irqdomain, it helps to make
+the architecture more clear.
 
---Pd0ReVV5GZGQvF3a
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+We should construct hwirq based on mmr_blade and mmr_offset, but
+mmr_offset is type of unsigned long, it may exceed the range of
+irq_hw_number_t. So help about the way to construct hwirq based
+on mmr_blade and mmr_offset is welcomed!
 
-On Fri, Sep 05, 2014 at 05:34:21PM -0600, Bjorn Helgaas wrote:
-> Date: Fri, 5 Sep 2014 17:34:21 -0600
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> To: "Chen, Gong" <gong.chen@linux.intel.com>
-> Cc: rdunlap@infradead.org, bp@alien8.de, tony.luck@intel.com,
->  linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-> Subject: Re: [RESEND RFC 5/5] PCIe, AER: Update initial value of UC error
->  mask
-> User-Agent: Mutt/1.5.21 (2010-09-15)
->=20
-> On Wed, Aug 13, 2014 at 02:22:41AM -0400, Chen, Gong wrote:
-> > In PCI-e SPEC r3.0, BIT 0 of Uncorrectable Error Status Register
-> > is redefined and it has an explicit requirement that when writing
-> > this field, a value of 1b is the only choice. So change previous
-> > initial maks from 0 to 1.
-> >=20
-> > Signed-off-by: Chen, Gong <gong.chen@linux.intel.com>
-> > ---
-> > NOTE: After scratching all use cases, this is the most obvious use
-> > case to violate the SPEC. Most of use cases just read first and
-> > then overwrite for clear purpose. Even so, such fix is obvious to
-> > not compatiable with previous SPEC definition. Do we need a dirty
-> > hack?
-> >=20
-> >  arch/mips/pci/pci-octeon.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >=20
-> > diff --git a/arch/mips/pci/pci-octeon.c b/arch/mips/pci/pci-octeon.c
-> > index 59cccd95688b..f1bfdc201297 100644
-> > --- a/arch/mips/pci/pci-octeon.c
-> > +++ b/arch/mips/pci/pci-octeon.c
-> > @@ -134,7 +134,7 @@ int pcibios_plat_dev_init(struct pci_dev *dev)
-> >  				       dconfig);
-> >  		/* Enable reporting of all uncorrectable errors */
-> >  		/* Uncorrectable Error Mask - turned on bits disable errors */
-> > -		pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, 0);
-> > +		pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, 1);
->=20
-> I see the text in the spec that says we should only write 1 to bit 0 (sec
-> 7.10.3, for anybody following along).  It looks like that change was made
-> between PCIe r1.0 and r1.1.  It would really be nice to have more context
-> about why the change was made, because if there's hardware in the field
-> that implements r1.0 behavior, this patch will change the way it works, a=
-nd
-> I don't know how to verify that is safe.
->=20
-> Does this actually change fix a problem?  If it fixes a problem that
-> happens on real hardware, that's a much better reason to make a change th=
-an
-> just to comply with the spec.
->=20
-> Sec 7.10.2 also says we should ignore the value of bit 0 in the
-> Uncorrectable Error Status register, and I don't see any place where we
-> follow that advice.
->=20
-That's why I mark this patch as RFC. As you mentioned above, these are my
-concerns, too. I submit such a patch not for merging but throwing a potenti=
-al
-issue. As I noted above, I don't know if it is deserved to fix all affected
-placed to comply with spec change. After all, no one reports such an
-issue (or maybe have happened :-))
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hw_irq.h |    9 ++
+ arch/x86/platform/uv/uv_irq.c |  290 ++++++++++++++++-------------------------
+ 2 files changed, 122 insertions(+), 177 deletions(-)
 
---Pd0ReVV5GZGQvF3a
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 35bdc90e5797..1cb6687375f8 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -122,6 +122,7 @@ enum irq_alloc_type {
+ 	X86_IRQ_ALLOC_TYPE_MSI,
+ 	X86_IRQ_ALLOC_TYPE_MSIX,
+ 	X86_IRQ_ALLOC_TYPE_DMAR,
++	X86_IRQ_ALLOC_TYPE_UV,
+ };
+ 
+ struct irq_alloc_info {
+@@ -164,6 +165,14 @@ struct irq_alloc_info {
+ 			void		*ht_update;
+ 		};
+ #endif
++#ifdef	CONFIG_X86_UV
++		struct {
++			int		uv_limit;
++			int		uv_blade;
++			unsigned long	uv_offset;
++			char		*uv_name;
++		};
++#endif
+ 	};
+ };
+ 
+diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
+index 474912d03f40..743b409e966c 100644
+--- a/arch/x86/platform/uv/uv_irq.c
++++ b/arch/x86/platform/uv/uv_irq.c
+@@ -19,17 +19,31 @@
+ #include <asm/uv/uv_hub.h>
+ 
+ /* MMR offset and pnode of hub sourcing interrupts for a given irq */
+-struct uv_irq_2_mmr_pnode{
+-	struct rb_node		list;
++struct uv_irq_2_mmr_pnode {
+ 	unsigned long		offset;
+ 	int			pnode;
+-	int			irq;
+ };
+ 
+-static DEFINE_SPINLOCK(uv_irq_lock);
+-static struct rb_root		uv_irq_root;
++static void uv_program_mmr(struct irq_cfg *cfg, struct uv_irq_2_mmr_pnode *info)
++{
++	unsigned long mmr_value;
++	struct uv_IO_APIC_route_entry *entry;
++
++	BUILD_BUG_ON(sizeof(struct uv_IO_APIC_route_entry) !=
++		     sizeof(unsigned long));
++
++	mmr_value = 0;
++	entry = (struct uv_IO_APIC_route_entry *)&mmr_value;
++	entry->vector		= cfg->vector;
++	entry->delivery_mode	= apic->irq_delivery_mode;
++	entry->dest_mode	= apic->irq_dest_mode;
++	entry->polarity		= 0;
++	entry->trigger		= 0;
++	entry->mask		= 0;
++	entry->dest		= cfg->dest_apicid;
+ 
+-static int uv_set_irq_affinity(struct irq_data *, const struct cpumask *, bool);
++	uv_write_global_mmr64(info->pnode, info->offset, mmr_value);
++}
+ 
+ static void uv_noop(struct irq_data *data) { }
+ 
+@@ -38,6 +52,24 @@ static void uv_ack_apic(struct irq_data *data)
+ 	ack_APIC_irq();
+ }
+ 
++static int
++uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
++		    bool force)
++{
++	struct irq_data *parent = data->parent_data;
++	struct irq_cfg *cfg = irqd_cfg(data);
++	int ret;
++
++	ret = parent->chip->irq_set_affinity(parent, mask, force);
++	if (ret >= 0) {
++		uv_program_mmr(cfg, data->chip_data);
++		if (cfg->move_in_progress)
++			send_cleanup_vector(cfg);
++	}
++
++	return ret;
++}
++
+ static struct irq_chip uv_irq_chip = {
+ 	.name			= "UV-CORE",
+ 	.irq_mask		= uv_noop,
+@@ -46,179 +78,106 @@ static struct irq_chip uv_irq_chip = {
+ 	.irq_set_affinity	= uv_set_irq_affinity,
+ };
+ 
+-/*
+- * Add offset and pnode information of the hub sourcing interrupts to the
+- * rb tree for a specific irq.
+- */
+-static int uv_set_irq_2_mmr_info(int irq, unsigned long offset, unsigned blade)
++static int uv_domain_alloc(struct irq_domain *domain, unsigned int virq,
++			   unsigned int nr_irqs, void *arg)
+ {
+-	struct rb_node **link = &uv_irq_root.rb_node;
+-	struct rb_node *parent = NULL;
+-	struct uv_irq_2_mmr_pnode *n;
+-	struct uv_irq_2_mmr_pnode *e;
+-	unsigned long irqflags;
+-
+-	n = kmalloc_node(sizeof(struct uv_irq_2_mmr_pnode), GFP_KERNEL,
+-				uv_blade_to_memory_nid(blade));
+-	if (!n)
++	struct uv_irq_2_mmr_pnode *chip_data;
++	struct irq_alloc_info *info = arg;
++	struct irq_data *irq_data = irq_domain_get_irq_data(domain, virq);
++	int ret;
++
++	if (nr_irqs > 1 || !info || info->type != X86_IRQ_ALLOC_TYPE_UV)
++		return -EINVAL;
++
++	chip_data = kmalloc_node(sizeof(*chip_data), GFP_KERNEL,
++				 irq_data->node);
++	if (!chip_data)
+ 		return -ENOMEM;
+ 
+-	n->irq = irq;
+-	n->offset = offset;
+-	n->pnode = uv_blade_to_pnode(blade);
+-	spin_lock_irqsave(&uv_irq_lock, irqflags);
+-	/* Find the right place in the rbtree: */
+-	while (*link) {
+-		parent = *link;
+-		e = rb_entry(parent, struct uv_irq_2_mmr_pnode, list);
+-
+-		if (unlikely(irq == e->irq)) {
+-			/* irq entry exists */
+-			e->pnode = uv_blade_to_pnode(blade);
+-			e->offset = offset;
+-			spin_unlock_irqrestore(&uv_irq_lock, irqflags);
+-			kfree(n);
+-			return 0;
+-		}
+-
+-		if (irq < e->irq)
+-			link = &(*link)->rb_left;
++	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
++	if (ret >= 0) {
++		if (info->uv_limit == UV_AFFINITY_CPU)
++			irq_set_status_flags(virq, IRQ_NO_BALANCING);
+ 		else
+-			link = &(*link)->rb_right;
++			irq_set_status_flags(virq, IRQ_MOVE_PCNTXT);
++
++		chip_data->pnode = uv_blade_to_pnode(info->uv_blade);
++		chip_data->offset = info->uv_offset;
++		irq_domain_set_hwirq_and_chip(domain, virq, virq,
++					      &uv_irq_chip, chip_data);
++		__irq_set_handler(virq, handle_percpu_irq, 0, info->uv_name);
++	} else {
++		kfree(chip_data);
+ 	}
+ 
+-	/* Insert the node into the rbtree. */
+-	rb_link_node(&n->list, parent, link);
+-	rb_insert_color(&n->list, &uv_irq_root);
+-
+-	spin_unlock_irqrestore(&uv_irq_lock, irqflags);
+-	return 0;
++	return ret;
+ }
+ 
+-/* Retrieve offset and pnode information from the rb tree for a specific irq */
+-int uv_irq_2_mmr_info(int irq, unsigned long *offset, int *pnode)
++static void uv_domain_free(struct irq_domain *domain, unsigned int virq,
++			   unsigned int nr_irqs)
+ {
+-	struct uv_irq_2_mmr_pnode *e;
+-	struct rb_node *n;
+-	unsigned long irqflags;
+-
+-	spin_lock_irqsave(&uv_irq_lock, irqflags);
+-	n = uv_irq_root.rb_node;
+-	while (n) {
+-		e = rb_entry(n, struct uv_irq_2_mmr_pnode, list);
+-
+-		if (e->irq == irq) {
+-			*offset = e->offset;
+-			*pnode = e->pnode;
+-			spin_unlock_irqrestore(&uv_irq_lock, irqflags);
+-			return 0;
+-		}
+-
+-		if (irq < e->irq)
+-			n = n->rb_left;
+-		else
+-			n = n->rb_right;
+-	}
+-	spin_unlock_irqrestore(&uv_irq_lock, irqflags);
+-	return -1;
++	struct irq_data *irq_data = irq_domain_get_irq_data(domain, virq);
++
++	BUG_ON(nr_irqs != 1);
++	kfree(irq_data->chip_data);
++	irq_domain_reset_irq_data(irq_data);
++	irq_set_handler(virq, NULL);
++	irq_clear_status_flags(virq, IRQ_MOVE_PCNTXT);
++	irq_clear_status_flags(virq, IRQ_NO_BALANCING);
++	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
+ }
+ 
+ /*
+  * Re-target the irq to the specified CPU and enable the specified MMR located
+  * on the specified blade to allow the sending of MSIs to the specified CPU.
+  */
+-static int
+-arch_enable_uv_irq(char *irq_name, unsigned int irq, int cpu, int mmr_blade,
+-		       unsigned long mmr_offset, int limit)
++static int uv_domain_activate(struct irq_domain *domain,
++			      struct irq_data *irq_data)
+ {
+-	struct irq_cfg *cfg = irq_cfg(irq);
+-	unsigned long mmr_value;
+-	struct uv_IO_APIC_route_entry *entry;
+-	int mmr_pnode;
+-
+-	BUILD_BUG_ON(sizeof(struct uv_IO_APIC_route_entry) !=
+-			sizeof(unsigned long));
+-
+-	if (limit == UV_AFFINITY_CPU)
+-		irq_set_status_flags(irq, IRQ_NO_BALANCING);
+-	else
+-		irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
+-
+-	irq_set_chip_and_handler_name(irq, &uv_irq_chip, handle_percpu_irq,
+-				      irq_name);
++	uv_program_mmr(irqd_cfg(irq_data), irq_data->chip_data);
+ 
+-	mmr_value = 0;
+-	entry = (struct uv_IO_APIC_route_entry *)&mmr_value;
+-	entry->vector		= cfg->vector;
+-	entry->delivery_mode	= apic->irq_delivery_mode;
+-	entry->dest_mode	= apic->irq_dest_mode;
+-	entry->polarity		= 0;
+-	entry->trigger		= 0;
+-	entry->mask		= 0;
+-	entry->dest		= cfg->dest_apicid;
+-
+-	mmr_pnode = uv_blade_to_pnode(mmr_blade);
+-	uv_write_global_mmr64(mmr_pnode, mmr_offset, mmr_value);
+-
+-	if (cfg->move_in_progress)
+-		send_cleanup_vector(cfg);
+-
+-	return irq;
++	return 0;
+ }
+ 
+ /*
+  * Disable the specified MMR located on the specified blade so that MSIs are
+  * longer allowed to be sent.
+  */
+-static void arch_disable_uv_irq(int mmr_pnode, unsigned long mmr_offset)
++static int uv_domain_deactivate(struct irq_domain *domain,
++				struct irq_data *irq_data)
+ {
+ 	unsigned long mmr_value;
+ 	struct uv_IO_APIC_route_entry *entry;
+ 
+-	BUILD_BUG_ON(sizeof(struct uv_IO_APIC_route_entry) !=
+-			sizeof(unsigned long));
+-
+ 	mmr_value = 0;
+ 	entry = (struct uv_IO_APIC_route_entry *)&mmr_value;
+ 	entry->mask = 1;
++	uv_program_mmr(irqd_cfg(irq_data), irq_data->chip_data);
+ 
+-	uv_write_global_mmr64(mmr_pnode, mmr_offset, mmr_value);
++	return 0;
+ }
+ 
+-static int
+-uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
+-		    bool force)
+-{
+-	struct irq_cfg *cfg = irqd_cfg(data);
+-	unsigned int dest;
+-	unsigned long mmr_value, mmr_offset;
+-	struct uv_IO_APIC_route_entry *entry;
+-	int mmr_pnode;
+-
+-	if (apic_set_affinity(data, mask, &dest))
+-		return -1;
+-
+-	mmr_value = 0;
+-	entry = (struct uv_IO_APIC_route_entry *)&mmr_value;
+-
+-	entry->vector		= cfg->vector;
+-	entry->delivery_mode	= apic->irq_delivery_mode;
+-	entry->dest_mode	= apic->irq_dest_mode;
+-	entry->polarity		= 0;
+-	entry->trigger		= 0;
+-	entry->mask		= 0;
+-	entry->dest		= dest;
+-
+-	/* Get previously stored MMR and pnode of hub sourcing interrupts */
+-	if (uv_irq_2_mmr_info(data->irq, &mmr_offset, &mmr_pnode))
+-		return -1;
+-
+-	uv_write_global_mmr64(mmr_pnode, mmr_offset, mmr_value);
++static struct irq_domain_ops uv_domain_ops = {
++	.alloc = uv_domain_alloc,
++	.free = uv_domain_free,
++	.activate = uv_domain_activate,
++	.deactivate = uv_domain_deactivate,
++};
+ 
+-	if (cfg->move_in_progress)
+-		send_cleanup_vector(cfg);
++static struct irq_domain *uv_get_irq_domain(void)
++{
++	static struct irq_domain *uv_domain;
++	static DEFINE_MUTEX(uv_lock);
++
++	mutex_lock(&uv_lock);
++	if (uv_domain == NULL) {
++		uv_domain = irq_domain_add_tree(NULL, &uv_domain_ops, NULL);
++		if (uv_domain)
++			uv_domain->parent = x86_vector_domain;
++	}
++	mutex_unlock(&uv_lock);
+ 
+-	return IRQ_SET_MASK_OK_NOCOPY;
++	return uv_domain;
+ }
+ 
+ /*
+@@ -229,23 +188,20 @@ uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
+ int uv_setup_irq(char *irq_name, int cpu, int mmr_blade,
+ 		 unsigned long mmr_offset, int limit)
+ {
+-	int ret, irq;
+ 	struct irq_alloc_info info;
++	struct irq_domain *domain = uv_get_irq_domain();
++
++	if (!domain)
++		return -ENOMEM;
+ 
+ 	init_irq_alloc_info(&info, cpumask_of(cpu));
+-	irq = irq_domain_alloc_irqs(NULL, 1, uv_blade_to_memory_nid(mmr_blade),
+-				    &info);
+-	if (irq <= 0)
+-		return -EBUSY;
+-
+-	ret = arch_enable_uv_irq(irq_name, irq, cpu, mmr_blade, mmr_offset,
+-		limit);
+-	if (ret == irq)
+-		uv_set_irq_2_mmr_info(irq, mmr_offset, mmr_blade);
+-	else
+-		irq_domain_free_irqs(irq, 1);
++	info.uv_limit = limit;
++	info.uv_blade = mmr_blade;
++	info.uv_offset = mmr_offset;
++	info.uv_name = irq_name;
+ 
+-	return ret;
++	return irq_domain_alloc_irqs(domain, 1,
++				     uv_blade_to_memory_nid(mmr_blade), &info);
+ }
+ EXPORT_SYMBOL_GPL(uv_setup_irq);
+ 
+@@ -258,26 +214,6 @@ EXPORT_SYMBOL_GPL(uv_setup_irq);
+  */
+ void uv_teardown_irq(unsigned int irq)
+ {
+-	struct uv_irq_2_mmr_pnode *e;
+-	struct rb_node *n;
+-	unsigned long irqflags;
+-
+-	spin_lock_irqsave(&uv_irq_lock, irqflags);
+-	n = uv_irq_root.rb_node;
+-	while (n) {
+-		e = rb_entry(n, struct uv_irq_2_mmr_pnode, list);
+-		if (e->irq == irq) {
+-			arch_disable_uv_irq(e->pnode, e->offset);
+-			rb_erase(n, &uv_irq_root);
+-			kfree(e);
+-			break;
+-		}
+-		if (irq < e->irq)
+-			n = n->rb_left;
+-		else
+-			n = n->rb_right;
+-	}
+-	spin_unlock_irqrestore(&uv_irq_lock, irqflags);
+ 	irq_domain_free_irqs(irq, 1);
+ }
+ EXPORT_SYMBOL_GPL(uv_teardown_irq);
+-- 
+1.7.10.4
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUDqh0AAoJEI01n1+kOSLHy4QP/2BbLr1NORHlsNG7eypswhdJ
-7FrEXWQus8W3+ByjLwxYJsIWEUbkdMMseMkfT2urguUQZQgldgT6W0q0amG8ntCn
-nx37ra9ct4XtUGdicSCCs+zGAIZvl9O9X1HfDjubC+JbXeoiRgUd7Sxd1Zws6Qeh
-rJRKzIyUCdnBjZz23hPFKKNBO3myvuveOmLNpwNTYHBISbzk8hMytZkjAc5viAkQ
-FG2Yj6eh4BGvp9zv02I5lTHUY7RNVLhxwejIbmPb/FMA2hqfq/fav4+ft76rIMn+
-N6xfauxQmukF6IP9YlkZdtxbudLMe8noqy41OJcU3w5d+SLcwHrkPoqp/d0Vmz1N
-wPoX5IcnB/M/vYfKZ5ZWm0h91ctGvI6G/1a3tMeVcMHoFKGUA/GJkhkoIB7+ZttY
-SwHR/axViRs0Jr62+ZM/gwGQi5wxBbz3e0AhgKZqRG8qMy2MIljDbIvMc7c70wA8
-T1dP4nrSZTalqva0+FiFdxsCH3gDc5DLfEH6fwWvP8CvNen53X+4Z0xccMgNUJuR
-FdLl1HSVg+xj7VnP8e+opgKl4ieKRlRQT8i1oU3OaFXdsGVieFauZ2aCsTiZusfI
-oDQs1sflB3uKetWdur5EUzxYmSVp4cEgi2EaRMwDFffRrUGpfch62P3HSt0Wu2gz
-xXL4usDe3xQRRQCwfadQ
-=50d2
------END PGP SIGNATURE-----
-
---Pd0ReVV5GZGQvF3a--
