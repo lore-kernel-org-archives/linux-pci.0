@@ -20,102 +20,122 @@ Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	x86@kernel.org, linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org
-Subject: [RFC Part2 v1 07/21] x86, uv: Use new irqdomain interfaces to allocate/free IRQ
-Date: Thu, 11 Sep 2014 22:03:34 +0800
-Message-Id: <1410444228-3134-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
+Subject: [RFT Part2 v2 00/24] Enable hierarchy irqdomian on x86 platforms
+Date: Fri, 26 Sep 2014 22:02:01 +0800
+Message-Id: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ, so we could
-kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+We plan to restructure x86 interrupt code based on hierarchy irqdomain,
+that is to build irqdomains for CPU vector, interrupt remapping unit,
+IOAPIC, MSI and HPET etc and organize those irqdomains in hierarchy mode.
+Each irqdomain manages corresponding interrupt controller and talks to
+parent interrupt controller through public irqdomain interfaces. We also
+support stacked irq_chip based on hierarchy irqdomain. It will make the
+x86 interrupt architecture much more clear and more easy to maintain
+with hierarchy irqdomain and stacked irq_chip. It may also help ARM
+interrupt management architecture too.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/platform/uv/uv_irq.c |   27 +++++++++++----------------
- 1 file changed, 11 insertions(+), 16 deletions(-)
+This is the second patch set to enable support of hierarchy irqdomain
+on x86 platforms. It depends on the first part at:
+https://lkml.org/lkml/2014/9/26/501
+And you may access it at:
+https://github.com/jiangliu/linux.git irqdomain/p2v2
 
-diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
-index 0ce673645432..74871ead5a30 100644
---- a/arch/x86/platform/uv/uv_irq.c
-+++ b/arch/x86/platform/uv/uv_irq.c
-@@ -12,6 +12,7 @@
- #include <linux/rbtree.h>
- #include <linux/slab.h>
- #include <linux/irq.h>
-+#include <linux/irqdomain.h>
- 
- #include <asm/apic.h>
- #include <asm/uv/uv_irq.h>
-@@ -130,24 +131,14 @@ static int
- arch_enable_uv_irq(char *irq_name, unsigned int irq, int cpu, int mmr_blade,
- 		       unsigned long mmr_offset, int limit)
- {
--	const struct cpumask *eligible_cpu = cpumask_of(cpu);
- 	struct irq_cfg *cfg = irq_cfg(irq);
- 	unsigned long mmr_value;
- 	struct uv_IO_APIC_route_entry *entry;
--	int mmr_pnode, err;
--	unsigned int dest;
-+	int mmr_pnode;
- 
- 	BUILD_BUG_ON(sizeof(struct uv_IO_APIC_route_entry) !=
- 			sizeof(unsigned long));
- 
--	err = assign_irq_vector(irq, cfg, eligible_cpu);
--	if (err != 0)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(eligible_cpu, eligible_cpu, &dest);
--	if (err != 0)
--		return err;
--
- 	if (limit == UV_AFFINITY_CPU)
- 		irq_set_status_flags(irq, IRQ_NO_BALANCING);
- 	else
-@@ -164,7 +155,7 @@ arch_enable_uv_irq(char *irq_name, unsigned int irq, int cpu, int mmr_blade,
- 	entry->polarity		= 0;
- 	entry->trigger		= 0;
- 	entry->mask		= 0;
--	entry->dest		= dest;
-+	entry->dest		= cfg->dest_apicid;
- 
- 	mmr_pnode = uv_blade_to_pnode(mmr_blade);
- 	uv_write_global_mmr64(mmr_pnode, mmr_offset, mmr_value);
-@@ -238,9 +229,13 @@ uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
- int uv_setup_irq(char *irq_name, int cpu, int mmr_blade,
- 		 unsigned long mmr_offset, int limit)
- {
--	int ret, irq = irq_alloc_hwirq(uv_blade_to_memory_nid(mmr_blade));
-+	int ret, irq;
-+	struct irq_alloc_info info;
- 
--	if (!irq)
-+	init_irq_alloc_info(&info, cpumask_of(cpu));
-+	irq = irq_domain_alloc_irqs(NULL, -1, 1,
-+				    uv_blade_to_memory_nid(mmr_blade), &info);
-+	if (irq <= 0)
- 		return -EBUSY;
- 
- 	ret = arch_enable_uv_irq(irq_name, irq, cpu, mmr_blade, mmr_offset,
-@@ -248,7 +243,7 @@ int uv_setup_irq(char *irq_name, int cpu, int mmr_blade,
- 	if (ret == irq)
- 		uv_set_irq_2_mmr_info(irq, mmr_offset, mmr_blade);
- 	else
--		irq_free_hwirq(irq);
-+		irq_domain_free_irqs(irq, 1);
- 
- 	return ret;
- }
-@@ -283,6 +278,6 @@ void uv_teardown_irq(unsigned int irq)
- 			n = n->rb_right;
- 	}
- 	spin_unlock_irqrestore(&uv_irq_lock, irqflags);
--	irq_free_hwirq(irq);
-+	irq_domain_free_irqs(irq, 1);
- }
- EXPORT_SYMBOL_GPL(uv_teardown_irq);
+And there will be a third patch set to convert IOAPIC driver to support
+hierarchy irqdomain and clean up code.
+
+The first patch extends irqdomain interfaces to support hierarchy
+irqdomain. Hope this interface could be used by other architectures too,
+such as ARM/ARM64.
+The second patch introduces two helper functions to support stacked
+irq_chip.
+Patch 3-9 implements an irqdomain to manange CPU interrupt vectors, and
+it's the root irqdomain for x86 platforms.
+Patch 10-13 converts Intel and AMD interrupt remapping drivers to
+support hierarchy irqdomain.
+Patch 14-16 converts HPET and MSI to support hierarchy irqdomain.
+Patch 17-20 cleans up unsued code in x86 arch and interrupt remapping
+drivers.
+Patch 21-24 converts DMAR, HTIRQ and UV to support hierarchy irqdomain.
+
+We have tested this patchset on Intel 32-bit and 64-bit systems. And it
+also passes Fengguang's 0day tests. But helps are need for testing:
+1) AMD interrupt remapping 
+2) AMD HT_IRQ
+3) UV platform
+
+V1->V2
+1) Add hierarchy iredomain support of DMAR IRQ and UV IRQ.
+2) Fix bugs reported by Joe C.
+3) Address all review comments from Thomas
+4) Fix a bug found during tests
+5) Fix errors and warning found by 0day tests
+
+Jiang Liu (24):
+  irqdomain: Introduce new interfaces to support hierarchy irqdomains
+  genirq: Introduce helper functions to support stacked irq_chip
+  x86, irq: Save destination CPU ID in irq_cfg
+  x86, irq: Use hierarchy irqdomain to manage CPU interrupt vectors
+  x86, hpet: Use new irqdomain interfaces to allocate/free IRQ
+  x86, MSI: Use new irqdomain interfaces to allocate/free IRQ
+  x86, uv: Use new irqdomain interfaces to allocate/free IRQ
+  x86, htirq: Use new irqdomain interfaces to allocate/free IRQ
+  x86, dmar: Use new irqdomain interfaces to allocate/free IRQ
+  x86: irq_remapping: Introduce new interfaces to support hierarchy
+    irqdomain
+  iommu/vt-d: Change prototypes to prepare for enabling hierarchy
+    irqdomain
+  iommu/vt-d: Enhance Intel IR driver to suppport hierarchy irqdomain
+  iommu/amd: Enhance AMD IR driver to suppport hierarchy irqdomain
+  x86, hpet: Enhance HPET IRQ to support hierarchy irqdomain
+  x86, MSI: Use hierarchy irqdomain to manage MSI interrupts
+  x86, irq: Directly call native_compose_msi_msg() for DMAR IRQ
+  iommu/vt-d: Clean up unused MSI related code
+  iommu/amd: Clean up unused MSI related code
+  x86: irq_remapping: Clean up unused MSI related code
+  x86, irq: Clean up unused MSI related code and interfaces
+  iommu/vt-d: Refine the interfaces to create IRQ for DMAR unit
+  x86, irq: Use hierarchy irqdomain to manage DMAR interrupts
+  x86, htirq: Use hierarchy irqdomain to manage Hypertransport
+    interrupts
+  x86, uv: Use hierarchy irqdomain to manage UV interrupts
+
+ Documentation/IRQ-domain.txt          |   71 +++++
+ arch/ia64/include/asm/irq_remapping.h |    2 -
+ arch/ia64/kernel/msi_ia64.c           |   30 +-
+ arch/x86/Kconfig                      |    3 +-
+ arch/x86/include/asm/hpet.h           |   16 +-
+ arch/x86/include/asm/hw_irq.h         |   81 +++++
+ arch/x86/include/asm/irq_remapping.h  |   84 ++++-
+ arch/x86/include/asm/pci.h            |    5 -
+ arch/x86/include/asm/x86_init.h       |    4 -
+ arch/x86/kernel/apic/htirq.c          |  178 ++++++++---
+ arch/x86/kernel/apic/io_apic.c        |    3 -
+ arch/x86/kernel/apic/msi.c            |  538 +++++++++++++++++++++++++--------
+ arch/x86/kernel/apic/vector.c         |  160 +++++++++-
+ arch/x86/kernel/hpet.c                |   57 +---
+ arch/x86/kernel/x86_init.c            |    2 -
+ arch/x86/platform/uv/uv_irq.c         |  301 +++++++-----------
+ drivers/iommu/amd_iommu.c             |  388 ++++++++++++++++++------
+ drivers/iommu/amd_iommu_init.c        |    4 +
+ drivers/iommu/amd_iommu_proto.h       |    9 +
+ drivers/iommu/amd_iommu_types.h       |    5 +
+ drivers/iommu/dmar.c                  |   19 +-
+ drivers/iommu/intel_irq_remapping.c   |  471 ++++++++++++++++++++---------
+ drivers/iommu/irq_remapping.c         |  221 +++++---------
+ drivers/iommu/irq_remapping.h         |   22 +-
+ drivers/pci/htirq.c                   |   48 +--
+ include/linux/dmar.h                  |    3 +-
+ include/linux/htirq.h                 |   22 +-
+ include/linux/intel-iommu.h           |    4 +
+ include/linux/irq.h                   |   10 +
+ include/linux/irqdomain.h             |   81 +++++
+ kernel/irq/Kconfig                    |    3 +
+ kernel/irq/chip.c                     |   20 ++
+ kernel/irq/irqdomain.c                |  372 ++++++++++++++++++++++-
+ 33 files changed, 2311 insertions(+), 926 deletions(-)
+
 -- 
 1.7.10.4
 
