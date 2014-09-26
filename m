@@ -1,289 +1,214 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:57245 "EHLO
-	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750727AbaICELX convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 3 Sep 2014 00:11:23 -0400
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Pratyush ANAND <pratyush.anand@st.com>,
-	"jg1.han@samsung.com" <jg1.han@samsung.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Wed, 3 Sep 2014 12:11:08 +0800
-Subject: RE: [PATCH] PCIe: Designware: Extract struct pcie_port_info
- elements into struct pcie_port
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB661A70E51E437@EAPEX1MAIL1.st.com>
-References: <67297b465f1b531aec9f290246698b23aa994381.1407906240.git.pratyush.anand@st.com>
-In-Reply-To: <67297b465f1b531aec9f290246698b23aa994381.1407906240.git.pratyush.anand@st.com>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:5513 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755654AbaIZOC7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Sep 2014 10:02:59 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFT v2 17/24] iommu/vt-d: Clean up unused MSI related code
+Date: Fri, 26 Sep 2014 22:02:18 +0800
+Message-Id: <1411740145-30626-18-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Pratyush,
+Now MSI interrupt has been converted to new hierarchy irqdomain
+interfaces, so kill legacy MSI related code.
 
-> -----Original Message-----
-> From: Pratyush ANAND
-> Sent: Saturday, August 16, 2014 12:53 PM
-> To: jg1.han@samsung.com; Mohit KUMAR DCG
-> Cc: linux-pci@vger.kernel.org; Pratyush ANAND
-> Subject: [PATCH] PCIe: Designware: Extract struct pcie_port_info elements
-> into struct pcie_port
-> 
-> struct pcie_port_info elements are not containing any exclusive information
-> compared to other elements of struct pcie_port. So, keeping a separate
-> structure like struct pcie_port_info does not seem very logical. Therefore
-> remove this struct  and embed its elements directly into struct pcie_port.
-> 
-> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-> ---
->  drivers/pci/host/pcie-designware.c | 53 +++++++++++++++++++--------------
-> -----
->  drivers/pci/host/pcie-designware.h | 16 +++++-------
->  2 files changed, 32 insertions(+), 37 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-
-> designware.c
-> index 52bd3a143563..8b5237fe162f 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -435,16 +435,16 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> 
->  	cfg_res = platform_get_resource_byname(pdev,
-> IORESOURCE_MEM, "config");
->  	if (cfg_res) {
-> -		pp->config.cfg0_size = resource_size(cfg_res)/2;
-> -		pp->config.cfg1_size = resource_size(cfg_res)/2;
-> +		pp->cfg0_size = resource_size(cfg_res)/2;
-> +		pp->cfg1_size = resource_size(cfg_res)/2;
->  		pp->cfg0_base = cfg_res->start;
-> -		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
-> +		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
-> 
->  		/* Find the untranslated configuration space address */
->  		index = of_property_match_string(np, "reg-names",
-> "config");
->  		addrp = of_get_address(np, index, false, false);
->  		pp->cfg0_mod_base = of_read_number(addrp, ns);
-> -		pp->cfg1_mod_base = pp->cfg0_mod_base + pp-
-> >config.cfg0_size;
-> +		pp->cfg1_mod_base = pp->cfg0_mod_base + pp->cfg0_size;
->  	} else {
->  		dev_err(pp->dev, "missing *config* reg space\n");
->  	}
-> @@ -467,8 +467,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  					   IO_SPACE_LIMIT,
->  					   range.pci_addr + range.size
->  					   + global_io_offset);
-> -			pp->config.io_size = resource_size(&pp->io);
-> -			pp->config.io_bus_addr = range.pci_addr;
-> +			pp->io_size = resource_size(&pp->io);
-> +			pp->io_bus_addr = range.pci_addr;
->  			pp->io_base = range.cpu_addr;
-> 
->  			/* Find the untranslated IO space address */ @@ -
-> 478,8 +478,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  		if (restype == IORESOURCE_MEM) {
->  			of_pci_range_to_resource(&range, np, &pp->mem);
->  			pp->mem.name = "MEM";
-> -			pp->config.mem_size = resource_size(&pp->mem);
-> -			pp->config.mem_bus_addr = range.pci_addr;
-> +			pp->mem_size = resource_size(&pp->mem);
-> +			pp->mem_bus_addr = range.pci_addr;
-> 
->  			/* Find the untranslated MEM space address */
->  			pp->mem_mod_base =
-> of_read_number(parser.range - @@ -487,16 +487,16 @@ int __init
-> dw_pcie_host_init(struct pcie_port *pp)
->  		}
->  		if (restype == 0) {
->  			of_pci_range_to_resource(&range, np, &pp->cfg);
-> -			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
-> -			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
-> +			pp->cfg0_size = resource_size(&pp->cfg)/2;
-> +			pp->cfg1_size = resource_size(&pp->cfg)/2;
->  			pp->cfg0_base = pp->cfg.start;
-> -			pp->cfg1_base = pp->cfg.start + pp-
-> >config.cfg0_size;
-> +			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
-> 
->  			/* Find the untranslated configuration space address
-> */
->  			pp->cfg0_mod_base =
-> of_read_number(parser.range -
->  							   parser.np + na, ns);
->  			pp->cfg1_mod_base = pp->cfg0_mod_base +
-> -					    pp->config.cfg0_size;
-> +					    pp->cfg0_size;
->  		}
->  	}
-> 
-> @@ -512,13 +512,13 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  	pp->mem_base = pp->mem.start;
-> 
->  	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
-> -					pp->config.cfg0_size);
-> +					pp->cfg0_size);
->  	if (!pp->va_cfg0_base) {
->  		dev_err(pp->dev, "error with ioremap in function\n");
->  		return -ENOMEM;
->  	}
->  	pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
-> -					pp->config.cfg1_size);
-> +					pp->cfg1_size);
->  	if (!pp->va_cfg1_base) {
->  		dev_err(pp->dev, "error with ioremap\n");
->  		return -ENOMEM;
-> @@ -573,7 +573,7 @@ static void dw_pcie_prog_viewport_cfg0(struct
-> pcie_port *pp, u32 busdev)
->  			  PCIE_ATU_VIEWPORT);
->  	dw_pcie_writel_rc(pp, pp->cfg0_mod_base,
-> PCIE_ATU_LOWER_BASE);
->  	dw_pcie_writel_rc(pp, (pp->cfg0_mod_base >> 32),
-> PCIE_ATU_UPPER_BASE);
-> -	dw_pcie_writel_rc(pp, pp->cfg0_mod_base + pp->config.cfg0_size -
-> 1,
-> +	dw_pcie_writel_rc(pp, pp->cfg0_mod_base + pp->cfg0_size - 1,
->  			  PCIE_ATU_LIMIT);
->  	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
->  	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET); @@ -589,7
-> +589,7 @@ static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp,
-> u32 busdev)
->  	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
->  	dw_pcie_writel_rc(pp, pp->cfg1_mod_base,
-> PCIE_ATU_LOWER_BASE);
->  	dw_pcie_writel_rc(pp, (pp->cfg1_mod_base >> 32),
-> PCIE_ATU_UPPER_BASE);
-> -	dw_pcie_writel_rc(pp, pp->cfg1_mod_base + pp->config.cfg1_size -
-> 1,
-> +	dw_pcie_writel_rc(pp, pp->cfg1_mod_base + pp->cfg1_size - 1,
->  			  PCIE_ATU_LIMIT);
->  	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
->  	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET); @@ -604,10
-> +604,10 @@ static void dw_pcie_prog_viewport_mem_outbound(struct
-> pcie_port *pp)
->  	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
->  	dw_pcie_writel_rc(pp, pp->mem_mod_base,
-> PCIE_ATU_LOWER_BASE);
->  	dw_pcie_writel_rc(pp, (pp->mem_mod_base >> 32),
-> PCIE_ATU_UPPER_BASE);
-> -	dw_pcie_writel_rc(pp, pp->mem_mod_base + pp-
-> >config.mem_size - 1,
-> +	dw_pcie_writel_rc(pp, pp->mem_mod_base + pp->mem_size - 1,
->  			  PCIE_ATU_LIMIT);
-> -	dw_pcie_writel_rc(pp, pp->config.mem_bus_addr,
-> PCIE_ATU_LOWER_TARGET);
-> -	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.mem_bus_addr),
-> +	dw_pcie_writel_rc(pp, pp->mem_bus_addr,
-> PCIE_ATU_LOWER_TARGET);
-> +	dw_pcie_writel_rc(pp, upper_32_bits(pp->mem_bus_addr),
->  			  PCIE_ATU_UPPER_TARGET);
->  	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);  } @@ -
-> 620,10 +620,10 @@ static void dw_pcie_prog_viewport_io_outbound(struct
-> pcie_port *pp)
->  	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
->  	dw_pcie_writel_rc(pp, pp->io_mod_base,
-> PCIE_ATU_LOWER_BASE);
->  	dw_pcie_writel_rc(pp, (pp->io_mod_base >> 32),
-> PCIE_ATU_UPPER_BASE);
-> -	dw_pcie_writel_rc(pp, pp->io_mod_base + pp->config.io_size - 1,
-> +	dw_pcie_writel_rc(pp, pp->io_mod_base + pp->io_size - 1,
->  			  PCIE_ATU_LIMIT);
-> -	dw_pcie_writel_rc(pp, pp->config.io_bus_addr,
-> PCIE_ATU_LOWER_TARGET);
-> -	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.io_bus_addr),
-> +	dw_pcie_writel_rc(pp, pp->io_bus_addr,
-> PCIE_ATU_LOWER_TARGET);
-> +	dw_pcie_writel_rc(pp, upper_32_bits(pp->io_bus_addr),
->  			  PCIE_ATU_UPPER_TARGET);
->  	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);  } @@ -
-> 771,15 +771,15 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
->  	if (!pp)
->  		return 0;
-> 
-> -	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
-> -		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
-> +	if (global_io_offset < SZ_1M && pp->io_size > 0) {
-> +		sys->io_offset = global_io_offset - pp->io_bus_addr;
->  		pci_ioremap_io(global_io_offset, pp->io_base);
->  		global_io_offset += SZ_64K;
->  		pci_add_resource_offset(&sys->resources, &pp->io,
->  					sys->io_offset);
->  	}
-> 
-> -	sys->mem_offset = pp->mem.start - pp->config.mem_bus_addr;
-> +	sys->mem_offset = pp->mem.start - pp->mem_bus_addr;
->  	pci_add_resource_offset(&sys->resources, &pp->mem, sys-
-> >mem_offset);
-> 
->  	return 1;
-> @@ -833,7 +833,6 @@ static struct hw_pci dw_pci = {
-> 
->  void dw_pcie_setup_rc(struct pcie_port *pp)  {
-> -	struct pcie_port_info *config = &pp->config;
->  	u32 val;
->  	u32 membase;
->  	u32 memlimit;
-> @@ -888,7 +887,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
-> 
->  	/* setup memory base, memory limit */
->  	membase = ((u32)pp->mem_base & 0xfff00000) >> 16;
-> -	memlimit = (config->mem_size + (u32)pp->mem_base) &
-> 0xfff00000;
-> +	memlimit = (pp->mem_size + (u32)pp->mem_base) & 0xfff00000;
->  	val = memlimit | membase;
->  	dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
-> 
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-
-> designware.h
-> index daf81f922cda..80c1cd07c373 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -14,15 +14,6 @@
->  #ifndef _PCIE_DESIGNWARE_H
->  #define _PCIE_DESIGNWARE_H
-> 
-> -struct pcie_port_info {
-> -	u32		cfg0_size;
-> -	u32		cfg1_size;
-> -	u32		io_size;
-> -	u32		mem_size;
-> -	phys_addr_t	io_bus_addr;
-> -	phys_addr_t	mem_bus_addr;
-> -};
-> -
->  /*
->   * Maximum number of MSI IRQs can be 256 per controller. But keep
->   * it 32 as of now. Probably we will never need more than 32. If needed, @@
-> -38,17 +29,22 @@ struct pcie_port {
->  	u64			cfg0_base;
->  	u64			cfg0_mod_base;
->  	void __iomem		*va_cfg0_base;
-> +	u32			cfg0_size;
->  	u64			cfg1_base;
->  	u64			cfg1_mod_base;
->  	void __iomem		*va_cfg1_base;
-> +	u32			cfg1_size;
->  	u64			io_base;
->  	u64			io_mod_base;
-> +	phys_addr_t		io_bus_addr;
-> +	u32			io_size;
->  	u64			mem_base;
->  	u64			mem_mod_base;
-> +	phys_addr_t		mem_bus_addr;
-> +	u32			mem_size;
->  	struct resource		cfg;
->  	struct resource		io;
->  	struct resource		mem;
-> -	struct pcie_port_info	config;
->  	int			irq;
->  	u32			lanes;
->  	struct pcie_host_ops	*ops;
-> --
-> 1.8.1.2
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel_irq_remapping.c |  144 -----------------------------------
+ 1 file changed, 144 deletions(-)
 
-- Thanks, it cleaned up some unnecessary nesting.
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 166a73a3b551..8be4f924cb7c 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -146,44 +146,6 @@ static int qi_flush_iec(struct intel_iommu *iommu, int index, int mask)
+ 	return qi_submit_sync(&desc, iommu);
+ }
+ 
+-static int map_irq_to_irte_handle(int irq, u16 *sub_handle)
+-{
+-	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
+-	unsigned long flags;
+-	int index;
+-
+-	if (!irq_iommu)
+-		return -1;
+-
+-	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
+-	*sub_handle = irq_iommu->sub_handle;
+-	index = irq_iommu->irte_index;
+-	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
+-	return index;
+-}
+-
+-static int set_irte_irq(int irq, struct intel_iommu *iommu, u16 index, u16 subhandle)
+-{
+-	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
+-	struct irq_cfg *cfg = irq_cfg(irq);
+-	unsigned long flags;
+-
+-	if (!irq_iommu)
+-		return -1;
+-
+-	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
+-
+-	cfg->remapped = 1;
+-	irq_iommu->iommu = iommu;
+-	irq_iommu->irte_index = index;
+-	irq_iommu->sub_handle = subhandle;
+-	irq_iommu->irte_mask = 0;
+-
+-	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
+-
+-	return 0;
+-}
+-
+ static int modify_irte(struct irq_2_iommu *irq_iommu,
+ 		       struct irte *irte_modified)
+ {
+@@ -1072,108 +1034,6 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	return 0;
+ }
+ 
+-static void intel_compose_msi_msg(struct pci_dev *pdev,
+-				  unsigned int irq, unsigned int dest,
+-				  struct msi_msg *msg, u8 hpet_id)
+-{
+-	struct irq_cfg *cfg;
+-	struct irte irte;
+-	u16 sub_handle = 0;
+-	int ir_index;
+-
+-	cfg = irq_cfg(irq);
+-
+-	ir_index = map_irq_to_irte_handle(irq, &sub_handle);
+-	BUG_ON(ir_index == -1);
+-
+-	prepare_irte(&irte, cfg->vector, dest);
+-
+-	/* Set source-id of interrupt request */
+-	if (pdev)
+-		set_msi_sid(&irte, pdev);
+-	else
+-		set_hpet_sid(&irte, hpet_id);
+-
+-	modify_irte(irq_2_iommu(irq), &irte);
+-
+-	msg->address_hi = MSI_ADDR_BASE_HI;
+-	msg->data = sub_handle;
+-	msg->address_lo = MSI_ADDR_BASE_LO | MSI_ADDR_IR_EXT_INT |
+-			  MSI_ADDR_IR_SHV |
+-			  MSI_ADDR_IR_INDEX1(ir_index) |
+-			  MSI_ADDR_IR_INDEX2(ir_index);
+-}
+-
+-/*
+- * Map the PCI dev to the corresponding remapping hardware unit
+- * and allocate 'nvec' consecutive interrupt-remapping table entries
+- * in it.
+- */
+-static int intel_msi_alloc_irq(struct pci_dev *dev, int irq, int nvec)
+-{
+-	struct intel_iommu *iommu;
+-	int index;
+-
+-	down_read(&dmar_global_lock);
+-	iommu = map_dev_to_ir(dev);
+-	if (!iommu) {
+-		printk(KERN_ERR
+-		       "Unable to map PCI %s to iommu\n", pci_name(dev));
+-		index = -ENOENT;
+-	} else {
+-		index = alloc_irte(iommu, irq, irq_2_iommu(irq), nvec);
+-		if (index < 0) {
+-			printk(KERN_ERR
+-			       "Unable to allocate %d IRTE for PCI %s\n",
+-			       nvec, pci_name(dev));
+-			index = -ENOSPC;
+-		}
+-	}
+-	up_read(&dmar_global_lock);
+-
+-	return index;
+-}
+-
+-static int intel_msi_setup_irq(struct pci_dev *pdev, unsigned int irq,
+-			       int index, int sub_handle)
+-{
+-	struct intel_iommu *iommu;
+-	int ret = -ENOENT;
+-
+-	down_read(&dmar_global_lock);
+-	iommu = map_dev_to_ir(pdev);
+-	if (iommu) {
+-		/*
+-		 * setup the mapping between the irq and the IRTE
+-		 * base index, the sub_handle pointing to the
+-		 * appropriate interrupt remap table entry.
+-		 */
+-		set_irte_irq(irq, iommu, index, sub_handle);
+-		ret = 0;
+-	}
+-	up_read(&dmar_global_lock);
+-
+-	return ret;
+-}
+-
+-static int intel_setup_hpet_msi(unsigned int irq, unsigned int id)
+-{
+-	int ret = -1;
+-	struct intel_iommu *iommu;
+-	int index;
+-
+-	down_read(&dmar_global_lock);
+-	iommu = map_hpet_to_ir(id);
+-	if (iommu) {
+-		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
+-		if (index >= 0)
+-			ret = 0;
+-	}
+-	up_read(&dmar_global_lock);
+-
+-	return ret;
+-}
+-
+ static struct irq_domain *intel_get_ir_irq_domain(struct irq_alloc_info *info)
+ {
+ 	struct intel_iommu *iommu = NULL;
+@@ -1250,10 +1110,6 @@ struct irq_remap_ops intel_irq_remap_ops = {
+ 	.setup_ioapic_entry	= intel_setup_ioapic_entry,
+ 	.set_affinity		= intel_ioapic_set_affinity,
+ 	.free_irq		= free_irte,
+-	.compose_msi_msg	= intel_compose_msi_msg,
+-	.msi_alloc_irq		= intel_msi_alloc_irq,
+-	.msi_setup_irq		= intel_msi_setup_irq,
+-	.setup_hpet_msi		= intel_setup_hpet_msi,
+ 	.get_ir_irq_domain	= intel_get_ir_irq_domain,
+ 	.get_irq_domain		= intel_get_irq_domain,
+ 	.get_ioapic_entry	= intel_get_ioapic_entry,
+-- 
+1.7.10.4
 
-Acked-by: Mohit Kumar <mohit.kumar@st.com>
-
-Regards
-Mohit
