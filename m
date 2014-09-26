@@ -1,31 +1,98 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1410748970.24738.3.camel@concordia>
-Subject: Re: [PATCH v2 1/3] PCI/MSI/PPC: Remove arch_msi_check_device()
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-pci@vger.kernel.org
-Date: Mon, 15 Sep 2014 12:42:50 +1000
-In-Reply-To: <a7a806c4f531ba80386e9d0baf69571a827ea59c.1410078503.git.agordeev@redhat.com>
-References: <cover.1410078503.git.agordeev@redhat.com>
-	 <a7a806c4f531ba80386e9d0baf69571a827ea59c.1410078503.git.agordeev@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC v1 11/28] x86, irq: Kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
+Date: Fri, 26 Sep 2014 22:57:41 +0800
+Message-Id: <1411743478-31435-12-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 2014-09-07 at 20:57 +0200, Alexander Gordeev wrote:
-> Moving MSI checks from arch_msi_check_device() function to
-> arch_setup_msi_irqs() function makes code more compact and
-> allows removing unnecessary hook arch_msi_check_device()
-> from generic MSI code.
-> 
-> Cc: linuxppc-dev@lists.ozlabs.org
-> Cc: linux-pci@vger.kernel.org
-> Cc: Michael Ellerman <mpe@ellerman.id.au>
+There's no user of irq_alloc_hwirqs(), irq_alloc_hwirq(), irq_free_hwirqs()
+and irq_free_hwirq() anymore, so kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ and
+related code.
 
-I already acked the previous version, but if you didn't want it that's fine :)
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/Kconfig              |    1 -
+ arch/x86/kernel/apic/vector.c |   34 ----------------------------------
+ 2 files changed, 35 deletions(-)
 
-cheers
-
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index f057a53b19a8..9d378c23a6a9 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -837,7 +837,6 @@ config X86_UP_IOAPIC
+ config X86_LOCAL_APIC
+ 	def_bool y
+ 	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
+-	select GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
+ 	select IRQ_DOMAIN
+ 	select IRQ_DOMAIN_HIERARCHY
+ 
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 1fb9e602e3ae..a149a6b37efe 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -656,40 +656,6 @@ void irq_force_complete_move(int irq)
+ void irq_complete_move(struct irq_cfg *cfg) { }
+ #endif
+ 
+-/*
+- * Dynamic irq allocate and deallocation. Should be replaced by irq domains!
+- */
+-int arch_setup_hwirq(unsigned int irq, int node)
+-{
+-	struct irq_cfg *cfg;
+-	unsigned long flags;
+-	int ret;
+-
+-	cfg = alloc_irq_cfg(node);
+-	if (!cfg)
+-		return -ENOMEM;
+-
+-	raw_spin_lock_irqsave(&vector_lock, flags);
+-	ret = __assign_irq_vector(irq, cfg, apic->target_cpus());
+-	raw_spin_unlock_irqrestore(&vector_lock, flags);
+-
+-	if (!ret)
+-		irq_set_chip_data(irq, cfg);
+-	else
+-		free_irq_cfg(cfg);
+-	return ret;
+-}
+-
+-void arch_teardown_hwirq(unsigned int irq)
+-{
+-	struct irq_cfg *cfg = irq_cfg(irq);
+-
+-	free_remapped_irq(irq);
+-	clear_irq_vector(irq, cfg);
+-	irq_set_chip_data(irq, NULL);
+-	free_irq_cfg(cfg);
+-}
+-
+ static void __init print_APIC_field(int base)
+ {
+ 	int i;
+-- 
+1.7.10.4
 
