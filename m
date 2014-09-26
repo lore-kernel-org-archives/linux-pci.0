@@ -18,93 +18,265 @@ Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	x86@kernel.org, linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v2 06/18] x86, irq: Protect __clear_irq_vector() with vector_lock
-Date: Fri, 26 Sep 2014 21:29:43 +0800
-Message-Id: <1411738196-29958-7-git-send-email-jiang.liu@linux.intel.com>
+Subject: [Patch v2 11/18] x86, irq: Move HT IRQ related code from io_apic.c into htirq.c
+Date: Fri, 26 Sep 2014 21:29:48 +0800
+Message-Id: <1411738196-29958-12-git-send-email-jiang.liu@linux.intel.com>
 In-Reply-To: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
 References: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function __clear_irq_vector() accesses vector related data structure,
-so protect it with vector_lock. Also rename it as clear_irq_vector().
+Create arch/x86/kernel/apic/htirq.c to host Hypertransport IRQ related
+code, preparing for enabling hierarchy irqdomain.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/kernel/apic/io_apic.c |   19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+ arch/x86/kernel/apic/Makefile  |    1 +
+ arch/x86/kernel/apic/htirq.c   |  106 ++++++++++++++++++++++++++++++++++++++++
+ arch/x86/kernel/apic/io_apic.c |   91 ----------------------------------
+ 3 files changed, 107 insertions(+), 91 deletions(-)
+ create mode 100644 arch/x86/kernel/apic/htirq.c
 
+diff --git a/arch/x86/kernel/apic/Makefile b/arch/x86/kernel/apic/Makefile
+index aac300750f0e..8bb12ddc5db8 100644
+--- a/arch/x86/kernel/apic/Makefile
++++ b/arch/x86/kernel/apic/Makefile
+@@ -7,6 +7,7 @@ obj-y				+= hw_nmi.o
+ 
+ obj-$(CONFIG_X86_IO_APIC)	+= io_apic.o
+ obj-$(CONFIG_PCI_MSI)		+= msi.o
++obj-$(CONFIG_HT_IRQ)		+= htirq.o
+ obj-$(CONFIG_SMP)		+= ipi.o
+ 
+ ifeq ($(CONFIG_X86_64),y)
+diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
+new file mode 100644
+index 000000000000..1cd879fe39d7
+--- /dev/null
++++ b/arch/x86/kernel/apic/htirq.c
+@@ -0,0 +1,106 @@
++/*
++ * Support Hypertransport IRQ
++ *
++ * Copyright (C) 1997, 1998, 1999, 2000, 2009 Ingo Molnar, Hajnalka Szabo
++ *	Moved from arch/x86/kernel/apic/io_apic.c.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++#include <linux/mm.h>
++#include <linux/interrupt.h>
++#include <linux/init.h>
++#include <linux/device.h>
++#include <linux/pci.h>
++#include <linux/htirq.h>
++#include <asm/hw_irq.h>
++#include <asm/apic.h>
++#include <asm/hypertransport.h>
++
++/*
++ * Hypertransport interrupt support
++ */
++static void target_ht_irq(unsigned int irq, unsigned int dest, u8 vector)
++{
++	struct ht_irq_msg msg;
++
++	fetch_ht_irq_msg(irq, &msg);
++
++	msg.address_lo &= ~(HT_IRQ_LOW_VECTOR_MASK | HT_IRQ_LOW_DEST_ID_MASK);
++	msg.address_hi &= ~(HT_IRQ_HIGH_DEST_ID_MASK);
++
++	msg.address_lo |= HT_IRQ_LOW_VECTOR(vector) | HT_IRQ_LOW_DEST_ID(dest);
++	msg.address_hi |= HT_IRQ_HIGH_DEST_ID(dest);
++
++	write_ht_irq_msg(irq, &msg);
++}
++
++static int
++ht_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
++{
++	struct irq_cfg *cfg = data->chip_data;
++	unsigned int dest;
++	int ret;
++
++	ret = apic_set_affinity(data, mask, &dest);
++	if (ret)
++		return ret;
++
++	target_ht_irq(data->irq, dest, cfg->vector);
++	return IRQ_SET_MASK_OK_NOCOPY;
++}
++
++static struct irq_chip ht_irq_chip = {
++	.name			= "PCI-HT",
++	.irq_mask		= mask_ht_irq,
++	.irq_unmask		= unmask_ht_irq,
++	.irq_ack		= apic_ack_edge,
++	.irq_set_affinity	= ht_set_affinity,
++	.irq_retrigger		= apic_retrigger_irq,
++};
++
++int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
++{
++	struct irq_cfg *cfg;
++	struct ht_irq_msg msg;
++	unsigned dest;
++	int err;
++
++	if (disable_apic)
++		return -ENXIO;
++
++	cfg = irq_cfg(irq);
++	err = assign_irq_vector(irq, cfg, apic->target_cpus());
++	if (err)
++		return err;
++
++	err = apic->cpu_mask_to_apicid_and(cfg->domain,
++					   apic->target_cpus(), &dest);
++	if (err)
++		return err;
++
++	msg.address_hi = HT_IRQ_HIGH_DEST_ID(dest);
++
++	msg.address_lo =
++		HT_IRQ_LOW_BASE |
++		HT_IRQ_LOW_DEST_ID(dest) |
++		HT_IRQ_LOW_VECTOR(cfg->vector) |
++		((apic->irq_dest_mode == 0) ?
++			HT_IRQ_LOW_DM_PHYSICAL :
++			HT_IRQ_LOW_DM_LOGICAL) |
++		HT_IRQ_LOW_RQEOI_EDGE |
++		((apic->irq_delivery_mode != dest_LowestPrio) ?
++			HT_IRQ_LOW_MT_FIXED :
++			HT_IRQ_LOW_MT_ARBITRATED) |
++		HT_IRQ_LOW_IRQ_MASKED;
++
++	write_ht_irq_msg(irq, &msg);
++
++	irq_set_chip_and_handler_name(irq, &ht_irq_chip,
++				      handle_edge_irq, "edge");
++
++	dev_dbg(&dev->dev, "irq %d for HT\n", irq);
++
++	return 0;
++}
 diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 50681c97b4cd..0022a0c2faac 100644
+index 3d40049e5b18..0741d864612a 100644
 --- a/arch/x86/kernel/apic/io_apic.c
 +++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1349,10 +1349,12 @@ int assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
- 	return err;
- }
+@@ -32,7 +32,6 @@
+ #include <linux/module.h>
+ #include <linux/syscore_ops.h>
+ #include <linux/irqdomain.h>
+-#include <linux/htirq.h>
+ #include <linux/freezer.h>
+ #include <linux/kthread.h>
+ #include <linux/jiffies.h>	/* time_after() */
+@@ -49,7 +48,6 @@
+ #include <asm/dma.h>
+ #include <asm/timer.h>
+ #include <asm/i8259.h>
+-#include <asm/hypertransport.h>
+ #include <asm/setup.h>
+ #include <asm/irq_remapping.h>
+ #include <asm/hw_irq.h>
+@@ -2449,95 +2447,6 @@ static int __init ioapic_init_ops(void)
  
--static void __clear_irq_vector(int irq, struct irq_cfg *cfg)
-+static void clear_irq_vector(int irq, struct irq_cfg *cfg)
+ device_initcall(ioapic_init_ops);
+ 
+-/*
+- * Hypertransport interrupt support
+- */
+-#ifdef CONFIG_HT_IRQ
+-
+-static void target_ht_irq(unsigned int irq, unsigned int dest, u8 vector)
+-{
+-	struct ht_irq_msg msg;
+-	fetch_ht_irq_msg(irq, &msg);
+-
+-	msg.address_lo &= ~(HT_IRQ_LOW_VECTOR_MASK | HT_IRQ_LOW_DEST_ID_MASK);
+-	msg.address_hi &= ~(HT_IRQ_HIGH_DEST_ID_MASK);
+-
+-	msg.address_lo |= HT_IRQ_LOW_VECTOR(vector) | HT_IRQ_LOW_DEST_ID(dest);
+-	msg.address_hi |= HT_IRQ_HIGH_DEST_ID(dest);
+-
+-	write_ht_irq_msg(irq, &msg);
+-}
+-
+-static int
+-ht_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+-{
+-	struct irq_cfg *cfg = data->chip_data;
+-	unsigned int dest;
+-	int ret;
+-
+-	ret = apic_set_affinity(data, mask, &dest);
+-	if (ret)
+-		return ret;
+-
+-	target_ht_irq(data->irq, dest, cfg->vector);
+-	return IRQ_SET_MASK_OK_NOCOPY;
+-}
+-
+-static struct irq_chip ht_irq_chip = {
+-	.name			= "PCI-HT",
+-	.irq_mask		= mask_ht_irq,
+-	.irq_unmask		= unmask_ht_irq,
+-	.irq_ack		= apic_ack_edge,
+-	.irq_set_affinity	= ht_set_affinity,
+-	.irq_retrigger		= apic_retrigger_irq,
+-};
+-
+-int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
+-{
+-	struct irq_cfg *cfg;
+-	struct ht_irq_msg msg;
+-	unsigned dest;
+-	int err;
+-
+-	if (disable_apic)
+-		return -ENXIO;
+-
+-	cfg = irq_cfg(irq);
+-	err = assign_irq_vector(irq, cfg, apic->target_cpus());
+-	if (err)
+-		return err;
+-
+-	err = apic->cpu_mask_to_apicid_and(cfg->domain,
+-					   apic->target_cpus(), &dest);
+-	if (err)
+-		return err;
+-
+-	msg.address_hi = HT_IRQ_HIGH_DEST_ID(dest);
+-
+-	msg.address_lo =
+-		HT_IRQ_LOW_BASE |
+-		HT_IRQ_LOW_DEST_ID(dest) |
+-		HT_IRQ_LOW_VECTOR(cfg->vector) |
+-		((apic->irq_dest_mode == 0) ?
+-			HT_IRQ_LOW_DM_PHYSICAL :
+-			HT_IRQ_LOW_DM_LOGICAL) |
+-		HT_IRQ_LOW_RQEOI_EDGE |
+-		((apic->irq_delivery_mode != dest_LowestPrio) ?
+-			HT_IRQ_LOW_MT_FIXED :
+-			HT_IRQ_LOW_MT_ARBITRATED) |
+-		HT_IRQ_LOW_IRQ_MASKED;
+-
+-	write_ht_irq_msg(irq, &msg);
+-
+-	irq_set_chip_and_handler_name(irq, &ht_irq_chip,
+-				      handle_edge_irq, "edge");
+-
+-	dev_printk(KERN_DEBUG, &dev->dev, "irq %d for HT\n", irq);
+-
+-	return 0;
+-}
+-#endif /* CONFIG_HT_IRQ */
+-
+ static int
+ io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
  {
- 	int cpu, vector;
-+	unsigned long flags;
- 
-+	raw_spin_lock_irqsave(&vector_lock, flags);
- 	BUG_ON(!cfg->vector);
- 
- 	vector = cfg->vector;
-@@ -1362,8 +1364,11 @@ static void __clear_irq_vector(int irq, struct irq_cfg *cfg)
- 	cfg->vector = 0;
- 	cpumask_clear(cfg->domain);
- 
--	if (likely(!cfg->move_in_progress))
-+	if (likely(!cfg->move_in_progress)) {
-+		raw_spin_unlock_irqrestore(&vector_lock, flags);
- 		return;
-+	}
-+
- 	for_each_cpu_and(cpu, cfg->old_domain, cpu_online_mask) {
- 		for (vector = FIRST_EXTERNAL_VECTOR; vector < NR_VECTORS; vector++) {
- 			if (per_cpu(vector_irq, cpu)[vector] != irq)
-@@ -1373,6 +1378,7 @@ static void __clear_irq_vector(int irq, struct irq_cfg *cfg)
- 		}
- 	}
- 	cfg->move_in_progress = 0;
-+	raw_spin_unlock_irqrestore(&vector_lock, flags);
- }
- 
- void __setup_vector_irq(int cpu)
-@@ -1499,7 +1505,7 @@ static void setup_ioapic_irq(unsigned int irq, struct irq_cfg *cfg,
- 					 &dest)) {
- 		pr_warn("Failed to obtain apicid for ioapic %d, pin %d\n",
- 			mpc_ioapic_id(attr->ioapic), attr->ioapic_pin);
--		__clear_irq_vector(irq, cfg);
-+		clear_irq_vector(irq, cfg);
- 
- 		return;
- 	}
-@@ -1513,7 +1519,7 @@ static void setup_ioapic_irq(unsigned int irq, struct irq_cfg *cfg,
- 	if (x86_io_apic_ops.setup_entry(irq, &entry, dest, cfg->vector, attr)) {
- 		pr_warn("Failed to setup ioapic entry for ioapic  %d, pin %d\n",
- 			mpc_ioapic_id(attr->ioapic), attr->ioapic_pin);
--		__clear_irq_vector(irq, cfg);
-+		clear_irq_vector(irq, cfg);
- 
- 		return;
- 	}
-@@ -3082,12 +3088,9 @@ int arch_setup_hwirq(unsigned int irq, int node)
- void arch_teardown_hwirq(unsigned int irq)
- {
- 	struct irq_cfg *cfg = irq_cfg(irq);
--	unsigned long flags;
- 
- 	free_remapped_irq(irq);
--	raw_spin_lock_irqsave(&vector_lock, flags);
--	__clear_irq_vector(irq, cfg);
--	raw_spin_unlock_irqrestore(&vector_lock, flags);
-+	clear_irq_vector(irq, cfg);
- 	free_irq_cfg(irq, cfg);
- }
- 
 -- 
 1.7.10.4
 
