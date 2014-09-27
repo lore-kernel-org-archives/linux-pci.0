@@ -1,68 +1,54 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"Russell King" <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yijing Wang <wangyiijng@huawei.com>
-Subject: [PATCH v1 12/21] MIPS/Xlp: Remove the dead function destroy_irq() to fix build error
-Date: Fri, 5 Sep 2014 18:09:57 +0800
-Message-ID: <1409911806-10519-13-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20140926224752.GB22030@e106497-lin.cambridge.arm.com>
+References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
+ <1411498874-9864-9-git-send-email-Liviu.Dudau@arm.com> <CAL_Jsq+j40Xf208wCf4as3H=cDU=htJ-JWinB0DjpcORjatNXQ@mail.gmail.com>
+ <20140926212052.GA6030@borg.dudau.co.uk> <CAL_JsqKJ6bfPuOofo4grVm3qW_WOpUzcS1juZvHxZdFyyF_19A@mail.gmail.com>
+ <20140926224752.GB22030@e106497-lin.cambridge.arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 27 Sep 2014 14:18:55 -0600
+Message-ID: <CAErSpo5Q-gZaeV91+UeMjmnUt7jqGndDY6zfZqsDWJUNh+Gm6A@mail.gmail.com>
+Subject: Re: [PATCH v12 08/12] PCI: OF: Introduce helper function for
+ retrieving PCI domain numbers
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Rob Herring <robherring2@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 465665f78a7 ("mips: Kill pointless destroy_irq()") removed
-the destroy_irq(). So remove the leftover one in xlp_setup_msix()
-to fix build error.
+[+cc Yinghai]
 
-arch/mips/pci/msi-xlp.c: In function 'xlp_setup_msix':
-arch/mips/pci/msi-xlp.c:447:3: error: implicit declaration of function 'destroy_irq'..
-cc1: some warnings being treated as errors
-make[1]: *** [arch/mips/pci/msi-xlp.o] Error 1
-make: *** [arch/mips/pci/] Error 2
+On Fri, Sep 26, 2014 at 4:47 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> On Fri, Sep 26, 2014 at 10:53:26PM +0100, Rob Herring wrote:
 
-Signed-off-by: Yijing Wang <wangyiijng@huawei.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
----
- arch/mips/pci/msi-xlp.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+>> I thought Bjorn already applied the series. Who's agreement are you
+>> waiting for specifically.
+>
+> Looks like he only applied about 60% of the series.
 
-diff --git a/arch/mips/pci/msi-xlp.c b/arch/mips/pci/msi-xlp.c
-index fa374fe..e469dc7 100644
---- a/arch/mips/pci/msi-xlp.c
-+++ b/arch/mips/pci/msi-xlp.c
-@@ -443,10 +443,8 @@ static int xlp_setup_msix(uint64_t lnkbase, int node, int link,
- 	msg.data = 0xc00 | msixvec;
- 
- 	ret = irq_set_msi_desc(xirq, desc);
--	if (ret < 0) {
--		destroy_irq(xirq);
-+	if (ret < 0)
- 		return ret;
--	}
- 
- 	write_msi_msg(xirq, &msg);
- 	return 0;
--- 
-1.7.1
+I applied it all but Yinghai pointed out a problem with a patch in the
+middle, so I dropped that patch and everything after it because I didn't
+have time to work out whether the later patches depended on anything
+in the one I dropped.
 
+Bjorn
