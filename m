@@ -1,214 +1,329 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Robert Richter <rrichter@cavium.com>
-Subject: [PATCH v12 09/12] OF: PCI: Add support for parsing PCI host bridge resources from DT
-Date: Tue, 23 Sep 2014 20:01:11 +0100
-Message-Id: <1411498874-9864-10-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:64051 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751449AbaI0JUc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Sep 2014 05:20:32 -0400
+Message-ID: <5426815A.1010102@gmail.com>
+Date: Sat, 27 Sep 2014 17:20:26 +0800
+From: Chen Gang <gang.chen.5i5j@gmail.com>
+MIME-Version: 1.0
+To: David Vrabel <david.vrabel@citrix.com>
+CC: konrad.wilk@oracle.com, ian.campbell@citrix.com,
+	wei.liu2@citrix.com, boris.ostrovsky@oracle.com,
+	bhelgaas@google.com, jgross@suse.com,
+	yongjun_wei@trendmicro.com.cn, mukesh.rathor@oracle.com,
+	xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-scsi@vger.kernel.org,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [Xen-devel] [PATCH] xen/xenbus: Use 'void' instead of 'int' for
+ the return of xenbus_switch_state()
+References: <5425961A.5000604@gmail.com> <5425AB57.8040804@citrix.com>
+In-Reply-To: <5425AB57.8040804@citrix.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Provide a function to parse the PCI DT ranges that can be used to
-create a pci_host_bridge structure together with its associated
-bus.
+On 09/27/2014 02:07 AM, David Vrabel wrote:
+> On 26/09/14 17:36, Chen Gang wrote:
+>> When xenbus_switch_state() fails, it will call xenbus_switch_fatal()
+>> internally, so need not return any status value, then use 'void' instead
+>> of 'int' for xenbus_switch_state() and __xenbus_switch_state().
+>>
+>> Also need be sure that all callers which check the return value must let
+>> 'err' be 0.
+> 
+> I've rewritten the commit message as:
+> 
+>     xen/xenbus: don't return errors from xenbus_switch_state()
+> 
+>     Most users of xenbus_switch_state() weren't handling the failure of
+>     xenbus_switch_state() correctly.  They either called
+>     xenbus_dev_fatal() (which xenbus_switch_state() has effectively
+>     already tried to do), or ignored errors.
+> 
+>     xenbus_switch_state() may fail because:
+> 
+>     a) The device is being unplugged by the toolstack. The device will
+>     shortly be removed and the error does not need to be handled.
+> 
+>     b) Xenstore is broken.  There isn't much the driver can do in this
+>     case since xenstore is required to signal failure to the toolstack.
+> 
+>     So, don't report any errors from xenbus_switch_state() which removes
+>     some unnecessary error handling in some of the drivers.
+> 
+> I'd appreciate a review from some of the other front/backend driver
+> maintainers on whether this is sensible reasoning.
+> 
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-[make io_base parameter optional]
-Signed-off-by: Robert Richter <rrichter@cavium.com>
----
- drivers/of/of_pci.c    | 115 +++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/of_pci.h |  11 +++++
- 2 files changed, 126 insertions(+)
+At least for me, what your changes is necessary, and also necessary to
+let other related members to have a look.
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 82d172f..c2285aa 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -1,7 +1,9 @@
- #include <linux/kernel.h>
- #include <linux/export.h>
- #include <linux/of.h>
-+#include <linux/of_address.h>
- #include <linux/of_pci.h>
-+#include <linux/slab.h>
- 
- static inline int __of_pci_pci_compare(struct device_node *node,
- 				       unsigned int data)
-@@ -114,6 +116,119 @@ int of_get_pci_domain_nr(struct device_node *node)
- }
- EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
- 
-+/**
-+ * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
-+ * @dev: device node of the host bridge having the range property
-+ * @busno: bus number associated with the bridge root bus
-+ * @bus_max: maximum number of busses for this bridge
-+ * @resources: list where the range of resources will be added after DT parsing
-+ * @io_base: pointer to a variable that will contain on return the physical
-+ * address for the start of the I/O range. Can be NULL if the caller doesn't
-+ * expect IO ranges to be present in the device tree.
-+ *
-+ * It is the callers job to free the @resources list.
-+ *
-+ * This function will parse the "ranges" property of a PCI host bridge device
-+ * node and setup the resource mapping based on its content. It is expected
-+ * that the property conforms with the Power ePAPR document.
-+ *
-+ * It returns zero if the range parsing has been successful or a standard error
-+ * value if it failed.
-+ */
-+int of_pci_get_host_bridge_resources(struct device_node *dev,
-+			unsigned char busno, unsigned char bus_max,
-+			struct list_head *resources, resource_size_t *io_base)
-+{
-+	struct resource *res;
-+	struct resource *bus_range;
-+	struct of_pci_range range;
-+	struct of_pci_range_parser parser;
-+	char range_type[4];
-+	int err;
-+
-+	if (io_base)
-+		*io_base = (resource_size_t)OF_BAD_ADDR;
-+
-+	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
-+	if (!bus_range)
-+		return -ENOMEM;
-+
-+	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
-+
-+	err = of_pci_parse_bus_range(dev, bus_range);
-+	if (err) {
-+		bus_range->start = busno;
-+		bus_range->end = bus_max;
-+		bus_range->flags = IORESOURCE_BUS;
-+		pr_info("  No bus range found for %s, using %pR\n",
-+			dev->full_name, bus_range);
-+	} else {
-+		if (bus_range->end > bus_range->start + bus_max)
-+			bus_range->end = bus_range->start + bus_max;
-+	}
-+	pci_add_resource(resources, bus_range);
-+
-+	/* Check for ranges property */
-+	err = of_pci_range_parser_init(&parser, dev);
-+	if (err)
-+		goto parse_failed;
-+
-+	pr_debug("Parsing ranges property...\n");
-+	for_each_of_pci_range(&parser, &range) {
-+		/* Read next ranges element */
-+		if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
-+			snprintf(range_type, 4, " IO");
-+		else if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_MEM)
-+			snprintf(range_type, 4, "MEM");
-+		else
-+			snprintf(range_type, 4, "err");
-+		pr_info("  %s %#010llx..%#010llx -> %#010llx\n", range_type,
-+			range.cpu_addr, range.cpu_addr + range.size - 1,
-+			range.pci_addr);
-+
-+		/*
-+		 * If we failed translation or got a zero-sized region
-+		 * then skip this range
-+		 */
-+		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
-+			continue;
-+
-+		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
-+		if (!res) {
-+			err = -ENOMEM;
-+			goto parse_failed;
-+		}
-+
-+		err = of_pci_range_to_resource(&range, dev, res);
-+		if (err)
-+			goto conversion_failed;
-+
-+		if (resource_type(res) == IORESOURCE_IO) {
-+			if (!io_base) {
-+				pr_err("I/O range found for %s. Please provide an io_base pointer to save CPU base address\n",
-+					dev->full_name);
-+				err = -EINVAL;
-+				goto conversion_failed;
-+			}
-+			if (*io_base != (resource_size_t)OF_BAD_ADDR)
-+				pr_warn("More than one I/O resource converted for %s. CPU base address for old range lost!\n",
-+					dev->full_name);
-+			*io_base = range.cpu_addr;
-+		}
-+
-+		pci_add_resource_offset(resources, res,	res->start - range.pci_addr);
-+	}
-+
-+	return 0;
-+
-+conversion_failed:
-+	kfree(res);
-+parse_failed:
-+	pci_free_resource_list(resources);
-+	return err;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
-+
- #ifdef CONFIG_PCI_MSI
- 
- static LIST_HEAD(of_pci_msi_chip_list);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 71062e9..9ff818a 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -16,6 +16,10 @@ int of_pci_get_devfn(struct device_node *np);
- int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
- int of_get_pci_domain_nr(struct device_node *node);
-+int of_pci_get_host_bridge_resources(struct device_node *dev,
-+			unsigned char busno, unsigned char bus_max,
-+			struct list_head *resources, resource_size_t *io_base);
-+
- #else
- static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
- {
-@@ -50,6 +54,13 @@ of_get_pci_domain_nr(struct device_node *node)
- {
- 	return -1;
- }
-+
-+int of_pci_get_host_bridge_resources(struct device_node *dev,
-+			unsigned char busno, unsigned char bus_max,
-+			struct list_head *resources, resource_size_t *io_base);
-+{
-+	return -EINVAL;
-+}
- #endif
- 
- #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+And one thing I did not mention: after the patch, it reports a warning,
+which I have sent the other followed patch for it (it is for a bug fix,
+but also can fix this warning). The other followed patch is
+
+  "xen/xen-scsiback: Need go to fail after xenbus_dev_error()"
+
+Please help check, too.
+
+Thanks.
+
+> David
+> 
+>>
+>> And also need change the related comments for xenbus_switch_state().
+>>
+>> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+>> ---
+>>  drivers/block/xen-blkback/xenbus.c |  9 ++-------
+>>  drivers/net/xen-netback/xenbus.c   |  5 +----
+>>  drivers/pci/xen-pcifront.c         | 15 ++++++---------
+>>  drivers/xen/xen-pciback/xenbus.c   | 21 ++++-----------------
+>>  drivers/xen/xen-scsiback.c         |  5 +----
+>>  drivers/xen/xenbus/xenbus_client.c | 16 ++++++++--------
+>>  include/xen/xenbus.h               |  3 ++-
+>>  7 files changed, 24 insertions(+), 50 deletions(-)
+>>
+>> diff --git a/drivers/block/xen-blkback/xenbus.c b/drivers/block/xen-blkback/xenbus.c
+>> index 3a8b810..fdcc584 100644
+>> --- a/drivers/block/xen-blkback/xenbus.c
+>> +++ b/drivers/block/xen-blkback/xenbus.c
+>> @@ -587,9 +587,7 @@ static int xen_blkbk_probe(struct xenbus_device *dev,
+>>  	if (err)
+>>  		goto fail;
+>>  
+>> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+>> -	if (err)
+>> -		goto fail;
+>> +	xenbus_switch_state(dev, XenbusStateInitWait);
+>>  
+>>  	return 0;
+>>  
+>> @@ -837,10 +835,7 @@ again:
+>>  	if (err)
+>>  		xenbus_dev_fatal(dev, err, "ending transaction");
+>>  
+>> -	err = xenbus_switch_state(dev, XenbusStateConnected);
+>> -	if (err)
+>> -		xenbus_dev_fatal(dev, err, "%s: switching to Connected state",
+>> -				 dev->nodename);
+>> +	xenbus_switch_state(dev, XenbusStateConnected);
+>>  
+>>  	return;
+>>   abort:
+>> diff --git a/drivers/net/xen-netback/xenbus.c b/drivers/net/xen-netback/xenbus.c
+>> index 9c47b89..b5c3d47 100644
+>> --- a/drivers/net/xen-netback/xenbus.c
+>> +++ b/drivers/net/xen-netback/xenbus.c
+>> @@ -337,10 +337,7 @@ static int netback_probe(struct xenbus_device *dev,
+>>  	if (err)
+>>  		pr_debug("Error writing multi-queue-max-queues\n");
+>>  
+>> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+>> -	if (err)
+>> -		goto fail;
+>> -
+>> +	xenbus_switch_state(dev, XenbusStateInitWait);
+>>  	be->state = XenbusStateInitWait;
+>>  
+>>  	/* This kicks hotplug scripts, so do it immediately. */
+>> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+>> index 53df39a..c1d73b7 100644
+>> --- a/drivers/pci/xen-pcifront.c
+>> +++ b/drivers/pci/xen-pcifront.c
+>> @@ -901,18 +901,16 @@ static int pcifront_try_connect(struct pcifront_device *pdev)
+>>  		}
+>>  	}
+>>  
+>> -	err = xenbus_switch_state(pdev->xdev, XenbusStateConnected);
+>> -
+>> +	xenbus_switch_state(pdev->xdev, XenbusStateConnected);
+>> +	return 0;
+>>  out:
+>>  	return err;
+>>  }
+>>  
+>>  static int pcifront_try_disconnect(struct pcifront_device *pdev)
+>>  {
+>> -	int err = 0;
+>>  	enum xenbus_state prev_state;
+>>  
+>> -
+>>  	prev_state = xenbus_read_driver_state(pdev->xdev->nodename);
+>>  
+>>  	if (prev_state >= XenbusStateClosing)
+>> @@ -923,11 +921,10 @@ static int pcifront_try_disconnect(struct pcifront_device *pdev)
+>>  		pcifront_disconnect(pdev);
+>>  	}
+>>  
+>> -	err = xenbus_switch_state(pdev->xdev, XenbusStateClosed);
+>> +	xenbus_switch_state(pdev->xdev, XenbusStateClosed);
+>>  
+>>  out:
+>> -
+>> -	return err;
+>> +	return 0;
+>>  }
+>>  
+>>  static int pcifront_attach_devices(struct pcifront_device *pdev)
+>> @@ -1060,8 +1057,8 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
+>>  			domain, bus, slot, func);
+>>  	}
+>>  
+>> -	err = xenbus_switch_state(pdev->xdev, XenbusStateReconfiguring);
+>> -
+>> +	xenbus_switch_state(pdev->xdev, XenbusStateReconfiguring);
+>> +	return 0;
+>>  out:
+>>  	return err;
+>>  }
+>> diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
+>> index c214daa..630a215 100644
+>> --- a/drivers/xen/xen-pciback/xenbus.c
+>> +++ b/drivers/xen/xen-pciback/xenbus.c
+>> @@ -184,10 +184,7 @@ static int xen_pcibk_attach(struct xen_pcibk_device *pdev)
+>>  
+>>  	dev_dbg(&pdev->xdev->dev, "Connecting...\n");
+>>  
+>> -	err = xenbus_switch_state(pdev->xdev, XenbusStateConnected);
+>> -	if (err)
+>> -		xenbus_dev_fatal(pdev->xdev, err,
+>> -				 "Error switching to connected state!");
+>> +	xenbus_switch_state(pdev->xdev, XenbusStateConnected);
+>>  
+>>  	dev_dbg(&pdev->xdev->dev, "Connected? %d\n", err);
+>>  out:
+>> @@ -500,12 +497,7 @@ static int xen_pcibk_reconfigure(struct xen_pcibk_device *pdev)
+>>  		}
+>>  	}
+>>  
+>> -	err = xenbus_switch_state(pdev->xdev, XenbusStateReconfigured);
+>> -	if (err) {
+>> -		xenbus_dev_fatal(pdev->xdev, err,
+>> -				 "Error switching to reconfigured state!");
+>> -		goto out;
+>> -	}
+>> +	xenbus_switch_state(pdev->xdev, XenbusStateReconfigured);
+>>  
+>>  out:
+>>  	mutex_unlock(&pdev->dev_lock);
+>> @@ -640,10 +632,7 @@ static int xen_pcibk_setup_backend(struct xen_pcibk_device *pdev)
+>>  		goto out;
+>>  	}
+>>  
+>> -	err = xenbus_switch_state(pdev->xdev, XenbusStateInitialised);
+>> -	if (err)
+>> -		xenbus_dev_fatal(pdev->xdev, err,
+>> -				 "Error switching to initialised state!");
+>> +	xenbus_switch_state(pdev->xdev, XenbusStateInitialised);
+>>  
+>>  out:
+>>  	mutex_unlock(&pdev->dev_lock);
+>> @@ -683,9 +672,7 @@ static int xen_pcibk_xenbus_probe(struct xenbus_device *dev,
+>>  	}
+>>  
+>>  	/* wait for xend to configure us */
+>> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+>> -	if (err)
+>> -		goto out;
+>> +	xenbus_switch_state(dev, XenbusStateInitWait);
+>>  
+>>  	/* watch the backend node for backend configuration information */
+>>  	err = xenbus_watch_path(dev, dev->nodename, &pdev->be_watch,
+>> diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
+>> index ad11258..847bc9c 100644
+>> --- a/drivers/xen/xen-scsiback.c
+>> +++ b/drivers/xen/xen-scsiback.c
+>> @@ -1225,10 +1225,7 @@ static int scsiback_probe(struct xenbus_device *dev,
+>>  	if (err)
+>>  		xenbus_dev_error(dev, err, "writing feature-sg-grant");
+>>  
+>> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+>> -	if (err)
+>> -		goto fail;
+>> -
+>> +	xenbus_switch_state(dev, XenbusStateInitWait);
+>>  	return 0;
+>>  
+>>  fail:
+>> diff --git a/drivers/xen/xenbus/xenbus_client.c b/drivers/xen/xenbus/xenbus_client.c
+>> index ca74410..e2bcd1d 100644
+>> --- a/drivers/xen/xenbus/xenbus_client.c
+>> +++ b/drivers/xen/xenbus/xenbus_client.c
+>> @@ -166,7 +166,7 @@ EXPORT_SYMBOL_GPL(xenbus_watch_pathfmt);
+>>  static void xenbus_switch_fatal(struct xenbus_device *, int, int,
+>>  				const char *, ...);
+>>  
+>> -static int
+>> +static void
+>>  __xenbus_switch_state(struct xenbus_device *dev,
+>>  		      enum xenbus_state state, int depth)
+>>  {
+>> @@ -188,7 +188,7 @@ __xenbus_switch_state(struct xenbus_device *dev,
+>>  	int err, abort;
+>>  
+>>  	if (state == dev->state)
+>> -		return 0;
+>> +		return;
+>>  
+>>  again:
+>>  	abort = 1;
+>> @@ -196,7 +196,7 @@ again:
+>>  	err = xenbus_transaction_start(&xbt);
+>>  	if (err) {
+>>  		xenbus_switch_fatal(dev, depth, err, "starting transaction");
+>> -		return 0;
+>> +		return;
+>>  	}
+>>  
+>>  	err = xenbus_scanf(xbt, dev->nodename, "state", "%d", &current_state);
+>> @@ -219,7 +219,7 @@ abort:
+>>  	} else
+>>  		dev->state = state;
+>>  
+>> -	return 0;
+>> +	return;
+>>  }
+>>  
+>>  /**
+>> @@ -228,12 +228,12 @@ abort:
+>>   * @state: new state
+>>   *
+>>   * Advertise in the store a change of the given driver to the given new_state.
+>> - * Return 0 on success, or -errno on error.  On error, the device will switch
+>> - * to XenbusStateClosing, and the error will be saved in the store.
+>> + * When failure occurs, it will call xenbus_switch_fatal() internally, so need
+>> + * not return value to notify upper caller.
+>>   */
+>> -int xenbus_switch_state(struct xenbus_device *dev, enum xenbus_state state)
+>> +void xenbus_switch_state(struct xenbus_device *dev, enum xenbus_state state)
+>>  {
+>> -	return __xenbus_switch_state(dev, state, 0);
+>> +	__xenbus_switch_state(dev, state, 0);
+>>  }
+>>  
+>>  EXPORT_SYMBOL_GPL(xenbus_switch_state);
+>> diff --git a/include/xen/xenbus.h b/include/xen/xenbus.h
+>> index 0324c6d..587c53d 100644
+>> --- a/include/xen/xenbus.h
+>> +++ b/include/xen/xenbus.h
+>> @@ -195,7 +195,8 @@ int xenbus_watch_pathfmt(struct xenbus_device *dev, struct xenbus_watch *watch,
+>>  					  const char **, unsigned int),
+>>  			 const char *pathfmt, ...);
+>>  
+>> -int xenbus_switch_state(struct xenbus_device *dev, enum xenbus_state new_state);
+>> +void xenbus_switch_state(struct xenbus_device *dev,
+>> +			 enum xenbus_state new_state);
+>>  int xenbus_grant_ring(struct xenbus_device *dev, unsigned long ring_mfn);
+>>  int xenbus_map_ring_valloc(struct xenbus_device *dev,
+>>  			   int gnt_ref, void **vaddr);
+>>
+> 
+
+
 -- 
-2.1.0
+Chen Gang
 
+Open share and attitude like air water and life which God blessed
