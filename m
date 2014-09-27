@@ -1,124 +1,121 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [PATCH v13 11/12] PCI: Add pci_remap_iospace() to map bus I/O resources
-Date: Mon, 29 Sep 2014 15:29:30 +0100
-Message-Id: <1412000971-9242-12-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:54449 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750953AbaI0FdK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Sep 2014 01:33:10 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Sat, 27 Sep 2014 15:33:08 +1000
+Date: Sat, 27 Sep 2014 15:33:07 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, kvm@vger.kernel.org,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 4/4] vfio/pci: Restore MSIx message prior to enabling
+Message-ID: <20140927053306.GA18847@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1400468470-11262-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1400468470-11262-5-git-send-email-gwshan@linux.vnet.ibm.com>
+ <20140910081342.GA18833@shangw>
+ <20140926031958.GA30285@shangw>
+ <1411703204.7360.5.camel@ul30vt.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1411703204.7360.5.camel@ul30vt.home>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add pci_remap_iospace() to map bus I/O resources into the CPU virtual
-address space.  Architectures with special needs may provide their own
-version, but most should be able to use this one.
+On Thu, Sep 25, 2014 at 09:46:44PM -0600, Alex Williamson wrote:
+>On Fri, 2014-09-26 at 13:19 +1000, Gavin Shan wrote:
+>> On Wed, Sep 10, 2014 at 06:13:42PM +1000, Gavin Shan wrote:
+>> >On Mon, May 19, 2014 at 01:01:10PM +1000, Gavin Shan wrote:
+>> >>The MSIx vector table lives in device memory, which may be cleared as
+>> >>part of a backdoor device reset. This is the case on the IBM IPR HBA
+>> >>when the BIST is run on the device. When assigned to a QEMU guest,
+>> >>the guest driver does a pci_save_state(), issues a BIST, then does a
+>> >>pci_restore_state(). The BIST clears the MSIx vector table, but due
+>> >>to the way interrupts are configured the pci_restore_state() does not
+>> >>restore the vector table as expected. Eventually this results in an
+>> >>EEH error on Power platforms when the device attempts to signal an
+>> >>interrupt with the zero'd table entry.
+>> >>
+>> >>Fix the problem by restoring the host cached MSI message prior to
+>> >>enabling each vector.
+>> >>
+>> >>Reported-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+>> >>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> >>Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+>> >
+>> >Alex, please let me know if I need resend this one to you. The patch
+>> >has been pending for long time, I'm not sure if you still can grab
+>> >it somewhere.
+>> >
+>> >As you might see, Bjorn will take that one with PCI changes. This patch
+>> >depends on the changes.
+>> >
+>> 
+>> Alex, I guess you probably missed last reply. Bjorn acked the first
+>> patch and you can pick both of them if I understand correctly. Please
+>> let me know if I need resend those 2 patches?
+>
+>Please update the patches, add Bjorn's ACK, test and resend.  I'd like
+>to at least know that it still applies and resolves the problem on the
+>current code base since the patch is 4 months old.  Thanks,
+>
 
-This function is useful for PCI host bridge drivers that need to map the
-PCI I/O resources into virtual memory space.
+Retested and it helps avoiding unexpected EEH error as before though
+the error because of MSIx message lost is eventually progagated to
+guest and the adapter is recovered successfully by the feature
+"EEH support for guest". I'll resend it with Bjorn's ack.
 
-[bhelgaas: phys_addr description, drop temporary "err" variable]
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>
----
- drivers/pci/pci.c             | 31 +++++++++++++++++++++++++++++++
- include/asm-generic/pgtable.h |  4 ++++
- include/linux/pci.h           |  3 +++
- 3 files changed, 38 insertions(+)
+Thanks,
+Gavin
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index d36f35f..6e994fc 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2704,6 +2704,37 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
- }
- EXPORT_SYMBOL(pci_request_regions_exclusive);
- 
-+/**
-+ *	pci_remap_iospace - Remap the memory mapped I/O space
-+ *	@res: Resource describing the I/O space
-+ *	@phys_addr: physical address of range to be mapped
-+ *
-+ *	Remap the memory mapped I/O space described by the @res
-+ *	and the CPU physical address @phys_addr into virtual address space.
-+ *	Only architectures that have memory mapped IO functions defined
-+ *	(and the PCI_IOBASE value defined) should call this function.
-+ */
-+int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
-+{
-+#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
-+	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
-+
-+	if (!(res->flags & IORESOURCE_IO))
-+		return -EINVAL;
-+
-+	if (res->end > IO_SPACE_LIMIT)
-+		return -EINVAL;
-+
-+	return ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
-+				  pgprot_device(PAGE_KERNEL));
-+#else
-+	/* this architecture does not have memory mapped I/O space,
-+	   so this function should never be called */
-+	WARN_ONCE(1, "This architecture does not support memory mapped I/O\n");
-+	return -ENODEV;
-+#endif
-+}
-+
- static void __pci_set_master(struct pci_dev *dev, bool enable)
- {
- 	u16 old_cmd, cmd;
-diff --git a/include/asm-generic/pgtable.h b/include/asm-generic/pgtable.h
-index 53b2acc..977e545 100644
---- a/include/asm-generic/pgtable.h
-+++ b/include/asm-generic/pgtable.h
-@@ -249,6 +249,10 @@ static inline int pmd_same(pmd_t pmd_a, pmd_t pmd_b)
- #define pgprot_writecombine pgprot_noncached
- #endif
- 
-+#ifndef pgprot_device
-+#define pgprot_device pgprot_noncached
-+#endif
-+
- /*
-  * When walking page tables, get the address of the next boundary,
-  * or the end address of the range if that comes earlier.  Although no
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 150da2d..b4995fd 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1100,6 +1100,9 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
- 						  resource_size_t),
- 			void *alignf_data);
- 
-+
-+int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
-+
- static inline dma_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
- {
- 	struct pci_bus_region region;
--- 
-2.1.1
+>Alex
+>
+>> >>---
+>> >> drivers/vfio/pci/vfio_pci_intrs.c | 15 +++++++++++++++
+>> >> 1 file changed, 15 insertions(+)
+>> >>
+>> >>diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
+>> >>index 9dd49c9..553212f 100644
+>> >>--- a/drivers/vfio/pci/vfio_pci_intrs.c
+>> >>+++ b/drivers/vfio/pci/vfio_pci_intrs.c
+>> >>@@ -16,6 +16,7 @@
+>> >> #include <linux/device.h>
+>> >> #include <linux/interrupt.h>
+>> >> #include <linux/eventfd.h>
+>> >>+#include <linux/msi.h>
+>> >> #include <linux/pci.h>
+>> >> #include <linux/file.h>
+>> >> #include <linux/poll.h>
+>> >>@@ -548,6 +549,20 @@ static int vfio_msi_set_vector_signal(struct vfio_pci_device *vdev,
+>> >> 		return PTR_ERR(trigger);
+>> >> 	}
+>> >>
+>> >>+	/*
+>> >>+	 * The MSIx vector table resides in device memory which may be cleared
+>> >>+	 * via backdoor resets. We don't allow direct access to the vector
+>> >>+	 * table so even if a userspace driver attempts to save/restore around
+>> >>+	 * such a reset it would be unsuccessful. To avoid this, restore the
+>> >>+	 * cached value of the message prior to enabling.
+>> >>+	 */
+>> >>+	if (msix) {
+>> >>+		struct msi_msg msg;
+>> >>+
+>> >>+		get_cached_msi_msg(irq, &msg);
+>> >>+		write_msi_msg(irq, &msg);
+>> >>+	}
+>> >>+
+>> >> 	ret = request_irq(irq, vfio_msihandler, 0,
+>> >> 			  vdev->ctx[vector].name, trigger);
+>> >> 	if (ret) {
+>> >>-- 
+>> >>1.8.3.2
+>> >>
+>> 
+>
+>
+>
 
