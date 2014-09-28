@@ -1,125 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:57356 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751744AbaIEXPs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Sep 2014 19:15:48 -0400
-Received: by mail-pd0-f170.google.com with SMTP id r10so16696208pdi.29
-        for <linux-pci@vger.kernel.org>; Fri, 05 Sep 2014 16:15:48 -0700 (PDT)
-Date: Fri, 5 Sep 2014 17:15:43 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Chen, Gong" <gong.chen@linux.intel.com>
-Cc: rdunlap@infradead.org, bp@alien8.de, tony.luck@intel.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RESEND 2/5] PCIe, AER: Replenish missed AER status bits for AER
- driver
-Message-ID: <20140905231543.GK8080@google.com>
-References: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
- <1407910961-7798-3-git-send-email-gong.chen@linux.intel.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <5427A6A0.5040703@huawei.com>
+Date: Sun, 28 Sep 2014 14:11:44 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1407910961-7798-3-git-send-email-gong.chen@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Thierry Reding <thierry.reding@gmail.com>
+CC: Liviu Dudau <liviu@dudau.co.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
+ in all platforms
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com> <20140925074235.GN12423@ulmo> <20140925144855.GB31157@bart.dudau.co.uk> <20140925164937.GB30382@ulmo> <20140925171612.GC31157@bart.dudau.co.uk> <542505B3.7040208@huawei.com> <20140926085430.GG31106@ulmo> <20140926090537.GH31106@ulmo> <54277327.6070500@huawei.com>
+In-Reply-To: <54277327.6070500@huawei.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 13, 2014 at 02:22:38AM -0400, Chen, Gong wrote:
-> Since commit 6c2b374d is commited, the capability of PCI-e AER
-> has changed a lot. This patch adds all missed CE/UC error bits
-> existed in PCI-e SPEC r3.0. Meanwhile, adjust the code format
-> to make it simpler to read/maintain.
+On 2014/9/28 10:32, Yijing Wang wrote:
+> On 2014/9/26 17:05, Thierry Reding wrote:
+>> On Fri, Sep 26, 2014 at 10:54:32AM +0200, Thierry Reding wrote:
+>> [...]
+>>> At least for Tegra it's trivial to just hook it up in tegra_pcie_scan_bus()
+>>> directly (patch attached).
+>>
+>> Really attached this time.
+>>
+>> Thierry
+>>
 > 
-> Signed-off-by: Chen, Gong <gong.chen@linux.intel.com>
-> ---
->  drivers/pci/pcie/aer/aerdrv_errprint.c | 60 ++++++++++++++--------------------
->  1 file changed, 25 insertions(+), 35 deletions(-)
+> It looks good to me, so I will update the arm pci hostbridge driver to assign
+> pci root bus the msi chip instead of current pcibios_add_bus(). But for other
+> platforms which only have a one msi chip, I will kept the arch_find_msi_chip()
+> temporarily for more comments, especially from Bjorn.
+
+Oh, sorry, I found designware and rcar use pci_scan_root_bus(), so we can not simply
+assign msi chip to root bus in all host drivers's scan functions.
+
 > 
-> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> index 35d06e177917..5c4f7e252e5e 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> @@ -75,44 +75,34 @@ static const char *aer_error_layer[] = {
->  };
->  
->  static const char *aer_correctable_error_string[] = {
-> -	"Receiver Error",		/* Bit Position 0	*/
-> -	NULL,
-> -	NULL,
-> -	NULL,
-> -	NULL,
-> -	NULL,
-> -	"Bad TLP",			/* Bit Position 6	*/
-> -	"Bad DLLP",			/* Bit Position 7	*/
-> -	"RELAY_NUM Rollover",		/* Bit Position 8	*/
-> -	NULL,
-> -	NULL,
-> -	NULL,
-> -	"Replay Timer Timeout",		/* Bit Position 12	*/
-> -	"Advisory Non-Fatal",		/* Bit Position 13	*/
-> +	[0] = "Receiver Error",
-> +	[6] = "Bad TLP",
-> +	[7] = "Bad DLLP",
-> +	[8] = "RELAY_NUM Rollover",
-> +	[12] = "Replay Timer Timeout",
-> +	[13] = "Advisory Non-Fatal Error",
-> +	[14] = "Corrected Internal Error",
-> +	[15] = "Header Log Overflow",
-
-You replaced bare numbers with the existing #defines in the previous patch
-(thank you), but now we're adding them here.  I'm pretty sure you can use
-the #defines here, e.g.,
-
-    [PCI_ERR_COR_RCVR] = "Receiver Error",
-
-In fact, it would be really nice if you could figure out a way to have only
-one set of these strings.  Right now, we have the set in
-include/ras/ras_event.h, and then another set here in aerdrv_errprint.c,
-and they contain exactly the same information.
-
-Bjorn
-
->  };
->  
->  static const char *aer_uncorrectable_error_string[] = {
-> -	NULL,
-> -	NULL,
-> -	NULL,
-> -	NULL,
-> -	"Data Link Protocol",		/* Bit Position 4	*/
-> -	NULL,
-> -	NULL,
-> -	NULL,
-> -	NULL,
-> -	NULL,
-> -	NULL,
-> -	NULL,
-> -	"Poisoned TLP",			/* Bit Position 12	*/
-> -	"Flow Control Protocol",	/* Bit Position 13	*/
-> -	"Completion Timeout",		/* Bit Position 14	*/
-> -	"Completer Abort",		/* Bit Position 15	*/
-> -	"Unexpected Completion",	/* Bit Position 16	*/
-> -	"Receiver Overflow",		/* Bit Position 17	*/
-> -	"Malformed TLP",		/* Bit Position 18	*/
-> -	"ECRC",				/* Bit Position 19	*/
-> -	"Unsupported Request",		/* Bit Position 20	*/
-> +	[0] = "Undefined",
-> +	[4] = "Data Link Protocol Error",
-> +	[5] = "Surprise Down Error",
-> +	[12] = "Poisoned TLP",
-> +	[13] = "Flow Control Protocol Error",
-> +	[14] = "Completion Timeout",
-> +	[15] = "Completer Abort",
-> +	[16] = "Unexpected Completion",
-> +	[17] = "Receiver Overflow",
-> +	[18] = "Malformed TLP",
-> +	[19] = "ECRC Error",
-> +	[20] = "Unsupported Request Error",
-> +	[21] = "ACS Violation",
-> +	[22] = "Uncorrectable Internal Error",
-> +	[23] = "MC Blocked TLP",
-> +	[24] = "AtomicOp Egress Blocked",
-> +	[25] = "TLP Prefix Blocked Error",
->  };
->  
->  static const char *aer_agent_string[] = {
-> -- 
-> 2.0.0.rc2
+> Thanks!
+> Yijing.
 > 
+
+
+-- 
+Thanks!
+Yijing
+
