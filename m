@@ -1,267 +1,173 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Sun, 7 Sep 2014 20:02:47 +0200
-From: Quentin Lambert <lambert.quentin@gmail.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Murray <scott@spiteful.org>
-Cc: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/4] PCI: fix a simple if coding style issue
-Message-ID: <20140907180247.GA12399@greed>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Sun, 28 Sep 2014 12:21:45 +0100
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
+	Bharat.Bhushan@freescale.com, x86@kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
+ in all platforms
+Message-ID: <20140928112144.GA4671@bart.dudau.co.uk>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+ <20140925074235.GN12423@ulmo>
+ <20140925144855.GB31157@bart.dudau.co.uk>
+ <20140925164937.GB30382@ulmo>
+ <5424E09F.50701@huawei.com>
+ <20140926085030.GE31157@bart.dudau.co.uk>
+ <54276F6C.5010705@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <54276F6C.5010705@huawei.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Removing curly braces in simple if cases.
+On Sun, Sep 28, 2014 at 10:16:12AM +0800, Yijing Wang wrote:
+> >>>> What I would like to see is a way of creating the pci_host_bridge structure outside
+> >>>> the pci_create_root_bus(). That would then allow us to pass this sort of platform
+> >>>> details like associated msi_chip into the host bridge and the child busses will
+> >>>> have an easy way of finding the information needed by finding the root bus and then
+> >>>> the host bridge structure. Then the generic pci_scan_root_bus() can be used by (mostly)
+> >>>> everyone and the drivers can remove their kludges that try to work around the
+> >>>> current limitations.
+> >>
+> >> So I think maybe save msi chip in PCI arch sysdata is a good candidate.
+> > 
+> > Except that arch sysdata at the moment is an opaque pointer. I am all in favour in
+> > changing the type of sysdata from void* into pci_host_bridge* and arches can wrap their old
+> > sysdata around the pci_host_bridge*.
+> 
+> I inspected every arch and found there are almost no common stuff,
 
-Signed-off-by: Quentin Lambert <lambert.quentin@gmail.com>
----
- drivers/pci/hotplug/cpci_hotplug_core.c |  4 ++--
- drivers/pci/hotplug/cpcihp_zt5550.c     | 11 +++++------
- drivers/pci/hotplug/cpqphp_core.c       |  3 +--
- drivers/pci/hotplug/cpqphp_ctrl.c       | 15 +++++----------
- drivers/pci/hotplug/cpqphp_nvram.c      | 13 +++++--------
- drivers/pci/hotplug/ibmphp_core.c       |  6 ++----
- drivers/pci/hotplug/ibmphp_ebda.c       |  3 +--
- drivers/pci/hotplug/ibmphp_hpc.c        |  3 +--
- 8 files changed, 22 insertions(+), 36 deletions(-)
+I will disagree here. Most (all?) of the structures that are passed as sysdata argument to
+pci_create_root_bus() or pci_scan_root_bus() have a set of resources for storing the MEM and
+IO ranges, which struct pci_host_bridge already has. So that can be factored out of the
+arch code. Same for pci_domain_nr. Then there are some variables that are used for communication
+with the platform code due to convoluted way(s) in which PCI code gets instantiated.
 
-diff --git a/drivers/pci/hotplug/cpci_hotplug_core.c b/drivers/pci/hotplug/cpci_hotplug_core.c
-index e09cf78..8359e29 100644
---- a/drivers/pci/hotplug/cpci_hotplug_core.c
-+++ b/drivers/pci/hotplug/cpci_hotplug_core.c
-@@ -467,9 +467,9 @@ check_slots(void)
- 			    __func__, slot_name(slot), hs_csr);
+What I am arguing here is not that the arch equivalent of pci_host_bridge structure is already
+common, but that by moving the members that are common out of arch sysdata into pci_host_bridge
+we will have more commonality and it will be easier to re-factor the code.
+
+> and generic data struct should
+> be created in generic PCI code.
+
+Not necessarily. What I have in mind is something like this:
+
+ - drivers/pci/ exports pci_init_host_bridge() that does the initialisation of bridge->windows
+   and anything else that is needed (like find_pci_host_bridge() function).
+ - arch code does:
+
+	struct pci_controller {
+		struct pci_host_bridge bridge;
+		.....
+	};
+
+	#define to_pci_controller(bridge)	container_of(bridge, struct pci_controller, bridge)
+
+	static inline struct pci_controller *get_host_controller(const struct pci_bus *bus)
+	{
+		struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+		if (bridge)
+			return to_pci_controller(bridge);
+
+		return NULL;
+	}
+
+	int arch_pci_init(....)
+	{
+		struct pci_controller *hose;
+		....
+		hose = kzalloc(sizeof(*hose), GFP_KERNEL);
+		pci_init_host_bridge(&hose->bridge);
+		....
+		pci_scan_root_bus(...., &hose->bridge, &resources);
+		....
+		return 0;
+	}
+
+Then finding the right structure will be easy.
+
+> Another, I don't like associate msi chip and every PCI device, further more,
+> almost all platforms except arm have only one MSI controller, and currently, PCI enumerating code doesn't need
+> to know the MSI chip details, like for legacy IRQ, PCI device doesn't need to know which IRQ controller they
+> should deliver IRQ to. I would think more about it, and hope other PCI guys can give some comments, especially from Bjorn.
+>
+
+I wasn't suggesing to associate an msi chip with every PCI device, but with the pci_host_bridge.
+I don't expect a host bridge to have more than one msi chip, so that should be OK. Also, I'm
+thinking that getting the associated msi chip should be some sort of pci_host_bridge ops function,
+and for arches that don't care about MSI it doesn't get implemented.
+
+Best regards,
+Liviu
+
  
- 			if (!slot->extracting) {
--				if (update_latch_status(slot->hotplug_slot, 0)) {
-+				if (update_latch_status(slot->hotplug_slot, 0))
- 					warn("failure to update latch file");
--				}
-+
- 				slot->extracting = 1;
- 				atomic_inc(&extracting);
- 			}
-diff --git a/drivers/pci/hotplug/cpcihp_zt5550.c b/drivers/pci/hotplug/cpcihp_zt5550.c
-index e618020..cfd01e9 100644
---- a/drivers/pci/hotplug/cpcihp_zt5550.c
-+++ b/drivers/pci/hotplug/cpcihp_zt5550.c
-@@ -182,9 +182,9 @@ static int zt5550_hc_enable_irq(void)
- {
- 	u8 reg;
- 
--	if (hc_dev == NULL) {
-+	if (hc_dev == NULL)
- 		return -ENODEV;
--	}
-+
- 	reg = readb(csr_int_mask);
- 	reg = reg & ~ENUM_INT_MASK;
- 	writeb(reg, csr_int_mask);
-@@ -195,9 +195,8 @@ static int zt5550_hc_disable_irq(void)
- {
- 	u8 reg;
- 
--	if (hc_dev == NULL) {
-+	if (hc_dev == NULL)
- 		return -ENODEV;
--	}
- 
- 	reg = readb(csr_int_mask);
- 	reg = reg | ENUM_INT_MASK;
-@@ -210,9 +209,9 @@ static int zt5550_hc_init_one (struct pci_dev *pdev, const struct pci_device_id
- 	int status;
- 
- 	status = zt5550_hc_config(pdev);
--	if (status != 0) {
-+	if (status != 0)
- 		return status;
--	}
-+
- 	dbg("returned from zt5550_hc_config");
- 
- 	memset(&zt5550_hpc, 0, sizeof (struct cpci_hp_controller));
-diff --git a/drivers/pci/hotplug/cpqphp_core.c b/drivers/pci/hotplug/cpqphp_core.c
-index 4aaee74..a53084d 100644
---- a/drivers/pci/hotplug/cpqphp_core.c
-+++ b/drivers/pci/hotplug/cpqphp_core.c
-@@ -1096,9 +1096,8 @@ static int cpqhpc_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	/* initialize our threads if they haven't already been started up */
- 	rc = one_time_init();
--	if (rc) {
-+	if (rc)
- 		goto err_free_bus;
--	}
- 
- 	dbg("pdev = %p\n", pdev);
- 	dbg("pci resource start %llx\n", (unsigned long long)pci_resource_start(pdev, 0));
-diff --git a/drivers/pci/hotplug/cpqphp_ctrl.c b/drivers/pci/hotplug/cpqphp_ctrl.c
-index 476482e..c5cbefe 100644
---- a/drivers/pci/hotplug/cpqphp_ctrl.c
-+++ b/drivers/pci/hotplug/cpqphp_ctrl.c
-@@ -705,9 +705,8 @@ static struct pci_resource *get_max_resource(struct pci_resource **head, u32 siz
- 		if (temp == max) {
- 			*head = max->next;
- 		} else {
--			while (temp && temp->next != max) {
-+			while (temp && temp->next != max)
- 				temp = temp->next;
--			}
- 
- 			if (temp)
- 				temp->next = max->next;
-@@ -903,9 +902,8 @@ irqreturn_t cpqhp_ctrl_intr(int IRQ, void *data)
- 	/*
- 	 * Check to see if it was our interrupt
- 	 */
--	if (!(misc & 0x000C)) {
-+	if (!(misc & 0x000C))
- 		return IRQ_NONE;
--	}
- 
- 	if (misc & 0x0004) {
- 		/*
-@@ -2006,9 +2004,8 @@ int cpqhp_process_SI(struct controller *ctrl, struct pci_func *func)
- 	/* Check to see if the interlock is closed */
- 	tempdword = readl(ctrl->hpc_reg + INT_INPUT_CLEAR);
- 
--	if (tempdword & (0x01 << hp_slot)) {
-+	if (tempdword & (0x01 << hp_slot))
- 		return 1;
--	}
- 
- 	if (func->is_a_board) {
- 		rc = board_replaced(func, ctrl);
-@@ -2070,9 +2067,8 @@ int cpqhp_process_SI(struct controller *ctrl, struct pci_func *func)
- 		}
- 	}
- 
--	if (rc) {
-+	if (rc)
- 		dbg("%s: rc = %d\n", __func__, rc);
--	}
- 
- 	if (p_slot)
- 		update_slot_info(ctrl, p_slot);
-@@ -2095,9 +2091,8 @@ int cpqhp_process_SS(struct controller *ctrl, struct pci_func *func)
- 	device = func->device;
- 	func = cpqhp_slot_find(ctrl->bus, device, index++);
- 	p_slot = cpqhp_find_slot(ctrl, device);
--	if (p_slot) {
-+	if (p_slot)
- 		physical_slot = p_slot->number;
--	}
- 
- 	/* Make sure there are no video controllers here */
- 	while (func && !rc) {
-diff --git a/drivers/pci/hotplug/cpqphp_nvram.c b/drivers/pci/hotplug/cpqphp_nvram.c
-index 0968a9b..1e08ff8 100644
---- a/drivers/pci/hotplug/cpqphp_nvram.c
-+++ b/drivers/pci/hotplug/cpqphp_nvram.c
-@@ -204,9 +204,8 @@ static int load_HRT (void __iomem *rom_start)
- 	u8 temp_byte = 0xFF;
- 	u32 rc;
- 
--	if (!check_for_compaq_ROM(rom_start)) {
-+	if (!check_for_compaq_ROM(rom_start))
- 		return -ENODEV;
--	}
- 
- 	available = 1024;
- 
-@@ -250,9 +249,8 @@ static u32 store_HRT (void __iomem *rom_start)
- 
- 	available = 1024;
- 
--	if (!check_for_compaq_ROM(rom_start)) {
-+	if (!check_for_compaq_ROM(rom_start))
- 		return(1);
--	}
- 
- 	buffer = (u32*) evbuffer;
- 
-@@ -427,9 +425,9 @@ static u32 store_HRT (void __iomem *rom_start)
- 
- void compaq_nvram_init (void __iomem *rom_start)
- {
--	if (rom_start) {
-+	if (rom_start)
- 		compaq_int15_entry_point = (rom_start + ROM_INT15_PHY_ADDR - ROM_PHY_ADDR);
--	}
-+
- 	dbg("int15 entry  = %p\n", compaq_int15_entry_point);
- 
- 	/* initialize our int15 lock */
-@@ -661,9 +659,8 @@ int compaq_nvram_store (void __iomem *rom_start)
- 
- 	if (evbuffer_init) {
- 		rc = store_HRT(rom_start);
--		if (rc) {
-+		if (rc)
- 			err(msg_unable_to_save);
--		}
- 	}
- 	return rc;
- }
-diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
-index f7b8684..cfe2afe 100644
---- a/drivers/pci/hotplug/ibmphp_core.c
-+++ b/drivers/pci/hotplug/ibmphp_core.c
-@@ -1199,9 +1199,8 @@ int ibmphp_do_disable_slot(struct slot *slot_cur)
- 
- 	debug("DISABLING SLOT...\n");
- 
--	if ((slot_cur == NULL) || (slot_cur->ctrl == NULL)) {
-+	if ((slot_cur == NULL) || (slot_cur->ctrl == NULL))
- 		return -ENODEV;
--	}
- 
- 	flag = slot_cur->flag;
- 	slot_cur->flag = 1;
-@@ -1355,9 +1354,8 @@ static int __init ibmphp_init(void)
- 	}
- 
- 	ibmphp_print_test();
--	if ((rc = ibmphp_hpc_start_poll_thread())) {
-+	if ((rc = ibmphp_hpc_start_poll_thread()))
- 		goto error;
--	}
- 
- exit:
- 	return rc;
-diff --git a/drivers/pci/hotplug/ibmphp_ebda.c b/drivers/pci/hotplug/ibmphp_ebda.c
-index 0f65ac5..d9b197d 100644
---- a/drivers/pci/hotplug/ibmphp_ebda.c
-+++ b/drivers/pci/hotplug/ibmphp_ebda.c
-@@ -215,9 +215,8 @@ static void __init print_ebda_hpc (void)
- 			debug ("%s - cap of the slot: %x\n", __func__, hpc_ptr->slots[index].slot_cap);
- 		}
- 
--		for (index = 0; index < hpc_ptr->bus_count; index++) {
-+		for (index = 0; index < hpc_ptr->bus_count; index++)
- 			debug ("%s - bus# of each bus controlled by this ctlr: %x\n", __func__, hpc_ptr->buses[index].bus_num);
--		}
- 
- 		debug ("%s - type of hpc: %x\n", __func__, hpc_ptr->ctlr_type);
- 		switch (hpc_ptr->ctlr_type) {
-diff --git a/drivers/pci/hotplug/ibmphp_hpc.c b/drivers/pci/hotplug/ibmphp_hpc.c
-index a936022..2208767 100644
---- a/drivers/pci/hotplug/ibmphp_hpc.c
-+++ b/drivers/pci/hotplug/ibmphp_hpc.c
-@@ -997,9 +997,8 @@ static int process_changeinstatus (struct slot *pslot, struct slot *poldslot)
- 		rc = ibmphp_do_disable_slot (pslot);
- 	}
- 
--	if (update || disable) {
-+	if (update || disable)
- 		ibmphp_update_slot_info (pslot);
--	}
- 
- 	debug ("%s - Exit rc[%d] disable[%x] update[%x]\n", __func__, rc, disable, update);
- 
+> Thanks!
+> Yijing.
+> 
+> > 
+> > Best regards,
+> > Liviu
+> > 
+> >>
+> >>>
+> >>> I think both issues are orthogonal. Last time I checked a lot of work
+> >>> was still necessary to unify host bridges enough so that it could be
+> >>> shared across architectures. But perhaps some of that work has
+> >>> happened in the meantime.
+> >>>
+> >>> But like I said, when you create the root bus, you can easily attach the
+> >>> MSI chip to it.
+> >>>
+> >>> Thierry
+> >>>
+> >>
+> >>
+> >> -- 
+> >> Thanks!
+> >> Yijing
+> >>
+> >>
+> > 
+> 
+> 
+> -- 
+> Thanks!
+> Yijing
+> 
+> 
+
 -- 
-1.9.1
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
+
+ One small step
+   for me ...
 
