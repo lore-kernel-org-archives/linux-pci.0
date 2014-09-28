@@ -1,62 +1,101 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<tglx@linutronix.de>, <hpa@zytor.com>, <x86@kernel.org>,
-	<bp@suse.de>, <dan.carpenter@oracle.com>,
-	<dougthompson@xmission.com>, <bp@alien8.de>,
-	<m.chehab@samsung.com>, <linux-edac@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-Subject: [PATCH 3/4] edac: Add DDR3 LRDIMM support, entries in edac_mem_types[]
-Date: Thu, 18 Sep 2014 14:56:58 -0500
-Message-ID: <1411070218-10258-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:52247 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750807AbaI1Fyf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 28 Sep 2014 01:54:35 -0400
+Message-ID: <5427A297.7050605@intel.com>
+Date: Sun, 28 Sep 2014 13:54:31 +0800
+From: Aaron Lu <aaron.lu@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+To: Chuansheng Liu <chuansheng.liu@intel.com>,
+	Tejun Heo <tj@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+	mister.freeman@laposte.net, rui.zhang@intel.com,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH V2] ata: Disabling the async PM for JMicron chips
+References: <1411543338-2257-1-git-send-email-chuansheng.liu@intel.com>
+In-Reply-To: <1411543338-2257-1-git-send-email-chuansheng.liu@intel.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-F15hM60h adds support for DDR4 and DDR3 LRDIMMS. Adding them here.
+On 09/24/2014 03:22 PM, Chuansheng Liu wrote:
+> Like the commit e6b7e41cdd8c ("ata: Disabling the async PM for JMicron chip 363/361"),
+> Barto found the similar issue for JMicron chip 368, that 363/368 has no
+> parent-children relationship, but they have the power dependency.
+> 
+> So here we can exclude the JMicron chips out of pm_async method directly,
+> to avoid further similar issues.
+> 
+> Details in:
+> https://bugzilla.kernel.org/show_bug.cgi?id=84861
 
-Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
----
- drivers/edac/edac_mc.c | 3 +++
- include/linux/edac.h   | 2 ++
- 2 files changed, 5 insertions(+)
+I think we can disable the async PM for JMicron chips in PCI subsystem:
+pci_pm_init, check if it is JMicron chip and then enable_async
+accordingly. The problem doesn't have much to do with ATA, so move them
+to PCI may be more appropriate.
 
-diff --git a/drivers/edac/edac_mc.c b/drivers/edac/edac_mc.c
-index 9f134823..71fd9fb 100644
---- a/drivers/edac/edac_mc.c
-+++ b/drivers/edac/edac_mc.c
-@@ -146,6 +146,9 @@ const char *edac_mem_types[] = {
- 	"Rambus XDR",
- 	"Unbuffered DDR3 RAM",
- 	"Registered DDR3 RAM",
-+	"Load-Reduce DDR3 RAM",
-+	"Unbuffered DDR4 RAM",
-+	"Registered DDR4 RAM",
- };
- EXPORT_SYMBOL_GPL(edac_mem_types);
- 
-diff --git a/include/linux/edac.h b/include/linux/edac.h
-index e1e68da..7a80100 100644
---- a/include/linux/edac.h
-+++ b/include/linux/edac.h
-@@ -194,6 +194,7 @@ static inline char *mc_event_error_type(const unsigned int err_type)
-  * @MEM_DDR3:		DDR3 RAM
-  * @MEM_RDDR3:		Registered DDR3 RAM
-  *			This is a variant of the DDR3 memories.
-+ * @MEM_LRDDR3		Load-Reduce DDR3 memory
-  * @MEM_DDR4:		DDR4 RAM
-  * @MEM_RDDR4:		Registered DDR4 RAM
-  *			This is a variant of the DDR4 memories.
-@@ -216,6 +217,7 @@ enum mem_type {
- 	MEM_XDR,
- 	MEM_DDR3,
- 	MEM_RDDR3,
-+	MEM_LRDDR3,
- 	MEM_DDR4,
- 	MEM_RDDR4,
- };
--- 
-2.0.2
+Thanks,
+Aaron
+
+> 
+> Reported-and-tested-by: Barto <mister.freeman@laposte.net>
+> Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+> ---
+>  drivers/ata/ahci.c         |   11 +++++------
+>  drivers/ata/pata_jmicron.c |   11 +++++------
+>  2 files changed, 10 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index a0cc0ed..85aa6ec 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1340,15 +1340,14 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  		ahci_pci_bar = AHCI_PCI_BAR_ENMOTUS;
+>  
+>  	/*
+> -	 * The JMicron chip 361/363 contains one SATA controller and one
+> +	 * The JMicron chip 361/363/368 contains one SATA controller and one
+>  	 * PATA controller,for powering on these both controllers, we must
+>  	 * follow the sequence one by one, otherwise one of them can not be
+> -	 * powered on successfully, so here we disable the async suspend
+> -	 * method for these chips.
+> +	 * powered on successfully.
+> +	 * Here we can exclude the Jmicron family directly out of pm_async
+> +	 * method to follow the power-on sequence.
+>  	 */
+> -	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
+> -		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
+> -		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
+> +	if (pdev->vendor == PCI_VENDOR_ID_JMICRON)
+>  		device_disable_async_suspend(&pdev->dev);
+>  
+>  	/* acquire resources */
+> diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
+> index 47e418b..1d685b6 100644
+> --- a/drivers/ata/pata_jmicron.c
+> +++ b/drivers/ata/pata_jmicron.c
+> @@ -144,15 +144,14 @@ static int jmicron_init_one (struct pci_dev *pdev, const struct pci_device_id *i
+>  	const struct ata_port_info *ppi[] = { &info, NULL };
+>  
+>  	/*
+> -	 * The JMicron chip 361/363 contains one SATA controller and one
+> +	 * The JMicron chip 361/363/368 contains one SATA controller and one
+>  	 * PATA controller,for powering on these both controllers, we must
+>  	 * follow the sequence one by one, otherwise one of them can not be
+> -	 * powered on successfully, so here we disable the async suspend
+> -	 * method for these chips.
+> +	 * powered on successfully.
+> +	 * Here we can exclude the Jmicron family directly out of pm_async
+> +	 * method to follow the power-on sequence.
+>  	 */
+> -	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
+> -		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
+> -		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
+> +	if (pdev->vendor == PCI_VENDOR_ID_JMICRON)
+>  		device_disable_async_suspend(&pdev->dev);
+>  
+>  	return ata_pci_bmdma_init_one(pdev, ppi, &jmicron_sht, NULL, 0);
+> 
 
