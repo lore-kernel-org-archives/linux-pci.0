@@ -1,690 +1,262 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC Part1 v1 10/18] x86, irq: Move PCI MSI related code from io_apic.c into msi.c
-Date: Thu, 11 Sep 2014 16:24:57 +0800
-Message-Id: <1410423905-26239-11-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bn0109.outbound.protection.outlook.com ([157.56.110.109]:9653
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753525AbaI1Uye (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 28 Sep 2014 16:54:34 -0400
+From: <suravee.suthikulpanit@amd.com>
+To: <will.deacon@arm.com>, <liviu.dudau@arm.com>,
+	<marc.zyngier@arm.com>, <mark.rutland@arm.com>,
+	<catalin.marinas@arm.com>, <jason@lakedaemon.net>,
+	<tglx@linutronix.de>, <robh+dt@kernel.org>, <bhelgaas@google.com>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
+Date: Sun, 28 Sep 2014 15:53:28 -0500
+Message-ID: <1411937610-22125-3-git-send-email-suravee.suthikulpanit@amd.com>
+In-Reply-To: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Create arch/x86/kernel/apic/msi.c to host MSI related code,
-preparing for enabling hierarchy irqdomain.
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+This patch adds ARM64 support to the generic PCI host driver.
+
+For MSI support, it adds new device tree binding "msi-parent",
+which should point to corresponded msi-controller.
+
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mark Rutland <mark.rutland@arm.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 ---
- arch/x86/include/asm/io_apic.h |    4 -
- arch/x86/include/asm/pci.h     |    3 +
- arch/x86/kernel/apic/Makefile  |    1 +
- arch/x86/kernel/apic/io_apic.c |  269 --------------------------------------
- arch/x86/kernel/apic/msi.c     |  283 ++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 287 insertions(+), 273 deletions(-)
- create mode 100644 arch/x86/kernel/apic/msi.c
+ .../devicetree/bindings/pci/host-generic-pci.txt   |  3 +
+ drivers/pci/host/Kconfig                           |  2 +-
+ drivers/pci/host/pci-host-generic.c                | 95 ++++++++++++++++++++--
+ 3 files changed, 90 insertions(+), 10 deletions(-)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index ca742d5249db..a2245cb5ca3f 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -148,9 +148,6 @@ extern int native_setup_ioapic_entry(int, struct IO_APIC_route_entry *,
- 				     struct io_apic_irq_attr *);
- extern void eoi_ioapic_irq(unsigned int irq, struct irq_cfg *cfg);
+diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+index f0b0436..327e5b1 100644
+--- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
++++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+@@ -69,6 +69,9 @@ Practice: Interrupt Mapping' and requires the following properties:
  
--extern void native_compose_msi_msg(struct pci_dev *pdev,
--				   unsigned int irq, unsigned int dest,
--				   struct msi_msg *msg, u8 hpet_id);
- extern void native_eoi_ioapic_pin(int apic, int pin, int vector);
+ - interrupt-map-mask : <see aforementioned specification>
  
- extern int save_ioapic_entries(void);
-@@ -264,7 +261,6 @@ static inline void disable_ioapic_support(void) { }
- #define native_io_apic_print_entries	NULL
- #define native_ioapic_set_affinity	NULL
- #define native_setup_ioapic_entry	NULL
--#define native_compose_msi_msg		NULL
- #define native_eoi_ioapic_pin		NULL
- #endif
- 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 0892ea0e683f..4e370a5d8117 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -96,12 +96,15 @@ extern void pci_iommu_alloc(void);
- #ifdef CONFIG_PCI_MSI
- /* implemented in arch/x86/kernel/apic/io_apic. */
- struct msi_desc;
-+void native_compose_msi_msg(struct pci_dev *pdev, unsigned int irq,
-+			    unsigned int dest, struct msi_msg *msg, u8 hpet_id);
- int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- void native_teardown_msi_irq(unsigned int irq);
- void native_restore_msi_irqs(struct pci_dev *dev);
- int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- 		  unsigned int irq_base, unsigned int irq_offset);
- #else
-+#define native_compose_msi_msg		NULL
- #define native_setup_msi_irqs		NULL
- #define native_teardown_msi_irq		NULL
- #endif
-diff --git a/arch/x86/kernel/apic/Makefile b/arch/x86/kernel/apic/Makefile
-index 84299e5d10dc..aac300750f0e 100644
---- a/arch/x86/kernel/apic/Makefile
-+++ b/arch/x86/kernel/apic/Makefile
-@@ -6,6 +6,7 @@ obj-$(CONFIG_X86_LOCAL_APIC)	+= apic.o apic_noop.o ipi.o vector.o
- obj-y				+= hw_nmi.o
- 
- obj-$(CONFIG_X86_IO_APIC)	+= io_apic.o
-+obj-$(CONFIG_PCI_MSI)		+= msi.o
- obj-$(CONFIG_SMP)		+= ipi.o
- 
- ifeq ($(CONFIG_X86_64),y)
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 517fe91d3011..b9fdef0299a4 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -32,15 +32,12 @@
- #include <linux/module.h>
- #include <linux/syscore_ops.h>
- #include <linux/irqdomain.h>
--#include <linux/msi.h>
- #include <linux/htirq.h>
- #include <linux/freezer.h>
- #include <linux/kthread.h>
- #include <linux/jiffies.h>	/* time_after() */
- #include <linux/slab.h>
- #include <linux/bootmem.h>
--#include <linux/dmar.h>
--#include <linux/hpet.h>
- 
- #include <asm/idle.h>
- #include <asm/io.h>
-@@ -52,11 +49,9 @@
- #include <asm/dma.h>
- #include <asm/timer.h>
- #include <asm/i8259.h>
--#include <asm/msidef.h>
- #include <asm/hypertransport.h>
- #include <asm/setup.h>
- #include <asm/irq_remapping.h>
--#include <asm/hpet.h>
- #include <asm/hw_irq.h>
- 
- #include <asm/apic.h>
-@@ -2455,270 +2450,6 @@ static int __init ioapic_init_ops(void)
- device_initcall(ioapic_init_ops);
- 
- /*
-- * MSI message composition
-- */
--void native_compose_msi_msg(struct pci_dev *pdev,
--			    unsigned int irq, unsigned int dest,
--			    struct msi_msg *msg, u8 hpet_id)
--{
--	struct irq_cfg *cfg = irq_cfg(irq);
--
--	msg->address_hi = MSI_ADDR_BASE_HI;
--
--	if (x2apic_enabled())
--		msg->address_hi |= MSI_ADDR_EXT_DEST_ID(dest);
--
--	msg->address_lo =
--		MSI_ADDR_BASE_LO |
--		((apic->irq_dest_mode == 0) ?
--			MSI_ADDR_DEST_MODE_PHYSICAL:
--			MSI_ADDR_DEST_MODE_LOGICAL) |
--		((apic->irq_delivery_mode != dest_LowestPrio) ?
--			MSI_ADDR_REDIRECTION_CPU:
--			MSI_ADDR_REDIRECTION_LOWPRI) |
--		MSI_ADDR_DEST_ID(dest);
--
--	msg->data =
--		MSI_DATA_TRIGGER_EDGE |
--		MSI_DATA_LEVEL_ASSERT |
--		((apic->irq_delivery_mode != dest_LowestPrio) ?
--			MSI_DATA_DELIVERY_FIXED:
--			MSI_DATA_DELIVERY_LOWPRI) |
--		MSI_DATA_VECTOR(cfg->vector);
--}
--
--#ifdef CONFIG_PCI_MSI
--static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
--			   struct msi_msg *msg, u8 hpet_id)
--{
--	struct irq_cfg *cfg;
--	int err;
--	unsigned dest;
--
--	if (disable_apic)
--		return -ENXIO;
--
--	cfg = irq_cfg(irq);
--	err = assign_irq_vector(irq, cfg, apic->target_cpus());
--	if (err)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(cfg->domain,
--					   apic->target_cpus(), &dest);
--	if (err)
--		return err;
--
--	x86_msi.compose_msi_msg(pdev, irq, dest, msg, hpet_id);
--
--	return 0;
--}
--
--static int
--msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
--{
--	struct irq_cfg *cfg = data->chip_data;
--	struct msi_msg msg;
--	unsigned int dest;
--	int ret;
--
--	ret = apic_set_affinity(data, mask, &dest);
--	if (ret)
--		return ret;
--
--	__get_cached_msi_msg(data->msi_desc, &msg);
--
--	msg.data &= ~MSI_DATA_VECTOR_MASK;
--	msg.data |= MSI_DATA_VECTOR(cfg->vector);
--	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
--	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
--
--	__write_msi_msg(data->msi_desc, &msg);
--
--	return IRQ_SET_MASK_OK_NOCOPY;
--}
--
--/*
-- * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
-- * which implement the MSI or MSI-X Capability Structure.
-- */
--static struct irq_chip msi_chip = {
--	.name			= "PCI-MSI",
--	.irq_unmask		= unmask_msi_irq,
--	.irq_mask		= mask_msi_irq,
--	.irq_ack		= apic_ack_edge,
--	.irq_set_affinity	= msi_set_affinity,
--	.irq_retrigger		= apic_retrigger_irq,
--};
--
--int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
--		  unsigned int irq_base, unsigned int irq_offset)
--{
--	struct irq_chip *chip = &msi_chip;
--	struct msi_msg msg;
--	unsigned int irq = irq_base + irq_offset;
--	int ret;
--
--	ret = msi_compose_msg(dev, irq, &msg, -1);
--	if (ret < 0)
--		return ret;
--
--	irq_set_msi_desc_off(irq_base, irq_offset, msidesc);
--
--	/*
--	 * MSI-X message is written per-IRQ, the offset is always 0.
--	 * MSI message denotes a contiguous group of IRQs, written for 0th IRQ.
--	 */
--	if (!irq_offset)
--		write_msi_msg(irq, &msg);
--
--	setup_remapped_irq(irq, irq_cfg(irq), chip);
--
--	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
--
--	dev_printk(KERN_DEBUG, &dev->dev, "irq %d for MSI/MSI-X\n", irq);
--
--	return 0;
--}
--
--int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
--{
--	struct msi_desc *msidesc;
--	unsigned int irq;
--	int node, ret;
--
--	/* Multiple MSI vectors only supported with interrupt remapping */
--	if (type == PCI_CAP_ID_MSI && nvec > 1)
--		return 1;
--
--	node = dev_to_node(&dev->dev);
--
--	list_for_each_entry(msidesc, &dev->msi_list, list) {
--		irq = irq_alloc_hwirq(node);
--		if (!irq)
--			return -ENOSPC;
--
--		ret = setup_msi_irq(dev, msidesc, irq, 0);
--		if (ret < 0) {
--			irq_free_hwirq(irq);
--			return ret;
--		}
--
--	}
--	return 0;
--}
--
--void native_teardown_msi_irq(unsigned int irq)
--{
--	irq_free_hwirq(irq);
--}
--
--#ifdef CONFIG_DMAR_TABLE
--static int
--dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
--		      bool force)
--{
--	struct irq_cfg *cfg = data->chip_data;
--	unsigned int dest, irq = data->irq;
--	struct msi_msg msg;
--	int ret;
--
--	ret = apic_set_affinity(data, mask, &dest);
--	if (ret)
--		return ret;
--
--	dmar_msi_read(irq, &msg);
--
--	msg.data &= ~MSI_DATA_VECTOR_MASK;
--	msg.data |= MSI_DATA_VECTOR(cfg->vector);
--	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
--	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
--	msg.address_hi = MSI_ADDR_BASE_HI | MSI_ADDR_EXT_DEST_ID(dest);
--
--	dmar_msi_write(irq, &msg);
--
--	return IRQ_SET_MASK_OK_NOCOPY;
--}
--
--static struct irq_chip dmar_msi_type = {
--	.name			= "DMAR_MSI",
--	.irq_unmask		= dmar_msi_unmask,
--	.irq_mask		= dmar_msi_mask,
--	.irq_ack		= apic_ack_edge,
--	.irq_set_affinity	= dmar_msi_set_affinity,
--	.irq_retrigger		= apic_retrigger_irq,
--};
--
--int arch_setup_dmar_msi(unsigned int irq)
--{
--	int ret;
--	struct msi_msg msg;
--
--	ret = msi_compose_msg(NULL, irq, &msg, -1);
--	if (ret < 0)
--		return ret;
--	dmar_msi_write(irq, &msg);
--	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
--				      "edge");
--	return 0;
--}
--#endif
--
--#ifdef CONFIG_HPET_TIMER
--
--static int hpet_msi_set_affinity(struct irq_data *data,
--				 const struct cpumask *mask, bool force)
--{
--	struct irq_cfg *cfg = data->chip_data;
--	struct msi_msg msg;
--	unsigned int dest;
--	int ret;
--
--	ret = apic_set_affinity(data, mask, &dest);
--	if (ret)
--		return ret;
--
--	hpet_msi_read(data->handler_data, &msg);
--
--	msg.data &= ~MSI_DATA_VECTOR_MASK;
--	msg.data |= MSI_DATA_VECTOR(cfg->vector);
--	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
--	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
--
--	hpet_msi_write(data->handler_data, &msg);
--
--	return IRQ_SET_MASK_OK_NOCOPY;
--}
--
--static struct irq_chip hpet_msi_type = {
--	.name = "HPET_MSI",
--	.irq_unmask = hpet_msi_unmask,
--	.irq_mask = hpet_msi_mask,
--	.irq_ack = apic_ack_edge,
--	.irq_set_affinity = hpet_msi_set_affinity,
--	.irq_retrigger = apic_retrigger_irq,
--};
--
--int default_setup_hpet_msi(unsigned int irq, unsigned int id)
--{
--	struct irq_chip *chip = &hpet_msi_type;
--	struct msi_msg msg;
--	int ret;
--
--	ret = msi_compose_msg(NULL, irq, &msg, id);
--	if (ret < 0)
--		return ret;
--
--	hpet_msi_write(irq_get_handler_data(irq), &msg);
--	irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
--	setup_remapped_irq(irq, irq_cfg(irq), chip);
--
--	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
--	return 0;
--}
--#endif
--
--#endif /* CONFIG_PCI_MSI */
--/*
-  * Hypertransport interrupt support
-  */
- #ifdef CONFIG_HT_IRQ
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-new file mode 100644
-index 000000000000..8ad0046849f3
---- /dev/null
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -0,0 +1,283 @@
-+/*
-+ * Support of MSI, HPET and DMAR interrupts.
-+ *
-+ * Copyright (C) 1997, 1998, 1999, 2000, 2009 Ingo Molnar, Hajnalka Szabo
-+ *	Moved from arch/x86/kernel/apic/io_apic.c.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+#include <linux/mm.h>
-+#include <linux/interrupt.h>
-+#include <linux/pci.h>
-+#include <linux/dmar.h>
-+#include <linux/hpet.h>
-+#include <linux/msi.h>
-+#include <asm/msidef.h>
-+#include <asm/hpet.h>
-+#include <asm/hw_irq.h>
-+#include <asm/apic.h>
-+#include <asm/irq_remapping.h>
++Optinal Properties:
 +
-+void native_compose_msi_msg(struct pci_dev *pdev,
-+			    unsigned int irq, unsigned int dest,
-+			    struct msi_msg *msg, u8 hpet_id)
-+{
-+	struct irq_cfg *cfg = irq_cfg(irq);
++- msi-parent     : Specify the msi-controller phandle.
+ 
+ Example:
+ 
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 90f5cca..44bf523 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -50,7 +50,7 @@ config PCI_RCAR_GEN2_PCIE
+ 
+ config PCI_HOST_GENERIC
+ 	bool "Generic PCI host controller"
+-	depends on ARM && OF
++	depends on (ARM || ARM64) && OF
+ 	help
+ 	  Say Y here if you want to support a simple generic PCI host
+ 	  controller, such as the one emulated by kvmtool.
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 3d2076f..f33c547 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -42,14 +42,24 @@ struct gen_pci {
+ 	struct pci_host_bridge			host;
+ 	struct gen_pci_cfg_windows		cfg;
+ 	struct list_head			resources;
++	struct device_node *msi_parent;
+ };
+ 
++#ifdef CONFIG_ARM64
++#define bus_to_gen_pci(b) \
++	((struct gen_pci *)b->sysdata)
++#else
++#define bus_to_gen_pci(b) \
++	((struct gen_pci *) \
++	(((struct pci_sys_data *) \
++	(bus->sysdata))->private_data))
++#endif
 +
-+	msg->address_hi = MSI_ADDR_BASE_HI;
-+
-+	if (x2apic_enabled())
-+		msg->address_hi |= MSI_ADDR_EXT_DEST_ID(dest);
-+
-+	msg->address_lo =
-+		MSI_ADDR_BASE_LO |
-+		((apic->irq_dest_mode == 0) ?
-+			MSI_ADDR_DEST_MODE_PHYSICAL :
-+			MSI_ADDR_DEST_MODE_LOGICAL) |
-+		((apic->irq_delivery_mode != dest_LowestPrio) ?
-+			MSI_ADDR_REDIRECTION_CPU :
-+			MSI_ADDR_REDIRECTION_LOWPRI) |
-+		MSI_ADDR_DEST_ID(dest);
-+
-+	msg->data =
-+		MSI_DATA_TRIGGER_EDGE |
-+		MSI_DATA_LEVEL_ASSERT |
-+		((apic->irq_delivery_mode != dest_LowestPrio) ?
-+			MSI_DATA_DELIVERY_FIXED :
-+			MSI_DATA_DELIVERY_LOWPRI) |
-+		MSI_DATA_VECTOR(cfg->vector);
-+}
-+
-+static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
-+			   struct msi_msg *msg, u8 hpet_id)
-+{
-+	struct irq_cfg *cfg;
+ static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
+ 					     unsigned int devfn,
+ 					     int where)
+ {
+-	struct pci_sys_data *sys = bus->sysdata;
+-	struct gen_pci *pci = sys->private_data;
++	struct gen_pci *pci = bus_to_gen_pci(bus);
+ 	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
+ 
+ 	return pci->cfg.win[idx] + ((devfn << 8) | where);
+@@ -64,8 +74,7 @@ static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
+ 					      unsigned int devfn,
+ 					      int where)
+ {
+-	struct pci_sys_data *sys = bus->sysdata;
+-	struct gen_pci *pci = sys->private_data;
++	struct gen_pci *pci = bus_to_gen_pci(bus);
+ 	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
+ 
+ 	return pci->cfg.win[idx] + ((devfn << 12) | where);
+@@ -80,8 +89,7 @@ static int gen_pci_config_read(struct pci_bus *bus, unsigned int devfn,
+ 				int where, int size, u32 *val)
+ {
+ 	void __iomem *addr;
+-	struct pci_sys_data *sys = bus->sysdata;
+-	struct gen_pci *pci = sys->private_data;
++	struct gen_pci *pci = bus_to_gen_pci(bus);
+ 
+ 	addr = pci->cfg.ops->map_bus(bus, devfn, where);
+ 
+@@ -103,8 +111,7 @@ static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
+ 				 int where, int size, u32 val)
+ {
+ 	void __iomem *addr;
+-	struct pci_sys_data *sys = bus->sysdata;
+-	struct gen_pci *pci = sys->private_data;
++	struct gen_pci *pci = bus_to_gen_pci(bus);
+ 
+ 	addr = pci->cfg.ops->map_bus(bus, devfn, where);
+ 
+@@ -144,8 +151,11 @@ static int gen_pci_calc_io_offset(struct device *dev,
+ 				  resource_size_t *offset)
+ {
+ 	static atomic_t wins = ATOMIC_INIT(0);
+-	int err, idx, max_win;
++	int idx, max_win;
+ 	unsigned int window;
++#ifndef CONFIG_ARM64
 +	int err;
-+	unsigned dest;
++#endif
+ 
+ 	if (!PAGE_ALIGNED(range->cpu_addr))
+ 		return -EINVAL;
+@@ -156,9 +166,12 @@ static int gen_pci_calc_io_offset(struct device *dev,
+ 		return -ENOSPC;
+ 
+ 	window = (idx - 1) * SZ_64K;
 +
-+	if (disable_apic)
-+		return -ENXIO;
++#ifndef CONFIG_ARM64
+ 	err = pci_ioremap_io(window, range->cpu_addr);
+ 	if (err)
+ 		return err;
++#endif
+ 
+ 	of_pci_range_to_resource(range, dev->of_node, res);
+ 	res->start = window;
+@@ -310,12 +323,58 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+ 	return 0;
+ }
+ 
++#ifndef CONFIG_ARM64
+ static int gen_pci_setup(int nr, struct pci_sys_data *sys)
+ {
+ 	struct gen_pci *pci = sys->private_data;
+ 	list_splice_init(&pci->resources, &sys->resources);
+ 	return 1;
+ }
++#endif
 +
-+	cfg = irq_cfg(irq);
-+	err = assign_irq_vector(irq, cfg, apic->target_cpus());
-+	if (err)
-+		return err;
-+
-+	err = apic->cpu_mask_to_apicid_and(cfg->domain,
-+					   apic->target_cpus(), &dest);
-+	if (err)
-+		return err;
-+
-+	x86_msi.compose_msi_msg(pdev, irq, dest, msg, hpet_id);
-+
-+	return 0;
-+}
-+
-+static int
-+msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
++#ifdef CONFIG_ARM64
++struct pci_bus *gen_scan_root_bus(struct device *parent, int bus,
++				       struct pci_ops *ops, void *sysdata,
++				       struct list_head *resources)
 +{
-+	struct irq_cfg *cfg = data->chip_data;
-+	struct msi_msg msg;
-+	unsigned int dest;
-+	int ret;
++	struct pci_host_bridge_window *window;
++	bool found = false;
++	struct pci_bus *b;
++	int max;
++	struct gen_pci *pci = sysdata;
 +
-+	ret = apic_set_affinity(data, mask, &dest);
-+	if (ret)
-+		return ret;
-+
-+	__get_cached_msi_msg(data->msi_desc, &msg);
-+
-+	msg.data &= ~MSI_DATA_VECTOR_MASK;
-+	msg.data |= MSI_DATA_VECTOR(cfg->vector);
-+	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
-+	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
-+
-+	__write_msi_msg(data->msi_desc, &msg);
-+
-+	return IRQ_SET_MASK_OK_NOCOPY;
-+}
-+
-+/*
-+ * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
-+ * which implement the MSI or MSI-X Capability Structure.
-+ */
-+static struct irq_chip msi_chip = {
-+	.name			= "PCI-MSI",
-+	.irq_unmask		= unmask_msi_irq,
-+	.irq_mask		= mask_msi_irq,
-+	.irq_ack		= apic_ack_edge,
-+	.irq_set_affinity	= msi_set_affinity,
-+	.irq_retrigger		= apic_retrigger_irq,
-+};
-+
-+int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
-+		  unsigned int irq_base, unsigned int irq_offset)
-+{
-+	struct irq_chip *chip = &msi_chip;
-+	struct msi_msg msg;
-+	unsigned int irq = irq_base + irq_offset;
-+	int ret;
-+
-+	ret = msi_compose_msg(dev, irq, &msg, -1);
-+	if (ret < 0)
-+		return ret;
-+
-+	irq_set_msi_desc_off(irq_base, irq_offset, msidesc);
-+
-+	/*
-+	 * MSI-X message is written per-IRQ, the offset is always 0.
-+	 * MSI message denotes a contiguous group of IRQs, written for 0th IRQ.
-+	 */
-+	if (!irq_offset)
-+		write_msi_msg(irq, &msg);
-+
-+	setup_remapped_irq(irq, irq_cfg(irq), chip);
-+
-+	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
-+
-+	dev_dbg(&dev->dev, "irq %d for MSI/MSI-X\n", irq);
-+
-+	return 0;
-+}
-+
-+int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+{
-+	struct msi_desc *msidesc;
-+	unsigned int irq;
-+	int node, ret;
-+
-+	/* Multiple MSI vectors only supported with interrupt remapping */
-+	if (type == PCI_CAP_ID_MSI && nvec > 1)
-+		return 1;
-+
-+	node = dev_to_node(&dev->dev);
-+
-+	list_for_each_entry(msidesc, &dev->msi_list, list) {
-+		irq = irq_alloc_hwirq(node);
-+		if (!irq)
-+			return -ENOSPC;
-+
-+		ret = setup_msi_irq(dev, msidesc, irq, 0);
-+		if (ret < 0) {
-+			irq_free_hwirq(irq);
-+			return ret;
++	list_for_each_entry(window, resources, list)
++		if (window->res->flags & IORESOURCE_BUS) {
++			found = true;
++			break;
 +		}
 +
++	b = pci_create_root_bus(parent, bus, ops, sysdata, resources);
++	if (!b)
++		return NULL;
++
++	/* TODO:
++	 * This is probably should be done in the core pci driver somewhere
++	 */
++	if (pci->msi_parent)
++		b->msi = of_pci_find_msi_chip_by_node(pci->msi_parent);
++
++	if (!found) {
++		dev_info(&b->dev,
++		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
++			bus);
++		pci_bus_insert_busn_res(b, bus, 255);
 +	}
-+	return 0;
-+}
 +
-+void native_teardown_msi_irq(unsigned int irq)
-+{
-+	irq_free_hwirq(irq);
-+}
++	max = pci_scan_child_bus(b);
 +
-+#ifdef CONFIG_DMAR_TABLE
-+static int
-+dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
-+		      bool force)
-+{
-+	struct irq_cfg *cfg = data->chip_data;
-+	unsigned int dest, irq = data->irq;
-+	struct msi_msg msg;
-+	int ret;
++	if (!found)
++		pci_bus_update_busn_res_end(b, max);
 +
-+	ret = apic_set_affinity(data, mask, &dest);
-+	if (ret)
-+		return ret;
-+
-+	dmar_msi_read(irq, &msg);
-+
-+	msg.data &= ~MSI_DATA_VECTOR_MASK;
-+	msg.data |= MSI_DATA_VECTOR(cfg->vector);
-+	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
-+	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
-+	msg.address_hi = MSI_ADDR_BASE_HI | MSI_ADDR_EXT_DEST_ID(dest);
-+
-+	dmar_msi_write(irq, &msg);
-+
-+	return IRQ_SET_MASK_OK_NOCOPY;
-+}
-+
-+static struct irq_chip dmar_msi_type = {
-+	.name			= "DMAR_MSI",
-+	.irq_unmask		= dmar_msi_unmask,
-+	.irq_mask		= dmar_msi_mask,
-+	.irq_ack		= apic_ack_edge,
-+	.irq_set_affinity	= dmar_msi_set_affinity,
-+	.irq_retrigger		= apic_retrigger_irq,
-+};
-+
-+int arch_setup_dmar_msi(unsigned int irq)
-+{
-+	int ret;
-+	struct msi_msg msg;
-+
-+	ret = msi_compose_msg(NULL, irq, &msg, -1);
-+	if (ret < 0)
-+		return ret;
-+	dmar_msi_write(irq, &msg);
-+	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
-+				      "edge");
-+	return 0;
++	pci_bus_add_devices(b);
++	return b;
 +}
 +#endif
-+
-+/*
-+ * MSI message composition
-+ */
-+#ifdef CONFIG_HPET_TIMER
-+
-+static int hpet_msi_set_affinity(struct irq_data *data,
-+				 const struct cpumask *mask, bool force)
-+{
-+	struct irq_cfg *cfg = data->chip_data;
-+	struct msi_msg msg;
-+	unsigned int dest;
-+	int ret;
-+
-+	ret = apic_set_affinity(data, mask, &dest);
-+	if (ret)
-+		return ret;
-+
-+	hpet_msi_read(data->handler_data, &msg);
-+
-+	msg.data &= ~MSI_DATA_VECTOR_MASK;
-+	msg.data |= MSI_DATA_VECTOR(cfg->vector);
-+	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
-+	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
-+
-+	hpet_msi_write(data->handler_data, &msg);
-+
-+	return IRQ_SET_MASK_OK_NOCOPY;
-+}
-+
-+static struct irq_chip hpet_msi_type = {
-+	.name = "HPET_MSI",
-+	.irq_unmask = hpet_msi_unmask,
-+	.irq_mask = hpet_msi_mask,
-+	.irq_ack = apic_ack_edge,
-+	.irq_set_affinity = hpet_msi_set_affinity,
-+	.irq_retrigger = apic_retrigger_irq,
-+};
-+
-+int default_setup_hpet_msi(unsigned int irq, unsigned int id)
-+{
-+	struct irq_chip *chip = &hpet_msi_type;
-+	struct msi_msg msg;
-+	int ret;
-+
-+	ret = msi_compose_msg(NULL, irq, &msg, id);
-+	if (ret < 0)
-+		return ret;
-+
-+	hpet_msi_write(irq_get_handler_data(irq), &msg);
-+	irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
-+	setup_remapped_irq(irq, irq_cfg(irq), chip);
-+
-+	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
-+	return 0;
-+}
+ 
+ static int gen_pci_probe(struct platform_device *pdev)
+ {
+@@ -326,6 +385,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = dev->of_node;
+ 	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
++#ifndef CONFIG_ARM64
+ 	struct hw_pci hw = {
+ 		.nr_controllers	= 1,
+ 		.private_data	= (void **)&pci,
+@@ -333,6 +393,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 		.map_irq	= of_irq_parse_and_map_pci,
+ 		.ops		= &gen_pci_ops,
+ 	};
 +#endif
+ 
+ 	if (!pci)
+ 		return -ENOMEM;
+@@ -368,8 +429,24 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 		gen_pci_release_of_pci_ranges(pci);
+ 		return err;
+ 	}
++#ifdef CONFIG_ARM64
+ 
++#ifdef CONFIG_PCI_MSI
++	pci->msi_parent = of_parse_phandle(np, "msi-parent", 0);
++	if (!pci->msi_parent) {
++		dev_err(&pdev->dev, "Failed to allocate msi-parent.\n");
++		return -EINVAL;
++	}
++#endif
++
++	if (!gen_scan_root_bus(&pdev->dev, pci->cfg.bus_range.start,
++			       &gen_pci_ops, pci, &pci->resources)) {
++		dev_err(&pdev->dev, "failed to enable PCIe ports\n");
++		return -ENODEV;
++	}
++#else
+ 	pci_common_init_dev(dev, &hw);
++#endif /* CONFIG_ARM64 */
+ 	return 0;
+ }
+ 
 -- 
-1.7.10.4
+1.9.3
 
