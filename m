@@ -1,216 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:43129 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755395AbaIZO7A convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Sep 2014 10:59:00 -0400
-Date: Fri, 26 Sep 2014 15:58:54 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v12 06/12] PCI: Create pci_host_bridge before its
- associated bus in pci_create_root_bus.
-Message-ID: <20140926145854.GS841@e106497-lin.cambridge.arm.com>
-References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
- <1411498874-9864-7-git-send-email-Liviu.Dudau@arm.com>
- <CAE9FiQXuJZnj74dwTbKJCQNJ+OdEbjSB0fpwqh92+WZ_XGnrxQ@mail.gmail.com>
- <CAErSpo6eUEV81n1rFjjvRcFVmsFkeUxhdL6JauTmx_Et6XdBuQ@mail.gmail.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <542773DD.8020105@huawei.com>
+Date: Sun, 28 Sep 2014 10:35:09 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6eUEV81n1rFjjvRcFVmsFkeUxhdL6JauTmx_Et6XdBuQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 06/22] PCI/MSI: Introduce weak arch_find_msi_chip()
+ to find MSI chip
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com> <1411614872-4009-7-git-send-email-wangyijing@huawei.com> <alpine.DEB.2.10.1409251220570.4604@nanos> <5424D30A.6040900@huawei.com> <alpine.DEB.2.11.1409261236160.4567@nanos>
+In-Reply-To: <alpine.DEB.2.11.1409261236160.4567@nanos>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 25, 2014 at 08:59:26PM +0100, Bjorn Helgaas wrote:
-> On Thu, Sep 25, 2014 at 12:15 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > On Tue, Sep 23, 2014 at 12:01 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> >> Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
-> >> As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
-> >> the creation order has been changed for no good reason. Revert the order of
-> >> creation as we are going to depend on the pci_host_bridge structure to retrieve the
-> >> domain number of the root bus.
-> >>
-> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> >> Acked-by: Grant Likely <grant.likely@linaro.org>
-> >> Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-> >> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> >> ---
-> >>  drivers/pci/probe.c | 32 +++++++++++++++++---------------
-> >>  1 file changed, 17 insertions(+), 15 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> >> index e3cf8a2..5ff72ec 100644
-> >> --- a/drivers/pci/probe.c
-> >> +++ b/drivers/pci/probe.c
-> >> @@ -515,7 +515,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
-> >>         kfree(bridge);
-> >>  }
-> >>
-> >> -static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
-> >> +static struct pci_host_bridge *pci_alloc_host_bridge(void)
-> >>  {
-> >>         struct pci_host_bridge *bridge;
-> >>
-> >> @@ -524,7 +524,8 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
-> >>                 return NULL;
-> >>
-> >>         INIT_LIST_HEAD(&bridge->windows);
-> >> -       bridge->bus = b;
-> >> +       bridge->dev.release = pci_release_host_bridge_dev;
-> >> +
-> >>         return bridge;
-> >>  }
-> >>
-> >> @@ -1761,9 +1762,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> >>         char bus_addr[64];
-> >>         char *fmt;
-> >>
-> >> +       bridge = pci_alloc_host_bridge();
-> >> +       if (!bridge)
-> >> +               return NULL;
-> >> +
-> >> +       bridge->dev.parent = parent;
-> >> +
-> >>         b = pci_alloc_bus();
-> >>         if (!b)
-> >> -               return NULL;
-> >> +               goto err_out;
-> >>
-> >>         b->sysdata = sysdata;
-> >>         b->ops = ops;
-> >> @@ -1772,26 +1779,19 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> >>         if (b2) {
-> >>                 /* If we already got to this bus through a different bridge, ignore it */
-> >>                 dev_dbg(&b2->dev, "bus already known\n");
-> >> -               goto err_out;
-> >> +               goto err_bus_out;
-> >>         }
-> >>
-> >> -       bridge = pci_alloc_host_bridge(b);
-> >> -       if (!bridge)
-> >> -               goto err_out;
-> >> -
-> >> -       bridge->dev.parent = parent;
-> >> -       bridge->dev.release = pci_release_host_bridge_dev;
-> >> +       bridge->bus = b;
-> >>         dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-> >>         error = pcibios_root_bridge_prepare(bridge);
-> >> -       if (error) {
-> >> -               kfree(bridge);
-> >> +       if (error)
-> >>                 goto err_out;
-> >> -       }
-> >>
-> >>         error = device_register(&bridge->dev);
-> >>         if (error) {
-> >>                 put_device(&bridge->dev);
-> >> -               goto err_out;
-> >> +               goto err_bus_out;
-> >>         }
-> >>         b->bridge = get_device(&bridge->dev);
-> >>         device_enable_async_suspend(b->bridge);
-> >> @@ -1848,8 +1848,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> >>  class_dev_reg_err:
-> >>         put_device(&bridge->dev);
-> >>         device_unregister(&bridge->dev);
-> >> -err_out:
-> >> +err_bus_out:
-> >>         kfree(b);
-> >> +err_out:
-> >> +       kfree(bridge);
-> >>         return NULL;
-> >>  }
-> >
-> > Hi Bjorn,
-> >
-> > Noticed that you put this one into pci/next.
-> >
-> > This patch has problem for the class_dev_reg_err path.
-> > as device_unregister(&bridge->dev) will trigger pci_release_host_bridge_dev.
-> > So will have double free for bridge or else.
-> >
-> > Please drop this patch from pci/next.
-> >
-> > Also looks strange that the patch have long CC list, but just omit me
-> > and Jiang Liu that
-> > touched those code before.
+>> MSI chip in this series is to setup MSI irq, including IRQ allocation, Map,
+>> compose MSI msg ..., in different platform, many arch specific MSI irq details in it.
+>> It's difficult to extract the common data and code.
+>>
+>> I have a plan to rework MSI related irq_chips in kernel, PCI and Non-PCI, currently,
+>> HPET, DMAR and PCI have their own irq_chip and MSI related functions, write_msi_msg(),
+>> mask_msi_irq(), etc... I want to extract the common data set for that, so we can
+>> remove lots of unnecessary MSI code.
 > 
-> Thanks for noticing that.  I was concerned, but couldn't remember the details.
+> That makes sense. Can you please make sure that this does not conflict
+> with the ongoing work Jiang is doing in the x86 irq area with
+> hierarchical irqdomains to distangle layered levels like MSI from the
+> underlying vector/irqremap mechanics.
+
+Yes, I'm reviewing Jiang hierarchical irqdomains series, I'm interested in that changes.
+
+Thanks!
+Yijing.
+
 > 
-> I dropped this patch and the subsequent ones from pci/host and rebased
-> my "next" branch.
+> Thanks,
 > 
-> Sorry I didn't notice you weren't on the CC list.
+> 	tglx
 > 
-> Bjorn
+> .
 > 
 
-Bjorn,
-
-I have refreshed/rebuilt the series from what was on 25th in linux-next and I have
-dropped this patch. I have pushed the series into 
-
-git://linux-arm.org/linux-ld.git for-upstream/pci-next
-
-I hope that I've carried all your Sign-off-bys correctly, but I would like to ask you
-to double check that I haven't screwed up things.
-
-This patch dates from the times I was trying to add the domain number information
-into the pci_host_bridge structure. Now, with Catalin's patch that adds the data in
-the pci_bus structure, this is not needed, so it is safe to drop. I did try to fix
-the patch but I've realised how intricately linked pci_host_bridge and root bus are,
-which to my opinion is a strong hint that the creation of the two should be split
-into separate functions.
-
-I can send an official v13 patchset to the mailing list if you want, but if not, here
-is the changelog:
-
-- updated "[PATCH 01/12] asm-generic/io.h: Fix ioport_map() for !CONFIG_GENERIC_IOMAP" to match
-  the patch that Thierry Reding has submitted through the asm-generic branch. If his
-  series lands first upstream this patch will be skipped.
-- updated "[PATCH 03/12] ARM: Define PCI_IOBASE as the base of virtual PCI IO space" to
-  cast the PCI_IOBASE value to (void __iomem *) as is the case with most #defined versions
-- dropped the patch that was changing the order of initialisation between pci_host_bridge
-  and root bus in pci_create_root_bus()
-- fixed "[PATCH 07/12] PCI: Add generic domain handling" to account for the previous patch
-  being removed
-- fixed the title of commit 08/12 to reflect the name of the functions that are actually
-  added (s/of_pci_get_domain_nr/pci_get_new_domain_nr/)
-
-I've compiled tested the series on sparc, microblaze (no)mmu_defconfig, arm omap2plus_defconfig
-and multi_v7_defconfig and arm64. I've also tested the series on my Juno (arm64) board.
-
-Sorry for causing this amount of churn! And to Yinghai Lu and Jiang Liu: appologies for not
-including you in the Cc list, I'm still getting the grip on the whole submission process.
-
-Best regards,
-Liviu
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+Thanks!
+Yijing
 
