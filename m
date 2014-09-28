@@ -1,127 +1,415 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0110.outbound.protection.outlook.com ([157.56.111.110]:55104
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+Received: from mail-by2on0135.outbound.protection.outlook.com ([207.46.100.135]:59391
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752028AbaI3Ju0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Sep 2014 05:50:26 -0400
-From: Richard Zhu <r65037@freescale.com>
-To: <linux-pci-owner@vger.kernel.org>
-CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
-	<festevam@gmail.com>, <l.stach@pengutronix.de>,
-	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
-Subject: [PATCH v4 07/10] ARM: imx6: update dts and binding for imx6sx pcie
-Date: Tue, 30 Sep 2014 17:19:54 +0800
-Message-ID: <1412068796-16931-8-git-send-email-r65037@freescale.com>
-In-Reply-To: <1412068796-16931-1-git-send-email-r65037@freescale.com>
-References: <1412068796-16931-1-git-send-email-r65037@freescale.com>
+	id S1750882AbaI1HIX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 28 Sep 2014 03:08:23 -0400
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Minghuan Lian" <Minghuan.Lian@freescale.com>
+Subject: [PATCH v4] PCI: Layerscape: Add Layerscape PCIe driver
+Date: Sun, 28 Sep 2014 15:08:27 +0800
+Message-ID: <1411888107-27640-1-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-- imx6sx pcie phy has its own power regulator. Add the
-pcie phy power suppy into im6sx pcie dts and binding.
-- in order to align with imx6qdl's pcie dts, re-format
-imx6sx pcie dts.
-- in order to align with imx6qdl pcie dts format and
-keep clean of imx6 pcie driver, keep the pcie phy clock
-in imx6sx pcie dts, although it's the parent clk of the
-pcie bus clock now, and would be enabled automatically
-when pcie bus clock is enabled. secondly, it's
-possible that the external osc maybe used as source
-of the pcie_bus clk in board design in future.
-- disp_axi clock is required by pcie inbound axi port.
-Add one more clock named pcie_inbound_axi for imx6sx pcie.
+Add support for Freescale Layerscape PCIe controller. This driver
+re-uses the designware core code.
 
-Signed-off-by: Richard Zhu <r65037@freescale.com>
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
 ---
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  8 +++++-
- arch/arm/boot/dts/imx6sx.dtsi                      | 32 ++++++++++++----------
- 2 files changed, 25 insertions(+), 15 deletions(-)
+Change log:
+v4:
+1. Add 'depends on OF' to Kconfig 
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index 9455fd0..ad81179 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -4,7 +4,7 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
- and thus inherits all the common properties defined in designware-pcie.txt.
- 
- Required properties:
--- compatible: "fsl,imx6q-pcie"
-+- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie"
- - reg: base addresse and length of the pcie controller
- - interrupts: A list of interrupt outputs of the controller. Must contain an
-   entry for each entry in the interrupt-names property.
-@@ -13,6 +13,12 @@ Required properties:
- - clock-names: Must include the following additional entries:
- 	- "pcie_phy"
- 
-+Additional required properties for imx6sx-pcie:
-+- clock names: Must include the following additional entries:
-+	- "pcie_inbound_axi"
-+- power supplies:
-+	- pcie-phy-supply: regulator used to power the PCIe PHY
+v3:
+1. Add prefechable mem region and adjust mem region
+2. Rename 'pcie-scfg' to 'fsl,pcie-scfg'
+3. Change MSI interrupt handler
+4. Use module_platform_driver_probe instead of subsys_initcall
+
+v2:
+1. Add pcie-scfg to link scfg device node and remove "fsl, ls-pcie" compatible
+2. Use regmap API to access scfg.
+3. remove ls1021 PCI device ID.
+4. remove unused irq pme_irq and ls_pcie_list.
+5. Do not set scfg bit reverse mode
+
+ .../devicetree/bindings/pci/layerscape-pci.txt     |  46 ++++
+ drivers/pci/host/Kconfig                           |   8 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pci-layerscape.c                  | 274 +++++++++++++++++++++
+ 4 files changed, 329 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/layerscape-pci.txt
+ create mode 100644 drivers/pci/host/pci-layerscape.c
+
+diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+new file mode 100644
+index 0000000..d7b0026
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+@@ -0,0 +1,46 @@
++Freescale Layerscape PCIe controller
 +
- Example:
++This PCIe host controller is based on the Synopsis Designware PCIe IP
++and thus inherits all the common properties defined in designware-pcie.txt.
++
++Required properties:
++- compatible: should contain the platform identifier such as "fsl,ls1021a-pcie"
++- reg: base addresses and lengths of the PCIe controller
++- interrupts: A list of interrupt outputs of the controller. Must contain an
++  entry for each entry in the interrupt-names property.
++- interrupt-names: Must include the following entries:
++  "intr": The interrupt that is asserted for controller interrupts
++  "msi": The interrupt that is asserted when an MSI is received
++  "pme": The interrupt that is asserted when PME state changes
++- fsl,pcie-scfg: Must include two entries.
++  The first entry must be a link to the SCFG device node
++  The second entry must be '0' or '1' based on physical PCIe controller index.
++  used to get SCFG PEXN registers
++
++Example:
++
++	pcie@3400000 {
++		compatible = "fsl,ls1021a-pcie", "snps,dw-pcie";
++		reg = <0x00 0x03400000 0x0 0x00010000   /* controller registers */
++		       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
++		reg-names = "regs", "config";
++		interrupts = <GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
++			     <GIC_SPI 179 IRQ_TYPE_LEVEL_HIGH>, /* MSI interrupt */
++			     <GIC_SPI 181 IRQ_TYPE_LEVEL_HIGH>; /* PME interrupt */
++		interrupt-names = "intr", "msi", "pme";
++		fsl,pcie-scfg = <&scfg 0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		num-lanes = <4>;
++		bus-range = <0x0 0xff>;
++		ranges = <0x81000000 0x0 0x00000000 0x40 0x00010000 0x0 0x00010000   /* downstream I/O */
++			  0xc2000000 0x0 0x20000000 0x40 0x20000000 0x0 0x20000000   /* prefetchable memory */
++			  0x82000000 0x0 0x40000000 0x40 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0000 0 0 1 &gic GIC_SPI 91  IRQ_TYPE_LEVEL_HIGH>,
++				<0000 0 0 2 &gic GIC_SPI 188 IRQ_TYPE_LEVEL_HIGH>,
++				<0000 0 0 3 &gic GIC_SPI 190 IRQ_TYPE_LEVEL_HIGH>,
++				<0000 0 0 4 &gic GIC_SPI 192 IRQ_TYPE_LEVEL_HIGH>;
++	};
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 34134d6..5c45ce2 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -82,4 +82,12 @@ config PCIE_XILINX
+ 	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
+ 	  Host Bridge driver.
  
- 	pcie@0x01000000 {
-diff --git a/arch/arm/boot/dts/imx6sx.dtsi b/arch/arm/boot/dts/imx6sx.dtsi
-index f4b9da6..eefedba 100644
---- a/arch/arm/boot/dts/imx6sx.dtsi
-+++ b/arch/arm/boot/dts/imx6sx.dtsi
-@@ -599,9 +599,9 @@
- 					anatop-max-voltage = <1450000>;
- 				};
- 
--				reg_pcie: regulator-vddpcie@140 {
-+				reg_pcie_phy: regulator-vddpcie-phy@140 {
- 					compatible = "fsl,anatop-regulator";
--					regulator-name = "vddpcie";
-+					regulator-name = "vddpcie-phy";
- 					regulator-min-microvolt = <725000>;
- 					regulator-max-microvolt = <1450000>;
- 					anatop-reg-offset = <0x140>;
-@@ -1184,24 +1184,28 @@
- 
- 		pcie: pcie@0x08000000 {
- 			compatible = "fsl,imx6sx-pcie", "snps,dw-pcie";
--			reg = <0x08ffc000 0x4000>; /* DBI */
-+			reg = <0x08ffc000 0x4000>, <0x08f00000 0x80000>;
-+			reg-names = "rc_dbi", "config";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
--				  /* configuration space */
--			ranges = <0x00000800 0 0x08f00000 0x08f00000 0 0x00080000
--				  /* downstream I/O */
--				  0x81000000 0 0          0x08f80000 0 0x00010000
--				  /* non-prefetchable memory */
--				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>;
-+			ranges = <0x81000000 0 0          0x08f80000 0 0x00010000 /* downstream I/O */
-+				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>; /* non-prefetchable memory */
- 			num-lanes = <1>;
--			interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>;
--			clocks = <&clks IMX6SX_CLK_PCIE_REF_125M>,
--				 <&clks IMX6SX_CLK_PCIE_AXI>,
-+			interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "msi";
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
-+			                <0 0 0 2 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
-+			                <0 0 0 3 &intc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
-+			                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&clks IMX6SX_CLK_PCIE_AXI>,
- 				 <&clks IMX6SX_CLK_LVDS1_OUT>,
-+				 <&clks IMX6SX_CLK_PCIE_REF_125M>,
- 				 <&clks IMX6SX_CLK_DISPLAY_AXI>;
--			clock-names = "pcie_ref_125m", "pcie_axi",
--				      "lvds_gate", "display_axi";
-+			clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_inbound_axi";
-+			pcie-phy-supply = <&reg_pcie_phy>;
- 			status = "disabled";
- 		};
- 	};
++config PCI_LAYERSCAPE
++	bool "Freescale Layerscape PCIe controller"
++	depends on OF
++	select PCIE_DW
++	select MFD_SYSCON
++	help
++	  Say Y here if you want PCIe controller support on Layerscape SoCs.
++
+ endmenu
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 182929c..fd10554 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -10,3 +10,4 @@ obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
+ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+ obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
+ obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
++obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+new file mode 100644
+index 0000000..8f5e65e
+--- /dev/null
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -0,0 +1,274 @@
++/*
++ * PCIe host controller driver for Freescale Layerscape SoCs
++ *
++ * Copyright (C) 2014 Freescale Semiconductor.
++ *
++  * Author: Minghuan Lian <Minghuan.Lian@freescale.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/kernel.h>
++#include <linux/delay.h>
++#include <linux/interrupt.h>
++#include <linux/module.h>
++#include <linux/of_pci.h>
++#include <linux/of_platform.h>
++#include <linux/of_irq.h>
++#include <linux/of_address.h>
++#include <linux/pci.h>
++#include <linux/platform_device.h>
++#include <linux/resource.h>
++#include <linux/mfd/syscon.h>
++#include <linux/regmap.h>
++#include <linux/bitrev.h>
++
++#include "pcie-designware.h"
++
++/* PEX1/2 Misc Ports Status Register */
++#define SCFG_PEXMSCPORTSR(pex_idx)	(0x94 + (pex_idx) * 4)
++#define LTSSM_STATE_SHIFT	20
++#define LTSSM_STATE_MASK	0x3f
++#define LTSSM_PCIE_L0		0x11 /* L0 state */
++
++/* SCFG MSI register */
++#define SCFG_SPIMSICR		0x40
++#define SCFG_SPIMSICLRCR	0x90
++
++#define MSI_LS1021A_ADDR		0x1570040
++#define MSI_LS1021A_DATA(pex_idx)	(0xb3 + pex_idx)
++
++/* Symbol Timer Register and Filter Mask Register 1 */
++#define PCIE_STRFMR1 0x71c
++
++struct ls_pcie {
++	struct list_head node;
++	struct device *dev;
++	struct pci_bus *bus;
++	void __iomem *dbi;
++	struct regmap *scfg;
++	struct pcie_port pp;
++	int index;
++	int msi_irq;
++};
++
++#define to_ls_pcie(x)	container_of(x, struct ls_pcie, pp)
++
++static int ls_pcie_link_up(struct pcie_port *pp)
++{
++	u32 state;
++	struct ls_pcie *pcie = to_ls_pcie(pp);
++
++	regmap_read(pcie->scfg, SCFG_PEXMSCPORTSR(pcie->index), &state);
++	state = bitrev32(state);
++	state = (state >> LTSSM_STATE_SHIFT) & LTSSM_STATE_MASK;
++
++	if (state < LTSSM_PCIE_L0)
++		return 0;
++
++	return 1;
++}
++
++static u32 ls_pcie_get_msi_addr(struct pcie_port *pp)
++{
++	return MSI_LS1021A_ADDR;
++}
++
++static u32 ls_pcie_get_msi_data(struct pcie_port *pp, int pos)
++{
++	struct ls_pcie *pcie = to_ls_pcie(pp);
++
++	return MSI_LS1021A_DATA(pcie->index);
++}
++
++static irqreturn_t ls_pcie_msi_irq_handler(int irq, void *data)
++{
++	struct pcie_port *pp = data;
++	struct ls_pcie *pcie = to_ls_pcie(pp);
++	unsigned int msi_irq;
++
++	/* clear the interrupt */
++	regmap_write(pcie->scfg, SCFG_SPIMSICLRCR,
++		     MSI_LS1021A_DATA(pcie->index));
++
++	msi_irq = irq_find_mapping(pp->irq_domain, 0);
++	if (!msi_irq) {
++		/*
++		 * that's weird who triggered this?
++		 * just clear it
++		 */
++		dev_err(pcie->dev, "unexpected MSI\n");
++		return IRQ_NONE;
++	}
++
++	generic_handle_irq(msi_irq);
++	return IRQ_HANDLED;
++}
++
++static void ls_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
++{
++}
++
++static void ls_pcie_msi_set_irq(struct pcie_port *pp, int irq)
++{
++}
++
++static void ls1021a_pcie_msi_fixup(struct pcie_port *pp)
++{
++	int i;
++
++	/*
++	 * LS1021A has only one MSI interrupt
++	 * Set all msi interrupts as used except the first one
++	 */
++	for (i = 1; i < MAX_MSI_IRQS; i++)
++		set_bit(i, pp->msi_irq_in_use);
++}
++
++static void ls_pcie_host_init(struct pcie_port *pp)
++{
++	struct ls_pcie *pcie = to_ls_pcie(pp);
++	int count = 0;
++	u32 val;
++
++	dw_pcie_setup_rc(pp);
++
++	while (!ls_pcie_link_up(pp)) {
++		usleep_range(100, 1000);
++		count++;
++		if (count >= 200) {
++			dev_err(pp->dev, "phy link never came up\n");
++			return;
++		}
++	}
++
++	if (of_device_is_compatible(pcie->dev->of_node, "fsl,ls1021a-pcie")) {
++		/*
++		 * LS1021A Workaround for internal TKT228622
++		 * to fix the INTx hang issue
++		 */
++		val = ioread32(pcie->dbi + PCIE_STRFMR1);
++		val &= 0xffff;
++		iowrite32(val, pcie->dbi + PCIE_STRFMR1);
++
++		ls1021a_pcie_msi_fixup(pp);
++	}
++}
++
++static struct pcie_host_ops ls_pcie_host_ops = {
++	.link_up = ls_pcie_link_up,
++	.host_init = ls_pcie_host_init,
++	.msi_set_irq = ls_pcie_msi_set_irq,
++	.msi_clear_irq = ls_pcie_msi_clear_irq,
++	.get_msi_addr = ls_pcie_get_msi_addr,
++	.get_msi_data = ls_pcie_get_msi_data,
++};
++
++static int ls_add_pcie_port(struct ls_pcie *pcie)
++{
++	struct pcie_port *pp;
++	int ret;
++
++	if (!pcie)
++		return -EINVAL;
++
++	pp = &pcie->pp;
++	pp->dev = pcie->dev;
++	pp->dbi_base = pcie->dbi;
++	pp->msi_irq = pcie->msi_irq;
++
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		ret = devm_request_irq(pp->dev, pp->msi_irq,
++					ls_pcie_msi_irq_handler,
++					IRQF_SHARED, "ls-pcie-msi", pp);
++		if (ret) {
++			dev_err(pp->dev, "failed to request msi irq\n");
++			return ret;
++		}
++	}
++
++	pp->root_bus_nr = -1;
++	pp->ops = &ls_pcie_host_ops;
++
++	ret = dw_pcie_host_init(pp);
++	if (ret) {
++		dev_err(pp->dev, "failed to initialize host\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static int __init ls_pcie_probe(struct platform_device *pdev)
++{
++	struct ls_pcie *pcie;
++	struct resource *dbi_base;
++	u32 index[2];
++	int ret;
++
++	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
++	if (!pcie)
++		return -ENOMEM;
++
++	pcie->dev = &pdev->dev;
++
++	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
++	if (!dbi_base) {
++		dev_err(&pdev->dev, "missing *regs* space\n");
++		return -ENODEV;
++	}
++
++	pcie->dbi = devm_ioremap_resource(&pdev->dev, dbi_base);
++	if (IS_ERR(pcie->dbi))
++		return PTR_ERR(pcie->dbi);
++
++	pcie->scfg = syscon_regmap_lookup_by_phandle(pdev->dev.of_node,
++						     "fsl,pcie-scfg");
++	if (IS_ERR(pcie->scfg)) {
++		dev_err(&pdev->dev, "No syscfg phandle specified\n");
++		return PTR_ERR(pcie->scfg);
++	}
++
++	ret = of_property_read_u32_array(pdev->dev.of_node,
++					 "fsl,pcie-scfg", index, 2);
++	if (ret)
++		return ret;
++	pcie->index = index[1];
++
++	pcie->msi_irq = platform_get_irq_byname(pdev, "msi");
++	if (pcie->msi_irq < 0) {
++		dev_err(&pdev->dev,
++			"failed to get MSI IRQ: %d\n", pcie->msi_irq);
++		return pcie->msi_irq;
++	}
++
++	ret = ls_add_pcie_port(pcie);
++	if (ret < 0)
++		return ret;
++
++	platform_set_drvdata(pdev, pcie);
++
++	return 0;
++}
++
++static const struct of_device_id ls_pcie_of_match[] = {
++	{ .compatible = "fsl,ls1021a-pcie" },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
++
++static struct platform_driver ls_pcie_driver = {
++	.driver = {
++		.name = "layerscape-pcie",
++		.owner = THIS_MODULE,
++		.of_match_table = ls_pcie_of_match,
++	},
++};
++
++module_platform_driver_probe(ls_pcie_driver, ls_pcie_probe);
++
++MODULE_AUTHOR("Minghuan Lian <Minghuan.Lian@freescale.com>");
++MODULE_DESCRIPTION("Freescale Layerscape PCIe host controller driver");
++MODULE_LICENSE("GPL v2");
 -- 
 1.9.1
 
