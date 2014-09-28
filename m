@@ -1,84 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC v1 17/28] x86, irq: Kill irq_cfg.irq_remapped
-Date: Fri, 26 Sep 2014 22:57:47 +0800
-Message-Id: <1411743478-31435-18-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2on0123.outbound.protection.outlook.com ([207.46.100.123]:56592
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753525AbaI1Uyp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 28 Sep 2014 16:54:45 -0400
+From: <suravee.suthikulpanit@amd.com>
+To: <will.deacon@arm.com>, <liviu.dudau@arm.com>,
+	<marc.zyngier@arm.com>, <mark.rutland@arm.com>,
+	<catalin.marinas@arm.com>, <jason@lakedaemon.net>,
+	<tglx@linutronix.de>, <robh+dt@kernel.org>, <bhelgaas@google.com>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: [RFC 3/4] arm64: Do not call enable PCI resources when specify PCI_PROBE_ONLY
+Date: Sun, 28 Sep 2014 15:53:29 -0500
+Message-ID: <1411937610-22125-4-git-send-email-suravee.suthikulpanit@amd.com>
+In-Reply-To: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there is no user of irq_cfg.irq_remapped, so kill it.
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+When specify PCI_PROBE_ONLY, the resource parent does not get assigned.
+Therefore, pci_enable_resources() return error saying that
+"BAR x not claimed".
+
+Note: This same logic is also used in the arch/arm/kernel/bios32.c
+
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 ---
- arch/x86/include/asm/hw_irq.h       |    1 -
- drivers/iommu/amd_iommu.c           |    1 -
- drivers/iommu/intel_irq_remapping.c |    2 --
- 3 files changed, 4 deletions(-)
+ arch/arm64/kernel/pci.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index ceb0244c3454..990e255ea5d5 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -185,7 +185,6 @@ struct irq_cfg {
- 	u8			vector;
- 	u8			move_in_progress : 1;
- #ifdef CONFIG_IRQ_REMAP
--	u8			remapped : 1;
- 	union {
- 		struct irq_2_iommu irq_2_iommu;
- 		struct irq_2_irte  irq_2_irte;
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 21f8edcc0635..28d1cd404ff1 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -4132,7 +4132,6 @@ static void irq_remapping_prepare_irte(struct amd_ir_data *data,
- 	struct IR_IO_APIC_route_entry *entry = &data->ioapic_entry;
- 	struct msi_msg *msg = &data->msi_entry;
- 
--	irq_cfg->remapped = 1;
- 	data->irq_2_irte.devid = devid;
- 	data->irq_2_irte.index = index + sub_handle;
- 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 41ece6b0564e..5c77d6f04136 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -68,7 +68,6 @@ static int alloc_irte(struct intel_iommu *iommu, int irq,
- 		      struct irq_2_iommu *irq_iommu, u16 count)
- {
- 	struct ir_table *table = iommu->ir_table;
--	struct irq_cfg *cfg = irq_cfg(irq);
- 	unsigned int mask = 0;
- 	unsigned long flags;
- 	int index;
-@@ -95,7 +94,6 @@ static int alloc_irte(struct intel_iommu *iommu, int irq,
- 	if (index < 0) {
- 		pr_warn("IR%d: can't allocate an IRTE\n", iommu->seq_id);
- 	} else {
--		cfg->remapped = 1;
- 		irq_iommu->iommu = iommu;
- 		irq_iommu->irte_index =  index;
- 		irq_iommu->sub_handle = 0;
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index ce5836c..7fd4d2b 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -68,3 +68,11 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ 	bus->domain_nr = domain;
+ }
+ #endif
++
++int pcibios_enable_device(struct pci_dev *dev, int mask)
++{
++	if (pci_has_flag(PCI_PROBE_ONLY))
++		return 0;
++
++	return pci_enable_resources(dev, mask);
++}
 -- 
-1.7.10.4
+1.9.3
 
