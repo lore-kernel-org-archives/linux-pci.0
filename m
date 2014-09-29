@@ -1,97 +1,209 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <540E960D.7080408@huawei.com>
-Date: Tue, 9 Sep 2014 13:54:21 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Rob Herring <robherring2@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	"Rob Herring" <robh+dt@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50775 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754480AbaI2ObZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 10:31:25 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"Will Deacon" <Will.Deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
 	Russell King <linux@arm.linux.org.uk>,
 	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
+	Linus Walleij <linus.walleij@linaro.org>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
 	Grant Likely <grant.likely@secretlab.ca>,
 	Sinan Kaya <okaya@codeaurora.org>,
 	Jingoo Han <jg1.han@samsung.com>,
 	Kukjin Kim <kgene.kim@samsung.com>,
-	"Suravee Suthikulanit" <suravee.suthikulpanit@amd.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
 	linux-arch <linux-arch@vger.kernel.org>,
 	LKML <linux-kernel@vger.kernel.org>,
-	"Device Tree ML" <devicetree@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI
- domain_nr
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com> <1410184472-17630-8-git-send-email-Liviu.Dudau@arm.com> <CAL_JsqJi8k1Goc3UmXhuxf9v7=4gJrYG_Di7v574PxS8TsJaXw@mail.gmail.com> <20140908145459.GO27864@e106497-lin.cambridge.arm.com> <CAL_JsqJdGKDVwJOpPp19OkVPGzR7Zqv3nh+ONHHaYnPLYTYoYg@mail.gmail.com> <20140908155931.GP27864@e106497-lin.cambridge.arm.com>
-In-Reply-To: <20140908155931.GP27864@e106497-lin.cambridge.arm.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-arch-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Robert Richter <rrichter@cavium.com>,
+	Grant Likely <grant.likely@linaro.org>
+Subject: [PATCH v13 09/12] of/pci: Add support for parsing PCI host bridge resources from DT
+Date: Mon, 29 Sep 2014 15:29:28 +0100
+Message-Id: <1412000971-9242-10-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> on new requests. This function gets called quite a lot and I'm trying not to
->>> make it too heavy weight.
->>
->> Generally, nothing should be accessing the same DT value frequently.
->> It should get cached somewhere.
->>
-> 
-> The problem appears for DTs that don't have the pci-domain info. Then the cached
-> value is left at the default non-valid value and attempts to rescan the DT will
-> be made every time the function is called.
-> 
->> I don't really understand how domains are used so it's hard to provide
->> a recommendation here. Do domains even belong in the DT?
-> 
-> ACPI calls them segments and the way Bjorn explained it to me at some moment was
-> that it was an attempt to split up a bus in different groups (or alternatively,
-> merge a few busses together). To be honest I haven't seen systems where the domain
-> is anything other than zero, but JasonG (or maybe Benjamin) were floating an
-> idea of using the domain number to identify physical slots.
+Provide a function to parse the PCI DT ranges that can be used to create a
+pci_host_bridge structure together with its associated bus.
 
-PCI domain(or named segment) is provided by firmware, in ACPI system, we evaluated it
-by method "_SEG". in IA64 with ACPI, PCI hostbridge driver retrieves the domain from ACPI,
-if it's absent, the default domain is zero. So I wonder why in DTS, if it's absent, we get
-a auto increment domain value.
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+[make io_base parameter optional]
+Signed-off-by: Robert Richter <rrichter@cavium.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Grant Likely <grant.likely@linaro.org>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Catalin Marinas <catalin.marinas@arm.com>
+---
+ drivers/of/of_pci.c    | 117 +++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/of_pci.h |   6 +++
+ 2 files changed, 123 insertions(+)
 
-PCI get domain by ACPI "_SEG" in IA64(drivers/acpi/pci_root.c)
-......
-	status = acpi_evaluate_integer(handle, METHOD_NAME__SEG, NULL,
-				       &segment);
-	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
-		dev_err(&device->dev,  "can't evaluate _SEG\n");
-		result = -ENODEV;
-		goto end;
-	}
-.......
-
-Thanks!
-Yijing.
-
-> 
->> This function
->> is just a weird mixture of data retrieval and allocation. I think you
->> need to separate it into 2 functions.
-> 
-> It is meant to do allocation with the retrieval being a short-cut (or fine
-> control if you want).
-> 
-> I need to think a bit more for a better solution.
-> 
-> Best regards,
-> Liviu
-> 
->>
->> Rob
->>
-> 
-
-
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 82d172f..8882b46 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -1,7 +1,9 @@
+ #include <linux/kernel.h>
+ #include <linux/export.h>
+ #include <linux/of.h>
++#include <linux/of_address.h>
+ #include <linux/of_pci.h>
++#include <linux/slab.h>
+ 
+ static inline int __of_pci_pci_compare(struct device_node *node,
+ 				       unsigned int data)
+@@ -114,6 +116,121 @@ int of_get_pci_domain_nr(struct device_node *node)
+ }
+ EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
+ 
++#if defined(CONFIG_OF_ADDRESS)
++/**
++ * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
++ * @dev: device node of the host bridge having the range property
++ * @busno: bus number associated with the bridge root bus
++ * @bus_max: maximum number of buses for this bridge
++ * @resources: list where the range of resources will be added after DT parsing
++ * @io_base: pointer to a variable that will contain on return the physical
++ * address for the start of the I/O range. Can be NULL if the caller doesn't
++ * expect IO ranges to be present in the device tree.
++ *
++ * It is the caller's job to free the @resources list.
++ *
++ * This function will parse the "ranges" property of a PCI host bridge device
++ * node and setup the resource mapping based on its content. It is expected
++ * that the property conforms with the Power ePAPR document.
++ *
++ * It returns zero if the range parsing has been successful or a standard error
++ * value if it failed.
++ */
++int of_pci_get_host_bridge_resources(struct device_node *dev,
++			unsigned char busno, unsigned char bus_max,
++			struct list_head *resources, resource_size_t *io_base)
++{
++	struct resource *res;
++	struct resource *bus_range;
++	struct of_pci_range range;
++	struct of_pci_range_parser parser;
++	char range_type[4];
++	int err;
++
++	if (io_base)
++		*io_base = (resource_size_t)OF_BAD_ADDR;
++
++	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
++	if (!bus_range)
++		return -ENOMEM;
++
++	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
++
++	err = of_pci_parse_bus_range(dev, bus_range);
++	if (err) {
++		bus_range->start = busno;
++		bus_range->end = bus_max;
++		bus_range->flags = IORESOURCE_BUS;
++		pr_info("  No bus range found for %s, using %pR\n",
++			dev->full_name, bus_range);
++	} else {
++		if (bus_range->end > bus_range->start + bus_max)
++			bus_range->end = bus_range->start + bus_max;
++	}
++	pci_add_resource(resources, bus_range);
++
++	/* Check for ranges property */
++	err = of_pci_range_parser_init(&parser, dev);
++	if (err)
++		goto parse_failed;
++
++	pr_debug("Parsing ranges property...\n");
++	for_each_of_pci_range(&parser, &range) {
++		/* Read next ranges element */
++		if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
++			snprintf(range_type, 4, " IO");
++		else if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_MEM)
++			snprintf(range_type, 4, "MEM");
++		else
++			snprintf(range_type, 4, "err");
++		pr_info("  %s %#010llx..%#010llx -> %#010llx\n", range_type,
++			range.cpu_addr, range.cpu_addr + range.size - 1,
++			range.pci_addr);
++
++		/*
++		 * If we failed translation or got a zero-sized region
++		 * then skip this range
++		 */
++		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
++			continue;
++
++		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
++		if (!res) {
++			err = -ENOMEM;
++			goto parse_failed;
++		}
++
++		err = of_pci_range_to_resource(&range, dev, res);
++		if (err)
++			goto conversion_failed;
++
++		if (resource_type(res) == IORESOURCE_IO) {
++			if (!io_base) {
++				pr_err("I/O range found for %s. Please provide an io_base pointer to save CPU base address\n",
++					dev->full_name);
++				err = -EINVAL;
++				goto conversion_failed;
++			}
++			if (*io_base != (resource_size_t)OF_BAD_ADDR)
++				pr_warn("More than one I/O resource converted for %s. CPU base address for old range lost!\n",
++					dev->full_name);
++			*io_base = range.cpu_addr;
++		}
++
++		pci_add_resource_offset(resources, res,	res->start - range.pci_addr);
++	}
++
++	return 0;
++
++conversion_failed:
++	kfree(res);
++parse_failed:
++	pci_free_resource_list(resources);
++	return err;
++}
++EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
++#endif /* CONFIG_OF_ADDRESS */
++
+ #ifdef CONFIG_PCI_MSI
+ 
+ static LIST_HEAD(of_pci_msi_chip_list);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 71062e9..1fd207e 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -52,6 +52,12 @@ of_get_pci_domain_nr(struct device_node *node)
+ }
+ #endif
+ 
++#if defined(CONFIG_OF_ADDRESS)
++int of_pci_get_host_bridge_resources(struct device_node *dev,
++			unsigned char busno, unsigned char bus_max,
++			struct list_head *resources, resource_size_t *io_base);
++#endif
++
+ #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+ int of_pci_msi_chip_add(struct msi_chip *chip);
+ void of_pci_msi_chip_remove(struct msi_chip *chip);
 -- 
-Thanks!
-Yijing
+2.1.1
 
