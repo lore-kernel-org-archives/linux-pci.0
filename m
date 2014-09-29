@@ -1,51 +1,124 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 11 Sep 2014 10:23:36 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [Patch v5 04/15] ACPI: Add interfaces to parse IOAPIC ID for
- IOAPIC hotplug
-In-Reply-To: <1410422758-24942-5-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.10.1409111021110.4178@nanos>
-References: <1410422758-24942-1-git-send-email-jiang.liu@linux.intel.com> <1410422758-24942-5-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f181.google.com ([209.85.216.181]:45272 "EHLO
+	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751028AbaI2XeP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 19:34:15 -0400
+Received: by mail-qc0-f181.google.com with SMTP id w7so7917200qcr.40
+        for <linux-pci@vger.kernel.org>; Mon, 29 Sep 2014 16:34:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <D38E8E86660E514AB505863C19C9287C74064FB1@ORSMSX102.amr.corp.intel.com>
+References: <20140926230717.17458.59969.stgit@gimli.home> <20140929194855.GA15712@google.com>
+ <D38E8E86660E514AB505863C19C9287C74064FB1@ORSMSX102.amr.corp.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 29 Sep 2014 17:33:54 -0600
+Message-ID: <CAErSpo6BGQwLwyJtgk2Wj6eV-9+TSHwc7x5AURJh-O7HZywFVw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Intel 10G NIC ACS quirks
+To: "Ronciak, John" <john.ronciak@intel.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 11 Sep 2014, Jiang Liu wrote:
-> +
-> +#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-> +static int map_ioapic_id(struct acpi_subtable_header *entry, u32 gsi_base,
-> +			 u64 *phys_addr, int *ioapic_id)
+On Mon, Sep 29, 2014 at 4:17 PM, Ronciak, John <john.ronciak@intel.com> wrote:
+> On Fri, Sep 26, 2014 at 05:07:59PM -0600, Alex Williamson wrote:
+>> Intel has verified there is no peer-to-peer between functions for the
+>> below selection of 82598, 82599, and X520 10G NICs.  These NICs lack
+>> an ACS capability, so we're not able to determine this isolation
+>> without the help of quirks.  Generalize the Solarflare quirk and add
+>> these.
+>>
+>> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+>> Cc: John Ronciak <john.ronciak@intel.com>
+>
+>> Applied to pci/virtualization for v3.18, thanks!
+> Acked-by: John Ronciak <John.ronciak@intel.com>
+>
+> (I don't k now if this is needed at this point but since Alex asked for it, here it is.
 
-I find these function names map_* quite confusing. All they do is a
-lookup, right?
+Thanks!  I merged that in.
 
-> +/**
-> + * acpi_get_ioapic_id() - Get IOAPIC ID and physical address matching @gsi_base
-> + * @handle ACPI object for IOAPIC device
-
-Proper docbook formatting is:
-
- * acpi_get_ioapic_id - Get ....
- * @handle:	 ACPI object     
-
-Thanks,
-
-	tglx
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Sent: Monday, September 29, 2014 12:49 PM
+> To: Alex Williamson
+> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; Ronciak, John
+> Subject: Re: [PATCH] PCI: Intel 10G NIC ACS quirks
+>
+> On Fri, Sep 26, 2014 at 05:07:59PM -0600, Alex Williamson wrote:
+>> Intel has verified there is no peer-to-peer between functions for the
+>> below selection of 82598, 82599, and X520 10G NICs.  These NICs lack
+>> an ACS capability, so we're not able to determine this isolation
+>> without the help of quirks.  Generalize the Solarflare quirk and add
+>> these.
+>>
+>> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+>> Cc: John Ronciak <john.ronciak@intel.com>
+>
+> Applied to pci/virtualization for v3.18, thanks!
+>
+>> ---
+>>
+>>  drivers/pci/quirks.c |   34 ++++++++++++++++++++++++++++------
+>>  1 file changed, 28 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index
+>> 95239e0..b6c6500 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -3635,14 +3635,16 @@ static int pci_quirk_intel_pch_acs(struct pci_dev *dev, u16 acs_flags)
+>>       return acs_flags & ~flags ? 0 : 1;
+>>  }
+>>
+>> -static int pci_quirk_solarflare_acs(struct pci_dev *dev, u16
+>> acs_flags)
+>> +static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16
+>> +acs_flags)
+>>  {
+>>       /*
+>>        * SV, TB, and UF are not relevant to multifunction endpoints.
+>>        *
+>> -      * Solarflare indicates that peer-to-peer between functions is not
+>> -      * possible, therefore RR, CR, and DT are not implemented.  Mask
+>> -      * these out as if they were clear in the ACS capabilities register.
+>> +      * Multifunction devices are only required to implement RR, CR, and DT
+>> +      * in their ACS capability if they support peer-to-peer transactions.
+>> +      * Devices matching this quirk have been verified by the vendor to not
+>> +      * perform peer-to-peer with other functions, allowing us to mask out
+>> +      * these bits as if they were unimplemented in the ACS capability.
+>>        */
+>>       acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+>>                      PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT); @@ -3661,8 +3663,28
+>> @@ static const struct pci_dev_acs_enabled {
+>>       { PCI_VENDOR_ID_ATI, 0x439d, pci_quirk_amd_sb_acs },
+>>       { PCI_VENDOR_ID_ATI, 0x4384, pci_quirk_amd_sb_acs },
+>>       { PCI_VENDOR_ID_ATI, 0x4399, pci_quirk_amd_sb_acs },
+>> -     { PCI_VENDOR_ID_SOLARFLARE, 0x0903, pci_quirk_solarflare_acs },
+>> -     { PCI_VENDOR_ID_SOLARFLARE, 0x0923, pci_quirk_solarflare_acs },
+>> +     { PCI_VENDOR_ID_SOLARFLARE, 0x0903, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_SOLARFLARE, 0x0923, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x10C6, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x10DB, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x10DD, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x10E1, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x10F1, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x10F7, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x10F8, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x10F9, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x10FA, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x10FB, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x10FC, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x1507, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x1514, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x151C, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x1529, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x152A, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x154D, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x154F, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x1551, pci_quirk_mf_endpoint_acs },
+>> +     { PCI_VENDOR_ID_INTEL, 0x1558, pci_quirk_mf_endpoint_acs },
+>>       { PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
+>>       { 0 }
+>>  };
+>>
