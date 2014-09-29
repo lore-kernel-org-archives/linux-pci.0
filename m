@@ -1,98 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:45676 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753145AbaICShW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Sep 2014 14:37:22 -0400
-Received: by mail-pa0-f44.google.com with SMTP id rd3so17886520pab.17
-        for <linux-pci@vger.kernel.org>; Wed, 03 Sep 2014 11:37:19 -0700 (PDT)
-Date: Wed, 3 Sep 2014 12:37:49 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>, Marek Vasut <marex@denx.de>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	kernel@pengutronix.de, Pratyush Anand <pratyush.anand@st.com>
-Subject: Re: [PATCH 1/4] PCI: designware: start parsing bus-range
-Message-ID: <20140903183749.GB26073@google.com>
-References: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
- <1406137961-14684-2-git-send-email-l.stach@pengutronix.de>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1406137961-14684-2-git-send-email-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1412029912.4285.110.camel@pasglop>
+References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+ <1412000971-9242-11-git-send-email-Liviu.Dudau@arm.com> <CAE9FiQXEUZvkuzwOrK+2zGVj0ywFaQsiWH7SHufZk9BRWnwddQ@mail.gmail.com>
+ <CAE9FiQUkcPRMUEn01VJMyXz8aYvk6C5MBNZi5NCV2m3qkNabeg@mail.gmail.com>
+ <1412024521.4285.98.camel@pasglop> <CAErSpo62ap1YkzvuZ6MCpXry9=VpLv+Skzrwr10h=+Lc4VfVgQ@mail.gmail.com>
+ <1412029912.4285.110.camel@pasglop>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 29 Sep 2014 17:08:49 -0600
+Message-ID: <CAErSpo70t9TMdntjBt+GdTw3FVmMquACQePX8=SKkySPuG3F3Q@mail.gmail.com>
+Subject: Re: [PATCH v13 10/12] PCI: Assign unassigned bus resources in pci_scan_root_bus()
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Yinghai Lu <yinghai@kernel.org>, Liviu Dudau <Liviu.Dudau@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 23, 2014 at 07:52:38PM +0200, Lucas Stach wrote:
-> This allows to explicitly specify the covered bus
-> numbers in the devicetree, which will come in handy
-> once we see a SoC with more than one PCIe host
-> controller instance.
-> 
-> Previously the driver relied on the behavior of
-> pci_scan_root_bus() to fill in a range of 0x00-0xff
-> if no valid range was found. We fall back to the
-> same range if no valid DT entry was found to keep
-> backwards compatibility, but now do it explicitly.
-> 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
->  Documentation/devicetree/bindings/pci/designware-pcie.txt |  3 +++
->  drivers/pci/host/pcie-designware.c                        | 13 ++++++++++++-
->  drivers/pci/host/pcie-designware.h                        |  1 +
->  3 files changed, 16 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> index ed0d9b9fff2b..9f4faa8e8d00 100644
-> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> @@ -23,3 +23,6 @@ Required properties:
->  
->  Optional properties:
->  - reset-gpio: gpio pin number of power good signal
-> +- bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
-> +  specify this property, to keep backwards compatibility a range of 0x00-0xff
-> +  is assumed if not present)
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 52bd3a143563..b13a830c8b0f 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -425,7 +425,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  	struct resource *cfg_res;
->  	u32 val, na, ns;
->  	const __be32 *addrp;
-> -	int i, index;
-> +	int i, index, ret;
->  
->  	/* Find the address cell size and the number of cells in order to get
->  	 * the untranslated address.
-> @@ -500,6 +500,16 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  		}
->  	}
->  
-> +	ret = of_pci_parse_bus_range(np, &pp->busn);
-> +	if (ret < 0) {
-> +		dev_dbg(pp->dev, "failed to parse bus-range property: %d, using default [0x00-0xff]\n",
-> +			ret);
-> +		pp->busn.name = np->name;
-> +		pp->busn.start = 0;
-> +		pp->busn.end = 0xff;
-> +		pp->busn.flags = IORESOURCE_BUS;
-> +	}
-> +
+On Mon, Sep 29, 2014 at 4:31 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Mon, 2014-09-29 at 15:33 -0600, Bjorn Helgaas wrote:
+>> > Right and on powerpc and others as well. We need to survey existing
+>> > resources. We also have a number of platform things that might need
+>> > to happen before we do the final re-assignment pass.
+>>
+>> That's true today.  But I don't know whether it *has* to be this way
+>> forever.  On x86, pcibios_resource_survey() throws in E820 information
+>> (which we know long before we do any PCI enumeration) and some IO-APIC
+>> resources (it looks like we also know these before PCI enumeration).
+>> Powerpc has pcibios_reserve_legacy_regions(), but that looks like
+>> mostly stuff that could be done when we find the host bridge, before
+>> we enumerate PCI devices below it.
+>
+> Oh we can probably change that but it's going to be much more work than
+> just moving the assignment into pci_scan_root_bus().
 
-I tweaked this to look like:
+Agreed.  It's obvious that we can't apply Liviu's patch as-is.
 
-+       if (ret < 0) {
-+               pp->busn.name = np->name;
-+               pp->busn.start = 0;
-+               pp->busn.end = 0xff;
-+               pp->busn.flags = IORESOURCE_BUS;
-+               dev_dbg(pp->dev, "failed to parse bus-range property: %d, using default %pR\n",
-+                       ret, &pp->busn);
+> There are also a
+> number of subtle and not-so-subtle bits of code that rely on side
+> effects of the current code such as anything that tests for bus->added
+> or dev->added. Again, nothing we can't sort out eventually but the
+> transition might be a bit painful.
+>
+> We might need to introduce a new flag for platforms converted to the
+> "new style" generalized resource assignment which we can deprecate once
+> everybody has moved over.
 
-to avoid the repetition of 0x00 and 0xff.
-
-Pratyush, I added your Reviewed-by to patches 1 and 2, which I missed before.
+There's definitely a lot of work here if we ever want to make this happen.
 
 Bjorn
