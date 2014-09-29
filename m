@@ -1,59 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:41276 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752007AbaILSDQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Sep 2014 14:03:16 -0400
-Received: by mail-ie0-f173.google.com with SMTP id x19so1379067ier.4
-        for <linux-pci@vger.kernel.org>; Fri, 12 Sep 2014 11:03:16 -0700 (PDT)
-Subject: [PATCH v1 04/13] PCI: pciehp: Configure hot-added display devices
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatxjain@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Date: Fri, 12 Sep 2014 12:03:14 -0600
-Message-ID: <20140912180314.1630.94483.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:8997 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752085AbaI2ILm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 04:11:42 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2 2/2] PCI/MSI: Remove the redundant irq_set_msi_desc()
+Date: Mon, 29 Sep 2014 16:35:45 +0800
+Message-ID: <1411979745-28568-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We configure cache line size and other settings of hot-added devices, e.g.,
-based on ACPI _HPP or _HPX methods.  Previously we skipped this
-configuration for display devices, but there is no spec requirement for
-that.
+Irq and msi_desc will be associated in arch MSI
+setup code regardless of MSI or MSI-X type.
+The irq_set_msi_desc() in msix_program_entries()
+is redundant.
 
-Remove the check so we configure display devices the same way we configure
-other devices.
+The typical MSI setup flow:
+pci_enable_msix()
+	msix_capability_init()
+		arch_setup_msi_irqs()
+			native_setup_msi_irqs()	e.g in x86
+				setup_msi_irq()
+					irq_set_msi_desc_off() <---
 
-See also ac81860ea073 ("PCI: hotplug: pciehp: Removed check for hotplug of
-display devices").
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/pci/hotplug/pciehp_pci.c |    6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ drivers/pci/msi.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-index 5f871f4c4af1..b66812703415 100644
---- a/drivers/pci/hotplug/pciehp_pci.c
-+++ b/drivers/pci/hotplug/pciehp_pci.c
-@@ -66,12 +66,8 @@ int pciehp_configure_device(struct slot *p_slot)
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index e0916ad..48eae97 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -673,7 +673,6 @@ static void msix_program_entries(struct pci_dev *dev,
+ 						PCI_MSIX_ENTRY_VECTOR_CTRL;
  
- 	pci_assign_unassigned_bridge_resources(bridge);
- 
--	list_for_each_entry(dev, &parent->devices, bus_list) {
--		if ((dev->class >> 16) == PCI_BASE_CLASS_DISPLAY)
--			continue;
--
-+	list_for_each_entry(dev, &parent->devices, bus_list)
- 		pci_configure_slot(dev);
--	}
- 
- 	pci_bus_add_devices(parent);
- 
+ 		entries[i].vector = entry->irq;
+-		irq_set_msi_desc(entry->irq, entry);
+ 		entry->masked = readl(entry->mask_base + offset);
+ 		msix_mask_irq(entry, 1);
+ 		i++;
+-- 
+1.7.1
 
