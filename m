@@ -1,262 +1,285 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bn0109.outbound.protection.outlook.com ([157.56.110.109]:9653
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753525AbaI1Uye (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 28 Sep 2014 16:54:34 -0400
-From: <suravee.suthikulpanit@amd.com>
-To: <will.deacon@arm.com>, <liviu.dudau@arm.com>,
-	<marc.zyngier@arm.com>, <mark.rutland@arm.com>,
-	<catalin.marinas@arm.com>, <jason@lakedaemon.net>,
-	<tglx@linutronix.de>, <robh+dt@kernel.org>, <bhelgaas@google.com>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
-Date: Sun, 28 Sep 2014 15:53:28 -0500
-Message-ID: <1411937610-22125-3-git-send-email-suravee.suthikulpanit@amd.com>
-In-Reply-To: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
+Received: from cantor2.suse.de ([195.135.220.15]:48388 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751192AbaI2FJn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Sep 2014 01:09:43 -0400
+Message-ID: <5428E97F.7040608@suse.com>
+Date: Mon, 29 Sep 2014 07:09:19 +0200
+From: Juergen Gross <jgross@suse.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Chen Gang <gang.chen.5i5j@gmail.com>,
+	David Vrabel <david.vrabel@citrix.com>, konrad.wilk@oracle.com,
+	ian.campbell@citrix.com, wei.liu2@citrix.com,
+	boris.ostrovsky@oracle.com, bhelgaas@google.com,
+	yongjun_wei@trendmicro.com.cn, mukesh.rathor@oracle.com
+CC: xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-scsi@vger.kernel.org,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [Xen-devel] [PATCH] xen/xenbus: Use 'void' instead of 'int' for
+ the return of xenbus_switch_state()
+References: <5425961A.5000604@gmail.com>
+In-Reply-To: <5425961A.5000604@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+On 09/26/2014 06:36 PM, Chen Gang wrote:
+> When xenbus_switch_state() fails, it will call xenbus_switch_fatal()
+> internally, so need not return any status value, then use 'void' instead
+> of 'int' for xenbus_switch_state() and __xenbus_switch_state().
+>
+> Also need be sure that all callers which check the return value must let
+> 'err' be 0.
+>
+> And also need change the related comments for xenbus_switch_state().
+>
+> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
 
-This patch adds ARM64 support to the generic PCI host driver.
+Acked-by: Juergen Gross <jgross@suse.com>
 
-For MSI support, it adds new device tree binding "msi-parent",
-which should point to corresponded msi-controller.
-
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mark Rutland <mark.rutland@arm.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
----
- .../devicetree/bindings/pci/host-generic-pci.txt   |  3 +
- drivers/pci/host/Kconfig                           |  2 +-
- drivers/pci/host/pci-host-generic.c                | 95 ++++++++++++++++++++--
- 3 files changed, 90 insertions(+), 10 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-index f0b0436..327e5b1 100644
---- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-@@ -69,6 +69,9 @@ Practice: Interrupt Mapping' and requires the following properties:
- 
- - interrupt-map-mask : <see aforementioned specification>
- 
-+Optinal Properties:
-+
-+- msi-parent     : Specify the msi-controller phandle.
- 
- Example:
- 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 90f5cca..44bf523 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -50,7 +50,7 @@ config PCI_RCAR_GEN2_PCIE
- 
- config PCI_HOST_GENERIC
- 	bool "Generic PCI host controller"
--	depends on ARM && OF
-+	depends on (ARM || ARM64) && OF
- 	help
- 	  Say Y here if you want to support a simple generic PCI host
- 	  controller, such as the one emulated by kvmtool.
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 3d2076f..f33c547 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -42,14 +42,24 @@ struct gen_pci {
- 	struct pci_host_bridge			host;
- 	struct gen_pci_cfg_windows		cfg;
- 	struct list_head			resources;
-+	struct device_node *msi_parent;
- };
- 
-+#ifdef CONFIG_ARM64
-+#define bus_to_gen_pci(b) \
-+	((struct gen_pci *)b->sysdata)
-+#else
-+#define bus_to_gen_pci(b) \
-+	((struct gen_pci *) \
-+	(((struct pci_sys_data *) \
-+	(bus->sysdata))->private_data))
-+#endif
-+
- static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
- 					     unsigned int devfn,
- 					     int where)
- {
--	struct pci_sys_data *sys = bus->sysdata;
--	struct gen_pci *pci = sys->private_data;
-+	struct gen_pci *pci = bus_to_gen_pci(bus);
- 	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
- 
- 	return pci->cfg.win[idx] + ((devfn << 8) | where);
-@@ -64,8 +74,7 @@ static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
- 					      unsigned int devfn,
- 					      int where)
- {
--	struct pci_sys_data *sys = bus->sysdata;
--	struct gen_pci *pci = sys->private_data;
-+	struct gen_pci *pci = bus_to_gen_pci(bus);
- 	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
- 
- 	return pci->cfg.win[idx] + ((devfn << 12) | where);
-@@ -80,8 +89,7 @@ static int gen_pci_config_read(struct pci_bus *bus, unsigned int devfn,
- 				int where, int size, u32 *val)
- {
- 	void __iomem *addr;
--	struct pci_sys_data *sys = bus->sysdata;
--	struct gen_pci *pci = sys->private_data;
-+	struct gen_pci *pci = bus_to_gen_pci(bus);
- 
- 	addr = pci->cfg.ops->map_bus(bus, devfn, where);
- 
-@@ -103,8 +111,7 @@ static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
- 				 int where, int size, u32 val)
- {
- 	void __iomem *addr;
--	struct pci_sys_data *sys = bus->sysdata;
--	struct gen_pci *pci = sys->private_data;
-+	struct gen_pci *pci = bus_to_gen_pci(bus);
- 
- 	addr = pci->cfg.ops->map_bus(bus, devfn, where);
- 
-@@ -144,8 +151,11 @@ static int gen_pci_calc_io_offset(struct device *dev,
- 				  resource_size_t *offset)
- {
- 	static atomic_t wins = ATOMIC_INIT(0);
--	int err, idx, max_win;
-+	int idx, max_win;
- 	unsigned int window;
-+#ifndef CONFIG_ARM64
-+	int err;
-+#endif
- 
- 	if (!PAGE_ALIGNED(range->cpu_addr))
- 		return -EINVAL;
-@@ -156,9 +166,12 @@ static int gen_pci_calc_io_offset(struct device *dev,
- 		return -ENOSPC;
- 
- 	window = (idx - 1) * SZ_64K;
-+
-+#ifndef CONFIG_ARM64
- 	err = pci_ioremap_io(window, range->cpu_addr);
- 	if (err)
- 		return err;
-+#endif
- 
- 	of_pci_range_to_resource(range, dev->of_node, res);
- 	res->start = window;
-@@ -310,12 +323,58 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
- 	return 0;
- }
- 
-+#ifndef CONFIG_ARM64
- static int gen_pci_setup(int nr, struct pci_sys_data *sys)
- {
- 	struct gen_pci *pci = sys->private_data;
- 	list_splice_init(&pci->resources, &sys->resources);
- 	return 1;
- }
-+#endif
-+
-+#ifdef CONFIG_ARM64
-+struct pci_bus *gen_scan_root_bus(struct device *parent, int bus,
-+				       struct pci_ops *ops, void *sysdata,
-+				       struct list_head *resources)
-+{
-+	struct pci_host_bridge_window *window;
-+	bool found = false;
-+	struct pci_bus *b;
-+	int max;
-+	struct gen_pci *pci = sysdata;
-+
-+	list_for_each_entry(window, resources, list)
-+		if (window->res->flags & IORESOURCE_BUS) {
-+			found = true;
-+			break;
-+		}
-+
-+	b = pci_create_root_bus(parent, bus, ops, sysdata, resources);
-+	if (!b)
-+		return NULL;
-+
-+	/* TODO:
-+	 * This is probably should be done in the core pci driver somewhere
-+	 */
-+	if (pci->msi_parent)
-+		b->msi = of_pci_find_msi_chip_by_node(pci->msi_parent);
-+
-+	if (!found) {
-+		dev_info(&b->dev,
-+		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
-+			bus);
-+		pci_bus_insert_busn_res(b, bus, 255);
-+	}
-+
-+	max = pci_scan_child_bus(b);
-+
-+	if (!found)
-+		pci_bus_update_busn_res_end(b, max);
-+
-+	pci_bus_add_devices(b);
-+	return b;
-+}
-+#endif
- 
- static int gen_pci_probe(struct platform_device *pdev)
- {
-@@ -326,6 +385,7 @@ static int gen_pci_probe(struct platform_device *pdev)
- 	struct device *dev = &pdev->dev;
- 	struct device_node *np = dev->of_node;
- 	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-+#ifndef CONFIG_ARM64
- 	struct hw_pci hw = {
- 		.nr_controllers	= 1,
- 		.private_data	= (void **)&pci,
-@@ -333,6 +393,7 @@ static int gen_pci_probe(struct platform_device *pdev)
- 		.map_irq	= of_irq_parse_and_map_pci,
- 		.ops		= &gen_pci_ops,
- 	};
-+#endif
- 
- 	if (!pci)
- 		return -ENOMEM;
-@@ -368,8 +429,24 @@ static int gen_pci_probe(struct platform_device *pdev)
- 		gen_pci_release_of_pci_ranges(pci);
- 		return err;
- 	}
-+#ifdef CONFIG_ARM64
- 
-+#ifdef CONFIG_PCI_MSI
-+	pci->msi_parent = of_parse_phandle(np, "msi-parent", 0);
-+	if (!pci->msi_parent) {
-+		dev_err(&pdev->dev, "Failed to allocate msi-parent.\n");
-+		return -EINVAL;
-+	}
-+#endif
-+
-+	if (!gen_scan_root_bus(&pdev->dev, pci->cfg.bus_range.start,
-+			       &gen_pci_ops, pci, &pci->resources)) {
-+		dev_err(&pdev->dev, "failed to enable PCIe ports\n");
-+		return -ENODEV;
-+	}
-+#else
- 	pci_common_init_dev(dev, &hw);
-+#endif /* CONFIG_ARM64 */
- 	return 0;
- }
- 
--- 
-1.9.3
+> ---
+>   drivers/block/xen-blkback/xenbus.c |  9 ++-------
+>   drivers/net/xen-netback/xenbus.c   |  5 +----
+>   drivers/pci/xen-pcifront.c         | 15 ++++++---------
+>   drivers/xen/xen-pciback/xenbus.c   | 21 ++++-----------------
+>   drivers/xen/xen-scsiback.c         |  5 +----
+>   drivers/xen/xenbus/xenbus_client.c | 16 ++++++++--------
+>   include/xen/xenbus.h               |  3 ++-
+>   7 files changed, 24 insertions(+), 50 deletions(-)
+>
+> diff --git a/drivers/block/xen-blkback/xenbus.c b/drivers/block/xen-blkback/xenbus.c
+> index 3a8b810..fdcc584 100644
+> --- a/drivers/block/xen-blkback/xenbus.c
+> +++ b/drivers/block/xen-blkback/xenbus.c
+> @@ -587,9 +587,7 @@ static int xen_blkbk_probe(struct xenbus_device *dev,
+>   	if (err)
+>   		goto fail;
+>
+> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+> -	if (err)
+> -		goto fail;
+> +	xenbus_switch_state(dev, XenbusStateInitWait);
+>
+>   	return 0;
+>
+> @@ -837,10 +835,7 @@ again:
+>   	if (err)
+>   		xenbus_dev_fatal(dev, err, "ending transaction");
+>
+> -	err = xenbus_switch_state(dev, XenbusStateConnected);
+> -	if (err)
+> -		xenbus_dev_fatal(dev, err, "%s: switching to Connected state",
+> -				 dev->nodename);
+> +	xenbus_switch_state(dev, XenbusStateConnected);
+>
+>   	return;
+>    abort:
+> diff --git a/drivers/net/xen-netback/xenbus.c b/drivers/net/xen-netback/xenbus.c
+> index 9c47b89..b5c3d47 100644
+> --- a/drivers/net/xen-netback/xenbus.c
+> +++ b/drivers/net/xen-netback/xenbus.c
+> @@ -337,10 +337,7 @@ static int netback_probe(struct xenbus_device *dev,
+>   	if (err)
+>   		pr_debug("Error writing multi-queue-max-queues\n");
+>
+> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+> -	if (err)
+> -		goto fail;
+> -
+> +	xenbus_switch_state(dev, XenbusStateInitWait);
+>   	be->state = XenbusStateInitWait;
+>
+>   	/* This kicks hotplug scripts, so do it immediately. */
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index 53df39a..c1d73b7 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -901,18 +901,16 @@ static int pcifront_try_connect(struct pcifront_device *pdev)
+>   		}
+>   	}
+>
+> -	err = xenbus_switch_state(pdev->xdev, XenbusStateConnected);
+> -
+> +	xenbus_switch_state(pdev->xdev, XenbusStateConnected);
+> +	return 0;
+>   out:
+>   	return err;
+>   }
+>
+>   static int pcifront_try_disconnect(struct pcifront_device *pdev)
+>   {
+> -	int err = 0;
+>   	enum xenbus_state prev_state;
+>
+> -
+>   	prev_state = xenbus_read_driver_state(pdev->xdev->nodename);
+>
+>   	if (prev_state >= XenbusStateClosing)
+> @@ -923,11 +921,10 @@ static int pcifront_try_disconnect(struct pcifront_device *pdev)
+>   		pcifront_disconnect(pdev);
+>   	}
+>
+> -	err = xenbus_switch_state(pdev->xdev, XenbusStateClosed);
+> +	xenbus_switch_state(pdev->xdev, XenbusStateClosed);
+>
+>   out:
+> -
+> -	return err;
+> +	return 0;
+>   }
+>
+>   static int pcifront_attach_devices(struct pcifront_device *pdev)
+> @@ -1060,8 +1057,8 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
+>   			domain, bus, slot, func);
+>   	}
+>
+> -	err = xenbus_switch_state(pdev->xdev, XenbusStateReconfiguring);
+> -
+> +	xenbus_switch_state(pdev->xdev, XenbusStateReconfiguring);
+> +	return 0;
+>   out:
+>   	return err;
+>   }
+> diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
+> index c214daa..630a215 100644
+> --- a/drivers/xen/xen-pciback/xenbus.c
+> +++ b/drivers/xen/xen-pciback/xenbus.c
+> @@ -184,10 +184,7 @@ static int xen_pcibk_attach(struct xen_pcibk_device *pdev)
+>
+>   	dev_dbg(&pdev->xdev->dev, "Connecting...\n");
+>
+> -	err = xenbus_switch_state(pdev->xdev, XenbusStateConnected);
+> -	if (err)
+> -		xenbus_dev_fatal(pdev->xdev, err,
+> -				 "Error switching to connected state!");
+> +	xenbus_switch_state(pdev->xdev, XenbusStateConnected);
+>
+>   	dev_dbg(&pdev->xdev->dev, "Connected? %d\n", err);
+>   out:
+> @@ -500,12 +497,7 @@ static int xen_pcibk_reconfigure(struct xen_pcibk_device *pdev)
+>   		}
+>   	}
+>
+> -	err = xenbus_switch_state(pdev->xdev, XenbusStateReconfigured);
+> -	if (err) {
+> -		xenbus_dev_fatal(pdev->xdev, err,
+> -				 "Error switching to reconfigured state!");
+> -		goto out;
+> -	}
+> +	xenbus_switch_state(pdev->xdev, XenbusStateReconfigured);
+>
+>   out:
+>   	mutex_unlock(&pdev->dev_lock);
+> @@ -640,10 +632,7 @@ static int xen_pcibk_setup_backend(struct xen_pcibk_device *pdev)
+>   		goto out;
+>   	}
+>
+> -	err = xenbus_switch_state(pdev->xdev, XenbusStateInitialised);
+> -	if (err)
+> -		xenbus_dev_fatal(pdev->xdev, err,
+> -				 "Error switching to initialised state!");
+> +	xenbus_switch_state(pdev->xdev, XenbusStateInitialised);
+>
+>   out:
+>   	mutex_unlock(&pdev->dev_lock);
+> @@ -683,9 +672,7 @@ static int xen_pcibk_xenbus_probe(struct xenbus_device *dev,
+>   	}
+>
+>   	/* wait for xend to configure us */
+> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+> -	if (err)
+> -		goto out;
+> +	xenbus_switch_state(dev, XenbusStateInitWait);
+>
+>   	/* watch the backend node for backend configuration information */
+>   	err = xenbus_watch_path(dev, dev->nodename, &pdev->be_watch,
+> diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
+> index ad11258..847bc9c 100644
+> --- a/drivers/xen/xen-scsiback.c
+> +++ b/drivers/xen/xen-scsiback.c
+> @@ -1225,10 +1225,7 @@ static int scsiback_probe(struct xenbus_device *dev,
+>   	if (err)
+>   		xenbus_dev_error(dev, err, "writing feature-sg-grant");
+>
+> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+> -	if (err)
+> -		goto fail;
+> -
+> +	xenbus_switch_state(dev, XenbusStateInitWait);
+>   	return 0;
+>
+>   fail:
+> diff --git a/drivers/xen/xenbus/xenbus_client.c b/drivers/xen/xenbus/xenbus_client.c
+> index ca74410..e2bcd1d 100644
+> --- a/drivers/xen/xenbus/xenbus_client.c
+> +++ b/drivers/xen/xenbus/xenbus_client.c
+> @@ -166,7 +166,7 @@ EXPORT_SYMBOL_GPL(xenbus_watch_pathfmt);
+>   static void xenbus_switch_fatal(struct xenbus_device *, int, int,
+>   				const char *, ...);
+>
+> -static int
+> +static void
+>   __xenbus_switch_state(struct xenbus_device *dev,
+>   		      enum xenbus_state state, int depth)
+>   {
+> @@ -188,7 +188,7 @@ __xenbus_switch_state(struct xenbus_device *dev,
+>   	int err, abort;
+>
+>   	if (state == dev->state)
+> -		return 0;
+> +		return;
+>
+>   again:
+>   	abort = 1;
+> @@ -196,7 +196,7 @@ again:
+>   	err = xenbus_transaction_start(&xbt);
+>   	if (err) {
+>   		xenbus_switch_fatal(dev, depth, err, "starting transaction");
+> -		return 0;
+> +		return;
+>   	}
+>
+>   	err = xenbus_scanf(xbt, dev->nodename, "state", "%d", &current_state);
+> @@ -219,7 +219,7 @@ abort:
+>   	} else
+>   		dev->state = state;
+>
+> -	return 0;
+> +	return;
+>   }
+>
+>   /**
+> @@ -228,12 +228,12 @@ abort:
+>    * @state: new state
+>    *
+>    * Advertise in the store a change of the given driver to the given new_state.
+> - * Return 0 on success, or -errno on error.  On error, the device will switch
+> - * to XenbusStateClosing, and the error will be saved in the store.
+> + * When failure occurs, it will call xenbus_switch_fatal() internally, so need
+> + * not return value to notify upper caller.
+>    */
+> -int xenbus_switch_state(struct xenbus_device *dev, enum xenbus_state state)
+> +void xenbus_switch_state(struct xenbus_device *dev, enum xenbus_state state)
+>   {
+> -	return __xenbus_switch_state(dev, state, 0);
+> +	__xenbus_switch_state(dev, state, 0);
+>   }
+>
+>   EXPORT_SYMBOL_GPL(xenbus_switch_state);
+> diff --git a/include/xen/xenbus.h b/include/xen/xenbus.h
+> index 0324c6d..587c53d 100644
+> --- a/include/xen/xenbus.h
+> +++ b/include/xen/xenbus.h
+> @@ -195,7 +195,8 @@ int xenbus_watch_pathfmt(struct xenbus_device *dev, struct xenbus_watch *watch,
+>   					  const char **, unsigned int),
+>   			 const char *pathfmt, ...);
+>
+> -int xenbus_switch_state(struct xenbus_device *dev, enum xenbus_state new_state);
+> +void xenbus_switch_state(struct xenbus_device *dev,
+> +			 enum xenbus_state new_state);
+>   int xenbus_grant_ring(struct xenbus_device *dev, unsigned long ring_mfn);
+>   int xenbus_map_ring_valloc(struct xenbus_device *dev,
+>   			   int gnt_ref, void **vaddr);
+>
 
