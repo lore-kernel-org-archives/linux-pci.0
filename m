@@ -1,55 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0145.outbound.protection.outlook.com ([157.56.111.145]:59904
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751134AbaIYCCO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Sep 2014 22:02:14 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Fabio Estevam <festevam@gmail.com>
-CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Tim Harvey <tharvey@gateworks.com>
-Subject: RE: [PATCH v2 1/5] PCI: imx6: enable pcie on imx6qdl sabreauto
-Date: Thu, 25 Sep 2014 02:02:11 +0000
-Message-ID: <e5a6b27166044f288a0b8482daa9d94a@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
-	<1411445498-20250-2-git-send-email-r65037@freescale.com>
-	<CAOMZO5BuPcw9bJSdLMJ2D=a6EMFMPtKeY352N9-x8dwmRnnfWw@mail.gmail.com>
-	<f72dd09d379d4c1b89cc27612afcea77@BY1PR0301MB0855.namprd03.prod.outlook.com>
-	<CAOMZO5CKZce3AZfm79DVGShx7bY6DJ3YvSC7q9MYx5v+Zwve5g@mail.gmail.com>
-	<366bf7b53b044fdd94f12ed21f505841@DM2PR0301MB0862.namprd03.prod.outlook.com>
- <CAOMZO5DC55n_2=5qCeGa-cdkRRnc1z9F+hau=jgTkP_66gn=qA@mail.gmail.com>
-In-Reply-To: <CAOMZO5DC55n_2=5qCeGa-cdkRRnc1z9F+hau=jgTkP_66gn=qA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1412024521.4285.98.camel@pasglop>
+References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+ <1412000971-9242-11-git-send-email-Liviu.Dudau@arm.com> <CAE9FiQXEUZvkuzwOrK+2zGVj0ywFaQsiWH7SHufZk9BRWnwddQ@mail.gmail.com>
+ <CAE9FiQUkcPRMUEn01VJMyXz8aYvk6C5MBNZi5NCV2m3qkNabeg@mail.gmail.com> <1412024521.4285.98.camel@pasglop>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 29 Sep 2014 15:33:37 -0600
+Message-ID: <CAErSpo62ap1YkzvuZ6MCpXry9=VpLv+Skzrwr10h=+Lc4VfVgQ@mail.gmail.com>
+Subject: Re: [PATCH v13 10/12] PCI: Assign unassigned bus resources in pci_scan_root_bus()
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Yinghai Lu <yinghai@kernel.org>, Liviu Dudau <Liviu.Dudau@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgRmFiaW86DQoNCg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEZh
-YmlvIEVzdGV2YW0gW21haWx0bzpmZXN0ZXZhbUBnbWFpbC5jb21dDQo+IFNlbnQ6IFRodXJzZGF5
-LCBTZXB0ZW1iZXIgMjUsIDIwMTQgOTo0MCBBTQ0KPiBUbzogWmh1IFJpY2hhcmQtUjY1MDM3DQo+
-IENjOiBsaW51eC1wY2ktb3duZXJAdmdlci5rZXJuZWwub3JnOyBsaW51eC1wY2lAdmdlci5rZXJu
-ZWwub3JnOyBHdW8gU2hhd24tDQo+IFI2NTA3MzsgTHVjYXMgU3RhY2g7IFRpbSBIYXJ2ZXkNCj4g
-U3ViamVjdDogUmU6IFtQQVRDSCB2MiAxLzVdIFBDSTogaW14NjogZW5hYmxlIHBjaWUgb24gaW14
-NnFkbCBzYWJyZWF1dG8NCj4gDQo+IE9uIFdlZCwgU2VwIDI0LCAyMDE0IGF0IDEwOjIxIFBNLCBI
-b25nLVhpbmcuWmh1QGZyZWVzY2FsZS5jb20gPEhvbmctDQo+IFhpbmcuWmh1QGZyZWVzY2FsZS5j
-b20+IHdyb3RlOg0KPiA+IFtSaWNoYXJkXSBZZXMgaXQgaXMuIE9uIEFSRCBib2FyZCwgdGhlIFBD
-SUVfUlNUX0IgaXMgY29ubmVjdGVkIHRvDQo+IENQVV9QRVJfUlNUX0IuDQo+ID4gQnV0IHRoaXMg
-aXMgbm90IG9uZSBzaWduYWwgdGhhdCBjYW4gYmUgY29udHJvbGxlZCBieSBQQ0lFIG1vZHVsZSBp
-dHNlbGYuDQo+IA0KPiBMZXQncyB0YWtlIGlteDZxZGwtc2FicmVzZC5kdHNpIGZvciBleGFtcGxl
-Og0KPiANCj4gJnBjaWUgew0KPiAgICAgcGluY3RybC1uYW1lcyA9ICJkZWZhdWx0IjsNCj4gICAg
-IHBpbmN0cmwtMCA9IDwmcGluY3RybF9wY2llPjsNCj4gICAgIHJlc2V0LWdwaW8gPSA8JmdwaW83
-IDEyIDA+Ow0KPiAgICAgc3RhdHVzID0gIm9rYXkiOw0KPiB9Ow0KPiANCj4gSXQgdXNlcyBHUElP
-N18xMiBmb3IgUENJIHJlc2V0Lg0KPiANCj4gRm9yIHNhYnJlYXV0byB3ZSBqdXN0IG5lZWQgdG8g
-Y2hhbmdlIHRvIHNvbWV0aGluZyBsaWtlIHRoaXMgZm9ybWF0Og0KPiANCj4gcmVzZXQtZ3BpbyA9
-IDwmbWF4NzMxMF9iIDIgMD47DQo+IA0KPiA+IEl0IGlzIGtpY2tlZCBvbmNlIGF0IHRoZSBtb21l
-bnQgd2hlbiB0aGUgYm9hcmQgaXMgcG93ZXJlZCB1cC4NCj4gDQo+IFllcywgdGhlIHNpZ25hbCBp
-cyBjb25uZWN0ZWQgdG8gcG93ZXItb24gYW5kIGl0IGNhbiBhbHNvIGJlIGluZGVwZW5kZW50bHkN
-Cj4gY29udHJvbGxlZCB2aWEgTUFYNzMxMC4NCj4gDQo+IEFueXdheSwgbm8gbmVlZCB0byBjaGFu
-Z2UgdGhpcyBpZiB5b3UgZG9uJ3Qgd2FudC4gSSBjYW4gc2VuZCBhIHBhdGNoIGFkZGluZw0KPiB0
-aGUgcmVzZXQgbGF0ZXIgOi0pDQoNCltSaWNoYXJkXSBPbmUgbW9yZSBkZXBlbmRlbmN5LCB0aGlz
-IHNpZ25hbCB3b3VsZCBiZSBzaGFyZS11c2VkIGJ5IG11bHRpLW1vZHVsZXMuDQpJJ20gYWZyYWlk
-IHRoZSBvcGVyYXRpb25zIG9mIHRoZSBwY2llLXJlc2V0LWIgd291bGQgYnJpbmcgdW4tZXhjZXB0
-aW9uYWwgdG8gb3RoZXIgbW9kdWxlcy4NCg0KQmVzdCBSZWdhcmRzDQpSaWNoYXJkIFpodQ0K
+On Mon, Sep 29, 2014 at 3:02 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Mon, 2014-09-29 at 12:06 -0700, Yinghai Lu wrote:
+>> On Mon, Sep 29, 2014 at 11:25 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> > On Mon, Sep 29, 2014 at 7:29 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+>> >> If the firmware has not assigned all the bus resources and we are not just
+>> >> probing the PCI buses, it makes sense to assign the unassigned resources
+>> >> in pci_scan_root_bus().
+>> >>
+>> >> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+>> >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> >> CC: Arnd Bergmann <arnd@arndb.de>
+>> >> CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+>> >> CC: Rob Herring <robh+dt@kernel.org>
+>> >> ---
+>> >>  drivers/pci/probe.c | 3 +++
+>> >>  1 file changed, 3 insertions(+)
+>> >>
+>> >> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> >> index 636d1c9..d2ebd49 100644
+>> >> --- a/drivers/pci/probe.c
+>> >> +++ b/drivers/pci/probe.c
+>> >> @@ -1951,6 +1951,9 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+>> >>         if (!found)
+>> >>                 pci_bus_update_busn_res_end(b, max);
+>> >>
+>> >> +       if (!pci_has_flag(PCI_PROBE_ONLY))
+>> >> +               pci_assign_unassigned_bus_resources(b);
+>> >> +
+>> >>         pci_bus_add_devices(b);
+>> >>         return b;
+>> >>  }
+>> >
+>> > No, you can not do it that early.
+>> >
+>> > On x86, we need to call
+>> > pcibios_resource_survey_bus at first.
+>>
+>> on x86:
+>> pcibios_init
+>> pcibios_resource_survey()
+>> pcibios_assign_resources() via fs_initcall
+>
+> Right and on powerpc and others as well. We need to survey existing
+> resources. We also have a number of platform things that might need
+> to happen before we do the final re-assignment pass.
+
+That's true today.  But I don't know whether it *has* to be this way
+forever.  On x86, pcibios_resource_survey() throws in E820 information
+(which we know long before we do any PCI enumeration) and some IO-APIC
+resources (it looks like we also know these before PCI enumeration).
+Powerpc has pcibios_reserve_legacy_regions(), but that looks like
+mostly stuff that could be done when we find the host bridge, before
+we enumerate PCI devices below it.
+
+Bjorn
