@@ -1,98 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:33598 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752761AbaIPHx5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 03:53:57 -0400
-Message-ID: <5417EC7B.4060400@huawei.com>
-Date: Tue, 16 Sep 2014 15:53:31 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from smtp.citrix.com ([66.165.176.89]:63801 "EHLO SMTP.CITRIX.COM"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751543AbaI2ORT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Sep 2014 10:17:19 -0400
+Message-ID: <542969E6.1010104@citrix.com>
+Date: Mon, 29 Sep 2014 15:17:10 +0100
+From: David Vrabel <david.vrabel@citrix.com>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	"Vinod Koul" <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-CC: Ashok Raj <ashok.raj@intel.com>, Tony Luck <tony.luck@intel.com>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	<linux-hotplug@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<dmaengine@vger.kernel.org>
-Subject: Re: [Patch Part3 V5 5/8] iommu/vt-d: Enhance intel_irq_remapping
- driver to support DMAR unit hotplug
-References: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com> <1410487848-6027-6-git-send-email-jiang.liu@linux.intel.com> <54164D01.4060003@huawei.com> <5417E00D.5000108@linux.intel.com>
-In-Reply-To: <5417E00D.5000108@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Chen Gang <gang.chen.5i5j@gmail.com>
+CC: <ian.campbell@citrix.com>, <wei.liu2@citrix.com>,
+	<boris.ostrovsky@oracle.com>, <bhelgaas@google.com>,
+	<jgross@suse.com>, <yongjun_wei@trendmicro.com.cn>,
+	<mukesh.rathor@oracle.com>, <xen-devel@lists.xenproject.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] xen/xenbus: Use 'void' instead of 'int' for the return
+ of xenbus_switch_state()
+References: <5425961A.5000604@gmail.com> <20140929140229.GA28279@laptop.dumpdata.com>
+In-Reply-To: <20140929140229.GA28279@laptop.dumpdata.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/16 15:00, Jiang Liu wrote:
-> On 2014/9/15 10:20, Yijing Wang wrote:
->>> +static void ir_remove_ioapic_hpet_scope(struct intel_iommu *iommu)
->>> +{
->>> +	int i;
->>>  
->>> -			ir_parse_one_hpet_scope(scope, iommu);
->>> -		}
->>> -		start += scope->length;
->>> -	}
->>> +	for (i = 0; i < MAX_HPET_TBS; i++)
->>> +		if (ir_hpet[i].iommu == iommu)
->>> +			ir_hpet[i].iommu = NULL;
->>
->> Hi Gerry, why not reset whole ir_hpe and ir_ioapic data struct?
-> Hi Yijing,
-> 	Thanks for review. Zero is legal for id, bus and devfn in
-> struct ioapic_scope and struct hpet_scope. So we use domain field
-> as a flag to mark entry valid or invalid and only reset iommu field.
-
-Hi Gerry, use iommu field as a flag to mark entry valid may be not safe enough,
-I found map_hpet_to_ir() and map_ioapic_to_ir() still only check the id field to return the valid iommu.
-
-What about this case:
-E.g. ir_hpet[2].id = N, ir_hpet[2].iommu = NULL, ir_hpet[4].id = N, ir_hpet[4].iommu = iommu;
-
-ir_hpet[2] maybe released yet, and the hpet now has been saved in ir_hpet[4], but map_hpet_to_irq()
-will return the wrong iommu(NULL).
-
-
-static struct intel_iommu *map_hpet_to_ir(u8 hpet_id)
-{
-	int i;
-
-	for (i = 0; i < MAX_HPET_TBS; i++)
-		if (ir_hpet[i].id == hpet_id)
-			return ir_hpet[i].iommu;
-	return NULL;
-}
-
+On 29/09/14 15:02, Konrad Rzeszutek Wilk wrote:
+> On Sat, Sep 27, 2014 at 12:36:42AM +0800, Chen Gang wrote:
+>> When xenbus_switch_state() fails, it will call xenbus_switch_fatal()
 > 
-> Regards!
-> Gerry
->>
->>
->>
->>>  
->>> -	return 0;
->>> +	for (i = 0; i < MAX_IO_APICS; i++)
->>> +		if (ir_ioapic[i].iommu == iommu)
->>> +			ir_ioapic[i].iommu = NULL;
->>>  }
->>>  
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Please read the FAQ at  http://www.tux.org/lkml/
->>
+> Only on the first depth, not on the subsequent ones (as in if
+> the first xenbus_switch_fail fails, it won't try to call
+> xenbus_switch_state again and again).
 > 
-> .
+>> internally, so need not return any status value, then use 'void' instead
+>> of 'int' for xenbus_switch_state() and __xenbus_switch_state().
 > 
+> When that switch occurs (to XenbusStateConnected) won't the watches
+> fire - meaning we MUST make sure that the watch functions - if they
+> use the xenbus_switch_state() they MUST not hold any locks - because
+> they could be executed once more?
+> 
+> Oh wait, we don't have to worry about that right now as the callbacks
+> that pick up the messages from the XenBus are all gated on one mutex
+> anyhow.
+> 
+> Hm, anyhow, I would add this extra piece of information to the patch:
+> 
+> 
+> diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
+> index c214daa..f7399fd 100644
+> --- a/drivers/xen/xen-pciback/xenbus.c
+> +++ b/drivers/xen/xen-pciback/xenbus.c
+> @@ -661,6 +661,12 @@ static void xen_pcibk_be_watch(struct xenbus_watch *watch,
+>  
+>  	switch (xenbus_read_driver_state(pdev->xdev->nodename)) {
+>  	case XenbusStateInitWait:
+> +		/*
+> +		 * xenbus_switch_state can call xenbus_switch_fatal which will
+> +		 * immediately set the state to XenbusStateClosing which
+> +		 * means if we were reading for it here we MUST drop any
+> +		 * locks so that we don't dead-lock.
+> +		 */
 
+Watches are asynchronous and serialised by the xenwatch thread.  I can't
+see what deadlock you're talking about here.  Particularly since the
+backend doesn't watch its own state node (it watches the frontend one).
 
--- 
-Thanks!
-Yijing
+>  		xen_pcibk_setup_backend(pdev);
+>  		break;
+>  
+>>
+>> Also need be sure that all callers which check the return value must let
+>> 'err' be 0.
+> 
+> I am bit uncomfortable with that, that is due to:
+> 
+> 
+> .. snip..
+>> diff --git a/drivers/net/xen-netback/xenbus.c b/drivers/net/xen-netback/xenbus.c
+>> index 9c47b89..b5c3d47 100644
+>> --- a/drivers/net/xen-netback/xenbus.c
+>> +++ b/drivers/net/xen-netback/xenbus.c
+>> @@ -337,10 +337,7 @@ static int netback_probe(struct xenbus_device *dev,
+>>  	if (err)
+>>  		pr_debug("Error writing multi-queue-max-queues\n");
+>>  
+>> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+>> -	if (err)
+>> -		goto fail;
+>> -
+>> +	xenbus_switch_state(dev, XenbusStateInitWait);
+> 
+> Which if it fails it won't call:
+> 
+> 354 fail:                                                                           
+> 355         pr_debug("failed\n");                                                   
+> 356         netback_remove(dev);                                                    
+> 357         return err;         
+> 
+> 
+> And since there is no watch on the backend state to go in Closing it won't
+> ever call those and we leak memory.
+
+It's not leaking the memory.  All resources will be recovered when the
+device is removed.
+
+> The same is for xen-blkback mechanism in the probe function.
+
+David
 
