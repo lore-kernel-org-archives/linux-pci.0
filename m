@@ -1,17 +1,17 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0140.outbound.protection.outlook.com ([157.56.111.140]:12608
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+Received: from mail-bl2on0140.outbound.protection.outlook.com ([65.55.169.140]:31936
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751554AbaI2FdX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	id S1751483AbaI2FdX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
 	Mon, 29 Sep 2014 01:33:23 -0400
 From: Richard Zhu <r65037@freescale.com>
 To: <linux-pci-owner@vger.kernel.org>
 CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
 	<festevam@gmail.com>, <l.stach@pengutronix.de>,
 	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
-Subject: [PATCH v3 8/9] PCI: designware: refine setup_rc and add msi data restore
-Date: Mon, 29 Sep 2014 13:03:16 +0800
-Message-ID: <1411966997-27118-9-git-send-email-r65037@freescale.com>
+Subject: [PATCH v3 7/9] PCI: imx6: add imx6sx pcie support
+Date: Mon, 29 Sep 2014 13:03:15 +0800
+Message-ID: <1411966997-27118-8-git-send-email-r65037@freescale.com>
 In-Reply-To: <1411966997-27118-1-git-send-email-r65037@freescale.com>
 References: <1411966997-27118-1-git-send-email-r65037@freescale.com>
 MIME-Version: 1.0
@@ -19,74 +19,287 @@ Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-- move "program correct class for RC" from dw_pcie_host_init()
-to dw_pcie_setup_rc(). since this is RC setup, it's
-better to contained in dw_pcie_setup_rc function.
-Then, RC can be re-setup really by dw_pcie_setup_rc().
-- add one re-store msi data function. Because that
-pcie controller maybe powered off during system suspend,
-and the msi data configuration would be lost.
-this functions can be used to restore the msi data
-during the resume callback.
+- imx6sx pcie has its own standalone pcie power supply.
+In order to turn on the imx6sx pcie power during
+initialization. Add the pcie regulator and the gpc regmap
+into the imx6sx pcie structure.
+- imx6sx pcie has the new added reset mechanism, add the
+reset operations into the initialization.
+- Register one PM call-back, enter/exit L2 state of the ASPM
+during system suspend/resume.
+- disp_axi clock is required by pcie inbound axi port actually.
+Add one more clock for imx6sx pcie.
 
 Signed-off-by: Richard Zhu <r65037@freescale.com>
 ---
- drivers/pci/host/pcie-designware.c | 15 ++++++++++++---
- drivers/pci/host/pcie-designware.h |  1 +
- 2 files changed, 13 insertions(+), 3 deletions(-)
+ drivers/pci/host/pci-imx6.c | 162 +++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 144 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 538bbf3..ae1e6c5 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -194,6 +194,13 @@ void dw_pcie_msi_init(struct pcie_port *pp)
- 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
- }
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index eac96fb..be953aa 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -18,12 +18,16 @@
+ #include <linux/mfd/syscon.h>
+ #include <linux/mfd/syscon/imx6q-iomuxc-gpr.h>
+ #include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_device.h>
+ #include <linux/of_gpio.h>
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+ #include <linux/regmap.h>
++#include <linux/regulator/consumer.h>
+ #include <linux/resource.h>
+ #include <linux/signal.h>
++#include <linux/syscore_ops.h>
+ #include <linux/types.h>
+ #include <linux/interrupt.h>
  
-+void dw_pcie_msi_cfg_restore(struct pcie_port *pp)
+@@ -35,11 +39,15 @@ struct imx6_pcie {
+ 	int			reset_gpio;
+ 	struct clk		*pcie_bus;
+ 	struct clk		*pcie_phy;
++	struct clk		*disp_axi;
+ 	struct clk		*pcie;
+ 	struct pcie_port	pp;
+ 	struct regmap		*iomuxc_gpr;
++	struct regmap		*gpc_ips_reg;
++	struct regulator	*pcie_regulator;
+ 	void __iomem		*mem_base;
+ };
++static struct imx6_pcie *imx6_pcie;
+ 
+ /* PCIe Root Complex registers (memory-mapped) */
+ #define PCIE_RC_LCR				0x7c
+@@ -77,6 +85,18 @@ struct imx6_pcie {
+ #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
+ #define PHY_RX_OVRD_IN_LO_RX_PLL_EN (1 << 3)
+ 
++/* GPC PCIE PHY bit definitions */
++#define GPC_CNTR			0
++#define GPC_CNTR_PCIE_PHY_PUP_REQ	BIT(7)
++
++static inline bool is_imx6sx_pcie(struct imx6_pcie *imx6_pcie)
 +{
-+	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
-+			virt_to_phys((void *)pp->msi_data));
-+	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
++	struct pcie_port *pp = &imx6_pcie->pp;
++	struct device_node *np = pp->dev->of_node;
++
++	return of_device_is_compatible(np, "fsl,imx6sx-pcie");
 +}
 +
- static int find_valid_pos0(struct pcie_port *pp, int msgvec, int pos, int *pos0)
+ static int pcie_phy_poll_ack(void __iomem *dbi_base, int exp_val)
  {
- 	int flag = 1;
-@@ -570,9 +577,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	u32 val;
+@@ -275,18 +295,29 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		goto err_pcie;
+ 	}
  
- 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
- 
--	/* program correct class for RC */
--	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
--
- 	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
- 	val |= PORT_LOGIC_SPEED_CHANGE;
- 	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
-@@ -917,6 +921,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	val = memlimit | membase;
- 	dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
- 
-+	/* program correct class for RC */
-+	dw_pcie_readl_rc(pp, PCI_CLASS_REVISION, &val);
-+	val |= PCI_CLASS_BRIDGE_PCI << 16;
-+	dw_pcie_writel_rc(pp, val, PCI_CLASS_REVISION);
+-	/* power up core phy and enable ref clock */
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+-	/*
+-	 * the async reset input need ref clock to sync internally,
+-	 * when the ref clock comes after reset, internal synced
+-	 * reset time is too short , cannot meet the requirement.
+-	 * add one ~10us delay here.
+-	 */
+-	udelay(10);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		ret = clk_prepare_enable(imx6_pcie->disp_axi);
++		if (ret) {
++			dev_err(pp->dev, "unable to enable pcie clock\n");
++			goto err_disp;
++		}
 +
- 	/* setup command register */
- 	dw_pcie_readl_rc(pp, PCI_COMMAND, &val);
- 	val &= 0xffff0000;
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index a476e60..bb75715 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -83,6 +83,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
- int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
- void dw_pcie_msi_init(struct pcie_port *pp);
-+void dw_pcie_msi_cfg_restore(struct pcie_port *pp);
- int dw_pcie_link_up(struct pcie_port *pp);
- void dw_pcie_setup_rc(struct pcie_port *pp);
- int dw_pcie_host_init(struct pcie_port *pp);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				IMX6SX_GPR12_PCIE_TEST_PD, 0 << 30);
++	} else {
++		/* power up core phy and enable ref clock */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
++		/*
++		 * the async reset input need ref clock to sync internally,
++		 * when the ref clock comes after reset, internal synced
++		 * reset time is too short , cannot meet the requirement.
++		 * add one ~10us delay here.
++		 */
++		udelay(10);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
++	}
+ 
+ 	/* allow the clocks to stabilize */
+ 	usleep_range(200, 500);
+@@ -297,8 +328,19 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		msleep(100);
+ 		gpio_set_value(imx6_pcie->reset_gpio, 1);
+ 	}
++
++	/*
++	 * Release the PCIe PHY reset here, that we have set in
++	 * imx6_pcie_init_phy() now
++	 */
++	if (is_imx6sx_pcie(imx6_pcie))
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++				IMX6SX_GPR5_PCIE_BTNRST, 0 << 19);
++
+ 	return 0;
+ 
++err_disp:
++	clk_disable_unprepare(imx6_pcie->pcie);
+ err_pcie:
+ 	clk_disable_unprepare(imx6_pcie->pcie_bus);
+ err_pcie_bus:
+@@ -311,6 +353,26 @@ err_pcie_phy:
+ static void imx6_pcie_init_phy(struct pcie_port *pp)
+ {
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
++	int ret;
++
++	/* Power up the separate domain available on i.MX6SX */
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		/* Force PCIe PHY reset */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++				IMX6SX_GPR5_PCIE_BTNRST,
++				IMX6SX_GPR5_PCIE_BTNRST);
++
++		regmap_update_bits(imx6_pcie->gpc_ips_reg, GPC_CNTR,
++				GPC_CNTR_PCIE_PHY_PUP_REQ,
++				GPC_CNTR_PCIE_PHY_PUP_REQ);
++		regulator_set_voltage(imx6_pcie->pcie_regulator,
++				1100000, 1100000);
++		ret = regulator_enable(imx6_pcie->pcie_regulator);
++		if (ret)
++			dev_info(pp->dev, "failed to enable pcie regulator.\n");
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				IMX6SX_GPR12_RX_EQ_MASK, IMX6SX_GPR12_RX_EQ_2);
++	}
+ 
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
+@@ -319,7 +381,7 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 			IMX6Q_GPR12_DEVICE_TYPE, PCI_EXP_TYPE_ROOT_PORT << 12);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-			IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
++			IMX6Q_GPR12_LOS_LEVEL, IMX6Q_GPR12_LOS_LEVEL_9);
+ 
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+ 			IMX6Q_GPR8_TX_DEEMPH_GEN1, 0 << 0);
+@@ -377,7 +439,8 @@ static int imx6_pcie_start_link(struct pcie_port *pp)
+ 
+ 	/* Start LTSSM. */
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
++			IMX6Q_GPR12_PCIE_CTL_2,
++			IMX6Q_GPR12_PCIE_CTL_2);
+ 
+ 	ret = imx6_pcie_wait_for_link(pp);
+ 	if (ret)
+@@ -553,9 +616,50 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PM_SLEEP
++static int pci_imx_suspend(void)
++{
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		/* PM_TURN_OFF */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				IMX6SX_GPR12_PCIE_PM_TURN_OFF,
++				IMX6SX_GPR12_PCIE_PM_TURN_OFF);
++		udelay(10);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				IMX6SX_GPR12_PCIE_PM_TURN_OFF, 0 << 16);
++	}
++
++	return 0;
++}
++
++static void pci_imx_resume(void)
++{
++	struct pcie_port *pp = &imx6_pcie->pp;
++
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		/* Reset iMX6SX PCIe */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++				IMX6SX_GPR5_PCIE_PERST, IMX6SX_GPR5_PCIE_PERST);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++				IMX6SX_GPR5_PCIE_PERST, 0 << 18);
++		/*
++		 * controller maybe turn off, re-configure again
++		 */
++		dw_pcie_setup_rc(pp);
++
++		if (IS_ENABLED(CONFIG_PCI_MSI))
++			dw_pcie_msi_cfg_restore(pp);
++	}
++}
++
++static struct syscore_ops pci_imx_syscore_ops = {
++	.suspend = pci_imx_suspend,
++	.resume = pci_imx_resume,
++};
++#endif
++
+ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ {
+-	struct imx6_pcie *imx6_pcie;
+ 	struct pcie_port *pp;
+ 	struct device_node *np = pdev->dev.of_node;
+ 	struct resource *dbi_base;
+@@ -610,9 +714,27 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(imx6_pcie->pcie);
+ 	}
+ 
+-	/* Grab GPR config register range */
+-	imx6_pcie->iomuxc_gpr =
+-		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		imx6_pcie->disp_axi = devm_clk_get(&pdev->dev, "disp_axi");
++		if (IS_ERR(imx6_pcie->disp_axi)) {
++			dev_err(&pdev->dev,
++				"pcie clock source missing or invalid\n");
++			return PTR_ERR(imx6_pcie->disp_axi);
++		}
++
++		imx6_pcie->pcie_regulator = devm_regulator_get(pp->dev,
++				"pcie_phy");
++
++		imx6_pcie->iomuxc_gpr =
++			 syscon_regmap_lookup_by_compatible
++			 ("fsl,imx6sx-iomuxc-gpr");
++		imx6_pcie->gpc_ips_reg =
++			 syscon_regmap_lookup_by_compatible("fsl,imx6sx-gpc");
++	} else {
++		imx6_pcie->iomuxc_gpr =
++			syscon_regmap_lookup_by_compatible
++			("fsl,imx6q-iomuxc-gpr");
++	}
+ 	if (IS_ERR(imx6_pcie->iomuxc_gpr)) {
+ 		dev_err(&pdev->dev, "unable to find iomuxc registers\n");
+ 		return PTR_ERR(imx6_pcie->iomuxc_gpr);
+@@ -623,6 +745,9 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 
+ 	platform_set_drvdata(pdev, imx6_pcie);
++#ifdef CONFIG_PM_SLEEP
++	register_syscore_ops(&pci_imx_syscore_ops);
++#endif
+ 	return 0;
+ }
+ 
+@@ -636,6 +761,7 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
+ 
+ static const struct of_device_id imx6_pcie_of_match[] = {
+ 	{ .compatible = "fsl,imx6q-pcie", },
++	{ .compatible = "fsl,imx6sx-pcie", },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
 -- 
 1.9.1
 
