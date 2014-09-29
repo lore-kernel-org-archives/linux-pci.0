@@ -1,122 +1,51 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <540FC1C2.40100@linux.intel.com>
-Date: Wed, 10 Sep 2014 11:13:06 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org, Prarit Bhargava <prarit@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.24]:52988 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751347AbaI2Oip (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 10:38:45 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: suravee.suthikulpanit@amd.com
+Cc: will.deacon@arm.com, liviu.dudau@arm.com, marc.zyngier@arm.com,
+	mark.rutland@arm.com, catalin.marinas@arm.com,
+	jason@lakedaemon.net, tglx@linutronix.de, robh+dt@kernel.org,
+	bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: Re: [Patch v4 12/16] x86, irq, ACPI: Implement interface to support
- ACPI based IOAPIC hot-addition
-References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com> <1409192561-19744-13-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1409091417120.11037@nanos>
-In-Reply-To: <alpine.DEB.2.10.1409091417120.11037@nanos>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+	linux-doc@vger.kernel.org, devicetree@vger.kernel.org,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: Re: [RFC 3/4] arm64: Do not call enable PCI resources when specify PCI_PROBE_ONLY
+Date: Mon, 29 Sep 2014 16:38:09 +0200
+Message-ID: <4139946.HEULtVYyUh@wuerfel>
+In-Reply-To: <1411937610-22125-4-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com> <1411937610-22125-4-git-send-email-suravee.suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sunday 28 September 2014 15:53:29 suravee.suthikulpanit@amd.com wrote:
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index ce5836c..7fd4d2b 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -68,3 +68,11 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+>         bus->domain_nr = domain;
+>  }
+>  #endif
+> +
+> +int pcibios_enable_device(struct pci_dev *dev, int mask)
+> +{
+> +       if (pci_has_flag(PCI_PROBE_ONLY))
+> +               return 0;
+> +
+> +       return pci_enable_resources(dev, mask);
+> +}
 
+This doesn't look arm64 specific to me, and there is already a generic
+pcibios_enable_device() function in drivers/pci/pci.c. Would it
+be possible to move the check for PCI_PROBE_ONLY there without breaking
+other architectures?
 
-On 2014/9/9 20:20, Thomas Gleixner wrote:
-> On Thu, 28 Aug 2014, Jiang Liu wrote:
->>  EXPORT_SYMBOL(acpi_register_ioapic);
->> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
->> index 6e67af0c5f99..b286461cabf9 100644
->> --- a/arch/x86/kernel/apic/io_apic.c
->> +++ b/arch/x86/kernel/apic/io_apic.c
->> @@ -3851,7 +3851,13 @@ static int bad_ioapic_register(int idx)
->>  
->>  static int find_free_ioapic_entry(void)
->>  {
->> -	return nr_ioapics;
->> +	int idx;
->> +
->> +	for (idx = 0; idx < MAX_IO_APICS; idx++)
->> +		if (ioapics[idx].nr_registers == 0)
->> +			return idx;
->> +
->> +	return MAX_IO_APICS;
->>  }
->>  
->>  int mp_register_ioapic(int id, u32 address, u32 gsi_base,
->> @@ -3867,8 +3873,15 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
->>  	}
->>  	for_each_ioapic(ioapic)
->>  		if (ioapics[ioapic].mp_config.apicaddr == address) {
->> -			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
->> -				address, ioapic);
->> +			/*
->> +			 * IOAPIC unit may also be visible in PCI scope.
->> +			 * When ioapic PCI driver's probe() is called,
->> +			 * the IOAPIC unit may have already been initialized
->> +			 * at boot time.
->> +			 */
->> +			if (!ioapic_initialized)
->> +				pr_warn("address 0x%x conflicts with IOAPIC%d\n",
->> +					address, ioapic);
-> 
-> Hmm. This smells fishy. Why do we allow multiple initializations of
-> the same IOAPIC in the first place. Either it's done via ACPI or via
-> PCI, but not both.
-The ACPI subsystem will register and initialize all IOAPICs when walking
-ACPI MADT table during boot, before initializing PCI subsystem.
-Later when binding ioapic PCI driver to IOAPIC PCI device, it will try
-to register the IOAPIC device again.
+If that works, please do so.
 
-After this patchset is applied, we could remove the !ioapic_initialized
-check. We check acpi_ioapic_register() before calling
-acpi_register_ioapic(). So the check becomes redundant.
-Or we could remove the temporary code from this patch.
-
-> 
->>  			return -EEXIST;
->>  		}
->>  
->> @@ -3918,6 +3931,14 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
->>  	ioapics[idx].irqdomain = NULL;
->>  	ioapics[idx].irqdomain_cfg = *cfg;
->>  
->> +	if (ioapic_initialized) {
-> 
-> I have a hard time to understand this conditional. Why can't we do
-> that unconditionally?
-How about following comments?
-/*
- * If mp_register_ioapic() is called during early boot stage when
- * walking ACPI/SFI/DT tables, it's too early to create irqdomain,
- * we are still using bootmem allocator. So delay it to setup_IO_APIC().
- */
-Regards!
-Gerry
-> 
->> +		if (mp_irqdomain_create(idx)) {
->> +			clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
->> +			return -ENOMEM;
->> +		}
->> +		alloc_ioapic_saved_registers(idx);
->> +	}
->> +
->>  	if (gsi_cfg->gsi_end >= gsi_top)
->>  		gsi_top = gsi_cfg->gsi_end + 1;
->>  	if (nr_ioapics <= idx)
-> 
-> Thanks,
-> 
-> 	tglx
-> 
+	Arnd
