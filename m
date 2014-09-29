@@ -1,69 +1,218 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:63279 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753225AbaIVLkq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 07:40:46 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Mon, 29 Sep 2014 10:26:00 +0100
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
+	Bharat.Bhushan@freescale.com, x86@kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
 	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: RE: [PATCH 0/3] Add PCI domain support to R-Car drivers
-Date: Mon, 22 Sep 2014 11:40:42 +0000
-Message-ID: <a9539cb545eb4ce6b6636a28ff498f90@HKXPR06MB168.apcprd06.prod.outlook.com>
-References: <1411379470-20639-1-git-send-email-phil.edworthy@renesas.com>
- <20140922112849.GL1994@e106497-lin.cambridge.arm.com>
-In-Reply-To: <20140922112849.GL1994@e106497-lin.cambridge.arm.com>
-Content-Type: text/plain; charset="utf-8"
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
+ in all platforms
+Message-ID: <20140929092600.GA15854@bart.dudau.co.uk>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+ <20140925074235.GN12423@ulmo>
+ <20140925144855.GB31157@bart.dudau.co.uk>
+ <20140925164937.GB30382@ulmo>
+ <5424E09F.50701@huawei.com>
+ <20140926085030.GE31157@bart.dudau.co.uk>
+ <54276F6C.5010705@huawei.com>
+ <20140928112144.GA4671@bart.dudau.co.uk>
+ <5428B971.50101@huawei.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5428B971.50101@huawei.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgTGl2aXUsDQoNCk9uIDIyIFNlcHRlbWJlciAyMDE0IDEyOjI5LCBMaXZpdSB3cm90ZToNCj4g
-T24gTW9uLCBTZXAgMjIsIDIwMTQgYXQgMTA6NTE6MDdBTSArMDEwMCwgUGhpbCBFZHdvcnRoeSB3
-cm90ZToNCj4gPiBUaGUgUmVuZXNhcyBSLUNhciBkZXZpY2VzIChyOGE3NzkwIGFuZCByOGE3Nzkx
-KSB1c2UgdHdvIFBDSSBjb250cm9sbGVyDQo+IGRyaXZlcnMsDQo+ID4gb25lIGZvciBhbiBleHRl
-cm5hbCBQQ0llIHNsb3QsIHRoZSBvdGhlciBmb3IgYW4gaW50ZXJuYWwgUENJIGJyaWRnZSB0byBV
-U0INCj4gPiBjb250cm9sbGVycy4NCj4gPg0KPiA+IEhvd2V2ZXIsIHRoZXkgY3VycmVudGx5IGRv
-IG5vdCB3b3JrIGF0IHRoZSBzYW1lIHRpbWUgYXMgdGhleSB1c2UgdGhlDQo+IHNhbWUgUENJDQo+
-ID4gZG9tYWluIGFuZCB1c2UgdGhlIHNhbWUgcm9vdCBidXMgbnVtYmVyLiBXZSBjYW4ndCB1c2Ug
-ZGlmZmVyZW50IHJvb3QNCj4gYnVzIG51bWJlcnMNCj4gPiBkdWUgdG8gdGhlIHdheSByb290IGJ1
-cyBudW1iZXJzIGFyZSBhc3NpZ25lZCBpbiBwY2liaW9zX2luaXRfaHcoKSBpbg0KPiA+IGFyY2gv
-YXJtL2tlcm5lbC9iaW9zMzIuYy4NCj4gPg0KPiA+IFNpbmNlIHRoZSB0d28gUENJIGNvbnRyb2xs
-ZXJzIGFyZSBjb21wbGV0ZWx5IGluZGVwZW5kZW50LCBJIHRoaW5rIGl0IG1ha2VzDQo+IHNlbnNl
-DQo+ID4gdG8gdXNlIGRpZmZlcmVudCBQQ0kgZG9tYWlucyBmb3IgdGhlbS4NCj4gPg0KPiA+IEkn
-dmUgbWFya2VkIHRoZSB0aGlyZCBwYXRjaCBhcyBSRkMgYXMgSSBhbSBub3Qgc3VyZSBvZiB0aGUg
-aW1wYWN0IG9mDQo+IGVuYWJsaW5nDQo+ID4gUENJIGRvbWFpbnMgZm9yIGFsbCBBUk0gZGV2aWNl
-cy4gSW4gdGhlIG1hcmNoIHRvICdvbmUga2VybmVsIHRvIHJ1bGUgdGhlbQ0KPiBhbGwnLA0KPiA+
-IEkgc3RlZXJlZCBjbGVhciBvZiBtYWNoIHNwZWNpZmljIGNoYW5nZXMuDQo+ID4NCj4gPiBUaGVz
-ZSBwYXRjaGVzIHJlcXVpcmUgdGhlIGZvbGxvd2luZyBwYXRjaCBmcm9tIExpdml1IER1ZGF1Og0K
-PiA+ICAgW1BBVENIIHYxMSAwNy8xMF0gT0Y6IEludHJvZHVjZSBoZWxwZXIgZnVuY3Rpb24gZm9y
-IGdldHRpbmcgUENJDQo+IGRvbWFpbl9ucg0KPiA+IEJhc2VkIG9uIGNvbW1lbnRzIG9uIHRoaXMg
-cGF0Y2ggZnJvbSBKYXNvbiBHdW50aG9ycGUsIHRoZXJlIGlzIHN0aWxsIHRoZQ0KPiBpc3N1ZQ0K
-PiA+IHRoYXQgdGhlIGRvbWFpbiBudW1iZXJzIG1heSBjaGFuZ2UgZGVwZW5kaW5nIG9uIHRoZSBv
-cmRlcmluZyBhdCBwcm9iZQ0KPiB0aW1lLg0KPiA+IEhvd2V2ZXIsIHRoaXMgY2FuIGJlIGZpeGVk
-IGxhdGVyIG9uIGJ5IGFkZGluZyB0aGUgZW50cmllcyBpbiB0aGUgRFQgZmlsZXMuDQo+IA0KPiBI
-aSBQaGlsLA0KPiANCj4gSSdtIGhhcHB5IHRoYXQgeW91IGZvdW5kIHVzZSBmb3IgbXkgcGF0Y2gs
-IGJ1dCBJIGNhbid0IGhlbHAgd29uZGVyaW5nIGlmIGl0IGlzDQo+IG5vdCBhIGJldHRlciBpZGVh
-IHRvIGNvbnZlcnQgeW91ciBkcml2ZXJzIHRvIHRoZSB3aG9sZSBuZXcgQVBJIGluIG15IHNlcmll
-cy4NCj4gRG8geW91IGhhdmUgYW55IHRob3VnaHRzIG9uIHRoYXQ/DQpUaGUgbWFpbiByZWFzb24g
-YmVpbmcgdGhhdCBSZW5lc2FzIGFsc28gc3VwcG9ydHMgdGhlIExUU0kgdHJlZXMsIHNvIHRoaXMg
-Zml4DQp3aWxsIGFsc28gbmVlZCBiYWNrcG9ydGluZyB0byB2My4xMC4gDQoNCj4gT25lIG90aGVy
-IHRoaW5nIHRvIG5vdGU6IFJvYiBIZXJyaW5nIGlzIG5vdCB2ZXJ5IGhhcHB5IHdpdGggdGhlIG1p
-eCBvZiBPRg0KPiBwYXJzaW5nIGFuZCBkb21haW4gbnVtYmVyIGFsbG9jYXRpb24gZ29pbmcgaW4g
-dG9nZXRoZXIsIHNvIEkgbWlnaHQgcmVtb3ZlDQo+IHRoZQ0KPiBPRiBwYXJzaW5nIGVudGlyZWx5
-IGZvciBub3cuIFdvdWxkIHRoYXQgY2F1c2UgeW91IGFueSBwcm9ibGVtcyAob3RoZXIgdGhhbg0K
-PiB0aGUgZmFjdCB0aGF0IGlmIG9mX3BjaV9nZXRfZG9tYWluX25yKCkgZG9lc24ndCBkbyBhbnl0
-aGluZyBPRiByZWxhdGVkIEkNCj4gbWlnaHQNCj4gcmVuYW1lIGl0IHRvIHBjaV9nZXRfZG9tYWlu
-X25yKCkpLiBZb3UgZG9uJ3Qgc2VlbSB0byBoYXZlIGFueSBhbGlhcyBkZWZpbmVkDQo+IGZvciBw
-Y2ktZG9tYWluIGluIHRoZSBEVCwgc28gSSdsbCBndWVzcyBub3QuDQpJbiB0aGUgY292ZXJpbmcg
-bGV0dGVyIEkgbWVudGlvbmVkIHRoYXQgY29udHJvbGxlcnMgc2hvdWxkIGFsd2F5cyB1c2UgdGhl
-IHNhbWUNCmRvbWFpbiBudW1iZXIsIHNvIEkgd2FzIHBsYW5uaW5nIHRvIGFkZCBwY2ktZG9tYWlu
-IGludG8gdGhlIERUcyBsYXRlciBvbi4NCg0KVGhhbmtzDQpQaGlsDQo=
+On Mon, Sep 29, 2014 at 09:44:17AM +0800, Yijing Wang wrote:
+> On 2014/9/28 19:21, Liviu Dudau wrote:
+> > On Sun, Sep 28, 2014 at 10:16:12AM +0800, Yijing Wang wrote:
+> >>>>>> What I would like to see is a way of creating the pci_host_bridge structure outside
+> >>>>>> the pci_create_root_bus(). That would then allow us to pass this sort of platform
+> >>>>>> details like associated msi_chip into the host bridge and the child busses will
+> >>>>>> have an easy way of finding the information needed by finding the root bus and then
+> >>>>>> the host bridge structure. Then the generic pci_scan_root_bus() can be used by (mostly)
+> >>>>>> everyone and the drivers can remove their kludges that try to work around the
+> >>>>>> current limitations.
+> >>>>
+> >>>> So I think maybe save msi chip in PCI arch sysdata is a good candidate.
+> >>>
+> >>> Except that arch sysdata at the moment is an opaque pointer. I am all in favour in
+> >>> changing the type of sysdata from void* into pci_host_bridge* and arches can wrap their old
+> >>> sysdata around the pci_host_bridge*.
+> >>
+> >> I inspected every arch and found there are almost no common stuff,
+> > 
+> > I will disagree here. Most (all?) of the structures that are passed as sysdata argument to
+> 
+> Most.
+> 
+> > pci_create_root_bus() or pci_scan_root_bus() have a set of resources for storing the MEM and
+> > IO ranges, which struct pci_host_bridge already has. So that can be factored out of the
+> > arch code. Same for pci_domain_nr. Then there are some variables that are used for communication
+> > with the platform code due to convoluted way(s) in which PCI code gets instantiated.
+> 
+> Yes, currently some archs store MEM and IO resource in pci sysdata, and others not, move the MEM and IO
+> resource to pci_host_bride could make code become simple, we can clean up the resource list argument in
+> pci scan functions.
+> 
+> > 
+> > What I am arguing here is not that the arch equivalent of pci_host_bridge structure is already
+> > common, but that by moving the members that are common out of arch sysdata into pci_host_bridge
+> > we will have more commonality and it will be easier to re-factor the code.
+> 
+> Now, I got it, thanks!
+> 
+> > 
+> >> and generic data struct should
+> >> be created in generic PCI code.
+> > 
+> > Not necessarily. What I have in mind is something like this:
+> 
+> This is a good idea, what I'm worried is this series is already large, so I think we need to post
+> another series to do it.
+
+I wasn't asking to do it here, I was just offering a suggestion (and sharing some experience) when
+it comes to handling msi chip in an arch independent way.
+
+> 
+> 
+> > 
+> >  - drivers/pci/ exports pci_init_host_bridge() that does the initialisation of bridge->windows
+> >    and anything else that is needed (like find_pci_host_bridge() function).
+> >  - arch code does:
+> > 
+> > 	struct pci_controller {
+> > 		struct pci_host_bridge bridge;
+> > 		.....
+> > 	};
+> > 
+> > 	#define to_pci_controller(bridge)	container_of(bridge, struct pci_controller, bridge)
+> > 
+> > 	static inline struct pci_controller *get_host_controller(const struct pci_bus *bus)
+> > 	{
+> > 		struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+> > 		if (bridge)
+> > 			return to_pci_controller(bridge);
+> > 
+> > 		return NULL;
+> > 	}
+> > 
+> > 	int arch_pci_init(....)
+> > 	{
+> > 		struct pci_controller *hose;
+> > 		....
+> > 		hose = kzalloc(sizeof(*hose), GFP_KERNEL);
+> > 		pci_init_host_bridge(&hose->bridge);
+> > 		....
+> > 		pci_scan_root_bus(...., &hose->bridge, &resources);
+> > 		....
+> > 		return 0;
+> > 	}
+> > 
+> > Then finding the right structure will be easy.
+> > 
+> >> Another, I don't like associate msi chip and every PCI device, further more,
+> >> almost all platforms except arm have only one MSI controller, and currently, PCI enumerating code doesn't need
+> >> to know the MSI chip details, like for legacy IRQ, PCI device doesn't need to know which IRQ controller they
+> >> should deliver IRQ to. I would think more about it, and hope other PCI guys can give some comments, especially from Bjorn.
+> >>
+> > 
+> > I wasn't suggesing to associate an msi chip with every PCI device, but with the pci_host_bridge.
+> > I don't expect a host bridge to have more than one msi chip, so that should be OK. Also, I'm
+> > thinking that getting the associated msi chip should be some sort of pci_host_bridge ops function,
+> > and for arches that don't care about MSI it doesn't get implemented.
+> 
+> Currently, a property "msi-parent" was introduced in arm, and all msi chip integrated in irq chip controller will
+> be added to of_pci_msi_chip_list. PCI host driver find the match msi chip by its of_node.
+
+OK. But as you might have seen that still implies open coding a separate version of pci_scan_root_bus().
+
+Best regards,
+Liviu
+
+> 
+> Thanks!
+> Yijing.
+> 
+> > 
+> > Best regards,
+> > Liviu
+> > 
+> >  
+> >> Thanks!
+> >> Yijing.
+> >>
+> >>>
+> >>> Best regards,
+> >>> Liviu
+> >>>
+> >>>>
+> >>>>>
+> >>>>> I think both issues are orthogonal. Last time I checked a lot of work
+> >>>>> was still necessary to unify host bridges enough so that it could be
+> >>>>> shared across architectures. But perhaps some of that work has
+> >>>>> happened in the meantime.
+> >>>>>
+> >>>>> But like I said, when you create the root bus, you can easily attach the
+> >>>>> MSI chip to it.
+> >>>>>
+> >>>>> Thierry
+> >>>>>
+> >>>>
+> >>>>
+> >>>> -- 
+> >>>> Thanks!
+> >>>> Yijing
+> >>>>
+> >>>>
+> >>>
+> >>
+> >>
+> >> -- 
+> >> Thanks!
+> >> Yijing
+> >>
+> >>
+> > 
+> 
+> 
+> -- 
+> Thanks!
+> Yijing
+> 
+> 
+
+-- 
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
+
+ One small step
+   for me ...
+
