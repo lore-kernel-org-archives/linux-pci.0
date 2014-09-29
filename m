@@ -1,47 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:50310 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753172AbaIKINF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Sep 2014 04:13:05 -0400
-Message-ID: <54115995.5020107@canonical.com>
-Date: Thu, 11 Sep 2014 10:13:09 +0200
-From: David Henningsson <david.henningsson@canonical.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH] Add pci=assign-busses quirk to Dell Latitude D505
-References: <1409303414-5196-1-git-send-email-david.henningsson@canonical.com> <CAErSpo5v82xeYGqsiWXpfQdr8kF9x+1K4gjYremfCh3fNQ8Unw@mail.gmail.com> <540091D1.1040902@canonical.com> <CAErSpo6D+8KwM9LJC4VFCtGbQ65zh_2ZjNOuP-JQB1bmt5dwCw@mail.gmail.com> <CAErSpo6DDCkrew8rwkNX8=gzc19vErY5iafPBN4oKw_Ww792=g@mail.gmail.com>
-In-Reply-To: <CAErSpo6DDCkrew8rwkNX8=gzc19vErY5iafPBN4oKw_Ww792=g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:46471 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753762AbaI2KNY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 06:13:24 -0400
+Message-ID: <1411985600.2625.11.camel@pengutronix.de>
+Subject: Re: [PATCH v3 3/9] PCI: imx6: update dts and binding for imx6sx pcie
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Richard Zhu <r65037@freescale.com>
+Cc: linux-pci-owner@vger.kernel.org, linux-pci@vger.kernel.org,
+	shawn.guo@freescale.com, festevam@gmail.com, tharvey@gateworks.com
+Date: Mon, 29 Sep 2014 12:13:20 +0200
+In-Reply-To: <1411966997-27118-4-git-send-email-r65037@freescale.com>
+References: <1411966997-27118-1-git-send-email-r65037@freescale.com>
+	 <1411966997-27118-4-git-send-email-r65037@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Am Montag, den 29.09.2014, 13:03 +0800 schrieb Richard Zhu:
+> - imx6sx pcie phy has its own power regulator. Add the
+> pcie phy power suppy into im6sx pcie dts and binding.
+> - in order to align with imx6qdl's pcie dts, re-format
+> imx6sx pcie dts.
+> - in order to align with imx6qdl pcie dts format and
+> keep clean of imx6 pcie driver, keep the pcie phy clock
+> in imx6sx pcie dts, although it's the parent clk of the
+> pcie bus clock now, and would be enabled automatically
+> when pcie bus clock is enabled. secondly, it's
+> possible that the external osc maybe used as source
+> of the pcie_bus clk in board design in future.
+> - disp_axi clock is required by pcie inbound axi port.
+> Add one more clock for imx6sx pcie.
+> 
+> Signed-off-by: Richard Zhu <r65037@freescale.com>
+> ---
+>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  5 +++-
+>  arch/arm/boot/dts/imx6sx.dtsi                      | 30 ++++++++++++----------
+>  2 files changed, 21 insertions(+), 14 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> index 9455fd0..981e41d 100644
+> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> @@ -4,7 +4,7 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
+>  and thus inherits all the common properties defined in designware-pcie.txt.
+>  
+>  Required properties:
+> -- compatible: "fsl,imx6q-pcie"
+> +- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie"
+>  - reg: base addresse and length of the pcie controller
+>  - interrupts: A list of interrupt outputs of the controller. Must contain an
+>    entry for each entry in the interrupt-names property.
+> @@ -13,6 +13,9 @@ Required properties:
+>  - clock-names: Must include the following additional entries:
+>  	- "pcie_phy"
+>  
+> +Power supplies for imx6sx:
+> +- pcie_phy-supply: regulator used by imx6sx pcie phy.
+> +
+To align with the previous practice of naming regulator supplies please
+don't use underscores in the name. Also you aren't documenting the
+additional clock (which also needs a descriptive name, NOT "disp_axi").
+I would recommend the documentation change to look like this:
 
+Additional required properties for imx6sx-pcie:
+- clock names: Must include the following additional entries:
+	- "pcie_inbound_axi"
+- power supplies:
+	- pcie-phy-supply: regulator used to power the PCIe PHY
 
-On 2014-09-10 20:08, Bjorn Helgaas wrote:
-> [+cc Andreas]
-> v3.16 fails with:
->
->    pci 0000:01:01.0: can't allocate child bus 01 from [bus 01]
->
-> which Andreas added with fc1b253141b3 ("PCI: Don't scan random busses
-> in pci_scan_bridge()").  But I don't understand that code well enough
-> to know whether this commit is actually the cause of the problem.
->
-> And I also haven't figured out how "pci=assign-busses" makes a difference.
->
-> David, would you mind turning on CONFIG_DYNAMIC_DEBUG=y in your v3.16
-> kernel, adding  'dyndbg="file probe.c +p"' to your boot arguments, and
-> collecting another dmesg log?
+Please update the DTS and driver accordingly.
 
-Thanks for looking at this (and sorry for not having done a bisect yet).
+>  Example:
+>  
+>  	pcie@0x01000000 {
+> diff --git a/arch/arm/boot/dts/imx6sx.dtsi b/arch/arm/boot/dts/imx6sx.dtsi
+> index f4b9da6..b4ca94b 100644
+> --- a/arch/arm/boot/dts/imx6sx.dtsi
+> +++ b/arch/arm/boot/dts/imx6sx.dtsi
+> @@ -599,9 +599,9 @@
+>  					anatop-max-voltage = <1450000>;
+>  				};
+>  
+> -				reg_pcie: regulator-vddpcie@140 {
+> +				reg_pcie_phy: regulator-vddpcie_phy@140 {
+>  					compatible = "fsl,anatop-regulator";
+> -					regulator-name = "vddpcie";
+> +					regulator-name = "vddpcie_phy";
+>  					regulator-min-microvolt = <725000>;
+>  					regulator-max-microvolt = <1450000>;
+>  					anatop-reg-offset = <0x140>;
+> @@ -1188,20 +1188,24 @@
+>  			#address-cells = <3>;
+>  			#size-cells = <2>;
+>  			device_type = "pci";
+> -				  /* configuration space */
+> -			ranges = <0x00000800 0 0x08f00000 0x08f00000 0 0x00080000
+> -				  /* downstream I/O */
+> -				  0x81000000 0 0          0x08f80000 0 0x00010000
+> -				  /* non-prefetchable memory */
+> -				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>;
+> +			ranges = <0x00000800 0 0x08f00000 0x08f00000 0 0x00080000 /* configuration space */
+> +				  0x81000000 0 0          0x08f80000 0 0x00010000 /* downstream I/O */
+> +				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>; /* non-prefetchable memory */
+>  			num-lanes = <1>;
+> -			interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>;
+> -			clocks = <&clks IMX6SX_CLK_PCIE_REF_125M>,
+> -				 <&clks IMX6SX_CLK_PCIE_AXI>,
+> +			interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
+> +			interrupt-names = "msi";
+> +			#interrupt-cells = <1>;
+> +			interrupt-map-mask = <0 0 0 0x7>;
+> +			interrupt-map = <0 0 0 1 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
+> +			                <0 0 0 2 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
+> +			                <0 0 0 3 &intc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
+> +			                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
+> +			clocks = <&clks IMX6SX_CLK_PCIE_AXI>,
+>  				 <&clks IMX6SX_CLK_LVDS1_OUT>,
+> +				 <&clks IMX6SX_CLK_PCIE_REF_125M>,
+>  				 <&clks IMX6SX_CLK_DISPLAY_AXI>;
+> -			clock-names = "pcie_ref_125m", "pcie_axi",
+> -				      "lvds_gate", "display_axi";
+> +			clock-names = "pcie", "pcie_bus", "pcie_phy", "disp_axi";
+> +			pcie_phy-supply = <&reg_pcie_phy>;
+>  			status = "disabled";
+>  		};
+>  	};
 
-Anyhow, a new dmesg log has now been posted at kernel bugzilla #83441. 
-It has a few more lines starting with "pci_bus" but nothing that really 
-stands out AFAICT.
+You are still missing the "config" reg space. Please look at the
+designware-pcie.txt base binding, it's a required property now. Also
+please be more careful to address my review comments.
 
-
+Regards,
+Lucas
 -- 
-David Henningsson, Canonical Ltd.
-https://launchpad.net/~diwic
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
+
