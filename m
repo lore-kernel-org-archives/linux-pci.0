@@ -1,69 +1,166 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
 	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC Part1 v1 14/18] x86, irq: Make MSI and HT_IRQ indepenent of X86_IO_APIC
-Date: Thu, 11 Sep 2014 16:25:01 +0800
-Message-Id: <1410423905-26239-15-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1410423905-26239-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH v13 08/12] of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()
+Date: Mon, 29 Sep 2014 15:29:27 +0100
+Message-Id: <1412000971-9242-9-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have splitted functions to support MSI and HT_IRQ into vector.c,
-and they have no dependency on IOAPIC any more. So change Kconfig files
-to make MSI and HT_IRQ independent of X86_IO_APIC.
+Add pci_get_new_domain_nr() to allocate a new domain number and
+of_get_pci_domain_nr() to retrieve the PCI domain number of a given device
+from DT.  Host bridge drivers or architecture-specific code can choose to
+implement their PCI domain number policy using these two functions.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Using of_get_pci_domain_nr() guarantees a stable PCI domain number on every
+boot provided that all host bridge controllers are assigned a number in the
+device tree using "linux,pci-domain" property.  Mixing use of
+pci_get_new_domain_nr() and of_get_pci_domain_nr() is not recommended as it
+can lead to potentially conflicting domain numbers being assigned to root
+buses behind different host bridges.
+
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Grant Likely <grant.likely@linaro.org>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Catalin Marinas <catalin.marinas@arm.com>
 ---
- arch/x86/Kconfig    |    4 ++--
- drivers/pci/Kconfig |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/of/of_pci.c    | 25 +++++++++++++++++++++++++
+ drivers/pci/pci.c      |  9 +++++++++
+ include/linux/of_pci.h |  7 +++++++
+ include/linux/pci.h    |  3 +++
+ 4 files changed, 44 insertions(+)
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index e0fc1e721ae2..7d0ca80d628f 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -839,8 +839,8 @@ config X86_LOCAL_APIC
- 	select GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 8481996..82d172f 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -89,6 +89,31 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
+ }
+ EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
  
- config X86_IO_APIC
--	def_bool y
--	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_IOAPIC || PCI_MSI
-+	def_bool X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_IOAPIC
-+	depends on X86_LOCAL_APIC
- 	select IRQ_DOMAIN
++/**
++ * This function will try to obtain the host bridge domain number by
++ * finding a property called "linux,pci-domain" of the given device node.
++ *
++ * @node: device tree node with the domain information
++ *
++ * Returns the associated domain number from DT in the range [0-0xffff], or
++ * a negative value if the required property is not found.
++ */
++int of_get_pci_domain_nr(struct device_node *node)
++{
++	const __be32 *value;
++	int len;
++	u16 domain;
++
++	value = of_get_property(node, "linux,pci-domain", &len);
++	if (!value || len < sizeof(*value))
++		return -EINVAL;
++
++	domain = (u16)be32_to_cpup(value);
++
++	return domain;
++}
++EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
++
+ #ifdef CONFIG_PCI_MSI
  
- config X86_REROUTE_FOR_BROKEN_BOOT_IRQS
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 39866d18004e..b9db0f2ce11f 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -61,7 +61,7 @@ config XEN_PCIDEV_FRONTEND
- config HT_IRQ
- 	bool "Interrupts on hypertransport devices"
- 	default y
--	depends on PCI && X86_LOCAL_APIC && X86_IO_APIC
-+	depends on PCI && X86_LOCAL_APIC
- 	help
- 	   This allows native hypertransport devices to use interrupts.
+ static LIST_HEAD(of_pci_msi_chip_list);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 2c9ac70..d36f35f 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4406,6 +4406,15 @@ static void pci_no_domains(void)
+ #endif
+ }
  
++#ifdef CONFIG_PCI_DOMAINS
++static atomic_t __domain_nr = ATOMIC_INIT(-1);
++
++int pci_get_new_domain_nr(void)
++{
++	return atomic_inc_return(&__domain_nr);
++}
++#endif
++
+ /**
+  * pci_ext_cfg_avail - can we access extended PCI config space?
+  *
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index dde3a4a..71062e9 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -15,6 +15,7 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ int of_pci_get_devfn(struct device_node *np);
+ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+ int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
++int of_get_pci_domain_nr(struct device_node *node);
+ #else
+ static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
+ {
+@@ -43,6 +44,12 @@ of_pci_parse_bus_range(struct device_node *node, struct resource *res)
+ {
+ 	return -EINVAL;
+ }
++
++static inline int
++of_get_pci_domain_nr(struct device_node *node)
++{
++	return -1;
++}
+ #endif
+ 
+ #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a494e5d..150da2d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1285,10 +1285,12 @@ void pci_cfg_access_unlock(struct pci_dev *dev);
+  */
+ #ifdef CONFIG_PCI_DOMAINS
+ extern int pci_domains_supported;
++int pci_get_new_domain_nr(void);
+ #else
+ enum { pci_domains_supported = 0 };
+ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+ static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
++static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ #endif /* CONFIG_PCI_DOMAINS */
+ 
+ /*
+@@ -1417,6 +1419,7 @@ static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
+ 
+ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+ static inline struct pci_dev *pci_dev_get(struct pci_dev *dev) { return NULL; }
++static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ 
+ #define dev_is_pci(d) (false)
+ #define dev_is_pf(d) (false)
 -- 
-1.7.10.4
+2.1.1
 
