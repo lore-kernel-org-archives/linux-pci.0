@@ -1,184 +1,236 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v6 09/15] x86, irq: Keep balance of IOAPIC pin reference count
-Date: Wed, 24 Sep 2014 16:59:30 +0800
-Message-Id: <1411549176-30780-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411549176-30780-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:27722 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751913AbaI2OCq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 10:02:46 -0400
+Date: Mon, 29 Sep 2014 10:02:29 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Chen Gang <gang.chen.5i5j@gmail.com>
+Cc: David Vrabel <david.vrabel@citrix.com>, ian.campbell@citrix.com,
+	wei.liu2@citrix.com, boris.ostrovsky@oracle.com,
+	bhelgaas@google.com, jgross@suse.com,
+	yongjun_wei@trendmicro.com.cn, mukesh.rathor@oracle.com,
+	xen-devel@lists.xenproject.org,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] xen/xenbus: Use 'void' instead of 'int' for the return
+ of xenbus_switch_state()
+Message-ID: <20140929140229.GA28279@laptop.dumpdata.com>
+References: <5425961A.5000604@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5425961A.5000604@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To keep balance of IOAPIC pin reference count, we need to protect
-pirq_enable_irq(), acpi_pci_irq_enable() and intel_mid_pci_irq_enable()
-from reentrance. There are two cases which will cause reentrance.
+On Sat, Sep 27, 2014 at 12:36:42AM +0800, Chen Gang wrote:
+> When xenbus_switch_state() fails, it will call xenbus_switch_fatal()
 
-The first case is caused by suspend/hibernation. If pcibios_disable_irq
-is called during suspending/hibernating, we don't release the assigned
-IRQ number, otherwise it may break the suspend/hibernation. So late when
-pcibios_enable_irq is called during resume, we shouldn't allocate IRQ
-number again.
+Only on the first depth, not on the subsequent ones (as in if
+the first xenbus_switch_fail fails, it won't try to call
+xenbus_switch_state again and again).
 
-The second case is that function acpi_pci_irq_enable() may be called
-twice for PCI devices present at boot time as below:
-1) pci_acpi_init()
-	--> acpi_pci_irq_enable() if pci_routeirq is true
-2) pci_enable_device()
-	--> pcibios_enable_device()
-		--> acpi_pci_irq_enable()
-We can't kill kernel parameter pci_routeirq yet because it's still
-needed for debugging purpose.
+> internally, so need not return any status value, then use 'void' instead
+> of 'int' for xenbus_switch_state() and __xenbus_switch_state().
 
-So flag irq_managed is introduced to track whether IRQ number is
-assigned by OS and to protect pirq_enable_irq(), acpi_pci_irq_enable()
-and intel_mid_pci_irq_enable() from reentrance.
+When that switch occurs (to XenbusStateConnected) won't the watches
+fire - meaning we MUST make sure that the watch functions - if they
+use the xenbus_switch_state() they MUST not hold any locks - because
+they could be executed once more?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/pci/intel_mid_pci.c |   10 +++++++++-
- arch/x86/pci/irq.c           |    7 ++++++-
- drivers/acpi/pci_irq.c       |   11 +++++++++--
- include/linux/pci.h          |    1 +
- 4 files changed, 25 insertions(+), 4 deletions(-)
+Oh wait, we don't have to worry about that right now as the callbacks
+that pick up the messages from the XenBus are all gated on one mutex
+anyhow.
 
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index b9958c364075..44b9271580b5 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -210,6 +210,9 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- {
- 	int polarity;
- 
-+	if (dev->irq_managed && dev->irq > 0)
-+		return 0;
-+
- 	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
- 		polarity = 0; /* active high */
- 	else
-@@ -224,13 +227,18 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 	if (mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC) < 0)
- 		return -EBUSY;
- 
-+	dev->irq_managed = 1;
-+
- 	return 0;
- }
- 
- static void intel_mid_pci_irq_disable(struct pci_dev *dev)
- {
--	if (!mp_should_keep_irq(&dev->dev) && dev->irq > 0)
-+	if (!mp_should_keep_irq(&dev->dev) && dev->irq_managed &&
-+	    dev->irq > 0) {
- 		mp_unmap_irq(dev->irq);
-+		dev->irq_managed = 0;
-+	}
- }
- 
- struct pci_ops intel_mid_pci_ops = {
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index eb500c2592ad..a47e2dea0972 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1202,6 +1202,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 			int irq;
- 			struct io_apic_irq_attr irq_attr;
- 
-+			if (dev->irq_managed && dev->irq > 0)
-+				return 0;
-+
- 			irq = IO_APIC_get_PCI_irq_vector(dev->bus->number,
- 						PCI_SLOT(dev->devfn),
- 						pin - 1, &irq_attr);
-@@ -1228,6 +1231,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 			}
- 			dev = temp_dev;
- 			if (irq >= 0) {
-+				dev->irq_managed = 1;
- 				dev->irq = irq;
- 				dev_info(&dev->dev, "PCI->APIC IRQ transform: "
- 					 "INT %c -> IRQ %d\n", 'A' + pin - 1, irq);
-@@ -1257,8 +1261,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
- static void pirq_disable_irq(struct pci_dev *dev)
- {
- 	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
--	    dev->irq) {
-+	    dev->irq_managed && dev->irq) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq = 0;
-+		dev->irq_managed = 0;
- 	}
- }
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index 6e6b80eb0bba..5f1fdca65e5f 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -413,6 +413,9 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 		return 0;
- 	}
- 
-+	if (dev->irq_managed && dev->irq > 0)
-+		return 0;
-+
- 	entry = acpi_pci_irq_lookup(dev, pin);
- 	if (!entry) {
- 		/*
-@@ -456,6 +459,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 		return rc;
- 	}
- 	dev->irq = rc;
-+	dev->irq_managed = 1;
- 
- 	if (link)
- 		snprintf(link_desc, sizeof(link_desc), " -> Link[%s]", link);
-@@ -478,7 +482,7 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	u8 pin;
- 
- 	pin = dev->pin;
--	if (!pin)
-+	if (!pin || !dev->irq_managed || dev->irq <= 0)
- 		return;
- 
- 	/* Keep IOAPIC pin configuration when suspending */
-@@ -506,6 +510,9 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	 */
- 
- 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
--	if (gsi >= 0 && dev->irq > 0)
-+	if (gsi >= 0) {
- 		acpi_unregister_gsi(gsi);
-+		dev->irq = 0;
-+		dev->irq_managed = 0;
-+	}
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 96453f9bc8ba..17838e07fd16 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -348,6 +348,7 @@ struct pci_dev {
- 	unsigned int	__aer_firmware_first:1;
- 	unsigned int	broken_intx_masking:1;
- 	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
-+	unsigned int	irq_managed:1;
- 	pci_dev_flags_t dev_flags;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
- 
--- 
-1.7.10.4
+Hm, anyhow, I would add this extra piece of information to the patch:
 
+
+diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
+index c214daa..f7399fd 100644
+--- a/drivers/xen/xen-pciback/xenbus.c
++++ b/drivers/xen/xen-pciback/xenbus.c
+@@ -661,6 +661,12 @@ static void xen_pcibk_be_watch(struct xenbus_watch *watch,
+ 
+ 	switch (xenbus_read_driver_state(pdev->xdev->nodename)) {
+ 	case XenbusStateInitWait:
++		/*
++		 * xenbus_switch_state can call xenbus_switch_fatal which will
++		 * immediately set the state to XenbusStateClosing which
++		 * means if we were reading for it here we MUST drop any
++		 * locks so that we don't dead-lock.
++		 */
+ 		xen_pcibk_setup_backend(pdev);
+ 		break;
+ 
+> 
+> Also need be sure that all callers which check the return value must let
+> 'err' be 0.
+
+I am bit uncomfortable with that, that is due to:
+
+
+.. snip..
+> diff --git a/drivers/net/xen-netback/xenbus.c b/drivers/net/xen-netback/xenbus.c
+> index 9c47b89..b5c3d47 100644
+> --- a/drivers/net/xen-netback/xenbus.c
+> +++ b/drivers/net/xen-netback/xenbus.c
+> @@ -337,10 +337,7 @@ static int netback_probe(struct xenbus_device *dev,
+>  	if (err)
+>  		pr_debug("Error writing multi-queue-max-queues\n");
+>  
+> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+> -	if (err)
+> -		goto fail;
+> -
+> +	xenbus_switch_state(dev, XenbusStateInitWait);
+
+Which if it fails it won't call:
+
+354 fail:                                                                           
+355         pr_debug("failed\n");                                                   
+356         netback_remove(dev);                                                    
+357         return err;         
+
+
+And since there is no watch on the backend state to go in Closing it won't
+ever call those and we leak memory.
+
+The same is for xen-blkback mechanism in the probe function.
+
+>  	be->state = XenbusStateInitWait;
+>  
+>  	/* This kicks hotplug scripts, so do it immediately. */
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index 53df39a..c1d73b7 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -901,18 +901,16 @@ static int pcifront_try_connect(struct pcifront_device *pdev)
+>  		}
+>  	}
+>  
+> -	err = xenbus_switch_state(pdev->xdev, XenbusStateConnected);
+> -
+> +	xenbus_switch_state(pdev->xdev, XenbusStateConnected);
+> +	return 0;
+>  out:
+>  	return err;
+>  }
+>  
+>  static int pcifront_try_disconnect(struct pcifront_device *pdev)
+>  {
+> -	int err = 0;
+>  	enum xenbus_state prev_state;
+>  
+> -
+>  	prev_state = xenbus_read_driver_state(pdev->xdev->nodename);
+>  
+>  	if (prev_state >= XenbusStateClosing)
+> @@ -923,11 +921,10 @@ static int pcifront_try_disconnect(struct pcifront_device *pdev)
+>  		pcifront_disconnect(pdev);
+>  	}
+>  
+> -	err = xenbus_switch_state(pdev->xdev, XenbusStateClosed);
+> +	xenbus_switch_state(pdev->xdev, XenbusStateClosed);
+>  
+>  out:
+> -
+> -	return err;
+> +	return 0;
+>  }
+>  
+>  static int pcifront_attach_devices(struct pcifront_device *pdev)
+> @@ -1060,8 +1057,8 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
+>  			domain, bus, slot, func);
+>  	}
+>  
+> -	err = xenbus_switch_state(pdev->xdev, XenbusStateReconfiguring);
+> -
+> +	xenbus_switch_state(pdev->xdev, XenbusStateReconfiguring);
+> +	return 0;
+>  out:
+>  	return err;
+>  }
+> diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
+> index c214daa..630a215 100644
+
+The xen-pcifront are OK, this one:
+
+> --- a/drivers/xen/xen-pciback/xenbus.c
+> +++ b/drivers/xen/xen-pciback/xenbus.c
+> @@ -184,10 +184,7 @@ static int xen_pcibk_attach(struct xen_pcibk_device *pdev)
+>  
+>  	dev_dbg(&pdev->xdev->dev, "Connecting...\n");
+>  
+> -	err = xenbus_switch_state(pdev->xdev, XenbusStateConnected);
+> -	if (err)
+> -		xenbus_dev_fatal(pdev->xdev, err,
+> -				 "Error switching to connected state!");
+> +	xenbus_switch_state(pdev->xdev, XenbusStateConnected);
+
+
+This one is OK
+>  
+>  	dev_dbg(&pdev->xdev->dev, "Connected? %d\n", err);
+>  out:
+> @@ -500,12 +497,7 @@ static int xen_pcibk_reconfigure(struct xen_pcibk_device *pdev)
+>  		}
+>  	}
+>  
+> -	err = xenbus_switch_state(pdev->xdev, XenbusStateReconfigured);
+> -	if (err) {
+> -		xenbus_dev_fatal(pdev->xdev, err,
+> -				 "Error switching to reconfigured state!");
+> -		goto out;
+> -	}
+> +	xenbus_switch_state(pdev->xdev, XenbusStateReconfigured);
+
+That is OKish, thought I am not too happy about us holding the lock.
+>  
+>  out:
+>  	mutex_unlock(&pdev->dev_lock);
+> @@ -640,10 +632,7 @@ static int xen_pcibk_setup_backend(struct xen_pcibk_device *pdev)
+>  		goto out;
+>  	}
+>  
+> -	err = xenbus_switch_state(pdev->xdev, XenbusStateInitialised);
+> -	if (err)
+> -		xenbus_dev_fatal(pdev->xdev, err,
+> -				 "Error switching to initialised state!");
+> +	xenbus_switch_state(pdev->xdev, XenbusStateInitialised);
+
+And this one needs that comment above about the mutex.
+>  
+>  out:
+>  	mutex_unlock(&pdev->dev_lock);
+> @@ -683,9 +672,7 @@ static int xen_pcibk_xenbus_probe(struct xenbus_device *dev,
+>  	}
+>  
+>  	/* wait for xend to configure us */
+> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+> -	if (err)
+> -		goto out;
+> +	xenbus_switch_state(dev, XenbusStateInitWait);
+
+That means the error that is returned on 'probe' is always zero. I don't
+think that is right as we did fail to establish a connection.
+
+>  
+>  	/* watch the backend node for backend configuration information */
+>  	err = xenbus_watch_path(dev, dev->nodename, &pdev->be_watch,
+> diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
+> index ad11258..847bc9c 100644
+> --- a/drivers/xen/xen-scsiback.c
+> +++ b/drivers/xen/xen-scsiback.c
+> @@ -1225,10 +1225,7 @@ static int scsiback_probe(struct xenbus_device *dev,
+>  	if (err)
+>  		xenbus_dev_error(dev, err, "writing feature-sg-grant");
+>  
+> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+> -	if (err)
+> -		goto fail;
+> -
+> +	xenbus_switch_state(dev, XenbusStateInitWait);
+>  	return 0;
+>  
+>  fail:
