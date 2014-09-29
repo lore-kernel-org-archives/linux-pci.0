@@ -1,130 +1,92 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v10 05/10] PCI: Create pci_host_bridge before its associated bus in pci_create_root_bus.
-Date: Mon,  8 Sep 2014 14:54:27 +0100
-Message-Id: <1410184472-17630-6-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bon0140.outbound.protection.outlook.com ([157.56.111.140]:12608
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751554AbaI2FdX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Sep 2014 01:33:23 -0400
+From: Richard Zhu <r65037@freescale.com>
+To: <linux-pci-owner@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
+	<festevam@gmail.com>, <l.stach@pengutronix.de>,
+	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
+Subject: [PATCH v3 8/9] PCI: designware: refine setup_rc and add msi data restore
+Date: Mon, 29 Sep 2014 13:03:16 +0800
+Message-ID: <1411966997-27118-9-git-send-email-r65037@freescale.com>
+In-Reply-To: <1411966997-27118-1-git-send-email-r65037@freescale.com>
+References: <1411966997-27118-1-git-send-email-r65037@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
-As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
-the creation order has been changed for no good reason. Revert the order of
-creation as we are going to depend on the pci_host_bridge structure to retrieve the
-domain number of the root bus.
+- move "program correct class for RC" from dw_pcie_host_init()
+to dw_pcie_setup_rc(). since this is RC setup, it's
+better to contained in dw_pcie_setup_rc function.
+Then, RC can be re-setup really by dw_pcie_setup_rc().
+- add one re-store msi data function. Because that
+pcie controller maybe powered off during system suspend,
+and the msi data configuration would be lost.
+this functions can be used to restore the msi data
+during the resume callback.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Acked-by: Grant Likely <grant.likely@linaro.org>
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+Signed-off-by: Richard Zhu <r65037@freescale.com>
 ---
- drivers/pci/probe.c | 32 +++++++++++++++++---------------
- 1 file changed, 17 insertions(+), 15 deletions(-)
+ drivers/pci/host/pcie-designware.c | 15 ++++++++++++---
+ drivers/pci/host/pcie-designware.h |  1 +
+ 2 files changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e3cf8a2..5ff72ec 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -515,7 +515,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
- 	kfree(bridge);
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 538bbf3..ae1e6c5 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -194,6 +194,13 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+ 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
  }
  
--static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
-+static struct pci_host_bridge *pci_alloc_host_bridge(void)
++void dw_pcie_msi_cfg_restore(struct pcie_port *pp)
++{
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
++			virt_to_phys((void *)pp->msi_data));
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
++}
++
+ static int find_valid_pos0(struct pcie_port *pp, int msgvec, int pos, int *pos0)
  {
- 	struct pci_host_bridge *bridge;
+ 	int flag = 1;
+@@ -570,9 +577,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
  
-@@ -524,7 +524,8 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
- 		return NULL;
+ 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
  
- 	INIT_LIST_HEAD(&bridge->windows);
--	bridge->bus = b;
-+	bridge->dev.release = pci_release_host_bridge_dev;
-+
- 	return bridge;
- }
- 
-@@ -1761,9 +1762,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	char bus_addr[64];
- 	char *fmt;
- 
-+	bridge = pci_alloc_host_bridge();
-+	if (!bridge)
-+		return NULL;
-+
-+	bridge->dev.parent = parent;
-+
- 	b = pci_alloc_bus();
- 	if (!b)
--		return NULL;
-+		goto err_out;
- 
- 	b->sysdata = sysdata;
- 	b->ops = ops;
-@@ -1772,26 +1779,19 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	if (b2) {
- 		/* If we already got to this bus through a different bridge, ignore it */
- 		dev_dbg(&b2->dev, "bus already known\n");
--		goto err_out;
-+		goto err_bus_out;
- 	}
- 
--	bridge = pci_alloc_host_bridge(b);
--	if (!bridge)
--		goto err_out;
+-	/* program correct class for RC */
+-	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
 -
--	bridge->dev.parent = parent;
--	bridge->dev.release = pci_release_host_bridge_dev;
-+	bridge->bus = b;
- 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
- 	error = pcibios_root_bridge_prepare(bridge);
--	if (error) {
--		kfree(bridge);
-+	if (error)
- 		goto err_out;
--	}
+ 	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+ 	val |= PORT_LOGIC_SPEED_CHANGE;
+ 	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+@@ -917,6 +921,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	val = memlimit | membase;
+ 	dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
  
- 	error = device_register(&bridge->dev);
- 	if (error) {
- 		put_device(&bridge->dev);
--		goto err_out;
-+		goto err_bus_out;
- 	}
- 	b->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(b->bridge);
-@@ -1848,8 +1848,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- class_dev_reg_err:
- 	put_device(&bridge->dev);
- 	device_unregister(&bridge->dev);
--err_out:
-+err_bus_out:
- 	kfree(b);
-+err_out:
-+	kfree(bridge);
- 	return NULL;
- }
- 
++	/* program correct class for RC */
++	dw_pcie_readl_rc(pp, PCI_CLASS_REVISION, &val);
++	val |= PCI_CLASS_BRIDGE_PCI << 16;
++	dw_pcie_writel_rc(pp, val, PCI_CLASS_REVISION);
++
+ 	/* setup command register */
+ 	dw_pcie_readl_rc(pp, PCI_COMMAND, &val);
+ 	val &= 0xffff0000;
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index a476e60..bb75715 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -83,6 +83,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+ int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+ void dw_pcie_msi_init(struct pcie_port *pp);
++void dw_pcie_msi_cfg_restore(struct pcie_port *pp);
+ int dw_pcie_link_up(struct pcie_port *pp);
+ void dw_pcie_setup_rc(struct pcie_port *pp);
+ int dw_pcie_host_init(struct pcie_port *pp);
 -- 
-2.0.4
+1.9.1
 
