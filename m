@@ -1,67 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:53415 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750917AbaIWFDQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 01:03:16 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v3 1/9] PCI/MSI: Clean up the kobject in struct msi_desc
-Date: Tue, 23 Sep 2014 13:27:22 +0800
-Message-ID: <1411450050-1510-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1411450050-1510-1-git-send-email-wangyijing@huawei.com>
-References: <1411450050-1510-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [PATCH v13 01/12] asm-generic/io.h: Fix ioport_map() for !CONFIG_GENERIC_IOMAP
+Date: Mon, 29 Sep 2014 15:29:20 +0100
+Message-Id: <1412000971-9242-2-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-commit 1c51b50c299 using attributes to export MSI mode
-instead of kobject. So clean up the kobject in struct
-msi_desc.
+The !CONFIG_GENERIC_IOMAP version of ioport_map() is wrong.  It returns a
+mapped, i.e., virtual, address that can start from zero and completely
+ignores the PCI_IOBASE and IO_SPACE_LIMIT that most architectures that use
+!CONFIG_GENERIC_MAP define.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/pci/msi.c   |   11 -----------
- include/linux/msi.h |    2 --
- 2 files changed, 0 insertions(+), 13 deletions(-)
+ include/asm-generic/io.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 5a40516..e2aa74e 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -384,17 +384,6 @@ static void free_msi_irqs(struct pci_dev *dev)
- 				iounmap(entry->mask_base);
- 		}
+diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+index 975e1cc..b8fdc57 100644
+--- a/include/asm-generic/io.h
++++ b/include/asm-generic/io.h
+@@ -331,7 +331,7 @@ static inline void iounmap(void __iomem *addr)
+ #ifndef CONFIG_GENERIC_IOMAP
+ static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
+ {
+-	return (void __iomem *) port;
++	return PCI_IOBASE + (port & IO_SPACE_LIMIT);
+ }
  
--		/*
--		 * Its possible that we get into this path
--		 * When populate_msi_sysfs fails, which means the entries
--		 * were not registered with sysfs.  In that case don't
--		 * unregister them.
--		 */
--		if (entry->kobj.parent) {
--			kobject_del(&entry->kobj);
--			kobject_put(&entry->kobj);
--		}
--
- 		list_del(&entry->list);
- 		kfree(entry);
- 	}
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 8103f32..8892d41 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -47,8 +47,6 @@ struct msi_desc {
- 
- 	/* Last set MSI message */
- 	struct msi_msg msg;
--
--	struct kobject kobj;
- };
- 
- /*
+ static inline void ioport_unmap(void __iomem *p)
 -- 
-1.7.1
+2.1.1
 
