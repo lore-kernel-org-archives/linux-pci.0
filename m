@@ -1,97 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:51081 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753130AbaIWCfF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 22:35:05 -0400
-Received: by mail-ig0-f172.google.com with SMTP id a13so3872099igq.5
-        for <linux-pci@vger.kernel.org>; Mon, 22 Sep 2014 19:35:04 -0700 (PDT)
-Date: Mon, 22 Sep 2014 20:35:01 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: print out exact timeout in pciehp for wait_cmd
-Message-ID: <20140923023501.GO1880@google.com>
-References: <1408756512-16885-1-git-send-email-yinghai@kernel.org>
- <1408756512-16885-3-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 29 Sep 2014 16:23:08 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+cc: marc.zyngier@arm.com, mark.rutland@arm.com, jason@lakedaemon.net,
+	will.deacon@arm.com, catalin.marinas@arm.com,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [RFC 4/4] irqchip: gicv2m: Add supports for ARM GICv2m MSI(-X)
+In-Reply-To: <54287F17.8000503@amd.com>
+Message-ID: <alpine.DEB.2.02.1409291611030.22082@ionos.tec.linutronix.de>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com> <1411937610-22125-5-git-send-email-suravee.suthikulpanit@amd.com> <54287F17.8000503@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1408756512-16885-3-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 22, 2014 at 06:15:09PM -0700, Yinghai Lu wrote:
-> debug print out should add back timeout that pass during wait event or
-> polling.
+On Sun, 28 Sep 2014, Suravee Suthikulpanit wrote:
+
+> Jason/Thomas,
 > 
-> That now is cached vaule before wait.
+> This patch comes from:
+>     [V8 2/2] irqchip: gicv2m: Add supports for ARM GICv2m MSI(-X)
+>     (https://lkml.org/lkml/2014/9/20/113)
 > 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> It has been slightly modified to remove the multi-MSI supports for now
+> (I am waiting to discuss with Marc after he returned from vacation.), and will
+> be submitted separately.
 > 
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
-> +++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -173,7 +173,7 @@ static void pcie_wait_cmd(struct control
->  	if (!rc)
->  		ctrl_info(ctrl, "Timeout on hotplug command %#010x (issued %u msec ago)\n",
->  			  ctrl->slot_ctrl,
-> -			  jiffies_to_msecs(now - ctrl->cmd_started));
-> +			  jiffies_to_msecs(now - ctrl->cmd_started + timeout));
->  }
->  
->  /**
+> Since this patch is independent from the multi-MSI stuff.  Please let me know
+> if you would consider taking this separately.
 
-I propose the modification below because I think it's more direct.  Does it
-make sense to you, or am I still missing something?
+Not without an explicit reviewed/acked from Marc for the GIC part and
+a reviewed/acked from the DT folks.
 
-
-commit 83d752536aa9dfb1fddb04d6ef8c6bdc75492d4f
-Author: Yinghai Lu <yinghai@kernel.org>
-Date:   Mon Sep 22 20:07:35 2014 -0600
-
-    PCI: pciehp: Fix wait time in timeout message
-    
-    When we warned about a timeout on a hotplug command, we previously printed
-    the time between calls to pcie_write_cmd(), without accounting for any time
-    spent actually waiting.  Consider this sequence:
-    
-      pcie_write_cmd
-        write SLTCTL
-        cmd_started = jiffies          # T1
-    
-      pcie_write_cmd
-        pcie_wait_cmd
-          now = jiffies                # T2
-          wait_event_timeout           # we may wait here
-          if (timeout)
-            ctrl_info("Timeout on command issued %u msec ago",
-                      jiffies_to_msecs(now - cmd_started))
-    
-    We previously printed (T2 - T1), but that doesn't include the time spent in
-    wait_event_timeout().
-    
-    Fix this by using the current jiffies value, not the one cached before
-    calling wait_event_timeout().
-    
-    [bhelgaas: changelog, use current jiffies instead of adding timeout]
-    Fixes: 40b960831cfa ("PCI: pciehp: Compute timeout from hotplug command start time")
-    Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 9e0f4aec5f0c..3673a913379f 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -173,7 +173,7 @@ static void pcie_wait_cmd(struct controller *ctrl)
- 	if (!rc)
- 		ctrl_info(ctrl, "Timeout on hotplug command %#06x (issued %u msec ago)\n",
- 			  ctrl->slot_ctrl,
--			  jiffies_to_msecs(now - ctrl->cmd_started));
-+			  jiffies_to_msecs(jiffies - ctrl->cmd_started));
- }
+Aside of that the conditional madness is just horrible:
  
- /**
+> > +static inline
+> > +struct gic_chip_data *irq_data_get_gic_chip_data(struct irq_data *d)
+> > +{
+> > +	struct gic_chip_data *gic_data;
+> > +	struct msi_chip *mchip;
+> > +	struct v2m_data *v2mdat;
+> > +
+> > +	/*
+> > +	 * For MSI, irq_data.chip_data points to struct msi_chip.
+> > +	 * For non-MSI, irq_data.chip_data points to struct gic_chip_data.
+> > +	 */
+> > +	if (d->msi_desc) {
+> > +		mchip = irq_data_get_irq_chip_data(d);
+> > +		v2mdat = container_of(mchip, struct v2m_data, msi_chip);
+> > +		gic_data = v2mdat->gic;
+> > +	} else {
+> > +		gic_data = irq_data_get_irq_chip_data(d);
+> > +	}
+> > +	return gic_data;
+> > +}
+
+For heavens sake, why are you insisting on duct-taping that into the
+GIC proper instead of coming up with a proper layering?
+
+    https://lkml.org/lkml/2014/8/27/228
+    https://lkml.org/lkml/2014/8/26/707
+
+Thanks,
+
+	tglx
+    
+
