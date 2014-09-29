@@ -1,81 +1,185 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:45630 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753071AbaIXCpm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 22:45:42 -0400
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <5428B971.50101@huawei.com>
+Date: Mon, 29 Sep 2014 09:44:17 +0800
 From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v4 3/3] PCI/MSI: Rename __read_msi_msg() to read_msi_msg()
-Date: Wed, 24 Sep 2014 11:09:59 +0800
-Message-ID: <1411528199-2085-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+To: Liviu Dudau <liviu@dudau.co.uk>
+CC: Thierry Reding <thierry.reding@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
+ in all platforms
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com> <20140925074235.GN12423@ulmo> <20140925144855.GB31157@bart.dudau.co.uk> <20140925164937.GB30382@ulmo> <5424E09F.50701@huawei.com> <20140926085030.GE31157@bart.dudau.co.uk> <54276F6C.5010705@huawei.com> <20140928112144.GA4671@bart.dudau.co.uk>
+In-Reply-To: <20140928112144.GA4671@bart.dudau.co.uk>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rename __read_msi_msg() to read_msi_msg().
+On 2014/9/28 19:21, Liviu Dudau wrote:
+> On Sun, Sep 28, 2014 at 10:16:12AM +0800, Yijing Wang wrote:
+>>>>>> What I would like to see is a way of creating the pci_host_bridge structure outside
+>>>>>> the pci_create_root_bus(). That would then allow us to pass this sort of platform
+>>>>>> details like associated msi_chip into the host bridge and the child busses will
+>>>>>> have an easy way of finding the information needed by finding the root bus and then
+>>>>>> the host bridge structure. Then the generic pci_scan_root_bus() can be used by (mostly)
+>>>>>> everyone and the drivers can remove their kludges that try to work around the
+>>>>>> current limitations.
+>>>>
+>>>> So I think maybe save msi chip in PCI arch sysdata is a good candidate.
+>>>
+>>> Except that arch sysdata at the moment is an opaque pointer. I am all in favour in
+>>> changing the type of sysdata from void* into pci_host_bridge* and arches can wrap their old
+>>> sysdata around the pci_host_bridge*.
+>>
+>> I inspected every arch and found there are almost no common stuff,
+> 
+> I will disagree here. Most (all?) of the structures that are passed as sysdata argument to
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/powerpc/platforms/pseries/msi.c |    2 +-
- arch/x86/pci/xen.c                   |    2 +-
- drivers/pci/msi.c                    |    2 +-
- include/linux/msi.h                  |    2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+Most.
 
-diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-index dae71df..7e87878 100644
---- a/arch/powerpc/platforms/pseries/msi.c
-+++ b/arch/powerpc/platforms/pseries/msi.c
-@@ -485,7 +485,7 @@ again:
- 		irq_set_msi_desc(virq, entry);
- 
- 		/* Read config space back so we can restore after reset */
--		__read_msi_msg(entry, &msg);
-+		read_msi_msg(entry, &msg);
- 		entry->msg = msg;
- 	}
- 
-diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index 093f5f4..ad03739 100644
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -229,7 +229,7 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 		return 1;
- 
- 	list_for_each_entry(msidesc, &dev->msi_list, list) {
--		__read_msi_msg(msidesc, &msg);
-+		read_msi_msg(msidesc, &msg);
- 		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
- 			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
- 		if (msg.data != XEN_PIRQ_MSI_DATA ||
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 45da095..aff384a 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -259,7 +259,7 @@ void default_restore_msi_irqs(struct pci_dev *dev)
- 	}
- }
- 
--void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
-+void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	BUG_ON(entry->dev->current_state != PCI_D0);
- 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 9ec258e..6be66f4 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -15,7 +15,7 @@ struct irq_data;
- struct msi_desc;
- void mask_msi_irq(struct irq_data *data);
- void unmask_msi_irq(struct irq_data *data);
--void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-+void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void write_msi_msg(unsigned int irq, struct msi_msg *msg);
+> pci_create_root_bus() or pci_scan_root_bus() have a set of resources for storing the MEM and
+> IO ranges, which struct pci_host_bridge already has. So that can be factored out of the
+> arch code. Same for pci_domain_nr. Then there are some variables that are used for communication
+> with the platform code due to convoluted way(s) in which PCI code gets instantiated.
+
+Yes, currently some archs store MEM and IO resource in pci sysdata, and others not, move the MEM and IO
+resource to pci_host_bride could make code become simple, we can clean up the resource list argument in
+pci scan functions.
+
+> 
+> What I am arguing here is not that the arch equivalent of pci_host_bridge structure is already
+> common, but that by moving the members that are common out of arch sysdata into pci_host_bridge
+> we will have more commonality and it will be easier to re-factor the code.
+
+Now, I got it, thanks!
+
+> 
+>> and generic data struct should
+>> be created in generic PCI code.
+> 
+> Not necessarily. What I have in mind is something like this:
+
+This is a good idea, what I'm worried is this series is already large, so I think we need to post
+another series to do it.
+
+
+> 
+>  - drivers/pci/ exports pci_init_host_bridge() that does the initialisation of bridge->windows
+>    and anything else that is needed (like find_pci_host_bridge() function).
+>  - arch code does:
+> 
+> 	struct pci_controller {
+> 		struct pci_host_bridge bridge;
+> 		.....
+> 	};
+> 
+> 	#define to_pci_controller(bridge)	container_of(bridge, struct pci_controller, bridge)
+> 
+> 	static inline struct pci_controller *get_host_controller(const struct pci_bus *bus)
+> 	{
+> 		struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+> 		if (bridge)
+> 			return to_pci_controller(bridge);
+> 
+> 		return NULL;
+> 	}
+> 
+> 	int arch_pci_init(....)
+> 	{
+> 		struct pci_controller *hose;
+> 		....
+> 		hose = kzalloc(sizeof(*hose), GFP_KERNEL);
+> 		pci_init_host_bridge(&hose->bridge);
+> 		....
+> 		pci_scan_root_bus(...., &hose->bridge, &resources);
+> 		....
+> 		return 0;
+> 	}
+> 
+> Then finding the right structure will be easy.
+> 
+>> Another, I don't like associate msi chip and every PCI device, further more,
+>> almost all platforms except arm have only one MSI controller, and currently, PCI enumerating code doesn't need
+>> to know the MSI chip details, like for legacy IRQ, PCI device doesn't need to know which IRQ controller they
+>> should deliver IRQ to. I would think more about it, and hope other PCI guys can give some comments, especially from Bjorn.
+>>
+> 
+> I wasn't suggesing to associate an msi chip with every PCI device, but with the pci_host_bridge.
+> I don't expect a host bridge to have more than one msi chip, so that should be OK. Also, I'm
+> thinking that getting the associated msi chip should be some sort of pci_host_bridge ops function,
+> and for arches that don't care about MSI it doesn't get implemented.
+
+Currently, a property "msi-parent" was introduced in arm, and all msi chip integrated in irq chip controller will
+be added to of_pci_msi_chip_list. PCI host driver find the match msi chip by its of_node.
+
+Thanks!
+Yijing.
+
+> 
+> Best regards,
+> Liviu
+> 
+>  
+>> Thanks!
+>> Yijing.
+>>
+>>>
+>>> Best regards,
+>>> Liviu
+>>>
+>>>>
+>>>>>
+>>>>> I think both issues are orthogonal. Last time I checked a lot of work
+>>>>> was still necessary to unify host bridges enough so that it could be
+>>>>> shared across architectures. But perhaps some of that work has
+>>>>> happened in the meantime.
+>>>>>
+>>>>> But like I said, when you create the root bus, you can easily attach the
+>>>>> MSI chip to it.
+>>>>>
+>>>>> Thierry
+>>>>>
+>>>>
+>>>>
+>>>> -- 
+>>>> Thanks!
+>>>> Yijing
+>>>>
+>>>>
+>>>
+>>
+>>
+>> -- 
+>> Thanks!
+>> Yijing
+>>
+>>
+> 
+
+
 -- 
-1.7.1
+Thanks!
+Yijing
 
