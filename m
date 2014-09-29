@@ -1,125 +1,120 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC Part2 v1 00/21] Enable hierarchy irqdomian on x86 platforms
-Date: Thu, 11 Sep 2014 22:03:27 +0800
-Message-Id: <1410444228-3134-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:55350 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753270AbaI2Kis (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 06:38:48 -0400
+Message-ID: <1411987122.2625.17.camel@pengutronix.de>
+Subject: Re: [PATCH v3 9/9] PCI: imx6: Fix possible dead lock
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Richard Zhu <r65037@freescale.com>
+Cc: linux-pci-owner@vger.kernel.org, linux-pci@vger.kernel.org,
+	shawn.guo@freescale.com, festevam@gmail.com, tharvey@gateworks.com
+Date: Mon, 29 Sep 2014 12:38:42 +0200
+In-Reply-To: <1411966997-27118-10-git-send-email-r65037@freescale.com>
+References: <1411966997-27118-1-git-send-email-r65037@freescale.com>
+	 <1411966997-27118-10-git-send-email-r65037@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We plan to restructure x86 interrupt code based on hierarchy irqdomain,
-that is to build irqdomains for CPU vector, interrupt remapping unit,
-IOAPIC, MSI and HPET etc and organize those irqdomains in hierarchy mode.
-Each irqdomain manages corresponding interrupt controller and talks to
-parent interrupt controller through public irqdomain interfaces. We also
-support stacked irq_chip based on hierarchy irqdomain. It will make the
-x86 interrupt architecture much more clear and more easy to maintain
-with hierarchy irqdomain and stacked irq_chip. It may also help ARM
-interrupt management architecture too.
+Am Montag, den 29.09.2014, 13:03 +0800 schrieb Richard Zhu:
+> kernel report one possible dead lock during imx6sx pcie
+> suspend resume stress tests, after enable Lock Debugging.
+> platform: imx6sx sdb board + xhci(pcie2usb3.0 ep)
+> 
+> reason: usleep_range used in imx6_pcie_link_up maybe scheduled
+> out from dw_pcie_valid_config.isra...
+> About details, please see the following logs.
+> 
+> solution: replace the usleep_range(1000, 2000) by udelay(10) and
+> enlarge the loop counter.
+> 
+I don't like this change, as we eat one CPU just to work around a
+slightly wrong behavior of the link-up signaling. I had a look at the
+code in question and it seems there are more things that need different
+handling in there. I'll post a patch to resolve the deadlock without
+using a udelay shortly.
 
-This is the second patch set to enable support of hierarchy irqdomain
-on x86 platforms. It depends on the first part at:
-https://lkml.org/lkml/2014/9/11/101 
-And you may access it at:
-https://github.com/jiangliu/linux.git irqdomain/p2v1
+Regards,
+Lucas
 
-And there will be a third patch set to convert IOAPIC driver to support
-hierarchy irqdomain and clean up code.
-
-The first patch extends irqdomain interfaces to support hierarchy
-irqdomain. Hope this interface could be used by other architectures too,
-such as ARM/ARM64.
-The second patch introduces two helper functions to support stacked
-irq_chip.
-Patch 3-9 implements an irqdomain to manange CPU interrupt vectors, and
-it's the root irqdomain for x86 platforms.
-Patch 10-13 converts Intel and AMD interrupt remapping drivers to
-support hierarchy irqdomain.
-Patch 14-17 converts HPET, MSI and HT_IRQ drivers to support hierarchy
-irqdomain.
-Patch 18-21 cleans up unsued code in x86 arch and interrupt remapping
-drivers.
-
-We have tested this patchset on Intel 32-bit and 64-bit systems. But we
-have only done compilation tests for HT_IRQ and AMD interrupt remapping
-drivers due to hardware resource limitation. Tests on AMD platforms are
-warmly welcomed!
-
-Jiang Liu (21):
-  irqdomain: Introduce new interfaces to support hierarchy irqdomains
-  genirq: Introduce helper functions to support stacked irq_chip
-  x86, irq: Save destination CPU ID in irq_cfg
-  x86, irq: Use hierarchy irqdomain to manage CPU interrupt vectors
-  x86, hpet: Use new irqdomain interfaces to allocate/free IRQ
-  x86, MSI: Use new irqdomain interfaces to allocate/free IRQ
-  x86, uv: Use new irqdomain interfaces to allocate/free IRQ
-  x86, htirq: Use new irqdomain interfaces to allocate/free IRQ
-  x86, dmar: Use new irqdomain interfaces to allocate/free IRQ
-  x86: irq_remapping: Introduce new interfaces to support hierarchy
-    irqdomain
-  iommu/vt-d: Change prototypes to prepare for enabling hierarchy
-    irqdomain
-  iommu/vt-d: Enhance Intel IR driver to suppport hierarchy irqdomain
-  iommu/amd: Enhance AMD IR driver to suppport hierarchy irqdomain
-  x86, hpet: Enhance HPET IRQ to support hierarchy irqdomain
-  x86, MSI: Use hierarchy irqdomain to manage MSI interrupts
-  x86, irq: Directly call native_compose_msi_msg() for DMAR IRQ
-  x86, htirq: Use hierarchy irqdomain to manage Hypertransport
-    interrupts
-  iommu/vt-d: Clean up unused MSI related code
-  iommu/amd: Clean up unused MSI related code
-  x86: irq_remapping: Clean up unused MSI related code
-  x86, irq: Clean up unused MSI related code and interfaces
-
- arch/x86/Kconfig                     |    3 +-
- arch/x86/include/asm/hpet.h          |   16 +-
- arch/x86/include/asm/hw_irq.h        |   64 +++++
- arch/x86/include/asm/irq_remapping.h |   66 +++--
- arch/x86/include/asm/pci.h           |    5 -
- arch/x86/include/asm/x86_init.h      |    4 -
- arch/x86/kernel/apic/htirq.c         |  179 +++++++++----
- arch/x86/kernel/apic/io_apic.c       |    3 -
- arch/x86/kernel/apic/msi.c           |  430 +++++++++++++++++++++++--------
- arch/x86/kernel/apic/vector.c        |  158 +++++++++++-
- arch/x86/kernel/hpet.c               |   57 ++---
- arch/x86/kernel/x86_init.c           |    2 -
- arch/x86/platform/uv/uv_irq.c        |   27 +-
- drivers/iommu/amd_iommu.c            |  385 ++++++++++++++++++++++------
- drivers/iommu/amd_iommu_init.c       |    4 +
- drivers/iommu/amd_iommu_proto.h      |    9 +
- drivers/iommu/amd_iommu_types.h      |    5 +
- drivers/iommu/intel_irq_remapping.c  |  468 +++++++++++++++++++++++-----------
- drivers/iommu/irq_remapping.c        |  221 ++++++----------
- drivers/iommu/irq_remapping.h        |   22 +-
- drivers/pci/htirq.c                  |   48 +---
- include/linux/htirq.h                |   22 +-
- include/linux/intel-iommu.h          |    4 +
- include/linux/irq.h                  |    8 +
- include/linux/irqdomain.h            |   60 +++++
- kernel/irq/Kconfig                   |    3 +
- kernel/irq/chip.c                    |   21 ++
- kernel/irq/irqdomain.c               |  349 ++++++++++++++++++++++++-
- 28 files changed, 1934 insertions(+), 709 deletions(-)
+> logs:
+> [   50.643062] xhci_hcd 0000:01:00.0: Refused to change power state, currently in D3
+> [   50.653390]
+> [   50.654898] =========================================================
+> [   50.661343] [ INFO: possible irq lock inversion dependency detected ]
+> [   50.667792] 3.17.0-rc2-01341-gfc43ff7-dirty #101 Not tainted
+> [   50.673454] ---------------------------------------------------------
+> [   50.679898] kworker/u2:2/48 just changed the state of lock:
+> [   50.685477]  (pci_lock){+.....}, at: [<802d650c>] pci_bus_read_config_dword+0x44/0x94
+> [   50.693394] but this lock was taken by another, HARDIRQ-safe lock in the past:
+> [   50.700619]  (&irq_desc_lock_class){-.-...}
+> 
+> and interrupts could create inverse lock ordering between them.
+> 
+> [   50.710843]
+> [   50.710843] other info that might help us debug this:
+> [   50.717377]  Possible interrupt unsafe locking scenario:
+> [   50.717377]
+> [   50.724169]        CPU0                    CPU1
+> [   50.728702]        ----                    ----
+> [   50.733234]   lock(pci_lock);
+> [   50.736232]                                local_irq_disable();
+> [   50.742154]                                lock(&irq_desc_lock_class);
+> [   50.748713]                                lock(pci_lock);
+> [   50.754229]   <Interrupt>
+> [   50.756852]     lock(&irq_desc_lock_class);
+> [   50.761065]
+> [   50.761065]  *** DEADLOCK ***
+> ...
+> 
+> [   52.119515] [<806e8ad0>] (schedule_hrtimeout_range) from [<80077e90>] (usleep_range+0x50/0x58)
+> [   52.128141] [<80077e40>] (usleep_range) from [<802f3694>] (imx6_pcie_link_up+0x48/0x16c)
+> [   52.136242] [<802f364c>] (imx6_pcie_link_up) from [<802f1b74>] (dw_pcie_valid_config.isra.10+0x40/0x7c)
+> [   52.145637]  r6:ae72606d r5:ae72606c r4:ae711228
+> [   52.150311] [<802f1b34>] (dw_pcie_valid_config.isra.10) from [<802f1ca8>] (dw_pcie_rd_conf+0x4c/0x154)
+> [   52.159620]  r7:00000000 r6:00000000 r5:ae711228 r4:ae726000
+> [   52.165355] [<802f1c5c>] (dw_pcie_rd_conf) from [<802d6534>] (pci_bus_read_config_dword+0x6c/0x94)
+> [   52.174316]  r9:adf4e910 r8:809bc51c r7:00000000 r6:60000153 r5:adc3fd5c r4:ae726000
+> [   52.182152] [<802d64c8>] (pci_bus_read_config_dword) from [<802db588>] (pci_restore_config_dword+0x54/0xa4)
+> [   52.191894]  r6:00000024 r5:0000000a r4:ae61e000
+> [   52.196570] [<802db534>] (pci_restore_config_dword) from [<802dd150>] (pci_restore_state.part.37+0x7c/0x1f8)
+> [   52.206399]  r8:802e086c r7:ae61dfe8 r6:519e2024 r5:ae61e000 r4:ae61dffc
+> [   52.213187] [<802dd0d4>] (pci_restore_state.part.37) from [<802dd2e8>] (pci_restore_state+0x1c/0x20)
+> [   52.222322]  r7:adc3fea8 r6:809d90e0 r5:ae61e000 r4:ae61e068
+> [   52.228056] [<802dd2cc>] (pci_restore_state) from [<802e0894>] (pci_pm_resume_noirq+0x28/0xa4)
+> [   52.236683] [<802e086c>] (pci_pm_resume_noirq) from [<8037ea1c>] (dpm_run_callback.isra.12+0x34/0x7c)
+> 
+> Signed-off-by: Richard Zhu <r65037@freescale.com>
+> ---
+>  drivers/pci/host/pci-imx6.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index be953aa..e60c195 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -521,7 +521,7 @@ static void imx6_pcie_reset_phy(struct pcie_port *pp)
+>  static int imx6_pcie_link_up(struct pcie_port *pp)
+>  {
+>  	u32 rc, debug_r0, rx_valid;
+> -	int count = 5;
+> +	int count = 500;
+>  
+>  	/*
+>  	 * Test if the PHY reports that the link is up and also that the LTSSM
+> @@ -552,7 +552,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+>  		 * Wait a little bit, then re-check if the link finished
+>  		 * the training.
+>  		 */
+> -		usleep_range(1000, 2000);
+> +		udelay(10);
+>  	}
+>  	/*
+>  	 * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
 
 -- 
-1.7.10.4
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
