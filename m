@@ -1,38 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:57006 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751091AbaI3PP4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 11:15:56 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Rob Herring <robh@kernel.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] of/pci: add pci_pio_to_address dummy for !CONFIG_OF
-Date: Tue, 30 Sep 2014 17:15:19 +0200
-Message-ID: <2033939.5UfzeSiRKs@wuerfel>
-In-Reply-To: <20140930144506.GQ841@e106497-lin.cambridge.arm.com>
-References: <706416181.hbVGLDA3o6@wuerfel> <20140930144506.GQ841@e106497-lin.cambridge.arm.com>
+Received: from mail-by2on0114.outbound.protection.outlook.com ([207.46.100.114]:25952
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751439AbaI2FdU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Sep 2014 01:33:20 -0400
+From: Richard Zhu <r65037@freescale.com>
+To: <linux-pci-owner@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
+	<festevam@gmail.com>, <l.stach@pengutronix.de>,
+	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
+Subject: [PATCH v3 1/9] PCI: imx6: wait the clocks to stabilize after ref_en
+Date: Mon, 29 Sep 2014 13:03:09 +0800
+Message-ID: <1411966997-27118-2-git-send-email-r65037@freescale.com>
+In-Reply-To: <1411966997-27118-1-git-send-email-r65037@freescale.com>
+References: <1411966997-27118-1-git-send-email-r65037@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 30 September 2014 15:45:06 Liviu Dudau wrote:
-> 
-> Acked-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> 
-> Is that triggered by shmobile_defconfig?
-> 
-> 
+For boards without a reset gpio we skip the delay between enabling
+the pcie_ref_clk and touching the RC registers for configuration.
+System would be hangs when the clocks are not yet settled in the DW
+PCIe core. So we need to make sure that there is always an
+appropriate delay between those two actions.
 
-No, I only found it using randconfig testing, shmobile enables CONFIG_OF by
-default.
+Signed-off-by: Richard Zhu <r65037@freescale.com>
+---
+ drivers/pci/host/pci-imx6.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-	Arnd
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 233fe8a..eac96fb 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -275,15 +275,22 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		goto err_pcie;
+ 	}
+ 
+-	/* allow the clocks to stabilize */
+-	usleep_range(200, 500);
+-
+ 	/* power up core phy and enable ref clock */
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
++	/*
++	 * the async reset input need ref clock to sync internally,
++	 * when the ref clock comes after reset, internal synced
++	 * reset time is too short , cannot meet the requirement.
++	 * add one ~10us delay here.
++	 */
++	udelay(10);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+ 
++	/* allow the clocks to stabilize */
++	usleep_range(200, 500);
++
+ 	/* Some boards don't have PCIe reset GPIO. */
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+ 		gpio_set_value(imx6_pcie->reset_gpio, 0);
+-- 
+1.9.1
+
