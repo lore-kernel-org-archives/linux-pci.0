@@ -1,61 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <3780051.0eHpCN6UC9@wuerfel>
-References: <1410184472-17630-1-git-send-email-Liviu.Dudau@arm.com>
- <540E960D.7080408@huawei.com> <20140909084621.GS27864@e106497-lin.cambridge.arm.com>
- <3780051.0eHpCN6UC9@wuerfel>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 9 Sep 2014 08:17:50 -0600
-Message-ID: <CAErSpo5ZyanUNiVnkt0q1m-HhMpTN+ZUVL59o70THyL_hKZAdg@mail.gmail.com>
-Subject: Re: [PATCH v10 07/10] OF: Introduce helper function for getting PCI domain_nr
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Rob Herring <robherring2@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:50337 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751547AbaI2Ihw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 04:37:52 -0400
+Message-ID: <1411979850.2625.7.camel@pengutronix.de>
+Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
+ in all platforms
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	linux-arm-kernel@lists.infradead.org,
 	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
+	Bharat.Bhushan@freescale.com, x86@kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Date: Mon, 29 Sep 2014 10:37:30 +0200
+In-Reply-To: <5427A6A0.5040703@huawei.com>
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
+	 <20140925074235.GN12423@ulmo> <20140925144855.GB31157@bart.dudau.co.uk>
+	 <20140925164937.GB30382@ulmo> <20140925171612.GC31157@bart.dudau.co.uk>
+	 <542505B3.7040208@huawei.com> <20140926085430.GG31106@ulmo>
+	 <20140926090537.GH31106@ulmo> <54277327.6070500@huawei.com>
+	 <5427A6A0.5040703@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 9, 2014 at 3:16 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Tuesday 09 September 2014 09:46:21 Liviu Dudau wrote:
->> On Tue, Sep 09, 2014 at 06:54:21AM +0100, Yijing Wang wrote:
->> > PCI domain(or named segment) is provided by firmware, in ACPI system, we evaluated it
->> > by method "_SEG". in IA64 with ACPI, PCI hostbridge driver retrieves the domain from ACPI,
->> > if it's absent, the default domain is zero. So I wonder why in DTS, if it's absent, we get
->> > a auto increment domain value.
->>
->> Because you can have more than one hostbridge (rare, but not impossible) and unless you
->> want to join the two segments, you might want to give it a different domain.
->
-> I think you misunderstood the question. The difference is that in ACPI you
-> are required to specify the domain, while in DT it is optional with your
-> implementation.
+Am Sonntag, den 28.09.2014, 14:11 +0800 schrieb Yijing Wang:
+> On 2014/9/28 10:32, Yijing Wang wrote:
+> > On 2014/9/26 17:05, Thierry Reding wrote:
+> >> On Fri, Sep 26, 2014 at 10:54:32AM +0200, Thierry Reding wrote:
+> >> [...]
+> >>> At least for Tegra it's trivial to just hook it up in tegra_pcie_scan_bus()
+> >>> directly (patch attached).
+> >>
+> >> Really attached this time.
+> >>
+> >> Thierry
+> >>
+> > 
+> > It looks good to me, so I will update the arm pci hostbridge driver to assign
+> > pci root bus the msi chip instead of current pcibios_add_bus(). But for other
+> > platforms which only have a one msi chip, I will kept the arch_find_msi_chip()
+> > temporarily for more comments, especially from Bjorn.
+> 
+> Oh, sorry, I found designware and rcar use pci_scan_root_bus(), so we can not simply
+> assign msi chip to root bus in all host drivers's scan functions.
 
-_SEG is actually optional, but the spec (ACPI r5.0, sec 6.5.6) says to
-assume domain 0 if _SEG is absent.
+Designware will switch away from pci_scan_root_bus() in the 3.18 cycle
+and I would think it would be no problem to to the same with rcar.
 
-Yijing mentioned ia64, which is relevant because PCI config accesses
-on ia64 are done via a firmware (SAL) interface, and the domain is
-part of that interface, so the kernel is actually required to supply
-the correct domain number (0 or _SEG value) for each host bridge.
+Regards,
+Lucas
 
-Bjorn
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
+
