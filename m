@@ -1,148 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0132.outbound.protection.outlook.com ([157.56.110.132]:21827
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751792AbaIXKPO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Sep 2014 06:15:14 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	"festevam@gmail.com" <festevam@gmail.com>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>
-Subject: RE: [PATCH v2 5/5] PCI: imx6: add imx6sx pcie support
-Date: Wed, 24 Sep 2014 10:15:10 +0000
-Message-ID: <af641611e2464f0085646c1122126dcd@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
-	 <1411445498-20250-6-git-send-email-r65037@freescale.com>
-	 <1411470006.3256.13.camel@pengutronix.de>
-	 <6300241fd29146f78a46c40e2232c8aa@BY1PR0301MB0855.namprd03.prod.outlook.com>
- <1411551962.2735.2.camel@pengutronix.de>
-In-Reply-To: <1411551962.2735.2.camel@pengutronix.de>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [PATCH v13 11/12] PCI: Add pci_remap_iospace() to map bus I/O resources
+Date: Mon, 29 Sep 2014 15:29:30 +0100
+Message-Id: <1412000971-9242-12-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEx1Y2FzIFN0YWNoIFttYWls
-dG86bC5zdGFjaEBwZW5ndXRyb25peC5kZV0NCj4gU2VudDogV2VkbmVzZGF5LCBTZXB0ZW1iZXIg
-MjQsIDIwMTQgNTo0NiBQTQ0KPiBUbzogWmh1IFJpY2hhcmQtUjY1MDM3DQo+IENjOiBsaW51eC1w
-Y2ktb3duZXJAdmdlci5rZXJuZWwub3JnOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBHdW8g
-U2hhd24tDQo+IFI2NTA3MzsgZmVzdGV2YW1AZ21haWwuY29tOyB0aGFydmV5QGdhdGV3b3Jrcy5j
-b20NCj4gU3ViamVjdDogUmU6IFtQQVRDSCB2MiA1LzVdIFBDSTogaW14NjogYWRkIGlteDZzeCBw
-Y2llIHN1cHBvcnQNCj4gDQo+IEFtIE1pdHR3b2NoLCBkZW4gMjQuMDkuMjAxNCwgMDc6MDkgKzAw
-MDAgc2NocmllYg0KPiBIb25nLVhpbmcuWmh1QGZyZWVzY2FsZS5jb206DQo+IA0KPiBbLi4uXQ0K
-PiANCj4gPiA+ID4gKwlpZiAoaXNfaW14NnN4X3BjaWUoaW14Nl9wY2llKSkgew0KPiA+ID4gPiAr
-CQkvKiBGb3JjZSBQQ0llIFBIWSByZXNldCAqLw0KPiA+ID4gPiArCQlyZWdtYXBfdXBkYXRlX2Jp
-dHMoaW14Nl9wY2llLT5pb211eGNfZ3ByLCBJT01VWENfR1BSNSwNCj4gPiA+ID4gKwkJCQlJTVg2
-U1hfR1BSNV9QQ0lFX0JUTlJTVCwNCj4gPiA+ID4gKwkJCQlJTVg2U1hfR1BSNV9QQ0lFX0JUTlJT
-VCk7DQo+ID4gPiA+ICsNCj4gPiA+ID4gKwkJcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+
-Z3BjX2lwc19yZWcsIDAsIDEgPDwgNywgMSA8PCA3KTsNCj4gPiA+DQo+ID4gPiBNYWdpYyB2YWx1
-ZXMgaGVyZS4gQWxzbyB0aGlzIGlzIHRoZSBvbmx5IHRpbWUgd2UgbmVlZCB0byBhY2Nlc3MNCj4g
-Z3BjX2lwc19yZWcuDQo+ID4gPiBTbyBpZiB0aGlzIGlzIGEgcHJlcmVxdWlzaXRlIHRvIGVuYWJs
-aW5nIHRoZSBBTkFUT1AgcmVndWxhdG9yLCBJDQo+ID4gPiB3b3VsZCBhcmd1ZSBpdCBzaG91bGQg
-YmUgZG9uZSBpbiB0aGUgcmVndWxhdG9yIGRyaXZlci4NCj4gPiBbUmljaGFyZF1NYWdpYyB2YWx1
-ZXMgd291bGQgYmUgcmVwbGFjZWQuDQo+ID4gWWVzLCB0aGlzIGlzIHRoZSBvbmx5IHRpbWUgd2Ug
-bmVlZCB0byBhY2Nlc3MgZ3BjX2lwc19yZWcuDQo+ID4gSXQncyBhIGxpdHRsZSBjb21wbGV4IHRv
-IGFkZCB0aGUgR1BDIG1hbmlwdWxhdGlvbnMgaW4NCj4gPiBBTkFUT1AvcmVndWxhdG9yIGZyYW1l
-d29yay9kcml2ZXIgY29kZXMuDQo+ID4gU2luY2UgQU5BVE9QIHJlZ3VsYXRvciBpcyBjb21tb24g
-ZnJhbWV3b3JrIGFuZCBkcml2ZXIsIGl0J3MgaGFyZCB0bw0KPiA+IG1hbmlwdWxhdGUgR1BDIGJp
-dHMgaW4gQU5BVE9QL3JlZ3VsYXRvciBkcml2ZXIuDQo+ID4gSW4gb3JkZXIgdG8gYmUgZWFzaWVy
-LCBJIGFkZCB0aGUgR1BDIGJpdHMgbWFuaXB1bGF0aW9uIGhlcmUgZGlyZWN0bHkuDQo+ID4gSG93
-IGRvIHlvdSB0aGluayBhYm91dCB0aGF0Pw0KPiANCj4gSSBzdGlsbCB0aGluayBpdCB3b3VsZCBi
-ZSBiZXR0ZXIgdG8gaGFuZGxlIHRoaXMgaW4gdGhlIHJlZ3VsYXRvciBkcml2ZXIuDQo+IEJ1dCBh
-cyBJIGRvbid0IHlldCBoYXZlIGEgcmVmZXJlbmNlIG1hbnVhbCBmb3IgdGhlIGlteDZzeDogY2Fu
-IHlvdSBwbGVhc2UNCj4gZGVzY3JpYmUgd2hhdCB0aGlzIGJpdCBkb2VzIGV4YWN0bHk/IE1heWJl
-IHRoaXMgaGVscHMgbWUgdG8gdW5kZXJzdGFuZCB3aGVyZQ0KPiB0aGUgY2FsbCBzaG91bGQgYmUg
-cGxhY2VkLg0KW1JpY2hhcmRdIEhpIEx1Y2FzOg0KSGVyZSBpdCBpczoNCkJpdCA3IG9mIEdQQyBJ
-bnRlcmZhY2UgY29udHJvbCByZWdpc3RlciAoR1BDX0NOVFIpLCBsb2NhdGVkIGluIEdlbmVyYWwg
-UG93ZXIgQ29udHJvbGxlcg0KDQpQQ0lFX1BIWV9QVVBfUkVRDQoNClBDSUUgUEhZIHBvd2VyIHVw
-IHJlcXVlc3QuIFNlbGYtY2xlYXIgYml0Lg0KTk9URTogU29mdHdhcmUgbWF5IGRpcmVjdGx5IGNv
-bnRyb2wgZGlzcGxheSBwb3dlciBnYXRlIGFuZCB1dGlsaXplIGhhcmR3YXJlIGNvbnRyb2wgZm9y
-IHJlc2V0IHNlcXVlbmNlLg0KMCDigJQgTm8gUmVxdWVzdA0KMSDigJQgUmVxdWVzdCBwb3dlciB1
-cCBzZXF1ZW5jZQ0KPiANCj4gDQo+ID4gPg0KPiA+ID4gPiArCQkvKiBQb3dlciB1cCBQQ0llIFBI
-WSwgQU5BVE9QX1JFR19DT1JFIG9mZnNldCAweDE0MCwgYml0MTMtOSAqLw0KPiA+ID4NCj4gPiA+
-IE9oIHNvIHRoaXMgaXMgYWN0dWFsbHkgYSBQSFkgcmVndWxhdG9yLCBub3QgZmVlZGluZyB0aGUg
-d2hvbGUgY29yZSwNCj4gPiA+IGJ1dCBqdXN0IHRoZSBQSFk/IFlvdSBjb3VsZCByZW1vdmUgdGhl
-IGNvbW1lbnQgaXQgaXMgY2xlYXIgd2hhdCB5b3UNCj4gPiA+IGFyZSBkb2luZyBmcm9tIHRoZSBj
-b2RlIGFuZCB0aGUgb2Zmc2V0cyBhcmUgb2Ygbm8gaW50ZXJlc3QgaW4gdGhlIFBDSWUNCj4gZHJp
-dmVyLg0KPiA+IFtSaWNoYXJkXSB5ZXMsIGl0IGlzIGEgUEhZIHJlZ3VsYXRvciwgbm90IHVzZWQg
-dG8gZmVlZCB0aGUgd2hvbGUgY29yZS4NCj4gDQo+IE9rLCBzbyBJIGV4cGVjdCB0aGlzIHRvIGJl
-IGNhbGxlZCAicGNpZS1waHktc3VwcGx5IiBpbiB0aGUgYmluZGluZy4NCltSaWNoYXJkXSBUaGFu
-a3MuDQo+IA0KPiA+ID4NCj4gPiA+ID4gKwkJcmVndWxhdG9yX3NldF92b2x0YWdlKGlteDZfcGNp
-ZS0+cGNpZV9yZWd1bGF0b3IsDQo+ID4gPiA+ICsJCQkJMTEwMDAwMCwgMTEwMDAwMCk7DQo+ID4g
-PiA+ICsJCXJldCA9IHJlZ3VsYXRvcl9lbmFibGUoaW14Nl9wY2llLT5wY2llX3JlZ3VsYXRvcik7
-DQo+ID4gPiA+ICsJCWlmIChyZXQpDQo+ID4gPiA+ICsJCQlkZXZfaW5mbyhwcC0+ZGV2LCAiZmFp
-bGVkIHRvIGVuYWJsZSBwY2llIHJlZ3VsYXRvci5cbiIpOw0KPiA+ID4gPiArCQlyZWdtYXBfdXBk
-YXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNfZ3ByLCBJT01VWENfR1BSMTIsDQo+ID4gPiA+ICsJ
-CQkJSU1YNlNYX0dQUjEyX1JYX0VRX01BU0ssIElNWDZTWF9HUFIxMl9SWF9FUV8yKTsNCj4gPiA+
-ID4gKwl9DQo+ID4gPiA+DQo+ID4gPiA+ICAJcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+
-aW9tdXhjX2dwciwgSU9NVVhDX0dQUjEyLA0KPiA+ID4gPiAtCQkJSU1YNlFfR1BSMTJfUENJRV9D
-VExfMiwgMCA8PCAxMCk7DQo+ID4gPiA+ICsJCQlJTVg2UV9HUFIxMl9QQ0lFX0NUTF8yLA0KPiA+
-ID4gPiArCQkJSU1YNlFfR1BSMTJfUENJRV9DVExfMl9DTFIpOw0KPiA+ID4gPg0KPiA+ID4gPiAg
-CS8qIGNvbmZpZ3VyZSBjb25zdGFudCBpbnB1dCBzaWduYWwgdG8gdGhlIHBjaWUgY3RybCBhbmQg
-cGh5ICovDQo+ID4gPiA+ICAJcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+aW9tdXhjX2dw
-ciwgSU9NVVhDX0dQUjEyLA0KPiA+ID4gPiAgCQkJSU1YNlFfR1BSMTJfREVWSUNFX1RZUEUsIFBD
-SV9FWFBfVFlQRV9ST09UX1BPUlQgPDwgMTIpOw0KPiA+ID4gPiAgCXJlZ21hcF91cGRhdGVfYml0
-cyhpbXg2X3BjaWUtPmlvbXV4Y19ncHIsIElPTVVYQ19HUFIxMiwNCj4gPiA+ID4gLQkJCUlNWDZR
-X0dQUjEyX0xPU19MRVZFTCwgOSA8PCA0KTsNCj4gPiA+ID4gKwkJCUlNWDZRX0dQUjEyX0xPU19M
-RVZFTCwgSU1YNlFfR1BSMTJfTE9TX0xFVkVMXzkpOw0KPiA+ID4gPg0KPiA+ID4gPiAgCXJlZ21h
-cF91cGRhdGVfYml0cyhpbXg2X3BjaWUtPmlvbXV4Y19ncHIsIElPTVVYQ19HUFI4LA0KPiA+ID4g
-PiAgCQkJSU1YNlFfR1BSOF9UWF9ERUVNUEhfR0VOMSwgMCA8PCAwKTsgQEAgLTM3MCw3ICs0MzUs
-OCBAQA0KPiBzdGF0aWMNCj4gDQo+IFsuLi5dDQo+IA0KPiA+ID4gPiArc3RhdGljIHZvaWQgcGNp
-X2lteF9yZXN1bWUodm9pZCkNCj4gPiA+ID4gK3sNCj4gPiA+ID4gKwlzdHJ1Y3QgcGNpZV9wb3J0
-ICpwcCA9ICZpbXg2X3BjaWUtPnBwOw0KPiA+ID4gPiArDQo+ID4gPiA+ICsJaWYgKGlzX2lteDZz
-eF9wY2llKGlteDZfcGNpZSkpIHsNCj4gPiA+ID4gKwkJLyogcmVzZXQgaU1YNlNYIFBDSWUgKi8N
-Cj4gPiA+ID4gKwkJcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+aW9tdXhjX2dwciwNCj4g
-PiA+ID4gKwkJCQlJT01VWENfR1BSNSwgQklUKDE4KSwgMSA8PCAxOCk7DQo+ID4gPiA+ICsNCj4g
-PiA+ID4gKwkJcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+aW9tdXhjX2dwciwNCj4gPiA+
-ID4gKwkJCQlJT01VWENfR1BSNSwgQklUKDE4KSwgMCA8PCAxOCk7DQo+ID4gPiA+ICsNCj4gPiA+
-DQo+ID4gPiBBZ2FpbiBtYWdpYyBudW1iZXJzIGhlcmUuIFBsZWFzZSBhZGQgZGVmaW5lcyBmb3Ig
-dGhvc2UuDQo+ID4gW1JpY2hhcmRdIE9rLg0KPiA+ID4NCj4gPiA+ID4gKwkJLyoNCj4gPiA+ID4g
-KwkJICogY29udHJvbGxlciBtYXliZSB0dXJuIG9mZiwgcmUtY29uZmlndXJlIGFnYWluDQo+ID4g
-PiA+ICsJCSAqIFNldCB0aGUgQ0xBU1NfUkVWIG9mIFJDIENGRyBoZWFkZXIgdG8NCj4gPiA+ID4g
-KwkJICogUENJX0NMQVNTX0JSSURHRV9QQ0kNCj4gPiA+ID4gKwkJICovDQo+ID4gPiA+ICsJCXdy
-aXRlbChyZWFkbChwcC0+ZGJpX2Jhc2UgKyBQQ0lfQ0xBU1NfUkVWSVNJT04pDQo+ID4gPiA+ICsJ
-CQl8IChQQ0lfQ0xBU1NfQlJJREdFX1BDSSA8PCAxNiksDQo+ID4gPiA+ICsJCQlwcC0+ZGJpX2Jh
-c2UgKyBQQ0lfQ0xBU1NfUkVWSVNJT04pOw0KPiA+ID4gPiArDQo+ID4gPg0KPiA+ID4gQ2FuJ3Qg
-d2UganVzdCBtb3ZlIHRoZSBjYWxsIHRvIHNldCB0aGlzIGZyb20gZHdfcGNpZV9ob3N0X2luaXQo
-KSB0bw0KPiA+ID4gZHdfcGNpZV9zZXR1cF9yYygpIHNvIHdlIGRvbid0IG5lZWQgdG8gZG8gdGhp
-cyBvdXJzZWx2ZXM/IEl0IHNlZW1zDQo+ID4gPiB0byBiZSB0aGUgbW9yZSBsb2dpY2FsIGNoYW5n
-ZS4NCj4gPiBbUmljaGFyZF1kd19wY2llX2hvc3RfaW5pdCBjb250YWlucyB0aGUgd2hvbGUgcmUt
-aW5pdGlhbGl6YXRpb24gYW5kDQo+ID4gcmUtbGluay11cCAgYWdhaW4gb2YgdGhlIHBjaWUgbW9k
-dWxlLiBJdCdzIG5vdCBwcm9wZXIgdG8gcmUtY2FsbA0KPiBkd19wY2llX2hvc3RfaW5pdCgpLg0K
-PiA+IEkgZmluZCB0aGF0IHRoZSBtc2kgaW5pdCBzaG91bGQgYmUgcmUtY29uZmlndXJlZCBhZ2Fp
-biBhZnRlciByZXN1bWUgYmFjay4NCj4gPiBTbywgdGhlIGRlZmluaXRpb25zIG9mIHRoZSAiUENJ
-RV9NU0lfQUREUl9MTyIgYW5kICJQQ0lFX01TSV9BRERSX0hJIg0KPiA+IHdvdWxkIGJlIHVzZWQg
-aGVyZS4NCj4gPg0KPiANCj4gSSBzZWVtcyB5b3UgbWlzdW5kZXJzdG9vZCBteSBjb21tZW50IGhl
-cmUuIEknbSBub3Qgc2F5aW5nIHdlIHNob3VsZCBjYWxsDQo+IGR3X3BjaWVfaG9zdF9pbml0KCkg
-aGVyZSwgd2hpY2ggd291bGQgYmUgY2xlYXJseSB3cm9uZy4NCj4gDQo+IFdoYXQgSSdtIHNheWlu
-ZyBpcyB0aGF0IHRoZSBjYWxsIHRvIHNldCB1cCB0aGUgQ0xBU1NfUkVWIHJlZ2lzdGVyIGlzIGN1
-cnJlbnRseQ0KPiBkb25lIGluIGR3X3BjaWVfaG9zdF9pbml0KCksIGJ1dCBmcm9tIGEgcXVpY2sg
-bG9vayBhdCB0aGUgY29kZSBJIHRoaW5rIGl0IGlzDQo+IHNhZmUgdG8gbW92ZSB0aGlzIGNhbGwg
-dG8gZHdfcGNpZV9zZXR1cF9yYygpLg0KPiBJZiB5b3UgbW92ZSBpdCB0byB0aGlzIGZ1bmN0aW9u
-IHRoZXJlIHdvdWxkIG5vIG5lZWQgdG8gZG8gaXQgZXhwbGljaXRseSBmcm9tDQo+IHRoaXMgcmVz
-dW1lIGhvb2sgYWdhaW4uDQpbUmljaGFyZF0gVW5kZXJzdG9vZCwgdGhhbmtzLg0KVGhlbiwgSSB3
-b3VsZCBtb3ZlIHRoZSBzZXR1cCBvZiB0aGUgQ0xBU1NfUkVWIHJlZ2lzdGVyIHRvIGR3X3BjaWVf
-c2V0X3JjKCkgbGF0ZXIuDQo+IA0KPiA+IEJUVywgZG8geW91IGtub3cgd2h5IHRoZSAiLyogU3lu
-b3BzaXMgc3BlY2lmaWMgUENJRSBjb25maWd1cmF0aW9uIHJlZ2lzdGVycw0KPiAqLyINCj4gPiBp
-cyBub3QgZGVmaW5lZCBpbiBwY2llLWRlc2lnbndhcmUuaCwgYnV0IGluIHBjaWUtZGVzaWdud2Fy
-ZS5jPw0KPiA+DQo+IA0KPiBNb3N0IHByb2JhYmx5IGJlY2F1c2UgdGhlIHNldHVwIGZvciB0aGUg
-RFcgUENJZSBjb3JlIHNob3VsZCBiZSBoYW5kbGVkIHRocm91Z2gNCj4gcGNpZS1kZXNpZ253YXJl
-LmMgYW5kIG5vdCB0aHJvdWdoIHRoZSBpbmRpdmlkdWFsIFNvQyBkcml2ZXJzLg0KPiANCltSaWNo
-YXJkXSBHb3QgdGhhdCwgdGhhbmtzLg0KPiA+ID4NCj4gPiA+ID4gKwkJZHdfcGNpZV9zZXR1cF9y
-YyhwcCk7DQo+ID4gPiA+ICsJfQ0KPiA+ID4gPiArfQ0KPiA+ID4gPiArDQo+ID4gPiA+ICtzdGF0
-aWMgc3RydWN0IHN5c2NvcmVfb3BzIHBjaV9pbXhfc3lzY29yZV9vcHMgPSB7DQo+ID4gPiA+ICsJ
-LnN1c3BlbmQgPSBwY2lfaW14X3N1c3BlbmQsDQo+ID4gPiA+ICsJLnJlc3VtZSA9IHBjaV9pbXhf
-cmVzdW1lLA0KPiA+ID4gPiArfTsNCj4gPiA+ID4gKyNlbmRpZg0KPiA+ID4gPiArDQo+ID4gPg0K
-PiA+ID4gV2h5IGRvZXMgdGhpcyBuZWVkIHRvIGJlIHN5c2NvcmVfb3BzIGluc3RlYWQgb2YgZGV2
-X3BtX29wcz8NCj4gPiBbUmljaGFyZF0gUE1fVFVSTl9PRkYgbXNnIHNob3VsZCBiZSBzZW50IG91
-dCBhdCB0aGUgZW5kIG9mIHRoZSBzdXNwZW5kIG9mDQo+IHBjaWUgc3Vic3lzdGVtLg0KPiA+IFJl
-c3VtZSBhbmQgcmUtY29uZmlndXJlIG9mIHJjIGNvbnRyb2xsZXIgc2hvdWxkIGJlIGRvbmUgYmVm
-b3JlIHRoZSByZXN1bWUgb2YNCj4gcGNpZSBzdWJzeXN0ZW0uDQo+ID4gU28sIHN5c2NvcmVfb3Bz
-IGlzIHVzZWQgaGVyZS4NCj4gDQo+IE9rLCBtYWtlcyBzZW5zZS4NCltSaWNoYXJkXVRoYW5rcy4N
-Cj4gDQo+IFJlZ2FyZHMsDQo+IEx1Y2FzDQo+IA0KPiAtLQ0KPiBQZW5ndXRyb25peCBlLksuICAg
-ICAgICAgICAgIHwgTHVjYXMgU3RhY2ggICAgICAgICAgICAgICAgIHwNCj4gSW5kdXN0cmlhbCBM
-aW51eCBTb2x1dGlvbnMgICB8IGh0dHA6Ly93d3cucGVuZ3V0cm9uaXguZGUvICB8DQoNCg0KQmVz
-dCBSZWdhcmRzDQpSaWNoYXJkIFpodQ0KDQo=
+Add pci_remap_iospace() to map bus I/O resources into the CPU virtual
+address space.  Architectures with special needs may provide their own
+version, but most should be able to use this one.
+
+This function is useful for PCI host bridge drivers that need to map the
+PCI I/O resources into virtual memory space.
+
+[bhelgaas: phys_addr description, drop temporary "err" variable]
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/pci/pci.c             | 31 +++++++++++++++++++++++++++++++
+ include/asm-generic/pgtable.h |  4 ++++
+ include/linux/pci.h           |  3 +++
+ 3 files changed, 38 insertions(+)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d36f35f..6e994fc 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2704,6 +2704,37 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
+ }
+ EXPORT_SYMBOL(pci_request_regions_exclusive);
+ 
++/**
++ *	pci_remap_iospace - Remap the memory mapped I/O space
++ *	@res: Resource describing the I/O space
++ *	@phys_addr: physical address of range to be mapped
++ *
++ *	Remap the memory mapped I/O space described by the @res
++ *	and the CPU physical address @phys_addr into virtual address space.
++ *	Only architectures that have memory mapped IO functions defined
++ *	(and the PCI_IOBASE value defined) should call this function.
++ */
++int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
++{
++#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
++	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
++
++	if (!(res->flags & IORESOURCE_IO))
++		return -EINVAL;
++
++	if (res->end > IO_SPACE_LIMIT)
++		return -EINVAL;
++
++	return ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
++				  pgprot_device(PAGE_KERNEL));
++#else
++	/* this architecture does not have memory mapped I/O space,
++	   so this function should never be called */
++	WARN_ONCE(1, "This architecture does not support memory mapped I/O\n");
++	return -ENODEV;
++#endif
++}
++
+ static void __pci_set_master(struct pci_dev *dev, bool enable)
+ {
+ 	u16 old_cmd, cmd;
+diff --git a/include/asm-generic/pgtable.h b/include/asm-generic/pgtable.h
+index 53b2acc..977e545 100644
+--- a/include/asm-generic/pgtable.h
++++ b/include/asm-generic/pgtable.h
+@@ -249,6 +249,10 @@ static inline int pmd_same(pmd_t pmd_a, pmd_t pmd_b)
+ #define pgprot_writecombine pgprot_noncached
+ #endif
+ 
++#ifndef pgprot_device
++#define pgprot_device pgprot_noncached
++#endif
++
+ /*
+  * When walking page tables, get the address of the next boundary,
+  * or the end address of the range if that comes earlier.  Although no
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 150da2d..b4995fd 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1100,6 +1100,9 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
+ 						  resource_size_t),
+ 			void *alignf_data);
+ 
++
++int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
++
+ static inline dma_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
+ {
+ 	struct pci_bus_region region;
+-- 
+2.1.1
+
