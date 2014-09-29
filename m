@@ -1,145 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:40324 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757739AbaISUsX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Sep 2014 16:48:23 -0400
-Received: by mail-pd0-f179.google.com with SMTP id ft15so627006pdb.38
-        for <linux-pci@vger.kernel.org>; Fri, 19 Sep 2014 13:48:23 -0700 (PDT)
-Date: Fri, 19 Sep 2014 14:48:17 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Grant Likely <grant.likely@linaro.org>
-Subject: Re: [PATCH v11 02/10] PCI: Introduce helper functions to deal with
- PCI I/O ranges.
-Message-ID: <20140919204817.GF19374@google.com>
-References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
- <1411003825-21521-3-git-send-email-Liviu.Dudau@arm.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:26692 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750911AbaI2KNL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 06:13:11 -0400
+Message-ID: <5429308A.7030201@huawei.com>
+Date: Mon, 29 Sep 2014 18:12:26 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411003825-21521-3-git-send-email-Liviu.Dudau@arm.com>
+To: Liviu Dudau <liviu@dudau.co.uk>
+CC: Thierry Reding <thierry.reding@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 00/22] Use MSI chip framework to configure MSI/MSI-X
+ in all platforms
+References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com> <20140925074235.GN12423@ulmo> <20140925144855.GB31157@bart.dudau.co.uk> <20140925164937.GB30382@ulmo> <5424E09F.50701@huawei.com> <20140926085030.GE31157@bart.dudau.co.uk> <54276F6C.5010705@huawei.com> <20140928112144.GA4671@bart.dudau.co.uk> <5428B971.50101@huawei.com> <20140929092600.GA15854@bart.dudau.co.uk>
+In-Reply-To: <20140929092600.GA15854@bart.dudau.co.uk>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 18, 2014 at 02:30:17AM +0100, Liviu Dudau wrote:
-> Some architectures do not have a simple view of the PCI I/O space
-> and instead use a range of CPU addresses that map to bus addresses.
-> For some architectures these ranges will be expressed by OF bindings
-> in a device tree file.
+>>> Not necessarily. What I have in mind is something like this:
+>>
+>> This is a good idea, what I'm worried is this series is already large, so I think we need to post
+>> another series to do it.
 > 
-> This patch introduces a pci_register_io_range() helper function with
-> a generic implementation that can be used by such architectures to
-> keep track of the I/O ranges described by the PCI bindings. If the
-> PCI_IOBASE macro is not defined that signals lack of support for PCI
-> and we return an error.
+> I wasn't asking to do it here, I was just offering a suggestion (and sharing some experience) when
+> it comes to handling msi chip in an arch independent way.
+
+It's a good suggestion, thanks! :)
+
 > 
-> In order to retrieve the CPU address associated with an I/O port, a
-> new helper function pci_pio_to_address() is introduced. This will
-> search in the list of ranges registered with pci_register_io_range()
-> and return the CPU address that corresponds to the given port.
-> 
-> Cc: Grant Likely <grant.likely@linaro.org>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-> Acked-by: Rob Herring <robh@kernel.org>
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> ---
->  drivers/of/address.c       | 100 +++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/of_address.h |   2 +
->  2 files changed, 102 insertions(+)
-> 
-> diff --git a/drivers/of/address.c b/drivers/of/address.c
-> index e371825..2373a92 100644
-> --- a/drivers/of/address.c
-> +++ b/drivers/of/address.c
-> @@ -5,6 +5,7 @@
->  #include <linux/module.h>
->  #include <linux/of_address.h>
->  #include <linux/pci_regs.h>
-> +#include <linux/slab.h>
->  #include <linux/string.h>
->  
->  /* Max address size we deal with */
-> @@ -601,12 +602,111 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
->  }
->  EXPORT_SYMBOL(of_get_address);
->  
-> +#ifdef PCI_IOBASE
-> +struct io_range {
-> +	struct list_head list;
-> +	phys_addr_t start;
-> +	resource_size_t size;
-> +};
-> +
-> +static LIST_HEAD(io_range_list);
-> +static DEFINE_SPINLOCK(io_range_lock);
-> +#endif
-> +
-> +/*
-> + * Record the PCI IO range (expressed as CPU physical address + size).
-> + * Return a negative value if an error has occured, zero otherwise
-> + */
-> +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-> +{
-> +#ifdef PCI_IOBASE
-> +	struct io_range *range;
-> +	resource_size_t allocated_size = 0;
-> +
-> +	/* check if the range hasn't been previously recorded */
-> +	spin_lock(&io_range_lock);
-> +	list_for_each_entry(range, &io_range_list, list) {
-> +		if (addr >= range->start && addr + size <= range->start + size)
-> +			return 0;
+>>
+>>
 
-This returns while holding io_range_lock.
-
-> +		allocated_size += range->size;
-> +	}
-> +	spin_unlock(&io_range_lock);
-
-I think this is racy; because you drop the lock between (1) checking
-whether the range is already recorded and (2) adding the range to the list,
-it's still possible for two callers to add the same range.
-
-> +	/* range not registed yet, check for available space */
-> +	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
-> +		/* if it's too big check if 64K space can be reserved */
-> +		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT)
-> +			return -E2BIG;
-> +
-> +		size = SZ_64K;
-> +		pr_warn("Requested IO range too big, new size set to 64K\n");
-> +	}
-> +
-> +	/* add the range to the list */
-> +	range = kzalloc(sizeof(*range), GFP_KERNEL);
-> +	if (!range)
-> +		return -ENOMEM;
-> +
-> +	range->start = addr;
-> +	range->size = size;
-> +
-> +	spin_lock(&io_range_lock);
-> +	list_add_tail(&range->list, &io_range_list);
-> +	spin_unlock(&io_range_lock);
-> +#endif
-> +
-> +	return 0;
-> +}
