@@ -1,57 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:50698 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752521AbaIIKZD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Sep 2014 06:25:03 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Mark Rutland <mark.rutland@arm.com>,
-	devicetree@vger.kernel.org, Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Rob Herring <robh+dt@kernel.org>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: keystone: update to support multiple pci ports
-Date: Tue, 09 Sep 2014 12:24:48 +0200
-Message-ID: <5974944.bS5MvrslRo@wuerfel>
-In-Reply-To: <540DD0CF.4000501@ti.com>
-References: <1409938782-31460-1-git-send-email-m-karicheri2@ti.com> <5769746.NkKjYOOUiv@wuerfel> <540DD0CF.4000501@ti.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42948 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752538AbaI2PlQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 11:41:16 -0400
+Date: Mon, 29 Sep 2014 11:40:55 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: David Vrabel <david.vrabel@citrix.com>
+Cc: Chen Gang <gang.chen.5i5j@gmail.com>, ian.campbell@citrix.com,
+	wei.liu2@citrix.com, boris.ostrovsky@oracle.com,
+	bhelgaas@google.com, jgross@suse.com,
+	yongjun_wei@trendmicro.com.cn, mukesh.rathor@oracle.com,
+	xen-devel@lists.xenproject.org,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] xen/xenbus: Use 'void' instead of 'int' for the return
+ of xenbus_switch_state()
+Message-ID: <20140929154055.GA31952@laptop.dumpdata.com>
+References: <5425961A.5000604@gmail.com>
+ <20140929140229.GA28279@laptop.dumpdata.com>
+ <542969E6.1010104@citrix.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <542969E6.1010104@citrix.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 08 September 2014 11:52:47 Murali Karicheri wrote:
-> On 09/05/2014 05:11 PM, Arnd Bergmann wrote:
-> > But the driver can only do root complex mode, and we would probably
-> > want a completely different driver if we were to start supporting
-> > endpoint mode.
+On Mon, Sep 29, 2014 at 03:17:10PM +0100, David Vrabel wrote:
+> On 29/09/14 15:02, Konrad Rzeszutek Wilk wrote:
+> > On Sat, Sep 27, 2014 at 12:36:42AM +0800, Chen Gang wrote:
+> >> When xenbus_switch_state() fails, it will call xenbus_switch_fatal()
+> > 
+> > Only on the first depth, not on the subsequent ones (as in if
+> > the first xenbus_switch_fail fails, it won't try to call
+> > xenbus_switch_state again and again).
+> > 
+> >> internally, so need not return any status value, then use 'void' instead
+> >> of 'int' for xenbus_switch_state() and __xenbus_switch_state().
+> > 
+> > When that switch occurs (to XenbusStateConnected) won't the watches
+> > fire - meaning we MUST make sure that the watch functions - if they
+> > use the xenbus_switch_state() they MUST not hold any locks - because
+> > they could be executed once more?
+> > 
+> > Oh wait, we don't have to worry about that right now as the callbacks
+> > that pick up the messages from the XenBus are all gated on one mutex
+> > anyhow.
+> > 
+> > Hm, anyhow, I would add this extra piece of information to the patch:
+> > 
+> > 
+> > diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
+> > index c214daa..f7399fd 100644
+> > --- a/drivers/xen/xen-pciback/xenbus.c
+> > +++ b/drivers/xen/xen-pciback/xenbus.c
+> > @@ -661,6 +661,12 @@ static void xen_pcibk_be_watch(struct xenbus_watch *watch,
+> >  
+> >  	switch (xenbus_read_driver_state(pdev->xdev->nodename)) {
+> >  	case XenbusStateInitWait:
+> > +		/*
+> > +		 * xenbus_switch_state can call xenbus_switch_fatal which will
+> > +		 * immediately set the state to XenbusStateClosing which
+> > +		 * means if we were reading for it here we MUST drop any
+> > +		 * locks so that we don't dead-lock.
+> > +		 */
 > 
-> Good point! I will drop index#2 handling in the driver code and will 
-> handle the same in boot loader. But I have a question though. The 
-> original driver which is queued up for merge to v3.18 has index #2 for 
-> this reg offset and is documented in the DT documentation as
+> Watches are asynchronous and serialised by the xenwatch thread.  I can't
+> see what deadlock you're talking about here.  Particularly since the
+> backend doesn't watch its own state node (it watches the frontend one).
 > 
-> 	index 2 is the base address and length of PCI mode configuration
-> 	register.
-> 	index 3 is the base address and length of PCI device ID register.
+> >  		xen_pcibk_setup_backend(pdev);
+> >  		break;
+> >  
+> >>
+> >> Also need be sure that all callers which check the return value must let
+> >> 'err' be 0.
+> > 
+> > I am bit uncomfortable with that, that is due to:
+> > 
+> > 
+> > .. snip..
+> >> diff --git a/drivers/net/xen-netback/xenbus.c b/drivers/net/xen-netback/xenbus.c
+> >> index 9c47b89..b5c3d47 100644
+> >> --- a/drivers/net/xen-netback/xenbus.c
+> >> +++ b/drivers/net/xen-netback/xenbus.c
+> >> @@ -337,10 +337,7 @@ static int netback_probe(struct xenbus_device *dev,
+> >>  	if (err)
+> >>  		pr_debug("Error writing multi-queue-max-queues\n");
+> >>  
+> >> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+> >> -	if (err)
+> >> -		goto fail;
+> >> -
+> >> +	xenbus_switch_state(dev, XenbusStateInitWait);
+> > 
+> > Which if it fails it won't call:
+> > 
+> > 354 fail:                                                                           
+> > 355         pr_debug("failed\n");                                                   
+> > 356         netback_remove(dev);                                                    
+> > 357         return err;         
+> > 
+> > 
+> > And since there is no watch on the backend state to go in Closing it won't
+> > ever call those and we leak memory.
 > 
-> 
-> Will this create any issue in terms of backward compatibility if I 
-> remove it and move index3 to index2 and update the code for the same? I 
-> assume since this patch also will likely be on the next branch soon, and 
-> gets merged together with original driver to v3.18, this should be fine. 
-> But for some reason, if this patch doesn't make to v3.18, then won't 
-> this break the backward compatibility?
-> 
-> I think the other option is document index2 as obsolete and update the 
-> document and remove the code for handling it. Any suggestion?
+> It's not leaking the memory.  All resources will be recovered when the
+> device is removed.
 
-Since the driver is not merged into Linus' tree yet and (more importantly)
-has not been in a release yet, we can still fix it. Please just send a
-patch on top to remove it now, it's not too late yet.
+I presume you mean when the XenBus entries are torn down? It does look
+like it would call the .remove functionality. That should take care of that.
 
-	Arnd
+In which case we can just remove all of the 'netback_remove()' and also
+remove some of the labels.
+
+
+> 
+> > The same is for xen-blkback mechanism in the probe function.
+> 
+> David
+> 
