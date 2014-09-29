@@ -1,104 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<bhelgaas@google.com>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>
-Subject: [PATCH v2 1/2] PCI: keystone: remove handle of PCI mode configuration
-Date: Tue, 9 Sep 2014 16:17:14 -0400
-Message-ID: <1410293835-13050-1-git-send-email-m-karicheri2@ti.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQXEUZvkuzwOrK+2zGVj0ywFaQsiWH7SHufZk9BRWnwddQ@mail.gmail.com>
+References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+	<1412000971-9242-11-git-send-email-Liviu.Dudau@arm.com>
+	<CAE9FiQXEUZvkuzwOrK+2zGVj0ywFaQsiWH7SHufZk9BRWnwddQ@mail.gmail.com>
+Date: Mon, 29 Sep 2014 12:06:10 -0700
+Message-ID: <CAE9FiQUkcPRMUEn01VJMyXz8aYvk6C5MBNZi5NCV2m3qkNabeg@mail.gmail.com>
+Subject: Re: [PATCH v13 10/12] PCI: Assign unassigned bus resources in pci_scan_root_bus()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Keystone PCI hardware supports both RC and EP modes and devcfg
-register has bits to boot strap the device to either of these modes.
-It seems proper to add this functionality to the boot loader rather
-than in the driver as device will be operating in either mode, not
-both any time. Currently the driver supports only RC mode and hence
-register configuration in the driver is not needed and driver can
-assume this is a RC hardware.
+On Mon, Sep 29, 2014 at 11:25 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Sep 29, 2014 at 7:29 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+>> If the firmware has not assigned all the bus resources and we are not just
+>> probing the PCI buses, it makes sense to assign the unassigned resources
+>> in pci_scan_root_bus().
+>>
+>> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> CC: Arnd Bergmann <arnd@arndb.de>
+>> CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+>> CC: Rob Herring <robh+dt@kernel.org>
+>> ---
+>>  drivers/pci/probe.c | 3 +++
+>>  1 file changed, 3 insertions(+)
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 636d1c9..d2ebd49 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1951,6 +1951,9 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+>>         if (!found)
+>>                 pci_bus_update_busn_res_end(b, max);
+>>
+>> +       if (!pci_has_flag(PCI_PROBE_ONLY))
+>> +               pci_assign_unassigned_bus_resources(b);
+>> +
+>>         pci_bus_add_devices(b);
+>>         return b;
+>>  }
+>
+> No, you can not do it that early.
+>
+> On x86, we need to call
+> pcibios_resource_survey_bus at first.
 
-Also update the DT documentation accordingly.
-
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
----
- - Added this separate patch to remove pci mode handling
- .../devicetree/bindings/pci/pci-keystone.txt       |    4 +---
- drivers/pci/host/pci-keystone.c                    |   21 ++------------------
- 2 files changed, 3 insertions(+), 22 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-index ceb3e24..bedacf0 100644
---- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
-+++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-@@ -13,9 +13,7 @@ Required Properties:-
- 
- compatibility: "ti,keystone-pcie"
- reg:	index 1 is the base address and length of DW application registers.
--	index 2 is the base address and length of PCI mode configuration
--	register.
--	index 3 is the base address and length of PCI device ID register.
-+	index 2 is the base address and length of PCI device ID register.
- 
- pcie_msi_intc : Interrupt controller device node for MSI IRQ chip
- 	interrupt-cells: should be set to 1
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-index ff8ed25..f1119eb 100644
---- a/drivers/pci/host/pci-keystone.c
-+++ b/drivers/pci/host/pci-keystone.c
-@@ -35,10 +35,6 @@
- #define MAX_MSI_HOST_IRQS		8
- #define MAX_LEGACY_HOST_IRQS		4
- 
--/* RC mode settings masks */
--#define PCIE_RC_MODE		BIT(2)
--#define PCIE_MODE_MASK		(BIT(1) | BIT(2))
--
- /* DEV_STAT_CTRL */
- #define PCIE_CAP_BASE		0x70
- 
-@@ -355,7 +351,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 	void __iomem *reg_p;
- 	struct phy *phy;
- 	int ret = 0;
--	u32 val;
- 
- 	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
- 				GFP_KERNEL);
-@@ -365,18 +360,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 	}
- 	pp = &ks_pcie->pp;
- 
--	/* index 2 is the devcfg register for RC mode settings */
--	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
--	reg_p = devm_ioremap_resource(dev, res);
--	if (IS_ERR(reg_p))
--		return PTR_ERR(reg_p);
--
--	/* enable RC mode in devcfg */
--	val = readl(reg_p);
--	val &= ~PCIE_MODE_MASK;
--	val |= PCIE_RC_MODE;
--	writel(val, reg_p);
--
- 	/* initialize SerDes Phy if present */
- 	phy = devm_phy_get(dev, "pcie-phy");
- 	if (!IS_ERR_OR_NULL(phy)) {
-@@ -385,8 +368,8 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 			return ret;
- 	}
- 
--	/* index 3 is to read PCI DEVICE_ID */
--	res = platform_get_resource(pdev, IORESOURCE_MEM, 3);
-+	/* index 2 is to read PCI DEVICE_ID */
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
- 	reg_p = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(reg_p))
- 		return PTR_ERR(reg_p);
--- 
-1.7.9.5
-
+on x86:
+pcibios_init
+pcibios_resource_survey()
+pcibios_assign_resources() via fs_initcall
