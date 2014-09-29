@@ -1,124 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:59768 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751134AbaIYBXw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 21:23:52 -0400
-Message-ID: <54236E7B.5000905@huawei.com>
-Date: Thu, 25 Sep 2014 09:23:07 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Keith Busch <keith.busch@intel.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Jon Mason <jon.mason@intel.com>, Jon Mason <jdmason@kudzu.us>
-Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
-References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com> <20140903224201.GD26073@google.com> <540802D9.6000903@huawei.com> <CAErSpo6qy76zTX07Ufm0n1_HUA5G0MrAYxauEFa5QkibWsejFQ@mail.gmail.com> <5409117E.2000002@huawei.com> <alpine.LRH.2.03.1409241547430.4696@AMR> <CAErSpo5upA7KYVo=_SvwJ9pdNot_5ENi3OtiPpuzZjpwj3ghPA@mail.gmail.com>
-In-Reply-To: <CAErSpo5upA7KYVo=_SvwJ9pdNot_5ENi3OtiPpuzZjpwj3ghPA@mail.gmail.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <1412029912.4285.110.camel@pasglop>
+Subject: Re: [PATCH v13 10/12] PCI: Assign unassigned bus resources in
+ pci_scan_root_bus()
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Liviu Dudau <Liviu.Dudau@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Date: Tue, 30 Sep 2014 08:31:52 +1000
+In-Reply-To: <CAErSpo62ap1YkzvuZ6MCpXry9=VpLv+Skzrwr10h=+Lc4VfVgQ@mail.gmail.com>
+References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+	 <1412000971-9242-11-git-send-email-Liviu.Dudau@arm.com>
+	 <CAE9FiQXEUZvkuzwOrK+2zGVj0ywFaQsiWH7SHufZk9BRWnwddQ@mail.gmail.com>
+	 <CAE9FiQUkcPRMUEn01VJMyXz8aYvk6C5MBNZi5NCV2m3qkNabeg@mail.gmail.com>
+	 <1412024521.4285.98.camel@pasglop>
+	 <CAErSpo62ap1YkzvuZ6MCpXry9=VpLv+Skzrwr10h=+Lc4VfVgQ@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Mime-Version: 1.0
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/25 7:30, Bjorn Helgaas wrote:
-> On Wed, Sep 24, 2014 at 4:41 PM, Keith Busch <keith.busch@intel.com> wrote:
->> Just poking this thread to make sure it's not dead. :)
->>
->> I tested Yijing's proposal and it is successful on our Intel server
->> platforms; hoping either this or something that derives similar behavior
->> will be applied so we can remove bus tuning kernel parameters.
->>
->> Tested-by: Keith Busch <keith.busch@intel.com>
+On Mon, 2014-09-29 at 15:33 -0600, Bjorn Helgaas wrote:
+> > Right and on powerpc and others as well. We need to survey existing
+> > resources. We also have a number of platform things that might need
+> > to happen before we do the final re-assignment pass.
 > 
-> Oops, thanks for poking me, because this was indeed dead.
-> 
-> My main objection was to testing "is_hotplug_bridge".  That doesn't
-> seem right, because this issue really isn't specific to hotplug.  I
-> didn't see a resolution of that, but let me know if I missed it.
+> That's true today.  But I don't know whether it *has* to be this way
+> forever.  On x86, pcibios_resource_survey() throws in E820 information
+> (which we know long before we do any PCI enumeration) and some IO-APIC
+> resources (it looks like we also know these before PCI enumeration).
+> Powerpc has pcibios_reserve_legacy_regions(), but that looks like
+> mostly stuff that could be done when we find the host bridge, before
+> we enumerate PCI devices below it.
 
-Why I introduced "is_hotplug_bridge" is to avoid to touch the MPS which is not
-in hotplug case when pcie_bus_config == PCIE_BUS_TUNE_OFF.
+Oh we can probably change that but it's going to be much more work than
+just moving the assignment into pci_scan_root_bus(). There are also a
+number of subtle and not-so-subtle bits of code that rely on side
+effects of the current code such as anything that tests for bus->added
+or dev->added. Again, nothing we can't sort out eventually but the
+transition might be a bit painful.
 
-It's so sad that PCIe spec doesn't give a detailed guide to configure MPS.
+We might need to introduce a new flag for platforms converted to the
+"new style" generalized resource assignment which we can deprecate once
+everybody has moved over.
 
-I'd like to refactor current MPS framework, but now there are still some puzzles
-to me. I need to have a deeper understanding of pcie mps. I read Jon's mps patch
-log from git, I found he turn off all this MPS config, because some issues were found
-in some platforms, but no platforms detailed info and no bugzilla records.
-
-
-> 
-> Bjorn
-> 
->> On Thu, 4 Sep 2014, Yijing Wang wrote:
->>>>>>>
->>>>>>>      if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
->>>>>>> +            pcie_bus_update_set(dev);
->>>>>>
->>>>>>
->>>>>> You're only adding this to the PCIE_BUS_TUNE_OFF path.  Can't the same
->>>>>> problem occur for other pcie_bus_config settings?
->>>>>
->>>>>
->>>>> We only found the problem during PCIE_BUS_TUNE_OFF set. Other mode like
->>>>> PCIE_BUS_SAFE and PCIE_BUS_PEER2PEER.
->>>>> This issue won't happen.
->>>>
->>>>
->>>> Sorry, I can't parse this.  Are you saying the problem won't happen in
->>>> the other modes?  Why not?
->>>
->>>
->>> Hi Bjorn, when in PCIE_BUS_SAFE mode, pcie_find_smpss() will find the
->>> largest available mpss in a pcie path.
->>> Then call pcie_bus_configure_set() to set all devices' mps to the largest
->>> available mps in this path, so
->>> all devices in the path will have the same mps. When in
->>> PCIE_BUS_PEER2PEER, all devices' mps will be set to 128B
->>> for safety. And to the PCIE_BUS_PERFORMANCE mode, I found Jon's comment in
->>> pcie_write_mps(),
->>>
->>>                         /* For "Performance", the assumption is made that
->>>                          * downstream communication will never be larger
->>> than
->>>                          * the MRRS.  So, the MPS only needs to be
->>> configured
->>>                          * for the upstream communication.  This being the
->>> case, <------
->>>                          * walk from the top down and set the MPS of the
->>> child
->>>                          * to that of the parent bus.
->>>
->>> So I think the problem won't happen in other modes.
->>>
->>> Thanks!
->>> Yijing.
->>>
->>>
->>>>
->>>>>>>              pcie_bus_detect_mps(dev);
->>>>>>>              return 0;
->>>>>>>      }
->>>>
->>>>
->>>> .
->>>>
->>>
->>>
->>> --
->>> Thanks!
->>> Yijing
->>>
->>>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
+Cheers,
+Ben.
+ 
 
