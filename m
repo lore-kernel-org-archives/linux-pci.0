@@ -1,166 +1,149 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:59527 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754020AbaIWBWc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 21:22:32 -0400
-Message-ID: <5420CB48.7000002@huawei.com>
-Date: Tue, 23 Sep 2014 09:22:16 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Tony Luck <tony.luck@intel.com>,
-	"Thomas Gleixner" <tglx@linutronix.de>, <x86@kernel.org>,
-	<linux-ia64@vger.kernel.org>
-Subject: Re: [PATCH v2 4/5] MSI: Use __get_cached_msi_msg() instead of get_cached_msi_msg()
-References: <1408694880-8260-1-git-send-email-wangyijing@huawei.com> <1408694880-8260-5-git-send-email-wangyijing@huawei.com> <20140922230840.GM1880@google.com>
-In-Reply-To: <20140922230840.GM1880@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>
+Subject: [PATCH v13 07/12] PCI: Add generic domain handling
+Date: Mon, 29 Sep 2014 15:29:26 +0100
+Message-Id: <1412000971-9242-8-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/23 7:08, Bjorn Helgaas wrote:
-> On Fri, Aug 22, 2014 at 04:07:59PM +0800, Yijing Wang wrote:
->> Get_cached_msi_msg() only be called in two places,
->> ia64_set_msi_irq_affinity() and sn_set_msi_irq_affinity().
->>
->> The code flow is:
->> irq = irq_data->irq
->>     get_cached_msi_msg(irq)
->> 	    irq_get_msi_desc(irq)
->> 		    irq_get_irq_data(irq)
->> 			    msi_desc = irq_data->desc
->>         __get_cached_msi_msg(msi_desc, msg)
->>
->> This is crazy, we should use __get_cached_msi_msg(irq_data->desc, msg)
->> directly to simplify the flow, and remove get_cached_msi_msg().
->> Finally, rename __get_cached_msi_msg() to get_cached_msi_msg().
-> 
-> This looks like a nice cleanup.  It'd be easier to review if this were two
-> patches:
-> 
->   1) Convert all callers to use __get_cached_msi_msg() rather than
->      get_cached_msi_msg().
->   2) Remove the unused get_cached_msi_msg() and rename
->      __get_cached_msi_msg() to get_cached_msi_msg().
-> 
-> Maybe even the second patch should be split into remove and rename patches.
+From: Catalin Marinas <catalin.marinas@arm.com>
 
-OK.
+The handling of PCI domains (or PCI segments in ACPI speak) is usually a
+straightforward affair but its implementation is currently left to the
+architectural code, with pci_domain_nr(b) querying the value of the domain
+associated with bus b.
 
-Thanks!
-Yijing.
+This patch introduces CONFIG_PCI_DOMAINS_GENERIC as an option that can be
+selected if an architecture wants a simple implementation where the value
+of the domain associated with a bus is stored in struct pci_bus.
 
-> 
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> CC: Tony Luck <tony.luck@intel.com>
->> CC: Thomas Gleixner <tglx@linutronix.de>
->> CC: x86@kernel.org
->> CC: linux-ia64@vger.kernel.org
->> ---
->>  arch/ia64/kernel/msi_ia64.c    |    2 +-
->>  arch/ia64/sn/kernel/msi_sn.c   |    4 ++--
->>  arch/x86/kernel/apic/io_apic.c |    2 +-
->>  drivers/pci/msi.c              |    9 +--------
->>  include/linux/msi.h            |    3 +--
->>  5 files changed, 6 insertions(+), 14 deletions(-)
->>
->> diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
->> index c430f91..4efe748 100644
->> --- a/arch/ia64/kernel/msi_ia64.c
->> +++ b/arch/ia64/kernel/msi_ia64.c
->> @@ -23,7 +23,7 @@ static int ia64_set_msi_irq_affinity(struct irq_data *idata,
->>  	if (irq_prepare_move(irq, cpu))
->>  		return -1;
->>  
->> -	get_cached_msi_msg(irq, &msg);
->> +	get_cached_msi_msg(idata->msi_desc, &msg);
->>  
->>  	addr = msg.address_lo;
->>  	addr &= MSI_ADDR_DEST_ID_MASK;
->> diff --git a/arch/ia64/sn/kernel/msi_sn.c b/arch/ia64/sn/kernel/msi_sn.c
->> index afc58d2..8bec242 100644
->> --- a/arch/ia64/sn/kernel/msi_sn.c
->> +++ b/arch/ia64/sn/kernel/msi_sn.c
->> @@ -175,8 +175,8 @@ static int sn_set_msi_irq_affinity(struct irq_data *data,
->>  	 * Release XIO resources for the old MSI PCI address
->>  	 */
->>  
->> -	get_cached_msi_msg(irq, &msg);
->> -        sn_pdev = (struct pcidev_info *)sn_irq_info->irq_pciioinfo;
->> +	get_cached_msi_msg(data->msi_desc, &msg);
->> +	sn_pdev = (struct pcidev_info *)sn_irq_info->irq_pciioinfo;
->>  	pdev = sn_pdev->pdi_linux_pcidev;
->>  	provider = SN_PCIDEV_BUSPROVIDER(pdev);
->>  
->> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
->> index 29290f5..e877cfb 100644
->> --- a/arch/x86/kernel/apic/io_apic.c
->> +++ b/arch/x86/kernel/apic/io_apic.c
->> @@ -3145,7 +3145,7 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
->>  	if (ret)
->>  		return ret;
->>  
->> -	__get_cached_msi_msg(data->msi_desc, &msg);
->> +	get_cached_msi_msg(data->msi_desc, &msg);
->>  
->>  	msg.data &= ~MSI_DATA_VECTOR_MASK;
->>  	msg.data |= MSI_DATA_VECTOR(cfg->vector);
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index 0d0f163..8746ecd 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -296,7 +296,7 @@ void read_msi_msg(unsigned int irq, struct msi_msg *msg)
->>  	__read_msi_msg(entry, msg);
->>  }
->>  
->> -void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->> +void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->>  {
->>  	/* Assert that the cache is valid, assuming that
->>  	 * valid messages are not all-zeroes. */
->> @@ -306,13 +306,6 @@ void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->>  	*msg = entry->msg;
->>  }
->>  
->> -void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg)
->> -{
->> -	struct msi_desc *entry = irq_get_msi_desc(irq);
->> -
->> -	__get_cached_msi_msg(entry, msg);
->> -}
->> -
->>  void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->>  {
->>  	if (entry->dev->current_state != PCI_D0) {
->> diff --git a/include/linux/msi.h b/include/linux/msi.h
->> index fff7201..329ec73 100644
->> --- a/include/linux/msi.h
->> +++ b/include/linux/msi.h
->> @@ -16,10 +16,9 @@ struct msi_desc;
->>  void mask_msi_irq(struct irq_data *data);
->>  void unmask_msi_irq(struct irq_data *data);
->>  void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->> -void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->> +void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->>  void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->>  void read_msi_msg(unsigned int irq, struct msi_msg *msg);
->> -void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
->>  void write_msi_msg(unsigned int irq, struct msi_msg *msg);
->>  
->>  struct msi_desc {
->> -- 
->> 1.7.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
+The architectures that select CONFIG_PCI_DOMAINS_GENERIC will then have to
+implement pci_bus_assign_domain_nr() as a way of setting the domain number
+associated with a root bus.  All child buses except the root bus will
+inherit the domain_nr value from their parent.
 
+Signed-off-by: Catalin Marinas <Catalin.Marinas@arm.com>
+[Renamed pci_set_domain_nr() to pci_bus_assign_domain_nr()]
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/pci/probe.c | 11 ++++++++---
+ include/linux/pci.h | 21 +++++++++++++++++++++
+ 2 files changed, 29 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index e3cf8a2..636d1c9 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -485,7 +485,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
+ 	}
+ }
+ 
+-static struct pci_bus *pci_alloc_bus(void)
++static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
+ {
+ 	struct pci_bus *b;
+ 
+@@ -500,6 +500,10 @@ static struct pci_bus *pci_alloc_bus(void)
+ 	INIT_LIST_HEAD(&b->resources);
+ 	b->max_bus_speed = PCI_SPEED_UNKNOWN;
+ 	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
++	if (parent)
++		b->domain_nr = parent->domain_nr;
++#endif
+ 	return b;
+ }
+ 
+@@ -671,7 +675,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	/*
+ 	 * Allocate a new bus, and inherit stuff from the parent..
+ 	 */
+-	child = pci_alloc_bus();
++	child = pci_alloc_bus(parent);
+ 	if (!child)
+ 		return NULL;
+ 
+@@ -1761,13 +1765,14 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	char bus_addr[64];
+ 	char *fmt;
+ 
+-	b = pci_alloc_bus();
++	b = pci_alloc_bus(NULL);
+ 	if (!b)
+ 		return NULL;
+ 
+ 	b->sysdata = sysdata;
+ 	b->ops = ops;
+ 	b->number = b->busn_res.start = bus;
++	pci_bus_assign_domain_nr(b, parent);
+ 	b2 = pci_find_bus(pci_domain_nr(b), bus);
+ 	if (b2) {
+ 		/* If we already got to this bus through a different bridge, ignore it */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 61978a4..a494e5d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -456,6 +456,9 @@ struct pci_bus {
+ 	unsigned char	primary;	/* number of primary bridge */
+ 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
+ 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
++	int		domain_nr;
++#endif
+ 
+ 	char		name[48];
+ 
+@@ -1288,6 +1291,24 @@ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+ static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+ #endif /* CONFIG_PCI_DOMAINS */
+ 
++/*
++ * Generic implementation for PCI domain support. If your
++ * architecture does not need custom management of PCI
++ * domains then this implementation will be used
++ */
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
++static inline int pci_domain_nr(struct pci_bus *bus)
++{
++	return bus->domain_nr;
++}
++void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
++#else
++static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
++					struct device *parent)
++{
++}
++#endif
++
+ /* some architectures require additional setup to direct VGA traffic */
+ typedef int (*arch_set_vga_state_t)(struct pci_dev *pdev, bool decode,
+ 		      unsigned int command_bits, u32 flags);
 -- 
-Thanks!
-Yijing
+2.1.1
 
