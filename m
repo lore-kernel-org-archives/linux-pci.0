@@ -1,66 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:57673 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751694AbaI2Omm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 10:42:42 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: suravee.suthikulpanit@amd.com, will.deacon@arm.com,
-	liviu.dudau@arm.com, marc.zyngier@arm.com, mark.rutland@arm.com,
-	catalin.marinas@arm.com, jason@lakedaemon.net, tglx@linutronix.de,
-	robh+dt@kernel.org, bhelgaas@google.com,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	Marc Zyngier <Marc.Zyngier@arm.com>, linux-pci@vger.kernel.org,
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50536 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752540AbaI2ObK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Sep 2014 10:31:10 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
-	linux-kernel@vger.kernel.org,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>
-Subject: Re: [RFC 4/4] irqchip: gicv2m: Add supports for ARM GICv2m MSI(-X)
-Date: Mon, 29 Sep 2014 16:42:18 +0200
-Message-ID: <2648363.DSa0NxqRJL@wuerfel>
-In-Reply-To: <1411937610-22125-5-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com> <1411937610-22125-5-git-send-email-suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [PATCH v13 10/12] PCI: Assign unassigned bus resources in pci_scan_root_bus()
+Date: Mon, 29 Sep 2014 15:29:29 +0100
+Message-Id: <1412000971-9242-11-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday 28 September 2014 15:53:30 suravee.suthikulpanit@amd.com wrote:
-> +       interrupt-controller@e1101000 {
-> +               compatible = "arm,gic-400";
-> +               #interrupt-cells = >;
-> +               #address-cells = <2>;
-> +               #size-cells = <2>;
-> +               interrupt-controller;
-> +               interrupts = <1 8 0xf04>;
-> +               ranges = <0 0 0 0xe1100000 0 0x100000>;
-> +               reg = <0x0 0xe1110000 0 0x01000>,
-> +                     <0x0 0xe112f000 0 0x02000>,
-> +                     <0x0 0xe1140000 0 0x10000>,
-> +                     <0x0 0xe1160000 0 0x10000>;
-> +               v2m0: v2m@0x8000 {
-> +                       compatible = "arm,gic-v2m-frame";
-> +                       msi-controller;
-> +                       reg = <0x0 0x80000 0 0x1000>;
-> +               };
-> +
-> +               ....
-> +
-> +               v2mN: v2m@0x9000 {
-> +                       compatible = "arm,gic-v2m-frame";
-> +                       msi-controller;
-> +                       reg = <0x0 0x90000 0 0x1000>;
-> +               };
-> +       };
-> 
+If the firmware has not assigned all the bus resources and we are not just
+probing the PCI buses, it makes sense to assign the unassigned resources
+in pci_scan_root_bus().
 
-Could this just be modeled as a separate msi-controller node
-outside of the GIC?
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+CC: Rob Herring <robh+dt@kernel.org>
+---
+ drivers/pci/probe.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Instead of the arm,msi-base-spi/arm,msi-num-spis properties, how
-about using regular "interrupts"/"interrupt-parent" properties listing
-the exact interrupts? That would also make it more flexible in
-case the same layout is used with a parent other than the GIC.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 636d1c9..d2ebd49 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1951,6 +1951,9 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ 	if (!found)
+ 		pci_bus_update_busn_res_end(b, max);
+ 
++	if (!pci_has_flag(PCI_PROBE_ONLY))
++		pci_assign_unassigned_bus_resources(b);
++
+ 	pci_bus_add_devices(b);
+ 	return b;
+ }
+-- 
+2.1.1
 
-	ARnd
