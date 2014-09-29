@@ -1,47 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bn0105.outbound.protection.outlook.com ([157.56.110.105]:47994
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751134AbaIYBXK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Sep 2014 21:23:10 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Fabio Estevam <festevam@gmail.com>
-CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Subject: RE: [PATCH v1 4/4] PCI: imx6: add imx6sx pcie support
-Date: Thu, 25 Sep 2014 01:23:07 +0000
-Message-ID: <5ecf8c18ffa242b993f42ba5c6d542d7@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1411382705-15301-1-git-send-email-r65037@freescale.com>
-	<1411382705-15301-5-git-send-email-r65037@freescale.com>
-	<CAOMZO5D_s7ST_J0FV+NbrHpw2jVBDSpHprHnwJfPbQ=tqy7PWQ@mail.gmail.com>
-	<8f7c463a0c7c4bd2a4a4416bd8b046b3@DM2PR0301MB0862.namprd03.prod.outlook.com>
-	<CAOMZO5BQQdVvyh56dO6CWJF23NN17hgsEEeBBzruhjV4FpSyXQ@mail.gmail.com>
-	<d61b12831f97408badd1850d6a8782b1@BY1PR0301MB0855.namprd03.prod.outlook.com>
- <CAOMZO5ADM1ig6=+TiQJJVkBMSK6qW_Vf7vYsnW_KKoGcFtmxJg@mail.gmail.com>
-In-Reply-To: <CAOMZO5ADM1ig6=+TiQJJVkBMSK6qW_Vf7vYsnW_KKoGcFtmxJg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 29 Sep 2014 17:53:01 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Abel <wuyun.wu@huawei.com>
+cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFT v2 01/24] irqdomain: Introduce new interfaces to support
+ hierarchy irqdomains
+In-Reply-To: <54294F1C.30606@huawei.com>
+Message-ID: <alpine.DEB.2.02.1409291707410.22082@ionos.tec.linutronix.de>
+References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com> <1411740145-30626-2-git-send-email-jiang.liu@linux.intel.com> <54294F1C.30606@huawei.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogRmFiaW8gRXN0ZXZhbSBb
-bWFpbHRvOmZlc3RldmFtQGdtYWlsLmNvbV0NCj4gU2VudDogVGh1cnNkYXksIFNlcHRlbWJlciAy
-NSwgMjAxNCA1OjEzIEFNDQo+IFRvOiBaaHUgUmljaGFyZC1SNjUwMzcNCj4gQ2M6IGxpbnV4LXBj
-aS1vd25lckB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IEd1byBT
-aGF3bi0NCj4gUjY1MDczOyBMdWNhcyBTdGFjaA0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYxIDQv
-NF0gUENJOiBpbXg2OiBhZGQgaW14NnN4IHBjaWUgc3VwcG9ydA0KPiANCj4gT24gVHVlLCBTZXAg
-MjMsIDIwMTQgYXQgMTE6NTUgUE0sIEhvbmctWGluZy5aaHVAZnJlZXNjYWxlLmNvbSA8SG9uZy0N
-Cj4gWGluZy5aaHVAZnJlZXNjYWxlLmNvbT4gd3JvdGU6DQo+IA0KPiA+PiBXaGF0IGFib3V0IHRo
-ZSBleGlzdGluZyBteDZxIHNpbGljb24gdmVyc2lvbj8gSG93IGNhbiB3ZSBmaXggdGhlIGhhbmc/
-DQo+ID4gW1JpY2hhcmRdIFRoZXJlIGlzIGFscmVhZHkgb25lIFNXIHdvcmthcm91bmQodG9nZ2xl
-IHRoZSBURVNUX1BEIGJpdCBpbg0KPiBhcmNoL2FybS9tYWNoLWlteC9wbS5jKSBmb3IgdGhpcyBp
-c3N1ZS4NCj4gPiBJdCBjYW4gd29ya2Fyb3VuZCB0aGlzIGlzc3VlLCBhbHRob3VnaCB3ZSBkb24n
-dCBnZXQgZ3VhcmFudGVlIGZyb20gZGVzaWduDQo+IHRlYW0uDQo+IA0KPiBUaGlzIHdvcmthcm91
-bmQgaXMgYXZhaWxhYmxlIGluIHRoZSBGU0wga2VybmVsLiBIb3dldmVyLCBJIGFtIGludGVyZXN0
-ZWQgaW4gYQ0KPiBzb2x1dGlvbiBmb3IgdGhlIG1haW5saW5lIGtlcm5lbC4NCltSaWNoYXJkXSBJ
-TUhPLCBJIGRvbid0IGtub3cgZWl0aGVyLg0KVGhlIFNXIHdvcmthcm91bmQgdXNlZCBpbiB0aGUg
-RlNMIGtlcm5lbCBjYW4gd29ya3MsIGJ1dCBpdCBzdGlsbCBjYW4ndCBnZXQgZ3VhcmFudGVlDQpU
-aGF0IGl0IGNhbiBmaXggdGhpcyBwcm9ibGVtIGZvciBzdXJlIGZyb20gZGVzaWduIHRlYW0geWV0
-Lg0KDQpCZXN0IFJlZ2FyZHMNClJpY2hhcmQgWmh1DQo=
+On Mon, 29 Sep 2014, Abel wrote:
+> On 2014/9/26 22:02, Jiang Liu wrote:
+> > +static void irq_domain_free_descs(unsigned int virq, unsigned int nr_irqs)
+> > +{
+> > +	unsigned int i;
+> > +
+> > +	for (i = 0; i < nr_irqs; i++)
+> > +		irq_free_desc(virq + i);
+> > +}
+> 
+> I am not sure why this function is needed, since it works in the exact same
+> way as irq_free_descs(virq, nr_irqs).
+
+Indeed.
+ 
+> I've been through your patches and noticed that the only domain
+> which does not call irq_domain_alloc_irqs_parent() is
+> x86_vector_domain. And this makes sense *if* we already knew which
+> domain is the nearest one to the CPU.
+
+Right, and in case of x86 the vector domain _IS_ the one which is
+always the nearest one to the cpu.
+
+> But I don't think a well implemented device driver should assume
+> itself be in a particular position of the interrupt delivery path.
+
+The device driver has no knowledge of this. The irq domain driver
+definitely has to know to some extent.
+
+> Actually it should be guaranteed by the core infrastructure that all
+> the domains in the interrupt delivery path should allocate a
+> hardware interrupt for the interrupt source.
+
+Well, that's what we do. We allocate down the irq domain hierarchy. If
+one level fails the whole operation fails.
+
+> And besides the comments/questions I mentioned above, I am also curious about
+> how the chained interrupts been processed.
+> 
+> Let's take a 3-level-chained-domains for example.
+> Given 3 interrupt controllers A, B and C, and the interrupt delivery path is:
+> 
+> DEV -> A -> B -> C -> CPU
+> 
+> After the hierarchy irqdomains are established, the unique linux interrupt of
+> DEV will be mapped with a hardware interrupt in each domain:
+> 
+> DomainA: HWIRQ_A => VIRQ_DEV
+> DomainB: HWIRQ_B => VIRQ_DEV
+> DomainC: HWIRQ_C => VIRQ_DEV
+> 
+> When the DEV triggered an interrupt signal, the CPU will acknowledge HWIRQ_C,
+
+Not necessarily. The CPU will process HWIRQ_C. The acknowledge
+mechanism depends on the implementation details of the hierarchy.
+
+> and then irq_find_mapping(DomainC, HWIRQ_C) will be called to get the linux
+> interrupt VIRQ_DEV, and after the handler of the VIRQ_DEV has been processed,
+> the interrupt will end with the level (if have) uncleared on B, which will
+> result in the interrupt of DEV cannot be processed again.
+> 
+> Or is there anything I misunderstand?
+
+This heavily depends on the properties of the stacked domains.
+
+It depends on the hardware requirements and the implementation of
+domain A and B how this is handled.
+
+It might be sufficient to have the following code in the irq_ack()
+callback of domain A:
+
+irq_ack_A(struct irq_data *d)
+{
+	ack_hw_A();
+}
+
+Another HW or stacking scenario requires
+
+irq_ack_A(struct irq_data *d)
+{
+	ack_hw_A();
+	ack_parent();
+}
+
+where ack_parent() does:
+
+      if (d->parent_data)
+      	 d->parent_data->chip->ack(d->parent_data);
+
+and ack_hw_A() can be anything from a nop to some more or less complex
+hw access.
+
+So we cannot define upfront how deep an ack/mask/unmask/... has to be
+propagated down the chain. This needs a careful consideration in terms
+of functionality and we want to be able to do performance shortcuts as
+well.
+
+Thanks,
+
+	tglx
+
+
