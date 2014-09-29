@@ -1,160 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:56833 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753855AbaIDUxw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Sep 2014 16:53:52 -0400
-Received: by mail-pd0-f178.google.com with SMTP id y13so14495948pdi.9
-        for <linux-pci@vger.kernel.org>; Thu, 04 Sep 2014 13:53:52 -0700 (PDT)
-Date: Thu, 4 Sep 2014 14:53:48 -0600
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Mon, 29 Sep 2014 13:43:35 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] resource: Add device-managed
- request/release_resource()
-Message-ID: <20140904205348.GC17125@google.com>
-References: <1406895311-18869-1-git-send-email-thierry.reding@gmail.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH v13 00/12] Support for creating generic PCI host bridges
+ from DT
+Message-ID: <20140929194335.GA13747@google.com>
+References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1406895311-18869-1-git-send-email-thierry.reding@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 01, 2014 at 02:15:10PM +0200, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
-> 
-> Provide device-managed implementations of the request_resource() and
-> release_resource() functions. Upon failure to request a resource, the
-> new devm_request_resource() function will output an error message for
-> consistent error reporting.
-> 
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
+On Mon, Sep 29, 2014 at 03:29:19PM +0100, Liviu Dudau wrote:
+> This is my version 13 of the attempt at adding support for generic PCI host
+> bridge controllers. It contains only cleanups to make it play nice with the
+> linux-next tree as of 09/25. If Bjorn deems it safe, now that it looks like
+> asm-generic is going to revert some of its more aggresive patches, he has the
+> choice of queueing it into linux-next again.
+> ...
 
-Applied both, with Tejun's ack on the first, for v3.18, thanks!
+These patches above were already on my pci/host-generic branch and in
+linux-next:
 
-> ---
-> Changes in v2:
-> - use more natural flow for error handling
-> - don't needlessly check for NULL pointers
-> 
->  Documentation/driver-model/devres.txt |  2 +
->  include/linux/ioport.h                |  5 +++
->  kernel/resource.c                     | 70 +++++++++++++++++++++++++++++++++++
->  3 files changed, 77 insertions(+)
-> 
-> diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
-> index d14710b04439..befc3fe12ba6 100644
-> --- a/Documentation/driver-model/devres.txt
-> +++ b/Documentation/driver-model/devres.txt
-> @@ -264,8 +264,10 @@ IIO
->  IO region
->    devm_release_mem_region()
->    devm_release_region()
-> +  devm_release_resource()
->    devm_request_mem_region()
->    devm_request_region()
-> +  devm_request_resource()
->  
->  IOMAP
->    devm_ioport_map()
-> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> index 142ec544167c..2c5250222278 100644
-> --- a/include/linux/ioport.h
-> +++ b/include/linux/ioport.h
-> @@ -215,6 +215,11 @@ static inline int __deprecated check_region(resource_size_t s,
->  
->  /* Wrappers for managed devices */
->  struct device;
-> +
-> +extern int devm_request_resource(struct device *dev, struct resource *root,
-> +				 struct resource *new);
-> +extern void devm_release_resource(struct device *dev, struct resource *new);
-> +
->  #define devm_request_region(dev,start,n,name) \
->  	__devm_request_region(dev, &ioport_resource, (start), (n), (name))
->  #define devm_request_mem_region(dev,start,n,name) \
-> diff --git a/kernel/resource.c b/kernel/resource.c
-> index da14b8d09296..ca24f19f9d18 100644
-> --- a/kernel/resource.c
-> +++ b/kernel/resource.c
-> @@ -1248,6 +1248,76 @@ int release_mem_region_adjustable(struct resource *parent,
->  /*
->   * Managed region resource
->   */
-> +static void devm_resource_release(struct device *dev, void *ptr)
-> +{
-> +	struct resource **r = ptr;
-> +
-> +	release_resource(*r);
-> +}
-> +
-> +/**
-> + * devm_request_resource() - request and reserve an I/O or memory resource
-> + * @dev: device for which to request the resource
-> + * @root: root of the resource tree from which to request the resource
-> + * @new: descriptor of the resource to request
-> + *
-> + * This is a device-managed version of request_resource(). There is usually
-> + * no need to release resources requested by this function explicitly since
-> + * that will be taken care of when the device is unbound from its driver.
-> + * If for some reason the resource needs to be released explicitly, because
-> + * of ordering issues for example, drivers must call devm_release_resource()
-> + * rather than the regular release_resource().
-> + *
-> + * When a conflict is detected between any existing resources and the newly
-> + * requested resource, an error message will be printed.
-> + *
-> + * Returns 0 on success or a negative error code on failure.
-> + */
-> +int devm_request_resource(struct device *dev, struct resource *root,
-> +			  struct resource *new)
-> +{
-> +	struct resource *conflict, **ptr;
-> +
-> +	ptr = devres_alloc(devm_resource_release, sizeof(*ptr), GFP_KERNEL);
-> +	if (!ptr)
-> +		return -ENOMEM;
-> +
-> +	*ptr = new;
-> +
-> +	conflict = request_resource_conflict(root, new);
-> +	if (conflict) {
-> +		dev_err(dev, "resource collision: %pR conflicts with %s %pR\n",
-> +			new, conflict->name, conflict);
-> +		devres_free(ptr);
-> +		return -EBUSY;
-> +	}
-> +
-> +	devres_add(dev, ptr);
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL(devm_request_resource);
-> +
-> +static int devm_resource_match(struct device *dev, void *res, void *data)
-> +{
-> +	struct resource **ptr = res;
-> +
-> +	return *ptr == data;
-> +}
-> +
-> +/**
-> + * devm_release_resource() - release a previously requested resource
-> + * @dev: device for which to release the resource
-> + * @new: descriptor of the resource to release
-> + *
-> + * Releases a resource previously requested using devm_request_resource().
-> + */
-> +void devm_release_resource(struct device *dev, struct resource *new)
-> +{
-> +	WARN_ON(devres_release(dev, devm_resource_release, devm_resource_match,
-> +			       new));
-> +}
-> +EXPORT_SYMBOL(devm_release_resource);
-> +
->  struct region_devres {
->  	struct resource *parent;
->  	resource_size_t start;
-> -- 
-> 2.0.3
-> 
+   asm-generic/io.h: Fix ioport_map() for !CONFIG_GENERIC_IOMAP
+   of/pci: Add pci_register_io_range() and pci_pio_to_address()
+   ARM: Define PCI_IOBASE as the base of virtual PCI IO space
+   of/pci: Define of_pci_range_to_resource() only when CONFIG_PCI=y
+   of/pci: Move of_pci_range_to_resources() to of/address.c
+   of/pci: Fix the conversion of IO ranges into IO resources
+
+I added these three patches to my pci/host-generic branch:
+
+   PCI: Add generic domain handling
+   of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()
+   of/pci: Add support for parsing PCI host bridge resources from DT
+
+Yinghai pointed out a problem with this one, so I omitted it:
+
+   PCI: Assign unassigned bus resources in pci_scan_root_bus()
+
+I added this one to my pci/host-generic branch:
+
+   PCI: Add pci_remap_iospace() to map bus I/O resources
+
+I assume this depends on the pci_scan_root_bus() change (if not, let me
+know), so I omitted this one:
+
+   arm64: Add architectural support for PCI
+
+Bjorn
