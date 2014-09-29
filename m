@@ -1,50 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:53040 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751048AbaIJIWo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Sep 2014 04:22:44 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: linux-arm-kernel@lists.infradead.org, robh+dt@kernel.org,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	bhelgaas@google.com, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] PCI: keystone: update to support multiple pci ports
-Date: Wed, 10 Sep 2014 10:22:36 +0200
-Message-ID: <3814561.AbrslYBNjb@wuerfel>
-In-Reply-To: <540F8425.70304@ti.com>
-References: <1410293835-13050-1-git-send-email-m-karicheri2@ti.com> <3967092.l9bxcqMaSa@wuerfel> <540F8425.70304@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [PATCH v13 04/12] of/pci: Define of_pci_range_to_resource() only when CONFIG_PCI=y
+Date: Mon, 29 Sep 2014 15:29:23 +0100
+Message-Id: <1412000971-9242-5-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 09 September 2014 18:50:13 Murali Karicheri wrote:
-> My mistake. It is the device ID, not vendor ID. The PCI driver supports 
-> PCI h/w on K2HK, K2E and K2L SoCs for which PCI device IDs are assigned as
-> 
-> +#define PCIE_RC_K2HK           0xb008
-> +#define PCIE_RC_K2E            0xb009
-> +#define PCIE_RC_K2L            0xb00a
-> +
-> 
-> and the same driver code runs on all these h/w. The device ID is not 
-> filled in by default by the h/w, in the config space of the RC at offset 
-> 1000h "VENDOR_DEVICE_ID Vendor and Device Identification Register". 
-> Same is available in a seperate SoC register whose offset is specified 
-> by index 2. This is read by driver and updated in the config space. The 
-> Vendor ID is however set by default.
-> 
-> There is a mrrs PCI quirk required for Keystone PCI which depends on 
-> this vendor ID to be filled correctly as it match vendor id/ device id 
-> of the bridge device to apply the quirk.
-> 
-> Hope this clarify your question.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Ok, I understand now. Yes, this makes sense, though I wonder if it would
-have been easier to handle the quirk in a different way based on the
-driver rather than the PCI ID. It's probably not worth revisiting though,
-unless Bjorn wants to see it done differently now.
+of_pci_range_to_resource() was previously defined always, but it's only
+used by PCI code, so move the definition inside the CONFIG_OF_ADDRESS &&
+CONFIG_PCI block.
 
-	Arnd
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ include/linux/of_address.h | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index f8cc7da..ecf913c 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -23,17 +23,6 @@ struct of_pci_range {
+ #define for_each_of_pci_range(parser, range) \
+ 	for (; of_pci_range_parser_one(parser, range);)
+ 
+-static inline void of_pci_range_to_resource(struct of_pci_range *range,
+-					    struct device_node *np,
+-					    struct resource *res)
+-{
+-	res->flags = range->flags;
+-	res->start = range->cpu_addr;
+-	res->end = range->cpu_addr + range->size - 1;
+-	res->parent = res->child = res->sibling = NULL;
+-	res->name = np->full_name;
+-}
+-
+ /* Translate a DMA address from device space to CPU space */
+ extern u64 of_translate_dma_address(struct device_node *dev,
+ 				    const __be32 *in_addr);
+@@ -140,6 +129,18 @@ extern const __be32 *of_get_pci_address(struct device_node *dev, int bar_no,
+ 			       u64 *size, unsigned int *flags);
+ extern int of_pci_address_to_resource(struct device_node *dev, int bar,
+ 				      struct resource *r);
++
++static inline void of_pci_range_to_resource(struct of_pci_range *range,
++					    struct device_node *np,
++					    struct resource *res)
++{
++	res->flags = range->flags;
++	res->start = range->cpu_addr;
++	res->end = range->cpu_addr + range->size - 1;
++	res->parent = res->child = res->sibling = NULL;
++	res->name = np->full_name;
++}
++
+ #else /* CONFIG_OF_ADDRESS && CONFIG_PCI */
+ static inline int of_pci_address_to_resource(struct device_node *dev, int bar,
+ 				             struct resource *r)
+@@ -155,4 +156,3 @@ static inline const __be32 *of_get_pci_address(struct device_node *dev,
+ #endif /* CONFIG_OF_ADDRESS && CONFIG_PCI */
+ 
+ #endif /* __OF_ADDRESS_H */
+-
+-- 
+2.1.1
+
