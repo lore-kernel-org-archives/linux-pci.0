@@ -1,62 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:55801 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754016AbaIAOL0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Sep 2014 10:11:26 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dmitry Torokhov <dtor@google.com>,
-	Aubrey Li <aubrey.li@intel.com>
-Subject: [PATCH 04/13] genirq: Make use of pm misfeature accounting
-Date: Mon, 01 Sep 2014 16:22:02 +0200
-Message-ID: <1544653.nbssNZd6vM@vostro.rjw.lan>
-In-Reply-To: <2516134.pmOxkEuOOy@vostro.rjw.lan>
-References: <26580319.OZP7jvJnA9@vostro.rjw.lan> <5320472.coYotHR1d0@vostro.rjw.lan> <2516134.pmOxkEuOOy@vostro.rjw.lan>
+Received: from mail-bn1on0114.outbound.protection.outlook.com ([157.56.110.114]:20448
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751525AbaI3KHJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Sep 2014 06:07:09 -0400
+From: Richard Zhu <r65037@freescale.com>
+To: <linux-pci-owner@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
+	<festevam@gmail.com>, <l.stach@pengutronix.de>,
+	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
+Subject: [PATCH v4 09/10] ARM: imx6sx: add imx6sx pcie related gpr bits definitions
+Date: Tue, 30 Sep 2014 17:36:43 +0800
+Message-ID: <1412069804-17162-10-git-send-email-r65037@freescale.com>
+In-Reply-To: <1412069804-17162-1-git-send-email-r65037@freescale.com>
+References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
-
-Use the accounting fields which got introduced for snity checking for
-the various PM options.
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Richard Zhu <r65037@freescale.com>
 ---
- kernel/irq/pm.c |    9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ include/linux/mfd/syscon/imx6q-iomuxc-gpr.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-Index: linux/kernel/irq/pm.c
-===================================================================
---- linux.orig/kernel/irq/pm.c
-+++ linux/kernel/irq/pm.c
-@@ -51,7 +51,7 @@ void irq_pm_remove_action(struct irq_des
+diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+index ff44374..3273b87 100644
+--- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
++++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+@@ -301,6 +301,7 @@
+ #define IMX6Q_GPR12_DEVICE_TYPE			(0xf << 12)
+ #define IMX6Q_GPR12_PCIE_CTL_2			BIT(10)
+ #define IMX6Q_GPR12_LOS_LEVEL			(0x1f << 4)
++#define IMX6Q_GPR12_LOS_LEVEL_9			(0x9 << 4)
  
- static void suspend_device_irq(struct irq_desc *desc, int irq)
- {
--	if (!desc->action || (desc->action->flags & IRQF_NO_SUSPEND))
-+	if (!desc->action || desc->no_suspend_depth)
- 		return;
+ #define IMX6Q_GPR13_SDMA_STOP_REQ		BIT(30)
+ #define IMX6Q_GPR13_CAN2_STOP_REQ		BIT(29)
+@@ -395,4 +396,12 @@
+ #define IMX6SL_GPR1_FEC_CLOCK_MUX1_SEL_MASK    (0x3 << 17)
+ #define IMX6SL_GPR1_FEC_CLOCK_MUX2_SEL_MASK    (0x1 << 14)
  
- 	desc->istate |= IRQS_SUSPENDED;
-@@ -94,11 +94,8 @@ static void resume_irq(struct irq_desc *
- 	if (desc->istate & IRQS_SUSPENDED)
- 		goto resume;
- 
--	if (!desc->action)
--		return;
--
--	/* Interrupts marked with that flag are force reenabled */
--	if (!(desc->action->flags & IRQF_FORCE_RESUME))
-+	/* Force resume the interrupt? */
-+	if (!desc->force_resume_depth)
- 		return;
- 
- 	/* Pretend that it got disabled ! */
++/* For imx6sx iomux gpr register field define */
++#define IMX6SX_GPR5_PCIE_BTNRST			BIT(19)
++#define IMX6SX_GPR5_PCIE_PERST			BIT(18)
++
++#define IMX6SX_GPR12_PCIE_PM_TURN_OFF		BIT(16)
++#define IMX6SX_GPR12_PCIE_TEST_PD		BIT(30)
++#define IMX6SX_GPR12_RX_EQ_MASK			(0x7 << 0)
++#define IMX6SX_GPR12_RX_EQ_2			(0x2 << 0)
+ #endif /* __LINUX_IMX6Q_IOMUXC_GPR_H */
+-- 
+1.9.1
 
