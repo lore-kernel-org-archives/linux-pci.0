@@ -1,28 +1,47 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1on0134.outbound.protection.outlook.com ([157.56.110.134]:56640
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752043AbaI3KHJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Sep 2014 06:07:09 -0400
+From: Richard Zhu <r65037@freescale.com>
+To: <linux-pci-owner@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
+	<festevam@gmail.com>, <l.stach@pengutronix.de>,
+	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
+Subject: [PATCH v4 06/10] ARM: imx6qdl: enable pcie on imx6qdl sabreauto
+Date: Tue, 30 Sep 2014 17:36:40 +0800
+Message-ID: <1412069804-17162-7-git-send-email-r65037@freescale.com>
+In-Reply-To: <1412069804-17162-1-git-send-email-r65037@freescale.com>
+References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20140912180141.1630.17120.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Date: Fri, 12 Sep 2014 11:53:14 -0700
-Message-ID: <CA+55aFzrt7PRbNbcDJzK2doEuhuvDrNDr=X21m6k0+bXk2tmmg@mail.gmail.com>
-Subject: Re: [PATCH v1 00/13] PCI: Device configuration cleanup
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 12, 2014 at 11:02 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
-> Finally, it tweaks several _HPP/_HPX things where we do things not
-> required by the spec and I haven't seen any other good reason for them:
+- enable pcie on imx6qdl sabreauto boards.
 
-Looks ok to me, although, as always, resource management changes just
-makes me worry that things worked "by mistake" before.
+Signed-off-by: Richard Zhu <r65037@freescale.com>
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+---
+ arch/arm/boot/dts/imx6qdl-sabreauto.dtsi | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-          Linus
+diff --git a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
+index 009abd6..d6040a5 100644
+--- a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
++++ b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
+@@ -410,6 +410,10 @@
+ 	};
+ };
+ 
++&pcie {
++	status = "okay";
++};
++
+ &pwm3 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_pwm3>;
+-- 
+1.9.1
+
