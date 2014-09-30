@@ -1,145 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f181.google.com ([209.85.216.181]:50236 "EHLO
-	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899AbaIKWvt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Sep 2014 18:51:49 -0400
-Received: by mail-qc0-f181.google.com with SMTP id r5so2117331qcx.40
-        for <linux-pci@vger.kernel.org>; Thu, 11 Sep 2014 15:51:46 -0700 (PDT)
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:37356 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754755AbaI3GQE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 02:16:04 -0400
+Message-ID: <542A4A99.4030204@hp.com>
+Date: Tue, 30 Sep 2014 14:15:53 +0800
+From: "Li, ZhenHua" <zhen-hual@hp.com>
 MIME-Version: 1.0
-In-Reply-To: <ghd2b1svdw.fsf@quad.gouders.net>
-References: <ghiol53r9u.fsf@lena.gouders.net> <CAMxnaaXiEZeJOsgQ6ZSbiqy5Z1zNoXonwNSQNRyRhV0t5jveYQ@mail.gmail.com>
- <ghwq9k3m6z.fsf@lena.gouders.net> <CAMxnaaUqTMf1uEQUqrAGjym8ZrQaBf2QbE4Jqxh2t6a2JgJkOQ@mail.gmail.com>
- <ghioku5l29.fsf@lena.gouders.net> <CAErSpo7j=a3y2MVsvEQGQ4B63_mNCyZSRNXNEZa-2++xs88NmQ@mail.gmail.com>
- <CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com>
- <ghppf15236.fsf@quad.gouders.net> <CAErSpo5SVUOz+qa_x5JTC+-Y5ewTyYzA0N=jyPtK9LaguRrt=w@mail.gmail.com>
- <ghd2b1svdw.fsf@quad.gouders.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 11 Sep 2014 16:51:25 -0600
-Message-ID: <CAErSpo5e0GOdVbZdQYriP+aWziKELpb9BWTgJ4ERPia354CM5w@mail.gmail.com>
-Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
-To: Dirk Gouders <dirk@gouders.net>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>
+CC: "Li, Zhen-Hua" <zhen-hual@hp.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Carolyn Wyborny <carolyn.wyborny@intel.com>,
+	Don Skidmore <donald.c.skidmore@intel.com>,
+	Greg Rose <gregory.v.rose@intel.com>,
+	Alex Duyck <alexander.h.duyck@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Mitch Williams <mitch.a.williams@intel.com>,
+	Linux NICS <linux.nics@intel.com>,
+	e1000-devel@lists.sourceforge.net, linda.knippers@hp.com
+Subject: Re: [PATCH 1/1] pci/quirks: fix a dmar fault for intel 82599 card
+References: <1412057394-7186-1-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1412057394-7186-1-git-send-email-zhen-hual@hp.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 11, 2014 at 3:24 PM, Dirk Gouders <dirk@gouders.net> wrote:
-> Bjorn Helgaas <bhelgaas@google.com> writes:
->
->> On Thu, Sep 11, 2014 at 2:33 PM, Dirk Gouders <dirk@gouders.net> wrote:
->>> What I was currently trying was to construct a test-environment so that
->>> I do not need to do tests and diagnosis on a busy machine.
->>>
->>> I noticed that this problem seems to start with the narrow Root
->>> Bridge window (00-07) but every other machine that I had a look at,
->>> starts with (00-ff), so those will not trigger my problem.
->>>
->>> I thought I could perhaps try to shrink the window in
->>> acpi_pci_root_add() to trigger the problem and that kind of works: it
->>> triggers it but not exactly the same way, because it basically ends at
->>> this code in pci_scan_bridge():
->>>
->>>         if (max >= bus->busn_res.end) {
->>>                 dev_warn(&dev->dev, "can't allocate child bus %02x from %pR (pass %d)\n",
->>>                          max, &bus->busn_res, pass);
->>>                 goto out;
->>>         }
->>>
->>> If this could work but I am just missing a small detail, I would be
->>> glad to hear about it and do the first tests this way.  If it is
->>> complete nonsense, I will just use the machine that triggers the problem
->>> for the tests.
->>
->> I was about to suggest the same thing.  If the problem is related to
->> the bus number change, we should be able to force that to happen on a
->> different machine.  Your approach sounds good, so I'm guessing we just
->> need a tweak.
->>
->> I would first double-check that the PCI adapters are identical,
->> including the firmware on the card.  Can you also include your patch
->> and the resulting dmesg (with debug enabled as before)?
->
-> Currently I am at home doing just tests for understanding and that I can
-> hopefully use when I am back in the office.
->
-> I already noticed the the backup FC Adapter on the test machine is not
-> exactly the same: it is Rev. 1 whereas the one on the failing machine is
-> Rev. 2.
->
-> So, here at home my tests let a NIC disappear.  Different from the
-> original problem but I was just trying to reconstruct the szenario of a
-> misconfigured bridge causing a reconfiguration.
->
-> What I was trying is:
->
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index e6ae603..fd146b3 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -556,6 +556,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->         strcpy(acpi_device_name(device), ACPI_PCI_ROOT_DEVICE_NAME);
->         strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
->         device->driver_data = root;
-> +       root->secondary.end = 0x02;
->
->         pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
->                acpi_device_name(device), acpi_device_bid(device),
->
-> The device that disappears is a NIC:
->
-> 00:00.0 Host bridge: Intel Corporation Xeon E3-1200 v2/3rd Gen Core processor DRAM Controller (rev 09)
-> 00:02.0 VGA compatible controller: Intel Corporation Xeon E3-1200 v2/3rd Gen Core processor Graphics Controller (rev 09)
-> 00:14.0 USB controller: Intel Corporation 7 Series/C210 Series Chipset Family USB xHCI Host Controller (rev 04)
-> 00:16.0 Communication controller: Intel Corporation 7 Series/C210 Series Chipset Family MEI Controller #1 (rev 04)
-> 00:1a.0 USB controller: Intel Corporation 7 Series/C210 Series Chipset Family USB Enhanced Host Controller #2 (rev 04)
-> 00:1b.0 Audio device: Intel Corporation 7 Series/C210 Series Chipset Family High Definition Audio Controller (rev 04)
-> 00:1c.0 PCI bridge: Intel Corporation 7 Series/C210 Series Chipset Family PCI Express Root Port 1 (rev c4)
-> 00:1c.4 PCI bridge: Intel Corporation 7 Series/C210 Series Chipset Family PCI Express Root Port 5 (rev c4)
-> 00:1c.5 PCI bridge: Intel Corporation 7 Series/C210 Series Chipset Family PCI Express Root Port 6 (rev c4)
-> 00:1d.0 USB controller: Intel Corporation 7 Series/C210 Series Chipset Family USB Enhanced Host Controller #1 (rev 04)
-> 00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev a4)
-> 00:1f.0 ISA bridge: Intel Corporation B75 Express Chipset LPC Controller (rev 04)
-> 00:1f.2 SATA controller: Intel Corporation 7 Series/C210 Series Chipset Family 6-port SATA Controller [AHCI mode] (rev 04)
-> 00:1f.3 SMBus: Intel Corporation 7 Series/C210 Series Chipset Family SMBus Controller (rev 04)
-> 02:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 06)
->
-> This is the one that is missing with the above change:
-> 03:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 06)
+Add Joerg to CC list. For it is also related to iommu module.
 
-This situation is a little different, so I don't think you're
-reproducing the situation we want to test.  On this box, you have:
+Joerg,
+There was a try for this dmar fault,
+	https://lkml.org/lkml/2014/8/18/118
 
-    pci_bus 0000:00: root bus resource [bus 00-02]
-    pci 0000:00:1c.0: PCI bridge to [bus 01]
-    pci 0000:00:1c.4: PCI bridge to [bus 02]
+This patch is trying to fix the same thing.
 
-so we find all the devices on bus 00 and bus 02 (there's nothing on
-bus 01).  My guess is the 03:00.0 device is normally behind the
-00:1c.5 bridge, but we don't even scan behind that bridge because we
-can't allocate a secondary bus number for it (we're not smart enough
-to take advantage of the empty bus 01).
 
-On the failing box, it's different because we *do* have unused bus
-number space, and we do actually reconfigure the bridge to use it.
-It's just that the FC adapter doesn't respond when we use the new bus
-number for it.
+Zhenhua
+On 09/30/2014 02:09 PM, Li, Zhen-Hua wrote:
+> On a HP system with Intel Corporation 82599 ethernet adapter, when kernel
+> crashed and the kdump kernel boots with intel_iommu=on, there may be some
+> unexpected DMA requests on this adapter, which will cause DMA Remapping
+> faults like:
+>      dmar: DRHD: handling fault status reg 102
+>      dmar: DMAR:[DMA Read] Request device [41:00.0] fault addr fff81000
+>      DMAR:[fault reason 01] Present bit in root entry is clear
+>
+> Analysis for this bug:
+>
+> The present bit is set in this function:
+>
+> static struct context_entry * device_to_context_entry(
+> 		struct intel_iommu *iommu, u8 bus, u8 devfn)
+> {
+>      ......
+>                  set_root_present(root);
+>      ......
+> }
+>
+> Calling tree:
+> ixgbe_open
+>      ixgbe_setup_tx_resources
+>          intel_alloc_coherent
+>              __intel_map_single
+>                  domain_context_mapping
+>                      domain_context_mapping_one
+>                          device_to_context_entry
+>
+> This means, the present bit in root entry will not be set until the device
+>   driver is loaded.
+>
+> But in the kdump kernel, some hardware device does not know the OS is the
+>   second kernel and the drivers should be loaded again, this causes there are
+>   some unexpected DMA requsts on this device when it has not been initialized,
+>   and then the DMA Remapping errors come.
+>
+> To fix this DMAR fault, we need to reset the bus that this device on. Reset
+>   the device itself does not work.
+>
+> There also was a discussion:
+> https://lkml.org/lkml/2013/5/14/9
+>
+> Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+> ---
+>   drivers/pci/quirks.c | 11 +++++++++++
+>   1 file changed, 11 insertions(+)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 80c2d01..5198af3 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -25,6 +25,7 @@
+>   #include <linux/sched.h>
+>   #include <linux/ktime.h>
+>   #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+> +#include <linux/crash_dump.h>
+>   #include "pci.h"
+>
+>   /*
+> @@ -3832,3 +3833,13 @@ void pci_dev_specific_enable_acs(struct pci_dev *dev)
+>   		}
+>   	}
+>   }
+> +
+> +#ifdef CONFIG_CRASH_DUMP
+> +void quirk_reset_buggy_devices(struct pci_dev *dev)
+> +{
+> +	if (unlikely(is_kdump_kernel()))
+> +		pci_try_reset_bus(dev->bus);
+> +}
+> +DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_INTEL, 0x10f8,
+> +		PCI_CLASS_NETWORK_ETHERNET, 8, quirk_reset_buggy_devices);
+> +#endif
+>
 
-You might be able to do something similar on the test box by:
-
-  - Keeping your root->secondary.end = 02 patch, so you still have [bus 00-02].
-  - Ignoring bridges 00:1c.0 and 00:1c.4.  I would just test for those
-devfns in pci_scan_device() and when you see them, return NULL instead
-of trying to read the vendor ID.
-
-Then 00:1c.5 is probably configured by the BIOS for [bus 03], but
-that's outside the root bridge range, so we should reconfigure it to
-use [bus 01].  Then we should scan behind it, and we'll probably
-discover the NIC that was previously at 03:00.0.  The device *should*
-just work at the new bus number, since it probably doesn't have the
-same bug the FC adapter does.
-
-Bjorn
