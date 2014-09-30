@@ -1,173 +1,107 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <540FB051.3050107@linux.intel.com>
-Date: Wed, 10 Sep 2014 09:58:41 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Len Brown <lenb@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [Patch v4 05/16] ACPI: Add interfaces to parse IOAPIC ID for
- IOAPIC hotplug
-References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com> <1409192561-19744-6-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1409091248090.11037@nanos>
-In-Reply-To: <alpine.DEB.2.10.1409091248090.11037@nanos>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:16777 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753736AbaI3RvQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Sep 2014 13:51:16 -0400
+From: Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: Martin Mares <mj@ucw.cz>, linux-pci@vger.kernel.org
+Cc: Matthew Wilcox <willy@linux.intel.com>,
+	Matthew Wilcox <matthew.r.wilcox@intel.com>
+Subject: [PATCH] lspci: Add ability to filter by class code
+Date: Tue, 30 Sep 2014 13:50:36 -0400
+Message-Id: <1412099436-18899-1-git-send-email-matthew.r.wilcox@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Extend the 'filter by device ID' functionality to allow optional
+specification of a device ID.  For example, to list all USB controllers
+in the system made by Intel, specify:
 
+lspci -d 8086::0c03
 
-On 2014/9/9 18:54, Thomas Gleixner wrote:
-> On Thu, 28 Aug 2014, Jiang Liu wrote:
->>  
->> +static struct acpi_table_madt *madt;
->> +static int read_madt;
-> 
-> Pretty lousy file visible variable names.
-> 
-> So we end up with two copies of the butt ugly 
-> 
->    if (!read_madt) {
->       .....
->    }
-> 
-> stuff instead of creating a helper function which hides that and do
-> 
->       madr = get_madt();
->       if (!madt)
-> 		return ...;
-> 
-> at the call sites.
-Thanks for suggestion, will improve in that way.
+Signed-off-by: Matthew Wilcox <matthew.r.wilcox@intel.com>
+---
+ lib/filter.c | 22 +++++++++++++++++++---
+ lib/pci.h    |  2 +-
+ 2 files changed, 20 insertions(+), 4 deletions(-)
 
-> 
->>  static int map_lapic_id(struct acpi_subtable_header *entry,
->>  		 u32 acpi_id, int *apic_id)
->>  {
->> @@ -64,8 +71,6 @@ static int map_lsapic_id(struct acpi_subtable_header *entry,
->>  static int map_madt_entry(int type, u32 acpi_id)
->>  {
->>  	unsigned long madt_end, entry;
->> -	static struct acpi_table_madt *madt;
->> -	static int read_madt;
->>  	int apic_id = -1;
->>  
->>  	if (!read_madt) {
->> @@ -200,3 +205,90 @@ int acpi_get_cpuid(acpi_handle handle, int type, u32 acpi_id)
->>  	return acpi_map_cpuid(apic_id, acpi_id);
->>  }
->>  EXPORT_SYMBOL_GPL(acpi_get_cpuid);
->> +
->> +#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
->> +static int map_ioapic_id(struct acpi_subtable_header *entry, u32 gsi_base,
->> +			 u64 *phys_addr, int *ioapic_id)
->> +{
->> +	struct acpi_madt_io_apic *ioapic = (struct acpi_madt_io_apic *)entry;
->> +
->> +	if (ioapic->global_irq_base != gsi_base)
->> +		return 0;
->> +
->> +	*phys_addr = ioapic->address;
->> +	*ioapic_id = ioapic->id;
->> +	return 1;
->> +}
->> +
->> +static int map_madt_ioapic_entry(u32 gsi_base, u64 *phys_addr)
->> +{
->> +	struct acpi_subtable_header *hdr;
->> +	unsigned long madt_end, entry;
->> +	int apic_id = -1;
->> +
->> +	if (!read_madt) {
->> +		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
->> +					(struct acpi_table_header **)&madt)))
->> +			madt = NULL;
->> +		read_madt++;
->> +	}
->> +
->> +	if (!madt)
->> +		return apic_id;
->> +
->> +	entry = (unsigned long)madt;
->> +	madt_end = entry + madt->header.length;
->> +
->> +	/* Parse all entries looking for a match. */
->> +	entry += sizeof(struct acpi_table_madt);
->> +	while (entry + sizeof(struct acpi_subtable_header) < madt_end) {
->> +		hdr = (struct acpi_subtable_header *)entry;
->> +		if (hdr->type == ACPI_MADT_TYPE_IO_APIC &&
->> +		    map_ioapic_id(hdr, gsi_base, phys_addr, &apic_id))
->> +			break;
->> +		else
->> +			entry += hdr->length;
->> +	}
->> +
->> +	return apic_id;
->> +}
->> +
->> +static int map_mat_ioapic_entry(acpi_handle handle, u32 gsi_base,
->> +				u64 *phys_addr)
->> +{
->> +	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
->> +	union acpi_object *obj;
->> +	struct acpi_subtable_header *header;
->> +	int apic_id = -1;
->> +
->> +	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_MAT", NULL, &buffer)))
->> +		goto exit;
->> +
->> +	if (!buffer.length || !buffer.pointer)
->> +		goto exit;
->> +
->> +	obj = buffer.pointer;
->> +	if (obj->type != ACPI_TYPE_BUFFER ||
->> +	    obj->buffer.length < sizeof(struct acpi_subtable_header))
->> +		goto exit;
->> +
->> +	header = (struct acpi_subtable_header *)obj->buffer.pointer;
->> +	if (header->type == ACPI_MADT_TYPE_IO_APIC)
->> +		map_ioapic_id(header, gsi_base, phys_addr, &apic_id);
->> +
->> +exit:
->> +	kfree(buffer.pointer);
->> +	return apic_id;
->> +}
-> 
-> 
-> This stuff really wants proper documentation. The lack of comments is
-> just annoying.
-Sure, will improve comments in next version.
+diff --git a/lib/filter.c b/lib/filter.c
+index f321b0f..fab0025 100644
+--- a/lib/filter.c
++++ b/lib/filter.c
+@@ -15,7 +15,7 @@ void
+ pci_filter_init(struct pci_access *a UNUSED, struct pci_filter *f)
+ {
+   f->domain = f->bus = f->slot = f->func = -1;
+-  f->vendor = f->device = -1;
++  f->vendor = f->device = f->class = -1;
+ }
+ 
+ /* Slot filter syntax: [[[domain]:][bus]:][slot][.[func]] */
+@@ -74,12 +74,12 @@ pci_filter_parse_slot(struct pci_filter *f, char *str)
+   return NULL;
+ }
+ 
+-/* ID filter syntax: [vendor]:[device] */
++/* ID filter syntax: [vendor]:[device][:class] */
+ 
+ char *
+ pci_filter_parse_id(struct pci_filter *f, char *str)
+ {
+-  char *s, *e;
++  char *s, *c, *e;
+ 
+   if (!*str)
+     return NULL;
+@@ -94,6 +94,9 @@ pci_filter_parse_id(struct pci_filter *f, char *str)
+ 	return "Invalid vendor ID";
+       f->vendor = x;
+     }
++  c = strchr(s, ':');
++  if (c)
++    *c++ = 0;
+   if (s[0] && strcmp(s, "*"))
+     {
+       long int x = strtol(s, &e, 16);
+@@ -101,6 +104,13 @@ pci_filter_parse_id(struct pci_filter *f, char *str)
+ 	return "Invalid device ID";
+       f->device = x;
+     }
++  if (c && c[0] && strcmp(s, "*"))
++    {
++      long int x = strtol(c, &e, 16);
++      if ((e && *e) || (x < 0 || x > 0xffff))
++	return "Invalid class code";
++      f->class = x;
++    }
+   return NULL;
+ }
+ 
+@@ -119,5 +129,11 @@ pci_filter_match(struct pci_filter *f, struct pci_dev *d)
+ 	  (f->vendor >= 0 && f->vendor != d->vendor_id))
+ 	return 0;
+     }
++  if (f->class >= 0)
++    {
++      pci_fill_info(d, PCI_FILL_CLASS);
++      if (f->class != d->device_class)
++	return 0;
++    }
+   return 1;
+ }
+diff --git a/lib/pci.h b/lib/pci.h
+index 38e2e99..b0bf1aa 100644
+--- a/lib/pci.h
++++ b/lib/pci.h
+@@ -193,7 +193,7 @@ struct pci_cap *pci_find_cap(struct pci_dev *, unsigned int id, unsigned int typ
+ 
+ struct pci_filter {
+   int domain, bus, slot, func;			/* -1 = ANY */
+-  int vendor, device;
++  int vendor, device, class;
+ };
+ 
+ void pci_filter_init(struct pci_access *, struct pci_filter *) PCI_ABI;
+-- 
+2.1.0
 
-Regards!
-Gerry
-
-> 
->> +int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr)
->> +{
->> +	int apic_id;
->> +
->> +	apic_id = map_mat_ioapic_entry(handle, gsi_base, phys_addr);
->> +	if (apic_id == -1)
->> +		apic_id = map_madt_ioapic_entry(gsi_base, phys_addr);
->> +
->> +	return apic_id;
->> +}
-> 
-> Thanks,
-> 
-> 	tglx
-> 
