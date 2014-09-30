@@ -1,65 +1,65 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Mon, 22 Sep 2014 17:29:48 +0200
-From: Robert Richter <rric@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v11 10/10] PCI: Introduce pci_remap_iospace() for
- remapping PCI I/O bus resources into CPU space
-Message-ID: <20140922152948.GB20256@rric.localhost>
-References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
- <1411003825-21521-11-git-send-email-Liviu.Dudau@arm.com>
- <20140919215400.GA30239@google.com>
- <201409200420.31433.arnd@arndb.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1on0119.outbound.protection.outlook.com ([157.56.110.119]:30081
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751497AbaI3KHJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Sep 2014 06:07:09 -0400
+From: Richard Zhu <r65037@freescale.com>
+To: <linux-pci-owner@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
+	<festevam@gmail.com>, <l.stach@pengutronix.de>,
+	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
+Subject: [PATCH v4 01/10] PCI: imx6: wait the clocks to stabilize after ref_en
+Date: Tue, 30 Sep 2014 17:36:35 +0800
+Message-ID: <1412069804-17162-2-git-send-email-r65037@freescale.com>
+In-Reply-To: <1412069804-17162-1-git-send-email-r65037@freescale.com>
+References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <201409200420.31433.arnd@arndb.de>
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20.09.14 04:20:31, Arnd Bergmann wrote:
-> On Friday 19 September 2014, Bjorn Helgaas wrote:
-> > On Thu, Sep 18, 2014 at 02:30:25AM +0100, Liviu Dudau wrote:
-> 
-> > PCI_IOBASE is a virtual address.  So PCI_IOBASE + res->start is also a
-> > virtual address (only for IORESOURCE_IO).
-> > 
-> > Since res->start is normally a *physical* address, I think it would be less
-> > confusing to do something like this:
-> > 
-> >     vaddr = PCI_IOBASE + res->start;
-> >     ioremap_page_range(vaddr, vaddr + resource_size(res), ...);
-> > 
-> > so we have a hint that the first two ioremap_page_range() parameters are
-> > virtual addresses.  It's also confusing that it uses "unsigned long" for
-> > the virtual addresses, when we usually use "void *".  But that's out of
-> > scope for this patch.
-> 
-> Good idea. I think it will have to be (unsigned long)PCI_IOBASE above then,
-> since ioremap_page_range takes a 'unsigned long' virtual address and PCI_IOBASE
-> should really remain an __iomem pointer.
+For boards without a reset gpio we skip the delay between enabling
+the pcie_ref_clk and touching the RC registers for configuration.
+System would be hangs when the clocks are not yet settled in the DW
+PCIe core. So we need to make sure that there is always an
+appropriate delay between those two actions.
 
-Right, I see this warning here:
+Signed-off-by: Richard Zhu <r65037@freescale.com>
+---
+ drivers/pci/host/pci-imx6.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-drivers/pci/pci.c: In function ‘pci_remap_iospace’:
-drivers/pci/pci.c:2728:8: warning: assignment makes integer from pointer without a cast [enabled by default]
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 233fe8a..eac96fb 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -275,15 +275,22 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		goto err_pcie;
+ 	}
+ 
+-	/* allow the clocks to stabilize */
+-	usleep_range(200, 500);
+-
+ 	/* power up core phy and enable ref clock */
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
++	/*
++	 * the async reset input need ref clock to sync internally,
++	 * when the ref clock comes after reset, internal synced
++	 * reset time is too short , cannot meet the requirement.
++	 * add one ~10us delay here.
++	 */
++	udelay(10);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+ 
++	/* allow the clocks to stabilize */
++	usleep_range(200, 500);
++
+ 	/* Some boards don't have PCIe reset GPIO. */
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+ 		gpio_set_value(imx6_pcie->reset_gpio, 0);
+-- 
+1.9.1
 
--Robert
