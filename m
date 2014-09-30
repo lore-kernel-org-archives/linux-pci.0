@@ -1,130 +1,84 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qg0-f48.google.com ([209.85.192.48]:52918 "EHLO
+	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751268AbaI3Tx3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 15:53:29 -0400
+Received: by mail-qg0-f48.google.com with SMTP id i50so3973950qgf.7
+        for <linux-pci@vger.kernel.org>; Tue, 30 Sep 2014 12:53:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140930171002.GB15854@bart.dudau.co.uk>
+References: <706416181.hbVGLDA3o6@wuerfel> <20140930160139.GA5625@google.com> <20140930171002.GB15854@bart.dudau.co.uk>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 30 Sep 2014 13:53:06 -0600
+Message-ID: <CAErSpo61favodLTSwCYzFZq-sB60+ZH6_WvwSGHgRx6cPKtXpA@mail.gmail.com>
+Subject: Re: [PATCH] of/pci: add pci_pio_to_address dummy for !CONFIG_OF
+To: Liviu Dudau <liviu@dudau.co.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
 	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v12 06/12] PCI: Create pci_host_bridge before its associated bus in pci_create_root_bus.
-Date: Tue, 23 Sep 2014 20:01:08 +0100
-Message-Id: <1411498874-9864-7-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+	Rob Herring <robh@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
-As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
-the creation order has been changed for no good reason. Revert the order of
-creation as we are going to depend on the pci_host_bridge structure to retrieve the
-domain number of the root bus.
+On Tue, Sep 30, 2014 at 11:10 AM, Liviu Dudau <liviu@dudau.co.uk> wrote:
+> On Tue, Sep 30, 2014 at 10:01:39AM -0600, Bjorn Helgaas wrote:
+>> On Tue, Sep 30, 2014 at 03:19:05PM +0200, Arnd Bergmann wrote:
+>> > The pci_register_io_range() and pci_pio_to_address() were recently
+>> > introduced to generalize the handling of memory mapped PCI I/O space,
+>> > but they are only valid when CONFIG_OF is set, leading to a possible
+>> > build error:
+>> >
+>> > drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_setup_window':
+>> > drivers/pci/host/pcie-rcar.c:340:3: error: implicit declaration of function 'pci_pio_to_address' [-Werror=implicit-function-declaration]
+>> >    res_start = pci_pio_to_address(res->start);
+>> >    ^
+>> > drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_probe':
+>> > drivers/pci/host/pcie-rcar.c:945:3: error: implicit declaration of function 'of_pci_range_to_resource' [-Werror=implicit-function-declaration]
+>> >    err = of_pci_range_to_resource(&range, pdev->dev.of_node,
+>> >    ^
+>> > cc1: some warnings being treated as errors
+>> >
+>> > This provides inline dummy implementations for the case that
+>> > CONFIG_OF is disabled, to allow better build testing.
+>> >
+>> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>> > Fixes: 279c5dd046 ("of/pci: Add pci_register_io_range() and pci_pio_to_address()")
+>>
+>> I'm rebuilding the pci/host-generic branch to pick up the other v13 fixes,
+>> so I folded this fix directly into the "of/pci: Add pci_register_io_range()
+>> and pci_pio_to_address()" patch.  Thanks for finding this; the config
+>> dependencies are a bit of a mess.
+>
+> Bjorn,
+>
+> I suggest splitting this patch into 2 parts, move the one that adds pci_pio_to_address() in patch 2
+> and the other in patch 5.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Acked-by: Grant Likely <grant.likely@linaro.org>
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-Tested-by: Tanmay Inamdar <tinamdar@apm.com>
----
- drivers/pci/probe.c | 32 +++++++++++++++++---------------
- 1 file changed, 17 insertions(+), 15 deletions(-)
+Yeah, I screwed that up.  I had just applied Arnd's patch completely
+to 279c5dd046, which doesn't quite make sense.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e3cf8a2..5ff72ec 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -515,7 +515,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
- 	kfree(bridge);
- }
- 
--static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
-+static struct pci_host_bridge *pci_alloc_host_bridge(void)
- {
- 	struct pci_host_bridge *bridge;
- 
-@@ -524,7 +524,8 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
- 		return NULL;
- 
- 	INIT_LIST_HEAD(&bridge->windows);
--	bridge->bus = b;
-+	bridge->dev.release = pci_release_host_bridge_dev;
-+
- 	return bridge;
- }
- 
-@@ -1761,9 +1762,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	char bus_addr[64];
- 	char *fmt;
- 
-+	bridge = pci_alloc_host_bridge();
-+	if (!bridge)
-+		return NULL;
-+
-+	bridge->dev.parent = parent;
-+
- 	b = pci_alloc_bus();
- 	if (!b)
--		return NULL;
-+		goto err_out;
- 
- 	b->sysdata = sysdata;
- 	b->ops = ops;
-@@ -1772,26 +1779,19 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	if (b2) {
- 		/* If we already got to this bus through a different bridge, ignore it */
- 		dev_dbg(&b2->dev, "bus already known\n");
--		goto err_out;
-+		goto err_bus_out;
- 	}
- 
--	bridge = pci_alloc_host_bridge(b);
--	if (!bridge)
--		goto err_out;
--
--	bridge->dev.parent = parent;
--	bridge->dev.release = pci_release_host_bridge_dev;
-+	bridge->bus = b;
- 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
- 	error = pcibios_root_bridge_prepare(bridge);
--	if (error) {
--		kfree(bridge);
-+	if (error)
- 		goto err_out;
--	}
- 
- 	error = device_register(&bridge->dev);
- 	if (error) {
- 		put_device(&bridge->dev);
--		goto err_out;
-+		goto err_bus_out;
- 	}
- 	b->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(b->bridge);
-@@ -1848,8 +1848,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- class_dev_reg_err:
- 	put_device(&bridge->dev);
- 	device_unregister(&bridge->dev);
--err_out:
-+err_bus_out:
- 	kfree(b);
-+err_out:
-+	kfree(bridge);
- 	return NULL;
- }
- 
--- 
-2.1.0
+I tried again like this:
 
+  - In "of/pci: Add pci_register_io_range() and pci_pio_to_address()",
+I added the dummy pci_pio_to_address(), so there's an extern and a
+definition in address.c when CONFIG_OF_ADDRESS=y, and an inline dummy
+otherwise.
+
+  - I dropped "of/pci: Define of_pci_range_to_resource() only when
+CONFIG_PCI=y".
+
+  - In "of/pci: Move of_pci_range_to_resource() to of/address.c", I
+added the dummy of_pci_range_to_resource(), so there's an extern an a
+definition in address.c when CONFIG_OF_ADDRESS=y and CONFIG_PCI=y, and
+an inline dummy otherwise.
+
+I'm not really set up to build test this, and my head is swimming a
+bit, so I hope this is it.  I pushed the pci/host-generic branch
+again, so you can look at it yourself.
+
+Bjorn
