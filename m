@@ -1,70 +1,40 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2on0134.outbound.protection.outlook.com ([207.46.100.134]:23611
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751497AbaI3KHG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Sep 2014 06:07:06 -0400
+From: Richard Zhu <r65037@freescale.com>
+To: <linux-pci-owner@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
+	<festevam@gmail.com>, <l.stach@pengutronix.de>,
+	<tharvey@gateworks.com>
+Subject: [PATCH v4]PCI: imx6: enable pcie on imx6sx sdb and imx6qdl sabreauto.
+Date: Tue, 30 Sep 2014 17:36:34 +0800
+Message-ID: <1412069804-17162-1-git-send-email-r65037@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <1412029912.4285.110.camel@pasglop>
-References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
- <1412000971-9242-11-git-send-email-Liviu.Dudau@arm.com> <CAE9FiQXEUZvkuzwOrK+2zGVj0ywFaQsiWH7SHufZk9BRWnwddQ@mail.gmail.com>
- <CAE9FiQUkcPRMUEn01VJMyXz8aYvk6C5MBNZi5NCV2m3qkNabeg@mail.gmail.com>
- <1412024521.4285.98.camel@pasglop> <CAErSpo62ap1YkzvuZ6MCpXry9=VpLv+Skzrwr10h=+Lc4VfVgQ@mail.gmail.com>
- <1412029912.4285.110.camel@pasglop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 29 Sep 2014 17:08:49 -0600
-Message-ID: <CAErSpo70t9TMdntjBt+GdTw3FVmMquACQePX8=SKkySPuG3F3Q@mail.gmail.com>
-Subject: Re: [PATCH v13 10/12] PCI: Assign unassigned bus resources in pci_scan_root_bus()
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Yinghai Lu <yinghai@kernel.org>, Liviu Dudau <Liviu.Dudau@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 29, 2014 at 4:31 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Mon, 2014-09-29 at 15:33 -0600, Bjorn Helgaas wrote:
->> > Right and on powerpc and others as well. We need to survey existing
->> > resources. We also have a number of platform things that might need
->> > to happen before we do the final re-assignment pass.
->>
->> That's true today.  But I don't know whether it *has* to be this way
->> forever.  On x86, pcibios_resource_survey() throws in E820 information
->> (which we know long before we do any PCI enumeration) and some IO-APIC
->> resources (it looks like we also know these before PCI enumeration).
->> Powerpc has pcibios_reserve_legacy_regions(), but that looks like
->> mostly stuff that could be done when we find the host bridge, before
->> we enumerate PCI devices below it.
->
-> Oh we can probably change that but it's going to be much more work than
-> just moving the assignment into pci_scan_root_bus().
+The 10th patch is not sent out properly, re-send the patch-set again.
 
-Agreed.  It's obvious that we can't apply Liviu's patch as-is.
+Main changes since the v3:
+1. fix one potential assignment error of cfg start in designware driver when
+IORESOURCE_MEM "config" is represented as cfg space resource.
+2. Use "config" cfg space in imx6sx pcie dts.
+3. Add more descriptive in the imx6sx pcie binding.
+4. Sort the pre-fix of the patch-set, then it would be easier
+for Bjorn and Shawn to merge them, after the patch-set is accepted.
+5. rename the disp_axi clcok to pcie_inbound_axi.
 
-> There are also a
-> number of subtle and not-so-subtle bits of code that rely on side
-> effects of the current code such as anything that tests for bus->added
-> or dev->added. Again, nothing we can't sort out eventually but the
-> transition might be a bit painful.
->
-> We might need to introduce a new flag for platforms converted to the
-> "new style" generalized resource assignment which we can deprecate once
-> everybody has moved over.
-
-There's definitely a lot of work here if we ever want to make this happen.
-
-Bjorn
+[PATCH v4 01/10] PCI: imx6: wait the clocks to stabilize after ref_en
+[PATCH v4 02/10] PCI: imx6: add imx6sx pcie support
+[PATCH v4 03/10] PCI: imx6: Fix possible dead lock
+[PATCH v4 04/10] PCI: designware: refine setup_rc and add msi data
+[PATCH v4 05/10] PCI: designware: fix one potential assignment error
+[PATCH v4 06/10] ARM: imx6qdl: enable pcie on imx6qdl sabreauto
+[PATCH v4 07/10] ARM: imx6: update dts and binding for imx6sx pcie
+[PATCH v4 08/10] ARM: imx6sx: add syscon into gpc dts
+[PATCH v4 09/10] ARM: imx6sx: add imx6sx pcie related gpr bits
+[PATCH v4 10/10] ARM: imx6sx: enable pcie on imx6sx sdb board
