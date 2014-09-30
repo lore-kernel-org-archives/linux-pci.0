@@ -1,82 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5417E40A.6030009@linux.intel.com>
-Date: Tue, 16 Sep 2014 15:17:30 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:51040 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750833AbaI3VG1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 17:06:27 -0400
+Received: by mail-ig0-f170.google.com with SMTP id a13so13207igq.3
+        for <linux-pci@vger.kernel.org>; Tue, 30 Sep 2014 14:06:27 -0700 (PDT)
+Date: Tue, 30 Sep 2014 15:06:24 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI/MSI: Simplify default_restore_msi_irq()
+Message-ID: <20140930210624.GE5625@google.com>
+References: <1411979733-28523-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-CC: Ashok Raj <ashok.raj@intel.com>, Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: Re: [Patch Part3 V5 0/8] Enable support of Intel DMAR device hotplug
-References: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com> <54169B1B.1070709@huawei.com>
-In-Reply-To: <54169B1B.1070709@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1411979733-28523-1-git-send-email-wangyijing@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Sep 29, 2014 at 04:35:33PM +0800, Yijing Wang wrote:
+> Both MSI and MSI-X irq will be associated to msi_desc
+> in arch MSI code, e.g. in x86
+> arch_setup_msi_irqs()
+> 	native_setup_msi_irqs()
+> 		setup_msi_irq()
+> 			irq_set_msi_desc_off()
+> 
+> Use irq_get_msi_desc() to get the MSI-X msi_desc for
+> simplification. 
 
+Holy cow, this is a mess (not your patch, but the existing split between
+common code and arch code).  You showed one path above, but how am I
+supposed to know that *all* the paths make this association correctly?  If
+all the paths do it, why isn't the association done in some common code to
+begin with?  Is this telling us that the arch interface is designed wrong?
 
-On 2014/9/15 15:54, Yijing Wang wrote:
-> I built and boot this series in Huawei RH5885 (Intel(R) Xeon(R) CPU E7- 4807, two IOHs and two IOMMUs),
-> It works fine, IRQ remap and DMA remap are both look good.
-> But because my platform BIOS has no _DSM, so I didn't test the hotplug case yet.
+No doubt there's some implicit knowledge, like "there's no way MSI can work
+at all unless the arch code makes this association," but I don't know
+enough about MSI to have that knowledge, and consequently I really can't
+convince myself that this patch is safe for everybody.
+
+> Also use __write_msi_msg() instead
+> of write_msi_msg() to avoid the redundant calls.
+
+I applied this part to pci/msi for v3.18 since it's unrelated.
+
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/msi.c |   13 ++-----------
+>  1 files changed, 2 insertions(+), 11 deletions(-)
 > 
-> Thanks!
-> Yijing.
-Hi Yijing,
-	Thanks for your great effort to review and test this patch set!
-Regards!
-Gerry
-> 
-> 
-> On 2014/9/12 10:10, Jiang Liu wrote:
->> When hot plugging a descrete IOH or a physical processor with embedded
->> IIO, we need to handle DMAR(or IOMMU) unit in the PCIe host bridge if
->> DMAR is in use. This patch set tries to enhance current DMAR/IOMMU/IR
->> drivers to support hotplug and is based on latest Linus master branch.
->>
->> All prerequisite patches to support DMAR device hotplug have been merged
->> into the mainstream kernel, and this is the last patch set to enable
->> DMAR device hotplug.
->>
->> You may access the patch set at:
->> https://github.com/jiangliu/linux.git iommu/hotplug_v5
->>
->> This patch set has been tested on Intel development machine.
->> Appreciate any comments and tests.
->>
->> Patch 1-4 enhances DMAR framework to support hotplug
->> Patch 5 enhances Intel interrupt remapping driver to support hotplug
->> Patch 6 enhances error handling in Intel IR driver
->> Patch 7 enhance Intel IOMMU to support hotplug
->> Patch 8 enhance ACPI pci_root driver to handle DMAR units
->>
->> Jiang Liu (8):
->>   iommu/vt-d: Introduce helper function dmar_walk_resources()
->>   iommu/vt-d: Dynamically allocate and free seq_id for DMAR units
->>   iommu/vt-d: Implement DMAR unit hotplug framework
->>   iommu/vt-d: Search for ACPI _DSM method for DMAR hotplug
->>   iommu/vt-d: Enhance intel_irq_remapping driver to support DMAR unit
->>     hotplug
->>   iommu/vt-d: Enhance error recovery in function
->>     intel_enable_irq_remapping()
->>   iommu/vt-d: Enhance intel-iommu driver to support DMAR unit hotplug
->>   pci, ACPI, iommu: Enhance pci_root to support DMAR device hotplug
->>
->>  drivers/acpi/pci_root.c             |   16 +-
->>  drivers/iommu/dmar.c                |  532 ++++++++++++++++++++++++++++-------
->>  drivers/iommu/intel-iommu.c         |  297 ++++++++++++++-----
->>  drivers/iommu/intel_irq_remapping.c |  233 +++++++++++----
->>  include/linux/dmar.h                |   50 +++-
->>  5 files changed, 888 insertions(+), 240 deletions(-)
->>
-> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index d077749..e0916ad 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -109,18 +109,9 @@ static void default_restore_msi_irq(struct pci_dev *dev, int irq)
+>  {
+>  	struct msi_desc *entry;
+>  
+> -	entry = NULL;
+> -	if (dev->msix_enabled) {
+> -		list_for_each_entry(entry, &dev->msi_list, list) {
+> -			if (irq == entry->irq)
+> -				break;
+> -		}
+> -	} else if (dev->msi_enabled)  {
+> -		entry = irq_get_msi_desc(irq);
+> -	}
+> -
+> +	entry = irq_get_msi_desc(irq);
+>  	if (entry)
+> -		write_msi_msg(irq, &entry->msg);
+> +		__write_msi_msg(entry, &entry->msg);
+>  }
+>  
+>  void __weak arch_restore_msi_irqs(struct pci_dev *dev)
+> -- 
+> 1.7.1
 > 
