@@ -1,53 +1,104 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 4 Sep 2014 15:58:21 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI/AER: Make linux/aer.h standalone includable
-Message-ID: <20140904215821.GF17125@google.com>
-References: <1407240535-19564-1-git-send-email-thierry.reding@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1407240535-19564-1-git-send-email-thierry.reding@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:23798 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751492AbaI3GKG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 02:10:06 -0400
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Carolyn Wyborny <carolyn.wyborny@intel.com>,
+	Don Skidmore <donald.c.skidmore@intel.com>,
+	Greg Rose <gregory.v.rose@intel.com>,
+	Alex Duyck <alexander.h.duyck@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Mitch Williams <mitch.a.williams@intel.com>,
+	Linux NICS <linux.nics@intel.com>,
+	<e1000-devel@lists.sourceforge.net>, <linda.knippers@hp.com>,
+	"Li, Zhen-Hua" <zhen-hual@hp.com>
+Subject: [PATCH 1/1] pci/quirks: fix a dmar fault for intel 82599 card
+Date: Tue, 30 Sep 2014 14:09:54 +0800
+Message-Id: <1412057394-7186-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 05, 2014 at 02:08:55PM +0200, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
-> 
-> The header file references u16, u32 and struct pci_dev types, but they
-> are not defined in the header nor does the header pull in the necessary
-> includes for them. This causes build breakage when the file is included
-> without any of the dependencies being satisfied from somewhere else.
-> 
-> Fix this by including linux/types.h (for u16 and u32) and by adding a
-> forward-declaration of struct pci_dev.
-> 
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
+On a HP system with Intel Corporation 82599 ethernet adapter, when kernel
+crashed and the kdump kernel boots with intel_iommu=on, there may be some
+unexpected DMA requests on this adapter, which will cause DMA Remapping
+faults like:
+    dmar: DRHD: handling fault status reg 102
+    dmar: DMAR:[DMA Read] Request device [41:00.0] fault addr fff81000
+    DMAR:[fault reason 01] Present bit in root entry is clear
 
-Applied to pci/misc for v3.18, thanks!  I dropped the struct pci_dev
-declaration because it was already added by 5ccb8225abf2 ("x86/ras: Fix
-build warnings in <linux/aer.h>")
+Analysis for this bug:
 
-> ---
->  include/linux/aer.h | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/include/linux/aer.h b/include/linux/aer.h
-> index 4dbaa7081530..04bcf33a3e3a 100644
-> --- a/include/linux/aer.h
-> +++ b/include/linux/aer.h
-> @@ -7,6 +7,10 @@
->  #ifndef _AER_H_
->  #define _AER_H_
->  
-> +#include <linux/types.h>
-> +
-> +struct pci_dev;
-> +
->  #define AER_NONFATAL			0
->  #define AER_FATAL			1
->  #define AER_CORRECTABLE			2
-> -- 
-> 2.0.4
-> 
+The present bit is set in this function:
+
+static struct context_entry * device_to_context_entry(
+		struct intel_iommu *iommu, u8 bus, u8 devfn)
+{
+    ......
+                set_root_present(root);
+    ......
+}
+
+Calling tree:
+ixgbe_open
+    ixgbe_setup_tx_resources
+        intel_alloc_coherent
+            __intel_map_single
+                domain_context_mapping
+                    domain_context_mapping_one
+                        device_to_context_entry
+
+This means, the present bit in root entry will not be set until the device
+ driver is loaded.
+
+But in the kdump kernel, some hardware device does not know the OS is the
+ second kernel and the drivers should be loaded again, this causes there are
+ some unexpected DMA requsts on this device when it has not been initialized,
+ and then the DMA Remapping errors come.
+
+To fix this DMAR fault, we need to reset the bus that this device on. Reset
+ the device itself does not work.
+
+There also was a discussion:
+https://lkml.org/lkml/2013/5/14/9
+
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/pci/quirks.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 80c2d01..5198af3 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -25,6 +25,7 @@
+ #include <linux/sched.h>
+ #include <linux/ktime.h>
+ #include <asm/dma.h>	/* isa_dma_bridge_buggy */
++#include <linux/crash_dump.h>
+ #include "pci.h"
+ 
+ /*
+@@ -3832,3 +3833,13 @@ void pci_dev_specific_enable_acs(struct pci_dev *dev)
+ 		}
+ 	}
+ }
++
++#ifdef CONFIG_CRASH_DUMP
++void quirk_reset_buggy_devices(struct pci_dev *dev)
++{
++	if (unlikely(is_kdump_kernel()))
++		pci_try_reset_bus(dev->bus);
++}
++DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_INTEL, 0x10f8,
++		PCI_CLASS_NETWORK_ETHERNET, 8, quirk_reset_buggy_devices);
++#endif
+-- 
+2.0.0-rc0
+
