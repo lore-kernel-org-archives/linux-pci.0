@@ -1,40 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:42695 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754847AbaIVUtx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Sep 2014 16:49:53 -0400
-Received: by mail-ie0-f174.google.com with SMTP id rd18so2972971iec.19
-        for <linux-pci@vger.kernel.org>; Mon, 22 Sep 2014 13:49:53 -0700 (PDT)
-Date: Mon, 22 Sep 2014 14:49:48 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] PCI: Remove dead code after DMA alias work
-Message-ID: <20140922204948.GH1880@google.com>
-References: <20140917163930.21584.69496.stgit@gimli.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140917163930.21584.69496.stgit@gimli.home>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:37662 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751610AbaI3O6b (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 10:58:31 -0400
+Message-ID: <1412089108.2473.5.camel@pengutronix.de>
+Subject: Re: [PATCH v4 04/10] PCI: designware: refine setup_rc and add msi
+ data restore
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Richard Zhu <r65037@freescale.com>
+Cc: linux-pci-owner@vger.kernel.org, linux-pci@vger.kernel.org,
+	shawn.guo@freescale.com, festevam@gmail.com, tharvey@gateworks.com
+Date: Tue, 30 Sep 2014 16:58:28 +0200
+In-Reply-To: <1412069804-17162-5-git-send-email-r65037@freescale.com>
+References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
+	 <1412069804-17162-5-git-send-email-r65037@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 17, 2014 at 10:41:01AM -0600, Alex Williamson wrote:
-> v1: inopportune DNS failure blocked patches, resending
+Am Dienstag, den 30.09.2014, 17:36 +0800 schrieb Richard Zhu:
+> - move "program correct class for RC" from dw_pcie_host_init()
+> to dw_pcie_setup_rc(). since this is RC setup, it's
+> better to contained in dw_pcie_setup_rc function.
+> Then, RC can be re-setup really by dw_pcie_setup_rc().
+> - add one re-store msi data function. Because that
+> pcie controller maybe powered off during system suspend,
+> and the msi data configuration would be lost.
+> this functions can be used to restore the msi data
+> during the resume callback.
 > 
-> Now that IOMMU drivers have completed the DMA alias transition,
-> remove the left behind dead code.  Thanks,
-> 
-> Alex
-> 
+> Signed-off-by: Richard Zhu <r65037@freescale.com>
+
+NACK. I asked you to split this patch and move it before the imx6 pcie
+changes in the series in order to not break compilation within the
+series.
+
 > ---
+>  drivers/pci/host/pcie-designware.c | 15 ++++++++++++---
+>  drivers/pci/host/pcie-designware.h |  1 +
+>  2 files changed, 13 insertions(+), 3 deletions(-)
 > 
-> Alex Williamson (2):
->       PCI: Remove pci_get_dma_source()
->       PCI: Remove pci_find_upstream_pcie_bridge()
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 538bbf3..ae1e6c5 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -194,6 +194,13 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+>  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
+>  }
+>  
+> +void dw_pcie_msi_cfg_restore(struct pcie_port *pp)
+> +{
+> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+> +			virt_to_phys((void *)pp->msi_data));
+> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
+> +}
+> +
+>  static int find_valid_pos0(struct pcie_port *pp, int msgvec, int pos, int *pos0)
+>  {
+>  	int flag = 1;
+> @@ -570,9 +577,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>  
+>  	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+>  
+> -	/* program correct class for RC */
+> -	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
+> -
+>  	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+>  	val |= PORT_LOGIC_SPEED_CHANGE;
+>  	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+> @@ -917,6 +921,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>  	val = memlimit | membase;
+>  	dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
+>  
+> +	/* program correct class for RC */
+> +	dw_pcie_readl_rc(pp, PCI_CLASS_REVISION, &val);
+> +	val |= PCI_CLASS_BRIDGE_PCI << 16;
+> +	dw_pcie_writel_rc(pp, val, PCI_CLASS_REVISION);
+> +
+>  	/* setup command register */
+>  	dw_pcie_readl_rc(pp, PCI_COMMAND, &val);
+>  	val &= 0xffff0000;
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index a476e60..bb75715 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -83,6 +83,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+>  int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
+>  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+>  void dw_pcie_msi_init(struct pcie_port *pp);
+> +void dw_pcie_msi_cfg_restore(struct pcie_port *pp);
+>  int dw_pcie_link_up(struct pcie_port *pp);
+>  void dw_pcie_setup_rc(struct pcie_port *pp);
+>  int dw_pcie_host_init(struct pcie_port *pp);
 
-Applied to pci/virtualization for v3.18, thanks!
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
->  drivers/pci/quirks.c |   51 --------------------------------------------------
->  drivers/pci/search.c |   34 ---------------------------------
->  include/linux/pci.h  |   16 ----------------
->  3 files changed, 101 deletions(-)
