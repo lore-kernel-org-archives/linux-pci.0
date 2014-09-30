@@ -1,129 +1,104 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Dirk Gouders <dirk@gouders.net>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
-In-Reply-To: <CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com>
-	(Yinghai Lu's message of "Thu, 11 Sep 2014 12:26:54 -0700")
-References: <ghiol53r9u.fsf@lena.gouders.net>
-	<CAMxnaaXiEZeJOsgQ6ZSbiqy5Z1zNoXonwNSQNRyRhV0t5jveYQ@mail.gmail.com>
-	<ghwq9k3m6z.fsf@lena.gouders.net>
-	<CAMxnaaUqTMf1uEQUqrAGjym8ZrQaBf2QbE4Jqxh2t6a2JgJkOQ@mail.gmail.com>
-	<ghioku5l29.fsf@lena.gouders.net>
-	<CAErSpo7j=a3y2MVsvEQGQ4B63_mNCyZSRNXNEZa-2++xs88NmQ@mail.gmail.com>
-	<CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com>
-Date: Thu, 11 Sep 2014 22:35:57 +0200
-Message-ID: <ghoaul51zm.fsf@quad.gouders.net>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Tue, 30 Sep 2014 10:18:05 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH v13 00/12] Support for creating generic PCI host bridges
+ from DT
+Message-ID: <20140930161805.GB5625@google.com>
+References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140929194335.GA13747@google.com>
+ <20140930103942.GO841@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140930103942.GO841@e106497-lin.cambridge.arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yinghai Lu <yinghai@kernel.org> writes:
+On Tue, Sep 30, 2014 at 11:39:42AM +0100, Liviu Dudau wrote:
+> On Mon, Sep 29, 2014 at 08:43:35PM +0100, Bjorn Helgaas wrote:
+> > On Mon, Sep 29, 2014 at 03:29:19PM +0100, Liviu Dudau wrote:
+> > > This is my version 13 of the attempt at adding support for generic PCI host
+> > > bridge controllers. It contains only cleanups to make it play nice with the
+> > > linux-next tree as of 09/25. If Bjorn deems it safe, now that it looks like
+> > > asm-generic is going to revert some of its more aggresive patches, he has the
+> > > choice of queueing it into linux-next again.
+> > > ...
+> > 
+> > These patches above were already on my pci/host-generic branch and in
+> > linux-next:
+> > 
+> >    asm-generic/io.h: Fix ioport_map() for !CONFIG_GENERIC_IOMAP
+> This ^ ...
+> 
+> >    of/pci: Add pci_register_io_range() and pci_pio_to_address()
+> >    ARM: Define PCI_IOBASE as the base of virtual PCI IO space
+> 
+> and this ^ need to be refreshed from my series otherwise we will get conflicts with
+> asm-generic branch (either now or in the future). While the asm-generic/io.h
+> cast is arguably superflous, we need to define PCI_IOBASE as a void __iomem* to
+> match all other standard declarations of PCI_IOBASE.
+> 
+> >    of/pci: Define of_pci_range_to_resource() only when CONFIG_PCI=y
+> >    of/pci: Move of_pci_range_to_resources() to of/address.c
+> >    of/pci: Fix the conversion of IO ranges into IO resources
+> > 
+> > I added these three patches to my pci/host-generic branch:
+> > 
+> >    PCI: Add generic domain handling
+> >    of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()
+> >    of/pci: Add support for parsing PCI host bridge resources from DT
+> 
+> I can see these patches added to pci/host-generic but not on pci/next.
 
-> On Thu, Sep 11, 2014 at 10:30 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> [+cc linux-pci]
->>
->>
->> On Thu, Sep 11, 2014 at 7:43 AM, Dirk Gouders <dirk@gouders.net> wrote:
->>> Andreas Noever <andreas.noever@gmail.com> writes:
->>>
->>>> On Wed, Sep 3, 2014 at 2:47 PM, Dirk Gouders <dirk@gouders.net> wrote:
->>>>> Andreas Noever <andreas.noever@gmail.com> writes:
->>>>>
->>>>>> On Wed, Sep 3, 2014 at 12:57 PM, Dirk Gouders <dirk@gouders.net> wrote:
->>>>>>> On a Tyan VX50 (B4985) I ran into problems when updating the kernel: the
->>>>>>> PCI FC Adapter is no longer recognized.
->>>>>>
->>>>>> Can you provide the output of lspci -vvv and the output of dmesg from
->>>>>> a working boot? Which card is the one that is not recognized?
->>>>>
->>>>> Sure, the card that disappeared is:
->>>>>
->>>>> 0a:00.0 Fibre Channel: LSI Logic / Symbios Logic FC949ES Fibre Channel Adapter (rev 02)
->>>>
->>>> As far as I can tell the following is happening:
->>>> The root bus resource window (advertised by the bios?) is to small:
->>>> pci_bus 0000:00: root bus resource [bus 00-07]
->>>> Previously we didn't really care. There is a resource conflict but we
->>>> ignored it:
->>>> pci_bus 0000:0a: busn_res: can not insert [bus 0a] under [bus 00-07]
->>>> (conflicts with (null) [bus 00-07])
->>>> With the patch we mark the bridge as broken and reassign the bus to 06:
->>>> pci 0000:00:0e.0: bridge configuration invalid ([bus 0a-0a]), reconfiguring
->>>> pci 0000:00:0e.0: PCI bridge to [bus 06-07]
->>>> pci 0000:00:0e.0:   bridge window [io  0x3000-0x3fff]
->>>> pci 0000:00:0e.0:   bridge window [mem 0xd4200000-0xd42fffff]
->>>> pci_bus 0000:06: busn_res: [bus 06-07] end is updated to 06
->
->> Thanks for following up on this.  It had fallen off my radar, so I
->> opened https://bugzilla.kernel.org/show_bug.cgi?id=84281 to make sure
->> I don't forget again.  Please continue the debug discussion here in
->> email.
->
-> Two problems here:
-> 1. This is amd two node systems. amd_bus.c tell us bus [00, 7f] is from
-> first socket, but _OSC says only [0,7] is from first socket.
->
-> So solution (1):
-> According to Linus's principle, we should always trust HW than firmware,
-> so should we just adjust bus range from _OSC before we use it?
->
-> 2. After moving, LSI FC card from bus 0a to bus 07, the LSI refuse to respond.
->
-> During my testing with pci busn allocation patchset, I found that if changing
-> LSI Erie card to different bus, it will refuse to responding. Only
-> thing that will
-> make the LSI card again, is resetting the pcie link. This should be LSI firmware
-> bug.
->
-> Dirk, please check if you can apply attached patches to use
->
-> echo 1 > /sys/bus/pci/devices/0000\:00\0e.0/link_disable
-> echo 0 > /sys/bus/pci/devices/0000\:00\0e.0/link_disable
->
-> to reset the link.
+Right.  I leave things on topic branches for a day or two to give a chance
+for Fengguang's auto-builder to find problems before I merge them into the
+more public "next" or "for-linus" branches.
 
-Thanks, Yinghai, I will apply them tomorrow and report.
+> > Yinghai pointed out a problem with this one, so I omitted it:
+> > 
+> >    PCI: Assign unassigned bus resources in pci_scan_root_bus()
+> 
+> Thats fine, host bridge drivers will have to work around pci_scan_root_bus() reduced
+> functionality for now.
 
-What I was currently trying was to construct a test-environment so that
-I do not need to do tests and diagnosis on a busy machine.
+Well, it's not really "reduced functionality."  It is unchanged by this
+series and host bridge drivers can continue using it the same way they have
+in the past.  It's just that we'd like to make it smarter someday.
 
-I noticed that this problem seems to start with the narrow Root
-Bridge window (00-07) but every other machine that I had a look at,
-starts with (00-ff), so those will not trigger my problem.
+> > I added this one to my pci/host-generic branch:
+> > 
+> >    PCI: Add pci_remap_iospace() to map bus I/O resources
+> > 
+> > I assume this depends on the pci_scan_root_bus() change (if not, let me
+> > know), so I omitted this one:
+> > 
+> >    arm64: Add architectural support for PCI
+> 
+> No, there is no dependency there on pci_scan_root_bus(), it can go in the series.
+> The only thing that depends on a feature rich pci_scan_root_bus() is the host
+> bridge driver in order to be able to use only one line to process the root bus.
 
-I thought I could perhaps try to shrink the window in
-acpi_pci_root_add() to trigger the problem and that kind of works: it
-triggers it but not exactly the same way, because it basically ends at
-this code in pci_scan_bridge():
+OK, I rebuilt pci/host-generic from scratch.  It consists of your v13
+patches + Arnd's build fix for pci_pio_to_address() in !CONFIG_OF configs.
 
-	if (max >= bus->busn_res.end) {
-		dev_warn(&dev->dev, "can't allocate child bus %02x from %pR (pass %d)\n",
-			 max, &bus->busn_res, pass);
-		goto out;
-	}
-
-If this could work but I am just missing a small detail, I would be
-glad to hear about it and do the first tests this way.  If it is
-complete nonsense, I will just use the machine that triggers the problem
-for the tests.
-
-Dirk
-
-
-> Solution (2)
-> To workaround the problem, we could reset the pcie link after change bus num
-> in the pcie bridges ?
->
-> Soultion (3)
-> Or we just revert the offending 1820ffdccb9b4398 (PCI: Make sure
-> bus number resources stay within their parents bounds) ?
->
-> Thanks
->
-> Yinghai
+Bjorn
