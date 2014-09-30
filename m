@@ -1,110 +1,64 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54113BAC.10505@linux.intel.com>
-Date: Thu, 11 Sep 2014 14:05:32 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:55244 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751965AbaI3WYT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 18:24:19 -0400
+Date: Tue, 30 Sep 2014 15:24:18 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Guenter Roeck <groeck@juniper.net>
+Cc: Wolfram Sang <wsa@the-dreams.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org, Prarit Bhargava <prarit@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Jiri Kosina <jkosina@suse.cz>,
 	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: Re: [Patch v4 12/16] x86, irq, ACPI: Implement interface to support
- ACPI based IOAPIC hot-addition
-References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com> <1409192561-19744-13-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1409091417120.11037@nanos> <540FC1C2.40100@linux.intel.com> <alpine.DEB.2.10.1409102202530.4178@nanos>
-In-Reply-To: <alpine.DEB.2.10.1409102202530.4178@nanos>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+	"David S. Miller" <davem@davemloft.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-i2c <linux-i2c@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>
+Subject: Re: [PATCH 0/4] Driver for talking to PLX PEX8xxx PCIe switch over
+ I2C
+Message-ID: <20140930222418.GA8199@kroah.com>
+References: <542A3593.4020108@gmail.com>
+ <CAErSpo7BkXDHOZwHzwEu2BN3=39xFwQOyrjgVo6afWKMsnYT=A@mail.gmail.com>
+ <20140930211339.GA1264@katana>
+ <20140930213306.GA29008@svl-evodev-groeck.juniper.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140930213306.GA29008@svl-evodev-groeck.juniper.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/11 4:06, Thomas Gleixner wrote:
-> On Wed, 10 Sep 2014, Jiang Liu wrote:
->>>>  int mp_register_ioapic(int id, u32 address, u32 gsi_base,
->>>> @@ -3867,8 +3873,15 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
->>>>  	}
->>>>  	for_each_ioapic(ioapic)
->>>>  		if (ioapics[ioapic].mp_config.apicaddr == address) {
->>>> -			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
->>>> -				address, ioapic);
->>>> +			/*
->>>> +			 * IOAPIC unit may also be visible in PCI scope.
->>>> +			 * When ioapic PCI driver's probe() is called,
->>>> +			 * the IOAPIC unit may have already been initialized
->>>> +			 * at boot time.
->>>> +			 */
->>>> +			if (!ioapic_initialized)
->>>> +				pr_warn("address 0x%x conflicts with IOAPIC%d\n",
->>>> +					address, ioapic);
->>>
->>> Hmm. This smells fishy. Why do we allow multiple initializations of
->>> the same IOAPIC in the first place. Either it's done via ACPI or via
->>> PCI, but not both.
->> The ACPI subsystem will register and initialize all IOAPICs when walking
->> ACPI MADT table during boot, before initializing PCI subsystem.
->> Later when binding ioapic PCI driver to IOAPIC PCI device, it will try
->> to register the IOAPIC device again.
->>
->> After this patchset is applied, we could remove the !ioapic_initialized
->> check. We check acpi_ioapic_register() before calling
->> acpi_register_ioapic(). So the check becomes redundant.
->> Or we could remove the temporary code from this patch.
-> 
-> How about removing the disfunctional ioapic PCI driver first and then
-> implementing the whole thing cleanly?
-Good suggestion:)
+On Tue, Sep 30, 2014 at 02:35:51PM -0700, Guenter Roeck wrote:
+> On Tue, Sep 30, 2014 at 11:13:39PM +0200, Wolfram Sang wrote:
+> > 
+> > > > Since this is a driver for a PCIe switch, I currently put it under /driver/pci/.
+> > > > I'm very open to suggestions for moving this around (Does introducing
+> > > > drivers/pci/switch/ seem any better?). Especially I can see that the
+> > > > drivers/pci/Kconfig appears under "Bus Options" in the main menu which does not
+> > > > look like the right place for this driver. I am looking for suggestions here.
+> > > 
+> > > Definitely interesting work.  I have no idea where to put it.  It
+> > > doesn't have anything to do with PCI core services or structures, so
+> > > drivers/pci doesn't seem like the ideal place for it, but I don't have
+> > > any better ideas.  If it did end up under drivers/pci, I agree that a
+> > > drivers/pci/switch or something similar would probably be better than
+> > > having it directly in drivers/pci.
+> > > 
+> > > Maybe Wolfram or other I2C folks will have an idea.
+> > 
+> > Hmm, is this a common interface for those switches? Then a directory
+> > like drivers/pci/switch could make sense. Otherwise I'd suggest
+> > drivers/misc?
+> > 
+> We had discussed drivers/misc internally, but it didn't seem to be the right
+> location to me. After all, it is not a misc driver, but a driver to configure
+> a PCIe switch. Not that I have a better idea, though.
 
->  
->>>
->>>>  			return -EEXIST;
->>>>  		}
->>>>  
->>>> @@ -3918,6 +3931,14 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
->>>>  	ioapics[idx].irqdomain = NULL;
->>>>  	ioapics[idx].irqdomain_cfg = *cfg;
->>>>  
->>>> +	if (ioapic_initialized) {
->>>
->>> I have a hard time to understand this conditional. Why can't we do
->>> that unconditionally?
->> How about following comments?
->> /*
->>  * If mp_register_ioapic() is called during early boot stage when
->>  * walking ACPI/SFI/DT tables, it's too early to create irqdomain,
->>  * we are still using bootmem allocator. So delay it to setup_IO_APIC().
->>  */
-> 
-> Fine, but then the "if (ioapic_initialized)" conditional still does
-> not make sense. We surely have some global non ioapic specific
-> indicator that bootmem is done and the proper memory allocator is
-> available, right?
-Flag ioapic_initialized will be used to check whether we have created
-irqdomains for IOAPICs. Currently function arch_dynirq_lower_bound()
-uses that flag, and alloc_irq_from_domain() will use it too later.
+drivers/misc is fine with me, I think we already have something like
+this for I2C USB devices somewhere in the tree in that location.
 
-> 
-> Aside of that is there a point to walk those tables before we actually
-> can make any use of their content?
-At least we depend on walking those tables to detect whether system has
-IOAPICs available:)
+thanks,
 
-Regards!
-Gerry
-> 
-> Thanks,
-> 
-> 	tglx
-> 
+greg k-h
