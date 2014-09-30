@@ -1,181 +1,80 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+MIME-Version: 1.0
+In-Reply-To: <542A3593.4020108@gmail.com>
+References: <542A3593.4020108@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 30 Sep 2014 14:45:37 -0600
+Message-ID: <CAErSpo7BkXDHOZwHzwEu2BN3=39xFwQOyrjgVo6afWKMsnYT=A@mail.gmail.com>
+Subject: Re: [PATCH 0/4] Driver for talking to PLX PEX8xxx PCIe switch over I2C
+To: Rajat Jain <rajatxjain@gmail.com>
+Cc: Jiri Kosina <jkosina@suse.cz>,
 	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
+	"David S. Miller" <davem@davemloft.net>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v2 04/18] x86, irq: Refine hw_irq.h to prepare for irqdomain support
-Date: Fri, 26 Sep 2014 21:29:41 +0800
-Message-Id: <1411738196-29958-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-i2c <linux-i2c@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>,
+	Wolfram Sang <wsa@the-dreams.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refine hw_irq.h to prepare for irqdomain support by:
-1) guarding common APIC related interfaces with CONFIG_X86_LOCAL_APIC
-2) guarding interrupt remapping related interfaces with CONFIG_IRQ_REMAP
-3) guarding IOAPIC related interfaces with CONFIG_X86_IO_APIC
+[+cc Wolfram]
 
-There should be no functional changes.
+On Mon, Sep 29, 2014 at 10:46 PM, Rajat Jain <rajatxjain@gmail.com> wrote:
+> Most of the PLX PCI Express switches (and also switches from other vendors such
+> IDT) provide an I2C based secondary interface to access and program the switch.
+> This can be used to program the switch in situations where the PCIe interface
+> may not be suitable, or even available. (For instance, we may need to program
+> the device in a particular fashion before we even begin enumerating on the PCI,
+> or to even enable the PCIe interface of the device). More information on
+> usecases and other details has been provided in the documentation being added
+> as part of this patchset.
+>
+> This is a driver that allows talking to the PLX PEX8xxx family of PCIe switches
+> over its I2C interface. Here are the patch descriptions:
+>
+> [Patch 1/4] - Adds the PEX8xxx driver that exports API calls to read / write.
+> [Patch 2/4] - Adds a sysfs interface, to allow access to the switch.
+> [Patch 3/4] - Adds the MAINTAINERS entry.
+> [Patch 4/4] - Adds the documentation in Documentation/PCI/pex8xxx_i2c.txt
+>
+> Since this is a driver for a PCIe switch, I currently put it under /driver/pci/.
+> I'm very open to suggestions for moving this around (Does introducing
+> drivers/pci/switch/ seem any better?). Especially I can see that the
+> drivers/pci/Kconfig appears under "Bus Options" in the main menu which does not
+> look like the right place for this driver. I am looking for suggestions here.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/hw_irq.h |   94 ++++++++++++++++++++++-------------------
- 1 file changed, 51 insertions(+), 43 deletions(-)
+Definitely interesting work.  I have no idea where to put it.  It
+doesn't have anything to do with PCI core services or structures, so
+drivers/pci doesn't seem like the ideal place for it, but I don't have
+any better ideas.  If it did end up under drivers/pci, I agree that a
+drivers/pci/switch or something similar would probably be better than
+having it directly in drivers/pci.
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 28f283988c8e..8188d648d48c 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -94,30 +94,7 @@ extern void trace_call_function_single_interrupt(void);
- #define trace_kvm_posted_intr_ipi kvm_posted_intr_ipi
- #endif /* CONFIG_TRACING */
- 
--/* IOAPIC */
--#define IO_APIC_IRQ(x) (((x) >= NR_IRQS_LEGACY) || ((1<<(x)) & io_apic_irqs))
--extern unsigned long io_apic_irqs;
--
--extern void setup_IO_APIC(void);
--extern void disable_IO_APIC(void);
--
--struct io_apic_irq_attr {
--	int ioapic;
--	int ioapic_pin;
--	int trigger;
--	int polarity;
--};
--
--static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
--					int ioapic, int ioapic_pin,
--					int trigger, int polarity)
--{
--	irq_attr->ioapic	= ioapic;
--	irq_attr->ioapic_pin	= ioapic_pin;
--	irq_attr->trigger	= trigger;
--	irq_attr->polarity	= polarity;
--}
--
-+#ifdef CONFIG_IRQ_REMAP
- /* Intel specific interrupt remapping information */
- struct irq_2_iommu {
- 	struct intel_iommu *iommu;
-@@ -131,14 +108,10 @@ struct irq_2_irte {
- 	u16 devid; /* Device ID for IRTE table */
- 	u16 index; /* Index into IRTE table*/
- };
-+#endif	/* CONFIG_IRQ_REMAP */
- 
--/*
-- * This is performance-critical, we want to do it O(1)
-- *
-- * Most irqs are mapped 1:1 with pins.
-- */
-+#ifdef	CONFIG_X86_LOCAL_APIC
- struct irq_cfg {
--	struct list_head	irq_2_pin;
- 	cpumask_var_t		domain;
- 	cpumask_var_t		old_domain;
- 	u8			vector;
-@@ -150,18 +123,64 @@ struct irq_cfg {
- 		struct irq_2_irte  irq_2_irte;
- 	};
- #endif
-+	union {
-+#ifdef CONFIG_X86_IO_APIC
-+		struct {
-+			struct list_head	irq_2_pin;
-+		};
-+#endif
-+	};
- };
- 
-+extern void setup_vector_irq(int cpu);
- extern int assign_irq_vector(int, struct irq_cfg *, const struct cpumask *);
- extern void send_cleanup_vector(struct irq_cfg *);
- 
- struct irq_data;
- int __ioapic_set_affinity(struct irq_data *, const struct cpumask *,
- 			  unsigned int *dest_id);
--extern int IO_APIC_get_PCI_irq_vector(int bus, int devfn, int pin);
--extern void setup_ioapic_dest(void);
-+#endif	/* CONFIG_X86_LOCAL_APIC */
-+
-+#ifdef CONFIG_X86_IO_APIC
-+extern void lock_vector_lock(void);
-+extern void unlock_vector_lock(void);
-+extern void __setup_vector_irq(int cpu);
-+#else
-+static inline void lock_vector_lock(void) {}
-+static inline void unlock_vector_lock(void) {}
-+static inline void __setup_vector_irq(int cpu) {}
-+#endif
-+
-+/* IOAPIC */
-+#ifdef CONFIG_X86_IO_APIC
-+struct io_apic_irq_attr {
-+	int ioapic;
-+	int ioapic_pin;
-+	int trigger;
-+	int polarity;
-+};
-+
-+static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
-+					int ioapic, int ioapic_pin,
-+					int trigger, int polarity)
-+{
-+	irq_attr->ioapic	= ioapic;
-+	irq_attr->ioapic_pin	= ioapic_pin;
-+	irq_attr->trigger	= trigger;
-+	irq_attr->polarity	= polarity;
-+}
- 
-+extern void setup_IO_APIC(void);
- extern void enable_IO_APIC(void);
-+extern void disable_IO_APIC(void);
-+extern void setup_ioapic_dest(void);
-+extern int IO_APIC_get_PCI_irq_vector(int bus, int devfn, int pin);
-+
-+extern unsigned long io_apic_irqs;
-+#define IO_APIC_IRQ(x) (((x) >= NR_IRQS_LEGACY) || ((1 << (x)) & io_apic_irqs))
-+#else	/* CONFIG_X86_IO_APIC */
-+#define IO_APIC_IRQ(x)	0
-+#endif	/* CONFIG_X86_IO_APIC */
- 
- /* Statistics */
- extern atomic_t irq_err_count;
-@@ -195,17 +214,6 @@ extern void (*__initconst interrupt[NR_VECTORS-FIRST_EXTERNAL_VECTOR])(void);
- 
- typedef int vector_irq_t[NR_VECTORS];
- DECLARE_PER_CPU(vector_irq_t, vector_irq);
--extern void setup_vector_irq(int cpu);
--
--#ifdef CONFIG_X86_IO_APIC
--extern void lock_vector_lock(void);
--extern void unlock_vector_lock(void);
--extern void __setup_vector_irq(int cpu);
--#else
--static inline void lock_vector_lock(void) {}
--static inline void unlock_vector_lock(void) {}
--static inline void __setup_vector_irq(int cpu) {}
--#endif
- 
- #endif /* !ASSEMBLY_ */
- 
--- 
-1.7.10.4
+Maybe Wolfram or other I2C folks will have an idea.
 
+> Rajat Jain (4):
+>   pci: Add I2C driver for the PLX PEX8xxx PCIe switch
+>   pci/pex8xxx: Add sysfs interface for userspace access.
+>   MAINTAINERS: Add new device driver entry for PEX pex8xxx
+>   Documentation: Add documentation for the PCI switch PEX8xxx I2C
+>     driver
+>
+>  Documentation/PCI/pex8xxx_i2c.txt |  134 +++++++++
+>  MAINTAINERS                       |    7 +
+>  drivers/pci/Kconfig               |   13 +
+>  drivers/pci/Makefile              |    2 +
+>  drivers/pci/pex8xxx_i2c.c         |  538 +++++++++++++++++++++++++++++++++++++
+>  include/linux/i2c/pex8xxx_i2c.h   |   36 +++
+>  6 files changed, 730 insertions(+)
+>  create mode 100644 Documentation/PCI/pex8xxx_i2c.txt
+>  create mode 100644 drivers/pci/pex8xxx_i2c.c
+>  create mode 100644 include/linux/i2c/pex8xxx_i2c.h
+>
+> --
+> 1.7.9.5
+>
