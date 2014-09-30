@@ -1,110 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:55935 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752980AbaIBXvw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Sep 2014 19:51:52 -0400
-Message-ID: <54065208.3080309@gmail.com>
-Date: Tue, 02 Sep 2014 16:26:00 -0700
-From: Rajat Jain <rajatxjain@gmail.com>
+Received: from service87.mimecast.com ([91.220.42.44]:54537 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751330AbaI3OpK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 10:45:10 -0400
+Date: Tue, 30 Sep 2014 15:45:06 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Rob Herring <robh@kernel.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] of/pci: add pci_pio_to_address dummy for !CONFIG_OF
+Message-ID: <20140930144506.GQ841@e106497-lin.cambridge.arm.com>
+References: <706416181.hbVGLDA3o6@wuerfel>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Richard Yang <weiyang@linux.vnet.ibm.com>,
-	Matthew Wilcox <matthew.r.wilcox@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2] pci/probe: Enable CRS for root port if it is supported
-References: <53FFA54D.9000907@gmail.com> <CAErSpo5_WMUmnTHpPZt+j04VZoiW1pthQoGV90A5BDQpQgjwOQ@mail.gmail.com>
-In-Reply-To: <CAErSpo5_WMUmnTHpPZt+j04VZoiW1pthQoGV90A5BDQpQgjwOQ@mail.gmail.com>
+In-Reply-To: <706416181.hbVGLDA3o6@wuerfel>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Sep 30, 2014 at 02:19:05PM +0100, Arnd Bergmann wrote:
+> The pci_register_io_range() and pci_pio_to_address() were recently
+> introduced to generalize the handling of memory mapped PCI I/O space,
+> but they are only valid when CONFIG_OF is set, leading to a possible
+> build error:
+> 
+> drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_setup_window':
+> drivers/pci/host/pcie-rcar.c:340:3: error: implicit declaration of function 'pci_pio_to_address' [-Werror=implicit-function-declaration]
+>    res_start = pci_pio_to_address(res->start);
+>    ^
+> drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_probe':
+> drivers/pci/host/pcie-rcar.c:945:3: error: implicit declaration of function 'of_pci_range_to_resource' [-Werror=implicit-function-declaration]
+>    err = of_pci_range_to_resource(&range, pdev->dev.of_node,
+>    ^
+> cc1: some warnings being treated as errors
+> 
+> This provides inline dummy implementations for the case that
+> CONFIG_OF is disabled, to allow better build testing.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Fixes: 279c5dd046 ("of/pci: Add pci_register_io_range() and pci_pio_to_address()")
 
-As per the PCIe spec, an endpoint may return the configuration cycles
-with CRS if it is not yet fully ready to be accessed. If the CRS visibility
-is not enabled at the root port, the spec leaves the retry behaviour open
-to implementation in such a case. The Intel root ports have chosen to retry
-endlessly in this situation. Thus, the root controller may "hang" (repeatedly
-retrying the configuration requests until it gets a status other than CRS) if
-a device returns CRS for a long time. This can cause a broken endpoint to bring
-down the whole PCI hierarchy.
+Acked-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-This was recently known to cause problems on Intel systems and
-was discussed here:
-http://marc.info/?t=140926298500002&r=1&w=2
+Is that triggered by shmobile_defconfig?
 
-Ref1:
-https://www.pcisig.com/specifications/pciexpress/ECN_CRS_Software_Visibility_No27.pdf
+Best regards,
+Liviu
 
-Ref2:
-PCIe spec V3.0, pg119, pg127 for "Configuration Request Retry Status"
+> 
+> diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+> index 7ebb877b07c2..851097aab115 100644
+> --- a/include/linux/of_address.h
+> +++ b/include/linux/of_address.h
+> @@ -71,6 +71,11 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
+>  	return NULL;
+>  }
+>  
+> +static inline phys_addr_t pci_pio_to_address(unsigned long pio)
+> +{
+> +	return 0;
+> +}
+> +
+>  static inline int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+>  			struct device_node *node)
+>  {
+> @@ -144,6 +149,12 @@ static inline const __be32 *of_get_pci_address(struct device_node *dev,
+>  {
+>  	return NULL;
+>  }
+> +static inline int of_pci_range_to_resource(struct of_pci_range *range,
+> +					   struct device_node *np,
+> +					   struct resource *res)
+> +{
+> +	return -ENOSYS;
+> +}
+>  #endif /* CONFIG_OF_ADDRESS && CONFIG_PCI */
+>  
+>  #endif /* __OF_ADDRESS_H */
+> 
+> 
+> 
 
-Thus enable the CRS visibility for the root ports that support it. This
-patch reverts the following commit, but enables CRS visibility only
-when the root port supports it:
-
-ad7edfe04908 ("[PCI] Do not enable CRS Software Visibility by default")
-
-(Linus' response: http://marc.info/?l=linux-pci&m=140968622520192&w=2)
-
-Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
----
-v2: Remove the white list, that was enabling the CRS for certain known Intel systems.
-    Rather now enable it for all systems that support this capability.
-v1: Enable CRS for only some given Intel systems (maintain a whitelist)
-
- drivers/pci/probe.c           |   13 +++++++++++++
- include/uapi/linux/pci_regs.h |    1 +
- 2 files changed, 14 insertions(+)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e3cf8a2..3c4c35c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -740,6 +740,17 @@ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
- }
- EXPORT_SYMBOL(pci_add_new_bus);
- 
-+static void pci_enable_crs(struct pci_dev *pdev)
-+{
-+	u16 root_cap = 0;
-+
-+	/* Enable CRS Software visibility if supported */
-+	pcie_capability_read_word(pdev, PCI_EXP_RTCAP, &root_cap);
-+	if (root_cap & PCI_EXP_RTCAP_CRSVIS)
-+		pcie_capability_set_word(pdev, PCI_EXP_RTCTL,
-+					 PCI_EXP_RTCTL_CRSSVE);
-+}
-+
- /*
-  * If it's a bridge, configure it and scan the bus behind it.
-  * For CardBus bridges, we don't scan behind as the devices will
-@@ -787,6 +798,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 	pci_write_config_word(dev, PCI_BRIDGE_CONTROL,
- 			      bctl & ~PCI_BRIDGE_CTL_MASTER_ABORT);
- 
-+	pci_enable_crs(dev);
-+
- 	if ((secondary || subordinate) && !pcibios_assign_all_busses() &&
- 	    !is_cardbus && !broken) {
- 		unsigned int cmax;
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 30db069..a75106d 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -552,6 +552,7 @@
- #define  PCI_EXP_RTCTL_PMEIE	0x0008	/* PME Interrupt Enable */
- #define  PCI_EXP_RTCTL_CRSSVE	0x0010	/* CRS Software Visibility Enable */
- #define PCI_EXP_RTCAP		30	/* Root Capabilities */
-+#define  PCI_EXP_RTCAP_CRSVIS	0x0001	/* CRS software visibility capability */
- #define PCI_EXP_RTSTA		32	/* Root Status */
- #define PCI_EXP_RTSTA_PME	0x00010000 /* PME status */
- #define PCI_EXP_RTSTA_PENDING	0x00020000 /* PME pending */
 -- 
-1.7.9.5
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
