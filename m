@@ -1,121 +1,177 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:60143 "EHLO
-	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754667AbaICFBJ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 3 Sep 2014 01:01:09 -0400
-Received: from pps.filterd (m0046661.ppops.net [127.0.0.1])
-	by mx08-00178001.pphosted.com (8.14.5/8.14.5) with SMTP id s834x1QX014812
-	for <linux-pci@vger.kernel.org>; Wed, 3 Sep 2014 07:01:07 +0200
-Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
-	by mx08-00178001.pphosted.com with ESMTP id 1p59xfdcb8-1
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 03 Sep 2014 07:01:07 +0200
-Received: from zeta.dmz-ap.st.com (ns6.st.com [138.198.234.13])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 329F723
-	for <linux-pci@vger.kernel.org>; Wed,  3 Sep 2014 05:01:03 +0000 (GMT)
-Received: from Webmail-ap.st.com (eapex1hubcas3.st.com [10.80.176.67])
-	by zeta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 3182A9AC
-	for <linux-pci@vger.kernel.org>; Wed,  3 Sep 2014 05:01:02 +0000 (GMT)
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Pratyush ANAND <pratyush.anand@st.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Wed, 3 Sep 2014 13:01:00 +0800
-Subject: RE: [PATCH] PCIe: SPEAr13XX: Pass config resource through reg
- property
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB661A70E51E466@EAPEX1MAIL1.st.com>
-References: <d1df374113d9d4a4ed1f22b4b83e8a2aeb6a8cff.1409156450.git.pratyush.anand@st.com>
-In-Reply-To: <d1df374113d9d4a4ed1f22b4b83e8a2aeb6a8cff.1409156450.git.pratyush.anand@st.com>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:25795 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751042AbaI3QjW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Sep 2014 12:39:22 -0400
+From: Marcel Apfelbaum <marcel.a@redhat.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: linux-kernel@vger.kernel.org, marcel@redhat.com, mst@redhat.com,
+	alex.williamson@redhat.com
+Subject: [PATCH] PCI: add kernel parameter to override devid<->driver mapping.
+Date: Tue, 30 Sep 2014 19:38:35 +0300
+Message-Id: <1412095115-28982-1-git-send-email-marcel.a@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Pratyush,
+Scanning a lot of devices during boot requires a lot of time.
+On other scenarios there is a need to bind a driver to a specific slot.
 
-> -----Original Message-----
-> From: Pratyush ANAND
-> Sent: Thursday, August 28, 2014 9:01 AM
-> To: Mohit KUMAR DCG
-> Cc: linux-pci@vger.kernel.org; Pratyush ANAND
-> Subject: [PATCH] PCIe: SPEAr13XX: Pass config resource through reg
-> property
-> 
-> PCIe configuration space should be passed through reg property, rather than
-> through ranges property. This patch does the correction for SPEAr13XX SOCs.
-> 
-> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-> ---
->  arch/arm/boot/dts/spear1310.dtsi  | 18 +++++++++---------
-> arch/arm/boot/dts/spear1340.dtsi  |  6 +++---  drivers/pci/host/pcie-
-> spear13xx.c |  2 +-
->  3 files changed, 13 insertions(+), 13 deletions(-)
-> 
-> diff --git a/arch/arm/boot/dts/spear1310.dtsi
-> b/arch/arm/boot/dts/spear1310.dtsi
-> index fa5f2bb5f106..51de3876caf4 100644
-> --- a/arch/arm/boot/dts/spear1310.dtsi
-> +++ b/arch/arm/boot/dts/spear1310.dtsi
-> @@ -85,7 +85,8 @@
-> 
->  		pcie0: pcie@b1000000 {
->  			compatible = "st,spear1340-pcie", "snps,dw-pcie";
-> -			reg = <0xb1000000 0x4000>;
-> +			reg = <0xb1000000 0x4000>, <0x80000000 0x20000>;
-> +			reg-names = "dbi", "config";
->  			interrupts = <0 68 0x4>;
->  			interrupt-map-mask = <0 0 0 0>;
->  			interrupt-map = <0x0 0 &gic 0 68 0x4>; @@ -95,15
-> +96,15 @@
->  			#address-cells = <3>;
->  			#size-cells = <2>;
->  			device_type = "pci";
-> -			ranges = <0x00000800 0 0x80000000 0x80000000 0
-> 0x00020000   /* configuration space */
-> -				0x81000000 0 0	 0x80020000 0 0x00010000   /*
-> downstream I/O */
-> +			ranges = <0x81000000 0 0	 0x80020000 0
-> 0x00010000   /* downstream I/O */
->  				0x82000000 0 0x80030000 0xc0030000 0
-> 0x0ffd0000>; /* non-prefetchable memory */
->  			status = "disabled";
->  		};
-> 
->  		pcie1: pcie@b1800000 {
->  			compatible = "st,spear1340-pcie", "snps,dw-pcie";
-> -			reg = <0xb1800000 0x4000>;
-> +			reg = <0xb1000000 0x4000>, <0x90000000 0x20000>;
+Binding devices to pci-stub driver does not work,
+as it will not differentiate between devices of the
+same type. Using some start scripts is error prone.
 
-- should be reg = <0xb18000000 0x4000>, <0x90000000 0x20000>;
+The solution leverages driver_override functionality introduced by
 
-> +			reg-names = "dbi", "config";
->  			interrupts = <0 69 0x4>;
->  			interrupt-map-mask = <0 0 0 0>;
->  			interrupt-map = <0x0 0 &gic 0 69 0x4>; @@ -113,15
-> +114,15 @@
->  			#address-cells = <3>;
->  			#size-cells = <2>;
->  			device_type = "pci";
-> -			ranges = <0x00000800 0 0x90000000 0x90000000 0
-> 0x00020000   /* configuration space */
-> -				0x81000000 0 0  0x90020000 0 0x00010000   /*
-> downstream I/O */
-> +			ranges = <0x81000000 0 0  0x90020000 0 0x00010000
-> /* downstream I/O */
->  				0x82000000 0 0x90030000 0x90030000 0
-> 0x0ffd0000>; /* non-prefetchable memory */
->  			status = "disabled";
->  		};
-> 
->  		pcie2: pcie@b4000000 {
->  			compatible = "st,spear1340-pcie", "snps,dw-pcie";
-> -			reg = <0xb4000000 0x4000>;
-> +			reg = <0xb1000000 0x4000>, <0xc0000000 0x20000>;
+	commit: 782a985d7af26db39e86070d28f987cad21313c0
+	Author: Alex Williamson <alex.williamson@redhat.com>
+	Date:   Tue May 20 08:53:21 2014 -0600
 
-- should be reg = <0xb4000000 0x4000>, <0xc0000000 0x20000>;
+    	PCI: Introduce new device binding path using pci_dev.driver_override
 
-Otherwise looks good and removes warning "spear-pcie b4000000.pcie: missing
- *config* reg space", now config space is passed as reg property.
+In order to bind PCI slot 0001:02:03.4 to pci-stub use:
+	driver[0001:02:03.4]=pci-stub
 
-Thanks
-Mohit
+Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
+---
+Notes:
+ - For the moment only 32 slots can be assigned specific driver.
+ - I have further ideas on top of this patch based on your reviews.
+   I thought of:
+   - Use wildcards to specify entire buses/devices, something like:
+     	driver[0001:02:*.*]=pci-stub
+   - Use comma to separate several devices:
+     	driver[0001:02:03.4,0001:02:04.0,...]=pci-stub
+   - Make domain optional:
+   	driver[00:03.0]=pci-stub
+
+Comments will be appreciated,
+Thanks,
+Marcel
+
+Documentation/kernel-parameters.txt |  4 +++
+ drivers/pci/bus.c                   |  1 +
+ drivers/pci/pci.c                   | 61 +++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h                   |  1 +
+ 4 files changed, 67 insertions(+)
+
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 5ae8608..c1cbb4c 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2631,6 +2631,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 		pcie_scan_all	Scan all possible PCIe devices.  Otherwise we
+ 				only look for one device below a PCIe downstream
+ 				port.
++		driver		Provide an override to the devid<->driver mapping
++				for a specific slot.
++				Bind PCI slot 0001:02:03.4 to pci-stub by:
++					driver[0001:02:03.4]=pci-stub
+ 
+ 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+ 			Management.
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 73aef51..7a7ed85 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -245,6 +245,7 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 	 * are not assigned yet for some devices.
+ 	 */
+ 	pci_fixup_device(pci_fixup_final, dev);
++	pci_device_setup_driver_override(dev);
+ 	pci_create_sysfs_dev_files(dev);
+ 	pci_proc_attach_device(dev);
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b7678be..0a3e07c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4426,6 +4426,65 @@ void __weak pci_fixup_cardbus(struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL(pci_fixup_cardbus);
+ 
++#define DRIVER_OVERRIDE_NAME_LENGTH 64
++#define DRIVER_OVERRIDE_MAP_SIZE 32
++
++struct driver_override_entry {
++	unsigned int domain;
++	unsigned char bus;
++	unsigned int devfn;
++	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
++};
++
++static struct driver_override_entry __initdata
++	driver_override_map[DRIVER_OVERRIDE_MAP_SIZE];
++static int driver_override_num_entries __initdata;
++
++void pci_device_setup_driver_override(struct pci_dev *dev)
++{
++	int i;
++
++	for (i = 0; i < driver_override_num_entries; i++) {
++		if (pci_domain_nr(dev->bus) != driver_override_map[i].domain ||
++		    dev->bus->number != driver_override_map[i].bus ||
++		    dev->devfn != driver_override_map[i].devfn)
++			continue;
++
++		dev->driver_override = kstrndup(driver_override_map[i].driver_name,
++						DRIVER_OVERRIDE_NAME_LENGTH,
++						GFP_KERNEL);
++		break;
++	}
++}
++
++static void __init pci_parse_driver_override(char *str)
++{
++	unsigned int domain, bus, dev, fn;
++	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
++	int ret, next_entry;
++	char format[] = "[%4x:%2x:%2x.%2x]=%%%ds";
++
++	sprintf(format + 18, "%%%ds", DRIVER_OVERRIDE_NAME_LENGTH);
++	ret = sscanf(str, format, &domain, &bus, &dev, &fn, driver_name);
++
++	if (ret != 5) {
++		pr_err("PCI: Invalid command line: driver%s\n", str);
++		return;
++	}
++
++	if (driver_override_num_entries == DRIVER_OVERRIDE_MAP_SIZE) {
++		pr_err("PCI: Driver map overflow - ignoring driver%s\n", str);
++		return;
++	}
++
++	next_entry = driver_override_num_entries++;
++	driver_override_map[next_entry].domain = domain;
++	driver_override_map[next_entry].bus = bus && 0xff;
++	driver_override_map[next_entry].devfn = ((dev & 0x1f) << 3) | (fn & 0x7);
++	memcpy(driver_override_map[next_entry].driver_name,
++	       driver_name, sizeof(driver_name));
++}
++
+ static int __init pci_setup(char *str)
+ {
+ 	while (str) {
+@@ -4468,6 +4527,8 @@ static int __init pci_setup(char *str)
+ 				pcie_bus_config = PCIE_BUS_PEER2PEER;
+ 			} else if (!strncmp(str, "pcie_scan_all", 13)) {
+ 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
++			} else if (!strncmp(str, "driver", 6)) {
++				pci_parse_driver_override(str + 6);
+ 			} else {
+ 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
+ 						str);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 0601890..023d78b 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -197,6 +197,7 @@ enum pci_bar_type {
+ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+ 				int crs_timeout);
+ int pci_setup_device(struct pci_dev *dev);
++void pci_device_setup_driver_override(struct pci_dev *dev);
+ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		    struct resource *res, unsigned int reg);
+ int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
+-- 
+1.8.3.1
+
