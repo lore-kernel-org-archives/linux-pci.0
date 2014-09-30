@@ -1,51 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f180.google.com ([209.85.220.180]:35104 "EHLO
-	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755106AbaIBTaW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Sep 2014 15:30:22 -0400
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:54116 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751102AbaI3ErT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 00:47:19 -0400
+Message-ID: <542A35E6.8020100@gmail.com>
+Date: Mon, 29 Sep 2014 21:47:34 -0700
+From: Rajat Jain <rajatxjain@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5_WMUmnTHpPZt+j04VZoiW1pthQoGV90A5BDQpQgjwOQ@mail.gmail.com>
-References: <53FFA54D.9000907@gmail.com>
-	<CAErSpo5_WMUmnTHpPZt+j04VZoiW1pthQoGV90A5BDQpQgjwOQ@mail.gmail.com>
-Date: Tue, 2 Sep 2014 12:30:21 -0700
-Message-ID: <CA+55aFy63sEs2zvr0LzKSjxSRuH5paLG378qQ6_QyLmmJw=D3w@mail.gmail.com>
-Subject: Re: [PATCH] pci/probe: Enable CRS for Intel Haswell root ports
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatxjain@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>,
-	Richard Yang <weiyang@linux.vnet.ibm.com>,
-	Matthew Wilcox <matthew.r.wilcox@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Bjorn Helgaas <bhelgaas@google.com>, Jiri Kosina <jkosina@suse.cz>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-i2c@vger.kernel.org, linux-doc@vger.kernel.org
+CC: rajatjain@juniper.net, groeck@juniper.net
+Subject: [PATCH 3/4] MAINTAINERS: Add new device driver entry for PEX pex8xxx
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 1, 2014 at 9:14 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
-> I'm not a fan of adding a whitelist for devices that work correctly.
-> I don't think that's a maintainable solution.  Since we haven't had
-> many systems yet that care about CRS, some kind of "enable CRS on
-> machines newer than X" might work.
 
-I'd suggest trying to just enable CRS unconditionally (ie revert my
-old commit ad7edfe04908). We've done other changes in this area since,
-and in particular, it's entirely possible that the original problem we
-had doesn't even trigger any more.
+Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+Signed-off-by: Guenter Roeck <groeck@juniper.net>
+---
+ MAINTAINERS |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-In particular, looking at one of the old reports, I don't see that
-"Device %04x:%02x:%02x.%d not responding" warning that we *should*
-have triggered in pci_scan_device(). So I wonder if we had some case
-that read the vendor ID without that whole loop, and that _that_ was
-our fundamental problem.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 3705430..0ef7a92 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7003,6 +7003,13 @@ S:	Maintained
+ F:	include/linux/personality.h
+ F:	include/uapi/linux/personality.h
+ 
++PEX8XXX I2C DRIVER
++M:	Rajat Jain <rajatjain@juniper.net>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	drivers/pci/pex8xxx_i2c.c
++F:	include/linux/i2c/pex8xxx_i2c.h
++
+ PHONET PROTOCOL
+ M:	Remi Denis-Courmont <courmisch@gmail.com>
+ S:	Supported
+-- 
+1.7.9.5
 
-It would be great if somebody could test with the old hardware that
-triggered the problem originally, but those reports are from 2007, so
-it might be hard to find anything relevant today. But trying to just
-go back to unconditionally enabling CRS (say, in 3.18-rc1) and seeing
-if anybody hollers, might just be the right approach.
-
-            Linus
