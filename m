@@ -1,56 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:43147 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752938AbaIPXRU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Sep 2014 19:17:20 -0400
-Received: by mail-pd0-f171.google.com with SMTP id p10so761635pdj.16
-        for <linux-pci@vger.kernel.org>; Tue, 16 Sep 2014 16:17:19 -0700 (PDT)
-Date: Tue, 16 Sep 2014 17:17:16 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 30 Sep 2014 14:35:51 -0700
+From: Guenter Roeck <groeck@juniper.net>
+To: Wolfram Sang <wsa@the-dreams.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: mvebu: Fix uninitialized variable in
- mvebu_get_tgt_attr()
-Message-ID: <20140916231716.GG5050@google.com>
-References: <1407512045-26969-1-git-send-email-geert+renesas@glider.be>
- <20140905174122.GD8080@google.com>
- <20140905202044.4c166a43@free-electrons.com>
- <5898856.RmRf87KNto@wuerfel>
- <CAErSpo4sEQN6T9knuh4U2x9BCUODJheaAf3S8+W4U4oC-C7mMA@mail.gmail.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-i2c <linux-i2c@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>
+Subject: Re: [PATCH 0/4] Driver for talking to PLX PEX8xxx PCIe switch over
+ I2C
+Message-ID: <20140930213306.GA29008@svl-evodev-groeck.juniper.net>
+References: <542A3593.4020108@gmail.com>
+ <CAErSpo7BkXDHOZwHzwEu2BN3=39xFwQOyrjgVo6afWKMsnYT=A@mail.gmail.com>
+ <20140930211339.GA1264@katana>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4sEQN6T9knuh4U2x9BCUODJheaAf3S8+W4U4oC-C7mMA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20140930211339.GA1264@katana>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 05, 2014 at 01:00:29PM -0600, Bjorn Helgaas wrote:
-> On Fri, Sep 5, 2014 at 12:34 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Friday 05 September 2014 20:20:44 Thomas Petazzoni wrote:
-> >> Hum, I think I would actually prefer something like:
-> >>
-> >>                 if (DT_FLAGS_TO_TYPE(flags) == DT_TYPE_IO)
-> >>                         rtype = IORESOURCE_IO;
-> >>                 else if (DT_FLAGS_TO_TYPE(flags) == DT_TYPE_MEM32)
-> >>                         rtype = IORESOURCE_MEM;
-> >> +               else
-> >> +                       continue;
-> >>
-> >> So that we're explicit with the fact that we only care about I/O and
-> >> MEM32 resource types.
-> >
-> > Agreed, that looks better than my patch as well.
+On Tue, Sep 30, 2014 at 11:13:39PM +0200, Wolfram Sang wrote:
 > 
-> I like it better, too, but we still need the "range += rangesz" part,
-> so I don't think it will work.  I suppose that could be moved to the
-> update expression of the "for" loop.  Or, since we don't use "i" in
-> the loop at all, maybe we could do something like this:
+> > > Since this is a driver for a PCIe switch, I currently put it under /driver/pci/.
+> > > I'm very open to suggestions for moving this around (Does introducing
+> > > drivers/pci/switch/ seem any better?). Especially I can see that the
+> > > drivers/pci/Kconfig appears under "Bus Options" in the main menu which does not
+> > > look like the right place for this driver. I am looking for suggestions here.
+> > 
+> > Definitely interesting work.  I have no idea where to put it.  It
+> > doesn't have anything to do with PCI core services or structures, so
+> > drivers/pci doesn't seem like the ideal place for it, but I don't have
+> > any better ideas.  If it did end up under drivers/pci, I agree that a
+> > drivers/pci/switch or something similar would probably be better than
+> > having it directly in drivers/pci.
+> > 
+> > Maybe Wolfram or other I2C folks will have an idea.
 > 
->     for (; range < rend; range += rangesz)
+> Hmm, is this a common interface for those switches? Then a directory
+> like drivers/pci/switch could make sense. Otherwise I'd suggest
+> drivers/misc?
+> 
+We had discussed drivers/misc internally, but it didn't seem to be the right
+location to me. After all, it is not a misc driver, but a driver to configure
+a PCIe switch. Not that I have a better idea, though.
 
-Any more input on this?  I don't think I've seen anything actually acked by
-Thomas or Jason.
+Guenter
