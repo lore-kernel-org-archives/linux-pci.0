@@ -1,133 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:60253 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754070AbaIYPvE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Sep 2014 11:51:04 -0400
-Received: by mail-ig0-f173.google.com with SMTP id l13so8716784iga.6
-        for <linux-pci@vger.kernel.org>; Thu, 25 Sep 2014 08:51:03 -0700 (PDT)
-Date: Thu, 25 Sep 2014 09:51:00 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Chen, Gong" <gong.chen@linux.intel.com>
-Cc: rdunlap@infradead.org, bp@alien8.de, tony.luck@intel.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Heather Brown <hbrown@hp.com>
-Subject: Re: [RESEND 2/5] PCIe, AER: Replenish missed AER status bits for AER
- driver
-Message-ID: <20140925155100.GA12200@google.com>
-References: <1407910961-7798-1-git-send-email-gong.chen@linux.intel.com>
- <1407910961-7798-3-git-send-email-gong.chen@linux.intel.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Tue, 30 Sep 2014 11:39:42 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH v13 00/12] Support for creating generic PCI host bridges
+ from DT
+Message-ID: <20140930103942.GO841@e106497-lin.cambridge.arm.com>
+References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140929194335.GA13747@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1407910961-7798-3-git-send-email-gong.chen@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20140929194335.GA13747@google.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Heather]
-
-On Wed, Aug 13, 2014 at 02:22:38AM -0400, Chen, Gong wrote:
-> Since commit 6c2b374d is commited, the capability of PCI-e AER
-> has changed a lot. This patch adds all missed CE/UC error bits
-> existed in PCI-e SPEC r3.0. Meanwhile, adjust the code format
-> to make it simpler to read/maintain.
+On Mon, Sep 29, 2014 at 08:43:35PM +0100, Bjorn Helgaas wrote:
+> On Mon, Sep 29, 2014 at 03:29:19PM +0100, Liviu Dudau wrote:
+> > This is my version 13 of the attempt at adding support for generic PCI host
+> > bridge controllers. It contains only cleanups to make it play nice with the
+> > linux-next tree as of 09/25. If Bjorn deems it safe, now that it looks like
+> > asm-generic is going to revert some of its more aggresive patches, he has the
+> > choice of queueing it into linux-next again.
+> > ...
 > 
-> Signed-off-by: Chen, Gong <gong.chen@linux.intel.com>
-> ---
->  drivers/pci/pcie/aer/aerdrv_errprint.c | 60 ++++++++++++++--------------------
->  1 file changed, 25 insertions(+), 35 deletions(-)
+> These patches above were already on my pci/host-generic branch and in
+> linux-next:
 > 
-> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> index 35d06e177917..5c4f7e252e5e 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> @@ -75,44 +75,34 @@ static const char *aer_error_layer[] = {
->  };
->  
->  static const char *aer_correctable_error_string[] = {
-> -	"Receiver Error",		/* Bit Position 0	*/
-> -	NULL,
-> -	NULL,
-> -	NULL,
-> -	NULL,
-> -	NULL,
-> -	"Bad TLP",			/* Bit Position 6	*/
-> -	"Bad DLLP",			/* Bit Position 7	*/
-> -	"RELAY_NUM Rollover",		/* Bit Position 8	*/
-> -	NULL,
-> -	NULL,
-> -	NULL,
-> -	"Replay Timer Timeout",		/* Bit Position 12	*/
-> -	"Advisory Non-Fatal",		/* Bit Position 13	*/
-> +	[0] = "Receiver Error",
-> +	[6] = "Bad TLP",
-> +	[7] = "Bad DLLP",
-> +	[8] = "RELAY_NUM Rollover",
-> +	[12] = "Replay Timer Timeout",
-> +	[13] = "Advisory Non-Fatal Error",
-> +	[14] = "Corrected Internal Error",
-> +	[15] = "Header Log Overflow",
+>    asm-generic/io.h: Fix ioport_map() for !CONFIG_GENERIC_IOMAP
+This ^ ...
 
-This patch does two things at once: (1) adds new error strings and (2)
-converts to the designated initializer style.  The first is useful but I
-don't think the second really helps anything.
+>    of/pci: Add pci_register_io_range() and pci_pio_to_address()
+>    ARM: Define PCI_IOBASE as the base of virtual PCI IO space
 
-We still have to manually match up the array index, e.g., "14", with the
-#define, PCI_ERR_COR_INTERNAL, and then count bits to make sure it
-matches the constant 0x00004000.
+and this ^ need to be refreshed from my series otherwise we will get conflicts with
+asm-generic branch (either now or in the future). While the asm-generic/io.h
+cast is arguably superflous, we need to define PCI_IOBASE as a void __iomem* to
+match all other standard declarations of PCI_IOBASE.
 
-I'm still holding out for a change that solves that problem.  I would also
-like to avoid duplicating all the strings between include/ras/ras_event.h
-and drivers/pci/pcie/aer/aerdrv_errprint.c.
+>    of/pci: Define of_pci_range_to_resource() only when CONFIG_PCI=y
+>    of/pci: Move of_pci_range_to_resources() to of/address.c
+>    of/pci: Fix the conversion of IO ranges into IO resources
+> 
+> I added these three patches to my pci/host-generic branch:
+> 
+>    PCI: Add generic domain handling
+>    of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()
+>    of/pci: Add support for parsing PCI host bridge resources from DT
 
-In the meantime, I applied the patch below, which does just (1).
+I can see these patches added to pci/host-generic but not on pci/next.
 
-Bjorn
+> 
+> Yinghai pointed out a problem with this one, so I omitted it:
+> 
+>    PCI: Assign unassigned bus resources in pci_scan_root_bus()
+
+Thats fine, host bridge drivers will have to work around pci_scan_root_bus() reduced
+functionality for now.
 
 
-commit d179111767aa2a1d594023ce65abf9c81bfbb0cf
-Author: Chen, Gong <gong.chen@linux.intel.com>
-Date:   Thu Sep 25 09:36:43 2014 -0600
+> 
+> I added this one to my pci/host-generic branch:
+> 
+>    PCI: Add pci_remap_iospace() to map bus I/O resources
+> 
+> I assume this depends on the pci_scan_root_bus() change (if not, let me
+> know), so I omitted this one:
+> 
+>    arm64: Add architectural support for PCI
 
-    PCI/AER: Add additional PCIe AER error strings
-    
-    Add strings for all AER error bits defined in PCIe r3.0.
-    
-    [bhelgaas: changelog, drop designated initializer change]
-    Signed-off-by: Chen, Gong <gong.chen@linux.intel.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+No, there is no dependency there on pci_scan_root_bus(), it can go in the series.
+The only thing that depends on a feature rich pci_scan_root_bus() is the host
+bridge driver in order to be able to use only one line to process the root bus.
 
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 35d06e177917..c6849d9e86ce 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -89,15 +89,17 @@ static const char *aer_correctable_error_string[] = {
- 	NULL,
- 	"Replay Timer Timeout",		/* Bit Position 12	*/
- 	"Advisory Non-Fatal",		/* Bit Position 13	*/
-+	"Corrected Internal Error",	/* Bit Position 14	*/
-+	"Header Log Overflow",		/* Bit Position 15	*/
- };
- 
- static const char *aer_uncorrectable_error_string[] = {
--	NULL,
-+	"Undefined",			/* Bit Position 0	*/
- 	NULL,
- 	NULL,
- 	NULL,
- 	"Data Link Protocol",		/* Bit Position 4	*/
--	NULL,
-+	"Surprise Down Error",		/* Bit Position 5	*/
- 	NULL,
- 	NULL,
- 	NULL,
-@@ -113,6 +115,11 @@ static const char *aer_uncorrectable_error_string[] = {
- 	"Malformed TLP",		/* Bit Position 18	*/
- 	"ECRC",				/* Bit Position 19	*/
- 	"Unsupported Request",		/* Bit Position 20	*/
-+	"ACS Violation",		/* Bit Position 21	*/
-+	"Uncorrectable Internal Error",	/* Bit Position 22	*/
-+	"MC Blocked TLP",		/* Bit Position 23	*/
-+	"AtomicOp Egress Blocked",	/* Bit Position 24	*/
-+	"TLP Prefix Blocked Error",	/* Bit Position 25	*/
- };
- 
- static const char *aer_agent_string[] = {
+Thanks for huge support in getting these patches in and I do hope I'm not being
+too much of a burden to you.
+
+Best regards,
+Liviu
+
+> 
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
