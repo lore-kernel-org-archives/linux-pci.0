@@ -1,136 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:48078 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756060AbaIZO5P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 26 Sep 2014 10:57:15 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC v1 23/28] x86, irq: Clean up io_apic.h
-Date: Fri, 26 Sep 2014 22:57:53 +0800
-Message-Id: <1411743478-31435-24-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-bl2on0144.outbound.protection.outlook.com ([65.55.169.144]:3248
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751906AbaI3C6W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Sep 2014 22:58:22 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shengchao Guo <Shawn.Guo@freescale.com>,
+	"festevam@gmail.com" <festevam@gmail.com>,
+	"tharvey@gateworks.com" <tharvey@gateworks.com>
+Subject: RE: [PATCH v3 3/9] PCI: imx6: update dts and binding for imx6sx pcie
+Date: Tue, 30 Sep 2014 02:58:19 +0000
+Message-ID: <f8954ab4937c4993b4fec5348753b17c@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1411966997-27118-1-git-send-email-r65037@freescale.com>
+	 <1411966997-27118-4-git-send-email-r65037@freescale.com>
+ <1411985600.2625.11.camel@pengutronix.de>
+In-Reply-To: <1411985600.2625.11.camel@pengutronix.de>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Clean up io_apic.h by:
-1) moving definition of struct mp_ioapic_gsi into io_apic.c
-2) changing mp_pin_to_gsi() and mp_ioapic_gsi_routing() as static
-3) killing unused MP_MAX_IOAPIC_PIN
-4) killing useless forward declaration
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |   14 ++------------
- arch/x86/kernel/apic/io_apic.c |    9 +++++++--
- 2 files changed, 9 insertions(+), 14 deletions(-)
-
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index e978dc335eea..840e366ea0d3 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -113,9 +113,6 @@ extern int nr_ioapics;
- 
- extern int mpc_ioapic_id(int ioapic);
- extern unsigned int mpc_ioapic_addr(int ioapic);
--extern struct mp_ioapic_gsi *mp_ioapic_gsi_routing(int ioapic);
--
--#define MP_MAX_IOAPIC_PIN 127
- 
- /* # of MP IRQ source entries */
- extern int mp_irq_entries;
-@@ -135,6 +132,8 @@ extern int noioapicquirk;
- /* -1 if "noapic" boot option passed */
- extern int noioapicreroute;
- 
-+extern u32 gsi_top;
-+
- extern unsigned long io_apic_irqs;
- 
- #define IO_APIC_IRQ(x) (((x) >= NR_IRQS_LEGACY) || ((1 << (x)) & io_apic_irqs))
-@@ -146,7 +145,6 @@ extern unsigned long io_apic_irqs;
- #define io_apic_assign_pci_irqs \
- 	(mp_irq_entries && !skip_ioapic_setup && io_apic_irqs)
- 
--struct irq_cfg;
- extern void ioapic_insert_resources(void);
- extern int arch_early_ioapic_init(void);
- 
-@@ -174,15 +172,8 @@ struct ioapic_domain_cfg {
- 	struct device_node		*dev;
- };
- 
--struct mp_ioapic_gsi{
--	u32 gsi_base;
--	u32 gsi_end;
--};
--extern u32 gsi_top;
--
- extern int mp_find_ioapic(u32 gsi);
- extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
--extern u32 mp_pin_to_gsi(int ioapic, int pin);
- extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags,
- 			     struct irq_alloc_info *info);
- extern void mp_unmap_irq(int irq);
-@@ -232,7 +223,6 @@ static inline int arch_early_ioapic_init(void) { return 0; }
- static inline void print_IO_APICs(void) {}
- #define gsi_top (NR_IRQS_LEGACY)
- static inline int mp_find_ioapic(u32 gsi) { return 0; }
--static inline u32 mp_pin_to_gsi(int ioapic, int pin) { return UINT_MAX; }
- static inline int mp_map_gsi_to_irq(u32 gsi, unsigned int flags,
- 				    struct irq_alloc_info *info)
- {
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index f55ab3a8de08..4c8c22171f43 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -98,6 +98,11 @@ struct mp_pin_info {
- 	u32 count;
- };
- 
-+struct mp_ioapic_gsi{
-+	u32 gsi_base;
-+	u32 gsi_end;
-+};
-+
- static struct ioapic {
- 	/*
- 	 * # of IRQ routing registers
-@@ -129,7 +134,7 @@ unsigned int mpc_ioapic_addr(int ioapic_idx)
- 	return ioapics[ioapic_idx].mp_config.apicaddr;
- }
- 
--struct mp_ioapic_gsi *mp_ioapic_gsi_routing(int ioapic_idx)
-+static struct mp_ioapic_gsi *mp_ioapic_gsi_routing(int ioapic_idx)
- {
- 	return &ioapics[ioapic_idx].gsi_config;
- }
-@@ -141,7 +146,7 @@ static inline int mp_ioapic_pin_count(int ioapic)
- 	return gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
- }
- 
--u32 mp_pin_to_gsi(int ioapic, int pin)
-+static u32 mp_pin_to_gsi(int ioapic, int pin)
- {
- 	return mp_ioapic_gsi_routing(ioapic)->gsi_base + pin;
- }
--- 
-1.7.10.4
-
+SGkgTHVjYXM6DQpUaGFua3MgZm9yIHlvdXIgcmV2aWV3IGNvbW1lbnRzLg0KDQo+IC0tLS0tT3Jp
+Z2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEx1Y2FzIFN0YWNoIFttYWlsdG86bC5zdGFjaEBw
+ZW5ndXRyb25peC5kZV0NCj4gU2VudDogTW9uZGF5LCBTZXB0ZW1iZXIgMjksIDIwMTQgNjoxMyBQ
+TQ0KPiBUbzogWmh1IFJpY2hhcmQtUjY1MDM3DQo+IENjOiBsaW51eC1wY2ktb3duZXJAdmdlci5r
+ZXJuZWwub3JnOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBHdW8gU2hhd24tDQo+IFI2NTA3
+MzsgZmVzdGV2YW1AZ21haWwuY29tOyB0aGFydmV5QGdhdGV3b3Jrcy5jb20NCj4gU3ViamVjdDog
+UmU6IFtQQVRDSCB2MyAzLzldIFBDSTogaW14NjogdXBkYXRlIGR0cyBhbmQgYmluZGluZyBmb3Ig
+aW14NnN4IHBjaWUNCj4gDQo+IEFtIE1vbnRhZywgZGVuIDI5LjA5LjIwMTQsIDEzOjAzICswODAw
+IHNjaHJpZWIgUmljaGFyZCBaaHU6DQo+ID4gLSBpbXg2c3ggcGNpZSBwaHkgaGFzIGl0cyBvd24g
+cG93ZXIgcmVndWxhdG9yLiBBZGQgdGhlIHBjaWUgcGh5IHBvd2VyDQo+ID4gc3VwcHkgaW50byBp
+bTZzeCBwY2llIGR0cyBhbmQgYmluZGluZy4NCj4gPiAtIGluIG9yZGVyIHRvIGFsaWduIHdpdGgg
+aW14NnFkbCdzIHBjaWUgZHRzLCByZS1mb3JtYXQgaW14NnN4IHBjaWUNCj4gPiBkdHMuDQo+ID4g
+LSBpbiBvcmRlciB0byBhbGlnbiB3aXRoIGlteDZxZGwgcGNpZSBkdHMgZm9ybWF0IGFuZCBrZWVw
+IGNsZWFuIG9mDQo+ID4gaW14NiBwY2llIGRyaXZlciwga2VlcCB0aGUgcGNpZSBwaHkgY2xvY2sg
+aW4gaW14NnN4IHBjaWUgZHRzLCBhbHRob3VnaA0KPiA+IGl0J3MgdGhlIHBhcmVudCBjbGsgb2Yg
+dGhlIHBjaWUgYnVzIGNsb2NrIG5vdywgYW5kIHdvdWxkIGJlIGVuYWJsZWQNCj4gPiBhdXRvbWF0
+aWNhbGx5IHdoZW4gcGNpZSBidXMgY2xvY2sgaXMgZW5hYmxlZC4gc2Vjb25kbHksIGl0J3MgcG9z
+c2libGUNCj4gPiB0aGF0IHRoZSBleHRlcm5hbCBvc2MgbWF5YmUgdXNlZCBhcyBzb3VyY2Ugb2Yg
+dGhlIHBjaWVfYnVzIGNsayBpbg0KPiA+IGJvYXJkIGRlc2lnbiBpbiBmdXR1cmUuDQo+ID4gLSBk
+aXNwX2F4aSBjbG9jayBpcyByZXF1aXJlZCBieSBwY2llIGluYm91bmQgYXhpIHBvcnQuDQo+ID4g
+QWRkIG9uZSBtb3JlIGNsb2NrIGZvciBpbXg2c3ggcGNpZS4NCj4gPg0KPiA+IFNpZ25lZC1vZmYt
+Ynk6IFJpY2hhcmQgWmh1IDxyNjUwMzdAZnJlZXNjYWxlLmNvbT4NCj4gPiAtLS0NCj4gPiAgLi4u
+L2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2ZzbCxpbXg2cS1wY2llLnR4dCAgICAgfCAgNSArKyst
+DQo+ID4gIGFyY2gvYXJtL2Jvb3QvZHRzL2lteDZzeC5kdHNpICAgICAgICAgICAgICAgICAgICAg
+IHwgMzAgKysrKysrKysrKysrLS0tLS0tLQ0KPiAtLS0NCj4gPiAgMiBmaWxlcyBjaGFuZ2VkLCAy
+MSBpbnNlcnRpb25zKCspLCAxNCBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9E
+b2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2ZzbCxpbXg2cS1wY2llLnR4dA0K
+PiA+IGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9mc2wsaW14NnEtcGNp
+ZS50eHQNCj4gPiBpbmRleCA5NDU1ZmQwLi45ODFlNDFkIDEwMDY0NA0KPiA+IC0tLSBhL0RvY3Vt
+ZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvZnNsLGlteDZxLXBjaWUudHh0DQo+ID4g
+KysrIGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9mc2wsaW14NnEtcGNp
+ZS50eHQNCj4gPiBAQCAtNCw3ICs0LDcgQEAgVGhpcyBQQ0llIGhvc3QgY29udHJvbGxlciBpcyBi
+YXNlZCBvbiB0aGUgU3lub3BzaXMNCj4gPiBEZXNpZ253YXJlIFBDSWUgSVAgIGFuZCB0aHVzIGlu
+aGVyaXRzIGFsbCB0aGUgY29tbW9uIHByb3BlcnRpZXMgZGVmaW5lZCBpbg0KPiBkZXNpZ253YXJl
+LXBjaWUudHh0Lg0KPiA+DQo+ID4gIFJlcXVpcmVkIHByb3BlcnRpZXM6DQo+ID4gLS0gY29tcGF0
+aWJsZTogImZzbCxpbXg2cS1wY2llIg0KPiA+ICstIGNvbXBhdGlibGU6ICJmc2wsaW14NnEtcGNp
+ZSIsICJmc2wsaW14NnN4LXBjaWUiDQo+ID4gIC0gcmVnOiBiYXNlIGFkZHJlc3NlIGFuZCBsZW5n
+dGggb2YgdGhlIHBjaWUgY29udHJvbGxlcg0KPiA+ICAtIGludGVycnVwdHM6IEEgbGlzdCBvZiBp
+bnRlcnJ1cHQgb3V0cHV0cyBvZiB0aGUgY29udHJvbGxlci4gTXVzdCBjb250YWluDQo+IGFuDQo+
+ID4gICAgZW50cnkgZm9yIGVhY2ggZW50cnkgaW4gdGhlIGludGVycnVwdC1uYW1lcyBwcm9wZXJ0
+eS4NCj4gPiBAQCAtMTMsNiArMTMsOSBAQCBSZXF1aXJlZCBwcm9wZXJ0aWVzOg0KPiA+ICAtIGNs
+b2NrLW5hbWVzOiBNdXN0IGluY2x1ZGUgdGhlIGZvbGxvd2luZyBhZGRpdGlvbmFsIGVudHJpZXM6
+DQo+ID4gIAktICJwY2llX3BoeSINCj4gPg0KPiA+ICtQb3dlciBzdXBwbGllcyBmb3IgaW14NnN4
+Og0KPiA+ICstIHBjaWVfcGh5LXN1cHBseTogcmVndWxhdG9yIHVzZWQgYnkgaW14NnN4IHBjaWUg
+cGh5Lg0KPiA+ICsNCj4gVG8gYWxpZ24gd2l0aCB0aGUgcHJldmlvdXMgcHJhY3RpY2Ugb2YgbmFt
+aW5nIHJlZ3VsYXRvciBzdXBwbGllcyBwbGVhc2UgZG9uJ3QNCj4gdXNlIHVuZGVyc2NvcmVzIGlu
+IHRoZSBuYW1lLiBBbHNvIHlvdSBhcmVuJ3QgZG9jdW1lbnRpbmcgdGhlIGFkZGl0aW9uYWwgY2xv
+Y2sNCj4gKHdoaWNoIGFsc28gbmVlZHMgYSBkZXNjcmlwdGl2ZSBuYW1lLCBOT1QgImRpc3BfYXhp
+IikuDQo+IEkgd291bGQgcmVjb21tZW5kIHRoZSBkb2N1bWVudGF0aW9uIGNoYW5nZSB0byBsb29r
+IGxpa2UgdGhpczoNCj4gDQo+IEFkZGl0aW9uYWwgcmVxdWlyZWQgcHJvcGVydGllcyBmb3IgaW14
+NnN4LXBjaWU6DQo+IC0gY2xvY2sgbmFtZXM6IE11c3QgaW5jbHVkZSB0aGUgZm9sbG93aW5nIGFk
+ZGl0aW9uYWwgZW50cmllczoNCj4gCS0gInBjaWVfaW5ib3VuZF9heGkiDQo+IC0gcG93ZXIgc3Vw
+cGxpZXM6DQo+IAktIHBjaWUtcGh5LXN1cHBseTogcmVndWxhdG9yIHVzZWQgdG8gcG93ZXIgdGhl
+IFBDSWUgUEhZDQo+IA0KPiBQbGVhc2UgdXBkYXRlIHRoZSBEVFMgYW5kIGRyaXZlciBhY2NvcmRp
+bmdseS4NCj4gDQpbUmljaGFyZF0gQWNjZXB0ZWQuIHBjaWVfaW5ib3VuZF9heGkgaXMgb2suDQoN
+Cj4gPiAgRXhhbXBsZToNCj4gPg0KPiA+ICAJcGNpZUAweDAxMDAwMDAwIHsNCj4gPiBkaWZmIC0t
+Z2l0IGEvYXJjaC9hcm0vYm9vdC9kdHMvaW14NnN4LmR0c2kNCj4gPiBiL2FyY2gvYXJtL2Jvb3Qv
+ZHRzL2lteDZzeC5kdHNpIGluZGV4IGY0YjlkYTYuLmI0Y2E5NGIgMTAwNjQ0DQo+ID4gLS0tIGEv
+YXJjaC9hcm0vYm9vdC9kdHMvaW14NnN4LmR0c2kNCj4gPiArKysgYi9hcmNoL2FybS9ib290L2R0
+cy9pbXg2c3guZHRzaQ0KPiA+IEBAIC01OTksOSArNTk5LDkgQEANCj4gPiAgCQkJCQlhbmF0b3At
+bWF4LXZvbHRhZ2UgPSA8MTQ1MDAwMD47DQo+ID4gIAkJCQl9Ow0KPiA+DQo+ID4gLQkJCQlyZWdf
+cGNpZTogcmVndWxhdG9yLXZkZHBjaWVAMTQwIHsNCj4gPiArCQkJCXJlZ19wY2llX3BoeTogcmVn
+dWxhdG9yLXZkZHBjaWVfcGh5QDE0MCB7DQo+ID4gIAkJCQkJY29tcGF0aWJsZSA9ICJmc2wsYW5h
+dG9wLXJlZ3VsYXRvciI7DQo+ID4gLQkJCQkJcmVndWxhdG9yLW5hbWUgPSAidmRkcGNpZSI7DQo+
+ID4gKwkJCQkJcmVndWxhdG9yLW5hbWUgPSAidmRkcGNpZV9waHkiOw0KPiA+ICAJCQkJCXJlZ3Vs
+YXRvci1taW4tbWljcm92b2x0ID0gPDcyNTAwMD47DQo+ID4gIAkJCQkJcmVndWxhdG9yLW1heC1t
+aWNyb3ZvbHQgPSA8MTQ1MDAwMD47DQo+ID4gIAkJCQkJYW5hdG9wLXJlZy1vZmZzZXQgPSA8MHgx
+NDA+Ow0KPiA+IEBAIC0xMTg4LDIwICsxMTg4LDI0IEBADQo+ID4gIAkJCSNhZGRyZXNzLWNlbGxz
+ID0gPDM+Ow0KPiA+ICAJCQkjc2l6ZS1jZWxscyA9IDwyPjsNCj4gPiAgCQkJZGV2aWNlX3R5cGUg
+PSAicGNpIjsNCj4gPiAtCQkJCSAgLyogY29uZmlndXJhdGlvbiBzcGFjZSAqLw0KPiA+IC0JCQly
+YW5nZXMgPSA8MHgwMDAwMDgwMCAwIDB4MDhmMDAwMDAgMHgwOGYwMDAwMCAwIDB4MDAwODAwMDAN
+Cj4gPiAtCQkJCSAgLyogZG93bnN0cmVhbSBJL08gKi8NCj4gPiAtCQkJCSAgMHg4MTAwMDAwMCAw
+IDAgICAgICAgICAgMHgwOGY4MDAwMCAwIDB4MDAwMTAwMDANCj4gPiAtCQkJCSAgLyogbm9uLXBy
+ZWZldGNoYWJsZSBtZW1vcnkgKi8NCj4gPiAtCQkJCSAgMHg4MjAwMDAwMCAwIDB4MDgwMDAwMDAg
+MHgwODAwMDAwMCAwIDB4MDBmMDAwMDA+Ow0KPiA+ICsJCQlyYW5nZXMgPSA8MHgwMDAwMDgwMCAw
+IDB4MDhmMDAwMDAgMHgwOGYwMDAwMCAwIDB4MDAwODAwMDAgLyoNCj4gY29uZmlndXJhdGlvbiBz
+cGFjZSAqLw0KPiA+ICsJCQkJICAweDgxMDAwMDAwIDAgMCAgICAgICAgICAweDA4ZjgwMDAwIDAg
+MHgwMDAxMDAwMCAvKg0KPiBkb3duc3RyZWFtIEkvTyAqLw0KPiA+ICsJCQkJICAweDgyMDAwMDAw
+IDAgMHgwODAwMDAwMCAweDA4MDAwMDAwIDAgMHgwMGYwMDAwMD47IC8qDQo+ID4gK25vbi1wcmVm
+ZXRjaGFibGUgbWVtb3J5ICovDQo+ID4gIAkJCW51bS1sYW5lcyA9IDwxPjsNCj4gPiAtCQkJaW50
+ZXJydXB0cyA9IDxHSUNfU1BJIDEyMyBJUlFfVFlQRV9MRVZFTF9ISUdIPjsNCj4gPiAtCQkJY2xv
+Y2tzID0gPCZjbGtzIElNWDZTWF9DTEtfUENJRV9SRUZfMTI1TT4sDQo+ID4gLQkJCQkgPCZjbGtz
+IElNWDZTWF9DTEtfUENJRV9BWEk+LA0KPiA+ICsJCQlpbnRlcnJ1cHRzID0gPEdJQ19TUEkgMTIw
+IElSUV9UWVBFX0xFVkVMX0hJR0g+Ow0KPiA+ICsJCQlpbnRlcnJ1cHQtbmFtZXMgPSAibXNpIjsN
+Cj4gPiArCQkJI2ludGVycnVwdC1jZWxscyA9IDwxPjsNCj4gPiArCQkJaW50ZXJydXB0LW1hcC1t
+YXNrID0gPDAgMCAwIDB4Nz47DQo+ID4gKwkJCWludGVycnVwdC1tYXAgPSA8MCAwIDAgMSAmaW50
+YyBHSUNfU1BJIDEyMyBJUlFfVFlQRV9MRVZFTF9ISUdIPiwNCj4gPiArCQkJICAgICAgICAgICAg
+ICAgIDwwIDAgMCAyICZpbnRjIEdJQ19TUEkgMTIyIElSUV9UWVBFX0xFVkVMX0hJR0g+LA0KPiA+
+ICsJCQkgICAgICAgICAgICAgICAgPDAgMCAwIDMgJmludGMgR0lDX1NQSSAxMjEgSVJRX1RZUEVf
+TEVWRUxfSElHSD4sDQo+ID4gKwkJCSAgICAgICAgICAgICAgICA8MCAwIDAgNCAmaW50YyBHSUNf
+U1BJIDEyMCBJUlFfVFlQRV9MRVZFTF9ISUdIPjsNCj4gPiArCQkJY2xvY2tzID0gPCZjbGtzIElN
+WDZTWF9DTEtfUENJRV9BWEk+LA0KPiA+ICAJCQkJIDwmY2xrcyBJTVg2U1hfQ0xLX0xWRFMxX09V
+VD4sDQo+ID4gKwkJCQkgPCZjbGtzIElNWDZTWF9DTEtfUENJRV9SRUZfMTI1TT4sDQo+ID4gIAkJ
+CQkgPCZjbGtzIElNWDZTWF9DTEtfRElTUExBWV9BWEk+Ow0KPiA+IC0JCQljbG9jay1uYW1lcyA9
+ICJwY2llX3JlZl8xMjVtIiwgInBjaWVfYXhpIiwNCj4gPiAtCQkJCSAgICAgICJsdmRzX2dhdGUi
+LCAiZGlzcGxheV9heGkiOw0KPiA+ICsJCQljbG9jay1uYW1lcyA9ICJwY2llIiwgInBjaWVfYnVz
+IiwgInBjaWVfcGh5IiwgImRpc3BfYXhpIjsNCj4gPiArCQkJcGNpZV9waHktc3VwcGx5ID0gPCZy
+ZWdfcGNpZV9waHk+Ow0KPiA+ICAJCQlzdGF0dXMgPSAiZGlzYWJsZWQiOw0KPiA+ICAJCX07DQo+
+ID4gIAl9Ow0KPiANCj4gWW91IGFyZSBzdGlsbCBtaXNzaW5nIHRoZSAiY29uZmlnIiByZWcgc3Bh
+Y2UuIFBsZWFzZSBsb29rIGF0IHRoZSBkZXNpZ253YXJlLQ0KPiBwY2llLnR4dCBiYXNlIGJpbmRp
+bmcsIGl0J3MgYSByZXF1aXJlZCBwcm9wZXJ0eSBub3cuIEFsc28gcGxlYXNlIGJlIG1vcmUNCj4g
+Y2FyZWZ1bCB0byBhZGRyZXNzIG15IHJldmlldyBjb21tZW50cy4NCj4gDQpbUmljaGFyZF1Tb3Jy
+eSwgbWlzLXVuZGVyc3RhbmQgeW91ciBwcmV2aW91cyBjb21tZW50Lg0KQ2F0Y2ggeW91ciBwb2lu
+dCBub3csIHdvdWxkIGFkZCB0aGUgbmV3ICJjb25maWciIHJlZyBzcGFjZSBsYXRlci4NCj4gUmVn
+YXJkcywNCj4gTHVjYXMNCj4gLS0NCj4gUGVuZ3V0cm9uaXggZS5LLiAgICAgICAgICAgICB8IEx1
+Y2FzIFN0YWNoICAgICAgICAgICAgICAgICB8DQo+IEluZHVzdHJpYWwgTGludXggU29sdXRpb25z
+ICAgfCBodHRwOi8vd3d3LnBlbmd1dHJvbml4LmRlLyAgfA0KDQoNCkJlc3QgUmVnYXJkcw0KUmlj
+aGFyZCBaaHUNCg==
