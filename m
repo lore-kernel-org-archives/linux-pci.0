@@ -1,54 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:53644 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753059AbaIXN0N (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 09:26:13 -0400
-Received: by mail-ig0-f180.google.com with SMTP id a13so6476938igq.7
-        for <linux-pci@vger.kernel.org>; Wed, 24 Sep 2014 06:26:13 -0700 (PDT)
-Date: Wed, 24 Sep 2014 07:26:10 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Minghuan Lian <Minghuan.Lian@freescale.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] PCI: designware: Fix IO resource end address calculation
-Message-ID: <20140924132610.GB13850@google.com>
-References: <1411482540-31297-1-git-send-email-Minghuan.Lian@freescale.com>
- <1411482540-31297-2-git-send-email-Minghuan.Lian@freescale.com>
+Received: from mail-bn1bbn0102.outbound.protection.outlook.com ([157.56.111.102]:47232
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752082AbaI3KHM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Sep 2014 06:07:12 -0400
+From: Richard Zhu <r65037@freescale.com>
+To: <linux-pci-owner@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
+	<festevam@gmail.com>, <l.stach@pengutronix.de>,
+	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
+Subject: [PATCH v4 10/10] ARM: imx6sx: enable pcie on imx6sx sdb board
+Date: Tue, 30 Sep 2014 17:36:44 +0800
+Message-ID: <1412069804-17162-11-git-send-email-r65037@freescale.com>
+In-Reply-To: <1412069804-17162-1-git-send-email-r65037@freescale.com>
+References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411482540-31297-2-git-send-email-Minghuan.Lian@freescale.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 23, 2014 at 10:28:57PM +0800, Minghuan Lian wrote:
-> End address should be equal to start_addr + size - 1.
-> The patch fixes PCI IO resource end address calculation.
-> 
-> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+Signed-off-by: Richard Zhu <r65037@freescale.com>
+---
+ arch/arm/boot/dts/imx6sx-sdb.dts | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-Applied to pci/host-designware with Mohit's ack for v3.18, thanks!
+diff --git a/arch/arm/boot/dts/imx6sx-sdb.dts b/arch/arm/boot/dts/imx6sx-sdb.dts
+index a3980d9..2976913 100644
+--- a/arch/arm/boot/dts/imx6sx-sdb.dts
++++ b/arch/arm/boot/dts/imx6sx-sdb.dts
+@@ -251,6 +251,13 @@
+ 	};
+ };
+ 
++&pcie {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_pcie>;
++	reset-gpio = <&gpio2 0 0>;
++	status = "okay";
++};
++
+ &ssi2 {
+ 	status = "okay";
+ };
+@@ -365,6 +372,12 @@
+ 			>;
+ 		};
+ 
++		pinctrl_pcie: pciegrp {
++			fsl,pins = <
++				MX6SX_PAD_ENET1_COL__GPIO2_IO_0 0x17059
++			>;
++		};
++
+ 		pinctrl_vcc_sd3: vccsd3grp {
+ 			fsl,pins = <
+ 				MX6SX_PAD_KEY_COL1__GPIO2_IO_11		0x17059
+-- 
+1.9.1
 
-> ---
->  drivers/pci/host/pcie-designware.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 0f3cb2a..c19184f7 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -459,7 +459,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  			pp->io.end = min_t(resource_size_t,
->  					   IO_SPACE_LIMIT,
->  					   range.pci_addr + range.size
-> -					   + global_io_offset);
-> +					   + global_io_offset - 1);
->  			pp->io_size = resource_size(&pp->io);
->  			pp->io_bus_addr = range.pci_addr;
->  			pp->io_base = range.cpu_addr;
-> -- 
-> 1.9.1
-> 
