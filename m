@@ -1,62 +1,154 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <542A8C5E.3040901@huawei.com>
+Date: Tue, 30 Sep 2014 18:56:30 +0800
+From: Abel <wuyun.wu@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <ghppf15236.fsf@quad.gouders.net>
-References: <ghiol53r9u.fsf@lena.gouders.net> <CAMxnaaXiEZeJOsgQ6ZSbiqy5Z1zNoXonwNSQNRyRhV0t5jveYQ@mail.gmail.com>
- <ghwq9k3m6z.fsf@lena.gouders.net> <CAMxnaaUqTMf1uEQUqrAGjym8ZrQaBf2QbE4Jqxh2t6a2JgJkOQ@mail.gmail.com>
- <ghioku5l29.fsf@lena.gouders.net> <CAErSpo7j=a3y2MVsvEQGQ4B63_mNCyZSRNXNEZa-2++xs88NmQ@mail.gmail.com>
- <CAE9FiQUXvuZo2bQSRg0vpuDVYrnkcXDu7KZBNp-YgXbKa2LQhw@mail.gmail.com> <ghppf15236.fsf@quad.gouders.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 11 Sep 2014 14:42:47 -0600
-Message-ID: <CAErSpo5SVUOz+qa_x5JTC+-Y5ewTyYzA0N=jyPtK9LaguRrt=w@mail.gmail.com>
-Subject: Re: [BUG] Bisected Problem with LSI PCI FC Adapter
-To: Dirk Gouders <dirk@gouders.net>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Jiang Liu <jiang.liu@linux.intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	<x86@kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [RFT v2 01/24] irqdomain: Introduce new interfaces to support
+ hierarchy irqdomains
+References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com> <1411740145-30626-2-git-send-email-jiang.liu@linux.intel.com> <54294F1C.30606@huawei.com> <alpine.DEB.2.02.1409291707410.22082@ionos.tec.linutronix.de>
+In-Reply-To: <alpine.DEB.2.02.1409291707410.22082@ionos.tec.linutronix.de>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 11, 2014 at 2:33 PM, Dirk Gouders <dirk@gouders.net> wrote:
-> What I was currently trying was to construct a test-environment so that
-> I do not need to do tests and diagnosis on a busy machine.
->
-> I noticed that this problem seems to start with the narrow Root
-> Bridge window (00-07) but every other machine that I had a look at,
-> starts with (00-ff), so those will not trigger my problem.
->
-> I thought I could perhaps try to shrink the window in
-> acpi_pci_root_add() to trigger the problem and that kind of works: it
-> triggers it but not exactly the same way, because it basically ends at
-> this code in pci_scan_bridge():
->
->         if (max >= bus->busn_res.end) {
->                 dev_warn(&dev->dev, "can't allocate child bus %02x from %pR (pass %d)\n",
->                          max, &bus->busn_res, pass);
->                 goto out;
->         }
->
-> If this could work but I am just missing a small detail, I would be
-> glad to hear about it and do the first tests this way.  If it is
-> complete nonsense, I will just use the machine that triggers the problem
-> for the tests.
+Hi Thomas,
+On 2014/9/29 23:53, Thomas Gleixner wrote:
 
-I was about to suggest the same thing.  If the problem is related to
-the bus number change, we should be able to force that to happen on a
-different machine.  Your approach sounds good, so I'm guessing we just
-need a tweak.
+> On Mon, 29 Sep 2014, Abel wrote:
+>> I've been through your patches and noticed that the only domain
+>> which does not call irq_domain_alloc_irqs_parent() is
+>> x86_vector_domain. And this makes sense *if* we already knew which
+>> domain is the nearest one to the CPU.
+> 
+> Right, and in case of x86 the vector domain _IS_ the one which is
+> always the nearest one to the cpu.
 
-I would first double-check that the PCI adapters are identical,
-including the firmware on the card.  Can you also include your patch
-and the resulting dmesg (with debug enabled as before)?
+Yes, I know that. :)
+What I meant is... (please see below)
 
-Is the test machine itself similar to the failing one?  Do they have
-the same BIOS version?  From [1], it looks like you already have the
-latest BIOS on the failing machine.  It's interesting that the notes
-for your version mention "Fixed a PCI Bus Number re-allocation error."
+> 
+>> But I don't think a well implemented device driver should assume
+>> itself be in a particular position of the interrupt delivery path.
+> 
+> The device driver has no knowledge of this. The irq domain driver
+> definitely has to know to some extent.
+> 
+>> Actually it should be guaranteed by the core infrastructure that all
+>> the domains in the interrupt delivery path should allocate a
+>> hardware interrupt for the interrupt source.
+> 
+> Well, that's what we do. We allocate down the irq domain hierarchy. If
+> one level fails the whole operation fails.
 
-Bjorn
+Actually the core infrastructure just calls domain->ops->alloc() which is
+the one who really guarantees it by calling irq_domain_alloc_irqs_parent().
+I think it's enough for a particular domain to pick a hwirq from itself for
+that linux irq, and need not to care about its parent.
+What I suggest is something like:
 
-[1] http://www.tyan.com/support_download_bios.aspx?model=B.VX50B4985-E
+for (iter = domain; iter; iter = iter->parent) {
+	ret = iter->ops->alloc(iter, virq, nr_irqs, arg);
+	if (ret < 0) {
+		mutex_unlock(&irq_domain_mutex);
+		goto out_free_irq_data;
+	}
+}
+
+in this way, the core infrastructure guarantees allocating down the irqdomain
+hierarchy, and the implementers of domain_ops->alloc() need not to call
+irq_domain_alloc_irqs_parent() any longer, just do the things they have to.
+
+> 
+>> And besides the comments/questions I mentioned above, I am also curious about
+>> how the chained interrupts been processed.
+>>
+>> Let's take a 3-level-chained-domains for example.
+>> Given 3 interrupt controllers A, B and C, and the interrupt delivery path is:
+>>
+>> DEV -> A -> B -> C -> CPU
+>>
+>> After the hierarchy irqdomains are established, the unique linux interrupt of
+>> DEV will be mapped with a hardware interrupt in each domain:
+>>
+>> DomainA: HWIRQ_A => VIRQ_DEV
+>> DomainB: HWIRQ_B => VIRQ_DEV
+>> DomainC: HWIRQ_C => VIRQ_DEV
+>>
+>> When the DEV triggered an interrupt signal, the CPU will acknowledge HWIRQ_C,
+> 
+> Not necessarily. The CPU will process HWIRQ_C. The acknowledge
+> mechanism depends on the implementation details of the hierarchy.
+
+Yes, you are right. Thanks for pointing out.
+
+> 
+>> and then irq_find_mapping(DomainC, HWIRQ_C) will be called to get the linux
+>> interrupt VIRQ_DEV, and after the handler of the VIRQ_DEV has been processed,
+>> the interrupt will end with the level (if have) uncleared on B, which will
+>> result in the interrupt of DEV cannot be processed again.
+>>
+>> Or is there anything I misunderstand?
+> 
+> This heavily depends on the properties of the stacked domains.
+> 
+> It depends on the hardware requirements and the implementation of
+> domain A and B how this is handled.
+> 
+> It might be sufficient to have the following code in the irq_ack()
+> callback of domain A:
+> 
+> irq_ack_A(struct irq_data *d)
+> {
+> 	ack_hw_A();
+> }
+> 
+> Another HW or stacking scenario requires
+> 
+> irq_ack_A(struct irq_data *d)
+> {
+> 	ack_hw_A();
+> 	ack_parent();
+> }
+> 
+> where ack_parent() does:
+> 
+>       if (d->parent_data)
+>       	 d->parent_data->chip->ack(d->parent_data);
+> 
+> and ack_hw_A() can be anything from a nop to some more or less complex
+> hw access.
+> 
+> So we cannot define upfront how deep an ack/mask/unmask/... has to be
+> propagated down the chain. This needs a careful consideration in terms
+> of functionality and we want to be able to do performance shortcuts as
+> well.
+> 
+
+Yes, I got it. And one more thing I concerned is that when hierarchy
+irqdomains is enabled, shouldn't the ack_parent() be called by default
+by the irqchip->irq_ack() of each domain to ensure all the domains in
+the delivery path ack this interrupt?
+
+Thanks,
+	Abel.
+
