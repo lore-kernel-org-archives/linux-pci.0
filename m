@@ -1,94 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:37208 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752961AbaIYCvJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Sep 2014 22:51:09 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 19/22] IA64/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-Date: Thu, 25 Sep 2014 11:14:29 +0800
-Message-ID: <1411614872-4009-20-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:37651 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751857AbaI3O5H (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 10:57:07 -0400
+Message-ID: <1412089023.2473.3.camel@pengutronix.de>
+Subject: Re: [PATCH v4 03/10] PCI: imx6: Fix possible dead lock
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Richard Zhu <r65037@freescale.com>
+Cc: linux-pci-owner@vger.kernel.org, linux-pci@vger.kernel.org,
+	shawn.guo@freescale.com, festevam@gmail.com, tharvey@gateworks.com
+Date: Tue, 30 Sep 2014 16:57:03 +0200
+In-Reply-To: <1412069804-17162-4-git-send-email-r65037@freescale.com>
+References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
+	 <1412069804-17162-4-git-send-email-r65037@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI chip framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+Am Dienstag, den 30.09.2014, 17:36 +0800 schrieb Richard Zhu:
+> kernel report one possible dead lock during imx6sx pcie
+> suspend resume stress tests, after enable Lock Debugging.
+> platform: imx6sx sdb board + xhci(pcie2usb3.0 ep)
+> 
+> reason: usleep_range used in imx6_pcie_link_up maybe scheduled
+> out from dw_pcie_valid_config.isra...
+> About details, please see the following logs.
+> 
+> solution: replace the usleep_range(1000, 2000) by udelay(10) and
+> enlarge the loop counter.
+> 
+> logs:
+> [   50.643062] xhci_hcd 0000:01:00.0: Refused to change power state, currently in D3
+> [   50.653390]
+> [   50.654898] =========================================================
+> [   50.661343] [ INFO: possible irq lock inversion dependency detected ]
+> [   50.667792] 3.17.0-rc2-01341-gfc43ff7-dirty #101 Not tainted
+> [   50.673454] ---------------------------------------------------------
+> [   50.679898] kworker/u2:2/48 just changed the state of lock:
+> [   50.685477]  (pci_lock){+.....}, at: [<802d650c>] pci_bus_read_config_dword+0x44/0x94
+> [   50.693394] but this lock was taken by another, HARDIRQ-safe lock in the past:
+> [   50.700619]  (&irq_desc_lock_class){-.-...}
+> 
+> and interrupts could create inverse lock ordering between them.
+> 
+> [   50.710843]
+> [   50.710843] other info that might help us debug this:
+> [   50.717377]  Possible interrupt unsafe locking scenario:
+> [   50.717377]
+> [   50.724169]        CPU0                    CPU1
+> [   50.728702]        ----                    ----
+> [   50.733234]   lock(pci_lock);
+> [   50.736232]                                local_irq_disable();
+> [   50.742154]                                lock(&irq_desc_lock_class);
+> [   50.748713]                                lock(pci_lock);
+> [   50.754229]   <Interrupt>
+> [   50.756852]     lock(&irq_desc_lock_class);
+> [   50.761065]
+> [   50.761065]  *** DEADLOCK ***
+> ...
+> 
+> [   52.119515] [<806e8ad0>] (schedule_hrtimeout_range) from [<80077e90>] (usleep_range+0x50/0x58)
+> [   52.128141] [<80077e40>] (usleep_range) from [<802f3694>] (imx6_pcie_link_up+0x48/0x16c)
+> [   52.136242] [<802f364c>] (imx6_pcie_link_up) from [<802f1b74>] (dw_pcie_valid_config.isra.10+0x40/0x7c)
+> [   52.145637]  r6:ae72606d r5:ae72606c r4:ae711228
+> [   52.150311] [<802f1b34>] (dw_pcie_valid_config.isra.10) from [<802f1ca8>] (dw_pcie_rd_conf+0x4c/0x154)
+> [   52.159620]  r7:00000000 r6:00000000 r5:ae711228 r4:ae726000
+> [   52.165355] [<802f1c5c>] (dw_pcie_rd_conf) from [<802d6534>] (pci_bus_read_config_dword+0x6c/0x94)
+> [   52.174316]  r9:adf4e910 r8:809bc51c r7:00000000 r6:60000153 r5:adc3fd5c r4:ae726000
+> [   52.182152] [<802d64c8>] (pci_bus_read_config_dword) from [<802db588>] (pci_restore_config_dword+0x54/0xa4)
+> [   52.191894]  r6:00000024 r5:0000000a r4:ae61e000
+> [   52.196570] [<802db534>] (pci_restore_config_dword) from [<802dd150>] (pci_restore_state.part.37+0x7c/0x1f8)
+> [   52.206399]  r8:802e086c r7:ae61dfe8 r6:519e2024 r5:ae61e000 r4:ae61dffc
+> [   52.213187] [<802dd0d4>] (pci_restore_state.part.37) from [<802dd2e8>] (pci_restore_state+0x1c/0x20)
+> [   52.222322]  r7:adc3fea8 r6:809d90e0 r5:ae61e000 r4:ae61e068
+> [   52.228056] [<802dd2cc>] (pci_restore_state) from [<802e0894>] (pci_pm_resume_noirq+0x28/0xa4)
+> [   52.236683] [<802e086c>] (pci_pm_resume_noirq) from [<8037ea1c>] (dpm_run_callback.isra.12+0x34/0x7c)
+> 
+> Signed-off-by: Richard Zhu <r65037@freescale.com>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/ia64/kernel/msi_ia64.c |   18 ++++++++++++++----
- 1 files changed, 14 insertions(+), 4 deletions(-)
+NACK. I don't like this spinning with the CPU and you are now possibly
+dumping 500 debug prints into the logs until you reach the timeout.
+Please remove this patch from this series. It has nothing to do with the
+imx6sx support and I'll try to post a (hopefully) better patch shortly.
 
-diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
-index 4efe748..55ac859 100644
---- a/arch/ia64/kernel/msi_ia64.c
-+++ b/arch/ia64/kernel/msi_ia64.c
-@@ -112,15 +112,15 @@ static struct irq_chip ia64_msi_chip = {
- };
- 
- 
--int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
-+static int arch_ia64_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- {
- 	if (platform_setup_msi_irq)
--		return platform_setup_msi_irq(pdev, desc);
-+		return platform_setup_msi_irq(dev, desc);
- 
--	return ia64_setup_msi_irq(pdev, desc);
-+	return ia64_setup_msi_irq(dev, desc);
- }
- 
--void arch_teardown_msi_irq(unsigned int irq)
-+static void arch_ia64_teardown_msi_irq(unsigned int irq)
- {
- 	if (platform_teardown_msi_irq)
- 		return platform_teardown_msi_irq(irq);
-@@ -128,6 +128,16 @@ void arch_teardown_msi_irq(unsigned int irq)
- 	return ia64_teardown_msi_irq(irq);
- }
- 
-+static struct msi_chip chip = {
-+	.setup_irq = arch_ia64_setup_msi_irq,
-+	.teardown_irq = arch_ia64_teardown_msi_irq,
-+};
-+
-+struct msi_chip *arch_find_msi_chip(struct pci_dev *dev)
-+{
-+	return &chip;
-+}
-+
- #ifdef CONFIG_INTEL_IOMMU
- #ifdef CONFIG_SMP
- static int dmar_msi_set_affinity(struct irq_data *data,
+> ---
+>  drivers/pci/host/pci-imx6.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index c74e87d..4334de6 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -519,7 +519,7 @@ static void imx6_pcie_reset_phy(struct pcie_port *pp)
+>  static int imx6_pcie_link_up(struct pcie_port *pp)
+>  {
+>  	u32 rc, debug_r0, rx_valid;
+> -	int count = 5;
+> +	int count = 500;
+>  
+>  	/*
+>  	 * Test if the PHY reports that the link is up and also that the LTSSM
+> @@ -550,7 +550,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+>  		 * Wait a little bit, then re-check if the link finished
+>  		 * the training.
+>  		 */
+> -		usleep_range(1000, 2000);
+> +		udelay(10);
+>  	}
+>  	/*
+>  	 * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
+
 -- 
-1.7.1
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
