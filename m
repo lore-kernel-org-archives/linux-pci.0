@@ -1,22 +1,23 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:51042 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751535AbaI3Nsb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 09:48:31 -0400
 From: Sudeep Holla <sudeep.holla@arm.com>
 To: LKML <linux-kernel@vger.kernel.org>
 Cc: Sudeep Holla <sudeep.holla@arm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
 	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Peter Zijlstra <a.p.zijlstra@chello.nl>, x86@kernel.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v4 01/11 UPDATE] cpumask: factor out show_cpumap into separate helper function
-Date: Thu,  4 Sep 2014 16:46:32 +0100
-Message-Id: <1409845592-27739-1-git-send-email-sudeep.holla@arm.com>
-In-Reply-To: <1409763617-17074-2-git-send-email-sudeep.holla@arm.com>
-References: <1409763617-17074-2-git-send-email-sudeep.holla@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	x86@kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v5 01/11] cpumask: factor out show_cpumap into separate helper function
+Date: Tue, 30 Sep 2014 14:48:22 +0100
+Message-Id: <1412084912-2767-2-git-send-email-sudeep.holla@arm.com>
+In-Reply-To: <1412084912-2767-1-git-send-email-sudeep.holla@arm.com>
+References: <1412084912-2767-1-git-send-email-sudeep.holla@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
-
-From: Sudeep Holla <sudeep.holla@arm.com>
 
 Many sysfs *_show function use cpu{list,mask}_scnprintf to copy cpumap
 to the buffer aligned to PAGE_SIZE, append '\n' and '\0' to return null
@@ -28,10 +29,11 @@ most of those sysfs functions using the new helper function.
 
 Signed-off-by: Sudeep Holla <sudeep.holla@arm.com>
 Suggested-by: Stephen Boyd <sboyd@codeaurora.org>
+Tested-by: Stephen Boyd <sboyd@codeaurora.org>
 Acked-by: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
 Cc: x86@kernel.org
 Cc: linux-acpi@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
@@ -49,15 +51,6 @@ Cc: linux-pci@vger.kernel.org
  include/linux/cpumask.h                       | 17 ++++++++++++
  lib/bitmap.c                                  | 29 ++++++++++++++++++++
  12 files changed, 73 insertions(+), 87 deletions(-)
-
-Hi,
-
-I am sending just update(instead of new version) to this patch as it's
-independent of the series and can be taken out of it. It is just to
-avoid another churn of the series without much update.
-
-Regards,
-Sudeep
 
 diff --git a/arch/x86/kernel/cpu/perf_event_amd_iommu.c b/arch/x86/kernel/cpu/perf_event_amd_iommu.c
 index 639d1289b1ba..97242a9242bd 100644
@@ -438,5 +431,5 @@ index 1e031f2c9aba..0a9f39388c63 100644
   * @buf: read nul-terminated user string from this buffer
   * @buflen: buffer size in bytes.  If string is smaller than this
 -- 
-1.8.3.2
+1.9.1
 
