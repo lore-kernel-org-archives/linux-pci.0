@@ -1,57 +1,71 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v11 03/10] ARM: Define PCI_IOBASE as the base of virtual PCI IO space.
-Date: Thu, 18 Sep 2014 02:30:18 +0100
-Message-Id: <1411003825-21521-4-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1411003825-21521-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:41820 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750846AbaI3Ep5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 00:45:57 -0400
+Message-ID: <542A3593.4020108@gmail.com>
+Date: Mon, 29 Sep 2014 21:46:11 -0700
+From: Rajat Jain <rajatxjain@gmail.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>, Jiri Kosina <jkosina@suse.cz>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-i2c@vger.kernel.org, linux-doc@vger.kernel.org
+CC: rajatjain@juniper.net, groeck@juniper.net
+Subject: [PATCH 0/4] Driver for talking to PLX PEX8xxx PCIe switch over I2C
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is needed for calls into OF code that parses PCI ranges.
-It signals support for memory mapped PCI I/O accesses that
-are described be device trees.
+Most of the PLX PCI Express switches (and also switches from other vendors such
+IDT) provide an I2C based secondary interface to access and program the switch.
+This can be used to program the switch in situations where the PCIe interface
+may not be suitable, or even available. (For instance, we may need to program
+the device in a particular fashion before we even begin enumerating on the PCI,
+or to even enable the PCIe interface of the device). More information on
+usecases and other details has been provided in the documentation being added
+as part of this patchset.
 
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Rob Herring <robh+dt@kernel.org>
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
----
- arch/arm/include/asm/io.h | 1 +
- 1 file changed, 1 insertion(+)
+This is a driver that allows talking to the PLX PEX8xxx family of PCIe switches
+over its I2C interface. Here are the patch descriptions:
 
-diff --git a/arch/arm/include/asm/io.h b/arch/arm/include/asm/io.h
-index 3d23418..22b7529 100644
---- a/arch/arm/include/asm/io.h
-+++ b/arch/arm/include/asm/io.h
-@@ -178,6 +178,7 @@ static inline void __iomem *__typesafe_io(unsigned long addr)
- 
- /* PCI fixed i/o mapping */
- #define PCI_IO_VIRT_BASE	0xfee00000
-+#define PCI_IOBASE		PCI_IO_VIRT_BASE
- 
- #if defined(CONFIG_PCI)
- void pci_ioremap_set_mem_type(int mem_type);
+[Patch 1/4] - Adds the PEX8xxx driver that exports API calls to read / write.
+[Patch 2/4] - Adds a sysfs interface, to allow access to the switch.
+[Patch 3/4] - Adds the MAINTAINERS entry.
+[Patch 4/4] - Adds the documentation in Documentation/PCI/pex8xxx_i2c.txt
+
+Since this is a driver for a PCIe switch, I currently put it under /driver/pci/.
+I'm very open to suggestions for moving this around (Does introducing
+drivers/pci/switch/ seem any better?). Especially I can see that the
+drivers/pci/Kconfig appears under "Bus Options" in the main menu which does not
+look like the right place for this driver. I am looking for suggestions here.
+
+Looking forward to comments,
+
+Thanks,
+
+Rajat
+
+Rajat Jain (4):
+  pci: Add I2C driver for the PLX PEX8xxx PCIe switch
+  pci/pex8xxx: Add sysfs interface for userspace access.
+  MAINTAINERS: Add new device driver entry for PEX pex8xxx
+  Documentation: Add documentation for the PCI switch PEX8xxx I2C
+    driver
+
+ Documentation/PCI/pex8xxx_i2c.txt |  134 +++++++++
+ MAINTAINERS                       |    7 +
+ drivers/pci/Kconfig               |   13 +
+ drivers/pci/Makefile              |    2 +
+ drivers/pci/pex8xxx_i2c.c         |  538 +++++++++++++++++++++++++++++++++++++
+ include/linux/i2c/pex8xxx_i2c.h   |   36 +++
+ 6 files changed, 730 insertions(+)
+ create mode 100644 Documentation/PCI/pex8xxx_i2c.txt
+ create mode 100644 drivers/pci/pex8xxx_i2c.c
+ create mode 100644 include/linux/i2c/pex8xxx_i2c.h
+
 -- 
-2.1.0
+1.7.9.5
 
