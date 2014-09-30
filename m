@@ -1,110 +1,126 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54113C60.2080501@linux.intel.com>
-Date: Thu, 11 Sep 2014 14:08:32 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 30 Sep 2014 17:12:41 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>
+Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
+Message-ID: <20140930161241.GA16583@e102568-lin.cambridge.arm.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <8631927.qWHZsjCs8e@wuerfel>
+ <20140930120344.GA14215@e102568-lin.cambridge.arm.com>
+ <3090148.OUdB0fsdsR@wuerfel>
 MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org, Prarit Bhargava <prarit@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: Re: [Patch v4 12/16] x86, irq, ACPI: Implement interface to support
- ACPI based IOAPIC hot-addition
-References: <1409192561-19744-1-git-send-email-jiang.liu@linux.intel.com> <1409192561-19744-13-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1409091417120.11037@nanos> <540FC1C2.40100@linux.intel.com> <alpine.DEB.2.10.1409102202530.4178@nanos>
-In-Reply-To: <alpine.DEB.2.10.1409102202530.4178@nanos>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <3090148.OUdB0fsdsR@wuerfel>
+Content-Type: text/plain; charset=WINDOWS-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Sep 30, 2014 at 01:31:44PM +0100, Arnd Bergmann wrote:
+> On Tuesday 30 September 2014 13:03:44 Lorenzo Pieralisi wrote:
+> > > >  static int gen_pci_probe(struct platform_device *pdev)
+> > > >  {
+> > > > @@ -326,6 +385,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+> > > >         struct device *dev = &pdev->dev;
+> > > >         struct device_node *np = dev->of_node;
+> > > >         struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+> > > > +#ifndef CONFIG_ARM64
+> > > >         struct hw_pci hw = {
+> > > >                 .nr_controllers = 1,
+> > > >                 .private_data   = (void **)&pci,
+> > > > @@ -333,6 +393,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+> > > >                 .map_irq        = of_irq_parse_and_map_pci,
+> > > >                 .ops            = &gen_pci_ops,
+> > > >         };
+> > > > +#endif
+> > > >  
+> > > 
+> > > Same here, I'd suggest marking this "#ifdef CONFIG_ARM" instead, as hw_pci
+> > > is an arm32 specific data structure.
+> > 
+> > I do not think we need hw struct at all, see below, we can write code so
+> > that we do not rely on ARM32 PCI bios, I will have a stab at that and
+> > post the resulting code.
+> 
+> That would of course be best. I think it needs some rework of the
+> arm32 PCI code though, or you'd still have to create pci_sys_data
+> manually, and that is currently allocated by pcibios_init_hw.
 
+Right, as far as I can see, creating a pci_sys_data struct
+that's all we would need. "Problem" is that it does not exist on ARM64
+so to avoid ifdeffery we have to declare a struct with the same
+fields (ie only pci_sys_data.private_data is used by this driver -
+apart from arm32 specific functions usage) that is passed to the PCI layer
+and stored in the bus.sysdata, but that's extremely ugly (and we won't
+need this when the arm32 conversion is completed).
 
-On 2014/9/11 4:06, Thomas Gleixner wrote:
-> On Wed, 10 Sep 2014, Jiang Liu wrote:
->>>>  int mp_register_ioapic(int id, u32 address, u32 gsi_base,
->>>> @@ -3867,8 +3873,15 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
->>>>  	}
->>>>  	for_each_ioapic(ioapic)
->>>>  		if (ioapics[ioapic].mp_config.apicaddr == address) {
->>>> -			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
->>>> -				address, ioapic);
->>>> +			/*
->>>> +			 * IOAPIC unit may also be visible in PCI scope.
->>>> +			 * When ioapic PCI driver's probe() is called,
->>>> +			 * the IOAPIC unit may have already been initialized
->>>> +			 * at boot time.
->>>> +			 */
->>>> +			if (!ioapic_initialized)
->>>> +				pr_warn("address 0x%x conflicts with IOAPIC%d\n",
->>>> +					address, ioapic);
->>>
->>> Hmm. This smells fishy. Why do we allow multiple initializations of
->>> the same IOAPIC in the first place. Either it's done via ACPI or via
->>> PCI, but not both.
->> The ACPI subsystem will register and initialize all IOAPICs when walking
->> ACPI MADT table during boot, before initializing PCI subsystem.
->> Later when binding ioapic PCI driver to IOAPIC PCI device, it will try
->> to register the IOAPIC device again.
->>
->> After this patchset is applied, we could remove the !ioapic_initialized
->> check. We check acpi_ioapic_register() before calling
->> acpi_register_ioapic(). So the check becomes redundant.
->> Or we could remove the temporary code from this patch.
+> > > > +       if (!gen_scan_root_bus(&pdev->dev, pci->cfg.bus_range.start,
+> > > > +                              &gen_pci_ops, pci, &pci->resources)) {
+> > > > +               dev_err(&pdev->dev, "failed to enable PCIe ports\n");
+> > > > +               return -ENODEV;
+> > > > +       }
+> > > > +#else
+> > > >         pci_common_init_dev(dev, &hw);
+> > > > +#endif /* CONFIG_ARM64 */
+> > > > 
+> > > 
+> > > Again, just make the pci_common_init_dev() call #ifdef CONFIG_ARM, and move
+> > > the generic case after it, outside of the #ifdef.
+> > 
+> > I went through the code quickly but I think we can (and should) remove
+> > this quite ugly ifdeffery altogether. Most of the functionality in
+> > pci_common_init_dev() can be implemented through the common PCI API (and this
+> > would make this driver arch agnostic as it should be), I will go through ARM32
+> > PCI bios code to check what is executed in detail in pci_common_init_dev() and
+> > make sure that we follow those initialization steps in the resulting probe code
+> > for this PCI generic host controller driver.
 > 
-> How about removing the disfunctional ioapic PCI driver first and then
-> implementing the whole thing cleanly?
->  
->>>
->>>>  			return -EEXIST;
->>>>  		}
->>>>  
->>>> @@ -3918,6 +3931,14 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
->>>>  	ioapics[idx].irqdomain = NULL;
->>>>  	ioapics[idx].irqdomain_cfg = *cfg;
->>>>  
->>>> +	if (ioapic_initialized) {
->>>
->>> I have a hard time to understand this conditional. Why can't we do
->>> that unconditionally?
->> How about following comments?
->> /*
->>  * If mp_register_ioapic() is called during early boot stage when
->>  * walking ACPI/SFI/DT tables, it's too early to create irqdomain,
->>  * we are still using bootmem allocator. So delay it to setup_IO_APIC().
->>  */
+> These are the functions I found that refer to pci_sys_data on arm32:
 > 
-> Fine, but then the "if (ioapic_initialized)" conditional still does
-> not make sense. We surely have some global non ioapic specific
-> indicator that bootmem is done and the proper memory allocator is
-> available, right?
-Maybe a good name helps here. How about
-bool hotplug = !!ioapic_initialized;
+> pcibios_add_bus
+> pcibios_remove_bus
+> pcibios_align_resource
+> pci_mmap_page_range
+> pci_domain_nr
+> pci_proc_domain
+> 
+> This is not as bad as I had feared, but we still have to ensure that
+> any caller of these functions will work with both the generic PCI support
+> and the arm32 specific drivers that today use hw_pci.
+> 
+> My idea for dealing with this was to convert all host drivers in
+> drivers/pci/host to the generic PCI code and never build the arm32
+> bios32 code when CONFIG_ARCH_MULTIPLATFORM is set. Unfortunately that
+> requires either doing them all at once or coming up with a migration
+> strategy so we don't break things in the process.
 
-if (hotplug)
-	mp_irqdomain_create(idx);
+That makes sense. Related to the migration strategy, thoughts
+appreciated. Declaring a static pci_sys_data (with some ifdef around it)
+seems a horrible hack to me. Calling pci_common_init() only if CONFIG_ARM
+is rather horrible too, but we can probably live with that.
 
-Regards!
-Gerry	
+I do not see anything else as possible solution at the moment unless
+we go the whole nine yards and do what you suggest above, might take a
+little while though.
 
-> 
-> Aside of that is there a point to walk those tables before we actually
-> can make any use of their content?
-> 
-> Thanks,
-> 
-> 	tglx
-> 
+Probably leaving pci_common_init() call (and related hw_pci struct, and
+related ifdeffery to differentiate between different sysdata layouts for ARM
+and ARM64) is the fastest path but I still think it is not nice at all.
+
+Thanks,
+Lorenzo
+
