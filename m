@@ -1,90 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:59733 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753005AbaIYIyj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Sep 2014 04:54:39 -0400
-Date: Thu, 25 Sep 2014 09:54:32 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Robert Richter <rrichter@cavium.com>
-Subject: Re: [PATCH v12 09/12] OF: PCI: Add support for parsing PCI host
- bridge resources from DT
-Message-ID: <20140925085432.GL1994@e106497-lin.cambridge.arm.com>
-References: <1411498874-9864-1-git-send-email-Liviu.Dudau@arm.com>
- <1411498874-9864-10-git-send-email-Liviu.Dudau@arm.com>
- <20140924164304.GF1994@e106497-lin.cambridge.arm.com>
- <20140924173109.GA20416@google.com>
- <20140924175330.GI1994@e106497-lin.cambridge.arm.com>
- <20140924180119.GN16244@arm.com>
+Received: from dliviu.plus.com ([80.229.23.120]:58399 "EHLO smtp.dudau.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752993AbaI3RS4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Sep 2014 13:18:56 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by smtp.dudau.co.uk (Postfix) with SMTP id 5CC411002ED
+	for <linux-pci@vger.kernel.org>; Tue, 30 Sep 2014 18:18:55 +0100 (BST)
+Date: Tue, 30 Sep 2014 18:10:03 +0100
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Herring <robh@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] of/pci: add pci_pio_to_address dummy for !CONFIG_OF
+Message-ID: <20140930171002.GB15854@bart.dudau.co.uk>
+References: <706416181.hbVGLDA3o6@wuerfel>
+ <20140930160139.GA5625@google.com>
 MIME-Version: 1.0
-In-Reply-To: <20140924180119.GN16244@arm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140930160139.GA5625@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 24, 2014 at 07:01:19PM +0100, Will Deacon wrote:
-> On Wed, Sep 24, 2014 at 06:53:31PM +0100, Liviu Dudau wrote:
-> > On Wed, Sep 24, 2014 at 06:31:09PM +0100, Bjorn Helgaas wrote:
-> > > On Wed, Sep 24, 2014 at 05:43:04PM +0100, Liviu Dudau wrote:
-> > > > Provide a function to parse the PCI DT ranges that can be used to
-> > > > create a pci_host_bridge structure together with its associated
-> > > > bus.
-> > > > 
-> > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > > Cc: Arnd Bergmann <arnd@arndb.de>
-> > > > Cc: Grant Likely <grant.likely@linaro.org>
-> > > > Cc: Rob Herring <robh+dt@kernel.org>
-> > > > Cc: Catalin Marinas <catalin.marinas@arm.com>
-> > > > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > > > [make io_base parameter optional]
-> > > > Signed-off-by: Robert Richter <rrichter@cavium.com>
-> > > > ---
-> > > > Hi Bjorn,
-> > > > 
-> > > > I have fixed the compilation error that this patch was triggering. I
-> > > > have validated that the patch applies to your pci/host-generic branch
-> > > > as well as to my series.
-> > > 
-> > > I applied this to pci/host-generic along with the following patches and
-> > > pushed the branch, thanks!
+On Tue, Sep 30, 2014 at 10:01:39AM -0600, Bjorn Helgaas wrote:
+> On Tue, Sep 30, 2014 at 03:19:05PM +0200, Arnd Bergmann wrote:
+> > The pci_register_io_range() and pci_pio_to_address() were recently
+> > introduced to generalize the handling of memory mapped PCI I/O space,
+> > but they are only valid when CONFIG_OF is set, leading to a possible
+> > build error:
 > > 
-> > Thanks again and sorry for lack of thorough testing. I still haven't managed
-> > to get a cross compiler for sparc and as I don't run Ubuntu or debian the
-> > make.cross script doesn't work for me.
+> > drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_setup_window':
+> > drivers/pci/host/pcie-rcar.c:340:3: error: implicit declaration of function 'pci_pio_to_address' [-Werror=implicit-function-declaration]
+> >    res_start = pci_pio_to_address(res->start);
+> >    ^
+> > drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_probe':
+> > drivers/pci/host/pcie-rcar.c:945:3: error: implicit declaration of function 'of_pci_range_to_resource' [-Werror=implicit-function-declaration]
+> >    err = of_pci_range_to_resource(&range, pdev->dev.of_node,
+> >    ^
+> > cc1: some warnings being treated as errors
+> > 
+> > This provides inline dummy implementations for the case that
+> > CONFIG_OF is disabled, to allow better build testing.
+> > 
+> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> > Fixes: 279c5dd046 ("of/pci: Add pci_register_io_range() and pci_pio_to_address()")
 > 
->   https://www.kernel.org/pub/tools/crosstool/
-> 
-> No libc, but good enough for building the kernel. I've asked for an aarch64
-> compiler there for a while, but it didn't materialise for some reason.
+> I'm rebuilding the pci/host-generic branch to pick up the other v13 fixes,
+> so I folded this fix directly into the "of/pci: Add pci_register_io_range()
+> and pci_pio_to_address()" patch.  Thanks for finding this; the config
+> dependencies are a bit of a mess.
 
-I'm familiar with crosstool and busybox uses a variant of crosstool-ng, but
-it currently fails with "configure: error: cannot compute suffix of object files: cannot compile"
-on the stage2 of the compilation.
+Bjorn,
+
+I suggest splitting this patch into 2 parts, move the one that adds pci_pio_to_address() in patch 2
+and the other in patch 5.
 
 Best regards,
 Liviu
 
 > 
-> Will
+> > diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+> > index 7ebb877b07c2..851097aab115 100644
+> > --- a/include/linux/of_address.h
+> > +++ b/include/linux/of_address.h
+> > @@ -71,6 +71,11 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
+> >  	return NULL;
+> >  }
+> >  
+> > +static inline phys_addr_t pci_pio_to_address(unsigned long pio)
+> > +{
+> > +	return 0;
+> > +}
+> > +
+> >  static inline int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+> >  			struct device_node *node)
+> >  {
+> > @@ -144,6 +149,12 @@ static inline const __be32 *of_get_pci_address(struct device_node *dev,
+> >  {
+> >  	return NULL;
+> >  }
+> > +static inline int of_pci_range_to_resource(struct of_pci_range *range,
+> > +					   struct device_node *np,
+> > +					   struct resource *res)
+> > +{
+> > +	return -ENOSYS;
+> > +}
+> >  #endif /* CONFIG_OF_ADDRESS && CONFIG_PCI */
+> >  
+> >  #endif /* __OF_ADDRESS_H */
+> > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 > the body of a message to majordomo@vger.kernel.org
@@ -92,12 +99,14 @@ Liviu
 > 
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
+
+ One small step
+   for me ...
 
