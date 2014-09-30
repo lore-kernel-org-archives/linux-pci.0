@@ -1,85 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:53432 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750762AbaIWFDS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Sep 2014 01:03:18 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v3 3/9] PCI/MSI: Change msi_bus attribute to support enable/disable MSI for EP
-Date: Tue, 23 Sep 2014 13:27:24 +0800
-Message-ID: <1411450050-1510-4-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1411450050-1510-1-git-send-email-wangyijing@huawei.com>
-References: <1411450050-1510-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 30 Sep 2014 13:03:44 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
+Message-ID: <20140930120344.GA14215@e102568-lin.cambridge.arm.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <1411937610-22125-3-git-send-email-suravee.suthikulpanit@amd.com>
+ <8631927.qWHZsjCs8e@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <8631927.qWHZsjCs8e@wuerfel>
+Content-Type: text/plain; charset=WINDOWS-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Msi_bus attribute is only valid for bridge device.
-We can enable or disable MSI capability for a bus,
-if we echo 1/0 > /sys/bus/pci/devices/$EP/msi_bus,
-the action will be ignored. Sometime we need to
-only enable/disable a EP device MSI capability,
-not all devices share the same bus.
+On Mon, Sep 29, 2014 at 03:36:30PM +0100, Arnd Bergmann wrote:
+> On Sunday 28 September 2014 15:53:28 suravee.suthikulpanit@amd.com wrote:
+> > +
+> > +#ifdef CONFIG_ARM64
+> > +struct pci_bus *gen_scan_root_bus(struct device *parent, int bus,
+> > +                                      struct pci_ops *ops, void *sysdata,
+> > +                                      struct list_head *resources)
+> > +{
+> 
+> I don't see anything ARM64 specific in this, the function only uses
+> the newly added generic helpers.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- Documentation/ABI/testing/sysfs-bus-pci |    9 +++++++++
- drivers/pci/pci-sysfs.c                 |   12 ++++++------
- 2 files changed, 15 insertions(+), 6 deletions(-)
+I do not see it either, it is just a copy'n'paste of common PCI code,
+plus msi management.
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-index 6615fda..edc4e8d 100644
---- a/Documentation/ABI/testing/sysfs-bus-pci
-+++ b/Documentation/ABI/testing/sysfs-bus-pci
-@@ -65,6 +65,15 @@ Description:
- 		force a rescan of all PCI buses in the system, and
- 		re-discover previously removed devices.
- 
-+What:		/sys/bus/pci/devices/.../msi_bus
-+Date:		September 2014
-+Contact:	Linux PCI developers <linux-pci@vger.kernel.org>
-+Description:
-+		Writing a zero value to this attribute will turn off
-+		MSI capability for device. If device is a bridge, all
-+		child devices under the bridge will be set to no MSI.
-+		Drivers need to be reloaded to valid the new setting.
-+
- What:		/sys/bus/pci/devices/.../msi_irqs/
- Date:		September, 2011
- Contact:	Neil Horman <nhorman@tuxdriver.com>
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 9ff0a90..b199ad9 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -251,11 +251,9 @@ static ssize_t msi_bus_show(struct device *dev, struct device_attribute *attr,
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	if (!pdev->subordinate)
--		return 0;
--
--	return sprintf(buf, "%u\n",
--		       !(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI));
-+	return sprintf(buf, "%u\n", pdev->subordinate ?
-+		       !(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI)
-+			   : !pdev->no_msi);
- }
- 
- static ssize_t msi_bus_store(struct device *dev, struct device_attribute *attr,
-@@ -278,8 +276,10 @@ static ssize_t msi_bus_store(struct device *dev, struct device_attribute *attr,
- 	 * Maybe devices without subordinate buses shouldn't have this
- 	 * attribute in the first place?
- 	 */
--	if (!pdev->subordinate)
-+	if (!pdev->subordinate) {
-+		pdev->no_msi = !val;
- 		return count;
-+	}
- 
- 	/* Is the flag going to change, or keep the value it already had? */
- 	if (!(pdev->subordinate->bus_flags & PCI_BUS_FLAGS_NO_MSI) ^
--- 
-1.7.1
+> >  static int gen_pci_probe(struct platform_device *pdev)
+> >  {
+> > @@ -326,6 +385,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+> >         struct device *dev = &pdev->dev;
+> >         struct device_node *np = dev->of_node;
+> >         struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+> > +#ifndef CONFIG_ARM64
+> >         struct hw_pci hw = {
+> >                 .nr_controllers = 1,
+> >                 .private_data   = (void **)&pci,
+> > @@ -333,6 +393,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+> >                 .map_irq        = of_irq_parse_and_map_pci,
+> >                 .ops            = &gen_pci_ops,
+> >         };
+> > +#endif
+> >  
+> 
+> Same here, I'd suggest marking this "#ifdef CONFIG_ARM" instead, as hw_pci
+> is an arm32 specific data structure.
+
+I do not think we need hw struct at all, see below, we can write code so
+that we do not rely on ARM32 PCI bios, I will have a stab at that and
+post the resulting code.
+
+> >         if (!pci)
+> >                 return -ENOMEM;
+> > @@ -368,8 +429,24 @@ static int gen_pci_probe(struct platform_device *pdev)
+> >                 gen_pci_release_of_pci_ranges(pci);
+> >                 return err;
+> >         }
+> > +#ifdef CONFIG_ARM64
+> >  
+> > +#ifdef CONFIG_PCI_MSI
+> > +       pci->msi_parent = of_parse_phandle(np, "msi-parent", 0);
+> > +       if (!pci->msi_parent) {
+> > +               dev_err(&pdev->dev, "Failed to allocate msi-parent.\n");
+> > +               return -EINVAL;
+> > +       }
+> > +#endif
+> 
+> We probably want to enable MSI unconditionally on ARM64, so the #ifdef is
+> not necessary here. However, I don't think that a missing msi-parent should
+> be a fatal error here: we can still continue without MSI support if this
+> case.
+> 
+> > +       if (!gen_scan_root_bus(&pdev->dev, pci->cfg.bus_range.start,
+> > +                              &gen_pci_ops, pci, &pci->resources)) {
+> > +               dev_err(&pdev->dev, "failed to enable PCIe ports\n");
+> > +               return -ENODEV;
+> > +       }
+> > +#else
+> >         pci_common_init_dev(dev, &hw);
+> > +#endif /* CONFIG_ARM64 */
+> > 
+> 
+> Again, just make the pci_common_init_dev() call #ifdef CONFIG_ARM, and move
+> the generic case after it, outside of the #ifdef.
+
+I went through the code quickly but I think we can (and should) remove
+this quite ugly ifdeffery altogether. Most of the functionality in
+pci_common_init_dev() can be implemented through the common PCI API (and this
+would make this driver arch agnostic as it should be), I will go through ARM32
+PCI bios code to check what is executed in detail in pci_common_init_dev() and
+make sure that we follow those initialization steps in the resulting probe code
+for this PCI generic host controller driver.
+
+Lorenzo
 
