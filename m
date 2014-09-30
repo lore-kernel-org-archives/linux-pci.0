@@ -1,155 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [Patch v2 03/18] x86, irq: Convert irq_2_pin list to generic list
-Date: Fri, 26 Sep 2014 21:29:40 +0800
-Message-Id: <1411738196-29958-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1411738196-29958-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.187]:61936 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750836AbaI3Sys (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 14:54:48 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>
+Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
+Date: Tue, 30 Sep 2014 20:54:41 +0200
+Message-ID: <3079787.54pZijGjZM@wuerfel>
+In-Reply-To: <20140930174821.GX841@e106497-lin.cambridge.arm.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com> <20140930173540.GB16583@e102568-lin.cambridge.arm.com> <20140930174821.GX841@e106497-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+On Tuesday 30 September 2014 18:48:21 Liviu Dudau wrote:
+> > > > > These are the functions I found that refer to pci_sys_data on arm32:
+> > > > > 
+> > > > > pcibios_add_bus
+> > > > > pcibios_remove_bus
+> 
+> These are only needed if you want to do per HB processing of the bus
+> 
+> > > > > pcibios_align_resource
+> 
+> mvebu is the only user of this function.
+> 
+> > > > > pci_mmap_page_range
+> 
+> This is only needed when mapping a PCI resource to userspace. Is that your case here?
+> 
+> > > > > pci_domain_nr
+> > > > > pci_proc_domain
+> 
+> We have equivalent functionality in the generic patches for those.
+> 
 
-Use generic list to replace private list implementation so we could
-use generic helper functions to operate it.
+We clearly don't need those functions for the new drivers, but that's not
+the point. The problem is that when you build a kernel that has both
+a traditional host bridge driver and a new one in it, you always get those
+functions and they get called from the PCI core, with incorrect arguments.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: Joerg Roedel <joro@8bytes.org>
----
- arch/x86/include/asm/hw_irq.h  |    2 +-
- arch/x86/kernel/apic/io_apic.c |   28 +++++++++++-----------------
- 2 files changed, 12 insertions(+), 18 deletions(-)
-
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 64330c2e172e..28f283988c8e 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -138,7 +138,7 @@ struct irq_2_irte {
-  * Most irqs are mapped 1:1 with pins.
-  */
- struct irq_cfg {
--	struct irq_pin_list	*irq_2_pin;
-+	struct list_head	irq_2_pin;
- 	cpumask_var_t		domain;
- 	cpumask_var_t		old_domain;
- 	u8			vector;
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index bad3b1268070..d8c4339d87e7 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -74,7 +74,7 @@
- 		for_each_pin((idx), (pin))
- 
- #define for_each_irq_pin(entry, head) \
--	for (entry = head; entry; entry = entry->next)
-+	list_for_each_entry(entry, &head, list)
- 
- /*
-  *      Is the SiS APIC rmw bug present ?
-@@ -229,8 +229,8 @@ void mp_save_irq(struct mpc_intsrc *m)
- }
- 
- struct irq_pin_list {
-+	struct list_head list;
- 	int apic, pin;
--	struct irq_pin_list *next;
- };
- 
- static struct irq_pin_list *alloc_irq_pin_list(int node)
-@@ -297,6 +297,7 @@ static struct irq_cfg *alloc_irq_cfg(unsigned int irq, int node)
- 		goto out_cfg;
- 	if (!zalloc_cpumask_var_node(&cfg->old_domain, GFP_KERNEL, node))
- 		goto out_domain;
-+	INIT_LIST_HEAD(&cfg->irq_2_pin);
- 	return cfg;
- out_domain:
- 	free_cpumask_var(cfg->domain);
-@@ -460,15 +461,12 @@ static void ioapic_mask_entry(int apic, int pin)
-  */
- static int __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pin)
- {
--	struct irq_pin_list **last, *entry;
-+	struct irq_pin_list *entry;
- 
- 	/* don't allow duplicates */
--	last = &cfg->irq_2_pin;
--	for_each_irq_pin(entry, cfg->irq_2_pin) {
-+	for_each_irq_pin(entry, cfg->irq_2_pin)
- 		if (entry->apic == apic && entry->pin == pin)
- 			return 0;
--		last = &entry->next;
--	}
- 
- 	entry = alloc_irq_pin_list(node);
- 	if (!entry) {
-@@ -479,22 +477,19 @@ static int __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pi
- 	entry->apic = apic;
- 	entry->pin = pin;
- 
--	*last = entry;
-+	list_add_tail(&entry->list, &cfg->irq_2_pin);
- 	return 0;
- }
- 
- static void __remove_pin_from_irq(struct irq_cfg *cfg, int apic, int pin)
- {
--	struct irq_pin_list **last, *entry;
-+	struct irq_pin_list *tmp, *entry;
- 
--	last = &cfg->irq_2_pin;
--	for_each_irq_pin(entry, cfg->irq_2_pin)
-+	list_for_each_entry_safe(entry, tmp, &cfg->irq_2_pin, list)
- 		if (entry->apic == apic && entry->pin == pin) {
--			*last = entry->next;
-+			list_del(&entry->list);
- 			kfree(entry);
- 			return;
--		} else {
--			last = &entry->next;
- 		}
- }
- 
-@@ -1739,8 +1734,7 @@ __apicdebuginit(void) print_IO_APICs(void)
- 		cfg = irq_cfg(irq);
- 		if (!cfg)
- 			continue;
--		entry = cfg->irq_2_pin;
--		if (!entry)
-+		if (list_empty(&cfg->irq_2_pin))
- 			continue;
- 		printk(KERN_DEBUG "IRQ%d ", irq);
- 		for_each_irq_pin(entry, cfg->irq_2_pin)
-@@ -4063,7 +4057,7 @@ void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq)
- 
- 	ioapic_mask_entry(ioapic, pin);
- 	__remove_pin_from_irq(cfg, ioapic, pin);
--	WARN_ON(cfg->irq_2_pin != NULL);
-+	WARN_ON(!list_empty(&cfg->irq_2_pin));
- 	arch_teardown_hwirq(virq);
- }
- 
--- 
-1.7.10.4
-
+	Arnd
