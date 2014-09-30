@@ -1,67 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:16618 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752686AbaIPH3b (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 16 Sep 2014 03:29:31 -0400
-Message-ID: <5417E00D.5000108@linux.intel.com>
-Date: Tue, 16 Sep 2014 15:00:29 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Received: from mail-bn1bbn0109.outbound.protection.outlook.com ([157.56.111.109]:20160
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751017AbaI3JuX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Sep 2014 05:50:23 -0400
+From: Richard Zhu <r65037@freescale.com>
+To: <linux-pci-owner@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
+	<festevam@gmail.com>, <l.stach@pengutronix.de>,
+	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
+Subject: [PATCH v4 04/10] PCI: designware: refine setup_rc and add msi data restore
+Date: Tue, 30 Sep 2014 17:19:51 +0800
+Message-ID: <1412068796-16931-5-git-send-email-r65037@freescale.com>
+In-Reply-To: <1412068796-16931-1-git-send-email-r65037@freescale.com>
+References: <1412068796-16931-1-git-send-email-r65037@freescale.com>
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-CC: Ashok Raj <ashok.raj@intel.com>, Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: Re: [Patch Part3 V5 5/8] iommu/vt-d: Enhance intel_irq_remapping
- driver to support DMAR unit hotplug
-References: <1410487848-6027-1-git-send-email-jiang.liu@linux.intel.com> <1410487848-6027-6-git-send-email-jiang.liu@linux.intel.com> <54164D01.4060003@huawei.com>
-In-Reply-To: <54164D01.4060003@huawei.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/15 10:20, Yijing Wang wrote:
->> +static void ir_remove_ioapic_hpet_scope(struct intel_iommu *iommu)
->> +{
->> +	int i;
->>  
->> -			ir_parse_one_hpet_scope(scope, iommu);
->> -		}
->> -		start += scope->length;
->> -	}
->> +	for (i = 0; i < MAX_HPET_TBS; i++)
->> +		if (ir_hpet[i].iommu == iommu)
->> +			ir_hpet[i].iommu = NULL;
-> 
-> Hi Gerry, why not reset whole ir_hpe and ir_ioapic data struct?
-Hi Yijing,
-	Thanks for review. Zero is legal for id, bus and devfn in
-struct ioapic_scope and struct hpet_scope. So we use domain field
-as a flag to mark entry valid or invalid and only reset iommu field.
+- move "program correct class for RC" from dw_pcie_host_init()
+to dw_pcie_setup_rc(). since this is RC setup, it's
+better to contained in dw_pcie_setup_rc function.
+Then, RC can be re-setup really by dw_pcie_setup_rc().
+- add one re-store msi data function. Because that
+pcie controller maybe powered off during system suspend,
+and the msi data configuration would be lost.
+this functions can be used to restore the msi data
+during the resume callback.
 
-Regards!
-Gerry
-> 
-> 
-> 
->>  
->> -	return 0;
->> +	for (i = 0; i < MAX_IO_APICS; i++)
->> +		if (ir_ioapic[i].iommu == iommu)
->> +			ir_ioapic[i].iommu = NULL;
->>  }
->>  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+Signed-off-by: Richard Zhu <r65037@freescale.com>
+---
+ drivers/pci/host/pcie-designware.c | 15 ++++++++++++---
+ drivers/pci/host/pcie-designware.h |  1 +
+ 2 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 538bbf3..ae1e6c5 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -194,6 +194,13 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+ 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
+ }
+ 
++void dw_pcie_msi_cfg_restore(struct pcie_port *pp)
++{
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
++			virt_to_phys((void *)pp->msi_data));
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
++}
++
+ static int find_valid_pos0(struct pcie_port *pp, int msgvec, int pos, int *pos0)
+ {
+ 	int flag = 1;
+@@ -570,9 +577,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+ 
+-	/* program correct class for RC */
+-	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
+-
+ 	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+ 	val |= PORT_LOGIC_SPEED_CHANGE;
+ 	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+@@ -917,6 +921,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	val = memlimit | membase;
+ 	dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
+ 
++	/* program correct class for RC */
++	dw_pcie_readl_rc(pp, PCI_CLASS_REVISION, &val);
++	val |= PCI_CLASS_BRIDGE_PCI << 16;
++	dw_pcie_writel_rc(pp, val, PCI_CLASS_REVISION);
++
+ 	/* setup command register */
+ 	dw_pcie_readl_rc(pp, PCI_COMMAND, &val);
+ 	val &= 0xffff0000;
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index a476e60..bb75715 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -83,6 +83,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+ int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+ void dw_pcie_msi_init(struct pcie_port *pp);
++void dw_pcie_msi_cfg_restore(struct pcie_port *pp);
+ int dw_pcie_link_up(struct pcie_port *pp);
+ void dw_pcie_setup_rc(struct pcie_port *pp);
+ int dw_pcie_host_init(struct pcie_port *pp);
+-- 
+1.9.1
+
