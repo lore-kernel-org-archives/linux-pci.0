@@ -1,86 +1,82 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <541792C0.9090303@huawei.com>
-Date: Tue, 16 Sep 2014 09:30:40 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <542A6411.5040201@gmail.com>
+Date: Tue, 30 Sep 2014 16:04:33 +0800
+From: Chen Gang <gang.chen.5i5j@gmail.com>
 MIME-Version: 1.0
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH v1 03/21] MSI: Remove the redundant irq_set_chip_data()
-References: <1409911806-10519-1-git-send-email-wangyijing@huawei.com>	 <1409911806-10519-4-git-send-email-wangyijing@huawei.com> <1410789648.3314.5.camel@pengutronix.de>
-In-Reply-To: <1410789648.3314.5.camel@pengutronix.de>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-arch-owner@vger.kernel.org
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: David Vrabel <david.vrabel@citrix.com>, ian.campbell@citrix.com,
+	wei.liu2@citrix.com, boris.ostrovsky@oracle.com,
+	bhelgaas@google.com, jgross@suse.com,
+	yongjun_wei@trendmicro.com.cn, mukesh.rathor@oracle.com,
+	xen-devel@lists.xenproject.org,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] xen/xenbus: Use 'void' instead of 'int' for the return
+ of xenbus_switch_state()
+References: <5425961A.5000604@gmail.com> <20140929140229.GA28279@laptop.dumpdata.com>
+In-Reply-To: <20140929140229.GA28279@laptop.dumpdata.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/9/15 22:00, Lucas Stach wrote:
-> Am Freitag, den 05.09.2014, 18:09 +0800 schrieb Yijing Wang:
->> Currently, pcie-designware, pcie-rcar, pci-tegra drivers
->> use irq chip_data to save the msi_chip pointer. They
->> already call irq_set_chip_data() in their own MSI irq map
->> functions. So irq_set_chip_data() in arch_setup_msi_irq()
->> is useless.
+On 9/29/14 22:02, Konrad Rzeszutek Wilk wrote:
+> On Sat, Sep 27, 2014 at 12:36:42AM +0800, Chen Gang wrote:
+>> When xenbus_switch_state() fails, it will call xenbus_switch_fatal()
+> 
+> Only on the first depth, not on the subsequent ones (as in if
+> the first xenbus_switch_fail fails, it won't try to call
+> xenbus_switch_state again and again).
+> 
+
+Yeah, I guess you want to give more completion for this comment, do not
+mean the original comments is incorrect.
+
+[...]
 >>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  drivers/pci/msi.c |    2 --
->>  1 files changed, 0 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index f6cb317..d547f7f 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -41,8 +41,6 @@ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
->>  	if (err < 0)
->>  		return err;
+>> Also need be sure that all callers which check the return value must let
+>> 'err' be 0.
+> 
+> I am bit uncomfortable with that, that is due to:
+> 
+> 
+> .. snip..
+>> diff --git a/drivers/net/xen-netback/xenbus.c b/drivers/net/xen-netback/xenbus.c
+>> index 9c47b89..b5c3d47 100644
+>> --- a/drivers/net/xen-netback/xenbus.c
+>> +++ b/drivers/net/xen-netback/xenbus.c
+>> @@ -337,10 +337,7 @@ static int netback_probe(struct xenbus_device *dev,
+>>  	if (err)
+>>  		pr_debug("Error writing multi-queue-max-queues\n");
 >>  
->> -	irq_set_chip_data(desc->irq, chip);
+>> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+>> -	if (err)
+>> -		goto fail;
 >> -
->>  	return 0;
->>  }
->>  
+>> +	xenbus_switch_state(dev, XenbusStateInitWait);
 > 
-> arch_teardown_msi_irq() expects to find the msi_chip in the irq
-> chip_data field. As this means drivers don't have any reasonable other
-> possibility to stuff things into this field, I think it would make sense
-> to do the cleanup the other way around: keep the irq_set_chip_data
-> arch_setup_msi_irq() and rip it out of the individual drivers.
-
-Hi Lucas, thanks for your review and comments!
-irq_set_chip_data() should not be placed in MSI core functions, because other arch like x86,
-use irq_data->chip_data to stores irq_cfg. So how to set the chip_data is arch dependent.
-And this series is mainly to use MSI chip framework in all platforms.
-Currently, only ARM platform MSI drivers use the chip_data to store msi_chip, and the drivers call
-irq_set_chip_data() in their driver already. So I thought we should clean up it in MSI core code.
-
-Thanks!
-Yijing.
-
-
+> Which if it fails it won't call:
 > 
-> Regards,
-> Lucas
+> 354 fail:                                                                           
+> 355         pr_debug("failed\n");                                                   
+> 356         netback_remove(dev);                                                    
+> 357         return err;         
 > 
 
+Originally, I intended left 'fail' code block for the next patch (which
+I thought the next patch would need it).
 
+Hmm... but any way, originally, I really need give additional comments
+for it.
+
+[...]
+
+I skip all other contents which have already discussed by maintainers,
+if I really miss something, please let me know.
+
+
+Thanks.
 -- 
-Thanks!
-Yijing
+Chen Gang
 
+Open, share, and attitude like air, water, and life which God blessed
