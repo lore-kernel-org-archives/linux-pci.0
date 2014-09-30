@@ -1,218 +1,109 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: ACPI: Add interfaces to parse IOAPIC ID for IOAPIC hotplug
-Date: Tue, 16 Sep 2014 14:46:41 +0800
-Message-Id: <1410850001-2242-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1410422758-24942-5-git-send-email-jiang.liu@linux.intel.com>
-References: <1410422758-24942-5-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1on0134.outbound.protection.outlook.com ([157.56.110.134]:50368
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751959AbaI3KHH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Sep 2014 06:07:07 -0400
+From: Richard Zhu <r65037@freescale.com>
+To: <linux-pci-owner@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
+	<festevam@gmail.com>, <l.stach@pengutronix.de>,
+	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
+Subject: [PATCH v4 03/10] PCI: imx6: Fix possible dead lock
+Date: Tue, 30 Sep 2014 17:36:37 +0800
+Message-ID: <1412069804-17162-4-git-send-email-r65037@freescale.com>
+In-Reply-To: <1412069804-17162-1-git-send-email-r65037@freescale.com>
+References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+kernel report one possible dead lock during imx6sx pcie
+suspend resume stress tests, after enable Lock Debugging.
+platform: imx6sx sdb board + xhci(pcie2usb3.0 ep)
 
-We need to parse APIC ID for IOAPIC registration for IOAPIC hotplug.
-ACPI _MAT method and MADT table are used to figure out IOAPIC ID, just
-like parsing CPU APIC ID for CPU hotplug.
+reason: usleep_range used in imx6_pcie_link_up maybe scheduled
+out from dw_pcie_valid_config.isra...
+About details, please see the following logs.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+solution: replace the usleep_range(1000, 2000) by udelay(10) and
+enlarge the loop counter.
+
+logs:
+[   50.643062] xhci_hcd 0000:01:00.0: Refused to change power state, currently in D3
+[   50.653390]
+[   50.654898] =========================================================
+[   50.661343] [ INFO: possible irq lock inversion dependency detected ]
+[   50.667792] 3.17.0-rc2-01341-gfc43ff7-dirty #101 Not tainted
+[   50.673454] ---------------------------------------------------------
+[   50.679898] kworker/u2:2/48 just changed the state of lock:
+[   50.685477]  (pci_lock){+.....}, at: [<802d650c>] pci_bus_read_config_dword+0x44/0x94
+[   50.693394] but this lock was taken by another, HARDIRQ-safe lock in the past:
+[   50.700619]  (&irq_desc_lock_class){-.-...}
+
+and interrupts could create inverse lock ordering between them.
+
+[   50.710843]
+[   50.710843] other info that might help us debug this:
+[   50.717377]  Possible interrupt unsafe locking scenario:
+[   50.717377]
+[   50.724169]        CPU0                    CPU1
+[   50.728702]        ----                    ----
+[   50.733234]   lock(pci_lock);
+[   50.736232]                                local_irq_disable();
+[   50.742154]                                lock(&irq_desc_lock_class);
+[   50.748713]                                lock(pci_lock);
+[   50.754229]   <Interrupt>
+[   50.756852]     lock(&irq_desc_lock_class);
+[   50.761065]
+[   50.761065]  *** DEADLOCK ***
+...
+
+[   52.119515] [<806e8ad0>] (schedule_hrtimeout_range) from [<80077e90>] (usleep_range+0x50/0x58)
+[   52.128141] [<80077e40>] (usleep_range) from [<802f3694>] (imx6_pcie_link_up+0x48/0x16c)
+[   52.136242] [<802f364c>] (imx6_pcie_link_up) from [<802f1b74>] (dw_pcie_valid_config.isra.10+0x40/0x7c)
+[   52.145637]  r6:ae72606d r5:ae72606c r4:ae711228
+[   52.150311] [<802f1b34>] (dw_pcie_valid_config.isra.10) from [<802f1ca8>] (dw_pcie_rd_conf+0x4c/0x154)
+[   52.159620]  r7:00000000 r6:00000000 r5:ae711228 r4:ae726000
+[   52.165355] [<802f1c5c>] (dw_pcie_rd_conf) from [<802d6534>] (pci_bus_read_config_dword+0x6c/0x94)
+[   52.174316]  r9:adf4e910 r8:809bc51c r7:00000000 r6:60000153 r5:adc3fd5c r4:ae726000
+[   52.182152] [<802d64c8>] (pci_bus_read_config_dword) from [<802db588>] (pci_restore_config_dword+0x54/0xa4)
+[   52.191894]  r6:00000024 r5:0000000a r4:ae61e000
+[   52.196570] [<802db534>] (pci_restore_config_dword) from [<802dd150>] (pci_restore_state.part.37+0x7c/0x1f8)
+[   52.206399]  r8:802e086c r7:ae61dfe8 r6:519e2024 r5:ae61e000 r4:ae61dffc
+[   52.213187] [<802dd0d4>] (pci_restore_state.part.37) from [<802dd2e8>] (pci_restore_state+0x1c/0x20)
+[   52.222322]  r7:adc3fea8 r6:809d90e0 r5:ae61e000 r4:ae61e068
+[   52.228056] [<802dd2cc>] (pci_restore_state) from [<802e0894>] (pci_pm_resume_noirq+0x28/0xa4)
+[   52.236683] [<802e086c>] (pci_pm_resume_noirq) from [<8037ea1c>] (dpm_run_callback.isra.12+0x34/0x7c)
+
+Signed-off-by: Richard Zhu <r65037@freescale.com>
 ---
-Hi Thomas,
-	I have fixed the docbook issues, and renamed functions with
-more meaningful names.
-Regards!
-Gerry
----
- drivers/acpi/processor_core.c |  122 ++++++++++++++++++++++++++++++++++++++---
- include/linux/acpi.h          |    4 ++
- 2 files changed, 117 insertions(+), 9 deletions(-)
+ drivers/pci/host/pci-imx6.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/acpi/processor_core.c b/drivers/acpi/processor_core.c
-index b048f3752c2b..4a3150f2187c 100644
---- a/drivers/acpi/processor_core.c
-+++ b/drivers/acpi/processor_core.c
-@@ -4,6 +4,10 @@
-  *
-  *	Alex Chiang <achiang@hp.com>
-  *	- Unified x86/ia64 implementations
-+ *
-+ * I/O APIC hotplug support
-+ *	Yinghai Lu <yinghai@kernel.org>
-+ *	Jiang Liu <jiang.liu@intel.com>
-  */
- #include <linux/export.h>
- #include <linux/acpi.h>
-@@ -12,6 +16,21 @@
- #define _COMPONENT		ACPI_PROCESSOR_COMPONENT
- ACPI_MODULE_NAME("processor_core");
- 
-+static struct acpi_table_madt *get_madt_table(void)
-+{
-+	static struct acpi_table_madt *madt;
-+	static int read_madt;
-+
-+	if (!read_madt) {
-+		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
-+					(struct acpi_table_header **)&madt)))
-+			madt = NULL;
-+		read_madt++;
-+	}
-+
-+	return madt;
-+}
-+
- static int map_lapic_id(struct acpi_subtable_header *entry,
- 		 u32 acpi_id, int *apic_id)
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index c74e87d..4334de6 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -519,7 +519,7 @@ static void imx6_pcie_reset_phy(struct pcie_port *pp)
+ static int imx6_pcie_link_up(struct pcie_port *pp)
  {
-@@ -67,17 +86,10 @@ static int map_lsapic_id(struct acpi_subtable_header *entry,
- static int map_madt_entry(int type, u32 acpi_id)
- {
- 	unsigned long madt_end, entry;
--	static struct acpi_table_madt *madt;
--	static int read_madt;
- 	int apic_id = -1;
-+	struct acpi_table_madt *madt;
+ 	u32 rc, debug_r0, rx_valid;
+-	int count = 5;
++	int count = 500;
  
--	if (!read_madt) {
--		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
--					(struct acpi_table_header **)&madt)))
--			madt = NULL;
--		read_madt++;
--	}
--
-+	madt = get_madt_table();
- 	if (!madt)
- 		return apic_id;
- 
-@@ -203,3 +215,95 @@ int acpi_get_cpuid(acpi_handle handle, int type, u32 acpi_id)
- 	return acpi_map_cpuid(apic_id, acpi_id);
- }
- EXPORT_SYMBOL_GPL(acpi_get_cpuid);
-+
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+static int get_ioapic_id(struct acpi_subtable_header *entry, u32 gsi_base,
-+			 u64 *phys_addr, int *ioapic_id)
-+{
-+	struct acpi_madt_io_apic *ioapic = (struct acpi_madt_io_apic *)entry;
-+
-+	if (ioapic->global_irq_base != gsi_base)
-+		return 0;
-+
-+	*phys_addr = ioapic->address;
-+	*ioapic_id = ioapic->id;
-+	return 1;
-+}
-+
-+static int parse_madt_ioapic_entry(u32 gsi_base, u64 *phys_addr)
-+{
-+	struct acpi_subtable_header *hdr;
-+	unsigned long madt_end, entry;
-+	int apic_id = -1;
-+	struct acpi_table_madt *madt;
-+
-+	madt = get_madt_table();
-+	if (!madt)
-+		return apic_id;
-+
-+	entry = (unsigned long)madt;
-+	madt_end = entry + madt->header.length;
-+
-+	/* Parse all entries looking for a match. */
-+	entry += sizeof(struct acpi_table_madt);
-+	while (entry + sizeof(struct acpi_subtable_header) < madt_end) {
-+		hdr = (struct acpi_subtable_header *)entry;
-+		if (hdr->type == ACPI_MADT_TYPE_IO_APIC &&
-+		    get_ioapic_id(hdr, gsi_base, phys_addr, &apic_id))
-+			break;
-+		else
-+			entry += hdr->length;
-+	}
-+
-+	return apic_id;
-+}
-+
-+static int parse_mat_ioapic_entry(acpi_handle handle, u32 gsi_base,
-+				  u64 *phys_addr)
-+{
-+	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
-+	union acpi_object *obj;
-+	struct acpi_subtable_header *header;
-+	int apic_id = -1;
-+
-+	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_MAT", NULL, &buffer)))
-+		goto exit;
-+
-+	if (!buffer.length || !buffer.pointer)
-+		goto exit;
-+
-+	obj = buffer.pointer;
-+	if (obj->type != ACPI_TYPE_BUFFER ||
-+	    obj->buffer.length < sizeof(struct acpi_subtable_header))
-+		goto exit;
-+
-+	header = (struct acpi_subtable_header *)obj->buffer.pointer;
-+	if (header->type == ACPI_MADT_TYPE_IO_APIC)
-+		get_ioapic_id(header, gsi_base, phys_addr, &apic_id);
-+
-+exit:
-+	kfree(buffer.pointer);
-+	return apic_id;
-+}
-+
-+/**
-+ * acpi_get_ioapic_id - Get IOAPIC ID and physical address matching @gsi_base
-+ * @handle:	ACPI object for IOAPIC device
-+ * @gsi_base:	GSI base to match with
-+ * @phys_add:	hold physical address of matching IOAPIC record
-+ *
-+ * Walk resources returned by ACPI_MAT method, then ACPI MADT table, to search
-+ * for an ACPI IOAPIC record matching @gsi_base.
-+ * Return IOAPIC id and physical address if found a match, otherwise return <0.
-+ */
-+int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr)
-+{
-+	int apic_id;
-+
-+	apic_id = parse_mat_ioapic_entry(handle, gsi_base, phys_addr);
-+	if (apic_id == -1)
-+		apic_id = parse_madt_ioapic_entry(gsi_base, phys_addr);
-+
-+	return apic_id;
-+}
-+#endif /* CONFIG_ACPI_HOTPLUG_IOAPIC */
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 807cbc46d73e..3574f137242e 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -146,6 +146,10 @@ int acpi_map_lsapic(acpi_handle handle, int physid, int *pcpu);
- int acpi_unmap_lsapic(int cpu);
- #endif /* CONFIG_ACPI_HOTPLUG_CPU */
- 
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
-+#endif
-+
- int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
- int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
- void acpi_irq_stats_init(void);
+ 	/*
+ 	 * Test if the PHY reports that the link is up and also that the LTSSM
+@@ -550,7 +550,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+ 		 * Wait a little bit, then re-check if the link finished
+ 		 * the training.
+ 		 */
+-		usleep_range(1000, 2000);
++		udelay(10);
+ 	}
+ 	/*
+ 	 * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
 -- 
-1.7.10.4
+1.9.1
 
