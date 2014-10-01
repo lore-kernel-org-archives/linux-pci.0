@@ -1,123 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2on0107.outbound.protection.outlook.com ([207.46.100.107]:51552
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751268AbaJAVRI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 17:17:08 -0400
+Date: Wed, 1 Oct 2014 14:16:57 -0700
+From: Guenter Roeck <groeck@juniper.net>
+To: Wolfram Sang <wsa@the-dreams.de>
+CC: Danielle Costantino <danielle.costantino@gmail.com>,
+	linux-i2c <linux-i2c@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 12/16] arm/iop13xx/MSI: Use MSI controller framework to configure MSI/MSI-X irq
-Date: Mon, 27 Oct 2014 21:22:18 +0800
-Message-ID: <1414416142-31239-13-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
-References: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>
+Subject: Re: Fwd: [Proposal] PM sleep children of inactive I2C bus segments
+ off Masters in multi-master systems
+Message-ID: <20141001211657.GA7904@svl-evodev-groeck.juniper.net>
+References: <CAAVjN7dwS62EKMnuZc_P1UjkbRVk6RXqJ91GwWZ96bbY5Ct-rg@mail.gmail.com>
+ <CAAVjN7eUmBVcAGPbcn3qsJ9M9uu2nkFoKHqGhhKGekZSceGiMw@mail.gmail.com>
+ <20141001184304.GA6832@svl-evodev-groeck.juniper.net>
+ <CAAVjN7edpkXYMHBm+wLegA_pc0hnm_YZf_z=Ni3h=EbDTmfegQ@mail.gmail.com>
+ <20141001194115.GA6948@svl-evodev-groeck.juniper.net>
+ <CAAVjN7fGRzyu7gxavJUay+K_Mm-0t1T_0Bysk6-sdaqu5=5k5A@mail.gmail.com>
+ <20141001202058.GB6948@svl-evodev-groeck.juniper.net>
+ <CAAVjN7e4nO579TfAJ5zMNe__Q9yU_-6naq4-0vm1rimespSrsw@mail.gmail.com>
+ <20141001204302.GA7744@svl-evodev-groeck.juniper.net>
+ <20141001211046.GA2368@katana>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20141001211046.GA2368@katana>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI controller framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+On Wed, Oct 01, 2014 at 11:10:47PM +0200, Wolfram Sang wrote:
+> 
+> > Maybe you can find an error code which with some level of confidence
+> > reflects "lost mastership". Then you can implement whatever makes sense
+> > for your use case in your user space application(s).
+> 
+> We have a documented fault code for ArbitrationLost and that is -EAGAIN
+> (see Documentation/i2c/fault-codes). If a driver does use something
+> else, patches are very welcome.
+> 
+> Other than that, I find this thread very confusing. Of course can
+> another master modify the clients, this is what multi-master is all
+> about, no?
+> 
+That is the point I was trying to make in one of my earlier replies.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/arm/mach-iop13xx/include/mach/pci.h |    4 ++++
- arch/arm/mach-iop13xx/iq81340mc.c        |    3 +++
- arch/arm/mach-iop13xx/iq81340sc.c        |    5 ++++-
- arch/arm/mach-iop13xx/msi.c              |   11 +++++++++--
- 4 files changed, 20 insertions(+), 3 deletions(-)
-
-diff --git a/arch/arm/mach-iop13xx/include/mach/pci.h b/arch/arm/mach-iop13xx/include/mach/pci.h
-index 59f42b5..c8f5caf 100644
---- a/arch/arm/mach-iop13xx/include/mach/pci.h
-+++ b/arch/arm/mach-iop13xx/include/mach/pci.h
-@@ -11,6 +11,10 @@ void iop13xx_atu_select(struct hw_pci *plat_pci);
- void iop13xx_pci_init(void);
- void iop13xx_map_pci_memory(void);
- 
-+#ifdef CONFIG_PCI_MSI
-+extern struct msi_controller iop13xx_msi_ctrl;
-+#endif
-+
- #define IOP_PCI_STATUS_ERROR (PCI_STATUS_PARITY |	     \
- 			       PCI_STATUS_SIG_TARGET_ABORT | \
- 			       PCI_STATUS_REC_TARGET_ABORT | \
-diff --git a/arch/arm/mach-iop13xx/iq81340mc.c b/arch/arm/mach-iop13xx/iq81340mc.c
-index 9cd07d3..7b802f5 100644
---- a/arch/arm/mach-iop13xx/iq81340mc.c
-+++ b/arch/arm/mach-iop13xx/iq81340mc.c
-@@ -59,6 +59,9 @@ static struct hw_pci iq81340mc_pci __initdata = {
- 	.map_irq	= iq81340mc_pcix_map_irq,
- 	.scan		= iop13xx_scan_bus,
- 	.preinit	= iop13xx_pci_init,
-+#ifdef CONFIG_PCI_MSI
-+	.msi_ctrl	= &iop13xx_msi_ctrl,
-+#endif
- };
- 
- static int __init iq81340mc_pci_init(void)
-diff --git a/arch/arm/mach-iop13xx/iq81340sc.c b/arch/arm/mach-iop13xx/iq81340sc.c
-index b3ec11c..934de2e 100644
---- a/arch/arm/mach-iop13xx/iq81340sc.c
-+++ b/arch/arm/mach-iop13xx/iq81340sc.c
-@@ -60,7 +60,10 @@ static struct hw_pci iq81340sc_pci __initdata = {
- 	.setup		= iop13xx_pci_setup,
- 	.scan		= iop13xx_scan_bus,
- 	.map_irq	= iq81340sc_atux_map_irq,
--	.preinit	= iop13xx_pci_init
-+	.preinit	= iop13xx_pci_init,
-+#ifdef CONFIG_PCI_MSI
-+	.msi_ctrl	= &iop13xx_msi_ctrl,
-+#endif
- };
- 
- static int __init iq81340sc_pci_init(void)
-diff --git a/arch/arm/mach-iop13xx/msi.c b/arch/arm/mach-iop13xx/msi.c
-index e7730cf..07a512e 100644
---- a/arch/arm/mach-iop13xx/msi.c
-+++ b/arch/arm/mach-iop13xx/msi.c
-@@ -132,7 +132,8 @@ static struct irq_chip iop13xx_msi_chip = {
- 	.irq_unmask = unmask_msi_irq,
- };
- 
--int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
-+static int iop13xx_setup_msi_irq(struct msi_controller *ctrl,
-+		struct pci_dev *dev, struct msi_desc *desc)
- {
- 	int id, irq = irq_alloc_desc_from(IRQ_IOP13XX_MSI_0, -1);
- 	struct msi_msg msg;
-@@ -159,7 +160,13 @@ int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
- 	return 0;
- }
- 
--void arch_teardown_msi_irq(unsigned int irq)
-+static void iop13xx_teardown_msi_irq(struct msi_controller *ctrl,
-+		unsigned int irq)
- {
- 	irq_free_desc(irq);
- }
-+
-+struct msi_controller iop13xx_msi_ctrl = {
-+	.setup_irq = iop13xx_setup_msi_irq,
-+	.teardown_irq = iop13xx_teardown_msi_irq,
-+};
--- 
-1.7.1
-
+Guenter
