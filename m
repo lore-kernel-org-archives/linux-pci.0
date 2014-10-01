@@ -1,148 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:49676 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751063AbaJAJjl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 05:39:41 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
+Received: from sauhun.de ([89.238.76.85]:52259 "EHLO pokefinder.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751295AbaJAVVN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 17:21:13 -0400
+Date: Wed, 1 Oct 2014 23:21:46 +0200
+From: Wolfram Sang <wsa@the-dreams.de>
+To: Guenter Roeck <groeck@juniper.net>
+Cc: Danielle Costantino <danielle.costantino@gmail.com>,
+	linux-i2c <linux-i2c@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>
-Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
-Date: Wed, 01 Oct 2014 11:38:45 +0200
-Message-ID: <3256560.C0cZnIlnAv@wuerfel>
-In-Reply-To: <20141001084626.GZ841@e106497-lin.cambridge.arm.com>
-References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com> <2430078.s4snyh5OoF@wuerfel> <20141001084626.GZ841@e106497-lin.cambridge.arm.com>
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>
+Subject: Re: Fwd: [Proposal] PM sleep children of inactive I2C bus segments
+ off Masters in multi-master systems
+Message-ID: <20141001212142.GB2368@katana>
+References: <CAAVjN7eUmBVcAGPbcn3qsJ9M9uu2nkFoKHqGhhKGekZSceGiMw@mail.gmail.com>
+ <20141001184304.GA6832@svl-evodev-groeck.juniper.net>
+ <CAAVjN7edpkXYMHBm+wLegA_pc0hnm_YZf_z=Ni3h=EbDTmfegQ@mail.gmail.com>
+ <20141001194115.GA6948@svl-evodev-groeck.juniper.net>
+ <CAAVjN7fGRzyu7gxavJUay+K_Mm-0t1T_0Bysk6-sdaqu5=5k5A@mail.gmail.com>
+ <20141001202058.GB6948@svl-evodev-groeck.juniper.net>
+ <CAAVjN7e4nO579TfAJ5zMNe__Q9yU_-6naq4-0vm1rimespSrsw@mail.gmail.com>
+ <20141001204302.GA7744@svl-evodev-groeck.juniper.net>
+ <20141001211046.GA2368@katana>
+ <20141001211657.GA7904@svl-evodev-groeck.juniper.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="lEGEL1/lMxI0MVQ2"
+In-Reply-To: <20141001211657.GA7904@svl-evodev-groeck.juniper.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 01 October 2014 09:46:26 Liviu Dudau wrote:
-> On Tue, Sep 30, 2014 at 09:01:14PM +0100, Arnd Bergmann wrote:
-> > On Tuesday 30 September 2014 20:54:41 Arnd Bergmann wrote:
-> > > On Tuesday 30 September 2014 18:48:21 Liviu Dudau wrote:
-> > > > > > > > These are the functions I found that refer to pci_sys_data on arm32:
-> > > > > > > > 
-> > > > > > > > pcibios_add_bus
-> > > > > > > > pcibios_remove_bus
-> > > > 
-> > > > These are only needed if you want to do per HB processing of the bus
-> > > > 
-> > > > > > > > pcibios_align_resource
-> > > > 
-> > > > mvebu is the only user of this function.
-> > > > 
-> > > > > > > > pci_mmap_page_range
-> > > > 
-> > > > This is only needed when mapping a PCI resource to userspace. Is that your case here?
-> > > > 
-> > > > > > > > pci_domain_nr
-> > > > > > > > pci_proc_domain
-> > > > 
-> > > > We have equivalent functionality in the generic patches for those.
-> > > > 
-> > > 
-> > > We clearly don't need those functions for the new drivers, but that's not
-> > > the point. The problem is that when you build a kernel that has both
-> > > a traditional host bridge driver and a new one in it, you always get those
-> > > functions and they get called from the PCI core, with incorrect arguments.
-> > 
-> > FWIW, the last time we discussed this, I think I had suggested that the
-> > functions that are currently architecture specific and have a generic
-> > __weak fallback could become function pointers in a per-host structure
-> > passed to pci_scan_root_bus, either a new structure or an extended
-> > struct pci_ops. Something along these lines:
-> 
-> Agree to the general idea. But have a look why host drivers need the add_bus ops:
-> to add MSI information into the bus!! If we take care of the MSI in the generic
-> code there is less of a need for this function at all.
+
+--lEGEL1/lMxI0MVQ2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, Oct 01, 2014 at 02:16:57PM -0700, Guenter Roeck wrote:
+> On Wed, Oct 01, 2014 at 11:10:47PM +0200, Wolfram Sang wrote:
+> >=20
+> > > Maybe you can find an error code which with some level of confidence
+> > > reflects "lost mastership". Then you can implement whatever makes sen=
+se
+> > > for your use case in your user space application(s).
+> >=20
+> > We have a documented fault code for ArbitrationLost and that is -EAGAIN
+> > (see Documentation/i2c/fault-codes). If a driver does use something
+> > else, patches are very welcome.
+> >=20
+> > Other than that, I find this thread very confusing. Of course can
+> > another master modify the clients, this is what multi-master is all
+> > about, no?
+> >=20
+> That is the point I was trying to make in one of my earlier replies.
+
+Yes, and I wondered why the thread continued after that, so I thought
+I'll bring it up again :) No, seriously, I did not understand the reply
+to that mail of yours, but I'll try again tomorrow after some sleep.
 
 
-Right, if we can eliminate the need for some or all of the functions above,
-we don't have to abstract them any more.
+--lEGEL1/lMxI0MVQ2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-pcibios_remove_bus can just go away entirely, we don't have a single driver
-on ARM that implements it. pcibios_add_bus as you say is just used for MSI
-at the moment, and we could get rid of it by just moving the msi_chip
-reference from pci_bus into pci_host_bridge. 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-The arm32 implementations of pci_domain_nr/pci_proc_domain can probably be
-removed if we change the arm32 pcibios_init_hw function to call the new
-interfaces that set the domain number.
+iQIcBAEBAgAGBQJULHBlAAoJEBQN5MwUoCm2K1QP/jN4YVaUcPzQpRwH1pVy/hCN
+7k+koSKRHe9IXi5yUPex0mIv54r7wO+hqV5kVKzSWh3CXSaUtqqKgPDfcIv4a1YJ
+Fwij5Tz7xuYV47fNyke3507Q5XgAaPDb1YBS6SVfezuzN53SPexT9wC34Kh0niMw
+kHhNFJmb4DLa61QIFMxvWU7kQylnLBwwnpnbFxry6NhWzNsAHGykIps77aiofeML
+Az8VQ39/6FiY3xzVY5S2ROvvKgaGbgneJk3/9qq/4u5S4v3m5BxLrXTFNWS1IJFG
+aqu3No9mhVGoWPdY7lOjqKB5mOBTRpcJVjJT4+Jpq0R9x5gCfH09r1EV/XsC+QPt
+LWPE5OYEQNev7OQU1kdDLhwuOz2xNgFmeob/MCrG+WYxbcDZnPzB/6S1RtHziYC1
+5+n1MvfXhQ1MXh8/M/6x+9B6H5SEEssRQkN09tBfDepbVVjAhvsLe8KO2u1Hzebt
+BuK6MQhd02pRMx4bn3Rn4vIaYs/YM6esPWnknrDee59Wrb3lhxb3NkWC+rYe7qrV
+wO0w7HNX6gv0k9E1LC15+BBg8W8Hj96okayOoK1WSnNIaI3p9VS2IEy0ulOdaIT/
+E6Esb3GvVatjZikfzVYwqa22x7061t+WOR0Msi4XqVHM2VrDwR4QQHwjBvPVrTPz
+YCPaC+53bil6WZrmRDy/
+=nxSz
+-----END PGP SIGNATURE-----
 
-pci_mmap_page_range could either get generalized some more in an attempt
-to have a __weak default implementation that works on ARM, or it could
-be changed to lose the dependency on pci_sys_data instead. In either
-case, the change would involve using the generic pci_host_bridge_window
-list.
-
-pcibios_align_resource should probably be per host, and we could move
-that into a pointer in pci_host_bridge, something like this:
-
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index b7c3a5ea1fca..d9cb6c916d54 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -200,11 +200,15 @@ static int pci_revert_fw_address(struct resource *res, struct pci_dev *dev,
- static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 		int resno, resource_size_t size, resource_size_t align)
- {
-+	struct pci_host_bridge *host = find_pci_host_bridge(bus);
-+	resource_size_t (*alignf)(void *, const struct resource *,
-+				  resource_size_t, resource_size_t),
- 	struct resource *res = dev->resource + resno;
- 	resource_size_t min;
- 	int ret;
- 
- 	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
-+	alignf = host->align_resource ?: pcibios_align_resource;
- 
- 	/*
- 	 * First, try exact prefetching match.  Even if a 64-bit
-@@ -215,7 +219,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 */
- 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
- 				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
--				     pcibios_align_resource, dev);
-+				     alignf, dev);
- 	if (ret == 0)
- 		return 0;
- 
-@@ -227,7 +231,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min,
- 					     IORESOURCE_PREFETCH,
--					     pcibios_align_resource, dev);
-+					     alignf, dev);
- 		if (ret == 0)
- 			return 0;
- 	}
-@@ -240,7 +244,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 */
- 	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
--					     pcibios_align_resource, dev);
-+					     alignf, dev);
- 
- 	return ret;
- }
-
-
-If we decide constantly calling find_pci_host_bridge() is too expensive, we can
-be more clever about it.
-
-	Arnd
+--lEGEL1/lMxI0MVQ2--
