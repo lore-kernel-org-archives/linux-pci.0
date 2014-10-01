@@ -1,76 +1,80 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from sauhun.de ([89.238.76.85]:52185 "EHLO pokefinder.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751165AbaJAVKN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 17:10:13 -0400
+Date: Wed, 1 Oct 2014 23:10:47 +0200
+From: Wolfram Sang <wsa@the-dreams.de>
+To: Guenter Roeck <groeck@juniper.net>
+Cc: Danielle Costantino <danielle.costantino@gmail.com>,
+	linux-i2c <linux-i2c@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Jiri Kosina <jkosina@suse.cz>,
 	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
+	"David S. Miller" <davem@davemloft.net>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [Patch Part1 v3 01/20] ACPI, irq, x86: Get rid of special handling of GSI for ACPI SCI
-Date: Mon, 27 Oct 2014 16:11:52 +0800
-Message-Id: <1414397531-28254-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>
+Subject: Re: Fwd: [Proposal] PM sleep children of inactive I2C bus segments
+ off Masters in multi-master systems
+Message-ID: <20141001211046.GA2368@katana>
+References: <CAAVjN7dwS62EKMnuZc_P1UjkbRVk6RXqJ91GwWZ96bbY5Ct-rg@mail.gmail.com>
+ <CAAVjN7eUmBVcAGPbcn3qsJ9M9uu2nkFoKHqGhhKGekZSceGiMw@mail.gmail.com>
+ <20141001184304.GA6832@svl-evodev-groeck.juniper.net>
+ <CAAVjN7edpkXYMHBm+wLegA_pc0hnm_YZf_z=Ni3h=EbDTmfegQ@mail.gmail.com>
+ <20141001194115.GA6948@svl-evodev-groeck.juniper.net>
+ <CAAVjN7fGRzyu7gxavJUay+K_Mm-0t1T_0Bysk6-sdaqu5=5k5A@mail.gmail.com>
+ <20141001202058.GB6948@svl-evodev-groeck.juniper.net>
+ <CAAVjN7e4nO579TfAJ5zMNe__Q9yU_-6naq4-0vm1rimespSrsw@mail.gmail.com>
+ <20141001204302.GA7744@svl-evodev-groeck.juniper.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="vkogqOf2sHV7VnPd"
+In-Reply-To: <20141001204302.GA7744@svl-evodev-groeck.juniper.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The IOAPIC has logic to track IOAPIC pin status, so there's no need for
-special treatment for GSI used by ACPI SCI in function mp_register_gsi()
-and mp_unregister_gsi().
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/acpi/boot.c |   10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+--vkogqOf2sHV7VnPd
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index f27b33194e06..47334a918d16 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -408,10 +408,6 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
- 		return gsi;
- 
--	/* Don't set up the ACPI SCI because it's already set up */
--	if (acpi_gbl_FADT.sci_interrupt == gsi)
--		return mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC);
--
- 	trigger = trigger == ACPI_EDGE_SENSITIVE ? 0 : 1;
- 	polarity = polarity == ACPI_ACTIVE_HIGH ? 0 : 1;
- 	node = dev ? dev_to_node(dev) : NUMA_NO_NODE;
-@@ -424,7 +420,8 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 	if (irq < 0)
- 		return irq;
- 
--	if (enable_update_mptable)
-+	/* Don't set up the ACPI SCI because it's already set up */
-+	if (enable_update_mptable && acpi_gbl_FADT.sci_interrupt != gsi)
- 		mp_config_acpi_gsi(dev, gsi, trigger, polarity);
- 
- 	return irq;
-@@ -437,9 +434,6 @@ static void mp_unregister_gsi(u32 gsi)
- 	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
- 		return;
- 
--	if (acpi_gbl_FADT.sci_interrupt == gsi)
--		return;
--
- 	irq = mp_map_gsi_to_irq(gsi, 0);
- 	if (irq > 0)
- 		mp_unmap_irq(irq);
--- 
-1.7.10.4
 
+> Maybe you can find an error code which with some level of confidence
+> reflects "lost mastership". Then you can implement whatever makes sense
+> for your use case in your user space application(s).
+
+We have a documented fault code for ArbitrationLost and that is -EAGAIN
+(see Documentation/i2c/fault-codes). If a driver does use something
+else, patches are very welcome.
+
+Other than that, I find this thread very confusing. Of course can
+another master modify the clients, this is what multi-master is all
+about, no?
+
+
+--vkogqOf2sHV7VnPd
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJULG3WAAoJEBQN5MwUoCm2pC4P/RbvbS/H65+KWbaMGdD6IpQy
+kIYe6cwTXFrJYPT4s5igfoFmXjpSF6BB6cBFnziv9sPd4yY+OkHJUV4oNy9dik4v
+GLLgnrHXGxnY3HjXEBZYK0o3t4FRnovWuSsXSW+Vfspfo/4CEq5Bns6B8C4ArxT2
+ozg3wZm86I1HvzSBemH8ZwO01tIIvHfu3kupsqoy5+lC1kr8MWcXmXt6Mm24w+jl
+dX+DJlvPvq+/lcdotZU3RdGcKvBKTteYqmDbti1g8U1GhKu40FPmllZECYI+K3kO
+v0/mJVs/9rf9UQJx8cRNf3rmr9mV9PpDn1CKYKp32bfQwZgwjfn2w/J910dkM8dH
+aF5NVrUfGpzZ+E0yuD0e1oUsUpnSuN1HWy2tvzy0TK+FZ81UP0ku8LHxgXoclL+1
+ExrY4a8psG5fTA4XVDJrdT+MBxM3d0j3eIejMBlQYeKJ1Mgj1eMQ6FTkxNyQWKeT
+qG9oj8wTDgIRDdtmmhQKtXfb4CJ1tjQ7daDxohxaCnQkdf9AtK4amZqI9O+tB3D5
+/Vkcqo83m93nzUCyHHjWDb5P9OC+JRTUiVrEamKSwXcAgOIqoiu8/AMULZNE+pM0
+RKJsPLtWtMIPdzrSQHcenYIosREJuvxezEtWRkmuGKc/zLFKORmPoRQgxzmqv48T
+L9YeptF+SGSK6HRYjRim
+=78pa
+-----END PGP SIGNATURE-----
+
+--vkogqOf2sHV7VnPd--
