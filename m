@@ -1,82 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0110.outbound.protection.outlook.com ([157.56.111.110]:65408
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757694AbaJaDNC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 23:13:02 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v5 5/8] PCI: Prevent xHCI driver from claiming AMD Nolan USB3 DRD device
-Date: Fri, 31 Oct 2014 11:11:16 +0800
-Message-ID: <1414725079-11490-6-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414725079-11490-1-git-send-email-ray.huang@amd.com>
-References: <1414725079-11490-1-git-send-email-ray.huang@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from gate.crashing.org ([63.228.1.57]:48102 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753428AbaJAW2g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 18:28:36 -0400
+Message-ID: <1412201390.4285.233.camel@pasglop>
+Subject: Re: [PATCH 1/4] pci/msi: Move "force_32bit_msi" flag from powerpc
+ to generic pci_dev
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex Deucher <alexdeucher@gmail.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Date: Thu, 02 Oct 2014 08:09:50 +1000
+In-Reply-To: <20141001203322.GE4171@google.com>
+References: <1412048401.4285.128.camel@pasglop>
+	 <CAErSpo4B6kuZJcKwreNvW1qC5sZ=1Ko71vbzNz7T8-_pjf7mww@mail.gmail.com>
+	 <CADnq5_PT+dX=KA4epGNRaoraco2z1pe5K7UgqLmTUhWMnvtWkw@mail.gmail.com>
+	 <1412108504.4285.155.camel@pasglop>
+	 <CADnq5_O_iLAZUKLL4nph8VwuP2NOkWXhBZC2XTSkFm5P42WZ+g@mail.gmail.com>
+	 <1412110946.4285.158.camel@pasglop>
+	 <CADnq5_OXBax1+TKPsR2RDYTWijQKDVw34ECfWzcwN2SibCGYTg@mail.gmail.com>
+	 <1412112324.4285.160.camel@pasglop> <1412129363.4285.190.camel@pasglop>
+	 <20141001203322.GE4171@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The AMD Nolan (NL) SoC contains a DesignWare USB3 Dual-Role Device that can
-be operated either as a USB Host or a USB Device.  In the AMD NL platform,
-this device ([1022:7912]) has a class code of PCI_CLASS_SERIAL_USB_XHCI
-(0x0c0330), which means the xhci driver will claim it.
+On Wed, 2014-10-01 at 14:33 -0600, Bjorn Helgaas wrote:
+> I like the idea of handling this more generically, e.g., with a bit like
+> this in struct pci_dev (I'd probably name it something like "no_64bit_msi"
+> along the lines of your driver #defines).
+> 
+> What I don't like is that we haven't done anything to help other
+> architectures, because the only code that *looks* at this bit is in
+> arch/powerpc.  The next arch that tries to use 64-bit MSI addresses for
+> these devices will trip over the same problem.
 
-But the dwc3 driver is a more specific driver for this device, and we'd
-prefer to use it instead of xhci.  To prevent xhci from claiming the
-device, change the class code to 0x0c03fe, which the PCI r3.0 spec defines
-as "USB device (not host controller)".  The dwc3 driver can then claim it
-based on its Vendor and Device ID.
+I started looking. From my (limited) understanding of x86, it doesn't
+even look at the "size" of MSIs which makes me think it's always 32-bit,
+and I plan to look at the others next (though not for stable).
 
-Suggested-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jason Chang <jason.chang@amd.com>
-Signed-off-by: Huang Rui <ray.huang@amd.com>
----
- drivers/pci/quirks.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+> Can we check in pci_enable_msi_range() and pci_enable_msix_range() whether
+> the MSI addresses allocated by the arch are too big, and fail the call if
+> they are?
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 90acb32..ed6f89b 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -379,6 +379,26 @@ static void quirk_ati_exploding_mce(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,	PCI_DEVICE_ID_ATI_RS100,   quirk_ati_exploding_mce);
- 
- /*
-+ * In the AMD NL platform, this device ([1022:7912]) has a class code of
-+ * PCI_CLASS_SERIAL_USB_XHCI (0x0c0330), which means the xhci driver will
-+ * claim it.
-+ * But the dwc3 driver is a more specific driver for this device, and we'd
-+ * prefer to use it instead of xhci. To prevent xhci from claiming the
-+ * device, change the class code to 0x0c03fe, which the PCI r3.0 spec
-+ * defines as "USB device (not host controller)". The dwc3 driver can then
-+ * claim it based on its Vendor and Device ID.
-+ */
-+static void quirk_amd_nl_class(struct pci_dev *pdev)
-+{
-+	/*
-+	 * Use 'USB Device' (0x0c03fe) instead of PCI header provided
-+	 */
-+	pdev->class = 0x0c03fe;
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL_USB,
-+		quirk_amd_nl_class);
-+
-+/*
-  * Let's make the southbridge information explicit instead
-  * of having to worry about people probing the ACPI areas,
-  * for example.. (Yes, it happens, and if you read the wrong
--- 
-1.9.1
+Yes, good idea, I'll add something.
+
+Cheers,
+Ben.
+
 
