@@ -1,126 +1,163 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:41820 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751451AbaIIFiN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Sep 2014 01:38:13 -0400
-Received: by mail-pd0-f178.google.com with SMTP id p10so5285227pdj.23
-        for <linux-pci@vger.kernel.org>; Mon, 08 Sep 2014 22:38:12 -0700 (PDT)
-Date: Mon, 8 Sep 2014 23:38:08 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Rajat Jain <rajatxjain@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Richard Yang <weiyang@linux.vnet.ibm.com>,
-	Matthew Wilcox <matthew.r.wilcox@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v2] pci/probe: Enable CRS for root port if it is supported
-Message-ID: <20140909053808.GQ8080@google.com>
-References: <53FFA54D.9000907@gmail.com>
- <CAErSpo5_WMUmnTHpPZt+j04VZoiW1pthQoGV90A5BDQpQgjwOQ@mail.gmail.com>
- <54065208.3080309@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54065208.3080309@gmail.com>
+Received: from gate.crashing.org ([63.228.1.57]:41611 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751738AbaJACKA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Sep 2014 22:10:00 -0400
+Message-ID: <1412129363.4285.190.camel@pasglop>
+Subject: [PATCH 1/4] pci/msi: Move "force_32bit_msi" flag from powerpc to
+ generic pci_dev
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alex Deucher <alexdeucher@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Date: Wed, 01 Oct 2014 12:09:23 +1000
+In-Reply-To: <1412112324.4285.160.camel@pasglop>
+References: <1412048401.4285.128.camel@pasglop>
+	 <CAErSpo4B6kuZJcKwreNvW1qC5sZ=1Ko71vbzNz7T8-_pjf7mww@mail.gmail.com>
+	 <CADnq5_PT+dX=KA4epGNRaoraco2z1pe5K7UgqLmTUhWMnvtWkw@mail.gmail.com>
+	 <1412108504.4285.155.camel@pasglop>
+	 <CADnq5_O_iLAZUKLL4nph8VwuP2NOkWXhBZC2XTSkFm5P42WZ+g@mail.gmail.com>
+	 <1412110946.4285.158.camel@pasglop>
+	 <CADnq5_OXBax1+TKPsR2RDYTWijQKDVw34ECfWzcwN2SibCGYTg@mail.gmail.com>
+	 <1412112324.4285.160.camel@pasglop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 02, 2014 at 04:26:00PM -0700, Rajat Jain wrote:
-> 
-> As per the PCIe spec, an endpoint may return the configuration cycles
-> with CRS if it is not yet fully ready to be accessed. If the CRS visibility
-> is not enabled at the root port, the spec leaves the retry behaviour open
-> to implementation in such a case. The Intel root ports have chosen to retry
-> endlessly in this situation. Thus, the root controller may "hang" (repeatedly
-> retrying the configuration requests until it gets a status other than CRS) if
-> a device returns CRS for a long time. This can cause a broken endpoint to bring
-> down the whole PCI hierarchy.
-> 
-> This was recently known to cause problems on Intel systems and
-> was discussed here:
-> http://marc.info/?t=140926298500002&r=1&w=2
-> 
-> Ref1:
-> https://www.pcisig.com/specifications/pciexpress/ECN_CRS_Software_Visibility_No27.pdf
-> 
-> Ref2:
-> PCIe spec V3.0, pg119, pg127 for "Configuration Request Retry Status"
-> 
-> Thus enable the CRS visibility for the root ports that support it. This
-> patch reverts the following commit, but enables CRS visibility only
-> when the root port supports it:
-> 
-> ad7edfe04908 ("[PCI] Do not enable CRS Software Visibility by default")
-> 
-> (Linus' response: http://marc.info/?l=linux-pci&m=140968622520192&w=2)
-> 
-> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-> Signed-off-by: Guenter Roeck <groeck@juniper.net>
 
-I put this and the "only look at Vendor ID" patch on a pci/enumeration
-branch [1].  I rewrote the changelogs to reflect my understanding of what's
-going on, so probably the real truth is somewhere between your original and
-mine.  Let me know what should be fixed.
+Some devices have broken 64-bit MSI support which only support some
+address bits (40 to 48 typically). This doesn't work on some platforms
+such as POWER servers, so we need a quirk.
 
-We should figure out an easy way for Josh to test these.  Ideally, he could
-test the second patch by itself first, then both together.
+Currently we keep a flag in a powerpc specific data structure which we
+have per PCI device. However this is impractical as we really want the
+driver to set that flag appropriately (and the driver shouldn't touch
+that arch specific data structure).
 
-[1] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/enumeration
+It's also not unlikely that this limitation will affect other architectures
+in the long run so may as well be prepared for it.
 
-> ---
-> v2: Remove the white list, that was enabling the CRS for certain known Intel systems.
->     Rather now enable it for all systems that support this capability.
-> v1: Enable CRS for only some given Intel systems (maintain a whitelist)
-> 
->  drivers/pci/probe.c           |   13 +++++++++++++
->  include/uapi/linux/pci_regs.h |    1 +
->  2 files changed, 14 insertions(+)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index e3cf8a2..3c4c35c 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -740,6 +740,17 @@ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
->  }
->  EXPORT_SYMBOL(pci_add_new_bus);
->  
-> +static void pci_enable_crs(struct pci_dev *pdev)
-> +{
-> +	u16 root_cap = 0;
-> +
-> +	/* Enable CRS Software visibility if supported */
-> +	pcie_capability_read_word(pdev, PCI_EXP_RTCAP, &root_cap);
-> +	if (root_cap & PCI_EXP_RTCAP_CRSVIS)
-> +		pcie_capability_set_word(pdev, PCI_EXP_RTCTL,
-> +					 PCI_EXP_RTCTL_CRSSVE);
-> +}
-> +
->  /*
->   * If it's a bridge, configure it and scan the bus behind it.
->   * For CardBus bridges, we don't scan behind as the devices will
-> @@ -787,6 +798,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
->  	pci_write_config_word(dev, PCI_BRIDGE_CONTROL,
->  			      bctl & ~PCI_BRIDGE_CTL_MASTER_ABORT);
->  
-> +	pci_enable_crs(dev);
-> +
->  	if ((secondary || subordinate) && !pcibios_assign_all_busses() &&
->  	    !is_cardbus && !broken) {
->  		unsigned int cmax;
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 30db069..a75106d 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -552,6 +552,7 @@
->  #define  PCI_EXP_RTCTL_PMEIE	0x0008	/* PME Interrupt Enable */
->  #define  PCI_EXP_RTCTL_CRSSVE	0x0010	/* CRS Software Visibility Enable */
->  #define PCI_EXP_RTCAP		30	/* Root Capabilities */
-> +#define  PCI_EXP_RTCAP_CRSVIS	0x0001	/* CRS software visibility capability */
->  #define PCI_EXP_RTSTA		32	/* Root Status */
->  #define PCI_EXP_RTSTA_PME	0x00010000 /* PME status */
->  #define PCI_EXP_RTSTA_PENDING	0x00020000 /* PME pending */
-> -- 
-> 1.7.9.5
+So this moves the flag to struct pci_dev instead and adjusts the
+corresponding arch/powerpc code to look for it there. At this point,
+there is no attempt at making other architectures honor it just yet
+though from what I can tell, x86 seems to always use 32-bit addresses
+for MSIs.
+
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: <stable@vger.kernel.org>
+---
+
+Note: CC'ing stable as I really want this to hit distros, without that
+(and the three subsequent patches), we crash during boot with a number
+of radeon cards on power machines.
+
+Note2: Alex, we can wait for the response of the HW guys for which revisions
+actually need the quirk in hda_intel but I don't see a big risk or issue in
+just doing it for all AMD/ATI for now and fix that up later
+
+ arch/powerpc/include/asm/pci-bridge.h     | 2 --
+ arch/powerpc/kernel/pci_64.c              | 5 +----
+ arch/powerpc/platforms/powernv/pci-ioda.c | 3 +--
+ arch/powerpc/platforms/powernv/pci.c      | 3 +--
+ arch/powerpc/platforms/pseries/msi.c      | 2 +-
+ include/linux/pci.h                       | 1 +
+ 6 files changed, 5 insertions(+), 11 deletions(-)
+
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 4ca90a3..725247b 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -159,8 +159,6 @@ struct pci_dn {
+ 
+ 	int	pci_ext_config_space;	/* for pci devices */
+ 
+-	bool	force_32bit_msi;
+-
+ 	struct	pci_dev *pcidev;	/* back-pointer to the pci device */
+ #ifdef CONFIG_EEH
+ 	struct eeh_dev *edev;		/* eeh device */
+diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
+index 155013d..a6ce5fe 100644
+--- a/arch/powerpc/kernel/pci_64.c
++++ b/arch/powerpc/kernel/pci_64.c
+@@ -269,10 +269,7 @@ EXPORT_SYMBOL(pcibus_to_node);
+ 
+ static void quirk_radeon_32bit_msi(struct pci_dev *dev)
+ {
+-	struct pci_dn *pdn = pci_get_pdn(dev);
+-
+-	if (pdn)
+-		pdn->force_32bit_msi = true;
++	dev->force_32bit_msi = true;
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x68f2, quirk_radeon_32bit_msi);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index df241b1..9d98475 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1311,7 +1311,6 @@ static int pnv_pci_ioda_msi_setup(struct pnv_phb *phb, struct pci_dev *dev,
+ 				  unsigned int is_64, struct msi_msg *msg)
+ {
+ 	struct pnv_ioda_pe *pe = pnv_ioda_get_pe(dev);
+-	struct pci_dn *pdn = pci_get_pdn(dev);
+ 	struct irq_data *idata;
+ 	struct irq_chip *ichip;
+ 	unsigned int xive_num = hwirq - phb->msi_base;
+@@ -1327,7 +1326,7 @@ static int pnv_pci_ioda_msi_setup(struct pnv_phb *phb, struct pci_dev *dev,
+ 		return -ENXIO;
+ 
+ 	/* Force 32-bit MSI on some broken devices */
+-	if (pdn && pdn->force_32bit_msi)
++	if (dev->force_32bit_msi)
+ 		is_64 = 0;
+ 
+ 	/* Assign XIVE to PE */
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index b854b57..4e43a6f 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -50,9 +50,8 @@ static int pnv_msi_check_device(struct pci_dev* pdev, int nvec, int type)
+ {
+ 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+ 	struct pnv_phb *phb = hose->private_data;
+-	struct pci_dn *pdn = pci_get_pdn(pdev);
+ 
+-	if (pdn && pdn->force_32bit_msi && !phb->msi32_support)
++	if (pdev->force_32bit_msi && !phb->msi32_support)
+ 		return -ENODEV;
+ 
+ 	return (phb && phb->msi_bmp.bitmap) ? 0 : -ENODEV;
+diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
+index 18ff462..b3f2c1a 100644
+--- a/arch/powerpc/platforms/pseries/msi.c
++++ b/arch/powerpc/platforms/pseries/msi.c
+@@ -429,7 +429,7 @@ static int rtas_setup_msi_irqs(struct pci_dev *pdev, int nvec_in, int type)
+ 	 */
+ again:
+ 	if (type == PCI_CAP_ID_MSI) {
+-		if (pdn->force_32bit_msi) {
++		if (pdev->force_32bit_msi) {
+ 			rc = rtas_change_msi(pdn, RTAS_CHANGE_32MSI_FN, nvec);
+ 			if (rc < 0) {
+ 				/*
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 96453f9..740cadd 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -331,6 +331,7 @@ struct pci_dev {
+ 	unsigned int	is_added:1;
+ 	unsigned int	is_busmaster:1; /* device is busmaster */
+ 	unsigned int	no_msi:1;	/* device may not use msi */
++	unsigned int    force_32bit_msi:1;	/* Device has broken 64-bit MSIs */
+ 	unsigned int	block_cfg_access:1;	/* config space access is blocked */
+ 	unsigned int	broken_parity_status:1;	/* Device generates false positive parity */
+ 	unsigned int	irq_reroute_variant:2;	/* device needs IRQ rerouting variant */
+
+
+
