@@ -1,228 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:42571 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751644AbaJOIbl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Oct 2014 04:31:41 -0400
-Message-ID: <543E30E0.3060203@hp.com>
-Date: Wed, 15 Oct 2014 16:31:28 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:57675 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751192AbaJAUca (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 16:32:30 -0400
 MIME-Version: 1.0
-To: Takao Indoh <indou.takao@jp.fujitsu.com>
-CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linda.knippers@hp.com,
-	jerry.hoemann@hp.com, lisa.mitchell@hp.com,
-	alexander.duyck@gmail.com, rwright@hp.com
-Subject: Re: [PATCH 1/1] pci: fix dmar fault for kdump kernel
-References: <1412925191-27970-1-git-send-email-zhen-hual@hp.com> <543CEE32.50109@hp.com> <543E2CD5.60708@jp.fujitsu.com>
-In-Reply-To: <543E2CD5.60708@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-2022-JP
+In-Reply-To: <20141001202058.GB6948@svl-evodev-groeck.juniper.net>
+References: <CAAVjN7dwS62EKMnuZc_P1UjkbRVk6RXqJ91GwWZ96bbY5Ct-rg@mail.gmail.com>
+	<CAAVjN7eUmBVcAGPbcn3qsJ9M9uu2nkFoKHqGhhKGekZSceGiMw@mail.gmail.com>
+	<20141001184304.GA6832@svl-evodev-groeck.juniper.net>
+	<CAAVjN7edpkXYMHBm+wLegA_pc0hnm_YZf_z=Ni3h=EbDTmfegQ@mail.gmail.com>
+	<20141001194115.GA6948@svl-evodev-groeck.juniper.net>
+	<CAAVjN7fGRzyu7gxavJUay+K_Mm-0t1T_0Bysk6-sdaqu5=5k5A@mail.gmail.com>
+	<20141001202058.GB6948@svl-evodev-groeck.juniper.net>
+Date: Wed, 1 Oct 2014 13:32:28 -0700
+Message-ID: <CAAVjN7e4nO579TfAJ5zMNe__Q9yU_-6naq4-0vm1rimespSrsw@mail.gmail.com>
+Subject: Re: Fwd: [Proposal] PM sleep children of inactive I2C bus segments
+ off Masters in multi-master systems
+From: Danielle Costantino <danielle.costantino@gmail.com>
+To: Guenter Roeck <groeck@juniper.net>
+Cc: linux-i2c <linux-i2c@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I still think resetting the devices is necessary.  Reading your original
-mails ,  I think reason 2 you mentioned, resetting the devices in the
-first kernel,  may be a good solution.
+My goal was to automatically put the devices behind the master
+selector in a (logical) state where all settings would be verified and
+if needed corrected and initialized back to how the device was
+configured prior to giving up the bus.
 
-Well, I am now working on Bill's patch that you mentioned. As it is not
-accepted yet, I will create a new version for latest stable kernel 3.17.
+The error return is the main issue, but I was hoping to automate
+multi-master bus re-initialization.
 
-Thanks
-Zhenhua
-
-
-On 10/15/2014 04:14 PM, Takao Indoh wrote:
-> (2014/10/14 18:34), Li, ZhenHua wrote:
->> I tested on the latest stable version 3.17, it works well.
+On Wed, Oct 1, 2014 at 1:20 PM, Guenter Roeck <groeck@juniper.net> wrote:
+> On Wed, Oct 01, 2014 at 01:03:59PM -0700, Danielle Costantino wrote:
+>> On Wed, Oct 1, 2014 at 12:41 PM, Guenter Roeck <groeck@juniper.net> wrote:
+>> > On Wed, Oct 01, 2014 at 11:44:59AM -0700, Danielle Costantino wrote:
+>> >> Re-sending Proposal:
+>> >>
+>> >> Currently I2C mux devices that support multiple master arbitration are
+>> >> the i2c-mux-pca9541 and i2c-arb-gpio-challenge drivers. I propose to
+>> >> add the ability to configure an interrupt pin from the Master Selector
+>> >> device to indicate that bus ownership has been lost. Once the device
+>> >> loses ownership, all of its children should enter a pm sleep mode (as
+>> >> you can't talk to them at this point) until master-ship has been
+>> >> reacquired.
+>> >>
+>> > Not sure I understand what you are proposing here.
 >>
->> On 10/10/2014 03:13 PM, Li, Zhen-Hua wrote:
->>> On a HP system with Intel vt-d supported and many PCI devices on it,
->>> when kernel crashed and the kdump kernel boots with intel_iommu=on,
->>> there may be some unexpected DMA requests on this adapter, which will
->>> cause DMA Remapping faults like:
->>>       dmar: DRHD: handling fault status reg 102
->>>       dmar: DMAR:[DMA Read] Request device [41:00.0] fault addr fff81000
->>>       DMAR:[fault reason 01] Present bit in root entry is clear
->>>
->>> This bug may happen on *any* PCI device.
->>> Analysis for this bug:
->>>
->>> The present bit is set in this function:
->>>
->>> static struct context_entry * device_to_context_entry(
->>>                   struct intel_iommu *iommu, u8 bus, u8 devfn)
->>> {
->>>       ......
->>>                   set_root_present(root);
->>>       ......
->>> }
->>>
->>> Calling tree:
->>>       device driver
->>>           intel_alloc_coherent
->>>               __intel_map_single
->>>                   domain_context_mapping
->>>                       domain_context_mapping_one
->>>                           device_to_context_entry
->>>
->>> This means, the present bit in root entry will not be set until the device
->>> driver is loaded.
->>>
->>> But in the kdump kernel, hardware devices are not aware that control has
->>> transferred to the second kernel, and those drivers must initialize again.
->>> Consequently there may be unexpected DMA requests from devices activity
->>> initiated in the first kernel leading to the DMA Remapping errors in the
->>> second kernel.
->>>
->>> To fix this DMAR fault, we need to reset the bus that this device on. Reset
->>> the device itself does not work.
->>>
->>> A patch for this bug that has been sent before:
->>> https://lkml.org/lkml/2014/9/30/55
->>> As in discussion, this bug may happen on *any* device, so we need to reset all
->>> pci devices.
->>>
->>> There was an original version(Takao Indoh) that resets the pcie devices:
->>> https://lkml.org/lkml/2013/5/14/9
-> 
-> As far as I can remember, the original patch was nacked by
-> the following reasons:
-> 
-> 1) On sparc, the IOMMU is initialized before PCI devices are enumerated,
->     so there would still be a window where ongoing DMA could cause an
->     IOMMU error.
-> 
-> 2) Basically Bjorn is thinking device reset should be done in the
->     1st kernel before jumping into 2nd kernel.
-> 
-> And Bill Sumner proposed another idea.
-> http://comments.gmane.org/gmane.linux.kernel.iommu/4828
-> I don't know the current status of this patch, but I think Jerry Hoemann
-> is working on this.
-> 
-> Thanks,
-> Takao Indoh
-> 
-> 
->>>
->>> Update of this new version, comparing with Takao Indoh's version:
->>>       Add support for legacy PCI devices.
->>>       Use pci_try_reset_bus instead of do_downstream_device_reset in original version
->>>
->>> Randy Wright corrects some misunderstanding in this description.
->>>
->>> Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
->>> Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
->>> Signed-off-by: Randy Wright <rwright@hp.com>
->>> ---
->>>    drivers/pci/pci.c | 84 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
->>>    1 file changed, 84 insertions(+)
->>>
->>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>> index 2c9ac70..8cb146c 100644
->>> --- a/drivers/pci/pci.c
->>> +++ b/drivers/pci/pci.c
->>> @@ -23,6 +23,7 @@
->>>    #include <linux/device.h>
->>>    #include <linux/pm_runtime.h>
->>>    #include <linux/pci_hotplug.h>
->>> +#include <linux/crash_dump.h>
->>>    #include <asm-generic/pci-bridge.h>
->>>    #include <asm/setup.h>
->>>    #include "pci.h"
->>> @@ -4423,6 +4424,89 @@ void __weak pci_fixup_cardbus(struct pci_bus *bus)
->>>    }
->>>    EXPORT_SYMBOL(pci_fixup_cardbus);
->>>
->>> +/*
->>> + * Return true if dev is PCI root port or downstream port whose child is PCI
->>> + * endpoint except VGA device.
->>> + */
->>> +static int __pci_dev_need_reset(struct pci_dev *dev)
->>> +{
->>> +    struct pci_bus *subordinate;
->>> +    struct pci_dev *child;
->>> +
->>> +    if (dev->hdr_type != PCI_HEADER_TYPE_BRIDGE)
->>> +        return 0;
->>> +
->>> +    if (pci_is_pcie(dev)) {
->>> +        if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT) &&
->>> +            (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM))
->>> +            return 0;
->>> +    }
->>> +
->>> +    subordinate = dev->subordinate;
->>> +    list_for_each_entry(child, &subordinate->devices, bus_list) {
->>> +        /* Don't reset switch, bridge, VGA device */
->>> +        if ((child->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
->>> +            ((child->class >> 16) == PCI_BASE_CLASS_BRIDGE) ||
->>> +            ((child->class >> 16) == PCI_BASE_CLASS_DISPLAY))
->>> +            return 0;
->>> +
->>> +        if (pci_is_pcie(child)) {
->>> +            if ((pci_pcie_type(child) == PCI_EXP_TYPE_UPSTREAM) ||
->>> +                (pci_pcie_type(child) == PCI_EXP_TYPE_PCI_BRIDGE))
->>> +                return 0;
->>> +        }
->>> +    }
->>> +
->>> +    return 1;
->>> +}
->>> +
->>> +struct pci_dev_reset_entry {
->>> +    struct list_head list;
->>> +    struct pci_dev *dev;
->>> +};
->>> +int __init pci_reset_endpoints(void)
->>> +{
->>> +    struct pci_dev *dev = NULL;
->>> +    struct pci_dev_reset_entry *pdev_entry, *tmp;
->>> +    struct pci_bus *subordinate = NULL;
->>> +    int has_it;
->>> +
->>> +    LIST_HEAD(pdev_list);
->>> +
->>> +    if (likely(!is_kdump_kernel()))
->>> +        return 0;
->>> +
->>> +    for_each_pci_dev(dev) {
->>> +        subordinate = dev->subordinate;
->>> +        if (!subordinate || list_empty(&subordinate->devices))
->>> +            continue;
->>> +
->>> +        has_it = 0;
->>> +        list_for_each_entry(pdev_entry, &pdev_list, list) {
->>> +            if (dev == pdev_entry->dev) {
->>> +                has_it = 1;
->>> +                break;
->>> +            }
->>> +        }
->>> +        if (has_it)
->>> +            continue;
->>> +
->>> +        if (__pci_dev_need_reset(dev)) {
->>> +            pdev_entry = kmalloc(sizeof(*pdev_entry), GFP_KERNEL);
->>> +            pdev_entry->dev = dev;
->>> +            list_add(&pdev_entry->list, &pdev_list);
->>> +        }
->>> +    }
->>> +
->>> +    list_for_each_entry_safe(pdev_entry, tmp, &pdev_list, list) {
->>> +        pci_try_reset_bus(pdev_entry->dev->subordinate);
->>> +        kfree(pdev_entry);
->>> +    }
->>> +
->>> +    return 0;
->>> +}
->>> +fs_initcall_sync(pci_reset_endpoints);
->>> +
->>>    static int __init pci_setup(char *str)
->>>    {
->>>        while (str) {
->>>
+>> Lets say you have a active - standby based multi-master system. If the
+>> other master forced arbitration (took mastership) the next transation
+>> on any slaves of that bus would return EAGAIN or EBUSY.
 >>
+>> Another point is that once mastership has been lost, the configuration
+>> of the devices on that bus are no longer known to be valid...therefor
+>> a re-init of those devices may be needed.
 >>
+> Unfortunately that is a generic problem in a multi-master system.
+> You never know if the other end reconfigured a device or not,
+> even if there was no error.
+>
+>> > A typical use case would be a power supply such as the one supported by
+>> > drivers/hwmon/lineage-pem.c from both an active and standby system
+>> > controller. The power supply needs to be accessible from both controllers.
+>> > If one controller looses access, it can only mean that it did not follow
+>> > the access protocol. Similar, one controller enforcing access means that
+>> > it either does not follow the access protocol either, or that the other
+>> > end did not follow the protocol (or maybe the other end died).
+>> >
+>> > In all cases, loss of access does not mean that the end device can or should
+>> > be put in sleep mode, not even logically. All it means is that there was
+>> > an access protocol error. Not sure if there is anything that can be done
+>> > about that, but putting the device into sleep mode does not seem to be
+>> > an appropriate response to me.
+>> >
+>> >> This has come up as an issue when the master loses control over a bus
+>> >> the return code of all transactions to its lave devices is EIO (not
+>> >> very helpful).
+>> >>
+>> > But, again, doesn't that mean that there was some access protocol error ?
+>> > Shouldn't it try to re-acquire mastership instead, and block all accesses
+>> > to slaves until it acquired it ?
 >>
-> 
-> 
+>> EIO is such a generic error it makes finding weather there was a
+>> problem communicating or is no longer master of the bus segment.
+>>
+> AFAICS the only time the pca9541 driver returns -EIO is if a transaction
+> did not complete. Only possible improvement I could imagine would be to
+> check if mastership was lost if there was an error, and return something
+> more useful if that is the case. Both -EBUSY or -EAGAIN might make sense
+> here; I don't really know what would be better or more appropriate.
+>
+> Guenter
 
+
+
+-- 
+- Danielle Costantino
