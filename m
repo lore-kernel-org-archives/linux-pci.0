@@ -1,117 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:50105 "EHLO arroyo.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:13955 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756388AbaJXPak (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 24 Oct 2014 11:30:40 -0400
-Date: Fri, 24 Oct 2014 10:30:17 -0500
-From: Felipe Balbi <balbi@ti.com>
-To: Huang Rui <ray.huang@amd.com>
-CC: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 00/16] usb: dwc3: add support for AMD NL SoC
-Message-ID: <20141024153017.GG26941@saruman>
-Reply-To: <balbi@ti.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
- <20141017151026.GN26260@saruman>
- <20141020153822.GF24357@hr-slim.amd.com>
+	id S1751644AbaJAQsW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 12:48:22 -0400
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 0/3] Revert MSI msg API churn
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: linux-kernel@vger.kernel.org, wangyijing@huawei.com
+Date: Wed, 01 Oct 2014 10:48:16 -0600
+Message-ID: <20141001163814.2709.92885.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="df+09Je9rNq3P+GE"
-In-Reply-To: <20141020153822.GF24357@hr-slim.amd.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---df+09Je9rNq3P+GE
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The MSI message API has gone through some churn, that I think results
+in an inconsistent interface.  We now have this:
 
-Hi,
+void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+void write_msi_msg(unsigned int irq, struct msi_msg *msg);
 
-On Mon, Oct 20, 2014 at 11:38:23PM +0800, Huang Rui wrote:
-> On Fri, Oct 17, 2014 at 10:10:26AM -0500, Felipe Balbi wrote:
-> > Hi,
-> >=20
-> > On Fri, Oct 17, 2014 at 04:53:25PM +0800, Huang Rui wrote:
-> > > The series of patches add AMD NL SoC support for DesignWare USB3 OTG
-> > > IP with PCI bus glue layer. This controller supported hibernation, LPM
-> > > erratum and used the 2.80a IP version and amd own phy. Current
-> > > implementation support both simulation and SoC platform. And already
-> > > tested with gadget zero and msc tool.  It works well on file storage
-> > > gadget.
-> >=20
-> > patches look much, much nicer there are still a few things to fix. A
-> > global set of issues which I see:
-> >=20
-> > 1) Let's get confirmation that all those quirks will be needed in
-> > production as well, I have a feeling quite a few of them won't be.
-> >=20
-> > 2) All quirks should become 1-bit fields insteads of single-bits on a
-> > 32-bit variable.
-> >=20
-> > 3) All quirks should have DeviceTree counterparts. They should all
-> > become boolean properties should we can:
-> >=20
-> > 	dwc->tx_deemphasis_quirk =3D of_property_read_bool(node,
-> > 		"snps,tx_deemphasis_quirk");
-> >=20
->=20
-> Thanks to summarize them. Will update in V3.
+write_msi_msg() takes an irq arg, but read_msi_msg() takes an
+msi_desc.  Presumably write_msi_msg() was not converted because it
+has a much larger user base, but this sort of inconsitency results
+in a poor API.
 
-hey, no problem.
+This series reverts a selection of commits to return us to:
 
-> > > These patches are generated on balbi/testing/next
-> > >=20
-> > > Changes from v1 -> v2
-> > > - remove dual role function temporarily
-> > > - add pci quirk to avoid to bind with xhci driver
-> > > - distinguish between simulation board and soc
-> > > - break down all the special quirks
-> > >=20
-> > >=20
-> > > Patch 1:
-> > > - add PCI device id into pci bus glue
-> >=20
-> > this guy should be the last in the series, with all AMD quirks being
-> > enabled at once. This will avoid bisection points where AMD's platforms
-> > don't work.
-> >=20
->=20
-> So all the AMD special configuration and device id should be in one
-> patch, right?
+void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
+void write_msi_msg(unsigned int irq, struct msi_msg *msg);
 
-correct :-)
+I've left the removal of read_msi_msg() since it has no users, but
+restored get_cached_msi_msg() since it has an imminent user.  This
+will also cleanup the upcoming merge conflicts in next.  Thanks,
 
---=20
-balbi
+Alex
 
---df+09Je9rNq3P+GE
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+---
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+Alex Williamson (3):
+      Revert "PCI/MSI: Remove unused get_cached_msi_msg()"
+      Revert "PCI/MSI: Rename __get_cached_msi_msg() to get_cached_msi_msg()"
+      Revert "PCI/MSI: Rename __read_msi_msg() to read_msi_msg()"
 
-iQIcBAEBAgAGBQJUSnCJAAoJEIaOsuA1yqREvaoP/0FM+lLi3r5SnXjR0GWdfYqW
-SAFTFp0+Uq+LuRGJx5j+bvjSA+4R/F3GGNyvMuOSSI2Q1LlJ6rm41BxvvqOvrm5B
-DuDBu01ZhC0BFGo3qYOUbpDWTXArwdeVDf8JQ+7iiTnnPx+89meSJuumYUOJcbkU
-SeaSTCWH5z8VfajHKImNO4hoVyHRvwx/XeSRZHi0/Cqr13GPW3wkI0nxcld/MNt9
-H+y89+WvHBd058IpGPjGYq22jJeg1G9FB5K8vT93Qhh/d7FvOTHRIPFL83ISmN/9
-XpbMxlGsm100+Re64DUqQ44ErGT2cNbdycrR7Twd4spbWInRHGLOOqtwfdfaBl6s
-z4IFRkaW3KoTEuXnu1s1XB0ayf0dtl5dIPWSZbxDXSz9O6uiAV+lNMFt3XxKgcYb
-b6LK2m6SGmb/TTd+mhhu7IOckWuEcryl7d5esPqAf2DCqGVK1jRTyHlFfgYhW23k
-jvV5YtphWkPEcuNkK+W0j/sVYVkS6BtbvOgRyDScC7ks9lS1v/cnl3UATUJmmoTd
-hHgOJtqBuluMYjx9DBEsrKsCbi4KpQm1xmZg85G1rXshmS8ytBqeZH1Rp9LGtAih
-UXtAOniEDj2eY34QdYhWPwGXyylq2wI58A4DRBr3YZxndl0HMR8ZhWjjSzvb88yy
-+XdGUHLbeXDj16v9NRKy
-=hpVq
------END PGP SIGNATURE-----
 
---df+09Je9rNq3P+GE--
+ arch/ia64/kernel/msi_ia64.c          |    2 +-
+ arch/ia64/sn/kernel/msi_sn.c         |    2 +-
+ arch/powerpc/platforms/pseries/msi.c |    2 +-
+ arch/x86/kernel/apic/io_apic.c       |    2 +-
+ arch/x86/pci/xen.c                   |    2 +-
+ drivers/pci/msi.c                    |   11 +++++++++--
+ include/linux/msi.h                  |    5 +++--
+ 7 files changed, 17 insertions(+), 9 deletions(-)
