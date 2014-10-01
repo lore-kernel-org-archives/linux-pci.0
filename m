@@ -1,75 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:51016 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756126AbaJ3QUc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Oct 2014 12:20:32 -0400
-Date: Thu, 30 Oct 2014 16:20:22 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFC PATCH 2/2] arm: pcibios: move to generic PCI domains
-Message-ID: <20141030162022.GA2048@red-moon>
-References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1414669490-1217-3-git-send-email-lorenzo.pieralisi@arm.com>
- <1803568.ShmHEYg5Ky@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1803568.ShmHEYg5Ky@wuerfel>
+Received: from gate.crashing.org ([63.228.1.57]:48054 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753110AbaJAWI6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 18:08:58 -0400
+Message-ID: <1412201282.4285.232.camel@pasglop>
+Subject: Re: [PATCH 4/4] sounds/hda/radeon: Disable 64-bit DMA on radeon
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alex Deucher <alexdeucher@gmail.com>
+Cc: Takashi Iwai <tiwai@suse.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Date: Thu, 02 Oct 2014 08:08:02 +1000
+In-Reply-To: <CADnq5_P1qTkedSuFfgJ=dd5cWji1-OUbmKoUyq+kLQgPGYYaQw@mail.gmail.com>
+References: <1412129393.4285.195.camel@pasglop>
+	 <s5htx3o44tv.wl-tiwai@suse.de> <1412149289.4285.204.camel@pasglop>
+	 <s5hr3ys43ev.wl-tiwai@suse.de> <s5hoatw42f6.wl-tiwai@suse.de>
+	 <CADnq5_P1qTkedSuFfgJ=dd5cWji1-OUbmKoUyq+kLQgPGYYaQw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 30, 2014 at 11:55:31AM +0000, Arnd Bergmann wrote:
-> On Thursday 30 October 2014 11:44:48 Lorenzo Pieralisi wrote:
-> > Most if not all ARM PCI host controller device drivers either ignore the
-> > domain field in the pci_sys_data structure or just increment it every
-> > time a host controller is probed, using it as a domain counter.
-> > 
-> > Therefore, instead of relying on pci_sys_data to stash the domain number
-> > in a standard location, ARM pcibios code can be moved to the newly
-> > introduced generic PCI domains code, implemented in commits:
-> > 
-> > commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
-> > ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
-> > 
-> > commit 670ba0c8883b576d0aec28bd7a838358a4be1
-> > ("PCI: Add generic domain handling")
-> > 
-> > In order to assign a domain number dynamically, the ARM pcibios defines
-> > the function, called by core PCI code:
-> > 
-> > void pci_bus_assign_domain_nr(...)
-> > 
-> > that relies on a DT property to define the domain number or falls back to
-> > a counter; its usage replaces the current domain assignment code in PCI
-> > host controllers present in the kernel.
-> > 
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> > Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> > Cc: Jingoo Han <jg1.han@samsung.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Russell King <linux@arm.linux.org.uk>
-> > Cc: Mohit Kumar <mohit.kumar@st.com>
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > 
-> 
-> Acked-by: Arnd Bergmann <arnd@arndb.de>
-> 
-> Very nice!
+On Wed, 2014-10-01 at 13:58 -0400, Alex Deucher wrote:
+> Patch looks good.  Audio DMAs are limited to 40 bits, same as the GPU
+> side.  I'm still waiting to hear back on the MSIs for audio, but they
+> probably follow the GPU side, so I expect they should be fixed on Sea
+> Islands as well.
 
-Thank you very much, I would be grateful if Jason, Jingoo, and Phil can
-give the patch a go on the respective platforms and hopefully I will add
-their tested-by tags.
+In the audio driver we don't have the "family names", just a list of
+PCI IDs, do you happen to know which ones are unaffected ?
 
-I guess pci_sys_data.add_bus pointer is the next to go :)
+Cheers,
+Ben.
 
-Lorenzo
+
