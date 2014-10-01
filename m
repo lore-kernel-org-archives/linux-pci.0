@@ -1,99 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cmexedge1.emulex.com ([138.239.224.99]:32506 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751214AbaJGHCd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Oct 2014 03:02:33 -0400
-From: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.com>
-To: <linux-pci@vger.kernel.org>
-CC: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.com>
-Subject: [PATCH] pci: Limit VPD length of Emulex adapters to the actual length supported.
-Date: Tue, 7 Oct 2014 12:30:06 +0530
-MIME-Version: 1.0
-Content-Type: text/plain
-Message-ID: <c67cd7f4-8d8f-48fc-a63c-dbdafde873a2@CMEXHTCAS1.ad.emulex.com>
+Received: from gate.crashing.org ([63.228.1.57]:49583 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750981AbaJAHsf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 03:48:35 -0400
+Message-ID: <1412149682.4285.209.camel@pasglop>
+Subject: Re: [PATCH 4/4] sounds/hda/radeon: Disable 64-bit DMA on radeon
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Takashi Iwai <tiwai@suse.de>
+Cc: Alex Deucher <alexdeucher@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Date: Wed, 01 Oct 2014 17:48:02 +1000
+In-Reply-To: <1412149289.4285.204.camel@pasglop>
+References: <1412129393.4285.195.camel@pasglop>
+	 <s5htx3o44tv.wl-tiwai@suse.de> <1412149289.4285.204.camel@pasglop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-By default pci utilities/subsystem tries to read 32k bytes of vpd data no matter
-what the device supports. This can lead to unexpected behavior depending
-on how each of the devices handle this condition. This patch fixes the
-problem for Emulex adapter family.
+On Wed, 2014-10-01 at 17:41 +1000, Benjamin Herrenschmidt wrote:
 
-Signed-off-by: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.com>
----
- drivers/pci/quirks.c    |   35 +++++++++++++++++++++++++++++++++++
- include/linux/pci_ids.h |   17 +++++++++++++++++
- 2 files changed, 52 insertions(+), 0 deletions(-)
+> I don't like that approach because technically the chip doesn't do
+> 64-bit DMA ... it does something like 40 or 48 (might actually depend on
+> the chip version) and for all I know it will break on future x86 with
+> more memory or other platforms with similar address encodings as
+> powerpc...
+> 
+> The right thing might be to get the exact number of bits and do the
+> appropriate dma_set_mask() like the graphics driver does, but that's a
+> bit tricky unless we add a DMA mask field in that big array of chips in
+> there...
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 80c2d01..21b439f 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3832,3 +3832,38 @@ void pci_dev_specific_enable_acs(struct pci_dev *dev)
- 		}
- 	}
- }
-+
-+#define SLI_INTF_REG_OFFSET     0x58
-+#define SLI_INTF_FT_MASK        0x00000001
-+static void quirk_elx_limit_vpd(struct pci_dev *dev)
-+{
-+	int virtfn;
-+	u32 sli_intf;
-+
-+	pci_read_config_dword(dev, SLI_INTF_REG_OFFSET, &sli_intf);
-+	virtfn = (sli_intf & SLI_INTF_FT_MASK) ? 1 : 0;
-+
-+	if (dev->vpd) {
-+		if (virtfn)
-+			dev->vpd->len = 0x200;
-+		else
-+			dev->vpd->len = 0x400;
-+	}
-+}
-+
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BE, PCI_DEVICE_ID_BE_ID1,
-+			quirk_elx_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BE, PCI_DEVICE_ID_BE_ID2,
-+			quirk_elx_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BE, PCI_DEVICE_ID_OC_BE2,
-+			quirk_elx_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BE, PCI_DEVICE_ID_OC_BE3,
-+			quirk_elx_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_OC_LANCER,
-+			quirk_elx_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_OC_VF_LANCER,
-+			quirk_elx_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_OC_SKYHAWK,
-+			quirk_elx_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_OC_VF_SKYHAWK,
-+			quirk_elx_limit_vpd);
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 6ed0bb7..888041d 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2971,4 +2971,21 @@
- 
- #define PCI_VENDOR_ID_OCZ		0x1b85
- 
-+#define PCI_VENDOR_ID_BE		0x19a2
-+#define PCI_VENDOR_ID_EMULEX		0x10df
-+#define PCI_DEVICE_ID_BE_ID1		0x211
-+#define PCI_DEVICE_ID_BE_ID2		0x221
-+/* Device Id for BE2 cards */
-+#define PCI_DEVICE_ID_OC_BE2		0x700
-+/* Device Id for BE3 cards */
-+#define PCI_DEVICE_ID_OC_BE3		0x710
-+/* Device id for Lancer cards */
-+#define PCI_DEVICE_ID_OC_LANCER		0xe220
-+/* Device id for VF in Lancer */
-+#define PCI_DEVICE_ID_OC_VF_LANCER	0xe228
-+/* Device id for SkyHawk cards */
-+#define PCI_DEVICE_ID_OC_SKYHAWK	0x720
-+/* Device id for VF in SkyHawk */
-+#define PCI_DEVICE_ID_OC_VF_SKYHAWK	0x728
-+
- #endif /* _LINUX_PCI_IDS_H */
--- 
-1.7.1
+Note that I made the assumption that in the grand scheme of things, HDMI
+audio isn't a very big throughput device and thus the extra iommu
+mappings (or swiotlb) shouldn't hurt that much. But I may be wrong...
+
+So by all means, let me know what you want done here, but I don't think
+CONFIG_PPC is the right thing to do here, especially since this is not
+even something that affects all PPCs, but specifically the POWER server
+PCI bridges for which we configure a 64-bit window high up in the
+address space.
+
+FYI: Basically we setup PCI DMA addresses 0...2G as a 32-bit IOMMU
+remapped window and we also configure a "direct map" window higher up
+that bypasses the IOMMU and provides a direct linear mapping of RAM for
+64-bit capable devices. The problem is that the HW on those server chips
+requires that second window to have address bit 59 set. Then based on
+the DMA mask, the arch code provide the device with DMA ops that will
+either go through the iommu remap window or through the bypass window
+based on the DMA mask set by the driver.
+
+Cheers,
+Ben.
+
 
