@@ -1,100 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:49526 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751939AbaJQO4Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Oct 2014 10:56:25 -0400
-Date: Fri, 17 Oct 2014 09:56:06 -0500
-From: Felipe Balbi <balbi@ti.com>
-To: Huang Rui <ray.huang@amd.com>
-CC: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 12/16] usb: dwc3: add delay phy power change quirk
-Message-ID: <20141017145606.GH26260@saruman>
-Reply-To: <balbi@ti.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
- <1413536021-4886-13-git-send-email-ray.huang@amd.com>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:47235 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751930AbaJASAr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 14:00:47 -0400
+Received: by mail-ig0-f171.google.com with SMTP id h15so705386igd.10
+        for <linux-pci@vger.kernel.org>; Wed, 01 Oct 2014 11:00:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="X+8siUETKMkW99st"
-In-Reply-To: <1413536021-4886-13-git-send-email-ray.huang@amd.com>
+In-Reply-To: <CAJ+vNU30=+YXkBHjzs_4n49TSJU0CuuSx54X3M7AVg8JRSLTfw@mail.gmail.com>
+References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
+	<1411445498-20250-3-git-send-email-r65037@freescale.com>
+	<1411466190.3256.7.camel@pengutronix.de>
+	<CAJ+vNU30=+YXkBHjzs_4n49TSJU0CuuSx54X3M7AVg8JRSLTfw@mail.gmail.com>
+Date: Wed, 1 Oct 2014 11:00:46 -0700
+Message-ID: <CAJ+vNU18ZgO9ketUmNj0+FC3zCzhsnv_wB6Cq+7BdiwT1y5XYw@mail.gmail.com>
+Subject: Re: [PATCH v2 2/5] PCI: imx6: wait the clocks to stabilize after ref_en
+From: Tim Harvey <tharvey@gateworks.com>
+To: Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <r65037@freescale.com>
+Cc: linux-pci-owner@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shawn Guo <shawn.guo@freescale.com>,
+	Fabio Estevam <festevam@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---X+8siUETKMkW99st
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Tue, Sep 23, 2014 at 5:28 AM, Tim Harvey <tharvey@gateworks.com> wrote:
+> On Tue, Sep 23, 2014 at 2:56 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+>> Am Dienstag, den 23.09.2014, 12:11 +0800 schrieb Richard Zhu:
+>>> - a while delay is mandatory required after pcie_ref_clk_en
+>>> is set. Otherwise, the system would be hang on imx6qdl ard
+>>> boards, because that imx6qdl boards don't have the reset_gpio.
+>>> - the clocks should be stable already after the
+>>> "clk_prepare_enable" is return. So I think it's ok to move the
+>>> usleep delay after the pcie_ref_en is set.
+>>>
+>>
+>> You are describing a lot of the conditions around the issue, but not the
+>> issue itself, which makes it hard to follow your commit message. After
+>> looking at the code I think the problem is this (and should be described
+>> accordingly):
+>>
+>> For boards without a reset gpio we skip the delay between enabling the
+>> pcie_ref_clk and touching the RC registers for configuration. Apparently
+>> this hangs when the clocks are not yet settled in the DW PCIe core. So
+>> we need to make sure that there is always an appropriate delay between
+>> those two actions.
+>>
+>> I have not found this constraint anywhere in the i.MX6 Reference Manual,
+>> nor in the DW PCIe documents I have access to, which makes me a bit feel
+>> a bit unhappy about this. Richard, do you have better info on why this
+>> delay is needed and how long it needs to be? Or is this just empirical?
+>>
+>> In general I'm ok with this patch, but still want a confirmation from
+>> Tim that this doesn't break anything.
+>
+> I agree with Lucas' comments and also agree that this can use some
+> testing. Based on my previous findings PCI link is very fragile. It
+> will take me a few days to get a proper test setup in a thermal
+> chamber with a host of boards but I will report back when I have
+> findings.
+>
+> Tim
+>
+>>
+>>> Signed-off-by: Richard Zhu <r65037@freescale.com>
+>>> ---
+>>>  drivers/pci/host/pci-imx6.c | 6 +++---
+>>>  1 file changed, 3 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+>>> index 233fe8a..bc4222b 100644
+>>> --- a/drivers/pci/host/pci-imx6.c
+>>> +++ b/drivers/pci/host/pci-imx6.c
+>>> @@ -275,15 +275,15 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+>>>               goto err_pcie;
+>>>       }
+>>>
+>>> -     /* allow the clocks to stabilize */
+>>> -     usleep_range(200, 500);
+>>> -
+>>>       /* power up core phy and enable ref clock */
+>>>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+>>>                       IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+>>>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+>>>                       IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+>>>
+>>> +     /* allow the clocks to stabilize */
+>>> +     usleep_range(200, 500);
+>>> +
+>>>       /* Some boards don't have PCIe reset GPIO. */
+>>>       if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+>>>               gpio_set_value(imx6_pcie->reset_gpio, 0);
+>>
 
-Hi,
+I tested this across temperature over 300+ boots each on several IMX6
+based boards with switches and did not encounter any link failures.
 
-On Fri, Oct 17, 2014 at 04:53:37PM +0800, Huang Rui wrote:
-> AMD NL needs to delay PHY power change from P0 to P1/P2/P3 when link state
-> changing from U0 to U1/U2/U3 respectively.
->=20
-> Signed-off-by: Huang Rui <ray.huang@amd.com>
-> ---
->  drivers/usb/dwc3/core.c          | 3 +++
->  drivers/usb/dwc3/core.h          | 1 +
->  drivers/usb/dwc3/dwc3-pci.c      | 3 ++-
->  drivers/usb/dwc3/platform_data.h | 1 +
->  4 files changed, 7 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-> index a9f1d4c..920a8ab 100644
-> --- a/drivers/usb/dwc3/core.c
-> +++ b/drivers/usb/dwc3/core.c
-> @@ -383,6 +383,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
->  	if (dwc->quirks & DWC3_QUIRK_DEPP1P2P3)
->  		reg |=3D DWC3_GUSB3PIPECTL_DEP1P2P3(1);
-> =20
-> +	if (dwc->quirks & DWC3_QUIRK_DEPOCHANGE)
-
-	if (dwc->delay_p0_change_quirk)
-
-> diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
-> index 23ae6a7..0eb8b2a 100644
-> --- a/drivers/usb/dwc3/dwc3-pci.c
-> +++ b/drivers/usb/dwc3/dwc3-pci.c
-> @@ -153,7 +153,8 @@ static int dwc3_pci_probe(struct pci_dev *pci,
->  			| DWC3_QUIRK_U2EXIT_LFPS
->  			| DWC3_QUIRK_U2SSINP3OK
->  			| DWC3_QUIRK_REQP1P2P3
-> -			| DWC3_QUIRK_DEPP1P2P3;
-> +			| DWC3_QUIRK_DEPP1P2P3
-> +			| DWC3_QUIRK_DEPOCHANGE;
-
-combined with the last patch
-
---=20
-balbi
-
---X+8siUETKMkW99st
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUQS4GAAoJEIaOsuA1yqREONIQAIk26JDdrIJKrU/heF2zvPIe
-hTD9Mu3BPNLXMi1+joSBh0kbYkk6k9ZB7vcMuBBrD0s71wRVZ3jX7a26WCwf06IR
-/+/LGVPf0x3weUwvy8/B0jxF9JT70kshlDTNdg064GDRDkmAMOGGwmiJ6Tyvidyz
-kLU11R8BGkfI0o2J7EiJSkPfxXGIoptDK4fRzkJARemxZe49y6NpM90CZvqXU+rf
-9BSbXzxH7uv/4wUSzjLrEYmtMf5OmuG9vj88ZXk7MgE/miL8b9I9v7bNw5J2Cqa7
-TN7zywe53HZtjW65FyTcAI2Tayz6rQ1q0BxmaZiekVijmpR9BNhZt9PEC9h0vAvv
-9yk1iH37Z6lQuxNyhUQsxK0uOAH+s8VILJbkfeQk7W/6claNSrpX9rfWIYdXyKvy
-vP9SaxpoSF/tGup1dtLTkNgbpTh5ge6WPSDnSVTg/LDKP+vcx2Zlsj01riCO1vtQ
-maDinGQQsDpELw36ebxMvu0OZhLs4PhbPdwAqZe65IIFk6kMZPmQ1HjStsxVRdby
-YtorT7WyPTYdo+pUeD8CNOXr1lPvSn3tdtAVmLo4yGgaYZDMKapCK75DtSb0WxJr
-VNxrWI//p04eqV9aEz8PeuBxuBarjv+k1nErDezqAEA1jTXj+wd8KNLyHHhrCFq/
-4rtEnDgwjJFdUXKgODZb
-=pTmI
------END PGP SIGNATURE-----
-
---X+8siUETKMkW99st--
+Tested-by: Tim Harvey <tharvey@gateworks.com>
