@@ -1,38 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.citrix.com ([66.165.176.89]:13900 "EHLO SMTP.CITRIX.COM"
+Received: from mail.skyhub.de ([78.46.96.112]:33168 "EHLO mail.skyhub.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752713AbaJ0LKe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 27 Oct 2014 07:10:34 -0400
-Message-ID: <544E2828.9060901@citrix.com>
-Date: Mon, 27 Oct 2014 11:10:32 +0000
-From: David Vrabel <david.vrabel@citrix.com>
+	id S1751666AbaJALcv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 07:32:51 -0400
+Date: Wed, 1 Oct 2014 13:32:45 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: x86-ml <x86@kernel.org>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, tglx@linutronix.de,
+	hpa@zytor.com, x86@kernel.org, bp@suse.de,
+	dan.carpenter@oracle.com, dougthompson@xmission.com,
+	m.chehab@samsung.com, linux-edac@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Subject: Re: [PATCH 2/4] x86, amd_nb: Add device IDs to NB tables for F15h
+ M60h
+Message-ID: <20141001113245.GD18271@pd.tnic>
+References: <1411070205-10217-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>
-Subject: Re: [PATCH 2/3] x86/xen: Revert "PCI: Add x86_msi.msi_mask_irq()
- and msix_mask_irq()"
-References: <1414377878-23497-1-git-send-email-wangyijing@huawei.com> <1414377878-23497-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1414377878-23497-3-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1411070205-10217-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27/10/14 02:44, Yijing Wang wrote:
-> Commit 0e4ccb1505a9 ("PCI: Add x86_msi.msi_mask_irq() and msix_mask_irq()")
-> introduced two __weak arch functions arch_msix_mask_irq() and
-> arch_msi_mask_irq() to work around a bug when running xen in x86.
-> These two functions made msi code more complex. We have introduced
-> a global flag to ignore MSI mask to fix the issue in previous patch,
-> so we can revert the commit safely. This patch is also preparation
-> to use MSI chip framework instead of weak arch MSI functions in all
-> platforms. Because s390 MSI also use default_msi_mask_irq() functions
-> introduced by commit 0e4ccb1505a9. We keep default_msi_mask_irq()
-> and default_msix_mask_irq() temporarily. They will be removed in later
-> patch.
+tip guys,
 
-Acked-by: David Vrabel <david.vrabel@citrix.com>
+can I get an ACK for this one so that I can route it through the EDAC
+tree for 3.19?
 
-David
+Thanks.
+
+On Thu, Sep 18, 2014 at 02:56:45PM -0500, Aravind Gopalakrishnan wrote:
+> Add F3 and F4 PCI device IDs to amd_nb_misc_ids[] and
+> amd_nb_link_ids[] respectively. We need this to cache the
+> Northbridges.
+> 
+> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+> ---
+>  arch/x86/kernel/amd_nb.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
+> index f04dbb3..5caed1d 100644
+> --- a/arch/x86/kernel/amd_nb.c
+> +++ b/arch/x86/kernel/amd_nb.c
+> @@ -21,6 +21,7 @@ const struct pci_device_id amd_nb_misc_ids[] = {
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F3) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M60H_NB_F3) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_M30H_NB_F3) },
+>  	{}
+> @@ -30,6 +31,7 @@ EXPORT_SYMBOL(amd_nb_misc_ids);
+>  static const struct pci_device_id amd_nb_link_ids[] = {
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F4) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F4) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M60H_NB_F4) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F4) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_M30H_NB_F4) },
+>  	{}
+> -- 
+> 2.0.2
+> 
+> 
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
