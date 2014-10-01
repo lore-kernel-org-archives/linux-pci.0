@@ -1,113 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:3489 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754944AbaIZOz2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 26 Sep 2014 10:55:28 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:36268 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750750AbaJAE2j (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 00:28:39 -0400
+Date: Wed, 1 Oct 2014 09:58:15 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC Part3 v1 00/28] Enable hierarchy irqdomian on x86 platforms
-Date: Fri, 26 Sep 2014 22:57:30 +0800
-Message-Id: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 0/2] Designware MSI fixes
+Message-ID: <20141001042815.GA24581@pratyush-vbox>
+References: <1412094987-1894-1-git-send-email-l.stach@pengutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1412094987-1894-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is the last part to enable support of hierarchy domain on x86
-platforms.
+On Wed, Oct 01, 2014 at 12:36:25AM +0800, Lucas Stach wrote:
+> Those two patches were part of my designware multi-msi series. I decided
+> to postpone that one a little bit until the treewide MSI chip patches from
+> Yijing Wang have landed, but those two patches are just too obvious
+> fixes/style corrections to let them wait any longer.
+> 
+> Both patches were tested by Jingoo Han as part of the earlier series, but
+> I had to modify them a bit for the rebase, so any review/testing much
+> appreciated. Patches are on top of the pci/host-designware branch.
+> 
+> Lucas Stach (2):
+>   PCI: designware: remove bogus multiple MSI setup
+>   PCI: designware: remove open-coded bitmap operations
+> 
 
-It first converts IOAPIC to support hierarchy irqdomain, then cleans
-up all unused code and interfaces. It also introduces a kernel boot
-parameter to configure CPU vector allocation policies.
+Looks cleaner to me.
+Reviewed-by: Pratyush Anand <pratyush.anand@st.com>
 
-It's based on my previous patch set at:
-https://lkml.org/lkml/2014/9/26/538
-And you may access it at:
-https://github.com/jiangliu/linux.git irqdomain/p3v1
-
-It has been tested on Intel 64-bit server and 32-bit laptop. It also
-passes Fengguang's 0day tests. Helps are welcomed for testing:
-1) Intel MID platform
-2) Intel CE or OLPC platforms
-
-Patch 1-6 convert IOAPIC to support hierarchy irqdomain.
-Patch 7-16,22 clean up unused code, x86_io_apic_ops and header files.
-Patch 17-20 simplify struct irq_cfg.
-Patch 21, 23-26 clean up code and interfaces further.
-Patch 27-28 introduces a mechanism to configure CPU vector allocation
-	policies.
-
-Jiang Liu (28):
-  x86, irq: Kill unused setup_timer_IRQ0_pin()
-  x86, irq: Prepare IOAPIC interfaces to support hierarchy irqdomain
-  x86, irq: Implement callbacks to enable hierarchy irqdomain on
-    IOAPICs
-  x86, irq: Refine the way to allocate irq_cfg for legacy IRQs
-  x86, irq: Convert IOAPIC to use hierarchy irqdomain interfaces
-  x86, irq: Kill unused old IOAPIC irqdomain interfaces
-  x86, irq: Kill x86_io_apic_ops.print_entries and related interfaces
-  x86, irq: Kill x86_io_apic_ops.setup_entry and related interfaces
-  x86, irq: Kill x86_io_apic_ops.set_affinity and related interfaces
-  x86, irq: Kill x86_io_apic_ops.eoi_ioapic_pin and related interfaces
-  x86, irq: Kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
-  x86: Clean up unused forward declarations in x86_init.h
-  x86: irq_remapping: Clean up unsued code
-  iommu/vt-d: Clean up unsued code
-  iommu/amd: Clean up unsued code
-  x86: irq_remapping: Clean up unused interfaces
-  x86, irq: Kill irq_cfg.irq_remapped
-  iommu/vt-d: Move struct irq_2_iommu into intel_irq_remapping.c
-  iommu/amd: Move struct irq_2_irte into amd_iommu.c
-  x86, irq: Move irq_cfg.irq_2_pin into io_apic.c
-  x86, irq: Kill struct io_apic_irq_attr
-  x86, irq: Kill x86_io_apic_ops.write and x86_io_apic_ops.modify
-  x86, irq: Clean up io_apic.h
-  x86, irq: Kill unused alloc_irq_and_cfg_at()
-  x86, irq: Change functions only used in vector.c as static
-  x86, irq: Kill function apic_set_affinity()
-  x86, irq: Introduce mechanism to support different vector allocation
-    policies
-  x86, irq: Add kernel parameter vector_alloc to set CPU vector
-    allocation policy
-
- Documentation/kernel-parameters.txt                |    6 +
- arch/x86/Kconfig                                   |    1 -
- arch/x86/include/asm/hw_irq.h                      |   50 +-
- arch/x86/include/asm/io_apic.h                     |   81 +-
- arch/x86/include/asm/irq_remapping.h               |   36 -
- arch/x86/include/asm/x86_init.h                    |   16 -
- arch/x86/kernel/acpi/boot.c                        |   19 +-
- arch/x86/kernel/apic/io_apic.c                     |  926 +++++++++++---------
- arch/x86/kernel/apic/vector.c                      |  226 ++---
- arch/x86/kernel/devicetree.c                       |   39 +-
- arch/x86/kernel/mpparse.c                          |    6 +-
- arch/x86/kernel/x86_init.c                         |    6 -
- arch/x86/pci/intel_mid_pci.c                       |    6 +-
- .../platform/intel-mid/device_libs/platform_wdt.c  |    5 +-
- arch/x86/platform/intel-mid/intel-mid.c            |    2 +
- arch/x86/platform/intel-mid/sfi.c                  |    6 +-
- arch/x86/platform/sfi/sfi.c                        |    5 +-
- drivers/iommu/amd_iommu.c                          |  150 +---
- drivers/iommu/intel_irq_remapping.c                |  202 +----
- drivers/iommu/irq_remapping.c                      |   84 --
- drivers/iommu/irq_remapping.h                      |   16 -
- 21 files changed, 709 insertions(+), 1179 deletions(-)
-
--- 
-1.7.10.4
-
+>  drivers/pci/host/pcie-designware.c | 98 ++++++--------------------------------
+>  1 file changed, 14 insertions(+), 84 deletions(-)
+> 
+> -- 
+> 2.1.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
