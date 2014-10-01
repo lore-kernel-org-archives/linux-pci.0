@@ -1,150 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:57702 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750746AbaJNGtB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 02:49:01 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 14 Oct 2014 16:48:58 +1000
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id D486A2BB0047
-	for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 17:48:55 +1100 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay05.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s9E6ONf962521486
-	for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 17:24:23 +1100
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s9E6mt1P011015
-	for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 17:48:55 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH 3/3] PCI: use u16 instead of int for pci express extended capabilities pos and cap
-Date: Tue, 14 Oct 2014 14:47:32 +0800
-Message-Id: <1413269253-8990-4-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1413269253-8990-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1413269253-8990-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-qc0-f177.google.com ([209.85.216.177]:34611 "EHLO
+	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751538AbaJAVci (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 17:32:38 -0400
+MIME-Version: 1.0
+Reply-To: rajatxjain@gmail.com
+In-Reply-To: <20141001072949.GA1322@katana>
+References: <542A3593.4020108@gmail.com>
+	<CAErSpo7BkXDHOZwHzwEu2BN3=39xFwQOyrjgVo6afWKMsnYT=A@mail.gmail.com>
+	<20140930211339.GA1264@katana>
+	<CAA93t1out+gJO29_0tn1zLJv_MUwJ458XKNT3Lo6WW+mH9XeRQ@mail.gmail.com>
+	<20141001072949.GA1322@katana>
+Date: Wed, 1 Oct 2014 14:32:37 -0700
+Message-ID: <CAA93t1qjzAWQqkZQcJYFZxvuhy6o1N2gJ+j=AKgcqE=zup=BJw@mail.gmail.com>
+Subject: Re: [PATCH 0/4] Driver for talking to PLX PEX8xxx PCIe switch over I2C
+From: Rajat Jain <rajatxjain@gmail.com>
+To: Wolfram Sang <wsa@the-dreams.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Jiri Kosina <jkosina@suse.cz>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-i2c <linux-i2c@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For pci express devices, it could have extended capabilities. The position of
-extened capabilities is 12bit and the cap is 16bit.
+Hello,
 
-This patch does a clean up for pci express extended capabilities by replacing
-type int with u16.
+On Wed, Oct 1, 2014 at 12:29 AM, Wolfram Sang <wsa@the-dreams.de> wrote:
+>
+>> ===========================================================
+>> ...<snip>...
+>>
+>> +0. Why have an I2C interface to a PCIe switch?
+>> +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>> +Other than the regular PCI express interface, most modern PCIe switches (e.g.
+>> +from IDT and PLX) have an I2C based secondary interface. This interface allows
+>> +access to all the registers of the switch. Some of these registers may not even
+>> +be accessible over the regular PCI interface. Also, there are certain registers
+>> +that can be written to, using only the I2C interface and may only be read-only
+>> +using the PCI interface.
+>> +
+>> +This I2C interface is often used in designs involving these switches, and can
+>> +be used for a variety of use cases where the switch needs to be configured
+>> +independent of the PCI subsystem (and likely before PCI enumeration). Some
+>> +examples:
+>> +
+>> +* Dividing a PCIe switch into multiple "virtual" switches. Using this feature,
+>> +  a switch could be connected to 2 root ports for instance, each managing its
+>> +  own PCI hierarchy, and the traffic from one virtual switch does not leak into
+>> +  another.
+>> +
+>> +* Managing Transparent / Non-transparent bridging, and changing them
+>> on-the-fly.
+>> +  There are ports that can be converted into "Non-transparent" bridge ports.
+>> +  Essentially this is used to create different domains (not visible to
+>> +  software). In a dynamic distributed system, it may be desirable to change a
+>> +  transparent bridge to non-transparent or vice versa, for example, to handle a
+>> +  failover situation.
+>> +
+>> +* Buggy hardware / Bad EEPROM configuration. There may be cases where an errata
+>> +  involving register writes need to be applied before enumerating over PCI.
+>> +  Also these switches are typically attached to an EEPROM that is supposed to
+>> +  initialize the switch. If that EEPROM is not present, or contains bad
+>> +  initialization data, this I2C interface can be used to fix that.
+>> +
+>> +* Changing switch configuration on the fly. In a multi-homed or complex
+>> +  distributed systemsystem, there may be a need to change the switch
+>> +  configuration (eg. change the upstream port, or the port or lane
+>> +  configuration etc) to address run time scenarios (CPU plug out etc).
+>> +
+>>
+>> ...<snip>...
+>> ===========================================================
+>>
+>> I am myself leaning towards drivers/pci/switch/. And am wanting to
+>> hear what other think.
+>
+> I had a closer look and my first question is now if we really need a
+> kernel driver for this?
+>
+> The sysfs interface is basically to PEEK/POKE registers of the switch.
+> How registers get accessed is part of userspace. Well, then it might
+> even be easier to construct the proper i2c messages in userspace, too,
+> and send them via i2c-dev (instead of writing to various files in
+> sysfs).
+>
+> The Kernel API is also PEEK/POKE register. I am not an PCI expert, but I
+> can't see a user in this form. What I'd expect would be more like
+>
+> pci_switch_set_mode(some_device, PCI_BRIDGE_MODE_TRANSPARENT);
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/iov.c   |    2 +-
- drivers/pci/pci.c   |   12 ++++++------
- drivers/pci/probe.c |    2 +-
- include/linux/pci.h |    6 +++---
- 4 files changed, 11 insertions(+), 11 deletions(-)
+I understand and agree. In fact in the internal version of this driver
+(that I have not yet sent out for review), we do have APIs added
+similar to what you mention above. Currently I have APIs that:
+- Enable / Disable PCIe links.
+- Change the upstream port.
+- Enable / Disable Non-transparent mode etc.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index cb6f247..fffab81 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -453,7 +453,7 @@ static void sriov_restore_state(struct pci_dev *dev)
-  */
- int pci_iov_init(struct pci_dev *dev)
- {
--	int pos;
-+	u16 pos;
- 
- 	if (!pci_is_pcie(dev))
- 		return -ENODEV;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 47d8d0c..023af40 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -266,11 +266,11 @@ EXPORT_SYMBOL(pci_bus_find_capability);
-  * not support it.  Some capabilities can occur several times, e.g., the
-  * vendor-specific capability, and this provides a way to find them all.
-  */
--int pci_find_next_ext_capability(struct pci_dev *dev, int start, int cap)
-+u16 pci_find_next_ext_capability(struct pci_dev *dev, int start, u16 cap)
- {
- 	u32 header;
- 	int ttl;
--	int pos = PCI_CFG_SPACE_SIZE;
-+	u16 pos = PCI_CFG_SPACE_SIZE;
- 
- 	/* minimum 8 bytes per capability */
- 	ttl = (PCI_CFG_SPACE_EXP_SIZE - PCI_CFG_SPACE_SIZE) / 8;
-@@ -321,7 +321,7 @@ EXPORT_SYMBOL_GPL(pci_find_next_ext_capability);
-  *  %PCI_EXT_CAP_ID_DSN		Device Serial Number
-  *  %PCI_EXT_CAP_ID_PWR		Power Budgeting
-  */
--int pci_find_ext_capability(struct pci_dev *dev, int cap)
-+u16 pci_find_ext_capability(struct pci_dev *dev, u16 cap)
- {
- 	return pci_find_next_ext_capability(dev, 0, cap);
- }
-@@ -2119,7 +2119,7 @@ static void pci_add_saved_cap(struct pci_dev *pci_dev,
- static int _pci_add_cap_save_buffer(struct pci_dev *dev, u16 cap,
- 				    bool extended, unsigned int size)
- {
--	int pos;
-+	u16 pos;
- 	struct pci_cap_saved_state *save_state;
- 
- 	if (extended)
-@@ -2233,7 +2233,7 @@ void pci_request_acs(void)
-  */
- static int pci_std_enable_acs(struct pci_dev *dev)
- {
--	int pos;
-+	u16 pos;
- 	u16 cap;
- 	u16 ctrl;
- 
-@@ -2278,7 +2278,7 @@ void pci_enable_acs(struct pci_dev *dev)
- 
- static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
- {
--	int pos;
-+	u16 pos;
- 	u16 cap, ctrl;
- 
- 	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 9b316bf..86147ba 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1425,7 +1425,7 @@ EXPORT_SYMBOL(pci_scan_single_device);
- 
- static unsigned next_fn(struct pci_bus *bus, struct pci_dev *dev, unsigned fn)
- {
--	int pos;
-+	u16 pos;
- 	u16 cap = 0;
- 	unsigned next_fn;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 399a18a..b9a4f40 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -820,8 +820,8 @@ enum pci_lost_interrupt_reason {
- enum pci_lost_interrupt_reason pci_lost_interrupt(struct pci_dev *dev);
- u8 pci_find_capability(struct pci_dev *dev, u8 cap);
- u8 pci_find_next_capability(struct pci_dev *dev, u8 pos, u8 cap);
--int pci_find_ext_capability(struct pci_dev *dev, int cap);
--int pci_find_next_ext_capability(struct pci_dev *dev, int pos, int cap);
-+u16 pci_find_ext_capability(struct pci_dev *dev, u16 cap);
-+u16 pci_find_next_ext_capability(struct pci_dev *dev, int pos, u16 cap);
- u8 pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
- u8 pci_find_next_ht_capability(struct pci_dev *dev, u8 pos, int ht_cap);
- struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
-@@ -1365,7 +1365,7 @@ static inline u8 pci_find_capability(struct pci_dev *dev, u8 cap)
- static inline u8 pci_find_next_capability(struct pci_dev *dev, u8 post,
- 					   u8 cap)
- { return 0; }
--static inline int pci_find_ext_capability(struct pci_dev *dev, int cap)
-+static inline u16 pci_find_ext_capability(struct pci_dev *dev, u16 cap)
- { return 0; }
- 
- /* Power management related routines */
--- 
-1.7.9.5
+However, I did not send them all out for review because I don't have
+the hardware to try and test them out on ALL the supported devices
+(also would require considerable amount of time). I have tested those
+APIs on PEX8713 only, because for e.g.I only have PEX8713 in a HW that
+connects to 2 CPUs at the same time.
 
+>
+> and then a shim layer would make sure the proper driver for the switch
+> sends the proper commands. Again, I don't know if the decision of
+> setting a mode/creating virtual switches... is even desirable in kernel
+> space. If so, then this is probably a sub-subsystem
+> drivers/pci/switches, but needs way more abstraction. Otherwise,
+> userspace will currently do IMO.
+
+You are right, what this basic driver abstracts is the I2C interface
+(i.e. the command format and response format etc) of the PCIe switch,
+and not really the PCIe switch itself (Hence I was calling it PEX8xxx
+I2C driver. I think that is still a useful abstraction to have,
+because that can be used to build the actual logic code that program
+the switch. Yes, I agree that we can have another layer of abstraction
+so that we have:
+
+- The Core logic code (that knows "How do we want the switch to behave")
+- A PEX8xxx driver (that knows "which registers to program")
+- A PEX8xxx I2C driver ("How to program those registers") - this driver.
+
+I do understand that your suggestion is to include and bundle the
+latter two into this same driver. However since the possibilities
+(about which APIs to provide) are too much and not enough hardware to
+test it, would it be acceptable if I include those APIs, but support
+them for only 1 device (and return error for others)? Note that even
+with those APIs, I feel exposing the Read/Write APIs will be useful -
+because what core logic wants to achieve can be highly device and
+platform specific. Also, a sysfs interface for this switch is proving
+to be a very helpful development aid :-) (personal experience :-))
+
+Thanks & Best Regards,
+
+Rajat Jain
