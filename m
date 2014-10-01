@@ -1,118 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:33251 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751192AbaJBMKY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Oct 2014 08:10:24 -0400
-Message-ID: <1412251787.28143.14.camel@pasglop>
-Subject: Re: [PATCH v2 3/4] sound/radeon: Move 64-bit MSI quirk from arch to
- driver
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Takashi Iwai <tiwai@suse.de>
-Cc: Alex Deucher <alexdeucher@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Date: Thu, 02 Oct 2014 22:09:47 +1000
-In-Reply-To: <s5hlhoy52c3.wl-tiwai@suse.de>
-References: <1412210082.10667.2.camel@pasglop>
-	 <CADnq5_PhuFbRPgzAa_hEA1czTQjY9xdLFOWhL393DN4CYDnFng@mail.gmail.com>
-	 <s5hlhoy52c3.wl-tiwai@suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-bn1bn0104.outbound.protection.outlook.com ([157.56.110.104]:60924
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751176AbaJATo3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 15:44:29 -0400
+Message-ID: <542C5995.7050803@amd.com>
+Date: Wed, 1 Oct 2014 14:44:21 -0500
+From: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
+MIME-Version: 1.0
+To: Borislav Petkov <bp@alien8.de>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<tglx@linutronix.de>, <hpa@zytor.com>, <x86@kernel.org>,
+	<bp@suse.de>, <dan.carpenter@oracle.com>,
+	<dougthompson@xmission.com>, <m.chehab@samsung.com>,
+	<linux-edac@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 4/4] edac, amd64_edac: Add F15h M60h support
+References: <1411070230-10298-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+ <20141001113235.GC18271@pd.tnic>
+In-Reply-To: <20141001113235.GC18271@pd.tnic>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-10-02 at 09:59 +0200, Takashi Iwai wrote:
+On 10/1/2014 6:32 AM, Borislav Petkov wrote:
+> On Thu, Sep 18, 2014 at 02:57:10PM -0500, Aravind Gopalakrishnan wrote:
+>> This patch adds support for ECC error decoding for F15h M60h processor.
+>> Aside from the usual changes, the patch adds support for some new features
+>> in the processor:
+>>   - DDR4(unbuffered, registered); LRDIMM DDR3 support
+>>     - relevant debug messages have been modified/added to report these
+>>       memory types
+>>   - new dbam_to_cs mappers
+>>     - if (F15h M60h && LRDIMM); we need a 'multiplier' value to find
+>>       cs_size. This multiplier value is obtained from the per-dimm
+>>       DCSM register. So, change the interface to accept a 'cs_mask_nr'
+>>       value to facilitate this calculation
+>> Misc cleanup:
+>>   - amd64_pci_table[] is condensed by using PCI_VDEVICE macro.
+>>
+>> Testing details:
+>> Tested the patch by injecting 'ECC' type errors using mce_amd_inj
+>> and error decoding works fine.
+>>
+>> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+>> ---
+>>   drivers/edac/amd64_edac.c | 226 ++++++++++++++++++++++++++++++++--------------
+>>   drivers/edac/amd64_edac.h |  12 ++-
+>>   2 files changed, 169 insertions(+), 69 deletions(-)
+>>   
+>> @@ -817,10 +838,26 @@ static enum mem_type determine_memory_type(struct amd64_pvt *pvt, int cs)
+>>   {
+>>   	enum mem_type type;
+>>   
+>> -	/* F15h supports only DDR3 */
+>> -	if (pvt->fam >= 0x15)
+>> -		type = (pvt->dclr0 & BIT(16)) ?	MEM_DDR3 : MEM_RDDR3;
+>> -	else if (pvt->fam == 0x10 || pvt->ext_model >= K8_REV_F) {
+>> +	/* F15h, M60h supports DDR4 too*/
+>> +	if (pvt->fam >= 0x15) {
+>> +		if (pvt->model == 0x60) {
+>> +			/*
+>> +			 * Since in init_csrow we iterate over just DCT0
+>> +			 * use '0' for dct values here when necessary.
+>> +			 */
+>> +			u32 dram_ctrl;
+>> +			u32 dcsm = pvt->csels[0].csmasks[cs];
+>> +
+>> +			amd64_read_dct_pci_cfg(pvt, 0, DRAM_CONTROL,
+>> +					       &dram_ctrl);
+> We're reading DRAM_CONTROL at two locations, maybe we should cache it in
+> pvt->dram_ctl ?
+>
+>> +			type = (((dram_ctrl >> 8) & 0x7) == 0x2) ? MEM_DDR4 :
+>> +				(pvt->dclr0 & BIT(16)) ? MEM_DDR3 :
+>> +				(dcsm & 0x3) ? MEM_LRDDR3 : MEM_RDDR3;
+>
+>   
+> @@ -1184,18 +1260,56 @@ static int f10_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
+>    * F15h supports only 64bit DCT interfaces
+>    */
+>   static int f15_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
+> -				   unsigned cs_mode)
+> +				   unsigned cs_mode, int cs_mask_nr)
+>   {
+>   	WARN_ON(cs_mode > 12);
+>   
+>   	return ddr3_cs_size(cs_mode, false);
+>   }
+>   
+> +/* F15h M60h supports DDR4 mapping as well.. */
+> +static int f15_m60h_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
+> +					unsigned cs_mode, int cs_mask_nr)
+> +{
+> +	int cs_size;
+> +	enum mem_type type;
+> +	u32 dram_ctrl;
+> +	u32 dcsm = pvt->csels[dct].csmasks[cs_mask_nr];
+> +
+> +	WARN_ON(cs_mode > 12);
+> +
+> +	amd64_read_dct_pci_cfg(pvt, dct, DRAM_CONTROL, &dram_ctrl);
+> +	type = (((dram_ctrl >> 8) & 0x7) == 0x2) ? MEM_DDR4 :
+> +		(pvt->dclr0 & BIT(16)) ? MEM_DDR3 :
+> +		(dcsm & 0x3) ? MEM_LRDDR3 : MEM_RDDR3;
+> This is the second time we're determining memory type, maybe we should
+> cache that too into pvt->dram_type...?
+>
+>
 
-> > The attached updated patch only flags the affected asics.
-> 
-> Alex's patch looks more comprehensive.  For either patch,
-> 
-> Reviewed-by: Takashi Iwai <tiwai@suse.de>
+The more I think about this, I'm finding it's hard to do this cleanly.
+I initially thought I'd just cache this in pvt->dram_type the first time 
+I'm doing this.
+But, the pvt->ops->dbam_to_cs() mappers get called first before 
+determine_memory_type().
 
-Absolutely. I'll give it a spin tomorrow to be 100% sure. From there,
-it will need the previous patch moving the quirk so I'm thinking of
-merging it via Bjorn or my tree unless objection...
+So, If I look for dram_type in f15_m60h_dbam_to_chip_select() it's ugly 
+as that's really the point of
+having a determine_memory_type().
 
-Cheers,
-Ben.
+Also, there's just a lot of if-else statements in 
+determine_memory_type() now.
+This could benefit from having a per-family low_ops function.
+And, we can call this early... somewhere in read_mc_regs() so that we 
+have information ready to use in
+f15_m60h_dbam_to_chip_select() and in init_csrows() which needs 
+dram_type too.
 
-> 
-> thanks,
-> 
-> Takashi
-> 
-> > 
-> > Alex
-> > 
-> > > ---
-> > >  arch/powerpc/kernel/pci_64.c |  6 ------
-> > >  sound/pci/hda/hda_intel.c    | 10 ++++++++--
-> > >  sound/pci/hda/hda_priv.h     |  1 +
-> > >  3 files changed, 9 insertions(+), 8 deletions(-)
-> > >
-> > > diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
-> > > index 5330f6d..b15194e 100644
-> > > --- a/arch/powerpc/kernel/pci_64.c
-> > > +++ b/arch/powerpc/kernel/pci_64.c
-> > > @@ -266,9 +266,3 @@ int pcibus_to_node(struct pci_bus *bus)
-> > >  }
-> > >  EXPORT_SYMBOL(pcibus_to_node);
-> > >  #endif
-> > > -
-> > > -static void quirk_radeon_32bit_msi(struct pci_dev *dev)
-> > > -{
-> > > -       dev->no_64bit_msi = true;
-> > > -}
-> > > -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
-> > > diff --git a/sound/pci/hda/hda_intel.c b/sound/pci/hda/hda_intel.c
-> > > index aa302fb..f91ba7f 100644
-> > > --- a/sound/pci/hda/hda_intel.c
-> > > +++ b/sound/pci/hda/hda_intel.c
-> > > @@ -296,7 +296,8 @@ enum {
-> > >
-> > >  /* quirks for ATI/AMD HDMI */
-> > >  #define AZX_DCAPS_PRESET_ATI_HDMI \
-> > > -       (AZX_DCAPS_NO_TCSEL | AZX_DCAPS_SYNC_WRITE | AZX_DCAPS_POSFIX_LPIB)
-> > > +       (AZX_DCAPS_NO_TCSEL | AZX_DCAPS_SYNC_WRITE | AZX_DCAPS_POSFIX_LPIB|\
-> > > +        AZX_DCAPS_NO_MSI64)
-> > >
-> > >  /* quirks for Nvidia */
-> > >  #define AZX_DCAPS_PRESET_NVIDIA \
-> > > @@ -1505,9 +1506,14 @@ static int azx_first_init(struct azx *chip)
-> > >                 return -ENXIO;
-> > >         }
-> > >
-> > > -       if (chip->msi)
-> > > +       if (chip->msi) {
-> > > +               if (chip->driver_caps & AZX_DCAPS_NO_MSI64) {
-> > > +                       dev_dbg(card->dev, "Disabling 64bit MSI\n");
-> > > +                       pci->no_64bit_msi = true;
-> > > +               }
-> > >                 if (pci_enable_msi(pci) < 0)
-> > >                         chip->msi = 0;
-> > > +       }
-> > >
-> > >         if (azx_acquire_irq(chip, 0) < 0)
-> > >                 return -EBUSY;
-> > > diff --git a/sound/pci/hda/hda_priv.h b/sound/pci/hda/hda_priv.h
-> > > index 949cd43..5016014 100644
-> > > --- a/sound/pci/hda/hda_priv.h
-> > > +++ b/sound/pci/hda/hda_priv.h
-> > > @@ -171,6 +171,7 @@ enum { SDI0, SDI1, SDI2, SDI3, SDO0, SDO1, SDO2, SDO3 };
-> > >  #define AZX_DCAPS_PM_RUNTIME   (1 << 26)       /* runtime PM support */
-> > >  #define AZX_DCAPS_I915_POWERWELL (1 << 27)     /* HSW i915 powerwell support */
-> > >  #define AZX_DCAPS_CORBRP_SELF_CLEAR (1 << 28)  /* CORBRP clears itself after reset */
-> > > +#define AZX_DCAPS_NO_MSI64      (1 << 29)      /* Stick to 32-bit MSIs */
-> > >
-> > >  /* HD Audio class code */
-> > >  #define PCI_CLASS_MULTIMEDIA_HD_AUDIO  0x0403
-> > >
-> > >
-> > >
-> > >
+Oh, btw- We can do away with a pvt->dram_ctrl as 
+f15_m60h_dbam_to_chip_select() really just needs the dram_type.
 
+Thoughts?
 
+-Aravind.
