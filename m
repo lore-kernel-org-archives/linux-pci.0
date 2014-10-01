@@ -1,331 +1,132 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:62798 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750945AbaJAUtr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 16:49:47 -0400
+MIME-Version: 1.0
+In-Reply-To: <20141001204302.GA7744@svl-evodev-groeck.juniper.net>
+References: <CAAVjN7dwS62EKMnuZc_P1UjkbRVk6RXqJ91GwWZ96bbY5Ct-rg@mail.gmail.com>
+	<CAAVjN7eUmBVcAGPbcn3qsJ9M9uu2nkFoKHqGhhKGekZSceGiMw@mail.gmail.com>
+	<20141001184304.GA6832@svl-evodev-groeck.juniper.net>
+	<CAAVjN7edpkXYMHBm+wLegA_pc0hnm_YZf_z=Ni3h=EbDTmfegQ@mail.gmail.com>
+	<20141001194115.GA6948@svl-evodev-groeck.juniper.net>
+	<CAAVjN7fGRzyu7gxavJUay+K_Mm-0t1T_0Bysk6-sdaqu5=5k5A@mail.gmail.com>
+	<20141001202058.GB6948@svl-evodev-groeck.juniper.net>
+	<CAAVjN7e4nO579TfAJ5zMNe__Q9yU_-6naq4-0vm1rimespSrsw@mail.gmail.com>
+	<20141001204302.GA7744@svl-evodev-groeck.juniper.net>
+Date: Wed, 1 Oct 2014 13:49:45 -0700
+Message-ID: <CAAVjN7dyiSonvsEfawTSi_bJ9umxMFfmA_WAdwz=Yd6wsN4uzA@mail.gmail.com>
+Subject: Re: Fwd: [Proposal] PM sleep children of inactive I2C bus segments
+ off Masters in multi-master systems
+From: Danielle Costantino <danielle.costantino@gmail.com>
+To: Guenter Roeck <groeck@juniper.net>
+Cc: linux-i2c <linux-i2c@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v3 19/24] x86: irq_remapping: Clean up unused MSI related code
-Date: Tue, 28 Oct 2014 16:26:37 +0800
-Message-Id: <1414484803-10311-20-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now MSI interrupt has been converted to new hierarchy irqdomain
-interfaces, so kill legacy MSI related code and interfaces.
+Thanks, I will probably work on error return values for master
+selectors and add IRQ support to the pca9541 driver.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/irq_remapping.h |   13 ---
- arch/x86/include/asm/pci.h           |    5 --
- arch/x86/kernel/x86_init.c           |    2 -
- drivers/iommu/irq_remapping.c        |  159 ----------------------------------
- drivers/iommu/irq_remapping.h        |   14 ---
- 5 files changed, 193 deletions(-)
+On Wed, Oct 1, 2014 at 1:43 PM, Guenter Roeck <groeck@juniper.net> wrote:
+> On Wed, Oct 01, 2014 at 01:32:28PM -0700, Danielle Costantino wrote:
+>> My goal was to automatically put the devices behind the master
+>> selector in a (logical) state where all settings would be verified and
+>> if needed corrected and initialized back to how the device was
+>> configured prior to giving up the bus.
+>>
+>
+> That kind of reaction could result in a re-configuration war
+> if both masters disagree how devices should be configured.
+> Also, unless I am missing something, it would require changes
+> in pretty much every i2c client driver. That doesn't really sound
+> feasible to me.
+>
+> Maybe you can find an error code which with some level of confidence
+> reflects "lost mastership". Then you can implement whatever makes sense
+> for your use case in your user space application(s).
+>
+> Guenter
+>
+>> The error return is the main issue, but I was hoping to automate
+>> multi-master bus re-initialization.
+>>
+>> On Wed, Oct 1, 2014 at 1:20 PM, Guenter Roeck <groeck@juniper.net> wrote:
+>> > On Wed, Oct 01, 2014 at 01:03:59PM -0700, Danielle Costantino wrote:
+>> >> On Wed, Oct 1, 2014 at 12:41 PM, Guenter Roeck <groeck@juniper.net> wrote:
+>> >> > On Wed, Oct 01, 2014 at 11:44:59AM -0700, Danielle Costantino wrote:
+>> >> >> Re-sending Proposal:
+>> >> >>
+>> >> >> Currently I2C mux devices that support multiple master arbitration are
+>> >> >> the i2c-mux-pca9541 and i2c-arb-gpio-challenge drivers. I propose to
+>> >> >> add the ability to configure an interrupt pin from the Master Selector
+>> >> >> device to indicate that bus ownership has been lost. Once the device
+>> >> >> loses ownership, all of its children should enter a pm sleep mode (as
+>> >> >> you can't talk to them at this point) until master-ship has been
+>> >> >> reacquired.
+>> >> >>
+>> >> > Not sure I understand what you are proposing here.
+>> >>
+>> >> Lets say you have a active - standby based multi-master system. If the
+>> >> other master forced arbitration (took mastership) the next transation
+>> >> on any slaves of that bus would return EAGAIN or EBUSY.
+>> >>
+>> >> Another point is that once mastership has been lost, the configuration
+>> >> of the devices on that bus are no longer known to be valid...therefor
+>> >> a re-init of those devices may be needed.
+>> >>
+>> > Unfortunately that is a generic problem in a multi-master system.
+>> > You never know if the other end reconfigured a device or not,
+>> > even if there was no error.
+>> >
+>> >> > A typical use case would be a power supply such as the one supported by
+>> >> > drivers/hwmon/lineage-pem.c from both an active and standby system
+>> >> > controller. The power supply needs to be accessible from both controllers.
+>> >> > If one controller looses access, it can only mean that it did not follow
+>> >> > the access protocol. Similar, one controller enforcing access means that
+>> >> > it either does not follow the access protocol either, or that the other
+>> >> > end did not follow the protocol (or maybe the other end died).
+>> >> >
+>> >> > In all cases, loss of access does not mean that the end device can or should
+>> >> > be put in sleep mode, not even logically. All it means is that there was
+>> >> > an access protocol error. Not sure if there is anything that can be done
+>> >> > about that, but putting the device into sleep mode does not seem to be
+>> >> > an appropriate response to me.
+>> >> >
+>> >> >> This has come up as an issue when the master loses control over a bus
+>> >> >> the return code of all transactions to its lave devices is EIO (not
+>> >> >> very helpful).
+>> >> >>
+>> >> > But, again, doesn't that mean that there was some access protocol error ?
+>> >> > Shouldn't it try to re-acquire mastership instead, and block all accesses
+>> >> > to slaves until it acquired it ?
+>> >>
+>> >> EIO is such a generic error it makes finding weather there was a
+>> >> problem communicating or is no longer master of the bus segment.
+>> >>
+>> > AFAICS the only time the pca9541 driver returns -EIO is if a transaction
+>> > did not complete. Only possible improvement I could imagine would be to
+>> > check if mastership was lost if there was an error, and return something
+>> > more useful if that is the case. Both -EBUSY or -EAGAIN might make sense
+>> > here; I don't really know what would be better or more appropriate.
+>> >
+>> > Guenter
+>>
+>>
+>>
+>> --
+>> - Danielle Costantino
 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index ea71f86423ee..cda6efe15f63 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -50,10 +50,6 @@ extern int setup_ioapic_remapped_entry(int irq,
- 				       int vector,
- 				       struct io_apic_irq_attr *attr);
- extern void free_remapped_irq(int irq);
--extern void compose_remapped_msi_msg(struct pci_dev *pdev,
--				     unsigned int irq, unsigned int dest,
--				     struct msi_msg *msg, u8 hpet_id);
--extern int setup_hpet_msi_remapped(unsigned int irq, unsigned int id);
- extern void panic_if_irq_remap(const char *msg);
- extern bool setup_remapped_irq(int irq,
- 			       struct irq_cfg *cfg,
-@@ -112,15 +108,6 @@ static inline int setup_ioapic_remapped_entry(int irq,
- 	return -ENODEV;
- }
- static inline void free_remapped_irq(int irq) { }
--static inline void compose_remapped_msi_msg(struct pci_dev *pdev,
--					    unsigned int irq, unsigned int dest,
--					    struct msi_msg *msg, u8 hpet_id)
--{
--}
--static inline int setup_hpet_msi_remapped(unsigned int irq, unsigned int id)
--{
--	return -ENODEV;
--}
- 
- static inline void panic_if_irq_remap(const char *msg)
- {
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 4e370a5d8117..d8c80ff32e8c 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -96,15 +96,10 @@ extern void pci_iommu_alloc(void);
- #ifdef CONFIG_PCI_MSI
- /* implemented in arch/x86/kernel/apic/io_apic. */
- struct msi_desc;
--void native_compose_msi_msg(struct pci_dev *pdev, unsigned int irq,
--			    unsigned int dest, struct msi_msg *msg, u8 hpet_id);
- int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- void native_teardown_msi_irq(unsigned int irq);
- void native_restore_msi_irqs(struct pci_dev *dev);
--int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
--		  unsigned int irq_base, unsigned int irq_offset);
- #else
--#define native_compose_msi_msg		NULL
- #define native_setup_msi_irqs		NULL
- #define native_teardown_msi_irq		NULL
- #endif
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index e48b674639cc..814fcbadaad1 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -111,11 +111,9 @@ EXPORT_SYMBOL_GPL(x86_platform);
- #if defined(CONFIG_PCI_MSI)
- struct x86_msi_ops x86_msi = {
- 	.setup_msi_irqs		= native_setup_msi_irqs,
--	.compose_msi_msg	= native_compose_msi_msg,
- 	.teardown_msi_irq	= native_teardown_msi_irq,
- 	.teardown_msi_irqs	= default_teardown_msi_irqs,
- 	.restore_msi_irqs	= default_restore_msi_irqs,
--	.setup_hpet_msi		= default_setup_hpet_msi,
- 	.msi_mask_irq		= default_msi_mask_irq,
- 	.msix_mask_irq		= default_msix_mask_irq,
- };
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index f92d49110f83..8fabc1d05f93 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -26,9 +26,6 @@ int no_x2apic_optout;
- 
- static struct irq_remap_ops *remap_ops;
- 
--static int msi_alloc_remapped_irq(struct pci_dev *pdev, int irq, int nvec);
--static int msi_setup_remapped_irq(struct pci_dev *pdev, unsigned int irq,
--				  int index, int sub_handle);
- static int set_remapped_irq_affinity(struct irq_data *data,
- 				     const struct cpumask *mask,
- 				     bool force);
-@@ -51,117 +48,6 @@ static void irq_remapping_disable_io_apic(void)
- 		disconnect_bsp_APIC(0);
- }
- 
--#ifndef CONFIG_GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
--static unsigned int irq_alloc_hwirqs(int cnt, int node)
--{
--	return irq_domain_alloc_irqs(NULL, -1, cnt, node, NULL);
--}
--
--static void irq_free_hwirqs(unsigned int from, int cnt)
--{
--	irq_domain_free_irqs(from, cnt);
--}
--#endif
--
--static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
--{
--	int ret, sub_handle, nvec_pow2, index = 0;
--	unsigned int irq;
--	struct msi_desc *msidesc;
--
--	WARN_ON(!list_is_singular(&dev->msi_list));
--	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
--	WARN_ON(msidesc->irq);
--	WARN_ON(msidesc->msi_attrib.multiple);
--	WARN_ON(msidesc->nvec_used);
--
--	irq = irq_alloc_hwirqs(nvec, dev_to_node(&dev->dev));
--	if (irq == 0)
--		return -ENOSPC;
--
--	nvec_pow2 = __roundup_pow_of_two(nvec);
--	msidesc->nvec_used = nvec;
--	msidesc->msi_attrib.multiple = ilog2(nvec_pow2);
--	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
--		if (!sub_handle) {
--			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
--			if (index < 0) {
--				ret = index;
--				goto error;
--			}
--		} else {
--			ret = msi_setup_remapped_irq(dev, irq + sub_handle,
--						     index, sub_handle);
--			if (ret < 0)
--				goto error;
--		}
--		ret = setup_msi_irq(dev, msidesc, irq, sub_handle);
--		if (ret < 0)
--			goto error;
--	}
--	return 0;
--
--error:
--	irq_free_hwirqs(irq, nvec);
--
--	/*
--	 * Restore altered MSI descriptor fields and prevent just destroyed
--	 * IRQs from tearing down again in default_teardown_msi_irqs()
--	 */
--	msidesc->irq = 0;
--	msidesc->nvec_used = 0;
--	msidesc->msi_attrib.multiple = 0;
--
--	return ret;
--}
--
--static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
--{
--	int node, ret, sub_handle, index = 0;
--	struct msi_desc *msidesc;
--	unsigned int irq;
--
--	node		= dev_to_node(&dev->dev);
--	sub_handle	= 0;
--
--	list_for_each_entry(msidesc, &dev->msi_list, list) {
--
--		irq = irq_alloc_hwirqs(1, node);
--		if (irq == 0)
--			return -1;
--
--		if (sub_handle == 0)
--			ret = index = msi_alloc_remapped_irq(dev, irq, nvec);
--		else
--			ret = msi_setup_remapped_irq(dev, irq, index, sub_handle);
--
--		if (ret < 0)
--			goto error;
--
--		ret = setup_msi_irq(dev, msidesc, irq, 0);
--		if (ret < 0)
--			goto error;
--
--		sub_handle += 1;
--		irq        += 1;
--	}
--
--	return 0;
--
--error:
--	irq_free_hwirqs(irq, 1);
--	return ret;
--}
--
--static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
--					int nvec, int type)
--{
--	if (type == PCI_CAP_ID_MSI)
--		return do_setup_msi_irqs(dev, nvec);
--	else
--		return do_setup_msix_irqs(dev, nvec);
--}
--
- static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
- {
- 	/*
-@@ -179,8 +65,6 @@ static void __init irq_remapping_modify_x86_ops(void)
- 	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
- 	x86_io_apic_ops.setup_entry	= setup_ioapic_remapped_entry;
- 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
--	x86_msi.setup_hpet_msi		= setup_hpet_msi_remapped;
--	x86_msi.compose_msi_msg		= compose_remapped_msi_msg;
- }
- 
- static __init int setup_nointremap(char *str)
-@@ -327,49 +211,6 @@ void free_remapped_irq(int irq)
- 		remap_ops->free_irq(irq);
- }
- 
--void compose_remapped_msi_msg(struct pci_dev *pdev,
--			      unsigned int irq, unsigned int dest,
--			      struct msi_msg *msg, u8 hpet_id)
--{
--	struct irq_cfg *cfg = irq_cfg(irq);
--
--	if (!irq_remapped(cfg))
--		native_compose_msi_msg(pdev, irq, dest, msg, hpet_id);
--	else if (remap_ops && remap_ops->compose_msi_msg)
--		remap_ops->compose_msi_msg(pdev, irq, dest, msg, hpet_id);
--}
--
--static int msi_alloc_remapped_irq(struct pci_dev *pdev, int irq, int nvec)
--{
--	if (!remap_ops || !remap_ops->msi_alloc_irq)
--		return -ENODEV;
--
--	return remap_ops->msi_alloc_irq(pdev, irq, nvec);
--}
--
--static int msi_setup_remapped_irq(struct pci_dev *pdev, unsigned int irq,
--				  int index, int sub_handle)
--{
--	if (!remap_ops || !remap_ops->msi_setup_irq)
--		return -ENODEV;
--
--	return remap_ops->msi_setup_irq(pdev, irq, index, sub_handle);
--}
--
--int setup_hpet_msi_remapped(unsigned int irq, unsigned int id)
--{
--	int ret;
--
--	if (!remap_ops || !remap_ops->alloc_hpet_msi)
--		return -ENODEV;
--
--	ret = remap_ops->alloc_hpet_msi(irq, id);
--	if (ret)
--		return -EINVAL;
--
--	return default_setup_hpet_msi(irq, id);
--}
--
- void panic_if_irq_remap(const char *msg)
- {
- 	if (irq_remapping_enabled)
-diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
-index fd0270b7a351..b01a51ed1780 100644
---- a/drivers/iommu/irq_remapping.h
-+++ b/drivers/iommu/irq_remapping.h
-@@ -70,20 +70,6 @@ struct irq_remap_ops {
- 	/* Free an IRQ */
- 	int (*free_irq)(int);
- 
--	/* Create MSI msg to use for interrupt remapping */
--	void (*compose_msi_msg)(struct pci_dev *,
--				unsigned int, unsigned int,
--				struct msi_msg *, u8);
--
--	/* Allocate remapping resources for MSI */
--	int (*msi_alloc_irq)(struct pci_dev *, int, int);
--
--	/* Setup the remapped MSI irq */
--	int (*msi_setup_irq)(struct pci_dev *, unsigned int, int, int);
--
--	/* Setup interrupt remapping for an HPET MSI */
--	int (*alloc_hpet_msi)(unsigned int, unsigned int);
--
- 	/* Get the irqdomain associated the IOMMU device */
- 	struct irq_domain *(*get_ir_irq_domain)(struct irq_alloc_info *);
- 
+
+
 -- 
-1.7.10.4
-
+- Danielle Costantino
