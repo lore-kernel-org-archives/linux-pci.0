@@ -1,187 +1,220 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0114.outbound.protection.outlook.com ([207.46.100.114]:27251
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933681AbaJaDNR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 23:13:17 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v5 7/8] usb: dwc3: make HIRD threshold configurable
-Date: Fri, 31 Oct 2014 11:11:18 +0800
-Message-ID: <1414725079-11490-8-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414725079-11490-1-git-send-email-ray.huang@amd.com>
-References: <1414725079-11490-1-git-send-email-ray.huang@amd.com>
+Received: from mx1.redhat.com ([209.132.183.28]:14415 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750868AbaJAH0n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 03:26:43 -0400
+Date: Wed, 1 Oct 2014 10:30:08 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Marcel Apfelbaum <marcel.a@redhat.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, marcel@redhat.com,
+	alex.williamson@redhat.com
+Subject: Re: [PATCH] PCI: add kernel parameter to override devid<->driver
+ mapping.
+Message-ID: <20141001073008.GC31859@redhat.com>
+References: <1412095115-28982-1-git-send-email-marcel.a@redhat.com>
+ <20141001065227.GB31859@redhat.com>
+ <1412147206.2772.8.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1412147206.2772.8.camel@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-HIRD threshold should be configurable by different platforms.
+On Wed, Oct 01, 2014 at 10:06:46AM +0300, Marcel Apfelbaum wrote:
+> On Wed, 2014-10-01 at 09:52 +0300, Michael S. Tsirkin wrote:
+> > On Tue, Sep 30, 2014 at 07:38:35PM +0300, Marcel Apfelbaum wrote:
+> > > Scanning a lot of devices during boot requires a lot of time.
+> > > On other scenarios there is a need to bind a driver to a specific slot.
+> > > 
+> > > Binding devices to pci-stub driver does not work,
+> > > as it will not differentiate between devices of the
+> > > same type. Using some start scripts is error prone.
+> > > 
+> > > The solution leverages driver_override functionality introduced by
+> > > 
+> > > 	commit: 782a985d7af26db39e86070d28f987cad21313c0
+> > > 	Author: Alex Williamson <alex.williamson@redhat.com>
+> > > 	Date:   Tue May 20 08:53:21 2014 -0600
+> > > 
+> > >     	PCI: Introduce new device binding path using pci_dev.driver_override
+> > > 
+> > > In order to bind PCI slot 0001:02:03.4 to pci-stub use:
+> > > 	driver[0001:02:03.4]=pci-stub
+> > > 
+> > > Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
+> > > ---
+> > > Notes:
+> > >  - For the moment only 32 slots can be assigned specific driver.
+> > >  - I have further ideas on top of this patch based on your reviews.
+> > >    I thought of:
+> > >    - Use wildcards to specify entire buses/devices, something like:
+> > >      	driver[0001:02:*.*]=pci-stub
+> > >    - Use comma to separate several devices:
+> > >      	driver[0001:02:03.4,0001:02:04.0,...]=pci-stub
+> > >    - Make domain optional:
+> > >    	driver[00:03.0]=pci-stub
+> > > 
+> > > Comments will be appreciated,
+> > > Thanks,
+> > > Marcel
+> > > 
+> > > Documentation/kernel-parameters.txt |  4 +++
+> > >  drivers/pci/bus.c                   |  1 +
+> > >  drivers/pci/pci.c                   | 61 +++++++++++++++++++++++++++++++++++++
+> > >  drivers/pci/pci.h                   |  1 +
+> > >  4 files changed, 67 insertions(+)
+> > > 
+> > > diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+> > > index 5ae8608..c1cbb4c 100644
+> > > --- a/Documentation/kernel-parameters.txt
+> > > +++ b/Documentation/kernel-parameters.txt
+> > > @@ -2631,6 +2631,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+> > >  		pcie_scan_all	Scan all possible PCIe devices.  Otherwise we
+> > >  				only look for one device below a PCIe downstream
+> > >  				port.
+> > > +		driver		Provide an override to the devid<->driver mapping
+> > > +				for a specific slot.
+> > > +				Bind PCI slot 0001:02:03.4 to pci-stub by:
+> > > +					driver[0001:02:03.4]=pci-stub
+> > >  
+> > >  	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+> > >  			Management.
+> > > diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> > > index 73aef51..7a7ed85 100644
+> > > --- a/drivers/pci/bus.c
+> > > +++ b/drivers/pci/bus.c
+> > > @@ -245,6 +245,7 @@ void pci_bus_add_device(struct pci_dev *dev)
+> > >  	 * are not assigned yet for some devices.
+> > >  	 */
+> > >  	pci_fixup_device(pci_fixup_final, dev);
+> > > +	pci_device_setup_driver_override(dev);
+> > >  	pci_create_sysfs_dev_files(dev);
+> > >  	pci_proc_attach_device(dev);
+> > >  
+> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > index b7678be..0a3e07c 100644
+> > > --- a/drivers/pci/pci.c
+> > > +++ b/drivers/pci/pci.c
+> > > @@ -4426,6 +4426,65 @@ void __weak pci_fixup_cardbus(struct pci_bus *bus)
+> > >  }
+> > >  EXPORT_SYMBOL(pci_fixup_cardbus);
+> > >  
+> > > +#define DRIVER_OVERRIDE_NAME_LENGTH 64
+> > > +#define DRIVER_OVERRIDE_MAP_SIZE 32
+> > > +
+> > > +struct driver_override_entry {
+> > > +	unsigned int domain;
+> > > +	unsigned char bus;
+> > > +	unsigned int devfn;
+> > > +	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
+> > > +};
+> > > +
+> > > +static struct driver_override_entry __initdata
+> > > +	driver_override_map[DRIVER_OVERRIDE_MAP_SIZE];
+> > > +static int driver_override_num_entries __initdata;
+> > > +
+> > > +void pci_device_setup_driver_override(struct pci_dev *dev)
+> > > +{
+> > > +	int i;
+> > > +
+> > > +	for (i = 0; i < driver_override_num_entries; i++) {
+> > > +		if (pci_domain_nr(dev->bus) != driver_override_map[i].domain ||
+> > > +		    dev->bus->number != driver_override_map[i].bus ||
+> > > +		    dev->devfn != driver_override_map[i].devfn)
+> > > +			continue;
+> > > +
+> > > +		dev->driver_override = kstrndup(driver_override_map[i].driver_name,
+> > > +						DRIVER_OVERRIDE_NAME_LENGTH,
+> > > +						GFP_KERNEL);
+> > 
+> > 
+> Hi,
+> 
+> > You allocate this entry but never free it?
+> Is being freed in pci_release_dev function.
+> 
+> > Shouldn't allocation failure be handled in some way?
+> I thought about it, but in my opinion there is no need for error
+> handling in this situation.
+> - On the worst case scenario it will load the regular driver, no harm done.
+>   (kstrndup will return NULL)
+> - It is used in pci_bus_add_device workflow that has no error flow
+>   that I am aware of, and even if it were an error flow, in my opinion
+>   this is not enough to stop system boot.
+> But thinking of this again, maybe a pr_err message?
+> 
+> Your review is most appreciated.
+> Thanks,
+> Marcel
+> 
+> 
 
->From DesignWare databook:
-When HIRD_Threshold[4] is set to 1b1 and HIRD value is greater than or
-equal to the value in HIRD_Threshold[3:0], dwc3 asserts output signals
-utmi_l1_suspend_n to put PHY into Deep Low-Power mode in L1.
+Thinking more about it, how about just using strstr to search a string
+of overrides?  This will completely remove the artificial
+DRIVER_OVERRIDE_MAP_SIZE as well.
 
-When HIRD_Threshold[4] is set to 1b0 or the HIRD value is less than
-HIRD_Threshold[3:0], dwc3 asserts output signals utmi_sleep_n on L1.
 
-Signed-off-by: Huang Rui <ray.huang@amd.com>
----
- Documentation/devicetree/bindings/usb/dwc3.txt |  3 +++
- drivers/usb/dwc3/core.c                        | 17 +++++++++++++++++
- drivers/usb/dwc3/core.h                        |  6 ++++++
- drivers/usb/dwc3/gadget.c                      |  6 +-----
- drivers/usb/dwc3/platform_data.h               |  3 +++
- 5 files changed, 30 insertions(+), 5 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentation/devicetree/bindings/usb/dwc3.txt
-index f200ecc..cd7f045 100644
---- a/Documentation/devicetree/bindings/usb/dwc3.txt
-+++ b/Documentation/devicetree/bindings/usb/dwc3.txt
-@@ -34,6 +34,9 @@ Optional properties:
- 			LTSSM during USB3 Compliance mode.
-  - snps,dis_u3_susphy_quirk: when set core will disable USB3 suspend phy.
-  - snps,dis_u2_susphy_quirk: when set core will disable USB2 suspend phy.
-+ - snps,is-utmi-l1-suspend: true when DWC3 asserts output signal
-+			utmi_l1_suspend_n, false when asserts utmi_sleep_n
-+ - snps,hird-threshold: HIRD threshold
- 
- This is usually a subnode to DWC3 glue to which it is connected.
- 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index 25f1446..8753792 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -725,6 +725,7 @@ static int dwc3_probe(struct platform_device *pdev)
- 	struct dwc3		*dwc;
- 	u8			lpm_nyet_threshold;
- 	u8			tx_de_emphasis;
-+	u8			hird_threshold;
- 
- 	int			ret;
- 
-@@ -786,12 +787,22 @@ static int dwc3_probe(struct platform_device *pdev)
- 	/* default to -3.5dB de-emphasis */
- 	tx_de_emphasis = 1;
- 
-+	/*
-+	 * default to assert utmi_sleep_n and use maximum allowed HIRD
-+	 * threshold value of 0b1100
-+	 */
-+	hird_threshold = 12;
-+
- 	if (node) {
- 		dwc->maximum_speed = of_usb_get_maximum_speed(node);
- 		dwc->has_lpm_erratum = of_property_read_bool(node,
- 				"snps,has-lpm-erratum");
- 		of_property_read_u8(node, "snps,lpm-nyet-threshold",
- 				&lpm_nyet_threshold);
-+		dwc->is_utmi_l1_suspend = of_property_read_bool(node,
-+				"snps,is-utmi-l1-suspend");
-+		of_property_read_u8(node, "snps,hird-threshold",
-+				&hird_threshold);
- 
- 		dwc->needs_fifo_resize = of_property_read_bool(node,
- 				"tx-fifo-resize");
-@@ -827,6 +838,9 @@ static int dwc3_probe(struct platform_device *pdev)
- 		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
- 		if (pdata->lpm_nyet_threshold)
- 			lpm_nyet_threshold = pdata->lpm_nyet_threshold;
-+		dwc->is_utmi_l1_suspend = pdata->is_utmi_l1_suspend;
-+		if (pdata->hird_threshold)
-+			hird_threshold = pdata->hird_threshold;
- 
- 		dwc->needs_fifo_resize = pdata->tx_fifo_resize;
- 		dwc->dr_mode = pdata->dr_mode;
-@@ -854,6 +868,9 @@ static int dwc3_probe(struct platform_device *pdev)
- 	dwc->lpm_nyet_threshold = lpm_nyet_threshold;
- 	dwc->tx_de_emphasis = tx_de_emphasis;
- 
-+	dwc->hird_threshold = hird_threshold
-+		| (dwc->is_utmi_l1_suspend << 4);
-+
- 	ret = dwc3_core_get_phy(dwc);
- 	if (ret)
- 		return ret;
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index cf86d30..4bb9aa6 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -675,12 +675,16 @@ struct dwc3_scratchpad_array {
-  * @test_mode: true when we're entering a USB test mode
-  * @test_mode_nr: test feature selector
-  * @lpm_nyet_threshold: LPM NYET response threshold
-+ * @hird_threshold: HIRD threshold
-  * @delayed_status: true when gadget driver asks for delayed status
-  * @ep0_bounced: true when we used bounce buffer
-  * @ep0_expect_in: true when we expect a DATA IN transfer
-  * @has_hibernation: true when dwc3 was configured with Hibernation
-  * @has_lpm_erratum: true when core was configured with LPM Erratum. Note that
-  *			there's now way for software to detect this in runtime.
-+ * @is_utmi_l1_suspend: the core asserts output signal
-+ * 	0	- utmi_sleep_n
-+ * 	1	- utmi_l1_suspend_n
-  * @is_selfpowered: true when we are selfpowered
-  * @is_fpga: true when we are using the FPGA board
-  * @needs_fifo_resize: not all users might want fifo resizing, flag it
-@@ -797,12 +801,14 @@ struct dwc3 {
- 	u8			test_mode;
- 	u8			test_mode_nr;
- 	u8			lpm_nyet_threshold;
-+	u8			hird_threshold;
- 
- 	unsigned		delayed_status:1;
- 	unsigned		ep0_bounced:1;
- 	unsigned		ep0_expect_in:1;
- 	unsigned		has_hibernation:1;
- 	unsigned		has_lpm_erratum:1;
-+	unsigned		is_utmi_l1_suspend:1;
- 	unsigned		is_selfpowered:1;
- 	unsigned		is_fpga:1;
- 	unsigned		needs_fifo_resize:1;
-diff --git a/drivers/usb/dwc3/gadget.c b/drivers/usb/dwc3/gadget.c
-index ff6db0d..01e22d7 100644
---- a/drivers/usb/dwc3/gadget.c
-+++ b/drivers/usb/dwc3/gadget.c
-@@ -2295,11 +2295,7 @@ static void dwc3_gadget_conndone_interrupt(struct dwc3 *dwc)
- 		reg = dwc3_readl(dwc->regs, DWC3_DCTL);
- 		reg &= ~(DWC3_DCTL_HIRD_THRES_MASK | DWC3_DCTL_L1_HIBER_EN);
- 
--		/*
--		 * TODO: This should be configurable. For now using
--		 * maximum allowed HIRD threshold value of 0b1100
--		 */
--		reg |= DWC3_DCTL_HIRD_THRES(12);
-+		reg |= DWC3_DCTL_HIRD_THRES(dwc->hird_threshold);
- 
- 		/*
- 		 * When dwc3 revisions >= 2.40a, LPM Erratum is enabled and
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index 245300b..a3a3b6d 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -25,6 +25,9 @@ struct dwc3_platform_data {
- 	enum usb_dr_mode dr_mode;
- 	bool tx_fifo_resize;
- 
-+	unsigned is_utmi_l1_suspend:1;
-+	u8 hird_threshold;
-+
- 	u8 lpm_nyet_threshold;
- 
- 	unsigned disable_scramble_quirk:1;
--- 
-1.9.1
 
+> > 
+> > > +		break;
+> > > +	}
+> > > +}
+> > > +
+> > > +static void __init pci_parse_driver_override(char *str)
+> > > +{
+> > > +	unsigned int domain, bus, dev, fn;
+> > > +	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
+> > > +	int ret, next_entry;
+> > > +	char format[] = "[%4x:%2x:%2x.%2x]=%%%ds";
+> > > +
+> > > +	sprintf(format + 18, "%%%ds", DRIVER_OVERRIDE_NAME_LENGTH);
+> > > +	ret = sscanf(str, format, &domain, &bus, &dev, &fn, driver_name);
+> > > +
+> > > +	if (ret != 5) {
+> > > +		pr_err("PCI: Invalid command line: driver%s\n", str);
+> > > +		return;
+> > > +	}
+> > > +
+> > > +	if (driver_override_num_entries == DRIVER_OVERRIDE_MAP_SIZE) {
+> > > +		pr_err("PCI: Driver map overflow - ignoring driver%s\n", str);
+> > > +		return;
+> > > +	}
+> > > +
+> > > +	next_entry = driver_override_num_entries++;
+> > > +	driver_override_map[next_entry].domain = domain;
+> > > +	driver_override_map[next_entry].bus = bus && 0xff;
+> > > +	driver_override_map[next_entry].devfn = ((dev & 0x1f) << 3) | (fn & 0x7);
+> > > +	memcpy(driver_override_map[next_entry].driver_name,
+> > > +	       driver_name, sizeof(driver_name));
+> > > +}
+> > > +
+> > >  static int __init pci_setup(char *str)
+> > >  {
+> > >  	while (str) {
+> > > @@ -4468,6 +4527,8 @@ static int __init pci_setup(char *str)
+> > >  				pcie_bus_config = PCIE_BUS_PEER2PEER;
+> > >  			} else if (!strncmp(str, "pcie_scan_all", 13)) {
+> > >  				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
+> > > +			} else if (!strncmp(str, "driver", 6)) {
+> > > +				pci_parse_driver_override(str + 6);
+> > >  			} else {
+> > >  				printk(KERN_ERR "PCI: Unknown option `%s'\n",
+> > >  						str);
+> > > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> > > index 0601890..023d78b 100644
+> > > --- a/drivers/pci/pci.h
+> > > +++ b/drivers/pci/pci.h
+> > > @@ -197,6 +197,7 @@ enum pci_bar_type {
+> > >  bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+> > >  				int crs_timeout);
+> > >  int pci_setup_device(struct pci_dev *dev);
+> > > +void pci_device_setup_driver_override(struct pci_dev *dev);
+> > >  int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+> > >  		    struct resource *res, unsigned int reg);
+> > >  int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
+> > > -- 
+> > > 1.8.3.1
+> 
+> 
