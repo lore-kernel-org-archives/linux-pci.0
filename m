@@ -1,86 +1,100 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Thu, 25 Sep 2014 09:26:20 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
-	Bharat.Bhushan@freescale.com, x86@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 06/22] PCI/MSI: Introduce weak arch_find_msi_chip() to
- find MSI chip
-Message-ID: <20140925072619.GI12423@ulmo>
-References: <1411614872-4009-1-git-send-email-wangyijing@huawei.com>
- <1411614872-4009-7-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="wZdghQXYJzyo6AGC"
-In-Reply-To: <1411614872-4009-7-git-send-email-wangyijing@huawei.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:45849 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750833AbaJACbn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Sep 2014 22:31:43 -0400
+Message-ID: <1412129383.4285.193.camel@pasglop>
+Subject: [PATCH 3/4] sound/hda/radeon: Generalize 64-bit MSI quirks
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alex Deucher <alexdeucher@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Date: Wed, 01 Oct 2014 12:09:43 +1000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+A number of radeon cards have a HW limitation causing them to be
+unable to generate the full 64-bit of address bits for MSIs. This
+breaks MSIs on some platforms such as POWER machines.
 
---wZdghQXYJzyo6AGC
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+We used to have a powerpc specific quirk to address that on a
+single card, but this doesn't scale very well, this is better
+put under control of the drivers who know precisely what a given
+HW revision can do.
 
-On Thu, Sep 25, 2014 at 11:14:16AM +0800, Yijing Wang wrote:
-> Introduce weak arch_find_msi_chip() to find the match msi_chip.
-> Currently, MSI chip associates pci bus to msi_chip. Because in
-> ARM platform, there may be more than one MSI controller in system.
-> Associate pci bus to msi_chip help pci device to find the match
-> msi_chip and setup MSI/MSI-X irq correctly. But in other platform,
-> like in x86. we only need one MSI chip, because all device use
-> the same MSI address/data and irq etc. So it's no need to associate
-> pci bus to MSI chip, just use a arch function, arch_find_msi_chip()
-> to return the MSI chip for simplicity. The default weak
-> arch_find_msi_chip() used in ARM platform, find the MSI chip
-> by pci bus.
+This moves the setting of the quirk flag to the HDA driver when
+detecting the radeon audio interface.
 
-Can't x86 simply set the bus' .msi field anyway? It would seem to be
-easy to do and unifies the code rather than driving it further apart
-using even more of the __weak functions.
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: <stable@vger.kernel.org>
+---
+ arch/powerpc/kernel/pci_64.c |  6 ------
+ sound/pci/hda/hda_intel.c    | 10 ++++++++--
+ sound/pci/hda/hda_priv.h     |  1 +
+ 3 files changed, 9 insertions(+), 8 deletions(-)
 
-Thierry
+diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
+index 66e1cd0..b15194e 100644
+--- a/arch/powerpc/kernel/pci_64.c
++++ b/arch/powerpc/kernel/pci_64.c
+@@ -266,9 +266,3 @@ int pcibus_to_node(struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL(pcibus_to_node);
+ #endif
+-
+-static void quirk_radeon_32bit_msi(struct pci_dev *dev)
+-{
+-	dev->force_32bit_msi = true;
+-}
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
+diff --git a/sound/pci/hda/hda_intel.c b/sound/pci/hda/hda_intel.c
+index aa302fb..3e6d22d 100644
+--- a/sound/pci/hda/hda_intel.c
++++ b/sound/pci/hda/hda_intel.c
+@@ -296,7 +296,8 @@ enum {
+ 
+ /* quirks for ATI/AMD HDMI */
+ #define AZX_DCAPS_PRESET_ATI_HDMI \
+-	(AZX_DCAPS_NO_TCSEL | AZX_DCAPS_SYNC_WRITE | AZX_DCAPS_POSFIX_LPIB)
++	(AZX_DCAPS_NO_TCSEL | AZX_DCAPS_SYNC_WRITE | AZX_DCAPS_POSFIX_LPIB|\
++	 AZX_DCAPS_NO_MSI64)
+ 
+ /* quirks for Nvidia */
+ #define AZX_DCAPS_PRESET_NVIDIA \
+@@ -1505,9 +1506,14 @@ static int azx_first_init(struct azx *chip)
+ 		return -ENXIO;
+ 	}
+ 
+-	if (chip->msi)
++	if (chip->msi) {
++		if (chip->driver_caps & AZX_DCAPS_NO_MSI64) {
++			dev_dbg(card->dev, "Disabling 64bit MSI\n");
++			pci->force_32bit_msi = true;
++		}
+ 		if (pci_enable_msi(pci) < 0)
+ 			chip->msi = 0;
++	}
+ 
+ 	if (azx_acquire_irq(chip, 0) < 0)
+ 		return -EBUSY;
+diff --git a/sound/pci/hda/hda_priv.h b/sound/pci/hda/hda_priv.h
+index 949cd43..5016014 100644
+--- a/sound/pci/hda/hda_priv.h
++++ b/sound/pci/hda/hda_priv.h
+@@ -171,6 +171,7 @@ enum { SDI0, SDI1, SDI2, SDI3, SDO0, SDO1, SDO2, SDO3 };
+ #define AZX_DCAPS_PM_RUNTIME	(1 << 26)	/* runtime PM support */
+ #define AZX_DCAPS_I915_POWERWELL (1 << 27)	/* HSW i915 powerwell support */
+ #define AZX_DCAPS_CORBRP_SELF_CLEAR (1 << 28)	/* CORBRP clears itself after reset */
++#define AZX_DCAPS_NO_MSI64      (1 << 29)	/* Stick to 32-bit MSIs */
+ 
+ /* HD Audio class code */
+ #define PCI_CLASS_MULTIMEDIA_HD_AUDIO	0x0403
 
---wZdghQXYJzyo6AGC
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
 
-iQIcBAEBAgAGBQJUI8ObAAoJEN0jrNd/PrOhuC4P/jIBmvnDAEtAA8p9/uMyo4ub
-35EbcR8vyvkUOhtovW5OYqkxRnKAfsYNHAbYYijRRWopeBkmqYj1EiW8F3M3MbKT
-FD+87Kx/0mNqy1mNdoPnIttpaCyY9igbhmeWhE5gFFqI4L715gT4AVg7tG79gsas
-BObGQrGqdsEcdHsMae9wIm6X46Q2HcECiOp5T619C7P6/4DRXoQ6CreiwtWgh8GN
-HdDemrevFvVZI72ceWPPPSY813vykzLhvxbiMhjhiYtZSbtqmYJoNQBbeQIlhfYV
-mdIBuGWQlSAyy4+IZq/IBJ/lO4BtU4zevDvSCOnKhCUlHAZ7qNpxLtDXaZmxRQ1W
-/9BeZHt+IDeev7rXTA97oQXAwzbAabafN1FWyCUWZEq28xIYmAqQZeFA9+KKRQQm
-QMs10F3xpcayjlUXPNp7pLoWgcffcb0g8YocMo4DdMgMFQ9Pnx7jIrQ9Z46n4o+i
-u2Qb275YAwisvL1ol3S2lZ+19CdVEwp+ly/66aYviHzVYeDm2C11myPCbfCbNcPg
-M/qS6KwZzn+LyyCiLT0dmcm90UTIPZ7uw0sbwcVbq80skjhZxLT5NS7xHYnP/znG
-62a/6pxngsPcnk+b7pv2htjbxkKDjJkpn8kXGiR6sGwun0b7HheNwzanLbDPs/7B
-3QkCbl7txteq7GjETQqt
-=LNzZ
------END PGP SIGNATURE-----
-
---wZdghQXYJzyo6AGC--
