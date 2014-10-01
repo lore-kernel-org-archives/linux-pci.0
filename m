@@ -1,76 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:62003 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752743AbaJBPsc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Oct 2014 11:48:32 -0400
-Received: by mail-qa0-f49.google.com with SMTP id f12so1983266qad.8
-        for <linux-pci@vger.kernel.org>; Thu, 02 Oct 2014 08:48:31 -0700 (PDT)
+Received: from mail.skyhub.de ([78.46.96.112]:33178 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751674AbaJALcz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 07:32:55 -0400
+Date: Wed, 1 Oct 2014 13:32:50 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, tglx@linutronix.de,
+	hpa@zytor.com, x86@kernel.org, bp@suse.de,
+	dan.carpenter@oracle.com, dougthompson@xmission.com,
+	m.chehab@samsung.com, linux-edac@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/4] edac: Add DDR3 LRDIMM support, entries in
+ edac_mem_types[]
+Message-ID: <20141001113250.GE18271@pd.tnic>
+References: <1411070218-10258-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <bug-85311-41252-8dDry2SwcF@https.bugzilla.kernel.org/>
-References: <bug-85311-41252@https.bugzilla.kernel.org/> <bug-85311-41252-8dDry2SwcF@https.bugzilla.kernel.org/>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 2 Oct 2014 09:48:11 -0600
-Message-ID: <CAErSpo5KnNsMej07ak-3fJt8K5bSwDoogxUY=2Jvuccc7Hf4Wg@mail.gmail.com>
-Subject: Re: [Bug 85311] radeon 0000:01:00.0: Max Payload Size 16384, but
- upstream 0000:00:01.0 set to 128; if necessary, use "pci=pcie_bus_safe" and
- report a bug
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: Rafael Wysocki <rjw@rjwysocki.net>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Alex Deucher <alexdeucher@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1411070218-10258-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci, linux-pm, Rafael, Alex]
+On Thu, Sep 18, 2014 at 02:56:58PM -0500, Aravind Gopalakrishnan wrote:
+> F15hM60h adds support for DDR4 and DDR3 LRDIMMS. Adding them here.
+> 
+> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+> ---
+>  drivers/edac/edac_mc.c | 3 +++
+>  include/linux/edac.h   | 2 ++
+>  2 files changed, 5 insertions(+)
+> 
+> diff --git a/drivers/edac/edac_mc.c b/drivers/edac/edac_mc.c
+> index 9f134823..71fd9fb 100644
+> --- a/drivers/edac/edac_mc.c
+> +++ b/drivers/edac/edac_mc.c
+> @@ -146,6 +146,9 @@ const char *edac_mem_types[] = {
+>  	"Rambus XDR",
+>  	"Unbuffered DDR3 RAM",
+>  	"Registered DDR3 RAM",
+> +	"Load-Reduce DDR3 RAM",
 
-> https://bugzilla.kernel.org/show_bug.cgi?id=85311
+Renamed it to "Load-Reduced DDR3 RAM" while applying.
 
-Pali reported:
+Also, applied the following cleanup ontop:
 
-> Every time when I open LID on my notebook I see tons of new error lines in dmesg
-> with kernel 3.17-rc6. And more lines come from radeon card (dmesg log is attached).
-> I do not see these log lines with 3.13 kernel, so this is regression.
+---
+From: Borislav Petkov <bp@suse.de>
+Subject: [PATCH] EDAC: Sync memory types and names
 
-The new error lines are (from the bugzilla attachment):
+Make keeping the sync between the mem_types enum and the actual string
+names simpler by using designated initializers.
 
-  i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
-  radeon 0000:01:00.0: Max Payload Size 16384, but upstream
-0000:00:01.0 set to 128; if necessary, use "pci=pcie_bus_safe" and
-report a bug
-  pci_bus 0000:02: Allocating resources
-  pci_bus 0000:03: Allocating resources
-  pci_bus 0000:04: Allocating resources
-  pci_bus 0000:05: Allocating resources
-  pci_bus 0000:06: Allocating resources
-  pci_bus 0000:0e: Allocating resources
-  i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
-  radeon 0000:01:00.0: Max Payload Size 16384, but upstream
-0000:00:01.0 set to 128; if necessary, use "pci=pcie_bus_safe" and
-report a bug
-  i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
-  radeon 0000:01:00.0: Max Payload Size 16384, but upstream
-0000:00:01.0 set to 128; if necessary, use "pci=pcie_bus_safe" and
-report a bug
-  i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
-  radeon 0000:01:00.0: Max Payload Size 16384, but upstream
-0000:00:01.0 set to 128; if necessary, use "pci=pcie_bus_safe" and
-report a bug
-  i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
-  ...
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ drivers/edac/edac_mc.c | 43 ++++++++++++++++++++-----------------------
+ 1 file changed, 20 insertions(+), 23 deletions(-)
 
-Using "radeon.runpm=0" gets rid of the radeon MPS complaints, but not
-the others.
+diff --git a/drivers/edac/edac_mc.c b/drivers/edac/edac_mc.c
+index 129ff9c36a78..1747906f10ce 100644
+--- a/drivers/edac/edac_mc.c
++++ b/drivers/edac/edac_mc.c
+@@ -125,30 +125,27 @@ static void edac_mc_dump_mci(struct mem_ctl_info *mci)
+ 
+ #endif				/* CONFIG_EDAC_DEBUG */
+ 
+-/*
+- * keep those in sync with the enum mem_type
+- */
+ const char * const edac_mem_types[] = {
+-	"Empty csrow",
+-	"Reserved csrow type",
+-	"Unknown csrow type",
+-	"Fast page mode RAM",
+-	"Extended data out RAM",
+-	"Burst Extended data out RAM",
+-	"Single data rate SDRAM",
+-	"Registered single data rate SDRAM",
+-	"Double data rate SDRAM",
+-	"Registered Double data rate SDRAM",
+-	"Rambus DRAM",
+-	"Unbuffered DDR2 RAM",
+-	"Fully buffered DDR2",
+-	"Registered DDR2 RAM",
+-	"Rambus XDR",
+-	"Unbuffered DDR3 RAM",
+-	"Registered DDR3 RAM",
+-	"Load-Reduced DDR3 RAM",
+-	"Unbuffered DDR4 RAM",
+-	"Registered DDR4 RAM",
++	[MEM_EMPTY]	= "Empty csrow",
++	[MEM_RESERVED]	= "Reserved csrow type",
++	[MEM_UNKNOWN]	= "Unknown csrow type",
++	[MEM_FPM]	= "Fast page mode RAM",
++	[MEM_EDO]	= "Extended data out RAM",
++	[MEM_BEDO]	= "Burst Extended data out RAM",
++	[MEM_SDR]	= "Single data rate SDRAM",
++	[MEM_RDR]	= "Registered single data rate SDRAM",
++	[MEM_DDR]	= "Double data rate SDRAM",
++	[MEM_RDDR]	= "Registered Double data rate SDRAM",
++	[MEM_RMBS]	= "Rambus DRAM",
++	[MEM_DDR2]	= "Unbuffered DDR2 RAM",
++	[MEM_FB_DDR2]	= "Fully buffered DDR2",
++	[MEM_RDDR2]	= "Registered DDR2 RAM",
++	[MEM_XDR]	= "Rambus XDR",
++	[MEM_DDR3]	= "Unbuffered DDR3 RAM",
++	[MEM_RDDR3]	= "Registered DDR3 RAM",
++	[MEM_LRDDR3]	= "Load-Reduced DDR3 RAM",
++	[MEM_DDR4]	= "Unbuffered DDR4 RAM",
++	[MEM_RDDR4]	= "Registered DDR4 RAM",
+ };
+ EXPORT_SYMBOL_GPL(edac_mem_types);
+ 
+-- 
+2.0.0
 
-Alex said (in the bugzilla):
+-- 
+Regards/Gruss,
+    Boris.
 
-> When the radeon device is powered down, all the PCI registers and BARs read
-> back as ones. which is why you are seeing the radeon errors.  Apparently the
-> pci runtime pm code does not properly ask the driver to power the card up
-> before accessing those registers.  Unfortunately, I'm not that familiar with
-> the Linux runtime pm code.  I have no idea about the i915 and apci messages.
-
-I haven't looked into this at all, so I don't know where this bug
-report belongs.
-
-Bjorn
+Sent from a fat crate under my desk. Formatting is fine.
+--
