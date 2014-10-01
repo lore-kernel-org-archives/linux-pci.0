@@ -1,147 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:36220 "EHLO bear.ext.ti.com"
+Received: from sauhun.de ([89.238.76.85]:46757 "EHLO pokefinder.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756957AbaJXP0x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 24 Oct 2014 11:26:53 -0400
-Date: Fri, 24 Oct 2014 10:26:28 -0500
-From: Felipe Balbi <balbi@ti.com>
-To: Huang Rui <ray.huang@amd.com>
-CC: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+	id S1751266AbaJAH3V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 03:29:21 -0400
+Date: Wed, 1 Oct 2014 09:29:50 +0200
+From: Wolfram Sang <wsa@the-dreams.de>
+To: Rajat Jain <rajatxjain@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Jiri Kosina <jkosina@suse.cz>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 06/16] usb: dwc3: add disscramble quirk
-Message-ID: <20141024152628.GC26941@saruman>
-Reply-To: <balbi@ti.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
- <1413536021-4886-7-git-send-email-ray.huang@amd.com>
- <20141017144532.GB26260@saruman>
- <20141020063827.GB24357@hr-slim.amd.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-i2c <linux-i2c@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>
+Subject: Re: [PATCH 0/4] Driver for talking to PLX PEX8xxx PCIe switch over
+ I2C
+Message-ID: <20141001072949.GA1322@katana>
+References: <542A3593.4020108@gmail.com>
+ <CAErSpo7BkXDHOZwHzwEu2BN3=39xFwQOyrjgVo6afWKMsnYT=A@mail.gmail.com>
+ <20140930211339.GA1264@katana>
+ <CAA93t1out+gJO29_0tn1zLJv_MUwJ458XKNT3Lo6WW+mH9XeRQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="LwW0XdcUbUexiWVK"
-In-Reply-To: <20141020063827.GB24357@hr-slim.amd.com>
+	protocol="application/pgp-signature"; boundary="fdj2RfSjLxBAspz7"
+In-Reply-To: <CAA93t1out+gJO29_0tn1zLJv_MUwJ458XKNT3Lo6WW+mH9XeRQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---LwW0XdcUbUexiWVK
+
+--fdj2RfSjLxBAspz7
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Oct 20, 2014 at 02:38:28PM +0800, Huang Rui wrote:
-> On Fri, Oct 17, 2014 at 09:45:32AM -0500, Felipe Balbi wrote:
-> > Hi,
-> >=20
-> > On Fri, Oct 17, 2014 at 04:53:31PM +0800, Huang Rui wrote:
-> > > AMD NL fpga needs to enable disscramble quirk. And this quirk doesn't=
- need on
-> > > the true soc.
-> > >=20
-> > > Signed-off-by: Huang Rui <ray.huang@amd.com>
-> > > ---
-> > >  drivers/usb/dwc3/core.c          | 8 +++++++-
-> > >  drivers/usb/dwc3/dwc3-pci.c      | 5 +++++
-> > >  drivers/usb/dwc3/platform_data.h | 4 ++++
-> > >  3 files changed, 16 insertions(+), 1 deletion(-)
-> > >=20
-> > > diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-> > > index 50c0eae..819e501 100644
-> > > --- a/drivers/usb/dwc3/core.c
-> > > +++ b/drivers/usb/dwc3/core.c
-> > > @@ -422,7 +422,6 @@ static int dwc3_core_init(struct dwc3 *dwc)
-> > > =20
-> > >  	reg =3D dwc3_readl(dwc->regs, DWC3_GCTL);
-> > >  	reg &=3D ~DWC3_GCTL_SCALEDOWN_MASK;
-> > > -	reg &=3D ~DWC3_GCTL_DISSCRAMBLE;
-> > > =20
-> > >  	switch (DWC3_GHWPARAMS1_EN_PWROPT(dwc->hwparams.hwparams1)) {
-> > >  	case DWC3_GHWPARAMS1_EN_PWROPT_CLK:
-> > > @@ -461,6 +460,13 @@ static int dwc3_core_init(struct dwc3 *dwc)
-> > >  		dwc->is_fpga =3D true;
-> > >  	}
-> > > =20
-> > > +	if ((dwc->quirks & DWC3_QUIRK_AMD_NL) && dwc->is_fpga)
-> > > +		dwc->quirks |=3D DWC3_QUIRK_DISSCRAMBLE;
-> > > +
-> > > +	if (dwc->quirks & DWC3_QUIRK_DISSCRAMBLE)
-> >=20
-> > this should only be set if is_fpga, and this quirk should be a 1-bit
-> > flag, so here's what you should do:
-> >=20
-> > 	WARN_ONCE(dwc->disable_scramble_quirk && !dwc->is_fpga,
-> > 		"disable_scramble cannot be used on non-FPGA builds\n");
-> >=20
-> > 	if (dwc->disable_scramble && dwc->is_fpga)
-> > 		reg |=3D DWC3_GCTL_DISSCRAMBLE;
-> > 	else
-> > 		reg &=3D ~DWC3_GCTL_DISSCRAMBLE;
-> >=20
->=20
-> OK, will update it in V3.
->=20
-> > > +		reg |=3D DWC3_GCTL_DISSCRAMBLE;
-> > > +	else
-> > > +		reg &=3D ~DWC3_GCTL_DISSCRAMBLE;
-> >=20
-> > add a blank line here, to aid readability.
-> >=20
->=20
-> OK, will add it.
->=20
-> > >  	/*
-> > >  	 * WORKAROUND: DWC3 revisions <1.90a have a bug
-> > >  	 * where the device can fail to connect at SuperSpeed
-> > > diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
-> > > index 18569a4..a89db6c 100644
-> > > --- a/drivers/usb/dwc3/dwc3-pci.c
-> > > +++ b/drivers/usb/dwc3/dwc3-pci.c
-> > > @@ -146,6 +146,11 @@ static int dwc3_pci_probe(struct pci_dev *pci,
-> > >  	res[1].name	=3D "dwc_usb3";
-> > >  	res[1].flags	=3D IORESOURCE_IRQ;
-> > > =20
-> > > +	if (pci->vendor =3D=3D PCI_VENDOR_ID_AMD && pci->device =3D=3D
-> > > +			PCI_DEVICE_ID_AMD_NL) {
-> > > +		dwc3_pdata.quirks |=3D DWC3_QUIRK_AMD_NL;
-> > > +	}
-> >=20
-> > should be part of another patch and the quirk is
-> > "disable_scramble_quirk", not AMD.
-> >=20
->=20
-> Got it, you would like to keep this patch just for fpga disscramble
-> quirk and do not add any 3rd platform info, right?
 
-right. So far only FPGA-based systems need this :-)
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> ...<snip>...
+>=20
+> +0. Why have an I2C interface to a PCIe switch?
+> +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> +Other than the regular PCI express interface, most modern PCIe switches =
+(e.g.
+> +from IDT and PLX) have an I2C based secondary interface. This interface =
+allows
+> +access to all the registers of the switch. Some of these registers may n=
+ot even
+> +be accessible over the regular PCI interface. Also, there are certain re=
+gisters
+> +that can be written to, using only the I2C interface and may only be rea=
+d-only
+> +using the PCI interface.
+> +
+> +This I2C interface is often used in designs involving these switches, an=
+d can
+> +be used for a variety of use cases where the switch needs to be configur=
+ed
+> +independent of the PCI subsystem (and likely before PCI enumeration). So=
+me
+> +examples:
+> +
+> +* Dividing a PCIe switch into multiple "virtual" switches. Using this fe=
+ature,
+> +  a switch could be connected to 2 root ports for instance, each managin=
+g its
+> +  own PCI hierarchy, and the traffic from one virtual switch does not le=
+ak into
+> +  another.
+> +
+> +* Managing Transparent / Non-transparent bridging, and changing them
+> on-the-fly.
+> +  There are ports that can be converted into "Non-transparent" bridge po=
+rts.
+> +  Essentially this is used to create different domains (not visible to
+> +  software). In a dynamic distributed system, it may be desirable to cha=
+nge a
+> +  transparent bridge to non-transparent or vice versa, for example, to h=
+andle a
+> +  failover situation.
+> +
+> +* Buggy hardware / Bad EEPROM configuration. There may be cases where an=
+ errata
+> +  involving register writes need to be applied before enumerating over P=
+CI.
+> +  Also these switches are typically attached to an EEPROM that is suppos=
+ed to
+> +  initialize the switch. If that EEPROM is not present, or contains bad
+> +  initialization data, this I2C interface can be used to fix that.
+> +
+> +* Changing switch configuration on the fly. In a multi-homed or complex
+> +  distributed systemsystem, there may be a need to change the switch
+> +  configuration (eg. change the upstream port, or the port or lane
+> +  configuration etc) to address run time scenarios (CPU plug out etc).
+> +
+>=20
+> ...<snip>...
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>=20
+> I am myself leaning towards drivers/pci/switch/. And am wanting to
+> hear what other think.
 
---=20
-balbi
+I had a closer look and my first question is now if we really need a
+kernel driver for this?
 
---LwW0XdcUbUexiWVK
+The sysfs interface is basically to PEEK/POKE registers of the switch.
+How registers get accessed is part of userspace. Well, then it might
+even be easier to construct the proper i2c messages in userspace, too,
+and send them via i2c-dev (instead of writing to various files in
+sysfs).
+
+The Kernel API is also PEEK/POKE register. I am not an PCI expert, but I
+can't see a user in this form. What I'd expect would be more like
+
+pci_switch_set_mode(some_device, PCI_BRIDGE_MODE_TRANSPARENT);
+
+and then a shim layer would make sure the proper driver for the switch
+sends the proper commands. Again, I don't know if the decision of
+setting a mode/creating virtual switches... is even desirable in kernel
+space. If so, then this is probably a sub-subsystem
+drivers/pci/switches, but needs way more abstraction. Otherwise,
+userspace will currently do IMO.
+
+--fdj2RfSjLxBAspz7
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1
 
-iQIcBAEBAgAGBQJUSm+kAAoJEIaOsuA1yqREmWUP/REwJX7PJlz+4QpftDPTbwTh
-AqtdshSZ2kmxfAPQd3GWVsU2K4lrNT3OUCZdZgB9lB8q9psJzCR7SaGGHKy8szVf
-ZUQrw2gWzCN5KN/6TLiSnLvPAMkIlnivudEEZ3hvjISuk5x/zRyZGJuuMChfZ/1y
-TXIwyKQJcrndzLZo5Zsqh6dvUxLYaImmf8Gfez6ccianL3yXIyYbAg05uBzjTJkl
-iYO3yOsh6t+JkOHdrDJiETh7kdSMVX3uoKsZS2usyKs2Xn+5AwHYijI3whC1Xmcl
-+/MuAEF8NL357D1LAEHuhpadmU7mro28zeHt3Hf0qrTNhPhOdWJ8L08KPsExjvzC
-DVo5awl29twuI/65tJhVJ5QDP+uEbu4q1xszpgDVl+hwDmaWcn9N7Y/86X503uyt
-5e8mSSpJkcA1hg35zVZgNx8akHDPKtXuSN4RENK+fh60t1SDQDl3hK/TCHLSVm6T
-adm1nkMp9VI80nv48FwL00pr4E/KSZcue5SRQyMLoTUm9/gnM8R3pVi+P+7F5oI4
-11NjlrTboIMOH9viP7u0EUOJGMORUYMG4aiZdhrcb3BaoDRBULGTJW8FgV0lOlpI
-bkKb4Oy28QFk11D2L+QPePJhd6m2e54t2newZjwp4pl08M7ghoZsygI2dYVTtMC1
-WMfUVCm3BDeZzX/w87fK
-=ZIM6
+iQIcBAEBAgAGBQJUK61tAAoJEBQN5MwUoCm2Bl0QAIS02sG+hqwNieDAPGGCEahc
+YeBTdv4lgeICqm+ejlYq3pSck66BM7i60pOGq1OXtT5VFPlpR28yw45VvBSecduM
+DagLz4OvmWdzUtNCL4jJc5piuOMPdLjQ5c9VO9UQ40bRc/RJy3EJcIBHa/fKLC8d
+mvueNlxU3WNtKojEdD0avCfHHz+9ZAo0fQMfXW658h/GH+w6gDi6GpcEmpKUrTQf
+GrlWkqDuFmlVvxb7p7ltPuyVC4R853iLzMNFa92IaRnouWcWOde63RPdYRrbQcsv
+qNkpTWGudHmMpft6MmmxNCetvnKOyDkwx2JR98UnQX67Rt95yN+kDJyNV9v2X2H3
+ln5aU8a/ERxiI2FOmWCikKN4K8RA34owDpvxPS8G5fHPJikwVUZVzasmDxDRukyM
+POSRvC38jGgheMkJ+4IHcz+ApZkLaIHSjhvA2gga5SfT4m9D5QoLVxe2hw6KFbwX
+XUeiSYBqestWpIJRqxYLYTsRggBft5xIbOb5tFQ5zp/9U3aUoGMRruJNNFRf9jez
+hGWJ/4Gp+RaXDqb2LsbICLHZoUpOhxOywtyEPee5NRlL12k2BQTXyrddkISdoJRY
+H+zhv5+Jb2DuIkOCUOAc2lXoGi1sItRKBUCG2KzpPUyizuO9JbYkvrRMiOsbry8Q
+fDF5WSqu+m920YQLwbUN
+=KEHo
 -----END PGP SIGNATURE-----
 
---LwW0XdcUbUexiWVK--
+--fdj2RfSjLxBAspz7--
