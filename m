@@ -1,64 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:55244 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751965AbaI3WYT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Sep 2014 18:24:19 -0400
-Date: Tue, 30 Sep 2014 15:24:18 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Guenter Roeck <groeck@juniper.net>
-Cc: Wolfram Sang <wsa@the-dreams.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-i2c <linux-i2c@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>
-Subject: Re: [PATCH 0/4] Driver for talking to PLX PEX8xxx PCIe switch over
- I2C
-Message-ID: <20140930222418.GA8199@kroah.com>
-References: <542A3593.4020108@gmail.com>
- <CAErSpo7BkXDHOZwHzwEu2BN3=39xFwQOyrjgVo6afWKMsnYT=A@mail.gmail.com>
- <20140930211339.GA1264@katana>
- <20140930213306.GA29008@svl-evodev-groeck.juniper.net>
+Received: from mail-bn1bon0142.outbound.protection.outlook.com ([157.56.111.142]:23632
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752161AbaJAQCf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 12:02:35 -0400
+Message-ID: <542C2588.2040004@amd.com>
+Date: Wed, 1 Oct 2014 11:02:16 -0500
+From: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140930213306.GA29008@svl-evodev-groeck.juniper.net>
+To: Borislav Petkov <bp@alien8.de>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<tglx@linutronix.de>, <hpa@zytor.com>, <x86@kernel.org>,
+	<bp@suse.de>, <dan.carpenter@oracle.com>,
+	<dougthompson@xmission.com>, <m.chehab@samsung.com>,
+	<linux-edac@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 4/4] edac, amd64_edac: Add F15h M60h support
+References: <1411070230-10298-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+ <20141001113235.GC18271@pd.tnic> <542C1EAA.4050408@amd.com>
+ <20141001154523.GF18271@pd.tnic>
+In-Reply-To: <20141001154523.GF18271@pd.tnic>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 30, 2014 at 02:35:51PM -0700, Guenter Roeck wrote:
-> On Tue, Sep 30, 2014 at 11:13:39PM +0200, Wolfram Sang wrote:
-> > 
-> > > > Since this is a driver for a PCIe switch, I currently put it under /driver/pci/.
-> > > > I'm very open to suggestions for moving this around (Does introducing
-> > > > drivers/pci/switch/ seem any better?). Especially I can see that the
-> > > > drivers/pci/Kconfig appears under "Bus Options" in the main menu which does not
-> > > > look like the right place for this driver. I am looking for suggestions here.
-> > > 
-> > > Definitely interesting work.  I have no idea where to put it.  It
-> > > doesn't have anything to do with PCI core services or structures, so
-> > > drivers/pci doesn't seem like the ideal place for it, but I don't have
-> > > any better ideas.  If it did end up under drivers/pci, I agree that a
-> > > drivers/pci/switch or something similar would probably be better than
-> > > having it directly in drivers/pci.
-> > > 
-> > > Maybe Wolfram or other I2C folks will have an idea.
-> > 
-> > Hmm, is this a common interface for those switches? Then a directory
-> > like drivers/pci/switch could make sense. Otherwise I'd suggest
-> > drivers/misc?
-> > 
-> We had discussed drivers/misc internally, but it didn't seem to be the right
-> location to me. After all, it is not a misc driver, but a driver to configure
-> a PCIe switch. Not that I have a better idea, though.
+On 10/1/2014 10:45 AM, Borislav Petkov wrote:
+> On Wed, Oct 01, 2014 at 10:32:58AM -0500, Aravind Gopalakrishnan wrote:
+>>>> +			if (dcsm & 0x3) {
+>>>> +				/* LRDIMMs */
+>>>> +				edac_dbg(1, "  DIMM type: LRDIMM %dx rank multiply;"
+>>>> +					 "CS = %d; all DIMMs support ECC: %s\n",
+>>>> +					 (dcsm & 0x3), cs,
+>>>> +					 (dclr & BIT(19)) ? "yes" : "no");
+>>> Why do we need to iterate over the DRAM CS sets? Just for the rank
+>>> multiplier, apparently. We dump those normally in read_dct_base_mask(),
+>>> though.
+>> It's not just for rank multiplier.. we find that it's LRDIMM only by
+>> examining dcsm. Hence the iteration here..
+> So we can look only at the first DCSM, no? Or are there systems with
+> different types of LRDIMMs on one DCT?
+>
 
-drivers/misc is fine with me, I think we already have something like
-this for I2C USB devices somewhere in the tree in that location.
+Not AFAIK, But I'll ask to make sure.
+If different LRDIMMs on one DCT don't exist, then sure, I'll modify the 
+code to use first DCSM.
 
-thanks,
+Regarding resend-
+I'm not sure how you'll want the patches.. I just noticed a 
+'edac-for-3.19' branch.
+Would you prefer I based changes on top of this for merging purposes?
+Or just resend the original 4 patches based off tip as usual?
 
-greg k-h
+Thanks,
+-Aravind.
