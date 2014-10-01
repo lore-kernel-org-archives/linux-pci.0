@@ -1,105 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([69.164.217.139]:56350 "EHLO foo.masarand.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752370AbaJBEID (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Oct 2014 00:08:03 -0400
-From: matt@masarand.com
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, Matthew Minter <matt@masarand.com>
-Subject: [PATCH 06/18] Delayed alpha setup of PCI IRQs to bus scan time
-Date: Thu,  2 Oct 2014 05:07:34 +0100
-Message-Id: <1412222866-21068-7-git-send-email-matt@masarand.com>
-In-Reply-To: <1412222866-21068-1-git-send-email-matt@masarand.com>
-References: <1412222866-21068-1-git-send-email-matt@masarand.com>
+Received: from mailout2.samsung.com ([203.254.224.25]:16670 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750981AbaJAHJS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 03:09:18 -0400
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0NCR0002J7VG2D30@mailout2.samsung.com> for
+ linux-pci@vger.kernel.org; Wed, 01 Oct 2014 16:09:17 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Lucas Stach' <l.stach@pengutronix.de>
+Cc: 'Pratyush Anand' <pratyush.anand@st.com>,
+	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
+References: <1412094987-1894-1-git-send-email-l.stach@pengutronix.de>
+ <20141001042815.GA24581@pratyush-vbox>
+In-reply-to: <20141001042815.GA24581@pratyush-vbox>
+Subject: Re: [PATCH 0/2] Designware MSI fixes
+Date: Wed, 01 Oct 2014 16:09:10 +0900
+Message-id: <006801cfdd46$9cbcecb0$d636c610$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Matthew Minter <matt@masarand.com>
+On Wednesday, October 01, 2014 1:28 PM, Pratyush Anand wrote:
+> On Wed, Oct 01, 2014 at 12:36:25AM +0800, Lucas Stach wrote:
+> > Those two patches were part of my designware multi-msi series. I decided
+> > to postpone that one a little bit until the treewide MSI chip patches from
+> > Yijing Wang have landed, but those two patches are just too obvious
+> > fixes/style corrections to let them wait any longer.
+> >
+> > Both patches were tested by Jingoo Han as part of the earlier series, but
+> > I had to modify them a bit for the rebase, so any review/testing much
+> > appreciated. Patches are on top of the pci/host-designware branch.
+> >
+> > Lucas Stach (2):
+> >   PCI: designware: remove bogus multiple MSI setup
+> >   PCI: designware: remove open-coded bitmap operations
+> >
+> 
+> Looks cleaner to me.
+> Reviewed-by: Pratyush Anand <pratyush.anand@st.com>
 
-PCI IRQ initialisation is currently run during the boot code on alpha,
-this has the issue that firstly an extra pass over the PCI bus is
-required and second hot-plugged devices which are added after boot have
-no way to be assigned an IRQ. This patch set fixes this by defering the
-assignment of PCI IRQs untill device enable time which should solve
-both of these issues.
+Acked-by: Jingoo Han <jg1.han@samsung.com>
 
-Signed-off-by: Matthew Minter <matt@masarand.com>
+Best regards,
+Jingoo Han
 
----
- arch/alpha/kernel/pci.c          | 16 ++++++++++------
- arch/alpha/kernel/sys_nautilus.c |  1 -
- 2 files changed, 10 insertions(+), 7 deletions(-)
-
-diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
-index 076c35c..338537c 100644
---- a/arch/alpha/kernel/pci.c
-+++ b/arch/alpha/kernel/pci.c
-@@ -28,7 +28,7 @@
- 
- 
- /*
-- * Some string constants used by the various core logics. 
-+ * Some string constants used by the various core logics.
-  */
- 
- const char *const pci_io_names[] = {
-@@ -247,7 +247,7 @@ void pcibios_fixup_bus(struct pci_bus *bus)
- 	if (pci_has_flag(PCI_PROBE_ONLY) && dev &&
-  		   (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
-  		pci_read_bridge_bases(bus);
--	} 
-+	}
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		pdev_save_srm_config(dev);
-@@ -338,7 +338,7 @@ common_init_pci(void)
- 		hose->need_domain_info = need_domain_info;
- 		next_busno = bus->busn_res.end + 1;
- 		/* Don't allow 8-bit bus number overflow inside the hose -
--		   reserve some space for bridges. */ 
-+		   reserve some space for bridges. */
- 		if (next_busno > 224) {
- 			next_busno = 0;
- 			need_domain_info = 1;
-@@ -346,11 +346,15 @@ common_init_pci(void)
- 	}
- 
- 	pcibios_claim_console_setup();
--
- 	pci_assign_unassigned_resources();
--	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
- }
- 
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->swizzle_irq = alpha_mv.pci_swizzle;
-+	bridge->map_irq = alpha_mv.pci_map_irq;
-+	return 0;
-+}
- 
- struct pci_controller * __init
- alloc_pci_controller(void)
-@@ -387,7 +391,7 @@ sys_pciconfig_iobase(long which, unsigned long bus, unsigned long dfn)
- 
- 	/* from hose or from bus.devfn */
- 	if (which & IOBASE_FROM_HOSE) {
--		for(hose = hose_head; hose; hose = hose->next) 
-+		for(hose = hose_head; hose; hose = hose->next)
- 			if (hose->index == bus) break;
- 		if (!hose) return -ENODEV;
- 	} else {
-diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
-index 837c0fa..7fb4d51 100644
---- a/arch/alpha/kernel/sys_nautilus.c
-+++ b/arch/alpha/kernel/sys_nautilus.c
-@@ -252,7 +252,6 @@ nautilus_init_pci(void)
- 	/* pci_common_swizzle() relies on bus->self being NULL
- 	   for the root bus, so just clear it. */
- 	bus->self = NULL;
--	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
- }
- 
- /*
--- 
-2.1.0
+> 
+> >  drivers/pci/host/pcie-designware.c | 98 ++++++--------------------------------
+> >  1 file changed, 14 insertions(+), 84 deletions(-)
+> >
+> > --
+> > 2.1.0
 
