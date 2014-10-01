@@ -1,77 +1,173 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0106.outbound.protection.outlook.com ([65.55.169.106]:47424
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755469AbaJ2JPW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 Oct 2014 05:15:22 -0400
-Date: Wed, 29 Oct 2014 17:13:43 +0800
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>
-CC: Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Paul Zimmerman" <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Jason Chang <jason.chang@amd.com>,
-	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 19/19] usb: dwc3: add support for AMD NL platform
-Message-ID: <20141029091342.GC10840@hr-slim.amd.com>
-References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
- <1414497280-3126-20-git-send-email-ray.huang@amd.com>
- <20141028133856.GB8123@saruman> <20141028143536.GA4519@hr-slim.amd.com>
+Received: from service87.mimecast.com ([91.220.42.44]:51157 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751208AbaJAIqb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 04:46:31 -0400
+Date: Wed, 1 Oct 2014 09:46:26 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>
+Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
+Message-ID: <20141001084626.GZ841@e106497-lin.cambridge.arm.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <20140930174821.GX841@e106497-lin.cambridge.arm.com>
+ <3079787.54pZijGjZM@wuerfel>
+ <2430078.s4snyh5OoF@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20141028143536.GA4519@hr-slim.amd.com>
+In-Reply-To: <2430078.s4snyh5OoF@wuerfel>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Felipe, Paul,
-
-On Tue, Oct 28, 2014 at 10:35:37PM +0800, Huang Rui wrote:
-> On Tue, Oct 28, 2014 at 08:38:56AM -0500, Felipe Balbi wrote:
-
-<snip>
-
+On Tue, Sep 30, 2014 at 09:01:14PM +0100, Arnd Bergmann wrote:
+> On Tuesday 30 September 2014 20:54:41 Arnd Bergmann wrote:
+> > On Tuesday 30 September 2014 18:48:21 Liviu Dudau wrote:
+> > > > > > > These are the functions I found that refer to pci_sys_data on arm32:
+> > > > > > > 
+> > > > > > > pcibios_add_bus
+> > > > > > > pcibios_remove_bus
+> > > 
+> > > These are only needed if you want to do per HB processing of the bus
+> > > 
+> > > > > > > pcibios_align_resource
+> > > 
+> > > mvebu is the only user of this function.
+> > > 
+> > > > > > > pci_mmap_page_range
+> > > 
+> > > This is only needed when mapping a PCI resource to userspace. Is that your case here?
+> > > 
+> > > > > > > pci_domain_nr
+> > > > > > > pci_proc_domain
+> > > 
+> > > We have equivalent functionality in the generic patches for those.
+> > > 
 > > 
-> > however, as I mentioned before, the core shouldn't have to know that
-> > it's running on an AMD platform. We already support several different
-> > platforms (OMAP5, AM437x, DRA7xx, Exynos5, Exynos7, Qcom, Merrifield,
-> > Baytrail, Braswell, HAPS PCIe, and STiH407) and none of them get their
-> > $my_awesome_platform flag in dwc3, why should AMD be any different ?
-> > 
-> > This is the only part of $subject that I cannot accept because it would
-> > mean we would be giving AMD a special treatment when there shouldn't be
-> > any, for anybody.
-> > 
+> > We clearly don't need those functions for the new drivers, but that's not
+> > the point. The problem is that when you build a kernel that has both
+> > a traditional host bridge driver and a new one in it, you always get those
+> > functions and they get called from the PCI core, with incorrect arguments.
 > 
-> That's because I used this flag to enable below quirks on AMD NL FPGA
-> board, and FPGA flag only can be detected on core. Can I set
-> disable_scramble_quirk, dis_u3_susphy_quirk, and dis_u2_susphy_quirk
-> for all the FPGA platforms?
+> FWIW, the last time we discussed this, I think I had suggested that the
+> functions that are currently architecture specific and have a generic
+> __weak fallback could become function pointers in a per-host structure
+> passed to pci_scan_root_bus, either a new structure or an extended
+> struct pci_ops. Something along these lines:
+
+Agree to the general idea. But have a look why host drivers need the add_bus ops:
+to add MSI information into the bus!! If we take care of the MSI in the generic
+code there is less of a need for this function at all.
+
+Best regards,
+Liviu
+
 > 
-> if (dwc->amd_nl_plat && dwc->is_fpga) {
->         dwc->disable_scramble_quirk = true;
->         dwc->dis_u3_susphy_quirk = true;
->         dwc->dis_u2_susphy_quirk = true;
-> }
+> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+> index 7fc42784becb..3da32fc631d0 100644
+> --- a/arch/arm/include/asm/mach/pci.h
+> +++ b/arch/arm/include/asm/mach/pci.h
+> @@ -36,7 +36,6 @@ struct hw_pci {
+>  					  resource_size_t start,
+>  					  resource_size_t size,
+>  					  resource_size_t align);
+> -	void		(*add_bus)(struct pci_bus *bus);
+>  	void		(*remove_bus)(struct pci_bus *bus);
+>  };
+>  
+> @@ -65,7 +64,6 @@ struct pci_sys_data {
+>  					  resource_size_t start,
+>  					  resource_size_t size,
+>  					  resource_size_t align);
+> -	void		(*add_bus)(struct pci_bus *bus);
+>  	void		(*remove_bus)(struct pci_bus *bus);
+>  	void		*private_data;	/* platform controller private data	*/
+>  };
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index 17a26c17f7f5..3cbcf8dc41e4 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -360,13 +360,6 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+>  }
+>  EXPORT_SYMBOL(pcibios_fixup_bus);
+>  
+> -void pcibios_add_bus(struct pci_bus *bus)
+> -{
+> -	struct pci_sys_data *sys = bus->sysdata;
+> -	if (sys->add_bus)
+> -		sys->add_bus(bus);
+> -}
+> -
+>  void pcibios_remove_bus(struct pci_bus *bus)
+>  {
+>  	struct pci_sys_data *sys = bus->sysdata;
+> @@ -475,7 +468,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+>  		sys->swizzle = hw->swizzle;
+>  		sys->map_irq = hw->map_irq;
+>  		sys->align_resource = hw->align_resource;
+> -		sys->add_bus = hw->add_bus;
+>  		sys->remove_bus = hw->remove_bus;
+>  		INIT_LIST_HEAD(&sys->resources);
+>  
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index b1315e197ffb..c9a0ee0429e8 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -716,6 +716,7 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+>  static struct pci_ops mvebu_pcie_ops = {
+>  	.read = mvebu_pcie_rd_conf,
+>  	.write = mvebu_pcie_wr_conf,
+> +	.add_bus = mvebu_pcie_add_bus,
+>  };
+>  
+>  static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+> @@ -823,7 +824,6 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
+>  	hw.map_irq        = of_irq_parse_and_map_pci;
+>  	hw.ops            = &mvebu_pcie_ops;
+>  	hw.align_resource = mvebu_pcie_align_resource;
+> -	hw.add_bus        = mvebu_pcie_add_bus;
+>  
+>  	pci_common_init(&hw);
+>  }
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index a63a47a70846..be6d56358320 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1885,6 +1885,8 @@ int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+>  
+>  void __weak pcibios_add_bus(struct pci_bus *bus)
+>  {
+> +	if (bus->ops && bus->ops->add_bus)
+> +		bus->ops->add_bus(bus);		
+>  }
+>  
+>  void __weak pcibios_remove_bus(struct pci_bus *bus)
+> 
+> 	Arnd
+> 
 > 
 
-I confirmed with HW designer, these three quirks only will be needed
-on FPGA board. And these should *not* be used on non-FPGA board, as you
-known.
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
-So I would like to use below conditions on dwc3 core. When I set these
-quirk flags in pci glue layer, then core can filter them by is_fpga
-flag to support both on FPGA and SoC. Is there any concern? If that, I
-should remove WARN_ONCE at disable_scramble flag.
-
-if (dwc->disable_scramble_quirk && dwc->is_fpga) {..}
-
-if (dwc->dis_u2_susphy_quirk && dwc->is_fpga) {..}
-
-if (dwc->dis_u3_susphy_quirk && dwc->is_fpga) {..}
-
-Thanks,
-Rui
