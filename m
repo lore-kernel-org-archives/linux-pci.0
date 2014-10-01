@@ -1,134 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:42881 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755274AbaIBXPx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Sep 2014 19:15:53 -0400
-Received: by mail-pd0-f178.google.com with SMTP id y13so9658321pdi.23
-        for <linux-pci@vger.kernel.org>; Tue, 02 Sep 2014 16:15:53 -0700 (PDT)
-Date: Tue, 2 Sep 2014 17:15:51 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Subject: Re: [PATCH] PCI / PM: Drop unused runtime PM support code for PCIe
- ports
-Message-ID: <20140902231551.GB12657@google.com>
-References: <1722733.TI67PLqUAC@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1722733.TI67PLqUAC@vostro.rjw.lan>
+Received: from gate.crashing.org ([63.228.1.57]:45879 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750833AbaJACdv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Sep 2014 22:33:51 -0400
+Message-ID: <1412129393.4285.195.camel@pasglop>
+Subject: [PATCH 4/4] sounds/hda/radeon: Disable 64-bit DMA on radeon
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alex Deucher <alexdeucher@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Date: Wed, 01 Oct 2014 12:09:53 +1000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 21, 2014 at 02:02:23AM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Since commit de7d5f729c72 (PCI/PM: Disable runtime PM of PCIe ports)
-> the runtime PM support code for PCIe ports in portdrv_pci.c has never
-> been used, so drop it entirely.
-> 
-> If we are to support runtime PM of PCIe ports, it will have to be
-> done in a different way most likely anyway.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+The chipset has a limitation in the number of address bits it
+can generate. The graphics portion uses a specific mask of
+40 or 48 bits depending on the generation. For audio, it's a bit
+less of an issue, so just mark them as no-64bit for now.
 
-Applied to pci/pm for v3.18, thanks!
+Without this, it crashes on POWER machines which can use high bits
+in the DMA address to distinguish between DMA windows. 
 
-> ---
->  drivers/pci/pcie/portdrv_pci.c |   74 -----------------------------------------
->  1 file changed, 74 deletions(-)
-> 
-> Index: linux-pm/drivers/pci/pcie/portdrv_pci.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pcie/portdrv_pci.c
-> +++ linux-pm/drivers/pci/pcie/portdrv_pci.c
-> @@ -93,77 +93,6 @@ static int pcie_port_resume_noirq(struct
->  	return 0;
->  }
->  
-> -#ifdef CONFIG_PM_RUNTIME
-> -struct d3cold_info {
-> -	bool no_d3cold;
-> -	unsigned int d3cold_delay;
-> -};
-> -
-> -static int pci_dev_d3cold_info(struct pci_dev *pdev, void *data)
-> -{
-> -	struct d3cold_info *info = data;
-> -
-> -	info->d3cold_delay = max_t(unsigned int, pdev->d3cold_delay,
-> -				   info->d3cold_delay);
-> -	if (pdev->no_d3cold)
-> -		info->no_d3cold = true;
-> -	return 0;
-> -}
-> -
-> -static int pcie_port_runtime_suspend(struct device *dev)
-> -{
-> -	struct pci_dev *pdev = to_pci_dev(dev);
-> -	struct d3cold_info d3cold_info = {
-> -		.no_d3cold	= false,
-> -		.d3cold_delay	= PCI_PM_D3_WAIT,
-> -	};
-> -
-> -	/*
-> -	 * If any subordinate device disable D3cold, we should not put
-> -	 * the port into D3cold.  The D3cold delay of port should be
-> -	 * the max of that of all subordinate devices.
-> -	 */
-> -	pci_walk_bus(pdev->subordinate, pci_dev_d3cold_info, &d3cold_info);
-> -	pdev->no_d3cold = d3cold_info.no_d3cold;
-> -	pdev->d3cold_delay = d3cold_info.d3cold_delay;
-> -	return 0;
-> -}
-> -
-> -static int pcie_port_runtime_resume(struct device *dev)
-> -{
-> -	return 0;
-> -}
-> -
-> -static int pci_dev_pme_poll(struct pci_dev *pdev, void *data)
-> -{
-> -	bool *pme_poll = data;
-> -
-> -	if (pdev->pme_poll)
-> -		*pme_poll = true;
-> -	return 0;
-> -}
-> -
-> -static int pcie_port_runtime_idle(struct device *dev)
-> -{
-> -	struct pci_dev *pdev = to_pci_dev(dev);
-> -	bool pme_poll = false;
-> -
-> -	/*
-> -	 * If any subordinate device needs pme poll, we should keep
-> -	 * the port in D0, because we need port in D0 to poll it.
-> -	 */
-> -	pci_walk_bus(pdev->subordinate, pci_dev_pme_poll, &pme_poll);
-> -	/* Delay for a short while to prevent too frequent suspend/resume */
-> -	if (!pme_poll)
-> -		pm_schedule_suspend(dev, 10);
-> -	return -EBUSY;
-> -}
-> -#else
-> -#define pcie_port_runtime_suspend	NULL
-> -#define pcie_port_runtime_resume	NULL
-> -#define pcie_port_runtime_idle		NULL
-> -#endif
-> -
->  static const struct dev_pm_ops pcie_portdrv_pm_ops = {
->  	.suspend	= pcie_port_device_suspend,
->  	.resume		= pcie_port_device_resume,
-> @@ -172,9 +101,6 @@ static const struct dev_pm_ops pcie_port
->  	.poweroff	= pcie_port_device_suspend,
->  	.restore	= pcie_port_device_resume,
->  	.resume_noirq	= pcie_port_resume_noirq,
-> -	.runtime_suspend = pcie_port_runtime_suspend,
-> -	.runtime_resume = pcie_port_runtime_resume,
-> -	.runtime_idle	= pcie_port_runtime_idle,
->  };
->  
->  #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
-> 
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: <stable@vger.kernel.org>
+---
+ sound/pci/hda/hda_intel.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sound/pci/hda/hda_intel.c b/sound/pci/hda/hda_intel.c
+index 3e6d22d..2b679d5 100644
+--- a/sound/pci/hda/hda_intel.c
++++ b/sound/pci/hda/hda_intel.c
+@@ -297,7 +297,7 @@ enum {
+ /* quirks for ATI/AMD HDMI */
+ #define AZX_DCAPS_PRESET_ATI_HDMI \
+ 	(AZX_DCAPS_NO_TCSEL | AZX_DCAPS_SYNC_WRITE | AZX_DCAPS_POSFIX_LPIB|\
+-	 AZX_DCAPS_NO_MSI64)
++	 AZX_DCAPS_NO_MSI64 | AZX_DCAPS_NO_64BIT)
+ 
+ /* quirks for Nvidia */
+ #define AZX_DCAPS_PRESET_NVIDIA \
+
+
