@@ -1,176 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28344 "EHLO mx1.redhat.com"
+Received: from gate.crashing.org ([63.228.1.57]:51588 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932838AbaJWOeV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 Oct 2014 10:34:21 -0400
-Message-ID: <1414074808.2376.88.camel@localhost.localdomain>
-Subject: Re: [PATCH v4] PCI: add kernel parameter to override devid<->driver
- mapping.
-From: Marcel Apfelbaum <marcel.a@redhat.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Stuart Yoder <stuart.yoder@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"marcel@redhat.com" <marcel@redhat.com>,
-	"mst@redhat.com" <mst@redhat.com>
-Date: Thu, 23 Oct 2014 17:33:28 +0300
-In-Reply-To: <1414072672.27420.12.camel@ul30vt.home>
-References: <1413813882-27047-1-git-send-email-marcel.a@redhat.com>
-	 <1414002755.4202.253.camel@ul30vt.home>
-	 <d093a0738f61433aafe5ddd36d0393e9@CY1PR0301MB0748.namprd03.prod.outlook.com>
-	 <1414072672.27420.12.camel@ul30vt.home>
+	id S1752068AbaJBBKw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 21:10:52 -0400
+Message-ID: <1412210092.10667.3.camel@pasglop>
+Subject: [PATCH 4/4] ALSA: hda - Limit 40bit DMA for AMD HDMI controllers
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alex Deucher <alexdeucher@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Date: Thu, 02 Oct 2014 10:34:52 +1000
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-10-23 at 07:57 -0600, Alex Williamson wrote:
-> On Thu, 2014-10-23 at 13:44 +0000, Stuart Yoder wrote:
-> > 
-> > > -----Original Message-----
-> > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > > Sent: Wednesday, October 22, 2014 1:33 PM
-> > > To: Marcel Apfelbaum
-> > > Cc: linux-pci@vger.kernel.org; bhelgaas@google.com; linux-kernel@vger.kernel.org; marcel@redhat.com;
-> > > mst@redhat.com; Yoder Stuart-B08248
-> > > Subject: Re: [PATCH v4] PCI: add kernel parameter to override devid<->driver mapping.
-> > > 
-> > > [cc+ stuart]
-> > > 
-> > > On Mon, 2014-10-20 at 17:04 +0300, Marcel Apfelbaum wrote:
-> > > > Scanning a lot of devices during boot requires a lot of time.
-> > > > On other scenarios there is a need to bind a driver to a specific slot.
-> > > >
-> > > > Binding devices to pci-stub driver does not work,
-> > > > as it will not differentiate between devices of the
-> > > > same type. Using some start scripts is error prone.
-> > > >
-> > > > The solution leverages driver_override functionality introduced by
-> > > >
-> > > > 	commit: 782a985d7af26db39e86070d28f987cad21313c0
-> > > > 	Author: Alex Williamson <alex.williamson@redhat.com>
-> > > > 	Date:   Tue May 20 08:53:21 2014 -0600
-> > > >
-> > > >     	PCI: Introduce new device binding path using pci_dev.driver_override
-> > > >
-> > > > In order to bind PCI slots to specific drivers use:
-> > > > 	pci=driver[xxxx:xx:xx.x]=foo,driver[xxxx:xx:xx.x]=bar,...
-> > > >
-> > > > Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
-> > > > ---
-> > > > v3 -> v4:
-> > > >  - Addressed Alex Williamson's comments:
-> > > >    - Modified the type of driver_override_entry's fields
-> > > >    - Used PCI_DEVFN when appropriated
-> > > >    - Removed redundant checks
-> > > >    - Replaced BUG_ON with pr_err messages
-> > > >    - Simpler command line parsing
-> > > >  - Addressed Michael S. Tsirkin comments
-> > > >    - removed DRIVER_OVERRIDE_NAME_LENGTH limitation
-> > > > v2 -> v3:
-> > > >  - Corrected subject line
-> > > > v1 -> v2:
-> > > >  - Addressed Michael S. Tsirkin comments
-> > > >    - Removed 32 slots limitation
-> > > >    - Better handling of memory allocation failures
-> > > >      (preferred BUG_ON over error messages)
-> > > >  - Addressed Alex Williamson's comments:
-> > > >    - Modified commit message to show parameter usage more clear.
-> > > >  - I preferred to re-use parse_args instead of manually using
-> > > >    strstr in order to better comply with command line parsing
-> > > >    rules.
-> > > >  - I didn't use any locking when parsing the command line args
-> > > >    (see parse_done usage) assuming that first call will be
-> > > >    early in system boot and no race can occur. Please correct
-> > > >    me if I am wrong.
-> > > >
-> > > > Notes:
-> > > >  - I have further ideas on top of this patch based on your reviews.
-> > > >    I thought of:
-> > > >    - Use wildcards to specify entire buses/devices, something like:
-> > > >      	driver[0001:02:*.*]=pci-stub
-> > > >    - Use comma to separate several devices:
-> > > >      	driver[0001:02:03.4,0001:02:04.0,...]=pci-stub
-> > > >    - Make domain optional:
-> > > >    	driver[00:03.0]=pci-stub
-> > > >
-> > > > Comments will be appreciated,
-> > > > Thanks,
-> > > > Marcel
-> > > >  Documentation/kernel-parameters.txt |   4 ++
-> > > >  drivers/pci/bus.c                   | 111 ++++++++++++++++++++++++++++++++++++
-> > > >  drivers/pci/pci.c                   |   2 +
-> > > >  3 files changed, 117 insertions(+)
-> > > 
-> > > The driver_override feature that we're making use of here is also going
-> > > to be supported by platform devices and potentially more bustypes in the
-> > > future, so I'm concerned that making a pci specific kernel parameter is
-> > > too shortsighted.  Instead we could hook on to BUS_NOTIFY_ADD_DEVICE for
-> > > bustypes that support driver_override so we can have a common interface.
-> > > Perhaps:
-> > > 
-> > > driver_override=pci,0000:02:00.0=pci-stub;platform,fakename=vfio-platform
-> > > 
-> > > Finding delimiters that don't conflict may be challenging.
-> > 
-> > I think what you proposed works--  <bus-name>,<bus-dev>=<driver>;
-> > 
-> > Think that will work for PCI, platform, and the new fsl-mc bus we are working
-> > on.
-> > 
-> > > Also, can we
-> > > assume that bus-name:dev-name is unique for every bustype?  It is for
-> > > pci, platform?
-> > 
-> > I think that has to be the case.
-> > 
-> > > It also seems like there's a question of how long should this override
-> > > last and how does the user disable it?
-> > 
-> > Isn't that a general question for the "driver_overrride" mechanism?
-> > I'm forgetting if the mechanism in the kernel now has a way to disable
-> > it--  e.g. echo /dev/null > /sys/pci/devices/.../driver_override ??
-> > 
-> > So, it would last until explicitly disabled through sysfs.
-> 
-> Yes, when you set a driver_override on a device you cancel it by writing
-> a NULL string to the same interface.  The problem is that here we have a
-> new entity in the driver scan that keeps re-applying the driver_override
-> as devices are scanned with no way to stop it.  So you can certainly
-> undo the immediate effect and bind the device to another driver, but if
-> the device is removed and re-scanned there's no way to stop if from
-> re-applying the override.  Thanks,
-Hi Alex,
 
-I checked the above scenario and after driver_override is cleared
-an we do bind/unbind, the mapping defined in the command line
-does not apply anymore.
+AMD/ATI HDMI controller chip models, we already have a filter to lower
+to 32bit DMA, but the rest are supposed to be working with 64bit
+although the hardware doesn't really work with 63bit but only with 40
+or 48bit DMA.  In this patch, we take 40bit DMA for safety for the
+AMD/ATI controllers as the graphics drivers does.
 
-My steps were:
-1. define the override in command-line -> the mapped driver is used instead of the native one
-2. unbind the device from the slot -> no driver for device
-3. remove the driver_override mapping form the slot -> no mapping defined
-3, bind the device again -> native driver in use.
+Signed-off-by: Takashi Iwai <tiwai@suse.de>
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: <stable@vger.kernel.org>
+---
 
-Thanks,
-Marcel
+Tested, works fine. This patch is actually independent of the rest
+of the series
 
+ sound/pci/hda/hda_intel.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
-> 
-> Alex
-> 
-> > > I think with pci-stub.ids=
-> > > $VENDOR:$DEVICE a user can echo the IDs to the pci-stub/remove_id sysfs
-> > > entry to cancel the effect.  The only option here seems to be a reboot.
-> > > Do we need a /sys/bus/pci/driver_overrides/{add_name,remove_name} for
-> > > this interface?  Thanks,
-> > 
-> > Thanks,
-> > Stuart
-> 
-> 
-> 
+diff --git a/sound/pci/hda/hda_intel.c b/sound/pci/hda/hda_intel.c
+index f91ba7f..48d0f30 100644
+--- a/sound/pci/hda/hda_intel.c
++++ b/sound/pci/hda/hda_intel.c
+@@ -1483,6 +1483,7 @@ static int azx_first_init(struct azx *chip)
+ 	struct snd_card *card = chip->card;
+ 	int err;
+ 	unsigned short gcap;
++	unsigned int dma_bits = 64;
+ 
+ #if BITS_PER_LONG != 64
+ 	/* Fix up base address on ULI M5461 */
+@@ -1524,9 +1525,14 @@ static int azx_first_init(struct azx *chip)
+ 	gcap = azx_readw(chip, GCAP);
+ 	dev_dbg(card->dev, "chipset global capabilities = 0x%x\n", gcap);
+ 
++	/* AMD devices support 40 or 48bit DMA, take the safe one */
++	if (chip->pci->vendor == PCI_VENDOR_ID_AMD)
++		dma_bits = 40;
++
+ 	/* disable SB600 64bit support for safety */
+ 	if (chip->pci->vendor == PCI_VENDOR_ID_ATI) {
+ 		struct pci_dev *p_smbus;
++		dma_bits = 40;
+ 		p_smbus = pci_get_device(PCI_VENDOR_ID_ATI,
+ 					 PCI_DEVICE_ID_ATI_SBX00_SMBUS,
+ 					 NULL);
+@@ -1556,9 +1562,11 @@ static int azx_first_init(struct azx *chip)
+ 	}
+ 
+ 	/* allow 64bit DMA address if supported by H/W */
+-	if ((gcap & AZX_GCAP_64OK) && !pci_set_dma_mask(pci, DMA_BIT_MASK(64)))
+-		pci_set_consistent_dma_mask(pci, DMA_BIT_MASK(64));
+-	else {
++	if (!(gcap & AZX_GCAP_64OK))
++		dma_bits = 32;
++	if (!pci_set_dma_mask(pci, DMA_BIT_MASK(dma_bits))) {
++		pci_set_consistent_dma_mask(pci, DMA_BIT_MASK(dma_bits));
++	} else {
+ 		pci_set_dma_mask(pci, DMA_BIT_MASK(32));
+ 		pci_set_consistent_dma_mask(pci, DMA_BIT_MASK(32));
+ 	}
+
 
 
 
