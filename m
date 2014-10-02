@@ -1,112 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:49563 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751374AbaJIKvz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Oct 2014 06:51:55 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"rmk+kernel@arm.linux.org.uk" <rmk+kernel@arm.linux.org.uk>,
-	"tglx@linutronix.de" <tglx@linutronix.de>
-Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
-Date: Thu, 09 Oct 2014 12:51:43 +0200
-Message-ID: <1831157.eN0OxS7i7m@wuerfel>
-In-Reply-To: <20141009090420.GA16293@e102568-lin.cambridge.arm.com>
-References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com> <2323270.n17xqW47JB@wuerfel> <20141009090420.GA16293@e102568-lin.cambridge.arm.com>
+Received: from mail-qa0-f48.google.com ([209.85.216.48]:57634 "EHLO
+	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752326AbaJBBTZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 21:19:25 -0400
+Received: by mail-qa0-f48.google.com with SMTP id dc16so1197906qab.7
+        for <linux-pci@vger.kernel.org>; Wed, 01 Oct 2014 18:19:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1412201282.4285.232.camel@pasglop>
+References: <1412129393.4285.195.camel@pasglop>
+	<s5htx3o44tv.wl-tiwai@suse.de>
+	<1412149289.4285.204.camel@pasglop>
+	<s5hr3ys43ev.wl-tiwai@suse.de>
+	<s5hoatw42f6.wl-tiwai@suse.de>
+	<CADnq5_P1qTkedSuFfgJ=dd5cWji1-OUbmKoUyq+kLQgPGYYaQw@mail.gmail.com>
+	<1412201282.4285.232.camel@pasglop>
+Date: Wed, 1 Oct 2014 21:19:24 -0400
+Message-ID: <CADnq5_PuquWuwoJuOL_rNk_bkWmKh4Mh2fu2r7dNASHktFAN_w@mail.gmail.com>
+Subject: Re: [PATCH 4/4] sounds/hda/radeon: Disable 64-bit DMA on radeon
+From: Alex Deucher <alexdeucher@gmail.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Takashi Iwai <tiwai@suse.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 09 October 2014 10:04:20 Lorenzo Pieralisi wrote:
-> On Wed, Oct 08, 2014 at 03:47:43PM +0100, Arnd Bergmann wrote:
-> > On Wednesday 08 October 2014 11:19:43 Lorenzo Pieralisi wrote:
+On Wed, Oct 1, 2014 at 6:08 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Wed, 2014-10-01 at 13:58 -0400, Alex Deucher wrote:
+>> Patch looks good.  Audio DMAs are limited to 40 bits, same as the GPU
+>> side.  I'm still waiting to hear back on the MSIs for audio, but they
+>> probably follow the GPU side, so I expect they should be fixed on Sea
+>> Islands as well.
+>
+> In the audio driver we don't have the "family names", just a list of
+> PCI IDs, do you happen to know which ones are unaffected ?
 
-> > Please look at the procfs interface again. That one can be defined
-> > in two ways (either like sparc and arm, or like powerpc and microblaze)
-> > but either one should be able to work with user space that expects
-> > that interface and break with user space that expects the other one.
-> 
-> I agree as long as pci_mmap_page_range() is concerned, but I am
-> referring to the pci_mmap_fits() implementation here:
-> 
->         start = vma->vm_pgoff;
->         size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
->         pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
->                         pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
->         if (start >= pci_start && start < pci_start + size &&
->                         start + nr <= pci_start + size)
->                 return 1;
->         return 0;
-> 
-> pci_mmap_fits(), when mapping from procfs always check the offset against
-> resources, which are fixed-up addresses. If we passed the values dumped
-> from the device config space (as pci_mmap_page_range() expects on arm) IMHO
-> the check above would fail (always referring to platforms where
-> mem_offset != 0).
+The list of unaffected ones are:
+0x1308 //kaveri
+0x9840 //Kabini
+0xaac0 //bonaire
+0xaac8 //hawaii
+0xaad8 //tonga
+Pus all newer asics.
 
-Ah, I see it now too.
+Alternatively, the list of older asics that are affected (some of
+these may not even support MSI64 in the first place):
+0x1314 //palm
+0x7919 //RS690
+0x793b //RS600
+0x7969 //RS740
+0x960f //RS780
+0x9646 //sumo
+0x970f //RS880
+0x9902 //trinity
+0xaa00 //R600
+0xaa08 //RV630
+0xaa10 //RV610
+0xaa18 //RV670
+0xaa20 //RV635
+0xaa28 //RV620
+0xaa30 //RV770
+0xaa38 //RV730
+0xaa40 //RV710
+0xaa48 //RV740
+0xaa50 //cypress
+0xaa58 //juniper
+0xaa60 //redwood
+0xaa68 //cedar
+0xaa80 //cayman
+0xaa88 //barts
+0xaa90 //turks
+0xaa98 //caicos
+0xaaa0 //tahiti
+0xaab0 //verde, pitcairn, oland
 
-> Last changes where introduced by commit 8c05cd08a, whose commit log adds
-> to my confusion:
-> 
-> "[...] I think what we want here is for pci_start to be 0 when mmap_api ==
-> PCI_MMAP_PROCFS.[...]"
-> 
-> But that's not what the code does.
+It might be better to only set the msi32 flag on the above affected
+asics so we don't have to worry about new ones.
 
-My best guess is that this is a typo and that Darrick meant PCI_MMAP_SYSFS
-in the changelog, which is the same thing that the code does. It's also
-the sensible thing to do.
-
-This probably means that the procfs interface is now also broken on
-sparc.
-
-> I will try to grab an integrator board to give it a go.
-
-Ok, good idea.
-
-> > > Or we can add mem_offset to the host bridge (after all architectures like
-> > > PowerPC and Microblaze have a pci_mem_offset variable in their host
-> > > controllers), but still, this removes pci_sys_data dependency but does
-> > > not solve the pci_mmap_page_range() issue.
-> > 
-> > The host bridge already stores the mem_offset in terms of the resource
-> > list, so we could readily use that, except that it might break the
-> > powerpc hack if that is still in use.
-> 
-> Well, yes, I am not saying it can't be done by using the resources list,
-> I am just trying to understand if that's really useful.
-
-The PCI core tries to be ready for PCI host bridges that have multiple
-discontiguous memory spaces with different offsets, although I don't know
-of anybody has that. However if we decide to implement a generic 
-pci_mmap_page_range that tries to take the offset into account, we should
-use the resource list in the host bridge because it can tell us the correct
-offsets.
-
-However, given what you found, the procfs interface being broken since
-2010 on both architectures (arm32 and sparc) that try to honor the offset,
-we should probably go back to your previous suggestion of removing
-the offset handling, which would make it possible to use the procfs
-interface and the sysfs interface on all architectures.
-
-Would you be able to prepare a patch that does this and circulate that
-with the sparc, powerpc and microblaze maintainers as well as Darrick
-and Martin who were involved with the pci_mmap_fits change?
-
-	Arnd
+Alex
