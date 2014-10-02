@@ -1,49 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f46.google.com ([209.85.192.46]:39237 "EHLO
-	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750969AbaJPDvT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Oct 2014 23:51:19 -0400
-Received: by mail-qg0-f46.google.com with SMTP id z60so1938915qgd.19
-        for <linux-pci@vger.kernel.org>; Wed, 15 Oct 2014 20:51:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+QbAV6-C9wxPttEx0uDn_K5Y1LaGt8pxDWc8RJmN4DqR+NHtQ@mail.gmail.com>
-References: <CA+QbAV6-C9wxPttEx0uDn_K5Y1LaGt8pxDWc8RJmN4DqR+NHtQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 15 Oct 2014 21:50:58 -0600
-Message-ID: <CAErSpo5YXZ8YRzhg0xvbHGCr22o+_+yi7HrCCBYBM9Ke42okJQ@mail.gmail.com>
-Subject: Re: PCIe PASID (Process Address Space ID) and iommu code
-To: Kallol Biswas <nucleodyne@gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Jay Cornwall <jay.cornwall@amd.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from foo.masarand.uk ([69.164.217.139]:56326 "EHLO foo.masarand.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751488AbaJBD7Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 23:59:24 -0400
+From: matt@masarand.com
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, Matthew Minter <matt@masarand.com>
+Subject: [PATCH 08/18] Delayed frv setup of PCI IRQs to bus scan time
+Date: Thu,  2 Oct 2014 04:50:27 +0100
+Message-Id: <1412221837-17452-9-git-send-email-matt@masarand.com>
+In-Reply-To: <1412221837-17452-1-git-send-email-matt@masarand.com>
+References: <1412221837-17452-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Joerg, Suravee, Jay, iommu list, linux-pci]
+From: Matthew Minter <matt@masarand.com>
 
-On Wed, Oct 15, 2014 at 5:44 PM, Kallol Biswas <nucleodyne@gmail.com> wrote:
-> Resending, as message got bounced for html content.
-> --------------------------------------------
-> Hi,
->     PCIe has introduced PASID TLP Prefix.  There are two ECNs on this.
->
-> It seems that AMD iommu code makes use of PASID. Is there a device that
-> utilizes this TLP prefix?
->
-> PASID allocation and management within a device is not clear to me. How
-> does device know which PASID to issue for which virtual address? Who makes
-> the association? Must be software/OS, but how? There is no table for this
-> like MSI-X table.
->
-> Any pointer/documentation will be appreciated.
->
-> Regards,
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+PCI IRQs are being assigned during the frv pcibios phase. This causes
+devices which are not connected at boot but are later hot-plugged
+to not receive an IRQ. This patch set causes the pcibios to instead
+register an IRQ assignment function which is called during the enable
+device path to apply to all devices.
+
+---
+ arch/frv/mb93090-mb00/pci-frv.h |  1 -
+ arch/frv/mb93090-mb00/pci-irq.c | 28 +++++++++++++++++-----------
+ arch/frv/mb93090-mb00/pci-vdk.c |  1 -
+ 3 files changed, 17 insertions(+), 13 deletions(-)
+
+diff --git a/arch/frv/mb93090-mb00/pci-frv.h b/arch/frv/mb93090-mb00/pci-frv.h
+index a7e487fe..492b56d 100644
+--- a/arch/frv/mb93090-mb00/pci-frv.h
++++ b/arch/frv/mb93090-mb00/pci-frv.h
+@@ -36,5 +36,4 @@ extern struct pci_ops *__nongpreldata pci_root_ops;
+ extern unsigned int pcibios_irq_mask;
+ 
+ void pcibios_irq_init(void);
+-void pcibios_fixup_irqs(void);
+ void pcibios_enable_irq(struct pci_dev *dev);
+diff --git a/arch/frv/mb93090-mb00/pci-irq.c b/arch/frv/mb93090-mb00/pci-irq.c
+index 1c35c93..3463e30 100644
+--- a/arch/frv/mb93090-mb00/pci-irq.c
++++ b/arch/frv/mb93090-mb00/pci-irq.c
+@@ -40,19 +40,25 @@ void __init pcibios_irq_init(void)
+ {
+ }
+ 
+-void __init pcibios_fixup_irqs(void)
++int pcibios_map_irq(struct pci_dev *dev, uint8_t slot, uint8_t pin)
+ {
+-	struct pci_dev *dev = NULL;
+-	uint8_t line, pin;
+-
+-	for_each_pci_dev(dev) {
+-		pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+-		if (pin) {
+-			dev->irq = pci_bus0_irq_routing[PCI_SLOT(dev->devfn)][pin - 1];
+-			pci_write_config_byte(dev, PCI_INTERRUPT_LINE, dev->irq);
+-		}
+-		pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &line);
++	uint8_t line;
++	int irq;
++
++	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
++	if (pin) {
++		irq = pci_bus0_irq_routing[PCI_SLOT(dev->devfn)][pin - 1];
++		pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+ 	}
++	pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &line);
++	return irq;
++}
++
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->swizzle_irq = NULL;
++	bridge->map_irq = pcibios_map_irq;
++	return 0;
+ }
+ 
+ void pcibios_enable_irq(struct pci_dev *dev)
+diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
+index efa5d65..86657a7 100644
+--- a/arch/frv/mb93090-mb00/pci-vdk.c
++++ b/arch/frv/mb93090-mb00/pci-vdk.c
+@@ -386,7 +386,6 @@ int __init pcibios_init(void)
+ 	pci_scan_root_bus(NULL, 0, pci_root_ops, NULL, &resources);
+ 
+ 	pcibios_irq_init();
+-	pcibios_fixup_irqs();
+ 	pcibios_resource_survey();
+ 
+ 	return 0;
+-- 
+2.1.0
+
