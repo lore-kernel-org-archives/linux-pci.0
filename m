@@ -1,186 +1,242 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:48703 "EHLO comal.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:47923 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751946AbaJQOtQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Oct 2014 10:49:16 -0400
-Date: Fri, 17 Oct 2014 09:48:59 -0500
-From: Felipe Balbi <balbi@ti.com>
-To: Huang Rui <ray.huang@amd.com>
-CC: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 07/16] usb: dwc3: add lpm erratum support
-Message-ID: <20141017144859.GC26260@saruman>
-Reply-To: <balbi@ti.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
- <1413536021-4886-8-git-send-email-ray.huang@amd.com>
+	id S1751391AbaJBIJc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Oct 2014 04:09:32 -0400
+Date: Thu, 2 Oct 2014 11:12:58 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Marcel Apfelbaum <marcel.a@redhat.com>, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	marcel@redhat.com
+Subject: Re: [PATCH] PCI: add kernel parameter to override devid<->driver
+ mapping.
+Message-ID: <20141002081258.GB19369@redhat.com>
+References: <1412095115-28982-1-git-send-email-marcel.a@redhat.com>
+ <20141001065227.GB31859@redhat.com>
+ <1412147206.2772.8.camel@localhost.localdomain>
+ <20141001073008.GC31859@redhat.com>
+ <1412149836.2772.15.camel@localhost.localdomain>
+ <1412189463.7360.241.camel@ul30vt.home>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="jy6Sn24JjFx/iggw"
-In-Reply-To: <1413536021-4886-8-git-send-email-ray.huang@amd.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1412189463.7360.241.camel@ul30vt.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---jy6Sn24JjFx/iggw
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Wed, Oct 01, 2014 at 12:51:03PM -0600, Alex Williamson wrote:
+> On Wed, 2014-10-01 at 10:50 +0300, Marcel Apfelbaum wrote:
+> > On Wed, 2014-10-01 at 10:30 +0300, Michael S. Tsirkin wrote:
+> > > On Wed, Oct 01, 2014 at 10:06:46AM +0300, Marcel Apfelbaum wrote:
+> > > > On Wed, 2014-10-01 at 09:52 +0300, Michael S. Tsirkin wrote:
+> > > > > On Tue, Sep 30, 2014 at 07:38:35PM +0300, Marcel Apfelbaum wrote:
+> > > > > > Scanning a lot of devices during boot requires a lot of time.
+> > > > > > On other scenarios there is a need to bind a driver to a specific slot.
+> > > > > > 
+> > > > > > Binding devices to pci-stub driver does not work,
+> > > > > > as it will not differentiate between devices of the
+> > > > > > same type. Using some start scripts is error prone.
+> > > > > > 
+> > > > > > The solution leverages driver_override functionality introduced by
+> > > > > > 
+> > > > > > 	commit: 782a985d7af26db39e86070d28f987cad21313c0
+> > > > > > 	Author: Alex Williamson <alex.williamson@redhat.com>
+> > > > > > 	Date:   Tue May 20 08:53:21 2014 -0600
+> > > > > > 
+> > > > > >     	PCI: Introduce new device binding path using pci_dev.driver_override
+> > > > > > 
+> > > > > > In order to bind PCI slot 0001:02:03.4 to pci-stub use:
+> > > > > > 	driver[0001:02:03.4]=pci-stub
+> > > > > > 
+> > > > > > Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
+> > > > > > ---
+> > > > > > Notes:
+> > > > > >  - For the moment only 32 slots can be assigned specific driver.
+> > > > > >  - I have further ideas on top of this patch based on your reviews.
+> > > > > >    I thought of:
+> > > > > >    - Use wildcards to specify entire buses/devices, something like:
+> > > > > >      	driver[0001:02:*.*]=pci-stub
+> > > > > >    - Use comma to separate several devices:
+> > > > > >      	driver[0001:02:03.4,0001:02:04.0,...]=pci-stub
+> > > > > >    - Make domain optional:
+> > > > > >    	driver[00:03.0]=pci-stub
+> > > > > > 
+> > > > > > Comments will be appreciated,
+> > > > > > Thanks,
+> > > > > > Marcel
+> > > > > > 
+> > > > > > Documentation/kernel-parameters.txt |  4 +++
+> > > > > >  drivers/pci/bus.c                   |  1 +
+> > > > > >  drivers/pci/pci.c                   | 61 +++++++++++++++++++++++++++++++++++++
+> > > > > >  drivers/pci/pci.h                   |  1 +
+> > > > > >  4 files changed, 67 insertions(+)
+> > > > > > 
+> > > > > > diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+> > > > > > index 5ae8608..c1cbb4c 100644
+> > > > > > --- a/Documentation/kernel-parameters.txt
+> > > > > > +++ b/Documentation/kernel-parameters.txt
+> > > > > > @@ -2631,6 +2631,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+> > > > > >  		pcie_scan_all	Scan all possible PCIe devices.  Otherwise we
+> > > > > >  				only look for one device below a PCIe downstream
+> > > > > >  				port.
+> > > > > > +		driver		Provide an override to the devid<->driver mapping
+> > > > > > +				for a specific slot.
+> > > > > > +				Bind PCI slot 0001:02:03.4 to pci-stub by:
+> > > > > > +					driver[0001:02:03.4]=pci-stub
+> > > > > >  
+> > > > > >  	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+> > > > > >  			Management.
+> > > > > > diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> > > > > > index 73aef51..7a7ed85 100644
+> > > > > > --- a/drivers/pci/bus.c
+> > > > > > +++ b/drivers/pci/bus.c
+> > > > > > @@ -245,6 +245,7 @@ void pci_bus_add_device(struct pci_dev *dev)
+> > > > > >  	 * are not assigned yet for some devices.
+> > > > > >  	 */
+> > > > > >  	pci_fixup_device(pci_fixup_final, dev);
+> > > > > > +	pci_device_setup_driver_override(dev);
+> > > > > >  	pci_create_sysfs_dev_files(dev);
+> > > > > >  	pci_proc_attach_device(dev);
+> > > > > >  
+> > > > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > > > > index b7678be..0a3e07c 100644
+> > > > > > --- a/drivers/pci/pci.c
+> > > > > > +++ b/drivers/pci/pci.c
+> > > > > > @@ -4426,6 +4426,65 @@ void __weak pci_fixup_cardbus(struct pci_bus *bus)
+> > > > > >  }
+> > > > > >  EXPORT_SYMBOL(pci_fixup_cardbus);
+> > > > > >  
+> > > > > > +#define DRIVER_OVERRIDE_NAME_LENGTH 64
+> > > > > > +#define DRIVER_OVERRIDE_MAP_SIZE 32
+> > > > > > +
+> > > > > > +struct driver_override_entry {
+> > > > > > +	unsigned int domain;
+> > > > > > +	unsigned char bus;
+> > > > > > +	unsigned int devfn;
+> > > > > > +	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
+> > > > > > +};
+> > > > > > +
+> > > > > > +static struct driver_override_entry __initdata
+> > > > > > +	driver_override_map[DRIVER_OVERRIDE_MAP_SIZE];
+> > > > > > +static int driver_override_num_entries __initdata;
+> > > > > > +
+> > > > > > +void pci_device_setup_driver_override(struct pci_dev *dev)
+> > > > > > +{
+> > > > > > +	int i;
+> > > > > > +
+> > > > > > +	for (i = 0; i < driver_override_num_entries; i++) {
+> > > > > > +		if (pci_domain_nr(dev->bus) != driver_override_map[i].domain ||
+> > > > > > +		    dev->bus->number != driver_override_map[i].bus ||
+> > > > > > +		    dev->devfn != driver_override_map[i].devfn)
+> > > > > > +			continue;
+> > > > > > +
+> > > > > > +		dev->driver_override = kstrndup(driver_override_map[i].driver_name,
+> > > > > > +						DRIVER_OVERRIDE_NAME_LENGTH,
+> > > > > > +						GFP_KERNEL);
+> > > > > 
+> > > > > 
+> > > > Hi,
+> > > > 
+> > > > > You allocate this entry but never free it?
+> > > > Is being freed in pci_release_dev function.
+> > > > 
+> > > > > Shouldn't allocation failure be handled in some way?
+> > > > I thought about it, but in my opinion there is no need for error
+> > > > handling in this situation.
+> > > > - On the worst case scenario it will load the regular driver, no harm done.
+> > > >   (kstrndup will return NULL)
+> > > > - It is used in pci_bus_add_device workflow that has no error flow
+> > > >   that I am aware of, and even if it were an error flow, in my opinion
+> > > >   this is not enough to stop system boot.
+> > > > But thinking of this again, maybe a pr_err message?
+> > > > 
+> > > > Your review is most appreciated.
+> > > > Thanks,
+> > > > Marcel
+> > > > 
+> > > > 
+> > > 
+> > > Thinking more about it, how about just using strstr to search a string
+> > > of overrides?  This will completely remove the artificial
+> > > DRIVER_OVERRIDE_MAP_SIZE as well.
+> > I'll try it, thanks, hope it will not be too ugly.
+> > 
+> > I will still need to reserve a COMMAND_LINE_SIZE string for "string of overrides", right?
+> > Or can I dynamically allocate a buffer to hold the string so early in boot process?
+> > If I can, it will be no problem to create a dynamic sized driver_override_map.
+> 
+> I think Michael is suggesting searching the existing commandline on each
+> pass so that you don't need to allocate any memory at all.  Thanks,
+> 
+> Alex
 
-On Fri, Oct 17, 2014 at 04:53:32PM +0800, Huang Rui wrote:
-> When parameter DWC_USB3_LPM_ERRATA_ENABLE is enabled in Andvanced Configu=
-ration
-> of coreConsultant, it supports of xHCI BESL Errata Dated 10/19/2011 is en=
-abled
-> in host mode. In device mode it adds the capability to send NYET response=
- based
-> on the BESL value received in the LPM token.
->=20
-> This patch add an entry that soc platform is able to define the lpm capac=
-ity
-> with their own device tree or bus glue layer.
->=20
-> Suggested-by: Felipe Balbi <balbi@ti.com>
-> Signed-off-by: Huang Rui <ray.huang@amd.com>
-> ---
->  drivers/usb/dwc3/core.c          |  2 ++
->  drivers/usb/dwc3/core.h          | 24 +++++++++++++++---------
->  drivers/usb/dwc3/dwc3-pci.c      |  1 +
->  drivers/usb/dwc3/gadget.c        |  7 +++++++
->  drivers/usb/dwc3/platform_data.h |  1 +
->  5 files changed, 26 insertions(+), 9 deletions(-)
->=20
-> diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-> index 819e501..25db533 100644
-> --- a/drivers/usb/dwc3/core.c
-> +++ b/drivers/usb/dwc3/core.c
-> @@ -708,11 +708,13 @@ static int dwc3_probe(struct platform_device *pdev)
-> =20
->  	if (node) {
->  		dwc->maximum_speed =3D of_usb_get_maximum_speed(node);
-> +		dwc->has_lpm_erratum =3D of_property_read_bool(node, "snps,has-lpm-err=
-atum");
-> =20
->  		dwc->needs_fifo_resize =3D of_property_read_bool(node, "tx-fifo-resize=
-");
->  		dwc->dr_mode =3D of_usb_get_dr_mode(node);
->  	} else if (pdata) {
->  		dwc->maximum_speed =3D pdata->maximum_speed;
-> +		dwc->has_lpm_erratum =3D pdata->has_lpm_erratum;
-> =20
->  		dwc->needs_fifo_resize =3D pdata->tx_fifo_resize;
->  		dwc->dr_mode =3D pdata->dr_mode;
-> diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-> index cfe0d57..d58479e 100644
-> --- a/drivers/usb/dwc3/core.h
-> +++ b/drivers/usb/dwc3/core.h
-> @@ -246,16 +246,19 @@
->  #define DWC3_DCTL_TRGTULST_SS_INACT	(DWC3_DCTL_TRGTULST(6))
-> =20
->  /* These apply for core versions 1.94a and later */
-> -#define DWC3_DCTL_KEEP_CONNECT	(1 << 19)
-> -#define DWC3_DCTL_L1_HIBER_EN	(1 << 18)
-> -#define DWC3_DCTL_CRS		(1 << 17)
-> -#define DWC3_DCTL_CSS		(1 << 16)
-> +#define DWC3_DCTL_LPM_ERRATA_MASK	DWC3_DCTL_LPM_ERRATA(0xf)
-> +#define DWC3_DCTL_LPM_ERRATA(n)		((n) << 20)
-> -#define DWC3_DCTL_INITU2ENA	(1 << 12)
-> -#define DWC3_DCTL_ACCEPTU2ENA	(1 << 11)
-> -#define DWC3_DCTL_INITU1ENA	(1 << 10)
-> -#define DWC3_DCTL_ACCEPTU1ENA	(1 << 9)
-> -#define DWC3_DCTL_TSTCTRL_MASK	(0xf << 1)
-> +#define DWC3_DCTL_KEEP_CONNECT		(1 << 19)
-> +#define DWC3_DCTL_L1_HIBER_EN		(1 << 18)
-> +#define DWC3_DCTL_CRS			(1 << 17)
-> +#define DWC3_DCTL_CSS			(1 << 16)
-> +
-> +#define DWC3_DCTL_INITU2ENA		(1 << 12)
-> +#define DWC3_DCTL_ACCEPTU2ENA		(1 << 11)
-> +#define DWC3_DCTL_INITU1ENA		(1 << 10)
-> +#define DWC3_DCTL_ACCEPTU1ENA		(1 << 9)
-> +#define DWC3_DCTL_TSTCTRL_MASK		(0xf << 1)
-> =20
->  #define DWC3_DCTL_ULSTCHNGREQ_MASK	(0x0f << 5)
->  #define DWC3_DCTL_ULSTCHNGREQ(n) (((n) << 5) & DWC3_DCTL_ULSTCHNGREQ_MAS=
-K)
-> @@ -665,6 +668,8 @@ struct dwc3_scratchpad_array {
->   * @ep0_bounced: true when we used bounce buffer
->   * @ep0_expect_in: true when we expect a DATA IN transfer
->   * @has_hibernation: true when dwc3 was configured with Hibernation
-> + * @has_lpm_erratum: true when core was configured with LPM Erratum. Not=
-e that
-> + *			there's now way for software to detect this in runtime.
->   * @is_selfpowered: true when we are selfpowered
->   * @is_fpga: true when we are using the FPGA board
->   * @needs_fifo_resize: not all users might want fifo resizing, flag it
-> @@ -771,6 +776,7 @@ struct dwc3 {
->  	unsigned		ep0_bounced:1;
->  	unsigned		ep0_expect_in:1;
->  	unsigned		has_hibernation:1;
-> +	unsigned		has_lpm_erratum:1;
->  	unsigned		is_selfpowered:1;
->  	unsigned		is_fpga:1;
->  	unsigned		needs_fifo_resize:1;
-> diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
-> index a89db6c..bbe946c 100644
-> --- a/drivers/usb/dwc3/dwc3-pci.c
-> +++ b/drivers/usb/dwc3/dwc3-pci.c
-> @@ -148,6 +148,7 @@ static int dwc3_pci_probe(struct pci_dev *pci,
-> =20
->  	if (pci->vendor =3D=3D PCI_VENDOR_ID_AMD && pci->device =3D=3D
->  			PCI_DEVICE_ID_AMD_NL) {
-> +		dwc3_pdata.has_lpm_erratum =3D true;
->  		dwc3_pdata.quirks |=3D DWC3_QUIRK_AMD_NL;
->  	}
-> =20
+Conditional on having the option specified.
+BTW, API-wise, I think that it's a good idea to make the fact that pci
+addresses are used, explicit.
 
-let's combine all AMD patches as the last patch in the series so we add
-AMD support with all quirks in one place.
-
-> diff --git a/drivers/usb/dwc3/gadget.c b/drivers/usb/dwc3/gadget.c
-> index 1f2a719..33bfc70 100644
-> --- a/drivers/usb/dwc3/gadget.c
-> +++ b/drivers/usb/dwc3/gadget.c
-> @@ -1581,6 +1581,13 @@ static int dwc3_gadget_start(struct usb_gadget *g,
->  	}
->  	dwc3_writel(dwc->regs, DWC3_DCFG, reg);
-> =20
-> +	if (dwc->has_lpm_erratum) {
-> +		reg =3D dwc3_readl(dwc->regs, DWC3_DCTL);
-> +		/* REVISIT should this be configurable ? */
-> +		reg |=3D DWC3_DCTL_LPM_ERRATA(0xf);
-
-as Paul mentioned, this should definitely be configurable. So we need to
-discuss how to make that configurable too.
-
---=20
-balbi
-
---jy6Sn24JjFx/iggw
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUQSxbAAoJEIaOsuA1yqREgioP/3Q9X6e5+haGSZhi+3zDcrVW
-2coHDoKh58TJczSu6F2tBQsQ6dNorHAGwpx1nja68Z/9P0FDnamtU4MN9W5NlM5Z
-S7IEtaNVRG6BUTd8qn2AGX/1jxsURS2s676uR6zUUPjcGT50voQglst/4+jNwhRC
-P7io0cRf/G6aYvq3KFIcVkREc8Dm+FUhYB4o80KClL/kjFyY544Tuv5mOPLBsAqd
-T72HYEHujQs+6AnxEMNaLiwCJlD7dJjP0xRLK2kQpwadsbhirLSth1rW8gI2HxQL
-Z6HLnaatYuSsvI5Plr9y2My8YZoZkNZUXwT3sQ2NOErZBuejw8WbxlZlOUBDIhwQ
-znKwjuJ1XkE3oRfi1oB1x0oyuRcTxrpd2eM3PCutq0lffZDVYuPO/8oKPfeY+S7N
-rThJam9P4AOSMotmBJHDyBXXzdSJtjKx3HIZovTe6M7GmX0BFOwo84bahHT6DFpa
-a8sKwiJasLPo7px3cNacBwgKPl5TxQE0HxU3RTe5Mh8WHb/I904j/wK792M9OE0E
-SJAjxkAvDbE3WNigRDSL3pGtHrUqHwl5PTg79A92g3uZvJktLN0SK5nX9+tc+brV
-dx8ANdBjoGuihbnlPsd8qgbIVKgHZIfPw3pZXIhqKMFw9KZHiTU8u0KxI8i1DUGv
-7KA50v/SSLdk8QvG6Y++
-=WMer
------END PGP SIGNATURE-----
-
---jy6Sn24JjFx/iggw--
+> > > > > 
+> > > > > > +		break;
+> > > > > > +	}
+> > > > > > +}
+> > > > > > +
+> > > > > > +static void __init pci_parse_driver_override(char *str)
+> > > > > > +{
+> > > > > > +	unsigned int domain, bus, dev, fn;
+> > > > > > +	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
+> > > > > > +	int ret, next_entry;
+> > > > > > +	char format[] = "[%4x:%2x:%2x.%2x]=%%%ds";
+> > > > > > +
+> > > > > > +	sprintf(format + 18, "%%%ds", DRIVER_OVERRIDE_NAME_LENGTH);
+> > > > > > +	ret = sscanf(str, format, &domain, &bus, &dev, &fn, driver_name);
+> > > > > > +
+> > > > > > +	if (ret != 5) {
+> > > > > > +		pr_err("PCI: Invalid command line: driver%s\n", str);
+> > > > > > +		return;
+> > > > > > +	}
+> > > > > > +
+> > > > > > +	if (driver_override_num_entries == DRIVER_OVERRIDE_MAP_SIZE) {
+> > > > > > +		pr_err("PCI: Driver map overflow - ignoring driver%s\n", str);
+> > > > > > +		return;
+> > > > > > +	}
+> > > > > > +
+> > > > > > +	next_entry = driver_override_num_entries++;
+> > > > > > +	driver_override_map[next_entry].domain = domain;
+> > > > > > +	driver_override_map[next_entry].bus = bus && 0xff;
+> > > > > > +	driver_override_map[next_entry].devfn = ((dev & 0x1f) << 3) | (fn & 0x7);
+> > > > > > +	memcpy(driver_override_map[next_entry].driver_name,
+> > > > > > +	       driver_name, sizeof(driver_name));
+> > > > > > +}
+> > > > > > +
+> > > > > >  static int __init pci_setup(char *str)
+> > > > > >  {
+> > > > > >  	while (str) {
+> > > > > > @@ -4468,6 +4527,8 @@ static int __init pci_setup(char *str)
+> > > > > >  				pcie_bus_config = PCIE_BUS_PEER2PEER;
+> > > > > >  			} else if (!strncmp(str, "pcie_scan_all", 13)) {
+> > > > > >  				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
+> > > > > > +			} else if (!strncmp(str, "driver", 6)) {
+> > > > > > +				pci_parse_driver_override(str + 6);
+> > > > > >  			} else {
+> > > > > >  				printk(KERN_ERR "PCI: Unknown option `%s'\n",
+> > > > > >  						str);
+> > > > > > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> > > > > > index 0601890..023d78b 100644
+> > > > > > --- a/drivers/pci/pci.h
+> > > > > > +++ b/drivers/pci/pci.h
+> > > > > > @@ -197,6 +197,7 @@ enum pci_bar_type {
+> > > > > >  bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+> > > > > >  				int crs_timeout);
+> > > > > >  int pci_setup_device(struct pci_dev *dev);
+> > > > > > +void pci_device_setup_driver_override(struct pci_dev *dev);
+> > > > > >  int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+> > > > > >  		    struct resource *res, unsigned int reg);
+> > > > > >  int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
+> > > > > > -- 
+> > > > > > 1.8.3.1
+> > > > 
+> > > > 
+> > 
+> > 
+> > 
+> 
+> 
