@@ -1,194 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0115.outbound.protection.outlook.com ([157.56.110.115]:9184
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933331AbaJ2PaU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 Oct 2014 11:30:20 -0400
-Message-ID: <54510806.9080102@amd.com>
-Date: Wed, 29 Oct 2014 10:30:14 -0500
-From: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
+Received: from mail-qg0-f42.google.com ([209.85.192.42]:60381 "EHLO
+	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751507AbaJBPKM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Oct 2014 11:10:12 -0400
+Received: by mail-qg0-f42.google.com with SMTP id z60so2075841qgd.1
+        for <linux-pci@vger.kernel.org>; Thu, 02 Oct 2014 08:10:11 -0700 (PDT)
 MIME-Version: 1.0
-To: Borislav Petkov <bp@alien8.de>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<tglx@linutronix.de>, <hpa@zytor.com>, <x86@kernel.org>,
-	<bp@suse.de>, <dan.carpenter@oracle.com>,
-	<dougthompson@xmission.com>, <m.chehab@samsung.com>,
-	<linux-edac@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH V2 4/4] edac, amd64_edac: Add F15h M60h support
-References: <1412640280-11452-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
- <20141010174954.GA13017@pd.tnic>
-In-Reply-To: <20141010174954.GA13017@pd.tnic>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <542A4A99.4030204@hp.com>
+References: <1412057394-7186-1-git-send-email-zhen-hual@hp.com> <542A4A99.4030204@hp.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 2 Oct 2014 09:09:50 -0600
+Message-ID: <CAErSpo56yKZgP3KLbZWRH78PXc8i2nrnN2aN-12j9HR+R5bhUA@mail.gmail.com>
+Subject: Re: [PATCH 1/1] pci/quirks: fix a dmar fault for intel 82599 card
+To: "Li, ZhenHua" <zhen-hual@hp.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Carolyn Wyborny <carolyn.wyborny@intel.com>,
+	Don Skidmore <donald.c.skidmore@intel.com>,
+	Greg Rose <gregory.v.rose@intel.com>,
+	Alex Duyck <alexander.h.duyck@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Mitch Williams <mitch.a.williams@intel.com>,
+	Linux NICS <linux.nics@intel.com>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>, linda.knippers@hp.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/10/2014 12:49 PM, Borislav Petkov wrote:
-> On Mon, Oct 06, 2014 at 07:04:40PM -0500, Aravind Gopalakrishnan wrote:
->> This patch adds support for ECC error decoding for F15h M60h processor.
->> Aside from the usual changes, the patch adds support for some new features
->> in the processor:
->>   - DDR4(unbuffered, registered); LRDIMM DDR3 support
->>     - relevant debug messages have been modified/added to report these
->>       memory types
->>   - new dbam_to_cs mappers
->>     - if (F15h M60h && LRDIMM); we need a 'multiplier' value to find
->>       cs_size. This multiplier value is obtained from the per-dimm
->>       DCSM register. So, change the interface to accept a 'cs_mask_nr'
->>       value to facilitate this calculation
->>   - new determine_memory_type low_ops
->>     - introduced to remove too many if-else conditions in
->>       determine_memory_type().
->>     - This is now called early in read_mc_regs() to cache dram_type
+On Tue, Sep 30, 2014 at 12:15 AM, Li, ZhenHua <zhen-hual@hp.com> wrote:
+> Add Joerg to CC list. For it is also related to iommu module.
+>
+> Joerg,
+> There was a try for this dmar fault,
+>         https://lkml.org/lkml/2014/8/18/118
+>
+> This patch is trying to fix the same thing.
+>
+>
+> Zhenhua
+>
+> On 09/30/2014 02:09 PM, Li, Zhen-Hua wrote:
 >>
->> Misc cleanup:
->>   - amd64_pci_table[] is condensed by using PCI_VDEVICE macro.
+>> On a HP system with Intel Corporation 82599 ethernet adapter, when kernel
+>> crashed and the kdump kernel boots with intel_iommu=on, there may be some
+>> unexpected DMA requests on this adapter, which will cause DMA Remapping
+>> faults like:
+>>      dmar: DRHD: handling fault status reg 102
+>>      dmar: DMAR:[DMA Read] Request device [41:00.0] fault addr fff81000
+>>      DMAR:[fault reason 01] Present bit in root entry is clear
 >>
->> Testing details:
->> Tested the patch by injecting 'ECC' type errors using mce_amd_inj
->> and error decoding works fine.
+>> Analysis for this bug:
 >>
->> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+>> The present bit is set in this function:
+>>
+>> static struct context_entry * device_to_context_entry(
+>>                 struct intel_iommu *iommu, u8 bus, u8 devfn)
+>> {
+>>      ......
+>>                  set_root_present(root);
+>>      ......
+>> }
+>>
+>> Calling tree:
+>> ixgbe_open
+>>      ixgbe_setup_tx_resources
+>>          intel_alloc_coherent
+>>              __intel_map_single
+>>                  domain_context_mapping
+>>                      domain_context_mapping_one
+>>                          device_to_context_entry
+>>
+>> This means, the present bit in root entry will not be set until the device
+>>   driver is loaded.
+>>
+>> But in the kdump kernel, some hardware device does not know the OS is the
+>>   second kernel and the drivers should be loaded again, this causes there
+>> are
+>>   some unexpected DMA requsts on this device when it has not been
+>> initialized,
+>>   and then the DMA Remapping errors come.
+>>
+>> To fix this DMAR fault, we need to reset the bus that this device on.
+>> Reset
+>>   the device itself does not work.
+
+This seems like something that could happen with *any* device, not
+just the 82599 NIC.  Or is there something in the "kernel crash ->
+kexec -> kdump kernel" path that stops DMA for most devices, but not
+for the 82599?
+
+>> There also was a discussion:
+>> https://lkml.org/lkml/2013/5/14/9
+>>
+>> Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
 >> ---
->> Changes in V2
->>   - Cache dram_type in amd64_pvt structure (per Boris suggestion)
->>   - Introduce per-family low_ops for determine_memory_type() to reduce
->>     number of if-else statements
->>     - Call this early in read_mc_regs() to cache dram_type
->>     - The debug messages are moved around a bit as a result to print
->>       dram_type immediately
+>>   drivers/pci/quirks.c | 11 +++++++++++
+>>   1 file changed, 11 insertions(+)
 >>
->>   drivers/edac/amd64_edac.c | 253 ++++++++++++++++++++++++++++++++--------------
->>   drivers/edac/amd64_edac.h |  16 ++-
->>   2 files changed, 188 insertions(+), 81 deletions(-)
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index 80c2d01..5198af3 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -25,6 +25,7 @@
+>>   #include <linux/sched.h>
+>>   #include <linux/ktime.h>
+>>   #include <asm/dma.h>  /* isa_dma_bridge_buggy */
+>> +#include <linux/crash_dump.h>
+>>   #include "pci.h"
 >>
->> diff --git a/drivers/edac/amd64_edac.c b/drivers/edac/amd64_edac.c
->> index bbd6514..6cc3243 100644
->> --- a/drivers/edac/amd64_edac.c
->> +++ b/drivers/edac/amd64_edac.c
->> @@ -692,9 +692,18 @@ static void debug_dump_dramcfg_low(struct amd64_pvt *pvt, u32 dclr, int chan)
->>   {
->>   	edac_dbg(1, "F2x%d90 (DRAM Cfg Low): 0x%08x\n", chan, dclr);
->>   
->> -	edac_dbg(1, "  DIMM type: %sbuffered; all DIMMs support ECC: %s\n",
->> -		 (dclr & BIT(16)) ?  "un" : "",
->> -		 (dclr & BIT(19)) ? "yes" : "no");
->> +	if (pvt->dram_type == MEM_LRDDR3) {
->> +		u32 dcsm = pvt->csels[chan].csmasks[0];
->> +		/*
->> +		 * It's assumed all LRDIMMs in a DCT are going to be of
->> +		 * same 'type' until proven otherwise. So, use a cs
->> +		 * value of '0' here to get dcsm value.
->> +		 */
->> +		edac_dbg(1, " LRDIMM %dx rank multiply\n", (dcsm & 0x3));
->> +	}
->> +
->> +	edac_dbg(1, "All DIMMs support ECC:%s\n",
->> +		    (dclr & BIT(19)) ? "yes" : "no");
->>   
->>   	edac_dbg(1, "  PAR/ERR parity: %s\n",
->>   		 (dclr & BIT(8)) ?  "enabled" : "disabled");
->> @@ -756,7 +765,7 @@ static void prep_chip_selects(struct amd64_pvt *pvt)
->>   	if (pvt->fam == 0xf && pvt->ext_model < K8_REV_F) {
->>   		pvt->csels[0].b_cnt = pvt->csels[1].b_cnt = 8;
->>   		pvt->csels[0].m_cnt = pvt->csels[1].m_cnt = 8;
->> -	} else if (pvt->fam == 0x15 && pvt->model >= 0x30) {
->> +	} else if (pvt->fam == 0x15 && pvt->model == 0x30) {
->>   		pvt->csels[0].b_cnt = pvt->csels[1].b_cnt = 4;
->>   		pvt->csels[0].m_cnt = pvt->csels[1].m_cnt = 2;
->>   	} else {
->> @@ -813,25 +822,57 @@ static void read_dct_base_mask(struct amd64_pvt *pvt)
->>   	}
+>>   /*
+>> @@ -3832,3 +3833,13 @@ void pci_dev_specific_enable_acs(struct pci_dev
+>> *dev)
+>>                 }
+>>         }
 >>   }
->>   
->> -static enum mem_type determine_memory_type(struct amd64_pvt *pvt, int cs)
->> +void determine_memory_type_k8(struct amd64_pvt *pvt)
->>   {
->> -	enum mem_type type;
->> -
->> -	/* F15h supports only DDR3 */
->> -	if (pvt->fam >= 0x15)
->> -		type = (pvt->dclr0 & BIT(16)) ?	MEM_DDR3 : MEM_RDDR3;
->> -	else if (pvt->fam == 0x10 || pvt->ext_model >= K8_REV_F) {
->> +	if (pvt->ext_model >= K8_REV_F) {
->>   		if (pvt->dchr0 & DDR3_MODE)
->> -			type = (pvt->dclr0 & BIT(16)) ?	MEM_DDR3 : MEM_RDDR3;
->> +			pvt->dram_type = (pvt->dclr0 & BIT(16)) ?
->> +					 MEM_DDR3 : MEM_RDDR3;
->>   		else
->> -			type = (pvt->dclr0 & BIT(16)) ? MEM_DDR2 : MEM_RDDR2;
->> +			pvt->dram_type = (pvt->dclr0 & BIT(16)) ?
->> +					 MEM_DDR2 : MEM_RDDR2;
-> If you want to do separate ->determine_memory_type() per family, you can
-> at least avoid code duplication here above ^^^ by doing
->
-> 	return determine_memory_type_f10(pvt);
->
-> for the K8-revF and later at least.
->
-> Or, you can do a nice clean switch/case and keep the logic for the
-> memory type in one function. See which one looks cleaner but from where
-> I'm standing, the per-family pointers are a bit too much for this case,
-> IMHO.
->
-> Oh, btw, they all should be static declarations, of course.
->
->>   	} else {
->> -		type = (pvt->dclr0 & BIT(18)) ? MEM_DDR : MEM_RDDR;
->> +		pvt->dram_type = (pvt->dclr0 & BIT(18)) ? MEM_DDR : MEM_RDDR;
->>   	}
->> +}
->>   
->> -	amd64_info("CS%d: %s\n", cs, edac_mem_types[type]);
->> +void determine_memory_type_f10(struct amd64_pvt *pvt)
->> +{
->> +	if (pvt->dchr0 & DDR3_MODE)
->> +		pvt->dram_type = (pvt->dclr0 & BIT(16)) ?
->> +				 MEM_DDR3 : MEM_RDDR3;
->> +	else
->> +		pvt->dram_type = (pvt->dclr0 & BIT(16)) ?
->> +				 MEM_DDR2 : MEM_RDDR2;
->> +}
->>   
->> -	return type;
->> +void determine_memory_type_f15(struct amd64_pvt *pvt)
->> +{
->> +	if (pvt->model == 0x60) {
->> +		/*
->> +		 * We use a Chip Select value of '0' to obtain dcsm.
->> +		 * Theoretically, it is possible to populate LRDIMMs
->> +		 * of different 'Rank' value on a DCT. But this is
->> +		 * not a common case. So, it's reasonable to assume
->> +		 * all DIMMs are going to be of same 'type' until
->> +		 * proven otherwise.
->> +		 */
->> +		u32 dram_ctrl;
->> +		u32 dcsm = pvt->csels[0].csmasks[0];
 >> +
->> +		amd64_read_dct_pci_cfg(pvt, 0, DRAM_CONTROL,
->> +				       &dram_ctrl);
->> +		pvt->dram_type = (((dram_ctrl >> 8) & 0x7) == 0x2) ? MEM_DDR4 :
->> +				 (pvt->dclr0 & BIT(16)) ? MEM_DDR3 :
->> +				 (dcsm & 0x3) ? MEM_LRDDR3 : MEM_RDDR3;
-> This is pretty unreadable, please do a simpler if-else instead.
-
-Ok, will do.
-
->> +	} else {
->> +		pvt->dram_type = (pvt->dclr0 & BIT(16)) ? MEM_DDR3 : MEM_RDDR3;
->> +	}
->> +}
->> +
->> +void determine_memory_type_f16(struct amd64_pvt *pvt)
+>> +#ifdef CONFIG_CRASH_DUMP
+>> +void quirk_reset_buggy_devices(struct pci_dev *dev)
 >> +{
->> +	pvt->dram_type = (pvt->dclr0 & BIT(16)) ? MEM_DDR3 : MEM_RDDR3;
-> This line tends to repeat a lot - the switch/case version starts to
-> sound much better all of a sudden... :-)
+>> +       if (unlikely(is_kdump_kernel()))
+>> +               pci_try_reset_bus(dev->bus);
+>> +}
+>> +DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_INTEL, 0x10f8,
+>> +               PCI_CLASS_NETWORK_ETHERNET, 8, quirk_reset_buggy_devices);
+>> +#endif
+>>
 >
->
-
-switch-case is fine too (although it'll probably be one big function..).
-I thought per-family pointers might be more manageable; anyway, I'll 
-re-implement this as a switch-case and send as V3.
-
-Thanks,
--Aravind
