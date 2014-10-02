@@ -1,108 +1,112 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 28 Oct 2014 20:37:17 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Yingjoe Chen <yingjoe.chen@mediatek.com>
-cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	Matthias Brugger <matthias.bgg@gmail.com>
-Subject: Re: [Patch Part2 v3 01/24] irqdomain: Introduce new interfaces to
- support hierarchy irqdomains
-In-Reply-To: <1414489711.32399.53.camel@mtksdaap41>
-Message-ID: <alpine.DEB.2.11.1410282010340.5308@nanos>
-References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>  <1414484803-10311-2-git-send-email-jiang.liu@linux.intel.com> <1414489711.32399.53.camel@mtksdaap41>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:48073 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752744AbaJBWXt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Oct 2014 18:23:49 -0400
+Message-ID: <1412288593.28143.37.camel@pasglop>
+Subject: Re: [PATCH v2 2/4] gpu/radeon: Move 64-bit MSI quirk from arch to
+ driver
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex Deucher <alexdeucher@gmail.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Takashi Iwai <tiwai@suse.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Date: Fri, 03 Oct 2014 08:23:13 +1000
+In-Reply-To: <CAErSpo4XYYJGZvAH7bQp6DXdBtLFT4e8WR6ve3mdV1LY0JdgPA@mail.gmail.com>
+References: <1412210062.10667.1.camel@pasglop>
+	 <20141002153402.GC18056@google.com> <1412283745.28143.23.camel@pasglop>
+	 <CAErSpo4XYYJGZvAH7bQp6DXdBtLFT4e8WR6ve3mdV1LY0JdgPA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 28 Oct 2014, Yingjoe Chen wrote:
-> On Tue, 2014-10-28 at 16:26 +0800, Jiang Liu wrote:
-> <deleted...>
-> > @@ -471,7 +469,7 @@ unsigned int irq_create_of_mapping(struct of_phandle_args *irq_data)
-> >  	struct irq_domain *domain;
-> >  	irq_hw_number_t hwirq;
-> >  	unsigned int type = IRQ_TYPE_NONE;
-> > -	unsigned int virq;
-> > +	int virq;
-> >  
-> >  	domain = irq_data->np ? irq_find_host(irq_data->np) : irq_default_domain;
-> >  	if (!domain) {
-> > @@ -480,6 +478,11 @@ unsigned int irq_create_of_mapping(struct of_phandle_args *irq_data)
-> >  		return 0;
-> >  	}
-> >  
-> > +	if (irq_domain_is_hierarchy(domain)) {
-> > +		virq = irq_domain_alloc_irqs(domain, 1, NUMA_NO_NODE, irq_data);
-> > +		return virq <= 0 ? 0 : virq;
-> > +	}
-> > +
-> >  	/* If domain has no translation, then we assume interrupt line */
-> >  	if (domain->ops->xlate == NULL)
-> >  		hwirq = irq_data->args[0];
-> > @@ -540,8 +543,8 @@ unsigned int irq_find_mapping(struct irq_domain *domain,
-> >  		return 0;
-> >  
-> >  	if (hwirq < domain->revmap_direct_max_irq) {
-> > -		data = irq_get_irq_data(hwirq);
-> > -		if (data && (data->domain == domain) && (data->hwirq == hwirq))
-> > +		data = irq_domain_get_irq_data(domain, hwirq);
-> > +		if (data && data->hwirq == hwirq)
-> >  			return hwirq;
-> >  	}
+On Thu, 2014-10-02 at 15:44 -0600, Bjorn Helgaas wrote:
+> On Thu, Oct 2, 2014 at 3:02 PM, Benjamin Herrenschmidt
+> <benh@kernel.crashing.org> wrote:
+> > On Thu, 2014-10-02 at 09:34 -0600, Bjorn Helgaas wrote:
+> >> On Thu, Oct 02, 2014 at 10:34:22AM +1000, Benjamin Herrenschmidt wrote:
+> >> >
+> >> > A number of radeon cards have a HW limitation causing them to be
+> >> > unable to generate the full 64-bit of address bits for MSIs. This
+> >> > breaks MSIs on some platforms such as POWER machines.
+> >> >
+> >> > We used to have a powerpc specific quirk to address that on a
+> >> > single card, but this doesn't scale very well, this is better
+> >> > put under control of the drivers who know precisely what a given
+> >> > HW revision can do.
+> >> >
+> >> > This moves the setting of the quirk flag to the radeon driver
+> >> >
+> >> > Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> >> > ---
+> >> >
+> >> > v2: This is just adjusted to the new flag name
+> >>
+> >> I'm sorta confused because I got two "v2 2/4" emails a minute or so apart.
+> >> I assume they're the same.
+> >
+> > Yes, evo blew up while sending the series the first time around :(
 > 
-> Why do you want to move irq_domain_alloc_irqs up there?
+> No problem.  My real question is below, but you probably missed it
+> because of my email gripe :)
 
-That's the wrong question. The proper question is whether we can move
-it after the xlate part. I don't see a reason why we cannot do that.
+Heh ok :-)
 
-Jiang was right not to incorporate your patch to do that simply
-because we want to keep the history of the evolution of this
-code. Your patch is an enhancement and it needs to be discussed and
-applied seperately.
+> >> >  arch/powerpc/kernel/pci_64.c            |  1 -
+> >> >  drivers/gpu/drm/radeon/radeon_irq_kms.c | 10 ++++++++++
+> >> >  2 files changed, 10 insertions(+), 1 deletion(-)
+> >> >
+> >> > diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
+> >> > index d41a831..5330f6d 100644
+> >> > --- a/arch/powerpc/kernel/pci_64.c
+> >> > +++ b/arch/powerpc/kernel/pci_64.c
+> >> > @@ -271,5 +271,4 @@ static void quirk_radeon_32bit_msi(struct pci_dev *dev)
+> >> >  {
+> >> >     dev->no_64bit_msi = true;
+> >> >  }
+> >> > -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x68f2, quirk_radeon_32bit_msi);
+> >> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
+> >>
+> >> Why do we keep the 0xaa68 quirk?  Shouldn't that be made generic, too?
 
-So while we are at it:
+aa68 is the audio part, it's removed by the audio driver patch.
 
-> +	if (irq_domain_is_hierarchy(domain)) {
-> +		if (domain->ops->xlate) {
-> +			/*
-> +			 * If we've already configured this interrupt,
-> +			 * don't do it again, or hell will break loose.
-> +			 */
-> +			virq = irq_find_mapping(domain, hwirq);
-> +			if (virq)
-> +				return virq;
+But I can break things down into smaller bits as you suggested. I'll try
+to get that sorted later today.
 
-I can understand that it is an issue if the mapping exists already,
-but I have to ask WHY is it correct behaviour to call into that code
-for an existing mapping.
+Cheers,
+Ben.
 
-And why would this check only apply if domain->ops->xlate is set?
-irq_create_mapping() does it unconditionally.
+> >> > diff --git a/drivers/gpu/drm/radeon/radeon_irq_kms.c b/drivers/gpu/drm/radeon/radeon_irq_kms.c
+> >> > index 16807af..e760671 100644
+> >> > --- a/drivers/gpu/drm/radeon/radeon_irq_kms.c
+> >> > +++ b/drivers/gpu/drm/radeon/radeon_irq_kms.c
+> >> > @@ -202,6 +202,16 @@ static bool radeon_msi_ok(struct radeon_device *rdev)
+> >> >     if (rdev->flags & RADEON_IS_AGP)
+> >> >             return false;
+> >> >
+> >> > +   /*
+> >> > +    * Older chips have a HW limitation, they can only generate 40 bits
+> >> > +    * of address for "64-bit" MSIs which breaks on some platforms, notably
+> >> > +    * IBM POWER servers, so we limit them
+> >> > +    */
+> >> > +   if (rdev->family < CHIP_BONAIRE) {
+> >> > +           dev_info(rdev->dev, "radeon: MSI limited to 32-bit\n");
+> >> > +           rdev->pdev->no_64bit_msi = true;
+> >> > +   }
+> >> > +
+> >> >     /* force MSI on */
+> >> >     if (radeon_msi == 1)
+> >> >             return true;
+> >> >
+> >> >
+> >> >
+> >
+> >
 
-> Joe.C
-> >  
-> > @@ -709,3 +712,341 @@ const struct irq_domain_ops irq_domain_simple_ops = {
 
-Please remove the rest of the mail to which you are not answering next time.
-
-Thanks,
-
-	tglx
