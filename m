@@ -1,170 +1,231 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <543346CD.4070308@linux.intel.com>
-Date: Tue, 07 Oct 2014 09:50:05 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Abel <wuyun.wu@huawei.com>, Thomas Gleixner <tglx@linutronix.de>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFT v2 01/24] irqdomain: Introduce new interfaces to support
- hierarchy irqdomains
-References: <1411740145-30626-1-git-send-email-jiang.liu@linux.intel.com> <1411740145-30626-2-git-send-email-jiang.liu@linux.intel.com> <54294F1C.30606@huawei.com> <alpine.DEB.2.02.1409291707410.22082@ionos.tec.linutronix.de> <542A8C5E.3040901@huawei.com>
-In-Reply-To: <542A8C5E.3040901@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foo.masarand.uk ([69.164.217.139]:56332 "EHLO foo.masarand.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751357AbaJBD7Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 23:59:25 -0400
+From: matt@masarand.com
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, Vality <matt@masarand.com>
+Subject: [PATCH 05/18] Delayed sh setup of PCI IRQs to bus scan time
+Date: Thu,  2 Oct 2014 04:50:24 +0100
+Message-Id: <1412221837-17452-6-git-send-email-matt@masarand.com>
+In-Reply-To: <1412221837-17452-1-git-send-email-matt@masarand.com>
+References: <1412221837-17452-1-git-send-email-matt@masarand.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Vality <matt@masarand.com>
 
+Currently platform specific PCI device IRQ assignment is run during
+the boot code, this results in a wide array of differing code paths
+and causes hot-plugged PCI devices to not be assigned IRQs, this
+patch removes the boot time initialisation of such IRQs and instead
+registers assignment functions to be run during the PCI device enable
+plase.
 
-On 2014/9/30 18:56, Abel wrote:
-> Hi Thomas,
-> On 2014/9/29 23:53, Thomas Gleixner wrote:
-> 
->> On Mon, 29 Sep 2014, Abel wrote:
->>> I've been through your patches and noticed that the only domain
->>> which does not call irq_domain_alloc_irqs_parent() is
->>> x86_vector_domain. And this makes sense *if* we already knew which
->>> domain is the nearest one to the CPU.
->>
->> Right, and in case of x86 the vector domain _IS_ the one which is
->> always the nearest one to the cpu.
-> 
-> Yes, I know that. :)
-> What I meant is... (please see below)
-> 
->>
->>> But I don't think a well implemented device driver should assume
->>> itself be in a particular position of the interrupt delivery path.
->>
->> The device driver has no knowledge of this. The irq domain driver
->> definitely has to know to some extent.
->>
->>> Actually it should be guaranteed by the core infrastructure that all
->>> the domains in the interrupt delivery path should allocate a
->>> hardware interrupt for the interrupt source.
->>
->> Well, that's what we do. We allocate down the irq domain hierarchy. If
->> one level fails the whole operation fails.
-> 
-> Actually the core infrastructure just calls domain->ops->alloc() which is
-> the one who really guarantees it by calling irq_domain_alloc_irqs_parent().
-> I think it's enough for a particular domain to pick a hwirq from itself for
-> that linux irq, and need not to care about its parent.
-> What I suggest is something like:
-> 
-> for (iter = domain; iter; iter = iter->parent) {
-> 	ret = iter->ops->alloc(iter, virq, nr_irqs, arg);
-> 	if (ret < 0) {
-> 		mutex_unlock(&irq_domain_mutex);
-> 		goto out_free_irq_data;
-> 	}
-> }
-> 
-> in this way, the core infrastructure guarantees allocating down the irqdomain
-> hierarchy, and the implementers of domain_ops->alloc() need not to call
-> irq_domain_alloc_irqs_parent() any longer, just do the things they have to.
-Hi Abel,
-	We have considered the above design when implementing hierarchy
-irqdomain, but adopted the irq_domain_alloc_irqs_parent().
-The core could only support pre-order or post-order processing,
-it could support pre-order, post-order, pre-/post-order processing by
-using irq_domain_alloc_irqs_parent(). So we choose it for flexibility.
-Regards!
-Gerry
-> 
->>
->>> And besides the comments/questions I mentioned above, I am also curious about
->>> how the chained interrupts been processed.
->>>
->>> Let's take a 3-level-chained-domains for example.
->>> Given 3 interrupt controllers A, B and C, and the interrupt delivery path is:
->>>
->>> DEV -> A -> B -> C -> CPU
->>>
->>> After the hierarchy irqdomains are established, the unique linux interrupt of
->>> DEV will be mapped with a hardware interrupt in each domain:
->>>
->>> DomainA: HWIRQ_A => VIRQ_DEV
->>> DomainB: HWIRQ_B => VIRQ_DEV
->>> DomainC: HWIRQ_C => VIRQ_DEV
->>>
->>> When the DEV triggered an interrupt signal, the CPU will acknowledge HWIRQ_C,
->>
->> Not necessarily. The CPU will process HWIRQ_C. The acknowledge
->> mechanism depends on the implementation details of the hierarchy.
-> 
-> Yes, you are right. Thanks for pointing out.
-> 
->>
->>> and then irq_find_mapping(DomainC, HWIRQ_C) will be called to get the linux
->>> interrupt VIRQ_DEV, and after the handler of the VIRQ_DEV has been processed,
->>> the interrupt will end with the level (if have) uncleared on B, which will
->>> result in the interrupt of DEV cannot be processed again.
->>>
->>> Or is there anything I misunderstand?
->>
->> This heavily depends on the properties of the stacked domains.
->>
->> It depends on the hardware requirements and the implementation of
->> domain A and B how this is handled.
->>
->> It might be sufficient to have the following code in the irq_ack()
->> callback of domain A:
->>
->> irq_ack_A(struct irq_data *d)
->> {
->> 	ack_hw_A();
->> }
->>
->> Another HW or stacking scenario requires
->>
->> irq_ack_A(struct irq_data *d)
->> {
->> 	ack_hw_A();
->> 	ack_parent();
->> }
->>
->> where ack_parent() does:
->>
->>       if (d->parent_data)
->>       	 d->parent_data->chip->ack(d->parent_data);
->>
->> and ack_hw_A() can be anything from a nop to some more or less complex
->> hw access.
->>
->> So we cannot define upfront how deep an ack/mask/unmask/... has to be
->> propagated down the chain. This needs a careful consideration in terms
->> of functionality and we want to be able to do performance shortcuts as
->> well.
->>
-> 
-> Yes, I got it. And one more thing I concerned is that when hierarchy
-> irqdomains is enabled, shouldn't the ack_parent() be called by default
-> by the irqchip->irq_ack() of each domain to ensure all the domains in
-> the delivery path ack this interrupt?
-> 
-> Thanks,
-> 	Abel.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+---
+ arch/sh/drivers/pci/fixups-cayman.c     |  2 +-
+ arch/sh/drivers/pci/fixups-dreamcast.c  |  2 +-
+ arch/sh/drivers/pci/fixups-r7780rp.c    |  2 +-
+ arch/sh/drivers/pci/fixups-rts7751r2d.c |  6 +++---
+ arch/sh/drivers/pci/fixups-sdk7780.c    |  4 ++--
+ arch/sh/drivers/pci/fixups-se7751.c     |  2 +-
+ arch/sh/drivers/pci/fixups-sh03.c       |  2 +-
+ arch/sh/drivers/pci/fixups-snapgear.c   |  2 +-
+ arch/sh/drivers/pci/fixups-titan.c      |  4 ++--
+ arch/sh/drivers/pci/pci.c               | 10 +++++++---
+ arch/sh/drivers/pci/pcie-sh7786.c       |  2 +-
+ 11 files changed, 21 insertions(+), 17 deletions(-)
+
+diff --git a/arch/sh/drivers/pci/fixups-cayman.c b/arch/sh/drivers/pci/fixups-cayman.c
+index edc2fb7..3246788 100644
+--- a/arch/sh/drivers/pci/fixups-cayman.c
++++ b/arch/sh/drivers/pci/fixups-cayman.c
+@@ -5,7 +5,7 @@
+ #include <cpu/irq.h>
+ #include "pci-sh5.h"
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	int result = -1;
+ 
+diff --git a/arch/sh/drivers/pci/fixups-dreamcast.c b/arch/sh/drivers/pci/fixups-dreamcast.c
+index 1d1c5a2..9d597f7 100644
+--- a/arch/sh/drivers/pci/fixups-dreamcast.c
++++ b/arch/sh/drivers/pci/fixups-dreamcast.c
+@@ -76,7 +76,7 @@ static void gapspci_fixup_resources(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, gapspci_fixup_resources);
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	/*
+ 	 * The interrupt routing semantics here are quite trivial.
+diff --git a/arch/sh/drivers/pci/fixups-r7780rp.c b/arch/sh/drivers/pci/fixups-r7780rp.c
+index 57ed3f0..2c9b58f 100644
+--- a/arch/sh/drivers/pci/fixups-r7780rp.c
++++ b/arch/sh/drivers/pci/fixups-r7780rp.c
+@@ -15,7 +15,7 @@
+ #include <linux/sh_intc.h>
+ #include "pci-sh4.h"
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+ 	return evt2irq(0xa20) + slot;
+ }
+diff --git a/arch/sh/drivers/pci/fixups-rts7751r2d.c b/arch/sh/drivers/pci/fixups-rts7751r2d.c
+index eaddb56..358ac10 100644
+--- a/arch/sh/drivers/pci/fixups-rts7751r2d.c
++++ b/arch/sh/drivers/pci/fixups-rts7751r2d.c
+@@ -20,18 +20,18 @@
+ #define PCIMCR_MRSET_OFF	0xBFFFFFFF
+ #define PCIMCR_RFSH_OFF		0xFFFFFFFB
+ 
+-static u8 rts7751r2d_irq_tab[] __initdata = {
++static u8 rts7751r2d_irq_tab[] = {
+ 	IRQ_PCI_INTA,
+ 	IRQ_PCI_INTB,
+ 	IRQ_PCI_INTC,
+ 	IRQ_PCI_INTD,
+ };
+ 
+-static char lboxre2_irq_tab[] __initdata = {
++static char lboxre2_irq_tab[] = {
+ 	IRQ_ETH0, IRQ_ETH1, IRQ_INTA, IRQ_INTD,
+ };
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+ 	if (mach_is_lboxre2())
+ 		return lboxre2_irq_tab[slot];
+diff --git a/arch/sh/drivers/pci/fixups-sdk7780.c b/arch/sh/drivers/pci/fixups-sdk7780.c
+index c0a015a..24e96df 100644
+--- a/arch/sh/drivers/pci/fixups-sdk7780.c
++++ b/arch/sh/drivers/pci/fixups-sdk7780.c
+@@ -22,7 +22,7 @@
+ #define IRQ_INTD	evt2irq(0xa80)
+ 
+ /* IDSEL [16][17][18][19][20][21][22][23][24][25][26][27][28][29][30][31] */
+-static char sdk7780_irq_tab[4][16] __initdata = {
++static char sdk7780_irq_tab[4][16] = {
+ 	/* INTA */
+ 	{ IRQ_INTA, IRQ_INTD, IRQ_INTC, IRQ_INTD, -1, -1, -1, -1, -1, -1,
+ 	  -1, -1, -1, -1, -1, -1 },
+@@ -37,7 +37,7 @@ static char sdk7780_irq_tab[4][16] __initdata = {
+ 	  -1, -1, -1 },
+ };
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+        return sdk7780_irq_tab[pin-1][slot];
+ }
+diff --git a/arch/sh/drivers/pci/fixups-se7751.c b/arch/sh/drivers/pci/fixups-se7751.c
+index 84a88ca..1cb8d0a 100644
+--- a/arch/sh/drivers/pci/fixups-se7751.c
++++ b/arch/sh/drivers/pci/fixups-se7751.c
+@@ -7,7 +7,7 @@
+ #include <linux/sh_intc.h>
+ #include "pci-sh4.h"
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *, u8 slot, u8 pin)
+ {
+         switch (slot) {
+         case 0: return evt2irq(0x3a0);
+diff --git a/arch/sh/drivers/pci/fixups-sh03.c b/arch/sh/drivers/pci/fixups-sh03.c
+index 16207be..55ac1ba 100644
+--- a/arch/sh/drivers/pci/fixups-sh03.c
++++ b/arch/sh/drivers/pci/fixups-sh03.c
+@@ -4,7 +4,7 @@
+ #include <linux/pci.h>
+ #include <linux/sh_intc.h>
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	int irq;
+ 
+diff --git a/arch/sh/drivers/pci/fixups-snapgear.c b/arch/sh/drivers/pci/fixups-snapgear.c
+index 6e33ba4..a931e59 100644
+--- a/arch/sh/drivers/pci/fixups-snapgear.c
++++ b/arch/sh/drivers/pci/fixups-snapgear.c
+@@ -19,7 +19,7 @@
+ #include <linux/sh_intc.h>
+ #include "pci-sh4.h"
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+ 	int irq = -1;
+ 
+diff --git a/arch/sh/drivers/pci/fixups-titan.c b/arch/sh/drivers/pci/fixups-titan.c
+index bd1addb..a9d563e 100644
+--- a/arch/sh/drivers/pci/fixups-titan.c
++++ b/arch/sh/drivers/pci/fixups-titan.c
+@@ -19,7 +19,7 @@
+ #include <mach/titan.h>
+ #include "pci-sh4.h"
+ 
+-static char titan_irq_tab[] __initdata = {
++static char titan_irq_tab[] = {
+ 	TITAN_IRQ_WAN,
+ 	TITAN_IRQ_LAN,
+ 	TITAN_IRQ_MPCIA,
+@@ -27,7 +27,7 @@ static char titan_irq_tab[] __initdata = {
+ 	TITAN_IRQ_USB,
+ };
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+ 	int irq = titan_irq_tab[slot];
+ 
+diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
+index 1bc09ee..718fae3 100644
+--- a/arch/sh/drivers/pci/pci.c
++++ b/arch/sh/drivers/pci/pci.c
+@@ -141,16 +141,20 @@ static int __init pcibios_init(void)
+ 	for (hose = hose_head; hose; hose = hose->next)
+ 		pcibios_scanbus(hose);
+ 
+-	pci_fixup_irqs(pci_common_swizzle, pcibios_map_platform_irq);
+-
+ 	dma_debug_add_bus(&pci_bus_type);
+-
+ 	pci_initialized = 1;
+ 
+ 	return 0;
+ }
+ subsys_initcall(pcibios_init);
+ 
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->swizzle_irq = pci_common_swizzle;
++	bridge->map_irq = pcibios_map_platform_irq;
++	return 0;
++}
++
+ /*
+  *  Called after each bus is probed, but before its children
+  *  are examined.
+diff --git a/arch/sh/drivers/pci/pcie-sh7786.c b/arch/sh/drivers/pci/pcie-sh7786.c
+index a162a7f..0167a73 100644
+--- a/arch/sh/drivers/pci/pcie-sh7786.c
++++ b/arch/sh/drivers/pci/pcie-sh7786.c
+@@ -467,7 +467,7 @@ static int __init pcie_init(struct sh7786_pcie_port *port)
+ 	return 0;
+ }
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+         return evt2irq(0xae0);
+ }
+-- 
+2.1.0
+
