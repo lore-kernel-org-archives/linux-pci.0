@@ -1,86 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v2 12/16] usb: dwc3: add delay phy power change quirk
-Date: Fri, 17 Oct 2014 16:53:37 +0800
-Message-ID: <1413536021-4886-13-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foo.masarand.uk ([69.164.217.139]:56327 "EHLO foo.masarand.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751518AbaJBD7Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 23:59:24 -0400
+From: matt@masarand.com
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, Vality <matt@masarand.com>
+Subject: [PATCH 17/18] Disabled bus scan time PCI IRQ assignment on parisc
+Date: Thu,  2 Oct 2014 04:50:36 +0100
+Message-Id: <1412221837-17452-18-git-send-email-matt@masarand.com>
+In-Reply-To: <1412221837-17452-1-git-send-email-matt@masarand.com>
+References: <1412221837-17452-1-git-send-email-matt@masarand.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-AMD NL needs to delay PHY power change from P0 to P1/P2/P3 when link state
-changing from U0 to U1/U2/U3 respectively.
+From: Vality <matt@masarand.com>
 
-Signed-off-by: Huang Rui <ray.huang@amd.com>
+Most of the architectures are switched to allocating IRQs at device_enable
+time instead of boot time, however parisc does not provide an easy way of
+making that transition so the new code is disabled here on parisc.
+
 ---
- drivers/usb/dwc3/core.c          | 3 +++
- drivers/usb/dwc3/core.h          | 1 +
- drivers/usb/dwc3/dwc3-pci.c      | 3 ++-
- drivers/usb/dwc3/platform_data.h | 1 +
- 4 files changed, 7 insertions(+), 1 deletion(-)
+ arch/parisc/kernel/pci.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index a9f1d4c..920a8ab 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -383,6 +383,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
- 	if (dwc->quirks & DWC3_QUIRK_DEPP1P2P3)
- 		reg |= DWC3_GUSB3PIPECTL_DEP1P2P3(1);
+diff --git a/arch/parisc/kernel/pci.c b/arch/parisc/kernel/pci.c
+index 64f2764..9654c69 100644
+--- a/arch/parisc/kernel/pci.c
++++ b/arch/parisc/kernel/pci.c
+@@ -105,7 +105,13 @@ PCI_PORT_OUT(b,  8)
+ PCI_PORT_OUT(w, 16)
+ PCI_PORT_OUT(l, 32)
  
-+	if (dwc->quirks & DWC3_QUIRK_DEPOCHANGE)
-+		reg |= DWC3_GUSB3PIPECTL_DEPOCHANGE;
-+
- 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
+-
++/* We do not support hot-add irq assignment */
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->swizzle_irq = NULL;
++	bridge->map_irq = NULL;
++	return 0;
++}
  
- 	mdelay(100);
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index cf70fa6..4c0200f 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -180,6 +180,7 @@
- #define DWC3_GUSB3PIPECTL_REQP1P2P3	(1 << 24)
- #define DWC3_GUSB3PIPECTL_DEP1P2P3_MASK	DWC3_GUSB3PIPECTL_DEP1P2P3(7)
- #define DWC3_GUSB3PIPECTL_DEP1P2P3(n)	((n) << 19)
-+#define DWC3_GUSB3PIPECTL_DEPOCHANGE	(1 << 18)
- #define DWC3_GUSB3PIPECTL_SUSPHY	(1 << 17)
- 
- /* Global TX Fifo Size Register */
-diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
-index 23ae6a7..0eb8b2a 100644
---- a/drivers/usb/dwc3/dwc3-pci.c
-+++ b/drivers/usb/dwc3/dwc3-pci.c
-@@ -153,7 +153,8 @@ static int dwc3_pci_probe(struct pci_dev *pci,
- 			| DWC3_QUIRK_U2EXIT_LFPS
- 			| DWC3_QUIRK_U2SSINP3OK
- 			| DWC3_QUIRK_REQP1P2P3
--			| DWC3_QUIRK_DEPP1P2P3;
-+			| DWC3_QUIRK_DEPP1P2P3
-+			| DWC3_QUIRK_DEPOCHANGE;
- 	}
- 
- 	ret = platform_device_add_resources(dwc3, res, ARRAY_SIZE(res));
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index e668c1f..934c5e1 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -34,5 +34,6 @@ struct dwc3_platform_data {
- #define DWC3_QUIRK_U2SSINP3OK		(1 << 3)
- #define DWC3_QUIRK_REQP1P2P3		(1 << 4)
- #define DWC3_QUIRK_DEPP1P2P3		(1 << 5)
-+#define DWC3_QUIRK_DEPOCHANGE		(1 << 6)
- 
- };
+ /*
+  * BIOS32 replacement.
 -- 
-1.9.1
+2.1.0
 
