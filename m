@@ -1,68 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0116.outbound.protection.outlook.com ([157.56.111.116]:5280
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754367AbaJBPX1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Oct 2014 11:23:27 -0400
-Message-ID: <542D6DE5.3000205@amd.com>
-Date: Thu, 2 Oct 2014 10:23:17 -0500
-From: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
-MIME-Version: 1.0
-To: Borislav Petkov <bp@alien8.de>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<tglx@linutronix.de>, <hpa@zytor.com>, <x86@kernel.org>,
-	<bp@suse.de>, <dan.carpenter@oracle.com>,
-	<dougthompson@xmission.com>, <m.chehab@samsung.com>,
-	<linux-edac@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 4/4] edac, amd64_edac: Add F15h M60h support
-References: <1411070230-10298-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
- <20141001113235.GC18271@pd.tnic> <542C5995.7050803@amd.com>
- <20141002145201.GF16452@pd.tnic>
-In-Reply-To: <20141002145201.GF16452@pd.tnic>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from foo.masarand.uk ([69.164.217.139]:56350 "EHLO foo.masarand.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752370AbaJBEID (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Oct 2014 00:08:03 -0400
+From: matt@masarand.com
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, Matthew Minter <matt@masarand.com>
+Subject: [PATCH 06/18] Delayed alpha setup of PCI IRQs to bus scan time
+Date: Thu,  2 Oct 2014 05:07:34 +0100
+Message-Id: <1412222866-21068-7-git-send-email-matt@masarand.com>
+In-Reply-To: <1412222866-21068-1-git-send-email-matt@masarand.com>
+References: <1412222866-21068-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/2/2014 9:52 AM, Borislav Petkov wrote:
-> On Wed, Oct 01, 2014 at 02:44:21PM -0500, Aravind Gopalakrishnan wrote:
->> The more I think about this, I'm finding it's hard to do this cleanly.
->> I initially thought I'd just cache this in pvt->dram_type the first time I'm
->> doing this.
->> But, the pvt->ops->dbam_to_cs() mappers get called first before
->> determine_memory_type().
->>
->> So, If I look for dram_type in f15_m60h_dbam_to_chip_select() it's ugly as
->> that's really the point of
->> having a determine_memory_type().
->>
->> Also, there's just a lot of if-else statements in determine_memory_type()
->> now.
->> This could benefit from having a per-family low_ops function.
->> And, we can call this early... somewhere in read_mc_regs() so that we have
->> information ready to use in
->> f15_m60h_dbam_to_chip_select() and in init_csrows() which needs dram_type
->> too.
-> Right, this is what I was thinking too: somewhere in read_mc_regs(),
-> after having collected ->dclr0, you call determine_memory_type() and
-> store it into pvt->dram_type.
+From: Matthew Minter <matt@masarand.com>
 
-Yep.
-So, let me go ahead and make these changes.
-Shall send out a V2 once I have an answer on the LRDIMM question..
+PCI IRQ initialisation is currently run during the boot code on alpha,
+this has the issue that firstly an extra pass over the PCI bus is
+required and second hot-plugged devices which are added after boot have
+no way to be assigned an IRQ. This patch set fixes this by defering the
+assignment of PCI IRQs untill device enable time which should solve
+both of these issues.
 
-Thanks,
--Aravind.
+Signed-off-by: Matthew Minter <matt@masarand.com>
 
->> Oh, btw- We can do away with a pvt->dram_ctrl as
->> f15_m60h_dbam_to_chip_select() really just needs the dram_type.
-> Yes, you make the read of DRAM_CONTROL inside determine_memory_type() as
-> we don't need it anywhere else.
->
-> If we do, all of a sudden, we'll move it up to read_mc_regs(). IOW, I'm
-> trying to centralize all reg reads in read_mc_regs() and use locally
-> cached info later so I don't have to access the hardware each time
-> needlessly, if it can be helped.
->
->
+---
+ arch/alpha/kernel/pci.c          | 16 ++++++++++------
+ arch/alpha/kernel/sys_nautilus.c |  1 -
+ 2 files changed, 10 insertions(+), 7 deletions(-)
 
+diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+index 076c35c..338537c 100644
+--- a/arch/alpha/kernel/pci.c
++++ b/arch/alpha/kernel/pci.c
+@@ -28,7 +28,7 @@
+ 
+ 
+ /*
+- * Some string constants used by the various core logics. 
++ * Some string constants used by the various core logics.
+  */
+ 
+ const char *const pci_io_names[] = {
+@@ -247,7 +247,7 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+ 	if (pci_has_flag(PCI_PROBE_ONLY) && dev &&
+  		   (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
+  		pci_read_bridge_bases(bus);
+-	} 
++	}
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		pdev_save_srm_config(dev);
+@@ -338,7 +338,7 @@ common_init_pci(void)
+ 		hose->need_domain_info = need_domain_info;
+ 		next_busno = bus->busn_res.end + 1;
+ 		/* Don't allow 8-bit bus number overflow inside the hose -
+-		   reserve some space for bridges. */ 
++		   reserve some space for bridges. */
+ 		if (next_busno > 224) {
+ 			next_busno = 0;
+ 			need_domain_info = 1;
+@@ -346,11 +346,15 @@ common_init_pci(void)
+ 	}
+ 
+ 	pcibios_claim_console_setup();
+-
+ 	pci_assign_unassigned_resources();
+-	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
+ }
+ 
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->swizzle_irq = alpha_mv.pci_swizzle;
++	bridge->map_irq = alpha_mv.pci_map_irq;
++	return 0;
++}
+ 
+ struct pci_controller * __init
+ alloc_pci_controller(void)
+@@ -387,7 +391,7 @@ sys_pciconfig_iobase(long which, unsigned long bus, unsigned long dfn)
+ 
+ 	/* from hose or from bus.devfn */
+ 	if (which & IOBASE_FROM_HOSE) {
+-		for(hose = hose_head; hose; hose = hose->next) 
++		for(hose = hose_head; hose; hose = hose->next)
+ 			if (hose->index == bus) break;
+ 		if (!hose) return -ENODEV;
+ 	} else {
+diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
+index 837c0fa..7fb4d51 100644
+--- a/arch/alpha/kernel/sys_nautilus.c
++++ b/arch/alpha/kernel/sys_nautilus.c
+@@ -252,7 +252,6 @@ nautilus_init_pci(void)
+ 	/* pci_common_swizzle() relies on bus->self being NULL
+ 	   for the root bus, so just clear it. */
+ 	bus->self = NULL;
+-	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
+ }
+ 
+ /*
+-- 
+2.1.0
 
