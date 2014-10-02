@@ -1,60 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:49583 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750981AbaJAHsf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 03:48:35 -0400
-Message-ID: <1412149682.4285.209.camel@pasglop>
-Subject: Re: [PATCH 4/4] sounds/hda/radeon: Disable 64-bit DMA on radeon
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Takashi Iwai <tiwai@suse.de>
+Received: from mail-qc0-f179.google.com ([209.85.216.179]:39020 "EHLO
+	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751778AbaJBVpU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Oct 2014 17:45:20 -0400
+Received: by mail-qc0-f179.google.com with SMTP id x3so2884893qcv.38
+        for <linux-pci@vger.kernel.org>; Thu, 02 Oct 2014 14:45:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1412283745.28143.23.camel@pasglop>
+References: <1412210062.10667.1.camel@pasglop> <20141002153402.GC18056@google.com>
+ <1412283745.28143.23.camel@pasglop>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 2 Oct 2014 15:44:57 -0600
+Message-ID: <CAErSpo4XYYJGZvAH7bQp6DXdBtLFT4e8WR6ve3mdV1LY0JdgPA@mail.gmail.com>
+Subject: Re: [PATCH v2 2/4] gpu/radeon: Move 64-bit MSI quirk from arch to driver
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Cc: Alex Deucher <alexdeucher@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
 	Dave Airlie <airlied@linux.ie>,
 	Brian King <brking@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
+	Takashi Iwai <tiwai@suse.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
 	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Date: Wed, 01 Oct 2014 17:48:02 +1000
-In-Reply-To: <1412149289.4285.204.camel@pasglop>
-References: <1412129393.4285.195.camel@pasglop>
-	 <s5htx3o44tv.wl-tiwai@suse.de> <1412149289.4285.204.camel@pasglop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-10-01 at 17:41 +1000, Benjamin Herrenschmidt wrote:
+On Thu, Oct 2, 2014 at 3:02 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Thu, 2014-10-02 at 09:34 -0600, Bjorn Helgaas wrote:
+>> On Thu, Oct 02, 2014 at 10:34:22AM +1000, Benjamin Herrenschmidt wrote:
+>> >
+>> > A number of radeon cards have a HW limitation causing them to be
+>> > unable to generate the full 64-bit of address bits for MSIs. This
+>> > breaks MSIs on some platforms such as POWER machines.
+>> >
+>> > We used to have a powerpc specific quirk to address that on a
+>> > single card, but this doesn't scale very well, this is better
+>> > put under control of the drivers who know precisely what a given
+>> > HW revision can do.
+>> >
+>> > This moves the setting of the quirk flag to the radeon driver
+>> >
+>> > Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>> > ---
+>> >
+>> > v2: This is just adjusted to the new flag name
+>>
+>> I'm sorta confused because I got two "v2 2/4" emails a minute or so apart.
+>> I assume they're the same.
+>
+> Yes, evo blew up while sending the series the first time around :(
 
-> I don't like that approach because technically the chip doesn't do
-> 64-bit DMA ... it does something like 40 or 48 (might actually depend on
-> the chip version) and for all I know it will break on future x86 with
-> more memory or other platforms with similar address encodings as
-> powerpc...
-> 
-> The right thing might be to get the exact number of bits and do the
-> appropriate dma_set_mask() like the graphics driver does, but that's a
-> bit tricky unless we add a DMA mask field in that big array of chips in
-> there...
+No problem.  My real question is below, but you probably missed it
+because of my email gripe :)
 
-Note that I made the assumption that in the grand scheme of things, HDMI
-audio isn't a very big throughput device and thus the extra iommu
-mappings (or swiotlb) shouldn't hurt that much. But I may be wrong...
-
-So by all means, let me know what you want done here, but I don't think
-CONFIG_PPC is the right thing to do here, especially since this is not
-even something that affects all PPCs, but specifically the POWER server
-PCI bridges for which we configure a 64-bit window high up in the
-address space.
-
-FYI: Basically we setup PCI DMA addresses 0...2G as a 32-bit IOMMU
-remapped window and we also configure a "direct map" window higher up
-that bypasses the IOMMU and provides a direct linear mapping of RAM for
-64-bit capable devices. The problem is that the HW on those server chips
-requires that second window to have address bit 59 set. Then based on
-the DMA mask, the arch code provide the device with DMA ops that will
-either go through the iommu remap window or through the bypass window
-based on the DMA mask set by the driver.
-
-Cheers,
-Ben.
-
-
+>> >  arch/powerpc/kernel/pci_64.c            |  1 -
+>> >  drivers/gpu/drm/radeon/radeon_irq_kms.c | 10 ++++++++++
+>> >  2 files changed, 10 insertions(+), 1 deletion(-)
+>> >
+>> > diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
+>> > index d41a831..5330f6d 100644
+>> > --- a/arch/powerpc/kernel/pci_64.c
+>> > +++ b/arch/powerpc/kernel/pci_64.c
+>> > @@ -271,5 +271,4 @@ static void quirk_radeon_32bit_msi(struct pci_dev *dev)
+>> >  {
+>> >     dev->no_64bit_msi = true;
+>> >  }
+>> > -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x68f2, quirk_radeon_32bit_msi);
+>> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
+>>
+>> Why do we keep the 0xaa68 quirk?  Shouldn't that be made generic, too?
+>>
+>> > diff --git a/drivers/gpu/drm/radeon/radeon_irq_kms.c b/drivers/gpu/drm/radeon/radeon_irq_kms.c
+>> > index 16807af..e760671 100644
+>> > --- a/drivers/gpu/drm/radeon/radeon_irq_kms.c
+>> > +++ b/drivers/gpu/drm/radeon/radeon_irq_kms.c
+>> > @@ -202,6 +202,16 @@ static bool radeon_msi_ok(struct radeon_device *rdev)
+>> >     if (rdev->flags & RADEON_IS_AGP)
+>> >             return false;
+>> >
+>> > +   /*
+>> > +    * Older chips have a HW limitation, they can only generate 40 bits
+>> > +    * of address for "64-bit" MSIs which breaks on some platforms, notably
+>> > +    * IBM POWER servers, so we limit them
+>> > +    */
+>> > +   if (rdev->family < CHIP_BONAIRE) {
+>> > +           dev_info(rdev->dev, "radeon: MSI limited to 32-bit\n");
+>> > +           rdev->pdev->no_64bit_msi = true;
+>> > +   }
+>> > +
+>> >     /* force MSI on */
+>> >     if (radeon_msi == 1)
+>> >             return true;
+>> >
+>> >
+>> >
+>
+>
