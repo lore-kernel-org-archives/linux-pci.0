@@ -1,137 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:7265 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754574AbaJUIFB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Oct 2014 04:05:01 -0400
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <kexec@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	"Li, Zhen-Hua" <zhen-hual@hp.com>
-Subject: [PATCH 2/5] iommu/vt-d: Items required for kdump
-Date: Tue, 21 Oct 2014 16:04:16 +0800
-Message-Id: <1413878659-1383-3-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1413878659-1383-1-git-send-email-zhen-hual@hp.com>
-References: <1413878659-1383-1-git-send-email-zhen-hual@hp.com>
+Received: from foo.masarand.uk ([69.164.217.139]:56348 "EHLO foo.masarand.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752383AbaJBEIE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Oct 2014 00:08:04 -0400
+From: matt@masarand.com
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, Matthew Minter <matt@masarand.com>
+Subject: [PATCH 09/18] Delayed m68k setup of PCI IRQs to bus scan time
+Date: Thu,  2 Oct 2014 05:07:37 +0100
+Message-Id: <1412222866-21068-10-git-send-email-matt@masarand.com>
+In-Reply-To: <1412222866-21068-1-git-send-email-matt@masarand.com>
+References: <1412222866-21068-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add structure type domain_values_entry used for kdump;
-Add context functions needed for kdump.
+From: Matthew Minter <matt@masarand.com>
 
-Bill Sumner:
-    Original version;
+Currently PCI IRQs are assigned during mcf_pci_init which is only run
+at boot time, this causes devices which are connected after boot time
+to not receive an IRQ, this patch set fixes this by registering an IRQ
+assignment function to be run later at device enable time.
 
-Li, Zhenhua:
-    Changed the name of new functions, make them consistent with current
-    context get/set functions.
+Signed-off-by: Matthew Minter <matt@masarand.com>
 
-Signed-off-by: Bill Sumner
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
 ---
- drivers/iommu/intel-iommu.c | 69 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 69 insertions(+)
+ arch/m68k/platform/coldfire/pci.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 1c7350d..99fe408 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -207,6 +207,15 @@ get_context_addr_from_root(struct root_entry *root)
- 		NULL);
+diff --git a/arch/m68k/platform/coldfire/pci.c b/arch/m68k/platform/coldfire/pci.c
+index df96792..058ca86 100644
+--- a/arch/m68k/platform/coldfire/pci.c
++++ b/arch/m68k/platform/coldfire/pci.c
+@@ -316,10 +316,16 @@ static int __init mcf_pci_init(void)
+ 	rootbus->resource[0] = &mcf_pci_io;
+ 	rootbus->resource[1] = &mcf_pci_mem;
+ 
+-	pci_fixup_irqs(pci_common_swizzle, mcf_pci_map_irq);
+ 	pci_bus_size_bridges(rootbus);
+ 	pci_bus_assign_resources(rootbus);
+ 	return 0;
  }
  
-+static inline struct context_entry *
-+get_context_phys_from_root(struct root_entry *root)
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
 +{
-+	return (struct context_entry *)
-+		(root_present(root) ? (void *) (root->val & VTD_PAGE_MASK)
-+		: NULL);
++	bridge->swizzle_irq = pci_common_swizzle;
++	bridge->map_irq = mcf_pci_map_irq;
++	return 0;
 +}
 +
-+
- /*
-  * low 64 bits:
-  * 0: present
-@@ -227,6 +236,32 @@ static inline bool context_present(struct context_entry *context)
- {
- 	return (context->lo & 1);
- }
-+
-+static inline int context_fault_enable(struct context_entry *c)
-+{
-+	return((c->lo >> 1) & 0x1);
-+}
-+
-+static inline int context_translation_type(struct context_entry *c)
-+{
-+	return((c->lo >> 2) & 0x3);
-+}
-+
-+static inline u64 context_address_root(struct context_entry *c)
-+{
-+	return((c->lo >> VTD_PAGE_SHIFT));
-+}
-+
-+static inline int context_address_width(struct context_entry *c)
-+{
-+	return((c->hi >> 0) & 0x7);
-+}
-+
-+static inline int context_domain_id(struct context_entry *c)
-+{
-+	return((c->hi >> 8) & 0xffff);
-+}
-+
- static inline void context_set_present(struct context_entry *context)
- {
- 	context->lo |= 1;
-@@ -311,6 +346,40 @@ static inline int first_pte_in_page(struct dma_pte *pte)
- 	return !((unsigned long)pte & ~VTD_PAGE_MASK);
- }
- 
-+
-+#ifdef CONFIG_CRASH_DUMP
-+/*
-+ * Fix Crashdump failure caused by leftover DMA through a hardware IOMMU
-+ *
-+ * Fixes the crashdump kernel to deal with an active iommu and legacy
-+ * DMA from the (old) panicked kernel in a manner similar to how legacy
-+ * DMA is handled when no hardware iommu was in use by the old kernel --
-+ * allow the legacy DMA to continue into its current buffers.
-+ *
-+ * In the crashdump kernel, this code:
-+ * 1. skips disabling the IOMMU's translating of IO Virtual Addresses (IOVA)
-+ * 2. leaves the current translations in-place so that legacy DMA will
-+ *    continue to use its current buffers,
-+ * 3. allocates to the device drivers in the crashdump kernel
-+ *    portions of the iova address ranges that are different
-+ *    from the iova address ranges that were being used by the old kernel
-+ *    at the time of the panic.
-+ *
-+ */
-+
-+struct domain_values_entry {
-+	struct list_head link;		/* link entries into a list */
-+	struct iova_domain iovad;	/* iova's that belong to this domain */
-+	struct dma_pte	*pgd;		/* virtual address */
-+	int    did;			/* domain id */
-+	int    gaw;			/* max guest address width */
-+	int    iommu_superpage;		/* Level of superpages supported:
-+					   0 == 4KiB (no superpages), 1 == 2MiB,
-+					   2 == 1GiB, 3 == 512GiB, 4 == 1TiB */
-+};
-+
-+#endif /* CONFIG_CRASH_DUMP */
-+
- /*
-  * This domain is a statically identity mapping domain.
-  *	1. This domain creats a static 1:1 mapping to all usable memory.
+ subsys_initcall(mcf_pci_init);
 -- 
-2.0.0-rc0
+2.1.0
 
