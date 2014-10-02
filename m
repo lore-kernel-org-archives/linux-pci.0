@@ -1,53 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:49950 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753961AbaJNGrv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 02:47:51 -0400
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 14 Oct 2014 16:47:49 +1000
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 92C462CE8047
-	for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 17:47:45 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay05.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s9E6NDiW2883772
-	for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 17:23:13 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s9E6lism018038
-	for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 17:47:45 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH 0/3] PCI: code clean up on pci configuration space
-Date: Tue, 14 Oct 2014 14:47:29 +0800
-Message-Id: <1413269253-8990-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-la0-f47.google.com ([209.85.215.47]:52052 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752205AbaJBNGC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Oct 2014 09:06:02 -0400
+Received: by mail-la0-f47.google.com with SMTP id pv20so2308451lab.6
+        for <linux-pci@vger.kernel.org>; Thu, 02 Oct 2014 06:06:00 -0700 (PDT)
+From: Marti Raudsepp <marti@juffo.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Joel Schopp <joel.schopp@amd.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Marti Raudsepp <marti@juffo.org>
+Subject: [PATCH] PCI: Add ACS support for AMD A88X southbridge devices
+Date: Thu,  2 Oct 2014 16:05:37 +0300
+Message-Id: <1412255137-28954-1-git-send-email-marti@juffo.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series is a clean up in the pci subsystem when accessing the pci
-configuration space.
+AMD has confirmed that peer-to-peer between two southbridge functions
+does not occur.
 
-The first one is to re-use the PCI_FIND_CAP_TTL to limit the times iterating
-in pci configuration space.
+Joel Schopp at https://bugzilla.kernel.org/show_bug.cgi?id=81841#c15
+>     +-14.4-[01]----05.0  Dialogic Corporation PRI
+> The legacy PCI should be isolated from the other devices identified.
+> Not sure what is going on here.
+>
+>     +-14.5  Advanced Micro Devices, Inc. [AMD] FCH USB OHCI Controller
+> This OHCI Controller should also be isolated from the other devices.
 
-The next two is to use the exact type to access the pci cap and pcie ext cap.
+Signed-off-by: Marti Raudsepp <marti@juffo.org>
+---
+ drivers/pci/quirks.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Tested on x86 and powerpc.
-
-Wei Yang (3):
-  PCI: move PCI_FIND_CAP_TTL to pci.h and use it in quirks
-  PCI: use u8 instead of int for pci configuration space pos and cap
-  PCI: use u16 instead of int for pci express extended capabilities pos
-    and cap
-
- drivers/pci/iov.c    |    2 +-
- drivers/pci/pci.c    |   68 +++++++++++++++++++++++++-------------------------
- drivers/pci/probe.c  |   10 ++++----
- drivers/pci/quirks.c |   19 +++++++-------
- include/linux/pci.h  |   28 +++++++++++----------
- 5 files changed, 65 insertions(+), 62 deletions(-)
-
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 80c2d01..ce43316 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3582,6 +3582,11 @@ struct pci_dev *pci_get_dma_source(struct pci_dev *dev)
+  * 1002:439d SB7x0/SB8x0/SB9x0 LPC host controller
+  * 1002:4384 SBx00 PCI to PCI Bridge
+  * 1002:4399 SB7x0/SB8x0/SB9x0 USB OHCI2 Controller
++ *
++ * https://bugzilla.kernel.org/show_bug.cgi?id=81841#c15
++ *
++ * 1022:780f [AMD] FCH PCI Bridge
++ * 1022:7809 [AMD] FCH USB OHCI Controller
+  */
+ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+ {
+@@ -3675,6 +3680,8 @@ static const struct pci_dev_acs_enabled {
+ 	{ PCI_VENDOR_ID_ATI, 0x439d, pci_quirk_amd_sb_acs },
+ 	{ PCI_VENDOR_ID_ATI, 0x4384, pci_quirk_amd_sb_acs },
+ 	{ PCI_VENDOR_ID_ATI, 0x4399, pci_quirk_amd_sb_acs },
++	{ PCI_VENDOR_ID_AMD, 0x780f, pci_quirk_amd_sb_acs },
++	{ PCI_VENDOR_ID_AMD, 0x7809, pci_quirk_amd_sb_acs },
+ 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
+ 	{ 0 }
+ };
 -- 
-1.7.9.5
+2.1.1
 
