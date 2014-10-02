@@ -1,48 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f50.google.com ([209.85.192.50]:40144 "EHLO
-	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751188AbaJMUqo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Oct 2014 16:46:44 -0400
-Received: by mail-qg0-f50.google.com with SMTP id q108so7252772qgd.23
-        for <linux-pci@vger.kernel.org>; Mon, 13 Oct 2014 13:46:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1413231118.26478.21.camel@pasglop>
-References: <1412656696.30859.122.camel@pasglop> <CADnq5_NFt8neiOAg896d3-DbAn0rnrE7iXaTFmkNGSg-J9oSkA@mail.gmail.com>
- <1412746096.30859.229.camel@pasglop> <1413231118.26478.21.camel@pasglop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 13 Oct 2014 14:46:23 -0600
-Message-ID: <CAErSpo4gZwHy-P=w8qD9CMSkrNhJ9PE+sE1Dxfqgi_N8O_GRjQ@mail.gmail.com>
-Subject: Re: [PATCH v3 4/7] sound/radeon: Add quirk for broken 64-bit MSI
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Dave Airlie <airlied@linux.ie>, Takashi Iwai <tiwai@suse.de>,
+Received: from gate.crashing.org ([63.228.1.57]:37842 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753054AbaJBAQ1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 20:16:27 -0400
+Message-ID: <1412208952.4285.239.camel@pasglop>
+Subject: Re: [PATCH 4/4] sounds/hda/radeon: Disable 64-bit DMA on radeon
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alex Deucher <alexdeucher@gmail.com>
+Cc: Takashi Iwai <tiwai@suse.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	Dave Airlie <airlied@linux.ie>,
 	Brian King <brking@linux.vnet.ibm.com>,
 	Linux PCI <linux-pci@vger.kernel.org>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org,
-	Alex Deucher <alexdeucher@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Date: Thu, 02 Oct 2014 10:15:52 +1000
+In-Reply-To: <1412201282.4285.232.camel@pasglop>
+References: <1412129393.4285.195.camel@pasglop>
+	 <s5htx3o44tv.wl-tiwai@suse.de> <1412149289.4285.204.camel@pasglop>
+	 <s5hr3ys43ev.wl-tiwai@suse.de> <s5hoatw42f6.wl-tiwai@suse.de>
+	 <CADnq5_P1qTkedSuFfgJ=dd5cWji1-OUbmKoUyq+kLQgPGYYaQw@mail.gmail.com>
+	 <1412201282.4285.232.camel@pasglop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 13, 2014 at 2:11 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Wed, 2014-10-08 at 16:28 +1100, Benjamin Herrenschmidt wrote:
->
->> > Further discussion with the hw teams have revealed that this is still
->> > an issue on newer asics so I think your original patch is correct
->> > after all.  Just disable 64 bit MSIs on all AMD audio PCI ids.
->>
->> Allright, I won't resend the whole series, I can just pickup my previous
->> patch. Takashi, Bjorn, Dave, this series covers your 3 areas of
->> maintainership, how do you want to proceed ? I'm happy to merge the
->> whole lot via powerpc ASAP (since it's all CC'ed stable) if you guys
->> send me the appropriate acks, otherwise, let me know.
->
-> So I got an Ack from Takashi but so far silence from Bjorn and Dave :-)
->
-> Ping ?
+On Thu, 2014-10-02 at 08:08 +1000, Benjamin Herrenschmidt wrote:
+> On Wed, 2014-10-01 at 13:58 -0400, Alex Deucher wrote:
+> > Patch looks good.  Audio DMAs are limited to 40 bits, same as the GPU
+> > side.  I'm still waiting to hear back on the MSIs for audio, but they
+> > probably follow the GPU side, so I expect they should be fixed on Sea
+> > Islands as well.
+> 
+> In the audio driver we don't have the "family names", just a list of
+> PCI IDs, do you happen to know which ones are unaffected ?
 
-Sorry, I've been taking a breather after the v3.17 release.  I'll try
-to look at these soon, but I will be on vacation Thu-Fri this week).
+So I tried to be more discriminate but in the end, I had to give up, the
+most recent ID we have in the driver seems to be Cap Verde/Pitcairn,
+which isn't fixed. So either we are missing IDs or the new cards use the
+same ID.
 
-Bjorn
+I think the consequences of being over-zealous here are nil on what
+matters, ie, x86. AFAIK, x86 always uses 32-bit addresses for MSIs
+anyway, so it's unaffected and ARM ... well, I doubt it will be. In
+general, I don't think we have a big issue here by just flagging them
+all.
+
+I'll send an updated series with just the flag name changed as suggested
+by Alex and the DMA bits updated as suggested by Takashi.
+
+Cheers,
+Ben.
+
+
