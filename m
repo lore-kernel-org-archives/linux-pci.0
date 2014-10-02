@@ -1,57 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f53.google.com ([209.85.213.53]:60616 "EHLO
-	mail-yh0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751152AbaJWW1L (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Oct 2014 18:27:11 -0400
-Received: by mail-yh0-f53.google.com with SMTP id z6so883349yhz.40
-        for <linux-pci@vger.kernel.org>; Thu, 23 Oct 2014 15:27:11 -0700 (PDT)
-Date: Thu, 23 Oct 2014 16:27:07 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, liviu.dudau@arm.com,
-	Suravee.Suthikulpanit@amd.com, Will Deacon <will.deacon@arm.com>
-Subject: Re: [PATCH RFC 1/2] drivers: pci: fix window allocation order wrt
- bus_range filtering
-Message-ID: <20141023222707.GB11115@google.com>
-References: <1414077787-20633-1-git-send-email-lorenzo.pieralisi@arm.com>
+Received: from mout.kundenserver.de ([212.227.17.13]:64785 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751192AbaJBMVD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Oct 2014 08:21:03 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	patches@apm.com, jcm@redhat.com
+Subject: Re: [PATCH v10 0/4] APM X-Gene PCIe host controller
+Date: Thu, 02 Oct 2014 14:20:49 +0200
+Message-ID: <2135522.DVGa59N1mx@wuerfel>
+In-Reply-To: <20141001191403.GC22713@google.com>
+References: <1411765707-28822-1-git-send-email-tinamdar@apm.com> <20141001191403.GC22713@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414077787-20633-1-git-send-email-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 23, 2014 at 04:23:06PM +0100, Lorenzo Pieralisi wrote:
-> The number of windows allocated for the host bridge depends on the
-> bus resource. Instead of first allocating the windows and then
-> limit the bus resource, this patch reshuffles the code so that if any
-> limitation is applied to the bus resource it is taken into account in
-> the windows allocation.
+On Wednesday 01 October 2014 13:14:03 Bjorn Helgaas wrote:
+> On Fri, Sep 26, 2014 at 02:08:23PM -0700, Tanmay Inamdar wrote:
+> > This patch adds support for AppliedMicro X-Gene PCIe host controller. The
+> > driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
+> > cards.
+> > 
+> > X-Gene PCIe controller driver has depedency on the pcie arm64 arch support.
+> > Liviu Dudau from ARM has sent a patch set for pcie arm64 arch support and
+> > support for creating generic pcie bridge from device tree. Liviu's patches
+> > are available here
+> > https://lkml.org/lkml/2014/9/23/852
+> > 
+> > If someone wishes to test PCIe on X-Gene with this patch set, above mentioned
+> > patches from Liviu must be applied before the patches in this patch set. Also
+> > please use latest xgene u-boot firmware.
 > 
-> Cc: Will Deacon <will.deacon@arm.com>
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> I applied these on pci/host-xgene (based on pci/host-generic).  I hope to
+> merge these for v3.18.  It'd be nice to have a device tree person like Arnd
+> or Rob take a look at the arch/arm64/boot/dts/ bits.
 
-Hi Lorenzo,
+Those changes should normally go through the arm-soc tree, but we
+have not done that so far for arm64 stuff, so I'm not blaming anybody.
 
-I can *read* your patches just fine, but when I save them using mutt to
-apply them, they look like this:
+The dts changes all look good to me, and I think it's ok to have them
+go through your tree this time.
 
-  --- a/drivers/pci/host/pci-host-generic.c
-  +++ b/drivers/pci/host/pci-host-generic.c
-  @@ -276,17 +276,17 @@ static int gen_pci_parse_map_cfg_windows(struct gen_p=
-  ci *pci)
-   =09=09return err;
-    =09}
-    =20
-    -=09pci->cfg.win =3D devm_kcalloc(dev,
-    resource_size(&pci->cfg.bus_range),
+Acked-by: Arnd Bergmann <arnd@arndb.de>
 
-I can work around this by downloading them another way, but it is a
-bit of a hassle.  I *think* this is because your email has
+In the future, we should all have an eye on this more to ensure that
+the .dts changes all go through arm-soc.
 
-  Content-Type: text/plain; charset=WINDOWS-1252
-
-which apparently confuses mutt.  Any idea why this is?  Anybody know how I
-can fix mutt to deal with this?
-
-Bjorn
+	Arnd
