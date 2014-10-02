@@ -1,224 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41761 "EHLO mx1.redhat.com"
+Received: from ozlabs.org ([103.22.144.67]:58194 "EHLO ozlabs.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755629AbaJ2SQ1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 Oct 2014 14:16:27 -0400
-Message-ID: <1414606581.27420.266.camel@ul30vt.home>
-Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass through
- (vfio)
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Andreas Hartmann <andihartmann@freenet.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Date: Wed, 29 Oct 2014 12:16:21 -0600
-In-Reply-To: <54512A91.2010606@maya.org>
-References: <20140923210318.498dacbd@dualc.maya.org>
-							 <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com>
-							 <5437F1F5.3010706@maya.org>
-							 <CAErSpo6DuWEcJb_gfS=5JnKN8b4DXXV9+u-CRa8m3db0dbzpsQ@mail.gmail.com>
-							 <543804BC.3080307@maya.org>
-							 <CAErSpo450czUtAM104o+RS=yOcmP+3MKMH7mYk=UYhVJ2+cfSQ@mail.gmail.com>
-							 <20141011003219.560cca97@dualc.maya.org>
-							 <20141010225408.GA24493@google.com> <5438CC1E.3060407@maya.org>
-							 <1413360267.4202.70.camel@ul30vt.home> <54406B34.1050808@maya.org>
-							 <1413925580.4202.189.camel@ul30vt.home>
-						 <1413927152.4202.195.camel@ul30vt.home> <5447D9D9.9030909@maya.org>
-					 <1414010215.4202.275.camel@ul30vt.home> <54492606.5090308@maya.org>
-				 <1414082022.27420.39.camel@ul30vt.home> <54493BFA.8010609@maya.org>
-			 <1414093023.27420.40.camel@ul30vt.home> <544B3D14.70907@maya.org>
-		 <1414533068.27420.226.camel@ul30vt.home> <54511A16.30602@maya.org>
-	 <1414604677.27420.263.camel@ul30vt.home> <54512A91.2010606@maya.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752309AbaJBBwK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 21:52:10 -0400
+Date: Thu, 2 Oct 2014 11:52:02 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Alex Deucher <alexdeucher@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@ozlabs.org,
+	Dave Airlie <airlied@linux.ie>, linux-pci@vger.kernel.org,
+	Anton Blanchard <anton@au1.ibm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Takashi Iwai <tiwai@suse.de>,
+	Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 2/4] gpu/radeon: Move 64-bit MSI quirk from arch to
+ driver
+Message-ID: <20141002115202.796eacb1@canb.auug.org.au>
+In-Reply-To: <1412210062.10667.1.camel@pasglop>
+References: <1412210062.10667.1.camel@pasglop>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/e0QPA=r0nX9HPR2hvDnOa3C"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-10-29 at 18:57 +0100, Andreas Hartmann wrote:
-> Alex Williamson schrieb:
-> > On Wed, 2014-10-29 at 17:47 +0100, Andreas Hartmann wrote:
-> >> Alex Williamson wrote:
-> >>> On Sat, 2014-10-25 at 08:03 +0200, Andreas Hartmann wrote:
-> >>>>
-> >>>> Out of interest:
-> >>>> Bjorn's patch disables vc save/restore support - and the machine works
-> >>>> fine again. Why is it needed at all if it seems to work perfectly w/o
-> >>>> it? What's the additional benefit? Or in other words: What am I missing
-> >>>> until today :-) ? What would be better? What could I do more?
-> >>>
-> >>>
-> >>> You're right, in the configuration you have the endpoint device has a
-> >>> Virtual Channel capability but the upstream root port does not.  The
-> >>> spec is not at all clear about defining the endpoints for enabling
-> >>> Virtual Channel in each type of configuration, but I think that if we
-> >>> have an upstream port that does not support Virtual Channel, we can skip
-> >>> the save/restore.  Please test the patch below.
-> >>>
-> >>> I'm also still completely confused about whether this is a VC
-> >>> save/restore issue or a bus reset issue.  You originally bisected this
-> >>> back to the VC save/restore patch, but you also found that a manual,
-> >>> setpci-based bus reset triggered a system hang.
-> >>
-> >> With your additional patch posted here:
-> >> http://article.gmane.org/gmane.linux.kernel.pci/36162
-> > 
-> > Right, a reset via sysfs also triggered it with that patch, but the
-> > reset via setpci is independent of any VC save/restore and still hung
-> > your box.
-> > 
-> >>
-> >>>  I believe that
-> >>> re-ordering the kernel reset mechanisms also triggered this.  Since
-> >>> recent versions of QEMU are going to favor a bus reset over PM reset, I
-> >>> don't have a lot of confidence that we're actually solving the problem
-> >>> for you.  Please make sure to test with a recent QEMU to be sure we'll
-> >>> do a bus reset.
-> >>
-> >> I'm running qemu 2.1.0 (newest is 2.1.2 - but this shouldn't be a
-> >> problem) and tested w/ linux 3.17.
-> > 
-> > Yep, just want to make sure it's QEMU new enough to do a bus reset and
-> > kernel with matching support.
-> > 
-> >>> diff --git a/drivers/pci/vc.c b/drivers/pci/vc.c
-> >>> index 7e1304d..6d13d34 100644
-> >>> --- a/drivers/pci/vc.c
-> >>> +++ b/drivers/pci/vc.c
-> >>> @@ -339,6 +339,25 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
-> >>>  	return buf ? 0 : len;
-> >>>  }
-> >>>  
-> >>> +/**
-> >>> + * pci_vc_needs_save - Determine whether a VC capability needs to be saved
-> >>> + * @dev: device
-> >>> + * @id: VC capability ID (VC/VC9/MFVC)
-> >>> + *
-> >>> + * In configurations where we have a VC or MFVC capability, but the upstream
-> >>> + * device does not, we assume that VC save (and therefore restore) is not
-> >>> + * necessary.  The intention is to only do VC save/restore in configuration
-> >>> + * where it's necessary and hopefully avoid reset issues.
-> >>> + */
-> >>> +static bool pci_vc_needs_save(struct pci_dev *dev, u16 id)
-> >>> +{
-> >>> +	if (id == PCI_EXT_CAP_ID_VC9 || pci_is_root_bus(dev->bus) ||
-> >>> +	    pci_find_ext_capability(dev->bus->self, PCI_EXT_CAP_ID_VC))
-> >>> +		return true;
-> >>> +
-> >>> +	return false;
-> >>> +}
-> >>> +
-> >>>  static struct {
-> >>>  	u16 id;
-> >>>  	const char *name;
-> >>> @@ -362,7 +381,7 @@ int pci_save_vc_state(struct pci_dev *dev)
-> >>>  		struct pci_cap_saved_state *save_state;
-> >>>  
-> >>>  		pos = pci_find_ext_capability(dev, vc_caps[i].id);
-> >>> -		if (!pos)
-> >>> +		if (!posi || !pci_vc_needs_save(dev, vc_caps[i].id))
-> >>                         ^
-> >> This should be most probably !pos (and not !posi - because !posi does
-> >> through a compile error).
-> > 
-> > Oops, sorry.
-> > 
-> >>>  			continue;
-> >>>  
-> >>>  		save_state = pci_find_saved_ext_cap(dev, vc_caps[i].id);
-> >>> @@ -422,7 +441,7 @@ void pci_allocate_vc_save_buffers(struct pci_dev *dev)
-> >>>  	for (i = 0; i < ARRAY_SIZE(vc_caps); i++) {
-> >>>  		int len, pos = pci_find_ext_capability(dev, vc_caps[i].id);
-> >>>  
-> >>> -		if (!pos)
-> >>> +		if (!pos || !pci_vc_needs_save(dev, vc_caps[i].id))
-> >>>  			continue;
-> >>>  
-> >>>  		len = pci_vc_do_save_buffer(dev, pos, NULL, false);
-> >>
-> >> W/ the above patch, the machine hangs again (w/ qemu and setpci), but w/
-> >> Bjorn's patch (and nothing more applied) which disables vc save/restore,
-> >> the machine just works fine ... . I especially retested this case to be
-> >> really sure. I'm so sorry. But that's how it behaves here :-(
-> > 
-> > Hmm, the intention was that this should effectively do the same thing as
-> > Bjorn's patch.  The Atheros device (03:00.0) reports a VC capability but
-> > the root port above it (00:05.0) does not.
-> 
-> Are you sure, that this patch really works (-> here!) as expected? Would
-> it be possible to add some debug output printing to the actual console
-> (not to log file) to be sure it really works as expected? Maybe some
-> more output to get an idea what's actually going on? Or is it just a
-> timing issue?
+--Sig_/e0QPA=r0nX9HPR2hvDnOa3C
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Sure, here's some added printks (and fixed posi).  You should be able to
-run 'dmesg | grep pci_vc_needs_save' after boot and see device
-0000:03:00.0.  Hopefully you won't see the pci_save_vc_state() printk as
-you assign the device.
+Hi Ben,
 
-diff --git a/drivers/pci/vc.c b/drivers/pci/vc.c
-index 7e1304d..300e126 100644
---- a/drivers/pci/vc.c
-+++ b/drivers/pci/vc.c
-@@ -339,6 +339,26 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
- 	return buf ? 0 : len;
- }
- 
-+/**
-+ * pci_vc_needs_save - Determine whether a VC capability needs to be saved
-+ * @dev: device
-+ * @id: VC capability ID (VC/VC9/MFVC)
-+ *
-+ * In configurations where we have a VC or MFVC capability, but the upstream
-+ * device does not, we assume that VC save (and therefore restore) is not
-+ * necessary.  The intention is to only do VC save/restore in configuration
-+ * where it's necessary and hopefully avoid reset issues.
-+ */
-+static bool pci_vc_needs_save(struct pci_dev *dev, u16 id)
-+{
-+	if (id == PCI_EXT_CAP_ID_VC9 || pci_is_root_bus(dev->bus) ||
-+	    pci_find_ext_capability(dev->bus->self, PCI_EXT_CAP_ID_VC))
-+		return true;
-+
-+	printk("%s(%s, %x) returning false\n", __func__, pci_name(dev), id);
-+	return false;
-+}
-+
- static struct {
- 	u16 id;
- 	const char *name;
-@@ -362,7 +382,7 @@ int pci_save_vc_state(struct pci_dev *dev)
- 		struct pci_cap_saved_state *save_state;
- 
- 		pos = pci_find_ext_capability(dev, vc_caps[i].id);
--		if (!pos)
-+		if (!pos || !pci_vc_needs_save(dev, vc_caps[i].id))
- 			continue;
- 
- 		save_state = pci_find_saved_ext_cap(dev, vc_caps[i].id);
-@@ -372,6 +392,7 @@ int pci_save_vc_state(struct pci_dev *dev)
- 			return -ENOMEM;
- 		}
- 
-+	I	printk("%s doing %s save on %s\n", __func__, vc_caps[i].name, pci_name(dev));
- 		ret = pci_vc_do_save_buffer(dev, pos, save_state, true);
- 		if (ret) {
- 			dev_err(&dev->dev, "%s save unsuccessful %s\n",
-@@ -403,6 +424,7 @@ void pci_restore_vc_state(struct pci_dev *dev)
- 		if (!save_state || !pos)
- 			continue;
- 
-+	I	printk("%s doing %s restore on %s\n", __func__, vc_caps[i].name, pci_name(dev));
- 		pci_vc_do_save_buffer(dev, pos, save_state, false);
- 	}
- }
-@@ -422,7 +444,7 @@ void pci_allocate_vc_save_buffers(struct pci_dev *dev)
- 	for (i = 0; i < ARRAY_SIZE(vc_caps); i++) {
- 		int len, pos = pci_find_ext_capability(dev, vc_caps[i].id);
- 
--		if (!pos)
-+		if (!pos || !pci_vc_needs_save(dev, vc_caps[i].id))
- 			continue;
- 
- 		len = pci_vc_do_save_buffer(dev, pos, NULL, false);
+On Thu, 02 Oct 2014 10:34:22 +1000 Benjamin Herrenschmidt <benh@kernel.cras=
+hing.org> wrote:
+>
+> --- a/drivers/gpu/drm/radeon/radeon_irq_kms.c
+> +++ b/drivers/gpu/drm/radeon/radeon_irq_kms.c
+> @@ -202,6 +202,16 @@ static bool radeon_msi_ok(struct radeon_device *rdev)
+>  	if (rdev->flags & RADEON_IS_AGP)
+>  		return false;
+> =20
+> +	/*
+> +	 * Older chips have a HW limitation, they can only generate 40 bits
+> +	 * of address for "64-bit" MSIs which breaks on some platforms, notably
+> +	 * IBM POWER servers, so we limit them
+> +	 */
+> +	if (rdev->family < CHIP_BONAIRE) {
+> +		dev_info(rdev->dev, "radeon: MSI limited to 32-bit\n");
+> +		rdev->pdev->no_64bit_msi =3D true;
 
+Again, no_64bit_msi is not a bool ...
 
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
 
+--Sig_/e0QPA=r0nX9HPR2hvDnOa3C
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJULK/HAAoJEMDTa8Ir7ZwVtisP/i5qg6vg8Vy8ZrjYIdVruU4U
+aHA7RbZ2CKtGRMFv3NC1PIi2LzQMu6PbQBa9NzsOXuH5Scehs3Ka/hS3+Gdz1WwI
+gCvX7Mpw0pqWUFSvrY6v2/RlniC/lesvTCBmI5TqqgVA2/Xm3WhS8q7WIsYVHF+t
+ZoVI16gZAF753NZa5OCTbwF2a4A99jN1HvqscOFw1kso+577OiXdX0+xMILOPfd+
+JoHEmJiUb1B+uNQPYClNJmziAlM1mPEw9mgCxReAz/sQlV5HD/+rGOJ7NJvdiaBK
+yXVqO0+yasKnS/YfKHnWO3Ocu2Tt28SVOQlDhdRM9bp6sh+RU5C7c8/grae4/4oZ
+Cf+fstnCo4MPUfNb2IM8TwlU9FJ3SzcBe6XzNsgQPZCaxZnkXcg+3ZaGM2uIV9Kh
+yOODLaXnILnnvuBWH6eU/PH7d2xpfdwuSEbvUAgSJiVEpGsRK0HdbvVf2gt5rjbW
+O3iyvqb8+VMrp3dCpDcIh4orWLUgJRmfcoVeTGj3DZFAfgJV5shrBZcVcUdQ9Nzs
+xagq5q4HA4Z5fzbxU7A9RdKU9Oz3GWYRsJ66BfHTmkOA4Ov+srmQnhJhVL6q/vNN
+yRH4shSYX3OBMOVnUpxbACc4Owf65nq7RKzqfnTTZNZcsYRt+PSRw3S9pLkJgTlu
+EpHtcnqejKI4FoL2egQK
+=67Oq
+-----END PGP SIGNATURE-----
+
+--Sig_/e0QPA=r0nX9HPR2hvDnOa3C--
