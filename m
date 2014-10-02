@@ -1,118 +1,173 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0113.outbound.protection.outlook.com ([157.56.110.113]:26559
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757694AbaJaDMz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 23:12:55 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v5 3/8] usb: dwc3: add disable usb2 suspend phy quirk
-Date: Fri, 31 Oct 2014 11:11:14 +0800
-Message-ID: <1414725079-11490-4-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414725079-11490-1-git-send-email-ray.huang@amd.com>
-References: <1414725079-11490-1-git-send-email-ray.huang@amd.com>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:59980 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751300AbaJBXjZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Oct 2014 19:39:25 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 3 Oct 2014 09:39:23 +1000
+Received: from d23relay04.au.ibm.com (d23relay04.au.ibm.com [9.190.234.120])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 8CBCC2BB003F
+	for <linux-pci@vger.kernel.org>; Fri,  3 Oct 2014 09:39:20 +1000 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay04.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s92NKnxJ60686564
+	for <linux-pci@vger.kernel.org>; Fri, 3 Oct 2014 09:20:58 +1000
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s92NclBA022725
+	for <linux-pci@vger.kernel.org>; Fri, 3 Oct 2014 09:38:48 +1000
+Date: Fri, 3 Oct 2014 09:38:23 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	Mike Qiu <qiudayu@linux.vnet.ibm.com>
+Subject: Re: [PATCH V7 00/17] Enable SRIOV on POWER8
+Message-ID: <20141002233823.GA9035@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20140819211942.GA6295@google.com>
+ <20140820023404.GC6904@richard>
+ <CAErSpo5Dm4Eu0TcvJn2fYLVd005OgJCy-yZAhqsttjbb8jwm=A@mail.gmail.com>
+ <20140820033546.GA7669@richard>
+ <20141002155943.GA19392@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141002155943.GA19392@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds disable usb2 suspend phy quirk, and some special platforms
-can configure that if it is needed.
+On Thu, Oct 02, 2014 at 09:59:43AM -0600, Bjorn Helgaas wrote:
+>On Wed, Aug 20, 2014 at 11:35:46AM +0800, Wei Yang wrote:
+>> On Tue, Aug 19, 2014 at 10:12:27PM -0500, Bjorn Helgaas wrote:
+>> >On Tue, Aug 19, 2014 at 9:34 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>> >> On Tue, Aug 19, 2014 at 03:19:42PM -0600, Bjorn Helgaas wrote:
+>> >>>On Thu, Jul 24, 2014 at 02:22:10PM +0800, Wei Yang wrote:
+>> >>>> This patch set enables the SRIOV on POWER8.
+>> >>>>
+>> >>>> The gerneral idea is put each VF into one individual PE and allocate required
+>> >>>> resources like DMA/MSI.
+>> >>>>
+>> >>>> One thing special for VF PE is we use M64BT to cover the IOV BAR. M64BT is one
+>> >>>> hardware on POWER platform to map MMIO address to PE. By using M64BT, we could
+>> >>>> map one individual VF to a VF PE, which introduce more flexiblity to users.
+>> >>>>
+>> >>>> To achieve this effect, we need to do some hack on pci devices's resources.
+>> >>>> 1. Expand the IOV BAR properly.
+>> >>>>    Done by pnv_pci_ioda_fixup_iov_resources().
+>> >>>> 2. Shift the IOV BAR properly.
+>> >>>>    Done by pnv_pci_vf_resource_shift().
+>> >>>> 3. IOV BAR alignment is the total size instead of an individual size on
+>> >>>>    powernv platform.
+>> >>>>    Done by pnv_pcibios_sriov_resource_alignment().
+>> >>>> 4. Take the IOV BAR alignment into consideration in the sizing and assigning.
+>> >>>>    This is achieved by commit: "PCI: Take additional IOV BAR alignment in
+>> >>>>    sizing and assigning"
+>> >>>>
+>> >>>> Test Environment:
+>> >>>>        The SRIOV device tested is Emulex Lancer and Mellanox ConnectX-3 on
+>> >>>>        POWER8.
+>> >>>>
+>> >>>> Examples on pass through a VF to guest through vfio:
+>> >>>>      1. install necessary modules
+>> >>>>         modprobe vfio
+>> >>>>         modprobe vfio-pci
+>> >>>>      2. retrieve the iommu_group the device belongs to
+>> >>>>         readlink /sys/bus/pci/devices/0000:06:0d.0/iommu_group
+>> >>>>         ../../../../kernel/iommu_groups/26
+>> >>>>         This means it belongs to group 26
+>> >>>>      3. see how many devices under this iommu_group
+>> >>>>         ls /sys/kernel/iommu_groups/26/devices/
+>> >>>>      4. unbind the original driver and bind to vfio-pci driver
+>> >>>>         echo 0000:06:0d.0 > /sys/bus/pci/devices/0000:06:0d.0/driver/unbind
+>> >>>>         echo  1102 0002 > /sys/bus/pci/drivers/vfio-pci/new_id
+>> >>>>         Note: this should be done for each device in the same iommu_group
+>> >>>>      5. Start qemu and pass device through vfio
+>> >>>>         /home/ywywyang/git/qemu-impreza/ppc64-softmmu/qemu-system-ppc64 \
+>> >>>>                 -M pseries -m 2048 -enable-kvm -nographic \
+>> >>>>                 -drive file=/home/ywywyang/kvm/fc19.img \
+>> >>>>                 -monitor telnet:localhost:5435,server,nowait -boot cd \
+>> >>>>                 -device "spapr-pci-vfio-host-bridge,id=CXGB3,iommu=26,index=6"
+>> >>>>
+>> >>>> Verify this is the exact VF response:
+>> >>>>      1. ping from a machine in the same subnet(the broadcast domain)
+>> >>>>      2. run arp -n on this machine
+>> >>>>         9.115.251.20             ether   00:00:c9:df:ed:bf   C eth0
+>> >>>>      3. ifconfig in the guest
+>> >>>>         # ifconfig eth1
+>> >>>>         eth1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+>> >>>>              inet 9.115.251.20  netmask 255.255.255.0  broadcast 9.115.251.255
+>> >>>>              inet6 fe80::200:c9ff:fedf:edbf  prefixlen 64  scopeid 0x20<link>
+>> >>>>              ether 00:00:c9:df:ed:bf  txqueuelen 1000 (Ethernet)
+>> >>>>              RX packets 175  bytes 13278 (12.9 KiB)
+>> >>>>              RX errors 0  dropped 0  overruns 0  frame 0
+>> >>>>              TX packets 58  bytes 9276 (9.0 KiB)
+>> >>>>              TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+>> >>>>      4. They have the same MAC address
+>> >>>>
+>> >>>>      Note: make sure you shutdown other network interfaces in guest.
+>> >>>>
+>> >>>> ---
+>> >>>> v6 -> v7:
+>> >>>>    1. add IORESOURCE_ARCH flag for IOV BAR on powernv platform.
+>> >>>>    2. when IOV BAR has IORESOURCE_ARCH flag, the size is retrieved from
+>> >>>>       hardware directly. If not, calculate as usual.
+>> >>>>    3. reorder the patch set, group them by subsystem:
+>> >>>>       PCI, powerpc, powernv
+>> >>>>    4. rebase it on 3.16-rc6
+>> >>>
+>> >>>This doesn't apply for me on v3.16-rc6:
+>> >>>
+>> >>>  02:48:57 ~/linux$ stg rebase v3.16-rc6
+>> >>>  Checking for changes in the working directory ... done
+>> >>>  Rebasing to "v3.16-rc6" ... done
+>> >>>  No patches applied
+>> >>>  02:49:14 ~/linux$ stg import -M --sign m/wy
+>> >>>  Checking for changes in the working directory ... done
+>> >>>  Importing patch "pci-iov-export-interface-for" ... done
+>> >>>  Importing patch "pci-iov-get-vf-bar-size-from" ... done
+>> >>>  Importing patch "pci-add-weak" ... done
+>> >>>  Importing patch "pci-take-additional-iov-bar" ... done
+>> >>>  Importing patch "powerpc-pci-don-t-unset-pci" ... done
+>> >>>  Importing patch "powerpc-pci-define" ... done
+>> >>>  Importing patch "powrepc-pci-refactor-pci_dn" ... done
+>> >>>  Importing patch "powerpc-powernv-use-pci_dn-in" ... error: patch failed:
+>> >>>  arch/powerpc/platforms/powernv/pci.c:376
+>> >>>  error: arch/powerpc/platforms/powernv/pci.c: patch does not apply
+>> >>>  stg import: Diff does not apply cleanly
+>> >>>
+>> >>>What am I missing?
+>> >>>
+>> >>>I assume you intend these all to go through my tree just to keep them all
+>> >>>together.  The ideal rebase target for me would be v3.17-rc1.
+>> >>
+>> >> Ok, I will rebase it on v3.17-rc1 upstream. While I guess the conflict is due
+>> >> to some patches from Gavin, which is not merged at that moment. I will make
+>> >> sure it applies to v3.17-rc1.
+>> >
+>> >I tried applying them on v3.16-rc6 as well as on every change to
+>> >arch/powerpc/platforms/powernv/pci.c between v3.16-rc6 and v3.17-rc1,
+>> >and none applied cleanly.  Patches you post should be based on some
+>> >upstream tag, not on something that includes unmerged patches.
+>> 
+>> Sorry about this, I will pay attention to this next time.
+>
+>I haven't seen any more on this series, and I'm assuming you'll post a
+>rebased series (maybe you're waiting for v3.18-rc1?).  I'm just checking to
+>make sure you're not waiting for something from me...
+>
 
-Signed-off-by: Huang Rui <ray.huang@amd.com>
----
- Documentation/devicetree/bindings/usb/dwc3.txt | 1 +
- drivers/usb/dwc3/core.c                        | 6 ++++++
- drivers/usb/dwc3/core.h                        | 2 ++
- drivers/usb/dwc3/platform_data.h               | 1 +
- 4 files changed, 10 insertions(+)
+Wei Yang is on vacation and he might not see your reply and response in time.
+As discussed with Wei Yang offline, he was waiting for 3.18.rc1 to rebase and
+send a new version out for comments.
 
-diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentation/devicetree/bindings/usb/dwc3.txt
-index 08b394e..f200ecc 100644
---- a/Documentation/devicetree/bindings/usb/dwc3.txt
-+++ b/Documentation/devicetree/bindings/usb/dwc3.txt
-@@ -33,6 +33,7 @@ Optional properties:
-  - snps,tx_de_emphasis: the value driven to the PHY is controlled by the
- 			LTSSM during USB3 Compliance mode.
-  - snps,dis_u3_susphy_quirk: when set core will disable USB3 suspend phy.
-+ - snps,dis_u2_susphy_quirk: when set core will disable USB2 suspend phy.
- 
- This is usually a subnode to DWC3 glue to which it is connected.
- 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index 6ec4176..25f1446 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -422,6 +422,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
- 	if (dwc->revision > DWC3_REVISION_194A)
- 		reg |= DWC3_GUSB2PHYCFG_SUSPHY;
- 
-+	if (dwc->dis_u2_susphy_quirk && dwc->is_fpga)
-+		reg &= ~DWC3_GUSB2PHYCFG_SUSPHY;
-+
- 	dwc3_writel(dwc->regs, DWC3_GUSB2PHYCFG(0), reg);
- 
- 	mdelay(100);
-@@ -812,6 +815,8 @@ static int dwc3_probe(struct platform_device *pdev)
- 				"snps,rx_detect_poll_quirk");
- 		dwc->dis_u3_susphy_quirk = of_property_read_bool(node,
- 				"snps,dis_u3_susphy_quirk");
-+		dwc->dis_u2_susphy_quirk = of_property_read_bool(node,
-+				"snps,dis_u2_susphy_quirk");
- 
- 		dwc->tx_de_emphasis_quirk = of_property_read_bool(node,
- 				"snps,tx_de_emphasis_quirk");
-@@ -835,6 +840,7 @@ static int dwc3_probe(struct platform_device *pdev)
- 		dwc->lfps_filter_quirk = pdata->lfps_filter_quirk;
- 		dwc->rx_detect_poll_quirk = pdata->rx_detect_poll_quirk;
- 		dwc->dis_u3_susphy_quirk = pdata->dis_u3_susphy_quirk;
-+		dwc->dis_u2_susphy_quirk = pdata->dis_u2_susphy_quirk;
- 
- 		dwc->tx_de_emphasis_quirk = pdata->tx_de_emphasis_quirk;
- 		if (pdata->tx_de_emphasis)
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index fa778b0..cf86d30 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -698,6 +698,7 @@ struct dwc3_scratchpad_array {
-  * @lfps_filter_quirk: set if we enable LFPS filter quirk
-  * @rx_detect_poll_quirk: set if we enable rx_detect to polling lfps quirk
-  * @dis_u3_susphy_quirk: set if we disable usb3 suspend phy
-+ * @dis_u2_susphy_quirk: set if we disable usb2 suspend phy
-  * @tx_de_emphasis_quirk: set if we enable Tx de-emphasis quirk
-  * @tx_de_emphasis: Tx de-emphasis value
-  * 	0	- -6dB de-emphasis
-@@ -820,6 +821,7 @@ struct dwc3 {
- 	unsigned		lfps_filter_quirk:1;
- 	unsigned		rx_detect_poll_quirk:1;
- 	unsigned		dis_u3_susphy_quirk:1;
-+	unsigned		dis_u2_susphy_quirk:1;
- 
- 	unsigned		tx_de_emphasis_quirk:1;
- 	unsigned		tx_de_emphasis:2;
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index 0f1d5ad..245300b 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -37,6 +37,7 @@ struct dwc3_platform_data {
- 	unsigned lfps_filter_quirk:1;
- 	unsigned rx_detect_poll_quirk:1;
- 	unsigned dis_u3_susphy_quirk:1;
-+	unsigned dis_u2_susphy_quirk:1;
- 
- 	unsigned tx_de_emphasis_quirk:1;
- 	unsigned tx_de_emphasis:2;
--- 
-1.9.1
+Thanks,
+Gavin
+
+>Bjorn
+>
 
