@@ -1,79 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:58194 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752309AbaJBBwK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 21:52:10 -0400
-Date: Thu, 2 Oct 2014 11:52:02 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Alex Deucher <alexdeucher@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@ozlabs.org,
-	Dave Airlie <airlied@linux.ie>, linux-pci@vger.kernel.org,
-	Anton Blanchard <anton@au1.ibm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Takashi Iwai <tiwai@suse.de>,
-	Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 2/4] gpu/radeon: Move 64-bit MSI quirk from arch to
- driver
-Message-ID: <20141002115202.796eacb1@canb.auug.org.au>
-In-Reply-To: <1412210062.10667.1.camel@pasglop>
-References: <1412210062.10667.1.camel@pasglop>
+Received: from mail-qa0-f49.google.com ([209.85.216.49]:62003 "EHLO
+	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752743AbaJBPsc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Oct 2014 11:48:32 -0400
+Received: by mail-qa0-f49.google.com with SMTP id f12so1983266qad.8
+        for <linux-pci@vger.kernel.org>; Thu, 02 Oct 2014 08:48:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/e0QPA=r0nX9HPR2hvDnOa3C"; protocol="application/pgp-signature"
+In-Reply-To: <bug-85311-41252-8dDry2SwcF@https.bugzilla.kernel.org/>
+References: <bug-85311-41252@https.bugzilla.kernel.org/> <bug-85311-41252-8dDry2SwcF@https.bugzilla.kernel.org/>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 2 Oct 2014 09:48:11 -0600
+Message-ID: <CAErSpo5KnNsMej07ak-3fJt8K5bSwDoogxUY=2Jvuccc7Hf4Wg@mail.gmail.com>
+Subject: Re: [Bug 85311] radeon 0000:01:00.0: Max Payload Size 16384, but
+ upstream 0000:00:01.0 set to 128; if necessary, use "pci=pcie_bus_safe" and
+ report a bug
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc: Rafael Wysocki <rjw@rjwysocki.net>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Alex Deucher <alexdeucher@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/e0QPA=r0nX9HPR2hvDnOa3C
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+[+cc linux-pci, linux-pm, Rafael, Alex]
 
-Hi Ben,
+> https://bugzilla.kernel.org/show_bug.cgi?id=85311
 
-On Thu, 02 Oct 2014 10:34:22 +1000 Benjamin Herrenschmidt <benh@kernel.cras=
-hing.org> wrote:
->
-> --- a/drivers/gpu/drm/radeon/radeon_irq_kms.c
-> +++ b/drivers/gpu/drm/radeon/radeon_irq_kms.c
-> @@ -202,6 +202,16 @@ static bool radeon_msi_ok(struct radeon_device *rdev)
->  	if (rdev->flags & RADEON_IS_AGP)
->  		return false;
-> =20
-> +	/*
-> +	 * Older chips have a HW limitation, they can only generate 40 bits
-> +	 * of address for "64-bit" MSIs which breaks on some platforms, notably
-> +	 * IBM POWER servers, so we limit them
-> +	 */
-> +	if (rdev->family < CHIP_BONAIRE) {
-> +		dev_info(rdev->dev, "radeon: MSI limited to 32-bit\n");
-> +		rdev->pdev->no_64bit_msi =3D true;
+Pali reported:
 
-Again, no_64bit_msi is not a bool ...
+> Every time when I open LID on my notebook I see tons of new error lines in dmesg
+> with kernel 3.17-rc6. And more lines come from radeon card (dmesg log is attached).
+> I do not see these log lines with 3.13 kernel, so this is regression.
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
+The new error lines are (from the bugzilla attachment):
 
---Sig_/e0QPA=r0nX9HPR2hvDnOa3C
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+  i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+  radeon 0000:01:00.0: Max Payload Size 16384, but upstream
+0000:00:01.0 set to 128; if necessary, use "pci=pcie_bus_safe" and
+report a bug
+  pci_bus 0000:02: Allocating resources
+  pci_bus 0000:03: Allocating resources
+  pci_bus 0000:04: Allocating resources
+  pci_bus 0000:05: Allocating resources
+  pci_bus 0000:06: Allocating resources
+  pci_bus 0000:0e: Allocating resources
+  i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+  radeon 0000:01:00.0: Max Payload Size 16384, but upstream
+0000:00:01.0 set to 128; if necessary, use "pci=pcie_bus_safe" and
+report a bug
+  i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+  radeon 0000:01:00.0: Max Payload Size 16384, but upstream
+0000:00:01.0 set to 128; if necessary, use "pci=pcie_bus_safe" and
+report a bug
+  i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+  radeon 0000:01:00.0: Max Payload Size 16384, but upstream
+0000:00:01.0 set to 128; if necessary, use "pci=pcie_bus_safe" and
+report a bug
+  i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+  ...
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+Using "radeon.runpm=0" gets rid of the radeon MPS complaints, but not
+the others.
 
-iQIcBAEBCAAGBQJULK/HAAoJEMDTa8Ir7ZwVtisP/i5qg6vg8Vy8ZrjYIdVruU4U
-aHA7RbZ2CKtGRMFv3NC1PIi2LzQMu6PbQBa9NzsOXuH5Scehs3Ka/hS3+Gdz1WwI
-gCvX7Mpw0pqWUFSvrY6v2/RlniC/lesvTCBmI5TqqgVA2/Xm3WhS8q7WIsYVHF+t
-ZoVI16gZAF753NZa5OCTbwF2a4A99jN1HvqscOFw1kso+577OiXdX0+xMILOPfd+
-JoHEmJiUb1B+uNQPYClNJmziAlM1mPEw9mgCxReAz/sQlV5HD/+rGOJ7NJvdiaBK
-yXVqO0+yasKnS/YfKHnWO3Ocu2Tt28SVOQlDhdRM9bp6sh+RU5C7c8/grae4/4oZ
-Cf+fstnCo4MPUfNb2IM8TwlU9FJ3SzcBe6XzNsgQPZCaxZnkXcg+3ZaGM2uIV9Kh
-yOODLaXnILnnvuBWH6eU/PH7d2xpfdwuSEbvUAgSJiVEpGsRK0HdbvVf2gt5rjbW
-O3iyvqb8+VMrp3dCpDcIh4orWLUgJRmfcoVeTGj3DZFAfgJV5shrBZcVcUdQ9Nzs
-xagq5q4HA4Z5fzbxU7A9RdKU9Oz3GWYRsJ66BfHTmkOA4Ov+srmQnhJhVL6q/vNN
-yRH4shSYX3OBMOVnUpxbACc4Owf65nq7RKzqfnTTZNZcsYRt+PSRw3S9pLkJgTlu
-EpHtcnqejKI4FoL2egQK
-=67Oq
------END PGP SIGNATURE-----
+Alex said (in the bugzilla):
 
---Sig_/e0QPA=r0nX9HPR2hvDnOa3C--
+> When the radeon device is powered down, all the PCI registers and BARs read
+> back as ones. which is why you are seeing the radeon errors.  Apparently the
+> pci runtime pm code does not properly ask the driver to power the card up
+> before accessing those registers.  Unfortunately, I'm not that familiar with
+> the Linux runtime pm code.  I have no idea about the i915 and apci messages.
+
+I haven't looked into this at all, so I don't know where this bug
+report belongs.
+
+Bjorn
