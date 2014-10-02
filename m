@@ -1,128 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0101.outbound.protection.outlook.com ([207.46.100.101]:48743
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+Received: from mail-bn1bon0141.outbound.protection.outlook.com ([157.56.111.141]:42050
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758689AbaJ3KKu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 06:10:50 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v4 08/20] usb: dwc3: add request P1/P2/P3 quirk
-Date: Thu, 30 Oct 2014 18:08:33 +0800
-Message-ID: <1414663725-2195-9-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
-References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+	id S1750868AbaJBC0U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 22:26:20 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Tim Harvey <tharvey@gateworks.com>
+CC: Lucas Stach <l.stach@pengutronix.de>,
+	"Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>,
+	"linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shengchao Guo <Shawn.Guo@freescale.com>,
+	"Fabio Estevam" <festevam@gmail.com>
+Subject: Re: [PATCH v2 2/5] PCI: imx6: wait the clocks to stabilize after
+ ref_en
+Date: Thu, 2 Oct 2014 02:26:16 +0000
+Message-ID: <B4FA1D9B-4A0D-42E1-BB13-95EDBC6F79C0@freescale.com>
+References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
+	<1411445498-20250-3-git-send-email-r65037@freescale.com>
+	<1411466190.3256.7.camel@pengutronix.de>
+	<CAJ+vNU30=+YXkBHjzs_4n49TSJU0CuuSx54X3M7AVg8JRSLTfw@mail.gmail.com>,<CAJ+vNU18ZgO9ketUmNj0+FC3zCzhsnv_wB6Cq+7BdiwT1y5XYw@mail.gmail.com>
+In-Reply-To: <CAJ+vNU18ZgO9ketUmNj0+FC3zCzhsnv_wB6Cq+7BdiwT1y5XYw@mail.gmail.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds request P1/P2/P3 quirk for U2/U2/U3, and some special
-platforms can configure that if it is needed.
-
-[ balbi@ti.com : added DeviceTree binding documentation ]
-
-Signed-off-by: Huang Rui <ray.huang@amd.com>
-Signed-off-by: Felipe Balbi <balbi@ti.com>
----
- Documentation/devicetree/bindings/usb/dwc3.txt | 2 ++
- drivers/usb/dwc3/core.c                        | 6 ++++++
- drivers/usb/dwc3/core.h                        | 3 +++
- drivers/usb/dwc3/platform_data.h               | 1 +
- 4 files changed, 12 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentation/devicetree/bindings/usb/dwc3.txt
-index f714357..9de11fd 100644
---- a/Documentation/devicetree/bindings/usb/dwc3.txt
-+++ b/Documentation/devicetree/bindings/usb/dwc3.txt
-@@ -20,6 +20,8 @@ Optional properties:
-  - snps,lpm-nyet-threshold: LPM NYET threshold
-  - snps,u2exit_lfps_quirk: set if we want to enable U2Exit LFPS quirk
-  - snps,u2ss_inp3_quirk: set if we enable P3 OK for U2/SS Inactive quirk
-+ - snps,req_p1p2p3_quirk: when set, the core will always request for
-+			P1/P2/P3 transition sequence.
- 
- This is usually a subnode to DWC3 glue to which it is connected.
- 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index 0a935cb..e951984 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -377,6 +377,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
- 	if (dwc->u2ss_inp3_quirk)
- 		reg |= DWC3_GUSB3PIPECTL_U2SSINP3OK;
- 
-+	if (dwc->req_p1p2p3_quirk)
-+		reg |= DWC3_GUSB3PIPECTL_REQP1P2P3;
-+
- 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
- 
- 	mdelay(100);
-@@ -753,6 +756,8 @@ static int dwc3_probe(struct platform_device *pdev)
- 				"snps,u2exit_lfps_quirk");
- 		dwc->u2ss_inp3_quirk = of_property_read_bool(node,
- 				"snps,u2ss_inp3_quirk");
-+		dwc->req_p1p2p3_quirk = of_property_read_bool(node,
-+				"snps,req_p1p2p3_quirk");
- 	} else if (pdata) {
- 		dwc->maximum_speed = pdata->maximum_speed;
- 		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
-@@ -765,6 +770,7 @@ static int dwc3_probe(struct platform_device *pdev)
- 		dwc->disable_scramble_quirk = pdata->disable_scramble_quirk;
- 		dwc->u2exit_lfps_quirk = pdata->u2exit_lfps_quirk;
- 		dwc->u2ss_inp3_quirk = pdata->u2ss_inp3_quirk;
-+		dwc->req_p1p2p3_quirk = pdata->req_p1p2p3_quirk;
- 	}
- 
- 	/* default to superspeed if no maximum_speed passed */
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index 3843511..cbb8593 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -177,6 +177,7 @@
- /* Global USB3 PIPE Control Register */
- #define DWC3_GUSB3PIPECTL_PHYSOFTRST	(1 << 31)
- #define DWC3_GUSB3PIPECTL_U2SSINP3OK	(1 << 29)
-+#define DWC3_GUSB3PIPECTL_REQP1P2P3	(1 << 24)
- #define DWC3_GUSB3PIPECTL_SUSPHY	(1 << 17)
- 
- /* Global TX Fifo Size Register */
-@@ -683,6 +684,7 @@ struct dwc3_scratchpad_array {
-  * @disable_scramble_quirk: set if we enable the disable scramble quirk
-  * @u2exit_lfps_quirk: set if we enable U2Exit LFPS quirk
-  * @u2ss_inp3_quirk: set if we enable P3 OK for U2/SS Inactive quirk
-+ * @req_p1p2p3_quirk: set if we enable request P1/P2/P3 quirk
-  */
- struct dwc3 {
- 	struct usb_ctrlrequest	*ctrl_req;
-@@ -793,6 +795,7 @@ struct dwc3 {
- 	unsigned		disable_scramble_quirk:1;
- 	unsigned		u2exit_lfps_quirk:1;
- 	unsigned		u2ss_inp3_quirk:1;
-+	unsigned		req_p1p2p3_quirk:1;
- };
- 
- /* -------------------------------------------------------------------------- */
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index cf92c81..d3e6ec2 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -31,4 +31,5 @@ struct dwc3_platform_data {
- 	unsigned has_lpm_erratum:1;
- 	unsigned u2exit_lfps_quirk:1;
- 	unsigned u2ss_inp3_quirk:1;
-+	unsigned req_p1p2p3_quirk:1;
- };
--- 
-1.9.1
-
+VGhhbmtzIFRpbS4NCg0KQmVzdCByZWdhcmRzDQpSaWNoYXJkDQoNCj4g1NogMjAxNMTqMTDUwjLI
+1aOsyc/O5zI6MDCjrCJUaW0gSGFydmV5IiA8dGhhcnZleUBnYXRld29ya3MuY29tPiDQtLXAo7oN
+Cj4gDQo+PiBPbiBUdWUsIFNlcCAyMywgMjAxNCBhdCA1OjI4IEFNLCBUaW0gSGFydmV5IDx0aGFy
+dmV5QGdhdGV3b3Jrcy5jb20+IHdyb3RlOg0KPj4+IE9uIFR1ZSwgU2VwIDIzLCAyMDE0IGF0IDI6
+NTYgQU0sIEx1Y2FzIFN0YWNoIDxsLnN0YWNoQHBlbmd1dHJvbml4LmRlPiB3cm90ZToNCj4+PiBB
+bSBEaWVuc3RhZywgZGVuIDIzLjA5LjIwMTQsIDEyOjExICswODAwIHNjaHJpZWIgUmljaGFyZCBa
+aHU6DQo+Pj4+IC0gYSB3aGlsZSBkZWxheSBpcyBtYW5kYXRvcnkgcmVxdWlyZWQgYWZ0ZXIgcGNp
+ZV9yZWZfY2xrX2VuDQo+Pj4+IGlzIHNldC4gT3RoZXJ3aXNlLCB0aGUgc3lzdGVtIHdvdWxkIGJl
+IGhhbmcgb24gaW14NnFkbCBhcmQNCj4+Pj4gYm9hcmRzLCBiZWNhdXNlIHRoYXQgaW14NnFkbCBi
+b2FyZHMgZG9uJ3QgaGF2ZSB0aGUgcmVzZXRfZ3Bpby4NCj4+Pj4gLSB0aGUgY2xvY2tzIHNob3Vs
+ZCBiZSBzdGFibGUgYWxyZWFkeSBhZnRlciB0aGUNCj4+Pj4gImNsa19wcmVwYXJlX2VuYWJsZSIg
+aXMgcmV0dXJuLiBTbyBJIHRoaW5rIGl0J3Mgb2sgdG8gbW92ZSB0aGUNCj4+Pj4gdXNsZWVwIGRl
+bGF5IGFmdGVyIHRoZSBwY2llX3JlZl9lbiBpcyBzZXQuDQo+Pj4gDQo+Pj4gWW91IGFyZSBkZXNj
+cmliaW5nIGEgbG90IG9mIHRoZSBjb25kaXRpb25zIGFyb3VuZCB0aGUgaXNzdWUsIGJ1dCBub3Qg
+dGhlDQo+Pj4gaXNzdWUgaXRzZWxmLCB3aGljaCBtYWtlcyBpdCBoYXJkIHRvIGZvbGxvdyB5b3Vy
+IGNvbW1pdCBtZXNzYWdlLiBBZnRlcg0KPj4+IGxvb2tpbmcgYXQgdGhlIGNvZGUgSSB0aGluayB0
+aGUgcHJvYmxlbSBpcyB0aGlzIChhbmQgc2hvdWxkIGJlIGRlc2NyaWJlZA0KPj4+IGFjY29yZGlu
+Z2x5KToNCj4+PiANCj4+PiBGb3IgYm9hcmRzIHdpdGhvdXQgYSByZXNldCBncGlvIHdlIHNraXAg
+dGhlIGRlbGF5IGJldHdlZW4gZW5hYmxpbmcgdGhlDQo+Pj4gcGNpZV9yZWZfY2xrIGFuZCB0b3Vj
+aGluZyB0aGUgUkMgcmVnaXN0ZXJzIGZvciBjb25maWd1cmF0aW9uLiBBcHBhcmVudGx5DQo+Pj4g
+dGhpcyBoYW5ncyB3aGVuIHRoZSBjbG9ja3MgYXJlIG5vdCB5ZXQgc2V0dGxlZCBpbiB0aGUgRFcg
+UENJZSBjb3JlLiBTbw0KPj4+IHdlIG5lZWQgdG8gbWFrZSBzdXJlIHRoYXQgdGhlcmUgaXMgYWx3
+YXlzIGFuIGFwcHJvcHJpYXRlIGRlbGF5IGJldHdlZW4NCj4+PiB0aG9zZSB0d28gYWN0aW9ucy4N
+Cj4+PiANCj4+PiBJIGhhdmUgbm90IGZvdW5kIHRoaXMgY29uc3RyYWludCBhbnl3aGVyZSBpbiB0
+aGUgaS5NWDYgUmVmZXJlbmNlIE1hbnVhbCwNCj4+PiBub3IgaW4gdGhlIERXIFBDSWUgZG9jdW1l
+bnRzIEkgaGF2ZSBhY2Nlc3MgdG8sIHdoaWNoIG1ha2VzIG1lIGEgYml0IGZlZWwNCj4+PiBhIGJp
+dCB1bmhhcHB5IGFib3V0IHRoaXMuIFJpY2hhcmQsIGRvIHlvdSBoYXZlIGJldHRlciBpbmZvIG9u
+IHdoeSB0aGlzDQo+Pj4gZGVsYXkgaXMgbmVlZGVkIGFuZCBob3cgbG9uZyBpdCBuZWVkcyB0byBi
+ZT8gT3IgaXMgdGhpcyBqdXN0IGVtcGlyaWNhbD8NCj4+PiANCj4+PiBJbiBnZW5lcmFsIEknbSBv
+ayB3aXRoIHRoaXMgcGF0Y2gsIGJ1dCBzdGlsbCB3YW50IGEgY29uZmlybWF0aW9uIGZyb20NCj4+
+PiBUaW0gdGhhdCB0aGlzIGRvZXNuJ3QgYnJlYWsgYW55dGhpbmcuDQo+PiANCj4+IEkgYWdyZWUg
+d2l0aCBMdWNhcycgY29tbWVudHMgYW5kIGFsc28gYWdyZWUgdGhhdCB0aGlzIGNhbiB1c2Ugc29t
+ZQ0KPj4gdGVzdGluZy4gQmFzZWQgb24gbXkgcHJldmlvdXMgZmluZGluZ3MgUENJIGxpbmsgaXMg
+dmVyeSBmcmFnaWxlLiBJdA0KPj4gd2lsbCB0YWtlIG1lIGEgZmV3IGRheXMgdG8gZ2V0IGEgcHJv
+cGVyIHRlc3Qgc2V0dXAgaW4gYSB0aGVybWFsDQo+PiBjaGFtYmVyIHdpdGggYSBob3N0IG9mIGJv
+YXJkcyBidXQgSSB3aWxsIHJlcG9ydCBiYWNrIHdoZW4gSSBoYXZlDQo+PiBmaW5kaW5ncy4NCj4+
+IA0KPj4gVGltDQo+PiANCj4+PiANCj4+Pj4gU2lnbmVkLW9mZi1ieTogUmljaGFyZCBaaHUgPHI2
+NTAzN0BmcmVlc2NhbGUuY29tPg0KPj4+PiAtLS0NCj4+Pj4gZHJpdmVycy9wY2kvaG9zdC9wY2kt
+aW14Ni5jIHwgNiArKystLS0NCj4+Pj4gMSBmaWxlIGNoYW5nZWQsIDMgaW5zZXJ0aW9ucygrKSwg
+MyBkZWxldGlvbnMoLSkNCj4+Pj4gDQo+Pj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9ob3N0
+L3BjaS1pbXg2LmMgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaS1pbXg2LmMNCj4+Pj4gaW5kZXggMjMz
+ZmU4YS4uYmM0MjIyYiAxMDA2NDQNCj4+Pj4gLS0tIGEvZHJpdmVycy9wY2kvaG9zdC9wY2ktaW14
+Ni5jDQo+Pj4+ICsrKyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWlteDYuYw0KPj4+PiBAQCAtMjc1
+LDE1ICsyNzUsMTUgQEAgc3RhdGljIGludCBpbXg2X3BjaWVfZGVhc3NlcnRfY29yZV9yZXNldChz
+dHJ1Y3QgcGNpZV9wb3J0ICpwcCkNCj4+Pj4gICAgICAgICAgICAgIGdvdG8gZXJyX3BjaWU7DQo+
+Pj4+ICAgICAgfQ0KPj4+PiANCj4+Pj4gLSAgICAgLyogYWxsb3cgdGhlIGNsb2NrcyB0byBzdGFi
+aWxpemUgKi8NCj4+Pj4gLSAgICAgdXNsZWVwX3JhbmdlKDIwMCwgNTAwKTsNCj4+Pj4gLQ0KPj4+
+PiAgICAgIC8qIHBvd2VyIHVwIGNvcmUgcGh5IGFuZCBlbmFibGUgcmVmIGNsb2NrICovDQo+Pj4+
+ICAgICAgcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+aW9tdXhjX2dwciwgSU9NVVhDX0dQ
+UjEsDQo+Pj4+ICAgICAgICAgICAgICAgICAgICAgIElNWDZRX0dQUjFfUENJRV9URVNUX1BELCAw
+IDw8IDE4KTsNCj4+Pj4gICAgICByZWdtYXBfdXBkYXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNf
+Z3ByLCBJT01VWENfR1BSMSwNCj4+Pj4gICAgICAgICAgICAgICAgICAgICAgSU1YNlFfR1BSMV9Q
+Q0lFX1JFRl9DTEtfRU4sIDEgPDwgMTYpOw0KPj4+PiANCj4+Pj4gKyAgICAgLyogYWxsb3cgdGhl
+IGNsb2NrcyB0byBzdGFiaWxpemUgKi8NCj4+Pj4gKyAgICAgdXNsZWVwX3JhbmdlKDIwMCwgNTAw
+KTsNCj4+Pj4gKw0KPj4+PiAgICAgIC8qIFNvbWUgYm9hcmRzIGRvbid0IGhhdmUgUENJZSByZXNl
+dCBHUElPLiAqLw0KPj4+PiAgICAgIGlmIChncGlvX2lzX3ZhbGlkKGlteDZfcGNpZS0+cmVzZXRf
+Z3BpbykpIHsNCj4+Pj4gICAgICAgICAgICAgIGdwaW9fc2V0X3ZhbHVlKGlteDZfcGNpZS0+cmVz
+ZXRfZ3BpbywgMCk7DQo+IA0KPiBJIHRlc3RlZCB0aGlzIGFjcm9zcyB0ZW1wZXJhdHVyZSBvdmVy
+IDMwMCsgYm9vdHMgZWFjaCBvbiBzZXZlcmFsIElNWDYNCj4gYmFzZWQgYm9hcmRzIHdpdGggc3dp
+dGNoZXMgYW5kIGRpZCBub3QgZW5jb3VudGVyIGFueSBsaW5rIGZhaWx1cmVzLg0KPiANCj4gVGVz
+dGVkLWJ5OiBUaW0gSGFydmV5IDx0aGFydmV5QGdhdGV3b3Jrcy5jb20+DQo=
