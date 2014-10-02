@@ -1,125 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:39253 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752929AbaJ0Ml4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Oct 2014 08:41:56 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 14/16] Sparc/MSI: Use MSI controller framework to configure MSI/MSI-X irq
-Date: Mon, 27 Oct 2014 21:22:20 +0800
-Message-ID: <1414416142-31239-15-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
-References: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-qc0-f182.google.com ([209.85.216.182]:40894 "EHLO
+	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750868AbaJBCQ6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 22:16:58 -0400
+Received: by mail-qc0-f182.google.com with SMTP id i17so1524464qcy.13
+        for <linux-pci@vger.kernel.org>; Wed, 01 Oct 2014 19:16:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1412210092.10667.3.camel@pasglop>
+References: <1412210092.10667.3.camel@pasglop>
+Date: Wed, 1 Oct 2014 22:16:57 -0400
+Message-ID: <CADnq5_Pizkne_pHJiT1eUgsrK0SY0F_KvWazvNkg02qS49Shig@mail.gmail.com>
+Subject: Re: [PATCH 4/4] ALSA: hda - Limit 40bit DMA for AMD HDMI controllers
+From: Alex Deucher <alexdeucher@gmail.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Takashi Iwai <tiwai@suse.de>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI controller framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+On Wed, Oct 1, 2014 at 8:34 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+>
+> AMD/ATI HDMI controller chip models, we already have a filter to lower
+> to 32bit DMA, but the rest are supposed to be working with 64bit
+> although the hardware doesn't really work with 63bit but only with 40
+> or 48bit DMA.  In this patch, we take 40bit DMA for safety for the
+> AMD/ATI controllers as the graphics drivers does.
+>
+> Signed-off-by: Takashi Iwai <tiwai@suse.de>
+> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> CC: <stable@vger.kernel.org>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Acked-by: David S. Miller <davem@davemloft.net>
----
- arch/sparc/kernel/pci.c      |   20 ++++++++++++++++++--
- arch/sparc/kernel/pci_impl.h |    3 +++
- 2 files changed, 21 insertions(+), 2 deletions(-)
+Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index b36365f..c691a10 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -656,6 +656,9 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 
- 	printk("PCI: Scanning PBM %s\n", node->full_name);
- 
-+#ifdef CONFIG_PCI_MSI
-+	pbm->msi_ctrl = &sparc_msi_ctrl;
-+#endif
- 	pci_add_resource_offset(&resources, &pbm->io_space,
- 				pbm->io_space.start);
- 	pci_add_resource_offset(&resources, &pbm->mem_space,
-@@ -905,7 +908,15 @@ int pci_domain_nr(struct pci_bus *pbus)
- EXPORT_SYMBOL(pci_domain_nr);
- 
- #ifdef CONFIG_PCI_MSI
--int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
-+struct msi_controller *pcibios_msi_controller(struct pci_bus *bus)
-+{
-+	struct pci_pbm_info *pbm = bus->sysdata;
-+
-+	return pbm->msi_ctrl;
-+}
-+
-+static int sparc_setup_msi_irq(struct msi_controller *ctrl,
-+		struct pci_dev *pdev, struct msi_desc *desc)
- {
- 	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
- 	unsigned int irq;
-@@ -916,7 +927,7 @@ int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
- 	return pbm->setup_msi_irq(&irq, pdev, desc);
- }
- 
--void arch_teardown_msi_irq(unsigned int irq)
-+static void sparc_teardown_msi_irq(struct msi_controller *ctrl, unsigned int irq)
- {
- 	struct msi_desc *entry = irq_get_msi_desc(irq);
- 	struct pci_dev *pdev = entry->dev;
-@@ -925,6 +936,11 @@ void arch_teardown_msi_irq(unsigned int irq)
- 	if (pbm->teardown_msi_irq)
- 		pbm->teardown_msi_irq(irq, pdev);
- }
-+
-+struct msi_controller sparc_msi_ctrl = {
-+	.setup_irq = sparc_setup_msi_irq,
-+	.teardown_irq = sparc_teardown_msi_irq,
-+};
- #endif /* !(CONFIG_PCI_MSI) */
- 
- static void ali_sound_dma_hack(struct pci_dev *pdev, int set_bit)
-diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
-index 75803c7..e02642d 100644
---- a/arch/sparc/kernel/pci_impl.h
-+++ b/arch/sparc/kernel/pci_impl.h
-@@ -55,6 +55,8 @@ struct sparc64_msiq_cookie {
- 	struct pci_pbm_info *pbm;
- 	unsigned long msiqid;
- };
-+
-+extern struct msi_controller sparc_msi_ctrl;
- #endif
- 
- struct pci_pbm_info {
-@@ -132,6 +134,7 @@ struct pci_pbm_info {
- 	void				*msi_queues;
- 	unsigned long			*msi_bitmap;
- 	unsigned int			*msi_irq_table;
-+	struct msi_controller *msi_ctrl;
- 	int (*setup_msi_irq)(unsigned int *irq_p, struct pci_dev *pdev,
- 			     struct msi_desc *entry);
- 	void (*teardown_msi_irq)(unsigned int irq, struct pci_dev *pdev);
--- 
-1.7.1
-
+> ---
+>
+> Tested, works fine. This patch is actually independent of the rest
+> of the series
+>
+>  sound/pci/hda/hda_intel.c | 14 +++++++++++---
+>  1 file changed, 11 insertions(+), 3 deletions(-)
+>
+> diff --git a/sound/pci/hda/hda_intel.c b/sound/pci/hda/hda_intel.c
+> index f91ba7f..48d0f30 100644
+> --- a/sound/pci/hda/hda_intel.c
+> +++ b/sound/pci/hda/hda_intel.c
+> @@ -1483,6 +1483,7 @@ static int azx_first_init(struct azx *chip)
+>         struct snd_card *card = chip->card;
+>         int err;
+>         unsigned short gcap;
+> +       unsigned int dma_bits = 64;
+>
+>  #if BITS_PER_LONG != 64
+>         /* Fix up base address on ULI M5461 */
+> @@ -1524,9 +1525,14 @@ static int azx_first_init(struct azx *chip)
+>         gcap = azx_readw(chip, GCAP);
+>         dev_dbg(card->dev, "chipset global capabilities = 0x%x\n", gcap);
+>
+> +       /* AMD devices support 40 or 48bit DMA, take the safe one */
+> +       if (chip->pci->vendor == PCI_VENDOR_ID_AMD)
+> +               dma_bits = 40;
+> +
+>         /* disable SB600 64bit support for safety */
+>         if (chip->pci->vendor == PCI_VENDOR_ID_ATI) {
+>                 struct pci_dev *p_smbus;
+> +               dma_bits = 40;
+>                 p_smbus = pci_get_device(PCI_VENDOR_ID_ATI,
+>                                          PCI_DEVICE_ID_ATI_SBX00_SMBUS,
+>                                          NULL);
+> @@ -1556,9 +1562,11 @@ static int azx_first_init(struct azx *chip)
+>         }
+>
+>         /* allow 64bit DMA address if supported by H/W */
+> -       if ((gcap & AZX_GCAP_64OK) && !pci_set_dma_mask(pci, DMA_BIT_MASK(64)))
+> -               pci_set_consistent_dma_mask(pci, DMA_BIT_MASK(64));
+> -       else {
+> +       if (!(gcap & AZX_GCAP_64OK))
+> +               dma_bits = 32;
+> +       if (!pci_set_dma_mask(pci, DMA_BIT_MASK(dma_bits))) {
+> +               pci_set_consistent_dma_mask(pci, DMA_BIT_MASK(dma_bits));
+> +       } else {
+>                 pci_set_dma_mask(pci, DMA_BIT_MASK(32));
+>                 pci_set_consistent_dma_mask(pci, DMA_BIT_MASK(32));
+>         }
+>
+>
+>
+>
