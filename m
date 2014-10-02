@@ -1,238 +1,282 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0146.outbound.protection.outlook.com ([207.46.100.146]:2016
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758587AbaJ3KKF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Oct 2014 06:10:05 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v4 00/20] usb: dwc3: add support for AMD Nolan SoC
-Date: Thu, 30 Oct 2014 18:08:25 +0800
-Message-ID: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+Received: from mail-qc0-f170.google.com ([209.85.216.170]:42711 "EHLO
+	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750868AbaJBCNj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 22:13:39 -0400
+Received: by mail-qc0-f170.google.com with SMTP id m20so1508824qcx.1
+        for <linux-pci@vger.kernel.org>; Wed, 01 Oct 2014 19:13:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="yes"
+In-Reply-To: <1412210082.10667.2.camel@pasglop>
+References: <1412210082.10667.2.camel@pasglop>
+Date: Wed, 1 Oct 2014 22:13:38 -0400
+Message-ID: <CADnq5_PhuFbRPgzAa_hEA1czTQjY9xdLFOWhL393DN4CYDnFng@mail.gmail.com>
+Subject: Re: [PATCH v2 3/4] sound/radeon: Move 64-bit MSI quirk from arch to driver
+From: Alex Deucher <alexdeucher@gmail.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Takashi Iwai <tiwai@suse.de>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Content-Type: multipart/mixed; boundary=001a11c1234021915c0504672a5c
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+--001a11c1234021915c0504672a5c
+Content-Type: text/plain; charset=UTF-8
 
-The series of patches add AMD Nolan (NL) SoC support for DesignWare USB3
-OTG IP with PCI bus glue layer. This controller supported hibernation, LPM
-erratum and used the 2.80a IP version and amd own phy. Current
-implementation support both simulation and SoC platform. And already tested
-with gadget zero and msc tool. It works well on file storage gadget.
+On Wed, Oct 1, 2014 at 8:34 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+>
+> A number of radeon cards have a HW limitation causing them to be
+> unable to generate the full 64-bit of address bits for MSIs. This
+> breaks MSIs on some platforms such as POWER machines.
+>
+> We used to have a powerpc specific quirk to address that on a
+> single card, but this doesn't scale very well, this is better
+> put under control of the drivers who know precisely what a given
+> HW revision can do.
+>
+> This moves the setting of the quirk flag to the audio driver.
+>
+> While recent ASICs have that problem fixed, they don't seem to
+> be listed in the PCI IDs of the current driver, so let's quirk all
+> the ATI HDMI for now. The consequences are nil on x86 anyway.
+>
+> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> CC: <stable@vger.kernel.org>
 
+The attached updated patch only flags the affected asics.
 
-These patches are generated on balbi/testing/next
+Alex
 
-Changes from v3 -> v4
-- Add comment on hibernation patch
-- Fix typos of commit log and comments
-- Remove WARN_ON for temporary solution of FPGA board
-- Rename tx deemph to tx de-emphasis
-- Add documentation under Documentation/devicetree/bindings/usb/dwc3.txt
-- Check FPGA flag on usb3 and usb2 suspend phy quirk
-- Refine description of PCI quirk patch
-- Remove amd_nl_plat flag at dwc3 structure
-- Make HIRD threshold configurable
+> ---
+>  arch/powerpc/kernel/pci_64.c |  6 ------
+>  sound/pci/hda/hda_intel.c    | 10 ++++++++--
+>  sound/pci/hda/hda_priv.h     |  1 +
+>  3 files changed, 9 insertions(+), 8 deletions(-)
+>
+> diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
+> index 5330f6d..b15194e 100644
+> --- a/arch/powerpc/kernel/pci_64.c
+> +++ b/arch/powerpc/kernel/pci_64.c
+> @@ -266,9 +266,3 @@ int pcibus_to_node(struct pci_bus *bus)
+>  }
+>  EXPORT_SYMBOL(pcibus_to_node);
+>  #endif
+> -
+> -static void quirk_radeon_32bit_msi(struct pci_dev *dev)
+> -{
+> -       dev->no_64bit_msi = true;
+> -}
+> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
+> diff --git a/sound/pci/hda/hda_intel.c b/sound/pci/hda/hda_intel.c
+> index aa302fb..f91ba7f 100644
+> --- a/sound/pci/hda/hda_intel.c
+> +++ b/sound/pci/hda/hda_intel.c
+> @@ -296,7 +296,8 @@ enum {
+>
+>  /* quirks for ATI/AMD HDMI */
+>  #define AZX_DCAPS_PRESET_ATI_HDMI \
+> -       (AZX_DCAPS_NO_TCSEL | AZX_DCAPS_SYNC_WRITE | AZX_DCAPS_POSFIX_LPIB)
+> +       (AZX_DCAPS_NO_TCSEL | AZX_DCAPS_SYNC_WRITE | AZX_DCAPS_POSFIX_LPIB|\
+> +        AZX_DCAPS_NO_MSI64)
+>
+>  /* quirks for Nvidia */
+>  #define AZX_DCAPS_PRESET_NVIDIA \
+> @@ -1505,9 +1506,14 @@ static int azx_first_init(struct azx *chip)
+>                 return -ENXIO;
+>         }
+>
+> -       if (chip->msi)
+> +       if (chip->msi) {
+> +               if (chip->driver_caps & AZX_DCAPS_NO_MSI64) {
+> +                       dev_dbg(card->dev, "Disabling 64bit MSI\n");
+> +                       pci->no_64bit_msi = true;
+> +               }
+>                 if (pci_enable_msi(pci) < 0)
+>                         chip->msi = 0;
+> +       }
+>
+>         if (azx_acquire_irq(chip, 0) < 0)
+>                 return -EBUSY;
+> diff --git a/sound/pci/hda/hda_priv.h b/sound/pci/hda/hda_priv.h
+> index 949cd43..5016014 100644
+> --- a/sound/pci/hda/hda_priv.h
+> +++ b/sound/pci/hda/hda_priv.h
+> @@ -171,6 +171,7 @@ enum { SDI0, SDI1, SDI2, SDI3, SDO0, SDO1, SDO2, SDO3 };
+>  #define AZX_DCAPS_PM_RUNTIME   (1 << 26)       /* runtime PM support */
+>  #define AZX_DCAPS_I915_POWERWELL (1 << 27)     /* HSW i915 powerwell support */
+>  #define AZX_DCAPS_CORBRP_SELF_CLEAR (1 << 28)  /* CORBRP clears itself after reset */
+> +#define AZX_DCAPS_NO_MSI64      (1 << 29)      /* Stick to 32-bit MSIs */
+>
+>  /* HD Audio class code */
+>  #define PCI_CLASS_MULTIMEDIA_HD_AUDIO  0x0403
+>
+>
+>
+>
 
-Changes from v2 -> v3
-- Confirmed these quirks will be needed in product level
-- Move AMD configuration patch to the last one with all quirk flags
-- Make all quirks as 1-bit field instead of single-bits on a 32-bit
-  variable
-- Add all quirks DeviceTree counterparts
-- Make LPM erratum configurable
-- Add PCI ID into pci_ids.h because it will be used both on PCI and DWC3
-  device driver.
+--001a11c1234021915c0504672a5c
+Content-Type: text/x-patch; charset=US-ASCII;
+	name="0001-sound-radeon-Move-64-bit-MSI-quirk-from-arch-to-driv.patch"
+Content-Disposition: attachment;
+	filename="0001-sound-radeon-Move-64-bit-MSI-quirk-from-arch-to-driv.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_i0rgy5qs0
 
-Changes from v1 -> v2
-- Remove dual role function temporarily
-- Add pci quirk to avoid to bind with xhci driver
-- Distinguish between simulation board and soc
-- Break down all the special quirks
-
-
-Patch 1:
-- Enable hibernation
-
-Patch 2:
-- Distinguish between simulation board and SoC
-
-Patch 3:
-- Initialize platform data at pci glue layer
-
-Patch 4 - 16:
-- Break down all the special quirks
-
-Patch 17:
-- Add PCI device ID of AMD NL USB3 DRD
-
-Patch 18:
-- Prevent xHCI driver from claiming AMD NL USB3 DRD device
-
-Patch 19:
-- Add support AMD NL USB3 DRD for dwc3 driver
-
-Patch 20:
-- Make HIRD threshold configurable
-
-Patch set already passed all the MSC testing on simulation board with low
-clock frequency, so the speed will slower than true SoC. Detailed result
-without verbose debug option is below:
-
-root@hr-bak:/home/ray/felipe/usb-tools# ./msc.sh -o /dev/sdb1
-Starting test suite: 2014年 10月 30日 星期四 15:42:32 CST
-test 0a: simple 4k read/write
-test  0: sent       3.91 MB read       7.43 MB/s write       6.45 MB/s ... success
-test 0b: simple 8k read/write
-test  0: sent       7.81 MB read      10.10 MB/s write       8.92 MB/s ... success
-test 0c: simple 16k read/write
-test  0: sent      15.62 MB read      15.22 MB/s write      12.02 MB/s ... success
-test 0d: simple 32k read/write
-test  0: sent      31.25 MB read      19.30 MB/s write      16.65 MB/s ... success
-test 0e: simple 64k read/write
-test  0: sent      62.50 MB read      22.43 MB/s write      16.04 MB/s ... success
-test 1: simple 1-sector read/write
-test  1: sent     500.00 kB read       1.27 MB/s write       1.04 MB/s ... success
-test 2: simple 8-sectors read/write
-test  2: sent       3.91 MB read       7.39 MB/s write       6.35 MB/s ... success
-test 3: simple 32-sectors read/write
-test  3: sent      15.62 MB read      15.26 MB/s write      12.42 MB/s ... success
-test 4: simple 64-sectors read/write
-test  4: sent      31.25 MB read      19.56 MB/s write      16.83 MB/s ... success
-test 5a: scatter/gather for 2-sectors buflen 4k
-test  5: sent    1000.00 kB read       2.53 MB/s write       1.89 MB/s ... success
-test 5b: scatter/gather for 2-sectors buflen 8k
-test  5: sent    1000.00 kB read       2.52 MB/s write       1.87 MB/s ... success
-test 5c: scatter/gather for 2-sectors buflen 16k
-test  5: sent    1000.00 kB read       2.53 MB/s write       1.85 MB/s ... success
-test 5d: scatter/gather for 2-sectors buflen 32k
-test  5: sent    1000.00 kB read       2.47 MB/s write       2.08 MB/s ... success
-test 5e: scatter/gather for 2-sectors buflen 64k
-test  5: sent    1000.00 kB read       2.48 MB/s write       2.09 MB/s ... success
-test 6a: scatter/gather for 8-sectors buflen 4k
-test  6: sent       3.91 MB read       7.05 MB/s write       6.31 MB/s ... success
-test 6b: scatter/gather for 8-sectors buflen 8k
-test  6: sent       3.91 MB read       7.43 MB/s write       6.39 MB/s ... success
-test 6c: scatter/gather for 8-sectors buflen 16k
-test  6: sent       3.91 MB read       7.66 MB/s write       6.27 MB/s ... success
-test 6d: scatter/gather for 8-sectors buflen 32k
-test  6: sent       3.91 MB read       7.71 MB/s write       6.30 MB/s ... success
-test 6e: scatter/gather for 8-sectors buflen 64k
-test  6: sent       3.91 MB read       7.38 MB/s write       6.46 MB/s ... success
-test 7a: scatter/gather for 32-sectors buflen 16k
-test  7: sent      15.62 MB read      14.56 MB/s write      11.90 MB/s ... success
-test 7b: scatter/gather for 32-sectors buflen 32k
-test  7: sent      15.62 MB read      15.16 MB/s write      12.02 MB/s ... success
-test 7c: scatter/gather for 32-sectors buflen 64k
-test  7: sent      15.62 MB read      15.29 MB/s write      12.03 MB/s ... success
-test 8a: scatter/gather for 64-sectors buflen 32k
-test  8: sent      31.25 MB read      19.48 MB/s write      16.62 MB/s ... success
-test 8b: scatter/gather for 64-sectors buflen 64k
-test  8: sent      31.25 MB read      19.62 MB/s write      16.71 MB/s ... success
-test 9: scatter/gather for 128-sectors buflen 64k
-test  9: sent      62.50 MB read      22.14 MB/s write      16.65 MB/s ... success
-test 10: read over the end of the block device
-test 10: sent      62.01 MB read       0.00 MB/s write       0.00 MB/s ... success
-test 11: lseek past the end of the block device
-test 11: sent       0.00 B read       0.00 MB/s write       0.00 MB/s ... success
-test 12: write over the end of the block device
-test 12: sent       0.00 B read       0.00 MB/s write       0.00 MB/s ... success
-test 13: write 1 sg, read 8 random size sgs
-test 13: sent      62.50 MB read      21.54 MB/s write      16.17 MB/s ... success
-test 14: write 8 random size sgs, read 1 sg
-test 14: sent      62.50 MB read      21.62 MB/s write      15.98 MB/s ... success
-test 15: write and read 8 random size sgs
-test 15: sent      62.50 MB read      22.00 MB/s write      16.53 MB/s ... success
-test 16a: read with heap allocated buffer
-test 16: sent      62.50 MB read      21.10 MB/s write       0.00 MB/s ... success
-test 16b: read with stack allocated buffer
-test 16: sent      62.50 MB read      21.28 MB/s write       0.00 MB/s ... success
-test 17a: write with heap allocated buffer
-test 17: sent       0.00 B read       0.00 MB/s write      20.29 MB/s ... success
-test 17b: write with stack allocated buffer
-test 17: sent       0.00 B read       0.00 MB/s write      20.34 MB/s ... success
-test 18a: write 0x00 and read it back
-test 18: sent      62.50 MB read      21.80 MB/s write      16.02 MB/s ... success
-test 18b: write 0xff and read it back
-test 18: sent      62.50 MB read      20.56 MB/s write      15.06 MB/s ... success
-test 18c: write 0x55 and read it back
-test 18: sent      62.50 MB read      21.68 MB/s write      15.94 MB/s ... success
-test 18d: write 0xaa and read it back
-test 18: sent      62.50 MB read      21.69 MB/s write      15.99 MB/s ... success
-test 18e: write 0x11 and read it back
-test 18: sent      62.50 MB read      21.59 MB/s write      15.97 MB/s ... success
-test 18f: write 0x22 and read it back
-test 18: sent      62.50 MB read      21.62 MB/s write      15.98 MB/s ... success
-test 18g: write 0x44 and read it back
-test 18: sent      62.50 MB read      21.42 MB/s write      16.09 MB/s ... success
-test 18h: write 0x88 and read it back
-test 18: sent      62.50 MB read      21.01 MB/s write      15.83 MB/s ... success
-test 18i: write 0x33 and read it back
-test 18: sent      62.50 MB read      21.42 MB/s write      16.06 MB/s ... success
-test 18j: write 0x66 and read it back
-test 18: sent      62.50 MB read      21.53 MB/s write      16.01 MB/s ... success
-test 18k: write 0x99 and read it back
-test 18: sent      62.50 MB read      21.39 MB/s write      16.03 MB/s ... success
-test 18l: write 0xcc and read it back
-test 18: sent      62.50 MB read      21.77 MB/s write      16.02 MB/s ... success
-test 18m: write 0x77 and read it back
-test 18: sent      62.50 MB read      21.99 MB/s write      16.09 MB/s ... success
-test 18n: write 0xbb and read it back
-test 18: sent      62.50 MB read      21.91 MB/s write      16.02 MB/s ... success
-test 18o: write 0xdd and read it back
-test 18: sent      62.50 MB read      21.17 MB/s write      15.90 MB/s ... success
-test 18p: write 0xee and read it back
-test 18: sent      62.50 MB read      21.93 MB/s write      16.05 MB/s ... success
-Test suite ended: 2014年 10月 30日 星期四 15:46:12 CST
-
-Thanks,
-Rui
-
-Huang Rui (20):
-  usb: dwc3: enable hibernation if to be supported
-  usb: dwc3: add a flag to check if it is FPGA board
-  usb: dwc3: initialize platform data at pci glue layer
-  usb: dwc3: add disable scramble quirk
-  usb: dwc3: add lpm erratum support
-  usb: dwc3: add U2Exit LFPS quirk
-  usb: dwc3: add P3 in U2 SS Inactive quirk
-  usb: dwc3: add request P1/P2/P3 quirk
-  usb: dwc3: add delay P1/P2/P3 quirk
-  usb: dwc3: add delay phy power change quirk
-  usb: dwc3: add LFPS filter quirk
-  usb: dwc3: add rx_detect to polling LFPS quirk
-  usb: dwc3: set SUSPHY bit for all cores
-  usb: dwc3: add Tx de-emphasis quirk
-  usb: dwc3: add disable usb3 suspend phy quirk
-  usb: dwc3: add disable usb2 suspend phy quirk
-  PCI: Add support for AMD Nolan USB3 DRD
-  PCI: Prevent xHCI driver from claiming AMD Nolan USB3 DRD device
-  usb: dwc3: add support for AMD Nolan platform
-  usb: dwc3: make HIRD threshold configurable
-
- Documentation/devicetree/bindings/usb/dwc3.txt |  23 ++++
- drivers/pci/quirks.c                           |  20 +++
- drivers/usb/dwc3/core.c                        | 174 ++++++++++++++++++++++++-
- drivers/usb/dwc3/core.h                        |  78 +++++++++--
- drivers/usb/dwc3/dwc3-pci.c                    |  32 +++++
- drivers/usb/dwc3/gadget.c                      |  15 ++-
- drivers/usb/dwc3/platform_data.h               |  20 +++
- include/linux/pci_ids.h                        |   1 +
- 8 files changed, 347 insertions(+), 16 deletions(-)
-
--- 
-1.9.1
-
+RnJvbSA0MTJmY2UwOTI5NTU4NjAyYTQzYTQxZmVhYjA1MWM0Y2Y3M2M3MTQyIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBCZW5qYW1pbiBIZXJyZW5zY2htaWR0IDxiZW5oQGtlcm5lbC5j
+cmFzaGluZy5vcmc+CkRhdGU6IFRodSwgMiBPY3QgMjAxNCAxMDozNDo0MiArMTAwMApTdWJqZWN0
+OiBbUEFUQ0hdIHNvdW5kL3JhZGVvbjogTW92ZSA2NC1iaXQgTVNJIHF1aXJrIGZyb20gYXJjaCB0
+byBkcml2ZXIgKHYyKQoKQSBudW1iZXIgb2YgcmFkZW9uIGNhcmRzIGhhdmUgYSBIVyBsaW1pdGF0
+aW9uIGNhdXNpbmcgdGhlbSB0byBiZQp1bmFibGUgdG8gZ2VuZXJhdGUgdGhlIGZ1bGwgNjQtYml0
+IG9mIGFkZHJlc3MgYml0cyBmb3IgTVNJcy4gVGhpcwpicmVha3MgTVNJcyBvbiBzb21lIHBsYXRm
+b3JtcyBzdWNoIGFzIFBPV0VSIG1hY2hpbmVzLgoKV2UgdXNlZCB0byBoYXZlIGEgcG93ZXJwYyBz
+cGVjaWZpYyBxdWlyayB0byBhZGRyZXNzIHRoYXQgb24gYQpzaW5nbGUgY2FyZCwgYnV0IHRoaXMg
+ZG9lc24ndCBzY2FsZSB2ZXJ5IHdlbGwsIHRoaXMgaXMgYmV0dGVyCnB1dCB1bmRlciBjb250cm9s
+IG9mIHRoZSBkcml2ZXJzIHdobyBrbm93IHByZWNpc2VseSB3aGF0IGEgZ2l2ZW4KSFcgcmV2aXNp
+b24gY2FuIGRvLgoKVGhpcyBtb3ZlcyB0aGUgc2V0dGluZyBvZiB0aGUgcXVpcmsgZmxhZyB0byB0
+aGUgYXVkaW8gZHJpdmVyLgoKV2hpbGUgcmVjZW50IEFTSUNzIGhhdmUgdGhhdCBwcm9ibGVtIGZp
+eGVkLCB0aGV5IGRvbid0IHNlZW0gdG8KYmUgbGlzdGVkIGluIHRoZSBQQ0kgSURzIG9mIHRoZSBj
+dXJyZW50IGRyaXZlciwgc28gbGV0J3MgcXVpcmsgYWxsCnRoZSBBVEkgSERNSSBmb3Igbm93LiBU
+aGUgY29uc2VxdWVuY2VzIGFyZSBuaWwgb24geDg2IGFueXdheS4KCnYyOiBBbGV4IERldWNoZXI6
+IG9ubHkgcXVpcmsgdGhlIGFmZmVjdGVkIGFzaWNzCgpTaWduZWQtb2ZmLWJ5OiBCZW5qYW1pbiBI
+ZXJyZW5zY2htaWR0IDxiZW5oQGtlcm5lbC5jcmFzaGluZy5vcmc+CkNDOiA8c3RhYmxlQHZnZXIu
+a2VybmVsLm9yZz4KLS0tCiBhcmNoL3Bvd2VycGMva2VybmVsL3BjaV82NC5jIHwgIDYgLS0tCiBz
+b3VuZC9wY2kvaGRhL2hkYV9pbnRlbC5jICAgIHwgOTYgKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKy0tLS0tLS0tLS0tLS0KIHNvdW5kL3BjaS9oZGEvaGRhX3ByaXYuaCAgICAgfCAgMSAr
+CiAzIGZpbGVzIGNoYW5nZWQsIDY5IGluc2VydGlvbnMoKyksIDM0IGRlbGV0aW9ucygtKQoKZGlm
+ZiAtLWdpdCBhL2FyY2gvcG93ZXJwYy9rZXJuZWwvcGNpXzY0LmMgYi9hcmNoL3Bvd2VycGMva2Vy
+bmVsL3BjaV82NC5jCmluZGV4IDUzMzBmNmQuLmIxNTE5NGUgMTAwNjQ0Ci0tLSBhL2FyY2gvcG93
+ZXJwYy9rZXJuZWwvcGNpXzY0LmMKKysrIGIvYXJjaC9wb3dlcnBjL2tlcm5lbC9wY2lfNjQuYwpA
+QCAtMjY2LDkgKzI2NiwzIEBAIGludCBwY2lidXNfdG9fbm9kZShzdHJ1Y3QgcGNpX2J1cyAqYnVz
+KQogfQogRVhQT1JUX1NZTUJPTChwY2lidXNfdG9fbm9kZSk7CiAjZW5kaWYKLQotc3RhdGljIHZv
+aWQgcXVpcmtfcmFkZW9uXzMyYml0X21zaShzdHJ1Y3QgcGNpX2RldiAqZGV2KQotewotCWRldi0+
+bm9fNjRiaXRfbXNpID0gdHJ1ZTsKLX0KLURFQ0xBUkVfUENJX0ZJWFVQX0ZJTkFMKFBDSV9WRU5E
+T1JfSURfQVRJLCAweGFhNjgsIHF1aXJrX3JhZGVvbl8zMmJpdF9tc2kpOwpkaWZmIC0tZ2l0IGEv
+c291bmQvcGNpL2hkYS9oZGFfaW50ZWwuYyBiL3NvdW5kL3BjaS9oZGEvaGRhX2ludGVsLmMKaW5k
+ZXggYWEzMDJmYi4uNDg5NmYyNSAxMDA2NDQKLS0tIGEvc291bmQvcGNpL2hkYS9oZGFfaW50ZWwu
+YworKysgYi9zb3VuZC9wY2kvaGRhL2hkYV9pbnRlbC5jCkBAIC0xNTA1LDkgKzE1MDUsMTQgQEAg
+c3RhdGljIGludCBhenhfZmlyc3RfaW5pdChzdHJ1Y3QgYXp4ICpjaGlwKQogCQlyZXR1cm4gLUVO
+WElPOwogCX0KIAotCWlmIChjaGlwLT5tc2kpCisJaWYgKGNoaXAtPm1zaSkgeworCQlpZiAoY2hp
+cC0+ZHJpdmVyX2NhcHMgJiBBWlhfRENBUFNfTk9fTVNJNjQpIHsKKwkJCWRldl9kYmcoY2FyZC0+
+ZGV2LCAiRGlzYWJsaW5nIDY0Yml0IE1TSVxuIik7CisJCQlwY2ktPm5vXzY0Yml0X21zaSA9IHRy
+dWU7CisJCX0KIAkJaWYgKHBjaV9lbmFibGVfbXNpKHBjaSkgPCAwKQogCQkJY2hpcC0+bXNpID0g
+MDsKKwl9CiAKIAlpZiAoYXp4X2FjcXVpcmVfaXJxKGNoaXAsIDApIDwgMCkKIAkJcmV0dXJuIC1F
+QlVTWTsKQEAgLTIwNjIsNTggKzIwNjcsOTMgQEAgc3RhdGljIGNvbnN0IHN0cnVjdCBwY2lfZGV2
+aWNlX2lkIGF6eF9pZHNbXSA9IHsKIAl7IFBDSV9ERVZJQ0UoMHgxMDIyLCAweDc4MGQpLAogCSAg
+LmRyaXZlcl9kYXRhID0gQVpYX0RSSVZFUl9HRU5FUklDIHwgQVpYX0RDQVBTX1BSRVNFVF9BVElf
+U0IgfSwKIAkvKiBBVEkgSERNSSAqLwotCXsgUENJX0RFVklDRSgweDEwMDIsIDB4NzkzYiksCi0J
+ICAuZHJpdmVyX2RhdGEgPSBBWlhfRFJJVkVSX0FUSUhETUkgfCBBWlhfRENBUFNfUFJFU0VUX0FU
+SV9IRE1JIH0sCisJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHgxMzE0KSwKKwkgIC5kcml2ZXJfZGF0
+YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAg
+QVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHg3OTE5KSwKLQkg
+IC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJ
+X0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQ
+U19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCisJeyBQQ0lfREVW
+SUNFKDB4MTAwMiwgMHg3OTY5KSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERN
+SSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0s
+CisJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHg3OTNiKSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9E
+UklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBT
+X05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHg5NjBmKSwKLQkgIC5kcml2ZXJf
+ZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwK
+KwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRf
+QVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCisJeyBQQ0lfREVWSUNFKDB4MTAw
+MiwgMHg5NjQ2KSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9E
+Q0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lf
+REVWSUNFKDB4MTAwMiwgMHg5NzBmKSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJ
+SERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFa
+WF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RD
+QVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTAwKSwKLQkgIC5kcml2
+ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkg
+fSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVT
+RVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4
+MTAwMiwgMHhhYTA4KSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFa
+WF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJf
+QVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01T
+STY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTEwKSwKLQkgIC5kcml2ZXJfZGF0YSA9
+IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5k
+cml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hE
+TUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhh
+YTE4KSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19Q
+UkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8
+IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJ
+eyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTIwKSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklW
+RVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0
+YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAg
+QVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTI4KSwKLQkg
+IC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJ
+X0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQ
+U19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVW
+SUNFKDB4MTAwMiwgMHhhYTMwKSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERN
+SSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9E
+UklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBT
+X05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTM4KSwKLQkgIC5kcml2ZXJf
+ZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwK
+KwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRf
+QVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAw
+MiwgMHhhYTQwKSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9E
+Q0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJ
+SERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0
+IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTQ4KSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFa
+WF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2
+ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkg
+fAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTUw
+KSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVT
+RVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFa
+WF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQ
+Q0lfREVWSUNFKDB4MTAwMiwgMHhhYTU4KSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJf
+QVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9
+IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpY
+X0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTYwKSwKLQkgIC5k
+cml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hE
+TUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19Q
+UkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNF
+KDB4MTAwMiwgMHhhYTY4KSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8
+IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklW
+RVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05P
+X01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTgwKSwKLQkgIC5kcml2ZXJfZGF0
+YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkg
+IC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJ
+X0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwg
+MHhhYTg4KSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQ
+U19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERN
+SSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0s
+CiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTkwKSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9E
+UklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJf
+ZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAor
+CSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTk4KSwK
+LQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRf
+QVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9E
+Q0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lf
+REVWSUNFKDB4MTAwMiwgMHg5OTAyKSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJ
+SERNSV9OUyB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9
+IEFaWF9EUklWRVJfQVRJSERNSV9OUyB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAg
+QVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYWEwKSwKLQkg
+IC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSV9OUyB8IEFaWF9EQ0FQU19QUkVTRVRf
+QVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSV9OUyB8IEFa
+WF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQ
+Q0lfREVWSUNFKDB4MTAwMiwgMHhhYWE4KSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJf
+QVRJSERNSV9OUyB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0
+YSA9IEFaWF9EUklWRVJfQVRJSERNSV9OUyB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAor
+CSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYWIwKSwK
+LQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSV9OUyB8IEFaWF9EQ0FQU19QUkVT
+RVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSV9OUyB8
+IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJ
+LyogVklBIFZUODI1MS9WVDgyMzdBICovCiAJeyBQQ0lfREVWSUNFKDB4MTEwNiwgMHgzMjg4KSwK
+IAkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfVklBIHwgQVpYX0RDQVBTX1BPU0ZJWF9WSUEg
+fSwKZGlmZiAtLWdpdCBhL3NvdW5kL3BjaS9oZGEvaGRhX3ByaXYuaCBiL3NvdW5kL3BjaS9oZGEv
+aGRhX3ByaXYuaAppbmRleCA5NDljZDQzLi41MDE2MDE0IDEwMDY0NAotLS0gYS9zb3VuZC9wY2kv
+aGRhL2hkYV9wcml2LmgKKysrIGIvc291bmQvcGNpL2hkYS9oZGFfcHJpdi5oCkBAIC0xNzEsNiAr
+MTcxLDcgQEAgZW51bSB7IFNESTAsIFNESTEsIFNESTIsIFNESTMsIFNETzAsIFNETzEsIFNETzIs
+IFNETzMgfTsKICNkZWZpbmUgQVpYX0RDQVBTX1BNX1JVTlRJTUUJKDEgPDwgMjYpCS8qIHJ1bnRp
+bWUgUE0gc3VwcG9ydCAqLwogI2RlZmluZSBBWlhfRENBUFNfSTkxNV9QT1dFUldFTEwgKDEgPDwg
+MjcpCS8qIEhTVyBpOTE1IHBvd2Vyd2VsbCBzdXBwb3J0ICovCiAjZGVmaW5lIEFaWF9EQ0FQU19D
+T1JCUlBfU0VMRl9DTEVBUiAoMSA8PCAyOCkJLyogQ09SQlJQIGNsZWFycyBpdHNlbGYgYWZ0ZXIg
+cmVzZXQgKi8KKyNkZWZpbmUgQVpYX0RDQVBTX05PX01TSTY0ICAgICAgKDEgPDwgMjkpCS8qIFN0
+aWNrIHRvIDMyLWJpdCBNU0lzICovCiAKIC8qIEhEIEF1ZGlvIGNsYXNzIGNvZGUgKi8KICNkZWZp
+bmUgUENJX0NMQVNTX01VTFRJTUVESUFfSERfQVVESU8JMHgwNDAzCi0tIAoxLjguMy4xCgo=
+--001a11c1234021915c0504672a5c--
