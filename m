@@ -1,167 +1,321 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 28 Oct 2014 15:51:52 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Vidya Sagar <vidyas@nvidia.com>
-Cc: bhelgaas@google.com, swarren@wwwdotorg.org, kthota@nvidia.com,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: tegra: Enable root port specific features
-Message-ID: <20141028145151.GD17770@ulmo>
-References: <1413803091-10824-1-git-send-email-vidyas@nvidia.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:55573 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752063AbaJBKvQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Oct 2014 06:51:16 -0400
+Date: Thu, 2 Oct 2014 11:51:12 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: "matt@masarand.com" <matt@masarand.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 02/18] Delayed x86 setup of PCI IRQs to bus scan time
+Message-ID: <20141002105112.GN841@e106497-lin.cambridge.arm.com>
+References: <1412222866-21068-1-git-send-email-matt@masarand.com>
+ <1412222866-21068-3-git-send-email-matt@masarand.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="3Gf/FFewwPeBMqCJ"
-In-Reply-To: <1413803091-10824-1-git-send-email-vidyas@nvidia.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1412222866-21068-3-git-send-email-matt@masarand.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
---3Gf/FFewwPeBMqCJ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, Oct 20, 2014 at 04:34:51PM +0530, Vidya Sagar wrote:
-> Enables root port to advertise its ASPM-L1 capability
-> resulting in possible link entry to L1 when an ASPM-L1 capable
-> device is connected
-> Enables per-controller & per-TMS clock clamping by default
-> Enabling above features result in more power saving
->=20
-> It also avoids PM message truncation by waiting for DLLP to finish
-> before entering into L1 or L2
->=20
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+On Thu, Oct 02, 2014 at 05:07:30AM +0100, matt@masarand.com wrote:
+> From: Matthew Minter <matt@masarand.com>
+> 
+> The x86 architecture boot code currently traverses the PCI buses with
+> an extra pass in order to initialise the PCI device IRQs at boot, this
+> patch avoids this pass and defers the IRQ assignment untill device
+> enable time which also has the benefit that hot-plugged devices are
+> assigned IRQs without additional code.
+> 
+> Signed-off-by: Matthew Minter <matt@masarand.com>
+> 
 > ---
-> v2:
->  Removed rp_read() & rp_write() as they seem to be redundant
->  Moved port disable code under error condition i.e. it the link
->   is down, corresponding port will be disabled
->=20
->  drivers/pci/host/pci-tegra.c | 50 ++++++++++++++++++++++++++++++++++++++=
-+-----
->  1 file changed, 45 insertions(+), 5 deletions(-)
->=20
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 3d43874..7f32b07 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -237,6 +237,18 @@
->  		(0xf  << PADS_REFCLK_CFG_DRVI_SHIFT)     \
->  	)
-> =20
-> +#define NV_PCIE2_RP_VEND_XP1			0x00000F04
-> +#define NV_PCIE2_RP_VEND_XP_LINK_PVT_CTL_L1_ASPM_SUPPORT	(1 << 21)
+>  arch/x86/include/asm/pci_x86.h |  7 ++--
+>  arch/x86/kernel/x86_init.c     |  1 -
+>  arch/x86/pci/acpi.c            |  5 ++-
+>  arch/x86/pci/common.c          |  2 -
+>  arch/x86/pci/irq.c             | 94 +++++++++++++++++++++++-------------------
+>  5 files changed, 59 insertions(+), 50 deletions(-)
+> 
+> diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+> index fa1195d..16fd8e9 100644
+> --- a/arch/x86/include/asm/pci_x86.h
+> +++ b/arch/x86/include/asm/pci_x86.h
+> @@ -90,6 +90,7 @@ extern unsigned int pcibios_irq_mask;
+>  
+>  extern raw_spinlock_t pci_config_lock;
+>  
+> +extern int pci_map_irq(struct pci_dev *dev, u8 slot, u8 pin);
+>  extern int (*pcibios_enable_irq)(struct pci_dev *dev);
+>  extern void (*pcibios_disable_irq)(struct pci_dev *dev);
+>  
+> @@ -119,7 +120,7 @@ extern int __init pci_acpi_init(void);
+>  extern void __init pcibios_irq_init(void);
+>  extern int __init pcibios_init(void);
+>  extern int pci_legacy_init(void);
+> -extern void pcibios_fixup_irqs(void);
+> +extern int pcibios_fixup_irq(struct pci_dev *dev, u8 pin);
+>  
+>  /* pci-mmconfig.c */
+>  
+> @@ -200,9 +201,9 @@ static inline void mmio_config_writel(void __iomem *pos, u32 val)
+>  #  define x86_default_pci_init		pci_legacy_init
+>  # endif
+>  # define x86_default_pci_init_irq	pcibios_irq_init
+> -# define x86_default_pci_fixup_irqs	pcibios_fixup_irqs
+> +# define x86_default_pci_fixup_irq	pcibios_fixup_irq
+>  #else
+>  # define x86_default_pci_init		NULL
+>  # define x86_default_pci_init_irq	NULL
+> -# define x86_default_pci_fixup_irqs	NULL
+> +# define x86_default_pci_fixup_irq	NULL
+>  #endif
+> diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+> index e48b674..064457f 100644
+> --- a/arch/x86/kernel/x86_init.c
+> +++ b/arch/x86/kernel/x86_init.c
+> @@ -81,7 +81,6 @@ struct x86_init_ops x86_init __initdata = {
+>  	.pci = {
+>  		.init			= x86_default_pci_init,
+>  		.init_irq		= x86_default_pci_init_irq,
+> -		.fixup_irqs		= x86_default_pci_fixup_irqs,
+>  	},
+>  };
+>  
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index cfd1b13..2c433f4 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -311,7 +311,7 @@ static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
+>  	} else if (orig_end != end) {
+>  		dev_info(&info->bridge->dev,
+>  			"host bridge window [%#llx-%#llx] "
+> -			"([%#llx-%#llx] ignored, not CPU addressable)\n", 
+> +			"([%#llx-%#llx] ignored, not CPU addressable)\n",
+>  			start, orig_end, end + 1, orig_end);
+>  	}
+>  
+> @@ -571,6 +571,9 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+
+Your previous patch removed the weak implementation of pcibios_root_bridge_prepare yet
+you are adding it here in the arch specific code. Again, confused on what you
+were trying to achieve by removing the __weak version. Should that not have by default
+setup bridge->swizzle_irq and bridge->map_irq to some sane defaults and kept into drivers/pci?
+
+>  	struct pci_sysdata *sd = bridge->bus->sysdata;
+>  
+>  	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
 > +
-> +#define NV_PCIE2_RP_VEND_XP_BIST		0x00000F4C
-> +#define PCIE2_RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE	(1 << 28)
-> +
-> +#define NV_PCIE2_RP_PRIV_MISC			0x00000FE0
-> +#define PCIE2_RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD	(0xF << 16)
-> +#define PCIE2_RP_PRIV_MISC_CTLR_CLK_CLAMP_ENABLE	(1 << 23)
-> +#define PCIE2_RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD	(0xF << 24)
-> +#define PCIE2_RP_PRIV_MISC_TMS_CLK_CLAMP_ENABLE		(1 << 31)
+> +	bridge->swizzle_irq = NULL;
+> +	bridge->map_irq = pci_map_irq;
+>  	return 0;
+>  }
+>  
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index 059a76c..d4ed0b0 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -662,8 +662,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+>  	if ((err = pci_enable_resources(dev, mask)) < 0)
+>  		return err;
+>  
+> -	if (!pci_dev_msi_enabled(dev))
+> -		return pcibios_enable_irq(dev);
+>  	return 0;
+>  }
+>  
+> diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+> index eb500c2..33d323d 100644
+> --- a/arch/x86/pci/irq.c
+> +++ b/arch/x86/pci/irq.c
+> @@ -594,9 +594,9 @@ static __init int intel_router_probe(struct irq_router *r, struct pci_dev *route
+>  		return 1;
+>  	}
+>  
+> -	if ((device >= PCI_DEVICE_ID_INTEL_5_3400_SERIES_LPC_MIN && 
+> -	     device <= PCI_DEVICE_ID_INTEL_5_3400_SERIES_LPC_MAX) 
+> -	||  (device >= PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MIN && 
+> +	if ((device >= PCI_DEVICE_ID_INTEL_5_3400_SERIES_LPC_MIN &&
+> +	     device <= PCI_DEVICE_ID_INTEL_5_3400_SERIES_LPC_MAX)
+> +	||  (device >= PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MIN &&
 
-These registers should move to the section where other RP_* registers
-are already defined. Also, please adjust the name to match what's
-already there.
+More indentation fixes?
 
-In particular you also redefine RP_PRIV_MISC here.
+>  	     device <= PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MAX)
+>  	||  (device >= PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MIN &&
+>  	     device <= PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MAX)
+> @@ -875,9 +875,8 @@ static struct irq_info *pirq_get_info(struct pci_dev *dev)
+>  	return NULL;
+>  }
+>  
+> -static int pcibios_lookup_irq(struct pci_dev *dev, int assign)
+> +static int pcibios_lookup_irq(struct pci_dev *dev, u8 pin, int assign)
+>  {
+> -	u8 pin;
+>  	struct irq_info *info;
+>  	int i, pirq, newirq;
+>  	int irq = 0;
+> @@ -887,7 +886,6 @@ static int pcibios_lookup_irq(struct pci_dev *dev, int assign)
+>  	char *msg = NULL;
+>  
+>  	/* Find IRQ pin */
+> -	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+>  	if (!pin) {
+>  		dev_dbg(&dev->dev, "no interrupt pin\n");
+>  		return 0;
+> @@ -1017,50 +1015,45 @@ static int pcibios_lookup_irq(struct pci_dev *dev, int assign)
+>  					 irq, pci_name(dev2));
+>  		}
+>  	}
+> -	return 1;
+> +	/*
+> +	 * Due to the complicated platform specific behvaiour we cannot defer
 
-> +/* Enable various features of root port */
-> +static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
+behaviour
+
+> +	 * assigning dev->irq to the caller but will return it anyway
+> +	 */
+
+What? How is that sane?
+
+> +	return dev->irq;
+
+Beside the above comment, you are changing the behaviour of the function from previously
+returning 0/1 depending on whether an irq has been found into returning 0/dev->irq. That
+is unnecessary as you can extract the information anyway from dev, according to your
+comment.
+
+>  }
+>  
+> -void __init pcibios_fixup_irqs(void)
+> +int pcibios_fixup_irq(struct pci_dev *dev, u8 pin)
+>  {
+> -	struct pci_dev *dev = NULL;
+> -	u8 pin;
+> -
+> +	int irq = dev->irq;
+>  	DBG(KERN_DEBUG "PCI: IRQ fixup\n");
+> -	for_each_pci_dev(dev) {
+> -		/*
+> -		 * If the BIOS has set an out of range IRQ number, just
+> -		 * ignore it.  Also keep track of which IRQ's are
+> -		 * already in use.
+> -		 */
+> -		if (dev->irq >= 16) {
+> -			dev_dbg(&dev->dev, "ignoring bogus IRQ %d\n", dev->irq);
+> -			dev->irq = 0;
+> -		}
+> -		/*
+> -		 * If the IRQ is already assigned to a PCI device,
+> -		 * ignore its ISA use penalty
+> -		 */
+> -		if (pirq_penalty[dev->irq] >= 100 &&
+> -				pirq_penalty[dev->irq] < 100000)
+> -			pirq_penalty[dev->irq] = 0;
+> -		pirq_penalty[dev->irq]++;
+> +	/*
+> +	 * If the BIOS has set an out of range IRQ number, just
+> +	 * ignore it.  Also keep track of which IRQ's are
+> +	 * already in use.
+> +	 */
+> +	if (irq >= 16) {
+> +		dev_dbg(&dev->dev, "ignoring bogus IRQ %d\n", irq);
+> +		irq = 0;
+>  	}
+> +	/*
+> +	 * If the IRQ is already assigned to a PCI device,
+> +	 * ignore its ISA use penalty
+> +	 */
+> +	if (pirq_penalty[irq] >= 100 &&
+> +			pirq_penalty[irq] < 100000)
+> +		pirq_penalty[irq] = 0;
+> +	pirq_penalty[irq]++;
+>  
+> -	if (io_apic_assign_pci_irqs)
+> -		return;
+> +	if (io_apic_assign_pci_irqs || !pin)
+> +		return irq;
+>  
+> -	dev = NULL;
+> -	for_each_pci_dev(dev) {
+> -		pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+> -		if (!pin)
+> -			continue;
+> +	/*
+> +	 * Still no IRQ? Try to lookup one...
+> +	 */
+> +	if (!irq)
+> +		irq = pcibios_lookup_irq(dev, pin, 0);
+>  
+> -		/*
+> -		 * Still no IRQ? Try to lookup one...
+> -		 */
+> -		if (!dev->irq)
+> -			pcibios_lookup_irq(dev, 0);
+> -	}
+> +	return irq;
+>  }
+>  
+>  /*
+> @@ -1161,6 +1154,13 @@ void __init pcibios_irq_init(void)
+>  	}
+>  }
+>  
+> +int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
 > +{
-> +	unsigned int data;
-
-u32 please. And maybe rename it to something like "value" to be more
-consistent with other parts of the driver.
-
-> +
-> +	/* Power mangagement settings */
-> +	/* Enable clock clamping by default */
-> +	data =3D readl(port->base + NV_PCIE2_RP_PRIV_MISC);
-> +	data |=3D PCIE2_RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD |
-> +		PCIE2_RP_PRIV_MISC_CTLR_CLK_CLAMP_ENABLE |
-> +		PCIE2_RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD |
-> +		PCIE2_RP_PRIV_MISC_TMS_CLK_CLAMP_ENABLE;
-> +	writel(data, port->base + NV_PCIE2_RP_PRIV_MISC);
-> +
-> +	/* Enable rootport to advertise its ASPM - L1 capability */
-> +	data =3D readl(port->base + NV_PCIE2_RP_VEND_XP1);
-> +	data |=3D NV_PCIE2_RP_VEND_XP_LINK_PVT_CTL_L1_ASPM_SUPPORT;
-> +	writel(data, port->base + NV_PCIE2_RP_VEND_XP1);
-> +
-> +	/* LTSSM : wait for DLLP to finish before entering L1 or L2/L3 */
-> +	/* to avoid truncating PM messages resulting in receiver errors */
-
-See Documentation/CodingStyle for the proper format of multi-line
-comments.
-
-> +	data =3D readl(port->base + NV_PCIE2_RP_VEND_XP_BIST);
-> +	data |=3D PCIE2_RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE;
-> +	writel(data, port->base + NV_PCIE2_RP_VEND_XP_BIST);
+> +	bridge->swizzle_irq = NULL;
+> +	bridge->map_irq = pci_map_irq;
+> +	return 0;
 > +}
 
-I think these features could all be implemented in separate functions,
-which would allow you to give them meaningful names and make these odd
-comments obsolete. Or if you want to be more verbose about explaining
-the features, having separate functions for them will give you a good
-place for such comments.
+Like I've mentioned above, you already have a non-weak version in arch/x86/pci/acpi.c,
+why do you provide a week one here?
+
+Best regards,
+Liviu
 
 > +
->  static int tegra_pcie_enable(struct tegra_pcie *pcie)
+>  static void pirq_penalize_isa_irq(int irq, int active)
 >  {
->  	struct tegra_pcie_port *port, *tmp;
-> @@ -1870,13 +1908,15 @@ static int tegra_pcie_enable(struct tegra_pcie *p=
-cie)
-> =20
->  		tegra_pcie_port_enable(port);
-> =20
-> -		if (tegra_pcie_port_check_link(port))
-> +		if (!tegra_pcie_port_check_link(port)) {
-> +			dev_info(pcie->dev, "link %u down, ignoring\n",
-> +				port->index);
+>  	/*
+> @@ -1185,12 +1185,20 @@ void pcibios_penalize_isa_irq(int irq, int active)
+>  		pirq_penalize_isa_irq(irq, active);
+>  }
+>  
+> +int pci_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
+> +{
+> +	dev->irq = pcibios_fixup_irq(dev, pin);
+> +	if (pcibios_enable_irq(dev))
+> +		return -1;
+> +	return dev->irq;
+> +}
+> +
+>  static int pirq_enable_irq(struct pci_dev *dev)
+>  {
+>  	u8 pin = 0;
+>  
+>  	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+> -	if (pin && !pcibios_lookup_irq(dev, 1)) {
+> +	if (pin && !pcibios_lookup_irq(dev, pin, 1)) {
+>  		char *msg = "";
+>  
+>  		if (!io_apic_assign_pci_irqs && dev->irq)
+> -- 
+> 2.1.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-This isn't properly aligned.
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
-> +			tegra_pcie_port_disable(port);
-> +			tegra_pcie_port_free(port);
->  			continue;
-> +		}
-> =20
-> -		dev_info(pcie->dev, "link %u down, ignoring\n", port->index);
-> -
-> -		tegra_pcie_port_disable(port);
-> -		tegra_pcie_port_free(port);
-> +		tegra_pcie_enable_rp_features(port);
->  	}
-
-I think the new function is oddly named. Perhaps something like
-tegra_pcie_enable_pm() or tegra_pcie_port_init() would work better. The
-latter would for example give us a good point to do other work that's
-not "enabling a feature" if we need that kind of thing in the future.
-
-Thierry
-
---3Gf/FFewwPeBMqCJ
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJUT62HAAoJEN0jrNd/PrOhBNsQAKes/G+j+ELuMx2RP1CuMrQ7
-jjEM4FIlgTXgAbmWi59QVAbH/WvlwKbZY9rVbAxcUMVUpyU+8RkUsSV98bqS2pjD
-prv75aiUhKHmUnrkvP/DxUCIgAhUwmi4roxVDRXFRlCbupdpfVSc5HeUUDVvi17Y
-UdrIgnDTTMrtcLCMyk/kJbuq4rK8FFcZOWhBt0rMyMbmLCmRLn1BxIjkhso/QC1y
-wyx+KdUeDNWOAsJoKRwE5qznyeHUI46uHlXuCdRoT+f5/tT6iq0wb1bDO1Gc4lLA
-sCZW2nbihtzQFGOagFNlSWt6YcVqJcDFP0ZlWvARpJnmHuFx3Q4qwVoldI0eJru2
-kLIPOL13kLUonIDA2DfpJUn/fMtLE1pt9/opntX8zziivU/KZzwqp0ENQIoj60ce
-gel+MWhA1tSt+Yfxbqc+sojhQlPhKx2WRYJ57hzKgBNaO6cd2tFSq2RNtY6BH+il
-OGHLIB91I4LO60F/t/o2OigpYq1xjI71QKXCx/cgiqO/RPdcdXw69Uif4hJPP3dD
-Fy9SpV9ro3y4KnwLVkruPhKZMP6t5ju2/niW+ZtrbtuGgHp6txXyp/YSqPjMc61t
-GCbgOW1XBRwNxXp+Pv+WDCMMhFlRng12SQO85eOCYT/nFPOP6ljM7rq3VZWt3M2I
-wjqq9IbYBqZZ4Yces40J
-=Dqr1
------END PGP SIGNATURE-----
-
---3Gf/FFewwPeBMqCJ--
