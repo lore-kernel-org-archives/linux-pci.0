@@ -1,91 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [65.55.169.139] ([65.55.169.139]:51385 "EHLO
-	na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751289AbaJQJPd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Oct 2014 05:15:33 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v2 11/16] usb: dwc3: add delay p1p2p3 quirk
-Date: Fri, 17 Oct 2014 16:53:36 +0800
-Message-ID: <1413536021-4886-12-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from foo.masarand.uk ([69.164.217.139]:56342 "EHLO foo.masarand.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752370AbaJBEIA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Oct 2014 00:08:00 -0400
+From: matt@masarand.com
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, Matthew Minter <matt@masarand.com>
+Subject: [PATCH 03/18] Delayed arm setup of PCI IRQs to bus scan time
+Date: Thu,  2 Oct 2014 05:07:31 +0100
+Message-Id: <1412222866-21068-4-git-send-email-matt@masarand.com>
+In-Reply-To: <1412222866-21068-1-git-send-email-matt@masarand.com>
+References: <1412222866-21068-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-AMD NL needs to delay P0 to P1/P2/P3 request when entering U1/U2/U3.
+From: Matthew Minter <matt@masarand.com>
 
-Signed-off-by: Huang Rui <ray.huang@amd.com>
+Currently PCI device IRQs under arm are initialised during the
+pci_common_init_dev code path, this results in an extra sweep of the
+PCI bus as well as causing PCI devices hot-plugged after boot to not
+receive an IRQ.
+
+This patch set defers this assignment untill the device enable phase
+which prevents both these issues.
+
+Signed-off-by: Matthew Minter <matt@masarand.com>
+
 ---
- drivers/usb/dwc3/core.c          | 3 +++
- drivers/usb/dwc3/core.h          | 2 ++
- drivers/usb/dwc3/dwc3-pci.c      | 3 ++-
- drivers/usb/dwc3/platform_data.h | 1 +
- 4 files changed, 8 insertions(+), 1 deletion(-)
+ arch/arm/kernel/bios32.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index ec8b667..a9f1d4c 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -380,6 +380,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
- 	if (dwc->quirks & DWC3_QUIRK_REQP1P2P3)
- 		reg |= DWC3_GUSB3PIPECTL_REQP1P2P3;
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 17a26c1..4dcf3f7 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -389,7 +389,7 @@ void pcibios_remove_bus(struct pci_bus *bus)
+  * PCI standard swizzle is implemented on plug-in cards and Cardbus based
+  * PCI extenders, so it can not be ignored.
+  */
+-static u8 pcibios_swizzle(struct pci_dev *dev, u8 *pin)
++u8 pcibios_swizzle(struct pci_dev *dev, u8 *pin)
+ {
+ 	struct pci_sys_data *sys = dev->sysdata;
+ 	int slot, oldpin = *pin;
+@@ -409,7 +409,7 @@ static u8 pcibios_swizzle(struct pci_dev *dev, u8 *pin)
+ /*
+  * Map a slot/pin to an IRQ.
+  */
+-static int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++int pcibios_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	struct pci_sys_data *sys = dev->sysdata;
+ 	int irq = -1;
+@@ -424,6 +424,13 @@ static int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return irq;
+ }
  
-+	if (dwc->quirks & DWC3_QUIRK_DEPP1P2P3)
-+		reg |= DWC3_GUSB3PIPECTL_DEP1P2P3(1);
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->swizzle_irq = pcibios_swizzle;
++	bridge->map_irq = pcibios_map_irq;
++	return 0;
++}
 +
- 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
+ static int pcibios_init_resources(int busnr, struct pci_sys_data *sys)
+ {
+ 	int ret;
+@@ -523,8 +530,6 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+ 	if (hw->postinit)
+ 		hw->postinit();
  
- 	mdelay(100);
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index 8f47ade18..cf70fa6 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -178,6 +178,8 @@
- #define DWC3_GUSB3PIPECTL_PHYSOFTRST	(1 << 31)
- #define DWC3_GUSB3PIPECTL_U2SSINP3OK	(1 << 29)
- #define DWC3_GUSB3PIPECTL_REQP1P2P3	(1 << 24)
-+#define DWC3_GUSB3PIPECTL_DEP1P2P3_MASK	DWC3_GUSB3PIPECTL_DEP1P2P3(7)
-+#define DWC3_GUSB3PIPECTL_DEP1P2P3(n)	((n) << 19)
- #define DWC3_GUSB3PIPECTL_SUSPHY	(1 << 17)
+-	pci_fixup_irqs(pcibios_swizzle, pcibios_map_irq);
+-
+ 	list_for_each_entry(sys, &head, node) {
+ 		struct pci_bus *bus = sys->bus;
  
- /* Global TX Fifo Size Register */
-diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
-index 7154d18..23ae6a7 100644
---- a/drivers/usb/dwc3/dwc3-pci.c
-+++ b/drivers/usb/dwc3/dwc3-pci.c
-@@ -152,7 +152,8 @@ static int dwc3_pci_probe(struct pci_dev *pci,
- 		dwc3_pdata.quirks |= DWC3_QUIRK_AMD_NL
- 			| DWC3_QUIRK_U2EXIT_LFPS
- 			| DWC3_QUIRK_U2SSINP3OK
--			| DWC3_QUIRK_REQP1P2P3;
-+			| DWC3_QUIRK_REQP1P2P3
-+			| DWC3_QUIRK_DEPP1P2P3;
- 	}
- 
- 	ret = platform_device_add_resources(dwc3, res, ARRAY_SIZE(res));
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index 850883f..e668c1f 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -33,5 +33,6 @@ struct dwc3_platform_data {
- #define DWC3_QUIRK_U2EXIT_LFPS		(1 << 2)
- #define DWC3_QUIRK_U2SSINP3OK		(1 << 3)
- #define DWC3_QUIRK_REQP1P2P3		(1 << 4)
-+#define DWC3_QUIRK_DEPP1P2P3		(1 << 5)
- 
- };
 -- 
-1.9.1
+2.1.0
 
