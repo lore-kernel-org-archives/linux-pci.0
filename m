@@ -1,37 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f48.google.com ([209.85.216.48]:51481 "EHLO
-	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755358AbaJUPiL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Oct 2014 11:38:11 -0400
-Received: by mail-qa0-f48.google.com with SMTP id dc16so995616qab.7
-        for <linux-pci@vger.kernel.org>; Tue, 21 Oct 2014 08:38:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <66d89550a8de45f89b50c1862a35394f@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
- <1413879507.2751.1.camel@pengutronix.de> <66d89550a8de45f89b50c1862a35394f@DM2PR0301MB0862.namprd03.prod.outlook.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 21 Oct 2014 09:37:45 -0600
-Message-ID: <CAErSpo5ZkyPNY6SBxu6pZBEpDSW_V5H6g3=EX3dme3W0ehbG8A@mail.gmail.com>
-Subject: Re: [PATCH v8]PCI: imx6: enable pcie on imx6sx sdb and imx6qdl sabreauto.
-To: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <richard.zhu@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	"festevam@gmail.com" <festevam@gmail.com>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from foo.masarand.uk ([69.164.217.139]:56365 "EHLO foo.masarand.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752406AbaJBEII (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Oct 2014 00:08:08 -0400
+From: matt@masarand.com
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, Matthew Minter <matt@masarand.com>
+Subject: [PATCH 15/18] Delayed unicore32 setup of PCI IRQs to bus scan time
+Date: Thu,  2 Oct 2014 05:07:43 +0100
+Message-Id: <1412222866-21068-16-git-send-email-matt@masarand.com>
+In-Reply-To: <1412222866-21068-1-git-send-email-matt@masarand.com>
+References: <1412222866-21068-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 21, 2014 at 3:54 AM, Hong-Xing.Zhu@freescale.com
-<Hong-Xing.Zhu@freescale.com> wrote:
-> ...
-> Richard Zhu
+From: Matthew Minter <matt@masarand.com>
 
-Can you please straighten out this Hong-Xing.Zhu vs. Richard Zhu
-thing?  It is really a hassle to deal with multiple names for one
-person.
+PCI IRQs are currently assigned during pci_common_init, this is only run
+at boot time so devices hot-plugged after boot will not be allocated an IRQ.
+this is fixed here by defering the assignment untill the device enable code,
+instead registering the function pointer at boot time.
 
-Bjorn
+Signed-off-by: Matthew Minter <matt@masarand.com>
+
+---
+ arch/unicore32/kernel/pci.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
+index 374a055..6a9da80 100644
+--- a/arch/unicore32/kernel/pci.c
++++ b/arch/unicore32/kernel/pci.c
+@@ -101,7 +101,7 @@ void pci_puv3_preinit(void)
+ 	writel(readl(PCIBRI_CMD) | PCIBRI_CMD_IO | PCIBRI_CMD_MEM, PCIBRI_CMD);
+ }
+ 
+-static int __init pci_puv3_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++static int pci_puv3_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	if (dev->bus->number == 0) {
+ #ifdef CONFIG_ARCH_FPGA /* 4 pci slots */
+@@ -263,8 +263,6 @@ static int __init pci_common_init(void)
+ 	if (!puv3_bus)
+ 		panic("PCI: unable to scan bus!");
+ 
+-	pci_fixup_irqs(pci_common_swizzle, pci_puv3_map_irq);
+-
+ 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+ 		/*
+ 		 * Size the bridge windows.
+@@ -281,6 +279,13 @@ static int __init pci_common_init(void)
+ }
+ subsys_initcall(pci_common_init);
+ 
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->swizzle_irq = pci_common_swizzle;
++	bridge->map_irq = pci_puv3_map_irq;
++	return 0;
++}
++
+ char * __init pcibios_setup(char *str)
+ {
+ 	if (!strcmp(str, "debug")) {
+-- 
+2.1.0
+
