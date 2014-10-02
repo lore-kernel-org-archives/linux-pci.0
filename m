@@ -1,94 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from AUSXIPPS310.us.dell.com ([143.166.148.211]:37231 "EHLO
-	ausxipps310.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752502AbaJBPpD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Oct 2014 11:45:03 -0400
-From: <Jordan_Hargrave@Dell.com>
-To: <wangyijing@huawei.com>, <keith.busch@intel.com>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<jdmason@kudzu.us>, <Jose_De_La_Rosa@Dell.com>,
-	<Austin_Bolen@Dell.com>
-Date: Thu, 2 Oct 2014 10:31:39 -0500
-Subject: RE: [PATCH] PCI: update device mps when doing pci hotplug
-Message-ID: <5B3AAEAF6B46EA4D955DF7AD46C2C48515FBE408DA@AUSX7MCPS303.AMER.DELL.COM>
-References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com>
- <20140903224201.GD26073@google.com> <540802D9.6000903@huawei.com>
- <CAErSpo6qy76zTX07Ufm0n1_HUA5G0MrAYxauEFa5QkibWsejFQ@mail.gmail.com>
- <5409117E.2000002@huawei.com> <alpine.LRH.2.03.1409241547430.4696@AMR>
- <CAErSpo5upA7KYVo=_SvwJ9pdNot_5ENi3OtiPpuzZjpwj3ghPA@mail.gmail.com>
- <54236E7B.5000905@huawei.com>
- <alpine.LRH.2.03.1409251029220.4688@AMR>,<5424DC01.6020906@huawei.com>
-In-Reply-To: <5424DC01.6020906@huawei.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from ozlabs.org ([103.22.144.67]:34240 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752549AbaJBBxq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 21:53:46 -0400
+Date: Thu, 2 Oct 2014 11:53:38 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Alex Deucher <alexdeucher@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@ozlabs.org,
+	Dave Airlie <airlied@linux.ie>, linux-pci@vger.kernel.org,
+	Anton Blanchard <anton@au1.ibm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Takashi Iwai <tiwai@suse.de>,
+	Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 3/4] sound/radeon: Move 64-bit MSI quirk from arch to
+ driver
+Message-ID: <20141002115338.3a0ae11f@canb.auug.org.au>
+In-Reply-To: <1412210082.10667.2.camel@pasglop>
+References: <1412210082.10667.2.camel@pasglop>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/c=QZ8QV/xwUIs48KR6IIKHx"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-\My original proposed patch to handle MPS only lived in the hotplug code path, it wasn't part of the initial PCI configuration.
-This is the code that we have had to insert into our drivers (MTIP32XX, NVME) as the current default setting doesn't work for hotplug.
+--Sig_/c=QZ8QV/xwUIs48KR6IIKHx
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-http://www.spinics.net/lists/hotplug/msg04728.html
+Hi Ben,
 
---jordan hargrave
-Dell Enterprise Linux Engineering
-________________________________________
-From: Yijing Wang [wangyijing@huawei.com]
-Sent: Thursday, September 25, 2014 10:22 PM
-To: Keith Busch
-Cc: Bjorn Helgaas; linux-pci@vger.kernel.org; Hargrave, Jordan; Jon Mason
-Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
-
-On 2014/9/26 0:46, Keith Busch wrote:
-> On Wed, 24 Sep 2014, Yijing Wang wrote:
->> On 2014/9/25 7:30, Bjorn Helgaas wrote:
->>> On Wed, Sep 24, 2014 at 4:41 PM, Keith Busch <keith.busch@intel.com> wrote:
->>>> Just poking this thread to make sure it's not dead. :)
->>>>
->>>> I tested Yijing's proposal and it is successful on our Intel server
->>>> platforms; hoping either this or something that derives similar behavior
->>>> will be applied so we can remove bus tuning kernel parameters.
->>>>
->>>> Tested-by: Keith Busch <keith.busch@intel.com>
->>>
->>> Oops, thanks for poking me, because this was indeed dead.
->>>
->>> My main objection was to testing "is_hotplug_bridge".  That doesn't
->>> seem right, because this issue really isn't specific to hotplug.  I
->>> didn't see a resolution of that, but let me know if I missed it.
->>
->> Why I introduced "is_hotplug_bridge" is to avoid to touch the MPS which is not
->> in hotplug case when pcie_bus_config == PCIE_BUS_TUNE_OFF.
->>
->> It's so sad that PCIe spec doesn't give a detailed guide to configure MPS.
->>
->> I'd like to refactor current MPS framework, but now there are still some puzzles
->> to me. I need to have a deeper understanding of pcie mps. I read Jon's mps patch
->> log from git, I found he turn off all this MPS config, because some issues were found
->> in some platforms, but no platforms detailed info and no bugzilla records.
+On Thu, 02 Oct 2014 10:34:42 +1000 Benjamin Herrenschmidt <benh@kernel.cras=
+hing.org> wrote:
 >
-> Just my opinion, I thought the hotplug check was a good idea: it addresses
-> a known issue, and does not mess with current unknowns. Outside a hotplug
-> scenario, I think we expect platform f/w to handle MPS settings and the
-> kernel can stay out of the way because of the unknown platform issues. If
-> it is hotplug, having the kernel set device's MPS to match the parent
-> couldn't make things worse off than doing nothing, right?
+> diff --git a/sound/pci/hda/hda_intel.c b/sound/pci/hda/hda_intel.c
+> index aa302fb..f91ba7f 100644
+> --- a/sound/pci/hda/hda_intel.c
+> +++ b/sound/pci/hda/hda_intel.c
+> @@ -296,7 +296,8 @@ enum {
+> =20
+>  /* quirks for ATI/AMD HDMI */
+>  #define AZX_DCAPS_PRESET_ATI_HDMI \
+> -	(AZX_DCAPS_NO_TCSEL | AZX_DCAPS_SYNC_WRITE | AZX_DCAPS_POSFIX_LPIB)
+> +	(AZX_DCAPS_NO_TCSEL | AZX_DCAPS_SYNC_WRITE | AZX_DCAPS_POSFIX_LPIB|\
+> +	 AZX_DCAPS_NO_MSI64)
+> =20
+>  /* quirks for Nvidia */
+>  #define AZX_DCAPS_PRESET_NVIDIA \
+> @@ -1505,9 +1506,14 @@ static int azx_first_init(struct azx *chip)
+>  		return -ENXIO;
+>  	}
+> =20
+> -	if (chip->msi)
+> +	if (chip->msi) {
+> +		if (chip->driver_caps & AZX_DCAPS_NO_MSI64) {
+> +			dev_dbg(card->dev, "Disabling 64bit MSI\n");
+> +			pci->no_64bit_msi =3D true;
 
-Yes, I think so, but it all decided by Bjorn. I think he want a better solution,
-and current patch just still is a temporary fix.
+You get the idea :-)
 
->
-> On the side, I'll see if I can ping some comrades on PCI-SIG to propose
-> an ECN to clarify configuring MPS. They usually ignore me though, so no
-> promises. :)
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
 
-Thanks in advance for your help :)
+--Sig_/c=QZ8QV/xwUIs48KR6IIKHx
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
->
-> .
->
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
+iQIcBAEBCAAGBQJULLAnAAoJEMDTa8Ir7ZwVzG0P/isbB7zvLZqybONzSR850tGb
+8TsJpbXTzxrXiGJJIYwGubHJYUiOm+9lLcjMxTxILplkMd1vJ1rqB4YSVHSGe97A
+f1m2B3E3ufQiqkM5fHSAOwxpZAE8kVD/7LdqPzH3Ac/VQCibEVeci5mDNJ5sUvAp
+9SczWcTRFhcd9nwvs6/kX3WDEUVfb4vhl+pjsf7sg3AJU9C6xG6rHDTbkwpbGWMc
+pTp6mJ/NiinnK0GFfaFiWZ1ZYBlWUVs4cKEntgr2ReztWwFRkwkydeW8mZVs55W9
+RftHVoQMAms4G0wjvDAmks3PU1wjkRRvaa3SDW6jDZvd3uHOeLE2unMnBdw44Nde
+IO5+RNLYWnyH+9sYg0DFwQJbA4w3USrboJFe3zgHhNiC3I99/aRUgEaUfAmgphBz
+EGq4r7u1KxXS0pDYF8C52BBIbPnrE9/tQYFskEQlodKR14tcZupFGlHfXPE3eiUp
++KvKjTJnYfzfHr7EkdXqhYbbenQqNM0o9qKCcfZy7537EK0Cgo9WKrYroAXj1zwk
+Z8yJgVsc3P3OYLTShI6i8Wasw/dqwJWP0q+MLhj8lhDQ7U48c96knUirEdqm8ZHE
+5GBgq3/AMcNBLd5P/XW9ItST1cJ7whyhzypYbECbvwC3RVGgNHksodjg54jEGuEh
+JekybX5Su1IrvqT1iDms
+=1SgU
+-----END PGP SIGNATURE-----
 
---
-Thanks!
-Yijing
-
+--Sig_/c=QZ8QV/xwUIs48KR6IIKHx--
