@@ -1,127 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0101.outbound.protection.outlook.com ([65.55.169.101]:47470
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932923AbaJ3KKj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 06:10:39 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v4 06/20] usb: dwc3: add U2Exit LFPS quirk
-Date: Thu, 30 Oct 2014 18:08:31 +0800
-Message-ID: <1414663725-2195-7-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
-References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from foo.masarand.uk ([69.164.217.139]:56324 "EHLO foo.masarand.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751439AbaJBD7Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 23:59:24 -0400
+From: matt@masarand.com
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, Vality <matt@masarand.com>
+Subject: [PATCH 14/18] Delayed tile setup of PCI IRQs to bus scan time
+Date: Thu,  2 Oct 2014 04:50:33 +0100
+Message-Id: <1412221837-17452-15-git-send-email-matt@masarand.com>
+In-Reply-To: <1412221837-17452-1-git-send-email-matt@masarand.com>
+References: <1412221837-17452-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds U2Exit LFPS quirk, and some special platforms can configure
-that if it is needed.
+From: Vality <matt@masarand.com>
 
-[ balbi@ti.com : added DeviceTree binding documentation ]
+Currently pcibios_init is running pci_fixup_irqs in order to assign
+IRQs to PCI devices, this is only done once at boot-time and causes
+devices hot-plugged after boot time to not be allocated an IRQ.
+This is fixed in this patch-set by delaying the allocation untill
+device enable time by registering the function to be called later.
 
-Signed-off-by: Huang Rui <ray.huang@amd.com>
-Signed-off-by: Felipe Balbi <balbi@ti.com>
 ---
- Documentation/devicetree/bindings/usb/dwc3.txt | 1 +
- drivers/usb/dwc3/core.c                        | 6 ++++++
- drivers/usb/dwc3/core.h                        | 3 +++
- drivers/usb/dwc3/platform_data.h               | 1 +
- 4 files changed, 11 insertions(+)
+ arch/tile/kernel/pci.c    | 10 +++++++---
+ arch/tile/kernel/pci_gx.c | 10 +++++++---
+ 2 files changed, 14 insertions(+), 6 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentation/devicetree/bindings/usb/dwc3.txt
-index 2b0c1f2..79ed37c 100644
---- a/Documentation/devicetree/bindings/usb/dwc3.txt
-+++ b/Documentation/devicetree/bindings/usb/dwc3.txt
-@@ -18,6 +18,7 @@ Optional properties:
- 	Only really useful for FPGA builds.
-  - snps,has-lpm-erratum: true when DWC3 was configured with LPM Erratum enabled
-  - snps,lpm-nyet-threshold: LPM NYET threshold
-+ - snps,u2exit_lfps_quirk: set if we want to enable U2Exit LFPS quirk
- 
- This is usually a subnode to DWC3 glue to which it is connected.
- 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index 2ac96e4..6d1f09f 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -470,6 +470,9 @@ static int dwc3_core_init(struct dwc3 *dwc)
- 	else
- 		reg &= ~DWC3_GCTL_DISSCRAMBLE;
- 
-+	if (dwc->u2exit_lfps_quirk)
-+		reg |= DWC3_GCTL_U2EXIT_LFPS;
-+
- 	/*
- 	 * WORKAROUND: DWC3 revisions <1.90a have a bug
- 	 * where the device can fail to connect at SuperSpeed
-@@ -726,6 +729,8 @@ static int dwc3_probe(struct platform_device *pdev)
- 
- 		dwc->disable_scramble_quirk = of_property_read_bool(node,
- 				"snps,disable_scramble_quirk");
-+		dwc->u2exit_lfps_quirk = of_property_read_bool(node,
-+				"snps,u2exit_lfps_quirk");
- 	} else if (pdata) {
- 		dwc->maximum_speed = pdata->maximum_speed;
- 		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
-@@ -736,6 +741,7 @@ static int dwc3_probe(struct platform_device *pdev)
- 		dwc->dr_mode = pdata->dr_mode;
- 
- 		dwc->disable_scramble_quirk = pdata->disable_scramble_quirk;
-+		dwc->u2exit_lfps_quirk = pdata->u2exit_lfps_quirk;
+diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
+index 1f80a88..6dc0bd8 100644
+--- a/arch/tile/kernel/pci.c
++++ b/arch/tile/kernel/pci.c
+@@ -313,9 +313,6 @@ int __init pcibios_init(void)
+ 		}
  	}
  
- 	/* default to superspeed if no maximum_speed passed */
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index 34f1e08..45130a1 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -166,6 +166,7 @@
- #define DWC3_GCTL_SCALEDOWN(n)		((n) << 4)
- #define DWC3_GCTL_SCALEDOWN_MASK	DWC3_GCTL_SCALEDOWN(3)
- #define DWC3_GCTL_DISSCRAMBLE		(1 << 3)
-+#define DWC3_GCTL_U2EXIT_LFPS		(1 << 2)
- #define DWC3_GCTL_GBLHIBERNATIONEN	(1 << 1)
- #define DWC3_GCTL_DSBLCLKGTNG		(1 << 0)
+-	/* Do machine dependent PCI interrupt routing */
+-	pci_fixup_irqs(pci_common_swizzle, tile_map_irq);
+-
+ 	/*
+ 	 * This comes from the generic Linux PCI driver.
+ 	 *
+@@ -367,6 +364,13 @@ int __init pcibios_init(void)
+ }
+ subsys_initcall(pcibios_init);
  
-@@ -679,6 +680,7 @@ struct dwc3_scratchpad_array {
-  * @start_config_issued: true when StartConfig command has been issued
-  * @three_stage_setup: set if we perform a three phase setup
-  * @disable_scramble_quirk: set if we enable the disable scramble quirk
-+ * @u2exit_lfps_quirk: set if we enable U2Exit LFPS quirk
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->swizzle_irq = pci_common_swizzle;
++	bridge->map_irq = tile_map_irq;
++	return 0;
++}
++
+ /*
+  * No bus fixups needed.
   */
- struct dwc3 {
- 	struct usb_ctrlrequest	*ctrl_req;
-@@ -787,6 +789,7 @@ struct dwc3 {
- 	unsigned		three_stage_setup:1;
+diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
+index e39f9c5..7d1b5bf 100644
+--- a/arch/tile/kernel/pci_gx.c
++++ b/arch/tile/kernel/pci_gx.c
+@@ -893,9 +893,6 @@ int __init pcibios_init(void)
+ 		next_busno = bus->busn_res.end + 1;
+ 	}
  
- 	unsigned		disable_scramble_quirk:1;
-+	unsigned		u2exit_lfps_quirk:1;
- };
+-	/* Do machine dependent PCI interrupt routing */
+-	pci_fixup_irqs(pci_common_swizzle, tile_map_irq);
+-
+ 	/*
+ 	 * This comes from the generic Linux PCI driver.
+ 	 *
+@@ -1048,6 +1045,13 @@ alloc_mem_map_failed:
+ }
+ subsys_initcall(pcibios_init);
  
- /* -------------------------------------------------------------------------- */
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index e128308..3f21591 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -29,4 +29,5 @@ struct dwc3_platform_data {
- 
- 	unsigned disable_scramble_quirk:1;
- 	unsigned has_lpm_erratum:1;
-+	unsigned u2exit_lfps_quirk:1;
- };
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->swizzle_irq = pci_common_swizzle;
++	bridge->map_irq = tile_map_irq;
++	return 0;
++}
++
+ /* No bus fixups needed. */
+ void pcibios_fixup_bus(struct pci_bus *bus)
+ {
 -- 
-1.9.1
+2.1.0
 
