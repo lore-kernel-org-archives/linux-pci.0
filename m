@@ -1,29 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp02.citrix.com ([66.165.176.63]:31369 "EHLO
-	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752171AbaJ0NJQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Oct 2014 09:09:16 -0400
-Message-ID: <544E43E8.8000704@citrix.com>
-Date: Mon, 27 Oct 2014 13:08:56 +0000
-From: David Vrabel <david.vrabel@citrix.com>
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:34067 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754221AbaJBPeG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Oct 2014 11:34:06 -0400
+Received: by mail-pa0-f53.google.com with SMTP id kq14so2686663pab.26
+        for <linux-pci@vger.kernel.org>; Thu, 02 Oct 2014 08:34:06 -0700 (PDT)
+Date: Thu, 2 Oct 2014 09:34:02 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Alex Deucher <alexdeucher@gmail.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Subject: Re: [PATCH v2 2/4] gpu/radeon: Move 64-bit MSI quirk from arch to
+ driver
+Message-ID: <20141002153402.GC18056@google.com>
+References: <1412210062.10667.1.camel@pasglop>
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <xen-devel@lists.xenproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Vrabel <david.vrabel@citrix.com>
-Subject: Re: [Xen-devel] [PATCH 03/16] x86/xen/MSI: Use MSI controller framework
- to configure MSI/MSI-X irq
-References: <1414416142-31239-1-git-send-email-wangyijing@huawei.com> <1414416142-31239-4-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1414416142-31239-4-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1412210062.10667.1.camel@pasglop>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27/10/14 13:22, Yijing Wang wrote:
-> Use MSI controller framework instead of arch MSI functions to configure
-> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+On Thu, Oct 02, 2014 at 10:34:22AM +1000, Benjamin Herrenschmidt wrote:
+> 
+> A number of radeon cards have a HW limitation causing them to be
+> unable to generate the full 64-bit of address bits for MSIs. This
+> breaks MSIs on some platforms such as POWER machines.
+> 
+> We used to have a powerpc specific quirk to address that on a
+> single card, but this doesn't scale very well, this is better
+> put under control of the drivers who know precisely what a given
+> HW revision can do.
+> 
+> This moves the setting of the quirk flag to the radeon driver
+> 
+> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> ---
+> 
+> v2: This is just adjusted to the new flag name
 
-Reviewed-by: David Vrabel <david.vrabel@citrix.com>
+I'm sorta confused because I got two "v2 2/4" emails a minute or so apart.
+I assume they're the same.
 
-David
+> 
+>  arch/powerpc/kernel/pci_64.c            |  1 -
+>  drivers/gpu/drm/radeon/radeon_irq_kms.c | 10 ++++++++++
+>  2 files changed, 10 insertions(+), 1 deletion(-)
+> 
+> diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
+> index d41a831..5330f6d 100644
+> --- a/arch/powerpc/kernel/pci_64.c
+> +++ b/arch/powerpc/kernel/pci_64.c
+> @@ -271,5 +271,4 @@ static void quirk_radeon_32bit_msi(struct pci_dev *dev)
+>  {
+>  	dev->no_64bit_msi = true;
+>  }
+> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x68f2, quirk_radeon_32bit_msi);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
+
+Why do we keep the 0xaa68 quirk?  Shouldn't that be made generic, too?
+
+> diff --git a/drivers/gpu/drm/radeon/radeon_irq_kms.c b/drivers/gpu/drm/radeon/radeon_irq_kms.c
+> index 16807af..e760671 100644
+> --- a/drivers/gpu/drm/radeon/radeon_irq_kms.c
+> +++ b/drivers/gpu/drm/radeon/radeon_irq_kms.c
+> @@ -202,6 +202,16 @@ static bool radeon_msi_ok(struct radeon_device *rdev)
+>  	if (rdev->flags & RADEON_IS_AGP)
+>  		return false;
+>  
+> +	/*
+> +	 * Older chips have a HW limitation, they can only generate 40 bits
+> +	 * of address for "64-bit" MSIs which breaks on some platforms, notably
+> +	 * IBM POWER servers, so we limit them
+> +	 */
+> +	if (rdev->family < CHIP_BONAIRE) {
+> +		dev_info(rdev->dev, "radeon: MSI limited to 32-bit\n");
+> +		rdev->pdev->no_64bit_msi = true;
+> +	}
+> +
+>  	/* force MSI on */
+>  	if (radeon_msi == 1)
+>  		return true;
+> 
+> 
+> 
