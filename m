@@ -1,195 +1,263 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Prarit Bhargava <prarit@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch v7 13/18] x86, irq: Refine mp_register_ioapic() to prepare for IOAPIC hotplug
-Date: Mon, 27 Oct 2014 13:21:43 +0800
-Message-Id: <1414387308-27148-14-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foo.masarand.uk ([69.164.217.139]:56340 "EHLO foo.masarand.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752367AbaJBEIA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Oct 2014 00:08:00 -0400
+From: matt@masarand.com
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, Matthew Minter <matt@masarand.com>
+Subject: [PATCH 01/18] Added way to register deferred PCI IRQ assignment handlers
+Date: Thu,  2 Oct 2014 05:07:29 +0100
+Message-Id: <1412222866-21068-2-git-send-email-matt@masarand.com>
+In-Reply-To: <1412222866-21068-1-git-send-email-matt@masarand.com>
+References: <1412222866-21068-1-git-send-email-matt@masarand.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refine mp_register_ioapic() to prepare for IOAPIC hotplug by:
-1) change return value from void to int.
-2) check for gsi range conflicts
-3) check for IOAPIC physical address conflicts
-4) enhance the way to allocate IOAPIC index
+From: Matthew Minter <matt@masarand.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+
+These are the main infrastructure changes to allow the registration of
+PCI IRQ assignment functions which can then be called during the device
+enabling stage. This replaces the pre-initialisation of PCI IRQs at boot
+time which caused limitations such as failing for devices which are
+hot-plugged after the machine has booted and resulted in highly
+fragmented PCI initialisation paths.
+
+The pdev_assign_irq function becomes a centralised method of assigning
+IRQs to PCI devices in a non platform specific way. The pci_host_bridge
+structure has had some function pointers added to it where the boot code
+can register the platform specific ways of assigning PCI IRQs to be used
+to allow them to be used by pdev_assign_irq.
+
+Some small adjustements have also been made to makefiles in order to
+accomodate these changes.
+
+Note this code completely obsolites the pci_fixup_irqs code path which
+has thus been removed.
+
+Signed-off-by: Matthew Minter <matt@masarand.com>
+
 ---
- arch/x86/include/asm/io_apic.h |    4 +-
- arch/x86/kernel/apic/io_apic.c |   87 ++++++++++++++++++++++++++--------------
- 2 files changed, 58 insertions(+), 33 deletions(-)
+ drivers/of/of_pci_irq.c   |  2 +-
+ drivers/pci/Makefile      | 15 ++-------------
+ drivers/pci/host-bridge.c |  2 +-
+ drivers/pci/pci.c         |  5 ++++-
+ drivers/pci/pci.h         |  1 +
+ drivers/pci/probe.c       | 12 ------------
+ drivers/pci/setup-irq.c   | 34 ++++++++++++++++------------------
+ include/linux/pci.h       |  6 ++++--
+ 8 files changed, 29 insertions(+), 48 deletions(-)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index a666dcdeea67..8741c1ea33c3 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -188,8 +188,8 @@ extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
- extern u32 mp_pin_to_gsi(int ioapic, int pin);
- extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
- extern void mp_unmap_irq(int irq);
--extern void mp_register_ioapic(int id, u32 address, u32 gsi_base,
--			       struct ioapic_domain_cfg *cfg);
-+extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
-+			      struct ioapic_domain_cfg *cfg);
- extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 			    irq_hw_number_t hwirq);
- extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 581e51728871..59267659e5b1 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3832,20 +3832,6 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
- 	return gsi - gsi_cfg->gsi_base;
+diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
+index 1710d9d..205eb7a 100644
+--- a/drivers/of/of_pci_irq.c
++++ b/drivers/of/of_pci_irq.c
+@@ -97,7 +97,7 @@ EXPORT_SYMBOL_GPL(of_irq_parse_pci);
+  * @pin: PCI irq pin number; passed when used as map_irq callback. Unused
+  *
+  * @slot and @pin are unused, but included in the function so that this
+- * function can be used directly as the map_irq callback to pci_fixup_irqs().
++ * function can be used directly as the map_irq callback to pdev_assign_irq().
+  */
+ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index e04fe2d..38c4cb0 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -4,7 +4,8 @@
+ 
+ obj-y		+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
+ 			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
+-			irq.o vpd.o setup-bus.o vc.o
++			irq.o vpd.o setup-bus.o vc.o setup-irq.o
++
+ obj-$(CONFIG_PROC_FS) += proc.o
+ obj-$(CONFIG_SYSFS) += slot.o
+ 
+@@ -31,18 +32,6 @@ obj-$(CONFIG_PCI_ATS) += ats.o
+ obj-$(CONFIG_PCI_IOV) += iov.o
+ 
+ #
+-# Some architectures use the generic PCI setup functions
+-#
+-obj-$(CONFIG_ALPHA) += setup-irq.o
+-obj-$(CONFIG_ARM) += setup-irq.o
+-obj-$(CONFIG_UNICORE32) += setup-irq.o
+-obj-$(CONFIG_SUPERH) += setup-irq.o
+-obj-$(CONFIG_MIPS) += setup-irq.o
+-obj-$(CONFIG_TILE) += setup-irq.o
+-obj-$(CONFIG_SPARC_LEON) += setup-irq.o
+-obj-$(CONFIG_M68K) += setup-irq.o
+-
+-#
+ # ACPI Related PCI FW Functions
+ # ACPI _DSM provided firmware instance and string name
+ #
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 0e5f3c9..8ed186f 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -16,7 +16,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+ 	return bus;
  }
  
--static int bad_ioapic(unsigned long address)
+-static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
++struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+ {
+ 	struct pci_bus *root_bus = find_pci_root_bus(bus);
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 2c9ac70..2dd28d9 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1192,11 +1192,15 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+ 	struct pci_dev *bridge;
+ 	u16 cmd;
+ 	u8 pin;
++	struct pci_host_bridge *hbrg = find_pci_host_bridge(dev->bus);
+ 
+ 	err = pci_set_power_state(dev, PCI_D0);
+ 	if (err < 0 && err != -EIO)
+ 		return err;
+ 
++	pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
++	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
++
+ 	bridge = pci_upstream_bridge(dev);
+ 	if (bridge)
+ 		pcie_aspm_powersave_config_link(bridge);
+@@ -1209,7 +1213,6 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+ 	if (dev->msi_enabled || dev->msix_enabled)
+ 		return 0;
+ 
+-	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+ 	if (pin) {
+ 		pci_read_config_word(dev, PCI_COMMAND, &cmd);
+ 		if (cmd & PCI_COMMAND_INTX_DISABLE)
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 0601890..a6cf445 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -70,6 +70,7 @@ void pci_config_pm_runtime_put(struct pci_dev *dev);
+ void pci_pm_init(struct pci_dev *dev);
+ void pci_allocate_cap_save_buffers(struct pci_dev *dev);
+ void pci_free_cap_save_buffers(struct pci_dev *dev);
++struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus);
+ 
+ static inline void pci_wakeup_event(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 4170113..314e9e3 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1719,18 +1719,6 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL_GPL(pci_scan_child_bus);
+ 
+-/**
+- * pcibios_root_bridge_prepare - Platform-specific host bridge setup.
+- * @bridge: Host bridge to set up.
+- *
+- * Default empty implementation.  Replace with an architecture-specific setup
+- * routine, if necessary.
+- */
+-int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
 -{
--	if (nr_ioapics >= MAX_IO_APICS) {
--		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
--			MAX_IO_APICS, nr_ioapics);
--		return 1;
--	}
--	if (!address) {
--		pr_warn("WARNING: Bogus (zero) I/O APIC address found in table, skipping!\n");
--		return 1;
--	}
 -	return 0;
 -}
 -
- static int bad_ioapic_register(int idx)
+ void __weak pcibios_add_bus(struct pci_bus *bus)
  {
- 	union IO_APIC_reg_00 reg_00;
-@@ -3865,29 +3851,51 @@ static int bad_ioapic_register(int idx)
- 	return 0;
+ }
+diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+index 4e2d595..203bf7e 100644
+--- a/drivers/pci/setup-irq.c
++++ b/drivers/pci/setup-irq.c
+@@ -22,13 +22,19 @@ void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
+ 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
  }
  
--void mp_register_ioapic(int id, u32 address, u32 gsi_base,
--			struct ioapic_domain_cfg *cfg)
-+static int find_free_ioapic_entry(void)
+-static void pdev_fixup_irq(struct pci_dev *dev,
++void pdev_assign_irq(struct pci_dev *dev,
+ 			   u8 (*swizzle)(struct pci_dev *, u8 *),
+-			   int (*map_irq)(const struct pci_dev *, u8, u8))
++			   int (*map_irq)(struct pci_dev *, u8, u8))
  {
--	int idx = 0;
--	int entries;
-+	return nr_ioapics;
-+}
+-	u8 pin, slot;
++	u8 pin;
++	u8 slot = -1;
+ 	int irq = 0;
+ 
++	if (!map_irq) {
++		dev_dbg(&dev->dev, "runtime irq mapping not provided by arch\n");
++		return;
++	}
 +
-+/**
-+ * mp_register_ioapic - Register an IOAPIC device
-+ * @id:		hardware IOAPIC ID
-+ * @address:	physical address of IOAPIC register area
-+ * @gsi_base:	base of GSI associated with the IOAPIC
-+ * @cfg:	configuration information for the IOAPIC
-+ */
-+int mp_register_ioapic(int id, u32 address, u32 gsi_base,
-+		       struct ioapic_domain_cfg *cfg)
-+{
-+	u32 gsi_end;
-+	int idx, ioapic, entries;
- 	struct mp_ioapic_gsi *gsi_cfg;
+ 	/* If this device is not on the primary bus, we need to figure out
+ 	   which interrupt pin it will come in on.   We know which slot it
+ 	   will come in on 'cos that slot is where the bridge is.   Each
+@@ -40,28 +46,20 @@ static void pdev_fixup_irq(struct pci_dev *dev,
+ 	if (pin > 4)
+ 		pin = 1;
  
--	if (bad_ioapic(address))
--		return;
-+	if (!address) {
-+		pr_warn("Bogus (zero) I/O APIC address found, skipping!\n");
-+		return -EINVAL;
-+	}
-+	for_each_ioapic(ioapic)
-+		if (ioapics[ioapic].mp_config.apicaddr == address) {
-+			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
-+				address, ioapic);
-+			return -EEXIST;
-+		}
+-	if (pin != 0) {
+-		/* Follow the chain of bridges, swizzling as we go.  */
+-		slot = (*swizzle)(dev, &pin);
++	if (pin) {
++		/* Follow the chain of bridges, swizzling as we go. */
++		if(swizzle)
++			slot = (*swizzle)(dev, &pin);
  
--	idx = nr_ioapics;
-+	idx = find_free_ioapic_entry();
-+	if (idx >= MAX_IO_APICS) {
-+		pr_warn("Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
-+			MAX_IO_APICS, idx);
-+		return -ENOSPC;
-+	}
- 
- 	ioapics[idx].mp_config.type = MP_IOAPIC;
- 	ioapics[idx].mp_config.flags = MPC_APIC_USABLE;
- 	ioapics[idx].mp_config.apicaddr = address;
--	ioapics[idx].irqdomain = NULL;
--	ioapics[idx].irqdomain_cfg = *cfg;
- 
- 	set_fixmap_nocache(FIX_IO_APIC_BASE_0 + idx, address);
--
- 	if (bad_ioapic_register(idx)) {
- 		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
--		return;
-+		return -ENODEV;
++		/* If a swizzling function is not used map_irq must ignore slot */
+ 		irq = (*map_irq)(dev, slot, pin);
+ 		if (irq == -1)
+ 			irq = 0;
  	}
+-	dev->irq = irq;
+-
+-	dev_dbg(&dev->dev, "fixup irq: got %d\n", dev->irq);
  
- 	ioapics[idx].mp_config.apicid = io_apic_unique_id(idx, id);
-@@ -3898,24 +3906,41 @@ void mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 	 * and to prevent reprogramming of IOAPIC pins (PCI GSIs).
- 	 */
- 	entries = io_apic_get_redir_entries(idx);
-+	gsi_end = gsi_base + entries - 1;
-+	for_each_ioapic(ioapic) {
-+		gsi_cfg = mp_ioapic_gsi_routing(ioapic);
-+		if ((gsi_base >= gsi_cfg->gsi_base &&
-+		     gsi_base <= gsi_cfg->gsi_end) ||
-+		    (gsi_end >= gsi_cfg->gsi_base &&
-+		     gsi_end <= gsi_cfg->gsi_end)) {
-+			pr_warn("GSI range [%u-%u] for new IOAPIC conflicts with GSI[%u-%u]\n",
-+				gsi_base, gsi_end,
-+				gsi_cfg->gsi_base, gsi_cfg->gsi_end);
-+			clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
-+			return -ENOSPC;
-+		}
-+	}
- 	gsi_cfg = mp_ioapic_gsi_routing(idx);
- 	gsi_cfg->gsi_base = gsi_base;
--	gsi_cfg->gsi_end = gsi_base + entries - 1;
-+	gsi_cfg->gsi_end = gsi_end;
- 
--	/*
--	 * The number of IO-APIC IRQ registers (== #pins):
--	 */
--	ioapics[idx].nr_registers = entries;
-+	ioapics[idx].irqdomain = NULL;
-+	ioapics[idx].irqdomain_cfg = *cfg;
- 
- 	if (gsi_cfg->gsi_end >= gsi_top)
- 		gsi_top = gsi_cfg->gsi_end + 1;
-+	if (nr_ioapics <= idx)
-+		nr_ioapics = idx + 1;
-+
-+	/* Set nr_registers to mark entry present */
-+	ioapics[idx].nr_registers = entries;
- 
- 	pr_info("IOAPIC[%d]: apic_id %d, version %d, address 0x%x, GSI %d-%d\n",
- 		idx, mpc_ioapic_id(idx),
- 		mpc_ioapic_ver(idx), mpc_ioapic_addr(idx),
- 		gsi_cfg->gsi_base, gsi_cfg->gsi_end);
- 
--	nr_ioapics++;
-+	return 0;
++	dev_dbg(&dev->dev, "assign irq: got %d\n", dev->irq);
++	dev->irq = irq;
+ 	/* Always tell the device, so the driver knows what is
+ 	   the real IRQ to use; the device does not use it. */
+ 	pcibios_update_irq(dev, irq);
  }
- 
- int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+-
+-void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+-		    int (*map_irq)(const struct pci_dev *, u8, u8))
+-{
+-	struct pci_dev *dev = NULL;
+-
+-	for_each_pci_dev(dev)
+-		pdev_fixup_irq(dev, swizzle, map_irq);
+-}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 96453f9..5426d11 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -403,6 +403,8 @@ struct pci_host_bridge {
+ 	struct device dev;
+ 	struct pci_bus *bus;		/* root bus */
+ 	struct list_head windows;	/* pci_host_bridge_windows */
++	u8 (*swizzle_irq)(struct pci_dev *, u8 *); /* platform irq swizzler */
++	int (*map_irq)(struct pci_dev *, u8, u8);
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+ };
+@@ -1064,8 +1066,8 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
+ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
+ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+-void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+-		    int (*)(const struct pci_dev *, u8, u8));
++void pdev_assign_irq(struct pci_dev *dev, u8 (*swizzle)(struct pci_dev *, u8 *),
++                     int (*map_irq)(struct pci_dev *, u8, u8));
+ #define HAVE_PCI_REQ_REGIONS	2
+ int __must_check pci_request_regions(struct pci_dev *, const char *);
+ int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
 -- 
-1.7.10.4
+2.1.0
 
