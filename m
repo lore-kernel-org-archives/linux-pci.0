@@ -1,152 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from sauhun.de ([89.238.76.85]:46757 "EHLO pokefinder.org"
+Received: from gate.crashing.org ([63.228.1.57]:51658 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751266AbaJAH3V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 03:29:21 -0400
-Date: Wed, 1 Oct 2014 09:29:50 +0200
-From: Wolfram Sang <wsa@the-dreams.de>
-To: Rajat Jain <rajatxjain@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Jiri Kosina <jkosina@suse.cz>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-i2c <linux-i2c@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>
-Subject: Re: [PATCH 0/4] Driver for talking to PLX PEX8xxx PCIe switch over
- I2C
-Message-ID: <20141001072949.GA1322@katana>
-References: <542A3593.4020108@gmail.com>
- <CAErSpo7BkXDHOZwHzwEu2BN3=39xFwQOyrjgVo6afWKMsnYT=A@mail.gmail.com>
- <20140930211339.GA1264@katana>
- <CAA93t1out+gJO29_0tn1zLJv_MUwJ458XKNT3Lo6WW+mH9XeRQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="fdj2RfSjLxBAspz7"
-In-Reply-To: <CAA93t1out+gJO29_0tn1zLJv_MUwJ458XKNT3Lo6WW+mH9XeRQ@mail.gmail.com>
+	id S1752075AbaJBBOo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 21:14:44 -0400
+Message-ID: <1412210052.10667.0.camel@pasglop>
+Subject: [PATCH v2 1/4] pci/msi: Move "no_64bit_msi" flag from powerpc to
+ generic pci_dev
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alex Deucher <alexdeucher@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Date: Thu, 02 Oct 2014 10:34:12 +1000
+In-Reply-To: <1412112324.4285.160.camel@pasglop>
+References: <1412048401.4285.128.camel@pasglop>
+	 <CAErSpo4B6kuZJcKwreNvW1qC5sZ=1Ko71vbzNz7T8-_pjf7mww@mail.gmail.com>
+	 <CADnq5_PT+dX=KA4epGNRaoraco2z1pe5K7UgqLmTUhWMnvtWkw@mail.gmail.com>
+	 <1412108504.4285.155.camel@pasglop>
+	 <CADnq5_O_iLAZUKLL4nph8VwuP2NOkWXhBZC2XTSkFm5P42WZ+g@mail.gmail.com>
+	 <1412110946.4285.158.camel@pasglop>
+	 <CADnq5_OXBax1+TKPsR2RDYTWijQKDVw34ECfWzcwN2SibCGYTg@mail.gmail.com>
+	 <1412112324.4285.160.camel@pasglop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
---fdj2RfSjLxBAspz7
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Some devices have broken 64-bit MSI support which only support some
+address bits (40 to 48 typically). This doesn't work on some platforms
+such as POWER servers, so we need a quirk.
+
+Currently we keep a flag in a powerpc specific data structure which we
+have per PCI device. However this is impractical as we really want the
+driver to set that flag appropriately (and the driver shouldn't touch
+that arch specific data structure).
+
+It's also not unlikely that this limitation will affect other architectures
+in the long run.
+
+So this moves the flag to struct pci_dev instead and adjusts the
+corresponding arch/powerpc code to look for it there. At this point,
+there is no attempt at making other architectures honor it just yet,
+though it appears that x86 doesn't care and always generates 32-bit
+MSI addresses.
+
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: <stable@vger.kernel.org>
+---
+
+v2: Rename flag to "no_64bit_msi" as suggested by Bjorn
+
+ arch/powerpc/include/asm/pci-bridge.h     | 2 --
+ arch/powerpc/kernel/pci_64.c              | 5 +----
+ arch/powerpc/platforms/powernv/pci-ioda.c | 3 +--
+ arch/powerpc/platforms/powernv/pci.c      | 3 +--
+ arch/powerpc/platforms/pseries/msi.c      | 2 +-
+ include/linux/pci.h                       | 1 +
+ 6 files changed, 5 insertions(+), 11 deletions(-)
+
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 4ca90a3..725247b 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -159,8 +159,6 @@ struct pci_dn {
+ 
+ 	int	pci_ext_config_space;	/* for pci devices */
+ 
+-	bool	force_32bit_msi;
+-
+ 	struct	pci_dev *pcidev;	/* back-pointer to the pci device */
+ #ifdef CONFIG_EEH
+ 	struct eeh_dev *edev;		/* eeh device */
+diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
+index 155013d..d41a831 100644
+--- a/arch/powerpc/kernel/pci_64.c
++++ b/arch/powerpc/kernel/pci_64.c
+@@ -269,10 +269,7 @@ EXPORT_SYMBOL(pcibus_to_node);
+ 
+ static void quirk_radeon_32bit_msi(struct pci_dev *dev)
+ {
+-	struct pci_dn *pdn = pci_get_pdn(dev);
+-
+-	if (pdn)
+-		pdn->force_32bit_msi = true;
++	dev->no_64bit_msi = true;
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x68f2, quirk_radeon_32bit_msi);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index df241b1..a188bb8 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1311,7 +1311,6 @@ static int pnv_pci_ioda_msi_setup(struct pnv_phb *phb, struct pci_dev *dev,
+ 				  unsigned int is_64, struct msi_msg *msg)
+ {
+ 	struct pnv_ioda_pe *pe = pnv_ioda_get_pe(dev);
+-	struct pci_dn *pdn = pci_get_pdn(dev);
+ 	struct irq_data *idata;
+ 	struct irq_chip *ichip;
+ 	unsigned int xive_num = hwirq - phb->msi_base;
+@@ -1327,7 +1326,7 @@ static int pnv_pci_ioda_msi_setup(struct pnv_phb *phb, struct pci_dev *dev,
+ 		return -ENXIO;
+ 
+ 	/* Force 32-bit MSI on some broken devices */
+-	if (pdn && pdn->force_32bit_msi)
++	if (dev->no_64bit_msi)
+ 		is_64 = 0;
+ 
+ 	/* Assign XIVE to PE */
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index b854b57..89c6608 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -50,9 +50,8 @@ static int pnv_msi_check_device(struct pci_dev* pdev, int nvec, int type)
+ {
+ 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+ 	struct pnv_phb *phb = hose->private_data;
+-	struct pci_dn *pdn = pci_get_pdn(pdev);
+ 
+-	if (pdn && pdn->force_32bit_msi && !phb->msi32_support)
++	if (pdev->no_64bit_msi && !phb->msi32_support)
+ 		return -ENODEV;
+ 
+ 	return (phb && phb->msi_bmp.bitmap) ? 0 : -ENODEV;
+diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
+index 18ff462..6fd96d8 100644
+--- a/arch/powerpc/platforms/pseries/msi.c
++++ b/arch/powerpc/platforms/pseries/msi.c
+@@ -429,7 +429,7 @@ static int rtas_setup_msi_irqs(struct pci_dev *pdev, int nvec_in, int type)
+ 	 */
+ again:
+ 	if (type == PCI_CAP_ID_MSI) {
+-		if (pdn->force_32bit_msi) {
++		if (pdev->no_64bit_msi) {
+ 			rc = rtas_change_msi(pdn, RTAS_CHANGE_32MSI_FN, nvec);
+ 			if (rc < 0) {
+ 				/*
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 96453f9..fc938003 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -331,6 +331,7 @@ struct pci_dev {
+ 	unsigned int	is_added:1;
+ 	unsigned int	is_busmaster:1; /* device is busmaster */
+ 	unsigned int	no_msi:1;	/* device may not use msi */
++	unsigned int    no_64bit_msi:1;	/* Device has broken 64-bit MSIs */
+ 	unsigned int	block_cfg_access:1;	/* config space access is blocked */
+ 	unsigned int	broken_parity_status:1;	/* Device generates false positive parity */
+ 	unsigned int	irq_reroute_variant:2;	/* device needs IRQ rerouting variant */
 
 
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> ...<snip>...
->=20
-> +0. Why have an I2C interface to a PCIe switch?
-> +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> +Other than the regular PCI express interface, most modern PCIe switches =
-(e.g.
-> +from IDT and PLX) have an I2C based secondary interface. This interface =
-allows
-> +access to all the registers of the switch. Some of these registers may n=
-ot even
-> +be accessible over the regular PCI interface. Also, there are certain re=
-gisters
-> +that can be written to, using only the I2C interface and may only be rea=
-d-only
-> +using the PCI interface.
-> +
-> +This I2C interface is often used in designs involving these switches, an=
-d can
-> +be used for a variety of use cases where the switch needs to be configur=
-ed
-> +independent of the PCI subsystem (and likely before PCI enumeration). So=
-me
-> +examples:
-> +
-> +* Dividing a PCIe switch into multiple "virtual" switches. Using this fe=
-ature,
-> +  a switch could be connected to 2 root ports for instance, each managin=
-g its
-> +  own PCI hierarchy, and the traffic from one virtual switch does not le=
-ak into
-> +  another.
-> +
-> +* Managing Transparent / Non-transparent bridging, and changing them
-> on-the-fly.
-> +  There are ports that can be converted into "Non-transparent" bridge po=
-rts.
-> +  Essentially this is used to create different domains (not visible to
-> +  software). In a dynamic distributed system, it may be desirable to cha=
-nge a
-> +  transparent bridge to non-transparent or vice versa, for example, to h=
-andle a
-> +  failover situation.
-> +
-> +* Buggy hardware / Bad EEPROM configuration. There may be cases where an=
- errata
-> +  involving register writes need to be applied before enumerating over P=
-CI.
-> +  Also these switches are typically attached to an EEPROM that is suppos=
-ed to
-> +  initialize the switch. If that EEPROM is not present, or contains bad
-> +  initialization data, this I2C interface can be used to fix that.
-> +
-> +* Changing switch configuration on the fly. In a multi-homed or complex
-> +  distributed systemsystem, there may be a need to change the switch
-> +  configuration (eg. change the upstream port, or the port or lane
-> +  configuration etc) to address run time scenarios (CPU plug out etc).
-> +
->=20
-> ...<snip>...
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->=20
-> I am myself leaning towards drivers/pci/switch/. And am wanting to
-> hear what other think.
 
-I had a closer look and my first question is now if we really need a
-kernel driver for this?
-
-The sysfs interface is basically to PEEK/POKE registers of the switch.
-How registers get accessed is part of userspace. Well, then it might
-even be easier to construct the proper i2c messages in userspace, too,
-and send them via i2c-dev (instead of writing to various files in
-sysfs).
-
-The Kernel API is also PEEK/POKE register. I am not an PCI expert, but I
-can't see a user in this form. What I'd expect would be more like
-
-pci_switch_set_mode(some_device, PCI_BRIDGE_MODE_TRANSPARENT);
-
-and then a shim layer would make sure the proper driver for the switch
-sends the proper commands. Again, I don't know if the decision of
-setting a mode/creating virtual switches... is even desirable in kernel
-space. If so, then this is probably a sub-subsystem
-drivers/pci/switches, but needs way more abstraction. Otherwise,
-userspace will currently do IMO.
-
---fdj2RfSjLxBAspz7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUK61tAAoJEBQN5MwUoCm2Bl0QAIS02sG+hqwNieDAPGGCEahc
-YeBTdv4lgeICqm+ejlYq3pSck66BM7i60pOGq1OXtT5VFPlpR28yw45VvBSecduM
-DagLz4OvmWdzUtNCL4jJc5piuOMPdLjQ5c9VO9UQ40bRc/RJy3EJcIBHa/fKLC8d
-mvueNlxU3WNtKojEdD0avCfHHz+9ZAo0fQMfXW658h/GH+w6gDi6GpcEmpKUrTQf
-GrlWkqDuFmlVvxb7p7ltPuyVC4R853iLzMNFa92IaRnouWcWOde63RPdYRrbQcsv
-qNkpTWGudHmMpft6MmmxNCetvnKOyDkwx2JR98UnQX67Rt95yN+kDJyNV9v2X2H3
-ln5aU8a/ERxiI2FOmWCikKN4K8RA34owDpvxPS8G5fHPJikwVUZVzasmDxDRukyM
-POSRvC38jGgheMkJ+4IHcz+ApZkLaIHSjhvA2gga5SfT4m9D5QoLVxe2hw6KFbwX
-XUeiSYBqestWpIJRqxYLYTsRggBft5xIbOb5tFQ5zp/9U3aUoGMRruJNNFRf9jez
-hGWJ/4Gp+RaXDqb2LsbICLHZoUpOhxOywtyEPee5NRlL12k2BQTXyrddkISdoJRY
-H+zhv5+Jb2DuIkOCUOAc2lXoGi1sItRKBUCG2KzpPUyizuO9JbYkvrRMiOsbry8Q
-fDF5WSqu+m920YQLwbUN
-=KEHo
------END PGP SIGNATURE-----
-
---fdj2RfSjLxBAspz7--
