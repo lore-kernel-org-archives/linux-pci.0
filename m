@@ -1,96 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([69.164.217.139]:56326 "EHLO foo.masarand.uk"
+Received: from gate.crashing.org ([63.228.1.57]:57489 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751488AbaJBD7Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 23:59:24 -0400
-From: matt@masarand.com
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, Matthew Minter <matt@masarand.com>
-Subject: [PATCH 08/18] Delayed frv setup of PCI IRQs to bus scan time
-Date: Thu,  2 Oct 2014 04:50:27 +0100
-Message-Id: <1412221837-17452-9-git-send-email-matt@masarand.com>
-In-Reply-To: <1412221837-17452-1-git-send-email-matt@masarand.com>
-References: <1412221837-17452-1-git-send-email-matt@masarand.com>
+	id S1753446AbaJBAeN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 20:34:13 -0400
+Message-ID: <1412210019.4285.251.camel@pasglop>
+Subject: [PATCH v2 2/4] gpu/radeon: Move 64-bit MSI quirk from arch to driver
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alex Deucher <alexdeucher@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Date: Thu, 02 Oct 2014 10:33:39 +1000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Matthew Minter <matt@masarand.com>
+A number of radeon cards have a HW limitation causing them to be
+unable to generate the full 64-bit of address bits for MSIs. This
+breaks MSIs on some platforms such as POWER machines.
 
-PCI IRQs are being assigned during the frv pcibios phase. This causes
-devices which are not connected at boot but are later hot-plugged
-to not receive an IRQ. This patch set causes the pcibios to instead
-register an IRQ assignment function which is called during the enable
-device path to apply to all devices.
+We used to have a powerpc specific quirk to address that on a
+single card, but this doesn't scale very well, this is better
+put under control of the drivers who know precisely what a given
+HW revision can do.
 
+This moves the setting of the quirk flag to the radeon driver
+
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: <stable@vger.kernel.org>
 ---
- arch/frv/mb93090-mb00/pci-frv.h |  1 -
- arch/frv/mb93090-mb00/pci-irq.c | 28 +++++++++++++++++-----------
- arch/frv/mb93090-mb00/pci-vdk.c |  1 -
- 3 files changed, 17 insertions(+), 13 deletions(-)
 
-diff --git a/arch/frv/mb93090-mb00/pci-frv.h b/arch/frv/mb93090-mb00/pci-frv.h
-index a7e487fe..492b56d 100644
---- a/arch/frv/mb93090-mb00/pci-frv.h
-+++ b/arch/frv/mb93090-mb00/pci-frv.h
-@@ -36,5 +36,4 @@ extern struct pci_ops *__nongpreldata pci_root_ops;
- extern unsigned int pcibios_irq_mask;
- 
- void pcibios_irq_init(void);
--void pcibios_fixup_irqs(void);
- void pcibios_enable_irq(struct pci_dev *dev);
-diff --git a/arch/frv/mb93090-mb00/pci-irq.c b/arch/frv/mb93090-mb00/pci-irq.c
-index 1c35c93..3463e30 100644
---- a/arch/frv/mb93090-mb00/pci-irq.c
-+++ b/arch/frv/mb93090-mb00/pci-irq.c
-@@ -40,19 +40,25 @@ void __init pcibios_irq_init(void)
+v2: This is just adjusted to the new flag name
+
+ arch/powerpc/kernel/pci_64.c            |  1 -
+ drivers/gpu/drm/radeon/radeon_irq_kms.c | 10 ++++++++++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
+index d41a831..5330f6d 100644
+--- a/arch/powerpc/kernel/pci_64.c
++++ b/arch/powerpc/kernel/pci_64.c
+@@ -271,5 +271,4 @@ static void quirk_radeon_32bit_msi(struct pci_dev *dev)
  {
+ 	dev->no_64bit_msi = true;
  }
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x68f2, quirk_radeon_32bit_msi);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
+diff --git a/drivers/gpu/drm/radeon/radeon_irq_kms.c b/drivers/gpu/drm/radeon/radeon_irq_kms.c
+index 16807af..e760671 100644
+--- a/drivers/gpu/drm/radeon/radeon_irq_kms.c
++++ b/drivers/gpu/drm/radeon/radeon_irq_kms.c
+@@ -202,6 +202,16 @@ static bool radeon_msi_ok(struct radeon_device *rdev)
+ 	if (rdev->flags & RADEON_IS_AGP)
+ 		return false;
  
--void __init pcibios_fixup_irqs(void)
-+int pcibios_map_irq(struct pci_dev *dev, uint8_t slot, uint8_t pin)
- {
--	struct pci_dev *dev = NULL;
--	uint8_t line, pin;
--
--	for_each_pci_dev(dev) {
--		pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
--		if (pin) {
--			dev->irq = pci_bus0_irq_routing[PCI_SLOT(dev->devfn)][pin - 1];
--			pci_write_config_byte(dev, PCI_INTERRUPT_LINE, dev->irq);
--		}
--		pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &line);
-+	uint8_t line;
-+	int irq;
++	/*
++	 * Older chips have a HW limitation, they can only generate 40 bits
++	 * of address for "64-bit" MSIs which breaks on some platforms, notably
++	 * IBM POWER servers, so we limit them
++	 */
++	if (rdev->family < CHIP_BONAIRE) {
++		dev_info(rdev->dev, "radeon: MSI limited to 32-bit\n");
++		rdev->pdev->no_64bit_msi = true;
++	}
 +
-+	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
-+	if (pin) {
-+		irq = pci_bus0_irq_routing[PCI_SLOT(dev->devfn)][pin - 1];
-+		pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
- 	}
-+	pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &line);
-+	return irq;
-+}
-+
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->swizzle_irq = NULL;
-+	bridge->map_irq = pcibios_map_irq;
-+	return 0;
- }
- 
- void pcibios_enable_irq(struct pci_dev *dev)
-diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
-index efa5d65..86657a7 100644
---- a/arch/frv/mb93090-mb00/pci-vdk.c
-+++ b/arch/frv/mb93090-mb00/pci-vdk.c
-@@ -386,7 +386,6 @@ int __init pcibios_init(void)
- 	pci_scan_root_bus(NULL, 0, pci_root_ops, NULL, &resources);
- 
- 	pcibios_irq_init();
--	pcibios_fixup_irqs();
- 	pcibios_resource_survey();
- 
- 	return 0;
--- 
-2.1.0
+ 	/* force MSI on */
+ 	if (radeon_msi == 1)
+ 		return true;
+
 
