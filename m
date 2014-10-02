@@ -1,118 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:33554 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932650AbaJVXSh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Oct 2014 19:18:37 -0400
-Received: by mail-ig0-f180.google.com with SMTP id uq10so419678igb.7
-        for <linux-pci@vger.kernel.org>; Wed, 22 Oct 2014 16:18:37 -0700 (PDT)
-Date: Wed, 22 Oct 2014 17:18:30 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 1/3] PCI: move PCI_FIND_CAP_TTL to pci.h and use it in
- quirks
-Message-ID: <20141022231830.GC4795@google.com>
-References: <1413269253-8990-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1413269253-8990-2-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail.skyhub.de ([78.46.96.112]:60398 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753951AbaJBOwJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Oct 2014 10:52:09 -0400
+Date: Thu, 2 Oct 2014 16:52:01 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, tglx@linutronix.de,
+	hpa@zytor.com, x86@kernel.org, bp@suse.de,
+	dan.carpenter@oracle.com, dougthompson@xmission.com,
+	m.chehab@samsung.com, linux-edac@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/4] edac, amd64_edac: Add F15h M60h support
+Message-ID: <20141002145201.GF16452@pd.tnic>
+References: <1411070230-10298-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+ <20141001113235.GC18271@pd.tnic>
+ <542C5995.7050803@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1413269253-8990-2-git-send-email-weiyang@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <542C5995.7050803@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yinghai]
-
-On Tue, Oct 14, 2014 at 02:47:30PM +0800, Wei Yang wrote:
-> In some quirks, it tries to search a pci cap and use a ttl value to avoid
-> infinite loop. While the value is hard coded to 48, which is the same as marco
-> PCI_FIND_CAP_TTL.
+On Wed, Oct 01, 2014 at 02:44:21PM -0500, Aravind Gopalakrishnan wrote:
+> The more I think about this, I'm finding it's hard to do this cleanly.
+> I initially thought I'd just cache this in pvt->dram_type the first time I'm
+> doing this.
+> But, the pvt->ops->dbam_to_cs() mappers get called first before
+> determine_memory_type().
 > 
-> This patch moves the definition of PCI_FIND_CAP_TTL to pci.h and replace the
-> hard coded value with it.
-
-This seems reasonable (though I added Yinghai in case he knows of any
-reason why HT capabilities should be different from plain PCI capabilities
-in this respect).
-
-But I'd prefer to have the definition in drivers/pci/pci.h rather than in
-include/linux/pci.h, because both users already include drivers/pci/pci.h,
-and it is less visible.
-
-Bjorn
-
+> So, If I look for dram_type in f15_m60h_dbam_to_chip_select() it's ugly as
+> that's really the point of
+> having a determine_memory_type().
 > 
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> ---
->  drivers/pci/pci.c    |    1 -
->  drivers/pci/quirks.c |    8 ++++----
->  include/linux/pci.h  |    2 ++
->  3 files changed, 6 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 2c9ac70..76b002b1 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -137,7 +137,6 @@ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
->  EXPORT_SYMBOL_GPL(pci_ioremap_bar);
->  #endif
->  
-> -#define PCI_FIND_CAP_TTL	48
->  
->  static int __pci_find_next_cap_ttl(struct pci_bus *bus, unsigned int devfn,
->  				   u8 pos, int cap, int *ttl)
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 80c2d01..a5f46b8 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2176,7 +2176,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x9601, quirk_amd_780_apc_msi);
->   * return 1 if a HT MSI capability is found and enabled */
->  static int msi_ht_cap_enabled(struct pci_dev *dev)
->  {
-> -	int pos, ttl = 48;
-> +	int pos, ttl = PCI_FIND_CAP_TTL;
->  
->  	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
->  	while (pos && ttl--) {
-> @@ -2235,7 +2235,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_CK804_PCIE,
->  /* Force enable MSI mapping capability on HT bridges */
->  static void ht_enable_msi_mapping(struct pci_dev *dev)
->  {
-> -	int pos, ttl = 48;
-> +	int pos, ttl = PCI_FIND_CAP_TTL;
->  
->  	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
->  	while (pos && ttl--) {
-> @@ -2314,7 +2314,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA,
->  
->  static int ht_check_msi_mapping(struct pci_dev *dev)
->  {
-> -	int pos, ttl = 48;
-> +	int pos, ttl = PCI_FIND_CAP_TTL;
->  	int found = 0;
->  
->  	/* check if there is HT MSI cap or enabled on this device */
-> @@ -2439,7 +2439,7 @@ out:
->  
->  static void ht_disable_msi_mapping(struct pci_dev *dev)
->  {
-> -	int pos, ttl = 48;
-> +	int pos, ttl = PCI_FIND_CAP_TTL;
->  
->  	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
->  	while (pos && ttl--) {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 96453f9..b27b79e 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -33,6 +33,8 @@
->  
->  #include <linux/pci_ids.h>
->  
-> +#define PCI_FIND_CAP_TTL	48
-> +
->  /*
->   * The PCI interface treats multi-function devices as independent
->   * devices.  The slot/function address of each device is encoded
-> -- 
-> 1.7.9.5
-> 
+> Also, there's just a lot of if-else statements in determine_memory_type()
+> now.
+> This could benefit from having a per-family low_ops function.
+> And, we can call this early... somewhere in read_mc_regs() so that we have
+> information ready to use in
+> f15_m60h_dbam_to_chip_select() and in init_csrows() which needs dram_type
+> too.
+
+Right, this is what I was thinking too: somewhere in read_mc_regs(),
+after having collected ->dclr0, you call determine_memory_type() and
+store it into pvt->dram_type.
+
+> Oh, btw- We can do away with a pvt->dram_ctrl as
+> f15_m60h_dbam_to_chip_select() really just needs the dram_type.
+
+Yes, you make the read of DRAM_CONTROL inside determine_memory_type() as
+we don't need it anywhere else.
+
+If we do, all of a sudden, we'll move it up to read_mc_regs(). IOW, I'm
+trying to centralize all reg reads in read_mc_regs() and use locally
+cached info later so I don't have to access the hardware each time
+needlessly, if it can be helped.
+
+Thanks.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
