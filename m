@@ -1,98 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:48931 "EHLO comal.ext.ti.com"
+Received: from foo.masarand.uk ([69.164.217.139]:56343 "EHLO foo.masarand.uk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751846AbaJQOxl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Oct 2014 10:53:41 -0400
-Date: Fri, 17 Oct 2014 09:53:25 -0500
-From: Felipe Balbi <balbi@ti.com>
-To: Huang Rui <ray.huang@amd.com>
-CC: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 10/16] usb: dwc3: add request p1p2p3 quirk
-Message-ID: <20141017145325.GF26260@saruman>
-Reply-To: <balbi@ti.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
- <1413536021-4886-11-git-send-email-ray.huang@amd.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="V4b9U9vrdWczvw78"
-In-Reply-To: <1413536021-4886-11-git-send-email-ray.huang@amd.com>
+	id S1752371AbaJBEIB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Oct 2014 00:08:01 -0400
+From: matt@masarand.com
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org
+Subject: [PATCH V3] Delay allocation of PCI device IRQs from boot time until bus scan time to fix PCI hotplugging
+Date: Thu,  2 Oct 2014 05:07:28 +0100
+Message-Id: <1412222866-21068-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---V4b9U9vrdWczvw78
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Sorry, the previous submission was damaged by my editor which purged the sign off lines from the patches,
+this is a fixed version.
 
-On Fri, Oct 17, 2014 at 04:53:35PM +0800, Huang Rui wrote:
-> AMD NL needs to enable always request P1/P2/P3 for U1/U2/U3 for AMD own p=
-hy.
->=20
-> Signed-off-by: Huang Rui <ray.huang@amd.com>
-> ---
->  drivers/usb/dwc3/core.c          | 3 +++
->  drivers/usb/dwc3/core.h          | 1 +
->  drivers/usb/dwc3/dwc3-pci.c      | 3 ++-
->  drivers/usb/dwc3/platform_data.h | 1 +
->  4 files changed, 7 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-> index 9d0a249..ec8b667 100644
-> --- a/drivers/usb/dwc3/core.c
-> +++ b/drivers/usb/dwc3/core.c
-> @@ -377,6 +377,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
->  	if (dwc->quirks & DWC3_QUIRK_U2SSINP3OK)
->  		reg |=3D DWC3_GUSB3PIPECTL_U2SSINP3OK;
-> =20
-> +	if (dwc->quirks & DWC3_QUIRK_REQP1P2P3)
+pci_fixup_irqs is the current method used in most arches to assign IRQs to
+PCI devices. This has a number of flaws including it requiring an extra walk
+of the PCI bus and most importantly not running for devices which are added
+after boot time, this includes hot-added devices on boards that support this.
 
-	if (dwc->request_p1p2p3_quirk)
+This patch set modifies the IRQ mapping and swizzling infrastructure
+such that functions are registered by the boot code (instead of being
+run directly by the boot code) and then run later in the enable_device
+path such that it will apply to all devices and not only those inserted
+at boot time.
 
-> diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
-> index 1235eb3..7154d18 100644
-> --- a/drivers/usb/dwc3/dwc3-pci.c
-> +++ b/drivers/usb/dwc3/dwc3-pci.c
-> @@ -151,7 +151,8 @@ static int dwc3_pci_probe(struct pci_dev *pci,
->  		dwc3_pdata.has_lpm_erratum =3D true;
->  		dwc3_pdata.quirks |=3D DWC3_QUIRK_AMD_NL
->  			| DWC3_QUIRK_U2EXIT_LFPS
-> -			| DWC3_QUIRK_U2SSINP3OK;
-> +			| DWC3_QUIRK_U2SSINP3OK
-> +			| DWC3_QUIRK_REQP1P2P3;
+This is cleaner as it unifies how each architecture allocates PCI IRQs as much
+as possible (some arches were particularly resistant to these changes so some
+work-arounds have been used or the change disabled completely).
 
-to be combined with the last patch in this series.
+The caveat here is that I have been forced to modify some architecture specific
+code for various architectures which I cannot test due to not having such boards
+available. The code seems correct and the changes in most cases are small and
+trivial however I have not tested all the patches for rare arches.
 
---=20
-balbi
+NEW: Since the last version all changes and suggested bug fixes have been implemented
+the patch-set has also been rebased onto the latest kernel version to ease merging.
 
---V4b9U9vrdWczvw78
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+Many Thanks,
+Matthew
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+Note also that I have switched email addresses due to a change in employment
+but I am indeed the same person who submitted the previous versions of this patch.
 
-iQIcBAEBAgAGBQJUQS1lAAoJEIaOsuA1yqREvy4QAKzRs4UqXWseG48ICi3EyKHr
-HnOLePDdpCppx0qx8oqwaqE0TN55oItxtSeNIhqG5CM1Dl7jLT6fkSNFX94S04EU
-klGNa2CZJYuPjXmDR3aRk7rJ4qO4bGzddmoo6n3RXnJC5aWwU7oT9LnifjeSGVW8
-LR8zaj1SLyd5Few7Go41A3NLF3ftBXDIVRI1pfgQA76b0KL9oD0InVORDJYBSZHl
-igMf9d9oYtPknMQ81NrSCCRJMFQobC2HjtozLc+i/haO5Sc3sVxe3cADktZMtwat
-rkToj3m7o5SGmIKcWrZQfE8u4GVyaSSP6zB95Kf1IBIMs+sMLO2axP3Gpl+oZik4
-3ERa47Rq1SowWFje2laPtcrIl5lWtsn6jY5yywClkWlX0g4QEC2X3BYFS7hHXyHt
-ZEbP+UnALkQXf7rBYWWzSUesonLWUrHzfru01rxVENlbkUqvxn2P5LIPIu+i6oZr
-Tx44P2Crj5NHw82I1dEOtIOeKxREbH86O61qnWZ/XRMaiQySvj2Qt86TJxNFwt1L
-IyPIBusLWn6qNScodHZvNnKMtTQ71WzBu/QCsGc58Vu4CGg6eCB6wXNCYClumMhj
-9AryK+uua0vOQQKstLevo0KdLVr3Q6ZMKJdD1myMJSB4U04OQx3CExJsyry05poq
-ji+dS8JdVGcgUDMPOgJW
-=ySw0
------END PGP SIGNATURE-----
+ arch/alpha/kernel/pci.c                 | 16 +++---
+ arch/alpha/kernel/sys_nautilus.c        |  1 -
+ arch/arm/kernel/bios32.c                | 13 +++--
+ arch/cris/arch-v32/drivers/pci/bios.c   | 14 ++---
+ arch/frv/mb93090-mb00/pci-frv.h         |  1 -
+ arch/frv/mb93090-mb00/pci-irq.c         | 28 ++++++----
+ arch/frv/mb93090-mb00/pci-vdk.c         |  1 -
+ arch/ia64/pci/pci.c                     |  3 ++
+ arch/m68k/platform/coldfire/pci.c       |  8 ++-
+ arch/microblaze/pci/pci-common.c        | 10 ++--
+ arch/mips/pci/pci.c                     |  9 +++-
+ arch/mn10300/unit-asb2305/pci-asb2305.h |  5 +-
+ arch/mn10300/unit-asb2305/pci-irq.c     | 25 ++-------
+ arch/mn10300/unit-asb2305/pci.c         | 21 +++-----
+ arch/parisc/kernel/pci.c                |  8 ++-
+ arch/powerpc/kernel/pci-common.c        | 26 ++++-----
+ arch/s390/pci/pci.c                     |  7 +++
+ arch/sh/drivers/pci/fixups-cayman.c     |  2 +-
+ arch/sh/drivers/pci/fixups-dreamcast.c  |  2 +-
+ arch/sh/drivers/pci/fixups-r7780rp.c    |  2 +-
+ arch/sh/drivers/pci/fixups-rts7751r2d.c |  6 +--
+ arch/sh/drivers/pci/fixups-sdk7780.c    |  4 +-
+ arch/sh/drivers/pci/fixups-se7751.c     |  2 +-
+ arch/sh/drivers/pci/fixups-sh03.c       |  2 +-
+ arch/sh/drivers/pci/fixups-snapgear.c   |  2 +-
+ arch/sh/drivers/pci/fixups-titan.c      |  4 +-
+ arch/sh/drivers/pci/pci.c               | 10 ++--
+ arch/sh/drivers/pci/pcie-sh7786.c       |  2 +-
+ arch/sparc/kernel/leon_pci.c            | 12 ++++-
+ arch/sparc/kernel/pci.c                 | 21 ++++++--
+ arch/tile/kernel/pci.c                  | 10 ++--
+ arch/tile/kernel/pci_gx.c               | 10 ++--
+ arch/unicore32/kernel/pci.c             | 11 ++--
+ arch/x86/include/asm/pci_x86.h          |  7 +--
+ arch/x86/kernel/x86_init.c              |  1 -
+ arch/x86/pci/acpi.c                     |  5 +-
+ arch/x86/pci/common.c                   |  2 -
+ arch/x86/pci/irq.c                      | 94 ++++++++++++++++++---------------
+ drivers/of/of_pci_irq.c                 |  2 +-
+ drivers/pci/Makefile                    | 15 +-----
+ drivers/pci/host-bridge.c               |  2 +-
+ drivers/pci/pci.c                       |  5 +-
+ drivers/pci/pci.h                       |  1 +
+ drivers/pci/probe.c                     | 12 -----
+ drivers/pci/setup-irq.c                 | 34 ++++++------
+ include/linux/pci.h                     |  6 ++-
+ 46 files changed, 265 insertions(+), 219 deletions(-)
 
---V4b9U9vrdWczvw78--
+
