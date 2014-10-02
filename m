@@ -1,115 +1,42 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2on0118.outbound.protection.outlook.com ([65.55.169.118]:22547
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750868AbaJBCkN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Oct 2014 22:40:13 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Fabio Estevam <festevam@gmail.com>
+CC: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>,
+	"linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shengchao Guo <Shawn.Guo@freescale.com>,
 	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v3 26/27] tile/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-Date: Wed, 15 Oct 2014 11:07:14 +0800
-Message-ID: <1413342435-7876-27-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
-References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+	Tim Harvey <tharvey@gateworks.com>
+Subject: Re: [PATCH v4 10/10] ARM: imx6sx: enable pcie on imx6sx sdb board
+Date: Thu, 2 Oct 2014 02:40:10 +0000
+Message-ID: <28E9FA64-81D5-42C2-ABCA-8B72239EC6AA@freescale.com>
+References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
+	<1412069804-17162-11-git-send-email-r65037@freescale.com>,<CAOMZO5A3Bdxdspc_UnJcQ-DVrmUXQCKW0W08msnDs7TELzXEJg@mail.gmail.com>
+In-Reply-To: <CAOMZO5A3Bdxdspc_UnJcQ-DVrmUXQCKW0W08msnDs7TELzXEJg@mail.gmail.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI chip framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/tile/include/asm/pci.h |   10 ++++++++++
- arch/tile/kernel/pci_gx.c   |   13 +++++++++++--
- 2 files changed, 21 insertions(+), 2 deletions(-)
-
-diff --git a/arch/tile/include/asm/pci.h b/arch/tile/include/asm/pci.h
-index dfedd7a..d27d9ec 100644
---- a/arch/tile/include/asm/pci.h
-+++ b/arch/tile/include/asm/pci.h
-@@ -152,6 +152,7 @@ struct pci_controller {
- 	int pio_io_index;	/* PIO region index for I/O space access */
- #endif
- 
-+	struct msi_chip *msi_chip;
- 	/*
- 	 * Mem-Map regions for all the memory controllers so that Linux can
- 	 * map all of its physical memory space to the PCI bus.
-@@ -179,6 +180,15 @@ struct pci_controller {
- 	int irq_intx_table[4];
- };
- 
-+extern struct msi_chip tilegx_msi;
-+
-+static inline struct msi_chip *pci_msi_chip(struct pci_bus *bus)
-+{
-+	struct pci_controller *controller = bus->sysdata;
-+
-+	return controller->msi_chip;
-+}
-+
- extern struct pci_controller pci_controllers[TILEGX_NUM_TRIO * TILEGX_TRIO_PCIES];
- extern gxio_trio_context_t trio_contexts[TILEGX_NUM_TRIO];
- extern int num_trio_shims;
-diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
-index e39f9c5..ba66517 100644
---- a/arch/tile/kernel/pci_gx.c
-+++ b/arch/tile/kernel/pci_gx.c
-@@ -887,6 +887,7 @@ int __init pcibios_init(void)
- 					controller->mem_offset);
- 		pci_add_resource(&resources, &controller->io_space);
- 		controller->first_busno = next_busno;
-+		controller->msi_chip = &tilegx_msi;
- 		bus = pci_scan_root_bus(NULL, next_busno, controller->ops,
- 					controller, &resources);
- 		controller->root_bus = bus;
-@@ -1485,7 +1486,8 @@ static struct irq_chip tilegx_msi_chip = {
- 	/* TBD: support set_affinity. */
- };
- 
--int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
-+static int tile_setup_msi_irq(struct msi_chip *chip,
-+		struct pci_dev *pdev, struct msi_desc *desc)
- {
- 	struct pci_controller *controller;
- 	gxio_trio_context_t *trio_context;
-@@ -1604,7 +1606,12 @@ is_64_failure:
- 	return ret;
- }
- 
--void arch_teardown_msi_irq(unsigned int irq)
-+static void tile_teardown_msi_irq(struct msi_chip *chip, unsigned int irq)
- {
- 	irq_free_hwirq(irq);
- }
-+
-+struct msi_chip tilegx_msi = {
-+	.setup_irq = tile_setup_msi_irq,
-+	.teardown_irq = tile_teardown_msi_irq,
-+};
--- 
-1.7.1
-
+WWVzLCAgUENJRV9QV1JfRU4gd291bGQgYmUgYWRkZWQgbGF0ZXIuDQpUaGFua3MsIEZhYmlvLg0K
+DQpCZXN0IHJlZ2FyZHMNClJpY2hhcmQNCg0KPiDU2iAyMDE0xOoxMNTCMcjVo6zJz87nMTI6MjGj
+rCJGYWJpbyBFc3RldmFtIiA8ZmVzdGV2YW1AZ21haWwuY29tPiDQtLXAo7oNCj4gDQo+IEhpIFJp
+Y2hhcmQsDQo+IA0KPj4gT24gVHVlLCBTZXAgMzAsIDIwMTQgYXQgNjozNiBBTSwgUmljaGFyZCBa
+aHUgPHI2NTAzN0BmcmVlc2NhbGUuY29tPiB3cm90ZToNCj4+IFNpZ25lZC1vZmYtYnk6IFJpY2hh
+cmQgWmh1IDxyNjUwMzdAZnJlZXNjYWxlLmNvbT4NCj4+IC0tLQ0KPj4gYXJjaC9hcm0vYm9vdC9k
+dHMvaW14NnN4LXNkYi5kdHMgfCAxMyArKysrKysrKysrKysrDQo+PiAxIGZpbGUgY2hhbmdlZCwg
+MTMgaW5zZXJ0aW9ucygrKQ0KPj4gDQo+PiBkaWZmIC0tZ2l0IGEvYXJjaC9hcm0vYm9vdC9kdHMv
+aW14NnN4LXNkYi5kdHMgYi9hcmNoL2FybS9ib290L2R0cy9pbXg2c3gtc2RiLmR0cw0KPj4gaW5k
+ZXggYTM5ODBkOS4uMjk3NjkxMyAxMDA2NDQNCj4+IC0tLSBhL2FyY2gvYXJtL2Jvb3QvZHRzL2lt
+eDZzeC1zZGIuZHRzDQo+PiArKysgYi9hcmNoL2FybS9ib290L2R0cy9pbXg2c3gtc2RiLmR0cw0K
+Pj4gQEAgLTI1MSw2ICsyNTEsMTMgQEANCj4+ICAgICAgICB9Ow0KPj4gfTsNCj4+IA0KPj4gKyZw
+Y2llIHsNCj4+ICsgICAgICAgcGluY3RybC1uYW1lcyA9ICJkZWZhdWx0IjsNCj4+ICsgICAgICAg
+cGluY3RybC0wID0gPCZwaW5jdHJsX3BjaWU+Ow0KPj4gKyAgICAgICByZXNldC1ncGlvID0gPCZn
+cGlvMiAwIDA+Ow0KPj4gKyAgICAgICBzdGF0dXMgPSAib2theSI7DQo+PiArfTsNCj4gDQo+IFRo
+ZXJlIGlzIGFsc28gR1BJTzJfMSB3aGljaCBpcyB0aGUgUENJRV9QV1JfRU4gc2lnbmFsIGFuZCBz
+aG91bGQgYmUNCj4gYWRkZWQgYXMgYSBHUElPIGNvbnRyb2xsZWQgcmVndWxhdG9yLg0K
