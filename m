@@ -1,105 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8866 "EHLO mx1.redhat.com"
+Received: from foo.masarand.uk ([69.164.217.139]:56355 "EHLO foo.masarand.uk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751410AbaJWQdt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 Oct 2014 12:33:49 -0400
-Message-ID: <1414082022.27420.39.camel@ul30vt.home>
-Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass through
- (vfio)
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Andreas Hartmann <andihartmann@freenet.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Date: Thu, 23 Oct 2014 10:33:42 -0600
-In-Reply-To: <54492606.5090308@maya.org>
-References: <20140923210318.498dacbd@dualc.maya.org>
-			 <1411502866.24563.8.camel@ul30vt.home> <5437A958.3000201@maya.org>
-			 <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com>
-			 <5437F1F5.3010706@maya.org>
-			 <CAErSpo6DuWEcJb_gfS=5JnKN8b4DXXV9+u-CRa8m3db0dbzpsQ@mail.gmail.com>
-			 <543804BC.3080307@maya.org>
-			 <CAErSpo450czUtAM104o+RS=yOcmP+3MKMH7mYk=UYhVJ2+cfSQ@mail.gmail.com>
-			 <20141011003219.560cca97@dualc.maya.org>
-			 <20141010225408.GA24493@google.com> <5438CC1E.3060407@maya.org>
-			 <1413360267.4202.70.camel@ul30vt.home> <54406B34.1050808@maya.org>
-			 <1413925580.4202.189.camel@ul30vt.home>
-		 <1413927152.4202.195.camel@ul30vt.home> <5447D9D9.9030909@maya.org>
-	 <1414010215.4202.275.camel@ul30vt.home> <54492606.5090308@maya.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752373AbaJBEIF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Oct 2014 00:08:05 -0400
+From: matt@masarand.com
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, Matthew Minter <matt@masarand.com>
+Subject: [PATCH 10/18] Delayed microblaze setup of PCI IRQs to bus scan time
+Date: Thu,  2 Oct 2014 05:07:38 +0100
+Message-Id: <1412222866-21068-11-git-send-email-matt@masarand.com>
+In-Reply-To: <1412222866-21068-1-git-send-email-matt@masarand.com>
+References: <1412222866-21068-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-10-23 at 18:00 +0200, Andreas Hartmann wrote:
-> Alex Williamson wrote:
-> > On Wed, 2014-10-22 at 18:22 +0200, Andreas Hartmann wrote:
-> >> Alex Williamson wrote:
-> >>> --- a/drivers/pci/pci.c
-> >>> +++ b/drivers/pci/pci.c
-> >>> @@ -3308,15 +3308,15 @@ static int __pci_dev_reset(struct pci_dev *dev, int prob
-> >>>         if (rc != -ENOTTY)
-> >>>                 goto done;
-> >>>  
-> >>> -       rc = pci_pm_reset(dev, probe);
-> >>> +       rc = pci_dev_reset_slot_function(dev, probe);
-> >>>         if (rc != -ENOTTY)
-> >>>                 goto done;
-> >>>  
-> >>> -       rc = pci_dev_reset_slot_function(dev, probe);
-> >>> +       rc = pci_parent_bus_reset(dev, probe);
-> >>>         if (rc != -ENOTTY)
-> >>>                 goto done;
-> >>>  
-> >>> -       rc = pci_parent_bus_reset(dev, probe);
-> >>> +       rc = pci_pm_reset(dev, probe);
-> >>>  done:
-> >>>         return rc;
-> >>>  }
-> >>
-> >> This way it's crashing with echo 1 > reset, too.
-> > 
-> > Ok, so it's somehow related to doing a bus reset with virtual channel
-> > save/restore while PM reset with VC save/restore works ok as apparently
-> > does bus reset without VC save/restore.  Let's try to do a manual bus
-> > reset so we can look at the post reset state of the device before the
-> > kernel tries to restore it.
-> > 
-> > First bind the target device 03:00.0 to pci-stub or vfio-pci so that we
-> > know it's not being used.
-> > 
-> > Next capture lspci -xxxx -s 3:00.0 so we have the starting state.
-> > 
-> > Then we'll do a bus reset using setpci:
-> > # setpci -s 00:05.0 3e.w=40:40
-> > <if you script this, wait at least 2ms here>
-> > # setpci -s 00:05.0 3e.w=00:40
-> > <wait 1 second here>
-> > 
-> > Now re-capture lspci -xxxx -s 3:00.0
-> 
-> The machine is booted w/ vfio bound to 3:00.0 as usual (now for testing
-> linux 3.14)
-> 
-> lspci -xxxx -s 3:00.0
-> setpci -s 00:05.0 3e.w=40:40
-> usleep 10
-> setpci -s 00:05.0 3e.w=00:40
-> sleep 1
-> lspci -xxxx -s 3:00.0
-> 
-> I didn't get the second lspci because the machine already was hanging.
-> The first output is attached completely.
+From: Matthew Minter <matt@masarand.com>
 
-Hmm, that doesn't make much sense.  You had found that if you disabled
-the VC save/restore then QEMU works.  That should have still been using
-secondary bus reset as we're trying to do here, so I don't understand
-why we can't do a manual secondary bus reset now.
+Currently microblaze assigns PCI IRQs during the pcibios phase, this means
+that devices connected after boot will not be assigned an IRQ, instead the
+boot code now registers IRQ assignment functions to be called later by the
+device enable code paths.
 
-If you use Bjorn's previous patch to disable VC save/restore and my
-patch to reorder the reset mechanisms, does echo 1 > reset for the sysfs
-entry for the device also still cause a hang?
+Signed-off-by: Matthew Minter <matt@masarand.com>
 
-Can you provide a link to the specific model for this card?  Thanks,
+---
+ arch/microblaze/pci/pci-common.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-Alex
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index 9037914..6843b34 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -850,12 +850,16 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
+ 		 * code and is needed by the DMA init
+ 		 */
+ 		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
+-
+-		/* Read default IRQs and fixup if necessary */
+-		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+ 	}
+ }
+ 
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->swizzle_irq = NULL;
++	bridge->map_irq = of_irq_parse_and_map_pci;
++	return 0;
++}
++
+ void pcibios_fixup_bus(struct pci_bus *bus)
+ {
+ 	/* When called from the generic PCI probe, read PCI<->PCI bridge
+-- 
+2.1.0
 
