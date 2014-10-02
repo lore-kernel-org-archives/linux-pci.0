@@ -1,44 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from numascale.com ([213.162.240.84]:39347 "EHLO numascale.com"
+Received: from gate.crashing.org ([63.228.1.57]:38893 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751593AbaJSBqz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 18 Oct 2014 21:46:55 -0400
-From: Daniel J Blueman <daniel@numascale.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Daniel J Blueman <daniel@numascale.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>
-Subject: [PATCH v2 1/5] Numachip: Fix build failure with trunk GCC
-Date: Sun, 19 Oct 2014 09:45:48 +0800
-Message-Id: <1413683152-31302-1-git-send-email-daniel@numascale.com>
+	id S1751728AbaJBVIO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Oct 2014 17:08:14 -0400
+Message-ID: <1412283745.28143.23.camel@pasglop>
+Subject: Re: [PATCH v2 2/4] gpu/radeon: Move 64-bit MSI quirk from arch to
+ driver
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex Deucher <alexdeucher@gmail.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Date: Fri, 03 Oct 2014 07:02:25 +1000
+In-Reply-To: <20141002153402.GC18056@google.com>
+References: <1412210062.10667.1.camel@pasglop>
+	 <20141002153402.GC18056@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix APIC declaration to be consistent with definition; this addresses
-a compilation failure with the development branch of GCC, see:
-https://bugzilla.kernel.org/show_bug.cgi?id=78251
+On Thu, 2014-10-02 at 09:34 -0600, Bjorn Helgaas wrote:
+> On Thu, Oct 02, 2014 at 10:34:22AM +1000, Benjamin Herrenschmidt wrote:
+> > 
+> > A number of radeon cards have a HW limitation causing them to be
+> > unable to generate the full 64-bit of address bits for MSIs. This
+> > breaks MSIs on some platforms such as POWER machines.
+> > 
+> > We used to have a powerpc specific quirk to address that on a
+> > single card, but this doesn't scale very well, this is better
+> > put under control of the drivers who know precisely what a given
+> > HW revision can do.
+> > 
+> > This moves the setting of the quirk flag to the radeon driver
+> > 
+> > Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> > ---
+> > 
+> > v2: This is just adjusted to the new flag name
+> 
+> I'm sorta confused because I got two "v2 2/4" emails a minute or so apart.
+> I assume they're the same.
 
-Signed-off-by: Daniel J Blueman <daniel@numascale.com>
----
- arch/x86/kernel/apic/apic_numachip.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yes, evo blew up while sending the series the first time around :(
+> > 
+> >  arch/powerpc/kernel/pci_64.c            |  1 -
+> >  drivers/gpu/drm/radeon/radeon_irq_kms.c | 10 ++++++++++
+> >  2 files changed, 10 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
+> > index d41a831..5330f6d 100644
+> > --- a/arch/powerpc/kernel/pci_64.c
+> > +++ b/arch/powerpc/kernel/pci_64.c
+> > @@ -271,5 +271,4 @@ static void quirk_radeon_32bit_msi(struct pci_dev *dev)
+> >  {
+> >  	dev->no_64bit_msi = true;
+> >  }
+> > -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x68f2, quirk_radeon_32bit_msi);
+> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
+> 
+> Why do we keep the 0xaa68 quirk?  Shouldn't that be made generic, too?
+> 
+> > diff --git a/drivers/gpu/drm/radeon/radeon_irq_kms.c b/drivers/gpu/drm/radeon/radeon_irq_kms.c
+> > index 16807af..e760671 100644
+> > --- a/drivers/gpu/drm/radeon/radeon_irq_kms.c
+> > +++ b/drivers/gpu/drm/radeon/radeon_irq_kms.c
+> > @@ -202,6 +202,16 @@ static bool radeon_msi_ok(struct radeon_device *rdev)
+> >  	if (rdev->flags & RADEON_IS_AGP)
+> >  		return false;
+> >  
+> > +	/*
+> > +	 * Older chips have a HW limitation, they can only generate 40 bits
+> > +	 * of address for "64-bit" MSIs which breaks on some platforms, notably
+> > +	 * IBM POWER servers, so we limit them
+> > +	 */
+> > +	if (rdev->family < CHIP_BONAIRE) {
+> > +		dev_info(rdev->dev, "radeon: MSI limited to 32-bit\n");
+> > +		rdev->pdev->no_64bit_msi = true;
+> > +	}
+> > +
+> >  	/* force MSI on */
+> >  	if (radeon_msi == 1)
+> >  		return true;
+> > 
+> > 
+> > 
 
-diff --git a/arch/x86/kernel/apic/apic_numachip.c b/arch/x86/kernel/apic/apic_numachip.c
-index ae91539..81d70ba 100644
---- a/arch/x86/kernel/apic/apic_numachip.c
-+++ b/arch/x86/kernel/apic/apic_numachip.c
-@@ -32,7 +32,7 @@
- 
- static int numachip_system __read_mostly;
- 
--static const struct apic apic_numachip __read_mostly;
-+static const struct apic apic_numachip __refconst;
- 
- static unsigned int get_apic_id(unsigned long x)
- {
--- 
-1.9.1
 
