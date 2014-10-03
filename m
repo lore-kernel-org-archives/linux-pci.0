@@ -1,59 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bn0105.outbound.protection.outlook.com ([157.56.110.105]:7168
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751597AbaJUJyT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 21 Oct 2014 05:54:19 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <richard.zhu@freescale.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	"festevam@gmail.com" <festevam@gmail.com>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>
-Subject: RE: [PATCH v8]PCI: imx6: enable pcie on imx6sx sdb and imx6qdl
- sabreauto.
-Date: Tue, 21 Oct 2014 09:54:16 +0000
-Message-ID: <66d89550a8de45f89b50c1862a35394f@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
- <1413879507.2751.1.camel@pengutronix.de>
-In-Reply-To: <1413879507.2751.1.camel@pengutronix.de>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:44235 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752721AbaJCOg2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Oct 2014 10:36:28 -0400
+Message-ID: <542EB2A2.3050005@gmail.com>
+Date: Fri, 03 Oct 2014 07:28:50 -0700
+From: Alexander Duyck <alexander.duyck@gmail.com>
 MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Li, ZhenHua" <zhen-hual@hp.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Carolyn Wyborny <carolyn.wyborny@intel.com>,
+	Don Skidmore <donald.c.skidmore@intel.com>,
+	Greg Rose <gregory.v.rose@intel.com>,
+	Alex Duyck <alexander.h.duyck@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Mitch Williams <mitch.a.williams@intel.com>,
+	Linux NICS <linux.nics@intel.com>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>, linda.knippers@hp.com
+Subject: Re: [PATCH 1/1] pci/quirks: fix a dmar fault for intel 82599 card
+References: <1412057394-7186-1-git-send-email-zhen-hual@hp.com> <542A4A99.4030204@hp.com> <CAErSpo56yKZgP3KLbZWRH78PXc8i2nrnN2aN-12j9HR+R5bhUA@mail.gmail.com>
+In-Reply-To: <CAErSpo56yKZgP3KLbZWRH78PXc8i2nrnN2aN-12j9HR+R5bhUA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEx1Y2FzIFN0YWNoIFttYWls
-dG86bC5zdGFjaEBwZW5ndXRyb25peC5kZV0NCj4gU2VudDogVHVlc2RheSwgT2N0b2JlciAyMSwg
-MjAxNCA0OjE4IFBNDQo+IFRvOiBSaWNoYXJkIFpodQ0KPiBDYzogbGludXgtcGNpQHZnZXIua2Vy
-bmVsLm9yZzsgR3VvIFNoYXduLVI2NTA3MzsgZmVzdGV2YW1AZ21haWwuY29tOw0KPiB0aGFydmV5
-QGdhdGV3b3Jrcy5jb207IG0ta2FyaWNoZXJpMkB0aS5jb20NCj4gU3ViamVjdDogUmU6IFtQQVRD
-SCB2OF1QQ0k6IGlteDY6IGVuYWJsZSBwY2llIG9uIGlteDZzeCBzZGIgYW5kIGlteDZxZGwNCj4g
-c2FicmVhdXRvLg0KPiANCj4gQW0gTW9udGFnLCBkZW4gMjAuMTAuMjAxNCwgMTM6MjUgKzA4MDAg
-c2NocmllYiBSaWNoYXJkIFpodToNCj4gPiBNYWluIGNoYW5nZXMgc2luY2UgdGhlIHY2KHY3IGlz
-IGlnbm9yZWQpOg0KPiA+IDEuIFJlZ2FyZGluZyB0byBMdWNhcycgc3VnZ2VzdGlvbiwgYXNzZXJ0
-IHBlci1yZXNldCBpbiBzdXNwZW5kLCBhbmQNCj4gPiBkZS1hc3NlcnQgaXQgaW4gcmVzdW1lLg0K
-PiA+IDIuIFVzZSBwcC0+b3BzLT5nZXRfbXNpX2RhdGEgaW4gZHdfcGNpZV9tc2lfY2ZnX3Jlc3Rv
-cmUoKSBpZiB0aGVyZSBpcw0KPiA+IG9uZSBnZXRfbXNpX2RhdGEgcHAgb3BzIGNhbGxiYWNrLCBy
-ZWZlciB0byBNdWFsaSdzIGNvbW1lbnQuDQo+ID4gMy4gSW4gb3JkZXIgdG8gYXZvaWQgdGhlIGNv
-bXBpbGF0aW9uLCBzcXVhc2ggaW14NiBjaGFuZ2VzIHdpdGgNCj4gPiBwYXRjaDItNSBvZiB2Niwg
-c2luY2UgdGhlIHByb3RvdHlwZSBvZiB0aGUgaG9zdF9pbml0IGlzIGNoYW5nZWQuDQo+IA0KPiBO
-bywgdGhpcyBpc24ndCB3aGF0IEkgd2FudGVkLiBUaGlzIGlzIGNvbXBsZXRlbHkgc2VwYXJhdGUg
-Y2hhbmdlIGFuZCBuZWVkcyB0bw0KPiBiZSBpbiBvbmUgcGF0Y2guDQo+IA0KW1JpY2hhcmRdIERv
-IHlvdSBtZWFuIHRoZSBmb2xsb3dpbmc/DQoqIGlteDZzeCBwY2llIHN1cHBvcnQgdG8gYmUgb25l
-IHBhdGNoLg0KKiB0aGUgcHJvdG90eXBlIG9mIHRoZSBob3N0X2luaXQgY2hhbmdlcyBzaG91bGQg
-YmUgc3F1YXNoZWQgaW50byBvbmUgc3RhbmRhbG9uZSBwYXRjaC4NCg0KPiBCdXQgdG8gbW92ZSB0
-aGlzIHBhdGNoc2V0IGZvcndhcmQgd2l0aG91dCBrZWVwaW5nIHRob3NlIGVuZGxlc3MgbG9vcHMg
-YmFjayBhbmQNCj4gZm9ydGggYmV0d2VlbiB1cyBib3RoIGxldCdzIHR1cm4gdGhlIHRoaW5nIGFy
-b3VuZDogSSB3aWxsIHRha2UgbW9zdCBvZiB5b3VyDQo+IHBhdGNoZXMgKG5hbWVseSB0aGUgb25l
-cyBhZGRpbmcgaW14NnN4IHN1cHBvcnQpIGFuZCByZXdvcmsgdGhlbSBzbyB0aGV5IGxvb2sNCj4g
-Z29vZCB0byBtZS4gSSdsbCBzZW5kIHRoZW0gdG8geW91IHNvIHlvdSBjYW4gdGVzdCB0aGVtIG9u
-IHlvdXIgaGFyZHdhcmUgYW5kDQo+IGFmdGVyIHRoYXQgc2VuZCB0aGVtIHRvIHRoZSBsaXN0IGZv
-ciBpbmNsdXNpb24uDQo+IA0KPiBJJ2xsIGxlYXZlIG91dCB0aGUgcHVyZWx5IERUUyBjaGFuZ2Vz
-LCBhcyB0aG9zZSBhcmUgc2VwYXJhdGUgaGFyZHdhcmUNCj4gZW5hYmxlbWVudCBwYXRjaGVzLCB0
-aGF0IGRvbid0IHN0cmljdGx5IG5lZWQgdG8gYmUgaW4gdGhpcyBzZXJpZXMuDQo+IA0KPiBSZWdh
-cmRzLA0KPiBMdWNhcw0KPiANCj4gLS0NCj4gUGVuZ3V0cm9uaXggZS5LLiAgICAgICAgICAgICB8
-IEx1Y2FzIFN0YWNoICAgICAgICAgICAgICAgICB8DQo+IEluZHVzdHJpYWwgTGludXggU29sdXRp
-b25zICAgfCBodHRwOi8vd3d3LnBlbmd1dHJvbml4LmRlLyAgfA0KDQoNCkJlc3QgUmVnYXJkcw0K
-UmljaGFyZCBaaHUNCg0K
+On 10/02/2014 08:09 AM, Bjorn Helgaas wrote:
+> On Tue, Sep 30, 2014 at 12:15 AM, Li, ZhenHua <zhen-hual@hp.com> wrote:
+>> Add Joerg to CC list. For it is also related to iommu module.
+>>
+>> Joerg,
+>> There was a try for this dmar fault,
+>>         https://lkml.org/lkml/2014/8/18/118
+>>
+>> This patch is trying to fix the same thing.
+>>
+>>
+>> Zhenhua
+>>
+>> On 09/30/2014 02:09 PM, Li, Zhen-Hua wrote:
+>>> On a HP system with Intel Corporation 82599 ethernet adapter, when kernel
+>>> crashed and the kdump kernel boots with intel_iommu=on, there may be some
+>>> unexpected DMA requests on this adapter, which will cause DMA Remapping
+>>> faults like:
+>>>      dmar: DRHD: handling fault status reg 102
+>>>      dmar: DMAR:[DMA Read] Request device [41:00.0] fault addr fff81000
+>>>      DMAR:[fault reason 01] Present bit in root entry is clear
+>>>
+>>> Analysis for this bug:
+>>>
+>>> The present bit is set in this function:
+>>>
+>>> static struct context_entry * device_to_context_entry(
+>>>                 struct intel_iommu *iommu, u8 bus, u8 devfn)
+>>> {
+>>>      ......
+>>>                  set_root_present(root);
+>>>      ......
+>>> }
+>>>
+>>> Calling tree:
+>>> ixgbe_open
+>>>      ixgbe_setup_tx_resources
+>>>          intel_alloc_coherent
+>>>              __intel_map_single
+>>>                  domain_context_mapping
+>>>                      domain_context_mapping_one
+>>>                          device_to_context_entry
+>>>
+>>> This means, the present bit in root entry will not be set until the device
+>>>   driver is loaded.
+>>>
+>>> But in the kdump kernel, some hardware device does not know the OS is the
+>>>   second kernel and the drivers should be loaded again, this causes there
+>>> are
+>>>   some unexpected DMA requsts on this device when it has not been
+>>> initialized,
+>>>   and then the DMA Remapping errors come.
+>>>
+>>> To fix this DMAR fault, we need to reset the bus that this device on.
+>>> Reset
+>>>   the device itself does not work.
+> This seems like something that could happen with *any* device, not
+> just the 82599 NIC.  Or is there something in the "kernel crash ->
+> kexec -> kdump kernel" path that stops DMA for most devices, but not
+> for the 82599?lex
+>
+
+This is an *any* device problem.  Specifically any device that is doing
+active DMA when a kdump kernel is triggered will cause this issue since
+the IOMMU will not have valid mappings for the DMA events until the
+device driver itself is loaded and resets the device.
+
+Thanks,
+
+Alex
