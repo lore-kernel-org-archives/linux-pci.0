@@ -1,59 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:45825 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753165AbaJGPoI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Oct 2014 11:44:08 -0400
-Message-ID: <54340A45.4050005@wwwdotorg.org>
-Date: Tue, 07 Oct 2014 08:44:05 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:41902 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752027AbaJFC66 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 5 Oct 2014 22:58:58 -0400
+Message-ID: <543206CD.1040505@gmail.com>
+Date: Mon, 06 Oct 2014 11:04:45 +0800
+From: Chen Gang <gang.chen.5i5j@gmail.com>
 MIME-Version: 1.0
-To: Vidya Sagar <vidyas@nvidia.com>, thierry.reding@gmail.com,
-	bhelgaas@google.com
-CC: kthota@nvidia.com, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1] PCI: tegra: Enable root port specific features
-References: <1412677678-12011-1-git-send-email-vidyas@nvidia.com>
-In-Reply-To: <1412677678-12011-1-git-send-email-vidyas@nvidia.com>
-Content-Type: text/plain; charset=windows-1252
+To: konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
+	david.vrabel@citrix.com, bhelgaas@google.com
+CC: xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH next] xen: pcifront: Process failure for pcifront_(re)scan_root()
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/07/2014 03:27 AM, Vidya Sagar wrote:
-> Enables root port to advertise its ASPM-L1 capability
->  resulting in possible link entry to L1 when an ASPM-L1 capable
->  device is connected
-> Enables per-controller & per-TMS clock clamping by default
-> Enabling above features result in more power saving
-> 
-> It also avoids PM message truncation by waiting for DLLP to finish
-> before entering into L1 or L2
-> 
-> Also, it adds helper functions to access root port registers
+When pcifront_rescan_root() or pcifront_scan_root() fails, need return
+error code, neither set XenbusStateConnected state, just like the other
+areas have done.
 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+For pcifront_rescan_root(), it will return error code ("num_roots = 0;",
+skip xenbus_switch_state return value).
 
-> @@ -1870,8 +1920,10 @@ static int tegra_pcie_enable(struct tegra_pcie *pcie)
->  
->  		tegra_pcie_port_enable(port);
->  
-> -		if (tegra_pcie_port_check_link(port))
-> +		if (tegra_pcie_port_check_link(port)) {
-> +			tegra_pcie_enable_rp_features(port);
->  			continue;
-> +		}
->  
->  		dev_info(pcie->dev, "link %u down, ignoring\n", port->index);
+For pcifront_scan_root(), it will return 0 ("num_roots = 0;", set 0 by
+the return value of xenbus_switch_state, which always return 0, at
+present).
 
-Wouldn't it be better to have the error case inside the if block; most
-error-handling is that way. For example:
+Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+---
+ drivers/pci/xen-pcifront.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-if (!tegra_pcie_port_check_link(port)) {
-	dev_info(pcie->dev, "link %u down, ignoring\n", port->index);
-	tegra_pcie_port_disable(port);
-	tegra_pcie_port_free(port);
-	continue;
-}
-
-tegra_pcie_enable_rp_features(port);
-... any other "good case" code (of which there admittedly is none at
-present)
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index 53df39a..d78d884 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -866,6 +866,11 @@ static int pcifront_try_connect(struct pcifront_device *pdev)
+ 		xenbus_dev_error(pdev->xdev, err,
+ 				 "No PCI Roots found, trying 0000:00");
+ 		err = pcifront_scan_root(pdev, 0, 0);
++		if (err) {
++			xenbus_dev_fatal(pdev->xdev, err,
++					 "Error scanning PCI root 0000:00");
++			goto out;
++		}
+ 		num_roots = 0;
+ 	} else if (err != 1) {
+ 		if (err == 0)
+@@ -947,6 +952,11 @@ static int pcifront_attach_devices(struct pcifront_device *pdev)
+ 		xenbus_dev_error(pdev->xdev, err,
+ 				 "No PCI Roots found, trying 0000:00");
+ 		err = pcifront_rescan_root(pdev, 0, 0);
++		if (err) {
++			xenbus_dev_fatal(pdev->xdev, err,
++					 "Error scanning PCI root 0000:00");
++			goto out;
++		}
+ 		num_roots = 0;
+ 	} else if (err != 1) {
+ 		if (err == 0)
+-- 
+1.9.3
