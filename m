@@ -1,169 +1,138 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:49483 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751718AbaJBVCf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Oct 2014 17:02:35 -0400
-Message-ID: <1412283716.28143.22.camel@pasglop>
-Subject: Re: [PATCH v2 1/4] pci/msi: Move "no_64bit_msi" flag from powerpc
- to generic pci_dev
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Deucher <alexdeucher@gmail.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Date: Fri, 03 Oct 2014 07:01:56 +1000
-In-Reply-To: <20141002153101.GB18056@google.com>
-References: <1412048401.4285.128.camel@pasglop>
-	 <CAErSpo4B6kuZJcKwreNvW1qC5sZ=1Ko71vbzNz7T8-_pjf7mww@mail.gmail.com>
-	 <CADnq5_PT+dX=KA4epGNRaoraco2z1pe5K7UgqLmTUhWMnvtWkw@mail.gmail.com>
-	 <1412108504.4285.155.camel@pasglop>
-	 <CADnq5_O_iLAZUKLL4nph8VwuP2NOkWXhBZC2XTSkFm5P42WZ+g@mail.gmail.com>
-	 <1412110946.4285.158.camel@pasglop>
-	 <CADnq5_OXBax1+TKPsR2RDYTWijQKDVw34ECfWzcwN2SibCGYTg@mail.gmail.com>
-	 <1412112324.4285.160.camel@pasglop> <1412210052.10667.0.camel@pasglop>
-	 <20141002153101.GB18056@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 7 Oct 2014 15:47:50 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"rmk+kernel@arm.linux.org.uk" <rmk+kernel@arm.linux.org.uk>
+Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
+Message-ID: <20141007144750.GB30590@e102568-lin.cambridge.arm.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <3256560.C0cZnIlnAv@wuerfel>
+ <20141007120659.GA30590@e102568-lin.cambridge.arm.com>
+ <3659934.boXsmm8jcn@wuerfel>
+MIME-Version: 1.0
+In-Reply-To: <3659934.boXsmm8jcn@wuerfel>
+Content-Type: text/plain; charset=WINDOWS-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-10-02 at 09:31 -0600, Bjorn Helgaas wrote:
-
-> > So this moves the flag to struct pci_dev instead and adjusts the
-> > corresponding arch/powerpc code to look for it there. At this point,
-> > there is no attempt at making other architectures honor it just yet,
-> > though it appears that x86 doesn't care and always generates 32-bit
-> > MSI addresses.
+On Tue, Oct 07, 2014 at 02:52:27PM +0100, Arnd Bergmann wrote:
+> On Tuesday 07 October 2014 13:06:59 Lorenzo Pieralisi wrote:
+> > On Wed, Oct 01, 2014 at 10:38:45AM +0100, Arnd Bergmann wrote:
+> > 
+> > [...]
+> > 
+> > > pci_mmap_page_range could either get generalized some more in an attempt
+> > > to have a __weak default implementation that works on ARM, or it could
+> > > be changed to lose the dependency on pci_sys_data instead. In either
+> > > case, the change would involve using the generic pci_host_bridge_window
+> > > list.
+> > 
+> > On ARM pci_mmap_page_range requires pci_sys_data to retrieve its
+> > mem_offset parameter. I had a look, and I do not understand *why*
+> > it is required in that function, so I am asking. That function
+> > is basically used to map PCI resources to userspace, IIUC, through
+> > /proc or /sysfs file mappings. As far as I understand those mappings
+> > expect VMA pgoff to be the CPU address when files representing resources
+> > are mmapped from /proc and 0 when mmapped from /sys (I mean from
+> > userspace, then VMA pgoff should be updated by the kernel to map the
+> > resource).
 > 
-> I thought you were going to add something in drivers/pci to make this more
-> generic?
+> Applying the mem_offset is certainly the more intuitive way, since
+> that lets you read the PCI BAR values from a device and access the
+> device with the appropriate offsets.
 
-I don't see how. The only thing I can add is the check which I still
-plan to do. But the decision on the address is in the arch.
+Ok, but I am referring to this snippet (drivers/pci/pci-sysfs.c):
 
-> Is it feasible to structure this series as follows?
+/* pci_mmap_page_range() expects the same kind of entry as coming
+ * from /proc/bus/pci/ which is a "user visible" value. If this is
+ * different from the resource itself, arch will do necessary fixup.
+ */
+pci_resource_to_user(pdev, i, res, &start, &end);
+
+--> Here start represents a CPU physical address, if pci_resource_to_user()
+    does not fix it up, correct ?
+
+vma->vm_pgoff += start >> PAGE_SHIFT;
+
+[...]
+
+return pci_mmap_page_range(...);
+
+pci_mmap_page_range() applies (mem_offset >> PAGE_SHIFT) to pgoff in the
+ARM implemention.
+
+Is not there a mismatch here on platforms where mem_offset != 0 ?
+
+> > Question is: why pci_mmap_page_range() should apply an additional
+> > shift to the VMA pgoff based on pci_sys_data.mem_offset, which represents
+> > the offset from cpu->bus offset. I do not understand that. PowerPC
+> > does not seem to apply that fix-up (in PowerPC __pci_mmap_make_offset there
+> > is commented out code which prevents the pci_mem_offset shift to be
+> > applied). I think it all boils down to what the userspace interface is
+> > expecting when the memory areas are mmapped, if anyone has comments on
+> > this that is appreciated.
 > 
->   - add generic stuff (struct pci_dev bit, msi.c checks)
->   - add quirks to drivers to set the pci_dev bit
->   - change powerpc to check pci_dev bit instead of pdn bit
->   - remove powerpc-specific quirks since nobody looks as the pdn bit
+> The important part is certainly that whatever transformation is done
+> by pci_resource_to_user() gets undone by __pci_mmap_make_offset().
+
+Exactly, it does not seem to be the case above, that's why I asked.
+
+> In case of PowerPC and Microblaze, the mem_offset handling is commented
+> out in both, to work around X11 trying to use the same values on
+> /dev/mem. However, they do have the respective fixup for io_offset.
 > 
-> I think it would be easier to follow if the powerpc-specific parts weren't
-> intertwined with the rest.
+> sparc applies the offset in both places for both io_offset and mem_offset.
+> xtensa applies only io_offset in __pci_mmap_make_offset but neither
+>   in pci_resource_to_user. This probably works because the mem_offset is
+>   always zero there.
+> mips applies a different fixup (for 36-bit addressing), but not the
+>   mem_offset.
+> 
+> Every other architecture applies no offset here, neither in __pci_mmap_make_offset/pci_mmap_page_range nor in pci_resource_to_user
+> 
+> The only hint I could find for how the ARM version came to be is
+> from the historic kernel tree git log for linux-2.5.42, which added
+> the current code as
+> 
+>     2002/10/13 11:05:47+01:00 rmk
+>     [ARM] Update pcibios_enable_device, supply pci_mmap_page_range()
+>     Update pcibios_enable_device to only enable requested resources,
+>     mainly for IDE.  Supply a pci_mmap_page_range() function to allow
+>     user space to mmap PCI regions.
+> 
+> At that point, only two platforms had a nonzero mem_offset:
+> footbridge/dc21285 and integrator/pci_v3. Both were using VGA,
+> and presumably used this to make X work. (rmk might remember
+> details).
 
-Well, in that case the first patch just adds one bit to pci_dev and
-maybe one check for address to msi.c. Unfortunately there isn't more
-I can do generically. But ok, I'll do it that way.
+I think that, as I mentioned, it boils down to what the userspace
+interface (proc/sys and they seem to differ) is supposed to be passed
+from userspace processes upon mmap.
 
-> > Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> > CC: <stable@vger.kernel.org>
-> > ---
-> > 
-> > v2: Rename flag to "no_64bit_msi" as suggested by Bjorn
-> > 
-> >  arch/powerpc/include/asm/pci-bridge.h     | 2 --
-> >  arch/powerpc/kernel/pci_64.c              | 5 +----
-> >  arch/powerpc/platforms/powernv/pci-ioda.c | 3 +--
-> >  arch/powerpc/platforms/powernv/pci.c      | 3 +--
-> >  arch/powerpc/platforms/pseries/msi.c      | 2 +-
-> >  include/linux/pci.h                       | 1 +
-> >  6 files changed, 5 insertions(+), 11 deletions(-)
-> > 
-> > diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-> > index 4ca90a3..725247b 100644
-> > --- a/arch/powerpc/include/asm/pci-bridge.h
-> > +++ b/arch/powerpc/include/asm/pci-bridge.h
-> > @@ -159,8 +159,6 @@ struct pci_dn {
-> >  
-> >  	int	pci_ext_config_space;	/* for pci devices */
-> >  
-> > -	bool	force_32bit_msi;
-> > -
-> >  	struct	pci_dev *pcidev;	/* back-pointer to the pci device */
-> >  #ifdef CONFIG_EEH
-> >  	struct eeh_dev *edev;		/* eeh device */
-> > diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
-> > index 155013d..d41a831 100644
-> > --- a/arch/powerpc/kernel/pci_64.c
-> > +++ b/arch/powerpc/kernel/pci_64.c
-> > @@ -269,10 +269,7 @@ EXPORT_SYMBOL(pcibus_to_node);
-> >  
-> >  static void quirk_radeon_32bit_msi(struct pci_dev *dev)
-> >  {
-> > -	struct pci_dn *pdn = pci_get_pdn(dev);
-> > -
-> > -	if (pdn)
-> > -		pdn->force_32bit_msi = true;
-> > +	dev->no_64bit_msi = true;
-> >  }
-> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x68f2, quirk_radeon_32bit_msi);
-> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
-> > diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> > index df241b1..a188bb8 100644
-> > --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> > +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> > @@ -1311,7 +1311,6 @@ static int pnv_pci_ioda_msi_setup(struct pnv_phb *phb, struct pci_dev *dev,
-> >  				  unsigned int is_64, struct msi_msg *msg)
-> >  {
-> >  	struct pnv_ioda_pe *pe = pnv_ioda_get_pe(dev);
-> > -	struct pci_dn *pdn = pci_get_pdn(dev);
-> >  	struct irq_data *idata;
-> >  	struct irq_chip *ichip;
-> >  	unsigned int xive_num = hwirq - phb->msi_base;
-> > @@ -1327,7 +1326,7 @@ static int pnv_pci_ioda_msi_setup(struct pnv_phb *phb, struct pci_dev *dev,
-> >  		return -ENXIO;
-> >  
-> >  	/* Force 32-bit MSI on some broken devices */
-> > -	if (pdn && pdn->force_32bit_msi)
-> > +	if (dev->no_64bit_msi)
-> >  		is_64 = 0;
-> >  
-> >  	/* Assign XIVE to PE */
-> > diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-> > index b854b57..89c6608 100644
-> > --- a/arch/powerpc/platforms/powernv/pci.c
-> > +++ b/arch/powerpc/platforms/powernv/pci.c
-> > @@ -50,9 +50,8 @@ static int pnv_msi_check_device(struct pci_dev* pdev, int nvec, int type)
-> >  {
-> >  	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
-> >  	struct pnv_phb *phb = hose->private_data;
-> > -	struct pci_dn *pdn = pci_get_pdn(pdev);
-> >  
-> > -	if (pdn && pdn->force_32bit_msi && !phb->msi32_support)
-> > +	if (pdev->no_64bit_msi && !phb->msi32_support)
-> >  		return -ENODEV;
-> >  
-> >  	return (phb && phb->msi_bmp.bitmap) ? 0 : -ENODEV;
-> > diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-> > index 18ff462..6fd96d8 100644
-> > --- a/arch/powerpc/platforms/pseries/msi.c
-> > +++ b/arch/powerpc/platforms/pseries/msi.c
-> > @@ -429,7 +429,7 @@ static int rtas_setup_msi_irqs(struct pci_dev *pdev, int nvec_in, int type)
-> >  	 */
-> >  again:
-> >  	if (type == PCI_CAP_ID_MSI) {
-> > -		if (pdn->force_32bit_msi) {
-> > +		if (pdev->no_64bit_msi) {
-> >  			rc = rtas_change_msi(pdn, RTAS_CHANGE_32MSI_FN, nvec);
-> >  			if (rc < 0) {
-> >  				/*
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 96453f9..fc938003 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -331,6 +331,7 @@ struct pci_dev {
-> >  	unsigned int	is_added:1;
-> >  	unsigned int	is_busmaster:1; /* device is busmaster */
-> >  	unsigned int	no_msi:1;	/* device may not use msi */
-> > +	unsigned int    no_64bit_msi:1;	/* Device has broken 64-bit MSIs */
-> >  	unsigned int	block_cfg_access:1;	/* config space access is blocked */
-> >  	unsigned int	broken_parity_status:1;	/* Device generates false positive parity */
-> >  	unsigned int	irq_reroute_variant:2;	/* device needs IRQ rerouting variant */
-> > 
-> > 
-> > 
+> The code at the time matched what powerpc and sparc did, but then
+> both implemented pci_resource_to_user() in order for libpciaccess
+> to work correctly (bcea1db16b for sparc, 463ce0e103f for powerpc),
+> and later powerpc changed it again to not apply the offset in
+> pci_resource_to_user or pci_mmap_page_range in 396a1a5832ae.
 
+I will keep investigating, thank you for your help, any further comments
+appreciated.
+
+Lorenzo
 
