@@ -1,108 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:56567 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752538AbaJ1Om0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Oct 2014 10:42:26 -0400
-Date: Tue, 28 Oct 2014 09:41:56 -0500
-From: Felipe Balbi <balbi@ti.com>
-To: Huang Rui <ray.huang@amd.com>
-CC: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 00/19] usb: dwc3: add support for AMD Nolan SoC
-Message-ID: <20141028144156.GC8123@saruman>
-Reply-To: <balbi@ti.com>
-References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="kfjH4zxOES6UT95V"
-In-Reply-To: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+Received: from gate.crashing.org ([63.228.1.57]:42837 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752731AbaJGFC1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Oct 2014 01:02:27 -0400
+Message-ID: <1412656708.30859.123.camel@pasglop>
+Subject: [PATCH v3 5/7] powerpc/powernv: Honor the generic "no_64bit_msi"
+ flag
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alex Deucher <alexdeucher@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Date: Tue, 07 Oct 2014 15:38:28 +1100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---kfjH4zxOES6UT95V
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Instead of the arch specific quirk which we are deprecating
+and that drivers don't understand.
 
-Hi,
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: <stable@vger.kernel.org>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 3 +--
+ arch/powerpc/platforms/powernv/pci.c      | 3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-On Tue, Oct 28, 2014 at 07:54:21PM +0800, Huang Rui wrote:
-> Hi,
->=20
-> The series of patches add AMD Nolan (NL) SoC support for DesignWare USB3
-> OTG IP with PCI bus glue layer. This controller supported hibernation, LPM
-> erratum and used the 2.80a IP version and amd own phy. Current
-> implementation support both simulation and SoC platform. And already test=
-ed
-> with gadget zero and msc tool. It works well on file storage gadget.
->=20
->=20
-> These patches are generated on balbi/testing/next
->=20
-> Changes from v2 -> v3
-> - Confirmed these quirks will be needed in product level
-> - Move AMD configuration patch to the last one with all quirk flags
-> - Make all quirks as 1-bit field instead of single-bits on a 32-bit
->   variable
-> - Add all quirks DeviceTree counterparts
-> - Make LPM erratum configurable
-> - Add PCI ID into pci_ids.h because it will be used both on PCI and DWC3
->   device driver.
->=20
-> Changes from v1 -> v2
-> - Remove dual role function temporarily
-> - Add pci quirk to avoid to bind with xhci driver
-> - Distinguish between simulation board and soc
-> - Break down all the special quirks
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index df241b1..a188bb8 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1311,7 +1311,6 @@ static int pnv_pci_ioda_msi_setup(struct pnv_phb *phb, struct pci_dev *dev,
+ 				  unsigned int is_64, struct msi_msg *msg)
+ {
+ 	struct pnv_ioda_pe *pe = pnv_ioda_get_pe(dev);
+-	struct pci_dn *pdn = pci_get_pdn(dev);
+ 	struct irq_data *idata;
+ 	struct irq_chip *ichip;
+ 	unsigned int xive_num = hwirq - phb->msi_base;
+@@ -1327,7 +1326,7 @@ static int pnv_pci_ioda_msi_setup(struct pnv_phb *phb, struct pci_dev *dev,
+ 		return -ENXIO;
+ 
+ 	/* Force 32-bit MSI on some broken devices */
+-	if (pdn && pdn->force_32bit_msi)
++	if (dev->no_64bit_msi)
+ 		is_64 = 0;
+ 
+ 	/* Assign XIVE to PE */
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index b854b57..89c6608 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -50,9 +50,8 @@ static int pnv_msi_check_device(struct pci_dev* pdev, int nvec, int type)
+ {
+ 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+ 	struct pnv_phb *phb = hose->private_data;
+-	struct pci_dn *pdn = pci_get_pdn(pdev);
+ 
+-	if (pdn && pdn->force_32bit_msi && !phb->msi32_support)
++	if (pdev->no_64bit_msi && !phb->msi32_support)
+ 		return -ENODEV;
+ 
+ 	return (phb && phb->msi_bmp.bitmap) ? 0 : -ENODEV;
 
-In all patches touching DeviceTree, you should add the matching binding
-documentation under Documentation/devicetree/bindings/usb/dwc3.txt
 
-There are still a few cases where you're clipping words too harshly, for
-example tx_deemph doesn't look very intuitive, if you spell it out as
-tx_deemphasis, it's easier to read. Remember that humans will be the
-ones fiddling with those quirks.
-
-A few of your patches I have fixed myself and they now sit on
-testing/next, please rebase your remaining changes there and make sure
-to add DeviceTree documentation.
-
-When resending, please resend the entire series (even the ones I have
-already taken) because you also didn't Cc devicetree mailing list.
-
-cheers
-
---=20
-balbi
-
---kfjH4zxOES6UT95V
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUT6s0AAoJEIaOsuA1yqRE7NYP/RVFFlxbqfvKIz6ZUVBkaTK5
-ZXtyzVYuL95XOy95g9UDtkf51BQmeVNPdHJ8B2kDZhaS1tNU5JPVsK2B+lFGIoQf
-e1Vomi5RS7F2MdJ4yE0xaq/Bq1HG37S+sescEXgab3fO209aUAW9jNuliURpAe0I
-zhZWNJzoi9vIFnyb943sb8ytiQWp4pYTSRKRn16or9y0eSzEKgMioyaAH4aerSr/
-ZpBYKYPFIbI9N91aKpoAx2P4H2TlYtziWXmwiReCSwO99yH7qpFpvNAA0T4i2UNI
-VbDARH9pm26YwYPjW0FI+vpvCFMdEVA0AkeQpDK/3jegcK0oh8H31g2hsZ/XRGBf
-XqCyn47q6GaJz1HqXx6NiAiUNO11zcMTFHkWKUbLBZZ3Ge+E6Myyz8AzlvTjVeC9
-hMQxqzZDgP3LZ/XP//Bxs0Rf9UUbG4aDgESzYrHZVuJlf0hfOph+ewDhKcAWYkhk
-Fbq2ZG1Na9VDIF1H4zpqgSFq1lVbn0vFp/2Fd9DKtpYp4EZOfmHeMHC6rkXNDuIc
-PgJLbLzBcjumC/iZL+e5ZQpEp6FkUPU84XJ/HLKf9meZqQVOx06mRtYB+Drn3/+z
-893A7YHTLa/wq8K0zXQWU/U8ZSJpcTAdXubvQ0t0KxS/hXWt5OZ2EcaI9h27VaVG
-Ybu/W38cTeKMl1y+aXbq
-=u9vT
------END PGP SIGNATURE-----
-
---kfjH4zxOES6UT95V--
