@@ -1,75 +1,58 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 31 Oct 2014 15:00:50 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Date: Tue, 7 Oct 2014 16:27:44 +0200
+From: Robert Richter <robert.richter@caviumnetworks.com>
+To: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <liviu.dudau@arm.com>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Robert Richter <rric@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org
-Subject: Re: [Patch Part2 v3 15/24] x86, MSI: Use hierarchy irqdomain to
- manage MSI interrupts
-In-Reply-To: <54537AC7.90409@linux.intel.com>
-Message-ID: <alpine.DEB.2.11.1410311340000.5308@nanos>
-References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com> <1414484803-10311-16-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1410282046120.5308@nanos> <54537AC7.90409@linux.intel.com>
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Sunil Goutham <sgoutham@cavium.com>
+Subject: Re: [PATCH 3/6] pci, thunder: Add PCIe host controller devicetree
+ bindings
+Message-ID: <20141007142744.GE31556@rric.localhost>
+References: <1411573068-12952-1-git-send-email-rric@kernel.org>
+ <1411573068-12952-4-git-send-email-rric@kernel.org>
+ <3082935.e3X4GsVUDn@wuerfel>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <3082935.e3X4GsVUDn@wuerfel>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 31 Oct 2014, Jiang Liu wrote:
-> On 2014/10/29 5:37, Thomas Gleixner wrote:
-> > Then it calls down the domain allocation chain. x86_msi_domain would
-> > simply hand down to the parent domain. That would either be the remap
-> > domain or the vector domain.
-> The issue here is that, the hierarchy irqdomain maintains a tree
-> topology and every irqdomain only supports one parent.
+On 24.09.14 18:06:04, Arnd Bergmann wrote:
+> > +               compatible = "cavium,thunder-pcie";
+> > +               device_type = "pci";
+> > +               msi-parent = <&its>;
+> > +               bus-range = <0 255>;
+> > +               #size-cells = <2>;
+> > +               #address-cells = <3>;
+> > +               reg = <0x8480 0x00000000 0 0x10000000>;  /* Configuration space */
+> > +               ranges = <0x03000000 0x8010 0x00000000 0x8010 0x00000000 0x70 0x00000000>, /* mem ranges */
+> > +                       <0x03000000 0x8300 0x00000000 0x8300 0x00000000 0x80 0x00000000>,
+> > +                       <0x03000000 0x87e0 0x00000000 0x87e0 0x00000000 0x01 0x00000000>;
+> > +        };
 > 
-> In case of irq remapping, we need to build one irqdomain for each IOMMU
-> unit to support hotplug and simplify the implementation. So we need to
-> build one MSI irqdomain for each IOMMU unit too instead of using a
-> common MSI irqdomain.
+> If you claim the entire 0-255 bus range, I think you should also
+> specify a domain, otherwise it's not predictable which domain you
+> get.
 
-That makes indeed a difference.
- 
-> Current design is that, a common MSI irqdomain to support all MSI when
-> irq remapping is disabled, and one MSI irqdomain for each IOMMU unit
-> when irq remapping is enabled.
+Liviu's code assigns a unique id to the domain if missing, see
+of_pci_get_domain_nr(). So I don't think we need to add a "pci-domain"
+property here.
 
-> So we have the code below to choose the correct irqdomain for MSI.
->         domain = irq_remapping_get_irq_domain(&info);
->         if (domain == NULL)
->                 domain = msi_default_domain;
->         if (domain == NULL)
->                 return -ENOSYS;
+Liviu's DT implementation that assigns a unique number differs a bit
+from ACPI which states: "If _SEG [aka domain number] does not exist,
+OSPM assumes that all PCI bus segments are in PCI Segment Group 0."
 
-Right. I guess we need to keep it that way for now.
+Maybe of_pci_get_domain_nr() should be similar to ACPI. If there are
+multiple root bridges, the "pci-domain" property could be forced
+instead.
 
-But looking at the code makes me wonder why we actually need to call
-into the remap code and do a list walk to figure the domain out. The
-association of device and iommu should be known at startup/hotplug
-time already. That's out of the scope of this work, but should be
-fixed eventually.
-
-Thanks,
-
-	tglx
-
-
-
-
+-Robert
