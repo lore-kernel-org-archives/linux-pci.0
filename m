@@ -1,77 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:39246 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750722AbaJ1Smp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Oct 2014 14:42:45 -0400
-Date: Tue, 28 Oct 2014 13:42:13 -0500
-From: Felipe Balbi <balbi@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Huang Rui <ray.huang@amd.com>, Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	USB list <linux-usb@vger.kernel.org>,
+Received: from mout.kundenserver.de ([212.227.17.24]:63577 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755102AbaJGVj4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Oct 2014 17:39:56 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 04/19] usb: dwc3: add disscramble quirk
-Message-ID: <20141028184213.GC25735@saruman>
-Reply-To: <balbi@ti.com>
-References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
- <1414497280-3126-5-git-send-email-ray.huang@amd.com>
- <CAErSpo5vRcGxu=e61tCEwNVL913_Lxne=1KW+JtQVpc6jgCaHg@mail.gmail.com>
+	Will Deacon <Will.Deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"rmk+kernel@arm.linux.org.uk" <rmk+kernel@arm.linux.org.uk>
+Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
+Date: Tue, 07 Oct 2014 23:39:47 +0200
+Message-ID: <3978481.XNAIA6gzAG@wuerfel>
+In-Reply-To: <20141007144750.GB30590@e102568-lin.cambridge.arm.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com> <3659934.boXsmm8jcn@wuerfel> <20141007144750.GB30590@e102568-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="yLVHuoLXiP9kZBkt"
-In-Reply-To: <CAErSpo5vRcGxu=e61tCEwNVL913_Lxne=1KW+JtQVpc6jgCaHg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---yLVHuoLXiP9kZBkt
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Tuesday 07 October 2014 15:47:50 Lorenzo Pieralisi wrote:
+> On Tue, Oct 07, 2014 at 02:52:27PM +0100, Arnd Bergmann wrote:
+> > On Tuesday 07 October 2014 13:06:59 Lorenzo Pieralisi wrote:
+> > > On Wed, Oct 01, 2014 at 10:38:45AM +0100, Arnd Bergmann wrote:
+> > > 
+> > > [...]
+> > > 
+> > > > pci_mmap_page_range could either get generalized some more in an attempt
+> > > > to have a __weak default implementation that works on ARM, or it could
+> > > > be changed to lose the dependency on pci_sys_data instead. In either
+> > > > case, the change would involve using the generic pci_host_bridge_window
+> > > > list.
+> > > 
+> > > On ARM pci_mmap_page_range requires pci_sys_data to retrieve its
+> > > mem_offset parameter. I had a look, and I do not understand *why*
+> > > it is required in that function, so I am asking. That function
+> > > is basically used to map PCI resources to userspace, IIUC, through
+> > > /proc or /sysfs file mappings. As far as I understand those mappings
+> > > expect VMA pgoff to be the CPU address when files representing resources
+> > > are mmapped from /proc and 0 when mmapped from /sys (I mean from
+> > > userspace, then VMA pgoff should be updated by the kernel to map the
+> > > resource).
+> > 
+> > Applying the mem_offset is certainly the more intuitive way, since
+> > that lets you read the PCI BAR values from a device and access the
+> > device with the appropriate offsets.
+> 
+> Ok, but I am referring to this snippet (drivers/pci/pci-sysfs.c):
+> 
+> /* pci_mmap_page_range() expects the same kind of entry as coming
+>  * from /proc/bus/pci/ which is a "user visible" value. If this is
+>  * different from the resource itself, arch will do necessary fixup.
+>  */
+> pci_resource_to_user(pdev, i, res, &start, &end);
+> 
+> --> Here start represents a CPU physical address, if pci_resource_to_user()
+>     does not fix it up, correct ?
+> 
+> vma->vm_pgoff += start >> PAGE_SHIFT;
+> 
+> [...]
+> 
+> return pci_mmap_page_range(...);
+> 
+> pci_mmap_page_range() applies (mem_offset >> PAGE_SHIFT) to pgoff in the
+> ARM implemention.
+> 
+> Is not there a mismatch here on platforms where mem_offset != 0 ?
 
-Hi,
+Yes, I think that's right: ARM never gained its own pci_resource_to_user()
+implementation, presumably because nobody ran into this problem and
+debugged it all the way.
 
-On Tue, Oct 28, 2014 at 10:39:26AM -0600, Bjorn Helgaas wrote:
-> On Tue, Oct 28, 2014 at 5:54 AM, Huang Rui <ray.huang@amd.com> wrote:
-> > This patch adds disscramble quirk, and it only needs to be enabled at f=
-pga
->=20
-> "disscramble" (in subject and above) is not a real word.
->=20
-> I see that DWC3_GCTL_DISSCRAMBLE is already defined in
-> drivers/usb/dwc3/core.h even before your patches, so I suppose it's
-> something the hardware designers made up.
-
-hehe, disable scramble :-)
-
---=20
-balbi
-
---yLVHuoLXiP9kZBkt
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUT+OFAAoJEIaOsuA1yqREl9oP/1R2h7m49fmZriFB6u9g8bpS
-qTazfs/gKQC+8rXTCuKyQI1xLC2BxMNhmlbbndoTrQ4v+zV3RpBQ12tkq89fI7QW
-rjK7wNOcPiqxSgwur/teRbTY/XKPU3IFDeG1Oe5c5N5h8/nCw8xcj3ncUzAfILDz
-dE/jTyjTMczOMBoLzIr6TUb1Cc3L3Tir50iN7BI1iYjCYCasWkt7cnweqs6scr6d
-HTahz6xrek+7cAVdcywzQQNPzs5fo7ogeAgr3Z6d8cUGY4qHUEqhHPIcuC5xooxS
-UHFpo2P+J7BzzECfTh4ubo6iVX9TlKc2GY5bth6hagG/+tr/BPCjTZjtYzX6kZPX
-iej5ia4hlOydAdxV2SjdCODdRzEX0qeqoYHSK3WYi8eooV9LBPu1FlevdZKPOlsO
-RFUYeIu3d63UDjIAJQ5+fujnQkEqbqjcfCXtoH+ABsD2c6C3ce2Xlq9XBTV55OFh
-X+a125Eb3QAiTfKTS8JuIfeTM4/Zs0W01JV+CZox1T8DoZdnAk8VtiLVk+vEg0z8
-u61SUCwqei47T8JP7bU+QX6hrLTq3UjLx5JzEwlfxC/Ui4oq33xnyqWDq56tYoHo
-l5SUTTORi53JYutL5Z+G/644yzFeRMhZR5zHgtah+TZanstT3iFKDpSi/f1i4PJo
-IlhGi0wSDgQ5gKjDLHLA
-=wKXT
------END PGP SIGNATURE-----
-
---yLVHuoLXiP9kZBkt--
+	Arnd
