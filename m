@@ -1,82 +1,201 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0122.outbound.protection.outlook.com ([207.46.100.122]:19808
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933938AbaJ3KLj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 06:11:39 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v4 18/20] PCI: Prevent xHCI driver from claiming AMD Nolan USB3 DRD device
-Date: Thu, 30 Oct 2014 18:08:43 +0800
-Message-ID: <1414663725-2195-19-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
-References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from gate.crashing.org ([63.228.1.57]:47011 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751339AbaJGEnw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Oct 2014 00:43:52 -0400
+Message-ID: <1412656696.30859.122.camel@pasglop>
+Subject: [PATCH v3 4/7] sound/radeon: Add quirk for broken 64-bit MSI
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alex Deucher <alexdeucher@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Date: Tue, 07 Oct 2014 15:38:16 +1100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The AMD Nolan (NL) SoC contains a DesignWare USB3 Dual-Role Device that can
-be operated either as a USB Host or a USB Device.  In the AMD NL platform,
-this device ([1022:7912]) has a class code of PCI_CLASS_SERIAL_USB_XHCI
-(0x0c0330), which means the xhci driver will claim it.
+From: Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
 
-But the dwc3 driver is a more specific driver for this device, and we'd
-prefer to use it instead of xhci.  To prevent xhci from claiming the
-device, change the class code to 0x0c03fe, which the PCI r3.0 spec defines
-as "USB device (not host controller)".  The dwc3 driver can then claim it
-based on its Vendor and Device ID.
+A number of radeon cards have a HW limitation causing them to be
+unable to generate the full 64-bit of address bits for MSIs. This
+breaks MSIs on some platforms such as POWER machines.
 
-Suggested-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jason Chang <jason.chang@amd.com>
-Signed-off-by: Huang Rui <ray.huang@amd.com>
+We used to have a powerpc specific quirk to address that on a
+single card, but this doesn't scale very well, this is better
+put under control of the drivers who know precisely what a given
+HW revision can do.
+
+This moves the setting of the quirk flag to the audio driver.
+
+While recent ASICs have that problem fixed, they don't seem to
+be listed in the PCI IDs of the current driver, so let's quirk all
+the ATI HDMI for now. The consequences are nil on x86 anyway.
+
+Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: <stable@vger.kernel.org>
 ---
- drivers/pci/quirks.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ sound/pci/hda/hda_intel.c | 96 +++++++++++++++++++++++++++++++++--------------
+ sound/pci/hda/hda_priv.h  |  1 +
+ 2 files changed, 69 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 90acb32..ed6f89b 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -379,6 +379,26 @@ static void quirk_ati_exploding_mce(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,	PCI_DEVICE_ID_ATI_RS100,   quirk_ati_exploding_mce);
+diff --git a/sound/pci/hda/hda_intel.c b/sound/pci/hda/hda_intel.c
+index 99b367b..af38ed9 100644
+--- a/sound/pci/hda/hda_intel.c
++++ b/sound/pci/hda/hda_intel.c
+@@ -1506,9 +1506,14 @@ static int azx_first_init(struct azx *chip)
+ 		return -ENXIO;
+ 	}
  
- /*
-+ * In the AMD NL platform, this device ([1022:7912]) has a class code of
-+ * PCI_CLASS_SERIAL_USB_XHCI (0x0c0330), which means the xhci driver will
-+ * claim it.
-+ * But the dwc3 driver is a more specific driver for this device, and we'd
-+ * prefer to use it instead of xhci. To prevent xhci from claiming the
-+ * device, change the class code to 0x0c03fe, which the PCI r3.0 spec
-+ * defines as "USB device (not host controller)". The dwc3 driver can then
-+ * claim it based on its Vendor and Device ID.
-+ */
-+static void quirk_amd_nl_class(struct pci_dev *pdev)
-+{
-+	/*
-+	 * Use 'USB Device' (0x0c03fe) instead of PCI header provided
-+	 */
-+	pdev->class = 0x0c03fe;
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL_USB,
-+		quirk_amd_nl_class);
-+
-+/*
-  * Let's make the southbridge information explicit instead
-  * of having to worry about people probing the ACPI areas,
-  * for example.. (Yes, it happens, and if you read the wrong
--- 
-1.9.1
+-	if (chip->msi)
++	if (chip->msi) {
++		if (chip->driver_caps & AZX_DCAPS_NO_MSI64) {
++			dev_dbg(card->dev, "Disabling 64bit MSI\n");
++			pci->no_64bit_msi = true;
++		}
+ 		if (pci_enable_msi(pci) < 0)
+ 			chip->msi = 0;
++	}
+ 
+ 	if (azx_acquire_irq(chip, 0) < 0)
+ 		return -EBUSY;
+@@ -2070,58 +2075,93 @@ static const struct pci_device_id azx_ids[] = {
+ 	{ PCI_DEVICE(0x1022, 0x780d),
+ 	  .driver_data = AZX_DRIVER_GENERIC | AZX_DCAPS_PRESET_ATI_SB },
+ 	/* ATI HDMI */
+-	{ PCI_DEVICE(0x1002, 0x793b),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	{ PCI_DEVICE(0x1002, 0x1314),
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0x7919),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
++	{ PCI_DEVICE(0x1002, 0x7969),
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
++	{ PCI_DEVICE(0x1002, 0x793b),
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0x960f),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
++	{ PCI_DEVICE(0x1002, 0x9646),
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0x970f),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaa00),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaa08),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaa10),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaa18),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaa20),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaa28),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaa30),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaa38),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaa40),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaa48),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaa50),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaa58),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaa60),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaa68),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaa80),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaa88),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaa90),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaa98),
+-	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0x9902),
+-	  .driver_data = AZX_DRIVER_ATIHDMI_NS | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI_NS | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaaa0),
+-	  .driver_data = AZX_DRIVER_ATIHDMI_NS | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI_NS | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaaa8),
+-	  .driver_data = AZX_DRIVER_ATIHDMI_NS | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI_NS | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	{ PCI_DEVICE(0x1002, 0xaab0),
+-	  .driver_data = AZX_DRIVER_ATIHDMI_NS | AZX_DCAPS_PRESET_ATI_HDMI },
++	  .driver_data = AZX_DRIVER_ATIHDMI_NS | AZX_DCAPS_PRESET_ATI_HDMI |
++	  AZX_DCAPS_NO_MSI64 },
+ 	/* VIA VT8251/VT8237A */
+ 	{ PCI_DEVICE(0x1106, 0x3288),
+ 	  .driver_data = AZX_DRIVER_VIA | AZX_DCAPS_POSFIX_VIA },
+diff --git a/sound/pci/hda/hda_priv.h b/sound/pci/hda/hda_priv.h
+index 949cd43..5016014 100644
+--- a/sound/pci/hda/hda_priv.h
++++ b/sound/pci/hda/hda_priv.h
+@@ -171,6 +171,7 @@ enum { SDI0, SDI1, SDI2, SDI3, SDO0, SDO1, SDO2, SDO3 };
+ #define AZX_DCAPS_PM_RUNTIME	(1 << 26)	/* runtime PM support */
+ #define AZX_DCAPS_I915_POWERWELL (1 << 27)	/* HSW i915 powerwell support */
+ #define AZX_DCAPS_CORBRP_SELF_CLEAR (1 << 28)	/* CORBRP clears itself after reset */
++#define AZX_DCAPS_NO_MSI64      (1 << 29)	/* Stick to 32-bit MSIs */
+ 
+ /* HD Audio class code */
+ #define PCI_CLASS_MULTIMEDIA_HD_AUDIO	0x0403
+
 
