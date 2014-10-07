@@ -1,48 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([69.164.217.139]:56327 "EHLO foo.masarand.uk"
+Received: from gate.crashing.org ([63.228.1.57]:40402 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751518AbaJBD7Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 23:59:24 -0400
-From: matt@masarand.com
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, Vality <matt@masarand.com>
-Subject: [PATCH 17/18] Disabled bus scan time PCI IRQ assignment on parisc
-Date: Thu,  2 Oct 2014 04:50:36 +0100
-Message-Id: <1412221837-17452-18-git-send-email-matt@masarand.com>
-In-Reply-To: <1412221837-17452-1-git-send-email-matt@masarand.com>
-References: <1412221837-17452-1-git-send-email-matt@masarand.com>
+	id S1753757AbaJGFix (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Oct 2014 01:38:53 -0400
+Message-ID: <1412656686.30859.121.camel@pasglop>
+Subject: [PATCH v3 3/7] gpu/radeon: Set flag to indicate broken 64-bit MSI
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alex Deucher <alexdeucher@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Date: Tue, 07 Oct 2014 15:38:06 +1100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Vality <matt@masarand.com>
+Some radeon ASICs don't support all 64 address bits of MSIs despite
+advertising support for 64-bit MSIs in their configuration space.
 
-Most of the architectures are switched to allocating IRQs at device_enable
-time instead of boot time, however parisc does not provide an easy way of
-making that transition so the new code is disabled here on parisc.
+This breaks on systems such as IBM POWER7/8, where 64-bit MSIs can
+be assigned with some of the high address bits set.
 
+This makes use of the newly introduced "no_64bit_msi" flag in structure
+pci_dev to allow the MSI allocation code to fallback to 32-bit MSIs
+on those adapters.
+
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+CC: <stable@vger.kernel.org>
 ---
- arch/parisc/kernel/pci.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/arch/parisc/kernel/pci.c b/arch/parisc/kernel/pci.c
-index 64f2764..9654c69 100644
---- a/arch/parisc/kernel/pci.c
-+++ b/arch/parisc/kernel/pci.c
-@@ -105,7 +105,13 @@ PCI_PORT_OUT(b,  8)
- PCI_PORT_OUT(w, 16)
- PCI_PORT_OUT(l, 32)
+Adding Alex's review tag. Patch to the driver is identical to the
+reviewed one, I dropped the arch/powerpc hunk rewrote the subject
+and cset comment.
+---
+ drivers/gpu/drm/radeon/radeon_irq_kms.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/gpu/drm/radeon/radeon_irq_kms.c b/drivers/gpu/drm/radeon/radeon_irq_kms.c
+index 16807af..c74f12d 100644
+--- a/drivers/gpu/drm/radeon/radeon_irq_kms.c
++++ b/drivers/gpu/drm/radeon/radeon_irq_kms.c
+@@ -202,6 +202,16 @@ static bool radeon_msi_ok(struct radeon_device *rdev)
+ 	if (rdev->flags & RADEON_IS_AGP)
+ 		return false;
  
--
-+/* We do not support hot-add irq assignment */
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->swizzle_irq = NULL;
-+	bridge->map_irq = NULL;
-+	return 0;
-+}
- 
- /*
-  * BIOS32 replacement.
--- 
-2.1.0
++	/*
++	 * Older chips have a HW limitation, they can only generate 40 bits
++	 * of address for "64-bit" MSIs which breaks on some platforms, notably
++	 * IBM POWER servers, so we limit them
++	 */
++	if (rdev->family < CHIP_BONAIRE) {
++		dev_info(rdev->dev, "radeon: MSI limited to 32-bit\n");
++		rdev->pdev->no_64bit_msi = 1;
++	}
++
+ 	/* force MSI on */
+ 	if (radeon_msi == 1)
+ 		return true;
+
 
