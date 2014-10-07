@@ -1,56 +1,215 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:51125 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760763AbaJ3SJu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Oct 2014 14:09:50 -0400
-Date: Thu, 30 Oct 2014 18:09:41 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Mohit Kumar <mohit.kumar@st.com>
-Subject: Re: [RFC PATCH 0/2] arm: pcibios: remove pci_sys_data domain
-Message-ID: <20141030180941.GA17911@red-moon>
-References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20141030162552.GC26820@obsidianresearch.com>
- <20141030165246.GC2048@red-moon>
- <20141030170305.GE26820@obsidianresearch.com>
- <20141030173914.GS1069@e106497-lin.cambridge.arm.com>
- <20141030174541.GH26820@obsidianresearch.com>
+Received: from mail-qg0-f46.google.com ([209.85.192.46]:54395 "EHLO
+	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755555AbaJGXrK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Oct 2014 19:47:10 -0400
+Received: by mail-qg0-f46.google.com with SMTP id z60so6266058qgd.33
+        for <linux-pci@vger.kernel.org>; Tue, 07 Oct 2014 16:47:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141030174541.GH26820@obsidianresearch.com>
+In-Reply-To: <1412656696.30859.122.camel@pasglop>
+References: <1412656696.30859.122.camel@pasglop>
+Date: Tue, 7 Oct 2014 19:47:08 -0400
+Message-ID: <CADnq5_NFt8neiOAg896d3-DbAn0rnrE7iXaTFmkNGSg-J9oSkA@mail.gmail.com>
+Subject: Re: [PATCH v3 4/7] sound/radeon: Add quirk for broken 64-bit MSI
+From: Alex Deucher <alexdeucher@gmail.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Takashi Iwai <tiwai@suse.de>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 30, 2014 at 05:45:41PM +0000, Jason Gunthorpe wrote:
-> On Thu, Oct 30, 2014 at 05:39:15PM +0000, Liviu Dudau wrote:
-> 
-> > But of_pci_get_host_bridge_resources() does not request the resources, it only
-> > creates them out of the DT ranges. If/when the driver decides the list of
-> > resources is correct and it can work with it can also request them and use
-> > whatever domain number allocation strategy it wants (auto-incrementing or DT
-> > based). So I don't think the global sequencing is broken here.
-> 
-> So how does mvebu now allocate a unique domain number per mvebu_pcie?
-> 
-> Which hw_pci callback should do that?
+On Tue, Oct 7, 2014 at 12:38 AM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> From: Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+>
+> A number of radeon cards have a HW limitation causing them to be
+> unable to generate the full 64-bit of address bits for MSIs. This
+> breaks MSIs on some platforms such as POWER machines.
+>
+> We used to have a powerpc specific quirk to address that on a
+> single card, but this doesn't scale very well, this is better
+> put under control of the drivers who know precisely what a given
+> HW revision can do.
+>
+> This moves the setting of the quirk flag to the audio driver.
+>
+> While recent ASICs have that problem fixed, they don't seem to
+> be listed in the PCI IDs of the current driver, so let's quirk all
+> the ATI HDMI for now. The consequences are nil on x86 anyway.
+>
+> Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> CC: <stable@vger.kernel.org>
 
-It is done through core code in pci_create_root_bus(), that in turn
-calls pci_bus_assign_domain_nr() which is implemented now in pcibios
-for arm, it is all in patch 2. What Liviu is saying is correct, it all
-depends on *when* the resource naming should be applied. For code
-relying on pcibios the setup hw_pci hook() is likely to be the place where
-resources are requested and the domain is not set-up yet there with
-the generic PCI domains approach, hence I can't attach a domain number
-to the resource names in question.
+Further discussion with the hw teams have revealed that this is still
+an issue on newer asics so I think your original patch is correct
+after all.  Just disable 64 bit MSIs on all AMD audio PCI ids.
 
-Lorenzo
+Alex
+
+> ---
+>  sound/pci/hda/hda_intel.c | 96 +++++++++++++++++++++++++++++++++--------------
+>  sound/pci/hda/hda_priv.h  |  1 +
+>  2 files changed, 69 insertions(+), 28 deletions(-)
+>
+> diff --git a/sound/pci/hda/hda_intel.c b/sound/pci/hda/hda_intel.c
+> index 99b367b..af38ed9 100644
+> --- a/sound/pci/hda/hda_intel.c
+> +++ b/sound/pci/hda/hda_intel.c
+> @@ -1506,9 +1506,14 @@ static int azx_first_init(struct azx *chip)
+>                 return -ENXIO;
+>         }
+>
+> -       if (chip->msi)
+> +       if (chip->msi) {
+> +               if (chip->driver_caps & AZX_DCAPS_NO_MSI64) {
+> +                       dev_dbg(card->dev, "Disabling 64bit MSI\n");
+> +                       pci->no_64bit_msi = true;
+> +               }
+>                 if (pci_enable_msi(pci) < 0)
+>                         chip->msi = 0;
+> +       }
+>
+>         if (azx_acquire_irq(chip, 0) < 0)
+>                 return -EBUSY;
+> @@ -2070,58 +2075,93 @@ static const struct pci_device_id azx_ids[] = {
+>         { PCI_DEVICE(0x1022, 0x780d),
+>           .driver_data = AZX_DRIVER_GENERIC | AZX_DCAPS_PRESET_ATI_SB },
+>         /* ATI HDMI */
+> -       { PCI_DEVICE(0x1002, 0x793b),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +       { PCI_DEVICE(0x1002, 0x1314),
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0x7919),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+> +       { PCI_DEVICE(0x1002, 0x7969),
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+> +       { PCI_DEVICE(0x1002, 0x793b),
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0x960f),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+> +       { PCI_DEVICE(0x1002, 0x9646),
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0x970f),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaa00),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaa08),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaa10),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaa18),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaa20),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaa28),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaa30),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaa38),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaa40),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaa48),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaa50),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaa58),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaa60),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaa68),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaa80),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaa88),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaa90),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaa98),
+> -         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0x9902),
+> -         .driver_data = AZX_DRIVER_ATIHDMI_NS | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI_NS | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaaa0),
+> -         .driver_data = AZX_DRIVER_ATIHDMI_NS | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI_NS | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaaa8),
+> -         .driver_data = AZX_DRIVER_ATIHDMI_NS | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI_NS | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         { PCI_DEVICE(0x1002, 0xaab0),
+> -         .driver_data = AZX_DRIVER_ATIHDMI_NS | AZX_DCAPS_PRESET_ATI_HDMI },
+> +         .driver_data = AZX_DRIVER_ATIHDMI_NS | AZX_DCAPS_PRESET_ATI_HDMI |
+> +         AZX_DCAPS_NO_MSI64 },
+>         /* VIA VT8251/VT8237A */
+>         { PCI_DEVICE(0x1106, 0x3288),
+>           .driver_data = AZX_DRIVER_VIA | AZX_DCAPS_POSFIX_VIA },
+> diff --git a/sound/pci/hda/hda_priv.h b/sound/pci/hda/hda_priv.h
+> index 949cd43..5016014 100644
+> --- a/sound/pci/hda/hda_priv.h
+> +++ b/sound/pci/hda/hda_priv.h
+> @@ -171,6 +171,7 @@ enum { SDI0, SDI1, SDI2, SDI3, SDO0, SDO1, SDO2, SDO3 };
+>  #define AZX_DCAPS_PM_RUNTIME   (1 << 26)       /* runtime PM support */
+>  #define AZX_DCAPS_I915_POWERWELL (1 << 27)     /* HSW i915 powerwell support */
+>  #define AZX_DCAPS_CORBRP_SELF_CLEAR (1 << 28)  /* CORBRP clears itself after reset */
+> +#define AZX_DCAPS_NO_MSI64      (1 << 29)      /* Stick to 32-bit MSIs */
+>
+>  /* HD Audio class code */
+>  #define PCI_CLASS_MULTIMEDIA_HD_AUDIO  0x0403
+>
+>
