@@ -1,128 +1,203 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout1.freenet.de ([195.4.92.91]:49084 "EHLO mout1.freenet.de"
+Received: from mx1.redhat.com ([209.132.183.28]:36342 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753746AbaJ3TQa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 15:16:30 -0400
-Date: Thu, 30 Oct 2014 20:09:22 +0100
-From: Andreas Hartmann <andihartmann@freenet.de>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass through
- (vfio)
-Message-ID: <20141030200922.15126d7a@dualc.maya.org>
-In-Reply-To: <1414688299.27420.292.camel@ul30vt.home>
-References: <20140923210318.498dacbd@dualc.maya.org>									 <20141011003219.560cca97@dualc.maya.org>									 <20141010225408.GA24493@google.com> <5438CC1E.3060407@maya.org>									 <1413360267.4202.70.camel@ul30vt.home> <54406B34.1050808@maya.org>									 <1413925580.4202.189.camel@ul30vt.home>								 <1413927152.4202.195.camel@ul30vt.home> <5447D9D9.9030909@maya.org>							 <1414010215.4202.275.camel@ul30vt.home> <54492606.5090308@maya.org>						 <1414082022.27420.39.camel@ul30vt.home> <54493BFA.8010609@maya.org>					 <1414093023.27420.40.camel@ul30vt.home> <544B3D14.70907@maya.org>				 <1414533068.27420.226.camel@ul30vt.home> <54511A16.30602@maya.org>			 <1414604677.27420.263.camel@ul30vt.home> <54512A91.2010606@maya.org>		 <1414606581.27420.266.camel@ul30vt.home>		 <20141029204344.61d5fc73@dualc.maya.org>	 <1414615824.27420.281.camel@ul30vt.home> <545268E8.3080107@maya.org> <1414688299.27420.292.camel@ul30vt.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1752846AbaJGOpV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Oct 2014 10:45:21 -0400
+From: Marcel Apfelbaum <marcel.a@redhat.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: linux-kernel@vger.kernel.org, marcel@redhat.com, mst@redhat.com,
+	alex.williamson@redhat.com
+Subject: [Qemu-devel] [PATCH v2] PCI: add kernel parameter to override devid<->driver mapping.
+Date: Tue,  7 Oct 2014 17:44:15 +0300
+Message-Id: <1412693055-1794-1-git-send-email-marcel.a@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Alex Williamson wrote:
-> On Thu, 2014-10-30 at 17:35 +0100, Andreas Hartmann wrote:
->> Alex Williamson wrote:
->>> On Wed, 2014-10-29 at 20:43 +0100, Andreas Hartmann wrote:
->> [...]
->>>> Therefore, I never should need pci_save_vc_state and
->>>> pci_restore_vc_state. Thus, it should be ok to add "return" at the
->>>> beginning of each of these function, true? Then it should work.
->>>>
->>>> I tested it. It worked.
->>>>
->>>> But if I'm removing only one of these returns either in
->>>> pci_save_vc_state or pci_restore_vc_state, the machine hangs again.
->>>>
->>>> Therefore, there must be something odd going on in the for loops. Isn't
->>>> it possible to add some useful debug code to these loops to see what's
->>>> really going on? But the output *must* go to the actual console,
->>>> otherwise I can't see it!
->>>>
->>>>
->>>> int pci_save_vc_state(struct pci_dev *dev)
->>>> {
->>>>         return 0; // must be set
->>>>         int i;
->>>>
->>>>         for (i = 0; i < ARRAY_SIZE(vc_caps); i++) {
->> 		   // continue; -> works
->>>>                 int pos, ret;
->>>>                 struct pci_cap_saved_state *save_state;
->> 		   // continue does not work!
->>
->> --> Most probably the
->>
->>             struct pci_cap_saved_state *save_state;
->>
->>     makes the system hang!
-> 
-> We've done nothing more than declare variables there, there's no actual
-> code.  What happens if you increase the delay after bus reset, edit
-> drivers/pci/pci.c, find the call to ssleep(1) and change the 1 to a 2,
-> doubling the delay after reset.
+Scanning a lot of devices during boot requires a lot of time.
+On other scenarios there is a need to bind a driver to a specific slot.
 
-Same behaviour.
+Binding devices to pci-stub driver does not work,
+as it will not differentiate between devices of the
+same type. Using some start scripts is error prone.
 
->  It seems like VC save/restore is just a
-> scapegoat for the platform already being broken by the bus reset.  Also,
-> if you have any other card to test in this slot, it would be useful
-> comparison data to know if we're dealing with an endpoint issue or a bus
-> issue.
+The solution leverages driver_override functionality introduced by
 
-I organized an Intel pcie card:
+	commit: 782a985d7af26db39e86070d28f987cad21313c0
+	Author: Alex Williamson <alex.williamson@redhat.com>
+	Date:   Tue May 20 08:53:21 2014 -0600
 
-03:00.0 Ethernet controller: Intel Corporation 82574L Gigabit Network Connection
-        Subsystem: Intel Corporation Gigabit CT Desktop Adapter
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Interrupt: pin A routed to IRQ 17
-        Region 0: Memory at fdbc0000 (32-bit, non-prefetchable) [disabled] [size=128K]
-        Region 1: Memory at fdb00000 (32-bit, non-prefetchable) [disabled] [size=512K]
-        Region 2: I/O ports at cf00 [disabled] [size=32]
-        Region 3: Memory at fdbfc000 (32-bit, non-prefetchable) [disabled] [size=16K]
-        [virtual] Expansion ROM at fdb80000 [disabled] [size=256K]
-        Capabilities: [c8] Power Management version 2
-                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst- PME-Enable+ DSel=0 DScale=1 PME-
-        Capabilities: [d0] MSI: Enable- Count=1/1 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [e0] Express (v1) Endpoint, MSI 00
-                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
-                LnkCap: Port #1, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <128ns, L1 <64us
-                        ClockPM- Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-        Capabilities: [a0] MSI-X: Enable- Count=5 Masked-
-                Vector table: BAR=3 offset=00000000
-                PBA: BAR=3 offset=00002000
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
-        Capabilities: [140 v1] Device Serial Number 00-1b-21-ff-ff-cf-8f-57
-        Kernel driver in use: vfio-pci
+    	PCI: Introduce new device binding path using pci_dev.driver_override
 
+In order to bind PCI slots to specific drivers use:
+	pci=driver[xxxx:xx:xx.x]=foo,driver[xxxx:xx:xx.x]=bar,...
 
-and tested with the same kernel, which hangs w/ atheros card. It just
-worked. Not just once, but each of the tests I did. I retested w/
-atheros -> hang. Tested again with intel-card -> works. Back to
-atheros -> hang.
+Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
+---
+v1 -> v2:
+ - Addressed Michael S. Tsirkin comments
+   - Removed 32 slots limitation
+   - Better handling of memory allocation failures
+     (preferred BUG_ON over error messages)
+ - Addressed Alex Williamson's comments:
+   - Modified commit message to show parameter usage more clear.
+ - I preferred to re-use parse_args instead of manually using
+   strstr in order to better comply with command line parsing
+   rules.
+ - I didn't use any locking when parsing the command line args
+   (see parse_done usage) assuming that first call will be
+   early in system boot and no race can occur. Please correct
+   me if I am wrong.
 
-Seems to be really a problem w/ the atheros card, which is triggered by
-new vc save/restore.
+Notes:
+ - I have further ideas on top of this patch based on your reviews.
+   I thought of:
+   - Use wildcards to specify entire buses/devices, something like:
+     	driver[0001:02:*.*]=pci-stub
+   - Use comma to separate several devices:
+     	driver[0001:02:03.4,0001:02:04.0,...]=pci-stub
+   - Make domain optional:
+   	driver[00:03.0]=pci-stub
 
-Well, but what to do now? I know how to "fix" it. But this means I have
-to compile my kernels again on my own if it is >= 3.14.
-
-
+Comments will be appreciated,
 Thanks,
-kind regards,
-Andreas
+Marcel
+ Documentation/kernel-parameters.txt |  4 ++
+ drivers/pci/bus.c                   | 86 +++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.c                   |  2 +
+ 3 files changed, 92 insertions(+)
+
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 5ae8608..c1cbb4c 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2631,6 +2631,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 		pcie_scan_all	Scan all possible PCIe devices.  Otherwise we
+ 				only look for one device below a PCIe downstream
+ 				port.
++		driver		Provide an override to the devid<->driver mapping
++				for a specific slot.
++				Bind PCI slot 0001:02:03.4 to pci-stub by:
++					driver[0001:02:03.4]=pci-stub
+ 
+ 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+ 			Management.
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 73aef51..d2c0721 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -230,6 +230,91 @@ EXPORT_SYMBOL(pci_bus_alloc_resource);
+ 
+ void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
+ 
++#define DRIVER_OVERRIDE_NAME_LENGTH 64
++
++struct driver_override_entry {
++	unsigned int domain;
++	unsigned char bus;
++	unsigned int devfn;
++	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
++	struct list_head list;
++};
++
++static LIST_HEAD(driver_override_entries);
++
++static int pci_device_parse_driver_override(char *param, char *val,
++					    const char *unused)
++{
++	unsigned int domain, bus, dev, fn;
++	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
++	char format[] = "[%4x:%2x:%2x.%2x]=%%%ds";
++	struct driver_override_entry *entry;
++	int ret;
++
++	while (val) {
++		char *k = strchr(val, ',');
++
++		if (k)
++			*k++ = 0;
++
++		if (strncmp(val, "driver", 6)) {
++			val = k;
++			continue;
++		}
++
++		sprintf(format + 18, "%%%ds", DRIVER_OVERRIDE_NAME_LENGTH);
++		ret = sscanf(val + 6, format, &domain, &bus, &dev, &fn,
++			     driver_name);
++		if (ret != 5) {
++			pr_err("PCI: Invalid command line: %s\n", val);
++			val = k;
++			continue;
++		}
++
++		entry = kzalloc(sizeof(*entry), GFP_KERNEL);
++		BUG_ON(!entry);
++
++		INIT_LIST_HEAD(&entry->list);
++		entry->domain = domain;
++		entry->bus = bus && 0xff;
++		entry->devfn = ((dev & 0x1f) << 3) | (fn & 0x7);
++		memcpy(entry->driver_name, driver_name, sizeof(driver_name));
++
++		list_add_tail(&entry->list, &driver_override_entries);
++		val = k;
++	}
++
++	return 0;
++}
++
++static void pci_device_setup_driver_override(struct pci_dev *dev)
++{
++	static int parse_done;
++	struct driver_override_entry *entry;
++
++	if (!parse_done) {
++		char *cmdline = kstrdup(saved_command_line, GFP_KERNEL);
++
++		BUG_ON(!cmdline);
++
++		parse_args("pci", cmdline, NULL,
++			   0, 0, 0, &pci_device_parse_driver_override);
++		kfree(cmdline);
++		parse_done = 1;
++	}
++
++	list_for_each_entry(entry, &driver_override_entries, list) {
++		if (pci_domain_nr(dev->bus) != entry->domain ||
++		    dev->bus->number != entry->bus ||
++		    dev->devfn != entry->devfn)
++			continue;
++
++		dev->driver_override = kstrdup(entry->driver_name, GFP_KERNEL);
++		BUG_ON(!dev->driver_override);
++		break;
++	}
++}
++
+ /**
+  * pci_bus_add_device - start driver for a single device
+  * @dev: device to add
+@@ -245,6 +330,7 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 	 * are not assigned yet for some devices.
+ 	 */
+ 	pci_fixup_device(pci_fixup_final, dev);
++	pci_device_setup_driver_override(dev);
+ 	pci_create_sysfs_dev_files(dev);
+ 	pci_proc_attach_device(dev);
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b7678be..6bd7844 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4468,6 +4468,8 @@ static int __init pci_setup(char *str)
+ 				pcie_bus_config = PCIE_BUS_PEER2PEER;
+ 			} else if (!strncmp(str, "pcie_scan_all", 13)) {
+ 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
++			} else if (!strncmp(str, "driver", 6)) {
++				/* lazy evaluation by the pci subsystem */
+ 			} else {
+ 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
+ 						str);
+-- 
+1.8.3.1
+
