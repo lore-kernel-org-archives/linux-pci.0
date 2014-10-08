@@ -1,64 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout3.freenet.de ([195.4.92.93]:43661 "EHLO mout3.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751324AbaJJQMC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 10 Oct 2014 12:12:02 -0400
-Message-ID: <543804BC.3080307@maya.org>
-Date: Fri, 10 Oct 2014 18:09:32 +0200
-From: Andreas Hartmann <andihartmann@freenet.de>
+Received: from mail-qc0-f171.google.com ([209.85.216.171]:35257 "EHLO
+	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751712AbaJHGXU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Oct 2014 02:23:20 -0400
+Received: by mail-qc0-f171.google.com with SMTP id i17so7020151qcy.2
+        for <linux-pci@vger.kernel.org>; Tue, 07 Oct 2014 23:23:19 -0700 (PDT)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass
- through (vfio)
-References: <20140923210318.498dacbd@dualc.maya.org> <1411502866.24563.8.camel@ul30vt.home> <5437A958.3000201@maya.org> <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com> <5437F1F5.3010706@maya.org> <CAErSpo6DuWEcJb_gfS=5JnKN8b4DXXV9+u-CRa8m3db0dbzpsQ@mail.gmail.com>
-In-Reply-To: <CAErSpo6DuWEcJb_gfS=5JnKN8b4DXXV9+u-CRa8m3db0dbzpsQ@mail.gmail.com>
+In-Reply-To: <1412746096.30859.229.camel@pasglop>
+References: <1412656696.30859.122.camel@pasglop>
+	<CADnq5_NFt8neiOAg896d3-DbAn0rnrE7iXaTFmkNGSg-J9oSkA@mail.gmail.com>
+	<1412746096.30859.229.camel@pasglop>
+Date: Wed, 8 Oct 2014 02:23:19 -0400
+Message-ID: <CADnq5_MH+sLjm=_teX-oJ0k+2BsR+pthen7VDUDVFsKPJw6kqg@mail.gmail.com>
+Subject: Re: [PATCH v3 4/7] sound/radeon: Add quirk for broken 64-bit MSI
+From: Alex Deucher <alexdeucher@gmail.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dave Airlie <airlied@linux.ie>, Takashi Iwai <tiwai@suse.de>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas wrote:
-> On Fri, Oct 10, 2014 at 8:49 AM, Andreas Hartmann
-> <andihartmann@freenet.de> wrote:
->> Bjorn Helgaas wrote:
->>> On Fri, Oct 10, 2014 at 3:39 AM, Andreas Hartmann
->>> <andihartmann@freenet.de> wrote:
->>>> shortly: I retested w/ qemu 2.1.0 and Linux 3.17.0 - no change in behaviour.
->>>>
->>>> Alex Williamson wrote:
->>>>> On Tue, 2014-09-23 at 21:03 +0200, Andreas Hartmann wrote:
->>>>>> Hello!
->>>>>>
->>>>>> Since long time now, I'm using w/o any problem PCIe pass through with a
->>>>>> Gigabyte GA-990XA-UD3/GA-990XA-UD3 mainboard (AMD 990X chipset) and
->>>>>> enabled IOMMU with vfio-pci.
->>>>>>
->>>>>> The last kernel working w/o any problem is kernel 3.13.7 (I didn't use
->>>>>> .8 and .9, but I do not think they would have been problematic).
->>>>>>
->>>>>> Since 3.14.19 (I didn't test any 3.14 kernel before) I'm encountering a
->>>>>> hard and silent lock up of the complete machine when starting the VM
->>>>>> with the PCIe card passed through.
->>>
->>> Since we're not really making any progress on this yet, would it be
->>> possible to bisect it?  We already know that 3.13.7 works and 3.14.19
->>> fails, and "git bisect start v3.14 v3.13" says it's about 13 steps.  I
->>> know that's still quite a bit of work, but at least it sounds like the
->>> problem is easy to reproduce.
+On Wed, Oct 8, 2014 at 1:28 AM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Tue, 2014-10-07 at 19:47 -0400, Alex Deucher wrote:
+>> > This moves the setting of the quirk flag to the audio driver.
+>> >
+>> > While recent ASICs have that problem fixed, they don't seem to
+>> > be listed in the PCI IDs of the current driver, so let's quirk all
+>> > the ATI HDMI for now. The consequences are nil on x86 anyway.
+>> >
+>> > Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+>> > Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>> > CC: <stable@vger.kernel.org>
 >>
->> Which git repository should I use best?
-> 
-> The linux-stable repository [1] contains both the v3.13.x and the
-> v3.14.x branches, but apparently you can't bisect directly between
-> v3.13.7 and v3.14.19:
+>> Further discussion with the hw teams have revealed that this is still
+>> an issue on newer asics so I think your original patch is correct
+>> after all.  Just disable 64 bit MSIs on all AMD audio PCI ids.
+>
+> Allright, I won't resend the whole series, I can just pickup my previous
+> patch. Takashi, Bjorn, Dave, this series covers your 3 areas of
+> maintainership, how do you want to proceed ? I'm happy to merge the
+> whole lot via powerpc ASAP (since it's all CC'ed stable) if you guys
+> send me the appropriate acks, otherwise, let me know.
+>
 
-I know that the first version after 3.13.0 (patch-v3.13-next-20140121)
-is already broken. Therefore, it must be between 3.13.7 and
-patch-v3.13-next-20140121.
+I don't remember if I gave my formal review of your original patch, so if not,
+Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
 
-
-
-Thanks,
-regards,
-Andreas
+Alex
