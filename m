@@ -1,79 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <2637527.N3qngMM9sh@vostro.rjw.lan>
-References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
- <1414387308-27148-6-git-send-email-jiang.liu@linux.intel.com>
- <CAErSpo6hq9+RV9sFe2gZL2mMHTPEDGQDfqP5J=TAZtJsj_1-Pg@mail.gmail.com> <2637527.N3qngMM9sh@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 27 Oct 2014 19:13:57 -0600
-Message-ID: <CAErSpo57QZjQZ1U6XRVdLxNVLdQu5yt==bEpHaoyVKQzg7PeHw@mail.gmail.com>
-Subject: Re: [Patch v7 05/18] ACPI: Correct return value of acpi_dev_resource_address_space()
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bon0137.outbound.protection.outlook.com ([157.56.111.137]:36579
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750999AbaJHGlL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Oct 2014 02:41:11 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>,
+	Fabio Estevam <festevam@gmail.com>
+CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+	Shengchao Guo <Shawn.Guo@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Tim Harvey <tharvey@gateworks.com>
+Subject: RE: [PATCH v4 10/10] ARM: imx6sx: enable pcie on imx6sx sdb board
+Date: Wed, 8 Oct 2014 06:41:07 +0000
+Message-ID: <f11b939d2a1f4d6f823bc36d55eb3d09@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
+	<1412069804-17162-11-git-send-email-r65037@freescale.com>,<CAOMZO5A3Bdxdspc_UnJcQ-DVrmUXQCKW0W08msnDs7TELzXEJg@mail.gmail.com>
+ <28E9FA64-81D5-42C2-ABCA-8B72239EC6AA@freescale.com>
+In-Reply-To: <28E9FA64-81D5-42C2-ABCA-8B72239EC6AA@freescale.com>
+Content-Type: text/plain; charset="gb2312"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 27, 2014 at 5:11 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Monday, October 27, 2014 04:49:06 PM Bjorn Helgaas wrote:
->> On Sun, Oct 26, 2014 at 11:21 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->> > Change acpi_dev_resource_address_space() to return failure if the
->> > acpi_resource structure can't be converted to an ACPI address64
->> > structure, so caller could correctly detect failure.
->>
->> Fixes: 046d9ce6820e ("ACPI: Move device resources interpretation code
->> from PNP to ACPI core")
->>
->> Possible stable candidate?  046d9ce6820e appeared in v3.8.
->
-> Well, are we seeing problems with it?
-
-Not to my knowledge.  I only raised the possibility because it seems
-like we are seeing more and more things backported to stable.  But if
-we we're not seeing a problem, I agree we probably shouldn't push it.
-
->> > Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> > ---
->> >  drivers/acpi/resource.c |    2 +-
->> >  1 file changed, 1 insertion(+), 1 deletion(-)
->> >
->> > diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
->> > index 2ba8f02ced36..782a0d15c25f 100644
->> > --- a/drivers/acpi/resource.c
->> > +++ b/drivers/acpi/resource.c
->> > @@ -200,7 +200,7 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
->> >
->> >         status = acpi_resource_to_address64(ares, &addr);
->> >         if (ACPI_FAILURE(status))
->> > -               return true;
->> > +               return false;
->> >
->> >         res->start = addr.minimum;
->> >         res->end = addr.maximum;
->> > --
->> > 1.7.10.4
->> >
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> --
-> I speak only for myself.
-> Rafael J. Wysocki, Intel Open Source Technology Center.
+SGkgRmFiaW86DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogWmh1IFJp
+Y2hhcmQtUjY1MDM3DQo+IFNlbnQ6IFRodXJzZGF5LCBPY3RvYmVyIDAyLCAyMDE0IDEwOjQwIEFN
+DQo+IFRvOiBGYWJpbyBFc3RldmFtDQo+IENjOiBaaHUgUmljaGFyZC1SNjUwMzc7IGxpbnV4LXBj
+aS1vd25lckB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LQ0KPiBwY2lAdmdlci5rZXJuZWwub3JnOyBH
+dW8gU2hhd24tUjY1MDczOyBMdWNhcyBTdGFjaDsgVGltIEhhcnZleQ0KPiBTdWJqZWN0OiBSZTog
+W1BBVENIIHY0IDEwLzEwXSBBUk06IGlteDZzeDogZW5hYmxlIHBjaWUgb24gaW14NnN4IHNkYiBi
+b2FyZA0KPiANCj4gWWVzLCAgUENJRV9QV1JfRU4gd291bGQgYmUgYWRkZWQgbGF0ZXIuDQo+IFRo
+YW5rcywgRmFiaW8uDQo+IA0KPiBCZXN0IHJlZ2FyZHMNCj4gUmljaGFyZA0KPiANCj4gPiDU2iAy
+MDE0xOoxMNTCMcjVo6zJz87nMTI6MjGjrCJGYWJpbyBFc3RldmFtIiA8ZmVzdGV2YW1AZ21haWwu
+Y29tPiDQtLXAo7oNCj4gPg0KPiA+IEhpIFJpY2hhcmQsDQo+ID4NCj4gPj4gT24gVHVlLCBTZXAg
+MzAsIDIwMTQgYXQgNjozNiBBTSwgUmljaGFyZCBaaHUgPHI2NTAzN0BmcmVlc2NhbGUuY29tPiB3
+cm90ZToNCj4gPj4gU2lnbmVkLW9mZi1ieTogUmljaGFyZCBaaHUgPHI2NTAzN0BmcmVlc2NhbGUu
+Y29tPg0KPiA+PiAtLS0NCj4gPj4gYXJjaC9hcm0vYm9vdC9kdHMvaW14NnN4LXNkYi5kdHMgfCAx
+MyArKysrKysrKysrKysrDQo+ID4+IDEgZmlsZSBjaGFuZ2VkLCAxMyBpbnNlcnRpb25zKCspDQo+
+ID4+DQo+ID4+IGRpZmYgLS1naXQgYS9hcmNoL2FybS9ib290L2R0cy9pbXg2c3gtc2RiLmR0cw0K
+PiA+PiBiL2FyY2gvYXJtL2Jvb3QvZHRzL2lteDZzeC1zZGIuZHRzDQo+ID4+IGluZGV4IGEzOTgw
+ZDkuLjI5NzY5MTMgMTAwNjQ0DQo+ID4+IC0tLSBhL2FyY2gvYXJtL2Jvb3QvZHRzL2lteDZzeC1z
+ZGIuZHRzDQo+ID4+ICsrKyBiL2FyY2gvYXJtL2Jvb3QvZHRzL2lteDZzeC1zZGIuZHRzDQo+ID4+
+IEBAIC0yNTEsNiArMjUxLDEzIEBADQo+ID4+ICAgICAgICB9Ow0KPiA+PiB9Ow0KPiA+Pg0KPiA+
+PiArJnBjaWUgew0KPiA+PiArICAgICAgIHBpbmN0cmwtbmFtZXMgPSAiZGVmYXVsdCI7DQo+ID4+
+ICsgICAgICAgcGluY3RybC0wID0gPCZwaW5jdHJsX3BjaWU+Ow0KPiA+PiArICAgICAgIHJlc2V0
+LWdwaW8gPSA8JmdwaW8yIDAgMD47DQo+ID4+ICsgICAgICAgc3RhdHVzID0gIm9rYXkiOw0KPiA+
+PiArfTsNCj4gPg0KPiA+IFRoZXJlIGlzIGFsc28gR1BJTzJfMSB3aGljaCBpcyB0aGUgUENJRV9Q
+V1JfRU4gc2lnbmFsIGFuZCBzaG91bGQgYmUNCj4gPiBhZGRlZCBhcyBhIEdQSU8gY29udHJvbGxl
+ZCByZWd1bGF0b3IuDQpbUmljaGFyZF0gVGhlIEdJUE8gY29udHJvbGxlZCByZWd1bGF0b3IgaXMg
+ZGlzY2FyZGVkIGluIHRoZSBsYXRlc3Qga2VybmVsLCBpdCBpcyBwb2ludGVkIG91dCBieSBMdWNh
+cyBpbiB0aGUNCnByZXZpb3VzIHJldmlldy4NCiINCj4gQEAgLTUwMiw2ICs1MDMsNyBAQA0KPiAg
+JnBjaWUgew0KPiAgCXBpbmN0cmwtbmFtZXMgPSAiZGVmYXVsdCI7DQo+ICAJcGluY3RybC0wID0g
+PCZwaW5jdHJsX3BjaWU+Ow0KPiArCXBvd2VyLW9uLWdwaW8gPSA8JmdwaW8zIDE5IDA+Ow0KPiAg
+CXJlc2V0LWdwaW8gPSA8JmdwaW83IDEyIDA+Ow0KPiAgCXN0YXR1cyA9ICJva2F5IjsNCj4gIH07
+DQoNClRoaXMgaHVuayBpcyB3cm9uZy4gVGhlcmUgaXMgbm8gInBvd2VyLW9uLWdwaW8iIGluIHRo
+ZSBiaW5kaW5nIGFueW1vcmUuDQpBbHNvIHRoZXJlIGlzIGFscmVhZHkgYSBjaGFuZ2UgaW4gU2hh
+d25zIHRyZWUgdG8gbW9kZWwgdGhpcyBhcyBhIGFsd2F5cy1vbiByZWd1bGF0b3IuIElmIHdlIHJl
+YWxseSB3YW50IHRvIGNvbnRyb2wgcGNpIGJ1cyBwb3dlciB0aGlzIG5lZWRzIHRvIGJlIGRvbmUg
+dGhyb3VnaCB0aGlzIHJlZ3VsYXRvciwgbm90IHNvbWUgYXJiaXRyYXJ5IGdwaW8gaGFjay4NCiIN
+Cg0KQmVzdCBSZWdhcmRzDQpSaWNoYXJkIFpodQ0KDQo=
