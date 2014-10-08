@@ -1,216 +1,202 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0115.outbound.protection.outlook.com ([157.56.111.115]:46208
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758262AbaJ3KKe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 06:10:34 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v4 05/20] usb: dwc3: add lpm erratum support
-Date: Thu, 30 Oct 2014 18:08:30 +0800
-Message-ID: <1414663725-2195-6-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
-References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+Received: from service87.mimecast.com ([91.220.42.44]:33993 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754122AbaJHJL0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Oct 2014 05:11:26 -0400
+Date: Wed, 8 Oct 2014 10:11:22 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Zhudacai <zhudacai@hisilicon.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linuxarm <linuxarm@huawei.com>,
+	"liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
+	wangyijing <wangyijing@huawei.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"zhudacai@huawei.com" <zhudacai@huawei.com>,
+	zhanweitao <zhanweitao@huawei.com>
+Subject: Re: PCIe test result in ARM64 and some problem follows.
+Message-ID: <20141008091122.GB4652@e106497-lin.cambridge.arm.com>
+References: <5434EBF2.3060300@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5434EBF2.3060300@hisilicon.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When parameter DWC_USB3_LPM_ERRATA_ENABLE is enabled in Advanced
-Configuration of coreConsultant, support of xHCI BESL Errata Dated
-10/19/2011 is enabled in host mode. In device mode it adds the capability
-to send NYET response threshold based on the BESL value received in the LPM
-token, and the threshold is configurable for each SoC platform.
+On Wed, Oct 08, 2014 at 08:46:58AM +0100, Zhudacai wrote:
+> Hi Liviu,
 
-This patch adds an entry that soc platform is able to define the lpm
-capacity with their own device tree or bus glue layer.
+Hi Dacai,
 
-[ balbi@ti.com : added devicetree documentation, spelled threshold
-		completely, made sure threshold is only applied to
-		proper core revisions. ]
+> 
+> I am an engineer from Hisilicon in ShenZhen China. I noticed that there is a patchset[1] about PCIe in ARM64.
+> So I just merged it in 3.16 linux kernel and tested it in our Arm64 board.
+> 
+> Hisilicon Arm64 Board PCIe is based on pcie-designware.c[2], and connected to a PCIe-SATA card.
+> 
+> As a result, it works very well.
+> 
+> But what more, There still have some problem about msi, and I have to hardcode it in my PCIe host driver.
+> In arm32, we just use function as pcibios_add_bus to fix msi-chip.
 
-Signed-off-by: Huang Rui <ray.huang@amd.com>
-Signed-off-by: Felipe Balbi <balbi@ti.com>
----
- Documentation/devicetree/bindings/usb/dwc3.txt |  2 ++
- drivers/usb/dwc3/core.c                        | 16 +++++++++++++++-
- drivers/usb/dwc3/core.h                        | 26 +++++++++++++++++---------
- drivers/usb/dwc3/gadget.c                      | 13 +++++++++++++
- drivers/usb/dwc3/platform_data.h               |  3 +++
- 5 files changed, 50 insertions(+), 10 deletions(-)
+You are not the only one to notice the lack of MSI support. The problem I faced was that the generic
+PCIe framework leaves the MSI support at the latitude of arch code. We need to pull that code into
+the framework, and there are discussions around how best to do that, but nothing has been implemented
+yet.
 
-diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentation/devicetree/bindings/usb/dwc3.txt
-index 8ec2256..2b0c1f2 100644
---- a/Documentation/devicetree/bindings/usb/dwc3.txt
-+++ b/Documentation/devicetree/bindings/usb/dwc3.txt
-@@ -16,6 +16,8 @@ Optional properties:
-  - tx-fifo-resize: determines if the FIFO *has* to be reallocated.
-  - snps,disable_scramble_quirk: true when SW should disable data scrambling.
- 	Only really useful for FPGA builds.
-+ - snps,has-lpm-erratum: true when DWC3 was configured with LPM Erratum enabled
-+ - snps,lpm-nyet-threshold: LPM NYET threshold
- 
- This is usually a subnode to DWC3 glue to which it is connected.
- 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index fae095f..2ac96e4 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -654,6 +654,7 @@ static int dwc3_probe(struct platform_device *pdev)
- 	struct device_node	*node = dev->of_node;
- 	struct resource		*res;
- 	struct dwc3		*dwc;
-+	u8			lpm_nyet_threshold;
- 
- 	int			ret;
- 
-@@ -709,16 +710,27 @@ static int dwc3_probe(struct platform_device *pdev)
- 	 */
- 	res->start -= DWC3_GLOBALS_REGS_START;
- 
-+	/* default to highest possible threshold */
-+	lpm_nyet_threshold = 0xff;
-+
- 	if (node) {
- 		dwc->maximum_speed = of_usb_get_maximum_speed(node);
-+		dwc->has_lpm_erratum = of_property_read_bool(node,
-+				"snps,has-lpm-erratum");
-+		of_property_read_u8(node, "snps,lpm-nyet-threshold",
-+				&lpm_nyet_threshold);
- 
--		dwc->needs_fifo_resize = of_property_read_bool(node, "tx-fifo-resize");
-+		dwc->needs_fifo_resize = of_property_read_bool(node,
-+				"tx-fifo-resize");
- 		dwc->dr_mode = of_usb_get_dr_mode(node);
- 
- 		dwc->disable_scramble_quirk = of_property_read_bool(node,
- 				"snps,disable_scramble_quirk");
- 	} else if (pdata) {
- 		dwc->maximum_speed = pdata->maximum_speed;
-+		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
-+		if (pdata->lpm_nyet_threshold)
-+			lpm_nyet_threshold = pdata->lpm_nyet_threshold;
- 
- 		dwc->needs_fifo_resize = pdata->tx_fifo_resize;
- 		dwc->dr_mode = pdata->dr_mode;
-@@ -730,6 +742,8 @@ static int dwc3_probe(struct platform_device *pdev)
- 	if (dwc->maximum_speed == USB_SPEED_UNKNOWN)
- 		dwc->maximum_speed = USB_SPEED_SUPER;
- 
-+	dwc->lpm_nyet_threshold = lpm_nyet_threshold;
-+
- 	ret = dwc3_core_get_phy(dwc);
- 	if (ret)
- 		return ret;
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index 56bada6..34f1e08 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -246,16 +246,19 @@
- #define DWC3_DCTL_TRGTULST_SS_INACT	(DWC3_DCTL_TRGTULST(6))
- 
- /* These apply for core versions 1.94a and later */
--#define DWC3_DCTL_KEEP_CONNECT	(1 << 19)
--#define DWC3_DCTL_L1_HIBER_EN	(1 << 18)
--#define DWC3_DCTL_CRS		(1 << 17)
--#define DWC3_DCTL_CSS		(1 << 16)
-+#define DWC3_DCTL_LPM_ERRATA_MASK	DWC3_DCTL_LPM_ERRATA(0xf)
-+#define DWC3_DCTL_LPM_ERRATA(n)		((n) << 20)
- 
--#define DWC3_DCTL_INITU2ENA	(1 << 12)
--#define DWC3_DCTL_ACCEPTU2ENA	(1 << 11)
--#define DWC3_DCTL_INITU1ENA	(1 << 10)
--#define DWC3_DCTL_ACCEPTU1ENA	(1 << 9)
--#define DWC3_DCTL_TSTCTRL_MASK	(0xf << 1)
-+#define DWC3_DCTL_KEEP_CONNECT		(1 << 19)
-+#define DWC3_DCTL_L1_HIBER_EN		(1 << 18)
-+#define DWC3_DCTL_CRS			(1 << 17)
-+#define DWC3_DCTL_CSS			(1 << 16)
-+
-+#define DWC3_DCTL_INITU2ENA		(1 << 12)
-+#define DWC3_DCTL_ACCEPTU2ENA		(1 << 11)
-+#define DWC3_DCTL_INITU1ENA		(1 << 10)
-+#define DWC3_DCTL_ACCEPTU1ENA		(1 << 9)
-+#define DWC3_DCTL_TSTCTRL_MASK		(0xf << 1)
- 
- #define DWC3_DCTL_ULSTCHNGREQ_MASK	(0x0f << 5)
- #define DWC3_DCTL_ULSTCHNGREQ(n) (((n) << 5) & DWC3_DCTL_ULSTCHNGREQ_MASK)
-@@ -660,10 +663,13 @@ struct dwc3_scratchpad_array {
-  * @regset: debugfs pointer to regdump file
-  * @test_mode: true when we're entering a USB test mode
-  * @test_mode_nr: test feature selector
-+ * @lpm_nyet_threshold: LPM NYET response threshold
-  * @delayed_status: true when gadget driver asks for delayed status
-  * @ep0_bounced: true when we used bounce buffer
-  * @ep0_expect_in: true when we expect a DATA IN transfer
-  * @has_hibernation: true when dwc3 was configured with Hibernation
-+ * @has_lpm_erratum: true when core was configured with LPM Erratum. Note that
-+ *			there's now way for software to detect this in runtime.
-  * @is_selfpowered: true when we are selfpowered
-  * @is_fpga: true when we are using the FPGA board
-  * @needs_fifo_resize: not all users might want fifo resizing, flag it
-@@ -764,11 +770,13 @@ struct dwc3 {
- 
- 	u8			test_mode;
- 	u8			test_mode_nr;
-+	u8			lpm_nyet_threshold;
- 
- 	unsigned		delayed_status:1;
- 	unsigned		ep0_bounced:1;
- 	unsigned		ep0_expect_in:1;
- 	unsigned		has_hibernation:1;
-+	unsigned		has_lpm_erratum:1;
- 	unsigned		is_selfpowered:1;
- 	unsigned		is_fpga:1;
- 	unsigned		needs_fifo_resize:1;
-diff --git a/drivers/usb/dwc3/gadget.c b/drivers/usb/dwc3/gadget.c
-index 7a64c2f..2c0d19a4 100644
---- a/drivers/usb/dwc3/gadget.c
-+++ b/drivers/usb/dwc3/gadget.c
-@@ -2297,6 +2297,19 @@ static void dwc3_gadget_conndone_interrupt(struct dwc3 *dwc)
- 		 */
- 		reg |= DWC3_DCTL_HIRD_THRES(12);
- 
-+		/*
-+		 * When dwc3 revisions >= 2.40a, LPM Erratum is enabled and
-+		 * DCFG.LPMCap is set, core responses with an ACK and the
-+		 * BESL value in the LPM token is less than or equal to LPM
-+		 * NYET threshold.
-+		 */
-+		WARN_ONCE(dwc->revision < DWC3_REVISION_240A
-+				&& dwc->has_lpm_erratum,
-+				"LPM Erratum not available on dwc3 revisisions < 2.40a\n");
-+
-+		if (dwc->has_lpm_erratum && dwc->revision >= DWC3_REVISION_240A)
-+			reg |= DWC3_DCTL_LPM_ERRATA(dwc->lpm_nyet_threshold);
-+
- 		dwc3_writel(dwc->regs, DWC3_DCTL, reg);
- 	} else {
- 		reg = dwc3_readl(dwc->regs, DWC3_DCTL);
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index 9209d02..e128308 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -25,5 +25,8 @@ struct dwc3_platform_data {
- 	enum usb_dr_mode dr_mode;
- 	bool tx_fifo_resize;
- 
-+	u8 lpm_nyet_threshold;
-+
- 	unsigned disable_scramble_quirk:1;
-+	unsigned has_lpm_erratum:1;
- };
+One solution that others are using is to have your own version of pci_scan_root_bus() where after
+the root bus is created you add your msi_chip information into the bus and then go about scanning.
+
+If enough implementations do that then I hope to convince Bjorn that the generic code needs to change
+to be able to pass the msi_chip information.
+
+If you are interested in working on the generic framework, my plan currently is to split the creation
+of the pci_host_bridge out of the pci_create_root_bus() function and add the msi_chip-related functions
+to retrieve the chip as ops for the pci_host_bridge(). Then your driver would look like:
+
+struct hisilicon_host_bridge {
+	struct pci_host_bridge bridge;
+	.....
+};
+
+struct pci_host_bridge_ops {
+	struct msi_chip *get_msi_chip(...);
+	...
+};
+
+struct pci_host_bridge_ops hb_ops = {
+	.get_msi_chip = hs_hb_get_msi_chip;
+	...
+};
+
+int hs_hb_probe(...)
+{
+	struct hisilicon_host_bridge *hshb;
+
+	hshb = kzalloc(...);
+	...
+	pci_setup_host_bridge(&hshb->bridge, hb_ops);
+	...
+
+	pci_scan_root_bus(...., &hshb->bridge);
+	...
+	return 0;
+}
+
+
+
+
+> 
+> void pcibios_add_bus(struct pci_bus *bus)
+> {
+>        struct pci_sys_data *sys = bus->sysdata;
+>        if (sys->add_bus)
+>                  sys->add_bus(bus);
+>  }
+> 
+> However In arm64, there is no strcut like hw_pci, and I have no idea about how to fix up the msi.
+> 
+> So, I will be very appreciated if you can give some useful guidance.
+> 
+> Best regards.
+> 
+> Dacai
+> 
+> [1] https://lkml.org/lkml/2014/9/23/852
+> [2] http://thread.gmane.org/gmane.linux.kernel/1684318
+> 
+> The test log as  follows:
+> 
+> hisi-pcie b0000000.pcie: PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [bus 00-0f]
+> pci_bus 0000:00: root bus resource [mem 0xb4100000-0xb4ffffff]
+> pci 0000:00:00.0: [19e5:0660] type 01 class 0x060400
+> pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x0fffffff]
+> pci 0000:00:00.0: supports D1 D2
+> pci 0000:00:00.0: PME# supported from D0 D1 D3hot
+> pci 0000:00:00.0: of_irq_parse_pci() failed with rc=-22
+> pci 0000:01:00.0: [197b:2362] type 00 class 0x010601
+> pci 0000:01:00.0: reg 0x10: [io  0x0000-0x0007]
+> pci 0000:01:00.0: reg 0x14: [io  0x0000-0x0003]
+> pci 0000:01:00.0: reg 0x18: [io  0x0000-0x0007]
+> pci 0000:01:00.0: reg 0x1c: [io  0x0000-0x0003]
+> pci 0000:01:00.0: reg 0x20: [io  0x0000-0x000f]
+> pci 0000:01:00.0: reg 0x24: [mem 0x00000000-0x000001ff]
+> pci 0000:01:00.0: reg 0x30: [mem 0x00000000-0x0000ffff pref]
+> pci 0000:01:00.0: PME# supported from D3hot
+> pci 0000:01:00.0: of_irq_parse_pci() failed with rc=-22
+> pci 0000:00:00.0: BAR 0: can't assign mem (size 0x10000000)
+> pci 0000:00:00.0: BAR 8: assigned [mem 0xb4100000-0xb41fffff]
+> pci 0000:00:00.0: BAR 7: can't assign io (size 0x1000)
+> pci 0000:01:00.0: BAR 6: assigned [mem 0xb4100000-0xb410ffff pref]
+> pci 0000:01:00.0: BAR 5: assigned [mem 0xb4110000-0xb41101ff]
+> pci 0000:01:00.0: BAR 4: can't assign io (size 0x10)
+> pci 0000:01:00.0: BAR 0: can't assign io (size 0x8)
+> pci 0000:01:00.0: BAR 2: can't assign io (size 0x8)
+> pci 0000:01:00.0: BAR 1: can't assign io (size 0x4)
+> pci 0000:01:00.0: BAR 3: can't assign io (size 0x4)
+
+You don't seem to have declared in your DT your IO range, but
+the devices you have need some IO space.
+
+Best regards,
+Liviu
+
+> pci 0000:00:00.0: PCI bridge to [bus 01]
+> pci 0000:00:00.0:   bridge window [mem 0xb4100000-0xb41fffff]
+> ...........................................................
+> ahci 0000:01:00.0: version 3.0
+> ahci 0000:01:00.0: enabling device (0000 -> 0002)
+> ahci 0000:01:00.0: ITT 1 entries, 0 bits
+> ahci 0000:01:00.0: ID:0 pID:8448 vID:48
+> its_msi_setup_irq 1222,msi addr 0xb7010040,msi data 0x0,msi_phys 0xb7000000
+> ahci 0000:01:00.0: AHCI 0010.0100 32 slots 2 ports 3 Gbps 0x3 impl SATA mode
+> ahci 0000:01:00.0: flags: 64bit ncq pm led clo pmp pio slum part
+> scsi0 : ahci
+> scsi1 : ahci
+> ata1: SATA max UDMA/133 abar m512@0xb4110000 port 0xb4110100 irq 48
+> ata2: SATA max UDMA/133 abar m512@0xb4110000 port 0xb4110180 irq 48
+> ..............................................................
+> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata1.00: ATA-8: ST3250311SV, CV11, max UDMA/133
+> ata1.00: 488397168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> ata1.00: configured for UDMA/133
+> scsi 0:0:0:0: Direct-Access     ATA      ST3250311SV      CV11 PQ: 0 ANSI: 5
+> sd 0:0:0:0: Attached scsi generic sg0 type 0
+> sd 0:0:0:0: [sda] 488397168 512-byte logical blocks: (250 GB/232 GiB)
+> sd 0:0:0:0: [sda] Write Protect is off
+> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO
+>  or FUA
+>  sda: sda1
+> sd 0:0:0:0: [sda] Attached SCSI disk
+> ...........................................................
+> sh-4.2# lspci
+> 00:00.0 Class 0604: 19e5:0660
+> 01:00.0 Class 0106: 197b:2362
+> sh-4.2# ls /dev/sda
+> /dev/sda
+> sh-4.2# ls /dev/sda*
+> /dev/sda   /dev/sda1
+> sh-4.2# fdisk -l
+> 
+> Disk /dev/sda: 250.0 GB, 250059350016 bytes
+> 255 heads, 63 sectors/track, 30401 cylinders
+> Units = cylinders of 16065 * 512 = 8225280 bytes
+> 
+>    Device Boot      Start         End      Blocks  Id System
+> /dev/sda1               1        1217     9775521  83 Linux
+> ............................................................
+> 
+> 
+> 
+
 -- 
-1.9.1
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
