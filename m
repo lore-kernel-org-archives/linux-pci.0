@@ -1,129 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <54471FB4.4030602@hp.com>
-Date: Wed, 22 Oct 2014 11:08:36 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Wed, 8 Oct 2014 12:46:07 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Robert Richter <rric@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH v13 00/12] Support for creating generic PCI host bridges
+ from DT
+Message-ID: <20141008114606.GG4652@e106497-lin.cambridge.arm.com>
+References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140929194335.GA13747@google.com>
+ <20140930103942.GO841@e106497-lin.cambridge.arm.com>
+ <20140930161805.GB5625@google.com>
+ <20140930165431.GV841@e106497-lin.cambridge.arm.com>
+ <20141008074428.GD20256@rric.localhost>
+ <20141008091321.GC4652@e106497-lin.cambridge.arm.com>
+ <20141008103600.GS20170@rric.localhost>
 MIME-Version: 1.0
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"Hoemann, Jerry" <jerry.hoemann@hp.com>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	Baoquan He <bhe@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	doug.hatch@hp.com,
-	"ishii.hironobu@jp.fujitsu.com" <ishii.hironobu@jp.fujitsu.com>,
-	zhenhua@hp.com,
-	"Vaden, Tom L (HP Server OS Architecture)" <tom.vaden@hp.com>
-Subject: Re: [PATCH 0/8] iommu/vt-d: Fix crash dump failure caused by legacy
- DMA/IO
-References: <1398386198-19304-1-git-send-email-bill.sumner@hp.com> <1398854973.12733.23.camel@i7.infradead.org> <20140702133258.GN26537@8bytes.org> <CAErSpo69VmK5zD-ztNVHCA=KrK8zucqubY17z0K3rcpe6ReNUA@mail.gmail.com> <87mw8on7lx.fsf@x220.int.ebiederm.org>
-In-Reply-To: <87mw8on7lx.fsf@x220.int.ebiederm.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20141008103600.GS20170@rric.localhost>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Need more time to read and think about these mails. I just want to 
-clarify one thing: Bill has left HP, and now I inherited his works.
-That's why I sent an update of his patch
-	https://lkml.org/lkml/2014/10/21/134
+On Wed, Oct 08, 2014 at 11:36:00AM +0100, Robert Richter wrote:
+> On 08.10.14 10:13:21, Liviu Dudau wrote:
+> > On Wed, Oct 08, 2014 at 08:44:28AM +0100, Robert Richter wrote:
+> > > I assume pci/host-generic is the latest now with this issue fixed as
+> > > the commit date is 2014-10-01 past you message above, right? So is it
+> > > ok to rebase our host controller driver onto pci/host-generic or will
+> > > there be further updates or any other branch that is newer?
+> > 
+> > You can rebase either on top of Bjorn's next branch or use linux-next. Hope to
+> > see it in v3.18 soon.
+> 
+> Thanks Liviu. So I will use pci/host-generic which is what is in
+> pci/next:
+> 
+>  d1e6dc91b532 arm64: Add architectural support for PCI
 
-On 10/22/2014 10:47 AM, Eric W. Biederman wrote:
-> Bjorn Helgaas <bhelgaas@google.com> writes:
->
->> [-cc Bill, +cc Zhen-Hua, Eric, Tom, Jerry]
->>
->> Hi Joerg,
->>
->> I was looking at Zhen-Hua's recent patches, trying to figure out if I
->> need to do anything with them.  Resetting devices in the old kernel
->> seems like a non-starter.  Resetting devices in the new kernel, ...,
->> well, maybe.  It seems ugly, and it seems like the sort of problem
->> that IOMMUs are designed to solve.  Anyway, I found this old
->> discussion that I didn't quite understand:
->
-> For context here is the kexec on panic design, and what I know from
-> previous rounds of similar conversations.
->
-> The way kexec on panic aka kdump is designed to work is that the
-> recovery kernel lives in a piece of memory reserved at boot time and
-> known not to be in use by any driver (because we never ever use it for
-> DMA).  If DMA's continue from any source the old kernel may be a little
-> more corrupted but our currently running kernel should not.
->
-> Device drivers that we use in the recovery kernel are required to be
-> able to initialize their devices from an arbitrary state or fail to
-> initialize their devices.
->
-> We have discussed things on various occassions but IOMMUs all have their
-> own individual idiosynchrousies and came late to the party so that it
-> is hard to generalize.
->
-> The reserved region is generally low enough in memory that simply
-> not using IOMMUs works.
->
-> The major challenge with initializing an IOMMU would be that there are
-> potentially devices whose driver is not loaded in the recover kernel
-> with on-going DMA sessions (perhaps a NIC in response to network
-> packet).
->
-> Which essentially means that if you are going to use an IOMMU slot in a
-> recovery kernel you have to either know that IOMMU slot was reserved for
-> the recovery kernel (what has always felt like the easiest way to me).
-> Or you have to know everything that could target that IOMMU slot has
-> been reset or has it's driver loaded.
->
-> I have always thought the simplist and easiest solution would be to
-> reserve a few IOMMU slots for the kexec on panic kernel.  But if folks
-> can find other ways to guarantee that an on-going DMA isn't targeting
-> an IOMMU slot (such as resetting everything downstream from that
-> IOMMU slot) more power to you.
->
->> On Wed, Jul 2, 2014 at 7:32 AM, Joerg Roedel <joro@8bytes.org> wrote:
->>> On Wed, Apr 30, 2014 at 11:49:33AM +0100, David Woodhouse wrote:
->>
->>>> After the last round of this patchset, we discussed a potential
->>>> improvement where you point every virtual bus address at the *same*
->>>> physical scratch page.
->>>
->>> That is a solution to prevent the in-flight DMA failures. But what
->>> happens when there is some in-flight DMA to a disk to write some inodes
->>> or a new superblock. Then this scratch address-space may cause
->>> filesystem corruption at worst.
->>
->> This in-flight DMA is from a device programmed by the old kernel, and
->> it would be reading data from the old kernel's buffers.  I think
->> you're suggesting that we might want that DMA read to complete so the
->> device can update filesystem metadata?
->>
->> I don't really understand that argument.  Don't we usually want to
->> stop any data from escaping the machine after a crash, on the theory
->> that the old kernel is crashing because something is catastrophically
->> wrong and we may have already corrupted things in memory?  If so,
->> allowing this old DMA to complete is just as likely to make things
->> worse as to make them better.
->>
->> Without kdump, we likely would reboot through the BIOS and the device
->> would get reset and the DMA would never happen at all.  So if we made
->> the dump kernel program the IOMMU to prevent the DMA, that seems like
->> a similar situation.
->>
->>> So with this in mind I would prefer initially taking over the
->>> page-tables from the old kernel before the device drivers re-initialize
->>> the devices.
->>
->> This makes the dump kernel more dependent on data from the old kernel,
->> which we obviously want to avoid when possible.
->>
->> I didn't find the previous discussion where pointing every virtual bus
->> address at the same physical scratch page was proposed.  Why was that
->> better than programming the IOMMU to reject every DMA?
->>
->> Bjorn
->
-> Eric
->
+Yes, that's the one.
+
+Best regards,
+Liviu
+
+> 
+> -Robert
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
