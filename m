@@ -1,106 +1,70 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <5448A2A7.9090407@huawei.com>
-Date: Thu, 23 Oct 2014 14:39:35 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qg0-f46.google.com ([209.85.192.46]:34468 "EHLO
+	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755362AbaJHASc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Oct 2014 20:18:32 -0400
+Received: by mail-qg0-f46.google.com with SMTP id z60so6212034qgd.19
+        for <linux-pci@vger.kernel.org>; Tue, 07 Oct 2014 17:18:32 -0700 (PDT)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>
-Subject: Re: [PATCH v3 09/27] arm/PCI: Clean unused pcibios_add_bus() and
- pcibios_remove_bus()
-References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com> <1413342435-7876-10-git-send-email-wangyijing@huawei.com> <20141023053858.GD11770@google.com>
-In-Reply-To: <20141023053858.GD11770@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <1412725790.30859.214.camel@pasglop>
+References: <1412656696.30859.122.camel@pasglop>
+	<CADnq5_NFt8neiOAg896d3-DbAn0rnrE7iXaTFmkNGSg-J9oSkA@mail.gmail.com>
+	<1412725790.30859.214.camel@pasglop>
+Date: Tue, 7 Oct 2014 20:18:32 -0400
+Message-ID: <CADnq5_OhSYa+zXBp03_rrvNFTahcaQrtX2o5+H049Nig9378gg@mail.gmail.com>
+Subject: Re: [PATCH v3 4/7] sound/radeon: Add quirk for broken 64-bit MSI
+From: Alex Deucher <alexdeucher@gmail.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Takashi Iwai <tiwai@suse.de>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>  /*
->>   * Swizzle the device pin each time we cross a bridge.  If a platform does
->>   * not provide a swizzle function, we perform the standard PCI swizzling.
->> @@ -478,8 +464,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->>  		sys->swizzle = hw->swizzle;
->>  		sys->map_irq = hw->map_irq;
->>  		sys->align_resource = hw->align_resource;
->> -		sys->add_bus = hw->add_bus;
->> -		sys->remove_bus = hw->remove_bus;
->>  		INIT_LIST_HEAD(&sys->resources);
->>  
->>  		if (hw->private_data)
-> 
-> What do the core changes below have to do with the ARM changes above?
-> They should be a separate patch unless they can't be separated.
-
-Hm, it's not the thing have to do, because the changes below is only used by arm arch, so I put it here
-together. It's ok to split the core changes out to another one.
-
-> 
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index f11108c..56e54ad 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -32,12 +32,10 @@ int pci_msi_ignore_mask;
->>  
->>  int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
->>  {
->> -	struct msi_chip *chip = dev->bus->msi;
->> +	struct msi_chip *chip;
->>  	int err;
->>  
->> -	if (!chip)
->> -		chip = pci_msi_chip(dev->bus);
->> -
->> +	chip = pci_msi_chip(dev->bus);
->>  	if (!chip || !chip->setup_irq)
->>  		return -EINVAL;
->>  
->> @@ -51,10 +49,7 @@ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
->>  void __weak arch_teardown_msi_irq(unsigned int irq)
->>  {
->>  	struct msi_desc *entry = irq_get_msi_desc(irq);
->> -	struct msi_chip *chip = entry->dev->bus->msi;
->> -
->> -	if (!chip)
->> -		chip = pci_msi_chip(entry->dev->bus);
->> +	struct msi_chip *chip = pci_msi_chip(entry->dev->bus);
->>  
->>  	if (!chip || !chip->teardown_irq)
->>  		return;
->> -- 
->> 1.7.1
+On Tue, Oct 7, 2014 at 7:49 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Tue, 2014-10-07 at 19:47 -0400, Alex Deucher wrote:
+>> > While recent ASICs have that problem fixed, they don't seem to
+>> > be listed in the PCI IDs of the current driver, so let's quirk all
+>> > the ATI HDMI for now. The consequences are nil on x86 anyway.
+>> >
+>> > Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+>> > Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>> > CC: <stable@vger.kernel.org>
 >>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
+>> Further discussion with the hw teams have revealed that this is still
+>> an issue on newer asics so I think your original patch is correct
+>> after all.  Just disable 64 bit MSIs on all AMD audio PCI ids.
+>
+> Ok. You confirm that this is however good on newer video side right ?
+>
 
+Yes, this was definitely fixed on the GPU side.
 
--- 
-Thanks!
-Yijing
+> Also, is there a known issue that if MSI were once enabled, the chip
+> still shoots them even if we disable them in config space ?
+>
+> When testing my new patch set, I was trying to test the error path
+> when the arch does *not* honor the limitation. The error went back
+> up to the driver as far as I can tell (ie, pci_enable_msi() failed),
+> but the system still got into error state as if the card had tried
+> to shoot an MSI to the wrong address.
+>
+> (I suspect the graphics side)
 
+I'm not aware of any such issue, but I can ask the hw guys if there is
+anything special required to disable MSIs beyond the pci config space
+settings.
+
+Alex
+
+>
+> Cheers,
+> Ben.
+>
+>
