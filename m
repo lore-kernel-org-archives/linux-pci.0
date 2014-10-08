@@ -1,139 +1,162 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout1.freenet.de ([195.4.92.91]:59806 "EHLO mout1.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751137AbaJJJpl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 10 Oct 2014 05:45:41 -0400
-Message-ID: <5437A958.3000201@maya.org>
-Date: Fri, 10 Oct 2014 11:39:36 +0200
-From: Andreas Hartmann <andihartmann@freenet.de>
+Received: from service87.mimecast.com ([91.220.42.44]:45440 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751610AbaJHQoh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Oct 2014 12:44:37 -0400
+Date: Wed, 8 Oct 2014 17:44:32 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Robert Richter <robert.richter@caviumnetworks.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Robert Richter <rric@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Sunil Goutham <sgoutham@cavium.com>
+Subject: Re: [PATCH 3/6] pci, thunder: Add PCIe host controller devicetree
+ bindings
+Message-ID: <20141008164432.GC15382@e106497-lin.cambridge.arm.com>
+References: <1411573068-12952-1-git-send-email-rric@kernel.org>
+ <1411573068-12952-4-git-send-email-rric@kernel.org>
+ <3082935.e3X4GsVUDn@wuerfel>
+ <20141007142744.GE31556@rric.localhost>
+ <20141007150149.GW4652@e106497-lin.cambridge.arm.com>
+ <20141008084927.GH31556@rric.localhost>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass
- through (vfio)
-References: <20140923210318.498dacbd@dualc.maya.org> <1411502866.24563.8.camel@ul30vt.home>
-In-Reply-To: <1411502866.24563.8.camel@ul30vt.home>
+In-Reply-To: <20141008084927.GH31556@rric.localhost>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-shortly: I retested w/ qemu 2.1.0 and Linux 3.17.0 - no change in behaviour.
+On Wed, Oct 08, 2014 at 09:49:27AM +0100, Robert Richter wrote:
+> On 07.10.14 16:01:49, Liviu Dudau wrote:
+> > On Tue, Oct 07, 2014 at 03:27:44PM +0100, Robert Richter wrote:
+> > > On 24.09.14 18:06:04, Arnd Bergmann wrote:
+> > > > > +               compatible = "cavium,thunder-pcie";
+> > > > > +               device_type = "pci";
+> > > > > +               msi-parent = <&its>;
+> > > > > +               bus-range = <0 255>;
+> > > > > +               #size-cells = <2>;
+> > > > > +               #address-cells = <3>;
+> > > > > +               reg = <0x8480 0x00000000 0 0x10000000>;  /* Configuration space */
+> > > > > +               ranges = <0x03000000 0x8010 0x00000000 0x8010 0x00000000 0x70 0x00000000>, /* mem ranges */
+> > > > > +                       <0x03000000 0x8300 0x00000000 0x8300 0x00000000 0x80 0x00000000>,
+> > > > > +                       <0x03000000 0x87e0 0x00000000 0x87e0 0x00000000 0x01 0x00000000>;
+> > > > > +        };
+> > > > 
+> > > > If you claim the entire 0-255 bus range, I think you should also
+> > > > specify a domain, otherwise it's not predictable which domain you
+> > > > get.
+> > > 
+> > > Liviu's code assigns a unique id to the domain if missing, see
+> > > of_pci_get_domain_nr(). So I don't think we need to add a "pci-domain"
+> > > property here.
+> > 
+> > Not anymore! That function is gone in v12 onwards. What is in -next has
+> > a new function called of_get_pci_domain_nr() (slight name change) but
+> > that only gets the value set in the "linux,pci-domain" property of the
+> > device node. It is the choice of the host bridge driver to use that
+> > function or to use pci_get_new_domain_nr() which *does* generate an
+> > unique id every time it gets called.
+> 
+> I am quite confused a bit on which is the latest code base now. I was
+> looking into Bjorn's pci/host-generic and there is a different
+> implemetation:
+> 
+> ----
+> /**
+>  * This function will try to obtain the host bridge domain number by
+>  * using of_alias_get_id() call with "pci-domain" as a stem.  If that
+>  * fails, a local allocator will be used.  The local allocator can
+>  * be requested to return a new domain_nr if the information is missing
+>  * from the device tree.
+>  *
+>  * @node: device tree node with the domain information
+>  * @allocate_if_missing: if DT lacks information about the domain nr,
+>  * allocate a new number.
+>  *
+>  * Returns the associated domain number from DT, or a new domain number
+>  * if DT information is missing and @allocate_if_missing is true.  If
+>  * @allocate_if_missing is false then the last allocated domain number
+>  * will be returned.
+>  */
+> int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
+> {
+>         int domain;
+> 
+>         domain = atomic_read(&of_domain_nr);
+>         if (domain == -1) {
+>                 /* first run, get max defined domain nr in device tree */
+>                 domain = of_get_max_pci_domain_nr();
+>                 /* then set the start value for allocator to be max + 1 */
+>                 atomic_set(&of_domain_nr, domain + 1);
+>         }
+>         domain = of_alias_get_id(node, "pci-domain");
+>         if (domain == -ENODEV) {
+>                 domain = atomic_read(&of_domain_nr);
+>                 if (allocate_if_missing)
+>                         atomic_inc(&of_domain_nr);
+>         }
+> 
+>         return domain;
+> }
+> EXPORT_SYMBOL_GPL(of_pci_get_domain_nr);
+> ----
+> 
+> This differs also from v13. Please check.
 
-Alex Williamson wrote:
-> On Tue, 2014-09-23 at 21:03 +0200, Andreas Hartmann wrote:
->> Hello!
->>
->> Since long time now, I'm using w/o any problem PCIe pass through with a
->> Gigabyte GA-990XA-UD3/GA-990XA-UD3 mainboard (AMD 990X chipset) and
->> enabled IOMMU with vfio-pci.
->>
->> The last kernel working w/o any problem is kernel 3.13.7 (I didn't use
->> .8 and .9, but I do not think they would have been problematic).
->>
->> Since 3.14.19 (I didn't test any 3.14 kernel before) I'm encountering a
->> hard and silent lock up of the complete machine when starting the VM
->> with the PCIe card passed through.
->>
->> That's the relevant PCIe card, which locks up the machine (here
->> running w/ 3.12.28) when passed to the VM:
->>
->> 03:00.0 Network controller: Qualcomm Atheros AR93xx Wireless Network Adapter (rev 01)
->>         Subsystem: Qualcomm Atheros Device 3112
->>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
->>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->>         Latency: 0, Cache Line Size: 64 bytes
->>         Interrupt: pin A routed to IRQ 17
->>         Region 0: Memory at fdbc0000 (64-bit, non-prefetchable) [size=128K]
->>         Expansion ROM at fda00000 [size=64K]
->>         Capabilities: [40] Power Management version 3
->>                 Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
->>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
->>         Capabilities: [50] MSI: Enable- Count=1/4 Maskable+ 64bit+
->>                 Address: 0000000000000000  Data: 0000
->>                 Masking: 00000000  Pending: 00000000
->>         Capabilities: [70] Express (v2) Endpoint, MSI 00
->>                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <1us, L1 <8us
->>                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
->>                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
->>                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
->>                         MaxPayload 128 bytes, MaxReadReq 512 bytes
->>                 DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
->>                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <2us, L1 <64us
->>                         ClockPM- Surprise- LLActRep- BwNot-
->>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
->>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
->>                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
->>                 DevCap2: Completion Timeout: Not Supported, TimeoutDis+, LTR-, OBFF Not Supported
->>                 DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
->>                 LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
->>                          Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
->>                          Compliance De-emphasis: -6dB
->>                 LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
->>                          EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
->>         Capabilities: [100 v1] Advanced Error Reporting
->>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->>                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->>                 UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
->>                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout+ NonFatalErr+
->>                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
->>                 AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
->>         Capabilities: [140 v1] Virtual Channel
->>                 Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
->>                 Arb:    Fixed- WRR32- WRR64- WRR128-
->>                 Ctrl:   ArbSelect=Fixed
->>                 Status: InProgress-
->>                 VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
->>                         Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
->>                         Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
->>                         Status: NegoPending- InProgress-
->>         Capabilities: [300 v1] Device Serial Number 00-00-00-00-00-00-00-00
->>         Kernel driver in use: vfio-pci
->>         Kernel modules: ath9k
->>
->>
->> Unbinding it works w/o any problem. The lock up encounters about 4 s
->> after the start of the VM.
->>
->> On 3.12.x, I can see the following message on the error terminal when
->> starting the VM: 
->> vfio-pci: 03:00.0: invalid ROM contents.
->>
->> I compared AMD-Vi debug output between 3.12 and 3.14, but couldn't see
->> any difference. I compared /proc/interrupts between 3.12 and 3.14
->> and couldn't see any difference too so far.
->>
->>
->> qemu version I'm using is 1.7.0.
->>
->>
->> It is strange(?), that a second VM using PCI (legacy) pass through works
->> w/o any problem. I tried to start the problematic VM even w/o running
->> this VM - same result: machine is locked up hard.
->>
->>
->> Do you have any idea, what could be going on there? Or how to debug it
->> to see what happened?
-
-> There weren't many vfio changes between 3.13 and 3.14.
-
-It could be a pci problem, too? It is strange, that there is no problem
-with the pci-card, but the pcie card hangs the machine!
-
-> Have you tested whether the problem still occurs on 3.16 +
-
-Same problem with 3.17.0
-
-> newer QEMU?
-
-Same problem With qemu 2.1.0.
-
->  Maybe also remove the ROM from the equation with the
-> rombar=0 option for the vfio-pci device in QEMU.
-
-Same problem :-(. The machine really is completely dead: it even pings
-any more.
+I'm not sure what you are looking at. Commit 41e5c0f81d3e does look like
+my v13. Not sure why you are still seeing this v11 version.
 
 
+> 
+> It would be good to have a stable code base to work with, so I would
+> prefer incremental patches on top of Bjorn's pci/host-generic.
 
-Regards,
-Andreas
+Agreed, but from what I can see from my side pci/host-generic and next
+have the same versions, so there should not be any confusion.
+
+Best regards,
+Liviu
+
+> 
+> > > Liviu's DT implementation that assigns a unique number differs a bit
+> > > from ACPI which states: "If _SEG [aka domain number] does not exist,
+> > > OSPM assumes that all PCI bus segments are in PCI Segment Group 0."
+> > > 
+> > > Maybe of_pci_get_domain_nr() should be similar to ACPI. If there are
+> > > multiple root bridges, the "pci-domain" property could be forced
+> > > instead.
+> > 
+> > Indeed. But the enforcing is left as an exercise to the host bridge
+> > implementor for the moment.
+> 
+> Right, can be added later.
+> 
+> Thanks,
+> 
+> -Robert
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
