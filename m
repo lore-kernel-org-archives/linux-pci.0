@@ -1,38 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:48172 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750862AbaJCFYN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 3 Oct 2014 01:24:13 -0400
-Message-ID: <1412313820.30859.2.camel@pasglop>
-Subject: Re: [PATCH v2 3/4] sound/radeon: Move 64-bit MSI quirk from arch to
- driver
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Alex Deucher <alexdeucher@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Takashi Iwai <tiwai@suse.de>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Date: Fri, 03 Oct 2014 15:23:40 +1000
-In-Reply-To: <CADnq5_PhuFbRPgzAa_hEA1czTQjY9xdLFOWhL393DN4CYDnFng@mail.gmail.com>
-References: <1412210082.10667.2.camel@pasglop>
-	 <CADnq5_PhuFbRPgzAa_hEA1czTQjY9xdLFOWhL393DN4CYDnFng@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:33747 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753326AbaJHHog (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Oct 2014 03:44:36 -0400
+Date: Wed, 8 Oct 2014 09:44:28 +0200
+From: Robert Richter <rric@kernel.org>
+To: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH v13 00/12] Support for creating generic PCI host bridges
+ from DT
+Message-ID: <20141008074428.GD20256@rric.localhost>
+References: <1412000971-9242-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140929194335.GA13747@google.com>
+ <20140930103942.GO841@e106497-lin.cambridge.arm.com>
+ <20140930161805.GB5625@google.com>
+ <20140930165431.GV841@e106497-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140930165431.GV841@e106497-lin.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-10-01 at 22:13 -0400, Alex Deucher wrote:
+Liviu, Bjorn,
 
-> The attached updated patch only flags the affected asics.
+On 30.09.14 17:54:31, Liviu Dudau wrote:
+> On Tue, Sep 30, 2014 at 05:18:05PM +0100, Bjorn Helgaas wrote:
+> > OK, I rebuilt pci/host-generic from scratch.  It consists of your v13
+> > patches + Arnd's build fix for pci_pio_to_address() in !CONFIG_OF configs.
+> 
+> Something went wrong with the integration, patch 02 adds another definition of 
+> of_pci_range_to_resource() before it is moved out of the header file for some reason.
 
-I need formal (email :-) permission to add your s-o-b (and From: while
-at it since you wrote most of it) for this patch. I'll then include
-it in my new series.
+I assume pci/host-generic is the latest now with this issue fixed as
+the commit date is 2014-10-01 past you message above, right? So is it
+ok to rebase our host controller driver onto pci/host-generic or will
+there be further updates or any other branch that is newer?
 
-Cheers,
-Ben.
+Thanks,
 
-
+-Robert
