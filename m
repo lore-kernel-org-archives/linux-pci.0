@@ -1,58 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp02.citrix.com ([66.165.176.63]:22635 "EHLO
-	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751005AbaJ1Qos (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Oct 2014 12:44:48 -0400
-Message-ID: <544FC7FC.9040807@citrix.com>
-Date: Tue, 28 Oct 2014 16:44:44 +0000
-From: David Vrabel <david.vrabel@citrix.com>
+Received: from mail-by2on0147.outbound.protection.outlook.com ([207.46.100.147]:11260
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752630AbaJHGpi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Oct 2014 02:45:38 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shengchao Guo <Shawn.Guo@freescale.com>,
+	"festevam@gmail.com" <festevam@gmail.com>,
+	"tharvey@gateworks.com" <tharvey@gateworks.com>
+Subject: RE: [PATCH v4 04/10] PCI: designware: refine setup_rc and add msi
+ data restore
+Date: Wed, 8 Oct 2014 06:45:36 +0000
+Message-ID: <4249527b13de42d8af5fc68abf48df4c@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
+	 <1412069804-17162-5-git-send-email-r65037@freescale.com>
+ <1412089108.2473.5.camel@pengutronix.de>
+In-Reply-To: <1412089108.2473.5.camel@pengutronix.de>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <xen-devel@lists.xenproject.org>
-Subject: Re: [Xen-devel] [PATCH 1/3] x86/xen: Introduce a global flag to fix
- the MSI mask bug
-References: <1414377878-23497-1-git-send-email-wangyijing@huawei.com> <1414377878-23497-2-git-send-email-wangyijing@huawei.com> <544E27F6.8010607@citrix.com> <20141027194501.GI14654@laptop.dumpdata.com>
-In-Reply-To: <20141027194501.GI14654@laptop.dumpdata.com>
-Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27/10/14 19:45, Konrad Rzeszutek Wilk wrote:
-> On Mon, Oct 27, 2014 at 11:09:42AM +0000, David Vrabel wrote:
->> On 27/10/14 02:44, Yijing Wang wrote:
->>> Commit 0e4ccb1505a9 ("PCI: Add x86_msi.msi_mask_irq() and msix_mask_irq()")
->>> fixed MSI mask bug which may cause kernel crash. But the commit
->>> made MSI code complex. Introduce a new global flag "pci_msi_ignore_mask"
->>> to ignore MSI/MSI-X to fix this issue, it's a cleaner solution.
->>> And the commit 0e4ccb1505a9 will be reverted in the later patch.
->>
->> Reviewed-by: David Vrabel <david.vrabel@citrix.com>
->>
->> In the sense that it keeps the odd Xen behaviour.  But...
->>
->> Konrad, why was this fixed like this in the first place?  IMO, it would
-> 
-> As 0e4ccb1505a9 explains:
->     PCI: Add x86_msi.msi_mask_irq() and msix_mask_irq()
->     
->     Certain platforms do not allow writes in the MSI-X BARs to setup or tear
->     down vector values.  To combat against the generic code trying to write to
->     that and either silently being ignored or crashing due to the pagetables
->     being marked R/O this patch introduces a platform override.
->     
->     Note that we keep two separate, non-weak, functions default_mask_msi_irqs()
->     and default_mask_msix_irqs() for the behavior of the arch_mask_msi_irqs()
->     and arch_mask_msix_irqs(), as the default behavior is needed by x86 PCI
->     code.
->     
->     For Xen, which does not allow the guest to write to MSI-X tables - as the
->     hypervisor is solely responsible for setting the vector values - we
->     implement two nops.
-
-My question specifically was: could this be fixed by allowing writes to
-set/clear the mask bit?  If so, why was this not done and could we do
-this now?
-
-David
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEx1Y2FzIFN0YWNoIFttYWls
+dG86bC5zdGFjaEBwZW5ndXRyb25peC5kZV0NCj4gU2VudDogVHVlc2RheSwgU2VwdGVtYmVyIDMw
+LCAyMDE0IDEwOjU4IFBNDQo+IFRvOiBaaHUgUmljaGFyZC1SNjUwMzcNCj4gQ2M6IGxpbnV4LXBj
+aS1vd25lckB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IEd1byBT
+aGF3bi0NCj4gUjY1MDczOyBmZXN0ZXZhbUBnbWFpbC5jb207IHRoYXJ2ZXlAZ2F0ZXdvcmtzLmNv
+bQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHY0IDA0LzEwXSBQQ0k6IGRlc2lnbndhcmU6IHJlZmlu
+ZSBzZXR1cF9yYyBhbmQgYWRkIG1zaQ0KPiBkYXRhIHJlc3RvcmUNCj4gDQo+IEFtIERpZW5zdGFn
+LCBkZW4gMzAuMDkuMjAxNCwgMTc6MzYgKzA4MDAgc2NocmllYiBSaWNoYXJkIFpodToNCj4gPiAt
+IG1vdmUgInByb2dyYW0gY29ycmVjdCBjbGFzcyBmb3IgUkMiIGZyb20gZHdfcGNpZV9ob3N0X2lu
+aXQoKSB0bw0KPiA+IGR3X3BjaWVfc2V0dXBfcmMoKS4gc2luY2UgdGhpcyBpcyBSQyBzZXR1cCwg
+aXQncyBiZXR0ZXIgdG8gY29udGFpbmVkDQo+ID4gaW4gZHdfcGNpZV9zZXR1cF9yYyBmdW5jdGlv
+bi4NCj4gPiBUaGVuLCBSQyBjYW4gYmUgcmUtc2V0dXAgcmVhbGx5IGJ5IGR3X3BjaWVfc2V0dXBf
+cmMoKS4NCj4gPiAtIGFkZCBvbmUgcmUtc3RvcmUgbXNpIGRhdGEgZnVuY3Rpb24uIEJlY2F1c2Ug
+dGhhdCBwY2llIGNvbnRyb2xsZXINCj4gPiBtYXliZSBwb3dlcmVkIG9mZiBkdXJpbmcgc3lzdGVt
+IHN1c3BlbmQsIGFuZCB0aGUgbXNpIGRhdGENCj4gPiBjb25maWd1cmF0aW9uIHdvdWxkIGJlIGxv
+c3QuDQo+ID4gdGhpcyBmdW5jdGlvbnMgY2FuIGJlIHVzZWQgdG8gcmVzdG9yZSB0aGUgbXNpIGRh
+dGEgZHVyaW5nIHRoZSByZXN1bWUNCj4gPiBjYWxsYmFjay4NCj4gPg0KPiA+IFNpZ25lZC1vZmYt
+Ynk6IFJpY2hhcmQgWmh1IDxyNjUwMzdAZnJlZXNjYWxlLmNvbT4NCj4gDQo+IE5BQ0suIEkgYXNr
+ZWQgeW91IHRvIHNwbGl0IHRoaXMgcGF0Y2ggYW5kIG1vdmUgaXQgYmVmb3JlIHRoZSBpbXg2IHBj
+aWUgY2hhbmdlcw0KPiBpbiB0aGUgc2VyaWVzIGluIG9yZGVyIHRvIG5vdCBicmVhayBjb21waWxh
+dGlvbiB3aXRoaW4gdGhlIHNlcmllcy4NCj4gDQpbUmljaGFyZF0gT2suIEFjY2VwdGVkLg0KPiA+
+IC0tLQ0KPiA+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jIHwgMTUgKysrKysr
+KysrKysrLS0tDQo+ID4gZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuaCB8ICAxICsN
+Cj4gPiAgMiBmaWxlcyBjaGFuZ2VkLCAxMyBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQ0K
+PiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMN
+Cj4gPiBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMNCj4gPiBpbmRleCA1Mzhi
+YmYzLi5hZTFlNmM1IDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNp
+Z253YXJlLmMNCj4gPiArKysgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jDQo+
+ID4gQEAgLTE5NCw2ICsxOTQsMTMgQEAgdm9pZCBkd19wY2llX21zaV9pbml0KHN0cnVjdCBwY2ll
+X3BvcnQgKnBwKQ0KPiA+ICAJZHdfcGNpZV93cl9vd25fY29uZihwcCwgUENJRV9NU0lfQUREUl9I
+SSwgNCwgMCk7ICB9DQo+ID4NCj4gPiArdm9pZCBkd19wY2llX21zaV9jZmdfcmVzdG9yZShzdHJ1
+Y3QgcGNpZV9wb3J0ICpwcCkgew0KPiA+ICsJZHdfcGNpZV93cl9vd25fY29uZihwcCwgUENJRV9N
+U0lfQUREUl9MTywgNCwNCj4gPiArCQkJdmlydF90b19waHlzKCh2b2lkICopcHAtPm1zaV9kYXRh
+KSk7DQo+ID4gKwlkd19wY2llX3dyX293bl9jb25mKHBwLCBQQ0lFX01TSV9BRERSX0hJLCA0LCAw
+KTsgfQ0KPiA+ICsNCj4gPiAgc3RhdGljIGludCBmaW5kX3ZhbGlkX3BvczAoc3RydWN0IHBjaWVf
+cG9ydCAqcHAsIGludCBtc2d2ZWMsIGludCBwb3MsDQo+ID4gaW50ICpwb3MwKSAgew0KPiA+ICAJ
+aW50IGZsYWcgPSAxOw0KPiA+IEBAIC01NzAsOSArNTc3LDYgQEAgaW50IF9faW5pdCBkd19wY2ll
+X2hvc3RfaW5pdChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCkNCj4gPg0KPiA+ICAJZHdfcGNpZV93cl9v
+d25fY29uZihwcCwgUENJX0JBU0VfQUREUkVTU18wLCA0LCAwKTsNCj4gPg0KPiA+IC0JLyogcHJv
+Z3JhbSBjb3JyZWN0IGNsYXNzIGZvciBSQyAqLw0KPiA+IC0JZHdfcGNpZV93cl9vd25fY29uZihw
+cCwgUENJX0NMQVNTX0RFVklDRSwgMiwgUENJX0NMQVNTX0JSSURHRV9QQ0kpOw0KPiA+IC0NCj4g
+PiAgCWR3X3BjaWVfcmRfb3duX2NvbmYocHAsIFBDSUVfTElOS19XSURUSF9TUEVFRF9DT05UUk9M
+LCA0LCAmdmFsKTsNCj4gPiAgCXZhbCB8PSBQT1JUX0xPR0lDX1NQRUVEX0NIQU5HRTsNCj4gPiAg
+CWR3X3BjaWVfd3Jfb3duX2NvbmYocHAsIFBDSUVfTElOS19XSURUSF9TUEVFRF9DT05UUk9MLCA0
+LCB2YWwpOyBAQA0KPiA+IC05MTcsNiArOTIxLDExIEBAIHZvaWQgZHdfcGNpZV9zZXR1cF9yYyhz
+dHJ1Y3QgcGNpZV9wb3J0ICpwcCkNCj4gPiAgCXZhbCA9IG1lbWxpbWl0IHwgbWVtYmFzZTsNCj4g
+PiAgCWR3X3BjaWVfd3JpdGVsX3JjKHBwLCB2YWwsIFBDSV9NRU1PUllfQkFTRSk7DQo+ID4NCj4g
+PiArCS8qIHByb2dyYW0gY29ycmVjdCBjbGFzcyBmb3IgUkMgKi8NCj4gPiArCWR3X3BjaWVfcmVh
+ZGxfcmMocHAsIFBDSV9DTEFTU19SRVZJU0lPTiwgJnZhbCk7DQo+ID4gKwl2YWwgfD0gUENJX0NM
+QVNTX0JSSURHRV9QQ0kgPDwgMTY7DQo+ID4gKwlkd19wY2llX3dyaXRlbF9yYyhwcCwgdmFsLCBQ
+Q0lfQ0xBU1NfUkVWSVNJT04pOw0KPiA+ICsNCj4gPiAgCS8qIHNldHVwIGNvbW1hbmQgcmVnaXN0
+ZXIgKi8NCj4gPiAgCWR3X3BjaWVfcmVhZGxfcmMocHAsIFBDSV9DT01NQU5ELCAmdmFsKTsNCj4g
+PiAgCXZhbCAmPSAweGZmZmYwMDAwOw0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9ob3N0
+L3BjaWUtZGVzaWdud2FyZS5oDQo+ID4gYi9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2Fy
+ZS5oDQo+ID4gaW5kZXggYTQ3NmU2MC4uYmI3NTcxNSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJz
+L3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5oDQo+ID4gKysrIGIvZHJpdmVycy9wY2kvaG9zdC9w
+Y2llLWRlc2lnbndhcmUuaA0KPiA+IEBAIC04Myw2ICs4Myw3IEBAIGludCBkd19wY2llX2NmZ19y
+ZWFkKHZvaWQgX19pb21lbSAqYWRkciwgaW50IHdoZXJlLA0KPiA+IGludCBzaXplLCB1MzIgKnZh
+bCk7ICBpbnQgZHdfcGNpZV9jZmdfd3JpdGUodm9pZCBfX2lvbWVtICphZGRyLCBpbnQNCj4gPiB3
+aGVyZSwgaW50IHNpemUsIHUzMiB2YWwpOyAgaXJxcmV0dXJuX3QgZHdfaGFuZGxlX21zaV9pcnEo
+c3RydWN0DQo+ID4gcGNpZV9wb3J0ICpwcCk7ICB2b2lkIGR3X3BjaWVfbXNpX2luaXQoc3RydWN0
+IHBjaWVfcG9ydCAqcHApOw0KPiA+ICt2b2lkIGR3X3BjaWVfbXNpX2NmZ19yZXN0b3JlKHN0cnVj
+dCBwY2llX3BvcnQgKnBwKTsNCj4gPiAgaW50IGR3X3BjaWVfbGlua191cChzdHJ1Y3QgcGNpZV9w
+b3J0ICpwcCk7ICB2b2lkDQo+ID4gZHdfcGNpZV9zZXR1cF9yYyhzdHJ1Y3QgcGNpZV9wb3J0ICpw
+cCk7ICBpbnQgZHdfcGNpZV9ob3N0X2luaXQoc3RydWN0DQo+ID4gcGNpZV9wb3J0ICpwcCk7DQo+
+IA0KPiAtLQ0KPiBQZW5ndXRyb25peCBlLksuICAgICAgICAgICAgIHwgTHVjYXMgU3RhY2ggICAg
+ICAgICAgICAgICAgIHwNCj4gSW5kdXN0cmlhbCBMaW51eCBTb2x1dGlvbnMgICB8IGh0dHA6Ly93
+d3cucGVuZ3V0cm9uaXguZGUvICB8DQoNCg0KQmVzdCBSZWdhcmRzDQpSaWNoYXJkIFpodQ0KDQo=
