@@ -1,133 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:11041 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754574AbaJUIEt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Oct 2014 04:04:49 -0400
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <kexec@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	"Li, Zhen-Hua" <zhen-hual@hp.com>
-Subject: [PATCH 1/5] iommu/vt-d: Update iommu_attach_domain() and its callers
-Date: Tue, 21 Oct 2014 16:04:15 +0800
-Message-Id: <1413878659-1383-2-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1413878659-1383-1-git-send-email-zhen-hual@hp.com>
-References: <1413878659-1383-1-git-send-email-zhen-hual@hp.com>
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:57714 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753326AbaJHHpH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Oct 2014 03:45:07 -0400
+Date: Wed, 8 Oct 2014 09:45:03 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Vidya Sagar <vidyas@nvidia.com>, bhelgaas@google.com,
+	kthota@nvidia.com, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1] PCI: tegra: Enable root port specific features
+Message-ID: <20141008074502.GD4999@ulmo>
+References: <1412677678-12011-1-git-send-email-vidyas@nvidia.com>
+ <54340A45.4050005@wwwdotorg.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="9UV9rz0O2dU/yYYn"
+In-Reply-To: <54340A45.4050005@wwwdotorg.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Allow specification of the domain-id for the new domain.
-This patch only adds the 'did' parameter to iommu_attach_domain()
-and modifies all of its callers to specify the default value of -1
-which says "no did specified, allocate a new one".
 
-This is no functional change from current behaviour -- just enables
-a functional change to be made in a later patch.
+--9UV9rz0O2dU/yYYn
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Bill Sumner:
-    Original version.
+On Tue, Oct 07, 2014 at 08:44:05AM -0700, Stephen Warren wrote:
+> On 10/07/2014 03:27 AM, Vidya Sagar wrote:
+> > Enables root port to advertise its ASPM-L1 capability
+> >  resulting in possible link entry to L1 when an ASPM-L1 capable
+> >  device is connected
+> > Enables per-controller & per-TMS clock clamping by default
+> > Enabling above features result in more power saving
+> >=20
+> > It also avoids PM message truncation by waiting for DLLP to finish
+> > before entering into L1 or L2
+> >=20
+> > Also, it adds helper functions to access root port registers
+>=20
+> > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+>=20
+> > @@ -1870,8 +1920,10 @@ static int tegra_pcie_enable(struct tegra_pcie *=
+pcie)
+> > =20
+> >  		tegra_pcie_port_enable(port);
+> > =20
+> > -		if (tegra_pcie_port_check_link(port))
+> > +		if (tegra_pcie_port_check_link(port)) {
+> > +			tegra_pcie_enable_rp_features(port);
+> >  			continue;
+> > +		}
+> > =20
+> >  		dev_info(pcie->dev, "link %u down, ignoring\n", port->index);
+>=20
+> Wouldn't it be better to have the error case inside the if block; most
+> error-handling is that way. For example:
+>=20
+> if (!tegra_pcie_port_check_link(port)) {
+> 	dev_info(pcie->dev, "link %u down, ignoring\n", port->index);
+> 	tegra_pcie_port_disable(port);
+> 	tegra_pcie_port_free(port);
+> 	continue;
+> }
+>=20
+> tegra_pcie_enable_rp_features(port);
+> ... any other "good case" code (of which there admittedly is none at
+> present)
 
-Li, Zhenhua:
-    Minor change, add change to function __iommu_attach_domain.
+Yes, that's a little more idiomatic. I think it could be a separate
+cleanup patch, though.
 
-Signed-off-by: Bill Sumner 
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
----
- drivers/iommu/intel-iommu.c | 32 +++++++++++++++++++-------------
- 1 file changed, 19 insertions(+), 13 deletions(-)
+Thierry
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index a27d6cb..1c7350d 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1531,31 +1531,36 @@ static struct dmar_domain *alloc_domain(int flags)
- }
- 
- static int __iommu_attach_domain(struct dmar_domain *domain,
--				 struct intel_iommu *iommu)
-+				 struct intel_iommu *iommu,
-+				 int domain_number)
- {
- 	int num;
- 	unsigned long ndomains;
- 
- 	ndomains = cap_ndoms(iommu->cap);
--	num = find_first_zero_bit(iommu->domain_ids, ndomains);
--	if (num < ndomains) {
--		set_bit(num, iommu->domain_ids);
--		iommu->domains[num] = domain;
--	} else {
--		num = -ENOSPC;
--	}
-+	if (domain_number < 0) {
-+		num = find_first_zero_bit(iommu->domain_ids, ndomains);
-+		if (num < ndomains) {
-+			set_bit(num, iommu->domain_ids);
-+			iommu->domains[num] = domain;
-+		} else {
-+			num = -ENOSPC;
-+		}
-+	} else
-+		num = domain_number;
- 
- 	return num;
- }
- 
- static int iommu_attach_domain(struct dmar_domain *domain,
--			       struct intel_iommu *iommu)
-+			       struct intel_iommu *iommu,
-+			       int domain_number)
- {
- 	int num;
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&iommu->lock, flags);
--	num = __iommu_attach_domain(domain, iommu);
-+	num = __iommu_attach_domain(domain, iommu, domain_number);
- 	spin_unlock_irqrestore(&iommu->lock, flags);
- 	if (num < 0)
- 		pr_err("IOMMU: no free domain ids\n");
-@@ -1574,7 +1579,7 @@ static int iommu_attach_vm_domain(struct dmar_domain *domain,
- 		if (iommu->domains[num] == domain)
- 			return num;
- 
--	return __iommu_attach_domain(domain, iommu);
-+	return __iommu_attach_domain(domain, iommu, -1);
- }
- 
- static void iommu_detach_domain(struct dmar_domain *domain,
-@@ -2230,6 +2235,7 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	u16 dma_alias;
- 	unsigned long flags;
- 	u8 bus, devfn;
-+	int did = -1;   /* Default to "no domain_id supplied" */
- 
- 	domain = find_domain(dev);
- 	if (domain)
-@@ -2263,7 +2269,7 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	domain = alloc_domain(0);
- 	if (!domain)
- 		return NULL;
--	domain->id = iommu_attach_domain(domain, iommu);
-+	domain->id = iommu_attach_domain(domain, iommu, did);
- 	if (domain->id < 0) {
- 		free_domain_mem(domain);
- 		return NULL;
-@@ -2441,7 +2447,7 @@ static int __init si_domain_init(int hw)
- 		return -EFAULT;
- 
- 	for_each_active_iommu(iommu, drhd) {
--		ret = iommu_attach_domain(si_domain, iommu);
-+		ret = iommu_attach_domain(si_domain, iommu, -1);
- 		if (ret < 0) {
- 			domain_exit(si_domain);
- 			return -EFAULT;
--- 
-2.0.0-rc0
+--9UV9rz0O2dU/yYYn
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJUNOt+AAoJEN0jrNd/PrOhmewP/RBXhTBw5sHJGT30binD1OK+
+wLbDQhnNCVoPw2WF20+ceD4Iy4hBghkjA2C2hpDxTUs4nMVqI7zvjDg9ZE3adSYH
+kNoKma7hZIJNkCwtwtb/aRqSKmdff3kMFmXUMv2e1KoM3uQMvYSAwiDXfS/P+jZg
+dhQCnIcWcOom5VOXmO4xn7IW1m1QQyClJH8U72S45SOYB/Yo1POlbX4jQnQu6CKY
+j+Unk2hxQ3H8Slrz7ObRNOWa4UioaJHrXa2h10yqlTQiwWvfFZjC7jtN9CY+5Hla
+NlTFQP96Ujta3lykL4j4oKsIRv9jXknvNwTN3rjf2riP322PR0d4Iz20k3ksSA/L
+DrHi/vFRLgsxi7j1mQPr/BQQmAJw+SETZXasDl6zFv0im27eHr69Rcg/N1NjzMR/
+XC50Xlx6rNAaEITKMB2Snk5rJw+yh7iaK8qZqwes/Cytz9ozfKsuCKB8GcrXH/uu
+c1DxABnaGgkKHfKzUWw+8vTq8OYY1cG76s/2Jn9u3ME9fFGhMqUvyiex1DOPwXVM
+dnKkgBAtIDkEsbRdLI9/Jd7tmw0HnPPwY/kmbKnxp+qBUPcsPJZuoPVhZ03N2jO4
+XG4B4E+MuU8vPXvuddex3IILrb62Qxv/tjDFOcMp1kSjA/hZ76QmHob+23aylQbm
+k6JjuNXwePm1ArA2mKCj
+=l9qc
+-----END PGP SIGNATURE-----
+
+--9UV9rz0O2dU/yYYn--
