@@ -1,89 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:56809 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751251AbaJPATV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Oct 2014 20:19:21 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 16 Oct 2014 10:19:19 +1000
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 1560F2BB003F
-	for <linux-pci@vger.kernel.org>; Thu, 16 Oct 2014 11:19:18 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay05.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s9FNshoB10289430
-	for <linux-pci@vger.kernel.org>; Thu, 16 Oct 2014 10:54:43 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s9G0JHeO007516
-	for <linux-pci@vger.kernel.org>; Thu, 16 Oct 2014 11:19:17 +1100
-Date: Thu, 16 Oct 2014 11:19:21 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+Received: from mail-bl2on0100.outbound.protection.outlook.com ([65.55.169.100]:22800
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753915AbaJHItq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Oct 2014 04:49:46 -0400
+Date: Wed, 8 Oct 2014 10:49:27 +0200
+From: Robert Richter <robert.richter@caviumnetworks.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Robert Richter <rric@kernel.org>,
+	"Rob Herring" <robh+dt@kernel.org>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"Will Deacon" <Will.Deacon@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Yang <weiyang@linux.vnet.ibm.com>
-Subject: Re: [PATCH] PCI: Make reset warning messages different
-Message-ID: <20141016001920.GA18777@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1413416470-14828-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <CAErSpo5iWEiM_0WeLJHfhus_LXo5ByUbDktWzBO1tVqwkko7Sg@mail.gmail.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Sunil Goutham <sgoutham@cavium.com>
+Subject: Re: [PATCH 3/6] pci, thunder: Add PCIe host controller devicetree
+ bindings
+Message-ID: <20141008084927.GH31556@rric.localhost>
+References: <1411573068-12952-1-git-send-email-rric@kernel.org>
+ <1411573068-12952-4-git-send-email-rric@kernel.org>
+ <3082935.e3X4GsVUDn@wuerfel>
+ <20141007142744.GE31556@rric.localhost>
+ <20141007150149.GW4652@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5iWEiM_0WeLJHfhus_LXo5ByUbDktWzBO1tVqwkko7Sg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20141007150149.GW4652@e106497-lin.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 15, 2014 at 05:48:35PM -0600, Bjorn Helgaas wrote:
->On Wed, Oct 15, 2014 at 5:41 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
->> We have same warning message for FLR and AF FLR and users can't
->> know which type of resets the PCI device is taking when there are
->> pending transactions. The patch makes them different for FLR and
->> AF FLR cases.
->>
->> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> ---
->>  drivers/pci/pci.c | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 625a4ac..2d708cd 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -3144,7 +3144,7 @@ static int pcie_flr(struct pci_dev *dev, int probe)
->>                 return 0;
->>
->>         if (!pci_wait_for_pending_transaction(dev))
->> -               dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
->> +               dev_err(&dev->dev, "Force FLR with pending transaction\n");
->>
->>         pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
->>
->> @@ -3178,7 +3178,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
->>                                  PCI_AF_STATUS_TP << 8))
->>                 goto clear;
->>
->> -       dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
->> +       dev_err(&dev->dev, "Force AF FLR with pending transaction\n");
->
->Making the text different is fine, but I don't think "FLR" and "AF
->FLR" are meaningful except to extremely technical people.  So I think
->"reset" needs to stay spelled out in the message.
->
+On 07.10.14 16:01:49, Liviu Dudau wrote:
+> On Tue, Oct 07, 2014 at 03:27:44PM +0100, Robert Richter wrote:
+> > On 24.09.14 18:06:04, Arnd Bergmann wrote:
+> > > > +               compatible = "cavium,thunder-pcie";
+> > > > +               device_type = "pci";
+> > > > +               msi-parent = <&its>;
+> > > > +               bus-range = <0 255>;
+> > > > +               #size-cells = <2>;
+> > > > +               #address-cells = <3>;
+> > > > +               reg = <0x8480 0x00000000 0 0x10000000>;  /* Configuration space */
+> > > > +               ranges = <0x03000000 0x8010 0x00000000 0x8010 0x00000000 0x70 0x00000000>, /* mem ranges */
+> > > > +                       <0x03000000 0x8300 0x00000000 0x8300 0x00000000 0x80 0x00000000>,
+> > > > +                       <0x03000000 0x87e0 0x00000000 0x87e0 0x00000000 0x01 0x00000000>;
+> > > > +        };
+> > > 
+> > > If you claim the entire 0-255 bus range, I think you should also
+> > > specify a domain, otherwise it's not predictable which domain you
+> > > get.
+> > 
+> > Liviu's code assigns a unique id to the domain if missing, see
+> > of_pci_get_domain_nr(). So I don't think we need to add a "pci-domain"
+> > property here.
+> 
+> Not anymore! That function is gone in v12 onwards. What is in -next has
+> a new function called of_get_pci_domain_nr() (slight name change) but
+> that only gets the value set in the "linux,pci-domain" property of the
+> device node. It is the choice of the host bridge driver to use that
+> function or to use pci_get_new_domain_nr() which *does* generate an
+> unique id every time it gets called.
 
-Agree, it's worthy to keep "reset". How about something like this:
+I am quite confused a bit on which is the latest code base now. I was
+looking into Bjorn's pci/host-generic and there is a different
+implemetation:
 
-   "Force function level reset with pending transaction"         - FLR
-   "Force AF function level reset with pending transaction"      - AF FLR
+----
+/**
+ * This function will try to obtain the host bridge domain number by
+ * using of_alias_get_id() call with "pci-domain" as a stem.  If that
+ * fails, a local allocator will be used.  The local allocator can
+ * be requested to return a new domain_nr if the information is missing
+ * from the device tree.
+ *
+ * @node: device tree node with the domain information
+ * @allocate_if_missing: if DT lacks information about the domain nr,
+ * allocate a new number.
+ *
+ * Returns the associated domain number from DT, or a new domain number
+ * if DT information is missing and @allocate_if_missing is true.  If
+ * @allocate_if_missing is false then the last allocated domain number
+ * will be returned.
+ */
+int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
+{
+        int domain;
 
-If above messages look good to you, I'll send out another revision.
+        domain = atomic_read(&of_domain_nr);
+        if (domain == -1) {
+                /* first run, get max defined domain nr in device tree */
+                domain = of_get_max_pci_domain_nr();
+                /* then set the start value for allocator to be max + 1 */
+                atomic_set(&of_domain_nr, domain + 1);
+        }
+        domain = of_alias_get_id(node, "pci-domain");
+        if (domain == -ENODEV) {
+                domain = atomic_read(&of_domain_nr);
+                if (allocate_if_missing)
+                        atomic_inc(&of_domain_nr);
+        }
+
+        return domain;
+}
+EXPORT_SYMBOL_GPL(of_pci_get_domain_nr);
+----
+
+This differs also from v13. Please check.
+
+It would be good to have a stable code base to work with, so I would
+prefer incremental patches on top of Bjorn's pci/host-generic.
+
+> > Liviu's DT implementation that assigns a unique number differs a bit
+> > from ACPI which states: "If _SEG [aka domain number] does not exist,
+> > OSPM assumes that all PCI bus segments are in PCI Segment Group 0."
+> > 
+> > Maybe of_pci_get_domain_nr() should be similar to ACPI. If there are
+> > multiple root bridges, the "pci-domain" property could be forced
+> > instead.
+> 
+> Indeed. But the enforcing is left as an exercise to the host bridge
+> implementor for the moment.
+
+Right, can be added later.
 
 Thanks,
-Gavin
 
->>  clear:
->>         pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
->> --
->> 1.8.3.2
->>
->
-
+-Robert
