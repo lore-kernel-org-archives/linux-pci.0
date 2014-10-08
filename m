@@ -1,242 +1,175 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <5448B21C.1020906@huawei.com>
-Date: Thu, 23 Oct 2014 15:45:32 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:59758 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752084AbaJHHoJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Oct 2014 03:44:09 -0400
+Date: Wed, 8 Oct 2014 09:44:05 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Vidya Sagar <vidyas@nvidia.com>
+Cc: bhelgaas@google.com, swarren@wwwdotorg.org, kthota@nvidia.com,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1] PCI: tegra: Enable root port specific features
+Message-ID: <20141008074404.GC4999@ulmo>
+References: <1412677678-12011-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>
-Subject: Re: [PATCH v3 00/27] Use MSI chip framework to configure MSI/MSI-X
- in all platforms
-References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com> <20141023054326.GF4795@google.com>
-In-Reply-To: <20141023054326.GF4795@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="+xNpyl7Qekk2NvDX"
+In-Reply-To: <1412677678-12011-1-git-send-email-vidyas@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> v1->v2:
->> Add a patch to make s390 MSI code build happy between patch "x86/xen/MSI: E.."
->> and "s390/MSI: Use MSI..". Fix several typo problems found by Lucas.
->>
->> RFC->v1: 
->> Updated "[patch 4/21] x86/xen/MSI: Eliminate...", export msi_chip instead
->> of #ifdef to fix MSI bug in xen running in x86. 
->> Rename arch_get_match_msi_chip() to arch_find_msi_chip().
->> Drop use struct device as the msi_chip argument, we will do that
->> later in another patchset.
->>
->> Yijing Wang (27):
-> 
-> This is a lot of stuff, and it's not all related, so putting it all
-> together in one series makes it hard for me to deal with it.
-> 
->>   MSI: Remove the redundant irq_set_chip_data()
 
-OK, will post it out separately.
+--+xNpyl7Qekk2NvDX
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> This doesn't seem related to eliminating weak functions.
-> 
->>   x86/xen/MSI: Eliminate arch_msix_mask_irq() and arch_msi_mask_irq()
->>   s390/MSI: Use __msi_mask_irq() instead of default_msi_mask_irq()
+On Tue, Oct 07, 2014 at 03:57:58PM +0530, Vidya Sagar wrote:
+> Enables root port to advertise its ASPM-L1 capability
+>  resulting in possible link entry to L1 when an ASPM-L1 capable
+>  device is connected
+> Enables per-controller & per-TMS clock clamping by default
+> Enabling above features result in more power saving
+>=20
+> It also avoids PM message truncation by waiting for DLLP to finish
+> before entering into L1 or L2
+>=20
+> Also, it adds helper functions to access root port registers
+>=20
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> ---
+>  drivers/pci/host/pci-tegra.c | 54 ++++++++++++++++++++++++++++++++++++++=
++++++-
+>  1 file changed, 53 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 3d43874..b192a47 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -237,6 +237,18 @@
+>  		(0xf  << PADS_REFCLK_CFG_DRVI_SHIFT)     \
+>  	)
+> =20
+> +#define NV_PCIE2_RP_VEND_XP1			0x00000F04
+> +#define NV_PCIE2_RP_VEND_XP_LINK_PVT_CTL_L1_ASPM_SUPPORT	(1 << 21)
+> +
+> +#define NV_PCIE2_RP_VEND_XP_BIST		0x00000F4C
+> +#define PCIE2_RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE	(1 << 28)
+> +
+> +#define NV_PCIE2_RP_PRIV_MISC			0x00000FE0
+> +#define PCIE2_RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD	(0xF << 16)
+> +#define PCIE2_RP_PRIV_MISC_CTLR_CLK_CLAMP_ENABLE	(1 << 23)
+> +#define PCIE2_RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD	(0xF << 24)
+> +#define PCIE2_RP_PRIV_MISC_TMS_CLK_CLAMP_ENABLE		(1 << 31)
 
-Will update your comments and post these together.
+These seem to be part of the same set as the RP_PRIV_* registers already
+defined earlier in the file. In fact NV_PCIE2_RP_PRIV_MISC is defined as
+RP_PRIV_MISC above already. Please move them there and drop the useless
+NV_PCIE2_ and PCIE2_ prefixes.
 
-> 
-> These two seem to go together.
-> 
->>   arm/MSI: Save MSI chip in pci_sys_data
->>   PCI: tegra: Save msi chip in pci_sys_data
->>   PCI: designware: Save msi chip in pci_sys_data
->>   PCI: rcar: Save msi chip in pci_sys_data
->>   PCI: mvebu: Save msi chip in pci_sys_data
->>   arm/PCI: Clean unused pcibios_add_bus() and pcibios_remove_bus()
->>   PCI/MSI: Remove useless bus->msi assignment
-> 
-> These seem to go together (it'd be nice if they were all capitalized the
-> same).
+>  struct tegra_msi {
+>  	struct msi_chip chip;
+>  	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+> @@ -346,6 +358,18 @@ static inline u32 pads_readl(struct tegra_pcie *pcie=
+, unsigned long offset)
+>  	return readl(pcie->pads + offset);
+>  }
+> =20
+> +static inline void rp_writel(struct tegra_pcie_port *port, u32 value,
+> +							 unsigned long offset)
+> +{
+> +	writel(value, offset + port->base);
+> +}
+> +
+> +static inline unsigned int rp_readl(struct tegra_pcie_port *port,
 
-OK, will update the titles and post together.
+readl() returns u32 and so should rp_readl().
 
-> 
-> I don't like the "msi_chip" name because the "chip" part doesn't convey
-> much information, other than telling us that apparently some sort of
-> semiconductor integrated circuit is involved.  I sort of assumed that
-> much :)
+> +							unsigned long offset)
+> +{
+> +	return readl(offset + port->base);
+> +}
 
-I think so, msi_chip easily make me confuse with x86 irq_chip msi_chip.
+I don't see much use in these, but if you really want to add them,
+please also replace any of the open-coded occurrences of this. Also
+please fix the alignment of function arguments on subsequent lines.
+They should align with the first argument on the first line.
 
-> 
-> Something like "msi_controller" would be more descriptive since we're
-> talking about an interrupt controller that accepts writes from a device and
-> turns them into CPU interrupts, e.g., a LAPIC.
+> +/* Enable various features of root port */
 
-Hm, it's a better one, arm also use "msi-controller" to represent the msi related
-object in DTS file.
+This comment is useless. It's a rewording of the function name. Either
+leave it out or describe what kind of features are being enabled. Since
+you already do that with comments in the function body, I'd suggest to
+just drop this comment out.
 
+> +static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
 
-> 
->>   PCI/MSI: Refactor struct msi_chip to make it become more common
->>   x86/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   x86/xen/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   Irq_remapping/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   x86/MSI: Remove unused MSI weak arch functions
->>   Mips/MSI: Save msi chip in pci sysdata
->>   MIPS/Octeon/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   MIPS/Xlp: Remove the dead function destroy_irq() to fix build error
->>   MIPS/Xlp/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   MIPS/Xlr/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   Powerpc/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   s390/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   arm/iop13xx/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   IA64/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   Sparc/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   tile/MSI: Use MSI chip framework to configure MSI/MSI-X irq
->>   PCI/MSI: Clean up unused MSI arch functions
->>
->>  arch/arm/include/asm/mach/pci.h                 |   10 +-
->>  arch/arm/include/asm/pci.h                      |    9 ++
->>  arch/arm/kernel/bios32.c                        |   19 +---
->>  arch/arm/mach-iop13xx/include/mach/pci.h        |    4 +
->>  arch/arm/mach-iop13xx/iq81340mc.c               |    3 +
->>  arch/arm/mach-iop13xx/iq81340sc.c               |    5 +-
->>  arch/arm/mach-iop13xx/msi.c                     |   11 ++-
->>  arch/ia64/include/asm/pci.h                     |   10 ++
->>  arch/ia64/kernel/msi_ia64.c                     |   14 ++-
->>  arch/ia64/pci/pci.c                             |    1 +
->>  arch/mips/include/asm/netlogic/xlp-hal/pcibus.h |    1 +
->>  arch/mips/include/asm/octeon/pci-octeon.h       |    4 +
->>  arch/mips/include/asm/pci.h                     |   14 +++
->>  arch/mips/pci/msi-octeon.c                      |   31 +++---
->>  arch/mips/pci/msi-xlp.c                         |   15 ++-
->>  arch/mips/pci/pci-octeon.c                      |    3 +
->>  arch/mips/pci/pci-xlp.c                         |    3 +
->>  arch/mips/pci/pci-xlr.c                         |   17 +++-
->>  arch/powerpc/include/asm/pci-bridge.h           |   15 +++
->>  arch/powerpc/kernel/msi.c                       |   12 ++-
->>  arch/powerpc/kernel/pci-common.c                |    3 +
->>  arch/s390/include/asm/pci.h                     |    9 ++
->>  arch/s390/pci/pci.c                             |   16 ++-
->>  arch/sparc/kernel/pci.c                         |   14 ++-
->>  arch/sparc/kernel/pci_impl.h                    |   12 ++
->>  arch/tile/include/asm/pci.h                     |   10 ++
->>  arch/tile/kernel/pci_gx.c                       |   13 ++-
->>  arch/x86/include/asm/pci.h                      |   18 +++-
->>  arch/x86/include/asm/x86_init.h                 |    7 --
->>  arch/x86/kernel/apic/io_apic.c                  |   12 ++-
->>  arch/x86/kernel/x86_init.c                      |   34 ------
->>  arch/x86/pci/acpi.c                             |    1 +
->>  arch/x86/pci/common.c                           |    3 +
->>  arch/x86/pci/xen.c                              |   72 +++++++------
->>  drivers/iommu/irq_remapping.c                   |   13 ++-
->>  drivers/pci/host/pci-mvebu.c                    |   10 +--
->>  drivers/pci/host/pci-tegra.c                    |   13 +--
->>  drivers/pci/host/pcie-designware.c              |   15 +--
->>  drivers/pci/host/pcie-rcar.c                    |   13 +--
->>  drivers/pci/msi.c                               |  133 ++++++++++-------------
->>  drivers/pci/probe.c                             |    1 -
->>  include/linux/msi.h                             |   24 ++---
->>  include/linux/pci.h                             |    1 +
->>  43 files changed, 379 insertions(+), 269 deletions(-)
-> 
-> Huh.  I was hoping this was going to simplify things, and maybe it does
-> somehow, but it's unfortunate that it adds 110 lines of code overall.  Does
-> that seem right to you?  Why does it add code?
+I think a better name would be tegra_pcie_port_enable_features() so that
+the name more accurately reflects what "object" the function operates
+on.
 
-I filter out these patches which add code.
+> +{
+> +	unsigned int data;
 
-[PATCH v3 04/27] arm/MSI: Save MSI chip in pci_sys_data
- 5 files changed, 33 insertions(+), 0 deletions(-)
-Insertions code mainly to introduce arch specific pci_msi_chip() to extract msi_chip from pci_sys_data, and temporary #ifdef
+Should be u32 and a more common name as used in this driver is "value".
 
-[PATCH v3 11/27] PCI/MSI: Refactor struct msi_chip to make it become more common
- 2 files changed, 19 insertions(+), 0 deletions(-)
-Insertions here is to add msi ops like restore, teardown to msi_chip.
+> +
+> +	/* Power mangagement settings */
 
-[PATCH v3 12/27] x86/MSI: Use MSI chip framework to configure MSI/MSI-X irq
- 4 files changed, 36 insertions(+), 0 deletions(-)
-Arch specific pci_msi_chip() and declaration of msi_chip in x86, also some temporary code to compile ok.
+"management". Though I'm not sure why this comment is here. My best
+guess is that you want to group features. Comments are terrible for
+grouping code. Perhaps since everything in this function is related to
+power management a better name would be tegra_pcie_port_enable_pm().
+That gives you grouping for free.
 
-[PATCH v3 13/27] x86/xen/MSI: Use MSI chip framework to configure MSI/MSI-X irq
- 1 files changed, 39 insertions(+), 19 deletions(-)
-To avoid call default_teardown_msi_irq(), copy the default_teardown_msi_irq() code in this file.
+> +	/* Enable clock clamping by default */
+> +	data =3D rp_readl(port, NV_PCIE2_RP_PRIV_MISC);
+> +	data |=3D PCIE2_RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD |
+> +		PCIE2_RP_PRIV_MISC_CTLR_CLK_CLAMP_ENABLE |
+> +		PCIE2_RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD |
+> +		PCIE2_RP_PRIV_MISC_TMS_CLK_CLAMP_ENABLE;
+> +	rp_writel(port, data, NV_PCIE2_RP_PRIV_MISC);
+> +
+> +	/* Enable rootport to advertise its ASPM - L1 capability */
 
-[PATCH v3 16/27] Mips/MSI: Save msi chip in pci sysdata
- 1 files changed, 14 insertions(+), 0 deletions(-)
-Arch specific pci_msi_chip() and some #ifdef code
+"root port"
 
-[PATCH v3 17/27] MIPS/Octeon/MSI: Use MSI chip framework to configure MSI/MSI-X irq
- 3 files changed, 25 insertions(+), 13 deletions(-)
+> +	data =3D rp_readl(port, NV_PCIE2_RP_VEND_XP1);
+> +	data |=3D NV_PCIE2_RP_VEND_XP_LINK_PVT_CTL_L1_ASPM_SUPPORT;
+> +	rp_writel(port, data, NV_PCIE2_RP_VEND_XP1);
+> +
+> +	/* LTSSM : wait for DLLP to finish before entering L1 or L2/L3 */
+> +	/* to avoid truncating PM messages resulting in receiver errors */
 
-Archs Use msi chip framework to configure MSI/MSI-x
- 3 files changed, 13 insertions(+), 2 deletions(-)
- 1 files changed, 15 insertions(+), 2 deletions(-)
- 3 files changed, 28 insertions(+), 2 deletions(-)
- 2 files changed, 19 insertions(+), 2 deletions(-)
- 4 files changed, 20 insertions(+), 3 deletions(-)
- 3 files changed, 21 insertions(+), 4 deletions(-)
- 2 files changed, 24 insertions(+), 2 deletions(-)
- 2 files changed, 21 insertions(+), 2 deletions(-)
+Proper style for block comments is:
 
-So the most adding code is to introduce arch specific pci_msi_chip(), this one will be removed after we make
-pci_host_bridge generic and save msi_chip in it. There are also lots of #ifdef in arm code for msi_chip.
+	/*
+	 * LTSSM: ...
+	 * ... errors
+	 */
 
-> 
-> Who do you want to apply this?  I can take it if that makes the most sense,
+Thierry
 
-I hope you can apply this.
+--+xNpyl7Qekk2NvDX
+Content-Type: application/pgp-signature
 
-> but I'd like acks from the architecture folks for their pieces, and
-> especially one from Thomas for the overall direction and the x86 parts.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-OK.
+iQIcBAEBAgAGBQJUNOtEAAoJEN0jrNd/PrOhinsQAIh+nVCpowYrtwKp9BFipdqy
+WpGe59eVPsJk0xCynYw4sExbYtgEk+nxUiPsxRoKMtIThMVO2IJi1NluH2PKonIj
++vLtoa35iz9BK6DQR+2+blTgaKhJfr9snP+mDmNqQjKwRH3SuCFV9p2cyTt9qswv
+wjyWmytyX0qVKknfI1beuRjwaYmGCNW77S8vhJlsVEzahVqrDi8Dqojfw8x1eqtM
+ZEqWyceJJkIODy8m5TApiEVhOr55PATFZK2N2OWpZmcwkJXuz3HxAitKam8XTAKp
+AMpUcD4BoALKv2CHKG6cRD3zANo+iQ2NiZxpDegdmHOENLBK/M5jEo62v9i8FucG
+nEKOh004cLE7vvJrtnxBhGZ0fC3BB1+7yma45sx2Bx6G2ycwblWedTMDnu2XQ2PV
+MQIjauIvi3LgvuOTCYUvWCQHT1oD9PmkeQnFsOEVuZJHDfcf4OdSPagB56pE0H+w
+Kc8zIr3/d5xizPrDcI9xMzugK9mVls8wDYwu72gkT5UkAYRIO25e6i/qK9D18LKn
+z9OTzj7hydeGOLVnOqpS+ZgYyvIiOnvpfGrUI3WmROSu0EX7n9uSv/tbE9Zteh3o
+Fr+xPQPuuc2l2DsnkTYeuE2R85lJcmPleaNeIF8dX2ThdSrdq56QN5Jc1i5kcgeR
+SCZ0R6Rwxyx3LYZx4G+W
+=nPr3
+-----END PGP SIGNATURE-----
 
-> 
-> If you want me to take this, can you refresh it to be based on v3.18-rc1?
-> I tried to apply it on v3.18-rc1, but [15/27] didn't apply because of
-> conflicts in arch/x86/kernel/apic/io_apic.c.
-
-OK.
-
-> 
-> I'll look at these more tomorrow, I'm getting bleary-eyed tonight.
-
-Thanks for your review and comments very much!
-
-Thanks!
-Yijing.
-
-> 
-> Bjorn
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+--+xNpyl7Qekk2NvDX--
