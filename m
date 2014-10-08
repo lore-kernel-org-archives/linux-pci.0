@@ -1,42 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout3.freenet.de ([195.4.92.93]:43783 "EHLO mout3.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161172AbaJ3U1e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 16:27:34 -0400
-Message-ID: <54529DC8.30103@maya.org>
-Date: Thu, 30 Oct 2014 21:21:28 +0100
-From: Andreas Hartmann <andihartmann@freenet.de>
+Received: from mout.kundenserver.de ([212.227.126.130]:59774 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753035AbaJHOr4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Oct 2014 10:47:56 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"rmk+kernel@arm.linux.org.uk" <rmk+kernel@arm.linux.org.uk>,
+	"tglx@linutronix.de" <tglx@linutronix.de>
+Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
+Date: Wed, 08 Oct 2014 16:47:43 +0200
+Message-ID: <2323270.n17xqW47JB@wuerfel>
+In-Reply-To: <20141008101942.GA7179@e102568-lin.cambridge.arm.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com> <3978481.XNAIA6gzAG@wuerfel> <20141008101942.GA7179@e102568-lin.cambridge.arm.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass
- through (vfio)
-References: <20140923210318.498dacbd@dualc.maya.org>										 <20141010225408.GA24493@google.com> <5438CC1E.3060407@maya.org>										 <1413360267.4202.70.camel@ul30vt.home> <54406B34.1050808@maya.org>										 <1413925580.4202.189.camel@ul30vt.home>									 <1413927152.4202.195.camel@ul30vt.home> <5447D9D9.9030909@maya.org>								 <1414010215.4202.275.camel@ul30vt.home> <54492606.5090308@maya.org>							 <1414082022.27420.39.camel@ul30vt.home> <54493BFA.8010609@maya.org>						 <1414093023.27420.40.camel@ul30vt.home> <544B3D14.70907@maya.org>					 <1414533068.27420.226.camel@ul30vt.home> <54511A16.30602@maya.org>				 <1414604677.27420.263.camel@ul30vt.home> <54512A91.2010606@maya.org>			 <1414606581.27420.266.camel@ul30vt.home>			 <20141029204344.61d5fc73@dualc.maya.org>		 <1414615824.27420.281.camel@ul30vt.home> <545268E8.3080107@maya.org>	 <1414688299.27420.292.camel@ul30vt.home>	 <20141030200922.15126d7a@dualc.maya.org> <1414698349.27420.302.camel@ul30vt.home>
-In-Reply-To: <1414698349.27420.302.camel@ul30vt.home>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Alex Williamson wrote:
-> On Thu, 2014-10-30 at 20:09 +0100, Andreas Hartmann wrote:
-[...]
->> Well, but what to do now? I know how to "fix" it. But this means I have
->> to compile my kernels again on my own if it is >= 3.14.
+On Wednesday 08 October 2014 11:19:43 Lorenzo Pieralisi wrote:
 > 
-> Let's not give up hope just yet, I'd like to try another bus reset
-> mechanism with setpci.  Install the Atheros card and bind it to
-> pci-stub, then do:
-> 
-> setpci -s 00:05.0 68.w=0010:0010
-> sleep 0.1
-> setpci -s 00:05.0 68.w=0000:0010
-> sleep 1
-> lspci -xxx -s 3:00.0
+> Ok. So, unless I am missing something, on platform with mem_offset != 0
+> /proc and /sys interfaces for remapping PCI resources can't work (IIUC
+> the proc interface expects the user to pass in the resource address as
+> seen from /proc/bus/pci/devices - which are not BAR values. Even if the
+> user passed the BAR value to mmap, pci_mmap_fits() in proc_bus_pci_mmap()
+> would fail since it compares the pgoff to resource values, which are not
+> BAR values).
 
-Exactly same -> hang :-(.
+I think you are right for the sysfs interface, that one can't possibly
+work because of the incorrect address computation.
 
+For the /procfs interface, I think it can work as long as the offsets
+used there are coming from the config space dump in /proc/bus/pci/*
+rather than from the /sys/bus/pci/devices/*/resource file.
+ 
+> As things stand I think we can safely remove the mem_offset (and
+> pci_sys_data dependency) from pci_mmap_page_range(). I do not think
+> we can break userspace in any way, basically because it can't work at
+> the moment, again, happy to be corrected if I am wrong, please shout.
 
-Thanks,
-Regards,
-Andreas
+Please look at the procfs interface again. That one can be defined
+in two ways (either like sparc and arm, or like powerpc and microblaze)
+but either one should be able to work with user space that expects
+that interface and break with user space that expects the other one.
+
+> Or we can add mem_offset to the host bridge (after all architectures like
+> PowerPC and Microblaze have a pci_mem_offset variable in their host
+> controllers), but still, this removes pci_sys_data dependency but does
+> not solve the pci_mmap_page_range() issue.
+
+The host bridge already stores the mem_offset in terms of the resource
+list, so we could readily use that, except that it might break the
+powerpc hack if that is still in use.
+
+	Arnd
