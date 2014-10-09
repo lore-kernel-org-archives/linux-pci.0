@@ -1,39 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:48054 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753110AbaJAWI6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 18:08:58 -0400
-Message-ID: <1412201282.4285.232.camel@pasglop>
-Subject: Re: [PATCH 4/4] sounds/hda/radeon: Disable 64-bit DMA on radeon
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Alex Deucher <alexdeucher@gmail.com>
-Cc: Takashi Iwai <tiwai@suse.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Date: Thu, 02 Oct 2014 08:08:02 +1000
-In-Reply-To: <CADnq5_P1qTkedSuFfgJ=dd5cWji1-OUbmKoUyq+kLQgPGYYaQw@mail.gmail.com>
-References: <1412129393.4285.195.camel@pasglop>
-	 <s5htx3o44tv.wl-tiwai@suse.de> <1412149289.4285.204.camel@pasglop>
-	 <s5hr3ys43ev.wl-tiwai@suse.de> <s5hoatw42f6.wl-tiwai@suse.de>
-	 <CADnq5_P1qTkedSuFfgJ=dd5cWji1-OUbmKoUyq+kLQgPGYYaQw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 9 Oct 2014 08:23:01 +0200
+From: Robert Richter <robert.richter@caviumnetworks.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Robert Richter <rric@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Sunil Goutham <sgoutham@cavium.com>
+Subject: Re: [PATCH 3/6] pci, thunder: Add PCIe host controller devicetree
+ bindings
+Message-ID: <20141009062301.GJ31556@rric.localhost>
+References: <1411573068-12952-1-git-send-email-rric@kernel.org>
+ <1411573068-12952-4-git-send-email-rric@kernel.org>
+ <3082935.e3X4GsVUDn@wuerfel>
+ <20141007142744.GE31556@rric.localhost>
+ <20141007150149.GW4652@e106497-lin.cambridge.arm.com>
+ <20141008084927.GH31556@rric.localhost>
+ <20141008164432.GC15382@e106497-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20141008164432.GC15382@e106497-lin.cambridge.arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-10-01 at 13:58 -0400, Alex Deucher wrote:
-> Patch looks good.  Audio DMAs are limited to 40 bits, same as the GPU
-> side.  I'm still waiting to hear back on the MSIs for audio, but they
-> probably follow the GPU side, so I expect they should be fixed on Sea
-> Islands as well.
+On 08.10.14 17:44:32, Liviu Dudau wrote:
+> On Wed, Oct 08, 2014 at 09:49:27AM +0100, Robert Richter wrote:
+> > On 07.10.14 16:01:49, Liviu Dudau wrote:
+> > I am quite confused a bit on which is the latest code base now. I was
+> > looking into Bjorn's pci/host-generic and there is a different
+> > implemetation:
 
-In the audio driver we don't have the "family names", just a list of
-PCI IDs, do you happen to know which ones are unaffected ?
+> > This differs also from v13. Please check.
 
-Cheers,
-Ben.
+> I'm not sure what you are looking at. Commit 41e5c0f81d3e does look like
+> my v13. Not sure why you are still seeing this v11 version.
 
+Right, my bad. Sorry for the noise.
 
+-Robert
