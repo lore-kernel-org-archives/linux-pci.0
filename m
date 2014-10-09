@@ -1,74 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0115.outbound.protection.outlook.com ([65.55.169.115]:53482
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752356AbaJ0Frs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 27 Oct 2014 01:47:48 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <bhelgaas@google.com>, <shawn.guo@freescale.com>,
-	<festevam@gmail.com>, <l.stach@pengutronix.de>,
-	<tharvey@gateworks.com>, <m-karicheri2@ti.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH V3] PCI: imx6: Wait the clocks to stabilize after ref_en
-Date: Mon, 27 Oct 2014 13:17:32 +0800
-Message-ID: <1414387052-3582-2-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1414387052-3582-1-git-send-email-richard.zhu@freescale.com>
-References: <1414387052-3582-1-git-send-email-richard.zhu@freescale.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5435F009.1010602@linux.intel.com>
+Date: Thu, 09 Oct 2014 10:16:41 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [RFC v1 01/28] x86, irq: Kill unused setup_timer_IRQ0_pin()
+References: <1411743478-31435-1-git-send-email-jiang.liu@linux.intel.com> <1411743478-31435-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1411743478-31435-2-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Richard Zhu <r65037@freescale.com>
+Hi Thomas,
+	This patch has dependency on your patchset to remove
+the last caller of setup_timer_IRQ0_pin(). What's the best
+way to solve this dependency? Should I pull your patches or
+just keeping the temporary "#if 0"?
+Regards!
+Gerry
 
-For boards without a reset GPIO we skip the delay between enabling the
-pcie_ref_clk and touching the RC registers for configuration.
-This hangs the system if there isn't a proper delay to ensure the clocks
-are settled in the DW PCIe core.
-
-Also iMX6Q always needs an additional 10us delay to make sure the reset
-is propagated through the core, as we don't have an explicitly
-controlled reset input on this SoC.
-
-Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
-Tested-by: Fabio Estevam <fabio.estevam@freescale.com>
-Acked-by: Lucas Stach <l.stach@pengutronix.de>
----
- drivers/pci/host/pci-imx6.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 233fe8a..eac96fb 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -275,15 +275,22 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 		goto err_pcie;
- 	}
- 
--	/* allow the clocks to stabilize */
--	usleep_range(200, 500);
--
- 	/* power up core phy and enable ref clock */
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
-+	/*
-+	 * the async reset input need ref clock to sync internally,
-+	 * when the ref clock comes after reset, internal synced
-+	 * reset time is too short , cannot meet the requirement.
-+	 * add one ~10us delay here.
-+	 */
-+	udelay(10);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
- 
-+	/* allow the clocks to stabilize */
-+	usleep_range(200, 500);
-+
- 	/* Some boards don't have PCIe reset GPIO. */
- 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
- 		gpio_set_value(imx6_pcie->reset_gpio, 0);
--- 
-1.9.1
-
+On 2014/9/26 22:57, Jiang Liu wrote:
+> Now there's no user of setup_timer_IRQ0_pin(), so kill it.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+> Hi all,
+> 	This patch depends on Thomas' work to remove the last caller of
+> setup_timer_IRQ0_pin(). So the "#if 0" is intended, so it won't block
+> following up patches.
+> Regards!
+> Gerry
+> ---
+>  arch/x86/include/asm/io_apic.h          |    1 -
+>  arch/x86/kernel/apic/io_apic.c          |   17 -----------------
+>  arch/x86/platform/intel-mid/intel-mid.c |    2 ++
+>  3 files changed, 2 insertions(+), 18 deletions(-)
+> 
+> diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+> index 7bf86bfe05b1..f9a99bc28981 100644
+> --- a/arch/x86/include/asm/io_apic.h
+> +++ b/arch/x86/include/asm/io_apic.h
+> @@ -204,7 +204,6 @@ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+>  			    irq_hw_number_t hwirq);
+>  extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+>  extern int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node);
+> -extern void __init pre_init_apic_IRQ0(void);
+>  
+>  extern void mp_save_irq(struct mpc_intsrc *m);
+>  extern bool mp_should_keep_irq(struct device *dev);
+> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+> index 37796fcd33e2..5cccf8989507 100644
+> --- a/arch/x86/kernel/apic/io_apic.c
+> +++ b/arch/x86/kernel/apic/io_apic.c
+> @@ -3091,20 +3091,3 @@ bool mp_should_keep_irq(struct device *dev)
+>  
+>  	return false;
+>  }
+> -
+> -/* Enable IOAPIC early just for system timer */
+> -void __init pre_init_apic_IRQ0(void)
+> -{
+> -	struct io_apic_irq_attr attr = { 0, 0, 0, 0 };
+> -
+> -	printk(KERN_INFO "Early APIC setup for system timer0\n");
+> -#ifndef CONFIG_SMP
+> -	physid_set_mask_of_physid(boot_cpu_physical_apicid,
+> -					 &phys_cpu_present_map);
+> -#endif
+> -	setup_local_APIC();
+> -
+> -	io_apic_setup_irq_pin(0, 0, &attr);
+> -	irq_set_chip_and_handler_name(0, &ioapic_chip, handle_edge_irq,
+> -				      "edge");
+> -}
+> diff --git a/arch/x86/platform/intel-mid/intel-mid.c b/arch/x86/platform/intel-mid/intel-mid.c
+> index 1bbedc4b0f88..f8855b703cab 100644
+> --- a/arch/x86/platform/intel-mid/intel-mid.c
+> +++ b/arch/x86/platform/intel-mid/intel-mid.c
+> @@ -99,7 +99,9 @@ static void __init intel_mid_time_init(void)
+>  		return;
+>  	}
+>  	/* we need at least one APB timer */
+> +#if 0
+>  	pre_init_apic_IRQ0();
+> +#endif
+>  	apbt_time_init();
+>  }
+>  
+> 
