@@ -1,82 +1,108 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:45133 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755836AbaJIJE3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Oct 2014 05:04:29 -0400
+Date: Thu, 9 Oct 2014 10:04:20 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v3 16/27] Mips/MSI: Save msi chip in pci sysdata
-Date: Wed, 15 Oct 2014 11:07:04 +0800
-Message-ID: <1413342435-7876-17-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
-References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"rmk+kernel@arm.linux.org.uk" <rmk+kernel@arm.linux.org.uk>,
+	"tglx@linutronix.de" <tglx@linutronix.de>
+Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
+Message-ID: <20141009090420.GA16293@e102568-lin.cambridge.arm.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <3978481.XNAIA6gzAG@wuerfel>
+ <20141008101942.GA7179@e102568-lin.cambridge.arm.com>
+ <2323270.n17xqW47JB@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <2323270.n17xqW47JB@wuerfel>
+Content-Type: text/plain; charset=WINDOWS-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Save msi chip in pci sysdata, add arch pci_find_msi_chip()
-to extract out msi chip.
+On Wed, Oct 08, 2014 at 03:47:43PM +0100, Arnd Bergmann wrote:
+> On Wednesday 08 October 2014 11:19:43 Lorenzo Pieralisi wrote:
+> > 
+> > Ok. So, unless I am missing something, on platform with mem_offset != 0
+> > /proc and /sys interfaces for remapping PCI resources can't work (IIUC
+> > the proc interface expects the user to pass in the resource address as
+> > seen from /proc/bus/pci/devices - which are not BAR values. Even if the
+> > user passed the BAR value to mmap, pci_mmap_fits() in proc_bus_pci_mmap()
+> > would fail since it compares the pgoff to resource values, which are not
+> > BAR values).
+> 
+> I think you are right for the sysfs interface, that one can't possibly
+> work because of the incorrect address computation.
+> 
+> For the /procfs interface, I think it can work as long as the offsets
+> used there are coming from the config space dump in /proc/bus/pci/*
+> rather than from the /sys/bus/pci/devices/*/resource file.
+>  
+> > As things stand I think we can safely remove the mem_offset (and
+> > pci_sys_data dependency) from pci_mmap_page_range(). I do not think
+> > we can break userspace in any way, basically because it can't work at
+> > the moment, again, happy to be corrected if I am wrong, please shout.
+> 
+> Please look at the procfs interface again. That one can be defined
+> in two ways (either like sparc and arm, or like powerpc and microblaze)
+> but either one should be able to work with user space that expects
+> that interface and break with user space that expects the other one.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/mips/include/asm/pci.h |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+I agree as long as pci_mmap_page_range() is concerned, but I am
+referring to the pci_mmap_fits() implementation here:
 
-diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
-index 974b0e3..287661b 100644
---- a/arch/mips/include/asm/pci.h
-+++ b/arch/mips/include/asm/pci.h
-@@ -43,6 +43,9 @@ struct pci_controller {
- 
- 	int iommu;
- 
-+#ifdef CONFIG_PCI_MSI
-+	struct msi_chip *msi_chip;
-+#endif
- 	/* Optional access methods for reading/writing the bus number
- 	   of the PCI controller */
- 	int (*get_busno)(void);
-@@ -54,6 +57,17 @@ struct pci_controller {
-  */
- extern void register_pci_controller(struct pci_controller *hose);
- 
-+#ifdef CONFIG_PCI_MSI
-+
-+static inline struct msi_chip *pci_msi_chip(struct pci_bus *bus)
-+{
-+	struct pci_controller *control = (struct pci_controller *)bus->sysdata;
-+
-+	return control->msi_chip;
-+}
-+
-+#endif
-+
- /*
-  * board supplied pci irq fixup routine
-  */
--- 
-1.7.1
+	start = vma->vm_pgoff;
+	size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
+	pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
+			pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
+	if (start >= pci_start && start < pci_start + size &&
+			start + nr <= pci_start + size)
+		return 1;
+	return 0;
+
+pci_mmap_fits(), when mapping from procfs always check the offset against
+resources, which are fixed-up addresses. If we passed the values dumped
+from the device config space (as pci_mmap_page_range() expects on arm) IMHO
+the check above would fail (always referring to platforms where
+mem_offset != 0).
+
+Last changes where introduced by commit 8c05cd08a, whose commit log adds
+to my confusion:
+
+"[...] I think what we want here is for pci_start to be 0 when mmap_api ==
+PCI_MMAP_PROCFS.[...]"
+
+But that's not what the code does.
+
+I will try to grab an integrator board to give it a go.
+
+> > Or we can add mem_offset to the host bridge (after all architectures like
+> > PowerPC and Microblaze have a pci_mem_offset variable in their host
+> > controllers), but still, this removes pci_sys_data dependency but does
+> > not solve the pci_mmap_page_range() issue.
+> 
+> The host bridge already stores the mem_offset in terms of the resource
+> list, so we could readily use that, except that it might break the
+> powerpc hack if that is still in use.
+
+Well, yes, I am not saying it can't be done by using the resources list,
+I am just trying to understand if that's really useful.
+
+Thank you !
+Lorenzo
 
