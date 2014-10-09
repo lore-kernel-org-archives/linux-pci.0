@@ -1,75 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cmexedge1.emulex.com ([138.239.224.99]:20492 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751287AbaJPItN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Oct 2014 04:49:13 -0400
-From: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.com>
-To: <linux-pci@vger.kernel.org>
-CC: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.com>
-Subject: [PATCH v1] pci: Limit VPD length of Emulex adapters to the actual length supported.
-Date: Thu, 16 Oct 2014 14:16:42 +0530
+Received: from mout.kundenserver.de ([212.227.17.13]:49563 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751374AbaJIKvz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Oct 2014 06:51:55 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"rmk+kernel@arm.linux.org.uk" <rmk+kernel@arm.linux.org.uk>,
+	"tglx@linutronix.de" <tglx@linutronix.de>
+Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
+Date: Thu, 09 Oct 2014 12:51:43 +0200
+Message-ID: <1831157.eN0OxS7i7m@wuerfel>
+In-Reply-To: <20141009090420.GA16293@e102568-lin.cambridge.arm.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com> <2323270.n17xqW47JB@wuerfel> <20141009090420.GA16293@e102568-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Message-ID: <1f6d7b6c-7189-4fe3-926b-42609724cab9@CMEXHTCAS2.ad.emulex.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-By default pci utilities/subsystem tries to read 32k bytes of vpd data no matter
-what the device supports. This can lead to unexpected behavior depending
-on how each of the devices handle this condition. This patch fixes the
-problem for Emulex adapter family.
+On Thursday 09 October 2014 10:04:20 Lorenzo Pieralisi wrote:
+> On Wed, Oct 08, 2014 at 03:47:43PM +0100, Arnd Bergmann wrote:
+> > On Wednesday 08 October 2014 11:19:43 Lorenzo Pieralisi wrote:
 
-v1:
-Addressed Bjorn's comments
-1. Removed Vendor id and Device id macros from pci_ids.h and
-   using the Vendor and Device id values directly in DECLARE_PCI_FIXUP_FINAL() lines.
+> > Please look at the procfs interface again. That one can be defined
+> > in two ways (either like sparc and arm, or like powerpc and microblaze)
+> > but either one should be able to work with user space that expects
+> > that interface and break with user space that expects the other one.
+> 
+> I agree as long as pci_mmap_page_range() is concerned, but I am
+> referring to the pci_mmap_fits() implementation here:
+> 
+>         start = vma->vm_pgoff;
+>         size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
+>         pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
+>                         pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
+>         if (start >= pci_start && start < pci_start + size &&
+>                         start + nr <= pci_start + size)
+>                 return 1;
+>         return 0;
+> 
+> pci_mmap_fits(), when mapping from procfs always check the offset against
+> resources, which are fixed-up addresses. If we passed the values dumped
+> from the device config space (as pci_mmap_page_range() expects on arm) IMHO
+> the check above would fail (always referring to platforms where
+> mem_offset != 0).
 
-Signed-off-by: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.com>
----
- drivers/pci/quirks.c |   33 +++++++++++++++++++++++++++++++++
- 1 files changed, 33 insertions(+), 0 deletions(-)
+Ah, I see it now too.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 80c2d01..95d88f3 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3832,3 +3832,36 @@ void pci_dev_specific_enable_acs(struct pci_dev *dev)
- 		}
- 	}
- }
-+
-+#define SLI_INTF_REG_OFFSET     0x58
-+#define SLI_INTF_FT_MASK        0x00000001
-+static void quirk_elx_limit_vpd(struct pci_dev *dev)
-+{
-+	int virtfn;
-+	u32 sli_intf;
-+
-+	pci_read_config_dword(dev, SLI_INTF_REG_OFFSET, &sli_intf);
-+	virtfn = (sli_intf & SLI_INTF_FT_MASK) ? 1 : 0;
-+
-+	if (dev->vpd) {
-+		if (virtfn)
-+			dev->vpd->len = 0x200;
-+		else
-+			dev->vpd->len = 0x400;
-+	}
-+}
-+
-+DECLARE_PCI_FIXUP_FINAL(0x19a2, 0x211, quirk_elx_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(0x19a2, 0x221, quirk_elx_limit_vpd);
-+/* BE2 */
-+DECLARE_PCI_FIXUP_FINAL(0x19a2, 0x700, quirk_elx_limit_vpd);
-+/* BE3 */
-+DECLARE_PCI_FIXUP_FINAL(0x19a2, 0x710, quirk_elx_limit_vpd);
-+/* LANCER */
-+DECLARE_PCI_FIXUP_FINAL(0x10df, 0xe220, quirk_elx_limit_vpd);
-+/* LANCER VF */
-+DECLARE_PCI_FIXUP_FINAL(0x10df, 0xe228, quirk_elx_limit_vpd);
-+/* SKYHAWK */
-+DECLARE_PCI_FIXUP_FINAL(0x10df, 0x720, quirk_elx_limit_vpd);
-+/* SKYHAWK VF */
-+DECLARE_PCI_FIXUP_FINAL(0x10df, 0x728, quirk_elx_limit_vpd);
--- 
-1.7.1
+> Last changes where introduced by commit 8c05cd08a, whose commit log adds
+> to my confusion:
+> 
+> "[...] I think what we want here is for pci_start to be 0 when mmap_api ==
+> PCI_MMAP_PROCFS.[...]"
+> 
+> But that's not what the code does.
 
+My best guess is that this is a typo and that Darrick meant PCI_MMAP_SYSFS
+in the changelog, which is the same thing that the code does. It's also
+the sensible thing to do.
+
+This probably means that the procfs interface is now also broken on
+sparc.
+
+> I will try to grab an integrator board to give it a go.
+
+Ok, good idea.
+
+> > > Or we can add mem_offset to the host bridge (after all architectures like
+> > > PowerPC and Microblaze have a pci_mem_offset variable in their host
+> > > controllers), but still, this removes pci_sys_data dependency but does
+> > > not solve the pci_mmap_page_range() issue.
+> > 
+> > The host bridge already stores the mem_offset in terms of the resource
+> > list, so we could readily use that, except that it might break the
+> > powerpc hack if that is still in use.
+> 
+> Well, yes, I am not saying it can't be done by using the resources list,
+> I am just trying to understand if that's really useful.
+
+The PCI core tries to be ready for PCI host bridges that have multiple
+discontiguous memory spaces with different offsets, although I don't know
+of anybody has that. However if we decide to implement a generic 
+pci_mmap_page_range that tries to take the offset into account, we should
+use the resource list in the host bridge because it can tell us the correct
+offsets.
+
+However, given what you found, the procfs interface being broken since
+2010 on both architectures (arm32 and sparc) that try to honor the offset,
+we should probably go back to your previous suggestion of removing
+the offset handling, which would make it possible to use the procfs
+interface and the sysfs interface on all architectures.
+
+Would you be able to prepare a patch that does this and circulate that
+with the sparc, powerpc and microblaze maintainers as well as Darrick
+and Martin who were involved with the pci_mmap_fits change?
+
+	Arnd
