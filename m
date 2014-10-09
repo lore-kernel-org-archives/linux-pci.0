@@ -1,121 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:34996 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751653AbaJXQfd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Oct 2014 12:35:33 -0400
-Received: by mail-ie0-f180.google.com with SMTP id at20so2687021iec.39
-        for <linux-pci@vger.kernel.org>; Fri, 24 Oct 2014 09:35:32 -0700 (PDT)
-Date: Fri, 24 Oct 2014 10:35:29 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Huang Rui <ray.huang@amd.com>
-Cc: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 02/16] pci: quirks: add quirk to avoid AMD NL to bind
- with xhci
-Message-ID: <20141024163529.GA7075@google.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
- <1413536021-4886-3-git-send-email-ray.huang@amd.com>
+Received: from mail-by2on0115.outbound.protection.outlook.com ([207.46.100.115]:48064
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756914AbaJICyB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Oct 2014 22:54:01 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shengchao Guo <Shawn.Guo@freescale.com>,
+	Fabio Estevam <festevam@gmail.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	"tharvey@gateworks.com" <tharvey@gateworks.com>
+Subject: RE: [PATCH v4 02/10] PCI: imx6: add imx6sx pcie support
+Date: Thu, 9 Oct 2014 02:53:59 +0000
+Message-ID: <47f86e0cc3c44de7a8124cff706830bf@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1412068796-16931-1-git-send-email-r65037@freescale.com>
+ <1412068796-16931-3-git-send-email-r65037@freescale.com>
+ <CAErSpo5Uw-5cYA2xVe-S09D7adxiAEEHY9atCgNJZqfBDTX6MQ@mail.gmail.com>
+In-Reply-To: <CAErSpo5Uw-5cYA2xVe-S09D7adxiAEEHY9atCgNJZqfBDTX6MQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1413536021-4886-3-git-send-email-ray.huang@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 17, 2014 at 04:53:27PM +0800, Huang Rui wrote:
-> The dwc3 controller is the PCI-E device in AMD NL platform, but the class code
-> of PCI header is 0x0c0330, the same with xHC. That's because it needs to meet
-> the windows enviroment. The dwc3 controller acted as only host mode to bind with
-> windows xhci driver.
-> But on linux, sometimes, it would auto-bind with xhci driver as well (class code
-> 0x0c0330) despite it uses Pid/Vid on dwc3 driver.
-
-This changelog really doesn't make any sense unless the reader already
-knows everything.  I think you mean something like this:
-
-  The AMD NL (please explain what "NL" is; Google has no clue) SoC contains
-  a DesignWare USB3 Dual-Role Device that can be operated either as a USB
-  Host or a USB Device.  In the AMD NL platform, this device ([1022:7912])
-  has a class code of PCI_CLASS_SERIAL_USB_XHCI (0x0c0330), which means the
-  xhci driver will claim it.
-
-  But the dwc3 driver is a more specific driver for this device, and we'd
-  prefer to use it instead of xhci.  To prevent xhci from claiming the
-  device, change the class code to 0x0c03fe, which the PCI r3.0 spec
-  defines as "USB device (not host controller)".  The dwc3 driver can then
-  claim it based on its Vendor and Device ID.
-
-Obviously, this means the device won't work at all unless dwc3 is enabled.
-Previously, it probably would work as a host controller with the xhci
-driver.  I assume this change is what you want.
-
-> Heikki suggested to use the quirk to fix this issue, and the detailed discussion
-> is at below thread:
-> http://marc.info/?l=linux-usb&m=141197934712824&w=2
-
-This changelog needs to be wrapped so no line is longer than 75 characters.
-
-Please run "git log --oneline --no-merges drivers/pci/quirks.c" and make
-your subject line match the rest.  In particular, "PCI" (not "pci"), drop
-the "quirks:" part, and capitalize "Add".
-
-> Suggested-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Huang Rui <ray.huang@amd.com>
-> ---
->  drivers/pci/quirks.c | 20 ++++++++++++++++++++
->  1 file changed, 20 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 90acb32..3c911b7 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -378,6 +378,26 @@ static void quirk_ati_exploding_mce(struct pci_dev *dev)
->  }
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,	PCI_DEVICE_ID_ATI_RS100,   quirk_ati_exploding_mce);
->  
-> +/* FIXME should define in <linux/pci_ids.h> */
-> +#define PCI_DEVICE_ID_AMD_NL	0x7912
-
-If you KNOW this should be in linux/pci_ids.h (and it looks like it COULD
-go there, since you do use the same definition in patch [01/16]), why don't
-you just do it?  Why are you wasting our time reviewing trivial stuff like
-this?
-
-> +
-> +/*
-> + * AMD NL SoC 7912 PCI device is dwc3 controller, but the class code of PCI
-> + * header is 0x0c0330, the same with xHC. That's because it need to meet the
-> + * windows enviroment. The dwc3 controller acted as only host mode to bind with
-> + * windows xhci driver. But on linux, sometimes, we auto-bind with xhci driver
-> + * as well (class code 0x0c0330) despite we use Pid/Vid on dwc3 driver. So this
-> + * quirk used a dummy class code to avoid to bind with xhci driver at booting
-> + * phase.
-> + */
-> +static void quirk_amd_nl_class(struct pci_dev *pdev)
-> +{
-> +	/* Use a dummy class value instead of PCI header provided */
-
-When you say "dummy class value," that makes it sound like you just chose
-a random invalid value.  But this value is actually defined by the spec, so
-you should use the description from the spec, namely, "USB device (not host
-controller)".
-
-Bjorn
-
-> +	pdev->class = 0x0c03fe;
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL,
-> +		quirk_amd_nl_class);
-> +
->  /*
->   * Let's make the southbridge information explicit instead
->   * of having to worry about people probing the ACPI areas,
-> -- 
-> 1.9.1
-> 
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEJqb3JuIEhlbGdhYXMgW21h
+aWx0bzpiaGVsZ2Fhc0Bnb29nbGUuY29tXQ0KPiBTZW50OiBUaHVyc2RheSwgT2N0b2JlciAwOSwg
+MjAxNCAxOjEwIEFNDQo+IFRvOiBaaHUgUmljaGFyZC1SNjUwMzcNCj4gQ2M6IGxpbnV4LXBjaUB2
+Z2VyLmtlcm5lbC5vcmc7IEd1byBTaGF3bi1SNjUwNzM7IEZhYmlvIEVzdGV2YW07IEx1Y2FzIFN0
+YWNoOw0KPiB0aGFydmV5QGdhdGV3b3Jrcy5jb207IFpodSBSaWNoYXJkLVI2NTAzNw0KPiBTdWJq
+ZWN0OiBSZTogW1BBVENIIHY0IDAyLzEwXSBQQ0k6IGlteDY6IGFkZCBpbXg2c3ggcGNpZSBzdXBw
+b3J0DQo+IA0KPiBbK2NjIEhvbmctWGluZy5aaHUsIC1jYyBsaW51eC1wY2ktb3duZXJdDQo+IA0K
+PiBIaSBSaWNoYXJkLA0KPiANCj4gSSBhc3N1bWUgdGhlc2UgZW1haWwgYWRkcmVzc2VzOg0KPiAN
+Cj4gICBSaWNoYXJkIFpodSA8cjY1MDM3QGZyZWVzY2FsZS5jb20+DQo+ICAgSG9uZy1YaW5nLlpo
+dUBmcmVlc2NhbGUuY29tIDxIb25nLVhpbmcuWmh1QGZyZWVzY2FsZS5jb20+DQo+IA0KPiBhcmUg
+cmVhbGx5IHRoZSBzYW1lIHBlcnNvbi4gIElmIHNvLCB3b3VsZCB5b3UgbWluZCB1c2luZyBvbmUg
+b2YgdGhlbQ0KPiBjb25zaXN0ZW50bHksIG9yIGF0IGxlYXN0IHVzaW5nIHRoZSBzYW1lIGRpc3Bs
+YXkgbmFtZSAoIlJpY2hhcmQgWmh1Ig0KPiBvciAiSG9uZy1YaW5nLlpodSIpPyAgSXQncyBjb25m
+dXNpbmcgdG8gZm9sbG93IGEgY29udmVyc2F0aW9uIHdoZW4gb25lIHBlcnNvbg0KPiB1c2VzIHNl
+dmVyYWwgbmFtZXMuDQo+IA0KW1JpY2hhcmRdIE9rLCBubyBwcm9ibGVtLg0KDQo+IEFsc28sIHRo
+ZXJlJ3Mgbm8gbmVlZCB0byBjYzogbGludXgtcGNpLW93bmVyQHZnZXIua2VybmVsLm9yZy4gIFRo
+YXQgZG9lc24ndCBnbw0KPiBhbnl3aGVyZSwgYXMgZmFyIGFzIEkga25vdy4gIGxpbnV4LXBjaUB2
+Z2VyLmtlcm5lbC5vcmcgaXMgZW5vdWdoLg0KPiANCj4gQmpvcm4NCltSaWNoYXJkXSBVbmRlcnN0
+YW5kLiBUaGFua3MuDQoNCkJlc3QgUmVnYXJkcw0KUmljaGFyZCBaaHUNCg0K
