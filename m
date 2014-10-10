@@ -1,246 +1,303 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60819 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753217AbaJTOFh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Oct 2014 10:05:37 -0400
-From: Marcel Apfelbaum <marcel.a@redhat.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linux-kernel@vger.kernel.org, marcel@redhat.com, mst@redhat.com,
-	alex.williamson@redhat.com
-Subject: [PATCH v4] PCI: add kernel parameter to override devid<->driver mapping.
-Date: Mon, 20 Oct 2014 17:04:42 +0300
-Message-Id: <1413813882-27047-1-git-send-email-marcel.a@redhat.com>
+Received: from mail-bl2on0121.outbound.protection.outlook.com ([65.55.169.121]:1184
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751324AbaJJGLp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 Oct 2014 02:11:45 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH v5 4/9] PCI: imx6: add imx6sx pcie support
+Date: Fri, 10 Oct 2014 13:41:11 +0800
+Message-ID: <1412919676-25344-5-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
+References: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Scanning a lot of devices during boot requires a lot of time.
-On other scenarios there is a need to bind a driver to a specific slot.
+From: Richard Zhu <r65037@freescale.com>
 
-Binding devices to pci-stub driver does not work,
-as it will not differentiate between devices of the
-same type. Using some start scripts is error prone.
+- imx6sx pcie has its own standalone pcie power supply.
+In order to turn on the imx6sx pcie power during
+initialization. Add the pcie regulator and the gpc regmap
+into the imx6sx pcie structure.
+- imx6sx pcie has the new added reset mechanism, add the
+reset operations into the initialization.
+- Register one PM call-back, enter/exit L2 state of the ASPM
+during system suspend/resume.
+- disp_axi clock is required by pcie inbound axi port actually.
+Add one more clock named pcie_inbound_axi for imx6sx pcie.
 
-The solution leverages driver_override functionality introduced by
-
-	commit: 782a985d7af26db39e86070d28f987cad21313c0
-	Author: Alex Williamson <alex.williamson@redhat.com>
-	Date:   Tue May 20 08:53:21 2014 -0600
-
-    	PCI: Introduce new device binding path using pci_dev.driver_override
-
-In order to bind PCI slots to specific drivers use:
-	pci=driver[xxxx:xx:xx.x]=foo,driver[xxxx:xx:xx.x]=bar,...
-
-Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
 ---
-v3 -> v4:
- - Addressed Alex Williamson's comments:
-   - Modified the type of driver_override_entry's fields
-   - Used PCI_DEVFN when appropriated
-   - Removed redundant checks
-   - Replaced BUG_ON with pr_err messages
-   - Simpler command line parsing
- - Addressed Michael S. Tsirkin comments
-   - removed DRIVER_OVERRIDE_NAME_LENGTH limitation
-v2 -> v3:
- - Corrected subject line
-v1 -> v2:
- - Addressed Michael S. Tsirkin comments
-   - Removed 32 slots limitation
-   - Better handling of memory allocation failures
-     (preferred BUG_ON over error messages)
- - Addressed Alex Williamson's comments:
-   - Modified commit message to show parameter usage more clear.
- - I preferred to re-use parse_args instead of manually using
-   strstr in order to better comply with command line parsing
-   rules.
- - I didn't use any locking when parsing the command line args
-   (see parse_done usage) assuming that first call will be
-   early in system boot and no race can occur. Please correct
-   me if I am wrong.
+ drivers/pci/host/pci-imx6.c | 161 +++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 143 insertions(+), 18 deletions(-)
 
-Notes:
- - I have further ideas on top of this patch based on your reviews.
-   I thought of:
-   - Use wildcards to specify entire buses/devices, something like:
-     	driver[0001:02:*.*]=pci-stub
-   - Use comma to separate several devices:
-     	driver[0001:02:03.4,0001:02:04.0,...]=pci-stub
-   - Make domain optional:
-   	driver[00:03.0]=pci-stub
-
-Comments will be appreciated,
-Thanks,
-Marcel
- Documentation/kernel-parameters.txt |   4 ++
- drivers/pci/bus.c                   | 111 ++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.c                   |   2 +
- 3 files changed, 117 insertions(+)
-
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 5ae8608..c1cbb4c 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -2631,6 +2631,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 		pcie_scan_all	Scan all possible PCIe devices.  Otherwise we
- 				only look for one device below a PCIe downstream
- 				port.
-+		driver		Provide an override to the devid<->driver mapping
-+				for a specific slot.
-+				Bind PCI slot 0001:02:03.4 to pci-stub by:
-+					driver[0001:02:03.4]=pci-stub
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index eac96fb..5ece4e1 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -22,8 +22,10 @@
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+ #include <linux/regmap.h>
++#include <linux/regulator/consumer.h>
+ #include <linux/resource.h>
+ #include <linux/signal.h>
++#include <linux/syscore_ops.h>
+ #include <linux/types.h>
+ #include <linux/interrupt.h>
  
- 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
- 			Management.
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 73aef51..b49f5cc 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -15,6 +15,8 @@
- #include <linux/proc_fs.h>
- #include <linux/slab.h>
+@@ -35,11 +37,15 @@ struct imx6_pcie {
+ 	int			reset_gpio;
+ 	struct clk		*pcie_bus;
+ 	struct clk		*pcie_phy;
++	struct clk		*pcie_inbound_axi;
+ 	struct clk		*pcie;
+ 	struct pcie_port	pp;
+ 	struct regmap		*iomuxc_gpr;
++	struct regmap		*gpc_ips_reg;
++	struct regulator	*pcie_phy_regulator;
+ 	void __iomem		*mem_base;
+ };
++static struct imx6_pcie *imx6_pcie;
  
-+#include <asm/setup.h>
+ /* PCIe Root Complex registers (memory-mapped) */
+ #define PCIE_RC_LCR				0x7c
+@@ -77,6 +83,18 @@ struct imx6_pcie {
+ #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
+ #define PHY_RX_OVRD_IN_LO_RX_PLL_EN (1 << 3)
+ 
++/* GPC PCIE PHY bit definitions */
++#define GPC_CNTR			0
++#define GPC_CNTR_PCIE_PHY_PUP_REQ	BIT(7)
 +
- #include "pci.h"
- 
- void pci_add_resource_offset(struct list_head *resources, struct resource *res,
-@@ -230,6 +232,114 @@ EXPORT_SYMBOL(pci_bus_alloc_resource);
- 
- void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
- 
-+struct driver_override_entry {
-+	u16 domain;
-+	u8 bus;
-+	u8 devfn;
-+	char *driver_name;
-+	struct list_head list;
-+};
-+
-+static LIST_HEAD(driver_override_entries);
-+
-+static int pci_device_parse_driver_override(char *param, char *val,
-+					    const char *unused)
++static inline bool is_imx6sx_pcie(struct imx6_pcie *imx6_pcie)
 +{
-+	unsigned int domain, bus, dev, fn;
-+	char  *buf;
-+	struct driver_override_entry *entry;
++	struct pcie_port *pp = &imx6_pcie->pp;
++	struct device_node *np = pp->dev->of_node;
++
++	return of_device_is_compatible(np, "fsl,imx6sx-pcie");
++}
++
+ static int pcie_phy_poll_ack(void __iomem *dbi_base, int exp_val)
+ {
+ 	u32 val;
+@@ -275,18 +293,29 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		goto err_pcie;
+ 	}
+ 
+-	/* power up core phy and enable ref clock */
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+-	/*
+-	 * the async reset input need ref clock to sync internally,
+-	 * when the ref clock comes after reset, internal synced
+-	 * reset time is too short , cannot meet the requirement.
+-	 * add one ~10us delay here.
+-	 */
+-	udelay(10);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		ret = clk_prepare_enable(imx6_pcie->pcie_inbound_axi);
++		if (ret) {
++			dev_err(pp->dev, "unable to enable pcie clock\n");
++			goto err_inbound_axi;
++		}
++
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				IMX6SX_GPR12_PCIE_TEST_PD, 0);
++	} else {
++		/* power up core phy and enable ref clock */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				IMX6Q_GPR1_PCIE_TEST_PD, 0);
++		/*
++		 * the async reset input need ref clock to sync internally,
++		 * when the ref clock comes after reset, internal synced
++		 * reset time is too short , cannot meet the requirement.
++		 * add one ~10us delay here.
++		 */
++		udelay(10);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
++	}
+ 
+ 	/* allow the clocks to stabilize */
+ 	usleep_range(200, 500);
+@@ -297,8 +326,19 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		msleep(100);
+ 		gpio_set_value(imx6_pcie->reset_gpio, 1);
+ 	}
++
++	/*
++	 * Release the PCIe PHY reset here, that we have set in
++	 * imx6_pcie_init_phy() now
++	 */
++	if (is_imx6sx_pcie(imx6_pcie))
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++				IMX6SX_GPR5_PCIE_BTNRST, 0);
++
+ 	return 0;
+ 
++err_inbound_axi:
++	clk_disable_unprepare(imx6_pcie->pcie);
+ err_pcie:
+ 	clk_disable_unprepare(imx6_pcie->pcie_bus);
+ err_pcie_bus:
+@@ -311,6 +351,26 @@ err_pcie_phy:
+ static void imx6_pcie_init_phy(struct pcie_port *pp)
+ {
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
 +	int ret;
 +
-+	buf = kmalloc(COMMAND_LINE_SIZE, GFP_KERNEL);
-+	if (!buf)
-+		goto err_buf;
++	/* Power up the separate domain available on i.MX6SX */
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		/* Force PCIe PHY reset */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++				IMX6SX_GPR5_PCIE_BTNRST,
++				IMX6SX_GPR5_PCIE_BTNRST);
 +
-+	while (val) {
-+		char *k = strchr(val, ',');
-+
-+		if (k)
-+			*k++ = 0;
-+
-+		if (strncmp(val, "driver", 6)) {
-+			val = k;
-+			continue;
-+		}
-+
-+		memset(buf, 0, COMMAND_LINE_SIZE);
-+		ret = sscanf(val + 6, "[%4x:%2x:%2x.%2x]=%s",
-+			     &domain, &bus, &dev, &fn, buf);
-+		if (ret != 5) {
-+			pr_warn("PCI: Invalid command line: %s\n", val);
-+			val = k;
-+			continue;
-+		}
-+
-+		entry = kzalloc(sizeof(*entry), GFP_KERNEL);
-+		if (!entry)
-+			goto err_entry;
-+
-+		INIT_LIST_HEAD(&entry->list);
-+		entry->domain = domain;
-+		entry->bus = bus;
-+		entry->devfn = PCI_DEVFN(dev, fn);
-+		entry->driver_name = kstrdup(buf, GFP_KERNEL);
-+		if (!entry->driver_name)
-+			goto err_driver_name;
-+
-+		list_add_tail(&entry->list, &driver_override_entries);
-+		val = k;
++		regmap_update_bits(imx6_pcie->gpc_ips_reg, GPC_CNTR,
++				GPC_CNTR_PCIE_PHY_PUP_REQ,
++				GPC_CNTR_PCIE_PHY_PUP_REQ);
++		regulator_set_voltage(imx6_pcie->pcie_phy_regulator,
++				1100000, 1100000);
++		ret = regulator_enable(imx6_pcie->pcie_phy_regulator);
++		if (ret)
++			dev_info(pp->dev, "failed to enable pcie regulator.\n");
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				IMX6SX_GPR12_RX_EQ_MASK, IMX6SX_GPR12_RX_EQ_2);
 +	}
-+
-+	kfree(buf);
-+	return 0;
-+
-+err_driver_name:
-+	kfree(entry);
-+
-+err_entry:
-+	kfree(buf);
-+
-+err_buf:
-+	pr_err("PCI: Out of memory while parsing command line: %s\n", val);
-+	return -ENOMEM;
-+}
-+
-+static void pci_device_setup_driver_override(struct pci_dev *dev)
-+{
-+	static int parse_done;
-+	struct driver_override_entry *entry;
-+
-+	if (!parse_done) {
-+		char *cmdline = kstrdup(saved_command_line, GFP_KERNEL);
-+
-+		if (!cmdline)
-+			goto err_out_of_mem;
-+
-+		parse_args("pci", cmdline, NULL,
-+			   0, 0, 0, &pci_device_parse_driver_override);
-+		kfree(cmdline);
-+		parse_done = 1;
-+	}
-+
-+	list_for_each_entry(entry, &driver_override_entries, list) {
-+		if (pci_domain_nr(dev->bus) != entry->domain ||
-+		    dev->bus->number != entry->bus ||
-+		    dev->devfn != entry->devfn)
-+			continue;
-+
-+		dev->driver_override = kstrdup(entry->driver_name, GFP_KERNEL);
-+		if (!dev->driver_override)
-+			goto err_out_of_mem;
-+
-+		break;
-+	}
-+
-+	return;
-+
-+err_out_of_mem:
-+	pr_err("PCI: Out of memory while setting up driver override\n");
-+}
-+
- /**
-  * pci_bus_add_device - start driver for a single device
-  * @dev: device to add
-@@ -245,6 +355,7 @@ void pci_bus_add_device(struct pci_dev *dev)
- 	 * are not assigned yet for some devices.
- 	 */
- 	pci_fixup_device(pci_fixup_final, dev);
-+	pci_device_setup_driver_override(dev);
- 	pci_create_sysfs_dev_files(dev);
- 	pci_proc_attach_device(dev);
  
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 625a4ac..37809d4 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4508,6 +4508,8 @@ static int __init pci_setup(char *str)
- 				pcie_bus_config = PCIE_BUS_PEER2PEER;
- 			} else if (!strncmp(str, "pcie_scan_all", 13)) {
- 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
-+			} else if (!strncmp(str, "driver", 6)) {
-+				/* lazy evaluation by the pci subsystem */
- 			} else {
- 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
- 						str);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
+@@ -319,7 +379,7 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 			IMX6Q_GPR12_DEVICE_TYPE, PCI_EXP_TYPE_ROOT_PORT << 12);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-			IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
++			IMX6Q_GPR12_LOS_LEVEL, IMX6Q_GPR12_LOS_LEVEL_9);
+ 
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+ 			IMX6Q_GPR8_TX_DEEMPH_GEN1, 0 << 0);
+@@ -377,7 +437,8 @@ static int imx6_pcie_start_link(struct pcie_port *pp)
+ 
+ 	/* Start LTSSM. */
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
++			IMX6Q_GPR12_PCIE_CTL_2,
++			IMX6Q_GPR12_PCIE_CTL_2);
+ 
+ 	ret = imx6_pcie_wait_for_link(pp);
+ 	if (ret)
+@@ -553,9 +614,50 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PM_SLEEP
++static int pci_imx_suspend(void)
++{
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		/* PM_TURN_OFF */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				IMX6SX_GPR12_PCIE_PM_TURN_OFF,
++				IMX6SX_GPR12_PCIE_PM_TURN_OFF);
++		udelay(10);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				IMX6SX_GPR12_PCIE_PM_TURN_OFF, 0);
++	}
++
++	return 0;
++}
++
++static void pci_imx_resume(void)
++{
++	struct pcie_port *pp = &imx6_pcie->pp;
++
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		/* Reset iMX6SX PCIe */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++				IMX6SX_GPR5_PCIE_PERST, IMX6SX_GPR5_PCIE_PERST);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++				IMX6SX_GPR5_PCIE_PERST, 0);
++		/*
++		 * controller maybe turn off, re-configure again
++		 */
++		dw_pcie_setup_rc(pp);
++
++		if (IS_ENABLED(CONFIG_PCI_MSI))
++			dw_pcie_msi_cfg_restore(pp);
++	}
++}
++
++static struct syscore_ops pci_imx_syscore_ops = {
++	.suspend = pci_imx_suspend,
++	.resume = pci_imx_resume,
++};
++#endif
++
+ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ {
+-	struct imx6_pcie *imx6_pcie;
+ 	struct pcie_port *pp;
+ 	struct device_node *np = pdev->dev.of_node;
+ 	struct resource *dbi_base;
+@@ -610,9 +712,28 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(imx6_pcie->pcie);
+ 	}
+ 
+-	/* Grab GPR config register range */
+-	imx6_pcie->iomuxc_gpr =
+-		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		imx6_pcie->pcie_inbound_axi = devm_clk_get(&pdev->dev,
++				"pcie_inbound_axi");
++		if (IS_ERR(imx6_pcie->pcie_inbound_axi)) {
++			dev_err(&pdev->dev,
++				"pcie clock source missing or invalid\n");
++			return PTR_ERR(imx6_pcie->pcie_inbound_axi);
++		}
++
++		imx6_pcie->pcie_phy_regulator = devm_regulator_get(pp->dev,
++				"pcie-phy");
++
++		imx6_pcie->iomuxc_gpr =
++			 syscon_regmap_lookup_by_compatible
++			 ("fsl,imx6sx-iomuxc-gpr");
++		imx6_pcie->gpc_ips_reg =
++			 syscon_regmap_lookup_by_compatible("fsl,imx6sx-gpc");
++	} else {
++		imx6_pcie->iomuxc_gpr =
++			syscon_regmap_lookup_by_compatible
++			("fsl,imx6q-iomuxc-gpr");
++	}
+ 	if (IS_ERR(imx6_pcie->iomuxc_gpr)) {
+ 		dev_err(&pdev->dev, "unable to find iomuxc registers\n");
+ 		return PTR_ERR(imx6_pcie->iomuxc_gpr);
+@@ -623,6 +744,9 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 
+ 	platform_set_drvdata(pdev, imx6_pcie);
++#ifdef CONFIG_PM_SLEEP
++	register_syscore_ops(&pci_imx_syscore_ops);
++#endif
+ 	return 0;
+ }
+ 
+@@ -636,6 +760,7 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
+ 
+ static const struct of_device_id imx6_pcie_of_match[] = {
+ 	{ .compatible = "fsl,imx6q-pcie", },
++	{ .compatible = "fsl,imx6sx-pcie", },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
 -- 
-1.8.3.1
+1.9.1
 
