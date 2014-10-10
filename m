@@ -1,128 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out02.mta.xmission.com ([166.70.13.232]:39793 "EHLO
-	out02.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932232AbaJVCsM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Oct 2014 22:48:12 -0400
-From: ebiederm@xmission.com (Eric W. Biederman)
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"Hoemann\, Jerry" <jerry.hoemann@hp.com>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	Baoquan He <bhe@redhat.com>,
-	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"kexec\@lists.infradead.org" <kexec@lists.infradead.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"open list\:INTEL IOMMU \(VT-d\)" <iommu@lists.linux-foundation.org>,
-	doug.hatch@hp.com,
-	"ishii.hironobu\@jp.fujitsu.com" <ishii.hironobu@jp.fujitsu.com>,
-	zhenhua@hp.com, Zhen-Hua <zhen-hual@hp.com>,
-	"Vaden\, Tom L \(HP Server OS Architecture\)" <tom.vaden@hp.com>
-References: <1398386198-19304-1-git-send-email-bill.sumner@hp.com>
-	<1398854973.12733.23.camel@i7.infradead.org>
-	<20140702133258.GN26537@8bytes.org>
-	<CAErSpo69VmK5zD-ztNVHCA=KrK8zucqubY17z0K3rcpe6ReNUA@mail.gmail.com>
-Date: Tue, 21 Oct 2014 21:47:22 -0500
-In-Reply-To: <CAErSpo69VmK5zD-ztNVHCA=KrK8zucqubY17z0K3rcpe6ReNUA@mail.gmail.com>
-	(Bjorn Helgaas's message of "Tue, 21 Oct 2014 20:16:46 -0600")
-Message-ID: <87mw8on7lx.fsf@x220.int.ebiederm.org>
+Received: from mail-by2on0103.outbound.protection.outlook.com ([207.46.100.103]:2656
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751390AbaJJGLr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 Oct 2014 02:11:47 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH v5 6/9] ARM: imx6: update dts and binding for imx6sx pcie
+Date: Fri, 10 Oct 2014 13:41:13 +0800
+Message-ID: <1412919676-25344-7-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
+References: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Subject: Re: [PATCH 0/8] iommu/vt-d: Fix crash dump failure caused by legacy DMA/IO
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <bhelgaas@google.com> writes:
+From: Richard Zhu <r65037@freescale.com>
 
-> [-cc Bill, +cc Zhen-Hua, Eric, Tom, Jerry]
->
-> Hi Joerg,
->
-> I was looking at Zhen-Hua's recent patches, trying to figure out if I
-> need to do anything with them.  Resetting devices in the old kernel
-> seems like a non-starter.  Resetting devices in the new kernel, ...,
-> well, maybe.  It seems ugly, and it seems like the sort of problem
-> that IOMMUs are designed to solve.  Anyway, I found this old
-> discussion that I didn't quite understand:
+- imx6sx pcie phy has its own power regulator. Add the
+pcie phy power suppy into im6sx pcie dts and binding.
+- in order to align with imx6qdl's pcie dts, re-format
+imx6sx pcie dts.
+- in order to align with imx6qdl pcie dts format and
+keep clean of imx6 pcie driver, keep the pcie phy clock
+in imx6sx pcie dts, although it's the parent clk of the
+pcie bus clock now, and would be enabled automatically
+when pcie bus clock is enabled. secondly, it's
+possible that the external osc maybe used as source
+of the pcie_bus clk in board design in future.
+- disp_axi clock is required by pcie inbound axi port.
+Add one more clock named pcie_inbound_axi for imx6sx pcie.
 
-For context here is the kexec on panic design, and what I know from
-previous rounds of similar conversations.
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
+---
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  8 +++++-
+ arch/arm/boot/dts/imx6sx.dtsi                      | 32 ++++++++++++----------
+ 2 files changed, 25 insertions(+), 15 deletions(-)
 
-The way kexec on panic aka kdump is designed to work is that the
-recovery kernel lives in a piece of memory reserved at boot time and
-known not to be in use by any driver (because we never ever use it for
-DMA).  If DMA's continue from any source the old kernel may be a little
-more corrupted but our currently running kernel should not.
-
-Device drivers that we use in the recovery kernel are required to be
-able to initialize their devices from an arbitrary state or fail to
-initialize their devices.
-
-We have discussed things on various occassions but IOMMUs all have their
-own individual idiosynchrousies and came late to the party so that it
-is hard to generalize.
-
-The reserved region is generally low enough in memory that simply
-not using IOMMUs works.
-
-The major challenge with initializing an IOMMU would be that there are
-potentially devices whose driver is not loaded in the recover kernel
-with on-going DMA sessions (perhaps a NIC in response to network
-packet).
-
-Which essentially means that if you are going to use an IOMMU slot in a
-recovery kernel you have to either know that IOMMU slot was reserved for
-the recovery kernel (what has always felt like the easiest way to me).
-Or you have to know everything that could target that IOMMU slot has
-been reset or has it's driver loaded.
-
-I have always thought the simplist and easiest solution would be to
-reserve a few IOMMU slots for the kexec on panic kernel.  But if folks
-can find other ways to guarantee that an on-going DMA isn't targeting
-an IOMMU slot (such as resetting everything downstream from that
-IOMMU slot) more power to you.
-
-> On Wed, Jul 2, 2014 at 7:32 AM, Joerg Roedel <joro@8bytes.org> wrote:
->> On Wed, Apr 30, 2014 at 11:49:33AM +0100, David Woodhouse wrote:
->
->>> After the last round of this patchset, we discussed a potential
->>> improvement where you point every virtual bus address at the *same*
->>> physical scratch page.
->>
->> That is a solution to prevent the in-flight DMA failures. But what
->> happens when there is some in-flight DMA to a disk to write some inodes
->> or a new superblock. Then this scratch address-space may cause
->> filesystem corruption at worst.
->
-> This in-flight DMA is from a device programmed by the old kernel, and
-> it would be reading data from the old kernel's buffers.  I think
-> you're suggesting that we might want that DMA read to complete so the
-> device can update filesystem metadata?
->
-> I don't really understand that argument.  Don't we usually want to
-> stop any data from escaping the machine after a crash, on the theory
-> that the old kernel is crashing because something is catastrophically
-> wrong and we may have already corrupted things in memory?  If so,
-> allowing this old DMA to complete is just as likely to make things
-> worse as to make them better.
->
-> Without kdump, we likely would reboot through the BIOS and the device
-> would get reset and the DMA would never happen at all.  So if we made
-> the dump kernel program the IOMMU to prevent the DMA, that seems like
-> a similar situation.
->
->> So with this in mind I would prefer initially taking over the
->> page-tables from the old kernel before the device drivers re-initialize
->> the devices.
->
-> This makes the dump kernel more dependent on data from the old kernel,
-> which we obviously want to avoid when possible.
->
-> I didn't find the previous discussion where pointing every virtual bus
-> address at the same physical scratch page was proposed.  Why was that
-> better than programming the IOMMU to reject every DMA?
->
-> Bjorn
-
-Eric
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index 9455fd0..ad81179 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -4,7 +4,7 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
+ and thus inherits all the common properties defined in designware-pcie.txt.
+ 
+ Required properties:
+-- compatible: "fsl,imx6q-pcie"
++- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie"
+ - reg: base addresse and length of the pcie controller
+ - interrupts: A list of interrupt outputs of the controller. Must contain an
+   entry for each entry in the interrupt-names property.
+@@ -13,6 +13,12 @@ Required properties:
+ - clock-names: Must include the following additional entries:
+ 	- "pcie_phy"
+ 
++Additional required properties for imx6sx-pcie:
++- clock names: Must include the following additional entries:
++	- "pcie_inbound_axi"
++- power supplies:
++	- pcie-phy-supply: regulator used to power the PCIe PHY
++
+ Example:
+ 
+ 	pcie@0x01000000 {
+diff --git a/arch/arm/boot/dts/imx6sx.dtsi b/arch/arm/boot/dts/imx6sx.dtsi
+index f4b9da6..eefedba 100644
+--- a/arch/arm/boot/dts/imx6sx.dtsi
++++ b/arch/arm/boot/dts/imx6sx.dtsi
+@@ -599,9 +599,9 @@
+ 					anatop-max-voltage = <1450000>;
+ 				};
+ 
+-				reg_pcie: regulator-vddpcie@140 {
++				reg_pcie_phy: regulator-vddpcie-phy@140 {
+ 					compatible = "fsl,anatop-regulator";
+-					regulator-name = "vddpcie";
++					regulator-name = "vddpcie-phy";
+ 					regulator-min-microvolt = <725000>;
+ 					regulator-max-microvolt = <1450000>;
+ 					anatop-reg-offset = <0x140>;
+@@ -1184,24 +1184,28 @@
+ 
+ 		pcie: pcie@0x08000000 {
+ 			compatible = "fsl,imx6sx-pcie", "snps,dw-pcie";
+-			reg = <0x08ffc000 0x4000>; /* DBI */
++			reg = <0x08ffc000 0x4000>, <0x08f00000 0x80000>;
++			reg-names = "rc_dbi", "config";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+-				  /* configuration space */
+-			ranges = <0x00000800 0 0x08f00000 0x08f00000 0 0x00080000
+-				  /* downstream I/O */
+-				  0x81000000 0 0          0x08f80000 0 0x00010000
+-				  /* non-prefetchable memory */
+-				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>;
++			ranges = <0x81000000 0 0          0x08f80000 0 0x00010000 /* downstream I/O */
++				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>; /* non-prefetchable memory */
+ 			num-lanes = <1>;
+-			interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>;
+-			clocks = <&clks IMX6SX_CLK_PCIE_REF_125M>,
+-				 <&clks IMX6SX_CLK_PCIE_AXI>,
++			interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "msi";
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 0x7>;
++			interrupt-map = <0 0 0 1 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
++			                <0 0 0 2 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
++			                <0 0 0 3 &intc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
++			                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&clks IMX6SX_CLK_PCIE_AXI>,
+ 				 <&clks IMX6SX_CLK_LVDS1_OUT>,
++				 <&clks IMX6SX_CLK_PCIE_REF_125M>,
+ 				 <&clks IMX6SX_CLK_DISPLAY_AXI>;
+-			clock-names = "pcie_ref_125m", "pcie_axi",
+-				      "lvds_gate", "display_axi";
++			clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_inbound_axi";
++			pcie-phy-supply = <&reg_pcie_phy>;
+ 			status = "disabled";
+ 		};
+ 	};
+-- 
+1.9.1
 
