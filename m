@@ -1,109 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0114.outbound.protection.outlook.com ([157.56.111.114]:44592
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755346AbaJ1L4w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 Oct 2014 07:56:52 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Jason Chang <jason.chang@amd.com>,
-	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v3 12/19] usb: dwc3: add rx_detect to polling lfps quirk
-Date: Tue, 28 Oct 2014 19:54:33 +0800
-Message-ID: <1414497280-3126-13-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
-References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+Received: from mout1.freenet.de ([195.4.92.91]:47764 "EHLO mout1.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754928AbaJJOzW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 Oct 2014 10:55:22 -0400
+Message-ID: <5437F1F5.3010706@maya.org>
+Date: Fri, 10 Oct 2014 16:49:25 +0200
+From: Andreas Hartmann <andihartmann@freenet.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass
+ through (vfio)
+References: <20140923210318.498dacbd@dualc.maya.org> <1411502866.24563.8.camel@ul30vt.home> <5437A958.3000201@maya.org> <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com>
+In-Reply-To: <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds RX_DETECT to Polling.LFPS control quirk, and some special
-platforms can configure that if it is needed.
+Bjorn Helgaas schrieb:
+> On Fri, Oct 10, 2014 at 3:39 AM, Andreas Hartmann
+> <andihartmann@freenet.de> wrote:
+>> shortly: I retested w/ qemu 2.1.0 and Linux 3.17.0 - no change in behaviour.
+>>
+>> Alex Williamson wrote:
+>>> On Tue, 2014-09-23 at 21:03 +0200, Andreas Hartmann wrote:
+>>>> Hello!
+>>>>
+>>>> Since long time now, I'm using w/o any problem PCIe pass through with a
+>>>> Gigabyte GA-990XA-UD3/GA-990XA-UD3 mainboard (AMD 990X chipset) and
+>>>> enabled IOMMU with vfio-pci.
+>>>>
+>>>> The last kernel working w/o any problem is kernel 3.13.7 (I didn't use
+>>>> .8 and .9, but I do not think they would have been problematic).
+>>>>
+>>>> Since 3.14.19 (I didn't test any 3.14 kernel before) I'm encountering a
+>>>> hard and silent lock up of the complete machine when starting the VM
+>>>> with the PCIe card passed through.
+> 
+> Since we're not really making any progress on this yet, would it be
+> possible to bisect it?  We already know that 3.13.7 works and 3.14.19
+> fails, and "git bisect start v3.14 v3.13" says it's about 13 steps.  I
+> know that's still quite a bit of work, but at least it sounds like the
+> problem is easy to reproduce.
 
-Signed-off-by: Huang Rui <ray.huang@amd.com>
----
- drivers/usb/dwc3/core.c          | 6 ++++++
- drivers/usb/dwc3/core.h          | 3 +++
- drivers/usb/dwc3/platform_data.h | 1 +
- 3 files changed, 10 insertions(+)
+Which git repository should I use best?
 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index 86ed064..19019dc 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -389,6 +389,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
- 	if (dwc->lfps_filter_quirk)
- 		reg |= DWC3_GUSB3PIPECTL_LFPSFILT;
- 
-+	if (dwc->rx_detect_poll_quirk)
-+		reg |= DWC3_GUSB3PIPECTL_RX_DETOPOLL;
-+
- 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
- 
- 	mdelay(100);
-@@ -771,6 +774,8 @@ static int dwc3_probe(struct platform_device *pdev)
- 				"snps,del_phy_power_chg_quirk");
- 		dwc->lfps_filter_quirk = of_property_read_bool(node,
- 				"snps,lfps_filter_quirk");
-+		dwc->rx_detect_poll_quirk = of_property_read_bool(node,
-+				"snps,rx_detect_poll_quirk");
- 	} else if (pdata) {
- 		dwc->maximum_speed = pdata->maximum_speed;
- 		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
-@@ -787,6 +792,7 @@ static int dwc3_probe(struct platform_device *pdev)
- 		dwc->del_p1p2p3_quirk = pdata->del_p1p2p3_quirk;
- 		dwc->del_phy_power_chg_quirk = pdata->del_phy_power_chg_quirk;
- 		dwc->lfps_filter_quirk = pdata->lfps_filter_quirk;
-+		dwc->rx_detect_poll_quirk = pdata->rx_detect_poll_quirk;
- 	}
- 
- 	/* default to superspeed if no maximum_speed passed */
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index 23b48a0..57a203a 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -184,6 +184,7 @@
- #define DWC3_GUSB3PIPECTL_DEPOCHANGE	(1 << 18)
- #define DWC3_GUSB3PIPECTL_SUSPHY	(1 << 17)
- #define DWC3_GUSB3PIPECTL_LFPSFILT	(1 << 9)
-+#define DWC3_GUSB3PIPECTL_RX_DETOPOLL	(1 << 8)
- 
- /* Global TX Fifo Size Register */
- #define DWC3_GTXFIFOSIZ_TXFDEF(n)	((n) & 0xffff)
-@@ -693,6 +694,7 @@ struct dwc3_scratchpad_array {
-  * @del_p1p2p3_quirk: set if we enable delay p1p2p3 quirk
-  * @del_phy_power_chg_quirk: set if we enable delay phy power change quirk
-  * @lfps_filter_quirk: set if we enable LFPS filter quirk
-+ * @rx_detect_poll_quirk: set if we enable rx_detect to polling lfps quirk
-  */
- struct dwc3 {
- 	struct usb_ctrlrequest	*ctrl_req;
-@@ -807,6 +809,7 @@ struct dwc3 {
- 	unsigned                del_p1p2p3_quirk:1;
- 	unsigned		del_phy_power_chg_quirk:1;
- 	unsigned		lfps_filter_quirk:1;
-+	unsigned		rx_detect_poll_quirk:1;
- };
- 
- /* -------------------------------------------------------------------------- */
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index 89918e5..9776764 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -34,4 +34,5 @@ struct dwc3_platform_data {
- 	unsigned del_p1p2p3_quirk:1;
- 	unsigned del_phy_power_chg_quirk:1;
- 	unsigned lfps_filter_quirk:1;
-+	unsigned rx_detect_poll_quirk:1;
- };
--- 
-1.9.1
+Is it possible to do one checkout and work afterwards always on base of
+this? Unfortunately my internet connection is very slow :-(.
 
+
+Thanks for your hint!
+
+Regards,
+Andreas
