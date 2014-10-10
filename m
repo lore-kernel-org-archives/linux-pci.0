@@ -1,237 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55926 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751453AbaJASvG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 14:51:06 -0400
-Message-ID: <1412189463.7360.241.camel@ul30vt.home>
-Subject: Re: [PATCH] PCI: add kernel parameter to override devid<->driver
- mapping.
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Marcel Apfelbaum <marcel.a@redhat.com>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	marcel@redhat.com
-Date: Wed, 01 Oct 2014 12:51:03 -0600
-In-Reply-To: <1412149836.2772.15.camel@localhost.localdomain>
-References: <1412095115-28982-1-git-send-email-marcel.a@redhat.com>
-	 <20141001065227.GB31859@redhat.com>
-	 <1412147206.2772.8.camel@localhost.localdomain>
-	 <20141001073008.GC31859@redhat.com>
-	 <1412149836.2772.15.camel@localhost.localdomain>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:65075 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751917AbaJJNy0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Oct 2014 09:54:26 -0400
+Received: by mail-ig0-f169.google.com with SMTP id uq10so6915243igb.4
+        for <linux-pci@vger.kernel.org>; Fri, 10 Oct 2014 06:54:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140910141514.GC27864@e106497-lin.cambridge.arm.com>
+References: <CAA8O7Crwi7=afUpLoC1O5H9ymjYEPyb63kO8QdFuPx6RUJ8NpQ@mail.gmail.com>
+	<20140910141514.GC27864@e106497-lin.cambridge.arm.com>
+Date: Fri, 10 Oct 2014 08:54:25 -0500
+Message-ID: <CAA8O7CrqkjGTiK68iWDe6C9-VMT5OF=D72u4mR9edOzUGjQwPQ@mail.gmail.com>
+Subject: Re: designware: prefetch and 64-bit addr support?
+From: L H <swdevgid@gmail.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-10-01 at 10:50 +0300, Marcel Apfelbaum wrote:
-> On Wed, 2014-10-01 at 10:30 +0300, Michael S. Tsirkin wrote:
-> > On Wed, Oct 01, 2014 at 10:06:46AM +0300, Marcel Apfelbaum wrote:
-> > > On Wed, 2014-10-01 at 09:52 +0300, Michael S. Tsirkin wrote:
-> > > > On Tue, Sep 30, 2014 at 07:38:35PM +0300, Marcel Apfelbaum wrote:
-> > > > > Scanning a lot of devices during boot requires a lot of time.
-> > > > > On other scenarios there is a need to bind a driver to a specific slot.
-> > > > > 
-> > > > > Binding devices to pci-stub driver does not work,
-> > > > > as it will not differentiate between devices of the
-> > > > > same type. Using some start scripts is error prone.
-> > > > > 
-> > > > > The solution leverages driver_override functionality introduced by
-> > > > > 
-> > > > > 	commit: 782a985d7af26db39e86070d28f987cad21313c0
-> > > > > 	Author: Alex Williamson <alex.williamson@redhat.com>
-> > > > > 	Date:   Tue May 20 08:53:21 2014 -0600
-> > > > > 
-> > > > >     	PCI: Introduce new device binding path using pci_dev.driver_override
-> > > > > 
-> > > > > In order to bind PCI slot 0001:02:03.4 to pci-stub use:
-> > > > > 	driver[0001:02:03.4]=pci-stub
-> > > > > 
-> > > > > Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
-> > > > > ---
-> > > > > Notes:
-> > > > >  - For the moment only 32 slots can be assigned specific driver.
-> > > > >  - I have further ideas on top of this patch based on your reviews.
-> > > > >    I thought of:
-> > > > >    - Use wildcards to specify entire buses/devices, something like:
-> > > > >      	driver[0001:02:*.*]=pci-stub
-> > > > >    - Use comma to separate several devices:
-> > > > >      	driver[0001:02:03.4,0001:02:04.0,...]=pci-stub
-> > > > >    - Make domain optional:
-> > > > >    	driver[00:03.0]=pci-stub
-> > > > > 
-> > > > > Comments will be appreciated,
-> > > > > Thanks,
-> > > > > Marcel
-> > > > > 
-> > > > > Documentation/kernel-parameters.txt |  4 +++
-> > > > >  drivers/pci/bus.c                   |  1 +
-> > > > >  drivers/pci/pci.c                   | 61 +++++++++++++++++++++++++++++++++++++
-> > > > >  drivers/pci/pci.h                   |  1 +
-> > > > >  4 files changed, 67 insertions(+)
-> > > > > 
-> > > > > diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> > > > > index 5ae8608..c1cbb4c 100644
-> > > > > --- a/Documentation/kernel-parameters.txt
-> > > > > +++ b/Documentation/kernel-parameters.txt
-> > > > > @@ -2631,6 +2631,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
-> > > > >  		pcie_scan_all	Scan all possible PCIe devices.  Otherwise we
-> > > > >  				only look for one device below a PCIe downstream
-> > > > >  				port.
-> > > > > +		driver		Provide an override to the devid<->driver mapping
-> > > > > +				for a specific slot.
-> > > > > +				Bind PCI slot 0001:02:03.4 to pci-stub by:
-> > > > > +					driver[0001:02:03.4]=pci-stub
-> > > > >  
-> > > > >  	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
-> > > > >  			Management.
-> > > > > diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> > > > > index 73aef51..7a7ed85 100644
-> > > > > --- a/drivers/pci/bus.c
-> > > > > +++ b/drivers/pci/bus.c
-> > > > > @@ -245,6 +245,7 @@ void pci_bus_add_device(struct pci_dev *dev)
-> > > > >  	 * are not assigned yet for some devices.
-> > > > >  	 */
-> > > > >  	pci_fixup_device(pci_fixup_final, dev);
-> > > > > +	pci_device_setup_driver_override(dev);
-> > > > >  	pci_create_sysfs_dev_files(dev);
-> > > > >  	pci_proc_attach_device(dev);
-> > > > >  
-> > > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > > > index b7678be..0a3e07c 100644
-> > > > > --- a/drivers/pci/pci.c
-> > > > > +++ b/drivers/pci/pci.c
-> > > > > @@ -4426,6 +4426,65 @@ void __weak pci_fixup_cardbus(struct pci_bus *bus)
-> > > > >  }
-> > > > >  EXPORT_SYMBOL(pci_fixup_cardbus);
-> > > > >  
-> > > > > +#define DRIVER_OVERRIDE_NAME_LENGTH 64
-> > > > > +#define DRIVER_OVERRIDE_MAP_SIZE 32
-> > > > > +
-> > > > > +struct driver_override_entry {
-> > > > > +	unsigned int domain;
-> > > > > +	unsigned char bus;
-> > > > > +	unsigned int devfn;
-> > > > > +	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
-> > > > > +};
-> > > > > +
-> > > > > +static struct driver_override_entry __initdata
-> > > > > +	driver_override_map[DRIVER_OVERRIDE_MAP_SIZE];
-> > > > > +static int driver_override_num_entries __initdata;
-> > > > > +
-> > > > > +void pci_device_setup_driver_override(struct pci_dev *dev)
-> > > > > +{
-> > > > > +	int i;
-> > > > > +
-> > > > > +	for (i = 0; i < driver_override_num_entries; i++) {
-> > > > > +		if (pci_domain_nr(dev->bus) != driver_override_map[i].domain ||
-> > > > > +		    dev->bus->number != driver_override_map[i].bus ||
-> > > > > +		    dev->devfn != driver_override_map[i].devfn)
-> > > > > +			continue;
-> > > > > +
-> > > > > +		dev->driver_override = kstrndup(driver_override_map[i].driver_name,
-> > > > > +						DRIVER_OVERRIDE_NAME_LENGTH,
-> > > > > +						GFP_KERNEL);
-> > > > 
-> > > > 
-> > > Hi,
-> > > 
-> > > > You allocate this entry but never free it?
-> > > Is being freed in pci_release_dev function.
-> > > 
-> > > > Shouldn't allocation failure be handled in some way?
-> > > I thought about it, but in my opinion there is no need for error
-> > > handling in this situation.
-> > > - On the worst case scenario it will load the regular driver, no harm done.
-> > >   (kstrndup will return NULL)
-> > > - It is used in pci_bus_add_device workflow that has no error flow
-> > >   that I am aware of, and even if it were an error flow, in my opinion
-> > >   this is not enough to stop system boot.
-> > > But thinking of this again, maybe a pr_err message?
-> > > 
-> > > Your review is most appreciated.
-> > > Thanks,
-> > > Marcel
-> > > 
-> > > 
-> > 
-> > Thinking more about it, how about just using strstr to search a string
-> > of overrides?  This will completely remove the artificial
-> > DRIVER_OVERRIDE_MAP_SIZE as well.
-> I'll try it, thanks, hope it will not be too ugly.
-> 
-> I will still need to reserve a COMMAND_LINE_SIZE string for "string of overrides", right?
-> Or can I dynamically allocate a buffer to hold the string so early in boot process?
-> If I can, it will be no problem to create a dynamic sized driver_override_map.
+Thank you Liviu for the detailed response.  I've been buried with work
+and out on personal matters so I'm just now able to resume
+participation on this thread.
 
-I think Michael is suggesting searching the existing commandline on each
-pass so that you don't need to allocate any memory at all.  Thanks,
+I did successfully get prefetch memory support working on my platform.
+As you indicated, because the prefetchable flags are preserved in the
+resource, the PCI framework handled it just fine, with, however, a
+small change to dw_pcie_setup_rc().   That's because that function
+originally just assumed that the memory region was non-prefetch.  I
+added a check for the prefetch flag in dw_pcie_setup_rc() and
+initialized the root-complex's host bridge registers appropriately:
 
-Alex
 
-> > > > 
-> > > > > +		break;
-> > > > > +	}
-> > > > > +}
-> > > > > +
-> > > > > +static void __init pci_parse_driver_override(char *str)
-> > > > > +{
-> > > > > +	unsigned int domain, bus, dev, fn;
-> > > > > +	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
-> > > > > +	int ret, next_entry;
-> > > > > +	char format[] = "[%4x:%2x:%2x.%2x]=%%%ds";
-> > > > > +
-> > > > > +	sprintf(format + 18, "%%%ds", DRIVER_OVERRIDE_NAME_LENGTH);
-> > > > > +	ret = sscanf(str, format, &domain, &bus, &dev, &fn, driver_name);
-> > > > > +
-> > > > > +	if (ret != 5) {
-> > > > > +		pr_err("PCI: Invalid command line: driver%s\n", str);
-> > > > > +		return;
-> > > > > +	}
-> > > > > +
-> > > > > +	if (driver_override_num_entries == DRIVER_OVERRIDE_MAP_SIZE) {
-> > > > > +		pr_err("PCI: Driver map overflow - ignoring driver%s\n", str);
-> > > > > +		return;
-> > > > > +	}
-> > > > > +
-> > > > > +	next_entry = driver_override_num_entries++;
-> > > > > +	driver_override_map[next_entry].domain = domain;
-> > > > > +	driver_override_map[next_entry].bus = bus && 0xff;
-> > > > > +	driver_override_map[next_entry].devfn = ((dev & 0x1f) << 3) | (fn & 0x7);
-> > > > > +	memcpy(driver_override_map[next_entry].driver_name,
-> > > > > +	       driver_name, sizeof(driver_name));
-> > > > > +}
-> > > > > +
-> > > > >  static int __init pci_setup(char *str)
-> > > > >  {
-> > > > >  	while (str) {
-> > > > > @@ -4468,6 +4527,8 @@ static int __init pci_setup(char *str)
-> > > > >  				pcie_bus_config = PCIE_BUS_PEER2PEER;
-> > > > >  			} else if (!strncmp(str, "pcie_scan_all", 13)) {
-> > > > >  				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
-> > > > > +			} else if (!strncmp(str, "driver", 6)) {
-> > > > > +				pci_parse_driver_override(str + 6);
-> > > > >  			} else {
-> > > > >  				printk(KERN_ERR "PCI: Unknown option `%s'\n",
-> > > > >  						str);
-> > > > > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> > > > > index 0601890..023d78b 100644
-> > > > > --- a/drivers/pci/pci.h
-> > > > > +++ b/drivers/pci/pci.h
-> > > > > @@ -197,6 +197,7 @@ enum pci_bar_type {
-> > > > >  bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
-> > > > >  				int crs_timeout);
-> > > > >  int pci_setup_device(struct pci_dev *dev);
-> > > > > +void pci_device_setup_driver_override(struct pci_dev *dev);
-> > > > >  int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
-> > > > >  		    struct resource *res, unsigned int reg);
-> > > > >  int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
-> > > > > -- 
-> > > > > 1.8.3.1
-> > > 
-> > > 
-> 
-> 
-> 
+-       /* setup memory base, memory limit */
+-       membase = ((u32)pp->mem_base & 0xfff00000) >> 16;
+-       memlimit = (config->mem_size + (u32)pp->mem_base) & 0xfff00000;
+-       val = memlimit | membase;
+-       dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
++       if (!(pp->mem.flags & IORESOURCE_PREFETCH)) {
++               /* setup memory base, memory limit */
++               membase = ((u32)pp->mem_base & 0xfff00000) >> 16;
++               memlimit = (config->mem_size + (u32)pp->mem_base) & 0xfff00000;
++               val = memlimit | membase;
++               dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
++       }
++       else {
++               /* setup prefetch memory base, limit */
++               membase = (lower_32_bits(pp->mem_base) & 0xfff00000) >> 16;
++               memlimit = (lower_32_bits(config->mem_size) +
++                               lower_32_bits(pp->mem_base)) & 0xfff00000;
++               val = memlimit | membase;
++               dw_pcie_writel_rc(pp, val, PCI_PREF_MEMORY_BASE);
++               dw_pcie_writel_rc(pp, upper_32_bits(pp->mem_base),
+PCI_PREF_BASE_UPPER32);
++               dw_pcie_writel_rc(pp, upper_32_bits(pp->mem_base +
+config->mem_size), PCI_PREF_LIMIT_UPPER32);
++       }
+
+Note that this, of course, follows the current driver implementation
+that supports only one PCI memory region:  either prefetch or
+non-prefetch.  For the purposes of supporting more SoC's which employ
+DesignWare, the driver can easily be extended to support both but I
+understand the mindset of leaving that to whomever needs multiple
+memory regions.
+
+thanks again,
+LH
 
 
 
+On Wed, Sep 10, 2014 at 9:15 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> On Wed, Sep 03, 2014 at 09:57:11PM +0100, L H wrote:
+>> Greetings my fellow PCI designware developers.  I'm working on an
+>> implementation that relies on the PCIe DesignWare IP and am writing a
+>> platform-specific layer to link with the designware code, but have run
+>> into a couple challenges.
+>>
+>> Reading the pcie-designware.c (looking at the master branch of a repo
+>> cloned from git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git --
+>> is that the best branch/repo to view?), it appears to me that the
+>> dw_pcie_host_init() code doesn't comprehend prefetch memory ranges,
+>> but instead just assumes that a memory range is non-prefetch despite
+>> its encoding in the device-tree.  Am I reading that correctly?  The
+>> loop for walking the ranges begins with:
+>>
+>>     for_each_of_pci_range(&parser, &range) {
+>>         unsigned long restype = range.flags & IORESOURCE_TYPE_BITS;
+>>
+>> The bitmask for IORESOURCE_TYPE_BITS would result in a restype
+>> ignorant of the IORESOURCE_PREFETCH bit, right?   The ensuing code
+>> flow then treats the range as non-prefetch unless I missed something.
+>
+> Hi LH,
+>
+> You are not reading all of the code. The designware code only cares
+> about the type of the range (IO, MEM, cfg?). But the conversion from
+> range to resource that happens in of_pci_range_to_resource() *does*
+> preserve the prefetchable flags and that is being used by the generic
+> PCI framework.
+>
+>>
+>> Curiously, I also noted that the for_each_of_pcie_range() which calls
+>> of_pci_range_parser_one() that in turn includes calls to
+>> of_bus_pci_get_flags() does not set the IORESOURCE_MEM_64 bit parsed
+>> from the range either.
+>
+> Where exactly do you expect those flags to be read into?
+>
+>>
+>> If I followed that all correctly, is the proper assumption that all of
+>> the current implementations relying on the designware code only use
+>> 32-bit non-prefetch memory ranges?
+>
+> No, I don't think that is correct. What I would say is that the current
+> designware PCIe code does not care whether the memory is prefetcheable
+> or not for the DW specific part of the setup.
+>
+> Best regards,
+> Liviu
+>
+>>
+>> The platform which I'm working on will use a large 64-bit PCI memory
+>> address space, and thus I need 64-bit memory apertures which implies,
+>> I think, only prefetch memory.
+>>
+>> I hasten to add this isn't a complaint or critique of the valuable
+>> work developed up to this point. I'm very grateful to have it as a
+>> rich starting point.  I'm reaching out to the list here as a newbie to
+>> verify my comprehension of the designware code, and if valid, to
+>> inquire if there's any effort by anyone currently to support 64-bit
+>> prefetch ranges.  I've accepted the real possibility that I might be
+>> blazing this trail myself, but just wanted to check if anyone else has
+>> considered it or working on this support to avoid a redundant effort.
+>>
+>> thanks,
+>> LH
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+> --
+> ====================
+> | I would like to |
+> | fix the world,  |
+> | but they're not |
+> | giving me the   |
+>  \ source code!  /
+>   ---------------
+>     ¯\_(ツ)_/¯
+>
