@@ -1,242 +1,224 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47923 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:60689 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751391AbaJBIJc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Oct 2014 04:09:32 -0400
-Date: Thu, 2 Oct 2014 11:12:58 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Marcel Apfelbaum <marcel.a@redhat.com>, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	marcel@redhat.com
-Subject: Re: [PATCH] PCI: add kernel parameter to override devid<->driver
- mapping.
-Message-ID: <20141002081258.GB19369@redhat.com>
-References: <1412095115-28982-1-git-send-email-marcel.a@redhat.com>
- <20141001065227.GB31859@redhat.com>
- <1412147206.2772.8.camel@localhost.localdomain>
- <20141001073008.GC31859@redhat.com>
- <1412149836.2772.15.camel@localhost.localdomain>
- <1412189463.7360.241.camel@ul30vt.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1412189463.7360.241.camel@ul30vt.home>
+	id S1752225AbaJJPfw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 Oct 2014 11:35:52 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, linux-pci@vger.kernel.org
+Subject: [PATCH] PCI/MSI: Remove pci_enable_msix()
+Date: Fri, 10 Oct 2014 17:35:43 +0200
+Message-Id: <1412955343-27239-1-git-send-email-agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 01, 2014 at 12:51:03PM -0600, Alex Williamson wrote:
-> On Wed, 2014-10-01 at 10:50 +0300, Marcel Apfelbaum wrote:
-> > On Wed, 2014-10-01 at 10:30 +0300, Michael S. Tsirkin wrote:
-> > > On Wed, Oct 01, 2014 at 10:06:46AM +0300, Marcel Apfelbaum wrote:
-> > > > On Wed, 2014-10-01 at 09:52 +0300, Michael S. Tsirkin wrote:
-> > > > > On Tue, Sep 30, 2014 at 07:38:35PM +0300, Marcel Apfelbaum wrote:
-> > > > > > Scanning a lot of devices during boot requires a lot of time.
-> > > > > > On other scenarios there is a need to bind a driver to a specific slot.
-> > > > > > 
-> > > > > > Binding devices to pci-stub driver does not work,
-> > > > > > as it will not differentiate between devices of the
-> > > > > > same type. Using some start scripts is error prone.
-> > > > > > 
-> > > > > > The solution leverages driver_override functionality introduced by
-> > > > > > 
-> > > > > > 	commit: 782a985d7af26db39e86070d28f987cad21313c0
-> > > > > > 	Author: Alex Williamson <alex.williamson@redhat.com>
-> > > > > > 	Date:   Tue May 20 08:53:21 2014 -0600
-> > > > > > 
-> > > > > >     	PCI: Introduce new device binding path using pci_dev.driver_override
-> > > > > > 
-> > > > > > In order to bind PCI slot 0001:02:03.4 to pci-stub use:
-> > > > > > 	driver[0001:02:03.4]=pci-stub
-> > > > > > 
-> > > > > > Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
-> > > > > > ---
-> > > > > > Notes:
-> > > > > >  - For the moment only 32 slots can be assigned specific driver.
-> > > > > >  - I have further ideas on top of this patch based on your reviews.
-> > > > > >    I thought of:
-> > > > > >    - Use wildcards to specify entire buses/devices, something like:
-> > > > > >      	driver[0001:02:*.*]=pci-stub
-> > > > > >    - Use comma to separate several devices:
-> > > > > >      	driver[0001:02:03.4,0001:02:04.0,...]=pci-stub
-> > > > > >    - Make domain optional:
-> > > > > >    	driver[00:03.0]=pci-stub
-> > > > > > 
-> > > > > > Comments will be appreciated,
-> > > > > > Thanks,
-> > > > > > Marcel
-> > > > > > 
-> > > > > > Documentation/kernel-parameters.txt |  4 +++
-> > > > > >  drivers/pci/bus.c                   |  1 +
-> > > > > >  drivers/pci/pci.c                   | 61 +++++++++++++++++++++++++++++++++++++
-> > > > > >  drivers/pci/pci.h                   |  1 +
-> > > > > >  4 files changed, 67 insertions(+)
-> > > > > > 
-> > > > > > diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> > > > > > index 5ae8608..c1cbb4c 100644
-> > > > > > --- a/Documentation/kernel-parameters.txt
-> > > > > > +++ b/Documentation/kernel-parameters.txt
-> > > > > > @@ -2631,6 +2631,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
-> > > > > >  		pcie_scan_all	Scan all possible PCIe devices.  Otherwise we
-> > > > > >  				only look for one device below a PCIe downstream
-> > > > > >  				port.
-> > > > > > +		driver		Provide an override to the devid<->driver mapping
-> > > > > > +				for a specific slot.
-> > > > > > +				Bind PCI slot 0001:02:03.4 to pci-stub by:
-> > > > > > +					driver[0001:02:03.4]=pci-stub
-> > > > > >  
-> > > > > >  	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
-> > > > > >  			Management.
-> > > > > > diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> > > > > > index 73aef51..7a7ed85 100644
-> > > > > > --- a/drivers/pci/bus.c
-> > > > > > +++ b/drivers/pci/bus.c
-> > > > > > @@ -245,6 +245,7 @@ void pci_bus_add_device(struct pci_dev *dev)
-> > > > > >  	 * are not assigned yet for some devices.
-> > > > > >  	 */
-> > > > > >  	pci_fixup_device(pci_fixup_final, dev);
-> > > > > > +	pci_device_setup_driver_override(dev);
-> > > > > >  	pci_create_sysfs_dev_files(dev);
-> > > > > >  	pci_proc_attach_device(dev);
-> > > > > >  
-> > > > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > > > > index b7678be..0a3e07c 100644
-> > > > > > --- a/drivers/pci/pci.c
-> > > > > > +++ b/drivers/pci/pci.c
-> > > > > > @@ -4426,6 +4426,65 @@ void __weak pci_fixup_cardbus(struct pci_bus *bus)
-> > > > > >  }
-> > > > > >  EXPORT_SYMBOL(pci_fixup_cardbus);
-> > > > > >  
-> > > > > > +#define DRIVER_OVERRIDE_NAME_LENGTH 64
-> > > > > > +#define DRIVER_OVERRIDE_MAP_SIZE 32
-> > > > > > +
-> > > > > > +struct driver_override_entry {
-> > > > > > +	unsigned int domain;
-> > > > > > +	unsigned char bus;
-> > > > > > +	unsigned int devfn;
-> > > > > > +	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
-> > > > > > +};
-> > > > > > +
-> > > > > > +static struct driver_override_entry __initdata
-> > > > > > +	driver_override_map[DRIVER_OVERRIDE_MAP_SIZE];
-> > > > > > +static int driver_override_num_entries __initdata;
-> > > > > > +
-> > > > > > +void pci_device_setup_driver_override(struct pci_dev *dev)
-> > > > > > +{
-> > > > > > +	int i;
-> > > > > > +
-> > > > > > +	for (i = 0; i < driver_override_num_entries; i++) {
-> > > > > > +		if (pci_domain_nr(dev->bus) != driver_override_map[i].domain ||
-> > > > > > +		    dev->bus->number != driver_override_map[i].bus ||
-> > > > > > +		    dev->devfn != driver_override_map[i].devfn)
-> > > > > > +			continue;
-> > > > > > +
-> > > > > > +		dev->driver_override = kstrndup(driver_override_map[i].driver_name,
-> > > > > > +						DRIVER_OVERRIDE_NAME_LENGTH,
-> > > > > > +						GFP_KERNEL);
-> > > > > 
-> > > > > 
-> > > > Hi,
-> > > > 
-> > > > > You allocate this entry but never free it?
-> > > > Is being freed in pci_release_dev function.
-> > > > 
-> > > > > Shouldn't allocation failure be handled in some way?
-> > > > I thought about it, but in my opinion there is no need for error
-> > > > handling in this situation.
-> > > > - On the worst case scenario it will load the regular driver, no harm done.
-> > > >   (kstrndup will return NULL)
-> > > > - It is used in pci_bus_add_device workflow that has no error flow
-> > > >   that I am aware of, and even if it were an error flow, in my opinion
-> > > >   this is not enough to stop system boot.
-> > > > But thinking of this again, maybe a pr_err message?
-> > > > 
-> > > > Your review is most appreciated.
-> > > > Thanks,
-> > > > Marcel
-> > > > 
-> > > > 
-> > > 
-> > > Thinking more about it, how about just using strstr to search a string
-> > > of overrides?  This will completely remove the artificial
-> > > DRIVER_OVERRIDE_MAP_SIZE as well.
-> > I'll try it, thanks, hope it will not be too ugly.
-> > 
-> > I will still need to reserve a COMMAND_LINE_SIZE string for "string of overrides", right?
-> > Or can I dynamically allocate a buffer to hold the string so early in boot process?
-> > If I can, it will be no problem to create a dynamic sized driver_override_map.
-> 
-> I think Michael is suggesting searching the existing commandline on each
-> pass so that you don't need to allocate any memory at all.  Thanks,
-> 
-> Alex
+There are no users of pci_enable_msix() function left. Obsolete
+it in favor of pci_enable_msix_range() and pci_enable_msix_exact()
+functions.
 
-Conditional on having the option specified.
-BTW, API-wise, I think that it's a good idea to make the fact that pci
-addresses are used, explicit.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-pci@vger.kernel.org
+---
+ Documentation/PCI/PCIEBUS-HOWTO.txt | 15 +++---
+ Documentation/PCI/pci.txt           | 14 +++---
+ drivers/pci/msi.c                   | 91 +++++++++++++++----------------------
+ include/linux/pci.h                 |  4 --
+ 4 files changed, 51 insertions(+), 73 deletions(-)
 
-> > > > > 
-> > > > > > +		break;
-> > > > > > +	}
-> > > > > > +}
-> > > > > > +
-> > > > > > +static void __init pci_parse_driver_override(char *str)
-> > > > > > +{
-> > > > > > +	unsigned int domain, bus, dev, fn;
-> > > > > > +	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
-> > > > > > +	int ret, next_entry;
-> > > > > > +	char format[] = "[%4x:%2x:%2x.%2x]=%%%ds";
-> > > > > > +
-> > > > > > +	sprintf(format + 18, "%%%ds", DRIVER_OVERRIDE_NAME_LENGTH);
-> > > > > > +	ret = sscanf(str, format, &domain, &bus, &dev, &fn, driver_name);
-> > > > > > +
-> > > > > > +	if (ret != 5) {
-> > > > > > +		pr_err("PCI: Invalid command line: driver%s\n", str);
-> > > > > > +		return;
-> > > > > > +	}
-> > > > > > +
-> > > > > > +	if (driver_override_num_entries == DRIVER_OVERRIDE_MAP_SIZE) {
-> > > > > > +		pr_err("PCI: Driver map overflow - ignoring driver%s\n", str);
-> > > > > > +		return;
-> > > > > > +	}
-> > > > > > +
-> > > > > > +	next_entry = driver_override_num_entries++;
-> > > > > > +	driver_override_map[next_entry].domain = domain;
-> > > > > > +	driver_override_map[next_entry].bus = bus && 0xff;
-> > > > > > +	driver_override_map[next_entry].devfn = ((dev & 0x1f) << 3) | (fn & 0x7);
-> > > > > > +	memcpy(driver_override_map[next_entry].driver_name,
-> > > > > > +	       driver_name, sizeof(driver_name));
-> > > > > > +}
-> > > > > > +
-> > > > > >  static int __init pci_setup(char *str)
-> > > > > >  {
-> > > > > >  	while (str) {
-> > > > > > @@ -4468,6 +4527,8 @@ static int __init pci_setup(char *str)
-> > > > > >  				pcie_bus_config = PCIE_BUS_PEER2PEER;
-> > > > > >  			} else if (!strncmp(str, "pcie_scan_all", 13)) {
-> > > > > >  				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
-> > > > > > +			} else if (!strncmp(str, "driver", 6)) {
-> > > > > > +				pci_parse_driver_override(str + 6);
-> > > > > >  			} else {
-> > > > > >  				printk(KERN_ERR "PCI: Unknown option `%s'\n",
-> > > > > >  						str);
-> > > > > > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> > > > > > index 0601890..023d78b 100644
-> > > > > > --- a/drivers/pci/pci.h
-> > > > > > +++ b/drivers/pci/pci.h
-> > > > > > @@ -197,6 +197,7 @@ enum pci_bar_type {
-> > > > > >  bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
-> > > > > >  				int crs_timeout);
-> > > > > >  int pci_setup_device(struct pci_dev *dev);
-> > > > > > +void pci_device_setup_driver_override(struct pci_dev *dev);
-> > > > > >  int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
-> > > > > >  		    struct resource *res, unsigned int reg);
-> > > > > >  int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
-> > > > > > -- 
-> > > > > > 1.8.3.1
-> > > > 
-> > > > 
-> > 
-> > 
-> > 
-> 
-> 
+diff --git a/Documentation/PCI/PCIEBUS-HOWTO.txt b/Documentation/PCI/PCIEBUS-HOWTO.txt
+index 6bd5f37..873a84a 100644
+--- a/Documentation/PCI/PCIEBUS-HOWTO.txt
++++ b/Documentation/PCI/PCIEBUS-HOWTO.txt
+@@ -190,13 +190,14 @@ in the field interrupt_mode of struct pcie_device.
+ 6.2 MSI-X Vector Resources
+ 
+ Similar to the MSI a device driver for an MSI-X capable device can
+-call pci_enable_msix to request MSI-X interrupts. All service drivers
+-are not permitted to switch interrupt mode on its device. The PCI
+-Express Port Bus driver is responsible for determining the interrupt
+-mode and this should be transparent to service drivers. Any attempt
+-by service driver to call pci_enable_msix/pci_disable_msix may
+-result unpredictable behavior. Service drivers should use
+-(struct pcie_device*)dev->irq and call request_irq/free_irq.
++call pci_enable_msix_range to request MSI-X interrupts. All service
++drivers are not permitted to switch interrupt mode on its device.
++The PCI Express Port Bus driver is responsible for determining the
++interrupt mode and this should be transparent to service drivers.
++Any attempt by service driver to call pci_enable_msix_range or
++pci_disable_msix may result unpredictable behavior. Service drivers
++should use (struct pcie_device*)dev->irq and call request_irq or
++free_irq.
+ 
+ 6.3 PCI Memory/IO Mapped Regions
+ 
+diff --git a/Documentation/PCI/pci.txt b/Documentation/PCI/pci.txt
+index 9518006..eb57f0a 100644
+--- a/Documentation/PCI/pci.txt
++++ b/Documentation/PCI/pci.txt
+@@ -383,18 +383,18 @@ The fundamental difference between MSI and MSI-X is how multiple
+ "vectors" get allocated. MSI requires contiguous blocks of vectors
+ while MSI-X can allocate several individual ones.
+ 
+-MSI capability can be enabled by calling pci_enable_msi() or
+-pci_enable_msix() before calling request_irq(). This causes
++MSI capability can be enabled by calling pci_enable_msi_range() or
++pci_enable_msix_range() before calling request_irq(). This causes
+ the PCI support to program CPU vector data into the PCI device
+ capability registers.
+ 
+ If your PCI device supports both, try to enable MSI-X first.
+ Only one can be enabled at a time.  Many architectures, chip-sets,
+-or BIOSes do NOT support MSI or MSI-X and the call to pci_enable_msi/msix
+-will fail. This is important to note since many drivers have
+-two (or more) interrupt handlers: one for MSI/MSI-X and another for IRQs.
+-They choose which handler to register with request_irq() based on the
+-return value from pci_enable_msi/msix().
++or BIOSes do NOT support MSI or MSI-X and the call to pci_enable_msi_range()
++or pci_enable_msix_range() will fail. This is important to note since many
++drivers have two (or more) interrupt handlers: one for MSI/MSI-X and another
++for IRQs. They choose which handler to register with request_irq() based on
++the return value from pci_enable_msi_range() or pci_enable_msix_range().
+ 
+ There are (at least) two really good reasons for using MSI:
+ 1) MSI is an exclusive interrupt vector by definition.
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 2f7c92c..0df0ce1 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -903,58 +903,6 @@ int pci_msix_vec_count(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL(pci_msix_vec_count);
+ 
+-/**
+- * pci_enable_msix - configure device's MSI-X capability structure
+- * @dev: pointer to the pci_dev data structure of MSI-X device function
+- * @entries: pointer to an array of MSI-X entries
+- * @nvec: number of MSI-X irqs requested for allocation by device driver
+- *
+- * Setup the MSI-X capability structure of device function with the number
+- * of requested irqs upon its software driver call to request for
+- * MSI-X mode enabled on its hardware device function. A return of zero
+- * indicates the successful configuration of MSI-X capability structure
+- * with new allocated MSI-X irqs. A return of < 0 indicates a failure.
+- * Or a return of > 0 indicates that driver request is exceeding the number
+- * of irqs or MSI-X vectors available. Driver should use the returned value to
+- * re-send its request.
+- **/
+-int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+-{
+-	int nr_entries;
+-	int i, j;
+-
+-	if (!pci_msi_supported(dev, nvec))
+-		return -EINVAL;
+-
+-	if (!entries)
+-		return -EINVAL;
+-
+-	nr_entries = pci_msix_vec_count(dev);
+-	if (nr_entries < 0)
+-		return nr_entries;
+-	if (nvec > nr_entries)
+-		return nr_entries;
+-
+-	/* Check for any invalid entries */
+-	for (i = 0; i < nvec; i++) {
+-		if (entries[i].entry >= nr_entries)
+-			return -EINVAL;		/* invalid entry */
+-		for (j = i + 1; j < nvec; j++) {
+-			if (entries[i].entry == entries[j].entry)
+-				return -EINVAL;	/* duplicate entry */
+-		}
+-	}
+-	WARN_ON(!!dev->msix_enabled);
+-
+-	/* Check whether driver already requested for MSI irq */
+-	if (dev->msi_enabled) {
+-		dev_info(&dev->dev, "can't enable MSI-X (MSI IRQ already assigned)\n");
+-		return -EINVAL;
+-	}
+-	return msix_capability_init(dev, entries, nvec);
+-}
+-EXPORT_SYMBOL(pci_enable_msix);
+-
+ void pci_msix_shutdown(struct pci_dev *dev)
+ {
+ 	struct msi_desc *entry;
+@@ -1088,16 +1036,49 @@ EXPORT_SYMBOL(pci_enable_msi_range);
+  * with new allocated MSI-X interrupts.
+  **/
+ int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
+-			       int minvec, int maxvec)
++			  int minvec, int maxvec)
+ {
+-	int nvec = maxvec;
++	int i, j;
++	int nvec;
+ 	int rc;
+ 
++	if (!pci_msi_supported(dev, minvec))
++		return -EINVAL;
++
++	WARN_ON(!!dev->msix_enabled);
++
++	/* Check whether driver already requested MSI irqs */
++	if (dev->msi_enabled) {
++		dev_info(&dev->dev,
++			 "can't enable MSI-X (MSI already enabled)\n");
++		return -EINVAL;
++	}
++
+ 	if (maxvec < minvec)
+ 		return -ERANGE;
++	else if (!entries)
++		return -EINVAL;
++
++	nvec = pci_msix_vec_count(dev);
++	if (nvec < 0)
++		return nvec;
++	else if (nvec < minvec)
++		return -EINVAL;
++	else if (nvec > maxvec)
++		nvec = maxvec;
++
++	/* Check for any invalid entries */
++	for (i = 0; i < nvec; i++) {
++		if (entries[i].entry >= nvec)
++			return -EINVAL;		/* invalid entry */
++		for (j = i + 1; j < nvec; j++) {
++			if (entries[i].entry == entries[j].entry)
++				return -EINVAL;	/* duplicate entry */
++		}
++	}
+ 
+ 	do {
+-		rc = pci_enable_msix(dev, entries, nvec);
++		rc = msix_capability_init(dev, entries, nvec);
+ 		if (rc < 0) {
+ 			return rc;
+ 		} else if (rc > 0) {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5be8db4..ad9b5d4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1197,7 +1197,6 @@ int pci_msi_vec_count(struct pci_dev *dev);
+ void pci_msi_shutdown(struct pci_dev *dev);
+ void pci_disable_msi(struct pci_dev *dev);
+ int pci_msix_vec_count(struct pci_dev *dev);
+-int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
+ void pci_msix_shutdown(struct pci_dev *dev);
+ void pci_disable_msix(struct pci_dev *dev);
+ void pci_restore_msi_state(struct pci_dev *dev);
+@@ -1225,9 +1224,6 @@ static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+ static inline void pci_msi_shutdown(struct pci_dev *dev) { }
+ static inline void pci_disable_msi(struct pci_dev *dev) { }
+ static inline int pci_msix_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+-static inline int pci_enable_msix(struct pci_dev *dev,
+-				  struct msix_entry *entries, int nvec)
+-{ return -ENOSYS; }
+ static inline void pci_msix_shutdown(struct pci_dev *dev) { }
+ static inline void pci_disable_msix(struct pci_dev *dev) { }
+ static inline void pci_restore_msi_state(struct pci_dev *dev) { }
+-- 
+1.8.3.1
+
