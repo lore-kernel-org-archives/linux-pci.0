@@ -1,44 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0115.outbound.protection.outlook.com ([207.46.100.115]:48064
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756914AbaJICyB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 Oct 2014 22:54:01 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	Fabio Estevam <festevam@gmail.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>
-Subject: RE: [PATCH v4 02/10] PCI: imx6: add imx6sx pcie support
-Date: Thu, 9 Oct 2014 02:53:59 +0000
-Message-ID: <47f86e0cc3c44de7a8124cff706830bf@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1412068796-16931-1-git-send-email-r65037@freescale.com>
- <1412068796-16931-3-git-send-email-r65037@freescale.com>
- <CAErSpo5Uw-5cYA2xVe-S09D7adxiAEEHY9atCgNJZqfBDTX6MQ@mail.gmail.com>
-In-Reply-To: <CAErSpo5Uw-5cYA2xVe-S09D7adxiAEEHY9atCgNJZqfBDTX6MQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mout3.freenet.de ([195.4.92.93]:49318 "EHLO mout3.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755268AbaJJWie (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 Oct 2014 18:38:34 -0400
+Date: Sat, 11 Oct 2014 00:32:19 +0200
+From: Andreas Hartmann <andihartmann@freenet.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass through
+ (vfio)
+Message-ID: <20141011003219.560cca97@dualc.maya.org>
+In-Reply-To: <CAErSpo450czUtAM104o+RS=yOcmP+3MKMH7mYk=UYhVJ2+cfSQ@mail.gmail.com>
+References: <20140923210318.498dacbd@dualc.maya.org> <1411502866.24563.8.camel@ul30vt.home> <5437A958.3000201@maya.org> <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com> <5437F1F5.3010706@maya.org> <CAErSpo6DuWEcJb_gfS=5JnKN8b4DXXV9+u-CRa8m3db0dbzpsQ@mail.gmail.com> <543804BC.3080307@maya.org> <CAErSpo450czUtAM104o+RS=yOcmP+3MKMH7mYk=UYhVJ2+cfSQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEJqb3JuIEhlbGdhYXMgW21h
-aWx0bzpiaGVsZ2Fhc0Bnb29nbGUuY29tXQ0KPiBTZW50OiBUaHVyc2RheSwgT2N0b2JlciAwOSwg
-MjAxNCAxOjEwIEFNDQo+IFRvOiBaaHUgUmljaGFyZC1SNjUwMzcNCj4gQ2M6IGxpbnV4LXBjaUB2
-Z2VyLmtlcm5lbC5vcmc7IEd1byBTaGF3bi1SNjUwNzM7IEZhYmlvIEVzdGV2YW07IEx1Y2FzIFN0
-YWNoOw0KPiB0aGFydmV5QGdhdGV3b3Jrcy5jb207IFpodSBSaWNoYXJkLVI2NTAzNw0KPiBTdWJq
-ZWN0OiBSZTogW1BBVENIIHY0IDAyLzEwXSBQQ0k6IGlteDY6IGFkZCBpbXg2c3ggcGNpZSBzdXBw
-b3J0DQo+IA0KPiBbK2NjIEhvbmctWGluZy5aaHUsIC1jYyBsaW51eC1wY2ktb3duZXJdDQo+IA0K
-PiBIaSBSaWNoYXJkLA0KPiANCj4gSSBhc3N1bWUgdGhlc2UgZW1haWwgYWRkcmVzc2VzOg0KPiAN
-Cj4gICBSaWNoYXJkIFpodSA8cjY1MDM3QGZyZWVzY2FsZS5jb20+DQo+ICAgSG9uZy1YaW5nLlpo
-dUBmcmVlc2NhbGUuY29tIDxIb25nLVhpbmcuWmh1QGZyZWVzY2FsZS5jb20+DQo+IA0KPiBhcmUg
-cmVhbGx5IHRoZSBzYW1lIHBlcnNvbi4gIElmIHNvLCB3b3VsZCB5b3UgbWluZCB1c2luZyBvbmUg
-b2YgdGhlbQ0KPiBjb25zaXN0ZW50bHksIG9yIGF0IGxlYXN0IHVzaW5nIHRoZSBzYW1lIGRpc3Bs
-YXkgbmFtZSAoIlJpY2hhcmQgWmh1Ig0KPiBvciAiSG9uZy1YaW5nLlpodSIpPyAgSXQncyBjb25m
-dXNpbmcgdG8gZm9sbG93IGEgY29udmVyc2F0aW9uIHdoZW4gb25lIHBlcnNvbg0KPiB1c2VzIHNl
-dmVyYWwgbmFtZXMuDQo+IA0KW1JpY2hhcmRdIE9rLCBubyBwcm9ibGVtLg0KDQo+IEFsc28sIHRo
-ZXJlJ3Mgbm8gbmVlZCB0byBjYzogbGludXgtcGNpLW93bmVyQHZnZXIua2VybmVsLm9yZy4gIFRo
-YXQgZG9lc24ndCBnbw0KPiBhbnl3aGVyZSwgYXMgZmFyIGFzIEkga25vdy4gIGxpbnV4LXBjaUB2
-Z2VyLmtlcm5lbC5vcmcgaXMgZW5vdWdoLg0KPiANCj4gQmpvcm4NCltSaWNoYXJkXSBVbmRlcnN0
-YW5kLiBUaGFua3MuDQoNCkJlc3QgUmVnYXJkcw0KUmljaGFyZCBaaHUNCg0K
+Bjorn Helgaas wrote:
+> On Fri, Oct 10, 2014 at 10:09 AM, Andreas Hartmann
+> <andihartmann@freenet.de> wrote:
+>> Bjorn Helgaas wrote:
+>>> On Fri, Oct 10, 2014 at 8:49 AM, Andreas Hartmann
+>>> <andihartmann@freenet.de> wrote:
+>>>> Bjorn Helgaas wrote:
+>>>>> On Fri, Oct 10, 2014 at 3:39 AM, Andreas Hartmann
+>>>>> <andihartmann@freenet.de> wrote:
+>>>>>> shortly: I retested w/ qemu 2.1.0 and Linux 3.17.0 - no change in behaviour.
+>>>>>>
+>>>>>> Alex Williamson wrote:
+>>>>>>> On Tue, 2014-09-23 at 21:03 +0200, Andreas Hartmann wrote:
+>>>>>>>> Hello!
+>>>>>>>>
+>>>>>>>> Since long time now, I'm using w/o any problem PCIe pass through with a
+>>>>>>>> Gigabyte GA-990XA-UD3/GA-990XA-UD3 mainboard (AMD 990X chipset) and
+>>>>>>>> enabled IOMMU with vfio-pci.
+>>>>>>>>
+>>>>>>>> The last kernel working w/o any problem is kernel 3.13.7 (I didn't use
+>>>>>>>> .8 and .9, but I do not think they would have been problematic).
+>>>>>>>>
+>>>>>>>> Since 3.14.19 (I didn't test any 3.14 kernel before) I'm encountering a
+>>>>>>>> hard and silent lock up of the complete machine when starting the VM
+>>>>>>>> with the PCIe card passed through.
+>>>>>
+>>>>> Since we're not really making any progress on this yet, would it be
+>>>>> possible to bisect it?  We already know that 3.13.7 works and 3.14.19
+>>>>> fails, and "git bisect start v3.14 v3.13" says it's about 13 steps.  I
+>>>>> know that's still quite a bit of work, but at least it sounds like the
+>>>>> problem is easy to reproduce.
+>>>>
+>>>> Which git repository should I use best?
+>>>
+>>> The linux-stable repository [1] contains both the v3.13.x and the
+>>> v3.14.x branches, but apparently you can't bisect directly between
+>>> v3.13.7 and v3.14.19:
+>>
+>> I know that the first version after 3.13.0 (patch-v3.13-next-20140121)
+>> is already broken. Therefore, it must be between 3.13.7 and
+>> patch-v3.13-next-20140121.
+
+
+Ok, this is the result of git bisect:
+
+425c1b223dac456d00a61fd6b451b6d1cf00d065 is the first bad commit
+commit 425c1b223dac456d00a61fd6b451b6d1cf00d065
+Author: Alex Williamson <alex.williamson@redhat.com>
+Date:   Tue Dec 17 16:43:51 2013 -0700
+
+    PCI: Add Virtual Channel to save/restore support
+    
+    While we don't really have any infrastructure for making use of VC
+    support, the system BIOS can configure the topology to non-default
+    VC values prior to boot.  This may be due to silicon bugs, desire to
+    reserve traffic classes, or perhaps just BIOS bugs.  When we reset
+    devices, the VC configuration may return to default values, which can
+    be incompatible with devices upstream.  For instance, Nvidia GRID 
+    cards provide a PCIe switch and some number of GPUs, all supporting 
+    VC.  The power-on default for VC is to support TC0-7 across VC0,
+    however some platforms will only enable TC0/VC0 mapping across the 
+    topology.  When we do a secondary bus reset on the downstream switch 
+    port, the GPU is reset to a TC0-7/VC0 mapping while the opposite end 
+    of the link only enables TC0/VC0.  If the GPU attempts to use TC1-7, 
+    it fails. 
+
+    This patch attempts to provide complete support for VC save/restore, 
+    even beyond the minimally required use case above.  This includes 
+    save/restore and reload of the arbitration table, save/restore and 
+    reload of the port arbitration tables, and re-enabling of the 
+    channels for VC, VC9, and MFVC capabilities. 
+
+    Signed-off-by: Alex Williamson <alex.williamson@redhat.com> 
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+
+Kind regards,
+Andreas
