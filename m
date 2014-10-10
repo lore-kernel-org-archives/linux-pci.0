@@ -1,40 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0116.outbound.protection.outlook.com ([157.56.110.116]:38176
+Received: from mail-bn1on0115.outbound.protection.outlook.com ([157.56.110.115]:21238
 	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751908AbaJAS6j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 14:58:39 -0400
-Date: Wed, 1 Oct 2014 11:43:05 -0700
-From: Guenter Roeck <groeck@juniper.net>
-To: Danielle Costantino <danielle.costantino@gmail.com>
-CC: linux-i2c <linux-i2c@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>
-Subject: Re: Fwd: [Proposal] PM sleep children of inactive I2C bus segments
- off Masters in multi-master systems
-Message-ID: <20141001184304.GA6832@svl-evodev-groeck.juniper.net>
-References: <CAAVjN7dwS62EKMnuZc_P1UjkbRVk6RXqJ91GwWZ96bbY5Ct-rg@mail.gmail.com>
- <CAAVjN7eUmBVcAGPbcn3qsJ9M9uu2nkFoKHqGhhKGekZSceGiMw@mail.gmail.com>
+	id S1751292AbaJJGLp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 Oct 2014 02:11:45 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH v5 3/9] PCI: imx6: wait the clocks to stabilize after ref_en
+Date: Fri, 10 Oct 2014 13:41:10 +0800
+Message-ID: <1412919676-25344-4-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
+References: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAAVjN7eUmBVcAGPbcn3qsJ9M9uu2nkFoKHqGhhKGekZSceGiMw@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 01, 2014 at 11:39:49AM -0700, Danielle Costantino wrote:
-> added proper mailing lists...I hope
-> 
+From: Richard Zhu <r65037@freescale.com>
 
-Hi Danielle,
+For boards without a reset gpio we skip the delay between enabling
+the pcie_ref_clk and touching the RC registers for configuration.
+System would be hangs when the clocks are not yet settled in the DW
+PCIe core. So we need to make sure that there is always an
+appropriate delay between those two actions.
 
-I don't see the actual proposal, and I don't find anything on the web
-either when looking for the headline :-(.
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
+Tested-by: Tim Harvey <tharvey@gateworks.com>
+---
+ drivers/pci/host/pci-imx6.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-Guenter
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 233fe8a..eac96fb 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -275,15 +275,22 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		goto err_pcie;
+ 	}
+ 
+-	/* allow the clocks to stabilize */
+-	usleep_range(200, 500);
+-
+ 	/* power up core phy and enable ref clock */
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
++	/*
++	 * the async reset input need ref clock to sync internally,
++	 * when the ref clock comes after reset, internal synced
++	 * reset time is too short , cannot meet the requirement.
++	 * add one ~10us delay here.
++	 */
++	udelay(10);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+ 
++	/* allow the clocks to stabilize */
++	usleep_range(200, 500);
++
+ 	/* Some boards don't have PCIe reset GPIO. */
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+ 		gpio_set_value(imx6_pcie->reset_gpio, 0);
+-- 
+1.9.1
+
