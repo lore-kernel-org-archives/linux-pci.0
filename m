@@ -1,152 +1,192 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v2 07/16] usb: dwc3: add lpm erratum support
-Date: Fri, 17 Oct 2014 16:53:32 +0800
-Message-ID: <1413536021-4886-8-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.skyhub.de ([78.46.96.112]:57928 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751356AbaJJRuH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 Oct 2014 13:50:07 -0400
+Date: Fri, 10 Oct 2014 19:49:54 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, tglx@linutronix.de,
+	hpa@zytor.com, x86@kernel.org, bp@suse.de,
+	dan.carpenter@oracle.com, dougthompson@xmission.com,
+	m.chehab@samsung.com, linux-edac@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V2 4/4] edac, amd64_edac: Add F15h M60h support
+Message-ID: <20141010174954.GA13017@pd.tnic>
+References: <1412640280-11452-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1412640280-11452-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When parameter DWC_USB3_LPM_ERRATA_ENABLE is enabled in Andvanced Configuration
-of coreConsultant, it supports of xHCI BESL Errata Dated 10/19/2011 is enabled
-in host mode. In device mode it adds the capability to send NYET response based
-on the BESL value received in the LPM token.
+On Mon, Oct 06, 2014 at 07:04:40PM -0500, Aravind Gopalakrishnan wrote:
+> This patch adds support for ECC error decoding for F15h M60h processor.
+> Aside from the usual changes, the patch adds support for some new features
+> in the processor:
+>  - DDR4(unbuffered, registered); LRDIMM DDR3 support
+>    - relevant debug messages have been modified/added to report these
+>      memory types
+>  - new dbam_to_cs mappers
+>    - if (F15h M60h && LRDIMM); we need a 'multiplier' value to find
+>      cs_size. This multiplier value is obtained from the per-dimm
+>      DCSM register. So, change the interface to accept a 'cs_mask_nr'
+>      value to facilitate this calculation
+>  - new determine_memory_type low_ops
+>    - introduced to remove too many if-else conditions in
+>      determine_memory_type().
+>    - This is now called early in read_mc_regs() to cache dram_type
+> 
+> Misc cleanup:
+>  - amd64_pci_table[] is condensed by using PCI_VDEVICE macro.
+> 
+> Testing details:
+> Tested the patch by injecting 'ECC' type errors using mce_amd_inj
+> and error decoding works fine.
+> 
+> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+> ---
+> Changes in V2
+>  - Cache dram_type in amd64_pvt structure (per Boris suggestion)
+>  - Introduce per-family low_ops for determine_memory_type() to reduce
+>    number of if-else statements
+>    - Call this early in read_mc_regs() to cache dram_type
+>    - The debug messages are moved around a bit as a result to print
+>      dram_type immediately
+> 
+>  drivers/edac/amd64_edac.c | 253 ++++++++++++++++++++++++++++++++--------------
+>  drivers/edac/amd64_edac.h |  16 ++-
+>  2 files changed, 188 insertions(+), 81 deletions(-)
+> 
+> diff --git a/drivers/edac/amd64_edac.c b/drivers/edac/amd64_edac.c
+> index bbd6514..6cc3243 100644
+> --- a/drivers/edac/amd64_edac.c
+> +++ b/drivers/edac/amd64_edac.c
+> @@ -692,9 +692,18 @@ static void debug_dump_dramcfg_low(struct amd64_pvt *pvt, u32 dclr, int chan)
+>  {
+>  	edac_dbg(1, "F2x%d90 (DRAM Cfg Low): 0x%08x\n", chan, dclr);
+>  
+> -	edac_dbg(1, "  DIMM type: %sbuffered; all DIMMs support ECC: %s\n",
+> -		 (dclr & BIT(16)) ?  "un" : "",
+> -		 (dclr & BIT(19)) ? "yes" : "no");
+> +	if (pvt->dram_type == MEM_LRDDR3) {
+> +		u32 dcsm = pvt->csels[chan].csmasks[0];
+> +		/*
+> +		 * It's assumed all LRDIMMs in a DCT are going to be of
+> +		 * same 'type' until proven otherwise. So, use a cs
+> +		 * value of '0' here to get dcsm value.
+> +		 */
+> +		edac_dbg(1, " LRDIMM %dx rank multiply\n", (dcsm & 0x3));
+> +	}
+> +
+> +	edac_dbg(1, "All DIMMs support ECC:%s\n",
+> +		    (dclr & BIT(19)) ? "yes" : "no");
+>  
+>  	edac_dbg(1, "  PAR/ERR parity: %s\n",
+>  		 (dclr & BIT(8)) ?  "enabled" : "disabled");
+> @@ -756,7 +765,7 @@ static void prep_chip_selects(struct amd64_pvt *pvt)
+>  	if (pvt->fam == 0xf && pvt->ext_model < K8_REV_F) {
+>  		pvt->csels[0].b_cnt = pvt->csels[1].b_cnt = 8;
+>  		pvt->csels[0].m_cnt = pvt->csels[1].m_cnt = 8;
+> -	} else if (pvt->fam == 0x15 && pvt->model >= 0x30) {
+> +	} else if (pvt->fam == 0x15 && pvt->model == 0x30) {
+>  		pvt->csels[0].b_cnt = pvt->csels[1].b_cnt = 4;
+>  		pvt->csels[0].m_cnt = pvt->csels[1].m_cnt = 2;
+>  	} else {
+> @@ -813,25 +822,57 @@ static void read_dct_base_mask(struct amd64_pvt *pvt)
+>  	}
+>  }
+>  
+> -static enum mem_type determine_memory_type(struct amd64_pvt *pvt, int cs)
+> +void determine_memory_type_k8(struct amd64_pvt *pvt)
+>  {
+> -	enum mem_type type;
+> -
+> -	/* F15h supports only DDR3 */
+> -	if (pvt->fam >= 0x15)
+> -		type = (pvt->dclr0 & BIT(16)) ?	MEM_DDR3 : MEM_RDDR3;
+> -	else if (pvt->fam == 0x10 || pvt->ext_model >= K8_REV_F) {
+> +	if (pvt->ext_model >= K8_REV_F) {
+>  		if (pvt->dchr0 & DDR3_MODE)
+> -			type = (pvt->dclr0 & BIT(16)) ?	MEM_DDR3 : MEM_RDDR3;
+> +			pvt->dram_type = (pvt->dclr0 & BIT(16)) ?
+> +					 MEM_DDR3 : MEM_RDDR3;
+>  		else
+> -			type = (pvt->dclr0 & BIT(16)) ? MEM_DDR2 : MEM_RDDR2;
+> +			pvt->dram_type = (pvt->dclr0 & BIT(16)) ?
+> +					 MEM_DDR2 : MEM_RDDR2;
 
-This patch add an entry that soc platform is able to define the lpm capacity
-with their own device tree or bus glue layer.
+If you want to do separate ->determine_memory_type() per family, you can
+at least avoid code duplication here above ^^^ by doing
 
-Suggested-by: Felipe Balbi <balbi@ti.com>
-Signed-off-by: Huang Rui <ray.huang@amd.com>
----
- drivers/usb/dwc3/core.c          |  2 ++
- drivers/usb/dwc3/core.h          | 24 +++++++++++++++---------
- drivers/usb/dwc3/dwc3-pci.c      |  1 +
- drivers/usb/dwc3/gadget.c        |  7 +++++++
- drivers/usb/dwc3/platform_data.h |  1 +
- 5 files changed, 26 insertions(+), 9 deletions(-)
+	return determine_memory_type_f10(pvt);
 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index 819e501..25db533 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -708,11 +708,13 @@ static int dwc3_probe(struct platform_device *pdev)
- 
- 	if (node) {
- 		dwc->maximum_speed = of_usb_get_maximum_speed(node);
-+		dwc->has_lpm_erratum = of_property_read_bool(node, "snps,has-lpm-erratum");
- 
- 		dwc->needs_fifo_resize = of_property_read_bool(node, "tx-fifo-resize");
- 		dwc->dr_mode = of_usb_get_dr_mode(node);
- 	} else if (pdata) {
- 		dwc->maximum_speed = pdata->maximum_speed;
-+		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
- 
- 		dwc->needs_fifo_resize = pdata->tx_fifo_resize;
- 		dwc->dr_mode = pdata->dr_mode;
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index cfe0d57..d58479e 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -246,16 +246,19 @@
- #define DWC3_DCTL_TRGTULST_SS_INACT	(DWC3_DCTL_TRGTULST(6))
- 
- /* These apply for core versions 1.94a and later */
--#define DWC3_DCTL_KEEP_CONNECT	(1 << 19)
--#define DWC3_DCTL_L1_HIBER_EN	(1 << 18)
--#define DWC3_DCTL_CRS		(1 << 17)
--#define DWC3_DCTL_CSS		(1 << 16)
-+#define DWC3_DCTL_LPM_ERRATA_MASK	DWC3_DCTL_LPM_ERRATA(0xf)
-+#define DWC3_DCTL_LPM_ERRATA(n)		((n) << 20)
- 
--#define DWC3_DCTL_INITU2ENA	(1 << 12)
--#define DWC3_DCTL_ACCEPTU2ENA	(1 << 11)
--#define DWC3_DCTL_INITU1ENA	(1 << 10)
--#define DWC3_DCTL_ACCEPTU1ENA	(1 << 9)
--#define DWC3_DCTL_TSTCTRL_MASK	(0xf << 1)
-+#define DWC3_DCTL_KEEP_CONNECT		(1 << 19)
-+#define DWC3_DCTL_L1_HIBER_EN		(1 << 18)
-+#define DWC3_DCTL_CRS			(1 << 17)
-+#define DWC3_DCTL_CSS			(1 << 16)
-+
-+#define DWC3_DCTL_INITU2ENA		(1 << 12)
-+#define DWC3_DCTL_ACCEPTU2ENA		(1 << 11)
-+#define DWC3_DCTL_INITU1ENA		(1 << 10)
-+#define DWC3_DCTL_ACCEPTU1ENA		(1 << 9)
-+#define DWC3_DCTL_TSTCTRL_MASK		(0xf << 1)
- 
- #define DWC3_DCTL_ULSTCHNGREQ_MASK	(0x0f << 5)
- #define DWC3_DCTL_ULSTCHNGREQ(n) (((n) << 5) & DWC3_DCTL_ULSTCHNGREQ_MASK)
-@@ -665,6 +668,8 @@ struct dwc3_scratchpad_array {
-  * @ep0_bounced: true when we used bounce buffer
-  * @ep0_expect_in: true when we expect a DATA IN transfer
-  * @has_hibernation: true when dwc3 was configured with Hibernation
-+ * @has_lpm_erratum: true when core was configured with LPM Erratum. Note that
-+ *			there's now way for software to detect this in runtime.
-  * @is_selfpowered: true when we are selfpowered
-  * @is_fpga: true when we are using the FPGA board
-  * @needs_fifo_resize: not all users might want fifo resizing, flag it
-@@ -771,6 +776,7 @@ struct dwc3 {
- 	unsigned		ep0_bounced:1;
- 	unsigned		ep0_expect_in:1;
- 	unsigned		has_hibernation:1;
-+	unsigned		has_lpm_erratum:1;
- 	unsigned		is_selfpowered:1;
- 	unsigned		is_fpga:1;
- 	unsigned		needs_fifo_resize:1;
-diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
-index a89db6c..bbe946c 100644
---- a/drivers/usb/dwc3/dwc3-pci.c
-+++ b/drivers/usb/dwc3/dwc3-pci.c
-@@ -148,6 +148,7 @@ static int dwc3_pci_probe(struct pci_dev *pci,
- 
- 	if (pci->vendor == PCI_VENDOR_ID_AMD && pci->device ==
- 			PCI_DEVICE_ID_AMD_NL) {
-+		dwc3_pdata.has_lpm_erratum = true;
- 		dwc3_pdata.quirks |= DWC3_QUIRK_AMD_NL;
- 	}
- 
-diff --git a/drivers/usb/dwc3/gadget.c b/drivers/usb/dwc3/gadget.c
-index 1f2a719..33bfc70 100644
---- a/drivers/usb/dwc3/gadget.c
-+++ b/drivers/usb/dwc3/gadget.c
-@@ -1581,6 +1581,13 @@ static int dwc3_gadget_start(struct usb_gadget *g,
- 	}
- 	dwc3_writel(dwc->regs, DWC3_DCFG, reg);
- 
-+	if (dwc->has_lpm_erratum) {
-+		reg = dwc3_readl(dwc->regs, DWC3_DCTL);
-+		/* REVISIT should this be configurable ? */
-+		reg |= DWC3_DCTL_LPM_ERRATA(0xf);
-+		dwc3_writel(dwc->regs, DWC3_DCTL, reg);
-+	}
-+
- 	dwc->start_config_issued = false;
- 
- 	/* Start with SuperSpeed Default */
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index 9c5f074..098ab04 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -25,6 +25,7 @@ struct dwc3_platform_data {
- 	enum usb_dr_mode dr_mode;
- 	bool tx_fifo_resize;
- 
-+	unsigned has_lpm_erratum:1;
- 	u32     quirks;
- 
- #define DWC3_QUIRK_AMD_NL		(1 << 0)
+for the K8-revF and later at least.
+
+Or, you can do a nice clean switch/case and keep the logic for the
+memory type in one function. See which one looks cleaner but from where
+I'm standing, the per-family pointers are a bit too much for this case,
+IMHO.
+
+Oh, btw, they all should be static declarations, of course.
+
+>  	} else {
+> -		type = (pvt->dclr0 & BIT(18)) ? MEM_DDR : MEM_RDDR;
+> +		pvt->dram_type = (pvt->dclr0 & BIT(18)) ? MEM_DDR : MEM_RDDR;
+>  	}
+> +}
+>  
+> -	amd64_info("CS%d: %s\n", cs, edac_mem_types[type]);
+> +void determine_memory_type_f10(struct amd64_pvt *pvt)
+> +{
+> +	if (pvt->dchr0 & DDR3_MODE)
+> +		pvt->dram_type = (pvt->dclr0 & BIT(16)) ?
+> +				 MEM_DDR3 : MEM_RDDR3;
+> +	else
+> +		pvt->dram_type = (pvt->dclr0 & BIT(16)) ?
+> +				 MEM_DDR2 : MEM_RDDR2;
+> +}
+>  
+> -	return type;
+> +void determine_memory_type_f15(struct amd64_pvt *pvt)
+> +{
+> +	if (pvt->model == 0x60) {
+> +		/*
+> +		 * We use a Chip Select value of '0' to obtain dcsm.
+> +		 * Theoretically, it is possible to populate LRDIMMs
+> +		 * of different 'Rank' value on a DCT. But this is
+> +		 * not a common case. So, it's reasonable to assume
+> +		 * all DIMMs are going to be of same 'type' until
+> +		 * proven otherwise.
+> +		 */
+> +		u32 dram_ctrl;
+> +		u32 dcsm = pvt->csels[0].csmasks[0];
+> +
+> +		amd64_read_dct_pci_cfg(pvt, 0, DRAM_CONTROL,
+> +				       &dram_ctrl);
+> +		pvt->dram_type = (((dram_ctrl >> 8) & 0x7) == 0x2) ? MEM_DDR4 :
+> +				 (pvt->dclr0 & BIT(16)) ? MEM_DDR3 :
+> +				 (dcsm & 0x3) ? MEM_LRDDR3 : MEM_RDDR3;
+
+This is pretty unreadable, please do a simpler if-else instead.
+
+> +	} else {
+> +		pvt->dram_type = (pvt->dclr0 & BIT(16)) ? MEM_DDR3 : MEM_RDDR3;
+> +	}
+> +}
+> +
+> +void determine_memory_type_f16(struct amd64_pvt *pvt)
+> +{
+> +	pvt->dram_type = (pvt->dclr0 & BIT(16)) ? MEM_DDR3 : MEM_RDDR3;
+
+This line tends to repeat a lot - the switch/case version starts to
+sound much better all of a sudden... :-)
+
+Thanks.
+
 -- 
-1.9.1
+Regards/Gruss,
+    Boris.
 
+Sent from a fat crate under my desk. Formatting is fine.
+--
