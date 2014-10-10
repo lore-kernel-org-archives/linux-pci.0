@@ -1,104 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 29 Oct 2014 10:19:15 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org
-Subject: Re: [Patch Part2 v3 15/24] x86, MSI: Use hierarchy irqdomain to
- manage MSI interrupts
-In-Reply-To: <5450A9D8.108@linux.intel.com>
-Message-ID: <alpine.DEB.2.11.1410291017180.5308@nanos>
-References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com> <1414484803-10311-16-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1410282046120.5308@nanos> <5450A9D8.108@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:35682 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751249AbaJJBio (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Oct 2014 21:38:44 -0400
+Message-ID: <5437389D.3050902@huawei.com>
+Date: Fri, 10 Oct 2014 09:38:37 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+To: "Wei, Aaron" <Aaron.Wei@emc.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: A question about PCI device rescan
+References: <643A135C3423C4499CDC6CEE6EC6559D014710C96D@MX25A.corp.emc.com>
+In-Reply-To: <643A135C3423C4499CDC6CEE6EC6559D014710C96D@MX25A.corp.emc.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 29 Oct 2014, Jiang Liu wrote:
-> On 2014/10/29 5:37, Thomas Gleixner wrote:
-> > On Tue, 28 Oct 2014, Jiang Liu wrote:
-> >> +static int msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
-> >> +			    bool force)
-> >> +{
-> >> +	struct irq_data *parent = data->parent_data;
-> >> +	int ret;
-> >>  
-> >> -	msg.data &= ~MSI_DATA_VECTOR_MASK;
-> >> -	msg.data |= MSI_DATA_VECTOR(cfg->vector);
-> >> -	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
-> >> -	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
-> >> +	ret = parent->chip->irq_set_affinity(parent, mask, force);
-> >> +	/* No need to reprogram MSI registers if interrupt is remapped */
-> >> +	if (ret >= 0 && !msi_irq_remapped(data)) {
-> >> +		struct msi_msg msg;
-> >>  
-> >> -	__write_msi_msg(data->msi_desc, &msg);
-> >> +		__get_cached_msi_msg(data->msi_desc, &msg);
-> >> +		msi_update_msg(&msg, data);
-> >> +		__write_msi_msg(data->msi_desc, &msg);
-> >> +	}
-> > 
-> > I'm not too happy about the msi_irq_remapped() conditional here. It
-> > violates the whole concept of domain stacking somewhat.
-> > 
-> > A better separation would be to add a callback to the irq chip:
-> > 
-> >   	void (*irq_write_msi_msg)(struct irq_data *data, struct msi_desc *msi_desc, bool cached);
-> > 
-> > and change this code to:
-> > 
-> >     	if (ret >= 0)
-> > 	   	parent->chip->irq_write_msi_msg(parent, data->msi-desc, true);
-> >   
-> Hi Thomas,
-> 	Thanks for your great suggestion and I have worked out a draft
-> patch to achieve what you want:)
-> 	I have made following changes to irq core to get rid of remapped
-> irq logic from msi.c:
-> 1) Add IRQ_SET_MASK_OK_DONE in addition to IRQ_SET_MASK_OK and
-> IRQ_SET_MASK_OK_NOCOPY. IRQ_SET_MASK_OK_DONE is the same as
-> IRQ_SET_MASK_OK for irq core and indicates to stacked irqchip that
-> parent irqchips have done all work and skip any handling in descendant
-> irqchips.
-> 2) Add int (*irq_compose_msi_msg)(struct irq_data *data, struct msi_msg
-> *msg) into struct irq_chip. I'm still hesitating to return void or int
-> here. By returning void, irq_chip_compose_msi_msg() will be simpler,
-> but it loses flexibility.
+On 2014/10/9 18:50, Wei, Aaron wrote:
+> Hi,
+> 
+> Could someone help explain why writing to "rescan" under "/sys/bus/pci/devices/.../rescan" will force a rescan of the device's parent bus instead of just re-discover all the devices behind this device (if the device is type-0, then nothing happens).
+> 
+> Is there any user space interface that could let user just rescan devices behind one specified type-1 device?
 
-void should be sufficient. If the chip advertises this function it
-better can provide a proper msi msg :)
- 
-> With above changes to core, we could remove all knowledge of irq
-> remapping from msi.c and the irq remapping interfaces get simpler too.
-> Please refer to following patch for details. The patch passes basic
-> booting tests with irq remapping enabled. If it's OK, I will fold
-> it into the patch set.
+You can use pci_bus rescan which is placed under the pci_bus, i.e.
 
-Yes. That looks reasonable. 
- 
-> IOAPIC runs into the same situation, but I need some more time
-> to find a solution:)
+ \-[0000:00]-+-00.0  Intel Corporation 5520/5500/X58 I/O Hub to ESI Port
+             +-01.0-[0000:01-02]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
+             |                    \-00.1  Intel Corporation 82576 Gigabit Network Connection
 
-I'm sure you will!
+If you want to rescan devices behind 00:01.0(root port),
+echo 1 > /sys/bus/pci/devices/0000:00:01.0/pci_bus/0000:01/rescan
 
-Thanks,
+Then it will only rescan the subordinate pci bus.
 
-	tglx
+
+> 
+> Thanks,
+> Aaron 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+
+
+-- 
+Thanks!
+Yijing
+
