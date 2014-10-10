@@ -1,72 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:10274 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752473AbaJ0HIX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Oct 2014 03:08:23 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Thierry Reding" <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 06/10] PCI: rcar: Save MSI controller in pci_sys_data
-Date: Mon, 27 Oct 2014 15:48:43 +0800
-Message-ID: <1414396127-30023-7-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1414396127-30023-1-git-send-email-wangyijing@huawei.com>
-References: <1414396127-30023-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-bl2on0129.outbound.protection.outlook.com ([65.55.169.129]:24329
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750990AbaJJGLp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 Oct 2014 02:11:45 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH v5 2/9] PCI: designware: fix one potential assignment error of cfg start
+Date: Fri, 10 Oct 2014 13:41:09 +0800
+Message-ID: <1412919676-25344-3-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
+References: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Save MSI controller in pci_sys_data instead of
-assigning MSI controller pointer to every pci bus
-in .add_bus().
+From: Richard Zhu <r65037@freescale.com>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+if va_cfg0_base/va_cfg1_base are initialized by
+designware core, the pp->cfg.start is not initialized
+properly, when IORESOURCE_MEM "config" is represented
+as cfg space resource.
+solution: assign cfg_res->start to pp->cfg.start.
+
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
 ---
- drivers/pci/host/pcie-rcar.c |   13 +++----------
- 1 files changed, 3 insertions(+), 10 deletions(-)
+ drivers/pci/host/pcie-designware.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 48221aa..0dd9c75 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -380,20 +380,10 @@ static int rcar_pcie_setup(int nr, struct pci_sys_data *sys)
- 	return 1;
- }
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index ae1e6c5..f1f127f 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -444,6 +444,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	if (cfg_res) {
+ 		pp->config.cfg0_size = resource_size(cfg_res)/2;
+ 		pp->config.cfg1_size = resource_size(cfg_res)/2;
++		pp->cfg.start = cfg_res->start;
+ 		pp->cfg0_base = cfg_res->start;
+ 		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
  
--static void rcar_pcie_add_bus(struct pci_bus *bus)
--{
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
--
--		bus->msi = &pcie->msi.ctrl;
--	}
--}
--
- struct hw_pci rcar_pci = {
- 	.setup          = rcar_pcie_setup,
- 	.map_irq        = of_irq_parse_and_map_pci,
- 	.ops            = &rcar_pcie_ops,
--	.add_bus        = rcar_pcie_add_bus,
- };
- 
- static void rcar_pcie_enable(struct rcar_pcie *pcie)
-@@ -402,6 +392,9 @@ static void rcar_pcie_enable(struct rcar_pcie *pcie)
- 
- 	rcar_pci.nr_controllers = 1;
- 	rcar_pci.private_data = (void **)&pcie;
-+#ifdef CONFIG_PCI_MSI
-+	rcar_pci.msi_ctrl = &pcie->msi.ctrl;
-+#endif
- 
- 	pci_common_init_dev(&pdev->dev, &rcar_pci);
- #ifdef CONFIG_PCI_DOMAINS
 -- 
-1.7.1
+1.9.1
 
