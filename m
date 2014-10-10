@@ -1,99 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH] PCI: Remove fixed parameter in pci_iov_resource_bar()
-From: Myron Stowe <myron.stowe@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: chrisw@sous-sol.org, ddutile@redhat.com,
-	linux-kernel@vger.kernel.org, yuzhao@google.com
-Date: Thu, 30 Oct 2014 15:28:17 -0600
-Message-ID: <20141030212816.9654.73990.stgit@amt.stowe>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailuogwdur.emc.com ([128.221.224.79]:21593 "EHLO
+	mailuogwdur.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751064AbaJJCiz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Oct 2014 22:38:55 -0400
+From: "Wei, Aaron" <Aaron.Wei@emc.com>
+To: Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Thu, 9 Oct 2014 22:38:25 -0400
+Subject: RE: A question about PCI device rescan
+Message-ID: <643A135C3423C4499CDC6CEE6EC6559D014710CA22@MX25A.corp.emc.com>
+References: <643A135C3423C4499CDC6CEE6EC6559D014710C96D@MX25A.corp.emc.com>
+ <5437389D.3050902@huawei.com>
+In-Reply-To: <5437389D.3050902@huawei.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_iov_resource_bar() always sets its 'pci_bar_type' parameter to
-'pci_bar_unknown'.  Drop the parameter and just use 'pci_bar_unknown'
-directly in the callers.
-
-No functional change intended.
-
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
-Cc: Chris Wright <chrisw@sous-sol.org>
-Cc: Yu Zhao <yuzhao@google.com>
----
- drivers/pci/iov.c |   11 +++--------
- drivers/pci/pci.c |    3 ++-
- drivers/pci/pci.h |    3 +--
- 3 files changed, 6 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 4d109c0..4b3a4ea 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -479,20 +479,16 @@ void pci_iov_release(struct pci_dev *dev)
-  * pci_iov_resource_bar - get position of the SR-IOV BAR
-  * @dev: the PCI device
-  * @resno: the resource number
-- * @type: the BAR type to be filled in
-  *
-  * Returns position of the BAR encapsulated in the SR-IOV capability.
-  */
--int pci_iov_resource_bar(struct pci_dev *dev, int resno,
--			 enum pci_bar_type *type)
-+int pci_iov_resource_bar(struct pci_dev *dev, int resno)
- {
- 	if (resno < PCI_IOV_RESOURCES || resno > PCI_IOV_RESOURCE_END)
- 		return 0;
- 
- 	BUG_ON(!dev->is_physfn);
- 
--	*type = pci_bar_unknown;
--
- 	return dev->sriov->pos + PCI_SRIOV_BAR +
- 		4 * (resno - PCI_IOV_RESOURCES);
- }
-@@ -510,13 +506,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno,
- resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
- {
- 	struct resource tmp;
--	enum pci_bar_type type;
--	int reg = pci_iov_resource_bar(dev, resno, &type);
-+	int reg = pci_iov_resource_bar(dev, resno);
- 
- 	if (!reg)
- 		return 0;
- 
--	 __pci_read_base(dev, type, &tmp, reg);
-+	 __pci_read_base(dev, pci_bar_unknown, &tmp, reg);
- 	return resource_alignment(&tmp);
- }
- 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 625a4ac..7bf2465 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4180,7 +4180,8 @@ int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type)
- 		return dev->rom_base_reg;
- 	} else if (resno < PCI_BRIDGE_RESOURCES) {
- 		/* device specific resource */
--		reg = pci_iov_resource_bar(dev, resno, type);
-+		*type = pci_bar_unknown;
-+		reg = pci_iov_resource_bar(dev, resno);
- 		if (reg)
- 			return reg;
- 	}
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 0601890..e0b5f17 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -251,8 +251,7 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
- #ifdef CONFIG_PCI_IOV
- int pci_iov_init(struct pci_dev *dev);
- void pci_iov_release(struct pci_dev *dev);
--int pci_iov_resource_bar(struct pci_dev *dev, int resno,
--			 enum pci_bar_type *type);
-+int pci_iov_resource_bar(struct pci_dev *dev, int resno);
- resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno);
- void pci_restore_iov_state(struct pci_dev *dev);
- int pci_iov_bus_range(struct pci_bus *bus);
-
+SGkgWWlqaW5nLA0KDQpUaGFua3MgZm9yIHlvdXIgaW5mb3JtYXRpb24sIHRoYXQncyB3aGF0IEkn
+bSBsb29raW5nIGZvciENCg0KLUFhcm9uDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpG
+cm9tOiBZaWppbmcgV2FuZyBbbWFpbHRvOndhbmd5aWppbmdAaHVhd2VpLmNvbV0gDQpTZW50OiAy
+MDE0xOoxMNTCMTDI1SA5OjM5DQpUbzogV2VpLCBBYXJvbjsgbGludXgtcGNpQHZnZXIua2VybmVs
+Lm9yZw0KU3ViamVjdDogUmU6IEEgcXVlc3Rpb24gYWJvdXQgUENJIGRldmljZSByZXNjYW4NCg0K
+T24gMjAxNC8xMC85IDE4OjUwLCBXZWksIEFhcm9uIHdyb3RlOg0KPiBIaSwNCj4gDQo+IENvdWxk
+IHNvbWVvbmUgaGVscCBleHBsYWluIHdoeSB3cml0aW5nIHRvICJyZXNjYW4iIHVuZGVyICIvc3lz
+L2J1cy9wY2kvZGV2aWNlcy8uLi4vcmVzY2FuIiB3aWxsIGZvcmNlIGEgcmVzY2FuIG9mIHRoZSBk
+ZXZpY2UncyBwYXJlbnQgYnVzIGluc3RlYWQgb2YganVzdCByZS1kaXNjb3ZlciBhbGwgdGhlIGRl
+dmljZXMgYmVoaW5kIHRoaXMgZGV2aWNlIChpZiB0aGUgZGV2aWNlIGlzIHR5cGUtMCwgdGhlbiBu
+b3RoaW5nIGhhcHBlbnMpLg0KPiANCj4gSXMgdGhlcmUgYW55IHVzZXIgc3BhY2UgaW50ZXJmYWNl
+IHRoYXQgY291bGQgbGV0IHVzZXIganVzdCByZXNjYW4gZGV2aWNlcyBiZWhpbmQgb25lIHNwZWNp
+ZmllZCB0eXBlLTEgZGV2aWNlPw0KDQpZb3UgY2FuIHVzZSBwY2lfYnVzIHJlc2NhbiB3aGljaCBp
+cyBwbGFjZWQgdW5kZXIgdGhlIHBjaV9idXMsIGkuZS4NCg0KIFwtWzAwMDA6MDBdLSstMDAuMCAg
+SW50ZWwgQ29ycG9yYXRpb24gNTUyMC81NTAwL1g1OCBJL08gSHViIHRvIEVTSSBQb3J0DQogICAg
+ICAgICAgICAgKy0wMS4wLVswMDAwOjAxLTAyXS0tKy0wMC4wICBJbnRlbCBDb3Jwb3JhdGlvbiA4
+MjU3NiBHaWdhYml0IE5ldHdvcmsgQ29ubmVjdGlvbg0KICAgICAgICAgICAgIHwgICAgICAgICAg
+ICAgICAgICAgIFwtMDAuMSAgSW50ZWwgQ29ycG9yYXRpb24gODI1NzYgR2lnYWJpdCBOZXR3b3Jr
+IENvbm5lY3Rpb24NCg0KSWYgeW91IHdhbnQgdG8gcmVzY2FuIGRldmljZXMgYmVoaW5kIDAwOjAx
+LjAocm9vdCBwb3J0KSwgZWNobyAxID4gL3N5cy9idXMvcGNpL2RldmljZXMvMDAwMDowMDowMS4w
+L3BjaV9idXMvMDAwMDowMS9yZXNjYW4NCg0KVGhlbiBpdCB3aWxsIG9ubHkgcmVzY2FuIHRoZSBz
+dWJvcmRpbmF0ZSBwY2kgYnVzLg0KDQoNCj4gDQo+IFRoYW5rcywNCj4gQWFyb24NCj4gDQo+IC0t
+DQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNj
+cmliZSBsaW51eC1wY2kiIA0KPiBpbiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21v
+QHZnZXIua2VybmVsLm9yZyBNb3JlIG1ham9yZG9tbyANCj4gaW5mbyBhdCAgaHR0cDovL3ZnZXIu
+a2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo+IA0KPiANCg0KDQotLQ0KVGhhbmtzIQ0K
+WWlqaW5nDQoNCg==
