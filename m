@@ -1,127 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:55105 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753413AbaJNSvb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 14:51:31 -0400
-Received: by mail-ig0-f181.google.com with SMTP id r10so15855409igi.2
-        for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 11:51:30 -0700 (PDT)
-Date: Tue, 14 Oct 2014 12:51:28 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: matt@masarand.com
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH 13/18] Delayed sparc setup of PCI IRQs to bus scan time
-Message-ID: <20141014185128.GK10125@google.com>
-References: <1412222866-21068-1-git-send-email-matt@masarand.com>
- <1412222866-21068-14-git-send-email-matt@masarand.com>
+Received: from mail-qg0-f53.google.com ([209.85.192.53]:39458 "EHLO
+	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754051AbaJJOh6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Oct 2014 10:37:58 -0400
+Received: by mail-qg0-f53.google.com with SMTP id a108so3926612qge.40
+        for <linux-pci@vger.kernel.org>; Fri, 10 Oct 2014 07:37:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1412222866-21068-14-git-send-email-matt@masarand.com>
+In-Reply-To: <5437A958.3000201@maya.org>
+References: <20140923210318.498dacbd@dualc.maya.org> <1411502866.24563.8.camel@ul30vt.home>
+ <5437A958.3000201@maya.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 10 Oct 2014 08:37:37 -0600
+Message-ID: <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com>
+Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass through (vfio)
+To: Andreas Hartmann <andihartmann@freenet.de>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 02, 2014 at 05:07:41AM +0100, matt@masarand.com wrote:
-> From: Matthew Minter <matt@masarand.com>
-> 
-> Currently sparc allocates PCI IRQs through several different methods
-> based on device. This is done during the boot stage and faces a draw-back
-> by which hot-plugged devices will not be allocated an IRQ, this is fixed
-> by registering IRQ allocation functions for later use during the device
-> enable path.
-> 
-> Signed-off-by: Matthew Minter <matt@masarand.com>
-> 
-> ---
->  arch/sparc/kernel/leon_pci.c | 12 +++++++++++-
->  arch/sparc/kernel/pci.c      | 21 +++++++++++++++++----
->  2 files changed, 28 insertions(+), 5 deletions(-)
-> 
-> diff --git a/arch/sparc/kernel/leon_pci.c b/arch/sparc/kernel/leon_pci.c
-> index 899b720..1079eb7 100644
-> --- a/arch/sparc/kernel/leon_pci.c
-> +++ b/arch/sparc/kernel/leon_pci.c
-> @@ -13,6 +13,8 @@
->  #include <asm/leon.h>
->  #include <asm/leon_pci.h>
->  
-> +int (*leon_pci_map_irq)(const struct pci_dev *dev, u8 slot, u8 pin);
-> +
->  /* The LEON architecture does not rely on a BIOS or bootloader to setup
->   * PCI for us. The Linux generic routines are used to setup resources,
->   * reset values of configuration-space register settings are preserved.
-> @@ -36,7 +38,7 @@ void leon_pci_init(struct platform_device *ofdev, struct leon_pci_info *info)
->  				     &resources);
->  	if (root_bus) {
->  		/* Setup IRQs of all devices using custom routines */
-> -		pci_fixup_irqs(pci_common_swizzle, info->map_irq);
-> +		leon_pci_map_irq = info->map_irq;
->  
->  		/* Assign devices with resources */
->  		pci_assign_unassigned_resources();
-> @@ -45,6 +47,14 @@ void leon_pci_init(struct platform_device *ofdev, struct leon_pci_info *info)
->  	}
->  }
->  
-> +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-> +{
-> +	bridge->swizzle_irq = pci_common_swizzle;
-> +	bridge->map_irq = leon_pci_map_irq;
-> +	return 0;
-> +}
-> +
-> +
->  void pcibios_fixup_bus(struct pci_bus *pbus)
->  {
->  	struct pci_dev *dev;
-> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-> index b36365f..7361c52 100644
-> --- a/arch/sparc/kernel/pci.c
-> +++ b/arch/sparc/kernel/pci.c
-> @@ -340,10 +340,6 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
->  	} else {
->  		dev->hdr_type = PCI_HEADER_TYPE_NORMAL;
->  		dev->rom_base_reg = PCI_ROM_ADDRESS;
-> -
-> -		dev->irq = sd->op->archdata.irqs[0];
-> -		if (dev->irq == 0xffffffff)
-> -			dev->irq = PCI_IRQ_NONE;
->  	}
->  
->  	pci_parse_of_addrs(sd->op, node, dev);
-> @@ -356,6 +352,23 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
->  	return dev;
->  }
->  
-> +int pci_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
-> +{
-> +	int irq;
-> +	struct platform_device *op = of_find_device_by_node(dev->sysdata);
+On Fri, Oct 10, 2014 at 3:39 AM, Andreas Hartmann
+<andihartmann@freenet.de> wrote:
+> shortly: I retested w/ qemu 2.1.0 and Linux 3.17.0 - no change in behaviour.
+>
+> Alex Williamson wrote:
+>> On Tue, 2014-09-23 at 21:03 +0200, Andreas Hartmann wrote:
+>>> Hello!
+>>>
+>>> Since long time now, I'm using w/o any problem PCIe pass through with a
+>>> Gigabyte GA-990XA-UD3/GA-990XA-UD3 mainboard (AMD 990X chipset) and
+>>> enabled IOMMU with vfio-pci.
+>>>
+>>> The last kernel working w/o any problem is kernel 3.13.7 (I didn't use
+>>> .8 and .9, but I do not think they would have been problematic).
+>>>
+>>> Since 3.14.19 (I didn't test any 3.14 kernel before) I'm encountering a
+>>> hard and silent lock up of the complete machine when starting the VM
+>>> with the PCIe card passed through.
 
-Add a blank line here.
+Since we're not really making any progress on this yet, would it be
+possible to bisect it?  We already know that 3.13.7 works and 3.14.19
+fails, and "git bisect start v3.14 v3.13" says it's about 13 steps.  I
+know that's still quite a bit of work, but at least it sounds like the
+problem is easy to reproduce.
 
-> +	irq = op->archdata.irqs[0];
-> +	if (irq == 0xffffffff)
-> +		irq = PCI_IRQ_NONE;
-> +	return irq;
-> +}
-> +
-> +int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-
-Shouldn't be weak.  I see why you're doing it, since you added a non-weak
-version in leon_pci.c, but without leon_pci.c, we'll have two weak versions
-(this one and the one in drivers/pci/probe.c), and it's not clear which one
-will be used.  Maybe keep this implementation (non-weak), and make a global
-map_irq pointer that defaults to pci_map_irq() and leon_pci.c would
-override that?
-
-> +{
-> +	bridge->swizzle_irq = NULL;
-> +	bridge->map_irq = pci_map_irq;
-> +	return 0;
-> +}
-> +
->  static void apb_calc_first_last(u8 map, u32 *first_p, u32 *last_p)
->  {
->  	u32 idx, first, last;
-> -- 
-> 2.1.0
-> 
+Bjorn
