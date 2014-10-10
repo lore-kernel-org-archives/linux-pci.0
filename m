@@ -1,83 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0111.outbound.protection.outlook.com ([157.56.110.111]:29824
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+Received: from mail-bl2on0115.outbound.protection.outlook.com ([65.55.169.115]:35382
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933367AbaJ3KLO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 06:11:14 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v4 13/20] usb: dwc3: set SUSPHY bit for all cores
-Date: Thu, 30 Oct 2014 18:08:38 +0800
-Message-ID: <1414663725-2195-14-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
-References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+	id S1751292AbaJJGLs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 Oct 2014 02:11:48 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH v5 8/9] ARM: imx6sx: add imx6sx pcie related gpr bits definitions
+Date: Fri, 10 Oct 2014 13:41:15 +0800
+Message-ID: <1412919676-25344-9-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
+References: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is recommended to set USB3 and USB2 SUSPHY bits to '1' after the core
-initialization is completed above the dwc3 revision 1.94a.
+From: Richard Zhu <r65037@freescale.com>
 
-Signed-off-by: Huang Rui <ray.huang@amd.com>
-Signed-off-by: Felipe Balbi <balbi@ti.com>
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
 ---
- drivers/usb/dwc3/core.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ include/linux/mfd/syscon/imx6q-iomuxc-gpr.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index 11b0ab08..e02c3b0 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -374,6 +374,15 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
+diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+index ff44374..3273b87 100644
+--- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
++++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+@@ -301,6 +301,7 @@
+ #define IMX6Q_GPR12_DEVICE_TYPE			(0xf << 12)
+ #define IMX6Q_GPR12_PCIE_CTL_2			BIT(10)
+ #define IMX6Q_GPR12_LOS_LEVEL			(0x1f << 4)
++#define IMX6Q_GPR12_LOS_LEVEL_9			(0x9 << 4)
  
- 	reg = dwc3_readl(dwc->regs, DWC3_GUSB3PIPECTL(0));
+ #define IMX6Q_GPR13_SDMA_STOP_REQ		BIT(30)
+ #define IMX6Q_GPR13_CAN2_STOP_REQ		BIT(29)
+@@ -395,4 +396,12 @@
+ #define IMX6SL_GPR1_FEC_CLOCK_MUX1_SEL_MASK    (0x3 << 17)
+ #define IMX6SL_GPR1_FEC_CLOCK_MUX2_SEL_MASK    (0x1 << 14)
  
-+	/*
-+	 * Above 1.94a, it is recommended to set DWC3_GUSB3PIPECTL_SUSPHY
-+	 * to '0' during coreConsultant configuration. So default value
-+	 * will be '0' when the core is reset. Application needs to set it
-+	 * to '1' after the core initialization is completed.
-+	 */
-+	if (dwc->revision > DWC3_REVISION_194A)
-+		reg |= DWC3_GUSB3PIPECTL_SUSPHY;
++/* For imx6sx iomux gpr register field define */
++#define IMX6SX_GPR5_PCIE_BTNRST			BIT(19)
++#define IMX6SX_GPR5_PCIE_PERST			BIT(18)
 +
- 	if (dwc->u2ss_inp3_quirk)
- 		reg |= DWC3_GUSB3PIPECTL_U2SSINP3OK;
- 
-@@ -395,6 +404,21 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
- 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
- 
- 	mdelay(100);
-+
-+	reg = dwc3_readl(dwc->regs, DWC3_GUSB2PHYCFG(0));
-+
-+	/*
-+	 * Above 1.94a, it is recommended to set DWC3_GUSB2PHYCFG_SUSPHY to
-+	 * '0' during coreConsultant configuration. So default value will
-+	 * be '0' when the core is reset. Application needs to set it to
-+	 * '1' after the core initialization is completed.
-+	 */
-+	if (dwc->revision > DWC3_REVISION_194A)
-+		reg |= DWC3_GUSB2PHYCFG_SUSPHY;
-+
-+	dwc3_writel(dwc->regs, DWC3_GUSB2PHYCFG(0), reg);
-+
-+	mdelay(100);
- }
- 
- /**
++#define IMX6SX_GPR12_PCIE_PM_TURN_OFF		BIT(16)
++#define IMX6SX_GPR12_PCIE_TEST_PD		BIT(30)
++#define IMX6SX_GPR12_RX_EQ_MASK			(0x7 << 0)
++#define IMX6SX_GPR12_RX_EQ_2			(0x2 << 0)
+ #endif /* __LINUX_IMX6Q_IOMUXC_GPR_H */
 -- 
 1.9.1
 
