@@ -1,43 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:53609 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750720AbaJFVLR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Oct 2014 17:11:17 -0400
-Date: Mon, 6 Oct 2014 23:11:13 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, tglx@linutronix.de,
-	hpa@zytor.com, x86@kernel.org, bp@suse.de,
-	dan.carpenter@oracle.com, dougthompson@xmission.com,
-	m.chehab@samsung.com, linux-edac@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/4] edac, amd64_edac: Add F15h M60h support
-Message-ID: <20141006211113.GG20739@pd.tnic>
-References: <1411070230-10298-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
- <20141001113235.GC18271@pd.tnic>
- <542C1EAA.4050408@amd.com>
- <20141001154523.GF18271@pd.tnic>
- <542EB53E.30507@amd.com>
+Received: from service87.mimecast.com ([91.220.42.44]:46640 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754391AbaJJN6L convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Oct 2014 09:58:11 -0400
+Date: Fri, 10 Oct 2014 14:58:04 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"rmk+kernel@arm.linux.org.uk" <rmk+kernel@arm.linux.org.uk>,
+	"tglx@linutronix.de" <tglx@linutronix.de>
+Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
+Message-ID: <20141010135804.GA26646@e102568-lin.cambridge.arm.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <2323270.n17xqW47JB@wuerfel>
+ <20141009090420.GA16293@e102568-lin.cambridge.arm.com>
+ <1831157.eN0OxS7i7m@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <542EB53E.30507@amd.com>
+In-Reply-To: <1831157.eN0OxS7i7m@wuerfel>
+Content-Type: text/plain; charset=WINDOWS-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 03, 2014 at 09:39:58AM -0500, Aravind Gopalakrishnan wrote:
-> So it seems we can theoretically have systems in this manner, but that is
-> not a common case..
+On Thu, Oct 09, 2014 at 11:51:43AM +0100, Arnd Bergmann wrote:
+
+[...]
+
+> > Last changes where introduced by commit 8c05cd08a, whose commit log adds
+> > to my confusion:
+> > 
+> > "[...] I think what we want here is for pci_start to be 0 when mmap_api ==
+> > PCI_MMAP_PROCFS.[...]"
+> > 
+> > But that's not what the code does.
 > 
-> So, shall I just use first DCSM to keep it simple for now?
-> And find rank multiplier iteratively as and when need arises?
+> My best guess is that this is a typo and that Darrick meant PCI_MMAP_SYSFS
+> in the changelog, which is the same thing that the code does. It's also
+> the sensible thing to do.
+> 
+> This probably means that the procfs interface is now also broken on
+> sparc.
+> 
+> > I will try to grab an integrator board to give it a go.
+> 
+> Ok, good idea.
 
-Yep, sounds nicely conservative.
+Grabbed, tested it, my theory was correct, I can't map PCI resources
+to userspace. Actually, if I pass resource offset as a fixed-up address, mmap
+succeeds through proc, but it does not mmap the resource, it maps
+the resource + mem_offset that happens to be RAM :D for the PCI slot I am
+using.
 
-Thanks.
+I am testing on an oldish (3.16) kernel since I am having trouble with
+mainline PCI and my network adapter on integrator, but I do not see why this
+is a problem, this bug has been there forever.
 
--- 
-Regards/Gruss,
-    Boris.
+By removing mem_offset from pci_mmap_page_range() everything works fine,
+both proc and sys mappings are ok.
 
-Sent from a fat crate under my desk. Formatting is fine.
---
+> > > > Or we can add mem_offset to the host bridge (after all architectures like
+> > > > PowerPC and Microblaze have a pci_mem_offset variable in their host
+> > > > controllers), but still, this removes pci_sys_data dependency but does
+> > > > not solve the pci_mmap_page_range() issue.
+> > > 
+> > > The host bridge already stores the mem_offset in terms of the resource
+> > > list, so we could readily use that, except that it might break the
+> > > powerpc hack if that is still in use.
+> > 
+> > Well, yes, I am not saying it can't be done by using the resources list,
+> > I am just trying to understand if that's really useful.
+> 
+> The PCI core tries to be ready for PCI host bridges that have multiple
+> discontiguous memory spaces with different offsets, although I don't know
+> of anybody has that. However if we decide to implement a generic 
+> pci_mmap_page_range that tries to take the offset into account, we should
+> use the resource list in the host bridge because it can tell us the correct
+> offsets.
+> 
+> However, given what you found, the procfs interface being broken since
+> 2010 on both architectures (arm32 and sparc) that try to honor the offset,
+> we should probably go back to your previous suggestion of removing
+> the offset handling, which would make it possible to use the procfs
+> interface and the sysfs interface on all architectures.
+> 
+> Would you be able to prepare a patch that does this and circulate that
+> with the sparc, powerpc and microblaze maintainers as well as Darrick
+> and Martin who were involved with the pci_mmap_fits change?
+
+Yes, but let's step back a second. I think that the proc interface
+should expect an offset as passed to the user in /proc/bus/pci/devices,
+and there the resource is exposed through pci_resource_to_user().
+
+Hence, the pci_mmap_fits() should check the offset against the
+resource filtered through pci_resource_to_user(), job done, patch
+is trivial, and does what pci_resource_to_user() was meant for IMHO.
+
+Then we have to decide what to do with arm32 code:
+
+1) we remove mem_offset from pci_mmap_page_range() (and rely on default
+   pci_resource_to_user())
+
+or
+
+2) we provide pci_resource_to_user() for arm32 which does the CPU->bus
+   conversion for us (and leave mem_offset as-is in pci_mmap_range())
+
+Thoughts ?
+
+Thanks,
+Lorenzo
+
