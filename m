@@ -1,304 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:40473 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751057AbaJTBrG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 Oct 2014 21:47:06 -0400
-Message-ID: <54446986.3050603@hp.com>
-Date: Mon, 20 Oct 2014 09:46:46 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
+Received: from mout3.freenet.de ([195.4.92.93]:49618 "EHLO mout3.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751145AbaJKG0i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 11 Oct 2014 02:26:38 -0400
+Message-ID: <5438CC1E.3060407@maya.org>
+Date: Sat, 11 Oct 2014 08:20:14 +0200
+From: Andreas Hartmann <andihartmann@freenet.de>
 MIME-Version: 1.0
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-CC: "Eric W. Biederman" <ebiederm@xmission.com>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, indou.takao@jp.fujitsu.com,
-	kexec@lists.infradead.org, linda.knippers@hp.com,
-	Randy Wright <rwright@hp.com>
-Subject: Re: [PATCH 1/1] pci: reset all pci endpoints to stop on going dma
-References: <1413537207-16514-1-git-send-email-zhen-hual@hp.com> <87siin58tw.fsf@x220.int.ebiederm.org> <20141019232008.GA20854@shangw>
-In-Reply-To: <20141019232008.GA20854@shangw>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass
+ through (vfio)
+References: <20140923210318.498dacbd@dualc.maya.org> <1411502866.24563.8.camel@ul30vt.home> <5437A958.3000201@maya.org> <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com> <5437F1F5.3010706@maya.org> <CAErSpo6DuWEcJb_gfS=5JnKN8b4DXXV9+u-CRa8m3db0dbzpsQ@mail.gmail.com> <543804BC.3080307@maya.org> <CAErSpo450czUtAM104o+RS=yOcmP+3MKMH7mYk=UYhVJ2+cfSQ@mail.gmail.com> <20141011003219.560cca97@dualc.maya.org> <20141010225408.GA24493@google.com>
+In-Reply-To: <20141010225408.GA24493@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Bjorn Helgaas wrote:
+> On Sat, Oct 11, 2014 at 12:32:19AM +0200, Andreas Hartmann wrote:
+>> Bjorn Helgaas wrote:
+>>> On Fri, Oct 10, 2014 at 10:09 AM, Andreas Hartmann
+>>> <andihartmann@freenet.de> wrote:
+>>>> Bjorn Helgaas wrote:
+>>>>> On Fri, Oct 10, 2014 at 8:49 AM, Andreas Hartmann
+>>>>> <andihartmann@freenet.de> wrote:
+>>>>>> Bjorn Helgaas wrote:
+>>>>>>> On Fri, Oct 10, 2014 at 3:39 AM, Andreas Hartmann
+>>>>>>> <andihartmann@freenet.de> wrote:
+>>>>>>>> shortly: I retested w/ qemu 2.1.0 and Linux 3.17.0 - no change in behaviour.
+>>>>>>>>
+>>>>>>>> Alex Williamson wrote:
+>>>>>>>>> On Tue, 2014-09-23 at 21:03 +0200, Andreas Hartmann wrote:
+>>>>>>>>>> Hello!
+>>>>>>>>>>
+>>>>>>>>>> Since long time now, I'm using w/o any problem PCIe pass through with a
+>>>>>>>>>> Gigabyte GA-990XA-UD3/GA-990XA-UD3 mainboard (AMD 990X chipset) and
+>>>>>>>>>> enabled IOMMU with vfio-pci.
+>>>>>>>>>>
+>>>>>>>>>> The last kernel working w/o any problem is kernel 3.13.7 (I didn't use
+>>>>>>>>>> .8 and .9, but I do not think they would have been problematic).
+>>>>>>>>>>
+>>>>>>>>>> Since 3.14.19 (I didn't test any 3.14 kernel before) I'm encountering a
+>>>>>>>>>> hard and silent lock up of the complete machine when starting the VM
+>>>>>>>>>> with the PCIe card passed through.
+>>>>>>>
+>>>>>>> Since we're not really making any progress on this yet, would it be
+>>>>>>> possible to bisect it?  We already know that 3.13.7 works and 3.14.19
+>>>>>>> fails, and "git bisect start v3.14 v3.13" says it's about 13 steps.  I
+>>>>>>> know that's still quite a bit of work, but at least it sounds like the
+>>>>>>> problem is easy to reproduce.
+>>>>>>
+>>>>>> Which git repository should I use best?
+>>>>>
+>>>>> The linux-stable repository [1] contains both the v3.13.x and the
+>>>>> v3.14.x branches, but apparently you can't bisect directly between
+>>>>> v3.13.7 and v3.14.19:
+>>>>
+>>>> I know that the first version after 3.13.0 (patch-v3.13-next-20140121)
+>>>> is already broken. Therefore, it must be between 3.13.7 and
+>>>> patch-v3.13-next-20140121.
+>>
+>>
+>> Ok, this is the result of git bisect:
+>>
+>> 425c1b223dac456d00a61fd6b451b6d1cf00d065 is the first bad commit
+>> commit 425c1b223dac456d00a61fd6b451b6d1cf00d065
+>> Author: Alex Williamson <alex.williamson@redhat.com>
+>> Date:   Tue Dec 17 16:43:51 2013 -0700
+>>
+>>     PCI: Add Virtual Channel to save/restore support
+>>     
+>>     While we don't really have any infrastructure for making use of VC
+>>     support, the system BIOS can configure the topology to non-default
+>>     VC values prior to boot.  This may be due to silicon bugs, desire to
+>>     reserve traffic classes, or perhaps just BIOS bugs.  When we reset
+>>     devices, the VC configuration may return to default values, which can
+>>     be incompatible with devices upstream.  For instance, Nvidia GRID 
+>>     cards provide a PCIe switch and some number of GPUs, all supporting 
+>>     VC.  The power-on default for VC is to support TC0-7 across VC0,
+>>     however some platforms will only enable TC0/VC0 mapping across the 
+>>     topology.  When we do a secondary bus reset on the downstream switch 
+>>     port, the GPU is reset to a TC0-7/VC0 mapping while the opposite end 
+>>     of the link only enables TC0/VC0.  If the GPU attempts to use TC1-7, 
+>>     it fails. 
+>>
+>>     This patch attempts to provide complete support for VC save/restore, 
+>>     even beyond the minimally required use case above.  This includes 
+>>     save/restore and reload of the arbitration table, save/restore and 
+>>     reload of the port arbitration tables, and re-enabling of the 
+>>     channels for VC, VC9, and MFVC capabilities. 
+>>
+>>     Signed-off-by: Alex Williamson <alex.williamson@redhat.com> 
+>>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Wow, I'm amazed that you could get that done so fast... you must have spent
+> your whole day working on this!
 
-On 10/20/2014 07:20 AM, Gavin Shan wrote:
-> On Fri, Oct 17, 2014 at 02:44:43AM -0700, Eric W. Biederman wrote:
->> "Li, Zhen-Hua" <zhen-hual@hp.com> writes:
->>
->>> This is an update of the patch
->>> 	https://lkml.org/lkml/2014/10/10/37
->>>
->>> This patch is doing the reset works before the kdump kernel boots.
->>
->> If I have said it once I have said it a thousand times.
->>
->> Nacked-by: "Eric W. Biederman" <ebiederm@xmission.com>
->> Nacked-by: "Eric W. Biederman" <ebiederm@xmission.com>
->> Nacked-by: "Eric W. Biederman" <ebiederm@xmission.com>
->>
->> It is absolutely inappropriate to do this in the kernel that has
->> crashed.
->>
->> Either reserve a chunk of the iommu for use by the crash dump kernel,
->> or figure out how to do this during boot up.
->>
->> But this is absolutely and totally inappropriate to do in crash_kexec.
->> The failure modes are all wrong.  It will impact the reliability of our
->> crash dumps.
->>
->> If an the code for a linux architecture is not structured in such a way
->> as to make it easy or straight forward to do this my sympathies you are
->> going to have do fix that linux port to be able to do things during
->> boot.
->>
->> But things called from crash_kexec should be absolute necessities and I
->> do not see this as coming anywhere close to being something that is
->> impossible to do in the target kernel.
->>
->
-> Zhenhua, Intrestingly, PPC has mechanism to reset the root port for kdump case
-> in order to drop pending DMA traffic. Maybe you can implement similar thing.
-> However, this kind of reset would be platform/board specific and needs support
-> from underly firmware. More details could be found from arch/powerpc/
-> platforms/powernv/pci-ioda.c
->
->          if (is_kdump_kernel()) {
->                  pr_info("  Issue PHB reset ...\n");
->                  ioda_eeh_phb_reset(hose, EEH_RESET_FUNDAMENTAL);
->                  ioda_eeh_phb_reset(hose, OPAL_DEASSERT_RESET);
->          }
->
-> Please check if it's the thing you're looking for. I didn't understand your
-> requirements 100%
->
-> Thanks,
-> Gavin
-Gavin,
-I was trying to fix a DMAR fault for iommu. On X86 platform, iommu is 
-initialized after pci , while on powerpc iommu is before pci.  So I 
-tried to do the operation in the first kernel, and this can work on all 
-platforms.
+If I would have been more familiar with the versioning of the kernels
+and if I would have a faster internet connection and if there wouldn't
+be another bug in systemd, which has bitten me on booting with broken fs
+(but I found a cool workaround now :-)), I would have been much faster:
+my 8 core machine and 8 GB of RAM, where I've been compiling the kernel
+in and my special kernel config (which Im using since 3.10) only
+containing my requests, with parts of the process automated makes it
+possible to have a turn around of ~ 7 minutes :-).
+I too had no problem with reproducibility, because the problem always
+comes up at the start of the vm after 1 or 2 secs.
 
-But according to Eric's mail, it is inappropriate doing this in 
-crash_kexec. So I have to figure out how to do this in the kdump kernel.
+> 
+> To double-check this, can you try applying the patch below?  It should be
+> enough to make things work if 425c1b223dac is really what's causing the
+> trouble.
+> 
+> This patch is based on v3.17, but 425c1b223dac appeared in v3.14, so you
+> should be able to apply it to v3.14 or any later kernel.
+> 
+> Bjorn
+> 
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 2c9ac70254e2..8ef8bc56a584 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1007,8 +1007,6 @@ int pci_save_state(struct pci_dev *dev)
+>  		return i;
+>  	if ((i = pci_save_pcix_state(dev)) != 0)
+>  		return i;
+> -	if ((i = pci_save_vc_state(dev)) != 0)
+> -		return i;
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL(pci_save_state);
+> @@ -1072,7 +1070,6 @@ void pci_restore_state(struct pci_dev *dev)
+>  	/* PCI Express register must be restored first */
+>  	pci_restore_pcie_state(dev);
+>  	pci_restore_ats_state(dev);
+> -	pci_restore_vc_state(dev);
+>  
+>  	pci_restore_config_space(dev);
+>  
+> @@ -2170,8 +2167,6 @@ void pci_allocate_cap_save_buffers(struct pci_dev *dev)
+>  	if (error)
+>  		dev_err(&dev->dev,
+>  			"unable to preallocate PCI-X save buffer\n");
+> -
+> -	pci_allocate_vc_save_buffers(dev);
+>  }
+>  
+>  void pci_free_cap_save_buffers(struct pci_dev *dev)
+> 
 
-As it is clear the powerpc has already do the resetting during booting, 
-so I only need to implement a similar mechanism on X86 system.
+This patch proofed the git bisect result. I applied it to
+patch-v3.13-next-20140122 and the machine worked pretty fine :-).
 
-Thanks
-Zhenhua
->
->> Eric
->>
->>
->>> On a Linux system with iommu supported and many PCI devices on it,
->>> when kernel crashed and the kdump kernel boots with intel_iommu=on,
->>> there may be some unexpected DMA requests on this adapter, which will
->>> cause DMA Remapping faults like:
->>>      dmar: DRHD: handling fault status reg 102
->>>      dmar: DMAR:[DMA Read] Request device [41:00.0] fault addr fff81000
->>>      DMAR:[fault reason 01] Present bit in root entry is clear
->>>
->>> This bug may happen on *any* PCI device.
->>> Analysis for this bug:
->>>
->>> The present bit is set in this function:
->>>
->>> static struct context_entry * device_to_context_entry(
->>>                  struct intel_iommu *iommu, u8 bus, u8 devfn)
->>> {
->>>      ......
->>>                  set_root_present(root);
->>>      ......
->>> }
->>>
->>> Calling tree:
->>>      device driver
->>>          intel_alloc_coherent
->>>              __intel_map_single
->>>                  domain_context_mapping
->>>                      domain_context_mapping_one
->>>                          device_to_context_entry
->>>
->>> This means, the present bit in root entry will not be set until the device
->>> driver is loaded.
->>>
->>> But in the kdump kernel, hardware devices are not aware that control has
->>> transferred to the second kernel, and those drivers must initialize again.
->>> Consequently there may be unexpected DMA requests from devices activity
->>> initiated in the first kernel leading to the DMA Remapping errors in the
->>> second kernel.
->>>
->>> To fix this DMAR fault, we need to reset the bus that this device on. Reset
->>> the device itself does not work.
->>>
->>> A patch for this bug that has been sent before:
->>> https://lkml.org/lkml/2014/9/30/55
->>> As in discussion, this bug may happen on *any* device, so we need to reset
->>> all pci devices.
->>>
->>> There was an original version(Takao Indoh) that resets the pcie devices:
->>> https://lkml.org/lkml/2013/5/14/9
->>>
->>> According to the previous discussion, On sparc, the IOMMU is initialized
->>> before PCI devices are enumerated, this patch does the resetting works before
->>> the kdump kernel boots, so it can also fix the problems on sparc.
->>>
->>> Update of this new version, comparing with Takao Indoh's version:
->>>      Add support for legacy PCI devices.
->>>      Use pci_try_reset_bus instead of do_downstream_device_reset.
->>>      Reset all PCI/PCIe deviecs in the first kernel, before kdump kernel boots.
->>>
->>> Randy Wright corrects some misunderstanding in this description.
->>>
->>> Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
->>> Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
->>> Signed-off-by: Randy Wright <rwright@hp.com>
->>> ---
->>>   drivers/pci/pci.c   | 82 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->>>   include/linux/pci.h |  6 ++++
->>>   kernel/kexec.c      |  2 ++
->>>   3 files changed, 90 insertions(+)
->>>
->>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>> index 625a4ac..aa9192a 100644
->>> --- a/drivers/pci/pci.c
->>> +++ b/drivers/pci/pci.c
->>> @@ -23,6 +23,7 @@
->>>   #include <linux/device.h>
->>>   #include <linux/pm_runtime.h>
->>>   #include <linux/pci_hotplug.h>
->>> +#include <linux/crash_dump.h>
->>>   #include <asm-generic/pci-bridge.h>
->>>   #include <asm/setup.h>
->>>   #include "pci.h"
->>> @@ -4466,6 +4467,87 @@ void __weak pci_fixup_cardbus(struct pci_bus *bus)
->>>   }
->>>   EXPORT_SYMBOL(pci_fixup_cardbus);
->>>
->>> +/*
->>> + * Return true if dev is PCI root port or downstream port whose child is PCI
->>> + * endpoint except VGA device.
->>> + */
->>> +static int __pci_dev_need_reset(struct pci_dev *dev)
->>> +{
->>> +	struct pci_bus *subordinate;
->>> +	struct pci_dev *child;
->>> +
->>> +	if (dev->hdr_type != PCI_HEADER_TYPE_BRIDGE)
->>> +		return 0;
->>> +
->>> +	if (pci_is_pcie(dev)) {
->>> +		if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT) &&
->>> +		    (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM))
->>> +			return 0;
->>> +	}
->>> +
->>> +	subordinate = dev->subordinate;
->>> +	list_for_each_entry(child, &subordinate->devices, bus_list) {
->>> +		/* Don't reset switch, bridge, VGA device */
->>> +		if ((child->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
->>> +		    ((child->class >> 16) == PCI_BASE_CLASS_BRIDGE) ||
->>> +		    ((child->class >> 16) == PCI_BASE_CLASS_DISPLAY))
->>> +			return 0;
->>> +
->>> +		if (pci_is_pcie(child)) {
->>> +			if ((pci_pcie_type(child) == PCI_EXP_TYPE_UPSTREAM) ||
->>> +			    (pci_pcie_type(child) == PCI_EXP_TYPE_PCI_BRIDGE))
->>> +				return 0;
->>> +		}
->>> +	}
->>> +
->>> +	return 1;
->>> +}
->>> +
->>> +struct pci_dev_reset_entry {
->>> +	struct list_head list;
->>> +	struct pci_dev *dev;
->>> +};
->>> +int pci_reset_endpoints(void)
->>> +{
->>> +	struct pci_dev *dev = NULL;
->>> +	struct pci_dev_reset_entry *pdev_entry, *tmp;
->>> +	struct pci_bus *subordinate = NULL;
->>> +	int has_it;
->>> +
->>> +	LIST_HEAD(pdev_list);
->>> +
->>> +
->>> +	for_each_pci_dev(dev) {
->>> +		subordinate = dev->subordinate;
->>> +		if (!subordinate || list_empty(&subordinate->devices))
->>> +			continue;
->>> +
->>> +		has_it = 0;
->>> +		list_for_each_entry(pdev_entry, &pdev_list, list) {
->>> +			if (dev == pdev_entry->dev) {
->>> +				has_it = 1;
->>> +				break;
->>> +			}
->>> +		}
->>> +		if (has_it)
->>> +			continue;
->>> +
->>> +		if (__pci_dev_need_reset(dev)) {
->>> +			pdev_entry = kmalloc(sizeof(*pdev_entry), GFP_KERNEL);
->>> +			pdev_entry->dev = dev;
->>> +			list_add(&pdev_entry->list, &pdev_list);
->>> +		}
->>> +	}
->>> +
->>> +	list_for_each_entry_safe(pdev_entry, tmp, &pdev_list, list) {
->>> +		pci_try_reset_bus(pdev_entry->dev->subordinate);
->>> +		kfree(pdev_entry);
->>> +	}
->>> +
->>> +	return 0;
->>> +}
->>> +EXPORT_SYMBOL_GPL(pci_reset_endpoints);
->>> +
->>>   static int __init pci_setup(char *str)
->>>   {
->>>   	while (str) {
->>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>> index 5be8db4..1cf7207 100644
->>> --- a/include/linux/pci.h
->>> +++ b/include/linux/pci.h
->>> @@ -1869,4 +1869,10 @@ static inline bool pci_is_dev_assigned(struct pci_dev *pdev)
->>>   {
->>>   	return (pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED) == PCI_DEV_FLAGS_ASSIGNED;
->>>   }
->>> +
->>> +/*
->>> + * Reset all pci devices by resetting the buses.
->>> + */
->>> +int pci_reset_endpoints(void);
->>> +
->>>   #endif /* LINUX_PCI_H */
->>> diff --git a/kernel/kexec.c b/kernel/kexec.c
->>> index 2abf9f6..986e8f7 100644
->>> --- a/kernel/kexec.c
->>> +++ b/kernel/kexec.c
->>> @@ -36,6 +36,7 @@
->>>   #include <linux/syscore_ops.h>
->>>   #include <linux/compiler.h>
->>>   #include <linux/hugetlb.h>
->>> +#include <linux/pci.h>
->>>
->>>   #include <asm/page.h>
->>>   #include <asm/uaccess.h>
->>> @@ -1474,6 +1475,7 @@ void crash_kexec(struct pt_regs *regs)
->>>   		if (kexec_crash_image) {
->>>   			struct pt_regs fixed_regs;
->>>
->>> +			pci_reset_endpoints();
->>>   			crash_setup_regs(&fixed_regs, regs);
->>>   			crash_save_vmcoreinfo();
->>>   			machine_crash_shutdown(&fixed_regs);
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
 
+Thanks,
+Regards,
+Andreas
