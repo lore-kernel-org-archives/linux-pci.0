@@ -1,94 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:39631 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752016AbaJ1Sv1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Oct 2014 14:51:27 -0400
-Date: Tue, 28 Oct 2014 13:50:59 -0500
-From: Felipe Balbi <balbi@ti.com>
-To: Paul Zimmerman <Paul.Zimmerman@synopsys.com>
-CC: Huang Rui <ray.huang@amd.com>, Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 01/19] usb: dwc3: enable hibernation if to be supported
-Message-ID: <20141028185059.GE25735@saruman>
-Reply-To: <balbi@ti.com>
-References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
- <1414497280-3126-2-git-send-email-ray.huang@amd.com>
- <A2CA0424C0A6F04399FB9E1CD98E0304844E68B7@US01WEMBX2.internal.synopsys.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="BZaMRJmqxGScZ8Mx"
-In-Reply-To: <A2CA0424C0A6F04399FB9E1CD98E0304844E68B7@US01WEMBX2.internal.synopsys.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:43538 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752355AbaJLOjP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 12 Oct 2014 10:39:15 -0400
+Message-ID: <1413124703.2459.18.camel@antimon.intern.lynxeye.de>
+Subject: Re: [PATCH v5 8/9] ARM: imx6sx: add imx6sx pcie related gpr bits
+ definitions
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Richard Zhu <richard.zhu@freescale.com>
+Cc: linux-pci@vger.kernel.org, shawn.guo@freescale.com,
+	festevam@gmail.com, tharvey@gateworks.com,
+	Richard Zhu <r65037@freescale.com>
+Date: Sun, 12 Oct 2014 16:38:23 +0200
+In-Reply-To: <1412919676-25344-9-git-send-email-richard.zhu@freescale.com>
+References: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
+	 <1412919676-25344-9-git-send-email-richard.zhu@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---BZaMRJmqxGScZ8Mx
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Am Freitag, den 10.10.2014, 13:41 +0800 schrieb Richard Zhu:
+> From: Richard Zhu <r65037@freescale.com>
+> 
+> Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
 
-On Tue, Oct 28, 2014 at 06:47:08PM +0000, Paul Zimmerman wrote:
-> > From: Huang Rui [mailto:ray.huang@amd.com]
-> > Sent: Tuesday, October 28, 2014 4:54 AM
-> >=20
-> > It enables hibernation if the function is set in coreConsultant.
-> >=20
-> > Suggested-by: Felipe Balbi <balbi@ti.com>
-> > Signed-off-by: Huang Rui <ray.huang@amd.com>
-> > ---
-> >  drivers/usb/dwc3/core.c | 1 +
-> >  1 file changed, 1 insertion(+)
-> >=20
-> > diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-> > index fa396fc..bf77509 100644
-> > --- a/drivers/usb/dwc3/core.c
-> > +++ b/drivers/usb/dwc3/core.c
-> > @@ -449,6 +449,7 @@ static int dwc3_core_init(struct dwc3 *dwc)
-> >  	case DWC3_GHWPARAMS1_EN_PWROPT_HIB:
-> >  		/* enable hibernation here */
-> >  		dwc->nr_scratch =3D DWC3_GHWPARAMS4_HIBER_SCRATCHBUFS(hwparams4);
-> > +		reg |=3D DWC3_GCTL_GBLHIBERNATIONEN;
-> >  		break;
-> >  	default:
-> >  		dev_dbg(dwc->dev, "No power optimization available\n");
->=20
-> What effect does this have when the controller is in device mode? I
-> expect it will start generating DWC3_DEVICE_EVENT_HIBER_REQ interrupt
-> events when this register bit is set. So the dev_WARN_ONCE in
-> dwc3_gadget_interrupt() will start firing, I think.
+You are using those defines in the PCIe driver changes, so the need to
+be sorted before them in the series as they need to be picked up by
+Bjorn to make sure we don't introduce build regressions.
 
-Ok, so this *has* to wait for proper hibernation support ?
+> ---
+>  include/linux/mfd/syscon/imx6q-iomuxc-gpr.h | 9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+> index ff44374..3273b87 100644
+> --- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+> +++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+> @@ -301,6 +301,7 @@
+>  #define IMX6Q_GPR12_DEVICE_TYPE			(0xf << 12)
+>  #define IMX6Q_GPR12_PCIE_CTL_2			BIT(10)
+>  #define IMX6Q_GPR12_LOS_LEVEL			(0x1f << 4)
+> +#define IMX6Q_GPR12_LOS_LEVEL_9			(0x9 << 4)
+>  
+>  #define IMX6Q_GPR13_SDMA_STOP_REQ		BIT(30)
+>  #define IMX6Q_GPR13_CAN2_STOP_REQ		BIT(29)
+> @@ -395,4 +396,12 @@
+>  #define IMX6SL_GPR1_FEC_CLOCK_MUX1_SEL_MASK    (0x3 << 17)
+>  #define IMX6SL_GPR1_FEC_CLOCK_MUX2_SEL_MASK    (0x1 << 14)
+>  
+> +/* For imx6sx iomux gpr register field define */
+> +#define IMX6SX_GPR5_PCIE_BTNRST			BIT(19)
+> +#define IMX6SX_GPR5_PCIE_PERST			BIT(18)
+> +
+> +#define IMX6SX_GPR12_PCIE_PM_TURN_OFF		BIT(16)
+> +#define IMX6SX_GPR12_PCIE_TEST_PD		BIT(30)
+> +#define IMX6SX_GPR12_RX_EQ_MASK			(0x7 << 0)
+> +#define IMX6SX_GPR12_RX_EQ_2			(0x2 << 0)
+>  #endif /* __LINUX_IMX6Q_IOMUXC_GPR_H */
 
---=20
-balbi
 
---BZaMRJmqxGScZ8Mx
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUT+WTAAoJEIaOsuA1yqREKKsP/iGl2AqFXQNlRSEMWUApj2Ld
-Y1R2Ev05BctX0IraFyI+KsVGJlXOFX8zvkSvYACDiD+Y+fGwAENS+qgMAIYOCx9z
-dcdkB8/aMPWFQ1LT/Llxz8hcwyGFGi20NRPWuysXzu9j0KKMmo5KM7LZFWS/UdCo
-B0qusCvGeGX8yHUj6id435NVImHk/ETfAwIHAZyAOWRINhpbQ0VkkOPOKATTX/Vn
-c96KLu1iCMBGASqeg65jpXdAYqi4ZGOD/6kC23nDhcZDasPQ1dmQISa6PVRsATtT
-dDDWthGVgaAoW0vyJZrKVnJ520b7o7D01sl5Mz8Z76y/Wdcy6NYslE2SSVmaDUcg
-CpuE6hZrc0Ac2IGoTguPm2vv8RdkXPWriWDjQLKzCDMU1tQvkBzr7cK/D/hyRdI3
-Q3qP1godBJLXVK4ThCzViaZEx/enRifY8L/Ym4OC7yfhhAMY/C8dtaif4ybPgOXh
-KyMqx6rSVNPCCRm3Nl55fsFkKCp9+Znz48sIMp80QysROOn3W/uAoGJ1aWQd38Km
-KwIi+/RNff3PHvvffbkt//XdoyarLn0SkgVmkFrmhvhF4tooh0w/jR9ox2gOKODq
-j+px70i1RfspUXSSycRRG0vzpScGs8Abt7S2iIgSohUCrMhnAjXuudzCE46+i4fT
-R51tPuSaJVrb3aa8g5sB
-=1Fb2
------END PGP SIGNATURE-----
-
---BZaMRJmqxGScZ8Mx--
