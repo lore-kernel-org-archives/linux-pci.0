@@ -1,228 +1,172 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:52881 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759052AbaJ3M3o (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Oct 2014 08:29:44 -0400
-Message-ID: <54522EA1.20707@huawei.com>
-Date: Thu, 30 Oct 2014 20:27:13 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>, <linux-pci@vger.kernel.org>
-CC: <liviu.dudau@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	"Mohit Kumar" <mohit.kumar@st.com>
-Subject: Re: [RFC PATCH 2/2] arm: pcibios: move to generic PCI domains
-References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com> <1414669490-1217-3-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1414669490-1217-3-git-send-email-lorenzo.pieralisi@arm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:63958 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751115AbaJLMUz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 12 Oct 2014 08:20:55 -0400
+Message-ID: <1413116386.6042.13.camel@localhost.localdomain>
+Subject: Re: [PATCH] PCI: add kernel parameter to override devid<->driver
+ mapping.
+From: Marcel Apfelbaum <marcel.a@redhat.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, marcel@redhat.com, mst@redhat.com
+Date: Sun, 12 Oct 2014 15:19:46 +0300
+In-Reply-To: <1412189309.7360.238.camel@ul30vt.home>
+References: <1412095115-28982-1-git-send-email-marcel.a@redhat.com>
+	 <1412189309.7360.238.camel@ul30vt.home>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/10/30 19:44, Lorenzo Pieralisi wrote:
-> Most if not all ARM PCI host controller device drivers either ignore the
-> domain field in the pci_sys_data structure or just increment it every
-> time a host controller is probed, using it as a domain counter.
+On Wed, 2014-10-01 at 12:48 -0600, Alex Williamson wrote:
+> On Tue, 2014-09-30 at 19:38 +0300, Marcel Apfelbaum wrote:
+> > Scanning a lot of devices during boot requires a lot of time.
+> > On other scenarios there is a need to bind a driver to a specific slot.
+> > 
+> > Binding devices to pci-stub driver does not work,
+> > as it will not differentiate between devices of the
+> > same type. Using some start scripts is error prone.
+> > 
+> > The solution leverages driver_override functionality introduced by
+> > 
+> > 	commit: 782a985d7af26db39e86070d28f987cad21313c0
+> > 	Author: Alex Williamson <alex.williamson@redhat.com>
+> > 	Date:   Tue May 20 08:53:21 2014 -0600
+> > 
+> >     	PCI: Introduce new device binding path using pci_dev.driver_override
+> > 
+> > In order to bind PCI slot 0001:02:03.4 to pci-stub use:
+> > 	driver[0001:02:03.4]=pci-stub
 > 
-> Therefore, instead of relying on pci_sys_data to stash the domain number
-> in a standard location, ARM pcibios code can be moved to the newly
-> introduced generic PCI domains code, implemented in commits:
+> So the option is actually:
 > 
-> commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
-> ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
+> pci=driver=[...]=foo,driver=[...]=bar
 > 
-> commit 670ba0c8883b576d0aec28bd7a838358a4be1
-> ("PCI: Add generic domain handling")
+> That's not very clear from the commit log.
 > 
-> In order to assign a domain number dynamically, the ARM pcibios defines
-> the function, called by core PCI code:
-> 
-> void pci_bus_assign_domain_nr(...)
-> 
-> that relies on a DT property to define the domain number or falls back to
-> a counter; its usage replaces the current domain assignment code in PCI
-> host controllers present in the kernel.
 
-Nice clean up.
+[...]
+Hi Alex,
+I am sorry, but I missed the bellow comments, I am going to
+fix them for the next version.
 
-Reviewed-by: Yijing Wang <wangyijing@huawei.com>
+> > +
+> > +struct driver_override_entry {
+> > +	unsigned int domain;
+> 
+> u16
+Sure
+> 
+> > +	unsigned char bus;
+> 
+> u8
+Sure
+> 
+> > +	unsigned int devfn;
+> 
+> u8
+Sure
+> 
+> > +	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
+I'll allocate it dynamically
+
+> > +};
+> > +
+> > +static struct driver_override_entry __initdata
+> > +	driver_override_map[DRIVER_OVERRIDE_MAP_SIZE];
+> > +static int driver_override_num_entries __initdata;
+> > +
+> > +void pci_device_setup_driver_override(struct pci_dev *dev)
+> > +{
+> > +	int i;
+> > +
+> > +	for (i = 0; i < driver_override_num_entries; i++) {
+> > +		if (pci_domain_nr(dev->bus) != driver_override_map[i].domain ||
+> > +		    dev->bus->number != driver_override_map[i].bus ||
+> > +		    dev->devfn != driver_override_map[i].devfn)
+> > +			continue;
+> > +
+> > +		dev->driver_override = kstrndup(driver_override_map[i].driver_name,
+> > +						DRIVER_OVERRIDE_NAME_LENGTH,
+> > +						GFP_KERNEL);
+> > +		break;
+> > +	}
+> > +}
+> > +
+> > +static void __init pci_parse_driver_override(char *str)
+> > +{
+> > +	unsigned int domain, bus, dev, fn;
+> > +	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
+> > +	int ret, next_entry;
+> > +	char format[] = "[%4x:%2x:%2x.%2x]=%%%ds";
+> > +
+> > +	sprintf(format + 18, "%%%ds", DRIVER_OVERRIDE_NAME_LENGTH);
+> 
+> There must be a less confusing way to do this.
+I'll try it, and also I'll get rid of DRIVER_OVERRIDE_NAME_LENGTH
+restriction.
 
 > 
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> Cc: Jingoo Han <jg1.han@samsung.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Russell King <linux@arm.linux.org.uk>
-> Cc: Mohit Kumar <mohit.kumar@st.com>
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> ---
->  arch/arm/Kconfig                   |  3 +++
->  arch/arm/include/asm/mach/pci.h    |  3 ---
->  arch/arm/include/asm/pci.h         |  7 -------
->  arch/arm/kernel/bios32.c           | 26 +++++++++++++++++++++++---
->  drivers/pci/host/pci-mvebu.c       | 10 ++--------
->  drivers/pci/host/pcie-designware.c |  3 ---
->  drivers/pci/host/pcie-rcar.c       |  3 ---
->  7 files changed, 28 insertions(+), 27 deletions(-)
+> > +	ret = sscanf(str, format, &domain, &bus, &dev, &fn, driver_name);
+> > +
+> > +	if (ret != 5) {
+> > +		pr_err("PCI: Invalid command line: driver%s\n", str);
+> > +		return;
+> > +	}
+> > +
+> > +	if (driver_override_num_entries == DRIVER_OVERRIDE_MAP_SIZE) {
+> > +		pr_err("PCI: Driver map overflow - ignoring driver%s\n", str);
+> > +		return;
+> > +	}
+> > +
+> > +	next_entry = driver_override_num_entries++;
+> > +	driver_override_map[next_entry].domain = domain;
+> > +	driver_override_map[next_entry].bus = bus && 0xff;
 > 
-> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-> index 89c4b5c..29544f0 100644
-> --- a/arch/arm/Kconfig
-> +++ b/arch/arm/Kconfig
-> @@ -1292,6 +1292,9 @@ config PCI_DOMAINS
->  	bool
->  	depends on PCI
->  
-> +config PCI_DOMAINS_GENERIC
-> +	def_bool PCI_DOMAINS
-> +
->  config PCI_NANOENGINE
->  	bool "BSE nanoEngine PCI support"
->  	depends on SA1100_NANOENGINE
-> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-> index 7fc4278..f19f627 100644
-> --- a/arch/arm/include/asm/mach/pci.h
-> +++ b/arch/arm/include/asm/mach/pci.h
-> @@ -44,9 +44,6 @@ struct hw_pci {
->   * Per-controller structure
->   */
->  struct pci_sys_data {
-> -#ifdef CONFIG_PCI_DOMAINS
-> -	int		domain;
-> -#endif
->  	struct list_head node;
->  	int		busnr;		/* primary bus number			*/
->  	u64		mem_offset;	/* bus->cpu memory mapping offset	*/
-> diff --git a/arch/arm/include/asm/pci.h b/arch/arm/include/asm/pci.h
-> index 7e95d85..585dc33 100644
-> --- a/arch/arm/include/asm/pci.h
-> +++ b/arch/arm/include/asm/pci.h
-> @@ -18,13 +18,6 @@ static inline int pcibios_assign_all_busses(void)
->  }
->  
->  #ifdef CONFIG_PCI_DOMAINS
-> -static inline int pci_domain_nr(struct pci_bus *bus)
-> -{
-> -	struct pci_sys_data *root = bus->sysdata;
-> -
-> -	return root->domain;
-> -}
-> -
->  static inline int pci_proc_domain(struct pci_bus *bus)
->  {
->  	return pci_domain_nr(bus);
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index 17a26c1..d8c2b4e 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -11,6 +11,8 @@
->  #include <linux/slab.h>
->  #include <linux/init.h>
->  #include <linux/io.h>
-> +#include <linux/of.h>
-> +#include <linux/of_pci.h>
->  
->  #include <asm/mach-types.h>
->  #include <asm/mach/map.h>
-> @@ -468,9 +470,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->  		if (!sys)
->  			panic("PCI: unable to allocate sys data!");
->  
-> -#ifdef CONFIG_PCI_DOMAINS
-> -		sys->domain  = hw->domain;
-> -#endif
->  		sys->busnr   = busnr;
->  		sys->swizzle = hw->swizzle;
->  		sys->map_irq = hw->map_irq;
-> @@ -511,6 +510,27 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->  	}
->  }
->  
-> +#ifdef CONFIG_PCI_DOMAINS_GENERIC
-> +static bool dt_domain_found;
-> +
-> +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> +{
-> +	int domain = of_get_pci_domain_nr(parent->of_node);
-> +
-> +	if (domain >= 0) {
-> +		dt_domain_found = true;
-> +	} else if (dt_domain_found == true) {
-> +		dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
-> +			parent->of_node->full_name);
-> +		return;
-> +	} else {
-> +		domain = pci_get_new_domain_nr();
-> +	}
-> +
-> +	bus->domain_nr = domain;
-> +}
-> +#endif
-> +
->  void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
->  {
->  	struct pci_sys_data *sys;
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index b1315e1..2b4c1f2 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -722,17 +722,11 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
->  {
->  	struct mvebu_pcie *pcie = sys_to_pcie(sys);
->  	int i;
-> -	int domain = 0;
->  
-> -#ifdef CONFIG_PCI_DOMAINS
-> -	domain = sys->domain;
-> -#endif
-> -
-> -	snprintf(pcie->mem_name, sizeof(pcie->mem_name), "PCI MEM %04x",
-> -		 domain);
-> +	snprintf(pcie->mem_name, sizeof(pcie->mem_name), "PCI MEM %04x", nr);
->  	pcie->mem.name = pcie->mem_name;
->  
-> -	snprintf(pcie->io_name, sizeof(pcie->io_name), "PCI I/O %04x", domain);
-> +	snprintf(pcie->io_name, sizeof(pcie->io_name), "PCI I/O %04x", nr);
->  	pcie->realio.name = pcie->io_name;
->  
->  	if (request_resource(&iomem_resource, &pcie->mem))
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index dfed00a..6790b87 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -502,9 +502,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  	dw_pci.private_data = (void **)&pp;
->  
->  	pci_common_init_dev(pp->dev, &dw_pci);
-> -#ifdef CONFIG_PCI_DOMAINS
-> -	dw_pci.domain++;
-> -#endif
->  
->  	return 0;
->  }
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index 61158e0..b6b859e 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -404,9 +404,6 @@ static void rcar_pcie_enable(struct rcar_pcie *pcie)
->  	rcar_pci.private_data = (void **)&pcie;
->  
->  	pci_common_init_dev(&pdev->dev, &rcar_pci);
-> -#ifdef CONFIG_PCI_DOMAINS
-> -	rcar_pci.domain++;
-> -#endif
->  }
->  
->  static int phy_wait_for_ack(struct rcar_pcie *pcie)
+> How could it not be given our format?
+Right, I'll remove the check.
+> 
+> > +	driver_override_map[next_entry].devfn = ((dev & 0x1f) << 3) | (fn & 0x7);
+> 
+> PCI_DEVFN(dev, fn)
+Sure,
+
+Thank you for the review,
+Marcel
+
+> 
+> > +	memcpy(driver_override_map[next_entry].driver_name,
+> > +	       driver_name, sizeof(driver_name));
+> > +}
+> > +
+> >  static int __init pci_setup(char *str)
+> >  {
+> >  	while (str) {
+> > @@ -4468,6 +4527,8 @@ static int __init pci_setup(char *str)
+> >  				pcie_bus_config = PCIE_BUS_PEER2PEER;
+> >  			} else if (!strncmp(str, "pcie_scan_all", 13)) {
+> >  				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
+> > +			} else if (!strncmp(str, "driver", 6)) {
+> > +				pci_parse_driver_override(str + 6);
+> >  			} else {
+> >  				printk(KERN_ERR "PCI: Unknown option `%s'\n",
+> >  						str);
+> > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> > index 0601890..023d78b 100644
+> > --- a/drivers/pci/pci.h
+> > +++ b/drivers/pci/pci.h
+> > @@ -197,6 +197,7 @@ enum pci_bar_type {
+> >  bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+> >  				int crs_timeout);
+> >  int pci_setup_device(struct pci_dev *dev);
+> > +void pci_device_setup_driver_override(struct pci_dev *dev);
+> >  int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+> >  		    struct resource *res, unsigned int reg);
+> >  int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
+> 
+> 
 > 
 
 
--- 
-Thanks!
-Yijing
 
