@@ -1,99 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:49158 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752343AbaJQO5w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Oct 2014 10:57:52 -0400
-Date: Fri, 17 Oct 2014 09:57:36 -0500
-From: Felipe Balbi <balbi@ti.com>
-To: Huang Rui <ray.huang@amd.com>
-CC: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 15/16] usb: dwc3: add tx demphasis quirk
-Message-ID: <20141017145736.GK26260@saruman>
-Reply-To: <balbi@ti.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
- <1413536021-4886-16-git-send-email-ray.huang@amd.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="rnP2AJ7yb1j09OW/"
-In-Reply-To: <1413536021-4886-16-git-send-email-ray.huang@amd.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:43526 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751115AbaJLOfV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 12 Oct 2014 10:35:21 -0400
+Message-ID: <1413124507.2459.16.camel@antimon.intern.lynxeye.de>
+Subject: Re: [PATCH v5 6/9] ARM: imx6: update dts and binding for imx6sx pcie
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Richard Zhu <richard.zhu@freescale.com>
+Cc: linux-pci@vger.kernel.org, shawn.guo@freescale.com,
+	festevam@gmail.com, tharvey@gateworks.com,
+	Richard Zhu <r65037@freescale.com>
+Date: Sun, 12 Oct 2014 16:35:07 +0200
+In-Reply-To: <1412919676-25344-7-git-send-email-richard.zhu@freescale.com>
+References: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
+	 <1412919676-25344-7-git-send-email-richard.zhu@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---rnP2AJ7yb1j09OW/
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Am Freitag, den 10.10.2014, 13:41 +0800 schrieb Richard Zhu:
+> From: Richard Zhu <r65037@freescale.com>
+> 
+> - imx6sx pcie phy has its own power regulator. Add the
+> pcie phy power suppy into im6sx pcie dts and binding.
+> - in order to align with imx6qdl's pcie dts, re-format
+> imx6sx pcie dts.
+> - in order to align with imx6qdl pcie dts format and
+> keep clean of imx6 pcie driver, keep the pcie phy clock
+> in imx6sx pcie dts, although it's the parent clk of the
+> pcie bus clock now, and would be enabled automatically
+> when pcie bus clock is enabled. secondly, it's
+> possible that the external osc maybe used as source
+> of the pcie_bus clk in board design in future.
+> - disp_axi clock is required by pcie inbound axi port.
+> Add one more clock named pcie_inbound_axi for imx6sx pcie.
+> 
+> Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
 
-HI,
+One nit below, otherwise this looks fine now.
 
-On Fri, Oct 17, 2014 at 04:53:40PM +0800, Huang Rui wrote:
-> AMD NL needs to enable Tx Deemphasis quirk.
->=20
-> Signed-off-by: Huang Rui <ray.huang@amd.com>
 > ---
->  drivers/usb/dwc3/core.c          | 3 +++
->  drivers/usb/dwc3/core.h          | 2 ++
->  drivers/usb/dwc3/dwc3-pci.c      | 3 ++-
->  drivers/usb/dwc3/platform_data.h | 1 +
->  4 files changed, 8 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-> index f3c9699..3ccfe41 100644
-> --- a/drivers/usb/dwc3/core.c
-> +++ b/drivers/usb/dwc3/core.c
-> @@ -392,6 +392,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
->  	if (dwc->quirks & DWC3_QUIRK_RX_DETOPOLL)
->  		reg |=3D DWC3_GUSB3PIPECTL_RX_DETOPOLL;
-> =20
-> +	if (dwc->quirks & DWC3_QUIRK_TX_DEEPH)
+>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  8 +++++-
+>  arch/arm/boot/dts/imx6sx.dtsi                      | 32 ++++++++++++----------
+>  2 files changed, 25 insertions(+), 15 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> index 9455fd0..ad81179 100644
+> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> @@ -4,7 +4,7 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
+>  and thus inherits all the common properties defined in designware-pcie.txt.
+>  
+>  Required properties:
+> -- compatible: "fsl,imx6q-pcie"
+> +- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie"
+>  - reg: base addresse and length of the pcie controller
+>  - interrupts: A list of interrupt outputs of the controller. Must contain an
+>    entry for each entry in the interrupt-names property.
+> @@ -13,6 +13,12 @@ Required properties:
+>  - clock-names: Must include the following additional entries:
+>  	- "pcie_phy"
+>  
+> +Additional required properties for imx6sx-pcie:
+> +- clock names: Must include the following additional entries:
+> +	- "pcie_inbound_axi"
+> +- power supplies:
+> +	- pcie-phy-supply: regulator used to power the PCIe PHY
+> +
+>  Example:
+>  
+>  	pcie@0x01000000 {
+> diff --git a/arch/arm/boot/dts/imx6sx.dtsi b/arch/arm/boot/dts/imx6sx.dtsi
+> index f4b9da6..eefedba 100644
+> --- a/arch/arm/boot/dts/imx6sx.dtsi
+> +++ b/arch/arm/boot/dts/imx6sx.dtsi
+> @@ -599,9 +599,9 @@
+>  					anatop-max-voltage = <1450000>;
+>  				};
+>  
+> -				reg_pcie: regulator-vddpcie@140 {
+> +				reg_pcie_phy: regulator-vddpcie-phy@140 {
+>  					compatible = "fsl,anatop-regulator";
+> -					regulator-name = "vddpcie";
+> +					regulator-name = "vddpcie-phy";
+>  					regulator-min-microvolt = <725000>;
+>  					regulator-max-microvolt = <1450000>;
+>  					anatop-reg-offset = <0x140>;
+> @@ -1184,24 +1184,28 @@
+>  
+>  		pcie: pcie@0x08000000 {
+>  			compatible = "fsl,imx6sx-pcie", "snps,dw-pcie";
+> -			reg = <0x08ffc000 0x4000>; /* DBI */
+> +			reg = <0x08ffc000 0x4000>, <0x08f00000 0x80000>;
+> +			reg-names = "rc_dbi", "config";
 
-	if (dwc->tx_deemphasis_quirk)
+While it doesn't make a fucntional change, I would like to see this
+aligned to imx6q, which means the first reg name is just "dbi".
+ 
+>  			#address-cells = <3>;
+>  			#size-cells = <2>;
+>  			device_type = "pci";
+> -				  /* configuration space */
+> -			ranges = <0x00000800 0 0x08f00000 0x08f00000 0 0x00080000
+> -				  /* downstream I/O */
+> -				  0x81000000 0 0          0x08f80000 0 0x00010000
+> -				  /* non-prefetchable memory */
+> -				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>;
+> +			ranges = <0x81000000 0 0          0x08f80000 0 0x00010000 /* downstream I/O */
+> +				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>; /* non-prefetchable memory */
+>  			num-lanes = <1>;
+> -			interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>;
+> -			clocks = <&clks IMX6SX_CLK_PCIE_REF_125M>,
+> -				 <&clks IMX6SX_CLK_PCIE_AXI>,
+> +			interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
+> +			interrupt-names = "msi";
+> +			#interrupt-cells = <1>;
+> +			interrupt-map-mask = <0 0 0 0x7>;
+> +			interrupt-map = <0 0 0 1 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
+> +			                <0 0 0 2 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
+> +			                <0 0 0 3 &intc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
+> +			                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
+> +			clocks = <&clks IMX6SX_CLK_PCIE_AXI>,
+>  				 <&clks IMX6SX_CLK_LVDS1_OUT>,
+> +				 <&clks IMX6SX_CLK_PCIE_REF_125M>,
+>  				 <&clks IMX6SX_CLK_DISPLAY_AXI>;
+> -			clock-names = "pcie_ref_125m", "pcie_axi",
+> -				      "lvds_gate", "display_axi";
+> +			clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_inbound_axi";
+> +			pcie-phy-supply = <&reg_pcie_phy>;
+>  			status = "disabled";
+>  		};
+>  	};
 
-> diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
-> index 6f789fd..146eb2f 100644
-> --- a/drivers/usb/dwc3/dwc3-pci.c
-> +++ b/drivers/usb/dwc3/dwc3-pci.c
-> @@ -156,7 +156,8 @@ static int dwc3_pci_probe(struct pci_dev *pci,
->  			| DWC3_QUIRK_DEPP1P2P3
->  			| DWC3_QUIRK_DEPOCHANGE
->  			| DWC3_QUIRK_LFPSFILT
-> -			| DWC3_QUIRK_RX_DETOPOLL;
-> +			| DWC3_QUIRK_RX_DETOPOLL
-> +			| DWC3_QUIRK_TX_DEEPH;
 
-last patch.
-
---=20
-balbi
-
---rnP2AJ7yb1j09OW/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUQS5gAAoJEIaOsuA1yqREokQP/R4facH82NaXtCVnrMejIxrs
-R2jI0TzhYgxOeqAOJRzXMcxZlTqPXhMxd+NEtbmiGmyjfqGJLrXTXh6knsLdwaUC
-fV5D0wIkMrL+0srshdqpGb89gyVYzKmeSqqjzKE7nEJzJK2AsbA9TdvBbY0op8r8
-ganwom7MO3/2SVQ4NRX2v/yWWQNKFiyy8eCqOLj1FacuS5EKqpyHg/BryxcLxDhp
-K/uZ3jby8HAB8xb4tDi2yWc3CIwU6t8SXCAYFcnUm4fp+fbjtGba1ODQgXV7EM3x
-M9z8IyKLilj90sYEeMR365jMnulzKmg0fSHPaxDELDsdKkfjfWyydVZlAZibcH8H
-7h3d/ltUIpisszVVMBVXZwuWztvn7jnPk0tkyYdbvcSrlx7N2GAE+fp2bGW8Wpcl
-jzznkIlQTL42ryWae9hFtehFIGyNmz1CbxFfOJAMdwcPrm5tjpHI623kBRICIslo
-n0qGsbTCgk2oHjScZL4s127LSEpmiKafx+8szaCEro8My4L+CuAw71Je/6Pqo36X
-5CGfuaQCKMNuCdmKj49FO+9KbB/TsGgS8ghAEK36jHPL2obCnixt28BUXXAF9FsH
-dS7ZL++bEUJJMtcnkVkA3GiJThfYaYfVrRMSvQHcj+5GHQcdR3QVfUoK7X/6iuT8
-spJquNo5b0+ICuIvborm
-=nsaP
------END PGP SIGNATURE-----
-
---rnP2AJ7yb1j09OW/--
