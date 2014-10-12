@@ -1,112 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0142.outbound.protection.outlook.com ([65.55.169.142]:20064
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755811AbaJWOGO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 Oct 2014 10:06:14 -0400
-From: Stuart Yoder <stuart.yoder@freescale.com>
-To: Marcel Apfelbaum <marcel.a@redhat.com>,
-	Alex Williamson <alex.williamson@redhat.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"marcel@redhat.com" <marcel@redhat.com>,
-	"mst@redhat.com" <mst@redhat.com>
-Subject: RE: [PATCH v4] PCI: add kernel parameter to override devid<->driver
- mapping.
-Date: Thu, 23 Oct 2014 13:51:06 +0000
-Message-ID: <78dc034416ad42f1a2c8343ea1401fae@CY1PR0301MB0748.namprd03.prod.outlook.com>
-References: <1413813882-27047-1-git-send-email-marcel.a@redhat.com>
-	 <1414002755.4202.253.camel@ul30vt.home>
- <1414067521.2376.54.camel@localhost.localdomain>
-In-Reply-To: <1414067521.2376.54.camel@localhost.localdomain>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:42368 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751159AbaJLO1x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 12 Oct 2014 10:27:53 -0400
+Message-ID: <1413124067.2459.12.camel@antimon.intern.lynxeye.de>
+Subject: Re: [PATCH v5 4/9] PCI: imx6: add imx6sx pcie support
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Richard Zhu <richard.zhu@freescale.com>
+Cc: linux-pci@vger.kernel.org, shawn.guo@freescale.com,
+	festevam@gmail.com, tharvey@gateworks.com,
+	Richard Zhu <r65037@freescale.com>
+Date: Sun, 12 Oct 2014 16:27:47 +0200
+In-Reply-To: <1412919676-25344-5-git-send-email-richard.zhu@freescale.com>
+References: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
+	 <1412919676-25344-5-git-send-email-richard.zhu@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTWFyY2VsIEFwZmVsYmF1
-bSBbbWFpbHRvOm1hcmNlbC5hQHJlZGhhdC5jb21dDQo+IFNlbnQ6IFRodXJzZGF5LCBPY3RvYmVy
-IDIzLCAyMDE0IDc6MzIgQU0NCj4gVG86IEFsZXggV2lsbGlhbXNvbg0KPiBDYzogbGludXgtcGNp
-QHZnZXIua2VybmVsLm9yZzsgYmhlbGdhYXNAZ29vZ2xlLmNvbTsgbGludXgta2VybmVsQHZnZXIu
-a2VybmVsLm9yZzsgbWFyY2VsQHJlZGhhdC5jb207DQo+IG1zdEByZWRoYXQuY29tOyBZb2RlciBT
-dHVhcnQtQjA4MjQ4DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjRdIFBDSTogYWRkIGtlcm5lbCBw
-YXJhbWV0ZXIgdG8gb3ZlcnJpZGUgZGV2aWQ8LT5kcml2ZXIgbWFwcGluZy4NCj4gDQo+IE9uIFdl
-ZCwgMjAxNC0xMC0yMiBhdCAxMjozMiAtMDYwMCwgQWxleCBXaWxsaWFtc29uIHdyb3RlOg0KPiA+
-IFtjYysgc3R1YXJ0XQ0KPiA+DQo+ID4gT24gTW9uLCAyMDE0LTEwLTIwIGF0IDE3OjA0ICswMzAw
-LCBNYXJjZWwgQXBmZWxiYXVtIHdyb3RlOg0KPiA+ID4gU2Nhbm5pbmcgYSBsb3Qgb2YgZGV2aWNl
-cyBkdXJpbmcgYm9vdCByZXF1aXJlcyBhIGxvdCBvZiB0aW1lLg0KPiA+ID4gT24gb3RoZXIgc2Nl
-bmFyaW9zIHRoZXJlIGlzIGEgbmVlZCB0byBiaW5kIGEgZHJpdmVyIHRvIGEgc3BlY2lmaWMgc2xv
-dC4NCj4gPiA+DQo+ID4gPiBCaW5kaW5nIGRldmljZXMgdG8gcGNpLXN0dWIgZHJpdmVyIGRvZXMg
-bm90IHdvcmssDQo+ID4gPiBhcyBpdCB3aWxsIG5vdCBkaWZmZXJlbnRpYXRlIGJldHdlZW4gZGV2
-aWNlcyBvZiB0aGUNCj4gPiA+IHNhbWUgdHlwZS4gVXNpbmcgc29tZSBzdGFydCBzY3JpcHRzIGlz
-IGVycm9yIHByb25lLg0KPiA+ID4NCj4gPiA+IFRoZSBzb2x1dGlvbiBsZXZlcmFnZXMgZHJpdmVy
-X292ZXJyaWRlIGZ1bmN0aW9uYWxpdHkgaW50cm9kdWNlZCBieQ0KPiA+ID4NCj4gPiA+IAljb21t
-aXQ6IDc4MmE5ODVkN2FmMjZkYjM5ZTg2MDcwZDI4Zjk4N2NhZDIxMzEzYzANCj4gPiA+IAlBdXRo
-b3I6IEFsZXggV2lsbGlhbXNvbiA8YWxleC53aWxsaWFtc29uQHJlZGhhdC5jb20+DQo+ID4gPiAJ
-RGF0ZTogICBUdWUgTWF5IDIwIDA4OjUzOjIxIDIwMTQgLTA2MDANCj4gPiA+DQo+ID4gPiAgICAg
-CVBDSTogSW50cm9kdWNlIG5ldyBkZXZpY2UgYmluZGluZyBwYXRoIHVzaW5nIHBjaV9kZXYuZHJp
-dmVyX292ZXJyaWRlDQo+ID4gPg0KPiA+ID4gSW4gb3JkZXIgdG8gYmluZCBQQ0kgc2xvdHMgdG8g
-c3BlY2lmaWMgZHJpdmVycyB1c2U6DQo+ID4gPiAJcGNpPWRyaXZlclt4eHh4Onh4Onh4LnhdPWZv
-byxkcml2ZXJbeHh4eDp4eDp4eC54XT1iYXIsLi4uDQo+ID4gPg0KPiA+ID4gU2lnbmVkLW9mZi1i
-eTogTWFyY2VsIEFwZmVsYmF1bSA8bWFyY2VsLmFAcmVkaGF0LmNvbT4NCj4gPiA+IC0tLQ0KPiA+
-ID4gdjMgLT4gdjQ6DQo+ID4gPiAgLSBBZGRyZXNzZWQgQWxleCBXaWxsaWFtc29uJ3MgY29tbWVu
-dHM6DQo+ID4gPiAgICAtIE1vZGlmaWVkIHRoZSB0eXBlIG9mIGRyaXZlcl9vdmVycmlkZV9lbnRy
-eSdzIGZpZWxkcw0KPiA+ID4gICAgLSBVc2VkIFBDSV9ERVZGTiB3aGVuIGFwcHJvcHJpYXRlZA0K
-PiA+ID4gICAgLSBSZW1vdmVkIHJlZHVuZGFudCBjaGVja3MNCj4gPiA+ICAgIC0gUmVwbGFjZWQg
-QlVHX09OIHdpdGggcHJfZXJyIG1lc3NhZ2VzDQo+ID4gPiAgICAtIFNpbXBsZXIgY29tbWFuZCBs
-aW5lIHBhcnNpbmcNCj4gPiA+ICAtIEFkZHJlc3NlZCBNaWNoYWVsIFMuIFRzaXJraW4gY29tbWVu
-dHMNCj4gPiA+ICAgIC0gcmVtb3ZlZCBEUklWRVJfT1ZFUlJJREVfTkFNRV9MRU5HVEggbGltaXRh
-dGlvbg0KPiA+ID4gdjIgLT4gdjM6DQo+ID4gPiAgLSBDb3JyZWN0ZWQgc3ViamVjdCBsaW5lDQo+
-ID4gPiB2MSAtPiB2MjoNCj4gPiA+ICAtIEFkZHJlc3NlZCBNaWNoYWVsIFMuIFRzaXJraW4gY29t
-bWVudHMNCj4gPiA+ICAgIC0gUmVtb3ZlZCAzMiBzbG90cyBsaW1pdGF0aW9uDQo+ID4gPiAgICAt
-IEJldHRlciBoYW5kbGluZyBvZiBtZW1vcnkgYWxsb2NhdGlvbiBmYWlsdXJlcw0KPiA+ID4gICAg
-ICAocHJlZmVycmVkIEJVR19PTiBvdmVyIGVycm9yIG1lc3NhZ2VzKQ0KPiA+ID4gIC0gQWRkcmVz
-c2VkIEFsZXggV2lsbGlhbXNvbidzIGNvbW1lbnRzOg0KPiA+ID4gICAgLSBNb2RpZmllZCBjb21t
-aXQgbWVzc2FnZSB0byBzaG93IHBhcmFtZXRlciB1c2FnZSBtb3JlIGNsZWFyLg0KPiA+ID4gIC0g
-SSBwcmVmZXJyZWQgdG8gcmUtdXNlIHBhcnNlX2FyZ3MgaW5zdGVhZCBvZiBtYW51YWxseSB1c2lu
-Zw0KPiA+ID4gICAgc3Ryc3RyIGluIG9yZGVyIHRvIGJldHRlciBjb21wbHkgd2l0aCBjb21tYW5k
-IGxpbmUgcGFyc2luZw0KPiA+ID4gICAgcnVsZXMuDQo+ID4gPiAgLSBJIGRpZG4ndCB1c2UgYW55
-IGxvY2tpbmcgd2hlbiBwYXJzaW5nIHRoZSBjb21tYW5kIGxpbmUgYXJncw0KPiA+ID4gICAgKHNl
-ZSBwYXJzZV9kb25lIHVzYWdlKSBhc3N1bWluZyB0aGF0IGZpcnN0IGNhbGwgd2lsbCBiZQ0KPiA+
-ID4gICAgZWFybHkgaW4gc3lzdGVtIGJvb3QgYW5kIG5vIHJhY2UgY2FuIG9jY3VyLiBQbGVhc2Ug
-Y29ycmVjdA0KPiA+ID4gICAgbWUgaWYgSSBhbSB3cm9uZy4NCj4gPiA+DQo+ID4gPiBOb3RlczoN
-Cj4gPiA+ICAtIEkgaGF2ZSBmdXJ0aGVyIGlkZWFzIG9uIHRvcCBvZiB0aGlzIHBhdGNoIGJhc2Vk
-IG9uIHlvdXIgcmV2aWV3cy4NCj4gPiA+ICAgIEkgdGhvdWdodCBvZjoNCj4gPiA+ICAgIC0gVXNl
-IHdpbGRjYXJkcyB0byBzcGVjaWZ5IGVudGlyZSBidXNlcy9kZXZpY2VzLCBzb21ldGhpbmcgbGlr
-ZToNCj4gPiA+ICAgICAgCWRyaXZlclswMDAxOjAyOiouKl09cGNpLXN0dWINCj4gPiA+ICAgIC0g
-VXNlIGNvbW1hIHRvIHNlcGFyYXRlIHNldmVyYWwgZGV2aWNlczoNCj4gPiA+ICAgICAgCWRyaXZl
-clswMDAxOjAyOjAzLjQsMDAwMTowMjowNC4wLC4uLl09cGNpLXN0dWINCj4gPiA+ICAgIC0gTWFr
-ZSBkb21haW4gb3B0aW9uYWw6DQo+ID4gPiAgICAJZHJpdmVyWzAwOjAzLjBdPXBjaS1zdHViDQo+
-ID4gPg0KPiA+ID4gQ29tbWVudHMgd2lsbCBiZSBhcHByZWNpYXRlZCwNCj4gPiA+IFRoYW5rcywN
-Cj4gPiA+IE1hcmNlbA0KPiA+ID4gIERvY3VtZW50YXRpb24va2VybmVsLXBhcmFtZXRlcnMudHh0
-IHwgICA0ICsrDQo+ID4gPiAgZHJpdmVycy9wY2kvYnVzLmMgICAgICAgICAgICAgICAgICAgfCAx
-MTEgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrDQo+ID4gPiAgZHJpdmVycy9w
-Y2kvcGNpLmMgICAgICAgICAgICAgICAgICAgfCAgIDIgKw0KPiA+ID4gIDMgZmlsZXMgY2hhbmdl
-ZCwgMTE3IGluc2VydGlvbnMoKykNCj4gPg0KPiA+IFRoZSBkcml2ZXJfb3ZlcnJpZGUgZmVhdHVy
-ZSB0aGF0IHdlJ3JlIG1ha2luZyB1c2Ugb2YgaGVyZSBpcyBhbHNvIGdvaW5nDQo+ID4gdG8gYmUg
-c3VwcG9ydGVkIGJ5IHBsYXRmb3JtIGRldmljZXMgYW5kIHBvdGVudGlhbGx5IG1vcmUgYnVzdHlw
-ZXMgaW4gdGhlDQo+ID4gZnV0dXJlLCBzbyBJJ20gY29uY2VybmVkIHRoYXQgbWFraW5nIGEgcGNp
-IHNwZWNpZmljIGtlcm5lbCBwYXJhbWV0ZXIgaXMNCj4gPiB0b28gc2hvcnRzaWdodGVkLiAgSW5z
-dGVhZCB3ZSBjb3VsZCBob29rIG9uIHRvIEJVU19OT1RJRllfQUREX0RFVklDRSBmb3INCj4gPiBi
-dXN0eXBlcyB0aGF0IHN1cHBvcnQgZHJpdmVyX292ZXJyaWRlIHNvIHdlIGNhbiBoYXZlIGEgY29t
-bW9uIGludGVyZmFjZS4NCj4gVGhlIHJlYWwgcXVlc3Rpb24gaGVyZSBpZiB0aG9zZSBidXMgdHlw
-ZXMvZGV2aWNlcyB3b3VsZCBiZW5lZml0IGZyb20gdGhpcw0KPiBmZWF0dXJlLCBhbmQgSSBhbHNv
-IG11c3QgY29uZmVzcyB0aGF0IEkgaGF2ZSBubyBrbm93bGVkZ2Ugb2YgdGhlIG90aGVyIGJ1c2Vz
-Lg0KPiBDYW4gYW55b25lIGNvbmZpcm0gdGhhdCBpdCBkb2VzIG1ha2Ugc2Vuc2UgZm9yIHRoZW0/
-DQoNCldlIGRvbid0IGhhdmUgdmZpby1wbGF0Zm9ybSBpbiB1c2UgeWV0LCBzbyBub3QgbXVjaCBh
-Y3R1YWwgcmVhbCB3b3JsZCB1c2VyDQpleHBlcmllbmNlIHlldC4gIEJ1dCwgSSB0aGluayBpdCBt
-YWtlcyBzZW5zZS4gICBFc3BlY2lhbGx5LCBnaXZlbiB0aGF0IHdlIGFyZQ0KaW52ZW50aW5nIGEg
-a2VybmVsIHBhcmFtZXRlciBJIHRoaW5rIHdlIHNob3VsZCBkZXNpZ24gdGhlIHN5bnRheCBzbyB0
-aGF0IGl0DQpjYW4gd29yayBidXNlcyBjYW4gaW1wbGVtZW50IHN1cHBvcnQgZm9yIHRoaXMuICBU
-aGUgZHJpdmVyX292ZXJyaWRlIG1lY2hhbmlzbQ0KaXMgbm90IGJ1cyBzcGVjaWZpYywgc28gbGV0
-J3Mgbm90IG1ha2UgdGhlIGtlcm5lbCBwYXJhbWV0ZXIgYnVzIHNwZWNpZmljLg0KDQo+ID4gUGVy
-aGFwczoNCj4gPg0KPiA+IGRyaXZlcl9vdmVycmlkZT1wY2ksMDAwMDowMjowMC4wPXBjaS1zdHVi
-O3BsYXRmb3JtLGZha2VuYW1lPXZmaW8tcGxhdGZvcm0NCj4gPg0KPiA+IEZpbmRpbmcgZGVsaW1p
-dGVycyB0aGF0IGRvbid0IGNvbmZsaWN0IG1heSBiZSBjaGFsbGVuZ2luZy4gIEFsc28sIGNhbiB3
-ZQ0KPiA+IGFzc3VtZSB0aGF0IGJ1cy1uYW1lOmRldi1uYW1lIGlzIHVuaXF1ZSBmb3IgZXZlcnkg
-YnVzdHlwZT8gIEl0IGlzIGZvcg0KPiA+IHBjaSwgcGxhdGZvcm0/DQo+IEZvciBQQ0ksIHN1cmUg
-dGhlIGRvbWFpbjpidXM6ZGV2LmZ1bmMgaXMgdW5pcXVlLCBmb3IgcGxhdGZvcm0gSSBoYXZlIG5v
-IGlkZWEsDQo+IGNhbiBhbnlvbmUgdGhhdCBrbm93cyAicGxhdGZvcm0iIGNvbmZpcm0gb3IgZGVu
-eT8NCg0KWWVzLCBkZXYtbmFtZSB3aWxsIGJlIHVuaXF1ZS4gIEFsbCBwbGF0Zm9ybSBkZXZpY2Vz
-IGFyZSB1bmRlciBhIHNpbmdsZQ0KcGxhdGZvcm0gYnVzLg0KDQpTdHVhcnQNCg==
+Am Freitag, den 10.10.2014, 13:41 +0800 schrieb Richard Zhu:
+> From: Richard Zhu <r65037@freescale.com>
+> 
+> - imx6sx pcie has its own standalone pcie power supply.
+> In order to turn on the imx6sx pcie power during
+> initialization. Add the pcie regulator and the gpc regmap
+> into the imx6sx pcie structure.
+> - imx6sx pcie has the new added reset mechanism, add the
+> reset operations into the initialization.
+> - Register one PM call-back, enter/exit L2 state of the ASPM
+> during system suspend/resume.
+> - disp_axi clock is required by pcie inbound axi port actually.
+> Add one more clock named pcie_inbound_axi for imx6sx pcie.
+
+> Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
+
+In addition to Fabios comment I have one additional nitpick below and
+also you didn't include all the feedback from the last round.
+
+> ---
+>  drivers/pci/host/pci-imx6.c | 161 +++++++++++++++++++++++++++++++++++++++-----
+>  1 file changed, 143 insertions(+), 18 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index eac96fb..5ece4e1 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -22,8 +22,10 @@
+>  #include <linux/pci.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/regmap.h>
+> +#include <linux/regulator/consumer.h>
+>  #include <linux/resource.h>
+>  #include <linux/signal.h>
+> +#include <linux/syscore_ops.h>
+>  #include <linux/types.h>
+>  #include <linux/interrupt.h>
+>  
+> @@ -35,11 +37,15 @@ struct imx6_pcie {
+>  	int			reset_gpio;
+>  	struct clk		*pcie_bus;
+>  	struct clk		*pcie_phy;
+> +	struct clk		*pcie_inbound_axi;
+>  	struct clk		*pcie;
+>  	struct pcie_port	pp;
+>  	struct regmap		*iomuxc_gpr;
+> +	struct regmap		*gpc_ips_reg;
+> +	struct regulator	*pcie_phy_regulator;
+>  	void __iomem		*mem_base;
+>  };
+> +static struct imx6_pcie *imx6_pcie;
+
+Remove this static struct. I've already said on the last version that
+this is completely backwards.
+
+>  
+>  /* PCIe Root Complex registers (memory-mapped) */
+>  #define PCIE_RC_LCR				0x7c
+> @@ -77,6 +83,18 @@ struct imx6_pcie {
+>  #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
+>  #define PHY_RX_OVRD_IN_LO_RX_PLL_EN (1 << 3)
+>  
+> +/* GPC PCIE PHY bit definitions */
+> +#define GPC_CNTR			0
+> +#define GPC_CNTR_PCIE_PHY_PUP_REQ	BIT(7)
+> +
+> +static inline bool is_imx6sx_pcie(struct imx6_pcie *imx6_pcie)
+> +{
+> +	struct pcie_port *pp = &imx6_pcie->pp;
+> +	struct device_node *np = pp->dev->of_node;
+> +
+> +	return of_device_is_compatible(np, "fsl,imx6sx-pcie");
+> +}
+> +
+>  static int pcie_phy_poll_ack(void __iomem *dbi_base, int exp_val)
+>  {
+>  	u32 val;
+> @@ -275,18 +293,29 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+>  		goto err_pcie;
+>  	}
+>  
+> -	/* power up core phy and enable ref clock */
+> -	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> -			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+> -	/*
+> -	 * the async reset input need ref clock to sync internally,
+> -	 * when the ref clock comes after reset, internal synced
+> -	 * reset time is too short , cannot meet the requirement.
+> -	 * add one ~10us delay here.
+> -	 */
+> -	udelay(10);
+> -	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> -			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+> +	if (is_imx6sx_pcie(imx6_pcie)) {
+> +		ret = clk_prepare_enable(imx6_pcie->pcie_inbound_axi);
+> +		if (ret) {
+> +			dev_err(pp->dev, "unable to enable pcie clock\n");
+> +			goto err_inbound_axi;
+> +		}
+> +
+> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> +				IMX6SX_GPR12_PCIE_TEST_PD, 0);
+> +	} else {
+> +		/* power up core phy and enable ref clock */
+> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +				IMX6Q_GPR1_PCIE_TEST_PD, 0);
+> +		/*
+> +		 * the async reset input need ref clock to sync internally,
+> +		 * when the ref clock comes after reset, internal synced
+> +		 * reset time is too short , cannot meet the requirement.
+> +		 * add one ~10us delay here.
+> +		 */
+> +		udelay(10);
+> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +				IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+
+[...]
+
+Please use IMX6Q_GPR1_PCIE_REF_CLK_EN instead of 1 << 16 here. I know
+this is only moved code, but as you are touching it anyway this cleanup
+should be folded in.
+
+
