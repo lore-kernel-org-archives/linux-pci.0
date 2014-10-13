@@ -1,66 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([69.164.217.139]:56324 "EHLO foo.masarand.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752065AbaJBD7Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 23:59:25 -0400
-From: matt@masarand.com
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, Matthew Minter <matt@masarand.com>
-Subject: [PATCH 15/18] Delayed unicore32 setup of PCI IRQs to bus scan time
-Date: Thu,  2 Oct 2014 04:50:34 +0100
-Message-Id: <1412221837-17452-16-git-send-email-matt@masarand.com>
-In-Reply-To: <1412221837-17452-1-git-send-email-matt@masarand.com>
-References: <1412221837-17452-1-git-send-email-matt@masarand.com>
+Received: from mail-bn1bon0147.outbound.protection.outlook.com ([157.56.111.147]:57207
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754432AbaJMSrb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Oct 2014 14:47:31 -0400
+From: Rajat Jain <rajatjain@juniper.net>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-x86_64@vger.kernel.org" <linux-x86_64@vger.kernel.org>
+CC: Guenter Roeck <groeck@juniper.net>
+Subject: Reducing dependence on BIOS for allocating memory at PCI root port?
+Date: Mon, 13 Oct 2014 18:32:04 +0000
+Message-ID: <e192566903fe4b5eb9903e3b6c49a2e8@DM2PR05MB671.namprd05.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Matthew Minter <matt@masarand.com>
+Hello,
 
-PCI IRQs are currently assigned during pci_common_init, this is only run
-at boot time so devices hot-plugged after boot will not be allocated an IRQ.
-this is fixed here by defering the assignment untill the device enable code,
-instead registering the function pointer at boot time.
+I have huge hot-plug systems that can have hundreds of hot plug PCI slots that may not be populated at the boot time. Since BIOS doesn't see all devices could be plugged in, so we ask it to hard code and allocate a fixed chunk of memory space (say 4 GB) for PCI at the root port.
 
----
- arch/unicore32/kernel/pci.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+Now as we keep on developing new add-on cards with more PCI memory requirements - we have a problem because we need to increase that root port allocation. While asking the BIOS vendor to increase the memory for new releases is an option, I am in general thinking if there is a way to do this without depending on the BIOS allocation at all. We don't want to upgrade BIOS for just this. I'm hopeful this is a common problem - so I wanted to ask if there are there existing mechanisms that allow / instruct the kernel to ignore the BIOS allocations, and reprogram the PCI host controllers, (by maybe a kernel configuration or command line parameters etc for example).
 
-diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
-index 374a055..6a9da80 100644
---- a/arch/unicore32/kernel/pci.c
-+++ b/arch/unicore32/kernel/pci.c
-@@ -101,7 +101,7 @@ void pci_puv3_preinit(void)
- 	writel(readl(PCIBRI_CMD) | PCIBRI_CMD_IO | PCIBRI_CMD_MEM, PCIBRI_CMD);
- }
- 
--static int __init pci_puv3_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-+static int pci_puv3_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- {
- 	if (dev->bus->number == 0) {
- #ifdef CONFIG_ARCH_FPGA /* 4 pci slots */
-@@ -263,8 +263,6 @@ static int __init pci_common_init(void)
- 	if (!puv3_bus)
- 		panic("PCI: unable to scan bus!");
- 
--	pci_fixup_irqs(pci_common_swizzle, pci_puv3_map_irq);
--
- 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
- 		/*
- 		 * Size the bridge windows.
-@@ -281,6 +279,13 @@ static int __init pci_common_init(void)
- }
- subsys_initcall(pci_common_init);
- 
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->swizzle_irq = pci_common_swizzle;
-+	bridge->map_irq = pci_puv3_map_irq;
-+	return 0;
-+}
-+
- char * __init pcibios_setup(char *str)
- {
- 	if (!strcmp(str, "debug")) {
--- 
-2.1.0
+My question is whether some thing exists (or if it makes sense)?
+
+Thanks,
+
+Rajat
+
+PS: The immediate thought of device tree comes to mind - but what about architectures that don't support it yet. (FWIW - I'm using x86 - and I do not know if its host controller driver supports / will support any device tree options to specify PCI windows)
 
