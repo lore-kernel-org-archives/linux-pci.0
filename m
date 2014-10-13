@@ -1,122 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:58469 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755506AbaJNSUv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 14:20:51 -0400
-Received: by mail-ig0-f182.google.com with SMTP id hn15so15754318igb.9
-        for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 11:20:50 -0700 (PDT)
-Date: Tue, 14 Oct 2014 12:20:48 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: matt@masarand.com
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH 04/18] Delayed powerpc setup of PCI IRQs to bus scan time
-Message-ID: <20141014182048.GD10125@google.com>
-References: <1412222866-21068-1-git-send-email-matt@masarand.com>
- <1412222866-21068-5-git-send-email-matt@masarand.com>
+Received: from [207.46.100.145] ([207.46.100.145]:27936 "EHLO
+	na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751505AbaJMGxF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Oct 2014 02:53:05 -0400
+Message-ID: <543B767E.8000800@freescale.com>
+Date: Mon, 13 Oct 2014 14:51:42 +0800
+From: Lian Minghuan-B31939 <B31939@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1412222866-21068-5-git-send-email-matt@masarand.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Zang Roy-R61911" <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v4] PCI: Layerscape: Add Layerscape PCIe driver
+References: <1411888107-27640-1-git-send-email-Minghuan.Lian@freescale.com>
+ <8584310.bgN0fYJaqP@wuerfel>
+In-Reply-To: <8584310.bgN0fYJaqP@wuerfel>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 02, 2014 at 05:07:32AM +0100, matt@masarand.com wrote:
-> From: Matthew Minter <matt@masarand.com>
-> 
-> The powerpc PCI init code is currently initialising PCI device IRQ during
-> the boot time pcibios phase. This results in devices which are connected
-> after boot time not being asigned IRQs which can cause various problems.
-> 
-> This patch as part of its set fixes this be moving the IRQ initialisation
-> into the PCI device enable code path so that it is run for boot time and
-> hot-plugged devices alike.
-> 
-> Signed-off-by: Matthew Minter <matt@masarand.com>
-> 
-> ---
->  arch/powerpc/kernel/pci-common.c | 26 +++++++++++++-------------
->  1 file changed, 13 insertions(+), 13 deletions(-)
-> 
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index b2814e2..a8be5a5 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -217,7 +217,7 @@ struct pci_controller* pci_find_hose_for_OF_device(struct device_node* node)
->   * If the interrupt is used, then gets the interrupt line from the
->   * openfirmware and sets it in the pci_dev and pci_config line.
->   */
-> -static int pci_read_irq_line(struct pci_dev *pci_dev)
-> +static int pci_read_irq_line(struct pci_dev *pci_dev, u8 pin)
->  {
->  	struct of_phandle_args oirq;
->  	unsigned int virq;
-> @@ -229,7 +229,7 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
->  #endif
->  	/* Try to get a mapping from the device-tree */
->  	if (of_irq_parse_pci(pci_dev, &oirq)) {
-> -		u8 line, pin;
-> +		u8 line;
->  
->  		/* If that fails, lets fallback to what is in the config
->  		 * space and map that through the default controller. We
-> @@ -238,10 +238,6 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
->  		 * either provide a proper interrupt tree or don't use this
->  		 * function.
->  		 */
-> -		if (pci_read_config_byte(pci_dev, PCI_INTERRUPT_PIN, &pin))
-> -			return -1;
-> -		if (pin == 0)
-> -			return -1;
->  		if (pci_read_config_byte(pci_dev, PCI_INTERRUPT_LINE, &line) ||
->  		    line == 0xff || line == 0) {
->  			return -1;
-> @@ -266,9 +262,16 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
->  
->  	pr_debug(" Mapped to linux irq %d\n", virq);
->  
-> -	pci_dev->irq = virq;
-> +	return virq;
-> +}
->  
-> -	return 0;
-> +int pci_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
+Hi Arnd,
 
-Should be static.
+Sorry for delay in my reply.
+Please see my comments inline.
 
-> +{
-> +	/* Read default IRQs and fixup if necessary */
-> +	int irq = pci_read_irq_line(dev, pin);
-> +	if (ppc_md.pci_irq_fixup)
-> +		ppc_md.pci_irq_fixup(dev);
-> +	return irq;
+On 2014年09月30日 17:18, Arnd Bergmann wrote:
+> On Sunday 28 September 2014 15:08:27 Minghuan Lian wrote:
+>> Add support for Freescale Layerscape PCIe controller. This driver
+>> re-uses the designware core code.
+>>
+>> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> I'm still not too happy about the MSI handling here. I think you
+> really need to have a separate driver for the msi controller.
+[Minghuan] LS1021 does not contains MSI controller.
+SCFG contains only one register to implement MSI interrupt support.
+And I reused pci-designware.c MSI API.
+>> +/* SCFG MSI register */
+>> +#define SCFG_SPIMSICR		0x40
+>> +#define SCFG_SPIMSICLRCR	0x90
+>> +
+>> +#define MSI_LS1021A_ADDR		0x1570040
+>> +#define MSI_LS1021A_DATA(pex_idx)	(0xb3 + pex_idx)
+>  From what I can tell, the 'scfg' registers are mostly for MSI, and
+> the MSI_LS1021A_ADDR that you have hardcoded here is actually part of
+> the scfg area itself. You should never hardwire that in a PCI host
+> driver.
+>
+> Please make a separate MSI driver instead and use the 'msi-parent'
+> property.
+[Minghuan] There is only one register in SCFG used for MSI.
+I really do not want to write a separate MSI driver only for one 
+register and two MSI interrupts.
+It is really not good to use hardcode MSI_LS1021A_ADDR.
+I hope to change it when adding LS2085 PCI driver support.
+SCFG contains some registers used for PCI link status, PCI error 
+interrupt and PCI PME support.
+This is the first patch and will continue to improve.
 
-The .pci_irq_fixup() can change dev->irq, so wouldn't you want to return
-dev->irq, not irq, here?  Otherwise, pdev_assign_irq() (the caller of
-pci_map_irq()) will overwrite the dev->irq value set by the fixup.
+>> +static u32 ls_pcie_get_msi_addr(struct pcie_port *pp)
+>> +{
+>> +	return MSI_LS1021A_ADDR;
+>> +}
+>> +
+>> +static u32 ls_pcie_get_msi_data(struct pcie_port *pp, int pos)
+>> +{
+>> +	struct ls_pcie *pcie = to_ls_pcie(pp);
+>> +
+>> +	return MSI_LS1021A_DATA(pcie->index);
+>> +}
+> Does this mean you can have only one device on this PCI host that
+> uses MSI?
+[Minghuan] Yes. LS1021A provides  only one MSI interrupt for a PCI 
+controller NOT 32.
+>> +static irqreturn_t ls_pcie_msi_irq_handler(int irq, void *data)
+>> +{
+>> +	struct pcie_port *pp = data;
+>> +	struct ls_pcie *pcie = to_ls_pcie(pp);
+>> +	unsigned int msi_irq;
+>> +
+>> +	/* clear the interrupt */
+>> +	regmap_write(pcie->scfg, SCFG_SPIMSICLRCR,
+>> +		     MSI_LS1021A_DATA(pcie->index));
+>> +
+>> +	msi_irq = irq_find_mapping(pp->irq_domain, 0);
+>> +	if (!msi_irq) {
+>> +		/*
+>> +		 * that's weird who triggered this?
+>> +		 * just clear it
+>> +		 */
+>> +		dev_err(pcie->dev, "unexpected MSI\n");
+>> +		return IRQ_NONE;
+>> +	}
+>> +
+>> +	generic_handle_irq(msi_irq);
+>> +	return IRQ_HANDLED;
+>> +}
+> Since you have only one addr/data value per host controller, does that mean
+> that you can have only one device on this host that uses one interrupt?
+>
+> How do you ensure that the second user that tries to call pci_enable_msi
+> gets an error? Is there only one internal device attached to the host?
+[Minghuan] I used the following code to reserve 31 MSI interrupt.
+static void ls1021a_pcie_msi_fixup(struct pcie_port *pp)
+{
+     int i;
 
->  }
->  
->  /*
-> @@ -766,6 +769,8 @@ int pci_proc_domain(struct pci_bus *bus)
->  
->  int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->  {
-> +	bridge->swizzle_irq = NULL;
-> +	bridge->map_irq = pci_map_irq;
->  	if (ppc_md.pcibios_root_bridge_prepare)
->  		return ppc_md.pcibios_root_bridge_prepare(bridge);
->  
-> @@ -968,11 +973,6 @@ static void pcibios_setup_device(struct pci_dev *dev)
->  	/* Additional platform DMA/iommu setup */
->  	if (ppc_md.pci_dma_dev_setup)
->  		ppc_md.pci_dma_dev_setup(dev);
-> -
-> -	/* Read default IRQs and fixup if necessary */
-> -	pci_read_irq_line(dev);
-> -	if (ppc_md.pci_irq_fixup)
-> -		ppc_md.pci_irq_fixup(dev);
->  }
->  
->  int pcibios_add_device(struct pci_dev *dev)
-> -- 
-> 2.1.0
-> 
+     /*
+      * LS1021A has only one MSI interrupt
+      * Set all msi interrupts as used except the first one
+      */
+     for (i = 1; i < MAX_MSI_IRQS; i++)
+         set_bit(i, pp->msi_irq_in_use);
+}
+>> +	if (of_device_is_compatible(pcie->dev->of_node, "fsl,ls1021a-pcie")) {
+>> +		/*
+>> +		 * LS1021A Workaround for internal TKT228622
+>> +		 * to fix the INTx hang issue
+>> +		 */
+>> +		val = ioread32(pcie->dbi + PCIE_STRFMR1);
+>> +		val &= 0xffff;
+>> +		iowrite32(val, pcie->dbi + PCIE_STRFMR1);
+>> +
+>> +		ls1021a_pcie_msi_fixup(pp);
+>> +	}
+>> +}
+> "fsl,ls1021a-pcie" is the only one supported by this driver, so the
+> check is useless.
+[Minghuan] Ok. I will remove the 'if" and will re-add when adding LS2085 
+PCI driver.
+> 	Arnd
+
