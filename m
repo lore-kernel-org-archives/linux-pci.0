@@ -1,76 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:51622 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752075AbaJBBM4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 21:12:56 -0400
-Message-ID: <1412210062.10667.1.camel@pasglop>
-Subject: [PATCH v2 2/4] gpu/radeon: Move 64-bit MSI quirk from arch to driver
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Alex Deucher <alexdeucher@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dave Airlie <airlied@linux.ie>,
+Received: from mail-qg0-f50.google.com ([209.85.192.50]:40144 "EHLO
+	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751188AbaJMUqo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Oct 2014 16:46:44 -0400
+Received: by mail-qg0-f50.google.com with SMTP id q108so7252772qgd.23
+        for <linux-pci@vger.kernel.org>; Mon, 13 Oct 2014 13:46:43 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1413231118.26478.21.camel@pasglop>
+References: <1412656696.30859.122.camel@pasglop> <CADnq5_NFt8neiOAg896d3-DbAn0rnrE7iXaTFmkNGSg-J9oSkA@mail.gmail.com>
+ <1412746096.30859.229.camel@pasglop> <1413231118.26478.21.camel@pasglop>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 13 Oct 2014 14:46:23 -0600
+Message-ID: <CAErSpo4gZwHy-P=w8qD9CMSkrNhJ9PE+sE1Dxfqgi_N8O_GRjQ@mail.gmail.com>
+Subject: Re: [PATCH v3 4/7] sound/radeon: Add quirk for broken 64-bit MSI
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Dave Airlie <airlied@linux.ie>, Takashi Iwai <tiwai@suse.de>,
 	Brian King <brking@linux.vnet.ibm.com>,
-	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
+	Linux PCI <linux-pci@vger.kernel.org>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Date: Thu, 02 Oct 2014 10:34:22 +1000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org,
+	Alex Deucher <alexdeucher@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Oct 13, 2014 at 2:11 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Wed, 2014-10-08 at 16:28 +1100, Benjamin Herrenschmidt wrote:
+>
+>> > Further discussion with the hw teams have revealed that this is still
+>> > an issue on newer asics so I think your original patch is correct
+>> > after all.  Just disable 64 bit MSIs on all AMD audio PCI ids.
+>>
+>> Allright, I won't resend the whole series, I can just pickup my previous
+>> patch. Takashi, Bjorn, Dave, this series covers your 3 areas of
+>> maintainership, how do you want to proceed ? I'm happy to merge the
+>> whole lot via powerpc ASAP (since it's all CC'ed stable) if you guys
+>> send me the appropriate acks, otherwise, let me know.
+>
+> So I got an Ack from Takashi but so far silence from Bjorn and Dave :-)
+>
+> Ping ?
 
-A number of radeon cards have a HW limitation causing them to be
-unable to generate the full 64-bit of address bits for MSIs. This
-breaks MSIs on some platforms such as POWER machines.
+Sorry, I've been taking a breather after the v3.17 release.  I'll try
+to look at these soon, but I will be on vacation Thu-Fri this week).
 
-We used to have a powerpc specific quirk to address that on a
-single card, but this doesn't scale very well, this is better
-put under control of the drivers who know precisely what a given
-HW revision can do.
-
-This moves the setting of the quirk flag to the radeon driver
-
-Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
----
-
-v2: This is just adjusted to the new flag name
-
- arch/powerpc/kernel/pci_64.c            |  1 -
- drivers/gpu/drm/radeon/radeon_irq_kms.c | 10 ++++++++++
- 2 files changed, 10 insertions(+), 1 deletion(-)
-
-diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
-index d41a831..5330f6d 100644
---- a/arch/powerpc/kernel/pci_64.c
-+++ b/arch/powerpc/kernel/pci_64.c
-@@ -271,5 +271,4 @@ static void quirk_radeon_32bit_msi(struct pci_dev *dev)
- {
- 	dev->no_64bit_msi = true;
- }
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x68f2, quirk_radeon_32bit_msi);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
-diff --git a/drivers/gpu/drm/radeon/radeon_irq_kms.c b/drivers/gpu/drm/radeon/radeon_irq_kms.c
-index 16807af..e760671 100644
---- a/drivers/gpu/drm/radeon/radeon_irq_kms.c
-+++ b/drivers/gpu/drm/radeon/radeon_irq_kms.c
-@@ -202,6 +202,16 @@ static bool radeon_msi_ok(struct radeon_device *rdev)
- 	if (rdev->flags & RADEON_IS_AGP)
- 		return false;
- 
-+	/*
-+	 * Older chips have a HW limitation, they can only generate 40 bits
-+	 * of address for "64-bit" MSIs which breaks on some platforms, notably
-+	 * IBM POWER servers, so we limit them
-+	 */
-+	if (rdev->family < CHIP_BONAIRE) {
-+		dev_info(rdev->dev, "radeon: MSI limited to 32-bit\n");
-+		rdev->pdev->no_64bit_msi = true;
-+	}
-+
- 	/* force MSI on */
- 	if (radeon_msi == 1)
- 		return true;
-
-
-
+Bjorn
