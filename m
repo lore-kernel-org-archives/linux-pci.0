@@ -1,151 +1,100 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <54406B06.4020401@huawei.com>
-Date: Fri, 17 Oct 2014 09:04:06 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f172.google.com ([209.85.216.172]:43883 "EHLO
+	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754512AbaJMQLu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Oct 2014 12:11:50 -0400
+Received: by mail-qc0-f172.google.com with SMTP id o8so5197975qcw.17
+        for <linux-pci@vger.kernel.org>; Mon, 13 Oct 2014 09:11:49 -0700 (PDT)
 MIME-Version: 1.0
-To: Sebastian Ott <sebott@linux.vnet.ibm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	"Ralf Baechle" <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	"David Vrabel" <david.vrabel@citrix.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>
-Subject: Re: [PATCH v3 22/27] s390/MSI: Use MSI chip framework to configure
- MSI/MSI-X irq
-References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com> <1413342435-7876-23-git-send-email-wangyijing@huawei.com> <alpine.LFD.2.11.1410161411340.1575@denkbrett>
-In-Reply-To: <alpine.LFD.2.11.1410161411340.1575@denkbrett>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <2298090.n99M7dPPE3@segfault>
+References: <2354837.kuMZPK0Y1Q@segfault> <CAErSpo6zLY8RVAHnLe81jjOE8cxGzskjPq3HL7eZVOtC-WF6=w@mail.gmail.com>
+ <2298090.n99M7dPPE3@segfault>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 13 Oct 2014 10:11:28 -0600
+Message-ID: <CAErSpo4C=zANrE6muRf93nxLtmOG-U0xhWQPV_=fb8dFaKG8yw@mail.gmail.com>
+Subject: Re: [Bulk] Re: [3.16-rcX][pciehp][radeon] PCIe HotPlug conflicts with
+ radeon GPU
+To: Shawn Starr <shawn.starr@rogers.com>
+Cc: Kernel development list <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	=?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+	DRI mailing list <dri-devel@lists.freedesktop.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/10/16 20:13, Sebastian Ott wrote:
-> On Wed, 15 Oct 2014, Yijing Wang wrote:
->> Use MSI chip framework instead of arch MSI functions to configure
->> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->> Hi Sebastian,
->>    I dropped the Acked-by , because this version has a
->> lot changes compared to last. So, I guess you may want to check it again.
-> 
-> I did and I agree with that one too.
+[+cc Alex, Christian, dri-devel]
 
-Thanks very much!
+On Sat, Oct 11, 2014 at 1:37 PM, Shawn Starr <shawn.starr@rogers.com> wrote:
+> On September 11, 2014 04:26:21 PM Bjorn Helgaas wrote:
+>> [+cc linux-pci]
+>>
+>> On Sat, Aug 2, 2014 at 10:02 AM, Shawn Starr <shawn.starr@rogers.com> wrote:
+>> > Hello devs,
+>> >
+>> > There are two issues I am encountering with the PCIe Hotplug driver on my
+>> > Lenovo Laptop (W500). I note this goes back further than 3.15.
+>> >
+>> > It is noted here:
+>> > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=
+>> > f244d8b623dae7a7bc695b0336f67729b95a9736
+>> > https://bugzilla.kernel.org/show_bug.cgi?id=79701
+>> >
+>> > And my open bug here:
+>> > https://bugzilla.kernel.org/show_bug.cgi?id=77261
+>> >
+>> > 1) If I enable the device to use both the integrated and discrete GPU,
+>> > pciehp will decide to force unload radeon because it puts itself into a
+>> > power saving state, fails back to the Intel integrated GPU in this case
+>> > unless I tell radeon.ko to runpm=0 (no power management, then pciehp wont
+>> > touch it).
+>> >
+>> > 2) If the Radeon GPU resets and you use pci_reset=1 for kernel module
+>> > option, pciehp decides to force unload radeon even though the GPU is
+>> > trying to setup after failing.
+>> >
+>> > Kernel I am using right now: 3.16.0-0.rc7.git3.1.fc21.x86_64 (about to
+>> > boot into snapshot kernel-core-3.16.0-0.rc7.git4.1.fc21.x86_64)
+>> Hi Shawn,
+>>
+>> Thanks for the report and sorry that it got dropped.  But I see you're
+>> cc'd on https://bugzilla.kernel.org/show_bug.cgi?id=79701, so you've
+>> probably seen the work there.  If you can try out the patches I just
+>> posted, that would be great.
+>>
+>> Bjorn
+>
+> Hi Bjorn,
+>
+> For #1) This is fixed in linux-next (tracking 3.18.0-0.rc0.git1.2.fc22.1.x86_64
+> nondebug kernel for Fedora). PCIe HotPlug no longer unloads radeon. For this
+> bugzilla report we can close it.
+>
+> #2) This still has weird results however, radeon.hard_reset=1 is experimental
+> and while it attempts to reset GPU, PCIe HotPlug seems to interact in this.
+>
+> This can be tested by adding to grub command line radeon.hard_reset=1.
+> When X has started up, trigger a reset by cat
+> /sys/kernel/debug/dri/#/radeon_gpu_reset. It will output 0, cat it again will
+> show 1.
+>
+> Attempt to drag a window. The this will trigger a GPU reset, but fail to
+> recover, its unknown if PCIe HotPlug is preventing a proper reset or not but
+> there is pciehp calls in the stack trace.
 
-Thanks!
-Yijing.
+A PCIe device reset usually looks like a hotplug event because the
+PCIe link goes down and comes back up.  As far as the PCI core is
+concerned, it can't tell the difference between (1) a simple reset
+where the link bounces and (2) removal of one device followed by
+addition of another.
 
-> 
-> Regards,
-> Sebastian
-> 
->> ---
->>  arch/s390/include/asm/pci.h |    9 +++++++++
->>  arch/s390/pci/pci.c         |   12 ++++++++++--
->>  2 files changed, 19 insertions(+), 2 deletions(-)
->>
->> diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
->> index c030900..4d41f08 100644
->> --- a/arch/s390/include/asm/pci.h
->> +++ b/arch/s390/include/asm/pci.h
->> @@ -88,6 +88,8 @@ struct zpci_dev {
->>  	u32 uid;			/* user defined id */
->>  	u8 util_str[CLP_UTIL_STR_LEN];	/* utility string */
->>
->> +	struct msi_chip *msi_chip;
->> +
->>  	/* IRQ stuff */
->>  	u64		msi_addr;	/* MSI address */
->>  	struct airq_iv *aibv;		/* adapter interrupt bit vector */
->> @@ -121,6 +123,13 @@ struct zpci_dev {
->>  	struct dentry	*debugfs_perf;
->>  };
->>
->> +static inline struct msi_chip *pci_msi_chip(struct pci_bus *bus)
->> +{
->> +	struct zpci_dev *zpci = bus->sysdata;
->> +
->> +	return zpci->msi_chip;
->> +}
->> +
->>  static inline bool zdev_enabled(struct zpci_dev *zdev)
->>  {
->>  	return (zdev->fh & (1UL << 31)) ? true : false;
->> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
->> index 552b990..bf6732f 100644
->> --- a/arch/s390/pci/pci.c
->> +++ b/arch/s390/pci/pci.c
->> @@ -358,7 +358,8 @@ static void zpci_irq_handler(struct airq_struct *airq)
->>  	}
->>  }
->>
->> -int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
->> +static int zpci_setup_msi_irqs(struct msi_chip *chip,
->> +		struct pci_dev *pdev, int nvec, int type)
->>  {
->>  	struct zpci_dev *zdev = get_zdev(pdev);
->>  	unsigned int hwirq, msi_vecs;
->> @@ -434,7 +435,8 @@ out:
->>  	return rc;
->>  }
->>
->> -void arch_teardown_msi_irqs(struct pci_dev *pdev)
->> +static void zpci_teardown_msi_irqs(struct msi_chip *chip,
->> +		struct pci_dev *pdev)
->>  {
->>  	struct zpci_dev *zdev = get_zdev(pdev);
->>  	struct msi_desc *msi;
->> @@ -464,6 +466,11 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
->>  	airq_iv_free_bit(zpci_aisb_iv, zdev->aisb);
->>  }
->>
->> +static struct msi_chip zpci_msi_chip = {
->> +	.setup_irqs = zpci_setup_msi_irqs,
->> +	.teardown_irqs = zpci_teardown_msi_irqs,
->> +};
->> +
->>  static void zpci_map_resources(struct zpci_dev *zdev)
->>  {
->>  	struct pci_dev *pdev = zdev->pdev;
->> @@ -749,6 +756,7 @@ static int zpci_scan_bus(struct zpci_dev *zdev)
->>  	if (ret)
->>  		return ret;
->>
->> +	zdev->msi_chip = &zpci_msi_chip;
->>  	zdev->bus = pci_scan_root_bus(NULL, ZPCI_BUS_NR, &pci_root_ops,
->>  				      zdev, &resources);
->>  	if (!zdev->bus) {
->> -- 
->> 1.7.1
->>
->>
-> 
-> 
-> .
-> 
+b440bde74f04 ("PCI: Add pci_ignore_hotplug() to ignore hotplug events
+for a device") addressed this for some similar cases, but it looks
+like we probably need some more calls to pci_ignore_hotplug() in the
+radeon driver reset methods.
 
+Can you please open a bugzilla and attach the complete dmesg log,
+including the GPU reset and recovery failure?
 
--- 
-Thanks!
-Yijing
-
+Bjorn
