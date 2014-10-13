@@ -1,85 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:51588 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752068AbaJBBKw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 21:10:52 -0400
-Message-ID: <1412210092.10667.3.camel@pasglop>
-Subject: [PATCH 4/4] ALSA: hda - Limit 40bit DMA for AMD HDMI controllers
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Alex Deucher <alexdeucher@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dave Airlie <airlied@linux.ie>,
+Received: from mail-qa0-f54.google.com ([209.85.216.54]:56600 "EHLO
+	mail-qa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751949AbaJMUjD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Oct 2014 16:39:03 -0400
+Received: by mail-qa0-f54.google.com with SMTP id i13so4968068qae.13
+        for <linux-pci@vger.kernel.org>; Mon, 13 Oct 2014 13:39:02 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1413231118.26478.21.camel@pasglop>
+References: <1412656696.30859.122.camel@pasglop>
+	<CADnq5_NFt8neiOAg896d3-DbAn0rnrE7iXaTFmkNGSg-J9oSkA@mail.gmail.com>
+	<1412746096.30859.229.camel@pasglop>
+	<1413231118.26478.21.camel@pasglop>
+Date: Mon, 13 Oct 2014 16:39:02 -0400
+Message-ID: <CADnq5_Od-cr5u8vsMbLw3sTTsbKDGwJcbvoMNgKETAeDpUXhTw@mail.gmail.com>
+Subject: Re: [PATCH v3 4/7] sound/radeon: Add quirk for broken 64-bit MSI
+From: Alex Deucher <alexdeucher@gmail.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dave Airlie <airlied@linux.ie>, Takashi Iwai <tiwai@suse.de>,
 	Brian King <brking@linux.vnet.ibm.com>,
-	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
+	Linux PCI <linux-pci@vger.kernel.org>,
 	Yijing Wang <wangyijing@huawei.com>,
 	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Date: Thu, 02 Oct 2014 10:34:52 +1000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Oct 13, 2014 at 4:11 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Wed, 2014-10-08 at 16:28 +1100, Benjamin Herrenschmidt wrote:
+>
+>> > Further discussion with the hw teams have revealed that this is still
+>> > an issue on newer asics so I think your original patch is correct
+>> > after all.  Just disable 64 bit MSIs on all AMD audio PCI ids.
+>>
+>> Allright, I won't resend the whole series, I can just pickup my previous
+>> patch. Takashi, Bjorn, Dave, this series covers your 3 areas of
+>> maintainership, how do you want to proceed ? I'm happy to merge the
+>> whole lot via powerpc ASAP (since it's all CC'ed stable) if you guys
+>> send me the appropriate acks, otherwise, let me know.
+>
+> So I got an Ack from Takashi but so far silence from Bjorn and Dave :-)
+>
+> Ping ?
 
-AMD/ATI HDMI controller chip models, we already have a filter to lower
-to 32bit DMA, but the rest are supposed to be working with 64bit
-although the hardware doesn't really work with 63bit but only with 40
-or 48bit DMA.  In this patch, we take 40bit DMA for safety for the
-AMD/ATI controllers as the graphics drivers does.
+I'm fine with the radeon patches going through your tree rather than
+through my tree.
 
-Signed-off-by: Takashi Iwai <tiwai@suse.de>
-Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: <stable@vger.kernel.org>
----
-
-Tested, works fine. This patch is actually independent of the rest
-of the series
-
- sound/pci/hda/hda_intel.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
-
-diff --git a/sound/pci/hda/hda_intel.c b/sound/pci/hda/hda_intel.c
-index f91ba7f..48d0f30 100644
---- a/sound/pci/hda/hda_intel.c
-+++ b/sound/pci/hda/hda_intel.c
-@@ -1483,6 +1483,7 @@ static int azx_first_init(struct azx *chip)
- 	struct snd_card *card = chip->card;
- 	int err;
- 	unsigned short gcap;
-+	unsigned int dma_bits = 64;
- 
- #if BITS_PER_LONG != 64
- 	/* Fix up base address on ULI M5461 */
-@@ -1524,9 +1525,14 @@ static int azx_first_init(struct azx *chip)
- 	gcap = azx_readw(chip, GCAP);
- 	dev_dbg(card->dev, "chipset global capabilities = 0x%x\n", gcap);
- 
-+	/* AMD devices support 40 or 48bit DMA, take the safe one */
-+	if (chip->pci->vendor == PCI_VENDOR_ID_AMD)
-+		dma_bits = 40;
-+
- 	/* disable SB600 64bit support for safety */
- 	if (chip->pci->vendor == PCI_VENDOR_ID_ATI) {
- 		struct pci_dev *p_smbus;
-+		dma_bits = 40;
- 		p_smbus = pci_get_device(PCI_VENDOR_ID_ATI,
- 					 PCI_DEVICE_ID_ATI_SBX00_SMBUS,
- 					 NULL);
-@@ -1556,9 +1562,11 @@ static int azx_first_init(struct azx *chip)
- 	}
- 
- 	/* allow 64bit DMA address if supported by H/W */
--	if ((gcap & AZX_GCAP_64OK) && !pci_set_dma_mask(pci, DMA_BIT_MASK(64)))
--		pci_set_consistent_dma_mask(pci, DMA_BIT_MASK(64));
--	else {
-+	if (!(gcap & AZX_GCAP_64OK))
-+		dma_bits = 32;
-+	if (!pci_set_dma_mask(pci, DMA_BIT_MASK(dma_bits))) {
-+		pci_set_consistent_dma_mask(pci, DMA_BIT_MASK(dma_bits));
-+	} else {
- 		pci_set_dma_mask(pci, DMA_BIT_MASK(32));
- 		pci_set_consistent_dma_mask(pci, DMA_BIT_MASK(32));
- 	}
-
-
-
-
+Alex
