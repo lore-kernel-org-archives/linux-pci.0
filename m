@@ -1,53 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0144.outbound.protection.outlook.com ([65.55.169.144]:45904
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+Received: from mail-bn1bon0142.outbound.protection.outlook.com ([157.56.111.142]:10523
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751680AbaJ2GwO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 Oct 2014 02:52:14 -0400
-Date: Wed, 29 Oct 2014 14:50:55 +0800
-From: Huang Rui <ray.huang@amd.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Jason Chang <jason.chang@amd.com>,
-	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 04/19] usb: dwc3: add disscramble quirk
-Message-ID: <20141029065055.GA8935@hr-slim.amd.com>
-References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
- <1414497280-3126-5-git-send-email-ray.huang@amd.com>
- <CAErSpo5vRcGxu=e61tCEwNVL913_Lxne=1KW+JtQVpc6jgCaHg@mail.gmail.com>
+	id S1753085AbaJMCeP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 12 Oct 2014 22:34:15 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <richard.zhu@freescale.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shengchao Guo <Shawn.Guo@freescale.com>,
+	"festevam@gmail.com" <festevam@gmail.com>,
+	"tharvey@gateworks.com" <tharvey@gateworks.com>
+Subject: RE: [PATCH v5 8/9] ARM: imx6sx: add imx6sx pcie related gpr bits
+ definitions
+Date: Mon, 13 Oct 2014 02:34:10 +0000
+Message-ID: <a9f132948e7540b09f393b6b3d9b78ec@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
+	 <1412919676-25344-9-git-send-email-richard.zhu@freescale.com>
+ <1413124703.2459.18.camel@antimon.intern.lynxeye.de>
+In-Reply-To: <1413124703.2459.18.camel@antimon.intern.lynxeye.de>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAErSpo5vRcGxu=e61tCEwNVL913_Lxne=1KW+JtQVpc6jgCaHg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On Tue, Oct 28, 2014 at 10:39:26AM -0600, Bjorn Helgaas wrote:
-> On Tue, Oct 28, 2014 at 5:54 AM, Huang Rui <ray.huang@amd.com> wrote:
-> > This patch adds disscramble quirk, and it only needs to be enabled at fpga
-> 
-> "disscramble" (in subject and above) is not a real word.
-> 
-> I see that DWC3_GCTL_DISSCRAMBLE is already defined in
-> drivers/usb/dwc3/core.h even before your patches, so I suppose it's
-> something the hardware designers made up.
-> 
-> Maybe it means "descramble" (or "unscramble").  Or maybe it means
-> "disable scrambling"?  A comment might make this clearer.  A better
-> name would be even better.
-> 
-
-Your mention is right. "disscramble" is writed by HW designers in
-DesignWare databook. It could confuse reader, I will update subject
-and add note (disscramble = disable scramble) at commit log.
-
-Thanks,
-Rui
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXBjaS1vd25lckB2
+Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1wY2ktb3duZXJAdmdlci5rZXJuZWwub3JnXQ0K
+PiBPbiBCZWhhbGYgT2YgTHVjYXMgU3RhY2gNCj4gU2VudDogU3VuZGF5LCBPY3RvYmVyIDEyLCAy
+MDE0IDEwOjM4IFBNDQo+IFRvOiBSaWNoYXJkIFpodQ0KPiBDYzogbGludXgtcGNpQHZnZXIua2Vy
+bmVsLm9yZzsgR3VvIFNoYXduLVI2NTA3MzsgZmVzdGV2YW1AZ21haWwuY29tOw0KPiB0aGFydmV5
+QGdhdGV3b3Jrcy5jb207IFpodSBSaWNoYXJkLVI2NTAzNw0KPiBTdWJqZWN0OiBSZTogW1BBVENI
+IHY1IDgvOV0gQVJNOiBpbXg2c3g6IGFkZCBpbXg2c3ggcGNpZSByZWxhdGVkIGdwciBiaXRzDQo+
+IGRlZmluaXRpb25zDQo+IA0KPiBBbSBGcmVpdGFnLCBkZW4gMTAuMTAuMjAxNCwgMTM6NDEgKzA4
+MDAgc2NocmllYiBSaWNoYXJkIFpodToNCj4gPiBGcm9tOiBSaWNoYXJkIFpodSA8cjY1MDM3QGZy
+ZWVzY2FsZS5jb20+DQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBSaWNoYXJkIFpodSA8cmljaGFy
+ZC56aHVAZnJlZXNjYWxlLmNvbT4NCj4gDQo+IFlvdSBhcmUgdXNpbmcgdGhvc2UgZGVmaW5lcyBp
+biB0aGUgUENJZSBkcml2ZXIgY2hhbmdlcywgc28gdGhlIG5lZWQgdG8gYmUNCj4gc29ydGVkIGJl
+Zm9yZSB0aGVtIGluIHRoZSBzZXJpZXMgYXMgdGhleSBuZWVkIHRvIGJlIHBpY2tlZCB1cCBieSBC
+am9ybiB0byBtYWtlDQo+IHN1cmUgd2UgZG9uJ3QgaW50cm9kdWNlIGJ1aWxkIHJlZ3Jlc3Npb25z
+Lg0KPiANCltSaWNoYXJkXSBUaGFua3MgZm9yIHlvdXIga2luZGx5IHJldmlldy4NCk9rLCB3b3Vs
+ZCBiZSBwbGFjZWQganVzdCBiZWhpbmQgdGhlIG1vZGlmaWNhdGlvbnMgb2YgdGhlIGRlc2lnbi13
+YXJlIGNvZGVzLg0KDQo+ID4gLS0tDQo+ID4gIGluY2x1ZGUvbGludXgvbWZkL3N5c2Nvbi9pbXg2
+cS1pb211eGMtZ3ByLmggfCA5ICsrKysrKysrKw0KPiA+ICAxIGZpbGUgY2hhbmdlZCwgOSBpbnNl
+cnRpb25zKCspDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9tZmQvc3lzY29u
+L2lteDZxLWlvbXV4Yy1ncHIuaA0KPiA+IGIvaW5jbHVkZS9saW51eC9tZmQvc3lzY29uL2lteDZx
+LWlvbXV4Yy1ncHIuaA0KPiA+IGluZGV4IGZmNDQzNzQuLjMyNzNiODcgMTAwNjQ0DQo+ID4gLS0t
+IGEvaW5jbHVkZS9saW51eC9tZmQvc3lzY29uL2lteDZxLWlvbXV4Yy1ncHIuaA0KPiA+ICsrKyBi
+L2luY2x1ZGUvbGludXgvbWZkL3N5c2Nvbi9pbXg2cS1pb211eGMtZ3ByLmgNCj4gPiBAQCAtMzAx
+LDYgKzMwMSw3IEBADQo+ID4gICNkZWZpbmUgSU1YNlFfR1BSMTJfREVWSUNFX1RZUEUJCQkoMHhm
+IDw8IDEyKQ0KPiA+ICAjZGVmaW5lIElNWDZRX0dQUjEyX1BDSUVfQ1RMXzIJCQlCSVQoMTApDQo+
+ID4gICNkZWZpbmUgSU1YNlFfR1BSMTJfTE9TX0xFVkVMCQkJKDB4MWYgPDwgNCkNCj4gPiArI2Rl
+ZmluZSBJTVg2UV9HUFIxMl9MT1NfTEVWRUxfOQkJCSgweDkgPDwgNCkNCj4gPg0KPiA+ICAjZGVm
+aW5lIElNWDZRX0dQUjEzX1NETUFfU1RPUF9SRVEJCUJJVCgzMCkNCj4gPiAgI2RlZmluZSBJTVg2
+UV9HUFIxM19DQU4yX1NUT1BfUkVRCQlCSVQoMjkpDQo+ID4gQEAgLTM5NSw0ICszOTYsMTIgQEAN
+Cj4gPiAgI2RlZmluZSBJTVg2U0xfR1BSMV9GRUNfQ0xPQ0tfTVVYMV9TRUxfTUFTSyAgICAoMHgz
+IDw8IDE3KQ0KPiA+ICAjZGVmaW5lIElNWDZTTF9HUFIxX0ZFQ19DTE9DS19NVVgyX1NFTF9NQVNL
+ICAgICgweDEgPDwgMTQpDQo+ID4NCj4gPiArLyogRm9yIGlteDZzeCBpb211eCBncHIgcmVnaXN0
+ZXIgZmllbGQgZGVmaW5lICovDQo+ID4gKyNkZWZpbmUgSU1YNlNYX0dQUjVfUENJRV9CVE5SU1QJ
+CQlCSVQoMTkpDQo+ID4gKyNkZWZpbmUgSU1YNlNYX0dQUjVfUENJRV9QRVJTVAkJCUJJVCgxOCkN
+Cj4gPiArDQo+ID4gKyNkZWZpbmUgSU1YNlNYX0dQUjEyX1BDSUVfUE1fVFVSTl9PRkYJCUJJVCgx
+NikNCj4gPiArI2RlZmluZSBJTVg2U1hfR1BSMTJfUENJRV9URVNUX1BECQlCSVQoMzApDQo+ID4g
+KyNkZWZpbmUgSU1YNlNYX0dQUjEyX1JYX0VRX01BU0sJCQkoMHg3IDw8IDApDQo+ID4gKyNkZWZp
+bmUgSU1YNlNYX0dQUjEyX1JYX0VRXzIJCQkoMHgyIDw8IDApDQo+ID4gICNlbmRpZiAvKiBfX0xJ
+TlVYX0lNWDZRX0lPTVVYQ19HUFJfSCAqLw0KPiANCj4gDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJl
+IGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1wY2kiIGlu
+IHRoZQ0KPiBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnIE1v
+cmUgbWFqb3Jkb21vIGluZm8gYXQNCj4gaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8t
+aW5mby5odG1sDQoNCkJlc3QgUmVnYXJkcw0KUmljaGFyZCBaaHUNCg==
