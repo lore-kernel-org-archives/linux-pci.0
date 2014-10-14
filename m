@@ -1,143 +1,118 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 13/16] IA64/MSI: Use MSI controller framework to configure MSI/MSI-X irq
-Date: Mon, 27 Oct 2014 21:22:19 +0800
-Message-ID: <1414416142-31239-14-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
-References: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:42973 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753373AbaJNS10 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 14:27:26 -0400
+Received: by mail-ig0-f176.google.com with SMTP id hn15so15754773igb.3
+        for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 11:27:26 -0700 (PDT)
+Date: Tue, 14 Oct 2014 12:27:22 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: matt@masarand.com
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH 06/18] Delayed alpha setup of PCI IRQs to bus scan time
+Message-ID: <20141014182722.GF10125@google.com>
+References: <1412222866-21068-1-git-send-email-matt@masarand.com>
+ <1412222866-21068-7-git-send-email-matt@masarand.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1412222866-21068-7-git-send-email-matt@masarand.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI controller framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+On Thu, Oct 02, 2014 at 05:07:34AM +0100, matt@masarand.com wrote:
+> From: Matthew Minter <matt@masarand.com>
+> 
+> PCI IRQ initialisation is currently run during the boot code on alpha,
+> this has the issue that firstly an extra pass over the PCI bus is
+> required and second hot-plugged devices which are added after boot have
+> no way to be assigned an IRQ. This patch set fixes this by defering the
+> assignment of PCI IRQs untill device enable time which should solve
+> both of these issues.
+> 
+> Signed-off-by: Matthew Minter <matt@masarand.com>
+> 
+> ---
+>  arch/alpha/kernel/pci.c          | 16 ++++++++++------
+>  arch/alpha/kernel/sys_nautilus.c |  1 -
+>  2 files changed, 10 insertions(+), 7 deletions(-)
+> 
+> diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+> index 076c35c..338537c 100644
+> --- a/arch/alpha/kernel/pci.c
+> +++ b/arch/alpha/kernel/pci.c
+> @@ -28,7 +28,7 @@
+>  
+>  
+>  /*
+> - * Some string constants used by the various core logics. 
+> + * Some string constants used by the various core logics.
+>   */
+>  
+>  const char *const pci_io_names[] = {
+> @@ -247,7 +247,7 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+>  	if (pci_has_flag(PCI_PROBE_ONLY) && dev &&
+>   		   (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
+>   		pci_read_bridge_bases(bus);
+> -	} 
+> +	}
+>  
+>  	list_for_each_entry(dev, &bus->devices, bus_list) {
+>  		pdev_save_srm_config(dev);
+> @@ -338,7 +338,7 @@ common_init_pci(void)
+>  		hose->need_domain_info = need_domain_info;
+>  		next_busno = bus->busn_res.end + 1;
+>  		/* Don't allow 8-bit bus number overflow inside the hose -
+> -		   reserve some space for bridges. */ 
+> +		   reserve some space for bridges. */
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/ia64/include/asm/pci.h |    3 ++-
- arch/ia64/kernel/msi_ia64.c |   24 ++++++++++++++++++------
- arch/ia64/pci/pci.c         |    1 +
- 3 files changed, 21 insertions(+), 7 deletions(-)
+Extraneous whitespace changes above.
 
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index 52af5ed..805bbc3 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -93,7 +93,7 @@ struct pci_controller {
- 	void *iommu;
- 	int segment;
- 	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
--
-+	struct msi_controller *msi_ctrl;
- 	void *platform_data;
- };
- 
-@@ -101,6 +101,7 @@ struct pci_controller {
- #define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
- #define pci_domain_nr(busdev)    (PCI_CONTROLLER(busdev)->segment)
- 
-+extern struct msi_controller ia64_msi_ctrl;
- extern struct pci_ops pci_root_ops;
- 
- static inline int pci_proc_domain(struct pci_bus *bus)
-diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
-index 8c3730c..b92b8e2 100644
---- a/arch/ia64/kernel/msi_ia64.c
-+++ b/arch/ia64/kernel/msi_ia64.c
-@@ -42,7 +42,7 @@ static int ia64_set_msi_irq_affinity(struct irq_data *idata,
- }
- #endif /* CONFIG_SMP */
- 
--int ia64_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
-+int __ia64_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
- {
- 	struct msi_msg	msg;
- 	unsigned long	dest_phys_id;
-@@ -77,7 +77,7 @@ int ia64_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
- 	return 0;
- }
- 
--void ia64_teardown_msi_irq(unsigned int irq)
-+void __ia64_teardown_msi_irq(unsigned int irq)
- {
- 	destroy_irq(irq);
- }
-@@ -111,23 +111,35 @@ static struct irq_chip ia64_msi_chip = {
- 	.irq_retrigger		= ia64_msi_retrigger_irq,
- };
- 
-+struct msi_controller *pcibios_msi_controller(struct pci_bus *bus)
-+{
-+	struct pci_controller *ctrl = bus->sysdata;
-+
-+	return ctrl->msi_ctrl;
-+}
- 
--int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
-+static int ia64_setup_msi_irq(struct msi_controller *ctrl,
-+		struct pci_dev *pdev, struct msi_desc *desc)
- {
- 	if (platform_setup_msi_irq)
- 		return platform_setup_msi_irq(pdev, desc);
- 
--	return ia64_setup_msi_irq(pdev, desc);
-+	return __ia64_setup_msi_irq(pdev, desc);
- }
- 
--void arch_teardown_msi_irq(unsigned int irq)
-+static void ia64_teardown_msi_irq(struct msi_controller *ctrl, unsigned int irq)
- {
- 	if (platform_teardown_msi_irq)
- 		return platform_teardown_msi_irq(irq);
- 
--	return ia64_teardown_msi_irq(irq);
-+	return __ia64_teardown_msi_irq(irq);
- }
- 
-+struct msi_controller ia64_msi_ctrl = {
-+	.setup_irq = ia64_setup_msi_irq,
-+	.teardown_irq = ia64_teardown_msi_irq,
-+};
-+
- #ifdef CONFIG_INTEL_IOMMU
- #ifdef CONFIG_SMP
- static int dmar_msi_set_affinity(struct irq_data *data,
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 291a582..875f46a 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -437,6 +437,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 
- 	controller->companion = device;
- 	controller->node = acpi_get_node(device->handle);
-+	controller->msi_ctrl = &ia64_msi_ctrl;
- 
- 	info = kzalloc(sizeof(*info), GFP_KERNEL);
- 	if (!info) {
--- 
-1.7.1
+>  		if (next_busno > 224) {
+>  			next_busno = 0;
+>  			need_domain_info = 1;
+> @@ -346,11 +346,15 @@ common_init_pci(void)
+>  	}
+>  
+>  	pcibios_claim_console_setup();
+> -
+>  	pci_assign_unassigned_resources();
+> -	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
+>  }
+>  
+> +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+> +{
+> +	bridge->swizzle_irq = alpha_mv.pci_swizzle;
+> +	bridge->map_irq = alpha_mv.pci_map_irq;
+> +	return 0;
+> +}
+>  
+>  struct pci_controller * __init
+>  alloc_pci_controller(void)
+> @@ -387,7 +391,7 @@ sys_pciconfig_iobase(long which, unsigned long bus, unsigned long dfn)
+>  
+>  	/* from hose or from bus.devfn */
+>  	if (which & IOBASE_FROM_HOSE) {
+> -		for(hose = hose_head; hose; hose = hose->next) 
+> +		for(hose = hose_head; hose; hose = hose->next)
 
+Extraneous whitespace change.  If you fix this in a separate patch, also
+add a space after "for".
+
+>  			if (hose->index == bus) break;
+>  		if (!hose) return -ENODEV;
+>  	} else {
+> diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
+> index 837c0fa..7fb4d51 100644
+> --- a/arch/alpha/kernel/sys_nautilus.c
+> +++ b/arch/alpha/kernel/sys_nautilus.c
+> @@ -252,7 +252,6 @@ nautilus_init_pci(void)
+>  	/* pci_common_swizzle() relies on bus->self being NULL
+>  	   for the root bus, so just clear it. */
+>  	bus->self = NULL;
+> -	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
+>  }
+>  
+>  /*
+> -- 
+> 2.1.0
+> 
