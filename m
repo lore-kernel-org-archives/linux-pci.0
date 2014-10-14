@@ -1,99 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:8574 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754589AbaJHBjb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Oct 2014 21:39:31 -0400
-Message-ID: <543495C3.2040904@huawei.com>
-Date: Wed, 8 Oct 2014 09:39:15 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:53948 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753241AbaJNSOc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 14:14:32 -0400
+Received: by mail-ig0-f178.google.com with SMTP id h3so15675821igd.17
+        for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 11:14:32 -0700 (PDT)
+Date: Tue, 14 Oct 2014 12:14:29 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: matt@masarand.com
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH 03/18] Delayed arm setup of PCI IRQs to bus scan time
+Message-ID: <20141014181429.GC10125@google.com>
+References: <1412222866-21068-1-git-send-email-matt@masarand.com>
+ <1412222866-21068-4-git-send-email-matt@masarand.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] PCI/MSI: Simplify default_restore_msi_irq()
-References: <1411979733-28523-1-git-send-email-wangyijing@huawei.com> <20140930210624.GE5625@google.com>
-In-Reply-To: <20140930210624.GE5625@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1412222866-21068-4-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/10/1 5:06, Bjorn Helgaas wrote:
-> On Mon, Sep 29, 2014 at 04:35:33PM +0800, Yijing Wang wrote:
->> Both MSI and MSI-X irq will be associated to msi_desc
->> in arch MSI code, e.g. in x86
->> arch_setup_msi_irqs()
->> 	native_setup_msi_irqs()
->> 		setup_msi_irq()
->> 			irq_set_msi_desc_off()
->>
->> Use irq_get_msi_desc() to get the MSI-X msi_desc for
->> simplification. 
+On Thu, Oct 02, 2014 at 05:07:31AM +0100, matt@masarand.com wrote:
+> From: Matthew Minter <matt@masarand.com>
 > 
-> Holy cow, this is a mess (not your patch, but the existing split between
-> common code and arch code).  You showed one path above, but how am I
-> supposed to know that *all* the paths make this association correctly?  If
-> all the paths do it, why isn't the association done in some common code to
-> begin with?  Is this telling us that the arch interface is designed wrong?
-
-Hi Bjorn, sorry for the late reply, in vocation last week.
-Yes, I think this a mess, there is no similar association in MSI type common code,
-only in MSI-X code, but MSI arch code allocates irq and process it in the same way for
-both MSI and MSI-X irq. But I can't find why in git log now.
-
+> Currently PCI device IRQs under arm are initialised during the
+> pci_common_init_dev code path, this results in an extra sweep of the
+> PCI bus as well as causing PCI devices hot-plugged after boot to not
+> receive an IRQ.
 > 
-> No doubt there's some implicit knowledge, like "there's no way MSI can work
-> at all unless the arch code makes this association," but I don't know
-> enough about MSI to have that knowledge, and consequently I really can't
-> convince myself that this patch is safe for everybody.
-
-Ok, just keep it now.
-
+> This patch set defers this assignment untill the device enable phase
+> which prevents both these issues.
 > 
->> Also use __write_msi_msg() instead
->> of write_msi_msg() to avoid the redundant calls.
+> Signed-off-by: Matthew Minter <matt@masarand.com>
 > 
-> I applied this part to pci/msi for v3.18 since it's unrelated.
-
-Thanks very much!
-
+> ---
+>  arch/arm/kernel/bios32.c | 13 +++++++++----
+>  1 file changed, 9 insertions(+), 4 deletions(-)
 > 
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  drivers/pci/msi.c |   13 ++-----------
->>  1 files changed, 2 insertions(+), 11 deletions(-)
->>
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index d077749..e0916ad 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -109,18 +109,9 @@ static void default_restore_msi_irq(struct pci_dev *dev, int irq)
->>  {
->>  	struct msi_desc *entry;
->>  
->> -	entry = NULL;
->> -	if (dev->msix_enabled) {
->> -		list_for_each_entry(entry, &dev->msi_list, list) {
->> -			if (irq == entry->irq)
->> -				break;
->> -		}
->> -	} else if (dev->msi_enabled)  {
->> -		entry = irq_get_msi_desc(irq);
->> -	}
->> -
->> +	entry = irq_get_msi_desc(irq);
->>  	if (entry)
->> -		write_msi_msg(irq, &entry->msg);
->> +		__write_msi_msg(entry, &entry->msg);
->>  }
->>  
->>  void __weak arch_restore_msi_irqs(struct pci_dev *dev)
->> -- 
->> 1.7.1
->>
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index 17a26c1..4dcf3f7 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -389,7 +389,7 @@ void pcibios_remove_bus(struct pci_bus *bus)
+>   * PCI standard swizzle is implemented on plug-in cards and Cardbus based
+>   * PCI extenders, so it can not be ignored.
+>   */
+> -static u8 pcibios_swizzle(struct pci_dev *dev, u8 *pin)
+> +u8 pcibios_swizzle(struct pci_dev *dev, u8 *pin)
+
+I don't think there's anything in this patch that requires
+pcibios_swizzle() or pcibios_map_irq() to be non-static.
+
+>  {
+>  	struct pci_sys_data *sys = dev->sysdata;
+>  	int slot, oldpin = *pin;
+> @@ -409,7 +409,7 @@ static u8 pcibios_swizzle(struct pci_dev *dev, u8 *pin)
+>  /*
+>   * Map a slot/pin to an IRQ.
+>   */
+> -static int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+> +int pcibios_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
+>  {
+>  	struct pci_sys_data *sys = dev->sysdata;
+>  	int irq = -1;
+> @@ -424,6 +424,13 @@ static int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+>  	return irq;
+>  }
+>  
+> +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+> +{
+> +	bridge->swizzle_irq = pcibios_swizzle;
+> +	bridge->map_irq = pcibios_map_irq;
+> +	return 0;
+> +}
+> +
+>  static int pcibios_init_resources(int busnr, struct pci_sys_data *sys)
+>  {
+>  	int ret;
+> @@ -523,8 +530,6 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+>  	if (hw->postinit)
+>  		hw->postinit();
+>  
+> -	pci_fixup_irqs(pcibios_swizzle, pcibios_map_irq);
+> -
+>  	list_for_each_entry(sys, &head, node) {
+>  		struct pci_bus *bus = sys->bus;
+>  
+> -- 
+> 2.1.0
 > 
-> 
-
-
--- 
-Thanks!
-Yijing
-
