@@ -1,65 +1,108 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 24 Oct 2014 09:53:44 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Will Deacon <Will.Deacon@arm.com>
-Subject: Re: [PATCH RFC 1/2] drivers: pci: fix window allocation order wrt
- bus_range filtering
-Message-ID: <20141024085344.GA23784@red-moon>
-References: <1414077787-20633-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20141023222707.GB11115@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:44492 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754243AbaJNSha (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 14:37:30 -0400
+Received: by mail-ig0-f177.google.com with SMTP id a13so15803056igq.10
+        for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 11:37:30 -0700 (PDT)
+Date: Tue, 14 Oct 2014 12:37:26 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: matt@masarand.com
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH 08/18] Delayed frv setup of PCI IRQs to bus scan time
+Message-ID: <20141014183726.GH10125@google.com>
+References: <1412222866-21068-1-git-send-email-matt@masarand.com>
+ <1412222866-21068-9-git-send-email-matt@masarand.com>
 MIME-Version: 1.0
-In-Reply-To: <20141023222707.GB11115@google.com>
-Content-Type: text/plain; charset=WINDOWS-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1412222866-21068-9-git-send-email-matt@masarand.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 23, 2014 at 11:27:07PM +0100, Bjorn Helgaas wrote:
-> On Thu, Oct 23, 2014 at 04:23:06PM +0100, Lorenzo Pieralisi wrote:
-> > The number of windows allocated for the host bridge depends on the
-> > bus resource. Instead of first allocating the windows and then
-> > limit the bus resource, this patch reshuffles the code so that if any
-> > limitation is applied to the bus resource it is taken into account in
-> > the windows allocation.
-> > 
-> > Cc: Will Deacon <will.deacon@arm.com>
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+On Thu, Oct 02, 2014 at 05:07:36AM +0100, matt@masarand.com wrote:
+> From: Matthew Minter <matt@masarand.com>
 > 
-> Hi Lorenzo,
+> PCI IRQs are being assigned during the frv pcibios phase. This causes
+> devices which are not connected at boot but are later hot-plugged
+> to not receive an IRQ. This patch set causes the pcibios to instead
+> register an IRQ assignment function which is called during the enable
+> device path to apply to all devices.
 > 
-> I can *read* your patches just fine, but when I save them using mutt to
-> apply them, they look like this:
+> Signed-off-by: Matthew Minter <matt@masarand.com>
 > 
->   --- a/drivers/pci/host/pci-host-generic.c
->   +++ b/drivers/pci/host/pci-host-generic.c
->   @@ -276,17 +276,17 @@ static int gen_pci_parse_map_cfg_windows(struct gen_p=
->   ci *pci)
->    =09=09return err;
->     =09}
->     =20
->     -=09pci->cfg.win =3D devm_kcalloc(dev,
->     resource_size(&pci->cfg.bus_range),
+> ---
+>  arch/frv/mb93090-mb00/pci-frv.h |  1 -
+>  arch/frv/mb93090-mb00/pci-irq.c | 28 +++++++++++++++++-----------
+>  arch/frv/mb93090-mb00/pci-vdk.c |  1 -
+>  3 files changed, 17 insertions(+), 13 deletions(-)
 > 
-> I can work around this by downloading them another way, but it is a
-> bit of a hassle.  I *think* this is because your email has
+> diff --git a/arch/frv/mb93090-mb00/pci-frv.h b/arch/frv/mb93090-mb00/pci-frv.h
+> index a7e487fe..492b56d 100644
+> --- a/arch/frv/mb93090-mb00/pci-frv.h
+> +++ b/arch/frv/mb93090-mb00/pci-frv.h
+> @@ -36,5 +36,4 @@ extern struct pci_ops *__nongpreldata pci_root_ops;
+>  extern unsigned int pcibios_irq_mask;
+>  
+>  void pcibios_irq_init(void);
+> -void pcibios_fixup_irqs(void);
+>  void pcibios_enable_irq(struct pci_dev *dev);
+> diff --git a/arch/frv/mb93090-mb00/pci-irq.c b/arch/frv/mb93090-mb00/pci-irq.c
+> index 1c35c93..3463e30 100644
+> --- a/arch/frv/mb93090-mb00/pci-irq.c
+> +++ b/arch/frv/mb93090-mb00/pci-irq.c
+> @@ -40,19 +40,25 @@ void __init pcibios_irq_init(void)
+>  {
+>  }
+>  
+> -void __init pcibios_fixup_irqs(void)
+> +int pcibios_map_irq(struct pci_dev *dev, uint8_t slot, uint8_t pin)
+>  {
+> -	struct pci_dev *dev = NULL;
+> -	uint8_t line, pin;
+> -
+> -	for_each_pci_dev(dev) {
+> -		pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+> -		if (pin) {
+> -			dev->irq = pci_bus0_irq_routing[PCI_SLOT(dev->devfn)][pin - 1];
+> -			pci_write_config_byte(dev, PCI_INTERRUPT_LINE, dev->irq);
+> -		}
+> -		pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &line);
+> +	uint8_t line;
+> +	int irq;
+> +
+> +	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+
+Doesn't your common code always read PCI_INTERRUPT_PIN and pass it in, so
+you wouldn't need to read it again here?
+
+> +	if (pin) {
+> +		irq = pci_bus0_irq_routing[PCI_SLOT(dev->devfn)][pin - 1];
+> +		pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+>  	}
+> +	pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &line);
+> +	return irq;
+> +}
+> +
+> +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+> +{
+> +	bridge->swizzle_irq = NULL;
+> +	bridge->map_irq = pcibios_map_irq;
+> +	return 0;
+>  }
+>  
+>  void pcibios_enable_irq(struct pci_dev *dev)
+> diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
+> index efa5d65..86657a7 100644
+> --- a/arch/frv/mb93090-mb00/pci-vdk.c
+> +++ b/arch/frv/mb93090-mb00/pci-vdk.c
+> @@ -386,7 +386,6 @@ int __init pcibios_init(void)
+>  	pci_scan_root_bus(NULL, 0, pci_root_ops, NULL, &resources);
+>  
+>  	pcibios_irq_init();
+> -	pcibios_fixup_irqs();
+>  	pcibios_resource_survey();
+>  
+>  	return 0;
+> -- 
+> 2.1.0
 > 
->   Content-Type: text/plain; charset=WINDOWS-1252
-
-Yes, it is the SMTP server messing about with patches, I will have to switch
-to another one, sorry.
-
-I pushed a branch on my arm git:
-
-git://linux-arm.org/linux-2.6-lp.git pci-host-generic
-
-I can also resend the patches, whatever it is best for you.
-
-Thanks,
-Lorenzo
-
