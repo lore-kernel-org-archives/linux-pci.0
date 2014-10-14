@@ -1,45 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:36196 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754465AbaJMUOn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Oct 2014 16:14:43 -0400
-Message-ID: <1413231118.26478.21.camel@pasglop>
-Subject: Re: [PATCH v3 4/7] sound/radeon: Add quirk for broken 64-bit MSI
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dave Airlie <airlied@linux.ie>, Takashi Iwai <tiwai@suse.de>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org,
-	Alex Deucher <alexdeucher@gmail.com>
-Date: Tue, 14 Oct 2014 07:11:58 +1100
-In-Reply-To: <1412746096.30859.229.camel@pasglop>
-References: <1412656696.30859.122.camel@pasglop>
-	 <CADnq5_NFt8neiOAg896d3-DbAn0rnrE7iXaTFmkNGSg-J9oSkA@mail.gmail.com>
-	 <1412746096.30859.229.camel@pasglop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:44561 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750746AbaJNGsy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 02:48:54 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 14 Oct 2014 16:48:53 +1000
+Received: from d23relay04.au.ibm.com (d23relay04.au.ibm.com [9.190.234.120])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 202CE2CE8047
+	for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 17:48:50 +1100 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay04.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s9E6U57I43974734
+	for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 17:30:13 +1100
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s9E6mGv5031836
+	for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 17:48:17 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH 1/3] PCI: move PCI_FIND_CAP_TTL to pci.h and use it in quirks
+Date: Tue, 14 Oct 2014 14:47:30 +0800
+Message-Id: <1413269253-8990-2-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1413269253-8990-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1413269253-8990-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-10-08 at 16:28 +1100, Benjamin Herrenschmidt wrote:
+In some quirks, it tries to search a pci cap and use a ttl value to avoid
+infinite loop. While the value is hard coded to 48, which is the same as marco
+PCI_FIND_CAP_TTL.
 
-> > Further discussion with the hw teams have revealed that this is still
-> > an issue on newer asics so I think your original patch is correct
-> > after all.  Just disable 64 bit MSIs on all AMD audio PCI ids.
-> 
-> Allright, I won't resend the whole series, I can just pickup my previous
-> patch. Takashi, Bjorn, Dave, this series covers your 3 areas of
-> maintainership, how do you want to proceed ? I'm happy to merge the
-> whole lot via powerpc ASAP (since it's all CC'ed stable) if you guys
-> send me the appropriate acks, otherwise, let me know.
+This patch moves the definition of PCI_FIND_CAP_TTL to pci.h and replace the
+hard coded value with it.
 
-So I got an Ack from Takashi but so far silence from Bjorn and Dave :-)
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/pci.c    |    1 -
+ drivers/pci/quirks.c |    8 ++++----
+ include/linux/pci.h  |    2 ++
+ 3 files changed, 6 insertions(+), 5 deletions(-)
 
-Ping ?
-
-Cheers,
-Ben.
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 2c9ac70..76b002b1 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -137,7 +137,6 @@ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
+ EXPORT_SYMBOL_GPL(pci_ioremap_bar);
+ #endif
+ 
+-#define PCI_FIND_CAP_TTL	48
+ 
+ static int __pci_find_next_cap_ttl(struct pci_bus *bus, unsigned int devfn,
+ 				   u8 pos, int cap, int *ttl)
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 80c2d01..a5f46b8 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2176,7 +2176,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x9601, quirk_amd_780_apc_msi);
+  * return 1 if a HT MSI capability is found and enabled */
+ static int msi_ht_cap_enabled(struct pci_dev *dev)
+ {
+-	int pos, ttl = 48;
++	int pos, ttl = PCI_FIND_CAP_TTL;
+ 
+ 	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
+ 	while (pos && ttl--) {
+@@ -2235,7 +2235,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_CK804_PCIE,
+ /* Force enable MSI mapping capability on HT bridges */
+ static void ht_enable_msi_mapping(struct pci_dev *dev)
+ {
+-	int pos, ttl = 48;
++	int pos, ttl = PCI_FIND_CAP_TTL;
+ 
+ 	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
+ 	while (pos && ttl--) {
+@@ -2314,7 +2314,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA,
+ 
+ static int ht_check_msi_mapping(struct pci_dev *dev)
+ {
+-	int pos, ttl = 48;
++	int pos, ttl = PCI_FIND_CAP_TTL;
+ 	int found = 0;
+ 
+ 	/* check if there is HT MSI cap or enabled on this device */
+@@ -2439,7 +2439,7 @@ out:
+ 
+ static void ht_disable_msi_mapping(struct pci_dev *dev)
+ {
+-	int pos, ttl = 48;
++	int pos, ttl = PCI_FIND_CAP_TTL;
+ 
+ 	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
+ 	while (pos && ttl--) {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 96453f9..b27b79e 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -33,6 +33,8 @@
+ 
+ #include <linux/pci_ids.h>
+ 
++#define PCI_FIND_CAP_TTL	48
++
+ /*
+  * The PCI interface treats multi-function devices as independent
+  * devices.  The slot/function address of each device is encoded
+-- 
+1.7.9.5
 
