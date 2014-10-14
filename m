@@ -1,76 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:48022 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753834AbaJASgH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 14:36:07 -0400
-Received: by mail-ig0-f174.google.com with SMTP id l13so769338iga.7
-        for <linux-pci@vger.kernel.org>; Wed, 01 Oct 2014 11:36:06 -0700 (PDT)
-Date: Wed, 1 Oct 2014 12:36:03 -0600
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:58469 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755506AbaJNSUv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 14:20:51 -0400
+Received: by mail-ig0-f182.google.com with SMTP id hn15so15754318igb.9
+        for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 11:20:50 -0700 (PDT)
+Date: Tue, 14 Oct 2014 12:20:48 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	wangyijing@huawei.com
-Subject: Re: [PATCH 0/3] Revert MSI msg API churn
-Message-ID: <20141001183603.GA22713@google.com>
-References: <20141001163814.2709.92885.stgit@gimli.home>
+To: matt@masarand.com
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH 04/18] Delayed powerpc setup of PCI IRQs to bus scan time
+Message-ID: <20141014182048.GD10125@google.com>
+References: <1412222866-21068-1-git-send-email-matt@masarand.com>
+ <1412222866-21068-5-git-send-email-matt@masarand.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141001163814.2709.92885.stgit@gimli.home>
+In-Reply-To: <1412222866-21068-5-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 01, 2014 at 10:48:16AM -0600, Alex Williamson wrote:
-> The MSI message API has gone through some churn, that I think results
-> in an inconsistent interface.  We now have this:
+On Thu, Oct 02, 2014 at 05:07:32AM +0100, matt@masarand.com wrote:
+> From: Matthew Minter <matt@masarand.com>
 > 
-> void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-> void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-> void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-> void write_msi_msg(unsigned int irq, struct msi_msg *msg);
+> The powerpc PCI init code is currently initialising PCI device IRQ during
+> the boot time pcibios phase. This results in devices which are connected
+> after boot time not being asigned IRQs which can cause various problems.
 > 
-> write_msi_msg() takes an irq arg, but read_msi_msg() takes an
-> msi_desc.  Presumably write_msi_msg() was not converted because it
-> has a much larger user base, but this sort of inconsitency results
-> in a poor API.
-
-Yeah, that isn't good, thanks for noticing.
-
-I rebuilt the pci/msi branch and dropped the commits you mentioned.
-The ones that are left are these:
-
-  56b72b409579 PCI/MSI: Use __write_msi_msg() instead of write_msi_msg()
-  1e8f4cc82ede MSI/powerpc: Use __read_msi_msg() instead of read_msi_msg()
-  2b260085e466 PCI/MSI: Use __get_cached_msi_msg() instead of get_cached_msi_msg()
-
-which I think are OK.
-
-> This series reverts a selection of commits to return us to:
+> This patch as part of its set fixes this be moving the IRQ initialisation
+> into the PCI device enable code path so that it is run for boot time and
+> hot-plugged devices alike.
 > 
-> void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-> void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-> void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-> void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
-> void write_msi_msg(unsigned int irq, struct msi_msg *msg);
-> 
-> I've left the removal of read_msi_msg() since it has no users, but
-> restored get_cached_msi_msg() since it has an imminent user.  This
-> will also cleanup the upcoming merge conflicts in next.  Thanks,
-> 
-> Alex
+> Signed-off-by: Matthew Minter <matt@masarand.com>
 > 
 > ---
+>  arch/powerpc/kernel/pci-common.c | 26 +++++++++++++-------------
+>  1 file changed, 13 insertions(+), 13 deletions(-)
 > 
-> Alex Williamson (3):
->       Revert "PCI/MSI: Remove unused get_cached_msi_msg()"
->       Revert "PCI/MSI: Rename __get_cached_msi_msg() to get_cached_msi_msg()"
->       Revert "PCI/MSI: Rename __read_msi_msg() to read_msi_msg()"
+> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+> index b2814e2..a8be5a5 100644
+> --- a/arch/powerpc/kernel/pci-common.c
+> +++ b/arch/powerpc/kernel/pci-common.c
+> @@ -217,7 +217,7 @@ struct pci_controller* pci_find_hose_for_OF_device(struct device_node* node)
+>   * If the interrupt is used, then gets the interrupt line from the
+>   * openfirmware and sets it in the pci_dev and pci_config line.
+>   */
+> -static int pci_read_irq_line(struct pci_dev *pci_dev)
+> +static int pci_read_irq_line(struct pci_dev *pci_dev, u8 pin)
+>  {
+>  	struct of_phandle_args oirq;
+>  	unsigned int virq;
+> @@ -229,7 +229,7 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
+>  #endif
+>  	/* Try to get a mapping from the device-tree */
+>  	if (of_irq_parse_pci(pci_dev, &oirq)) {
+> -		u8 line, pin;
+> +		u8 line;
+>  
+>  		/* If that fails, lets fallback to what is in the config
+>  		 * space and map that through the default controller. We
+> @@ -238,10 +238,6 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
+>  		 * either provide a proper interrupt tree or don't use this
+>  		 * function.
+>  		 */
+> -		if (pci_read_config_byte(pci_dev, PCI_INTERRUPT_PIN, &pin))
+> -			return -1;
+> -		if (pin == 0)
+> -			return -1;
+>  		if (pci_read_config_byte(pci_dev, PCI_INTERRUPT_LINE, &line) ||
+>  		    line == 0xff || line == 0) {
+>  			return -1;
+> @@ -266,9 +262,16 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
+>  
+>  	pr_debug(" Mapped to linux irq %d\n", virq);
+>  
+> -	pci_dev->irq = virq;
+> +	return virq;
+> +}
+>  
+> -	return 0;
+> +int pci_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
+
+Should be static.
+
+> +{
+> +	/* Read default IRQs and fixup if necessary */
+> +	int irq = pci_read_irq_line(dev, pin);
+> +	if (ppc_md.pci_irq_fixup)
+> +		ppc_md.pci_irq_fixup(dev);
+> +	return irq;
+
+The .pci_irq_fixup() can change dev->irq, so wouldn't you want to return
+dev->irq, not irq, here?  Otherwise, pdev_assign_irq() (the caller of
+pci_map_irq()) will overwrite the dev->irq value set by the fixup.
+
+>  }
+>  
+>  /*
+> @@ -766,6 +769,8 @@ int pci_proc_domain(struct pci_bus *bus)
+>  
+>  int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+>  {
+> +	bridge->swizzle_irq = NULL;
+> +	bridge->map_irq = pci_map_irq;
+>  	if (ppc_md.pcibios_root_bridge_prepare)
+>  		return ppc_md.pcibios_root_bridge_prepare(bridge);
+>  
+> @@ -968,11 +973,6 @@ static void pcibios_setup_device(struct pci_dev *dev)
+>  	/* Additional platform DMA/iommu setup */
+>  	if (ppc_md.pci_dma_dev_setup)
+>  		ppc_md.pci_dma_dev_setup(dev);
+> -
+> -	/* Read default IRQs and fixup if necessary */
+> -	pci_read_irq_line(dev);
+> -	if (ppc_md.pci_irq_fixup)
+> -		ppc_md.pci_irq_fixup(dev);
+>  }
+>  
+>  int pcibios_add_device(struct pci_dev *dev)
+> -- 
+> 2.1.0
 > 
-> 
->  arch/ia64/kernel/msi_ia64.c          |    2 +-
->  arch/ia64/sn/kernel/msi_sn.c         |    2 +-
->  arch/powerpc/platforms/pseries/msi.c |    2 +-
->  arch/x86/kernel/apic/io_apic.c       |    2 +-
->  arch/x86/pci/xen.c                   |    2 +-
->  drivers/pci/msi.c                    |   11 +++++++++--
->  include/linux/msi.h                  |    5 +++--
->  7 files changed, 17 insertions(+), 9 deletions(-)
