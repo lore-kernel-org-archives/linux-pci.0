@@ -1,44 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:45516 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754398AbaJ0TcI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Oct 2014 15:32:08 -0400
-Received: by mail-qa0-f53.google.com with SMTP id n8so1950317qaq.40
-        for <linux-pci@vger.kernel.org>; Mon, 27 Oct 2014 12:32:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <544E99FD.5040306@web.de>
-References: <544D37F7.2060800@web.de> <1414399977.2421.1.camel@pengutronix.de> <544E99FD.5040306@web.de>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:57477 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753372AbaJNXZV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 19:25:21 -0400
+Received: by mail-ie0-f174.google.com with SMTP id tr6so112742ieb.33
+        for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 16:25:20 -0700 (PDT)
+Date: Tue, 14 Oct 2014 17:25:18 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 27 Oct 2014 13:31:47 -0600
-Message-ID: <CAErSpo5Wsmjqm1rMi_46j_Y-6h+9eNv7Rc1OH0Wm7S1VmMNWWA@mail.gmail.com>
-Subject: Re: Setting cpu affinity for MSI-X on i.mx6 possible?
-To: Heiner Kallweit <heiner.kallweit@web.de>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: "matt@masarand.com" <matt@masarand.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 01/18] Added way to register deferred PCI IRQ assignment
+ handlers
+Message-ID: <20141014232518.GA15225@google.com>
+References: <1412222866-21068-1-git-send-email-matt@masarand.com>
+ <1412222866-21068-2-git-send-email-matt@masarand.com>
+ <20141002103315.GM841@e106497-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141002103315.GM841@e106497-lin.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 27, 2014 at 1:16 PM, Heiner Kallweit <heiner.kallweit@web.de> wrote:
-> Thanks, Lucas.
->
-> It's interesting however that the igb driver claims it's using MSI-X.
-> Maybe the DW PCIE drivers offers MSI-X on the bus and just internally falls back to MSI?
->
-> Rgds, Heiner
->
-> [    4.165850] igb: Intel(R) Gigabit Ethernet Network Driver - version 5.2.15-k
-> [    4.172930] igb: Copyright (c) 2007-2014 Intel Corporation.
-> [    4.178638] igb 0000:01:00.0: enabling device (0140 -> 0142)
-> [    4.235789] igb 0000:01:00.0: added PHC on eth0
-> [    4.235793] igb 0000:01:00.0: Intel(R) Gigabit Ethernet Network Connection
-> [    4.235799] igb 0000:01:00.0: eth0: (PCIe:2.5Gb/s:Width x1) 00:01:c0:14:b1:58
-> [    4.235804] igb 0000:01:00.0: eth0: PBA No: FFFFFF-0FF
-> [    4.235810] igb 0000:01:00.0: Using MSI-X interrupts. 2 rx queue(s), 2 tx queue(s)
+On Thu, Oct 02, 2014 at 11:33:15AM +0100, Liviu Dudau wrote:
+> On Thu, Oct 02, 2014 at 05:07:29AM +0100, matt@masarand.com wrote:
+> > From: Matthew Minter <matt@masarand.com>
+> > 
+> 
+> Hi Matthew,
+> 
+> Some comments below:
 
-What does "lspci -vvs01:00.0" say?  It *looks* like igb pays attention
-to whether enabling MSI-X worked, but that path in the driver is not
-completely trivial, and I got tired of tracing the code to verify it.
+Hi Liviu,
+
+Thank you very much for reviewing this!  Sorry that I didn't notice your
+comments until later (mutt email-reading snafu on my end), so I duplicated
+some of your thoughts.  This was just out of my ignorance, not because I'm
+taking issue with your comments.
+
+> > -static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+> > +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+> 
+> When I did the same thing in one of the versions of my generic host bridge series,
+> Bjorn has mentioned that he would like the name to be changed to pci_xxxxx to
+> make clear that the function is now public.
+
+This particular one is not a big deal to me because it's in
+drivers/pci/pci.h, which is really only for use inside the PCI core.  It's
+when we expose things in include/linux/pci.h, and especially when we export
+things for use by modules, that I think we should be careful to use a
+consistent namespace.
 
 Bjorn
