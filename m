@@ -1,118 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:42973 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753373AbaJNS10 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 14:27:26 -0400
-Received: by mail-ig0-f176.google.com with SMTP id hn15so15754773igb.3
-        for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 11:27:26 -0700 (PDT)
-Date: Tue, 14 Oct 2014 12:27:22 -0600
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:62406 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753413AbaJNSeX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 14:34:23 -0400
+Received: by mail-ig0-f181.google.com with SMTP id r10so15793328igi.8
+        for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 11:34:22 -0700 (PDT)
+Date: Tue, 14 Oct 2014 12:34:19 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
 To: matt@masarand.com
 Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH 06/18] Delayed alpha setup of PCI IRQs to bus scan time
-Message-ID: <20141014182722.GF10125@google.com>
+Subject: Re: [PATCH 07/18] Delayed cris setup of PCI IRQs to bus scan time
+Message-ID: <20141014183419.GG10125@google.com>
 References: <1412222866-21068-1-git-send-email-matt@masarand.com>
- <1412222866-21068-7-git-send-email-matt@masarand.com>
+ <1412222866-21068-8-git-send-email-matt@masarand.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1412222866-21068-7-git-send-email-matt@masarand.com>
+In-Reply-To: <1412222866-21068-8-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 02, 2014 at 05:07:34AM +0100, matt@masarand.com wrote:
+On Thu, Oct 02, 2014 at 05:07:35AM +0100, matt@masarand.com wrote:
 > From: Matthew Minter <matt@masarand.com>
 > 
-> PCI IRQ initialisation is currently run during the boot code on alpha,
-> this has the issue that firstly an extra pass over the PCI bus is
-> required and second hot-plugged devices which are added after boot have
-> no way to be assigned an IRQ. This patch set fixes this by defering the
-> assignment of PCI IRQs untill device enable time which should solve
-> both of these issues.
+> PCI IRQs are currently configured to be enabled once at boot in a
+> dedicated pass. This means that PCI devices which are hot-plugged after
+> boot time will not be given an IRQ, this patch-set fixes this by
+> registering the assignment function to be called later in the device
+> enable path.
 > 
 > Signed-off-by: Matthew Minter <matt@masarand.com>
 > 
 > ---
->  arch/alpha/kernel/pci.c          | 16 ++++++++++------
->  arch/alpha/kernel/sys_nautilus.c |  1 -
->  2 files changed, 10 insertions(+), 7 deletions(-)
+>  arch/cris/arch-v32/drivers/pci/bios.c | 14 +++++---------
+>  1 file changed, 5 insertions(+), 9 deletions(-)
 > 
-> diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
-> index 076c35c..338537c 100644
-> --- a/arch/alpha/kernel/pci.c
-> +++ b/arch/alpha/kernel/pci.c
-> @@ -28,7 +28,7 @@
->  
->  
->  /*
-> - * Some string constants used by the various core logics. 
-> + * Some string constants used by the various core logics.
->   */
->  
->  const char *const pci_io_names[] = {
-> @@ -247,7 +247,7 @@ void pcibios_fixup_bus(struct pci_bus *bus)
->  	if (pci_has_flag(PCI_PROBE_ONLY) && dev &&
->   		   (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
->   		pci_read_bridge_bases(bus);
-> -	} 
-> +	}
->  
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
->  		pdev_save_srm_config(dev);
-> @@ -338,7 +338,7 @@ common_init_pci(void)
->  		hose->need_domain_info = need_domain_info;
->  		next_busno = bus->busn_res.end + 1;
->  		/* Don't allow 8-bit bus number overflow inside the hose -
-> -		   reserve some space for bridges. */ 
-> +		   reserve some space for bridges. */
-
-Extraneous whitespace changes above.
-
->  		if (next_busno > 224) {
->  			next_busno = 0;
->  			need_domain_info = 1;
-> @@ -346,11 +346,15 @@ common_init_pci(void)
->  	}
->  
->  	pcibios_claim_console_setup();
-> -
->  	pci_assign_unassigned_resources();
-> -	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
+> diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
+> index 64a5fb9..d04ecc8 100644
+> --- a/arch/cris/arch-v32/drivers/pci/bios.c
+> +++ b/arch/cris/arch-v32/drivers/pci/bios.c
+> @@ -80,20 +80,16 @@ int pcibios_enable_resources(struct pci_dev *dev, int mask)
+>  	return 0;
 >  }
 >  
+> -int pcibios_enable_irq(struct pci_dev *dev)
+> +int pcibios_enable_irq(struct pci_dev *dev, u8 slot, u8 pin)
+>  {
+>  	dev->irq = EXT_INTR_VECT;
+>  	return 0;
+>  }
+>  
+> -int pcibios_enable_device(struct pci_dev *dev, int mask)
 > +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-> +{
-> +	bridge->swizzle_irq = alpha_mv.pci_swizzle;
-> +	bridge->map_irq = alpha_mv.pci_map_irq;
-> +	return 0;
-> +}
->  
->  struct pci_controller * __init
->  alloc_pci_controller(void)
-> @@ -387,7 +391,7 @@ sys_pciconfig_iobase(long which, unsigned long bus, unsigned long dfn)
->  
->  	/* from hose or from bus.devfn */
->  	if (which & IOBASE_FROM_HOSE) {
-> -		for(hose = hose_head; hose; hose = hose->next) 
-> +		for(hose = hose_head; hose; hose = hose->next)
+>  {
+> -	int err;
+> -
+> -	if ((err = pcibios_enable_resources(dev, mask)) < 0)
+> -		return err;
 
-Extraneous whitespace change.  If you fix this in a separate patch, also
-add a space after "for".
+If I understand correctly, this means we'd now use the default
+pcibios_enable_device() from drivers/pci/pci.c, which uses
+pci_enable_resources(), instead of cris's pcibios_enable_resources().
 
->  			if (hose->index == bus) break;
->  		if (!hose) return -ENODEV;
->  	} else {
-> diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
-> index 837c0fa..7fb4d51 100644
-> --- a/arch/alpha/kernel/sys_nautilus.c
-> +++ b/arch/alpha/kernel/sys_nautilus.c
-> @@ -252,7 +252,6 @@ nautilus_init_pci(void)
->  	/* pci_common_swizzle() relies on bus->self being NULL
->  	   for the root bus, so just clear it. */
->  	bus->self = NULL;
-> -	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
+That's a good thing that we should do someday, but it's out of scope for
+this series because they *are* different, and we need to evaluate whether
+it's safe to use the default version instead of the cris version.  Also, I
+think this patch leaves the cris pcibios_enable_resources() unused.
+
+> -
+> -	if (!dev->msi_enabled)
+> -		pcibios_enable_irq(dev);
+> +	bridge->swizzle_irq = NULL;
+> +	bridge->map_irq = pcibios_enable_irq;
+>  	return 0;
 >  }
->  
->  /*
+> +
 > -- 
 > 2.1.0
 > 
