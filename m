@@ -1,256 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:11419 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754574AbaJUIFT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Oct 2014 04:05:19 -0400
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <kexec@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	"Li, Zhen-Hua" <zhen-hual@hp.com>
-Subject: [PATCH 5/5] iommu/vt-d: enable kdump support in iommu module
-Date: Tue, 21 Oct 2014 16:04:19 +0800
-Message-Id: <1413878659-1383-6-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1413878659-1383-1-git-send-email-zhen-hual@hp.com>
-References: <1413878659-1383-1-git-send-email-zhen-hual@hp.com>
+Received: from service87.mimecast.com ([91.220.42.44]:55452 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751533AbaJOMDN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Oct 2014 08:03:13 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Michal Simek <monstr@monstr.eu>,
+	Martin Wilck <martin.wilck@ts.fujitsu.com>,
+	"Derrick J. Wong" <djwong@us.ibm.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH RFC 1/2] drivers: pci: fix pci_mmap_fits() implementation for procfs mmap
+Date: Wed, 15 Oct 2014 13:03:40 +0100
+Message-Id: <1413374624-30066-1-git-send-email-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=WINDOWS-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Modify the operation of the following functions when called during crash dump:
- device_to_domain_id
- get_domain_for_dev
- init_dmars
- intel_iommu_init
+The addresses stored in PCI device resources for memory spaces
+correspond to CPU physical addresses, which do not necessarily
+map 1:1 to PCI bus addresses as programmed in PCI devices configuration
+spaces.
 
-Signed-off-by: Bill Sumner 
+Therefore, the changes applied by commits:
+
+8c05cd08a7504b855c26526
+3b519e4ea618b6943a82931
+
+imply that the sanity checks carried out in pci_mmap_fits() to
+ensure that the user executes an mmap of a "real" pci resource are
+erroneous when executed through procfs. Some platforms (ie SPARC)
+expect the offset value to be passed in (procfs mapping) to be the
+PCI BAR configuration value as read from the PCI device configuration
+space, not the fixed-up CPU physical address that is present in PCI
+device resources.
+
+The required pgoff (offset in mmap syscall) value passed from userspace
+is supposed to represent the resource value exported through
+/proc/bus/pci/devices when the resource is mmapped though procfs (and 0
+when the mapping is carried out through sysfs resource files), which
+corresponds to the PCI resource filtered through the pci_resource_to_user()
+API.
+
+This patch converts the PCI resource to the expected "user visible"
+value through pci_resource_to_user() before carrying out sanity checks
+in pci_mmap_fits() so that the check is carried out on the resource
+values as expected from the userspace mmap API.
+
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: David S. Miller <davem@davemloft.net>
+Cc: Michal Simek <monstr@monstr.eu>
+Cc: Martin Wilck <martin.wilck@ts.fujitsu.com>
+Cc: Derrick J. Wong <djwong@us.ibm.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 ---
- drivers/iommu/intel-iommu.c | 134 +++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 121 insertions(+), 13 deletions(-)
+ drivers/pci/pci-sysfs.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index bde8f22..be12dab 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -40,6 +40,7 @@
- #include <linux/pci-ats.h>
- #include <linux/memblock.h>
- #include <linux/dma-contiguous.h>
-+#include <linux/crash_dump.h>
- #include <asm/irq_remapping.h>
- #include <asm/cacheflush.h>
- #include <asm/iommu.h>
-@@ -393,6 +394,8 @@ static struct list_head *domain_values_list;
-  */
- #define RET_BADCOPY -1	/* Return-code: Cannot copy translate tables */
- 
-+static int intel_iommu_in_crashdump;
-+
- /*
-  * Struct copy_page_addr_parms is used to allow copy_page_addr()
-  * to accumulate values across multiple calls and returns.
-@@ -2287,6 +2290,24 @@ static void domain_remove_dev_info(struct dmar_domain *domain)
- 	spin_unlock_irqrestore(&device_domain_lock, flags);
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 92b6d9a..777d8bc 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -963,17 +963,20 @@ void pci_remove_legacy_files(struct pci_bus *b)
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *=
+vma,
+ =09=09  enum pci_mmap_api mmap_api)
+ {
+-=09unsigned long nr, start, size, pci_start;
++=09unsigned long nr, start, size, pci_offset;
++=09resource_size_t pci_start, pci_end;
+=20
+ =09if (pci_resource_len(pdev, resno) =3D=3D 0)
+ =09=09return 0;
+ =09nr =3D vma_pages(vma);
+ =09start =3D vma->vm_pgoff;
++=09pci_resource_to_user(pdev, resno, &pdev->resource[resno],
++=09=09=09     &pci_start, &pci_end);
+ =09size =3D ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
+-=09pci_start =3D (mmap_api =3D=3D PCI_MMAP_PROCFS) ?
+-=09=09=09pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
+-=09if (start >=3D pci_start && start < pci_start + size &&
+-=09=09=09start + nr <=3D pci_start + size)
++=09pci_offset =3D (mmap_api =3D=3D PCI_MMAP_PROCFS) ?
++=09=09=09pci_start >> PAGE_SHIFT : 0;
++=09if (start >=3D pci_offset && start < pci_offset + size &&
++=09=09=09start + nr <=3D pci_offset + size)
+ =09=09return 1;
+ =09return 0;
  }
- 
-+#ifdef CONFIG_CRASH_DUMP
-+static int device_to_domain_id(struct intel_iommu *iommu, u8 bus, u8 devfn)
-+{
-+	int did = -1;			/* domain-id returned */
-+	struct root_entry *root;
-+	struct context_entry *context;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&iommu->lock, flags);
-+	root = &iommu->root_entry[bus];
-+	context = get_context_addr_from_root(root);
-+	if (context && context_present(context+devfn))
-+		did = context_domain_id(context+devfn);
-+	spin_unlock_irqrestore(&iommu->lock, flags);
-+	return did;
-+}
-+#endif /* CONFIG_CRASH_DUMP */
-+
- /*
-  * find_domain
-  * Note: we use struct device->archdata.iommu stores the info
-@@ -2375,6 +2396,9 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	unsigned long flags;
- 	u8 bus, devfn;
- 	int did = -1;   /* Default to "no domain_id supplied" */
-+#ifdef CONFIG_CRASH_DUMP
-+	struct domain_values_entry *dve = NULL;
-+#endif /* CONFIG_CRASH_DUMP */
- 
- 	domain = find_domain(dev);
- 	if (domain)
-@@ -2408,6 +2432,24 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	domain = alloc_domain(0);
- 	if (!domain)
- 		return NULL;
-+
-+#ifdef CONFIG_CRASH_DUMP
-+	if (intel_iommu_in_crashdump) {
-+		/*
-+		 * if this device had a did in the old kernel
-+		 * use its values instead of generating new ones
-+		 */
-+		did = device_to_domain_id(iommu, bus, devfn);
-+		if (did > 0 || (did == 0 && !cap_caching_mode(iommu->cap)))
-+			dve = intel_iommu_did_to_domain_values_entry(did,
-+								iommu);
-+		if (dve)
-+			gaw = dve->gaw;
-+		else
-+			did = -1;
-+	}
-+#endif /* CONFIG_CRASH_DUMP */
-+
- 	domain->id = iommu_attach_domain(domain, iommu, did);
- 	if (domain->id < 0) {
- 		free_domain_mem(domain);
-@@ -2419,6 +2461,18 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 		return NULL;
- 	}
- 
-+#ifdef CONFIG_CRASH_DUMP
-+	if (intel_iommu_in_crashdump && dve) {
-+
-+		if (domain->pgd)
-+			free_pgtable_page(domain->pgd);
-+
-+		domain->pgd = dve->pgd;
-+
-+		copy_reserved_iova(&dve->iovad, &domain->iovad);
-+	}
-+#endif /* CONFIG_CRASH_DUMP */
-+
- 	/* register PCI DMA alias device */
- 	if (dev_is_pci(dev)) {
- 		tmp = dmar_insert_dev_info(iommu, PCI_BUS_NUM(dma_alias),
-@@ -2860,6 +2914,10 @@ static int __init init_dmars(void)
- 	struct device *dev;
- 	struct intel_iommu *iommu;
- 	int i, ret;
-+#ifdef CONFIG_CRASH_DUMP
-+	struct root_entry *root_old_phys;
-+	struct root_entry *root_new_virt;
-+#endif /* CONFIG_CRASH_DUMP */
- 
- 	/*
- 	 * for each drhd
-@@ -2903,16 +2961,40 @@ static int __init init_dmars(void)
- 		if (ret)
- 			goto free_iommu;
- 
--		/*
--		 * TBD:
--		 * we could share the same root & context tables
--		 * among all IOMMU's. Need to Split it later.
--		 */
--		ret = iommu_alloc_root_entry(iommu);
--		if (ret) {
--			printk(KERN_ERR "IOMMU: allocate root entry failed\n");
--			goto free_iommu;
-+#ifdef CONFIG_CRASH_DUMP
-+		if (intel_iommu_in_crashdump) {
-+			pr_info("IOMMU Copying translate tables from panicked kernel\n");
-+			ret = intel_iommu_copy_translation_tables(drhd,
-+					&root_old_phys, &root_new_virt,
-+					g_num_of_iommus);
-+			if (ret) {
-+				pr_err("IOMMU: Copy translate tables failed\n");
-+
-+				/* Best to stop trying */
-+				intel_iommu_in_crashdump = false;
-+				goto error;
-+			}
-+			iommu->root_entry = root_new_virt;
-+			pr_info("IOMMU: root_new_virt:0x%12.12llx phys:0x%12.12llx\n",
-+				(u64)root_new_virt,
-+				virt_to_phys(root_new_virt));
-+			intel_iommu_get_dids_from_old_kernel(iommu);
-+		} else {
-+#endif /* CONFIG_CRASH_DUMP */
-+			/*
-+			 * TBD:
-+			 * we could share the same root & context tables
-+			 * among all IOMMU's. Need to Split it later.
-+			 */
-+			ret = iommu_alloc_root_entry(iommu);
-+			if (ret) {
-+				pr_err("IOMMU: allocate root entry failed\n");
-+				goto free_iommu;
-+			}
-+#ifdef CONFIG_CRASH_DUMP
- 		}
-+#endif /* CONFIG_CRASH_DUMP */
-+
- 		if (!ecap_pass_through(iommu->ecap))
- 			hw_pass_through = 0;
- 	}
-@@ -2971,6 +3053,16 @@ static int __init init_dmars(void)
- 
- 	check_tylersburg_isoch();
- 
-+#ifdef CONFIG_CRASH_DUMP
-+	/*
-+	 * In the crashdump kernel: Skip setting-up new domains for
-+	 * si, rmrr, and the isa bus on the expectation that these
-+	 * translations were copied from the old kernel.
-+	 */
-+	if (intel_iommu_in_crashdump)
-+		goto skip_new_domains_for_si_rmrr_isa;
-+#endif /* CONFIG_CRASH_DUMP */
-+
- 	/*
- 	 * If pass through is not set or not enabled, setup context entries for
- 	 * identity mappings for rmrr, gfx, and isa and may fall back to static
-@@ -3011,6 +3103,10 @@ static int __init init_dmars(void)
- 
- 	iommu_prepare_isa();
- 
-+#ifdef CONFIG_CRASH_DUMP
-+skip_new_domains_for_si_rmrr_isa:;
-+#endif /* CONFIG_CRASH_DUMP */
-+
- 	/*
- 	 * for each drhd
- 	 *   enable fault log
-@@ -4185,12 +4281,24 @@ int __init intel_iommu_init(void)
- 		goto out_free_dmar;
- 	}
- 
-+#ifdef CONFIG_CRASH_DUMP
- 	/*
--	 * Disable translation if already enabled prior to OS handover.
-+	 * If (This is the crash kernel)
-+	 *    Set: copy iommu translate tables from old kernel
-+	 *    Skip disabling the iommu hardware translations
- 	 */
--	for_each_active_iommu(iommu, drhd)
--		if (iommu->gcmd & DMA_GCMD_TE)
--			iommu_disable_translation(iommu);
-+	if (is_kdump_kernel()) {
-+		intel_iommu_in_crashdump = true;
-+		pr_info("IOMMU intel_iommu_in_crashdump = true\n");
-+		pr_info("IOMMU Skip disabling iommu hardware translations\n");
-+	} else
-+#endif /* CONFIG_CRASH_DUMP */
-+		/*
-+		 * Disable translation if already enabled prior to OS handover.
-+		 */
-+		for_each_active_iommu(iommu, drhd)
-+			if (iommu->gcmd & DMA_GCMD_TE)
-+				iommu_disable_translation(iommu);
- 
- 	if (dmar_dev_scope_init() < 0) {
- 		if (force_on)
--- 
-2.0.0-rc0
+--=20
+2.1.2
+
 
