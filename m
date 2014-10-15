@@ -1,141 +1,113 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Prarit Bhargava <prarit@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v3 14/20] x86, irq: Move IRQ initialization routines from io_apic.c into vector.c
-Date: Mon, 27 Oct 2014 16:12:05 +0800
-Message-Id: <1414397531-28254-15-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v3 11/27] PCI/MSI: Refactor struct msi_chip to make it become more common
+Date: Wed, 15 Oct 2014 11:06:59 +0800
+Message-ID: <1413342435-7876-12-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move IRQ initialization routines from io_apic.c into vector.c,
-preparing for enabling hierarchy irqdomain.
+Now there are a lot of __weak arch functions in MSI code.
+These functions make MSI driver complex. Thierry introduced
+MSI chip framework to configure MSI/MSI-X irq in arm. Use
+MSI chip framework to refactor all other platform MSI
+code to eliminate weak arch MSI functions. This patch add
+.restore_irqs(), .teardown_irqs() and .setup_irqs() to make it
+become more common.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
 ---
- arch/x86/include/asm/io_apic.h |    2 ++
- arch/x86/kernel/apic/io_apic.c |   22 +---------------------
- arch/x86/kernel/apic/vector.c  |   28 ++++++++++++++++++++++++++++
- 3 files changed, 31 insertions(+), 21 deletions(-)
+ drivers/pci/msi.c   |   15 +++++++++++++++
+ include/linux/msi.h |    4 ++++
+ 2 files changed, 19 insertions(+), 0 deletions(-)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 533803dc3733..7bf86bfe05b1 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -145,6 +145,7 @@ extern unsigned long io_apic_irqs;
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 56e54ad..5cbd774 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -61,6 +61,11 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ {
+ 	struct msi_desc *entry;
+ 	int ret;
++	struct msi_chip *chip;
++
++	chip = pci_msi_chip(dev->bus);
++	if (chip && chip->setup_irqs)
++		return chip->setup_irqs(chip, dev, nvec, type);
  
- struct irq_cfg;
- extern void ioapic_insert_resources(void);
-+extern int arch_early_ioapic_init(void);
+ 	/*
+ 	 * If an architecture wants to support multiple MSI, it needs to
+@@ -103,6 +108,11 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
  
- extern int native_setup_ioapic_entry(int, struct IO_APIC_route_entry *,
- 				     unsigned int, int,
-@@ -249,6 +250,7 @@ extern void print_IO_APICs(void);
- #define io_apic_assign_pci_irqs 0
- #define setup_ioapic_ids_from_mpc x86_init_noop
- static inline void ioapic_insert_resources(void) { }
-+static inline int arch_early_ioapic_init(void) { return 0; }
- static inline void print_IO_APICs(void) {}
- #define gsi_top (NR_IRQS_LEGACY)
- static inline int mp_find_ioapic(u32 gsi) { return 0; }
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index b6f249ac5d20..f94094a0b00d 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -245,7 +245,7 @@ static void free_ioapic_saved_registers(int idx)
- 	ioapics[idx].saved_registers = NULL;
+ void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
+ {
++	struct msi_chip *chip = pci_msi_chip(dev->bus);
++
++	if (chip && chip->teardown_irqs)
++		return chip->teardown_irqs(chip, dev);
++
+ 	return default_teardown_msi_irqs(dev);
  }
  
--int __init arch_early_irq_init(void)
-+int __init arch_early_ioapic_init(void)
+@@ -126,6 +136,11 @@ static void default_restore_msi_irq(struct pci_dev *dev, int irq)
+ 
+ void __weak arch_restore_msi_irqs(struct pci_dev *dev)
  {
- 	struct irq_cfg *cfg;
- 	int i, node = cpu_to_node(0);
-@@ -2487,26 +2487,6 @@ unsigned int arch_dynirq_lower_bound(unsigned int from)
- 	return ioapic_initialized ? ioapic_dynirq_base : gsi_top;
++	struct msi_chip *chip = pci_msi_chip(dev->bus);
++
++	if (chip && chip->restore_irqs)
++             return chip->restore_irqs(chip, dev);
++
+ 	return default_restore_msi_irqs(dev);
  }
  
--int __init arch_probe_nr_irqs(void)
--{
--	int nr;
--
--	if (nr_irqs > (NR_VECTORS * nr_cpu_ids))
--		nr_irqs = NR_VECTORS * nr_cpu_ids;
--
--	nr = (gsi_top + nr_legacy_irqs()) + 8 * nr_cpu_ids;
--#if defined(CONFIG_PCI_MSI) || defined(CONFIG_HT_IRQ)
--	/*
--	 * for MSI and HT dyn irq
--	 */
--	nr += gsi_top * 16;
--#endif
--	if (nr < nr_irqs)
--		nr_irqs = nr;
--
--	return 0;
--}
--
- #ifdef CONFIG_X86_32
- static int io_apic_get_unique_id(int ioapic, int apic_id)
- {
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index f728cbfc29a9..2d778f508f65 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -235,6 +235,34 @@ void clear_irq_vector(int irq, struct irq_cfg *cfg)
- 	raw_spin_unlock_irqrestore(&vector_lock, flags);
- }
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 175aa21..eb5ae36 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -74,7 +74,11 @@ struct msi_chip {
  
-+int __init arch_probe_nr_irqs(void)
-+{
-+	int nr;
-+
-+	if (nr_irqs > (NR_VECTORS * nr_cpu_ids))
-+		nr_irqs = NR_VECTORS * nr_cpu_ids;
-+
-+	nr = (gsi_top + nr_legacy_irqs()) + 8 * nr_cpu_ids;
-+#if defined(CONFIG_PCI_MSI) || defined(CONFIG_HT_IRQ)
-+	/*
-+	 * for MSI and HT dyn irq
-+	 */
-+	if (gsi_top <= NR_IRQS_LEGACY)
-+		nr +=  8 * nr_cpu_ids;
-+	else
-+		nr += gsi_top * 16;
-+#endif
-+	if (nr < nr_irqs)
-+		nr_irqs = nr;
-+
-+	return nr_legacy_irqs();
-+}
-+
-+int __init arch_early_irq_init(void)
-+{
-+	return arch_early_ioapic_init();
-+}
-+
- static void __setup_vector_irq(int cpu)
- {
- 	/* Initialize vector_irq on a new cpu */
+ 	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
+ 			 struct msi_desc *desc);
++	int (*setup_irqs)(struct msi_chip *chip, struct pci_dev *dev,
++			int nvec, int type);
+ 	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
++	void (*teardown_irqs)(struct msi_chip *chip, struct pci_dev *dev);
++	void (*restore_irqs)(struct msi_chip *chip, struct pci_dev *dev);
+ };
+ 
+ #endif /* LINUX_MSI_H */
 -- 
-1.7.10.4
+1.7.1
 
