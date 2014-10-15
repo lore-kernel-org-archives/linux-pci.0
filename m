@@ -1,77 +1,91 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Daniel J Blueman <daniel@numascale.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Daniel J Blueman <daniel@numascale.com>, x86@kernel.org,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v3 08/20] x86, irq: Introduce helpers to access struct irq_cfg
-Date: Mon, 27 Oct 2014 16:11:59 +0800
-Message-Id: <1414397531-28254-9-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Steffen Persvold <sp@numascale.com>
+Subject: [PATCH 2/3] Numachip: drop unuseful code
+Date: Wed, 15 Oct 2014 20:53:07 +0800
+Message-Id: <1413377588-6985-2-git-send-email-daniel@numascale.com>
+In-Reply-To: <1413377588-6985-1-git-send-email-daniel@numascale.com>
+References: <1413377588-6985-1-git-send-email-daniel@numascale.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change irq_cfg() from static to extern, also introduce helper function
-irqd_cfg(). Later we could rewrite these two helpers when enabling
-hierarchy irqdomain.
+Drop printing that serves no purpose, as it's printing fixed or
+known values, and mark constant structure appropriately.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Daniel J Blueman <daniel@numascale.com>
+Reviewed-by: Steffen Persvold <sp@numascale.com>
 ---
- arch/x86/include/asm/hw_irq.h  |    2 ++
- arch/x86/kernel/apic/io_apic.c |    7 ++++++-
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ arch/x86/kernel/apic/apic_numachip.c | 22 +++-------------------
+ arch/x86/pci/numachip.c              |  2 +-
+ 2 files changed, 4 insertions(+), 20 deletions(-)
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 18e8717bf644..f457fcd0f3ba 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -132,6 +132,8 @@ struct irq_cfg {
- 	};
- };
+diff --git a/arch/x86/kernel/apic/apic_numachip.c b/arch/x86/kernel/apic/apic_numachip.c
+index 4156470..ee2052d 100644
+--- a/arch/x86/kernel/apic/apic_numachip.c
++++ b/arch/x86/kernel/apic/apic_numachip.c
+@@ -157,20 +157,8 @@ static int __init numachip_probe(void)
+ 	return apic == &apic_numachip;
+ }
  
-+extern struct irq_cfg *irq_cfg(unsigned int irq);
-+extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
- extern void setup_vector_irq(int cpu);
- extern int assign_irq_vector(int, struct irq_cfg *, const struct cpumask *);
- extern void send_cleanup_vector(struct irq_cfg *);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 2de22ddf215a..c44d74fbab95 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -281,11 +281,16 @@ int __init arch_early_irq_init(void)
+-static void __init map_csrs(void)
+-{
+-	printk(KERN_INFO "NumaChip: Mapping local CSR space (%016llx - %016llx)\n",
+-		NUMACHIP_LCSR_BASE, NUMACHIP_LCSR_BASE + NUMACHIP_LCSR_SIZE - 1);
+-	init_extra_mapping_uc(NUMACHIP_LCSR_BASE, NUMACHIP_LCSR_SIZE);
+-
+-	printk(KERN_INFO "NumaChip: Mapping global CSR space (%016llx - %016llx)\n",
+-		NUMACHIP_GCSR_BASE, NUMACHIP_GCSR_BASE + NUMACHIP_GCSR_SIZE - 1);
+-	init_extra_mapping_uc(NUMACHIP_GCSR_BASE, NUMACHIP_GCSR_SIZE);
+-}
+-
+ static void fixup_cpu_id(struct cpuinfo_x86 *c, int node)
+ {
+-
+ 	if (c->phys_proc_id != node) {
+ 		c->phys_proc_id = node;
+ 		per_cpu(cpu_llc_id, smp_processor_id()) = node;
+@@ -179,19 +167,15 @@ static void fixup_cpu_id(struct cpuinfo_x86 *c, int node)
+ 
+ static int __init numachip_system_init(void)
+ {
+-	unsigned int val;
+-
+ 	if (!numachip_system)
+ 		return 0;
+ 
++	init_extra_mapping_uc(NUMACHIP_LCSR_BASE, NUMACHIP_LCSR_SIZE);
++	init_extra_mapping_uc(NUMACHIP_GCSR_BASE, NUMACHIP_GCSR_SIZE);
++
+ 	x86_cpuinit.fixup_cpu_id = fixup_cpu_id;
+ 	x86_init.pci.arch_init = pci_numachip_init;
+ 
+-	map_csrs();
+-
+-	val = read_lcsr(CSR_G0_NODE_IDS);
+-	printk(KERN_INFO "NumaChip: Local NodeID = %08x\n", val);
+-
+ 	return 0;
+ }
+ early_initcall(numachip_system_init);
+diff --git a/arch/x86/pci/numachip.c b/arch/x86/pci/numachip.c
+index 7307d9d..2e565e6 100644
+--- a/arch/x86/pci/numachip.c
++++ b/arch/x86/pci/numachip.c
+@@ -103,7 +103,7 @@ static int pci_mmcfg_write_numachip(unsigned int seg, unsigned int bus,
  	return 0;
  }
  
--static inline struct irq_cfg *irq_cfg(unsigned int irq)
-+struct irq_cfg *irq_cfg(unsigned int irq)
- {
- 	return irq_get_chip_data(irq);
- }
- 
-+struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
-+{
-+	return irq_data->chip_data;
-+}
-+
- static struct irq_cfg *alloc_irq_cfg(unsigned int irq, int node)
- {
- 	struct irq_cfg *cfg;
+-const struct pci_raw_ops pci_mmcfg_numachip = {
++static const struct pci_raw_ops pci_mmcfg_numachip = {
+ 	.read = pci_mmcfg_read_numachip,
+ 	.write = pci_mmcfg_write_numachip,
+ };
 -- 
-1.7.10.4
+1.9.1
 
