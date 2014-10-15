@@ -1,85 +1,103 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v3 02/24] genirq: Introduce helper functions to support stacked irq_chip
-Date: Tue, 28 Oct 2014 16:26:20 +0800
-Message-Id: <1414484803-10311-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:44736 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753707AbaJOAJO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 20:09:14 -0400
+Received: by mail-ie0-f172.google.com with SMTP id rl12so188828iec.3
+        for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 17:09:13 -0700 (PDT)
+Date: Tue, 14 Oct 2014 18:09:11 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Chen Gang <gang.chen.5i5j@gmail.com>
+Cc: konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
+	david.vrabel@citrix.com, xen-devel@lists.xenproject.org,
+	linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH next] xen: pcifront: Process failure for
+ pcifront_(re)scan_root()
+Message-ID: <20141015000911.GB15225@google.com>
+References: <543206CD.1040505@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <543206CD.1040505@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we already support hierarchy irq_datas, so introduce several helpers
-to support stacked irq_chips.
+On Mon, Oct 06, 2014 at 11:04:45AM +0800, Chen Gang wrote:
+> When pcifront_rescan_root() or pcifront_scan_root() fails, need return
+> error code, neither set XenbusStateConnected state, just like the other
+> areas have done.
+>
+> For pcifront_rescan_root(), it will return error code ("num_roots = 0;",
+> skip xenbus_switch_state return value).
+> 
+> For pcifront_scan_root(), it will return 0 ("num_roots = 0;", set 0 by
+> the return value of xenbus_switch_state, which always return 0, at
+> present).
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- include/linux/irq.h |    5 +++++
- kernel/irq/chip.c   |   17 +++++++++++++++++
- 2 files changed, 22 insertions(+)
+The changelog is somewhat confusing because it talks about the patch hunks
+in reverse order (the pcifront_scan_root() change is first in the patch,
+but the changelog mentions pcifront_rescan_root() first).  I *think* this
+means:
 
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 13ba412ce3a0..0adcbbbf2e87 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -443,6 +443,11 @@ extern void handle_percpu_devid_irq(unsigned int irq, struct irq_desc *desc);
- extern void handle_bad_irq(unsigned int irq, struct irq_desc *desc);
- extern void handle_nested_irq(unsigned int irq);
- 
-+#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-+extern void irq_chip_ack_parent(struct irq_data *data);
-+extern int irq_chip_retrigger_hierarchy(struct irq_data *data);
-+#endif
-+
- /* Handling of unhandled and spurious interrupts: */
- extern void note_interrupt(unsigned int irq, struct irq_desc *desc,
- 			   irqreturn_t action_ret);
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index 72a93086216b..12f3e72449eb 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -850,3 +850,20 @@ void irq_cpu_offline(void)
- 		raw_spin_unlock_irqrestore(&desc->lock, flags);
- 	}
- }
-+
-+#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-+void irq_chip_ack_parent(struct irq_data *data)
-+{
-+	data = data->parent_data;
-+	data->chip->irq_ack(data);
-+}
-+
-+int irq_chip_retrigger_hierarchy(struct irq_data *data)
-+{
-+	for (data = data->parent_data; data; data = data->parent_data)
-+		if (data->chip && data->chip->irq_retrigger)
-+			return data->chip->irq_retrigger(data);
-+
-+	return -ENOSYS;
-+}
-+#endif
--- 
-1.7.10.4
+  When pcifront_try_connect() finds no PCI roots, it falls back to calling
+  pcifront_scan_root() for 0000:00.  If that fails, it used to switch to
+  XenbusStateConnected and return success (because xenbus_switch_state()
+  currently always succeeds).
 
+  If pcifront_scan_root() fails, leave the XenbusState unchanged and
+  return an error code.
+
+  Similarly, pcifront_attach_devices() falls back to calling
+  pcifront_rescan_root() for 0000:00.  If that fails, it used to 
+  switch to XenbusStateConnected and return an error code.
+
+  If pcifront_rescan_root() fails, leave the XenbusState unchanged and
+  return the error code.
+
+The "num_roots" part doesn't seem relevant to me.
+
+> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+
+Konrad, if you want to take this, feel free.  Otherwise, if you ack it and
+you think my changelog understanding makes sense, I can pick it up.
+
+It does seem odd that pcifront_attach_devices() ignores the
+xenbus_switch_state() return value while pcifront_try_connect() does not.
+But many other callers also ignore the return value, so maybe that's OK.
+
+Bjorn
+
+> ---
+>  drivers/pci/xen-pcifront.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index 53df39a..d78d884 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -866,6 +866,11 @@ static int pcifront_try_connect(struct pcifront_device *pdev)
+>  		xenbus_dev_error(pdev->xdev, err,
+>  				 "No PCI Roots found, trying 0000:00");
+>  		err = pcifront_scan_root(pdev, 0, 0);
+> +		if (err) {
+> +			xenbus_dev_fatal(pdev->xdev, err,
+> +					 "Error scanning PCI root 0000:00");
+> +			goto out;
+> +		}
+>  		num_roots = 0;
+>  	} else if (err != 1) {
+>  		if (err == 0)
+> @@ -947,6 +952,11 @@ static int pcifront_attach_devices(struct pcifront_device *pdev)
+>  		xenbus_dev_error(pdev->xdev, err,
+>  				 "No PCI Roots found, trying 0000:00");
+>  		err = pcifront_rescan_root(pdev, 0, 0);
+> +		if (err) {
+> +			xenbus_dev_fatal(pdev->xdev, err,
+> +					 "Error scanning PCI root 0000:00");
+> +			goto out;
+> +		}
+>  		num_roots = 0;
+>  	} else if (err != 1) {
+>  		if (err == 0)
+> -- 
+> 1.9.3
