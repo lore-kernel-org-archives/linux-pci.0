@@ -1,128 +1,313 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1414068531.2376.69.camel@localhost.localdomain>
-Subject: Re: [PATCH v4] PCI: add kernel parameter to override devid<->driver
- mapping.
-From: Marcel Apfelbaum <marcel.a@redhat.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	marcel@redhat.com, "Michael S. Tsirkin" <mst@redhat.com>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>
-Date: Thu, 23 Oct 2014 15:48:51 +0300
-In-Reply-To: <CAErSpo4bx1tZMi1rhKhRoE6v9EVr6iTFVw=oQaLEpzT+h=U5Tg@mail.gmail.com>
-References: <1413813882-27047-1-git-send-email-marcel.a@redhat.com>
-	 <CAErSpo4bx1tZMi1rhKhRoE6v9EVr6iTFVw=oQaLEpzT+h=U5Tg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v3 27/27] PCI/MSI: Clean up unused MSI arch functions
+Date: Wed, 15 Oct 2014 11:07:15 +0800
+Message-ID: <1413342435-7876-28-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-10-22 at 15:28 -0600, Bjorn Helgaas wrote:
-> Hi Marcel,
-Hi Bjorn,
-Thank you for the review!
+Now we use struct msi_chip in all platforms to configure
+MSI/MSI-X. We can clean up the unused arch functions.
 
-> 
-> I'm not quite clear on what the objective is here, so I apologize for
-> some questions that probably seem silly.
-I appreciate you took your time to go over it.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+Hi Lucas,
+   I dropped the reviewed-by, because this version has a lot changes
+compared to last one, I guess you may want to check it again.
+---
+ drivers/iommu/irq_remapping.c |    2 +-
+ drivers/pci/msi.c             |  103 +++++++++++++++--------------------------
+ include/linux/msi.h           |   14 ------
+ include/linux/pci.h           |    8 ---
+ 4 files changed, 39 insertions(+), 88 deletions(-)
 
-> 
-> On Mon, Oct 20, 2014 at 8:04 AM, Marcel Apfelbaum <marcel.a@redhat.com> wrote:
-> > Scanning a lot of devices during boot requires a lot of time.
-> 
-> I think what takes a lot of time is the .probe() method for some
-> drivers, right?  I first thought you meant that it took a long time
-> for the PCI core to enumerate a lot of devices, but you're not
-> changing anything there.
-Yes indeed.
-
-> 
-> If the intent is to reduce boot time, I don't think this is a general
-> solution.  Drivers should be able to schedule asynchronous things in
-> their .probe() methods if necessary.
-I agree, but sadly we cannot go over *all* existing drivers and fix,
-we can of course do the best effort :)
-By the way this was not the only reason as you also thought, see bellow
-
-> 
-> > On other scenarios there is a need to bind a driver to a specific slot.
-> 
-> A short example here would be good.  Are you talking about something
-> like binding a NIC driver to one device while leaving others unbound
-> for use by guests?
-Exactly! This is the "perfect" example, thanks!
-> 
-> > Binding devices to pci-stub driver does not work,
-> > as it will not differentiate between devices of the
-> > same type.
-> 
-> I assume you mean booting with "pci-stub.ids=$VENDOR:$DEVICE" will
-> make pci-stub bind to *all* matching devices, and you only want it to
-> bind to some.
-You are right again.
-
->   Maybe pci-stub could be extended to pay attention to
-> PCI bus addresses in addition to vendor/device IDs.
-A few thoughts here:
-- We will have a race here between the "native" driver and pci-stub, right?
-- Why not leverage the existing driver_override feature that is already
-there and gives us exactly what we want: slot<->driver mapping?
-- Maybe there are other scenarios that can benefit from slot<->driver mapping,
-not only pci-stub.
-
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 48d57e9..77160a5 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -92,7 +92,7 @@ error:
  
-
-
-> 
-> > Using some start scripts is error prone.
-> >
-> > The solution leverages driver_override functionality introduced by
-> >
-> >         commit: 782a985d7af26db39e86070d28f987cad21313c0
-> >         Author: Alex Williamson <alex.williamson@redhat.com>
-> >         Date:   Tue May 20 08:53:21 2014 -0600
-> >
-> >         PCI: Introduce new device binding path using pci_dev.driver_override
-> >
-> > In order to bind PCI slots to specific drivers use:
-> >         pci=driver[xxxx:xx:xx.x]=foo,driver[xxxx:xx:xx.x]=bar,...
-> 
-> If/when you address Alex's comments about other bus types, can you
-> also update the changelog to use the canonical commit reference
-> format, i.e., 782a985d7af2 ("PCI: Introduce new device binding path
-> using pci_dev.driver_override") in this case?
-Sure, thanks for the tip.
-
-> 
-> PCI bus numbers are mutable, e.g., they can change with hotplug or
-> other configuration changes.  But I don't have any better suggestion,
-> so I guess all we can do is be aware of this.
-Well, indeed, there is so much that can be done. (We can listen to an event and remap...)
-
-> 
-> Speaking of hotplug, this is only a boot-time kernel parameter, with
-> no opportunity to use this, e.g., to add slot/driver pairs, after
-> boot.  Do you not need that because of Alex's driver_override thing?
-Well actually Alex's "driver_override" feature does that for runtime
-(adds slot/driver pair), the only thing missing is the boot time
-mapping.
-
-> How can we integrate this all together into a coherent whole?  I'm a
-> little confused as to how this would all be documented in a form
-> usable by end-users.
-For end-users it will be like this:
-They want to create a slot/driver mapping.
-In order to do that they will use the "driver_override" feature:
-1. Run-time use:
-   - Use sysfs to edit driver_override file associated with the slot.
-2. Boot-time use:
-   - Use the pci's driver_override parameter. 
-
-Thanks,
-Marcel
-> 
-> Bjorn
-
-
+ 	/*
+ 	 * Restore altered MSI descriptor fields and prevent just destroyed
+-	 * IRQs from tearing down again in default_teardown_msi_irqs()
++	 * IRQs from tearing down again in teardown_msi_irqs()
+ 	 */
+ 	msidesc->irq = 0;
+ 	msidesc->nvec_used = 0;
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 5cbd774..b9fefe9 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -28,54 +28,31 @@ int pci_msi_ignore_mask;
+ #define msix_table_size(flags)	((flags & PCI_MSIX_FLAGS_QSIZE) + 1)
+ 
+ 
+-/* Arch hooks */
+-
+-int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+-{
+-	struct msi_chip *chip;
+-	int err;
+-
+-	chip = pci_msi_chip(dev->bus);
+-	if (!chip || !chip->setup_irq)
+-		return -EINVAL;
+-
+-	err = chip->setup_irq(chip, dev, desc);
+-	if (err < 0)
+-		return err;
+-
+-	return 0;
+-}
+-
+-void __weak arch_teardown_msi_irq(unsigned int irq)
+-{
+-	struct msi_desc *entry = irq_get_msi_desc(irq);
+-	struct msi_chip *chip = pci_msi_chip(entry->dev->bus);
+-
+-	if (!chip || !chip->teardown_irq)
+-		return;
+-
+-	chip->teardown_irq(chip, irq);
+-}
+-
+-int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++int setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ {
+ 	struct msi_desc *entry;
+ 	int ret;
+ 	struct msi_chip *chip;
+ 
+ 	chip = pci_msi_chip(dev->bus);
+-	if (chip && chip->setup_irqs)
++	if (!chip)
++	   return -EINVAL;
++
++	if (chip->setup_irqs)
+ 		return chip->setup_irqs(chip, dev, nvec, type);
+ 
+ 	/*
+ 	 * If an architecture wants to support multiple MSI, it needs to
+-	 * override arch_setup_msi_irqs()
++	 * implement chip->setup_irqs().
+ 	 */
+ 	if (type == PCI_CAP_ID_MSI && nvec > 1)
+ 		return 1;
+ 
++	if (!chip->setup_irq)
++		return -EINVAL;
++
+ 	list_for_each_entry(entry, &dev->msi_list, list) {
+-		ret = arch_setup_msi_irq(dev, entry);
++		ret = chip->setup_irq(chip, dev, entry);
+ 		if (ret < 0)
+ 			return ret;
+ 		if (ret > 0)
+@@ -85,13 +62,20 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 	return 0;
+ }
+ 
+-/*
+- * We have a default implementation available as a separate non-weak
+- * function, as it is used by the Xen x86 PCI code
+- */
+-void default_teardown_msi_irqs(struct pci_dev *dev)
++static void teardown_msi_irqs(struct pci_dev *dev)
+ {
+ 	struct msi_desc *entry;
++	struct msi_chip *chip;
++
++	chip = pci_msi_chip(dev->bus);
++	if (!chip)
++		return;
++
++	if (chip->teardown_irqs)
++		return chip->teardown_irqs(chip, dev);
++
++	if (!chip->teardown_irq)
++		return;
+ 
+ 	list_for_each_entry(entry, &dev->msi_list, list) {
+ 		int i, nvec;
+@@ -102,20 +86,10 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
+ 		else
+ 			nvec = 1 << entry->msi_attrib.multiple;
+ 		for (i = 0; i < nvec; i++)
+-			arch_teardown_msi_irq(entry->irq + i);
++			chip->teardown_irq(chip, entry->irq + i);
+ 	}
+ }
+ 
+-void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
+-{
+-	struct msi_chip *chip = pci_msi_chip(dev->bus);
+-
+-	if (chip && chip->teardown_irqs)
+-		return chip->teardown_irqs(chip, dev);
+-
+-	return default_teardown_msi_irqs(dev);
+-}
+-
+ static void default_restore_msi_irq(struct pci_dev *dev, int irq)
+ {
+ 	struct msi_desc *entry;
+@@ -134,10 +108,18 @@ static void default_restore_msi_irq(struct pci_dev *dev, int irq)
+ 		__write_msi_msg(entry, &entry->msg);
+ }
+ 
+-void __weak arch_restore_msi_irqs(struct pci_dev *dev)
++static void default_restore_msi_irqs(struct pci_dev *dev)
+ {
+-	struct msi_chip *chip = pci_msi_chip(dev->bus);
++	struct msi_desc *entry = NULL;
++
++	list_for_each_entry(entry, &dev->msi_list, list) {
++		default_restore_msi_irq(dev, entry->irq);
++	}
++}
+ 
++static void restore_msi_irqs(struct pci_dev *dev)
++{
++	struct msi_chip *chip = pci_msi_chip(dev->bus);
+ 	if (chip && chip->restore_irqs)
+              return chip->restore_irqs(chip, dev);
+ 
+@@ -250,15 +232,6 @@ void unmask_msi_irq(struct irq_data *data)
+ 	msi_set_mask_bit(data, 0);
+ }
+ 
+-void default_restore_msi_irqs(struct pci_dev *dev)
+-{
+-	struct msi_desc *entry;
+-
+-	list_for_each_entry(entry, &dev->msi_list, list) {
+-		default_restore_msi_irq(dev, entry->irq);
+-	}
+-}
+-
+ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	BUG_ON(entry->dev->current_state != PCI_D0);
+@@ -376,7 +349,7 @@ static void free_msi_irqs(struct pci_dev *dev)
+ 			BUG_ON(irq_has_action(entry->irq + i));
+ 	}
+ 
+-	arch_teardown_msi_irqs(dev);
++	teardown_msi_irqs(dev);
+ 
+ 	list_for_each_entry_safe(entry, tmp, &dev->msi_list, list) {
+ 		if (entry->msi_attrib.is_msix) {
+@@ -435,7 +408,7 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
+ 
+ 	pci_intx_for_msi(dev, 0);
+ 	msi_set_enable(dev, 0);
+-	arch_restore_msi_irqs(dev);
++	restore_msi_irqs(dev);
+ 
+ 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+ 	msi_mask_irq(entry, msi_mask(entry->msi_attrib.multi_cap),
+@@ -458,7 +431,7 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
+ 	msix_clear_and_set_ctrl(dev, 0,
+ 				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
+ 
+-	arch_restore_msi_irqs(dev);
++	restore_msi_irqs(dev);
+ 	list_for_each_entry(entry, &dev->msi_list, list) {
+ 		msix_mask_irq(entry, entry->masked);
+ 	}
+@@ -628,7 +601,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+ 	list_add_tail(&entry->list, &dev->msi_list);
+ 
+ 	/* Configure MSI capability structure */
+-	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
++	ret = setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
+ 	if (ret) {
+ 		msi_mask_irq(entry, mask, ~mask);
+ 		free_msi_irqs(dev);
+@@ -743,7 +716,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
++	ret = setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
+ 	if (ret)
+ 		goto out_avail;
+ 
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index eb5ae36..65b0927 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -52,20 +52,6 @@ struct msi_desc {
+ 	struct msi_msg msg;
+ };
+ 
+-/*
+- * The arch hooks to setup up msi irqs. Those functions are
+- * implemented as weak symbols so that they /can/ be overriden by
+- * architecture specific code if needed.
+- */
+-int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
+-void arch_teardown_msi_irq(unsigned int irq);
+-int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+-void arch_teardown_msi_irqs(struct pci_dev *dev);
+-void arch_restore_msi_irqs(struct pci_dev *dev);
+-
+-void default_teardown_msi_irqs(struct pci_dev *dev);
+-void default_restore_msi_irqs(struct pci_dev *dev);
+-
+ struct msi_chip {
+ 	struct module *owner;
+ 	struct device *dev;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 7a48b40..b28cc03 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1433,14 +1433,6 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ 
+ #include <asm/pci.h>
+ 
+-/* Just avoid compile error, will be clean up later */
+-#ifdef CONFIG_PCI_MSI
+-
+-#ifndef pci_msi_chip
+-#define pci_msi_chip(bus)	NULL
+-#endif
+-
+-#endif
+ 
+ /* these helpers provide future and backwards compatibility
+  * for accessing popular PCI BAR info */
+-- 
+1.7.1
 
