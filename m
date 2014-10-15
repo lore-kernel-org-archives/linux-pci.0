@@ -1,111 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:60794 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755822AbaJHKTt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Oct 2014 06:19:49 -0400
-Date: Wed, 8 Oct 2014 11:19:43 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	"rmk+kernel@arm.linux.org.uk" <rmk+kernel@arm.linux.org.uk>
-Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
-Message-ID: <20141008101942.GA7179@e102568-lin.cambridge.arm.com>
-References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
- <3659934.boXsmm8jcn@wuerfel>
- <20141007144750.GB30590@e102568-lin.cambridge.arm.com>
- <3978481.XNAIA6gzAG@wuerfel>
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:24846 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751313AbaJOIpp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Oct 2014 04:45:45 -0400
+Message-ID: <543E3427.2040207@hp.com>
+Date: Wed, 15 Oct 2014 16:45:27 +0800
+From: "Li, ZhenHua" <zhen-hual@hp.com>
 MIME-Version: 1.0
-In-Reply-To: <3978481.XNAIA6gzAG@wuerfel>
-Content-Type: text/plain; charset=WINDOWS-1252
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>
+CC: Jerry.Hoemann@hp.com, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com, zhenhua@hp.com,
+	"Vaden, Tom L (HP Server OS Architecture)" <tom.vaden@hp.com>
+Subject: Re: [PATCH 0/8] iommu/vt-d: Fix crash dump failure caused by legacy
+ DMA/IO
+References: <1398386198-19304-1-git-send-email-bill.sumner@hp.com> <1398854973.12733.23.camel@i7.infradead.org> <20140702133258.GN26537@8bytes.org> <20140711162745.GA8335@anatevka.fc.hp.com> <543E2BDA.8030906@hp.com>
+In-Reply-To: <543E2BDA.8030906@hp.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 07, 2014 at 10:39:47PM +0100, Arnd Bergmann wrote:
-> On Tuesday 07 October 2014 15:47:50 Lorenzo Pieralisi wrote:
-> > On Tue, Oct 07, 2014 at 02:52:27PM +0100, Arnd Bergmann wrote:
-> > > On Tuesday 07 October 2014 13:06:59 Lorenzo Pieralisi wrote:
-> > > > On Wed, Oct 01, 2014 at 10:38:45AM +0100, Arnd Bergmann wrote:
-> > > > 
-> > > > [...]
-> > > > 
-> > > > > pci_mmap_page_range could either get generalized some more in an attempt
-> > > > > to have a __weak default implementation that works on ARM, or it could
-> > > > > be changed to lose the dependency on pci_sys_data instead. In either
-> > > > > case, the change would involve using the generic pci_host_bridge_window
-> > > > > list.
-> > > > 
-> > > > On ARM pci_mmap_page_range requires pci_sys_data to retrieve its
-> > > > mem_offset parameter. I had a look, and I do not understand *why*
-> > > > it is required in that function, so I am asking. That function
-> > > > is basically used to map PCI resources to userspace, IIUC, through
-> > > > /proc or /sysfs file mappings. As far as I understand those mappings
-> > > > expect VMA pgoff to be the CPU address when files representing resources
-> > > > are mmapped from /proc and 0 when mmapped from /sys (I mean from
-> > > > userspace, then VMA pgoff should be updated by the kernel to map the
-> > > > resource).
-> > > 
-> > > Applying the mem_offset is certainly the more intuitive way, since
-> > > that lets you read the PCI BAR values from a device and access the
-> > > device with the appropriate offsets.
-> > 
-> > Ok, but I am referring to this snippet (drivers/pci/pci-sysfs.c):
-> > 
-> > /* pci_mmap_page_range() expects the same kind of entry as coming
-> >  * from /proc/bus/pci/ which is a "user visible" value. If this is
-> >  * different from the resource itself, arch will do necessary fixup.
-> >  */
-> > pci_resource_to_user(pdev, i, res, &start, &end);
-> > 
-> > --> Here start represents a CPU physical address, if pci_resource_to_user()
-> >     does not fix it up, correct ?
-> > 
-> > vma->vm_pgoff += start >> PAGE_SHIFT;
-> > 
-> > [...]
-> > 
-> > return pci_mmap_page_range(...);
-> > 
-> > pci_mmap_page_range() applies (mem_offset >> PAGE_SHIFT) to pgoff in the
-> > ARM implemention.
-> > 
-> > Is not there a mismatch here on platforms where mem_offset != 0 ?
-> 
-> Yes, I think that's right: ARM never gained its own pci_resource_to_user()
-> implementation, presumably because nobody ran into this problem and
-> debugged it all the way.
-
-Ok. So, unless I am missing something, on platform with mem_offset != 0
-/proc and /sys interfaces for remapping PCI resources can't work (IIUC
-the proc interface expects the user to pass in the resource address as
-seen from /proc/bus/pci/devices - which are not BAR values. Even if the
-user passed the BAR value to mmap, pci_mmap_fits() in proc_bus_pci_mmap()
-would fail since it compares the pgoff to resource values, which are not
-BAR values).
-
-As things stand I think we can safely remove the mem_offset (and
-pci_sys_data dependency) from pci_mmap_page_range(). I do not think
-we can break userspace in any way, basically because it can't work at
-the moment, again, happy to be corrected if I am wrong, please shout.
-
-Or we can add mem_offset to the host bridge (after all architectures like
-PowerPC and Microblaze have a pci_mem_offset variable in their host
-controllers), but still, this removes pci_sys_data dependency but does
-not solve the pci_mmap_page_range() issue.
-
-Lorenzo
+Add Tom to CC list.
+On 10/15/2014 04:10 PM, Li, ZhenHua wrote:
+> David, Joerg,
+> I plan to merge this patch set with 3.17 stable kernel, and split this
+> patch set into two :
+> 1. The core part, including the changed functions, like [Patch 4/8],
+> [Patch 8/8].
+> 2. For the formatting issues, like [Patch 1/8],[Patch 3/8],  including
+> the changes for code formations, creation of new files
+> intel-iommu-kdump.c, intel-iommu-private.h.
+>
+> I believe this will make the patch set more clear to read and understand.
+>
+> What are your suggestions?
+>
+> Thanks
+> Zhenhua
+>
+>
+> On 07/12/2014 12:27 AM, Jerry Hoemann wrote:
+>> On Wed, Jul 02, 2014 at 03:32:59PM +0200, Joerg Roedel wrote:
+>>> Hi David,
+>>>
+>>> On Wed, Apr 30, 2014 at 11:49:33AM +0100, David Woodhouse wrote:
+>>>> There could be all kinds of existing mappings in the DMA page tables,
+>>>> and I'm not sure it's safe to preserve them. What prevents the
+>>>> crashdump
+>>>> kernel from trying to use any of the physical pages which are
+>>>> accessible, and which could thus be corrupted by stray DMA?
+>>>>
+>>>> In fact, the old kernel could even have set up 1:1 passthrough mappings
+>>>> for some devices, which would then be able to DMA *anywhere*. Surely we
+>>>> need to prevent that?
+>>>
+>>> Ideally we would prevent that, yes. But the problem is that a failed DMA
+>>> transaction might put the device into an unrecoverable state. Usually
+>>> any in-flight DMA transactions should only target buffers set up by the
+>>> previous kernel and not corrupt any data.
+>>>
+>>>> After the last round of this patchset, we discussed a potential
+>>>> improvement where you point every virtual bus address at the *same*
+>>>> physical scratch page.
+>>>
+>>> That is a solution to prevent the in-flight DMA failures. But what
+>>> happens when there is some in-flight DMA to a disk to write some inodes
+>>> or a new superblock. Then this scratch address-space may cause
+>>> filesystem corruption at worst.
+>>>
+>>> So with this in mind I would prefer initially taking over the
+>>> page-tables from the old kernel before the device drivers re-initialize
+>>> the devices.
+>>>
+>>>
+>>>     Joerg
+>>
+>> David, Joerg,
+>>
+>> What do you think here?  Do you want me to update the patch set for 3.17?
+>>
+>> Jerry
+>>
+>
 
