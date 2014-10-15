@@ -1,354 +1,173 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v3 04/24] x86, irq: Use hierarchy irqdomain to manage CPU interrupt vectors
-Date: Tue, 28 Oct 2014 16:26:22 +0800
-Message-Id: <1414484803-10311-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v3 15/27] x86/MSI: Remove unused MSI weak arch functions
+Date: Wed, 15 Oct 2014 11:07:03 +0800
+Message-ID: <1413342435-7876-16-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Abstract CPU local APIC as an interrupt controller and create an
-irqdomain for it to manage CPU interupt vectors. It's the base to
-enable hierarchy irqdomain on x86 systems. Eventually we will build
-a irqdomain hiearchy as below:
-IOAPIC domain-------|
-MSI/MSI-x domain------> [Inerrupt Remapping domain] -> CPU vector domain
-HPET_IRQ domain_____|                                         ^
-DMAR domain---------------------------------------------------|
-HT_IRQ domain-------------------------------------------------|
+Now we can clean up MSI weak arch functions in x86.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/x86/Kconfig               |    3 +-
- arch/x86/include/asm/hw_irq.h  |   11 +++
- arch/x86/kernel/apic/io_apic.c |    3 -
- arch/x86/kernel/apic/vector.c  |  151 ++++++++++++++++++++++++++++++++++++----
- 4 files changed, 151 insertions(+), 17 deletions(-)
+ arch/x86/include/asm/pci.h      |    5 +----
+ arch/x86/include/asm/x86_init.h |    4 ----
+ arch/x86/kernel/apic/io_apic.c  |   21 +++++----------------
+ arch/x86/kernel/x86_init.c      |   24 ------------------------
+ 4 files changed, 6 insertions(+), 48 deletions(-)
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index d019b1bc3efb..62383b641d69 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -879,11 +879,12 @@ config X86_LOCAL_APIC
- 	def_bool y
- 	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
- 	select GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
-+	select IRQ_DOMAIN
-+	select IRQ_DOMAIN_HIERARCHY
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index f41b58a..3a5cf19 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -108,14 +108,11 @@ extern void pci_iommu_alloc(void);
+ #ifdef CONFIG_PCI_MSI
+ /* implemented in arch/x86/kernel/apic/io_apic. */
+ struct msi_desc;
+-int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+-void native_teardown_msi_irq(unsigned int irq);
+-void native_restore_msi_irqs(struct pci_dev *dev);
++void native_teardown_msi_irq(struct msi_chip *chip, unsigned int irq);
+ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ 		  unsigned int irq_base, unsigned int irq_offset);
+ extern struct msi_chip *x86_msi_chip;
+ #else
+-#define native_setup_msi_irqs		NULL
+ #define native_teardown_msi_irq		NULL
+ #endif
  
- config X86_IO_APIC
- 	def_bool X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_IOAPIC
- 	depends on X86_LOCAL_APIC
--	select IRQ_DOMAIN
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index f58a9c7..2514f67 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -174,13 +174,9 @@ struct pci_dev;
+ struct msi_msg;
  
- config X86_REROUTE_FOR_BROKEN_BOOT_IRQS
- 	bool "Reroute for broken boot IRQs"
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 3d51d74d6c01..1300702adb1e 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -112,6 +112,11 @@ struct irq_2_irte {
- 
- #ifdef	CONFIG_X86_LOCAL_APIC
- struct irq_data;
-+struct irq_domain;
-+
-+struct irq_alloc_info {
-+	const struct cpumask *mask;	/* CPU mask for vector allocation */
-+};
- 
- struct irq_cfg {
- 	cpumask_var_t		domain;
-@@ -135,6 +140,12 @@ struct irq_cfg {
- 	};
+ struct x86_msi_ops {
+-	int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
+ 	void (*compose_msi_msg)(struct pci_dev *dev, unsigned int irq,
+ 				unsigned int dest, struct msi_msg *msg,
+ 			       u8 hpet_id);
+-	void (*teardown_msi_irq)(unsigned int irq);
+-	void (*teardown_msi_irqs)(struct pci_dev *dev);
+-	void (*restore_msi_irqs)(struct pci_dev *dev);
+ 	int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
  };
  
-+extern struct irq_domain *x86_vector_domain;
-+
-+extern void init_irq_alloc_info(struct irq_alloc_info *info,
-+				const struct cpumask *mask);
-+extern void copy_irq_alloc_info(struct irq_alloc_info *dst,
-+				struct irq_alloc_info *src);
- extern struct irq_cfg *irq_cfg(unsigned int irq);
- extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
- extern struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node);
 diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 68158c5112d2..59c4cde4051f 100644
+index ec79b38..11d353f 100644
 --- a/arch/x86/kernel/apic/io_apic.c
 +++ b/arch/x86/kernel/apic/io_apic.c
-@@ -2353,9 +2353,6 @@ static int mp_irqdomain_create(int ioapic)
- 		ioapic_dynirq_base = max(ioapic_dynirq_base,
- 					 gsi_cfg->gsi_end + 1);
+@@ -3200,7 +3200,8 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ 	return 0;
+ }
  
--	if (gsi_cfg->gsi_base == 0)
--		irq_set_default_host(ip->irqdomain);
+-int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++static int native_setup_msi_irqs(struct msi_chip *chip,
++		struct pci_dev *dev, int nvec, int type)
+ {
+ 	struct msi_desc *msidesc;
+ 	unsigned int irq;
+@@ -3227,26 +3228,14 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 	return 0;
+ }
+ 
+-static int __native_setup_msi_irqs(struct msi_chip *chip, 
+-		struct pci_dev *dev, int nvec, int type)
+-{
+-	return native_setup_msi_irqs(dev, nvec, type);
+-}
 -
- 	return 0;
- }
- 
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 02cb5d386985..c97848125895 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -3,6 +3,8 @@
-  *
-  * Copyright (C) 1997, 1998, 1999, 2000, 2009 Ingo Molnar, Hajnalka Szabo
-  *	Moved from arch/x86/kernel/apic/io_apic.c.
-+ * Jiang Liu <jiang.liu@linux.intel.com>
-+ *	Add support of hierarchy irqdomain
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -19,7 +21,9 @@
- #include <asm/desc.h>
- #include <asm/irq_remapping.h>
- 
-+struct irq_domain *x86_vector_domain;
- static DEFINE_RAW_SPINLOCK(vector_lock);
-+static struct irq_chip vector_chip;
- 
- void lock_vector_lock(void)
+-void native_teardown_msi_irq(unsigned int irq)
++void native_teardown_msi_irq(struct msi_chip *chip, unsigned int irq)
  {
-@@ -36,15 +40,21 @@ void unlock_vector_lock(void)
- 
- struct irq_cfg *irq_cfg(unsigned int irq)
- {
--	return irq_get_chip_data(irq);
-+	return irqd_cfg(irq_get_irq_data(irq));
+ 	irq_free_hwirq(irq);
  }
  
- struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
- {
-+	if (!irq_data)
-+		return NULL;
-+
-+	while (irq_data->parent_data)
-+		irq_data = irq_data->parent_data;
-+
- 	return irq_data->chip_data;
- }
+-static void __native_teardown_msi_irq(struct msi_chip *chip, 
+-		unsigned int irq)
+-{
+-	native_teardown_msi_irq(irq);
+-}
+-
+ static struct msi_chip native_msi_chip = {
+-	.setup_irqs = __native_setup_msi_irqs,
+-	.teardown_irq = __native_teardown_msi_irq,
++	.setup_irqs = native_setup_msi_irqs,
++	.teardown_irq = native_teardown_msi_irq,
+ };
  
--static struct irq_cfg *alloc_irq_cfg(unsigned int irq, int node)
-+static struct irq_cfg *alloc_irq_cfg(int node)
- {
- 	struct irq_cfg *cfg;
+ struct msi_chip *x86_msi_chip = &native_msi_chip;
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index 234b072..cc32568 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -110,34 +110,10 @@ EXPORT_SYMBOL_GPL(x86_platform);
  
-@@ -79,7 +89,7 @@ struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node)
- 			return cfg;
- 	}
+ #if defined(CONFIG_PCI_MSI)
+ struct x86_msi_ops x86_msi = {
+-	.setup_msi_irqs		= native_setup_msi_irqs,
+ 	.compose_msi_msg	= native_compose_msi_msg,
+-	.teardown_msi_irq	= native_teardown_msi_irq,
+-	.teardown_msi_irqs	= default_teardown_msi_irqs,
+-	.restore_msi_irqs	= default_restore_msi_irqs,
+ 	.setup_hpet_msi		= default_setup_hpet_msi,
+ };
  
--	cfg = alloc_irq_cfg(at, node);
-+	cfg = alloc_irq_cfg(node);
- 	if (cfg)
- 		irq_set_chip_data(at, cfg);
- 	else
-@@ -87,14 +97,13 @@ struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node)
- 	return cfg;
- }
+-/* MSI arch specific hooks */
+-int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+-{
+-	return x86_msi.setup_msi_irqs(dev, nvec, type);
+-}
+-
+-void arch_teardown_msi_irqs(struct pci_dev *dev)
+-{
+-	x86_msi.teardown_msi_irqs(dev);
+-}
+-
+-void arch_teardown_msi_irq(unsigned int irq)
+-{
+-	x86_msi.teardown_msi_irq(irq);
+-}
+-
+-void arch_restore_msi_irqs(struct pci_dev *dev)
+-{
+-	x86_msi.restore_msi_irqs(dev);
+-}
+ #endif
  
--static void free_irq_cfg(unsigned int at, struct irq_cfg *cfg)
-+static void free_irq_cfg(struct irq_cfg *cfg)
- {
--	if (!cfg)
--		return;
--	irq_set_chip_data(at, NULL);
--	free_cpumask_var(cfg->domain);
--	free_cpumask_var(cfg->old_domain);
--	kfree(cfg);
-+	if (cfg) {
-+		free_cpumask_var(cfg->domain);
-+		free_cpumask_var(cfg->old_domain);
-+		kfree(cfg);
-+	}
- }
- 
- static int
-@@ -241,6 +250,85 @@ void clear_irq_vector(int irq, struct irq_cfg *cfg)
- 	raw_spin_unlock_irqrestore(&vector_lock, flags);
- }
- 
-+void init_irq_alloc_info(struct irq_alloc_info *info,
-+			 const struct cpumask *mask)
-+{
-+	memset(info, 0, sizeof(*info));
-+	info->mask = mask;
-+}
-+
-+void copy_irq_alloc_info(struct irq_alloc_info *dst, struct irq_alloc_info *src)
-+{
-+	if (src)
-+		*dst = *src;
-+	else
-+		memset(dst, 0, sizeof(*dst));
-+}
-+
-+static inline const struct cpumask *
-+irq_alloc_info_get_mask(struct irq_alloc_info *info)
-+{
-+	return (!info || !info->mask) ? apic->target_cpus() : info->mask;
-+}
-+
-+static void x86_vector_free_irqs(struct irq_domain *domain,
-+				 unsigned int virq, unsigned int nr_irqs)
-+{
-+	int i;
-+	struct irq_data *irq_data;
-+
-+	for (i = 0; i < nr_irqs; i++) {
-+		irq_data = irq_domain_get_irq_data(x86_vector_domain, virq + i);
-+		if (irq_data && irq_data->chip_data) {
-+			free_remapped_irq(virq);
-+			clear_irq_vector(virq + i, irq_data->chip_data);
-+			free_irq_cfg(irq_data->chip_data);
-+			irq_domain_reset_irq_data(irq_data);
-+		}
-+	}
-+}
-+
-+static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
-+				 unsigned int nr_irqs, void *arg)
-+{
-+	int i, err;
-+	struct irq_cfg *cfg;
-+	struct irq_data *irq_data;
-+	const struct cpumask *mask;
-+
-+	if (disable_apic)
-+		return -ENXIO;
-+
-+	mask = irq_alloc_info_get_mask(arg);
-+	for (i = 0; i < nr_irqs; i++) {
-+		irq_data = irq_domain_get_irq_data(domain, virq + i);
-+		BUG_ON(!irq_data);
-+		cfg = alloc_irq_cfg(irq_data->node);
-+		if (!cfg) {
-+			err = -ENOMEM;
-+			goto error;
-+		}
-+
-+		irq_data->chip = &vector_chip;
-+		irq_data->chip_data = cfg;
-+		irq_data->hwirq = virq + i;
-+		err = assign_irq_vector(virq, cfg, mask);
-+		if (err)
-+			goto error;
-+	}
-+
-+	return 0;
-+
-+error:
-+	x86_vector_free_irqs(domain, virq, i + 1);
-+	return err;
-+}
-+
-+static struct irq_domain_ops x86_vector_domain_ops = {
-+	.alloc = x86_vector_alloc_irqs,
-+	.free = x86_vector_free_irqs,
-+};
-+
- int __init arch_probe_nr_irqs(void)
- {
- 	int nr;
-@@ -266,6 +354,11 @@ int __init arch_probe_nr_irqs(void)
- 
- int __init arch_early_irq_init(void)
- {
-+	x86_vector_domain = irq_domain_add_tree(NULL, &x86_vector_domain_ops,
-+						NULL);
-+	BUG_ON(x86_vector_domain == NULL);
-+	irq_set_default_host(x86_vector_domain);
-+
- 	return arch_early_ioapic_init();
- }
- 
-@@ -380,6 +473,37 @@ int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 	return 0;
- }
- 
-+static int vector_set_affinity(struct irq_data *irq_data,
-+			       const struct cpumask *dest, bool force)
-+{
-+	int err;
-+	int irq = irq_data->irq;
-+	struct irq_cfg *cfg = irq_data->chip_data;
-+
-+	if (!config_enabled(CONFIG_SMP))
-+		return -EPERM;
-+
-+	if (!cpumask_intersects(dest, cpu_online_mask))
-+		return -EINVAL;
-+
-+	err = assign_irq_vector(irq, cfg, dest);
-+	if (err) {
-+		struct irq_data *top = irq_get_irq_data(irq);
-+
-+		if (assign_irq_vector(irq, cfg, top->affinity))
-+			pr_err("Failed to recover vector for irq %d\n", irq);
-+		return err;
-+	}
-+
-+	return IRQ_SET_MASK_OK;
-+}
-+
-+static struct irq_chip vector_chip = {
-+	.irq_ack = apic_ack_edge,
-+	.irq_set_affinity = vector_set_affinity,
-+	.irq_retrigger = apic_retrigger_irq,
-+};
-+
- #ifdef CONFIG_SMP
- void send_cleanup_vector(struct irq_cfg *cfg)
- {
-@@ -500,7 +624,7 @@ int arch_setup_hwirq(unsigned int irq, int node)
- 	unsigned long flags;
- 	int ret;
- 
--	cfg = alloc_irq_cfg(irq, node);
-+	cfg = alloc_irq_cfg(node);
- 	if (!cfg)
- 		return -ENOMEM;
- 
-@@ -511,7 +635,7 @@ int arch_setup_hwirq(unsigned int irq, int node)
- 	if (!ret)
- 		irq_set_chip_data(irq, cfg);
- 	else
--		free_irq_cfg(irq, cfg);
-+		free_irq_cfg(cfg);
- 	return ret;
- }
- 
-@@ -521,7 +645,8 @@ void arch_teardown_hwirq(unsigned int irq)
- 
- 	free_remapped_irq(irq);
- 	clear_irq_vector(irq, cfg);
--	free_irq_cfg(irq, cfg);
-+	irq_set_chip_data(irq, NULL);
-+	free_irq_cfg(cfg);
- }
- 
- static void __init print_APIC_field(int base)
+ struct x86_io_apic_ops x86_io_apic_ops = {
 -- 
-1.7.10.4
+1.7.1
 
