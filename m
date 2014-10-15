@@ -1,144 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f177.google.com ([209.85.216.177]:34611 "EHLO
-	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751538AbaJAVci (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 17:32:38 -0400
-MIME-Version: 1.0
-Reply-To: rajatxjain@gmail.com
-In-Reply-To: <20141001072949.GA1322@katana>
-References: <542A3593.4020108@gmail.com>
-	<CAErSpo7BkXDHOZwHzwEu2BN3=39xFwQOyrjgVo6afWKMsnYT=A@mail.gmail.com>
-	<20140930211339.GA1264@katana>
-	<CAA93t1out+gJO29_0tn1zLJv_MUwJ458XKNT3Lo6WW+mH9XeRQ@mail.gmail.com>
-	<20141001072949.GA1322@katana>
-Date: Wed, 1 Oct 2014 14:32:37 -0700
-Message-ID: <CAA93t1qjzAWQqkZQcJYFZxvuhy6o1N2gJ+j=AKgcqE=zup=BJw@mail.gmail.com>
-Subject: Re: [PATCH 0/4] Driver for talking to PLX PEX8xxx PCIe switch over I2C
-From: Rajat Jain <rajatxjain@gmail.com>
-To: Wolfram Sang <wsa@the-dreams.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Jiri Kosina <jkosina@suse.cz>,
-	Andrew Morton <akpm@linux-foundation.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
 	"David S. Miller" <davem@davemloft.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-i2c <linux-i2c@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v3 22/27] s390/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+Date: Wed, 15 Oct 2014 11:07:10 +0800
+Message-ID: <1413342435-7876-23-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+Use MSI chip framework instead of arch MSI functions to configure
+MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
 
-On Wed, Oct 1, 2014 at 12:29 AM, Wolfram Sang <wsa@the-dreams.de> wrote:
->
->> ===========================================================
->> ...<snip>...
->>
->> +0. Why have an I2C interface to a PCIe switch?
->> +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->> +Other than the regular PCI express interface, most modern PCIe switches (e.g.
->> +from IDT and PLX) have an I2C based secondary interface. This interface allows
->> +access to all the registers of the switch. Some of these registers may not even
->> +be accessible over the regular PCI interface. Also, there are certain registers
->> +that can be written to, using only the I2C interface and may only be read-only
->> +using the PCI interface.
->> +
->> +This I2C interface is often used in designs involving these switches, and can
->> +be used for a variety of use cases where the switch needs to be configured
->> +independent of the PCI subsystem (and likely before PCI enumeration). Some
->> +examples:
->> +
->> +* Dividing a PCIe switch into multiple "virtual" switches. Using this feature,
->> +  a switch could be connected to 2 root ports for instance, each managing its
->> +  own PCI hierarchy, and the traffic from one virtual switch does not leak into
->> +  another.
->> +
->> +* Managing Transparent / Non-transparent bridging, and changing them
->> on-the-fly.
->> +  There are ports that can be converted into "Non-transparent" bridge ports.
->> +  Essentially this is used to create different domains (not visible to
->> +  software). In a dynamic distributed system, it may be desirable to change a
->> +  transparent bridge to non-transparent or vice versa, for example, to handle a
->> +  failover situation.
->> +
->> +* Buggy hardware / Bad EEPROM configuration. There may be cases where an errata
->> +  involving register writes need to be applied before enumerating over PCI.
->> +  Also these switches are typically attached to an EEPROM that is supposed to
->> +  initialize the switch. If that EEPROM is not present, or contains bad
->> +  initialization data, this I2C interface can be used to fix that.
->> +
->> +* Changing switch configuration on the fly. In a multi-homed or complex
->> +  distributed systemsystem, there may be a need to change the switch
->> +  configuration (eg. change the upstream port, or the port or lane
->> +  configuration etc) to address run time scenarios (CPU plug out etc).
->> +
->>
->> ...<snip>...
->> ===========================================================
->>
->> I am myself leaning towards drivers/pci/switch/. And am wanting to
->> hear what other think.
->
-> I had a closer look and my first question is now if we really need a
-> kernel driver for this?
->
-> The sysfs interface is basically to PEEK/POKE registers of the switch.
-> How registers get accessed is part of userspace. Well, then it might
-> even be easier to construct the proper i2c messages in userspace, too,
-> and send them via i2c-dev (instead of writing to various files in
-> sysfs).
->
-> The Kernel API is also PEEK/POKE register. I am not an PCI expert, but I
-> can't see a user in this form. What I'd expect would be more like
->
-> pci_switch_set_mode(some_device, PCI_BRIDGE_MODE_TRANSPARENT);
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+Hi Sebastian,
+   I dropped the Acked-by , because this version has a
+lot changes compared to last. So, I guess you may want to check it again.
+---
+ arch/s390/include/asm/pci.h |    9 +++++++++
+ arch/s390/pci/pci.c         |   12 ++++++++++--
+ 2 files changed, 19 insertions(+), 2 deletions(-)
 
-I understand and agree. In fact in the internal version of this driver
-(that I have not yet sent out for review), we do have APIs added
-similar to what you mention above. Currently I have APIs that:
-- Enable / Disable PCIe links.
-- Change the upstream port.
-- Enable / Disable Non-transparent mode etc.
+diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
+index c030900..4d41f08 100644
+--- a/arch/s390/include/asm/pci.h
++++ b/arch/s390/include/asm/pci.h
+@@ -88,6 +88,8 @@ struct zpci_dev {
+ 	u32 uid;			/* user defined id */
+ 	u8 util_str[CLP_UTIL_STR_LEN];	/* utility string */
+ 
++	struct msi_chip *msi_chip;
++
+ 	/* IRQ stuff */
+ 	u64		msi_addr;	/* MSI address */
+ 	struct airq_iv *aibv;		/* adapter interrupt bit vector */
+@@ -121,6 +123,13 @@ struct zpci_dev {
+ 	struct dentry	*debugfs_perf;
+ };
+ 
++static inline struct msi_chip *pci_msi_chip(struct pci_bus *bus)
++{
++	struct zpci_dev *zpci = bus->sysdata;
++
++	return zpci->msi_chip;
++}
++
+ static inline bool zdev_enabled(struct zpci_dev *zdev)
+ {
+ 	return (zdev->fh & (1UL << 31)) ? true : false;
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 552b990..bf6732f 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -358,7 +358,8 @@ static void zpci_irq_handler(struct airq_struct *airq)
+ 	}
+ }
+ 
+-int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
++static int zpci_setup_msi_irqs(struct msi_chip *chip,
++		struct pci_dev *pdev, int nvec, int type)
+ {
+ 	struct zpci_dev *zdev = get_zdev(pdev);
+ 	unsigned int hwirq, msi_vecs;
+@@ -434,7 +435,8 @@ out:
+ 	return rc;
+ }
+ 
+-void arch_teardown_msi_irqs(struct pci_dev *pdev)
++static void zpci_teardown_msi_irqs(struct msi_chip *chip,
++		struct pci_dev *pdev)
+ {
+ 	struct zpci_dev *zdev = get_zdev(pdev);
+ 	struct msi_desc *msi;
+@@ -464,6 +466,11 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
+ 	airq_iv_free_bit(zpci_aisb_iv, zdev->aisb);
+ }
+ 
++static struct msi_chip zpci_msi_chip = {
++	.setup_irqs = zpci_setup_msi_irqs,
++	.teardown_irqs = zpci_teardown_msi_irqs,
++};
++
+ static void zpci_map_resources(struct zpci_dev *zdev)
+ {
+ 	struct pci_dev *pdev = zdev->pdev;
+@@ -749,6 +756,7 @@ static int zpci_scan_bus(struct zpci_dev *zdev)
+ 	if (ret)
+ 		return ret;
+ 
++	zdev->msi_chip = &zpci_msi_chip;
+ 	zdev->bus = pci_scan_root_bus(NULL, ZPCI_BUS_NR, &pci_root_ops,
+ 				      zdev, &resources);
+ 	if (!zdev->bus) {
+-- 
+1.7.1
 
-However, I did not send them all out for review because I don't have
-the hardware to try and test them out on ALL the supported devices
-(also would require considerable amount of time). I have tested those
-APIs on PEX8713 only, because for e.g.I only have PEX8713 in a HW that
-connects to 2 CPUs at the same time.
-
->
-> and then a shim layer would make sure the proper driver for the switch
-> sends the proper commands. Again, I don't know if the decision of
-> setting a mode/creating virtual switches... is even desirable in kernel
-> space. If so, then this is probably a sub-subsystem
-> drivers/pci/switches, but needs way more abstraction. Otherwise,
-> userspace will currently do IMO.
-
-You are right, what this basic driver abstracts is the I2C interface
-(i.e. the command format and response format etc) of the PCIe switch,
-and not really the PCIe switch itself (Hence I was calling it PEX8xxx
-I2C driver. I think that is still a useful abstraction to have,
-because that can be used to build the actual logic code that program
-the switch. Yes, I agree that we can have another layer of abstraction
-so that we have:
-
-- The Core logic code (that knows "How do we want the switch to behave")
-- A PEX8xxx driver (that knows "which registers to program")
-- A PEX8xxx I2C driver ("How to program those registers") - this driver.
-
-I do understand that your suggestion is to include and bundle the
-latter two into this same driver. However since the possibilities
-(about which APIs to provide) are too much and not enough hardware to
-test it, would it be acceptable if I include those APIs, but support
-them for only 1 device (and return error for others)? Note that even
-with those APIs, I feel exposing the Read/Write APIs will be useful -
-because what core logic wants to achieve can be highly device and
-platform specific. Also, a sysfs interface for this switch is proving
-to be a very helpful development aid :-) (personal experience :-))
-
-Thanks & Best Regards,
-
-Rajat Jain
