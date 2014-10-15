@@ -1,271 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:39257 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752928AbaJ0Ml5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Oct 2014 08:41:57 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 16/16] PCI/MSI: Clean up unused MSI arch functions
-Date: Mon, 27 Oct 2014 21:22:22 +0800
-Message-ID: <1414416142-31239-17-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
-References: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:48997 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751196AbaJOTsB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Oct 2014 15:48:01 -0400
+Message-ID: <543ECF6F.2030705@redhat.com>
+Date: Wed, 15 Oct 2014 15:47:59 -0400
+From: Prarit Bhargava <prarit@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Myron Stowe <mstowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] pci, add sysfs numa_node write function
+References: <1413399924-599-1-git-send-email-prarit@redhat.com> <CAErSpo6Oy1S1OECirp6=tz+pQWUtkFE6p1LTzNaYtzxoX73FWw@mail.gmail.com>
+In-Reply-To: <CAErSpo6Oy1S1OECirp6=tz+pQWUtkFE6p1LTzNaYtzxoX73FWw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we use MSI controller in all platforms to configure
-MSI/MSI-X. We can clean up the unused arch functions.
+On 10/15/2014 03:23 PM, Bjorn Helgaas wrote:
+> Hi Prarit,
+> 
+> On Wed, Oct 15, 2014 at 1:05 PM, Prarit Bhargava <prarit@redhat.com> wrote:
+>> Consider a multi-node, multiple pci root bridge system which can be
+>> configured into one large node or one node/socket.  When configuring the
+>> system the numa_node value for each PCI root bridge is always set
+>> incorrectly to -1, or NUMA_NO_NODE, rather than to the node value of each
+>> socket.  Each PCI device inherits the numa value directly from it's parent
+>> device, so that the NUMA_NO_NODE value is passed through the entire PCI
+>> tree.
+>>
+>> Some new drivers, such as the Intel QAT driver, drivers/crypto/qat,
+>> require that a specific node be assigned to the device in order to
+>> achieve maximum performance for the device, and will fail to load if the
+>> device has NUMA_NO_NODE.
+> 
+> It seems ... unfriendly for a driver to fail to load just because it
+> can't guarantee maximum performance.  Out of curiosity, where does
+> this actually happen?  I had a quick look for NUMA_NO_NODE and
+> module_init() functions in drivers/crypto/qat, and I didn't see the
+> spot.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
----
- drivers/pci/msi.c   |   90 ++++++++++++++++++--------------------------------
- include/linux/msi.h |   11 ------
- 2 files changed, 33 insertions(+), 68 deletions(-)
+The whole point of the Intel QAT driver is to guarantee max performance.  If
+that is not possible the driver should not load (according to the thread
+mentioned below)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 0e1da3e..cdb4634 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -27,7 +27,6 @@ int pci_msi_ignore_mask;
- 
- #define msix_table_size(flags)	((flags & PCI_MSIX_FLAGS_QSIZE) + 1)
- 
--
- /* Arch hooks */
- 
- struct msi_controller * __weak pcibios_msi_controller(struct pci_bus *bus)
-@@ -35,56 +34,31 @@ struct msi_controller * __weak pcibios_msi_controller(struct pci_bus *bus)
- 	return NULL;
- }
- 
--struct msi_controller *pci_msi_controller(struct pci_bus *bus)
--{
--	return pcibios_msi_controller(bus);
--}
--
--int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
--{
--	struct msi_controller *ctrl = pci_msi_controller(dev->bus);
--	int err;
--
--	if (!ctrl || !ctrl->setup_irq)
--		return -EINVAL;
--
--	err = ctrl->setup_irq(ctrl, dev, desc);
--	if (err < 0)
--		return err;
--
--	return 0;
--}
--
--void __weak arch_teardown_msi_irq(unsigned int irq)
--{
--	struct msi_desc *entry = irq_get_msi_desc(irq);
--	struct msi_controller *ctrl = pci_msi_controller(entry->dev->bus);
--
--	if (!ctrl || !ctrl->teardown_irq)
--		return;
--
--	ctrl->teardown_irq(ctrl, irq);
--}
--
--int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+int setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- {
- 	struct msi_desc *entry;
- 	int ret;
- 	struct msi_controller *ctrl;
- 
--	ctrl = pci_msi_controller(dev->bus);
--	if (ctrl && ctrl->setup_irqs)
-+	ctrl = pcibios_msi_controller(dev->bus);
-+	if (!ctrl)
-+		return -EINVAL;
-+
-+	if (ctrl->setup_irqs)
- 		return ctrl->setup_irqs(ctrl, dev, nvec, type);
- 
- 	/*
- 	 * If an architecture wants to support multiple MSI, it needs to
--	 * override arch_setup_msi_irqs()
-+	 * implement ctrl->setup_irqs().
- 	 */
- 	if (type == PCI_CAP_ID_MSI && nvec > 1)
- 		return 1;
- 
-+	if (!ctrl->setup_irq)
-+		return -EINVAL;
-+
- 	list_for_each_entry(entry, &dev->msi_list, list) {
--		ret = arch_setup_msi_irq(dev, entry);
-+		ret = ctrl->setup_irq(ctrl, dev, entry);
- 		if (ret < 0)
- 			return ret;
- 		if (ret > 0)
-@@ -101,6 +75,10 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- void default_teardown_msi_irqs(struct pci_dev *dev)
- {
- 	struct msi_desc *entry;
-+	struct msi_controller *ctrl = pcibios_msi_controller(dev->bus);
-+
-+	if (!ctrl->teardown_irq)
-+		return;
- 
- 	list_for_each_entry(entry, &dev->msi_list, list) {
- 		int i, nvec;
-@@ -111,18 +89,18 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
- 		else
- 			nvec = 1 << entry->msi_attrib.multiple;
- 		for (i = 0; i < nvec; i++)
--			arch_teardown_msi_irq(entry->irq + i);
-+			ctrl->teardown_irq(ctrl, entry->irq + i);
- 	}
- }
- 
--void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
-+static void teardown_msi_irqs(struct pci_dev *dev)
- {
--	struct msi_controller *ctrl = pci_msi_controller(dev->bus);
-+	struct msi_controller *ctrl = pcibios_msi_controller(dev->bus);
- 
- 	if (ctrl && ctrl->teardown_irqs)
- 		return ctrl->teardown_irqs(ctrl, dev);
- 
--	return default_teardown_msi_irqs(dev);
-+	default_teardown_msi_irqs(dev);
- }
- 
- static void default_restore_msi_irq(struct pci_dev *dev, int irq)
-@@ -143,10 +121,17 @@ static void default_restore_msi_irq(struct pci_dev *dev, int irq)
- 		__write_msi_msg(entry, &entry->msg);
- }
- 
--void __weak arch_restore_msi_irqs(struct pci_dev *dev)
-+void default_restore_msi_irqs(struct pci_dev *dev)
- {
--	struct msi_controller *ctrl = pci_msi_controller(dev->bus);
-+	struct msi_desc *entry;
- 
-+	list_for_each_entry(entry, &dev->msi_list, list)
-+		default_restore_msi_irq(dev, entry->irq);
-+}
-+
-+static void restore_msi_irqs(struct pci_dev *dev)
-+{
-+	struct msi_controller *ctrl = pcibios_msi_controller(dev->bus);
- 	if (ctrl && ctrl->restore_irqs)
-              return ctrl->restore_irqs(ctrl, dev);
- 
-@@ -259,15 +244,6 @@ void unmask_msi_irq(struct irq_data *data)
- 	msi_set_mask_bit(data, 0);
- }
- 
--void default_restore_msi_irqs(struct pci_dev *dev)
--{
--	struct msi_desc *entry;
--
--	list_for_each_entry(entry, &dev->msi_list, list) {
--		default_restore_msi_irq(dev, entry->irq);
--	}
--}
--
- void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	BUG_ON(entry->dev->current_state != PCI_D0);
-@@ -387,7 +363,7 @@ static void free_msi_irqs(struct pci_dev *dev)
- 			BUG_ON(irq_has_action(entry->irq + i));
- 	}
- 
--	arch_teardown_msi_irqs(dev);
-+	teardown_msi_irqs(dev);
- 
- 	list_for_each_entry_safe(entry, tmp, &dev->msi_list, list) {
- 		if (entry->msi_attrib.is_msix) {
-@@ -446,7 +422,7 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
- 
- 	pci_intx_for_msi(dev, 0);
- 	msi_set_enable(dev, 0);
--	arch_restore_msi_irqs(dev);
-+	restore_msi_irqs(dev);
- 
- 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
- 	msi_mask_irq(entry, msi_mask(entry->msi_attrib.multi_cap),
-@@ -469,7 +445,7 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
- 	msix_clear_and_set_ctrl(dev, 0,
- 				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
- 
--	arch_restore_msi_irqs(dev);
-+	restore_msi_irqs(dev);
- 	list_for_each_entry(entry, &dev->msi_list, list) {
- 		msix_mask_irq(entry, entry->masked);
- 	}
-@@ -639,7 +615,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 	list_add_tail(&entry->list, &dev->msi_list);
- 
- 	/* Configure MSI capability structure */
--	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
-+	ret = setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
- 	if (ret) {
- 		msi_mask_irq(entry, mask, ~mask);
- 		free_msi_irqs(dev);
-@@ -754,7 +730,7 @@ static int msix_capability_init(struct pci_dev *dev,
- 	if (ret)
- 		return ret;
- 
--	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
-+	ret = setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
- 	if (ret)
- 		goto out_avail;
- 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 4426cb4..e4eb137 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -51,19 +51,8 @@ struct msi_desc {
- 	struct msi_msg msg;
- };
- 
--/*
-- * The arch hooks to setup up msi irqs. Those functions are
-- * implemented as weak symbols so that they /can/ be overriden by
-- * architecture specific code if needed.
-- */
--int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
--void arch_teardown_msi_irq(unsigned int irq);
--int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
--void arch_teardown_msi_irqs(struct pci_dev *dev);
--void arch_restore_msi_irqs(struct pci_dev *dev);
- 
- void default_teardown_msi_irqs(struct pci_dev *dev);
--void default_restore_msi_irqs(struct pci_dev *dev);
- 
- struct msi_controller {
- 	struct module *owner;
--- 
-1.7.1
+> 
+>> The driver would load if the numa_node value
+>> was equal to or greater than -1 and quickly hacking the driver results in
+>> a functional QAT driver.
+>>
+>> Using lspci and numactl it is easy to determine what the numa value should
+>> be.  The problem is that there is no way to set it.  This patch adds a
+>> store function for the PCI device's numa_node value.
+> 
+> I'm not familiar with numactl.  It sounds like it can show you the
+> NUMA topology?  Where does that information come from?
+
+You can map at least what nodes are available (although I suppose you can get
+the same information from dmesg).  You have to do a bit of hunting through the
+PCI tree to determine the root PCI devices, but you can determine which root
+device is connected to which node.
+
+> 
+>> To use this, one can do
+>>
+>> echo 3 > /sys/devices/pci0000:ff/0000:ff:1f.3/numa_node
+>>
+>> to set the numa node for PCI device 0000:ff:1f.3.
+> 
+> It definitely seems wrong that we don't set the node number correctly.
+> pci_acpi_scan_root() sets the node number by looking for a _PXM method
+> that applies to the host bridge.  Why does that not work in this case?
+>  Does the BIOS not supply _PXM?
+
+Yeah ... unfortunately the BIOS is broken in this case.  And I know what you're
+thinking ;) -- why not get the BIOS fixed?  I'm through relying on BIOS fixes
+which can take six months to a year to appear in a production version... I've
+been bitten too many times by promises of BIOS fixes that never materialize.
+
+We have systems that only have a support cycle of 3 years, and things like ACPI
+_PXM updates are at the bottom of the list :/.
+
+FWIW, on this particular system I have a filed a bug with the vendor.
+
+> 
+> If there's information that numactl uses, maybe the kernel should use that, too?
+> 
+> A sysfs interface might be a useful workaround, but obviously it would
+> be far better if we could fix the BIOS and/or kernel so the workaround
+> isn't necessary in the first place.
+
+Yep ... but like I said, I don't think anyone wants to wait a year.  What if we
+never see a fix?
+
+Side issue:  While investigating this I noticed that plain kmalloc() is used in
+the setup code.  Is there a reason we don't use kmalloc_node() in
+pci_alloc_dev(), and other allocation functions?  It seems like we should be to
+optimize system performance.  OTOH ... I haven't done any measurements to see if
+it actually makes a difference :)
+
+P.
+
+> 
+> Bjorn
+> 
+>> Cc: Myron Stowe <mstowe@redhat.com>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: linux-pci@vger.kernel.org
+>> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+>> ---
+>>  drivers/pci/pci-sysfs.c |   23 ++++++++++++++++++++++-
+>>  1 file changed, 22 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>> index 92b6d9a..c05ed30 100644
+>> --- a/drivers/pci/pci-sysfs.c
+>> +++ b/drivers/pci/pci-sysfs.c
+>> @@ -221,12 +221,33 @@ static ssize_t enabled_show(struct device *dev, struct device_attribute *attr,
+>>  static DEVICE_ATTR_RW(enabled);
+>>
+>>  #ifdef CONFIG_NUMA
+>> +static ssize_t numa_node_store(struct device *dev,
+>> +                              struct device_attribute *attr,
+>> +                              const char *buf, size_t count)
+>> +{
+>> +       int node, ret;
+>> +
+>> +       if (!capable(CAP_SYS_ADMIN))
+>> +               return -EPERM;
+>> +
+>> +       ret = kstrtoint(buf, 0, &node);
+>> +       if (ret)
+>> +               return ret;
+>> +
+>> +       if (!node_online(node))
+>> +               return -EINVAL;
+>> +
+>> +       dev->numa_node = node;
+>> +
+>> +       return count;
+>> +}
+>> +
+>>  static ssize_t numa_node_show(struct device *dev, struct device_attribute *attr,
+>>                               char *buf)
+>>  {
+>>         return sprintf(buf, "%d\n", dev->numa_node);
+>>  }
+>> -static DEVICE_ATTR_RO(numa_node);
+>> +static DEVICE_ATTR_RW(numa_node);
+>>  #endif
+>>
+>>  static ssize_t dma_mask_bits_show(struct device *dev,
+>> --
+>> 1.7.9.3
+>>
+> 
+> 
 
