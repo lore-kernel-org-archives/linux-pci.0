@@ -1,89 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bn0103.outbound.protection.outlook.com ([157.56.110.103]:39296
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752495AbaJTFzz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Oct 2014 01:55:55 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
-	<m-karicheri2@ti.com>, Richard Zhu <r65037@freescale.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH v8 9/9] ARM: imx6sx: Enable pcie on imx6sx sdb board
-Date: Mon, 20 Oct 2014 13:25:24 +0800
-Message-ID: <1413782724-30795-10-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
-References: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v3 20/27] MIPS/Xlr/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+Date: Wed, 15 Oct 2014 11:07:08 +0800
+Message-ID: <1413342435-7876-21-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Richard Zhu <r65037@freescale.com>
+Use MSI chip framework instead of arch MSI functions to configure
+MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
 
-Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/arm/boot/dts/imx6sx-sdb.dts | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+ arch/mips/pci/pci-xlr.c |   17 +++++++++++++++--
+ 1 files changed, 15 insertions(+), 2 deletions(-)
 
-diff --git a/arch/arm/boot/dts/imx6sx-sdb.dts b/arch/arm/boot/dts/imx6sx-sdb.dts
-index a3980d9..e28214a 100644
---- a/arch/arm/boot/dts/imx6sx-sdb.dts
-+++ b/arch/arm/boot/dts/imx6sx-sdb.dts
-@@ -90,6 +90,19 @@
- 			regulator-min-microvolt = <5000000>;
- 			regulator-max-microvolt = <5000000>;
- 		};
-+
-+		reg_pcie: regulator@4 {
-+			compatible = "regulator-fixed";
-+			reg = <3>;
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&pinctrl_pcie_reg>;
-+			regulator-name = "MPCIE_3V3";
-+			regulator-min-microvolt = <3300000>;
-+			regulator-max-microvolt = <3300000>;
-+			gpio = <&gpio2 1 0>;
-+			regulator-always-on;
-+			enable-active-high;
-+		};
- 	};
- 
- 	sound {
-@@ -251,6 +264,13 @@
- 	};
+diff --git a/arch/mips/pci/pci-xlr.c b/arch/mips/pci/pci-xlr.c
+index 0dde803..0e611de 100644
+--- a/arch/mips/pci/pci-xlr.c
++++ b/arch/mips/pci/pci-xlr.c
+@@ -149,6 +149,8 @@ static struct resource nlm_pci_io_resource = {
+ 	.flags		= IORESOURCE_IO,
  };
  
-+&pcie {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_pcie>;
-+	reset-gpio = <&gpio2 0 0>;
-+	status = "okay";
++static struct msi_chip xlr_msi_chip;
++
+ struct pci_controller nlm_pci_controller = {
+ 	.index		= 0,
+ 	.pci_ops	= &nlm_pci_ops,
+@@ -156,6 +158,9 @@ struct pci_controller nlm_pci_controller = {
+ 	.mem_offset	= 0x00000000UL,
+ 	.io_resource	= &nlm_pci_io_resource,
+ 	.io_offset	= 0x00000000UL,
++#ifdef CONFIG_PCI_MSI
++	.msi_chip = &xlr_msi_chip,
++#endif
+ };
+ 
+ /*
+@@ -214,11 +219,13 @@ static int get_irq_vector(const struct pci_dev *dev)
+ }
+ 
+ #ifdef CONFIG_PCI_MSI
+-void arch_teardown_msi_irq(unsigned int irq)
++static void xlr_teardown_msi_irq(struct msi_chip *chip,
++		unsigned int irq)
+ {
+ }
+ 
+-int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
++static int xlr_setup_msi_irq(struct msi_chip *chip,
++		struct pci_dev *dev, struct msi_desc *desc)
+ {
+ 	struct msi_msg msg;
+ 	struct pci_dev *lnk;
+@@ -263,6 +270,12 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ 	write_msi_msg(irq, &msg);
+ 	return 0;
+ }
++
++static struct msi_chip xlr_msi_chip = {
++	.setup_irq = xlr_setup_msi_irq,
++	.teardown_irq = xlr_teardown_msi_irq,
 +};
 +
- &ssi2 {
- 	status = "okay";
- };
-@@ -365,6 +385,18 @@
- 			>;
- 		};
+ #endif
  
-+		pinctrl_pcie: pciegrp {
-+			fsl,pins = <
-+				MX6SX_PAD_ENET1_COL__GPIO2_IO_0 0x10b0
-+			>;
-+		};
-+
-+		pinctrl_pcie_reg: pciereggrp {
-+			fsl,pins = <
-+				MX6SX_PAD_ENET1_CRS__GPIO2_IO_1	0x10b0
-+			>;
-+		};
-+
- 		pinctrl_vcc_sd3: vccsd3grp {
- 			fsl,pins = <
- 				MX6SX_PAD_KEY_COL1__GPIO2_IO_11		0x17059
+ /* Extra ACK needed for XLR on chip PCI controller */
 -- 
-1.9.1
+1.7.1
 
