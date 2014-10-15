@@ -1,89 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:58298 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752154AbaJTSRp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Oct 2014 14:17:45 -0400
-From: Paul Zimmerman <Paul.Zimmerman@synopsys.com>
-To: Huang Rui <ray.huang@amd.com>, Felipe Balbi <balbi@ti.com>
-CC: Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+Received: from mail-by2on0127.outbound.protection.outlook.com ([207.46.100.127]:37027
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750775AbaJOI2z convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Oct 2014 04:28:55 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Fabio Estevam <festevam@gmail.com>
+CC: "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v2 16/16] usb: dwc3: enable usb suspend phy
-Date: Mon, 20 Oct 2014 18:17:42 +0000
-Message-ID: <A2CA0424C0A6F04399FB9E1CD98E0304844E3C35@US01WEMBX2.internal.synopsys.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
- <1413536021-4886-17-git-send-email-ray.huang@amd.com>
- <20141017145942.GL26260@saruman>
- <A2CA0424C0A6F04399FB9E1CD98E0304844E3423@US01WEMBX2.internal.synopsys.com>
- <20141017184819.GX26260@saruman> <20141020084153.GD24357@hr-slim.amd.com>
- <20141020090124.GE24357@hr-slim.amd.com>
-In-Reply-To: <20141020090124.GE24357@hr-slim.amd.com>
-Content-Type: text/plain; charset="utf-8"
+	"Fabio.Estevam@freescale.com" <Fabio.Estevam@freescale.com>,
+	Rob Herring <robh@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH] PCI: imx6q-pcie doc: Update the clocks descriptions to
+ use defines
+Date: Wed, 15 Oct 2014 08:28:51 +0000
+Message-ID: <79d95f1ce195473b983c45519adf3e82@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1412434548-11219-1-git-send-email-festevam@gmail.com>
+ <20141015001746.GC15225@google.com>
+In-Reply-To: <20141015001746.GC15225@google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBGcm9tOiBIdWFuZyBSdWkgW21haWx0bzpyYXkuaHVhbmdAYW1kLmNvbV0NCj4gU2VudDogTW9u
-ZGF5LCBPY3RvYmVyIDIwLCAyMDE0IDI6MDEgQU0NCj4gDQo+IE9uIE1vbiwgT2N0IDIwLCAyMDE0
-IGF0IDA0OjQxOjU0UE0gKzA4MDAsIEh1YW5nIFJ1aSB3cm90ZToNCj4gPiBPbiBGcmksIE9jdCAx
-NywgMjAxNCBhdCAwMTo0ODoxOVBNIC0wNTAwLCBGZWxpcGUgQmFsYmkgd3JvdGU6DQo+ID4gPiBI
-aSwNCj4gPiA+DQo+ID4gPiBPbiBGcmksIE9jdCAxNywgMjAxNCBhdCAwNjo0MTowNFBNICswMDAw
-LCBQYXVsIFppbW1lcm1hbiB3cm90ZToNCj4gPiA+ID4gPiBGcm9tOiBGZWxpcGUgQmFsYmkgW21h
-aWx0bzpiYWxiaUB0aS5jb21dDQo+ID4gPiA+ID4gU2VudDogRnJpZGF5LCBPY3RvYmVyIDE3LCAy
-MDE0IDg6MDAgQU0NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IE9uIEZyaSwgT2N0IDE3LCAyMDE0IGF0
-IDA0OjUzOjQxUE0gKzA4MDAsIEh1YW5nIFJ1aSB3cm90ZToNCj4gPiA+ID4gPiA+IEFNRCBOTCBu
-ZWVkcyB0byBzdXNwZW5kIHVzYjMgc3MgcGh5LCBidXQgdGhpcyBkb2Vzbid0IGVuYWJsZSBvbiBz
-aW11bGF0aW9uDQo+ID4gPiA+ID4gPiBib2FyZC4NCj4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiBT
-aWduZWQtb2ZmLWJ5OiBIdWFuZyBSdWkgPHJheS5odWFuZ0BhbWQuY29tPg0KPiA+ID4gPiA+ID4g
-LS0tDQo+ID4gPiA+ID4gPiAgZHJpdmVycy91c2IvZHdjMy9jb3JlLmMgICAgICAgICAgfCA3ICsr
-KysrKy0NCj4gPiA+ID4gPiA+ICBkcml2ZXJzL3VzYi9kd2MzL2R3YzMtcGNpLmMgICAgICB8IDMg
-KystDQo+ID4gPiA+ID4gPiAgZHJpdmVycy91c2IvZHdjMy9wbGF0Zm9ybV9kYXRhLmggfCAxICsN
-Cj4gPiA+ID4gPiA+ICAzIGZpbGVzIGNoYW5nZWQsIDkgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlv
-bnMoLSkNCj4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy91c2Iv
-ZHdjMy9jb3JlLmMgYi9kcml2ZXJzL3VzYi9kd2MzL2NvcmUuYw0KPiA+ID4gPiA+ID4gaW5kZXgg
-M2NjZmU0MS4uNGE5ODY5NiAxMDA2NDQNCj4gPiA+ID4gPiA+IC0tLSBhL2RyaXZlcnMvdXNiL2R3
-YzMvY29yZS5jDQo+ID4gPiA+ID4gPiArKysgYi9kcml2ZXJzL3VzYi9kd2MzL2NvcmUuYw0KPiA+
-ID4gPiA+ID4gQEAgLTM5NSw2ICszOTUsOSBAQCBzdGF0aWMgdm9pZCBkd2MzX3BoeV9zZXR1cChz
-dHJ1Y3QgZHdjMyAqZHdjKQ0KPiA+ID4gPiA+ID4gIAlpZiAoZHdjLT5xdWlya3MgJiBEV0MzX1FV
-SVJLX1RYX0RFRVBIKQ0KPiA+ID4gPiA+ID4gIAkJcmVnIHw9IERXQzNfR1VTQjNQSVBFQ1RMX1RY
-X0RFRVBIKDEpOw0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ICsJaWYgKGR3Yy0+cXVpcmtzICYg
-RFdDM19RVUlSS19TVVNQSFkpDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBzaG91bGQgYmU6DQo+ID4g
-PiA+ID4NCj4gPiA+ID4gPiAJaWYgKCFkd2MtPnN1c3BlbmRfdXNiM19waHlfcXVpcmspDQo+ID4g
-PiA+ID4NCj4gPiA+ID4gPiA+ICsJCXJlZyB8PSBEV0MzX0dVU0IzUElQRUNUTF9TVVNQSFk7DQo+
-ID4gPiA+ID4NCj4gPiA+ID4gPiBJSVJDLCBkYXRhYm9vayBhc2tzIHVzIHRvIHNldCB0aGF0IGJp
-dCBhbnl3YXksIHNvIHRoZSBxdWlyayBpcyBkaXNhYmxpbmcNCj4gPiA+ID4gPiB0aGF0IGJpdC4g
-QW0gSSBtaXNzaW5nIHNvbWV0aGluZyA/IFBhdWwgPw0KPiA+ID4gPg0KPiA+ID4gPiBJdCBsb29r
-cyB0byBtZSB0aGF0IEh1YW5nJ3MgcGF0Y2ggaXMgZW5hYmxpbmcgdGhhdCBiaXQsIG5vdCBkaXNh
-YmxpbmcNCj4gPiA+ID4gaXQuDQo+ID4gPg0KPiA+ID4gcmlnaHQsIGJ1dCB0aGF0J3Mgd2hhdCdz
-IGFjdHVhbGx5IHF1aXJreSByaWdodCA/IElJUkMsIERhdGFib29rIGFza3MgdXMNCj4gPiA+IHRv
-IHNldCB1c2IyIGFuZCB1c2IzIHN1c3BlbmQgcGh5IGJpdHMgYW5kIHdlJ3JlIGp1c3Qgbm90IGRv
-aW5nIGl0Lg0KPiA+ID4NCj4gPiA+ID4gQ3VycmVudGx5IHRoZSBkcml2ZXIgZG9lcyBub3Qgc2V0
-IGVpdGhlciBEV0MzX0dVU0IzUElQRUNUTF9TVVNQSFkgb3INCj4gPiA+ID4gRFdDM19HVVNCMlBI
-WUNGR19TVVNQSFkgKHVubGVzcyBpdCBoYXMgYmVlbiBhZGRlZCBieSB0aGF0IGJpZyBwYXRjaA0K
-PiA+ID4gPiBzZXJpZXMgeW91IGp1c3QgcG9zdGVkKS4gQWNjb3JkaW5nIHRvIHRoZSBkYXRhYm9v
-aywgYm90aCBvZiB0aG9zZQ0KPiA+ID4gPiBiaXRzIHNob3VsZCBiZSBzZXQgdG8gMSBhZnRlciB0
-aGUgY29yZSBpbml0aWFsaXphdGlvbiBoYXMgY29tcGxldGVkLg0KPiA+ID4NCj4gPiA+IHRoZXJl
-IHlvdSBnby4gU28gdW5sZXNzIHRoYXQgcXVpcmsgYml0IGZsYWcgaXMgc2V0LCB3ZSdyZSBzYWZl
-IG9mDQo+ID4gPiBzZXR0aW5nIFNVU1BIWSBiaXQgZm9yIGV2ZXJ5Ym9keS4NCj4gPiA+DQo+ID4N
-Cj4gDQo+IEkgcmVhZCB0aGUgZGF0YWJvb2sgYWdhaW4sIGJlbG93IHdvcmRzIChEV0MzX0dVU0Iz
-UElQRUNUTF9TVVNQSFkpIGlzDQo+IGNvcGllZCBmcm9tIGRhdGFib29rOg0KPiANCj4gRm9yIERS
-RC9PVEcgY29uZmlndXJhdGlvbnMsIGl0IGlzIHJlY29tbWVuZGVkIHRoYXQgdGhpcyBiaXQgaXMg
-c2V0IHRv4oCYDQo+IDDigJkgZHVyaW5nIGNvcmVDb25zdWx0YW50IGNvbmZpZ3VyYXRpb24uIElm
-IGl0IGlzIHNldCB0byDigJkx4oCZLCB0aGVuIHRoZQ0KPiBhcHBsaWNhdGlvbiBzaG91bGQgY2xl
-YXIgdGhpcyBiaXQgYWZ0ZXIgcG93ZXItb24gcmVzZXQuIEFwcGxpY2F0aW9uDQo+IG5lZWRzIHRv
-IHNldCBpdCB0byDigJkx4oCZIGFmdGVyIHRoZSBjb3JlIGluaXRpYWxpemF0aW9uIGlzIGNvbXBs
-ZXRlZC4NCj4gRm9yIGFsbCBvdGhlciBjb25maWd1cmF0aW9ucywgdGhpcyBiaXQgY2FuIGJlIHNl
-dCB0byDigJkx4oCZIGR1cmluZyBjb3JlDQo+IGNvbmZpZ3VyYXRpb24uDQo+IA0KPiBJIHNlZSBp
-dCdzIHJlY29tbWVuZGVkIHRvIHNldCAnMCcgaWYgb24gRFJEL09URyBjb25maWd1cmF0aW9uLg0K
-DQpObywgaXQncyByZWNvbW1lbmRlZCB0byBzZXQgaXQgdG8gJzAnIGR1cmluZyBjb3JlQ29uc3Vs
-dGFudA0KY29uZmlndXJhdGlvbi4gVGhpcyBpcyBhIHBhcnQgb2YgdGhlIHN5bnRoZXNpcyBwcm9j
-ZXNzLCBpLmUuIHdoZW4NCmJ1aWxkaW5nIHRoZSBSVEwgZm9yIHRoZSBTb0MuIFRoaXMgZGV0ZXJt
-aW5lcyB3aGF0IHRoZSBkZWZhdWx0IHZhbHVlDQpvZiB0aGUgYml0IHdpbGwgYmUgd2hlbiB0aGUg
-Y29yZSBpcyByZXNldC4gQXQgcnVudGltZSBpdCBpcyBzdGlsbA0KcmVjb21tZW5kZWQgdG8gc2V0
-IGl0IHRvICcxJyB3aGVuIGluIGRldmljZSBtb2RlLCBhZnRlciB0aGUgY29yZQ0KaW5pdGlhbGl6
-YXRpb24gaXMgY29tcGxldGVkLg0KDQotLSANClBhdWwNCg0K
+
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Sent: Wednesday, October 15, 2014 8:18 AM
+> To: Fabio Estevam
+> Cc: l.stach@pengutronix.de; Zhu Richard-R65037; linux-pci@vger.kernel.org;
+> Estevam Fabio-R49496; Zhu Richard-R65037; Rob Herring; Arnd Bergmann; linux-
+> arm-kernel@lists.infradead.org
+> Subject: Re: [PATCH] PCI: imx6q-pcie doc: Update the clocks descriptions to
+> use defines
+> 
+> [+cc Rob, Arnd, linux-arm-kernel]
+> 
+> On Sat, Oct 04, 2014 at 11:55:48AM -0300, Fabio Estevam wrote:
+> > From: Fabio Estevam <fabio.estevam@freescale.com>
+> >
+> > Let's make the imx6q-pcie example to actually match the usage on
+> > imx6qdl.dtsi by providing the clock names via defines rather than hardcoded
+> numbers.
+> >
+> > Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+> 
+> Is this an arm-soc thing?
+> 
+> If you want me to take it, I'll wait for an ack from the likes of
+> Richard/Lucas/Rob/Arnd since I can't review this myself.
+> 
+Hi Bjorn:
+yes, this should be an arm-soc stuff.
+
+Hi Fabio:
+The prefix of this patch should be ARM: xxxx, and reviewed/merged by shawn.
+
+Best Regards
+Richard Zhu
+> > ---
+> >  Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt | 4 +++-
+> >  1 file changed, 3 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> > b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> > index 6fbba53..0b28b52 100644
+> > --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> > +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> > @@ -35,6 +35,8 @@ Example:
+> >  		                <0 0 0 2 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
+> >  		                <0 0 0 3 &intc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
+> >  		                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
+> > -		clocks = <&clks 144>, <&clks 206>, <&clks 189>;
+> > +		clocks = <&clks IMX6QDL_CLK_PCIE_AXI>,
+> > +			 <&clks IMX6QDL_CLK_LVDS1_GATE>,
+> > +			 <&clks IMX6QDL_CLK_PCIE_REF_125M>;
+> >  		clock-names = "pcie", "pcie_bus", "pcie_phy";
+> >  	};
+> > --
+> > 1.9.1
+> >
