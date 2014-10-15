@@ -1,73 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:50084 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750769AbaJVE6l (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Oct 2014 00:58:41 -0400
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0NDT00EA2XTRCP60@mailout1.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 22 Oct 2014 13:58:39 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
-Subject: [PATCH RESEND ] PCI: exynos: Add exynos prefix before
- add_pcie_port/pcie_init
-Date: Wed, 22 Oct 2014 13:58:49 +0900
-Message-id: <000001cfedb4$de2ab230$9a801690$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-qa0-f54.google.com ([209.85.216.54]:50583 "EHLO
+	mail-qa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750721AbaJOTXx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Oct 2014 15:23:53 -0400
+Received: by mail-qa0-f54.google.com with SMTP id i13so1346471qae.13
+        for <linux-pci@vger.kernel.org>; Wed, 15 Oct 2014 12:23:53 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1413399924-599-1-git-send-email-prarit@redhat.com>
+References: <1413399924-599-1-git-send-email-prarit@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 15 Oct 2014 13:23:32 -0600
+Message-ID: <CAErSpo6Oy1S1OECirp6=tz+pQWUtkFE6p1LTzNaYtzxoX73FWw@mail.gmail.com>
+Subject: Re: [PATCH] pci, add sysfs numa_node write function
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Myron Stowe <mstowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The add_pcie_port/pcie_init functions are Exynos-specific.
-Add exynos prefix to avoid collision in global name space.
+Hi Prarit,
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/pci/host/pci-exynos.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+On Wed, Oct 15, 2014 at 1:05 PM, Prarit Bhargava <prarit@redhat.com> wrote:
+> Consider a multi-node, multiple pci root bridge system which can be
+> configured into one large node or one node/socket.  When configuring the
+> system the numa_node value for each PCI root bridge is always set
+> incorrectly to -1, or NUMA_NO_NODE, rather than to the node value of each
+> socket.  Each PCI device inherits the numa value directly from it's parent
+> device, so that the NUMA_NO_NODE value is passed through the entire PCI
+> tree.
+>
+> Some new drivers, such as the Intel QAT driver, drivers/crypto/qat,
+> require that a specific node be assigned to the device in order to
+> achieve maximum performance for the device, and will fail to load if the
+> device has NUMA_NO_NODE.
 
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index c5d0ca3..902d7cd 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -509,8 +509,8 @@ static struct pcie_host_ops exynos_pcie_host_ops = {
- 	.host_init = exynos_pcie_host_init,
- };
- 
--static int __init add_pcie_port(struct pcie_port *pp,
--				struct platform_device *pdev)
-+static int __init exynos_add_pcie_port(struct pcie_port *pp,
-+				       struct platform_device *pdev)
- {
- 	int ret;
- 
-@@ -615,7 +615,7 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
- 		goto fail_bus_clk;
- 	}
- 
--	ret = add_pcie_port(pp, pdev);
-+	ret = exynos_add_pcie_port(pp, pdev);
- 	if (ret < 0)
- 		goto fail_bus_clk;
- 
-@@ -656,11 +656,11 @@ static struct platform_driver exynos_pcie_driver = {
- 
- /* Exynos PCIe driver does not allow module unload */
- 
--static int __init pcie_init(void)
-+static int __init exynos_pcie_init(void)
- {
- 	return platform_driver_probe(&exynos_pcie_driver, exynos_pcie_probe);
- }
--subsys_initcall(pcie_init);
-+subsys_initcall(exynos_pcie_init);
- 
- MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
- MODULE_DESCRIPTION("Samsung PCIe host controller driver");
--- 
-1.7.9.5
+It seems ... unfriendly for a driver to fail to load just because it
+can't guarantee maximum performance.  Out of curiosity, where does
+this actually happen?  I had a quick look for NUMA_NO_NODE and
+module_init() functions in drivers/crypto/qat, and I didn't see the
+spot.
 
+> The driver would load if the numa_node value
+> was equal to or greater than -1 and quickly hacking the driver results in
+> a functional QAT driver.
+>
+> Using lspci and numactl it is easy to determine what the numa value should
+> be.  The problem is that there is no way to set it.  This patch adds a
+> store function for the PCI device's numa_node value.
 
+I'm not familiar with numactl.  It sounds like it can show you the
+NUMA topology?  Where does that information come from?
+
+> To use this, one can do
+>
+> echo 3 > /sys/devices/pci0000:ff/0000:ff:1f.3/numa_node
+>
+> to set the numa node for PCI device 0000:ff:1f.3.
+
+It definitely seems wrong that we don't set the node number correctly.
+pci_acpi_scan_root() sets the node number by looking for a _PXM method
+that applies to the host bridge.  Why does that not work in this case?
+ Does the BIOS not supply _PXM?
+
+If there's information that numactl uses, maybe the kernel should use that, too?
+
+A sysfs interface might be a useful workaround, but obviously it would
+be far better if we could fix the BIOS and/or kernel so the workaround
+isn't necessary in the first place.
+
+Bjorn
+
+> Cc: Myron Stowe <mstowe@redhat.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+> ---
+>  drivers/pci/pci-sysfs.c |   23 ++++++++++++++++++++++-
+>  1 file changed, 22 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 92b6d9a..c05ed30 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -221,12 +221,33 @@ static ssize_t enabled_show(struct device *dev, struct device_attribute *attr,
+>  static DEVICE_ATTR_RW(enabled);
+>
+>  #ifdef CONFIG_NUMA
+> +static ssize_t numa_node_store(struct device *dev,
+> +                              struct device_attribute *attr,
+> +                              const char *buf, size_t count)
+> +{
+> +       int node, ret;
+> +
+> +       if (!capable(CAP_SYS_ADMIN))
+> +               return -EPERM;
+> +
+> +       ret = kstrtoint(buf, 0, &node);
+> +       if (ret)
+> +               return ret;
+> +
+> +       if (!node_online(node))
+> +               return -EINVAL;
+> +
+> +       dev->numa_node = node;
+> +
+> +       return count;
+> +}
+> +
+>  static ssize_t numa_node_show(struct device *dev, struct device_attribute *attr,
+>                               char *buf)
+>  {
+>         return sprintf(buf, "%d\n", dev->numa_node);
+>  }
+> -static DEVICE_ATTR_RO(numa_node);
+> +static DEVICE_ATTR_RW(numa_node);
+>  #endif
+>
+>  static ssize_t dma_mask_bits_show(struct device *dev,
+> --
+> 1.7.9.3
+>
