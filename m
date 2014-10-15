@@ -1,124 +1,186 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cmexedge1.emulex.com ([138.239.224.99]:57022 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932121AbaJNO2k convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 Oct 2014 10:28:40 -0400
-From: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.Com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH] pci: Limit VPD length of Emulex adapters to the actual
- length supported.
-Date: Tue, 14 Oct 2014 14:28:14 +0000
-Message-ID: <BF3270C86E8B1349A26C34E4EC1C44CB2D756B9E@CMEXMB1.ad.emulex.com>
-References: <c67cd7f4-8d8f-48fc-a63c-dbdafde873a2@CMEXHTCAS1.ad.emulex.com>
- <CF9D1877D81D214CB0CA0669EFAE020C57B90DEA@CMEXMB1.ad.emulex.com>
-In-Reply-To: <CF9D1877D81D214CB0CA0669EFAE020C57B90DEA@CMEXMB1.ad.emulex.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v3 17/27] MIPS/Octeon/MSI: Use MSI chip framework to configure MSI/MSI-X irq
+Date: Wed, 15 Oct 2014 11:07:05 +0800
+Message-ID: <1413342435-7876-18-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Gentle reminder. Please review.
+Use MSI chip framework instead of arch MSI functions to configure
+MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
 
-> > -----Original Message-----
-> > From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> > owner@vger.kernel.org] On Behalf Of Venkat Duvvuru
-> > Sent: Tuesday, October 07, 2014 9:00 AM
-> > To: linux-pci@vger.kernel.org
-> > Cc: Venkat Duvvuru
-> > Subject: [PATCH] pci: Limit VPD length of Emulex adapters to the actual
-> > length supported.
-> >
-> > By default pci utilities/subsystem tries to read 32k bytes of vpd data no
-> > matter
-> > what the device supports. This can lead to unexpected behavior depending
-> > on how each of the devices handle this condition. This patch fixes the
-> > problem for Emulex adapter family.
-> >
-> > Signed-off-by: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.com>
-> > ---
-> >  drivers/pci/quirks.c    |   35 +++++++++++++++++++++++++++++++++++
-> >  include/linux/pci_ids.h |   17 +++++++++++++++++
-> >  2 files changed, 52 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index 80c2d01..21b439f 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -3832,3 +3832,38 @@ void pci_dev_specific_enable_acs(struct pci_dev
-> > *dev)
-> >  		}
-> >  	}
-> >  }
-> > +
-> > +#define SLI_INTF_REG_OFFSET     0x58
-> > +#define SLI_INTF_FT_MASK        0x00000001
-> > +static void quirk_elx_limit_vpd(struct pci_dev *dev)
-> > +{
-> > +	int virtfn;
-> > +	u32 sli_intf;
-> > +
-> > +	pci_read_config_dword(dev, SLI_INTF_REG_OFFSET, &sli_intf);
-> > +	virtfn = (sli_intf & SLI_INTF_FT_MASK) ? 1 : 0;
-> > +
-> > +	if (dev->vpd) {
-> > +		if (virtfn)
-> > +			dev->vpd->len = 0x200;
-> > +		else
-> > +			dev->vpd->len = 0x400;
-> > +	}
-> > +}
-> > +
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BE, PCI_DEVICE_ID_BE_ID1,
-> > +			quirk_elx_limit_vpd);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BE, PCI_DEVICE_ID_BE_ID2,
-> > +			quirk_elx_limit_vpd);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BE, PCI_DEVICE_ID_OC_BE2,
-> > +			quirk_elx_limit_vpd);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BE, PCI_DEVICE_ID_OC_BE3,
-> > +			quirk_elx_limit_vpd);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_EMULEX,
-> > PCI_DEVICE_ID_OC_LANCER,
-> > +			quirk_elx_limit_vpd);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_EMULEX,
-> > PCI_DEVICE_ID_OC_VF_LANCER,
-> > +			quirk_elx_limit_vpd);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_EMULEX,
-> > PCI_DEVICE_ID_OC_SKYHAWK,
-> > +			quirk_elx_limit_vpd);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_EMULEX,
-> > PCI_DEVICE_ID_OC_VF_SKYHAWK,
-> > +			quirk_elx_limit_vpd);
-> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> > index 6ed0bb7..888041d 100644
-> > --- a/include/linux/pci_ids.h
-> > +++ b/include/linux/pci_ids.h
-> > @@ -2971,4 +2971,21 @@
-> >
-> >  #define PCI_VENDOR_ID_OCZ		0x1b85
-> >
-> > +#define PCI_VENDOR_ID_BE		0x19a2
-> > +#define PCI_VENDOR_ID_EMULEX		0x10df
-> > +#define PCI_DEVICE_ID_BE_ID1		0x211
-> > +#define PCI_DEVICE_ID_BE_ID2		0x221
-> > +/* Device Id for BE2 cards */
-> > +#define PCI_DEVICE_ID_OC_BE2		0x700
-> > +/* Device Id for BE3 cards */
-> > +#define PCI_DEVICE_ID_OC_BE3		0x710
-> > +/* Device id for Lancer cards */
-> > +#define PCI_DEVICE_ID_OC_LANCER		0xe220
-> > +/* Device id for VF in Lancer */
-> > +#define PCI_DEVICE_ID_OC_VF_LANCER	0xe228
-> > +/* Device id for SkyHawk cards */
-> > +#define PCI_DEVICE_ID_OC_SKYHAWK	0x720
-> > +/* Device id for VF in SkyHawk */
-> > +#define PCI_DEVICE_ID_OC_VF_SKYHAWK	0x728
-> > +
-> >  #endif /* _LINUX_PCI_IDS_H */
-> > --
-> > 1.7.1
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/mips/include/asm/octeon/pci-octeon.h |    4 +++
+ arch/mips/pci/msi-octeon.c                |   31 ++++++++++++++++------------
+ arch/mips/pci/pci-octeon.c                |    3 ++
+ 3 files changed, 25 insertions(+), 13 deletions(-)
+
+diff --git a/arch/mips/include/asm/octeon/pci-octeon.h b/arch/mips/include/asm/octeon/pci-octeon.h
+index 64ba56a..27ffe42 100644
+--- a/arch/mips/include/asm/octeon/pci-octeon.h
++++ b/arch/mips/include/asm/octeon/pci-octeon.h
+@@ -66,4 +66,8 @@ enum octeon_dma_bar_type {
+  */
+ extern enum octeon_dma_bar_type octeon_dma_bar_type;
+ 
++#ifdef CONFIG_PCI_MSI
++extern struct msi_chip octeon_msi_chip;
++#endif
++
+ #endif
+diff --git a/arch/mips/pci/msi-octeon.c b/arch/mips/pci/msi-octeon.c
+index 63bbe07..fd4d698 100644
+--- a/arch/mips/pci/msi-octeon.c
++++ b/arch/mips/pci/msi-octeon.c
+@@ -57,7 +57,7 @@ static int msi_irq_size;
+  *
+  * Returns 0 on success.
+  */
+-int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
++static int octeon_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ {
+ 	struct msi_msg msg;
+ 	u16 control;
+@@ -132,12 +132,12 @@ msi_irq_allocated:
+ 	/* Make sure the search for available interrupts didn't fail */
+ 	if (irq >= 64) {
+ 		if (request_private_bits) {
+-			pr_err("arch_setup_msi_irq: Unable to find %d free interrupts, trying just one",
+-			       1 << request_private_bits);
++			pr_err("%s: Unable to find %d free interrupts, trying just one",
++			       __func__, 1 << request_private_bits);
+ 			request_private_bits = 0;
+ 			goto try_only_one;
+ 		} else
+-			panic("arch_setup_msi_irq: Unable to find a free MSI interrupt");
++			panic("%s: Unable to find a free MSI interrupt", __func__);
+ 	}
+ 
+ 	/* MSI interrupts start at logical IRQ OCTEON_IRQ_MSI_BIT0 */
+@@ -168,7 +168,7 @@ msi_irq_allocated:
+ 		msg.address_hi = (0 + CVMX_SLI_PCIE_MSI_RCV) >> 32;
+ 		break;
+ 	default:
+-		panic("arch_setup_msi_irq: Invalid octeon_dma_bar_type");
++		panic("%s: Invalid octeon_dma_bar_type", __func__);
+ 	}
+ 	msg.data = irq - OCTEON_IRQ_MSI_BIT0;
+ 
+@@ -182,7 +182,8 @@ msi_irq_allocated:
+ 	return 0;
+ }
+ 
+-int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++static int octeon_setup_msi_irqs(struct msi_chip *chip, struct pci_dev *dev,
++		int nvec, int type)
+ {
+ 	struct msi_desc *entry;
+ 	int ret;
+@@ -201,7 +202,7 @@ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 		return 1;
+ 
+ 	list_for_each_entry(entry, &dev->msi_list, list) {
+-		ret = arch_setup_msi_irq(dev, entry);
++		ret = octeon_setup_msi_irq(dev, entry);
+ 		if (ret < 0)
+ 			return ret;
+ 		if (ret > 0)
+@@ -210,14 +211,13 @@ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 
+ 	return 0;
+ }
+-
+ /**
+  * Called when a device no longer needs its MSI interrupts. All
+  * MSI interrupts for the device are freed.
+  *
+  * @irq:    The devices first irq number. There may be multple in sequence.
+  */
+-void arch_teardown_msi_irq(unsigned int irq)
++static void octeon_teardown_msi_irq(struct msi_chip *chip, unsigned int irq)
+ {
+ 	int number_irqs;
+ 	u64 bitmask;
+@@ -226,8 +226,8 @@ void arch_teardown_msi_irq(unsigned int irq)
+ 
+ 	if ((irq < OCTEON_IRQ_MSI_BIT0)
+ 		|| (irq > msi_irq_size + OCTEON_IRQ_MSI_BIT0))
+-		panic("arch_teardown_msi_irq: Attempted to teardown illegal "
+-		      "MSI interrupt (%d)", irq);
++		panic("%s: Attempted to teardown illegal "
++			"MSI interrupt (%d)", __func__, irq);
+ 
+ 	irq -= OCTEON_IRQ_MSI_BIT0;
+ 	index = irq / 64;
+@@ -249,8 +249,8 @@ void arch_teardown_msi_irq(unsigned int irq)
+ 	/* Shift the mask to the correct bit location */
+ 	bitmask <<= irq0;
+ 	if ((msi_free_irq_bitmask[index] & bitmask) != bitmask)
+-		panic("arch_teardown_msi_irq: Attempted to teardown MSI "
+-		      "interrupt (%d) not in use", irq);
++		panic("%s: Attempted to teardown MSI "
++			"interrupt (%d) not in use", __func__, irq);
+ 
+ 	/* Checks are done, update the in use bitmask */
+ 	spin_lock(&msi_free_irq_bitmask_lock);
+@@ -259,6 +259,11 @@ void arch_teardown_msi_irq(unsigned int irq)
+ 	spin_unlock(&msi_free_irq_bitmask_lock);
+ }
+ 
++struct msi_chip octeon_msi_chip = {
++	.setup_irqs = octeon_setup_msi_irqs,
++	.teardown_irq = octeon_teardown_msi_irq,
++};
++
+ static DEFINE_RAW_SPINLOCK(octeon_irq_msi_lock);
+ 
+ static u64 msi_rcv_reg[4];
+diff --git a/arch/mips/pci/pci-octeon.c b/arch/mips/pci/pci-octeon.c
+index 59cccd9..aefaa8a 100644
+--- a/arch/mips/pci/pci-octeon.c
++++ b/arch/mips/pci/pci-octeon.c
+@@ -356,6 +356,9 @@ static struct pci_controller octeon_pci_controller = {
+ 	.io_resource = &octeon_pci_io_resource,
+ 	.io_offset = 0,
+ 	.io_map_base = OCTEON_PCI_IOSPACE_BASE,
++#ifdef CONFIG_PCI_MSI
++	.msi_chip = &octeon_msi_chip,
++#endif
+ };
+ 
+ 
+-- 
+1.7.1
+
