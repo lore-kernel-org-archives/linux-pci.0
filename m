@@ -1,40 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:40667 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760411AbaJ3OyC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 10:54:02 -0400
-Date: Thu, 30 Oct 2014 15:53:55 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, tglx@linutronix.de,
-	hpa@zytor.com, x86@kernel.org, bp@suse.de,
-	dan.carpenter@oracle.com, dougthompson@xmission.com,
-	m.chehab@samsung.com, linux-edac@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V3 4/4] edac, amd64_edac: Add F15h M60h support
-Message-ID: <20141030145355.GC11178@pd.tnic>
-References: <1414617483-4941-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
- <20141030124528.GB11178@pd.tnic>
- <54524123.1020407@amd.com>
+Received: from mail-qc0-f178.google.com ([209.85.216.178]:46882 "EHLO
+	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751293AbaJOXs4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Oct 2014 19:48:56 -0400
+Received: by mail-qc0-f178.google.com with SMTP id c9so1893217qcz.23
+        for <linux-pci@vger.kernel.org>; Wed, 15 Oct 2014 16:48:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <54524123.1020407@amd.com>
+In-Reply-To: <1413416470-14828-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1413416470-14828-1-git-send-email-gwshan@linux.vnet.ibm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 15 Oct 2014 17:48:35 -0600
+Message-ID: <CAErSpo5iWEiM_0WeLJHfhus_LXo5ByUbDktWzBO1tVqwkko7Sg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Make reset warning messages different
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Yang <weiyang@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 30, 2014 at 08:46:11AM -0500, Aravind Gopalakrishnan wrote:
-> Because it gets printed anyway when we do
-> edac_dbg(1, "  DIMM type: %s\n", edac_mem_types[pvt->dram_type]);
+On Wed, Oct 15, 2014 at 5:41 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+> We have same warning message for FLR and AF FLR and users can't
+> know which type of resets the PCI device is taking when there are
+> pending transactions. The patch makes them different for FLR and
+> AF FLR cases.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>  drivers/pci/pci.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 625a4ac..2d708cd 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3144,7 +3144,7 @@ static int pcie_flr(struct pci_dev *dev, int probe)
+>                 return 0;
+>
+>         if (!pci_wait_for_pending_transaction(dev))
+> -               dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
+> +               dev_err(&dev->dev, "Force FLR with pending transaction\n");
+>
+>         pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+>
+> @@ -3178,7 +3178,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
+>                                  PCI_AF_STATUS_TP << 8))
+>                 goto clear;
+>
+> -       dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
+> +       dev_err(&dev->dev, "Force AF FLR with pending transaction\n");
 
-Ah, true.
+Making the text different is fine, but I don't think "FLR" and "AF
+FLR" are meaningful except to extremely technical people.  So I think
+"reset" needs to stay spelled out in the message.
 
-Ok, patch queued for 3.19.
-
-Thanks.
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+>  clear:
+>         pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
+> --
+> 1.8.3.2
+>
