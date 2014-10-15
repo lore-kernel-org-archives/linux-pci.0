@@ -1,87 +1,169 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:31377 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751267AbaJOTvd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Oct 2014 15:51:33 -0400
+Message-ID: <543ED040.1010601@redhat.com>
+Date: Wed, 15 Oct 2014 15:51:28 -0400
+From: Prarit Bhargava <prarit@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1414497280-3126-19-git-send-email-ray.huang@amd.com>
-References: <1414497280-3126-1-git-send-email-ray.huang@amd.com> <1414497280-3126-19-git-send-email-ray.huang@amd.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 28 Oct 2014 07:29:39 -0600
-Message-ID: <CAErSpo44qsS_PBaia+Hy86XPsuik_x+u-8Ec2M73j36f1KNzig@mail.gmail.com>
-Subject: Re: [PATCH v3 18/19] PCI: Add quirk to prevent AMD NL USB3 DRD to
- bind with xHCI driver
-To: Huang Rui <ray.huang@amd.com>
-Cc: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Myron Stowe <mstowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] pci, add sysfs numa_node write function
+References: <1413399924-599-1-git-send-email-prarit@redhat.com> <CAErSpo6Oy1S1OECirp6=tz+pQWUtkFE6p1LTzNaYtzxoX73FWw@mail.gmail.com> <543ECF6F.2030705@redhat.com>
+In-Reply-To: <543ECF6F.2030705@redhat.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+To: unlisted-recipients:; (no To-header on input)
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I suggest a subject like this:
+On 10/15/2014 03:47 PM, Prarit Bhargava wrote:
+> On 10/15/2014 03:23 PM, Bjorn Helgaas wrote:
+>> Hi Prarit,
+>>
+>> On Wed, Oct 15, 2014 at 1:05 PM, Prarit Bhargava <prarit@redhat.com> wrote:
+>>> Consider a multi-node, multiple pci root bridge system which can be
+>>> configured into one large node or one node/socket.  When configuring the
+>>> system the numa_node value for each PCI root bridge is always set
+>>> incorrectly to -1, or NUMA_NO_NODE, rather than to the node value of each
+>>> socket.  Each PCI device inherits the numa value directly from it's parent
+>>> device, so that the NUMA_NO_NODE value is passed through the entire PCI
+>>> tree.
+>>>
+>>> Some new drivers, such as the Intel QAT driver, drivers/crypto/qat,
+>>> require that a specific node be assigned to the device in order to
+>>> achieve maximum performance for the device, and will fail to load if the
+>>> device has NUMA_NO_NODE.
+>>
+>> It seems ... unfriendly for a driver to fail to load just because it
+>> can't guarantee maximum performance.  Out of curiosity, where does
+>> this actually happen?  I had a quick look for NUMA_NO_NODE and
+>> module_init() functions in drivers/crypto/qat, and I didn't see the
+>> spot.
+> 
+> The whole point of the Intel QAT driver is to guarantee max performance.  If
+> that is not possible the driver should not load (according to the thread
+> mentioned below)
+> 
 
-PCI: Prevent xHCI driver from claiming AMD Nolan USB3 DRD device
+Whups.  This thread:
 
-On Tue, Oct 28, 2014 at 5:54 AM, Huang Rui <ray.huang@amd.com> wrote:
-> The AMD Nolan (NL) SoC contains a DesignWare USB3 Dual-Role Device that can
-> be operated either as a USB Host or a USB Device.  In the AMD NL platform,
-> this device ([1022:7912]) has a class code of PCI_CLASS_SERIAL_USB_XHCI
-> (0x0c0330), which means the xhci driver will claim it.
->
-> But the dwc3 driver is a more specific driver for this device, and we'd
-> prefer to use it instead of xhci.  To prevent xhci from claiming the
-> device, change the class code to 0x0c03fe, which the PCI r3.0 spec defines
-> as "USB device (not host controller)".  The dwc3 driver can then claim it
-> based on its Vendor and Device ID.
->
-> Suggested-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
+http://marc.info/?l=linux-crypto-vger&m=141279031626999&w=2
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Please merge along with the rest of your series.
+>>
+>>> The driver would load if the numa_node value
+>>> was equal to or greater than -1 and quickly hacking the driver results in
+>>> a functional QAT driver.
+>>>
+>>> Using lspci and numactl it is easy to determine what the numa value should
+>>> be.  The problem is that there is no way to set it.  This patch adds a
+>>> store function for the PCI device's numa_node value.
+>>
+>> I'm not familiar with numactl.  It sounds like it can show you the
+>> NUMA topology?  Where does that information come from?
+> 
+> You can map at least what nodes are available (although I suppose you can get
+> the same information from dmesg).  You have to do a bit of hunting through the
+> PCI tree to determine the root PCI devices, but you can determine which root
+> device is connected to which node.
+> 
+>>
+>>> To use this, one can do
+>>>
+>>> echo 3 > /sys/devices/pci0000:ff/0000:ff:1f.3/numa_node
+>>>
+>>> to set the numa node for PCI device 0000:ff:1f.3.
+>>
+>> It definitely seems wrong that we don't set the node number correctly.
+>> pci_acpi_scan_root() sets the node number by looking for a _PXM method
+>> that applies to the host bridge.  Why does that not work in this case?
+>>  Does the BIOS not supply _PXM?
+> 
+> Yeah ... unfortunately the BIOS is broken in this case.  And I know what you're
+> thinking ;) -- why not get the BIOS fixed?  I'm through relying on BIOS fixes
+> which can take six months to a year to appear in a production version... I've
+> been bitten too many times by promises of BIOS fixes that never materialize.
+> 
+> We have systems that only have a support cycle of 3 years, and things like ACPI
+> _PXM updates are at the bottom of the list :/.
+> 
+> FWIW, on this particular system I have a filed a bug with the vendor.
+> 
+>>
+>> If there's information that numactl uses, maybe the kernel should use that, too?
+>>
+>> A sysfs interface might be a useful workaround, but obviously it would
+>> be far better if we could fix the BIOS and/or kernel so the workaround
+>> isn't necessary in the first place.
+> 
+> Yep ... but like I said, I don't think anyone wants to wait a year.  What if we
+> never see a fix?
+> 
+> Side issue:  While investigating this I noticed that plain kmalloc() is used in
+> the setup code.  Is there a reason we don't use kmalloc_node() in
+> pci_alloc_dev(), and other allocation functions?  It seems like we should be to
+> optimize system performance.  OTOH ... I haven't done any measurements to see if
+> it actually makes a difference :)
+> 
+> P.
+> 
+>>
+>> Bjorn
+>>
+>>> Cc: Myron Stowe <mstowe@redhat.com>
+>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>>> Cc: linux-pci@vger.kernel.org
+>>> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+>>> ---
+>>>  drivers/pci/pci-sysfs.c |   23 ++++++++++++++++++++++-
+>>>  1 file changed, 22 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>>> index 92b6d9a..c05ed30 100644
+>>> --- a/drivers/pci/pci-sysfs.c
+>>> +++ b/drivers/pci/pci-sysfs.c
+>>> @@ -221,12 +221,33 @@ static ssize_t enabled_show(struct device *dev, struct device_attribute *attr,
+>>>  static DEVICE_ATTR_RW(enabled);
+>>>
+>>>  #ifdef CONFIG_NUMA
+>>> +static ssize_t numa_node_store(struct device *dev,
+>>> +                              struct device_attribute *attr,
+>>> +                              const char *buf, size_t count)
+>>> +{
+>>> +       int node, ret;
+>>> +
+>>> +       if (!capable(CAP_SYS_ADMIN))
+>>> +               return -EPERM;
+>>> +
+>>> +       ret = kstrtoint(buf, 0, &node);
+>>> +       if (ret)
+>>> +               return ret;
+>>> +
+>>> +       if (!node_online(node))
+>>> +               return -EINVAL;
+>>> +
+>>> +       dev->numa_node = node;
+>>> +
+>>> +       return count;
+>>> +}
+>>> +
+>>>  static ssize_t numa_node_show(struct device *dev, struct device_attribute *attr,
+>>>                               char *buf)
+>>>  {
+>>>         return sprintf(buf, "%d\n", dev->numa_node);
+>>>  }
+>>> -static DEVICE_ATTR_RO(numa_node);
+>>> +static DEVICE_ATTR_RW(numa_node);
+>>>  #endif
+>>>
+>>>  static ssize_t dma_mask_bits_show(struct device *dev,
+>>> --
+>>> 1.7.9.3
+>>>
+>>
+>>
+> 
 
-> Cc: Jason Chang <jason.chang@amd.com>
-> Signed-off-by: Huang Rui <ray.huang@amd.com>
-> ---
->  drivers/pci/quirks.c | 20 ++++++++++++++++++++
->  1 file changed, 20 insertions(+)
->
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 90acb32..1152bef 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -379,6 +379,26 @@ static void quirk_ati_exploding_mce(struct pci_dev *dev)
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,     PCI_DEVICE_ID_ATI_RS100,   quirk_ati_exploding_mce);
->
->  /*
-> + * In the AMD NL platform, this device ([1022:7912]) has a class code of
-> + * PCI_CLASS_SERIAL_USB_XHCI (0x0c0330), which means the xhci driver will
-> + * claim it.
-> + * But the dwc3 driver is a more specific driver for this device, and we'd
-> + * prefer to use it instead of xhci. To prevent xhci from claiming the
-> + * device, change the class code to 0x0c03fe, which the PCI r3.0 spec
-> + * defines as "USB device (not host controller)". The dwc3 driver can then
-> + * claim it based on its Vendor and Device ID.
-> + */
-> +static void quirk_amd_nl_class(struct pci_dev *pdev)
-> +{
-> +       /*
-> +        * Use 'USB Device' (0x0x03fe) instead of PCI header provided
-> +        */
-> +       pdev->class = 0x0c03fe;
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL_USB,
-> +               quirk_amd_nl_class);
-> +
-> +/*
->   * Let's make the southbridge information explicit instead
->   * of having to worry about people probing the ACPI areas,
->   * for example.. (Yes, it happens, and if you read the wrong
-> --
-> 1.9.1
->
