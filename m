@@ -1,53 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0119.outbound.protection.outlook.com ([157.56.111.119]:41914
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751795AbaJKIcP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 11 Oct 2014 04:32:15 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Fabio Estevam <festevam@gmail.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Tim Harvey <tharvey@gateworks.com>
-Subject: RE: [PATCH v5 4/9] PCI: imx6: add imx6sx pcie support
-Date: Sat, 11 Oct 2014 08:32:10 +0000
-Message-ID: <aae501b5bcf142a1a76797dd91ebccb3@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
-	<1412919676-25344-5-git-send-email-richard.zhu@freescale.com>
- <CAOMZO5D+hpmNMQ05QtnKwQ_jLwngtTOY0p8BaLpYiZgRM57ATA@mail.gmail.com>
-In-Reply-To: <CAOMZO5D+hpmNMQ05QtnKwQ_jLwngtTOY0p8BaLpYiZgRM57ATA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from g2t2354.austin.hp.com ([15.217.128.53]:3047 "EHLO
+	g2t2354.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751305AbaJOIKW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Oct 2014 04:10:22 -0400
+Message-ID: <543E2BDA.8030906@hp.com>
+Date: Wed, 15 Oct 2014 16:10:02 +0800
+From: "Li, ZhenHua" <zhen-hual@hp.com>
 MIME-Version: 1.0
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>
+CC: Jerry.Hoemann@hp.com, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com, zhenhua@hp.com
+Subject: Re: [PATCH 0/8] iommu/vt-d: Fix crash dump failure caused by legacy
+ DMA/IO
+References: <1398386198-19304-1-git-send-email-bill.sumner@hp.com> <1398854973.12733.23.camel@i7.infradead.org> <20140702133258.GN26537@8bytes.org> <20140711162745.GA8335@anatevka.fc.hp.com>
+In-Reply-To: <20140711162745.GA8335@anatevka.fc.hp.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBGYWJpbyBFc3RldmFtIFttYWls
-dG86ZmVzdGV2YW1AZ21haWwuY29tXQ0KPiBTZW50OiBGcmlkYXksIE9jdG9iZXIgMTAsIDIwMTQg
-MTA6NTUgUE0NCj4gVG86IFJpY2hhcmQgWmh1DQo+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwu
-b3JnOyBHdW8gU2hhd24tUjY1MDczOyBMdWNhcyBTdGFjaDsgVGltIEhhcnZleTsgWmh1DQo+IFJp
-Y2hhcmQtUjY1MDM3DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjUgNC85XSBQQ0k6IGlteDY6IGFk
-ZCBpbXg2c3ggcGNpZSBzdXBwb3J0DQo+IA0KPiBPbiBGcmksIE9jdCAxMCwgMjAxNCBhdCAyOjQx
-IEFNLCBSaWNoYXJkIFpodSA8cmljaGFyZC56aHVAZnJlZXNjYWxlLmNvbT4gd3JvdGU6DQo+IA0K
-PiA+ICBzdGF0aWMgdm9pZCBpbXg2X3BjaWVfaW5pdF9waHkoc3RydWN0IHBjaWVfcG9ydCAqcHAp
-ICB7DQo+ID4gICAgICAgICBzdHJ1Y3QgaW14Nl9wY2llICppbXg2X3BjaWUgPSB0b19pbXg2X3Bj
-aWUocHApOw0KPiA+ICsgICAgICAgaW50IHJldDsNCj4gPiArDQo+ID4gKyAgICAgICAvKiBQb3dl
-ciB1cCB0aGUgc2VwYXJhdGUgZG9tYWluIGF2YWlsYWJsZSBvbiBpLk1YNlNYICovDQo+ID4gKyAg
-ICAgICBpZiAoaXNfaW14NnN4X3BjaWUoaW14Nl9wY2llKSkgew0KPiA+ICsgICAgICAgICAgICAg
-ICAvKiBGb3JjZSBQQ0llIFBIWSByZXNldCAqLw0KPiA+ICsgICAgICAgICAgICAgICByZWdtYXBf
-dXBkYXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNfZ3ByLCBJT01VWENfR1BSNSwNCj4gPiArICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIElNWDZTWF9HUFI1X1BDSUVfQlROUlNULA0KPiA+
-ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgSU1YNlNYX0dQUjVfUENJRV9CVE5SU1Qp
-Ow0KPiA+ICsNCj4gPiArICAgICAgICAgICAgICAgcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNp
-ZS0+Z3BjX2lwc19yZWcsIEdQQ19DTlRSLA0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgR1BDX0NOVFJfUENJRV9QSFlfUFVQX1JFUSwNCj4gPiArICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgIEdQQ19DTlRSX1BDSUVfUEhZX1BVUF9SRVEpOw0KPiA+ICsgICAgICAgICAg
-ICAgICByZWd1bGF0b3Jfc2V0X3ZvbHRhZ2UoaW14Nl9wY2llLT5wY2llX3BoeV9yZWd1bGF0b3Is
-DQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAxMTAwMDAwLCAxMTAwMDAwKTsN
-Cj4gPiArICAgICAgICAgICAgICAgcmV0ID0gcmVndWxhdG9yX2VuYWJsZShpbXg2X3BjaWUtPnBj
-aWVfcGh5X3JlZ3VsYXRvcik7DQo+ID4gKyAgICAgICAgICAgICAgIGlmIChyZXQpDQo+ID4gKyAg
-ICAgICAgICAgICAgICAgICAgICAgZGV2X2luZm8ocHAtPmRldiwgImZhaWxlZCB0byBlbmFibGUg
-cGNpZQ0KPiA+ICsgcmVndWxhdG9yLlxuIik7DQo+IA0KPiBZb3Ugc2hvdWxkICdyZXR1cm4gcmV0
-JyBpbiB0aGUgY2FzZSBvZiBlcnJvci4NCltSaWNoYXJkXSBPay4NCg0KQmVzdCBSZWdhcmRzDQpS
-aWNoYXJkIFpodQ0KDQo=
+David, Joerg,
+I plan to merge this patch set with 3.17 stable kernel, and split this 
+patch set into two :
+1. The core part, including the changed functions, like [Patch 4/8], 
+[Patch 8/8].
+2. For the formatting issues, like [Patch 1/8],[Patch 3/8],  including 
+the changes for code formations, creation of new files 
+intel-iommu-kdump.c, intel-iommu-private.h.
+
+I believe this will make the patch set more clear to read and understand.
+
+What are your suggestions?
+
+Thanks
+Zhenhua
+
+
+On 07/12/2014 12:27 AM, Jerry Hoemann wrote:
+> On Wed, Jul 02, 2014 at 03:32:59PM +0200, Joerg Roedel wrote:
+>> Hi David,
+>>
+>> On Wed, Apr 30, 2014 at 11:49:33AM +0100, David Woodhouse wrote:
+>>> There could be all kinds of existing mappings in the DMA page tables,
+>>> and I'm not sure it's safe to preserve them. What prevents the crashdump
+>>> kernel from trying to use any of the physical pages which are
+>>> accessible, and which could thus be corrupted by stray DMA?
+>>>
+>>> In fact, the old kernel could even have set up 1:1 passthrough mappings
+>>> for some devices, which would then be able to DMA *anywhere*. Surely we
+>>> need to prevent that?
+>>
+>> Ideally we would prevent that, yes. But the problem is that a failed DMA
+>> transaction might put the device into an unrecoverable state. Usually
+>> any in-flight DMA transactions should only target buffers set up by the
+>> previous kernel and not corrupt any data.
+>>
+>>> After the last round of this patchset, we discussed a potential
+>>> improvement where you point every virtual bus address at the *same*
+>>> physical scratch page.
+>>
+>> That is a solution to prevent the in-flight DMA failures. But what
+>> happens when there is some in-flight DMA to a disk to write some inodes
+>> or a new superblock. Then this scratch address-space may cause
+>> filesystem corruption at worst.
+>>
+>> So with this in mind I would prefer initially taking over the
+>> page-tables from the old kernel before the device drivers re-initialize
+>> the devices.
+>>
+>>
+>> 	Joerg
+>
+> David, Joerg,
+>
+> What do you think here?  Do you want me to update the patch set for 3.17?
+>
+> Jerry
+>
+
