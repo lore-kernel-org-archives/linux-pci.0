@@ -1,202 +1,228 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:33993 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754122AbaJHJL0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Oct 2014 05:11:26 -0400
-Date: Wed, 8 Oct 2014 10:11:22 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Zhudacai <zhudacai@hisilicon.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linuxarm <linuxarm@huawei.com>,
-	"liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
-	wangyijing <wangyijing@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"zhudacai@huawei.com" <zhudacai@huawei.com>,
-	zhanweitao <zhanweitao@huawei.com>
-Subject: Re: PCIe test result in ARM64 and some problem follows.
-Message-ID: <20141008091122.GB4652@e106497-lin.cambridge.arm.com>
-References: <5434EBF2.3060300@hisilicon.com>
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:42571 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751644AbaJOIbl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Oct 2014 04:31:41 -0400
+Message-ID: <543E30E0.3060203@hp.com>
+Date: Wed, 15 Oct 2014 16:31:28 +0800
+From: "Li, ZhenHua" <zhen-hual@hp.com>
 MIME-Version: 1.0
-In-Reply-To: <5434EBF2.3060300@hisilicon.com>
-Content-Type: text/plain; charset=UTF-8
+To: Takao Indoh <indou.takao@jp.fujitsu.com>
+CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linda.knippers@hp.com,
+	jerry.hoemann@hp.com, lisa.mitchell@hp.com,
+	alexander.duyck@gmail.com, rwright@hp.com
+Subject: Re: [PATCH 1/1] pci: fix dmar fault for kdump kernel
+References: <1412925191-27970-1-git-send-email-zhen-hual@hp.com> <543CEE32.50109@hp.com> <543E2CD5.60708@jp.fujitsu.com>
+In-Reply-To: <543E2CD5.60708@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-2022-JP
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 08, 2014 at 08:46:58AM +0100, Zhudacai wrote:
-> Hi Liviu,
+I still think resetting the devices is necessary.  Reading your original
+mails ,  I think reason 2 you mentioned, resetting the devices in the
+first kernel,  may be a good solution.
 
-Hi Dacai,
+Well, I am now working on Bill's patch that you mentioned. As it is not
+accepted yet, I will create a new version for latest stable kernel 3.17.
 
+Thanks
+Zhenhua
+
+
+On 10/15/2014 04:14 PM, Takao Indoh wrote:
+> (2014/10/14 18:34), Li, ZhenHua wrote:
+>> I tested on the latest stable version 3.17, it works well.
+>>
+>> On 10/10/2014 03:13 PM, Li, Zhen-Hua wrote:
+>>> On a HP system with Intel vt-d supported and many PCI devices on it,
+>>> when kernel crashed and the kdump kernel boots with intel_iommu=on,
+>>> there may be some unexpected DMA requests on this adapter, which will
+>>> cause DMA Remapping faults like:
+>>>       dmar: DRHD: handling fault status reg 102
+>>>       dmar: DMAR:[DMA Read] Request device [41:00.0] fault addr fff81000
+>>>       DMAR:[fault reason 01] Present bit in root entry is clear
+>>>
+>>> This bug may happen on *any* PCI device.
+>>> Analysis for this bug:
+>>>
+>>> The present bit is set in this function:
+>>>
+>>> static struct context_entry * device_to_context_entry(
+>>>                   struct intel_iommu *iommu, u8 bus, u8 devfn)
+>>> {
+>>>       ......
+>>>                   set_root_present(root);
+>>>       ......
+>>> }
+>>>
+>>> Calling tree:
+>>>       device driver
+>>>           intel_alloc_coherent
+>>>               __intel_map_single
+>>>                   domain_context_mapping
+>>>                       domain_context_mapping_one
+>>>                           device_to_context_entry
+>>>
+>>> This means, the present bit in root entry will not be set until the device
+>>> driver is loaded.
+>>>
+>>> But in the kdump kernel, hardware devices are not aware that control has
+>>> transferred to the second kernel, and those drivers must initialize again.
+>>> Consequently there may be unexpected DMA requests from devices activity
+>>> initiated in the first kernel leading to the DMA Remapping errors in the
+>>> second kernel.
+>>>
+>>> To fix this DMAR fault, we need to reset the bus that this device on. Reset
+>>> the device itself does not work.
+>>>
+>>> A patch for this bug that has been sent before:
+>>> https://lkml.org/lkml/2014/9/30/55
+>>> As in discussion, this bug may happen on *any* device, so we need to reset all
+>>> pci devices.
+>>>
+>>> There was an original version(Takao Indoh) that resets the pcie devices:
+>>> https://lkml.org/lkml/2013/5/14/9
 > 
-> I am an engineer from Hisilicon in ShenZhen China. I noticed that there is a patchset[1] about PCIe in ARM64.
-> So I just merged it in 3.16 linux kernel and tested it in our Arm64 board.
+> As far as I can remember, the original patch was nacked by
+> the following reasons:
 > 
-> Hisilicon Arm64 Board PCIe is based on pcie-designware.c[2], and connected to a PCIe-SATA card.
+> 1) On sparc, the IOMMU is initialized before PCI devices are enumerated,
+>     so there would still be a window where ongoing DMA could cause an
+>     IOMMU error.
 > 
-> As a result, it works very well.
+> 2) Basically Bjorn is thinking device reset should be done in the
+>     1st kernel before jumping into 2nd kernel.
 > 
-> But what more, There still have some problem about msi, and I have to hardcode it in my PCIe host driver.
-> In arm32, we just use function as pcibios_add_bus to fix msi-chip.
-
-You are not the only one to notice the lack of MSI support. The problem I faced was that the generic
-PCIe framework leaves the MSI support at the latitude of arch code. We need to pull that code into
-the framework, and there are discussions around how best to do that, but nothing has been implemented
-yet.
-
-One solution that others are using is to have your own version of pci_scan_root_bus() where after
-the root bus is created you add your msi_chip information into the bus and then go about scanning.
-
-If enough implementations do that then I hope to convince Bjorn that the generic code needs to change
-to be able to pass the msi_chip information.
-
-If you are interested in working on the generic framework, my plan currently is to split the creation
-of the pci_host_bridge out of the pci_create_root_bus() function and add the msi_chip-related functions
-to retrieve the chip as ops for the pci_host_bridge(). Then your driver would look like:
-
-struct hisilicon_host_bridge {
-	struct pci_host_bridge bridge;
-	.....
-};
-
-struct pci_host_bridge_ops {
-	struct msi_chip *get_msi_chip(...);
-	...
-};
-
-struct pci_host_bridge_ops hb_ops = {
-	.get_msi_chip = hs_hb_get_msi_chip;
-	...
-};
-
-int hs_hb_probe(...)
-{
-	struct hisilicon_host_bridge *hshb;
-
-	hshb = kzalloc(...);
-	...
-	pci_setup_host_bridge(&hshb->bridge, hb_ops);
-	...
-
-	pci_scan_root_bus(...., &hshb->bridge);
-	...
-	return 0;
-}
-
-
-
-
+> And Bill Sumner proposed another idea.
+> http://comments.gmane.org/gmane.linux.kernel.iommu/4828
+> I don't know the current status of this patch, but I think Jerry Hoemann
+> is working on this.
 > 
-> void pcibios_add_bus(struct pci_bus *bus)
-> {
->        struct pci_sys_data *sys = bus->sysdata;
->        if (sys->add_bus)
->                  sys->add_bus(bus);
->  }
-> 
-> However In arm64, there is no strcut like hw_pci, and I have no idea about how to fix up the msi.
-> 
-> So, I will be very appreciated if you can give some useful guidance.
-> 
-> Best regards.
-> 
-> Dacai
-> 
-> [1] https://lkml.org/lkml/2014/9/23/852
-> [2] http://thread.gmane.org/gmane.linux.kernel/1684318
-> 
-> The test log as  follows:
-> 
-> hisi-pcie b0000000.pcie: PCI host bridge to bus 0000:00
-> pci_bus 0000:00: root bus resource [bus 00-0f]
-> pci_bus 0000:00: root bus resource [mem 0xb4100000-0xb4ffffff]
-> pci 0000:00:00.0: [19e5:0660] type 01 class 0x060400
-> pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x0fffffff]
-> pci 0000:00:00.0: supports D1 D2
-> pci 0000:00:00.0: PME# supported from D0 D1 D3hot
-> pci 0000:00:00.0: of_irq_parse_pci() failed with rc=-22
-> pci 0000:01:00.0: [197b:2362] type 00 class 0x010601
-> pci 0000:01:00.0: reg 0x10: [io  0x0000-0x0007]
-> pci 0000:01:00.0: reg 0x14: [io  0x0000-0x0003]
-> pci 0000:01:00.0: reg 0x18: [io  0x0000-0x0007]
-> pci 0000:01:00.0: reg 0x1c: [io  0x0000-0x0003]
-> pci 0000:01:00.0: reg 0x20: [io  0x0000-0x000f]
-> pci 0000:01:00.0: reg 0x24: [mem 0x00000000-0x000001ff]
-> pci 0000:01:00.0: reg 0x30: [mem 0x00000000-0x0000ffff pref]
-> pci 0000:01:00.0: PME# supported from D3hot
-> pci 0000:01:00.0: of_irq_parse_pci() failed with rc=-22
-> pci 0000:00:00.0: BAR 0: can't assign mem (size 0x10000000)
-> pci 0000:00:00.0: BAR 8: assigned [mem 0xb4100000-0xb41fffff]
-> pci 0000:00:00.0: BAR 7: can't assign io (size 0x1000)
-> pci 0000:01:00.0: BAR 6: assigned [mem 0xb4100000-0xb410ffff pref]
-> pci 0000:01:00.0: BAR 5: assigned [mem 0xb4110000-0xb41101ff]
-> pci 0000:01:00.0: BAR 4: can't assign io (size 0x10)
-> pci 0000:01:00.0: BAR 0: can't assign io (size 0x8)
-> pci 0000:01:00.0: BAR 2: can't assign io (size 0x8)
-> pci 0000:01:00.0: BAR 1: can't assign io (size 0x4)
-> pci 0000:01:00.0: BAR 3: can't assign io (size 0x4)
-
-You don't seem to have declared in your DT your IO range, but
-the devices you have need some IO space.
-
-Best regards,
-Liviu
-
-> pci 0000:00:00.0: PCI bridge to [bus 01]
-> pci 0000:00:00.0:   bridge window [mem 0xb4100000-0xb41fffff]
-> ...........................................................
-> ahci 0000:01:00.0: version 3.0
-> ahci 0000:01:00.0: enabling device (0000 -> 0002)
-> ahci 0000:01:00.0: ITT 1 entries, 0 bits
-> ahci 0000:01:00.0: ID:0 pID:8448 vID:48
-> its_msi_setup_irq 1222,msi addr 0xb7010040,msi data 0x0,msi_phys 0xb7000000
-> ahci 0000:01:00.0: AHCI 0010.0100 32 slots 2 ports 3 Gbps 0x3 impl SATA mode
-> ahci 0000:01:00.0: flags: 64bit ncq pm led clo pmp pio slum part
-> scsi0 : ahci
-> scsi1 : ahci
-> ata1: SATA max UDMA/133 abar m512@0xb4110000 port 0xb4110100 irq 48
-> ata2: SATA max UDMA/133 abar m512@0xb4110000 port 0xb4110180 irq 48
-> ..............................................................
-> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata1.00: ATA-8: ST3250311SV, CV11, max UDMA/133
-> ata1.00: 488397168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> ata1.00: configured for UDMA/133
-> scsi 0:0:0:0: Direct-Access     ATA      ST3250311SV      CV11 PQ: 0 ANSI: 5
-> sd 0:0:0:0: Attached scsi generic sg0 type 0
-> sd 0:0:0:0: [sda] 488397168 512-byte logical blocks: (250 GB/232 GiB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO
->  or FUA
->  sda: sda1
-> sd 0:0:0:0: [sda] Attached SCSI disk
-> ...........................................................
-> sh-4.2# lspci
-> 00:00.0 Class 0604: 19e5:0660
-> 01:00.0 Class 0106: 197b:2362
-> sh-4.2# ls /dev/sda
-> /dev/sda
-> sh-4.2# ls /dev/sda*
-> /dev/sda   /dev/sda1
-> sh-4.2# fdisk -l
-> 
-> Disk /dev/sda: 250.0 GB, 250059350016 bytes
-> 255 heads, 63 sectors/track, 30401 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
-> 
->    Device Boot      Start         End      Blocks  Id System
-> /dev/sda1               1        1217     9775521  83 Linux
-> ............................................................
+> Thanks,
+> Takao Indoh
 > 
 > 
+>>>
+>>> Update of this new version, comparing with Takao Indoh's version:
+>>>       Add support for legacy PCI devices.
+>>>       Use pci_try_reset_bus instead of do_downstream_device_reset in original version
+>>>
+>>> Randy Wright corrects some misunderstanding in this description.
+>>>
+>>> Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+>>> Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+>>> Signed-off-by: Randy Wright <rwright@hp.com>
+>>> ---
+>>>    drivers/pci/pci.c | 84 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>>    1 file changed, 84 insertions(+)
+>>>
+>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>> index 2c9ac70..8cb146c 100644
+>>> --- a/drivers/pci/pci.c
+>>> +++ b/drivers/pci/pci.c
+>>> @@ -23,6 +23,7 @@
+>>>    #include <linux/device.h>
+>>>    #include <linux/pm_runtime.h>
+>>>    #include <linux/pci_hotplug.h>
+>>> +#include <linux/crash_dump.h>
+>>>    #include <asm-generic/pci-bridge.h>
+>>>    #include <asm/setup.h>
+>>>    #include "pci.h"
+>>> @@ -4423,6 +4424,89 @@ void __weak pci_fixup_cardbus(struct pci_bus *bus)
+>>>    }
+>>>    EXPORT_SYMBOL(pci_fixup_cardbus);
+>>>
+>>> +/*
+>>> + * Return true if dev is PCI root port or downstream port whose child is PCI
+>>> + * endpoint except VGA device.
+>>> + */
+>>> +static int __pci_dev_need_reset(struct pci_dev *dev)
+>>> +{
+>>> +    struct pci_bus *subordinate;
+>>> +    struct pci_dev *child;
+>>> +
+>>> +    if (dev->hdr_type != PCI_HEADER_TYPE_BRIDGE)
+>>> +        return 0;
+>>> +
+>>> +    if (pci_is_pcie(dev)) {
+>>> +        if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT) &&
+>>> +            (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM))
+>>> +            return 0;
+>>> +    }
+>>> +
+>>> +    subordinate = dev->subordinate;
+>>> +    list_for_each_entry(child, &subordinate->devices, bus_list) {
+>>> +        /* Don't reset switch, bridge, VGA device */
+>>> +        if ((child->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
+>>> +            ((child->class >> 16) == PCI_BASE_CLASS_BRIDGE) ||
+>>> +            ((child->class >> 16) == PCI_BASE_CLASS_DISPLAY))
+>>> +            return 0;
+>>> +
+>>> +        if (pci_is_pcie(child)) {
+>>> +            if ((pci_pcie_type(child) == PCI_EXP_TYPE_UPSTREAM) ||
+>>> +                (pci_pcie_type(child) == PCI_EXP_TYPE_PCI_BRIDGE))
+>>> +                return 0;
+>>> +        }
+>>> +    }
+>>> +
+>>> +    return 1;
+>>> +}
+>>> +
+>>> +struct pci_dev_reset_entry {
+>>> +    struct list_head list;
+>>> +    struct pci_dev *dev;
+>>> +};
+>>> +int __init pci_reset_endpoints(void)
+>>> +{
+>>> +    struct pci_dev *dev = NULL;
+>>> +    struct pci_dev_reset_entry *pdev_entry, *tmp;
+>>> +    struct pci_bus *subordinate = NULL;
+>>> +    int has_it;
+>>> +
+>>> +    LIST_HEAD(pdev_list);
+>>> +
+>>> +    if (likely(!is_kdump_kernel()))
+>>> +        return 0;
+>>> +
+>>> +    for_each_pci_dev(dev) {
+>>> +        subordinate = dev->subordinate;
+>>> +        if (!subordinate || list_empty(&subordinate->devices))
+>>> +            continue;
+>>> +
+>>> +        has_it = 0;
+>>> +        list_for_each_entry(pdev_entry, &pdev_list, list) {
+>>> +            if (dev == pdev_entry->dev) {
+>>> +                has_it = 1;
+>>> +                break;
+>>> +            }
+>>> +        }
+>>> +        if (has_it)
+>>> +            continue;
+>>> +
+>>> +        if (__pci_dev_need_reset(dev)) {
+>>> +            pdev_entry = kmalloc(sizeof(*pdev_entry), GFP_KERNEL);
+>>> +            pdev_entry->dev = dev;
+>>> +            list_add(&pdev_entry->list, &pdev_list);
+>>> +        }
+>>> +    }
+>>> +
+>>> +    list_for_each_entry_safe(pdev_entry, tmp, &pdev_list, list) {
+>>> +        pci_try_reset_bus(pdev_entry->dev->subordinate);
+>>> +        kfree(pdev_entry);
+>>> +    }
+>>> +
+>>> +    return 0;
+>>> +}
+>>> +fs_initcall_sync(pci_reset_endpoints);
+>>> +
+>>>    static int __init pci_setup(char *str)
+>>>    {
+>>>        while (str) {
+>>>
+>>
+>>
+>>
 > 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+> 
 
