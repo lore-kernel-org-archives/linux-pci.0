@@ -1,128 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bn0106.outbound.protection.outlook.com ([157.56.110.106]:2848
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933546AbaJ3KLJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 06:11:09 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v4 12/20] usb: dwc3: add rx_detect to polling LFPS quirk
-Date: Thu, 30 Oct 2014 18:08:37 +0800
-Message-ID: <1414663725-2195-13-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
-References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v3 05/27] PCI: tegra: Save msi chip in pci_sys_data
+Date: Wed, 15 Oct 2014 11:06:53 +0800
+Message-ID: <1413342435-7876-6-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds RX_DETECT to Polling.LFPS control quirk, and some special
-platforms can configure that if it is needed.
+Save msi chip in pci_sys_data instead of assign
+msi chip to every pci bus in .add_bus().
 
-[ balbi@ti.com : added DeviceTree binding documentation ]
-
-Signed-off-by: Huang Rui <ray.huang@amd.com>
-Signed-off-by: Felipe Balbi <balbi@ti.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- Documentation/devicetree/bindings/usb/dwc3.txt | 2 ++
- drivers/usb/dwc3/core.c                        | 6 ++++++
- drivers/usb/dwc3/core.h                        | 3 +++
- drivers/usb/dwc3/platform_data.h               | 1 +
- 4 files changed, 12 insertions(+)
+ drivers/pci/host/pci-tegra.c |   13 +++----------
+ 1 files changed, 3 insertions(+), 10 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentation/devicetree/bindings/usb/dwc3.txt
-index 0647100..38bac28 100644
---- a/Documentation/devicetree/bindings/usb/dwc3.txt
-+++ b/Documentation/devicetree/bindings/usb/dwc3.txt
-@@ -27,6 +27,8 @@ Optional properties:
-  - snps,del_phy_power_chg_quirk: when set core will delay PHY power change
- 			from P0 to P1/P2/P3.
-  - snps,lfps_filter_quirk: when set core will filter LFPS reception.
-+ - snps,rx_detect_poll_quirk: when set core will disable a 400us delay to start
-+			Polling LFPS after RX.Detect.
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 3d43874..5af0525 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -694,15 +694,6 @@ static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ 	return irq;
+ }
  
- This is usually a subnode to DWC3 glue to which it is connected.
+-static void tegra_pcie_add_bus(struct pci_bus *bus)
+-{
+-	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-		struct tegra_pcie *pcie = sys_to_pcie(bus->sysdata);
+-
+-		bus->msi = &pcie->msi.chip;
+-	}
+-}
+-
+ static struct pci_bus *tegra_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ {
+ 	struct tegra_pcie *pcie = sys_to_pcie(sys);
+@@ -1881,11 +1872,13 @@ static int tegra_pcie_enable(struct tegra_pcie *pcie)
  
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index ae7ff8f..11b0ab08 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -389,6 +389,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
- 	if (dwc->lfps_filter_quirk)
- 		reg |= DWC3_GUSB3PIPECTL_LFPSFILT;
+ 	memset(&hw, 0, sizeof(hw));
  
-+	if (dwc->rx_detect_poll_quirk)
-+		reg |= DWC3_GUSB3PIPECTL_RX_DETOPOLL;
-+
- 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
++#ifdef CONFIG_PCI_MSI
++	hw.msi_chip = &pcie->msi.chip;
++#endif
+ 	hw.nr_controllers = 1;
+ 	hw.private_data = (void **)&pcie;
+ 	hw.setup = tegra_pcie_setup;
+ 	hw.map_irq = tegra_pcie_map_irq;
+-	hw.add_bus = tegra_pcie_add_bus;
+ 	hw.scan = tegra_pcie_scan_bus;
+ 	hw.ops = &tegra_pcie_ops;
  
- 	mdelay(100);
-@@ -773,6 +776,8 @@ static int dwc3_probe(struct platform_device *pdev)
- 				"snps,del_phy_power_chg_quirk");
- 		dwc->lfps_filter_quirk = of_property_read_bool(node,
- 				"snps,lfps_filter_quirk");
-+		dwc->rx_detect_poll_quirk = of_property_read_bool(node,
-+				"snps,rx_detect_poll_quirk");
- 	} else if (pdata) {
- 		dwc->maximum_speed = pdata->maximum_speed;
- 		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
-@@ -789,6 +794,7 @@ static int dwc3_probe(struct platform_device *pdev)
- 		dwc->del_p1p2p3_quirk = pdata->del_p1p2p3_quirk;
- 		dwc->del_phy_power_chg_quirk = pdata->del_phy_power_chg_quirk;
- 		dwc->lfps_filter_quirk = pdata->lfps_filter_quirk;
-+		dwc->rx_detect_poll_quirk = pdata->rx_detect_poll_quirk;
- 	}
- 
- 	/* default to superspeed if no maximum_speed passed */
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index cf9dd73..eeef976 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -184,6 +184,7 @@
- #define DWC3_GUSB3PIPECTL_DEPOCHANGE	(1 << 18)
- #define DWC3_GUSB3PIPECTL_SUSPHY	(1 << 17)
- #define DWC3_GUSB3PIPECTL_LFPSFILT	(1 << 9)
-+#define DWC3_GUSB3PIPECTL_RX_DETOPOLL	(1 << 8)
- 
- /* Global TX Fifo Size Register */
- #define DWC3_GTXFIFOSIZ_TXFDEF(n)	((n) & 0xffff)
-@@ -693,6 +694,7 @@ struct dwc3_scratchpad_array {
-  * @del_p1p2p3_quirk: set if we enable delay P1/P2/P3 quirk
-  * @del_phy_power_chg_quirk: set if we enable delay phy power change quirk
-  * @lfps_filter_quirk: set if we enable LFPS filter quirk
-+ * @rx_detect_poll_quirk: set if we enable rx_detect to polling LFPS quirk
-  */
- struct dwc3 {
- 	struct usb_ctrlrequest	*ctrl_req;
-@@ -807,6 +809,7 @@ struct dwc3 {
- 	unsigned                del_p1p2p3_quirk:1;
- 	unsigned		del_phy_power_chg_quirk:1;
- 	unsigned		lfps_filter_quirk:1;
-+	unsigned		rx_detect_poll_quirk:1;
- };
- 
- /* -------------------------------------------------------------------------- */
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index dad0211..4a0f06b 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -35,4 +35,5 @@ struct dwc3_platform_data {
- 	unsigned del_p1p2p3_quirk:1;
- 	unsigned del_phy_power_chg_quirk:1;
- 	unsigned lfps_filter_quirk:1;
-+	unsigned rx_detect_poll_quirk:1;
- };
 -- 
-1.9.1
+1.7.1
 
