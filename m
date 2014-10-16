@@ -1,73 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:59397 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751177AbaJPD67 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Oct 2014 23:58:59 -0400
+Message-ID: <1413431917.11213.56.camel@pasglop>
+Subject: Re: of/pci: Fix the conversion of IO ranges into IO resources
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, rui.zhang@intel.com,
-	linux-pm@vger.kernel.org
-Subject: [Patch v7 01/18] ACPI, irq: fix regression casued by 6b9fb7082409
-Date: Mon, 27 Oct 2014 13:21:31 +0800
-Message-Id: <1414387308-27148-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Linus Walleij <linus.walleij@linaro.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Date: Thu, 16 Oct 2014 14:58:37 +1100
+In-Reply-To: <1413428148.20705.2.camel@concordia>
+References: <20141009200235.55E5166107E@gitolite.kernel.org>
+	 <1413358507.4748.4.camel@pasglop>
+	 <20141015090239.GB18070@e106497-lin.cambridge.arm.com>
+	 <1413428148.20705.2.camel@concordia>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When IOAPIC is disabled, acpi_gsi_to_irq() should return gsi directly
-instead of calling mp_map_gsi_to_irq() to translate gsi to IRQ by IOAPIC.
-It fixes https://bugzilla.kernel.org/show_bug.cgi?id=84381.
+On Thu, 2014-10-16 at 13:55 +1100, Michael Ellerman wrote:
+> Yes, we already provide our own version of pci_address_to_pio().
+> 
+> The problem is it's too early to call it when we come in from
+> find_and_init_phbs() -> pci_process_bridge_OF_ranges(), so it returns junk.
+> 
+> I think you were expecting us to hit the #ifndef PCI_IOBASE case, which looks
+> like it might have worked.
+> 
+> For now we're just going to stop using of_pci_range_to_resource().
 
-Reported-by: Thomas Richter <thor@math.tu-berlin.de>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: rui.zhang@intel.com
-Cc: <stable@vger.kernel.org> # 3.17
----
- arch/x86/kernel/acpi/boot.c |   13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+Right, this is a band-aid to fix things now. For the long run, I think we could
+exploit Liviu's code with a few changes:
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index b436fc735aa4..eceba9d9e116 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -604,14 +604,19 @@ void __init acpi_pic_sci_set_trigger(unsigned int irq, u16 trigger)
- 
- int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
- {
--	int irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
-+	int irq;
- 
--	if (irq >= 0) {
-+	if (acpi_irq_model == ACPI_IRQ_MODEL_PIC) {
-+		*irqp = gsi;
-+	} else {
-+		irq = mp_map_gsi_to_irq(gsi,
-+					IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
-+		if (irq < 0)
-+			return -1;
- 		*irqp = irq;
--		return 0;
- 	}
- 
--	return -1;
-+	return 0;
- }
- EXPORT_SYMBOL_GPL(acpi_gsi_to_irq);
- 
--- 
-1.7.10.4
+ - We would want to add a variant of pci_register_io_range() that takes the actual
+PIO address as an argument so we can use it to "register" our ranges on ppc64
+since we decide where in IO space they go using our own algorithm and we don't
+want to change that. That would make the generic pci_pio_to_address() and
+pci_address_to_pio() work for us. At least for ppc64.
+
+ - For ppc32, we might want to consider changing the horrible pointer arithmetic
+we do today (which keeps breaking) and just switch to the allocator inside
+pci_register_io_range() and use it like ARM does.
+
+ - I object to of_pci_range_to_resource() implicitly doing the allocation/registration
+of the range. It should fail if the range isn't registered. The architecture code
+should explicitly register the IO ranges before trying to turn them into resources.
+
+Now, this will take a bit more time to sort out (and the latter comment will
+mean, if addressed, some changes to the new ARM code which I don't think I have
+the bandwidth to do), so I'm happy to settle for whatever band-aid Michael is
+coming up with for 3.18 but we should consider improving things for .19
+
+Cheers,
+Ben.
+
 
