@@ -1,89 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f51.google.com ([209.85.192.51]:54664 "EHLO
-	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751031AbaJVRYr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Oct 2014 13:24:47 -0400
-Received: by mail-qg0-f51.google.com with SMTP id z107so2865862qgd.24
-        for <linux-pci@vger.kernel.org>; Wed, 22 Oct 2014 10:24:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5447E12F.2030905@gmail.com>
-References: <1412925191-27970-1-git-send-email-zhen-hual@hp.com>
- <543CEE32.50109@hp.com> <543E2CD5.60708@jp.fujitsu.com> <CAErSpo4isVMeBipp3TngVtZ2CmeQva-6RSHgS8O4C9M+p1ua=Q@mail.gmail.com>
- <5447E12F.2030905@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 22 Oct 2014 11:24:23 -0600
-Message-ID: <CAErSpo4JhOyT=HX95uMeghAtnQC1UJQ+NkSbAoRk_2zFrh3vVA@mail.gmail.com>
-Subject: Re: [PATCH 1/1] pci: fix dmar fault for kdump kernel
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Takao Indoh <indou.takao@jp.fujitsu.com>,
-	"Li, Zhen-Hua" <zhen-hual@hp.com>,
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:45859 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750765AbaJPImE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Oct 2014 04:42:04 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 16 Oct 2014 18:42:02 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 37AB22BB0047
+	for <linux-pci@vger.kernel.org>; Thu, 16 Oct 2014 19:41:59 +1100 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s9G8fulg31785180
+	for <linux-pci@vger.kernel.org>; Thu, 16 Oct 2014 19:41:56 +1100
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s9G8fwwk009728
+	for <linux-pci@vger.kernel.org>; Thu, 16 Oct 2014 19:41:59 +1100
+Date: Thu, 16 Oct 2014 16:41:56 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linda.knippers@hp.com, jerry.hoemann@hp.com, lisa.mitchell@hp.com,
-	rwright@hp.com, Joerg Roedel <joro@8bytes.org>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	Tom Vaden <tom.vaden@hp.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8
+	Benjamin Herrenschmidt <benh@au1.ibm.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: Re: [PATCH V7 00/17] Enable SRIOV on POWER8
+Message-ID: <20141016084156.GA5216@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20140819211942.GA6295@google.com>
+ <20140820023404.GC6904@richard>
+ <CAErSpo5Dm4Eu0TcvJn2fYLVd005OgJCy-yZAhqsttjbb8jwm=A@mail.gmail.com>
+ <20140820033546.GA7669@richard>
+ <20141002155943.GA19392@google.com>
+ <20141015090014.GA13499@richard>
+ <CAErSpo4g1gtizAsVpxXGWRMDDaNLkjajqdj3xUdckiTf6f3g4Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4g1gtizAsVpxXGWRMDDaNLkjajqdj3xUdckiTf6f3g4Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 22, 2014 at 10:54 AM, Alexander Duyck
-<alexander.duyck@gmail.com> wrote:
-> On 10/21/2014 07:47 PM, Bjorn Helgaas wrote:
->> [+cc Joerg, Eric, Tom, David, iommu list]
+On Wed, Oct 15, 2014 at 07:52:16AM -0600, Bjorn Helgaas wrote:
+>On Wed, Oct 15, 2014 at 3:00 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>> On Thu, Oct 02, 2014 at 09:59:43AM -0600, Bjorn Helgaas wrote:
+>...
+>>>I haven't seen any more on this series, and I'm assuming you'll post a
+>>>rebased series (maybe you're waiting for v3.18-rc1?).  I'm just checking to
+>>>make sure you're not waiting for something from me...
+>>>
 >>
->> On Wed, Oct 15, 2014 at 2:14 AM, Takao Indoh <indou.takao@jp.fujitsu.com> wrote:
->>> (2014/10/14 18:34), Li, ZhenHua wrote:
->>>> I tested on the latest stable version 3.17, it works well.
->>>>
->>>> On 10/10/2014 03:13 PM, Li, Zhen-Hua wrote:
-
->>>>> To fix this DMAR fault, we need to reset the bus that this device on. Reset
->>>>> the device itself does not work.
->> You have not explained why the DMAR faults are a problem.  The fault
->> is just an indication that the IOMMU prevented a DMA from completing.
->> If the DMA is an artifact of the crashed kernel, we probably don't
->> *want* it to complete, so taking a DMAR fault seems like exactly the
->> right thing.
+>> Hi, Bjorn
 >>
->> If the problem is that we're being flooded with messages, it's easy
->> enough to just tone down the printks.
+>> Haven't seen you for a long time :-) I am just back from vocation and the mail
+>> box doesn't work well for previous two days.
+>>
+>> Yep, I am rebasing the code on top of v3.17, is this fine for you?
 >
-> As I recall what we have seen in the past with the network controllers
-> is that they get stuck in a state where they can no longer perform any
-> DMA due to the fact that some of the transactions have returned errors
-> from the IOMMU being reset.  The only way out is to perform a PCIe reset
-> on the part after the IOMMU has been enabled which doesn't occur
-> automatically unless AER or EEH is enabled in the system.
-
-OK, now we're talking about a real issue, the sort of thing that
-should be in the changelog for a change like this.
-
-I'm uneasy about the strategy of "it hurts when an IOMMU fault occurs,
-therefore we need to avoid all IOMMU faults."  Isn't the whole *point*
-of an IOMMU to generate faults?  It seems like we need to be able to
-handle faults gracefully.
-
-If having AER or EEH enabled in the kdump kernel is part of what's
-required to recover, I don't see a problem with requiring that.
-
-Don't we have to be able to recover from IOMMU faults for the device
-pass-through case anyway?  If a NIC is passed through to a malicious
-guest, I assume the guest can cause IOMMU faults.  I assume we handle
-this today by resetting the NIC when the guest exits.
-
-> One thought would be to take a look at the IOMMU reset code.  Is there
-> any way to go through and make sure that all of the PCI devices that
-> make use of the IOMMU have the bus mastering disabled prior to the IOMMU
-> being reset?  For example could we suspend all of the parts in order to
-> force them to hold off any transactions, and then resume them after the
-> IOMMU has been reset?  If we could do at least that much that would
-> prevent the errors and should allow for a graceful reset.
+>When I apply your patches, they will be on a branch based on
+>v3.18-rc1, so the easiest thing for me would be if you generate them
+>from that base.  Here's why:
 >
-> Thanks,
+>  - Linus released v3.17 on Oct 5, 2014
+>  - Merge window for v3.18 opened when v3.17 released
+>  - All changes intended for v3.18 will be merged during window
+>(theoretically, at least)
+>  - Merge window closes when Linus releases v3.18-rc1 (probably Oct 19 or 26)
 >
-> Alex
+>Your changes will miss the v3.18 merge window, so the next chance to
+>merge them will be during the v3.19 merge window that opens when v3.18
+>releases.  v3.18-rc1 is a close approximation of what v3.18 will
+>eventually be, so rebasing to v3.18-rc1 will minimize merge conflicts
+>when we eventually merge your changes on top of v3.18.
 >
+>v3.18-rc1 isn't out yet, but if you rebase to the current head of
+>Linus' tree, that should be fairly close.  The PCI changes are already
+>in (80213c03c415), and at least some of the powerpc changes are in
+>(fd9879b9bb32).
 >
+
+Thanks for your explanation. I will do some rebase and test on v3.17. Then
+rebase it on v3.18-rc1 when it is released.
+
+And finally give you the one on v3.18-rc1.
+
+>Bjorn
+
+-- 
+Richard Yang
+Help you, Help me
+
