@@ -1,142 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:58492 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752472AbaJQPKr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Oct 2014 11:10:47 -0400
-Date: Fri, 17 Oct 2014 10:10:26 -0500
-From: Felipe Balbi <balbi@ti.com>
-To: Huang Rui <ray.huang@amd.com>
-CC: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 00/16] usb: dwc3: add support for AMD NL SoC
-Message-ID: <20141017151026.GN26260@saruman>
-Reply-To: <balbi@ti.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+Received: from mail-bn1bon0138.outbound.protection.outlook.com ([157.56.111.138]:18142
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750966AbaJPIXH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Oct 2014 04:23:07 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH v6 01/13] PCI: designware: Refine setup_rc and add msi data restore
+Date: Thu, 16 Oct 2014 15:52:31 +0800
+Message-ID: <1413445963-24706-2-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
+References: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="/TUrtqMIkCP4YtJm"
-In-Reply-To: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---/TUrtqMIkCP4YtJm
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+From: Richard Zhu <r65037@freescale.com>
 
-Hi,
+- move "program correct class for RC" from dw_pcie_host_init()
+to dw_pcie_setup_rc(). since this is RC setup, it's
+better to contained in dw_pcie_setup_rc function.
+Then, RC can be re-setup really by dw_pcie_setup_rc().
+- add one store/re-store msi cfg functions. Because that
+pcie controller maybe powered off during system suspend,
+and the msi data configuration would be lost.
+these functions can be used to store/restore the msi data
+and msi_enable during the suspend/resume callback.
 
-On Fri, Oct 17, 2014 at 04:53:25PM +0800, Huang Rui wrote:
-> The series of patches add AMD NL SoC support for DesignWare USB3 OTG
-> IP with PCI bus glue layer. This controller supported hibernation, LPM
-> erratum and used the 2.80a IP version and amd own phy. Current
-> implementation support both simulation and SoC platform. And already
-> tested with gadget zero and msc tool.  It works well on file storage
-> gadget.
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
+---
+ drivers/pci/host/pcie-designware.c | 21 ++++++++++++++++++---
+ drivers/pci/host/pcie-designware.h |  3 +++
+ 2 files changed, 21 insertions(+), 3 deletions(-)
 
-patches look much, much nicer there are still a few things to fix. A
-global set of issues which I see:
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 538bbf3..b1f82ff 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -194,6 +194,19 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+ 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
+ }
+ 
++void dw_pcie_msi_cfg_store(struct pcie_port *pp)
++{
++	dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE, 4, &pp->msi_enable);
++}
++
++void dw_pcie_msi_cfg_restore(struct pcie_port *pp)
++{
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
++			virt_to_phys((void *)pp->msi_data));
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE, 4, pp->msi_enable);
++}
++
+ static int find_valid_pos0(struct pcie_port *pp, int msgvec, int pos, int *pos0)
+ {
+ 	int flag = 1;
+@@ -570,9 +583,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+ 
+-	/* program correct class for RC */
+-	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
+-
+ 	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+ 	val |= PORT_LOGIC_SPEED_CHANGE;
+ 	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+@@ -917,6 +927,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	val = memlimit | membase;
+ 	dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
+ 
++	/* program correct class for RC */
++	dw_pcie_readl_rc(pp, PCI_CLASS_REVISION, &val);
++	val |= PCI_CLASS_BRIDGE_PCI << 16;
++	dw_pcie_writel_rc(pp, val, PCI_CLASS_REVISION);
++
+ 	/* setup command register */
+ 	dw_pcie_readl_rc(pp, PCI_COMMAND, &val);
+ 	val &= 0xffff0000;
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index a476e60..b0bfed0 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -56,6 +56,7 @@ struct pcie_port {
+ 	int			msi_irq;
+ 	struct irq_domain	*irq_domain;
+ 	unsigned long		msi_data;
++	unsigned int		msi_enable;
+ 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+ };
+ 
+@@ -83,6 +84,8 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+ int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+ void dw_pcie_msi_init(struct pcie_port *pp);
++void dw_pcie_msi_cfg_store(struct pcie_port *pp);
++void dw_pcie_msi_cfg_restore(struct pcie_port *pp);
+ int dw_pcie_link_up(struct pcie_port *pp);
+ void dw_pcie_setup_rc(struct pcie_port *pp);
+ int dw_pcie_host_init(struct pcie_port *pp);
+-- 
+1.9.1
 
-1) Let's get confirmation that all those quirks will be needed in
-production as well, I have a feeling quite a few of them won't be.
-
-2) All quirks should become 1-bit fields insteads of single-bits on a
-32-bit variable.
-
-3) All quirks should have DeviceTree counterparts. They should all
-become boolean properties should we can:
-
-	dwc->tx_deemphasis_quirk =3D of_property_read_bool(node,
-		"snps,tx_deemphasis_quirk");
-
-> These patches are generated on balbi/testing/next
->=20
-> Changes from v1 -> v2
-> - remove dual role function temporarily
-> - add pci quirk to avoid to bind with xhci driver
-> - distinguish between simulation board and soc
-> - break down all the special quirks
->=20
->=20
-> Patch 1:
-> - add PCI device id into pci bus glue
-
-this guy should be the last in the series, with all AMD quirks being
-enabled at once. This will avoid bisection points where AMD's platforms
-don't work.
-
-> Patch 2:
-
-this should become as patch one :-)
-
-> - add PCI quirk to avoid to bind with xhci
->=20
-> Patch 3:
-> - enable hibernation
->=20
-> Patch 4:
-> - distinguish between simulation board and soc
->=20
-> Patch 5:
-> - add quirks flag to be compatible for kinds of soc
->=20
-> Patch 6 - 16:
-> - as felipe's suggestion, break down all the special quirks of amd nl
->=20
->=20
-> Patch set already passed all the MSC testing, detailed result is below:
->=20
-> root@hr-ub:/home/ray/felipe/usb-tools# ./msc.sh -o /dev/sdb1
-> test 0e: simple 64k read/write
-> test  0: sent      62.50 MB read      22.00 MB/s write      16.33 MB/s ..=
-=2E success
-
-Are you still running with VERBOSE_DEBUG on USB2 ? Here's what I get on
-USB2 connected to my PC with DWC3 running on a single-core cortex-a9
-board:
-
-$ ./msc -t0 -o /dev/sdh -s 65536 -c 5000
-test  0: sent     312.50 MB read      31.63 MB/s write      29.10 MB/s ... =
-success
-
-And with RAM as backend:
-
-$ ./msc -t0 -o /dev/sdh -s 65536 -c 5000
-test  0: sent     312.50 MB read      31.64 MB/s write      29.04 MB/s ... =
-success
-
-cheers
-
---=20
-balbi
-
---/TUrtqMIkCP4YtJm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUQTFiAAoJEIaOsuA1yqREpxYQAKb0mo7Peg3eyQgcm+bALpcq
-/x70lR7SJQRk9eSWuHA/VIJ5cBtTDYnwILAD6e4fT+1VGTMV6Z1raqi7GPMyWzv9
-sXHktZccJalLAhaRCLWL8kjAr1JzhvDB5mQ9vkNGcX94bx9rTaXbhyoDUgWKunj2
-inIei2pxqEZ/+yVrk6kh5G6C7YmQ4R+OUuCaB4Ix5t+hNrh/6labx6heSZfETcNC
-WjNesMnr/4BUyrDZr1wo++VJYl3z46ukjASLnlEzldMAJekbaSGS6sZALfUqADuD
-1BnYRAcmy3YvKD7lfBr2ocOSF50+1byM9SJZucId1iu3jSpdV7iOlkj0cikwZWa6
-Oony54PHJlNdTzbPyfDMJ08Gj7Sdog3wecyQjGkmfbGvbMDCbWVLvHMdL1bfZn6W
-CDMtRRYEi6w/dRPm+KiyIzYSR0hPt802D8gII916w2RBUq04/15y7AjSzk4frDZy
-YDOZoHSLbvie9/hg7IasnWt5yV2Xc2RQhHWiGuw/9O7tnHCehml9noppy7BjlOux
-7YR6+2KlguskKcTpbVawqjmgvPLnqeAysJ8BCAasTRJlvg7xGXYfU8IJ6MZpG87k
-vskHydbQNG8NV0L1mWTdNwjzMiwQdAJPwsox0CA3eX9d2WT/cteEJfQFczQtI6Ae
-YZFERZINKg3Ip8+6l9eX
-=0DTv
------END PGP SIGNATURE-----
-
---/TUrtqMIkCP4YtJm--
