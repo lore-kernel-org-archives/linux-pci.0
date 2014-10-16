@@ -1,85 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:28073 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751836AbaJ0Mlm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Oct 2014 08:41:42 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 06/16] Mips/MSI: Save MSI controller in pci sysdata
-Date: Mon, 27 Oct 2014 21:22:12 +0800
-Message-ID: <1414416142-31239-7-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
-References: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 16 Oct 2014 11:24:45 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH RFC 2/2] arm: kernel: fix pci_mmap_page_range() offset
+ calculation
+Message-ID: <20141016102445.GA28187@red-moon>
+References: <1413374624-30066-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1413374624-30066-2-git-send-email-lorenzo.pieralisi@arm.com>
+ <20141015222932.GL27405@n2100.arm.linux.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20141015222932.GL27405@n2100.arm.linux.org.uk>
+Content-Type: text/plain; charset=WINDOWS-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Save MSI controller in pci sysdata, add arch pcibios_msi_controller()
-to extract out MSI controller.
+Hi Russell,
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/mips/include/asm/pci.h |    3 +++
- arch/mips/pci/pci.c         |    9 +++++++++
- 2 files changed, 12 insertions(+), 0 deletions(-)
+thanks for having a look.
 
-diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
-index 974b0e3..d7cd850 100644
---- a/arch/mips/include/asm/pci.h
-+++ b/arch/mips/include/asm/pci.h
-@@ -43,6 +43,9 @@ struct pci_controller {
- 
- 	int iommu;
- 
-+#ifdef CONFIG_PCI_MSI
-+	struct msi_controller *msi_ctrl;
-+#endif
- 	/* Optional access methods for reading/writing the bus number
- 	   of the PCI controller */
- 	int (*get_busno)(void);
-diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
-index 1bf60b1..7917cba 100644
---- a/arch/mips/pci/pci.c
-+++ b/arch/mips/pci/pci.c
-@@ -36,6 +36,15 @@ unsigned long PCIBIOS_MIN_MEM;
- 
- static int pci_initialized;
- 
-+#ifdef CONFIG_PCI_MSI
-+struct msi_controller *pcibios_msi_controller(struct pci_bus *bus)
-+{
-+	struct pci_controller *ctrl = bus->sysdata;
-+
-+	return ctrl->msi_ctrl;
-+}
-+#endif
-+
- /*
-  * We need to avoid collisions with `mirrored' VGA ports
-  * and other strange ISA hardware, so we always want the
--- 
-1.7.1
+On Wed, Oct 15, 2014 at 11:29:32PM +0100, Russell King - ARM Linux wrote:
+> On Wed, Oct 15, 2014 at 01:03:41PM +0100, Lorenzo Pieralisi wrote:
+> > ARM relies on the standard implementation of pci_resource_to_user()
+> > which actually is an identity map and exports to user space
+> > PCI memory resources as they are stored in PCI devices resources (ie BARs)
+> > which represent CPU physical addresses (fixed-up using BUS to CPU
+> > address conversions) not PCI bus addresses.
+> 
+> This paragraph seems wrong.
+> 
+> It first says that PCI memory resources contain the same values that the
+> PCI device has in its BAR.  It then goes on to say that they are CPU
+> physical addresses.  That is not true.
+> 
+> For example, DC21285 systems always have done this as: the PCI bars
+> contain the _bus_ addresses, which tend to be in the range 0 to
+> 0x7fffffff.  These correspond with a CPU physical address of
+> 0x80000000 to 0xffffffff.  The PCI bus resources for IOMEM resources
+> contains the CPU physical address of the mapping.
+
+It is a commit log wording problem, I exactly meant what you said, I
+will reword it (or remove "ie BARs" from it, since it is misleading).
+
+I think that the word "BAR" is a bit misused in helpers function like:
+
+pci_resource_{start/end/len}
+
+too but as long as we all know what that means (and I write proper
+commit logs :)) it is all fine.
+
+> > On platforms where the mapping between CPU and BUS address is not a 1:1
+> > mapping this is erroneous, in that an additional shift is applied to
+> > an already fixed-up offset passed from userspace.
+> 
+> Yes, I think this is a correct patch inspite of the description. :)
+
+Great, I will reword it and wait for comments on patch 1 that changes
+pci_mmap_fits() (it does not affect ARM, but would like to get both changes
+in coherently - ie if I am asked to change patch 1 I will probably have
+to change this patch too).
+
+Thanks,
+Lorenzo
 
