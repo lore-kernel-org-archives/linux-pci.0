@@ -1,65 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48956 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750810AbaJ1Q5n (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Oct 2014 12:57:43 -0400
-Date: Tue, 28 Oct 2014 12:57:17 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: David Vrabel <david.vrabel@citrix.com>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	xen-devel@lists.xenproject.org
-Subject: Re: [Xen-devel] [PATCH 1/3] x86/xen: Introduce a global flag to fix
- the MSI mask bug
-Message-ID: <20141028165717.GC26801@laptop.dumpdata.com>
-References: <1414377878-23497-1-git-send-email-wangyijing@huawei.com>
- <1414377878-23497-2-git-send-email-wangyijing@huawei.com>
- <544E27F6.8010607@citrix.com>
- <20141027194501.GI14654@laptop.dumpdata.com>
- <544FC7FC.9040807@citrix.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <544FC7FC.9040807@citrix.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:39935 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752187AbaJPKhA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Oct 2014 06:37:00 -0400
+Message-ID: <1413455817.2165.6.camel@antimon.intern.lynxeye.de>
+Subject: Re: [PATCH v6 01/13] PCI: designware: Refine setup_rc and add msi
+ data restore
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Richard Zhu <richard.zhu@freescale.com>
+Cc: linux-pci@vger.kernel.org, shawn.guo@freescale.com,
+	festevam@gmail.com, tharvey@gateworks.com,
+	Richard Zhu <r65037@freescale.com>
+Date: Thu, 16 Oct 2014 12:36:57 +0200
+In-Reply-To: <1413445963-24706-2-git-send-email-richard.zhu@freescale.com>
+References: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
+	 <1413445963-24706-2-git-send-email-richard.zhu@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 28, 2014 at 04:44:44PM +0000, David Vrabel wrote:
-> On 27/10/14 19:45, Konrad Rzeszutek Wilk wrote:
-> > On Mon, Oct 27, 2014 at 11:09:42AM +0000, David Vrabel wrote:
-> >> On 27/10/14 02:44, Yijing Wang wrote:
-> >>> Commit 0e4ccb1505a9 ("PCI: Add x86_msi.msi_mask_irq() and msix_mask_irq()")
-> >>> fixed MSI mask bug which may cause kernel crash. But the commit
-> >>> made MSI code complex. Introduce a new global flag "pci_msi_ignore_mask"
-> >>> to ignore MSI/MSI-X to fix this issue, it's a cleaner solution.
-> >>> And the commit 0e4ccb1505a9 will be reverted in the later patch.
-> >>
-> >> Reviewed-by: David Vrabel <david.vrabel@citrix.com>
-> >>
-> >> In the sense that it keeps the odd Xen behaviour.  But...
-> >>
-> >> Konrad, why was this fixed like this in the first place?  IMO, it would
-> > 
-> > As 0e4ccb1505a9 explains:
-> >     PCI: Add x86_msi.msi_mask_irq() and msix_mask_irq()
-> >     
-> >     Certain platforms do not allow writes in the MSI-X BARs to setup or tear
-> >     down vector values.  To combat against the generic code trying to write to
-> >     that and either silently being ignored or crashing due to the pagetables
-> >     being marked R/O this patch introduces a platform override.
-> >     
-> >     Note that we keep two separate, non-weak, functions default_mask_msi_irqs()
-> >     and default_mask_msix_irqs() for the behavior of the arch_mask_msi_irqs()
-> >     and arch_mask_msix_irqs(), as the default behavior is needed by x86 PCI
-> >     code.
-> >     
-> >     For Xen, which does not allow the guest to write to MSI-X tables - as the
-> >     hypervisor is solely responsible for setting the vector values - we
-> >     implement two nops.
+Am Donnerstag, den 16.10.2014, 15:52 +0800 schrieb Richard Zhu:
+> From: Richard Zhu <r65037@freescale.com>
 > 
-> My question specifically was: could this be fixed by allowing writes to
-> set/clear the mask bit?  If so, why was this not done and could we do
+> - move "program correct class for RC" from dw_pcie_host_init()
+> to dw_pcie_setup_rc(). since this is RC setup, it's
+> better to contained in dw_pcie_setup_rc function.
+> Then, RC can be re-setup really by dw_pcie_setup_rc().
+> - add one store/re-store msi cfg functions. Because that
+> pcie controller maybe powered off during system suspend,
+> and the msi data configuration would be lost.
+> these functions can be used to store/restore the msi data
+> and msi_enable during the suspend/resume callback.
+> 
+> Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
 
-No.
-> this now?
+NAK for the reasons below.
+ 
+> ---
+>  drivers/pci/host/pcie-designware.c | 21 ++++++++++++++++++---
+>  drivers/pci/host/pcie-designware.h |  3 +++
+>  2 files changed, 21 insertions(+), 3 deletions(-)
 > 
-> David
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 538bbf3..b1f82ff 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -194,6 +194,19 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+>  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
+>  }
+>  
+> +void dw_pcie_msi_cfg_store(struct pcie_port *pp)
+> +{
+> +	dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE, 4, &pp->msi_enable);
+
+You are only saving and restoring this one register. While this might
+work for the current implementation that uses only a max of 32 vectors
+this is not true in general. At least the imx6 implementation supports
+up to 128 vectors, so actually 4 registers might be used here.
+
+> +}
+> +
+> +void dw_pcie_msi_cfg_restore(struct pcie_port *pp)
+> +{
+> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+> +			virt_to_phys((void *)pp->msi_data));
+> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
+> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE, 4, pp->msi_enable);
+
+Murali asked you to take into account the newly added requirements for
+older designware cores. You did not.
+
+> +}
+> +
+>  static int find_valid_pos0(struct pcie_port *pp, int msgvec, int pos, int *pos0)
+>  {
+>  	int flag = 1;
+> @@ -570,9 +583,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>  
+>  	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+>  
+> -	/* program correct class for RC */
+> -	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
+> -
+>  	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+>  	val |= PORT_LOGIC_SPEED_CHANGE;
+>  	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+> @@ -917,6 +927,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>  	val = memlimit | membase;
+>  	dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
+>  
+> +	/* program correct class for RC */
+> +	dw_pcie_readl_rc(pp, PCI_CLASS_REVISION, &val);
+> +	val |= PCI_CLASS_BRIDGE_PCI << 16;
+> +	dw_pcie_writel_rc(pp, val, PCI_CLASS_REVISION);
+> +
+
+This is getting ridiculous. How many time did I ask you to change this
+now. This hunk should just read:
+
++	/* program correct class for RC */
++	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
++
+
+>  	/* setup command register */
+>  	dw_pcie_readl_rc(pp, PCI_COMMAND, &val);
+>  	val &= 0xffff0000;
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index a476e60..b0bfed0 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -56,6 +56,7 @@ struct pcie_port {
+>  	int			msi_irq;
+>  	struct irq_domain	*irq_domain;
+>  	unsigned long		msi_data;
+> +	unsigned int		msi_enable;
+>  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+>  };
+>  
+> @@ -83,6 +84,8 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+>  int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
+>  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+>  void dw_pcie_msi_init(struct pcie_port *pp);
+> +void dw_pcie_msi_cfg_store(struct pcie_port *pp);
+> +void dw_pcie_msi_cfg_restore(struct pcie_port *pp);
+>  int dw_pcie_link_up(struct pcie_port *pp);
+>  void dw_pcie_setup_rc(struct pcie_port *pp);
+>  int dw_pcie_host_init(struct pcie_port *pp);
+
+
