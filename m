@@ -1,511 +1,182 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v3 13/24] iommu/amd: Enhance AMD IR driver to suppport hierarchy irqdomain
-Date: Tue, 28 Oct 2014 16:26:31 +0800
-Message-Id: <1414484803-10311-14-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:30333 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751334AbaJPTpZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Oct 2014 15:45:25 -0400
+Message-ID: <1413488723.2539.72.camel@zim.stowe>
+Subject: Re: [PATCH] pci, add sysfs numa_node write function
+From: Myron Stowe <mstowe@redhat.com>
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Myron Stowe <mstowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Thu, 16 Oct 2014 13:45:23 -0600
+In-Reply-To: <543FBAEF.7030905@redhat.com>
+References: <1413399924-599-1-git-send-email-prarit@redhat.com>
+	 <CAErSpo6Oy1S1OECirp6=tz+pQWUtkFE6p1LTzNaYtzxoX73FWw@mail.gmail.com>
+	 <543ECF6F.2030705@redhat.com>
+	 <CAErSpo76g-EPsUsMjhBpnnbKD3QufHz1xkvYaqXd8hYtgQ5u1g@mail.gmail.com>
+	 <543FBAEF.7030905@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance AMD interrupt remapping driver to support hierarchy irqdomain,
-it will simplify the code eventually.
+On Thu, 2014-10-16 at 08:32 -0400, Prarit Bhargava wrote:
+> 
+> On 10/15/2014 05:20 PM, Bjorn Helgaas wrote:
+> > On Wed, Oct 15, 2014 at 1:47 PM, Prarit Bhargava <prarit@redhat.com> wrote:
+> >> On 10/15/2014 03:23 PM, Bjorn Helgaas wrote:
+> >>> Hi Prarit,
+> >>>
+> >>> On Wed, Oct 15, 2014 at 1:05 PM, Prarit Bhargava <prarit@redhat.com> wrote:
+> >>>> Consider a multi-node, multiple pci root bridge system which can be
+> >>>> configured into one large node or one node/socket.  When configuring the
+> >>>> system the numa_node value for each PCI root bridge is always set
+> >>>> incorrectly to -1, or NUMA_NO_NODE, rather than to the node value of each
+> >>>> socket.  Each PCI device inherits the numa value directly from it's parent
+> >>>> device, so that the NUMA_NO_NODE value is passed through the entire PCI
+> >>>> tree.
+> >>>>
+> >>>> Some new drivers, such as the Intel QAT driver, drivers/crypto/qat,
+> >>>> require that a specific node be assigned to the device in order to
+> >>>> achieve maximum performance for the device, and will fail to load if the
+> >>>> device has NUMA_NO_NODE.
+> >>>
+> >>> It seems ... unfriendly for a driver to fail to load just because it
+> >>> can't guarantee maximum performance.  Out of curiosity, where does
+> >>> this actually happen?  I had a quick look for NUMA_NO_NODE and
+> >>> module_init() functions in drivers/crypto/qat, and I didn't see the
+> >>> spot.
+> >>
+> >> The whole point of the Intel QAT driver is to guarantee max performance.  If
+> >> that is not possible the driver should not load (according to the thread
+> >> mentioned below)
+> >>
+> >>>
+> >>>> The driver would load if the numa_node value
+> >>>> was equal to or greater than -1 and quickly hacking the driver results in
+> >>>> a functional QAT driver.
+> >>>>
+> >>>> Using lspci and numactl it is easy to determine what the numa value should
+> >>>> be.  The problem is that there is no way to set it.  This patch adds a
+> >>>> store function for the PCI device's numa_node value.
+> >>>
+> >>> I'm not familiar with numactl.  It sounds like it can show you the
+> >>> NUMA topology?  Where does that information come from?
+> >>
+> >> You can map at least what nodes are available (although I suppose you can get
+> >> the same information from dmesg).  You have to do a bit of hunting through the
+> >> PCI tree to determine the root PCI devices, but you can determine which root
+> >> device is connected to which node.
+> > 
+> > Is numactl reading SRAT?  SLIT?  SMBIOS tables?  Presumably the kernel
+> > has access to whatever information you're getting from numactl and
+> > lspci, and if so, maybe we can do the workaround automatically in the
+> > kernel.
+> 
+> I'll go figure that out ...
+> 
+> > 
+> >>>> To use this, one can do
+> >>>>
+> >>>> echo 3 > /sys/devices/pci0000:ff/0000:ff:1f.3/numa_node
+> >>>>
+> >>>> to set the numa node for PCI device 0000:ff:1f.3.
+> >>>
+> >>> It definitely seems wrong that we don't set the node number correctly.
+> >>> pci_acpi_scan_root() sets the node number by looking for a _PXM method
+> >>> that applies to the host bridge.  Why does that not work in this case?
+> >>>  Does the BIOS not supply _PXM?
+> >>
+> >> Yeah ... unfortunately the BIOS is broken in this case.  And I know what you're
+> >> thinking ;) -- why not get the BIOS fixed?  I'm through relying on BIOS fixes
+> >> which can take six months to a year to appear in a production version... I've
+> >> been bitten too many times by promises of BIOS fixes that never materialize.
+> > 
+> > Yep, I understand.  The question is how we implement a workaround so
+> > it doesn't become the accepted way to do things.  Obviously we don't
+> > want people manually grubbing through numactl/lspci output or writing
+> > shell scripts to do things that *should* happen automatically.
+> > 
+> >> We have systems that only have a support cycle of 3 years, and things like ACPI
+> >> _PXM updates are at the bottom of the list :/.
+> > 
+> 
+> > 
+> > Somewhere in the picture there needs to be a feedback loop that
+> > encourages the vendor to fix the problem.  I don't see that happening
+> > yet.  Having QAT fail because the platform didn't supply the
+> > information required to make it work would be a nice loop.  I don't
+> > want to completely paper over the problem without providing some other
+> > kind of feedback at the same time.
+> 
+> Okay -- I see what you're after here and I completely agree with it.  But
+> sometimes I feel like I banging on a silent drum with some of these companies
+> about this stuff :(  My frustration with these companies is starting to show I
+> guess...
+> 
+> > 
+> > You're probably aware of [1], which was the same problem.  Apparently
+> > it was originally reported to RedHat as [2] (which is private, so I
+> > can't read it).  That led to a workaround hack for some AMD systems
+> > [3, 4].
+> 
+> Yeah ... part of me was thinking that maybe I should do something like
+> the above but I didn't know how you'd feel about expanding that hack.  I'll look
+> into it.  I'd prefer it to be opt-in with a kernel parameter.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/amd_iommu.c       |  341 ++++++++++++++++++++++++++++++++++++++-
- drivers/iommu/amd_iommu_init.c  |    4 +
- drivers/iommu/amd_iommu_proto.h |    9 ++
- drivers/iommu/amd_iommu_types.h |    5 +
- 4 files changed, 353 insertions(+), 6 deletions(-)
+I believe the point was to not consider expanding upon the AMD chip-set
+specific driver, or some similar tactic, and to investigate how
+'numactl' obtains such information in order to see if that is a possible
+solution that could be used going forward.  It's good to see that the
+latest discussions with Alexander seem to suggest that is the direction
+being taken now.
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 6fda7cc789eb..a3ef3407bb1b 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -33,6 +33,7 @@
- #include <linux/export.h>
- #include <linux/irq.h>
- #include <linux/msi.h>
-+#include <linux/irqdomain.h>
- #include <asm/irq_remapping.h>
- #include <asm/io_apic.h>
- #include <asm/apic.h>
-@@ -3854,6 +3855,17 @@ union irte {
- 	} fields;
- };
- 
-+struct amd_ir_data {
-+	struct irq_2_irte			irq_2_irte;
-+	union irte				irte_entry;
-+	union {
-+		struct msi_msg			msi_entry;
-+		struct IR_IO_APIC_route_entry	ioapic_entry;
-+	};
-+};
-+
-+static struct irq_chip amd_ir_chip;
-+
- #define DTE_IRQ_PHYS_ADDR_MASK	(((1ULL << 45)-1) << 6)
- #define DTE_IRQ_REMAP_INTCTL    (2ULL << 60)
- #define DTE_IRQ_TABLE_LEN       (8ULL << 1)
-@@ -3947,7 +3959,8 @@ out_unlock:
- 	return table;
- }
- 
--static int alloc_irq_index(struct irq_cfg *cfg, u16 devid, int count)
-+static int alloc_irq_index(struct irq_cfg *cfg, struct irq_2_irte *irte_info,
-+			   u16 devid, int count)
- {
- 	struct irq_remap_table *table;
- 	unsigned long flags;
-@@ -3969,15 +3982,12 @@ static int alloc_irq_index(struct irq_cfg *cfg, u16 devid, int count)
- 			c = 0;
- 
- 		if (c == count)	{
--			struct irq_2_irte *irte_info;
--
- 			for (; c != 0; --c)
- 				table->table[index - c + 1] = IRTE_ALLOCATED;
- 
- 			index -= count - 1;
- 
- 			cfg->remapped	      = 1;
--			irte_info             = &cfg->irq_2_irte;
- 			irte_info->devid      = devid;
- 			irte_info->index      = index;
- 
-@@ -4222,7 +4232,7 @@ static int msi_alloc_irq(struct pci_dev *pdev, int irq, int nvec)
- 		return -EINVAL;
- 
- 	devid = get_device_id(&pdev->dev);
--	index = alloc_irq_index(cfg, devid, nvec);
-+	index = alloc_irq_index(cfg, &cfg->irq_2_irte, devid, nvec);
- 
- 	return index < 0 ? MAX_IRQS_PER_TABLE : index;
- }
-@@ -4269,7 +4279,7 @@ static int alloc_hpet_msi(unsigned int irq, unsigned int id)
- 	if (devid < 0)
- 		return devid;
- 
--	index = alloc_irq_index(cfg, devid, 1);
-+	index = alloc_irq_index(cfg, &cfg->irq_2_irte, devid, 1);
- 	if (index < 0)
- 		return index;
- 
-@@ -4280,6 +4290,91 @@ static int alloc_hpet_msi(unsigned int irq, unsigned int id)
- 	return 0;
- }
- 
-+static int get_devid(struct irq_alloc_info *info)
-+{
-+	int devid = -1;
-+
-+	switch (info->type) {
-+	case X86_IRQ_ALLOC_TYPE_IOAPIC:
-+		devid     = get_ioapic_devid(info->ioapic_id);
-+		break;
-+	case X86_IRQ_ALLOC_TYPE_HPET:
-+		devid     = get_hpet_devid(info->hpet_id);
-+		break;
-+	case X86_IRQ_ALLOC_TYPE_MSI:
-+	case X86_IRQ_ALLOC_TYPE_MSIX:
-+		devid = get_device_id(&info->msi_dev->dev);
-+		break;
-+	default:
-+		BUG_ON(1);
-+		break;
-+	}
-+
-+	return devid;
-+}
-+
-+static struct irq_domain *get_ir_irq_domain(struct irq_alloc_info *info)
-+{
-+	int devid;
-+	struct amd_iommu *iommu;
-+
-+	if (!info)
-+		return NULL;
-+
-+	devid = get_devid(info);
-+	if (devid >= 0) {
-+		iommu = amd_iommu_rlookup_table[devid];
-+		if (iommu)
-+			return iommu->ir_domain;
-+	}
-+
-+	return NULL;
-+}
-+
-+static struct irq_domain *get_irq_domain(struct irq_alloc_info *info)
-+{
-+	int devid;
-+	struct amd_iommu *iommu;
-+
-+	if (!info)
-+		return NULL;
-+
-+	switch (info->type) {
-+	case X86_IRQ_ALLOC_TYPE_MSI:
-+	case X86_IRQ_ALLOC_TYPE_MSIX:
-+		devid = get_device_id(&info->msi_dev->dev);
-+		if (devid >= 0) {
-+			iommu = amd_iommu_rlookup_table[devid];
-+			if (iommu)
-+				return iommu->msi_domain;
-+		}
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return NULL;
-+}
-+
-+static int get_ioapic_entry(struct irq_data *irq_data,
-+				  struct IR_IO_APIC_route_entry *entry)
-+{
-+	struct amd_ir_data *ir_data = irq_data->chip_data;
-+
-+	*entry = ir_data->ioapic_entry;
-+
-+	return 0;
-+}
-+
-+static int get_msi_entry(struct irq_data *irq_data, struct msi_msg *msg)
-+{
-+	struct amd_ir_data *ir_data = irq_data->chip_data;
-+
-+	*msg = ir_data->msi_entry;
-+
-+	return 0;
-+}
-+
- struct irq_remap_ops amd_iommu_irq_ops = {
- 	.supported		= amd_iommu_supported,
- 	.prepare		= amd_iommu_prepare,
-@@ -4294,5 +4389,239 @@ struct irq_remap_ops amd_iommu_irq_ops = {
- 	.msi_alloc_irq		= msi_alloc_irq,
- 	.msi_setup_irq		= msi_setup_irq,
- 	.alloc_hpet_msi		= alloc_hpet_msi,
-+	.get_ir_irq_domain	= get_ir_irq_domain,
-+	.get_irq_domain		= get_irq_domain,
-+	.get_ioapic_entry	= get_ioapic_entry,
-+	.get_msi_entry		= get_msi_entry,
- };
-+
-+static void irq_remapping_prepare_irte(struct amd_ir_data *data,
-+				       struct irq_cfg *irq_cfg,
-+				       struct irq_alloc_info *info,
-+				       int devid, int index, int sub_handle)
-+{
-+	union irte *irte = &data->irte_entry;
-+	struct irq_2_irte *irte_info = &data->irq_2_irte;
-+	struct IR_IO_APIC_route_entry *entry = &data->ioapic_entry;
-+	struct msi_msg *msg = &data->msi_entry;
-+
-+	irq_cfg->remapped = 1;
-+	data->irq_2_irte.devid = devid;
-+	data->irq_2_irte.index = index + sub_handle;
-+
-+	/* Setup IRTE for IOMMU */
-+	irte->val = 0;
-+	irte->fields.vector      = irq_cfg->vector;
-+	irte->fields.int_type    = apic->irq_delivery_mode;
-+	irte->fields.destination = irq_cfg->dest_apicid;
-+	irte->fields.dm          = apic->irq_dest_mode;
-+	irte->fields.valid       = 1;
-+
-+	switch (info->type) {
-+	case X86_IRQ_ALLOC_TYPE_IOAPIC:
-+		/* Setup IOAPIC entry */
-+		memset(entry, 0, sizeof(*entry));
-+		entry->vector        = index;
-+		entry->mask          = 0;
-+		entry->trigger       = info->ioapic_trigger;
-+		entry->polarity      = info->ioapic_polarity;
-+		/* Mask level triggered irqs. */
-+		if (info->ioapic_trigger)
-+			entry->mask = 1;
-+		break;
-+
-+	case X86_IRQ_ALLOC_TYPE_HPET:
-+	case X86_IRQ_ALLOC_TYPE_MSI:
-+	case X86_IRQ_ALLOC_TYPE_MSIX:
-+		msg->address_hi = MSI_ADDR_BASE_HI;
-+		msg->address_lo = MSI_ADDR_BASE_LO;
-+		msg->data = irte_info->index;
-+		break;
-+
-+	default:
-+		BUG_ON(1);
-+		break;
-+	}
-+}
-+
-+static int irq_remapping_alloc(struct irq_domain *domain, unsigned int virq,
-+			       unsigned int nr_irqs, void *arg)
-+{
-+	struct irq_alloc_info *info = arg;
-+	struct amd_ir_data *data;
-+	struct irq_data *irq_data;
-+	struct irq_cfg *cfg;
-+	int i, ret, devid;
-+	int index = -1;
-+
-+	if (!info)
-+		return -EINVAL;
-+	if (nr_irqs > 1 && info->type != X86_IRQ_ALLOC_TYPE_MSI &&
-+	    info->type != X86_IRQ_ALLOC_TYPE_MSIX)
-+		return -EINVAL;
-+
-+	devid = get_devid(info);
-+	if (devid < 0)
-+		return -EINVAL;
-+
-+	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
-+	if (ret < 0)
-+		return ret;
-+
-+	ret = -ENOMEM;
-+	data = kzalloc(sizeof(*data), GFP_KERNEL);
-+	if (!data)
-+		goto out_free_parent;
-+
-+	if (info->type == X86_IRQ_ALLOC_TYPE_IOAPIC) {
-+		if (get_irq_table(devid, true))
-+			index = info->ioapic_pin;
-+		else
-+			ret = -ENOMEM;
-+	} else {
-+		cfg = irq_cfg(virq);
-+		index = alloc_irq_index(cfg, &data->irq_2_irte, devid, nr_irqs);
-+	}
-+	if (index < 0) {
-+		pr_warn("Failed to allocate IRTE\n");
-+		kfree(data);
-+		goto out_free_parent;
-+	}
-+
-+	for (i = 0; i < nr_irqs; i++) {
-+		irq_data = irq_domain_get_irq_data(domain, virq + i);
-+		cfg = irqd_cfg(irq_data);
-+		if (!irq_data || !cfg) {
-+			ret = -EINVAL;
-+			goto out_free_data;
-+		}
-+
-+		if (i > 0) {
-+			data = kzalloc(sizeof(*data), GFP_KERNEL);
-+			if (!data)
-+				goto out_free_data;
-+		}
-+		irq_data->hwirq = (devid << 16) + i;
-+		irq_data->chip_data = data;
-+		irq_data->chip = &amd_ir_chip;
-+		irq_remapping_prepare_irte(data, cfg, info, devid, index, i);
-+		irq_set_status_flags(virq + i, IRQ_MOVE_PCNTXT);
-+	}
-+	return 0;
-+
-+out_free_data:
-+	for (i--; i >= 0; i--) {
-+		irq_data = irq_domain_get_irq_data(domain, virq + i);
-+		if (irq_data->chip_data) {
-+			kfree(irq_data->chip_data);
-+			irq_domain_reset_irq_data(irq_data);
-+		}
-+	}
-+	for (i = 0; i < nr_irqs; i++)
-+		free_irte(devid, index + i);
-+out_free_parent:
-+	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
-+	return ret;
-+}
-+
-+static void irq_remapping_free(struct irq_domain *domain, unsigned int virq,
-+			       unsigned int nr_irqs)
-+{
-+	struct irq_data *irq_data;
-+	struct amd_ir_data *data;
-+	struct irq_2_irte *irte_info;
-+	int i;
-+
-+	for (i = 0; i < nr_irqs; i++) {
-+		irq_data = irq_domain_get_irq_data(domain, virq  + i);
-+		if (irq_data && irq_data->chip_data) {
-+			data = irq_data->chip_data;
-+			irte_info = &data->irq_2_irte;
-+			free_irte(irte_info->devid, irte_info->index);
-+			irq_domain_reset_irq_data(irq_data);
-+			kfree(data);
-+		}
-+	}
-+	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
-+}
-+
-+static int irq_remapping_activate(struct irq_domain *domain,
-+				  struct irq_data *irq_data)
-+{
-+	struct amd_ir_data *data = irq_data->chip_data;
-+	struct irq_2_irte *irte_info = &data->irq_2_irte;
-+
-+	modify_irte(irte_info->devid, irte_info->index, data->irte_entry);
-+
-+	return 0;
-+}
-+
-+static int irq_remapping_deactivate(struct irq_domain *domain,
-+				    struct irq_data *irq_data)
-+{
-+	struct amd_ir_data *data = irq_data->chip_data;
-+	struct irq_2_irte *irte_info = &data->irq_2_irte;
-+	union irte entry;
-+
-+	entry.val = 0;
-+	modify_irte(irte_info->devid, irte_info->index, data->irte_entry);
-+
-+	return 0;
-+}
-+
-+static struct irq_domain_ops amd_ir_domain_ops = {
-+	.alloc = irq_remapping_alloc,
-+	.free = irq_remapping_free,
-+	.activate = irq_remapping_activate,
-+	.deactivate = irq_remapping_deactivate,
-+};
-+
-+static int amd_ir_set_affinity(struct irq_data *data,
-+			       const struct cpumask *mask, bool force)
-+{
-+	struct amd_ir_data *ir_data = data->chip_data;
-+	struct irq_2_irte *irte_info = &ir_data->irq_2_irte;
-+	struct irq_cfg *cfg = irqd_cfg(data);
-+	struct irq_data *parent = data->parent_data;
-+	int ret;
-+
-+	ret = parent->chip->irq_set_affinity(parent, mask, force);
-+	if (ret < 0)
-+		return ret;
-+
-+	/*
-+	 * Atomically updates the IRTE with the new destination, vector
-+	 * and flushes the interrupt entry cache.
-+	 */
-+	ir_data->irte_entry.fields.vector = cfg->vector;
-+	ir_data->irte_entry.fields.destination = cfg->dest_apicid;
-+	modify_irte(irte_info->devid, irte_info->index, ir_data->irte_entry);
-+
-+	/*
-+	 * After this point, all the interrupts will start arriving
-+	 * at the new destination. So, time to cleanup the previous
-+	 * vector allocation.
-+	 */
-+	if (cfg->move_in_progress)
-+		send_cleanup_vector(cfg);
-+
-+	return ret;
-+}
-+
-+static struct irq_chip amd_ir_chip = {
-+	.irq_ack = ir_ack_apic_edge,
-+	.irq_set_affinity = amd_ir_set_affinity,
-+};
-+
-+int amd_iommu_create_irq_domain(struct amd_iommu *iommu)
-+{
-+	iommu->ir_domain = irq_domain_add_tree(NULL, &amd_ir_domain_ops, iommu);
-+	if (!iommu->ir_domain)
-+		return -ENOMEM;
-+
-+	iommu->ir_domain->parent = arch_get_ir_parent_domain();
-+	iommu->msi_domain = arch_create_msi_irq_domain(iommu->ir_domain);
-+
-+	return 0;
-+}
- #endif
-diff --git a/drivers/iommu/amd_iommu_init.c b/drivers/iommu/amd_iommu_init.c
-index b0522f15730f..de3390a7d345 100644
---- a/drivers/iommu/amd_iommu_init.c
-+++ b/drivers/iommu/amd_iommu_init.c
-@@ -1124,6 +1124,10 @@ static int __init init_iommu_one(struct amd_iommu *iommu, struct ivhd_header *h)
- 	if (ret)
- 		return ret;
- 
-+	ret = amd_iommu_create_irq_domain(iommu);
-+	if (ret)
-+		return ret;
-+
- 	/*
- 	 * Make sure IOMMU is not considered to translate itself. The IVRS
- 	 * table tells us so, but this is a lie!
-diff --git a/drivers/iommu/amd_iommu_proto.h b/drivers/iommu/amd_iommu_proto.h
-index 95ed6deae47f..612a22192fa0 100644
---- a/drivers/iommu/amd_iommu_proto.h
-+++ b/drivers/iommu/amd_iommu_proto.h
-@@ -63,6 +63,15 @@ extern u8 amd_iommu_pc_get_max_counters(u16 devid);
- extern int amd_iommu_pc_get_set_reg_val(u16 devid, u8 bank, u8 cntr, u8 fxn,
- 				    u64 *value, bool is_write);
- 
-+#ifdef CONFIG_IRQ_REMAP
-+extern int amd_iommu_create_irq_domain(struct amd_iommu *iommu);
-+#else
-+static inline int amd_iommu_create_irq_domain(struct amd_iommu *iommu)
-+{
-+	return 0;
-+}
-+#endif
-+
- #define PPR_SUCCESS			0x0
- #define PPR_INVALID			0x1
- #define PPR_FAILURE			0xf
-diff --git a/drivers/iommu/amd_iommu_types.h b/drivers/iommu/amd_iommu_types.h
-index cec51a8ba844..ef12d74a03fe 100644
---- a/drivers/iommu/amd_iommu_types.h
-+++ b/drivers/iommu/amd_iommu_types.h
-@@ -392,6 +392,7 @@ struct amd_iommu_fault {
- 
- 
- struct iommu_domain;
-+struct irq_domain;
- 
- /*
-  * This structure contains generic data for  IOMMU protection domains
-@@ -574,6 +575,10 @@ struct amd_iommu {
- 	/* The maximum PC banks and counters/bank (PCSup=1) */
- 	u8 max_banks;
- 	u8 max_counters;
-+#ifdef CONFIG_IRQ_REMAP
-+	struct irq_domain *ir_domain;
-+	struct irq_domain *msi_domain;
-+#endif
- };
- 
- struct devid_map {
--- 
-1.7.10.4
+
+Pursuing something like the AMD scenario, where a chip-set specific
+driver reads internal registers, is an untenable dead end.  It leads to
+a perpetual cycle in which the driver has to constantly be updated as
+new platform chip-sets are introduced.  To solve such situations,
+architecture independent mechanisms are thought up, formalized, and put
+in place - in this case ACPI's _PXM methods and/or SRAT, SLIT tables.
+
+Chip-set specific drivers like 'amd_bus.c' perpetuate circumventing
+architected solutions, more often than not introducing subsequent issues
+themselves.
+
+The previous NUMA info issue that Bjorn referenced is a prime example of
+both: it "snoops" out proximity info from the chip-set when the BIOS has
+not supplied ACPI _PXM method(s) (i.e. the circumvention) and in doing
+such, had at least three sub-issues; all of which can be understood by
+carefully reading the chain of events from the PCI list's thread [1].
+
+As a result, the 'amd_bus.c' patch was pared down from a substantial
+re-factoring and update effort to its bare minimum - at one point there
+was even discussion about removing the driver completely as was done
+with 'intel_bus.c' (note that the NUMA related proximity "snooping"
+capability only exists for AMD based platforms, there is no equivalent
+for Intel based platforms).
+
+In that particular instance the end result was that the customer impact
+was significant enough financially that it forced the vendor to updated
+there BIOS to include the necessary _PXM methods.
+
+
+Introducing kernel parameters is a similar scenario.  Customers should
+not need to know about, nor utilize, kernel parameters in their normal
+day-to-day activities.  Yes, such capabilities are invaluable for those
+of us that work with the kernel but customers just should not be
+expected to have to resort to such.
+
+
+[1] https://lkml.org/lkml/2014/3/5/898
+
+
+Myron
+
+> 
+> P.
+
 
