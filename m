@@ -1,106 +1,120 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Jason Chang <jason.chang@amd.com>,
-	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v3 09/19] usb: dwc3: add delay p1p2p3 quirk
-Date: Tue, 28 Oct 2014 19:54:30 +0800
-Message-ID: <1414497280-3126-10-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
-References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:36473 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751035AbaJPOoH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Oct 2014 10:44:07 -0400
+Message-ID: <543FD9B2.6050802@redhat.com>
+Date: Thu, 16 Oct 2014 07:44:02 -0700
+From: Alexander Duyck <alexander.h.duyck@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+To: Prarit Bhargava <prarit@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Myron Stowe <mstowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] pci, add sysfs numa_node write function
+References: <1413399924-599-1-git-send-email-prarit@redhat.com> <CAErSpo6Oy1S1OECirp6=tz+pQWUtkFE6p1LTzNaYtzxoX73FWw@mail.gmail.com> <543ECF6F.2030705@redhat.com> <CAErSpo76g-EPsUsMjhBpnnbKD3QufHz1xkvYaqXd8hYtgQ5u1g@mail.gmail.com> <543FBAEF.7030905@redhat.com>
+In-Reply-To: <543FBAEF.7030905@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds delay P0 to P1/P2/P3 quirk for U2/U2/U3, and some special
-platforms can configure that if it is needed.
 
-Signed-off-by: Huang Rui <ray.huang@amd.com>
----
- drivers/usb/dwc3/core.c          | 6 ++++++
- drivers/usb/dwc3/core.h          | 5 +++++
- drivers/usb/dwc3/platform_data.h | 1 +
- 3 files changed, 12 insertions(+)
+On 10/16/2014 05:32 AM, Prarit Bhargava wrote:
+> On 10/15/2014 05:20 PM, Bjorn Helgaas wrote:
+>> On Wed, Oct 15, 2014 at 1:47 PM, Prarit Bhargava <prarit@redhat.com> wrote:
+>>> On 10/15/2014 03:23 PM, Bjorn Helgaas wrote:
+>>>> Hi Prarit,
+>>>>
+>>>> On Wed, Oct 15, 2014 at 1:05 PM, Prarit Bhargava <prarit@redhat.com> wrote:
+>>>>> Consider a multi-node, multiple pci root bridge system which can be
+>>>>> configured into one large node or one node/socket.  When configuring the
+>>>>> system the numa_node value for each PCI root bridge is always set
+>>>>> incorrectly to -1, or NUMA_NO_NODE, rather than to the node value of each
+>>>>> socket.  Each PCI device inherits the numa value directly from it's parent
+>>>>> device, so that the NUMA_NO_NODE value is passed through the entire PCI
+>>>>> tree.
+>>>>>
+>>>>> Some new drivers, such as the Intel QAT driver, drivers/crypto/qat,
+>>>>> require that a specific node be assigned to the device in order to
+>>>>> achieve maximum performance for the device, and will fail to load if the
+>>>>> device has NUMA_NO_NODE.
+>>>> It seems ... unfriendly for a driver to fail to load just because it
+>>>> can't guarantee maximum performance.  Out of curiosity, where does
+>>>> this actually happen?  I had a quick look for NUMA_NO_NODE and
+>>>> module_init() functions in drivers/crypto/qat, and I didn't see the
+>>>> spot.
+>>> The whole point of the Intel QAT driver is to guarantee max performance.  If
+>>> that is not possible the driver should not load (according to the thread
+>>> mentioned below)
 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index 021ebf3..244c71a 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -380,6 +380,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
- 	if (dwc->req_p1p2p3_quirk)
- 		reg |= DWC3_GUSB3PIPECTL_REQP1P2P3;
- 
-+	if (dwc->del_p1p2p3_quirk)
-+		reg |= DWC3_GUSB3PIPECTL_DEP1P2P3_EN;
-+
- 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
- 
- 	mdelay(100);
-@@ -756,6 +759,8 @@ static int dwc3_probe(struct platform_device *pdev)
- 				"snps,u2ss_inp3_quirk");
- 		dwc->req_p1p2p3_quirk = of_property_read_bool(node,
- 				"snps,req_p1p2p3_quirk");
-+		dwc->del_p1p2p3_quirk = of_property_read_bool(node,
-+				"snps,del_p1p2p3_quirk");
- 	} else if (pdata) {
- 		dwc->maximum_speed = pdata->maximum_speed;
- 		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
-@@ -769,6 +774,7 @@ static int dwc3_probe(struct platform_device *pdev)
- 		dwc->u2exit_lfps_quirk = pdata->u2exit_lfps_quirk;
- 		dwc->u2ss_inp3_quirk = pdata->u2ss_inp3_quirk;
- 		dwc->req_p1p2p3_quirk = pdata->req_p1p2p3_quirk;
-+		dwc->del_p1p2p3_quirk = pdata->del_p1p2p3_quirk;
- 	}
- 
- 	/* default to superspeed if no maximum_speed passed */
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index e1aca71..a91f42d 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -178,6 +178,9 @@
- #define DWC3_GUSB3PIPECTL_PHYSOFTRST	(1 << 31)
- #define DWC3_GUSB3PIPECTL_U2SSINP3OK	(1 << 29)
- #define DWC3_GUSB3PIPECTL_REQP1P2P3	(1 << 24)
-+#define DWC3_GUSB3PIPECTL_DEP1P2P3(n)	((n) << 19)
-+#define DWC3_GUSB3PIPECTL_DEP1P2P3_MASK	DWC3_GUSB3PIPECTL_DEP1P2P3(7)
-+#define DWC3_GUSB3PIPECTL_DEP1P2P3_EN	DWC3_GUSB3PIPECTL_DEP1P2P3(1)
- #define DWC3_GUSB3PIPECTL_SUSPHY	(1 << 17)
- 
- /* Global TX Fifo Size Register */
-@@ -685,6 +688,7 @@ struct dwc3_scratchpad_array {
-  * @u2exit_lfps_quirk: set if we enable u2exit lfps quirk
-  * @u2ss_inp3_quirk: set if we enable P3 OK for U2/SS Inactive quirk
-  * @req_p1p2p3_quirk: set if we enable request p1p2p3 quirk
-+ * @del_p1p2p3_quirk: set if we enable delay p1p2p3 quirk
-  */
- struct dwc3 {
- 	struct usb_ctrlrequest	*ctrl_req;
-@@ -796,6 +800,7 @@ struct dwc3 {
- 	unsigned		u2exit_lfps_quirk:1;
- 	unsigned		u2ss_inp3_quirk:1;
- 	unsigned		req_p1p2p3_quirk:1;
-+	unsigned                del_p1p2p3_quirk:1;
- };
- 
- /* -------------------------------------------------------------------------- */
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index 457ee9c..6dca665 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -31,4 +31,5 @@ struct dwc3_platform_data {
- 	unsigned u2exit_lfps_quirk:1;
- 	unsigned u2ss_inp3_quirk:1;
- 	unsigned req_p1p2p3_quirk:1;
-+	unsigned del_p1p2p3_quirk:1;
- };
--- 
-1.9.1
+This is just short-sighted thinking.  The fact that the PCI device 
+advertises -1 means that either the BIOS isn't configured, or the PCI 
+slots are shared as was the case on some Nehalem systems where the IOH 
+was shared between two sockets.  I suspect that this driver doesn't even 
+take that into account as it was likely only written for Sandy Bridge 
+architectures.
+
+>>>>> To use this, one can do
+>>>>>
+>>>>> echo 3 > /sys/devices/pci0000:ff/0000:ff:1f.3/numa_node
+>>>>>
+>>>>> to set the numa node for PCI device 0000:ff:1f.3.
+>>>> It definitely seems wrong that we don't set the node number correctly.
+>>>> pci_acpi_scan_root() sets the node number by looking for a _PXM method
+>>>> that applies to the host bridge.  Why does that not work in this case?
+>>>>   Does the BIOS not supply _PXM?
+>>> Yeah ... unfortunately the BIOS is broken in this case.  And I know what you're
+>>> thinking ;) -- why not get the BIOS fixed?  I'm through relying on BIOS fixes
+>>> which can take six months to a year to appear in a production version... I've
+>>> been bitten too many times by promises of BIOS fixes that never materialize.
+>> Yep, I understand.  The question is how we implement a workaround so
+>> it doesn't become the accepted way to do things.  Obviously we don't
+>> want people manually grubbing through numactl/lspci output or writing
+>> shell scripts to do things that *should* happen automatically.
+
+I'd say if nothing else we should flag the system as tainted as soon as 
+we start overwriting BIOS/ACPI configured values with sysfs. This is one 
+of the reasons for the TAINT_FIRMWARE_WORKAROUND even existing.
+
+>> Somewhere in the picture there needs to be a feedback loop that
+>> encourages the vendor to fix the problem.  I don't see that happening
+>> yet.  Having QAT fail because the platform didn't supply the
+>> information required to make it work would be a nice loop.  I don't
+>> want to completely paper over the problem without providing some other
+>> kind of feedback at the same time.
+> Okay -- I see what you're after here and I completely agree with it.  But
+> sometimes I feel like I banging on a silent drum with some of these companies
+> about this stuff :(  My frustration with these companies is starting to show I
+> guess...
+
+Just how visible is the QAT driver load failure?  I has a similar issue 
+with DCA not being configured in a number of BIOSes and it wasn't until 
+I made the issue painfully visible with TAINT_FIRMWARE_WORKAROUND that I 
+started to see any traction on getting this fixed in the BIOSes.
+
+We would need to sort out the systems that actually have bad BIOSes 
+versus just being configured without PCI slots directly associated with 
+any given NUMA node since there are systems where that is a valid 
+configuration.
+
+>> You're probably aware of [1], which was the same problem.  Apparently
+>> it was originally reported to RedHat as [2] (which is private, so I
+>> can't read it).  That led to a workaround hack for some AMD systems
+>> [3, 4].
+> Yeah ... part of me was thinking that maybe I should do something like
+> the above but I didn't know how you'd feel about expanding that hack.  I'll look
+> into it.  I'd prefer it to be opt-in with a kernel parameter.
+>
+> P.
+
+Are you thinking something like a "pci=assign-numa"?  The problem is 
+there doesn't seem to be a good way to currently determine the NUMA 
+layout without the information being provided by the BIOS/ACPI tables, 
+and we probably don't want to be creating a definition of the NUMA 
+layout per platform.
+
+Thanks,
+
+Alex
 
