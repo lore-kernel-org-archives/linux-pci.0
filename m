@@ -1,94 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0147.outbound.protection.outlook.com ([207.46.100.147]:11260
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752630AbaJHGpi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 Oct 2014 02:45:38 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	"festevam@gmail.com" <festevam@gmail.com>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>
-Subject: RE: [PATCH v4 04/10] PCI: designware: refine setup_rc and add msi
- data restore
-Date: Wed, 8 Oct 2014 06:45:36 +0000
-Message-ID: <4249527b13de42d8af5fc68abf48df4c@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
-	 <1412069804-17162-5-git-send-email-r65037@freescale.com>
- <1412089108.2473.5.camel@pengutronix.de>
-In-Reply-To: <1412089108.2473.5.camel@pengutronix.de>
-Content-Type: text/plain; charset="utf-8"
+Received: from service87.mimecast.com ([91.220.42.44]:46693 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752972AbaJPK2r convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Oct 2014 06:28:47 -0400
+Date: Thu, 16 Oct 2014 11:28:33 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Michael Ellerman <mpe@ellerman.id.au>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: of/pci: Fix the conversion of IO ranges into IO resources
+Message-ID: <20141016102833.GL4599@e106497-lin.cambridge.arm.com>
+References: <20141009200235.55E5166107E@gitolite.kernel.org>
+ <1413358507.4748.4.camel@pasglop>
+ <20141015090239.GB18070@e106497-lin.cambridge.arm.com>
+ <1413428148.20705.2.camel@concordia>
+ <20141016090529.GG4599@e106497-lin.cambridge.arm.com>
+ <1413453882.11213.95.camel@pasglop>
 MIME-Version: 1.0
+In-Reply-To: <1413453882.11213.95.camel@pasglop>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEx1Y2FzIFN0YWNoIFttYWls
-dG86bC5zdGFjaEBwZW5ndXRyb25peC5kZV0NCj4gU2VudDogVHVlc2RheSwgU2VwdGVtYmVyIDMw
-LCAyMDE0IDEwOjU4IFBNDQo+IFRvOiBaaHUgUmljaGFyZC1SNjUwMzcNCj4gQ2M6IGxpbnV4LXBj
-aS1vd25lckB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IEd1byBT
-aGF3bi0NCj4gUjY1MDczOyBmZXN0ZXZhbUBnbWFpbC5jb207IHRoYXJ2ZXlAZ2F0ZXdvcmtzLmNv
-bQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHY0IDA0LzEwXSBQQ0k6IGRlc2lnbndhcmU6IHJlZmlu
-ZSBzZXR1cF9yYyBhbmQgYWRkIG1zaQ0KPiBkYXRhIHJlc3RvcmUNCj4gDQo+IEFtIERpZW5zdGFn
-LCBkZW4gMzAuMDkuMjAxNCwgMTc6MzYgKzA4MDAgc2NocmllYiBSaWNoYXJkIFpodToNCj4gPiAt
-IG1vdmUgInByb2dyYW0gY29ycmVjdCBjbGFzcyBmb3IgUkMiIGZyb20gZHdfcGNpZV9ob3N0X2lu
-aXQoKSB0bw0KPiA+IGR3X3BjaWVfc2V0dXBfcmMoKS4gc2luY2UgdGhpcyBpcyBSQyBzZXR1cCwg
-aXQncyBiZXR0ZXIgdG8gY29udGFpbmVkDQo+ID4gaW4gZHdfcGNpZV9zZXR1cF9yYyBmdW5jdGlv
-bi4NCj4gPiBUaGVuLCBSQyBjYW4gYmUgcmUtc2V0dXAgcmVhbGx5IGJ5IGR3X3BjaWVfc2V0dXBf
-cmMoKS4NCj4gPiAtIGFkZCBvbmUgcmUtc3RvcmUgbXNpIGRhdGEgZnVuY3Rpb24uIEJlY2F1c2Ug
-dGhhdCBwY2llIGNvbnRyb2xsZXINCj4gPiBtYXliZSBwb3dlcmVkIG9mZiBkdXJpbmcgc3lzdGVt
-IHN1c3BlbmQsIGFuZCB0aGUgbXNpIGRhdGENCj4gPiBjb25maWd1cmF0aW9uIHdvdWxkIGJlIGxv
-c3QuDQo+ID4gdGhpcyBmdW5jdGlvbnMgY2FuIGJlIHVzZWQgdG8gcmVzdG9yZSB0aGUgbXNpIGRh
-dGEgZHVyaW5nIHRoZSByZXN1bWUNCj4gPiBjYWxsYmFjay4NCj4gPg0KPiA+IFNpZ25lZC1vZmYt
-Ynk6IFJpY2hhcmQgWmh1IDxyNjUwMzdAZnJlZXNjYWxlLmNvbT4NCj4gDQo+IE5BQ0suIEkgYXNr
-ZWQgeW91IHRvIHNwbGl0IHRoaXMgcGF0Y2ggYW5kIG1vdmUgaXQgYmVmb3JlIHRoZSBpbXg2IHBj
-aWUgY2hhbmdlcw0KPiBpbiB0aGUgc2VyaWVzIGluIG9yZGVyIHRvIG5vdCBicmVhayBjb21waWxh
-dGlvbiB3aXRoaW4gdGhlIHNlcmllcy4NCj4gDQpbUmljaGFyZF0gT2suIEFjY2VwdGVkLg0KPiA+
-IC0tLQ0KPiA+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jIHwgMTUgKysrKysr
-KysrKysrLS0tDQo+ID4gZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuaCB8ICAxICsN
-Cj4gPiAgMiBmaWxlcyBjaGFuZ2VkLCAxMyBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQ0K
-PiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMN
-Cj4gPiBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMNCj4gPiBpbmRleCA1Mzhi
-YmYzLi5hZTFlNmM1IDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNp
-Z253YXJlLmMNCj4gPiArKysgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jDQo+
-ID4gQEAgLTE5NCw2ICsxOTQsMTMgQEAgdm9pZCBkd19wY2llX21zaV9pbml0KHN0cnVjdCBwY2ll
-X3BvcnQgKnBwKQ0KPiA+ICAJZHdfcGNpZV93cl9vd25fY29uZihwcCwgUENJRV9NU0lfQUREUl9I
-SSwgNCwgMCk7ICB9DQo+ID4NCj4gPiArdm9pZCBkd19wY2llX21zaV9jZmdfcmVzdG9yZShzdHJ1
-Y3QgcGNpZV9wb3J0ICpwcCkgew0KPiA+ICsJZHdfcGNpZV93cl9vd25fY29uZihwcCwgUENJRV9N
-U0lfQUREUl9MTywgNCwNCj4gPiArCQkJdmlydF90b19waHlzKCh2b2lkICopcHAtPm1zaV9kYXRh
-KSk7DQo+ID4gKwlkd19wY2llX3dyX293bl9jb25mKHBwLCBQQ0lFX01TSV9BRERSX0hJLCA0LCAw
-KTsgfQ0KPiA+ICsNCj4gPiAgc3RhdGljIGludCBmaW5kX3ZhbGlkX3BvczAoc3RydWN0IHBjaWVf
-cG9ydCAqcHAsIGludCBtc2d2ZWMsIGludCBwb3MsDQo+ID4gaW50ICpwb3MwKSAgew0KPiA+ICAJ
-aW50IGZsYWcgPSAxOw0KPiA+IEBAIC01NzAsOSArNTc3LDYgQEAgaW50IF9faW5pdCBkd19wY2ll
-X2hvc3RfaW5pdChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCkNCj4gPg0KPiA+ICAJZHdfcGNpZV93cl9v
-d25fY29uZihwcCwgUENJX0JBU0VfQUREUkVTU18wLCA0LCAwKTsNCj4gPg0KPiA+IC0JLyogcHJv
-Z3JhbSBjb3JyZWN0IGNsYXNzIGZvciBSQyAqLw0KPiA+IC0JZHdfcGNpZV93cl9vd25fY29uZihw
-cCwgUENJX0NMQVNTX0RFVklDRSwgMiwgUENJX0NMQVNTX0JSSURHRV9QQ0kpOw0KPiA+IC0NCj4g
-PiAgCWR3X3BjaWVfcmRfb3duX2NvbmYocHAsIFBDSUVfTElOS19XSURUSF9TUEVFRF9DT05UUk9M
-LCA0LCAmdmFsKTsNCj4gPiAgCXZhbCB8PSBQT1JUX0xPR0lDX1NQRUVEX0NIQU5HRTsNCj4gPiAg
-CWR3X3BjaWVfd3Jfb3duX2NvbmYocHAsIFBDSUVfTElOS19XSURUSF9TUEVFRF9DT05UUk9MLCA0
-LCB2YWwpOyBAQA0KPiA+IC05MTcsNiArOTIxLDExIEBAIHZvaWQgZHdfcGNpZV9zZXR1cF9yYyhz
-dHJ1Y3QgcGNpZV9wb3J0ICpwcCkNCj4gPiAgCXZhbCA9IG1lbWxpbWl0IHwgbWVtYmFzZTsNCj4g
-PiAgCWR3X3BjaWVfd3JpdGVsX3JjKHBwLCB2YWwsIFBDSV9NRU1PUllfQkFTRSk7DQo+ID4NCj4g
-PiArCS8qIHByb2dyYW0gY29ycmVjdCBjbGFzcyBmb3IgUkMgKi8NCj4gPiArCWR3X3BjaWVfcmVh
-ZGxfcmMocHAsIFBDSV9DTEFTU19SRVZJU0lPTiwgJnZhbCk7DQo+ID4gKwl2YWwgfD0gUENJX0NM
-QVNTX0JSSURHRV9QQ0kgPDwgMTY7DQo+ID4gKwlkd19wY2llX3dyaXRlbF9yYyhwcCwgdmFsLCBQ
-Q0lfQ0xBU1NfUkVWSVNJT04pOw0KPiA+ICsNCj4gPiAgCS8qIHNldHVwIGNvbW1hbmQgcmVnaXN0
-ZXIgKi8NCj4gPiAgCWR3X3BjaWVfcmVhZGxfcmMocHAsIFBDSV9DT01NQU5ELCAmdmFsKTsNCj4g
-PiAgCXZhbCAmPSAweGZmZmYwMDAwOw0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9ob3N0
-L3BjaWUtZGVzaWdud2FyZS5oDQo+ID4gYi9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2Fy
-ZS5oDQo+ID4gaW5kZXggYTQ3NmU2MC4uYmI3NTcxNSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJz
-L3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5oDQo+ID4gKysrIGIvZHJpdmVycy9wY2kvaG9zdC9w
-Y2llLWRlc2lnbndhcmUuaA0KPiA+IEBAIC04Myw2ICs4Myw3IEBAIGludCBkd19wY2llX2NmZ19y
-ZWFkKHZvaWQgX19pb21lbSAqYWRkciwgaW50IHdoZXJlLA0KPiA+IGludCBzaXplLCB1MzIgKnZh
-bCk7ICBpbnQgZHdfcGNpZV9jZmdfd3JpdGUodm9pZCBfX2lvbWVtICphZGRyLCBpbnQNCj4gPiB3
-aGVyZSwgaW50IHNpemUsIHUzMiB2YWwpOyAgaXJxcmV0dXJuX3QgZHdfaGFuZGxlX21zaV9pcnEo
-c3RydWN0DQo+ID4gcGNpZV9wb3J0ICpwcCk7ICB2b2lkIGR3X3BjaWVfbXNpX2luaXQoc3RydWN0
-IHBjaWVfcG9ydCAqcHApOw0KPiA+ICt2b2lkIGR3X3BjaWVfbXNpX2NmZ19yZXN0b3JlKHN0cnVj
-dCBwY2llX3BvcnQgKnBwKTsNCj4gPiAgaW50IGR3X3BjaWVfbGlua191cChzdHJ1Y3QgcGNpZV9w
-b3J0ICpwcCk7ICB2b2lkDQo+ID4gZHdfcGNpZV9zZXR1cF9yYyhzdHJ1Y3QgcGNpZV9wb3J0ICpw
-cCk7ICBpbnQgZHdfcGNpZV9ob3N0X2luaXQoc3RydWN0DQo+ID4gcGNpZV9wb3J0ICpwcCk7DQo+
-IA0KPiAtLQ0KPiBQZW5ndXRyb25peCBlLksuICAgICAgICAgICAgIHwgTHVjYXMgU3RhY2ggICAg
-ICAgICAgICAgICAgIHwNCj4gSW5kdXN0cmlhbCBMaW51eCBTb2x1dGlvbnMgICB8IGh0dHA6Ly93
-d3cucGVuZ3V0cm9uaXguZGUvICB8DQoNCg0KQmVzdCBSZWdhcmRzDQpSaWNoYXJkIFpodQ0KDQo=
+On Thu, Oct 16, 2014 at 11:04:42AM +0100, Benjamin Herrenschmidt wrote:
+> On Thu, 2014-10-16 at 10:05 +0100, Liviu Dudau wrote:
+> > So you are going to continue converting IO ranges as IORESOURCE_MEM resources but with a
+> > different flag. Is that something that powerpc depends on or is it an artifact of too
+> > much code living around the kernel that has built in assumption of that being the fact?
+> > I'm trying to understand the world around powerpc so as to attempt to make a useful
+> > contribution in the future.
+> 
+> I'm not sure I understand what you mean and which specific resources you
+> are talking about.
+> 
+> For PCI devices, the IO BAR resources have IORESOURCE_IO ... 
+
+Correct. But the old version of of_pci_range_to_resource() and the powerpc opencoded
+version generate the same .start .end values for an IO range as it would for an
+MEM range, just the type of resource is different.
+
+Like I've said before and also put down in the commit message for 0b0b0893d49b, my
+understanding of the way Linux uses IORESOURCE_IO resources is that they are supposed
+to be based on the "magic port address 0." Nothing wrong with saying that powerpc
+sees IORESOURCE_IO as being something capable of covering the entire CPU address
+space, but ARM based architectures have decided to use an offset value for .start and
+.end and to base IO starting from PCI_IOBASE (which is what the macro signals).
+
+I'm just trying to understand how things stand here, I'm not starting a polemic.
+
+> 
+> The case where we might get an IORESOURCE_MEM, at least that's how my old
+> code used to work, was is if we try to use the device-tree to convert a
+> PCI IO device address before we have initialized our mappings (ie, before
+> we have probed our PCI host bridges).
+
+Although we might be cross-talking here, I would like to understand better this case.
+What do you mean by "use the device-tree to convert a PCI IO device address" ? Are
+you trying to do IO transactions before PCI host brige was setup?
+
+> 
+> In that case, we would get an IORESOURCE_MEM (which is functional as long
+> as one ioremap's and uses the proper accessors for memory resources).
+> 
+> Once we have the PCI host bridges probed, the IO space is assigned, and
+> such conversion routines will transform the addresses properly into IO
+> resources.
+
+The way I'm leaning to is to get everyone towards the following workflow:
+  - gather PCI resources describing the host bridge address space (IO + MEM)
+  - (future) create a struct pci_host_bridge that holds those resources
+    plus any other information that might be required for successfully
+    scanning the root bus
+  - (in driver) create a host bridge struct to hold driver specific data
+  - create root bus passing on the driver host bridge struct and (in future)
+    the pci_host_bridge structure
+  - scan root bus.
+
+Is this workflow going to be useful to powerpc or is there something missing
+here?
+
+> 
+> Note that it's fairly rare that we use the device-tree for PCI based
+> resources anyway and even rarer than we do that before the PCI host
+> bridges have been properly setup and thus their IO space allocated.
+> 
+> Note that the problems exposed by these patches can be entirely reproduced
+> in qemu using virtio, so you should be able to test a little bit if you
+> have a reasonably fast x86 box to run qemu on.
+
+Which host bridge/device(s) do I need to tell qemu to emulate/pass through?
+Do you have a wiki/README page where I can get details on how to setup a
+test environment with powerpc-qemu + virtio + PCIe?
+
+Best regards,
+Liviu
+
+> 
+> Cheers,
+> Ben.
+> 
+> 
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
