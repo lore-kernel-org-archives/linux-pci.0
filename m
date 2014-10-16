@@ -1,173 +1,75 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v3 15/27] x86/MSI: Remove unused MSI weak arch functions
-Date: Wed, 15 Oct 2014 11:07:03 +0800
-Message-ID: <1413342435-7876-16-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
-References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cmexedge1.emulex.com ([138.239.224.99]:20492 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751287AbaJPItN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Oct 2014 04:49:13 -0400
+From: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.com>
+To: <linux-pci@vger.kernel.org>
+CC: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.com>
+Subject: [PATCH v1] pci: Limit VPD length of Emulex adapters to the actual length supported.
+Date: Thu, 16 Oct 2014 14:16:42 +0530
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+Message-ID: <1f6d7b6c-7189-4fe3-926b-42609724cab9@CMEXHTCAS2.ad.emulex.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we can clean up MSI weak arch functions in x86.
+By default pci utilities/subsystem tries to read 32k bytes of vpd data no matter
+what the device supports. This can lead to unexpected behavior depending
+on how each of the devices handle this condition. This patch fixes the
+problem for Emulex adapter family.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+v1:
+Addressed Bjorn's comments
+1. Removed Vendor id and Device id macros from pci_ids.h and
+   using the Vendor and Device id values directly in DECLARE_PCI_FIXUP_FINAL() lines.
+
+Signed-off-by: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.com>
 ---
- arch/x86/include/asm/pci.h      |    5 +----
- arch/x86/include/asm/x86_init.h |    4 ----
- arch/x86/kernel/apic/io_apic.c  |   21 +++++----------------
- arch/x86/kernel/x86_init.c      |   24 ------------------------
- 4 files changed, 6 insertions(+), 48 deletions(-)
+ drivers/pci/quirks.c |   33 +++++++++++++++++++++++++++++++++
+ 1 files changed, 33 insertions(+), 0 deletions(-)
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index f41b58a..3a5cf19 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -108,14 +108,11 @@ extern void pci_iommu_alloc(void);
- #ifdef CONFIG_PCI_MSI
- /* implemented in arch/x86/kernel/apic/io_apic. */
- struct msi_desc;
--int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
--void native_teardown_msi_irq(unsigned int irq);
--void native_restore_msi_irqs(struct pci_dev *dev);
-+void native_teardown_msi_irq(struct msi_chip *chip, unsigned int irq);
- int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- 		  unsigned int irq_base, unsigned int irq_offset);
- extern struct msi_chip *x86_msi_chip;
- #else
--#define native_setup_msi_irqs		NULL
- #define native_teardown_msi_irq		NULL
- #endif
- 
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index f58a9c7..2514f67 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -174,13 +174,9 @@ struct pci_dev;
- struct msi_msg;
- 
- struct x86_msi_ops {
--	int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
- 	void (*compose_msi_msg)(struct pci_dev *dev, unsigned int irq,
- 				unsigned int dest, struct msi_msg *msg,
- 			       u8 hpet_id);
--	void (*teardown_msi_irq)(unsigned int irq);
--	void (*teardown_msi_irqs)(struct pci_dev *dev);
--	void (*restore_msi_irqs)(struct pci_dev *dev);
- 	int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
- };
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index ec79b38..11d353f 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3200,7 +3200,8 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- 	return 0;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 80c2d01..95d88f3 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3832,3 +3832,36 @@ void pci_dev_specific_enable_acs(struct pci_dev *dev)
+ 		}
+ 	}
  }
- 
--int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+static int native_setup_msi_irqs(struct msi_chip *chip,
-+		struct pci_dev *dev, int nvec, int type)
- {
- 	struct msi_desc *msidesc;
- 	unsigned int irq;
-@@ -3227,26 +3228,14 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 	return 0;
- }
- 
--static int __native_setup_msi_irqs(struct msi_chip *chip, 
--		struct pci_dev *dev, int nvec, int type)
--{
--	return native_setup_msi_irqs(dev, nvec, type);
--}
--
--void native_teardown_msi_irq(unsigned int irq)
-+void native_teardown_msi_irq(struct msi_chip *chip, unsigned int irq)
- {
- 	irq_free_hwirq(irq);
- }
- 
--static void __native_teardown_msi_irq(struct msi_chip *chip, 
--		unsigned int irq)
--{
--	native_teardown_msi_irq(irq);
--}
--
- static struct msi_chip native_msi_chip = {
--	.setup_irqs = __native_setup_msi_irqs,
--	.teardown_irq = __native_teardown_msi_irq,
-+	.setup_irqs = native_setup_msi_irqs,
-+	.teardown_irq = native_teardown_msi_irq,
- };
- 
- struct msi_chip *x86_msi_chip = &native_msi_chip;
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index 234b072..cc32568 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -110,34 +110,10 @@ EXPORT_SYMBOL_GPL(x86_platform);
- 
- #if defined(CONFIG_PCI_MSI)
- struct x86_msi_ops x86_msi = {
--	.setup_msi_irqs		= native_setup_msi_irqs,
- 	.compose_msi_msg	= native_compose_msi_msg,
--	.teardown_msi_irq	= native_teardown_msi_irq,
--	.teardown_msi_irqs	= default_teardown_msi_irqs,
--	.restore_msi_irqs	= default_restore_msi_irqs,
- 	.setup_hpet_msi		= default_setup_hpet_msi,
- };
- 
--/* MSI arch specific hooks */
--int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
--{
--	return x86_msi.setup_msi_irqs(dev, nvec, type);
--}
--
--void arch_teardown_msi_irqs(struct pci_dev *dev)
--{
--	x86_msi.teardown_msi_irqs(dev);
--}
--
--void arch_teardown_msi_irq(unsigned int irq)
--{
--	x86_msi.teardown_msi_irq(irq);
--}
--
--void arch_restore_msi_irqs(struct pci_dev *dev)
--{
--	x86_msi.restore_msi_irqs(dev);
--}
- #endif
- 
- struct x86_io_apic_ops x86_io_apic_ops = {
++
++#define SLI_INTF_REG_OFFSET     0x58
++#define SLI_INTF_FT_MASK        0x00000001
++static void quirk_elx_limit_vpd(struct pci_dev *dev)
++{
++	int virtfn;
++	u32 sli_intf;
++
++	pci_read_config_dword(dev, SLI_INTF_REG_OFFSET, &sli_intf);
++	virtfn = (sli_intf & SLI_INTF_FT_MASK) ? 1 : 0;
++
++	if (dev->vpd) {
++		if (virtfn)
++			dev->vpd->len = 0x200;
++		else
++			dev->vpd->len = 0x400;
++	}
++}
++
++DECLARE_PCI_FIXUP_FINAL(0x19a2, 0x211, quirk_elx_limit_vpd);
++DECLARE_PCI_FIXUP_FINAL(0x19a2, 0x221, quirk_elx_limit_vpd);
++/* BE2 */
++DECLARE_PCI_FIXUP_FINAL(0x19a2, 0x700, quirk_elx_limit_vpd);
++/* BE3 */
++DECLARE_PCI_FIXUP_FINAL(0x19a2, 0x710, quirk_elx_limit_vpd);
++/* LANCER */
++DECLARE_PCI_FIXUP_FINAL(0x10df, 0xe220, quirk_elx_limit_vpd);
++/* LANCER VF */
++DECLARE_PCI_FIXUP_FINAL(0x10df, 0xe228, quirk_elx_limit_vpd);
++/* SKYHAWK */
++DECLARE_PCI_FIXUP_FINAL(0x10df, 0x720, quirk_elx_limit_vpd);
++/* SKYHAWK VF */
++DECLARE_PCI_FIXUP_FINAL(0x10df, 0x728, quirk_elx_limit_vpd);
 -- 
 1.7.1
 
