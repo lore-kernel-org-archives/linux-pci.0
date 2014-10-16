@@ -1,61 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([69.164.217.139]:56330 "EHLO foo.masarand.uk"
+Received: from 8bytes.org ([81.169.241.247]:34081 "EHLO theia.8bytes.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752059AbaJBD7Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 23:59:25 -0400
-From: matt@masarand.com
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, Matthew Minter <matt@masarand.com>
-Subject: [PATCH 07/18] Delayed cris setup of PCI IRQs to bus scan time
-Date: Thu,  2 Oct 2014 04:50:26 +0100
-Message-Id: <1412221837-17452-8-git-send-email-matt@masarand.com>
-In-Reply-To: <1412221837-17452-1-git-send-email-matt@masarand.com>
-References: <1412221837-17452-1-git-send-email-matt@masarand.com>
+	id S1751476AbaJPJOf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Oct 2014 05:14:35 -0400
+Date: Thu, 16 Oct 2014 11:14:33 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kallol Biswas <nucleodyne@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Jay Cornwall <jay.cornwall@amd.com>
+Subject: Re: PCIe PASID (Process Address Space ID) and iommu code
+Message-ID: <20141016091433.GI28786@8bytes.org>
+References: <CA+QbAV6-C9wxPttEx0uDn_K5Y1LaGt8pxDWc8RJmN4DqR+NHtQ@mail.gmail.com>
+ <CAErSpo5YXZ8YRzhg0xvbHGCr22o+_+yi7HrCCBYBM9Ke42okJQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5YXZ8YRzhg0xvbHGCr22o+_+yi7HrCCBYBM9Ke42okJQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Matthew Minter <matt@masarand.com>
+On Wed, Oct 15, 2014 at 09:50:58PM -0600, Bjorn Helgaas wrote:
+> [+cc Joerg, Suravee, Jay, iommu list, linux-pci]
+> 
+> On Wed, Oct 15, 2014 at 5:44 PM, Kallol Biswas <nucleodyne@gmail.com> wrote:
+> > Resending, as message got bounced for html content.
+> > --------------------------------------------
+> > Hi,
+> >     PCIe has introduced PASID TLP Prefix.  There are two ECNs on this.
+> >
+> > It seems that AMD iommu code makes use of PASID. Is there a device that
+> > utilizes this TLP prefix?
 
-PCI IRQs are currently configured to be enabled once at boot in a
-dedicated pass. This means that PCI devices which are hot-plugged after
-boot time will not be given an IRQ, this patch-set fixes this by
-registering the assignment function to be called later in the device
-enable path.
+Yes, recent radeon GPUs can make use of the TLP prefix.
 
----
- arch/cris/arch-v32/drivers/pci/bios.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+> > PASID allocation and management within a device is not clear to me. How
+> > does device know which PASID to issue for which virtual address? Who makes
+> > the association? Must be software/OS, but how? There is no table for this
+> > like MSI-X table.
 
-diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
-index 64a5fb9..d04ecc8 100644
---- a/arch/cris/arch-v32/drivers/pci/bios.c
-+++ b/arch/cris/arch-v32/drivers/pci/bios.c
-@@ -80,20 +80,16 @@ int pcibios_enable_resources(struct pci_dev *dev, int mask)
- 	return 0;
- }
- 
--int pcibios_enable_irq(struct pci_dev *dev)
-+int pcibios_enable_irq(struct pci_dev *dev, u8 slot, u8 pin)
- {
- 	dev->irq = EXT_INTR_VECT;
- 	return 0;
- }
- 
--int pcibios_enable_device(struct pci_dev *dev, int mask)
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- {
--	int err;
--
--	if ((err = pcibios_enable_resources(dev, mask)) < 0)
--		return err;
--
--	if (!dev->msi_enabled)
--		pcibios_enable_irq(dev);
-+	bridge->swizzle_irq = NULL;
-+	bridge->map_irq = pcibios_enable_irq;
- 	return 0;
- }
-+
--- 
-2.1.0
+The setup of the PASIDs is device specific, so there is no standard for
+setting up PASID address spaces on devices.
+
+
+HTH,
+
+	Joerg
 
