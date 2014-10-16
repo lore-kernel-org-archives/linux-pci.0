@@ -1,51 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42025 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759946AbaJ3R4r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 13:56:47 -0400
-Subject: [PATCH 3/3] PCI: Add a informational printk for invalid BARs
-From: Myron Stowe <myron.stowe@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: willy@linux.intel.com, unruh@physics.ubc.ca,
-	linux-kernel@vger.kernel.org, martin@lucina.net
-Date: Thu, 30 Oct 2014 11:54:50 -0600
-Message-ID: <20141030175450.22238.79504.stgit@amt.stowe>
-In-Reply-To: <20141030175430.22238.47671.stgit@amt.stowe>
-References: <20141030175430.22238.47671.stgit@amt.stowe>
+Received: from mail-by2on0110.outbound.protection.outlook.com ([207.46.100.110]:52768
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751202AbaJPIXJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Oct 2014 04:23:09 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH v6 02/13] PCI: designware: Set func type of host init to int
+Date: Thu, 16 Oct 2014 15:52:32 +0800
+Message-ID: <1413445963-24706-3-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
+References: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As a consequence of restoring the detection of invalid BARs, add a new
-informational printk like the following when such occurrences are
-encountered.
+host init maybe failed, change the func type of host_init
+defined in struct pci_host_ops from void to int.
 
-  pci ssss:bb:dd.f: [Firmware Bug]: reg 0xXX: invalid BAR (can't size)
-
-Reported-by: William Unruh <unruh@physics.ubc.ca>
-Reported-by: Martin Lucina <martin@lucina.net>
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
-Cc: Matthew Wilcox <willy@linux.intel.com>
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
 ---
- drivers/pci/probe.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/pci/host/pcie-designware.c | 7 +++++--
+ drivers/pci/host/pcie-designware.h | 2 +-
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 5c13279..2953c1d 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -271,8 +271,11 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index b1f82ff..1a2b477 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -578,8 +578,11 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 		}
+ 	}
  
- 	sz64 = pci_size(l64, sz64, mask64);
- 
--	if (!sz64)
-+	if (!sz64) {
-+		dev_info(&dev->dev, "%sreg 0x%x: invalid BAR (can't size)\n",
-+			 FW_BUG, pos);
- 		goto fail;
+-	if (pp->ops->host_init)
+-		pp->ops->host_init(pp);
++	if (pp->ops->host_init) {
++		ret = pp->ops->host_init(pp);
++		if (ret < 0)
++			return ret;
 +	}
  
- 	region.start = l64;
- 	region.end = l64 + sz64;
+ 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+ 
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index b0bfed0..57ab11d 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -72,7 +72,7 @@ struct pcie_host_ops {
+ 	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
+ 			unsigned int devfn, int where, int size, u32 val);
+ 	int (*link_up)(struct pcie_port *pp);
+-	void (*host_init)(struct pcie_port *pp);
++	int (*host_init)(struct pcie_port *pp);
+ 	void (*msi_set_irq)(struct pcie_port *pp, int irq);
+ 	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
+ 	u32 (*get_msi_data)(struct pcie_port *pp);
+-- 
+1.9.1
 
