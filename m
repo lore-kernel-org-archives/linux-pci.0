@@ -1,44 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:63183 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758803AbaJ3LgI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Oct 2014 07:36:08 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Huang Rui <ray.huang@amd.com>
-Cc: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v4 01/20] usb: dwc3: enable hibernation if to be supported
-Date: Thu, 30 Oct 2014 12:35:56 +0100
-Message-ID: <4077930.b7qzaS4pBb@wuerfel>
-In-Reply-To: <1414663725-2195-2-git-send-email-ray.huang@amd.com>
-References: <1414663725-2195-1-git-send-email-ray.huang@amd.com> <1414663725-2195-2-git-send-email-ray.huang@amd.com>
+Received: from mail-bl2on0140.outbound.protection.outlook.com ([65.55.169.140]:2199
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751191AbaJPIXI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Oct 2014 04:23:08 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH v6 10/13] ARM: imx6qdl: Enable pcie on imx6qdl sabreauto
+Date: Thu, 16 Oct 2014 15:52:40 +0800
+Message-ID: <1413445963-24706-11-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
+References: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 30 October 2014 18:08:26 Huang Rui wrote:
-> It enables hibernation if the function is set in coreConsultant.
-> 
-> Suggested-by: Felipe Balbi <balbi@ti.com>
-> Signed-off-by: Huang Rui <ray.huang@amd.com>
-> Signed-off-by: Felipe Balbi <balbi@ti.com>
-> 
+From: Richard Zhu <r65037@freescale.com>
 
-Something went wrong with the Signed-off-by lines here. 
-You should never add someone else's Signed-off-by below yours.
+- enable pcie on imx6qdl sabreauto boards.
 
-I took a brief look at the entire series and the patches all look good
-to me, but you have made the same mistake with the Signed-off-by
-multiple times.
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+---
+ arch/arm/boot/dts/imx6qdl-sabreauto.dtsi | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-	Arnd
+diff --git a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
+index 009abd6..d6040a5 100644
+--- a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
++++ b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
+@@ -410,6 +410,10 @@
+ 	};
+ };
+ 
++&pcie {
++	status = "okay";
++};
++
+ &pwm3 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_pwm3>;
+-- 
+1.9.1
+
