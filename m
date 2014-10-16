@@ -1,181 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ozlabs.org ([103.22.144.67]:55031 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750887AbaJPCzx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Oct 2014 22:55:53 -0400
+Message-ID: <1413428148.20705.2.camel@concordia>
+Subject: Re: of/pci: Fix the conversion of IO ranges into IO resources
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Prarit Bhargava <prarit@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v3 05/20] x86, irq: Refine hw_irq.h to prepare for irqdomain support
-Date: Mon, 27 Oct 2014 16:11:56 +0800
-Message-Id: <1414397531-28254-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Linus Walleij <linus.walleij@linaro.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Date: Thu, 16 Oct 2014 13:55:48 +1100
+In-Reply-To: <20141015090239.GB18070@e106497-lin.cambridge.arm.com>
+References: <20141009200235.55E5166107E@gitolite.kernel.org>
+	 <1413358507.4748.4.camel@pasglop>
+	 <20141015090239.GB18070@e106497-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refine hw_irq.h to prepare for irqdomain support by:
-1) guarding common APIC related interfaces with CONFIG_X86_LOCAL_APIC
-2) guarding interrupt remapping related interfaces with CONFIG_IRQ_REMAP
-3) guarding IOAPIC related interfaces with CONFIG_X86_IO_APIC
+On Wed, 2014-10-15 at 10:02 +0100, Liviu Dudau wrote:
+> On Wed, Oct 15, 2014 at 08:35:07AM +0100, Benjamin Herrenschmidt wrote:
+> > On Thu, 2014-10-09 at 20:02 +0000, Linux Kernel Mailing List wrote:
+> > > Gitweb:     http://git.kernel.org/linus/;a=commit;h=0b0b0893d49b34201a6c4416b1a707b580b91e3d
+> > > Commit:     0b0b0893d49b34201a6c4416b1a707b580b91e3d
+> > > Author:     Liviu Dudau <Liviu.Dudau@arm.com>
+> > > Committer:  Bjorn Helgaas <bhelgaas@google.com>
+> > >
+> > >     of/pci: Fix the conversion of IO ranges into IO resources
+> > >
+> > >     The ranges property for a host bridge controller in DT describes the
+> > >     mapping between the PCI bus address and the CPU physical address.  The
+> > >     resources framework however expects that the IO resources start at a pseudo
+> > >     "port" address 0 (zero) and have a maximum size of IO_SPACE_LIMIT.  The
+> > >     conversion from PCI ranges to resources failed to take that into account,
+> > >     returning a CPU physical address instead of a port number.
+> > >
+> > >     Also fix all the drivers that depend on the old behaviour by fetching the
+> > >     CPU physical address based on the port number where it is being needed.
+> > 
+> > Michael just signaled me that this completely breaks IO space on powerpc ...
+> 
+> Hi Benjamin,
+> 
+> I'm sorry to hear that I've broke powerpc before I've had a chance to actually
+> change the code there. I would like to get the details of what functionality
+> get broken.
 
-There should be no functional changes.
+You changed code that arch/powerpc depends on, without updating it, or even
+CC'ing us on the patches. I'm not sure what you mean by "before I've had a
+chance to actually change the code there" - it's too late.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/hw_irq.h |   94 ++++++++++++++++++++++-------------------
- 1 file changed, 51 insertions(+), 43 deletions(-)
+> The pci_register_io_range() function (the "allocator" for IO space) is a
+> weak function. It takes the CPU physical address of the range and its size
+> and makes sure that it can fit that area in the arch's space for PCI IO.
+> The main purpose of that function is to be a helper to pci_address_to_pio()
+> in order to help return the correct answer in that function. pci_address_to_pio()
+> is also weak and can be overwritten.
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 28f283988c8e..8188d648d48c 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -94,30 +94,7 @@ extern void trace_call_function_single_interrupt(void);
- #define trace_kvm_posted_intr_ipi kvm_posted_intr_ipi
- #endif /* CONFIG_TRACING */
- 
--/* IOAPIC */
--#define IO_APIC_IRQ(x) (((x) >= NR_IRQS_LEGACY) || ((1<<(x)) & io_apic_irqs))
--extern unsigned long io_apic_irqs;
--
--extern void setup_IO_APIC(void);
--extern void disable_IO_APIC(void);
--
--struct io_apic_irq_attr {
--	int ioapic;
--	int ioapic_pin;
--	int trigger;
--	int polarity;
--};
--
--static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
--					int ioapic, int ioapic_pin,
--					int trigger, int polarity)
--{
--	irq_attr->ioapic	= ioapic;
--	irq_attr->ioapic_pin	= ioapic_pin;
--	irq_attr->trigger	= trigger;
--	irq_attr->polarity	= polarity;
--}
--
-+#ifdef CONFIG_IRQ_REMAP
- /* Intel specific interrupt remapping information */
- struct irq_2_iommu {
- 	struct intel_iommu *iommu;
-@@ -131,14 +108,10 @@ struct irq_2_irte {
- 	u16 devid; /* Device ID for IRTE table */
- 	u16 index; /* Index into IRTE table*/
- };
-+#endif	/* CONFIG_IRQ_REMAP */
- 
--/*
-- * This is performance-critical, we want to do it O(1)
-- *
-- * Most irqs are mapped 1:1 with pins.
-- */
-+#ifdef	CONFIG_X86_LOCAL_APIC
- struct irq_cfg {
--	struct list_head	irq_2_pin;
- 	cpumask_var_t		domain;
- 	cpumask_var_t		old_domain;
- 	u8			vector;
-@@ -150,18 +123,64 @@ struct irq_cfg {
- 		struct irq_2_irte  irq_2_irte;
- 	};
- #endif
-+	union {
-+#ifdef CONFIG_X86_IO_APIC
-+		struct {
-+			struct list_head	irq_2_pin;
-+		};
-+#endif
-+	};
- };
- 
-+extern void setup_vector_irq(int cpu);
- extern int assign_irq_vector(int, struct irq_cfg *, const struct cpumask *);
- extern void send_cleanup_vector(struct irq_cfg *);
- 
- struct irq_data;
- int __ioapic_set_affinity(struct irq_data *, const struct cpumask *,
- 			  unsigned int *dest_id);
--extern int IO_APIC_get_PCI_irq_vector(int bus, int devfn, int pin);
--extern void setup_ioapic_dest(void);
-+#endif	/* CONFIG_X86_LOCAL_APIC */
-+
-+#ifdef CONFIG_X86_IO_APIC
-+extern void lock_vector_lock(void);
-+extern void unlock_vector_lock(void);
-+extern void __setup_vector_irq(int cpu);
-+#else
-+static inline void lock_vector_lock(void) {}
-+static inline void unlock_vector_lock(void) {}
-+static inline void __setup_vector_irq(int cpu) {}
-+#endif
-+
-+/* IOAPIC */
-+#ifdef CONFIG_X86_IO_APIC
-+struct io_apic_irq_attr {
-+	int ioapic;
-+	int ioapic_pin;
-+	int trigger;
-+	int polarity;
-+};
-+
-+static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
-+					int ioapic, int ioapic_pin,
-+					int trigger, int polarity)
-+{
-+	irq_attr->ioapic	= ioapic;
-+	irq_attr->ioapic_pin	= ioapic_pin;
-+	irq_attr->trigger	= trigger;
-+	irq_attr->polarity	= polarity;
-+}
- 
-+extern void setup_IO_APIC(void);
- extern void enable_IO_APIC(void);
-+extern void disable_IO_APIC(void);
-+extern void setup_ioapic_dest(void);
-+extern int IO_APIC_get_PCI_irq_vector(int bus, int devfn, int pin);
-+
-+extern unsigned long io_apic_irqs;
-+#define IO_APIC_IRQ(x) (((x) >= NR_IRQS_LEGACY) || ((1 << (x)) & io_apic_irqs))
-+#else	/* CONFIG_X86_IO_APIC */
-+#define IO_APIC_IRQ(x)	0
-+#endif	/* CONFIG_X86_IO_APIC */
- 
- /* Statistics */
- extern atomic_t irq_err_count;
-@@ -195,17 +214,6 @@ extern void (*__initconst interrupt[NR_VECTORS-FIRST_EXTERNAL_VECTOR])(void);
- 
- typedef int vector_irq_t[NR_VECTORS];
- DECLARE_PER_CPU(vector_irq_t, vector_irq);
--extern void setup_vector_irq(int cpu);
--
--#ifdef CONFIG_X86_IO_APIC
--extern void lock_vector_lock(void);
--extern void unlock_vector_lock(void);
--extern void __setup_vector_irq(int cpu);
--#else
--static inline void lock_vector_lock(void) {}
--static inline void unlock_vector_lock(void) {}
--static inline void __setup_vector_irq(int cpu) {}
--#endif
- 
- #endif /* !ASSEMBLY_ */
- 
--- 
-1.7.10.4
+Yes, we already provide our own version of pci_address_to_pio().
+
+The problem is it's too early to call it when we come in from
+find_and_init_phbs() -> pci_process_bridge_OF_ranges(), so it returns junk.
+
+I think you were expecting us to hit the #ifndef PCI_IOBASE case, which looks
+like it might have worked.
+
+For now we're just going to stop using of_pci_range_to_resource().
+
+cheers
+
+
 
