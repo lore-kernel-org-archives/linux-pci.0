@@ -1,54 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([69.164.217.139]:56329 "EHLO foo.masarand.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751528AbaJBD7Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 23:59:24 -0400
-From: matt@masarand.com
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, Matthew Minter <matt@masarand.com>
-Subject: [PATCH 10/18] Delayed microblaze setup of PCI IRQs to bus scan time
-Date: Thu,  2 Oct 2014 04:50:29 +0100
-Message-Id: <1412221837-17452-11-git-send-email-matt@masarand.com>
-In-Reply-To: <1412221837-17452-1-git-send-email-matt@masarand.com>
-References: <1412221837-17452-1-git-send-email-matt@masarand.com>
+Received: from mail-bl2on0145.outbound.protection.outlook.com ([65.55.169.145]:55040
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751001AbaJPIXI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Oct 2014 04:23:08 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH v6 13/13] ARM: imx6sx: Enable pcie on imx6sx sdb board
+Date: Thu, 16 Oct 2014 15:52:43 +0800
+Message-ID: <1413445963-24706-14-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
+References: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Matthew Minter <matt@masarand.com>
+From: Richard Zhu <r65037@freescale.com>
 
-Currently microblaze assigns PCI IRQs during the pcibios phase, this means
-that devices connected after boot will not be assigned an IRQ, instead the
-boot code now registers IRQ assignment functions to be called later by the
-device enable code paths.
-
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
 ---
- arch/microblaze/pci/pci-common.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ arch/arm/boot/dts/imx6sx-sdb.dts | 32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
 
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 9037914..6843b34 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -850,12 +850,16 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
- 		 * code and is needed by the DMA init
- 		 */
- 		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
--
--		/* Read default IRQs and fixup if necessary */
--		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
- 	}
- }
- 
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->swizzle_irq = NULL;
-+	bridge->map_irq = of_irq_parse_and_map_pci;
-+	return 0;
-+}
+diff --git a/arch/arm/boot/dts/imx6sx-sdb.dts b/arch/arm/boot/dts/imx6sx-sdb.dts
+index a3980d9..e28214a 100644
+--- a/arch/arm/boot/dts/imx6sx-sdb.dts
++++ b/arch/arm/boot/dts/imx6sx-sdb.dts
+@@ -90,6 +90,19 @@
+ 			regulator-min-microvolt = <5000000>;
+ 			regulator-max-microvolt = <5000000>;
+ 		};
 +
- void pcibios_fixup_bus(struct pci_bus *bus)
- {
- 	/* When called from the generic PCI probe, read PCI<->PCI bridge
++		reg_pcie: regulator@4 {
++			compatible = "regulator-fixed";
++			reg = <3>;
++			pinctrl-names = "default";
++			pinctrl-0 = <&pinctrl_pcie_reg>;
++			regulator-name = "MPCIE_3V3";
++			regulator-min-microvolt = <3300000>;
++			regulator-max-microvolt = <3300000>;
++			gpio = <&gpio2 1 0>;
++			regulator-always-on;
++			enable-active-high;
++		};
+ 	};
+ 
+ 	sound {
+@@ -251,6 +264,13 @@
+ 	};
+ };
+ 
++&pcie {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_pcie>;
++	reset-gpio = <&gpio2 0 0>;
++	status = "okay";
++};
++
+ &ssi2 {
+ 	status = "okay";
+ };
+@@ -365,6 +385,18 @@
+ 			>;
+ 		};
+ 
++		pinctrl_pcie: pciegrp {
++			fsl,pins = <
++				MX6SX_PAD_ENET1_COL__GPIO2_IO_0 0x10b0
++			>;
++		};
++
++		pinctrl_pcie_reg: pciereggrp {
++			fsl,pins = <
++				MX6SX_PAD_ENET1_CRS__GPIO2_IO_1	0x10b0
++			>;
++		};
++
+ 		pinctrl_vcc_sd3: vccsd3grp {
+ 			fsl,pins = <
+ 				MX6SX_PAD_KEY_COL1__GPIO2_IO_11		0x17059
 -- 
-2.1.0
+1.9.1
 
