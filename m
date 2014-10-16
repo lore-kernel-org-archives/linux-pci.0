@@ -1,110 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0138.outbound.protection.outlook.com ([157.56.111.138]:18142
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750966AbaJPIXH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Oct 2014 04:23:07 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH v6 01/13] PCI: designware: Refine setup_rc and add msi data restore
-Date: Thu, 16 Oct 2014 15:52:31 +0800
-Message-ID: <1413445963-24706-2-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
-References: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
+Received: from mx1.redhat.com ([209.132.183.28]:2261 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751587AbaJPMcu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Oct 2014 08:32:50 -0400
+Message-ID: <543FBAEF.7030905@redhat.com>
+Date: Thu, 16 Oct 2014 08:32:47 -0400
+From: Prarit Bhargava <prarit@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Myron Stowe <mstowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] pci, add sysfs numa_node write function
+References: <1413399924-599-1-git-send-email-prarit@redhat.com> <CAErSpo6Oy1S1OECirp6=tz+pQWUtkFE6p1LTzNaYtzxoX73FWw@mail.gmail.com> <543ECF6F.2030705@redhat.com> <CAErSpo76g-EPsUsMjhBpnnbKD3QufHz1xkvYaqXd8hYtgQ5u1g@mail.gmail.com>
+In-Reply-To: <CAErSpo76g-EPsUsMjhBpnnbKD3QufHz1xkvYaqXd8hYtgQ5u1g@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Richard Zhu <r65037@freescale.com>
 
-- move "program correct class for RC" from dw_pcie_host_init()
-to dw_pcie_setup_rc(). since this is RC setup, it's
-better to contained in dw_pcie_setup_rc function.
-Then, RC can be re-setup really by dw_pcie_setup_rc().
-- add one store/re-store msi cfg functions. Because that
-pcie controller maybe powered off during system suspend,
-and the msi data configuration would be lost.
-these functions can be used to store/restore the msi data
-and msi_enable during the suspend/resume callback.
 
-Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
----
- drivers/pci/host/pcie-designware.c | 21 ++++++++++++++++++---
- drivers/pci/host/pcie-designware.h |  3 +++
- 2 files changed, 21 insertions(+), 3 deletions(-)
+On 10/15/2014 05:20 PM, Bjorn Helgaas wrote:
+> On Wed, Oct 15, 2014 at 1:47 PM, Prarit Bhargava <prarit@redhat.com> wrote:
+>> On 10/15/2014 03:23 PM, Bjorn Helgaas wrote:
+>>> Hi Prarit,
+>>>
+>>> On Wed, Oct 15, 2014 at 1:05 PM, Prarit Bhargava <prarit@redhat.com> wrote:
+>>>> Consider a multi-node, multiple pci root bridge system which can be
+>>>> configured into one large node or one node/socket.  When configuring the
+>>>> system the numa_node value for each PCI root bridge is always set
+>>>> incorrectly to -1, or NUMA_NO_NODE, rather than to the node value of each
+>>>> socket.  Each PCI device inherits the numa value directly from it's parent
+>>>> device, so that the NUMA_NO_NODE value is passed through the entire PCI
+>>>> tree.
+>>>>
+>>>> Some new drivers, such as the Intel QAT driver, drivers/crypto/qat,
+>>>> require that a specific node be assigned to the device in order to
+>>>> achieve maximum performance for the device, and will fail to load if the
+>>>> device has NUMA_NO_NODE.
+>>>
+>>> It seems ... unfriendly for a driver to fail to load just because it
+>>> can't guarantee maximum performance.  Out of curiosity, where does
+>>> this actually happen?  I had a quick look for NUMA_NO_NODE and
+>>> module_init() functions in drivers/crypto/qat, and I didn't see the
+>>> spot.
+>>
+>> The whole point of the Intel QAT driver is to guarantee max performance.  If
+>> that is not possible the driver should not load (according to the thread
+>> mentioned below)
+>>
+>>>
+>>>> The driver would load if the numa_node value
+>>>> was equal to or greater than -1 and quickly hacking the driver results in
+>>>> a functional QAT driver.
+>>>>
+>>>> Using lspci and numactl it is easy to determine what the numa value should
+>>>> be.  The problem is that there is no way to set it.  This patch adds a
+>>>> store function for the PCI device's numa_node value.
+>>>
+>>> I'm not familiar with numactl.  It sounds like it can show you the
+>>> NUMA topology?  Where does that information come from?
+>>
+>> You can map at least what nodes are available (although I suppose you can get
+>> the same information from dmesg).  You have to do a bit of hunting through the
+>> PCI tree to determine the root PCI devices, but you can determine which root
+>> device is connected to which node.
+> 
+> Is numactl reading SRAT?  SLIT?  SMBIOS tables?  Presumably the kernel
+> has access to whatever information you're getting from numactl and
+> lspci, and if so, maybe we can do the workaround automatically in the
+> kernel.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 538bbf3..b1f82ff 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -194,6 +194,19 @@ void dw_pcie_msi_init(struct pcie_port *pp)
- 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
- }
- 
-+void dw_pcie_msi_cfg_store(struct pcie_port *pp)
-+{
-+	dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE, 4, &pp->msi_enable);
-+}
-+
-+void dw_pcie_msi_cfg_restore(struct pcie_port *pp)
-+{
-+	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
-+			virt_to_phys((void *)pp->msi_data));
-+	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
-+	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE, 4, pp->msi_enable);
-+}
-+
- static int find_valid_pos0(struct pcie_port *pp, int msgvec, int pos, int *pos0)
- {
- 	int flag = 1;
-@@ -570,9 +583,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 
- 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
- 
--	/* program correct class for RC */
--	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
--
- 	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
- 	val |= PORT_LOGIC_SPEED_CHANGE;
- 	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
-@@ -917,6 +927,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	val = memlimit | membase;
- 	dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
- 
-+	/* program correct class for RC */
-+	dw_pcie_readl_rc(pp, PCI_CLASS_REVISION, &val);
-+	val |= PCI_CLASS_BRIDGE_PCI << 16;
-+	dw_pcie_writel_rc(pp, val, PCI_CLASS_REVISION);
-+
- 	/* setup command register */
- 	dw_pcie_readl_rc(pp, PCI_COMMAND, &val);
- 	val &= 0xffff0000;
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index a476e60..b0bfed0 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -56,6 +56,7 @@ struct pcie_port {
- 	int			msi_irq;
- 	struct irq_domain	*irq_domain;
- 	unsigned long		msi_data;
-+	unsigned int		msi_enable;
- 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
- };
- 
-@@ -83,6 +84,8 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
- int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
- void dw_pcie_msi_init(struct pcie_port *pp);
-+void dw_pcie_msi_cfg_store(struct pcie_port *pp);
-+void dw_pcie_msi_cfg_restore(struct pcie_port *pp);
- int dw_pcie_link_up(struct pcie_port *pp);
- void dw_pcie_setup_rc(struct pcie_port *pp);
- int dw_pcie_host_init(struct pcie_port *pp);
--- 
-1.9.1
+I'll go figure that out ...
 
+> 
+>>>> To use this, one can do
+>>>>
+>>>> echo 3 > /sys/devices/pci0000:ff/0000:ff:1f.3/numa_node
+>>>>
+>>>> to set the numa node for PCI device 0000:ff:1f.3.
+>>>
+>>> It definitely seems wrong that we don't set the node number correctly.
+>>> pci_acpi_scan_root() sets the node number by looking for a _PXM method
+>>> that applies to the host bridge.  Why does that not work in this case?
+>>>  Does the BIOS not supply _PXM?
+>>
+>> Yeah ... unfortunately the BIOS is broken in this case.  And I know what you're
+>> thinking ;) -- why not get the BIOS fixed?  I'm through relying on BIOS fixes
+>> which can take six months to a year to appear in a production version... I've
+>> been bitten too many times by promises of BIOS fixes that never materialize.
+> 
+> Yep, I understand.  The question is how we implement a workaround so
+> it doesn't become the accepted way to do things.  Obviously we don't
+> want people manually grubbing through numactl/lspci output or writing
+> shell scripts to do things that *should* happen automatically.
+> 
+>> We have systems that only have a support cycle of 3 years, and things like ACPI
+>> _PXM updates are at the bottom of the list :/.
+> 
+
+> 
+> Somewhere in the picture there needs to be a feedback loop that
+> encourages the vendor to fix the problem.  I don't see that happening
+> yet.  Having QAT fail because the platform didn't supply the
+> information required to make it work would be a nice loop.  I don't
+> want to completely paper over the problem without providing some other
+> kind of feedback at the same time.
+
+Okay -- I see what you're after here and I completely agree with it.  But
+sometimes I feel like I banging on a silent drum with some of these companies
+about this stuff :(  My frustration with these companies is starting to show I
+guess...
+
+> 
+> You're probably aware of [1], which was the same problem.  Apparently
+> it was originally reported to RedHat as [2] (which is private, so I
+> can't read it).  That led to a workaround hack for some AMD systems
+> [3, 4].
+
+Yeah ... part of me was thinking that maybe I should do something like
+the above but I didn't know how you'd feel about expanding that hack.  I'll look
+into it.  I'd prefer it to be opt-in with a kernel parameter.
+
+P.
