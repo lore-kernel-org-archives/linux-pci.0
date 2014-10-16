@@ -1,55 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f171.google.com ([209.85.216.171]:35257 "EHLO
-	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751712AbaJHGXU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Oct 2014 02:23:20 -0400
-Received: by mail-qc0-f171.google.com with SMTP id i17so7020151qcy.2
-        for <linux-pci@vger.kernel.org>; Tue, 07 Oct 2014 23:23:19 -0700 (PDT)
+Received: from mail-bl2on0131.outbound.protection.outlook.com ([65.55.169.131]:19648
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750765AbaJPIXH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Oct 2014 04:23:07 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>
+Subject: [PATCH v6]PCI: imx6: enable pcie on imx6sx sdb and imx6qdl sabreauto.
+Date: Thu, 16 Oct 2014 15:52:30 +0800
+Message-ID: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <1412746096.30859.229.camel@pasglop>
-References: <1412656696.30859.122.camel@pasglop>
-	<CADnq5_NFt8neiOAg896d3-DbAn0rnrE7iXaTFmkNGSg-J9oSkA@mail.gmail.com>
-	<1412746096.30859.229.camel@pasglop>
-Date: Wed, 8 Oct 2014 02:23:19 -0400
-Message-ID: <CADnq5_MH+sLjm=_teX-oJ0k+2BsR+pthen7VDUDVFsKPJw6kqg@mail.gmail.com>
-Subject: Re: [PATCH v3 4/7] sound/radeon: Add quirk for broken 64-bit MSI
-From: Alex Deucher <alexdeucher@gmail.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dave Airlie <airlied@linux.ie>, Takashi Iwai <tiwai@suse.de>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 8, 2014 at 1:28 AM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Tue, 2014-10-07 at 19:47 -0400, Alex Deucher wrote:
->> > This moves the setting of the quirk flag to the audio driver.
->> >
->> > While recent ASICs have that problem fixed, they don't seem to
->> > be listed in the PCI IDs of the current driver, so let's quirk all
->> > the ATI HDMI for now. The consequences are nil on x86 anyway.
->> >
->> > Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
->> > Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
->> > CC: <stable@vger.kernel.org>
->>
->> Further discussion with the hw teams have revealed that this is still
->> an issue on newer asics so I think your original patch is correct
->> after all.  Just disable 64 bit MSIs on all AMD audio PCI ids.
->
-> Allright, I won't resend the whole series, I can just pickup my previous
-> patch. Takashi, Bjorn, Dave, this series covers your 3 areas of
-> maintainership, how do you want to proceed ? I'm happy to merge the
-> whole lot via powerpc ASAP (since it's all CC'ed stable) if you guys
-> send me the appropriate acks, otherwise, let me know.
->
+Main changes since the v5:
+1.use noirq pm_ops instead of the syscore pm_ops
+2.in order to not break compilation, move gpr bits modifications, before
+imx6 pcie changes.
+3.host init maybe failed, return negative value when there is a failure
+in the host init. In responding, the host_init func type had been change from
+void to init.
 
-I don't remember if I gave my formal review of your original patch, so if not,
-Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
-
-Alex
+[PATCH v6 01/13] PCI: designware: Refine setup_rc and add msi data
+[PATCH v6 02/13] PCI: designware: Set func type of host init to int
+[PATCH v6 03/13] PCI: dra7xx: Change the func type of host init
+[PATCH v6 04/13] PCI: exynos: Change the func type of host init
+[PATCH v6 05/13] PCI: spear: Change the func type of host init
+[PATCH v6 06/13] PCI: designware: Fix one potential assignment error
+[PATCH v6 07/13] ARM: imx6sx: Add imx6sx pcie related gpr bits
+[PATCH v6 08/13] PCI: imx6: Wait the clocks to stabilize after ref_en
+[PATCH v6 09/13] PCI: imx6: Add imx6sx pcie support
+[PATCH v6 10/13] ARM: imx6qdl: Enable pcie on imx6qdl sabreauto
+[PATCH v6 11/13] ARM: imx6: Update dts and binding for imx6sx pcie
+[PATCH v6 12/13] ARM: imx6sx: Add syscon into gpc dts
+[PATCH v6 13/13] ARM: imx6sx: Enable pcie on imx6sx sdb board
