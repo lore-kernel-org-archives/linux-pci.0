@@ -1,143 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f170.google.com ([209.85.216.170]:60808 "EHLO
-	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753605AbaJAR6O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 13:58:14 -0400
-Received: by mail-qc0-f170.google.com with SMTP id m20so823459qcx.29
-        for <linux-pci@vger.kernel.org>; Wed, 01 Oct 2014 10:58:13 -0700 (PDT)
+Received: from mail-qg0-f46.google.com ([209.85.192.46]:39237 "EHLO
+	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750969AbaJPDvT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Oct 2014 23:51:19 -0400
+Received: by mail-qg0-f46.google.com with SMTP id z60so1938915qgd.19
+        for <linux-pci@vger.kernel.org>; Wed, 15 Oct 2014 20:51:19 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <s5hoatw42f6.wl-tiwai@suse.de>
-References: <1412129393.4285.195.camel@pasglop>
-	<s5htx3o44tv.wl-tiwai@suse.de>
-	<1412149289.4285.204.camel@pasglop>
-	<s5hr3ys43ev.wl-tiwai@suse.de>
-	<s5hoatw42f6.wl-tiwai@suse.de>
-Date: Wed, 1 Oct 2014 13:58:13 -0400
-Message-ID: <CADnq5_P1qTkedSuFfgJ=dd5cWji1-OUbmKoUyq+kLQgPGYYaQw@mail.gmail.com>
-Subject: Re: [PATCH 4/4] sounds/hda/radeon: Disable 64-bit DMA on radeon
-From: Alex Deucher <alexdeucher@gmail.com>
-To: Takashi Iwai <tiwai@suse.de>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
+In-Reply-To: <CA+QbAV6-C9wxPttEx0uDn_K5Y1LaGt8pxDWc8RJmN4DqR+NHtQ@mail.gmail.com>
+References: <CA+QbAV6-C9wxPttEx0uDn_K5Y1LaGt8pxDWc8RJmN4DqR+NHtQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 15 Oct 2014 21:50:58 -0600
+Message-ID: <CAErSpo5YXZ8YRzhg0xvbHGCr22o+_+yi7HrCCBYBM9Ke42okJQ@mail.gmail.com>
+Subject: Re: PCIe PASID (Process Address Space ID) and iommu code
+To: Kallol Biswas <nucleodyne@gmail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Jay Cornwall <jay.cornwall@amd.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 1, 2014 at 4:30 AM, Takashi Iwai <tiwai@suse.de> wrote:
-> At Wed, 01 Oct 2014 10:09:28 +0200,
-> Takashi Iwai wrote:
->>
->> At Wed, 01 Oct 2014 17:41:29 +1000,
->> Benjamin Herrenschmidt wrote:
->> >
->> > On Wed, 2014-10-01 at 09:38 +0200, Takashi Iwai wrote:
->> >
->> > > > diff --git a/sound/pci/hda/hda_intel.c b/sound/pci/hda/hda_intel.c
->> > > > index 3e6d22d..2b679d5 100644
->> > > > --- a/sound/pci/hda/hda_intel.c
->> > > > +++ b/sound/pci/hda/hda_intel.c
->> > > > @@ -297,7 +297,7 @@ enum {
->> > > >  /* quirks for ATI/AMD HDMI */
->> > > >  #define AZX_DCAPS_PRESET_ATI_HDMI \
->> > > >         (AZX_DCAPS_NO_TCSEL | AZX_DCAPS_SYNC_WRITE | AZX_DCAPS_POSFIX_LPIB|\
->> > > > -        AZX_DCAPS_NO_MSI64)
->> > > > +        AZX_DCAPS_NO_MSI64 | AZX_DCAPS_NO_64BIT)
->> > >
->> > > The only concern is that this will disable 64bit DMA also on x86 where
->> > > it has been working fine.  Can we add an ifdef CONFIG_PPC for this?
->> >
->> > I don't like that approach because technically the chip doesn't do
->> > 64-bit DMA ... it does something like 40 or 48 (might actually depend on
->> > the chip version) and for all I know it will break on future x86 with
->> > more memory or other platforms with similar address encodings as
->> > powerpc...
->> >
->> > The right thing might be to get the exact number of bits and do the
->> > appropriate dma_set_mask() like the graphics driver does, but that's a
->> > bit tricky unless we add a DMA mask field in that big array of chips in
->> > there...
->>
->> I think setting the dma mask explicitly would be a better approach
->> although it results in a bit bigger change.  At least, it would impact
->> less than forcing 32bit DMA, as most desktop machines have less than
->> 40bit address.  How about a patch like below?
+[+cc Joerg, Suravee, Jay, iommu list, linux-pci]
 
-Patch looks good.  Audio DMAs are limited to 40 bits, same as the GPU
-side.  I'm still waiting to hear back on the MSIs for audio, but they
-probably follow the GPU side, so I expect they should be fixed on Sea
-Islands as well.
-
-Alex
-
-
+On Wed, Oct 15, 2014 at 5:44 PM, Kallol Biswas <nucleodyne@gmail.com> wrote:
+> Resending, as message got bounced for html content.
+> --------------------------------------------
+> Hi,
+>     PCIe has introduced PASID TLP Prefix.  There are two ECNs on this.
 >
-> Oops, it obviously doesn't work with AMD ID...  Fixed in below.
+> It seems that AMD iommu code makes use of PASID. Is there a device that
+> utilizes this TLP prefix?
 >
+> PASID allocation and management within a device is not clear to me. How
+> does device know which PASID to issue for which virtual address? Who makes
+> the association? Must be software/OS, but how? There is no table for this
+> like MSI-X table.
 >
-> Takashi
+> Any pointer/documentation will be appreciated.
 >
-> -- 8< --
-> From: Takashi Iwai <tiwai@suse.de>
-> Subject: [PATCH v2] ALSA: hda - Limit 40bit DMA for AMD HDMI controllers
->
-> AMD/ATI HDMI controller chip models, we already have a filter to lower
-> to 32bit DMA, but the rest are supposed to be working with 64bit
-> although the hardware doesn't really work with 63bit but only with 40
-> or 48bit DMA.  In this patch, we take 40bit DMA for safety for the
-> AMD/ATI controllers as the graphics drivers does.
->
-> Signed-off-by: Takashi Iwai <tiwai@suse.de>
-> ---
->  sound/pci/hda/hda_intel.c | 14 +++++++++++---
->  1 file changed, 11 insertions(+), 3 deletions(-)
->
-> diff --git a/sound/pci/hda/hda_intel.c b/sound/pci/hda/hda_intel.c
-> index aa302fb03fc5..99b367bd9b1b 100644
-> --- a/sound/pci/hda/hda_intel.c
-> +++ b/sound/pci/hda/hda_intel.c
-> @@ -1482,6 +1482,7 @@ static int azx_first_init(struct azx *chip)
->         struct snd_card *card = chip->card;
->         int err;
->         unsigned short gcap;
-> +       unsigned int dma_bits = 64;
->
->  #if BITS_PER_LONG != 64
->         /* Fix up base address on ULI M5461 */
-> @@ -1518,9 +1519,14 @@ static int azx_first_init(struct azx *chip)
->         gcap = azx_readw(chip, GCAP);
->         dev_dbg(card->dev, "chipset global capabilities = 0x%x\n", gcap);
->
-> +       /* AMD devices support 40 or 48bit DMA, take the safe one */
-> +       if (chip->pci->vendor == PCI_VENDOR_ID_AMD)
-> +               dma_bits = 40;
-> +
->         /* disable SB600 64bit support for safety */
->         if (chip->pci->vendor == PCI_VENDOR_ID_ATI) {
->                 struct pci_dev *p_smbus;
-> +               dma_bits = 40;
->                 p_smbus = pci_get_device(PCI_VENDOR_ID_ATI,
->                                          PCI_DEVICE_ID_ATI_SBX00_SMBUS,
->                                          NULL);
-> @@ -1550,9 +1556,11 @@ static int azx_first_init(struct azx *chip)
->         }
->
->         /* allow 64bit DMA address if supported by H/W */
-> -       if ((gcap & AZX_GCAP_64OK) && !pci_set_dma_mask(pci, DMA_BIT_MASK(64)))
-> -               pci_set_consistent_dma_mask(pci, DMA_BIT_MASK(64));
-> -       else {
-> +       if (!(gcap & AZX_GCAP_64OK))
-> +               dma_bits = 32;
-> +       if (!pci_set_dma_mask(pci, DMA_BIT_MASK(dma_bits))) {
-> +               pci_set_consistent_dma_mask(pci, DMA_BIT_MASK(dma_bits));
-> +       } else {
->                 pci_set_dma_mask(pci, DMA_BIT_MASK(32));
->                 pci_set_consistent_dma_mask(pci, DMA_BIT_MASK(32));
->         }
+> Regards,
 > --
-> 2.1.0
->
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
