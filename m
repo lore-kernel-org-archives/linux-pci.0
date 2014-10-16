@@ -1,59 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13955 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751644AbaJAQsW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 12:48:22 -0400
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 0/3] Revert MSI msg API churn
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linux-kernel@vger.kernel.org, wangyijing@huawei.com
-Date: Wed, 01 Oct 2014 10:48:16 -0600
-Message-ID: <20141001163814.2709.92885.stgit@gimli.home>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 16 Oct 2014 10:05:29 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: of/pci: Fix the conversion of IO ranges into IO resources
+Message-ID: <20141016090529.GG4599@e106497-lin.cambridge.arm.com>
+References: <20141009200235.55E5166107E@gitolite.kernel.org>
+ <1413358507.4748.4.camel@pasglop>
+ <20141015090239.GB18070@e106497-lin.cambridge.arm.com>
+ <1413428148.20705.2.camel@concordia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1413428148.20705.2.camel@concordia>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The MSI message API has gone through some churn, that I think results
-in an inconsistent interface.  We now have this:
+On Thu, Oct 16, 2014 at 03:55:48AM +0100, Michael Ellerman wrote:
+> On Wed, 2014-10-15 at 10:02 +0100, Liviu Dudau wrote:
+> > On Wed, Oct 15, 2014 at 08:35:07AM +0100, Benjamin Herrenschmidt wrote:
+> > > On Thu, 2014-10-09 at 20:02 +0000, Linux Kernel Mailing List wrote:
+> > > > Gitweb:     http://git.kernel.org/linus/;a=commit;h=0b0b0893d49b34201a6c4416b1a707b580b91e3d
+> > > > Commit:     0b0b0893d49b34201a6c4416b1a707b580b91e3d
+> > > > Author:     Liviu Dudau <Liviu.Dudau@arm.com>
+> > > > Committer:  Bjorn Helgaas <bhelgaas@google.com>
+> > > >
+> > > >     of/pci: Fix the conversion of IO ranges into IO resources
+> > > >
+> > > >     The ranges property for a host bridge controller in DT describes the
+> > > >     mapping between the PCI bus address and the CPU physical address.  The
+> > > >     resources framework however expects that the IO resources start at a pseudo
+> > > >     "port" address 0 (zero) and have a maximum size of IO_SPACE_LIMIT.  The
+> > > >     conversion from PCI ranges to resources failed to take that into account,
+> > > >     returning a CPU physical address instead of a port number.
+> > > >
+> > > >     Also fix all the drivers that depend on the old behaviour by fetching the
+> > > >     CPU physical address based on the port number where it is being needed.
+> > > 
+> > > Michael just signaled me that this completely breaks IO space on powerpc ...
+> > 
+> > Hi Benjamin,
+> > 
+> > I'm sorry to hear that I've broke powerpc before I've had a chance to actually
+> > change the code there. I would like to get the details of what functionality
+> > get broken.
+> 
 
-void read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-void write_msi_msg(unsigned int irq, struct msi_msg *msg);
+Hi Michael,
 
-write_msi_msg() takes an irq arg, but read_msi_msg() takes an
-msi_desc.  Presumably write_msi_msg() was not converted because it
-has a much larger user base, but this sort of inconsitency results
-in a poor API.
+> You changed code that arch/powerpc depends on, without updating it, or even
+> CC'ing us on the patches. I'm not sure what you mean by "before I've had a
+> chance to actually change the code there" - it's too late.
 
-This series reverts a selection of commits to return us to:
+Sorry, I meant without directly changing the code in arch/powerpc. And I do appologise
+for not CC-ing you on the patches. I believe (hope) Benjamin has been on CC for several
+revisions, but I know he is very busy and he has told me so.
 
-void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
-void write_msi_msg(unsigned int irq, struct msi_msg *msg);
+> 
+> > The pci_register_io_range() function (the "allocator" for IO space) is a
+> > weak function. It takes the CPU physical address of the range and its size
+> > and makes sure that it can fit that area in the arch's space for PCI IO.
+> > The main purpose of that function is to be a helper to pci_address_to_pio()
+> > in order to help return the correct answer in that function. pci_address_to_pio()
+> > is also weak and can be overwritten.
+> 
+> Yes, we already provide our own version of pci_address_to_pio().
+> 
+> The problem is it's too early to call it when we come in from
+> find_and_init_phbs() -> pci_process_bridge_OF_ranges(), so it returns junk.
+> 
+> I think you were expecting us to hit the #ifndef PCI_IOBASE case, which looks
+> like it might have worked.
 
-I've left the removal of read_msi_msg() since it has no users, but
-restored get_cached_msi_msg() since it has an imminent user.  This
-will also cleanup the upcoming merge conflicts in next.  Thanks,
+That's correct. Unfortunately I lack access to a PowerPC platform with PCI(e) that I can
+test my patches on, so most of my testing has been compile tests. Also, due to the
+similarities in code between powerpc and microblaze in this area I hoped that focusing
+on the simpler microblaze would be faster, until I run into the brick wall of not being
+able to source an FPGA image for the test platform I have that contains all the relevant
+bits compiled in.
 
-Alex
+> 
+> For now we're just going to stop using of_pci_range_to_resource().
 
----
+So you are going to continue converting IO ranges as IORESOURCE_MEM resources but with a
+different flag. Is that something that powerpc depends on or is it an artifact of too
+much code living around the kernel that has built in assumption of that being the fact?
+I'm trying to understand the world around powerpc so as to attempt to make a useful
+contribution in the future.
 
-Alex Williamson (3):
-      Revert "PCI/MSI: Remove unused get_cached_msi_msg()"
-      Revert "PCI/MSI: Rename __get_cached_msi_msg() to get_cached_msi_msg()"
-      Revert "PCI/MSI: Rename __read_msi_msg() to read_msi_msg()"
+Best regards,
+Liviu
 
+> 
+> cheers
+> 
+> 
+> 
+> 
 
- arch/ia64/kernel/msi_ia64.c          |    2 +-
- arch/ia64/sn/kernel/msi_sn.c         |    2 +-
- arch/powerpc/platforms/pseries/msi.c |    2 +-
- arch/x86/kernel/apic/io_apic.c       |    2 +-
- arch/x86/pci/xen.c                   |    2 +-
- drivers/pci/msi.c                    |   11 +++++++++--
- include/linux/msi.h                  |    5 +++--
- 7 files changed, 17 insertions(+), 9 deletions(-)
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
