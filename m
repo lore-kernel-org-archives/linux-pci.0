@@ -1,169 +1,177 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 05/16] x86/MSI: Remove unused MSI weak arch functions
-Date: Mon, 27 Oct 2014 21:22:11 +0800
-Message-ID: <1414416142-31239-6-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
-References: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:48141 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751106AbaJPKyM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Oct 2014 06:54:12 -0400
+Message-ID: <1413456849.2165.13.camel@antimon.intern.lynxeye.de>
+Subject: Re: [PATCH v6 09/13] PCI: imx6: Add imx6sx pcie support
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Richard Zhu <richard.zhu@freescale.com>
+Cc: linux-pci@vger.kernel.org, shawn.guo@freescale.com,
+	festevam@gmail.com, tharvey@gateworks.com,
+	Richard Zhu <r65037@freescale.com>
+Date: Thu, 16 Oct 2014 12:54:09 +0200
+In-Reply-To: <1413445963-24706-10-git-send-email-richard.zhu@freescale.com>
+References: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
+	 <1413445963-24706-10-git-send-email-richard.zhu@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we can clean up MSI weak arch functions in x86.
+Am Donnerstag, den 16.10.2014, 15:52 +0800 schrieb Richard Zhu:
+> From: Richard Zhu <r65037@freescale.com>
+> 
+> - imx6sx pcie has its own standalone pcie power supply.
+> In order to turn on the imx6sx pcie power during
+> initialization. Add the pcie regulator and the gpc regmap
+> into the imx6sx pcie structure.
+> - imx6sx pcie has the new added reset mechanism, add the
+> reset operations into the initialization.
+> - register one PM call-back, enter/exit L2 state during
+> system suspend/resume.
+> use noirq pm_ops instead of the general pm_ops in dev_pm_ops,
+> since cfg read/write may occurs after suspend and before resume.
+> do msi store/re-store in suspend/resume callbacks, since
+> controller maybe turned off, and these msi cfg maybe lost
+> in suspend.
+> - disp_axi clock is required by pcie inbound axi port actually.
+> Add one more clock named pcie_inbound_axi for imx6sx pcie.
+> - host init maybe failed, return negative value when
+> there is a failure in the host init.
+> 
+> Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
+> ---
+>  drivers/pci/host/pci-imx6.c | 204 +++++++++++++++++++++++++++++++++++++++-----
+>  1 file changed, 183 insertions(+), 21 deletions(-)
+> 
+[...]
+>  
+> +#ifdef CONFIG_PM_SLEEP
+> +static int pci_imx_suspend_noirq(struct device *dev)
+> +{
+> +	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
+> +	struct pcie_port *pp = &imx6_pcie->pp;
+> +
+> +	if (is_imx6sx_pcie(imx6_pcie)) {
+> +		if (IS_ENABLED(CONFIG_PCI_MSI))
+> +			dw_pcie_msi_cfg_store(pp);
+> +
+> +		/* PM_TURN_OFF */
+> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> +				IMX6SX_GPR12_PCIE_PM_TURN_OFF,
+> +				IMX6SX_GPR12_PCIE_PM_TURN_OFF);
+> +		udelay(10);
+> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> +				IMX6SX_GPR12_PCIE_PM_TURN_OFF, 0);
+> +		clk_disable_unprepare(imx6_pcie->pcie);
+> +		clk_disable_unprepare(imx6_pcie->pcie_bus);
+> +		clk_disable_unprepare(imx6_pcie->pcie_phy);
+> +		clk_disable_unprepare(imx6_pcie->pcie_inbound_axi);
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int pci_imx_resume_noirq(struct device *dev)
+> +{
+> +	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
+> +	struct pcie_port *pp = &imx6_pcie->pp;
+> +
+> +	if (is_imx6sx_pcie(imx6_pcie)) {
+> +		clk_prepare_enable(imx6_pcie->pcie_inbound_axi);
+> +		clk_prepare_enable(imx6_pcie->pcie_bus);
+> +		clk_prepare_enable(imx6_pcie->pcie_phy);
+> +		clk_prepare_enable(imx6_pcie->pcie);
+> +
+> +		/* Reset iMX6SX PCIe */
+> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
+> +				IMX6SX_GPR5_PCIE_PERST, IMX6SX_GPR5_PCIE_PERST);
+> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
+> +				IMX6SX_GPR5_PCIE_PERST, 0);
+> +		/*
+> +		 * controller maybe turn off, re-configure again
+> +		 */
+> +		dw_pcie_setup_rc(pp);
+> +
+> +		if (IS_ENABLED(CONFIG_PCI_MSI))
+> +			dw_pcie_msi_cfg_restore(pp);
+> +
+> +		/* RESET EP */
+> +		gpio_set_value(imx6_pcie->reset_gpio, 0);
+> +		udelay(10);
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/x86/include/asm/pci.h      |    5 +----
- arch/x86/include/asm/x86_init.h |    4 ----
- arch/x86/kernel/apic/io_apic.c  |   21 +++++----------------
- arch/x86/kernel/x86_init.c      |   24 ------------------------
- 4 files changed, 6 insertions(+), 48 deletions(-)
+You are violating the spec here: "When PERST# is asserted it must remain
+active for a minimum of 100 us (Tperst)." Also you probably want to put
+the EP in reset at suspend and only release the reset in the resume
+path.
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 1af3d77..21fe24f 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -99,14 +99,11 @@ extern void pci_iommu_alloc(void);
- #ifdef CONFIG_PCI_MSI
- /* implemented in arch/x86/kernel/apic/io_apic. */
- struct msi_desc;
--int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
--void native_teardown_msi_irq(unsigned int irq);
--void native_restore_msi_irqs(struct pci_dev *dev);
-+void native_teardown_msi_irq(struct msi_controller *ctrl, unsigned int irq);
- int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- 		  unsigned int irq_base, unsigned int irq_offset);
- extern struct msi_controller *x86_msi_ctrl;
- #else
--#define native_setup_msi_irqs		NULL
- #define native_teardown_msi_irq		NULL
- #endif
- 
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index f58a9c7..2514f67 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -174,13 +174,9 @@ struct pci_dev;
- struct msi_msg;
- 
- struct x86_msi_ops {
--	int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
- 	void (*compose_msi_msg)(struct pci_dev *dev, unsigned int irq,
- 				unsigned int dest, struct msi_msg *msg,
- 			       u8 hpet_id);
--	void (*teardown_msi_irq)(unsigned int irq);
--	void (*teardown_msi_irqs)(struct pci_dev *dev);
--	void (*restore_msi_irqs)(struct pci_dev *dev);
- 	int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
- };
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 8b8c671..04bf011 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3207,7 +3207,8 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- 	return 0;
- }
- 
--int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+static int native_setup_msi_irqs(struct msi_controller *ctrl,
-+		struct pci_dev *dev, int nvec, int type)
- {
- 	struct msi_desc *msidesc;
- 	unsigned int irq;
-@@ -3234,26 +3235,14 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 	return 0;
- }
- 
--static int __native_setup_msi_irqs(struct msi_controller *ctrl, 
--		struct pci_dev *dev, int nvec, int type)
--{
--	return native_setup_msi_irqs(dev, nvec, type);
--}
--
--void native_teardown_msi_irq(unsigned int irq)
-+void native_teardown_msi_irq(struct msi_controller *ctrl, unsigned int irq)
- {
- 	irq_free_hwirq(irq);
- }
- 
--static void __native_teardown_msi_irq(struct msi_controller *ctrl, 
--		unsigned int irq)
--{
--	native_teardown_msi_irq(irq);
--}
--
- static struct msi_controller native_msi_ctrl = {
--	.setup_irqs = __native_setup_msi_irqs,
--	.teardown_irq = __native_teardown_msi_irq,
-+	.setup_irqs = native_setup_msi_irqs,
-+	.teardown_irq = native_teardown_msi_irq,
- };
- 
- struct msi_controller *pcibios_msi_controller(struct pci_bus *bus)
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index 234b072..cc32568 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -110,34 +110,10 @@ EXPORT_SYMBOL_GPL(x86_platform);
- 
- #if defined(CONFIG_PCI_MSI)
- struct x86_msi_ops x86_msi = {
--	.setup_msi_irqs		= native_setup_msi_irqs,
- 	.compose_msi_msg	= native_compose_msi_msg,
--	.teardown_msi_irq	= native_teardown_msi_irq,
--	.teardown_msi_irqs	= default_teardown_msi_irqs,
--	.restore_msi_irqs	= default_restore_msi_irqs,
- 	.setup_hpet_msi		= default_setup_hpet_msi,
- };
- 
--/* MSI arch specific hooks */
--int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
--{
--	return x86_msi.setup_msi_irqs(dev, nvec, type);
--}
--
--void arch_teardown_msi_irqs(struct pci_dev *dev)
--{
--	x86_msi.teardown_msi_irqs(dev);
--}
--
--void arch_teardown_msi_irq(unsigned int irq)
--{
--	x86_msi.teardown_msi_irq(irq);
--}
--
--void arch_restore_msi_irqs(struct pci_dev *dev)
--{
--	x86_msi.restore_msi_irqs(dev);
--}
- #endif
- 
- struct x86_io_apic_ops x86_io_apic_ops = {
--- 
-1.7.1
+> +		gpio_set_value(imx6_pcie->reset_gpio, 1);
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct dev_pm_ops pci_imx_pm_ops = {
+> +	.suspend_noirq = pci_imx_suspend_noirq,
+> +	.resume_noirq = pci_imx_resume_noirq,
+> +	.freeze_noirq = pci_imx_suspend_noirq,
+> +	.thaw_noirq = pci_imx_resume_noirq,
+> +	.poweroff_noirq = pci_imx_suspend_noirq,
+> +	.restore_noirq = pci_imx_resume_noirq,
+> +};
+> +#endif
+> +
+>  static int __init imx6_pcie_probe(struct platform_device *pdev)
+>  {
+>  	struct imx6_pcie *imx6_pcie;
+> @@ -610,9 +751,28 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>  		return PTR_ERR(imx6_pcie->pcie);
+>  	}
+>  
+> -	/* Grab GPR config register range */
+> -	imx6_pcie->iomuxc_gpr =
+> -		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
+> +	if (is_imx6sx_pcie(imx6_pcie)) {
+> +		imx6_pcie->pcie_inbound_axi = devm_clk_get(&pdev->dev,
+> +				"pcie_inbound_axi");
+> +		if (IS_ERR(imx6_pcie->pcie_inbound_axi)) {
+> +			dev_err(&pdev->dev,
+> +				"pcie clock source missing or invalid\n");
+> +			return PTR_ERR(imx6_pcie->pcie_inbound_axi);
+> +		}
+> +
+> +		imx6_pcie->pcie_phy_regulator = devm_regulator_get(pp->dev,
+> +				"pcie-phy");
+> +
+> +		imx6_pcie->iomuxc_gpr =
+> +			 syscon_regmap_lookup_by_compatible
+> +			 ("fsl,imx6sx-iomuxc-gpr");
+> +		imx6_pcie->gpc_ips_reg =
+> +			 syscon_regmap_lookup_by_compatible("fsl,imx6sx-gpc");
+> +	} else {
+> +		imx6_pcie->iomuxc_gpr =
+> +			syscon_regmap_lookup_by_compatible
+> +			("fsl,imx6q-iomuxc-gpr");
+> +	}
+>  	if (IS_ERR(imx6_pcie->iomuxc_gpr)) {
+>  		dev_err(&pdev->dev, "unable to find iomuxc registers\n");
+>  		return PTR_ERR(imx6_pcie->iomuxc_gpr);
+> @@ -636,6 +796,7 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
+>  
+>  static const struct of_device_id imx6_pcie_of_match[] = {
+>  	{ .compatible = "fsl,imx6q-pcie", },
+> +	{ .compatible = "fsl,imx6sx-pcie", },
+>  	{},
+>  };
+>  MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
+> @@ -645,6 +806,7 @@ static struct platform_driver imx6_pcie_driver = {
+>  		.name	= "imx6q-pcie",
+>  		.owner	= THIS_MODULE,
+>  		.of_match_table = imx6_pcie_of_match,
+> +		.pm = &pci_imx_pm_ops,
+>  	},
+>  	.shutdown = imx6_pcie_shutdown,
+>  };
+
 
