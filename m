@@ -1,91 +1,227 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Daniel J Blueman <daniel@numascale.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Daniel J Blueman <daniel@numascale.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>
-Subject: [PATCH 2/3] Numachip: drop unuseful code
-Date: Wed, 15 Oct 2014 20:53:07 +0800
-Message-Id: <1413377588-6985-2-git-send-email-daniel@numascale.com>
-In-Reply-To: <1413377588-6985-1-git-send-email-daniel@numascale.com>
-References: <1413377588-6985-1-git-send-email-daniel@numascale.com>
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <indou.takao@jp.fujitsu.com>,
+	Eric Biederman <ebiederm@xmission.com>,
+	<kexec@lists.infradead.org>
+Cc: <linda.knippers@hp.com>, "Li, Zhen-Hua" <zhen-hual@hp.com>,
+	Randy Wright <rwright@hp.com>
+Subject: [PATCH 1/1] pci: reset all pci endpoints to stop on going dma
+Date: Fri, 17 Oct 2014 17:13:27 +0800
+Message-Id: <1413537207-16514-1-git-send-email-zhen-hual@hp.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Drop printing that serves no purpose, as it's printing fixed or
-known values, and mark constant structure appropriately.
+This is an update of the patch
+	https://lkml.org/lkml/2014/10/10/37
 
-Signed-off-by: Daniel J Blueman <daniel@numascale.com>
-Reviewed-by: Steffen Persvold <sp@numascale.com>
+This patch is doing the reset works before the kdump kernel boots.
+
+On a Linux system with iommu supported and many PCI devices on it,
+when kernel crashed and the kdump kernel boots with intel_iommu=on,
+there may be some unexpected DMA requests on this adapter, which will
+cause DMA Remapping faults like:
+    dmar: DRHD: handling fault status reg 102
+    dmar: DMAR:[DMA Read] Request device [41:00.0] fault addr fff81000
+    DMAR:[fault reason 01] Present bit in root entry is clear
+
+This bug may happen on *any* PCI device.
+Analysis for this bug:
+
+The present bit is set in this function:
+
+static struct context_entry * device_to_context_entry(
+                struct intel_iommu *iommu, u8 bus, u8 devfn)
+{
+    ......
+                set_root_present(root);
+    ......
+}
+
+Calling tree:
+    device driver
+        intel_alloc_coherent
+            __intel_map_single
+                domain_context_mapping
+                    domain_context_mapping_one
+                        device_to_context_entry
+
+This means, the present bit in root entry will not be set until the device
+driver is loaded.
+
+But in the kdump kernel, hardware devices are not aware that control has
+transferred to the second kernel, and those drivers must initialize again.
+Consequently there may be unexpected DMA requests from devices activity
+initiated in the first kernel leading to the DMA Remapping errors in the
+second kernel.
+
+To fix this DMAR fault, we need to reset the bus that this device on. Reset
+the device itself does not work.
+
+A patch for this bug that has been sent before:
+https://lkml.org/lkml/2014/9/30/55
+As in discussion, this bug may happen on *any* device, so we need to reset
+all pci devices.
+
+There was an original version(Takao Indoh) that resets the pcie devices:
+https://lkml.org/lkml/2013/5/14/9
+
+According to the previous discussion, On sparc, the IOMMU is initialized
+before PCI devices are enumerated, this patch does the resetting works before
+the kdump kernel boots, so it can also fix the problems on sparc.
+
+Update of this new version, comparing with Takao Indoh's version:
+    Add support for legacy PCI devices.
+    Use pci_try_reset_bus instead of do_downstream_device_reset.
+    Reset all PCI/PCIe deviecs in the first kernel, before kdump kernel boots.
+
+Randy Wright corrects some misunderstanding in this description.
+
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+Signed-off-by: Randy Wright <rwright@hp.com>
 ---
- arch/x86/kernel/apic/apic_numachip.c | 22 +++-------------------
- arch/x86/pci/numachip.c              |  2 +-
- 2 files changed, 4 insertions(+), 20 deletions(-)
+ drivers/pci/pci.c   | 82 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |  6 ++++
+ kernel/kexec.c      |  2 ++
+ 3 files changed, 90 insertions(+)
 
-diff --git a/arch/x86/kernel/apic/apic_numachip.c b/arch/x86/kernel/apic/apic_numachip.c
-index 4156470..ee2052d 100644
---- a/arch/x86/kernel/apic/apic_numachip.c
-+++ b/arch/x86/kernel/apic/apic_numachip.c
-@@ -157,20 +157,8 @@ static int __init numachip_probe(void)
- 	return apic == &apic_numachip;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 625a4ac..aa9192a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -23,6 +23,7 @@
+ #include <linux/device.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/pci_hotplug.h>
++#include <linux/crash_dump.h>
+ #include <asm-generic/pci-bridge.h>
+ #include <asm/setup.h>
+ #include "pci.h"
+@@ -4466,6 +4467,87 @@ void __weak pci_fixup_cardbus(struct pci_bus *bus)
  }
+ EXPORT_SYMBOL(pci_fixup_cardbus);
  
--static void __init map_csrs(void)
--{
--	printk(KERN_INFO "NumaChip: Mapping local CSR space (%016llx - %016llx)\n",
--		NUMACHIP_LCSR_BASE, NUMACHIP_LCSR_BASE + NUMACHIP_LCSR_SIZE - 1);
--	init_extra_mapping_uc(NUMACHIP_LCSR_BASE, NUMACHIP_LCSR_SIZE);
--
--	printk(KERN_INFO "NumaChip: Mapping global CSR space (%016llx - %016llx)\n",
--		NUMACHIP_GCSR_BASE, NUMACHIP_GCSR_BASE + NUMACHIP_GCSR_SIZE - 1);
--	init_extra_mapping_uc(NUMACHIP_GCSR_BASE, NUMACHIP_GCSR_SIZE);
--}
--
- static void fixup_cpu_id(struct cpuinfo_x86 *c, int node)
- {
--
- 	if (c->phys_proc_id != node) {
- 		c->phys_proc_id = node;
- 		per_cpu(cpu_llc_id, smp_processor_id()) = node;
-@@ -179,19 +167,15 @@ static void fixup_cpu_id(struct cpuinfo_x86 *c, int node)
- 
- static int __init numachip_system_init(void)
- {
--	unsigned int val;
--
- 	if (!numachip_system)
- 		return 0;
- 
-+	init_extra_mapping_uc(NUMACHIP_LCSR_BASE, NUMACHIP_LCSR_SIZE);
-+	init_extra_mapping_uc(NUMACHIP_GCSR_BASE, NUMACHIP_GCSR_SIZE);
++/*
++ * Return true if dev is PCI root port or downstream port whose child is PCI
++ * endpoint except VGA device.
++ */
++static int __pci_dev_need_reset(struct pci_dev *dev)
++{
++	struct pci_bus *subordinate;
++	struct pci_dev *child;
 +
- 	x86_cpuinit.fixup_cpu_id = fixup_cpu_id;
- 	x86_init.pci.arch_init = pci_numachip_init;
- 
--	map_csrs();
--
--	val = read_lcsr(CSR_G0_NODE_IDS);
--	printk(KERN_INFO "NumaChip: Local NodeID = %08x\n", val);
--
- 	return 0;
++	if (dev->hdr_type != PCI_HEADER_TYPE_BRIDGE)
++		return 0;
++
++	if (pci_is_pcie(dev)) {
++		if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT) &&
++		    (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM))
++			return 0;
++	}
++
++	subordinate = dev->subordinate;
++	list_for_each_entry(child, &subordinate->devices, bus_list) {
++		/* Don't reset switch, bridge, VGA device */
++		if ((child->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
++		    ((child->class >> 16) == PCI_BASE_CLASS_BRIDGE) ||
++		    ((child->class >> 16) == PCI_BASE_CLASS_DISPLAY))
++			return 0;
++
++		if (pci_is_pcie(child)) {
++			if ((pci_pcie_type(child) == PCI_EXP_TYPE_UPSTREAM) ||
++			    (pci_pcie_type(child) == PCI_EXP_TYPE_PCI_BRIDGE))
++				return 0;
++		}
++	}
++
++	return 1;
++}
++
++struct pci_dev_reset_entry {
++	struct list_head list;
++	struct pci_dev *dev;
++};
++int pci_reset_endpoints(void)
++{
++	struct pci_dev *dev = NULL;
++	struct pci_dev_reset_entry *pdev_entry, *tmp;
++	struct pci_bus *subordinate = NULL;
++	int has_it;
++
++	LIST_HEAD(pdev_list);
++
++
++	for_each_pci_dev(dev) {
++		subordinate = dev->subordinate;
++		if (!subordinate || list_empty(&subordinate->devices))
++			continue;
++
++		has_it = 0;
++		list_for_each_entry(pdev_entry, &pdev_list, list) {
++			if (dev == pdev_entry->dev) {
++				has_it = 1;
++				break;
++			}
++		}
++		if (has_it)
++			continue;
++
++		if (__pci_dev_need_reset(dev)) {
++			pdev_entry = kmalloc(sizeof(*pdev_entry), GFP_KERNEL);
++			pdev_entry->dev = dev;
++			list_add(&pdev_entry->list, &pdev_list);
++		}
++	}
++
++	list_for_each_entry_safe(pdev_entry, tmp, &pdev_list, list) {
++		pci_try_reset_bus(pdev_entry->dev->subordinate);
++		kfree(pdev_entry);
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(pci_reset_endpoints);
++
+ static int __init pci_setup(char *str)
+ {
+ 	while (str) {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5be8db4..1cf7207 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1869,4 +1869,10 @@ static inline bool pci_is_dev_assigned(struct pci_dev *pdev)
+ {
+ 	return (pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED) == PCI_DEV_FLAGS_ASSIGNED;
  }
- early_initcall(numachip_system_init);
-diff --git a/arch/x86/pci/numachip.c b/arch/x86/pci/numachip.c
-index 7307d9d..2e565e6 100644
---- a/arch/x86/pci/numachip.c
-+++ b/arch/x86/pci/numachip.c
-@@ -103,7 +103,7 @@ static int pci_mmcfg_write_numachip(unsigned int seg, unsigned int bus,
- 	return 0;
- }
++
++/*
++ * Reset all pci devices by resetting the buses.
++ */
++int pci_reset_endpoints(void);
++
+ #endif /* LINUX_PCI_H */
+diff --git a/kernel/kexec.c b/kernel/kexec.c
+index 2abf9f6..986e8f7 100644
+--- a/kernel/kexec.c
++++ b/kernel/kexec.c
+@@ -36,6 +36,7 @@
+ #include <linux/syscore_ops.h>
+ #include <linux/compiler.h>
+ #include <linux/hugetlb.h>
++#include <linux/pci.h>
  
--const struct pci_raw_ops pci_mmcfg_numachip = {
-+static const struct pci_raw_ops pci_mmcfg_numachip = {
- 	.read = pci_mmcfg_read_numachip,
- 	.write = pci_mmcfg_write_numachip,
- };
+ #include <asm/page.h>
+ #include <asm/uaccess.h>
+@@ -1474,6 +1475,7 @@ void crash_kexec(struct pt_regs *regs)
+ 		if (kexec_crash_image) {
+ 			struct pt_regs fixed_regs;
+ 
++			pci_reset_endpoints();
+ 			crash_setup_regs(&fixed_regs, regs);
+ 			crash_save_vmcoreinfo();
+ 			machine_crash_shutdown(&fixed_regs);
 -- 
-1.9.1
+2.0.0-rc0
 
