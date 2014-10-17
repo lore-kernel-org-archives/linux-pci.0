@@ -1,70 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:53104 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753544AbaJBPA0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Oct 2014 11:00:26 -0400
-Received: by mail-pa0-f50.google.com with SMTP id kx10so2664594pab.9
-        for <linux-pci@vger.kernel.org>; Thu, 02 Oct 2014 08:00:26 -0700 (PDT)
-Date: Thu, 2 Oct 2014 09:00:21 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Marti Raudsepp <marti@juffo.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Joel Schopp <joel.schopp@amd.com>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH] PCI: Add ACS support for AMD A88X southbridge devices
-Message-ID: <20141002150021.GA18056@google.com>
-References: <1412255137-28954-1-git-send-email-marti@juffo.org>
+Received: from mail-bn1bbn0105.outbound.protection.outlook.com ([157.56.111.105]:32800
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752031AbaJQJOZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Oct 2014 05:14:25 -0400
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v2 06/16] usb: dwc3: add disscramble quirk
+Date: Fri, 17 Oct 2014 16:53:31 +0800
+Message-ID: <1413536021-4886-7-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1412255137-28954-1-git-send-email-marti@juffo.org>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 02, 2014 at 04:05:37PM +0300, Marti Raudsepp wrote:
-> AMD has confirmed that peer-to-peer between two southbridge functions
-> does not occur.
-> 
-> Joel Schopp at https://bugzilla.kernel.org/show_bug.cgi?id=81841#c15
-> >     +-14.4-[01]----05.0  Dialogic Corporation PRI
-> > The legacy PCI should be isolated from the other devices identified.
-> > Not sure what is going on here.
-> >
-> >     +-14.5  Advanced Micro Devices, Inc. [AMD] FCH USB OHCI Controller
-> > This OHCI Controller should also be isolated from the other devices.
-> 
-> Signed-off-by: Marti Raudsepp <marti@juffo.org>
+AMD NL fpga needs to enable disscramble quirk. And this quirk doesn't need on
+the true soc.
 
-Applied with Joel's ack to pci/virtualization for v3.18, thanks!
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+---
+ drivers/usb/dwc3/core.c          | 8 +++++++-
+ drivers/usb/dwc3/dwc3-pci.c      | 5 +++++
+ drivers/usb/dwc3/platform_data.h | 4 ++++
+ 3 files changed, 16 insertions(+), 1 deletion(-)
 
-> ---
->  drivers/pci/quirks.c | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 80c2d01..ce43316 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3582,6 +3582,11 @@ struct pci_dev *pci_get_dma_source(struct pci_dev *dev)
->   * 1002:439d SB7x0/SB8x0/SB9x0 LPC host controller
->   * 1002:4384 SBx00 PCI to PCI Bridge
->   * 1002:4399 SB7x0/SB8x0/SB9x0 USB OHCI2 Controller
-> + *
-> + * https://bugzilla.kernel.org/show_bug.cgi?id=81841#c15
-> + *
-> + * 1022:780f [AMD] FCH PCI Bridge
-> + * 1022:7809 [AMD] FCH USB OHCI Controller
->   */
->  static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
->  {
-> @@ -3675,6 +3680,8 @@ static const struct pci_dev_acs_enabled {
->  	{ PCI_VENDOR_ID_ATI, 0x439d, pci_quirk_amd_sb_acs },
->  	{ PCI_VENDOR_ID_ATI, 0x4384, pci_quirk_amd_sb_acs },
->  	{ PCI_VENDOR_ID_ATI, 0x4399, pci_quirk_amd_sb_acs },
-> +	{ PCI_VENDOR_ID_AMD, 0x780f, pci_quirk_amd_sb_acs },
-> +	{ PCI_VENDOR_ID_AMD, 0x7809, pci_quirk_amd_sb_acs },
->  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
->  	{ 0 }
->  };
-> -- 
-> 2.1.1
-> 
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index 50c0eae..819e501 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -422,7 +422,6 @@ static int dwc3_core_init(struct dwc3 *dwc)
+ 
+ 	reg = dwc3_readl(dwc->regs, DWC3_GCTL);
+ 	reg &= ~DWC3_GCTL_SCALEDOWN_MASK;
+-	reg &= ~DWC3_GCTL_DISSCRAMBLE;
+ 
+ 	switch (DWC3_GHWPARAMS1_EN_PWROPT(dwc->hwparams.hwparams1)) {
+ 	case DWC3_GHWPARAMS1_EN_PWROPT_CLK:
+@@ -461,6 +460,13 @@ static int dwc3_core_init(struct dwc3 *dwc)
+ 		dwc->is_fpga = true;
+ 	}
+ 
++	if ((dwc->quirks & DWC3_QUIRK_AMD_NL) && dwc->is_fpga)
++		dwc->quirks |= DWC3_QUIRK_DISSCRAMBLE;
++
++	if (dwc->quirks & DWC3_QUIRK_DISSCRAMBLE)
++		reg |= DWC3_GCTL_DISSCRAMBLE;
++	else
++		reg &= ~DWC3_GCTL_DISSCRAMBLE;
+ 	/*
+ 	 * WORKAROUND: DWC3 revisions <1.90a have a bug
+ 	 * where the device can fail to connect at SuperSpeed
+diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+index 18569a4..a89db6c 100644
+--- a/drivers/usb/dwc3/dwc3-pci.c
++++ b/drivers/usb/dwc3/dwc3-pci.c
+@@ -146,6 +146,11 @@ static int dwc3_pci_probe(struct pci_dev *pci,
+ 	res[1].name	= "dwc_usb3";
+ 	res[1].flags	= IORESOURCE_IRQ;
+ 
++	if (pci->vendor == PCI_VENDOR_ID_AMD && pci->device ==
++			PCI_DEVICE_ID_AMD_NL) {
++		dwc3_pdata.quirks |= DWC3_QUIRK_AMD_NL;
++	}
++
+ 	ret = platform_device_add_resources(dwc3, res, ARRAY_SIZE(res));
+ 	if (ret) {
+ 		dev_err(dev, "couldn't add resources to dwc3 device\n");
+diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
+index 1d3d65f..9c5f074 100644
+--- a/drivers/usb/dwc3/platform_data.h
++++ b/drivers/usb/dwc3/platform_data.h
+@@ -26,4 +26,8 @@ struct dwc3_platform_data {
+ 	bool tx_fifo_resize;
+ 
+ 	u32     quirks;
++
++#define DWC3_QUIRK_AMD_NL		(1 << 0)
++#define DWC3_QUIRK_DISSCRAMBLE		(1 << 1)
++
+ };
+-- 
+1.9.1
+
