@@ -1,33 +1,152 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailuogwhop.emc.com ([168.159.213.141]:41115 "EHLO
-	mailuogwhop.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751064AbaJILIJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Oct 2014 07:08:09 -0400
-Received: from maildlpprd06.lss.emc.com (maildlpprd06.lss.emc.com [10.253.24.38])
-	by mailuogwprd02.lss.emc.com (Sentrion-MTA-4.3.0/Sentrion-MTA-4.3.0) with ESMTP id s99Ap8sF030234
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-pci@vger.kernel.org>; Thu, 9 Oct 2014 06:51:08 -0400
-Received: from mailusrhubprd54.lss.emc.com (mailusrhubprd54.lss.emc.com [10.106.48.19]) by maildlpprd06.lss.emc.com (RSA Interceptor) for <linux-pci@vger.kernel.org>; Thu, 9 Oct 2014 06:50:21 -0400
-Received: from mxhub09.corp.emc.com (mxhub09.corp.emc.com [10.254.92.104])
-	by mailusrhubprd54.lss.emc.com (Sentrion-MTA-4.3.0/Sentrion-MTA-4.3.0) with ESMTP id s99AoULK018218
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=FAIL)
-	for <linux-pci@vger.kernel.org>; Thu, 9 Oct 2014 06:50:51 -0400
-From: "Wei, Aaron" <Aaron.Wei@emc.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Thu, 9 Oct 2014 06:50:47 -0400
-Subject: A question about PCI device rescan
-Message-ID: <643A135C3423C4499CDC6CEE6EC6559D014710C96D@MX25A.corp.emc.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v2 07/16] usb: dwc3: add lpm erratum support
+Date: Fri, 17 Oct 2014 16:53:32 +0800
+Message-ID: <1413536021-4886-8-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+When parameter DWC_USB3_LPM_ERRATA_ENABLE is enabled in Andvanced Configuration
+of coreConsultant, it supports of xHCI BESL Errata Dated 10/19/2011 is enabled
+in host mode. In device mode it adds the capability to send NYET response based
+on the BESL value received in the LPM token.
 
-Could someone help explain why writing to "rescan" under "/sys/bus/pci/devices/.../rescan" will force a rescan of the device's parent bus instead of just re-discover all the devices behind this device (if the device is type-0, then nothing happens).
+This patch add an entry that soc platform is able to define the lpm capacity
+with their own device tree or bus glue layer.
 
-Is there any user space interface that could let user just rescan devices behind one specified type-1 device?
+Suggested-by: Felipe Balbi <balbi@ti.com>
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+---
+ drivers/usb/dwc3/core.c          |  2 ++
+ drivers/usb/dwc3/core.h          | 24 +++++++++++++++---------
+ drivers/usb/dwc3/dwc3-pci.c      |  1 +
+ drivers/usb/dwc3/gadget.c        |  7 +++++++
+ drivers/usb/dwc3/platform_data.h |  1 +
+ 5 files changed, 26 insertions(+), 9 deletions(-)
 
-Thanks,
-Aaron 
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index 819e501..25db533 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -708,11 +708,13 @@ static int dwc3_probe(struct platform_device *pdev)
+ 
+ 	if (node) {
+ 		dwc->maximum_speed = of_usb_get_maximum_speed(node);
++		dwc->has_lpm_erratum = of_property_read_bool(node, "snps,has-lpm-erratum");
+ 
+ 		dwc->needs_fifo_resize = of_property_read_bool(node, "tx-fifo-resize");
+ 		dwc->dr_mode = of_usb_get_dr_mode(node);
+ 	} else if (pdata) {
+ 		dwc->maximum_speed = pdata->maximum_speed;
++		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
+ 
+ 		dwc->needs_fifo_resize = pdata->tx_fifo_resize;
+ 		dwc->dr_mode = pdata->dr_mode;
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index cfe0d57..d58479e 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -246,16 +246,19 @@
+ #define DWC3_DCTL_TRGTULST_SS_INACT	(DWC3_DCTL_TRGTULST(6))
+ 
+ /* These apply for core versions 1.94a and later */
+-#define DWC3_DCTL_KEEP_CONNECT	(1 << 19)
+-#define DWC3_DCTL_L1_HIBER_EN	(1 << 18)
+-#define DWC3_DCTL_CRS		(1 << 17)
+-#define DWC3_DCTL_CSS		(1 << 16)
++#define DWC3_DCTL_LPM_ERRATA_MASK	DWC3_DCTL_LPM_ERRATA(0xf)
++#define DWC3_DCTL_LPM_ERRATA(n)		((n) << 20)
+ 
+-#define DWC3_DCTL_INITU2ENA	(1 << 12)
+-#define DWC3_DCTL_ACCEPTU2ENA	(1 << 11)
+-#define DWC3_DCTL_INITU1ENA	(1 << 10)
+-#define DWC3_DCTL_ACCEPTU1ENA	(1 << 9)
+-#define DWC3_DCTL_TSTCTRL_MASK	(0xf << 1)
++#define DWC3_DCTL_KEEP_CONNECT		(1 << 19)
++#define DWC3_DCTL_L1_HIBER_EN		(1 << 18)
++#define DWC3_DCTL_CRS			(1 << 17)
++#define DWC3_DCTL_CSS			(1 << 16)
++
++#define DWC3_DCTL_INITU2ENA		(1 << 12)
++#define DWC3_DCTL_ACCEPTU2ENA		(1 << 11)
++#define DWC3_DCTL_INITU1ENA		(1 << 10)
++#define DWC3_DCTL_ACCEPTU1ENA		(1 << 9)
++#define DWC3_DCTL_TSTCTRL_MASK		(0xf << 1)
+ 
+ #define DWC3_DCTL_ULSTCHNGREQ_MASK	(0x0f << 5)
+ #define DWC3_DCTL_ULSTCHNGREQ(n) (((n) << 5) & DWC3_DCTL_ULSTCHNGREQ_MASK)
+@@ -665,6 +668,8 @@ struct dwc3_scratchpad_array {
+  * @ep0_bounced: true when we used bounce buffer
+  * @ep0_expect_in: true when we expect a DATA IN transfer
+  * @has_hibernation: true when dwc3 was configured with Hibernation
++ * @has_lpm_erratum: true when core was configured with LPM Erratum. Note that
++ *			there's now way for software to detect this in runtime.
+  * @is_selfpowered: true when we are selfpowered
+  * @is_fpga: true when we are using the FPGA board
+  * @needs_fifo_resize: not all users might want fifo resizing, flag it
+@@ -771,6 +776,7 @@ struct dwc3 {
+ 	unsigned		ep0_bounced:1;
+ 	unsigned		ep0_expect_in:1;
+ 	unsigned		has_hibernation:1;
++	unsigned		has_lpm_erratum:1;
+ 	unsigned		is_selfpowered:1;
+ 	unsigned		is_fpga:1;
+ 	unsigned		needs_fifo_resize:1;
+diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+index a89db6c..bbe946c 100644
+--- a/drivers/usb/dwc3/dwc3-pci.c
++++ b/drivers/usb/dwc3/dwc3-pci.c
+@@ -148,6 +148,7 @@ static int dwc3_pci_probe(struct pci_dev *pci,
+ 
+ 	if (pci->vendor == PCI_VENDOR_ID_AMD && pci->device ==
+ 			PCI_DEVICE_ID_AMD_NL) {
++		dwc3_pdata.has_lpm_erratum = true;
+ 		dwc3_pdata.quirks |= DWC3_QUIRK_AMD_NL;
+ 	}
+ 
+diff --git a/drivers/usb/dwc3/gadget.c b/drivers/usb/dwc3/gadget.c
+index 1f2a719..33bfc70 100644
+--- a/drivers/usb/dwc3/gadget.c
++++ b/drivers/usb/dwc3/gadget.c
+@@ -1581,6 +1581,13 @@ static int dwc3_gadget_start(struct usb_gadget *g,
+ 	}
+ 	dwc3_writel(dwc->regs, DWC3_DCFG, reg);
+ 
++	if (dwc->has_lpm_erratum) {
++		reg = dwc3_readl(dwc->regs, DWC3_DCTL);
++		/* REVISIT should this be configurable ? */
++		reg |= DWC3_DCTL_LPM_ERRATA(0xf);
++		dwc3_writel(dwc->regs, DWC3_DCTL, reg);
++	}
++
+ 	dwc->start_config_issued = false;
+ 
+ 	/* Start with SuperSpeed Default */
+diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
+index 9c5f074..098ab04 100644
+--- a/drivers/usb/dwc3/platform_data.h
++++ b/drivers/usb/dwc3/platform_data.h
+@@ -25,6 +25,7 @@ struct dwc3_platform_data {
+ 	enum usb_dr_mode dr_mode;
+ 	bool tx_fifo_resize;
+ 
++	unsigned has_lpm_erratum:1;
+ 	u32     quirks;
+ 
+ #define DWC3_QUIRK_AMD_NL		(1 << 0)
+-- 
+1.9.1
 
